@@ -21,3 +21,7 @@ bld/
 *.htm
 *.nuspec
 *.nupkg
+/Avatars
+/Stardust.WebFx/Config
+/Stardust.WebFx/Content
+/Stardust.WebFx/Plugins
