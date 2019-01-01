@@ -48,6 +48,22 @@ namespace Stardust.Data
         [BindColumn("Secret", "密钥", "")]
         public String Secret { get { return _Secret; } set { if (OnPropertyChanging(__.Secret, value)) { _Secret = value; OnPropertyChanged(__.Secret); } } }
 
+        private String _Version;
+        /// <summary>版本</summary>
+        [DisplayName("版本")]
+        [Description("版本")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Version", "版本", "")]
+        public String Version { get { return _Version; } set { if (OnPropertyChanging(__.Version, value)) { _Version = value; OnPropertyChanged(__.Version); } } }
+
+        private DateTime _Compile;
+        /// <summary>编译时间</summary>
+        [DisplayName("编译时间")]
+        [Description("编译时间")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("Compile", "编译时间", "")]
+        public DateTime Compile { get { return _Compile; } set { if (OnPropertyChanging(__.Compile, value)) { _Compile = value; OnPropertyChanged(__.Compile); } } }
+
         private Boolean _Enable;
         /// <summary>启用</summary>
         [DisplayName("启用")]
@@ -175,6 +191,8 @@ namespace Stardust.Data
                     case __.Name : return _Name;
                     case __.DisplayName : return _DisplayName;
                     case __.Secret : return _Secret;
+                    case __.Version : return _Version;
+                    case __.Compile : return _Compile;
                     case __.Enable : return _Enable;
                     case __.Services : return _Services;
                     case __.Actions : return _Actions;
@@ -200,6 +218,8 @@ namespace Stardust.Data
                     case __.Name : _Name = Convert.ToString(value); break;
                     case __.DisplayName : _DisplayName = Convert.ToString(value); break;
                     case __.Secret : _Secret = Convert.ToString(value); break;
+                    case __.Version : _Version = Convert.ToString(value); break;
+                    case __.Compile : _Compile = Convert.ToDateTime(value); break;
                     case __.Enable : _Enable = Convert.ToBoolean(value); break;
                     case __.Services : _Services = Convert.ToInt32(value); break;
                     case __.Actions : _Actions = Convert.ToInt32(value); break;
@@ -235,6 +255,12 @@ namespace Stardust.Data
 
             /// <summary>密钥</summary>
             public static readonly Field Secret = FindByName(__.Secret);
+
+            /// <summary>版本</summary>
+            public static readonly Field Version = FindByName(__.Version);
+
+            /// <summary>编译时间</summary>
+            public static readonly Field Compile = FindByName(__.Compile);
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName(__.Enable);
@@ -296,6 +322,12 @@ namespace Stardust.Data
             /// <summary>密钥</summary>
             public const String Secret = "Secret";
 
+            /// <summary>版本</summary>
+            public const String Version = "Version";
+
+            /// <summary>编译时间</summary>
+            public const String Compile = "Compile";
+
             /// <summary>启用</summary>
             public const String Enable = "Enable";
 
@@ -356,6 +388,12 @@ namespace Stardust.Data
 
         /// <summary>密钥</summary>
         String Secret { get; set; }
+
+        /// <summary>版本</summary>
+        String Version { get; set; }
+
+        /// <summary>编译时间</summary>
+        DateTime Compile { get; set; }
 
         /// <summary>启用</summary>
         Boolean Enable { get; set; }

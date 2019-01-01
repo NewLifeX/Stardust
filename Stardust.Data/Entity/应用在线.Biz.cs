@@ -138,18 +138,6 @@ namespace Stardust.Data
 
             return Find(_.Session == session);
         }
-
-        /// <summary>根据应用、实例查找</summary>
-        /// <param name="appid">应用</param>
-        /// <param name="instance">实例</param>
-        /// <returns>实体对象</returns>
-        public static AppOnline FindByAppIDAndInstance(Int32 appid, String instance)
-        {
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.AppID == appid && e.Instance == instance);
-
-            return Find(_.AppID == appid & _.Instance == instance);
-        }
         #endregion
 
         #region 高级查询
