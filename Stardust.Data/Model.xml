@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Tables Version="9.10.6940.25801" NameSpace="Stardust.Data" ConnName="Stardust" Output="Entity" BaseClass="EntityBase">
+  <Table Name="App" Description="应用系统。服务提供者和消费者">
+    <Columns>
+      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
+      <Column Name="DisplayName" DataType="String" Description="显示名" />
+      <Column Name="Secret" DataType="String" Description="密钥" />
+      <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="Services" DataType="Int32" Description="服务数。该应用提供的服务数" />
+      <Column Name="Actions" DataType="Int32" Description="功能数。该应用提供的功能数" />
+      <Column Name="LastLogin" DataType="DateTime" Description="最后登录" />
+      <Column Name="LastIP" DataType="String" Description="最后IP" />
+      <Column Name="Remark" DataType="String" Length="500" Description="内容" />
+      <Column Name="CreateUser" DataType="String" Description="创建者" />
+      <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="UpdateUser" DataType="String" Description="更新者" />
+      <Column Name="UpdateUserID" DataType="Int32" Description="更新者" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" />
+    </Columns>
+    <Indexes>
+      <Index Columns="Name" Unique="True" />
+    </Indexes>
+  </Table>
+  <Table Name="Service" Description="服务。服务提供者发布的服务">
+    <Columns>
+      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称。调用Api的字符串：Data/GetSite中的Data" />
+      <Column Name="ServiceType" DataType="String" Master="True" Nullable="False" Description="服务类型。带命名空间的全名" />
+      <Column Name="DisplayName" DataType="String" Description="显示名" />
+      <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="Anonymous" DataType="Boolean" Description="匿名" />
+      <Column Name="Actions" DataType="String" Length="500" Description="功能列表" />
+      <Column Name="Apps" DataType="String" Description="应用。提供该服务的应用列表" />
+      <Column Name="Remark" DataType="String" Length="500" Description="内容" />
+      <Column Name="CreateUser" DataType="String" Description="创建者" />
+      <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="UpdateUser" DataType="String" Description="更新者" />
+      <Column Name="UpdateUserID" DataType="Int32" Description="更新者" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" />
+    </Columns>
+    <Indexes>
+      <Index Columns="Name" Unique="True" />
+    </Indexes>
+  </Table>
+  <Table Name="AppService" Description="应用服务。应用提供的服务">
+    <Columns>
+      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="AppID" DataType="Int32" Description="应用" />
+      <Column Name="ServiceID" DataType="Int32" Description="服务" />
+      <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="CreateUser" DataType="String" Description="创建者" />
+      <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="UpdateUser" DataType="String" Description="更新者" />
+      <Column Name="UpdateUserID" DataType="Int32" Description="更新者" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" />
+    </Columns>
+    <Indexes>
+      <Index Columns="AppID,ServiceID" Unique="True" />
+    </Indexes>
+  </Table>
+  <Table Name="AppConsume" Description="应用消费。应用消费的服务">
+    <Columns>
+      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="AppID" DataType="Int32" Description="应用" />
+      <Column Name="ServiceID" DataType="Int32" Description="服务" />
+      <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="CreateUser" DataType="String" Description="创建者" />
+      <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="UpdateUser" DataType="String" Description="更新者" />
+      <Column Name="UpdateUserID" DataType="Int32" Description="更新者" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" />
+    </Columns>
+    <Indexes>
+      <Index Columns="AppID,ServiceID" Unique="True" />
+    </Indexes>
+  </Table>
+  <Table Name="AppOnline" Description="应用在线。一个应用有多个部署，每个在线会话对应一个服务地址" ConnName="Registry">
+    <Columns>
+      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="AppID" DataType="Int32" Description="应用" />
+      <Column Name="Instance" DataType="String" Description="实例。IP@进程" />
+      <Column Name="Session" DataType="String" Description="会话。tcp://ip:port" />
+      <Column Name="Address" DataType="String" Description="服务地址。tcp://ip:port" />
+      <Column Name="Version" DataType="String" Description="版本" />
+      <Column Name="Services" DataType="Int32" Description="服务数。该应用提供的服务数" />
+      <Column Name="Actions" DataType="String" Length="500" Description="功能列表" />
+      <Column Name="Clients" DataType="Int32" Description="客户端数。服务提供者当前服务的客户端数" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+    </Columns>
+    <Indexes>
+      <Index Columns="Session" Unique="True" />
+      <Index Columns="AppID,Instance" Unique="True" />
+    </Indexes>
+  </Table>
+  <Table Name="AppHistory" Description="应用历史" ConnName="Registry">
+    <Columns>
+      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="AppID" DataType="Int32" Description="应用" />
+      <Column Name="Version" DataType="String" Description="版本" />
+      <Column Name="Action" DataType="String" Description="操作" />
+      <Column Name="Success" DataType="Boolean" Description="成功" />
+      <Column Name="Remark" DataType="String" Length="500" Description="内容" />
+      <Column Name="CreateUser" DataType="String" Description="创建者" />
+      <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+    </Columns>
+    <Indexes>
+      <Index Columns="AppID" />
+    </Indexes>
+  </Table>
+  <Table Name="AppStat" Description="应用统计。记录应用每天访问量" ConnName="Registry">
+    <Columns>
+      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="AppID" DataType="Int32" Description="应用" />
+      <Column Name="Level" DataType="Int32" Description="层级" Type="XCode.Statistics.StatLevels" />
+      <Column Name="Time" DataType="DateTime" Description="日期" />
+      <Column Name="Count" DataType="Int64" Description="次数" />
+      <Column Name="Cost" DataType="Int32" Description="耗时。平均值，微秒us" />
+      <Column Name="TotalCost" DataType="Int64" Description="总耗时。微秒us" />
+      <Column Name="LastIP" DataType="String" Description="最后IP" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+    </Columns>
+    <Indexes>
+      <Index Columns="AppID,Level,Time" Unique="True" />
+      <Index Columns="Level,Time" />
+    </Indexes>
+  </Table>
+  <Table Name="ServiceStat" Description="服务统计。记录服务每天访问量" ConnName="Registry">
+    <Columns>
+      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="ServiceID" DataType="Int32" Description="服务" />
+      <Column Name="Level" DataType="Int32" Description="层级" Type="XCode.Statistics.StatLevels" />
+      <Column Name="Time" DataType="DateTime" Description="日期" />
+      <Column Name="Count" DataType="Int64" Description="次数" />
+      <Column Name="Cost" DataType="Int32" Description="耗时。平均值，微秒us" />
+      <Column Name="TotalCost" DataType="Int64" Description="总耗时。微秒us" />
+      <Column Name="LastIP" DataType="String" Description="最后IP" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+    </Columns>
+    <Indexes>
+      <Index Columns="ServiceID,Level,Time" Unique="True" />
+      <Index Columns="Level,Time" />
+    </Indexes>
+  </Table>
+  <Table Name="IpStat" Description="IP统计。记录IP地址每天访问量" ConnName="Registry">
+    <Columns>
+      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="Ip" DataType="String" Description="IP地址" />
+      <Column Name="Level" DataType="Int32" Description="层级" Type="XCode.Statistics.StatLevels" />
+      <Column Name="Time" DataType="DateTime" Description="日期" />
+      <Column Name="Count" DataType="Int64" Description="次数" />
+      <Column Name="Cost" DataType="Int32" Description="耗时。平均值，微秒us" />
+      <Column Name="TotalCost" DataType="Int64" Description="总耗时。微秒us" />
+      <Column Name="LastAppID" DataType="Int32" Description="最后应用" />
+      <Column Name="LastServiceID" DataType="Int32" Description="最后服务" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+    </Columns>
+    <Indexes>
+      <Index Columns="IP,Level,Time" Unique="True" />
+      <Index Columns="Level,Time" />
+    </Indexes>
+  </Table>
+</Tables>
