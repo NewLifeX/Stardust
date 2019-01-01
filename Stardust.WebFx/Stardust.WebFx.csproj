@@ -104,12 +104,23 @@
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Areas\Star\Controllers\AppConsumeController.cs" />
+    <Compile Include="Areas\Star\Controllers\IpStatController.cs" />
+    <Compile Include="Areas\Star\Controllers\ServiceStatController.cs" />
+    <Compile Include="Areas\Star\Controllers\AppServiceController.cs" />
+    <Compile Include="Areas\Star\Controllers\AppStatController.cs" />
+    <Compile Include="Areas\Star\Controllers\AppHistoryController.cs" />
+    <Compile Include="Areas\Star\Controllers\AppOnlineController.cs" />
+    <Compile Include="Areas\Star\Controllers\ServiceController.cs" />
+    <Compile Include="Areas\Star\Controllers\AppController.cs" />
+    <Compile Include="Areas\Star\StarAreaRegistration.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Areas\Star\Views\web.config" />
     <None Include="packages.config" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -117,6 +128,16 @@
     <None Include="Web.Release.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Areas\Star\Models\" />
+    <Folder Include="Areas\Star\Views\Shared\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Stardust.Data\Stardust.Data.csproj">
+      <Project>{8B5FC187-6592-4717-99C3-D97743062FD3}</Project>
+      <Name>Stardust.Data</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
