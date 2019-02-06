@@ -7,4 +7,18 @@
     <Deterministic>false</Deterministic>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Stardust.Data\Stardust.Data.csproj" />
+    <ProjectReference Include="..\Stardust\Stardust.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="NewLife.Core">
+      <HintPath>..\DLL20\NewLife.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="XCode">
+      <HintPath>..\DLL20\XCode.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
