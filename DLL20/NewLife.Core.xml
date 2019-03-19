@@ -4,1490 +4,6 @@
         <name>NewLife.Core</name>
     </assembly>
     <members>
-        <member name="T:System.Web.Script.Serialization.ScriptIgnoreAttribute">
-            <summary>忽略Json序列化</summary>
-        </member>
-        <member name="T:System.Collections.Generic.CollectionHelper">
-            <summary>集合扩展</summary>
-        </member>
-        <member name="M:System.Collections.Generic.CollectionHelper.ToArray``1(System.Collections.Generic.ICollection{``0},System.Int32)">
-            <summary>集合转为数组</summary>
-            <typeparam name="T"></typeparam>
-            <param name="collection"></param>
-            <param name="index"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.Collections.Generic.CollectionHelper.ToKeyArray``2(System.Collections.Generic.IDictionary{``0,``1},System.Int32)">
-            <summary>集合转为数组</summary>
-            <typeparam name="TKey"></typeparam>
-            <typeparam name="TValue"></typeparam>
-            <param name="collection"></param>
-            <param name="index"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.Collections.Generic.CollectionHelper.ToValueArray``2(System.Collections.Generic.IDictionary{``0,``1},System.Int32)">
-            <summary>集合转为数组</summary>
-            <typeparam name="TKey"></typeparam>
-            <typeparam name="TValue"></typeparam>
-            <param name="collection"></param>
-            <param name="index"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.Collections.Generic.CollectionHelper.ToDictionary(System.Object)">
-            <summary>目标匿名参数对象转为字典</summary>
-            <param name="target"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.Collections.Generic.CollectionHelper.Merge(System.Collections.Generic.IDictionary{System.String,System.Object},System.Object,System.Boolean,System.String[])">
-            <summary>合并字典参数</summary>
-            <param name="dic">字典</param>
-            <param name="target">目标对象</param>
-            <param name="overwrite">是否覆盖同名参数</param>
-            <param name="excludes">排除项</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.Collections.Generic.CollectionHelper.ToNullable``2(System.Collections.Generic.IDictionary{``0,``1},System.Collections.Generic.IEqualityComparer{``0})">
-            <summary>转为可空字典</summary>
-            <typeparam name="TKey"></typeparam>
-            <typeparam name="TValue"></typeparam>
-            <param name="collection"></param>
-            <param name="comparer"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.Collections.Generic.CollectionHelper.Take``1(System.Collections.Generic.Queue{``0},System.Int32)">
-            <summary>从队列里面获取指定个数元素</summary>
-            <typeparam name="T"></typeparam>
-            <param name="collection">消费集合</param>
-            <param name="count">元素个数</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.Collections.Generic.CollectionHelper.Take``1(System.Collections.Concurrent.IProducerConsumerCollection{``0},System.Int32)">
-            <summary>从消费集合里面获取指定个数元素</summary>
-            <typeparam name="T"></typeparam>
-            <param name="collection">消费集合</param>
-            <param name="count">元素个数</param>
-            <returns></returns>
-        </member>
-        <member name="T:System.Utility">
-            <summary>工具类</summary>
-            <remarks>
-            采用静态架构，允许外部重载工具类的各种实现<seealso cref="T:System.DefaultConvert"/>。
-            所有类型转换均支持默认值，默认值为该default(T)，在转换失败时返回默认值。
-            </remarks>
-        </member>
-        <member name="P:System.Utility.Convert">
-            <summary>类型转换提供者</summary>
-            <remarks>重载默认提供者<seealso cref="T:System.DefaultConvert"/>并赋值给<see cref="P:System.Utility.Convert"/>可改变所有类型转换的行为</remarks>
-        </member>
-        <member name="M:System.Utility.ToInt(System.Object,System.Int32)">
-            <summary>转为整数，转换失败时返回默认值。支持字符串、全角、字节数组（小端）、时间（Unix秒）</summary>
-            <remarks>Int16/UInt32/Int64等，可以先转为最常用的Int32后再二次处理</remarks>
-            <param name="value">待转换对象</param>
-            <param name="defaultValue">默认值。待转换对象无效时使用</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.Utility.ToLong(System.Object,System.Int64)">
-            <summary>转为长整数，转换失败时返回默认值。支持字符串、全角、字节数组（小端）、时间（Unix毫秒）</summary>
-            <remarks></remarks>
-            <param name="value">待转换对象</param>
-            <param name="defaultValue">默认值。待转换对象无效时使用</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.Utility.ToDouble(System.Object,System.Double)">
-            <summary>转为浮点数，转换失败时返回默认值。支持字符串、全角、字节数组（小端）</summary>
-            <remarks>Single可以先转为最常用的Double后再二次处理</remarks>
-            <param name="value">待转换对象</param>
-            <param name="defaultValue">默认值。待转换对象无效时使用</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.Utility.ToBoolean(System.Object,System.Boolean)">
-            <summary>转为布尔型，转换失败时返回默认值。支持大小写True/False、0和非零</summary>
-            <param name="value">待转换对象</param>
-            <param name="defaultValue">默认值。待转换对象无效时使用</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.Utility.ToDateTime(System.Object)">
-            <summary>转为时间日期，转换失败时返回最小时间。支持字符串、整数（Unix秒）</summary>
-            <param name="value">待转换对象</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.Utility.ToDateTime(System.Object,System.DateTime)">
-            <summary>转为时间日期，转换失败时返回默认值</summary>
-            <remarks><see cref="F:System.DateTime.MinValue"/>不是常量无法做默认值</remarks>
-            <param name="value">待转换对象</param>
-            <param name="defaultValue">默认值。待转换对象无效时使用</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.Utility.ToFullString(System.DateTime)">
-            <summary>时间日期转为yyyy-MM-dd HH:mm:ss完整字符串</summary>
-            <remarks>最常用的时间日期格式，可以无视各平台以及系统自定义的时间格式</remarks>
-            <param name="value">待转换对象</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.Utility.ToFullString(System.DateTime,System.String)">
-            <summary>时间日期转为yyyy-MM-dd HH:mm:ss完整字符串，支持指定最小时间的字符串</summary>
-            <remarks>最常用的时间日期格式，可以无视各平台以及系统自定义的时间格式</remarks>
-            <param name="value">待转换对象</param>
-            <param name="emptyValue">字符串空值时（DateTime.MinValue）显示的字符串，null表示原样显示最小时间，String.Empty表示不显示</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.Utility.ToString(System.DateTime,System.String,System.String)">
-            <summary>时间日期转为指定格式字符串</summary>
-            <param name="value">待转换对象</param>
-            <param name="format">格式化字符串</param>
-            <param name="emptyValue">字符串空值时显示的字符串，null表示原样显示最小时间，String.Empty表示不显示</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.Utility.GetTrue(System.Exception)">
-            <summary>获取内部真实异常</summary>
-            <param name="ex"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.Utility.GetMessage(System.Exception)">
-            <summary>获取异常消息</summary>
-            <param name="ex">异常</param>
-            <returns></returns>
-        </member>
-        <member name="T:System.DefaultConvert">
-            <summary>默认转换</summary>
-        </member>
-        <member name="M:System.DefaultConvert.ToInt(System.Object,System.Int32)">
-            <summary>转为整数，转换失败时返回默认值。支持字符串、全角、字节数组（小端）、时间（Unix秒）</summary>
-            <param name="value">待转换对象</param>
-            <param name="defaultValue">默认值。待转换对象无效时使用</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.DefaultConvert.ToLong(System.Object,System.Int64)">
-            <summary>转为长整数。支持字符串、全角、字节数组（小端）、时间（Unix毫秒）</summary>
-            <param name="value">待转换对象</param>
-            <param name="defaultValue">默认值。待转换对象无效时使用</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.DefaultConvert.ToDouble(System.Object,System.Double)">
-            <summary>转为浮点数</summary>
-            <param name="value">待转换对象</param>
-            <param name="defaultValue">默认值。待转换对象无效时使用</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.DefaultConvert.ToBoolean(System.Object,System.Boolean)">
-            <summary>转为布尔型。支持大小写True/False、0和非零</summary>
-            <param name="value">待转换对象</param>
-            <param name="defaultValue">默认值。待转换对象无效时使用</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.DefaultConvert.ToDateTime(System.Object,System.DateTime)">
-            <summary>转为时间日期，转换失败时返回最小时间。支持字符串、整数（Unix秒）</summary>
-            <param name="value">待转换对象</param>
-            <param name="defaultValue">默认值。待转换对象无效时使用</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.DefaultConvert.ToDBC(System.String)">
-            <summary>全角为半角</summary>
-            <remarks>全角半角的关系是相差0xFEE0</remarks>
-            <param name="str"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.DefaultConvert.ToFullString(System.DateTime,System.String)">
-            <summary>时间日期转为yyyy-MM-dd HH:mm:ss完整字符串</summary>
-            <param name="value">待转换对象</param>
-            <param name="emptyValue">字符串空值时显示的字符串，null表示原样显示最小时间，String.Empty表示不显示</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.DefaultConvert.ToString(System.DateTime,System.String,System.String)">
-            <summary>时间日期转为指定格式字符串</summary>
-            <param name="value">待转换对象</param>
-            <param name="format">格式化字符串</param>
-            <param name="emptyValue">字符串空值时显示的字符串，null表示原样显示最小时间，String.Empty表示不显示</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.DefaultConvert.GetTrue(System.Exception)">
-            <summary>获取内部真实异常</summary>
-            <param name="ex"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.DefaultConvert.GetMessage(System.Exception)">
-            <summary>获取异常消息</summary>
-            <param name="ex">异常</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.DefaultConvert.ToGMK(System.Int64,System.String)">
-            <summary>字节单位字符串</summary>
-            <param name="value">数值</param>
-            <param name="format">格式化字符串</param>
-            <returns></returns>
-        </member>
-        <member name="T:System.BitHelper">
-            <summary>数据位助手</summary>
-        </member>
-        <member name="M:System.BitHelper.SetBit(System.UInt16,System.Int32,System.Boolean)">
-            <summary>设置数据位</summary>
-            <param name="value">数值</param>
-            <param name="position"></param>
-            <param name="flag"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.BitHelper.SetBits(System.UInt16,System.Int32,System.Int32,System.UInt16)">
-            <summary>设置数据位</summary>
-            <param name="value">数值</param>
-            <param name="position"></param>
-            <param name="length"></param>
-            <param name="bits"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.BitHelper.SetBit(System.Byte,System.Int32,System.Boolean)">
-            <summary>设置数据位</summary>
-            <param name="value">数值</param>
-            <param name="position"></param>
-            <param name="flag"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.BitHelper.GetBit(System.UInt16,System.Int32)">
-            <summary>获取数据位</summary>
-            <param name="value">数值</param>
-            <param name="position"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.BitHelper.GetBits(System.UInt16,System.Int32,System.Int32)">
-            <summary>获取数据位</summary>
-            <param name="value">数值</param>
-            <param name="position"></param>
-            <param name="length"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.BitHelper.GetBit(System.Byte,System.Int32)">
-            <summary>获取数据位</summary>
-            <param name="value">数值</param>
-            <param name="position"></param>
-            <returns></returns>
-        </member>
-        <member name="T:System.ConcurrentDictionaryExtensions">
-            <summary>并行字典扩展</summary>
-        </member>
-        <member name="M:System.ConcurrentDictionaryExtensions.Remove``2(System.Collections.Concurrent.ConcurrentDictionary{``0,``1},``0)">
-            <summary>从并行字典中删除</summary>
-            <typeparam name="TKey"></typeparam>
-            <typeparam name="TValue"></typeparam>
-            <param name="dict"></param>
-            <param name="key"></param>
-            <returns></returns>
-        </member>
-        <member name="T:System.EndPointExtensions">
-            <summary>网络结点扩展</summary>
-        </member>
-        <member name="M:System.EndPointExtensions.ToAddress(System.Net.EndPoint)">
-            <summary>
-            
-            </summary>
-            <param name="endpoint"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.EndPointExtensions.ToAddress(System.Net.IPEndPoint)">
-            <summary>
-            
-            </summary>
-            <param name="endpoint"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.EndPointExtensions.ToEndPoint(System.String)">
-            <summary>
-            
-            </summary>
-            <param name="address"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.EndPointExtensions.ToEndPoints(System.String)">
-            <summary>
-            
-            </summary>
-            <param name="addresses"></param>
-            <returns></returns>
-        </member>
-        <member name="T:System.EnumHelper">
-            <summary>枚举类型助手类</summary>
-        </member>
-        <member name="M:System.EnumHelper.Has(System.Enum,System.Enum)">
-            <summary>枚举变量是否包含指定标识</summary>
-            <param name="value">枚举变量</param>
-            <param name="flag">要判断的标识</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.EnumHelper.Set``1(System.Enum,``0,System.Boolean)">
-            <summary>设置标识位</summary>
-            <typeparam name="T"></typeparam>
-            <param name="source"></param>
-            <param name="flag"></param>
-            <param name="value">数值</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.EnumHelper.GetDescription(System.Enum)">
-            <summary>获取枚举字段的注释</summary>
-            <param name="value">数值</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.EnumHelper.GetDescriptions``1">
-            <summary>获取枚举类型的所有字段注释</summary>
-            <typeparam name="TEnum"></typeparam>
-            <returns></returns>
-        </member>
-        <member name="M:System.EnumHelper.GetDescriptions(System.Type)">
-            <summary>获取枚举类型的所有字段注释</summary>
-            <param name="enumType"></param>
-            <returns></returns>
-        </member>
-        <member name="T:System.ListExtension">
-            <summary>扩展List，支持遍历中修改元素</summary>
-        </member>
-        <member name="M:System.ListExtension.Find``1(System.Collections.Generic.IList{``0},System.Predicate{``0})">
-            <summary>线程安全，搜索并返回第一个，支持遍历中修改元素</summary>
-            <param name="list">实体列表</param>
-            <param name="match">条件</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.ListExtension.FindAll``1(System.Collections.Generic.IList{``0},System.Predicate{``0})">
-            <summary>线程安全，搜索并返回第一个，支持遍历中修改元素</summary>
-            <param name="list">实体列表</param>
-            <param name="match">条件</param>
-            <returns></returns>
-        </member>
-        <member name="T:System.StringHelper">
-            <summary>字符串助手类</summary>
-        </member>
-        <member name="M:System.StringHelper.EqualIgnoreCase(System.String,System.String[])">
-            <summary>忽略大小写的字符串相等比较，判断是否以任意一个待比较字符串相等</summary>
-            <param name="value">字符串</param>
-            <param name="strs">待比较字符串数组</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.StartsWithIgnoreCase(System.String,System.String[])">
-            <summary>忽略大小写的字符串开始比较，判断是否以任意一个待比较字符串开始</summary>
-            <param name="value">字符串</param>
-            <param name="strs">待比较字符串数组</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.EndsWithIgnoreCase(System.String,System.String[])">
-            <summary>忽略大小写的字符串结束比较，判断是否以任意一个待比较字符串结束</summary>
-            <param name="value">字符串</param>
-            <param name="strs">待比较字符串数组</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.IsNullOrEmpty(System.String)">
-            <summary>指示指定的字符串是 null 还是 String.Empty 字符串</summary>
-            <param name="value">字符串</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.IsNullOrWhiteSpace(System.String)">
-            <summary>是否空或者空白字符串</summary>
-            <param name="value">字符串</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.Split(System.String,System.String[])">
-            <summary>拆分字符串，过滤空格，无效时返回空数组</summary>
-            <param name="value">字符串</param>
-            <param name="separators">分组分隔符，默认逗号分号</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.SplitAsInt(System.String,System.String[])">
-            <summary>拆分字符串成为整型数组，默认逗号分号分隔，无效时返回空数组</summary>
-            <remarks>过滤空格、过滤无效、不过滤重复</remarks>
-            <param name="value">字符串</param>
-            <param name="separators">分组分隔符，默认逗号分号</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.SplitAsDictionary(System.String,System.String,System.String[])">
-            <summary>拆分字符串成为不区分大小写的可空名值字典。逗号分号分组，等号分隔</summary>
-            <param name="value">字符串</param>
-            <param name="nameValueSeparator">名值分隔符，默认等于号</param>
-            <param name="separators">分组分隔符，默认逗号分号</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.SplitAsDictionary(System.String,System.String,System.String,System.Boolean)">
-            <summary>拆分字符串成为不区分大小写的可空名值字典。逗号分组，等号分隔</summary>
-            <param name="value">字符串</param>
-            <param name="nameValueSeparator">名值分隔符，默认等于号</param>
-            <param name="separator">分组分隔符，默认分号</param>
-            <param name="trimQuotation">去掉括号</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.SplitAsDictionaryT(System.String,System.Char,System.Char,System.Boolean)">
-            <summary>
-            在.netCore需要区分该部分内容
-            </summary>
-            <param name="value"></param>
-            <param name="nameValueSeparator"></param>
-            <param name="separator"></param>
-            <param name="trimQuotation"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.Join(System.Collections.IEnumerable,System.String)">
-            <summary>把一个列表组合成为一个字符串，默认逗号分隔</summary>
-            <param name="value"></param>
-            <param name="separator">组合分隔符，默认逗号</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.Join``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Func{``0,System.String})">
-            <summary>把一个列表组合成为一个字符串，默认逗号分隔</summary>
-            <param name="value"></param>
-            <param name="separator">组合分隔符，默认逗号</param>
-            <param name="func">把对象转为字符串的委托</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.Join``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Func{``0,System.Object})">
-            <summary>把一个列表组合成为一个字符串，默认逗号分隔</summary>
-            <param name="value"></param>
-            <param name="separator">组合分隔符，默认逗号</param>
-            <param name="func">把对象转为字符串的委托</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.Separate(System.Text.StringBuilder,System.String)">
-            <summary>追加分隔符字符串，忽略开头，常用于拼接</summary>
-            <param name="sb">字符串构造者</param>
-            <param name="separator">分隔符</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.GetBytes(System.String,System.Text.Encoding)">
-            <summary>字符串转数组</summary>
-            <param name="value">字符串</param>
-            <param name="encoding">编码，默认utf-8无BOM</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.F(System.String,System.Object[])">
-            <summary>格式化字符串。特别支持无格式化字符串的时间参数</summary>
-            <param name="value">格式字符串</param>
-            <param name="args">参数</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.EnsureStart(System.String,System.String)">
-            <summary>确保字符串以指定的另一字符串开始，不区分大小写</summary>
-            <param name="str">字符串</param>
-            <param name="start"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.EnsureEnd(System.String,System.String)">
-            <summary>确保字符串以指定的另一字符串结束，不区分大小写</summary>
-            <param name="str">字符串</param>
-            <param name="end"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.TrimStart(System.String,System.String[])">
-            <summary>从当前字符串开头移除另一字符串，不区分大小写，循环多次匹配前缀</summary>
-            <param name="str">当前字符串</param>
-            <param name="starts">另一字符串</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.TrimEnd(System.String,System.String[])">
-            <summary>从当前字符串结尾移除另一字符串，不区分大小写，循环多次匹配后缀</summary>
-            <param name="str">当前字符串</param>
-            <param name="ends">另一字符串</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.Substring(System.String,System.String,System.String,System.Int32,System.Int32[])">
-            <summary>从字符串中检索子字符串，在指定头部字符串之后，指定尾部字符串之前</summary>
-            <remarks>常用于截取xml某一个元素等操作</remarks>
-            <param name="str">目标字符串</param>
-            <param name="after">头部字符串，在它之后</param>
-            <param name="before">尾部字符串，在它之前</param>
-            <param name="startIndex">搜索的开始位置</param>
-            <param name="positions">位置数组，两个元素分别记录头尾位置</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.Cut(System.String,System.Int32,System.String)">
-            <summary>根据最大长度截取字符串，并允许以指定空白填充末尾</summary>
-            <param name="str">字符串</param>
-            <param name="maxLength">截取后字符串的最大允许长度，包含后面填充</param>
-            <param name="pad">需要填充在后面的字符串，比如几个圆点</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.CutStart(System.String,System.String[])">
-            <summary>从当前字符串开头移除另一字符串以及之前的部分</summary>
-            <param name="str">当前字符串</param>
-            <param name="starts">另一字符串</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.CutEnd(System.String,System.String[])">
-            <summary>从当前字符串结尾移除另一字符串以及之后的部分</summary>
-            <param name="str">当前字符串</param>
-            <param name="ends">另一字符串</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.LevenshteinSearch(System.String,System.String[])">
-            <summary>编辑距离搜索，从词组中找到最接近关键字的若干匹配项</summary>
-            <remarks>
-            算法代码由@Aimeast 独立完成。http://www.cnblogs.com/Aimeast/archive/2011/09/05/2167844.html
-            </remarks>
-            <param name="key">关键字</param>
-            <param name="words">词组</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.LevenshteinDistance(System.String,System.String)">
-            <summary>编辑距离</summary>
-            <remarks>
-            又称Levenshtein距离（也叫做Edit Distance），是指两个字串之间，由一个转成另一个所需的最少编辑操作次数。
-            许可的编辑操作包括将一个字符替换成另一个字符，插入一个字符，删除一个字符。
-            算法代码由@Aimeast 独立完成。http://www.cnblogs.com/Aimeast/archive/2011/09/05/2167844.html
-            </remarks>
-            <param name="str1"></param>
-            <param name="str2"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.LCSSearch(System.String,System.String[])">
-            <summary>最长公共子序列搜索，从词组中找到最接近关键字的若干匹配项</summary>
-            <remarks>
-            算法代码由@Aimeast 独立完成。http://www.cnblogs.com/Aimeast/archive/2011/09/05/2167844.html
-            </remarks>
-            <param name="key"></param>
-            <param name="words"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.LCSDistance(System.String,System.String[])">
-            <summary>
-            最长公共子序列问题是寻找两个或多个已知数列最长的子序列。
-            一个数列 S，如果分别是两个或多个已知数列的子序列，且是所有符合此条件序列中最长的，则 S 称为已知序列的最长公共子序列。
-            The longest common subsequence (LCS) problem is to find the longest subsequence common to all sequences in a set of sequences (often just two). Note that subsequence is different from a substring, see substring vs. subsequence. It is a classic computer science problem, the basis of diff (a file comparison program that outputs the differences between two files), and has applications in bioinformatics.
-            </summary>
-            <remarks>
-            算法代码由@Aimeast 独立完成。http://www.cnblogs.com/Aimeast/archive/2011/09/05/2167844.html
-            </remarks>
-            <param name="word"></param>
-            <param name="keys">多个关键字。长度必须大于0，必须按照字符串长度升序排列。</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.LCS``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Func{``0,System.String})">
-            <summary>根据列表项成员计算距离</summary>
-            <typeparam name="T"></typeparam>
-            <param name="list"></param>
-            <param name="keys"></param>
-            <param name="keySelector"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.LCSSearch``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Func{``0,System.String},System.Int32)">
-            <summary>在列表项中进行模糊搜索</summary>
-            <typeparam name="T"></typeparam>
-            <param name="list"></param>
-            <param name="keys"></param>
-            <param name="keySelector"></param>
-            <param name="count"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.Match``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Func{``0,System.String})">
-            <summary>模糊匹配</summary>
-            <typeparam name="T"></typeparam>
-            <param name="list"></param>
-            <param name="keys"></param>
-            <param name="keySelector"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.Match(System.String,System.String,System.Int32)">
-            <summary>模糊匹配</summary>
-            <param name="str"></param>
-            <param name="key"></param>
-            <param name="maxError"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.Match``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Func{``0,System.String},System.Int32,System.Double)">
-            <summary>模糊匹配</summary>
-            <typeparam name="T"></typeparam>
-            <param name="list">列表项</param>
-            <param name="keys">关键字</param>
-            <param name="keySelector">匹配字符串选择</param>
-            <param name="count">获取个数</param>
-            <param name="confidence">权重阀值</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.StringHelper.Speak(System.String)">
-            <summary>调用语音引擎说出指定话</summary>
-            <param name="value"></param>
-        </member>
-        <member name="M:System.StringHelper.SpeakAsync(System.String)">
-            <summary>异步调用语音引擎说出指定话。可能导致后来的调用打断前面的语音</summary>
-            <param name="value"></param>
-        </member>
-        <member name="P:System.StringHelper.EnableSpeechTip">
-            <summary>启用语音提示</summary>
-        </member>
-        <member name="M:System.StringHelper.SpeechTip(System.String)">
-            <summary>语音提示操作</summary>
-            <param name="value"></param>
-        </member>
-        <member name="M:System.StringHelper.Run(System.String,System.String,System.Int32,System.Action{System.String},System.Action{System.Diagnostics.Process})">
-            <summary>以隐藏窗口执行命令行</summary>
-            <param name="cmd">文件名</param>
-            <param name="arguments">命令参数</param>
-            <param name="msWait">等待毫秒数</param>
-            <param name="output">进程输出内容。默认为空时输出到日志</param>
-            <param name="onExit">进程退出时执行</param>
-            <returns>进程退出代码</returns>
-        </member>
-        <member name="T:System.IOHelper">
-            <summary>IO工具类</summary>
-        </member>
-        <member name="M:System.IOHelper.Compress(System.IO.Stream,System.IO.Stream)">
-            <summary>压缩数据流</summary>
-            <param name="inStream">输入流</param>
-            <param name="outStream">输出流。如果不指定，则内部实例化一个内存流</param>
-            <remarks>返回输出流，注意此时指针位于末端</remarks>
-        </member>
-        <member name="M:System.IOHelper.Decompress(System.IO.Stream,System.IO.Stream)">
-            <summary>解压缩数据流</summary>
-            <param name="inStream">输入流</param>
-            <param name="outStream">输出流。如果不指定，则内部实例化一个内存流</param>
-            <remarks>返回输出流，注意此时指针位于末端</remarks>
-        </member>
-        <member name="M:System.IOHelper.Compress(System.Byte[])">
-            <summary>压缩字节数组</summary>
-            <param name="data">字节数组</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.Decompress(System.Byte[])">
-            <summary>解压缩字节数组</summary>
-            <param name="data">字节数组</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.CompressGZip(System.IO.Stream,System.IO.Stream)">
-            <summary>压缩数据流</summary>
-            <param name="inStream">输入流</param>
-            <param name="outStream">输出流。如果不指定，则内部实例化一个内存流</param>
-            <remarks>返回输出流，注意此时指针位于末端</remarks>
-        </member>
-        <member name="M:System.IOHelper.DecompressGZip(System.IO.Stream,System.IO.Stream)">
-            <summary>解压缩数据流</summary>
-            <param name="inStream">输入流</param>
-            <param name="outStream">输出流。如果不指定，则内部实例化一个内存流</param>
-            <remarks>返回输出流，注意此时指针位于末端</remarks>
-        </member>
-        <member name="M:System.IOHelper.CopyTo(System.IO.Stream,System.IO.Stream,System.Int32,System.Int32)">
-            <summary>复制数据流</summary>
-            <param name="src">源数据流</param>
-            <param name="des">目的数据流</param>
-            <param name="bufferSize">缓冲区大小，也就是每次复制的大小</param>
-            <param name="max">最大复制字节数</param>
-            <returns>返回复制的总字节数</returns>
-        </member>
-        <member name="M:System.IOHelper.Write(System.IO.Stream,System.IO.Stream,System.Int32,System.Int32)">
-            <summary>把一个数据流写入到另一个数据流</summary>
-            <param name="des">目的数据流</param>
-            <param name="src">源数据流</param>
-            <param name="bufferSize">缓冲区大小，也就是每次复制的大小</param>
-            <param name="max">最大复制字节数</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.Write(System.IO.Stream,System.Byte[])">
-            <summary>把一个字节数组写入到一个数据流</summary>
-            <param name="des">目的数据流</param>
-            <param name="src">源数据流</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.WriteArray(System.IO.Stream,System.Byte[])">
-            <summary>写入字节数组，先写入压缩整数表示的长度</summary>
-            <param name="des"></param>
-            <param name="src"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.ReadArray(System.IO.Stream)">
-            <summary>读取字节数组，先读取压缩整数表示的长度</summary>
-            <param name="des"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.WriteDateTime(System.IO.Stream,System.DateTime)">
-            <summary>写入Unix格式时间，1970年以来秒数，绝对时间，非UTC</summary>
-            <param name="stream"></param>
-            <param name="dt"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.ReadDateTime(System.IO.Stream)">
-            <summary>读取Unix格式时间，1970年以来秒数，绝对时间，非UTC</summary>
-            <param name="stream"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.ReadBytes(System.Byte[],System.Int32,System.Int32)">
-            <summary>复制数组</summary>
-            <param name="src">源数组</param>
-            <param name="offset">起始位置</param>
-            <param name="count">复制字节数</param>
-            <returns>返回复制的总字节数</returns>
-        </member>
-        <member name="M:System.IOHelper.Write(System.Byte[],System.Int32,System.Byte[],System.Int32,System.Int32)">
-            <summary>向字节数组写入一片数据</summary>
-            <param name="dst">目标数组</param>
-            <param name="dstOffset">目标偏移</param>
-            <param name="src">源数组</param>
-            <param name="srcOffset">源数组偏移</param>
-            <param name="count">数量</param>
-            <returns>返回实际写入的字节个数</returns>
-        </member>
-        <member name="M:System.IOHelper.Combine(System.Byte[],System.Byte[],System.Int32,System.Int32)">
-            <summary>合并两个数组</summary>
-            <param name="src">源数组</param>
-            <param name="des">目标数组</param>
-            <param name="offset">起始位置</param>
-            <param name="count">字节数</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.ReadBytes(System.IO.Stream,System.Int64)">
-            <summary>数据流转为字节数组</summary>
-            <remarks>
-            针对MemoryStream进行优化。内存流的Read实现是一个个字节复制，而ToArray是调用内部内存复制方法
-            如果要读完数据，又不支持定位，则采用内存流搬运
-            如果指定长度超过数据流长度，就让其报错，因为那是调用者所期望的值
-            </remarks>
-            <param name="stream">数据流</param>
-            <param name="length">长度，0表示读到结束</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.ToArray(System.IO.Stream)">
-            <summary>数据流转为字节数组，从0开始，无视数据流的当前位置</summary>
-            <param name="stream">数据流</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.ReadTo(System.IO.Stream,System.Byte[],System.Int64,System.Int64)">
-            <summary>从数据流中读取字节数组，直到遇到指定字节数组</summary>
-            <param name="stream">数据流</param>
-            <param name="buffer">字节数组</param>
-            <param name="offset">字节数组中的偏移</param>
-            <param name="length">字节数组中的查找长度</param>
-            <returns>未找到时返回空，0位置范围大小为0的字节数组</returns>
-        </member>
-        <member name="M:System.IOHelper.ReadTo(System.IO.Stream,System.String,System.Text.Encoding)">
-            <summary>从数据流中读取字节数组，直到遇到指定字节数组</summary>
-            <param name="stream">数据流</param>
-            <param name="str"></param>
-            <param name="encoding"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.ReadLine(System.IO.Stream,System.Text.Encoding)">
-            <summary>从数据流中读取一行，直到遇到换行</summary>
-            <param name="stream">数据流</param>
-            <param name="encoding"></param>
-            <returns>未找到返回null，0位置返回String.Empty</returns>
-        </member>
-        <member name="M:System.IOHelper.ToStr(System.IO.Stream,System.Text.Encoding)">
-            <summary>流转换为字符串</summary>
-            <param name="stream">目标流</param>
-            <param name="encoding">编码格式</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.ToStr(System.Byte[],System.Text.Encoding,System.Int32,System.Int32)">
-            <summary>字节数组转换为字符串</summary>
-            <param name="buf">字节数组</param>
-            <param name="encoding">编码格式</param>
-            <param name="offset">字节数组中的偏移</param>
-            <param name="count">字节数组中的查找长度</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.ToUInt16(System.Byte[],System.Int32,System.Boolean)">
-            <summary>从字节数据指定位置读取一个无符号16位整数</summary>
-            <param name="data"></param>
-            <param name="offset">偏移</param>
-            <param name="isLittleEndian">是否小端字节序</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.ToUInt32(System.Byte[],System.Int32,System.Boolean)">
-            <summary>从字节数据指定位置读取一个无符号32位整数</summary>
-            <param name="data"></param>
-            <param name="offset">偏移</param>
-            <param name="isLittleEndian">是否小端字节序</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.ToUInt64(System.Byte[],System.Int32,System.Boolean)">
-            <summary>从字节数据指定位置读取一个无符号64位整数</summary>
-            <param name="data"></param>
-            <param name="offset">偏移</param>
-            <param name="isLittleEndian">是否小端字节序</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.Write(System.Byte[],System.UInt16,System.Int32,System.Boolean)">
-            <summary>向字节数组的指定位置写入一个无符号16位整数</summary>
-            <param name="data"></param>
-            <param name="n">数字</param>
-            <param name="offset">偏移</param>
-            <param name="isLittleEndian">是否小端字节序</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.Write(System.Byte[],System.UInt32,System.Int32,System.Boolean)">
-            <summary>向字节数组的指定位置写入一个无符号32位整数</summary>
-            <param name="data"></param>
-            <param name="n">数字</param>
-            <param name="offset">偏移</param>
-            <param name="isLittleEndian">是否小端字节序</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.Write(System.Byte[],System.UInt64,System.Int32,System.Boolean)">
-            <summary>向字节数组的指定位置写入一个无符号64位整数</summary>
-            <param name="data"></param>
-            <param name="n">数字</param>
-            <param name="offset">偏移</param>
-            <param name="isLittleEndian">是否小端字节序</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.GetBytes(System.UInt16,System.Boolean)">
-            <summary>整数转为字节数组，注意大小端字节序</summary>
-            <param name="value"></param>
-            <param name="isLittleEndian"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.GetBytes(System.Int16,System.Boolean)">
-            <summary>整数转为字节数组，注意大小端字节序</summary>
-            <param name="value"></param>
-            <param name="isLittleEndian"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.GetBytes(System.UInt32,System.Boolean)">
-            <summary>整数转为字节数组，注意大小端字节序</summary>
-            <param name="value"></param>
-            <param name="isLittleEndian"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.GetBytes(System.Int32,System.Boolean)">
-            <summary>整数转为字节数组，注意大小端字节序</summary>
-            <param name="value"></param>
-            <param name="isLittleEndian"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.GetBytes(System.UInt64,System.Boolean)">
-            <summary>整数转为字节数组，注意大小端字节序</summary>
-            <param name="value"></param>
-            <param name="isLittleEndian"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.GetBytes(System.Int64,System.Boolean)">
-            <summary>整数转为字节数组，注意大小端字节序</summary>
-            <param name="value"></param>
-            <param name="isLittleEndian"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.ReadEncodedInt(System.IO.Stream)">
-            <summary>以压缩格式读取32位整数</summary>
-            <param name="stream">数据流</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.ReadEncodedInt64(System.IO.Stream)">
-            <summary>以压缩格式读取32位整数</summary>
-            <param name="stream">数据流</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.TryReadEncodedInt(System.IO.Stream,System.UInt32@)">
-            <summary>尝试读取压缩编码整数</summary>
-            <param name="stream"></param>
-            <param name="value"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.WriteEncodedInt(System.IO.Stream,System.Int64)">
-            <summary>
-            以7位压缩格式写入32位整数，小于7位用1个字节，小于14位用2个字节。
-            由每次写入的一个字节的第一位标记后面的字节是否还是当前数据，所以每个字节实际可利用存储空间只有后7位。
-            </summary>
-            <param name="stream">数据流</param>
-            <param name="value">数值</param>
-            <returns>实际写入字节数</returns>
-        </member>
-        <member name="M:System.IOHelper.GetEncodedInt(System.Int64)">
-            <summary>获取压缩编码整数</summary>
-            <param name="value"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.IndexOf(System.IO.Stream,System.Byte[],System.Int64,System.Int64)">
-            <summary>在数据流中查找字节数组的位置，流指针会移动到结尾</summary>
-            <param name="stream">数据流</param>
-            <param name="buffer">字节数组</param>
-            <param name="offset">字节数组中的偏移</param>
-            <param name="length">字节数组中的查找长度</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.IndexOf(System.Byte[],System.Byte[],System.Int64,System.Int64)">
-            <summary>在字节数组中查找另一个字节数组的位置，不存在则返回-1</summary>
-            <param name="source">字节数组</param>
-            <param name="buffer">另一个字节数组</param>
-            <param name="offset">偏移</param>
-            <param name="length">查找长度</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.IndexOf(System.Byte[],System.Int64,System.Int64,System.Byte[],System.Int64,System.Int64)">
-            <summary>在字节数组中查找另一个字节数组的位置，不存在则返回-1</summary>
-            <param name="source">字节数组</param>
-            <param name="start">源数组起始位置</param>
-            <param name="count">查找长度</param>
-            <param name="buffer">另一个字节数组</param>
-            <param name="offset">偏移</param>
-            <param name="length">查找长度</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.CompareTo(System.Byte[],System.Byte[])">
-            <summary>比较两个字节数组大小。相等返回0，不等则返回不等的位置，如果位置为0，则返回1。</summary>
-            <param name="source"></param>
-            <param name="buffer">缓冲区</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.CompareTo(System.Byte[],System.Int64,System.Int64,System.Byte[],System.Int64,System.Int64)">
-            <summary>比较两个字节数组大小。相等返回0，不等则返回不等的位置，如果位置为0，则返回1。</summary>
-            <param name="source"></param>
-            <param name="start"></param>
-            <param name="count">数量</param>
-            <param name="buffer">缓冲区</param>
-            <param name="offset">偏移</param>
-            <param name="length"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.Split(System.Byte[],System.Byte[])">
-            <summary>字节数组分割</summary>
-            <param name="buf"></param>
-            <param name="sps"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.StartsWith(System.IO.Stream,System.Byte[])">
-            <summary>一个数据流是否以另一个数组开头。如果成功，指针移到目标之后，否则保持指针位置不变。</summary>
-            <param name="source"></param>
-            <param name="buffer">缓冲区</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.EndsWith(System.IO.Stream,System.Byte[])">
-            <summary>一个数据流是否以另一个数组结尾。如果成功，指针移到目标之后，否则保持指针位置不变。</summary>
-            <param name="source"></param>
-            <param name="buffer">缓冲区</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.StartsWith(System.Byte[],System.Byte[])">
-            <summary>一个数组是否以另一个数组开头</summary>
-            <param name="source"></param>
-            <param name="buffer">缓冲区</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.EndsWith(System.Byte[],System.Byte[])">
-            <summary>一个数组是否以另一个数组结尾</summary>
-            <param name="source"></param>
-            <param name="buffer">缓冲区</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.Reverse(System.Byte[])">
-            <summary>倒序、更换字节序</summary>
-            <param name="buf">字节数组</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.ToHex(System.Byte[],System.Int32,System.Int32)">
-            <summary>把字节数组编码为十六进制字符串</summary>
-            <param name="data">字节数组</param>
-            <param name="offset">偏移</param>
-            <param name="count">数量。超过实际数量时，使用实际数量</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.ToHex(System.Byte[],System.String,System.Int32,System.Int32)">
-            <summary>把字节数组编码为十六进制字符串，带有分隔符和分组功能</summary>
-            <param name="data">字节数组</param>
-            <param name="separate">分隔符</param>
-            <param name="groupSize">分组大小，为0时对每个字节应用分隔符，否则对每个分组使用</param>
-            <param name="maxLength">最大显示多少个字节。默认-1显示全部</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.ToHex(System.String,System.Int32,System.Int32)">
-            <summary>解密</summary>
-            <param name="data">Hex编码的字符串</param>
-            <param name="startIndex">起始位置</param>
-            <param name="length">长度</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.ToBase64(System.Byte[],System.Int32,System.Int32,System.Boolean)">
-            <summary>字节数组转为Base64编码</summary>
-            <param name="data"></param>
-            <param name="offset"></param>
-            <param name="count"></param>
-            <param name="lineBreak">是否换行显示</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.ToUrlBase64(System.Byte[],System.Int32,System.Int32)">
-            <summary>字节数组转为Url改进型Base64编码</summary>
-            <param name="data"></param>
-            <param name="offset"></param>
-            <param name="count"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IOHelper.ToBase64(System.String)">
-            <summary>Base64字符串转为字节数组</summary>
-            <param name="data"></param>
-            <returns></returns>
-        </member>
-        <member name="T:System.IO.PathHelper">
-            <summary>路径操作帮助</summary>
-        </member>
-        <member name="P:System.IO.PathHelper.BaseDirectory">
-            <summary>基础目录。GetFullPath依赖于此，默认为当前应用程序域基础目录</summary>
-        </member>
-        <member name="M:System.IO.PathHelper.GetFullPath(System.String)">
-            <summary>获取文件或目录的全路径，过滤相对目录</summary>
-            <remarks>不确保目录后面一定有分隔符，是否有分隔符由原始路径末尾决定</remarks>
-            <param name="path">文件或目录</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IO.PathHelper.GetBasePath(System.String)">
-            <summary>获取文件或目录基于应用程序域基目录的全路径，过滤相对目录</summary>
-            <remarks>不确保目录后面一定有分隔符，是否有分隔符由原始路径末尾决定</remarks>
-            <param name="path">文件或目录</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IO.PathHelper.GetCurrentPath(System.String)">
-            <summary>获取文件或目录基于当前目录的全路径，过滤相对目录</summary>
-            <remarks>不确保目录后面一定有分隔符，是否有分隔符由原始路径末尾决定</remarks>
-            <param name="path">文件或目录</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IO.PathHelper.EnsureDirectory(System.String,System.Boolean)">
-            <summary>确保目录存在，若不存在则创建</summary>
-            <remarks>
-            斜杠结尾的路径一定是目录，无视第二参数；
-            默认是文件，这样子只需要确保上一层目录存在即可，否则如果把文件当成了目录，目录的创建会导致文件无法创建。
-            </remarks>
-            <param name="path">文件路径或目录路径，斜杠结尾的路径一定是目录，无视第二参数</param>
-            <param name="isfile">该路径是否是否文件路径。文件路径需要取目录部分</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IO.PathHelper.CombinePath(System.String,System.String[])">
-            <summary>合并多段路径</summary>
-            <param name="path"></param>
-            <param name="ps"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IO.PathHelper.AsFile(System.String)">
-            <summary>文件路径作为文件信息</summary>
-            <param name="file"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IO.PathHelper.ReadBytes(System.IO.FileInfo,System.Int32,System.Int32)">
-            <summary>从文件中读取数据</summary>
-            <param name="file"></param>
-            <param name="offset"></param>
-            <param name="count"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IO.PathHelper.WriteBytes(System.IO.FileInfo,System.Byte[],System.Int32)">
-            <summary>把数据写入文件指定位置</summary>
-            <param name="file"></param>
-            <param name="data"></param>
-            <param name="offset"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IO.PathHelper.ReadText(System.IO.FileInfo,System.Text.Encoding)">
-            <summary>读取所有文本，自动检测编码</summary>
-            <remarks>性能较File.ReadAllText略慢，可通过提前检测BOM编码来优化</remarks>
-            <param name="file"></param>
-            <param name="encoding"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IO.PathHelper.WriteText(System.IO.FileInfo,System.String,System.Text.Encoding)">
-            <summary>把文本写入文件，自动检测编码</summary>
-            <param name="file"></param>
-            <param name="text"></param>
-            <param name="encoding"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IO.PathHelper.CopyToIfNewer(System.IO.FileInfo,System.String)">
-            <summary>复制到目标文件，目标文件必须已存在，且源文件较新</summary>
-            <param name="fi">源文件</param>
-            <param name="destFileName">目标文件</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IO.PathHelper.OpenRead``1(System.IO.FileInfo,System.Func{System.IO.FileStream,``0})">
-            <summary>打开并读取</summary>
-            <typeparam name="T">返回类型</typeparam>
-            <param name="file">文件信息</param>
-            <param name="func">要对文件流操作的委托</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IO.PathHelper.OpenWrite``1(System.IO.FileInfo,System.Func{System.IO.FileStream,``0})">
-            <summary>打开并写入</summary>
-            <typeparam name="T">返回类型</typeparam>
-            <param name="file">文件信息</param>
-            <param name="func">要对文件流操作的委托</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IO.PathHelper.Extract(System.IO.FileInfo,System.String,System.Boolean)">
-            <summary>解压缩</summary>
-            <param name="fi"></param>
-            <param name="destDir"></param>
-            <param name="overwrite">是否覆盖目标同名文件</param>
-        </member>
-        <member name="M:System.IO.PathHelper.Compress(System.IO.FileInfo,System.String)">
-            <summary>压缩文件</summary>
-            <param name="fi"></param>
-            <param name="destFile"></param>
-        </member>
-        <member name="M:System.IO.PathHelper.AsDirectory(System.String)">
-            <summary>路径作为目录信息</summary>
-            <param name="dir"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IO.PathHelper.GetAllFiles(System.IO.DirectoryInfo,System.String,System.Boolean)">
-            <summary>获取目录内所有符合条件的文件，支持多文件扩展匹配</summary>
-            <param name="di">目录</param>
-            <param name="exts">文件扩展列表。比如*.exe;*.dll;*.config</param>
-            <param name="allSub">是否包含所有子孙目录文件</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IO.PathHelper.CopyTo(System.IO.DirectoryInfo,System.String,System.String,System.Boolean,System.Action{System.String})">
-            <summary>复制目录中的文件</summary>
-            <param name="di">源目录</param>
-            <param name="destDirName">目标目录</param>
-            <param name="exts">文件扩展列表。比如*.exe;*.dll;*.config</param>
-            <param name="allSub">是否包含所有子孙目录文件</param>
-            <param name="callback">复制每一个文件之前的回调</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IO.PathHelper.CopyToIfNewer(System.IO.DirectoryInfo,System.String,System.String,System.Boolean,System.Action{System.String})">
-            <summary>对比源目录和目标目录，复制双方都存在且源目录较新的文件</summary>
-            <param name="di">源目录</param>
-            <param name="destDirName">目标目录</param>
-            <param name="exts">文件扩展列表。比如*.exe;*.dll;*.config</param>
-            <param name="allSub">是否包含所有子孙目录文件</param>
-            <param name="callback">复制每一个文件之前的回调</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IO.PathHelper.CopyIfNewer(System.IO.DirectoryInfo,System.String[],System.String,System.Boolean)">
-            <summary>从多个目标目录复制较新文件到当前目录</summary>
-            <param name="di">当前目录</param>
-            <param name="source">多个目标目录</param>
-            <param name="exts">文件扩展列表。比如*.exe;*.dll;*.config</param>
-            <param name="allSub">是否包含所有子孙目录文件</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.IO.PathHelper.Compress(System.IO.DirectoryInfo,System.String)">
-            <summary>压缩</summary>
-            <param name="di"></param>
-            <param name="destFile"></param>
-        </member>
-        <member name="T:System.ModelExtension">
-            <summary>模型扩展</summary>
-        </member>
-        <member name="M:System.ModelExtension.GetService``1(System.IServiceProvider)">
-            <summary>获取指定类型的服务对象</summary>
-            <typeparam name="T"></typeparam>
-            <param name="provider"></param>
-            <returns></returns>
-        </member>
-        <member name="T:System.ObjectContainerHelper">
-            <summary>对象容器助手。扩展方法专用</summary>
-        </member>
-        <member name="M:System.ObjectContainerHelper.Register``2(NewLife.Model.IObjectContainer,System.Object,System.Int32)">
-            <summary>注册类型和名称</summary>
-            <typeparam name="TInterface">接口类型</typeparam>
-            <typeparam name="TImplement">实现类型</typeparam>
-            <param name="container">对象容器</param>
-            <param name="id">标识</param>
-            <param name="priority">优先级</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.ObjectContainerHelper.Register``1(NewLife.Model.IObjectContainer,System.Object,System.Object,System.Int32)">
-            <summary>注册类型指定名称的实例</summary>
-            <typeparam name="TInterface">接口类型</typeparam>
-            <param name="container">对象容器</param>
-            <param name="instance">实例</param>
-            <param name="id">标识</param>
-            <param name="priority">优先级</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.ObjectContainerHelper.Resolve``1(NewLife.Model.IObjectContainer,System.Object)">
-            <summary>解析类型指定名称的实例</summary>
-            <typeparam name="TInterface">接口类型</typeparam>
-            <param name="container">对象容器</param>
-            <param name="id">标识</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.ObjectContainerHelper.ResolveInstance``1(NewLife.Model.IObjectContainer,System.Object)">
-            <summary>解析类型指定名称的实例</summary>
-            <typeparam name="TInterface">接口类型</typeparam>
-            <param name="container">对象容器</param>
-            <param name="id">标识</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.ObjectContainerHelper.AutoRegister``2(NewLife.Model.IObjectContainer)">
-            <summary>遍历所有程序集的所有类型，自动注册实现了指定接口或基类的类型。如果没有注册任何实现，则默认注册第一个排除类型</summary>
-            <remarks>自动注册一般用于单实例功能扩展型接口</remarks>
-            <typeparam name="TInterface">接口类型</typeparam>
-            <typeparam name="TImplement">要排除的类型，一般是内部默认实现</typeparam>
-            <param name="container">对象容器</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.ObjectContainerHelper.ResolveType``1(NewLife.Model.IObjectContainer,System.Object)">
-            <summary>解析接口指定名称的实现类型</summary>
-            <typeparam name="TInterface">接口类型</typeparam>
-            <param name="container">对象容器</param>
-            <param name="id">标识</param>
-            <returns></returns>
-        </member>
-        <member name="T:System.NetHelper">
-            <summary>网络工具类</summary>
-        </member>
-        <member name="M:System.NetHelper.SetTcpKeepAlive(System.Net.Sockets.Socket,System.Boolean,System.Int32,System.Int32)">
-            <summary>设置超时检测时间和检测间隔</summary>
-            <param name="socket">要设置的Socket对象</param>
-            <param name="iskeepalive">是否启用Keep-Alive</param>
-            <param name="starttime">多长时间后开始第一次探测（单位：毫秒）</param>
-            <param name="interval">探测时间间隔（单位：毫秒）</param>
-        </member>
-        <member name="M:System.NetHelper.ParseAddress(System.String)">
-            <summary>分析地址，根据IP或者域名得到IP地址，缓存60秒，异步更新</summary>
-            <param name="hostname"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.ParseEndPoint(System.String,System.Int32)">
-            <summary>分析网络终结点</summary>
-            <param name="address">地址，可以不带端口</param>
-            <param name="defaultPort">地址不带端口时指定的默认端口</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.GetRightAny(System.Net.IPAddress,System.Net.Sockets.AddressFamily)">
-            <summary>针对IPv4和IPv6获取合适的Any地址</summary>
-            <remarks>除了Any地址以为，其它地址不具备等效性</remarks>
-            <param name="address"></param>
-            <param name="family"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.IsAny(System.Net.IPAddress)">
-            <summary>是否Any地址，同时处理IPv4和IPv6</summary>
-            <param name="address"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.IsAny(System.Net.EndPoint)">
-            <summary>是否Any结点</summary>
-            <param name="endpoint"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.IsIPv4(System.Net.IPAddress)">
-            <summary>是否IPv4地址</summary>
-            <param name="address"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.IsLocal(System.Net.IPAddress)">
-            <summary>是否本地地址</summary>
-            <param name="address"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.GetRelativeAddress(System.Net.IPAddress,System.Net.IPAddress)">
-            <summary>获取相对于指定远程地址的本地地址</summary>
-            <param name="address"></param>
-            <param name="remote"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.GetRelativeEndPoint(System.Net.IPEndPoint,System.Net.IPAddress)">
-            <summary>获取相对于指定远程地址的本地地址</summary>
-            <param name="local"></param>
-            <param name="remote"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.CheckPort(System.Net.IPAddress,NewLife.Net.NetType,System.Int32)">
-            <summary>指定地址的指定端口是否已被使用，似乎没办法判断IPv6地址</summary>
-            <param name="protocol"></param>
-            <param name="address"></param>
-            <param name="port"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.CheckPort(NewLife.Net.NetUri)">
-            <summary>检查该协议的地址端口是否已经呗使用</summary>
-            <param name="uri"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.GetActiveInterfaces">
-            <summary>获取活动的接口信息</summary>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.GetDhcps">
-            <summary>获取可用的DHCP地址</summary>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.GetDns">
-            <summary>获取可用的DNS地址</summary>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.GetGateways">
-            <summary>获取可用的网关地址</summary>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.GetIPs">
-            <summary>获取可用的IP地址</summary>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.GetIPsWithCache">
-            <summary>获取本机可用IP地址，缓存60秒，异步更新</summary>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.GetMulticasts">
-            <summary>获取可用的多播地址</summary>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.GetMacs">
-            <summary>获取以太网MAC地址</summary>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.MyIP">
-            <summary>获取本地第一个IPv4地址</summary>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.MyIPv6">
-            <summary>获取本地第一个IPv6地址</summary>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.Wake(System.String[])">
-            <summary>唤醒指定MAC地址的计算机</summary>
-            <param name="macs"></param>
-        </member>
-        <member name="M:System.NetHelper.GetMac(System.Net.IPAddress)">
-            <summary>根据IP地址获取MAC地址</summary>
-            <param name="ip"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.GetAddress(System.Net.IPAddress)">
-            <summary>获取IP地址的物理地址位置</summary>
-            <param name="addr"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.IPToAddress(System.String)">
-            <summary>根据字符串形式IP地址转为物理地址</summary>
-            <param name="addr"></param>
-            <returns></returns>
-        </member>
-        <member name="T:System.NetHelper.IPProvider">
-            <summary>IP地址提供者接口</summary>
-        </member>
-        <member name="M:System.NetHelper.IPProvider.GetAddress(System.Net.IPAddress)">
-            <summary>获取IP地址的物理地址位置</summary>
-            <param name="addr"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.CreateClient(NewLife.Net.NetUri)">
-            <summary>根据本地网络标识创建客户端</summary>
-            <param name="local"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.NetHelper.CreateRemote(NewLife.Net.NetUri)">
-            <summary>根据远程网络标识创建客户端</summary>
-            <param name="remote"></param>
-            <returns></returns>
-        </member>
-        <member name="T:System.AttributeX">
-            <summary>特性辅助类</summary>
-        </member>
-        <member name="M:System.AttributeX.GetCustomAttributes``1(System.Reflection.Assembly)">
-            <summary>获取自定义属性，带有缓存功能，避免因.Net内部GetCustomAttributes没有缓存而带来的损耗</summary>
-            <typeparam name="TAttribute"></typeparam>
-            <param name="assembly"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.AttributeX.GetDisplayName(System.Reflection.MemberInfo,System.Boolean)">
-            <summary>获取成员绑定的显示名，优先DisplayName，然后Description</summary>
-            <param name="member"></param>
-            <param name="inherit"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.AttributeX.GetDescription(System.Reflection.MemberInfo,System.Boolean)">
-            <summary>获取成员绑定的显示名，优先DisplayName，然后Description</summary>
-            <param name="member"></param>
-            <param name="inherit"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.AttributeX.GetCustomAttributeValue``2(System.Reflection.Assembly)">
-            <summary>获取自定义属性的值。可用于ReflectionOnly加载的程序集</summary>
-            <typeparam name="TAttribute"></typeparam>
-            <typeparam name="TResult"></typeparam>
-            <returns></returns>
-        </member>
-        <member name="M:System.AttributeX.GetCustomAttributeValue``2(System.Reflection.MemberInfo,System.Boolean)">
-            <summary>获取自定义属性的值。可用于ReflectionOnly加载的程序集</summary>
-            <typeparam name="TAttribute"></typeparam>
-            <typeparam name="TResult"></typeparam>
-            <param name="target">目标对象</param>
-            <param name="inherit">是否递归</param>
-            <returns></returns>
-        </member>
-        <member name="T:System.SecurityHelper">
-            <summary>安全算法</summary>
-        </member>
-        <member name="M:System.SecurityHelper.MD5(System.Byte[])">
-            <summary>MD5散列</summary>
-            <param name="data"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.SecurityHelper.MD5(System.String,System.Text.Encoding)">
-            <summary>MD5散列</summary>
-            <param name="data"></param>
-            <param name="encoding">字符串编码，默认Default</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.SecurityHelper.MD5_16(System.String,System.Text.Encoding)">
-            <summary>MD5散列</summary>
-            <param name="data"></param>
-            <param name="encoding">字符串编码，默认Default</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.SecurityHelper.Crc(System.Byte[])">
-            <summary>Crc散列</summary>
-            <param name="data"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.SecurityHelper.Crc16(System.Byte[])">
-            <summary>Crc16散列</summary>
-            <param name="data"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.SecurityHelper.SHA1(System.Byte[],System.Byte[])">
-            <summary>SHA128</summary>
-            <param name="data"></param>
-            <param name="key"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.SecurityHelper.SHA256(System.Byte[],System.Byte[])">
-            <summary>SHA256</summary>
-            <param name="data"></param>
-            <param name="key"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.SecurityHelper.SHA384(System.Byte[],System.Byte[])">
-            <summary>SHA384</summary>
-            <param name="data"></param>
-            <param name="key"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.SecurityHelper.SHA512(System.Byte[],System.Byte[])">
-            <summary>SHA512</summary>
-            <param name="data"></param>
-            <param name="key"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.SecurityHelper.Encrypt(System.Security.Cryptography.SymmetricAlgorithm,System.IO.Stream,System.IO.Stream)">
-            <summary>对称加密算法扩展</summary>
-            <remarks>注意：CryptoStream会把 outstream 数据流关闭</remarks>
-            <param name="sa"></param>
-            <param name="instream"></param>
-            <param name="outstream"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.SecurityHelper.Encrypt(System.Security.Cryptography.SymmetricAlgorithm,System.Byte[],System.Byte[],System.Security.Cryptography.CipherMode,System.Security.Cryptography.PaddingMode)">
-            <summary>对称加密算法扩展</summary>
-            <param name="sa">算法</param>
-            <param name="data">数据</param>
-            <param name="pass">密码</param>
-            <param name="mode">模式。.Net默认CBC，Java默认ECB</param>
-            <param name="padding">填充算法。默认PKCS7，等同Java的PKCS5</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.SecurityHelper.Descrypt(System.Security.Cryptography.SymmetricAlgorithm,System.IO.Stream,System.IO.Stream)">
-            <summary>对称解密算法扩展
-            <para>注意：CryptoStream会把 instream 数据流关闭</para>
-            </summary>
-            <param name="sa"></param>
-            <param name="instream"></param>
-            <param name="outstream"></param>
-            <returns></returns>
-        </member>
-        <member name="M:System.SecurityHelper.Descrypt(System.Security.Cryptography.SymmetricAlgorithm,System.Byte[],System.Byte[],System.Security.Cryptography.CipherMode,System.Security.Cryptography.PaddingMode)">
-            <summary>对称解密算法扩展</summary>
-            <param name="sa">算法</param>
-            <param name="data">数据</param>
-            <param name="pass">密码</param>
-            <param name="mode">模式。.Net默认CBC，Java默认ECB</param>
-            <param name="padding">填充算法。默认PKCS7，等同Java的PKCS5</param>
-            <returns></returns>
-        </member>
-        <member name="M:System.SecurityHelper.RC4(System.Byte[],System.Byte[])">
-            <summary>RC4对称加密算法</summary>
-            <param name="data"></param>
-            <param name="pass"></param>
-            <returns></returns>
-        </member>
         <member name="T:NewLife.IP.Ip">
             <summary>IP搜索</summary>
         </member>
@@ -2225,9 +741,10 @@
         <member name="P:NewLife.Caching.Redis.Pool">
             <summary>连接池</summary>
         </member>
-        <member name="M:NewLife.Caching.Redis.Execute``1(System.Func{NewLife.Caching.RedisClient,``0},System.Boolean)">
+        <member name="M:NewLife.Caching.Redis.Execute``1(System.String,System.Func{NewLife.Caching.RedisClient,``0},System.Boolean)">
             <summary>执行命令</summary>
             <typeparam name="TResult">返回类型</typeparam>
+            <param name="key">命令key，用于选择集群节点</param>
             <param name="func">回调函数</param>
             <param name="write">是否写入操作</param>
             <returns></returns>
@@ -2688,6 +1205,62 @@
         </member>
         <member name="M:NewLife.Collections.DictionaryCache`2.GetEnumerator">
             <summary>枚举</summary>
+            <returns></returns>
+        </member>
+        <member name="T:NewLife.Collections.ICluster`2">
+            <summary>集群管理</summary>
+            <typeparam name="TKey"></typeparam>
+            <typeparam name="TValue"></typeparam>
+        </member>
+        <member name="P:NewLife.Collections.ICluster`2.GetItems">
+            <summary>资源列表</summary>
+        </member>
+        <member name="M:NewLife.Collections.ICluster`2.Open">
+            <summary>打开</summary>
+        </member>
+        <member name="M:NewLife.Collections.ICluster`2.Close(System.String)">
+            <summary>关闭</summary>
+            <param name="reason">关闭原因。便于日志分析</param>
+            <returns>是否成功</returns>
+        </member>
+        <member name="M:NewLife.Collections.ICluster`2.Get">
+            <summary>从集群中获取资源</summary>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Collections.ICluster`2.Put(`1)">
+            <summary>归还</summary>
+            <param name="value"></param>
+        </member>
+        <member name="T:NewLife.Collections.ClusterException">
+            <summary>集群异常</summary>
+        </member>
+        <member name="P:NewLife.Collections.ClusterException.Resource">
+            <summary>资源</summary>
+        </member>
+        <member name="M:NewLife.Collections.ClusterException.#ctor(System.String,System.Exception)">
+            <summary>实例化</summary>
+            <param name="res"></param>
+            <param name="inner"></param>
+        </member>
+        <member name="T:NewLife.Collections.ClusterHelper">
+            <summary>集群助手</summary>
+        </member>
+        <member name="M:NewLife.Collections.ClusterHelper.Invoke``3(NewLife.Collections.ICluster{``0,``1},System.Func{``1,``2})">
+            <summary>借助集群资源处理事务</summary>
+            <typeparam name="TKey"></typeparam>
+            <typeparam name="TValue"></typeparam>
+            <typeparam name="TResult"></typeparam>
+            <param name="cluster"></param>
+            <param name="func"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Collections.ClusterHelper.InvokeAll``3(NewLife.Collections.ICluster{``0,``1},System.Func{``1,``2})">
+            <summary>对集群进行多次调用</summary>
+            <typeparam name="TKey"></typeparam>
+            <typeparam name="TValue"></typeparam>
+            <typeparam name="TResult"></typeparam>
+            <param name="cluster"></param>
+            <param name="func"></param>
             <returns></returns>
         </member>
         <member name="T:NewLife.Collections.IPool`1">
@@ -3471,7 +2044,8 @@
             <param name="seg"></param>
         </member>
         <member name="M:NewLife.Data.Packet.#ctor(System.IO.Stream)">
-            <summary>从可扩展内存流实例化</summary>
+            <summary>从可扩展内存流实例化，尝试窃取内存流内部的字节数组，失败后拷贝</summary>
+            <remarks>因数据包内数组窃取自内存流，需要特别小心，避免多线程共用</remarks>
             <param name="stream"></param>
         </member>
         <member name="P:NewLife.Data.Packet.Item(System.Int32)">
@@ -3521,7 +2095,7 @@
             <summary>获取封包的数据流形式</summary>
             <returns></returns>
         </member>
-        <member name="M:NewLife.Data.Packet.WriteTo(System.IO.Stream)">
+        <member name="M:NewLife.Data.Packet.CopyTo(System.IO.Stream)">
             <summary>把封包写入到数据流</summary>
             <param name="stream"></param>
         </member>
@@ -3827,6 +2401,166 @@
             <param name="ex"></param>
             <returns></returns>
         </member>
+        <member name="T:NewLife.Expressions.MathExpression">
+            <summary>数学表达式</summary>
+        </member>
+        <member name="F:NewLife.Expressions.MathExpression.AddChar">
+            <summary>加法</summary>
+        </member>
+        <member name="F:NewLife.Expressions.MathExpression.SubtractChar">
+            <summary>减法</summary>
+        </member>
+        <member name="F:NewLife.Expressions.MathExpression.MultiplyChar">
+            <summary>乘法</summary>
+        </member>
+        <member name="F:NewLife.Expressions.MathExpression.DivideChar">
+            <summary>除法</summary>
+        </member>
+        <member name="M:NewLife.Expressions.MathExpression.#ctor">
+            <summary>实例化</summary>
+        </member>
+        <member name="M:NewLife.Expressions.MathExpression.GetOperationLevel(System.String)">
+            <summary>计算运算符优先级</summary>
+            <param name="op"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Expressions.MathExpression.AdapteAndReplace(System.String)">
+            <summary>适配和替换</summary>
+            <param name="expression"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Expressions.MathExpression.Complie(System.String,System.Object[])">
+            <summary>解逆波兰表达式</summary>
+            <param name="expression">标准逆波兰表达式</param>
+            <param name="args"></param>
+            <returns>逆波兰表达式的解</returns>
+        </member>
+        <member name="M:NewLife.Expressions.MathExpression.IsValid(System.String[])">
+            <summary>是否有效</summary>
+            <param name="arr"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Expressions.MathExpression.ToDouble(System.String)">
+            <summary>转为浮点数</summary>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Expressions.MathExpression.ComplieRpnExp(System.Double,System.Double,System.String)">
+            <summary>
+            计算逆波兰表达式
+            </summary>
+            <param name="last">最后压入数字堆栈的数字</param>
+            <param name="first">首先压入数字堆栈的数字</param>
+            <param name="op">操作运算符</param>
+            <returns>返回计算结果</returns>
+        </member>
+        <member name="T:NewLife.Expressions.RpnExpression">
+            <summary>逆波兰表达式</summary>
+        </member>
+        <member name="F:NewLife.Expressions.RpnExpression.LeftBracket">
+            <summary>左括号</summary>
+        </member>
+        <member name="F:NewLife.Expressions.RpnExpression.RightBracket">
+            <summary>右括号</summary>
+        </member>
+        <member name="F:NewLife.Expressions.RpnExpression.JoinChar">
+            <summary>连接符</summary>
+        </member>
+        <member name="F:NewLife.Expressions.RpnExpression.EmptyChar">
+            <summary>空格</summary>
+        </member>
+        <member name="P:NewLife.Expressions.RpnExpression.OperationChars">
+            <summary>操作符数组</summary>
+        </member>
+        <member name="M:NewLife.Expressions.RpnExpression.IsBracket(System.String)">
+            <summary>是否括号</summary>
+            <param name="ch"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Expressions.RpnExpression.IsBracket(System.Char)">
+            <summary>是否括号</summary>
+            <param name="ch"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Expressions.RpnExpression.GetOperationLevel(System.String)">
+            <summary>计算操作等级</summary>
+            <param name="op"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Expressions.RpnExpression.IsBracketMatch(System.String)">
+            <summary>是否括号匹配</summary>
+            <param name="expression"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Expressions.RpnExpression.AdapteAndReplace(System.String)">
+            <summary>适配器和替换</summary>
+            <param name="expression"></param>
+            <returns></returns>
+        </member>
+        <member name="P:NewLife.Expressions.RpnExpression.Value">
+            <summary>值</summary>
+        </member>
+        <member name="M:NewLife.Expressions.RpnExpression.ToExpression(System.String)">
+            <summary>将中缀表达式转换为逆波兰表达式</summary>
+            <param name="expression">标准中缀表达式</param>
+            <returns>标准逆波兰表达式</returns>
+        </member>
+        <member name="M:NewLife.Expressions.RpnExpression.IsValid(System.String[])">
+            <summary>是否有效</summary>
+            <param name="splitArray"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Expressions.RpnExpression.Complie(System.String,System.Object[])">
+            <summary>编译计算</summary>
+            <param name="expression"></param>
+            <param name="args"></param>
+            <returns></returns>
+        </member>
+        <member name="T:NewLife.Expressions.UnionExpresion">
+            <summary>与或非表达式</summary>
+        </member>
+        <member name="F:NewLife.Expressions.UnionExpresion.AndChar">
+            <summary>位与</summary>
+        </member>
+        <member name="F:NewLife.Expressions.UnionExpresion.OrChar">
+            <summary>位或</summary>
+        </member>
+        <member name="M:NewLife.Expressions.UnionExpresion.#ctor">
+            <summary>实例化</summary>
+        </member>
+        <member name="M:NewLife.Expressions.UnionExpresion.GetOperationLevel(System.String)">
+            <summary>操作符等级</summary>
+            <param name="op"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Expressions.UnionExpresion.AdapteAndReplace(System.String)">
+            <summary>适配替换</summary>
+            <param name="expression"></param>
+            <returns></returns>
+        </member>
+        <member name="P:NewLife.Expressions.UnionExpresion.Container">
+            <summary>容器</summary>
+        </member>
+        <member name="M:NewLife.Expressions.UnionExpresion.Complie(System.String,System.Object[])">
+            <summary>解逆波兰表达式</summary>
+            <param name="expression">标准逆波兰表达式</param>
+            <param name="args"></param>
+            <returns>逆波兰表达式的解</returns>
+        </member>
+        <member name="M:NewLife.Expressions.UnionExpresion.IsValid(System.String[])">
+            <summary>是否有效</summary>
+            <param name="arr"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Expressions.UnionExpresion.GetAllMarks">
+            <summary>所有掩码</summary>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Extension.SpeakProvider.SpeakAsyncCancelAll">
+            <summary>
+            停止话音播报
+            </summary>
+        </member>
         <member name="T:NewLife.Http.HttpBase">
             <summary>Http请求响应基类</summary>
         </member>
@@ -4090,7 +2824,7 @@
             <summary>状态码</summary>
         </member>
         <member name="P:NewLife.Http.TinyHttpClient.Timeout">
-            <summary>超时时间。默认15000ms</summary>
+            <summary>超时时间。默认15s</summary>
         </member>
         <member name="P:NewLife.Http.TinyHttpClient.Headers">
             <summary>头部集合</summary>
@@ -4099,15 +2833,27 @@
             <summary>销毁</summary>
             <param name="disposing"></param>
         </member>
-        <member name="M:NewLife.Http.TinyHttpClient.SendDataAsync(NewLife.Net.NetUri,NewLife.Data.Packet)">
+        <member name="M:NewLife.Http.TinyHttpClient.SendDataAsync(System.Uri,NewLife.Data.Packet)">
             <summary>异步请求</summary>
-            <param name="remote"></param>
+            <param name="uri"></param>
             <param name="request"></param>
             <returns></returns>
         </member>
-        <member name="M:NewLife.Http.TinyHttpClient.SendAsync(System.String,System.Byte[])">
+        <member name="M:NewLife.Http.TinyHttpClient.SendAsync(System.Uri,System.Byte[])">
             <summary>异步发出请求，并接收响应</summary>
-            <param name="url"></param>
+            <param name="uri"></param>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Http.TinyHttpClient.SendData(System.Uri,NewLife.Data.Packet)">
+            <summary>同步请求</summary>
+            <param name="uri"></param>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Http.TinyHttpClient.Send(System.Uri,System.Byte[])">
+            <summary>异步发出请求，并接收响应</summary>
+            <param name="uri"></param>
             <param name="data"></param>
             <returns></returns>
         </member>
@@ -4122,9 +2868,19 @@
             <param name="rs"></param>
             <returns></returns>
         </member>
-        <member name="M:NewLife.Http.TinyHttpClient.GetAsync(System.String)">
+        <member name="M:NewLife.Http.TinyHttpClient.GetPool(System.String)">
+            <summary>根据主机获取对象池</summary>
+            <param name="host"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Http.TinyHttpClient.GetStringAsync(System.String)">
             <summary>异步获取</summary>
             <param name="url">地址</param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Http.TinyHttpClient.GetString(System.String)">
+            <summary>同步获取</summary>
+            <param name="url"></param>
             <returns></returns>
         </member>
         <member name="T:NewLife.IO.CsvFile">
@@ -4217,6 +2973,130 @@
             <param name="buf"></param>
             <param name="pos"></param>
             <returns></returns>
+        </member>
+        <member name="T:NewLife.IO.FileSource">
+            <summary>文件资源</summary>
+        </member>
+        <member name="M:NewLife.IO.FileSource.ReleaseFile(System.Reflection.Assembly,System.String,System.String,System.Boolean)">
+            <summary>释放文件</summary>
+            <param name="asm"></param>
+            <param name="fileName"></param>
+            <param name="destFile"></param>
+            <param name="overWrite"></param>
+        </member>
+        <member name="M:NewLife.IO.FileSource.ReleaseFolder(System.Reflection.Assembly,System.String,System.String,System.Boolean)">
+            <summary>释放文件夹</summary>
+            <param name="asm"></param>
+            <param name="prefix"></param>
+            <param name="dest"></param>
+            <param name="overWrite"></param>
+        </member>
+        <member name="M:NewLife.IO.FileSource.ReleaseFolder(System.Reflection.Assembly,System.String,System.String,System.Boolean,System.Func{System.String,System.String})">
+            <summary>释放文件夹</summary>
+            <param name="asm"></param>
+            <param name="prefix"></param>
+            <param name="dest"></param>
+            <param name="overWrite"></param>
+            <param name="filenameResolver"></param>
+        </member>
+        <member name="M:NewLife.IO.FileSource.GetFileResource(System.Reflection.Assembly,System.String)">
+            <summary>获取文件资源</summary>
+            <param name="asm"></param>
+            <param name="filename"></param>
+            <returns></returns>
+        </member>
+        <member name="T:NewLife.Json.JsonConfig`1">
+            <summary>Json配置文件基类</summary>
+            <remarks>
+            标准用法：TConfig.Current
+            
+            配置实体类通过<see cref="T:NewLife.Json.JsonConfigFileAttribute"/>特性指定配置文件路径以及自动更新时间。
+            Current将加载配置文件，如果文件不存在或者加载失败，将实例化一个对象返回。
+            
+            考虑到自动刷新，不提供LoadFile和SaveFile等方法，可通过扩展方法ToXmlFileEntity和ToXmlFile实现。
+            
+            用户也可以通过配置实体类的静态构造函数修改基类的<see cref="P:NewLife.Json.JsonConfig`1._.ConfigFile"/>和<see cref="P:NewLife.Json.JsonConfig`1._.ReloadTime"/>来动态配置加载信息。
+            </remarks>
+            <typeparam name="TConfig"></typeparam>
+        </member>
+        <member name="P:NewLife.Json.JsonConfig`1.Current">
+            <summary>当前实例。通过置空可以使其重新加载。</summary>
+        </member>
+        <member name="T:NewLife.Json.JsonConfig`1._">
+            <summary>一些设置。派生类可以在自己的静态构造函数中指定</summary>
+        </member>
+        <member name="P:NewLife.Json.JsonConfig`1._.Debug">
+            <summary>是否调试</summary>
+        </member>
+        <member name="P:NewLife.Json.JsonConfig`1._.ConfigFile">
+            <summary>配置文件路径</summary>
+        </member>
+        <member name="P:NewLife.Json.JsonConfig`1._.ReloadTime">
+            <summary>重新加载时间。单位：毫秒</summary>
+        </member>
+        <member name="P:NewLife.Json.JsonConfig`1._.SaveNew">
+            <summary>没有配置文件时是否保存新配置。默认true</summary>
+        </member>
+        <member name="P:NewLife.Json.JsonConfig`1.ConfigFile">
+            <summary>配置文件</summary>
+        </member>
+        <member name="F:NewLife.Json.JsonConfig`1.lastWrite">
+            <summary>最后写入时间</summary>
+        </member>
+        <member name="F:NewLife.Json.JsonConfig`1.expire">
+            <summary>过期时间。如果在这个时间之后再次访问，将检查文件修改时间</summary>
+        </member>
+        <member name="P:NewLife.Json.JsonConfig`1.IsUpdated">
+            <summary>是否已更新。通过文件写入时间判断</summary>
+        </member>
+        <member name="M:NewLife.Json.JsonConfig`1.SetExpire">
+            <summary>设置过期重新加载配置的时间</summary>
+        </member>
+        <member name="P:NewLife.Json.JsonConfig`1.IsNew">
+            <summary>是否新的配置文件</summary>
+        </member>
+        <member name="M:NewLife.Json.JsonConfig`1.OnDispose(System.Boolean)">
+            <summary>销毁</summary>
+            <param name="disposing"></param>
+        </member>
+        <member name="M:NewLife.Json.JsonConfig`1.Load(System.String)">
+            <summary>加载指定配置文件</summary>
+            <param name="filename"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Json.JsonConfig`1.OnLoaded">
+            <summary>从配置文件中读取完成后触发</summary>
+        </member>
+        <member name="M:NewLife.Json.JsonConfig`1.Save(System.String)">
+            <summary>保存到配置文件中去</summary>
+            <param name="filename"></param>
+        </member>
+        <member name="M:NewLife.Json.JsonConfig`1.Save">
+            <summary>保存到配置文件中去</summary>
+        </member>
+        <member name="M:NewLife.Json.JsonConfig`1.SaveAsync">
+            <summary>异步保存</summary>
+        </member>
+        <member name="M:NewLife.Json.JsonConfig`1.OnNew">
+            <summary>新创建配置文件时执行</summary>
+        </member>
+        <member name="T:NewLife.Json.JsonConfigFileAttribute">
+            <summary>Json配置文件特性</summary>
+        </member>
+        <member name="P:NewLife.Json.JsonConfigFileAttribute.FileName">
+            <summary>配置文件名</summary>
+        </member>
+        <member name="P:NewLife.Json.JsonConfigFileAttribute.ReloadTime">
+            <summary>重新加载时间。单位：毫秒</summary>
+        </member>
+        <member name="M:NewLife.Json.JsonConfigFileAttribute.#ctor(System.String)">
+            <summary>指定配置文件名</summary>
+            <param name="fileName"></param>
+        </member>
+        <member name="M:NewLife.Json.JsonConfigFileAttribute.#ctor(System.String,System.Int32)">
+            <summary>指定配置文件名和重新加载时间（毫秒）</summary>
+            <param name="fileName"></param>
+            <param name="reloadTime"></param>
         </member>
         <member name="T:NewLife.Log.ActionLog">
             <summary>依托于动作的日志类</summary>
@@ -4919,7 +3799,7 @@
             <param name="asm"></param>
         </member>
         <member name="T:NewLife.Messaging.DefaultMessage">
-            <summary>标准消息</summary>
+            <summary>标准消息SRMP</summary>
             <remarks>
             标准网络封包协议：1 Flag + 1 Sequence + 2 Length + N Payload
             1个字节标识位，标识请求、响应、错误、加密、压缩等；
@@ -5027,6 +3907,32 @@
         <member name="P:NewLife.Messaging.MessageEventArgs.UserState">
             <summary>用户数据。比如远程地址等</summary>
         </member>
+        <member name="T:NewLife.Messaging.PacketCodec">
+            <summary>数据包编码器</summary>
+        </member>
+        <member name="P:NewLife.Messaging.PacketCodec.Stream">
+            <summary>缓存流</summary>
+        </member>
+        <member name="P:NewLife.Messaging.PacketCodec.GetLength">
+            <summary>获取长度的委托</summary>
+        </member>
+        <member name="P:NewLife.Messaging.PacketCodec.Last">
+            <summary>最后一次解包成功，而不是最后一次接收</summary>
+        </member>
+        <member name="P:NewLife.Messaging.PacketCodec.Expire">
+            <summary>缓存有效期。超过该时间后仍未匹配数据包的缓存数据将被抛弃</summary>
+        </member>
+        <member name="P:NewLife.Messaging.PacketCodec.MaxCache">
+            <summary>最大缓存待处理数据。默认0无限制</summary>
+        </member>
+        <member name="M:NewLife.Messaging.PacketCodec.Parse(NewLife.Data.Packet)">
+            <summary>分析数据流，得到一帧数据</summary>
+            <param name="pk">待分析数据包</param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Messaging.PacketCodec.CheckCache">
+            <summary>检查缓存</summary>
+        </member>
         <member name="T:NewLife.Model.IActor">
             <summary>无锁并行编程模型</summary>
             <remarks>
@@ -5113,6 +4019,97 @@
         <member name="M:NewLife.Model.Actor.Receive(NewLife.Model.ActorContext[])">
             <summary>批量处理消息</summary>
             <param name="contexts">上下文集合</param>
+        </member>
+        <member name="T:NewLife.Model.DeferredQueue">
+            <summary>延迟队列。缓冲合并对象，批量处理</summary>
+            <remarks>
+            借助实体字典，缓冲实体对象，定期给字典换新，实现批量处理。
+            
+            有可能外部拿到对象后，正在修改，内部恰巧执行批量处理，导致外部的部分修改未能得到处理。
+            解决办法是增加一个提交机制，外部用完后提交修改，内部需要处理时，等待一个时间。
+            </remarks>
+        </member>
+        <member name="P:NewLife.Model.DeferredQueue.Name">
+            <summary>名称</summary>
+        </member>
+        <member name="P:NewLife.Model.DeferredQueue.Entities">
+            <summary>实体字典</summary>
+        </member>
+        <member name="P:NewLife.Model.DeferredQueue.TraceCount">
+            <summary>跟踪数。达到该值时输出跟踪日志，默认1000</summary>
+        </member>
+        <member name="P:NewLife.Model.DeferredQueue.Period">
+            <summary>周期。默认10_000毫秒</summary>
+        </member>
+        <member name="P:NewLife.Model.DeferredQueue.MaxEntity">
+            <summary>最大个数。超过该个数时，进入队列将产生堵塞。默认100_000</summary>
+        </member>
+        <member name="P:NewLife.Model.DeferredQueue.BatchSize">
+            <summary>批大小。默认5_000</summary>
+        </member>
+        <member name="P:NewLife.Model.DeferredQueue.WaitForBusy">
+            <summary>等待借出对象确认修改的时间，默认3000ms</summary>
+        </member>
+        <member name="P:NewLife.Model.DeferredQueue.Speed">
+            <summary>保存速度，每秒保存多少个实体</summary>
+        </member>
+        <member name="P:NewLife.Model.DeferredQueue.Async">
+            <summary>是否异步处理。true表示异步处理，共用DQ定时调度；false表示同步处理，独立线程</summary>
+        </member>
+        <member name="P:NewLife.Model.DeferredQueue.Times">
+            <summary>合并保存的总次数</summary>
+        </member>
+        <member name="M:NewLife.Model.DeferredQueue.#ctor">
+            <summary>实例化</summary>
+        </member>
+        <member name="M:NewLife.Model.DeferredQueue.OnDispose(System.Boolean)">
+            <summary>销毁。统计队列销毁时保存数据</summary>
+            <param name="disposing"></param>
+        </member>
+        <member name="M:NewLife.Model.DeferredQueue.Init">
+            <summary>初始化</summary>
+        </member>
+        <member name="M:NewLife.Model.DeferredQueue.OnInit">
+            <summary>初始化</summary>
+        </member>
+        <member name="M:NewLife.Model.DeferredQueue.TryAdd(System.String,System.Object)">
+            <summary>尝试添加</summary>
+            <param name="key"></param>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Model.DeferredQueue.GetOrAdd``1(System.String,System.Func{System.String,``0})">
+            <summary>获取 或 添加 实体对象，在外部修改对象值</summary>
+            <remarks>
+            外部正在修改对象时，内部不允许执行批量处理
+            </remarks>
+            <typeparam name="T"></typeparam>
+            <param name="key"></param>
+            <param name="valueFactory"></param>
+            <returns></returns>
+        </member>
+        <member name="F:NewLife.Model.DeferredQueue._busy">
+            <summary>等待确认修改的借出对象数</summary>
+        </member>
+        <member name="M:NewLife.Model.DeferredQueue.Commit(System.String)">
+            <summary>提交对象的修改，外部不再使用该对象</summary>
+            <param name="key"></param>
+        </member>
+        <member name="F:NewLife.Model.DeferredQueue._count">
+            <summary>当前缓存个数</summary>
+        </member>
+        <member name="M:NewLife.Model.DeferredQueue.ProcessAll(System.Collections.Generic.ICollection{System.Object})">
+            <summary>定时处理全部数据</summary>
+            <param name="list"></param>
+        </member>
+        <member name="M:NewLife.Model.DeferredQueue.Process(System.Collections.Generic.IList{System.Object})">
+            <summary>处理一批</summary>
+            <param name="list"></param>
+        </member>
+        <member name="M:NewLife.Model.DeferredQueue.OnError(System.Collections.Generic.IList{System.Object},System.Exception)">
+            <summary>发生错误</summary>
+            <param name="list"></param>
+            <param name="ex"></param>
         </member>
         <member name="T:NewLife.Model.IAuthUser">
             <summary>认证用户接口，具有登录验证、注册、在线等基本信息</summary>
@@ -5677,6 +4674,9 @@
             <param name="callback">用于检查匹配的回调</param>
             <returns></returns>
         </member>
+        <member name="M:NewLife.Net.Handlers.IMatchQueue.Clear">
+            <summary>清空队列</summary>
+        </member>
         <member name="T:NewLife.Net.Handlers.DefaultMatchQueue">
             <summary>消息匹配队列。子类可重载以自定义请求响应匹配逻辑</summary>
         </member>
@@ -5698,6 +4698,9 @@
         <member name="M:NewLife.Net.Handlers.DefaultMatchQueue.Check(System.Object)">
             <summary>定时检查发送队列，超时未收到响应则重发</summary>
             <param name="state"></param>
+        </member>
+        <member name="M:NewLife.Net.Handlers.DefaultMatchQueue.Clear">
+            <summary>清空队列</summary>
         </member>
         <member name="T:NewLife.Net.Handlers.LengthFieldCodec">
             <summary>长度字段作为头部</summary>
@@ -5721,6 +4724,12 @@
             <summary>解码</summary>
             <param name="context"></param>
             <param name="pk"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Net.Handlers.LengthFieldCodec.Close(NewLife.Model.IHandlerContext,System.String)">
+            <summary>连接关闭时，清空粘包编码器</summary>
+            <param name="context"></param>
+            <param name="reason"></param>
             <returns></returns>
         </member>
         <member name="T:NewLife.Net.Handlers.MessageCodec`1">
@@ -5753,6 +4762,12 @@
             <param name="msg"></param>
             <returns></returns>
         </member>
+        <member name="M:NewLife.Net.Handlers.MessageCodec`1.Close(NewLife.Model.IHandlerContext,System.String)">
+            <summary>连接关闭时，清空粘包编码器</summary>
+            <param name="context"></param>
+            <param name="reason"></param>
+            <returns></returns>
+        </member>
         <member name="M:NewLife.Net.Handlers.MessageCodec`1.Read(NewLife.Model.IHandlerContext,System.Object)">
             <summary>读取数据</summary>
             <param name="context"></param>
@@ -5771,14 +4786,6 @@
             <param name="response"></param>
             <returns></returns>
         </member>
-        <member name="M:NewLife.Net.Handlers.MessageCodec`1.Parse(NewLife.Data.Packet,NewLife.Net.Handlers.CodecItem,System.Func{NewLife.Data.Packet,System.Int32},System.Int32)">
-            <summary>分析数据流，得到一帧数据</summary>
-            <param name="pk">待分析数据包</param>
-            <param name="codec">参数</param>
-            <param name="getLength">获取长度</param>
-            <param name="expire">缓存有效期</param>
-            <returns></returns>
-        </member>
         <member name="M:NewLife.Net.Handlers.MessageCodec`1.GetLength(NewLife.Data.Packet,System.Int32,System.Int32)">
             <summary>从数据流中获取整帧数据长度</summary>
             <param name="pk"></param>
@@ -5786,14 +4793,52 @@
             <param name="size"></param>
             <returns>数据帧长度（包含头部长度位）</returns>
         </member>
-        <member name="T:NewLife.Net.Handlers.CodecItem">
-            <summary>消息编码参数</summary>
+        <member name="T:NewLife.Net.Handlers.SplitDataCodec">
+            <summary>
+            按指定分割字节来处理粘包的处理器
+            </summary>
+            <remarks>
+            默认以"0x0D 0x0A"即换行来分割，分割的包包含分割字节本身，使用时请注意。
+            默认分割方式：ISocket.Add&lt;SplitDataCodec&gt;()
+            自定义分割方式：ISocket.Add(new SplitDataHandler { SplitData = 自定义分割字节数组 })
+            自定义最大缓存大小方式：ISocket.Add(new SplitDataHandler { MaxCacheDataLength = 2048 })
+            自定义方式：ISocket.Add(new SplitDataHandler { MaxCacheDataLength = 2048, SplitData = 自定义分割字节数组 })
+            </remarks>
         </member>
-        <member name="F:NewLife.Net.Handlers.CodecItem.Stream">
-            <summary>缓存流</summary>
+        <member name="P:NewLife.Net.Handlers.SplitDataCodec.SplitData">
+            <summary>
+            粘包分割字节数据（默认0x0D,0x0A）
+            </summary>
         </member>
-        <member name="F:NewLife.Net.Handlers.CodecItem.Last">
-            <summary>最后一次接收</summary>
+        <member name="P:NewLife.Net.Handlers.SplitDataCodec.MaxCacheDataLength">
+            <summary>
+            最大缓存待处理数据（字节）
+            </summary>
+        </member>
+        <member name="M:NewLife.Net.Handlers.SplitDataCodec.Read(NewLife.Model.IHandlerContext,System.Object)">
+            <summary>读取数据</summary>
+            <param name="context"></param>
+            <param name="message"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Net.Handlers.SplitDataCodec.Close(NewLife.Model.IHandlerContext,System.String)">
+            <summary>连接关闭时，清空粘包编码器</summary>
+            <param name="context"></param>
+            <param name="reason"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Net.Handlers.SplitDataCodec.Decode(NewLife.Model.IHandlerContext,NewLife.Data.Packet)">
+            <summary>解码</summary>
+            <param name="context"></param>
+            <param name="pk">包</param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Net.Handlers.SplitDataCodec.GetLineLength(NewLife.Data.Packet)">
+            <summary>
+            获取包含分割字节在内的数据长度
+            </summary>
+            <param name="pk"></param>
+            <returns></returns>
         </member>
         <member name="T:NewLife.Net.Handlers.StandardCodec">
             <summary>标准网络封包。头部4字节定长</summary>
@@ -5820,6 +4865,12 @@
             <summary>是否匹配响应</summary>
             <param name="request"></param>
             <param name="response"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Net.Handlers.StandardCodec.Close(NewLife.Model.IHandlerContext,System.String)">
+            <summary>连接关闭时，清空粘包编码器</summary>
+            <param name="context"></param>
+            <param name="reason"></param>
             <returns></returns>
         </member>
         <member name="T:NewLife.Net.INetSession">
@@ -6327,10 +5378,10 @@
             <param name="sender"></param>
             <param name="e"></param>
         </member>
-        <member name="M:NewLife.Net.NetServer.OnReceive(NewLife.Net.INetSession,System.IO.Stream)">
+        <member name="M:NewLife.Net.NetServer.OnReceive(NewLife.Net.INetSession,NewLife.Data.Packet)">
             <summary>收到数据时，最原始的数据处理，但不影响会话内部的数据处理</summary>
             <param name="session"></param>
-            <param name="stream"></param>
+            <param name="pk"></param>
         </member>
         <member name="E:NewLife.Net.NetServer.Error">
             <summary>错误发生/断开连接时。sender是ISocketSession</summary>
@@ -6614,15 +5665,6 @@
         <member name="P:NewLife.Net.ReceivedEventArgs.Packet">
             <summary>数据包</summary>
         </member>
-        <member name="P:NewLife.Net.ReceivedEventArgs.Data">
-            <summary>数据</summary>
-        </member>
-        <member name="P:NewLife.Net.ReceivedEventArgs.Length">
-            <summary>数据长度</summary>
-        </member>
-        <member name="P:NewLife.Net.ReceivedEventArgs.Stream">
-            <summary>数据区对应的一个数据流实例</summary>
-        </member>
         <member name="P:NewLife.Net.ReceivedEventArgs.Remote">
             <summary>远程地址</summary>
         </member>
@@ -6631,29 +5673,6 @@
         </member>
         <member name="P:NewLife.Net.ReceivedEventArgs.UserState">
             <summary>用户数据</summary>
-        </member>
-        <member name="M:NewLife.Net.ReceivedEventArgs.#ctor">
-            <summary>实例化一个数据事件参数</summary>
-        </member>
-        <member name="M:NewLife.Net.ReceivedEventArgs.#ctor(NewLife.Data.Packet)">
-            <summary>使用字节数组实例化一个数据事件参数</summary>
-            <param name="pk"></param>
-        </member>
-        <member name="M:NewLife.Net.ReceivedEventArgs.#ctor(NewLife.Data.IData)">
-            <summary>使用数据帧实例化</summary>
-            <param name="data"></param>
-        </member>
-        <member name="M:NewLife.Net.ReceivedEventArgs.ToStr(System.Text.Encoding)">
-            <summary>以字符串表示</summary>
-            <param name="encoding">字符串编码，默认URF-8</param>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Net.ReceivedEventArgs.ToHex(System.Int32,System.String,System.Int32)">
-            <summary>以十六进制编码表示</summary>
-            <param name="maxLength">最大显示多少个字节。默认-1显示全部</param>
-            <param name="separate">分隔符</param>
-            <param name="groupSize">分组大小，为0时对每个字节应用分隔符，否则对每个分组使用</param>
-            <returns></returns>
         </member>
         <member name="T:NewLife.Net.SessionBase">
             <summary>会话基类</summary>
@@ -7595,6 +6614,66 @@
             <summary>已重载。</summary>
             <returns></returns>
         </member>
+        <member name="T:NewLife.Reflection.DynamicInternal">
+            <summary>包装程序集内部类的动态对象</summary>
+        </member>
+        <member name="M:NewLife.Reflection.DynamicInternal.TryConvert(System.Dynamic.ConvertBinder,System.Object@)">
+            <summary>类型转换</summary>
+            <param name="binder"></param>
+            <param name="result"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Reflection.DynamicInternal.TryGetMember(System.Dynamic.GetMemberBinder,System.Object@)">
+            <summary>成员取值</summary>
+            <param name="binder"></param>
+            <param name="result"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Reflection.DynamicInternal.TryInvokeMember(System.Dynamic.InvokeMemberBinder,System.Object[],System.Object@)">
+            <summary>调用成员</summary>
+            <param name="binder"></param>
+            <param name="args"></param>
+            <param name="result"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Reflection.DynamicInternal.Wrap(System.Object)">
+            <summary>包装</summary>
+            <param name="obj"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Reflection.DynamicInternal.ToString">
+            <summary>已重载。</summary>
+            <returns></returns>
+        </member>
+        <member name="T:NewLife.Reflection.DynamicXml">
+            <summary>动态Xml</summary>
+        </member>
+        <member name="P:NewLife.Reflection.DynamicXml.Node">
+            <summary>节点</summary>
+        </member>
+        <member name="M:NewLife.Reflection.DynamicXml.#ctor">
+            <summary>实例化</summary>
+        </member>
+        <member name="M:NewLife.Reflection.DynamicXml.#ctor(System.Xml.Linq.XElement)">
+            <summary>实例化</summary>
+            <param name="node"></param>
+        </member>
+        <member name="M:NewLife.Reflection.DynamicXml.#ctor(System.String)">
+            <summary>实例化</summary>
+            <param name="name"></param>
+        </member>
+        <member name="M:NewLife.Reflection.DynamicXml.TrySetMember(System.Dynamic.SetMemberBinder,System.Object)">
+            <summary>设置</summary>
+            <param name="binder"></param>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Reflection.DynamicXml.TryGetMember(System.Dynamic.GetMemberBinder,System.Object@)">
+            <summary>获取</summary>
+            <param name="binder"></param>
+            <param name="result"></param>
+            <returns></returns>
+        </member>
         <member name="T:NewLife.Reflection.IIndexAccessor">
             <summary>
             索引器接访问口。
@@ -8202,6 +7281,12 @@
         <member name="P:NewLife.Remoting.ApiClient.Servers">
             <summary>服务端地址集合。负载均衡</summary>
         </member>
+        <member name="P:NewLife.Remoting.ApiClient.Cluster">
+            <summary>客户端连接集群</summary>
+        </member>
+        <member name="P:NewLife.Remoting.ApiClient.UsePool">
+            <summary>是否使用连接池。true时建立多个到服务端的连接，默认false使用单一连接</summary>
+        </member>
         <member name="P:NewLife.Remoting.ApiClient.NewLife#Remoting#IApiSession#Host">
             <summary>主机</summary>
         </member>
@@ -8222,6 +7307,7 @@
         </member>
         <member name="M:NewLife.Remoting.ApiClient.#ctor(System.String)">
             <summary>实例化应用接口客户端</summary>
+            <param name="uris">服务端地址集合，逗号分隔</param>
         </member>
         <member name="M:NewLife.Remoting.ApiClient.OnDispose(System.Boolean)">
             <summary>销毁</summary>
@@ -8277,6 +7363,7 @@
         </member>
         <member name="M:NewLife.Remoting.ApiClient.InvokeWithClientAsync``1(NewLife.Net.ISocketClient,System.String,System.Object,System.Byte)">
             <summary>指定客户端的异步调用，等待返回结果</summary>
+            <remarks>常用于在OnLoginAsync中实现连接后登录功能</remarks>
             <typeparam name="TResult"></typeparam>
             <param name="client">客户端</param>
             <param name="action">服务操作</param>
@@ -8296,21 +7383,6 @@
         </member>
         <member name="M:NewLife.Remoting.ApiClient.LoginAsync">
             <summary>登录</summary>
-            <returns></returns>
-        </member>
-        <member name="P:NewLife.Remoting.ApiClient.CreateCallback">
-            <summary>创建回调</summary>
-        </member>
-        <member name="M:NewLife.Remoting.ApiClient.GetClient(System.Boolean)">
-            <summary>获取客户端</summary>
-            <param name="create">是否创建</param>
-            <returns></returns>
-        </member>
-        <member name="F:NewLife.Remoting.ApiClient._index">
-            <summary>Round-Robin 负载均衡</summary>
-        </member>
-        <member name="M:NewLife.Remoting.ApiClient.OnCreate">
-            <summary>为连接池创建连接</summary>
             <returns></returns>
         </member>
         <member name="M:NewLife.Remoting.ApiClient.OnCreate(System.String)">
@@ -8515,6 +7587,76 @@
         </member>
         <member name="P:NewLife.Remoting.ApiServer.StatPeriod">
             <summary>显示统计信息的周期。默认600秒，0表示不显示统计信息</summary>
+        </member>
+        <member name="T:NewLife.Remoting.ClientPoolCluster">
+            <summary>客户端连接池负载均衡集群</summary>
+        </member>
+        <member name="P:NewLife.Remoting.ClientPoolCluster.GetItems">
+            <summary>服务器地址列表</summary>
+        </member>
+        <member name="P:NewLife.Remoting.ClientPoolCluster.OnCreate">
+            <summary>创建回调</summary>
+        </member>
+        <member name="P:NewLife.Remoting.ClientPoolCluster.Pool">
+            <summary>连接池</summary>
+        </member>
+        <member name="M:NewLife.Remoting.ClientPoolCluster.#ctor">
+            <summary>实例化连接池集群</summary>
+        </member>
+        <member name="M:NewLife.Remoting.ClientPoolCluster.Open">
+            <summary>打开</summary>
+        </member>
+        <member name="M:NewLife.Remoting.ClientPoolCluster.Close(System.String)">
+            <summary>关闭</summary>
+            <param name="reason">关闭原因。便于日志分析</param>
+            <returns>是否成功</returns>
+        </member>
+        <member name="M:NewLife.Remoting.ClientPoolCluster.Get">
+            <summary>从集群中获取资源</summary>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Remoting.ClientPoolCluster.Put(NewLife.Net.ISocketClient)">
+            <summary>归还</summary>
+            <param name="value"></param>
+        </member>
+        <member name="F:NewLife.Remoting.ClientPoolCluster._index">
+            <summary>Round-Robin 负载均衡</summary>
+        </member>
+        <member name="M:NewLife.Remoting.ClientPoolCluster.CreateClient">
+            <summary>为连接池创建连接</summary>
+            <returns></returns>
+        </member>
+        <member name="T:NewLife.Remoting.ClientSingleCluster">
+            <summary>客户端单连接故障转移集群</summary>
+        </member>
+        <member name="P:NewLife.Remoting.ClientSingleCluster.GetItems">
+            <summary>服务器地址列表</summary>
+        </member>
+        <member name="P:NewLife.Remoting.ClientSingleCluster.OnCreate">
+            <summary>创建回调</summary>
+        </member>
+        <member name="M:NewLife.Remoting.ClientSingleCluster.Open">
+            <summary>打开</summary>
+        </member>
+        <member name="M:NewLife.Remoting.ClientSingleCluster.Close(System.String)">
+            <summary>关闭</summary>
+            <param name="reason">关闭原因。便于日志分析</param>
+            <returns>是否成功</returns>
+        </member>
+        <member name="M:NewLife.Remoting.ClientSingleCluster.Get">
+            <summary>从集群中获取资源</summary>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Remoting.ClientSingleCluster.Put(NewLife.Net.ISocketClient)">
+            <summary>归还</summary>
+            <param name="value"></param>
+        </member>
+        <member name="F:NewLife.Remoting.ClientSingleCluster._index">
+            <summary>Round-Robin 负载均衡</summary>
+        </member>
+        <member name="M:NewLife.Remoting.ClientSingleCluster.CreateClient">
+            <summary>为连接池创建连接</summary>
+            <returns></returns>
         </member>
         <member name="T:NewLife.Remoting.ApiController">
             <summary>API控制器</summary>
@@ -8919,14 +8061,51 @@
             <param name="value"></param>
             <returns></returns>
         </member>
+        <member name="T:NewLife.Security.Certificate">
+            <summary>证书</summary>
+            <remarks>http://blogs.msdn.com/b/dcook/archive/2008/11/25/creating-a-self-signed-certificate-in-c.aspx</remarks>
+        </member>
+        <member name="M:NewLife.Security.Certificate.CreateSelfSignCertificatePfx(System.String)">
+            <summary>建立自签名证书</summary>
+            <param name="x500"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Security.Certificate.CreateSelfSignCertificatePfx(System.String,System.DateTime,System.DateTime)">
+            <summary>建立自签名证书</summary>
+            <param name="x500"></param>
+            <param name="startTime"></param>
+            <param name="endTime"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Security.Certificate.CreateSelfSignCertificatePfx(System.String,System.DateTime,System.DateTime,System.String)">
+            <summary>建立自签名证书</summary>
+            <param name="x500"></param>
+            <param name="startTime"></param>
+            <param name="endTime"></param>
+            <param name="insecurePassword"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Security.Certificate.CreateSelfSignCertificatePfx(System.String,System.DateTime,System.DateTime,System.Security.SecureString)">
+            <summary>建立自签名证书</summary>
+            <param name="x500">例如CN=SelfSignCertificate;C=China;OU=NewLife;O=Development Team;E=nnhy@vip.qq.com，其中CN是显示名</param>
+            <param name="startTime"></param>
+            <param name="endTime"></param>
+            <param name="password"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Security.Certificate.CreateSelfSignCertificatePfx(System.Security.Cryptography.X509Certificates.X500DistinguishedName,System.DateTime,System.DateTime,System.Security.SecureString)">
+            <summary>建立自签名证书</summary>
+            <param name="distName"></param>
+            <param name="startTime"></param>
+            <param name="endTime"></param>
+            <param name="password"></param>
+            <returns></returns>
+        </member>
         <member name="T:NewLife.Security.Crc16">
             <summary>CRC16校验</summary>
         </member>
         <member name="F:NewLife.Security.Crc16.CrcTable">
             <summary>CRC16表</summary>
-        </member>
-        <member name="F:NewLife.Security.Crc16.crc">
-            <summary>校验值</summary>
         </member>
         <member name="P:NewLife.Security.Crc16.Value">
             <summary>校验值</summary>
@@ -8942,15 +8121,10 @@
         </member>
         <member name="M:NewLife.Security.Crc16.Update(System.Byte[],System.Int32,System.Int32)">
             <summary>添加字节数组进行校验  CRC16-CCITT x16+x12+x5+1 1021  ISO HDLC, ITU X.25, V.34/V.41/V.42, PPP-FCS</summary>
-            <param name = "buffer">
-            The buffer which contains the data
-            </param>
-            <param name = "offset">
-            The offset in the buffer where the data starts
-            </param>
-            <param name = "count">
-            The number of data bytes to update the CRC with.
-            </param>
+            <remarks>字符串123456789的Crc16是31C3</remarks>
+            <param name = "buffer">数据缓冲区</param>
+            <param name = "offset">偏移量</param>
+            <param name = "count">字节个数</param>
         </member>
         <member name="M:NewLife.Security.Crc16.Update(System.IO.Stream,System.Int64)">
             <summary>添加数据流进行校验  CRC-16 x16+x15+x2+1 8005 IBM SDLC</summary>
@@ -9090,6 +8264,17 @@
             <param name="rgbSignature"></param>
             <returns></returns>
         </member>
+        <member name="M:NewLife.Security.DSAHelper.FromXmlStringX(System.Security.Cryptography.DSACryptoServiceProvider,System.String)">
+            <summary>从Xml加载DSA密钥</summary>
+            <param name="rsa"></param>
+            <param name="xmlString"></param>
+        </member>
+        <member name="M:NewLife.Security.DSAHelper.ToXmlStringX(System.Security.Cryptography.DSACryptoServiceProvider,System.Boolean)">
+            <summary>保存DSA密钥到Xml</summary>
+            <param name="rsa"></param>
+            <param name="includePrivateParameters"></param>
+            <returns></returns>
+        </member>
         <member name="T:NewLife.Security.Rand">
             <summary>随机数</summary>
         </member>
@@ -9143,6 +8328,79 @@
             <param name="pass">密码</param>  
             <param name="len">密码箱长度</param>  
             <returns>打乱后的密码</returns>  
+        </member>
+        <member name="T:NewLife.Security.RSAHelper">
+            <summary>RSA算法</summary>
+            <remarks>
+            RSA加密或签名小数据块时，密文长度128，速度也很快。
+            </remarks>
+        </member>
+        <member name="M:NewLife.Security.RSAHelper.GenerateKey(System.Int32)">
+            <summary>产生非对称密钥对</summary>
+            <remarks>
+            RSAParameters的各个字段采用大端字节序，转为BigInteger的之前一定要倒序。
+            RSA加密后密文最小长度就是密钥长度，所以1024密钥最小密文长度是128字节。
+            </remarks>
+            <param name="keySize">密钥长度，默认1024位强密钥</param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Security.RSAHelper.Encrypt(System.Byte[],System.String,System.Boolean)">
+            <summary>RSA加密</summary>
+            <param name="buf"></param>
+            <param name="pubKey"></param>
+            <param name="fOAEP">如果为 true，则使用 OAEP 填充（仅可用于运行 Windows XP 及更高版本的计算机）执行直接 System.Security.Cryptography.RSA加密；否则，如果为 false，则使用 PKCS#1 v1.5 填充。</param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Security.RSAHelper.Decrypt(System.Byte[],System.String,System.Boolean)">
+            <summary>RSA解密</summary>
+            <param name="buf"></param>
+            <param name="priKey"></param>
+            <param name="fOAEP">如果为 true，则使用 OAEP 填充（仅可用于运行 Microsoft Windows XP 及更高版本的计算机）执行直接 System.Security.Cryptography.RSA解密；否则，如果为 false 则使用 PKCS#1 v1.5 填充。</param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Security.RSAHelper.EncryptWithDES(System.Byte[],System.String)">
+            <summary>配合DES加密</summary>
+            <param name="buf"></param>
+            <param name="pubKey"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Security.RSAHelper.DecryptWithDES(System.Byte[],System.String)">
+            <summary>配合DES解密</summary>
+            <param name="buf"></param>
+            <param name="priKey"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Security.RSAHelper.Encrypt``1(System.Byte[],System.String)">
+            <summary>配合对称算法加密</summary>
+            <typeparam name="TSymmetricAlgorithm"></typeparam>
+            <param name="buf"></param>
+            <param name="pubKey"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Security.RSAHelper.Decrypt``1(System.Byte[],System.String)">
+            <summary>配合对称算法解密</summary>
+            <typeparam name="TSymmetricAlgorithm"></typeparam>
+            <param name="buf"></param>
+            <param name="priKey"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Security.RSAHelper.Sign(System.Byte[],System.String)">
+            <summary>签名</summary>
+            <param name="buf"></param>
+            <param name="priKey"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Security.RSAHelper.Verify(System.Byte[],System.String,System.Byte[])">
+            <summary>验证</summary>
+            <param name="buf"></param>
+            <param name="pukKey"></param>
+            <param name="rgbSignature"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Security.RSAHelper.SetRandom(System.Byte[])">
+            <summary>使用随机数设置</summary>
+            <param name="buf"></param>
+            <returns></returns>
         </member>
         <member name="T:NewLife.Serialization.Accessor">
             <summary>访问器基类</summary>
@@ -9373,6 +8631,24 @@
             <summary>快速写入</summary>
             <param name="value">对象</param>
             <param name="encodeInt">使用7位编码整数</param>
+            <returns></returns>
+        </member>
+        <member name="T:NewLife.Serialization.BinaryColor">
+            <summary>颜色处理器。</summary>
+        </member>
+        <member name="M:NewLife.Serialization.BinaryColor.#ctor">
+            <summary>实例化</summary>
+        </member>
+        <member name="M:NewLife.Serialization.BinaryColor.Write(System.Object,System.Type)">
+            <summary>写入对象</summary>
+            <param name="value">目标对象</param>
+            <param name="type">类型</param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Serialization.BinaryColor.TryRead(System.Type,System.Object@)">
+            <summary>尝试读取指定类型对象</summary>
+            <param name="type"></param>
+            <param name="value"></param>
             <returns></returns>
         </member>
         <member name="T:NewLife.Serialization.BinaryComposite">
@@ -9700,34 +8976,22 @@
             <param name="baseFirst"></param>
             <returns></returns>
         </member>
-        <member name="T:NewLife.Serialization.BitSizeAttribute">
-            <summary>字段位大小特性。</summary>
-            <remarks>
-            用于模仿C/C++的位域
-            </remarks>
+        <member name="T:NewLife.Serialization.BinaryUnknown">
+            <summary>内部对象处理器。对于其它处理器无法支持的类型，一律由该处理器解决</summary>
         </member>
-        <member name="P:NewLife.Serialization.BitSizeAttribute.Size">
-            <summary>大小</summary>
+        <member name="M:NewLife.Serialization.BinaryUnknown.#ctor">
+            <summary>实例化</summary>
         </member>
-        <member name="M:NewLife.Serialization.BitSizeAttribute.#ctor(System.Int32)">
-            <summary>通过Offset指定字段的偏移位置</summary>
-            <param name="size"></param>
-        </member>
-        <member name="M:NewLife.Serialization.BitSizeAttribute.Set(System.Int32,System.Int32,System.Int32)">
-            <summary>把当前字段所属部分附加到目标数字</summary>
-            <param name="target">目标数字</param>
-            <param name="value">当前字段的数值</param>
-            <param name="offset">当前字段偏移</param>
+        <member name="M:NewLife.Serialization.BinaryUnknown.Write(System.Object,System.Type)">
+            <summary>写入对象</summary>
+            <param name="value">目标对象</param>
+            <param name="type">类型</param>
             <returns></returns>
         </member>
-        <member name="M:NewLife.Serialization.BitSizeAttribute.Get(System.Int32,System.Int32)">
-            <summary>从目标数字里面获取当前字段所属部分</summary>
-            <param name="target">目标数字</param>
-            <param name="offset">当前字段偏移</param>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Serialization.BitSizeAttribute.GetMask">
-            <summary>根据大小计算掩码</summary>
+        <member name="M:NewLife.Serialization.BinaryUnknown.TryRead(System.Type,System.Object@)">
+            <summary>尝试读取指定类型对象</summary>
+            <param name="type"></param>
+            <param name="value"></param>
             <returns></returns>
         </member>
         <member name="T:NewLife.Serialization.FieldSizeAttribute">
@@ -11826,6 +11090,1496 @@
             <summary>写日志</summary>
             <param name="format"></param>
             <param name="args"></param>
+        </member>
+        <member name="T:System.Collections.Generic.CollectionHelper">
+            <summary>集合扩展</summary>
+        </member>
+        <member name="M:System.Collections.Generic.CollectionHelper.ToArray``1(System.Collections.Generic.ICollection{``0},System.Int32)">
+            <summary>集合转为数组</summary>
+            <typeparam name="T"></typeparam>
+            <param name="collection"></param>
+            <param name="index"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.Collections.Generic.CollectionHelper.ToKeyArray``2(System.Collections.Generic.IDictionary{``0,``1},System.Int32)">
+            <summary>集合转为数组</summary>
+            <typeparam name="TKey"></typeparam>
+            <typeparam name="TValue"></typeparam>
+            <param name="collection"></param>
+            <param name="index"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.Collections.Generic.CollectionHelper.ToValueArray``2(System.Collections.Generic.IDictionary{``0,``1},System.Int32)">
+            <summary>集合转为数组</summary>
+            <typeparam name="TKey"></typeparam>
+            <typeparam name="TValue"></typeparam>
+            <param name="collection"></param>
+            <param name="index"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.Collections.Generic.CollectionHelper.ToDictionary(System.Object)">
+            <summary>目标匿名参数对象转为字典</summary>
+            <param name="target"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.Collections.Generic.CollectionHelper.Merge(System.Collections.Generic.IDictionary{System.String,System.Object},System.Object,System.Boolean,System.String[])">
+            <summary>合并字典参数</summary>
+            <param name="dic">字典</param>
+            <param name="target">目标对象</param>
+            <param name="overwrite">是否覆盖同名参数</param>
+            <param name="excludes">排除项</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.Collections.Generic.CollectionHelper.ToNullable``2(System.Collections.Generic.IDictionary{``0,``1},System.Collections.Generic.IEqualityComparer{``0})">
+            <summary>转为可空字典</summary>
+            <typeparam name="TKey"></typeparam>
+            <typeparam name="TValue"></typeparam>
+            <param name="collection"></param>
+            <param name="comparer"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.Collections.Generic.CollectionHelper.Take``1(System.Collections.Generic.Queue{``0},System.Int32)">
+            <summary>从队列里面获取指定个数元素</summary>
+            <typeparam name="T"></typeparam>
+            <param name="collection">消费集合</param>
+            <param name="count">元素个数</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.Collections.Generic.CollectionHelper.Take``1(System.Collections.Concurrent.IProducerConsumerCollection{``0},System.Int32)">
+            <summary>从消费集合里面获取指定个数元素</summary>
+            <typeparam name="T"></typeparam>
+            <param name="collection">消费集合</param>
+            <param name="count">元素个数</param>
+            <returns></returns>
+        </member>
+        <member name="T:System.Utility">
+            <summary>工具类</summary>
+            <remarks>
+            采用静态架构，允许外部重载工具类的各种实现<seealso cref="T:System.DefaultConvert"/>。
+            所有类型转换均支持默认值，默认值为该default(T)，在转换失败时返回默认值。
+            </remarks>
+        </member>
+        <member name="P:System.Utility.Convert">
+            <summary>类型转换提供者</summary>
+            <remarks>重载默认提供者<seealso cref="T:System.DefaultConvert"/>并赋值给<see cref="P:System.Utility.Convert"/>可改变所有类型转换的行为</remarks>
+        </member>
+        <member name="M:System.Utility.ToInt(System.Object,System.Int32)">
+            <summary>转为整数，转换失败时返回默认值。支持字符串、全角、字节数组（小端）、时间（Unix秒）</summary>
+            <remarks>Int16/UInt32/Int64等，可以先转为最常用的Int32后再二次处理</remarks>
+            <param name="value">待转换对象</param>
+            <param name="defaultValue">默认值。待转换对象无效时使用</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.Utility.ToLong(System.Object,System.Int64)">
+            <summary>转为长整数，转换失败时返回默认值。支持字符串、全角、字节数组（小端）、时间（Unix毫秒）</summary>
+            <remarks></remarks>
+            <param name="value">待转换对象</param>
+            <param name="defaultValue">默认值。待转换对象无效时使用</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.Utility.ToDouble(System.Object,System.Double)">
+            <summary>转为浮点数，转换失败时返回默认值。支持字符串、全角、字节数组（小端）</summary>
+            <remarks>Single可以先转为最常用的Double后再二次处理</remarks>
+            <param name="value">待转换对象</param>
+            <param name="defaultValue">默认值。待转换对象无效时使用</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.Utility.ToBoolean(System.Object,System.Boolean)">
+            <summary>转为布尔型，转换失败时返回默认值。支持大小写True/False、0和非零</summary>
+            <param name="value">待转换对象</param>
+            <param name="defaultValue">默认值。待转换对象无效时使用</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.Utility.ToDateTime(System.Object)">
+            <summary>转为时间日期，转换失败时返回最小时间。支持字符串、整数（Unix秒）</summary>
+            <param name="value">待转换对象</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.Utility.ToDateTime(System.Object,System.DateTime)">
+            <summary>转为时间日期，转换失败时返回默认值</summary>
+            <remarks><see cref="F:System.DateTime.MinValue"/>不是常量无法做默认值</remarks>
+            <param name="value">待转换对象</param>
+            <param name="defaultValue">默认值。待转换对象无效时使用</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.Utility.ToFullString(System.DateTime)">
+            <summary>时间日期转为yyyy-MM-dd HH:mm:ss完整字符串</summary>
+            <remarks>最常用的时间日期格式，可以无视各平台以及系统自定义的时间格式</remarks>
+            <param name="value">待转换对象</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.Utility.ToFullString(System.DateTime,System.String)">
+            <summary>时间日期转为yyyy-MM-dd HH:mm:ss完整字符串，支持指定最小时间的字符串</summary>
+            <remarks>最常用的时间日期格式，可以无视各平台以及系统自定义的时间格式</remarks>
+            <param name="value">待转换对象</param>
+            <param name="emptyValue">字符串空值时（DateTime.MinValue）显示的字符串，null表示原样显示最小时间，String.Empty表示不显示</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.Utility.ToString(System.DateTime,System.String,System.String)">
+            <summary>时间日期转为指定格式字符串</summary>
+            <param name="value">待转换对象</param>
+            <param name="format">格式化字符串</param>
+            <param name="emptyValue">字符串空值时显示的字符串，null表示原样显示最小时间，String.Empty表示不显示</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.Utility.GetTrue(System.Exception)">
+            <summary>获取内部真实异常</summary>
+            <param name="ex"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.Utility.GetMessage(System.Exception)">
+            <summary>获取异常消息</summary>
+            <param name="ex">异常</param>
+            <returns></returns>
+        </member>
+        <member name="T:System.DefaultConvert">
+            <summary>默认转换</summary>
+        </member>
+        <member name="M:System.DefaultConvert.ToInt(System.Object,System.Int32)">
+            <summary>转为整数，转换失败时返回默认值。支持字符串、全角、字节数组（小端）、时间（Unix秒）</summary>
+            <param name="value">待转换对象</param>
+            <param name="defaultValue">默认值。待转换对象无效时使用</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.DefaultConvert.ToLong(System.Object,System.Int64)">
+            <summary>转为长整数。支持字符串、全角、字节数组（小端）、时间（Unix毫秒）</summary>
+            <param name="value">待转换对象</param>
+            <param name="defaultValue">默认值。待转换对象无效时使用</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.DefaultConvert.ToDouble(System.Object,System.Double)">
+            <summary>转为浮点数</summary>
+            <param name="value">待转换对象</param>
+            <param name="defaultValue">默认值。待转换对象无效时使用</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.DefaultConvert.ToBoolean(System.Object,System.Boolean)">
+            <summary>转为布尔型。支持大小写True/False、0和非零</summary>
+            <param name="value">待转换对象</param>
+            <param name="defaultValue">默认值。待转换对象无效时使用</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.DefaultConvert.ToDateTime(System.Object,System.DateTime)">
+            <summary>转为时间日期，转换失败时返回最小时间。支持字符串、整数（Unix秒）</summary>
+            <param name="value">待转换对象</param>
+            <param name="defaultValue">默认值。待转换对象无效时使用</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.DefaultConvert.ToDBC(System.String)">
+            <summary>全角为半角</summary>
+            <remarks>全角半角的关系是相差0xFEE0</remarks>
+            <param name="str"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.DefaultConvert.ToFullString(System.DateTime,System.String)">
+            <summary>时间日期转为yyyy-MM-dd HH:mm:ss完整字符串</summary>
+            <param name="value">待转换对象</param>
+            <param name="emptyValue">字符串空值时显示的字符串，null表示原样显示最小时间，String.Empty表示不显示</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.DefaultConvert.ToString(System.DateTime,System.String,System.String)">
+            <summary>时间日期转为指定格式字符串</summary>
+            <param name="value">待转换对象</param>
+            <param name="format">格式化字符串</param>
+            <param name="emptyValue">字符串空值时显示的字符串，null表示原样显示最小时间，String.Empty表示不显示</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.DefaultConvert.GetTrue(System.Exception)">
+            <summary>获取内部真实异常</summary>
+            <param name="ex"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.DefaultConvert.GetMessage(System.Exception)">
+            <summary>获取异常消息</summary>
+            <param name="ex">异常</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.DefaultConvert.ToGMK(System.Int64,System.String)">
+            <summary>字节单位字符串</summary>
+            <param name="value">数值</param>
+            <param name="format">格式化字符串</param>
+            <returns></returns>
+        </member>
+        <member name="T:System.BitHelper">
+            <summary>数据位助手</summary>
+        </member>
+        <member name="M:System.BitHelper.SetBit(System.UInt16,System.Int32,System.Boolean)">
+            <summary>设置数据位</summary>
+            <param name="value">数值</param>
+            <param name="position"></param>
+            <param name="flag"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.BitHelper.SetBits(System.UInt16,System.Int32,System.Int32,System.UInt16)">
+            <summary>设置数据位</summary>
+            <param name="value">数值</param>
+            <param name="position"></param>
+            <param name="length"></param>
+            <param name="bits"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.BitHelper.SetBit(System.Byte,System.Int32,System.Boolean)">
+            <summary>设置数据位</summary>
+            <param name="value">数值</param>
+            <param name="position"></param>
+            <param name="flag"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.BitHelper.GetBit(System.UInt16,System.Int32)">
+            <summary>获取数据位</summary>
+            <param name="value">数值</param>
+            <param name="position"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.BitHelper.GetBits(System.UInt16,System.Int32,System.Int32)">
+            <summary>获取数据位</summary>
+            <param name="value">数值</param>
+            <param name="position"></param>
+            <param name="length"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.BitHelper.GetBit(System.Byte,System.Int32)">
+            <summary>获取数据位</summary>
+            <param name="value">数值</param>
+            <param name="position"></param>
+            <returns></returns>
+        </member>
+        <member name="T:System.ConcurrentDictionaryExtensions">
+            <summary>并行字典扩展</summary>
+        </member>
+        <member name="M:System.ConcurrentDictionaryExtensions.Remove``2(System.Collections.Concurrent.ConcurrentDictionary{``0,``1},``0)">
+            <summary>从并行字典中删除</summary>
+            <typeparam name="TKey"></typeparam>
+            <typeparam name="TValue"></typeparam>
+            <param name="dict"></param>
+            <param name="key"></param>
+            <returns></returns>
+        </member>
+        <member name="T:System.EndPointExtensions">
+            <summary>网络结点扩展</summary>
+        </member>
+        <member name="M:System.EndPointExtensions.ToAddress(System.Net.EndPoint)">
+            <summary>
+            
+            </summary>
+            <param name="endpoint"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.EndPointExtensions.ToAddress(System.Net.IPEndPoint)">
+            <summary>
+            
+            </summary>
+            <param name="endpoint"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.EndPointExtensions.ToEndPoint(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="address"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.EndPointExtensions.ToEndPoints(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="addresses"></param>
+            <returns></returns>
+        </member>
+        <member name="T:System.EnumHelper">
+            <summary>枚举类型助手类</summary>
+        </member>
+        <member name="M:System.EnumHelper.Has(System.Enum,System.Enum)">
+            <summary>枚举变量是否包含指定标识</summary>
+            <param name="value">枚举变量</param>
+            <param name="flag">要判断的标识</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.EnumHelper.Set``1(System.Enum,``0,System.Boolean)">
+            <summary>设置标识位</summary>
+            <typeparam name="T"></typeparam>
+            <param name="source"></param>
+            <param name="flag"></param>
+            <param name="value">数值</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.EnumHelper.GetDescription(System.Enum)">
+            <summary>获取枚举字段的注释</summary>
+            <param name="value">数值</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.EnumHelper.GetDescriptions``1">
+            <summary>获取枚举类型的所有字段注释</summary>
+            <typeparam name="TEnum"></typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:System.EnumHelper.GetDescriptions(System.Type)">
+            <summary>获取枚举类型的所有字段注释</summary>
+            <param name="enumType"></param>
+            <returns></returns>
+        </member>
+        <member name="T:System.ListExtension">
+            <summary>扩展List，支持遍历中修改元素</summary>
+        </member>
+        <member name="M:System.ListExtension.Find``1(System.Collections.Generic.IList{``0},System.Predicate{``0})">
+            <summary>线程安全，搜索并返回第一个，支持遍历中修改元素</summary>
+            <param name="list">实体列表</param>
+            <param name="match">条件</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.ListExtension.FindAll``1(System.Collections.Generic.IList{``0},System.Predicate{``0})">
+            <summary>线程安全，搜索并返回第一个，支持遍历中修改元素</summary>
+            <param name="list">实体列表</param>
+            <param name="match">条件</param>
+            <returns></returns>
+        </member>
+        <member name="T:System.StringHelper">
+            <summary>字符串助手类</summary>
+        </member>
+        <member name="M:System.StringHelper.EqualIgnoreCase(System.String,System.String[])">
+            <summary>忽略大小写的字符串相等比较，判断是否以任意一个待比较字符串相等</summary>
+            <param name="value">字符串</param>
+            <param name="strs">待比较字符串数组</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.StartsWithIgnoreCase(System.String,System.String[])">
+            <summary>忽略大小写的字符串开始比较，判断是否以任意一个待比较字符串开始</summary>
+            <param name="value">字符串</param>
+            <param name="strs">待比较字符串数组</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.EndsWithIgnoreCase(System.String,System.String[])">
+            <summary>忽略大小写的字符串结束比较，判断是否以任意一个待比较字符串结束</summary>
+            <param name="value">字符串</param>
+            <param name="strs">待比较字符串数组</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.IsNullOrEmpty(System.String)">
+            <summary>指示指定的字符串是 null 还是 String.Empty 字符串</summary>
+            <param name="value">字符串</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.IsNullOrWhiteSpace(System.String)">
+            <summary>是否空或者空白字符串</summary>
+            <param name="value">字符串</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.Split(System.String,System.String[])">
+            <summary>拆分字符串，过滤空格，无效时返回空数组</summary>
+            <param name="value">字符串</param>
+            <param name="separators">分组分隔符，默认逗号分号</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.SplitAsInt(System.String,System.String[])">
+            <summary>拆分字符串成为整型数组，默认逗号分号分隔，无效时返回空数组</summary>
+            <remarks>过滤空格、过滤无效、不过滤重复</remarks>
+            <param name="value">字符串</param>
+            <param name="separators">分组分隔符，默认逗号分号</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.SplitAsDictionary(System.String,System.String,System.String[])">
+            <summary>拆分字符串成为不区分大小写的可空名值字典。逗号分号分组，等号分隔</summary>
+            <param name="value">字符串</param>
+            <param name="nameValueSeparator">名值分隔符，默认等于号</param>
+            <param name="separators">分组分隔符，默认逗号分号</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.SplitAsDictionary(System.String,System.String,System.String,System.Boolean)">
+            <summary>拆分字符串成为不区分大小写的可空名值字典。逗号分组，等号分隔</summary>
+            <param name="value">字符串</param>
+            <param name="nameValueSeparator">名值分隔符，默认等于号</param>
+            <param name="separator">分组分隔符，默认分号</param>
+            <param name="trimQuotation">去掉括号</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.SplitAsDictionaryT(System.String,System.Char,System.Char,System.Boolean)">
+            <summary>
+            在.netCore需要区分该部分内容
+            </summary>
+            <param name="value"></param>
+            <param name="nameValueSeparator"></param>
+            <param name="separator"></param>
+            <param name="trimQuotation"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.Join(System.Collections.IEnumerable,System.String)">
+            <summary>把一个列表组合成为一个字符串，默认逗号分隔</summary>
+            <param name="value"></param>
+            <param name="separator">组合分隔符，默认逗号</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.Join``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Func{``0,System.String})">
+            <summary>把一个列表组合成为一个字符串，默认逗号分隔</summary>
+            <param name="value"></param>
+            <param name="separator">组合分隔符，默认逗号</param>
+            <param name="func">把对象转为字符串的委托</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.Join``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Func{``0,System.Object})">
+            <summary>把一个列表组合成为一个字符串，默认逗号分隔</summary>
+            <param name="value"></param>
+            <param name="separator">组合分隔符，默认逗号</param>
+            <param name="func">把对象转为字符串的委托</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.Separate(System.Text.StringBuilder,System.String)">
+            <summary>追加分隔符字符串，忽略开头，常用于拼接</summary>
+            <param name="sb">字符串构造者</param>
+            <param name="separator">分隔符</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.GetBytes(System.String,System.Text.Encoding)">
+            <summary>字符串转数组</summary>
+            <param name="value">字符串</param>
+            <param name="encoding">编码，默认utf-8无BOM</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.F(System.String,System.Object[])">
+            <summary>格式化字符串。特别支持无格式化字符串的时间参数</summary>
+            <param name="value">格式字符串</param>
+            <param name="args">参数</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.EnsureStart(System.String,System.String)">
+            <summary>确保字符串以指定的另一字符串开始，不区分大小写</summary>
+            <param name="str">字符串</param>
+            <param name="start"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.EnsureEnd(System.String,System.String)">
+            <summary>确保字符串以指定的另一字符串结束，不区分大小写</summary>
+            <param name="str">字符串</param>
+            <param name="end"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.TrimStart(System.String,System.String[])">
+            <summary>从当前字符串开头移除另一字符串，不区分大小写，循环多次匹配前缀</summary>
+            <param name="str">当前字符串</param>
+            <param name="starts">另一字符串</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.TrimEnd(System.String,System.String[])">
+            <summary>从当前字符串结尾移除另一字符串，不区分大小写，循环多次匹配后缀</summary>
+            <param name="str">当前字符串</param>
+            <param name="ends">另一字符串</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.Substring(System.String,System.String,System.String,System.Int32,System.Int32[])">
+            <summary>从字符串中检索子字符串，在指定头部字符串之后，指定尾部字符串之前</summary>
+            <remarks>常用于截取xml某一个元素等操作</remarks>
+            <param name="str">目标字符串</param>
+            <param name="after">头部字符串，在它之后</param>
+            <param name="before">尾部字符串，在它之前</param>
+            <param name="startIndex">搜索的开始位置</param>
+            <param name="positions">位置数组，两个元素分别记录头尾位置</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.Cut(System.String,System.Int32,System.String)">
+            <summary>根据最大长度截取字符串，并允许以指定空白填充末尾</summary>
+            <param name="str">字符串</param>
+            <param name="maxLength">截取后字符串的最大允许长度，包含后面填充</param>
+            <param name="pad">需要填充在后面的字符串，比如几个圆点</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.CutStart(System.String,System.String[])">
+            <summary>从当前字符串开头移除另一字符串以及之前的部分</summary>
+            <param name="str">当前字符串</param>
+            <param name="starts">另一字符串</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.CutEnd(System.String,System.String[])">
+            <summary>从当前字符串结尾移除另一字符串以及之后的部分</summary>
+            <param name="str">当前字符串</param>
+            <param name="ends">另一字符串</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.LevenshteinSearch(System.String,System.String[])">
+            <summary>编辑距离搜索，从词组中找到最接近关键字的若干匹配项</summary>
+            <remarks>
+            算法代码由@Aimeast 独立完成。http://www.cnblogs.com/Aimeast/archive/2011/09/05/2167844.html
+            </remarks>
+            <param name="key">关键字</param>
+            <param name="words">词组</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.LevenshteinDistance(System.String,System.String)">
+            <summary>编辑距离</summary>
+            <remarks>
+            又称Levenshtein距离（也叫做Edit Distance），是指两个字串之间，由一个转成另一个所需的最少编辑操作次数。
+            许可的编辑操作包括将一个字符替换成另一个字符，插入一个字符，删除一个字符。
+            算法代码由@Aimeast 独立完成。http://www.cnblogs.com/Aimeast/archive/2011/09/05/2167844.html
+            </remarks>
+            <param name="str1"></param>
+            <param name="str2"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.LCSSearch(System.String,System.String[])">
+            <summary>最长公共子序列搜索，从词组中找到最接近关键字的若干匹配项</summary>
+            <remarks>
+            算法代码由@Aimeast 独立完成。http://www.cnblogs.com/Aimeast/archive/2011/09/05/2167844.html
+            </remarks>
+            <param name="key"></param>
+            <param name="words"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.LCSDistance(System.String,System.String[])">
+            <summary>
+            最长公共子序列问题是寻找两个或多个已知数列最长的子序列。
+            一个数列 S，如果分别是两个或多个已知数列的子序列，且是所有符合此条件序列中最长的，则 S 称为已知序列的最长公共子序列。
+            The longest common subsequence (LCS) problem is to find the longest subsequence common to all sequences in a set of sequences (often just two). Note that subsequence is different from a substring, see substring vs. subsequence. It is a classic computer science problem, the basis of diff (a file comparison program that outputs the differences between two files), and has applications in bioinformatics.
+            </summary>
+            <remarks>
+            算法代码由@Aimeast 独立完成。http://www.cnblogs.com/Aimeast/archive/2011/09/05/2167844.html
+            </remarks>
+            <param name="word"></param>
+            <param name="keys">多个关键字。长度必须大于0，必须按照字符串长度升序排列。</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.LCS``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Func{``0,System.String})">
+            <summary>根据列表项成员计算距离</summary>
+            <typeparam name="T"></typeparam>
+            <param name="list"></param>
+            <param name="keys"></param>
+            <param name="keySelector"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.LCSSearch``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Func{``0,System.String},System.Int32)">
+            <summary>在列表项中进行模糊搜索</summary>
+            <typeparam name="T"></typeparam>
+            <param name="list"></param>
+            <param name="keys"></param>
+            <param name="keySelector"></param>
+            <param name="count"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.Match``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Func{``0,System.String})">
+            <summary>模糊匹配</summary>
+            <typeparam name="T"></typeparam>
+            <param name="list"></param>
+            <param name="keys"></param>
+            <param name="keySelector"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.Match(System.String,System.String,System.Int32)">
+            <summary>模糊匹配</summary>
+            <param name="str"></param>
+            <param name="key"></param>
+            <param name="maxError"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.Match``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Func{``0,System.String},System.Int32,System.Double)">
+            <summary>模糊匹配</summary>
+            <typeparam name="T"></typeparam>
+            <param name="list">列表项</param>
+            <param name="keys">关键字</param>
+            <param name="keySelector">匹配字符串选择</param>
+            <param name="count">获取个数</param>
+            <param name="confidence">权重阀值</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.StringHelper.Speak(System.String)">
+            <summary>调用语音引擎说出指定话</summary>
+            <param name="value"></param>
+        </member>
+        <member name="M:System.StringHelper.SpeakAsync(System.String)">
+            <summary>异步调用语音引擎说出指定话。可能导致后来的调用打断前面的语音</summary>
+            <param name="value"></param>
+        </member>
+        <member name="P:System.StringHelper.EnableSpeechTip">
+            <summary>启用语音提示</summary>
+        </member>
+        <member name="M:System.StringHelper.SpeechTip(System.String)">
+            <summary>语音提示操作</summary>
+            <param name="value"></param>
+        </member>
+        <member name="M:System.StringHelper.SpeakAsyncCancelAll(System.String)">
+            <summary>
+            停止所有语音播报
+            </summary>
+            <param name="value"></param>
+        </member>
+        <member name="M:System.StringHelper.Run(System.String,System.String,System.Int32,System.Action{System.String},System.Action{System.Diagnostics.Process})">
+            <summary>以隐藏窗口执行命令行</summary>
+            <param name="cmd">文件名</param>
+            <param name="arguments">命令参数</param>
+            <param name="msWait">等待毫秒数</param>
+            <param name="output">进程输出内容。默认为空时输出到日志</param>
+            <param name="onExit">进程退出时执行</param>
+            <returns>进程退出代码</returns>
+        </member>
+        <member name="T:System.IOHelper">
+            <summary>IO工具类</summary>
+        </member>
+        <member name="M:System.IOHelper.Compress(System.IO.Stream,System.IO.Stream)">
+            <summary>压缩数据流</summary>
+            <param name="inStream">输入流</param>
+            <param name="outStream">输出流。如果不指定，则内部实例化一个内存流</param>
+            <remarks>返回输出流，注意此时指针位于末端</remarks>
+        </member>
+        <member name="M:System.IOHelper.Decompress(System.IO.Stream,System.IO.Stream)">
+            <summary>解压缩数据流</summary>
+            <param name="inStream">输入流</param>
+            <param name="outStream">输出流。如果不指定，则内部实例化一个内存流</param>
+            <remarks>返回输出流，注意此时指针位于末端</remarks>
+        </member>
+        <member name="M:System.IOHelper.Compress(System.Byte[])">
+            <summary>压缩字节数组</summary>
+            <param name="data">字节数组</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.Decompress(System.Byte[])">
+            <summary>解压缩字节数组</summary>
+            <param name="data">字节数组</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.CompressGZip(System.IO.Stream,System.IO.Stream)">
+            <summary>压缩数据流</summary>
+            <param name="inStream">输入流</param>
+            <param name="outStream">输出流。如果不指定，则内部实例化一个内存流</param>
+            <remarks>返回输出流，注意此时指针位于末端</remarks>
+        </member>
+        <member name="M:System.IOHelper.DecompressGZip(System.IO.Stream,System.IO.Stream)">
+            <summary>解压缩数据流</summary>
+            <param name="inStream">输入流</param>
+            <param name="outStream">输出流。如果不指定，则内部实例化一个内存流</param>
+            <remarks>返回输出流，注意此时指针位于末端</remarks>
+        </member>
+        <member name="M:System.IOHelper.CopyTo(System.IO.Stream,System.IO.Stream,System.Int32,System.Int32)">
+            <summary>复制数据流</summary>
+            <param name="src">源数据流</param>
+            <param name="des">目的数据流</param>
+            <param name="bufferSize">缓冲区大小，也就是每次复制的大小</param>
+            <param name="max">最大复制字节数</param>
+            <returns>返回复制的总字节数</returns>
+        </member>
+        <member name="M:System.IOHelper.Write(System.IO.Stream,System.IO.Stream,System.Int32,System.Int32)">
+            <summary>把一个数据流写入到另一个数据流</summary>
+            <param name="des">目的数据流</param>
+            <param name="src">源数据流</param>
+            <param name="bufferSize">缓冲区大小，也就是每次复制的大小</param>
+            <param name="max">最大复制字节数</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.Write(System.IO.Stream,System.Byte[])">
+            <summary>把一个字节数组写入到一个数据流</summary>
+            <param name="des">目的数据流</param>
+            <param name="src">源数据流</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.WriteArray(System.IO.Stream,System.Byte[])">
+            <summary>写入字节数组，先写入压缩整数表示的长度</summary>
+            <param name="des"></param>
+            <param name="src"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.ReadArray(System.IO.Stream)">
+            <summary>读取字节数组，先读取压缩整数表示的长度</summary>
+            <param name="des"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.WriteDateTime(System.IO.Stream,System.DateTime)">
+            <summary>写入Unix格式时间，1970年以来秒数，绝对时间，非UTC</summary>
+            <param name="stream"></param>
+            <param name="dt"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.ReadDateTime(System.IO.Stream)">
+            <summary>读取Unix格式时间，1970年以来秒数，绝对时间，非UTC</summary>
+            <param name="stream"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.ReadBytes(System.Byte[],System.Int32,System.Int32)">
+            <summary>复制数组</summary>
+            <param name="src">源数组</param>
+            <param name="offset">起始位置</param>
+            <param name="count">复制字节数</param>
+            <returns>返回复制的总字节数</returns>
+        </member>
+        <member name="M:System.IOHelper.Write(System.Byte[],System.Int32,System.Byte[],System.Int32,System.Int32)">
+            <summary>向字节数组写入一片数据</summary>
+            <param name="dst">目标数组</param>
+            <param name="dstOffset">目标偏移</param>
+            <param name="src">源数组</param>
+            <param name="srcOffset">源数组偏移</param>
+            <param name="count">数量</param>
+            <returns>返回实际写入的字节个数</returns>
+        </member>
+        <member name="M:System.IOHelper.Combine(System.Byte[],System.Byte[],System.Int32,System.Int32)">
+            <summary>合并两个数组</summary>
+            <param name="src">源数组</param>
+            <param name="des">目标数组</param>
+            <param name="offset">起始位置</param>
+            <param name="count">字节数</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.ReadBytes(System.IO.Stream,System.Int64)">
+            <summary>数据流转为字节数组</summary>
+            <remarks>
+            针对MemoryStream进行优化。内存流的Read实现是一个个字节复制，而ToArray是调用内部内存复制方法
+            如果要读完数据，又不支持定位，则采用内存流搬运
+            如果指定长度超过数据流长度，就让其报错，因为那是调用者所期望的值
+            </remarks>
+            <param name="stream">数据流</param>
+            <param name="length">长度，0表示读到结束</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.ToArray(System.IO.Stream)">
+            <summary>数据流转为字节数组，从0开始，无视数据流的当前位置</summary>
+            <param name="stream">数据流</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.ReadTo(System.IO.Stream,System.Byte[],System.Int64,System.Int64)">
+            <summary>从数据流中读取字节数组，直到遇到指定字节数组</summary>
+            <param name="stream">数据流</param>
+            <param name="buffer">字节数组</param>
+            <param name="offset">字节数组中的偏移</param>
+            <param name="length">字节数组中的查找长度</param>
+            <returns>未找到时返回空，0位置范围大小为0的字节数组</returns>
+        </member>
+        <member name="M:System.IOHelper.ReadTo(System.IO.Stream,System.String,System.Text.Encoding)">
+            <summary>从数据流中读取字节数组，直到遇到指定字节数组</summary>
+            <param name="stream">数据流</param>
+            <param name="str"></param>
+            <param name="encoding"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.ReadLine(System.IO.Stream,System.Text.Encoding)">
+            <summary>从数据流中读取一行，直到遇到换行</summary>
+            <param name="stream">数据流</param>
+            <param name="encoding"></param>
+            <returns>未找到返回null，0位置返回String.Empty</returns>
+        </member>
+        <member name="M:System.IOHelper.ToStr(System.IO.Stream,System.Text.Encoding)">
+            <summary>流转换为字符串</summary>
+            <param name="stream">目标流</param>
+            <param name="encoding">编码格式</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.ToStr(System.Byte[],System.Text.Encoding,System.Int32,System.Int32)">
+            <summary>字节数组转换为字符串</summary>
+            <param name="buf">字节数组</param>
+            <param name="encoding">编码格式</param>
+            <param name="offset">字节数组中的偏移</param>
+            <param name="count">字节数组中的查找长度</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.ToUInt16(System.Byte[],System.Int32,System.Boolean)">
+            <summary>从字节数据指定位置读取一个无符号16位整数</summary>
+            <param name="data"></param>
+            <param name="offset">偏移</param>
+            <param name="isLittleEndian">是否小端字节序</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.ToUInt32(System.Byte[],System.Int32,System.Boolean)">
+            <summary>从字节数据指定位置读取一个无符号32位整数</summary>
+            <param name="data"></param>
+            <param name="offset">偏移</param>
+            <param name="isLittleEndian">是否小端字节序</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.ToUInt64(System.Byte[],System.Int32,System.Boolean)">
+            <summary>从字节数据指定位置读取一个无符号64位整数</summary>
+            <param name="data"></param>
+            <param name="offset">偏移</param>
+            <param name="isLittleEndian">是否小端字节序</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.Write(System.Byte[],System.UInt16,System.Int32,System.Boolean)">
+            <summary>向字节数组的指定位置写入一个无符号16位整数</summary>
+            <param name="data"></param>
+            <param name="n">数字</param>
+            <param name="offset">偏移</param>
+            <param name="isLittleEndian">是否小端字节序</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.Write(System.Byte[],System.UInt32,System.Int32,System.Boolean)">
+            <summary>向字节数组的指定位置写入一个无符号32位整数</summary>
+            <param name="data"></param>
+            <param name="n">数字</param>
+            <param name="offset">偏移</param>
+            <param name="isLittleEndian">是否小端字节序</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.Write(System.Byte[],System.UInt64,System.Int32,System.Boolean)">
+            <summary>向字节数组的指定位置写入一个无符号64位整数</summary>
+            <param name="data"></param>
+            <param name="n">数字</param>
+            <param name="offset">偏移</param>
+            <param name="isLittleEndian">是否小端字节序</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.GetBytes(System.UInt16,System.Boolean)">
+            <summary>整数转为字节数组，注意大小端字节序</summary>
+            <param name="value"></param>
+            <param name="isLittleEndian"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.GetBytes(System.Int16,System.Boolean)">
+            <summary>整数转为字节数组，注意大小端字节序</summary>
+            <param name="value"></param>
+            <param name="isLittleEndian"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.GetBytes(System.UInt32,System.Boolean)">
+            <summary>整数转为字节数组，注意大小端字节序</summary>
+            <param name="value"></param>
+            <param name="isLittleEndian"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.GetBytes(System.Int32,System.Boolean)">
+            <summary>整数转为字节数组，注意大小端字节序</summary>
+            <param name="value"></param>
+            <param name="isLittleEndian"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.GetBytes(System.UInt64,System.Boolean)">
+            <summary>整数转为字节数组，注意大小端字节序</summary>
+            <param name="value"></param>
+            <param name="isLittleEndian"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.GetBytes(System.Int64,System.Boolean)">
+            <summary>整数转为字节数组，注意大小端字节序</summary>
+            <param name="value"></param>
+            <param name="isLittleEndian"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.ReadEncodedInt(System.IO.Stream)">
+            <summary>以压缩格式读取32位整数</summary>
+            <param name="stream">数据流</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.ReadEncodedInt64(System.IO.Stream)">
+            <summary>以压缩格式读取32位整数</summary>
+            <param name="stream">数据流</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.TryReadEncodedInt(System.IO.Stream,System.UInt32@)">
+            <summary>尝试读取压缩编码整数</summary>
+            <param name="stream"></param>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.WriteEncodedInt(System.IO.Stream,System.Int64)">
+            <summary>
+            以7位压缩格式写入32位整数，小于7位用1个字节，小于14位用2个字节。
+            由每次写入的一个字节的第一位标记后面的字节是否还是当前数据，所以每个字节实际可利用存储空间只有后7位。
+            </summary>
+            <param name="stream">数据流</param>
+            <param name="value">数值</param>
+            <returns>实际写入字节数</returns>
+        </member>
+        <member name="M:System.IOHelper.GetEncodedInt(System.Int64)">
+            <summary>获取压缩编码整数</summary>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.IndexOf(System.IO.Stream,System.Byte[],System.Int64,System.Int64)">
+            <summary>在数据流中查找字节数组的位置，流指针会移动到结尾</summary>
+            <param name="stream">数据流</param>
+            <param name="buffer">字节数组</param>
+            <param name="offset">字节数组中的偏移</param>
+            <param name="length">字节数组中的查找长度</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.IndexOf(System.Byte[],System.Byte[],System.Int64,System.Int64)">
+            <summary>在字节数组中查找另一个字节数组的位置，不存在则返回-1</summary>
+            <param name="source">字节数组</param>
+            <param name="buffer">另一个字节数组</param>
+            <param name="offset">偏移</param>
+            <param name="length">查找长度</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.IndexOf(System.Byte[],System.Int64,System.Int64,System.Byte[],System.Int64,System.Int64)">
+            <summary>在字节数组中查找另一个字节数组的位置，不存在则返回-1</summary>
+            <param name="source">字节数组</param>
+            <param name="start">源数组起始位置</param>
+            <param name="count">查找长度</param>
+            <param name="buffer">另一个字节数组</param>
+            <param name="offset">偏移</param>
+            <param name="length">查找长度</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.CompareTo(System.Byte[],System.Byte[])">
+            <summary>比较两个字节数组大小。相等返回0，不等则返回不等的位置，如果位置为0，则返回1。</summary>
+            <param name="source"></param>
+            <param name="buffer">缓冲区</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.CompareTo(System.Byte[],System.Int64,System.Int64,System.Byte[],System.Int64,System.Int64)">
+            <summary>比较两个字节数组大小。相等返回0，不等则返回不等的位置，如果位置为0，则返回1。</summary>
+            <param name="source"></param>
+            <param name="start"></param>
+            <param name="count">数量</param>
+            <param name="buffer">缓冲区</param>
+            <param name="offset">偏移</param>
+            <param name="length"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.Split(System.Byte[],System.Byte[])">
+            <summary>字节数组分割</summary>
+            <param name="buf"></param>
+            <param name="sps"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.StartsWith(System.IO.Stream,System.Byte[])">
+            <summary>一个数据流是否以另一个数组开头。如果成功，指针移到目标之后，否则保持指针位置不变。</summary>
+            <param name="source"></param>
+            <param name="buffer">缓冲区</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.EndsWith(System.IO.Stream,System.Byte[])">
+            <summary>一个数据流是否以另一个数组结尾。如果成功，指针移到目标之后，否则保持指针位置不变。</summary>
+            <param name="source"></param>
+            <param name="buffer">缓冲区</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.StartsWith(System.Byte[],System.Byte[])">
+            <summary>一个数组是否以另一个数组开头</summary>
+            <param name="source"></param>
+            <param name="buffer">缓冲区</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.EndsWith(System.Byte[],System.Byte[])">
+            <summary>一个数组是否以另一个数组结尾</summary>
+            <param name="source"></param>
+            <param name="buffer">缓冲区</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.Reverse(System.Byte[])">
+            <summary>倒序、更换字节序</summary>
+            <param name="buf">字节数组</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.ToHex(System.Byte[],System.Int32,System.Int32)">
+            <summary>把字节数组编码为十六进制字符串</summary>
+            <param name="data">字节数组</param>
+            <param name="offset">偏移</param>
+            <param name="count">数量。超过实际数量时，使用实际数量</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.ToHex(System.Byte[],System.String,System.Int32,System.Int32)">
+            <summary>把字节数组编码为十六进制字符串，带有分隔符和分组功能</summary>
+            <param name="data">字节数组</param>
+            <param name="separate">分隔符</param>
+            <param name="groupSize">分组大小，为0时对每个字节应用分隔符，否则对每个分组使用</param>
+            <param name="maxLength">最大显示多少个字节。默认-1显示全部</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.ToHex(System.String,System.Int32,System.Int32)">
+            <summary>解密</summary>
+            <param name="data">Hex编码的字符串</param>
+            <param name="startIndex">起始位置</param>
+            <param name="length">长度</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.ToBase64(System.Byte[],System.Int32,System.Int32,System.Boolean)">
+            <summary>字节数组转为Base64编码</summary>
+            <param name="data"></param>
+            <param name="offset"></param>
+            <param name="count"></param>
+            <param name="lineBreak">是否换行显示</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.ToUrlBase64(System.Byte[],System.Int32,System.Int32)">
+            <summary>字节数组转为Url改进型Base64编码</summary>
+            <param name="data"></param>
+            <param name="offset"></param>
+            <param name="count"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IOHelper.ToBase64(System.String)">
+            <summary>Base64字符串转为字节数组</summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="T:System.IO.PathHelper">
+            <summary>路径操作帮助</summary>
+        </member>
+        <member name="P:System.IO.PathHelper.BaseDirectory">
+            <summary>基础目录。GetFullPath依赖于此，默认为当前应用程序域基础目录</summary>
+        </member>
+        <member name="M:System.IO.PathHelper.GetFullPath(System.String)">
+            <summary>获取文件或目录的全路径，过滤相对目录</summary>
+            <remarks>不确保目录后面一定有分隔符，是否有分隔符由原始路径末尾决定</remarks>
+            <param name="path">文件或目录</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IO.PathHelper.GetBasePath(System.String)">
+            <summary>获取文件或目录基于应用程序域基目录的全路径，过滤相对目录</summary>
+            <remarks>不确保目录后面一定有分隔符，是否有分隔符由原始路径末尾决定</remarks>
+            <param name="path">文件或目录</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IO.PathHelper.GetCurrentPath(System.String)">
+            <summary>获取文件或目录基于当前目录的全路径，过滤相对目录</summary>
+            <remarks>不确保目录后面一定有分隔符，是否有分隔符由原始路径末尾决定</remarks>
+            <param name="path">文件或目录</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IO.PathHelper.EnsureDirectory(System.String,System.Boolean)">
+            <summary>确保目录存在，若不存在则创建</summary>
+            <remarks>
+            斜杠结尾的路径一定是目录，无视第二参数；
+            默认是文件，这样子只需要确保上一层目录存在即可，否则如果把文件当成了目录，目录的创建会导致文件无法创建。
+            </remarks>
+            <param name="path">文件路径或目录路径，斜杠结尾的路径一定是目录，无视第二参数</param>
+            <param name="isfile">该路径是否是否文件路径。文件路径需要取目录部分</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IO.PathHelper.CombinePath(System.String,System.String[])">
+            <summary>合并多段路径</summary>
+            <param name="path"></param>
+            <param name="ps"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IO.PathHelper.AsFile(System.String)">
+            <summary>文件路径作为文件信息</summary>
+            <param name="file"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IO.PathHelper.ReadBytes(System.IO.FileInfo,System.Int32,System.Int32)">
+            <summary>从文件中读取数据</summary>
+            <param name="file"></param>
+            <param name="offset"></param>
+            <param name="count"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IO.PathHelper.WriteBytes(System.IO.FileInfo,System.Byte[],System.Int32)">
+            <summary>把数据写入文件指定位置</summary>
+            <param name="file"></param>
+            <param name="data"></param>
+            <param name="offset"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IO.PathHelper.ReadText(System.IO.FileInfo,System.Text.Encoding)">
+            <summary>读取所有文本，自动检测编码</summary>
+            <remarks>性能较File.ReadAllText略慢，可通过提前检测BOM编码来优化</remarks>
+            <param name="file"></param>
+            <param name="encoding"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IO.PathHelper.WriteText(System.IO.FileInfo,System.String,System.Text.Encoding)">
+            <summary>把文本写入文件，自动检测编码</summary>
+            <param name="file"></param>
+            <param name="text"></param>
+            <param name="encoding"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IO.PathHelper.CopyToIfNewer(System.IO.FileInfo,System.String)">
+            <summary>复制到目标文件，目标文件必须已存在，且源文件较新</summary>
+            <param name="fi">源文件</param>
+            <param name="destFileName">目标文件</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IO.PathHelper.OpenRead``1(System.IO.FileInfo,System.Func{System.IO.FileStream,``0})">
+            <summary>打开并读取</summary>
+            <typeparam name="T">返回类型</typeparam>
+            <param name="file">文件信息</param>
+            <param name="func">要对文件流操作的委托</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IO.PathHelper.OpenWrite``1(System.IO.FileInfo,System.Func{System.IO.FileStream,``0})">
+            <summary>打开并写入</summary>
+            <typeparam name="T">返回类型</typeparam>
+            <param name="file">文件信息</param>
+            <param name="func">要对文件流操作的委托</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IO.PathHelper.Extract(System.IO.FileInfo,System.String,System.Boolean)">
+            <summary>解压缩</summary>
+            <param name="fi"></param>
+            <param name="destDir"></param>
+            <param name="overwrite">是否覆盖目标同名文件</param>
+        </member>
+        <member name="M:System.IO.PathHelper.Compress(System.IO.FileInfo,System.String)">
+            <summary>压缩文件</summary>
+            <param name="fi"></param>
+            <param name="destFile"></param>
+        </member>
+        <member name="M:System.IO.PathHelper.AsDirectory(System.String)">
+            <summary>路径作为目录信息</summary>
+            <param name="dir"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IO.PathHelper.GetAllFiles(System.IO.DirectoryInfo,System.String,System.Boolean)">
+            <summary>获取目录内所有符合条件的文件，支持多文件扩展匹配</summary>
+            <param name="di">目录</param>
+            <param name="exts">文件扩展列表。比如*.exe;*.dll;*.config</param>
+            <param name="allSub">是否包含所有子孙目录文件</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IO.PathHelper.CopyTo(System.IO.DirectoryInfo,System.String,System.String,System.Boolean,System.Action{System.String})">
+            <summary>复制目录中的文件</summary>
+            <param name="di">源目录</param>
+            <param name="destDirName">目标目录</param>
+            <param name="exts">文件扩展列表。比如*.exe;*.dll;*.config</param>
+            <param name="allSub">是否包含所有子孙目录文件</param>
+            <param name="callback">复制每一个文件之前的回调</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IO.PathHelper.CopyToIfNewer(System.IO.DirectoryInfo,System.String,System.String,System.Boolean,System.Action{System.String})">
+            <summary>对比源目录和目标目录，复制双方都存在且源目录较新的文件</summary>
+            <param name="di">源目录</param>
+            <param name="destDirName">目标目录</param>
+            <param name="exts">文件扩展列表。比如*.exe;*.dll;*.config</param>
+            <param name="allSub">是否包含所有子孙目录文件</param>
+            <param name="callback">复制每一个文件之前的回调</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IO.PathHelper.CopyIfNewer(System.IO.DirectoryInfo,System.String[],System.String,System.Boolean)">
+            <summary>从多个目标目录复制较新文件到当前目录</summary>
+            <param name="di">当前目录</param>
+            <param name="source">多个目标目录</param>
+            <param name="exts">文件扩展列表。比如*.exe;*.dll;*.config</param>
+            <param name="allSub">是否包含所有子孙目录文件</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.IO.PathHelper.Compress(System.IO.DirectoryInfo,System.String)">
+            <summary>压缩</summary>
+            <param name="di"></param>
+            <param name="destFile"></param>
+        </member>
+        <member name="T:System.ModelExtension">
+            <summary>模型扩展</summary>
+        </member>
+        <member name="M:System.ModelExtension.GetService``1(System.IServiceProvider)">
+            <summary>获取指定类型的服务对象</summary>
+            <typeparam name="T"></typeparam>
+            <param name="provider"></param>
+            <returns></returns>
+        </member>
+        <member name="T:System.ObjectContainerHelper">
+            <summary>对象容器助手。扩展方法专用</summary>
+        </member>
+        <member name="M:System.ObjectContainerHelper.Register``2(NewLife.Model.IObjectContainer,System.Object,System.Int32)">
+            <summary>注册类型和名称</summary>
+            <typeparam name="TInterface">接口类型</typeparam>
+            <typeparam name="TImplement">实现类型</typeparam>
+            <param name="container">对象容器</param>
+            <param name="id">标识</param>
+            <param name="priority">优先级</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.ObjectContainerHelper.Register``1(NewLife.Model.IObjectContainer,System.Object,System.Object,System.Int32)">
+            <summary>注册类型指定名称的实例</summary>
+            <typeparam name="TInterface">接口类型</typeparam>
+            <param name="container">对象容器</param>
+            <param name="instance">实例</param>
+            <param name="id">标识</param>
+            <param name="priority">优先级</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.ObjectContainerHelper.Resolve``1(NewLife.Model.IObjectContainer,System.Object)">
+            <summary>解析类型指定名称的实例</summary>
+            <typeparam name="TInterface">接口类型</typeparam>
+            <param name="container">对象容器</param>
+            <param name="id">标识</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.ObjectContainerHelper.ResolveInstance``1(NewLife.Model.IObjectContainer,System.Object)">
+            <summary>解析类型指定名称的实例</summary>
+            <typeparam name="TInterface">接口类型</typeparam>
+            <param name="container">对象容器</param>
+            <param name="id">标识</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.ObjectContainerHelper.AutoRegister``2(NewLife.Model.IObjectContainer)">
+            <summary>遍历所有程序集的所有类型，自动注册实现了指定接口或基类的类型。如果没有注册任何实现，则默认注册第一个排除类型</summary>
+            <remarks>自动注册一般用于单实例功能扩展型接口</remarks>
+            <typeparam name="TInterface">接口类型</typeparam>
+            <typeparam name="TImplement">要排除的类型，一般是内部默认实现</typeparam>
+            <param name="container">对象容器</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.ObjectContainerHelper.ResolveType``1(NewLife.Model.IObjectContainer,System.Object)">
+            <summary>解析接口指定名称的实现类型</summary>
+            <typeparam name="TInterface">接口类型</typeparam>
+            <param name="container">对象容器</param>
+            <param name="id">标识</param>
+            <returns></returns>
+        </member>
+        <member name="T:System.NetHelper">
+            <summary>网络工具类</summary>
+        </member>
+        <member name="M:System.NetHelper.SetTcpKeepAlive(System.Net.Sockets.Socket,System.Boolean,System.Int32,System.Int32)">
+            <summary>设置超时检测时间和检测间隔</summary>
+            <param name="socket">要设置的Socket对象</param>
+            <param name="iskeepalive">是否启用Keep-Alive</param>
+            <param name="starttime">多长时间后开始第一次探测（单位：毫秒）</param>
+            <param name="interval">探测时间间隔（单位：毫秒）</param>
+        </member>
+        <member name="M:System.NetHelper.ParseAddress(System.String)">
+            <summary>分析地址，根据IP或者域名得到IP地址，缓存60秒，异步更新</summary>
+            <param name="hostname"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.ParseEndPoint(System.String,System.Int32)">
+            <summary>分析网络终结点</summary>
+            <param name="address">地址，可以不带端口</param>
+            <param name="defaultPort">地址不带端口时指定的默认端口</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.GetRightAny(System.Net.IPAddress,System.Net.Sockets.AddressFamily)">
+            <summary>针对IPv4和IPv6获取合适的Any地址</summary>
+            <remarks>除了Any地址以为，其它地址不具备等效性</remarks>
+            <param name="address"></param>
+            <param name="family"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.IsAny(System.Net.IPAddress)">
+            <summary>是否Any地址，同时处理IPv4和IPv6</summary>
+            <param name="address"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.IsAny(System.Net.EndPoint)">
+            <summary>是否Any结点</summary>
+            <param name="endpoint"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.IsIPv4(System.Net.IPAddress)">
+            <summary>是否IPv4地址</summary>
+            <param name="address"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.IsLocal(System.Net.IPAddress)">
+            <summary>是否本地地址</summary>
+            <param name="address"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.GetRelativeAddress(System.Net.IPAddress,System.Net.IPAddress)">
+            <summary>获取相对于指定远程地址的本地地址</summary>
+            <param name="address"></param>
+            <param name="remote"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.GetRelativeEndPoint(System.Net.IPEndPoint,System.Net.IPAddress)">
+            <summary>获取相对于指定远程地址的本地地址</summary>
+            <param name="local"></param>
+            <param name="remote"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.CheckPort(System.Net.IPAddress,NewLife.Net.NetType,System.Int32)">
+            <summary>指定地址的指定端口是否已被使用，似乎没办法判断IPv6地址</summary>
+            <param name="protocol"></param>
+            <param name="address"></param>
+            <param name="port"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.CheckPort(NewLife.Net.NetUri)">
+            <summary>检查该协议的地址端口是否已经呗使用</summary>
+            <param name="uri"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.GetActiveInterfaces">
+            <summary>获取活动的接口信息</summary>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.GetDhcps">
+            <summary>获取可用的DHCP地址</summary>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.GetDns">
+            <summary>获取可用的DNS地址</summary>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.GetGateways">
+            <summary>获取可用的网关地址</summary>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.GetIPs">
+            <summary>获取可用的IP地址</summary>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.GetIPsWithCache">
+            <summary>获取本机可用IP地址，缓存60秒，异步更新</summary>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.GetMulticasts">
+            <summary>获取可用的多播地址</summary>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.GetMacs">
+            <summary>获取以太网MAC地址</summary>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.MyIP">
+            <summary>获取本地第一个IPv4地址</summary>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.MyIPv6">
+            <summary>获取本地第一个IPv6地址</summary>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.Wake(System.String[])">
+            <summary>唤醒指定MAC地址的计算机</summary>
+            <param name="macs"></param>
+        </member>
+        <member name="M:System.NetHelper.GetMac(System.Net.IPAddress)">
+            <summary>根据IP地址获取MAC地址</summary>
+            <param name="ip"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.GetAddress(System.Net.IPAddress)">
+            <summary>获取IP地址的物理地址位置</summary>
+            <param name="addr"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.IPToAddress(System.String)">
+            <summary>根据字符串形式IP地址转为物理地址</summary>
+            <param name="addr"></param>
+            <returns></returns>
+        </member>
+        <member name="T:System.NetHelper.IPProvider">
+            <summary>IP地址提供者接口</summary>
+        </member>
+        <member name="M:System.NetHelper.IPProvider.GetAddress(System.Net.IPAddress)">
+            <summary>获取IP地址的物理地址位置</summary>
+            <param name="addr"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.CreateClient(NewLife.Net.NetUri)">
+            <summary>根据本地网络标识创建客户端</summary>
+            <param name="local"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.NetHelper.CreateRemote(NewLife.Net.NetUri)">
+            <summary>根据远程网络标识创建客户端</summary>
+            <param name="remote"></param>
+            <returns></returns>
+        </member>
+        <member name="T:System.AttributeX">
+            <summary>特性辅助类</summary>
+        </member>
+        <member name="M:System.AttributeX.GetCustomAttributes``1(System.Reflection.Assembly)">
+            <summary>获取自定义属性，带有缓存功能，避免因.Net内部GetCustomAttributes没有缓存而带来的损耗</summary>
+            <typeparam name="TAttribute"></typeparam>
+            <param name="assembly"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.AttributeX.GetDisplayName(System.Reflection.MemberInfo,System.Boolean)">
+            <summary>获取成员绑定的显示名，优先DisplayName，然后Description</summary>
+            <param name="member"></param>
+            <param name="inherit"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.AttributeX.GetDescription(System.Reflection.MemberInfo,System.Boolean)">
+            <summary>获取成员绑定的显示名，优先DisplayName，然后Description</summary>
+            <param name="member"></param>
+            <param name="inherit"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.AttributeX.GetCustomAttributeValue``2(System.Reflection.Assembly)">
+            <summary>获取自定义属性的值。可用于ReflectionOnly加载的程序集</summary>
+            <typeparam name="TAttribute"></typeparam>
+            <typeparam name="TResult"></typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:System.AttributeX.GetCustomAttributeValue``2(System.Reflection.MemberInfo,System.Boolean)">
+            <summary>获取自定义属性的值。可用于ReflectionOnly加载的程序集</summary>
+            <typeparam name="TAttribute"></typeparam>
+            <typeparam name="TResult"></typeparam>
+            <param name="target">目标对象</param>
+            <param name="inherit">是否递归</param>
+            <returns></returns>
+        </member>
+        <member name="T:System.SecurityHelper">
+            <summary>安全算法</summary>
+        </member>
+        <member name="M:System.SecurityHelper.MD5(System.Byte[])">
+            <summary>MD5散列</summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.SecurityHelper.MD5(System.String,System.Text.Encoding)">
+            <summary>MD5散列</summary>
+            <param name="data"></param>
+            <param name="encoding">字符串编码，默认Default</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.SecurityHelper.MD5_16(System.String,System.Text.Encoding)">
+            <summary>MD5散列</summary>
+            <param name="data"></param>
+            <param name="encoding">字符串编码，默认Default</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.SecurityHelper.Crc(System.Byte[])">
+            <summary>Crc散列</summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.SecurityHelper.Crc16(System.Byte[])">
+            <summary>Crc16散列</summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.SecurityHelper.SHA1(System.Byte[],System.Byte[])">
+            <summary>SHA128</summary>
+            <param name="data"></param>
+            <param name="key"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.SecurityHelper.SHA256(System.Byte[],System.Byte[])">
+            <summary>SHA256</summary>
+            <param name="data"></param>
+            <param name="key"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.SecurityHelper.SHA384(System.Byte[],System.Byte[])">
+            <summary>SHA384</summary>
+            <param name="data"></param>
+            <param name="key"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.SecurityHelper.SHA512(System.Byte[],System.Byte[])">
+            <summary>SHA512</summary>
+            <param name="data"></param>
+            <param name="key"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.SecurityHelper.Encrypt(System.Security.Cryptography.SymmetricAlgorithm,System.IO.Stream,System.IO.Stream)">
+            <summary>对称加密算法扩展</summary>
+            <remarks>注意：CryptoStream会把 outstream 数据流关闭</remarks>
+            <param name="sa"></param>
+            <param name="instream"></param>
+            <param name="outstream"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.SecurityHelper.Encrypt(System.Security.Cryptography.SymmetricAlgorithm,System.Byte[],System.Byte[],System.Security.Cryptography.CipherMode,System.Security.Cryptography.PaddingMode)">
+            <summary>对称加密算法扩展</summary>
+            <param name="sa">算法</param>
+            <param name="data">数据</param>
+            <param name="pass">密码</param>
+            <param name="mode">模式。.Net默认CBC，Java默认ECB</param>
+            <param name="padding">填充算法。默认PKCS7，等同Java的PKCS5</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.SecurityHelper.Descrypt(System.Security.Cryptography.SymmetricAlgorithm,System.IO.Stream,System.IO.Stream)">
+            <summary>对称解密算法扩展
+            <para>注意：CryptoStream会把 instream 数据流关闭</para>
+            </summary>
+            <param name="sa"></param>
+            <param name="instream"></param>
+            <param name="outstream"></param>
+            <returns></returns>
+        </member>
+        <member name="M:System.SecurityHelper.Descrypt(System.Security.Cryptography.SymmetricAlgorithm,System.Byte[],System.Byte[],System.Security.Cryptography.CipherMode,System.Security.Cryptography.PaddingMode)">
+            <summary>对称解密算法扩展</summary>
+            <param name="sa">算法</param>
+            <param name="data">数据</param>
+            <param name="pass">密码</param>
+            <param name="mode">模式。.Net默认CBC，Java默认ECB</param>
+            <param name="padding">填充算法。默认PKCS7，等同Java的PKCS5</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.SecurityHelper.RC4(System.Byte[],System.Byte[])">
+            <summary>RC4对称加密算法</summary>
+            <param name="data"></param>
+            <param name="pass"></param>
+            <returns></returns>
+        </member>
+        <member name="T:System.Web.Script.Serialization.ScriptIgnoreAttribute">
+            <summary>忽略Json序列化</summary>
         </member>
     </members>
 </doc>

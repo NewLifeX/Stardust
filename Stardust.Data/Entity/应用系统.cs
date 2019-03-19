@@ -214,25 +214,25 @@ namespace Stardust.Data
             {
                 switch (name)
                 {
-                    case __.ID : _ID = Convert.ToInt32(value); break;
+                    case __.ID : _ID = value.ToInt(); break;
                     case __.Name : _Name = Convert.ToString(value); break;
                     case __.DisplayName : _DisplayName = Convert.ToString(value); break;
                     case __.Secret : _Secret = Convert.ToString(value); break;
                     case __.Version : _Version = Convert.ToString(value); break;
-                    case __.Compile : _Compile = Convert.ToDateTime(value); break;
-                    case __.Enable : _Enable = Convert.ToBoolean(value); break;
-                    case __.Services : _Services = Convert.ToInt32(value); break;
-                    case __.Actions : _Actions = Convert.ToInt32(value); break;
-                    case __.LastLogin : _LastLogin = Convert.ToDateTime(value); break;
+                    case __.Compile : _Compile = value.ToDateTime(); break;
+                    case __.Enable : _Enable = value.ToBoolean(); break;
+                    case __.Services : _Services = value.ToInt(); break;
+                    case __.Actions : _Actions = value.ToInt(); break;
+                    case __.LastLogin : _LastLogin = value.ToDateTime(); break;
                     case __.LastIP : _LastIP = Convert.ToString(value); break;
                     case __.Remark : _Remark = Convert.ToString(value); break;
                     case __.CreateUser : _CreateUser = Convert.ToString(value); break;
-                    case __.CreateUserID : _CreateUserID = Convert.ToInt32(value); break;
-                    case __.CreateTime : _CreateTime = Convert.ToDateTime(value); break;
+                    case __.CreateUserID : _CreateUserID = value.ToInt(); break;
+                    case __.CreateTime : _CreateTime = value.ToDateTime(); break;
                     case __.CreateIP : _CreateIP = Convert.ToString(value); break;
                     case __.UpdateUser : _UpdateUser = Convert.ToString(value); break;
-                    case __.UpdateUserID : _UpdateUserID = Convert.ToInt32(value); break;
-                    case __.UpdateTime : _UpdateTime = Convert.ToDateTime(value); break;
+                    case __.UpdateUserID : _UpdateUserID = value.ToInt(); break;
+                    case __.UpdateTime : _UpdateTime = value.ToDateTime(); break;
                     case __.UpdateIP : _UpdateIP = Convert.ToString(value); break;
                     default: base[name] = value; break;
                 }

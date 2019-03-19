@@ -328,6 +328,9 @@
         <member name="P:NewLife.Cube.Admin.Controllers.IndexController.MenuOrder">
             <summary>菜单顺序。扫描是会反射读取</summary>
         </member>
+        <member name="M:NewLife.Cube.Admin.Controllers.IndexController.#ctor">
+            <summary>实例化</summary>
+        </member>
         <member name="M:NewLife.Cube.Admin.Controllers.IndexController.Index">
             <summary>首页</summary>
             <returns></returns>
@@ -516,9 +519,10 @@
             <param name="obj"></param>
             <returns></returns>
         </member>
-        <member name="M:NewLife.Cube.ObjectController`1.WriteLog(`0)">
+        <member name="M:NewLife.Cube.ObjectController`1.WriteLog(`0,System.String)">
             <summary>写日志</summary>
             <param name="obj"></param>
+            <param name="ip"></param>
         </member>
         <member name="M:NewLife.Cube.ObjectController`1.GetMembers(System.Object)">
             <summary>获取要显示编辑的成员</summary>
@@ -527,6 +531,16 @@
         </member>
         <member name="T:NewLife.Cube.ControllerBaseX">
             <summary>控制器基类</summary>
+        </member>
+        <member name="P:NewLife.Cube.ControllerBaseX.PageSetting">
+            <summary>页面设置</summary>
+        </member>
+        <member name="M:NewLife.Cube.ControllerBaseX.#ctor">
+            <summary>实例化控制器</summary>
+        </member>
+        <member name="M:NewLife.Cube.ControllerBaseX.OnActionExecuting(System.Web.Mvc.ActionExecutingContext)">
+            <summary>动作执行前</summary>
+            <param name="filterContext"></param>
         </member>
         <member name="M:NewLife.Cube.ControllerBaseX.GetRequest(System.String)">
             <summary>获取请求值</summary>
@@ -577,6 +591,11 @@
             <param name="data"></param>
             <returns></returns>
         </member>
+        <member name="P:NewLife.Cube.ControllerBaseX.UserHost">
+            <summary>
+            用户主机
+            </summary>
+        </member>
         <member name="T:NewLife.Cube.DbRunTimeModule">
             <summary>页面查询执行时间模块</summary>
         </member>
@@ -623,9 +642,9 @@
             <param name="newName"></param>
             <returns></returns>
         </member>
-        <member name="M:NewLife.Cube.FieldCollection.RemoveField(System.String)">
+        <member name="M:NewLife.Cube.FieldCollection.RemoveField(System.String[])">
             <summary>删除字段</summary>
-            <param name="name"></param>
+            <param name="names"></param>
             <returns></returns>
         </member>
         <member name="M:NewLife.Cube.FieldCollection.Replace(System.String,System.String)">
@@ -815,6 +834,25 @@
             <param name="autoPostback">自动回发</param>
             <returns></returns>
         </member>
+        <member name="T:NewLife.Cube.PageSetting">
+            <summary>页面设置。用于控制各页面功能</summary>
+        </member>
+        <member name="P:NewLife.Cube.PageSetting.Global">
+            <summary>全局设置</summary>
+        </member>
+        <member name="P:NewLife.Cube.PageSetting.EnableNavbar">
+            <summary>启用导航栏。默认true</summary>
+        </member>
+        <member name="P:NewLife.Cube.PageSetting.EnableAdd">
+            <summary>启用添加按钮。默认true</summary>
+        </member>
+        <member name="P:NewLife.Cube.PageSetting.EnableSelect">
+            <summary>启用选择列。默认Update/Delete权限时为true</summary>
+        </member>
+        <member name="M:NewLife.Cube.PageSetting.Clone">
+            <summary>克隆</summary>
+            <returns></returns>
+        </member>
         <member name="T:NewLife.Cube.RazorViewEngineX">
             <summary>自定义视图引擎。为了让系统优先查找当前区域目录</summary>
         </member>
@@ -1001,7 +1039,13 @@
             <returns></returns>
         </member>
         <member name="M:NewLife.Cube.EntityController`1.Json(System.String,NewLife.Web.Pager)">
-            <summary>数据接口</summary>
+            <summary>Json接口</summary>
+            <param name="id">令牌</param>
+            <param name="p">分页</param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.EntityController`1.Xml(System.String,NewLife.Web.Pager)">
+            <summary>Xml接口</summary>
             <param name="id">令牌</param>
             <param name="p">分页</param>
             <returns></returns>
@@ -1249,30 +1293,6 @@
             <summary>未认证请求</summary>
             <param name="filterContext"></param>
         </member>
-        <member name="T:NewLife.Cube.MvcHandleErrorAttribute">
-            <summary>拦截错误的特性</summary>
-        </member>
-        <member name="M:NewLife.Cube.MvcHandleErrorAttribute.OnException(System.Web.Mvc.ExceptionContext)">
-            <summary>拦截异常</summary>
-            <param name="ctx"></param>
-        </member>
-        <member name="T:NewLife.Cube.WeuiJS">
-             <summary>
-            提示
-             </summary>
-        </member>
-        <member name="M:NewLife.Cube.WeuiJS.Toast(System.String)">
-            <summary>
-            
-            </summary>
-            <param name="message"></param>
-        </member>
-        <member name="M:NewLife.Cube.WeuiJS.Alert(System.String)">
-            <summary>
-            
-            </summary>
-            <param name="message"></param>
-        </member>
         <member name="T:NewLife.Cube.Controllers.CubeHomeController">
             <summary>主页面</summary>
         </member>
@@ -1292,10 +1312,6 @@
         <member name="M:NewLife.Cube.Controllers.SsoController.Index">
             <summary>首页</summary>
             <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.Controllers.SsoController.OnException(System.Web.Mvc.ExceptionContext)">
-            <summary>发生错误时</summary>
-            <param name="filterContext"></param>
         </member>
         <member name="M:NewLife.Cube.Controllers.SsoController.Login(System.String)">
             <summary>第三方登录</summary>
@@ -2060,6 +2076,11 @@
             <param name="action">动作</param>
             <returns></returns>
         </member>
+        <member name="M:NewLife.Cube.PagerHelper.FilterSpecialChar(System.Collections.Generic.IDictionary{System.String,System.String})">
+            <summary>过滤特殊字符，避免注入</summary>
+            <param name="dic"></param>
+            <returns></returns>
+        </member>
         <member name="T:NewLife.Cube.MvcApplication">
             <summary>
             注意: 有关启用 IIS6 或 IIS7 经典模式的说明，
@@ -2569,17 +2590,6 @@
         <member name="M:NewLife.Cube.WebHelper2.IsAjaxRequest(System.Web.HttpRequest)">
             <summary>确定指定的 HTTP 请求是否为 AJAX 请求</summary>
             <param name="request"></param>
-            <returns></returns>
-        </member>
-        <member name="T:NewLife.Bootstrap.BootstrapJs">
-            <summary>Bootstrap脚本提供者</summary>
-        </member>
-        <member name="M:NewLife.Bootstrap.BootstrapJs.OnAlert(System.String,System.String,System.Int32,System.String)">
-            <summary>重载Alert实现</summary>
-            <param name="message">消息内容</param>
-            <param name="title">标题</param>
-            <param name="msDelay">延迟指定毫秒数以后自动关闭，默认0表示不关闭</param>
-            <param name="kind">种类，info/success/error等</param>
             <returns></returns>
         </member>
         <member name="T:NewLife.Web.Pager">

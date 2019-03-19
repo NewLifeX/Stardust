@@ -13,7 +13,7 @@ namespace Stardust.Data
     [Description("IP统计。记录IP地址每天访问量")]
     [BindIndex("IU_IpStat_IP_Level_Time", true, "IP,Level,Time")]
     [BindIndex("IX_IpStat_Level_Time", false, "Level,Time")]
-    [BindTable("IpStat", Description = "IP统计。记录IP地址每天访问量", ConnName = "Registry", DbType = DatabaseType.None)]
+    [BindTable("IpStat", Description = "IP统计。记录IP地址每天访问量", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class IpStat : IIpStat
     {
         #region 属性
@@ -134,17 +134,17 @@ namespace Stardust.Data
             {
                 switch (name)
                 {
-                    case __.ID : _ID = Convert.ToInt32(value); break;
+                    case __.ID : _ID = value.ToInt(); break;
                     case __.Ip : _Ip = Convert.ToString(value); break;
-                    case __.Level : _Level = (XCode.Statistics.StatLevels)Convert.ToInt32(value); break;
-                    case __.Time : _Time = Convert.ToDateTime(value); break;
-                    case __.Count : _Count = Convert.ToInt64(value); break;
-                    case __.Cost : _Cost = Convert.ToInt32(value); break;
-                    case __.TotalCost : _TotalCost = Convert.ToInt64(value); break;
-                    case __.LastAppID : _LastAppID = Convert.ToInt32(value); break;
-                    case __.LastServiceID : _LastServiceID = Convert.ToInt32(value); break;
-                    case __.CreateTime : _CreateTime = Convert.ToDateTime(value); break;
-                    case __.UpdateTime : _UpdateTime = Convert.ToDateTime(value); break;
+                    case __.Level : _Level = (XCode.Statistics.StatLevels)value.ToInt(); break;
+                    case __.Time : _Time = value.ToDateTime(); break;
+                    case __.Count : _Count = value.ToLong(); break;
+                    case __.Cost : _Cost = value.ToInt(); break;
+                    case __.TotalCost : _TotalCost = value.ToLong(); break;
+                    case __.LastAppID : _LastAppID = value.ToInt(); break;
+                    case __.LastServiceID : _LastServiceID = value.ToInt(); break;
+                    case __.CreateTime : _CreateTime = value.ToDateTime(); break;
+                    case __.UpdateTime : _UpdateTime = value.ToDateTime(); break;
                     default: base[name] = value; break;
                 }
             }

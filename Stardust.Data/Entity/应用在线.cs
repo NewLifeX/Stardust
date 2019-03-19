@@ -14,7 +14,7 @@ namespace Stardust.Data
     [BindIndex("IU_AppOnline_Session", true, "Session")]
     [BindIndex("IX_AppOnline_Client", false, "Client")]
     [BindIndex("IX_AppOnline_AppID", false, "AppID")]
-    [BindTable("AppOnline", Description = "应用在线。一个应用有多个部署，每个在线会话对应一个服务地址", ConnName = "Registry", DbType = DatabaseType.None)]
+    [BindTable("AppOnline", Description = "应用在线。一个应用有多个部署，每个在线会话对应一个服务地址", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppOnline : IAppOnline
     {
         #region 属性
@@ -171,21 +171,21 @@ namespace Stardust.Data
             {
                 switch (name)
                 {
-                    case __.ID : _ID = Convert.ToInt32(value); break;
-                    case __.AppID : _AppID = Convert.ToInt32(value); break;
+                    case __.ID : _ID = value.ToInt(); break;
+                    case __.AppID : _AppID = value.ToInt(); break;
                     case __.Session : _Session = Convert.ToString(value); break;
                     case __.Client : _Client = Convert.ToString(value); break;
                     case __.Name : _Name = Convert.ToString(value); break;
                     case __.Version : _Version = Convert.ToString(value); break;
-                    case __.Compile : _Compile = Convert.ToDateTime(value); break;
+                    case __.Compile : _Compile = value.ToDateTime(); break;
                     case __.Server : _Server = Convert.ToString(value); break;
                     case __.Address : _Address = Convert.ToString(value); break;
-                    case __.Services : _Services = Convert.ToInt32(value); break;
+                    case __.Services : _Services = value.ToInt(); break;
                     case __.Actions : _Actions = Convert.ToString(value); break;
-                    case __.Clients : _Clients = Convert.ToInt32(value); break;
-                    case __.CreateTime : _CreateTime = Convert.ToDateTime(value); break;
+                    case __.Clients : _Clients = value.ToInt(); break;
+                    case __.CreateTime : _CreateTime = value.ToDateTime(); break;
                     case __.CreateIP : _CreateIP = Convert.ToString(value); break;
-                    case __.UpdateTime : _UpdateTime = Convert.ToDateTime(value); break;
+                    case __.UpdateTime : _UpdateTime = value.ToDateTime(); break;
                     default: base[name] = value; break;
                 }
             }

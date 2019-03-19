@@ -4005,6 +4005,53 @@
             <summary>写入</summary>
             <param name="writer"></param>
         </member>
+        <member name="T:XCode.DataAccessLayer.MSPageSplit">
+            <summary>MS系列数据库分页算法</summary>
+        </member>
+        <member name="M:XCode.DataAccessLayer.MSPageSplit.PageSplit(XCode.DataAccessLayer.SelectBuilder,System.Int64,System.Int64,System.Boolean,System.Func{XCode.DataAccessLayer.SelectBuilder,System.Int64})">
+            <summary>分页算法</summary>
+            <remarks>
+            builder里面必须含有排序，否则就要通过key指定主键，否则大部分算法不能使用，会导致逻辑数据排序不正确。
+            其实，一般数据都是按照聚集索引排序，而聚集索引刚好也就是主键。
+            所以，只要设置的Key顺序跟主键顺序一致，就没有问题。
+            如果，Key指定了跟主键不一致的顺序，那么查询语句一定要指定同样的排序。
+            </remarks>
+            <param name="builder"></param>
+            <param name="startRowIndex"></param>
+            <param name="maximumRows"></param>
+            <param name="isSql2005"></param>
+            <param name="queryCountCallback">查询总记录数的委托，近供DoubleTop使用</param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.DataAccessLayer.MSPageSplit.TopNotIn(XCode.DataAccessLayer.SelectBuilder,System.Int64,System.Int64)">
+            <summary>最经典的NotIn分页，通用但是效率最差。只需指定一个排序列。</summary>
+            <param name="builder">查询生成器</param>
+            <param name="startRowIndex">开始行，0表示第一行</param>
+            <param name="maximumRows">最大返回行数，0表示所有行</param>
+            <returns>分页SQL</returns>
+        </member>
+        <member name="M:XCode.DataAccessLayer.MSPageSplit.DoubleTop(XCode.DataAccessLayer.SelectBuilder,System.Int64,System.Int64,System.Func{XCode.DataAccessLayer.SelectBuilder,System.Int64})">
+            <summary>双Top分页，因为没有使用not in，性能比NotIn要好。语句必须有排序，不需额外指定排序列</summary>
+            <param name="builder"></param>
+            <param name="startRowIndex"></param>
+            <param name="maximumRows"></param>
+            <param name="queryCountCallback">查询总记录数的委托，近供DoubleTop使用</param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.DataAccessLayer.MSPageSplit.MaxMin(XCode.DataAccessLayer.SelectBuilder,System.Int64,System.Int64)">
+            <summary>按唯一数字最大最小分页，性能很好。必须指定一个数字型排序列。</summary>
+            <param name="builder">查询生成器</param>
+            <param name="startRowIndex">开始行，0表示第一行</param>
+            <param name="maximumRows">最大返回行数，0表示所有行</param>
+            <returns>分页SQL</returns>
+        </member>
+        <member name="M:XCode.DataAccessLayer.MSPageSplit.RowNumber(XCode.DataAccessLayer.SelectBuilder,System.Int64,System.Int64)">
+            <summary>RowNumber分页算法</summary>
+            <param name="builder">查询生成器</param>
+            <param name="startRowIndex">开始行，0表示第一行</param>
+            <param name="maximumRows">最大返回行数，0表示所有行</param>
+            <returns></returns>
+        </member>
         <member name="T:XCode.DataAccessLayer.SelectBuilder">
             <summary>SQL查询语句生成器</summary>
             <remarks>
@@ -5077,7 +5124,7 @@
         <member name="P:XCode.EntityBase.Extends">
             <summary>扩展属性</summary>
         </member>
-        <member name="P:XCode.EntityBase.Addition">
+        <member name="P:XCode.EntityBase.XCode#IEntity#Addition">
             <summary>累加</summary>
         </member>
         <member name="P:XCode.EntityBase.XCode#IEntity#IsNullKey">
@@ -5115,6 +5162,9 @@
         </member>
         <member name="P:XCode.EntityExtend.Expire">
             <summary>过期时间。单位是秒</summary>
+        </member>
+        <member name="P:XCode.EntityExtend.Keys">
+            <summary>键集合</summary>
         </member>
         <member name="M:XCode.EntityExtend.#ctor">
             <summary>实例化一个不区分键大小写的实体扩展</summary>
@@ -5253,7 +5303,10 @@
             <typeparam name="T">实体类型</typeparam>
             <param name="list">实体列表</param>
             <param name="columns">要插入的字段，默认所有字段</param>
-            <returns></returns>
+            <returns>
+            Oracle：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事物）
+            MySQL：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事物）
+            </returns>
         </member>
         <member name="M:XCode.EntityExtension.BatchUpdate``1(System.Collections.Generic.IEnumerable{``0},XCode.DataAccessLayer.IDataColumn[],System.Collections.Generic.ICollection{System.String},System.Collections.Generic.ICollection{System.String})">
             <summary>批量更新</summary>
@@ -5276,7 +5329,13 @@
             <param name="columns">要插入的字段，默认所有字段</param>
             <param name="updateColumns">要更新的字段，默认脏数据</param>
             <param name="addColumns">要累加更新的字段，默认累加</param>
-            <returns></returns>
+            <returns>
+            MySQL返回值：返回值相当于流程执行次数，及时insert失败也会累计一次执行（所以不建议通过该返回值确定操作记录数）
+            do insert success = 1次; 
+            do update success =2次(insert 1次+update 1次)，
+            简单来说：对于一行记录，如果Insert 成功则返回1，如果需要执行的是update 则返回2
+            Oracle返回值：无论是插入还是更新返回的都始终为-1
+            </returns>
         </member>
         <member name="M:XCode.EntityExtension.InsertOrUpdate``1(System.Collections.Generic.IEnumerable{``0},XCode.DataAccessLayer.IDataColumn[],System.Collections.Generic.ICollection{System.String},System.Collections.Generic.ICollection{System.String})">
             <summary>批量插入或更新</summary>
@@ -5293,7 +5352,12 @@
             <param name="columns">要插入的字段，默认所有字段</param>
             <param name="updateColumns">主键已存在时，要更新的字段</param>
             <param name="addColumns">主键已存在时，要累加更新的字段</param>
-            <returns></returns>
+            <returns>
+            MySQL返回值：返回值相当于流程执行次数，及时insert失败也会累计一次执行（所以不建议通过该返回值确定操作记录数）
+            do insert success = 1次; 
+            do update success =2次(insert 1次+update 1次)，
+            简单来说：如果Insert 成功则返回1，如果需要执行的是update 则返回2，
+            </returns>
         </member>
         <member name="M:XCode.EntityExtension.ToTable``1(System.Collections.Generic.IEnumerable{``0})">
             <summary>转为DbTable</summary>
@@ -5401,9 +5465,6 @@
         <member name="P:XCode.EntityQueue.Speed">
             <summary>保存速度，每秒保存多少个实体</summary>
         </member>
-        <member name="E:XCode.EntityQueue.Error">
-            <summary>错误发生时</summary>
-        </member>
         <member name="M:XCode.EntityQueue.#ctor(XCode.IEntitySession)">
             <summary>实例化实体队列</summary>
         </member>
@@ -5415,6 +5476,11 @@
         </member>
         <member name="F:XCode.EntityQueue._count">
             <summary>当前缓存个数</summary>
+        </member>
+        <member name="M:XCode.EntityQueue.OnError(System.Collections.Generic.IList{XCode.IEntity},System.Exception)">
+            <summary>发生错误</summary>
+            <param name="list"></param>
+            <param name="ex"></param>
         </member>
         <member name="T:XCode.EntitySession`1">
             <summary>实体会话。每个实体类、连接名和表名形成一个实体会话</summary>
@@ -5681,6 +5747,9 @@
         <member name="P:XCode.IEntity.IsFromDatabase">
             <summary>是否来自数据库。设置相同属性值时不改变脏数据</summary>
         </member>
+        <member name="P:XCode.IEntity.Addition">
+            <summary>累加</summary>
+        </member>
         <member name="P:XCode.IEntity.IsNullKey">
             <summary>主键是否为空</summary>
         </member>
@@ -5766,6 +5835,22 @@
         <member name="M:XCode.EntityAddition.Set(System.Collections.Generic.IEnumerable{System.String})">
             <summary>设置累加字段</summary>
             <param name="names">字段集合</param>
+        </member>
+        <member name="M:XCode.EntityAddition.Get">
+            <summary>获取累加备份</summary>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.EntityAddition.Reset(System.Collections.Generic.IDictionary{System.String,System.Object[]})">
+            <summary>重置累加备份</summary>
+            <param name="dfs"></param>
+        </member>
+        <member name="M:XCode.EntityAddition.SetField(System.Collections.Generic.IEnumerable{XCode.IEntity})">
+            <summary>设置累加备份</summary>
+            <param name="list"></param>
+        </member>
+        <member name="M:XCode.EntityAddition.SetField(XCode.IEntity)">
+            <summary>设置累加备份</summary>
+            <param name="entity"></param>
         </member>
         <member name="T:XCode.IEntityModule">
             <summary>实体处理模块</summary>
@@ -6811,6 +6896,34 @@
         </member>
         <member name="T:XCode.Membership.DefaultLogProvider">
             <summary>默认日志提供者，使用实体类<seealso cref="T:XCode.Membership.Log"/></summary>
+        </member>
+        <member name="T:XCode.Membership.MenuProvider">
+            <summary>菜单提供者。提供菜单相关操作的功能</summary>
+        </member>
+        <member name="M:XCode.Membership.MenuProvider.WriteLog(System.Type,System.String,System.String)">
+            <summary>写日志</summary>
+            <param name="type">类型</param>
+            <param name="action">操作</param>
+            <param name="remark">备注</param>
+        </member>
+        <member name="P:XCode.Membership.MenuProvider.Enable">
+            <summary>是否使用日志</summary>
+        </member>
+        <member name="P:XCode.Membership.MenuProvider.Provider">
+            <summary>当前成员提供者</summary>
+        </member>
+        <member name="T:XCode.Membership.MenuProvider`1">
+            <summary>泛型菜单提供者，使用泛型菜单实体基类作为派生</summary>
+            <typeparam name="TMenu"></typeparam>
+        </member>
+        <member name="M:XCode.Membership.MenuProvider`1.WriteLog(System.Type,System.String,System.String)">
+            <summary>写日志</summary>
+            <param name="type">类型</param>
+            <param name="action">操作</param>
+            <param name="remark">备注</param>
+        </member>
+        <member name="T:XCode.Membership.DefaultMenuProvider">
+            <summary>默认菜单提供者，使用实体类<seealso cref="T:XCode.Membership.Menu"/></summary>
         </member>
         <member name="T:XCode.Membership.UserModule">
             <summary>用户模型</summary>
@@ -9892,6 +10005,31 @@
             <param name="value">数值</param>
             <returns></returns>
         </member>
+        <member name="T:XCode.Model.EntityDeferredQueue">
+            <summary>实体延迟队列。缓冲合并对象，批量处理</summary>
+        </member>
+        <member name="P:XCode.Model.EntityDeferredQueue.BatchSave">
+            <summary>是否批量保存。默认true，使用数据库批量更新操作</summary>
+        </member>
+        <member name="M:XCode.Model.EntityDeferredQueue.Process(System.Collections.Generic.IList{System.Object})">
+            <summary>处理一批</summary>
+            <param name="list"></param>
+        </member>
+        <member name="T:XCode.Model.XCodeService">
+            <summary>XCode服务对象提供者</summary>
+        </member>
+        <member name="P:XCode.Model.XCodeService.Container">
+            <summary>当前对象容器</summary>
+        </member>
+        <member name="M:XCode.Model.XCodeService.CreateTable">
+            <summary>创建模型数据表</summary>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Model.XCodeService.CreateDataRowEntityAccessor(System.Type)">
+            <summary>创建实体类的数据行访问器</summary>
+            <param name="entityType"></param>
+            <returns></returns>
+        </member>
         <member name="T:XCode.Expression">
             <summary>表达式基类</summary>
         </member>
@@ -10100,21 +10238,6 @@
             <param name="exp"></param>
             <returns></returns>
         </member>
-        <member name="T:XCode.Model.XCodeService">
-            <summary>XCode服务对象提供者</summary>
-        </member>
-        <member name="P:XCode.Model.XCodeService.Container">
-            <summary>当前对象容器</summary>
-        </member>
-        <member name="M:XCode.Model.XCodeService.CreateTable">
-            <summary>创建模型数据表</summary>
-            <returns></returns>
-        </member>
-        <member name="M:XCode.Model.XCodeService.CreateDataRowEntityAccessor(System.Type)">
-            <summary>创建实体类的数据行访问器</summary>
-            <param name="entityType"></param>
-            <returns></returns>
-        </member>
         <member name="T:XCode.Service.DbClient">
             <summary>数据客户端</summary>
         </member>
@@ -10263,192 +10386,6 @@
         <member name="M:XCode.Setting.OnLoaded">
             <summary>加载后检查默认值</summary>
         </member>
-        <member name="T:XCode.Sharding.Shard">
-            <summary>分片</summary>
-            <summary>分片</summary>
-        </member>
-        <member name="M:XCode.Sharding.Shard.Valid(System.Boolean)">
-            <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>
-            <param name="isNew">是否插入</param>
-        </member>
-        <member name="M:XCode.Sharding.Shard.FindByID(System.Int32)">
-            <summary>根据编号查找</summary>
-            <param name="id">编号</param>
-            <returns>实体对象</returns>
-        </member>
-        <member name="M:XCode.Sharding.Shard.FindByName(System.String)">
-            <summary>根据名称查找</summary>
-            <param name="name">名称</param>
-            <returns>实体对象</returns>
-        </member>
-        <member name="M:XCode.Sharding.Shard.FindByType(System.String)">
-            <summary>根据实体类查找</summary>
-            <param name="type">实体类</param>
-            <returns>实体列表</returns>
-        </member>
-        <member name="P:XCode.Sharding.Shard.ID">
-            <summary>编号</summary>
-        </member>
-        <member name="P:XCode.Sharding.Shard.Name">
-            <summary>名称</summary>
-        </member>
-        <member name="P:XCode.Sharding.Shard.Type">
-            <summary>实体类</summary>
-        </member>
-        <member name="P:XCode.Sharding.Shard.ConnName">
-            <summary>连接名</summary>
-        </member>
-        <member name="P:XCode.Sharding.Shard.TableName">
-            <summary>表名</summary>
-        </member>
-        <member name="P:XCode.Sharding.Shard.CreateUserID">
-            <summary>创建者</summary>
-        </member>
-        <member name="P:XCode.Sharding.Shard.CreateIP">
-            <summary>创建地址</summary>
-        </member>
-        <member name="P:XCode.Sharding.Shard.CreateTime">
-            <summary>创建时间</summary>
-        </member>
-        <member name="P:XCode.Sharding.Shard.UpdateUserID">
-            <summary>更新者</summary>
-        </member>
-        <member name="P:XCode.Sharding.Shard.UpdateIP">
-            <summary>更新地址</summary>
-        </member>
-        <member name="P:XCode.Sharding.Shard.UpdateTime">
-            <summary>更新时间</summary>
-        </member>
-        <member name="P:XCode.Sharding.Shard.Remark">
-            <summary>备注</summary>
-        </member>
-        <member name="P:XCode.Sharding.Shard.Item(System.String)">
-            <summary>获取/设置 字段值</summary>
-            <param name="name">字段名</param>
-            <returns></returns>
-        </member>
-        <member name="T:XCode.Sharding.Shard._">
-            <summary>取得分片字段信息的快捷方式</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard._.ID">
-            <summary>编号</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard._.Name">
-            <summary>名称</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard._.Type">
-            <summary>实体类</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard._.ConnName">
-            <summary>连接名</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard._.TableName">
-            <summary>表名</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard._.CreateUserID">
-            <summary>创建者</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard._.CreateIP">
-            <summary>创建地址</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard._.CreateTime">
-            <summary>创建时间</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard._.UpdateUserID">
-            <summary>更新者</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard._.UpdateIP">
-            <summary>更新地址</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard._.UpdateTime">
-            <summary>更新时间</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard._.Remark">
-            <summary>备注</summary>
-        </member>
-        <member name="T:XCode.Sharding.Shard.__">
-            <summary>取得分片字段名称的快捷方式</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard.__.ID">
-            <summary>编号</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard.__.Name">
-            <summary>名称</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard.__.Type">
-            <summary>实体类</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard.__.ConnName">
-            <summary>连接名</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard.__.TableName">
-            <summary>表名</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard.__.CreateUserID">
-            <summary>创建者</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard.__.CreateIP">
-            <summary>创建地址</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard.__.CreateTime">
-            <summary>创建时间</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard.__.UpdateUserID">
-            <summary>更新者</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard.__.UpdateIP">
-            <summary>更新地址</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard.__.UpdateTime">
-            <summary>更新时间</summary>
-        </member>
-        <member name="F:XCode.Sharding.Shard.__.Remark">
-            <summary>备注</summary>
-        </member>
-        <member name="T:XCode.Sharding.IShard">
-            <summary>分片接口</summary>
-        </member>
-        <member name="P:XCode.Sharding.IShard.ID">
-            <summary>编号</summary>
-        </member>
-        <member name="P:XCode.Sharding.IShard.Name">
-            <summary>名称</summary>
-        </member>
-        <member name="P:XCode.Sharding.IShard.Type">
-            <summary>实体类</summary>
-        </member>
-        <member name="P:XCode.Sharding.IShard.ConnName">
-            <summary>连接名</summary>
-        </member>
-        <member name="P:XCode.Sharding.IShard.TableName">
-            <summary>表名</summary>
-        </member>
-        <member name="P:XCode.Sharding.IShard.CreateUserID">
-            <summary>创建者</summary>
-        </member>
-        <member name="P:XCode.Sharding.IShard.CreateIP">
-            <summary>创建地址</summary>
-        </member>
-        <member name="P:XCode.Sharding.IShard.CreateTime">
-            <summary>创建时间</summary>
-        </member>
-        <member name="P:XCode.Sharding.IShard.UpdateUserID">
-            <summary>更新者</summary>
-        </member>
-        <member name="P:XCode.Sharding.IShard.UpdateIP">
-            <summary>更新地址</summary>
-        </member>
-        <member name="P:XCode.Sharding.IShard.UpdateTime">
-            <summary>更新时间</summary>
-        </member>
-        <member name="P:XCode.Sharding.IShard.Remark">
-            <summary>备注</summary>
-        </member>
-        <member name="P:XCode.Sharding.IShard.Item(System.String)">
-            <summary>获取/设置 字段值</summary>
-            <param name="name">字段名</param>
-            <returns></returns>
-        </member>
         <member name="T:XCode.Statistics.IStat">
             <summary>统计接口</summary>
         </member>
@@ -10551,6 +10488,291 @@
         <member name="M:XCode.Statistics.StatModel.GetHashCode">
             <summary>获取哈希</summary>
             <returns></returns>
+        </member>
+        <member name="T:XCode.Sync.ISyncMaster">
+            <summary>同步架构主方接口</summary>
+            <remarks>
+            同步框架中的数据供应方，同步是双向的，从方可以从主方拿数据，也可以把更新数据提交给主方。
+            可通过<see cref="P:XCode.Sync.ISyncMaster.ReadOnly"/>来指定主方是否只读，只读的主方不接受数据提交。
+            </remarks>
+        </member>
+        <member name="P:XCode.Sync.ISyncMaster.ReadOnly">
+            <summary>是否只读。只读的主方不接受数据提交</summary>
+        </member>
+        <member name="M:XCode.Sync.ISyncMaster.GetAllUpdated(System.DateTime,System.Int32,System.Int32)">
+            <summary>获取指定时间后更新过的数据</summary>
+            <param name="last"></param>
+            <param name="start"></param>
+            <param name="max"></param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.ISyncMaster.GetAllUpdatedCount(System.DateTime)">
+            <summary>获取指定时间后更新过的数据数量</summary>
+            <param name="last"></param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.ISyncMaster.Insert(XCode.Sync.ISyncMasterEntity[])">
+            <summary>提交新增数据</summary>
+            <param name="list"></param>
+            <returns>返回新增成功后的数据，包括自增字段</returns>
+        </member>
+        <member name="M:XCode.Sync.ISyncMaster.Update(XCode.Sync.ISyncMasterEntity)">
+            <summary>更新数据</summary>
+            <param name="entity"></param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.ISyncMaster.Delete(System.Object[])">
+            <summary>根据主键数组删除数据</summary>
+            <param name="keys"></param>
+            <returns>是否删除成功</returns>
+        </member>
+        <member name="M:XCode.Sync.ISyncMaster.CheckExists(System.Object[])">
+            <summary>根据主键数组检查数据是否仍然存在</summary>
+            <param name="keys"></param>
+            <returns>是否存在</returns>
+        </member>
+        <member name="M:XCode.Sync.ISyncMaster.Create">
+            <summary>创建一个空白实体</summary>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.ISyncMaster.GetNames">
+            <summary>获取要同步的字段名</summary>
+            <returns></returns>
+        </member>
+        <member name="T:XCode.Sync.ISyncMasterEntity">
+            <summary>同步框架主方实体接口，由主方实体类实现</summary>
+        </member>
+        <member name="P:XCode.Sync.ISyncMasterEntity.Key">
+            <summary>唯一标识数据的键值</summary>
+        </member>
+        <member name="P:XCode.Sync.ISyncMasterEntity.LastUpdate">
+            <summary>最后修改时间。包括修改同步状态为假删除</summary>
+        </member>
+        <member name="T:XCode.Sync.SyncMaster">
+            <summary>同步架构主方</summary>
+        </member>
+        <member name="P:XCode.Sync.SyncMaster.Facotry">
+            <summary>工厂</summary>
+        </member>
+        <member name="P:XCode.Sync.SyncMaster.KeyName">
+            <summary>主键名</summary>
+        </member>
+        <member name="P:XCode.Sync.SyncMaster.LastUpdateName">
+            <summary>最后更新字段名。如果没有指定，将每次都同步全部数据</summary>
+        </member>
+        <member name="P:XCode.Sync.SyncMaster.ReadOnly">
+            <summary>是否只读。只读的主方不接受数据提交</summary>
+        </member>
+        <member name="M:XCode.Sync.SyncMaster.GetAllUpdated(System.DateTime,System.Int32,System.Int32)">
+            <summary>检查在指定时间后更新过的数据</summary>
+            <param name="last"></param>
+            <param name="start"></param>
+            <param name="max"></param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.SyncMaster.GetAllUpdatedCount(System.DateTime)">
+            <summary>获取指定时间后更新过的数据数量</summary>
+            <param name="last"></param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.SyncMaster.Insert(XCode.Sync.ISyncMasterEntity[])">
+            <summary>提交新增数据</summary>
+            <param name="list"></param>
+            <returns>返回新增成功后的数据，包括自增字段</returns>
+        </member>
+        <member name="M:XCode.Sync.SyncMaster.Update(XCode.Sync.ISyncMasterEntity)">
+            <summary>更新数据</summary>
+            <param name="entity"></param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.SyncMaster.Delete(System.Object[])">
+            <summary>根据主键数组删除数据</summary>
+            <param name="keys"></param>
+            <returns>是否删除成功</returns>
+        </member>
+        <member name="M:XCode.Sync.SyncMaster.CheckExists(System.Object[])">
+            <summary>根据主键数组检查数据是否仍然存在</summary>
+            <param name="keys"></param>
+            <returns>是否存在</returns>
+        </member>
+        <member name="M:XCode.Sync.SyncMaster.Create">
+            <summary>创建一个空白实体</summary>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.SyncMaster.GetNames">
+            <summary>获取要同步的字段名</summary>
+            <returns></returns>
+        </member>
+        <member name="P:XCode.Sync.SyncMaster.SyncMasterEntity.Host">
+            <summary>宿主</summary>
+        </member>
+        <member name="P:XCode.Sync.SyncMaster.SyncMasterEntity.Entity">
+            <summary>实体</summary>
+        </member>
+        <member name="T:XCode.Sync.ISyncSlave">
+            <summary>同步框架从方接口</summary>
+        </member>
+        <member name="P:XCode.Sync.ISyncSlave.LastSync">
+            <summary>最后同步时间</summary>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.ISyncSlave.GetAllNew(System.Int32,System.Int32)">
+            <summary>获取所有新添加的数据</summary>
+            <param name="start"></param>
+            <param name="max"></param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.ISyncSlave.GetAllDelete(System.Int32,System.Int32)">
+            <summary>获取所有删除的数据</summary>
+            <param name="start"></param>
+            <param name="max"></param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.ISyncSlave.GetAllOld(System.DateTime,System.Int32,System.Int32)">
+            <summary>获取所有未同步的旧数据</summary>
+            <param name="now"></param>
+            <param name="start"></param>
+            <param name="max"></param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.ISyncSlave.FindByKey(System.Object)">
+            <summary>根据主键查找</summary>
+            <param name="key"></param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.ISyncSlave.Create">
+            <summary>创建一个空白实体</summary>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.ISyncSlave.GetNames">
+            <summary>获取要同步的字段名</summary>
+            <returns></returns>
+        </member>
+        <member name="T:XCode.Sync.ISyncSlaveEntity">
+            <summary>同步框架从方实体接口，由从方实体类实现</summary>
+        </member>
+        <member name="P:XCode.Sync.ISyncSlaveEntity.Key">
+            <summary>唯一标识数据的键值</summary>
+        </member>
+        <member name="P:XCode.Sync.ISyncSlaveEntity.LastUpdate">
+            <summary>最后修改时间。包括修改同步状态为假删除</summary>
+        </member>
+        <member name="P:XCode.Sync.ISyncSlaveEntity.LastSync">
+            <summary>最后同步时间。包括向主方询问数据是否已删除</summary>
+        </member>
+        <member name="M:XCode.Sync.ISyncSlaveEntity.ChangeKey(System.Object)">
+            <summary>改变主键。本地新增加的数据，在提交到提供方后，可能主键会改变（如自增字段），需要更新本地主键为新主键</summary>
+            <param name="key"></param>
+        </member>
+        <member name="M:XCode.Sync.ISyncSlaveEntity.Insert">
+            <summary>插入</summary>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.ISyncSlaveEntity.Update">
+            <summary>更新</summary>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.ISyncSlaveEntity.Delete">
+            <summary>删除本地数据</summary>
+            <returns></returns>
+        </member>
+        <member name="T:XCode.Sync.SyncSlave">
+            <summary>同步框架从方，实体类默认实现。要求实体类实现<see cref="T:XCode.Sync.ISyncSlaveEntity"/>接口</summary>
+        </member>
+        <member name="P:XCode.Sync.SyncSlave.Factory">
+            <summary>工厂</summary>
+        </member>
+        <member name="P:XCode.Sync.SyncSlave.KeyName">
+            <summary>主键名</summary>
+        </member>
+        <member name="P:XCode.Sync.SyncSlave.LastUpdateName">
+            <summary>最后更新字段名</summary>
+        </member>
+        <member name="P:XCode.Sync.SyncSlave.LastSyncName">
+            <summary>最后更新字段名</summary>
+        </member>
+        <member name="P:XCode.Sync.SyncSlave.LastUpdateField">
+            <summary>最后更新字段名。先硬编码，不考虑可变</summary>
+        </member>
+        <member name="P:XCode.Sync.SyncSlave.LastSyncField">
+            <summary>最后同步字段名</summary>
+        </member>
+        <member name="P:XCode.Sync.SyncSlave.LastSync">
+            <summary>最后同步时间</summary>
+        </member>
+        <member name="M:XCode.Sync.SyncSlave.GetLastSync">
+            <summary>获取最后同步时间</summary>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.SyncSlave.GetAllNew(System.Int32,System.Int32)">
+            <summary>获取所有新添加的数据</summary>
+            <param name="start"></param>
+            <param name="max"></param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.SyncSlave.GetAllDelete(System.Int32,System.Int32)">
+            <summary>获取所有删除的数据</summary>
+            <param name="start"></param>
+            <param name="max"></param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.SyncSlave.GetAllOld(System.DateTime,System.Int32,System.Int32)">
+            <summary>获取所有未同步的旧数据</summary>
+            <param name="now"></param>
+            <param name="start"></param>
+            <param name="max"></param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.SyncSlave.FindByKey(System.Object)">
+            <summary>根据主键查找</summary>
+            <param name="key"></param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.SyncSlave.Create">
+            <summary>创建一个空白实体</summary>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Sync.SyncSlave.GetNames">
+            <summary>获取要同步的字段名</summary>
+            <returns></returns>
+        </member>
+        <member name="T:XCode.Sync.SyncManager">
+            <summary>同步管理器</summary>
+        </member>
+        <member name="P:XCode.Sync.SyncManager.Master">
+            <summary>同步框架主方，数据提供者。</summary>
+        </member>
+        <member name="P:XCode.Sync.SyncManager.Slave">
+            <summary>同步框架从方，数据消费者</summary>
+        </member>
+        <member name="P:XCode.Sync.SyncManager.BatchSize">
+            <summary>同步批大小</summary>
+        </member>
+        <member name="P:XCode.Sync.SyncManager.Names">
+            <summary>字段集合</summary>
+        </member>
+        <member name="P:XCode.Sync.SyncManager.UpdateConflictByLastUpdate">
+            <summary>是否根据最后修改时间来解决双方同时更新而带来的冲突，否则强制优先本地</summary>
+        </member>
+        <member name="M:XCode.Sync.SyncManager.Start">
+            <summary>开始处理</summary>
+        </member>
+        <member name="M:XCode.Sync.SyncManager.ProcessNew">
+            <summary>处理本地添加的数据</summary>
+        </member>
+        <member name="M:XCode.Sync.SyncManager.ProcessDelete">
+            <summary>处理本地删除的数据</summary>
+        </member>
+        <member name="M:XCode.Sync.SyncManager.ProcessItems">
+            <summary>处理更新的数据</summary>
+        </member>
+        <member name="M:XCode.Sync.SyncManager.ProcessItem(XCode.Sync.ISyncMasterEntity)">
+            <summary>处理更新的数据项</summary>
+            <param name="remote"></param>
+        </member>
+        <member name="M:XCode.Sync.SyncManager.ProcessOthers(System.DateTime)">
+            <summary>查找还有哪些没有同步的，可能提供者已经删除</summary>
+            <param name="now"></param>
         </member>
         <member name="T:XCode.Transform.DataContext">
             <summary>数据上下文</summary>
@@ -10773,6 +10995,23 @@
         <member name="M:XCode.Transform.ExtractSettingHelper.Clone(XCode.Transform.IExtractSetting)">
             <summary>克隆一份设置参数</summary>
             <param name="src"></param>
+            <returns></returns>
+        </member>
+        <member name="T:XCode.Transform.IdentityExtracter">
+            <summary>以自增列为比较点的数据抽取器</summary>
+        </member>
+        <member name="M:XCode.Transform.IdentityExtracter.Init">
+            <summary>初始化</summary>
+        </member>
+        <member name="M:XCode.Transform.IdentityExtracter.Fetch(XCode.Transform.IExtractSetting)">
+            <summary>抽取一批数据</summary>
+            <param name="set">设置</param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Transform.IdentityExtracter.FetchData(System.Int32,System.Int32)">
+            <summary>分段分页抽取数据</summary>
+            <param name="start"></param>
+            <param name="maxRows"></param>
             <returns></returns>
         </member>
         <member name="T:XCode.Transform.IETLModule">
@@ -11061,6 +11300,25 @@
         <member name="M:XCode.Transform.TimeExtracter.GetMinTime(System.DateTime)">
             <summary>获取大于等于指定时间的最小修改时间</summary>
             <param name="start"></param>
+            <returns></returns>
+        </member>
+        <member name="T:XCode.Transform.TimeSpanExtracter">
+            <summary>基于时间片的数据抽取器</summary>
+        </member>
+        <member name="M:XCode.Transform.TimeSpanExtracter.Init">
+            <summary>初始化</summary>
+        </member>
+        <member name="M:XCode.Transform.TimeSpanExtracter.Fetch(XCode.Transform.IExtractSetting)">
+            <summary>抽取一批数据</summary>
+            <param name="set">设置</param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.Transform.TimeSpanExtracter.FetchData(System.DateTime,System.DateTime,System.Int32,System.Int32)">
+            <summary>分段分页抽取数据</summary>
+            <param name="start"></param>
+            <param name="end"></param>
+            <param name="startRow"></param>
+            <param name="maxRows"></param>
             <returns></returns>
         </member>
         <member name="T:XCode.EntityTree`1">

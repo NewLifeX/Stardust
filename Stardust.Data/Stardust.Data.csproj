@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
     <AssemblyTitle>星尘数据</AssemblyTitle>
     <Description>星尘，轻量级服务框架。远程方法调用，服务自动注册和发现，负载均衡，动态伸缩，故障转移，性能监控。</Description>
     <Copyright>版权所有(C) 新生命开发团队 2019</Copyright>
@@ -12,12 +12,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="NewLife.Core">
-      <HintPath>..\DLL20\NewLife.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="XCode">
-      <HintPath>..\DLL20\XCode.dll</HintPath>
-    </Reference>
+    <None Remove="Build.tt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Build.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Build.log</LastGenOutput>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NewLife.XCode" Version="9.11.2019.314" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,10 +31,6 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Build.tt</DependentUpon>
-    </None>
-    <None Update="Build.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Build.log</LastGenOutput>
     </None>
   </ItemGroup>
 

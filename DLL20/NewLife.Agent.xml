@@ -101,6 +101,15 @@
             检查指定的任务是否已经停止，如果已经停止，则启动它。
             </remarks>
         </member>
+        <member name="M:NewLife.Agent.AgentServiceBase.Install(System.Boolean)">
+            <summary>安装、卸载 服务</summary>
+            <param name="isinstall">是否安装</param>
+        </member>
+        <member name="M:NewLife.Agent.AgentServiceBase.GetBinPath(System.String)">
+            <summary>获取安装服务的命令参数</summary>
+            <param name="exe"></param>
+            <returns></returns>
+        </member>
         <member name="P:NewLife.Agent.AgentServiceBase.Log">
             <summary>日志</summary>
         </member>
@@ -114,11 +123,6 @@
         </member>
         <member name="P:NewLife.Agent.ServiceHelper.ExeName">
             <summary>Exe程序名</summary>
-        </member>
-        <member name="M:NewLife.Agent.ServiceHelper.Install(NewLife.Agent.AgentServiceBase,System.Boolean)">
-            <summary>安装、卸载 服务</summary>
-            <param name="service">服务对象</param>
-            <param name="isinstall">是否安装</param>
         </member>
         <member name="M:NewLife.Agent.ServiceHelper.ControlService(NewLife.Agent.AgentServiceBase,System.Boolean)">
             <summary>启动、停止 服务</summary>

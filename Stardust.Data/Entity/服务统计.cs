@@ -13,7 +13,7 @@ namespace Stardust.Data
     [Description("服务统计。记录服务每天访问量")]
     [BindIndex("IU_ServiceStat_ServiceID_Level_Time", true, "ServiceID,Level,Time")]
     [BindIndex("IX_ServiceStat_Level_Time", false, "Level,Time")]
-    [BindTable("ServiceStat", Description = "服务统计。记录服务每天访问量", ConnName = "Registry", DbType = DatabaseType.None)]
+    [BindTable("ServiceStat", Description = "服务统计。记录服务每天访问量", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class ServiceStat : IServiceStat
     {
         #region 属性
@@ -125,16 +125,16 @@ namespace Stardust.Data
             {
                 switch (name)
                 {
-                    case __.ID : _ID = Convert.ToInt32(value); break;
-                    case __.ServiceID : _ServiceID = Convert.ToInt32(value); break;
-                    case __.Level : _Level = (XCode.Statistics.StatLevels)Convert.ToInt32(value); break;
-                    case __.Time : _Time = Convert.ToDateTime(value); break;
-                    case __.Count : _Count = Convert.ToInt64(value); break;
-                    case __.Cost : _Cost = Convert.ToInt32(value); break;
-                    case __.TotalCost : _TotalCost = Convert.ToInt64(value); break;
+                    case __.ID : _ID = value.ToInt(); break;
+                    case __.ServiceID : _ServiceID = value.ToInt(); break;
+                    case __.Level : _Level = (XCode.Statistics.StatLevels)value.ToInt(); break;
+                    case __.Time : _Time = value.ToDateTime(); break;
+                    case __.Count : _Count = value.ToLong(); break;
+                    case __.Cost : _Cost = value.ToInt(); break;
+                    case __.TotalCost : _TotalCost = value.ToLong(); break;
                     case __.LastIP : _LastIP = Convert.ToString(value); break;
-                    case __.CreateTime : _CreateTime = Convert.ToDateTime(value); break;
-                    case __.UpdateTime : _UpdateTime = Convert.ToDateTime(value); break;
+                    case __.CreateTime : _CreateTime = value.ToDateTime(); break;
+                    case __.UpdateTime : _UpdateTime = value.ToDateTime(); break;
                     default: base[name] = value; break;
                 }
             }

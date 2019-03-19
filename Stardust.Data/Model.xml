@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Tables Version="9.10.6940.25801" NameSpace="Stardust.Data" ConnName="Stardust" Output="Entity" BaseClass="EntityBase">
+<Tables Version="9.11.7012.14589" NameSpace="Stardust.Data" ConnName="Stardust" Output="Entity" BaseClass="EntityBase">
   <Table Name="App" Description="应用系统。服务提供者和消费者">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
@@ -89,7 +89,7 @@
       <Index Columns="AppID,ServiceID" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="AppOnline" Description="应用在线。一个应用有多个部署，每个在线会话对应一个服务地址" ConnName="Registry">
+  <Table Name="AppOnline" Description="应用在线。一个应用有多个部署，每个在线会话对应一个服务地址">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppID" DataType="Int32" Description="应用" />
@@ -113,7 +113,7 @@
       <Index Columns="AppID" />
     </Indexes>
   </Table>
-  <Table Name="AppHistory" Description="应用历史" ConnName="Registry">
+  <Table Name="AppHistory" Description="应用历史">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppID" DataType="Int32" Description="应用" />
@@ -130,7 +130,7 @@
       <Index Columns="AppID" />
     </Indexes>
   </Table>
-  <Table Name="AppStat" Description="应用统计。记录应用每天访问量" ConnName="Registry">
+  <Table Name="AppStat" Description="应用统计。记录应用每天访问量">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppID" DataType="Int32" Description="应用" />
@@ -148,7 +148,7 @@
       <Index Columns="Level,Time" />
     </Indexes>
   </Table>
-  <Table Name="ServiceStat" Description="服务统计。记录服务每天访问量" ConnName="Registry">
+  <Table Name="ServiceStat" Description="服务统计。记录服务每天访问量">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="ServiceID" DataType="Int32" Description="服务" />
@@ -166,7 +166,7 @@
       <Index Columns="Level,Time" />
     </Indexes>
   </Table>
-  <Table Name="IpStat" Description="IP统计。记录IP地址每天访问量" ConnName="Registry">
+  <Table Name="IpStat" Description="IP统计。记录IP地址每天访问量">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="Ip" DataType="String" Description="IP地址" />
