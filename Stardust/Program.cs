@@ -58,7 +58,7 @@ namespace Stardust
                 {
                     Log = XTrace.Log
                 };
-                if (Setting.Current.Debug)
+                if (set.Debug)
                 {
                     var ns = sc.EnsureCreate() as NetServer;
                     ns.Log = XTrace.Log;
