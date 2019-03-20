@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.168
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stardust", "Stardust\Stardust.csproj", "{AADBD913-749C-467E-A63F-C118C4C82351}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stardust", "Stardust\Stardust.csproj", "{AADBD913-749C-467E-A63F-C118C4C82351}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stardust.Web", "Stardust.Web\Stardust.Web.csproj", "{25331DEF-FEE3-44D5-A4E9-864078441F71}"
 EndProject
@@ -16,7 +16,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stardust.Data", "Stardust.D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stardust.WebFx", "Stardust.WebFx\Stardust.WebFx.csproj", "{A9E0597C-E818-4B33-8AC3-BE134D68B78E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{3B87711E-FF90-470B-A429-CFDF3B9B1F5F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test", "Test\Test.csproj", "{3B87711E-FF90-470B-A429-CFDF3B9B1F5F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stardust.Server", "Stardust.Server\Stardust.Server.csproj", "{73B28F07-E99F-45A8-B9A0-90E7BAC133A3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,6 +46,10 @@ Global
 		{3B87711E-FF90-470B-A429-CFDF3B9B1F5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3B87711E-FF90-470B-A429-CFDF3B9B1F5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3B87711E-FF90-470B-A429-CFDF3B9B1F5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73B28F07-E99F-45A8-B9A0-90E7BAC133A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73B28F07-E99F-45A8-B9A0-90E7BAC133A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73B28F07-E99F-45A8-B9A0-90E7BAC133A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73B28F07-E99F-45A8-B9A0-90E7BAC133A3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

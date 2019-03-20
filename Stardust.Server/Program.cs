@@ -1,7 +1,14 @@
 ﻿using System;
 using System.Net;
+using NewLife;
+using NewLife.Agent;
+using NewLife.Log;
+using NewLife.Net;
+using NewLife.Remoting;
+using NewLife.Threading;
+using Stardust.Data;
 
-namespace Stardust
+namespace Stardust.Server
 {
     class Program
     {

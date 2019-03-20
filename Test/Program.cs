@@ -4,8 +4,8 @@ using System.Threading;
 using NewLife.Log;
 using NewLife.Net;
 using NewLife.Remoting;
-using Stardust;
-using Setting = Stardust.Setting;
+using Stardust.Server;
+using Setting = Stardust.Server.Setting;
 
 namespace Test
 {

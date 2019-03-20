@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Stardust.Data\Stardust.Data.csproj" />
+    <ProjectReference Include="..\Stardust.Server\Stardust.Server.csproj" />
     <ProjectReference Include="..\Stardust\Stardust.csproj" />
   </ItemGroup>
 
