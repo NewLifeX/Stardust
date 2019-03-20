@@ -5,6 +5,8 @@ using System.Net;
 using NewLife.Log;
 using NewLife.Net;
 using NewLife.Remoting;
+using NewLife.Security;
+using NewLife.Serialization;
 using Stardust.Data;
 
 namespace Stardust.Server
@@ -129,7 +131,21 @@ namespace Stardust.Server
         [Api(nameof(Report))]
         public Boolean Report(String nameSpace, String[] services)
         {
+            XTrace.WriteLine(nameSpace);
+            XTrace.WriteLine(services.ToJson());
             return false;
+        }
+
+        [Api(nameof(GetAll))]
+        public List<String> GetAll()
+        {
+            var list = new List<String>();
+            for (var i = 0; i < 10; i++)
+            {
+                list.Add(Rand.NextString(8));
+            }
+
+            return list;
         }
         #endregion
 

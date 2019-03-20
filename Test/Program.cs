@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using NewLife.Log;
 using NewLife.Net;
@@ -18,6 +19,7 @@ namespace Test
             {
                 Port = 1234,
                 Log = XTrace.Log,
+                EncoderLog = XTrace.Log,
 
                 NameSpace = "NewLife.Test",
             };
@@ -29,6 +31,8 @@ namespace Test
             };
 
             sc.Star = star;
+
+            var rs = star.InvokeAsync<List<String>>("GetAll").Result;
 
             //if (set.Debug)
             {

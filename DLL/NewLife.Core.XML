@@ -7576,16 +7576,6 @@
             <param name="type"></param>
             <returns></returns>
         </member>
-        <member name="M:NewLife.Reflection.Reflect.IsList(System.Type)">
-            <summary>是否泛型列表</summary>
-            <param name="type"></param>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Reflection.Reflect.IsDictionary(System.Type)">
-            <summary>是否泛型字典</summary>
-            <param name="type"></param>
-            <returns></returns>
-        </member>
         <member name="M:NewLife.Reflection.Reflect.As(System.Type,System.Type)">
             <summary>是否能够转为指定基类</summary>
             <param name="type"></param>
