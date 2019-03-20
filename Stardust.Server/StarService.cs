@@ -135,18 +135,6 @@ namespace Stardust.Server
             XTrace.WriteLine(services.ToJson());
             return false;
         }
-
-        [Api(nameof(GetAll))]
-        public List<String> GetAll()
-        {
-            var list = new List<String>();
-            for (var i = 0; i < 10; i++)
-            {
-                list.Add(Rand.NextString(8));
-            }
-
-            return list;
-        }
         #endregion
 
         #region 在线状态

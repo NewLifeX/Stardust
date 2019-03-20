@@ -32,19 +32,6 @@ namespace Test
 
             sc.Star = star;
 
-            var rs = star.InvokeAsync<List<String>>("GetAll").Result;
-
-            //if (set.Debug)
-            {
-                var ns = sc.EnsureCreate() as NetServer;
-                ns.Log = XTrace.Log;
-#if DEBUG
-                ns.LogSend = true;
-                ns.LogReceive = true;
-                sc.EncoderLog = XTrace.Log;
-#endif
-            }
-
             sc.Start();
 
             _Server = sc;
