@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Tables Version="9.11.7012.14589" NameSpace="Stardust.Data" ConnName="Stardust" Output="Entity" BaseClass="EntityBase">
+<Tables Version="9.11.7017.35555" NameSpace="Stardust.Data" ConnName="Stardust" Output="Entity" BaseClass="EntityBase">
   <Table Name="App" Description="应用系统。服务提供者和消费者">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
@@ -9,6 +9,7 @@
       <Column Name="Version" DataType="String" Description="版本" />
       <Column Name="Compile" DataType="DateTime" Description="编译时间" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="AutoActive" DataType="Boolean" Description="自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务" />
       <Column Name="Services" DataType="Int32" Description="服务数。该应用提供的服务数" />
       <Column Name="Actions" DataType="Int32" Description="功能数。该应用提供的功能数" />
       <Column Name="LastLogin" DataType="DateTime" Description="最后登录" />
@@ -25,6 +26,48 @@
     </Columns>
     <Indexes>
       <Index Columns="Name" Unique="True" />
+    </Indexes>
+  </Table>
+  <Table Name="AppOnline" Description="应用在线。一个应用有多个部署，每个在线会话对应一个服务地址">
+    <Columns>
+      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="AppID" DataType="Int32" Description="应用" />
+      <Column Name="Session" DataType="String" Description="实例。IP加端口" />
+      <Column Name="Client" DataType="String" Description="客户端。IP加进程" />
+      <Column Name="Name" DataType="String" Master="True" Description="名称。机器名称" />
+      <Column Name="Version" DataType="String" Description="版本。客户端" />
+      <Column Name="Compile" DataType="DateTime" Description="编译时间。客户端" />
+      <Column Name="Server" DataType="String" Description="服务端。客户端登录到哪个服务端，IP加端口" />
+      <Column Name="Active" DataType="Boolean" Description="激活。只有激活的应用，才提供服务" />
+      <Column Name="Address" DataType="String" Description="服务地址。tcp://ip:port" />
+      <Column Name="Services" DataType="Int32" Description="服务数。该应用提供的服务数" />
+      <Column Name="Actions" DataType="String" Length="500" Description="功能列表" />
+      <Column Name="Clients" DataType="Int32" Description="客户端数。服务提供者当前服务的客户端数" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+    </Columns>
+    <Indexes>
+      <Index Columns="Session" Unique="True" />
+      <Index Columns="Client" />
+      <Index Columns="AppID" />
+    </Indexes>
+  </Table>
+  <Table Name="AppHistory" Description="应用历史">
+    <Columns>
+      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="AppID" DataType="Int32" Description="应用" />
+      <Column Name="Version" DataType="String" Description="版本" />
+      <Column Name="Action" DataType="String" Description="操作" />
+      <Column Name="Success" DataType="Boolean" Description="成功" />
+      <Column Name="Remark" DataType="String" Length="500" Description="内容" />
+      <Column Name="CreateUser" DataType="String" Description="创建者" />
+      <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+    </Columns>
+    <Indexes>
+      <Index Columns="AppID" />
     </Indexes>
   </Table>
   <Table Name="Service" Description="服务。服务提供者发布的服务">
@@ -87,47 +130,6 @@
     </Columns>
     <Indexes>
       <Index Columns="AppID,ServiceID" Unique="True" />
-    </Indexes>
-  </Table>
-  <Table Name="AppOnline" Description="应用在线。一个应用有多个部署，每个在线会话对应一个服务地址">
-    <Columns>
-      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="AppID" DataType="Int32" Description="应用" />
-      <Column Name="Session" DataType="String" Description="实例。IP加端口" />
-      <Column Name="Client" DataType="String" Description="客户端。IP加进程" />
-      <Column Name="Name" DataType="String" Master="True" Description="名称。机器名称" />
-      <Column Name="Version" DataType="String" Description="版本。客户端" />
-      <Column Name="Compile" DataType="DateTime" Description="编译时间。客户端" />
-      <Column Name="Server" DataType="String" Description="服务端。客户端登录到哪个服务端，IP加端口" />
-      <Column Name="Address" DataType="String" Description="服务地址。tcp://ip:port" />
-      <Column Name="Services" DataType="Int32" Description="服务数。该应用提供的服务数" />
-      <Column Name="Actions" DataType="String" Length="500" Description="功能列表" />
-      <Column Name="Clients" DataType="Int32" Description="客户端数。服务提供者当前服务的客户端数" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" />
-      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
-    </Columns>
-    <Indexes>
-      <Index Columns="Session" Unique="True" />
-      <Index Columns="Client" />
-      <Index Columns="AppID" />
-    </Indexes>
-  </Table>
-  <Table Name="AppHistory" Description="应用历史">
-    <Columns>
-      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="AppID" DataType="Int32" Description="应用" />
-      <Column Name="Version" DataType="String" Description="版本" />
-      <Column Name="Action" DataType="String" Description="操作" />
-      <Column Name="Success" DataType="Boolean" Description="成功" />
-      <Column Name="Remark" DataType="String" Length="500" Description="内容" />
-      <Column Name="CreateUser" DataType="String" Description="创建者" />
-      <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" />
-    </Columns>
-    <Indexes>
-      <Index Columns="AppID" />
     </Indexes>
   </Table>
   <Table Name="AppStat" Description="应用统计。记录应用每天访问量">

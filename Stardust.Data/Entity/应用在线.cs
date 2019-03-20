@@ -82,6 +82,14 @@ namespace Stardust.Data
         [BindColumn("Server", "服务端。客户端登录到哪个服务端，IP加端口", "")]
         public String Server { get { return _Server; } set { if (OnPropertyChanging(__.Server, value)) { _Server = value; OnPropertyChanged(__.Server); } } }
 
+        private Boolean _Active;
+        /// <summary>激活。只有激活的应用，才提供服务</summary>
+        [DisplayName("激活")]
+        [Description("激活。只有激活的应用，才提供服务")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Active", "激活。只有激活的应用，才提供服务", "")]
+        public Boolean Active { get { return _Active; } set { if (OnPropertyChanging(__.Active, value)) { _Active = value; OnPropertyChanged(__.Active); } } }
+
         private String _Address;
         /// <summary>服务地址。tcp://ip:port</summary>
         [DisplayName("服务地址")]
@@ -157,6 +165,7 @@ namespace Stardust.Data
                     case __.Version : return _Version;
                     case __.Compile : return _Compile;
                     case __.Server : return _Server;
+                    case __.Active : return _Active;
                     case __.Address : return _Address;
                     case __.Services : return _Services;
                     case __.Actions : return _Actions;
@@ -179,6 +188,7 @@ namespace Stardust.Data
                     case __.Version : _Version = Convert.ToString(value); break;
                     case __.Compile : _Compile = value.ToDateTime(); break;
                     case __.Server : _Server = Convert.ToString(value); break;
+                    case __.Active : _Active = value.ToBoolean(); break;
                     case __.Address : _Address = Convert.ToString(value); break;
                     case __.Services : _Services = value.ToInt(); break;
                     case __.Actions : _Actions = Convert.ToString(value); break;
@@ -219,6 +229,9 @@ namespace Stardust.Data
 
             /// <summary>服务端。客户端登录到哪个服务端，IP加端口</summary>
             public static readonly Field Server = FindByName(__.Server);
+
+            /// <summary>激活。只有激活的应用，才提供服务</summary>
+            public static readonly Field Active = FindByName(__.Active);
 
             /// <summary>服务地址。tcp://ip:port</summary>
             public static readonly Field Address = FindByName(__.Address);
@@ -271,6 +284,9 @@ namespace Stardust.Data
             /// <summary>服务端。客户端登录到哪个服务端，IP加端口</summary>
             public const String Server = "Server";
 
+            /// <summary>激活。只有激活的应用，才提供服务</summary>
+            public const String Active = "Active";
+
             /// <summary>服务地址。tcp://ip:port</summary>
             public const String Address = "Address";
 
@@ -322,6 +338,9 @@ namespace Stardust.Data
 
         /// <summary>服务端。客户端登录到哪个服务端，IP加端口</summary>
         String Server { get; set; }
+
+        /// <summary>激活。只有激活的应用，才提供服务</summary>
+        Boolean Active { get; set; }
 
         /// <summary>服务地址。tcp://ip:port</summary>
         String Address { get; set; }
