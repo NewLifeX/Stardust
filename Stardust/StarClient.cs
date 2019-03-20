@@ -85,11 +85,12 @@ namespace Stardust
 
         #region 核心方法
         /// <summary>上报服务</summary>
+        /// <param name="nameSpace"></param>
         /// <param name="services"></param>
         /// <returns></returns>
-        public async Task<Boolean> Report(String[] services)
+        public async Task<Boolean> ReportAsync(String nameSpace, String[] services)
         {
-            return await InvokeAsync<Boolean>(nameof(Report), services);
+            return await InvokeAsync<Boolean>("Report", new { nameSpace, services });
         }
         #endregion
 

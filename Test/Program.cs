@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Net;
 using System.Threading;
 using NewLife.Log;
 using NewLife.Net;
 using NewLife.Remoting;
-using Stardust.Server;
-using Setting = Stardust.Server.Setting;
+using Stardust;
 
 namespace Test
 {
@@ -16,13 +14,23 @@ namespace Test
         {
             XTrace.UseConsole();
 
-            var set = Setting.Current;
-
-            var sc = new ApiServer(set.Port)
+            var sc = new RpcServer()
             {
-                Log = XTrace.Log
+                Port = 1234,
+                Log = XTrace.Log,
+
+                NameSpace = "NewLife.Test",
             };
-            if (set.Debug)
+
+            var star = new StarClient("tcp://127.0.0.1:6666")
+            {
+                UserName = "test",
+                Password = "pass"
+            };
+
+            sc.Star = star;
+
+            //if (set.Debug)
             {
                 var ns = sc.EnsureCreate() as NetServer;
                 ns.Log = XTrace.Log;
@@ -32,12 +40,6 @@ namespace Test
                 sc.EncoderLog = XTrace.Log;
 #endif
             }
-
-            // 注册服务
-            sc.Register<StarService>();
-
-            StarService.Log = XTrace.Log;
-            StarService.Local = new IPEndPoint(NetHelper.MyIP(), set.Port);
 
             sc.Start();
 

@@ -123,10 +123,11 @@ namespace Stardust.Server
 
         #region 业务
         /// <summary>报告服务列表</summary>
+        /// <param name="nameSpace"></param>
         /// <param name="services"></param>
         /// <returns></returns>
         [Api(nameof(Report))]
-        public Boolean Report(String[] services)
+        public Boolean Report(String nameSpace, String[] services)
         {
             return false;
         }
