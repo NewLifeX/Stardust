@@ -12,7 +12,10 @@ namespace Stardust
         /// <summary>启动</summary>
         public override void Start()
         {
-            if (Star == null) throw new ArgumentNullException(nameof(Star));
+            var star = Star;
+            if (star == null) throw new ArgumentNullException(nameof(Star));
+
+            // 上报
 
             base.Start();
         }

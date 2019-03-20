@@ -10,6 +10,7 @@
       <Column Name="Compile" DataType="DateTime" Description="编译时间" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="AutoActive" DataType="Boolean" Description="自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务" />
+      <Column Name="Namespace" DataType="String" Description="命名空间。限制该应用只能发布指定命名空间的服务，多个用逗号分隔" />
       <Column Name="Services" DataType="Int32" Description="服务数。该应用提供的服务数" />
       <Column Name="Actions" DataType="Int32" Description="功能数。该应用提供的功能数" />
       <Column Name="LastLogin" DataType="DateTime" Description="最后登录" />

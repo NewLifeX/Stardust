@@ -80,6 +80,14 @@ namespace Stardust.Data
         [BindColumn("AutoActive", "自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务", "")]
         public Boolean AutoActive { get { return _AutoActive; } set { if (OnPropertyChanging(__.AutoActive, value)) { _AutoActive = value; OnPropertyChanged(__.AutoActive); } } }
 
+        private String _Namespace;
+        /// <summary>命名空间。限制该应用只能发布指定命名空间的服务，多个用逗号分隔</summary>
+        [DisplayName("命名空间")]
+        [Description("命名空间。限制该应用只能发布指定命名空间的服务，多个用逗号分隔")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Namespace", "命名空间。限制该应用只能发布指定命名空间的服务，多个用逗号分隔", "")]
+        public String Namespace { get { return _Namespace; } set { if (OnPropertyChanging(__.Namespace, value)) { _Namespace = value; OnPropertyChanged(__.Namespace); } } }
+
         private Int32 _Services;
         /// <summary>服务数。该应用提供的服务数</summary>
         [DisplayName("服务数")]
@@ -203,6 +211,7 @@ namespace Stardust.Data
                     case __.Compile : return _Compile;
                     case __.Enable : return _Enable;
                     case __.AutoActive : return _AutoActive;
+                    case __.Namespace : return _Namespace;
                     case __.Services : return _Services;
                     case __.Actions : return _Actions;
                     case __.LastLogin : return _LastLogin;
@@ -231,6 +240,7 @@ namespace Stardust.Data
                     case __.Compile : _Compile = value.ToDateTime(); break;
                     case __.Enable : _Enable = value.ToBoolean(); break;
                     case __.AutoActive : _AutoActive = value.ToBoolean(); break;
+                    case __.Namespace : _Namespace = Convert.ToString(value); break;
                     case __.Services : _Services = value.ToInt(); break;
                     case __.Actions : _Actions = value.ToInt(); break;
                     case __.LastLogin : _LastLogin = value.ToDateTime(); break;
@@ -277,6 +287,9 @@ namespace Stardust.Data
 
             /// <summary>自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务</summary>
             public static readonly Field AutoActive = FindByName(__.AutoActive);
+
+            /// <summary>命名空间。限制该应用只能发布指定命名空间的服务，多个用逗号分隔</summary>
+            public static readonly Field Namespace = FindByName(__.Namespace);
 
             /// <summary>服务数。该应用提供的服务数</summary>
             public static readonly Field Services = FindByName(__.Services);
@@ -347,6 +360,9 @@ namespace Stardust.Data
             /// <summary>自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务</summary>
             public const String AutoActive = "AutoActive";
 
+            /// <summary>命名空间。限制该应用只能发布指定命名空间的服务，多个用逗号分隔</summary>
+            public const String Namespace = "Namespace";
+
             /// <summary>服务数。该应用提供的服务数</summary>
             public const String Services = "Services";
 
@@ -416,6 +432,9 @@ namespace Stardust.Data
 
         /// <summary>自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务</summary>
         Boolean AutoActive { get; set; }
+
+        /// <summary>命名空间。限制该应用只能发布指定命名空间的服务，多个用逗号分隔</summary>
+        String Namespace { get; set; }
 
         /// <summary>服务数。该应用提供的服务数</summary>
         Int32 Services { get; set; }

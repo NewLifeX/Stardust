@@ -13,6 +13,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Log\**" />
+    <EmbeddedResource Remove="Log\**" />
+    <None Remove="Log\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Build.tt" />
   </ItemGroup>
 
@@ -21,14 +27,6 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Build.log</LastGenOutput>
     </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Build.log">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Build.tt</DependentUpon>
-    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -51,6 +49,14 @@
     <Reference Include="XCode">
       <HintPath>..\DLL20\XCode.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Build.log">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Build.tt</DependentUpon>
+    </None>
   </ItemGroup>
 
 </Project>
