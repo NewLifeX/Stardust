@@ -7,6 +7,7 @@
     <Description>星尘，轻量级服务框架。远程方法调用，服务自动注册和发现，负载均衡，动态伸缩，故障转移，性能监控。</Description>
     <Copyright>版权所有(C) 新生命开发团队 2019</Copyright>
     <Company>新生命开发团队</Company>
+    <Version>1.0.2019.0320</Version>
     <FileVersion>1.0.2019.0320</FileVersion>
     <AssemblyVersion>1.0.*</AssemblyVersion>
     <Deterministic>false</Deterministic>
@@ -19,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Stardust.Data\Stardust.Data.csproj" />
+    <ProjectReference Include="..\Stardust\Stardust.csproj" />
   </ItemGroup>
 
   <ItemGroup>

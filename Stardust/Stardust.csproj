@@ -32,13 +32,37 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-*" PrivateAssets="All" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+    <DefineConstants>$(DefineConstants);NETSTANDARD2_0;__CORE__</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='net45'">
+    <DefineConstants>$(DefineConstants);__WIN__</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
     <Compile Remove="Program.cs" />
     <Compile Remove="Setting.cs" />
     <Compile Remove="StarService.cs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="8.1.2019.314" />
+  <ItemGroup Condition="'$(TargetFramework)'=='net45'">
+    <Reference Include="NewLife.Core">
+      <HintPath>..\DLL\NewLife.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+    <Reference Include="NewLife.Core">
+      <HintPath>..\DLL20\NewLife.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
