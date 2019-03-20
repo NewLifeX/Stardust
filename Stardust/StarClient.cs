@@ -10,6 +10,7 @@ using NewLife.Serialization;
 
 namespace Stardust
 {
+    /// <summary>星尘客户端</summary>
     public class StarClient : ApiClient
     {
         #region 属性
@@ -83,6 +84,9 @@ namespace Stardust
         #endregion
 
         #region 核心方法
+        /// <summary>上报服务</summary>
+        /// <param name="services"></param>
+        /// <returns></returns>
         public async Task<Boolean> Report(String[] services)
         {
             return await InvokeAsync<Boolean>(nameof(Report), services);
