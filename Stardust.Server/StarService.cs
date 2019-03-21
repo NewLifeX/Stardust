@@ -166,9 +166,9 @@ namespace Stardust.Server
             // 下线
             ns.OnDisposed += (s, e) => online.Delete();
 
-            // 版本和编译时间
-            if (app.Version.IsNullOrEmpty() || app.Version.CompareTo(ver) < 0) app.Version = ver;
-            if (app.Compile.Year < 2000 || app.Compile < compile) app.Compile = compile;
+            //// 版本和编译时间
+            //if (app.Version.IsNullOrEmpty() || app.Version.CompareTo(ver) < 0) app.Version = ver;
+            //if (app.Compile.Year < 2000 || app.Compile < compile) app.Compile = compile;
 
             return online;
         }

@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Tables Version="9.11.7017.35555" NameSpace="Stardust.Data" ConnName="Stardust" Output="Entity" BaseClass="EntityBase">
+<Tables Version="9.11.7018.40371" NameSpace="Stardust.Data" ConnName="Stardust" Output="Entity" BaseClass="EntityBase">
   <Table Name="App" Description="应用系统。服务提供者和消费者">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
       <Column Name="DisplayName" DataType="String" Description="显示名" />
       <Column Name="Secret" DataType="String" Description="密钥" />
-      <Column Name="Version" DataType="String" Description="版本" />
-      <Column Name="Compile" DataType="DateTime" Description="编译时间" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="AutoActive" DataType="Boolean" Description="自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务" />
       <Column Name="Namespace" DataType="String" Description="命名空间。限制该应用只能发布指定命名空间的服务，多个用逗号分隔" />
