@@ -6,7 +6,6 @@ using NewLife.Remoting;
 using NewLife.Threading;
 using Stardust.Data;
 using System;
-using System.Net;
 
 namespace Stardust.Server
 {

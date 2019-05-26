@@ -6,13 +6,16 @@ using NewLife.Remoting;
 using NewLife.Threading;
 using Stardust;
 using System;
-using System.Net;
+using System.Collections.Generic;
 
 namespace StarAgent
 {
     class Program
     {
-        static void Main(String[] args) => new MyService().Main();
+        static void Main(String[] args)
+        {
+            new MyService().Main();
+        }
     }
 
     /// <summary>服务类。名字可以自定义</summary>
@@ -49,15 +52,20 @@ namespace StarAgent
         {
             if (server.IsNullOrEmpty()) return;
 
+            WriteLog("初始化服务端地址：{0}", server);
+
             var set = Setting.Current;
 
             var client = new StarClient(server)
             {
-                Log = XTrace.Log
+                UserName = Environment.MachineName,
+                Password = Environment.MachineName,
+                Log = XTrace.Log,
             };
             if (set.Debug) client.EncoderLog = XTrace.Log;
 
             client.Open();
+            client.LoginAsync();
 
             _Client = client;
         }
@@ -92,9 +100,13 @@ namespace StarAgent
         private TimerX _udp_timer;
         private void StartDiscover()
         {
-            var tc = new ApiClient("udp://255.255.255.255:6666");
-            tc.Log = XTrace.Log;
-            tc.EncoderLog = XTrace.Log;
+            var tc = new ApiClient("udp://255.255.255.255:6666")
+            {
+                UsePool = false,
+                Log = XTrace.Log,
+                EncoderLog = XTrace.Log,
+                Timeout = 1_000
+            };
 
             tc.Open();
 
@@ -115,27 +127,31 @@ namespace StarAgent
 
             var tc = state as ApiClient;
 
-            tc.InvokeOneWay("Discover");
+            var dic = tc.Invoke<IDictionary<String, Object>>("Discover", new { state = DateTime.Now.ToFullString() });
+            if (dic == null || dic.Count == 0) return;
 
-            //var str = e.Packet?.ToStr();
-            //WriteLog("收到[{0}]：{1}", e.UserState, str);
+            var str = dic["Server"] + "";
+            if (str.IsNullOrEmpty()) return;
+
             //WriteLog("收到[{0}]：{1}", tc, str);
 
-            //if (!str.IsNullOrEmpty())
-            //{
-            //    var uri = new NetUri(str);
-            //    if (!uri.Host.IsNullOrEmpty() && uri.Port > 0)
-            //    {
-            //        WriteLog("发现服务器：{0}", uri);
+            if (!str.IsNullOrEmpty())
+            {
+                var uri = new NetUri(str);
+                if (!uri.Host.IsNullOrEmpty() && uri.Port > 0)
+                {
+                    WriteLog("发现服务器：{0}", uri);
 
-            //        // 停止广播
-            //        _udp_timer.TryDispose();
-            //        _udp_timer = null;
+                    // 停止广播
+                    _udp_timer.TryDispose();
+                    _udp_timer = null;
 
-            //        _udp.TryDispose();
-            //        _udp = null;
-            //    }
-            //}
+                    _udp.TryDispose();
+                    _udp = null;
+
+                    InitClient(str);
+                }
+            }
         }
         #endregion
 
