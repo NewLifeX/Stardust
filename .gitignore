@@ -26,3 +26,5 @@ bld/
 /Stardust.WebFx/Content
 /Stardust.WebFx/Plugins
 /Stardust.Data/Config
+/BinServer
+/BinClient
