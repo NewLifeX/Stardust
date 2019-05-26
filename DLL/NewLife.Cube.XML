@@ -146,25 +146,6 @@
             <param name="p"></param>
             <returns></returns>
         </member>
-        <member name="M:NewLife.Cube.Admin.Controllers.VisitStatController.Add(XCode.Membership.VisitStat)">
-            <summary>不允许添加修改</summary>
-            <param name="entity"></param>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.Admin.Controllers.VisitStatController.Edit(XCode.Membership.VisitStat)">
-            <summary>不允许添加修改</summary>
-            <param name="entity"></param>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.Admin.Controllers.VisitStatController.Delete(System.String)">
-            <summary>不允许删除</summary>
-            <param name="id"></param>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.Admin.Controllers.VisitStatController.Clear">
-            <summary>清空全表数据</summary>
-            <returns></returns>
-        </member>
         <member name="M:NewLife.Cube.Admin.Controllers.VisitStatController.ScanActionMenu(XCode.Membership.IMenu)">
             <summary>菜单不可见</summary>
             <param name="menu"></param>
@@ -197,25 +178,6 @@
         <member name="M:NewLife.Cube.Admin.Controllers.LogController.Search(NewLife.Web.Pager)">
             <summary>搜索数据集</summary>
             <param name="p"></param>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.Admin.Controllers.LogController.Add(XCode.Membership.Log)">
-            <summary>不允许添加修改日志</summary>
-            <param name="entity"></param>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.Admin.Controllers.LogController.Edit(XCode.Membership.Log)">
-            <summary>不允许添加修改日志</summary>
-            <param name="entity"></param>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.Admin.Controllers.LogController.Delete(System.String)">
-            <summary>不允许删除日志</summary>
-            <param name="id"></param>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.Admin.Controllers.LogController.Clear">
-            <summary>清空全表数据</summary>
             <returns></returns>
         </member>
         <member name="T:NewLife.Cube.Admin.Controllers.MenuController">
@@ -429,6 +391,169 @@
             <param name="controller"></param>
             <param name="ex"></param>
             <returns></returns>
+        </member>
+        <member name="T:NewLife.Cube.ReadOnlyEntityController`1">
+            <summary>只读实体控制器基类</summary>
+            <typeparam name="TEntity"></typeparam>
+        </member>
+        <member name="P:NewLife.Cube.ReadOnlyEntityController`1.Factory">
+            <summary>实体工厂</summary>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.#ctor">
+            <summary>构造函数</summary>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.OnActionExecuting(System.Web.Mvc.ActionExecutingContext)">
+            <summary>动作执行前</summary>
+            <param name="filterContext"></param>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.OnActionExecuted(System.Web.Mvc.ActionExecutedContext)">
+            <summary>执行后</summary>
+            <param name="filterContext"></param>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.OnException(System.Web.Mvc.ExceptionContext)">
+            <summary>触发异常时</summary>
+            <param name="filterContext"></param>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.Search(NewLife.Web.Pager)">
+            <summary>搜索数据集</summary>
+            <param name="p"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.Find(System.Object)">
+            <summary>查找单行数据</summary>
+            <param name="key"></param>
+            <returns></returns>
+        </member>
+        <member name="P:NewLife.Cube.ReadOnlyEntityController`1.SelectKeys">
+            <summary>获取选中键</summary>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.ExportData(System.Int32)">
+            <summary>导出当前页以后的数据</summary>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.Index(NewLife.Web.Pager)">
+            <summary>数据列表首页</summary>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.IndexView(NewLife.Web.Pager)">
+            <summary>列表页视图。子控制器可重载，以传递更多信息给视图，比如修改要显示的列</summary>
+            <param name="p"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.Detail(System.String)">
+            <summary>表单，查看</summary>
+            <param name="id">主键。可能为空（表示添加），所以用字符串而不是整数</param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.FormView(`0)">
+            <summary>表单页视图。子控制器可以重载，以传递更多信息给视图，比如修改要显示的列</summary>
+            <param name="entity"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.Json(System.String,NewLife.Web.Pager)">
+            <summary>Json接口</summary>
+            <param name="id">令牌</param>
+            <param name="p">分页</param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.Xml(System.String,NewLife.Web.Pager)">
+            <summary>Xml接口</summary>
+            <param name="id">令牌</param>
+            <param name="p">分页</param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.ExportXml">
+            <summary>导出Xml</summary>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.OnExportXml">
+            <summary>要导出Xml的对象</summary>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.SetAttachment(System.String,System.String,System.Boolean)">
+            <summary>设置附件响应方式</summary>
+            <param name="name"></param>
+            <param name="ext"></param>
+            <param name="includeTime">包含时间戳</param>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.ExportJson">
+            <summary>导出Json</summary>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.OnExportJson">
+            <summary>要导出Json的对象</summary>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.ExportExcel">
+            <summary>导出Excel</summary>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.OnExportExcel(System.Collections.Generic.List{XCode.Configuration.FieldItem},System.Collections.Generic.IEnumerable{`0},System.IO.Stream)">
+            <summary>导出Excel，可重载修改要输出的列</summary>
+            <param name="fs">字段列表</param>
+            <param name="list">数据集</param>
+            <param name="output">输出流</param>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.Backup">
+            <summary>备份到服务器本地目录</summary>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.Restore">
+            <summary>从服务器本地目录还原</summary>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.BackupAndExport">
+            <summary>备份导出</summary>
+            <remarks>备份并下载</remarks>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.MakeList">
+            <summary>生成列表</summary>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.MakeForm">
+            <summary>生成表单</summary>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.Valid(`0,System.ComponentModel.DataObjectMethodType,System.Boolean)">
+            <summary>验证实体对象</summary>
+            <param name="entity">实体对象</param>
+            <param name="type">操作类型</param>
+            <param name="post">是否提交数据阶段</param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.ValidPermission(`0,System.ComponentModel.DataObjectMethodType,System.Boolean)">
+            <summary>验证实体对象</summary>
+            <param name="entity">实体对象</param>
+            <param name="type">操作类型</param>
+            <param name="post">是否提交数据阶段</param>
+            <returns></returns>
+        </member>
+        <member name="P:NewLife.Cube.ReadOnlyEntityController`1.ListFields">
+            <summary>列表字段过滤</summary>
+        </member>
+        <member name="P:NewLife.Cube.ReadOnlyEntityController`1.FormFields">
+            <summary>表单字段过滤</summary>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.GetFields(System.Boolean)">
+            <summary>获取要显示的字段列表</summary>
+            <param name="isForm">是否是表单</param>
+            <returns></returns>
+        </member>
+        <member name="P:NewLife.Cube.ReadOnlyEntityController`1.MenuOrder">
+            <summary>菜单顺序。扫描是会反射读取</summary>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.ScanActionMenu(XCode.Membership.IMenu)">
+            <summary>自动从实体类拿到显示名</summary>
+            <param name="menu"></param>
+            <returns></returns>
+        </member>
+        <member name="P:NewLife.Cube.ReadOnlyEntityController`1.IsJsonRequest">
+            <summary>是否Json请求</summary>
+        </member>
+        <member name="M:NewLife.Cube.ReadOnlyEntityController`1.SetCompress">
+            <summary>启用压缩</summary>
         </member>
         <member name="T:NewLife.Cube.PagerModelBinder">
             <summary>分页模型绑定器</summary>
@@ -959,56 +1084,6 @@
             <summary>实体控制器基类</summary>
             <typeparam name="TEntity"></typeparam>
         </member>
-        <member name="P:NewLife.Cube.EntityController`1.Factory">
-            <summary>实体工厂</summary>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.#ctor">
-            <summary>构造函数</summary>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.OnActionExecuting(System.Web.Mvc.ActionExecutingContext)">
-            <summary>动作执行前</summary>
-            <param name="filterContext"></param>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.OnActionExecuted(System.Web.Mvc.ActionExecutedContext)">
-            <summary>执行后</summary>
-            <param name="filterContext"></param>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.OnException(System.Web.Mvc.ExceptionContext)">
-            <summary>触发异常时</summary>
-            <param name="filterContext"></param>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.Search(NewLife.Web.Pager)">
-            <summary>搜索数据集</summary>
-            <param name="p"></param>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.Find(System.Object)">
-            <summary>查找单行数据</summary>
-            <param name="key"></param>
-            <returns></returns>
-        </member>
-        <member name="P:NewLife.Cube.EntityController`1.SelectKeys">
-            <summary>获取选中键</summary>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.ExportData(System.Int32)">
-            <summary>导出当前页以后的数据</summary>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.Index(NewLife.Web.Pager)">
-            <summary>数据列表首页</summary>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.IndexView(NewLife.Web.Pager)">
-            <summary>列表页视图。子控制器可重载，以传递更多信息给视图，比如修改要显示的列</summary>
-            <param name="p"></param>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.Detail(System.String)">
-            <summary>表单，查看</summary>
-            <param name="id">主键。可能为空（表示添加），所以用字符串而不是整数</param>
-            <returns></returns>
-        </member>
         <member name="M:NewLife.Cube.EntityController`1.Delete(System.String)">
             <summary>删除</summary>
             <param name="id"></param>
@@ -1033,61 +1108,13 @@
             <param name="entity"></param>
             <returns></returns>
         </member>
-        <member name="M:NewLife.Cube.EntityController`1.FormView(`0)">
-            <summary>表单页视图。子控制器可以重载，以传递更多信息给视图，比如修改要显示的列</summary>
-            <param name="entity"></param>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.Json(System.String,NewLife.Web.Pager)">
-            <summary>Json接口</summary>
-            <param name="id">令牌</param>
-            <param name="p">分页</param>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.Xml(System.String,NewLife.Web.Pager)">
-            <summary>Xml接口</summary>
-            <param name="id">令牌</param>
-            <param name="p">分页</param>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.ExportXml">
-            <summary>导出Xml</summary>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.OnExportXml">
-            <summary>要导出Xml的对象</summary>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.SetAttachment(System.String,System.String)">
-            <summary>设置附件响应方式</summary>
-            <param name="name"></param>
-            <param name="ext"></param>
-        </member>
         <member name="M:NewLife.Cube.EntityController`1.ImportXml">
             <summary>导入Xml</summary>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.ExportJson">
-            <summary>导出Json</summary>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.OnExportJson">
-            <summary>要导出Json的对象</summary>
             <returns></returns>
         </member>
         <member name="M:NewLife.Cube.EntityController`1.ImportJson">
             <summary>导入Json</summary>
             <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.ExportExcel">
-            <summary>导出Excel</summary>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.OnExportExcel(System.Collections.Generic.List{XCode.Configuration.FieldItem},System.Collections.Generic.IEnumerable{`0},System.IO.Stream)">
-            <summary>导出Excel，可重载修改要输出的列</summary>
-            <param name="fs">字段列表</param>
-            <param name="list">数据集</param>
-            <param name="output">输出流</param>
         </member>
         <member name="M:NewLife.Cube.EntityController`1.DeleteSelect">
             <summary>删除选中</summary>
@@ -1099,14 +1126,6 @@
         </member>
         <member name="M:NewLife.Cube.EntityController`1.Clear">
             <summary>清空全表数据</summary>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.MakeList">
-            <summary>生成列表</summary>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.MakeForm">
-            <summary>生成表单</summary>
             <returns></returns>
         </member>
         <member name="M:NewLife.Cube.EntityController`1.OnInsert(`0)">
@@ -1123,45 +1142,6 @@
             <summary>删除实体对象</summary>
             <param name="entity"></param>
             <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.Valid(`0,System.ComponentModel.DataObjectMethodType,System.Boolean)">
-            <summary>验证实体对象</summary>
-            <param name="entity">实体对象</param>
-            <param name="type">操作类型</param>
-            <param name="post">是否提交数据阶段</param>
-            <returns></returns>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.ValidPermission(`0,System.ComponentModel.DataObjectMethodType,System.Boolean)">
-            <summary>验证实体对象</summary>
-            <param name="entity">实体对象</param>
-            <param name="type">操作类型</param>
-            <param name="post">是否提交数据阶段</param>
-            <returns></returns>
-        </member>
-        <member name="P:NewLife.Cube.EntityController`1.ListFields">
-            <summary>列表字段过滤</summary>
-        </member>
-        <member name="P:NewLife.Cube.EntityController`1.FormFields">
-            <summary>表单字段过滤</summary>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.GetFields(System.Boolean)">
-            <summary>获取要显示的字段列表</summary>
-            <param name="isForm">是否是表单</param>
-            <returns></returns>
-        </member>
-        <member name="P:NewLife.Cube.EntityController`1.MenuOrder">
-            <summary>菜单顺序。扫描是会反射读取</summary>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.ScanActionMenu(XCode.Membership.IMenu)">
-            <summary>自动从实体类拿到显示名</summary>
-            <param name="menu"></param>
-            <returns></returns>
-        </member>
-        <member name="P:NewLife.Cube.EntityController`1.IsJsonRequest">
-            <summary>是否Json请求</summary>
-        </member>
-        <member name="M:NewLife.Cube.EntityController`1.SetCompress">
-            <summary>启用压缩</summary>
         </member>
         <member name="T:NewLife.Cube.ConfigController`1">
             <summary>设置控制器</summary>
@@ -2368,7 +2348,7 @@
             <summary>布局页。</summary>
         </member>
         <member name="P:NewLife.Cube.Setting.DefaultRole">
-            <summary>默认角色。注册用户得到的角色，0使用认证中心角色，-1强制使用</summary>
+            <summary>默认角色。默认普通用户3</summary>
         </member>
         <member name="P:NewLife.Cube.Setting.AllowLogin">
             <summary>启用密码登录。允许输入用户名密码进行登录</summary>
@@ -2410,7 +2390,7 @@
             <summary>强制SSL。强制使用https访问</summary>
         </member>
         <member name="P:NewLife.Cube.Setting.EnableCompress">
-            <summary>启用压缩。默认false</summary>
+            <summary>启用压缩。主要用于Json输出压缩，默认false</summary>
         </member>
         <member name="P:NewLife.Cube.Setting.AvatarPath">
             <summary>头像目录。设定后下载远程头像到本地</summary>

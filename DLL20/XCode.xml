@@ -1182,7 +1182,7 @@
             <returns></returns>
         </member>
         <member name="M:XCode.Configuration.FieldItem.NotIsNull">
-            <summary>NotIn操作</summary>
+            <summary>NotIsNull操作</summary>
             <returns></returns>
         </member>
         <member name="M:XCode.Configuration.FieldItem.IsNullOrEmpty">
@@ -1633,6 +1633,9 @@
         </member>
         <member name="P:XCode.DataAccessLayer.DbBase.ShowSQL">
             <summary>是否输出SQL语句，默认为XCode调试开关XCode.Debug</summary>
+        </member>
+        <member name="P:XCode.DataAccessLayer.DbBase.SQLMaxLength">
+            <summary>SQL最大长度，输出日志时的SQL最大长度，超长截断，默认4096，不截断用0</summary>
         </member>
         <member name="P:XCode.DataAccessLayer.DbBase.UseParameter">
             <summary>参数化添删改查。默认关闭</summary>
@@ -2621,11 +2624,20 @@
         </member>
         <member name="M:XCode.DataAccessLayer.MySql.PageSplit(XCode.DataAccessLayer.SelectBuilder,System.Int64,System.Int64)">
             <summary>构造分页SQL</summary>
-            <remarks>
-            两个构造分页SQL的方法，区别就在于查询生成器能够构造出来更好的分页语句，尽可能的避免子查询。
-            MS体系的分页精髓就在于唯一键，当唯一键带有Asc/Desc/Unkown等排序结尾时，就采用最大最小值分页，否则使用较次的TopNotIn分页。
-            TopNotIn分页和MaxMin分页的弊端就在于无法完美的支持GroupBy查询分页，只能查到第一页，往后分页就不行了，因为没有主键。
-            </remarks>
+            <param name="builder">查询生成器</param>
+            <param name="startRowIndex">开始行，0表示第一行</param>
+            <param name="maximumRows">最大返回行数，0表示所有行</param>
+            <returns>分页SQL</returns>
+        </member>
+        <member name="M:XCode.DataAccessLayer.MySql.PageSplitByLimit(System.String,System.Int64,System.Int64)">
+            <summary>已重写。获取分页</summary>
+            <param name="sql">SQL语句</param>
+            <param name="startRowIndex">开始行，0表示第一行</param>
+            <param name="maximumRows">最大返回行数，0表示所有行</param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.DataAccessLayer.MySql.PageSplitByLimit(XCode.DataAccessLayer.SelectBuilder,System.Int64,System.Int64)">
+            <summary>构造分页SQL</summary>
             <param name="builder">查询生成器</param>
             <param name="startRowIndex">开始行，0表示第一行</param>
             <param name="maximumRows">最大返回行数，0表示所有行</param>
@@ -2925,6 +2937,12 @@
         <member name="F:XCode.DataAccessLayer.OracleMeta._DataTypes">
             <summary>数据类型映射</summary>
         </member>
+        <member name="M:XCode.DataAccessLayer.OracleMeta.GetDefault(XCode.DataAccessLayer.IDataColumn,System.Boolean)">
+            <summary>默认值</summary>
+            <param name="field"></param>
+            <param name="onlyDefine"></param>
+            <returns></returns>
+        </member>
         <member name="P:XCode.DataAccessLayer.PostgreSQL.Type">
             <summary>返回数据库类型。</summary>
         </member>
@@ -2949,11 +2967,6 @@
         </member>
         <member name="M:XCode.DataAccessLayer.PostgreSQL.PageSplit(XCode.DataAccessLayer.SelectBuilder,System.Int64,System.Int64)">
             <summary>构造分页SQL</summary>
-            <remarks>
-            两个构造分页SQL的方法，区别就在于查询生成器能够构造出来更好的分页语句，尽可能的避免子查询。
-            MS体系的分页精髓就在于唯一键，当唯一键带有Asc/Desc/Unkown等排序结尾时，就采用最大最小值分页，否则使用较次的TopNotIn分页。
-            TopNotIn分页和MaxMin分页的弊端就在于无法完美的支持GroupBy查询分页，只能查到第一页，往后分页就不行了，因为没有主键。
-            </remarks>
             <param name="builder">查询生成器</param>
             <param name="startRowIndex">开始行，0表示第一行</param>
             <param name="maximumRows">最大返回行数，0表示所有行</param>
@@ -3035,11 +3048,6 @@
         </member>
         <member name="M:XCode.DataAccessLayer.SQLite.PageSplit(XCode.DataAccessLayer.SelectBuilder,System.Int64,System.Int64)">
             <summary>构造分页SQL</summary>
-            <remarks>
-            两个构造分页SQL的方法，区别就在于查询生成器能够构造出来更好的分页语句，尽可能的避免子查询。
-            MS体系的分页精髓就在于唯一键，当唯一键带有Asc/Desc/Unkown等排序结尾时，就采用最大最小值分页，否则使用较次的TopNotIn分页。
-            TopNotIn分页和MaxMin分页的弊端就在于无法完美的支持GroupBy查询分页，只能查到第一页，往后分页就不行了，因为没有主键。
-            </remarks>
             <param name="builder">查询生成器</param>
             <param name="startRowIndex">开始行，0表示第一行</param>
             <param name="maximumRows">最大返回行数，0表示所有行</param>
@@ -3076,6 +3084,12 @@
         </member>
         <member name="F:XCode.DataAccessLayer.SQLiteMetaData._DataTypes">
             <summary>数据类型映射</summary>
+        </member>
+        <member name="M:XCode.DataAccessLayer.SQLiteMetaData.GetTbFields(XCode.DataAccessLayer.IDataTable)">
+            <summary>
+            获取表字段 zhangy 2018年10月23日 15:30:43
+            </summary>
+            <param name="table"></param>
         </member>
         <member name="M:XCode.DataAccessLayer.SQLiteMetaData.Backup(System.String,System.String,System.Boolean)">
             <summary>备份文件到目标文件</summary>
@@ -3180,9 +3194,7 @@
             </summary>
         </member>
         <member name="P:XCode.DataAccessLayer.SqlServerSession.SqlBatcher.IsStarted">
-            <summary>
-            获得批处理是否正在批处理状态。
-            </summary>
+            <summary>获得批处理是否正在批处理状态。</summary>
         </member>
         <member name="M:XCode.DataAccessLayer.SqlServerSession.SqlBatcher.StartBatch(System.Data.Common.DbConnection)">
             <summary>开始批处理</summary>
@@ -3347,6 +3359,12 @@
             <summary>取得字段约束</summary>
             <param name="field">字段</param>
             <param name="onlyDefine">仅仅定义</param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.DataAccessLayer.DbMetaData.GetDefault(XCode.DataAccessLayer.IDataColumn,System.Boolean)">
+            <summary>默认值</summary>
+            <param name="field"></param>
+            <param name="onlyDefine"></param>
             <returns></returns>
         </member>
         <member name="M:XCode.DataAccessLayer.DbMetaData.GetTables">
@@ -5210,41 +5228,6 @@
         <member name="T:XCode.EntityExtension">
             <summary>实体扩展方法</summary>
         </member>
-        <member name="M:XCode.EntityExtension.Find``1(System.Collections.Generic.IList{``0},System.String,System.Object)">
-            <summary>根据指定项查找</summary>
-            <param name="list">实体列表</param>
-            <param name="name">属性名</param>
-            <param name="value">属性值</param>
-            <returns></returns>
-        </member>
-        <member name="M:XCode.EntityExtension.FindIgnoreCase``1(System.Collections.Generic.IList{``0},System.String,System.String)">
-            <summary>根据指定项查找</summary>
-            <param name="list">实体列表</param>
-            <param name="name">属性名</param>
-            <param name="value">属性值</param>
-            <returns></returns>
-        </member>
-        <member name="M:XCode.EntityExtension.FindAll``1(System.Collections.Generic.IList{``0},System.String,System.Object)">
-            <summary>根据指定项查找</summary>
-            <param name="list">实体列表</param>
-            <param name="name">属性名</param>
-            <param name="value">属性值</param>
-            <returns></returns>
-        </member>
-        <member name="M:XCode.EntityExtension.FindAllIgnoreCase``1(System.Collections.Generic.IList{``0},System.String,System.String)">
-            <summary>根据指定项查找</summary>
-            <param name="list">实体列表</param>
-            <param name="name">属性名</param>
-            <param name="value">属性值</param>
-            <returns></returns>
-        </member>
-        <member name="M:XCode.EntityExtension.Exists``1(System.Collections.Generic.IList{``0},System.String,System.Object)">
-            <summary>集合是否包含指定项</summary>
-            <param name="list">实体列表</param>
-            <param name="name">名称</param>
-            <param name="value">数值</param>
-            <returns></returns>
-        </member>
         <member name="M:XCode.EntityExtension.ToDictionary``1(System.Collections.Generic.IEnumerable{``0},System.String)">
             <summary>实体列表转为字典。主键为Key</summary>
             <param name="list">实体列表</param>
@@ -5337,15 +5320,6 @@
             Oracle返回值：无论是插入还是更新返回的都始终为-1
             </returns>
         </member>
-        <member name="M:XCode.EntityExtension.InsertOrUpdate``1(System.Collections.Generic.IEnumerable{``0},XCode.DataAccessLayer.IDataColumn[],System.Collections.Generic.ICollection{System.String},System.Collections.Generic.ICollection{System.String})">
-            <summary>批量插入或更新</summary>
-            <typeparam name="T">实体类型</typeparam>
-            <param name="list">实体列表</param>
-            <param name="columns">要插入的字段，默认所有字段</param>
-            <param name="updateColumns">要更新的字段，默认脏数据</param>
-            <param name="addColumns">要累加更新的字段，默认累加</param>
-            <returns></returns>
-        </member>
         <member name="M:XCode.EntityExtension.Upsert(XCode.IEntity,XCode.DataAccessLayer.IDataColumn[],System.Collections.Generic.ICollection{System.String},System.Collections.Generic.ICollection{System.String})">
             <summary>批量插入或更新</summary>
             <param name="entity">实体对象</param>
@@ -5359,6 +5333,12 @@
             简单来说：如果Insert 成功则返回1，如果需要执行的是update 则返回2，
             </returns>
         </member>
+        <member name="M:XCode.EntityExtension.GetDirtyColumns(XCode.IEntityOperate,System.Collections.Generic.IEnumerable{XCode.IEntity})">
+            <summary>获取脏数据列</summary>
+            <param name="fact"></param>
+            <param name="list"></param>
+            <returns></returns>
+        </member>
         <member name="M:XCode.EntityExtension.ToTable``1(System.Collections.Generic.IEnumerable{``0})">
             <summary>转为DbTable</summary>
             <param name="list">实体列表</param>
@@ -5371,9 +5351,23 @@
             <returns></returns>
         </member>
         <member name="M:XCode.EntityExtension.SaveFile``1(System.Collections.Generic.IEnumerable{``0},System.String)">
-            <summary>写入数据流</summary>
+            <summary>写入文件，二进制格式</summary>
             <param name="list">实体列表</param>
             <param name="file">文件</param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.EntityExtension.SaveCsv``1(System.Collections.Generic.IEnumerable{``0},System.IO.Stream,System.Boolean)">
+            <summary>写入数据流，Csv格式</summary>
+            <param name="list">实体列表</param>
+            <param name="stream">数据量</param>
+            <param name="displayName">是否使用中文显示名，否则使用英文属性名</param>
+            <returns></returns>
+        </member>
+        <member name="M:XCode.EntityExtension.SaveCsv``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Boolean)">
+            <summary>写入文件，Csv格式</summary>
+            <param name="list">实体列表</param>
+            <param name="file">文件</param>
+            <param name="displayName">是否使用中文显示名，否则使用英文属性名</param>
             <returns></returns>
         </member>
         <member name="M:XCode.EntityExtension.Read``1(System.Collections.Generic.IList{``0},System.IO.Stream)">
@@ -5389,7 +5383,19 @@
             <returns>实体列表</returns>
         </member>
         <member name="M:XCode.EntityExtension.LoadFile``1(System.Collections.Generic.IList{``0},System.String)">
-            <summary>从数据流读取列表</summary>
+            <summary>从文件读取列表，二进制格式</summary>
+            <param name="list">实体列表</param>
+            <param name="file">文件</param>
+            <returns>实体列表</returns>
+        </member>
+        <member name="M:XCode.EntityExtension.LoadCsv``1(System.Collections.Generic.IList{``0},System.IO.Stream)">
+            <summary>从数据流读取列表，Csv格式</summary>
+            <param name="list">实体列表</param>
+            <param name="stream">数据流</param>
+            <returns>实体列表</returns>
+        </member>
+        <member name="M:XCode.EntityExtension.LoadCsv``1(System.Collections.Generic.IList{``0},System.String)">
+            <summary>从文件读取列表，Csv格式</summary>
             <param name="list">实体列表</param>
             <param name="file">文件</param>
             <returns>实体列表</returns>
@@ -10005,11 +10011,38 @@
             <param name="value">数值</param>
             <returns></returns>
         </member>
+        <member name="M:XCode.ConcatExpression.op_BitwiseAnd(XCode.ConcatExpression,XCode.Configuration.FieldItem)">
+            <summary>重载运算符实现And操作，同时通过布尔型支持AndIf</summary>
+            <param name="exp"></param>
+            <param name="field">数值</param>
+            <returns></returns>
+        </member>
+        <member name="T:XCode.Model.EntityActions">
+            <summary>实体动作</summary>
+        </member>
+        <member name="F:XCode.Model.EntityActions.Save">
+            <summary>保存</summary>
+        </member>
+        <member name="F:XCode.Model.EntityActions.Insert">
+            <summary>插入</summary>
+        </member>
+        <member name="F:XCode.Model.EntityActions.Update">
+            <summary>更新</summary>
+        </member>
+        <member name="F:XCode.Model.EntityActions.Upsert">
+            <summary>插入或更新</summary>
+        </member>
+        <member name="F:XCode.Model.EntityActions.Delete">
+            <summary>删除</summary>
+        </member>
         <member name="T:XCode.Model.EntityDeferredQueue">
             <summary>实体延迟队列。缓冲合并对象，批量处理</summary>
         </member>
-        <member name="P:XCode.Model.EntityDeferredQueue.BatchSave">
-            <summary>是否批量保存。默认true，使用数据库批量更新操作</summary>
+        <member name="P:XCode.Model.EntityDeferredQueue.Action">
+            <summary>实体动作。默认Save保存</summary>
+        </member>
+        <member name="P:XCode.Model.EntityDeferredQueue.MaxSingle">
+            <summary>最大单行保存大小。大于该值时才采用批量保存，默认2</summary>
         </member>
         <member name="M:XCode.Model.EntityDeferredQueue.Process(System.Collections.Generic.IList{System.Object})">
             <summary>处理一批</summary>
@@ -10112,6 +10145,10 @@
         </member>
         <member name="P:XCode.FieldExpression.IsEmpty">
             <summary>是否为空</summary>
+        </member>
+        <member name="M:XCode.FieldExpression.#ctor(XCode.Configuration.FieldItem)">
+            <summary>构造字段表达式</summary>
+            <param name="field"></param>
         </member>
         <member name="M:XCode.FieldExpression.#ctor(XCode.Configuration.FieldItem,System.String,System.Object)">
             <summary>构造字段表达式</summary>
@@ -10352,6 +10389,9 @@
         </member>
         <member name="P:XCode.Setting.TraceSQLTime">
             <summary>跟踪SQL执行时间，大于该阀值将输出日志，默认1000毫秒</summary>
+        </member>
+        <member name="P:XCode.Setting.SQLMaxLength">
+            <summary>SQL最大长度，输出日志时的SQL最大长度，超长截断，默认4096，不截断用0</summary>
         </member>
         <member name="P:XCode.Setting.ConnMaps">
             <summary>连接名映射#，表名映射@，表名映射@，把实体类中的Test2和Test3连接名映射到Test去</summary>

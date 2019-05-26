@@ -1231,17 +1231,6 @@
             <summary>归还</summary>
             <param name="value"></param>
         </member>
-        <member name="T:NewLife.Collections.ClusterException">
-            <summary>集群异常</summary>
-        </member>
-        <member name="P:NewLife.Collections.ClusterException.Resource">
-            <summary>资源</summary>
-        </member>
-        <member name="M:NewLife.Collections.ClusterException.#ctor(System.String,System.Exception)">
-            <summary>实例化</summary>
-            <param name="res"></param>
-            <param name="inner"></param>
-        </member>
         <member name="T:NewLife.Collections.ClusterHelper">
             <summary>集群助手</summary>
         </member>
@@ -1254,8 +1243,8 @@
             <param name="func"></param>
             <returns></returns>
         </member>
-        <member name="M:NewLife.Collections.ClusterHelper.InvokeAll``3(NewLife.Collections.ICluster{``0,``1},System.Func{``1,``2})">
-            <summary>对集群进行多次调用</summary>
+        <member name="M:NewLife.Collections.ClusterHelper.InvokeAsync``3(NewLife.Collections.ICluster{``0,``1},System.Func{``1,System.Threading.Tasks.Task{``2}})">
+            <summary>借助集群资源处理事务</summary>
             <typeparam name="TKey"></typeparam>
             <typeparam name="TValue"></typeparam>
             <typeparam name="TResult"></typeparam>
@@ -1769,11 +1758,20 @@
             <summary>数据行</summary>
         </member>
         <member name="P:NewLife.Data.DbTable.Total">
-            <summary>总函数</summary>
+            <summary>总行数</summary>
         </member>
         <member name="M:NewLife.Data.DbTable.Read(System.Data.IDataReader)">
             <summary>读取数据</summary>
             <param name="dr"></param>
+        </member>
+        <member name="M:NewLife.Data.DbTable.ReadHeader(System.Data.IDataReader)">
+            <summary>读取头部</summary>
+            <param name="dr"></param>
+        </member>
+        <member name="M:NewLife.Data.DbTable.ReadData(System.Data.IDataReader,System.Int32[])">
+            <summary>读取数据</summary>
+            <param name="dr">数据读取器</param>
+            <param name="fields">要读取的字段序列</param>
         </member>
         <member name="M:NewLife.Data.DbTable.Read(System.IO.Stream)">
             <summary>从数据流读取</summary>
@@ -2089,6 +2087,10 @@
         </member>
         <member name="M:NewLife.Data.Packet.ToSegment">
             <summary>返回数据段</summary>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Data.Packet.ToSegments">
+            <summary>返回数据段集合</summary>
             <returns></returns>
         </member>
         <member name="M:NewLife.Data.Packet.GetStream">
@@ -2895,9 +2897,10 @@
         <member name="P:NewLife.IO.CsvFile.Separator">
             <summary>分隔符。默认逗号</summary>
         </member>
-        <member name="M:NewLife.IO.CsvFile.#ctor(System.IO.Stream)">
+        <member name="M:NewLife.IO.CsvFile.#ctor(System.IO.Stream,System.Boolean)">
             <summary>数据流实例化</summary>
             <param name="stream"></param>
+            <param name="leaveOpen">保留打开</param>
         </member>
         <member name="M:NewLife.IO.CsvFile.#ctor(System.String,System.Boolean)">
             <summary>Csv文件实例化</summary>
@@ -3199,6 +3202,9 @@
         </member>
         <member name="P:NewLife.Log.CompositeLog.Logs">
             <summary>日志提供者集合</summary>
+        </member>
+        <member name="P:NewLife.Log.CompositeLog.Level">
+            <summary>日志等级，只输出大于等于该级别的日志，默认Info，打开NewLife.Debug时默认为最低的Debug</summary>
         </member>
         <member name="M:NewLife.Log.CompositeLog.#ctor">
             <summary>实例化</summary>
@@ -4054,10 +4060,16 @@
             <summary>保存速度，每秒保存多少个实体</summary>
         </member>
         <member name="P:NewLife.Model.DeferredQueue.Async">
-            <summary>是否异步处理。true表示异步处理，共用DQ定时调度；false表示同步处理，独立线程</summary>
+            <summary>是否异步处理。默认true表示异步处理，共用DQ定时调度；false表示同步处理，独立线程</summary>
         </member>
         <member name="P:NewLife.Model.DeferredQueue.Times">
             <summary>合并保存的总次数</summary>
+        </member>
+        <member name="F:NewLife.Model.DeferredQueue.Finish">
+            <summary>批次处理成功时</summary>
+        </member>
+        <member name="F:NewLife.Model.DeferredQueue.Error">
+            <summary>批次处理失败时</summary>
         </member>
         <member name="M:NewLife.Model.DeferredQueue.#ctor">
             <summary>实例化</summary>
@@ -7176,6 +7188,16 @@
             <param name="type"></param>
             <returns></returns>
         </member>
+        <member name="M:NewLife.Reflection.Reflect.IsList(System.Type)">
+            <summary>是否泛型列表</summary>
+            <param name="type"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Reflection.Reflect.IsDictionary(System.Type)">
+            <summary>是否泛型字典</summary>
+            <param name="type"></param>
+            <returns></returns>
+        </member>
         <member name="M:NewLife.Reflection.Reflect.As(System.Type,System.Type)">
             <summary>是否能够转为指定基类</summary>
             <param name="type"></param>
@@ -7275,7 +7297,7 @@
             <summary>客户端连接集群</summary>
         </member>
         <member name="P:NewLife.Remoting.ApiClient.UsePool">
-            <summary>是否使用连接池。true时建立多个到服务端的连接，默认false使用单一连接</summary>
+            <summary>是否使用连接池。true时建立多个到服务端的连接（高吞吐），默认false使用单一连接（低延迟）</summary>
         </member>
         <member name="P:NewLife.Remoting.ApiClient.NewLife#Remoting#IApiSession#Host">
             <summary>主机</summary>
@@ -7310,6 +7332,9 @@
             <summary>关闭</summary>
             <param name="reason">关闭原因。便于日志分析</param>
             <returns>是否成功</returns>
+        </member>
+        <member name="M:NewLife.Remoting.ApiClient.InitCluster">
+            <summary>初始化集群</summary>
         </member>
         <member name="M:NewLife.Remoting.ApiClient.FindAction(System.String)">
             <summary>查找Api动作</summary>
@@ -7418,6 +7443,9 @@
         </member>
         <member name="P:NewLife.Remoting.ApiHost.StatProcess">
             <summary>接收数据包统计信息</summary>
+        </member>
+        <member name="P:NewLife.Remoting.ApiHost.SlowTrace">
+            <summary>慢追踪。远程调用或处理时间超过该值时，输出慢调用日志，默认5000ms</summary>
         </member>
         <member name="P:NewLife.Remoting.ApiHost.Items">
             <summary>用户会话数据</summary>
@@ -7663,6 +7691,11 @@
             <param name="state">状态信息</param>
             <returns></returns>
         </member>
+        <member name="M:NewLife.Remoting.ApiController.Info2(NewLife.Data.Packet)">
+            <summary>服务器信息，用户健康检测，二进制压测</summary>
+            <param name="state">状态信息</param>
+            <returns></returns>
+        </member>
         <member name="T:NewLife.Remoting.ControllerContext">
             <summary>控制器上下文</summary>
         </member>
@@ -7787,6 +7820,9 @@
         </member>
         <member name="P:NewLife.Remoting.IApiHost.StatProcess">
             <summary>接收统计</summary>
+        </member>
+        <member name="P:NewLife.Remoting.IApiHost.SlowTrace">
+            <summary>慢追踪。远程调用或处理时间超过该值时，输出慢调用日志，默认5000ms</summary>
         </member>
         <member name="P:NewLife.Remoting.IApiHost.Log">
             <summary>日志</summary>
@@ -9339,10 +9375,12 @@
         <member name="T:NewLife.Serialization.IJsonHost">
             <summary>Json序列化接口</summary>
         </member>
-        <member name="M:NewLife.Serialization.IJsonHost.Write(System.Object,System.Boolean)">
+        <member name="M:NewLife.Serialization.IJsonHost.Write(System.Object,System.Boolean,System.Boolean,System.Boolean)">
             <summary>写入对象，得到Json字符串</summary>
             <param name="value"></param>
-            <param name="indented">是否缩进</param>
+            <param name="indented">是否缩进。默认false</param>
+            <param name="nullValue">是否写控制。默认true</param>
+            <param name="camelCase">是否驼峰命名。默认false</param>
             <returns></returns>
         </member>
         <member name="M:NewLife.Serialization.IJsonHost.Read(System.String,System.Type)">
@@ -9367,6 +9405,14 @@
             <summary>写入对象，得到Json字符串</summary>
             <param name="value"></param>
             <param name="indented">是否缩进</param>
+            <returns></returns>
+        </member>
+        <member name="M:NewLife.Serialization.JsonHelper.ToJson(System.Object,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>写入对象，得到Json字符串</summary>
+            <param name="value"></param>
+            <param name="indented">是否缩进。默认false</param>
+            <param name="nullValue">是否写控制。默认true</param>
+            <param name="camelCase">是否驼峰命名。默认false</param>
             <returns></returns>
         </member>
         <member name="M:NewLife.Serialization.JsonHelper.ToJsonEntity(System.String,System.Type)">
@@ -9653,6 +9699,9 @@
         </member>
         <member name="P:NewLife.Serialization.JsonWriter.NullValue">
             <summary>写入空值。默认true</summary>
+        </member>
+        <member name="P:NewLife.Serialization.JsonWriter.MaxDepth">
+            <summary>最大序列化深度。默认5</summary>
         </member>
         <member name="M:NewLife.Serialization.JsonWriter.#ctor">
             <summary>实例化</summary>
