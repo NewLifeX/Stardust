@@ -10,8 +10,8 @@ using NewLife.Serialization;
 
 namespace Stardust
 {
-    /// <summary>星星客户端</summary>
-    public class StarClient : ApiClient
+    /// <summary>尘埃客户端</summary>
+    public class DustClient : ApiClient
     {
         #region 属性
         /// <summary>用户名</summary>
@@ -29,13 +29,13 @@ namespace Stardust
 
         #region 方法
         /// <summary>实例化</summary>
-        public StarClient()
+        public DustClient()
         {
         }
 
         /// <summary>实例化</summary>
         /// <param name="uri"></param>
-        public StarClient(String uri)
+        public DustClient(String uri)
         {
             if (!uri.IsNullOrEmpty())
             {
