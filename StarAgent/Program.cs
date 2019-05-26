@@ -2,6 +2,7 @@
 using NewLife.Agent;
 using NewLife.Log;
 using NewLife.Net;
+using NewLife.Remoting;
 using NewLife.Threading;
 using Stardust;
 using System;
@@ -87,48 +88,54 @@ namespace StarAgent
         }
 
         #region 自动发现服务端
-        private UdpServer _udp;
+        private ApiClient _udp;
         private TimerX _udp_timer;
         private void StartDiscover()
         {
-            var udp = new UdpServer();
-#if DEBUG
-            udp.Log = XTrace.Log;
-            udp.LogSend = true;
-            udp.LogReceive = true;
-#endif
+            var tc = new ApiClient("udp://255.255.255.255:6666");
+            tc.Log = XTrace.Log;
+            tc.EncoderLog = XTrace.Log;
 
-            var ep = new IPEndPoint(IPAddress.Broadcast, 6666);
-            var session = udp.CreateSession(ep);
-            session.Received += OnDiscover;
+            tc.Open();
 
-            //session.Send("Hello");
             // 定时广播
-            _udp_timer = new TimerX(s => (s as ISocketSession).Send("Hello"), session, 0, 5_000);
+            _udp_timer = new TimerX(OnDiscover, tc, 0, 5_000) { Async = true };
 
-            _udp = udp;
+            _udp = tc;
         }
 
-        private void OnDiscover(Object sender, ReceivedEventArgs e)
+        private void OnDiscover(Object state)
         {
-            var str = e.Packet?.ToStr();
-            WriteLog("收到[{0}]：{1}", e.UserState, str);
+            //var udp = new UdpServer();
+            //udp.Log = XTrace.Log;
 
-            if (!str.IsNullOrEmpty())
-            {
-                var uri = new NetUri(str);
-                if (!uri.Host.IsNullOrEmpty() && uri.Port > 0)
-                {
-                    WriteLog("发现服务器：{0}", uri);
+            //var ep = new IPEndPoint(IPAddress.Broadcast, 6666);
+            //var session = udp.CreateSession(ep);
+            //session.Send("Hello");
 
-                    // 停止广播
-                    _udp_timer.TryDispose();
-                    _udp_timer = null;
+            var tc = state as ApiClient;
 
-                    _udp.TryDispose();
-                    _udp = null;
-                }
-            }
+            tc.InvokeOneWay("Discover");
+
+            //var str = e.Packet?.ToStr();
+            //WriteLog("收到[{0}]：{1}", e.UserState, str);
+            //WriteLog("收到[{0}]：{1}", tc, str);
+
+            //if (!str.IsNullOrEmpty())
+            //{
+            //    var uri = new NetUri(str);
+            //    if (!uri.Host.IsNullOrEmpty() && uri.Port > 0)
+            //    {
+            //        WriteLog("发现服务器：{0}", uri);
+
+            //        // 停止广播
+            //        _udp_timer.TryDispose();
+            //        _udp_timer = null;
+
+            //        _udp.TryDispose();
+            //        _udp = null;
+            //    }
+            //}
         }
         #endregion
 

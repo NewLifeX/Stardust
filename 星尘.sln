@@ -20,8 +20,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test", "Test\Test.csproj", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stardust.Server", "Stardust.Server\Stardust.Server.csproj", "{73B28F07-E99F-45A8-B9A0-90E7BAC133A3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stardust.ServerFx", "Stardust.ServerFx\Stardust.ServerFx.csproj", "{9A7251DD-7EE7-45C6-9EB6-F80789D3BCD7}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StarAgent", "StarAgent\StarAgent.csproj", "{0FF65D90-214F-405E-9674-6C0992BC61FD}"
 EndProject
 Global
@@ -54,10 +52,6 @@ Global
 		{73B28F07-E99F-45A8-B9A0-90E7BAC133A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73B28F07-E99F-45A8-B9A0-90E7BAC133A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73B28F07-E99F-45A8-B9A0-90E7BAC133A3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9A7251DD-7EE7-45C6-9EB6-F80789D3BCD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9A7251DD-7EE7-45C6-9EB6-F80789D3BCD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9A7251DD-7EE7-45C6-9EB6-F80789D3BCD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9A7251DD-7EE7-45C6-9EB6-F80789D3BCD7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0FF65D90-214F-405E-9674-6C0992BC61FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0FF65D90-214F-405E-9674-6C0992BC61FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0FF65D90-214F-405E-9674-6C0992BC61FD}.Release|Any CPU.ActiveCfg = Release|Any CPU

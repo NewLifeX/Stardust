@@ -16,7 +16,7 @@ namespace Stardust.Server
     {
         #region 属性
         /// <summary>本地节点</summary>
-        public static EndPoint Local { get; set; }
+        public static NetUri Local { get; set; }
         #endregion
 
         #region 登录
@@ -157,7 +157,7 @@ namespace Stardust.Server
 
             // 服务器特性
             pid = Process.GetCurrentProcess().Id;
-            online.Server = Local + "@" + pid;
+            online.Server = Local.EndPoint + "@" + pid;
             online.Save();
 
             // 真正的用户

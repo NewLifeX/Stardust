@@ -1,18 +1,21 @@
-﻿using System;
-using System.Net;
-using NewLife;
+﻿using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
 using NewLife.Net;
 using NewLife.Remoting;
 using NewLife.Threading;
 using Stardust.Data;
+using System;
+using System.Net;
 
 namespace Stardust.Server
 {
     class Program
     {
-        static void Main(String[] args) => new MyService().Main();
+        static void Main(String[] args)
+        {
+            new MyService().Main();
+        }
     }
 
     /// <summary>服务类。名字可以自定义</summary>
@@ -25,21 +28,21 @@ namespace Stardust.Server
         {
             ServiceName = "Stardust";
 
+            var set = XCode.Setting.Current;
+            if (set.IsNew)
+            {
+                set.Debug = true;
+                set.ShowSQL = false;
+                set.TraceSQLTime = 3000;
+                set.SQLiteDbPath = @"..\Data";
+
+                set.SaveAsync();
+            }
+
             ThreadPoolX.QueueUserWorkItem(() =>
             {
                 var n = App.Meta.Count;
                 AppStat.Meta.Session.Dal.Db.ShowSQL = false;
-
-                var set2 = XCode.Setting.Current;
-                if (set2.IsNew)
-                {
-                    set2.Debug = true;
-                    set2.ShowSQL = false;
-                    set2.TraceSQLTime = 3000;
-                    set2.SQLiteDbPath = @"..\Data";
-
-                    set2.Save();
-                }
             });
 
             // 注册菜单，在控制台菜单中按 t 可以执行Test函数，主要用于临时处理数据
@@ -69,11 +72,20 @@ namespace Stardust.Server
 #endif
                 }
 
+                var local = new NetUri(NetType.Tcp, NetHelper.MyIP(), set.Port);
+
                 // 注册服务
                 sc.Register<StarService>();
 
+                var ds = new DiscoverService
+                {
+                    Name = Environment.MachineName,
+                    Local = local,
+                };
+                sc.Register(ds, null);
+
                 StarService.Log = XTrace.Log;
-                StarService.Local = new IPEndPoint(NetHelper.MyIP(), set.Port);
+                StarService.Local = local;
 
                 sc.Start();
 
