@@ -49,16 +49,8 @@
     <Compile Remove="StarService.cs" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)'=='net45'">
-    <Reference Include="NewLife.Core">
-      <HintPath>..\DLL\NewLife.Core.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-    <Reference Include="NewLife.Core">
-      <HintPath>..\DLL20\NewLife.Core.dll</HintPath>
-    </Reference>
+  <ItemGroup>
+    <PackageReference Include="NewLife.Core" Version="8.1.2019.618" />
   </ItemGroup>
 
 </Project>

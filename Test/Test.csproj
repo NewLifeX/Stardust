@@ -8,18 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Stardust.Data\Stardust.Data.csproj" />
-    <ProjectReference Include="..\Stardust.Server\Stardust.Server.csproj" />
-    <ProjectReference Include="..\Stardust\Stardust.csproj" />
+    <PackageReference Include="NewLife.Core" Version="8.1.2019.618" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="NewLife.Core">
-      <HintPath>..\DLL20\NewLife.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="XCode">
-      <HintPath>..\DLL20\XCode.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\Stardust.Data\Stardust.Data.csproj" />
+    <ProjectReference Include="..\Stardust.Server\Stardust.Server.csproj" />
+    <ProjectReference Include="..\Stardust\Stardust.csproj" />
   </ItemGroup>
 
 </Project>
