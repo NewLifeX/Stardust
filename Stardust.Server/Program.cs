@@ -33,9 +33,16 @@ namespace Stardust.Server
                 set.Debug = true;
                 set.ShowSQL = false;
                 set.TraceSQLTime = 3000;
-                set.SQLiteDbPath = @"..\Data";
+                //set.SQLiteDbPath = @"..\Data";
 
-                set.SaveAsync();
+                set.Save();
+            }
+            var set2 = NewLife.Setting.Current;
+            if (set2.IsNew)
+            {
+                set2.DataPath = @"..\Data";
+
+                set2.Save();
             }
 
             ThreadPoolX.QueueUserWorkItem(() =>

@@ -42,20 +42,22 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
     </Reference>
-    <Reference Include="NewLife.Core, Version=8.1.7113.26161, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NewLife.Core.8.1.2019.618\lib\net45\NewLife.Core.dll</HintPath>
+    <Reference Include="NewLife.Core, Version=8.7.7372.40134, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NewLife.Core.8.7.2020.308\lib\net46\NewLife.Core.dll</HintPath>
     </Reference>
-    <Reference Include="NewLife.Cube, Version=2.8.7113.33715, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NewLife.Cube.2.8.7113.33715\lib\net45\NewLife.Cube.dll</HintPath>
+    <Reference Include="NewLife.Cube, Version=3.3.7372.40827, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NewLife.Cube.3.3.7372.40827\lib\net45\NewLife.Cube.dll</HintPath>
     </Reference>
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Web.Extensions" />
@@ -79,14 +81,18 @@
     <Reference Include="System.Web" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Configuration" />
-    <Reference Include="XCode, Version=9.12.7113.26177, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NewLife.XCode.9.12.2019.618\lib\net45\XCode.dll</HintPath>
+    <Reference Include="XCode, Version=9.16.7372.40226, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NewLife.XCode.9.16.2020.308\lib\net45\XCode.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Entity\Build.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Build.log</LastGenOutput>
+    </Content>
+    <Content Include="Entity\Build_netcore.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Build_netcore.cs</LastGenOutput>
     </Content>
     <Content Include="Entity\Model.xml" />
     <Content Include="Global.asax" />
@@ -102,6 +108,11 @@
     <Compile Include="Areas\Star\Controllers\ServiceController.cs" />
     <Compile Include="Areas\Star\Controllers\AppController.cs" />
     <Compile Include="Areas\Star\StarAreaRegistration.cs" />
+    <Compile Include="Entity\Build_netcore.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Build_netcore.tt</DependentUpon>
+    </Compile>
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -114,7 +125,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Build.tt</DependentUpon>
     </Content>
-    <Content Include="Entity\XCoder.log" />
     <None Include="packages.config" />
     <Content Include="Web.config" />
     <None Include="Web.Debug.config">
