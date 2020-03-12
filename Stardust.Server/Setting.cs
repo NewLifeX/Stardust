@@ -1,12 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
-using NewLife.Xml;
+using NewLife.Configuration;
 
 namespace Stardust.Server
 {
     /// <summary>配置</summary>
-    [XmlConfigFile("Config/Stardust.config", 15000)]
-    public class Setting : XmlConfig<Setting>
+    [Config("Stardust")]
+    public class Setting : Config<Setting>
     {
         #region 属性
         /// <summary>调试开关。默认true</summary>
@@ -16,6 +16,14 @@ namespace Stardust.Server
         /// <summary>服务端口。默认6666</summary>
         [Description("服务端口。默认6666")]
         public Int32 Port { get; set; } = 6666;
+
+        /// <summary>令牌有效期。默认2*3600秒</summary>
+        [Description("令牌有效期。默认2*3600秒")]
+        public Int32 TokenExpire { get; set; } = 2 * 3600;
+
+        /// <summary>自动注册。允许客户端自动注册，默认true</summary>
+        [Description("自动注册。允许客户端自动注册，默认true")]
+        public Boolean AutoRegister { get; set; } = true;
         #endregion
 
         #region 构造

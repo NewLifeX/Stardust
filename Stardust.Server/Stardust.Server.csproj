@@ -1,17 +1,20 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFrameworks>net45;netcoreapp2.1</TargetFrameworks>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <AssemblyTitle>星尘分布式服务</AssemblyTitle>
     <Description>星尘，分布式服务框架。分布式资源调度，服务自动注册和发现，负载均衡，动态伸缩，故障转移，性能监控。</Description>
     <Company>新生命开发团队</Company>
-    <Copyright>版权所有(C) 新生命开发团队 2019</Copyright>
-    <Version>1.0.2019.0526</Version>
-    <FileVersion>1.0.2019.0526</FileVersion>
+    <Copyright>©2002-2020 NewLife</Copyright>
+    <Version>1.0.2020.0312</Version>
+    <FileVersion>1.0.2020.0312</FileVersion>
     <AssemblyVersion>1.0.*</AssemblyVersion>
     <Deterministic>false</Deterministic>
     <OutputPath>..\BinServer</OutputPath>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>TRACE</DefineConstants>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp2.1'">
@@ -28,12 +31,6 @@
     <Optimize>false</Optimize>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)'=='net45'">
-    <Reference Include="System.ServiceProcess" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Web.Extensions" />
-  </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="NewLife.Agent" Version="8.6.2020.204" />
     <PackageReference Include="NewLife.XCode" Version="9.16.2020.308" />
@@ -42,12 +39,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Stardust.Data\Stardust.Data.csproj" />
     <ProjectReference Include="..\Stardust\Stardust.csproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
-    <PackageReference Include="NewLife.Agent">
-      <Version>8.1.2019.618</Version>
-    </PackageReference>
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

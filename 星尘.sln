@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.28922.388
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stardust", "Stardust\Stardust.csproj", "{AADBD913-749C-467E-A63F-C118C4C82351}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stardust.Web", "Stardust.Web\Stardust.Web.csproj", "{25331DEF-FEE3-44D5-A4E9-864078441F71}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stardust.Web", "Stardust.Web\Stardust.Web.csproj", "{25331DEF-FEE3-44D5-A4E9-864078441F71}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Others", "Others", "{0EA980BB-BB15-41A3-B75B-537BC42E985B}"
 	ProjectSection(SolutionItems) = preProject
@@ -21,6 +21,11 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stardust.Server", "Stardust.Server\Stardust.Server.csproj", "{73B28F07-E99F-45A8-B9A0-90E7BAC133A3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StarAgent", "StarAgent\StarAgent.csproj", "{0FF65D90-214F-405E-9674-6C0992BC61FD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8D122272-87BB-4968-8A2F-CFF04CE47B29}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
