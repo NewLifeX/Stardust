@@ -76,12 +76,12 @@ namespace Stardust.Server.Controllers
 
         #region 令牌
         private static TokenProvider _tokenProvider;
-        private static TokenProvider GetTokenProvider()
+        private static TokenProvider GetTokenProvider(Boolean create)
         {
             if (_tokenProvider != null) return _tokenProvider;
 
             var provider = new TokenProvider();
-            provider.ReadKey("../keys/token.prvkey", false);
+            provider.ReadKey("../keys/token.prvkey", create);
             if (provider.Key.IsNullOrEmpty()) throw new ApplicationException("缺失私钥，无法创建令牌");
 
             return _tokenProvider = provider;
@@ -102,9 +102,9 @@ namespace Stardust.Server.Controllers
             var set = Setting.Current;
             var expire = set.TokenExpire;
 
-            var provider = GetTokenProvider();
+            var provider = GetTokenProvider(true);
 
-            var token = provider.Encode(code, DateTime.Now.AddSeconds(expire));
+            var token = provider.Encode($"{code}#", DateTime.Now.AddSeconds(expire));
             if (Token.IsNullOrEmpty())
             {
                 // 创建新的token
@@ -134,10 +134,9 @@ namespace Stardust.Server.Controllers
             }
 
             var code = rlist[0];
-
             var node = Node.FindByCode(code) ?? new Node { Code = code };
 
-            var provider = GetTokenProvider();
+            var provider = GetTokenProvider(false);
 
             // token解码失败
             if (!provider.TryDecode(token, out var result, out var dt))
