@@ -1,12 +1,12 @@
-﻿using System;
+﻿using NewLife.Configuration;
+using System;
 using System.ComponentModel;
-using NewLife.Xml;
 
 namespace StarAgent
 {
     /// <summary>配置</summary>
-    [XmlConfigFile("Config/Star.config", 15000)]
-    public class Setting : XmlConfig<Setting>
+    [Config("Star")]
+    public class Setting : Config<Setting>
     {
         #region 属性
         /// <summary>调试开关。默认true</summary>
