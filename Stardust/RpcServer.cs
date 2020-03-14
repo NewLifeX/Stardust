@@ -26,21 +26,21 @@ namespace Stardust
             var star = Star;
             if (star == null) throw new ArgumentNullException(nameof(Star));
 
-            // 上报
-            ReportAsync().Wait();
+            //// 上报
+            //ReportAsync().Wait();
 
             base.Start();
         }
 
-        /// <summary>异步上报</summary>
-        /// <returns></returns>
-        public async Task ReportAsync()
-        {
-            // 上报
-            var ss = Manager.Services.Select(e => e.Value.Name).ToList();
-            ss.RemoveAll(e => Excludes.Contains(e));
+        ///// <summary>异步上报</summary>
+        ///// <returns></returns>
+        //public async Task ReportAsync()
+        //{
+        //    // 上报
+        //    var ss = Manager.Services.Select(e => e.Value.Name).ToList();
+        //    ss.RemoveAll(e => Excludes.Contains(e));
 
-            await Star.ReportAsync(NameSpace, ss.ToArray());
-        }
+        //    await Star.ReportAsync(NameSpace, ss.ToArray());
+        //}
     }
 }

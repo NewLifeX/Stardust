@@ -1,45 +1,45 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
-    <AssemblyTitle>星尘管理平台</AssemblyTitle>
-    <Description>星尘，轻量级服务框架。远程方法调用，服务自动注册和发现，负载均衡，动态伸缩，故障转移，性能监控。</Description>
-    <Copyright>版权所有(C) 新生命开发团队 2019</Copyright>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AssemblyName>Stardust.Web</AssemblyName>
     <Company>新生命开发团队</Company>
-    <FileVersion>1.0.2019.0101</FileVersion>
+    <Copyright>©2002-2020 NewLife</Copyright>
+    <Version>1.0.2020.0312</Version>
+    <FileVersion>1.0.2020.0312</FileVersion>
     <AssemblyVersion>1.0.*</AssemblyVersion>
     <Deterministic>false</Deterministic>
+    <OutputPath>..\BinWeb</OutputPath>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>TRACE</DefineConstants>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.1.2" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.1" />
+    <Compile Include="..\Stardust.Server\Setting.cs" Link="Setting.cs" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NewLife.Agent" Version="8.6.2020.204" />
+    <PackageReference Include="NewLife.Core" Version="8.7.2020.308" />
+    <PackageReference Include="NewLife.Cube.Core" Version="3.3.2020.308" />
+    <PackageReference Include="NewLife.XCode" Version="9.16.2020.308" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Stardust.Data\Stardust.Data.csproj" />
+    <ProjectReference Include="..\Stardust\Stardust.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="NewLife.Core">
-      <HintPath>..\DLL20\NewLife.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="NewLife.Cube">
-      <HintPath>..\DLL20\NewLife.Cube.dll</HintPath>
-    </Reference>
-    <Reference Include="NewLife.Cube.Views">
-      <HintPath>..\DLL20\NewLife.Cube.Views.dll</HintPath>
-    </Reference>
-    <Reference Include="XCode">
-      <HintPath>..\DLL20\XCode.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Areas\Star\Data\" />
-    <Folder Include="Areas\Star\Models\" />
-    <Folder Include="Areas\Star\Views\" />
-  </ItemGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="del &quot;$(TargetDir)*.xml&quot; /q" />
+  </Target>
 
 </Project>
