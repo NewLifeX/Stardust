@@ -13,9 +13,9 @@ namespace Stardust.Server
         [Description("调试开关。默认true")]
         public Boolean Debug { get; set; } = true;
 
-        /// <summary>服务端口。默认6666</summary>
-        [Description("服务端口。默认6666")]
-        public Int32 Port { get; set; } = 6666;
+        /// <summary>服务端口。默认6600</summary>
+        [Description("服务端口。默认6600")]
+        public Int32 Port { get; set; } = 6600;
 
         /// <summary>令牌有效期。默认2*3600秒</summary>
         [Description("令牌有效期。默认2*3600秒")]

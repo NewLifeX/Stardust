@@ -43,7 +43,8 @@ namespace Stardust.Server.Controllers
 
             var rs = new
             {
-                Server = asmx?.Name,
+                asmx?.Name,
+                asmx?.Title,
                 asmx?.FileVersion,
                 asmx?.Compile,
                 OS = _OS,
