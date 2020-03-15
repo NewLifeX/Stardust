@@ -13,14 +13,13 @@ namespace Stardust.Web.Areas.Nodes.Controllers
 
         protected override IEnumerable<NodeCommand> Search(Pager p)
         {
-            var cityId = p["cityId"].ToInt(-1);
             var nodeId = p["nodeId"].ToInt(-1);
             var command = p["command"];
 
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            return NodeCommand.Search(cityId, siteId, nodeId, command, start, end, p["Q"], p);
+            return NodeCommand.Search(nodeId, command, start, end, p["Q"], p);
         }
     }
 }

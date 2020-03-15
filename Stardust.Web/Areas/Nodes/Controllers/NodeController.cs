@@ -31,7 +31,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            return Node.Search(productId, siteId, provinceId, cityId, version, enable, start, end, p["Q"], p);
+            return Node.Search(provinceId, cityId, version, enable, start, end, p["Q"], p);
         }
 
         public ActionResult Trace(Int32 id)

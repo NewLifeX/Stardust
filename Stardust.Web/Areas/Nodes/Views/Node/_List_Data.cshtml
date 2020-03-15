@@ -21,12 +21,9 @@
                 <th class="text-center" style="width:10px;"><input type="checkbox" id="chkAll" title="全选" /></th>
             }
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ID"))">编号</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ProductID"))">产品</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("CityID"))">城市</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("SiteID"))">网点</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Name"))">名称</a></th>
             <th class="text-center" title="编码。NodeKey"><a href="@Html.Raw(page.GetSortUrl("Code"))">编码</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("LastUser"))">最后用户</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Enable"))">启用</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Version"))">版本</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("OS"))">操作系统</a></th>
@@ -37,7 +34,6 @@
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Logins"))">登录次数</a></th>
             <th class="text-center" title="在线时长。单位秒"><a href="@Html.Raw(page.GetSortUrl("OnlineTime"))">在线时长</a></th>
             <th class="text-center">历史</th>
-            <th class="text-center">耗时</th>
             <th class="text-center">跟踪</th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("UpdateTime"))">更新时间</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("UpdateIP"))">更新地址</a></th>
@@ -57,12 +53,9 @@
                     <td class="text-center"><input type="checkbox" name="keys" value="@entity.ID" /></td>
                 }
                 <td class="text-center">@entity.ID</td>
-                <td><a href="Product?ID=@entity.ProductID">@entity.ProductName</a></td>
                 <td class="text-center"><a href="?cityId=@entity.CityID">@entity.CityName</a></td>
-                <td class="text-center"><a href="?siteId=@entity.SiteID">@entity.SiteName</a></td>
                 <td>@entity.Name</td>
-                <td title="PdaCode=@entity.GetPdaCode()">@entity.Code</td>
-                <td>@entity.LastUser</td>
+                <td>@entity.Code</td>
                 <td class="text-center">
                     <i class="glyphicon glyphicon-@(entity.Enable ? "ok" : "remove")" style="color: @(entity.Enable ? "green" : "red");"></i>
                 </td>
@@ -75,7 +68,6 @@
                 <td class="text-right">@entity.Logins.ToString("n0")</td>
                 <td class="text-right">@onlineTime</td>
                 <td><a href="NodeHistory?nodeId=@entity.ID">历史</a></td>
-                <td><a href="ProCostTime?nodeId=@entity.ID">耗时</a></td>
                 <td><a href="Node/Trace/@entity.ID">跟踪</a></td>
                 <td class="text-center">@entity.UpdateTime.ToFullString("")</td>
                 <td class="text-center" title="@entity.UpdateIP.IPToAddress()">@entity.UpdateIP</td>

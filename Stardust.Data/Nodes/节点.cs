@@ -186,6 +186,30 @@ namespace Stardust.Data.Nodes
         [BindColumn("Runtime", "运行时。.Net版本", "")]
         public String Runtime { get => _Runtime; set { if (OnPropertyChanging(__.Runtime, value)) { _Runtime = value; OnPropertyChanged(__.Runtime); } } }
 
+        private Int32 _ProvinceID;
+        /// <summary>省份</summary>
+        [DisplayName("省份")]
+        [Description("省份")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("ProvinceID", "省份", "")]
+        public Int32 ProvinceID { get => _ProvinceID; set { if (OnPropertyChanging(__.ProvinceID, value)) { _ProvinceID = value; OnPropertyChanged(__.ProvinceID); } } }
+
+        private Int32 _CityID;
+        /// <summary>城市</summary>
+        [DisplayName("城市")]
+        [Description("城市")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("CityID", "城市", "")]
+        public Int32 CityID { get => _CityID; set { if (OnPropertyChanging(__.CityID, value)) { _CityID = value; OnPropertyChanged(__.CityID); } } }
+
+        private String _Address;
+        /// <summary>地址</summary>
+        [DisplayName("地址")]
+        [Description("地址")]
+        [DataObjectField(false, false, true, 200)]
+        [BindColumn("Address", "地址", "")]
+        public String Address { get => _Address; set { if (OnPropertyChanging(__.Address, value)) { _Address = value; OnPropertyChanged(__.Address); } } }
+
         private Int32 _Logins;
         /// <summary>登录次数</summary>
         [DisplayName("登录次数")]
@@ -306,6 +330,9 @@ namespace Stardust.Data.Nodes
                     case __.COMs: return _COMs;
                     case __.InstallPath: return _InstallPath;
                     case __.Runtime: return _Runtime;
+                    case __.ProvinceID: return _ProvinceID;
+                    case __.CityID: return _CityID;
+                    case __.Address: return _Address;
                     case __.Logins: return _Logins;
                     case __.LastLogin: return _LastLogin;
                     case __.LastLoginIP: return _LastLoginIP;
@@ -345,6 +372,9 @@ namespace Stardust.Data.Nodes
                     case __.COMs: _COMs = Convert.ToString(value); break;
                     case __.InstallPath: _InstallPath = Convert.ToString(value); break;
                     case __.Runtime: _Runtime = Convert.ToString(value); break;
+                    case __.ProvinceID: _ProvinceID = value.ToInt(); break;
+                    case __.CityID: _CityID = value.ToInt(); break;
+                    case __.Address: _Address = Convert.ToString(value); break;
                     case __.Logins: _Logins = value.ToInt(); break;
                     case __.LastLogin: _LastLogin = value.ToDateTime(); break;
                     case __.LastLoginIP: _LastLoginIP = Convert.ToString(value); break;
@@ -428,6 +458,15 @@ namespace Stardust.Data.Nodes
 
             /// <summary>运行时。.Net版本</summary>
             public static readonly Field Runtime = FindByName(__.Runtime);
+
+            /// <summary>省份</summary>
+            public static readonly Field ProvinceID = FindByName(__.ProvinceID);
+
+            /// <summary>城市</summary>
+            public static readonly Field CityID = FindByName(__.CityID);
+
+            /// <summary>地址</summary>
+            public static readonly Field Address = FindByName(__.Address);
 
             /// <summary>登录次数</summary>
             public static readonly Field Logins = FindByName(__.Logins);
@@ -531,6 +570,15 @@ namespace Stardust.Data.Nodes
             /// <summary>运行时。.Net版本</summary>
             public const String Runtime = "Runtime";
 
+            /// <summary>省份</summary>
+            public const String ProvinceID = "ProvinceID";
+
+            /// <summary>城市</summary>
+            public const String CityID = "CityID";
+
+            /// <summary>地址</summary>
+            public const String Address = "Address";
+
             /// <summary>登录次数</summary>
             public const String Logins = "Logins";
 
@@ -633,6 +681,15 @@ namespace Stardust.Data.Nodes
 
         /// <summary>运行时。.Net版本</summary>
         String Runtime { get; set; }
+
+        /// <summary>省份</summary>
+        Int32 ProvinceID { get; set; }
+
+        /// <summary>城市</summary>
+        Int32 CityID { get; set; }
+
+        /// <summary>地址</summary>
+        String Address { get; set; }
 
         /// <summary>登录次数</summary>
         Int32 Logins { get; set; }

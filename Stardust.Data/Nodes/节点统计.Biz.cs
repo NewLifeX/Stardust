@@ -1,25 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
-using System.Xml.Serialization;
-using NewLife;
 using NewLife.Data;
-using NewLife.Log;
-using NewLife.Model;
-using NewLife.Reflection;
-using NewLife.Threading;
-using NewLife.Web;
 using XCode;
-using XCode.Cache;
-using XCode.Configuration;
-using XCode.DataAccessLayer;
 using XCode.Membership;
 
 namespace Stardust.Data.Nodes
@@ -95,6 +78,12 @@ namespace Stardust.Data.Nodes
         #endregion
 
         #region 扩展属性
+        /// <summary>省份</summary>
+        public Area Province => Extends.Get(nameof(Province), k => Area.FindByID(AreaID));
+
+        /// <summary>省份名</summary>
+        [Map(__.AreaID)]
+        public String ProvinceName => Province + "";
         #endregion
 
         #region 扩展查询
@@ -113,21 +102,27 @@ namespace Stardust.Data.Nodes
 
             //return Find(_.ID == id);
         }
+
+        /// <summary>根据日期查找</summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public static IList<NodeStat> FindAllByDate(DateTime date) => FindAll(_.StatDate == date);
         #endregion
 
         #region 高级查询
         /// <summary>高级查询</summary>
-        /// <param name="updateTime">更新时间</param>
+        /// <param name="areaId">省份</param>
         /// <param name="start">统计日期开始</param>
         /// <param name="end">统计日期结束</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<NodeStat> Search(DateTime updateTime, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<NodeStat> Search(Int32 areaId, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             exp &= _.StatDate.Between(start, end);
+            if (areaId >= 0) exp &= _.AreaID == areaId;
             if (!key.IsNullOrEmpty()) exp &= _.Remark.Contains(key);
 
             return FindAll(exp, page);
@@ -145,6 +140,115 @@ namespace Stardust.Data.Nodes
         #endregion
 
         #region 业务操作
+        /// <summary>统计指定日期的数据</summary>
+        /// <param name="date"></param>
+        public static void ProcessDate(DateTime date)
+        {
+            // 这一天的所有统计数据
+            var sts = FindAllByDate(date);
+
+            // 活跃数
+            {
+                var his = NodeHistory.Search(-1, -1, -1, "登录", null, date, date, null, null);
+                var nodes = his.Select(e => e.NodeID).Distinct().Select(Node.FindByID).ToList();
+                var dic = nodes.Where(e => e != null).GroupBy(e => e.ProvinceID).ToDictionary(e => e.Key, e => e.ToList());
+                foreach (var item in dic)
+                {
+                    var st = GetStat(sts, item.Key, date);
+                    st.Actives = item.Value.Count;
+                }
+            }
+
+            // 新增数
+            {
+                var nodes = Node.SearchByCreateDate(date);
+                var dic = nodes.GroupBy(e => e.ProvinceID).ToDictionary(e => e.Key, e => e.ToList());
+                foreach (var item in dic)
+                {
+                    var st = GetStat(sts, item.Key, date);
+                    st.News = item.Value.Count;
+                }
+            }
+
+            // 注册数
+            {
+                var his = NodeHistory.Search(-1, -1, -1, "注册", null, date, date, null, null);
+                var nodes = his.Select(e => e.NodeID).Distinct().Select(Node.FindByID).ToList();
+                var dic = nodes.Where(e => e != null).GroupBy(e => e.ProvinceID).ToDictionary(e => e.Key, e => e.ToList());
+                foreach (var item in dic)
+                {
+                    var st = GetStat(sts, item.Key, date);
+                    st.Registers = item.Value.Count;
+                }
+            }
+
+            // 总数
+            {
+                var dic = Node.SearchCountByCreateDate(date);
+                foreach (var item in dic)
+                {
+                    var st = GetStat(sts, item.Key, date);
+                    st.Total = item.Value;
+                }
+            }
+
+            // 最高在线
+            if (date == DateTime.Today)
+            {
+                var dic = NodeOnline.SearchGroupByProvince();
+                foreach (var item in dic)
+                {
+                    if (item.Key == 0) continue;
+
+                    var st = GetStat(sts, item.Key, date);
+                    if (item.Value > st.MaxOnline)
+                    {
+                        st.MaxOnline = item.Value;
+                        st.MaxOnlineTime = DateTime.Now;
+                    }
+                }
+            }
+
+            // 计算所有产品
+            {
+                var st = sts.FirstOrDefault(e => e.AreaID == 0);
+                if (st == null)
+                {
+                    st = new NodeStat { StatDate = date, AreaID = 0 };
+                    sts.Add(st);
+                }
+
+                var sts2 = sts.Where(e => e.AreaID != 0).ToList();
+                st.Total = sts2.Sum(e => e.Total);
+                st.Actives = sts2.Sum(e => e.Actives);
+                st.News = sts2.Sum(e => e.News);
+                st.Registers = sts2.Sum(e => e.Registers);
+
+                var max = sts2.Sum(e => e.MaxOnline);
+                if (max > st.MaxOnline)
+                {
+                    st.MaxOnline = max;
+                    st.MaxOnlineTime = DateTime.Now;
+                }
+            }
+
+            // 保存统计数据
+            sts.Save(true);
+        }
+
+        private static NodeStat GetStat(IList<NodeStat> sts, Int32 areaId, DateTime date)
+        {
+            // 无法识别省份时，使用-1，因为0表示全国
+            if (areaId == 0) areaId = -1;
+            var st = sts.FirstOrDefault(e => e.AreaID == areaId);
+            if (st == null)
+            {
+                st = new NodeStat { StatDate = date, AreaID = areaId };
+                sts.Add(st);
+            }
+
+            return st;
+        }
         #endregion
     }
-}
+    }

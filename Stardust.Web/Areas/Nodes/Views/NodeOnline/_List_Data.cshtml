@@ -21,12 +21,9 @@
                 <th class="text-center" style="width:10px;"><input type="checkbox" id="chkAll" title="全选" /></th>
             }
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ID"))">编号</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ProductID"))">产品</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AreaID"))">地区</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("SiteID"))">网点</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("CityID"))">城市</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("NodeID"))">设备</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Name"))">名称</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("UserName"))">用户</a></th>
             <th class="text-center" title="客户端正在指定的功能动作"><a href="@Html.Raw(page.GetSortUrl("Action"))">操作</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("PingCount"))">心跳</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Version"))">版本</a></th>
@@ -56,12 +53,9 @@
                     <td class="text-center"><input type="checkbox" name="keys" value="@entity.ID" /></td>
                 }
                 <td class="text-center">@entity.ID</td>
-                <td class="text-center">@entity.ProductName</td>
-                <td class="text-center"><a href="?cityId=@entity.AreaID">@entity.CityName</a></td>
-                <td class="text-center"><a href="?siteId=@entity.SiteID">@entity.SiteName</a></td>
+                <td class="text-center"><a href="?cityId=@entity.CityID">@entity.CityName</a></td>
                 <td class="text-center"><a href="Node?id=@entity.NodeID">@entity.NodeName</a></td>
                 <td>@entity.Name</td>
-                <td title="@entity.UserCode">@entity.UserName</td>
                 <td>@entity.Action</td>
                 <td class="text-right">@entity.PingCount.ToString("n0")</td>
                 <td>@entity.Version</td>
@@ -81,41 +75,6 @@
                     <td class="text-center">
                         @await Html.PartialAsync("_List_Data_Action", (Object)entity)
                     </td>
-                }
-            </tr>
-        }
-        @if (page.State != null)
-        {
-            var entity = page.State as NodeOnline;
-            <tr>
-                @if (set.EnableSelect)
-                {
-                    <td></td>
-                }
-                <td class="text-center">总计</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td class="text-right">@entity.SiteID.ToString("n0")</td>
-                <td class="text-right">@entity.AreaID.ToString("n0")</td>
-                <td class="text-right">@entity.PingCount.ToString("n0")</td>
-                <td></td>
-                <td></td>
-                <td class="text-right">@entity.Memory.ToString("n0")</td>
-                <td class="text-right">@entity.AvailableMemory.ToString("n0")</td>
-                <td class="text-center">@entity.CpuRate.ToString("p2")</td>
-                <td class="text-right">@entity.Delay.ToString("n0")</td>
-                <td class="text-right">@entity.Offset.ToString("n0")</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-
-                @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
-                {
-                    <td></td>
                 }
             </tr>
         }

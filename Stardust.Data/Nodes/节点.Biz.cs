@@ -51,6 +51,20 @@ namespace Stardust.Data.Nodes
         #endregion
 
         #region 扩展属性
+        /// <summary>省份</summary>
+        public Area Province => Extends.Get(nameof(Province), k => Area.FindByID(ProvinceID));
+
+        /// <summary>省份名</summary>
+        [Map(__.ProvinceID)]
+        public String ProvinceName => Province + "";
+
+        /// <summary>城市</summary>
+        public Area City => Extends.Get(nameof(City), k => Area.FindByID(CityID));
+
+        /// <summary>城市名</summary>
+        [Map(__.CityID)]
+        public String CityName => City + "";
+
         /// <summary>最后地址。IP=>Address</summary>
         [DisplayName("最后地址")]
         public String LastLoginAddress => LastLoginIP.IPToAddress();
@@ -129,6 +143,8 @@ namespace Stardust.Data.Nodes
         }
 
         /// <summary>高级查询</summary>
+        /// <param name="provinceId">省份</param>
+        /// <param name="cityId">城市</param>
         /// <param name="version">版本</param>
         /// <param name="enable"></param>
         /// <param name="start"></param>
@@ -136,10 +152,12 @@ namespace Stardust.Data.Nodes
         /// <param name="key"></param>
         /// <param name="page"></param>
         /// <returns></returns>
-        public static IList<Node> Search(String version, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<Node> Search(Int32 provinceId, Int32 cityId, String version, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
+            if (provinceId >= 0) exp &= _.ProvinceID == provinceId;
+            if (cityId >= 0) exp &= _.CityID == cityId;
             if (!version.IsNullOrEmpty()) exp &= _.Version == version;
             if (enable != null) exp &= _.Enable == enable.Value;
 
@@ -149,6 +167,20 @@ namespace Stardust.Data.Nodes
             if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 
             return FindAll(exp, page);
+        }
+
+        internal static IList<Node> SearchByCreateDate(DateTime date)
+        {
+            // 先用带有索引的UpdateTime过滤一次
+            return FindAll(_.UpdateTime >= date & _.CreateTime.Between(date, date));
+        }
+
+        internal static IDictionary<Int32, Int32> SearchCountByCreateDate(DateTime date)
+        {
+            var exp = new WhereExpression();
+            exp &= _.CreateTime < date.AddDays(1);
+            var list = FindAll(exp.GroupBy(_.ProvinceID), null, _.ID.Count() & _.ProvinceID, 0, 0);
+            return list.ToDictionary(e => e.ProvinceID, e => e.ID);
         }
         #endregion
 

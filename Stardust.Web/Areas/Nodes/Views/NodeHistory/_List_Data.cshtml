@@ -21,8 +21,7 @@
                 <th class="text-center" style="width:10px;"><input type="checkbox" id="chkAll" title="全选" /></th>
             }
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ID"))">编号</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AreaID"))">地区</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("SiteID"))">网点</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("CityID"))">城市</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("NodeID"))">设备</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Action"))">操作</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Success"))">成功</a></th>
@@ -48,7 +47,6 @@
                 }
                 <td class="text-center">@entity.ID</td>
                 <td class="text-center">@entity.CityName</td>
-                <td class="text-center" title="@entity.CityName">@entity.SiteName</td>
                 <td class="text-center" title="@entity.Version"><a href="Node?id=@entity.NodeID">@entity.Name</a></td>
                 <td>@entity.Action</td>
                 <td class="text-center">

@@ -15,12 +15,13 @@ namespace Stardust.Web.Areas.Nodes.Controllers
         {
             var nodeId = p["nodeId"].ToInt(-1);
             var rids = p["areaId"].SplitAsInt("/");
+            var provinceId = rids.Length > 0 ? rids[0] : -1;
             var cityId = rids.Length > 1 ? rids[1] : -1;
 
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            return NodeOnline.Search(productId, nodeId, siteId, cityId, start, end, p["Q"], p);
+            return NodeOnline.Search(nodeId, provinceId, cityId, start, end, p["Q"], p);
         }
     }
 }

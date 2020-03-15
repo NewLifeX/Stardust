@@ -14,6 +14,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
         protected override IEnumerable<NodeHistory> Search(Pager p)
         {
             var rids = p["areaId"].SplitAsInt("/");
+            var provinceId = rids.Length > 0 ? rids[0] : -1;
             var cityId = rids.Length > 1 ? rids[1] : -1;
 
             var nodeId = p["nodeId"].ToInt(-1);
@@ -23,7 +24,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            return NodeHistory.Search(cityId, siteId, nodeId, action, success, start, end, p["Q"], p);
+            return NodeHistory.Search(nodeId, provinceId, cityId, action, success, start, end, p["Q"], p);
         }
     }
 }

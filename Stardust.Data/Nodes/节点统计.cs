@@ -11,8 +11,8 @@ namespace Stardust.Data.Nodes
     [Serializable]
     [DataObject]
     [Description("节点统计。每日统计")]
-    [BindIndex("IU_NodeStat_StatDate", true, "StatDate")]
-    [BindIndex("IX_NodeStat_UpdateTime", false, "UpdateTime")]
+    [BindIndex("IU_NodeStat_StatDate_AreaID", true, "StatDate,AreaID")]
+    [BindIndex("IX_NodeStat_UpdateTime_AreaID", false, "UpdateTime,AreaID")]
     [BindTable("NodeStat", Description = "节点统计。每日统计", ConnName = "Node", DbType = DatabaseType.None)]
     public partial class NodeStat : INodeStat
     {
@@ -32,6 +32,14 @@ namespace Stardust.Data.Nodes
         [DataObjectField(false, false, true, 0)]
         [BindColumn("StatDate", "统计日期", "")]
         public DateTime StatDate { get => _StatDate; set { if (OnPropertyChanging(__.StatDate, value)) { _StatDate = value; OnPropertyChanged(__.StatDate); } } }
+
+        private Int32 _AreaID;
+        /// <summary>地区。省份，0表示全国</summary>
+        [DisplayName("地区")]
+        [Description("地区。省份，0表示全国")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AreaID", "地区。省份，0表示全国", "")]
+        public Int32 AreaID { get => _AreaID; set { if (OnPropertyChanging(__.AreaID, value)) { _AreaID = value; OnPropertyChanged(__.AreaID); } } }
 
         private Int32 _Total;
         /// <summary>总数。截止今天的全部设备数</summary>
@@ -118,6 +126,7 @@ namespace Stardust.Data.Nodes
                 {
                     case __.ID: return _ID;
                     case __.StatDate: return _StatDate;
+                    case __.AreaID: return _AreaID;
                     case __.Total: return _Total;
                     case __.Actives: return _Actives;
                     case __.News: return _News;
@@ -136,6 +145,7 @@ namespace Stardust.Data.Nodes
                 {
                     case __.ID: _ID = value.ToInt(); break;
                     case __.StatDate: _StatDate = value.ToDateTime(); break;
+                    case __.AreaID: _AreaID = value.ToInt(); break;
                     case __.Total: _Total = value.ToInt(); break;
                     case __.Actives: _Actives = value.ToInt(); break;
                     case __.News: _News = value.ToInt(); break;
@@ -160,6 +170,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>统计日期</summary>
             public static readonly Field StatDate = FindByName(__.StatDate);
+
+            /// <summary>地区。省份，0表示全国</summary>
+            public static readonly Field AreaID = FindByName(__.AreaID);
 
             /// <summary>总数。截止今天的全部设备数</summary>
             public static readonly Field Total = FindByName(__.Total);
@@ -200,6 +213,9 @@ namespace Stardust.Data.Nodes
             /// <summary>统计日期</summary>
             public const String StatDate = "StatDate";
 
+            /// <summary>地区。省份，0表示全国</summary>
+            public const String AreaID = "AreaID";
+
             /// <summary>总数。截止今天的全部设备数</summary>
             public const String Total = "Total";
 
@@ -239,6 +255,9 @@ namespace Stardust.Data.Nodes
 
         /// <summary>统计日期</summary>
         DateTime StatDate { get; set; }
+
+        /// <summary>地区。省份，0表示全国</summary>
+        Int32 AreaID { get; set; }
 
         /// <summary>总数。截止今天的全部设备数</summary>
         Int32 Total { get; set; }

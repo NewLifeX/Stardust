@@ -9,7 +9,9 @@ using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Threading;
 using NewLife.Web;
+using Stardust.Data.Nodes;
 using XCode.Membership;
+using static Stardust.Data.Nodes.NodeStat;
 
 namespace Stardust.Web.Areas.Nodes.Controllers
 {
@@ -30,28 +32,27 @@ namespace Stardust.Web.Areas.Nodes.Controllers
 
         protected override IEnumerable<NodeStat> Search(Pager p)
         {
-            var productId = p["areaId"].ToInt(-1);
+            var areaId = p["areaId"].ToInt(-1);
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            var list = NodeStat.Search(productId, start, end, p["Q"], p);
+            var list = NodeStat.Search(areaId, start, end, p["Q"], p);
 
             if (list.Count > 0)
             {
                 var hasDate = start.Year > 2000 || end.Year > 2000;
-                // 指定产品后，绘制日期曲线图
-                var prd = Product.FindByID(productId);
-                if (productId >= 0)
+                // 绘制日期曲线图
+                var ar = Area.FindByID(areaId);
+                if (areaId >= 0)
                 {
                     var chart = new ECharts
                     {
-                        Title = new ChartTitle { Text = prd + "设备统计" },
+                        Title = new ChartTitle { Text = ar + "" },
                         Height = 400,
                     };
                     chart.SetX(list, _.StatDate, e => e.StatDate.ToString("MM-dd"));
-                    chart.SetY("台数");
-                    var sr = chart.Add(list, _.Total, "line", null);
-                    sr.Smooth = true;
+                    chart.SetY("数量");
+                    chart.AddLine(list, _.Total, null, true);
                     chart.Add(list, _.Actives);
                     chart.Add(list, _.News);
                     chart.Add(list, _.Registers);
@@ -60,25 +61,25 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                     ViewBag.Charts = new[] { chart };
                 }
                 // 指定日期后，绘制饼图
-                if (hasDate && productId < 0)
+                if (hasDate && areaId < 0)
                 {
                     var w = 400;
                     var h = 300;
 
                     var chart0 = new ECharts { Width = w, Height = h };
-                    chart0.Add(list, _.Total, "pie", e => new { name = e.ProductName, value = e.Total });
+                    chart0.Add(list, _.Total, "pie", e => new { name = e.ProvinceName, value = e.Total });
 
                     var chart1 = new ECharts { Width = w, Height = h };
-                    chart1.Add(list, _.Actives, "pie", e => new { name = e.ProductName, value = e.Actives });
+                    chart1.Add(list, _.Actives, "pie", e => new { name = e.ProvinceName, value = e.Actives });
 
                     var chart2 = new ECharts { Width = w, Height = h };
-                    chart2.Add(list, _.News, "pie", e => new { name = e.ProductName, value = e.News });
+                    chart2.Add(list, _.News, "pie", e => new { name = e.ProvinceName, value = e.News });
 
                     var chart3 = new ECharts { Width = w, Height = h };
-                    chart3.Add(list, _.Registers, "pie", e => new { name = e.ProductName, value = e.Registers });
+                    chart3.Add(list, _.Registers, "pie", e => new { name = e.ProvinceName, value = e.Registers });
 
                     var chart4 = new ECharts { Width = w, Height = h };
-                    chart4.Add(list, _.MaxOnline, "pie", e => new { name = e.ProductName, value = e.MaxOnline });
+                    chart4.Add(list, _.MaxOnline, "pie", e => new { name = e.ProvinceName, value = e.MaxOnline });
 
                     ViewBag.Charts2 = new[] { chart0, chart1, chart2, chart3, chart4 };
                 }
@@ -92,22 +93,8 @@ namespace Stardust.Web.Areas.Nodes.Controllers
         {
             var date = DateTime.Today;
 
-            var ps = Parameter.Search(0, "统计", null, null, null);
-            var p = ps.FirstOrDefault(e => e.Name == "设备日统计");
-            if (p != null)
-            {
-                if (!p.Enable) return;
-
-                date = p.GetValue().ToDateTime();
-            }
-            else
-            {
-                // 计算统计，月初开始
-                date = new DateTime(date.Year, date.Month, 1);
-                p = new Parameter { Category = "统计", Name = "设备日统计", Enable = true };
-                p.SetValue(date);
-                p.Insert();
-            }
+            var p = Parameter.GetOrAdd(0, "统计", "节点日统计", new DateTime(date.Year, date.Month, 1).ToString("yyyy-MM-dd"));
+            date = p.GetValue().ToDateTime();
 
             while (date <= DateTime.Today)
             {
@@ -137,7 +124,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             sb.Append($"星尘[{dt:MM-dd}@{name}]报告：\n");
             foreach (var item in list)
             {
-                sb.Append($"[{item.ProductName ?? "全国",4}] 总数{item.Total,5}，活跃{item.Actives,4}，新增{item.News,4}，最高在线{item.MaxOnline,4}");
+                sb.Append($"[{item.ProvinceName ?? "全国",4}] 总数{item.Total,5}，活跃{item.Actives,4}，新增{item.News,4}，最高在线{item.MaxOnline,4}");
                 if (item.MaxOnlineTime.Year > 2000) sb.Append($" [{item.MaxOnlineTime.ToFullString("")}]");
                 sb.Append("\n");
             }

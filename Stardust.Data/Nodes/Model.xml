@@ -23,6 +23,9 @@
       <Column Name="COMs" DataType="String" Length="200" Description="串口" />
       <Column Name="InstallPath" DataType="String" Length="200" Description="安装路径" />
       <Column Name="Runtime" DataType="String" Description="运行时。.Net版本" />
+      <Column Name="ProvinceID" DataType="Int32" Description="省份" />
+      <Column Name="CityID" DataType="Int32" Description="城市" />
+      <Column Name="Address" DataType="String" Length="200" Description="地址" />
       <Column Name="Logins" DataType="Int32" Description="登录次数" />
       <Column Name="LastLogin" DataType="DateTime" Description="最后登录" />
       <Column Name="LastLoginIP" DataType="String" Description="最后IP。最后的公网IP地址" />
@@ -47,6 +50,8 @@
       <Column Name="SessionID" DataType="String" Description="会话" />
       <Column Name="NodeID" DataType="Int32" Description="节点" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
+      <Column Name="ProvinceID" DataType="Int32" Description="省份" />
+      <Column Name="CityID" DataType="Int32" Description="城市" />
       <Column Name="Action" DataType="String" Description="操作。客户端正在指定的功能动作" />
       <Column Name="PingCount" DataType="Int32" Description="心跳" />
       <Column Name="Version" DataType="String" Description="版本" />
@@ -69,7 +74,7 @@
     <Indexes>
       <Index Columns="SessionID" Unique="True" />
       <Index Columns="UpdateTime" />
-      <Index Columns="NodeID" />
+      <Index Columns="ProvinceID,CityID" />
     </Indexes>
   </Table>
   <Table Name="NodeHistory" Description="节点历史">
@@ -77,6 +82,8 @@
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="NodeID" DataType="Int32" Description="节点" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
+      <Column Name="ProvinceID" DataType="Int32" Description="省份" />
+      <Column Name="CityID" DataType="Int32" Description="城市" />
       <Column Name="Action" DataType="String" Description="操作" />
       <Column Name="Success" DataType="Boolean" Description="成功" />
       <Column Name="Version" DataType="String" Description="版本" />
@@ -137,6 +144,7 @@
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
+      <Column Name="AreaID" DataType="Int32" Description="地区。省份，0表示全国" />
       <Column Name="Total" DataType="Int32" Description="总数。截止今天的全部设备数" />
       <Column Name="Actives" DataType="Int32" Description="活跃数。最后登录位于今天" />
       <Column Name="News" DataType="Int32" Description="新增数。今天创建" />
@@ -148,8 +156,8 @@
       <Column Name="Remark" DataType="String" Length="500" Description="备注" />
     </Columns>
     <Indexes>
-      <Index Columns="StatDate" Unique="True" />
-      <Index Columns="UpdateTime" />
+      <Index Columns="StatDate,AreaID" Unique="True" />
+      <Index Columns="UpdateTime,AreaID" />
     </Indexes>
   </Table>
 </Tables>

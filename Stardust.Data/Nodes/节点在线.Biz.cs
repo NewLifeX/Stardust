@@ -47,6 +47,20 @@ namespace Stardust.Data.Nodes
         /// <summary>节点</summary>
         [Map(__.NodeID)]
         public String NodeName => Node + "";
+
+        /// <summary>省份</summary>
+        public Area Province => Extends.Get(nameof(Province), k => Area.FindByID(ProvinceID));
+
+        /// <summary>省份名</summary>
+        [Map(__.ProvinceID)]
+        public String ProvinceName => Province + "";
+
+        /// <summary>城市</summary>
+        public Area City => Extends.Get(nameof(City), k => Area.FindByID(CityID));
+
+        /// <summary>城市名</summary>
+        [Map(__.CityID)]
+        public String CityName => City + "";
         #endregion
 
         #region 扩展查询
@@ -70,22 +84,34 @@ namespace Stardust.Data.Nodes
         #region 高级查询
         /// <summary>查询满足条件的记录集，分页、排序</summary>
         /// <param name="nodeId">节点</param>
+        /// <param name="provinceId">省份</param>
+        /// <param name="cityId">城市</param>
         /// <param name="start">开始时间</param>
         /// <param name="end">结束时间</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页排序参数，同时返回满足条件的总记录数</param>
         /// <returns>实体集</returns>
-        public static IList<NodeOnline> Search(Int32 nodeId, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<NodeOnline> Search(Int32 nodeId, Int32 provinceId, Int32 cityId, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (nodeId >= 0) exp &= _.NodeID == nodeId;
+            if (provinceId >= 0) exp &= _.ProvinceID == provinceId;
+            if (cityId >= 0) exp &= _.CityID == cityId;
 
             exp &= _.CreateTime.Between(start, end);
 
             if (!key.IsNullOrEmpty()) exp &= (_.Name.Contains(key) | _.SessionID.Contains(key));
 
             return FindAll(exp, page);
+        }
+
+        /// <summary>根据产品，分组统计在线数</summary>
+        /// <returns></returns>
+        public static IDictionary<Int32, Int32> SearchGroupByProvince()
+        {
+            var list = FindAll(_.ProvinceID.GroupBy(), null, _.ID.Count() & _.ProvinceID);
+            return list.ToDictionary(e => e.ProvinceID, e => e.ID);
         }
         #endregion
 

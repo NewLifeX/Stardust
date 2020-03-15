@@ -13,7 +13,7 @@ namespace Stardust.Data.Nodes
     [Description("节点在线")]
     [BindIndex("IU_NodeOnline_SessionID", true, "SessionID")]
     [BindIndex("IX_NodeOnline_UpdateTime", false, "UpdateTime")]
-    [BindIndex("IX_NodeOnline_NodeID", false, "NodeID")]
+    [BindIndex("IX_NodeOnline_ProvinceID_CityID", false, "ProvinceID,CityID")]
     [BindTable("NodeOnline", Description = "节点在线", ConnName = "Node", DbType = DatabaseType.None)]
     public partial class NodeOnline : INodeOnline
     {
@@ -49,6 +49,22 @@ namespace Stardust.Data.Nodes
         [DataObjectField(false, false, true, 50)]
         [BindColumn("Name", "名称", "", Master = true)]
         public String Name { get => _Name; set { if (OnPropertyChanging(__.Name, value)) { _Name = value; OnPropertyChanged(__.Name); } } }
+
+        private Int32 _ProvinceID;
+        /// <summary>省份</summary>
+        [DisplayName("省份")]
+        [Description("省份")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("ProvinceID", "省份", "")]
+        public Int32 ProvinceID { get => _ProvinceID; set { if (OnPropertyChanging(__.ProvinceID, value)) { _ProvinceID = value; OnPropertyChanged(__.ProvinceID); } } }
+
+        private Int32 _CityID;
+        /// <summary>城市</summary>
+        [DisplayName("城市")]
+        [Description("城市")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("CityID", "城市", "")]
+        public Int32 CityID { get => _CityID; set { if (OnPropertyChanging(__.CityID, value)) { _CityID = value; OnPropertyChanged(__.CityID); } } }
 
         private String _Action;
         /// <summary>操作。客户端正在指定的功能动作</summary>
@@ -209,6 +225,8 @@ namespace Stardust.Data.Nodes
                     case __.SessionID: return _SessionID;
                     case __.NodeID: return _NodeID;
                     case __.Name: return _Name;
+                    case __.ProvinceID: return _ProvinceID;
+                    case __.CityID: return _CityID;
                     case __.Action: return _Action;
                     case __.PingCount: return _PingCount;
                     case __.Version: return _Version;
@@ -238,6 +256,8 @@ namespace Stardust.Data.Nodes
                     case __.SessionID: _SessionID = Convert.ToString(value); break;
                     case __.NodeID: _NodeID = value.ToInt(); break;
                     case __.Name: _Name = Convert.ToString(value); break;
+                    case __.ProvinceID: _ProvinceID = value.ToInt(); break;
+                    case __.CityID: _CityID = value.ToInt(); break;
                     case __.Action: _Action = Convert.ToString(value); break;
                     case __.PingCount: _PingCount = value.ToInt(); break;
                     case __.Version: _Version = Convert.ToString(value); break;
@@ -277,6 +297,12 @@ namespace Stardust.Data.Nodes
 
             /// <summary>名称</summary>
             public static readonly Field Name = FindByName(__.Name);
+
+            /// <summary>省份</summary>
+            public static readonly Field ProvinceID = FindByName(__.ProvinceID);
+
+            /// <summary>城市</summary>
+            public static readonly Field CityID = FindByName(__.CityID);
 
             /// <summary>操作。客户端正在指定的功能动作</summary>
             public static readonly Field Action = FindByName(__.Action);
@@ -350,6 +376,12 @@ namespace Stardust.Data.Nodes
             /// <summary>名称</summary>
             public const String Name = "Name";
 
+            /// <summary>省份</summary>
+            public const String ProvinceID = "ProvinceID";
+
+            /// <summary>城市</summary>
+            public const String CityID = "CityID";
+
             /// <summary>操作。客户端正在指定的功能动作</summary>
             public const String Action = "Action";
 
@@ -422,6 +454,12 @@ namespace Stardust.Data.Nodes
 
         /// <summary>名称</summary>
         String Name { get; set; }
+
+        /// <summary>省份</summary>
+        Int32 ProvinceID { get; set; }
+
+        /// <summary>城市</summary>
+        Int32 CityID { get; set; }
 
         /// <summary>操作。客户端正在指定的功能动作</summary>
         String Action { get; set; }

@@ -39,6 +39,20 @@ namespace Stardust.Data.Nodes
         /// <summary>节点</summary>
         [Map(__.NodeID)]
         public String NodeName => Node + "";
+
+        /// <summary>省份</summary>
+        public Area Province => Extends.Get(nameof(Province), k => Area.FindByID(ProvinceID));
+
+        /// <summary>省份名</summary>
+        [Map(__.ProvinceID)]
+        public String ProvinceName => Province + "";
+
+        /// <summary>城市</summary>
+        public Area City => Extends.Get(nameof(City), k => Area.FindByID(CityID));
+
+        /// <summary>城市名</summary>
+        [Map(__.CityID)]
+        public String CityName => City + "";
         #endregion
 
         #region 扩展查询
@@ -62,6 +76,8 @@ namespace Stardust.Data.Nodes
         #region 高级查询
         /// <summary>高级搜索</summary>
         /// <param name="nodeId"></param>
+        /// <param name="provinceId">省份</param>
+        /// <param name="cityId">城市</param>
         /// <param name="action"></param>
         /// <param name="success"></param>
         /// <param name="start"></param>
@@ -69,11 +85,13 @@ namespace Stardust.Data.Nodes
         /// <param name="key"></param>
         /// <param name="page"></param>
         /// <returns></returns>
-        public static IList<NodeHistory> Search(Int32 nodeId, String action, Boolean? success, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<NodeHistory> Search(Int32 nodeId, Int32 provinceId, Int32 cityId, String action, Boolean? success, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (nodeId >= 0) exp &= _.NodeID == nodeId;
+            if (provinceId >= 0) exp &= _.ProvinceID == provinceId;
+            if (cityId >= 0) exp &= _.CityID == cityId;
             if (!action.IsNullOrEmpty()) exp &= _.Action.In(action.Split(","));
             if (success != null) exp &= _.Success == success;
 
