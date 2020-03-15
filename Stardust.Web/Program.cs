@@ -26,11 +26,10 @@ namespace Stardust.Web
         private static void InitAsync()
         {
             // 配置
-            var set = XCode.Setting.Current;
+            var set = NewLife.Setting.Current;
             if (set.IsNew)
             {
-                set.ShowSQL = false;
-
+                set.DataPath = "../Data";
                 set.Save();
             }
 

@@ -80,7 +80,7 @@ namespace Stardust.Server.Controllers
 
                 olt.LocalTime = di.Time;
                 olt.MACs = di.Macs;
-                olt.COMs = di.COMs;
+                //olt.COMs = di.COMs;
 
                 olt.Token = Token;
                 olt.PingCount++;
@@ -283,7 +283,7 @@ namespace Stardust.Server.Controllers
             if (di.ProcessorCount > 0) node.Cpu = di.ProcessorCount;
             if (di.Memory > 0) node.Memory = (Int32)(di.Memory / 1024 / 1024);
             if (!di.Macs.IsNullOrEmpty()) node.MACs = di.Macs;
-            if (!di.COMs.IsNullOrEmpty()) node.COMs = di.COMs;
+            //if (!di.COMs.IsNullOrEmpty()) node.COMs = di.COMs;
             if (!di.InstallPath.IsNullOrEmpty()) node.InstallPath = di.InstallPath;
             if (!di.Runtime.IsNullOrEmpty()) node.Runtime = di.Runtime;
         }
@@ -489,7 +489,7 @@ namespace Stardust.Server.Controllers
             if (ch < NodeChannels.Release) ch = NodeChannels.Release;
 
             // 找到所有产品版本
-            var list = NodeUpgrade.GetValids(ch);
+            var list = NodeVersion.GetValids(ch);
 
             // 应用过滤规则
             var pv = list.FirstOrDefault(e => e.Match(node));
