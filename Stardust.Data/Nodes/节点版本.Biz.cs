@@ -23,10 +23,10 @@ namespace Stardust.Data.Nodes
     }
 
     /// <summary>节点版本。发布更新</summary>
-    public partial class NodeUpgrade : EntityBase<NodeUpgrade>
+    public partial class NodeVersion : EntityBase<NodeVersion>
     {
         #region 对象操作
-        static NodeUpgrade()
+        static NodeVersion()
         {
             // 累加字段
             //var df = Meta.Factory.AdditionalFields;
@@ -81,7 +81,7 @@ namespace Stardust.Data.Nodes
         /// <summary>根据编号查找</summary>
         /// <param name="id">编号</param>
         /// <returns>实体对象</returns>
-        public static NodeUpgrade FindByID(Int32 id)
+        public static NodeVersion FindByID(Int32 id)
         {
             if (id <= 0) return null;
 
@@ -102,7 +102,7 @@ namespace Stardust.Data.Nodes
         /// <summary>获取有效</summary>
         /// <param name="channel"></param>
         /// <returns></returns>
-        public static IList<NodeUpgrade> GetValids(NodeChannels channel)
+        public static IList<NodeVersion> GetValids(NodeChannels channel)
         {
             var list = Meta.Cache.FindAll(e => e.Enable);
             if (list.Count == 0) return list;

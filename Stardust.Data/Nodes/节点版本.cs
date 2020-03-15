@@ -11,9 +11,9 @@ namespace Stardust.Data.Nodes
     [Serializable]
     [DataObject]
     [Description("节点版本。发布更新")]
-    [BindIndex("IU_NodeUpgrade_Version", true, "Version")]
-    [BindTable("NodeUpgrade", Description = "节点版本。发布更新", ConnName = "Node", DbType = DatabaseType.None)]
-    public partial class NodeUpgrade : INodeUpgrade
+    [BindIndex("IU_NodeVersion_Version", true, "Version")]
+    [BindTable("NodeVersion", Description = "节点版本。发布更新", ConnName = "Node", DbType = DatabaseType.None)]
+    public partial class NodeVersion : INodeVersion
     {
         #region 属性
         private Int32 _ID;
@@ -294,7 +294,7 @@ namespace Stardust.Data.Nodes
     }
 
     /// <summary>节点版本。发布更新接口</summary>
-    public partial interface INodeUpgrade
+    public partial interface INodeVersion
     {
         #region 属性
         /// <summary>编号</summary>

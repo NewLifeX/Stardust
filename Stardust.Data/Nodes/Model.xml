@@ -91,7 +91,7 @@
       <Index Columns="CreateTime,NodeID,Action" />
     </Indexes>
   </Table>
-  <Table Name="NodeUpgrade" Description="节点版本。发布更新">
+  <Table Name="NodeVersion" Description="节点版本。发布更新">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="Version" DataType="String" Description="版本号" />
@@ -131,6 +131,25 @@
     <Indexes>
       <Index Columns="NodeID,Command" />
       <Index Columns="UpdateTime,NodeID,Command" />
+    </Indexes>
+  </Table>
+  <Table Name="NodeStat"  Description="节点统计。每日统计" IgnoreNameCase="False">
+    <Columns>
+      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
+      <Column Name="Total" DataType="Int32" Description="总数。截止今天的全部设备数" />
+      <Column Name="Actives" DataType="Int32" Description="活跃数。最后登录位于今天" />
+      <Column Name="News" DataType="Int32" Description="新增数。今天创建" />
+      <Column Name="Registers" DataType="Int32" Description="注册数。今天激活或重新激活" />
+      <Column Name="MaxOnline" DataType="Int32" Description="最高在线。今天最高在线数" />
+      <Column Name="MaxOnlineTime" DataType="DateTime" Description="最高在线时间" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+      <Column Name="Remark" DataType="String" Length="500" Description="备注" />
+    </Columns>
+    <Indexes>
+      <Index Columns="StatDate" Unique="True" />
+      <Index Columns="UpdateTime" />
     </Indexes>
   </Table>
 </Tables>
