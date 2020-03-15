@@ -26,8 +26,8 @@ namespace Test
 
             var star = new StarClient("tcp://127.0.0.1:6666")
             {
-                UserName = "test",
-                Password = "pass"
+                Code = "test",
+                Secret = "pass"
             };
 
             sc.Star = star;

@@ -51,8 +51,8 @@ namespace Stardust.Models
         /// <summary>MAC地址</summary>
         public String Macs { get; set; }
 
-        /// <summary>串口</summary>
-        public String COMs { get; set; }
+        ///// <summary>串口</summary>
+        //public String COMs { get; set; }
 
         /// <summary>安装路径</summary>
         public String InstallPath { get; set; }

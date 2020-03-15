@@ -1,29 +1,23 @@
-﻿using NewLife;
+﻿using System;
+using System.Collections.Generic;
+using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
 using NewLife.Net;
 using NewLife.Remoting;
 using NewLife.Threading;
 using Stardust;
-using System;
-using System.Collections.Generic;
 
 namespace StarAgent
 {
     class Program
     {
-        static void Main(String[] args)
-        {
-            new MyService().Main();
-        }
+        static void Main(String[] args) => new MyService().Main();
     }
 
     /// <summary>服务类。名字可以自定义</summary>
     class MyService : AgentServiceBase<MyService>
     {
-        /// <summary>是否使用线程池调度。false表示禁用线程池，改用Agent线程</summary>
-        public Boolean Pooling { get; set; } = true;
-
         public MyService()
         {
             ServiceName = "StarAgent";
@@ -38,13 +32,13 @@ namespace StarAgent
             if (_Client == null)
             {
                 var set = Setting.Current;
-                if (!set.Server.IsNullOrEmpty())
-                    InitClient(set.Server);
-                else
-                {
-                    WriteLog("未配置服务端地址，开始自动发现");
-                    StartDiscover();
-                }
+                //if (!set.Server.IsNullOrEmpty())
+                InitClient(set.Server);
+                //else
+                //{
+                //    WriteLog("未配置服务端地址，开始自动发现");
+                //    StartDiscover();
+                //}
             }
         }
 
@@ -58,14 +52,14 @@ namespace StarAgent
 
             var client = new StarClient(server)
             {
-                UserName = Environment.MachineName,
-                Password = Environment.MachineName,
+                Code = Environment.MachineName,
+                Secret = Environment.MachineName,
                 Log = XTrace.Log,
             };
-            if (set.Debug) client.EncoderLog = XTrace.Log;
+            //if (set.Debug) client.EncoderLog = XTrace.Log;
 
-            client.Open();
-            client.LoginAsync();
+            //client.Open();
+            client.Login();
 
             _Client = client;
         }
@@ -96,63 +90,63 @@ namespace StarAgent
         }
 
         #region 自动发现服务端
-        private ApiClient _udp;
-        private TimerX _udp_timer;
-        private void StartDiscover()
-        {
-            var tc = new ApiClient("udp://255.255.255.255:6666")
-            {
-                UsePool = false,
-                Log = XTrace.Log,
-                EncoderLog = XTrace.Log,
-                Timeout = 1_000
-            };
+        //private ApiClient _udp;
+        //private TimerX _udp_timer;
+        //private void StartDiscover()
+        //{
+        //    var tc = new ApiClient("udp://255.255.255.255:6666")
+        //    {
+        //        UsePool = false,
+        //        Log = XTrace.Log,
+        //        EncoderLog = XTrace.Log,
+        //        Timeout = 1_000
+        //    };
 
-            tc.Open();
+        //    tc.Open();
 
-            // 定时广播
-            _udp_timer = new TimerX(OnDiscover, tc, 0, 5_000) { Async = true };
+        //    // 定时广播
+        //    _udp_timer = new TimerX(OnDiscover, tc, 0, 5_000) { Async = true };
 
-            _udp = tc;
-        }
+        //    _udp = tc;
+        //}
 
-        private void OnDiscover(Object state)
-        {
-            //var udp = new UdpServer();
-            //udp.Log = XTrace.Log;
+        //private void OnDiscover(Object state)
+        //{
+        //    //var udp = new UdpServer();
+        //    //udp.Log = XTrace.Log;
 
-            //var ep = new IPEndPoint(IPAddress.Broadcast, 6666);
-            //var session = udp.CreateSession(ep);
-            //session.Send("Hello");
+        //    //var ep = new IPEndPoint(IPAddress.Broadcast, 6666);
+        //    //var session = udp.CreateSession(ep);
+        //    //session.Send("Hello");
 
-            var tc = state as ApiClient;
+        //    var tc = state as ApiClient;
 
-            var dic = tc.Invoke<IDictionary<String, Object>>("Discover", new { state = DateTime.Now.ToFullString() });
-            if (dic == null || dic.Count == 0) return;
+        //    var dic = tc.Invoke<IDictionary<String, Object>>("Discover", new { state = DateTime.Now.ToFullString() });
+        //    if (dic == null || dic.Count == 0) return;
 
-            var str = dic["Server"] + "";
-            if (str.IsNullOrEmpty()) return;
+        //    var str = dic["Server"] + "";
+        //    if (str.IsNullOrEmpty()) return;
 
-            //WriteLog("收到[{0}]：{1}", tc, str);
+        //    //WriteLog("收到[{0}]：{1}", tc, str);
 
-            if (!str.IsNullOrEmpty())
-            {
-                var uri = new NetUri(str);
-                if (!uri.Host.IsNullOrEmpty() && uri.Port > 0)
-                {
-                    WriteLog("发现服务器：{0}", uri);
+        //    if (!str.IsNullOrEmpty())
+        //    {
+        //        var uri = new NetUri(str);
+        //        if (!uri.Host.IsNullOrEmpty() && uri.Port > 0)
+        //        {
+        //            WriteLog("发现服务器：{0}", uri);
 
-                    // 停止广播
-                    _udp_timer.TryDispose();
-                    _udp_timer = null;
+        //            // 停止广播
+        //            _udp_timer.TryDispose();
+        //            _udp_timer = null;
 
-                    _udp.TryDispose();
-                    _udp = null;
+        //            _udp.TryDispose();
+        //            _udp = null;
 
-                    InitClient(str);
-                }
-            }
-        }
+        //            InitClient(str);
+        //        }
+        //    }
+        //}
         #endregion
 
         /// <summary>数据测试，菜单t</summary>
