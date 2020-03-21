@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using NewLife.Log;
 using Stardust.Data;
+using Stardust.Server.Services;
 
 namespace Stardust.Server
 {
@@ -33,6 +34,7 @@ namespace Stardust.Server
             return builder;
         }
 
+        private static NodeOnlineService _online;
         private static void InitAsync()
         {
             // 配置
@@ -46,6 +48,10 @@ namespace Stardust.Server
             // 初始化数据库
             var n = App.Meta.Count;
             AppStat.Meta.Session.Dal.Db.ShowSQL = false;
+
+            // 在线管理服务
+            _online = new NodeOnlineService();
+            _online.Init();
         }
     }
 }

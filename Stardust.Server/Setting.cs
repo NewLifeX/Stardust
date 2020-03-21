@@ -21,6 +21,10 @@ namespace Stardust.Server
         [Description("令牌有效期。默认2*3600秒")]
         public Int32 TokenExpire { get; set; } = 2 * 3600;
 
+        /// <summary>会话超时。默认600秒</summary>
+        [Description("会话超时。默认600秒")]
+        public Int32 SessionTimeout { get; set; } = 600;
+
         /// <summary>自动注册。允许客户端自动注册，默认true</summary>
         [Description("自动注册。允许客户端自动注册，默认true")]
         public Boolean AutoRegister { get; set; } = true;
