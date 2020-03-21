@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
-using NewLife.Net;
-using NewLife.Remoting;
-using NewLife.Threading;
 using Stardust;
 
 namespace StarAgent
@@ -32,13 +28,7 @@ namespace StarAgent
             if (_Client == null)
             {
                 var set = Setting.Current;
-                //if (!set.Server.IsNullOrEmpty())
                 InitClient(set.Server);
-                //else
-                //{
-                //    WriteLog("未配置服务端地址，开始自动发现");
-                //    StartDiscover();
-                //}
             }
         }
 
@@ -48,17 +38,13 @@ namespace StarAgent
 
             WriteLog("初始化服务端地址：{0}", server);
 
-            var set = Setting.Current;
-
             var client = new StarClient(server)
             {
                 Code = Environment.MachineName,
                 Secret = Environment.MachineName,
                 Log = XTrace.Log,
             };
-            //if (set.Debug) client.EncoderLog = XTrace.Log;
 
-            //client.Open();
             client.Login();
 
             _Client = client;

@@ -19,10 +19,10 @@ namespace StarAgent
         #endregion
 
         #region 构造
-        /// <summary>实例化</summary>
-        public Setting()
-        {
-        }
+        ///// <summary>实例化</summary>
+        //public Setting()
+        //{
+        //}
         #endregion
     }
 }

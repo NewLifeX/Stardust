@@ -32,7 +32,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Agent" Version="8.6.2020.204" />
     <PackageReference Include="NewLife.XCode" Version="9.16.2020.308" />
   </ItemGroup>
 
