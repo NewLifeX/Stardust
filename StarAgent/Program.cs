@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
@@ -17,6 +18,16 @@ namespace StarAgent
         public MyService()
         {
             ServiceName = "StarAgent";
+
+            var set = Setting.Current;
+            if (set.IsNew)
+            {
+#if DEBUG
+                set.Server = "http://localhost:6600";
+#endif
+
+                set.Save();
+            }
 
             // 注册菜单，在控制台菜单中按 t 可以执行Test函数，主要用于临时处理数据
             AddMenu('t', "测试", Test);
@@ -45,7 +56,7 @@ namespace StarAgent
                 Log = XTrace.Log,
             };
 
-            client.Login();
+            Task.Run(client.Login);
 
             _Client = client;
         }

@@ -60,6 +60,15 @@ namespace Stardust
                 }
             }
         }
+
+        /// <summary>销毁</summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(Boolean disposing)
+        {
+            Logout(disposing ? "Dispose" : "GC").Wait(1_000);
+
+            base.Dispose(disposing);
+        }
         #endregion
 
         #region 登录
@@ -92,7 +101,7 @@ namespace Stardust
                 {
                     if (_timer == null)
                     {
-                        _timer = new TimerX(s => Ping(), null, 5_000, 60_000, "Device") { Async = true };
+                        _timer = new TimerX(s => Ping().Wait(), null, 5_000, 60_000, "Device") { Async = true };
                     }
                 }
             }
@@ -197,7 +206,7 @@ namespace Stardust
         /// <returns></returns>
         private async Task<LoginResponse> LogoutAsync(String reason) => await GetAsync<LoginResponse>("Node/Logout", new { reason });
         #endregion
-        
+
         #region 心跳报告
         /// <summary>获取心跳信息</summary>
         public PingInfo GetHeartInfo()
