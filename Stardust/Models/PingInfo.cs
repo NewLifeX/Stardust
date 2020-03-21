@@ -9,6 +9,9 @@ namespace Stardust.Models
         /// <summary>可用内存大小</summary>
         public UInt64 AvailableMemory { get; set; }
 
+        /// <summary>磁盘可用空间。应用所在盘</summary>
+        public UInt64 AvailableFreeSpace { get; set; }
+
         /// <summary>主频</summary>
         public Single CpuRate { get; set; }
 

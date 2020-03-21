@@ -135,6 +135,7 @@ namespace Stardust
             var asm = AssemblyX.Entry ?? AssemblyX.Create(Assembly.GetExecutingAssembly());
             //var ps = System.IO.Ports.SerialPort.GetPortNames();
             var mcs = NetHelper.GetMacs().Select(e => e.ToHex("-")).OrderBy(e => e).Join(",");
+            var driveInfo = new DriveInfo(Path.GetPathRoot(".".GetFullPath()));
             var di = new NodeInfo
             {
                 Version = asm.FileVersion,
@@ -149,6 +150,9 @@ namespace Stardust
                 ProcessorCount = Environment.ProcessorCount,
                 Memory = mi.Memory,
                 AvailableMemory = mi.AvailableMemory,
+                TotalSize = (UInt64)driveInfo.TotalSize,
+                AvailableFreeSpace = (UInt64)driveInfo.AvailableFreeSpace,
+
                 Processor = mi.Processor,
                 CpuID = mi.CpuID,
                 CpuRate = mi.CpuRate,
@@ -228,9 +232,11 @@ namespace Stardust
             mi.Refresh();
 
             var mcs = NetHelper.GetMacs().Select(e => e.ToHex("-")).OrderBy(e => e).Join(",");
+            var driveInfo = new DriveInfo(Path.GetPathRoot(".".GetFullPath()));
             var ext = new PingInfo
             {
                 AvailableMemory = mi.AvailableMemory,
+                AvailableFreeSpace = (UInt64)driveInfo.AvailableFreeSpace,
                 CpuRate = mi.CpuRate,
 
                 Macs = mcs,

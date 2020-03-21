@@ -282,10 +282,17 @@ namespace Stardust.Server.Controllers
 
             if (di.ProcessorCount > 0) node.Cpu = di.ProcessorCount;
             if (di.Memory > 0) node.Memory = (Int32)(di.Memory / 1024 / 1024);
+            if (di.TotalSize > 0) node.TotalSize = (Int32)(di.TotalSize / 1024 / 1024);
             if (!di.Macs.IsNullOrEmpty()) node.MACs = di.Macs;
             //if (!di.COMs.IsNullOrEmpty()) node.COMs = di.COMs;
             if (!di.InstallPath.IsNullOrEmpty()) node.InstallPath = di.InstallPath;
             if (!di.Runtime.IsNullOrEmpty()) node.Runtime = di.Runtime;
+        }
+
+        private void Fill(NodeOnline online,NodeInfo di)
+        {
+            if (di.AvailableMemory > 0) online.AvailableMemory = (Int32)(di.AvailableMemory / 1024 / 1024);
+            if (di.AvailableFreeSpace > 0) online.AvailableFreeSpace = (Int32)(di.AvailableFreeSpace / 1024 / 1024);
         }
         #endregion
 
@@ -354,6 +361,7 @@ namespace Stardust.Server.Controllers
         private void Fill(NodeOnline olt, PingInfo inf)
         {
             if (inf.AvailableMemory > 0) olt.AvailableMemory = (Int32)(inf.AvailableMemory / 1024 / 1024);
+            if (inf.AvailableFreeSpace > 0) olt.AvailableFreeSpace = (Int32)(inf.AvailableFreeSpace / 1024 / 1024);
             if (inf.CpuRate > 0) olt.CpuRate = inf.CpuRate;
             if (inf.Delay > 0) olt.Delay = inf.Delay;
 

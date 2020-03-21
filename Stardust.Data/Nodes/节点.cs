@@ -122,6 +122,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("Memory", "内存。单位M", "")]
         public Int32 Memory { get => _Memory; set { if (OnPropertyChanging(__.Memory, value)) { _Memory = value; OnPropertyChanged(__.Memory); } } }
 
+        private Int32 _TotalSize;
+        /// <summary>磁盘。应用所在盘，单位M</summary>
+        [DisplayName("磁盘")]
+        [Description("磁盘。应用所在盘，单位M")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("TotalSize", "磁盘。应用所在盘，单位M", "")]
+        public Int32 TotalSize { get => _TotalSize; set { if (OnPropertyChanging(__.TotalSize, value)) { _TotalSize = value; OnPropertyChanged(__.TotalSize); } } }
+
         private String _Processor;
         /// <summary>处理器</summary>
         [DisplayName("处理器")]
@@ -322,6 +330,7 @@ namespace Stardust.Data.Nodes
                     case __.UserName: return _UserName;
                     case __.Cpu: return _Cpu;
                     case __.Memory: return _Memory;
+                    case __.TotalSize: return _TotalSize;
                     case __.Processor: return _Processor;
                     case __.CpuID: return _CpuID;
                     case __.Uuid: return _Uuid;
@@ -364,6 +373,7 @@ namespace Stardust.Data.Nodes
                     case __.UserName: _UserName = Convert.ToString(value); break;
                     case __.Cpu: _Cpu = value.ToInt(); break;
                     case __.Memory: _Memory = value.ToInt(); break;
+                    case __.TotalSize: _TotalSize = value.ToInt(); break;
                     case __.Processor: _Processor = Convert.ToString(value); break;
                     case __.CpuID: _CpuID = Convert.ToString(value); break;
                     case __.Uuid: _Uuid = Convert.ToString(value); break;
@@ -434,6 +444,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>内存。单位M</summary>
             public static readonly Field Memory = FindByName(__.Memory);
+
+            /// <summary>磁盘。应用所在盘，单位M</summary>
+            public static readonly Field TotalSize = FindByName(__.TotalSize);
 
             /// <summary>处理器</summary>
             public static readonly Field Processor = FindByName(__.Processor);
@@ -546,6 +559,9 @@ namespace Stardust.Data.Nodes
             /// <summary>内存。单位M</summary>
             public const String Memory = "Memory";
 
+            /// <summary>磁盘。应用所在盘，单位M</summary>
+            public const String TotalSize = "TotalSize";
+
             /// <summary>处理器</summary>
             public const String Processor = "Processor";
 
@@ -657,6 +673,9 @@ namespace Stardust.Data.Nodes
 
         /// <summary>内存。单位M</summary>
         Int32 Memory { get; set; }
+
+        /// <summary>磁盘。应用所在盘，单位M</summary>
+        Int32 TotalSize { get; set; }
 
         /// <summary>处理器</summary>
         String Processor { get; set; }

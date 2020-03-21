@@ -114,6 +114,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("AvailableMemory", "可用内存。单位M", "")]
         public Int32 AvailableMemory { get => _AvailableMemory; set { if (OnPropertyChanging(__.AvailableMemory, value)) { _AvailableMemory = value; OnPropertyChanged(__.AvailableMemory); } } }
 
+        private Int32 _AvailableFreeSpace;
+        /// <summary>可用磁盘。应用所在盘，单位M</summary>
+        [DisplayName("可用磁盘")]
+        [Description("可用磁盘。应用所在盘，单位M")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AvailableFreeSpace", "可用磁盘。应用所在盘，单位M", "")]
+        public Int32 AvailableFreeSpace { get => _AvailableFreeSpace; set { if (OnPropertyChanging(__.AvailableFreeSpace, value)) { _AvailableFreeSpace = value; OnPropertyChanged(__.AvailableFreeSpace); } } }
+
         private Double _CpuRate;
         /// <summary>CPU率。占用率</summary>
         [DisplayName("CPU率")]
@@ -233,6 +241,7 @@ namespace Stardust.Data.Nodes
                     case __.CompileTime: return _CompileTime;
                     case __.Memory: return _Memory;
                     case __.AvailableMemory: return _AvailableMemory;
+                    case __.AvailableFreeSpace: return _AvailableFreeSpace;
                     case __.CpuRate: return _CpuRate;
                     case __.Delay: return _Delay;
                     case __.Offset: return _Offset;
@@ -264,6 +273,7 @@ namespace Stardust.Data.Nodes
                     case __.CompileTime: _CompileTime = value.ToDateTime(); break;
                     case __.Memory: _Memory = value.ToInt(); break;
                     case __.AvailableMemory: _AvailableMemory = value.ToInt(); break;
+                    case __.AvailableFreeSpace: _AvailableFreeSpace = value.ToInt(); break;
                     case __.CpuRate: _CpuRate = value.ToDouble(); break;
                     case __.Delay: _Delay = value.ToInt(); break;
                     case __.Offset: _Offset = value.ToInt(); break;
@@ -321,6 +331,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>可用内存。单位M</summary>
             public static readonly Field AvailableMemory = FindByName(__.AvailableMemory);
+
+            /// <summary>可用磁盘。应用所在盘，单位M</summary>
+            public static readonly Field AvailableFreeSpace = FindByName(__.AvailableFreeSpace);
 
             /// <summary>CPU率。占用率</summary>
             public static readonly Field CpuRate = FindByName(__.CpuRate);
@@ -400,6 +413,9 @@ namespace Stardust.Data.Nodes
             /// <summary>可用内存。单位M</summary>
             public const String AvailableMemory = "AvailableMemory";
 
+            /// <summary>可用磁盘。应用所在盘，单位M</summary>
+            public const String AvailableFreeSpace = "AvailableFreeSpace";
+
             /// <summary>CPU率。占用率</summary>
             public const String CpuRate = "CpuRate";
 
@@ -478,6 +494,9 @@ namespace Stardust.Data.Nodes
 
         /// <summary>可用内存。单位M</summary>
         Int32 AvailableMemory { get; set; }
+
+        /// <summary>可用磁盘。应用所在盘，单位M</summary>
+        Int32 AvailableFreeSpace { get; set; }
 
         /// <summary>CPU率。占用率</summary>
         Double CpuRate { get; set; }
