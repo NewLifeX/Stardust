@@ -208,21 +208,23 @@ namespace Stardust
         #endregion
 
         #region 心跳报告
+        private readonly String[] _excludes = new[] { "Idle", "System", "Registry", "smss", "csrss", "lsass", "wininit", "services", "winlogon", "fontdrvhost", "dwm", "svchost", "dllhost", "conhost", "taskhostw", "explorer", "ctfmon", "ChsIME", "WmiPrvSE", "WUDFHost", "igfxCUIServiceN", "igfxEMN", "sihost", "RuntimeBroker", "StartMenuExperienceHost", "SecurityHealthSystray", "SecurityHealthService", "ShellExperienceHost", "PerfWatson2", "audiodg" };
+
         /// <summary>获取心跳信息</summary>
         public PingInfo GetHeartInfo()
         {
             var asm = AssemblyX.Entry;
             //var ps = System.IO.Ports.SerialPort.GetPortNames();
-            var pcs = new List<Process>();
-            foreach (var item in Process.GetProcesses().OrderBy(e => e.SessionId).ThenBy(e => e.ProcessName))
+            var pcs = new List<String>();
+            foreach (var item in Process.GetProcesses())
             {
                 var name = item.ProcessName;
-                if (name.EqualIgnoreCase("svchost", "dllhost", "conhost")) continue;
+                if (name.EqualIgnoreCase(_excludes)) continue;
 
-                if (!pcs.Contains(item)) pcs.Add(item);
+                if (!pcs.Contains(name)) pcs.Add(name);
             }
 
-            var mi = MachineInfo.Current;
+            var mi = MachineInfo.Current ?? _task.Result;
             mi.Refresh();
 
             var mcs = NetHelper.GetMacs().Select(e => e.ToHex("-")).OrderBy(e => e).Join(",");
@@ -234,7 +236,7 @@ namespace Stardust
                 Macs = mcs,
                 //COMs = ps.Join(","),
 
-                Processes = pcs.Join(",", e => e.ProcessName),
+                Processes = pcs.Join(),
 
                 Time = DateTime.Now.ToLong(),
                 Delay = Delay,
