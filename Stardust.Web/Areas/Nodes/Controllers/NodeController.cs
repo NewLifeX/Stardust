@@ -10,7 +10,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
     [NodesArea]
     public class NodeController : EntityController<Node>
     {
-        static NodeController() => MenuOrder = 80;
+        static NodeController() => MenuOrder = 90;
 
         protected override IEnumerable<Node> Search(Pager p)
         {
