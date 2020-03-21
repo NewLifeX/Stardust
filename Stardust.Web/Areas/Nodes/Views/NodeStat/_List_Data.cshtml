@@ -1,0 +1,103 @@
+﻿@model IList<NodeStat>
+@using Stardust.Data.Nodes
+@using NewLife;
+@using NewLife.Web;
+@using XCode;
+@using XCode.Configuration;
+@using XCode.Membership;
+@using NewLife.Cube;
+@{
+    var fact = ViewBag.Factory as IEntityFactory;
+    var page = ViewBag.Page as Pager;
+    var fields = ViewBag.Fields as IList<FieldItem>;
+    var set = ViewBag.PageSetting as PageSetting;
+    //var provider = ManageProvider.Provider;
+}
+<table class="table table-bordered table-hover table-striped table-condensed">
+    <thead>
+        <tr>
+            @if (set.EnableSelect)
+            {
+                <th class="text-center" style="width:10px;"><input type="checkbox" id="chkAll" title="全选" /></th>
+            }
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ID"))">编号</a></th>
+            <th class="text-center" style="min-width:80px;"><a href="@Html.Raw(page.GetSortUrl("StatDate"))">统计日期</a></th>
+            <th class="text-center" title="地区。省份，0表示全国"><a href="@Html.Raw(page.GetSortUrl("AreaID"))">地区</a></th>
+            <th class="text-center" title="总数。截止今天的全部设备数"><a href="@Html.Raw(page.GetSortUrl("Total"))">总数</a></th>
+            <th class="text-center" title="活跃数。最后登录位于今天"><a href="@Html.Raw(page.GetSortUrl("Actives"))">活跃数</a></th>
+            <th class="text-center" title="新增数。今天创建"><a href="@Html.Raw(page.GetSortUrl("News"))">新增数</a></th>
+            <th class="text-center" title="注册数。今天激活或重新激活"><a href="@Html.Raw(page.GetSortUrl("Registers"))">注册数</a></th>
+            <th class="text-center" title="最高在线。今天最高在线数"><a href="@Html.Raw(page.GetSortUrl("MaxOnline"))">最高在线</a></th>
+            <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("MaxOnlineTime"))">最高在线时间</a></th>
+            <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("CreateTime"))">创建时间</a></th>
+            <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("UpdateTime"))">更新时间</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Remark"))">备注</a></th>
+            @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
+            {
+                <th class="text-center">操作</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var entity in Model)
+        {
+            var name = (entity.AreaID) switch
+            {
+                0 => "全国",
+                -1 => "未知",
+                _ => entity.ProvinceName,
+            };
+            <tr>
+                @if (set.EnableSelect)
+                {
+                    <td class="text-center"><input type="checkbox" name="keys" value="@entity.ID" /></td>
+                }
+                <td class="text-center">@entity.ID</td>
+                <td class="text-center">@entity.StatDate.ToString("yyyy-MM-dd")</td>
+                <td class="text-center">@name</td>
+                <td class="text-right">@entity.Total.ToString("n0")</td>
+                <td class="text-right">@entity.Actives.ToString("n0")</td>
+                <td class="text-right">@entity.News.ToString("n0")</td>
+                <td class="text-right">@entity.Registers.ToString("n0")</td>
+                <td class="text-right">@entity.MaxOnline.ToString("n0")</td>
+                <td class="text-center">@entity.MaxOnlineTime.ToFullString("")</td>
+                <td class="text-center">@entity.CreateTime.ToFullString("")</td>
+                <td class="text-center">@entity.UpdateTime.ToFullString("")</td>
+                <td>@entity.Remark</td>
+                @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
+                {
+                    <td class="text-center">
+                        @await Html.PartialAsync("_List_Data_Action", (Object)entity)
+                    </td>
+                }
+            </tr>
+        }
+        @if (page.State is NodeStat)
+        {
+            var entity = page.State as NodeStat;
+            <tr>
+                @if (set.EnableSelect)
+                {
+                    <td></td>
+                }
+                <td class="text-center">总计</td>
+                <td></td>
+                <td></td>
+                <td class="text-right">@entity.Total.ToString("n0")</td>
+                <td class="text-right">@entity.Actives.ToString("n0")</td>
+                <td class="text-right">@entity.News.ToString("n0")</td>
+                <td class="text-right">@entity.Registers.ToString("n0")</td>
+                <td class="text-right">@entity.MaxOnline.ToString("n0")</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+
+                @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
+                {
+                    <td></td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>
