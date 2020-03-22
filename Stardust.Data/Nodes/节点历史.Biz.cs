@@ -136,6 +136,9 @@ namespace Stardust.Data.Nodes
                 Success = success,
                 Creator = creator,
 
+                ProvinceID = node.ProvinceID,
+                CityID = node.CityID,
+
                 Version = node.Version,
                 CompileTime = node.CompileTime,
 

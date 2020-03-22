@@ -12,6 +12,7 @@ using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Common;
 using XCode;
+using XCode.Membership;
 
 namespace Stardust.Server.Controllers
 {
@@ -66,6 +67,8 @@ namespace Stardust.Server.Controllers
 
                 if (node.CreateIP.IsNullOrEmpty()) node.CreateIP = ip;
                 node.UpdateIP = ip;
+
+                FixArea(node);
 
                 node.Save();
 
@@ -289,10 +292,35 @@ namespace Stardust.Server.Controllers
             if (!di.Runtime.IsNullOrEmpty()) node.Runtime = di.Runtime;
         }
 
-        private void Fill(NodeOnline online,NodeInfo di)
+        private void Fill(NodeOnline online, NodeInfo di)
         {
             if (di.AvailableMemory > 0) online.AvailableMemory = (Int32)(di.AvailableMemory / 1024 / 1024);
             if (di.AvailableFreeSpace > 0) online.AvailableFreeSpace = (Int32)(di.AvailableFreeSpace / 1024 / 1024);
+        }
+
+        private void FixArea(Node node)
+        {
+            if (node.CreateIP.IsNullOrEmpty()) return;
+
+            var ip = node.CreateIP.IPToAddress();
+            if (ip.IsNullOrEmpty()) return;
+
+            if (ip.StartsWith("广西")) ip = "广西自治区" + ip.Substring(2);
+            var addrs = ip.Split("省", "自治区", "市", "区", "县");
+            if (addrs != null && addrs.Length >= 2)
+            {
+                var prov = Area.FindByName(0, addrs[0]);
+                if (prov != null)
+                {
+                    node.ProvinceID = prov.ID;
+
+                    var city = Area.FindByName(prov.ID, addrs[1]);
+                    if (city != null)
+                        node.CityID = city.ID;
+                    else
+                        node.CityID = 0;
+                }
+            }
         }
         #endregion
 
@@ -402,6 +430,8 @@ namespace Stardust.Server.Controllers
             var olt = NodeOnline.GetOrAdd(sid);
             olt.NodeID = node.ID;
             olt.Name = node.Name;
+            olt.ProvinceID = node.ProvinceID;
+            olt.CityID = node.CityID;
 
             olt.Version = node.Version;
             olt.CompileTime = node.CompileTime;
