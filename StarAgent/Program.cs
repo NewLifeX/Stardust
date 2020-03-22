@@ -112,7 +112,7 @@ namespace StarAgent
             _Client = null;
         }
 
-        private static void CheckUpgrade(StarClient client, String channel)
+        private void CheckUpgrade(StarClient client, String channel)
         {
             // 检查更新
             var ur = client.Upgrade(channel).Result;
@@ -123,8 +123,11 @@ namespace StarAgent
                 // 强制更新时，马上重启
                 if (rs && ur.Force)
                 {
+                    StopWork("Upgrade");
+
                     var p = Process.GetCurrentProcess();
                     p.Close();
+                    p.Kill(true);
                 }
             }
         }
