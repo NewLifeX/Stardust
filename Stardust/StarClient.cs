@@ -3,13 +3,18 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using NewLife;
+using NewLife.Http;
 using NewLife.Log;
 using NewLife.Reflection;
 using NewLife.Remoting;
+using NewLife.Security;
+using NewLife.Serialization;
 using NewLife.Threading;
+using NewLife.Web;
 using Stardust.Models;
 using Stardust.Services;
 
@@ -318,6 +323,87 @@ namespace Stardust
         #endregion
 
         #region 更新
+        /// <summary>获取更新信息</summary>
+        /// <param name="channel"></param>
+        /// <returns></returns>
+        public async Task<UpgradeInfo> Upgrade(String channel)
+        {
+            XTrace.WriteLine("检查更新：{0}", channel);
+
+            var rs = await UpgradeAsync(channel);
+            if (rs != null)
+            {
+                XTrace.WriteLine("发现更新：{0}", rs.ToJson(true));
+            }
+
+            return rs;
+        }
+
+        /// <summary>执行更新</summary>
+        /// <param name="ur"></param>
+        /// <returns></returns>
+        public Boolean ProcessUpgrade(UpgradeInfo ur)
+        {
+            XTrace.WriteLine("执行更新：{0} {1}", ur.Version, ur.Source);
+
+            var dest = ".";
+            var url = ur.Source;
+
+            try
+            {
+                // 需要下载更新包
+                if (!url.IsNullOrEmpty())
+                {
+                    var fileName = Path.GetFileName(url);
+                    if (!fileName.EndsWithIgnoreCase(".zip")) fileName = Rand.NextString(8) + ".zip";
+                    fileName = Path.GetTempPath().CombinePath(fileName).EnsureDirectory(true);
+
+                    // 清理
+                    NewLife.Net.Upgrade.DeleteBuckup(dest);
+
+                    // 下载
+                    var sw = Stopwatch.StartNew();
+                    var client = new HttpClient();
+                    client.DownloadFileAsync(url, fileName).Wait();
+
+                    sw.Stop();
+                    XTrace.WriteLine("下载 {0} 到 {1} 完成，耗时 {2} 。", url, fileName, sw.Elapsed);
+
+                    // 解压
+                    var source = fileName.TrimEnd(".zip");
+                    if (Directory.Exists(source)) Directory.Delete(source, true);
+                    source.EnsureDirectory(false);
+                    fileName.AsFile().Extract(source, true);
+
+                    // 覆盖
+                    NewLife.Net.Upgrade.CopyAndReplace(source, dest);
+                    if (Directory.Exists(source)) Directory.Delete(source, true);
+                }
+
+                // 升级处理命令，可选
+                var cmd = ur.Executor?.Trim();
+                if (!cmd.IsNullOrEmpty())
+                {
+                    XTrace.WriteLine("执行更新命令：{0}", cmd);
+
+                    var p = cmd.IndexOf(' ');
+                    if (p < 0)
+                        Process.Start(cmd);
+                    else
+                        Process.Start(cmd.Substring(0, p), cmd.Substring(p + 1));
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteLine("更新失败！");
+                XTrace.WriteException(ex);
+
+                return false;
+            }
+        }
+
         /// <summary>更新</summary>
         /// <param name="channel"></param>
         /// <returns></returns>

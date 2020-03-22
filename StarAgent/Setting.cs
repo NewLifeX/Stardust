@@ -16,6 +16,10 @@ namespace StarAgent
         /// <summary>服务地址端口。默认为空，子网内自动发现</summary>
         [Description("服务地址端口。默认为空，子网内自动发现")]
         public String Server { get; set; } = "";
+
+        /// <summary>更新通道。默认Release</summary>
+        [Description("更新通道。默认Release")]
+        public String Channel { get; set; } = "Release";
         #endregion
 
         #region 构造

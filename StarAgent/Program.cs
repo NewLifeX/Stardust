@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using NewLife;
 using NewLife.Agent;
@@ -56,7 +57,9 @@ namespace StarAgent
                 Log = XTrace.Log,
             };
 
-            Task.Run(client.Login);
+            //todo 首次联网不通时，会有麻烦
+            var set = Setting.Current;
+            Task.Run(client.Login).ContinueWith(t => CheckUpgrade(client, set.Channel));
 
             _Client = client;
         }
@@ -84,6 +87,23 @@ namespace StarAgent
 
             _Client.TryDispose();
             _Client = null;
+        }
+
+        private static void CheckUpgrade(StarClient client, String channel)
+        {
+            // 检查更新
+            var ur = client.Upgrade(channel).Result;
+            if (ur != null)
+            {
+                var rs = client.ProcessUpgrade(ur);
+
+                // 强制更新时，马上重启
+                if (rs && ur.Force)
+                {
+                    var p = Process.GetCurrentProcess();
+                    p.Close();
+                }
+            }
         }
 
         #region 自动发现服务端
