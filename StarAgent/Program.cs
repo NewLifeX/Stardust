@@ -105,7 +105,8 @@ namespace StarAgent
         {
             base.StopWork(reason);
 
-            _Manager.TryDispose();
+            _Manager.Stop(reason);
+            //_Manager.TryDispose();
 
             _Client.TryDispose();
             _Client = null;

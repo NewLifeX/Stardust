@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using NewLife;
 using NewLife.Log;
@@ -23,7 +25,7 @@ namespace Stardust
         {
             base.Dispose(disposing);
 
-            Stop();
+            Stop(disposing ? "Dispose" : "GC");
         }
         #endregion
 
@@ -45,11 +47,20 @@ namespace Stardust
         {
             WriteLog("启动应用[{0}]：{1} {2}", service.Name, service.FileName, service.Arguments);
 
+            // 修正路径
+            var workDir = "";
+            var file = service.FileName;
+            if (file.Contains("/") || file.Contains("\\"))
+            {
+                file = file.GetFullPath();
+                workDir = Path.GetDirectoryName(file);
+            }
+
             var si = new ProcessStartInfo
             {
-                FileName = service.FileName,
+                FileName = file,
                 Arguments = service.Arguments,
-                WorkingDirectory = service.WorkingDirectory,
+                WorkingDirectory = workDir,
             };
 
             var retry = service.Retry;
@@ -67,18 +78,23 @@ namespace Stardust
                 catch (Exception ex)
                 {
                     Log?.Write(LogLevel.Error, "{0}", ex);
+
+                    Thread.Sleep(5_000);
                 }
             }
 
             return null;
         }
 
-        public void Stop()
+        public void Stop(String reason)
         {
             foreach (var item in _processes)
             {
+                WriteLog("停止应用[{0}] PID={1} {2}", item.ProcessName, item.Id, reason);
+
                 item.Kill();
             }
+            _processes.Clear();
         }
         #endregion
 
