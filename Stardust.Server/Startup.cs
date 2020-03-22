@@ -1,4 +1,5 @@
-﻿using System.Text.Encodings.Web;
+﻿using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -17,6 +18,8 @@ namespace Stardust.Server
 
         public void ConfigureServices(IServiceCollection services)
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             services.AddHttpClient();
 
             services.AddControllers()
