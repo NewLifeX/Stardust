@@ -300,9 +300,9 @@ namespace Stardust.Server.Controllers
 
         private void FixArea(Node node)
         {
-            if (node.CreateIP.IsNullOrEmpty()) return;
+            if (node.UpdateIP.IsNullOrEmpty()) return;
 
-            var ip = node.CreateIP.IPToAddress();
+            var ip = node.UpdateIP.IPToAddress();
             if (ip.IsNullOrEmpty()) return;
 
             if (ip.StartsWith("广西")) ip = "广西自治区" + ip.Substring(2);
@@ -315,6 +315,8 @@ namespace Stardust.Server.Controllers
                     node.ProvinceID = prov.ID;
 
                     var city = Area.FindByName(prov.ID, addrs[1]);
+                    // 特殊处理直辖市
+                    if (city == null) city = Area.FindByName(prov.ID, "市辖区");
                     if (city != null)
                         node.CityID = city.ID;
                     else
@@ -340,6 +342,8 @@ namespace Stardust.Server.Controllers
             if (node != null)
             {
                 var code = node.Code;
+                FixArea(node);
+                node.SaveAsync();
 
                 var olt = GetOnline(code, node);
                 if (olt == null) olt = CreateOnline(code, node);
