@@ -1,12 +1,14 @@
 ﻿using NewLife.Configuration;
+using NewLife.Xml;
+using Stardust.Models;
 using System;
 using System.ComponentModel;
 
 namespace StarAgent
 {
     /// <summary>配置</summary>
-    [Config("Star")]
-    public class Setting : Config<Setting>
+    [XmlConfigFile(@"Config\Star.config", 15_000)]
+    public class Setting : XmlConfig<Setting>
     {
         #region 属性
         /// <summary>调试开关。默认true</summary>
@@ -20,6 +22,10 @@ namespace StarAgent
         /// <summary>更新通道。默认Release</summary>
         [Description("更新通道。默认Release")]
         public String Channel { get; set; } = "Release";
+
+        /// <summary>应用服务集合</summary>
+        [Description("应用服务集合")]
+        public ServiceInfo[] Services { get; set; }
         #endregion
 
         #region 构造
@@ -27,6 +33,29 @@ namespace StarAgent
         //public Setting()
         //{
         //}
+        #endregion
+
+        #region 方法
+        protected override void OnLoaded()
+        {
+            if (Services == null || Services.Length == 0)
+            {
+                var si = new ServiceInfo
+                {
+                    Name = "test",
+                    FileName = "cmd",
+                    Arguments = "ping newlifex.com",
+
+                    AutoStart = false,
+                    AutoRestart = true,
+                    RestartExistCodes = "0,1,3",
+                };
+
+                Services = new[] { si };
+            }
+
+            base.OnLoaded();
+        }
         #endregion
     }
 }

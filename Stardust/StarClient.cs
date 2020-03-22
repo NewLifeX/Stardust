@@ -107,6 +107,9 @@ namespace Stardust
                     if (_timer == null)
                     {
                         _timer = new TimerX(s => Ping().Wait(), null, 5_000, 60_000, "Device") { Async = true };
+#if DEBUG
+                        _timer.Scheduler.Log = XTrace.Log;
+#endif
                     }
                 }
             }

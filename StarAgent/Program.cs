@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
+using NewLife.Threading;
 using Stardust;
 
 namespace StarAgent
@@ -34,18 +35,13 @@ namespace StarAgent
             AddMenu('t', "测试", Test);
         }
 
+        TimerX _timer;
         StarClient _Client;
-        private void Init()
+        ServiceManager _Manager;
+        private void StartClient()
         {
-            if (_Client == null)
-            {
-                var set = Setting.Current;
-                InitClient(set.Server);
-            }
-        }
-
-        private void InitClient(String server)
-        {
+            var set = Setting.Current;
+            var server = set.Server;
             if (server.IsNullOrEmpty()) return;
 
             WriteLog("初始化服务端地址：{0}", server);
@@ -57,11 +53,24 @@ namespace StarAgent
                 Log = XTrace.Log,
             };
 
-            //todo 首次联网不通时，会有麻烦
-            var set = Setting.Current;
-            Task.Run(client.Login).ContinueWith(t => CheckUpgrade(client, set.Channel));
+            // 可能需要多次尝试
+            _timer = new TimerX(TryConnectServer, client, 0, 5_000) { Async = true };
 
             _Client = client;
+        }
+
+        private void TryConnectServer(Object state)
+        {
+            var client = state as StarClient;
+            var set = Setting.Current;
+            //Task.Run(client.Login).ContinueWith(t => CheckUpgrade(client, set.Channel));
+            client.Login().Wait();
+            CheckUpgrade(client, set.Channel);
+
+            // 登录成功，销毁定时器
+            //TimerX.Current.Period = 0;
+            _timer.TryDispose();
+            _timer = null;
         }
 
         /// <summary>服务启动</summary>
@@ -71,7 +80,18 @@ namespace StarAgent
         /// </remarks>
         protected override void StartWork(String reason)
         {
-            Init();
+            var set = Setting.Current;
+
+            StartClient();
+
+            // 应用服务管理
+            _Manager = new ServiceManager
+            {
+                Services = set.Services,
+
+                Log = XTrace.Log,
+            };
+            _Manager.Start();
 
             base.StartWork(reason);
         }
@@ -84,6 +104,8 @@ namespace StarAgent
         protected override void StopWork(String reason)
         {
             base.StopWork(reason);
+
+            _Manager.TryDispose();
 
             _Client.TryDispose();
             _Client = null;
