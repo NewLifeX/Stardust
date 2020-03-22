@@ -127,7 +127,7 @@ namespace StarAgent
 
                     var p = Process.GetCurrentProcess();
                     p.Close();
-                    p.Kill(true);
+                    p.Kill();
                 }
             }
         }
