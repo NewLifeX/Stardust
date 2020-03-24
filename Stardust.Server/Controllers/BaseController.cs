@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -29,6 +28,9 @@ namespace Stardust.Server.Controllers
 
         /// <summary>用户主机</summary>
         public String UserHost => HttpContext.GetUserHost();
+
+        /// <summary>节点引用，令牌无效时使用</summary>
+        protected Node _nodeForHistory;
         #endregion
 
         #region 校验
@@ -42,7 +44,7 @@ namespace Stardust.Server.Controllers
                 var action = context.HttpContext.Request.Path + "";
                 if (context.ActionDescriptor is ControllerActionDescriptor act) action = $"{act.ControllerName}/{act.ActionName}";
 
-                var node = Session != null ? Session["Node"] as Node : null;
+                var node =  Session?["Node"] as Node ?? _nodeForHistory;
                 WriteHistory(node, action, false, context.Exception?.GetTrue() + "");
             }
         }
@@ -135,6 +137,7 @@ namespace Stardust.Server.Controllers
 
             var code = rlist[0];
             var node = Node.FindByCode(code) ?? new Node { Code = code };
+            _nodeForHistory = node;
 
             var provider = GetTokenProvider(false);
 

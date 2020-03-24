@@ -30,6 +30,7 @@ namespace Stardust.Server.Controllers
 
             var node = Node.FindByCode(code, true);
             var di = inf.Node;
+            _nodeForHistory = node;
 
             // 校验唯一编码，防止客户端拷贝配置
             if (node != null) node = CheckNode(node, di);
@@ -51,6 +52,7 @@ namespace Stardust.Server.Controllers
             }
 
             if (node == null) throw new ApiException(12, "节点鉴权失败");
+            _nodeForHistory = node;
 
             var msg = "";
             var success = false;
