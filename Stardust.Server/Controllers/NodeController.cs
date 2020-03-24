@@ -316,9 +316,7 @@ namespace Stardust.Server.Controllers
                 {
                     node.ProvinceID = prov.ID;
 
-                    var city = Area.FindByName(prov.ID, addrs[1]);
-                    // 特殊处理直辖市
-                    if (city == null) city = Area.FindByName(prov.ID, "市辖区");
+                    var city = Area.FindByNames(addrs);
                     if (city != null)
                         node.CityID = city.ID;
                     else
