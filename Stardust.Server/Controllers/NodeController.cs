@@ -75,7 +75,7 @@ namespace Stardust.Server.Controllers
                 // 设置令牌，可能已经进行用户登录
                 CreateToken(node.Code);
 
-                Session["Node"] = node;
+                if (Session != null) Session["Node"] = node;
 
                 // 在线记录
                 var olt = GetOnline(code, node);
