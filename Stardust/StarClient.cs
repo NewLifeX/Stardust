@@ -105,7 +105,7 @@ namespace Stardust
             Token = rs.Token;
             Logined = true;
 
-            OnLogined(this, EventArgs.Empty);
+            OnLogined?.Invoke(this, EventArgs.Empty);
 
             if (Logined && _timer == null)
             {

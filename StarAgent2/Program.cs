@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
+using System.Reflection;
 using System.Threading;
 using NewLife;
 using NewLife.Log;
+using NewLife.Reflection;
 using NewLife.Threading;
 using Stardust;
 
@@ -13,6 +16,17 @@ namespace StarAgent2
         static void Main(string[] args)
         {
             XTrace.UseConsole();
+
+            XTrace.WriteLine("FullPath:{0}", ".".GetFullPath());
+            XTrace.WriteLine("BasePath:{0}", ".".GetBasePath());
+            XTrace.WriteLine("TempPath:{0}", Path.GetTempPath());
+
+            var mi = MachineInfo.Current ?? MachineInfo.RegisterAsync().Result;
+
+            foreach (var pi in mi.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                XTrace.WriteLine("{0}:\t{1}", pi.Name, mi.GetValue(pi));
+            }
 
             var set = StarAgent.Setting.Current;
 
@@ -46,6 +60,18 @@ namespace StarAgent2
                 Code = Environment.MachineName,
                 Secret = Environment.MachineName,
                 Log = XTrace.Log,
+            };
+
+            // 登录后保存证书
+            client.OnLogined += (s, e) =>
+            {
+                var inf = client.Info;
+                if (inf != null && !inf.Code.IsNullOrEmpty())
+                {
+                    set.Code = inf.Code;
+                    set.Secret = inf.Secret;
+                    set.Save();
+                }
             };
 
             // 可能需要多次尝试
