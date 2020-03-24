@@ -57,8 +57,8 @@ namespace StarAgent2
 
             var client = new StarClient(server)
             {
-                Code = Environment.MachineName,
-                Secret = Environment.MachineName,
+                Code = set.Code,
+                Secret = set.Secret,
                 Log = XTrace.Log,
             };
 
