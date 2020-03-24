@@ -60,7 +60,7 @@ namespace Stardust.Data.Nodes
 
         /// <summary>城市名</summary>
         [Map(__.CityID)]
-        public String CityName => City + "";
+        public String CityName => City?.Path;
         #endregion
 
         #region 扩展查询
