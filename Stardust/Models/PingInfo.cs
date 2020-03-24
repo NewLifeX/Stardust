@@ -18,8 +18,8 @@ namespace Stardust.Models
         /// <summary>MAC地址</summary>
         public String Macs { get; set; }
 
-        /// <summary>串口</summary>
-        public String COMs { get; set; }
+        ///// <summary>串口</summary>
+        //public String COMs { get; set; }
 
         /// <summary>进程列表</summary>
         public String Processes { get; set; }

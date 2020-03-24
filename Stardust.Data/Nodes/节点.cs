@@ -170,14 +170,6 @@ namespace Stardust.Data.Nodes
         [BindColumn("MACs", "网卡", "")]
         public String MACs { get => _MACs; set { if (OnPropertyChanging(__.MACs, value)) { _MACs = value; OnPropertyChanged(__.MACs); } } }
 
-        private String _COMs;
-        /// <summary>串口</summary>
-        [DisplayName("串口")]
-        [Description("串口")]
-        [DataObjectField(false, false, true, 200)]
-        [BindColumn("COMs", "串口", "")]
-        public String COMs { get => _COMs; set { if (OnPropertyChanging(__.COMs, value)) { _COMs = value; OnPropertyChanged(__.COMs); } } }
-
         private String _InstallPath;
         /// <summary>安装路径</summary>
         [DisplayName("安装路径")]
@@ -336,7 +328,6 @@ namespace Stardust.Data.Nodes
                     case __.Uuid: return _Uuid;
                     case __.MachineGuid: return _MachineGuid;
                     case __.MACs: return _MACs;
-                    case __.COMs: return _COMs;
                     case __.InstallPath: return _InstallPath;
                     case __.Runtime: return _Runtime;
                     case __.ProvinceID: return _ProvinceID;
@@ -379,7 +370,6 @@ namespace Stardust.Data.Nodes
                     case __.Uuid: _Uuid = Convert.ToString(value); break;
                     case __.MachineGuid: _MachineGuid = Convert.ToString(value); break;
                     case __.MACs: _MACs = Convert.ToString(value); break;
-                    case __.COMs: _COMs = Convert.ToString(value); break;
                     case __.InstallPath: _InstallPath = Convert.ToString(value); break;
                     case __.Runtime: _Runtime = Convert.ToString(value); break;
                     case __.ProvinceID: _ProvinceID = value.ToInt(); break;
@@ -462,9 +452,6 @@ namespace Stardust.Data.Nodes
 
             /// <summary>网卡</summary>
             public static readonly Field MACs = FindByName(__.MACs);
-
-            /// <summary>串口</summary>
-            public static readonly Field COMs = FindByName(__.COMs);
 
             /// <summary>安装路径</summary>
             public static readonly Field InstallPath = FindByName(__.InstallPath);
@@ -577,9 +564,6 @@ namespace Stardust.Data.Nodes
             /// <summary>网卡</summary>
             public const String MACs = "MACs";
 
-            /// <summary>串口</summary>
-            public const String COMs = "COMs";
-
             /// <summary>安装路径</summary>
             public const String InstallPath = "InstallPath";
 
@@ -691,9 +675,6 @@ namespace Stardust.Data.Nodes
 
         /// <summary>网卡</summary>
         String MACs { get; set; }
-
-        /// <summary>串口</summary>
-        String COMs { get; set; }
 
         /// <summary>安装路径</summary>
         String InstallPath { get; set; }

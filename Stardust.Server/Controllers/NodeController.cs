@@ -406,7 +406,7 @@ namespace Stardust.Server.Controllers
 
             if (!inf.Processes.IsNullOrEmpty()) olt.Processes = inf.Processes;
             if (!inf.Macs.IsNullOrEmpty()) olt.MACs = inf.Macs;
-            if (!inf.COMs.IsNullOrEmpty()) olt.COMs = inf.COMs;
+            //if (!inf.COMs.IsNullOrEmpty()) olt.COMs = inf.COMs;
         }
 
         /// <summary></summary>
@@ -441,7 +441,7 @@ namespace Stardust.Server.Controllers
             olt.CompileTime = node.CompileTime;
             olt.Memory = node.Memory;
             olt.MACs = node.MACs;
-            olt.COMs = node.COMs;
+            //olt.COMs = node.COMs;
             olt.Token = Token;
             olt.CreateIP = ip;
 

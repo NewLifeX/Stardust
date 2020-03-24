@@ -66,14 +66,6 @@ namespace Stardust.Data.Nodes
         [BindColumn("CityID", "城市", "")]
         public Int32 CityID { get => _CityID; set { if (OnPropertyChanging(__.CityID, value)) { _CityID = value; OnPropertyChanged(__.CityID); } } }
 
-        private String _Action;
-        /// <summary>操作。客户端正在指定的功能动作</summary>
-        [DisplayName("操作")]
-        [Description("操作。客户端正在指定的功能动作")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("Action", "操作。客户端正在指定的功能动作", "")]
-        public String Action { get => _Action; set { if (OnPropertyChanging(__.Action, value)) { _Action = value; OnPropertyChanged(__.Action); } } }
-
         private Int32 _PingCount;
         /// <summary>心跳</summary>
         [DisplayName("心跳")]
@@ -162,14 +154,6 @@ namespace Stardust.Data.Nodes
         [BindColumn("MACs", "网卡", "")]
         public String MACs { get => _MACs; set { if (OnPropertyChanging(__.MACs, value)) { _MACs = value; OnPropertyChanged(__.MACs); } } }
 
-        private String _COMs;
-        /// <summary>串口</summary>
-        [DisplayName("串口")]
-        [Description("串口")]
-        [DataObjectField(false, false, true, 200)]
-        [BindColumn("COMs", "串口", "")]
-        public String COMs { get => _COMs; set { if (OnPropertyChanging(__.COMs, value)) { _COMs = value; OnPropertyChanged(__.COMs); } } }
-
         private String _Processes;
         /// <summary>进程列表</summary>
         [DisplayName("进程列表")]
@@ -235,7 +219,6 @@ namespace Stardust.Data.Nodes
                     case __.Name: return _Name;
                     case __.ProvinceID: return _ProvinceID;
                     case __.CityID: return _CityID;
-                    case __.Action: return _Action;
                     case __.PingCount: return _PingCount;
                     case __.Version: return _Version;
                     case __.CompileTime: return _CompileTime;
@@ -247,7 +230,6 @@ namespace Stardust.Data.Nodes
                     case __.Offset: return _Offset;
                     case __.LocalTime: return _LocalTime;
                     case __.MACs: return _MACs;
-                    case __.COMs: return _COMs;
                     case __.Processes: return _Processes;
                     case __.Token: return _Token;
                     case __.Creator: return _Creator;
@@ -267,7 +249,6 @@ namespace Stardust.Data.Nodes
                     case __.Name: _Name = Convert.ToString(value); break;
                     case __.ProvinceID: _ProvinceID = value.ToInt(); break;
                     case __.CityID: _CityID = value.ToInt(); break;
-                    case __.Action: _Action = Convert.ToString(value); break;
                     case __.PingCount: _PingCount = value.ToInt(); break;
                     case __.Version: _Version = Convert.ToString(value); break;
                     case __.CompileTime: _CompileTime = value.ToDateTime(); break;
@@ -279,7 +260,6 @@ namespace Stardust.Data.Nodes
                     case __.Offset: _Offset = value.ToInt(); break;
                     case __.LocalTime: _LocalTime = value.ToDateTime(); break;
                     case __.MACs: _MACs = Convert.ToString(value); break;
-                    case __.COMs: _COMs = Convert.ToString(value); break;
                     case __.Processes: _Processes = Convert.ToString(value); break;
                     case __.Token: _Token = Convert.ToString(value); break;
                     case __.Creator: _Creator = Convert.ToString(value); break;
@@ -314,9 +294,6 @@ namespace Stardust.Data.Nodes
             /// <summary>城市</summary>
             public static readonly Field CityID = FindByName(__.CityID);
 
-            /// <summary>操作。客户端正在指定的功能动作</summary>
-            public static readonly Field Action = FindByName(__.Action);
-
             /// <summary>心跳</summary>
             public static readonly Field PingCount = FindByName(__.PingCount);
 
@@ -349,9 +326,6 @@ namespace Stardust.Data.Nodes
 
             /// <summary>网卡</summary>
             public static readonly Field MACs = FindByName(__.MACs);
-
-            /// <summary>串口</summary>
-            public static readonly Field COMs = FindByName(__.COMs);
 
             /// <summary>进程列表</summary>
             public static readonly Field Processes = FindByName(__.Processes);
@@ -395,9 +369,6 @@ namespace Stardust.Data.Nodes
             /// <summary>城市</summary>
             public const String CityID = "CityID";
 
-            /// <summary>操作。客户端正在指定的功能动作</summary>
-            public const String Action = "Action";
-
             /// <summary>心跳</summary>
             public const String PingCount = "PingCount";
 
@@ -430,9 +401,6 @@ namespace Stardust.Data.Nodes
 
             /// <summary>网卡</summary>
             public const String MACs = "MACs";
-
-            /// <summary>串口</summary>
-            public const String COMs = "COMs";
 
             /// <summary>进程列表</summary>
             public const String Processes = "Processes";
@@ -477,9 +445,6 @@ namespace Stardust.Data.Nodes
         /// <summary>城市</summary>
         Int32 CityID { get; set; }
 
-        /// <summary>操作。客户端正在指定的功能动作</summary>
-        String Action { get; set; }
-
         /// <summary>心跳</summary>
         Int32 PingCount { get; set; }
 
@@ -512,9 +477,6 @@ namespace Stardust.Data.Nodes
 
         /// <summary>网卡</summary>
         String MACs { get; set; }
-
-        /// <summary>串口</summary>
-        String COMs { get; set; }
 
         /// <summary>进程列表</summary>
         String Processes { get; set; }

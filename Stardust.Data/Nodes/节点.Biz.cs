@@ -41,8 +41,8 @@ namespace Stardust.Data.Nodes
 
             var len = _.MACs.Length;
             if (MACs != null && len > 0 && MACs.Length > len) MACs = MACs.Substring(0, len);
-            len = _.COMs.Length;
-            if (COMs != null && len > 0 && COMs.Length > len) COMs = COMs.Substring(0, len);
+            //len = _.COMs.Length;
+            //if (COMs != null && len > 0 && COMs.Length > len) COMs = COMs.Substring(0, len);
         }
 
         /// <summary>已重载</summary>
