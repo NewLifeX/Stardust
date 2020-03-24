@@ -48,9 +48,21 @@ namespace StarAgent
 
             var client = new StarClient(server)
             {
-                Code = Environment.MachineName,
-                Secret = Environment.MachineName,
+                Code = set.Code,
+                Secret = set.Secret,
                 Log = XTrace.Log,
+            };
+
+            // 登录后保存证书
+            client.OnLogined += (s, e) =>
+            {
+                var inf = client.Info;
+                if (inf != null && !inf.Code.IsNullOrEmpty())
+                {
+                    set.Code = inf.Code;
+                    set.Secret = inf.Secret;
+                    set.Save();
+                }
             };
 
             // 可能需要多次尝试

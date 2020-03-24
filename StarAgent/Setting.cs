@@ -15,6 +15,14 @@ namespace StarAgent
         [Description("调试开关。默认true")]
         public Boolean Debug { get; set; } = true;
 
+        /// <summary>证书</summary>
+        [Description("证书")]
+        public String Code { get; set; }
+
+        /// <summary>密钥</summary>
+        [Description("密钥")]
+        public String Secret { get; set; }
+
         /// <summary>服务地址端口。默认为空，子网内自动发现</summary>
         [Description("服务地址端口。默认为空，子网内自动发现")]
         public String Server { get; set; } = "";

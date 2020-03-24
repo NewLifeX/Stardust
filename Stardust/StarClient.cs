@@ -33,6 +33,9 @@ namespace Stardust
         /// <summary>是否已登录</summary>
         public Boolean Logined { get; set; }
 
+        /// <summary>登录完成后触发</summary>
+        public event EventHandler OnLogined;
+
         /// <summary>最后一次登录成功后的消息</summary>
         public LoginResponse Info { get; private set; }
 
@@ -88,6 +91,7 @@ namespace Stardust
             // 登录前清空令牌，避免服务端使用上一次信息
             Token = null;
             Logined = false;
+            Info = null;
 
             var rs = Info = await LoginAsync(info);
             if (rs != null && !rs.Code.IsNullOrEmpty())
@@ -100,6 +104,8 @@ namespace Stardust
             // 登录后设置用于用户认证的token
             Token = rs.Token;
             Logined = true;
+
+            OnLogined(this, EventArgs.Empty);
 
             if (Logined && _timer == null)
             {
@@ -116,7 +122,7 @@ namespace Stardust
                 }
             }
 
-            return Info;
+            return rs;
         }
 
         /// <summary>获取登录信息</summary>
