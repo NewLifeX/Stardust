@@ -85,6 +85,8 @@ namespace Stardust
 
             var info = GetLoginInfo();
 
+            // 登录前清空令牌，避免服务端使用上一次信息
+            Token = null;
             Logined = false;
 
             var rs = Info = await LoginAsync(info);
@@ -97,7 +99,6 @@ namespace Stardust
 
             // 登录后设置用于用户认证的token
             Token = rs.Token;
-
             Logined = true;
 
             if (Logined && _timer == null)
@@ -108,6 +109,7 @@ namespace Stardust
                     {
                         _timer = new TimerX(s => Ping().Wait(), null, 5_000, 60_000, "Device") { Async = true };
 #if DEBUG
+                        _timer.Period = 5_000;
                         _timer.Scheduler.Log = XTrace.Log;
 #endif
                     }
@@ -299,13 +301,11 @@ namespace Stardust
             }
             catch (Exception ex)
             {
-                if (ex is AggregateException agg)
+                var ex2 = ex.GetTrue();
+                if (ex2 is ApiException aex && (aex.Code == 402 || aex.Code == 403))
                 {
-                    if (agg.InnerExceptions[0] is ApiException aex && aex.Code == 402)
-                    {
-                        XTrace.WriteLine("重新登录");
-                        return Login();
-                    }
+                    XTrace.WriteLine("重新登录");
+                    return Login();
                 }
 
                 XTrace.WriteLine("心跳异常 {0}", (String)ex.GetTrue().Message);
