@@ -47,6 +47,10 @@ namespace StarAgent3
                     sb.AppendLine("[Install]");
                     sb.AppendLine("WantedBy=multi-user.target");
 
+                    // sudo systemctl daemon-reload
+                    // sudo systemctl enable StarAgent
+                    // sudo systemctl start StarAgent
+
                     File.WriteAllText(file, sb.ToString());
                 }
             }
