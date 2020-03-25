@@ -1,0 +1,10 @@
+﻿{
+  "profiles": {
+    "StarAgent3": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

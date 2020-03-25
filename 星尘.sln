@@ -27,7 +27,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClientTest", "ClientTest\ClientTest.csproj", "{7DE10A4D-1749-4474-A6B2-F52CA8462813}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StarAgent2", "StarAgent2\StarAgent2.csproj", "{8F868ED3-102A-446C-AC1B-D635FF7EA772}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StarAgent2", "StarAgent2\StarAgent2.csproj", "{8F868ED3-102A-446C-AC1B-D635FF7EA772}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StarAgent3", "StarAgent3\StarAgent3.csproj", "{29BD9661-DE43-4AA5-A2D0-0106CBE5AF54}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -67,6 +69,10 @@ Global
 		{8F868ED3-102A-446C-AC1B-D635FF7EA772}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8F868ED3-102A-446C-AC1B-D635FF7EA772}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8F868ED3-102A-446C-AC1B-D635FF7EA772}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29BD9661-DE43-4AA5-A2D0-0106CBE5AF54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29BD9661-DE43-4AA5-A2D0-0106CBE5AF54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29BD9661-DE43-4AA5-A2D0-0106CBE5AF54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29BD9661-DE43-4AA5-A2D0-0106CBE5AF54}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
