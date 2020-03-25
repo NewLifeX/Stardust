@@ -1,10 +1,12 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NewLife;
 using NewLife.Log;
+using NewLife.Reflection;
 
 namespace StarAgent3
 {
@@ -25,14 +27,46 @@ namespace StarAgent3
                 XTrace.WriteLine("{0}:\t{1}", pi.Name, mi.GetValue(pi));
             }
 
+            // 检测systemd
+            if (Runtime.Linux)
+            {
+                var file = "/etc/systemd/system/StarAgent.service";
+                if (!File.Exists(file))
+                {
+                    var sb = new StringBuilder();
+                    sb.AppendLine("[Unit]");
+                    sb.AppendLine($"Description= 星尘代理");
+
+                    sb.AppendLine();
+                    sb.AppendLine("[Service]");
+                    sb.AppendLine("Type=notify");
+                    sb.AppendLine($"ExecStart=/usr/bin/dotnet {typeof(Program).Assembly.Location}");
+
+                    sb.AppendLine();
+                    sb.AppendLine("[Install]");
+                    sb.AppendLine("WantedBy=multi-user.target");
+
+                    File.WriteAllText(file, sb.ToString());
+                }
+            }
+
             CreateHostBuilder(args).Build().Run();
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
+        public static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            var builder = Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddHostedService<Worker>();
                 });
+
+            if (Runtime.Windows)
+                builder.UseWindowsService();
+            else if (Runtime.Linux)
+                builder.UseSystemd();
+
+            return builder;
+        }
     }
 }
