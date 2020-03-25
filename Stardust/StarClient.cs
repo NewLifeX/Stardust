@@ -14,7 +14,6 @@ using NewLife.Remoting;
 using NewLife.Security;
 using NewLife.Serialization;
 using NewLife.Threading;
-using NewLife.Web;
 using Stardust.Models;
 using Stardust.Services;
 
@@ -181,7 +180,7 @@ namespace Stardust
                 InstallPath = ".".GetFullPath(),
                 Runtime = Environment.Version + "",
 
-                Time = DateTime.Now,
+                Time = DateTime.UtcNow,
             };
 
             return di;
