@@ -39,7 +39,7 @@ namespace StarAgent3
 
                     sb.AppendLine();
                     sb.AppendLine("[Service]");
-                    sb.AppendLine("Type=notify");
+                    sb.AppendLine("Type=simple");
                     sb.AppendLine($"ExecStart=/usr/bin/dotnet {typeof(Program).Assembly.Location}");
 
                     sb.AppendLine();
