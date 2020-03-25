@@ -41,6 +41,7 @@ namespace StarAgent3
                     sb.AppendLine("[Service]");
                     sb.AppendLine("Type=simple");
                     sb.AppendLine($"ExecStart=/usr/bin/dotnet {typeof(Program).Assembly.Location}");
+                    sb.AppendLine("Restart=on-failure");
 
                     sb.AppendLine();
                     sb.AppendLine("[Install]");
