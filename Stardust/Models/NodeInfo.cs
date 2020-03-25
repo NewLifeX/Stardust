@@ -67,6 +67,9 @@ namespace Stardust.Models
         public String Runtime { get; set; }
 
         /// <summary>本地UTC时间</summary>
+        /// <remarks>
+        /// 跨系统传递UTC时间是严谨的，但是UTC时间序列化比较头疼，目前能够做到自己序列化后，自己能够解析出来，暂时用着，将来向netcore的system.text.json序列化迁移
+        /// </remarks>
         public DateTime Time { get; set; }
         #endregion
     }
