@@ -83,7 +83,7 @@ namespace Stardust.Server.Controllers
                 var olt = GetOnline(code, node);
                 if (olt == null) olt = CreateOnline(code, node);
 
-                olt.LocalTime = di.Time;
+                olt.LocalTime = di.Time.ToLocalTime();
                 olt.MACs = di.Macs;
                 //olt.COMs = di.COMs;
 
@@ -335,7 +335,7 @@ namespace Stardust.Server.Controllers
             var rs = new PingResponse
             {
                 Time = inf.Time,
-                ServerTime = DateTime.Now,
+                ServerTime = DateTime.UtcNow,
             };
 
             var node = Session["Node"] as Node;
@@ -397,7 +397,7 @@ namespace Stardust.Server.Controllers
             if (inf.CpuRate > 0) olt.CpuRate = inf.CpuRate;
             if (inf.Delay > 0) olt.Delay = inf.Delay;
 
-            var dt = inf.Time.ToDateTime();
+            var dt = inf.Time.ToDateTime().ToLocalTime();
             if (dt.Year > 2000)
             {
                 olt.LocalTime = dt;

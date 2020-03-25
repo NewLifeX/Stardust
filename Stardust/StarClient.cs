@@ -259,7 +259,7 @@ namespace Stardust
 
                 Processes = pcs.Join(),
 
-                Time = DateTime.Now.ToLong(),
+                Time = DateTime.UtcNow.ToLong(),
                 Delay = Delay,
             };
 
@@ -284,7 +284,7 @@ namespace Stardust
                     if (dt.Year > 2000)
                     {
                         // 计算延迟
-                        var ts = DateTime.Now - dt;
+                        var ts = DateTime.UtcNow - dt;
                         var ms = (Int32)ts.TotalMilliseconds;
                         if (Delay > 0)
                             Delay = (Delay + ms) / 2;

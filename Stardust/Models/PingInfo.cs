@@ -24,7 +24,7 @@ namespace Stardust.Models
         /// <summary>进程列表</summary>
         public String Processes { get; set; }
 
-        /// <summary>本地时间。ms毫秒</summary>
+        /// <summary>本地UTC时间。ms毫秒</summary>
         public Int64 Time { get; set; }
 
         /// <summary>延迟</summary>

@@ -66,7 +66,7 @@ namespace Stardust.Models
         /// <summary>运行时</summary>
         public String Runtime { get; set; }
 
-        /// <summary>本地时间</summary>
+        /// <summary>本地UTC时间</summary>
         public DateTime Time { get; set; }
         #endregion
     }
