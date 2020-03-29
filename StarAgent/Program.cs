@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
+using System.IO;
+using System.Reflection;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
+using NewLife.Reflection;
 using NewLife.Threading;
 using Stardust;
 
@@ -15,7 +17,7 @@ namespace StarAgent
     }
 
     /// <summary>服务类。名字可以自定义</summary>
-    class MyService : AgentServiceBase<MyService>
+    class MyService : ServiceBase
     {
         public MyService()
         {
@@ -32,7 +34,8 @@ namespace StarAgent
             }
 
             // 注册菜单，在控制台菜单中按 t 可以执行Test函数，主要用于临时处理数据
-            AddMenu('t', "测试", Test);
+            if (set.Server != "http://star.newlifex.com:6600") AddMenu('s', "使用星尘", UseStarServer);
+            AddMenu('t', "服务器信息", ShowMachineInfo);
         }
 
         TimerX _timer;
@@ -75,7 +78,6 @@ namespace StarAgent
         {
             var client = state as StarClient;
             var set = Setting.Current;
-            //Task.Run(client.Login).ContinueWith(t => CheckUpgrade(client, set.Channel));
             client.Login().Wait();
             CheckUpgrade(client, set.Channel);
 
@@ -144,69 +146,25 @@ namespace StarAgent
             }
         }
 
-        #region 自动发现服务端
-        //private ApiClient _udp;
-        //private TimerX _udp_timer;
-        //private void StartDiscover()
-        //{
-        //    var tc = new ApiClient("udp://255.255.255.255:6666")
-        //    {
-        //        UsePool = false,
-        //        Log = XTrace.Log,
-        //        EncoderLog = XTrace.Log,
-        //        Timeout = 1_000
-        //    };
-
-        //    tc.Open();
-
-        //    // 定时广播
-        //    _udp_timer = new TimerX(OnDiscover, tc, 0, 5_000) { Async = true };
-
-        //    _udp = tc;
-        //}
-
-        //private void OnDiscover(Object state)
-        //{
-        //    //var udp = new UdpServer();
-        //    //udp.Log = XTrace.Log;
-
-        //    //var ep = new IPEndPoint(IPAddress.Broadcast, 6666);
-        //    //var session = udp.CreateSession(ep);
-        //    //session.Send("Hello");
-
-        //    var tc = state as ApiClient;
-
-        //    var dic = tc.Invoke<IDictionary<String, Object>>("Discover", new { state = DateTime.Now.ToFullString() });
-        //    if (dic == null || dic.Count == 0) return;
-
-        //    var str = dic["Server"] + "";
-        //    if (str.IsNullOrEmpty()) return;
-
-        //    //WriteLog("收到[{0}]：{1}", tc, str);
-
-        //    if (!str.IsNullOrEmpty())
-        //    {
-        //        var uri = new NetUri(str);
-        //        if (!uri.Host.IsNullOrEmpty() && uri.Port > 0)
-        //        {
-        //            WriteLog("发现服务器：{0}", uri);
-
-        //            // 停止广播
-        //            _udp_timer.TryDispose();
-        //            _udp_timer = null;
-
-        //            _udp.TryDispose();
-        //            _udp = null;
-
-        //            InitClient(str);
-        //        }
-        //    }
-        //}
-        #endregion
-
-        /// <summary>数据测试，菜单t</summary>
-        public void Test()
+        public void UseStarServer()
         {
+            var set = Setting.Current;
+            set.Server = "http://star.newlifex.com:6600";
+            set.Save();
+        }
+
+        public void ShowMachineInfo()
+        {
+            XTrace.WriteLine("FullPath:{0}", ".".GetFullPath());
+            XTrace.WriteLine("BasePath:{0}", ".".GetBasePath());
+            XTrace.WriteLine("TempPath:{0}", Path.GetTempPath());
+
+            var mi = MachineInfo.Current ?? MachineInfo.RegisterAsync().Result;
+
+            foreach (var pi in mi.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                XTrace.WriteLine("{0}:\t{1}", pi.Name, mi.GetValue(pi));
+            }
         }
     }
 }
