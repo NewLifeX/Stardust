@@ -26,8 +26,8 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             _timer = new TimerX(DoNodeStat, null, 10_000, 60_000) { Async = true };
             _timerReport = new TimerX(DoReport, null, DateTime.Today.AddHours(8), 12 * 3600 * 1000) { Async = true };
 
-            // 先来一次
-            _timerReport.SetNext(10_000);
+            //// 先来一次
+            //_timerReport.SetNext(10_000);
         }
 
         protected override IEnumerable<NodeStat> Search(Pager p)
