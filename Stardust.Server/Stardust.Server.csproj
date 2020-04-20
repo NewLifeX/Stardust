@@ -10,7 +10,8 @@
     <FileVersion>1.0.2020.0312</FileVersion>
     <AssemblyVersion>1.0.*</AssemblyVersion>
     <Deterministic>false</Deterministic>
-    <OutputPath>..\BinServer</OutputPath>
+    <OutputPath>..\Bin\Server</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <DefineConstants>TRACE</DefineConstants>
