@@ -122,6 +122,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("CpuRate", "CPU率。占用率", "")]
         public Double CpuRate { get => _CpuRate; set { if (OnPropertyChanging(__.CpuRate, value)) { _CpuRate = value; OnPropertyChanged(__.CpuRate); } } }
 
+        private Double _Temperature;
+        /// <summary>温度</summary>
+        [DisplayName("温度")]
+        [Description("温度")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Temperature", "温度", "")]
+        public Double Temperature { get => _Temperature; set { if (OnPropertyChanging(__.Temperature, value)) { _Temperature = value; OnPropertyChanged(__.Temperature); } } }
+
         private Int32 _Delay;
         /// <summary>延迟。网络延迟，单位ms</summary>
         [DisplayName("延迟")]
@@ -226,6 +234,7 @@ namespace Stardust.Data.Nodes
                     case __.AvailableMemory: return _AvailableMemory;
                     case __.AvailableFreeSpace: return _AvailableFreeSpace;
                     case __.CpuRate: return _CpuRate;
+                    case __.Temperature: return _Temperature;
                     case __.Delay: return _Delay;
                     case __.Offset: return _Offset;
                     case __.LocalTime: return _LocalTime;
@@ -256,6 +265,7 @@ namespace Stardust.Data.Nodes
                     case __.AvailableMemory: _AvailableMemory = value.ToInt(); break;
                     case __.AvailableFreeSpace: _AvailableFreeSpace = value.ToInt(); break;
                     case __.CpuRate: _CpuRate = value.ToDouble(); break;
+                    case __.Temperature: _Temperature = value.ToDouble(); break;
                     case __.Delay: _Delay = value.ToInt(); break;
                     case __.Offset: _Offset = value.ToInt(); break;
                     case __.LocalTime: _LocalTime = value.ToDateTime(); break;
@@ -314,6 +324,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>CPU率。占用率</summary>
             public static readonly Field CpuRate = FindByName(__.CpuRate);
+
+            /// <summary>温度</summary>
+            public static readonly Field Temperature = FindByName(__.Temperature);
 
             /// <summary>延迟。网络延迟，单位ms</summary>
             public static readonly Field Delay = FindByName(__.Delay);
@@ -390,6 +403,9 @@ namespace Stardust.Data.Nodes
             /// <summary>CPU率。占用率</summary>
             public const String CpuRate = "CpuRate";
 
+            /// <summary>温度</summary>
+            public const String Temperature = "Temperature";
+
             /// <summary>延迟。网络延迟，单位ms</summary>
             public const String Delay = "Delay";
 
@@ -465,6 +481,9 @@ namespace Stardust.Data.Nodes
 
         /// <summary>CPU率。占用率</summary>
         Double CpuRate { get; set; }
+
+        /// <summary>温度</summary>
+        Double Temperature { get; set; }
 
         /// <summary>延迟。网络延迟，单位ms</summary>
         Int32 Delay { get; set; }

@@ -15,6 +15,9 @@ namespace Stardust.Models
         /// <summary>主频</summary>
         public Single CpuRate { get; set; }
 
+        /// <summary>温度</summary>
+        public Double Temperature { get; set; }
+
         /// <summary>MAC地址</summary>
         public String Macs { get; set; }
 
