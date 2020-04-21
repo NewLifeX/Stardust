@@ -43,7 +43,7 @@
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Agent" Version="8.7.2020.417-beta" />
+    <PackageReference Include="NewLife.Agent" Version="8.7.2020.421-beta2" />
   </ItemGroup>
 
   <ItemGroup>
