@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NewLife;
 using NewLife.Log;
+using NewLife.Threading;
 using Stardust.Models;
 
 namespace Stardust
@@ -37,21 +38,23 @@ namespace Stardust
         public void Start()
         {
             //var ts = new List<Task<Process>>();
-            foreach (var item in Services)
+            foreach (var service in Services)
             {
+                WriteLog("启动应用[{0}]：{1} {2}", service.Name, service.FileName, service.Arguments);
+
                 //if (item.AutoStart) ts.Add(Task.Run(() => StartService(item)));
-                StartService(item);
+                StartService(service);
             }
 
             //// 等待全部完成
             //var ps = Task.WhenAll(ts).Result;
             //_processes.AddRange(ps.Where(e => e != null));
+
+            _timer = new TimerX(DoWork, null, 5000, 5000) { Async = true };
         }
 
         private Process StartService(ServiceInfo service)
         {
-            WriteLog("启动应用[{0}]：{1} {2}", service.Name, service.FileName, service.Arguments);
-
             // 检查应用是否已启动
             var pidFile = Setting.Current.DataPath.CombinePath($"{service.Name}.pid");
             if (File.Exists(pidFile))
@@ -63,7 +66,7 @@ namespace Stardust
                     if (ss != null && ss.Length >= 2)
                     {
                         var p = Process.GetProcessById(ss[0].ToInt());
-                        if (p != null && p.ProcessName == ss[1])
+                        if (p != null && !p.HasExited && p.ProcessName == ss[1])
                         {
                             WriteLog("应用[{0}/{1}]已启动，直接接管", service.Name, ss[0]);
 
@@ -74,7 +77,7 @@ namespace Stardust
                 }
                 catch (Exception ex)
                 {
-                    XTrace.WriteException(ex);
+                    if (!(ex is ArgumentException)) XTrace.WriteException(ex);
                 }
             }
 
@@ -130,6 +133,8 @@ namespace Stardust
         /// <param name="reason"></param>
         public void Stop(String reason)
         {
+            _timer?.TryDispose();
+
             foreach (var item in _processes)
             {
                 var p = item.Value;
@@ -138,6 +143,23 @@ namespace Stardust
                 //p.Kill();
             }
             _processes.Clear();
+        }
+
+        private TimerX _timer;
+        private void DoWork(Object state)
+        {
+            foreach (var svc in Services)
+            {
+                if (svc != null && svc.AutoRestart && _processes.TryGetValue(svc.Name, out var p))
+                {
+                    if (p == null || p.HasExited)
+                    {
+                        WriteLog("应用[{0}/{1}]已退出，准备重新启动！", svc.Name, p?.Id);
+
+                        StartService(svc);
+                    }
+                }
+            }
         }
         #endregion
 
