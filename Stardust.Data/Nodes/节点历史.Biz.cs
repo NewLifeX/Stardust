@@ -108,7 +108,7 @@ namespace Stardust.Data.Nodes
 
         #region 扩展操作
         /// <summary>类别名实体缓存，异步，缓存10分钟</summary>
-        static FieldCache<NodeHistory> ActionCache = new FieldCache<NodeHistory>(_.Action);
+        static FieldCache<NodeHistory> ActionCache = new FieldCache<NodeHistory>(__.Action);
 
         /// <summary>获取所有类别名称</summary>
         /// <returns></returns>
@@ -153,7 +153,7 @@ namespace Stardust.Data.Nodes
             return hi;
         }
 
-        static Lazy<FieldCache<NodeHistory>> NameCache = new Lazy<FieldCache<NodeHistory>>(() => new FieldCache<NodeHistory>(_.Action));
+        static Lazy<FieldCache<NodeHistory>> NameCache = new Lazy<FieldCache<NodeHistory>>(() => new FieldCache<NodeHistory>(__.Action));
         /// <summary>获取所有分类名称</summary>
         /// <returns></returns>
         public static IDictionary<String, String> FindAllAction() => NameCache.Value.FindAllName();

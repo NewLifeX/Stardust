@@ -54,9 +54,9 @@ namespace StarAgent
                     FileName = "cmd",
                     Arguments = "ping newlifex.com",
 
-                    AutoStart = false,
+                    //AutoStart = false,
                     AutoRestart = true,
-                    RestartExistCodes = "0,1,3",
+                    //RestartExistCodes = "0,1,3",
                 };
 
                 Services = new[] { si };

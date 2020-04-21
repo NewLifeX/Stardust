@@ -15,12 +15,15 @@ namespace Stardust
     public class ServiceManager : DisposeBase
     {
         #region 属性
+        /// <summary>应用服务集合</summary>
         public ServiceInfo[] Services { get; set; }
 
-        private readonly List<Process> _processes = new List<Process>();
+        private readonly Dictionary<String, Process> _processes = new Dictionary<String, Process>();
         #endregion
 
         #region 构造
+        /// <summary>销毁</summary>
+        /// <param name="disposing"></param>
         protected override void Dispose(Boolean disposing)
         {
             base.Dispose(disposing);
@@ -30,22 +33,50 @@ namespace Stardust
         #endregion
 
         #region 方法
+        /// <summary>开始管理，拉起应用进程</summary>
         public void Start()
         {
-            var ts = new List<Task<Process>>();
+            //var ts = new List<Task<Process>>();
             foreach (var item in Services)
             {
-                if (item.AutoStart) ts.Add(Task.Run(() => StartService(item)));
+                //if (item.AutoStart) ts.Add(Task.Run(() => StartService(item)));
+                StartService(item);
             }
 
-            // 等待全部完成
-            var ps = Task.WhenAll(ts).Result;
-            _processes.AddRange(ps.Where(e => e != null));
+            //// 等待全部完成
+            //var ps = Task.WhenAll(ts).Result;
+            //_processes.AddRange(ps.Where(e => e != null));
         }
 
         private Process StartService(ServiceInfo service)
         {
             WriteLog("启动应用[{0}]：{1} {2}", service.Name, service.FileName, service.Arguments);
+
+            // 检查应用是否已启动
+            var pidFile = Setting.Current.DataPath.CombinePath($"{service.Name}.pid");
+            if (File.Exists(pidFile))
+            {
+                try
+                {
+                    // 读取 pid,procss_name
+                    var ss = File.ReadAllText(pidFile).Split(",");
+                    if (ss != null && ss.Length >= 2)
+                    {
+                        var p = Process.GetProcessById(ss[0].ToInt());
+                        if (p != null && p.ProcessName == ss[1])
+                        {
+                            WriteLog("应用[{0}/{1}]已启动，直接接管", service.Name, ss[0]);
+
+                            _processes[service.Name] = p;
+                            return p;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    XTrace.WriteException(ex);
+                }
+            }
 
             // 修正路径
             var workDir = "";
@@ -61,6 +92,10 @@ namespace Stardust
                 FileName = file,
                 Arguments = service.Arguments,
                 WorkingDirectory = workDir,
+
+                // false时目前控制台合并到当前控制台，一起退出；
+                // true时目标控制台独立窗口，不会一起退出；
+                UseShellExecute = true,
             };
 
             var retry = service.Retry;
@@ -72,6 +107,11 @@ namespace Stardust
                     var p = Process.Start(si);
 
                     WriteLog("应用[{0}]启动成功 PID={1}", service.Name, p.Id);
+
+                    // 记录进程信息，避免宿主重启后无法继续管理
+                    _processes[service.Name] = p;
+                    pidFile.EnsureDirectory(true);
+                    File.WriteAllText(pidFile, $"{p.Id},{p.ProcessName}");
 
                     return p;
                 }
@@ -86,21 +126,28 @@ namespace Stardust
             return null;
         }
 
+        /// <summary>停止管理，按需杀掉进程</summary>
+        /// <param name="reason"></param>
         public void Stop(String reason)
         {
             foreach (var item in _processes)
             {
-                WriteLog("停止应用[{0}] PID={1} {2}", item.ProcessName, item.Id, reason);
+                var p = item.Value;
+                WriteLog("停止应用[{0}] PID={1} {2}", item.Key, p.Id, reason);
 
-                item.Kill();
+                //p.Kill();
             }
             _processes.Clear();
         }
         #endregion
 
         #region 日志
+        /// <summary>日志</summary>
         public ILog Log { get; set; }
 
+        /// <summary>写日志</summary>
+        /// <param name="format"></param>
+        /// <param name="args"></param>
         public void WriteLog(String format, params Object[] args) => Log?.Info(format, args);
         #endregion
     }
