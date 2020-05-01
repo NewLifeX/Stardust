@@ -396,6 +396,7 @@ namespace Stardust.Server.Controllers
             if (inf.AvailableFreeSpace > 0) olt.AvailableFreeSpace = (Int32)(inf.AvailableFreeSpace / 1024 / 1024);
             if (inf.CpuRate > 0) olt.CpuRate = inf.CpuRate;
             if (inf.Temperature > 0) olt.Temperature = inf.Temperature;
+            if (inf.Uptime > 0) olt.Uptime = inf.Uptime;
             if (inf.Delay > 0) olt.Delay = inf.Delay;
 
             var dt = inf.Time.ToDateTime().ToLocalTime();

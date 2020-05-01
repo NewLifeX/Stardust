@@ -154,6 +154,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("LocalTime", "本地时间", "")]
         public DateTime LocalTime { get => _LocalTime; set { if (OnPropertyChanging(__.LocalTime, value)) { _LocalTime = value; OnPropertyChanged(__.LocalTime); } } }
 
+        private Int32 _Uptime;
+        /// <summary>开机时间。单位ms</summary>
+        [DisplayName("开机时间")]
+        [Description("开机时间。单位ms")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Uptime", "开机时间。单位ms", "")]
+        public Int32 Uptime { get => _Uptime; set { if (OnPropertyChanging(__.Uptime, value)) { _Uptime = value; OnPropertyChanged(__.Uptime); } } }
+
         private String _MACs;
         /// <summary>网卡</summary>
         [DisplayName("网卡")]
@@ -238,6 +246,7 @@ namespace Stardust.Data.Nodes
                     case __.Delay: return _Delay;
                     case __.Offset: return _Offset;
                     case __.LocalTime: return _LocalTime;
+                    case __.Uptime: return _Uptime;
                     case __.MACs: return _MACs;
                     case __.Processes: return _Processes;
                     case __.Token: return _Token;
@@ -269,6 +278,7 @@ namespace Stardust.Data.Nodes
                     case __.Delay: _Delay = value.ToInt(); break;
                     case __.Offset: _Offset = value.ToInt(); break;
                     case __.LocalTime: _LocalTime = value.ToDateTime(); break;
+                    case __.Uptime: _Uptime = value.ToInt(); break;
                     case __.MACs: _MACs = Convert.ToString(value); break;
                     case __.Processes: _Processes = Convert.ToString(value); break;
                     case __.Token: _Token = Convert.ToString(value); break;
@@ -336,6 +346,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>本地时间</summary>
             public static readonly Field LocalTime = FindByName(__.LocalTime);
+
+            /// <summary>开机时间。单位ms</summary>
+            public static readonly Field Uptime = FindByName(__.Uptime);
 
             /// <summary>网卡</summary>
             public static readonly Field MACs = FindByName(__.MACs);
@@ -415,6 +428,9 @@ namespace Stardust.Data.Nodes
             /// <summary>本地时间</summary>
             public const String LocalTime = "LocalTime";
 
+            /// <summary>开机时间。单位ms</summary>
+            public const String Uptime = "Uptime";
+
             /// <summary>网卡</summary>
             public const String MACs = "MACs";
 
@@ -493,6 +509,9 @@ namespace Stardust.Data.Nodes
 
         /// <summary>本地时间</summary>
         DateTime LocalTime { get; set; }
+
+        /// <summary>开机时间。单位ms</summary>
+        Int32 Uptime { get; set; }
 
         /// <summary>网卡</summary>
         String MACs { get; set; }

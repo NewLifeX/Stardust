@@ -254,6 +254,7 @@ namespace Stardust
                 AvailableFreeSpace = (UInt64)driveInfo.AvailableFreeSpace,
                 CpuRate = mi.CpuRate,
                 Temperature = mi.Temperature,
+                Uptime = Environment.TickCount,
 
                 Macs = mcs,
                 //COMs = ps.Join(","),
