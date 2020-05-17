@@ -36,6 +36,20 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
+            // 默认排序
+            if (start.Year < 2000 && p.Sort.IsNullOrEmpty())
+            {
+                start = DateTime.Today.AddDays(-30);
+                p["dtStart"] = start.ToString("yyyy-MM-dd");
+
+                p.Sort = NodeStat.__.StatDate;
+                p.Desc = false;
+                p.PageSize = 100;
+
+                // 默认全国
+                if (areaId < 0) areaId = 0;
+            }
+
             var list = NodeStat.Search(areaId, start, end, p["Q"], p);
 
             if (list.Count > 0)

@@ -6,5 +6,6 @@
     var fact = ViewBag.Factory as IEntityFactory;
     var page = ViewBag.Page as Pager;
 }
-@await Html.PartialAsync("_Area2", "")
+<a href="?areaId=0">全国</a>
+@await Html.PartialAsync("_Area1", "")
 @await Html.PartialAsync("_DateRange")
