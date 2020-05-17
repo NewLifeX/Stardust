@@ -340,6 +340,18 @@ namespace Stardust
         /// <returns></returns>
         private async Task<PingResponse> PingAsync(PingInfo inf) => await PostAsync<PingResponse>("Node/Ping", inf);
 
+        private TraceService _trace;
+        /// <summary>使用跟踪服务</summary>
+        public void UseTrace()
+        {
+            _trace = new TraceService
+            {
+                Queue = CommandQueue,
+                Callback = (id, data) => ReportAsync(id, data).Wait(),
+            };
+            _trace.Init();
+        }
+
         /// <summary>上报命令结果，如截屏、抓日志</summary>
         /// <param name="id"></param>
         /// <param name="data"></param>

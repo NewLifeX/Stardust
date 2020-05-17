@@ -368,24 +368,42 @@ namespace Stardust.Server.Controllers
                 olt.SaveAsync();
 
                 // 拉取命令
-                var cmds = NodeCommand.AcquireCommands(node.ID, 100);
-                if (cmds != null)
-                {
-                    rs.Commands = cmds.Select(e => new CommandModel
-                    {
-                        Id = e.ID,
-                        Command = e.Command,
-                        Argument = e.Argument,
-                    }).ToArray();
-
-                    foreach (var item in cmds)
-                    {
-                        item.Finished = true;
-                        item.UpdateTime = DateTime.Now;
-                    }
-                    cmds.Update(true);
-                }
+                rs.Commands = AcquireCommands(node.ID);
             }
+
+            return rs;
+        }
+
+        private static IList<NodeCommand> _commands;
+        private static DateTime _nextTime;
+        private static CommandModel[] AcquireCommands(Int32 nodeId)
+        {
+            // 缓存最近1000个未执行命令，用于快速过滤，避免大量节点在线时频繁查询命令表
+            if (_nextTime < DateTime.Now)
+            {
+                _commands = NodeCommand.AcquireCommands(-1, 1000);
+                _nextTime = DateTime.Now.AddMinutes(1);
+            }
+
+            // 是否有本节点
+            if (!_commands.Any(e => e.NodeID == nodeId)) return null;
+
+            var cmds = NodeCommand.AcquireCommands(nodeId, 100);
+            if (cmds == null) return null;
+
+            var rs = cmds.Select(e => new CommandModel
+            {
+                Id = e.ID,
+                Command = e.Command,
+                Argument = e.Argument,
+            }).ToArray();
+
+            foreach (var item in cmds)
+            {
+                item.Finished = true;
+                item.UpdateTime = DateTime.Now;
+            }
+            cmds.Update(true);
 
             return rs;
         }

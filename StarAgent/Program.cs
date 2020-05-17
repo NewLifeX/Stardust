@@ -68,6 +68,9 @@ namespace StarAgent
                 }
             };
 
+            // 使用跟踪
+            client.UseTrace();
+
             // 可能需要多次尝试
             _timer = new TimerX(TryConnectServer, client, 0, 5_000) { Async = true };
 
