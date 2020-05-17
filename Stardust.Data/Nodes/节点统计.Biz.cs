@@ -149,24 +149,57 @@ namespace Stardust.Data.Nodes
 
             // 活跃数
             {
-                var his = NodeHistory.Search(-1, -1, -1, "登录", null, date, date, null, null);
-                var nodes = his.Select(e => e.NodeID).Distinct().Select(Node.FindByID).ToList();
-                var dic = nodes.Where(e => e != null).GroupBy(e => e.ProvinceID).ToDictionary(e => e.Key, e => e.ToList());
+                var dic = Node.SearchGroupByLastLogin(date, date.AddDays(1));
                 foreach (var item in dic)
                 {
                     var st = GetStat(sts, item.Key, date);
-                    st.Actives = item.Value.Count;
+                    st.Actives = item.Value;
+                }
+            }
+            // 7天活跃数
+            {
+                var dic = Node.SearchGroupByLastLogin(date.AddDays(-7 + 1), date.AddDays(1));
+                foreach (var item in dic)
+                {
+                    var st = GetStat(sts, item.Key, date);
+                    st.T7Actives = item.Value;
+                }
+            }
+            // 30天活跃数
+            {
+                var dic = Node.SearchGroupByLastLogin(date.AddDays(-30 + 1), date.AddDays(1));
+                foreach (var item in dic)
+                {
+                    var st = GetStat(sts, item.Key, date);
+                    st.T30Actives = item.Value;
                 }
             }
 
             // 新增数
             {
-                var nodes = Node.SearchByCreateDate(date);
-                var dic = nodes.GroupBy(e => e.ProvinceID).ToDictionary(e => e.Key, e => e.ToList());
+                var dic = Node.SearchGroupByCreateTime(date, date.AddDays(1));
                 foreach (var item in dic)
                 {
                     var st = GetStat(sts, item.Key, date);
-                    st.News = item.Value.Count;
+                    st.News = item.Value;
+                }
+            }
+            // 7天新增
+            {
+                var dic = Node.SearchGroupByCreateTime(date.AddDays(-7 + 1), date.AddDays(1));
+                foreach (var item in dic)
+                {
+                    var st = GetStat(sts, item.Key, date);
+                    st.T7News = item.Value;
+                }
+            }
+            // 30天新增
+            {
+                var dic = Node.SearchGroupByCreateTime(date.AddDays(-30 + 1), date.AddDays(1));
+                foreach (var item in dic)
+                {
+                    var st = GetStat(sts, item.Key, date);
+                    st.T30News = item.Value;
                 }
             }
 
@@ -221,7 +254,11 @@ namespace Stardust.Data.Nodes
                 var sts2 = sts.Where(e => e.AreaID != 0).ToList();
                 st.Total = sts2.Sum(e => e.Total);
                 st.Actives = sts2.Sum(e => e.Actives);
+                st.T7Actives = sts2.Sum(e => e.T7Actives);
+                st.T30Actives = sts2.Sum(e => e.T30Actives);
                 st.News = sts2.Sum(e => e.News);
+                st.T7News = sts2.Sum(e => e.T7News);
+                st.T30News = sts2.Sum(e => e.T30News);
                 st.Registers = sts2.Sum(e => e.Registers);
 
                 var max = sts2.Sum(e => e.MaxOnline);

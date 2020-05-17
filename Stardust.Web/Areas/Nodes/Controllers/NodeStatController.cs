@@ -68,7 +68,11 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                     chart.SetY("数量");
                     chart.AddLine(list, _.Total, null, true);
                     chart.Add(list, _.Actives);
+                    chart.Add(list, _.T7Actives);
+                    chart.Add(list, _.T30Actives);
                     chart.Add(list, _.News);
+                    chart.Add(list, _.T7News);
+                    chart.Add(list, _.T30News);
                     chart.Add(list, _.Registers);
                     chart.Add(list, _.MaxOnline);
                     chart.SetTooltip();

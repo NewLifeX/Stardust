@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using XCode;
+using XCode.Cache;
 using XCode.Membership;
 
 namespace Stardust.Data.Nodes
@@ -175,6 +176,22 @@ namespace Stardust.Data.Nodes
             return FindAll(_.UpdateTime >= date & _.CreateTime.Between(date, date));
         }
 
+        internal static IDictionary<Int32, Int32> SearchGroupByCreateTime(DateTime start, DateTime end)
+        {
+            var exp = new WhereExpression();
+            exp &= _.CreateTime.Between(start, end);
+            var list = FindAll(exp.GroupBy(_.ProvinceID), null, _.ID.Count() & _.ProvinceID, 0, 0);
+            return list.ToDictionary(e => e.ProvinceID, e => e.ID);
+        }
+
+        internal static IDictionary<Int32, Int32> SearchGroupByLastLogin(DateTime start, DateTime end)
+        {
+            var exp = new WhereExpression();
+            exp &= _.LastLogin.Between(start, end);
+            var list = FindAll(exp.GroupBy(_.ProvinceID), null, _.ID.Count() & _.ProvinceID, 0, 0);
+            return list.ToDictionary(e => e.ProvinceID, e => e.ID);
+        }
+
         internal static IDictionary<Int32, Int32> SearchCountByCreateDate(DateTime date)
         {
             var exp = new WhereExpression();
@@ -185,6 +202,16 @@ namespace Stardust.Data.Nodes
         #endregion
 
         #region 扩展操作
+        /// <summary>类别名实体缓存，异步，缓存10分钟</summary>
+        static Lazy<FieldCache<Node>> VersionCache = new Lazy<FieldCache<Node>>(() => new FieldCache<Node>(__.Version)
+        {
+            Where = _.UpdateTime > DateTime.Today.AddDays(-30) & Expression.Empty,
+            MaxRows = 50
+        });
+
+        /// <summary>获取所有类别名称</summary>
+        /// <returns></returns>
+        public static IDictionary<String, String> FindAllVersion() => VersionCache.Value.FindAllName().OrderByDescending(e => e.Key).ToDictionary(e => e.Key, e => e.Value);
         #endregion
 
         #region 业务

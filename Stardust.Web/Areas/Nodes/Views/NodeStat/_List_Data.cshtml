@@ -25,7 +25,11 @@
             <th class="text-center" title="地区。省份，0表示全国"><a href="@Html.Raw(page.GetSortUrl("AreaID"))">地区</a></th>
             <th class="text-center" title="总数。截止今天的全部设备数"><a href="@Html.Raw(page.GetSortUrl("Total"))">总数</a></th>
             <th class="text-center" title="活跃数。最后登录位于今天"><a href="@Html.Raw(page.GetSortUrl("Actives"))">活跃数</a></th>
+            <th class="text-center" title="7天活跃数。最后登录位于7天"><a href="@Html.Raw(page.GetSortUrl("T7Actives"))">7天活跃数</a></th>
+            <th class="text-center" title="30天活跃数。最后登录位于30天"><a href="@Html.Raw(page.GetSortUrl("T30Actives"))">30天活跃数</a></th>
             <th class="text-center" title="新增数。今天创建"><a href="@Html.Raw(page.GetSortUrl("News"))">新增数</a></th>
+            <th class="text-center" title="7天新增数。7天创建"><a href="@Html.Raw(page.GetSortUrl("T7News"))">7天新增数</a></th>
+            <th class="text-center" title="30天新增数。30天创建"><a href="@Html.Raw(page.GetSortUrl("T30News"))">30天新增数</a></th>
             <th class="text-center" title="注册数。今天激活或重新激活"><a href="@Html.Raw(page.GetSortUrl("Registers"))">注册数</a></th>
             <th class="text-center" title="最高在线。今天最高在线数"><a href="@Html.Raw(page.GetSortUrl("MaxOnline"))">最高在线</a></th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("MaxOnlineTime"))">最高在线时间</a></th>
@@ -57,7 +61,11 @@
                 <td class="text-center">@name</td>
                 <td class="text-right">@entity.Total.ToString("n0")</td>
                 <td class="text-right">@entity.Actives.ToString("n0")</td>
+                <td class="text-right">@entity.T7Actives.ToString("n0")</td>
+                <td class="text-right">@entity.T30Actives.ToString("n0")</td>
                 <td class="text-right">@entity.News.ToString("n0")</td>
+                <td class="text-right">@entity.T7News.ToString("n0")</td>
+                <td class="text-right">@entity.T30News.ToString("n0")</td>
                 <td class="text-right">@entity.Registers.ToString("n0")</td>
                 <td class="text-right">@entity.MaxOnline.ToString("n0")</td>
                 <td class="text-center">@entity.MaxOnlineTime.ToFullString("")</td>

@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.Serialization;
+using System.Web.Script.Serialization;
+using System.Xml.Serialization;
 using XCode;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
@@ -23,7 +26,7 @@ namespace Stardust.Data.Nodes
         [Description("编号")]
         [DataObjectField(true, true, false, 0)]
         [BindColumn("ID", "编号", "")]
-        public Int32 ID { get => _ID; set { if (OnPropertyChanging(__.ID, value)) { _ID = value; OnPropertyChanged(__.ID); } } }
+        public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
         private Int32 _NodeID;
         /// <summary>节点</summary>
@@ -31,7 +34,7 @@ namespace Stardust.Data.Nodes
         [Description("节点")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("NodeID", "节点", "")]
-        public Int32 NodeID { get => _NodeID; set { if (OnPropertyChanging(__.NodeID, value)) { _NodeID = value; OnPropertyChanged(__.NodeID); } } }
+        public Int32 NodeID { get => _NodeID; set { if (OnPropertyChanging("NodeID", value)) { _NodeID = value; OnPropertyChanged("NodeID"); } } }
 
         private String _Command;
         /// <summary>命令</summary>
@@ -39,7 +42,7 @@ namespace Stardust.Data.Nodes
         [Description("命令")]
         [DataObjectField(false, false, true, 50)]
         [BindColumn("Command", "命令", "", Master = true)]
-        public String Command { get => _Command; set { if (OnPropertyChanging(__.Command, value)) { _Command = value; OnPropertyChanged(__.Command); } } }
+        public String Command { get => _Command; set { if (OnPropertyChanging("Command", value)) { _Command = value; OnPropertyChanged("Command"); } } }
 
         private String _Argument;
         /// <summary>参数</summary>
@@ -47,7 +50,7 @@ namespace Stardust.Data.Nodes
         [Description("参数")]
         [DataObjectField(false, false, true, 500)]
         [BindColumn("Argument", "参数", "")]
-        public String Argument { get => _Argument; set { if (OnPropertyChanging(__.Argument, value)) { _Argument = value; OnPropertyChanged(__.Argument); } } }
+        public String Argument { get => _Argument; set { if (OnPropertyChanging("Argument", value)) { _Argument = value; OnPropertyChanged("Argument"); } } }
 
         private Boolean _Finished;
         /// <summary>完成。客户端是否已执行</summary>
@@ -55,7 +58,7 @@ namespace Stardust.Data.Nodes
         [Description("完成。客户端是否已执行")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Finished", "完成。客户端是否已执行", "")]
-        public Boolean Finished { get => _Finished; set { if (OnPropertyChanging(__.Finished, value)) { _Finished = value; OnPropertyChanged(__.Finished); } } }
+        public Boolean Finished { get => _Finished; set { if (OnPropertyChanging("Finished", value)) { _Finished = value; OnPropertyChanged("Finished"); } } }
 
         private String _Result;
         /// <summary>结果</summary>
@@ -63,7 +66,7 @@ namespace Stardust.Data.Nodes
         [Description("结果")]
         [DataObjectField(false, false, true, 500)]
         [BindColumn("Result", "结果", "")]
-        public String Result { get => _Result; set { if (OnPropertyChanging(__.Result, value)) { _Result = value; OnPropertyChanged(__.Result); } } }
+        public String Result { get => _Result; set { if (OnPropertyChanging("Result", value)) { _Result = value; OnPropertyChanged("Result"); } } }
 
         private Int32 _CreateUserID;
         /// <summary>创建者</summary>
@@ -71,7 +74,7 @@ namespace Stardust.Data.Nodes
         [Description("创建者")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("CreateUserID", "创建者", "")]
-        public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging(__.CreateUserID, value)) { _CreateUserID = value; OnPropertyChanged(__.CreateUserID); } } }
+        public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
@@ -79,7 +82,7 @@ namespace Stardust.Data.Nodes
         [Description("创建时间")]
         [DataObjectField(false, false, true, 0)]
         [BindColumn("CreateTime", "创建时间", "")]
-        public DateTime CreateTime { get => _CreateTime; set { if (OnPropertyChanging(__.CreateTime, value)) { _CreateTime = value; OnPropertyChanged(__.CreateTime); } } }
+        public DateTime CreateTime { get => _CreateTime; set { if (OnPropertyChanging("CreateTime", value)) { _CreateTime = value; OnPropertyChanged("CreateTime"); } } }
 
         private String _CreateIP;
         /// <summary>创建地址</summary>
@@ -87,7 +90,7 @@ namespace Stardust.Data.Nodes
         [Description("创建地址")]
         [DataObjectField(false, false, true, 50)]
         [BindColumn("CreateIP", "创建地址", "")]
-        public String CreateIP { get => _CreateIP; set { if (OnPropertyChanging(__.CreateIP, value)) { _CreateIP = value; OnPropertyChanged(__.CreateIP); } } }
+        public String CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
 
         private Int32 _UpdateUserID;
         /// <summary>更新者</summary>
@@ -95,7 +98,7 @@ namespace Stardust.Data.Nodes
         [Description("更新者")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("UpdateUserID", "更新者", "")]
-        public Int32 UpdateUserID { get => _UpdateUserID; set { if (OnPropertyChanging(__.UpdateUserID, value)) { _UpdateUserID = value; OnPropertyChanged(__.UpdateUserID); } } }
+        public Int32 UpdateUserID { get => _UpdateUserID; set { if (OnPropertyChanging("UpdateUserID", value)) { _UpdateUserID = value; OnPropertyChanged("UpdateUserID"); } } }
 
         private DateTime _UpdateTime;
         /// <summary>更新时间</summary>
@@ -103,7 +106,7 @@ namespace Stardust.Data.Nodes
         [Description("更新时间")]
         [DataObjectField(false, false, true, 0)]
         [BindColumn("UpdateTime", "更新时间", "")]
-        public DateTime UpdateTime { get => _UpdateTime; set { if (OnPropertyChanging(__.UpdateTime, value)) { _UpdateTime = value; OnPropertyChanged(__.UpdateTime); } } }
+        public DateTime UpdateTime { get => _UpdateTime; set { if (OnPropertyChanging("UpdateTime", value)) { _UpdateTime = value; OnPropertyChanged("UpdateTime"); } } }
 
         private String _UpdateIP;
         /// <summary>更新地址</summary>
@@ -111,7 +114,7 @@ namespace Stardust.Data.Nodes
         [Description("更新地址")]
         [DataObjectField(false, false, true, 50)]
         [BindColumn("UpdateIP", "更新地址", "")]
-        public String UpdateIP { get => _UpdateIP; set { if (OnPropertyChanging(__.UpdateIP, value)) { _UpdateIP = value; OnPropertyChanged(__.UpdateIP); } } }
+        public String UpdateIP { get => _UpdateIP; set { if (OnPropertyChanging("UpdateIP", value)) { _UpdateIP = value; OnPropertyChanged("UpdateIP"); } } }
         #endregion
 
         #region 获取/设置 字段值
@@ -124,18 +127,18 @@ namespace Stardust.Data.Nodes
             {
                 switch (name)
                 {
-                    case __.ID: return _ID;
-                    case __.NodeID: return _NodeID;
-                    case __.Command: return _Command;
-                    case __.Argument: return _Argument;
-                    case __.Finished: return _Finished;
-                    case __.Result: return _Result;
-                    case __.CreateUserID: return _CreateUserID;
-                    case __.CreateTime: return _CreateTime;
-                    case __.CreateIP: return _CreateIP;
-                    case __.UpdateUserID: return _UpdateUserID;
-                    case __.UpdateTime: return _UpdateTime;
-                    case __.UpdateIP: return _UpdateIP;
+                    case "ID": return _ID;
+                    case "NodeID": return _NodeID;
+                    case "Command": return _Command;
+                    case "Argument": return _Argument;
+                    case "Finished": return _Finished;
+                    case "Result": return _Result;
+                    case "CreateUserID": return _CreateUserID;
+                    case "CreateTime": return _CreateTime;
+                    case "CreateIP": return _CreateIP;
+                    case "UpdateUserID": return _UpdateUserID;
+                    case "UpdateTime": return _UpdateTime;
+                    case "UpdateIP": return _UpdateIP;
                     default: return base[name];
                 }
             }
@@ -143,18 +146,18 @@ namespace Stardust.Data.Nodes
             {
                 switch (name)
                 {
-                    case __.ID: _ID = value.ToInt(); break;
-                    case __.NodeID: _NodeID = value.ToInt(); break;
-                    case __.Command: _Command = Convert.ToString(value); break;
-                    case __.Argument: _Argument = Convert.ToString(value); break;
-                    case __.Finished: _Finished = value.ToBoolean(); break;
-                    case __.Result: _Result = Convert.ToString(value); break;
-                    case __.CreateUserID: _CreateUserID = value.ToInt(); break;
-                    case __.CreateTime: _CreateTime = value.ToDateTime(); break;
-                    case __.CreateIP: _CreateIP = Convert.ToString(value); break;
-                    case __.UpdateUserID: _UpdateUserID = value.ToInt(); break;
-                    case __.UpdateTime: _UpdateTime = value.ToDateTime(); break;
-                    case __.UpdateIP: _UpdateIP = Convert.ToString(value); break;
+                    case "ID": _ID = value.ToInt(); break;
+                    case "NodeID": _NodeID = value.ToInt(); break;
+                    case "Command": _Command = Convert.ToString(value); break;
+                    case "Argument": _Argument = Convert.ToString(value); break;
+                    case "Finished": _Finished = value.ToBoolean(); break;
+                    case "Result": _Result = Convert.ToString(value); break;
+                    case "CreateUserID": _CreateUserID = value.ToInt(); break;
+                    case "CreateTime": _CreateTime = value.ToDateTime(); break;
+                    case "CreateIP": _CreateIP = Convert.ToString(value); break;
+                    case "UpdateUserID": _UpdateUserID = value.ToInt(); break;
+                    case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
+                    case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
                     default: base[name] = value; break;
                 }
             }
@@ -166,40 +169,40 @@ namespace Stardust.Data.Nodes
         public partial class _
         {
             /// <summary>编号</summary>
-            public static readonly Field ID = FindByName(__.ID);
+            public static readonly Field ID = FindByName("ID");
 
             /// <summary>节点</summary>
-            public static readonly Field NodeID = FindByName(__.NodeID);
+            public static readonly Field NodeID = FindByName("NodeID");
 
             /// <summary>命令</summary>
-            public static readonly Field Command = FindByName(__.Command);
+            public static readonly Field Command = FindByName("Command");
 
             /// <summary>参数</summary>
-            public static readonly Field Argument = FindByName(__.Argument);
+            public static readonly Field Argument = FindByName("Argument");
 
             /// <summary>完成。客户端是否已执行</summary>
-            public static readonly Field Finished = FindByName(__.Finished);
+            public static readonly Field Finished = FindByName("Finished");
 
             /// <summary>结果</summary>
-            public static readonly Field Result = FindByName(__.Result);
+            public static readonly Field Result = FindByName("Result");
 
             /// <summary>创建者</summary>
-            public static readonly Field CreateUserID = FindByName(__.CreateUserID);
+            public static readonly Field CreateUserID = FindByName("CreateUserID");
 
             /// <summary>创建时间</summary>
-            public static readonly Field CreateTime = FindByName(__.CreateTime);
+            public static readonly Field CreateTime = FindByName("CreateTime");
 
             /// <summary>创建地址</summary>
-            public static readonly Field CreateIP = FindByName(__.CreateIP);
+            public static readonly Field CreateIP = FindByName("CreateIP");
 
             /// <summary>更新者</summary>
-            public static readonly Field UpdateUserID = FindByName(__.UpdateUserID);
+            public static readonly Field UpdateUserID = FindByName("UpdateUserID");
 
             /// <summary>更新时间</summary>
-            public static readonly Field UpdateTime = FindByName(__.UpdateTime);
+            public static readonly Field UpdateTime = FindByName("UpdateTime");
 
             /// <summary>更新地址</summary>
-            public static readonly Field UpdateIP = FindByName(__.UpdateIP);
+            public static readonly Field UpdateIP = FindByName("UpdateIP");
 
             static Field FindByName(String name) => Meta.Table.FindByName(name);
         }
