@@ -173,6 +173,7 @@ namespace Stardust
                 CpuRate = mi.CpuRate,
                 UUID = mi.UUID,
                 MachineGuid = mi.Guid,
+                DiskID = mi.DiskID,
 
                 Macs = mcs,
                 //COMs = ps.Join(","),
@@ -182,6 +183,14 @@ namespace Stardust
 
                 Time = DateTime.UtcNow,
             };
+
+#if !__CORE__
+            // 收集屏幕相关信息
+            var g = System.Drawing.Graphics.FromHwnd(IntPtr.Zero);
+            di.Dpi = $"{g.DpiX}*{g.DpiY}";
+            var screen = System.Windows.Forms.Screen.PrimaryScreen;
+            di.Resolution = $"{screen.Bounds.Width}*{screen.Bounds.Height}";
+#endif
 
             return di;
         }
@@ -333,6 +342,7 @@ namespace Stardust
 
         /// <summary>上报命令结果，如截屏、抓日志</summary>
         /// <param name="id"></param>
+        /// <param name="data"></param>
         /// <returns></returns>
         private async Task<Object> ReportAsync(Int32 id, Byte[] data) => await PostAsync<Object>("Device/Report?Id=" + id, data);
         #endregion

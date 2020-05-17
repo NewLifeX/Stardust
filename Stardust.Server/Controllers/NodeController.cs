@@ -83,6 +83,7 @@ namespace Stardust.Server.Controllers
                 var olt = GetOnline(code, node);
                 if (olt == null) olt = CreateOnline(code, node);
 
+                Fill(olt, di);
                 olt.LocalTime = di.Time.ToLocalTime();
                 olt.MACs = di.Macs;
                 //olt.COMs = di.COMs;
@@ -177,6 +178,7 @@ namespace Stardust.Server.Controllers
             // 校验唯一编码，防止客户端拷贝配置
             var uuid = di.UUID;
             var guid = di.MachineGuid;
+            var diskid = di.DiskID;
             if (!uuid.IsNullOrEmpty() && uuid != node.Uuid)
             {
                 WriteHistory("登录校验", false, node, "唯一标识不符！{0}!={1}".F(uuid, node.Uuid));
@@ -185,6 +187,11 @@ namespace Stardust.Server.Controllers
             if (!guid.IsNullOrEmpty() && guid != node.MachineGuid)
             {
                 WriteHistory("登录校验", false, node, "机器标识不符！{0}!={1}".F(guid, node.MachineGuid));
+                return null;
+            }
+            if (!diskid.IsNullOrEmpty() && diskid != node.DiskID)
+            {
+                WriteHistory("登录校验", false, node, "磁盘序列号不符！{0}!={1}".F(diskid, node.DiskID));
                 return null;
             }
 
@@ -284,10 +291,13 @@ namespace Stardust.Server.Controllers
             if (!di.CpuID.IsNullOrEmpty()) node.CpuID = di.CpuID;
             if (!di.UUID.IsNullOrEmpty()) node.Uuid = di.UUID;
             if (!di.MachineGuid.IsNullOrEmpty()) node.MachineGuid = di.MachineGuid;
+            if (!di.DiskID.IsNullOrEmpty()) node.DiskID = di.DiskID;
 
             if (di.ProcessorCount > 0) node.Cpu = di.ProcessorCount;
             if (di.Memory > 0) node.Memory = (Int32)(di.Memory / 1024 / 1024);
             if (di.TotalSize > 0) node.TotalSize = (Int32)(di.TotalSize / 1024 / 1024);
+            if (!di.Dpi.IsNullOrEmpty()) node.Dpi = di.Dpi;
+            if (!di.Resolution.IsNullOrEmpty()) node.Resolution = di.Resolution;
             if (!di.Macs.IsNullOrEmpty()) node.MACs = di.Macs;
             //if (!di.COMs.IsNullOrEmpty()) node.COMs = di.COMs;
             if (!di.InstallPath.IsNullOrEmpty()) node.InstallPath = di.InstallPath;
@@ -296,6 +306,10 @@ namespace Stardust.Server.Controllers
 
         private void Fill(NodeOnline online, NodeInfo di)
         {
+            online.LocalTime = di.Time.ToLocalTime();
+            online.MACs = di.Macs;
+            //online.COMs = di.COMs;
+
             if (di.AvailableMemory > 0) online.AvailableMemory = (Int32)(di.AvailableMemory / 1024 / 1024);
             if (di.AvailableFreeSpace > 0) online.AvailableFreeSpace = (Int32)(di.AvailableFreeSpace / 1024 / 1024);
         }

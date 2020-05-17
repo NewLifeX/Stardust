@@ -133,6 +133,22 @@ namespace Stardust.Data.Nodes
         [BindColumn("TotalSize", "磁盘。应用所在盘，单位M", "")]
         public Int32 TotalSize { get => _TotalSize; set { if (OnPropertyChanging("TotalSize", value)) { _TotalSize = value; OnPropertyChanged("TotalSize"); } } }
 
+        private String _Dpi;
+        /// <summary>像素点。默认96*96</summary>
+        [DisplayName("像素点")]
+        [Description("像素点。默认96*96")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Dpi", "像素点。默认96*96", "")]
+        public String Dpi { get => _Dpi; set { if (OnPropertyChanging("Dpi", value)) { _Dpi = value; OnPropertyChanged("Dpi"); } } }
+
+        private String _Resolution;
+        /// <summary>分辨率。例如1024*768</summary>
+        [DisplayName("分辨率")]
+        [Description("分辨率。例如1024*768")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Resolution", "分辨率。例如1024*768", "")]
+        public String Resolution { get => _Resolution; set { if (OnPropertyChanging("Resolution", value)) { _Resolution = value; OnPropertyChanged("Resolution"); } } }
+
         private String _Processor;
         /// <summary>处理器</summary>
         [DisplayName("处理器")]
@@ -145,7 +161,7 @@ namespace Stardust.Data.Nodes
         /// <summary>CPU标识</summary>
         [DisplayName("CPU标识")]
         [Description("CPU标识")]
-        [DataObjectField(false, false, true, 50)]
+        [DataObjectField(false, false, true, 200)]
         [BindColumn("CpuID", "CPU标识", "")]
         public String CpuID { get => _CpuID; set { if (OnPropertyChanging("CpuID", value)) { _CpuID = value; OnPropertyChanged("CpuID"); } } }
 
@@ -153,7 +169,7 @@ namespace Stardust.Data.Nodes
         /// <summary>唯一标识</summary>
         [DisplayName("唯一标识")]
         [Description("唯一标识")]
-        [DataObjectField(false, false, true, 50)]
+        [DataObjectField(false, false, true, 200)]
         [BindColumn("Uuid", "唯一标识", "")]
         public String Uuid { get => _Uuid; set { if (OnPropertyChanging("Uuid", value)) { _Uuid = value; OnPropertyChanged("Uuid"); } } }
 
@@ -161,9 +177,17 @@ namespace Stardust.Data.Nodes
         /// <summary>机器标识</summary>
         [DisplayName("机器标识")]
         [Description("机器标识")]
-        [DataObjectField(false, false, true, 50)]
+        [DataObjectField(false, false, true, 200)]
         [BindColumn("MachineGuid", "机器标识", "")]
         public String MachineGuid { get => _MachineGuid; set { if (OnPropertyChanging("MachineGuid", value)) { _MachineGuid = value; OnPropertyChanged("MachineGuid"); } } }
+
+        private String _DiskID;
+        /// <summary>磁盘序列号</summary>
+        [DisplayName("磁盘序列号")]
+        [Description("磁盘序列号")]
+        [DataObjectField(false, false, true, 200)]
+        [BindColumn("DiskID", "磁盘序列号", "")]
+        public String DiskID { get => _DiskID; set { if (OnPropertyChanging("DiskID", value)) { _DiskID = value; OnPropertyChanged("DiskID"); } } }
 
         private String _MACs;
         /// <summary>网卡</summary>
@@ -326,10 +350,13 @@ namespace Stardust.Data.Nodes
                     case "Cpu": return _Cpu;
                     case "Memory": return _Memory;
                     case "TotalSize": return _TotalSize;
+                    case "Dpi": return _Dpi;
+                    case "Resolution": return _Resolution;
                     case "Processor": return _Processor;
                     case "CpuID": return _CpuID;
                     case "Uuid": return _Uuid;
                     case "MachineGuid": return _MachineGuid;
+                    case "DiskID": return _DiskID;
                     case "MACs": return _MACs;
                     case "InstallPath": return _InstallPath;
                     case "Runtime": return _Runtime;
@@ -368,10 +395,13 @@ namespace Stardust.Data.Nodes
                     case "Cpu": _Cpu = value.ToInt(); break;
                     case "Memory": _Memory = value.ToInt(); break;
                     case "TotalSize": _TotalSize = value.ToInt(); break;
+                    case "Dpi": _Dpi = Convert.ToString(value); break;
+                    case "Resolution": _Resolution = Convert.ToString(value); break;
                     case "Processor": _Processor = Convert.ToString(value); break;
                     case "CpuID": _CpuID = Convert.ToString(value); break;
                     case "Uuid": _Uuid = Convert.ToString(value); break;
                     case "MachineGuid": _MachineGuid = Convert.ToString(value); break;
+                    case "DiskID": _DiskID = Convert.ToString(value); break;
                     case "MACs": _MACs = Convert.ToString(value); break;
                     case "InstallPath": _InstallPath = Convert.ToString(value); break;
                     case "Runtime": _Runtime = Convert.ToString(value); break;
@@ -441,6 +471,12 @@ namespace Stardust.Data.Nodes
             /// <summary>磁盘。应用所在盘，单位M</summary>
             public static readonly Field TotalSize = FindByName("TotalSize");
 
+            /// <summary>像素点。默认96*96</summary>
+            public static readonly Field Dpi = FindByName("Dpi");
+
+            /// <summary>分辨率。例如1024*768</summary>
+            public static readonly Field Resolution = FindByName("Resolution");
+
             /// <summary>处理器</summary>
             public static readonly Field Processor = FindByName("Processor");
 
@@ -452,6 +488,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>机器标识</summary>
             public static readonly Field MachineGuid = FindByName("MachineGuid");
+
+            /// <summary>磁盘序列号</summary>
+            public static readonly Field DiskID = FindByName("DiskID");
 
             /// <summary>网卡</summary>
             public static readonly Field MACs = FindByName("MACs");
@@ -552,6 +591,12 @@ namespace Stardust.Data.Nodes
             /// <summary>磁盘。应用所在盘，单位M</summary>
             public const String TotalSize = "TotalSize";
 
+            /// <summary>像素点。默认96*96</summary>
+            public const String Dpi = "Dpi";
+
+            /// <summary>分辨率。例如1024*768</summary>
+            public const String Resolution = "Resolution";
+
             /// <summary>处理器</summary>
             public const String Processor = "Processor";
 
@@ -563,6 +608,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>机器标识</summary>
             public const String MachineGuid = "MachineGuid";
+
+            /// <summary>磁盘序列号</summary>
+            public const String DiskID = "DiskID";
 
             /// <summary>网卡</summary>
             public const String MACs = "MACs";
@@ -664,6 +712,12 @@ namespace Stardust.Data.Nodes
         /// <summary>磁盘。应用所在盘，单位M</summary>
         Int32 TotalSize { get; set; }
 
+        /// <summary>像素点。默认96*96</summary>
+        String Dpi { get; set; }
+
+        /// <summary>分辨率。例如1024*768</summary>
+        String Resolution { get; set; }
+
         /// <summary>处理器</summary>
         String Processor { get; set; }
 
@@ -675,6 +729,9 @@ namespace Stardust.Data.Nodes
 
         /// <summary>机器标识</summary>
         String MachineGuid { get; set; }
+
+        /// <summary>磁盘序列号</summary>
+        String DiskID { get; set; }
 
         /// <summary>网卡</summary>
         String MACs { get; set; }

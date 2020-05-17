@@ -39,6 +39,12 @@ namespace Stardust.Models
         /// <summary>磁盘可用空间。应用所在盘</summary>
         public UInt64 AvailableFreeSpace { get; set; }
 
+        /// <summary>像素点。默认96*96</summary>
+        public String Dpi { get; set; }
+
+        /// <summary>分辨率。例如1024*768</summary>
+        public String Resolution { get; set; }
+
         /// <summary>处理器</summary>
         public String Processor { get; set; }
 
@@ -53,6 +59,9 @@ namespace Stardust.Models
 
         /// <summary>机器标识</summary>
         public String MachineGuid { get; set; }
+
+        /// <summary>磁盘标识</summary>
+        public String DiskID { get; set; }
 
         /// <summary>MAC地址</summary>
         public String Macs { get; set; }

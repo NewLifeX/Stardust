@@ -7,5 +7,9 @@
     var fact = ViewBag.Factory as IEntityFactory;
     var page = ViewBag.Page as Pager;
 }
+<div class="form-group">
+    <label for="version" class="control-label">版本：</label>
+    @Html.ForDropDownList("version", Node.FindAllVersion(), page["version"], "全部", true)
+</div>
 @await Html.PartialAsync("_Area2", "")
 @await Html.PartialAsync("_DateRange")
