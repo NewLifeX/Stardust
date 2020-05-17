@@ -23,9 +23,9 @@ namespace Stardust.Models
         //[XmlAttribute]
         //public String WorkingDirectory { get; set; }
 
-        ///// <summary>是否自动启动</summary>
-        //[XmlAttribute]
-        //public Boolean AutoStart { get; set; }
+        /// <summary>是否自动启动</summary>
+        [XmlAttribute]
+        public Boolean AutoStart { get; set; }
 
         /// <summary>启动失败时的重试次数，默认3次</summary>
         [XmlAttribute]

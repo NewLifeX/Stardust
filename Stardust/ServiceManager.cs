@@ -43,7 +43,7 @@ namespace Stardust
                 WriteLog("启动应用[{0}]：{1} {2}", service.Name, service.FileName, service.Arguments);
 
                 //if (item.AutoStart) ts.Add(Task.Run(() => StartService(item)));
-                StartService(service);
+                if (service.AutoStart) StartService(service);
             }
 
             //// 等待全部完成
