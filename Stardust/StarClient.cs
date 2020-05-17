@@ -237,10 +237,15 @@ namespace Stardust
             var pcs = new List<String>();
             foreach (var item in Process.GetProcesses())
             {
-                var name = item.ProcessName;
-                if (name.EqualIgnoreCase(_excludes)) continue;
+                // 有些进程可能已退出，无法获取详细信息
+                try
+                {
+                    var name = item.ProcessName;
+                    if (name.EqualIgnoreCase(_excludes)) continue;
 
-                if (!pcs.Contains(name)) pcs.Add(name);
+                    if (!pcs.Contains(name)) pcs.Add(name);
+                }
+                catch { }
             }
 
             var mi = MachineInfo.Current ?? _task.Result;
