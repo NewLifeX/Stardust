@@ -37,7 +37,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             var end = p["dtEnd"].ToDateTime();
 
             // 默认排序
-            if (start.Year < 2000 && p.Sort.IsNullOrEmpty())
+            if (areaId >= 0 && start.Year < 2000 && p.Sort.IsNullOrEmpty())
             {
                 start = DateTime.Today.AddDays(-30);
                 p["dtStart"] = start.ToString("yyyy-MM-dd");
@@ -46,8 +46,8 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                 p.Desc = false;
                 p.PageSize = 100;
 
-                // 默认全国
-                if (areaId < 0) areaId = 0;
+                //// 默认全国
+                //if (areaId < 0) areaId = 0;
             }
 
             var list = NodeStat.Search(areaId, start, end, p["Q"], p);
@@ -133,16 +133,17 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             var dt = DateTime.Now;
             if (dt.Hour < 18) dt = dt.AddDays(-1);
             var list = NodeStat.FindAllByDate(dt.Date);
-            list = list.Where(e => e.Total > 10).OrderByDescending(e => e.Total).ToList();
+            list = list.OrderByDescending(e => e.Total).ToList();
             if (list.Count == 0) return;
 
             var name = Environment.MachineName;
 
             var sb = new StringBuilder();
-            sb.Append($"星尘[{dt:MM-dd}@{name}]报告：\n");
+            sb.Append($"星尘[{dt:MM-dd}@{name}]报告（今天/7天/30天）：\n");
             foreach (var item in list)
             {
-                sb.Append($"[{item.ProvinceName ?? "全国",4}] 总数{item.Total,5}，活跃{item.Actives,4}，新增{item.News,4}，最高在线{item.MaxOnline,4}");
+                var pname = item.AreaID <= 0 ? "全国" : item.ProvinceName?.Trim();
+                sb.Append($"[{pname}] 总数{item.Total}，活跃{item.Actives}/{item.T7Actives}/{item.T30Actives}，新增{item.News}/{item.T7News}/{item.T30News}，最高在线{item.MaxOnline}");
                 if (item.MaxOnlineTime.Year > 2000) sb.Append($" [{item.MaxOnlineTime.ToFullString("")}]");
                 sb.Append("\n");
             }
