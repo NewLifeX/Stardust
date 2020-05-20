@@ -185,11 +185,15 @@ namespace Stardust
             };
 
 #if !__CORE__
-            // 收集屏幕相关信息
-            var g = System.Drawing.Graphics.FromHwnd(IntPtr.Zero);
-            di.Dpi = $"{g.DpiX}*{g.DpiY}";
-            var screen = System.Windows.Forms.Screen.PrimaryScreen;
-            di.Resolution = $"{screen.Bounds.Width}*{screen.Bounds.Height}";
+            try
+            {
+                // 收集屏幕相关信息。Mono+Linux无法获取
+                var g = System.Drawing.Graphics.FromHwnd(IntPtr.Zero);
+                di.Dpi = $"{g.DpiX}*{g.DpiY}";
+                var screen = System.Windows.Forms.Screen.PrimaryScreen;
+                di.Resolution = $"{screen.Bounds.Width}*{screen.Bounds.Height}";
+            }
+            catch { }
 #endif
 
             return di;
