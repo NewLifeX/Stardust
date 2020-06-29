@@ -59,6 +59,15 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Build.tt</DependentUpon>
     </None>
+    <None Update="Monitors\Build.log">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Build.tt</DependentUpon>
+    </None>
+    <None Update="Monitors\Build.tt">
+      <LastGenOutput>Build.log</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
     <None Update="Nodes\Build.log">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
