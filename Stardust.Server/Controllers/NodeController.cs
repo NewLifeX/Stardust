@@ -441,6 +441,22 @@ namespace Stardust.Server.Controllers
             if (!inf.Processes.IsNullOrEmpty()) olt.Processes = inf.Processes;
             if (!inf.Macs.IsNullOrEmpty()) olt.MACs = inf.Macs;
             //if (!inf.COMs.IsNullOrEmpty()) olt.COMs = inf.COMs;
+
+            // 插入节点数据
+            var data = new NodeData
+            {
+                NodeID = olt.NodeID,
+                AvailableMemory = olt.AvailableMemory,
+                AvailableFreeSpace = olt.AvailableFreeSpace,
+                CpuRate = inf.CpuRate,
+                Temperature = inf.Temperature,
+                Uptime = inf.Uptime,
+                Delay = inf.Delay,
+                LocalTime = dt,
+                Offset = olt.Offset
+            };
+
+            data.SaveAsync();
         }
 
         /// <summary></summary>
