@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.Serialization;
+using System.Web.Script.Serialization;
+using System.Xml.Serialization;
 using XCode;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
@@ -24,7 +27,7 @@ namespace Stardust.Data
         [Description("编号")]
         [DataObjectField(true, true, false, 0)]
         [BindColumn("ID", "编号", "")]
-        public Int32 ID { get { return _ID; } set { if (OnPropertyChanging(__.ID, value)) { _ID = value; OnPropertyChanged(__.ID); } } }
+        public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
         private Int32 _AppID;
         /// <summary>应用</summary>
@@ -32,7 +35,7 @@ namespace Stardust.Data
         [Description("应用")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("AppID", "应用", "")]
-        public Int32 AppID { get { return _AppID; } set { if (OnPropertyChanging(__.AppID, value)) { _AppID = value; OnPropertyChanged(__.AppID); } } }
+        public Int32 AppID { get => _AppID; set { if (OnPropertyChanging("AppID", value)) { _AppID = value; OnPropertyChanged("AppID"); } } }
 
         private String _Session;
         /// <summary>实例。IP加端口</summary>
@@ -40,7 +43,7 @@ namespace Stardust.Data
         [Description("实例。IP加端口")]
         [DataObjectField(false, false, true, 50)]
         [BindColumn("Session", "实例。IP加端口", "")]
-        public String Session { get { return _Session; } set { if (OnPropertyChanging(__.Session, value)) { _Session = value; OnPropertyChanged(__.Session); } } }
+        public String Session { get => _Session; set { if (OnPropertyChanging("Session", value)) { _Session = value; OnPropertyChanged("Session"); } } }
 
         private String _Client;
         /// <summary>客户端。IP加进程</summary>
@@ -48,7 +51,7 @@ namespace Stardust.Data
         [Description("客户端。IP加进程")]
         [DataObjectField(false, false, true, 50)]
         [BindColumn("Client", "客户端。IP加进程", "")]
-        public String Client { get { return _Client; } set { if (OnPropertyChanging(__.Client, value)) { _Client = value; OnPropertyChanged(__.Client); } } }
+        public String Client { get => _Client; set { if (OnPropertyChanging("Client", value)) { _Client = value; OnPropertyChanged("Client"); } } }
 
         private String _Name;
         /// <summary>名称。机器名称</summary>
@@ -56,7 +59,7 @@ namespace Stardust.Data
         [Description("名称。机器名称")]
         [DataObjectField(false, false, true, 50)]
         [BindColumn("Name", "名称。机器名称", "", Master = true)]
-        public String Name { get { return _Name; } set { if (OnPropertyChanging(__.Name, value)) { _Name = value; OnPropertyChanged(__.Name); } } }
+        public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
         private String _Version;
         /// <summary>版本。客户端</summary>
@@ -64,7 +67,7 @@ namespace Stardust.Data
         [Description("版本。客户端")]
         [DataObjectField(false, false, true, 50)]
         [BindColumn("Version", "版本。客户端", "")]
-        public String Version { get { return _Version; } set { if (OnPropertyChanging(__.Version, value)) { _Version = value; OnPropertyChanged(__.Version); } } }
+        public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
         private DateTime _Compile;
         /// <summary>编译时间。客户端</summary>
@@ -72,7 +75,7 @@ namespace Stardust.Data
         [Description("编译时间。客户端")]
         [DataObjectField(false, false, true, 0)]
         [BindColumn("Compile", "编译时间。客户端", "")]
-        public DateTime Compile { get { return _Compile; } set { if (OnPropertyChanging(__.Compile, value)) { _Compile = value; OnPropertyChanged(__.Compile); } } }
+        public DateTime Compile { get => _Compile; set { if (OnPropertyChanging("Compile", value)) { _Compile = value; OnPropertyChanged("Compile"); } } }
 
         private String _Server;
         /// <summary>服务端。客户端登录到哪个服务端，IP加端口</summary>
@@ -80,7 +83,7 @@ namespace Stardust.Data
         [Description("服务端。客户端登录到哪个服务端，IP加端口")]
         [DataObjectField(false, false, true, 50)]
         [BindColumn("Server", "服务端。客户端登录到哪个服务端，IP加端口", "")]
-        public String Server { get { return _Server; } set { if (OnPropertyChanging(__.Server, value)) { _Server = value; OnPropertyChanged(__.Server); } } }
+        public String Server { get => _Server; set { if (OnPropertyChanging("Server", value)) { _Server = value; OnPropertyChanged("Server"); } } }
 
         private Boolean _Active;
         /// <summary>激活。只有激活的应用，才提供服务</summary>
@@ -88,7 +91,7 @@ namespace Stardust.Data
         [Description("激活。只有激活的应用，才提供服务")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Active", "激活。只有激活的应用，才提供服务", "")]
-        public Boolean Active { get { return _Active; } set { if (OnPropertyChanging(__.Active, value)) { _Active = value; OnPropertyChanged(__.Active); } } }
+        public Boolean Active { get => _Active; set { if (OnPropertyChanging("Active", value)) { _Active = value; OnPropertyChanged("Active"); } } }
 
         private String _Address;
         /// <summary>服务地址。tcp://ip:port</summary>
@@ -96,7 +99,7 @@ namespace Stardust.Data
         [Description("服务地址。tcp://ip:port")]
         [DataObjectField(false, false, true, 50)]
         [BindColumn("Address", "服务地址。tcp://ip:port", "")]
-        public String Address { get { return _Address; } set { if (OnPropertyChanging(__.Address, value)) { _Address = value; OnPropertyChanged(__.Address); } } }
+        public String Address { get => _Address; set { if (OnPropertyChanging("Address", value)) { _Address = value; OnPropertyChanged("Address"); } } }
 
         private Int32 _Services;
         /// <summary>服务数。该应用提供的服务数</summary>
@@ -104,7 +107,7 @@ namespace Stardust.Data
         [Description("服务数。该应用提供的服务数")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Services", "服务数。该应用提供的服务数", "")]
-        public Int32 Services { get { return _Services; } set { if (OnPropertyChanging(__.Services, value)) { _Services = value; OnPropertyChanged(__.Services); } } }
+        public Int32 Services { get => _Services; set { if (OnPropertyChanging("Services", value)) { _Services = value; OnPropertyChanged("Services"); } } }
 
         private String _Actions;
         /// <summary>功能列表</summary>
@@ -112,7 +115,7 @@ namespace Stardust.Data
         [Description("功能列表")]
         [DataObjectField(false, false, true, 500)]
         [BindColumn("Actions", "功能列表", "")]
-        public String Actions { get { return _Actions; } set { if (OnPropertyChanging(__.Actions, value)) { _Actions = value; OnPropertyChanged(__.Actions); } } }
+        public String Actions { get => _Actions; set { if (OnPropertyChanging("Actions", value)) { _Actions = value; OnPropertyChanged("Actions"); } } }
 
         private Int32 _Clients;
         /// <summary>客户端数。服务提供者当前服务的客户端数</summary>
@@ -120,7 +123,7 @@ namespace Stardust.Data
         [Description("客户端数。服务提供者当前服务的客户端数")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Clients", "客户端数。服务提供者当前服务的客户端数", "")]
-        public Int32 Clients { get { return _Clients; } set { if (OnPropertyChanging(__.Clients, value)) { _Clients = value; OnPropertyChanged(__.Clients); } } }
+        public Int32 Clients { get => _Clients; set { if (OnPropertyChanging("Clients", value)) { _Clients = value; OnPropertyChanged("Clients"); } } }
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
@@ -128,7 +131,7 @@ namespace Stardust.Data
         [Description("创建时间")]
         [DataObjectField(false, false, true, 0)]
         [BindColumn("CreateTime", "创建时间", "")]
-        public DateTime CreateTime { get { return _CreateTime; } set { if (OnPropertyChanging(__.CreateTime, value)) { _CreateTime = value; OnPropertyChanged(__.CreateTime); } } }
+        public DateTime CreateTime { get => _CreateTime; set { if (OnPropertyChanging("CreateTime", value)) { _CreateTime = value; OnPropertyChanged("CreateTime"); } } }
 
         private String _CreateIP;
         /// <summary>创建地址</summary>
@@ -136,7 +139,7 @@ namespace Stardust.Data
         [Description("创建地址")]
         [DataObjectField(false, false, true, 50)]
         [BindColumn("CreateIP", "创建地址", "")]
-        public String CreateIP { get { return _CreateIP; } set { if (OnPropertyChanging(__.CreateIP, value)) { _CreateIP = value; OnPropertyChanged(__.CreateIP); } } }
+        public String CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
 
         private DateTime _UpdateTime;
         /// <summary>更新时间</summary>
@@ -144,7 +147,7 @@ namespace Stardust.Data
         [Description("更新时间")]
         [DataObjectField(false, false, true, 0)]
         [BindColumn("UpdateTime", "更新时间", "")]
-        public DateTime UpdateTime { get { return _UpdateTime; } set { if (OnPropertyChanging(__.UpdateTime, value)) { _UpdateTime = value; OnPropertyChanged(__.UpdateTime); } } }
+        public DateTime UpdateTime { get => _UpdateTime; set { if (OnPropertyChanging("UpdateTime", value)) { _UpdateTime = value; OnPropertyChanged("UpdateTime"); } } }
         #endregion
 
         #region 获取/设置 字段值
@@ -157,22 +160,22 @@ namespace Stardust.Data
             {
                 switch (name)
                 {
-                    case __.ID : return _ID;
-                    case __.AppID : return _AppID;
-                    case __.Session : return _Session;
-                    case __.Client : return _Client;
-                    case __.Name : return _Name;
-                    case __.Version : return _Version;
-                    case __.Compile : return _Compile;
-                    case __.Server : return _Server;
-                    case __.Active : return _Active;
-                    case __.Address : return _Address;
-                    case __.Services : return _Services;
-                    case __.Actions : return _Actions;
-                    case __.Clients : return _Clients;
-                    case __.CreateTime : return _CreateTime;
-                    case __.CreateIP : return _CreateIP;
-                    case __.UpdateTime : return _UpdateTime;
+                    case "ID": return _ID;
+                    case "AppID": return _AppID;
+                    case "Session": return _Session;
+                    case "Client": return _Client;
+                    case "Name": return _Name;
+                    case "Version": return _Version;
+                    case "Compile": return _Compile;
+                    case "Server": return _Server;
+                    case "Active": return _Active;
+                    case "Address": return _Address;
+                    case "Services": return _Services;
+                    case "Actions": return _Actions;
+                    case "Clients": return _Clients;
+                    case "CreateTime": return _CreateTime;
+                    case "CreateIP": return _CreateIP;
+                    case "UpdateTime": return _UpdateTime;
                     default: return base[name];
                 }
             }
@@ -180,22 +183,22 @@ namespace Stardust.Data
             {
                 switch (name)
                 {
-                    case __.ID : _ID = value.ToInt(); break;
-                    case __.AppID : _AppID = value.ToInt(); break;
-                    case __.Session : _Session = Convert.ToString(value); break;
-                    case __.Client : _Client = Convert.ToString(value); break;
-                    case __.Name : _Name = Convert.ToString(value); break;
-                    case __.Version : _Version = Convert.ToString(value); break;
-                    case __.Compile : _Compile = value.ToDateTime(); break;
-                    case __.Server : _Server = Convert.ToString(value); break;
-                    case __.Active : _Active = value.ToBoolean(); break;
-                    case __.Address : _Address = Convert.ToString(value); break;
-                    case __.Services : _Services = value.ToInt(); break;
-                    case __.Actions : _Actions = Convert.ToString(value); break;
-                    case __.Clients : _Clients = value.ToInt(); break;
-                    case __.CreateTime : _CreateTime = value.ToDateTime(); break;
-                    case __.CreateIP : _CreateIP = Convert.ToString(value); break;
-                    case __.UpdateTime : _UpdateTime = value.ToDateTime(); break;
+                    case "ID": _ID = value.ToInt(); break;
+                    case "AppID": _AppID = value.ToInt(); break;
+                    case "Session": _Session = Convert.ToString(value); break;
+                    case "Client": _Client = Convert.ToString(value); break;
+                    case "Name": _Name = Convert.ToString(value); break;
+                    case "Version": _Version = Convert.ToString(value); break;
+                    case "Compile": _Compile = value.ToDateTime(); break;
+                    case "Server": _Server = Convert.ToString(value); break;
+                    case "Active": _Active = value.ToBoolean(); break;
+                    case "Address": _Address = Convert.ToString(value); break;
+                    case "Services": _Services = value.ToInt(); break;
+                    case "Actions": _Actions = Convert.ToString(value); break;
+                    case "Clients": _Clients = value.ToInt(); break;
+                    case "CreateTime": _CreateTime = value.ToDateTime(); break;
+                    case "CreateIP": _CreateIP = Convert.ToString(value); break;
+                    case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
                     default: base[name] = value; break;
                 }
             }
@@ -207,54 +210,54 @@ namespace Stardust.Data
         public partial class _
         {
             /// <summary>编号</summary>
-            public static readonly Field ID = FindByName(__.ID);
+            public static readonly Field ID = FindByName("ID");
 
             /// <summary>应用</summary>
-            public static readonly Field AppID = FindByName(__.AppID);
+            public static readonly Field AppID = FindByName("AppID");
 
             /// <summary>实例。IP加端口</summary>
-            public static readonly Field Session = FindByName(__.Session);
+            public static readonly Field Session = FindByName("Session");
 
             /// <summary>客户端。IP加进程</summary>
-            public static readonly Field Client = FindByName(__.Client);
+            public static readonly Field Client = FindByName("Client");
 
             /// <summary>名称。机器名称</summary>
-            public static readonly Field Name = FindByName(__.Name);
+            public static readonly Field Name = FindByName("Name");
 
             /// <summary>版本。客户端</summary>
-            public static readonly Field Version = FindByName(__.Version);
+            public static readonly Field Version = FindByName("Version");
 
             /// <summary>编译时间。客户端</summary>
-            public static readonly Field Compile = FindByName(__.Compile);
+            public static readonly Field Compile = FindByName("Compile");
 
             /// <summary>服务端。客户端登录到哪个服务端，IP加端口</summary>
-            public static readonly Field Server = FindByName(__.Server);
+            public static readonly Field Server = FindByName("Server");
 
             /// <summary>激活。只有激活的应用，才提供服务</summary>
-            public static readonly Field Active = FindByName(__.Active);
+            public static readonly Field Active = FindByName("Active");
 
             /// <summary>服务地址。tcp://ip:port</summary>
-            public static readonly Field Address = FindByName(__.Address);
+            public static readonly Field Address = FindByName("Address");
 
             /// <summary>服务数。该应用提供的服务数</summary>
-            public static readonly Field Services = FindByName(__.Services);
+            public static readonly Field Services = FindByName("Services");
 
             /// <summary>功能列表</summary>
-            public static readonly Field Actions = FindByName(__.Actions);
+            public static readonly Field Actions = FindByName("Actions");
 
             /// <summary>客户端数。服务提供者当前服务的客户端数</summary>
-            public static readonly Field Clients = FindByName(__.Clients);
+            public static readonly Field Clients = FindByName("Clients");
 
             /// <summary>创建时间</summary>
-            public static readonly Field CreateTime = FindByName(__.CreateTime);
+            public static readonly Field CreateTime = FindByName("CreateTime");
 
             /// <summary>创建地址</summary>
-            public static readonly Field CreateIP = FindByName(__.CreateIP);
+            public static readonly Field CreateIP = FindByName("CreateIP");
 
             /// <summary>更新时间</summary>
-            public static readonly Field UpdateTime = FindByName(__.UpdateTime);
+            public static readonly Field UpdateTime = FindByName("UpdateTime");
 
-            static Field FindByName(String name) { return Meta.Table.FindByName(name); }
+            static Field FindByName(String name) => Meta.Table.FindByName(name);
         }
 
         /// <summary>取得应用在线字段名称的快捷方式</summary>

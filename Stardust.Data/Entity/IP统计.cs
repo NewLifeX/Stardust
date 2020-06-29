@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.Serialization;
+using System.Web.Script.Serialization;
+using System.Xml.Serialization;
 using XCode;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
@@ -23,7 +26,7 @@ namespace Stardust.Data
         [Description("编号")]
         [DataObjectField(true, true, false, 0)]
         [BindColumn("ID", "编号", "")]
-        public Int32 ID { get { return _ID; } set { if (OnPropertyChanging(__.ID, value)) { _ID = value; OnPropertyChanged(__.ID); } } }
+        public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
         private String _Ip;
         /// <summary>IP地址</summary>
@@ -31,7 +34,7 @@ namespace Stardust.Data
         [Description("IP地址")]
         [DataObjectField(false, false, true, 50)]
         [BindColumn("Ip", "IP地址", "")]
-        public String Ip { get { return _Ip; } set { if (OnPropertyChanging(__.Ip, value)) { _Ip = value; OnPropertyChanged(__.Ip); } } }
+        public String Ip { get => _Ip; set { if (OnPropertyChanging("Ip", value)) { _Ip = value; OnPropertyChanged("Ip"); } } }
 
         private XCode.Statistics.StatLevels _Level;
         /// <summary>层级</summary>
@@ -39,7 +42,7 @@ namespace Stardust.Data
         [Description("层级")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Level", "层级", "")]
-        public XCode.Statistics.StatLevels Level { get { return _Level; } set { if (OnPropertyChanging(__.Level, value)) { _Level = value; OnPropertyChanged(__.Level); } } }
+        public XCode.Statistics.StatLevels Level { get => _Level; set { if (OnPropertyChanging("Level", value)) { _Level = value; OnPropertyChanged("Level"); } } }
 
         private DateTime _Time;
         /// <summary>日期</summary>
@@ -47,7 +50,7 @@ namespace Stardust.Data
         [Description("日期")]
         [DataObjectField(false, false, true, 0)]
         [BindColumn("Time", "日期", "")]
-        public DateTime Time { get { return _Time; } set { if (OnPropertyChanging(__.Time, value)) { _Time = value; OnPropertyChanged(__.Time); } } }
+        public DateTime Time { get => _Time; set { if (OnPropertyChanging("Time", value)) { _Time = value; OnPropertyChanged("Time"); } } }
 
         private Int64 _Count;
         /// <summary>次数</summary>
@@ -55,7 +58,7 @@ namespace Stardust.Data
         [Description("次数")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Count", "次数", "")]
-        public Int64 Count { get { return _Count; } set { if (OnPropertyChanging(__.Count, value)) { _Count = value; OnPropertyChanged(__.Count); } } }
+        public Int64 Count { get => _Count; set { if (OnPropertyChanging("Count", value)) { _Count = value; OnPropertyChanged("Count"); } } }
 
         private Int32 _Cost;
         /// <summary>耗时。平均值，微秒us</summary>
@@ -63,7 +66,7 @@ namespace Stardust.Data
         [Description("耗时。平均值，微秒us")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Cost", "耗时。平均值，微秒us", "")]
-        public Int32 Cost { get { return _Cost; } set { if (OnPropertyChanging(__.Cost, value)) { _Cost = value; OnPropertyChanged(__.Cost); } } }
+        public Int32 Cost { get => _Cost; set { if (OnPropertyChanging("Cost", value)) { _Cost = value; OnPropertyChanged("Cost"); } } }
 
         private Int64 _TotalCost;
         /// <summary>总耗时。微秒us</summary>
@@ -71,7 +74,7 @@ namespace Stardust.Data
         [Description("总耗时。微秒us")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("TotalCost", "总耗时。微秒us", "")]
-        public Int64 TotalCost { get { return _TotalCost; } set { if (OnPropertyChanging(__.TotalCost, value)) { _TotalCost = value; OnPropertyChanged(__.TotalCost); } } }
+        public Int64 TotalCost { get => _TotalCost; set { if (OnPropertyChanging("TotalCost", value)) { _TotalCost = value; OnPropertyChanged("TotalCost"); } } }
 
         private Int32 _LastAppID;
         /// <summary>最后应用</summary>
@@ -79,7 +82,7 @@ namespace Stardust.Data
         [Description("最后应用")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("LastAppID", "最后应用", "")]
-        public Int32 LastAppID { get { return _LastAppID; } set { if (OnPropertyChanging(__.LastAppID, value)) { _LastAppID = value; OnPropertyChanged(__.LastAppID); } } }
+        public Int32 LastAppID { get => _LastAppID; set { if (OnPropertyChanging("LastAppID", value)) { _LastAppID = value; OnPropertyChanged("LastAppID"); } } }
 
         private Int32 _LastServiceID;
         /// <summary>最后服务</summary>
@@ -87,7 +90,7 @@ namespace Stardust.Data
         [Description("最后服务")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("LastServiceID", "最后服务", "")]
-        public Int32 LastServiceID { get { return _LastServiceID; } set { if (OnPropertyChanging(__.LastServiceID, value)) { _LastServiceID = value; OnPropertyChanged(__.LastServiceID); } } }
+        public Int32 LastServiceID { get => _LastServiceID; set { if (OnPropertyChanging("LastServiceID", value)) { _LastServiceID = value; OnPropertyChanged("LastServiceID"); } } }
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
@@ -95,7 +98,7 @@ namespace Stardust.Data
         [Description("创建时间")]
         [DataObjectField(false, false, true, 0)]
         [BindColumn("CreateTime", "创建时间", "")]
-        public DateTime CreateTime { get { return _CreateTime; } set { if (OnPropertyChanging(__.CreateTime, value)) { _CreateTime = value; OnPropertyChanged(__.CreateTime); } } }
+        public DateTime CreateTime { get => _CreateTime; set { if (OnPropertyChanging("CreateTime", value)) { _CreateTime = value; OnPropertyChanged("CreateTime"); } } }
 
         private DateTime _UpdateTime;
         /// <summary>更新时间</summary>
@@ -103,7 +106,7 @@ namespace Stardust.Data
         [Description("更新时间")]
         [DataObjectField(false, false, true, 0)]
         [BindColumn("UpdateTime", "更新时间", "")]
-        public DateTime UpdateTime { get { return _UpdateTime; } set { if (OnPropertyChanging(__.UpdateTime, value)) { _UpdateTime = value; OnPropertyChanged(__.UpdateTime); } } }
+        public DateTime UpdateTime { get => _UpdateTime; set { if (OnPropertyChanging("UpdateTime", value)) { _UpdateTime = value; OnPropertyChanged("UpdateTime"); } } }
         #endregion
 
         #region 获取/设置 字段值
@@ -116,17 +119,17 @@ namespace Stardust.Data
             {
                 switch (name)
                 {
-                    case __.ID : return _ID;
-                    case __.Ip : return _Ip;
-                    case __.Level : return _Level;
-                    case __.Time : return _Time;
-                    case __.Count : return _Count;
-                    case __.Cost : return _Cost;
-                    case __.TotalCost : return _TotalCost;
-                    case __.LastAppID : return _LastAppID;
-                    case __.LastServiceID : return _LastServiceID;
-                    case __.CreateTime : return _CreateTime;
-                    case __.UpdateTime : return _UpdateTime;
+                    case "ID": return _ID;
+                    case "Ip": return _Ip;
+                    case "Level": return _Level;
+                    case "Time": return _Time;
+                    case "Count": return _Count;
+                    case "Cost": return _Cost;
+                    case "TotalCost": return _TotalCost;
+                    case "LastAppID": return _LastAppID;
+                    case "LastServiceID": return _LastServiceID;
+                    case "CreateTime": return _CreateTime;
+                    case "UpdateTime": return _UpdateTime;
                     default: return base[name];
                 }
             }
@@ -134,17 +137,17 @@ namespace Stardust.Data
             {
                 switch (name)
                 {
-                    case __.ID : _ID = value.ToInt(); break;
-                    case __.Ip : _Ip = Convert.ToString(value); break;
-                    case __.Level : _Level = (XCode.Statistics.StatLevels)value.ToInt(); break;
-                    case __.Time : _Time = value.ToDateTime(); break;
-                    case __.Count : _Count = value.ToLong(); break;
-                    case __.Cost : _Cost = value.ToInt(); break;
-                    case __.TotalCost : _TotalCost = value.ToLong(); break;
-                    case __.LastAppID : _LastAppID = value.ToInt(); break;
-                    case __.LastServiceID : _LastServiceID = value.ToInt(); break;
-                    case __.CreateTime : _CreateTime = value.ToDateTime(); break;
-                    case __.UpdateTime : _UpdateTime = value.ToDateTime(); break;
+                    case "ID": _ID = value.ToInt(); break;
+                    case "Ip": _Ip = Convert.ToString(value); break;
+                    case "Level": _Level = (XCode.Statistics.StatLevels)value.ToInt(); break;
+                    case "Time": _Time = value.ToDateTime(); break;
+                    case "Count": _Count = value.ToLong(); break;
+                    case "Cost": _Cost = value.ToInt(); break;
+                    case "TotalCost": _TotalCost = value.ToLong(); break;
+                    case "LastAppID": _LastAppID = value.ToInt(); break;
+                    case "LastServiceID": _LastServiceID = value.ToInt(); break;
+                    case "CreateTime": _CreateTime = value.ToDateTime(); break;
+                    case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
                     default: base[name] = value; break;
                 }
             }
@@ -156,39 +159,39 @@ namespace Stardust.Data
         public partial class _
         {
             /// <summary>编号</summary>
-            public static readonly Field ID = FindByName(__.ID);
+            public static readonly Field ID = FindByName("ID");
 
             /// <summary>IP地址</summary>
-            public static readonly Field Ip = FindByName(__.Ip);
+            public static readonly Field Ip = FindByName("Ip");
 
             /// <summary>层级</summary>
-            public static readonly Field Level = FindByName(__.Level);
+            public static readonly Field Level = FindByName("Level");
 
             /// <summary>日期</summary>
-            public static readonly Field Time = FindByName(__.Time);
+            public static readonly Field Time = FindByName("Time");
 
             /// <summary>次数</summary>
-            public static readonly Field Count = FindByName(__.Count);
+            public static readonly Field Count = FindByName("Count");
 
             /// <summary>耗时。平均值，微秒us</summary>
-            public static readonly Field Cost = FindByName(__.Cost);
+            public static readonly Field Cost = FindByName("Cost");
 
             /// <summary>总耗时。微秒us</summary>
-            public static readonly Field TotalCost = FindByName(__.TotalCost);
+            public static readonly Field TotalCost = FindByName("TotalCost");
 
             /// <summary>最后应用</summary>
-            public static readonly Field LastAppID = FindByName(__.LastAppID);
+            public static readonly Field LastAppID = FindByName("LastAppID");
 
             /// <summary>最后服务</summary>
-            public static readonly Field LastServiceID = FindByName(__.LastServiceID);
+            public static readonly Field LastServiceID = FindByName("LastServiceID");
 
             /// <summary>创建时间</summary>
-            public static readonly Field CreateTime = FindByName(__.CreateTime);
+            public static readonly Field CreateTime = FindByName("CreateTime");
 
             /// <summary>更新时间</summary>
-            public static readonly Field UpdateTime = FindByName(__.UpdateTime);
+            public static readonly Field UpdateTime = FindByName("UpdateTime");
 
-            static Field FindByName(String name) { return Meta.Table.FindByName(name); }
+            static Field FindByName(String name) => Meta.Table.FindByName(name);
         }
 
         /// <summary>取得IP统计字段名称的快捷方式</summary>

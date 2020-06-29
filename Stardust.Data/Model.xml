@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Tables Version="9.11.7018.40371" NameSpace="Stardust.Data" ConnName="Stardust" Output="Entity" BaseClass="EntityBase">
-  <Table Name="App" Description="应用系统。服务提供者和消费者">
+<Tables Version="9.17.7456.18658" xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data" ConnName="Stardust" Output="Entity" BaseClass="EntityBase" IgnoreNameCase="True" xmlns="http://www.newlifex.com/Model2020.xsd">
+  <Table Name="App" Description="应用系统。服务提供者和消费者" IgnoreNameCase="False">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
       <Column Name="DisplayName" DataType="String" Description="显示名" />
       <Column Name="Secret" DataType="String" Description="密钥" />
+      <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="AutoActive" DataType="Boolean" Description="自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务" />
       <Column Name="Namespace" DataType="String" Description="命名空间。限制该应用只能发布指定命名空间的服务，多个用逗号分隔" />
@@ -27,7 +28,7 @@
       <Index Columns="Name" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="AppOnline" Description="应用在线。一个应用有多个部署，每个在线会话对应一个服务地址">
+  <Table Name="AppOnline" Description="应用在线。一个应用有多个部署，每个在线会话对应一个服务地址" IgnoreNameCase="False">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppID" DataType="Int32" Description="应用" />
@@ -52,7 +53,7 @@
       <Index Columns="AppID" />
     </Indexes>
   </Table>
-  <Table Name="AppHistory" Description="应用历史">
+  <Table Name="AppHistory" Description="应用历史" IgnoreNameCase="False">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppID" DataType="Int32" Description="应用" />
@@ -69,7 +70,7 @@
       <Index Columns="AppID" />
     </Indexes>
   </Table>
-  <Table Name="Service" Description="服务。服务提供者发布的服务">
+  <Table Name="Service" Description="服务。服务提供者发布的服务" IgnoreNameCase="False">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称。调用Api的字符串：Data/GetSite中的Data" />
@@ -93,7 +94,7 @@
       <Index Columns="Name" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="AppService" Description="应用服务。应用提供的服务">
+  <Table Name="AppService" Description="应用服务。应用提供的服务" IgnoreNameCase="False">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppID" DataType="Int32" Description="应用" />
@@ -112,7 +113,7 @@
       <Index Columns="AppID,ServiceID" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="AppConsume" Description="应用消费。应用消费的服务">
+  <Table Name="AppConsume" Description="应用消费。应用消费的服务" IgnoreNameCase="False">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppID" DataType="Int32" Description="应用" />
@@ -131,7 +132,7 @@
       <Index Columns="AppID,ServiceID" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="AppStat" Description="应用统计。记录应用每天访问量">
+  <Table Name="AppStat" Description="应用统计。记录应用每天访问量" IgnoreNameCase="False">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppID" DataType="Int32" Description="应用" />
@@ -149,7 +150,7 @@
       <Index Columns="Level,Time" />
     </Indexes>
   </Table>
-  <Table Name="ServiceStat" Description="服务统计。记录服务每天访问量">
+  <Table Name="ServiceStat" Description="服务统计。记录服务每天访问量" IgnoreNameCase="False">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="ServiceID" DataType="Int32" Description="服务" />
@@ -167,7 +168,7 @@
       <Index Columns="Level,Time" />
     </Indexes>
   </Table>
-  <Table Name="IpStat" Description="IP统计。记录IP地址每天访问量">
+  <Table Name="IpStat" Description="IP统计。记录IP地址每天访问量" IgnoreNameCase="False">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="Ip" DataType="String" Description="IP地址" />

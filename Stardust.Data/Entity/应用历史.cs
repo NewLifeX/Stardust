@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.Serialization;
+using System.Web.Script.Serialization;
+using System.Xml.Serialization;
 using XCode;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
@@ -22,7 +25,7 @@ namespace Stardust.Data
         [Description("编号")]
         [DataObjectField(true, true, false, 0)]
         [BindColumn("ID", "编号", "")]
-        public Int32 ID { get { return _ID; } set { if (OnPropertyChanging(__.ID, value)) { _ID = value; OnPropertyChanged(__.ID); } } }
+        public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
         private Int32 _AppID;
         /// <summary>应用</summary>
@@ -30,7 +33,7 @@ namespace Stardust.Data
         [Description("应用")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("AppID", "应用", "")]
-        public Int32 AppID { get { return _AppID; } set { if (OnPropertyChanging(__.AppID, value)) { _AppID = value; OnPropertyChanged(__.AppID); } } }
+        public Int32 AppID { get => _AppID; set { if (OnPropertyChanging("AppID", value)) { _AppID = value; OnPropertyChanged("AppID"); } } }
 
         private String _Version;
         /// <summary>版本</summary>
@@ -38,7 +41,7 @@ namespace Stardust.Data
         [Description("版本")]
         [DataObjectField(false, false, true, 50)]
         [BindColumn("Version", "版本", "")]
-        public String Version { get { return _Version; } set { if (OnPropertyChanging(__.Version, value)) { _Version = value; OnPropertyChanged(__.Version); } } }
+        public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
         private String _Action;
         /// <summary>操作</summary>
@@ -46,7 +49,7 @@ namespace Stardust.Data
         [Description("操作")]
         [DataObjectField(false, false, true, 50)]
         [BindColumn("Action", "操作", "")]
-        public String Action { get { return _Action; } set { if (OnPropertyChanging(__.Action, value)) { _Action = value; OnPropertyChanged(__.Action); } } }
+        public String Action { get => _Action; set { if (OnPropertyChanging("Action", value)) { _Action = value; OnPropertyChanged("Action"); } } }
 
         private Boolean _Success;
         /// <summary>成功</summary>
@@ -54,7 +57,7 @@ namespace Stardust.Data
         [Description("成功")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Success", "成功", "")]
-        public Boolean Success { get { return _Success; } set { if (OnPropertyChanging(__.Success, value)) { _Success = value; OnPropertyChanged(__.Success); } } }
+        public Boolean Success { get => _Success; set { if (OnPropertyChanging("Success", value)) { _Success = value; OnPropertyChanged("Success"); } } }
 
         private String _Remark;
         /// <summary>内容</summary>
@@ -62,7 +65,7 @@ namespace Stardust.Data
         [Description("内容")]
         [DataObjectField(false, false, true, 500)]
         [BindColumn("Remark", "内容", "")]
-        public String Remark { get { return _Remark; } set { if (OnPropertyChanging(__.Remark, value)) { _Remark = value; OnPropertyChanged(__.Remark); } } }
+        public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
 
         private String _CreateUser;
         /// <summary>创建者</summary>
@@ -70,7 +73,7 @@ namespace Stardust.Data
         [Description("创建者")]
         [DataObjectField(false, false, true, 50)]
         [BindColumn("CreateUser", "创建者", "")]
-        public String CreateUser { get { return _CreateUser; } set { if (OnPropertyChanging(__.CreateUser, value)) { _CreateUser = value; OnPropertyChanged(__.CreateUser); } } }
+        public String CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
 
         private Int32 _CreateUserID;
         /// <summary>创建者</summary>
@@ -78,7 +81,7 @@ namespace Stardust.Data
         [Description("创建者")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("CreateUserID", "创建者", "")]
-        public Int32 CreateUserID { get { return _CreateUserID; } set { if (OnPropertyChanging(__.CreateUserID, value)) { _CreateUserID = value; OnPropertyChanged(__.CreateUserID); } } }
+        public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
@@ -86,7 +89,7 @@ namespace Stardust.Data
         [Description("创建时间")]
         [DataObjectField(false, false, true, 0)]
         [BindColumn("CreateTime", "创建时间", "")]
-        public DateTime CreateTime { get { return _CreateTime; } set { if (OnPropertyChanging(__.CreateTime, value)) { _CreateTime = value; OnPropertyChanged(__.CreateTime); } } }
+        public DateTime CreateTime { get => _CreateTime; set { if (OnPropertyChanging("CreateTime", value)) { _CreateTime = value; OnPropertyChanged("CreateTime"); } } }
 
         private String _CreateIP;
         /// <summary>创建地址</summary>
@@ -94,7 +97,7 @@ namespace Stardust.Data
         [Description("创建地址")]
         [DataObjectField(false, false, true, 50)]
         [BindColumn("CreateIP", "创建地址", "")]
-        public String CreateIP { get { return _CreateIP; } set { if (OnPropertyChanging(__.CreateIP, value)) { _CreateIP = value; OnPropertyChanged(__.CreateIP); } } }
+        public String CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
         #endregion
 
         #region 获取/设置 字段值
@@ -107,16 +110,16 @@ namespace Stardust.Data
             {
                 switch (name)
                 {
-                    case __.ID : return _ID;
-                    case __.AppID : return _AppID;
-                    case __.Version : return _Version;
-                    case __.Action : return _Action;
-                    case __.Success : return _Success;
-                    case __.Remark : return _Remark;
-                    case __.CreateUser : return _CreateUser;
-                    case __.CreateUserID : return _CreateUserID;
-                    case __.CreateTime : return _CreateTime;
-                    case __.CreateIP : return _CreateIP;
+                    case "ID": return _ID;
+                    case "AppID": return _AppID;
+                    case "Version": return _Version;
+                    case "Action": return _Action;
+                    case "Success": return _Success;
+                    case "Remark": return _Remark;
+                    case "CreateUser": return _CreateUser;
+                    case "CreateUserID": return _CreateUserID;
+                    case "CreateTime": return _CreateTime;
+                    case "CreateIP": return _CreateIP;
                     default: return base[name];
                 }
             }
@@ -124,16 +127,16 @@ namespace Stardust.Data
             {
                 switch (name)
                 {
-                    case __.ID : _ID = value.ToInt(); break;
-                    case __.AppID : _AppID = value.ToInt(); break;
-                    case __.Version : _Version = Convert.ToString(value); break;
-                    case __.Action : _Action = Convert.ToString(value); break;
-                    case __.Success : _Success = value.ToBoolean(); break;
-                    case __.Remark : _Remark = Convert.ToString(value); break;
-                    case __.CreateUser : _CreateUser = Convert.ToString(value); break;
-                    case __.CreateUserID : _CreateUserID = value.ToInt(); break;
-                    case __.CreateTime : _CreateTime = value.ToDateTime(); break;
-                    case __.CreateIP : _CreateIP = Convert.ToString(value); break;
+                    case "ID": _ID = value.ToInt(); break;
+                    case "AppID": _AppID = value.ToInt(); break;
+                    case "Version": _Version = Convert.ToString(value); break;
+                    case "Action": _Action = Convert.ToString(value); break;
+                    case "Success": _Success = value.ToBoolean(); break;
+                    case "Remark": _Remark = Convert.ToString(value); break;
+                    case "CreateUser": _CreateUser = Convert.ToString(value); break;
+                    case "CreateUserID": _CreateUserID = value.ToInt(); break;
+                    case "CreateTime": _CreateTime = value.ToDateTime(); break;
+                    case "CreateIP": _CreateIP = Convert.ToString(value); break;
                     default: base[name] = value; break;
                 }
             }
@@ -145,36 +148,36 @@ namespace Stardust.Data
         public partial class _
         {
             /// <summary>编号</summary>
-            public static readonly Field ID = FindByName(__.ID);
+            public static readonly Field ID = FindByName("ID");
 
             /// <summary>应用</summary>
-            public static readonly Field AppID = FindByName(__.AppID);
+            public static readonly Field AppID = FindByName("AppID");
 
             /// <summary>版本</summary>
-            public static readonly Field Version = FindByName(__.Version);
+            public static readonly Field Version = FindByName("Version");
 
             /// <summary>操作</summary>
-            public static readonly Field Action = FindByName(__.Action);
+            public static readonly Field Action = FindByName("Action");
 
             /// <summary>成功</summary>
-            public static readonly Field Success = FindByName(__.Success);
+            public static readonly Field Success = FindByName("Success");
 
             /// <summary>内容</summary>
-            public static readonly Field Remark = FindByName(__.Remark);
+            public static readonly Field Remark = FindByName("Remark");
 
             /// <summary>创建者</summary>
-            public static readonly Field CreateUser = FindByName(__.CreateUser);
+            public static readonly Field CreateUser = FindByName("CreateUser");
 
             /// <summary>创建者</summary>
-            public static readonly Field CreateUserID = FindByName(__.CreateUserID);
+            public static readonly Field CreateUserID = FindByName("CreateUserID");
 
             /// <summary>创建时间</summary>
-            public static readonly Field CreateTime = FindByName(__.CreateTime);
+            public static readonly Field CreateTime = FindByName("CreateTime");
 
             /// <summary>创建地址</summary>
-            public static readonly Field CreateIP = FindByName(__.CreateIP);
+            public static readonly Field CreateIP = FindByName("CreateIP");
 
-            static Field FindByName(String name) { return Meta.Table.FindByName(name); }
+            static Field FindByName(String name) => Meta.Table.FindByName(name);
         }
 
         /// <summary>取得应用历史字段名称的快捷方式</summary>
