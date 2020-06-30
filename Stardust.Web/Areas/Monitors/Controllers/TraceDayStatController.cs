@@ -4,10 +4,9 @@ using NewLife.Cube;
 using NewLife.Cube.Charts;
 using NewLife.Web;
 using Stardust.Data.Monitors;
-using Stardust.Web.Areas.Monitors;
 using static Stardust.Data.Monitors.TraceDayStat;
 
-namespace Stardust.Web.Areas.Nodes.Controllers
+namespace Stardust.Web.Areas.Monitors.Controllers
 {
     [MonitorsArea]
     public class TraceDayStatController : EntityController<TraceDayStat>
