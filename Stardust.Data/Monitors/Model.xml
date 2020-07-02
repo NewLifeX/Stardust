@@ -28,7 +28,7 @@
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@processid" />
+      <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@proccessid" />
       <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
       <Column Name="StartTime" DataType="Int64" Description="开始时间" />
       <Column Name="EndTime" DataType="Int64" Description="结束时间" />
