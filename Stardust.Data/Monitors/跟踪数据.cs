@@ -37,11 +37,11 @@ namespace Stardust.Data.Monitors
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
         private String _ClientId;
-        /// <summary>实例。应用可能多实例部署，ip@processid</summary>
+        /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
         [DisplayName("实例")]
-        [Description("实例。应用可能多实例部署，ip@processid")]
+        [Description("实例。应用可能多实例部署，ip@proccessid")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("ClientId", "实例。应用可能多实例部署，ip@processid", "")]
+        [BindColumn("ClientId", "实例。应用可能多实例部署，ip@proccessid", "")]
         public String ClientId { get => _ClientId; set { if (OnPropertyChanging("ClientId", value)) { _ClientId = value; OnPropertyChanged("ClientId"); } } }
 
         private String _Name;
@@ -53,19 +53,19 @@ namespace Stardust.Data.Monitors
         public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
         private Int64 _StartTime;
-        /// <summary>开始时间</summary>
+        /// <summary>开始时间。Unix毫秒</summary>
         [DisplayName("开始时间")]
-        [Description("开始时间")]
+        [Description("开始时间。Unix毫秒")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("StartTime", "开始时间", "")]
+        [BindColumn("StartTime", "开始时间。Unix毫秒", "")]
         public Int64 StartTime { get => _StartTime; set { if (OnPropertyChanging("StartTime", value)) { _StartTime = value; OnPropertyChanged("StartTime"); } } }
 
         private Int64 _EndTime;
-        /// <summary>结束时间</summary>
+        /// <summary>结束时间。Unix毫秒</summary>
         [DisplayName("结束时间")]
-        [Description("结束时间")]
+        [Description("结束时间。Unix毫秒")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("EndTime", "结束时间", "")]
+        [BindColumn("EndTime", "结束时间。Unix毫秒", "")]
         public Int64 EndTime { get => _EndTime; set { if (OnPropertyChanging("EndTime", value)) { _EndTime = value; OnPropertyChanged("EndTime"); } } }
 
         private Int32 _Total;
@@ -116,21 +116,29 @@ namespace Stardust.Data.Monitors
         [BindColumn("MinCost", "最小耗时。单位毫秒", "")]
         public Int32 MinCost { get => _MinCost; set { if (OnPropertyChanging("MinCost", value)) { _MinCost = value; OnPropertyChanged("MinCost"); } } }
 
-        private String _Samples;
+        private Int32 _Samples;
         /// <summary>正常采样</summary>
         [DisplayName("正常采样")]
         [Description("正常采样")]
-        [DataObjectField(false, false, true, 2000)]
+        [DataObjectField(false, false, false, 0)]
         [BindColumn("Samples", "正常采样", "")]
-        public String Samples { get => _Samples; set { if (OnPropertyChanging("Samples", value)) { _Samples = value; OnPropertyChanged("Samples"); } } }
+        public Int32 Samples { get => _Samples; set { if (OnPropertyChanging("Samples", value)) { _Samples = value; OnPropertyChanged("Samples"); } } }
 
-        private String _ErrorSamples;
+        private Int32 _ErrorSamples;
         /// <summary>异常采样</summary>
         [DisplayName("异常采样")]
         [Description("异常采样")]
-        [DataObjectField(false, false, true, 8000)]
+        [DataObjectField(false, false, false, 0)]
         [BindColumn("ErrorSamples", "异常采样", "")]
-        public String ErrorSamples { get => _ErrorSamples; set { if (OnPropertyChanging("ErrorSamples", value)) { _ErrorSamples = value; OnPropertyChanged("ErrorSamples"); } } }
+        public Int32 ErrorSamples { get => _ErrorSamples; set { if (OnPropertyChanging("ErrorSamples", value)) { _ErrorSamples = value; OnPropertyChanged("ErrorSamples"); } } }
+
+        private String _CreateIP;
+        /// <summary>创建地址</summary>
+        [DisplayName("创建地址")]
+        [Description("创建地址")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("CreateIP", "创建地址", "")]
+        public String CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
@@ -165,6 +173,7 @@ namespace Stardust.Data.Monitors
                     case "MinCost": return _MinCost;
                     case "Samples": return _Samples;
                     case "ErrorSamples": return _ErrorSamples;
+                    case "CreateIP": return _CreateIP;
                     case "CreateTime": return _CreateTime;
                     default: return base[name];
                 }
@@ -185,8 +194,9 @@ namespace Stardust.Data.Monitors
                     case "Cost": _Cost = value.ToInt(); break;
                     case "MaxCost": _MaxCost = value.ToInt(); break;
                     case "MinCost": _MinCost = value.ToInt(); break;
-                    case "Samples": _Samples = Convert.ToString(value); break;
-                    case "ErrorSamples": _ErrorSamples = Convert.ToString(value); break;
+                    case "Samples": _Samples = value.ToInt(); break;
+                    case "ErrorSamples": _ErrorSamples = value.ToInt(); break;
+                    case "CreateIP": _CreateIP = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     default: base[name] = value; break;
                 }
@@ -204,16 +214,16 @@ namespace Stardust.Data.Monitors
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
 
-            /// <summary>实例。应用可能多实例部署，ip@processid</summary>
+            /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
             public static readonly Field ClientId = FindByName("ClientId");
 
             /// <summary>操作名。接口名或埋点名</summary>
             public static readonly Field Name = FindByName("Name");
 
-            /// <summary>开始时间</summary>
+            /// <summary>开始时间。Unix毫秒</summary>
             public static readonly Field StartTime = FindByName("StartTime");
 
-            /// <summary>结束时间</summary>
+            /// <summary>结束时间。Unix毫秒</summary>
             public static readonly Field EndTime = FindByName("EndTime");
 
             /// <summary>总次数</summary>
@@ -240,6 +250,9 @@ namespace Stardust.Data.Monitors
             /// <summary>异常采样</summary>
             public static readonly Field ErrorSamples = FindByName("ErrorSamples");
 
+            /// <summary>创建地址</summary>
+            public static readonly Field CreateIP = FindByName("CreateIP");
+
             /// <summary>创建时间</summary>
             public static readonly Field CreateTime = FindByName("CreateTime");
 
@@ -255,16 +268,16 @@ namespace Stardust.Data.Monitors
             /// <summary>应用</summary>
             public const String AppId = "AppId";
 
-            /// <summary>实例。应用可能多实例部署，ip@processid</summary>
+            /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
             public const String ClientId = "ClientId";
 
             /// <summary>操作名。接口名或埋点名</summary>
             public const String Name = "Name";
 
-            /// <summary>开始时间</summary>
+            /// <summary>开始时间。Unix毫秒</summary>
             public const String StartTime = "StartTime";
 
-            /// <summary>结束时间</summary>
+            /// <summary>结束时间。Unix毫秒</summary>
             public const String EndTime = "EndTime";
 
             /// <summary>总次数</summary>
@@ -291,6 +304,9 @@ namespace Stardust.Data.Monitors
             /// <summary>异常采样</summary>
             public const String ErrorSamples = "ErrorSamples";
 
+            /// <summary>创建地址</summary>
+            public const String CreateIP = "CreateIP";
+
             /// <summary>创建时间</summary>
             public const String CreateTime = "CreateTime";
         }
@@ -307,16 +323,16 @@ namespace Stardust.Data.Monitors
         /// <summary>应用</summary>
         Int32 AppId { get; set; }
 
-        /// <summary>实例。应用可能多实例部署，ip@processid</summary>
+        /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
         String ClientId { get; set; }
 
         /// <summary>操作名。接口名或埋点名</summary>
         String Name { get; set; }
 
-        /// <summary>开始时间</summary>
+        /// <summary>开始时间。Unix毫秒</summary>
         Int64 StartTime { get; set; }
 
-        /// <summary>结束时间</summary>
+        /// <summary>结束时间。Unix毫秒</summary>
         Int64 EndTime { get; set; }
 
         /// <summary>总次数</summary>
@@ -338,10 +354,13 @@ namespace Stardust.Data.Monitors
         Int32 MinCost { get; set; }
 
         /// <summary>正常采样</summary>
-        String Samples { get; set; }
+        Int32 Samples { get; set; }
 
         /// <summary>异常采样</summary>
-        String ErrorSamples { get; set; }
+        Int32 ErrorSamples { get; set; }
+
+        /// <summary>创建地址</summary>
+        String CreateIP { get; set; }
 
         /// <summary>创建时间</summary>
         DateTime CreateTime { get; set; }

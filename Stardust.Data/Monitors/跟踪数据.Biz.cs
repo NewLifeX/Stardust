@@ -1,26 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
-using System.Web.Script.Serialization;
-using System.Xml.Serialization;
-using NewLife;
 using NewLife.Data;
 using NewLife.Log;
-using NewLife.Model;
-using NewLife.Reflection;
-using NewLife.Threading;
-using NewLife.Web;
 using XCode;
-using XCode.Cache;
-using XCode.Configuration;
-using XCode.DataAccessLayer;
 using XCode.Membership;
 
 namespace Stardust.Data.Monitors
@@ -46,53 +28,8 @@ namespace Stardust.Data.Monitors
             // 如果没有脏数据，则不需要进行任何处理
             if (!HasDirty) return;
 
-            // 在新插入数据或者修改了指定字段时进行修正
-            //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
+            Cost = Total == 0 ? 0 : (Int32)(TotalCost / Total);
         }
-
-        ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
-        //[EditorBrowsable(EditorBrowsableState.Never)]
-        //protected override void InitData()
-        //{
-        //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
-        //    if (Meta.Session.Count > 0) return;
-
-        //    if (XTrace.Debug) XTrace.WriteLine("开始初始化TraceData[跟踪数据]数据……");
-
-        //    var entity = new TraceData();
-        //    entity.ID = 0;
-        //    entity.AppId = 0;
-        //    entity.ClientId = "abc";
-        //    entity.Name = "abc";
-        //    entity.StartTime = 0;
-        //    entity.EndTime = 0;
-        //    entity.Total = 0;
-        //    entity.Errors = 0;
-        //    entity.TotalCost = 0;
-        //    entity.Cost = 0;
-        //    entity.MaxCost = 0;
-        //    entity.MinCost = 0;
-        //    entity.Samples = "abc";
-        //    entity.ErrorSamples = "abc";
-        //    entity.CreateTime = DateTime.Now;
-        //    entity.Insert();
-
-        //    if (XTrace.Debug) XTrace.WriteLine("完成初始化TraceData[跟踪数据]数据！");
-        //}
-
-        ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
-        ///// <returns></returns>
-        //public override Int32 Insert()
-        //{
-        //    return base.Insert();
-        //}
-
-        ///// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>
-        ///// <returns></returns>
-        //protected override Int32 OnDelete()
-        //{
-        //    return base.OnDelete();
-        //}
         #endregion
 
         #region 扩展属性
@@ -161,6 +98,29 @@ namespace Stardust.Data.Monitors
         #endregion
 
         #region 业务操作
+        /// <summary>根据跟踪数据创建对象</summary>
+        /// <param name="builder"></param>
+        /// <returns></returns>
+        public static TraceData Create(ISpanBuilder builder)
+        {
+            var td = new TraceData
+            {
+                Name = builder.Name,
+                StartTime = builder.StartTime,
+                EndTime = builder.EndTime,
+
+                Total = builder.Total,
+                Errors = builder.Errors,
+                TotalCost = builder.Cost,
+                MaxCost = builder.MaxCost,
+                MinCost = builder.MinCost,
+            };
+
+            if (builder.Samples != null) td.Samples = builder.Samples.Count;
+            if (builder.ErrorSamples != null) td.ErrorSamples = builder.ErrorSamples.Count;
+
+            return td;
+        }
         #endregion
     }
 }
