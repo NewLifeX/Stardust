@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Xml.Serialization;
 using NewLife.Data;
 using XCode;
 using XCode.Membership;
@@ -79,6 +81,7 @@ namespace Stardust.Data.Nodes
 
         #region 扩展属性
         /// <summary>省份</summary>
+        [XmlIgnore, IgnoreDataMember]
         public Area Province => Extends.Get(nameof(Province), k => Area.FindByID(AreaID));
 
         /// <summary>省份名</summary>

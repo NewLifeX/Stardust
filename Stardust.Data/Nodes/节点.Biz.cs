@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Web.Script.Serialization;
+using System.Xml.Serialization;
 using XCode;
 using XCode.Cache;
 using XCode.Membership;
@@ -53,6 +55,7 @@ namespace Stardust.Data.Nodes
 
         #region 扩展属性
         /// <summary>省份</summary>
+        [XmlIgnore, ScriptIgnore]
         public Area Province => Extends.Get(nameof(Province), k => Area.FindByID(ProvinceID));
 
         /// <summary>省份名</summary>
@@ -60,6 +63,7 @@ namespace Stardust.Data.Nodes
         public String ProvinceName => Province + "";
 
         /// <summary>城市</summary>
+        [XmlIgnore, ScriptIgnore]
         public Area City => Extends.Get(nameof(City), k => Area.FindByID(CityID));
 
         /// <summary>城市名</summary>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife.Data;
@@ -49,6 +50,7 @@ namespace Stardust.Data.Nodes
         public String NodeName => Node + "";
 
         /// <summary>省份</summary>
+        [XmlIgnore, IgnoreDataMember]
         public Area Province => Extends.Get(nameof(Province), k => Area.FindByID(ProvinceID));
 
         /// <summary>省份名</summary>
@@ -56,6 +58,7 @@ namespace Stardust.Data.Nodes
         public String ProvinceName => Province + "";
 
         /// <summary>城市</summary>
+        [XmlIgnore, IgnoreDataMember]
         public Area City => Extends.Get(nameof(City), k => Area.FindByID(CityID));
 
         /// <summary>城市名</summary>
