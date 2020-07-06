@@ -47,11 +47,11 @@ namespace Stardust.Data.Monitors
 
         /// <summary>开始时间</summary>
         [Map(nameof(StartTime))]
-        public DateTime Start => StartTime.ToDateTime();
+        public DateTime Start => StartTime.ToDateTime().ToLocalTime();
 
         /// <summary>结束时间</summary>
         [Map(nameof(EndTime))]
-        public DateTime End => EndTime.ToDateTime();
+        public DateTime End => EndTime.ToDateTime().ToLocalTime();
         #endregion
 
         #region 扩展查询

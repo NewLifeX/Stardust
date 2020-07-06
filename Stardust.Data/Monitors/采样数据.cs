@@ -78,11 +78,11 @@ namespace Stardust.Data.Monitors
         public String SpanId { get => _SpanId; set { if (OnPropertyChanging("SpanId", value)) { _SpanId = value; OnPropertyChanged("SpanId"); } } }
 
         private String _ParentId;
-        /// <summary>父级片段标识</summary>
-        [DisplayName("父级片段标识")]
-        [Description("父级片段标识")]
+        /// <summary>父级标识</summary>
+        [DisplayName("父级标识")]
+        [Description("父级标识")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("ParentId", "父级片段标识", "")]
+        [BindColumn("ParentId", "父级标识", "")]
         public String ParentId { get => _ParentId; set { if (OnPropertyChanging("ParentId", value)) { _ParentId = value; OnPropertyChanged("ParentId"); } } }
 
         private String _Tag;
@@ -180,7 +180,7 @@ namespace Stardust.Data.Monitors
             /// <summary>唯一标识。随线程上下文、Http、Rpc传递，作为内部片段的父级</summary>
             public static readonly Field SpanId = FindByName("SpanId");
 
-            /// <summary>父级片段标识</summary>
+            /// <summary>父级标识</summary>
             public static readonly Field ParentId = FindByName("ParentId");
 
             /// <summary>数据标签。记录一些附加数据</summary>
@@ -219,7 +219,7 @@ namespace Stardust.Data.Monitors
             /// <summary>唯一标识。随线程上下文、Http、Rpc传递，作为内部片段的父级</summary>
             public const String SpanId = "SpanId";
 
-            /// <summary>父级片段标识</summary>
+            /// <summary>父级标识</summary>
             public const String ParentId = "ParentId";
 
             /// <summary>数据标签。记录一些附加数据</summary>
@@ -259,7 +259,7 @@ namespace Stardust.Data.Monitors
         /// <summary>唯一标识。随线程上下文、Http、Rpc传递，作为内部片段的父级</summary>
         String SpanId { get; set; }
 
-        /// <summary>父级片段标识</summary>
+        /// <summary>父级标识</summary>
         String ParentId { get; set; }
 
         /// <summary>数据标签。记录一些附加数据</summary>

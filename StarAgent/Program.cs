@@ -70,7 +70,7 @@ namespace StarAgent
             };
 
             // APM埋点
-            var tracer = new StarTracer { Client = client, Log = XTrace.Log, Period = 15 };
+            var tracer = new StarTracer { Client = client, Log = XTrace.Log };
             DefaultTracer.Instance = tracer;
             client.Tracer = tracer;
 
