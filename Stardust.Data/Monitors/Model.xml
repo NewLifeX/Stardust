@@ -51,7 +51,7 @@
   <Table Name="SampleData" Description="采样数据。具体调用或异常详情" IgnoreNameCase="False">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="DataId" DataType="Int32" Description="跟踪数据" />
+      <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="Success" DataType="Boolean" Description="正常" />
       <Column Name="StartTime" DataType="Int64" Description="开始时间。Unix毫秒" />
       <Column Name="EndTime" DataType="Int64" Description="结束时间。Unix毫秒" />
@@ -63,7 +63,7 @@
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
     </Columns>
     <Indexes>
-      <Index Columns="DataId" />
+      <Index Columns="AppId,StartTime" />
       <Index Columns="TraceId" />
       <Index Columns="CreateTime" />
     </Indexes>

@@ -27,10 +27,16 @@
   <ItemGroup>
     <Compile Remove="Config\**" />
     <Compile Remove="Log\**" />
+    <Compile Remove="Monitors\Config\**" />
+    <Compile Remove="Monitors\Log\**" />
     <EmbeddedResource Remove="Config\**" />
     <EmbeddedResource Remove="Log\**" />
+    <EmbeddedResource Remove="Monitors\Config\**" />
+    <EmbeddedResource Remove="Monitors\Log\**" />
     <None Remove="Config\**" />
     <None Remove="Log\**" />
+    <None Remove="Monitors\Config\**" />
+    <None Remove="Monitors\Log\**" />
   </ItemGroup>
 
   <ItemGroup>

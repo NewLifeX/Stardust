@@ -36,7 +36,8 @@ namespace Stardust.Server.Controllers
             // 插入数据
             var ip = ManageProvider.UserHost;
 
-            using var tran = TraceData.Meta.CreateTrans();
+            var traces = new List<TraceData>();
+            var samples = new List<SampleData>();
             foreach (var item in builders)
             {
                 var td = TraceData.Create(item);
@@ -45,16 +46,18 @@ namespace Stardust.Server.Controllers
                 td.CreateIP = ip;
                 td.CreateTime = DateTime.Now;
 
-                td.Insert();
+                //td.Insert();
+                traces.Add(td);
 
-                var list = new List<SampleData>();
-                list.AddRange(SampleData.Create(item.Samples, td.ID));
-                list.AddRange(SampleData.Create(item.ErrorSamples, td.ID));
+                samples.AddRange(SampleData.Create(td.ID, item.Samples));
+                samples.AddRange(SampleData.Create(td.ID, item.ErrorSamples));
 
-                if (list.Count > 0) list.Insert(true);
+                //if (samples.Count > 0) samples.Insert(true);
             }
 
-            tran.Commit();
+            //tran.Commit();
+            traces.Insert(true);
+            samples.Insert(true);
 
             // 构造响应
             return new TraceResponse

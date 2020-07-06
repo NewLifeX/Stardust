@@ -54,17 +54,6 @@ namespace Stardust.Data.Monitors
             //return Find(_.ID == id);
         }
 
-        /// <summary>根据跟踪数据查找</summary>
-        /// <param name="dataId">跟踪数据</param>
-        /// <returns>实体列表</returns>
-        public static IList<SampleData> FindAllByDataId(Int32 dataId)
-        {
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.DataId == dataId);
-
-            return FindAll(_.DataId == dataId);
-        }
-
         /// <summary>根据跟踪标识查找</summary>
         /// <param name="traceId">跟踪标识</param>
         /// <returns>实体列表</returns>
@@ -79,18 +68,18 @@ namespace Stardust.Data.Monitors
 
         #region 高级查询
         /// <summary>高级查询</summary>
-        /// <param name="dataId">跟踪数据</param>
+        /// <param name="appId">应用</param>
         /// <param name="traceId">跟踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</param>
         /// <param name="start">创建时间开始</param>
         /// <param name="end">创建时间结束</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<SampleData> Search(Int32 dataId, String traceId, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<SampleData> Search(Int32 appId, String traceId, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
-            if (dataId >= 0) exp &= _.DataId == dataId;
+            if (appId >= 0) exp &= _.AppId == appId;
             if (!traceId.IsNullOrEmpty()) exp &= _.TraceId == traceId;
             exp &= _.CreateTime.Between(start, end);
             if (!key.IsNullOrEmpty()) exp &= _.SpanId.Contains(key) | _.ParentId.Contains(key) | _.Tag.Contains(key) | _.Error.Contains(key);
@@ -111,10 +100,10 @@ namespace Stardust.Data.Monitors
 
         #region 业务操作
         /// <summary>创建一批采样数据</summary>
+        /// <param name="appId"></param>
         /// <param name="spans"></param>
-        /// <param name="dataId"></param>
         /// <returns></returns>
-        public static IList<SampleData> Create(IList<ISpan> spans, Int32 dataId)
+        public static IList<SampleData> Create(Int32 appId, IList<ISpan> spans)
         {
             var list = new List<SampleData>();
             if (spans == null || spans.Count == 0) return list;
@@ -123,7 +112,7 @@ namespace Stardust.Data.Monitors
             {
                 var sd = new SampleData
                 {
-                    DataId = dataId,
+                    AppId = appId,
 
                     TraceId = item.TraceId,
                     SpanId = item.Id,
