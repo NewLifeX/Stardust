@@ -37,6 +37,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("AppId", "应用", "")]
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
+        private String _Name;
+        /// <summary>操作名。接口名或埋点名</summary>
+        [DisplayName("操作名")]
+        [Description("操作名。接口名或埋点名")]
+        [DataObjectField(false, false, true, 200)]
+        [BindColumn("Name", "操作名。接口名或埋点名", "", Master = true)]
+        public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
+
         private Boolean _Success;
         /// <summary>正常</summary>
         [DisplayName("正常")]
@@ -101,6 +109,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("Error", "错误信息", "")]
         public String Error { get => _Error; set { if (OnPropertyChanging("Error", value)) { _Error = value; OnPropertyChanged("Error"); } } }
 
+        private String _CreateIP;
+        /// <summary>创建地址</summary>
+        [DisplayName("创建地址")]
+        [Description("创建地址")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("CreateIP", "创建地址", "")]
+        public String CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
+
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
         [DisplayName("创建时间")]
@@ -122,6 +138,7 @@ namespace Stardust.Data.Monitors
                 {
                     case "ID": return _ID;
                     case "AppId": return _AppId;
+                    case "Name": return _Name;
                     case "Success": return _Success;
                     case "StartTime": return _StartTime;
                     case "EndTime": return _EndTime;
@@ -130,6 +147,7 @@ namespace Stardust.Data.Monitors
                     case "ParentId": return _ParentId;
                     case "Tag": return _Tag;
                     case "Error": return _Error;
+                    case "CreateIP": return _CreateIP;
                     case "CreateTime": return _CreateTime;
                     default: return base[name];
                 }
@@ -140,6 +158,7 @@ namespace Stardust.Data.Monitors
                 {
                     case "ID": _ID = value.ToInt(); break;
                     case "AppId": _AppId = value.ToInt(); break;
+                    case "Name": _Name = Convert.ToString(value); break;
                     case "Success": _Success = value.ToBoolean(); break;
                     case "StartTime": _StartTime = value.ToLong(); break;
                     case "EndTime": _EndTime = value.ToLong(); break;
@@ -148,6 +167,7 @@ namespace Stardust.Data.Monitors
                     case "ParentId": _ParentId = Convert.ToString(value); break;
                     case "Tag": _Tag = Convert.ToString(value); break;
                     case "Error": _Error = Convert.ToString(value); break;
+                    case "CreateIP": _CreateIP = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     default: base[name] = value; break;
                 }
@@ -164,6 +184,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
+
+            /// <summary>操作名。接口名或埋点名</summary>
+            public static readonly Field Name = FindByName("Name");
 
             /// <summary>正常</summary>
             public static readonly Field Success = FindByName("Success");
@@ -189,6 +212,9 @@ namespace Stardust.Data.Monitors
             /// <summary>错误信息</summary>
             public static readonly Field Error = FindByName("Error");
 
+            /// <summary>创建地址</summary>
+            public static readonly Field CreateIP = FindByName("CreateIP");
+
             /// <summary>创建时间</summary>
             public static readonly Field CreateTime = FindByName("CreateTime");
 
@@ -203,6 +229,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>应用</summary>
             public const String AppId = "AppId";
+
+            /// <summary>操作名。接口名或埋点名</summary>
+            public const String Name = "Name";
 
             /// <summary>正常</summary>
             public const String Success = "Success";
@@ -228,6 +257,9 @@ namespace Stardust.Data.Monitors
             /// <summary>错误信息</summary>
             public const String Error = "Error";
 
+            /// <summary>创建地址</summary>
+            public const String CreateIP = "CreateIP";
+
             /// <summary>创建时间</summary>
             public const String CreateTime = "CreateTime";
         }
@@ -243,6 +275,9 @@ namespace Stardust.Data.Monitors
 
         /// <summary>应用</summary>
         Int32 AppId { get; set; }
+
+        /// <summary>操作名。接口名或埋点名</summary>
+        String Name { get; set; }
 
         /// <summary>正常</summary>
         Boolean Success { get; set; }
@@ -267,6 +302,9 @@ namespace Stardust.Data.Monitors
 
         /// <summary>错误信息</summary>
         String Error { get; set; }
+
+        /// <summary>创建地址</summary>
+        String CreateIP { get; set; }
 
         /// <summary>创建时间</summary>
         DateTime CreateTime { get; set; }

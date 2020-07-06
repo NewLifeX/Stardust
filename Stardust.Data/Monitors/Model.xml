@@ -52,6 +52,7 @@
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
+      <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
       <Column Name="Success" DataType="Boolean" Description="正常" />
       <Column Name="StartTime" DataType="Int64" Description="开始时间。Unix毫秒" />
       <Column Name="EndTime" DataType="Int64" Description="结束时间。Unix毫秒" />
@@ -60,6 +61,7 @@
       <Column Name="ParentId" DataType="String" Description="父级标识" />
       <Column Name="Tag" DataType="String" Length="2000" Description="数据标签。记录一些附加数据" />
       <Column Name="Error" DataType="String" Length="8000" Description="错误信息" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
     </Columns>
     <Indexes>

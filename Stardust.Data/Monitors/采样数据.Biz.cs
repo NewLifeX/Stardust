@@ -117,10 +117,10 @@ namespace Stardust.Data.Monitors
 
         #region 业务操作
         /// <summary>创建一批采样数据</summary>
-        /// <param name="appId"></param>
+        /// <param name="data"></param>
         /// <param name="spans"></param>
         /// <returns></returns>
-        public static IList<SampleData> Create(Int32 appId, IList<ISpan> spans)
+        public static IList<SampleData> Create(ITraceData data, IList<ISpan> spans)
         {
             var list = new List<SampleData>();
             if (spans == null || spans.Count == 0) return list;
@@ -129,7 +129,8 @@ namespace Stardust.Data.Monitors
             {
                 var sd = new SampleData
                 {
-                    AppId = appId,
+                    AppId = data.AppId,
+                    Name = data.Name,
 
                     TraceId = item.TraceId,
                     SpanId = item.Id,
@@ -143,6 +144,7 @@ namespace Stardust.Data.Monitors
 
                     Success = item.Error.IsNullOrEmpty(),
 
+                    CreateIP = data.CreateIP,
                     CreateTime = DateTime.Now,
                 };
                 list.Add(sd);

@@ -52,8 +52,8 @@ namespace Stardust.Server.Controllers
                 //td.Insert();
                 traces.Add(td);
 
-                samples.AddRange(SampleData.Create(app.ID, item.Samples));
-                samples.AddRange(SampleData.Create(app.ID, item.ErrorSamples));
+                samples.AddRange(SampleData.Create(td, item.Samples));
+                samples.AddRange(SampleData.Create(td, item.ErrorSamples));
 
                 //if (samples.Count > 0) samples.Insert(true);
             }
