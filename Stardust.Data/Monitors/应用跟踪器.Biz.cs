@@ -57,7 +57,7 @@ namespace Stardust.Data.Monitors
 
         /// <summary>已重载。</summary>
         /// <returns></returns>
-        public override String ToString() => DisplayName.IsNullOrEmpty() ? DisplayName : Name;
+        public override String ToString() => !DisplayName.IsNullOrEmpty() ? DisplayName : Name;
         #endregion
 
         #region 扩展属性

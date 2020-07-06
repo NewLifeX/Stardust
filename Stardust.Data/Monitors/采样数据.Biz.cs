@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Xml.Serialization;
 using NewLife.Data;
 using NewLife.Log;
 using XCode;
@@ -35,6 +37,21 @@ namespace Stardust.Data.Monitors
         #endregion
 
         #region 扩展属性
+        /// <summary>应用</summary>
+        [XmlIgnore, IgnoreDataMember]
+        public AppTracer App => Extends.Get(nameof(App), k => AppTracer.FindByID(AppId));
+
+        /// <summary>应用</summary>
+        [Map(nameof(AppId))]
+        public String AppName => App + "";
+
+        /// <summary>开始时间</summary>
+        [Map(nameof(StartTime))]
+        public DateTime Start => StartTime.ToDateTime();
+
+        /// <summary>结束时间</summary>
+        [Map(nameof(EndTime))]
+        public DateTime End => EndTime.ToDateTime();
         #endregion
 
         #region 扩展查询
