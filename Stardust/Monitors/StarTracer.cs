@@ -47,8 +47,8 @@ namespace Stardust.Monitors
                 if (rs != null)
                 {
                     if (rs.Period > 0) Period = rs.Period;
-                    MaxSamples = rs.MaxSamples;
-                    MaxSamples = rs.MaxErrors;
+                    if (rs.MaxSamples > 0) MaxSamples = rs.MaxSamples;
+                    if (rs.MaxErrors > 0) MaxErrors = rs.MaxErrors;
                 }
             }
             catch (Exception ex)

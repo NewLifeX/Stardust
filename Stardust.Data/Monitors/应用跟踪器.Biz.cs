@@ -38,21 +38,12 @@ namespace Stardust.Data.Monitors
             // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
             if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), "名称不能为空！");
 
-            // 在新插入数据或者修改了指定字段时进行修正
-            // 处理当前已登录用户信息，可以由UserModule过滤器代劳
-            /*var user = ManageProvider.User;
-            if (user != null)
+            if (isNew)
             {
-                if (isNew && !Dirtys[nameof(CreateUserID)]) CreateUserID = user.ID;
-                if (!Dirtys[nameof(UpdateUserID)]) UpdateUserID = user.ID;
-            }*/
-            //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
-            //if (!Dirtys[nameof(UpdateTime)]) UpdateTime = DateTime.Now;
-            //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
-            //if (!Dirtys[nameof(UpdateIP)]) UpdateIP = ManageProvider.UserHost;
-
-            // 检查唯一索引
-            // CheckExist(isNew, nameof(Name));
+                if (!Dirtys[nameof(Period)]) Period = 60;
+                if (!Dirtys[nameof(MaxSamples)]) MaxSamples = 1;
+                if (!Dirtys[nameof(MaxErrors)]) MaxErrors = 10;
+            }
         }
 
         /// <summary>已重载。</summary>
