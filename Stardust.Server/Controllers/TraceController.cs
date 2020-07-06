@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using NewLife.Log;
 using Stardust.Data.Monitors;
 using Stardust.Monitors;
 using Stardust.Server.Common;
@@ -15,9 +17,10 @@ namespace Stardust.Server.Controllers
     {
         [ApiFilter]
         [HttpPost(nameof(Report))]
-        public TraceResponse Report(TraceModel model)
+        public TraceResponse Report([FromBody] MyTraceModel model)
         {
-            var builders = model?.Builders;
+            var builders = model?.Builders.Cast<ISpanBuilder>().ToArray();
+            //var builders = new ISpanBuilder[0];
             if (model == null || model.AppId.IsNullOrEmpty() || builders == null || builders.Length == 0) return null;
 
             // 校验应用

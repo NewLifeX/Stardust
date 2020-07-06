@@ -13,7 +13,7 @@ namespace Stardust.Monitors
         public String AppName { get; set; }
 
         /// <summary>跟踪数据</summary>
-        public DefaultSpanBuilder[] Builders { get; set; }
+        public ISpanBuilder[] Builders { get; set; }
     }
 
     /// <summary>跟踪响应模型</summary>

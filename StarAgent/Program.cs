@@ -8,6 +8,7 @@ using NewLife.Log;
 using NewLife.Reflection;
 using NewLife.Threading;
 using Stardust;
+using Stardust.Monitors;
 
 namespace StarAgent
 {
@@ -67,6 +68,11 @@ namespace StarAgent
                     set.Save();
                 }
             };
+
+            // APM埋点
+            var tracer = new StarTracer { Client = client, Log = XTrace.Log, Period = 15 };
+            DefaultTracer.Instance = tracer;
+            client.Tracer = tracer;
 
             // 使用跟踪
             client.UseTrace();
