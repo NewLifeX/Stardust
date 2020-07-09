@@ -17,6 +17,9 @@ namespace Stardust.Monitors
         /// <summary>应用名</summary>
         public String AppName { get; set; }
 
+        /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认120</summary>
+        public Int32 MaxFails { get; set; } = 120;
+
         /// <summary>Api客户端</summary>
         public IApiClient Client { get; set; }
 
@@ -56,7 +59,7 @@ namespace Stardust.Monitors
                 XTrace.WriteException(ex);
                 //throw;
 
-                _fails.Enqueue(model);
+                if (_fails.Count < MaxFails) _fails.Enqueue(model);
                 return;
             }
 
