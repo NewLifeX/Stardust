@@ -69,6 +69,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("EndTime", "结束时间。Unix毫秒", "")]
         public Int64 EndTime { get => _EndTime; set { if (OnPropertyChanging("EndTime", value)) { _EndTime = value; OnPropertyChanged("EndTime"); } } }
 
+        private Int32 _Cost;
+        /// <summary>耗时。毫秒</summary>
+        [DisplayName("耗时")]
+        [Description("耗时。毫秒")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Cost", "耗时。毫秒", "")]
+        public Int32 Cost { get => _Cost; set { if (OnPropertyChanging("Cost", value)) { _Cost = value; OnPropertyChanged("Cost"); } } }
+
         private String _TraceId;
         /// <summary>跟踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
         [DisplayName("跟踪标识")]
@@ -142,6 +150,7 @@ namespace Stardust.Data.Monitors
                     case "Success": return _Success;
                     case "StartTime": return _StartTime;
                     case "EndTime": return _EndTime;
+                    case "Cost": return _Cost;
                     case "TraceId": return _TraceId;
                     case "SpanId": return _SpanId;
                     case "ParentId": return _ParentId;
@@ -162,6 +171,7 @@ namespace Stardust.Data.Monitors
                     case "Success": _Success = value.ToBoolean(); break;
                     case "StartTime": _StartTime = value.ToLong(); break;
                     case "EndTime": _EndTime = value.ToLong(); break;
+                    case "Cost": _Cost = value.ToInt(); break;
                     case "TraceId": _TraceId = Convert.ToString(value); break;
                     case "SpanId": _SpanId = Convert.ToString(value); break;
                     case "ParentId": _ParentId = Convert.ToString(value); break;
@@ -196,6 +206,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>结束时间。Unix毫秒</summary>
             public static readonly Field EndTime = FindByName("EndTime");
+
+            /// <summary>耗时。毫秒</summary>
+            public static readonly Field Cost = FindByName("Cost");
 
             /// <summary>跟踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
             public static readonly Field TraceId = FindByName("TraceId");
@@ -242,6 +255,9 @@ namespace Stardust.Data.Monitors
             /// <summary>结束时间。Unix毫秒</summary>
             public const String EndTime = "EndTime";
 
+            /// <summary>耗时。毫秒</summary>
+            public const String Cost = "Cost";
+
             /// <summary>跟踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
             public const String TraceId = "TraceId";
 
@@ -287,6 +303,9 @@ namespace Stardust.Data.Monitors
 
         /// <summary>结束时间。Unix毫秒</summary>
         Int64 EndTime { get; set; }
+
+        /// <summary>耗时。毫秒</summary>
+        Int32 Cost { get; set; }
 
         /// <summary>跟踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
         String TraceId { get; set; }
