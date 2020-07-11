@@ -29,7 +29,6 @@
             <th class="text-center" style="min-width:134px;" title="结束时间。Unix毫秒"><a href="@Html.Raw(page.GetSortUrl("EndTime"))">结束时间</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Total"))">总次数</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Errors"))">错误数</a></th>
-            <th class="text-center" title="总耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("TotalCost"))">总耗时</a></th>
             <th class="text-center" title="平均耗时。总耗时除以总次数"><a href="@Html.Raw(page.GetSortUrl("Cost"))">平均耗时</a></th>
             <th class="text-center" title="最大耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MaxCost"))">最大耗时</a></th>
             <th class="text-center" title="最小耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MinCost"))">最小耗时</a></th>
@@ -46,7 +45,8 @@
     <tbody>
         @foreach (var entity in Model)
         {
-            var url = $"SampleData?appid={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}&start={entity.StartTime}&end={entity.EndTime}";
+            var url1 = $"?appid={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}";
+            var url2 = $"SampleData?appid={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}&start={entity.StartTime}&end={entity.EndTime}";
             <tr>
                 @if (set.EnableSelect)
                 {
@@ -55,17 +55,16 @@
                 <td class="text-center">@entity.ID</td>
                 <td class="text-center">@entity.AppName</td>
                 <td>@entity.ClientId</td>
-                <td>@entity.Name</td>
+                <td><a href="@url1">@entity.Name</a></td>
                 <td class="text-center">@entity.Start.ToFullString("")</td>
                 <td class="text-center">@entity.End.ToFullString("")</td>
-                <td class="text-right"><a href="@url">@entity.Total.ToString("n0")</a></td>
+                <td class="text-right"><a href="@url2">@entity.Total.ToString("n0")</a></td>
                 <td class="text-right">@entity.Errors.ToString("n0")</td>
-                <td class="text-right">@entity.TotalCost.ToString("n0")</td>
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>
                 <td class="text-right">@entity.MinCost.ToString("n0")</td>
-                <td class="text-right"><a href="@url&success=1">@entity.Samples.ToString("n0")</a></td>
-                <td class="text-right"><a href="@url&success=0">@entity.ErrorSamples.ToString("n0")</a></td>
+                <td class="text-right"><a href="@url2&success=1">@entity.Samples.ToString("n0")</a></td>
+                <td class="text-right"><a href="@url2&success=0">@entity.ErrorSamples.ToString("n0")</a></td>
                 <td class="text-center" title="@entity.CreateIP.IPToAddress()">@entity.CreateIP</td>
                 <td class="text-center">@entity.CreateTime.ToFullString("")</td>
                 @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
@@ -92,7 +91,6 @@
                 <td></td>
                 <td class="text-right">@entity.Total.ToString("n0")</td>
                 <td class="text-right">@entity.Errors.ToString("n0")</td>
-                <td class="text-right">@entity.TotalCost.ToString("n0")</td>
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>
                 <td class="text-right">@entity.MinCost.ToString("n0")</td>
