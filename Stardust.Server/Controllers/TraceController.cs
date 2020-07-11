@@ -37,7 +37,8 @@ namespace Stardust.Server.Controllers
             if (!app.Enable) throw new Exception($"无效应用[{model.AppId}/{model.AppName}]");
 
             // 插入数据
-            var ip = ManageProvider.UserHost;
+            var ip = HttpContext.GetUserHost();
+            if (ip.IsNullOrEmpty()) ip = ManageProvider.UserHost;
 
             var traces = new List<TraceData>();
             var samples = new List<SampleData>();

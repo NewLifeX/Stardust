@@ -85,19 +85,25 @@ namespace Stardust.Data.Monitors
         #region 高级查询
         /// <summary>高级查询</summary>
         /// <param name="appId">应用</param>
+        /// <param name="name">名称</param>
         /// <param name="traceId">跟踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</param>
-        /// <param name="start">创建时间开始</param>
-        /// <param name="end">创建时间结束</param>
+        /// <param name="success">是否成功</param>
+        /// <param name="start">时间开始</param>
+        /// <param name="end">时间结束</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<SampleData> Search(Int32 appId, String traceId, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<SampleData> Search(Int32 appId, String name, String traceId, Boolean? success, Int64 start, Int64 end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (appId >= 0) exp &= _.AppId == appId;
+            if (!name.IsNullOrEmpty()) exp &= _.Name == name;
             if (!traceId.IsNullOrEmpty()) exp &= _.TraceId == traceId;
-            exp &= _.CreateTime.Between(start, end);
+            if (success != null) exp &= _.Success == success;
+            if (start > 0) exp &= _.StartTime >= start;
+            if (end > 0) exp &= _.EndTime <= end;
+            //exp &= _.CreateTime.Between(start, end);
             if (!key.IsNullOrEmpty()) exp &= _.SpanId.Contains(key) | _.ParentId.Contains(key) | _.Tag.Contains(key) | _.Error.Contains(key);
 
             return FindAll(exp, page);

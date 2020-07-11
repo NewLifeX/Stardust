@@ -14,12 +14,16 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         protected override IEnumerable<SampleData> Search(Pager p)
         {
             var appId = p["appId"].ToInt(-1);
+            var name = p["name"] + "";
             var traceId = p["traceId"];
+            var success = p["success"]?.ToBoolean();
 
-            var start = p["dtStart"].ToDateTime();
-            var end = p["dtEnd"].ToDateTime();
+            //var start = p["dtStart"].ToDateTime();
+            //var end = p["dtEnd"].ToDateTime();
+            var start = p["start"].ToLong(-1);
+            var end = p["end"].ToLong(-1);
 
-            return SampleData.Search(appId, traceId, start, end, p["Q"], p);
+            return SampleData.Search(appId, name, traceId, success, start, end, p["Q"], p);
         }
     }
 }
