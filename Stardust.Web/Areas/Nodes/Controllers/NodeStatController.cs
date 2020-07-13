@@ -152,7 +152,11 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             XTrace.WriteLine(msg);
 
             // 发钉钉
-            var token = "83694ec8aa5c1b3337cbda5f576692e7f7e35343ef2e58d68ff399dd77a7017c";
+            //var token = "83694ec8aa5c1b3337cbda5f576692e7f7e35343ef2e58d68ff399dd77a7017c";
+            var p = Parameter.GetOrAdd(0, "统计", "钉钉令牌");
+            var token = p.GetValue() + "";
+            if (token.IsNullOrEmpty()) return;
+
             try
             {
                 SendDingTalk(token, msg);
