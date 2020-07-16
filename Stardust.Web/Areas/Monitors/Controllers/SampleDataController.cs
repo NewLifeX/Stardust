@@ -15,6 +15,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         {
             var appId = p["appId"].ToInt(-1);
             var name = p["name"] + "";
+            var dataId = p["dataId"].ToInt(-1);
             var traceId = p["traceId"];
             var success = p["success"]?.ToBoolean();
 
@@ -23,7 +24,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var start = p["start"].ToLong(-1);
             var end = p["end"].ToLong(-1);
 
-            return SampleData.Search(appId, name, traceId, success, start, end, p["Q"], p);
+            return SampleData.Search(dataId, appId, name, traceId, success, start, end, p["Q"], p);
         }
     }
 }

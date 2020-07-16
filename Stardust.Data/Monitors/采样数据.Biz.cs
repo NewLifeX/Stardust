@@ -84,6 +84,7 @@ namespace Stardust.Data.Monitors
 
         #region 高级查询
         /// <summary>高级查询</summary>
+        /// <param name="dataId">数据</param>
         /// <param name="appId">应用</param>
         /// <param name="name">名称</param>
         /// <param name="traceId">跟踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</param>
@@ -93,10 +94,11 @@ namespace Stardust.Data.Monitors
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<SampleData> Search(Int32 appId, String name, String traceId, Boolean? success, Int64 start, Int64 end, String key, PageParameter page)
+        public static IList<SampleData> Search(Int32 dataId, Int32 appId, String name, String traceId, Boolean? success, Int64 start, Int64 end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
+            if (dataId >= 0) exp &= _.DataId == dataId;
             if (appId >= 0) exp &= _.AppId == appId;
             if (!name.IsNullOrEmpty()) exp &= _.Name == name;
             if (!traceId.IsNullOrEmpty()) exp &= _.TraceId == traceId;
@@ -134,6 +136,7 @@ namespace Stardust.Data.Monitors
             {
                 var sd = new SampleData
                 {
+                    DataId = data.ID,
                     AppId = data.AppId,
                     Name = data.Name,
 

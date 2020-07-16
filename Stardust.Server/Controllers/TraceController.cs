@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NewLife.Log;
 using Stardust.Data.Monitors;
@@ -40,7 +41,20 @@ namespace Stardust.Server.Controllers
             var ip = HttpContext.GetUserHost();
             if (ip.IsNullOrEmpty()) ip = ManageProvider.UserHost;
 
-            var traces = new List<TraceData>();
+            Task.Run(() => ProcessData(app, ip, builders));
+
+            // 构造响应
+            return new TraceResponse
+            {
+                Period = app.Period,
+                MaxSamples = app.MaxSamples,
+                MaxErrors = app.MaxErrors,
+            };
+        }
+
+        private void ProcessData(AppTracer app, String ip, ISpanBuilder[] builders)
+        {
+            //var traces = new List<TraceData>();
             var samples = new List<SampleData>();
             foreach (var item in builders)
             {
@@ -50,8 +64,8 @@ namespace Stardust.Server.Controllers
                 td.CreateIP = ip;
                 td.CreateTime = DateTime.Now;
 
-                //td.Insert();
-                traces.Add(td);
+                td.Insert();
+                //traces.Add(td);
 
                 samples.AddRange(SampleData.Create(td, item.Samples));
                 samples.AddRange(SampleData.Create(td, item.ErrorSamples));
@@ -59,17 +73,8 @@ namespace Stardust.Server.Controllers
                 //if (samples.Count > 0) samples.Insert(true);
             }
 
-            //tran.Commit();
-            traces.Insert(true);
+            //traces.Insert(true);
             samples.Insert(true);
-
-            // 构造响应
-            return new TraceResponse
-            {
-                Period = app.Period,
-                MaxSamples = app.MaxSamples,
-                MaxErrors = app.MaxErrors,
-            };
         }
     }
 }

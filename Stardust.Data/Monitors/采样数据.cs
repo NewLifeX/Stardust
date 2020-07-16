@@ -14,6 +14,7 @@ namespace Stardust.Data.Monitors
     [Serializable]
     [DataObject]
     [Description("采样数据。具体调用或异常详情")]
+    [BindIndex("IX_SampleData_DataId", false, "DataId")]
     [BindIndex("IX_SampleData_AppId_StartTime", false, "AppId,StartTime")]
     [BindIndex("IX_SampleData_TraceId", false, "TraceId")]
     [BindIndex("IX_SampleData_CreateTime", false, "CreateTime")]
@@ -28,6 +29,14 @@ namespace Stardust.Data.Monitors
         [DataObjectField(true, true, false, 0)]
         [BindColumn("ID", "编号", "")]
         public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+
+        private Int32 _DataId;
+        /// <summary>数据</summary>
+        [DisplayName("数据")]
+        [Description("数据")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("DataId", "数据", "")]
+        public Int32 DataId { get => _DataId; set { if (OnPropertyChanging("DataId", value)) { _DataId = value; OnPropertyChanged("DataId"); } } }
 
         private Int32 _AppId;
         /// <summary>应用</summary>
@@ -145,6 +154,7 @@ namespace Stardust.Data.Monitors
                 switch (name)
                 {
                     case "ID": return _ID;
+                    case "DataId": return _DataId;
                     case "AppId": return _AppId;
                     case "Name": return _Name;
                     case "Success": return _Success;
@@ -166,6 +176,7 @@ namespace Stardust.Data.Monitors
                 switch (name)
                 {
                     case "ID": _ID = value.ToInt(); break;
+                    case "DataId": _DataId = value.ToInt(); break;
                     case "AppId": _AppId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Success": _Success = value.ToBoolean(); break;
@@ -191,6 +202,9 @@ namespace Stardust.Data.Monitors
         {
             /// <summary>编号</summary>
             public static readonly Field ID = FindByName("ID");
+
+            /// <summary>数据</summary>
+            public static readonly Field DataId = FindByName("DataId");
 
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
@@ -240,6 +254,9 @@ namespace Stardust.Data.Monitors
             /// <summary>编号</summary>
             public const String ID = "ID";
 
+            /// <summary>数据</summary>
+            public const String DataId = "DataId";
+
             /// <summary>应用</summary>
             public const String AppId = "AppId";
 
@@ -288,6 +305,9 @@ namespace Stardust.Data.Monitors
         #region 属性
         /// <summary>编号</summary>
         Int32 ID { get; set; }
+
+        /// <summary>数据</summary>
+        Int32 DataId { get; set; }
 
         /// <summary>应用</summary>
         Int32 AppId { get; set; }
