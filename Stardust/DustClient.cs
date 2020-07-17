@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using NewLife;
 using NewLife.Log;
 using NewLife.Net;
 using NewLife.Reflection;
@@ -71,7 +72,7 @@ namespace Stardust
             };
 
             var rs = await base.InvokeWithClientAsync<Object>(client, "Login", arg);
-            if (Setting.Current.Debug) XTrace.WriteLine("登录{0}成功！{1}", client, rs.ToJson());
+            if (NewLife.Setting.Current.Debug) XTrace.WriteLine("登录{0}成功！{1}", client, rs.ToJson());
 
             Logined = true;
 

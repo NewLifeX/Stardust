@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
+using NewLife;
 using NewLife.Log;
 using NewLife.Net;
 using NewLife.Remoting;

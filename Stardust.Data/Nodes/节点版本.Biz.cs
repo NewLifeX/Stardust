@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
+using NewLife;
 using NewLife.Data;
 using XCode;
 using XCode.Membership;

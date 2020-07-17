@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using NewLife;
 using XCode.Membership;
 
 namespace Stardust.Data

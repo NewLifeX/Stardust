@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.AspNetCore.Mvc.Filters;
+using NewLife;
 using NewLife.Remoting;
 using Stardust.Server.Controllers;
 

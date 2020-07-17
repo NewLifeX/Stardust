@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using NewLife;
 using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Nodes;

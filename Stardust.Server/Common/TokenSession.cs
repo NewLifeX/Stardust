@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NewLife;
 using NewLife.Caching;
 using NewLife.Collections;
 
