@@ -50,7 +50,7 @@ namespace Stardust
             //var ps = Task.WhenAll(ts).Result;
             //_processes.AddRange(ps.Where(e => e != null));
 
-            _timer = new TimerX(DoWork, null, 5000, 5000) { Async = true };
+            _timer = new TimerX(DoWork, null, 30_000, 30_000) { Async = true };
         }
 
         private Process StartService(ServiceInfo service)
