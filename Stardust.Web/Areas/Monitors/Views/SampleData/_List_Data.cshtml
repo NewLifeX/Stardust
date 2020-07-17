@@ -1,0 +1,72 @@
+﻿@model IList<SampleData>
+@using Stardust.Data.Monitors
+@using NewLife;
+@using NewLife.Web;
+@using XCode;
+@using XCode.Configuration;
+@using XCode.Membership;
+@using NewLife.Cube;
+@{
+    var fact = ViewBag.Factory as IEntityFactory;
+    var page = ViewBag.Page as Pager;
+    var fields = ViewBag.Fields as IList<FieldItem>;
+    var set = ViewBag.PageSetting as PageSetting;
+    //var provider = ManageProvider.Provider;
+}
+<table class="table table-bordered table-hover table-striped table-condensed">
+    <thead>
+        <tr>
+            @if (set.EnableSelect)
+            {
+                <th class="text-center" style="width:10px;"><input type="checkbox" id="chkAll" title="全选" /></th>
+            }
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ID"))">编号</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AppId"))">应用</a></th>
+            <th class="text-center" title="操作名。接口名或埋点名"><a href="@Html.Raw(page.GetSortUrl("Name"))">操作名</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Success"))">正常</a></th>
+            <th class="text-center" style="min-width:134px;" title="开始时间。Unix毫秒"><a href="@Html.Raw(page.GetSortUrl("StartTime"))">开始时间</a></th>
+            <th class="text-center" style="min-width:134px;" title="结束时间。Unix毫秒"><a href="@Html.Raw(page.GetSortUrl("EndTime"))">结束时间</a></th>
+            <th class="text-center" title="耗时。毫秒"><a href="@Html.Raw(page.GetSortUrl("Cost"))">耗时</a></th>
+            <th class="text-center" title="跟踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递"><a href="@Html.Raw(page.GetSortUrl("TraceId"))">跟踪标识</a></th>
+            <th class="text-center" title="唯一标识。随线程上下文、Http、Rpc传递，作为内部片段的父级"><a href="@Html.Raw(page.GetSortUrl("SpanId"))">唯一标识</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ParentId"))">父级标识</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("CreateIP"))">创建地址</a></th>
+            <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("CreateTime"))">创建时间</a></th>
+            @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
+            {
+                <th class="text-center">操作</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var entity in Model)
+        {
+            <tr>
+                @if (set.EnableSelect)
+                {
+                    <td class="text-center"><input type="checkbox" name="keys" value="@entity.ID" /></td>
+                }
+                <td class="text-center">@entity.ID</td>
+                <td class="text-center">@entity.AppName</td>
+                <td>@entity.Name</td>
+                <td class="text-center">
+                    <i class="glyphicon glyphicon-@(entity.Success ? "ok" : "remove")" style="color: @(entity.Success ? "green" : "red");"></i>
+                </td>
+                <td class="text-center">@entity.Start.ToFullString("")</td>
+                <td class="text-center">@entity.End.ToFullString("")</td>
+                <td class="text-right">@entity.Cost.ToString("n0")</td>
+                <td><a href="?traceId=@entity.TraceId">@entity.TraceId</a></td>
+                <td><a href="?parentId=@entity.SpanId">@entity.SpanId</a></td>
+                <td><a href="?spanId=@entity.ParentId">@entity.ParentId</a></td>
+                <td class="text-center" title="@entity.CreateIP.IPToAddress()">@entity.CreateIP</td>
+                <td class="text-center">@entity.CreateTime.ToFullString("")</td>
+                @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
+                {
+                    <td class="text-center">
+                        @await Html.PartialAsync("_List_Data_Action", (Object)entity)
+                    </td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>

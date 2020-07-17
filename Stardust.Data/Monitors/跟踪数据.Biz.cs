@@ -99,7 +99,7 @@ namespace Stardust.Data.Monitors
             if (appId >= 0) exp &= _.AppId == appId;
             if (!name.IsNullOrEmpty()) exp &= _.Name == name;
             exp &= _.CreateTime.Between(start, end);
-            if (!key.IsNullOrEmpty()) exp &= _.ClientId.Contains(key) | _.Samples.Contains(key) | _.ErrorSamples.Contains(key);
+            if (!key.IsNullOrEmpty()) exp &= _.ClientId == key;
 
             return FindAll(exp, page);
         }

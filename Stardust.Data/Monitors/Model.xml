@@ -70,6 +70,8 @@
       <Index Columns="DataId" />
       <Index Columns="AppId,StartTime" />
       <Index Columns="TraceId" />
+      <Index Columns="SpanId" />
+      <Index Columns="ParentId" />
       <Index Columns="CreateTime" />
     </Indexes>
   </Table>
