@@ -29,6 +29,7 @@ namespace Stardust.Web
                 DefaultTracer.Instance = tracer;
                 ApiHelper.Tracer = tracer;
                 DAL.GlobalTracer = tracer;
+                TracerMiddleware.Tracer = tracer;
 
                 services.AddSingleton<ITracer>(tracer);
             }
