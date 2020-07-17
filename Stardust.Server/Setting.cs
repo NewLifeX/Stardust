@@ -28,6 +28,10 @@ namespace Stardust.Server
         /// <summary>自动注册。允许客户端自动注册，默认true</summary>
         [Description("自动注册。允许客户端自动注册，默认true")]
         public Boolean AutoRegister { get; set; } = true;
+
+        /// <summary>APM监控服务器。</summary>
+        [Description("APM监控服务器。")]
+        public String TracerServer { get; set; }
         #endregion
 
         #region 构造

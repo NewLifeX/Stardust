@@ -6,7 +6,13 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NewLife;
+using NewLife.Cube.WebMiddleware;
+using NewLife.Log;
+using NewLife.Remoting;
+using Stardust.Monitors;
 using Stardust.Server.Common;
+using XCode.DataAccessLayer;
 
 namespace Stardust.Server
 {
@@ -20,6 +26,18 @@ namespace Stardust.Server
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
+            var set = Stardust.Server.Setting.Current;
+            if (!set.TracerServer.IsNullOrEmpty())
+            {
+                // APM跟踪器
+                var tracer = new StarTracer(set.TracerServer) { Log = XTrace.Log };
+                DefaultTracer.Instance = tracer;
+                ApiHelper.Tracer = tracer;
+                DAL.GlobalTracer = tracer;
+
+                services.AddSingleton<ITracer>(tracer);
+            }
+
             services.AddHttpClient();
 
             services.AddControllers()
@@ -32,12 +50,15 @@ namespace Stardust.Server
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            var set = Stardust.Server.Setting.Current;
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
 
             //app.UseHttpsRedirection();
+            if (!set.TracerServer.IsNullOrEmpty()) app.UseMiddleware<TracerMiddleware>();
 
             app.UseRouting();
 
