@@ -36,6 +36,17 @@ namespace Stardust.Monitors
             AppName = sys.DisplayName;
         }
 
+        /// <summary>指定服务端地址来实例化跟踪器</summary>
+        /// <param name="server"></param>
+        public StarTracer(String server) : this()
+        {
+            var http = new ApiHttpClient(server)
+            {
+                Tracer = this
+            };
+            Client = http;
+        }
+
         /// <summary>处理Span集合。默认输出日志，可重定义输出控制台</summary>
         protected override void ProcessSpans(ISpanBuilder[] builders)
         {
