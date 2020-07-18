@@ -33,6 +33,7 @@ namespace Stardust.Server.Controllers
                 {
                     Name = model.AppId,
                     DisplayName = model.AppName,
+                    Enable = Setting.Current.AutoRegister,
                 };
                 app.Save();
             }
