@@ -12,6 +12,7 @@ using NewLife.Log;
 using NewLife.Remoting;
 using Stardust.Monitors;
 using Stardust.Server.Common;
+using Stardust.Server.Services;
 using XCode.DataAccessLayer;
 
 namespace Stardust.Server
@@ -38,6 +39,10 @@ namespace Stardust.Server
 
                 services.AddSingleton<ITracer>(tracer);
             }
+
+            // 统计服务
+            var traceService = new TraceStatService();
+            services.AddSingleton<ITraceStatService>(traceService);
 
             services.AddHttpClient();
 

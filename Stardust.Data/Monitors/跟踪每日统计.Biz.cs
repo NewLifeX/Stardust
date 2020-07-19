@@ -1,26 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
-using System.Web.Script.Serialization;
-using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
-using NewLife.Log;
-using NewLife.Model;
-using NewLife.Reflection;
-using NewLife.Threading;
-using NewLife.Web;
 using XCode;
-using XCode.Cache;
-using XCode.Configuration;
-using XCode.DataAccessLayer;
 using XCode.Membership;
 
 namespace Stardust.Data.Monitors
@@ -29,15 +11,13 @@ namespace Stardust.Data.Monitors
     public partial class TraceDayStat : Entity<TraceDayStat>
     {
         #region 对象操作
-        static TraceDayStat()
-        {
+        static TraceDayStat() =>
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
             //var df = Meta.Factory.AdditionalFields;
             //df.Add(nameof(AppId));
 
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Modules.Add<TimeModule>();
-        }
 
         /// <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>
         /// <param name="isNew">是否插入</param>
@@ -46,54 +26,8 @@ namespace Stardust.Data.Monitors
             // 如果没有脏数据，则不需要进行任何处理
             if (!HasDirty) return;
 
-            // 在新插入数据或者修改了指定字段时进行修正
-            //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
-            //if (!Dirtys[nameof(UpdateTime)]) UpdateTime = DateTime.Now;
-
-            // 检查唯一索引
-            // CheckExist(isNew, nameof(StatDate), nameof(AppId), nameof(Name));
+            Cost = Total == 0 ? 0 : (Int32)(TotalCost / Total);
         }
-
-        ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
-        //[EditorBrowsable(EditorBrowsableState.Never)]
-        //protected override void InitData()
-        //{
-        //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
-        //    if (Meta.Session.Count > 0) return;
-
-        //    if (XTrace.Debug) XTrace.WriteLine("开始初始化TraceDayStat[跟踪每日统计]数据……");
-
-        //    var entity = new TraceDayStat();
-        //    entity.ID = 0;
-        //    entity.StatDate = DateTime.Now;
-        //    entity.AppId = 0;
-        //    entity.Name = "abc";
-        //    entity.Total = 0;
-        //    entity.Errors = 0;
-        //    entity.TotalCost = 0;
-        //    entity.Cost = 0;
-        //    entity.MaxCost = 0;
-        //    entity.MinCost = 0;
-        //    entity.CreateTime = DateTime.Now;
-        //    entity.UpdateTime = DateTime.Now;
-        //    entity.Insert();
-
-        //    if (XTrace.Debug) XTrace.WriteLine("完成初始化TraceDayStat[跟踪每日统计]数据！");
-        //}
-
-        ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
-        ///// <returns></returns>
-        //public override Int32 Insert()
-        //{
-        //    return base.Insert();
-        //}
-
-        ///// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>
-        ///// <returns></returns>
-        //protected override Int32 OnDelete()
-        //{
-        //    return base.OnDelete();
-        //}
         #endregion
 
         #region 扩展属性
@@ -146,6 +80,12 @@ namespace Stardust.Data.Monitors
         ///// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
         ///// <returns></returns>
         //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
+
+        /// <summary>查找一批统计</summary>
+        /// <param name="date"></param>
+        /// <param name="appIds"></param>
+        /// <returns></returns>
+        public static IList<TraceDayStat> Search(DateTime date, Int32[] appIds) => FindAll(_.StatDate == date & _.AppId.In(appIds));
         #endregion
 
         #region 业务操作

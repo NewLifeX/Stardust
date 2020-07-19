@@ -8,6 +8,7 @@ using NewLife.Log;
 using Stardust.Data.Monitors;
 using Stardust.Monitors;
 using Stardust.Server.Common;
+using Stardust.Server.Services;
 using XCode;
 using XCode.Membership;
 
@@ -17,6 +18,10 @@ namespace Stardust.Server.Controllers
     [Route("[controller]")]
     public class TraceController : ControllerBase
     {
+        private readonly ITraceStatService _stat;
+
+        public TraceController(ITraceStatService stat) => _stat = stat;
+
         [ApiFilter]
         [HttpPost(nameof(Report))]
         public TraceResponse Report([FromBody] MyTraceModel model)
@@ -43,6 +48,8 @@ namespace Stardust.Server.Controllers
             if (ip.IsNullOrEmpty()) ip = ManageProvider.UserHost;
 
             Task.Run(() => ProcessData(app, ip, builders));
+
+            _stat.Add(app.ID);
 
             // 构造响应
             return new TraceResponse
