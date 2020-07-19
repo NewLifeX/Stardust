@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Tables Version="9.18.7491.39176" xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data.Monitors" ConnName="Monitor" Output="" ChineseFileName="True" IgnoreNameCase="True" BaseClass="Entity" xmlns="http://www.newlifex.com/Model2020.xsd">
+<Tables Version="9.18.7503.31085" xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data.Monitors" ConnName="Monitor" Output="" ChineseFileName="True" IgnoreNameCase="True" BaseClass="Entity" xmlns="http://www.newlifex.com/Model2020.xsd">
   <Table Name="AppTracer" Description="应用跟踪器。负责跟踪的应用管理" IgnoreNameCase="False">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
@@ -44,8 +44,8 @@
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
     </Columns>
     <Indexes>
-      <Index Columns="AppId,Name" />
-      <Index Columns="CreateTime,AppId,Name" />
+      <Index Columns="AppId,StartTime" />
+      <Index Columns="CreateTime" />
     </Indexes>
   </Table>
   <Table Name="SampleData" Description="采样数据。具体调用或异常详情" IgnoreNameCase="False">
@@ -70,8 +70,6 @@
       <Index Columns="DataId" />
       <Index Columns="AppId,StartTime" />
       <Index Columns="TraceId" />
-      <Index Columns="SpanId" />
-      <Index Columns="ParentId" />
       <Index Columns="CreateTime" />
     </Indexes>
   </Table>

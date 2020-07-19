@@ -14,8 +14,8 @@ namespace Stardust.Data.Monitors
     [Serializable]
     [DataObject]
     [Description("跟踪数据。应用定时上报采样得到的埋点跟踪原始数据")]
-    [BindIndex("IX_TraceData_AppId_Name", false, "AppId,Name")]
-    [BindIndex("IX_TraceData_CreateTime_AppId_Name", false, "CreateTime,AppId,Name")]
+    [BindIndex("IX_TraceData_AppId_StartTime", false, "AppId,StartTime")]
+    [BindIndex("IX_TraceData_CreateTime", false, "CreateTime")]
     [BindTable("TraceData", Description = "跟踪数据。应用定时上报采样得到的埋点跟踪原始数据", ConnName = "Monitor", DbType = DatabaseType.None)]
     public partial class TraceData : ITraceData
     {

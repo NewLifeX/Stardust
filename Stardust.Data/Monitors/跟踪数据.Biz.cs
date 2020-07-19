@@ -98,8 +98,15 @@ namespace Stardust.Data.Monitors
 
             if (appId >= 0) exp &= _.AppId == appId;
             if (!name.IsNullOrEmpty()) exp &= _.Name == name;
-            exp &= _.CreateTime.Between(start, end);
-            if (!key.IsNullOrEmpty()) exp &= _.ClientId == key;
+            if (!key.IsNullOrEmpty()) exp &= _.ClientId == key | _.Name == key;
+
+            if (appId > 0)
+            {
+                if (start.Year > 2000) exp &= _.StartTime >= start.ToUniversalTime().ToLong();
+                if (end.Year > 2000) exp &= _.StartTime < end.AddDays(1).ToUniversalTime().ToLong();
+            }
+            else
+                exp &= _.CreateTime.Between(start, end);
 
             return FindAll(exp, page);
         }
