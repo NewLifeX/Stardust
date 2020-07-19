@@ -56,8 +56,8 @@
                 <td class="text-center">@entity.End.ToFullString("")</td>
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
                 <td><a href="?traceId=@entity.TraceId">@entity.TraceId</a></td>
-                <td><a href="?parentId=@entity.SpanId">@entity.SpanId</a></td>
-                <td><a href="?spanId=@entity.ParentId">@entity.ParentId</a></td>
+                <td>@entity.SpanId</td>
+                <td>@entity.ParentId</td>
                 <td class="text-center" title="@entity.CreateIP.IPToAddress()">@entity.CreateIP</td>
                 <td class="text-center">@entity.CreateTime.ToFullString("")</td>
                 @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))

@@ -109,7 +109,7 @@ namespace Stardust.Data.Monitors
             if (!parentId.IsNullOrEmpty()) exp &= _.ParentId == parentId;
             if (success != null) exp &= _.Success == success;
             if (start > 0) exp &= _.StartTime >= start;
-            if (end > 0) exp &= _.EndTime <= end;
+            if (end > 0) exp &= _.StartTime <= end;
             //exp &= _.CreateTime.Between(start, end);
             if (!key.IsNullOrEmpty()) exp &= _.TraceId == key | _.SpanId == key | _.ParentId == key | _.Tag.Contains(key) | _.Error.Contains(key);
 
