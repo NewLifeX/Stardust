@@ -36,6 +36,8 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 p.PageSize = 100;
             }
 
+            p.RetrieveState = true;
+
             var list = TraceDayStat.Search(appId, name, start, end, p["Q"], p);
 
             if (list.Count > 0)

@@ -1,0 +1,94 @@
+﻿@model IList<TraceDayStat>
+@using Stardust.Data.Monitors
+@using NewLife;
+@using NewLife.Web;
+@using XCode;
+@using XCode.Configuration;
+@using XCode.Membership;
+@using NewLife.Cube;
+@{
+    var fact = ViewBag.Factory as IEntityFactory;
+    var page = ViewBag.Page as Pager;
+    var fields = ViewBag.Fields as IList<FieldItem>;
+    var set = ViewBag.PageSetting as PageSetting;
+    //var provider = ManageProvider.Provider;
+}
+<table class="table table-bordered table-hover table-striped table-condensed">
+    <thead>
+        <tr>
+            @if (set.EnableSelect)
+            {
+                <th class="text-center" style="width:10px;"><input type="checkbox" id="chkAll" title="全选" /></th>
+            }
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ID"))">编号</a></th>
+            <th class="text-center" style="min-width:80px;"><a href="@Html.Raw(page.GetSortUrl("StatDate"))">统计日期</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AppId"))">应用</a></th>
+            <th class="text-center" title="操作名。接口名或埋点名"><a href="@Html.Raw(page.GetSortUrl("Name"))">操作名</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Total"))">总次数</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Errors"))">错误数</a></th>
+            <th class="text-center" title="平均耗时。总耗时除以总次数"><a href="@Html.Raw(page.GetSortUrl("Cost"))">平均耗时</a></th>
+            <th class="text-center" title="最大耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MaxCost"))">最大耗时</a></th>
+            <th class="text-center" title="最小耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MinCost"))">最小耗时</a></th>
+            <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("CreateTime"))">创建时间</a></th>
+            <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("UpdateTime"))">更新时间</a></th>
+            @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
+            {
+                <th class="text-center">操作</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var entity in Model)
+        {
+            <tr>
+                @if (set.EnableSelect)
+                {
+                    <td class="text-center"><input type="checkbox" name="keys" value="@entity.ID" /></td>
+                }
+                <td class="text-center">@entity.ID</td>
+                <td class="text-center">@entity.StatDate.ToString("yyyy-MM-dd")</td>
+                <td>@entity.AppName</td>
+                <td>@entity.Name</td>
+                <td class="text-right">@entity.Total.ToString("n0")</td>
+                <td class="text-right">@entity.Errors.ToString("n0")</td>
+                <td class="text-right">@entity.Cost.ToString("n0")</td>
+                <td class="text-right">@entity.MaxCost.ToString("n0")</td>
+                <td class="text-right">@entity.MinCost.ToString("n0")</td>
+                <td class="text-center">@entity.CreateTime.ToFullString("")</td>
+                <td class="text-center">@entity.UpdateTime.ToFullString("")</td>
+                @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
+                {
+                    <td class="text-center">
+                        @await Html.PartialAsync("_List_Data_Action", (Object)entity)
+                    </td>
+                }
+            </tr>
+        }
+        @if (page.State is TraceDayStat)
+        {
+            var entity = page.State as TraceDayStat;
+            <tr>
+                @if (set.EnableSelect)
+                {
+                    <td></td>
+                }
+                <td class="text-center">总计</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="text-right">@entity.Total.ToString("n0")</td>
+                <td class="text-right">@entity.Errors.ToString("n0")</td>
+                <td class="text-right">@entity.Cost.ToString("n0")</td>
+                <td class="text-right">@entity.MaxCost.ToString("n0")</td>
+                <td class="text-right">@entity.MinCost.ToString("n0")</td>
+                <td></td>
+                <td></td>
+
+                @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
+                {
+                    <td></td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>
