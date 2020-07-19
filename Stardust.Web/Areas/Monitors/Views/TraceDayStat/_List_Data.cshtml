@@ -6,6 +6,7 @@
 @using XCode.Configuration;
 @using XCode.Membership;
 @using NewLife.Cube;
+@using System.Web;
 @{
     var fact = ViewBag.Factory as IEntityFactory;
     var page = ViewBag.Page as Pager;
@@ -40,6 +41,8 @@
     <tbody>
         @foreach (var entity in Model)
         {
+            var url1 = $"traceData?appId={entity.AppId}&dtStart={entity.StatDate:yyyy-MM-dd}&dtEnd={entity.StatDate:yyyy-MM-dd}";
+            var url2 = $"{url1}&name={HttpUtility.UrlEncode(entity.Name)}";
             <tr>
                 @if (set.EnableSelect)
                 {
@@ -47,8 +50,8 @@
                 }
                 <td class="text-center">@entity.ID</td>
                 <td class="text-center">@entity.StatDate.ToString("yyyy-MM-dd")</td>
-                <td>@entity.AppName</td>
-                <td>@entity.Name</td>
+                <td><a href="@url1">@entity.AppName</a></td>
+                <td><a href="@url2">@entity.Name</a></td>
                 <td class="text-right">@entity.Total.ToString("n0")</td>
                 <td class="text-right">@entity.Errors.ToString("n0")</td>
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
