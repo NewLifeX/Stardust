@@ -13,13 +13,17 @@ namespace Stardust.Data.Monitors
     public partial class TraceDayStat : Entity<TraceDayStat>
     {
         #region 对象操作
-        static TraceDayStat() =>
+        static TraceDayStat()
+        {
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
-            //var df = Meta.Factory.AdditionalFields;
-            //df.Add(nameof(AppId));
+            var df = Meta.Factory.AdditionalFields;
+            df.Add(nameof(Total));
+            df.Add(nameof(Errors));
+            df.Add(nameof(TotalCost));
 
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Modules.Add<TimeModule>();
+        }
 
         /// <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>
         /// <param name="isNew">是否插入</param>

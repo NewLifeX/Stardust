@@ -1,26 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
-using System.Web.Script.Serialization;
 using System.Xml.Serialization;
-using NewLife;
 using NewLife.Data;
-using NewLife.Log;
-using NewLife.Model;
-using NewLife.Reflection;
-using NewLife.Threading;
-using NewLife.Web;
 using XCode;
-using XCode.Cache;
-using XCode.Configuration;
-using XCode.DataAccessLayer;
 using XCode.Membership;
 
 namespace Stardust.Data.Monitors
@@ -32,8 +15,10 @@ namespace Stardust.Data.Monitors
         static AppDayStat()
         {
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
-            //var df = Meta.Factory.AdditionalFields;
-            //df.Add(nameof(AppId));
+            var df = Meta.Factory.AdditionalFields;
+            df.Add(nameof(Total));
+            df.Add(nameof(Errors));
+            df.Add(nameof(TotalCost));
 
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Modules.Add<TimeModule>();
