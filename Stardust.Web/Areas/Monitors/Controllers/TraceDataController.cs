@@ -11,7 +11,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
     [MonitorsArea]
     public class TraceDataController : EntityController<TraceData>
     {
-        static TraceDataController() => MenuOrder = 80;
+        static TraceDataController() => MenuOrder = 60;
 
         protected override IEnumerable<TraceData> Search(Pager p)
         {

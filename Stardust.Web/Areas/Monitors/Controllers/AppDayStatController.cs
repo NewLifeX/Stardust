@@ -14,7 +14,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
     {
         static AppDayStatController()
         {
-            MenuOrder = 70;
+            MenuOrder = 80;
         }
 
         protected override IEnumerable<AppDayStat> Search(Pager p)
