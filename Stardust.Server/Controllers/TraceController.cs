@@ -19,8 +19,13 @@ namespace Stardust.Server.Controllers
     public class TraceController : ControllerBase
     {
         private readonly ITraceStatService _stat;
+        private readonly IAppDayStatService _appStat;
 
-        public TraceController(ITraceStatService stat) => _stat = stat;
+        public TraceController(ITraceStatService stat, IAppDayStatService appStat)
+        {
+            _stat = stat;
+            _appStat = appStat;
+        }
 
         [ApiFilter]
         [HttpPost(nameof(Report))]
@@ -51,6 +56,7 @@ namespace Stardust.Server.Controllers
             Task.Run(() => ProcessData(app, ip, builders));
 
             _stat.Add(app.ID);
+            _appStat.Add(app.ID);
 
             // 构造响应
             return new TraceResponse

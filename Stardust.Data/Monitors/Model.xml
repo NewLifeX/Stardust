@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Tables Version="9.18.7503.31085" xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data.Monitors" ConnName="Monitor" Output="" ChineseFileName="True" IgnoreNameCase="True" BaseClass="Entity" xmlns="http://www.newlifex.com/Model2020.xsd">
-  <Table Name="AppTracer" Description="应用跟踪器。负责跟踪的应用管理" IgnoreNameCase="False">
+  <Table Name="AppTracer" Description="应用跟踪器。负责跟踪的应用管理">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
@@ -24,7 +24,7 @@
       <Index Columns="Name" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="TraceData" Description="跟踪数据。应用定时上报采样得到的埋点跟踪原始数据" IgnoreNameCase="False">
+  <Table Name="TraceData" Description="跟踪数据。应用定时上报采样得到的埋点跟踪原始数据">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
@@ -48,7 +48,7 @@
       <Index Columns="CreateTime" />
     </Indexes>
   </Table>
-  <Table Name="SampleData" Description="采样数据。具体调用或异常详情" IgnoreNameCase="False">
+  <Table Name="SampleData" Description="采样数据。具体调用或异常详情">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="DataId" DataType="Int32" Description="数据" />
@@ -73,7 +73,7 @@
       <Index Columns="CreateTime" />
     </Indexes>
   </Table>
-  <Table Name="TraceDayStat" Description="跟踪每日统计。每应用每接口每日统计，用于分析接口健康状况" IgnoreNameCase="False">
+  <Table Name="TraceDayStat" Description="跟踪每日统计。每应用每接口每日统计，用于分析接口健康状况">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
@@ -90,6 +90,24 @@
     </Columns>
     <Indexes>
       <Index Columns="StatDate,AppId,Name" Unique="True" />
+    </Indexes>
+  </Table>
+  <Table Name="AppDayStat" Description="应用每日统计。每应用每日统计，用于分析应用健康状况">
+    <Columns>
+      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
+      <Column Name="AppId" DataType="Int32" Description="应用" />
+      <Column Name="Total" DataType="Int32" Description="总次数" />
+      <Column Name="Errors" DataType="Int32" Description="错误数" />
+      <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
+      <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数" />
+      <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
+      <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+    </Columns>
+    <Indexes>
+      <Index Columns="StatDate,AppId" Unique="True" />
     </Indexes>
   </Table>
 </Tables>

@@ -43,6 +43,8 @@ namespace Stardust.Server
             // 统计服务
             var traceService = new TraceStatService();
             services.AddSingleton<ITraceStatService>(traceService);
+            var appStatService = new AppDayStatService();
+            services.AddSingleton<IAppDayStatService>(appStatService);
 
             services.AddHttpClient();
 
