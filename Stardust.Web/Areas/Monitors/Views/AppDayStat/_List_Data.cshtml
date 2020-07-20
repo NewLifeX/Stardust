@@ -40,7 +40,8 @@
     <tbody>
         @foreach (var entity in Model)
         {
-            var url1 = $"traceData?appId={entity.AppId}&dtStart={entity.StatDate:yyyy-MM-dd}&dtEnd={entity.StatDate:yyyy-MM-dd}";
+            var url1 = $"traceDayStat?appId={entity.AppId}&dtStart={entity.StatDate:yyyy-MM-dd}&dtEnd={entity.StatDate:yyyy-MM-dd}";
+            var url2 = $"traceData?appId={entity.AppId}&dtStart={entity.StatDate:yyyy-MM-dd}&dtEnd={entity.StatDate:yyyy-MM-dd}";
             <tr>
                 @if (set.EnableSelect)
                 {
@@ -49,7 +50,7 @@
                 <td class="text-center">@entity.ID</td>
                 <td class="text-center">@entity.StatDate.ToString("yyyy-MM-dd")</td>
                 <td><a href="@url1">@entity.AppName</a></td>
-                <td class="text-right">@entity.Total.ToString("n0")</td>
+                <td class="text-right"><a href="@url2">@entity.Total.ToString("n0")</a></td>
                 <td class="text-right">@entity.Errors.ToString("n0")</td>
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>

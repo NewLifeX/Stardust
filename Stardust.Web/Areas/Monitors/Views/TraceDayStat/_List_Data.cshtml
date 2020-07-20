@@ -43,6 +43,7 @@
         {
             var url1 = $"traceData?appId={entity.AppId}&dtStart={entity.StatDate:yyyy-MM-dd}&dtEnd={entity.StatDate:yyyy-MM-dd}";
             var url2 = $"{url1}&name={HttpUtility.UrlEncode(entity.Name)}";
+            var url3 = $"?appId={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}";
             <tr>
                 @if (set.EnableSelect)
                 {
@@ -51,8 +52,8 @@
                 <td class="text-center">@entity.ID</td>
                 <td class="text-center">@entity.StatDate.ToString("yyyy-MM-dd")</td>
                 <td><a href="@url1">@entity.AppName</a></td>
-                <td><a href="@url2">@entity.Name</a></td>
-                <td class="text-right">@entity.Total.ToString("n0")</td>
+                <td><a href="@url3">@entity.Name</a></td>
+                <td class="text-right"><a href="@url2">@entity.Total.ToString("n0")</a></td>
                 <td class="text-right">@entity.Errors.ToString("n0")</td>
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>
