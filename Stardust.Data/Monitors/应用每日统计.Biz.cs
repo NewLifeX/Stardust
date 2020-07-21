@@ -2,18 +2,17 @@
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
-using NewLife;
 using NewLife.Data;
 using XCode;
 using XCode.Membership;
 
 namespace Stardust.Data.Monitors
 {
-    /// <summary>跟踪每日统计。每应用每接口每日统计，用于分析接口健康状况</summary>
-    public partial class TraceDayStat : Entity<TraceDayStat>
+    /// <summary>应用每日统计。每应用每日统计，用于分析应用健康状况</summary>
+    public partial class AppDayStat : Entity<AppDayStat>
     {
         #region 对象操作
-        static TraceDayStat()
+        static AppDayStat()
         {
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
             var df = Meta.Factory.AdditionalFields;
@@ -50,7 +49,7 @@ namespace Stardust.Data.Monitors
         /// <summary>根据编号查找</summary>
         /// <param name="id">编号</param>
         /// <returns>实体对象</returns>
-        public static TraceDayStat FindByID(Int32 id)
+        public static AppDayStat FindByID(Int32 id)
         {
             if (id <= 0) return null;
 
@@ -67,25 +66,23 @@ namespace Stardust.Data.Monitors
         #region 高级查询
         /// <summary>高级查询</summary>
         /// <param name="appId">应用</param>
-        /// <param name="name">操作名。接口名或埋点名</param>
         /// <param name="start">统计日期开始</param>
         /// <param name="end">统计日期结束</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<TraceDayStat> Search(Int32 appId, String name, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<AppDayStat> Search(Int32 appId, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (appId >= 0) exp &= _.AppId == appId;
-            if (!name.IsNullOrEmpty()) exp &= _.Name == name;
             exp &= _.StatDate.Between(start, end);
 
             return FindAll(exp, page);
         }
 
-        // Select Count(ID) as ID,Category From TraceDayStat Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By ID Desc limit 20
-        //static readonly FieldCache<TraceDayStat> _CategoryCache = new FieldCache<TraceDayStat>(nameof(Category))
+        // Select Count(ID) as ID,Category From AppDayStat Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By ID Desc limit 20
+        //static readonly FieldCache<AppDayStat> _CategoryCache = new FieldCache<AppDayStat>(nameof(Category))
         //{
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
         //};
@@ -98,7 +95,7 @@ namespace Stardust.Data.Monitors
         /// <param name="date"></param>
         /// <param name="appIds"></param>
         /// <returns></returns>
-        public static IList<TraceDayStat> Search(DateTime date, Int32[] appIds) => FindAll(_.StatDate == date & _.AppId.In(appIds));
+        public static IList<AppDayStat> Search(DateTime date, Int32[] appIds) => FindAll(_.StatDate == date & _.AppId.In(appIds));
         #endregion
 
         #region 业务操作

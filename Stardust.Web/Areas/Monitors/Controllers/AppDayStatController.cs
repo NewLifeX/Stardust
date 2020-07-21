@@ -1,44 +1,56 @@
 ﻿using System;
 using System.Collections.Generic;
+using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
 using NewLife.Web;
 using Stardust.Data.Monitors;
-using static Stardust.Data.Monitors.TraceData;
+using static Stardust.Data.Monitors.AppDayStat;
 
 namespace Stardust.Web.Areas.Monitors.Controllers
 {
     [MonitorsArea]
-    public class TraceDataController : EntityController<TraceData>
+    public class AppDayStatController : EntityController<AppDayStat>
     {
-        static TraceDataController() => MenuOrder = 60;
+        static AppDayStatController()
+        {
+            MenuOrder = 80;
+        }
 
-        protected override IEnumerable<TraceData> Search(Pager p)
+        protected override IEnumerable<AppDayStat> Search(Pager p)
         {
             var appId = p["appId"].ToInt(-1);
-            var name = p["name"];
 
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
+            // 默认排序
+            if (appId >= 0 && start.Year < 2000 && p.Sort.IsNullOrEmpty())
+            {
+                start = DateTime.Today.AddDays(-30);
+                p["dtStart"] = start.ToString("yyyy-MM-dd");
+
+                p.Sort = __.StatDate;
+                p.Desc = false;
+                p.PageSize = 100;
+            }
+
             p.RetrieveState = true;
 
-            var list = TraceData.Search(appId, name, start, end, p["Q"], p);
+            var list = AppDayStat.Search(appId, start, end, p["Q"], p);
 
-            if (list.Count > 0 && appId > 0)
+            if (list.Count > 0)
             {
-                //var hasDate = start.Year > 2000 || end.Year > 2000;
                 // 绘制日期曲线图
-                var app = AppTracer.FindByID(appId);
+                var ar = AppTracer.FindByID(appId);
                 if (appId >= 0)
                 {
                     var chart = new ECharts
                     {
-                        Title = new ChartTitle { Text = "调用次数" },
                         Height = 400,
                     };
-                    chart.SetX(list, _.StartTime, e => e.StartTime.ToDateTime().ToLocalTime().ToString("HH:mm:ss"));
-                    chart.SetY("次数");
+                    chart.SetX(list, _.StatDate, e => e.StatDate.ToString("MM-dd"));
+                    chart.SetY("调用次数");
                     chart.AddLine(list, _.Total, null, true);
                     chart.Add(list, _.Errors);
                     chart.SetTooltip();
@@ -48,10 +60,9 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 {
                     var chart = new ECharts
                     {
-                        Title = new ChartTitle { Text = "耗时" },
                         Height = 400,
                     };
-                    chart.SetX(list, _.StartTime, e => e.StartTime.ToDateTime().ToLocalTime().ToString("HH:mm:ss"));
+                    chart.SetX(list, _.StatDate, e => e.StatDate.ToString("MM-dd"));
                     chart.SetY("耗时");
                     chart.AddLine(list, _.Cost, null, true);
                     chart.Add(list, _.MaxCost);

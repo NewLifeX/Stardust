@@ -8,16 +8,16 @@ using XCode;
 
 namespace Stardust.Server.Services
 {
-    /// <summary>跟踪统计服务</summary>
-    public interface ITraceStatService
+    /// <summary>应用统计服务</summary>
+    public interface IAppDayStatService
     {
         /// <summary>添加需要统计的应用，去重</summary>
         /// <param name="appId"></param>
         void Add(Int32 appId);
     }
 
-    /// <summary>跟踪统计服务</summary>
-    public class TraceStatService : ITraceStatService
+    /// <summary>应用统计服务</summary>
+    public class AppDayStatService : IAppDayStatService
     {
         private TimerX _timer;
         private readonly ConcurrentBag<Int32> _bag = new ConcurrentBag<Int32>();
@@ -50,23 +50,27 @@ namespace Stardust.Server.Services
 
             // 统计日期，凌晨0点10分之前统计前一天
             var time = DateTime.Now;
-            if (time.Hour == 0 && time.Minute < 10) time = time.AddDays(-1);
-            var date = time.Date;
+            if (time.Hour == 0 && time.Minute < 10) Process(time.AddDays(-1).Date, appIds);
 
+            Process(time.Date, appIds);
+        }
+
+        private void Process(DateTime date, IList<Int32> appIds)
+        {
             // 统计数据
-            var list = TraceData.SearchGroupAppAndName(date, appIds.ToArray());
+            var list = TraceData.SearchGroupApp(date, appIds.ToArray());
             if (list.Count == 0) return;
 
             // 统计对象
-            var sts = TraceDayStat.Search(date, list.Select(e => e.AppId).ToArray());
+            var sts = AppDayStat.Search(date, list.Select(e => e.AppId).ToArray());
 
             // 聚合
             foreach (var item in list)
             {
-                var st = sts.FirstOrDefault(e => e.AppId == item.AppId && e.Name == item.Name);
+                var st = sts.FirstOrDefault(e => e.AppId == item.AppId);
                 if (st == null)
                 {
-                    st = new TraceDayStat { StatDate = date, AppId = item.AppId, Name = item.Name };
+                    st = new AppDayStat { StatDate = date, AppId = item.AppId };
                     sts.Add(st);
                 }
 

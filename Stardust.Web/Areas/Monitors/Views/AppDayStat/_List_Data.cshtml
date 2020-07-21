@@ -1,4 +1,4 @@
-﻿@model IList<TraceDayStat>
+﻿@model IList<AppDayStat>
 @using Stardust.Data.Monitors
 @using NewLife;
 @using NewLife.Web;
@@ -24,7 +24,6 @@
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ID"))">编号</a></th>
             <th class="text-center" style="min-width:80px;"><a href="@Html.Raw(page.GetSortUrl("StatDate"))">统计日期</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AppId"))">应用</a></th>
-            <th class="text-center" title="操作名。接口名或埋点名"><a href="@Html.Raw(page.GetSortUrl("Name"))">操作名</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Total"))">总次数</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Errors"))">错误数</a></th>
             <th class="text-center" title="平均耗时。总耗时除以总次数"><a href="@Html.Raw(page.GetSortUrl("Cost"))">平均耗时</a></th>
@@ -41,9 +40,8 @@
     <tbody>
         @foreach (var entity in Model)
         {
-            var url1 = $"traceData?appId={entity.AppId}&dtStart={entity.StatDate:yyyy-MM-dd}&dtEnd={entity.StatDate:yyyy-MM-dd}";
-            var url2 = $"{url1}&name={HttpUtility.UrlEncode(entity.Name)}";
-            var url3 = $"?appId={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}";
+            var url1 = $"traceDayStat?appId={entity.AppId}&dtStart={entity.StatDate:yyyy-MM-dd}&dtEnd={entity.StatDate:yyyy-MM-dd}";
+            var url2 = $"traceData?appId={entity.AppId}&dtStart={entity.StatDate:yyyy-MM-dd}&dtEnd={entity.StatDate:yyyy-MM-dd}";
             <tr>
                 @if (set.EnableSelect)
                 {
@@ -52,7 +50,6 @@
                 <td class="text-center">@entity.ID</td>
                 <td class="text-center">@entity.StatDate.ToString("yyyy-MM-dd")</td>
                 <td><a href="@url1">@entity.AppName</a></td>
-                <td><a href="@url3">@entity.Name</a></td>
                 <td class="text-right"><a href="@url2">@entity.Total.ToString("n0")</a></td>
                 <td class="text-right">@entity.Errors.ToString("n0")</td>
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
@@ -68,16 +65,15 @@
                 }
             </tr>
         }
-        @if (page.State is TraceDayStat)
+        @if (page.State is AppDayStat)
         {
-            var entity = page.State as TraceDayStat;
+            var entity = page.State as AppDayStat;
             <tr>
                 @if (set.EnableSelect)
                 {
                     <td></td>
                 }
                 <td class="text-center">总计</td>
-                <td></td>
                 <td></td>
                 <td></td>
                 <td class="text-right">@entity.Total.ToString("n0")</td>

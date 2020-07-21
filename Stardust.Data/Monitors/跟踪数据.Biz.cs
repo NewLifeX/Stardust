@@ -121,17 +121,30 @@ namespace Stardust.Data.Monitors
         ///// <returns></returns>
         //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
 
-        /// <summary>根据日期分组统计</summary>
+        /// <summary>根据应用接口分组统计</summary>
         /// <param name="date"></param>
         /// <param name="appIds"></param>
         /// <returns></returns>
-        public static IList<TraceData> SearchGroup(DateTime date, Int32[] appIds)
+        public static IList<TraceData> SearchGroupAppAndName(DateTime date, Int32[] appIds)
         {
             var selects = _.Total.Sum() & _.Errors.Sum() & _.TotalCost.Sum() & _.MaxCost.Max() & _.MinCost.Min() & _.AppId & _.Name;
             var where = _.StartTime >= date.ToUniversalTime().ToLong() & _.StartTime < date.AddDays(1).ToUniversalTime().ToLong();
             if (appIds != null && appIds.Length > 0) where &= _.AppId.In(appIds);
 
             return FindAll(where.GroupBy(_.AppId, _.Name), null, selects);
+        }
+
+        /// <summary>根据应用分组统计</summary>
+        /// <param name="date"></param>
+        /// <param name="appIds"></param>
+        /// <returns></returns>
+        public static IList<TraceData> SearchGroupApp(DateTime date, Int32[] appIds)
+        {
+            var selects = _.Total.Sum() & _.Errors.Sum() & _.TotalCost.Sum() & _.MaxCost.Max() & _.MinCost.Min() & _.AppId;
+            var where = _.StartTime >= date.ToUniversalTime().ToLong() & _.StartTime < date.AddDays(1).ToUniversalTime().ToLong();
+            if (appIds != null && appIds.Length > 0) where &= _.AppId.In(appIds);
+
+            return FindAll(where.GroupBy(_.AppId), null, selects);
         }
         #endregion
 

@@ -25,14 +25,21 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            // 默认排序
+            // 选了应用，没有选时间，按照统计日期升序
             if (appId >= 0 && start.Year < 2000 && p.Sort.IsNullOrEmpty())
             {
                 start = DateTime.Today.AddDays(-30);
                 p["dtStart"] = start.ToString("yyyy-MM-dd");
 
-                p.Sort = TraceDayStat.__.StatDate;
+                p.Sort = __.StatDate;
                 p.Desc = false;
+                p.PageSize = 100;
+            }
+            // 选了应用和时间，按照接口调用次数降序
+            else if (appId >= 0 && start.Year > 2000 && p.Sort.IsNullOrEmpty())
+            {
+                p.Sort = __.Total;
+                p.Desc = true;
                 p.PageSize = 100;
             }
 
@@ -40,26 +47,36 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
             var list = TraceDayStat.Search(appId, name, start, end, p["Q"], p);
 
-            if (list.Count > 0)
+            if (list.Count > 0 && !name.IsNullOrEmpty())
             {
-                var hasDate = start.Year > 2000 || end.Year > 2000;
                 // 绘制日期曲线图
                 var ar = AppTracer.FindByID(appId);
                 if (appId >= 0)
                 {
                     var chart = new ECharts
                     {
-                        Title = new ChartTitle { Text = ar + "" },
                         Height = 400,
                     };
                     chart.SetX(list, _.StatDate, e => e.StatDate.ToString("MM-dd"));
-                    chart.SetY("数量");
+                    chart.SetY("调用次数");
                     chart.AddLine(list, _.Total, null, true);
-                    chart.Add(list, _.Total);
                     chart.Add(list, _.Errors);
-                    chart.Add(list, _.Cost);
                     chart.SetTooltip();
                     ViewBag.Charts = new[] { chart };
+                }
+                if (appId >= 0)
+                {
+                    var chart = new ECharts
+                    {
+                        Height = 400,
+                    };
+                    chart.SetX(list, _.StatDate, e => e.StatDate.ToString("MM-dd"));
+                    chart.SetY("耗时");
+                    chart.AddLine(list, _.Cost, null, true);
+                    chart.Add(list, _.MaxCost);
+                    chart.Add(list, _.MinCost);
+                    chart.SetTooltip();
+                    ViewBag.Charts2 = new[] { chart };
                 }
             }
 

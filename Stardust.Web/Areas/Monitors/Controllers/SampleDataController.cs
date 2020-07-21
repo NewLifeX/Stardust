@@ -9,7 +9,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
     [MonitorsArea]
     public class SampleDataController : EntityController<SampleData>
     {
-        static SampleDataController() => MenuOrder = 80;
+        static SampleDataController() => MenuOrder = 50;
 
         protected override IEnumerable<SampleData> Search(Pager p)
         {
