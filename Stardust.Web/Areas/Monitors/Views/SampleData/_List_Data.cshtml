@@ -52,8 +52,8 @@
                 <td class="text-center">
                     <i class="glyphicon glyphicon-@(entity.Success ? "ok" : "remove")" style="color: @(entity.Success ? "green" : "red");"></i>
                 </td>
-                <td class="text-center">@entity.Start.ToFullString("")</td>
-                <td class="text-center">@entity.End.ToFullString("")</td>
+                <td class="text-center" title="@entity.StartTime">@entity.Start.ToFullString("")</td>
+                <td class="text-center" title="@entity.EndTime">@entity.End.ToFullString("")</td>
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
                 <td><a href="?traceId=@entity.TraceId">@entity.TraceId</a></td>
                 <td>@entity.SpanId</td>
@@ -70,3 +70,53 @@
         }
     </tbody>
 </table>
+@if (!page["traceId"].IsNullOrEmpty())
+{
+    <table class="table table-bordered table-hover table-striped table-condensed">
+        <thead>
+            <tr>
+                <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AppId"))">应用</a></th>
+                <th class="text-center" title="操作名。接口名或埋点名"><a href="@Html.Raw(page.GetSortUrl("Name"))">操作名</a></th>
+                <th style="width:80%">时间轴</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                //var sd = Model.OrderByDescending(e => e.EndTime - e.StartTime).FirstOrDefault();
+                var min = Model.Min(e => e.StartTime);
+                var max = Model.Max(e => e.EndTime);
+                var length = max - min;
+            }
+            @foreach (var entity in Model)
+            {
+                var ms = entity.EndTime - entity.StartTime;
+                var left = (Double)(entity.StartTime - min) / length;
+                if (left < 0) left = 0;
+                var w = (Double)ms / length;
+                <tr>
+                    <td class="text-center">@entity.AppName</td>
+                    <td>@entity.Name</td>
+                    <td>
+                        <div style="float:left;width:@left.ToString("p")">&nbsp;</div>
+                        @if (!entity.Success)
+                        {
+                            <div style="background-color: palevioletred;float:left;width:@w.ToString("p")">@ms.ToString("n0")ms</div>
+                        }
+                        else if (entity.Name.StartsWithIgnoreCase("db:"))
+                        {
+                            <div style="background-color: orange;float:left;width:@w.ToString("p")">@ms.ToString("n0")ms</div>
+                        }
+                        else if (entity.Name.StartsWithIgnoreCase("net:", "rpc:", "mqtt:", "biz:"))
+                        {
+                            <div style="background-color: mediumpurple;float:left;width:@w.ToString("p")">@ms.ToString("n0")ms</div>
+                        }
+                        else
+                        {
+                            <div style="background-color: lightgreen;float:left;width:@w.ToString("p")">@ms.ToString("n0")ms</div>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

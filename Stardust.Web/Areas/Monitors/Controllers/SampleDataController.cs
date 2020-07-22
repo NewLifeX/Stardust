@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using NewLife;
 using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Monitors;
@@ -26,7 +28,44 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var start = p["start"].ToLong(-1);
             var end = p["end"].ToLong(-1);
 
-            return SampleData.Search(dataId, appId, name, traceId, spanId, parentId, success, start, end, p["Q"], p);
+            var list = SampleData.Search(dataId, appId, name, traceId, spanId, parentId, success, start, end, p["Q"], p);
+            if (list.Count == 0) return list;
+
+            // 如果有traceId，则按照要求排序，深度搜索算法
+            if (!traceId.IsNullOrEmpty())
+            {
+                var rs = new List<SampleData>();
+                var stack = new Stack<SampleData>();
+
+                var pid = "";
+                while (true)
+                {
+                    // 降序入栈
+                    var ps = list.Where(e => e.ParentId + "" == pid).OrderByDescending(e => e.StartTime).ToList();
+                    foreach (var item in ps)
+                    {
+                        stack.Push(item);
+                        list.Remove(item);
+                    }
+
+                    // 没有数据，跳出
+                    if (stack.Count == 0) break;
+
+                    // 出栈，加入结果，处理它的下级
+                    if (stack.TryPop(out var sd))
+                    {
+                        rs.Add(sd);
+                        pid = sd.SpanId;
+                    }
+                }
+
+                // 残留的异常数据
+                rs.AddRange(list);
+
+                return rs;
+            }
+
+            return list;
         }
     }
 }
