@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
+using NewLife.Data;
 using NewLife.Web;
 using Stardust.Data.Monitors;
+using XCode.Membership;
 using static Stardust.Data.Monitors.TraceDayStat;
 
 namespace Stardust.Web.Areas.Monitors.Controllers
@@ -81,6 +85,21 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             }
 
             return list;
+        }
+
+        [EntityAuthorize(PermissionFlags.Detail)]
+        public ActionResult Trace(Int32 id)
+        {
+            var st = TraceDayStat.FindByID(id);
+            if (st == null) throw new InvalidDataException("找不到采样数据");
+
+            var ds = TraceData.Search(st.AppId, st.Name, st.StatDate, st.StatDate, null, new PageParameter { PageSize = 1 });
+            if (ds.Count == 0) throw new InvalidDataException("找不到采样数据");
+
+            var list = SampleData.FindAllByDataId(ds[0].ID);
+            if (list.Count == 0) throw new InvalidDataException("找不到采样数据");
+
+            return RedirectToAction("Index", "SampleData", new { traceId = list[0].TraceId });
         }
     }
 }

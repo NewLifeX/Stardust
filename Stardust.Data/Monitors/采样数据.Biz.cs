@@ -71,16 +71,15 @@ namespace Stardust.Data.Monitors
             //return Find(_.ID == id);
         }
 
+        /// <summary>根据数据编号查找</summary>
+        /// <param name="dataId"></param>
+        /// <returns></returns>
+        public static IList<SampleData> FindAllByDataId(Int32 dataId) => FindAll(_.DataId == dataId);
+
         /// <summary>根据跟踪标识查找</summary>
         /// <param name="traceId">跟踪标识</param>
         /// <returns>实体列表</returns>
-        public static IList<SampleData> FindAllByTraceId(String traceId)
-        {
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TraceId == traceId);
-
-            return FindAll(_.TraceId == traceId);
-        }
+        public static IList<SampleData> FindAllByTraceId(String traceId) => FindAll(_.TraceId == traceId);
         #endregion
 
         #region 高级查询
