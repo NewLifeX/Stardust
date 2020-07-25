@@ -33,6 +33,8 @@ namespace Stardust.Monitors
                     {
                         if (value.Value.GetValue("Request") is HttpRequestMessage request)
                         {
+                            var current = Activity.Current;
+
                             Tracer.NewSpan(request);
                         }
 

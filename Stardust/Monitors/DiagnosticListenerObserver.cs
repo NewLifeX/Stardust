@@ -33,7 +33,8 @@ namespace Stardust.Monitors
 
             _listeners.Add(listenerName, new TraceDiagnosticListener
             {
-                Name = listenerName
+                Name = listenerName,
+                Tracer = Tracer,
             });
         }
 
@@ -43,6 +44,7 @@ namespace Stardust.Monitors
         {
             Init();
 
+            listener.Tracer = Tracer;
             _listeners.Add(listener.Name, listener);
         }
 
@@ -65,6 +67,22 @@ namespace Stardust.Monitors
 
         /// <summary>跟踪器</summary>
         public ITracer Tracer { get; set; }
+
+        //#if NET45
+        //        private static readonly String FieldKey = typeof(DefaultSpan).FullName;
+        //        /// <summary>当前线程正在使用的上下文</summary>
+        //        public static ISpan Current
+        //        {
+        //            [System.Security.SecuritySafeCritical]
+        //            get => ((System.Runtime.Remoting.ObjectHandle)System.Runtime.Remoting.Messaging.CallContext.LogicalGetData(FieldKey))?.Unwrap() as ISpan;
+        //            [System.Security.SecuritySafeCritical]
+        //            set => System.Runtime.Remoting.Messaging.CallContext.LogicalSetData(FieldKey, new System.Runtime.Remoting.ObjectHandle(value));
+        //        }
+        //#else
+        //        private static readonly System.Threading.AsyncLocal<ISpan> _Current = new System.Threading.AsyncLocal<ISpan>();
+        //        /// <summary>当前线程正在使用的上下文</summary>
+        //        public static ISpan Current { get => _Current.Value; set => _Current.Value = value; }
+        //#endif
         #endregion
 
         /// <summary>完成时</summary>
