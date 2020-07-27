@@ -10,7 +10,6 @@ namespace ClientTest
 {
     public class DiagnosticTests
     {
-
         [Fact]
         public async void TestHttp()
         {
@@ -28,45 +27,38 @@ namespace ClientTest
             Assert.Null(builders[0].ErrorSamples);
         }
 
-        //private class MyObserver : IObserver<DiagnosticListener>
-        //{
-        //    private readonly Dictionary<String, MyObserver2> _listeners = new Dictionary<String, MyObserver2>();
+        [Fact]
+        public async void TestHttp2()
+        {
+            var tracer = NewLife.Log.DefaultTracer.Instance;
 
-        //    public void Subscribe(String listenerName, String startName, String endName, String errorName)
-        //    {
-        //        _listeners.Add(listenerName, new MyObserver2
-        //        {
-        //            StartName = startName,
-        //            EndName = endName,
-        //            ErrorName = errorName,
-        //        });
-        //    }
+            var observer = new DiagnosticListenerObserver { Tracer = tracer };
+            observer.Subscribe("HttpHandlerDiagnosticListener", "System.Net.Http.HttpRequestOut.Start", "System.Net.Http.HttpRequestOut.Stop", "System.Net.Http.Exception");
 
-        //    public void OnCompleted() => throw new NotImplementedException();
+            var http = new HttpClient();
+            await http.GetStringAsync("http://www.newlifex.com?id=1234");
 
-        //    public void OnError(Exception error) => throw new NotImplementedException();
+            var builders = tracer.TakeAll();
+            Assert.Single(builders);
+            Assert.Single(builders[0].Samples);
+            Assert.Null(builders[0].ErrorSamples);
+        }
 
-        //    public void OnNext(DiagnosticListener value)
-        //    {
-        //        if (_listeners.TryGetValue(value.Name, out var listener)) value.Subscribe(listener);
-        //    }
-        //}
+        [Fact]
+        public async void TestHttp3()
+        {
+            var tracer = NewLife.Log.DefaultTracer.Instance;
 
-        //private class MyObserver2 : IObserver<KeyValuePair<String, Object>>
-        //{
-        //    #region 属性
-        //    public String StartName { get; set; }
+            var observer = new DiagnosticListenerObserver { Tracer = tracer };
+            observer.Subscribe("HttpHandlerDiagnosticListener", null, null, null);
 
-        //    public String EndName { get; set; }
+            var http = new HttpClient();
+            await http.GetStringAsync("http://www.newlifex.com?id=1234");
 
-        //    public String ErrorName { get; set; }
-        //    #endregion
-
-        //    public void OnCompleted() => throw new NotImplementedException();
-
-        //    public void OnError(Exception error) => throw new NotImplementedException();
-
-        //    public void OnNext(KeyValuePair<String, Object> value) => XTrace.WriteLine(value.Key);
-        //}
+            var builders = tracer.TakeAll();
+            Assert.Single(builders);
+            Assert.Single(builders[0].Samples);
+            Assert.Null(builders[0].ErrorSamples);
+        }
     }
 }

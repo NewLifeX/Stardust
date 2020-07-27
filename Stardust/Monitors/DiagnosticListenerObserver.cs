@@ -27,14 +27,20 @@ namespace Stardust.Monitors
         }
 
         /// <summary>订阅新的监听器</summary>
-        /// <param name="listenerName"></param>
-        public void Subscribe(String listenerName)
+        /// <param name="listenerName">监听名称</param>
+        /// <param name="startName">开始名</param>
+        /// <param name="endName">结束名</param>
+        /// <param name="errorName">错误名</param>
+        public void Subscribe(String listenerName, String startName, String endName, String errorName)
         {
             Init();
 
             _listeners.Add(listenerName, new TraceDiagnosticListener
             {
                 Name = listenerName,
+                StartName = startName,
+                EndName = endName,
+                ErrorName = errorName,
                 Tracer = Tracer,
             });
         }
@@ -70,6 +76,15 @@ namespace Stardust.Monitors
         /// <summary>名称</summary>
         public String Name { get; set; }
 
+        /// <summary>开始名称</summary>
+        public String StartName { get; set; }
+
+        /// <summary>结束名称</summary>
+        public String EndName { get; set; }
+
+        /// <summary>异常名称</summary>
+        public String ErrorName { get; set; }
+
         /// <summary>跟踪器</summary>
         public ITracer Tracer { get; set; }
         #endregion
@@ -91,16 +106,20 @@ namespace Stardust.Monitors
             var activity = Activity.Current;
             if (activity != null)
             {
-                if (activity.OperationName + ".Start" == value.Key)
+                var start = !StartName.IsNullOrEmpty() ? StartName : (activity.OperationName + ".Start");
+                var end = !EndName.IsNullOrEmpty() ? EndName : (activity.OperationName + ".Stop");
+                var error = !ErrorName.IsNullOrEmpty() ? ErrorName : (activity.OperationName + ".Exception");
+
+                if (start == value.Key)
                 {
                     Tracer.NewSpan(activity.OperationName);
                 }
-                else if (activity.OperationName + ".Stop" == value.Key)
+                else if (end == value.Key)
                 {
                     var span = DefaultSpan.Current;
                     span?.Dispose();
                 }
-                else if (value.Key.EndsWith(".Exception"))
+                else if (error == value.Key || value.Key.EndsWith(".Exception"))
                 {
                     var span = DefaultSpan.Current;
                     if (span != null && value.Value.GetValue("Exception") is Exception ex)
