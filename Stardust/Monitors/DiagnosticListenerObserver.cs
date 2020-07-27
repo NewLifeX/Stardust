@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Threading;
 using NewLife;
 using NewLife.Log;
+using NewLife.Reflection;
 
 namespace Stardust.Monitors
 {
@@ -54,6 +55,10 @@ namespace Stardust.Monitors
 
         void IObserver<DiagnosticListener>.OnNext(DiagnosticListener value)
         {
+#if DEBUG
+            XTrace.WriteLine("DiagnosticListener: {0}", value.Name);
+#endif
+
             if (_listeners.TryGetValue(value.Name, out var listener)) value.Subscribe(listener);
         }
     }
@@ -67,22 +72,6 @@ namespace Stardust.Monitors
 
         /// <summary>跟踪器</summary>
         public ITracer Tracer { get; set; }
-
-        //#if NET45
-        //        private static readonly String FieldKey = typeof(DefaultSpan).FullName;
-        //        /// <summary>当前线程正在使用的上下文</summary>
-        //        public static ISpan Current
-        //        {
-        //            [System.Security.SecuritySafeCritical]
-        //            get => ((System.Runtime.Remoting.ObjectHandle)System.Runtime.Remoting.Messaging.CallContext.LogicalGetData(FieldKey))?.Unwrap() as ISpan;
-        //            [System.Security.SecuritySafeCritical]
-        //            set => System.Runtime.Remoting.Messaging.CallContext.LogicalSetData(FieldKey, new System.Runtime.Remoting.ObjectHandle(value));
-        //        }
-        //#else
-        //        private static readonly System.Threading.AsyncLocal<ISpan> _Current = new System.Threading.AsyncLocal<ISpan>();
-        //        /// <summary>当前线程正在使用的上下文</summary>
-        //        public static ISpan Current { get => _Current.Value; set => _Current.Value = value; }
-        //#endif
         #endregion
 
         /// <summary>完成时</summary>
@@ -100,9 +89,25 @@ namespace Stardust.Monitors
 
             // 当前活动名字匹配
             var activity = Activity.Current;
-            if (activity != null && activity.OperationName + ".Stop" == value.Key)
+            if (activity != null)
             {
-                XTrace.WriteLine(value.Key);
+                if (activity.OperationName + ".Start" == value.Key)
+                {
+                    Tracer.NewSpan(activity.OperationName);
+                }
+                else if (activity.OperationName + ".Stop" == value.Key)
+                {
+                    var span = DefaultSpan.Current;
+                    span?.Dispose();
+                }
+                else if (value.Key.EndsWith(".Exception"))
+                {
+                    var span = DefaultSpan.Current;
+                    if (span != null && value.Value.GetValue("Exception") is Exception ex)
+                    {
+                        span.SetError(ex, null);
+                    }
+                }
             }
         }
     }

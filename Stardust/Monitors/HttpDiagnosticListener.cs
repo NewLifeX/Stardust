@@ -52,8 +52,6 @@ namespace Stardust.Monitors
 
                 case "System.Net.Http.HttpRequestOut.Stop":
                     {
-                        var current = Activity.Current;
-
                         var span = DefaultSpan.Current;
                         if (span != null)
                         {
