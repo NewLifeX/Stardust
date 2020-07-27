@@ -17,7 +17,7 @@ namespace Stardust.Monitors
 
         private readonly Dictionary<String, TraceDiagnosticListener> _listeners = new Dictionary<String, TraceDiagnosticListener>();
 
-        private static Int32 _inited;
+        private Int32 _inited;
         private void Init()
         {
             if (_inited == 0 && Interlocked.CompareExchange(ref _inited, 1, 0) == 0)

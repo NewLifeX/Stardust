@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Text;
+using NewLife.Log;
 using Stardust.Monitors;
 using Xunit;
 
@@ -13,7 +14,8 @@ namespace ClientTest
         [Fact]
         public async void TestHttp()
         {
-            var tracer = NewLife.Log.DefaultTracer.Instance;
+            //var tracer = NewLife.Log.DefaultTracer.Instance;
+            var tracer = new DefaultTracer();
 
             var observer = new DiagnosticListenerObserver { Tracer = tracer };
             observer.Subscribe(new HttpDiagnosticListener());
@@ -30,7 +32,8 @@ namespace ClientTest
         [Fact]
         public async void TestHttp2()
         {
-            var tracer = NewLife.Log.DefaultTracer.Instance;
+            //var tracer = NewLife.Log.DefaultTracer.Instance;
+            var tracer = new DefaultTracer();
 
             var observer = new DiagnosticListenerObserver { Tracer = tracer };
             observer.Subscribe("HttpHandlerDiagnosticListener", "System.Net.Http.HttpRequestOut.Start", "System.Net.Http.HttpRequestOut.Stop", "System.Net.Http.Exception");
@@ -47,7 +50,8 @@ namespace ClientTest
         [Fact]
         public async void TestHttp3()
         {
-            var tracer = NewLife.Log.DefaultTracer.Instance;
+            //var tracer = NewLife.Log.DefaultTracer.Instance;
+            var tracer = new DefaultTracer();
 
             var observer = new DiagnosticListenerObserver { Tracer = tracer };
             observer.Subscribe("HttpHandlerDiagnosticListener", null, null, null);
