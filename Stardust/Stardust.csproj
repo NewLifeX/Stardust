@@ -52,6 +52,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Monitors\AspNetCoreDiagnosticListener.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="NewLife.Core" Version="8.8.2020.727-rc3" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' != 'net40'">
