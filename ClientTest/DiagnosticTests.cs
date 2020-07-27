@@ -12,7 +12,7 @@ namespace ClientTest
     {
 
         [Fact]
-        public async void TestActivity()
+        public async void TestHttp()
         {
             var tracer = NewLife.Log.DefaultTracer.Instance;
 
