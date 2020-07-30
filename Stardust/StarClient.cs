@@ -291,7 +291,7 @@ namespace Stardust
         /// <returns></returns>
         public async Task<Object> Ping()
         {
-            XTrace.WriteLine("心跳");
+            //XTrace.WriteLine("心跳");
 
             var inf = GetHeartInfo();
 
