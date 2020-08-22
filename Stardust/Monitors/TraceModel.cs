@@ -12,6 +12,9 @@ namespace Stardust.Monitors
         /// <summary>应用名</summary>
         public String AppName { get; set; }
 
+        /// <summary>应用密钥</summary>
+        public String AppSecret { get; set; }
+
         /// <summary>跟踪数据</summary>
         public ISpanBuilder[] Builders { get; set; }
     }
@@ -27,5 +30,8 @@ namespace Stardust.Monitors
 
         /// <summary>最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10</summary>
         public Int32 MaxErrors { get; set; } = 10;
+
+        /// <summary>要排除的操作名</summary>
+        public String[] Excludes { get; set; }
     }
 }

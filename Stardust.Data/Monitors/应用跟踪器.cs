@@ -91,6 +91,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("MaxErrors", "最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10", "")]
         public Int32 MaxErrors { get => _MaxErrors; set { if (OnPropertyChanging("MaxErrors", value)) { _MaxErrors = value; OnPropertyChanged("MaxErrors"); } } }
 
+        private String _Excludes;
+        /// <summary>排除项。要排除的操作名</summary>
+        [DisplayName("排除项")]
+        [Description("排除项。要排除的操作名")]
+        [DataObjectField(false, false, true, 2000)]
+        [BindColumn("Excludes", "排除项。要排除的操作名", "")]
+        public String Excludes { get => _Excludes; set { if (OnPropertyChanging("Excludes", value)) { _Excludes = value; OnPropertyChanged("Excludes"); } } }
+
         private String _CreateUser;
         /// <summary>创建者</summary>
         [DisplayName("创建者")]
@@ -175,6 +183,7 @@ namespace Stardust.Data.Monitors
                     case "Period": return _Period;
                     case "MaxSamples": return _MaxSamples;
                     case "MaxErrors": return _MaxErrors;
+                    case "Excludes": return _Excludes;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -199,6 +208,7 @@ namespace Stardust.Data.Monitors
                     case "Period": _Period = value.ToInt(); break;
                     case "MaxSamples": _MaxSamples = value.ToInt(); break;
                     case "MaxErrors": _MaxErrors = value.ToInt(); break;
+                    case "Excludes": _Excludes = Convert.ToString(value); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -243,6 +253,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10</summary>
             public static readonly Field MaxErrors = FindByName("MaxErrors");
+
+            /// <summary>排除项。要排除的操作名</summary>
+            public static readonly Field Excludes = FindByName("Excludes");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
@@ -301,6 +314,9 @@ namespace Stardust.Data.Monitors
             /// <summary>最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10</summary>
             public const String MaxErrors = "MaxErrors";
 
+            /// <summary>排除项。要排除的操作名</summary>
+            public const String Excludes = "Excludes";
+
             /// <summary>创建者</summary>
             public const String CreateUser = "CreateUser";
 
@@ -358,6 +374,9 @@ namespace Stardust.Data.Monitors
 
         /// <summary>最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10</summary>
         Int32 MaxErrors { get; set; }
+
+        /// <summary>排除项。要排除的操作名</summary>
+        String Excludes { get; set; }
 
         /// <summary>创建者</summary>
         String CreateUser { get; set; }

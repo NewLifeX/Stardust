@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using NewLife;
 using NewLife.Common;
 using NewLife.Log;
@@ -18,8 +19,14 @@ namespace Stardust.Monitors
         /// <summary>应用名</summary>
         public String AppName { get; set; }
 
+        /// <summary>应用密钥</summary>
+        public String AppSecret { get; set; }
+
         /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认120</summary>
         public Int32 MaxFails { get; set; } = 120;
+
+        /// <summary>要排除的操作名</summary>
+        public String[] Excludes { get; set; }
 
         /// <summary>Api客户端</summary>
         public IApiClient Client { get; set; }
@@ -56,8 +63,18 @@ namespace Stardust.Monitors
         {
             if (builders == null) return;
 
+            // 剔除项
+            if (Excludes != null) builders = builders.Where(e => !Excludes.Contains(e.Name)).ToArray();
+
             // 发送，失败后进入队列
-            var model = new TraceModel { AppId = AppId, AppName = AppName, Builders = builders };
+            var model = new TraceModel
+            {
+                AppId = AppId,
+                AppName = AppName,
+                AppSecret = AppSecret,
+
+                Builders = builders
+            };
             try
             {
                 var rs = Client.Invoke<TraceResponse>("Trace/Report", model);
@@ -67,6 +84,7 @@ namespace Stardust.Monitors
                     if (rs.Period > 0) Period = rs.Period;
                     if (rs.MaxSamples > 0) MaxSamples = rs.MaxSamples;
                     if (rs.MaxErrors > 0) MaxErrors = rs.MaxErrors;
+                    if (rs.Excludes != null) Excludes = rs.Excludes;
                 }
             }
             catch (Exception ex)

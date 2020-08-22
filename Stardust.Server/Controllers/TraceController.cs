@@ -29,7 +29,7 @@ namespace Stardust.Server.Controllers
 
         [ApiFilter]
         [HttpPost(nameof(Report))]
-        public TraceResponse Report([FromBody] MyTraceModel model)
+        public TraceResponse Report([FromBody] TraceModel model)
         {
             var builders = model?.Builders.Cast<ISpanBuilder>().ToArray();
             //var builders = new ISpanBuilder[0];
@@ -43,6 +43,7 @@ namespace Stardust.Server.Controllers
                 {
                     Name = model.AppId,
                     DisplayName = model.AppName,
+                    Secret = model.AppSecret,
                     Enable = Setting.Current.AutoRegister,
                 };
                 app.Save();
@@ -64,15 +65,22 @@ namespace Stardust.Server.Controllers
                 Period = app.Period,
                 MaxSamples = app.MaxSamples,
                 MaxErrors = app.MaxErrors,
+                Excludes = app.Excludes?.Split(",", ";"),
             };
         }
 
         private void ProcessData(AppTracer app, String ip, ISpanBuilder[] builders)
         {
+            // 排除项
+            var excludes = app.Excludes.Split(",", ";") ?? new String[0];
+
             //var traces = new List<TraceData>();
             var samples = new List<SampleData>();
             foreach (var item in builders)
             {
+                // 剔除指定项
+                if (excludes.Contains(item.Name)) continue;
+
                 var td = TraceData.Create(item);
                 td.AppId = app.ID;
                 td.ClientId = ip;
