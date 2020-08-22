@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using NewLife;
 using NewLife.Common;
 using NewLife.Log;
 using NewLife.Remoting;
@@ -26,6 +27,7 @@ namespace Stardust.Monitors
         private Queue<TraceModel> _fails = new Queue<TraceModel>();
         #endregion
 
+        #region 构造
         /// <summary>实例化</summary>
         public StarTracer()
         {
@@ -46,7 +48,9 @@ namespace Stardust.Monitors
             };
             Client = http;
         }
+        #endregion
 
+        #region 核心业务
         /// <summary>处理Span集合。默认输出日志，可重定义输出控制台</summary>
         protected override void ProcessSpans(ISpanBuilder[] builders)
         {
@@ -89,5 +93,23 @@ namespace Stardust.Monitors
                 }
             }
         }
+        #endregion
+
+        #region 全局注册
+        /// <summary>全局注册星尘性能跟踪器</summary>
+        /// <param name="server">星尘监控中心地址</param>
+        /// <returns></returns>
+        public static StarTracer Register(String server)
+        {
+            if (server.IsNullOrEmpty()) return null;
+
+            if (Instance is StarTracer tracer && tracer.Client is ApiHttpClient) return tracer;
+
+            tracer = new StarTracer(server) { Log = XTrace.Log };
+            DefaultTracer.Instance = tracer;
+
+            return tracer;
+        }
+        #endregion
     }
 }
