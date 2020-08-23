@@ -27,8 +27,8 @@ namespace Stardust.Web
                 // APM跟踪器
                 var tracer = new StarTracer(set.TracerServer) { Log = XTrace.Log };
                 DefaultTracer.Instance = tracer;
-                ApiHelper.Tracer = tracer;
-                DAL.GlobalTracer = tracer;
+                //ApiHelper.Tracer = tracer;
+                //DAL.GlobalTracer = tracer;
                 TracerMiddleware.Tracer = tracer;
 
                 services.AddSingleton<ITracer>(tracer);
@@ -43,12 +43,25 @@ namespace Stardust.Web
             // 使用Cube前添加自己的管道
             if (env.IsDevelopment())
                 app.UseDeveloperExceptionPage();
-            else
-                app.UseExceptionHandler("/CubeHome/Error");
+            //else
+            //    app.UseExceptionHandler("/CubeHome/Error");
+
+            app.UseStaticFiles();
+
+            app.UseRouting();
+
+            app.UseAuthorization();
 
             if (!set.TracerServer.IsNullOrEmpty()) app.UseMiddleware<TracerMiddleware>();
 
             app.UseCube();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllerRoute(
+                    name: "default",
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
+            });
         }
     }
 }
