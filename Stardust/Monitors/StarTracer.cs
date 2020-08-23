@@ -110,7 +110,7 @@ namespace Stardust.Monitors
             try
             {
                 // 检查令牌
-                CheckAuthorize();
+                if (!AppSecret.IsNullOrEmpty()) CheckAuthorize();
 
                 var rs = Client.Invoke<TraceResponse>("Trace/Report", model);
                 // 处理响应参数
