@@ -24,7 +24,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            p.RetrieveState = true;
+            //p.RetrieveState = true;
 
             var list = TraceData.Search(appId, name, start, end, p["Q"], p);
 
