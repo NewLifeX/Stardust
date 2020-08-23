@@ -50,8 +50,14 @@ namespace Stardust.Server.Services.Tests
 
             var set = Setting.Current;
             var service = new AppService();
+
             var model = service.IssueToken(app, set);
             Assert.IsNotNull(model);
+
+            Assert.AreEqual(3, model.AccessToken.Split('.').Length);
+            Assert.AreEqual(3, model.RefreshToken.Split('.').Length);
+            Assert.AreEqual(set.TokenExpire, model.ExpireIn);
+            Assert.AreEqual("JWT", model.TokenType);
         }
 
         [TestMethod()]

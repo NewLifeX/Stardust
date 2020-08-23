@@ -67,7 +67,7 @@ namespace Stardust.Server.Services
             return new TokenModel
             {
                 AccessToken = jwt.Encode(null),
-                TokenType = jwt.Type,
+                TokenType = jwt.Type ?? "JWT",
                 ExpireIn = set.TokenExpire,
                 RefreshToken = jwt.Encode(""),
             };
