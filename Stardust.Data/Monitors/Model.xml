@@ -5,7 +5,6 @@
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
       <Column Name="DisplayName" DataType="String" Description="显示名" />
-      <Column Name="Secret" DataType="String" Description="密钥" />
       <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Period" DataType="Int32" Description="采样周期。单位秒" />

@@ -12,8 +12,8 @@ namespace Stardust.Monitors
         /// <summary>应用名</summary>
         public String AppName { get; set; }
 
-        /// <summary>应用密钥</summary>
-        public String AppSecret { get; set; }
+        /// <summary>访问令牌</summary>
+        public String AccessToken { get; set; }
 
         /// <summary>跟踪数据</summary>
         public ISpanBuilder[] Builders { get; set; }

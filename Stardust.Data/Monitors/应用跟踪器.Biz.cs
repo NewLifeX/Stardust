@@ -106,7 +106,7 @@ namespace Stardust.Data.Monitors
 
             exp &= _.UpdateTime.Between(start, end);
 
-            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.DisplayName.Contains(key) | _.Secret.Contains(key) | _.Category.Contains(key) | _.CreateUser.Contains(key) | _.CreateIP.Contains(key) | _.UpdateUser.Contains(key) | _.UpdateIP.Contains(key);
+            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.DisplayName.Contains(key) | _.Category.Contains(key) | _.CreateUser.Contains(key) | _.CreateIP.Contains(key) | _.UpdateUser.Contains(key) | _.UpdateIP.Contains(key);
 
             return FindAll(exp, page);
         }

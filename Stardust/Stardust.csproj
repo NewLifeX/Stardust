@@ -53,7 +53,6 @@
 
   <ItemGroup>
     <Compile Remove="Monitors\AspNetCoreDiagnosticListener.cs" />
-    <Compile Remove="Monitors\MyTraceModel.cs" />
   </ItemGroup>
 
   <ItemGroup>

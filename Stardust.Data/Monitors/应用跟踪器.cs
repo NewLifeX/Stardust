@@ -43,14 +43,6 @@ namespace Stardust.Data.Monitors
         [BindColumn("DisplayName", "显示名", "")]
         public String DisplayName { get => _DisplayName; set { if (OnPropertyChanging("DisplayName", value)) { _DisplayName = value; OnPropertyChanged("DisplayName"); } } }
 
-        private String _Secret;
-        /// <summary>密钥</summary>
-        [DisplayName("密钥")]
-        [Description("密钥")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("Secret", "密钥", "")]
-        public String Secret { get => _Secret; set { if (OnPropertyChanging("Secret", value)) { _Secret = value; OnPropertyChanged("Secret"); } } }
-
         private String _Category;
         /// <summary>类别</summary>
         [DisplayName("类别")]
@@ -185,7 +177,6 @@ namespace Stardust.Data.Monitors
                     case "ID": return _ID;
                     case "Name": return _Name;
                     case "DisplayName": return _DisplayName;
-                    case "Secret": return _Secret;
                     case "Category": return _Category;
                     case "Enable": return _Enable;
                     case "Period": return _Period;
@@ -211,7 +202,6 @@ namespace Stardust.Data.Monitors
                     case "ID": _ID = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "DisplayName": _DisplayName = Convert.ToString(value); break;
-                    case "Secret": _Secret = Convert.ToString(value); break;
                     case "Category": _Category = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Period": _Period = value.ToInt(); break;
@@ -245,9 +235,6 @@ namespace Stardust.Data.Monitors
 
             /// <summary>显示名</summary>
             public static readonly Field DisplayName = FindByName("DisplayName");
-
-            /// <summary>密钥</summary>
-            public static readonly Field Secret = FindByName("Secret");
 
             /// <summary>类别</summary>
             public static readonly Field Category = FindByName("Category");
@@ -309,9 +296,6 @@ namespace Stardust.Data.Monitors
             /// <summary>显示名</summary>
             public const String DisplayName = "DisplayName";
 
-            /// <summary>密钥</summary>
-            public const String Secret = "Secret";
-
             /// <summary>类别</summary>
             public const String Category = "Category";
 
@@ -372,9 +356,6 @@ namespace Stardust.Data.Monitors
 
         /// <summary>显示名</summary>
         String DisplayName { get; set; }
-
-        /// <summary>密钥</summary>
-        String Secret { get; set; }
 
         /// <summary>类别</summary>
         String Category { get; set; }

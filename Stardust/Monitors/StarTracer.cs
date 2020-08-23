@@ -71,7 +71,7 @@ namespace Stardust.Monitors
             {
                 AppId = AppId,
                 AppName = AppName,
-                AppSecret = AppSecret,
+                AccessToken = AppSecret,
 
                 Builders = builders
             };

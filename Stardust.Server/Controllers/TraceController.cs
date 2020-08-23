@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Log;
 using Stardust.Data.Monitors;
+using Stardust.Models;
 using Stardust.Monitors;
 using Stardust.Server.Common;
 using Stardust.Server.Services;
@@ -18,6 +19,7 @@ namespace Stardust.Server.Controllers
     [Route("[controller]")]
     public class TraceController : ControllerBase
     {
+        private readonly AppService _service = new AppService();
         private readonly ITraceStatService _stat;
         private readonly IAppDayStatService _appStat;
 
@@ -29,13 +31,22 @@ namespace Stardust.Server.Controllers
 
         [ApiFilter]
         [HttpPost(nameof(Report))]
-        public TraceResponse Report([FromBody] TraceModel model)
+        public TraceResponse Report([FromBody] MyTraceModel model)
         {
             var builders = model?.Builders.Cast<ISpanBuilder>().ToArray();
             //var builders = new ISpanBuilder[0];
             if (model == null || model.AppId.IsNullOrEmpty() || builders == null || builders.Length == 0) return null;
 
-            // 校验应用
+            var set = Setting.Current;
+
+            // 新版验证方式，访问令牌
+            if (!model.AccessToken.IsNullOrEmpty())
+            {
+                var ap = _service.DecodeToken(model.AccessToken, set);
+                if (ap.Name != model.AppId) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{ap.Name}]！");
+            }
+
+            // 该应用的跟踪配置信息
             var app = AppTracer.FindByName(model.AppId);
             if (app == null)
             {
@@ -43,13 +54,13 @@ namespace Stardust.Server.Controllers
                 {
                     Name = model.AppId,
                     DisplayName = model.AppName,
-                    Secret = model.AppSecret,
-                    Enable = Setting.Current.AutoRegister,
+                    Enable = set.AutoRegister,
                 };
                 app.Save();
             }
-            if (!app.Enable || !app.Secret.IsNullOrEmpty() && app.Secret != model.AppSecret)
-                throw new Exception($"无效应用[{model.AppId}/{model.AppName}]");
+
+            // 校验应用
+            if (app == null || !app.Enable) throw new Exception($"无效应用[{model.AppId}/{model.AppName}]");
 
             // 插入数据
             var ip = HttpContext.GetUserHost();
