@@ -13,6 +13,7 @@ namespace Stardust.Server.Controllers
     {
         private readonly AppService _service = new AppService();
 
+        [ApiFilter]
         public TokenModel Token([FromBody] TokenInModel model)
         {
             var set = Setting.Current;
@@ -39,6 +40,21 @@ namespace Stardust.Server.Controllers
             {
                 throw new NotSupportedException($"未支持 grant_type={model.grant_type}");
             }
+        }
+
+        [ApiFilter]
+        public Object UserInfo(String token)
+        {
+            var set = Setting.Current;
+
+            var app = _service.DecodeToken(token, set);
+            return new
+            {
+                app.ID,
+                app.Name,
+                app.DisplayName,
+                app.Category,
+            };
         }
     }
 }

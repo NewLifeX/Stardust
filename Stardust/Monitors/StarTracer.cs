@@ -63,7 +63,7 @@ namespace Stardust.Monitors
         private DateTime _expire;
         private void CheckAuthorize()
         {
-            if (_token == null)
+            if (_token == null && Client.Token.IsNullOrEmpty())
             {
                 // 申请令牌
                 _token = Client.Invoke<TokenModel>("OAuth/Token", new
@@ -77,7 +77,7 @@ namespace Stardust.Monitors
                 // 提前一分钟过期
                 _expire = DateTime.Now.AddSeconds(_token.ExpireIn - 60);
             }
-            else if (DateTime.Now > _expire)
+            else if (_token != null && DateTime.Now > _expire)
             {
                 // 刷新令牌
                 _token = Client.Invoke<TokenModel>("OAuth/Token", new
