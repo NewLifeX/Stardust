@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
+using NewLife;
 using NewLife.Configuration;
+using NewLife.Security;
 
 namespace Stardust.Server
 {
@@ -16,6 +18,10 @@ namespace Stardust.Server
         /// <summary>服务端口。默认6600</summary>
         [Description("服务端口。默认6600")]
         public Int32 Port { get; set; } = 6600;
+
+        /// <summary>令牌密钥。用于生成JWT令牌的算法和密钥，如HS256:ABCD1234</summary>
+        [Description("令牌密钥。用于生成JWT令牌的算法和密钥，如HS256:ABCD1234")]
+        public String TokenSecret { get; set; }
 
         /// <summary>令牌有效期。默认2*3600秒</summary>
         [Description("令牌有效期。默认2*3600秒")]
@@ -34,10 +40,13 @@ namespace Stardust.Server
         public String TracerServer { get; set; }
         #endregion
 
-        #region 构造
-        /// <summary>实例化</summary>
-        public Setting()
+        #region 方法
+        /// <summary>加载时触发</summary>
+        protected override void OnLoaded()
         {
+            if (TokenSecret.IsNullOrEmpty() || TokenSecret.Split(':').Length != 2) TokenSecret = $"HS256:{Rand.NextString(16)}";
+            
+            base.OnLoaded();
         }
         #endregion
     }

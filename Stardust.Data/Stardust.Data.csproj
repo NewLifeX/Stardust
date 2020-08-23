@@ -44,7 +44,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Build.tt">
+    <Content Include="Entity\Build.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Build.log</LastGenOutput>
     </Content>
@@ -60,7 +60,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Build.log">
+    <None Update="Entity\Build.log">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Build.tt</DependentUpon>

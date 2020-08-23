@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Tables Version="9.17.7456.18658" xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data" ConnName="Stardust" Output="Entity" BaseClass="EntityBase" IgnoreNameCase="True" xmlns="http://www.newlifex.com/Model2020.xsd">
+<Tables Version="9.19.7540.31934" xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data" ConnName="Stardust" Output="" BaseClass="EntityBase" xmlns="http://www.newlifex.com/Model2020.xsd">
   <Table Name="App" Description="应用系统。服务提供者和消费者" IgnoreNameCase="False">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
