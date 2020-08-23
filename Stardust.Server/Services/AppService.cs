@@ -14,9 +14,9 @@ namespace Stardust.Server.Services
         /// <summary>验证应用密码</summary>
         /// <param name="username"></param>
         /// <param name="password"></param>
-        /// <param name="set"></param>
+        /// <param name="autoRegister"></param>
         /// <returns></returns>
-        public App Authorize(String username, String password, Setting set)
+        public App Authorize(String username, String password, Boolean autoRegister)
         {
             if (username.IsNullOrEmpty()) throw new ArgumentNullException(nameof(username));
             if (password.IsNullOrEmpty()) throw new ArgumentNullException(nameof(password));
@@ -29,7 +29,7 @@ namespace Stardust.Server.Services
                 {
                     Name = username,
                     Secret = password,
-                    Enable = set.AutoRegister,
+                    Enable = autoRegister,
                 };
 
                 // 先保存

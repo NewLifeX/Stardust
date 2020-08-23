@@ -18,7 +18,7 @@ namespace Stardust.Server.Controllers
             // 密码模式
             if (grant_type == "password")
             {
-                var app = _service.Authorize(username, password, set);
+                var app = _service.Authorize(username, password, set.AutoRegister);
                 return _service.IssueToken(app, set);
             }
             // 刷新令牌
