@@ -64,6 +64,8 @@ namespace Stardust.Data
         /// <returns>实体对象</returns>
         public static App FindByName(String name)
         {
+            if (name.IsNullOrEmpty()) return null;
+
             // 实体缓存
             if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Name == name);
 

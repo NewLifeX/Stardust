@@ -35,7 +35,7 @@ namespace Stardust.Server.Services
                 // 先保存
                 app.Insert();
 
-                if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(username), $"应用[{username}]不存在且禁止自动注册！");
+                //if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(username), $"应用[{username}]不存在且禁止自动注册！");
             }
 
             // 检查应用有效性
