@@ -46,7 +46,7 @@ namespace Stardust.Server.Services.Tests
         [TestMethod()]
         public void IssueTokenTest()
         {
-            var app = App.FindByName("test");
+            var app = new App { Name = "test" };
 
             var set = Setting.Current;
             var service = new AppService();
@@ -63,7 +63,25 @@ namespace Stardust.Server.Services.Tests
         [TestMethod()]
         public void DecodeTokenTest()
         {
-            Assert.Fail();
+            var app = App.FindByName("test");
+            if (app == null)
+            {
+                app = new App { Name = "test", Enable = true };
+                app.Insert();
+            }
+
+            var set = Setting.Current;
+            var service = new AppService();
+
+            var model = service.IssueToken(app, set);
+            Assert.IsNotNull(model);
+
+            // 马上解码
+            var app2 = service.DecodeToken(model.AccessToken, set);
+            Assert.IsNotNull(app2);
+
+            app2 = service.DecodeToken(model.RefreshToken, set);
+            Assert.IsNotNull(app2);
         }
     }
 }

@@ -69,7 +69,7 @@ namespace Stardust.Server.Services
                 AccessToken = jwt.Encode(null),
                 TokenType = jwt.Type ?? "JWT",
                 ExpireIn = set.TokenExpire,
-                RefreshToken = jwt.Encode(""),
+                RefreshToken = jwt.Encode(null),
             };
         }
 
