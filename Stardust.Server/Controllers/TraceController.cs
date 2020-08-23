@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Log;
 using Stardust.Data.Monitors;
-using Stardust.Models;
 using Stardust.Monitors;
 using Stardust.Server.Common;
 using Stardust.Server.Services;
@@ -31,7 +30,7 @@ namespace Stardust.Server.Controllers
 
         [ApiFilter]
         [HttpPost(nameof(Report))]
-        public TraceResponse Report([FromBody] MyTraceModel model)
+        public TraceResponse Report([FromBody] MyTraceModel model, String token)
         {
             var builders = model?.Builders.Cast<ISpanBuilder>().ToArray();
             //var builders = new ISpanBuilder[0];
@@ -40,9 +39,10 @@ namespace Stardust.Server.Controllers
             var set = Setting.Current;
 
             // 新版验证方式，访问令牌
-            if (!model.AccessToken.IsNullOrEmpty())
+            //var token = HttpContext.Items["Token"] as String;
+            if (!token.IsNullOrEmpty())
             {
-                var ap = _service.DecodeToken(model.AccessToken, set);
+                var ap = _service.DecodeToken(token, set);
                 if (ap.Name != model.AppId) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{ap.Name}]！");
             }
 

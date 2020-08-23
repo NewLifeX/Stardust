@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using NewLife;
 using NewLife.Log;
 using System;
 using System.Linq;
@@ -15,6 +16,15 @@ namespace Stardust.Server.Common
         {
             if (!context.ModelState.IsValid)
                 throw new ApplicationException(context.ModelState.Values.First(p => p.Errors.Count > 0).Errors[0].ErrorMessage);
+
+            // 访问令牌
+            var request = context.HttpContext.Request;
+            var token = request.Query["Token"] + "";
+            if (token.IsNullOrEmpty()) token = (request.Headers["Authorization"] + "").TrimStart("Bearer ");
+            if (token.IsNullOrEmpty()) token = request.Headers["X-Token"] + "";
+            if (token.IsNullOrEmpty()) token = request.Cookies["Token"] + "";
+            context.HttpContext.Items["Token"] = token;
+            if (!context.ActionArguments.ContainsKey("token")) context.ActionArguments.Add("token", token);
 
             base.OnActionExecuting(context);
         }

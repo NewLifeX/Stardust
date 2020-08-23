@@ -19,7 +19,7 @@ namespace Stardust.Server.Services
         public App Authorize(String username, String password, Boolean autoRegister)
         {
             if (username.IsNullOrEmpty()) throw new ArgumentNullException(nameof(username));
-            if (password.IsNullOrEmpty()) throw new ArgumentNullException(nameof(password));
+            //if (password.IsNullOrEmpty()) throw new ArgumentNullException(nameof(password));
 
             // 查找应用
             var app = App.FindByName(username);

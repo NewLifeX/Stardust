@@ -5,6 +5,7 @@ using NewLife;
 using NewLife.Common;
 using NewLife.Log;
 using NewLife.Remoting;
+using Stardust.Models;
 
 namespace Stardust.Monitors
 {
@@ -58,6 +59,36 @@ namespace Stardust.Monitors
         #endregion
 
         #region 核心业务
+        private TokenModel _token;
+        private DateTime _expire;
+        private void CheckAuthorize()
+        {
+            if (_token == null)
+            {
+                // 申请令牌
+                _token = Client.Invoke<TokenModel>("OAuth/Token", new
+                {
+                    grant_type = "password",
+                    username = AppId,
+                    password = AppSecret
+                });
+                Client.Token = _token.AccessToken;
+
+                // 提前一分钟过期
+                _expire = DateTime.Now.AddSeconds(_token.ExpireIn - 60);
+            }
+            else if (DateTime.Now > _expire)
+            {
+                // 刷新令牌
+                _token = Client.Invoke<TokenModel>("OAuth/Token", new
+                {
+                    grant_type = "refresh_token",
+                    refresh_token = _token.RefreshToken,
+                });
+                Client.Token = _token.AccessToken;
+            }
+        }
+
         /// <summary>处理Span集合。默认输出日志，可重定义输出控制台</summary>
         protected override void ProcessSpans(ISpanBuilder[] builders)
         {
@@ -65,18 +96,22 @@ namespace Stardust.Monitors
 
             // 剔除项
             if (Excludes != null) builders = builders.Where(e => !Excludes.Contains(e.Name)).ToArray();
+            if (builders.Length == 0) return;
 
             // 发送，失败后进入队列
             var model = new TraceModel
             {
                 AppId = AppId,
                 AppName = AppName,
-                AccessToken = AppSecret,
+                //AccessToken = AppSecret,
 
                 Builders = builders
             };
             try
             {
+                // 检查令牌
+                CheckAuthorize();
+
                 var rs = Client.Invoke<TraceResponse>("Trace/Report", model);
                 // 处理响应参数
                 if (rs != null)
