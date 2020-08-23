@@ -31,7 +31,7 @@ namespace Stardust.Monitors
         /// <summary>Api客户端</summary>
         public IApiClient Client { get; set; }
 
-        private Queue<TraceModel> _fails = new Queue<TraceModel>();
+        private readonly Queue<TraceModel> _fails = new Queue<TraceModel>();
         #endregion
 
         #region 构造
@@ -84,6 +84,7 @@ namespace Stardust.Monitors
                     if (rs.Period > 0) Period = rs.Period;
                     if (rs.MaxSamples > 0) MaxSamples = rs.MaxSamples;
                     if (rs.MaxErrors > 0) MaxErrors = rs.MaxErrors;
+                    if (rs.Timeout > 0) Timeout = rs.Timeout;
                     if (rs.Excludes != null) Excludes = rs.Excludes;
                 }
             }

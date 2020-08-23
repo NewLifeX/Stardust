@@ -48,7 +48,8 @@ namespace Stardust.Server.Controllers
                 };
                 app.Save();
             }
-            if (!app.Enable) throw new Exception($"无效应用[{model.AppId}/{model.AppName}]");
+            if (!app.Enable || !app.Secret.IsNullOrEmpty() && app.Secret != model.AppSecret)
+                throw new Exception($"无效应用[{model.AppId}/{model.AppName}]");
 
             // 插入数据
             var ip = HttpContext.GetUserHost();
@@ -65,6 +66,7 @@ namespace Stardust.Server.Controllers
                 Period = app.Period,
                 MaxSamples = app.MaxSamples,
                 MaxErrors = app.MaxErrors,
+                Timeout = app.Timeout,
                 Excludes = app.Excludes?.Split(",", ";"),
             };
         }
@@ -79,7 +81,7 @@ namespace Stardust.Server.Controllers
             foreach (var item in builders)
             {
                 // 剔除指定项
-                if (excludes.Contains(item.Name)) continue;
+                if (excludes != null && excludes.Contains(item.Name)) continue;
 
                 var td = TraceData.Create(item);
                 td.AppId = app.ID;
@@ -90,8 +92,8 @@ namespace Stardust.Server.Controllers
                 td.Insert();
                 //traces.Add(td);
 
-                samples.AddRange(SampleData.Create(td, item.Samples));
-                samples.AddRange(SampleData.Create(td, item.ErrorSamples));
+                samples.AddRange(SampleData.Create(td, item.Samples, true));
+                samples.AddRange(SampleData.Create(td, item.ErrorSamples, false));
 
                 //if (samples.Count > 0) samples.Insert(true);
             }

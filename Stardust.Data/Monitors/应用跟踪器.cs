@@ -99,6 +99,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("Excludes", "排除项。要排除的操作名", "")]
         public String Excludes { get => _Excludes; set { if (OnPropertyChanging("Excludes", value)) { _Excludes = value; OnPropertyChanged("Excludes"); } } }
 
+        private Int32 _Timeout;
+        /// <summary>超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒</summary>
+        [DisplayName("超时时间")]
+        [Description("超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Timeout", "超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒", "")]
+        public Int32 Timeout { get => _Timeout; set { if (OnPropertyChanging("Timeout", value)) { _Timeout = value; OnPropertyChanged("Timeout"); } } }
+
         private String _CreateUser;
         /// <summary>创建者</summary>
         [DisplayName("创建者")]
@@ -184,6 +192,7 @@ namespace Stardust.Data.Monitors
                     case "MaxSamples": return _MaxSamples;
                     case "MaxErrors": return _MaxErrors;
                     case "Excludes": return _Excludes;
+                    case "Timeout": return _Timeout;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -209,6 +218,7 @@ namespace Stardust.Data.Monitors
                     case "MaxSamples": _MaxSamples = value.ToInt(); break;
                     case "MaxErrors": _MaxErrors = value.ToInt(); break;
                     case "Excludes": _Excludes = Convert.ToString(value); break;
+                    case "Timeout": _Timeout = value.ToInt(); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -256,6 +266,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>排除项。要排除的操作名</summary>
             public static readonly Field Excludes = FindByName("Excludes");
+
+            /// <summary>超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒</summary>
+            public static readonly Field Timeout = FindByName("Timeout");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
@@ -317,6 +330,9 @@ namespace Stardust.Data.Monitors
             /// <summary>排除项。要排除的操作名</summary>
             public const String Excludes = "Excludes";
 
+            /// <summary>超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒</summary>
+            public const String Timeout = "Timeout";
+
             /// <summary>创建者</summary>
             public const String CreateUser = "CreateUser";
 
@@ -377,6 +393,9 @@ namespace Stardust.Data.Monitors
 
         /// <summary>排除项。要排除的操作名</summary>
         String Excludes { get; set; }
+
+        /// <summary>超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒</summary>
+        Int32 Timeout { get; set; }
 
         /// <summary>创建者</summary>
         String CreateUser { get; set; }

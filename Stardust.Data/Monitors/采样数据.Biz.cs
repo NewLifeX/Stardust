@@ -130,8 +130,9 @@ namespace Stardust.Data.Monitors
         /// <summary>创建一批采样数据</summary>
         /// <param name="data"></param>
         /// <param name="spans"></param>
+        /// <param name="success"></param>
         /// <returns></returns>
-        public static IList<SampleData> Create(ITraceData data, IList<ISpan> spans)
+        public static IList<SampleData> Create(ITraceData data, IList<ISpan> spans, Boolean success)
         {
             var list = new List<SampleData>();
             if (spans == null || spans.Count == 0) return list;
@@ -154,7 +155,7 @@ namespace Stardust.Data.Monitors
                     Tag = item.Tag,
                     Error = item.Error,
 
-                    Success = item.Error.IsNullOrEmpty(),
+                    Success = success,
 
                     CreateIP = data.CreateIP,
                     CreateTime = DateTime.Now,

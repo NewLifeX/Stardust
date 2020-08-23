@@ -44,6 +44,7 @@ namespace Stardust.Data.Monitors
                 if (!Dirtys[nameof(Period)]) Period = 60;
                 if (!Dirtys[nameof(MaxSamples)]) MaxSamples = 1;
                 if (!Dirtys[nameof(MaxErrors)]) MaxErrors = 10;
+                if (!Dirtys[nameof(Timeout)]) Timeout = 5000;
             }
         }
 

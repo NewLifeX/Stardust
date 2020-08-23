@@ -31,6 +31,9 @@ namespace Stardust.Monitors
         /// <summary>最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10</summary>
         public Int32 MaxErrors { get; set; } = 10;
 
+        /// <summary>超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒</summary>
+        public Int32 Timeout { get; set; }
+
         /// <summary>要排除的操作名</summary>
         public String[] Excludes { get; set; }
     }
