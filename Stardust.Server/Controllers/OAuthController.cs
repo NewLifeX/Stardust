@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore.Mvc;
 using Stardust.Models;
+using Stardust.Server.Common;
 using Stardust.Server.Models;
 using Stardust.Server.Services;
 
@@ -12,7 +13,7 @@ namespace Stardust.Server.Controllers
     {
         private readonly AppService _service = new AppService();
 
-        public TokenModel Token([FromBody]TokenInModel model)
+        public TokenModel Token([FromBody] TokenInModel model)
         {
             var set = Setting.Current;
 
@@ -20,6 +21,12 @@ namespace Stardust.Server.Controllers
             if (model.grant_type == "password")
             {
                 var app = _service.Authorize(model.UserName, model.Password, set.AutoRegister);
+
+                // 更新应用信息
+                app.LastLogin = DateTime.Now;
+                app.LastIP = HttpContext.GetUserHost();
+                app.SaveAsync();
+
                 return _service.IssueToken(app, set);
             }
             // 刷新令牌

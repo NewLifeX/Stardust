@@ -39,11 +39,19 @@ namespace Stardust.Server.Controllers
             var set = Setting.Current;
 
             // 新版验证方式，访问令牌
+            Data.App ap = null;
             //var token = HttpContext.Items["Token"] as String;
             if (!token.IsNullOrEmpty())
             {
-                var ap = _service.DecodeToken(token, set);
-                if (ap.Name != model.AppId) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{ap.Name}]！");
+                ap = _service.DecodeToken(token, set);
+                if (ap == null || ap.Name != model.AppId) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{ap.Name}]！");
+
+                // 更新应用名
+                if (ap.DisplayName.IsNullOrEmpty())
+                {
+                    ap.DisplayName = model.AppName;
+                    ap.Update();
+                }
             }
 
             // 该应用的跟踪配置信息
@@ -61,6 +69,13 @@ namespace Stardust.Server.Controllers
 
             // 校验应用
             if (app == null || !app.Enable) throw new Exception($"无效应用[{model.AppId}/{model.AppName}]");
+
+            // 修复数据
+            if (ap == null)
+            {
+                ap = new Data.App { Name = app.Name, DisplayName = app.DisplayName, Enable = true };
+                ap.Insert();
+            }
 
             // 插入数据
             var ip = HttpContext.GetUserHost();
