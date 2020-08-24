@@ -131,14 +131,19 @@ namespace Stardust.Data.Monitors
         /// <param name="data"></param>
         /// <param name="spans"></param>
         /// <param name="success"></param>
+        /// <param name="msTimeout"></param>
         /// <returns></returns>
-        public static IList<SampleData> Create(ITraceData data, IList<ISpan> spans, Boolean success)
+        public static IList<SampleData> Create(ITraceData data, IList<ISpan> spans, Boolean success, Int32 msTimeout)
         {
             var list = new List<SampleData>();
             if (spans == null || spans.Count == 0) return list;
 
             foreach (var item in spans)
             {
+                // 耗时超标的片段，也计为失败
+                var success2 = success;
+                if (msTimeout > 0 && (item.EndTime - item.StartTime) > msTimeout) success2 = false;
+
                 var sd = new SampleData
                 {
                     DataId = data.ID,
@@ -155,7 +160,7 @@ namespace Stardust.Data.Monitors
                     Tag = item.Tag,
                     Error = item.Error,
 
-                    Success = success,
+                    Success = success2,
 
                     CreateIP = data.CreateIP,
                     CreateTime = DateTime.Now,
