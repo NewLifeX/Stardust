@@ -73,8 +73,10 @@ namespace Stardust.Server.Controllers
             // 修复数据
             if (ap == null)
             {
-                ap = new Data.App { Name = app.Name, DisplayName = app.DisplayName, Enable = true };
-                ap.Insert();
+                ap = Data.App.FindByName(app.Name);
+                if (ap == null) ap = new Data.App { Name = app.Name, DisplayName = app.DisplayName, Enable = true };
+                if (ap.DisplayName.IsNullOrEmpty()) ap.DisplayName = app.DisplayName;
+                ap.Save();
             }
 
             // 插入数据
