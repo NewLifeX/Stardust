@@ -33,8 +33,9 @@ namespace Stardust.Web
 
                 services.AddSingleton<ITracer>(tracer);
             }
-            
-            services.AddCube(); }
+
+            services.AddCube();
+        }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {

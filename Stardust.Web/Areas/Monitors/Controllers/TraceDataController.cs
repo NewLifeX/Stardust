@@ -24,9 +24,9 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            // 具体查看某接口指定时间段数据时，才打开统计
-            if (appId > 0 && !name.IsNullOrEmpty() && start.Year > 2000 && end.Year > 2000)
-                p.RetrieveState = true;
+            //// 具体查看某接口指定时间段数据时，才打开统计
+            //if (appId > 0 && !name.IsNullOrEmpty() && start.Year > 2000 && end.Year > 2000)
+            //    p.RetrieveState = true;
 
             var list = TraceData.Search(appId, name, start, end, p["Q"], p);
 
