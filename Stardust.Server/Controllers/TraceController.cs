@@ -103,6 +103,7 @@ namespace Stardust.Server.Controllers
         {
             // 排除项
             var excludes = app.Excludes.Split(",", ";") ?? new String[0];
+            builders = builders.Where(e => !e.Name.EndsWithIgnoreCase("/Trace/Report")).ToArray();
 
             var flow = TraceData.Meta.Factory.FlowId;
             var traces = new List<TraceData>();
@@ -111,6 +112,7 @@ namespace Stardust.Server.Controllers
             {
                 // 剔除指定项
                 if (excludes != null && excludes.Contains(item.Name)) continue;
+                if (item.Name.EndsWithIgnoreCase("/Trace/Report")) continue;
 
                 var td = TraceData.Create(item);
                 td.Id = flow.NewId();
