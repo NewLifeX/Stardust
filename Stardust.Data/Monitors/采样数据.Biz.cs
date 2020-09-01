@@ -96,7 +96,7 @@ namespace Stardust.Data.Monitors
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<SampleData> Search(Int32 dataId, Int32 appId, String name, String traceId, String spanId, String parentId, Boolean? success, Int64 start, Int64 end, String key, PageParameter page)
+        public static IList<SampleData> Search(Int64 dataId, Int32 appId, String name, String traceId, String spanId, String parentId, Boolean? success, Int64 start, Int64 end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 

@@ -16,7 +16,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
         protected override IEnumerable<SampleData> Search(Pager p)
         {
-            var dataId = p["dataId"].ToInt(-1);
+            var dataId = p["dataId"].ToLong(-1);
             var appId = p["appId"].ToInt(-1);
             var name = p["name"] + "";
             var traceId = p["traceId"];

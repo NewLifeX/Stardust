@@ -74,7 +74,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         }
 
         [EntityAuthorize(PermissionFlags.Detail)]
-        public ActionResult Trace(Int32 id)
+        public ActionResult Trace(Int64 id)
         {
             var list = SampleData.FindAllByDataId(id);
             if (list.Count == 0) throw new InvalidDataException("找不到采样数据");
