@@ -5,6 +5,7 @@ using NewLife;
 using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Monitors;
+using XCode;
 
 namespace Stardust.Web.Areas.Monitors.Controllers
 {
@@ -27,6 +28,8 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             //var end = p["dtEnd"].ToDateTime();
             var start = p["start"].ToLong(-1);
             var end = p["end"].ToLong(-1);
+
+            if (p.Sort.IsNullOrEmpty()) p.OrderBy = SampleData._.Id.Desc();
 
             var list = SampleData.Search(dataId, appId, name, traceId, spanId, parentId, success, start, end, p["Q"], p);
             if (list.Count == 0) return list;

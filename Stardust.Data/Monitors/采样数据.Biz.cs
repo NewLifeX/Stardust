@@ -58,12 +58,12 @@ namespace Stardust.Data.Monitors
         /// <summary>根据编号查找</summary>
         /// <param name="id">编号</param>
         /// <returns>实体对象</returns>
-        public static SampleData FindByID(Int32 id)
+        public static SampleData FindById(Int64 id)
         {
             if (id <= 0) return null;
 
             // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
 
             // 单对象缓存
             return Meta.SingleCache[id];
@@ -74,7 +74,7 @@ namespace Stardust.Data.Monitors
         /// <summary>根据数据编号查找</summary>
         /// <param name="dataId"></param>
         /// <returns></returns>
-        public static IList<SampleData> FindAllByDataId(Int32 dataId) => FindAll(_.DataId == dataId);
+        public static IList<SampleData> FindAllByDataId(Int64 dataId) => FindAll(_.DataId == dataId);
 
         /// <summary>根据跟踪标识查找</summary>
         /// <param name="traceId">跟踪标识</param>
@@ -133,7 +133,7 @@ namespace Stardust.Data.Monitors
         /// <param name="success"></param>
         /// <param name="msTimeout"></param>
         /// <returns></returns>
-        public static IList<SampleData> Create(ITraceData data, IList<ISpan> spans, Boolean success, Int32 msTimeout)
+        public static IList<SampleData> Create(TraceData data, IList<ISpan> spans, Boolean success, Int32 msTimeout)
         {
             var list = new List<SampleData>();
             if (spans == null || spans.Count == 0) return list;
@@ -146,7 +146,7 @@ namespace Stardust.Data.Monitors
 
                 var sd = new SampleData
                 {
-                    DataId = data.ID,
+                    DataId = data.Id,
                     AppId = data.AppId,
                     Name = data.Name,
 

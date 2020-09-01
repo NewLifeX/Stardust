@@ -16,7 +16,7 @@ namespace Stardust.Data.Monitors
     [Description("跟踪每日统计。每应用每接口每日统计，用于分析接口健康状况")]
     [BindIndex("IU_TraceDayStat_StatDate_AppId_Name", true, "StatDate,AppId,Name")]
     [BindTable("TraceDayStat", Description = "跟踪每日统计。每应用每接口每日统计，用于分析接口健康状况", ConnName = "Monitor", DbType = DatabaseType.None)]
-    public partial class TraceDayStat : ITraceDayStat
+    public partial class TraceDayStat
     {
         #region 属性
         private Int32 _ID;
@@ -245,55 +245,6 @@ namespace Stardust.Data.Monitors
             /// <summary>更新时间</summary>
             public const String UpdateTime = "UpdateTime";
         }
-        #endregion
-    }
-
-    /// <summary>跟踪每日统计。每应用每接口每日统计，用于分析接口健康状况接口</summary>
-    public partial interface ITraceDayStat
-    {
-        #region 属性
-        /// <summary>编号</summary>
-        Int32 ID { get; set; }
-
-        /// <summary>统计日期</summary>
-        DateTime StatDate { get; set; }
-
-        /// <summary>应用</summary>
-        Int32 AppId { get; set; }
-
-        /// <summary>操作名。接口名或埋点名</summary>
-        String Name { get; set; }
-
-        /// <summary>总次数</summary>
-        Int32 Total { get; set; }
-
-        /// <summary>错误数</summary>
-        Int32 Errors { get; set; }
-
-        /// <summary>总耗时。单位毫秒</summary>
-        Int64 TotalCost { get; set; }
-
-        /// <summary>平均耗时。总耗时除以总次数</summary>
-        Int32 Cost { get; set; }
-
-        /// <summary>最大耗时。单位毫秒</summary>
-        Int32 MaxCost { get; set; }
-
-        /// <summary>最小耗时。单位毫秒</summary>
-        Int32 MinCost { get; set; }
-
-        /// <summary>创建时间</summary>
-        DateTime CreateTime { get; set; }
-
-        /// <summary>更新时间</summary>
-        DateTime UpdateTime { get; set; }
-        #endregion
-
-        #region 获取/设置 字段值
-        /// <summary>获取/设置 字段值</summary>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        Object this[String name] { get; set; }
         #endregion
     }
 }

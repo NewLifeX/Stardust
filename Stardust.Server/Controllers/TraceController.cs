@@ -104,7 +104,8 @@ namespace Stardust.Server.Controllers
             // 排除项
             var excludes = app.Excludes.Split(",", ";") ?? new String[0];
 
-            //var traces = new List<TraceData>();
+            var flow = TraceData.Meta.Factory.FlowId;
+            var traces = new List<TraceData>();
             var samples = new List<SampleData>();
             foreach (var item in builders)
             {
@@ -112,13 +113,14 @@ namespace Stardust.Server.Controllers
                 if (excludes != null && excludes.Contains(item.Name)) continue;
 
                 var td = TraceData.Create(item);
+                td.Id = flow.NewId();
                 td.AppId = app.ID;
                 td.ClientId = ip;
                 td.CreateIP = ip;
                 td.CreateTime = DateTime.Now;
 
-                td.Insert();
-                //traces.Add(td);
+                //td.Insert();
+                traces.Add(td);
 
                 samples.AddRange(SampleData.Create(td, item.Samples, true, app.Timeout));
                 samples.AddRange(SampleData.Create(td, item.ErrorSamples, false, app.Timeout));
@@ -126,7 +128,7 @@ namespace Stardust.Server.Controllers
                 //if (samples.Count > 0) samples.Insert(true);
             }
 
-            //traces.Insert(true);
+            traces.Insert(true);
             samples.Insert(true);
         }
     }

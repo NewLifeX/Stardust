@@ -96,7 +96,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var ds = TraceData.Search(st.AppId, st.Name, st.StatDate, st.StatDate, null, new PageParameter { PageSize = 1 });
             if (ds.Count == 0) throw new InvalidDataException("找不到采样数据");
 
-            var list = SampleData.FindAllByDataId(ds[0].ID);
+            var list = SampleData.FindAllByDataId(ds[0].Id);
             if (list.Count == 0) throw new InvalidDataException("找不到采样数据");
 
             return RedirectToAction("Index", "SampleData", new { traceId = list[0].TraceId });

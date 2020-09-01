@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.AspNetCore.Mvc;
+using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
 using NewLife.Web;
 using Stardust.Data.Monitors;
+using XCode;
 using XCode.Membership;
 using static Stardust.Data.Monitors.TraceData;
 
@@ -27,6 +29,8 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             //// 具体查看某接口指定时间段数据时，才打开统计
             //if (appId > 0 && !name.IsNullOrEmpty() && start.Year > 2000 && end.Year > 2000)
             //    p.RetrieveState = true;
+
+            if (p.Sort.IsNullOrEmpty()) p.OrderBy = TraceData._.Id.Desc();
 
             var list = TraceData.Search(appId, name, start, end, p["Q"], p);
 

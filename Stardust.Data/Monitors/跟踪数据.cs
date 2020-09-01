@@ -14,19 +14,18 @@ namespace Stardust.Data.Monitors
     [Serializable]
     [DataObject]
     [Description("跟踪数据。应用定时上报采样得到的埋点跟踪原始数据")]
-    [BindIndex("IX_TraceData_AppId_StartTime", false, "AppId,StartTime")]
-    [BindIndex("IX_TraceData_CreateTime", false, "CreateTime")]
+    [BindIndex("IX_TraceData_AppId_Name_StartTime", false, "AppId,Name,StartTime")]
     [BindTable("TraceData", Description = "跟踪数据。应用定时上报采样得到的埋点跟踪原始数据", ConnName = "Monitor", DbType = DatabaseType.None)]
-    public partial class TraceData : ITraceData
+    public partial class TraceData
     {
         #region 属性
-        private Int32 _ID;
+        private Int64 _Id;
         /// <summary>编号</summary>
         [DisplayName("编号")]
         [Description("编号")]
-        [DataObjectField(true, true, false, 0)]
-        [BindColumn("ID", "编号", "")]
-        public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+        [DataObjectField(true, false, false, 0)]
+        [BindColumn("Id", "编号", "")]
+        public Int64 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
         private Int32 _AppId;
         /// <summary>应用</summary>
@@ -159,7 +158,7 @@ namespace Stardust.Data.Monitors
             {
                 switch (name)
                 {
-                    case "ID": return _ID;
+                    case "Id": return _Id;
                     case "AppId": return _AppId;
                     case "ClientId": return _ClientId;
                     case "Name": return _Name;
@@ -182,7 +181,7 @@ namespace Stardust.Data.Monitors
             {
                 switch (name)
                 {
-                    case "ID": _ID = value.ToInt(); break;
+                    case "Id": _Id = value.ToLong(); break;
                     case "AppId": _AppId = value.ToInt(); break;
                     case "ClientId": _ClientId = Convert.ToString(value); break;
                     case "Name": _Name = Convert.ToString(value); break;
@@ -209,7 +208,7 @@ namespace Stardust.Data.Monitors
         public partial class _
         {
             /// <summary>编号</summary>
-            public static readonly Field ID = FindByName("ID");
+            public static readonly Field Id = FindByName("Id");
 
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
@@ -263,7 +262,7 @@ namespace Stardust.Data.Monitors
         public partial class __
         {
             /// <summary>编号</summary>
-            public const String ID = "ID";
+            public const String Id = "Id";
 
             /// <summary>应用</summary>
             public const String AppId = "AppId";
@@ -310,67 +309,6 @@ namespace Stardust.Data.Monitors
             /// <summary>创建时间</summary>
             public const String CreateTime = "CreateTime";
         }
-        #endregion
-    }
-
-    /// <summary>跟踪数据。应用定时上报采样得到的埋点跟踪原始数据接口</summary>
-    public partial interface ITraceData
-    {
-        #region 属性
-        /// <summary>编号</summary>
-        Int32 ID { get; set; }
-
-        /// <summary>应用</summary>
-        Int32 AppId { get; set; }
-
-        /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
-        String ClientId { get; set; }
-
-        /// <summary>操作名。接口名或埋点名</summary>
-        String Name { get; set; }
-
-        /// <summary>开始时间。Unix毫秒</summary>
-        Int64 StartTime { get; set; }
-
-        /// <summary>结束时间。Unix毫秒</summary>
-        Int64 EndTime { get; set; }
-
-        /// <summary>总次数</summary>
-        Int32 Total { get; set; }
-
-        /// <summary>错误数</summary>
-        Int32 Errors { get; set; }
-
-        /// <summary>总耗时。单位毫秒</summary>
-        Int64 TotalCost { get; set; }
-
-        /// <summary>平均耗时。总耗时除以总次数</summary>
-        Int32 Cost { get; set; }
-
-        /// <summary>最大耗时。单位毫秒</summary>
-        Int32 MaxCost { get; set; }
-
-        /// <summary>最小耗时。单位毫秒</summary>
-        Int32 MinCost { get; set; }
-
-        /// <summary>正常采样</summary>
-        Int32 Samples { get; set; }
-
-        /// <summary>异常采样</summary>
-        Int32 ErrorSamples { get; set; }
-
-        /// <summary>创建地址</summary>
-        String CreateIP { get; set; }
-
-        /// <summary>创建时间</summary>
-        DateTime CreateTime { get; set; }
-        #endregion
-
-        #region 获取/设置 字段值
-        /// <summary>获取/设置 字段值</summary>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        Object this[String name] { get; set; }
         #endregion
     }
 }

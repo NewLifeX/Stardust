@@ -16,7 +16,7 @@ namespace Stardust.Data.Monitors
     [Description("应用跟踪器。负责跟踪的应用管理")]
     [BindIndex("IU_AppTracer_Name", true, "Name")]
     [BindTable("AppTracer", Description = "应用跟踪器。负责跟踪的应用管理", ConnName = "Monitor", DbType = DatabaseType.None)]
-    public partial class AppTracer : IAppTracer
+    public partial class AppTracer
     {
         #region 属性
         private Int32 _ID;
@@ -341,73 +341,6 @@ namespace Stardust.Data.Monitors
             /// <summary>更新地址</summary>
             public const String UpdateIP = "UpdateIP";
         }
-        #endregion
-    }
-
-    /// <summary>应用跟踪器。负责跟踪的应用管理接口</summary>
-    public partial interface IAppTracer
-    {
-        #region 属性
-        /// <summary>编号</summary>
-        Int32 ID { get; set; }
-
-        /// <summary>名称</summary>
-        String Name { get; set; }
-
-        /// <summary>显示名</summary>
-        String DisplayName { get; set; }
-
-        /// <summary>类别</summary>
-        String Category { get; set; }
-
-        /// <summary>启用</summary>
-        Boolean Enable { get; set; }
-
-        /// <summary>采样周期。单位秒</summary>
-        Int32 Period { get; set; }
-
-        /// <summary>最大正常采样数。采样周期内，最多只记录指定数量的正常事件，用于绘制依赖关系</summary>
-        Int32 MaxSamples { get; set; }
-
-        /// <summary>最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10</summary>
-        Int32 MaxErrors { get; set; }
-
-        /// <summary>排除项。要排除的操作名</summary>
-        String Excludes { get; set; }
-
-        /// <summary>超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒</summary>
-        Int32 Timeout { get; set; }
-
-        /// <summary>创建者</summary>
-        String CreateUser { get; set; }
-
-        /// <summary>创建者</summary>
-        Int32 CreateUserID { get; set; }
-
-        /// <summary>创建时间</summary>
-        DateTime CreateTime { get; set; }
-
-        /// <summary>创建地址</summary>
-        String CreateIP { get; set; }
-
-        /// <summary>更新者</summary>
-        String UpdateUser { get; set; }
-
-        /// <summary>更新者</summary>
-        Int32 UpdateUserID { get; set; }
-
-        /// <summary>更新时间</summary>
-        DateTime UpdateTime { get; set; }
-
-        /// <summary>更新地址</summary>
-        String UpdateIP { get; set; }
-        #endregion
-
-        #region 获取/设置 字段值
-        /// <summary>获取/设置 字段值</summary>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        Object this[String name] { get; set; }
         #endregion
     }
 }

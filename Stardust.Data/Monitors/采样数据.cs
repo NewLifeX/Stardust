@@ -17,26 +17,25 @@ namespace Stardust.Data.Monitors
     [BindIndex("IX_SampleData_DataId", false, "DataId")]
     [BindIndex("IX_SampleData_AppId_StartTime", false, "AppId,StartTime")]
     [BindIndex("IX_SampleData_TraceId", false, "TraceId")]
-    [BindIndex("IX_SampleData_CreateTime", false, "CreateTime")]
     [BindTable("SampleData", Description = "采样数据。具体调用或异常详情", ConnName = "Monitor", DbType = DatabaseType.None)]
-    public partial class SampleData : ISampleData
+    public partial class SampleData
     {
         #region 属性
-        private Int32 _ID;
+        private Int64 _Id;
         /// <summary>编号</summary>
         [DisplayName("编号")]
         [Description("编号")]
-        [DataObjectField(true, true, false, 0)]
-        [BindColumn("ID", "编号", "")]
-        public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+        [DataObjectField(true, false, false, 0)]
+        [BindColumn("Id", "编号", "")]
+        public Int64 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
-        private Int32 _DataId;
+        private Int64 _DataId;
         /// <summary>数据</summary>
         [DisplayName("数据")]
         [Description("数据")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("DataId", "数据", "")]
-        public Int32 DataId { get => _DataId; set { if (OnPropertyChanging("DataId", value)) { _DataId = value; OnPropertyChanged("DataId"); } } }
+        public Int64 DataId { get => _DataId; set { if (OnPropertyChanging("DataId", value)) { _DataId = value; OnPropertyChanged("DataId"); } } }
 
         private Int32 _AppId;
         /// <summary>应用</summary>
@@ -153,7 +152,7 @@ namespace Stardust.Data.Monitors
             {
                 switch (name)
                 {
-                    case "ID": return _ID;
+                    case "Id": return _Id;
                     case "DataId": return _DataId;
                     case "AppId": return _AppId;
                     case "Name": return _Name;
@@ -175,8 +174,8 @@ namespace Stardust.Data.Monitors
             {
                 switch (name)
                 {
-                    case "ID": _ID = value.ToInt(); break;
-                    case "DataId": _DataId = value.ToInt(); break;
+                    case "Id": _Id = value.ToLong(); break;
+                    case "DataId": _DataId = value.ToLong(); break;
                     case "AppId": _AppId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Success": _Success = value.ToBoolean(); break;
@@ -201,7 +200,7 @@ namespace Stardust.Data.Monitors
         public partial class _
         {
             /// <summary>编号</summary>
-            public static readonly Field ID = FindByName("ID");
+            public static readonly Field Id = FindByName("Id");
 
             /// <summary>数据</summary>
             public static readonly Field DataId = FindByName("DataId");
@@ -252,7 +251,7 @@ namespace Stardust.Data.Monitors
         public partial class __
         {
             /// <summary>编号</summary>
-            public const String ID = "ID";
+            public const String Id = "Id";
 
             /// <summary>数据</summary>
             public const String DataId = "DataId";
@@ -296,64 +295,6 @@ namespace Stardust.Data.Monitors
             /// <summary>创建时间</summary>
             public const String CreateTime = "CreateTime";
         }
-        #endregion
-    }
-
-    /// <summary>采样数据。具体调用或异常详情接口</summary>
-    public partial interface ISampleData
-    {
-        #region 属性
-        /// <summary>编号</summary>
-        Int32 ID { get; set; }
-
-        /// <summary>数据</summary>
-        Int32 DataId { get; set; }
-
-        /// <summary>应用</summary>
-        Int32 AppId { get; set; }
-
-        /// <summary>操作名。接口名或埋点名</summary>
-        String Name { get; set; }
-
-        /// <summary>正常</summary>
-        Boolean Success { get; set; }
-
-        /// <summary>开始时间。Unix毫秒</summary>
-        Int64 StartTime { get; set; }
-
-        /// <summary>结束时间。Unix毫秒</summary>
-        Int64 EndTime { get; set; }
-
-        /// <summary>耗时。毫秒</summary>
-        Int32 Cost { get; set; }
-
-        /// <summary>跟踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
-        String TraceId { get; set; }
-
-        /// <summary>唯一标识。随线程上下文、Http、Rpc传递，作为内部片段的父级</summary>
-        String SpanId { get; set; }
-
-        /// <summary>父级标识</summary>
-        String ParentId { get; set; }
-
-        /// <summary>数据标签。记录一些附加数据</summary>
-        String Tag { get; set; }
-
-        /// <summary>错误信息</summary>
-        String Error { get; set; }
-
-        /// <summary>创建地址</summary>
-        String CreateIP { get; set; }
-
-        /// <summary>创建时间</summary>
-        DateTime CreateTime { get; set; }
-        #endregion
-
-        #region 获取/设置 字段值
-        /// <summary>获取/设置 字段值</summary>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        Object this[String name] { get; set; }
         #endregion
     }
 }
