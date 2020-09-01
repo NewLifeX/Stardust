@@ -15,7 +15,7 @@ namespace Stardust.Data.Monitors
     [DataObject]
     [Description("跟踪数据。应用定时上报采样得到的埋点跟踪原始数据")]
     [BindIndex("IX_TraceData_AppId_Name_StartTime", false, "AppId,Name,StartTime")]
-    [BindTable("TraceData", Description = "跟踪数据。应用定时上报采样得到的埋点跟踪原始数据", ConnName = "Monitor", DbType = DatabaseType.None)]
+    [BindTable("TraceData", Description = "跟踪数据。应用定时上报采样得到的埋点跟踪原始数据", ConnName = "MonitorLog", DbType = DatabaseType.None)]
     public partial class TraceData
     {
         #region 属性

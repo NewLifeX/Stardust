@@ -17,7 +17,7 @@ namespace Stardust.Data.Monitors
     [BindIndex("IX_SampleData_DataId", false, "DataId")]
     [BindIndex("IX_SampleData_AppId_StartTime", false, "AppId,StartTime")]
     [BindIndex("IX_SampleData_TraceId", false, "TraceId")]
-    [BindTable("SampleData", Description = "采样数据。具体调用或异常详情", ConnName = "Monitor", DbType = DatabaseType.None)]
+    [BindTable("SampleData", Description = "采样数据。具体调用或异常详情", ConnName = "MonitorLog", DbType = DatabaseType.None)]
     public partial class SampleData
     {
         #region 属性

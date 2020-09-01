@@ -25,7 +25,7 @@
       <Index Columns="Name" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="TraceData" Description="跟踪数据。应用定时上报采样得到的埋点跟踪原始数据">
+  <Table Name="TraceData" Description="跟踪数据。应用定时上报采样得到的埋点跟踪原始数据" ConnName="MonitorLog">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
@@ -48,7 +48,7 @@
       <Index Columns="AppId,Name,StartTime" />
     </Indexes>
   </Table>
-  <Table Name="SampleData" Description="采样数据。具体调用或异常详情">
+  <Table Name="SampleData" Description="采样数据。具体调用或异常详情" ConnName="MonitorLog">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="DataId" DataType="Int64" Description="数据" />
