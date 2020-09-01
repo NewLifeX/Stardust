@@ -95,7 +95,7 @@ namespace Stardust.Monitors
             if (builders == null) return;
 
             // 剔除项
-            if (Excludes != null) builders = builders.Where(e => !Excludes.Contains(e.Name)).ToArray();
+            if (Excludes != null) builders = builders.Where(e => !Excludes.Contains(e.Name) && !e.Name.EndsWithIgnoreCase("/Trace/Report")).ToArray();
             if (builders.Length == 0) return;
 
             // 发送，失败后进入队列
