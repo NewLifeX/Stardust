@@ -69,8 +69,14 @@ namespace StarAgent
                 }
             };
 
-            // APM埋点
-            var tracer = new StarTracer { Client = client, Log = XTrace.Log };
+            // APM埋点。独立应用名
+            var tracer = new StarTracer
+            {
+                AppId = "StarAgent",
+                AppSecret = null,
+                Client = client,
+                Log = XTrace.Log
+            };
             DefaultTracer.Instance = tracer;
             client.Tracer = tracer;
 
