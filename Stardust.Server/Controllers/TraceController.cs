@@ -41,7 +41,7 @@ namespace Stardust.Server.Controllers
             // 新版验证方式，访问令牌
             Data.App ap = null;
             //var token = HttpContext.Items["Token"] as String;
-            if (!token.IsNullOrEmpty())
+            if (!token.IsNullOrEmpty() && token.Split(".").Length == 3)
             {
                 ap = _service.DecodeToken(token, set);
                 if (ap == null || ap.Name != model.AppId) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{ap.Name}]！");
