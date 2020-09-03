@@ -4,6 +4,7 @@ using NewLife;
 using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Nodes;
+using XCode;
 
 namespace Stardust.Web.Areas.Nodes.Controllers
 {
@@ -24,6 +25,8 @@ namespace Stardust.Web.Areas.Nodes.Controllers
 
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
+
+            if (p.Sort.IsNullOrEmpty()) p.OrderBy = NodeHistory._.ID.Desc();
 
             return NodeHistory.Search(nodeId, provinceId, cityId, action, success, start, end, p["Q"], p);
         }
