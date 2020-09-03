@@ -5,6 +5,7 @@ using NewLife.Log;
 using NewLife.Net;
 using NewLife.Remoting;
 using Stardust;
+using XCode.DataAccessLayer;
 
 namespace Test
 {
@@ -15,6 +16,15 @@ namespace Test
         {
             XTrace.UseConsole();
 
+            Test2();
+            //Thread.Sleep(-1);
+
+            Console.WriteLine("OK!");
+            Console.ReadKey();
+        }
+
+        static void Test1()
+        {
             var sc = new RpcServer()
             {
                 Port = 1234,
@@ -35,8 +45,16 @@ namespace Test
             sc.Start();
 
             _Server = sc;
+        }
 
-            Thread.Sleep(-1);
+        static void Test2()
+        {
+            //DAL.AddConnStr("node", "Data Source=..\\Data\\Node.db", null, "sqlite");
+            DAL.AddConnStr("mysql", "Server=.;Port=3306;Database=Node;Uid=root;Pwd=root;", null, "mysql");
+
+            var dal = DAL.Create("mysql");
+            var rs = dal.RestoreAll("../data/Node_20200903215342.zip", null);
+            //Assert.NotNull(rs);
         }
     }
 }
