@@ -35,10 +35,24 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             if (list.Count == 0) return list;
 
             // 如果有traceId，则按照要求排序，深度搜索算法
-            if (!traceId.IsNullOrEmpty())
+            if (!traceId.IsNullOrEmpty() && list.Count > 0)
             {
                 var rs = new List<SampleData>();
                 var stack = new Stack<SampleData>();
+
+                // 有些数据有pid，但是pid对应的span实际不存在
+                var pids = list.Where(e => !e.ParentId.IsNullOrEmpty()).OrderByDescending(e => e.StartTime).Select(e => e.ParentId).Distinct().ToArray();
+                foreach (var item in pids.Where(e => !list.Any(y => y.SpanId == e)))
+                {
+                    foreach (var elm in list.Where(e => e.ParentId == item))
+                    {
+                        stack.Push(elm);
+                    }
+                }
+                foreach (var item in stack)
+                {
+                    list.Remove(item);
+                }
 
                 var pid = "";
                 while (true)
