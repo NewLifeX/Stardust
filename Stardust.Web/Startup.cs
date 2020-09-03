@@ -44,8 +44,8 @@ namespace Stardust.Web
             // 使用Cube前添加自己的管道
             if (env.IsDevelopment())
                 app.UseDeveloperExceptionPage();
-            //else
-            //    app.UseExceptionHandler("/CubeHome/Error");
+            else
+                app.UseExceptionHandler("/CubeHome/Error");
 
             app.UseStaticFiles();
 
