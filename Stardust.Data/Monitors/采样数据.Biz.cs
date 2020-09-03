@@ -76,6 +76,11 @@ namespace Stardust.Data.Monitors
         /// <returns></returns>
         public static IList<SampleData> FindAllByDataId(Int64 dataId) => FindAll(_.DataId == dataId);
 
+        /// <summary>根据数据编号查找</summary>
+        /// <param name="dataIds"></param>
+        /// <returns></returns>
+        public static IList<SampleData> FindAllByDataIds(Int64[] dataIds) => FindAll(_.DataId.In(dataIds));
+
         /// <summary>根据跟踪标识查找</summary>
         /// <param name="traceId">跟踪标识</param>
         /// <returns>实体列表</returns>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
@@ -93,10 +94,10 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var st = TraceDayStat.FindByID(id);
             if (st == null) throw new InvalidDataException("找不到采样数据");
 
-            var ds = TraceData.Search(st.AppId, st.Name, st.StatDate, st.StatDate, null, new PageParameter { PageSize = 1 });
+            var ds = TraceData.Search(st.AppId, st.Name, st.StatDate, st.StatDate, null, new PageParameter { PageSize = 20 });
             if (ds.Count == 0) throw new InvalidDataException("找不到采样数据");
 
-            var list = SampleData.FindAllByDataId(ds[0].Id);
+            var list = SampleData.FindAllByDataIds(ds.Select(e => e.Id).ToArray());
             if (list.Count == 0) throw new InvalidDataException("找不到采样数据");
 
             return RedirectToAction("Index", "SampleData", new { traceId = list[0].TraceId });
