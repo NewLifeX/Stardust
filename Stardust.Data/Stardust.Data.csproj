@@ -29,14 +29,20 @@
     <Compile Remove="Log\**" />
     <Compile Remove="Monitors\Config\**" />
     <Compile Remove="Monitors\Log\**" />
+    <Compile Remove="Nodes\Config\**" />
+    <Compile Remove="Nodes\Log\**" />
     <EmbeddedResource Remove="Config\**" />
     <EmbeddedResource Remove="Log\**" />
     <EmbeddedResource Remove="Monitors\Config\**" />
     <EmbeddedResource Remove="Monitors\Log\**" />
+    <EmbeddedResource Remove="Nodes\Config\**" />
+    <EmbeddedResource Remove="Nodes\Log\**" />
     <None Remove="Config\**" />
     <None Remove="Log\**" />
     <None Remove="Monitors\Config\**" />
     <None Remove="Monitors\Log\**" />
+    <None Remove="Nodes\Config\**" />
+    <None Remove="Nodes\Log\**" />
   </ItemGroup>
 
   <ItemGroup>

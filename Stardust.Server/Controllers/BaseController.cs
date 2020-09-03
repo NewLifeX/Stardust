@@ -176,7 +176,7 @@ namespace Stardust.Server.Controllers
         #endregion
 
         #region 日志
-        protected virtual void WriteHistory(INode node, String action, Boolean success, String remark)
+        protected virtual void WriteHistory(Node node, String action, Boolean success, String remark)
         {
             NodeHistory.Create(node, action, success, remark, Environment.MachineName, UserHost);
         }

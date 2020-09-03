@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Tables Version="9.17.7456.18658" xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data.Nodes" ConnName="Node" Output="" ChineseFileName="True" IgnoreNameCase="True" BaseClass="Entity" xmlns="http://www.newlifex.com/Model2020.xsd">
+<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data.Nodes" ConnName="Node" Output="" BaseClass="Entity" xmlns="http://www.newlifex.com/Model2020.xsd">
   <Table Name="Node" Description="节点">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
@@ -81,9 +81,9 @@
       <Index Columns="ProvinceID,CityID" />
     </Indexes>
   </Table>
-  <Table Name="NodeHistory" Description="节点历史">
+  <Table Name="NodeHistory" Description="节点历史" ConnName="NodeLog">
     <Columns>
-      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="ID" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="NodeID" DataType="Int32" Description="节点" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
       <Column Name="ProvinceID" DataType="Int32" Description="省份" />
@@ -99,12 +99,11 @@
     </Columns>
     <Indexes>
       <Index Columns="NodeID,Action" />
-      <Index Columns="CreateTime,NodeID,Action" />
     </Indexes>
   </Table>
-  <Table Name="NodeData" Description="节点数据。保存设备上来的一些数据，如心跳状态">
+  <Table Name="NodeData" Description="节点数据。保存设备上来的一些数据，如心跳状态" ConnName="NodeLog">
     <Columns>
-      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="ID" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="NodeID" DataType="Int32" Description="节点" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
       <Column Name="AvailableMemory" DataType="Int32" Description="可用内存。单位M" />
@@ -123,7 +122,6 @@
     </Columns>
     <Indexes>
       <Index Columns="NodeID" />
-      <Index Columns="CreateTime,NodeID" />
     </Indexes>
   </Table>
   <Table Name="NodeVersion" Description="节点版本。发布更新">

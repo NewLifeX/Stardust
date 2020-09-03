@@ -15,18 +15,17 @@ namespace Stardust.Data.Nodes
     [DataObject]
     [Description("节点历史")]
     [BindIndex("IX_NodeHistory_NodeID_Action", false, "NodeID,Action")]
-    [BindIndex("IX_NodeHistory_CreateTime_NodeID_Action", false, "CreateTime,NodeID,Action")]
-    [BindTable("NodeHistory", Description = "节点历史", ConnName = "Node", DbType = DatabaseType.None)]
-    public partial class NodeHistory : INodeHistory
+    [BindTable("NodeHistory", Description = "节点历史", ConnName = "NodeLog", DbType = DatabaseType.None)]
+    public partial class NodeHistory
     {
         #region 属性
-        private Int32 _ID;
+        private Int64 _ID;
         /// <summary>编号</summary>
         [DisplayName("编号")]
         [Description("编号")]
-        [DataObjectField(true, true, false, 0)]
+        [DataObjectField(true, false, false, 0)]
         [BindColumn("ID", "编号", "")]
-        public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+        public Int64 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
         private Int32 _NodeID;
         /// <summary>节点</summary>
@@ -155,7 +154,7 @@ namespace Stardust.Data.Nodes
             {
                 switch (name)
                 {
-                    case "ID": _ID = value.ToInt(); break;
+                    case "ID": _ID = value.ToLong(); break;
                     case "NodeID": _NodeID = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "ProvinceID": _ProvinceID = value.ToInt(); break;
@@ -262,58 +261,6 @@ namespace Stardust.Data.Nodes
             /// <summary>内容</summary>
             public const String Remark = "Remark";
         }
-        #endregion
-    }
-
-    /// <summary>节点历史接口</summary>
-    public partial interface INodeHistory
-    {
-        #region 属性
-        /// <summary>编号</summary>
-        Int32 ID { get; set; }
-
-        /// <summary>节点</summary>
-        Int32 NodeID { get; set; }
-
-        /// <summary>名称</summary>
-        String Name { get; set; }
-
-        /// <summary>省份</summary>
-        Int32 ProvinceID { get; set; }
-
-        /// <summary>城市</summary>
-        Int32 CityID { get; set; }
-
-        /// <summary>操作</summary>
-        String Action { get; set; }
-
-        /// <summary>成功</summary>
-        Boolean Success { get; set; }
-
-        /// <summary>版本</summary>
-        String Version { get; set; }
-
-        /// <summary>编译时间</summary>
-        DateTime CompileTime { get; set; }
-
-        /// <summary>创建者。服务端节点</summary>
-        String Creator { get; set; }
-
-        /// <summary>创建时间</summary>
-        DateTime CreateTime { get; set; }
-
-        /// <summary>创建地址</summary>
-        String CreateIP { get; set; }
-
-        /// <summary>内容</summary>
-        String Remark { get; set; }
-        #endregion
-
-        #region 获取/设置 字段值
-        /// <summary>获取/设置 字段值</summary>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        Object this[String name] { get; set; }
         #endregion
     }
 }

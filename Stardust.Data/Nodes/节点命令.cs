@@ -17,7 +17,7 @@ namespace Stardust.Data.Nodes
     [BindIndex("IX_NodeCommand_NodeID_Command", false, "NodeID,Command")]
     [BindIndex("IX_NodeCommand_UpdateTime_NodeID_Command", false, "UpdateTime,NodeID,Command")]
     [BindTable("NodeCommand", Description = "节点命令", ConnName = "Node", DbType = DatabaseType.None)]
-    public partial class NodeCommand : INodeCommand
+    public partial class NodeCommand
     {
         #region 属性
         private Int32 _ID;
@@ -246,55 +246,6 @@ namespace Stardust.Data.Nodes
             /// <summary>更新地址</summary>
             public const String UpdateIP = "UpdateIP";
         }
-        #endregion
-    }
-
-    /// <summary>节点命令接口</summary>
-    public partial interface INodeCommand
-    {
-        #region 属性
-        /// <summary>编号</summary>
-        Int32 ID { get; set; }
-
-        /// <summary>节点</summary>
-        Int32 NodeID { get; set; }
-
-        /// <summary>命令</summary>
-        String Command { get; set; }
-
-        /// <summary>参数</summary>
-        String Argument { get; set; }
-
-        /// <summary>完成。客户端是否已执行</summary>
-        Boolean Finished { get; set; }
-
-        /// <summary>结果</summary>
-        String Result { get; set; }
-
-        /// <summary>创建者</summary>
-        Int32 CreateUserID { get; set; }
-
-        /// <summary>创建时间</summary>
-        DateTime CreateTime { get; set; }
-
-        /// <summary>创建地址</summary>
-        String CreateIP { get; set; }
-
-        /// <summary>更新者</summary>
-        Int32 UpdateUserID { get; set; }
-
-        /// <summary>更新时间</summary>
-        DateTime UpdateTime { get; set; }
-
-        /// <summary>更新地址</summary>
-        String UpdateIP { get; set; }
-        #endregion
-
-        #region 获取/设置 字段值
-        /// <summary>获取/设置 字段值</summary>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        Object this[String name] { get; set; }
         #endregion
     }
 }

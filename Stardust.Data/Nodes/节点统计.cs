@@ -17,7 +17,7 @@ namespace Stardust.Data.Nodes
     [BindIndex("IU_NodeStat_StatDate_AreaID", true, "StatDate,AreaID")]
     [BindIndex("IX_NodeStat_UpdateTime_AreaID", false, "UpdateTime,AreaID")]
     [BindTable("NodeStat", Description = "节点统计。每日统计", ConnName = "Node", DbType = DatabaseType.None)]
-    public partial class NodeStat : INodeStat
+    public partial class NodeStat
     {
         #region 属性
         private Int32 _ID;
@@ -310,67 +310,6 @@ namespace Stardust.Data.Nodes
             /// <summary>备注</summary>
             public const String Remark = "Remark";
         }
-        #endregion
-    }
-
-    /// <summary>节点统计。每日统计接口</summary>
-    public partial interface INodeStat
-    {
-        #region 属性
-        /// <summary>编号</summary>
-        Int32 ID { get; set; }
-
-        /// <summary>统计日期</summary>
-        DateTime StatDate { get; set; }
-
-        /// <summary>地区。省份，0表示全国</summary>
-        Int32 AreaID { get; set; }
-
-        /// <summary>总数。截止今天的全部设备数</summary>
-        Int32 Total { get; set; }
-
-        /// <summary>活跃数。最后登录位于今天</summary>
-        Int32 Actives { get; set; }
-
-        /// <summary>7天活跃数。最后登录位于7天内</summary>
-        Int32 T7Actives { get; set; }
-
-        /// <summary>30天活跃数。最后登录位于30天内</summary>
-        Int32 T30Actives { get; set; }
-
-        /// <summary>新增数。今天创建</summary>
-        Int32 News { get; set; }
-
-        /// <summary>7天新增数。7天创建</summary>
-        Int32 T7News { get; set; }
-
-        /// <summary>30天新增数。30天创建</summary>
-        Int32 T30News { get; set; }
-
-        /// <summary>注册数。今天激活或重新激活</summary>
-        Int32 Registers { get; set; }
-
-        /// <summary>最高在线。今天最高在线数</summary>
-        Int32 MaxOnline { get; set; }
-
-        /// <summary>最高在线时间</summary>
-        DateTime MaxOnlineTime { get; set; }
-
-        /// <summary>创建时间</summary>
-        DateTime CreateTime { get; set; }
-
-        /// <summary>更新时间</summary>
-        DateTime UpdateTime { get; set; }
-
-        /// <summary>备注</summary>
-        String Remark { get; set; }
-        #endregion
-
-        #region 获取/设置 字段值
-        /// <summary>获取/设置 字段值</summary>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        Object this[String name] { get; set; }
         #endregion
     }
 }

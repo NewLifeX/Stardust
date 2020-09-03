@@ -15,18 +15,17 @@ namespace Stardust.Data.Nodes
     [DataObject]
     [Description("节点数据。保存设备上来的一些数据，如心跳状态")]
     [BindIndex("IX_NodeData_NodeID", false, "NodeID")]
-    [BindIndex("IX_NodeData_CreateTime_NodeID", false, "CreateTime,NodeID")]
-    [BindTable("NodeData", Description = "节点数据。保存设备上来的一些数据，如心跳状态", ConnName = "Node", DbType = DatabaseType.None)]
-    public partial class NodeData : INodeData
+    [BindTable("NodeData", Description = "节点数据。保存设备上来的一些数据，如心跳状态", ConnName = "NodeLog", DbType = DatabaseType.None)]
+    public partial class NodeData
     {
         #region 属性
-        private Int32 _ID;
+        private Int64 _ID;
         /// <summary>编号</summary>
         [DisplayName("编号")]
         [Description("编号")]
-        [DataObjectField(true, true, false, 0)]
+        [DataObjectField(true, false, false, 0)]
         [BindColumn("ID", "编号", "")]
-        public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+        public Int64 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
         private Int32 _NodeID;
         /// <summary>节点</summary>
@@ -182,7 +181,7 @@ namespace Stardust.Data.Nodes
             {
                 switch (name)
                 {
-                    case "ID": _ID = value.ToInt(); break;
+                    case "ID": _ID = value.ToLong(); break;
                     case "NodeID": _NodeID = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "AvailableMemory": _AvailableMemory = value.ToInt(); break;
@@ -310,67 +309,6 @@ namespace Stardust.Data.Nodes
             /// <summary>创建地址</summary>
             public const String CreateIP = "CreateIP";
         }
-        #endregion
-    }
-
-    /// <summary>节点数据。保存设备上来的一些数据，如心跳状态接口</summary>
-    public partial interface INodeData
-    {
-        #region 属性
-        /// <summary>编号</summary>
-        Int32 ID { get; set; }
-
-        /// <summary>节点</summary>
-        Int32 NodeID { get; set; }
-
-        /// <summary>名称</summary>
-        String Name { get; set; }
-
-        /// <summary>可用内存。单位M</summary>
-        Int32 AvailableMemory { get; set; }
-
-        /// <summary>可用磁盘。应用所在盘，单位M</summary>
-        Int32 AvailableFreeSpace { get; set; }
-
-        /// <summary>CPU率。占用率</summary>
-        Double CpuRate { get; set; }
-
-        /// <summary>温度</summary>
-        Double Temperature { get; set; }
-
-        /// <summary>延迟。网络延迟，单位ms</summary>
-        Int32 Delay { get; set; }
-
-        /// <summary>偏移。客户端时间减服务端时间，单位s</summary>
-        Int32 Offset { get; set; }
-
-        /// <summary>本地时间</summary>
-        DateTime LocalTime { get; set; }
-
-        /// <summary>开机时间。单位ms</summary>
-        Int32 Uptime { get; set; }
-
-        /// <summary>数据</summary>
-        String Data { get; set; }
-
-        /// <summary>编译时间</summary>
-        DateTime CompileTime { get; set; }
-
-        /// <summary>创建者。服务端节点</summary>
-        String Creator { get; set; }
-
-        /// <summary>创建时间</summary>
-        DateTime CreateTime { get; set; }
-
-        /// <summary>创建地址</summary>
-        String CreateIP { get; set; }
-        #endregion
-
-        #region 获取/设置 字段值
-        /// <summary>获取/设置 字段值</summary>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        Object this[String name] { get; set; }
         #endregion
     }
 }

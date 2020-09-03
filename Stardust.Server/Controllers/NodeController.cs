@@ -464,7 +464,7 @@ namespace Stardust.Server.Controllers
         /// <param name="code"></param>
         /// <param name="node"></param>
         /// <returns></returns>
-        protected virtual NodeOnline GetOnline(String code, INode node)
+        protected virtual NodeOnline GetOnline(String code, Node node)
         {
             var olt = Session["Online"] as NodeOnline;
             if (olt != null) return olt;
@@ -477,7 +477,7 @@ namespace Stardust.Server.Controllers
 
         /// <summary>检查在线</summary>
         /// <returns></returns>
-        protected virtual NodeOnline CreateOnline(String code, INode node)
+        protected virtual NodeOnline CreateOnline(String code, Node node)
         {
             var ip = UserHost;
             var port = HttpContext.Connection.RemotePort;
@@ -559,7 +559,7 @@ namespace Stardust.Server.Controllers
             return file;
         }
 
-        protected virtual NodeHistory WriteHistory(String action, Boolean success, INode node, String remark = null)
+        protected virtual NodeHistory WriteHistory(String action, Boolean success, Node node, String remark = null)
         {
             var ip = UserHost;
             return NodeHistory.Create(node, action, success, remark, Environment.MachineName, ip);

@@ -140,7 +140,14 @@ namespace Stardust.Data.Nodes
             var exp = new WhereExpression();
 
             if (nodeId >= 0) exp &= _.NodeID == nodeId;
-            exp &= _.CreateTime.Between(start, end);
+
+            // 主键带有时间戳
+            var flow = Meta.Factory.FlowId;
+            if (flow != null)
+                exp &= _.ID.Between(start, end, flow);
+            else
+                exp &= _.CreateTime.Between(start, end);
+
             if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Data.Contains(key) | _.Creator.Contains(key) | _.CreateIP.Contains(key);
 
             return FindAll(exp, page);

@@ -18,7 +18,7 @@ namespace Stardust.Data.Nodes
     [BindIndex("IX_NodeOnline_UpdateTime", false, "UpdateTime")]
     [BindIndex("IX_NodeOnline_ProvinceID_CityID", false, "ProvinceID,CityID")]
     [BindTable("NodeOnline", Description = "节点在线", ConnName = "Node", DbType = DatabaseType.None)]
-    public partial class NodeOnline : INodeOnline
+    public partial class NodeOnline
     {
         #region 属性
         private Int32 _ID;
@@ -455,94 +455,6 @@ namespace Stardust.Data.Nodes
             /// <summary>更新时间</summary>
             public const String UpdateTime = "UpdateTime";
         }
-        #endregion
-    }
-
-    /// <summary>节点在线接口</summary>
-    public partial interface INodeOnline
-    {
-        #region 属性
-        /// <summary>编号</summary>
-        Int32 ID { get; set; }
-
-        /// <summary>会话</summary>
-        String SessionID { get; set; }
-
-        /// <summary>节点</summary>
-        Int32 NodeID { get; set; }
-
-        /// <summary>名称</summary>
-        String Name { get; set; }
-
-        /// <summary>省份</summary>
-        Int32 ProvinceID { get; set; }
-
-        /// <summary>城市</summary>
-        Int32 CityID { get; set; }
-
-        /// <summary>心跳</summary>
-        Int32 PingCount { get; set; }
-
-        /// <summary>版本</summary>
-        String Version { get; set; }
-
-        /// <summary>编译时间</summary>
-        DateTime CompileTime { get; set; }
-
-        /// <summary>内存。单位M</summary>
-        Int32 Memory { get; set; }
-
-        /// <summary>可用内存。单位M</summary>
-        Int32 AvailableMemory { get; set; }
-
-        /// <summary>可用磁盘。应用所在盘，单位M</summary>
-        Int32 AvailableFreeSpace { get; set; }
-
-        /// <summary>CPU率。占用率</summary>
-        Double CpuRate { get; set; }
-
-        /// <summary>温度</summary>
-        Double Temperature { get; set; }
-
-        /// <summary>延迟。网络延迟，单位ms</summary>
-        Int32 Delay { get; set; }
-
-        /// <summary>偏移。客户端时间减服务端时间，单位s</summary>
-        Int32 Offset { get; set; }
-
-        /// <summary>本地时间</summary>
-        DateTime LocalTime { get; set; }
-
-        /// <summary>开机时间。单位ms</summary>
-        Int32 Uptime { get; set; }
-
-        /// <summary>网卡</summary>
-        String MACs { get; set; }
-
-        /// <summary>进程列表</summary>
-        String Processes { get; set; }
-
-        /// <summary>令牌</summary>
-        String Token { get; set; }
-
-        /// <summary>创建者。服务端节点</summary>
-        String Creator { get; set; }
-
-        /// <summary>创建时间</summary>
-        DateTime CreateTime { get; set; }
-
-        /// <summary>创建地址</summary>
-        String CreateIP { get; set; }
-
-        /// <summary>更新时间</summary>
-        DateTime UpdateTime { get; set; }
-        #endregion
-
-        #region 获取/设置 字段值
-        /// <summary>获取/设置 字段值</summary>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        Object this[String name] { get; set; }
         #endregion
     }
 }

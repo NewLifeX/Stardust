@@ -98,7 +98,12 @@ namespace Stardust.Data.Nodes
             if (!action.IsNullOrEmpty()) exp &= _.Action.In(action.Split(","));
             if (success != null) exp &= _.Success == success;
 
-            exp &= _.CreateTime.Between(start, end);
+            // 主键带有时间戳
+            var flow = Meta.Factory.FlowId;
+            if (flow != null)
+                exp &= _.ID.Between(start, end, flow);
+            else
+                exp &= _.CreateTime.Between(start, end);
 
             if (!key.IsNullOrEmpty())
             {
@@ -127,7 +132,7 @@ namespace Stardust.Data.Nodes
         /// <param name="creator"></param>
         /// <param name="ip"></param>
         /// <returns></returns>
-        public static NodeHistory Create(INode node, String action, Boolean success, String remark, String creator, String ip)
+        public static NodeHistory Create(Node node, String action, Boolean success, String remark, String creator, String ip)
         {
             if (node == null) node = new Node();
 

@@ -18,7 +18,7 @@ namespace Stardust.Data.Nodes
     [BindIndex("IX_Node_Uuid_MachineGuid_MACs", false, "Uuid,MachineGuid,MACs")]
     [BindIndex("IX_Node_UpdateTime", false, "UpdateTime")]
     [BindTable("Node", Description = "节点", ConnName = "Node", DbType = DatabaseType.None)]
-    public partial class Node : INode
+    public partial class Node
     {
         #region 属性
         private Int32 _ID;
@@ -663,133 +663,6 @@ namespace Stardust.Data.Nodes
             /// <summary>备注</summary>
             public const String Remark = "Remark";
         }
-        #endregion
-    }
-
-    /// <summary>节点接口</summary>
-    public partial interface INode
-    {
-        #region 属性
-        /// <summary>编号</summary>
-        Int32 ID { get; set; }
-
-        /// <summary>名称</summary>
-        String Name { get; set; }
-
-        /// <summary>编码。NodeKey</summary>
-        String Code { get; set; }
-
-        /// <summary>密钥。NodeSecret</summary>
-        String Secret { get; set; }
-
-        /// <summary>启用</summary>
-        Boolean Enable { get; set; }
-
-        /// <summary>版本</summary>
-        String Version { get; set; }
-
-        /// <summary>编译时间</summary>
-        DateTime CompileTime { get; set; }
-
-        /// <summary>操作系统</summary>
-        String OS { get; set; }
-
-        /// <summary>系统版本</summary>
-        String OSVersion { get; set; }
-
-        /// <summary>机器名称</summary>
-        String MachineName { get; set; }
-
-        /// <summary>用户名称</summary>
-        String UserName { get; set; }
-
-        /// <summary>CPU</summary>
-        Int32 Cpu { get; set; }
-
-        /// <summary>内存。单位M</summary>
-        Int32 Memory { get; set; }
-
-        /// <summary>磁盘。应用所在盘，单位M</summary>
-        Int32 TotalSize { get; set; }
-
-        /// <summary>像素点。默认96*96</summary>
-        String Dpi { get; set; }
-
-        /// <summary>分辨率。例如1024*768</summary>
-        String Resolution { get; set; }
-
-        /// <summary>处理器</summary>
-        String Processor { get; set; }
-
-        /// <summary>CPU标识</summary>
-        String CpuID { get; set; }
-
-        /// <summary>唯一标识</summary>
-        String Uuid { get; set; }
-
-        /// <summary>机器标识</summary>
-        String MachineGuid { get; set; }
-
-        /// <summary>磁盘序列号</summary>
-        String DiskID { get; set; }
-
-        /// <summary>网卡</summary>
-        String MACs { get; set; }
-
-        /// <summary>安装路径</summary>
-        String InstallPath { get; set; }
-
-        /// <summary>运行时。.Net版本</summary>
-        String Runtime { get; set; }
-
-        /// <summary>省份</summary>
-        Int32 ProvinceID { get; set; }
-
-        /// <summary>城市</summary>
-        Int32 CityID { get; set; }
-
-        /// <summary>地址</summary>
-        String Address { get; set; }
-
-        /// <summary>登录次数</summary>
-        Int32 Logins { get; set; }
-
-        /// <summary>最后登录</summary>
-        DateTime LastLogin { get; set; }
-
-        /// <summary>最后IP。最后的公网IP地址</summary>
-        String LastLoginIP { get; set; }
-
-        /// <summary>在线时长。单位，秒</summary>
-        Int32 OnlineTime { get; set; }
-
-        /// <summary>创建者</summary>
-        Int32 CreateUserID { get; set; }
-
-        /// <summary>创建时间</summary>
-        DateTime CreateTime { get; set; }
-
-        /// <summary>创建地址</summary>
-        String CreateIP { get; set; }
-
-        /// <summary>更新者</summary>
-        Int32 UpdateUserID { get; set; }
-
-        /// <summary>更新时间</summary>
-        DateTime UpdateTime { get; set; }
-
-        /// <summary>更新地址</summary>
-        String UpdateIP { get; set; }
-
-        /// <summary>备注</summary>
-        String Remark { get; set; }
-        #endregion
-
-        #region 获取/设置 字段值
-        /// <summary>获取/设置 字段值</summary>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        Object this[String name] { get; set; }
         #endregion
     }
 }

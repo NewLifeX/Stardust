@@ -16,7 +16,7 @@ namespace Stardust.Data.Nodes
     [Description("节点版本。发布更新")]
     [BindIndex("IU_NodeVersion_Version", true, "Version")]
     [BindTable("NodeVersion", Description = "节点版本。发布更新", ConnName = "Node", DbType = DatabaseType.None)]
-    public partial class NodeVersion : INodeVersion
+    public partial class NodeVersion
     {
         #region 属性
         private Int32 _ID;
@@ -293,64 +293,6 @@ namespace Stardust.Data.Nodes
             /// <summary>描述</summary>
             public const String Description = "Description";
         }
-        #endregion
-    }
-
-    /// <summary>节点版本。发布更新接口</summary>
-    public partial interface INodeVersion
-    {
-        #region 属性
-        /// <summary>编号</summary>
-        Int32 ID { get; set; }
-
-        /// <summary>版本号</summary>
-        String Version { get; set; }
-
-        /// <summary>启用。启用/停用</summary>
-        Boolean Enable { get; set; }
-
-        /// <summary>强制。强制升级</summary>
-        Boolean Force { get; set; }
-
-        /// <summary>升级通道</summary>
-        NodeChannels Channel { get; set; }
-
-        /// <summary>策略。升级策略</summary>
-        String Strategy { get; set; }
-
-        /// <summary>升级源</summary>
-        String Source { get; set; }
-
-        /// <summary>执行命令。空格前后为文件名和参数</summary>
-        String Executor { get; set; }
-
-        /// <summary>创建者</summary>
-        Int32 CreateUserID { get; set; }
-
-        /// <summary>创建时间</summary>
-        DateTime CreateTime { get; set; }
-
-        /// <summary>创建地址</summary>
-        String CreateIP { get; set; }
-
-        /// <summary>更新者</summary>
-        Int32 UpdateUserID { get; set; }
-
-        /// <summary>更新时间</summary>
-        DateTime UpdateTime { get; set; }
-
-        /// <summary>更新地址</summary>
-        String UpdateIP { get; set; }
-
-        /// <summary>描述</summary>
-        String Description { get; set; }
-        #endregion
-
-        #region 获取/设置 字段值
-        /// <summary>获取/设置 字段值</summary>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        Object this[String name] { get; set; }
         #endregion
     }
 }
