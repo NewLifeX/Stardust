@@ -46,8 +46,14 @@ namespace Stardust.Monitors
             Period = 60;
 
             var sys = SysConfig.Current;
-            AppId = sys.Name;
+            //AppId = sys.Name;
             AppName = sys.DisplayName;
+
+            var set = Setting.Current;
+            AppId = set.AppKey;
+            AppSecret = set.Secret;
+
+            if (set.Debug) Log = XTrace.Log;
 
             ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}";
         }

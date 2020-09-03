@@ -7,25 +7,25 @@ using System.ComponentModel;
 namespace StarAgent
 {
     /// <summary>配置</summary>
-    [XmlConfigFile(@"Config\Star.config", 15_000)]
-    public class Setting : XmlConfig<Setting>
+    [Config("StarAgent")]
+    public class Setting : Config<Setting>
     {
         #region 属性
         /// <summary>调试开关。默认true</summary>
         [Description("调试开关。默认true")]
         public Boolean Debug { get; set; } = true;
 
-        /// <summary>证书</summary>
-        [Description("证书")]
-        public String Code { get; set; }
+        ///// <summary>证书</summary>
+        //[Description("证书")]
+        //public String Code { get; set; }
 
-        /// <summary>密钥</summary>
-        [Description("密钥")]
-        public String Secret { get; set; }
+        ///// <summary>密钥</summary>
+        //[Description("密钥")]
+        //public String Secret { get; set; }
 
-        /// <summary>服务地址端口。默认为空，子网内自动发现</summary>
-        [Description("服务地址端口。默认为空，子网内自动发现")]
-        public String Server { get; set; } = "";
+        ///// <summary>服务地址端口。默认为空，子网内自动发现</summary>
+        //[Description("服务地址端口。默认为空，子网内自动发现")]
+        //public String Server { get; set; } = "";
 
         /// <summary>更新通道。默认Release</summary>
         [Description("更新通道。默认Release")]

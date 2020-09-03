@@ -21,11 +21,11 @@ namespace Stardust.Web
 
         public void ConfigureServices(IServiceCollection services)
         {
-            var set = Stardust.Server.Setting.Current;
-            if (!set.TracerServer.IsNullOrEmpty())
+            var set = Stardust.Setting.Current;
+            if (!set.Server.IsNullOrEmpty())
             {
                 // APM跟踪器
-                var tracer = new StarTracer(set.TracerServer) { Log = XTrace.Log };
+                var tracer = new StarTracer(set.Server) { Log = XTrace.Log };
                 DefaultTracer.Instance = tracer;
                 //ApiHelper.Tracer = tracer;
                 //DAL.GlobalTracer = tracer;
@@ -39,7 +39,7 @@ namespace Stardust.Web
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            var set = Stardust.Server.Setting.Current;
+            var set = Stardust.Setting.Current;
 
             // 使用Cube前添加自己的管道
             if (env.IsDevelopment())
@@ -53,7 +53,7 @@ namespace Stardust.Web
 
             app.UseAuthorization();
 
-            if (!set.TracerServer.IsNullOrEmpty()) app.UseMiddleware<TracerMiddleware>();
+            if (!set.Server.IsNullOrEmpty()) app.UseMiddleware<TracerMiddleware>();
 
             app.UseCube();
 

@@ -56,7 +56,7 @@ namespace Stardust
         private Process StartService(ServiceInfo service)
         {
             // 检查应用是否已启动
-            var pidFile = Setting.Current.DataPath.CombinePath($"{service.Name}.pid").GetBasePath();
+            var pidFile = NewLife.Setting.Current.DataPath.CombinePath($"{service.Name}.pid").GetBasePath();
             if (File.Exists(pidFile))
             {
                 try

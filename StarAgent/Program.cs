@@ -24,7 +24,7 @@ namespace StarAgent
         {
             ServiceName = "StarAgent";
 
-            var set = Setting.Current;
+            var set = Stardust.Setting.Current;
             if (set.IsNew)
             {
 #if DEBUG
@@ -44,7 +44,7 @@ namespace StarAgent
         ServiceManager _Manager;
         private void StartClient()
         {
-            var set = Setting.Current;
+            var set = Stardust.Setting.Current;
             var server = set.Server;
             if (server.IsNullOrEmpty()) return;
 
@@ -52,7 +52,7 @@ namespace StarAgent
 
             var client = new StarClient(server)
             {
-                Code = set.Code,
+                Code = set.AppKey,
                 Secret = set.Secret,
                 Log = XTrace.Log,
             };
@@ -63,7 +63,7 @@ namespace StarAgent
                 var inf = client.Info;
                 if (inf != null && !inf.Code.IsNullOrEmpty())
                 {
-                    set.Code = inf.Code;
+                    set.AppKey = inf.Code;
                     set.Secret = inf.Secret;
                     set.Save();
                 }
@@ -157,7 +157,7 @@ namespace StarAgent
 
         public void UseStarServer()
         {
-            var set = Setting.Current;
+            var set = Stardust.Setting.Current;
             set.Server = "http://star.newlifex.com:6600";
             set.Save();
         }
