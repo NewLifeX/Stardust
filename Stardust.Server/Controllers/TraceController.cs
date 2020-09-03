@@ -83,7 +83,7 @@ namespace Stardust.Server.Controllers
             var ip = HttpContext.GetUserHost();
             if (ip.IsNullOrEmpty()) ip = ManageProvider.UserHost;
 
-            Task.Run(() => ProcessData(app, ip, builders));
+            Task.Run(() => ProcessData(app, model.ClientId, ip, builders));
 
             _stat.Add(app.ID);
             _appStat.Add(app.ID);
@@ -99,7 +99,7 @@ namespace Stardust.Server.Controllers
             };
         }
 
-        private void ProcessData(AppTracer app, String ip, ISpanBuilder[] builders)
+        private void ProcessData(AppTracer app, String clientId, String ip, ISpanBuilder[] builders)
         {
             // 排除项
             var excludes = app.Excludes.Split(",", ";") ?? new String[0];
@@ -117,7 +117,7 @@ namespace Stardust.Server.Controllers
                 var td = TraceData.Create(item);
                 td.Id = flow.NewId();
                 td.AppId = app.ID;
-                td.ClientId = ip;
+                td.ClientId = clientId ?? ip;
                 td.CreateIP = ip;
                 td.CreateTime = DateTime.Now;
 

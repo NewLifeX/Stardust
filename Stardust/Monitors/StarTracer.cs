@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using NewLife;
 using NewLife.Common;
@@ -23,6 +24,9 @@ namespace Stardust.Monitors
         /// <summary>应用密钥</summary>
         public String AppSecret { get; set; }
 
+        /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
+        public String ClientId { get; set; }
+
         /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认120</summary>
         public Int32 MaxFails { get; set; } = 120;
 
@@ -44,6 +48,8 @@ namespace Stardust.Monitors
             var sys = SysConfig.Current;
             AppId = sys.Name;
             AppName = sys.DisplayName;
+
+            ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}";
         }
 
         /// <summary>指定服务端地址来实例化跟踪器</summary>
@@ -104,6 +110,7 @@ namespace Stardust.Monitors
             {
                 AppId = AppId,
                 AppName = AppName,
+                ClientId = ClientId,
                 //AccessToken = AppSecret,
 
                 Builders = builders
