@@ -7,7 +7,7 @@ using NewLife.Security;
 namespace Stardust.Server
 {
     /// <summary>配置</summary>
-    [Config("Stardust")]
+    [Config("StarServer")]
     public class Setting : Config<Setting>
     {
         #region 属性
@@ -35,9 +35,9 @@ namespace Stardust.Server
         [Description("自动注册。允许客户端自动注册，默认true")]
         public Boolean AutoRegister { get; set; } = true;
 
-        ///// <summary>APM监控服务器。</summary>
-        //[Description("APM监控服务器。")]
-        //public String TracerServer { get; set; }
+        /// <summary>节点编码公式。选择NodeInfo哪些硬件信息来计算节点编码，支持Crc/Crc16/MD5/MD5_16，默认Crc({UUID}@{MachineGuid}@{Macs})</summary>
+        [Description("节点编码公式。选择NodeInfo哪些硬件信息来计算节点编码，支持Crc/Crc16/MD5/MD5_16，默认Crc({UUID}@{MachineGuid}@{Macs})")]
+        public String NodeCodeFormula { get; set; } = "Crc({UUID}@{MachineGuid}@{Macs})";
         #endregion
 
         #region 方法

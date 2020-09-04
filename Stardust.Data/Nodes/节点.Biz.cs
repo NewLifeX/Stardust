@@ -1,5 +1,6 @@
 ﻿using NewLife;
 using NewLife.Data;
+using Stardust.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -226,6 +227,84 @@ namespace Stardust.Data.Nodes
         /// <param name="code"></param>
         /// <returns></returns>
         public static Node GetOrAdd(String code) => GetOrAdd(code, FindByCode, k => new Node { Code = k, Enable = true });
+
+        /// <summary>登录并保存信息</summary>
+        /// <param name="di"></param>
+        /// <param name="ip"></param>
+        public void Login(NodeInfo di,String ip)
+        {
+            var node = this;
+
+            node.Fill(di);
+
+            node.Logins++;
+            node.LastLogin = DateTime.Now;
+            node.LastLoginIP = ip;
+
+            if (node.CreateIP.IsNullOrEmpty()) node.CreateIP = ip;
+            node.UpdateIP = ip;
+
+            node.FixArea();
+
+            node.Save();
+        }
+
+        /// <summary>填充</summary>
+        /// <param name="di"></param>
+        public void Fill(NodeInfo di)
+        {
+            var node = this;
+
+            if (!di.OSName.IsNullOrEmpty()) node.OS = di.OSName;
+            if (!di.OSVersion.IsNullOrEmpty()) node.OSVersion = di.OSVersion;
+            if (!di.Version.IsNullOrEmpty()) node.Version = di.Version;
+            if (di.Compile.Year > 2000) node.CompileTime = di.Compile;
+
+            if (!di.MachineName.IsNullOrEmpty()) node.MachineName = di.MachineName;
+            if (!di.UserName.IsNullOrEmpty()) node.UserName = di.UserName;
+            if (!di.Processor.IsNullOrEmpty()) node.Processor = di.Processor;
+            if (!di.CpuID.IsNullOrEmpty()) node.CpuID = di.CpuID;
+            if (!di.UUID.IsNullOrEmpty()) node.Uuid = di.UUID;
+            if (!di.MachineGuid.IsNullOrEmpty()) node.MachineGuid = di.MachineGuid;
+            if (!di.DiskID.IsNullOrEmpty()) node.DiskID = di.DiskID;
+
+            if (di.ProcessorCount > 0) node.Cpu = di.ProcessorCount;
+            if (di.Memory > 0) node.Memory = (Int32)(di.Memory / 1024 / 1024);
+            if (di.TotalSize > 0) node.TotalSize = (Int32)(di.TotalSize / 1024 / 1024);
+            if (!di.Dpi.IsNullOrEmpty()) node.Dpi = di.Dpi;
+            if (!di.Resolution.IsNullOrEmpty()) node.Resolution = di.Resolution;
+            if (!di.Macs.IsNullOrEmpty()) node.MACs = di.Macs;
+            //if (!di.COMs.IsNullOrEmpty()) node.COMs = di.COMs;
+            if (!di.InstallPath.IsNullOrEmpty()) node.InstallPath = di.InstallPath;
+            if (!di.Runtime.IsNullOrEmpty()) node.Runtime = di.Runtime;
+        }
+
+        /// <summary>修正地区</summary>
+        public void FixArea()
+        {
+            var node = this;
+            if (node.UpdateIP.IsNullOrEmpty()) return;
+
+            var ip = node.UpdateIP.IPToAddress();
+            if (ip.IsNullOrEmpty()) return;
+
+            if (ip.StartsWith("广西")) ip = "广西自治区" + ip.Substring(2);
+            var addrs = ip.Split("省", "自治区", "市", "区", "县");
+            if (addrs != null && addrs.Length >= 2)
+            {
+                var prov = Area.FindByName(0, addrs[0]);
+                if (prov != null)
+                {
+                    node.ProvinceID = prov.ID;
+
+                    var city = Area.FindByNames(addrs);
+                    if (city != null)
+                        node.CityID = city.ID;
+                    else
+                        node.CityID = 0;
+                }
+            }
+        }
         #endregion
     }
 }

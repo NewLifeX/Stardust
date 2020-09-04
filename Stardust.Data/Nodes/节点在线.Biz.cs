@@ -6,6 +6,7 @@ using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using Stardust.Models;
 using XCode;
 using XCode.Membership;
 
@@ -138,6 +139,85 @@ namespace Stardust.Data.Nodes
             list.Delete();
 
             return list;
+        }
+
+        public void Save(NodeInfo di, PingInfo pi, String token)
+        {
+            var olt = this;
+
+            if (di != null)
+            {
+                olt.Fill(di);
+                olt.LocalTime = di.Time.ToLocalTime();
+                olt.MACs = di.Macs;
+                //olt.COMs = di.COMs;
+            }
+            else
+            {
+                olt.Fill(pi);
+            }
+
+            olt.Token = token;
+            olt.PingCount++;
+
+            // 5秒内直接保存
+            if (olt.CreateTime.AddSeconds(5) > DateTime.Now)
+                olt.Save();
+            else
+                olt.SaveAsync();
+        }
+
+        public void Fill(NodeInfo di)
+        {
+            var online = this;
+
+            online.LocalTime = di.Time.ToLocalTime();
+            online.MACs = di.Macs;
+            //online.COMs = di.COMs;
+
+            if (di.AvailableMemory > 0) online.AvailableMemory = (Int32)(di.AvailableMemory / 1024 / 1024);
+            if (di.AvailableFreeSpace > 0) online.AvailableFreeSpace = (Int32)(di.AvailableFreeSpace / 1024 / 1024);
+        }
+
+        /// <summary>填充在线节点信息</summary>
+        /// <param name="inf"></param>
+        private void Fill(PingInfo inf)
+        {
+            var olt = this;
+
+            if (inf.AvailableMemory > 0) olt.AvailableMemory = (Int32)(inf.AvailableMemory / 1024 / 1024);
+            if (inf.AvailableFreeSpace > 0) olt.AvailableFreeSpace = (Int32)(inf.AvailableFreeSpace / 1024 / 1024);
+            if (inf.CpuRate > 0) olt.CpuRate = inf.CpuRate;
+            if (inf.Temperature > 0) olt.Temperature = inf.Temperature;
+            if (inf.Uptime > 0) olt.Uptime = inf.Uptime;
+            if (inf.Delay > 0) olt.Delay = inf.Delay;
+
+            var dt = inf.Time.ToDateTime().ToLocalTime();
+            if (dt.Year > 2000)
+            {
+                olt.LocalTime = dt;
+                olt.Offset = (Int32)Math.Round((dt - DateTime.Now).TotalSeconds);
+            }
+
+            if (!inf.Processes.IsNullOrEmpty()) olt.Processes = inf.Processes;
+            if (!inf.Macs.IsNullOrEmpty()) olt.MACs = inf.Macs;
+            //if (!inf.COMs.IsNullOrEmpty()) olt.COMs = inf.COMs;
+
+            // 插入节点数据
+            var data = new NodeData
+            {
+                NodeID = olt.NodeID,
+                AvailableMemory = olt.AvailableMemory,
+                AvailableFreeSpace = olt.AvailableFreeSpace,
+                CpuRate = inf.CpuRate,
+                Temperature = inf.Temperature,
+                Uptime = inf.Uptime,
+                Delay = inf.Delay,
+                LocalTime = dt,
+                Offset = olt.Offset
+            };
+
+            data.SaveAsync();
         }
         #endregion
     }

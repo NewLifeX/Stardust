@@ -26,6 +26,8 @@ namespace Stardust.Data.Nodes
         /// <param name="isNew"></param>
         public override void Valid(Boolean isNew)
         {
+            base.Valid(isNew);
+
             // 截断日志
             var len = _.Remark.Length;
             if (!Remark.IsNullOrEmpty() && len > 0 && Remark.Length > len) Remark = Remark.Substring(0, len);

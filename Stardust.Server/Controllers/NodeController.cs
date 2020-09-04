@@ -52,28 +52,13 @@ namespace Stardust.Server.Controllers
                     node = AutoRegister(node, inf, out autoReg);
             }
 
-            if (node == null) throw new ApiException(12, "节点鉴权失败");
-            _nodeForHistory = node;
+            _nodeForHistory = node ?? throw new ApiException(12, "节点鉴权失败");
 
             var msg = "";
             var success = false;
             try
             {
-                Fill(node, di);
-
-                //var ip = Request.Host + "";
-                var ip = UserHost;
-
-                node.Logins++;
-                node.LastLogin = DateTime.Now;
-                node.LastLoginIP = ip;
-
-                if (node.CreateIP.IsNullOrEmpty()) node.CreateIP = ip;
-                node.UpdateIP = ip;
-
-                FixArea(node);
-
-                node.Save();
+                node.Login(di, UserHost);
 
                 // 设置令牌，可能已经进行用户登录
                 CreateToken(node.Code);
@@ -81,22 +66,8 @@ namespace Stardust.Server.Controllers
                 if (Session != null) Session["Node"] = node;
 
                 // 在线记录
-                var olt = GetOnline(code, node);
-                if (olt == null) olt = CreateOnline(code, node);
-
-                Fill(olt, di);
-                olt.LocalTime = di.Time.ToLocalTime();
-                olt.MACs = di.Macs;
-                //olt.COMs = di.COMs;
-
-                olt.Token = Token;
-                olt.PingCount++;
-
-                // 5秒内直接保存
-                if (olt.CreateTime.AddSeconds(5) > DateTime.Now)
-                    olt.Save();
-                else
-                    olt.SaveAsync();
+                var olt = GetOnline(code, node) ?? CreateOnline(code, node);
+                olt.Save(di, null, Token);
 
                 msg = $"[{node.Name}/{node.Code}]鉴权成功 ";
 
@@ -254,18 +225,8 @@ namespace Stardust.Server.Controllers
             if (node.Name.IsNullOrEmpty()) node.Name = name;
 
             // 优先使用节点散列来生成节点证书，确保节点路由到其它接入网关时保持相同证书代码
-            var code = "";
-            var uid = $"{di.UUID}@{di.MachineGuid}@{di.Macs}";
-            if (!uid.IsNullOrEmpty())
-            {
-                // 使用产品类别加密一下，确保不同类别有不同编码
-                var buf = uid.GetBytes();
-                code = buf.Crc().GetBytes().ToHex();
-
-                node.Code = code;
-            }
-
-            if (node.Code.IsNullOrEmpty()) code = Rand.NextString(8);
+            node.Code = BuildCode(di);
+            if (node.Code.IsNullOrEmpty()) node.Code = Rand.NextString(8);
 
             node.Secret = Rand.NextString(16);
             node.UpdateIP = ip;
@@ -279,65 +240,37 @@ namespace Stardust.Server.Controllers
             return node;
         }
 
-        private void Fill(Node node, NodeInfo di)
+        private String BuildCode(NodeInfo di)
         {
-            if (!di.OSName.IsNullOrEmpty()) node.OS = di.OSName;
-            if (!di.OSVersion.IsNullOrEmpty()) node.OSVersion = di.OSVersion;
-            if (!di.Version.IsNullOrEmpty()) node.Version = di.Version;
-            if (di.Compile.Year > 2000) node.CompileTime = di.Compile;
-
-            if (!di.MachineName.IsNullOrEmpty()) node.MachineName = di.MachineName;
-            if (!di.UserName.IsNullOrEmpty()) node.UserName = di.UserName;
-            if (!di.Processor.IsNullOrEmpty()) node.Processor = di.Processor;
-            if (!di.CpuID.IsNullOrEmpty()) node.CpuID = di.CpuID;
-            if (!di.UUID.IsNullOrEmpty()) node.Uuid = di.UUID;
-            if (!di.MachineGuid.IsNullOrEmpty()) node.MachineGuid = di.MachineGuid;
-            if (!di.DiskID.IsNullOrEmpty()) node.DiskID = di.DiskID;
-
-            if (di.ProcessorCount > 0) node.Cpu = di.ProcessorCount;
-            if (di.Memory > 0) node.Memory = (Int32)(di.Memory / 1024 / 1024);
-            if (di.TotalSize > 0) node.TotalSize = (Int32)(di.TotalSize / 1024 / 1024);
-            if (!di.Dpi.IsNullOrEmpty()) node.Dpi = di.Dpi;
-            if (!di.Resolution.IsNullOrEmpty()) node.Resolution = di.Resolution;
-            if (!di.Macs.IsNullOrEmpty()) node.MACs = di.Macs;
-            //if (!di.COMs.IsNullOrEmpty()) node.COMs = di.COMs;
-            if (!di.InstallPath.IsNullOrEmpty()) node.InstallPath = di.InstallPath;
-            if (!di.Runtime.IsNullOrEmpty()) node.Runtime = di.Runtime;
-        }
-
-        private void Fill(NodeOnline online, NodeInfo di)
-        {
-            online.LocalTime = di.Time.ToLocalTime();
-            online.MACs = di.Macs;
-            //online.COMs = di.COMs;
-
-            if (di.AvailableMemory > 0) online.AvailableMemory = (Int32)(di.AvailableMemory / 1024 / 1024);
-            if (di.AvailableFreeSpace > 0) online.AvailableFreeSpace = (Int32)(di.AvailableFreeSpace / 1024 / 1024);
-        }
-
-        private void FixArea(Node node)
-        {
-            if (node.UpdateIP.IsNullOrEmpty()) return;
-
-            var ip = node.UpdateIP.IPToAddress();
-            if (ip.IsNullOrEmpty()) return;
-
-            if (ip.StartsWith("广西")) ip = "广西自治区" + ip.Substring(2);
-            var addrs = ip.Split("省", "自治区", "市", "区", "县");
-            if (addrs != null && addrs.Length >= 2)
+            var set = Setting.Current;
+            //var uid = $"{di.UUID}@{di.MachineGuid}@{di.Macs}";
+            var ss = set.NodeCodeFormula.Split(new[] { '(', ')' });
+            if (ss.Length >= 2)
             {
-                var prov = Area.FindByName(0, addrs[0]);
-                if (prov != null)
+                var uid = ss[1];
+                foreach (var pi in di.GetType().GetProperties())
                 {
-                    node.ProvinceID = prov.ID;
-
-                    var city = Area.FindByNames(addrs);
-                    if (city != null)
-                        node.CityID = city.ID;
-                    else
-                        node.CityID = 0;
+                    uid = uid.Replace($"{{{pi.Name}}}", pi.GetValue(di) + "");
+                }
+                if (!uid.IsNullOrEmpty())
+                {
+                    // 使用产品类别加密一下，确保不同类别有不同编码
+                    var buf = uid.GetBytes();
+                    //code = buf.Crc().GetBytes().ToHex();
+                    switch (ss[0].ToLower())
+                    {
+                        case "crc": buf = buf.Crc().GetBytes(); break;
+                        case "crc16": buf = buf.Crc16().GetBytes(); break;
+                        case "md5": buf = buf.MD5(); break;
+                        case "md5_16": buf = uid.MD5_16().ToHex(); break;
+                        default:
+                            break;
+                    }
+                    return buf.ToHex();
                 }
             }
+
+            return null;
         }
         #endregion
 
@@ -353,20 +286,14 @@ namespace Stardust.Server.Controllers
                 ServerTime = DateTime.UtcNow,
             };
 
-            var node = Session["Node"] as Node;
-            if (node != null)
+            if (Session["Node"] is Node node)
             {
                 var code = node.Code;
-                FixArea(node);
+                node.FixArea();
                 node.SaveAsync();
 
-                var olt = GetOnline(code, node);
-                if (olt == null) olt = CreateOnline(code, node);
-                Fill(olt, inf);
-
-                olt.Token = Token;
-                olt.PingCount++;
-                olt.SaveAsync();
+                var olt = GetOnline(code, node) ?? CreateOnline(code, node);
+                olt.Save(null, inf, Token);
 
                 // 拉取命令
                 rs.Commands = AcquireCommands(node.ID);
@@ -418,46 +345,6 @@ namespace Stardust.Server.Controllers
                 Time = 0,
                 ServerTime = DateTime.Now,
             };
-        }
-
-        /// <summary>填充在线节点信息</summary>
-        /// <param name="olt"></param>
-        /// <param name="inf"></param>
-        private void Fill(NodeOnline olt, PingInfo inf)
-        {
-            if (inf.AvailableMemory > 0) olt.AvailableMemory = (Int32)(inf.AvailableMemory / 1024 / 1024);
-            if (inf.AvailableFreeSpace > 0) olt.AvailableFreeSpace = (Int32)(inf.AvailableFreeSpace / 1024 / 1024);
-            if (inf.CpuRate > 0) olt.CpuRate = inf.CpuRate;
-            if (inf.Temperature > 0) olt.Temperature = inf.Temperature;
-            if (inf.Uptime > 0) olt.Uptime = inf.Uptime;
-            if (inf.Delay > 0) olt.Delay = inf.Delay;
-
-            var dt = inf.Time.ToDateTime().ToLocalTime();
-            if (dt.Year > 2000)
-            {
-                olt.LocalTime = dt;
-                olt.Offset = (Int32)Math.Round((dt - DateTime.Now).TotalSeconds);
-            }
-
-            if (!inf.Processes.IsNullOrEmpty()) olt.Processes = inf.Processes;
-            if (!inf.Macs.IsNullOrEmpty()) olt.MACs = inf.Macs;
-            //if (!inf.COMs.IsNullOrEmpty()) olt.COMs = inf.COMs;
-
-            // 插入节点数据
-            var data = new NodeData
-            {
-                NodeID = olt.NodeID,
-                AvailableMemory = olt.AvailableMemory,
-                AvailableFreeSpace = olt.AvailableFreeSpace,
-                CpuRate = inf.CpuRate,
-                Temperature = inf.Temperature,
-                Uptime = inf.Uptime,
-                Delay = inf.Delay,
-                LocalTime = dt,
-                Offset = olt.Offset
-            };
-
-            data.SaveAsync();
         }
 
         /// <summary></summary>
