@@ -44,15 +44,15 @@ namespace StarAgent
         ServiceManager _Manager;
         private void StartClient()
         {
-            var set = Stardust.Setting.Current;
-            var server = set.Server;
+            var set = Setting.Current;
+            var server = Stardust.Setting.Current.Server;
             if (server.IsNullOrEmpty()) return;
 
             WriteLog("初始化服务端地址：{0}", server);
 
             var client = new StarClient(server)
             {
-                Code = set.AppKey,
+                Code = set.Code,
                 Secret = set.Secret,
                 Log = XTrace.Log,
             };
@@ -63,7 +63,7 @@ namespace StarAgent
                 var inf = client.Info;
                 if (inf != null && !inf.Code.IsNullOrEmpty())
                 {
-                    set.AppKey = inf.Code;
+                    set.Code = inf.Code;
                     set.Secret = inf.Secret;
                     set.Save();
                 }
