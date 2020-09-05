@@ -115,14 +115,6 @@ namespace Stardust.Data.Nodes
         [BindColumn("Data", "数据", "")]
         public String Data { get => _Data; set { if (OnPropertyChanging("Data", value)) { _Data = value; OnPropertyChanged("Data"); } } }
 
-        private DateTime _CompileTime;
-        /// <summary>编译时间</summary>
-        [DisplayName("编译时间")]
-        [Description("编译时间")]
-        [DataObjectField(false, false, true, 0)]
-        [BindColumn("CompileTime", "编译时间", "")]
-        public DateTime CompileTime { get => _CompileTime; set { if (OnPropertyChanging("CompileTime", value)) { _CompileTime = value; OnPropertyChanged("CompileTime"); } } }
-
         private String _Creator;
         /// <summary>创建者。服务端节点</summary>
         [DisplayName("创建者")]
@@ -170,7 +162,6 @@ namespace Stardust.Data.Nodes
                     case "LocalTime": return _LocalTime;
                     case "Uptime": return _Uptime;
                     case "Data": return _Data;
-                    case "CompileTime": return _CompileTime;
                     case "Creator": return _Creator;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -193,7 +184,6 @@ namespace Stardust.Data.Nodes
                     case "LocalTime": _LocalTime = value.ToDateTime(); break;
                     case "Uptime": _Uptime = value.ToInt(); break;
                     case "Data": _Data = Convert.ToString(value); break;
-                    case "CompileTime": _CompileTime = value.ToDateTime(); break;
                     case "Creator": _Creator = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -242,9 +232,6 @@ namespace Stardust.Data.Nodes
 
             /// <summary>数据</summary>
             public static readonly Field Data = FindByName("Data");
-
-            /// <summary>编译时间</summary>
-            public static readonly Field CompileTime = FindByName("CompileTime");
 
             /// <summary>创建者。服务端节点</summary>
             public static readonly Field Creator = FindByName("Creator");
@@ -296,9 +283,6 @@ namespace Stardust.Data.Nodes
 
             /// <summary>数据</summary>
             public const String Data = "Data";
-
-            /// <summary>编译时间</summary>
-            public const String CompileTime = "CompileTime";
 
             /// <summary>创建者。服务端节点</summary>
             public const String Creator = "Creator";

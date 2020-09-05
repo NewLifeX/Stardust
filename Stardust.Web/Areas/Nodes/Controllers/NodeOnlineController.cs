@@ -8,7 +8,7 @@ using Stardust.Data.Nodes;
 namespace Stardust.Web.Areas.Nodes.Controllers
 {
     [NodesArea]
-    public class NodeOnlineController : EntityController<NodeOnline>
+    public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
     {
         static NodeOnlineController() => MenuOrder = 70;
 

@@ -115,7 +115,6 @@
       <Column Name="LocalTime" DataType="DateTime" Description="本地时间" />
       <Column Name="Uptime" DataType="Int32" Description="开机时间。单位ms" />
       <Column Name="Data" DataType="String" Length="-1" Description="数据" />
-      <Column Name="CompileTime" DataType="DateTime" Description="编译时间" />
       <Column Name="Creator" DataType="String" Description="创建者。服务端节点" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />

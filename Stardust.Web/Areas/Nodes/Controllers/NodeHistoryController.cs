@@ -9,7 +9,7 @@ using XCode;
 namespace Stardust.Web.Areas.Nodes.Controllers
 {
     [NodesArea]
-    public class NodeHistoryController : EntityController<NodeHistory>
+    public class NodeHistoryController : ReadOnlyEntityController<NodeHistory>
     {
         static NodeHistoryController() => MenuOrder = 60;
 

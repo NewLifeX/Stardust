@@ -17,7 +17,7 @@ using static Stardust.Data.Nodes.NodeStat;
 namespace Stardust.Web.Areas.Nodes.Controllers
 {
     [NodesArea]
-    public class NodeStatController : EntityController<NodeStat>
+    public class NodeStatController : ReadOnlyEntityController<NodeStat>
     {
         static NodeStatController()
         {
