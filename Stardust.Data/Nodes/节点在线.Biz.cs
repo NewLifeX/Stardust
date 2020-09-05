@@ -141,6 +141,10 @@ namespace Stardust.Data.Nodes
             return list;
         }
 
+        /// <summary>更新并保存在线状态</summary>
+        /// <param name="di"></param>
+        /// <param name="pi"></param>
+        /// <param name="token"></param>
         public void Save(NodeInfo di, PingInfo pi, String token)
         {
             var olt = this;
@@ -167,6 +171,8 @@ namespace Stardust.Data.Nodes
                 olt.SaveAsync();
         }
 
+        /// <summary>填充节点信息</summary>
+        /// <param name="di"></param>
         public void Fill(NodeInfo di)
         {
             var online = this;
@@ -207,6 +213,7 @@ namespace Stardust.Data.Nodes
             var data = new NodeData
             {
                 NodeID = olt.NodeID,
+                Name = olt.Name,
                 AvailableMemory = olt.AvailableMemory,
                 AvailableFreeSpace = olt.AvailableFreeSpace,
                 CpuRate = inf.CpuRate,
@@ -214,7 +221,8 @@ namespace Stardust.Data.Nodes
                 Uptime = inf.Uptime,
                 Delay = inf.Delay,
                 LocalTime = dt,
-                Offset = olt.Offset
+                Offset = olt.Offset,
+                Creator = Environment.MachineName,
             };
 
             data.SaveAsync();
