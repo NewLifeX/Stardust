@@ -31,7 +31,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
 
             if (nodeId > 0)
             {
-                // 最近24小时
+                // 最近10小时
                 if (p.PageSize == 20 && nodeId > 0) p.PageSize = 600;
 
                 PageSetting.EnableNavbar = false;
