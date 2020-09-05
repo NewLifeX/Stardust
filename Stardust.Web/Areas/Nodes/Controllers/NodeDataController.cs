@@ -11,7 +11,12 @@ namespace Stardust.Web.Areas.Nodes.Controllers
     [NodesArea]
     public class NodeDataController : EntityController<NodeData>
     {
-        static NodeDataController() => MenuOrder = 60;
+        static NodeDataController()
+        {
+            MenuOrder = 60;
+
+            ListFields.RemoveField("Id");
+        }
 
         protected override IEnumerable<NodeData> Search(Pager p)
         {

@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
+using NewLife.Data;
 using NewLife.Web;
 using Stardust.Data.Nodes;
+using XCode;
+using static Stardust.Data.Nodes.Node;
 
 namespace Stardust.Web.Areas.Nodes.Controllers
 {
@@ -33,6 +37,28 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             var end = p["dtEnd"].ToDateTime();
 
             return Node.Search(provinceId, cityId, version, enable, start, end, p["Q"], p);
+        }
+
+        /// <summary>搜索</summary>
+        /// <param name="provinceId"></param>
+        /// <param name="cityId"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public ActionResult NodeSearch(Int32 provinceId = -1, Int32 cityId = -1, String key = null)
+        {
+            var page = new PageParameter { PageSize = 20 };
+
+            // 默认排序
+            if (page.Sort.IsNullOrEmpty()) page.Sort = _.Name;
+
+            var list = Node.Search(provinceId, cityId, null, null, DateTime.MinValue, DateTime.MinValue, key, page);
+
+            return Json(0, null, list.Select(e => new
+            {
+                e.ID,
+                e.Code,
+                e.Name,
+            }).ToArray());
         }
 
         public ActionResult Trace(Int32 id)

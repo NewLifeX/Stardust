@@ -1,0 +1,10 @@
+﻿@using Stardust.Data.Nodes
+@using NewLife;
+@using NewLife.Web;
+@using XCode;
+@{
+    var fact = ViewBag.Factory as IEntityFactory;
+    var page = ViewBag.Page as Pager;
+}
+@await Html.PartialAsync("_SelectNode", "nodeId")
+@await Html.PartialAsync("_DateRange")

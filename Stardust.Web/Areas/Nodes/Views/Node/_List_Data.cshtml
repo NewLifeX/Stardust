@@ -34,6 +34,7 @@
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Logins"))">登录次数</a></th>
             <th class="text-center" title="在线时长。单位秒"><a href="@Html.Raw(page.GetSortUrl("OnlineTime"))">在线时长</a></th>
             <th class="text-center">历史</th>
+            <th class="text-center">数据</th>
             <th class="text-center">跟踪</th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("UpdateTime"))">更新时间</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("UpdateIP"))">更新地址</a></th>
@@ -68,6 +69,7 @@
                 <td class="text-right">@entity.Logins.ToString("n0")</td>
                 <td class="text-right">@onlineTime</td>
                 <td><a href="NodeHistory?nodeId=@entity.ID">历史</a></td>
+                <td><a href="NodeData?nodeId=@entity.ID">数据</a></td>
                 <td><a href="Node/Trace/@entity.ID">跟踪</a></td>
                 <td class="text-center">@entity.UpdateTime.ToFullString("")</td>
                 <td class="text-center" title="@entity.UpdateIP.IPToAddress()">@entity.UpdateIP</td>

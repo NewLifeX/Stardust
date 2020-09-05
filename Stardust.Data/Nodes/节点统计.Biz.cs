@@ -87,7 +87,7 @@ namespace Stardust.Data.Nodes
 
         /// <summary>省份名</summary>
         [Map(__.AreaID)]
-        public String ProvinceName => Province + "";
+        public String ProvinceName => Province?.Name;
         #endregion
 
         #region 扩展查询

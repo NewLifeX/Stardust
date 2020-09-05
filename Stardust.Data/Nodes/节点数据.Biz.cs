@@ -38,52 +38,6 @@ namespace Stardust.Data.Nodes
             //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
             //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
         }
-
-        ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
-        //[EditorBrowsable(EditorBrowsableState.Never)]
-        //protected override void InitData()
-        //{
-        //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
-        //    if (Meta.Session.Count > 0) return;
-
-        //    if (XTrace.Debug) XTrace.WriteLine("开始初始化NodeData[节点数据]数据……");
-
-        //    var entity = new NodeData();
-        //    entity.ID = 0;
-        //    entity.NodeID = 0;
-        //    entity.Name = "abc";
-        //    entity.Memory = 0;
-        //    entity.AvailableMemory = 0;
-        //    entity.AvailableFreeSpace = 0;
-        //    entity.CpuRate = 0.0;
-        //    entity.Temperature = 0.0;
-        //    entity.Delay = 0;
-        //    entity.Offset = 0;
-        //    entity.LocalTime = DateTime.Now;
-        //    entity.Uptime = 0;
-        //    entity.Data = "abc";
-        //    entity.CompileTime = DateTime.Now;
-        //    entity.Creator = "abc";
-        //    entity.CreateTime = DateTime.Now;
-        //    entity.CreateIP = "abc";
-        //    entity.Insert();
-
-        //    if (XTrace.Debug) XTrace.WriteLine("完成初始化NodeData[节点数据]数据！");
-        //}
-
-        ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
-        ///// <returns></returns>
-        //public override Int32 Insert()
-        //{
-        //    return base.Insert();
-        //}
-
-        ///// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>
-        ///// <returns></returns>
-        //protected override Int32 OnDelete()
-        //{
-        //    return base.OnDelete();
-        //}
         #endregion
 
         #region 扩展属性
@@ -98,6 +52,10 @@ namespace Stardust.Data.Nodes
         [DisplayName("节点")]
         [Map(nameof(NodeID), typeof(Node), "ID")]
         public String NodeName => Node?.Name;
+
+        /// <summary>开机时间</summary>
+        [Map(nameof(Uptime))]
+        public String UptimeName => TimeSpan.FromMilliseconds(Uptime).ToString().TrimEnd("0000").TrimStart("00:");
         #endregion
 
         #region 扩展查询
