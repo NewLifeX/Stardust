@@ -11,7 +11,12 @@ namespace Stardust.Web.Areas.Nodes.Controllers
     [NodesArea]
     public class NodeHistoryController : ReadOnlyEntityController<NodeHistory>
     {
-        static NodeHistoryController() => MenuOrder = 60;
+        static NodeHistoryController()
+        {
+            MenuOrder = 60;
+
+            ListFields.RemoveField("Id");
+        }
 
         protected override IEnumerable<NodeHistory> Search(Pager p)
         {
