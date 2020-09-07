@@ -24,7 +24,15 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             ListFields.RemoveField("ID");
 
             //// 修正统计日期
-            //Task.Run(() => TraceData.FixStatDate(DateTime.Today));
+            //Task.Run(() =>
+            //{
+            //    //TraceData.FixStatDate(DateTime.Today);
+
+            //    for (var dt = new DateTime(2020, 9, 1); dt <= DateTime.Today; dt = dt.AddDays(1))
+            //    {
+            //        TraceData.FixStatDate(dt);
+            //    }
+            //});
         }
 
         protected override IEnumerable<TraceData> Search(Pager p)

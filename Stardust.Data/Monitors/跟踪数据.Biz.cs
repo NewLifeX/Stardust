@@ -103,7 +103,7 @@ namespace Stardust.Data.Monitors
 
             if (appId > 0)
             {
-                if (start == end)
+                if (start.Year > 2000 && start == end)
                     exp &= _.StatDate == start;
                 else
                     exp &= _.StatDate.Between(start, end);
