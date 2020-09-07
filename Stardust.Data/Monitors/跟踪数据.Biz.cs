@@ -102,7 +102,12 @@ namespace Stardust.Data.Monitors
             if (!key.IsNullOrEmpty()) exp &= _.ClientId == key | _.Name == key;
 
             if (appId > 0)
-                exp &= _.StatDate.Between(start, end);
+            {
+                if (start == end)
+                    exp &= _.StatDate == start;
+                else
+                    exp &= _.StatDate.Between(start, end);
+            }
             else
                 exp &= _.Id.Between(start, end, Meta.Factory.FlowId);
 
@@ -143,6 +148,14 @@ namespace Stardust.Data.Monitors
             if (appIds != null && appIds.Length > 0) where &= _.AppId.In(appIds);
 
             return FindAll(where.GroupBy(_.AppId), null, selects);
+        }
+
+        /// <summary>修正当天数据</summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public static Int32 FixStatDate(DateTime date)
+        {
+            return Update(_.StatDate == date, _.Id.Between(date, date, Meta.Factory.FlowId));
         }
         #endregion
 

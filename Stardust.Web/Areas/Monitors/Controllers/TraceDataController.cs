@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
@@ -16,7 +17,15 @@ namespace Stardust.Web.Areas.Monitors.Controllers
     [MonitorsArea]
     public class TraceDataController : EntityController<TraceData>
     {
-        static TraceDataController() => MenuOrder = 60;
+        static TraceDataController()
+        {
+            MenuOrder = 60;
+
+            ListFields.RemoveField("ID");
+
+            //// 修正统计日期
+            //Task.Run(() => TraceData.FixStatDate(DateTime.Today));
+        }
 
         protected override IEnumerable<TraceData> Search(Pager p)
         {

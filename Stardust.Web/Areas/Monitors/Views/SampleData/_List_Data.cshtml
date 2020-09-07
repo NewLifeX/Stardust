@@ -20,7 +20,6 @@
             {
                 <th class="text-center" style="width:10px;"><input type="checkbox" id="chkAll" title="全选" /></th>
             }
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ID"))">编号</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AppId"))">应用</a></th>
             <th class="text-center" title="操作名。接口名或埋点名"><a href="@Html.Raw(page.GetSortUrl("Name"))">操作名</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Success"))">正常</a></th>
@@ -45,7 +44,6 @@
                 {
                     <td class="text-center"><input type="checkbox" name="keys" value="@entity.Id" /></td>
                 }
-                <td class="text-center">@entity.Id</td>
                 <td class="text-center">@entity.AppName</td>
                 <td title="@entity.Tag">@entity.Name</td>
                 <td class="text-center">

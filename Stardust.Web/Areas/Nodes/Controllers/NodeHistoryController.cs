@@ -15,7 +15,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
         {
             MenuOrder = 60;
 
-            ListFields.RemoveField("Id");
+            ListFields.RemoveField("ID");
         }
 
         protected override IEnumerable<NodeHistory> Search(Pager p)

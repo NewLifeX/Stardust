@@ -12,7 +12,12 @@ namespace Stardust.Web.Areas.Monitors.Controllers
     [MonitorsArea]
     public class SampleDataController : EntityController<SampleData>
     {
-        static SampleDataController() => MenuOrder = 50;
+        static SampleDataController()
+        {
+            MenuOrder = 50;
+
+            ListFields.RemoveField("ID");
+        }
 
         protected override IEnumerable<SampleData> Search(Pager p)
         {
