@@ -14,7 +14,7 @@ namespace Stardust.Data.Monitors
     [Serializable]
     [DataObject]
     [Description("跟踪数据。应用定时上报采样得到的埋点跟踪原始数据")]
-    [BindIndex("IX_TraceData_AppId_Name_StartTime", false, "AppId,Name,StartTime")]
+    [BindIndex("IX_TraceData_StatDate_AppId_Name_StartTime", false, "StatDate,AppId,Name,StartTime")]
     [BindTable("TraceData", Description = "跟踪数据。应用定时上报采样得到的埋点跟踪原始数据", ConnName = "MonitorLog", DbType = DatabaseType.None)]
     public partial class TraceData
     {
@@ -26,6 +26,14 @@ namespace Stardust.Data.Monitors
         [DataObjectField(true, false, false, 0)]
         [BindColumn("Id", "编号", "")]
         public Int64 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
+
+        private DateTime _StatDate;
+        /// <summary>统计日期</summary>
+        [DisplayName("统计日期")]
+        [Description("统计日期")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("StatDate", "统计日期", "")]
+        public DateTime StatDate { get => _StatDate; set { if (OnPropertyChanging("StatDate", value)) { _StatDate = value; OnPropertyChanged("StatDate"); } } }
 
         private Int32 _AppId;
         /// <summary>应用</summary>
@@ -159,6 +167,7 @@ namespace Stardust.Data.Monitors
                 switch (name)
                 {
                     case "Id": return _Id;
+                    case "StatDate": return _StatDate;
                     case "AppId": return _AppId;
                     case "ClientId": return _ClientId;
                     case "Name": return _Name;
@@ -182,6 +191,7 @@ namespace Stardust.Data.Monitors
                 switch (name)
                 {
                     case "Id": _Id = value.ToLong(); break;
+                    case "StatDate": _StatDate = value.ToDateTime(); break;
                     case "AppId": _AppId = value.ToInt(); break;
                     case "ClientId": _ClientId = Convert.ToString(value); break;
                     case "Name": _Name = Convert.ToString(value); break;
@@ -209,6 +219,9 @@ namespace Stardust.Data.Monitors
         {
             /// <summary>编号</summary>
             public static readonly Field Id = FindByName("Id");
+
+            /// <summary>统计日期</summary>
+            public static readonly Field StatDate = FindByName("StatDate");
 
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
@@ -263,6 +276,9 @@ namespace Stardust.Data.Monitors
         {
             /// <summary>编号</summary>
             public const String Id = "Id";
+
+            /// <summary>统计日期</summary>
+            public const String StatDate = "StatDate";
 
             /// <summary>应用</summary>
             public const String AppId = "AppId";

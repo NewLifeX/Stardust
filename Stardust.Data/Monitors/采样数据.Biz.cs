@@ -120,15 +120,15 @@ namespace Stardust.Data.Monitors
             return FindAll(exp, page);
         }
 
-        // Select Count(ID) as ID,TraceId From SampleData Where CreateTime>'2020-01-24 00:00:00' Group By TraceId Order By ID Desc limit 20
-        static readonly FieldCache<SampleData> _TraceIdCache = new FieldCache<SampleData>(nameof(TraceId))
-        {
-            //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-        };
+        //// Select Count(ID) as ID,TraceId From SampleData Where CreateTime>'2020-01-24 00:00:00' Group By TraceId Order By ID Desc limit 20
+        //static readonly FieldCache<SampleData> _TraceIdCache = new FieldCache<SampleData>(nameof(TraceId))
+        //{
+        //    //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
+        //};
 
-        /// <summary>获取跟踪标识列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-        /// <returns></returns>
-        public static IDictionary<String, String> GetTraceIdList() => _TraceIdCache.FindAllName();
+        ///// <summary>获取跟踪标识列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
+        ///// <returns></returns>
+        //public static IDictionary<String, String> GetTraceIdList() => _TraceIdCache.FindAllName();
         #endregion
 
         #region 业务操作

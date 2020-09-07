@@ -28,6 +28,7 @@
   <Table Name="TraceData" Description="跟踪数据。应用定时上报采样得到的埋点跟踪原始数据" ConnName="MonitorLog">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+      <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@proccessid" />
       <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
@@ -45,7 +46,7 @@
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
     </Columns>
     <Indexes>
-      <Index Columns="AppId,Name,StartTime" />
+      <Index Columns="StatDate,AppId,Name,StartTime" />
     </Indexes>
   </Table>
   <Table Name="SampleData" Description="采样数据。具体调用或异常详情" ConnName="MonitorLog">

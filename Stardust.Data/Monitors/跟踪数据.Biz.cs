@@ -31,6 +31,7 @@ namespace Stardust.Data.Monitors
             // 如果没有脏数据，则不需要进行任何处理
             if (!HasDirty) return;
 
+            StatDate = StartTime.ToDateTime().ToLocalTime().Date;
             Cost = Total == 0 ? 0 : (Int32)(TotalCost / Total);
         }
         #endregion
@@ -101,12 +102,9 @@ namespace Stardust.Data.Monitors
             if (!key.IsNullOrEmpty()) exp &= _.ClientId == key | _.Name == key;
 
             if (appId > 0)
-            {
-                if (start.Year > 2000) exp &= _.StartTime >= start.ToUniversalTime().ToLong();
-                if (end.Year > 2000) exp &= _.StartTime < end.AddDays(1).ToUniversalTime().ToLong();
-            }
+                exp &= _.StatDate.Between(start, end);
             else
-                exp &= _.CreateTime.Between(start, end);
+                exp &= _.Id.Between(start, end, Meta.Factory.FlowId);
 
             return FindAll(exp, page);
         }
@@ -128,7 +126,7 @@ namespace Stardust.Data.Monitors
         public static IList<TraceData> SearchGroupAppAndName(DateTime date, Int32[] appIds)
         {
             var selects = _.Total.Sum() & _.Errors.Sum() & _.TotalCost.Sum() & _.MaxCost.Max() & _.MinCost.Min() & _.AppId & _.Name;
-            var where = _.StartTime >= date.ToUniversalTime().ToLong() & _.StartTime < date.AddDays(1).ToUniversalTime().ToLong();
+            var where = new WhereExpression() & _.StatDate == date;
             if (appIds != null && appIds.Length > 0) where &= _.AppId.In(appIds);
 
             return FindAll(where.GroupBy(_.AppId, _.Name), null, selects);
@@ -141,7 +139,7 @@ namespace Stardust.Data.Monitors
         public static IList<TraceData> SearchGroupApp(DateTime date, Int32[] appIds)
         {
             var selects = _.Total.Sum() & _.Errors.Sum() & _.TotalCost.Sum() & _.MaxCost.Max() & _.MinCost.Min() & _.AppId;
-            var where = _.StartTime >= date.ToUniversalTime().ToLong() & _.StartTime < date.AddDays(1).ToUniversalTime().ToLong();
+            var where = new WhereExpression() & _.StatDate == date;
             if (appIds != null && appIds.Length > 0) where &= _.AppId.In(appIds);
 
             return FindAll(where.GroupBy(_.AppId), null, selects);

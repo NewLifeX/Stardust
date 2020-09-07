@@ -34,7 +34,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
             var list = TraceData.Search(appId, name, start, end, p["Q"], p);
 
-            if (list.Count > 0 && appId > 0)
+            if (list.Count > 0 && appId > 0 && !name.IsNullOrEmpty())
             {
                 //var hasDate = start.Year > 2000 || end.Year > 2000;
                 // 绘制日期曲线图
