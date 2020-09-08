@@ -46,17 +46,14 @@ namespace Stardust.Server
             var appStatService = new AppDayStatService();
             services.AddSingleton<IAppDayStatService>(appStatService);
 
-            services.AddTransient<ISpanBuilder, DefaultSpanBuilder>();
-            services.AddTransient<ISpan, DefaultSpan>();
-
             services.AddHttpClient();
 
             services.AddControllers()
                 .AddJsonOptions(options =>
                 {
                     options.JsonSerializerOptions.Converters.Add(new DateTimeConverter());
-                    //options.JsonSerializerOptions.Converters.Add(new JsonConverterForBuilder());
-                    //options.JsonSerializerOptions.Converters.Add(new JsonConverterForSpan());
+                    options.JsonSerializerOptions.Converters.Add(new JsonConverter<ISpanBuilder, DefaultSpanBuilder>());
+                    options.JsonSerializerOptions.Converters.Add(new JsonConverter<ISpan, DefaultSpan>());
                     options.JsonSerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
                 });
         }

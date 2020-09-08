@@ -53,10 +53,13 @@
 
   <ItemGroup>
     <Compile Remove="Monitors\AspNetCoreDiagnosticListener.cs" />
+    <Compile Remove="Monitors\MyBuilder.cs" />
+    <Compile Remove="Monitors\MySpan.cs" />
+    <Compile Remove="Monitors\MyTraceModel.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="8.10.2020.907-beta" />
+    <PackageReference Include="NewLife.Core" Version="8.10.2020.908-beta" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' != 'net40'">
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.7.1" />

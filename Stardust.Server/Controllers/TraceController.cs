@@ -30,7 +30,7 @@ namespace Stardust.Server.Controllers
 
         [ApiFilter]
         [HttpPost(nameof(Report))]
-        public TraceResponse Report([FromBody] MyTraceModel model, String token)
+        public TraceResponse Report([FromBody] TraceModel model, String token)
         {
             var builders = model?.Builders.Cast<ISpanBuilder>().ToArray();
             //var builders = new ISpanBuilder[0];
