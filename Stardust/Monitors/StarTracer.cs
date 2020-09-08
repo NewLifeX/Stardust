@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using NewLife;
 using NewLife.Common;
 using NewLife.Log;
+using NewLife.Reflection;
 using NewLife.Remoting;
 using Stardust.Models;
 
@@ -55,7 +57,8 @@ namespace Stardust.Monitors
 
             if (set.Debug) Log = XTrace.Log;
 
-            ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}";
+            var asm = AssemblyX.Entry;
+            ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}@{asm.Version}";
         }
 
         /// <summary>指定服务端地址来实例化跟踪器</summary>
@@ -117,7 +120,6 @@ namespace Stardust.Monitors
                 AppId = AppId,
                 AppName = AppName,
                 ClientId = ClientId,
-                //AccessToken = AppSecret,
 
                 Builders = builders
             };
