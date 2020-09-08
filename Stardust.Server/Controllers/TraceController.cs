@@ -111,7 +111,7 @@ namespace Stardust.Server.Controllers
             foreach (var item in builders)
             {
                 // 剔除指定项
-                if (excludes != null && excludes.Contains(item.Name)) continue;
+                if (excludes != null && excludes.Any(e => e.IsMatch(item.Name))) continue;
                 if (item.Name.EndsWithIgnoreCase("/Trace/Report")) continue;
 
                 var td = TraceData.Create(item);
