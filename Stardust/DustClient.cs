@@ -42,7 +42,7 @@ namespace Stardust
             {
                 var u = new Uri(uri);
 
-                Servers = new[] { "{2}://{0}:{1}".F(u.Host, u.Port, u.Scheme) };
+                Servers = new[] { $"{u.Scheme}://{u.Host}:{u.Port}" };
 
                 var us = u.UserInfo.Split(":");
                 if (us.Length > 0) UserName = us[0];
