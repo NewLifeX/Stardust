@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
@@ -43,17 +44,14 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            //// 具体查看某接口指定时间段数据时，才打开统计
-            //if (appId > 0 && !name.IsNullOrEmpty() && start.Year > 2000 && end.Year > 2000)
-            //    p.RetrieveState = true;
-
-            if (p.Sort.IsNullOrEmpty()) p.OrderBy = TraceData._.Id.Desc();
+            if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.Id.Desc();
 
             var list = TraceData.Search(appId, name, start, end, p["Q"], p);
 
             if (list.Count > 0 && appId > 0 && !name.IsNullOrEmpty())
             {
-                //var hasDate = start.Year > 2000 || end.Year > 2000;
+                var list2 = list.OrderBy(e => e.Id).ToList();
+
                 // 绘制日期曲线图
                 var app = AppTracer.FindByID(appId);
                 if (appId >= 0)
@@ -63,10 +61,10 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                         Title = new ChartTitle { Text = "调用次数" },
                         Height = 400,
                     };
-                    chart.SetX(list, _.StartTime, e => e.StartTime.ToDateTime().ToLocalTime().ToString("HH:mm:ss"));
+                    chart.SetX(list2, _.StartTime, e => e.StartTime.ToDateTime().ToLocalTime().ToString("HH:mm:ss"));
                     chart.SetY("次数");
-                    chart.AddLine(list, _.Total, null, true);
-                    chart.Add(list, _.Errors);
+                    chart.AddLine(list2, _.Total, null, true);
+                    chart.Add(list2, _.Errors);
                     chart.SetTooltip();
                     ViewBag.Charts = new[] { chart };
                 }
@@ -77,11 +75,11 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                         Title = new ChartTitle { Text = "耗时" },
                         Height = 400,
                     };
-                    chart.SetX(list, _.StartTime, e => e.StartTime.ToDateTime().ToLocalTime().ToString("HH:mm:ss"));
+                    chart.SetX(list2, _.StartTime, e => e.StartTime.ToDateTime().ToLocalTime().ToString("HH:mm:ss"));
                     chart.SetY("耗时");
-                    chart.AddLine(list, _.Cost, null, true);
-                    chart.Add(list, _.MaxCost);
-                    chart.Add(list, _.MinCost);
+                    chart.AddLine(list2, _.Cost, null, true);
+                    chart.Add(list2, _.MaxCost);
+                    chart.Add(list2, _.MinCost);
                     chart.SetTooltip();
                     ViewBag.Charts2 = new[] { chart };
                 }
