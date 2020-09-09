@@ -44,6 +44,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
+            if (appId > 0 && p.PageSize == 20) p.PageSize = 100;
             if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.Id.Desc();
 
             var list = TraceData.Search(appId, name, start, end, p["Q"], p);

@@ -10,12 +10,12 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Monitors
 {
-    /// <summary>应用跟踪器。负责跟踪的应用管理</summary>
+    /// <summary>应用跟踪器。负责跟踪的应用管理和参数设置</summary>
     [Serializable]
     [DataObject]
-    [Description("应用跟踪器。负责跟踪的应用管理")]
+    [Description("应用跟踪器。负责跟踪的应用管理和参数设置")]
     [BindIndex("IU_AppTracer_Name", true, "Name")]
-    [BindTable("AppTracer", Description = "应用跟踪器。负责跟踪的应用管理", ConnName = "Monitor", DbType = DatabaseType.None)]
+    [BindTable("AppTracer", Description = "应用跟踪器。负责跟踪的应用管理和参数设置", ConnName = "Monitor", DbType = DatabaseType.None)]
     public partial class AppTracer
     {
         #region 属性
@@ -84,11 +84,11 @@ namespace Stardust.Data.Monitors
         public Int32 MaxErrors { get => _MaxErrors; set { if (OnPropertyChanging("MaxErrors", value)) { _MaxErrors = value; OnPropertyChanged("MaxErrors"); } } }
 
         private String _Excludes;
-        /// <summary>排除项。要排除的操作名</summary>
+        /// <summary>排除项。要排除的操作名，支持*模糊匹配</summary>
         [DisplayName("排除项")]
-        [Description("排除项。要排除的操作名")]
+        [Description("排除项。要排除的操作名，支持*模糊匹配")]
         [DataObjectField(false, false, true, 2000)]
-        [BindColumn("Excludes", "排除项。要排除的操作名", "")]
+        [BindColumn("Excludes", "排除项。要排除的操作名，支持*模糊匹配", "")]
         public String Excludes { get => _Excludes; set { if (OnPropertyChanging("Excludes", value)) { _Excludes = value; OnPropertyChanged("Excludes"); } } }
 
         private Int32 _Timeout;
@@ -251,7 +251,7 @@ namespace Stardust.Data.Monitors
             /// <summary>最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10</summary>
             public static readonly Field MaxErrors = FindByName("MaxErrors");
 
-            /// <summary>排除项。要排除的操作名</summary>
+            /// <summary>排除项。要排除的操作名，支持*模糊匹配</summary>
             public static readonly Field Excludes = FindByName("Excludes");
 
             /// <summary>超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒</summary>
@@ -311,7 +311,7 @@ namespace Stardust.Data.Monitors
             /// <summary>最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10</summary>
             public const String MaxErrors = "MaxErrors";
 
-            /// <summary>排除项。要排除的操作名</summary>
+            /// <summary>排除项。要排除的操作名，支持*模糊匹配</summary>
             public const String Excludes = "Excludes";
 
             /// <summary>超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒</summary>

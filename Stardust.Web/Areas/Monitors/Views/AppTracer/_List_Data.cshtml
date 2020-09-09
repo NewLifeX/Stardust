@@ -30,12 +30,7 @@
             <th class="text-center" title="最大正常采样数。采样周期内，最多只记录指定数量的正常事件，用于绘制依赖关系"><a href="@Html.Raw(page.GetSortUrl("MaxSamples"))">最大正常采样数</a></th>
             <th class="text-center" title="最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10"><a href="@Html.Raw(page.GetSortUrl("MaxErrors"))">最大异常采样数</a></th>
             <th class="text-center" title="超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒"><a href="@Html.Raw(page.GetSortUrl("Timeout"))">超时时间</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("CreateUser"))">创建者</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("CreateUserID"))">创建者</a></th>
-            <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("CreateTime"))">创建时间</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("CreateIP"))">创建地址</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("UpdateUser"))">更新者</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("UpdateUserID"))">更新者</a></th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("UpdateTime"))">更新时间</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("UpdateIP"))">更新地址</a></th>
             @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
@@ -54,7 +49,7 @@
                 }
                 <td class="text-center">@entity.ID</td>
                 <td class="text-center"><a href="AppDaystat?appId=@entity.ID">@entity.Name</a></td>
-                <td class="text-center"><a href="AppDaystat?appId=@entity.ID">@entity.DisplayName</a></td>
+                <td class="text-center"><a href="AppDaystat?appId=@entity.ID" title="该应用每日监控数据">@entity.DisplayName</a></td>
                 <td>@entity.Category</td>
                 <td class="text-center">
                     <i class="glyphicon glyphicon-@(entity.Enable ? "ok" : "remove")" style="color: @(entity.Enable ? "green" : "red");"></i>
@@ -63,12 +58,7 @@
                 <td class="text-right">@entity.MaxSamples.ToString("n0")</td>
                 <td class="text-right">@entity.MaxErrors.ToString("n0")</td>
                 <td class="text-right">@entity.Timeout.ToString("n0")</td>
-                <td>@entity.CreateUser</td>
-                <td class="text-center">@provider.FindByID(entity.CreateUserID)</td>
-                <td class="text-center">@entity.CreateTime.ToFullString("")</td>
-                <td class="text-center" title="@entity.CreateIP.IPToAddress()">@entity.CreateIP</td>
                 <td>@entity.UpdateUser</td>
-                <td class="text-center">@provider.FindByID(entity.UpdateUserID)</td>
                 <td class="text-center">@entity.UpdateTime.ToFullString("")</td>
                 <td class="text-center" title="@entity.UpdateIP.IPToAddress()">@entity.UpdateIP</td>
                 @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
