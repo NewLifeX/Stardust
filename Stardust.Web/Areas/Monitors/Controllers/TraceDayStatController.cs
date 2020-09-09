@@ -91,15 +91,33 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         public ActionResult Trace(Int32 id)
         {
             var st = TraceDayStat.FindByID(id);
-            if (st == null) throw new InvalidDataException("找不到采样数据");
+            if (st == null) throw new InvalidDataException("找不到统计数据");
 
             var ds = TraceData.Search(st.AppId, st.Name, st.StatDate, st.StatDate, null, new PageParameter { PageSize = 20 });
-            if (ds.Count == 0) throw new InvalidDataException("找不到采样数据");
+            if (ds.Count == 0) throw new InvalidDataException("找不到跟踪数据");
 
             var list = SampleData.FindAllByDataIds(ds.Select(e => e.Id).ToArray());
             if (list.Count == 0) throw new InvalidDataException("找不到采样数据");
 
             return RedirectToAction("Index", "SampleData", new { traceId = list[0].TraceId });
+        }
+
+        [EntityAuthorize(PermissionFlags.Update)]
+        public ActionResult Exclude(Int32 id)
+        {
+            var st = TraceDayStat.FindByID(id);
+            var app = st?.App;
+            if (app != null && !st.Name.IsNullOrEmpty())
+            {
+                app.AddExclude(st.Name);
+
+                app.Update();
+            }
+
+            var url = Request.Headers["Referer"].FirstOrDefault();
+            if (!url.IsNullOrEmpty()) return Redirect(url);
+
+            return RedirectToAction("Index");
         }
     }
 }

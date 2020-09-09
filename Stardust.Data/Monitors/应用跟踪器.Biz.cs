@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using NewLife;
 using NewLife.Data;
 using XCode;
@@ -123,6 +124,23 @@ namespace Stardust.Data.Monitors
         #endregion
 
         #region 业务操作
+        /// <summary>添加排除项</summary>
+        /// <param name="value"></param>
+        public void AddExclude(String value)
+        {
+            if (value.IsNullOrEmpty()) return;
+
+            var es = new List<String>();
+            var ss = Excludes?.Split(",");
+            if (ss != null) es.AddRange(ss);
+
+            if (!es.Contains(value))
+            {
+                es.Add(value);
+
+                Excludes = es.Distinct().Join();
+            }
+        }
         #endregion
     }
 }
