@@ -85,30 +85,40 @@
             }
             @foreach (var entity in Model)
             {
+                var msg = entity.Error ?? entity.Tag;
+
                 var ms = entity.EndTime - entity.StartTime;
                 var left = (Double)(entity.StartTime - min) / length;
                 if (left < 0) left = 0;
                 var w = (Double)ms / length;
+                if (w > 0.01) w -= 0.01;
+                var color = "lightgreen";
+                if (!entity.Success)
+                {
+                    color = "palevioletred";
+                }
+                else if (entity.Name.StartsWithIgnoreCase("db:"))
+                {
+                    color = "orange";
+                }
+                else if (entity.Name.StartsWithIgnoreCase("net:", "rpc:", "mqtt:", "biz:"))
+                {
+                    color = "mediumpurple";
+                }
                 <tr>
                     <td class="text-center">@entity.AppName</td>
                     <td title="@entity.Tag">@entity.Name</td>
-                    <td>
-                        <div style="float:left;width:@left.ToString("p")">&nbsp;</div>
-                        @if (!entity.Success)
+                    <td title="@msg">
+                        @if (left < 0.96)
                         {
-                            <div title="@entity.Error" style="background-color: palevioletred;float:left;width:@w.ToString("p")">@ms.ToString("n0")ms</div>
-                        }
-                        else if (entity.Name.StartsWithIgnoreCase("db:"))
-                        {
-                            <div title="@entity.Tag" style="background-color: orange;float:left;width:@w.ToString("p")">@ms.ToString("n0")ms</div>
-                        }
-                        else if (entity.Name.StartsWithIgnoreCase("net:", "rpc:", "mqtt:", "biz:"))
-                        {
-                            <div title="@entity.Tag" style="background-color: mediumpurple;float:left;width:@w.ToString("p")">@ms.ToString("n0")ms</div>
+                            <div style="float:left;width:@left.ToString("p")">&nbsp;</div>
+                            <div style="background-color: @color;float:left;width:@w.ToString("p")">@ms.ToString("n0")ms</div>
                         }
                         else
                         {
-                            <div title="@entity.Tag" style="background-color: lightgreen;float:left;width:@w.ToString("p")">@ms.ToString("n0")ms</div>
+                            <div style="float:left;width:@((left-0.04).ToString("p"))">&nbsp;</div>
+                            <div style="float:left;width:4%">@ms.ToString("n0")ms</div>
+                            <div style="background-color: @color;float:left;width:@w.ToString("p")">&nbsp;</div>
                         }
                     </td>
                 </tr>
