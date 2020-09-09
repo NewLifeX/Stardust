@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
@@ -27,11 +28,8 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             // 默认排序
             if (appId >= 0 && start.Year < 2000 && p.Sort.IsNullOrEmpty())
             {
-                start = DateTime.Today.AddDays(-30);
-                p["dtStart"] = start.ToString("yyyy-MM-dd");
-
                 p.Sort = __.StatDate;
-                p.Desc = false;
+                p.Desc = true;
                 p.PageSize = 100;
             }
 
@@ -39,8 +37,10 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
             var list = AppDayStat.Search(appId, start, end, p["Q"], p);
 
-            if (list.Count > 0)
+            if (list.Count > 0 && appId > 0)
             {
+                var list2 = list.OrderBy(e => e.StatDate).ToList();
+
                 // 绘制日期曲线图
                 var ar = AppTracer.FindByID(appId);
                 if (appId >= 0)
@@ -49,10 +49,10 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                     {
                         Height = 400,
                     };
-                    chart.SetX(list, _.StatDate, e => e.StatDate.ToString("MM-dd"));
+                    chart.SetX(list2, _.StatDate, e => e.StatDate.ToString("MM-dd"));
                     chart.SetY("调用次数");
-                    chart.AddLine(list, _.Total, null, true);
-                    chart.Add(list, _.Errors);
+                    chart.AddLine(list2, _.Total, null, true);
+                    chart.Add(list2, _.Errors);
                     chart.SetTooltip();
                     ViewBag.Charts = new[] { chart };
                 }
@@ -62,11 +62,11 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                     {
                         Height = 400,
                     };
-                    chart.SetX(list, _.StatDate, e => e.StatDate.ToString("MM-dd"));
+                    chart.SetX(list2, _.StatDate, e => e.StatDate.ToString("MM-dd"));
                     chart.SetY("耗时");
-                    chart.AddLine(list, _.Cost, null, true);
-                    chart.Add(list, _.MaxCost);
-                    chart.Add(list, _.MinCost);
+                    chart.AddLine(list2, _.Cost, null, true);
+                    chart.Add(list2, _.MaxCost);
+                    chart.Add(list2, _.MinCost);
                     chart.SetTooltip();
                     ViewBag.Charts2 = new[] { chart };
                 }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data.Monitors" ConnName="Monitor" Output="" BaseClass="Entity" xmlns="http://www.newlifex.com/Model2020.xsd">
-  <Table Name="AppTracer" Description="应用跟踪器。负责跟踪的应用管理">
+  <Table Name="AppTracer" Description="应用跟踪器。负责跟踪的应用管理和参数设置">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
@@ -25,7 +25,7 @@
       <Index Columns="Name" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="TraceData" Description="跟踪数据。应用定时上报采样得到的埋点跟踪原始数据" ConnName="MonitorLog">
+  <Table Name="TraceData" Description="跟踪数据。应用定时上报采样得到的埋点跟踪原始数据，应用端已完成初步统计，后端将再次向上汇总" ConnName="MonitorLog">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
@@ -49,7 +49,7 @@
       <Index Columns="StatDate,AppId,Name,StartTime" />
     </Indexes>
   </Table>
-  <Table Name="SampleData" Description="采样数据。具体调用或异常详情" ConnName="MonitorLog">
+  <Table Name="SampleData" Description="采样数据。具体调用或异常详情，每次跟踪统计携带少量样板，用于链路分析以及异常跟踪" ConnName="MonitorLog">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="DataId" DataType="Int64" Description="数据" />

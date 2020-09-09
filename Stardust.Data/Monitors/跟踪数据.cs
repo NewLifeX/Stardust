@@ -10,12 +10,12 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Monitors
 {
-    /// <summary>跟踪数据。应用定时上报采样得到的埋点跟踪原始数据</summary>
+    /// <summary>跟踪数据。应用定时上报采样得到的埋点跟踪原始数据，应用端已完成初步统计，后端将再次向上汇总</summary>
     [Serializable]
     [DataObject]
-    [Description("跟踪数据。应用定时上报采样得到的埋点跟踪原始数据")]
+    [Description("跟踪数据。应用定时上报采样得到的埋点跟踪原始数据，应用端已完成初步统计，后端将再次向上汇总")]
     [BindIndex("IX_TraceData_StatDate_AppId_Name_StartTime", false, "StatDate,AppId,Name,StartTime")]
-    [BindTable("TraceData", Description = "跟踪数据。应用定时上报采样得到的埋点跟踪原始数据", ConnName = "MonitorLog", DbType = DatabaseType.None)]
+    [BindTable("TraceData", Description = "跟踪数据。应用定时上报采样得到的埋点跟踪原始数据，应用端已完成初步统计，后端将再次向上汇总", ConnName = "MonitorLog", DbType = DatabaseType.None)]
     public partial class TraceData
     {
         #region 属性
