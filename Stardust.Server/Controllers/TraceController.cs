@@ -30,7 +30,7 @@ namespace Stardust.Server.Controllers
 
         [ApiFilter]
         [HttpPost(nameof(Report))]
-        public TraceResponse Report([FromBody] MyTraceModel model, String token)
+        public TraceResponse Report([FromBody] TraceModel model, String token)
         {
             var builders = model?.Builders.Cast<ISpanBuilder>().ToArray();
             //var builders = new ISpanBuilder[0];
@@ -83,7 +83,7 @@ namespace Stardust.Server.Controllers
             var ip = HttpContext.GetUserHost();
             if (ip.IsNullOrEmpty()) ip = ManageProvider.UserHost;
 
-            Task.Run(() => ProcessData(app, model.ClientId, ip, builders));
+            Task.Run(() => ProcessData(app, model, ip, builders));
 
             _stat.Add(app.ID);
             _appStat.Add(app.ID);
@@ -99,7 +99,7 @@ namespace Stardust.Server.Controllers
             };
         }
 
-        private void ProcessData(AppTracer app, String clientId, String ip, ISpanBuilder[] builders)
+        private void ProcessData(AppTracer app, TraceModel model, String ip, ISpanBuilder[] builders)
         {
             // 排除项
             var excludes = app.Excludes.Split(",", ";") ?? new String[0];
@@ -111,13 +111,13 @@ namespace Stardust.Server.Controllers
             foreach (var item in builders)
             {
                 // 剔除指定项
-                if (excludes != null && excludes.Contains(item.Name)) continue;
+                if (excludes != null && excludes.Any(e => e.IsMatch(item.Name))) continue;
                 if (item.Name.EndsWithIgnoreCase("/Trace/Report")) continue;
 
                 var td = TraceData.Create(item);
                 td.Id = flow.NewId();
                 td.AppId = app.ID;
-                td.ClientId = clientId ?? ip;
+                td.ClientId = model.ClientId ?? ip;
                 td.CreateIP = ip;
                 td.CreateTime = DateTime.Now;
 

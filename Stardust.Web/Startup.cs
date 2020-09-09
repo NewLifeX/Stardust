@@ -27,8 +27,8 @@ namespace Stardust.Web
                 // APM跟踪器
                 var tracer = new StarTracer(set.Server) { Log = XTrace.Log };
                 DefaultTracer.Instance = tracer;
-                //ApiHelper.Tracer = tracer;
-                //DAL.GlobalTracer = tracer;
+                ApiHelper.Tracer = tracer;
+                DAL.GlobalTracer = tracer;
                 TracerMiddleware.Tracer = tracer;
 
                 services.AddSingleton<ITracer>(tracer);
