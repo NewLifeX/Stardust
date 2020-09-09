@@ -139,9 +139,9 @@ namespace Stardust.Monitors
                     if (rs.Excludes != null) Excludes = rs.Excludes;
                 }
             }
-            catch (Exception ex)
+            catch /*(Exception ex)*/
             {
-                XTrace.WriteException(ex);
+                //XTrace.WriteException(ex);
                 //throw;
 
                 if (_fails.Count < MaxFails) _fails.Enqueue(model);
