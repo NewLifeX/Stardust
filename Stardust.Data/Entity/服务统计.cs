@@ -17,7 +17,7 @@ namespace Stardust.Data
     [BindIndex("IU_ServiceStat_ServiceID_Level_Time", true, "ServiceID,Level,Time")]
     [BindIndex("IX_ServiceStat_Level_Time", false, "Level,Time")]
     [BindTable("ServiceStat", Description = "服务统计。记录服务每天访问量", ConnName = "Stardust", DbType = DatabaseType.None)]
-    public partial class ServiceStat : IServiceStat
+    public partial class ServiceStat
     {
         #region 属性
         private Int32 _ID;
@@ -214,49 +214,6 @@ namespace Stardust.Data
             /// <summary>更新时间</summary>
             public const String UpdateTime = "UpdateTime";
         }
-        #endregion
-    }
-
-    /// <summary>服务统计。记录服务每天访问量接口</summary>
-    public partial interface IServiceStat
-    {
-        #region 属性
-        /// <summary>编号</summary>
-        Int32 ID { get; set; }
-
-        /// <summary>服务</summary>
-        Int32 ServiceID { get; set; }
-
-        /// <summary>层级</summary>
-        XCode.Statistics.StatLevels Level { get; set; }
-
-        /// <summary>日期</summary>
-        DateTime Time { get; set; }
-
-        /// <summary>次数</summary>
-        Int64 Count { get; set; }
-
-        /// <summary>耗时。平均值，微秒us</summary>
-        Int32 Cost { get; set; }
-
-        /// <summary>总耗时。微秒us</summary>
-        Int64 TotalCost { get; set; }
-
-        /// <summary>最后IP</summary>
-        String LastIP { get; set; }
-
-        /// <summary>创建时间</summary>
-        DateTime CreateTime { get; set; }
-
-        /// <summary>更新时间</summary>
-        DateTime UpdateTime { get; set; }
-        #endregion
-
-        #region 获取/设置 字段值
-        /// <summary>获取/设置 字段值</summary>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        Object this[String name] { get; set; }
         #endregion
     }
 }

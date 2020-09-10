@@ -16,7 +16,7 @@ namespace Stardust.Data
     [Description("应用服务。应用提供的服务")]
     [BindIndex("IU_AppService_AppID_ServiceID", true, "AppID,ServiceID")]
     [BindTable("AppService", Description = "应用服务。应用提供的服务", ConnName = "Stardust", DbType = DatabaseType.None)]
-    public partial class AppService : IAppService
+    public partial class AppService
     {
         #region 属性
         private Int32 _ID;
@@ -245,55 +245,6 @@ namespace Stardust.Data
             /// <summary>更新地址</summary>
             public const String UpdateIP = "UpdateIP";
         }
-        #endregion
-    }
-
-    /// <summary>应用服务。应用提供的服务接口</summary>
-    public partial interface IAppService
-    {
-        #region 属性
-        /// <summary>编号</summary>
-        Int32 ID { get; set; }
-
-        /// <summary>应用</summary>
-        Int32 AppID { get; set; }
-
-        /// <summary>服务</summary>
-        Int32 ServiceID { get; set; }
-
-        /// <summary>启用</summary>
-        Boolean Enable { get; set; }
-
-        /// <summary>创建者</summary>
-        String CreateUser { get; set; }
-
-        /// <summary>创建者</summary>
-        Int32 CreateUserID { get; set; }
-
-        /// <summary>创建时间</summary>
-        DateTime CreateTime { get; set; }
-
-        /// <summary>创建地址</summary>
-        String CreateIP { get; set; }
-
-        /// <summary>更新者</summary>
-        String UpdateUser { get; set; }
-
-        /// <summary>更新者</summary>
-        Int32 UpdateUserID { get; set; }
-
-        /// <summary>更新时间</summary>
-        DateTime UpdateTime { get; set; }
-
-        /// <summary>更新地址</summary>
-        String UpdateIP { get; set; }
-        #endregion
-
-        #region 获取/设置 字段值
-        /// <summary>获取/设置 字段值</summary>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        Object this[String name] { get; set; }
         #endregion
     }
 }

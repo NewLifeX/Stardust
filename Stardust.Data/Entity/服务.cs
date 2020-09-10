@@ -16,7 +16,7 @@ namespace Stardust.Data
     [Description("服务。服务提供者发布的服务")]
     [BindIndex("IU_Service_Name", true, "Name")]
     [BindTable("Service", Description = "服务。服务提供者发布的服务", ConnName = "Stardust", DbType = DatabaseType.None)]
-    public partial class Service : IService
+    public partial class Service
     {
         #region 属性
         private Int32 _ID;
@@ -325,70 +325,6 @@ namespace Stardust.Data
             /// <summary>更新地址</summary>
             public const String UpdateIP = "UpdateIP";
         }
-        #endregion
-    }
-
-    /// <summary>服务。服务提供者发布的服务接口</summary>
-    public partial interface IService
-    {
-        #region 属性
-        /// <summary>编号</summary>
-        Int32 ID { get; set; }
-
-        /// <summary>名称。调用Api的字符串：Data/GetSite中的Data</summary>
-        String Name { get; set; }
-
-        /// <summary>服务类型。带命名空间的全名</summary>
-        String ServiceType { get; set; }
-
-        /// <summary>显示名</summary>
-        String DisplayName { get; set; }
-
-        /// <summary>启用</summary>
-        Boolean Enable { get; set; }
-
-        /// <summary>匿名</summary>
-        Boolean Anonymous { get; set; }
-
-        /// <summary>功能列表</summary>
-        String Actions { get; set; }
-
-        /// <summary>应用。提供该服务的应用列表</summary>
-        String Apps { get; set; }
-
-        /// <summary>内容</summary>
-        String Remark { get; set; }
-
-        /// <summary>创建者</summary>
-        String CreateUser { get; set; }
-
-        /// <summary>创建者</summary>
-        Int32 CreateUserID { get; set; }
-
-        /// <summary>创建时间</summary>
-        DateTime CreateTime { get; set; }
-
-        /// <summary>创建地址</summary>
-        String CreateIP { get; set; }
-
-        /// <summary>更新者</summary>
-        String UpdateUser { get; set; }
-
-        /// <summary>更新者</summary>
-        Int32 UpdateUserID { get; set; }
-
-        /// <summary>更新时间</summary>
-        DateTime UpdateTime { get; set; }
-
-        /// <summary>更新地址</summary>
-        String UpdateIP { get; set; }
-        #endregion
-
-        #region 获取/设置 字段值
-        /// <summary>获取/设置 字段值</summary>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        Object this[String name] { get; set; }
         #endregion
     }
 }

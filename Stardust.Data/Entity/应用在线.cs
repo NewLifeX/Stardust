@@ -18,7 +18,7 @@ namespace Stardust.Data
     [BindIndex("IX_AppOnline_Client", false, "Client")]
     [BindIndex("IX_AppOnline_AppID", false, "AppID")]
     [BindTable("AppOnline", Description = "应用在线。一个应用有多个部署，每个在线会话对应一个服务地址", ConnName = "Stardust", DbType = DatabaseType.None)]
-    public partial class AppOnline : IAppOnline
+    public partial class AppOnline
     {
         #region 属性
         private Int32 _ID;
@@ -311,67 +311,6 @@ namespace Stardust.Data
             /// <summary>更新时间</summary>
             public const String UpdateTime = "UpdateTime";
         }
-        #endregion
-    }
-
-    /// <summary>应用在线。一个应用有多个部署，每个在线会话对应一个服务地址接口</summary>
-    public partial interface IAppOnline
-    {
-        #region 属性
-        /// <summary>编号</summary>
-        Int32 ID { get; set; }
-
-        /// <summary>应用</summary>
-        Int32 AppID { get; set; }
-
-        /// <summary>实例。IP加端口</summary>
-        String Session { get; set; }
-
-        /// <summary>客户端。IP加进程</summary>
-        String Client { get; set; }
-
-        /// <summary>名称。机器名称</summary>
-        String Name { get; set; }
-
-        /// <summary>版本。客户端</summary>
-        String Version { get; set; }
-
-        /// <summary>编译时间。客户端</summary>
-        DateTime Compile { get; set; }
-
-        /// <summary>服务端。客户端登录到哪个服务端，IP加端口</summary>
-        String Server { get; set; }
-
-        /// <summary>激活。只有激活的应用，才提供服务</summary>
-        Boolean Active { get; set; }
-
-        /// <summary>服务地址。tcp://ip:port</summary>
-        String Address { get; set; }
-
-        /// <summary>服务数。该应用提供的服务数</summary>
-        Int32 Services { get; set; }
-
-        /// <summary>功能列表</summary>
-        String Actions { get; set; }
-
-        /// <summary>客户端数。服务提供者当前服务的客户端数</summary>
-        Int32 Clients { get; set; }
-
-        /// <summary>创建时间</summary>
-        DateTime CreateTime { get; set; }
-
-        /// <summary>创建地址</summary>
-        String CreateIP { get; set; }
-
-        /// <summary>更新时间</summary>
-        DateTime UpdateTime { get; set; }
-        #endregion
-
-        #region 获取/设置 字段值
-        /// <summary>获取/设置 字段值</summary>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        Object this[String name] { get; set; }
         #endregion
     }
 }

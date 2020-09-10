@@ -17,7 +17,7 @@ namespace Stardust.Data
     [BindIndex("IU_IpStat_IP_Level_Time", true, "IP,Level,Time")]
     [BindIndex("IX_IpStat_Level_Time", false, "Level,Time")]
     [BindTable("IpStat", Description = "IP统计。记录IP地址每天访问量", ConnName = "Stardust", DbType = DatabaseType.None)]
-    public partial class IpStat : IIpStat
+    public partial class IpStat
     {
         #region 属性
         private Int32 _ID;
@@ -230,52 +230,6 @@ namespace Stardust.Data
             /// <summary>更新时间</summary>
             public const String UpdateTime = "UpdateTime";
         }
-        #endregion
-    }
-
-    /// <summary>IP统计。记录IP地址每天访问量接口</summary>
-    public partial interface IIpStat
-    {
-        #region 属性
-        /// <summary>编号</summary>
-        Int32 ID { get; set; }
-
-        /// <summary>IP地址</summary>
-        String Ip { get; set; }
-
-        /// <summary>层级</summary>
-        XCode.Statistics.StatLevels Level { get; set; }
-
-        /// <summary>日期</summary>
-        DateTime Time { get; set; }
-
-        /// <summary>次数</summary>
-        Int64 Count { get; set; }
-
-        /// <summary>耗时。平均值，微秒us</summary>
-        Int32 Cost { get; set; }
-
-        /// <summary>总耗时。微秒us</summary>
-        Int64 TotalCost { get; set; }
-
-        /// <summary>最后应用</summary>
-        Int32 LastAppID { get; set; }
-
-        /// <summary>最后服务</summary>
-        Int32 LastServiceID { get; set; }
-
-        /// <summary>创建时间</summary>
-        DateTime CreateTime { get; set; }
-
-        /// <summary>更新时间</summary>
-        DateTime UpdateTime { get; set; }
-        #endregion
-
-        #region 获取/设置 字段值
-        /// <summary>获取/设置 字段值</summary>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        Object this[String name] { get; set; }
         #endregion
     }
 }

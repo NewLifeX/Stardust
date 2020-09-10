@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using NewLife.Log;
@@ -21,15 +20,15 @@ namespace Stardust.Server
             CreateWebHostBuilder(args).Build().Run();
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(String[] args)
+        public static IHostBuilder CreateWebHostBuilder(String[] args)
         {
-            var set = Setting.Current;
-
-            var builder = WebHost.CreateDefaultBuilder(args);
-
-            if (set.Port > 0) builder.UseUrls($"http://*:{set.Port}");
-
-            builder.UseStartup<Startup>();
+            var builder = Host.CreateDefaultBuilder(args);
+            builder.ConfigureWebHostDefaults(webBuilder =>
+            {
+                var set = Setting.Current;
+                if (set.Port > 0) webBuilder.UseUrls($"http://*:{set.Port}");
+                webBuilder.UseStartup<Startup>();
+            });
 
             return builder;
         }

@@ -16,7 +16,7 @@ namespace Stardust.Data
     [Description("应用系统。服务提供者和消费者")]
     [BindIndex("IU_App_Name", true, "Name")]
     [BindTable("App", Description = "应用系统。服务提供者和消费者", ConnName = "Stardust", DbType = DatabaseType.None)]
-    public partial class App : IApp
+    public partial class App
     {
         #region 属性
         private Int32 _ID;
@@ -389,82 +389,6 @@ namespace Stardust.Data
             /// <summary>更新地址</summary>
             public const String UpdateIP = "UpdateIP";
         }
-        #endregion
-    }
-
-    /// <summary>应用系统。服务提供者和消费者接口</summary>
-    public partial interface IApp
-    {
-        #region 属性
-        /// <summary>编号</summary>
-        Int32 ID { get; set; }
-
-        /// <summary>名称</summary>
-        String Name { get; set; }
-
-        /// <summary>显示名</summary>
-        String DisplayName { get; set; }
-
-        /// <summary>密钥</summary>
-        String Secret { get; set; }
-
-        /// <summary>类别</summary>
-        String Category { get; set; }
-
-        /// <summary>启用</summary>
-        Boolean Enable { get; set; }
-
-        /// <summary>自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务</summary>
-        Boolean AutoActive { get; set; }
-
-        /// <summary>命名空间。限制该应用只能发布指定命名空间的服务，多个用逗号分隔</summary>
-        String Namespace { get; set; }
-
-        /// <summary>服务数。该应用提供的服务数</summary>
-        Int32 Services { get; set; }
-
-        /// <summary>功能数。该应用提供的功能数</summary>
-        Int32 Actions { get; set; }
-
-        /// <summary>最后登录</summary>
-        DateTime LastLogin { get; set; }
-
-        /// <summary>最后IP</summary>
-        String LastIP { get; set; }
-
-        /// <summary>内容</summary>
-        String Remark { get; set; }
-
-        /// <summary>创建者</summary>
-        String CreateUser { get; set; }
-
-        /// <summary>创建者</summary>
-        Int32 CreateUserID { get; set; }
-
-        /// <summary>创建时间</summary>
-        DateTime CreateTime { get; set; }
-
-        /// <summary>创建地址</summary>
-        String CreateIP { get; set; }
-
-        /// <summary>更新者</summary>
-        String UpdateUser { get; set; }
-
-        /// <summary>更新者</summary>
-        Int32 UpdateUserID { get; set; }
-
-        /// <summary>更新时间</summary>
-        DateTime UpdateTime { get; set; }
-
-        /// <summary>更新地址</summary>
-        String UpdateIP { get; set; }
-        #endregion
-
-        #region 获取/设置 字段值
-        /// <summary>获取/设置 字段值</summary>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        Object this[String name] { get; set; }
         #endregion
     }
 }

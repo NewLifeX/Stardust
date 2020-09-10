@@ -139,7 +139,7 @@ namespace Stardust.Server
         #endregion
 
         #region 在线状态
-        AppOnline CreateOnline(IApp app, INetSession ns, IDictionary<String, Object> ps)
+        AppOnline CreateOnline(App app, INetSession ns, IDictionary<String, Object> ps)
         {
             var ip = ns.Remote.Host;
 
@@ -174,7 +174,7 @@ namespace Stardust.Server
             return online;
         }
 
-        AppOnline GetOnline(IApp app, INetSession ns)
+        AppOnline GetOnline(App app, INetSession ns)
         {
             if (Session["AppOnline"] is AppOnline online) return online;
 

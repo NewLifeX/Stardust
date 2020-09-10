@@ -16,7 +16,7 @@ namespace Stardust.Data
     [Description("应用历史")]
     [BindIndex("IX_AppHistory_AppID", false, "AppID")]
     [BindTable("AppHistory", Description = "应用历史", ConnName = "Stardust", DbType = DatabaseType.None)]
-    public partial class AppHistory : IAppHistory
+    public partial class AppHistory
     {
         #region 属性
         private Int32 _ID;
@@ -213,49 +213,6 @@ namespace Stardust.Data
             /// <summary>创建地址</summary>
             public const String CreateIP = "CreateIP";
         }
-        #endregion
-    }
-
-    /// <summary>应用历史接口</summary>
-    public partial interface IAppHistory
-    {
-        #region 属性
-        /// <summary>编号</summary>
-        Int32 ID { get; set; }
-
-        /// <summary>应用</summary>
-        Int32 AppID { get; set; }
-
-        /// <summary>版本</summary>
-        String Version { get; set; }
-
-        /// <summary>操作</summary>
-        String Action { get; set; }
-
-        /// <summary>成功</summary>
-        Boolean Success { get; set; }
-
-        /// <summary>内容</summary>
-        String Remark { get; set; }
-
-        /// <summary>创建者</summary>
-        String CreateUser { get; set; }
-
-        /// <summary>创建者</summary>
-        Int32 CreateUserID { get; set; }
-
-        /// <summary>创建时间</summary>
-        DateTime CreateTime { get; set; }
-
-        /// <summary>创建地址</summary>
-        String CreateIP { get; set; }
-        #endregion
-
-        #region 获取/设置 字段值
-        /// <summary>获取/设置 字段值</summary>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        Object this[String name] { get; set; }
         #endregion
     }
 }
