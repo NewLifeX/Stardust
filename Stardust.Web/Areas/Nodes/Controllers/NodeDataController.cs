@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
@@ -48,19 +49,24 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                 var node = Node.FindByID(nodeId);
                 if (nodeId >= 0 && node != null)
                 {
+                    var list2 = list.OrderBy(e => e.ID).ToList();
+
                     var chart = new ECharts
                     {
-                        Title = new ChartTitle { Text = node.Name + " @ " + list[0].LocalTime.ToFullString() },
+                        Title = new ChartTitle { Text = node.Name + " @ " + list2[0].LocalTime.ToFullString() },
                         Height = 400,
                     };
-                    chart.SetX(list, _.LocalTime, e => e.LocalTime.ToString("HH:mm"));
+                    chart.SetX(list2, _.LocalTime, e => e.LocalTime.ToString("HH:mm"));
                     chart.SetY("指标");
-                    chart.AddLine(list, _.CpuRate, e => (Int32)(e.CpuRate * 100), true);
-                    chart.Add(list, _.AvailableMemory, "line", e => node.Memory == 0 ? 0 : (e.AvailableMemory * 100 / node.Memory));
-                    chart.Add(list, _.AvailableFreeSpace, "line", e => node.TotalSize == 0 ? 0 : (e.AvailableFreeSpace * 100 / node.TotalSize));
-                    chart.Add(list, _.Temperature);
-                    chart.Add(list, _.Delay);
-                    chart.Add(list, _.Offset);
+                    chart.AddLine(list2, _.CpuRate, e => (Int32)(e.CpuRate * 100), true);
+                    chart.Add(list2, _.AvailableMemory, "line", e => node.Memory == 0 ? 0 : (e.AvailableMemory * 100 / node.Memory));
+                    chart.Add(list2, _.AvailableFreeSpace, "line", e => node.TotalSize == 0 ? 0 : (e.AvailableFreeSpace * 100 / node.TotalSize));
+                    chart.Add(list2, _.TcpConnections);
+                    chart.Add(list2, _.TcpTimeWait);
+                    chart.Add(list2, _.TcpCloseWait);
+                    chart.Add(list2, _.Temperature);
+                    chart.Add(list2, _.Delay);
+                    chart.Add(list2, _.Offset);
                     chart.SetTooltip();
                     ViewBag.Charts = new[] { chart };
                 }

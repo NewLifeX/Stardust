@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Threading.Tasks;
 using NewLife;
@@ -264,6 +265,9 @@ namespace Stardust
             var mi = MachineInfo.Current ?? _task.Result;
             mi.Refresh();
 
+            var properties = IPGlobalProperties.GetIPGlobalProperties();
+            var connections = properties.GetActiveTcpConnections();
+
             var mcs = NetHelper.GetMacs().Select(e => e.ToHex("-")).OrderBy(e => e).Join(",");
             var driveInfo = new DriveInfo(Path.GetPathRoot(".".GetFullPath()));
             var ext = new PingInfo
@@ -272,6 +276,9 @@ namespace Stardust
                 AvailableFreeSpace = (UInt64)driveInfo.AvailableFreeSpace,
                 CpuRate = mi.CpuRate,
                 Temperature = mi.Temperature,
+                TcpConnections = connections.Count(e => e.State == TcpState.Established),
+                TcpTimeWait = connections.Count(e => e.State == TcpState.TimeWait),
+                TcpCloseWait = connections.Count(e => e.State == TcpState.CloseWait),
                 Uptime = Environment.TickCount,
 
                 Macs = mcs,

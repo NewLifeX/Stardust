@@ -133,6 +133,30 @@ namespace Stardust.Data.Nodes
         [BindColumn("Temperature", "温度", "")]
         public Double Temperature { get => _Temperature; set { if (OnPropertyChanging("Temperature", value)) { _Temperature = value; OnPropertyChanged("Temperature"); } } }
 
+        private Int32 _TcpConnections;
+        /// <summary>连接数。传输数据Established的Tcp网络连接数</summary>
+        [DisplayName("连接数")]
+        [Description("连接数。传输数据Established的Tcp网络连接数")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("TcpConnections", "连接数。传输数据Established的Tcp网络连接数", "")]
+        public Int32 TcpConnections { get => _TcpConnections; set { if (OnPropertyChanging("TcpConnections", value)) { _TcpConnections = value; OnPropertyChanged("TcpConnections"); } } }
+
+        private Int32 _TcpTimeWait;
+        /// <summary>主动关闭。主动关闭后TimeWait的Tcp网络连接数，下一步Closed</summary>
+        [DisplayName("主动关闭")]
+        [Description("主动关闭。主动关闭后TimeWait的Tcp网络连接数，下一步Closed")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("TcpTimeWait", "主动关闭。主动关闭后TimeWait的Tcp网络连接数，下一步Closed", "")]
+        public Int32 TcpTimeWait { get => _TcpTimeWait; set { if (OnPropertyChanging("TcpTimeWait", value)) { _TcpTimeWait = value; OnPropertyChanged("TcpTimeWait"); } } }
+
+        private Int32 _TcpCloseWait;
+        /// <summary>被动关闭。被动关闭后CloseWait的Tcp网络连接数，下一步TimeWait</summary>
+        [DisplayName("被动关闭")]
+        [Description("被动关闭。被动关闭后CloseWait的Tcp网络连接数，下一步TimeWait")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("TcpCloseWait", "被动关闭。被动关闭后CloseWait的Tcp网络连接数，下一步TimeWait", "")]
+        public Int32 TcpCloseWait { get => _TcpCloseWait; set { if (OnPropertyChanging("TcpCloseWait", value)) { _TcpCloseWait = value; OnPropertyChanged("TcpCloseWait"); } } }
+
         private Int32 _Delay;
         /// <summary>延迟。网络延迟，单位ms</summary>
         [DisplayName("延迟")]
@@ -246,6 +270,9 @@ namespace Stardust.Data.Nodes
                     case "AvailableFreeSpace": return _AvailableFreeSpace;
                     case "CpuRate": return _CpuRate;
                     case "Temperature": return _Temperature;
+                    case "TcpConnections": return _TcpConnections;
+                    case "TcpTimeWait": return _TcpTimeWait;
+                    case "TcpCloseWait": return _TcpCloseWait;
                     case "Delay": return _Delay;
                     case "Offset": return _Offset;
                     case "LocalTime": return _LocalTime;
@@ -278,6 +305,9 @@ namespace Stardust.Data.Nodes
                     case "AvailableFreeSpace": _AvailableFreeSpace = value.ToInt(); break;
                     case "CpuRate": _CpuRate = value.ToDouble(); break;
                     case "Temperature": _Temperature = value.ToDouble(); break;
+                    case "TcpConnections": _TcpConnections = value.ToInt(); break;
+                    case "TcpTimeWait": _TcpTimeWait = value.ToInt(); break;
+                    case "TcpCloseWait": _TcpCloseWait = value.ToInt(); break;
                     case "Delay": _Delay = value.ToInt(); break;
                     case "Offset": _Offset = value.ToInt(); break;
                     case "LocalTime": _LocalTime = value.ToDateTime(); break;
@@ -340,6 +370,15 @@ namespace Stardust.Data.Nodes
 
             /// <summary>温度</summary>
             public static readonly Field Temperature = FindByName("Temperature");
+
+            /// <summary>连接数。传输数据Established的Tcp网络连接数</summary>
+            public static readonly Field TcpConnections = FindByName("TcpConnections");
+
+            /// <summary>主动关闭。主动关闭后TimeWait的Tcp网络连接数，下一步Closed</summary>
+            public static readonly Field TcpTimeWait = FindByName("TcpTimeWait");
+
+            /// <summary>被动关闭。被动关闭后CloseWait的Tcp网络连接数，下一步TimeWait</summary>
+            public static readonly Field TcpCloseWait = FindByName("TcpCloseWait");
 
             /// <summary>延迟。网络延迟，单位ms</summary>
             public static readonly Field Delay = FindByName("Delay");
@@ -421,6 +460,15 @@ namespace Stardust.Data.Nodes
 
             /// <summary>温度</summary>
             public const String Temperature = "Temperature";
+
+            /// <summary>连接数。传输数据Established的Tcp网络连接数</summary>
+            public const String TcpConnections = "TcpConnections";
+
+            /// <summary>主动关闭。主动关闭后TimeWait的Tcp网络连接数，下一步Closed</summary>
+            public const String TcpTimeWait = "TcpTimeWait";
+
+            /// <summary>被动关闭。被动关闭后CloseWait的Tcp网络连接数，下一步TimeWait</summary>
+            public const String TcpCloseWait = "TcpCloseWait";
 
             /// <summary>延迟。网络延迟，单位ms</summary>
             public const String Delay = "Delay";

@@ -27,6 +27,15 @@ namespace Stardust.Models
         /// <summary>进程列表</summary>
         public String Processes { get; set; }
 
+        /// <summary>正在传输的Tcp连接数</summary>
+        public Int32 TcpConnections { get; set; }
+
+        /// <summary>主动关闭的Tcp连接数</summary>
+        public Int32 TcpTimeWait { get; set; }
+
+        /// <summary>被动关闭的Tcp连接数</summary>
+        public Int32 TcpCloseWait { get; set; }
+
         /// <summary>开机时间，ms</summary>
         public Int32 Uptime { get; set; }
 

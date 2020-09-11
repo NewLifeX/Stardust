@@ -63,6 +63,9 @@
       <Column Name="AvailableFreeSpace" DataType="Int32" Description="可用磁盘。应用所在盘，单位M" />
       <Column Name="CpuRate" DataType="Double" Description="CPU率。占用率" />
       <Column Name="Temperature" DataType="Double" Description="温度" />
+      <Column Name="TcpConnections" DataType="Int32" Description="连接数。传输数据Established的Tcp网络连接数" />
+      <Column Name="TcpTimeWait" DataType="Int32" Description="主动关闭。主动关闭后TimeWait的Tcp网络连接数，下一步Closed" />
+      <Column Name="TcpCloseWait" DataType="Int32" Description="被动关闭。被动关闭后CloseWait的Tcp网络连接数，下一步TimeWait" />
       <Column Name="Delay" DataType="Int32" Description="延迟。网络延迟，单位ms" />
       <Column Name="Offset" DataType="Int32" Description="偏移。客户端时间减服务端时间，单位s" />
       <Column Name="LocalTime" DataType="DateTime" Description="本地时间" />
@@ -110,6 +113,9 @@
       <Column Name="AvailableFreeSpace" DataType="Int32" Description="可用磁盘。应用所在盘，单位M" />
       <Column Name="CpuRate" DataType="Double" Description="CPU率。占用率" />
       <Column Name="Temperature" DataType="Double" Description="温度" />
+      <Column Name="TcpConnections" DataType="Int32" Description="连接数。传输数据Established的Tcp网络连接数" />
+      <Column Name="TcpTimeWait" DataType="Int32" Description="主动关闭。主动关闭后TimeWait的Tcp网络连接数，下一步Closed" />
+      <Column Name="TcpCloseWait" DataType="Int32" Description="被动关闭。被动关闭后CloseWait的Tcp网络连接数，下一步TimeWait" />
       <Column Name="Delay" DataType="Int32" Description="延迟。网络延迟，单位ms" />
       <Column Name="Offset" DataType="Int32" Description="偏移。客户端时间减服务端时间，单位s" />
       <Column Name="LocalTime" DataType="DateTime" Description="本地时间" />
