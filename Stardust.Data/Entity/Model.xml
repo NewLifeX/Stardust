@@ -70,7 +70,7 @@
       <Index Columns="AppID" />
     </Indexes>
   </Table>
-  <Table Name="AppPerformance" Description="应用性能。保存应用上报的性能数据，如CPU、内存、线程、句柄等">
+  <Table Name="AppMeter" Description="应用性能。保存应用上报的性能数据，如CPU、内存、线程、句柄等">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />

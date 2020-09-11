@@ -14,9 +14,9 @@ namespace Stardust.Data
     [Serializable]
     [DataObject]
     [Description("应用性能。保存应用上报的性能数据，如CPU、内存、线程、句柄等")]
-    [BindIndex("IX_AppPerformance_AppId_Id", false, "AppId,Id")]
-    [BindTable("AppPerformance", Description = "应用性能。保存应用上报的性能数据，如CPU、内存、线程、句柄等", ConnName = "Stardust", DbType = DatabaseType.None)]
-    public partial class AppPerformance
+    [BindIndex("IX_AppMeter_AppId_Id", false, "AppId,Id")]
+    [BindTable("AppMeter", Description = "应用性能。保存应用上报的性能数据，如CPU、内存、线程、句柄等", ConnName = "Stardust", DbType = DatabaseType.None)]
+    public partial class AppMeter
     {
         #region 属性
         private Int64 _Id;

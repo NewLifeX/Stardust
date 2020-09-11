@@ -26,10 +26,10 @@ using XCode.Membership;
 namespace Stardust.Data
 {
     /// <summary>应用性能。保存应用上报的性能数据，如CPU、内存、线程、句柄等</summary>
-    public partial class AppPerformance : EntityBase<AppPerformance>
+    public partial class AppMeter : EntityBase<AppMeter>
     {
         #region 对象操作
-        static AppPerformance()
+        static AppMeter()
         {
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
             //var df = Meta.Factory.AdditionalFields;
@@ -62,18 +62,18 @@ namespace Stardust.Data
         //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
         //    if (Meta.Session.Count > 0) return;
 
-        //    if (XTrace.Debug) XTrace.WriteLine("开始初始化AppPerformance[应用性能]数据……");
+        //    if (XTrace.Debug) XTrace.WriteLine("开始初始化AppMeter[应用性能]数据……");
 
-        //    var entity = new AppPerformance();
+        //    var entity = new AppMeter();
         //    entity.Id = 0;
         //    entity.AppId = 0;
         //    entity.Name = "abc";
-        //    entity.AvailableMemory = 0;
-        //    entity.AvailableFreeSpace = 0;
+        //    entity.Memory = 0;
         //    entity.CpuRate = 0.0;
         //    entity.Temperature = 0.0;
-        //    entity.Delay = 0;
-        //    entity.Offset = 0;
+        //    entity.Threads = 0;
+        //    entity.Handles = 0;
+        //    entity.Connects = 0;
         //    entity.LocalTime = DateTime.Now;
         //    entity.Uptime = 0;
         //    entity.Data = "abc";
@@ -82,7 +82,7 @@ namespace Stardust.Data
         //    entity.CreateIP = "abc";
         //    entity.Insert();
 
-        //    if (XTrace.Debug) XTrace.WriteLine("完成初始化AppPerformance[应用性能]数据！");
+        //    if (XTrace.Debug) XTrace.WriteLine("完成初始化AppMeter[应用性能]数据！");
         //}
 
         ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
@@ -118,7 +118,7 @@ namespace Stardust.Data
         /// <summary>根据编号查找</summary>
         /// <param name="id">编号</param>
         /// <returns>实体对象</returns>
-        public static AppPerformance FindById(Int64 id)
+        public static AppMeter FindById(Int64 id)
         {
             if (id <= 0) return null;
 
@@ -135,7 +135,7 @@ namespace Stardust.Data
         /// <param name="appId">应用</param>
         /// <param name="id">编号</param>
         /// <returns>实体列表</returns>
-        public static IList<AppPerformance> FindAllByAppIdAndId(Int32 appId, Int64 id)
+        public static IList<AppMeter> FindAllByAppIdAndId(Int32 appId, Int64 id)
         {
             // 实体缓存
             if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.Id == id);
@@ -150,7 +150,7 @@ namespace Stardust.Data
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<AppPerformance> Search(Int32 appId, String key, PageParameter page)
+        public static IList<AppMeter> Search(Int32 appId, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
@@ -160,8 +160,8 @@ namespace Stardust.Data
             return FindAll(exp, page);
         }
 
-        // Select Count(Id) as Id,Category From AppPerformance Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
-        //static readonly FieldCache<AppPerformance> _CategoryCache = new FieldCache<AppPerformance>(nameof(Category))
+        // Select Count(Id) as Id,Category From AppMeter Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
+        //static readonly FieldCache<AppMeter> _CategoryCache = new FieldCache<AppMeter>(nameof(Category))
         //{
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
         //};

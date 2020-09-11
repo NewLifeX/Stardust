@@ -1,5 +1,6 @@
 ﻿using System;
 using NewLife.Log;
+using Stardust.Models;
 
 namespace Stardust.Monitors
 {
@@ -14,6 +15,9 @@ namespace Stardust.Monitors
 
         /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
         public String ClientId { get; set; }
+
+        /// <summary>应用信息</summary>
+        public AppInfo Info { get; set; }
 
         /// <summary>跟踪数据</summary>
         public ISpanBuilder[] Builders { get; set; }
