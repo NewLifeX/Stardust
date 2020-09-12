@@ -40,7 +40,7 @@ namespace Stardust.Web.Areas.Star.Controllers
                 if (clientId.IsNullOrEmpty())
                 {
                     var clients = AppMeter.GetClientIds(appId);
-                    if (clients != null && clients.Count > 0) clientId = clients.First().Key;
+                    if (clients != null && clients.Count > 0) clientId = clients.FirstOrDefault(e => e.Key != "null").Key;
                 }
 
                 PageSetting.EnableNavbar = false;
