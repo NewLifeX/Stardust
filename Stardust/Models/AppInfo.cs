@@ -17,7 +17,7 @@ namespace Stardust.Models
         /// <summary>开始时间</summary>
         public DateTime StartTime { get; set; }
 
-        /// <summary>处理器时间</summary>
+        /// <summary>处理器时间。单位ms</summary>
         public Int64 ProcessorTime { get; set; }
 
         /// <summary>物理内存</summary>
@@ -28,6 +28,9 @@ namespace Stardust.Models
 
         /// <summary>句柄数</summary>
         public Int32 Handles { get; set; }
+
+        /// <summary>连接数</summary>
+        public Int32 Connections { get; set; }
         #endregion
 
         #region 构造

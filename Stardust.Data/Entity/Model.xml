@@ -82,7 +82,7 @@
       <Column Name="ProcessorTime" DataType="Int32" Description="处理器。处理器时间，单位ms" />
       <Column Name="Threads" DataType="Int32" Description="线程数" />
       <Column Name="Handles" DataType="Int32" Description="句柄数" />
-      <Column Name="Connects" DataType="Int32" Description="连接数" />
+      <Column Name="Connections" DataType="Int32" Description="连接数" />
       <Column Name="Data" DataType="String" Length="-1" Description="数据" />
       <Column Name="Creator" DataType="String" Description="创建者。服务端节点" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />

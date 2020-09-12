@@ -75,13 +75,13 @@ namespace Stardust.Data
         [BindColumn("Handles", "句柄数", "")]
         public Int32 Handles { get => _Handles; set { if (OnPropertyChanging("Handles", value)) { _Handles = value; OnPropertyChanged("Handles"); } } }
 
-        private Int32 _Connects;
+        private Int32 _Connections;
         /// <summary>连接数</summary>
         [DisplayName("连接数")]
         [Description("连接数")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Connects", "连接数", "")]
-        public Int32 Connects { get => _Connects; set { if (OnPropertyChanging("Connects", value)) { _Connects = value; OnPropertyChanged("Connects"); } } }
+        [BindColumn("Connections", "连接数", "")]
+        public Int32 Connections { get => _Connections; set { if (OnPropertyChanging("Connections", value)) { _Connections = value; OnPropertyChanged("Connections"); } } }
 
         private String _Data;
         /// <summary>数据</summary>
@@ -133,7 +133,7 @@ namespace Stardust.Data
                     case "ProcessorTime": return _ProcessorTime;
                     case "Threads": return _Threads;
                     case "Handles": return _Handles;
-                    case "Connects": return _Connects;
+                    case "Connections": return _Connections;
                     case "Data": return _Data;
                     case "Creator": return _Creator;
                     case "CreateTime": return _CreateTime;
@@ -152,7 +152,7 @@ namespace Stardust.Data
                     case "ProcessorTime": _ProcessorTime = value.ToInt(); break;
                     case "Threads": _Threads = value.ToInt(); break;
                     case "Handles": _Handles = value.ToInt(); break;
-                    case "Connects": _Connects = value.ToInt(); break;
+                    case "Connections": _Connections = value.ToInt(); break;
                     case "Data": _Data = Convert.ToString(value); break;
                     case "Creator": _Creator = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -189,7 +189,7 @@ namespace Stardust.Data
             public static readonly Field Handles = FindByName("Handles");
 
             /// <summary>连接数</summary>
-            public static readonly Field Connects = FindByName("Connects");
+            public static readonly Field Connections = FindByName("Connections");
 
             /// <summary>数据</summary>
             public static readonly Field Data = FindByName("Data");
@@ -231,7 +231,7 @@ namespace Stardust.Data
             public const String Handles = "Handles";
 
             /// <summary>连接数</summary>
-            public const String Connects = "Connects";
+            public const String Connections = "Connections";
 
             /// <summary>数据</summary>
             public const String Data = "Data";

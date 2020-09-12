@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using NewLife;
 using NewLife.Common;
@@ -38,6 +39,7 @@ namespace Stardust.Monitors
         /// <summary>Api客户端</summary>
         public IApiClient Client { get; set; }
 
+        private Process _process = Process.GetCurrentProcess();
         private readonly Queue<TraceModel> _fails = new Queue<TraceModel>();
         #endregion
 
@@ -114,12 +116,30 @@ namespace Stardust.Monitors
             builders = builders.Where(e => !e.Name.EndsWithIgnoreCase("/Trace/Report")).ToArray();
             if (builders.Length == 0) return;
 
+            // 暂时无法区分连接属于哪个进程，使用全局连接数
+            var properties = IPGlobalProperties.GetIPGlobalProperties();
+            var connections = properties.GetActiveTcpConnections();
+
+            // 构建应用信息
+            var info = new AppInfo
+            {
+                Id = _process.Id,
+                Name = _process.ProcessName,
+                StartTime = _process.StartTime,
+                ProcessorTime = (Int64)_process.TotalProcessorTime.TotalMilliseconds,
+                WorkingSet = _process.WorkingSet64,
+                Threads = _process.Threads.Count,
+                Handles = _process.HandleCount,
+                Connections = connections.Count(e => e.State == TcpState.Established),
+            };
+
             // 发送，失败后进入队列
             var model = new TraceModel
             {
                 AppId = AppId,
                 AppName = AppName,
                 ClientId = ClientId,
+                Info = info,
 
                 Builders = builders
             };
