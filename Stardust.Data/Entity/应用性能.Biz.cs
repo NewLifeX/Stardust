@@ -103,7 +103,7 @@ namespace Stardust.Data
             var exp = new WhereExpression();
 
             if (appId >= 0) exp &= _.AppId == appId;
-            if (!clientId.IsNullOrEmpty()) exp &= _.ClientId == clientId;
+            if (!clientId.IsNullOrEmpty() && clientId != "null") exp &= _.ClientId == clientId;
             exp &= _.Id.Between(start, end, Meta.Factory.FlowId);
             if (!key.IsNullOrEmpty()) exp &= _.ClientId.Contains(key) | _.Data.Contains(key) | _.Creator.Contains(key) | _.CreateIP.Contains(key);
 
@@ -125,7 +125,7 @@ namespace Stardust.Data
             var exp = new WhereExpression();
             exp &= _.AppId == appId & _.Id >= Meta.Factory.FlowId.GetId(DateTime.Today);
             var list = FindAll(exp.GroupBy(_.ClientId), null, _.Id.Count() & _.ClientId);
-            value = list.ToDictionary(e => e.ClientId, e => $"{e.ClientId}({e.Id})");
+            value = list.ToDictionary(e => e.ClientId ?? "null", e => $"{e.ClientId}({e.Id})");
 
             _cache.Set(key, value);
 
