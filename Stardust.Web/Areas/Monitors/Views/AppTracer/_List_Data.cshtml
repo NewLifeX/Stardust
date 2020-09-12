@@ -43,6 +43,8 @@
     <tbody>
         @foreach (var entity in Model)
         {
+            var ap = Stardust.Data.App.FindByName(entity.Name);
+            var appId = ap?.ID ?? 0;
             <tr>
                 @if (set.EnableSelect && ukey != null)
                 {
@@ -59,7 +61,7 @@
                 <td class="text-right">@entity.MaxSamples.ToString("n0")</td>
                 <td class="text-right">@entity.MaxErrors.ToString("n0")</td>
                 <td class="text-right">@entity.Timeout.ToString("n0")</td>
-                <td><a href="../Star/AppMeter?appId=@entity.ID">性能</a></td>
+                <td><a href="../Star/AppMeter?appId=@appId">性能</a></td>
                 <td>@entity.UpdateUser</td>
                 <td class="text-center">@entity.UpdateTime.ToFullString("")</td>
                 <td class="text-center" title="@entity.UpdateIP.IPToAddress()">@entity.UpdateIP</td>

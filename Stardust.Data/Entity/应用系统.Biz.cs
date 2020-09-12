@@ -100,7 +100,7 @@ namespace Stardust.Data
                 var online = Data.AppOnline.GetOrAddSession(clientId);
                 online.UpdateInfo(app, model.Info);
 
-                AppMeter.WriteData(app, model.Info, clientId);
+                AppMeter.WriteData(app, model.Info, ip);
             }
         }
 
