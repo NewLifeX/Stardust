@@ -119,13 +119,15 @@ namespace Stardust.Data
             var dic = new Dictionary<String, String>();
             if (appId <= 0) return dic;
 
+            // TryGet能够扛缓存穿透，即使没有数据，也写入空数据
             var key = $"field:{appId}";
             if (_cache.TryGet<IDictionary<String, String>>(key, out var value)) return value;
 
+            // 计算应用的ClientIds时，采取Id降序，较新活跃的客户端在前面
             var exp = new WhereExpression();
             exp &= _.AppId == appId & _.Id >= Meta.Factory.FlowId.GetId(DateTime.Today);
-            var list = FindAll(exp.GroupBy(_.ClientId), null, _.Id.Count() & _.ClientId);
-            value = list.ToDictionary(e => e.ClientId ?? "null", e => $"{e.ClientId}({e.Id})");
+            var list = FindAll(exp.GroupBy(_.ClientId), null, _.Id.Max() & _.ClientId);
+            value = list.OrderByDescending(e => e.Id).ToDictionary(e => e.ClientId ?? "null", e => $"{e.ClientId}({e.Id})");
 
             _cache.Set(key, value);
 
