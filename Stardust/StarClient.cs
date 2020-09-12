@@ -247,9 +247,9 @@ namespace Stardust
         public PingInfo GetHeartInfo()
         {
             var asm = AssemblyX.Entry;
-            //var ps = System.IO.Ports.SerialPort.GetPortNames();
+            var ps = Process.GetProcesses();
             var pcs = new List<String>();
-            foreach (var item in Process.GetProcesses())
+            foreach (var item in ps)
             {
                 // 有些进程可能已退出，无法获取详细信息
                 try
@@ -276,6 +276,7 @@ namespace Stardust
                 AvailableFreeSpace = (UInt64)driveInfo.AvailableFreeSpace,
                 CpuRate = mi.CpuRate,
                 Temperature = mi.Temperature,
+                ProcessCount = ps.Length,
                 TcpConnections = connections.Count(e => e.State == TcpState.Established),
                 TcpTimeWait = connections.Count(e => e.State == TcpState.TimeWait),
                 TcpCloseWait = connections.Count(e => e.State == TcpState.CloseWait),

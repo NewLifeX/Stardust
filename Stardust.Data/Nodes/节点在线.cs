@@ -133,6 +133,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("Temperature", "温度", "")]
         public Double Temperature { get => _Temperature; set { if (OnPropertyChanging("Temperature", value)) { _Temperature = value; OnPropertyChanged("Temperature"); } } }
 
+        private Int32 _ProcessCount;
+        /// <summary>进程数</summary>
+        [DisplayName("进程数")]
+        [Description("进程数")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("ProcessCount", "进程数", "")]
+        public Int32 ProcessCount { get => _ProcessCount; set { if (OnPropertyChanging("ProcessCount", value)) { _ProcessCount = value; OnPropertyChanged("ProcessCount"); } } }
+
         private Int32 _TcpConnections;
         /// <summary>连接数。传输数据Established的Tcp网络连接数</summary>
         [DisplayName("连接数")]
@@ -270,6 +278,7 @@ namespace Stardust.Data.Nodes
                     case "AvailableFreeSpace": return _AvailableFreeSpace;
                     case "CpuRate": return _CpuRate;
                     case "Temperature": return _Temperature;
+                    case "ProcessCount": return _ProcessCount;
                     case "TcpConnections": return _TcpConnections;
                     case "TcpTimeWait": return _TcpTimeWait;
                     case "TcpCloseWait": return _TcpCloseWait;
@@ -305,6 +314,7 @@ namespace Stardust.Data.Nodes
                     case "AvailableFreeSpace": _AvailableFreeSpace = value.ToInt(); break;
                     case "CpuRate": _CpuRate = value.ToDouble(); break;
                     case "Temperature": _Temperature = value.ToDouble(); break;
+                    case "ProcessCount": _ProcessCount = value.ToInt(); break;
                     case "TcpConnections": _TcpConnections = value.ToInt(); break;
                     case "TcpTimeWait": _TcpTimeWait = value.ToInt(); break;
                     case "TcpCloseWait": _TcpCloseWait = value.ToInt(); break;
@@ -370,6 +380,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>温度</summary>
             public static readonly Field Temperature = FindByName("Temperature");
+
+            /// <summary>进程数</summary>
+            public static readonly Field ProcessCount = FindByName("ProcessCount");
 
             /// <summary>连接数。传输数据Established的Tcp网络连接数</summary>
             public static readonly Field TcpConnections = FindByName("TcpConnections");
@@ -460,6 +473,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>温度</summary>
             public const String Temperature = "Temperature";
+
+            /// <summary>进程数</summary>
+            public const String ProcessCount = "ProcessCount";
 
             /// <summary>连接数。传输数据Established的Tcp网络连接数</summary>
             public const String TcpConnections = "TcpConnections";
