@@ -100,6 +100,8 @@ namespace Stardust.Data
                 var online = Data.AppOnline.GetOrAddSession(clientId);
                 online.UpdateInfo(app, model.Info);
 
+                // 优先使用clientId内部的内网本机IP作为跟踪数据客户端实例
+                if (!model.ClientId.IsNullOrEmpty() && model.ClientId.Contains("@")) ip = model.ClientId.Substring(null, "@");
                 AppMeter.WriteData(app, model.Info, ip);
             }
         }
