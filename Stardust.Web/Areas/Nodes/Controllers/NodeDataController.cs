@@ -44,7 +44,6 @@ namespace Stardust.Web.Areas.Nodes.Controllers
 
             if (list.Count > 0)
             {
-                var hasDate = start.Year > 2000 || end.Year > 2000;
                 // 绘制日期曲线图
                 var node = Node.FindByID(nodeId);
                 if (nodeId >= 0 && node != null)

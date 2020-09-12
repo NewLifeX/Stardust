@@ -39,6 +39,7 @@
             <th class="text-center" title="延迟。网络延迟，单位ms"><a href="@Html.Raw(page.GetSortUrl("Delay"))">延迟</a></th>
             <th class="text-center" title="偏移。客户端时间减服务端时间，单位s"><a href="@Html.Raw(page.GetSortUrl("Offset"))">偏移</a></th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("LocalTime"))">本地时间</a></th>
+            <th class="text-center">数据</th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Creator"))">创建者</a></th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("CreateTime"))">创建时间</a></th>
             <th class="text-center" title="创建者。服务器节点"><a href="@Html.Raw(page.GetSortUrl("CreateIP"))">创建地址</a></th>
@@ -76,6 +77,7 @@
                 <td class="text-right">@entity.Delay.ToString("n0")</td>
                 <td class="text-right">@entity.Offset.ToString("n0")</td>
                 <td class="text-center">@entity.LocalTime.ToFullString("")</td>
+                <td><a href="NodeData?nodeId=@entity.ID">数据</a></td>
                 <td class="text-center">@entity.Creator</td>
                 <td class="text-center">@entity.CreateTime.ToFullString("")</td>
                 <td class="text-center" title="@entity.CreateIP.IPToAddress()">@entity.CreateIP</td>
