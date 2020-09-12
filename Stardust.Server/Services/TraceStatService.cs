@@ -53,32 +53,36 @@ namespace Stardust.Server.Services
             if (time.Hour == 0 && time.Minute < 10) time = time.AddDays(-1);
             var date = time.Date;
 
-            // 统计数据
-            var list = TraceData.SearchGroupAppAndName(date, appIds.ToArray());
-            if (list.Count == 0) return;
-
-            // 统计对象
-            var sts = TraceDayStat.Search(date, list.Select(e => e.AppId).ToArray());
-
-            // 聚合
-            foreach (var item in list)
+            // 逐个应用计算
+            foreach (var appId in appIds)
             {
-                var st = sts.FirstOrDefault(e => e.AppId == item.AppId && e.Name == item.Name);
-                if (st == null)
+                // 统计数据
+                var list = TraceData.SearchGroupAppAndName(date, new[] { appId });
+                if (list.Count == 0) return;
+
+                // 统计对象
+                var sts = TraceDayStat.Search(date, list.Select(e => e.AppId).ToArray());
+
+                // 聚合
+                foreach (var item in list)
                 {
-                    st = new TraceDayStat { StatDate = date, AppId = item.AppId, Name = item.Name };
-                    sts.Add(st);
+                    var st = sts.FirstOrDefault(e => e.AppId == item.AppId && e.Name == item.Name);
+                    if (st == null)
+                    {
+                        st = new TraceDayStat { StatDate = date, AppId = item.AppId, Name = item.Name };
+                        sts.Add(st);
+                    }
+
+                    st.Total = item.Total;
+                    st.Errors = item.Errors;
+                    st.TotalCost = item.TotalCost;
+                    st.MaxCost = item.MaxCost;
+                    st.MinCost = item.MinCost;
                 }
 
-                st.Total = item.Total;
-                st.Errors = item.Errors;
-                st.TotalCost = item.TotalCost;
-                st.MaxCost = item.MaxCost;
-                st.MinCost = item.MinCost;
+                // 保存统计
+                sts.Save(true);
             }
-
-            // 保存统计
-            sts.Save(true);
         }
     }
 }
