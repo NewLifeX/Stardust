@@ -115,7 +115,7 @@ namespace Stardust.Server.Controllers
                 var olt = GetOnline(node.Code, node);
                 if (olt != null)
                 {
-                    var msg = "{3} [{0}]]登录于{1}，最后活跃于{2}".F(node, olt.CreateTime, olt.UpdateTime, reason);
+                    var msg = $"{reason} [{node}]]登录于{olt.CreateTime}，最后活跃于{olt.UpdateTime}";
                     WriteHistory(node, "节点下线", true, msg);
                     olt.Delete();
 
@@ -153,24 +153,24 @@ namespace Stardust.Server.Controllers
             var diskid = di.DiskID;
             if (!uuid.IsNullOrEmpty() && uuid != node.Uuid)
             {
-                WriteHistory("登录校验", false, node, "唯一标识不符！{0}!={1}".F(uuid, node.Uuid));
+                WriteHistory("登录校验", false, node, $"唯一标识不符！{uuid}!={node.Uuid}");
                 return null;
             }
             if (!guid.IsNullOrEmpty() && guid != node.MachineGuid)
             {
-                WriteHistory("登录校验", false, node, "机器标识不符！{0}!={1}".F(guid, node.MachineGuid));
+                WriteHistory("登录校验", false, node, $"机器标识不符！{guid}!={node.MachineGuid}");
                 return null;
             }
             if (!diskid.IsNullOrEmpty() && diskid != node.DiskID)
             {
-                WriteHistory("登录校验", false, node, "磁盘序列号不符！{0}!={1}".F(diskid, node.DiskID));
+                WriteHistory("登录校验", false, node, $"磁盘序列号不符！{diskid}!={node.DiskID}");
                 return null;
             }
 
             // 机器名
             if (di.MachineName != node.MachineName)
             {
-                WriteHistory("登录校验", false, node, "机器名不符！{0}!={1}".F(di.MachineName, node.MachineName));
+                WriteHistory("登录校验", false, node, $"机器名不符！{di.MachineName}!={node.MachineName}");
             }
 
             // 网卡地址
@@ -181,7 +181,7 @@ namespace Stardust.Server.Controllers
                 // 任意网卡匹配则通过
                 if (!nodems.Any(e => dims.Contains(e)))
                 {
-                    WriteHistory("登录校验", false, node, "网卡地址不符！{0}!={1}".F(di.Macs, node.MACs));
+                    WriteHistory("登录校验", false, node, $"网卡地址不符！{di.Macs}!={node.MACs}");
                 }
             }
 

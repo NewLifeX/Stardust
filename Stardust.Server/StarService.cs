@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Net;
 using NewLife;
 using NewLife.Log;
 using NewLife.Net;
 using NewLife.Remoting;
-using NewLife.Security;
 using NewLife.Serialization;
 using Stardust.Data;
 
@@ -106,7 +104,7 @@ namespace Stardust.Server
             else
             {
                 var ns = Session as INetSession;
-                throw new ApiException(401, "{0}未登录！不能执行{1}".F(ns.Remote, act));
+                throw new ApiException(401, $"{ns.Remote}未登录！不能执行{act}");
             }
         }
 

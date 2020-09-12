@@ -35,7 +35,7 @@ namespace Stardust.Server.Services
                     foreach (var olt in rs)
                     {
                         var node = olt?.Node;
-                        var msg = "[{0}]登录于{1}，最后活跃于{2}".F(node, olt.CreateTime, olt.UpdateTime);
+                        var msg = $"[{node}]登录于{olt.CreateTime}，最后活跃于{olt.UpdateTime}";
                         NodeHistory.Create(node, "超时下线", true, msg, Environment.MachineName, olt.CreateIP);
 
                         if (node != null)

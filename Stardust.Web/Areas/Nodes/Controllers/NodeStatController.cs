@@ -23,9 +23,9 @@ namespace Stardust.Web.Areas.Nodes.Controllers
         {
             MenuOrder = 30;
 
-            // 计算统计
-            _timer = new TimerX(DoNodeStat, null, 10_000, 60_000) { Async = true };
-            _timerReport = new TimerX(DoReport, null, DateTime.Today.AddHours(8), 12 * 3600 * 1000) { Async = true };
+            //// 计算统计
+            //_timer = new TimerX(DoNodeStat, null, 10_000, 60_000) { Async = true };
+            //_timerReport = new TimerX(DoReport, null, DateTime.Today.AddHours(8), 12 * 3600 * 1000) { Async = true };
 
             //// 先来一次
             //_timerReport.SetNext(10_000);
