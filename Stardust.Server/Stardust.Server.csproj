@@ -17,6 +17,7 @@
     <Optimize>true</Optimize>
     <DefineConstants>TRACE</DefineConstants>
     <LangVersion>latest</LangVersion>
+    <UserSecretsId>377ee3b4-0b0b-46ea-9059-cca0d3fa451e</UserSecretsId>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp2.1'">
