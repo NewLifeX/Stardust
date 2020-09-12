@@ -121,15 +121,8 @@ namespace Stardust.Monitors
             var connections = properties.GetActiveTcpConnections();
 
             // 构建应用信息
-            var info = new AppInfo
+            var info = new AppInfo(_process)
             {
-                Id = _process.Id,
-                Name = _process.ProcessName,
-                StartTime = _process.StartTime,
-                ProcessorTime = (Int64)_process.TotalProcessorTime.TotalMilliseconds,
-                WorkingSet = _process.WorkingSet64,
-                Threads = _process.Threads.Count,
-                Handles = _process.HandleCount,
                 Connections = connections.Length,
             };
 

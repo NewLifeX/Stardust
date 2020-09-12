@@ -1,24 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
 using System.Xml.Serialization;
-using NewLife;
-using NewLife.Data;
-using NewLife.Log;
-using NewLife.Model;
-using NewLife.Reflection;
-using NewLife.Threading;
-using NewLife.Web;
 using XCode;
-using XCode.Cache;
-using XCode.Configuration;
-using XCode.DataAccessLayer;
 using XCode.Membership;
 
 namespace Stardust.Data
@@ -56,59 +40,20 @@ namespace Stardust.Data
             //if (isNew && !Dirtys[nameof(CreateTime)]) nameof(CreateTime) = DateTime.Now;
             //if (isNew && !Dirtys[nameof(CreateIP)]) nameof(CreateIP) = ManageProvider.UserHost;
         }
-
-        ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
-        //[EditorBrowsable(EditorBrowsableState.Never)]
-        //protected override void InitData()
-        //{
-        //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
-        //    if (Meta.Session.Count > 0) return;
-
-        //    if (XTrace.Debug) XTrace.WriteLine("开始初始化AppHistory[应用历史]数据……");
-
-        //    var entity = new AppHistory();
-        //    entity.ID = 0;
-        //    entity.AppID = 0;
-        //    entity.Version = "abc";
-        //    entity.Action = "abc";
-        //    entity.Success = true;
-        //    entity.Remark = "abc";
-        //    entity.CreateUser = "abc";
-        //    entity.CreateUserID = 0;
-        //    entity.CreateTime = DateTime.Now;
-        //    entity.CreateIP = "abc";
-        //    entity.Insert();
-
-        //    if (XTrace.Debug) XTrace.WriteLine("完成初始化AppHistory[应用历史]数据！");
-        //}
-
-        ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
-        ///// <returns></returns>
-        //public override Int32 Insert()
-        //{
-        //    return base.Insert();
-        //}
-
-        ///// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>
-        ///// <returns></returns>
-        //protected override Int32 OnDelete()
-        //{
-        //    return base.OnDelete();
-        //}
         #endregion
 
         #region 扩展属性
         /// <summary>应用</summary>
         [XmlIgnore]
         //[ScriptIgnore]
-        public App App { get { return Extends.Get(nameof(App), k => App.FindByID(AppID)); } }
+        public App App => Extends.Get(nameof(App), k => App.FindByID(AppID));
 
         /// <summary>应用</summary>
         [XmlIgnore]
         //[ScriptIgnore]
         [DisplayName("应用")]
         [Map(__.AppID, typeof(App), "ID")]
-        public String AppName { get { return App?.Name; } }
+        public String AppName => App?.Name;
         #endregion
 
         #region 扩展查询
@@ -144,6 +89,28 @@ namespace Stardust.Data
         #endregion
 
         #region 业务操作
+        /// <summary>创建历史</summary>
+        /// <param name="app"></param>
+        /// <param name="action"></param>
+        /// <param name="success"></param>
+        /// <param name="remark"></param>
+        /// <returns></returns>
+        public static AppHistory Create(App app, String action, Boolean success, String remark)
+        {
+            var history = new AppHistory
+            {
+                AppID = app.ID,
+                Version = app.Name,
+
+                Action = action,
+                Success = success,
+                Remark = remark,
+
+                CreateTime = DateTime.Now,
+            };
+
+            return history;
+        }
         #endregion
     }
 }

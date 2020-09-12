@@ -36,23 +36,19 @@ namespace Stardust.Server.Controllers
             //var builders = new ISpanBuilder[0];
             if (model == null || model.AppId.IsNullOrEmpty() || builders == null || builders.Length == 0) return null;
 
+            var ip = HttpContext.GetUserHost();
+            if (ip.IsNullOrEmpty()) ip = ManageProvider.UserHost;
+
             var set = Setting.Current;
 
             // 新版验证方式，访问令牌
             Data.App ap = null;
-            //var token = HttpContext.Items["Token"] as String;
             if (!token.IsNullOrEmpty() && token.Split(".").Length == 3)
             {
                 ap = _service.DecodeToken(token, set);
                 if (ap == null || ap.Name != model.AppId) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{ap.Name}]！");
-
-                // 更新应用名
-                if (ap.DisplayName.IsNullOrEmpty())
-                {
-                    ap.DisplayName = model.AppName;
-                    ap.Update();
-                }
             }
+            Data.App.UpdateInfo(model, ip);
 
             // 该应用的跟踪配置信息
             var app = AppTracer.FindByName(model.AppId);
@@ -70,19 +66,7 @@ namespace Stardust.Server.Controllers
             // 校验应用
             if (app == null || !app.Enable) throw new Exception($"无效应用[{model.AppId}/{model.AppName}]");
 
-            // 修复数据
-            if (ap == null)
-            {
-                ap = Data.App.FindByName(app.Name);
-                if (ap == null) ap = new Data.App { Name = app.Name, DisplayName = app.DisplayName, Enable = true };
-                if (ap.DisplayName.IsNullOrEmpty()) ap.DisplayName = app.DisplayName;
-                ap.Save();
-            }
-
             // 插入数据
-            var ip = HttpContext.GetUserHost();
-            if (ip.IsNullOrEmpty()) ip = ManageProvider.UserHost;
-
             Task.Run(() => ProcessData(app, model, ip, builders));
 
             _stat.Add(app.ID);

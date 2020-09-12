@@ -18,7 +18,7 @@ namespace Stardust.Models
         public DateTime StartTime { get; set; }
 
         /// <summary>处理器时间。单位ms</summary>
-        public Int64 ProcessorTime { get; set; }
+        public Int32 ProcessorTime { get; set; }
 
         /// <summary>物理内存</summary>
         public Int64 WorkingSet { get; set; }
@@ -52,7 +52,7 @@ namespace Stardust.Models
                 Handles = process.HandleCount;
 
                 StartTime = process.StartTime;
-                ProcessorTime = (Int64)process.TotalProcessorTime.TotalMilliseconds;
+                ProcessorTime = (Int32)process.TotalProcessorTime.TotalMilliseconds;
             }
             catch (Win32Exception) { }
         }

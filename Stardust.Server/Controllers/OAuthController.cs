@@ -28,12 +28,17 @@ namespace Stardust.Server.Controllers
                 app.LastIP = HttpContext.GetUserHost();
                 app.SaveAsync();
 
+                app.WriteHistory("Authorize", true, model.UserName);
+
                 return _service.IssueToken(app, set);
             }
             // 刷新令牌
             else if (model.grant_type == "refresh_token")
             {
                 var app = _service.DecodeToken(model.refresh_token, set);
+
+                app.WriteHistory("RefreshToken", true, model.refresh_token);
+
                 return _service.IssueToken(app, set);
             }
             else

@@ -1,5 +1,7 @@
 ﻿using System;
 using NewLife;
+using Stardust.Models;
+using Stardust.Monitors;
 using XCode.Membership;
 
 namespace Stardust.Data
@@ -80,6 +82,39 @@ namespace Stardust.Data
         #endregion
 
         #region 业务操作
+        /// <summary>更新信息</summary>
+        /// <param name="model"></param>
+        /// <param name="ip"></param>
+        public static void UpdateInfo(TraceModel model, String ip)
+        {
+            // 修复数据
+            var app = FindByName(model.AppId);
+            if (app == null) app = new App { Name = model.AppId, DisplayName = model.AppName, Enable = true };
+            if (app.DisplayName.IsNullOrEmpty()) app.DisplayName = model.AppName;
+            app.Save();
+
+            // 更新应用信息
+            if (app != null && model.Info != null)
+            {
+                //ap.WriteHistory("Report", true, "");
+                var key = model.ClientId ?? ip;
+                var online = Data.AppOnline.GetOrAddSession(key);
+                online.UpdateInfo(app, model.Info);
+
+                AppMeter.WriteData(app, model.Info);
+            }
+        }
+
+        /// <summary>写应用历史</summary>
+        /// <param name="action"></param>
+        /// <param name="success"></param>
+        /// <param name="remark"></param>
+        public void WriteHistory(String action, Boolean success, String remark)
+        {
+            var history = AppHistory.Create(this, action, success, remark);
+
+            history.SaveAsync();
+        }
         #endregion
     }
 }

@@ -1,24 +1,8 @@
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
 using System.Xml.Serialization;
-using NewLife;
-using NewLife.Data;
-using NewLife.Log;
-using NewLife.Model;
-using NewLife.Reflection;
-using NewLife.Threading;
-using NewLife.Web;
+using Stardust.Models;
 using XCode;
-using XCode.Cache;
-using XCode.Configuration;
-using XCode.DataAccessLayer;
 using XCode.Membership;
 
 namespace Stardust.Data
@@ -54,61 +38,20 @@ namespace Stardust.Data
             // CheckExist(isNew, __.Session);
             // CheckExist(isNew, __.AppID, __.Instance);
         }
-
-        ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
-        //[EditorBrowsable(EditorBrowsableState.Never)]
-        //protected override void InitData()
-        //{
-        //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
-        //    if (Meta.Session.Count > 0) return;
-
-        //    if (XTrace.Debug) XTrace.WriteLine("开始初始化AppOnline[应用在线]数据……");
-
-        //    var entity = new AppOnline();
-        //    entity.ID = 0;
-        //    entity.AppID = 0;
-        //    entity.Instance = "abc";
-        //    entity.Session = "abc";
-        //    entity.Address = "abc";
-        //    entity.Version = "abc";
-        //    entity.Services = 0;
-        //    entity.Actions = "abc";
-        //    entity.Clients = 0;
-        //    entity.CreateTime = DateTime.Now;
-        //    entity.CreateIP = "abc";
-        //    entity.UpdateTime = DateTime.Now;
-        //    entity.Insert();
-
-        //    if (XTrace.Debug) XTrace.WriteLine("完成初始化AppOnline[应用在线]数据！");
-        //}
-
-        ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
-        ///// <returns></returns>
-        //public override Int32 Insert()
-        //{
-        //    return base.Insert();
-        //}
-
-        ///// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>
-        ///// <returns></returns>
-        //protected override Int32 OnDelete()
-        //{
-        //    return base.OnDelete();
-        //}
         #endregion
 
         #region 扩展属性
         /// <summary>应用</summary>
         [XmlIgnore]
         //[ScriptIgnore]
-        public App App { get { return Extends.Get(nameof(App), k => App.FindByID(AppID)); } }
+        public App App => Extends.Get(nameof(App), k => App.FindByID(AppID));
 
         /// <summary>应用</summary>
         [XmlIgnore]
         //[ScriptIgnore]
         [DisplayName("应用")]
         [Map(__.AppID, typeof(App), "ID")]
-        public String AppName { get { return App?.Name; } }
+        public String AppName => App?.Name;
         #endregion
 
         #region 扩展查询
@@ -144,6 +87,28 @@ namespace Stardust.Data
         #endregion
 
         #region 业务操作
+        /// <summary>获取 或 创建 会话</summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public static AppOnline GetOrAddSession(String session)
+        {
+            return GetOrAdd(session, (k, c) => Find(_.Session == k), k => new AppOnline { Session = k });
+        }
+
+        /// <summary>更新信息</summary>
+        /// <param name="app"></param>
+        /// <param name="info"></param>
+        public void UpdateInfo(App app, AppInfo info)
+        {
+            AppID = app.ID;
+            Name = app.Name;
+
+            ProcessId = info.Id;
+            ProcessName = info.Name;
+            StartTime = info.StartTime;
+
+            SaveAsync();
+        }
         #endregion
     }
 }
