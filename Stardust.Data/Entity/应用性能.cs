@@ -14,7 +14,7 @@ namespace Stardust.Data
     [Serializable]
     [DataObject]
     [Description("应用性能。保存应用上报的性能数据，如CPU、内存、线程、句柄等")]
-    [BindIndex("IX_AppMeter_AppId_Id", false, "AppId,Id")]
+    [BindIndex("IX_AppMeter_AppId_ClientId_Id", false, "AppId,ClientId,Id")]
     [BindTable("AppMeter", Description = "应用性能。保存应用上报的性能数据，如CPU、内存、线程、句柄等", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppMeter
     {
@@ -35,13 +35,13 @@ namespace Stardust.Data
         [BindColumn("AppId", "应用", "")]
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
-        private String _Name;
-        /// <summary>名称</summary>
-        [DisplayName("名称")]
-        [Description("名称")]
+        private String _ClientId;
+        /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
+        [DisplayName("实例")]
+        [Description("实例。应用可能多实例部署，ip@proccessid")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("Name", "名称", "", Master = true)]
-        public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
+        [BindColumn("ClientId", "实例。应用可能多实例部署，ip@proccessid", "")]
+        public String ClientId { get => _ClientId; set { if (OnPropertyChanging("ClientId", value)) { _ClientId = value; OnPropertyChanged("ClientId"); } } }
 
         private Int32 _Memory;
         /// <summary>内存。单位M</summary>
@@ -128,7 +128,7 @@ namespace Stardust.Data
                 {
                     case "Id": return _Id;
                     case "AppId": return _AppId;
-                    case "Name": return _Name;
+                    case "ClientId": return _ClientId;
                     case "Memory": return _Memory;
                     case "ProcessorTime": return _ProcessorTime;
                     case "Threads": return _Threads;
@@ -147,7 +147,7 @@ namespace Stardust.Data
                 {
                     case "Id": _Id = value.ToLong(); break;
                     case "AppId": _AppId = value.ToInt(); break;
-                    case "Name": _Name = Convert.ToString(value); break;
+                    case "ClientId": _ClientId = Convert.ToString(value); break;
                     case "Memory": _Memory = value.ToInt(); break;
                     case "ProcessorTime": _ProcessorTime = value.ToInt(); break;
                     case "Threads": _Threads = value.ToInt(); break;
@@ -173,8 +173,8 @@ namespace Stardust.Data
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
 
-            /// <summary>名称</summary>
-            public static readonly Field Name = FindByName("Name");
+            /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
+            public static readonly Field ClientId = FindByName("ClientId");
 
             /// <summary>内存。单位M</summary>
             public static readonly Field Memory = FindByName("Memory");
@@ -215,8 +215,8 @@ namespace Stardust.Data
             /// <summary>应用</summary>
             public const String AppId = "AppId";
 
-            /// <summary>名称</summary>
-            public const String Name = "Name";
+            /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
+            public const String ClientId = "ClientId";
 
             /// <summary>内存。单位M</summary>
             public const String Memory = "Memory";

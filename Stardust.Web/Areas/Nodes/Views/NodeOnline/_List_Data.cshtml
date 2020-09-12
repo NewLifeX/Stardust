@@ -77,7 +77,7 @@
                 <td class="text-right">@entity.Delay.ToString("n0")</td>
                 <td class="text-right">@entity.Offset.ToString("n0")</td>
                 <td class="text-center">@entity.LocalTime.ToFullString("")</td>
-                <td><a href="NodeData?nodeId=@entity.ID">数据</a></td>
+                <td><a href="NodeData?nodeId=@entity.NodeID">数据</a></td>
                 <td class="text-center">@entity.Creator</td>
                 <td class="text-center">@entity.CreateTime.ToFullString("")</td>
                 <td class="text-center" title="@entity.CreateIP.IPToAddress()">@entity.CreateIP</td>

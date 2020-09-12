@@ -1,0 +1,13 @@
+﻿@using Stardust.Data
+@using NewLife;
+@using NewLife.Web;
+@using XCode;
+@{
+    var fact = ViewBag.Factory as IEntityFactory;
+    var page = ViewBag.Page as Pager;
+}
+<div class="form-group">
+    <label for="clientId" class="control-label">节点：</label>
+    @Html.ForDropDownList("clientId", AppMeter.GetClientIds(page["appId"].ToInt()), page["clientId"], "全部", true)
+</div>
+@await Html.PartialAsync("_DateRange")

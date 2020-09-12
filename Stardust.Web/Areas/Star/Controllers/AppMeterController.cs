@@ -26,6 +26,7 @@ namespace Stardust.Web.Areas.Star.Controllers
             PageSetting.EnableAdd = false;
 
             var appId = p["appId"].ToInt(-1);
+            var clientId = p["clientId"];
 
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
@@ -35,14 +36,21 @@ namespace Stardust.Web.Areas.Star.Controllers
                 // 最近10小时
                 if (p.PageSize == 20 && appId > 0) p.PageSize = 600;
 
+                // 自动客户端
+                if (clientId.IsNullOrEmpty())
+                {
+                    var clients = AppMeter.GetClientIds(appId);
+                    if (clients != null && clients.Count > 0) clientId = clients.First().Key;
+                }
+
                 PageSetting.EnableNavbar = false;
             }
 
             if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.Id.Desc();
 
-            var list = AppMeter.Search(appId, start, end, p["Q"], p);
+            var list = AppMeter.Search(appId, clientId, start, end, p["Q"], p);
 
-            if (list.Count > 0)
+            if (list.Count > 0 && !clientId.IsNullOrEmpty())
             {
                 // 绘制日期曲线图
                 var app = App.FindByID(appId);
@@ -52,7 +60,7 @@ namespace Stardust.Web.Areas.Star.Controllers
 
                     var chart = new ECharts
                     {
-                        Title = new ChartTitle { Text = app.Name + " @ " + list2[0].CreateTime.ToFullString() },
+                        Title = new ChartTitle { Text = app.Name + "#" + clientId },
                         Height = 400,
                     };
                     chart.SetX(list2, _.CreateTime, e => e.CreateTime.ToString("HH:mm"));

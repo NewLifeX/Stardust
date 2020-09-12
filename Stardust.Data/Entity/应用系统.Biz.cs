@@ -1,6 +1,5 @@
 ﻿using System;
 using NewLife;
-using Stardust.Models;
 using Stardust.Monitors;
 using XCode.Membership;
 
@@ -97,11 +96,11 @@ namespace Stardust.Data
             if (app != null && model.Info != null)
             {
                 //ap.WriteHistory("Report", true, "");
-                var key = model.ClientId ?? ip;
-                var online = Data.AppOnline.GetOrAddSession(key);
+                var clientId = model.ClientId ?? ip;
+                var online = Data.AppOnline.GetOrAddSession(clientId);
                 online.UpdateInfo(app, model.Info);
 
-                AppMeter.WriteData(app, model.Info);
+                AppMeter.WriteData(app, model.Info, clientId);
             }
         }
 

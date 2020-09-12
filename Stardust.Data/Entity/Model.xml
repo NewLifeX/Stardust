@@ -77,7 +77,7 @@
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="Name" DataType="String" Master="True" Description="名称" />
+      <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@proccessid" />
       <Column Name="Memory" DataType="Int32" Description="内存。单位M" />
       <Column Name="ProcessorTime" DataType="Int32" Description="处理器。处理器时间，单位ms" />
       <Column Name="Threads" DataType="Int32" Description="线程数" />
@@ -89,7 +89,7 @@
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
     </Columns>
     <Indexes>
-      <Index Columns="AppId,Id" />
+      <Index Columns="AppId,ClientId,Id" />
     </Indexes>
   </Table>
   <Table Name="Service" Description="服务。服务提供者发布的服务">

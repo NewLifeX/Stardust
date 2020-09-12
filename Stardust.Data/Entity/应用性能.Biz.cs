@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using NewLife;
+using NewLife.Caching;
 using NewLife.Data;
 using NewLife.Serialization;
 using Stardust.Models;
@@ -90,20 +92,44 @@ namespace Stardust.Data
         #region 高级查询
         /// <summary>高级查询</summary>
         /// <param name="appId">应用</param>
+        /// <param name="clientId">客户端标识</param>
         /// <param name="start">开始时间</param>
         /// <param name="end">结束时间</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<AppMeter> Search(Int32 appId, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<AppMeter> Search(Int32 appId, String clientId, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (appId >= 0) exp &= _.AppId == appId;
+            if (!clientId.IsNullOrEmpty()) exp &= _.ClientId == clientId;
             exp &= _.Id.Between(start, end, Meta.Factory.FlowId);
-            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Data.Contains(key) | _.Creator.Contains(key) | _.CreateIP.Contains(key);
+            if (!key.IsNullOrEmpty()) exp &= _.ClientId.Contains(key) | _.Data.Contains(key) | _.Creator.Contains(key) | _.CreateIP.Contains(key);
 
             return FindAll(exp, page);
+        }
+
+        private static readonly ICache _cache = new MemoryCache { Expire = 600 };
+        /// <summary>获取某个应用下的客户端数</summary>
+        /// <param name="appId"></param>
+        /// <returns></returns>
+        public static IDictionary<String, String> GetClientIds(Int32 appId)
+        {
+            var dic = new Dictionary<String, String>();
+            if (appId <= 0) return dic;
+
+            var key = $"field:{appId}";
+            if (_cache.TryGet<IDictionary<String, String>>(key, out var value)) return value;
+
+            var exp = new WhereExpression();
+            exp &= _.AppId == appId & _.Id >= Meta.Factory.FlowId.GetId(DateTime.Today);
+            var list = FindAll(exp.GroupBy(_.ClientId), null, _.Id.Count() & _.ClientId);
+            value = list.ToDictionary(e => e.ClientId, e => $"{e.ClientId}({e.Id})");
+
+            _cache.Set(key, value);
+
+            return value;
         }
 
         // Select Count(Id) as Id,Category From AppMeter Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
@@ -121,13 +147,14 @@ namespace Stardust.Data
         /// <summary>更新信息</summary>
         /// <param name="app"></param>
         /// <param name="info"></param>
-        public static void WriteData(App app, AppInfo info)
+        /// <param name="clientId"></param>
+        public static void WriteData(App app, AppInfo info, String clientId)
         {
             // 插入节点数据
             var data = new AppMeter
             {
                 AppId = app.ID,
-                Name = app.Name,
+                ClientId = clientId,
                 Memory = (Int32)(info.WorkingSet / 1024 / 1024),
                 ProcessorTime = info.ProcessorTime,
                 Threads = info.Threads,

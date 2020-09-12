@@ -52,7 +52,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
 
                     var chart = new ECharts
                     {
-                        Title = new ChartTitle { Text = node.Name + " @ " + list2[0].LocalTime.ToFullString() },
+                        Title = new ChartTitle { Text = node.Name },
                         Height = 400,
                     };
                     chart.SetX(list2, _.LocalTime, e => e.LocalTime.ToString("HH:mm"));
