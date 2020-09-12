@@ -51,21 +51,13 @@ namespace Stardust.Data
         [BindColumn("Memory", "内存。单位M", "")]
         public Int32 Memory { get => _Memory; set { if (OnPropertyChanging("Memory", value)) { _Memory = value; OnPropertyChanged("Memory"); } } }
 
-        private Double _CpuRate;
-        /// <summary>CPU率。占用率</summary>
-        [DisplayName("CPU率")]
-        [Description("CPU率。占用率")]
+        private Int32 _ProcessorTime;
+        /// <summary>处理器。处理器时间，单位ms</summary>
+        [DisplayName("处理器")]
+        [Description("处理器。处理器时间，单位ms")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("CpuRate", "CPU率。占用率", "")]
-        public Double CpuRate { get => _CpuRate; set { if (OnPropertyChanging("CpuRate", value)) { _CpuRate = value; OnPropertyChanged("CpuRate"); } } }
-
-        private Double _Temperature;
-        /// <summary>温度</summary>
-        [DisplayName("温度")]
-        [Description("温度")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Temperature", "温度", "")]
-        public Double Temperature { get => _Temperature; set { if (OnPropertyChanging("Temperature", value)) { _Temperature = value; OnPropertyChanged("Temperature"); } } }
+        [BindColumn("ProcessorTime", "处理器。处理器时间，单位ms", "")]
+        public Int32 ProcessorTime { get => _ProcessorTime; set { if (OnPropertyChanging("ProcessorTime", value)) { _ProcessorTime = value; OnPropertyChanged("ProcessorTime"); } } }
 
         private Int32 _Threads;
         /// <summary>线程数</summary>
@@ -90,22 +82,6 @@ namespace Stardust.Data
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Connects", "连接数", "")]
         public Int32 Connects { get => _Connects; set { if (OnPropertyChanging("Connects", value)) { _Connects = value; OnPropertyChanged("Connects"); } } }
-
-        private DateTime _LocalTime;
-        /// <summary>本地时间</summary>
-        [DisplayName("本地时间")]
-        [Description("本地时间")]
-        [DataObjectField(false, false, true, 0)]
-        [BindColumn("LocalTime", "本地时间", "")]
-        public DateTime LocalTime { get => _LocalTime; set { if (OnPropertyChanging("LocalTime", value)) { _LocalTime = value; OnPropertyChanged("LocalTime"); } } }
-
-        private Int32 _Uptime;
-        /// <summary>开机时间。单位ms</summary>
-        [DisplayName("开机时间")]
-        [Description("开机时间。单位ms")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Uptime", "开机时间。单位ms", "")]
-        public Int32 Uptime { get => _Uptime; set { if (OnPropertyChanging("Uptime", value)) { _Uptime = value; OnPropertyChanged("Uptime"); } } }
 
         private String _Data;
         /// <summary>数据</summary>
@@ -154,13 +130,10 @@ namespace Stardust.Data
                     case "AppId": return _AppId;
                     case "Name": return _Name;
                     case "Memory": return _Memory;
-                    case "CpuRate": return _CpuRate;
-                    case "Temperature": return _Temperature;
+                    case "ProcessorTime": return _ProcessorTime;
                     case "Threads": return _Threads;
                     case "Handles": return _Handles;
                     case "Connects": return _Connects;
-                    case "LocalTime": return _LocalTime;
-                    case "Uptime": return _Uptime;
                     case "Data": return _Data;
                     case "Creator": return _Creator;
                     case "CreateTime": return _CreateTime;
@@ -176,13 +149,10 @@ namespace Stardust.Data
                     case "AppId": _AppId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Memory": _Memory = value.ToInt(); break;
-                    case "CpuRate": _CpuRate = value.ToDouble(); break;
-                    case "Temperature": _Temperature = value.ToDouble(); break;
+                    case "ProcessorTime": _ProcessorTime = value.ToInt(); break;
                     case "Threads": _Threads = value.ToInt(); break;
                     case "Handles": _Handles = value.ToInt(); break;
                     case "Connects": _Connects = value.ToInt(); break;
-                    case "LocalTime": _LocalTime = value.ToDateTime(); break;
-                    case "Uptime": _Uptime = value.ToInt(); break;
                     case "Data": _Data = Convert.ToString(value); break;
                     case "Creator": _Creator = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -209,11 +179,8 @@ namespace Stardust.Data
             /// <summary>内存。单位M</summary>
             public static readonly Field Memory = FindByName("Memory");
 
-            /// <summary>CPU率。占用率</summary>
-            public static readonly Field CpuRate = FindByName("CpuRate");
-
-            /// <summary>温度</summary>
-            public static readonly Field Temperature = FindByName("Temperature");
+            /// <summary>处理器。处理器时间，单位ms</summary>
+            public static readonly Field ProcessorTime = FindByName("ProcessorTime");
 
             /// <summary>线程数</summary>
             public static readonly Field Threads = FindByName("Threads");
@@ -223,12 +190,6 @@ namespace Stardust.Data
 
             /// <summary>连接数</summary>
             public static readonly Field Connects = FindByName("Connects");
-
-            /// <summary>本地时间</summary>
-            public static readonly Field LocalTime = FindByName("LocalTime");
-
-            /// <summary>开机时间。单位ms</summary>
-            public static readonly Field Uptime = FindByName("Uptime");
 
             /// <summary>数据</summary>
             public static readonly Field Data = FindByName("Data");
@@ -260,11 +221,8 @@ namespace Stardust.Data
             /// <summary>内存。单位M</summary>
             public const String Memory = "Memory";
 
-            /// <summary>CPU率。占用率</summary>
-            public const String CpuRate = "CpuRate";
-
-            /// <summary>温度</summary>
-            public const String Temperature = "Temperature";
+            /// <summary>处理器。处理器时间，单位ms</summary>
+            public const String ProcessorTime = "ProcessorTime";
 
             /// <summary>线程数</summary>
             public const String Threads = "Threads";
@@ -274,12 +232,6 @@ namespace Stardust.Data
 
             /// <summary>连接数</summary>
             public const String Connects = "Connects";
-
-            /// <summary>本地时间</summary>
-            public const String LocalTime = "LocalTime";
-
-            /// <summary>开机时间。单位ms</summary>
-            public const String Uptime = "Uptime";
 
             /// <summary>数据</summary>
             public const String Data = "Data";

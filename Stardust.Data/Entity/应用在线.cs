@@ -61,6 +61,30 @@ namespace Stardust.Data
         [BindColumn("Name", "名称。机器名称", "", Master = true)]
         public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
+        private Int32 _ProcessId;
+        /// <summary>进程Id</summary>
+        [DisplayName("进程Id")]
+        [Description("进程Id")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("ProcessId", "进程Id", "")]
+        public Int32 ProcessId { get => _ProcessId; set { if (OnPropertyChanging("ProcessId", value)) { _ProcessId = value; OnPropertyChanged("ProcessId"); } } }
+
+        private String _ProcessName;
+        /// <summary>进程名称</summary>
+        [DisplayName("进程名称")]
+        [Description("进程名称")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("ProcessName", "进程名称", "")]
+        public String ProcessName { get => _ProcessName; set { if (OnPropertyChanging("ProcessName", value)) { _ProcessName = value; OnPropertyChanged("ProcessName"); } } }
+
+        private DateTime _StartTime;
+        /// <summary>进程时间</summary>
+        [DisplayName("进程时间")]
+        [Description("进程时间")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("StartTime", "进程时间", "")]
+        public DateTime StartTime { get => _StartTime; set { if (OnPropertyChanging("StartTime", value)) { _StartTime = value; OnPropertyChanged("StartTime"); } } }
+
         private String _Version;
         /// <summary>版本。客户端</summary>
         [DisplayName("版本")]
@@ -165,6 +189,9 @@ namespace Stardust.Data
                     case "Session": return _Session;
                     case "Client": return _Client;
                     case "Name": return _Name;
+                    case "ProcessId": return _ProcessId;
+                    case "ProcessName": return _ProcessName;
+                    case "StartTime": return _StartTime;
                     case "Version": return _Version;
                     case "Compile": return _Compile;
                     case "Server": return _Server;
@@ -188,6 +215,9 @@ namespace Stardust.Data
                     case "Session": _Session = Convert.ToString(value); break;
                     case "Client": _Client = Convert.ToString(value); break;
                     case "Name": _Name = Convert.ToString(value); break;
+                    case "ProcessId": _ProcessId = value.ToInt(); break;
+                    case "ProcessName": _ProcessName = Convert.ToString(value); break;
+                    case "StartTime": _StartTime = value.ToDateTime(); break;
                     case "Version": _Version = Convert.ToString(value); break;
                     case "Compile": _Compile = value.ToDateTime(); break;
                     case "Server": _Server = Convert.ToString(value); break;
@@ -223,6 +253,15 @@ namespace Stardust.Data
 
             /// <summary>名称。机器名称</summary>
             public static readonly Field Name = FindByName("Name");
+
+            /// <summary>进程Id</summary>
+            public static readonly Field ProcessId = FindByName("ProcessId");
+
+            /// <summary>进程名称</summary>
+            public static readonly Field ProcessName = FindByName("ProcessName");
+
+            /// <summary>进程时间</summary>
+            public static readonly Field StartTime = FindByName("StartTime");
 
             /// <summary>版本。客户端</summary>
             public static readonly Field Version = FindByName("Version");
@@ -277,6 +316,15 @@ namespace Stardust.Data
 
             /// <summary>名称。机器名称</summary>
             public const String Name = "Name";
+
+            /// <summary>进程Id</summary>
+            public const String ProcessId = "ProcessId";
+
+            /// <summary>进程名称</summary>
+            public const String ProcessName = "ProcessName";
+
+            /// <summary>进程时间</summary>
+            public const String StartTime = "StartTime";
 
             /// <summary>版本。客户端</summary>
             public const String Version = "Version";

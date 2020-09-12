@@ -35,6 +35,9 @@
       <Column Name="Session" DataType="String" Description="实例。IP加端口" />
       <Column Name="Client" DataType="String" Description="客户端。IP加进程" />
       <Column Name="Name" DataType="String" Master="True" Description="名称。机器名称" />
+      <Column Name="ProcessId" DataType="Int32" Description="进程Id" />
+      <Column Name="ProcessName" DataType="String" Description="进程名称" />
+      <Column Name="StartTime" DataType="DateTime" Description="进程时间" />
       <Column Name="Version" DataType="String" Description="版本。客户端" />
       <Column Name="Compile" DataType="DateTime" Description="编译时间。客户端" />
       <Column Name="Server" DataType="String" Description="服务端。客户端登录到哪个服务端，IP加端口" />
@@ -76,13 +79,10 @@
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
       <Column Name="Memory" DataType="Int32" Description="内存。单位M" />
-      <Column Name="CpuRate" DataType="Double" Description="CPU率。占用率" />
-      <Column Name="Temperature" DataType="Double" Description="温度" />
+      <Column Name="ProcessorTime" DataType="Int32" Description="处理器。处理器时间，单位ms" />
       <Column Name="Threads" DataType="Int32" Description="线程数" />
       <Column Name="Handles" DataType="Int32" Description="句柄数" />
       <Column Name="Connects" DataType="Int32" Description="连接数" />
-      <Column Name="LocalTime" DataType="DateTime" Description="本地时间" />
-      <Column Name="Uptime" DataType="Int32" Description="开机时间。单位ms" />
       <Column Name="Data" DataType="String" Length="-1" Description="数据" />
       <Column Name="Creator" DataType="String" Description="创建者。服务端节点" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
