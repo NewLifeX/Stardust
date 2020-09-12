@@ -130,7 +130,7 @@ namespace Stardust.Monitors
                 WorkingSet = _process.WorkingSet64,
                 Threads = _process.Threads.Count,
                 Handles = _process.HandleCount,
-                Connections = connections.Count(e => e.State == TcpState.Established),
+                Connections = connections.Length,
             };
 
             // 发送，失败后进入队列
