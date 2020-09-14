@@ -14,6 +14,9 @@ namespace Stardust.Models
         /// <summary>名称</summary>
         public String Name { get; set; }
 
+        /// <summary>用户名</summary>
+        public String UserName { get; set; }
+
         /// <summary>开始时间</summary>
         public DateTime StartTime { get; set; }
 
@@ -51,6 +54,7 @@ namespace Stardust.Models
                 Threads = process.Threads.Count;
                 Handles = process.HandleCount;
 
+                UserName = Environment.UserName;
                 StartTime = process.StartTime;
                 ProcessorTime = (Int32)process.TotalProcessorTime.TotalMilliseconds;
             }
