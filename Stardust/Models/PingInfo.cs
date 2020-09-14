@@ -39,7 +39,7 @@ namespace Stardust.Models
         /// <summary>被动关闭的Tcp连接数</summary>
         public Int32 TcpCloseWait { get; set; }
 
-        /// <summary>开机时间，ms</summary>
+        /// <summary>开机时间，单位s</summary>
         public Int32 Uptime { get; set; }
 
         /// <summary>本地UTC时间。ms毫秒</summary>

@@ -190,11 +190,11 @@ namespace Stardust.Data.Nodes
         public DateTime LocalTime { get => _LocalTime; set { if (OnPropertyChanging("LocalTime", value)) { _LocalTime = value; OnPropertyChanged("LocalTime"); } } }
 
         private Int32 _Uptime;
-        /// <summary>开机时间。单位ms</summary>
+        /// <summary>开机时间。单位s</summary>
         [DisplayName("开机时间")]
-        [Description("开机时间。单位ms")]
+        [Description("开机时间。单位s")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Uptime", "开机时间。单位ms", "")]
+        [BindColumn("Uptime", "开机时间。单位s", "")]
         public Int32 Uptime { get => _Uptime; set { if (OnPropertyChanging("Uptime", value)) { _Uptime = value; OnPropertyChanged("Uptime"); } } }
 
         private String _MACs;
@@ -402,7 +402,7 @@ namespace Stardust.Data.Nodes
             /// <summary>本地时间</summary>
             public static readonly Field LocalTime = FindByName("LocalTime");
 
-            /// <summary>开机时间。单位ms</summary>
+            /// <summary>开机时间。单位s</summary>
             public static readonly Field Uptime = FindByName("Uptime");
 
             /// <summary>网卡</summary>
@@ -495,7 +495,7 @@ namespace Stardust.Data.Nodes
             /// <summary>本地时间</summary>
             public const String LocalTime = "LocalTime";
 
-            /// <summary>开机时间。单位ms</summary>
+            /// <summary>开机时间。单位s</summary>
             public const String Uptime = "Uptime";
 
             /// <summary>网卡</summary>

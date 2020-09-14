@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using NewLife;
 using NewLife.Http;
@@ -280,7 +281,7 @@ namespace Stardust
                 TcpConnections = connections.Count(e => e.State == TcpState.Established),
                 TcpTimeWait = connections.Count(e => e.State == TcpState.TimeWait),
                 TcpCloseWait = connections.Count(e => e.State == TcpState.CloseWait),
-                Uptime = Environment.TickCount,
+                Uptime = Environment.TickCount / 1000,
 
                 Macs = mcs,
                 //COMs = ps.Join(","),
@@ -290,9 +291,19 @@ namespace Stardust
                 Time = DateTime.UtcNow.ToLong(),
                 Delay = Delay,
             };
+#if __CORE__
+            //ext.Uptime = Environment.TickCount64 / 1000;
+#endif
+            // 开始时间 Environment.TickCount 很容易溢出，导致开机24天后变成负数。
+            // 后来在 netcore3.0 增加了Environment.TickCount64
+            // 现在借助 Stopwatch 来解决
+            if (Stopwatch.IsHighResolution) ext.Uptime = (Int32)(Stopwatch.GetTimestamp() / Stopwatch.Frequency);
 
             return ext;
         }
+
+        //[DllImport("kernel32.dll")]
+        //private static extern UInt64 GetTickCount64();
 
         private TimerX _timer;
         /// <summary>心跳</summary>
@@ -457,6 +468,6 @@ namespace Stardust
         /// <param name="channel"></param>
         /// <returns></returns>
         public async Task<UpgradeInfo> UpgradeAsync(String channel) => await GetAsync<UpgradeInfo>("Node/Upgrade", new { channel });
-        #endregion   
+        #endregion
     }
 }

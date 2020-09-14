@@ -55,7 +55,7 @@ namespace Stardust.Data.Nodes
 
         /// <summary>开机时间</summary>
         [Map(nameof(Uptime))]
-        public String UptimeName => TimeSpan.FromMilliseconds(Uptime).ToString().TrimEnd("0000").TrimStart("00:");
+        public String UptimeName => TimeSpan.FromSeconds(Uptime).ToString().TrimEnd("0000").TrimStart("00:");
         #endregion
 
         #region 扩展查询

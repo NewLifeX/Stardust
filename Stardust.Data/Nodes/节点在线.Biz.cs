@@ -6,6 +6,7 @@ using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using NewLife.Serialization;
 using Stardust.Models;
 using XCode;
 using XCode.Membership;
@@ -230,6 +231,7 @@ namespace Stardust.Data.Nodes
                 Delay = inf.Delay,
                 LocalTime = dt,
                 Offset = olt.Offset,
+                Data = inf.ToJson(),
                 Creator = Environment.MachineName,
             };
 
