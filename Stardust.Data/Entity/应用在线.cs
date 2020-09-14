@@ -77,6 +77,14 @@ namespace Stardust.Data
         [BindColumn("ProcessName", "进程名称", "")]
         public String ProcessName { get => _ProcessName; set { if (OnPropertyChanging("ProcessName", value)) { _ProcessName = value; OnPropertyChanged("ProcessName"); } } }
 
+        private String _UserName;
+        /// <summary>用户名。启动该进程的用户名</summary>
+        [DisplayName("用户名")]
+        [Description("用户名。启动该进程的用户名")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("UserName", "用户名。启动该进程的用户名", "")]
+        public String UserName { get => _UserName; set { if (OnPropertyChanging("UserName", value)) { _UserName = value; OnPropertyChanged("UserName"); } } }
+
         private DateTime _StartTime;
         /// <summary>进程时间</summary>
         [DisplayName("进程时间")]
@@ -191,6 +199,7 @@ namespace Stardust.Data
                     case "Name": return _Name;
                     case "ProcessId": return _ProcessId;
                     case "ProcessName": return _ProcessName;
+                    case "UserName": return _UserName;
                     case "StartTime": return _StartTime;
                     case "Version": return _Version;
                     case "Compile": return _Compile;
@@ -217,6 +226,7 @@ namespace Stardust.Data
                     case "Name": _Name = Convert.ToString(value); break;
                     case "ProcessId": _ProcessId = value.ToInt(); break;
                     case "ProcessName": _ProcessName = Convert.ToString(value); break;
+                    case "UserName": _UserName = Convert.ToString(value); break;
                     case "StartTime": _StartTime = value.ToDateTime(); break;
                     case "Version": _Version = Convert.ToString(value); break;
                     case "Compile": _Compile = value.ToDateTime(); break;
@@ -259,6 +269,9 @@ namespace Stardust.Data
 
             /// <summary>进程名称</summary>
             public static readonly Field ProcessName = FindByName("ProcessName");
+
+            /// <summary>用户名。启动该进程的用户名</summary>
+            public static readonly Field UserName = FindByName("UserName");
 
             /// <summary>进程时间</summary>
             public static readonly Field StartTime = FindByName("StartTime");
@@ -322,6 +335,9 @@ namespace Stardust.Data
 
             /// <summary>进程名称</summary>
             public const String ProcessName = "ProcessName";
+
+            /// <summary>用户名。启动该进程的用户名</summary>
+            public const String UserName = "UserName";
 
             /// <summary>进程时间</summary>
             public const String StartTime = "StartTime";
