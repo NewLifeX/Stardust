@@ -102,7 +102,7 @@ namespace Stardust.Data
         {
             AppID = app.ID;
             Name = app.Name;
-
+            UserName = info.UserName;
             ProcessId = info.Id;
             ProcessName = info.Name;
             StartTime = info.StartTime;
