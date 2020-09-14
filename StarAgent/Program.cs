@@ -35,7 +35,7 @@ namespace StarAgent
             }
 
             // 注册菜单，在控制台菜单中按 t 可以执行Test函数，主要用于临时处理数据
-            if (set.Server != "http://star.newlifex.com:6600") AddMenu('s', "使用星尘", UseStarServer);
+            AddMenu('s', "使用星尘", UseStarServer);
             AddMenu('t', "服务器信息", ShowMachineInfo);
         }
 
@@ -161,11 +161,30 @@ namespace StarAgent
             }
         }
 
+        protected override void ShowMenu()
+        {
+            base.ShowMenu();
+
+            var set = Stardust.Setting.Current;
+            if (!set.Server.IsNullOrEmpty()) Console.WriteLine("服务端：{0}", set.Server);
+            Console.WriteLine();
+        }
+
         public void UseStarServer()
         {
             var set = Stardust.Setting.Current;
-            set.Server = "http://star.newlifex.com:6600";
+
+            if (!set.Server.IsNullOrEmpty()) Console.WriteLine("服务端：{0}", set.Server);
+
+            Console.WriteLine("请输入新的服务端：");
+
+            var addr = Console.ReadLine();
+            if (addr.IsNullOrEmpty()) addr = "http://star.newlifex.com:6600";
+
+            set.Server = addr;
             set.Save();
+
+            WriteLog("服务端修改为：{0}", addr);
         }
 
         public void ShowMachineInfo()
