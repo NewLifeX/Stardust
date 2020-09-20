@@ -34,6 +34,11 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var start = p["start"].ToLong(-1);
             var end = p["end"].ToLong(-1);
 
+            // 指定跟踪标识后，分页100
+            if (!traceId.IsNullOrEmpty())
+            {
+                if (p.PageSize == 20) p.PageSize = 100;
+            }
             if (p.Sort.IsNullOrEmpty()) p.OrderBy = SampleData._.Id.Desc();
 
             var list = SampleData.Search(dataId, appId, name, traceId, spanId, parentId, success, start, end, p["Q"], p);
