@@ -293,6 +293,7 @@ namespace Stardust.Server.Controllers
                 node.SaveAsync();
 
                 var olt = GetOnline(code, node) ?? CreateOnline(code, node);
+                olt.Name = node.Name;
                 olt.Save(null, inf, Token);
 
                 // 拉取命令
