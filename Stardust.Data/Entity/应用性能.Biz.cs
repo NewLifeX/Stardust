@@ -104,7 +104,7 @@ namespace Stardust.Data
 
             if (appId >= 0) exp &= _.AppId == appId;
             if (!clientId.IsNullOrEmpty() && clientId != "null") exp &= _.ClientId == clientId;
-            exp &= _.Id.Between(start, end, Meta.Factory.FlowId);
+            exp &= _.Id.Between(start, end, Meta.Factory.Snow);
             if (!key.IsNullOrEmpty()) exp &= _.ClientId.Contains(key) | _.Data.Contains(key) | _.Creator.Contains(key) | _.CreateIP.Contains(key);
 
             return FindAll(exp, page);
@@ -125,7 +125,7 @@ namespace Stardust.Data
 
             // 计算应用的ClientIds时，采取Id降序，较新活跃的客户端在前面
             var exp = new WhereExpression();
-            exp &= _.AppId == appId & _.Id >= Meta.Factory.FlowId.GetId(DateTime.Today);
+            exp &= _.AppId == appId & _.Id >= Meta.Factory.Snow.GetId(DateTime.Today);
             var list = FindAll(exp.GroupBy(_.ClientId), null, _.Id.Max() & _.ClientId);
             value = list.OrderByDescending(e => e.Id).ToDictionary(e => e.ClientId ?? "null", e => $"{e.ClientId}({e.Id})");
 

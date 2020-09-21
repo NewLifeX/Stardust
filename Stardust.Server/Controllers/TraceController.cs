@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
+using NewLife.Caching;
 using NewLife.Log;
 using Stardust.Data.Monitors;
 using Stardust.Monitors;
@@ -21,6 +22,7 @@ namespace Stardust.Server.Controllers
         private readonly AppService _service = new AppService();
         private readonly ITraceStatService _stat;
         private readonly IAppDayStatService _appStat;
+        private static readonly ICache _cache = new NewLife.Caching.MemoryCache();
 
         public TraceController(ITraceStatService stat, IAppDayStatService appStat)
         {
@@ -89,7 +91,7 @@ namespace Stardust.Server.Controllers
             var excludes = app.Excludes.Split(",", ";") ?? new String[0];
             builders = builders.Where(e => !e.Name.EndsWithIgnoreCase("/Trace/Report")).ToArray();
 
-            var flow = TraceData.Meta.Factory.FlowId;
+            var flow = TraceData.Meta.Factory.Snow;
             var traces = new List<TraceData>();
             var samples = new List<SampleData>();
             foreach (var item in builders)
@@ -116,6 +118,18 @@ namespace Stardust.Server.Controllers
 
             traces.Insert(true);
             samples.Insert(true);
+
+            // 应用节点数
+            var nodes = app.Nodes?.Split(",").ToList() ?? new List<String>();
+            if (!nodes.Contains(ip))
+            {
+                // 如果超过一定时间没有更新，则刷新它
+                if (_cache.Add("appNodes:" + app.ID, 1, 3600)) nodes.Clear();
+
+                nodes.Add(ip);
+                app.Nodes = nodes.OrderBy(e => e).Join();
+                app.SaveAsync();
+            }
         }
     }
 }

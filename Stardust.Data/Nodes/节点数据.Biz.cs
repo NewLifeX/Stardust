@@ -102,7 +102,7 @@ namespace Stardust.Data.Nodes
             if (nodeId >= 0) exp &= _.NodeID == nodeId;
 
             // 主键带有时间戳
-            var flow = Meta.Factory.FlowId;
+            var flow = Meta.Factory.Snow;
             if (flow != null)
                 exp &= _.ID.Between(start, end, flow);
             else

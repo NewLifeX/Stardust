@@ -143,7 +143,7 @@ namespace Stardust.Data.Monitors
             var list = new List<SampleData>();
             if (spans == null || spans.Count == 0) return list;
 
-            var flow = Meta.Factory.FlowId;
+            var flow = Meta.Factory.Snow;
             foreach (var item in spans)
             {
                 // 耗时超标的片段，也计为失败

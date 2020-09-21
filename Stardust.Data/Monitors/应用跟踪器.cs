@@ -68,19 +68,19 @@ namespace Stardust.Data.Monitors
         public Int32 Period { get => _Period; set { if (OnPropertyChanging("Period", value)) { _Period = value; OnPropertyChanged("Period"); } } }
 
         private Int32 _MaxSamples;
-        /// <summary>最大正常采样数。采样周期内，最多只记录指定数量的正常事件，用于绘制依赖关系</summary>
-        [DisplayName("最大正常采样数")]
-        [Description("最大正常采样数。采样周期内，最多只记录指定数量的正常事件，用于绘制依赖关系")]
+        /// <summary>正常数。最大正常采样数，采样周期内，最多只记录指定数量的正常事件，用于绘制依赖关系</summary>
+        [DisplayName("正常数")]
+        [Description("正常数。最大正常采样数，采样周期内，最多只记录指定数量的正常事件，用于绘制依赖关系")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("MaxSamples", "最大正常采样数。采样周期内，最多只记录指定数量的正常事件，用于绘制依赖关系", "")]
+        [BindColumn("MaxSamples", "正常数。最大正常采样数，采样周期内，最多只记录指定数量的正常事件，用于绘制依赖关系", "")]
         public Int32 MaxSamples { get => _MaxSamples; set { if (OnPropertyChanging("MaxSamples", value)) { _MaxSamples = value; OnPropertyChanged("MaxSamples"); } } }
 
         private Int32 _MaxErrors;
-        /// <summary>最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10</summary>
-        [DisplayName("最大异常采样数")]
-        [Description("最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10")]
+        /// <summary>异常数。最大异常采样数，采样周期内，最多只记录指定数量的异常事件，默认10</summary>
+        [DisplayName("异常数")]
+        [Description("异常数。最大异常采样数，采样周期内，最多只记录指定数量的异常事件，默认10")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("MaxErrors", "最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10", "")]
+        [BindColumn("MaxErrors", "异常数。最大异常采样数，采样周期内，最多只记录指定数量的异常事件，默认10", "")]
         public Int32 MaxErrors { get => _MaxErrors; set { if (OnPropertyChanging("MaxErrors", value)) { _MaxErrors = value; OnPropertyChanged("MaxErrors"); } } }
 
         private String _Excludes;
@@ -98,6 +98,14 @@ namespace Stardust.Data.Monitors
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Timeout", "超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒", "")]
         public Int32 Timeout { get => _Timeout; set { if (OnPropertyChanging("Timeout", value)) { _Timeout = value; OnPropertyChanged("Timeout"); } } }
+
+        private String _Nodes;
+        /// <summary>节点集。该应用最近一段时间所涉及的来源地址</summary>
+        [DisplayName("节点集")]
+        [Description("节点集。该应用最近一段时间所涉及的来源地址")]
+        [DataObjectField(false, false, true, 500)]
+        [BindColumn("Nodes", "节点集。该应用最近一段时间所涉及的来源地址", "")]
+        public String Nodes { get => _Nodes; set { if (OnPropertyChanging("Nodes", value)) { _Nodes = value; OnPropertyChanged("Nodes"); } } }
 
         private String _CreateUser;
         /// <summary>创建者</summary>
@@ -184,6 +192,7 @@ namespace Stardust.Data.Monitors
                     case "MaxErrors": return _MaxErrors;
                     case "Excludes": return _Excludes;
                     case "Timeout": return _Timeout;
+                    case "Nodes": return _Nodes;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -209,6 +218,7 @@ namespace Stardust.Data.Monitors
                     case "MaxErrors": _MaxErrors = value.ToInt(); break;
                     case "Excludes": _Excludes = Convert.ToString(value); break;
                     case "Timeout": _Timeout = value.ToInt(); break;
+                    case "Nodes": _Nodes = Convert.ToString(value); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -245,10 +255,10 @@ namespace Stardust.Data.Monitors
             /// <summary>采样周期。单位秒</summary>
             public static readonly Field Period = FindByName("Period");
 
-            /// <summary>最大正常采样数。采样周期内，最多只记录指定数量的正常事件，用于绘制依赖关系</summary>
+            /// <summary>正常数。最大正常采样数，采样周期内，最多只记录指定数量的正常事件，用于绘制依赖关系</summary>
             public static readonly Field MaxSamples = FindByName("MaxSamples");
 
-            /// <summary>最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10</summary>
+            /// <summary>异常数。最大异常采样数，采样周期内，最多只记录指定数量的异常事件，默认10</summary>
             public static readonly Field MaxErrors = FindByName("MaxErrors");
 
             /// <summary>排除项。要排除的操作名，支持*模糊匹配</summary>
@@ -256,6 +266,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒</summary>
             public static readonly Field Timeout = FindByName("Timeout");
+
+            /// <summary>节点集。该应用最近一段时间所涉及的来源地址</summary>
+            public static readonly Field Nodes = FindByName("Nodes");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
@@ -305,10 +318,10 @@ namespace Stardust.Data.Monitors
             /// <summary>采样周期。单位秒</summary>
             public const String Period = "Period";
 
-            /// <summary>最大正常采样数。采样周期内，最多只记录指定数量的正常事件，用于绘制依赖关系</summary>
+            /// <summary>正常数。最大正常采样数，采样周期内，最多只记录指定数量的正常事件，用于绘制依赖关系</summary>
             public const String MaxSamples = "MaxSamples";
 
-            /// <summary>最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10</summary>
+            /// <summary>异常数。最大异常采样数，采样周期内，最多只记录指定数量的异常事件，默认10</summary>
             public const String MaxErrors = "MaxErrors";
 
             /// <summary>排除项。要排除的操作名，支持*模糊匹配</summary>
@@ -316,6 +329,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒</summary>
             public const String Timeout = "Timeout";
+
+            /// <summary>节点集。该应用最近一段时间所涉及的来源地址</summary>
+            public const String Nodes = "Nodes";
 
             /// <summary>创建者</summary>
             public const String CreateUser = "CreateUser";

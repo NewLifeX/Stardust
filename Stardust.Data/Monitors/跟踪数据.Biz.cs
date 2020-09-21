@@ -109,7 +109,7 @@ namespace Stardust.Data.Monitors
                     exp &= _.StatDate.Between(start, end);
             }
             else
-                exp &= _.Id.Between(start, end, Meta.Factory.FlowId);
+                exp &= _.Id.Between(start, end, Meta.Factory.Snow);
 
             return FindAll(exp, page);
         }
@@ -155,7 +155,7 @@ namespace Stardust.Data.Monitors
         /// <returns></returns>
         public static Int32 FixStatDate(DateTime date)
         {
-            return Update(_.StatDate == date, _.Id.Between(date, date, Meta.Factory.FlowId));
+            return Update(_.StatDate == date, _.Id.Between(date, date, Meta.Factory.Snow));
         }
         #endregion
 
