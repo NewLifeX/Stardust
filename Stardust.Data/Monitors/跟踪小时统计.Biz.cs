@@ -1,19 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
+using System.Web;
+using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using NewLife.Log;
+using NewLife.Model;
+using NewLife.Reflection;
+using NewLife.Threading;
+using NewLife.Web;
 using XCode;
+using XCode.Cache;
+using XCode.Configuration;
+using XCode.DataAccessLayer;
 using XCode.Membership;
 
 namespace Stardust.Data.Monitors
 {
-    /// <summary>跟踪每日统计。每应用每接口每日统计，用于分析接口健康状况</summary>
-    public partial class TraceDayStat : Entity<TraceDayStat>
+    /// <summary>跟踪小时统计。每应用每接口每小时统计，用于分析接口健康状况</summary>
+    public partial class TraceHourStat : Entity<TraceHourStat>
     {
         #region 对象操作
-        static TraceDayStat()
+        static TraceHourStat()
         {
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
             var df = Meta.Factory.AdditionalFields;
@@ -25,12 +41,15 @@ namespace Stardust.Data.Monitors
             Meta.Modules.Add<TimeModule>();
         }
 
-        /// <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>
+        /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
         /// <param name="isNew">是否插入</param>
         public override void Valid(Boolean isNew)
         {
             // 如果没有脏数据，则不需要进行任何处理
             if (!HasDirty) return;
+
+            // 建议先调用基类方法，基类方法会做一些统一处理
+            base.Valid(isNew);
 
             Cost = Total == 0 ? 0 : (Int32)(TotalCost / Total);
         }
@@ -50,7 +69,7 @@ namespace Stardust.Data.Monitors
         /// <summary>根据编号查找</summary>
         /// <param name="id">编号</param>
         /// <returns>实体对象</returns>
-        public static TraceDayStat FindByID(Int32 id)
+        public static TraceHourStat FindByID(Int32 id)
         {
             if (id <= 0) return null;
 
@@ -61,6 +80,19 @@ namespace Stardust.Data.Monitors
             return Meta.SingleCache[id];
 
             //return Find(_.ID == id);
+        }
+
+        /// <summary>根据应用、操作名、编号查找</summary>
+        /// <param name="appId">应用</param>
+        /// <param name="name">操作名</param>
+        /// <param name="id">编号</param>
+        /// <returns>实体列表</returns>
+        public static IList<TraceHourStat> FindAllByAppIdAndNameAndID(Int32 appId, String name, Int32 id)
+        {
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.Name == name && e.ID == id);
+
+            return FindAll(_.AppId == appId & _.Name == name & _.ID == id);
         }
         #endregion
 
@@ -73,7 +105,7 @@ namespace Stardust.Data.Monitors
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<TraceDayStat> Search(Int32 appId, String name, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<TraceHourStat> Search(Int32 appId, String name, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
@@ -89,7 +121,7 @@ namespace Stardust.Data.Monitors
         /// <param name="date"></param>
         /// <param name="appIds"></param>
         /// <returns></returns>
-        public static IList<TraceDayStat> Search(DateTime date, Int32[] appIds) => FindAll(_.StatDate == date & _.AppId.In(appIds));
+        public static IList<TraceHourStat> Search(DateTime date, Int32[] appIds) => FindAll(_.StatDate == date & _.AppId.In(appIds));
         #endregion
 
         #region 业务操作
