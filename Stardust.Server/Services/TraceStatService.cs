@@ -48,9 +48,8 @@ namespace Stardust.Server.Services
             }
             if (appIds.Count == 0) return;
 
-            // 统计日期，凌晨0点10分之前统计前一天
-            var time = DateTime.Now;
-            if (time.Hour == 0 && time.Minute < 10) ProcessDay(time.AddDays(-1), appIds);
+            // 统计1分钟之前数据
+            var time = DateTime.Now.AddMinutes(-1);
 
             ProcessDay(time, appIds);
             ProcessHour(time, appIds);
