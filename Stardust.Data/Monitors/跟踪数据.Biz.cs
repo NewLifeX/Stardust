@@ -167,7 +167,7 @@ namespace Stardust.Data.Monitors
         {
             var td = new TraceData
             {
-                Name = builder.Name,
+                Name = builder.Name.Cut(50),
                 StartTime = builder.StartTime,
                 EndTime = builder.EndTime,
 
