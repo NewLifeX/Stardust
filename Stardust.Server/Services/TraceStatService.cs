@@ -50,8 +50,15 @@ namespace Stardust.Server.Services
 
             // 统计日期，凌晨0点10分之前统计前一天
             var time = DateTime.Now;
-            if (time.Hour == 0 && time.Minute < 10) time = time.AddDays(-1);
-            var date = time.Date;
+            if (time.Hour == 0 && time.Minute < 10) Process(time.AddDays(-1).Date, appIds);
+
+            Process(time.Date, appIds);
+        }
+
+        private void Process(DateTime date, IList<Int32> appIds)
+        {
+            // 统计对象
+            var sts = TraceDayStat.Search(date, appIds.ToArray());
 
             // 逐个应用计算
             foreach (var appId in appIds)
@@ -59,9 +66,6 @@ namespace Stardust.Server.Services
                 // 统计数据
                 var list = TraceData.SearchGroupAppAndName(date, new[] { appId });
                 if (list.Count == 0) return;
-
-                // 统计对象
-                var sts = TraceDayStat.Search(date, list.Select(e => e.AppId).ToArray());
 
                 // 聚合
                 foreach (var item in list)
@@ -79,10 +83,10 @@ namespace Stardust.Server.Services
                     st.MaxCost = item.MaxCost;
                     st.MinCost = item.MinCost;
                 }
-
-                // 保存统计
-                sts.Save(true);
             }
+
+            // 保存统计
+            sts.Save(true);
         }
     }
 }
