@@ -103,6 +103,9 @@ namespace Stardust.Data.Monitors
 
             if (appId > 0)
             {
+                // 跟踪数据查询，时间段带有时分秒时，查id而不是statdate
+                if (start.Year > 2000 && start != start.Date)
+                    exp &= _.Id.Between(start, end, Meta.Factory.Snow);
                 if (start.Year > 2000 && start == end)
                     exp &= _.StatDate == start;
                 else
