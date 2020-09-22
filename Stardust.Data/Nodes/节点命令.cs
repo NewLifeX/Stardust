@@ -52,6 +52,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("Argument", "参数", "")]
         public String Argument { get => _Argument; set { if (OnPropertyChanging("Argument", value)) { _Argument = value; OnPropertyChanged("Argument"); } } }
 
+        private DateTime _Expire;
+        /// <summary>过期时间。未指定时表示不限制</summary>
+        [DisplayName("过期时间")]
+        [Description("过期时间。未指定时表示不限制")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("Expire", "过期时间。未指定时表示不限制", "")]
+        public DateTime Expire { get => _Expire; set { if (OnPropertyChanging("Expire", value)) { _Expire = value; OnPropertyChanged("Expire"); } } }
+
         private Boolean _Finished;
         /// <summary>完成。客户端是否已执行</summary>
         [DisplayName("完成")]
@@ -131,6 +139,7 @@ namespace Stardust.Data.Nodes
                     case "NodeID": return _NodeID;
                     case "Command": return _Command;
                     case "Argument": return _Argument;
+                    case "Expire": return _Expire;
                     case "Finished": return _Finished;
                     case "Result": return _Result;
                     case "CreateUserID": return _CreateUserID;
@@ -150,6 +159,7 @@ namespace Stardust.Data.Nodes
                     case "NodeID": _NodeID = value.ToInt(); break;
                     case "Command": _Command = Convert.ToString(value); break;
                     case "Argument": _Argument = Convert.ToString(value); break;
+                    case "Expire": _Expire = value.ToDateTime(); break;
                     case "Finished": _Finished = value.ToBoolean(); break;
                     case "Result": _Result = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
@@ -179,6 +189,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>参数</summary>
             public static readonly Field Argument = FindByName("Argument");
+
+            /// <summary>过期时间。未指定时表示不限制</summary>
+            public static readonly Field Expire = FindByName("Expire");
 
             /// <summary>完成。客户端是否已执行</summary>
             public static readonly Field Finished = FindByName("Finished");
@@ -221,6 +234,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>参数</summary>
             public const String Argument = "Argument";
+
+            /// <summary>过期时间。未指定时表示不限制</summary>
+            public const String Expire = "Expire";
 
             /// <summary>完成。客户端是否已执行</summary>
             public const String Finished = "Finished";

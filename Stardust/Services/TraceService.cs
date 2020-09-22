@@ -45,8 +45,11 @@ namespace Stardust.Services
                 var cmd = ms[0];
                 XTrace.WriteLine(cmd.ToJson());
 
-                var data = GetScreenCapture();
-                Callback?.Invoke(cmd.Id, data);
+                if (cmd.Expire.Year < 2000 || cmd.Expire > DateTime.Now)
+                {
+                    var data = GetScreenCapture();
+                    Callback?.Invoke(cmd.Id, data);
+                }
 #endif
             }
 
@@ -57,8 +60,11 @@ namespace Stardust.Services
                 var cmd = ms[0];
                 XTrace.WriteLine(cmd.ToJson());
 
-                var data = GetLog();
-                Callback?.Invoke(cmd.Id, data);
+                if (cmd.Expire.Year < 2000 || cmd.Expire > DateTime.Now)
+                {
+                    var data = GetLog();
+                    Callback?.Invoke(cmd.Id, data);
+                }
             }
         }
 

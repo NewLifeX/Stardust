@@ -159,6 +159,7 @@
       <Column Name="NodeID" DataType="Int32" Description="节点" />
       <Column Name="Command" DataType="String" Master="True" Description="命令" />
       <Column Name="Argument" DataType="String" Length="500" Description="参数" />
+      <Column Name="Expire" DataType="DateTime" Description="过期时间。未指定时表示不限制" />
       <Column Name="Finished" DataType="Boolean" Description="完成。客户端是否已执行" />
       <Column Name="Result" DataType="String" Length="500" Description="结果" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />

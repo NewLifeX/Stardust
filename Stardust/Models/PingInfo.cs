@@ -75,6 +75,7 @@ namespace Stardust.Models
         /// <summary>参数</summary>
         public String Argument { get; set; }
 
-        //public String Result { get; set; }
+        /// <summary>过期时间。未指定时表示不限制</summary>
+        public DateTime Expire { get; set; }
     }
 }

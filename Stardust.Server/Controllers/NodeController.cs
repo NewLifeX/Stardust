@@ -325,6 +325,7 @@ namespace Stardust.Server.Controllers
                 Id = e.ID,
                 Command = e.Command,
                 Argument = e.Argument,
+                Expire = e.Expire,
             }).ToArray();
 
             foreach (var item in cmds)
