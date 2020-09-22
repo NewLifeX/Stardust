@@ -50,13 +50,17 @@ namespace Stardust.Server.Services
 
             // 统计日期，凌晨0点10分之前统计前一天
             var time = DateTime.Now;
-            if (time.Hour == 0 && time.Minute < 10) Process(time.AddDays(-1).Date, appIds);
+            if (time.Hour == 0 && time.Minute < 10) ProcessDay(time.AddDays(-1), appIds);
 
-            Process(time.Date, appIds);
+            ProcessDay(time, appIds);
+            ProcessHour(time, appIds);
+            ProcessMinute(time, appIds);
         }
 
-        private void Process(DateTime date, IList<Int32> appIds)
+        private void ProcessDay(DateTime time, IList<Int32> appIds)
         {
+            var date = time.Date;
+
             // 统计对象
             var sts = TraceDayStat.Search(date, appIds.ToArray());
 
@@ -74,6 +78,78 @@ namespace Stardust.Server.Services
                     if (st == null)
                     {
                         st = new TraceDayStat { StatDate = date, AppId = item.AppId, Name = item.Name };
+                        sts.Add(st);
+                    }
+
+                    st.Total = item.Total;
+                    st.Errors = item.Errors;
+                    st.TotalCost = item.TotalCost;
+                    st.MaxCost = item.MaxCost;
+                    st.MinCost = item.MinCost;
+                }
+            }
+
+            // 保存统计
+            sts.Save(true);
+        }
+
+        private void ProcessHour(DateTime time, IList<Int32> appIds)
+        {
+            time = time.Date.AddHours(time.Hour);
+
+            // 统计对象
+            var sts = TraceHourStat.Search(time, appIds.ToArray());
+
+            // 逐个应用计算
+            foreach (var appId in appIds)
+            {
+                // 统计数据
+                var list = TraceData.SearchGroupAppAndName(time, new[] { appId });
+                if (list.Count == 0) return;
+
+                // 聚合
+                foreach (var item in list)
+                {
+                    var st = sts.FirstOrDefault(e => e.AppId == item.AppId && e.Name == item.Name);
+                    if (st == null)
+                    {
+                        st = new TraceHourStat { StatTime = time, AppId = item.AppId, Name = item.Name };
+                        sts.Add(st);
+                    }
+
+                    st.Total = item.Total;
+                    st.Errors = item.Errors;
+                    st.TotalCost = item.TotalCost;
+                    st.MaxCost = item.MaxCost;
+                    st.MinCost = item.MinCost;
+                }
+            }
+
+            // 保存统计
+            sts.Save(true);
+        }
+
+        private void ProcessMinute(DateTime time, IList<Int32> appIds)
+        {
+            time = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
+
+            // 统计对象
+            var sts = TraceMinuteStat.Search(time, appIds.ToArray());
+
+            // 逐个应用计算
+            foreach (var appId in appIds)
+            {
+                // 统计数据
+                var list = TraceData.SearchGroupAppAndName(time, new[] { appId });
+                if (list.Count == 0) return;
+
+                // 聚合
+                foreach (var item in list)
+                {
+                    var st = sts.FirstOrDefault(e => e.AppId == item.AppId && e.Name == item.Name);
+                    if (st == null)
+                    {
+                        st = new TraceMinuteStat { StatTime = time, AppId = item.AppId, Name = item.Name };
                         sts.Add(st);
                     }
 

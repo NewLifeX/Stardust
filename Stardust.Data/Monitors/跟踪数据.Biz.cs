@@ -31,7 +31,7 @@ namespace Stardust.Data.Monitors
             // 如果没有脏数据，则不需要进行任何处理
             if (!HasDirty) return;
 
-            StatDate = StartTime.ToDateTime().ToLocalTime().Date;
+            //StatDate = StartTime.ToDateTime().ToLocalTime().Date;
             Cost = Total == 0 ? 0 : (Int32)(TotalCost / Total);
         }
         #endregion
@@ -117,6 +117,36 @@ namespace Stardust.Data.Monitors
             return FindAll(exp, page);
         }
 
+        /// <summary>根据时间类型搜索</summary>
+        /// <param name="appId"></param>
+        /// <param name="name"></param>
+        /// <param name="kind"></param>
+        /// <param name="time"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public static IList<TraceData> Search(Int32 appId, String name, String kind, DateTime time, Int32 count)
+        {
+            var exp = new WhereExpression();
+
+            if (appId >= 0) exp &= _.AppId == appId;
+            if (!name.IsNullOrEmpty()) exp &= _.Name == name;
+
+            switch (kind)
+            {
+                case "day":
+                    exp &= _.StatDate == time;
+                    break;
+                case "hour":
+                    exp &= _.StatHour == time;
+                    break;
+                case "minute":
+                    exp &= _.StatMinute == time;
+                    break;
+            }
+
+            return FindAll(exp, new PageParameter { PageSize = count });
+        }
+
         // Select Count(ID) as ID,Category From TraceData Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By ID Desc limit 20
         //static readonly FieldCache<TraceData> _CategoryCache = new FieldCache<TraceData>(nameof(Category))
         //{
@@ -168,9 +198,14 @@ namespace Stardust.Data.Monitors
         /// <returns></returns>
         public static TraceData Create(ISpanBuilder builder)
         {
+            var time = builder.StartTime.ToDateTime().ToLocalTime();
+
             var td = new TraceData
             {
                 Id = Meta.Factory.Snow.NewId(),
+                StatDate = time.Date,
+                StatHour = time.Date.AddHours(time.Hour),
+                StatMinute = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5),
                 Name = builder.Name.Cut(50),
                 StartTime = builder.StartTime,
                 EndTime = builder.EndTime,

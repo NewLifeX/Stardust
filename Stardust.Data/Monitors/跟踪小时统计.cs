@@ -14,7 +14,7 @@ namespace Stardust.Data.Monitors
     [Serializable]
     [DataObject]
     [Description("跟踪小时统计。每应用每接口每小时统计，用于分析接口健康状况")]
-    [BindIndex("IU_TraceHourStat_StatDate_Hour_AppId_Name", true, "StatDate,Hour,AppId,Name")]
+    [BindIndex("IU_TraceHourStat_StatTime_AppId_Name", true, "StatTime,AppId,Name")]
     [BindIndex("IX_TraceHourStat_AppId_Name_Id", false, "AppId,Name,Id")]
     [BindTable("TraceHourStat", Description = "跟踪小时统计。每应用每接口每小时统计，用于分析接口健康状况", ConnName = "Monitor", DbType = DatabaseType.None)]
     public partial class TraceHourStat
@@ -28,21 +28,13 @@ namespace Stardust.Data.Monitors
         [BindColumn("ID", "编号", "")]
         public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
-        private DateTime _StatDate;
-        /// <summary>统计日期</summary>
-        [DisplayName("统计日期")]
-        [Description("统计日期")]
+        private DateTime _StatTime;
+        /// <summary>统计小时</summary>
+        [DisplayName("统计小时")]
+        [Description("统计小时")]
         [DataObjectField(false, false, true, 0)]
-        [BindColumn("StatDate", "统计日期", "")]
-        public DateTime StatDate { get => _StatDate; set { if (OnPropertyChanging("StatDate", value)) { _StatDate = value; OnPropertyChanged("StatDate"); } } }
-
-        private Int32 _Hour;
-        /// <summary>小时。统计日期所在天的小时数</summary>
-        [DisplayName("小时")]
-        [Description("小时。统计日期所在天的小时数")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Hour", "小时。统计日期所在天的小时数", "")]
-        public Int32 Hour { get => _Hour; set { if (OnPropertyChanging("Hour", value)) { _Hour = value; OnPropertyChanged("Hour"); } } }
+        [BindColumn("StatTime", "统计小时", "")]
+        public DateTime StatTime { get => _StatTime; set { if (OnPropertyChanging("StatTime", value)) { _StatTime = value; OnPropertyChanged("StatTime"); } } }
 
         private Int32 _AppId;
         /// <summary>应用</summary>
@@ -136,8 +128,7 @@ namespace Stardust.Data.Monitors
                 switch (name)
                 {
                     case "ID": return _ID;
-                    case "StatDate": return _StatDate;
-                    case "Hour": return _Hour;
+                    case "StatTime": return _StatTime;
                     case "AppId": return _AppId;
                     case "Name": return _Name;
                     case "Total": return _Total;
@@ -156,8 +147,7 @@ namespace Stardust.Data.Monitors
                 switch (name)
                 {
                     case "ID": _ID = value.ToInt(); break;
-                    case "StatDate": _StatDate = value.ToDateTime(); break;
-                    case "Hour": _Hour = value.ToInt(); break;
+                    case "StatTime": _StatTime = value.ToDateTime(); break;
                     case "AppId": _AppId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Total": _Total = value.ToInt(); break;
@@ -181,11 +171,8 @@ namespace Stardust.Data.Monitors
             /// <summary>编号</summary>
             public static readonly Field ID = FindByName("ID");
 
-            /// <summary>统计日期</summary>
-            public static readonly Field StatDate = FindByName("StatDate");
-
-            /// <summary>小时。统计日期所在天的小时数</summary>
-            public static readonly Field Hour = FindByName("Hour");
+            /// <summary>统计小时</summary>
+            public static readonly Field StatTime = FindByName("StatTime");
 
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
@@ -226,11 +213,8 @@ namespace Stardust.Data.Monitors
             /// <summary>编号</summary>
             public const String ID = "ID";
 
-            /// <summary>统计日期</summary>
-            public const String StatDate = "StatDate";
-
-            /// <summary>小时。统计日期所在天的小时数</summary>
-            public const String Hour = "Hour";
+            /// <summary>统计小时</summary>
+            public const String StatTime = "StatTime";
 
             /// <summary>应用</summary>
             public const String AppId = "AppId";

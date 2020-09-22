@@ -30,6 +30,8 @@
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
+      <Column Name="StatHour" DataType="DateTime" Description="统计小时" />
+      <Column Name="StatMinute" DataType="DateTime" Description="统计分钟" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@proccessid" />
       <Column Name="Name" DataType="String" Master="True" Description="操作名。接口名或埋点名" />
@@ -48,6 +50,8 @@
     </Columns>
     <Indexes>
       <Index Columns="StatDate,AppId,Name,StartTime" />
+      <Index Columns="StatHour,AppId,Name" />
+      <Index Columns="StatMinute,AppId,Name" />
     </Indexes>
   </Table>
   <Table Name="SampleData" Description="采样数据。具体调用或异常详情，每次跟踪统计携带少量样板，用于链路分析以及异常跟踪" ConnName="MonitorLog">
@@ -97,8 +101,7 @@
   <Table Name="TraceHourStat" Description="跟踪小时统计。每应用每接口每小时统计，用于分析接口健康状况">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
-      <Column Name="Hour" DataType="Int32" Description="小时。统计日期所在天的小时数" />
+      <Column Name="StatTime" DataType="DateTime" Description="统计小时" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="Name" DataType="String" Master="True" Description="操作名。接口名或埋点名" />
       <Column Name="Total" DataType="Int32" Description="总次数" />
@@ -111,15 +114,14 @@
       <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
     </Columns>
     <Indexes>
-      <Index Columns="StatDate,Hour,AppId,Name" Unique="True" />
+      <Index Columns="StatTime,AppId,Name" Unique="True" />
       <Index Columns="AppId,Name,Id" />
     </Indexes>
   </Table>
   <Table Name="TraceMinuteStat" Description="跟踪分钟统计。每应用每接口每5分钟统计，用于分析接口健康状况">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
-      <Column Name="Minute" DataType="Int32" Description="分钟。统计日期所在天的分钟数" />
+      <Column Name="StatTime" DataType="DateTime" Description="统计分钟" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="Name" DataType="String" Master="True" Description="操作名。接口名或埋点名" />
       <Column Name="Total" DataType="Int32" Description="总次数" />
@@ -132,7 +134,7 @@
       <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
     </Columns>
     <Indexes>
-      <Index Columns="StatDate,Minute,AppId,Name" Unique="True" />
+      <Index Columns="StatTime,AppId,Name" Unique="True" />
       <Index Columns="AppId,Name,Id" />
     </Indexes>
   </Table>

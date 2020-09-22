@@ -14,7 +14,7 @@ namespace Stardust.Data.Monitors
     [Serializable]
     [DataObject]
     [Description("跟踪分钟统计。每应用每接口每5分钟统计，用于分析接口健康状况")]
-    [BindIndex("IU_TraceMinuteStat_StatDate_Minute_AppId_Name", true, "StatDate,Minute,AppId,Name")]
+    [BindIndex("IU_TraceMinuteStat_StatTime_AppId_Name", true, "StatTime,AppId,Name")]
     [BindIndex("IX_TraceMinuteStat_AppId_Name_Id", false, "AppId,Name,Id")]
     [BindTable("TraceMinuteStat", Description = "跟踪分钟统计。每应用每接口每5分钟统计，用于分析接口健康状况", ConnName = "Monitor", DbType = DatabaseType.None)]
     public partial class TraceMinuteStat
@@ -28,21 +28,13 @@ namespace Stardust.Data.Monitors
         [BindColumn("ID", "编号", "")]
         public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
-        private DateTime _StatDate;
-        /// <summary>统计日期</summary>
-        [DisplayName("统计日期")]
-        [Description("统计日期")]
+        private DateTime _StatTime;
+        /// <summary>统计分钟</summary>
+        [DisplayName("统计分钟")]
+        [Description("统计分钟")]
         [DataObjectField(false, false, true, 0)]
-        [BindColumn("StatDate", "统计日期", "")]
-        public DateTime StatDate { get => _StatDate; set { if (OnPropertyChanging("StatDate", value)) { _StatDate = value; OnPropertyChanged("StatDate"); } } }
-
-        private Int32 _Minute;
-        /// <summary>分钟。统计日期所在天的分钟数</summary>
-        [DisplayName("分钟")]
-        [Description("分钟。统计日期所在天的分钟数")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Minute", "分钟。统计日期所在天的分钟数", "")]
-        public Int32 Minute { get => _Minute; set { if (OnPropertyChanging("Minute", value)) { _Minute = value; OnPropertyChanged("Minute"); } } }
+        [BindColumn("StatTime", "统计分钟", "")]
+        public DateTime StatTime { get => _StatTime; set { if (OnPropertyChanging("StatTime", value)) { _StatTime = value; OnPropertyChanged("StatTime"); } } }
 
         private Int32 _AppId;
         /// <summary>应用</summary>
@@ -136,8 +128,7 @@ namespace Stardust.Data.Monitors
                 switch (name)
                 {
                     case "ID": return _ID;
-                    case "StatDate": return _StatDate;
-                    case "Minute": return _Minute;
+                    case "StatTime": return _StatTime;
                     case "AppId": return _AppId;
                     case "Name": return _Name;
                     case "Total": return _Total;
@@ -156,8 +147,7 @@ namespace Stardust.Data.Monitors
                 switch (name)
                 {
                     case "ID": _ID = value.ToInt(); break;
-                    case "StatDate": _StatDate = value.ToDateTime(); break;
-                    case "Minute": _Minute = value.ToInt(); break;
+                    case "StatTime": _StatTime = value.ToDateTime(); break;
                     case "AppId": _AppId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Total": _Total = value.ToInt(); break;
@@ -181,11 +171,8 @@ namespace Stardust.Data.Monitors
             /// <summary>编号</summary>
             public static readonly Field ID = FindByName("ID");
 
-            /// <summary>统计日期</summary>
-            public static readonly Field StatDate = FindByName("StatDate");
-
-            /// <summary>分钟。统计日期所在天的分钟数</summary>
-            public static readonly Field Minute = FindByName("Minute");
+            /// <summary>统计分钟</summary>
+            public static readonly Field StatTime = FindByName("StatTime");
 
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
@@ -226,11 +213,8 @@ namespace Stardust.Data.Monitors
             /// <summary>编号</summary>
             public const String ID = "ID";
 
-            /// <summary>统计日期</summary>
-            public const String StatDate = "StatDate";
-
-            /// <summary>分钟。统计日期所在天的分钟数</summary>
-            public const String Minute = "Minute";
+            /// <summary>统计分钟</summary>
+            public const String StatTime = "StatTime";
 
             /// <summary>应用</summary>
             public const String AppId = "AppId";

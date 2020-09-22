@@ -15,6 +15,8 @@ namespace Stardust.Data.Monitors
     [DataObject]
     [Description("跟踪数据。应用定时上报采样得到的埋点跟踪原始数据，应用端已完成初步统计，后端将再次向上汇总")]
     [BindIndex("IX_TraceData_StatDate_AppId_Name_StartTime", false, "StatDate,AppId,Name,StartTime")]
+    [BindIndex("IX_TraceData_StatHour_AppId_Name", false, "StatHour,AppId,Name")]
+    [BindIndex("IX_TraceData_StatMinute_AppId_Name", false, "StatMinute,AppId,Name")]
     [BindTable("TraceData", Description = "跟踪数据。应用定时上报采样得到的埋点跟踪原始数据，应用端已完成初步统计，后端将再次向上汇总", ConnName = "MonitorLog", DbType = DatabaseType.None)]
     public partial class TraceData
     {
@@ -34,6 +36,22 @@ namespace Stardust.Data.Monitors
         [DataObjectField(false, false, true, 0)]
         [BindColumn("StatDate", "统计日期", "")]
         public DateTime StatDate { get => _StatDate; set { if (OnPropertyChanging("StatDate", value)) { _StatDate = value; OnPropertyChanged("StatDate"); } } }
+
+        private DateTime _StatHour;
+        /// <summary>统计小时</summary>
+        [DisplayName("统计小时")]
+        [Description("统计小时")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("StatHour", "统计小时", "")]
+        public DateTime StatHour { get => _StatHour; set { if (OnPropertyChanging("StatHour", value)) { _StatHour = value; OnPropertyChanged("StatHour"); } } }
+
+        private DateTime _StatMinute;
+        /// <summary>统计分钟</summary>
+        [DisplayName("统计分钟")]
+        [Description("统计分钟")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("StatMinute", "统计分钟", "")]
+        public DateTime StatMinute { get => _StatMinute; set { if (OnPropertyChanging("StatMinute", value)) { _StatMinute = value; OnPropertyChanged("StatMinute"); } } }
 
         private Int32 _AppId;
         /// <summary>应用</summary>
@@ -168,6 +186,8 @@ namespace Stardust.Data.Monitors
                 {
                     case "Id": return _Id;
                     case "StatDate": return _StatDate;
+                    case "StatHour": return _StatHour;
+                    case "StatMinute": return _StatMinute;
                     case "AppId": return _AppId;
                     case "ClientId": return _ClientId;
                     case "Name": return _Name;
@@ -192,6 +212,8 @@ namespace Stardust.Data.Monitors
                 {
                     case "Id": _Id = value.ToLong(); break;
                     case "StatDate": _StatDate = value.ToDateTime(); break;
+                    case "StatHour": _StatHour = value.ToDateTime(); break;
+                    case "StatMinute": _StatMinute = value.ToDateTime(); break;
                     case "AppId": _AppId = value.ToInt(); break;
                     case "ClientId": _ClientId = Convert.ToString(value); break;
                     case "Name": _Name = Convert.ToString(value); break;
@@ -222,6 +244,12 @@ namespace Stardust.Data.Monitors
 
             /// <summary>统计日期</summary>
             public static readonly Field StatDate = FindByName("StatDate");
+
+            /// <summary>统计小时</summary>
+            public static readonly Field StatHour = FindByName("StatHour");
+
+            /// <summary>统计分钟</summary>
+            public static readonly Field StatMinute = FindByName("StatMinute");
 
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
@@ -279,6 +307,12 @@ namespace Stardust.Data.Monitors
 
             /// <summary>统计日期</summary>
             public const String StatDate = "StatDate";
+
+            /// <summary>统计小时</summary>
+            public const String StatHour = "StatHour";
+
+            /// <summary>统计分钟</summary>
+            public const String StatMinute = "StatMinute";
 
             /// <summary>应用</summary>
             public const String AppId = "AppId";

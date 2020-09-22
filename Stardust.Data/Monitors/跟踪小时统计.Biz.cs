@@ -111,17 +111,17 @@ namespace Stardust.Data.Monitors
 
             if (appId >= 0) exp &= _.AppId == appId;
             if (!name.IsNullOrEmpty()) exp &= _.Name == name;
-            exp &= _.StatDate.Between(start, end);
+            exp &= _.StatTime.Between(start, end);
             if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key);
 
             return FindAll(exp, page);
         }
 
         /// <summary>查找一批统计</summary>
-        /// <param name="date"></param>
+        /// <param name="time"></param>
         /// <param name="appIds"></param>
         /// <returns></returns>
-        public static IList<TraceHourStat> Search(DateTime date, Int32[] appIds) => FindAll(_.StatDate == date & _.AppId.In(appIds));
+        public static IList<TraceHourStat> Search(DateTime time, Int32[] appIds) => FindAll(_.StatTime == time & _.AppId.In(appIds));
         #endregion
 
         #region 业务操作

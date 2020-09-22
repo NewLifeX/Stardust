@@ -33,7 +33,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             // 选了应用，没有选时间，按照统计日期升序
             if (appId >= 0 && start.Year < 2000 && p.Sort.IsNullOrEmpty())
             {
-                p.Sort = __.StatDate;
+                p.Sort = __.StatTime;
                 p.Desc = true;
                 p.PageSize = 100;
             }
@@ -51,7 +51,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
             if (list.Count > 0 && appId >= 0 && !name.IsNullOrEmpty())
             {
-                var list2 = list.OrderBy(e => e.StatDate).ToList();
+                var list2 = list.OrderBy(e => e.StatTime).ToList();
 
                 // 绘制日期曲线图
                 var ar = AppTracer.FindByID(appId);
@@ -61,7 +61,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                     {
                         Height = 400,
                     };
-                    chart.SetX(list2, _.StatDate, e => e.StatDate.ToString("MM-dd"));
+                    chart.SetX(list2, _.StatTime, e => e.StatTime.ToString("HH:mm"));
                     chart.SetY("调用次数");
                     chart.AddLine(list2, _.Total, null, true);
                     chart.Add(list2, _.Errors);
@@ -74,7 +74,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                     {
                         Height = 400,
                     };
-                    chart.SetX(list2, _.StatDate, e => e.StatDate.ToString("MM-dd"));
+                    chart.SetX(list2, _.StatTime, e => e.StatTime.ToString("HH:mm"));
                     chart.SetY("耗时");
                     chart.AddLine(list2, _.Cost, null, true);
                     chart.Add(list2, _.MaxCost);
@@ -93,7 +93,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var st = TraceMinuteStat.FindByID(id);
             if (st == null) throw new InvalidDataException("找不到统计数据");
 
-            var ds = TraceData.Search(st.AppId, st.Name, st.StatDate, st.StatDate, null, new PageParameter { PageSize = 20 });
+            var ds = TraceData.Search(st.AppId, st.Name, "minute", st.StatTime, 20);
             if (ds.Count == 0) throw new InvalidDataException("找不到跟踪数据");
 
             var list = SampleData.FindAllByDataIds(ds.Select(e => e.Id).ToArray());
