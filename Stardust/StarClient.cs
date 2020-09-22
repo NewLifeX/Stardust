@@ -163,6 +163,7 @@ namespace Stardust
 
                 MachineName = Environment.MachineName,
                 UserName = Environment.UserName,
+                IP = NetHelper.MyIP() + "",
 
                 ProcessorCount = Environment.ProcessorCount,
                 Memory = mi.Memory,

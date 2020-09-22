@@ -267,6 +267,7 @@ namespace Stardust.Data.Nodes
 
             if (!di.MachineName.IsNullOrEmpty()) node.MachineName = di.MachineName;
             if (!di.UserName.IsNullOrEmpty()) node.UserName = di.UserName;
+            if (!di.IP.IsNullOrEmpty()) node.IP = di.IP;
             if (!di.Processor.IsNullOrEmpty()) node.Processor = di.Processor;
             if (!di.CpuID.IsNullOrEmpty()) node.CpuID = di.CpuID;
             if (!di.UUID.IsNullOrEmpty()) node.Uuid = di.UUID;

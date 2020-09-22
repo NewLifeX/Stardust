@@ -109,6 +109,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("UserName", "用户名称", "")]
         public String UserName { get => _UserName; set { if (OnPropertyChanging("UserName", value)) { _UserName = value; OnPropertyChanged("UserName"); } } }
 
+        private String _IP;
+        /// <summary>本地IP</summary>
+        [DisplayName("本地IP")]
+        [Description("本地IP")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("IP", "本地IP", "")]
+        public String IP { get => _IP; set { if (OnPropertyChanging("IP", value)) { _IP = value; OnPropertyChanged("IP"); } } }
+
         private Int32 _Cpu;
         /// <summary>CPU</summary>
         [DisplayName("CPU")]
@@ -347,6 +355,7 @@ namespace Stardust.Data.Nodes
                     case "OSVersion": return _OSVersion;
                     case "MachineName": return _MachineName;
                     case "UserName": return _UserName;
+                    case "IP": return _IP;
                     case "Cpu": return _Cpu;
                     case "Memory": return _Memory;
                     case "TotalSize": return _TotalSize;
@@ -392,6 +401,7 @@ namespace Stardust.Data.Nodes
                     case "OSVersion": _OSVersion = Convert.ToString(value); break;
                     case "MachineName": _MachineName = Convert.ToString(value); break;
                     case "UserName": _UserName = Convert.ToString(value); break;
+                    case "IP": _IP = Convert.ToString(value); break;
                     case "Cpu": _Cpu = value.ToInt(); break;
                     case "Memory": _Memory = value.ToInt(); break;
                     case "TotalSize": _TotalSize = value.ToInt(); break;
@@ -461,6 +471,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>用户名称</summary>
             public static readonly Field UserName = FindByName("UserName");
+
+            /// <summary>本地IP</summary>
+            public static readonly Field IP = FindByName("IP");
 
             /// <summary>CPU</summary>
             public static readonly Field Cpu = FindByName("Cpu");
@@ -581,6 +594,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>用户名称</summary>
             public const String UserName = "UserName";
+
+            /// <summary>本地IP</summary>
+            public const String IP = "IP";
 
             /// <summary>CPU</summary>
             public const String Cpu = "Cpu";

@@ -13,6 +13,7 @@
       <Column Name="OSVersion" DataType="String" Description="系统版本" />
       <Column Name="MachineName" DataType="String" Description="机器名称" />
       <Column Name="UserName" DataType="String" Description="用户名称" />
+      <Column Name="IP" DataType="String" Description="本地IP" />
       <Column Name="Cpu" DataType="Int32" Description="CPU" />
       <Column Name="Memory" DataType="Int32" Description="内存。单位M" />
       <Column Name="TotalSize" DataType="Int32" Description="磁盘。应用所在盘，单位M" />
