@@ -161,7 +161,7 @@ namespace Stardust.Data.Nodes
         /// <summary>CPU标识</summary>
         [DisplayName("CPU标识")]
         [Description("CPU标识")]
-        [DataObjectField(false, false, true, 200)]
+        [DataObjectField(false, false, true, 50)]
         [BindColumn("CpuID", "CPU标识", "")]
         public String CpuID { get => _CpuID; set { if (OnPropertyChanging("CpuID", value)) { _CpuID = value; OnPropertyChanged("CpuID"); } } }
 
@@ -169,7 +169,7 @@ namespace Stardust.Data.Nodes
         /// <summary>唯一标识</summary>
         [DisplayName("唯一标识")]
         [Description("唯一标识")]
-        [DataObjectField(false, false, true, 200)]
+        [DataObjectField(false, false, true, 50)]
         [BindColumn("Uuid", "唯一标识", "")]
         public String Uuid { get => _Uuid; set { if (OnPropertyChanging("Uuid", value)) { _Uuid = value; OnPropertyChanged("Uuid"); } } }
 
@@ -177,7 +177,7 @@ namespace Stardust.Data.Nodes
         /// <summary>机器标识</summary>
         [DisplayName("机器标识")]
         [Description("机器标识")]
-        [DataObjectField(false, false, true, 200)]
+        [DataObjectField(false, false, true, 50)]
         [BindColumn("MachineGuid", "机器标识", "")]
         public String MachineGuid { get => _MachineGuid; set { if (OnPropertyChanging("MachineGuid", value)) { _MachineGuid = value; OnPropertyChanged("MachineGuid"); } } }
 

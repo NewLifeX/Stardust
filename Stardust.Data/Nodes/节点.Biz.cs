@@ -44,10 +44,15 @@ namespace Stardust.Data.Nodes
 
             if (Name.IsNullOrEmpty()) throw new ArgumentNullException(__.Name, _.Name.DisplayName + "不能为空！");
 
-            var len = _.MACs.Length;
+            var len = _.CpuID.Length;
+            if (CpuID != null && len > 0 && CpuID.Length > len) CpuID = CpuID.Substring(0, len);
+            len = _.Uuid.Length;
+            if (Uuid != null && len > 0 && Uuid.Length > len) Uuid = Uuid.Substring(0, len);
+            len = _.MachineGuid.Length;
+            if (MachineGuid != null && len > 0 && MachineGuid.Length > len) MachineGuid = MachineGuid.Substring(0, len);
+
+            len = _.MACs.Length;
             if (MACs != null && len > 0 && MACs.Length > len) MACs = MACs.Substring(0, len);
-            //len = _.COMs.Length;
-            //if (COMs != null && len > 0 && COMs.Length > len) COMs = COMs.Substring(0, len);
             len = _.DiskID.Length;
             if (DiskID != null && len > 0 && DiskID.Length > len) DiskID = DiskID.Substring(0, len);
         }
@@ -231,7 +236,7 @@ namespace Stardust.Data.Nodes
         /// <summary>登录并保存信息</summary>
         /// <param name="di"></param>
         /// <param name="ip"></param>
-        public void Login(NodeInfo di,String ip)
+        public void Login(NodeInfo di, String ip)
         {
             var node = this;
 
