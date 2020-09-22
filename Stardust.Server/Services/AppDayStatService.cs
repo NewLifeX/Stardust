@@ -33,7 +33,7 @@ namespace Stardust.Server.Services
             {
                 lock (this)
                 {
-                    if (_timer == null) _timer = new TimerX(DoTraceStat, null, 5_000, 30_000) { Async = true };
+                    if (_timer == null) _timer = new TimerX(DoTraceStat, null, 5_000, 300_000) { Async = true };
                 }
             }
         }
@@ -57,36 +57,32 @@ namespace Stardust.Server.Services
 
         private void Process(DateTime date, IList<Int32> appIds)
         {
-            // 逐个应用计算
-            foreach (var appId in appIds)
+            // 统计数据
+            var list = TraceData.SearchGroupApp(date, appIds.ToArray());
+            if (list.Count == 0) return;
+
+            // 统计对象
+            var sts = AppDayStat.Search(date, list.Select(e => e.AppId).ToArray());
+
+            // 聚合
+            foreach (var item in list)
             {
-                // 统计数据
-                var list = TraceData.SearchGroupApp(date, new[] { appId });
-                if (list.Count == 0) return;
-
-                // 统计对象
-                var sts = AppDayStat.Search(date, list.Select(e => e.AppId).ToArray());
-
-                // 聚合
-                foreach (var item in list)
+                var st = sts.FirstOrDefault(e => e.AppId == item.AppId);
+                if (st == null)
                 {
-                    var st = sts.FirstOrDefault(e => e.AppId == item.AppId);
-                    if (st == null)
-                    {
-                        st = new AppDayStat { StatDate = date, AppId = item.AppId };
-                        sts.Add(st);
-                    }
-
-                    st.Total = item.Total;
-                    st.Errors = item.Errors;
-                    st.TotalCost = item.TotalCost;
-                    st.MaxCost = item.MaxCost;
-                    st.MinCost = item.MinCost;
+                    st = new AppDayStat { StatDate = date, AppId = item.AppId };
+                    sts.Add(st);
                 }
 
-                // 保存统计
-                sts.Save(true);
+                st.Total = item.Total;
+                st.Errors = item.Errors;
+                st.TotalCost = item.TotalCost;
+                st.MaxCost = item.MaxCost;
+                st.MinCost = item.MinCost;
             }
+
+            // 保存统计
+            sts.Save(true);
         }
     }
 }
