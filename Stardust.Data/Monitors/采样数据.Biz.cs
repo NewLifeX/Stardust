@@ -136,23 +136,18 @@ namespace Stardust.Data.Monitors
         /// <param name="data"></param>
         /// <param name="spans"></param>
         /// <param name="success"></param>
-        /// <param name="msTimeout"></param>
         /// <returns></returns>
-        public static IList<SampleData> Create(TraceData data, IList<ISpan> spans, Boolean success, Int32 msTimeout)
+        public static IList<SampleData> Create(TraceData data, IList<ISpan> spans, Boolean success)
         {
             var list = new List<SampleData>();
             if (spans == null || spans.Count == 0) return list;
 
-            var flow = Meta.Factory.Snow;
+            var snow = Meta.Factory.Snow;
             foreach (var item in spans)
             {
-                // 耗时超标的片段，也计为失败
-                var success2 = success;
-                if (msTimeout > 0 && (item.EndTime - item.StartTime) > msTimeout) success2 = false;
-
                 var sd = new SampleData
                 {
-                    Id = flow.NewId(),
+                    Id = snow.NewId(),
                     DataId = data.Id,
                     AppId = data.AppId,
                     Name = data.Name,
@@ -167,7 +162,7 @@ namespace Stardust.Data.Monitors
                     Tag = item.Tag,
                     Error = item.Error,
 
-                    Success = success2,
+                    Success = success,
 
                     CreateIP = data.CreateIP,
                     CreateTime = DateTime.Now,

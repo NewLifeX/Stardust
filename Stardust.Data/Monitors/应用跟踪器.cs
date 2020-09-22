@@ -92,11 +92,11 @@ namespace Stardust.Data.Monitors
         public String Excludes { get => _Excludes; set { if (OnPropertyChanging("Excludes", value)) { _Excludes = value; OnPropertyChanged("Excludes"); } } }
 
         private Int32 _Timeout;
-        /// <summary>超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒</summary>
+        /// <summary>超时时间。超过该时间时强制采样，默认5000毫秒</summary>
         [DisplayName("超时时间")]
-        [Description("超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒")]
+        [Description("超时时间。超过该时间时强制采样，默认5000毫秒")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Timeout", "超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒", "")]
+        [BindColumn("Timeout", "超时时间。超过该时间时强制采样，默认5000毫秒", "")]
         public Int32 Timeout { get => _Timeout; set { if (OnPropertyChanging("Timeout", value)) { _Timeout = value; OnPropertyChanged("Timeout"); } } }
 
         private String _Nodes;
@@ -264,7 +264,7 @@ namespace Stardust.Data.Monitors
             /// <summary>排除项。要排除的操作名，支持*模糊匹配</summary>
             public static readonly Field Excludes = FindByName("Excludes");
 
-            /// <summary>超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒</summary>
+            /// <summary>超时时间。超过该时间时强制采样，默认5000毫秒</summary>
             public static readonly Field Timeout = FindByName("Timeout");
 
             /// <summary>节点集。该应用最近一段时间所涉及的来源地址</summary>
@@ -327,7 +327,7 @@ namespace Stardust.Data.Monitors
             /// <summary>排除项。要排除的操作名，支持*模糊匹配</summary>
             public const String Excludes = "Excludes";
 
-            /// <summary>超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒</summary>
+            /// <summary>超时时间。超过该时间时强制采样，默认5000毫秒</summary>
             public const String Timeout = "Timeout";
 
             /// <summary>节点集。该应用最近一段时间所涉及的来源地址</summary>

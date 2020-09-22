@@ -89,9 +89,7 @@ namespace Stardust.Server.Controllers
         {
             // 排除项
             var excludes = app.Excludes.Split(",", ";") ?? new String[0];
-            builders = builders.Where(e => !e.Name.EndsWithIgnoreCase("/Trace/Report")).ToArray();
 
-            var flow = TraceData.Meta.Factory.Snow;
             var traces = new List<TraceData>();
             var samples = new List<SampleData>();
             foreach (var item in builders)
@@ -101,19 +99,15 @@ namespace Stardust.Server.Controllers
                 if (item.Name.EndsWithIgnoreCase("/Trace/Report")) continue;
 
                 var td = TraceData.Create(item);
-                td.Id = flow.NewId();
                 td.AppId = app.ID;
                 td.ClientId = model.ClientId ?? ip;
                 td.CreateIP = ip;
                 td.CreateTime = DateTime.Now;
 
-                //td.Insert();
                 traces.Add(td);
 
-                samples.AddRange(SampleData.Create(td, item.Samples, true, app.Timeout));
-                samples.AddRange(SampleData.Create(td, item.ErrorSamples, false, app.Timeout));
-
-                //if (samples.Count > 0) samples.Insert(true);
+                samples.AddRange(SampleData.Create(td, item.Samples, true));
+                samples.AddRange(SampleData.Create(td, item.ErrorSamples, false));
             }
 
             traces.Insert(true);

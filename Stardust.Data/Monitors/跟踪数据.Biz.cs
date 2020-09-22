@@ -167,6 +167,7 @@ namespace Stardust.Data.Monitors
         {
             var td = new TraceData
             {
+                Id = Meta.Factory.Snow.NewId(),
                 Name = builder.Name.Cut(50),
                 StartTime = builder.StartTime,
                 EndTime = builder.EndTime,
