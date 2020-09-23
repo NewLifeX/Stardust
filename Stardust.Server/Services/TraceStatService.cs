@@ -67,7 +67,7 @@ namespace Stardust.Server.Services
             foreach (var appId in appIds)
             {
                 // 统计数据
-                var list = TraceData.SearchGroupAppAndName(date, new[] { appId });
+                var list = TraceData.SearchGroupAppAndName("day", date, new[] { appId });
                 if (list.Count == 0) return;
 
                 // 聚合
@@ -103,7 +103,7 @@ namespace Stardust.Server.Services
             foreach (var appId in appIds)
             {
                 // 统计数据
-                var list = TraceData.SearchGroupAppAndName(time, new[] { appId });
+                var list = TraceData.SearchGroupAppAndName("hour", time, new[] { appId });
                 if (list.Count == 0) return;
 
                 // 聚合
@@ -139,7 +139,7 @@ namespace Stardust.Server.Services
             foreach (var appId in appIds)
             {
                 // 统计数据
-                var list = TraceData.SearchGroupAppAndName(time, new[] { appId });
+                var list = TraceData.SearchGroupAppAndName("minute", time, new[] { appId });
                 if (list.Count == 0) return;
 
                 // 聚合

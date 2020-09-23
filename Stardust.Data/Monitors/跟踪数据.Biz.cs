@@ -158,16 +158,31 @@ namespace Stardust.Data.Monitors
         //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
 
         /// <summary>根据应用接口分组统计</summary>
-        /// <param name="date"></param>
+        /// <param name="kind"></param>
+        /// <param name="time"></param>
         /// <param name="appIds"></param>
         /// <returns></returns>
-        public static IList<TraceData> SearchGroupAppAndName(DateTime date, Int32[] appIds)
+        public static IList<TraceData> SearchGroupAppAndName(String kind, DateTime time, Int32[] appIds)
         {
+            var exp = new WhereExpression();
             var selects = _.Total.Sum() & _.Errors.Sum() & _.TotalCost.Sum() & _.MaxCost.Max() & _.MinCost.Min() & _.AppId & _.Name;
-            var where = new WhereExpression() & _.StatDate == date;
-            if (appIds != null && appIds.Length > 0) where &= _.AppId.In(appIds);
 
-            return FindAll(where.GroupBy(_.AppId, _.Name), null, selects);
+            switch (kind)
+            {
+                case "day":
+                    exp &= _.StatDate == time;
+                    break;
+                case "hour":
+                    exp &= _.StatHour == time;
+                    break;
+                case "minute":
+                    exp &= _.StatMinute == time;
+                    break;
+            }
+
+            if (appIds != null && appIds.Length > 0) exp &= _.AppId.In(appIds);
+
+            return FindAll(exp.GroupBy(_.AppId, _.Name), null, selects);
         }
 
         /// <summary>根据应用分组统计</summary>
