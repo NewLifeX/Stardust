@@ -79,7 +79,12 @@ namespace Stardust.Data.Monitors
 
             if (appId >= 0) exp &= _.AppId == appId;
             if (!name.IsNullOrEmpty()) exp &= _.Name == name;
-            exp &= _.StatDate.Between(start, end);
+
+            if (start.Year > 2000 && start == end)
+                exp &= _.StatDate == start;
+            else
+                exp &= _.StatDate.Between(start, end);
+
             if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key);
 
             return FindAll(exp, page);

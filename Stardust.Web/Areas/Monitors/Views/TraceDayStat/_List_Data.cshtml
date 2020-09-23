@@ -43,8 +43,8 @@
     <tbody>
         @foreach (var entity in Model)
         {
-            var url1 = $"traceData?appId={entity.AppId}&dtStart={entity.StatDate:yyyy-MM-dd}&dtEnd={entity.StatDate:yyyy-MM-dd}";
-            var url2 = $"{url1}&name={HttpUtility.UrlEncode(entity.Name)}";
+            var url1 = $"appDayStat?appId={entity.AppId}";
+            var url2 = $"traceData?appId={entity.AppId}&date={entity.StatDate:yyyy-MM-dd}&name={HttpUtility.UrlEncode(entity.Name)}";
             var url3 = $"?appId={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}";
             <tr>
                 @if (set.EnableSelect)
@@ -53,7 +53,7 @@
                 }
                 <td class="text-center">@entity.ID</td>
                 <td class="text-center">@entity.StatDate.ToString("yyyy-MM-dd")</td>
-                <td><a href="@url1" title="应用在该日的所有监控跟踪数据">@entity.AppName</a></td>
+                <td><a href="@url1" title="应用最近的监控图表">@entity.AppName</a></td>
                 <td><a href="@url3" title="该应用操作在最近一段时间内的监控图表">@entity.Name</a></td>
                 <td class="text-right"><a href="@url2" title="该应用操作在该日的所有监控跟踪数据">@entity.Total.ToString("n0")</a></td>
                 <td class="text-right">@entity.Errors.ToString("n0")</td>

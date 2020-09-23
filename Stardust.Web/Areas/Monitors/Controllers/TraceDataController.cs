@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
@@ -43,6 +42,8 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
+            var date = p["date"].ToDateTime();
+            if (start.Year < 2000 && end.Year < 2000) start = end = date;
 
             if (appId > 0 && p.PageSize == 20) p.PageSize = 100;
             if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.Id.Desc();
