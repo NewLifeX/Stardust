@@ -37,7 +37,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             {
                 p.Sort = __.StatDate;
                 p.Desc = true;
-                p.PageSize = 100;
+                p.PageSize = 90;
             }
             // 选了应用和时间，按照接口调用次数降序
             else if (appId >= 0 && start.Year > 2000 && p.Sort.IsNullOrEmpty())
