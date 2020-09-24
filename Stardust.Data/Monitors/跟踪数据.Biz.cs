@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using NewLife.Log;
 using XCode;
+using XCode.Configuration;
 using XCode.Membership;
 
 namespace Stardust.Data.Monitors
@@ -88,12 +90,13 @@ namespace Stardust.Data.Monitors
         /// <summary>高级查询</summary>
         /// <param name="appId">应用</param>
         /// <param name="name">操作名。接口名或埋点名</param>
+        /// <param name="kind">时间种类。day/hour/minute</param>
         /// <param name="start">创建时间开始</param>
         /// <param name="end">创建时间结束</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<TraceData> Search(Int32 appId, String name, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<TraceData> Search(Int32 appId, String name, String kind, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
@@ -103,39 +106,18 @@ namespace Stardust.Data.Monitors
 
             if (appId > 0)
             {
-                // 区分每日、小时、分钟
-                if (start.Year > 2000)
+                var fi = kind switch
                 {
-                    if (start == start.Date)
-                    {
-                        if (start == end)
-                            exp &= _.StatDate == start;
-                        else
-                            exp &= _.StatDate.Between(start, end);
-                    }
-                    else if (start == start.Date.AddHours(start.Hour))
-                    {
-                        if (start == end)
-                            exp &= _.StatHour == start;
-                        else
-                            exp &= _.StatHour.Between(start, end);
-                    }
-                    else if (start == start.Date.AddHours(start.Hour).AddMinutes(start.Minute / 5 * 5))
-                    {
-                        if (start == end)
-                            exp &= _.StatMinute == start;
-                        else
-                            exp &= _.StatMinute.Between(start, end);
-                    }
-                }
+                    "day" => _.StatDate,
+                    "hour" => _.StatHour,
+                    "minute" => _.StatMinute,
+                    _ => _.StatDate,
+                };
 
-                // 跟踪数据查询，时间段带有时分秒时，查id而不是statdate
-                if (start.Year > 2000 && start != start.Date)
-                    exp &= _.Id.Between(start, end, Meta.Factory.Snow);
-                if (start.Year > 2000 && start == end)
-                    exp &= _.StatDate == start;
+                if (start == end)
+                    exp &= fi == start;
                 else
-                    exp &= _.StatDate.Between(start, end);
+                    exp &= fi.Between(start, end);
             }
             else
                 exp &= _.Id.Between(start, end, Meta.Factory.Snow);
@@ -157,18 +139,14 @@ namespace Stardust.Data.Monitors
             if (appId >= 0) exp &= _.AppId == appId;
             if (!name.IsNullOrEmpty()) exp &= _.Name == name;
 
-            switch (kind)
+            var fi = kind switch
             {
-                case "day":
-                    exp &= _.StatDate == time;
-                    break;
-                case "hour":
-                    exp &= _.StatHour == time;
-                    break;
-                case "minute":
-                    exp &= _.StatMinute == time;
-                    break;
-            }
+                "day" => _.StatDate,
+                "hour" => _.StatHour,
+                "minute" => _.StatMinute,
+                _ => _.StatDate,
+            };
+            exp &= fi == time;
 
             return FindAll(exp, new PageParameter { PageSize = count });
         }
@@ -183,18 +161,14 @@ namespace Stardust.Data.Monitors
             var exp = new WhereExpression();
             var selects = _.Total.Sum() & _.Errors.Sum() & _.TotalCost.Sum() & _.MaxCost.Max() & _.MinCost.Min() & _.AppId & _.Name;
 
-            switch (kind)
+            var fi = kind switch
             {
-                case "day":
-                    exp &= _.StatDate == time;
-                    break;
-                case "hour":
-                    exp &= _.StatHour == time;
-                    break;
-                case "minute":
-                    exp &= _.StatMinute == time;
-                    break;
-            }
+                "day" => _.StatDate,
+                "hour" => _.StatHour,
+                "minute" => _.StatMinute,
+                _ => _.StatDate,
+            };
+            exp &= fi == time;
 
             if (appIds != null && appIds.Length > 0) exp &= _.AppId.In(appIds);
 
