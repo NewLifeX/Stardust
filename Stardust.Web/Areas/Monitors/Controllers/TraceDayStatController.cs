@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
-using NewLife.Data;
 using NewLife.Web;
 using Stardust.Data.Monitors;
 using XCode.Membership;
@@ -15,7 +14,7 @@ using static Stardust.Data.Monitors.TraceDayStat;
 namespace Stardust.Web.Areas.Monitors.Controllers
 {
     [MonitorsArea]
-    public class TraceDayStatController : EntityController<TraceDayStat>
+    public class TraceDayStatController : ReadOnlyEntityController<TraceDayStat>
     {
         static TraceDayStatController()
         {
