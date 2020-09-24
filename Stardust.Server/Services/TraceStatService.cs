@@ -26,7 +26,7 @@ namespace Stardust.Server.Services
         /// <param name="appId"></param>
         public void Add(Int32 appId)
         {
-            _bag.Add(appId);
+            if (!_bag.Contains(appId)) _bag.Add(appId);
 
             // 初始化定时器
             if (_timer == null)
@@ -46,6 +46,7 @@ namespace Stardust.Server.Services
             {
                 appIds.Add(id);
             }
+            appIds = appIds.Distinct().ToList();
             if (appIds.Count == 0) return;
 
             // 统计1分钟之前数据
