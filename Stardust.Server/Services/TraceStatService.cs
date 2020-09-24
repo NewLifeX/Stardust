@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using NewLife;
 using NewLife.Threading;
 using Stardust.Data.Monitors;
 using XCode;
@@ -74,6 +75,8 @@ namespace Stardust.Server.Services
                 // 聚合
                 foreach (var item in list)
                 {
+                    if (item.Name.IsNullOrEmpty()) continue;
+
                     var st = sts.FirstOrDefault(e => e.AppId == item.AppId && e.Name == item.Name);
                     if (st == null)
                     {
@@ -110,6 +113,8 @@ namespace Stardust.Server.Services
                 // 聚合
                 foreach (var item in list)
                 {
+                    if (item.Name.IsNullOrEmpty()) continue;
+
                     var st = sts.FirstOrDefault(e => e.AppId == item.AppId && e.Name == item.Name);
                     if (st == null)
                     {
@@ -146,6 +151,8 @@ namespace Stardust.Server.Services
                 // 聚合
                 foreach (var item in list)
                 {
+                    if (item.Name.IsNullOrEmpty()) continue;
+
                     var st = sts.FirstOrDefault(e => e.AppId == item.AppId && e.Name == item.Name);
                     if (st == null)
                     {

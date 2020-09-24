@@ -173,16 +173,6 @@ namespace Stardust.Data.Monitors
             return FindAll(exp, new PageParameter { PageSize = count });
         }
 
-        // Select Count(ID) as ID,Category From TraceData Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By ID Desc limit 20
-        //static readonly FieldCache<TraceData> _CategoryCache = new FieldCache<TraceData>(nameof(Category))
-        //{
-        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-        //};
-
-        ///// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-        ///// <returns></returns>
-        //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
-
         /// <summary>根据应用接口分组统计</summary>
         /// <param name="kind"></param>
         /// <param name="time"></param>
