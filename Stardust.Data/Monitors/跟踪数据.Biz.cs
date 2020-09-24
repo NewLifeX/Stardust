@@ -103,6 +103,32 @@ namespace Stardust.Data.Monitors
 
             if (appId > 0)
             {
+                // 区分每日、小时、分钟
+                if (start.Year > 2000)
+                {
+                    if (start == start.Date)
+                    {
+                        if (start == end)
+                            exp &= _.StatDate == start;
+                        else
+                            exp &= _.StatDate.Between(start, end);
+                    }
+                    else if (start == start.Date.AddHours(start.Hour))
+                    {
+                        if (start == end)
+                            exp &= _.StatHour == start;
+                        else
+                            exp &= _.StatHour.Between(start, end);
+                    }
+                    else if (start == start.Date.AddHours(start.Hour).AddMinutes(start.Minute / 5 * 5))
+                    {
+                        if (start == end)
+                            exp &= _.StatMinute == start;
+                        else
+                            exp &= _.StatMinute.Between(start, end);
+                    }
+                }
+
                 // 跟踪数据查询，时间段带有时分秒时，查id而不是statdate
                 if (start.Year > 2000 && start != start.Date)
                     exp &= _.Id.Between(start, end, Meta.Factory.Snow);
