@@ -221,7 +221,7 @@ namespace Stardust.Data.Monitors
                 StatDate = time.Date,
                 StatHour = time.Date.AddHours(time.Hour),
                 StatMinute = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5),
-                Name = builder.Name.Cut(50),
+                Name = builder.Name.Cut(_.Name.Length),
                 StartTime = builder.StartTime,
                 EndTime = builder.EndTime,
 

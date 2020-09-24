@@ -34,7 +34,7 @@
       <Column Name="StatMinute" DataType="DateTime" Description="统计分钟" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@proccessid" />
-      <Column Name="Name" DataType="String" Master="True" Description="操作名。接口名或埋点名" />
+      <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
       <Column Name="StartTime" DataType="Int64" Description="开始时间。Unix毫秒" />
       <Column Name="EndTime" DataType="Int64" Description="结束时间。Unix毫秒" />
       <Column Name="Total" DataType="Int32" Description="总次数" />
@@ -83,7 +83,7 @@
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="Name" DataType="String" Master="True" Description="操作名。接口名或埋点名" />
+      <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
       <Column Name="Total" DataType="Int32" Description="总次数" />
       <Column Name="Errors" DataType="Int32" Description="错误数" />
       <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
@@ -103,7 +103,7 @@
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="StatTime" DataType="DateTime" Description="统计小时" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="Name" DataType="String" Master="True" Description="操作名。接口名或埋点名" />
+      <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
       <Column Name="Total" DataType="Int32" Description="总次数" />
       <Column Name="Errors" DataType="Int32" Description="错误数" />
       <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
@@ -123,7 +123,7 @@
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="StatTime" DataType="DateTime" Description="统计分钟" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="Name" DataType="String" Master="True" Description="操作名。接口名或埋点名" />
+      <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
       <Column Name="Total" DataType="Int32" Description="总次数" />
       <Column Name="Errors" DataType="Int32" Description="错误数" />
       <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />

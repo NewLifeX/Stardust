@@ -48,7 +48,7 @@ namespace Stardust.Data.Monitors
         /// <summary>操作名。接口名或埋点名</summary>
         [DisplayName("操作名")]
         [Description("操作名。接口名或埋点名")]
-        [DataObjectField(false, false, true, 50)]
+        [DataObjectField(false, false, true, 200)]
         [BindColumn("Name", "操作名。接口名或埋点名", "", Master = true)]
         public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
