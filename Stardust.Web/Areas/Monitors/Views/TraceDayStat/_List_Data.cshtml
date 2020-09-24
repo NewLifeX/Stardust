@@ -31,7 +31,6 @@
             <th class="text-center" title="最大耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MaxCost"))">最大耗时</a></th>
             <th class="text-center" title="最小耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MinCost"))">最小耗时</a></th>
             <th title="跨多系统查看调用链">跟踪</th>
-            <th title="把该操作名加入排除名单，不再收集其信息">屏蔽</th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("CreateTime"))">创建时间</a></th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("UpdateTime"))">更新时间</a></th>
             @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
@@ -61,7 +60,6 @@
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>
                 <td class="text-right">@entity.MinCost.ToString("n0")</td>
                 <td><a href="TraceDayStat/Trace?id=@entity.ID" title="跨多系统查看调用链">跟踪</a></td>
-                <td><a href="TraceDayStat/Exclude?id=@entity.ID" title="把该操作名加入排除名单，不再收集其信息">屏蔽</a></td>
                 <td class="text-center">@entity.CreateTime.ToFullString("")</td>
                 <td class="text-center">@entity.UpdateTime.ToFullString("")</td>
                 @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
@@ -89,7 +87,6 @@
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>
                 <td class="text-right">@entity.MinCost.ToString("n0")</td>
-                <td></td>
                 <td></td>
                 <td></td>
                 <td></td>
