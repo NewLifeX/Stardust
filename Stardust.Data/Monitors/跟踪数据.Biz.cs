@@ -104,7 +104,7 @@ namespace Stardust.Data.Monitors
             if (!name.IsNullOrEmpty()) exp &= _.Name == name;
             if (!key.IsNullOrEmpty()) exp &= _.ClientId == key | _.Name == key;
 
-            if (appId > 0)
+            if (appId > 0 && start.Year > 2000)
             {
                 var fi = kind switch
                 {
