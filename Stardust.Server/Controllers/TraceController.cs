@@ -112,7 +112,7 @@ namespace Stardust.Server.Controllers
 
             // 更新统计
             _stat.Add(traces);
-            _appStat.Add(app.ID);
+            _appStat.Add(DateTime.Today);
 
             // 应用节点数
             var nodes = app.Nodes?.Split(",").ToList() ?? new List<String>();

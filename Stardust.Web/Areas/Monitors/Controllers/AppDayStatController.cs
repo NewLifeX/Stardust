@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
 using NewLife.Web;
 using Stardust.Data.Monitors;
+using Stardust.Server.Services;
+using XCode.Membership;
 using static Stardust.Data.Monitors.AppDayStat;
 
 namespace Stardust.Web.Areas.Monitors.Controllers
@@ -13,6 +17,8 @@ namespace Stardust.Web.Areas.Monitors.Controllers
     [MonitorsArea]
     public class AppDayStatController : ReadOnlyEntityController<AppDayStat>
     {
+        public static IAppDayStatService Service { get; set; }
+
         static AppDayStatController()
         {
             MenuOrder = 80;
@@ -73,6 +79,17 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             }
 
             return list;
+        }
+
+        [EntityAuthorize(PermissionFlags.Update)]
+        public ActionResult RetryStat(Int32 id)
+        {
+            var stat = AppDayStat.FindByID(id);
+            if (stat == null) throw new InvalidDataException("找不到统计数据");
+
+            Service.Add(stat.StatDate);
+
+            return RedirectToAction("Index");
         }
     }
 }

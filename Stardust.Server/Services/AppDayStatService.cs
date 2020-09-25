@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using NewLife.Threading;
 using Stardust.Data.Monitors;
@@ -12,50 +11,41 @@ namespace Stardust.Server.Services
     public interface IAppDayStatService
     {
         /// <summary>添加需要统计的应用，去重</summary>
-        /// <param name="appId"></param>
-        void Add(Int32 appId);
+        /// <param name="date"></param>
+        void Add(DateTime date);
     }
 
     /// <summary>应用统计服务</summary>
     public class AppDayStatService : IAppDayStatService
     {
         private TimerX _timer;
-        private readonly ConcurrentBag<Int32> _bag = new ConcurrentBag<Int32>();
+        private readonly ConcurrentBag<DateTime> _bag = new ConcurrentBag<DateTime>();
 
         /// <summary>添加需要统计的应用，去重</summary>
-        /// <param name="appId"></param>
-        public void Add(Int32 appId)
+        /// <param name="date"></param>
+        public void Add(DateTime date)
         {
-            _bag.Add(appId);
+            if (!_bag.Contains(date)) _bag.Add(date);
 
             // 初始化定时器
             if (_timer == null)
             {
                 lock (this)
                 {
-                    if (_timer == null) _timer = new TimerX(DoTraceStat, null, 5_000, 300_000) { Async = true };
+                    if (_timer == null) _timer = new TimerX(DoTraceStat, null, 5_000, 30_000) { Async = true };
                 }
             }
         }
 
         private void DoTraceStat(Object state)
         {
-            // 拿到需要统计的应用
-            var appIds = new List<Int32>();
-            while (_bag.TryTake(out var id))
+            while (_bag.TryTake(out var time))
             {
-                appIds.Add(id);
+                Process(time.Date);
             }
-            if (appIds.Count == 0) return;
-
-            // 统计日期，凌晨0点10分之前统计前一天
-            var time = DateTime.Now;
-            if (time.Hour == 0 && time.Minute < 10) Process(time.AddDays(-1).Date, appIds);
-
-            Process(time.Date, appIds);
         }
 
-        private void Process(DateTime date, IList<Int32> appIds)
+        private void Process(DateTime date)
         {
             // 统计数据
             var list = TraceDayStat.SearchGroupApp(date);

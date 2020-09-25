@@ -21,6 +21,9 @@ namespace Stardust.Server.Services
     /// <summary>跟踪统计服务</summary>
     public class TraceStatService : ITraceStatService
     {
+        /// <summary>开始时间</summary>
+        public DateTime StartTime { get; set; }
+
         private TimerX _timerFlow;
         private TimerX _timerBatch;
         private readonly ConcurrentBag<Int32> _bag = new ConcurrentBag<Int32>();
@@ -46,6 +49,12 @@ namespace Stardust.Server.Services
             }
 
             // 初始化定时器，用于流式增量计算和批量计算
+            Init();
+        }
+
+        /// <summary>初始化定时器</summary>
+        public void Init()
+        {
             if (_timerFlow == null)
             {
                 lock (this)
@@ -58,6 +67,8 @@ namespace Stardust.Server.Services
 
         private void DoFlowStat(Object state)
         {
+            if (_queue.IsEmpty) return;
+
             // 消费所有数据，完成统计
             var dayStats = new List<TraceDayStat>();
             var hourStats = new List<TraceHourStat>();

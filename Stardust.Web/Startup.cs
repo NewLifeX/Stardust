@@ -9,6 +9,8 @@ using NewLife.Cube.WebMiddleware;
 using NewLife.Log;
 using NewLife.Remoting;
 using Stardust.Monitors;
+using Stardust.Server.Services;
+using Stardust.Web.Areas.Monitors.Controllers;
 using XCode.DataAccessLayer;
 
 namespace Stardust.Web
@@ -33,6 +35,11 @@ namespace Stardust.Web
 
                 services.AddSingleton<ITracer>(tracer);
             }
+
+            // 统计
+            var appService = new AppDayStatService();
+            services.AddSingleton<IAppDayStatService>(appService);
+            AppDayStatController.Service = appService;
 
             services.AddCube();
         }
