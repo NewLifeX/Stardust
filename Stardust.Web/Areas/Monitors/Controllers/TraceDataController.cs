@@ -102,5 +102,23 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
             return RedirectToAction("Index", "SampleData", new { traceId = list[0].TraceId });
         }
+
+        [EntityAuthorize(PermissionFlags.Update)]
+        public ActionResult Exclude(Int64 id)
+        {
+            var td = TraceData.FindById(id);
+            var app = td?.App;
+            if (app != null && !td.Name.IsNullOrEmpty())
+            {
+                app.AddExclude(td.Name);
+
+                app.Update();
+            }
+
+            var url = Request.Headers["Referer"].FirstOrDefault();
+            if (!url.IsNullOrEmpty()) return Redirect(url);
+
+            return RedirectToAction("Index");
+        }
     }
 }
