@@ -14,7 +14,7 @@ using static Stardust.Data.Monitors.TraceMinuteStat;
 namespace Stardust.Web.Areas.Monitors.Controllers
 {
     [MonitorsArea]
-    public class TraceMinuteStatController : ReadOnlyEntityController<TraceMinuteStat>
+    public class TraceMinuteStatController : EntityController<TraceMinuteStat>
     {
         static TraceMinuteStatController()
         {

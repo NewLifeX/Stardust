@@ -15,7 +15,7 @@ using static Stardust.Data.Monitors.AppDayStat;
 namespace Stardust.Web.Areas.Monitors.Controllers
 {
     [MonitorsArea]
-    public class AppDayStatController : ReadOnlyEntityController<AppDayStat>
+    public class AppDayStatController : EntityController<AppDayStat>
     {
         public static IAppDayStatService AppStat { get; set; }
         public static ITraceStatService TraceStat { get; set; }
@@ -83,19 +83,23 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         }
 
         [EntityAuthorize(PermissionFlags.Update)]
-        public ActionResult RetryStat(Int32 id)
+        public ActionResult RetryStat()
         {
-            var stat = AppDayStat.FindByID(id);
-            if (stat == null) throw new InvalidDataException("找不到统计数据");
-
-            AppStat.Add(stat.StatDate);
-            //TraceStat.Add(stat.AppId, stat.StatDate);
-            for (var time = stat.StatDate; time < stat.StatDate.AddDays(1); time = time.AddMinutes(5))
+            foreach (var item in SelectKeys)
             {
-                TraceStat.Add(stat.AppId, time);
+                var stat = AppDayStat.FindByID(item.ToInt());
+                if (stat != null)
+                {
+                    AppStat.Add(stat.StatDate);
+                    //TraceStat.Add(stat.AppId, stat.StatDate);
+                    for (var time = stat.StatDate; time < stat.StatDate.AddDays(1); time = time.AddMinutes(5))
+                    {
+                        TraceStat.Add(stat.AppId, time);
+                    }
+                }
             }
 
-            return RedirectToAction("Index");
+            return JsonRefresh("成功！");
         }
     }
 }
