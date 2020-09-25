@@ -23,7 +23,7 @@ namespace Stardust.Server.Services
     {
         private TimerX _timerFlow;
         private TimerX _timerBatch;
-        //private readonly ConcurrentBag<Int32> _bag = new ConcurrentBag<Int32>();
+        private readonly ConcurrentBag<Int32> _bag = new ConcurrentBag<Int32>();
         private readonly ConcurrentQueue<TraceData> _queue = new ConcurrentQueue<TraceData>();
         private Int32 _count;
 
@@ -31,7 +31,12 @@ namespace Stardust.Server.Services
         /// <param name="traces"></param>
         public void Add(IList<TraceData> traces)
         {
-            //if (!_bag.Contains(appId)) _bag.Add(appId);
+            if (traces == null || traces.Count == 0) return;
+
+            var appId = traces[0].AppId;
+            if (!_bag.Contains(appId)) _bag.Add(appId);
+
+            if (_count > 100_000) return;
 
             // 加入队列，增量计算
             foreach (var item in traces)
@@ -65,10 +70,43 @@ namespace Stardust.Server.Services
                 if (!_queue.TryDequeue(out var td)) break;
                 Interlocked.Decrement(ref _count);
 
+                // 过滤异常数据
+                if (td.Name.IsNullOrEmpty()) continue;
+
+                // 每日
                 {
-                    var st = TraceDayStat.FindByID();
+                    var st = TraceDayStat.FindOrAdd(dayStats, td);
+                    st.Total += td.Total;
+                    st.Errors += td.Errors;
+                    st.TotalCost += td.TotalCost;
+                    if (st.MaxCost < td.MaxCost) st.MaxCost = td.MaxCost;
+                    if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
+                }
+
+                // 小时
+                {
+                    var st = TraceHourStat.FindOrAdd(hourStats, td);
+                    st.Total += td.Total;
+                    st.Errors += td.Errors;
+                    st.TotalCost += td.TotalCost;
+                    if (st.MaxCost < td.MaxCost) st.MaxCost = td.MaxCost;
+                    if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
+                }
+
+                // 分钟
+                {
+                    var st = TraceMinuteStat.FindOrAdd(minuteStats, td);
+                    st.Total += td.Total;
+                    st.Errors += td.Errors;
+                    st.TotalCost += td.TotalCost;
+                    if (st.MaxCost < td.MaxCost) st.MaxCost = td.MaxCost;
+                    if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
                 }
             }
+
+            dayStats.Save(true);
+            hourStats.Save(true);
+            minuteStats.Save(true);
         }
 
         private void DoBatchStat(Object state)
@@ -80,6 +118,7 @@ namespace Stardust.Server.Services
                 appIds.Add(id);
             }
             appIds = appIds.Distinct().ToList();
+            //var appIds = AppTracer.FindAllWithCache().Select(e => e.ID).ToList();
             if (appIds.Count == 0) return;
 
             // 统计1分钟之前数据
@@ -109,13 +148,7 @@ namespace Stardust.Server.Services
                 {
                     if (item.Name.IsNullOrEmpty()) continue;
 
-                    var st = sts.FirstOrDefault(e => e.AppId == item.AppId && e.Name == item.Name);
-                    if (st == null)
-                    {
-                        st = new TraceDayStat { StatDate = date, AppId = item.AppId, Name = item.Name };
-                        sts.Add(st);
-                    }
-
+                    var st = TraceDayStat.FindOrAdd(sts, item);
                     st.Total = item.Total;
                     st.Errors = item.Errors;
                     st.TotalCost = item.TotalCost;
@@ -147,13 +180,7 @@ namespace Stardust.Server.Services
                 {
                     if (item.Name.IsNullOrEmpty()) continue;
 
-                    var st = sts.FirstOrDefault(e => e.AppId == item.AppId && e.Name == item.Name);
-                    if (st == null)
-                    {
-                        st = new TraceHourStat { StatTime = time, AppId = item.AppId, Name = item.Name };
-                        sts.Add(st);
-                    }
-
+                    var st = TraceHourStat.FindOrAdd(sts, item);
                     st.Total = item.Total;
                     st.Errors = item.Errors;
                     st.TotalCost = item.TotalCost;
@@ -185,13 +212,7 @@ namespace Stardust.Server.Services
                 {
                     if (item.Name.IsNullOrEmpty()) continue;
 
-                    var st = sts.FirstOrDefault(e => e.AppId == item.AppId && e.Name == item.Name);
-                    if (st == null)
-                    {
-                        st = new TraceMinuteStat { StatTime = time, AppId = item.AppId, Name = item.Name };
-                        sts.Add(st);
-                    }
-
+                    var st = TraceMinuteStat.FindOrAdd(sts, item);
                     st.Total = item.Total;
                     st.Errors = item.Errors;
                     st.TotalCost = item.TotalCost;

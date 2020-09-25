@@ -125,6 +125,21 @@ namespace Stardust.Data.Monitors
         #endregion
 
         #region 业务操作
+        /// <summary>查找统计行</summary>
+        /// <param name="dayStats"></param>
+        /// <param name="td"></param>
+        /// <returns></returns>
+        public static TraceHourStat FindOrAdd(IList<TraceHourStat> dayStats, TraceData td)
+        {
+            var st = dayStats.FirstOrDefault(e => e.StatTime == td.StatHour && e.AppId == td.AppId && e.Name == td.Name);
+            if (st == null)
+            {
+                st = new TraceHourStat { StatTime = td.StatHour, AppId = td.AppId, Name = td.Name };
+                dayStats.Add(st);
+            }
+
+            return st;
+        }
         #endregion
     }
 }
