@@ -58,11 +58,11 @@ namespace Stardust.Server.Services
         private void Process(DateTime date, IList<Int32> appIds)
         {
             // 统计数据
-            var list = TraceData.SearchGroupApp(date, appIds.ToArray());
+            var list = TraceDayStat.SearchGroupApp(date);
             if (list.Count == 0) return;
 
             // 统计对象
-            var sts = AppDayStat.Search(date, list.Select(e => e.AppId).ToArray());
+            var sts = AppDayStat.Search(date, null);
 
             // 聚合
             foreach (var item in list)

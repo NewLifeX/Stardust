@@ -95,7 +95,14 @@ namespace Stardust.Data.Monitors
         /// <param name="date"></param>
         /// <param name="appIds"></param>
         /// <returns></returns>
-        public static IList<AppDayStat> Search(DateTime date, Int32[] appIds) => FindAll(_.StatDate == date & _.AppId.In(appIds));
+        public static IList<AppDayStat> Search(DateTime date, Int32[] appIds)
+        {
+            var exp = new WhereExpression();
+            if (date.Year > 2000) exp &= _.StatDate == date;
+            if (appIds != null && appIds.Length > 0) exp &= _.AppId.In(appIds);
+
+            return FindAll(exp, new PageParameter { PageSize = 1000 });
+        }
         #endregion
 
         #region 业务操作
