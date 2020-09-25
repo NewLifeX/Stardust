@@ -16,6 +16,11 @@ namespace Stardust.Server.Services
         /// <summary>添加需要统计的跟踪数据</summary>
         /// <param name="traces"></param>
         void Add(IList<TraceData> traces);
+
+        /// <summary>统计特定应用和时间</summary>
+        /// <param name="appId"></param>
+        /// <param name="time"></param>
+        void Add(Int32 appId, DateTime time);
     }
 
     /// <summary>跟踪统计服务</summary>
@@ -26,7 +31,9 @@ namespace Stardust.Server.Services
 
         private TimerX _timerFlow;
         private TimerX _timerBatch;
-        private readonly ConcurrentBag<Int32> _bag = new ConcurrentBag<Int32>();
+        private readonly ConcurrentBag<String> _bagDay = new ConcurrentBag<String>();
+        private readonly ConcurrentBag<String> _bagHour = new ConcurrentBag<String>();
+        private readonly ConcurrentBag<String> _bagMinute = new ConcurrentBag<String>();
         private readonly ConcurrentQueue<TraceData> _queue = new ConcurrentQueue<TraceData>();
         private Int32 _count;
 
@@ -36,8 +43,21 @@ namespace Stardust.Server.Services
         {
             if (traces == null || traces.Count == 0) return;
 
-            var appId = traces[0].AppId;
-            if (!_bag.Contains(appId)) _bag.Add(appId);
+            foreach (var item in traces)
+            {
+                {
+                    var key = $"{ item.AppId}_{item.StatDate.ToFullString()}";
+                    if (!_bagDay.Contains(key)) _bagDay.Add(key);
+                }
+                {
+                    var key = $"{ item.AppId}_{item.StatHour.ToFullString()}";
+                    if (!_bagHour.Contains(key)) _bagHour.Add(key);
+                }
+                {
+                    var key = $"{ item.AppId}_{item.StatMinute.ToFullString()}";
+                    if (!_bagMinute.Contains(key)) _bagMinute.Add(key);
+                }
+            }
 
             if (_count > 100_000) return;
 
@@ -50,6 +70,31 @@ namespace Stardust.Server.Services
 
             // 初始化定时器，用于流式增量计算和批量计算
             Init();
+        }
+
+        /// <summary>统计特定应用和时间</summary>
+        /// <param name="appId"></param>
+        /// <param name="time"></param>
+        public void Add(Int32 appId, DateTime time)
+        {
+            Init();
+
+            {
+                var key = $"{appId}_{time.Date.ToFullString()}";
+                if (!_bagDay.Contains(key)) _bagDay.Add(key);
+            }
+            {
+                var hour = time.Date.AddHours(time.Hour);
+                var key = $"{appId}_{hour.ToFullString()}";
+                if (!_bagHour.Contains(key)) _bagHour.Add(key);
+            }
+            {
+                var minute = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
+                var key = $"{appId}_{minute.ToFullString()}";
+                if (!_bagMinute.Contains(key)) _bagMinute.Add(key);
+            }
+
+            _timerBatch?.SetNext(-1);
         }
 
         /// <summary>初始化定时器</summary>
@@ -122,22 +167,28 @@ namespace Stardust.Server.Services
 
         private void DoBatchStat(Object state)
         {
-            // 拿到需要统计的应用
-            var appIds = new List<Int32>();
-            while (_bag.TryTake(out var id))
+            while (_bagDay.TryTake(out var key))
             {
-                appIds.Add(id);
+                var ss = key.Split("_");
+                ProcessDay(ss[1].ToDateTime(), new List<Int32> { ss[0].ToInt() });
             }
-            appIds = appIds.Distinct().ToList();
-            //var appIds = AppTracer.FindAllWithCache().Select(e => e.ID).ToList();
-            if (appIds.Count == 0) return;
+            while (_bagHour.TryTake(out var key))
+            {
+                var ss = key.Split("_");
+                ProcessHour(ss[1].ToDateTime(), new List<Int32> { ss[0].ToInt() });
+            }
+            while (_bagMinute.TryTake(out var key))
+            {
+                var ss = key.Split("_");
+                ProcessMinute(ss[1].ToDateTime(), new List<Int32> { ss[0].ToInt() });
+            }
 
-            // 统计1分钟之前数据
-            var time = DateTime.Now.AddMinutes(-1);
+            //// 统计1分钟之前数据
+            //var time = DateTime.Now.AddMinutes(-1);
 
-            ProcessDay(time, appIds);
-            ProcessHour(time, appIds);
-            ProcessMinute(time, appIds);
+            //ProcessDay(time, appIds);
+            //ProcessHour(time, appIds);
+            //ProcessMinute(time, appIds);
         }
 
         private void ProcessDay(DateTime time, IList<Int32> appIds)

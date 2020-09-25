@@ -39,7 +39,10 @@ namespace Stardust.Web
             // 统计
             var appService = new AppDayStatService();
             services.AddSingleton<IAppDayStatService>(appService);
-            AppDayStatController.Service = appService;
+            var traceService = new TraceStatService();
+            services.AddSingleton<ITraceStatService>(traceService);
+            AppDayStatController.AppStat = appService;
+            AppDayStatController.TraceStat = traceService;
 
             services.AddCube();
         }

@@ -17,7 +17,8 @@ namespace Stardust.Web.Areas.Monitors.Controllers
     [MonitorsArea]
     public class AppDayStatController : ReadOnlyEntityController<AppDayStat>
     {
-        public static IAppDayStatService Service { get; set; }
+        public static IAppDayStatService AppStat { get; set; }
+        public static ITraceStatService TraceStat { get; set; }
 
         static AppDayStatController()
         {
@@ -87,7 +88,12 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var stat = AppDayStat.FindByID(id);
             if (stat == null) throw new InvalidDataException("找不到统计数据");
 
-            Service.Add(stat.StatDate);
+            AppStat.Add(stat.StatDate);
+            //TraceStat.Add(stat.AppId, stat.StatDate);
+            for (var time = stat.StatDate; time < stat.StatDate.AddDays(1); time = time.AddMinutes(5))
+            {
+                TraceStat.Add(stat.AppId, time);
+            }
 
             return RedirectToAction("Index");
         }
