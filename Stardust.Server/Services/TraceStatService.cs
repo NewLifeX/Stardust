@@ -210,6 +210,7 @@ namespace Stardust.Server.Services
                 {
                     if (item.Name.IsNullOrEmpty()) continue;
 
+                    item.StatDate = date;
                     var st = TraceDayStat.FindOrAdd(sts, item);
                     st.Total = item.Total;
                     st.Errors = item.Errors;
@@ -242,6 +243,7 @@ namespace Stardust.Server.Services
                 {
                     if (item.Name.IsNullOrEmpty()) continue;
 
+                    item.StatHour = time;
                     var st = TraceHourStat.FindOrAdd(sts, item);
                     st.Total = item.Total;
                     st.Errors = item.Errors;
@@ -274,6 +276,7 @@ namespace Stardust.Server.Services
                 {
                     if (item.Name.IsNullOrEmpty()) continue;
 
+                    item.StatMinute = time;
                     var st = TraceMinuteStat.FindOrAdd(sts, item);
                     st.Total = item.Total;
                     st.Errors = item.Errors;
