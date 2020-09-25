@@ -71,9 +71,6 @@ namespace Stardust.Server.Controllers
             // 插入数据
             Task.Run(() => ProcessData(app, model, ip, builders));
 
-            _stat.Add(app.ID);
-            _appStat.Add(app.ID);
-
             // 构造响应
             return new TraceResponse
             {
@@ -112,6 +109,10 @@ namespace Stardust.Server.Controllers
 
             traces.Insert(true);
             samples.Insert(true);
+
+            // 更新统计
+            _stat.Add(traces);
+            _appStat.Add(app.ID);
 
             // 应用节点数
             var nodes = app.Nodes?.Split(",").ToList() ?? new List<String>();

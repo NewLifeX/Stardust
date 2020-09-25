@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using NewLife;
 using NewLife.Threading;
 using Stardust.Data.Monitors;
@@ -12,34 +13,65 @@ namespace Stardust.Server.Services
     /// <summary>跟踪统计服务</summary>
     public interface ITraceStatService
     {
-        /// <summary>添加需要统计的应用，去重</summary>
-        /// <param name="appId"></param>
-        void Add(Int32 appId);
+        /// <summary>添加需要统计的跟踪数据</summary>
+        /// <param name="traces"></param>
+        void Add(IList<TraceData> traces);
     }
 
     /// <summary>跟踪统计服务</summary>
     public class TraceStatService : ITraceStatService
     {
-        private TimerX _timer;
-        private readonly ConcurrentBag<Int32> _bag = new ConcurrentBag<Int32>();
+        private TimerX _timerFlow;
+        private TimerX _timerBatch;
+        //private readonly ConcurrentBag<Int32> _bag = new ConcurrentBag<Int32>();
+        private readonly ConcurrentQueue<TraceData> _queue = new ConcurrentQueue<TraceData>();
+        private Int32 _count;
 
-        /// <summary>添加需要统计的应用，去重</summary>
-        /// <param name="appId"></param>
-        public void Add(Int32 appId)
+        /// <summary>添加需要统计的跟踪数据</summary>
+        /// <param name="traces"></param>
+        public void Add(IList<TraceData> traces)
         {
-            if (!_bag.Contains(appId)) _bag.Add(appId);
+            //if (!_bag.Contains(appId)) _bag.Add(appId);
 
-            // 初始化定时器
-            if (_timer == null)
+            // 加入队列，增量计算
+            foreach (var item in traces)
+            {
+                _queue.Enqueue(item);
+                Interlocked.Increment(ref _count);
+            }
+
+            // 初始化定时器，用于流式增量计算和批量计算
+            if (_timerFlow == null)
             {
                 lock (this)
                 {
-                    if (_timer == null) _timer = new TimerX(DoTraceStat, null, 5_000, 30_000) { Async = true };
+                    if (_timerFlow == null) _timerFlow = new TimerX(DoFlowStat, null, 5_000, 30_000) { Async = true };
+                    if (_timerBatch == null) _timerBatch = new TimerX(DoBatchStat, null, 5_000, 300_000) { Async = true };
                 }
             }
         }
 
-        private void DoTraceStat(Object state)
+        private void DoFlowStat(Object state)
+        {
+            // 消费所有数据，完成统计
+            var dayStats = new List<TraceDayStat>();
+            var hourStats = new List<TraceHourStat>();
+            var minuteStats = new List<TraceMinuteStat>();
+
+            // 限制每次只处理这么多
+            var count = 10000;
+            while (count-- > 0)
+            {
+                if (!_queue.TryDequeue(out var td)) break;
+                Interlocked.Decrement(ref _count);
+
+                {
+                    var st = TraceDayStat.FindByID();
+                }
+            }
+        }
+
+        private void DoBatchStat(Object state)
         {
             // 拿到需要统计的应用
             var appIds = new List<Int32>();
