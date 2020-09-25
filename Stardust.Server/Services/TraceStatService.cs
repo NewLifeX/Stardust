@@ -94,7 +94,7 @@ namespace Stardust.Server.Services
                 if (!_bagMinute.Contains(key)) _bagMinute.Add(key);
             }
 
-            _timerBatch?.SetNext(-1);
+            _timerBatch?.SetNext(3_000);
         }
 
         /// <summary>初始化定时器</summary>
@@ -170,17 +170,17 @@ namespace Stardust.Server.Services
             while (_bagDay.TryTake(out var key))
             {
                 var ss = key.Split("_");
-                ProcessDay(ss[1].ToDateTime(), new List<Int32> { ss[0].ToInt() });
+                ProcessDay(ss[0].ToInt(), ss[1].ToDateTime());
             }
             while (_bagHour.TryTake(out var key))
             {
                 var ss = key.Split("_");
-                ProcessHour(ss[1].ToDateTime(), new List<Int32> { ss[0].ToInt() });
+                ProcessHour(ss[0].ToInt(), ss[1].ToDateTime());
             }
             while (_bagMinute.TryTake(out var key))
             {
                 var ss = key.Split("_");
-                ProcessMinute(ss[1].ToDateTime(), new List<Int32> { ss[0].ToInt() });
+                ProcessMinute(ss[0].ToInt(), ss[1].ToDateTime());
             }
 
             //// 统计1分钟之前数据
@@ -191,99 +191,88 @@ namespace Stardust.Server.Services
             //ProcessMinute(time, appIds);
         }
 
-        private void ProcessDay(DateTime time, IList<Int32> appIds)
+        private void ProcessDay(Int32 appId, DateTime time)
         {
             var date = time.Date;
 
-            // 统计对象
-            var sts = TraceDayStat.Search(date, appIds.ToArray());
-
             // 逐个应用计算
-            foreach (var appId in appIds)
+            var list = TraceData.SearchGroupAppAndName("day", date, new[] { appId });
+            if (list.Count == 0) return;
+
+            // 统计对象
+            var sts = TraceDayStat.Search(date, new[] { appId });
+
+            // 聚合
+            foreach (var item in list)
             {
-                // 统计数据
-                var list = TraceData.SearchGroupAppAndName("day", date, new[] { appId });
-                if (list.Count == 0) return;
+                if (item.Name.IsNullOrEmpty()) continue;
 
-                // 聚合
-                foreach (var item in list)
-                {
-                    if (item.Name.IsNullOrEmpty()) continue;
-
-                    item.StatDate = date;
-                    var st = TraceDayStat.FindOrAdd(sts, item);
-                    st.Total = item.Total;
-                    st.Errors = item.Errors;
-                    st.TotalCost = item.TotalCost;
-                    st.MaxCost = item.MaxCost;
-                    st.MinCost = item.MinCost;
-                }
+                item.StatDate = date;
+                var st = TraceDayStat.FindOrAdd(sts, item);
+                st.Total = item.Total;
+                st.Errors = item.Errors;
+                st.TotalCost = item.TotalCost;
+                st.MaxCost = item.MaxCost;
+                st.MinCost = item.MinCost;
             }
 
             // 保存统计
             sts.Save(true);
         }
 
-        private void ProcessHour(DateTime time, IList<Int32> appIds)
+        private void ProcessHour(Int32 appId, DateTime time)
         {
             time = time.Date.AddHours(time.Hour);
 
-            // 统计对象
-            var sts = TraceHourStat.Search(time, appIds.ToArray());
-
             // 逐个应用计算
-            foreach (var appId in appIds)
+            var list = TraceData.SearchGroupAppAndName("hour", time, new[] { appId });
+            if (list.Count == 0) return;
+
+            // 统计对象
+            var sts = TraceHourStat.Search(time, new[] { appId });
+
+            // 聚合
+            foreach (var item in list)
             {
-                // 统计数据
-                var list = TraceData.SearchGroupAppAndName("hour", time, new[] { appId });
-                if (list.Count == 0) return;
+                if (item.Name.IsNullOrEmpty()) continue;
 
-                // 聚合
-                foreach (var item in list)
-                {
-                    if (item.Name.IsNullOrEmpty()) continue;
-
-                    item.StatHour = time;
-                    var st = TraceHourStat.FindOrAdd(sts, item);
-                    st.Total = item.Total;
-                    st.Errors = item.Errors;
-                    st.TotalCost = item.TotalCost;
-                    st.MaxCost = item.MaxCost;
-                    st.MinCost = item.MinCost;
-                }
+                item.StatHour = time;
+                var st = TraceHourStat.FindOrAdd(sts, item);
+                st.Total = item.Total;
+                st.Errors = item.Errors;
+                st.TotalCost = item.TotalCost;
+                st.MaxCost = item.MaxCost;
+                st.MinCost = item.MinCost;
             }
 
             // 保存统计
             sts.Save(true);
         }
 
-        private void ProcessMinute(DateTime time, IList<Int32> appIds)
+        private void ProcessMinute(Int32 appId, DateTime time)
         {
             time = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
 
-            // 统计对象
-            var sts = TraceMinuteStat.Search(time, appIds.ToArray());
-
             // 逐个应用计算
-            foreach (var appId in appIds)
+            // 统计数据
+            var list = TraceData.SearchGroupAppAndName("minute", time, new[] { appId });
+            if (list.Count == 0) return;
+
+            // 统计对象
+            var sts = TraceMinuteStat.Search(time, new[] { appId });
+
+            // 聚合
+            foreach (var item in list)
             {
-                // 统计数据
-                var list = TraceData.SearchGroupAppAndName("minute", time, new[] { appId });
-                if (list.Count == 0) return;
+                if (item.Name.IsNullOrEmpty()) continue;
 
-                // 聚合
-                foreach (var item in list)
-                {
-                    if (item.Name.IsNullOrEmpty()) continue;
-
-                    item.StatMinute = time;
-                    var st = TraceMinuteStat.FindOrAdd(sts, item);
-                    st.Total = item.Total;
-                    st.Errors = item.Errors;
-                    st.TotalCost = item.TotalCost;
-                    st.MaxCost = item.MaxCost;
-                    st.MinCost = item.MinCost;
-                }
+                item.StatMinute = time;
+                var st = TraceMinuteStat.FindOrAdd(sts, item);
+                st.Total = item.Total;
+                st.Errors = item.Errors;
+                st.TotalCost = item.TotalCost;
+                st.MaxCost = item.MaxCost;
+                st.MinCost = item.MinCost;
             }
 
             // 保存统计
