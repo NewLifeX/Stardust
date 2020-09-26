@@ -30,6 +30,7 @@
             <th class="text-center" title="最大正常采样数。采样周期内，最多只记录指定数量的正常事件，用于绘制依赖关系"><a href="@Html.Raw(page.GetSortUrl("MaxSamples"))">最大正常采样数</a></th>
             <th class="text-center" title="最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10"><a href="@Html.Raw(page.GetSortUrl("MaxErrors"))">最大异常采样数</a></th>
             <th class="text-center" title="超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒"><a href="@Html.Raw(page.GetSortUrl("Timeout"))">超时时间</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Nodes"))">节点集</a></th>
             <th class="text-center">性能</th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("UpdateUser"))">更新者</a></th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("UpdateTime"))">更新时间</a></th>
@@ -45,6 +46,7 @@
         {
             var ap = Stardust.Data.App.FindByName(entity.Name);
             var appId = ap?.ID ?? 0;
+            var node = Stardust.Data.Nodes.Node.FindAllByIPs(entity.Nodes?.Split(",")).FirstOrDefault();
             <tr>
                 @if (set.EnableSelect && ukey != null)
                 {
@@ -61,6 +63,16 @@
                 <td class="text-right">@entity.MaxSamples.ToString("n0")</td>
                 <td class="text-right">@entity.MaxErrors.ToString("n0")</td>
                 <td class="text-right">@entity.Timeout.ToString("n0")</td>
+                <td style="max-width:200px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;" title="@entity.Nodes">
+                    @if (node != null)
+                    {
+                        <a href="../Nodes/NodeData?nodeId=@node.ID">@entity.Nodes</a>
+                    }
+                    else
+                    {
+                        <text>@entity.Nodes</text>
+                    }
+                </td>
                 <td><a href="../Star/AppMeter?appId=@appId">性能</a></td>
                 <td>@entity.UpdateUser</td>
                 <td class="text-center">@entity.UpdateTime.ToFullString("")</td>

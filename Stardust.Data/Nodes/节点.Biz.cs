@@ -136,6 +136,19 @@ namespace Stardust.Data.Nodes
             // 单对象缓存
             return Meta.SingleCache.GetItemWithSlaveKey(code) as Node;
         }
+
+        /// <summary>根据IP查找节点</summary>
+        /// <param name="ips"></param>
+        /// <returns></returns>
+        public static IList<Node> FindAllByIPs(params String[] ips)
+        {
+            if (ips == null || ips.Length == 0) return new List<Node>();
+
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => !e.IP.IsNullOrEmpty() && ips.Contains(e.IP));
+
+            return FindAll(_.IP.In(ips));
+        }
         #endregion
 
         #region 高级查询
