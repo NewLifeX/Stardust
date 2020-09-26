@@ -16,6 +16,7 @@ namespace Stardust.Data.Monitors
     [Description("跟踪每日统计。每应用每接口每日统计，用于分析接口健康状况")]
     [BindIndex("IU_TraceDayStat_StatDate_AppId_Name", true, "StatDate,AppId,Name")]
     [BindIndex("IX_TraceDayStat_AppId_Name_Id", false, "AppId,Name,Id")]
+    [BindIndex("IX_TraceDayStat_AppId_Type_StatDate", false, "AppId,Type,StatDate")]
     [BindTable("TraceDayStat", Description = "跟踪每日统计。每应用每接口每日统计，用于分析接口健康状况", ConnName = "Monitor", DbType = DatabaseType.None)]
     public partial class TraceDayStat
     {
@@ -51,6 +52,14 @@ namespace Stardust.Data.Monitors
         [DataObjectField(false, false, true, 200)]
         [BindColumn("Name", "操作名。接口名或埋点名", "", Master = true)]
         public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
+
+        private String _Type;
+        /// <summary>种类。Api/Http/Db/Mq/Redis/Other</summary>
+        [DisplayName("种类")]
+        [Description("种类。Api/Http/Db/Mq/Redis/Other")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Type", "种类。Api/Http/Db/Mq/Redis/Other", "")]
+        public String Type { get => _Type; set { if (OnPropertyChanging("Type", value)) { _Type = value; OnPropertyChanged("Type"); } } }
 
         private Int32 _Total;
         /// <summary>总次数</summary>
@@ -131,6 +140,7 @@ namespace Stardust.Data.Monitors
                     case "StatDate": return _StatDate;
                     case "AppId": return _AppId;
                     case "Name": return _Name;
+                    case "Type": return _Type;
                     case "Total": return _Total;
                     case "Errors": return _Errors;
                     case "TotalCost": return _TotalCost;
@@ -150,6 +160,7 @@ namespace Stardust.Data.Monitors
                     case "StatDate": _StatDate = value.ToDateTime(); break;
                     case "AppId": _AppId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
+                    case "Type": _Type = Convert.ToString(value); break;
                     case "Total": _Total = value.ToInt(); break;
                     case "Errors": _Errors = value.ToInt(); break;
                     case "TotalCost": _TotalCost = value.ToLong(); break;
@@ -179,6 +190,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>操作名。接口名或埋点名</summary>
             public static readonly Field Name = FindByName("Name");
+
+            /// <summary>种类。Api/Http/Db/Mq/Redis/Other</summary>
+            public static readonly Field Type = FindByName("Type");
 
             /// <summary>总次数</summary>
             public static readonly Field Total = FindByName("Total");
@@ -221,6 +235,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>操作名。接口名或埋点名</summary>
             public const String Name = "Name";
+
+            /// <summary>种类。Api/Http/Db/Mq/Redis/Other</summary>
+            public const String Type = "Type";
 
             /// <summary>总次数</summary>
             public const String Total = "Total";

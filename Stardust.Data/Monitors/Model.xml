@@ -84,6 +84,7 @@
       <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
+      <Column Name="Type" DataType="String" Description="种类。Api/Http/Db/Mq/Redis/Other" />
       <Column Name="Total" DataType="Int32" Description="总次数" />
       <Column Name="Errors" DataType="Int32" Description="错误数" />
       <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
@@ -96,6 +97,7 @@
     <Indexes>
       <Index Columns="StatDate,AppId,Name" Unique="True" />
       <Index Columns="AppId,Name,Id" />
+      <Index Columns="AppId,Type,StatDate" />
     </Indexes>
   </Table>
   <Table Name="TraceHourStat" Description="跟踪小时统计。每应用每接口每小时统计，用于分析接口健康状况">
@@ -149,6 +151,12 @@
       <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数" />
       <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
       <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
+      <Column Name="Apis" DataType="Int64" Description="接口数" />
+      <Column Name="Https" DataType="Int64" Description="Http请求" />
+      <Column Name="Dbs" DataType="Int64" Description="数据库" />
+      <Column Name="Mqs" DataType="Int64" Description="消息队列" />
+      <Column Name="Redis" DataType="Int64" Description="Redis缓存" />
+      <Column Name="Others" DataType="Int64" Description="其它" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
     </Columns>

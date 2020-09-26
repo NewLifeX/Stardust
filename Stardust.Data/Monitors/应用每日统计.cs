@@ -91,6 +91,54 @@ namespace Stardust.Data.Monitors
         [BindColumn("MinCost", "最小耗时。单位毫秒", "")]
         public Int32 MinCost { get => _MinCost; set { if (OnPropertyChanging("MinCost", value)) { _MinCost = value; OnPropertyChanged("MinCost"); } } }
 
+        private Int64 _Apis;
+        /// <summary>接口数</summary>
+        [DisplayName("接口数")]
+        [Description("接口数")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Apis", "接口数", "")]
+        public Int64 Apis { get => _Apis; set { if (OnPropertyChanging("Apis", value)) { _Apis = value; OnPropertyChanged("Apis"); } } }
+
+        private Int64 _Https;
+        /// <summary>Http请求</summary>
+        [DisplayName("Http请求")]
+        [Description("Http请求")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Https", "Http请求", "")]
+        public Int64 Https { get => _Https; set { if (OnPropertyChanging("Https", value)) { _Https = value; OnPropertyChanged("Https"); } } }
+
+        private Int64 _Dbs;
+        /// <summary>数据库</summary>
+        [DisplayName("数据库")]
+        [Description("数据库")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Dbs", "数据库", "")]
+        public Int64 Dbs { get => _Dbs; set { if (OnPropertyChanging("Dbs", value)) { _Dbs = value; OnPropertyChanged("Dbs"); } } }
+
+        private Int64 _Mqs;
+        /// <summary>消息队列</summary>
+        [DisplayName("消息队列")]
+        [Description("消息队列")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Mqs", "消息队列", "")]
+        public Int64 Mqs { get => _Mqs; set { if (OnPropertyChanging("Mqs", value)) { _Mqs = value; OnPropertyChanged("Mqs"); } } }
+
+        private Int64 _Redis;
+        /// <summary>Redis缓存</summary>
+        [DisplayName("Redis缓存")]
+        [Description("Redis缓存")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Redis", "Redis缓存", "")]
+        public Int64 Redis { get => _Redis; set { if (OnPropertyChanging("Redis", value)) { _Redis = value; OnPropertyChanged("Redis"); } } }
+
+        private Int64 _Others;
+        /// <summary>其它</summary>
+        [DisplayName("其它")]
+        [Description("其它")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Others", "其它", "")]
+        public Int64 Others { get => _Others; set { if (OnPropertyChanging("Others", value)) { _Others = value; OnPropertyChanged("Others"); } } }
+
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
         [DisplayName("创建时间")]
@@ -127,6 +175,12 @@ namespace Stardust.Data.Monitors
                     case "Cost": return _Cost;
                     case "MaxCost": return _MaxCost;
                     case "MinCost": return _MinCost;
+                    case "Apis": return _Apis;
+                    case "Https": return _Https;
+                    case "Dbs": return _Dbs;
+                    case "Mqs": return _Mqs;
+                    case "Redis": return _Redis;
+                    case "Others": return _Others;
                     case "CreateTime": return _CreateTime;
                     case "UpdateTime": return _UpdateTime;
                     default: return base[name];
@@ -145,6 +199,12 @@ namespace Stardust.Data.Monitors
                     case "Cost": _Cost = value.ToInt(); break;
                     case "MaxCost": _MaxCost = value.ToInt(); break;
                     case "MinCost": _MinCost = value.ToInt(); break;
+                    case "Apis": _Apis = value.ToLong(); break;
+                    case "Https": _Https = value.ToLong(); break;
+                    case "Dbs": _Dbs = value.ToLong(); break;
+                    case "Mqs": _Mqs = value.ToLong(); break;
+                    case "Redis": _Redis = value.ToLong(); break;
+                    case "Others": _Others = value.ToLong(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
                     default: base[name] = value; break;
@@ -184,6 +244,24 @@ namespace Stardust.Data.Monitors
             /// <summary>最小耗时。单位毫秒</summary>
             public static readonly Field MinCost = FindByName("MinCost");
 
+            /// <summary>接口数</summary>
+            public static readonly Field Apis = FindByName("Apis");
+
+            /// <summary>Http请求</summary>
+            public static readonly Field Https = FindByName("Https");
+
+            /// <summary>数据库</summary>
+            public static readonly Field Dbs = FindByName("Dbs");
+
+            /// <summary>消息队列</summary>
+            public static readonly Field Mqs = FindByName("Mqs");
+
+            /// <summary>Redis缓存</summary>
+            public static readonly Field Redis = FindByName("Redis");
+
+            /// <summary>其它</summary>
+            public static readonly Field Others = FindByName("Others");
+
             /// <summary>创建时间</summary>
             public static readonly Field CreateTime = FindByName("CreateTime");
 
@@ -222,6 +300,24 @@ namespace Stardust.Data.Monitors
 
             /// <summary>最小耗时。单位毫秒</summary>
             public const String MinCost = "MinCost";
+
+            /// <summary>接口数</summary>
+            public const String Apis = "Apis";
+
+            /// <summary>Http请求</summary>
+            public const String Https = "Https";
+
+            /// <summary>数据库</summary>
+            public const String Dbs = "Dbs";
+
+            /// <summary>消息队列</summary>
+            public const String Mqs = "Mqs";
+
+            /// <summary>Redis缓存</summary>
+            public const String Redis = "Redis";
+
+            /// <summary>其它</summary>
+            public const String Others = "Others";
 
             /// <summary>创建时间</summary>
             public const String CreateTime = "CreateTime";

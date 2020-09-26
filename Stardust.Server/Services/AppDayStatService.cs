@@ -55,20 +55,30 @@ namespace Stardust.Server.Services
             var sts = AppDayStat.Search(date, null);
 
             // 聚合
-            foreach (var item in list)
+            var dic = list.GroupBy(e => e.AppId);
+            foreach (var item in dic)
             {
-                var st = sts.FirstOrDefault(e => e.AppId == item.AppId);
+                var appId = item.Key;
+                var ds = item.ToList();
+                var st = sts.FirstOrDefault(e => e.AppId == appId);
                 if (st == null)
                 {
-                    st = new AppDayStat { StatDate = date, AppId = item.AppId };
+                    st = new AppDayStat { StatDate = date, AppId = appId };
                     sts.Add(st);
                 }
 
-                st.Total = item.Total;
-                st.Errors = item.Errors;
-                st.TotalCost = item.TotalCost;
-                st.MaxCost = item.MaxCost;
-                st.MinCost = item.MinCost;
+                st.Total = ds.Sum(e => e.Total);
+                st.Errors = ds.Sum(e => e.Errors);
+                st.TotalCost = ds.Sum(e => e.TotalCost);
+                st.MaxCost = ds.Max(e => e.MaxCost);
+                st.MinCost = ds.Min(e => e.MinCost);
+
+                st.Apis = ds.FirstOrDefault(e => e.Type == "api")?.Total ?? 0;
+                st.Https = ds.FirstOrDefault(e => e.Type == "http")?.Total ?? 0;
+                st.Dbs = ds.FirstOrDefault(e => e.Type == "db")?.Total ?? 0;
+                st.Mqs = ds.FirstOrDefault(e => e.Type == "mq")?.Total ?? 0;
+                st.Redis = ds.FirstOrDefault(e => e.Type == "redis")?.Total ?? 0;
+                st.Others = ds.FirstOrDefault(e => e.Type == "other")?.Total ?? 0;
             }
 
             // 保存统计

@@ -34,6 +34,23 @@ namespace Stardust.Data.Monitors
             if (!HasDirty) return;
 
             Cost = Total == 0 ? 0 : (Int32)(TotalCost / Total);
+
+            // 识别操作类型
+            if (Type.IsNullOrEmpty() && !Name.IsNullOrEmpty())
+            {
+                if (Name.StartsWithIgnoreCase("/", "rpc:"))
+                    Type = "api";
+                else if (Name.StartsWithIgnoreCase("http:", "https:"))
+                    Type = "http";
+                else if (Name.StartsWithIgnoreCase("db:"))
+                    Type = "db";
+                else if (Name.StartsWithIgnoreCase("mq:", "rmq:", "redismq:", "rocketmq:", "kafka:", "mns:"))
+                    Type = "mq";
+                else if (Name.StartsWithIgnoreCase("redis:"))
+                    Type = "http";
+                else
+                    Type = "other";
+            }
         }
         #endregion
 
@@ -102,10 +119,10 @@ namespace Stardust.Data.Monitors
         /// <returns></returns>
         public static IList<TraceDayStat> SearchGroupApp(DateTime date)
         {
-            var selects = _.Total.Sum() & _.Errors.Sum() & _.TotalCost.Sum() & _.MaxCost.Max() & _.MinCost.Min() & _.AppId;
+            var selects = _.Total.Sum() & _.Errors.Sum() & _.TotalCost.Sum() & _.MaxCost.Max() & _.MinCost.Min() & _.AppId & _.Type;
             var where = new WhereExpression() & _.StatDate == date;
 
-            return FindAll(where.GroupBy(_.AppId), null, selects);
+            return FindAll(where.GroupBy(_.AppId, _.Type), null, selects);
         }
         #endregion
 
