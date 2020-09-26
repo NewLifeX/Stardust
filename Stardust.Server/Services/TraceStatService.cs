@@ -160,9 +160,9 @@ namespace Stardust.Server.Services
                 }
             }
 
-            dayStats.Save(true);
-            hourStats.Save(true);
-            minuteStats.Save(true);
+            dayStats.Update(true);
+            hourStats.Update(true);
+            minuteStats.Update(true);
         }
 
         private void DoBatchStat(Object state)
