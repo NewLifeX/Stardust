@@ -217,7 +217,7 @@ namespace Stardust.Server.Services
             }
 
             // 保存统计
-            sts.Save(true);
+            sts.Update(true);
         }
 
         private void ProcessHour(Int32 appId, DateTime time)
@@ -246,7 +246,7 @@ namespace Stardust.Server.Services
             }
 
             // 保存统计
-            sts.Save(true);
+            sts.Update(true);
         }
 
         private void ProcessMinute(Int32 appId, DateTime time)
@@ -276,7 +276,7 @@ namespace Stardust.Server.Services
             }
 
             // 保存统计
-            sts.Save(true);
+            sts.Update(true);
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using NewLife;
+using NewLife.Caching;
 using NewLife.Data;
 using XCode;
 using XCode.Membership;
@@ -128,6 +129,19 @@ namespace Stardust.Data.Monitors
         #endregion
 
         #region 业务操作
+        private static ICache _cache = Cache.Default;
+        private static TraceDayStat FindByTrace(TraceData td, Boolean cache)
+        {
+            var key = $"TraceDayStat:{td.StatDate}#{td.AppId}#{td.Name}";
+            if (cache && _cache.TryGet<TraceDayStat>(key, out var st)) return st;
+
+            // 查询数据库，即时空值也缓存，避免缓存穿透
+            st = Find(_.StatDate == td.StatDate & _.AppId == td.AppId & _.Name == td.Name);
+            _cache.Set(key, st, 600);
+
+            return st;
+        }
+
         /// <summary>查找统计行</summary>
         /// <param name="dayStats"></param>
         /// <param name="td"></param>
@@ -137,7 +151,9 @@ namespace Stardust.Data.Monitors
             var st = dayStats.FirstOrDefault(e => e.StatDate == td.StatDate && e.AppId == td.AppId && e.Name == td.Name);
             if (st == null)
             {
-                st = new TraceDayStat { StatDate = td.StatDate, AppId = td.AppId, Name = td.Name };
+                // 高并发下获取或新增对象
+                st = GetOrAdd(td, FindByTrace, k => new TraceDayStat { StatDate = k.StatDate, AppId = k.AppId, Name = k.Name });
+
                 dayStats.Add(st);
             }
 
