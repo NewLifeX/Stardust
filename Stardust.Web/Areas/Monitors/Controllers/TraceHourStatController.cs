@@ -62,7 +62,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                     {
                         Height = 400,
                     };
-                    chart.SetX(list2, _.StatTime, e => e.StatTime.ToString("dd-HH"));
+                    chart.SetX(list2, _.StatTime, e => e.StatTime.Hour == 0 ? e.StatTime.ToString("MM-dd") : e.StatTime.ToString("HH:mm"));
                     chart.SetY("调用次数");
                     chart.AddLine(list2, _.Total, null, true);
                     chart.Add(list2, _.Errors);
@@ -75,7 +75,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                     {
                         Height = 400,
                     };
-                    chart.SetX(list2, _.StatTime, e => e.StatTime.ToString("dd-HH"));
+                    chart.SetX(list2, _.StatTime, e => e.StatTime.Hour == 0 ? e.StatTime.ToString("MM-dd") : e.StatTime.ToString("HH:mm"));
                     chart.SetY("耗时");
                     chart.AddLine(list2, _.Cost, null, true);
                     chart.Add(list2, _.MaxCost);
