@@ -255,6 +255,10 @@ namespace Stardust.Data.Nodes
 
             node.Fill(di);
 
+            // 如果节点本地IP为空，而来源IP是局域网，则直接取用
+            //if (node.IP.IsNullOrEmpty() && ip.StartsWithIgnoreCase("10.", "192.", "172.")) node.IP = ip;
+            if (node.IP.IsNullOrEmpty()) node.IP = ip;
+
             node.Logins++;
             node.LastLogin = DateTime.Now;
             node.LastLoginIP = ip;
