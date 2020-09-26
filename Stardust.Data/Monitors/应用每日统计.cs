@@ -124,11 +124,11 @@ namespace Stardust.Data.Monitors
         public Int64 Mqs { get => _Mqs; set { if (OnPropertyChanging("Mqs", value)) { _Mqs = value; OnPropertyChanged("Mqs"); } } }
 
         private Int64 _Redis;
-        /// <summary>Redis缓存</summary>
-        [DisplayName("Redis缓存")]
-        [Description("Redis缓存")]
+        /// <summary>Redis</summary>
+        [DisplayName("Redis")]
+        [Description("Redis")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Redis", "Redis缓存", "")]
+        [BindColumn("Redis", "Redis", "")]
         public Int64 Redis { get => _Redis; set { if (OnPropertyChanging("Redis", value)) { _Redis = value; OnPropertyChanged("Redis"); } } }
 
         private Int64 _Others;
@@ -256,7 +256,7 @@ namespace Stardust.Data.Monitors
             /// <summary>消息队列</summary>
             public static readonly Field Mqs = FindByName("Mqs");
 
-            /// <summary>Redis缓存</summary>
+            /// <summary>Redis</summary>
             public static readonly Field Redis = FindByName("Redis");
 
             /// <summary>其它</summary>
@@ -313,7 +313,7 @@ namespace Stardust.Data.Monitors
             /// <summary>消息队列</summary>
             public const String Mqs = "Mqs";
 
-            /// <summary>Redis缓存</summary>
+            /// <summary>Redis</summary>
             public const String Redis = "Redis";
 
             /// <summary>其它</summary>

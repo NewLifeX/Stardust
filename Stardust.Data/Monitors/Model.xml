@@ -155,7 +155,7 @@
       <Column Name="Https" DataType="Int64" Description="Http请求" />
       <Column Name="Dbs" DataType="Int64" Description="数据库" />
       <Column Name="Mqs" DataType="Int64" Description="消息队列" />
-      <Column Name="Redis" DataType="Int64" Description="Redis缓存" />
+      <Column Name="Redis" DataType="Int64" Description="Redis" />
       <Column Name="Others" DataType="Int64" Description="其它" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />

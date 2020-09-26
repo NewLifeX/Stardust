@@ -60,6 +60,12 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                     chart.SetY("调用次数");
                     chart.AddLine(list2, _.Total, null, true);
                     chart.Add(list2, _.Errors);
+                    chart.Add(list2, _.Apis);
+                    chart.Add(list2, _.Https);
+                    chart.Add(list2, _.Dbs);
+                    chart.Add(list2, _.Mqs);
+                    chart.Add(list2, _.Redis);
+                    chart.Add(list2, _.Others);
                     chart.SetTooltip();
                     ViewBag.Charts = new[] { chart };
                 }
