@@ -31,9 +31,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="8.10.2020.922-rc1" />
+    <PackageReference Include="NewLife.Core" Version="8.10.2020.927-rc2" />
     <PackageReference Include="NewLife.Cube.Core" Version="3.7.2020.922-rc1" />
-    <PackageReference Include="NewLife.XCode" Version="9.20.2020.922-rc1" />
+    <PackageReference Include="NewLife.XCode" Version="10.0.2020.927-rc2" />
   </ItemGroup>
 
   <ItemGroup>
