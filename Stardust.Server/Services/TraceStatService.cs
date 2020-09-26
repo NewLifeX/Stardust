@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NewLife;
+using NewLife.Model;
 using NewLife.Threading;
 using Stardust.Data.Monitors;
 using XCode;
+using XCode.Model;
 
 namespace Stardust.Server.Services
 {
@@ -35,6 +37,12 @@ namespace Stardust.Server.Services
         private readonly ConcurrentBag<String> _bagHour = new ConcurrentBag<String>();
         private readonly ConcurrentBag<String> _bagMinute = new ConcurrentBag<String>();
         private readonly ConcurrentQueue<TraceData> _queue = new ConcurrentQueue<TraceData>();
+
+        /* 延迟队列技术 */
+        private DeferredQueue _dayQueue = new EntityDeferredQueue { Period = 60 };
+        private DeferredQueue _hourQueue = new EntityDeferredQueue { Period = 60 };
+        private DeferredQueue _minuteQueue = new EntityDeferredQueue { Period = 60 };
+
         private Int32 _count;
 
         /// <summary>添加需要统计的跟踪数据</summary>
@@ -110,59 +118,64 @@ namespace Stardust.Server.Services
             }
         }
 
+        /// <summary>流式计算，增量累加</summary>
+        /// <param name="state"></param>
         private void DoFlowStat(Object state)
         {
             if (_queue.IsEmpty) return;
 
-            // 消费所有数据，完成统计
-            var dayStats = new List<TraceDayStat>();
-            var hourStats = new List<TraceHourStat>();
-            var minuteStats = new List<TraceMinuteStat>();
-
             // 限制每次只处理这么多
-            var count = 10000;
+            var count = 100_000;
             while (count-- > 0)
             {
                 if (!_queue.TryDequeue(out var td)) break;
                 Interlocked.Decrement(ref _count);
 
                 // 过滤异常数据
-                if (td.Name.IsNullOrEmpty()) continue;
+                if (td.AppId <= 0 || td.Name.IsNullOrEmpty()) continue;
 
                 // 每日
                 {
-                    var st = TraceDayStat.FindOrAdd(dayStats, td);
+                    var key = $"{td.StatDate}#{td.AppId}#{td.Name}";
+                    var st = _dayQueue.GetOrAdd(key, k => new TraceDayStat { StatDate = td.StatDate, AppId = td.AppId, Name = td.Name });
+
                     st.Total += td.Total;
                     st.Errors += td.Errors;
                     st.TotalCost += td.TotalCost;
                     if (st.MaxCost < td.MaxCost) st.MaxCost = td.MaxCost;
                     if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
+
+                    _dayQueue.Commit(key);
                 }
 
                 // 小时
                 {
-                    var st = TraceHourStat.FindOrAdd(hourStats, td);
+                    var key = $"{td.StatHour}#{td.AppId}#{td.Name}";
+                    var st = _hourQueue.GetOrAdd(key, k => new TraceHourStat { StatTime = td.StatHour, AppId = td.AppId, Name = td.Name });
+
                     st.Total += td.Total;
                     st.Errors += td.Errors;
                     st.TotalCost += td.TotalCost;
                     if (st.MaxCost < td.MaxCost) st.MaxCost = td.MaxCost;
                     if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
+
+                    _hourQueue.Commit(key);
                 }
 
                 // 分钟
                 {
-                    var st = TraceMinuteStat.FindOrAdd(minuteStats, td);
+                    var key = $"{td.StatMinute}#{td.AppId}#{td.Name}";
+                    var st = _minuteQueue.GetOrAdd(key, k => new TraceMinuteStat { StatTime = td.StatMinute, AppId = td.AppId, Name = td.Name });
+
                     st.Total += td.Total;
                     st.Errors += td.Errors;
                     st.TotalCost += td.TotalCost;
                     if (st.MaxCost < td.MaxCost) st.MaxCost = td.MaxCost;
                     if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
+
+                    _minuteQueue.Commit(key);
                 }
             }
-
-            dayStats.Update(true);
-            hourStats.Update(true);
-            minuteStats.Update(true);
         }
 
         private void DoBatchStat(Object state)
@@ -197,7 +210,7 @@ namespace Stardust.Server.Services
 
             var date = time.Date;
 
-            // 逐个应用计算
+            // 统计数据
             var list = TraceData.SearchGroupAppAndName("day", date, new[] { appId });
             if (list.Count == 0) return;
 
@@ -228,7 +241,7 @@ namespace Stardust.Server.Services
 
             time = time.Date.AddHours(time.Hour);
 
-            // 逐个应用计算
+            // 统计数据
             var list = TraceData.SearchGroupAppAndName("hour", time, new[] { appId });
             if (list.Count == 0) return;
 
@@ -259,7 +272,6 @@ namespace Stardust.Server.Services
 
             time = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
 
-            // 逐个应用计算
             // 统计数据
             var list = TraceData.SearchGroupAppAndName("minute", time, new[] { appId });
             if (list.Count == 0) return;
