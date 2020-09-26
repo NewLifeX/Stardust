@@ -25,6 +25,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         {
             var appId = p["appId"].ToInt(-1);
             var name = p["name"];
+            var type = p["type"];
 
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
@@ -48,7 +49,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
             p.RetrieveState = true;
 
-            var list = TraceDayStat.Search(appId, name, start, end, p["Q"], p);
+            var list = TraceDayStat.Search(appId, name, type, start, end, p["Q"], p);
 
             if (list.Count > 0 && appId >= 0 && !name.IsNullOrEmpty())
             {

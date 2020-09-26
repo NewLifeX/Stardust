@@ -29,6 +29,12 @@
             <th class="text-center" title="平均耗时。总耗时除以总次数"><a href="@Html.Raw(page.GetSortUrl("Cost"))">平均耗时</a></th>
             <th class="text-center" title="最大耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MaxCost"))">最大耗时</a></th>
             <th class="text-center" title="最小耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MinCost"))">最小耗时</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Apis"))">接口数</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Https"))">Http请求</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Dbs"))">数据库</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Mqs"))">消息队列</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Redis"))">Redis缓存</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Others"))">其它</a></th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("CreateTime"))">创建时间</a></th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("UpdateTime"))">更新时间</a></th>
             @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
@@ -55,6 +61,12 @@
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>
                 <td class="text-right">@entity.MinCost.ToString("n0")</td>
+                <td class="text-right"><a href="@url1&type=api">@entity.Apis.ToString("n0")</a></td>
+                <td class="text-right"><a href="@url1&type=http">@entity.Https.ToString("n0")</a></td>
+                <td class="text-right"><a href="@url1&type=db">@entity.Dbs.ToString("n0")</a></td>
+                <td class="text-right"><a href="@url1&type=mq">@entity.Mqs.ToString("n0")</a></td>
+                <td class="text-right"><a href="@url1&type=redis">@entity.Redis.ToString("n0")</a></td>
+                <td class="text-right"><a href="@url1&type=other">@entity.Others.ToString("n0")</a></td>
                 <td class="text-center">@entity.CreateTime.ToFullString("")</td>
                 <td class="text-center">@entity.UpdateTime.ToFullString("")</td>
                 @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
@@ -81,6 +93,12 @@
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>
                 <td class="text-right">@entity.MinCost.ToString("n0")</td>
+                <td class="text-right">@entity.Apis.ToString("n0")</td>
+                <td class="text-right">@entity.Https.ToString("n0")</td>
+                <td class="text-right">@entity.Dbs.ToString("n0")</td>
+                <td class="text-right">@entity.Mqs.ToString("n0")</td>
+                <td class="text-right">@entity.Redis.ToString("n0")</td>
+                <td class="text-right">@entity.Others.ToString("n0")</td>
                 <td></td>
                 <td></td>
 

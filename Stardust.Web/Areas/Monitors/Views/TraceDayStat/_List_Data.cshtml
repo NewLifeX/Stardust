@@ -24,6 +24,7 @@
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ID"))">编号</a></th>
             <th class="text-center" style="min-width:80px;"><a href="@Html.Raw(page.GetSortUrl("StatDate"))">统计日期</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AppId"))">应用</a></th>
+            <th class="text-center" title="种类。Api/Http/Db/Mq/Redis/Other"><a href="@Html.Raw(page.GetSortUrl("Type"))">种类</a></th>
             <th class="text-center" title="操作名。接口名或埋点名"><a href="@Html.Raw(page.GetSortUrl("Name"))">操作名</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Total"))">总次数</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Errors"))">错误数</a></th>
@@ -45,6 +46,19 @@
             var url1 = $"appDayStat?appId={entity.AppId}";
             var url2 = $"traceData?appId={entity.AppId}&date={entity.StatDate:yyyy-MM-dd}&name={HttpUtility.UrlEncode(entity.Name)}";
             var url3 = $"?appId={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}";
+            var color = "";
+            if (entity.Type == "db")
+            {
+                color = "orange";
+            }
+            else if (entity.Type == "mq")
+            {
+                color = "mediumpurple";
+            }
+            else if (entity.Type == "redis")
+            {
+                color = "palevioletred";
+            }
             <tr>
                 @if (set.EnableSelect)
                 {
@@ -53,7 +67,8 @@
                 <td class="text-center">@entity.ID</td>
                 <td class="text-center">@entity.StatDate.ToString("yyyy-MM-dd")</td>
                 <td><a href="@url1" title="应用最近的监控图表">@entity.AppName</a></td>
-                <td><a href="@url3" title="该应用操作在最近一段时间内的监控图表">@entity.Name</a></td>
+                <td><a href="?appId=@entity.AppId&type=@entity.Type">@entity.Type</a></td>
+                <td><a href="@url3" title="该应用操作在最近一段时间内的监控图表" style="color: @color">@entity.Name</a></td>
                 <td class="text-right"><a href="@url2" title="该应用操作在该日的所有监控跟踪数据">@entity.Total.ToString("n0")</a></td>
                 <td class="text-right">@entity.Errors.ToString("n0")</td>
                 <td class="text-right">@entity.Cost.ToString("n0")</td>

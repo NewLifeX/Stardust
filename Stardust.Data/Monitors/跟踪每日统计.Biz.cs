@@ -30,24 +30,23 @@ namespace Stardust.Data.Monitors
         /// <param name="isNew">是否插入</param>
         public override void Valid(Boolean isNew)
         {
-            // 如果没有脏数据，则不需要进行任何处理
-            if (!HasDirty) return;
-
             Cost = Total == 0 ? 0 : (Int32)(TotalCost / Total);
 
             // 识别操作类型
             if (Type.IsNullOrEmpty() && !Name.IsNullOrEmpty())
             {
-                if (Name.StartsWithIgnoreCase("/", "rpc:"))
+                if (Name.StartsWithIgnoreCase("/", "rps:", "net:"))
                     Type = "api";
-                else if (Name.StartsWithIgnoreCase("http:", "https:"))
+                else if (Name.StartsWithIgnoreCase("http:", "https:", "rpc:"))
                     Type = "http";
                 else if (Name.StartsWithIgnoreCase("db:"))
                     Type = "db";
-                else if (Name.StartsWithIgnoreCase("mq:", "rmq:", "redismq:", "rocketmq:", "kafka:", "mns:"))
+                else if (Name.StartsWithIgnoreCase("mq:", "mqtt:", "rmq:", "redismq:", "rocketmq:", "kafka:", "mns:"))
                     Type = "mq";
                 else if (Name.StartsWithIgnoreCase("redis:"))
-                    Type = "http";
+                    Type = "redis";
+                else if (Name.Contains(":"))
+                    Type = Name.Substring(null, ":").ToLower();
                 else
                     Type = "other";
             }
@@ -86,17 +85,19 @@ namespace Stardust.Data.Monitors
         /// <summary>高级查询</summary>
         /// <param name="appId">应用</param>
         /// <param name="name">操作名。接口名或埋点名</param>
+        /// <param name="type">操作类型</param>
         /// <param name="start">统计日期开始</param>
         /// <param name="end">统计日期结束</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<TraceDayStat> Search(Int32 appId, String name, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<TraceDayStat> Search(Int32 appId, String name, String type, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (appId >= 0) exp &= _.AppId == appId;
             if (!name.IsNullOrEmpty()) exp &= _.Name == name;
+            if (!type.IsNullOrEmpty()) exp &= _.Type == type;
 
             if (start.Year > 2000 && start == end)
                 exp &= _.StatDate == start;
