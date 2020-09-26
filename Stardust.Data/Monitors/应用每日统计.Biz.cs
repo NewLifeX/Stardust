@@ -81,16 +81,6 @@ namespace Stardust.Data.Monitors
             return FindAll(exp, page);
         }
 
-        // Select Count(ID) as ID,Category From AppDayStat Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By ID Desc limit 20
-        //static readonly FieldCache<AppDayStat> _CategoryCache = new FieldCache<AppDayStat>(nameof(Category))
-        //{
-        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-        //};
-
-        ///// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-        ///// <returns></returns>
-        //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
-
         /// <summary>查找一批统计</summary>
         /// <param name="date"></param>
         /// <param name="appIds"></param>
