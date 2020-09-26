@@ -59,6 +59,8 @@ namespace Stardust.Server.Services
             foreach (var item in dic)
             {
                 var appId = item.Key;
+                if (appId <= 0) continue;
+
                 var ds = item.ToList();
                 var st = sts.FirstOrDefault(e => e.AppId == appId);
                 if (st == null)
