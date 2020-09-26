@@ -108,6 +108,22 @@ namespace Stardust.Data.Monitors
         /// <param name="appIds"></param>
         /// <returns></returns>
         public static IList<TraceMinuteStat> Search(DateTime time, Int32[] appIds) => FindAll(_.StatTime == time & _.AppId.In(appIds));
+
+        /// <summary>指定应用根据名称分组统计</summary>
+        /// <param name="appId">应用</param>
+        /// <param name="start">统计日期开始</param>
+        /// <param name="end">统计日期结束</param>
+        /// <returns></returns>
+        public static IList<TraceMinuteStat> SearchGroup(Int32 appId, DateTime start, DateTime end)
+        {
+            var selects = _.Total.Sum() & _.Errors.Sum() & _.TotalCost.Sum() & _.MaxCost.Max() & _.MinCost.Min() & _.Name;
+
+            var exp = new WhereExpression();
+            exp &= _.AppId == appId;
+            exp &= _.StatTime >= start & _.StatTime < end;
+
+            return FindAll(exp.GroupBy(_.Name), null, selects);
+        }
         #endregion
 
         #region 业务操作

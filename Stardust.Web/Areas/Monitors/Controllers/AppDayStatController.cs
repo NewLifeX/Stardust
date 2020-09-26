@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
+using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data.Monitors;
 using Stardust.Server.Services;
@@ -96,8 +97,12 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 var stat = AppDayStat.FindByID(item.ToInt());
                 if (stat != null)
                 {
+                    XTrace.WriteLine("重新统计 {0}/{1} {2}", stat.AppName, stat.AppId, stat.StatDate);
+
                     AppStat.Add(stat.StatDate);
                     //TraceStat.Add(stat.AppId, stat.StatDate);
+                    //TraceStat.Add(stat.AppId, stat.StatDate.AddDays(1));
+                    //TraceStat.Add(stat.AppId, stat.StatDate.AddDays(1).AddSeconds(-1));
                     for (var time = stat.StatDate; time < stat.StatDate.AddDays(1); time = time.AddMinutes(5))
                     {
                         TraceStat.Add(stat.AppId, time);

@@ -35,13 +35,14 @@ namespace Stardust.Server.Services
         private TimerX _timerBatch;
         private readonly ConcurrentBag<String> _bagDay = new ConcurrentBag<String>();
         private readonly ConcurrentBag<String> _bagHour = new ConcurrentBag<String>();
-        private readonly ConcurrentBag<String> _bagMinute = new ConcurrentBag<String>();
+        //private readonly ConcurrentBag<String> _bagMinute = new ConcurrentBag<String>();
+        private readonly ConcurrentDictionary<Int32, ConcurrentBag<DateTime>> _bag = new ConcurrentDictionary<Int32, ConcurrentBag<DateTime>>();
         private readonly ConcurrentQueue<TraceData> _queue = new ConcurrentQueue<TraceData>();
 
         /* 延迟队列技术 */
-        private DeferredQueue _dayQueue = new EntityDeferredQueue { Period = 60 };
-        private DeferredQueue _hourQueue = new EntityDeferredQueue { Period = 60 };
-        private DeferredQueue _minuteQueue = new EntityDeferredQueue { Period = 60 };
+        private readonly DeferredQueue _dayQueue = new EntityDeferredQueue { Period = 60 };
+        private readonly DeferredQueue _hourQueue = new EntityDeferredQueue { Period = 60 };
+        private readonly DeferredQueue _minuteQueue = new EntityDeferredQueue { Period = 60 };
 
         private Int32 _count;
 
@@ -61,9 +62,13 @@ namespace Stardust.Server.Services
                     var key = $"{ item.AppId}_{item.StatHour.ToFullString()}";
                     if (!_bagHour.Contains(key)) _bagHour.Add(key);
                 }
+                //{
+                //    var key = $"{ item.AppId}_{item.StatMinute.ToFullString()}";
+                //    if (!_bagMinute.Contains(key)) _bagMinute.Add(key);
+                //}
                 {
-                    var key = $"{ item.AppId}_{item.StatMinute.ToFullString()}";
-                    if (!_bagMinute.Contains(key)) _bagMinute.Add(key);
+                    var bag = _bag.GetOrAdd(item.AppId, new ConcurrentBag<DateTime>());
+                    if (!bag.Contains(item.StatMinute)) bag.Add(item.StatMinute);
                 }
             }
 
@@ -96,10 +101,15 @@ namespace Stardust.Server.Services
                 var key = $"{appId}_{hour.ToFullString()}";
                 if (!_bagHour.Contains(key)) _bagHour.Add(key);
             }
+            //{
+            //    var minute = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
+            //    var key = $"{appId}_{minute.ToFullString()}";
+            //    if (!_bagMinute.Contains(key)) _bagMinute.Add(key);
+            //}
             {
                 var minute = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
-                var key = $"{appId}_{minute.ToFullString()}";
-                if (!_bagMinute.Contains(key)) _bagMinute.Add(key);
+                var bag = _bag.GetOrAdd(appId, new ConcurrentBag<DateTime>());
+                if (!bag.Contains(minute)) bag.Add(minute);
             }
 
             _timerBatch?.SetNext(3_000);
@@ -180,28 +190,37 @@ namespace Stardust.Server.Services
 
         private void DoBatchStat(Object state)
         {
-            while (_bagDay.TryTake(out var key))
+            //while (_bagMinute.TryTake(out var key))
+            //{
+            //    var ss = key.Split("_");
+            //    ProcessMinute(ss[0].ToInt(), ss[1].ToDateTime());
+            //}
+            foreach (var item in _bag)
             {
-                var ss = key.Split("_");
-                ProcessDay(ss[0].ToInt(), ss[1].ToDateTime());
+                var appId = item.Key;
+                var list = new List<DateTime>();
+                while (item.Value.TryTake(out var dt))
+                {
+                    if (!list.Contains(dt)) list.Add(dt);
+                }
+                // 按天分组，避免时间区间过大
+                foreach (var elm in list.GroupBy(e => e.Date))
+                {
+                    // 批量处理该应用，取最小时间和最大时间
+                    ProcessMinute(appId, elm.Min(), elm.Max());
+                }
             }
+
             while (_bagHour.TryTake(out var key))
             {
                 var ss = key.Split("_");
                 ProcessHour(ss[0].ToInt(), ss[1].ToDateTime());
             }
-            while (_bagMinute.TryTake(out var key))
+            while (_bagDay.TryTake(out var key))
             {
                 var ss = key.Split("_");
-                ProcessMinute(ss[0].ToInt(), ss[1].ToDateTime());
+                ProcessDay(ss[0].ToInt(), ss[1].ToDateTime());
             }
-
-            //// 统计1分钟之前数据
-            //var time = DateTime.Now.AddMinutes(-1);
-
-            //ProcessDay(time, appIds);
-            //ProcessHour(time, appIds);
-            //ProcessMinute(time, appIds);
         }
 
         private void ProcessDay(Int32 appId, DateTime time)
@@ -211,28 +230,26 @@ namespace Stardust.Server.Services
             var date = time.Date;
 
             // 统计数据
-            var list = TraceData.SearchGroupAppAndName("day", date, new[] { appId });
+            //var list = TraceData.SearchGroupAppAndName("day", date, new[] { appId });
+            var list = TraceMinuteStat.SearchGroup(appId, date, date.AddDays(1));
             if (list.Count == 0) return;
-
-            // 统计对象
-            var sts = TraceDayStat.Search(date, new[] { appId });
 
             // 聚合
             foreach (var item in list)
             {
                 if (item.Name.IsNullOrEmpty()) continue;
 
-                item.StatDate = date;
-                var st = TraceDayStat.FindOrAdd(sts, item);
+                var key = $"{date}#{appId}#{item.Name}";
+                var st = _dayQueue.GetOrAdd(key, k => new TraceDayStat { StatDate = date, AppId = appId, Name = item.Name });
+
                 st.Total = item.Total;
                 st.Errors = item.Errors;
                 st.TotalCost = item.TotalCost;
                 st.MaxCost = item.MaxCost;
                 st.MinCost = item.MinCost;
-            }
 
-            // 保存统计
-            sts.Update(true);
+                _dayQueue.Commit(key);
+            }
         }
 
         private void ProcessHour(Int32 appId, DateTime time)
@@ -242,28 +259,26 @@ namespace Stardust.Server.Services
             time = time.Date.AddHours(time.Hour);
 
             // 统计数据
-            var list = TraceData.SearchGroupAppAndName("hour", time, new[] { appId });
+            //var list = TraceData.SearchGroupAppAndName("hour", time, new[] { appId });
+            var list = TraceMinuteStat.SearchGroup(appId, time, time.AddHours(1));
             if (list.Count == 0) return;
-
-            // 统计对象
-            var sts = TraceHourStat.Search(time, new[] { appId });
 
             // 聚合
             foreach (var item in list)
             {
                 if (item.Name.IsNullOrEmpty()) continue;
 
-                item.StatHour = time;
-                var st = TraceHourStat.FindOrAdd(sts, item);
+                var key = $"{time}#{appId}#{item.Name}";
+                var st = _hourQueue.GetOrAdd(key, k => new TraceHourStat { StatTime = time, AppId = appId, Name = item.Name });
+
                 st.Total = item.Total;
                 st.Errors = item.Errors;
                 st.TotalCost = item.TotalCost;
                 st.MaxCost = item.MaxCost;
                 st.MinCost = item.MinCost;
-            }
 
-            // 保存统计
-            sts.Update(true);
+                _hourQueue.Commit(key);
+            }
         }
 
         private void ProcessMinute(Int32 appId, DateTime time)
@@ -284,17 +299,60 @@ namespace Stardust.Server.Services
             {
                 if (item.Name.IsNullOrEmpty()) continue;
 
+                //var key = $"{time}#{appId}#{item.Name}";
+                //var st = _minuteQueue.GetOrAdd(key, k => new TraceMinuteStat { StatTime = time, AppId = appId, Name = item.Name });
+
                 item.StatMinute = time;
                 var st = TraceMinuteStat.FindOrAdd(sts, item);
+
                 st.Total = item.Total;
                 st.Errors = item.Errors;
                 st.TotalCost = item.TotalCost;
                 st.MaxCost = item.MaxCost;
                 st.MinCost = item.MinCost;
-            }
 
-            // 保存统计
-            sts.Update(true);
+                //_minuteQueue.Commit(key);
+
+                // 保存统计
+                sts.Update(true);
+            }
+        }
+
+        private void ProcessMinute(Int32 appId, DateTime start, DateTime end)
+        {
+            if (appId <= 0 || start.Year < 2000 || end.Year < 2000) return;
+
+            start = start.Date.AddHours(start.Hour).AddMinutes(start.Minute / 5 * 5);
+            end = end.Date.AddHours(end.Hour).AddMinutes(end.Minute / 5 * 5);
+
+            // 统计数据
+            var list = TraceData.SearchGroupAppAndName(appId, start, end.AddMinutes(1));
+            if (list.Count == 0) return;
+
+            // 统计对象
+            var sts = TraceMinuteStat.Search(appId, null, start, end.AddMinutes(1), null, null);
+
+            // 聚合
+            foreach (var item in list)
+            {
+                if (item.Name.IsNullOrEmpty()) continue;
+
+                //var key = $"{time}#{appId}#{item.Name}";
+                //var st = _minuteQueue.GetOrAdd(key, k => new TraceMinuteStat { StatTime = time, AppId = appId, Name = item.Name });
+
+                var st = TraceMinuteStat.FindOrAdd(sts, item);
+
+                st.Total = item.Total;
+                st.Errors = item.Errors;
+                st.TotalCost = item.TotalCost;
+                st.MaxCost = item.MaxCost;
+                st.MinCost = item.MinCost;
+
+                //_minuteQueue.Commit(key);
+
+                // 保存统计
+                sts.Update(true);
+            }
         }
     }
 }

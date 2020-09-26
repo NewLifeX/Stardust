@@ -175,6 +175,22 @@ namespace Stardust.Data.Monitors
             return FindAll(exp.GroupBy(_.AppId, _.Name), null, selects);
         }
 
+        /// <summary>查询指定应用根据操作名分组统计</summary>
+        /// <param name="appId"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
+        public static IList<TraceData> SearchGroupAppAndName(Int32 appId, DateTime start, DateTime end)
+        {
+            var selects = _.Total.Sum() & _.Errors.Sum() & _.TotalCost.Sum() & _.MaxCost.Max() & _.MinCost.Min() & _.AppId & _.Name & _.StatMinute;
+
+            var exp = new WhereExpression();
+            exp &= _.AppId == appId;
+            exp &= _.StatMinute >= start & _.StatMinute < end;
+
+            return FindAll(exp.GroupBy(_.AppId, _.Name, _.StatMinute), null, selects);
+        }
+
         /// <summary>根据应用分组统计</summary>
         /// <param name="date"></param>
         /// <param name="appIds"></param>
