@@ -193,7 +193,7 @@ namespace Stardust.Server.Services
 
         private void ProcessDay(Int32 appId, DateTime time)
         {
-            if (appId <= 0) return;
+            if (appId <= 0 || time.Year < 2000) return;
 
             var date = time.Date;
 
@@ -224,7 +224,7 @@ namespace Stardust.Server.Services
 
         private void ProcessHour(Int32 appId, DateTime time)
         {
-            if (appId <= 0) return;
+            if (appId <= 0 || time.Year < 2000) return;
 
             time = time.Date.AddHours(time.Hour);
 
@@ -255,7 +255,7 @@ namespace Stardust.Server.Services
 
         private void ProcessMinute(Int32 appId, DateTime time)
         {
-            if (appId <= 0) return;
+            if (appId <= 0 || time.Year < 2000) return;
 
             time = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
 
