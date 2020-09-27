@@ -367,11 +367,11 @@ namespace Stardust.Server.Services
 
     class MinuteQueue : EntityDeferredQueue
     {
-        public TraceHourStat GetOrAdd(DateTime date, Int32 appId, String name, out String key)
+        public TraceMinuteStat GetOrAdd(DateTime date, Int32 appId, String name, out String key)
         {
             var model = new TraceStatModel { Time = date, AppId = appId, Name = name };
             key = model.Key;
-            return GetOrAdd(key, k => TraceHourStat.FindOrAdd(model));
+            return GetOrAdd(key, k => TraceMinuteStat.FindOrAdd(model));
         }
     }
 }
