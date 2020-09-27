@@ -130,34 +130,25 @@ namespace Stardust.Data.Monitors
 
         #region 业务操作
         private static ICache _cache = Cache.Default;
-        private static TraceDayStat FindByTrace(TraceData td, Boolean cache)
+        private static TraceDayStat FindByTrace(TraceStatModel model, Boolean cache)
         {
-            var key = $"TraceDayStat:{td.StatDate}#{td.AppId}#{td.Name}";
+            var key = $"TraceDayStat:{model.Time}#{model.AppId}#{model.Name}";
             if (cache && _cache.TryGet<TraceDayStat>(key, out var st)) return st;
 
             // 查询数据库，即时空值也缓存，避免缓存穿透
-            st = Find(_.StatDate == td.StatDate & _.AppId == td.AppId & _.Name == td.Name);
+            st = Find(_.StatDate == model.Time & _.AppId == model.AppId & _.Name == model.Name);
             _cache.Set(key, st, 600);
 
             return st;
         }
 
         /// <summary>查找统计行</summary>
-        /// <param name="dayStats"></param>
-        /// <param name="td"></param>
+        /// <param name="model"></param>
         /// <returns></returns>
-        public static TraceDayStat FindOrAdd(IList<TraceDayStat> dayStats, TraceData td)
+        public static TraceDayStat FindOrAdd(TraceStatModel model)
         {
-            var st = dayStats.FirstOrDefault(e => e.StatDate == td.StatDate && e.AppId == td.AppId && e.Name == td.Name);
-            if (st == null)
-            {
-                // 高并发下获取或新增对象
-                st = GetOrAdd(td, FindByTrace, k => new TraceDayStat { StatDate = k.StatDate, AppId = k.AppId, Name = k.Name });
-
-                dayStats.Add(st);
-            }
-
-            return st;
+            // 高并发下获取或新增对象
+            return GetOrAdd(model, FindByTrace, k => new TraceDayStat { StatDate = model.Time, AppId = model.AppId, Name = model.Name });
         }
         #endregion
     }

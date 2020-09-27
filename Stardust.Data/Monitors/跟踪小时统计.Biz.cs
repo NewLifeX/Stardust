@@ -112,34 +112,25 @@ namespace Stardust.Data.Monitors
 
         #region 业务操作
         private static ICache _cache = Cache.Default;
-        private static TraceHourStat FindByTrace(TraceData td, Boolean cache)
+        private static TraceHourStat FindByTrace(TraceStatModel model, Boolean cache)
         {
-            var key = $"TraceHourStat:{td.StatHour}#{td.AppId}#{td.Name}";
+            var key = $"TraceHourStat:{model.Time}#{model.AppId}#{model.Name}";
             if (cache && _cache.TryGet<TraceHourStat>(key, out var st)) return st;
 
             // 查询数据库，即时空值也缓存，避免缓存穿透
-            st = Find(_.StatTime == td.StatHour & _.AppId == td.AppId & _.Name == td.Name);
+            st = Find(_.StatTime == model.Time & _.AppId == model.AppId & _.Name == model.Name);
             _cache.Set(key, st, 600);
 
             return st;
         }
 
         /// <summary>查找统计行</summary>
-        /// <param name="dayStats"></param>
-        /// <param name="td"></param>
+        /// <param name="model"></param>
         /// <returns></returns>
-        public static TraceHourStat FindOrAdd(IList<TraceHourStat> dayStats, TraceData td)
+        public static TraceHourStat FindOrAdd(TraceStatModel model)
         {
-            var st = dayStats.FirstOrDefault(e => e.StatTime == td.StatHour && e.AppId == td.AppId && e.Name == td.Name);
-            if (st == null)
-            {
-                // 高并发下获取或新增对象
-                st = GetOrAdd(td, FindByTrace, k => new TraceHourStat { StatTime = k.StatHour, AppId = k.AppId, Name = k.Name });
-
-                dayStats.Add(st);
-            }
-
-            return st;
+            // 高并发下获取或新增对象
+            return GetOrAdd(model, FindByTrace, k => new TraceHourStat { StatTime = model.Time, AppId = model.AppId, Name = model.Name });
         }
         #endregion
     }
