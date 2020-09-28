@@ -180,18 +180,23 @@ namespace Stardust.Server.Services
         /// <param name="state"></param>
         private void DoBatchStat(Object state)
         {
-            foreach (var item in _bagMinute)
+            var keys = _bagMinute.Keys;
+            foreach (var item in keys)
             {
-                var ss = item.Key.Split("_");
-                var appId = ss[0].ToInt();
-                var list = new List<DateTime>();
-                while (item.Value.TryTake(out var dt))
+                // 摘取下来
+                if (_bagMinute.TryRemove(item, out var bag))
                 {
-                    if (!list.Contains(dt)) list.Add(dt);
-                }
+                    var ss = item.Split("_");
+                    var appId = ss[0].ToInt();
+                    var list = new List<DateTime>();
+                    while (bag.TryTake(out var dt))
+                    {
+                        if (!list.Contains(dt)) list.Add(dt);
+                    }
 
-                // 批量处理该应用，取最小时间和最大时间
-                if (list.Count > 0) ProcessMinute(appId, list.Min(), list.Max());
+                    // 批量处理该应用，取最小时间和最大时间
+                    if (list.Count > 0) ProcessMinute(appId, list.Min(), list.Max());
+                }
             }
 
             // 休息5000ms，让分钟统计落库
