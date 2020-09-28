@@ -137,10 +137,12 @@ namespace Stardust.Data.Monitors
             var key = $"TraceMinuteStat:FindByTrace:{model.Key}";
             if (cache && _cache.TryGet<TraceMinuteStat>(key, out var st)) return st;
 
-            // 查询数据库，即时空值也缓存，避免缓存穿透
-            //st = Find(_.StatTime == model.Time & _.AppId == model.AppId & _.Name == model.Name);
             st = FindAllByAppIdWithCache(model.AppId, model.Time.Date)
                 .FirstOrDefault(e => e.StatTime == model.Time && e.Name.EqualIgnoreCase(model.Name));
+
+            // 查询数据库，即时空值也缓存，避免缓存穿透
+            if (st == null) st = Find(_.StatTime == model.Time & _.AppId == model.AppId & _.Name == model.Name);
+
             _cache.Set(key, st, 60);
 
             return st;
