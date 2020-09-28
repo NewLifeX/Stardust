@@ -42,7 +42,7 @@ namespace Stardust.Data.Monitors
                     Type = "http";
                 else if (Name.StartsWithIgnoreCase("db:"))
                     Type = "db";
-                else if (Name.StartsWithIgnoreCase("mq:", "mqtt:", "rmq:", "redismq:", "rocketmq:", "kafka:", "mns:"))
+                else if (Name.StartsWithIgnoreCase("mq:", "mqtt:", "rmq:", "redismq:", "rocketmq:", "kafka:", "mns:", "emq:"))
                     Type = "mq";
                 else if (Name.StartsWithIgnoreCase("redis:"))
                     Type = "redis";
