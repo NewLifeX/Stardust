@@ -15,6 +15,7 @@ namespace Stardust.Data.Monitors
     public partial class TraceHourStat : Entity<TraceHourStat>
     {
         #region 对象操作
+        private static ICache _cache = Cache.Default;
         static TraceHourStat()
         {
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
@@ -68,17 +69,21 @@ namespace Stardust.Data.Monitors
             //return Find(_.ID == id);
         }
 
-        /// <summary>根据应用、操作名、编号查找</summary>
-        /// <param name="appId">应用</param>
-        /// <param name="name">操作名</param>
-        /// <param name="id">编号</param>
-        /// <returns>实体列表</returns>
-        public static IList<TraceHourStat> FindAllByAppIdAndNameAndID(Int32 appId, String name, Int32 id)
+        /// <summary>查询某应用某天的所有统计，带缓存</summary>
+        /// <param name="appId"></param>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public static IList<TraceHourStat> FindAllByAppIdWithCache(Int32 appId, DateTime date)
         {
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.Name == name && e.ID == id);
+            var key = $"TraceHourStat:FindAllByAppIdWithCache:{appId}#{date:yyyyMMdd}";
+            if (_cache.TryGet<IList<TraceHourStat>>(key, out var list) && list != null) return list;
 
-            return FindAll(_.AppId == appId & _.Name == name & _.ID == id);
+            // 查询数据库，即时空值也缓存，避免缓存穿透
+            list = FindAll(_.AppId == appId & _.StatTime >= date & _.StatTime < date.AddDays(1));
+
+            _cache.Set(key, list, 10);
+
+            return list;
         }
         #endregion
 
@@ -111,15 +116,18 @@ namespace Stardust.Data.Monitors
         #endregion
 
         #region 业务操作
-        private static ICache _cache = Cache.Default;
         private static TraceHourStat FindByTrace(TraceStatModel model, Boolean cache)
         {
-            var key = $"TraceHourStat:{model.Time}#{model.AppId}#{model.Name}";
+            var key = $"TraceHourStat:FindByTrace:{model.Key}";
             if (cache && _cache.TryGet<TraceHourStat>(key, out var st)) return st;
 
-            // 查询数据库，即时空值也缓存，避免缓存穿透
-            st = Find(_.StatTime == model.Time & _.AppId == model.AppId & _.Name == model.Name);
-            _cache.Set(key, st, 600);
+            st = FindAllByAppIdWithCache(model.AppId, model.Time.Date)
+                .FirstOrDefault(e => e.StatTime == model.Time && e.Name.EqualIgnoreCase(model.Name));
+
+            // 查询数据库
+            if (st == null) st = Find(_.StatTime == model.Time & _.AppId == model.AppId & _.Name == model.Name);
+
+            if (st != null) _cache.Set(key, st, 60);
 
             return st;
         }
@@ -130,7 +138,7 @@ namespace Stardust.Data.Monitors
         public static TraceHourStat FindOrAdd(TraceStatModel model)
         {
             // 高并发下获取或新增对象
-            return GetOrAdd(model, FindByTrace, k => new TraceHourStat { StatTime = model.Time, AppId = model.AppId, Name = model.Name });
+            return GetOrAdd(model, FindByTrace, m => new TraceHourStat { StatTime = m.Time, AppId = m.AppId, Name = m.Name });
         }
         #endregion
     }
