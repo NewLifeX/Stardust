@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NewLife;
-using NewLife.Model;
 using NewLife.Threading;
 using Stardust.Data.Monitors;
 using XCode;
@@ -151,8 +150,7 @@ namespace Stardust.Server.Services
 
                 // 小时
                 {
-                    var key = $"{td.StatHour}#{td.AppId}#{td.Name}";
-                    var st = _hourQueue.GetOrAdd(key, k => new TraceHourStat { StatTime = td.StatHour, AppId = td.AppId, Name = td.Name });
+                    var st = _hourQueue.GetOrAdd(td.StatHour, td.AppId, td.Name, out var key);
 
                     st.Total += td.Total;
                     st.Errors += td.Errors;
@@ -165,8 +163,7 @@ namespace Stardust.Server.Services
 
                 // 分钟
                 {
-                    var key = $"{td.StatMinute}#{td.AppId}#{td.Name}";
-                    var st = _minuteQueue.GetOrAdd(key, k => new TraceMinuteStat { StatTime = td.StatMinute, AppId = td.AppId, Name = td.Name });
+                    var st = _minuteQueue.GetOrAdd(td.StatMinute, td.AppId, td.Name, out var key);
 
                     st.Total += td.Total;
                     st.Errors += td.Errors;
@@ -219,8 +216,6 @@ namespace Stardust.Server.Services
             var date = time.Date;
 
             // 统计数据
-            //var list = TraceData.SearchGroupAppAndName("day", date, new[] { appId });
-            //var list = TraceMinuteStat.SearchGroup(appId, date, date.AddDays(1));
             var list = TraceMinuteStat.FindAllByAppIdWithCache(appId, date);
             if (list.Count == 0) return;
 
@@ -229,7 +224,6 @@ namespace Stardust.Server.Services
             {
                 if (item.Name.IsNullOrEmpty()) continue;
 
-                //var key = $"{date}#{appId}#{item.Name}";
                 var st = _dayQueue.GetOrAdd(date, appId, item.Name, out var key);
 
                 st.Total = item.Total;
@@ -249,8 +243,6 @@ namespace Stardust.Server.Services
             time = time.Date.AddHours(time.Hour);
 
             // 统计数据
-            //var list = TraceData.SearchGroupAppAndName("hour", time, new[] { appId });
-            //var list = TraceMinuteStat.SearchGroup(appId, time, time.AddHours(1));
             var list = TraceMinuteStat.FindAllByAppIdWithCache(appId, time.Date);
             list = list.Where(e => e.StatTime >= time & e.StatTime < time.AddHours(1)).ToList();
             if (list.Count == 0) return;
@@ -260,7 +252,6 @@ namespace Stardust.Server.Services
             {
                 if (item.Name.IsNullOrEmpty()) continue;
 
-                //var key = $"{time}#{appId}#{item.Name}";
                 var st = _hourQueue.GetOrAdd(time, appId, item.Name, out var key);
 
                 st.Total = item.Total;
@@ -272,43 +263,6 @@ namespace Stardust.Server.Services
                 _hourQueue.Commit(key);
             }
         }
-
-        //private void ProcessMinute(Int32 appId, DateTime time)
-        //{
-        //    if (appId <= 0 || time.Year < 2000) return;
-
-        //    time = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
-
-        //    // 统计数据
-        //    var list = TraceData.SearchGroupAppAndName("minute", time, new[] { appId });
-        //    if (list.Count == 0) return;
-
-        //    // 统计对象
-        //    var sts = TraceMinuteStat.Search(time, new[] { appId });
-
-        //    // 聚合
-        //    foreach (var item in list)
-        //    {
-        //        if (item.Name.IsNullOrEmpty()) continue;
-
-        //        //var key = $"{time}#{appId}#{item.Name}";
-        //        //var st = _minuteQueue.GetOrAdd(key, k => new TraceMinuteStat { StatTime = time, AppId = appId, Name = item.Name });
-
-        //        item.StatMinute = time;
-        //        var st = TraceMinuteStat.FindOrAdd(sts, item);
-
-        //        st.Total = item.Total;
-        //        st.Errors = item.Errors;
-        //        st.TotalCost = item.TotalCost;
-        //        st.MaxCost = item.MaxCost;
-        //        st.MinCost = item.MinCost;
-
-        //        //_minuteQueue.Commit(key);
-
-        //        // 保存统计
-        //        sts.Update(true);
-        //    }
-        //}
 
         private void ProcessMinute(Int32 appId, DateTime start, DateTime end)
         {
@@ -328,9 +282,6 @@ namespace Stardust.Server.Services
 
                 var st = _minuteQueue.GetOrAdd(item.StatMinute, appId, item.Name, out var key);
 
-                //var model = new TraceStatModel { Time = item.StatMinute, AppId = appId, Name = item.Name };
-                //var st = TraceMinuteStat.FindOrAdd(model);
-
                 st.Total = item.Total;
                 st.Errors = item.Errors;
                 st.TotalCost = item.TotalCost;
@@ -338,10 +289,6 @@ namespace Stardust.Server.Services
                 st.MinCost = item.MinCost;
 
                 _minuteQueue.Commit(key);
-
-                // 保存统计
-                //sts.Update(true);
-                //st.Update();
             }
         }
     }
