@@ -194,8 +194,8 @@ namespace Stardust.Server.Services
                 if (list.Count > 0) ProcessMinute(appId, list.Min(), list.Max());
             }
 
-            //// 休息5000ms，让分钟统计落库
-            //Thread.Sleep(5000);
+            // 休息5000ms，让分钟统计落库
+            Thread.Sleep(5000);
 
             while (_bagHour.TryTake(out var key))
             {
@@ -220,17 +220,23 @@ namespace Stardust.Server.Services
             if (list.Count == 0) return;
 
             // 聚合
-            foreach (var item in list)
+            // 分组聚合，这里包含了每个接口在该日内的所有分钟统计，需要求和
+            foreach (var item in list.GroupBy(e => e.Name))
             {
-                if (item.Name.IsNullOrEmpty()) continue;
+                var name = item.Key;
+                if (name.IsNullOrEmpty()) continue;
 
-                var st = _dayQueue.GetOrAdd(date, appId, item.Name, out var key);
+                var st = _dayQueue.GetOrAdd(date, appId, name, out var key);
 
-                st.Total = item.Total;
-                st.Errors = item.Errors;
-                st.TotalCost = item.TotalCost;
-                st.MaxCost = item.MaxCost;
-                st.MinCost = item.MinCost;
+                var vs = item.ToList();
+                st.Total = vs.Sum(e => e.Total);
+                st.Errors = vs.Sum(e => e.Errors);
+                st.TotalCost = vs.Sum(e => e.TotalCost);
+                st.MaxCost = vs.Max(e => e.MaxCost);
+                st.MinCost = vs.Where(e => e.MinCost > 0).Min(e => e.MinCost);
+
+                // 强制触发种类计算
+                st.Valid(false);
 
                 _dayQueue.Commit(key);
             }
@@ -247,18 +253,20 @@ namespace Stardust.Server.Services
             list = list.Where(e => e.StatTime >= time & e.StatTime < time.AddHours(1)).ToList();
             if (list.Count == 0) return;
 
-            // 聚合
-            foreach (var item in list)
+            // 分组聚合，这里包含了每个接口在该小时内的所有分钟统计，需要求和
+            foreach (var item in list.GroupBy(e => e.Name))
             {
-                if (item.Name.IsNullOrEmpty()) continue;
+                var name = item.Key;
+                if (name.IsNullOrEmpty()) continue;
 
-                var st = _hourQueue.GetOrAdd(time, appId, item.Name, out var key);
+                var st = _hourQueue.GetOrAdd(time, appId, name, out var key);
 
-                st.Total = item.Total;
-                st.Errors = item.Errors;
-                st.TotalCost = item.TotalCost;
-                st.MaxCost = item.MaxCost;
-                st.MinCost = item.MinCost;
+                var vs = item.ToList();
+                st.Total = vs.Sum(e => e.Total);
+                st.Errors = vs.Sum(e => e.Errors);
+                st.TotalCost = vs.Sum(e => e.TotalCost);
+                st.MaxCost = vs.Max(e => e.MaxCost);
+                st.MinCost = vs.Where(e => e.MinCost > 0).Min(e => e.MinCost);
 
                 _hourQueue.Commit(key);
             }
@@ -272,7 +280,7 @@ namespace Stardust.Server.Services
             end = end.Date.AddHours(end.Hour).AddMinutes(end.Minute / 5 * 5);
 
             // 统计数据
-            var list = TraceData.SearchGroupAppAndName(appId, start, end.AddMinutes(1));
+            var list = TraceData.SearchGroupAppAndName(appId, start, end);
             if (list.Count == 0) return;
 
             // 聚合

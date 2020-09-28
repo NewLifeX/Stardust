@@ -186,7 +186,7 @@ namespace Stardust.Data.Monitors
 
             var exp = new WhereExpression();
             exp &= _.AppId == appId;
-            exp &= _.StatMinute >= start & _.StatMinute < end;
+            exp &= _.StatMinute >= start & _.StatMinute <= end;
 
             return FindAll(exp.GroupBy(_.AppId, _.Name, _.StatMinute), null, selects);
         }
