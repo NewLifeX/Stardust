@@ -317,20 +317,15 @@ namespace Stardust.Server.Services
             var list = TraceData.SearchGroupAppAndName(appId, start, end.AddMinutes(1));
             if (list.Count == 0) return;
 
-            //// 统计对象
-            //var sts = TraceMinuteStat.Search(appId, null, start, end.AddMinutes(1), null, null);
-
             // 聚合
             foreach (var item in list)
             {
                 if (item.Name.IsNullOrEmpty()) continue;
 
-                //var key = $"{time}#{appId}#{item.Name}";
-                //var st = _minuteQueue.GetOrAdd(key, k => new TraceMinuteStat { StatTime = time, AppId = appId, Name = item.Name });
+                var st = _minuteQueue.GetOrAdd(item.StatMinute, appId, item.Name, out var key);
 
-                var model = new TraceStatModel { Time = item.StatMinute, AppId = appId, Name = item.Name };
-                var st = TraceMinuteStat.FindOrAdd(model);
-                //var st = TraceMinuteStat.FindOrAdd(sts, item);
+                //var model = new TraceStatModel { Time = item.StatMinute, AppId = appId, Name = item.Name };
+                //var st = TraceMinuteStat.FindOrAdd(model);
 
                 st.Total = item.Total;
                 st.Errors = item.Errors;
@@ -338,11 +333,11 @@ namespace Stardust.Server.Services
                 st.MaxCost = item.MaxCost;
                 st.MinCost = item.MinCost;
 
-                //_minuteQueue.Commit(key);
+                _minuteQueue.Commit(key);
 
                 // 保存统计
                 //sts.Update(true);
-                st.Update();
+                //st.Update();
             }
         }
     }
