@@ -194,8 +194,11 @@ namespace Stardust.Server.Services
                 }
 
                 // 批量处理该应用，取最小时间和最大时间
-                ProcessMinute(appId, list.Min(), list.Max());
+                if (list.Count > 0) ProcessMinute(appId, list.Min(), list.Max());
             }
+
+            //// 休息5000ms，让分钟统计落库
+            //Thread.Sleep(5000);
 
             while (_bagHour.TryTake(out var key))
             {
@@ -217,7 +220,8 @@ namespace Stardust.Server.Services
 
             // 统计数据
             //var list = TraceData.SearchGroupAppAndName("day", date, new[] { appId });
-            var list = TraceMinuteStat.SearchGroup(appId, date, date.AddDays(1));
+            //var list = TraceMinuteStat.SearchGroup(appId, date, date.AddDays(1));
+            var list = TraceMinuteStat.FindAllByAppIdWithCache(appId, date);
             if (list.Count == 0) return;
 
             // 聚合

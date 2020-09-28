@@ -118,12 +118,13 @@ namespace Stardust.Data.Monitors
         #region 业务操作
         private static TraceHourStat FindByTrace(TraceStatModel model, Boolean cache)
         {
-            var key = $"TraceHourStat:FindByTrace:{model.Time}#{model.AppId}#{model.Name}";
+            var key = $"TraceHourStat:FindByTrace:{model.Key}";
             if (cache && _cache.TryGet<TraceHourStat>(key, out var st)) return st;
 
             // 查询数据库，即时空值也缓存，避免缓存穿透
             //st = Find(_.StatTime == model.Time & _.AppId == model.AppId & _.Name == model.Name);
-            st = FindAllByAppIdWithCache(model.AppId, model.Time.Date).FirstOrDefault(e => e.Name == model.Name);
+            st = FindAllByAppIdWithCache(model.AppId, model.Time.Date)
+                .FirstOrDefault(e => e.StatTime == model.Time && e.Name == model.Name);
             _cache.Set(key, st, 60);
 
             return st;
@@ -135,7 +136,7 @@ namespace Stardust.Data.Monitors
         public static TraceHourStat FindOrAdd(TraceStatModel model)
         {
             // 高并发下获取或新增对象
-            return GetOrAdd(model, FindByTrace, k => new TraceHourStat { StatTime = model.Time, AppId = model.AppId, Name = model.Name });
+            return GetOrAdd(model, FindByTrace, m => new TraceHourStat { StatTime = m.Time, AppId = m.AppId, Name = m.Name });
         }
         #endregion
     }

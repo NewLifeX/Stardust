@@ -149,12 +149,13 @@ namespace Stardust.Data.Monitors
         private static ICache _cache = Cache.Default;
         private static TraceDayStat FindByTrace(TraceStatModel model, Boolean cache)
         {
-            var key = $"TraceDayStat:{model.Time}#{model.AppId}#{model.Name}";
+            var key = $"TraceDayStat:FindByTrace:{model.Key}";
             if (cache && _cache.TryGet<TraceDayStat>(key, out var st)) return st;
 
             // 查询数据库，即时空值也缓存，避免缓存穿透
             //st = Find(_.StatDate == model.Time & _.AppId == model.AppId & _.Name == model.Name);
-            st = FindAllByAppIdWithCache(model.AppId, model.Time.Date).FirstOrDefault(e => e.Name == model.Name);
+            st = FindAllByAppIdWithCache(model.AppId, model.Time.Date)
+                .FirstOrDefault(e => e.StatDate == model.Time && e.Name == model.Name);
             _cache.Set(key, st, 60);
 
             return st;
@@ -166,7 +167,7 @@ namespace Stardust.Data.Monitors
         public static TraceDayStat FindOrAdd(TraceStatModel model)
         {
             // 高并发下获取或新增对象
-            return GetOrAdd(model, FindByTrace, k => new TraceDayStat { StatDate = model.Time, AppId = model.AppId, Name = model.Name });
+            return GetOrAdd(model, FindByTrace, m => new TraceDayStat { StatDate = m.Time, AppId = m.AppId, Name = m.Name });
         }
         #endregion
     }
