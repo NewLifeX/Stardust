@@ -246,7 +246,9 @@ namespace Stardust.Server.Services
 
             // 统计数据
             //var list = TraceData.SearchGroupAppAndName("hour", time, new[] { appId });
-            var list = TraceMinuteStat.SearchGroup(appId, time, time.AddHours(1));
+            //var list = TraceMinuteStat.SearchGroup(appId, time, time.AddHours(1));
+            var list = TraceMinuteStat.FindAllByAppIdWithCache(appId, time.Date);
+            list = list.Where(e => e.StatTime >= time & e.StatTime < time.AddHours(1)).ToList();
             if (list.Count == 0) return;
 
             // 聚合

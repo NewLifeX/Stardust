@@ -15,6 +15,7 @@ namespace Stardust.Data.Monitors
     public partial class TraceHourStat : Entity<TraceHourStat>
     {
         #region 对象操作
+        private static ICache _cache = Cache.Default;
         static TraceHourStat()
         {
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
@@ -80,6 +81,23 @@ namespace Stardust.Data.Monitors
 
             return FindAll(_.AppId == appId & _.Name == name & _.ID == id);
         }
+
+        /// <summary>查询某应用某天的所有分钟统计，带缓存</summary>
+        /// <param name="appId"></param>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public static IList<TraceHourStat> FindAllByAppIdWithCache(Int32 appId, DateTime date)
+        {
+            var key = $"TraceHourStat:FindAllByAppIdWithCache:{appId}#{date:yyyyMMdd}";
+            if (_cache.TryGet<IList<TraceHourStat>>(key, out var list) && list != null) return list;
+
+            // 查询数据库，即时空值也缓存，避免缓存穿透
+            list = FindAll(_.AppId == appId & _.StatTime >= date & _.StatTime < date.AddDays(1));
+
+            _cache.Set(key, list, 10);
+
+            return list;
+        }
         #endregion
 
         #region 高级查询
@@ -111,15 +129,15 @@ namespace Stardust.Data.Monitors
         #endregion
 
         #region 业务操作
-        private static ICache _cache = Cache.Default;
         private static TraceHourStat FindByTrace(TraceStatModel model, Boolean cache)
         {
-            var key = $"TraceHourStat:{model.Time}#{model.AppId}#{model.Name}";
+            var key = $"TraceHourStat:FindByTrace:{model.Time}#{model.AppId}#{model.Name}";
             if (cache && _cache.TryGet<TraceHourStat>(key, out var st)) return st;
 
             // 查询数据库，即时空值也缓存，避免缓存穿透
-            st = Find(_.StatTime == model.Time & _.AppId == model.AppId & _.Name == model.Name);
-            _cache.Set(key, st, 600);
+            //st = Find(_.StatTime == model.Time & _.AppId == model.AppId & _.Name == model.Name);
+            st = FindAllByAppIdWithCache(model.AppId, model.Time.Date).FirstOrDefault(e => e.Name == model.Name);
+            _cache.Set(key, st, 60);
 
             return st;
         }
