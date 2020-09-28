@@ -80,6 +80,23 @@ namespace Stardust.Data.Monitors
 
             //return Find(_.ID == id);
         }
+
+        /// <summary>查询某应用某天的所有统计，带缓存</summary>
+        /// <param name="appId"></param>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public static IList<TraceDayStat> FindAllByAppIdWithCache(Int32 appId, DateTime date)
+        {
+            var key = $"TraceDayStat:FindAllByAppIdWithCache:{appId}#{date:yyyyMMdd}";
+            if (_cache.TryGet<IList<TraceDayStat>>(key, out var list) && list != null) return list;
+
+            // 查询数据库，即时空值也缓存，避免缓存穿透
+            list = FindAll(_.AppId == appId & _.StatDate == date);
+
+            _cache.Set(key, list, 10);
+
+            return list;
+        }
         #endregion
 
         #region 高级查询
@@ -136,8 +153,9 @@ namespace Stardust.Data.Monitors
             if (cache && _cache.TryGet<TraceDayStat>(key, out var st)) return st;
 
             // 查询数据库，即时空值也缓存，避免缓存穿透
-            st = Find(_.StatDate == model.Time & _.AppId == model.AppId & _.Name == model.Name);
-            _cache.Set(key, st, 600);
+            //st = Find(_.StatDate == model.Time & _.AppId == model.AppId & _.Name == model.Name);
+            st = FindAllByAppIdWithCache(model.AppId, model.Time.Date).FirstOrDefault(e => e.Name == model.Name);
+            _cache.Set(key, st, 60);
 
             return st;
         }

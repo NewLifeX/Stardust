@@ -69,20 +69,7 @@ namespace Stardust.Data.Monitors
             //return Find(_.ID == id);
         }
 
-        /// <summary>根据应用、操作名、编号查找</summary>
-        /// <param name="appId">应用</param>
-        /// <param name="name">操作名</param>
-        /// <param name="id">编号</param>
-        /// <returns>实体列表</returns>
-        public static IList<TraceHourStat> FindAllByAppIdAndNameAndID(Int32 appId, String name, Int32 id)
-        {
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.Name == name && e.ID == id);
-
-            return FindAll(_.AppId == appId & _.Name == name & _.ID == id);
-        }
-
-        /// <summary>查询某应用某天的所有分钟统计，带缓存</summary>
+        /// <summary>查询某应用某天的所有统计，带缓存</summary>
         /// <param name="appId"></param>
         /// <param name="date"></param>
         /// <returns></returns>
