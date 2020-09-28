@@ -140,7 +140,7 @@ namespace Stardust.Data.Monitors
             // 查询数据库，即时空值也缓存，避免缓存穿透
             //st = Find(_.StatTime == model.Time & _.AppId == model.AppId & _.Name == model.Name);
             st = FindAllByAppIdWithCache(model.AppId, model.Time.Date)
-                .FirstOrDefault(e => e.StatTime == model.Time && e.Name == model.Name);
+                .FirstOrDefault(e => e.StatTime == model.Time && e.Name.EqualIgnoreCase(model.Name));
             _cache.Set(key, st, 60);
 
             return st;
