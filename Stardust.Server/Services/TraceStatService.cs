@@ -61,7 +61,7 @@ namespace Stardust.Server.Services
                     if (!_bagHour.Contains(key)) _bagHour.Add(key);
                 }
                 {
-                    var key = $"{item.AppId}_{item.StatMinute:yyyyMMdd}";
+                    var key = $"{item.AppId}_{item.StatMinute:yyyyMMddHH}";
                     var bag = _bagMinute.GetOrAdd(key, new ConcurrentBag<DateTime>());
                     if (!bag.Contains(item.StatMinute)) bag.Add(item.StatMinute);
                 }
@@ -98,7 +98,7 @@ namespace Stardust.Server.Services
             }
             {
                 var minute = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
-                var key = $"{appId}_{minute:yyyyMMdd}";
+                var key = $"{appId}_{minute:yyyyMMddHH}";
                 var bag = _bagMinute.GetOrAdd(key, new ConcurrentBag<DateTime>());
                 if (!bag.Contains(minute)) bag.Add(minute);
             }
