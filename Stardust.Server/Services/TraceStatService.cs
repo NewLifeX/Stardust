@@ -238,7 +238,8 @@ namespace Stardust.Server.Services
                 st.Errors = vs.Sum(e => e.Errors);
                 st.TotalCost = vs.Sum(e => e.TotalCost);
                 st.MaxCost = vs.Max(e => e.MaxCost);
-                st.MinCost = vs.Where(e => e.MinCost > 0).Min(e => e.MinCost);
+                var vs2 = vs.Where(e => e.MinCost > 0).ToList();
+                if (vs2.Count > 0) st.MinCost = vs2.Min(e => e.MinCost);
 
                 // 强制触发种类计算
                 st.Valid(false);
@@ -271,7 +272,8 @@ namespace Stardust.Server.Services
                 st.Errors = vs.Sum(e => e.Errors);
                 st.TotalCost = vs.Sum(e => e.TotalCost);
                 st.MaxCost = vs.Max(e => e.MaxCost);
-                st.MinCost = vs.Where(e => e.MinCost > 0).Min(e => e.MinCost);
+                var vs2 = vs.Where(e => e.MinCost > 0).ToList();
+                if (vs2.Count > 0) st.MinCost = vs2.Min(e => e.MinCost);
 
                 _hourQueue.Commit(key);
             }
