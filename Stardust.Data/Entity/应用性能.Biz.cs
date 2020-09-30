@@ -121,7 +121,7 @@ namespace Stardust.Data
 
             // TryGet能够扛缓存穿透，即使没有数据，也写入空数据
             var key = $"field:{appId}";
-            if (_cache.TryGet<IDictionary<String, String>>(key, out var value)) return value;
+            if (_cache.TryGetValue<IDictionary<String, String>>(key, out var value)) return value;
 
             // 计算应用的ClientIds时，采取Id降序，较新活跃的客户端在前面
             var exp = new WhereExpression();

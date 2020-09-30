@@ -76,7 +76,7 @@ namespace Stardust.Data.Monitors
         public static IList<TraceMinuteStat> FindAllByAppIdWithCache(Int32 appId, DateTime date)
         {
             var key = $"TraceMinuteStat:FindAllByAppIdWithCache:{appId}#{date:yyyyMMdd}";
-            if (_cache.TryGet<IList<TraceMinuteStat>>(key, out var list) && list != null) return list;
+            if (_cache.TryGetValue<IList<TraceMinuteStat>>(key, out var list) && list != null) return list;
 
             // 查询数据库，即时空值也缓存，避免缓存穿透
             list = FindAll(_.AppId == appId & _.StatTime >= date & _.StatTime < date.AddDays(1));
@@ -135,7 +135,7 @@ namespace Stardust.Data.Monitors
         private static TraceMinuteStat FindByTrace(TraceStatModel model, Boolean cache)
         {
             var key = $"TraceMinuteStat:FindByTrace:{model.Key}";
-            if (cache && _cache.TryGet<TraceMinuteStat>(key, out var st)) return st;
+            if (cache && _cache.TryGetValue<TraceMinuteStat>(key, out var st)) return st;
 
             st = FindAllByAppIdWithCache(model.AppId, model.Time.Date)
                 .FirstOrDefault(e => e.StatTime == model.Time && e.Name.EqualIgnoreCase(model.Name));
