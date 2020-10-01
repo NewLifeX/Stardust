@@ -116,15 +116,28 @@ namespace Stardust.Monitors
             builders = builders.Where(e => !e.Name.EndsWithIgnoreCase("/Trace/Report")).ToArray();
             if (builders.Length == 0) return;
 
-            // 暂时无法区分连接属于哪个进程，使用全局连接数
-            var properties = IPGlobalProperties.GetIPGlobalProperties();
-            var connections = properties.GetActiveTcpConnections();
-
             // 构建应用信息
-            var info = new AppInfo(_process)
+            var info = new AppInfo(_process);
+
+            try
             {
-                Connections = connections.Length,
-            };
+                // 调用WindowApi获取进程的连接数
+                var tcps = NetHelper.GetAllTcpConnections();
+                if (tcps != null && tcps.Length > 0)
+                {
+                    var pid = Process.GetCurrentProcess().Id;
+                    info.Connections = tcps.Count(e => e.ProcessId == pid);
+                }
+            }
+            catch { }
+
+            if (info.Connections == 0 && !Runtime.Windows)
+            {
+                // 暂时无法区分连接属于哪个进程，使用全局连接数
+                var properties = IPGlobalProperties.GetIPGlobalProperties();
+                var connections = properties.GetActiveTcpConnections();
+                info.Connections = connections.Length;
+            }
 
             // 发送，失败后进入队列
             var model = new TraceModel
