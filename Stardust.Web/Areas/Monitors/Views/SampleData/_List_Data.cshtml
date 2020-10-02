@@ -45,7 +45,7 @@
                     <td class="text-center"><input type="checkbox" name="keys" value="@entity.Id" /></td>
                 }
                 <td class="text-center">@entity.AppName</td>
-                <td title="@entity.Tag">@entity.Name</td>
+                <td title="@entity.Tag" style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;">@entity.Name</td>
                 <td class="text-center">
                     <i class="glyphicon glyphicon-@(entity.Success ? "ok" : "remove")" style="color: @(entity.Success ? "green" : "red");"></i>
                 </td>
@@ -107,7 +107,7 @@
                 }
                 <tr>
                     <td class="text-center">@entity.AppName</td>
-                    <td title="@entity.Tag">@entity.Name</td>
+                    <td title="@entity.Tag" style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;">@entity.Name</td>
                     <td title="@msg">
                         @if (left < 0.96)
                         {

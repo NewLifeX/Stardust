@@ -53,7 +53,7 @@
                 }
                 <td class="text-center">@entity.AppName</td>
                 <td>@entity.ClientId</td>
-                <td><a href="@url1" title="该应用操作在最近一段时间内的监控图表">@entity.Name</a></td>
+                <td style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url1" title="该应用操作在最近一段时间内的监控图表">@entity.Name</a></td>
                 <td><a href="TraceData/Trace?id=@entity.Id" title="跨多系统查看调用链">跟踪</a></td>
                 <td class="text-right"><a href="@url2" title="本次跟踪的少量采样数据">@entity.Total.ToString("n0")</a></td>
                 <td class="text-right">@entity.Errors.ToString("n0")</td>
