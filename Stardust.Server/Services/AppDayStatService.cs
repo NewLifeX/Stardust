@@ -75,12 +75,13 @@ namespace Stardust.Server.Services
                 st.MaxCost = ds.Max(e => e.MaxCost);
                 st.MinCost = ds.Min(e => e.MinCost);
 
-                st.Apis = ds.FirstOrDefault(e => e.Type == "api")?.Total ?? 0;
-                st.Https = ds.FirstOrDefault(e => e.Type == "http")?.Total ?? 0;
-                st.Dbs = ds.FirstOrDefault(e => e.Type == "db")?.Total ?? 0;
-                st.Mqs = ds.FirstOrDefault(e => e.Type == "mq")?.Total ?? 0;
-                st.Redis = ds.FirstOrDefault(e => e.Type == "redis")?.Total ?? 0;
-                st.Others = ds.FirstOrDefault(e => e.Type == "other")?.Total ?? 0;
+                // 分类统计，应用有可能缺失某些类别
+                st.Apis = ds.Where(e => e.Type == "api").Sum(e => e.Total);
+                st.Https = ds.Where(e => e.Type == "http").Sum(e => e.Total);
+                st.Dbs = ds.Where(e => e.Type == "db").Sum(e => e.Total);
+                st.Mqs = ds.Where(e => e.Type == "mq").Sum(e => e.Total);
+                st.Redis = ds.Where(e => e.Type == "redis").Sum(e => e.Total);
+                st.Others = ds.Where(e => e.Type == "other").Sum(e => e.Total);
             }
 
             // 保存统计
