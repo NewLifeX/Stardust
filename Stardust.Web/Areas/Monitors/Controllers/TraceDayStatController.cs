@@ -56,7 +56,6 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 var list2 = list.OrderBy(e => e.StatDate).ToList();
 
                 // 绘制日期曲线图
-                var ar = AppTracer.FindByID(appId);
                 if (appId >= 0)
                 {
                     var chart = new ECharts
@@ -85,6 +84,9 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                     ViewBag.Charts2 = new[] { chart };
                 }
             }
+
+            var ar = AppTracer.FindByID(appId);
+            if (ar != null) ViewBag.Title = $"{ar}每日统计";
 
             return list;
         }

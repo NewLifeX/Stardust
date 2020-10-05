@@ -92,6 +92,9 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 return rs;
             }
 
+            var ar = AppTracer.FindByID(appId);
+            if (ar != null) ViewBag.Title = $"{ar}采样";
+
             return list;
         }
     }
