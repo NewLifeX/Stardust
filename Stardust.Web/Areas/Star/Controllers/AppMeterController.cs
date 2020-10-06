@@ -33,8 +33,8 @@ namespace Stardust.Web.Areas.Star.Controllers
 
             if (appId > 0)
             {
-                // 最近10小时
-                if (p.PageSize == 20 && appId > 0) p.PageSize = 600;
+                // 最近24小时
+                if (p.PageSize == 20 && appId > 0) p.PageSize = 1440;
 
                 // 自动客户端
                 if (clientId.IsNullOrEmpty())
