@@ -20,6 +20,13 @@ namespace Stardust.Data.Monitors
             df.Add(nameof(Errors));
             df.Add(nameof(TotalCost));
 
+            df.Add(nameof(Apis));
+            df.Add(nameof(Https));
+            df.Add(nameof(Dbs));
+            df.Add(nameof(Mqs));
+            df.Add(nameof(Redis));
+            df.Add(nameof(Others));
+
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Modules.Add<TimeModule>();
         }
