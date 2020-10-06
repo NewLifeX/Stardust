@@ -61,6 +61,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("Enable", "启用", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
+        private String _Category;
+        /// <summary>分类</summary>
+        [DisplayName("分类")]
+        [Description("分类")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Category", "分类", "")]
+        public String Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
+
         private String _Version;
         /// <summary>版本</summary>
         [DisplayName("版本")]
@@ -357,6 +365,7 @@ namespace Stardust.Data.Nodes
                     case "Code": return _Code;
                     case "Secret": return _Secret;
                     case "Enable": return _Enable;
+                    case "Category": return _Category;
                     case "Version": return _Version;
                     case "CompileTime": return _CompileTime;
                     case "OS": return _OS;
@@ -404,6 +413,7 @@ namespace Stardust.Data.Nodes
                     case "Code": _Code = Convert.ToString(value); break;
                     case "Secret": _Secret = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
+                    case "Category": _Category = Convert.ToString(value); break;
                     case "Version": _Version = Convert.ToString(value); break;
                     case "CompileTime": _CompileTime = value.ToDateTime(); break;
                     case "OS": _OS = Convert.ToString(value); break;
@@ -463,6 +473,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
+
+            /// <summary>分类</summary>
+            public static readonly Field Category = FindByName("Category");
 
             /// <summary>版本</summary>
             public static readonly Field Version = FindByName("Version");
@@ -589,6 +602,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>启用</summary>
             public const String Enable = "Enable";
+
+            /// <summary>分类</summary>
+            public const String Category = "Category";
 
             /// <summary>版本</summary>
             public const String Version = "Version";
