@@ -292,6 +292,8 @@ namespace Stardust.Server.Controllers
                 node.FixArea();
                 node.SaveAsync();
 
+                rs.Period = node.Period;
+
                 var olt = GetOnline(code, node) ?? CreateOnline(code, node);
                 olt.Name = node.Name;
                 olt.Save(null, inf, Token);

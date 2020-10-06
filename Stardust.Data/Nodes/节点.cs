@@ -245,6 +245,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("Address", "地址", "")]
         public String Address { get => _Address; set { if (OnPropertyChanging("Address", value)) { _Address = value; OnPropertyChanged("Address"); } } }
 
+        private Int32 _Period;
+        /// <summary>采样周期。默认60秒</summary>
+        [DisplayName("采样周期")]
+        [Description("采样周期。默认60秒")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Period", "采样周期。默认60秒", "")]
+        public Int32 Period { get => _Period; set { if (OnPropertyChanging("Period", value)) { _Period = value; OnPropertyChanged("Period"); } } }
+
         private Int32 _Logins;
         /// <summary>登录次数</summary>
         [DisplayName("登录次数")]
@@ -372,6 +380,7 @@ namespace Stardust.Data.Nodes
                     case "ProvinceID": return _ProvinceID;
                     case "CityID": return _CityID;
                     case "Address": return _Address;
+                    case "Period": return _Period;
                     case "Logins": return _Logins;
                     case "LastLogin": return _LastLogin;
                     case "LastLoginIP": return _LastLoginIP;
@@ -418,6 +427,7 @@ namespace Stardust.Data.Nodes
                     case "ProvinceID": _ProvinceID = value.ToInt(); break;
                     case "CityID": _CityID = value.ToInt(); break;
                     case "Address": _Address = Convert.ToString(value); break;
+                    case "Period": _Period = value.ToInt(); break;
                     case "Logins": _Logins = value.ToInt(); break;
                     case "LastLogin": _LastLogin = value.ToDateTime(); break;
                     case "LastLoginIP": _LastLoginIP = Convert.ToString(value); break;
@@ -522,6 +532,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>地址</summary>
             public static readonly Field Address = FindByName("Address");
+
+            /// <summary>采样周期。默认60秒</summary>
+            public static readonly Field Period = FindByName("Period");
 
             /// <summary>登录次数</summary>
             public static readonly Field Logins = FindByName("Logins");
@@ -645,6 +658,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>地址</summary>
             public const String Address = "Address";
+
+            /// <summary>采样周期。默认60秒</summary>
+            public const String Period = "Period";
 
             /// <summary>登录次数</summary>
             public const String Logins = "Logins";

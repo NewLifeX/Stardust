@@ -115,10 +115,6 @@ namespace Stardust
                     if (_timer == null)
                     {
                         _timer = new TimerX(s => Ping().Wait(), null, 5_000, 60_000, "Device") { Async = true };
-#if DEBUG
-                        _timer.Period = 5_000;
-                        _timer.Scheduler.Log = XTrace.Log;
-#endif
                     }
                 }
             }
@@ -320,6 +316,9 @@ namespace Stardust
                 var rs = await PingAsync(inf);
                 if (rs != null)
                 {
+                    // 由服务器改变采样频率
+                    if (rs.Period > 0) _timer.Period = rs.Period;
+
                     var dt = rs.Time.ToDateTime();
                     if (dt.Year > 2000)
                     {

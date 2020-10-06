@@ -55,6 +55,8 @@ namespace Stardust.Data.Nodes
             if (MACs != null && len > 0 && MACs.Length > len) MACs = MACs.Substring(0, len);
             len = _.DiskID.Length;
             if (DiskID != null && len > 0 && DiskID.Length > len) DiskID = DiskID.Substring(0, len);
+
+            if (Period == 0) Period = 60;
         }
 
         /// <summary>已重载</summary>

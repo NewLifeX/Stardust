@@ -30,6 +30,7 @@
       <Column Name="ProvinceID" DataType="Int32" Description="省份" />
       <Column Name="CityID" DataType="Int32" Description="城市" />
       <Column Name="Address" DataType="String" Length="200" Description="地址" />
+      <Column Name="Period" DataType="Int32" Description="采样周期。默认60秒" />
       <Column Name="Logins" DataType="Int32" Description="登录次数" />
       <Column Name="LastLogin" DataType="DateTime" Description="最后登录" />
       <Column Name="LastLoginIP" DataType="String" Description="最后IP。最后的公网IP地址" />

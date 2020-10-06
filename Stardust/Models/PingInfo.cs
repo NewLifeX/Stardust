@@ -59,6 +59,9 @@ namespace Stardust.Models
         /// <summary>服务器时间</summary>
         public DateTime ServerTime { get; set; }
 
+        /// <summary>采样周期</summary>
+        public Int32 Period { get; set; }
+
         /// <summary>下发命令</summary>
         public CommandModel[] Commands { get; set; }
     }
