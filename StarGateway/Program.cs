@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NewLife.Log;
 using Stardust.Data;
@@ -27,6 +28,10 @@ namespace StarGateway
             //    if (set.Port > 0) webBuilder.UseUrls($"http://*:{set.Port}");
             //    webBuilder.UseStartup<Startup>();
             //});
+            builder.ConfigureServices(services =>
+            {
+                services.AddHostedService<MyService>();
+            });
 
             return builder;
         }
