@@ -13,7 +13,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace ZTO.Scan.Server.Controllers
+namespace Stardust.Web.Controllers
 {
     public class ApiController : ControllerBaseX
     {
