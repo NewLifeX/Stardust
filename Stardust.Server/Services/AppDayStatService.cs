@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Data.Monitors;
 using XCode;
@@ -47,14 +48,14 @@ namespace Stardust.Server.Services
 
         private void Process(DateTime date)
         {
-            // 统计数据
+            // 统计数据，每日跟踪根据应用和类型分组
             var list = TraceDayStat.SearchGroupApp(date);
             if (list.Count == 0) return;
 
             // 统计对象
             var sts = AppDayStat.Search(date, null);
 
-            // 聚合
+            // 聚合，按应用分组，每一组内每个类型一行
             var dic = list.GroupBy(e => e.AppId);
             foreach (var item in dic)
             {

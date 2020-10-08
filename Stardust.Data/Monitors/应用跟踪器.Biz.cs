@@ -113,10 +113,7 @@ namespace Stardust.Data.Monitors
         }
 
         // Select Count(ID) as ID,Category From AppTracer Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By ID Desc limit 20
-        static readonly FieldCache<AppTracer> _CategoryCache = new FieldCache<AppTracer>(nameof(Category))
-        {
-            Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-        };
+        static readonly FieldCache<AppTracer> _CategoryCache = new FieldCache<AppTracer>(nameof(Category));
 
         /// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
         /// <returns></returns>

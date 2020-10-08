@@ -133,7 +133,7 @@ namespace Stardust.Data.Monitors
         /// <returns></returns>
         public static IList<TraceDayStat> Search(DateTime date, Int32[] appIds) => FindAll(_.StatDate == date & _.AppId.In(appIds));
 
-        /// <summary>根据应用分组统计</summary>
+        /// <summary>根据应用和类型分组统计</summary>
         /// <param name="date"></param>
         /// <returns></returns>
         public static IList<TraceDayStat> SearchGroupApp(DateTime date)

@@ -87,6 +87,7 @@ namespace Stardust.Server.Controllers
             // 排除项
             var excludes = app.Excludes.Split(",", ";") ?? new String[0];
 
+            var now = DateTime.Now;
             var traces = new List<TraceData>();
             var samples = new List<SampleData>();
             foreach (var item in builders)
@@ -100,7 +101,7 @@ namespace Stardust.Server.Controllers
                 td.AppId = app.ID;
                 td.ClientId = model.ClientId ?? ip;
                 td.CreateIP = ip;
-                td.CreateTime = DateTime.Now;
+                td.CreateTime = now;
 
                 traces.Add(td);
 
@@ -113,7 +114,8 @@ namespace Stardust.Server.Controllers
 
             // 更新统计
             _stat.Add(traces);
-            _appStat.Add(DateTime.Today);
+            _appStat.Add(now.Date);
+            if (now.Hour == 0 && now.Minute <= 10) _appStat.Add(now.Date.AddDays(-1));
 
             // 应用节点数
             var nodes = app.Nodes?.Split(",").ToList() ?? new List<String>();

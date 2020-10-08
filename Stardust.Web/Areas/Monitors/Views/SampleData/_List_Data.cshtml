@@ -66,7 +66,7 @@
         }
     </tbody>
 </table>
-@if (!page["traceId"].IsNullOrEmpty())
+@if (!page["traceId"].IsNullOrEmpty() && Model.Count > 0)
 {
     <table class="table table-bordered table-hover table-striped table-condensed">
         <thead>
