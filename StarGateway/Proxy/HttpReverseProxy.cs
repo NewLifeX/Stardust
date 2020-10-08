@@ -58,9 +58,6 @@ namespace StarGateway.Proxy
         /// <summary>原始主机</summary>
         public String RawHost { get; set; }
 
-        /// <summary>请求时触发。</summary>
-        public event EventHandler<ReceivedEventArgs> OnRequest;
-
         /// <summary>收到客户端发来的数据。子类可通过重载该方法来修改数据</summary>
         /// <param name="e"></param>
         protected override void OnReceive(ReceivedEventArgs e)
@@ -71,24 +68,40 @@ namespace StarGateway.Proxy
             var request = new HttpRequest();
             if (request.Read(e.Packet))
             {
+                e.Message = request;
+
+                // 解码请求头，准备修改细节
                 request.DecodeHeaders();
 
-                // 修改Host
-                var host = request.Headers["Host"];
-                host = GetHost(host);
-                if (!host.IsNullOrEmpty())
+                if (OnRequest(request, e))
                 {
-                    request.Headers["Host"] = host;
-
                     // 重新生成Http请求头
                     request.EncodeHeaders();
                     e.Packet = request.ToPacket();
                 }
 
-                WriteDebugLog(request.Header.ToStr());
+                //var uri = new NetUri(NetType.Http, RawHost, Session.Local.Port);
+                var uri = new Uri($"http://{RawHost}:{Session.Local.Port}{request.Uri}");
+                WriteDebugLog(uri + "");
             }
 
             base.OnReceive(e);
+        }
+
+        protected virtual Boolean OnRequest(HttpRequest request, ReceivedEventArgs e)
+        {
+            // 修改Host
+            RawHost = request.Headers["Host"];
+
+            var host = GetHost(RawHost);
+            if (!host.IsNullOrEmpty())
+            {
+                request.Headers["Host"] = host;
+
+                return true;
+            }
+
+            return false;
         }
 
         protected virtual String GetHost(String rawHost)
