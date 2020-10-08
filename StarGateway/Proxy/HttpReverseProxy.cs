@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 using NewLife;
-using NewLife.Http;
 using NewLife.Net;
+using StarGateway.Http;
 
 namespace StarGateway.Proxy
 {
@@ -39,12 +39,12 @@ namespace StarGateway.Proxy
             ProtocolType = NetType.Tcp;
         }
 
-        protected override void OnStart()
-        {
-            Add(new HttpCodec { AllowParseHeader = true });
+        //protected override void OnStart()
+        //{
+        //    Add(new HttpCodec { AllowParseHeader = true });
 
-            base.OnStart();
-        }
+        //    base.OnStart();
+        //}
 
         /// <summary>创建会话</summary>
         /// <param name="session"></param>
@@ -68,21 +68,24 @@ namespace StarGateway.Proxy
             if (Disposed) return;
 
             // 请求头
-            if (e.Message is HttpMessage msg)
+            var request = new HttpRequest();
+            if (request.Read(e.Packet))
             {
+                request.DecodeHeaders();
+
                 // 修改Host
-                var host = msg.Headers["Host"];
+                var host = request.Headers["Host"];
                 host = GetHost(host);
                 if (!host.IsNullOrEmpty())
                 {
-                    msg.Headers["Host"] = host;
+                    request.Headers["Host"] = host;
 
                     // 重新生成Http请求头
-
-                    e.Packet = msg.ToPacket();
+                    request.EncodeHeaders();
+                    e.Packet = request.ToPacket();
                 }
 
-                WriteDebugLog(msg.Header.ToStr());
+                WriteDebugLog(request.Header.ToStr());
             }
 
             base.OnReceive(e);
