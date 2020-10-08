@@ -10,8 +10,8 @@ namespace StarGateway.Proxy
     public abstract class ProxyServer : NetServer
     {
         #region 属性
-        /// <summary>开始会话时连接远程会话。默认true，否则将在首次收到数据包时连接远程会话</summary>
-        public Boolean ConnectRemoteOnStart { get; set; } = true;
+        /// <summary>开始会话时连接远程会话。默认false，将在首次收到数据包时连接远程会话</summary>
+        public Boolean ConnectRemoteOnStart { get; set; }
         #endregion
 
         #region 构造函数

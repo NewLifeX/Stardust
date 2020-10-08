@@ -101,8 +101,9 @@ namespace StarGateway.Proxy
                     WriteDebugLog("连接远程服务器 {0} 解析 {1}", RemoteServerUri, RemoteServerUri.Address);
 
                     session = CreateRemote(e);
-                    //session.Log = Log;
-                    // Socket日志一致
+#if DEBUG
+                    session.Log = Log;
+#endif
                     session.Log = Session.Log;
                     session.OnDisposed += (s, e2) =>
                     {

@@ -67,9 +67,36 @@ namespace StarGateway.Proxy
         {
             if (Disposed) return;
 
-            // 解析请求头
+            // 请求头
+            if (e.Message is HttpMessage msg)
+            {
+                // 修改Host
+                var host = msg.Headers["Host"];
+                host = GetHost(host);
+                if (!host.IsNullOrEmpty())
+                {
+                    msg.Headers["Host"] = host;
+
+                    // 重新生成Http请求头
+
+                    e.Packet = msg.ToPacket();
+                }
+
+                WriteDebugLog(msg.Header.ToStr());
+            }
 
             base.OnReceive(e);
+        }
+
+        protected virtual String GetHost(String rawHost)
+        {
+            if (Host is HttpReverseProxy http)
+            {
+                RemoteServerUri = http.RemoteServer;
+                return http.RemoteServer.Host;
+            }
+
+            return null;
         }
     }
 }
