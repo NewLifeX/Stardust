@@ -19,10 +19,14 @@ namespace StarGateway
                 Port = 8080,
                 RemoteServer = "http://star.newlifex.com",
 
+                Tracer = DefaultTracer.Instance,
                 Log = XTrace.Log,
             };
 
             if (set.Debug) server.SessionLog = XTrace.Log;
+#if DEBUG
+            server.SocketLog = XTrace.Log;
+#endif
 
             server.Start();
 
@@ -33,10 +37,14 @@ namespace StarGateway
                 Port = 80,
                 RemoteServer = "http://star.newlifex.com",
 
+                Tracer = DefaultTracer.Instance,
                 Log = XTrace.Log,
             };
 
             if (set.Debug) server2.SessionLog = XTrace.Log;
+#if DEBUG
+            server2.SocketLog = XTrace.Log;
+#endif
 
             server2.Start();
 

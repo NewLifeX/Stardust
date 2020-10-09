@@ -75,7 +75,7 @@ namespace StarGateway.Proxy
             var len = e.Packet.Total;
             if (len > 0 || len == 0 && ExchangeEmptyData)
             {
-                if (len > 0) WriteDebugLog("客户端", e.Packet);
+                //if (len > 0) WriteDebugLog("客户端", e.Packet);
 
                 // 如果未建立到远程服务器链接，则建立
                 if (RemoteServer == null) ConnectRemote(e);
@@ -98,7 +98,7 @@ namespace StarGateway.Proxy
                 ISocketClient session = null;
                 try
                 {
-                    WriteDebugLog("连接远程服务器 {0} 解析 {1}", RemoteServerUri, RemoteServerUri.Address);
+                    //WriteDebugLog("连接远程服务器 {0} 解析 {1}", RemoteServerUri, RemoteServerUri.Address);
 
                     session = CreateRemote(e);
 #if DEBUG
@@ -114,7 +114,7 @@ namespace StarGateway.Proxy
                     session.Received += Remote_Received;
                     session.Open();
 
-                    WriteDebugLog("连接远程服务器成功");
+                    //WriteDebugLog("连接远程服务器成功");
 
                     RemoteServer = session;
                 }
@@ -165,7 +165,7 @@ namespace StarGateway.Proxy
         protected virtual void OnReceiveRemote(ReceivedEventArgs e)
         {
             var len = e.Packet.Total;
-            if (len > 0) WriteDebugLog("服务端", e.Packet);
+            //if (len > 0) WriteDebugLog("服务端", e.Packet);
 
             if (len > 0 || len == 0 && ExchangeEmptyData)
             {

@@ -115,9 +115,12 @@ namespace StarGateway.Http
                 sb.AppendLine();
             }
 
-            sb.AppendLine();
+            // 获取数据，构建头部，不需要附带两个换行
+            var data = sb.Put(true).GetBytes();
+            var len = data.Length;
+            if (Headers.Count > 0) len -= 2;
 
-            Header = sb.Put(true).GetBytes();
+            Header = new Packet(data, 0, len);
 
             return true;
         }

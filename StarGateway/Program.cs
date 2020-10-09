@@ -9,6 +9,10 @@ namespace StarGateway
         {
             XTrace.UseConsole();
 
+#if DEBUG
+            DefaultTracer.Instance = new DefaultTracer { Log = XTrace.Log };
+#endif
+
             var host = new Host();
             host.Add<InitService>();
             host.Add<MyService>();
