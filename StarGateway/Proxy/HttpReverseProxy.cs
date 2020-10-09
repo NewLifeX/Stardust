@@ -58,6 +58,12 @@ namespace StarGateway.Proxy
         /// <summary>原始主机</summary>
         public String RawHost { get; set; }
 
+        /// <summary>请求地址</summary>
+        public Uri LocalUri { get; set; }
+
+        /// <summary>远程地址</summary>
+        public Uri RemoteUri { get; set; }
+
         /// <summary>收到客户端发来的数据。子类可通过重载该方法来修改数据</summary>
         /// <param name="e"></param>
         protected override void OnReceive(ReceivedEventArgs e)
@@ -81,8 +87,7 @@ namespace StarGateway.Proxy
                 }
 
                 //var uri = new NetUri(NetType.Http, RawHost, Session.Local.Port);
-                var uri = new Uri($"http://{RawHost}:{Session.Local.Port}{request.Uri}");
-                WriteDebugLog(uri + "");
+                WriteDebugLog(LocalUri + "");
             }
 
             base.OnReceive(e);
@@ -91,17 +96,22 @@ namespace StarGateway.Proxy
         protected virtual Boolean OnRequest(HttpRequest request, ReceivedEventArgs e)
         {
             // 修改Host
-            RawHost = request.Headers["Host"];
+            var host = request.Headers["Host"];
 
-            var host = GetHost(RawHost);
-            if (!host.IsNullOrEmpty())
-            {
-                request.Headers["Host"] = host;
+            LocalUri = new Uri($"http://{host}:{Session.Local.Port}{request.Uri}");
 
-                return true;
-            }
+            host = GetHost(host);
+            if (host.IsNullOrEmpty()) return false;
 
-            return false;
+            RemoteUri = new Uri($"http://{host}:{RemoteServerUri.Port}{request.Uri}");
+
+            request.Headers["Host"] = host;
+
+            request.Headers["X-Real-IP"] = Remote.Host;
+            request.Headers["X-Forwarded-For"] = Remote.Host;
+            request.Headers["X-Request-Uri"] = LocalUri.ToString();
+
+            return true;
         }
 
         protected virtual String GetHost(String rawHost)
