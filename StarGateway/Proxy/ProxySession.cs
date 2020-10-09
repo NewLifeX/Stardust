@@ -103,6 +103,8 @@ namespace StarGateway.Proxy
                     session = CreateRemote(e);
 #if DEBUG
                     session.Log = Log;
+                    session.LogSend = Host.LogSend;
+                    session.LogReceive = Host.LogReceive;
 #endif
                     session.Log = Session.Log;
                     session.OnDisposed += (s, e2) =>
