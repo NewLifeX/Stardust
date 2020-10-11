@@ -86,7 +86,7 @@ namespace Stardust.Server.Services
             }
 
             // 保存统计
-            sts.Save(true);
+            sts.Save(false);
         }
     }
 }

@@ -335,7 +335,7 @@ namespace Stardust.Server.Controllers
                 item.Finished = true;
                 item.UpdateTime = DateTime.Now;
             }
-            cmds.Update(true);
+            cmds.Update(false);
 
             return rs;
         }

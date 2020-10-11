@@ -274,7 +274,7 @@ namespace Stardust.Data.Nodes
             }
 
             // 保存统计数据
-            sts.Save(true);
+            sts.Save(false);
         }
 
         private static NodeStat GetStat(IList<NodeStat> sts, Int32 areaId, DateTime date)
