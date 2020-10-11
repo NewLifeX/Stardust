@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 using System.Threading.Tasks;
 using NewLife;
 using NewLife.Log;
@@ -59,7 +60,7 @@ namespace Stardust
         {
             if (Logined && !force) return null;
 
-            var asmx = AssemblyX.Entry;
+            var asm = AssemblyX.Entry ?? AssemblyX.Create(Assembly.GetExecutingAssembly());
 
             var arg = new
             {
@@ -67,8 +68,8 @@ namespace Stardust
                 pass = Password.MD5(),
                 machine = Environment.MachineName,
                 processid = Process.GetCurrentProcess().Id,
-                version = asmx?.Version,
-                compile = asmx?.Compile,
+                version = asm?.Version,
+                compile = asm?.Compile,
             };
 
             var rs = await base.InvokeWithClientAsync<Object>(client, "Login", arg);

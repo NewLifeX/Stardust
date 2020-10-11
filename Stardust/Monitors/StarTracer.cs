@@ -59,8 +59,12 @@ namespace Stardust.Monitors
 
             if (set.Debug) Log = XTrace.Log;
 
-            var asm = AssemblyX.Entry;
-            ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}@{asm.Version}";
+            try
+            {
+                var asm = AssemblyX.Entry ?? AssemblyX.Create(Assembly.GetExecutingAssembly());
+                ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}@{asm?.Version}";
+            }
+            catch { }
         }
 
         /// <summary>指定服务端地址来实例化跟踪器</summary>

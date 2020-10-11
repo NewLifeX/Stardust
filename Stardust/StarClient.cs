@@ -151,8 +151,8 @@ namespace Stardust
             var driveInfo = new DriveInfo(Path.GetPathRoot(".".GetFullPath()));
             var di = new NodeInfo
             {
-                Version = asm.FileVersion,
-                Compile = asm.Compile,
+                Version = asm?.FileVersion,
+                Compile = asm?.Compile ?? DateTime.MinValue,
 
                 OSName = mi.OSName,
                 OSVersion = mi.OSVersion,
@@ -244,7 +244,6 @@ namespace Stardust
         /// <summary>获取心跳信息</summary>
         public PingInfo GetHeartInfo()
         {
-            var asm = AssemblyX.Entry;
             var ps = Process.GetProcesses();
             var pcs = new List<String>();
             foreach (var item in ps)
