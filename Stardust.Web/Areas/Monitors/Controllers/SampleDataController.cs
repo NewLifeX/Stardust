@@ -89,9 +89,11 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 // 残留的异常数据
                 rs.AddRange(list);
 
-                return rs;
+                //return rs;
+                list = rs;
             }
 
+            if (appId <= 0 && list.Count > 0) appId = list[0].AppId;
             var ar = AppTracer.FindByID(appId);
             if (ar != null) ViewBag.Title = $"{ar}采样";
 

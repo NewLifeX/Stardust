@@ -6,6 +6,7 @@
 @using XCode.Configuration;
 @using XCode.Membership;
 @using NewLife.Cube;
+@using System.Web;
 @{
     var fact = ViewBag.Factory as IEntityFactory;
     var page = ViewBag.Page as Pager;
@@ -39,13 +40,28 @@
     <tbody>
         @foreach (var entity in Model)
         {
+            var url1 = $"appDayStat?appId={entity.AppId}";
+            var url2 = $"traceDayStat?appid={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}";
+            var color2 = "";
+            if (entity.Name.StartsWithIgnoreCase("db:"))
+            {
+                color2 = "orange";
+            }
+            else if (entity.Name.StartsWithIgnoreCase("mq:", "redismq:", "mqtt:", "mns:", "emq:"))
+            {
+                color2 = "mediumpurple";
+            }
+            else if (entity.Name.StartsWithIgnoreCase("redis:"))
+            {
+                color2 = "palevioletred";
+            }
             <tr>
                 @if (set.EnableSelect)
                 {
                     <td class="text-center"><input type="checkbox" name="keys" value="@entity.Id" /></td>
                 }
-                <td class="text-center">@entity.AppName</td>
-                <td title="@entity.Tag" style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;">@entity.Name</td>
+                <td class="text-center"><a href="@url1" title="应用最近的监控图表">@entity.AppName</a></td>
+                <td title="@entity.Tag" style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url2" style="color: @color2">@entity.Name</a></td>
                 <td class="text-center">
                     <i class="glyphicon glyphicon-@(entity.Success ? "ok" : "remove")" style="color: @(entity.Success ? "green" : "red");"></i>
                 </td>
@@ -101,13 +117,28 @@
                 {
                     color = "orange";
                 }
-                else if (entity.Name.StartsWithIgnoreCase("net:", "rpc:", "mqtt:", "biz:", "emq:"))
+                else if (entity.Name.StartsWithIgnoreCase("net:", "rpc:", "mq:", "redismq:", "mqtt:", "mns:", "emq:"))
                 {
                     color = "mediumpurple";
                 }
+                var color2 = "";
+                if (entity.Name.StartsWithIgnoreCase("db:"))
+                {
+                    color2 = "orange";
+                }
+                else if (entity.Name.StartsWithIgnoreCase("mq:", "redismq:", "mqtt:", "mns:", "emq:"))
+                {
+                    color2 = "mediumpurple";
+                }
+                else if (entity.Name.StartsWithIgnoreCase("redis:"))
+                {
+                    color2 = "palevioletred";
+                }
+                var url1 = $"appDayStat?appId={entity.AppId}";
+                var url2 = $"traceDayStat?appid={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}";
                 <tr>
-                    <td class="text-center">@entity.AppName</td>
-                    <td title="@entity.Tag" style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;">@entity.Name</td>
+                    <td class="text-center"><a href="@url1" title="应用最近的监控图表">@entity.AppName</a></td>
+                    <td title="@entity.Tag" style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url2" style="color: @color2">@entity.Name</a></td>
                     <td title="@msg">
                         @if (left < 0.96)
                         {

@@ -13,6 +13,13 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
         protected override IEnumerable<AppTracer> Search(Pager p)
         {
+            var id = p["Id"].ToInt(-1);
+            if (id > 0)
+            {
+                var app = AppTracer.FindByID(id);
+                if (app != null) return new[] { app };
+            }
+
             var category = p["category"];
             var enable = p["enable"]?.ToBoolean();
 
