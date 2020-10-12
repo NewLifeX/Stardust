@@ -19,6 +19,9 @@ namespace Stardust.Server.Services
     /// <summary>应用统计服务</summary>
     public class AppDayStatService : IAppDayStatService
     {
+        /// <summary>批计算周期。默认30秒</summary>
+        public Int32 BatchPeriod { get; set; } = 30;
+
         private TimerX _timer;
         private readonly ConcurrentBag<DateTime> _bag = new ConcurrentBag<DateTime>();
 
@@ -29,11 +32,11 @@ namespace Stardust.Server.Services
             if (!_bag.Contains(date)) _bag.Add(date);
 
             // 初始化定时器
-            if (_timer == null)
+            if (_timer == null && BatchPeriod > 0)
             {
                 lock (this)
                 {
-                    if (_timer == null) _timer = new TimerX(DoTraceStat, null, 5_000, 30_000) { Async = true };
+                    if (_timer == null && BatchPeriod > 0) _timer = new TimerX(DoTraceStat, null, 5_000, BatchPeriod * 1000) { Async = true };
                 }
             }
         }

@@ -27,8 +27,11 @@ namespace Stardust.Server.Services
     /// <summary>跟踪统计服务</summary>
     public class TraceStatService : ITraceStatService
     {
-        /// <summary>开始时间</summary>
-        public DateTime StartTime { get; set; }
+        /// <summary>流计算周期。默认30秒</summary>
+        public Int32 FlowPeriod { get; set; } = 30;
+
+        /// <summary>批计算周期。默认300秒</summary>
+        public Int32 BatchPeriod { get; set; } = 300;
 
         private TimerX _timerFlow;
         private TimerX _timerBatch;
@@ -109,12 +112,18 @@ namespace Stardust.Server.Services
         /// <summary>初始化定时器</summary>
         public void Init()
         {
-            if (_timerFlow == null)
+            if (_timerFlow == null && FlowPeriod > 0)
             {
                 lock (this)
                 {
-                    if (_timerFlow == null) _timerFlow = new TimerX(DoFlowStat, null, 5_000, 30_000) { Async = true };
-                    if (_timerBatch == null) _timerBatch = new TimerX(DoBatchStat, null, 5_000, 300_000) { Async = true };
+                    if (_timerFlow == null && FlowPeriod > 0) _timerFlow = new TimerX(DoFlowStat, null, 5_000, FlowPeriod * 1000) { Async = true };
+                }
+            }
+            if (_timerBatch == null && BatchPeriod > 0)
+            {
+                lock (this)
+                {
+                    if (_timerBatch == null && BatchPeriod > 0) _timerBatch = new TimerX(DoBatchStat, null, 5_000, BatchPeriod * 1000) { Async = true };
                 }
             }
         }

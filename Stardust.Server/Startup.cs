@@ -40,10 +40,12 @@ namespace Stardust.Server
                 services.AddSingleton<ITracer>(tracer);
             }
 
+            var set2 = Stardust.Server.Setting.Current;
+
             // 统计服务
-            var traceService = new TraceStatService();
+            var traceService = new TraceStatService { FlowPeriod = set2.MonitorFlowPeriod, BatchPeriod = set2.MonitorBatchPeriod };
             services.AddSingleton<ITraceStatService>(traceService);
-            var appStatService = new AppDayStatService();
+            var appStatService = new AppDayStatService { BatchPeriod = set2.MonitorBatchPeriod };
             services.AddSingleton<IAppDayStatService>(appStatService);
 
             services.AddHttpClient();
