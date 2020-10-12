@@ -308,7 +308,7 @@ namespace Stardust.Server.Services
         }
     }
 
-    class DayQueue : EntityDeferredQueue
+    class DayQueue : MyQueue
     {
         public TraceDayStat GetOrAdd(DateTime date, Int32 appId, String name, out String key)
         {
@@ -318,7 +318,7 @@ namespace Stardust.Server.Services
         }
     }
 
-    class HourQueue : EntityDeferredQueue
+    class HourQueue : MyQueue
     {
         public TraceHourStat GetOrAdd(DateTime date, Int32 appId, String name, out String key)
         {
@@ -328,7 +328,7 @@ namespace Stardust.Server.Services
         }
     }
 
-    class MinuteQueue : EntityDeferredQueue
+    class MinuteQueue : MyQueue
     {
         public TraceMinuteStat GetOrAdd(DateTime date, Int32 appId, String name, out String key)
         {
@@ -336,5 +336,19 @@ namespace Stardust.Server.Services
             key = model.Key;
             return GetOrAdd(key, k => TraceMinuteStat.FindOrAdd(model));
         }
+    }
+
+    class MyQueue : EntityDeferredQueue
+    {
+        #region 方法
+        /// <summary>处理一批</summary>
+        /// <param name="list"></param>
+        public override Int32 Process(IList<Object> list)
+        {
+            if (list.Count == 0) return 0;
+
+            return list.Cast<IEntity>().Update();
+        }
+        #endregion
     }
 }
