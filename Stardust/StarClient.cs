@@ -317,7 +317,7 @@ namespace Stardust
                 if (rs != null)
                 {
                     // 由服务器改变采样频率
-                    if (rs.Period > 0) _timer.Period = rs.Period;
+                    if (rs.Period > 0) _timer.Period = rs.Period * 1000;
 
                     var dt = rs.Time.ToDateTime();
                     if (dt.Year > 2000)
