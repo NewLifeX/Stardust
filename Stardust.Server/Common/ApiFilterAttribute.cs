@@ -37,7 +37,7 @@ namespace Stardust.Server.Common
             {
                 if (context.Result is ObjectResult obj)
                 {
-                    context.Result = new JsonResult(new { code = 0, data = obj.Value });
+                    context.Result = new JsonResult(new { code = obj.StatusCode ?? 0, data = obj.Value });
                 }
                 else if (context.Result is EmptyResult)
                 {
