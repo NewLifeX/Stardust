@@ -160,7 +160,7 @@ namespace Stardust
 
                 MachineName = Environment.MachineName,
                 UserName = Environment.UserName,
-                IP = NetHelper.GetIPsWithCache().Where(ip => !IPAddress.IsLoopback(ip) && ip.GetAddressBytes()[0] != 169).Join(),
+                IP = NetHelper.GetIPsWithCache().Where(ip => ip.IsIPv4() && !IPAddress.IsLoopback(ip) && ip.GetAddressBytes()[0] != 169).Join(),
 
                 ProcessorCount = Environment.ProcessorCount,
                 Memory = mi.Memory,

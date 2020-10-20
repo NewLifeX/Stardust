@@ -35,7 +35,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.XCode" Version="10.0.2020.1015-beta2" />
+    <PackageReference Include="NewLife.XCode" Version="10.0.2020.1020-beta4" />
   </ItemGroup>
 
   <ItemGroup>
