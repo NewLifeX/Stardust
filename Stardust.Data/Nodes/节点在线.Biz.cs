@@ -92,18 +92,20 @@ namespace Stardust.Data.Nodes
         /// <param name="nodeId">节点</param>
         /// <param name="provinceId">省份</param>
         /// <param name="cityId">城市</param>
+        /// <param name="category">类别</param>
         /// <param name="start">开始时间</param>
         /// <param name="end">结束时间</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页排序参数，同时返回满足条件的总记录数</param>
         /// <returns>实体集</returns>
-        public static IList<NodeOnline> Search(Int32 nodeId, Int32 provinceId, Int32 cityId, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<NodeOnline> Search(Int32 nodeId, Int32 provinceId, Int32 cityId, String category, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (nodeId >= 0) exp &= _.NodeID == nodeId;
             if (provinceId >= 0) exp &= _.ProvinceID == provinceId;
             if (cityId >= 0) exp &= _.CityID == cityId;
+            if (!category.IsNullOrEmpty()) exp &= _.Category == category;
 
             exp &= _.CreateTime.Between(start, end);
 

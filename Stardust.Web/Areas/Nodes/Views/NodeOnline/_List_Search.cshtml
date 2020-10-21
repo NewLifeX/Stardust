@@ -6,4 +6,8 @@
     var fact = ViewBag.Factory as IEntityFactory;
     var page = ViewBag.Page as Pager;
 }
+<div class="form-group">
+    <label for="category" class="control-label">类别：</label>
+    @Html.ForDropDownList("category", Node.FindAllCategory(), page["category"], "全部", true)
+</div>
 @await Html.PartialAsync("_Area2", "")

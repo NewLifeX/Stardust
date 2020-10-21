@@ -19,10 +19,11 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             var provinceId = rids.Length > 0 ? rids[0] : -1;
             var cityId = rids.Length > 1 ? rids[1] : -1;
 
+            var category = p["category"];
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            return NodeOnline.Search(nodeId, provinceId, cityId, start, end, p["Q"], p);
+            return NodeOnline.Search(nodeId, provinceId, cityId, category, start, end, p["Q"], p);
         }
     }
 }
