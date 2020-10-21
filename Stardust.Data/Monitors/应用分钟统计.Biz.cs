@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -11,6 +11,7 @@ using System.Web;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
+using NewLife.Caching;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Model;
@@ -29,11 +30,14 @@ namespace Stardust.Data.Monitors
     public partial class AppMinuteStat : Entity<AppMinuteStat>
     {
         #region 对象操作
+        private static ICache _cache = Cache.Default;
         static AppMinuteStat()
         {
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
-            //var df = Meta.Factory.AdditionalFields;
-            //df.Add(nameof(AppId));
+            var df = Meta.Factory.AdditionalFields;
+            df.Add(nameof(Total));
+            df.Add(nameof(Errors));
+            df.Add(nameof(TotalCost));
 
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Modules.Add<TimeModule>();
@@ -49,56 +53,18 @@ namespace Stardust.Data.Monitors
             // 建议先调用基类方法，基类方法会做一些统一处理
             base.Valid(isNew);
 
-            // 在新插入数据或者修改了指定字段时进行修正
-            //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
-            //if (!Dirtys[nameof(UpdateTime)]) UpdateTime = DateTime.Now;
-
-            // 检查唯一索引
-            // CheckExist(isNew, nameof(StatTime), nameof(AppId));
+            Cost = Total == 0 ? 0 : (Int32)(TotalCost / Total);
         }
-
-        ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
-        //[EditorBrowsable(EditorBrowsableState.Never)]
-        //protected override void InitData()
-        //{
-        //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
-        //    if (Meta.Session.Count > 0) return;
-
-        //    if (XTrace.Debug) XTrace.WriteLine("开始初始化AppMinuteStat[应用分钟统计]数据……");
-
-        //    var entity = new AppMinuteStat();
-        //    entity.ID = 0;
-        //    entity.StatTime = DateTime.Now;
-        //    entity.AppId = 0;
-        //    entity.Total = 0;
-        //    entity.Errors = 0;
-        //    entity.TotalCost = 0;
-        //    entity.Cost = 0;
-        //    entity.MaxCost = 0;
-        //    entity.MinCost = 0;
-        //    entity.CreateTime = DateTime.Now;
-        //    entity.UpdateTime = DateTime.Now;
-        //    entity.Insert();
-
-        //    if (XTrace.Debug) XTrace.WriteLine("完成初始化AppMinuteStat[应用分钟统计]数据！");
-        //}
-
-        ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
-        ///// <returns></returns>
-        //public override Int32 Insert()
-        //{
-        //    return base.Insert();
-        //}
-
-        ///// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>
-        ///// <returns></returns>
-        //protected override Int32 OnDelete()
-        //{
-        //    return base.OnDelete();
-        //}
         #endregion
 
         #region 扩展属性
+        /// <summary>应用</summary>
+        [XmlIgnore, IgnoreDataMember]
+        public AppTracer App => Extends.Get(nameof(App), k => AppTracer.FindByID(AppId));
+
+        /// <summary>应用</summary>
+        [Map(nameof(AppId))]
+        public String AppName => App + "";
         #endregion
 
         #region 扩展查询
@@ -128,6 +94,23 @@ namespace Stardust.Data.Monitors
             if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.ID == id);
 
             return FindAll(_.AppId == appId & _.ID == id);
+        }
+
+        /// <summary>查询某应用某天的所有统计，带缓存</summary>
+        /// <param name="appId"></param>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public static IList<AppMinuteStat> FindAllByAppIdWithCache(Int32 appId, DateTime date)
+        {
+            var key = $"AppMinuteStat:FindAllByAppIdWithCache:{appId}#{date:yyyyMMdd}";
+            if (_cache.TryGetValue<IList<AppMinuteStat>>(key, out var list) && list != null) return list;
+
+            // 查询数据库，即时空值也缓存，避免缓存穿透
+            list = FindAll(_.AppId == appId & _.StatTime >= date & _.StatTime < date.AddDays(1));
+
+            _cache.Set(key, list, 10);
+
+            return list;
         }
         #endregion
 
@@ -161,6 +144,30 @@ namespace Stardust.Data.Monitors
         #endregion
 
         #region 业务操作
+        private static AppMinuteStat FindByTrace(TraceStatModel model, Boolean cache)
+        {
+            var key = $"AppMinuteStat:FindByTrace:{model.Key}";
+            if (cache && _cache.TryGetValue<AppMinuteStat>(key, out var st)) return st;
+
+            st = FindAllByAppIdWithCache(model.AppId, model.Time.Date)
+                .FirstOrDefault(e => e.StatTime == model.Time);
+
+            // 查询数据库
+            if (st == null) st = Find(_.StatTime == model.Time & _.AppId == model.AppId);
+
+            if (st != null) _cache.Set(key, st, 60);
+
+            return st;
+        }
+
+        /// <summary>查找统计行</summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public static AppMinuteStat FindOrAdd(TraceStatModel model)
+        {
+            // 高并发下获取或新增对象
+            return GetOrAdd(model, FindByTrace, m => new AppMinuteStat { StatTime = m.Time, AppId = m.AppId });
+        }
         #endregion
     }
 }

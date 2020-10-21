@@ -44,6 +44,7 @@ namespace Stardust.Server.Services
         private readonly DayQueue _dayQueue = new DayQueue { Period = 60 };
         private readonly HourQueue _hourQueue = new HourQueue { Period = 60 };
         private readonly MinuteQueue _minuteQueue = new MinuteQueue { Period = 60 };
+        private readonly AppMinuteQueue _appMinuteQueue = new AppMinuteQueue { Period = 60 };
 
         private Int32 _count;
 
@@ -182,6 +183,19 @@ namespace Stardust.Server.Services
 
                     _minuteQueue.Commit(key);
                 }
+
+                // 应用分钟
+                {
+                    var st = _appMinuteQueue.GetOrAdd(td.StatMinute, td.AppId, out var key);
+
+                    st.Total += td.Total;
+                    st.Errors += td.Errors;
+                    st.TotalCost += td.TotalCost;
+                    if (st.MaxCost < td.MaxCost) st.MaxCost = td.MaxCost;
+                    if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
+
+                    _appMinuteQueue.Commit(key);
+                }
             }
         }
 
@@ -297,13 +311,12 @@ namespace Stardust.Server.Services
 
             // 统计数据
             var list = TraceData.SearchGroupAppAndName(appId, start, end);
+            list = list.Where(e => !e.Name.IsNullOrEmpty()).ToList();
             if (list.Count == 0) return;
 
             // 聚合
             foreach (var item in list)
             {
-                if (item.Name.IsNullOrEmpty()) continue;
-
                 var st = _minuteQueue.GetOrAdd(item.StatMinute, appId, item.Name, out var key);
 
                 st.Total = item.Total;
@@ -313,6 +326,23 @@ namespace Stardust.Server.Services
                 st.MinCost = item.MinCost;
 
                 _minuteQueue.Commit(key);
+            }
+
+            // 聚合应用分钟统计
+            foreach (var item in list.GroupBy(e => e.AppId + "#" + e.StatMinute))
+            {
+                var traces = item.ToList();
+                var st = _appMinuteQueue.GetOrAdd(traces[0].StatMinute, traces[0].AppId, out var key);
+
+                st.Total = traces.Sum(e => e.Total);
+                st.Errors = traces.Sum(e => e.Errors);
+                st.TotalCost = traces.Sum(e => e.TotalCost);
+                st.MaxCost = traces.Max(e => e.MaxCost);
+                //st.MinCost = traces.Min(e => e.MinCost);
+                var vs2 = traces.Where(e => e.MinCost > 0).ToList();
+                if (vs2.Count > 0) st.MinCost = vs2.Min(e => e.MinCost);
+
+                _appMinuteQueue.Commit(key);
             }
         }
     }
@@ -344,6 +374,16 @@ namespace Stardust.Server.Services
             var model = new TraceStatModel { Time = date, AppId = appId, Name = name };
             key = model.Key;
             return GetOrAdd(key, k => TraceMinuteStat.FindOrAdd(model));
+        }
+    }
+
+    class AppMinuteQueue : MyQueue
+    {
+        public AppMinuteStat GetOrAdd(DateTime date, Int32 appId, out String key)
+        {
+            var model = new TraceStatModel { Time = date, AppId = appId };
+            key = model.Key;
+            return GetOrAdd(key, k => AppMinuteStat.FindOrAdd(model));
         }
     }
 
