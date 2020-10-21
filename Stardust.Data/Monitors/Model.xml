@@ -164,4 +164,23 @@
       <Index Columns="StatDate,AppId" Unique="True" />
     </Indexes>
   </Table>
+  <Table Name="AppMinuteStat" Description="应用分钟统计。每应用每5分钟统计，用于分析应用健康状况">
+    <Columns>
+      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="StatTime" DataType="DateTime" Description="统计分钟" />
+      <Column Name="AppId" DataType="Int32" Description="应用" />
+      <Column Name="Total" DataType="Int32" Description="总次数" />
+      <Column Name="Errors" DataType="Int32" Description="错误数" />
+      <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
+      <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数" />
+      <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
+      <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+    </Columns>
+    <Indexes>
+      <Index Columns="StatTime,AppId" Unique="True" />
+      <Index Columns="AppId,Id" />
+    </Indexes>
+  </Table>
 </Tables>
