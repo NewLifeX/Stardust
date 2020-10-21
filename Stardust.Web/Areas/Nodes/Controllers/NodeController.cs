@@ -30,13 +30,14 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             var provinceId = rids.Length > 0 ? rids[0] : -1;
             var cityId = rids.Length > 1 ? rids[1] : -1;
 
+            var category = p["category"];
             var version = p["version"];
             var enable = p["enable"]?.ToBoolean();
 
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            return Node.Search(provinceId, cityId, version, enable, start, end, p["Q"], p);
+            return Node.Search(provinceId, cityId, category, version, enable, start, end, p["Q"], p);
         }
 
         /// <summary>搜索</summary>
@@ -51,13 +52,14 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             // 默认排序
             if (page.Sort.IsNullOrEmpty()) page.Sort = _.Name;
 
-            var list = Node.Search(provinceId, cityId, null, null, DateTime.MinValue, DateTime.MinValue, key, page);
+            var list = Node.Search(provinceId, cityId, null, null, null, DateTime.MinValue, DateTime.MinValue, key, page);
 
             return Json(0, null, list.Select(e => new
             {
                 e.ID,
                 e.Code,
                 e.Name,
+                e.Category,
             }).ToArray());
         }
 
