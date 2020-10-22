@@ -77,7 +77,7 @@ namespace Stardust.Server.Services
                 var error2 = _cache.Get<Int32>("alarm:" + appId);
                 if (error2 == 0 || st.Errors > error2 * 2)
                 {
-                    _cache.Set("alarm:" + appId, st.Errors);
+                    _cache.Set("alarm:" + appId, st.Errors, 5 * 60);
 
                     if (app.AlarmRobot.Contains("qyapi.weixin"))
                         SendWeixin(app, st);
