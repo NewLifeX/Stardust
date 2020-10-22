@@ -120,16 +120,16 @@ namespace Stardust.Server.Services
                 }
             }
 
+            var str = sb.ToString();
+            if (str.Length > 2048) str = str.Substring(0, 2048);
+
             // 构造网址
             var url = Setting.Current.WebUrl;
             if (!url.IsNullOrEmpty())
             {
                 url = url.EnsureEnd("/") + "Monitors/appMinuteStat?appId=" + st.AppId;
-                sb.AppendLine($"[更多信息]({url})");
+                str += Environment.NewLine + $"[更多信息]({url})";
             }
-
-            var str = sb.ToString();
-            if (str.Length > 2048) str = str.Substring(0, 2048);
 
             _weixin.SendMarkDown(str);
         }
