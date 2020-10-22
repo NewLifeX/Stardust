@@ -42,11 +42,16 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             // 监控视图，没有选应用
             else if (appId < 0 && p["t"] == "dash")
             {
-                // 最近一段时间
-                if (start.Year < 2000) start = DateTime.Now.AddMinutes(-5);
+                // 最近一段时间，5~10分钟
+                if (start.Year < 2000)
+                {
+                    var time = DateTime.Now;
+                    var minute = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
+                    start = minute.AddMinutes(-5);
+                }
 
                 p.OrderBy = $"{__.Errors} desc, {__.Total} desc";
-                p.PageSize = 20;
+                p.PageSize = 50;
 
                 PageSetting.EnableNavbar = false;
             }
