@@ -10,7 +10,7 @@ using XCode;
 namespace Stardust.Web.Areas.Monitors.Controllers
 {
     [MonitorsArea]
-    public class SampleDataController : EntityController<SampleData>
+    public class SampleDataController : ReadOnlyEntityController<SampleData>
     {
         static SampleDataController()
         {

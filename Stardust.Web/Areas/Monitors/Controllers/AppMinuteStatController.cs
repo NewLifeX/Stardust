@@ -11,7 +11,7 @@ using static Stardust.Data.Monitors.AppMinuteStat;
 namespace Stardust.Web.Areas.Monitors.Controllers
 {
     [MonitorsArea]
-    public class AppMinuteStatController : EntityController<AppMinuteStat>
+    public class AppMinuteStatController : ReadOnlyEntityController<AppMinuteStat>
     {
         static AppMinuteStatController()
         {
