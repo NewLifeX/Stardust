@@ -39,13 +39,13 @@ namespace Stardust.Server
         [Description("节点编码公式。选择NodeInfo哪些硬件信息来计算节点编码，支持Crc/Crc16/MD5/MD5_16，默认Crc({UUID}@{MachineGuid}@{Macs})")]
         public String NodeCodeFormula { get; set; } = "Crc({UUID}@{MachineGuid}@{Macs})";
 
-        /// <summary>监控流统计。默认30秒</summary>
-        [Description("监控流统计。默认30秒")]
-        public Int32 MonitorFlowPeriod { get; set; } = 30;
+        /// <summary>监控流统计。默认5秒</summary>
+        [Description("监控流统计。默认5秒")]
+        public Int32 MonitorFlowPeriod { get; set; } = 5;
 
         /// <summary>监控流统计。默认30秒</summary>
-        [Description("监控批统计。默认300秒")]
-        public Int32 MonitorBatchPeriod { get; set; } = 300;
+        [Description("监控批统计。默认30秒")]
+        public Int32 MonitorBatchPeriod { get; set; } = 30;
 
         /// <summary>监控告警周期。默认30秒</summary>
         [Description("监控告警周期。默认30秒")]
