@@ -69,6 +69,12 @@ namespace Stardust.Data.Monitors
             //return Find(_.ID == id);
         }
 
+        /// <summary>根据应用和时间查找</summary>
+        /// <param name="appId"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public static IList<TraceMinuteStat> FindAllByAppIdAndTime(Int32 appId, DateTime time) => FindAll(_.AppId == appId & _.StatTime == time);
+
         /// <summary>查询某应用某天的所有统计，带缓存</summary>
         /// <param name="appId"></param>
         /// <param name="date"></param>

@@ -47,6 +47,8 @@ namespace Stardust.Server
             services.AddSingleton<ITraceStatService>(traceService);
             var appStatService = new AppDayStatService { BatchPeriod = set2.MonitorBatchPeriod };
             services.AddSingleton<IAppDayStatService>(appStatService);
+            var alarmService = new AlarmService { Period = set2.AlarmPeriod };
+            services.AddSingleton<IAlarmService>(alarmService);
 
             services.AddHttpClient();
 

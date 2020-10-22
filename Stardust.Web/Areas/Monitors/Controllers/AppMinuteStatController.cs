@@ -40,7 +40,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 p.PageSize = 24 * 60 / 5;
             }
             // 监控视图，没有选应用
-            else if (appId < 0)
+            else if (appId < 0 && p["t"] == "dash")
             {
                 // 最近一段时间
                 if (start.Year < 2000) start = DateTime.Now.AddMinutes(-5);

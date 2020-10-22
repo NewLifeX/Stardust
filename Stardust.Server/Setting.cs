@@ -46,6 +46,14 @@ namespace Stardust.Server
         /// <summary>监控流统计。默认30秒</summary>
         [Description("监控批统计。默认300秒")]
         public Int32 MonitorBatchPeriod { get; set; } = 300;
+
+        /// <summary>监控告警周期。默认30秒</summary>
+        [Description("监控告警周期。默认30秒")]
+        public Int32 AlarmPeriod { get; set; } = 30;
+
+        /// <summary>控制台地址。用于监控告警地址</summary>
+        [Description("控制台地址。用于监控告警地址")]
+        public String WebUrl { get; set; } = "";
         #endregion
 
         #region 方法
@@ -53,7 +61,7 @@ namespace Stardust.Server
         protected override void OnLoaded()
         {
             if (TokenSecret.IsNullOrEmpty() || TokenSecret.Split(':').Length != 2) TokenSecret = $"HS256:{Rand.NextString(16)}";
-            
+
             base.OnLoaded();
         }
         #endregion
