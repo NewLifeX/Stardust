@@ -43,7 +43,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             {
                 p.Sort = __.Total;
                 p.Desc = true;
-                p.PageSize = 100;
+                p.PageSize = 24 * 60 / 5;
             }
 
             p.RetrieveState = true;
