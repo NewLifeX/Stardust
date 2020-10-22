@@ -30,7 +30,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             {
                 p.Sort = __.StatTime;
                 p.Desc = true;
-                p.PageSize = 60 / 5;
+                p.PageSize = 2 * 60 / 5;
             }
             // 选了应用和时间，按照接口调用次数降序
             else if (appId >= 0 && start.Year > 2000 && p.Sort.IsNullOrEmpty())
@@ -38,6 +38,15 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 p.Sort = __.Total;
                 p.Desc = true;
                 p.PageSize = 24 * 60 / 5;
+            }
+            // 监控视图，没有选应用
+            else if (appId < 0)
+            {
+                // 最近一段时间
+                if (start.Year < 2000) start = DateTime.Now.AddMinutes(-5);
+
+                p.OrderBy = $"{__.Errors} desc, {__.Total} desc";
+                p.PageSize = 20;
             }
 
             p.RetrieveState = true;

@@ -33,7 +33,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             if (nodeId > 0)
             {
                 // 最近10小时
-                if (p.PageSize == 20 && nodeId > 0) p.PageSize = 600;
+                if (p.PageSize == 20 && nodeId > 0) p.PageSize = 24 * 60;
 
                 PageSetting.EnableNavbar = false;
             }
