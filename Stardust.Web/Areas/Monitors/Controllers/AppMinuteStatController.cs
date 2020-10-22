@@ -47,6 +47,8 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
                 p.OrderBy = $"{__.Errors} desc, {__.Total} desc";
                 p.PageSize = 20;
+
+                PageSetting.EnableNavbar = false;
             }
 
             p.RetrieveState = true;
