@@ -52,6 +52,9 @@ namespace Stardust.Server
 
             services.AddHttpClient();
 
+            // 数据保留，定时删除过期数据
+            services.AddHostedService<DataRetentionService>();
+
             services.AddControllers()
                 .AddJsonOptions(options =>
                 {

@@ -125,6 +125,10 @@ namespace Stardust.Data.Nodes
         #endregion
 
         #region 业务操作
+        /// <summary>删除指定日期之前的数据</summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public static Int32 DeleteBefore(DateTime date) => Delete(_.ID < Meta.Factory.Snow.GetId(date));
         #endregion
     }
 }
