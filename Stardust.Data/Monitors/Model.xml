@@ -13,6 +13,8 @@
       <Column Name="Excludes" DataType="String" Length="2000" Description="排除项。要排除的操作名，支持*模糊匹配" />
       <Column Name="Timeout" DataType="Int32" Description="超时时间。超过该时间时强制采样，默认5000毫秒" />
       <Column Name="Nodes" DataType="String" Length="500" Description="节点集。该应用最近一段时间所涉及的来源地址" />
+      <Column Name="AlarmThreshold" DataType="Int32" Description="告警阈值。错误数达到该值时触发告警，0表示不启用" />
+      <Column Name="AlarmRobot" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
       <Column Name="CreateUser" DataType="String" Description="创建者" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />

@@ -107,6 +107,22 @@ namespace Stardust.Data.Monitors
         [BindColumn("Nodes", "节点集。该应用最近一段时间所涉及的来源地址", "")]
         public String Nodes { get => _Nodes; set { if (OnPropertyChanging("Nodes", value)) { _Nodes = value; OnPropertyChanged("Nodes"); } } }
 
+        private Int32 _AlarmThreshold;
+        /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用</summary>
+        [DisplayName("告警阈值")]
+        [Description("告警阈值。错误数达到该值时触发告警，0表示不启用")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AlarmThreshold", "告警阈值。错误数达到该值时触发告警，0表示不启用", "")]
+        public Int32 AlarmThreshold { get => _AlarmThreshold; set { if (OnPropertyChanging("AlarmThreshold", value)) { _AlarmThreshold = value; OnPropertyChanged("AlarmThreshold"); } } }
+
+        private String _AlarmRobot;
+        /// <summary>告警机器人。钉钉、企业微信等</summary>
+        [DisplayName("告警机器人")]
+        [Description("告警机器人。钉钉、企业微信等")]
+        [DataObjectField(false, false, true, 500)]
+        [BindColumn("AlarmRobot", "告警机器人。钉钉、企业微信等", "")]
+        public String AlarmRobot { get => _AlarmRobot; set { if (OnPropertyChanging("AlarmRobot", value)) { _AlarmRobot = value; OnPropertyChanged("AlarmRobot"); } } }
+
         private String _CreateUser;
         /// <summary>创建者</summary>
         [DisplayName("创建者")]
@@ -193,6 +209,8 @@ namespace Stardust.Data.Monitors
                     case "Excludes": return _Excludes;
                     case "Timeout": return _Timeout;
                     case "Nodes": return _Nodes;
+                    case "AlarmThreshold": return _AlarmThreshold;
+                    case "AlarmRobot": return _AlarmRobot;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -219,6 +237,8 @@ namespace Stardust.Data.Monitors
                     case "Excludes": _Excludes = Convert.ToString(value); break;
                     case "Timeout": _Timeout = value.ToInt(); break;
                     case "Nodes": _Nodes = Convert.ToString(value); break;
+                    case "AlarmThreshold": _AlarmThreshold = value.ToInt(); break;
+                    case "AlarmRobot": _AlarmRobot = Convert.ToString(value); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -269,6 +289,12 @@ namespace Stardust.Data.Monitors
 
             /// <summary>节点集。该应用最近一段时间所涉及的来源地址</summary>
             public static readonly Field Nodes = FindByName("Nodes");
+
+            /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用</summary>
+            public static readonly Field AlarmThreshold = FindByName("AlarmThreshold");
+
+            /// <summary>告警机器人。钉钉、企业微信等</summary>
+            public static readonly Field AlarmRobot = FindByName("AlarmRobot");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
@@ -332,6 +358,12 @@ namespace Stardust.Data.Monitors
 
             /// <summary>节点集。该应用最近一段时间所涉及的来源地址</summary>
             public const String Nodes = "Nodes";
+
+            /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用</summary>
+            public const String AlarmThreshold = "AlarmThreshold";
+
+            /// <summary>告警机器人。钉钉、企业微信等</summary>
+            public const String AlarmRobot = "AlarmRobot";
 
             /// <summary>创建者</summary>
             public const String CreateUser = "CreateUser";
