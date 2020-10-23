@@ -51,7 +51,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 }
 
                 p.OrderBy = $"{__.Errors} desc, {__.Total} desc";
-                p.PageSize = 50;
+                p.PageSize = 20;
 
                 PageSetting.EnableNavbar = false;
             }
@@ -69,7 +69,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 {
                     var chart = new ECharts
                     {
-                        Height = 400,
+                        Height = 800,
                     };
                     chart.SetX(list2, _.StatTime, e => e.StatTime.ToString("HH:mm"));
                     chart.SetY("调用次数");
@@ -131,7 +131,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                     Type = "bar",
                     ["stack"] = "总量",
                     ["label"] = new { show = true },
-                    Data = list2.Select(e => e.Total).ToArray(),
+                    Data = list2.Select(e => e.Total > 10000 ? e.Total / 1000 : e.Total).ToArray(),
                 });
 
                 ViewBag.Charts = new[] { chart };
