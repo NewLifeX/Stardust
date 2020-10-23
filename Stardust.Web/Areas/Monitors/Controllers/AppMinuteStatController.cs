@@ -93,6 +93,49 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                     ViewBag.Charts2 = new[] { chart };
                 }
             }
+            else if (list.Count > 0 && appId < 0)
+            {
+                var list2 = list.OrderBy(e => e.Errors).ThenBy(e => e.Total).ToList();
+
+                // 绘制柱状图
+                var chart = new ECharts
+                {
+                    Height = 400,
+                };
+                chart.SetTooltip("axis", "shadow");
+                chart.Legend = new { data = new[] { "总数", "错误数" } };
+                chart["grid"] = new { left = "3%", right = "4%", bottom = "3%", containLabel = true };
+
+                chart.XAxis = new[] { new { type = "value" } };
+                chart.YAxis = new[] {
+                    new {
+                        type = "category",
+                        axisTick = new { show = false },
+                        data = list2.Select(e => e.AppName).ToArray()
+                    }
+                };
+
+                //chart.Add(list2, _.Total, "bar");
+                //chart.Add(list2, _.Errors, "bar");
+                chart.Add(new Series
+                {
+                    Name = "错误数",
+                    Type = "bar",
+                    ["stack"] = "总量",
+                    ["label"] = new { show = true, position = "left" },
+                    Data = list2.Select(e => -e.Errors).ToArray(),
+                });
+                chart.Add(new Series
+                {
+                    Name = "总数",
+                    Type = "bar",
+                    ["stack"] = "总量",
+                    ["label"] = new { show = true },
+                    Data = list2.Select(e => e.Total).ToArray(),
+                });
+
+                ViewBag.Charts = new[] { chart };
+            }
 
             var ar = AppTracer.FindByID(appId);
             if (ar != null) ViewBag.Title = $"{ar}分钟统计";
