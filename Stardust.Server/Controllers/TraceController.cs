@@ -97,6 +97,9 @@ namespace Stardust.Server.Controllers
                 if (excludes != null && excludes.Any(e => e.IsMatch(item.Name))) continue;
                 if (item.Name.EndsWithIgnoreCase("/Trace/Report")) continue;
 
+                // 拒收超长项
+                if (item.Name.Length > TraceData._.Name.Length) continue;
+
                 var td = TraceData.Create(item);
                 td.AppId = app.ID;
                 td.ClientId = model.ClientId ?? ip;
