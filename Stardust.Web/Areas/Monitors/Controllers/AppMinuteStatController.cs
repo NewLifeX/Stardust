@@ -72,7 +72,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 {
                     var chart = new ECharts
                     {
-                        Height = 800,
+                        Height = 400,
                     };
                     chart.SetX(list2, _.StatTime, e => e.StatTime.ToString("HH:mm"));
                     chart.SetY("调用次数");
@@ -96,7 +96,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                     ViewBag.Charts2 = new[] { chart };
                 }
             }
-            else if (list.Count > 0 && appId < 0)
+            else if (list.Count > 0 && appId < 0 && p["t"] == "dash")
             {
                 var list2 = new List<AppMinuteStat>();
                 foreach (var item in list)
@@ -112,7 +112,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 // 绘制柱状图
                 var chart = new ECharts
                 {
-                    Height = 400,
+                    Height = 800,
                 };
                 chart.SetTooltip("axis", "shadow");
                 chart.Legend = new { data = new[] { "总数", "错误数" } };
