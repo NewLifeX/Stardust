@@ -54,6 +54,9 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 p.PageSize = 20;
 
                 PageSetting.EnableNavbar = false;
+                PageSetting.EnableAdd = false;
+                PageSetting.EnableKey = false;
+                PageSetting.EnableSelect = false;
             }
 
             p.RetrieveState = true;
@@ -95,7 +98,16 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             }
             else if (list.Count > 0 && appId < 0)
             {
-                var list2 = list.OrderBy(e => e.Errors).ThenBy(e => e.Total).ToList();
+                var list2 = new List<AppMinuteStat>();
+                foreach (var item in list)
+                {
+                    var st = list2.FirstOrDefault(e => e.AppId == item.AppId);
+                    if (st == null) list2.Add(st = new AppMinuteStat { AppId = item.AppId });
+
+                    st.Total += item.Total;
+                    st.Errors += item.Errors;
+                }
+                list2 = list2.OrderBy(e => e.Errors).ThenBy(e => e.Total).ToList();
 
                 // 绘制柱状图
                 var chart = new ECharts
@@ -131,7 +143,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                     Type = "bar",
                     ["stack"] = "总量",
                     ["label"] = new { show = true },
-                    Data = list2.Select(e => e.Total > 10000 ? e.Total / 1000 : e.Total).ToArray(),
+                    Data = list2.Select(e => e.Total).ToArray(),
                 });
 
                 ViewBag.Charts = new[] { chart };
