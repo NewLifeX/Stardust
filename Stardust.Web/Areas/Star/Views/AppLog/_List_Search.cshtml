@@ -1,0 +1,14 @@
+﻿@using NewLife;
+@using NewLife.Web;
+@using NewLife.Cube;
+@using XCode;
+@using Stardust.Data;
+@{
+    var fact = ViewBag.Factory as IEntityFactory;
+    var page = ViewBag.Page as Pager;
+}
+<div class="form-group">
+    <label for="appId" class="control-label">应用：</label>
+    @Html.ForDropDownList("appId", App.FindAllWithCache(), page["appId"], "全部", true)
+</div>
+@await Html.PartialAsync("_DateRange")
