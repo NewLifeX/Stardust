@@ -145,6 +145,31 @@ namespace Stardust.Data
         #endregion
 
         #region 业务操作
+        /// <summary>创建日志</summary>
+        /// <param name="appId"></param>
+        /// <param name="clientId"></param>
+        /// <param name="remark"></param>
+        /// <param name="ip"></param>
+        /// <returns></returns>
+        public static AppLog Create(Int32 appId, String clientId, String remark, String ip)
+        {
+            var log = new AppLog
+            {
+                AppId = appId,
+                ClientId = clientId,
+                Remark = remark,
+                CreateTime = DateTime.Now,
+                CreateIP = ip
+            };
+
+            //// 分表
+            //using var split = Meta.CreateSplit($"AppLog_{log.CreateTime:yyyyMMdd}", $"AppLog_{appId}");
+
+            //log.SaveAsync();
+            log.Insert();
+
+            return log;
+        }
         #endregion
     }
 }
