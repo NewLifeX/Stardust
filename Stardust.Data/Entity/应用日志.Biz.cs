@@ -97,7 +97,10 @@ namespace Stardust.Data
 
             var exp = new WhereExpression();
 
+            // 按天分表，只有具体时间才过滤
+            if (start == start.Date) start = DateTime.MinValue;
             exp &= _.Id.Between(start, end, Meta.Factory.Snow);
+
             if (appId >= 0) exp &= _.AppId == appId;
             if (!clientId.IsNullOrEmpty()) exp &= _.ClientId == clientId;
             if (!key.IsNullOrEmpty()) exp &= _.Message.Contains(key) | _.ClientId == key;
