@@ -100,7 +100,7 @@ namespace Stardust.Data
             exp &= _.Id.Between(start, end, Meta.Factory.Snow);
             if (appId >= 0) exp &= _.AppId == appId;
             if (!clientId.IsNullOrEmpty()) exp &= _.ClientId == clientId;
-            if (!key.IsNullOrEmpty()) exp &= _.Remark.Contains(key) | _.CreateIP.Contains(key);
+            if (!key.IsNullOrEmpty()) exp &= _.Message.Contains(key) | _.ClientId == key;
 
             return FindAll(exp, page);
         }
@@ -120,16 +120,21 @@ namespace Stardust.Data
         /// <summary>创建日志</summary>
         /// <param name="appId"></param>
         /// <param name="clientId"></param>
-        /// <param name="remark"></param>
+        /// <param name="ss"></param>
+        /// <param name="message"></param>
         /// <param name="ip"></param>
         /// <returns></returns>
-        public static AppLog Create(Int32 appId, String clientId, String remark, String ip)
+        public static AppLog Create(Int32 appId, String clientId, String[] ss, String message, String ip)
         {
             var log = new AppLog
             {
                 AppId = appId,
                 ClientId = clientId,
-                Remark = remark,
+                Time = ss[0],
+                ThreadId = ss[1],
+                Kind = ss[2],
+                Name = ss[3],
+                Message = message,
                 CreateTime = DateTime.Now,
                 CreateIP = ip
             };

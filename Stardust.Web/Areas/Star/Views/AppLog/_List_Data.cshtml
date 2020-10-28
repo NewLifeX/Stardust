@@ -23,6 +23,10 @@
             }
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AppId"))">应用</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ClientId"))">客户端</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Time"))">时间</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ThreadId"))">线程</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Kind"))">类型</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Name"))">名称</a></th>
             <th class="text-center">内容</th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("CreateTime"))">创建时间</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("CreateIP"))">创建地址</a></th>
@@ -42,7 +46,11 @@
                 }
                 <td><a href="App?ID=@entity.AppId">@entity.AppName</a></td>
                 <td>@entity.ClientId</td>
-                <td style="max-width:800px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;" title="@entity.Remark">@entity.Remark</td>
+                <td>@entity.Time</td>
+                <td>@entity.ThreadId</td>
+                <td>@entity.Kind</td>
+                <td>@entity.Name</td>
+                <td style="max-width:800px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;" title="@entity.Message">@entity.Message</td>
                 <td class="text-center">@entity.CreateTime.ToFullString("")</td>
                 <td class="text-center" title="@entity.CreateIP.IPToAddress()">@entity.CreateIP</td>
                 @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))

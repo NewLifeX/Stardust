@@ -33,7 +33,7 @@ namespace Stardust.Data
         [DisplayName("应用")]
         [Description("应用")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("AppId", "应用", "")]
+        [BindColumn("AppId", "应用", "", Master = true)]
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
         private String _ClientId;
@@ -41,16 +41,48 @@ namespace Stardust.Data
         [DisplayName("客户端")]
         [Description("客户端")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("ClientId", "客户端", "")]
+        [BindColumn("ClientId", "客户端", "", Master = true)]
         public String ClientId { get => _ClientId; set { if (OnPropertyChanging("ClientId", value)) { _ClientId = value; OnPropertyChanged("ClientId"); } } }
 
-        private String _Remark;
+        private String _Time;
+        /// <summary>时间</summary>
+        [DisplayName("时间")]
+        [Description("时间")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Time", "时间", "")]
+        public String Time { get => _Time; set { if (OnPropertyChanging("Time", value)) { _Time = value; OnPropertyChanged("Time"); } } }
+
+        private String _ThreadId;
+        /// <summary>线程</summary>
+        [DisplayName("线程")]
+        [Description("线程")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("ThreadId", "线程", "")]
+        public String ThreadId { get => _ThreadId; set { if (OnPropertyChanging("ThreadId", value)) { _ThreadId = value; OnPropertyChanged("ThreadId"); } } }
+
+        private String _Kind;
+        /// <summary>类型</summary>
+        [DisplayName("类型")]
+        [Description("类型")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Kind", "类型", "")]
+        public String Kind { get => _Kind; set { if (OnPropertyChanging("Kind", value)) { _Kind = value; OnPropertyChanged("Kind"); } } }
+
+        private String _Name;
+        /// <summary>名称</summary>
+        [DisplayName("名称")]
+        [Description("名称")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Name", "名称", "")]
+        public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
+
+        private String _Message;
         /// <summary>内容</summary>
         [DisplayName("内容")]
         [Description("内容")]
         [DataObjectField(false, false, true, -1)]
-        [BindColumn("Remark", "内容", "")]
-        public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
+        [BindColumn("Message", "内容", "")]
+        public String Message { get => _Message; set { if (OnPropertyChanging("Message", value)) { _Message = value; OnPropertyChanged("Message"); } } }
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
@@ -82,7 +114,11 @@ namespace Stardust.Data
                     case "Id": return _Id;
                     case "AppId": return _AppId;
                     case "ClientId": return _ClientId;
-                    case "Remark": return _Remark;
+                    case "Time": return _Time;
+                    case "ThreadId": return _ThreadId;
+                    case "Kind": return _Kind;
+                    case "Name": return _Name;
+                    case "Message": return _Message;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
                     default: return base[name];
@@ -95,7 +131,11 @@ namespace Stardust.Data
                     case "Id": _Id = value.ToLong(); break;
                     case "AppId": _AppId = value.ToInt(); break;
                     case "ClientId": _ClientId = Convert.ToString(value); break;
-                    case "Remark": _Remark = Convert.ToString(value); break;
+                    case "Time": _Time = Convert.ToString(value); break;
+                    case "ThreadId": _ThreadId = Convert.ToString(value); break;
+                    case "Kind": _Kind = Convert.ToString(value); break;
+                    case "Name": _Name = Convert.ToString(value); break;
+                    case "Message": _Message = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
                     default: base[name] = value; break;
@@ -117,8 +157,20 @@ namespace Stardust.Data
             /// <summary>客户端</summary>
             public static readonly Field ClientId = FindByName("ClientId");
 
+            /// <summary>时间</summary>
+            public static readonly Field Time = FindByName("Time");
+
+            /// <summary>线程</summary>
+            public static readonly Field ThreadId = FindByName("ThreadId");
+
+            /// <summary>类型</summary>
+            public static readonly Field Kind = FindByName("Kind");
+
+            /// <summary>名称</summary>
+            public static readonly Field Name = FindByName("Name");
+
             /// <summary>内容</summary>
-            public static readonly Field Remark = FindByName("Remark");
+            public static readonly Field Message = FindByName("Message");
 
             /// <summary>创建时间</summary>
             public static readonly Field CreateTime = FindByName("CreateTime");
@@ -141,8 +193,20 @@ namespace Stardust.Data
             /// <summary>客户端</summary>
             public const String ClientId = "ClientId";
 
+            /// <summary>时间</summary>
+            public const String Time = "Time";
+
+            /// <summary>线程</summary>
+            public const String ThreadId = "ThreadId";
+
+            /// <summary>类型</summary>
+            public const String Kind = "Kind";
+
+            /// <summary>名称</summary>
+            public const String Name = "Name";
+
             /// <summary>内容</summary>
-            public const String Remark = "Remark";
+            public const String Message = "Message";
 
             /// <summary>创建时间</summary>
             public const String CreateTime = "CreateTime";
