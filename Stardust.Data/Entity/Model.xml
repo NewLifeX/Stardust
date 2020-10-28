@@ -210,4 +210,18 @@
       <Index Columns="Level,Time" />
     </Indexes>
   </Table>
+  <Table Name="AppLog" Description="应用日志" ConnName="AppLog">
+    <Columns>
+      <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+      <Column Name="AppId" DataType="Int32" Description="应用" />
+      <Column Name="ClientId" DataType="String" Description="客户端" />
+      <Column Name="Remark" DataType="String" Length="-1" Description="内容" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+    </Columns>
+    <Indexes>
+      <Index Columns="AppId,ClientId,Id" />
+      <Index Columns="AppId,Id" />
+    </Indexes>
+  </Table>
 </Tables>
