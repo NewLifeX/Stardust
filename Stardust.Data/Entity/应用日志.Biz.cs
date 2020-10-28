@@ -79,12 +79,13 @@ namespace Stardust.Data
         /// <summary>高级查询</summary>
         /// <param name="appId">应用</param>
         /// <param name="clientId">客户端</param>
+        /// <param name="threadId">线程</param>
         /// <param name="start">开始时间</param>
         /// <param name="end">结束时间</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<AppLog> Search(Int32 appId, String clientId, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<AppLog> Search(Int32 appId, String clientId, Int32 threadId, DateTime start, DateTime end, String key, PageParameter page)
         {
             //if (appId <= 0) throw new ArgumentNullException(nameof(appId));
             //if (start.Year < 2000) throw new ArgumentNullException(nameof(start));
@@ -103,6 +104,7 @@ namespace Stardust.Data
 
             if (appId >= 0) exp &= _.AppId == appId;
             if (!clientId.IsNullOrEmpty()) exp &= _.ClientId == clientId;
+            if (threadId > 0) exp &= _.ThreadId == threadId;
             if (!key.IsNullOrEmpty()) exp &= _.Message.Contains(key) | _.ClientId == key;
 
             return FindAll(exp, page);

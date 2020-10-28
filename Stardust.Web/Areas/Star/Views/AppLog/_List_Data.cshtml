@@ -44,10 +44,10 @@
                 {
                     <td class="text-center"><input type="checkbox" name="keys" value="@entity.Id" /></td>
                 }
-                <td><a href="App?ID=@entity.AppId">@entity.AppName</a></td>
-                <td>@entity.ClientId</td>
+                <td><a href="AppLog?appId=@entity.AppId">@entity.AppName</a></td>
+                <td><a href="AppLog?appId=@entity.AppId&clientId=@entity.ClientId">@entity.ClientId</a></td>
                 <td>@entity.Time</td>
-                <td>@entity.ThreadId</td>
+                <td class="text-center"><a href="AppLog?appId=@entity.AppId&clientId=@entity.ClientId&threadId=@entity.ThreadId">@entity.ThreadId</a></td>
                 <td>@entity.Kind</td>
                 <td>@entity.Name</td>
                 <td style="max-width:800px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;" title="@entity.Message">@entity.Message</td>

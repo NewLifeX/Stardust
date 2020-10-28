@@ -23,13 +23,14 @@ namespace Stardust.Web.Areas.Star.Controllers
 
             var appId = p["appId"].ToInt(-1);
             var clientId = p["clientId"];
+            var threadId = p["threadId"].ToInt(-1);
 
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
             if (start.Year < 2000) start = DateTime.Today;
 
-            return AppLog.Search(appId, clientId, start, end, p["Q"], p);
+            return AppLog.Search(appId, clientId, threadId, start, end, p["Q"], p);
         }
     }
 }

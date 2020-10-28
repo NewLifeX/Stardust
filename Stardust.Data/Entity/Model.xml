@@ -224,7 +224,7 @@
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
     </Columns>
     <Indexes>
-      <Index Columns="AppId,ClientId,Id" />
+      <Index Columns="AppId,ClientId,ThreadId,Id" />
       <Index Columns="AppId,Id" />
     </Indexes>
   </Table>
