@@ -14,6 +14,8 @@ namespace Stardust.Web.Areas.Star.Controllers
             MenuOrder = 50;
         }
 
+        protected override AppLog Find(Object key) => AppLog.FindById(key.ToLong());
+
         protected override IEnumerable<AppLog> Search(Pager p)
         {
             PageSetting.EnableAdd = false;

@@ -1,26 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
-using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
-using NewLife.Log;
-using NewLife.Model;
-using NewLife.Reflection;
-using NewLife.Threading;
-using NewLife.Web;
 using XCode;
-using XCode.Cache;
-using XCode.Configuration;
-using XCode.DataAccessLayer;
 using XCode.Membership;
 
 namespace Stardust.Data
@@ -40,8 +25,8 @@ namespace Stardust.Data
             Meta.Modules.Add<IPModule>();
 
             // 分表分库
-            Meta.ShardConnName = e => $"AppLog_{e.CreateTime:yyyyMMdd}";
-            Meta.ShardTableName = e => $"AppLog_{e.AppId}";
+            Meta.ShardConnName = e => $"AppLog_{e.CreateTime:yyyyMM}";
+            Meta.ShardTableName = e => $"AppLog_{e.CreateTime:yyyyMMdd}";
         }
 
         /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
@@ -82,25 +67,11 @@ namespace Stardust.Data
         {
             if (id <= 0) return null;
 
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
+            // 分表
+            Meta.Factory.Snow.TryParse(id, out var time, out var _, out var _);
+            using var split = Meta.AutoSplit(new AppLog { CreateTime = time });
 
-            // 单对象缓存
-            return Meta.SingleCache[id];
-
-            //return Find(_.Id == id);
-        }
-
-        /// <summary>根据应用、客户端查找</summary>
-        /// <param name="appId">应用</param>
-        /// <param name="clientId">客户端</param>
-        /// <returns>实体列表</returns>
-        public static IList<AppLog> FindAllByAppIdAndClientId(Int32 appId, String clientId)
-        {
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.ClientId == clientId);
-
-            return FindAll(_.AppId == appId & _.ClientId == clientId);
+            return Find(_.Id == id);
         }
         #endregion
 
@@ -121,7 +92,8 @@ namespace Stardust.Data
             if (appId <= 0 || start.Year < 2000) return new List<AppLog>();
 
             // 分表
-            using var split = Meta.CreateSplit($"AppLog_{start:yyyyMMdd}", $"AppLog_{appId}");
+            //using var split = Meta.CreateSplit($"AppLog_{start:yyyyMMdd}", $"AppLog_{appId}");
+            using var split = Meta.AutoSplit(new AppLog { AppId = appId, CreateTime = start });
 
             var exp = new WhereExpression();
 
@@ -165,8 +137,8 @@ namespace Stardust.Data
             //// 分表
             //using var split = Meta.CreateSplit($"AppLog_{log.CreateTime:yyyyMMdd}", $"AppLog_{appId}");
 
-            //log.SaveAsync();
-            log.Insert();
+            log.SaveAsync();
+            //log.Insert();
 
             return log;
         }
