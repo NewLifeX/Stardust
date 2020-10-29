@@ -82,12 +82,12 @@ namespace Stardust
             }
 
             // 修正路径
-            var workDir = "";
+            var workDir = service.WorkingDirectory;
             var file = service.FileName;
             if (file.Contains("/") || file.Contains("\\"))
             {
                 file = file.GetFullPath();
-                workDir = Path.GetDirectoryName(file);
+                if (workDir.IsNullOrEmpty()) workDir = Path.GetDirectoryName(file);
             }
 
             var si = new ProcessStartInfo

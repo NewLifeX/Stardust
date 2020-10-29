@@ -19,9 +19,9 @@ namespace Stardust.Models
         [XmlAttribute]
         public String Arguments { get; set; }
 
-        ///// <summary>工作目录</summary>
-        //[XmlAttribute]
-        //public String WorkingDirectory { get; set; }
+        /// <summary>工作目录</summary>
+        [XmlAttribute]
+        public String WorkingDirectory { get; set; }
 
         /// <summary>是否自动启动</summary>
         [XmlAttribute]
