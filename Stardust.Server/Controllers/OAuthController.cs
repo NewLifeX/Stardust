@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Stardust.Models;
 using Stardust.Server.Common;
@@ -14,7 +15,7 @@ namespace Stardust.Server.Controllers
         private readonly AppService _service = new AppService();
 
         [ApiFilter]
-        public TokenModel Token([FromBody] TokenInModel model)
+        public TokenModel Token(TokenInModel model)
         {
             var set = Setting.Current;
 
