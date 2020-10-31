@@ -1,16 +1,12 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System;
 using Stardust.Data;
-using Stardust.Server.Services;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Xunit;
 
 namespace Stardust.Server.Services.Tests
 {
-    [TestClass()]
     public class AppServiceTests
     {
-        [TestMethod()]
+        [Fact]
         public void AuthorizeTest()
         {
             var app = App.FindByName("test");
@@ -19,8 +15,8 @@ namespace Stardust.Server.Services.Tests
             var service = new AppService();
 
             // 没有自动注册
-            var ex = Assert.ThrowsException<ArgumentOutOfRangeException>(() => service.Authorize("test", "xxx", false));
-            Assert.IsNotNull(ex);
+            var ex = Assert.Throws<ArgumentOutOfRangeException>(() => service.Authorize("test", "xxx", false));
+            Assert.NotNull(ex);
 
             // 启用
             app = App.FindByName("test");
@@ -29,21 +25,21 @@ namespace Stardust.Server.Services.Tests
 
             // 自动注册
             var rs = service.Authorize("test", "xxx", true);
-            Assert.IsNotNull(rs);
+            Assert.NotNull(rs);
 
-            Assert.IsNotNull(app);
-            Assert.AreEqual(app.ID, rs.ID);
+            Assert.NotNull(app);
+            Assert.Equal(app.ID, rs.ID);
 
             // 再次验证
             var rs2 = service.Authorize("test", "xxx", false);
-            Assert.IsNotNull(rs2);
-            Assert.AreEqual(app.ID, rs.ID);
+            Assert.NotNull(rs2);
+            Assert.Equal(app.ID, rs.ID);
 
             // 错误验证
-            Assert.ThrowsException<InvalidOperationException>(() => service.Authorize("test", "yyy", true));
+            Assert.Throws<InvalidOperationException>(() => service.Authorize("test", "yyy", true));
         }
 
-        [TestMethod()]
+        [Fact]
         public void IssueTokenTest()
         {
             var app = new App { Name = "test" };
@@ -52,15 +48,15 @@ namespace Stardust.Server.Services.Tests
             var service = new AppService();
 
             var model = service.IssueToken(app, set);
-            Assert.IsNotNull(model);
+            Assert.NotNull(model);
 
-            Assert.AreEqual(3, model.AccessToken.Split('.').Length);
-            Assert.AreEqual(3, model.RefreshToken.Split('.').Length);
-            Assert.AreEqual(set.TokenExpire, model.ExpireIn);
-            Assert.AreEqual("JWT", model.TokenType);
+            Assert.Equal(3, model.AccessToken.Split('.').Length);
+            Assert.Equal(3, model.RefreshToken.Split('.').Length);
+            Assert.Equal(set.TokenExpire, model.ExpireIn);
+            Assert.Equal("JWT", model.TokenType);
         }
 
-        [TestMethod()]
+        [Fact]
         public void DecodeTokenTest()
         {
             var app = App.FindByName("test");
@@ -74,14 +70,14 @@ namespace Stardust.Server.Services.Tests
             var service = new AppService();
 
             var model = service.IssueToken(app, set);
-            Assert.IsNotNull(model);
+            Assert.NotNull(model);
 
             // 马上解码
             var app2 = service.DecodeToken(model.AccessToken, set);
-            Assert.IsNotNull(app2);
+            Assert.NotNull(app2);
 
             app2 = service.DecodeToken(model.RefreshToken, set);
-            Assert.IsNotNull(app2);
+            Assert.NotNull(app2);
         }
     }
 }
