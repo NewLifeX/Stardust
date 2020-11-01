@@ -99,6 +99,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("Overstocks", "积压。待消费消息数", "")]
         public Int32 Overstocks { get => _Overstocks; set { if (OnPropertyChanging("Overstocks", value)) { _Overstocks = value; OnPropertyChanged("Overstocks"); } } }
 
+        private Int32 _MaxOverstocks;
+        /// <summary>最大积压。达到该值时告警，0表示不启用</summary>
+        [DisplayName("最大积压")]
+        [Description("最大积压。达到该值时告警，0表示不启用")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("MaxOverstocks", "最大积压。达到该值时告警，0表示不启用", "")]
+        public Int32 MaxOverstocks { get => _MaxOverstocks; set { if (OnPropertyChanging("MaxOverstocks", value)) { _MaxOverstocks = value; OnPropertyChanged("MaxOverstocks"); } } }
+
         private Int32 _Period;
         /// <summary>周期。采样周期，默认60s</summary>
         [DisplayName("周期")]
@@ -106,6 +114,14 @@ namespace Stardust.Data.Nodes
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Period", "周期。采样周期，默认60s", "")]
         public Int32 Period { get => _Period; set { if (OnPropertyChanging("Period", value)) { _Period = value; OnPropertyChanged("Period"); } } }
+
+        private Boolean _Enable;
+        /// <summary>启用。停用的节点不再执行监控</summary>
+        [DisplayName("启用")]
+        [Description("启用。停用的节点不再执行监控")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Enable", "启用。停用的节点不再执行监控", "")]
+        public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
         private String _CreateUser;
         /// <summary>创建人</summary>
@@ -175,7 +191,7 @@ namespace Stardust.Data.Nodes
         /// <summary>备注</summary>
         [DisplayName("备注")]
         [Description("备注")]
-        [DataObjectField(false, false, true, 500)]
+        [DataObjectField(false, false, true, 2000)]
         [BindColumn("Remark", "备注", "")]
         public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
         #endregion
@@ -200,7 +216,9 @@ namespace Stardust.Data.Nodes
                     case "Consumers": return _Consumers;
                     case "Messages": return _Messages;
                     case "Overstocks": return _Overstocks;
+                    case "MaxOverstocks": return _MaxOverstocks;
                     case "Period": return _Period;
+                    case "Enable": return _Enable;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -227,7 +245,9 @@ namespace Stardust.Data.Nodes
                     case "Consumers": _Consumers = value.ToInt(); break;
                     case "Messages": _Messages = value.ToInt(); break;
                     case "Overstocks": _Overstocks = value.ToInt(); break;
+                    case "MaxOverstocks": _MaxOverstocks = value.ToInt(); break;
                     case "Period": _Period = value.ToInt(); break;
+                    case "Enable": _Enable = value.ToBoolean(); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -277,8 +297,14 @@ namespace Stardust.Data.Nodes
             /// <summary>积压。待消费消息数</summary>
             public static readonly Field Overstocks = FindByName("Overstocks");
 
+            /// <summary>最大积压。达到该值时告警，0表示不启用</summary>
+            public static readonly Field MaxOverstocks = FindByName("MaxOverstocks");
+
             /// <summary>周期。采样周期，默认60s</summary>
             public static readonly Field Period = FindByName("Period");
+
+            /// <summary>启用。停用的节点不再执行监控</summary>
+            public static readonly Field Enable = FindByName("Enable");
 
             /// <summary>创建人</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
@@ -343,8 +369,14 @@ namespace Stardust.Data.Nodes
             /// <summary>积压。待消费消息数</summary>
             public const String Overstocks = "Overstocks";
 
+            /// <summary>最大积压。达到该值时告警，0表示不启用</summary>
+            public const String MaxOverstocks = "MaxOverstocks";
+
             /// <summary>周期。采样周期，默认60s</summary>
             public const String Period = "Period";
+
+            /// <summary>启用。停用的节点不再执行监控</summary>
+            public const String Enable = "Enable";
 
             /// <summary>创建人</summary>
             public const String CreateUser = "CreateUser";

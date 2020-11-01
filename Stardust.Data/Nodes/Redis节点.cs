@@ -115,6 +115,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("DiscoverQueue", "队列。自动扫描发现消息队列，默认true", "")]
         public Boolean DiscoverQueue { get => _DiscoverQueue; set { if (OnPropertyChanging("DiscoverQueue", value)) { _DiscoverQueue = value; OnPropertyChanged("DiscoverQueue"); } } }
 
+        private String _WebHook;
+        /// <summary>告警机器人。钉钉、企业微信等</summary>
+        [DisplayName("告警机器人")]
+        [Description("告警机器人。钉钉、企业微信等")]
+        [DataObjectField(false, false, true, 500)]
+        [BindColumn("WebHook", "告警机器人。钉钉、企业微信等", "")]
+        public String WebHook { get => _WebHook; set { if (OnPropertyChanging("WebHook", value)) { _WebHook = value; OnPropertyChanged("WebHook"); } } }
+
         private String _CreateUser;
         /// <summary>创建人</summary>
         [DisplayName("创建人")]
@@ -210,6 +218,7 @@ namespace Stardust.Data.Nodes
                     case "MemoryAllocator": return _MemoryAllocator;
                     case "Enable": return _Enable;
                     case "DiscoverQueue": return _DiscoverQueue;
+                    case "WebHook": return _WebHook;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -238,6 +247,7 @@ namespace Stardust.Data.Nodes
                     case "MemoryAllocator": _MemoryAllocator = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "DiscoverQueue": _DiscoverQueue = value.ToBoolean(); break;
+                    case "WebHook": _WebHook = Convert.ToString(value); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -292,6 +302,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>队列。自动扫描发现消息队列，默认true</summary>
             public static readonly Field DiscoverQueue = FindByName("DiscoverQueue");
+
+            /// <summary>告警机器人。钉钉、企业微信等</summary>
+            public static readonly Field WebHook = FindByName("WebHook");
 
             /// <summary>创建人</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
@@ -361,6 +374,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>队列。自动扫描发现消息队列，默认true</summary>
             public const String DiscoverQueue = "DiscoverQueue";
+
+            /// <summary>告警机器人。钉钉、企业微信等</summary>
+            public const String WebHook = "WebHook";
 
             /// <summary>创建人</summary>
             public const String CreateUser = "CreateUser";

@@ -68,11 +68,11 @@ namespace Stardust.Data.Nodes
         public Int32 OutputKbps { get => _OutputKbps; set { if (OnPropertyChanging("OutputKbps", value)) { _OutputKbps = value; OnPropertyChanged("OutputKbps"); } } }
 
         private Int32 _Uptime;
-        /// <summary>开始时间。单位秒</summary>
-        [DisplayName("开始时间")]
-        [Description("开始时间。单位秒")]
+        /// <summary>启动时间。单位秒</summary>
+        [DisplayName("启动时间")]
+        [Description("启动时间。单位秒")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Uptime", "开始时间。单位秒", "")]
+        [BindColumn("Uptime", "启动时间。单位秒", "")]
         public Int32 Uptime { get => _Uptime; set { if (OnPropertyChanging("Uptime", value)) { _Uptime = value; OnPropertyChanged("Uptime"); } } }
 
         private Int32 _ConnectedClients;
@@ -375,7 +375,7 @@ namespace Stardust.Data.Nodes
             /// <summary>出流量。单位kbps</summary>
             public static readonly Field OutputKbps = FindByName("OutputKbps");
 
-            /// <summary>开始时间。单位秒</summary>
+            /// <summary>启动时间。单位秒</summary>
             public static readonly Field Uptime = FindByName("Uptime");
 
             /// <summary>连接数</summary>
@@ -474,7 +474,7 @@ namespace Stardust.Data.Nodes
             /// <summary>出流量。单位kbps</summary>
             public const String OutputKbps = "OutputKbps";
 
-            /// <summary>开始时间。单位秒</summary>
+            /// <summary>启动时间。单位秒</summary>
             public const String Uptime = "Uptime";
 
             /// <summary>连接数</summary>

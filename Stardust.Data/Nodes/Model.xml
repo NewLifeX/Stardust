@@ -216,6 +216,7 @@
       <Column Name="MemoryAllocator" DataType="String" Description="分配器。内存分配器，低版本有内存泄漏" />
       <Column Name="Enable" DataType="Boolean" Description="启用。停用的节点不再执行监控" />
       <Column Name="DiscoverQueue" DataType="Boolean" Description="队列。自动扫描发现消息队列，默认true" />
+      <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
       <Column Name="CreateUser" DataType="String" Description="创建人" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
@@ -280,7 +281,9 @@
       <Column Name="Consumers" DataType="Int32" Description="消费者。消费者个数" />
       <Column Name="Messages" DataType="Int32" Description="消费数。消费的总消息个数，来自于消费者的消费数叠加" />
       <Column Name="Overstocks" DataType="Int32" Description="积压。待消费消息数" />
+      <Column Name="MaxOverstocks" DataType="Int32" Description="最大积压。达到该值时告警，0表示不启用" />
       <Column Name="Period" DataType="Int32" Description="周期。采样周期，默认60s" />
+      <Column Name="Enable" DataType="Boolean" Description="启用。停用的节点不再执行监控" />
       <Column Name="CreateUser" DataType="String" Description="创建人" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
@@ -289,7 +292,7 @@
       <Column Name="UpdateUserID" DataType="Int32" Description="更新者" />
       <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
       <Column Name="UpdateIP" DataType="String" Description="更新地址" />
-      <Column Name="Remark" DataType="String" Length="500" Description="备注" />
+      <Column Name="Remark" DataType="String" Length="2000" Description="备注" />
     </Columns>
     <Indexes>
       <Index Columns="RedisId" />
