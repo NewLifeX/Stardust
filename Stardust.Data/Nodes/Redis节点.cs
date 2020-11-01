@@ -99,6 +99,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("MemoryAllocator", "分配器。内存分配器，低版本有内存泄漏", "")]
         public String MemoryAllocator { get => _MemoryAllocator; set { if (OnPropertyChanging("MemoryAllocator", value)) { _MemoryAllocator = value; OnPropertyChanged("MemoryAllocator"); } } }
 
+        private Boolean _Enable;
+        /// <summary>启用。停用的节点不再执行监控</summary>
+        [DisplayName("启用")]
+        [Description("启用。停用的节点不再执行监控")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Enable", "启用。停用的节点不再执行监控", "")]
+        public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
+
         private String _CreateUser;
         /// <summary>创建人</summary>
         [DisplayName("创建人")]
@@ -192,6 +200,7 @@ namespace Stardust.Data.Nodes
                     case "MaxMemory": return _MaxMemory;
                     case "MemoryPolicy": return _MemoryPolicy;
                     case "MemoryAllocator": return _MemoryAllocator;
+                    case "Enable": return _Enable;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -218,6 +227,7 @@ namespace Stardust.Data.Nodes
                     case "MaxMemory": _MaxMemory = value.ToInt(); break;
                     case "MemoryPolicy": _MemoryPolicy = Convert.ToString(value); break;
                     case "MemoryAllocator": _MemoryAllocator = Convert.ToString(value); break;
+                    case "Enable": _Enable = value.ToBoolean(); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -266,6 +276,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>分配器。内存分配器，低版本有内存泄漏</summary>
             public static readonly Field MemoryAllocator = FindByName("MemoryAllocator");
+
+            /// <summary>启用。停用的节点不再执行监控</summary>
+            public static readonly Field Enable = FindByName("Enable");
 
             /// <summary>创建人</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
@@ -329,6 +342,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>分配器。内存分配器，低版本有内存泄漏</summary>
             public const String MemoryAllocator = "MemoryAllocator";
+
+            /// <summary>启用。停用的节点不再执行监控</summary>
+            public const String Enable = "Enable";
 
             /// <summary>创建人</summary>
             public const String CreateUser = "CreateUser";

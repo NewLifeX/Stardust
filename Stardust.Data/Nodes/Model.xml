@@ -214,6 +214,7 @@
       <Column Name="MaxMemory" DataType="Int32" Description="内存容量。单位MB" />
       <Column Name="MemoryPolicy" DataType="String" Description="内存策略。缓存淘汰策略" />
       <Column Name="MemoryAllocator" DataType="String" Description="分配器。内存分配器，低版本有内存泄漏" />
+      <Column Name="Enable" DataType="Boolean" Description="启用。停用的节点不再执行监控" />
       <Column Name="CreateUser" DataType="String" Description="创建人" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
