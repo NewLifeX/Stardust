@@ -7,6 +7,7 @@ using NewLife;
 using NewLife.Caching;
 using NewLife.Threading;
 using Stardust.Data.Monitors;
+using Stardust.DingTalk;
 using Stardust.WeiXin;
 
 namespace Stardust.Server.Services
@@ -25,7 +26,8 @@ namespace Stardust.Server.Services
 
         private TimerX _timer;
         private readonly ConcurrentBag<Int32> _bag = new ConcurrentBag<Int32>();
-        private Robot _weixin;
+        private WeiXinClient _weixin;
+        private DingTalkClient _dingTalk;
         private ICache _cache = new MemoryCache();
 
         public AlarmService()
@@ -81,14 +83,14 @@ namespace Stardust.Server.Services
 
                     if (app.AlarmRobot.Contains("qyapi.weixin"))
                         SendWeixin(app, st);
+                    else if (app.AlarmRobot.Contains("dingtalk"))
+                        SendDingTalk(app, st);
                 }
             }
         }
 
-        private void SendWeixin(AppTracer app, AppMinuteStat st)
+        private String GetMarkdown(AppTracer app, AppMinuteStat st)
         {
-            if (_weixin == null) _weixin = new Robot { Url = app.AlarmRobot };
-
             var sb = new StringBuilder();
             sb.AppendLine($"### [{app}]系统告警");
             sb.AppendLine($">**总数：**<font color=\"info\">{st.Errors}</font>");
@@ -121,7 +123,7 @@ namespace Stardust.Server.Services
             }
 
             var str = sb.ToString();
-            if (str.Length > 2048) str = str.Substring(0, 2048);
+            if (str.Length > 2000) str = str.Substring(0, 2000);
 
             // 构造网址
             var url = Setting.Current.WebUrl;
@@ -131,7 +133,25 @@ namespace Stardust.Server.Services
                 str += Environment.NewLine + $"[更多信息]({url})";
             }
 
-            _weixin.SendMarkDown(str);
+            return str;
+        }
+
+        private void SendWeixin(AppTracer app, AppMinuteStat st)
+        {
+            if (_weixin == null) _weixin = new WeiXinClient { Url = app.AlarmRobot };
+
+            var msg = GetMarkdown(app, st);
+
+            _weixin.SendMarkDown(msg);
+        }
+
+        private void SendDingTalk(AppTracer app, AppMinuteStat st)
+        {
+            if (_dingTalk == null) _dingTalk = new DingTalkClient { Url = app.AlarmRobot };
+
+            var msg = GetMarkdown(app, st);
+
+            _dingTalk.SendMarkDown("系统告警", msg, null);
         }
     }
 }

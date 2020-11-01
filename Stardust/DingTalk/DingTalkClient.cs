@@ -6,15 +6,16 @@ using System.Threading.Tasks;
 using NewLife;
 using NewLife.Log;
 using NewLife.Remoting;
+using Stardust.WeiXin;
 
-namespace Stardust.WeiXin
+namespace Stardust.DingTalk
 {
-    /// <summary>企业微信机器人。webhook推送</summary>
-    public class Robot
+    /// <summary>钉钉机器人</summary>
+    public class DingTalkClient
     {
         #region 属性
         /// <summary>服务地址</summary>
-        public String Url { get; set; } = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key={key}";
+        public String Url { get; set; } = "https://oapi.dingtalk.com/robot/send?access_token={access_token}";
 
         /// <summary>性能跟踪</summary>
         public ITracer Tracer { get; set; } = DefaultTracer.Instance;
@@ -28,7 +29,6 @@ namespace Stardust.WeiXin
             if (_Client == null)
             {
                 _Client = Tracer?.CreateHttpClient() ?? new HttpClient();
-                //_Client.BaseAddress = new Uri(Url.Replace("{key}", Key));
             }
 
             return await _Client.PostAsync<Object>(Url, msg);
@@ -36,14 +36,13 @@ namespace Stardust.WeiXin
 
         /// <summary>发送文本消息</summary>
         /// <param name="content">消息内容</param>
-        /// <param name="mentions">提醒人。userid，或者手机号，支持@all</param>
-        public void SendText(String content, params String[] mentions)
+        /// <param name="mentions">提醒人。手机号，支持all</param>
+        public void SendText(String content, String[] mentions)
         {
             if (content.IsNullOrEmpty()) return;
 
             // 分解手机号
-            var mentioned_list = mentions?.Where(e => e.Length != 11 || e.ToLong() == 0).ToArray();
-            var mentioned_mobile_list = mentions?.Where(e => e.Length == 11 && e.ToLong() > 0).ToArray();
+            var mobiles = mentions?.Where(e => e.Length == 11 && e.ToLong() > 0).ToArray();
 
             WriteLog(content);
 
@@ -53,8 +52,11 @@ namespace Stardust.WeiXin
                 text = new
                 {
                     content,
-                    mentioned_list,
-                    mentioned_mobile_list,
+                },
+                at = new
+                {
+                    atMobiles = mobiles,
+                    isAll = mentions.Contains("all"),
                 },
             };
 
@@ -62,44 +64,33 @@ namespace Stardust.WeiXin
         }
 
         /// <summary>发送markdown</summary>
-        /// <param name="content"></param>
-        public void SendMarkDown(String content)
+        /// <param name="title"></param>
+        /// <param name="text"></param>
+        /// <param name="mentions">提醒人。手机号，支持all</param>
+        public void SendMarkDown(String title, String text, String[] mentions)
         {
-            if (content.IsNullOrEmpty()) return;
+            if (text.IsNullOrEmpty()) return;
 
             // 超长阶段
-            if (content.Length > 2048) content = content.Substring(0, 2048);
+            if (text.Length > 2048) text = text.Substring(0, 2048);
 
-            WriteLog(content);
+            WriteLog(text);
+
+            // 分解手机号
+            var mobiles = mentions?.Where(e => e.Length == 11 && e.ToLong() > 0).ToArray();
 
             var msg = new
             {
                 msgtype = "markdown",
                 markdown = new
                 {
-                    content,
+                    title,
+                    text,
                 },
-            };
-
-            PostAsync(msg).Wait();
-        }
-
-        /// <summary>发送图片</summary>
-        /// <param name="image"></param>
-        public void SendImage(Byte[] image)
-        {
-            if (image == null) return;
-
-            var base64 = image.ToBase64();
-            var md5 = image.MD5().ToHex().ToLower();
-
-            var msg = new
-            {
-                msgtype = "image",
-                text = new
+                at = new
                 {
-                    base64,
-                    md5,
+                    atMobiles = mobiles,
+                    isAll = mentions.Contains("all"),
                 },
             };
 
@@ -107,15 +98,19 @@ namespace Stardust.WeiXin
         }
 
         /// <summary>发送图文，文章列表</summary>
-        /// <param name="articles"></param>
-        public void SendNews(params Article[] articles)
+        /// <param name="article"></param>
+        public void SendLink(Article article)
         {
-            if (articles == null || articles.Length == 0) return;
-
             var msg = new
             {
-                msgtype = "news",
-                articles,
+                msgtype = "link",
+                link = new
+                {
+                    text = article.Description,
+                    title = article.Title,
+                    picUrl = article.PicUrl,
+                    messageUrl = article.Url,
+                },
             };
 
             PostAsync(msg).Wait();
