@@ -54,7 +54,7 @@ namespace Stardust.Server.Services
                 {
                     Server = node.Server,
                     Password = node.Password,
-                    Log = XTrace.Log,
+                    //Log = XTrace.Log,
                 };
 
                 _servers[node.Id] = rds;

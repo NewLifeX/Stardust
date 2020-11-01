@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using NewLife;
 using NewLife.Data;
+using NewLife.Serialization;
 using XCode;
 using XCode.Membership;
 
@@ -168,7 +170,7 @@ namespace Stardust.Data.Nodes
         #region 业务操作
         /// <summary>从Redis信息填充字段</summary>
         /// <param name="inf"></param>
-        public void Fill(IDictionary<String, String> inf)
+        public KeyEntry[] Fill(IDictionary<String, String> inf)
         {
             Speed = inf["instantaneous_ops_per_sec"].ToInt();
             InputKbps = inf["instantaneous_input_kbps"].ToInt();
@@ -200,6 +202,7 @@ namespace Stardust.Data.Nodes
 
             // key统计
             var dbs = new KeyEntry[16];
+            var sb = new StringBuilder();
             for (var i = 0; i < dbs.Length; i++)
             {
                 if (inf.TryGetValue($"db{i}", out var db))
@@ -211,6 +214,7 @@ namespace Stardust.Data.Nodes
                         Expires = dic["expires"].ToInt(),
                         AvgTtl = dic["avg_ttl"].ToInt(),
                     };
+                    sb.AppendLine($"db{i}:{db}");
                 }
             }
             Keys = dbs.Where(e => e != null).Sum(e => Keys);
@@ -235,13 +239,17 @@ namespace Stardust.Data.Nodes
                 Db3Keys = dbs[3].Keys;
                 Db3Expires = dbs[3].Expires;
             }
+
+            Remark = sb.ToString().Trim();
+
+            return dbs;
         }
 
-        class KeyEntry
+        public class KeyEntry
         {
-            public Int32 Keys;
-            public Int32 Expires;
-            public Int32 AvgTtl;
+            public Int32 Keys { get; set; }
+            public Int32 Expires { get; set; }
+            public Int32 AvgTtl { get; set; }
         }
         #endregion
     }
