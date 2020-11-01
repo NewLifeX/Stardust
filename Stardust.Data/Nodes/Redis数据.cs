@@ -243,22 +243,6 @@ namespace Stardust.Data.Nodes
         [BindColumn("Db3Expires", "db3过期", "")]
         public Int64 Db3Expires { get => _Db3Expires; set { if (OnPropertyChanging("Db3Expires", value)) { _Db3Expires = value; OnPropertyChanged("Db3Expires"); } } }
 
-        private String _CreateUser;
-        /// <summary>创建人</summary>
-        [DisplayName("创建人")]
-        [Description("创建人")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("CreateUser", "创建人", "")]
-        public String CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
-
-        private Int32 _CreateUserID;
-        /// <summary>创建者</summary>
-        [DisplayName("创建者")]
-        [Description("创建者")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("CreateUserID", "创建者", "")]
-        public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
-
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
         [DisplayName("创建时间")]
@@ -322,8 +306,6 @@ namespace Stardust.Data.Nodes
                     case "Db2Expires": return _Db2Expires;
                     case "Db3Keys": return _Db3Keys;
                     case "Db3Expires": return _Db3Expires;
-                    case "CreateUser": return _CreateUser;
-                    case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
                     case "Remark": return _Remark;
@@ -362,8 +344,6 @@ namespace Stardust.Data.Nodes
                     case "Db2Expires": _Db2Expires = value.ToLong(); break;
                     case "Db3Keys": _Db3Keys = value.ToLong(); break;
                     case "Db3Expires": _Db3Expires = value.ToLong(); break;
-                    case "CreateUser": _CreateUser = Convert.ToString(value); break;
-                    case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
                     case "Remark": _Remark = Convert.ToString(value); break;
@@ -460,12 +440,6 @@ namespace Stardust.Data.Nodes
 
             /// <summary>db3过期</summary>
             public static readonly Field Db3Expires = FindByName("Db3Expires");
-
-            /// <summary>创建人</summary>
-            public static readonly Field CreateUser = FindByName("CreateUser");
-
-            /// <summary>创建者</summary>
-            public static readonly Field CreateUserID = FindByName("CreateUserID");
 
             /// <summary>创建时间</summary>
             public static readonly Field CreateTime = FindByName("CreateTime");
@@ -565,12 +539,6 @@ namespace Stardust.Data.Nodes
 
             /// <summary>db3过期</summary>
             public const String Db3Expires = "Db3Expires";
-
-            /// <summary>创建人</summary>
-            public const String CreateUser = "CreateUser";
-
-            /// <summary>创建者</summary>
-            public const String CreateUserID = "CreateUserID";
 
             /// <summary>创建时间</summary>
             public const String CreateTime = "CreateTime";

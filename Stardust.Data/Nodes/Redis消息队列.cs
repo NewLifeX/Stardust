@@ -10,22 +10,30 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Nodes
 {
-    /// <summary>Redis节点。Redis管理</summary>
+    /// <summary>Redis消息队列。Redis消息队列状态监控</summary>
     [Serializable]
     [DataObject]
-    [Description("Redis节点。Redis管理")]
-    [BindIndex("IU_RedisNode_Server", true, "Server")]
-    [BindTable("RedisNode", Description = "Redis节点。Redis管理", ConnName = "Node", DbType = DatabaseType.None)]
-    public partial class RedisNode
+    [Description("Redis消息队列。Redis消息队列状态监控")]
+    [BindIndex("IX_RedisMessageQueue_RedisId", false, "RedisId")]
+    [BindTable("RedisMessageQueue", Description = "Redis消息队列。Redis消息队列状态监控", ConnName = "Node", DbType = DatabaseType.None)]
+    public partial class RedisMessageQueue
     {
         #region 属性
-        private Int32 _Id;
+        private Int64 _Id;
         /// <summary>编号</summary>
         [DisplayName("编号")]
         [Description("编号")]
-        [DataObjectField(true, true, false, 0)]
+        [DataObjectField(true, false, false, 0)]
         [BindColumn("Id", "编号", "")]
-        public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
+        public Int64 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
+
+        private Int32 _RedisId;
+        /// <summary>Redis节点</summary>
+        [DisplayName("Redis节点")]
+        [Description("Redis节点")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("RedisId", "Redis节点", "")]
+        public Int32 RedisId { get => _RedisId; set { if (OnPropertyChanging("RedisId", value)) { _RedisId = value; OnPropertyChanged("RedisId"); } } }
 
         private String _Name;
         /// <summary>名称</summary>
@@ -35,85 +43,61 @@ namespace Stardust.Data.Nodes
         [BindColumn("Name", "名称", "", Master = true)]
         public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
-        private String _Category;
-        /// <summary>分类</summary>
-        [DisplayName("分类")]
-        [Description("分类")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("Category", "分类", "")]
-        public String Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
-
-        private String _Server;
-        /// <summary>地址。含端口</summary>
-        [DisplayName("地址")]
-        [Description("地址。含端口")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("Server", "地址。含端口", "")]
-        public String Server { get => _Server; set { if (OnPropertyChanging("Server", value)) { _Server = value; OnPropertyChanged("Server"); } } }
-
-        private String _Password;
-        /// <summary>密码</summary>
-        [DisplayName("密码")]
-        [Description("密码")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("Password", "密码", "")]
-        public String Password { get => _Password; set { if (OnPropertyChanging("Password", value)) { _Password = value; OnPropertyChanged("Password"); } } }
-
-        private String _Version;
-        /// <summary>版本</summary>
-        [DisplayName("版本")]
-        [Description("版本")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("Version", "版本", "")]
-        public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
-
-        private String _Mode;
-        /// <summary>模式</summary>
-        [DisplayName("模式")]
-        [Description("模式")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("Mode", "模式", "")]
-        public String Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
-
-        private Int32 _MaxMemory;
-        /// <summary>内存容量。单位MB</summary>
-        [DisplayName("内存容量")]
-        [Description("内存容量。单位MB")]
+        private Int32 _Db;
+        /// <summary>库</summary>
+        [DisplayName("库")]
+        [Description("库")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("MaxMemory", "内存容量。单位MB", "")]
-        public Int32 MaxMemory { get => _MaxMemory; set { if (OnPropertyChanging("MaxMemory", value)) { _MaxMemory = value; OnPropertyChanged("MaxMemory"); } } }
+        [BindColumn("Db", "库", "")]
+        public Int32 Db { get => _Db; set { if (OnPropertyChanging("Db", value)) { _Db = value; OnPropertyChanged("Db"); } } }
 
-        private String _MemoryPolicy;
-        /// <summary>内存策略。缓存淘汰策略</summary>
-        [DisplayName("内存策略")]
-        [Description("内存策略。缓存淘汰策略")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("MemoryPolicy", "内存策略。缓存淘汰策略", "")]
-        public String MemoryPolicy { get => _MemoryPolicy; set { if (OnPropertyChanging("MemoryPolicy", value)) { _MemoryPolicy = value; OnPropertyChanged("MemoryPolicy"); } } }
-
-        private String _MemoryAllocator;
-        /// <summary>分配器。内存分配器，低版本有内存泄漏</summary>
-        [DisplayName("分配器")]
-        [Description("分配器。内存分配器，低版本有内存泄漏")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("MemoryAllocator", "分配器。内存分配器，低版本有内存泄漏", "")]
-        public String MemoryAllocator { get => _MemoryAllocator; set { if (OnPropertyChanging("MemoryAllocator", value)) { _MemoryAllocator = value; OnPropertyChanged("MemoryAllocator"); } } }
-
-        private Boolean _Enable;
-        /// <summary>启用。停用的节点不再执行监控</summary>
-        [DisplayName("启用")]
-        [Description("启用。停用的节点不再执行监控")]
+        private Int32 _Topic;
+        /// <summary>主题。消息队列主题</summary>
+        [DisplayName("主题")]
+        [Description("主题。消息队列主题")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Enable", "启用。停用的节点不再执行监控", "")]
-        public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
+        [BindColumn("Topic", "主题。消息队列主题", "")]
+        public Int32 Topic { get => _Topic; set { if (OnPropertyChanging("Topic", value)) { _Topic = value; OnPropertyChanged("Topic"); } } }
 
-        private Boolean _DiscoverQueue;
-        /// <summary>队列。自动扫描发现消息队列，默认true</summary>
-        [DisplayName("队列")]
-        [Description("队列。自动扫描发现消息队列，默认true")]
+        private String _Type;
+        /// <summary>类型。消息队列类型</summary>
+        [DisplayName("类型")]
+        [Description("类型。消息队列类型")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Type", "类型。消息队列类型", "")]
+        public String Type { get => _Type; set { if (OnPropertyChanging("Type", value)) { _Type = value; OnPropertyChanged("Type"); } } }
+
+        private Int32 _Consumers;
+        /// <summary>消费者。消费者个数</summary>
+        [DisplayName("消费者")]
+        [Description("消费者。消费者个数")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("DiscoverQueue", "队列。自动扫描发现消息队列，默认true", "")]
-        public Boolean DiscoverQueue { get => _DiscoverQueue; set { if (OnPropertyChanging("DiscoverQueue", value)) { _DiscoverQueue = value; OnPropertyChanged("DiscoverQueue"); } } }
+        [BindColumn("Consumers", "消费者。消费者个数", "")]
+        public Int32 Consumers { get => _Consumers; set { if (OnPropertyChanging("Consumers", value)) { _Consumers = value; OnPropertyChanged("Consumers"); } } }
+
+        private Int32 _Messages;
+        /// <summary>消费数。消费的总消息个数，来自于消费者的消费数叠加</summary>
+        [DisplayName("消费数")]
+        [Description("消费数。消费的总消息个数，来自于消费者的消费数叠加")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Messages", "消费数。消费的总消息个数，来自于消费者的消费数叠加", "")]
+        public Int32 Messages { get => _Messages; set { if (OnPropertyChanging("Messages", value)) { _Messages = value; OnPropertyChanged("Messages"); } } }
+
+        private Int32 _Overstocks;
+        /// <summary>积压。待消费消息数</summary>
+        [DisplayName("积压")]
+        [Description("积压。待消费消息数")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Overstocks", "积压。待消费消息数", "")]
+        public Int32 Overstocks { get => _Overstocks; set { if (OnPropertyChanging("Overstocks", value)) { _Overstocks = value; OnPropertyChanged("Overstocks"); } } }
+
+        private Int32 _Period;
+        /// <summary>周期。采样周期，默认60s</summary>
+        [DisplayName("周期")]
+        [Description("周期。采样周期，默认60s")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Period", "周期。采样周期，默认60s", "")]
+        public Int32 Period { get => _Period; set { if (OnPropertyChanging("Period", value)) { _Period = value; OnPropertyChanged("Period"); } } }
 
         private String _CreateUser;
         /// <summary>创建人</summary>
@@ -199,17 +183,15 @@ namespace Stardust.Data.Nodes
                 switch (name)
                 {
                     case "Id": return _Id;
+                    case "RedisId": return _RedisId;
                     case "Name": return _Name;
-                    case "Category": return _Category;
-                    case "Server": return _Server;
-                    case "Password": return _Password;
-                    case "Version": return _Version;
-                    case "Mode": return _Mode;
-                    case "MaxMemory": return _MaxMemory;
-                    case "MemoryPolicy": return _MemoryPolicy;
-                    case "MemoryAllocator": return _MemoryAllocator;
-                    case "Enable": return _Enable;
-                    case "DiscoverQueue": return _DiscoverQueue;
+                    case "Db": return _Db;
+                    case "Topic": return _Topic;
+                    case "Type": return _Type;
+                    case "Consumers": return _Consumers;
+                    case "Messages": return _Messages;
+                    case "Overstocks": return _Overstocks;
+                    case "Period": return _Period;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -226,18 +208,16 @@ namespace Stardust.Data.Nodes
             {
                 switch (name)
                 {
-                    case "Id": _Id = value.ToInt(); break;
+                    case "Id": _Id = value.ToLong(); break;
+                    case "RedisId": _RedisId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
-                    case "Category": _Category = Convert.ToString(value); break;
-                    case "Server": _Server = Convert.ToString(value); break;
-                    case "Password": _Password = Convert.ToString(value); break;
-                    case "Version": _Version = Convert.ToString(value); break;
-                    case "Mode": _Mode = Convert.ToString(value); break;
-                    case "MaxMemory": _MaxMemory = value.ToInt(); break;
-                    case "MemoryPolicy": _MemoryPolicy = Convert.ToString(value); break;
-                    case "MemoryAllocator": _MemoryAllocator = Convert.ToString(value); break;
-                    case "Enable": _Enable = value.ToBoolean(); break;
-                    case "DiscoverQueue": _DiscoverQueue = value.ToBoolean(); break;
+                    case "Db": _Db = value.ToInt(); break;
+                    case "Topic": _Topic = value.ToInt(); break;
+                    case "Type": _Type = Convert.ToString(value); break;
+                    case "Consumers": _Consumers = value.ToInt(); break;
+                    case "Messages": _Messages = value.ToInt(); break;
+                    case "Overstocks": _Overstocks = value.ToInt(); break;
+                    case "Period": _Period = value.ToInt(); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -254,44 +234,38 @@ namespace Stardust.Data.Nodes
         #endregion
 
         #region 字段名
-        /// <summary>取得Redis节点字段信息的快捷方式</summary>
+        /// <summary>取得Redis消息队列字段信息的快捷方式</summary>
         public partial class _
         {
             /// <summary>编号</summary>
             public static readonly Field Id = FindByName("Id");
 
+            /// <summary>Redis节点</summary>
+            public static readonly Field RedisId = FindByName("RedisId");
+
             /// <summary>名称</summary>
             public static readonly Field Name = FindByName("Name");
 
-            /// <summary>分类</summary>
-            public static readonly Field Category = FindByName("Category");
+            /// <summary>库</summary>
+            public static readonly Field Db = FindByName("Db");
 
-            /// <summary>地址。含端口</summary>
-            public static readonly Field Server = FindByName("Server");
+            /// <summary>主题。消息队列主题</summary>
+            public static readonly Field Topic = FindByName("Topic");
 
-            /// <summary>密码</summary>
-            public static readonly Field Password = FindByName("Password");
+            /// <summary>类型。消息队列类型</summary>
+            public static readonly Field Type = FindByName("Type");
 
-            /// <summary>版本</summary>
-            public static readonly Field Version = FindByName("Version");
+            /// <summary>消费者。消费者个数</summary>
+            public static readonly Field Consumers = FindByName("Consumers");
 
-            /// <summary>模式</summary>
-            public static readonly Field Mode = FindByName("Mode");
+            /// <summary>消费数。消费的总消息个数，来自于消费者的消费数叠加</summary>
+            public static readonly Field Messages = FindByName("Messages");
 
-            /// <summary>内存容量。单位MB</summary>
-            public static readonly Field MaxMemory = FindByName("MaxMemory");
+            /// <summary>积压。待消费消息数</summary>
+            public static readonly Field Overstocks = FindByName("Overstocks");
 
-            /// <summary>内存策略。缓存淘汰策略</summary>
-            public static readonly Field MemoryPolicy = FindByName("MemoryPolicy");
-
-            /// <summary>分配器。内存分配器，低版本有内存泄漏</summary>
-            public static readonly Field MemoryAllocator = FindByName("MemoryAllocator");
-
-            /// <summary>启用。停用的节点不再执行监控</summary>
-            public static readonly Field Enable = FindByName("Enable");
-
-            /// <summary>队列。自动扫描发现消息队列，默认true</summary>
-            public static readonly Field DiscoverQueue = FindByName("DiscoverQueue");
+            /// <summary>周期。采样周期，默认60s</summary>
+            public static readonly Field Period = FindByName("Period");
 
             /// <summary>创建人</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
@@ -323,44 +297,38 @@ namespace Stardust.Data.Nodes
             static Field FindByName(String name) => Meta.Table.FindByName(name);
         }
 
-        /// <summary>取得Redis节点字段名称的快捷方式</summary>
+        /// <summary>取得Redis消息队列字段名称的快捷方式</summary>
         public partial class __
         {
             /// <summary>编号</summary>
             public const String Id = "Id";
 
+            /// <summary>Redis节点</summary>
+            public const String RedisId = "RedisId";
+
             /// <summary>名称</summary>
             public const String Name = "Name";
 
-            /// <summary>分类</summary>
-            public const String Category = "Category";
+            /// <summary>库</summary>
+            public const String Db = "Db";
 
-            /// <summary>地址。含端口</summary>
-            public const String Server = "Server";
+            /// <summary>主题。消息队列主题</summary>
+            public const String Topic = "Topic";
 
-            /// <summary>密码</summary>
-            public const String Password = "Password";
+            /// <summary>类型。消息队列类型</summary>
+            public const String Type = "Type";
 
-            /// <summary>版本</summary>
-            public const String Version = "Version";
+            /// <summary>消费者。消费者个数</summary>
+            public const String Consumers = "Consumers";
 
-            /// <summary>模式</summary>
-            public const String Mode = "Mode";
+            /// <summary>消费数。消费的总消息个数，来自于消费者的消费数叠加</summary>
+            public const String Messages = "Messages";
 
-            /// <summary>内存容量。单位MB</summary>
-            public const String MaxMemory = "MaxMemory";
+            /// <summary>积压。待消费消息数</summary>
+            public const String Overstocks = "Overstocks";
 
-            /// <summary>内存策略。缓存淘汰策略</summary>
-            public const String MemoryPolicy = "MemoryPolicy";
-
-            /// <summary>分配器。内存分配器，低版本有内存泄漏</summary>
-            public const String MemoryAllocator = "MemoryAllocator";
-
-            /// <summary>启用。停用的节点不再执行监控</summary>
-            public const String Enable = "Enable";
-
-            /// <summary>队列。自动扫描发现消息队列，默认true</summary>
-            public const String DiscoverQueue = "DiscoverQueue";
+            /// <summary>周期。采样周期，默认60s</summary>
+            public const String Period = "Period";
 
             /// <summary>创建人</summary>
             public const String CreateUser = "CreateUser";
