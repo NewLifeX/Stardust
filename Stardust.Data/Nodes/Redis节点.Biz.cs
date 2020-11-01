@@ -80,7 +80,7 @@ namespace Stardust.Data.Nodes
             var entity = new RedisNode
             {
                 Name = "本地",
-                Category = "",
+                Category = "默认",
                 Server = "127.0.0.1:6379",
                 Password = "",
                 Enable = true
@@ -170,6 +170,19 @@ namespace Stardust.Data.Nodes
         #endregion
 
         #region 业务操作
+        /// <summary>从Redis信息填充字段</summary>
+        /// <param name="inf"></param>
+        public void Fill(IDictionary<String, String> inf)
+        {
+            Version = inf["redis_version"];
+            Mode = inf["redis_mode"];
+
+            MaxMemory = (Int32)(inf["maxmemory"].ToLong() / 1024 / 1024);
+            if (MaxMemory == 0) MaxMemory = (Int32)(inf["total_system_memory"].ToLong() / 1024 / 1024);
+
+            MemoryPolicy = inf["maxmemory_policy"];
+            MemoryAllocator = inf["mem_allocator"];
+        }
         #endregion
     }
 }

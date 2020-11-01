@@ -8,7 +8,7 @@ using Stardust.Data.Nodes;
 namespace Stardust.Web.Areas.Nodes.Controllers
 {
     [NodesArea]
-    public class RedisMessageQueueController : ReadOnlyEntityController<RedisMessageQueue>
+    public class RedisMessageQueueController : EntityController<RedisMessageQueue>
     {
         static RedisMessageQueueController() => MenuOrder = 30;
 

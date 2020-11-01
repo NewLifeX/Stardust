@@ -117,6 +117,9 @@ namespace Stardust.Data.Nodes
         #endregion
 
         #region 扩展属性
+        /// <summary>开机时间</summary>
+        [Map(nameof(Uptime))]
+        public String UptimeName => TimeSpan.FromSeconds(Uptime).ToString().TrimEnd("0000").TrimStart("00:");
         #endregion
 
         #region 扩展查询
@@ -180,6 +183,42 @@ namespace Stardust.Data.Nodes
         #endregion
 
         #region 业务操作
+        /// <summary>从Redis信息填充字段</summary>
+        /// <param name="inf"></param>
+        public void Fill(IDictionary<String, String> inf)
+        {
+            Speed = inf["instantaneous_ops_per_sec"].ToInt();
+            InputKbps = inf["instantaneous_input_kbps"].ToInt();
+            OutputKbps = inf["instantaneous_output_kbps"].ToInt();
+
+            Uptime = inf["uptime_in_seconds"].ToInt();
+            ConnectedClients = inf["connected_clients"].ToInt();
+
+            UsedMemory = (Int32)(inf["used_memory_rss"].ToLong() / 1024 / 1024);
+
+            FragmentationRatio = inf["mem_fragmentation_ratio"].ToDouble();
+
+            ExpiredKeys = inf["expired_keys"].ToInt();
+            EvictedKeys = inf["evicted_keys"].ToInt();
+            KeySpaceHits = inf["keyspace_hits"].ToInt();
+            KeySpaceMisses = inf["keyspace_misses"].ToInt();
+            Commands = inf["total_commands_processed"].ToInt();
+            Reads = inf["total_reads_processed"].ToInt();
+            Writes = inf["total_writes_processed"].ToInt();
+
+            // 命令统计。cmdstat_lpush:calls=40,usec=816,usec_per_call=20.40
+            var cmds = inf.Where(e => e.Key.StartsWith("cmdstat_")).ToDictionary(e => e.Key.TrimStart("cmdstat_"), e => e.Value);
+            if (cmds.Count > 0)
+            {
+                var kv = cmds.OrderByDescending(e => e.Value).First();
+                TopCommand = $"{kv.Key}:{kv.Value}";
+            }
+
+            //Keys = inf["uptime_in_seconds"].ToInt();
+            AvgTtl = inf[""].ToInt();
+            Db0Keys = inf["uptime_in_seconds"].ToInt();
+            Db0Expires = inf["uptime_in_seconds"].ToInt();
+        }
         #endregion
     }
 }
