@@ -1,26 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
-using System.Web.Script.Serialization;
-using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
-using NewLife.Log;
-using NewLife.Model;
-using NewLife.Reflection;
-using NewLife.Threading;
-using NewLife.Web;
 using XCode;
-using XCode.Cache;
-using XCode.Configuration;
-using XCode.DataAccessLayer;
 using XCode.Membership;
 
 namespace Stardust.Data.Nodes
@@ -215,10 +198,50 @@ namespace Stardust.Data.Nodes
                 TopCommand = $"{kv.Key}:{cmds[kv.Key]}";
             }
 
-            //Keys = inf["uptime_in_seconds"].ToInt();
-            AvgTtl = inf[""].ToInt();
-            Db0Keys = inf["uptime_in_seconds"].ToInt();
-            Db0Expires = inf["uptime_in_seconds"].ToInt();
+            // key统计
+            var dbs = new KeyEntry[16];
+            for (var i = 0; i < dbs.Length; i++)
+            {
+                if (inf.TryGetValue($"db{i}", out var db))
+                {
+                    var dic = db.SplitAsDictionary("=", ",");
+                    dbs[i] = new KeyEntry
+                    {
+                        Keys = dic["keys"].ToInt(),
+                        Expires = dic["expires"].ToInt(),
+                        AvgTtl = dic["avg_ttl"].ToInt(),
+                    };
+                }
+            }
+            Keys = dbs.Where(e => e != null).Sum(e => Keys);
+            AvgTtl = (Int32)dbs.Where(e => e != null).Average(e => Keys * e.AvgTtl);
+            if (dbs[0] != null)
+            {
+                Db0Keys = dbs[0].Keys;
+                Db0Expires = dbs[0].Expires;
+            }
+            if (dbs[1] != null)
+            {
+                Db1Keys = dbs[1].Keys;
+                Db1Expires = dbs[1].Expires;
+            }
+            if (dbs[2] != null)
+            {
+                Db2Keys = dbs[2].Keys;
+                Db2Expires = dbs[2].Expires;
+            }
+            if (dbs[3] != null)
+            {
+                Db3Keys = dbs[3].Keys;
+                Db3Expires = dbs[3].Expires;
+            }
+        }
+
+        class KeyEntry
+        {
+            public Int32 Keys;
+            public Int32 Expires;
+            public Int32 AvgTtl;
         }
         #endregion
     }
