@@ -123,14 +123,6 @@ namespace Stardust.Data.Nodes
         [BindColumn("EvictedKeys", "驱逐Keys。由于 maxmemory 限制，而被回收内存的 key 的总数", "")]
         public Int64 EvictedKeys { get => _EvictedKeys; set { if (OnPropertyChanging("EvictedKeys", value)) { _EvictedKeys = value; OnPropertyChanged("EvictedKeys"); } } }
 
-        private Int64 _CommandsProcessed;
-        /// <summary>命令数</summary>
-        [DisplayName("命令数")]
-        [Description("命令数")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("CommandsProcessed", "命令数", "")]
-        public Int64 CommandsProcessed { get => _CommandsProcessed; set { if (OnPropertyChanging("CommandsProcessed", value)) { _CommandsProcessed = value; OnPropertyChanged("CommandsProcessed"); } } }
-
         private Int64 _KeySpaceHits;
         /// <summary>命中数。只读请求命中缓存</summary>
         [DisplayName("命中数")]
@@ -147,6 +139,30 @@ namespace Stardust.Data.Nodes
         [BindColumn("KeySpaceMisses", "Miss数。只读请求未命中缓存", "")]
         public Int64 KeySpaceMisses { get => _KeySpaceMisses; set { if (OnPropertyChanging("KeySpaceMisses", value)) { _KeySpaceMisses = value; OnPropertyChanged("KeySpaceMisses"); } } }
 
+        private Int64 _Commands;
+        /// <summary>命令数</summary>
+        [DisplayName("命令数")]
+        [Description("命令数")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Commands", "命令数", "")]
+        public Int64 Commands { get => _Commands; set { if (OnPropertyChanging("Commands", value)) { _Commands = value; OnPropertyChanged("Commands"); } } }
+
+        private Int64 _Reads;
+        /// <summary>读取数</summary>
+        [DisplayName("读取数")]
+        [Description("读取数")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Reads", "读取数", "")]
+        public Int64 Reads { get => _Reads; set { if (OnPropertyChanging("Reads", value)) { _Reads = value; OnPropertyChanged("Reads"); } } }
+
+        private Int64 _Writes;
+        /// <summary>写入数</summary>
+        [DisplayName("写入数")]
+        [Description("写入数")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Writes", "写入数", "")]
+        public Int64 Writes { get => _Writes; set { if (OnPropertyChanging("Writes", value)) { _Writes = value; OnPropertyChanged("Writes"); } } }
+
         private Int32 _AvgTtl;
         /// <summary>平均过期。平均过期时间，单位秒</summary>
         [DisplayName("平均过期")]
@@ -154,6 +170,14 @@ namespace Stardust.Data.Nodes
         [DataObjectField(false, false, false, 0)]
         [BindColumn("AvgTtl", "平均过期。平均过期时间，单位秒", "")]
         public Int32 AvgTtl { get => _AvgTtl; set { if (OnPropertyChanging("AvgTtl", value)) { _AvgTtl = value; OnPropertyChanged("AvgTtl"); } } }
+
+        private String _TopCommand;
+        /// <summary>最忙命令</summary>
+        [DisplayName("最忙命令")]
+        [Description("最忙命令")]
+        [DataObjectField(false, false, true, 200)]
+        [BindColumn("TopCommand", "最忙命令", "")]
+        public String TopCommand { get => _TopCommand; set { if (OnPropertyChanging("TopCommand", value)) { _TopCommand = value; OnPropertyChanged("TopCommand"); } } }
 
         private Int64 _Db0Keys;
         /// <summary>db0个数</summary>
@@ -283,10 +307,13 @@ namespace Stardust.Data.Nodes
                     case "Keys": return _Keys;
                     case "ExpiredKeys": return _ExpiredKeys;
                     case "EvictedKeys": return _EvictedKeys;
-                    case "CommandsProcessed": return _CommandsProcessed;
                     case "KeySpaceHits": return _KeySpaceHits;
                     case "KeySpaceMisses": return _KeySpaceMisses;
+                    case "Commands": return _Commands;
+                    case "Reads": return _Reads;
+                    case "Writes": return _Writes;
                     case "AvgTtl": return _AvgTtl;
+                    case "TopCommand": return _TopCommand;
                     case "Db0Keys": return _Db0Keys;
                     case "Db0Expires": return _Db0Expires;
                     case "Db1Keys": return _Db1Keys;
@@ -320,10 +347,13 @@ namespace Stardust.Data.Nodes
                     case "Keys": _Keys = value.ToLong(); break;
                     case "ExpiredKeys": _ExpiredKeys = value.ToLong(); break;
                     case "EvictedKeys": _EvictedKeys = value.ToLong(); break;
-                    case "CommandsProcessed": _CommandsProcessed = value.ToLong(); break;
                     case "KeySpaceHits": _KeySpaceHits = value.ToLong(); break;
                     case "KeySpaceMisses": _KeySpaceMisses = value.ToLong(); break;
+                    case "Commands": _Commands = value.ToLong(); break;
+                    case "Reads": _Reads = value.ToLong(); break;
+                    case "Writes": _Writes = value.ToLong(); break;
                     case "AvgTtl": _AvgTtl = value.ToInt(); break;
+                    case "TopCommand": _TopCommand = Convert.ToString(value); break;
                     case "Db0Keys": _Db0Keys = value.ToLong(); break;
                     case "Db0Expires": _Db0Expires = value.ToLong(); break;
                     case "Db1Keys": _Db1Keys = value.ToLong(); break;
@@ -386,17 +416,26 @@ namespace Stardust.Data.Nodes
             /// <summary>驱逐Keys。由于 maxmemory 限制，而被回收内存的 key 的总数</summary>
             public static readonly Field EvictedKeys = FindByName("EvictedKeys");
 
-            /// <summary>命令数</summary>
-            public static readonly Field CommandsProcessed = FindByName("CommandsProcessed");
-
             /// <summary>命中数。只读请求命中缓存</summary>
             public static readonly Field KeySpaceHits = FindByName("KeySpaceHits");
 
             /// <summary>Miss数。只读请求未命中缓存</summary>
             public static readonly Field KeySpaceMisses = FindByName("KeySpaceMisses");
 
+            /// <summary>命令数</summary>
+            public static readonly Field Commands = FindByName("Commands");
+
+            /// <summary>读取数</summary>
+            public static readonly Field Reads = FindByName("Reads");
+
+            /// <summary>写入数</summary>
+            public static readonly Field Writes = FindByName("Writes");
+
             /// <summary>平均过期。平均过期时间，单位秒</summary>
             public static readonly Field AvgTtl = FindByName("AvgTtl");
+
+            /// <summary>最忙命令</summary>
+            public static readonly Field TopCommand = FindByName("TopCommand");
 
             /// <summary>db0个数</summary>
             public static readonly Field Db0Keys = FindByName("Db0Keys");
@@ -482,17 +521,26 @@ namespace Stardust.Data.Nodes
             /// <summary>驱逐Keys。由于 maxmemory 限制，而被回收内存的 key 的总数</summary>
             public const String EvictedKeys = "EvictedKeys";
 
-            /// <summary>命令数</summary>
-            public const String CommandsProcessed = "CommandsProcessed";
-
             /// <summary>命中数。只读请求命中缓存</summary>
             public const String KeySpaceHits = "KeySpaceHits";
 
             /// <summary>Miss数。只读请求未命中缓存</summary>
             public const String KeySpaceMisses = "KeySpaceMisses";
 
+            /// <summary>命令数</summary>
+            public const String Commands = "Commands";
+
+            /// <summary>读取数</summary>
+            public const String Reads = "Reads";
+
+            /// <summary>写入数</summary>
+            public const String Writes = "Writes";
+
             /// <summary>平均过期。平均过期时间，单位秒</summary>
             public const String AvgTtl = "AvgTtl";
+
+            /// <summary>最忙命令</summary>
+            public const String TopCommand = "TopCommand";
 
             /// <summary>db0个数</summary>
             public const String Db0Keys = "Db0Keys";
