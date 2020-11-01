@@ -83,37 +83,29 @@ namespace Stardust.Data.Nodes
         [BindColumn("Consumers", "消费者。消费者个数", "")]
         public Int32 Consumers { get => _Consumers; set { if (OnPropertyChanging("Consumers", value)) { _Consumers = value; OnPropertyChanged("Consumers"); } } }
 
-        private Int32 _Messages;
-        /// <summary>消费数。消费的总消息个数，来自于消费者的消费数叠加</summary>
-        [DisplayName("消费数")]
-        [Description("消费数。消费的总消息个数，来自于消费者的消费数叠加")]
+        private Int64 _Total;
+        /// <summary>总消费。现有消费者的消费总数</summary>
+        [DisplayName("总消费")]
+        [Description("总消费。现有消费者的消费总数")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Messages", "消费数。消费的总消息个数，来自于消费者的消费数叠加", "")]
+        [BindColumn("Total", "总消费。现有消费者的消费总数", "")]
+        public Int64 Total { get => _Total; set { if (OnPropertyChanging("Total", value)) { _Total = value; OnPropertyChanged("Total"); } } }
+
+        private Int32 _Messages;
+        /// <summary>消息数。积压下来，等待消费的消息个数</summary>
+        [DisplayName("消息数")]
+        [Description("消息数。积压下来，等待消费的消息个数")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Messages", "消息数。积压下来，等待消费的消息个数", "")]
         public Int32 Messages { get => _Messages; set { if (OnPropertyChanging("Messages", value)) { _Messages = value; OnPropertyChanged("Messages"); } } }
 
-        private Int32 _Overstocks;
-        /// <summary>积压。待消费消息数</summary>
-        [DisplayName("积压")]
-        [Description("积压。待消费消息数")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Overstocks", "积压。待消费消息数", "")]
-        public Int32 Overstocks { get => _Overstocks; set { if (OnPropertyChanging("Overstocks", value)) { _Overstocks = value; OnPropertyChanged("Overstocks"); } } }
-
-        private Int32 _MaxOverstocks;
+        private Int32 _MaxMessages;
         /// <summary>最大积压。达到该值时告警，0表示不启用</summary>
         [DisplayName("最大积压")]
         [Description("最大积压。达到该值时告警，0表示不启用")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("MaxOverstocks", "最大积压。达到该值时告警，0表示不启用", "")]
-        public Int32 MaxOverstocks { get => _MaxOverstocks; set { if (OnPropertyChanging("MaxOverstocks", value)) { _MaxOverstocks = value; OnPropertyChanged("MaxOverstocks"); } } }
-
-        private Int32 _Period;
-        /// <summary>周期。采样周期，默认60s</summary>
-        [DisplayName("周期")]
-        [Description("周期。采样周期，默认60s")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Period", "周期。采样周期，默认60s", "")]
-        public Int32 Period { get => _Period; set { if (OnPropertyChanging("Period", value)) { _Period = value; OnPropertyChanged("Period"); } } }
+        [BindColumn("MaxMessages", "最大积压。达到该值时告警，0表示不启用", "")]
+        public Int32 MaxMessages { get => _MaxMessages; set { if (OnPropertyChanging("MaxMessages", value)) { _MaxMessages = value; OnPropertyChanged("MaxMessages"); } } }
 
         private Boolean _Enable;
         /// <summary>启用。停用的节点不再执行监控</summary>
@@ -122,6 +114,22 @@ namespace Stardust.Data.Nodes
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Enable", "启用。停用的节点不再执行监控", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
+
+        private DateTime _FirstConsumer;
+        /// <summary>最早消费者</summary>
+        [DisplayName("最早消费者")]
+        [Description("最早消费者")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("FirstConsumer", "最早消费者", "")]
+        public DateTime FirstConsumer { get => _FirstConsumer; set { if (OnPropertyChanging("FirstConsumer", value)) { _FirstConsumer = value; OnPropertyChanged("FirstConsumer"); } } }
+
+        private DateTime _LastActive;
+        /// <summary>最后活跃</summary>
+        [DisplayName("最后活跃")]
+        [Description("最后活跃")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("LastActive", "最后活跃", "")]
+        public DateTime LastActive { get => _LastActive; set { if (OnPropertyChanging("LastActive", value)) { _LastActive = value; OnPropertyChanged("LastActive"); } } }
 
         private String _CreateUser;
         /// <summary>创建人</summary>
@@ -214,11 +222,12 @@ namespace Stardust.Data.Nodes
                     case "Topic": return _Topic;
                     case "Type": return _Type;
                     case "Consumers": return _Consumers;
+                    case "Total": return _Total;
                     case "Messages": return _Messages;
-                    case "Overstocks": return _Overstocks;
-                    case "MaxOverstocks": return _MaxOverstocks;
-                    case "Period": return _Period;
+                    case "MaxMessages": return _MaxMessages;
                     case "Enable": return _Enable;
+                    case "FirstConsumer": return _FirstConsumer;
+                    case "LastActive": return _LastActive;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -243,11 +252,12 @@ namespace Stardust.Data.Nodes
                     case "Topic": _Topic = Convert.ToString(value); break;
                     case "Type": _Type = Convert.ToString(value); break;
                     case "Consumers": _Consumers = value.ToInt(); break;
+                    case "Total": _Total = value.ToLong(); break;
                     case "Messages": _Messages = value.ToInt(); break;
-                    case "Overstocks": _Overstocks = value.ToInt(); break;
-                    case "MaxOverstocks": _MaxOverstocks = value.ToInt(); break;
-                    case "Period": _Period = value.ToInt(); break;
+                    case "MaxMessages": _MaxMessages = value.ToInt(); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
+                    case "FirstConsumer": _FirstConsumer = value.ToDateTime(); break;
+                    case "LastActive": _LastActive = value.ToDateTime(); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -291,20 +301,23 @@ namespace Stardust.Data.Nodes
             /// <summary>消费者。消费者个数</summary>
             public static readonly Field Consumers = FindByName("Consumers");
 
-            /// <summary>消费数。消费的总消息个数，来自于消费者的消费数叠加</summary>
+            /// <summary>总消费。现有消费者的消费总数</summary>
+            public static readonly Field Total = FindByName("Total");
+
+            /// <summary>消息数。积压下来，等待消费的消息个数</summary>
             public static readonly Field Messages = FindByName("Messages");
 
-            /// <summary>积压。待消费消息数</summary>
-            public static readonly Field Overstocks = FindByName("Overstocks");
-
             /// <summary>最大积压。达到该值时告警，0表示不启用</summary>
-            public static readonly Field MaxOverstocks = FindByName("MaxOverstocks");
-
-            /// <summary>周期。采样周期，默认60s</summary>
-            public static readonly Field Period = FindByName("Period");
+            public static readonly Field MaxMessages = FindByName("MaxMessages");
 
             /// <summary>启用。停用的节点不再执行监控</summary>
             public static readonly Field Enable = FindByName("Enable");
+
+            /// <summary>最早消费者</summary>
+            public static readonly Field FirstConsumer = FindByName("FirstConsumer");
+
+            /// <summary>最后活跃</summary>
+            public static readonly Field LastActive = FindByName("LastActive");
 
             /// <summary>创建人</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
@@ -363,20 +376,23 @@ namespace Stardust.Data.Nodes
             /// <summary>消费者。消费者个数</summary>
             public const String Consumers = "Consumers";
 
-            /// <summary>消费数。消费的总消息个数，来自于消费者的消费数叠加</summary>
+            /// <summary>总消费。现有消费者的消费总数</summary>
+            public const String Total = "Total";
+
+            /// <summary>消息数。积压下来，等待消费的消息个数</summary>
             public const String Messages = "Messages";
 
-            /// <summary>积压。待消费消息数</summary>
-            public const String Overstocks = "Overstocks";
-
             /// <summary>最大积压。达到该值时告警，0表示不启用</summary>
-            public const String MaxOverstocks = "MaxOverstocks";
-
-            /// <summary>周期。采样周期，默认60s</summary>
-            public const String Period = "Period";
+            public const String MaxMessages = "MaxMessages";
 
             /// <summary>启用。停用的节点不再执行监控</summary>
             public const String Enable = "Enable";
+
+            /// <summary>最早消费者</summary>
+            public const String FirstConsumer = "FirstConsumer";
+
+            /// <summary>最后活跃</summary>
+            public const String LastActive = "LastActive";
 
             /// <summary>创建人</summary>
             public const String CreateUser = "CreateUser";

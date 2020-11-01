@@ -7,6 +7,7 @@ using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using NewLife.Serialization;
+using Stardust.Data.Models;
 using XCode;
 using XCode.Membership;
 
@@ -181,7 +182,7 @@ namespace Stardust.Data.Nodes
         #region 业务操作
         /// <summary>从Redis信息填充字段</summary>
         /// <param name="inf"></param>
-        public KeyEntry[] Fill(IDictionary<String, String> inf)
+        public RedisDbEntry[] Fill(IDictionary<String, String> inf)
         {
             Speed = inf["instantaneous_ops_per_sec"].ToInt();
             InputKbps = inf["instantaneous_input_kbps"].ToInt();
@@ -212,14 +213,14 @@ namespace Stardust.Data.Nodes
             }
 
             // key统计
-            var dbs = new KeyEntry[16];
+            var dbs = new RedisDbEntry[16];
             var sb = new StringBuilder();
             for (var i = 0; i < dbs.Length; i++)
             {
                 if (inf.TryGetValue($"db{i}", out var db))
                 {
                     var dic = db.SplitAsDictionary("=", ",");
-                    dbs[i] = new KeyEntry
+                    dbs[i] = new RedisDbEntry
                     {
                         Keys = dic["keys"].ToInt(),
                         Expires = dic["expires"].ToInt(),
@@ -254,13 +255,6 @@ namespace Stardust.Data.Nodes
             Remark = sb.ToString().Trim();
 
             return dbs;
-        }
-
-        public class KeyEntry
-        {
-            public Int32 Keys { get; set; }
-            public Int32 Expires { get; set; }
-            public Int32 AvgTtl { get; set; }
         }
         #endregion
     }

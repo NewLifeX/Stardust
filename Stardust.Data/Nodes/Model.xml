@@ -270,11 +270,12 @@
       <Column Name="Topic" DataType="String" Description="主题。消息队列主题" />
       <Column Name="Type" DataType="String" Description="类型。消息队列类型" />
       <Column Name="Consumers" DataType="Int32" Description="消费者。消费者个数" />
-      <Column Name="Messages" DataType="Int32" Description="消费数。消费的总消息个数，来自于消费者的消费数叠加" />
-      <Column Name="Overstocks" DataType="Int32" Description="积压。待消费消息数" />
-      <Column Name="MaxOverstocks" DataType="Int32" Description="最大积压。达到该值时告警，0表示不启用" />
-      <Column Name="Period" DataType="Int32" Description="周期。采样周期，默认60s" />
+      <Column Name="Total" DataType="Int64" Description="总消费。现有消费者的消费总数" />
+      <Column Name="Messages" DataType="Int32" Description="消息数。积压下来，等待消费的消息个数" />
+      <Column Name="MaxMessages" DataType="Int32" Description="最大积压。达到该值时告警，0表示不启用" />
       <Column Name="Enable" DataType="Boolean" Description="启用。停用的节点不再执行监控" />
+      <Column Name="FirstConsumer" DataType="DateTime" Description="最早消费者" />
+      <Column Name="LastActive" DataType="DateTime" Description="最后活跃" />
       <Column Name="CreateUser" DataType="String" Description="创建人" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />

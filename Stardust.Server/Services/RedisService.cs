@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using NewLife;
 using NewLife.Caching;
-using NewLife.Log;
+using NewLife.Serialization;
 using NewLife.Threading;
+using Stardust.Data.Models;
 using Stardust.Data.Nodes;
 
 namespace Stardust.Server.Services
@@ -16,23 +17,33 @@ namespace Stardust.Server.Services
     {
     }
 
-    public class RedisService : BackgroundService, IRedisService
+    public class RedisService : IHostedService, IRedisService
     {
-        /// <summary>计算周期。默认30秒</summary>
-        public Int32 Period { get; set; } = 30;
+        /// <summary>计算周期。默认60秒</summary>
+        public Int32 Period { get; set; } = 60;
 
-        private TimerX _timer;
+        private TimerX _traceNode;
+        private TimerX _traceQueue;
         private readonly ICache _cache = new MemoryCache();
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        public Task StartAsync(CancellationToken cancellationToken)
         {
             // 初始化定时器
-            _timer = new TimerX(DoWork, null, 5_000, Period * 1000) { Async = true };
+            _traceNode = new TimerX(DoTraceNode, null, 5_000, Period * 1000) { Async = true };
+            _traceQueue = new TimerX(DoTraceQueue, null, 10_000, Period * 1000) { Async = true };
 
             return Task.CompletedTask;
         }
 
-        private void DoWork(Object state)
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            _traceNode?.TryDispose();
+            _traceQueue?.TryDispose();
+
+            return Task.CompletedTask;
+        }
+
+        private void DoTraceNode(Object state)
         {
             var list = RedisNode.FindAllWithCache();
             foreach (var item in list)
@@ -40,13 +51,13 @@ namespace Stardust.Server.Services
                 if (item.Enable)
                 {
                     // 捕获异常，不要影响后续操作
-                    var key = $"redisService:error:{item.Id}";
+                    var key = $"DoTraceNode:{item.Id}";
                     var errors = _cache.Get<Int64>(key);
                     if (errors < 5)
                     {
                         try
                         {
-                            Process(item);
+                            TraceNode(item);
 
                             _cache.Remove(key);
                         }
@@ -68,7 +79,19 @@ namespace Stardust.Server.Services
 
         private readonly IDictionary<Int32, FullRedis> _servers = new Dictionary<Int32, FullRedis>();
         private readonly IDictionary<String, FullRedis> _servers2 = new Dictionary<String, FullRedis>();
-        private void Process(RedisNode node)
+        private FullRedis GetOrAdd(RedisNode node, Int32 db)
+        {
+            var key = $"{node.Id}-{db}";
+            if (!_servers2.TryGetValue(key, out var rds)) _servers2[key] = rds = new FullRedis();
+
+            rds.Server = node.Server;
+            rds.Password = node.Password;
+            rds.Db = db;
+
+            return rds;
+        }
+
+        private void TraceNode(RedisNode node)
         {
             if (!_servers.TryGetValue(node.Id, out var rds)) _servers[node.Id] = rds = new FullRedis();
 
@@ -93,7 +116,7 @@ namespace Stardust.Server.Services
             if (node.ScanQueue && dbs != null) ScanQueue(node, dbs);
         }
 
-        private void ScanQueue(RedisNode node, RedisData.KeyEntry[] dbs)
+        private void ScanQueue(RedisNode node, RedisDbEntry[] dbs)
         {
             var queues = RedisMessageQueue.FindAllByRedisId(node.Id);
 
@@ -101,12 +124,7 @@ namespace Stardust.Server.Services
             {
                 if (dbs[i] == null) continue;
 
-                var key = $"{node.Id}-{i}";
-                if (!_servers2.TryGetValue(key, out var rds2)) _servers2[key] = rds2 = new FullRedis();
-
-                rds2.Server = node.Server;
-                rds2.Password = node.Password;
-                rds2.Db = i;
+                var rds2 = GetOrAdd(node, i);
 
                 // keys个数太大不支持扫描
                 if (rds2.Count < 10000)
@@ -132,10 +150,77 @@ namespace Stardust.Server.Services
 
                         if (mq.Name.IsNullOrEmpty()) mq.Name = node.Name;
                         if (mq.Category.IsNullOrEmpty()) mq.Category = node.Category;
+                        if (mq.Type.IsNullOrEmpty())
+                        {
+                            mq.Type = topic.EndsWithIgnoreCase(":Delay") ? "Delay" : "List";
+                        }
 
                         mq.SaveAsync();
                     }
                 }
+            }
+        }
+
+        private void DoTraceQueue(Object state)
+        {
+            var list = RedisMessageQueue.FindAll();
+            foreach (var item in list)
+            {
+                if (item.Enable && item.Redis != null)
+                {
+                    // 捕获异常，不要影响后续操作
+                    var key = $"DoTraceQueue:{item.Id}";
+                    var errors = _cache.Get<Int64>(key);
+                    if (errors < 5)
+                    {
+                        try
+                        {
+                            TraceQueue(item);
+
+                            _cache.Remove(key);
+                        }
+                        catch
+                        {
+                            errors = _cache.Increment(key, 1);
+                            if (errors <= 1)
+                                _cache.SetExpire(key, TimeSpan.FromMinutes(10));
+                        }
+                    }
+                    else
+                    {
+                        item.Enable = false;
+                    }
+                    item.SaveAsync();
+                }
+            }
+        }
+
+        private void TraceQueue(RedisMessageQueue queue)
+        {
+            var rds = GetOrAdd(queue.Redis, queue.Db);
+
+            switch (queue.Type)
+            {
+                case "List":
+                    {
+                        var mq = rds.GetReliableQueue<Object>(queue.Topic);
+                        queue.Messages = mq.Count;
+
+                        var cs = rds.Search($"{queue.Topic}:Status:*", 1000).ToArray();
+                        queue.Consumers = cs.Length;
+
+                        var sts = rds.GetAll<RedisQueueStatus>(cs);
+                        if (sts != null)
+                        {
+                            queue.Total = sts.Sum(e => e.Value.Consumes);
+                            queue.FirstConsumer = sts.Min(e => e.Value.CreateTime);
+                            queue.LastActive = sts.Max(e => e.Value.LastActive);
+                            queue.Remark = sts.ToJson();
+                        }
+                    }
+                    break;
+                default:
+                    break;
             }
         }
     }
