@@ -215,7 +215,7 @@
       <Column Name="MemoryPolicy" DataType="String" Description="内存策略。缓存淘汰策略" />
       <Column Name="MemoryAllocator" DataType="String" Description="分配器。内存分配器，低版本有内存泄漏" />
       <Column Name="Enable" DataType="Boolean" Description="启用。停用的节点不再执行监控" />
-      <Column Name="DiscoverQueue" DataType="Boolean" Description="队列。自动扫描发现消息队列，默认true" />
+      <Column Name="ScanQueue" DataType="Boolean" Description="队列。自动扫描发现消息队列，默认true" />
       <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
       <Column Name="CreateUser" DataType="String" Description="创建人" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
@@ -271,12 +271,12 @@
   </Table>
   <Table Name="RedisMessageQueue" Description="Redis消息队列。Redis消息队列状态监控">
     <Columns>
-      <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="RedisId" DataType="Int32" Description="Redis节点" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
       <Column Name="Category" DataType="String" Description="分类" />
       <Column Name="Db" DataType="Int32" Description="库" />
-      <Column Name="Topic" DataType="Int32" Description="主题。消息队列主题" />
+      <Column Name="Topic" DataType="String" Description="主题。消息队列主题" />
       <Column Name="Type" DataType="String" Description="类型。消息队列类型" />
       <Column Name="Consumers" DataType="Int32" Description="消费者。消费者个数" />
       <Column Name="Messages" DataType="Int32" Description="消费数。消费的总消息个数，来自于消费者的消费数叠加" />

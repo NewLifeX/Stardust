@@ -19,13 +19,13 @@ namespace Stardust.Data.Nodes
     public partial class RedisMessageQueue
     {
         #region 属性
-        private Int64 _Id;
+        private Int32 _Id;
         /// <summary>编号</summary>
         [DisplayName("编号")]
         [Description("编号")]
-        [DataObjectField(true, false, false, 0)]
+        [DataObjectField(true, true, false, 0)]
         [BindColumn("Id", "编号", "")]
-        public Int64 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
+        public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
         private Int32 _RedisId;
         /// <summary>Redis节点</summary>
@@ -59,13 +59,13 @@ namespace Stardust.Data.Nodes
         [BindColumn("Db", "库", "")]
         public Int32 Db { get => _Db; set { if (OnPropertyChanging("Db", value)) { _Db = value; OnPropertyChanged("Db"); } } }
 
-        private Int32 _Topic;
+        private String _Topic;
         /// <summary>主题。消息队列主题</summary>
         [DisplayName("主题")]
         [Description("主题。消息队列主题")]
-        [DataObjectField(false, false, false, 0)]
+        [DataObjectField(false, false, true, 50)]
         [BindColumn("Topic", "主题。消息队列主题", "")]
-        public Int32 Topic { get => _Topic; set { if (OnPropertyChanging("Topic", value)) { _Topic = value; OnPropertyChanged("Topic"); } } }
+        public String Topic { get => _Topic; set { if (OnPropertyChanging("Topic", value)) { _Topic = value; OnPropertyChanged("Topic"); } } }
 
         private String _Type;
         /// <summary>类型。消息队列类型</summary>
@@ -235,12 +235,12 @@ namespace Stardust.Data.Nodes
             {
                 switch (name)
                 {
-                    case "Id": _Id = value.ToLong(); break;
+                    case "Id": _Id = value.ToInt(); break;
                     case "RedisId": _RedisId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Category": _Category = Convert.ToString(value); break;
                     case "Db": _Db = value.ToInt(); break;
-                    case "Topic": _Topic = value.ToInt(); break;
+                    case "Topic": _Topic = Convert.ToString(value); break;
                     case "Type": _Type = Convert.ToString(value); break;
                     case "Consumers": _Consumers = value.ToInt(); break;
                     case "Messages": _Messages = value.ToInt(); break;

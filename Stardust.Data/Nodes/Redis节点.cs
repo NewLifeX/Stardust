@@ -107,13 +107,13 @@ namespace Stardust.Data.Nodes
         [BindColumn("Enable", "启用。停用的节点不再执行监控", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
-        private Boolean _DiscoverQueue;
+        private Boolean _ScanQueue;
         /// <summary>队列。自动扫描发现消息队列，默认true</summary>
         [DisplayName("队列")]
         [Description("队列。自动扫描发现消息队列，默认true")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("DiscoverQueue", "队列。自动扫描发现消息队列，默认true", "")]
-        public Boolean DiscoverQueue { get => _DiscoverQueue; set { if (OnPropertyChanging("DiscoverQueue", value)) { _DiscoverQueue = value; OnPropertyChanged("DiscoverQueue"); } } }
+        [BindColumn("ScanQueue", "队列。自动扫描发现消息队列，默认true", "")]
+        public Boolean ScanQueue { get => _ScanQueue; set { if (OnPropertyChanging("ScanQueue", value)) { _ScanQueue = value; OnPropertyChanged("ScanQueue"); } } }
 
         private String _WebHook;
         /// <summary>告警机器人。钉钉、企业微信等</summary>
@@ -217,7 +217,7 @@ namespace Stardust.Data.Nodes
                     case "MemoryPolicy": return _MemoryPolicy;
                     case "MemoryAllocator": return _MemoryAllocator;
                     case "Enable": return _Enable;
-                    case "DiscoverQueue": return _DiscoverQueue;
+                    case "ScanQueue": return _ScanQueue;
                     case "WebHook": return _WebHook;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
@@ -246,7 +246,7 @@ namespace Stardust.Data.Nodes
                     case "MemoryPolicy": _MemoryPolicy = Convert.ToString(value); break;
                     case "MemoryAllocator": _MemoryAllocator = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
-                    case "DiscoverQueue": _DiscoverQueue = value.ToBoolean(); break;
+                    case "ScanQueue": _ScanQueue = value.ToBoolean(); break;
                     case "WebHook": _WebHook = Convert.ToString(value); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
@@ -301,7 +301,7 @@ namespace Stardust.Data.Nodes
             public static readonly Field Enable = FindByName("Enable");
 
             /// <summary>队列。自动扫描发现消息队列，默认true</summary>
-            public static readonly Field DiscoverQueue = FindByName("DiscoverQueue");
+            public static readonly Field ScanQueue = FindByName("ScanQueue");
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public static readonly Field WebHook = FindByName("WebHook");
@@ -373,7 +373,7 @@ namespace Stardust.Data.Nodes
             public const String Enable = "Enable";
 
             /// <summary>队列。自动扫描发现消息队列，默认true</summary>
-            public const String DiscoverQueue = "DiscoverQueue";
+            public const String ScanQueue = "ScanQueue";
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public const String WebHook = "WebHook";
