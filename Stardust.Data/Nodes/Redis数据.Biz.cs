@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -152,15 +152,18 @@ namespace Stardust.Data.Nodes
         #region 高级查询
         /// <summary>高级查询</summary>
         /// <param name="redisId">Redis节点</param>
+        /// <param name="start">更新时间开始</param>
+        /// <param name="end">更新时间结束</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<RedisData> Search(Int32 redisId, String key, PageParameter page)
+        public static IList<RedisData> Search(Int32 redisId, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (redisId >= 0) exp &= _.RedisId == redisId;
             if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.TopCommand.Contains(key) | _.CreateIP.Contains(key) | _.Remark.Contains(key);
+            exp &= _.Id.Between(start, end, Meta.Factory.Snow);
 
             return FindAll(exp, page);
         }

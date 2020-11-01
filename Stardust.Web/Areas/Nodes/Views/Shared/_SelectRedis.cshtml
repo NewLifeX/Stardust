@@ -7,9 +7,9 @@
     var id = (Object)Model + "";
     var page = ViewBag.Page as Pager;
 
-    if (id.IsNullOrEmpty()) { id = "nodeId"; }
-    var nodeId = page[id];
-    var showValue = Node.FindByID(nodeId.ToInt())?.Name;
+    if (id.IsNullOrEmpty()) { id = "redisId"; }
+    var redisId = page[id];
+    var showValue = Node.FindByID(redisId.ToInt())?.Name;
 
     var set = NewLife.Cube.Setting.Current;
     var res = set.ResourceUrl;
@@ -20,8 +20,8 @@
 <div class="form-group" style="position:relative">
     <div class="col-lg-12">
         <div class="input-group">
-            <input type="hidden" name="@id" id="@id" value="@nodeId" />
-            <input type="text" class="form-control" id="@(id)_select" placeholder="搜索节点" value="@showValue">
+            <input type="hidden" name="@id" id="@id" value="@redisId" />
+            <input type="text" class="form-control" id="@(id)_select" placeholder="搜索Redis" value="@showValue">
             <div class="input-group-btn">
                 <ul class="dropdown-menu dropdown-menu-right" role="menu"></ul>
             </div>
@@ -33,9 +33,9 @@
 <script type="text/javascript">
     $(function () {
         $("#@(id)_select").bsSuggest({
-            url: "/Nodes/Node/NodeSearch?key=",
+            url: "/Nodes/RedisNode/NodeSearch?key=",
             getDataMethod:"url",
-            effectiveFieldsAlias: { ID: "编号", Code: "代码", Name: "名称", Category: "类别" },
+            effectiveFieldsAlias: { ID: "编号", Name: "名称", Server: "地址", Category: "类别" },
             ignorecase: true,
             showHeader: true,
             delayUntilKeyup: true, //获取数据的方式为 firstByUrl 时，延迟到有输入/获取到焦点时才请求数据

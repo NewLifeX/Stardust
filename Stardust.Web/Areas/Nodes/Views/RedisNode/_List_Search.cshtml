@@ -1,0 +1,14 @@
+﻿@using NewLife;
+@using NewLife.Web;
+@using NewLife.Cube;
+@using XCode;
+@using Stardust.Data.Nodes;
+@{
+    var fact = ViewBag.Factory as IEntityFactory;
+    var page = ViewBag.Page as Pager;
+}
+<div class="form-group">
+    <label for="category" class="control-label">类别：</label>
+    @Html.ForDropDownList("category", RedisNode.GetCategoryList(), page["category"], "全部", true)
+</div>
+@await Html.PartialAsync("_DateRange")

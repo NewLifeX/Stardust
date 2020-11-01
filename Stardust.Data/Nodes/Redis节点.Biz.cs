@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -68,55 +68,41 @@ namespace Stardust.Data.Nodes
             // CheckExist(isNew, nameof(Server));
         }
 
-        ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
-        //[EditorBrowsable(EditorBrowsableState.Never)]
-        //protected override void InitData()
-        //{
-        //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
-        //    if (Meta.Session.Count > 0) return;
+        /// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected override void InitData()
+        {
+            // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
+            if (Meta.Session.Count > 0) return;
 
-        //    if (XTrace.Debug) XTrace.WriteLine("开始初始化RedisNode[Redis节点]数据……");
+            if (XTrace.Debug) XTrace.WriteLine("开始初始化RedisNode[Redis节点]数据……");
 
-        //    var entity = new RedisNode();
-        //    entity.Id = 0;
-        //    entity.Name = "abc";
-        //    entity.Category = "abc";
-        //    entity.Server = "abc";
-        //    entity.Password = "abc";
-        //    entity.Version = "abc";
-        //    entity.Mode = "abc";
-        //    entity.MaxMemory = 0;
-        //    entity.MemoryPolicy = "abc";
-        //    entity.MemoryAllocator = "abc";
-        //    entity.Enable = true;
-        //    entity.DiscoverQueue = true;
-        //    entity.CreateUser = "abc";
-        //    entity.CreateUserID = 0;
-        //    entity.CreateTime = DateTime.Now;
-        //    entity.CreateIP = "abc";
-        //    entity.UpdateUser = "abc";
-        //    entity.UpdateUserID = 0;
-        //    entity.UpdateTime = DateTime.Now;
-        //    entity.UpdateIP = "abc";
-        //    entity.Remark = "abc";
-        //    entity.Insert();
+            var entity = new RedisNode
+            {
+                Name = "本地",
+                Category = "",
+                Server = "127.0.0.1:6379",
+                Password = "",
+                Enable = true
+            };
+            entity.Insert();
 
-        //    if (XTrace.Debug) XTrace.WriteLine("完成初始化RedisNode[Redis节点]数据！");
-        //}
+            if (XTrace.Debug) XTrace.WriteLine("完成初始化RedisNode[Redis节点]数据！");
+        }
 
-        ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
-        ///// <returns></returns>
-        //public override Int32 Insert()
-        //{
-        //    return base.Insert();
-        //}
+        /// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
+        /// <returns></returns>
+        public override Int32 Insert()
+        {
+            return base.Insert();
+        }
 
-        ///// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>
-        ///// <returns></returns>
-        //protected override Int32 OnDelete()
-        //{
-        //    return base.OnDelete();
-        //}
+        /// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>
+        /// <returns></returns>
+        protected override Int32 OnDelete()
+        {
+            return base.OnDelete();
+        }
         #endregion
 
         #region 扩展属性
@@ -154,16 +140,21 @@ namespace Stardust.Data.Nodes
         #region 高级查询
         /// <summary>高级查询</summary>
         /// <param name="server">地址。含端口</param>
+        /// <param name="category">分类</param>
+        /// <param name="enable">启用</param>
         /// <param name="start">更新时间开始</param>
         /// <param name="end">更新时间结束</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<RedisNode> Search(String server, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<RedisNode> Search(String server, String category, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (!server.IsNullOrEmpty()) exp &= _.Server == server;
+            if (!category.IsNullOrEmpty()) exp &= _.Category == category;
+            if (enable != null) exp &= _.Enable == enable;
+
             exp &= _.UpdateTime.Between(start, end);
             if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Category.Contains(key) | _.Password.Contains(key) | _.Version.Contains(key) | _.Mode.Contains(key) | _.MemoryPolicy.Contains(key) | _.MemoryAllocator.Contains(key) | _.CreateUser.Contains(key) | _.CreateIP.Contains(key) | _.UpdateUser.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
 
@@ -171,14 +162,11 @@ namespace Stardust.Data.Nodes
         }
 
         // Select Count(Id) as Id,Category From RedisNode Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
-        //static readonly FieldCache<RedisNode> _CategoryCache = new FieldCache<RedisNode>(nameof(Category))
-        //{
-        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-        //};
+        static readonly FieldCache<RedisNode> _CategoryCache = new FieldCache<RedisNode>(nameof(Category));
 
-        ///// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-        ///// <returns></returns>
-        //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
+        /// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
+        /// <returns></returns>
+        public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
         #endregion
 
         #region 业务操作

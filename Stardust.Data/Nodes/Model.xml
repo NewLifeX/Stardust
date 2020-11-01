@@ -273,6 +273,7 @@
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="RedisId" DataType="Int32" Description="Redis节点" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
+      <Column Name="Category" DataType="String" Description="分类" />
       <Column Name="Db" DataType="Int32" Description="库" />
       <Column Name="Topic" DataType="Int32" Description="主题。消息队列主题" />
       <Column Name="Type" DataType="String" Description="类型。消息队列类型" />

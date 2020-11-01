@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -149,31 +149,31 @@ namespace Stardust.Data.Nodes
         #region 高级查询
         /// <summary>高级查询</summary>
         /// <param name="redisId">Redis节点</param>
+        /// <param name="category">分类</param>
         /// <param name="start">更新时间开始</param>
         /// <param name="end">更新时间结束</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<RedisMessageQueue> Search(Int32 redisId, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<RedisMessageQueue> Search(Int32 redisId, String category, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (redisId >= 0) exp &= _.RedisId == redisId;
+            if (!category.IsNullOrEmpty()) exp &= _.Category == category;
+
             exp &= _.UpdateTime.Between(start, end);
             if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Type.Contains(key) | _.CreateUser.Contains(key) | _.CreateIP.Contains(key) | _.UpdateUser.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
 
             return FindAll(exp, page);
         }
 
-        // Select Count(Id) as Id,Category From RedisMessageQueue Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
-        //static readonly FieldCache<RedisMessageQueue> _CategoryCache = new FieldCache<RedisMessageQueue>(nameof(Category))
-        //{
-        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-        //};
+        // Select Count(Id) as Id,Category From RedisNode Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
+        static readonly FieldCache<RedisMessageQueue> _CategoryCache = new FieldCache<RedisMessageQueue>(nameof(Category));
 
-        ///// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-        ///// <returns></returns>
-        //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
+        /// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
+        /// <returns></returns>
+        public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
         #endregion
 
         #region 业务操作
