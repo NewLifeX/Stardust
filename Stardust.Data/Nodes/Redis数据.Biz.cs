@@ -210,8 +210,9 @@ namespace Stardust.Data.Nodes
             var cmds = inf.Where(e => e.Key.StartsWith("cmdstat_")).ToDictionary(e => e.Key.TrimStart("cmdstat_"), e => e.Value);
             if (cmds.Count > 0)
             {
-                var kv = cmds.OrderByDescending(e => e.Value).First();
-                TopCommand = $"{kv.Key}:{kv.Value}";
+                var dic = cmds.ToDictionary(e => e.Key, e => e.Value.Substring("calls=", ",").ToInt());
+                var kv = dic.OrderByDescending(e => e.Value).First();
+                TopCommand = $"{kv.Key}:{cmds[kv.Key]}";
             }
 
             //Keys = inf["uptime_in_seconds"].ToInt();
