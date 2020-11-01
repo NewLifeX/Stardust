@@ -27,6 +27,7 @@ namespace Stardust.Server.Services
         public Int32 Period { get; set; } = 30;
 
         private TimerX _timer;
+        private ICache _cache = new MemoryCache();
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -41,7 +42,32 @@ namespace Stardust.Server.Services
             var list = RedisNode.FindAllWithCache();
             foreach (var item in list)
             {
-                if (item.Enable) Process(item);
+                if (item.Enable)
+                {
+                    // 捕获异常，不要影响后续操作
+                    var key = $"redisService:error:{item.Id}";
+                    var errors = _cache.Get<Int64>(key);
+                    if (errors < 5)
+                    {
+                        try
+                        {
+                            Process(item);
+
+                            _cache.Remove(key);
+                        }
+                        catch
+                        {
+                            errors = _cache.Increment(key, 1);
+                            if (errors <= 1)
+                                _cache.SetExpire(key, TimeSpan.FromMinutes(10));
+                        }
+                    }
+                    else
+                    {
+                        item.Enable = false;
+                        item.SaveAsync();
+                    }
+                }
             }
         }
 
@@ -49,16 +75,11 @@ namespace Stardust.Server.Services
         private void Process(RedisNode node)
         {
             if (!_servers.TryGetValue(node.Id, out var rds))
-            {
-                rds = new FullRedis
-                {
-                    Server = node.Server,
-                    Password = node.Password,
-                    //Log = XTrace.Log,
-                };
+                _servers[node.Id] = rds = new FullRedis();
 
-                _servers[node.Id] = rds;
-            }
+            // 可能后面更新了服务器地址和密码
+            rds.Server = node.Server;
+            rds.Password = node.Password;
 
             //var inf = rds.GetInfo(true);
             var inf = rds.GetInfo(false);
