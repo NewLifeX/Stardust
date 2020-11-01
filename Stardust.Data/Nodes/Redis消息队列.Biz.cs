@@ -25,7 +25,7 @@ using XCode.Membership;
 
 namespace Stardust.Data.Nodes
 {
-    /// <summary>Redis消息队列。Redis消息队列监控</summary>
+    /// <summary>Redis消息队列。Redis消息队列状态监控</summary>
     public partial class RedisMessageQueue : Entity<RedisMessageQueue>
     {
         #region 对象操作
@@ -80,6 +80,11 @@ namespace Stardust.Data.Nodes
         //    entity.Name = "abc";
         //    entity.Db = 0;
         //    entity.Topic = 0;
+        //    entity.Type = "abc";
+        //    entity.Consumers = 0;
+        //    entity.Messages = 0;
+        //    entity.Overstocks = 0;
+        //    entity.Period = 0;
         //    entity.CreateUser = "abc";
         //    entity.CreateUserID = 0;
         //    entity.CreateTime = DateTime.Now;
@@ -129,36 +134,33 @@ namespace Stardust.Data.Nodes
             //return Find(_.Id == id);
         }
 
-        /// <summary>根据Redis节点、名称查找</summary>
+        /// <summary>根据Redis节点查找</summary>
         /// <param name="redisId">Redis节点</param>
-        /// <param name="name">名称</param>
         /// <returns>实体列表</returns>
-        public static IList<RedisMessageQueue> FindAllByRedisIdAndName(Int32 redisId, String name)
+        public static IList<RedisMessageQueue> FindAllByRedisId(Int32 redisId)
         {
             // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.RedisId == redisId && e.Name == name);
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.RedisId == redisId);
 
-            return FindAll(_.RedisId == redisId & _.Name == name);
+            return FindAll(_.RedisId == redisId);
         }
         #endregion
 
         #region 高级查询
         /// <summary>高级查询</summary>
         /// <param name="redisId">Redis节点</param>
-        /// <param name="name">名称</param>
         /// <param name="start">更新时间开始</param>
         /// <param name="end">更新时间结束</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<RedisMessageQueue> Search(Int32 redisId, String name, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<RedisMessageQueue> Search(Int32 redisId, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (redisId >= 0) exp &= _.RedisId == redisId;
-            if (!name.IsNullOrEmpty()) exp &= _.Name == name;
             exp &= _.UpdateTime.Between(start, end);
-            if (!key.IsNullOrEmpty()) exp &= _.CreateUser.Contains(key) | _.CreateIP.Contains(key) | _.UpdateUser.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
+            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Type.Contains(key) | _.CreateUser.Contains(key) | _.CreateIP.Contains(key) | _.UpdateUser.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
 
             return FindAll(exp, page);
         }

@@ -36,7 +36,6 @@ namespace Stardust.Data.Nodes
             //df.Add(nameof(RedisId));
 
             // 过滤器 UserModule、TimeModule、IPModule
-            Meta.Modules.Add<UserModule>();
             Meta.Modules.Add<TimeModule>();
             Meta.Modules.Add<IPModule>();
         }
@@ -52,12 +51,6 @@ namespace Stardust.Data.Nodes
             base.Valid(isNew);
 
             // 在新插入数据或者修改了指定字段时进行修正
-            // 处理当前已登录用户信息，可以由UserModule过滤器代劳
-            /*var user = ManageProvider.User;
-            if (user != null)
-            {
-                if (isNew && !Dirtys[nameof(CreateUserID)]) CreateUserID = user.ID;
-            }*/
             //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
             //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
         }
@@ -85,10 +78,21 @@ namespace Stardust.Data.Nodes
         //    entity.Keys = 0;
         //    entity.ExpiredKeys = 0;
         //    entity.EvictedKeys = 0;
-        //    entity.CommandsProcessed = 0;
+        //    entity.KeySpaceHits = 0;
+        //    entity.KeySpaceMisses = 0;
+        //    entity.Commands = 0;
+        //    entity.Reads = 0;
+        //    entity.Writes = 0;
         //    entity.AvgTtl = 0;
-        //    entity.CreateUser = "abc";
-        //    entity.CreateUserID = 0;
+        //    entity.TopCommand = "abc";
+        //    entity.Db0Keys = 0;
+        //    entity.Db0Expires = 0;
+        //    entity.Db1Keys = 0;
+        //    entity.Db1Expires = 0;
+        //    entity.Db2Keys = 0;
+        //    entity.Db2Expires = 0;
+        //    entity.Db3Keys = 0;
+        //    entity.Db3Expires = 0;
         //    entity.CreateTime = DateTime.Now;
         //    entity.CreateIP = "abc";
         //    entity.Remark = "abc";
@@ -156,7 +160,7 @@ namespace Stardust.Data.Nodes
             var exp = new WhereExpression();
 
             if (redisId >= 0) exp &= _.RedisId == redisId;
-            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.CreateUser.Contains(key) | _.CreateIP.Contains(key) | _.Remark.Contains(key);
+            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.TopCommand.Contains(key) | _.CreateIP.Contains(key) | _.Remark.Contains(key);
 
             return FindAll(exp, page);
         }

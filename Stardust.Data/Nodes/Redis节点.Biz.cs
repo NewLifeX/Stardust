@@ -88,6 +88,8 @@ namespace Stardust.Data.Nodes
         //    entity.MaxMemory = 0;
         //    entity.MemoryPolicy = "abc";
         //    entity.MemoryAllocator = "abc";
+        //    entity.Enable = true;
+        //    entity.DiscoverQueue = true;
         //    entity.CreateUser = "abc";
         //    entity.CreateUserID = 0;
         //    entity.CreateTime = DateTime.Now;
