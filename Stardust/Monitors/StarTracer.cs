@@ -39,6 +39,7 @@ namespace Stardust.Monitors
         /// <summary>Api客户端</summary>
         public IApiClient Client { get; set; }
 
+        private String _version;
         private Process _process = Process.GetCurrentProcess();
         private readonly Queue<TraceModel> _fails = new Queue<TraceModel>();
         #endregion
@@ -61,7 +62,10 @@ namespace Stardust.Monitors
 
             try
             {
-                var asm = AssemblyX.Entry ?? AssemblyX.Create(Assembly.GetExecutingAssembly());
+                var executing = AssemblyX.Create(Assembly.GetExecutingAssembly());
+                if (executing != null) _version = executing.Version;
+
+                var asm = AssemblyX.Entry ?? executing;
                 ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}@{asm?.Version}";
             }
             catch { }
@@ -149,6 +153,7 @@ namespace Stardust.Monitors
                 AppId = AppId,
                 AppName = AppName,
                 ClientId = ClientId,
+                Version = _version,
                 Info = info,
 
                 Builders = builders

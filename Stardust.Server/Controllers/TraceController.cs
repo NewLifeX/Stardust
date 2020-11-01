@@ -72,14 +72,19 @@ namespace Stardust.Server.Controllers
             Task.Run(() => ProcessData(app, model, ip, builders));
 
             // 构造响应
-            return new TraceResponse
+            var rs = new TraceResponse
             {
                 Period = app.Period,
                 MaxSamples = app.MaxSamples,
                 MaxErrors = app.MaxErrors,
                 Timeout = app.Timeout,
-                Excludes = app.Excludes?.Split(",", ";"),
+                //Excludes = app.Excludes?.Split(",", ";"),
             };
+
+            // 新版本才返回Excludes，老版本客户端在处理Excludes时有BUG，错误处理/
+            if (!model.Version.IsNullOrEmpty()) rs.Excludes = app.Excludes?.Split(",", ";");
+
+            return rs;
         }
 
         private void ProcessData(AppTracer app, TraceModel model, String ip, ISpanBuilder[] builders)
