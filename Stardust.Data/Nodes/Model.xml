@@ -247,6 +247,14 @@
       <Column Name="KeySpaceHits" DataType="Int64" Description="命中数。只读请求命中缓存" />
       <Column Name="KeySpaceMisses" DataType="Int64" Description="Miss数。只读请求未命中缓存" />
       <Column Name="AvgTtl" DataType="Int32" Description="平均过期。平均过期时间，单位秒" />
+      <Column Name="Db0Keys" DataType="Int64" Description="db0个数" />
+      <Column Name="Db0Expires" DataType="Int64" Description="db0过期" />
+      <Column Name="Db1Keys" DataType="Int64" Description="db1个数" />
+      <Column Name="Db1Expires" DataType="Int64" Description="db1过期" />
+      <Column Name="Db2Keys" DataType="Int64" Description="db2个数" />
+      <Column Name="Db2Expires" DataType="Int64" Description="db2过期" />
+      <Column Name="Db3Keys" DataType="Int64" Description="db3个数" />
+      <Column Name="Db3Expires" DataType="Int64" Description="db3过期" />
       <Column Name="CreateUser" DataType="String" Description="创建人" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
