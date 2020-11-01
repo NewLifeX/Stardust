@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -18,8 +16,8 @@ namespace Stardust.Server.Services
         private TimerX _timer;
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            // 每天执行
-            _timer = new TimerX(DoWork, null, DateTime.Today.AddMinutes(7), 24 * 3600 * 1000) { Async = true };
+            // 每小时执行
+            _timer = new TimerX(DoWork, null, DateTime.Today.AddMinutes(Rand.Next(60)), 3600 * 1000) { Async = true };
 
             // 临时来一次
             TimerX.Delay(DoWork, 10_000);
