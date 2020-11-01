@@ -89,10 +89,10 @@ namespace Stardust.Server.Services
             }
         }
 
-        private String GetMarkdown(AppTracer app, AppMinuteStat st)
+        private String GetMarkdown(AppTracer app, AppMinuteStat st, Boolean includeTitle)
         {
             var sb = new StringBuilder();
-            sb.AppendLine($"### [{app}]系统告警");
+            if (includeTitle) sb.AppendLine($"### [{app}]系统告警");
             sb.AppendLine($">**总数：**<font color=\"info\">{st.Errors}</font>");
 
             // 找找具体接口错误
@@ -140,7 +140,7 @@ namespace Stardust.Server.Services
         {
             if (_weixin == null) _weixin = new WeiXinClient { Url = app.AlarmRobot };
 
-            var msg = GetMarkdown(app, st);
+            var msg = GetMarkdown(app, st, true);
 
             _weixin.SendMarkDown(msg);
         }
@@ -149,7 +149,7 @@ namespace Stardust.Server.Services
         {
             if (_dingTalk == null) _dingTalk = new DingTalkClient { Url = app.AlarmRobot };
 
-            var msg = GetMarkdown(app, st);
+            var msg = GetMarkdown(app, st, false);
 
             _dingTalk.SendMarkDown("系统告警", msg, null);
         }
