@@ -240,10 +240,12 @@
       <Column Name="ConnectedClients" DataType="Int32" Description="连接数" />
       <Column Name="UsedMemory" DataType="Int32" Description="已用内存。单位MB" />
       <Column Name="FragmentationRatio" DataType="Double" Description="碎片率。单位MB" />
-      <Column Name="Keys" DataType="Int32" Description="Keys数" />
-      <Column Name="ExpiredKeys" DataType="Int32" Description="过期Keys" />
-      <Column Name="EvictedKeys" DataType="Int32" Description="驱逐Keys。由于 maxmemory 限制，而被回收内存的 key 的总数" />
+      <Column Name="Keys" DataType="Int64" Description="Keys数" />
+      <Column Name="ExpiredKeys" DataType="Int64" Description="过期Keys" />
+      <Column Name="EvictedKeys" DataType="Int64" Description="驱逐Keys。由于 maxmemory 限制，而被回收内存的 key 的总数" />
       <Column Name="CommandsProcessed" DataType="Int64" Description="命令数" />
+      <Column Name="KeySpaceHits" DataType="Int64" Description="命中数。只读请求命中缓存" />
+      <Column Name="KeySpaceMisses" DataType="Int64" Description="Miss数。只读请求未命中缓存" />
       <Column Name="AvgTtl" DataType="Int32" Description="平均过期。平均过期时间，单位秒" />
       <Column Name="CreateUser" DataType="String" Description="创建人" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />

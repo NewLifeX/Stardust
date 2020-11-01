@@ -99,29 +99,29 @@ namespace Stardust.Data.Nodes
         [BindColumn("FragmentationRatio", "碎片率。单位MB", "")]
         public Double FragmentationRatio { get => _FragmentationRatio; set { if (OnPropertyChanging("FragmentationRatio", value)) { _FragmentationRatio = value; OnPropertyChanged("FragmentationRatio"); } } }
 
-        private Int32 _Keys;
+        private Int64 _Keys;
         /// <summary>Keys数</summary>
         [DisplayName("Keys数")]
         [Description("Keys数")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Keys", "Keys数", "")]
-        public Int32 Keys { get => _Keys; set { if (OnPropertyChanging("Keys", value)) { _Keys = value; OnPropertyChanged("Keys"); } } }
+        public Int64 Keys { get => _Keys; set { if (OnPropertyChanging("Keys", value)) { _Keys = value; OnPropertyChanged("Keys"); } } }
 
-        private Int32 _ExpiredKeys;
+        private Int64 _ExpiredKeys;
         /// <summary>过期Keys</summary>
         [DisplayName("过期Keys")]
         [Description("过期Keys")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("ExpiredKeys", "过期Keys", "")]
-        public Int32 ExpiredKeys { get => _ExpiredKeys; set { if (OnPropertyChanging("ExpiredKeys", value)) { _ExpiredKeys = value; OnPropertyChanged("ExpiredKeys"); } } }
+        public Int64 ExpiredKeys { get => _ExpiredKeys; set { if (OnPropertyChanging("ExpiredKeys", value)) { _ExpiredKeys = value; OnPropertyChanged("ExpiredKeys"); } } }
 
-        private Int32 _EvictedKeys;
+        private Int64 _EvictedKeys;
         /// <summary>驱逐Keys。由于 maxmemory 限制，而被回收内存的 key 的总数</summary>
         [DisplayName("驱逐Keys")]
         [Description("驱逐Keys。由于 maxmemory 限制，而被回收内存的 key 的总数")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("EvictedKeys", "驱逐Keys。由于 maxmemory 限制，而被回收内存的 key 的总数", "")]
-        public Int32 EvictedKeys { get => _EvictedKeys; set { if (OnPropertyChanging("EvictedKeys", value)) { _EvictedKeys = value; OnPropertyChanged("EvictedKeys"); } } }
+        public Int64 EvictedKeys { get => _EvictedKeys; set { if (OnPropertyChanging("EvictedKeys", value)) { _EvictedKeys = value; OnPropertyChanged("EvictedKeys"); } } }
 
         private Int64 _CommandsProcessed;
         /// <summary>命令数</summary>
@@ -130,6 +130,22 @@ namespace Stardust.Data.Nodes
         [DataObjectField(false, false, false, 0)]
         [BindColumn("CommandsProcessed", "命令数", "")]
         public Int64 CommandsProcessed { get => _CommandsProcessed; set { if (OnPropertyChanging("CommandsProcessed", value)) { _CommandsProcessed = value; OnPropertyChanged("CommandsProcessed"); } } }
+
+        private Int64 _KeySpaceHits;
+        /// <summary>命中数。只读请求命中缓存</summary>
+        [DisplayName("命中数")]
+        [Description("命中数。只读请求命中缓存")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("KeySpaceHits", "命中数。只读请求命中缓存", "")]
+        public Int64 KeySpaceHits { get => _KeySpaceHits; set { if (OnPropertyChanging("KeySpaceHits", value)) { _KeySpaceHits = value; OnPropertyChanged("KeySpaceHits"); } } }
+
+        private Int64 _KeySpaceMisses;
+        /// <summary>Miss数。只读请求未命中缓存</summary>
+        [DisplayName("Miss数")]
+        [Description("Miss数。只读请求未命中缓存")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("KeySpaceMisses", "Miss数。只读请求未命中缓存", "")]
+        public Int64 KeySpaceMisses { get => _KeySpaceMisses; set { if (OnPropertyChanging("KeySpaceMisses", value)) { _KeySpaceMisses = value; OnPropertyChanged("KeySpaceMisses"); } } }
 
         private Int32 _AvgTtl;
         /// <summary>平均过期。平均过期时间，单位秒</summary>
@@ -204,6 +220,8 @@ namespace Stardust.Data.Nodes
                     case "ExpiredKeys": return _ExpiredKeys;
                     case "EvictedKeys": return _EvictedKeys;
                     case "CommandsProcessed": return _CommandsProcessed;
+                    case "KeySpaceHits": return _KeySpaceHits;
+                    case "KeySpaceMisses": return _KeySpaceMisses;
                     case "AvgTtl": return _AvgTtl;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
@@ -227,10 +245,12 @@ namespace Stardust.Data.Nodes
                     case "ConnectedClients": _ConnectedClients = value.ToInt(); break;
                     case "UsedMemory": _UsedMemory = value.ToInt(); break;
                     case "FragmentationRatio": _FragmentationRatio = value.ToDouble(); break;
-                    case "Keys": _Keys = value.ToInt(); break;
-                    case "ExpiredKeys": _ExpiredKeys = value.ToInt(); break;
-                    case "EvictedKeys": _EvictedKeys = value.ToInt(); break;
+                    case "Keys": _Keys = value.ToLong(); break;
+                    case "ExpiredKeys": _ExpiredKeys = value.ToLong(); break;
+                    case "EvictedKeys": _EvictedKeys = value.ToLong(); break;
                     case "CommandsProcessed": _CommandsProcessed = value.ToLong(); break;
+                    case "KeySpaceHits": _KeySpaceHits = value.ToLong(); break;
+                    case "KeySpaceMisses": _KeySpaceMisses = value.ToLong(); break;
                     case "AvgTtl": _AvgTtl = value.ToInt(); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
@@ -288,6 +308,12 @@ namespace Stardust.Data.Nodes
 
             /// <summary>命令数</summary>
             public static readonly Field CommandsProcessed = FindByName("CommandsProcessed");
+
+            /// <summary>命中数。只读请求命中缓存</summary>
+            public static readonly Field KeySpaceHits = FindByName("KeySpaceHits");
+
+            /// <summary>Miss数。只读请求未命中缓存</summary>
+            public static readonly Field KeySpaceMisses = FindByName("KeySpaceMisses");
 
             /// <summary>平均过期。平均过期时间，单位秒</summary>
             public static readonly Field AvgTtl = FindByName("AvgTtl");
@@ -354,6 +380,12 @@ namespace Stardust.Data.Nodes
 
             /// <summary>命令数</summary>
             public const String CommandsProcessed = "CommandsProcessed";
+
+            /// <summary>命中数。只读请求命中缓存</summary>
+            public const String KeySpaceHits = "KeySpaceHits";
+
+            /// <summary>Miss数。只读请求未命中缓存</summary>
+            public const String KeySpaceMisses = "KeySpaceMisses";
 
             /// <summary>平均过期。平均过期时间，单位秒</summary>
             public const String AvgTtl = "AvgTtl";
