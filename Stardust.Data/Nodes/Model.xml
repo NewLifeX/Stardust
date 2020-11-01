@@ -178,7 +178,7 @@
       <Index Columns="UpdateTime,NodeID,Command" />
     </Indexes>
   </Table>
-  <Table Name="NodeStat" Description="节点统计。每日统计" IgnoreNameCase="False">
+  <Table Name="NodeStat" Description="节点统计。每日统计">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
@@ -200,6 +200,59 @@
     <Indexes>
       <Index Columns="StatDate,AreaID" Unique="True" />
       <Index Columns="UpdateTime,AreaID" />
+    </Indexes>
+  </Table>
+  <Table Name="RedisNode" Description="Redis节点。Redis管理">
+    <Columns>
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="Name" DataType="String" Master="True" Description="名称" />
+      <Column Name="Category" DataType="String" Description="分类" />
+      <Column Name="Server" DataType="String" Description="地址。含端口" />
+      <Column Name="Password" DataType="String" Description="密码" />
+      <Column Name="Version" DataType="String" Description="版本" />
+      <Column Name="Mode" DataType="String" Description="模式" />
+      <Column Name="MaxMemory" DataType="Int32" Description="内存容量。单位MB" />
+      <Column Name="MemoryPolicy" DataType="String" Description="内存策略。缓存淘汰策略" />
+      <Column Name="MemoryAllocator" DataType="String" Description="分配器。内存分配器，低版本有内存泄漏" />
+      <Column Name="CreateUser" DataType="String" Description="创建人" />
+      <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="UpdateUser" DataType="String" Description="更新人" />
+      <Column Name="UpdateUserID" DataType="Int32" Description="更新者" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" />
+      <Column Name="Remark" DataType="String" Length="500" Description="备注" />
+    </Columns>
+    <Indexes>
+      <Index Columns="Server" Unique="True" />
+    </Indexes>
+  </Table>
+  <Table Name="RedisData" Description="Redis数据。Redis监控" ConnName="NodeLog">
+    <Columns>
+      <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+      <Column Name="RedisId" DataType="Int32" Description="Redis节点" />
+      <Column Name="Name" DataType="String" Master="True" Description="名称" />
+      <Column Name="Speed" DataType="Int32" Description="速度。每秒操作数，instantaneous_ops_per_sec" />
+      <Column Name="InputKbps" DataType="Int32" Description="入流量。单位kbps" />
+      <Column Name="OutputKbps" DataType="Int32" Description="出流量。单位kbps" />
+      <Column Name="Uptime" DataType="Int32" Description="开始时间。单位秒" />
+      <Column Name="ConnectedClients" DataType="Int32" Description="连接数" />
+      <Column Name="UsedMemory" DataType="Int32" Description="已用内存。单位MB" />
+      <Column Name="FragmentationRatio" DataType="Double" Description="碎片率。单位MB" />
+      <Column Name="Keys" DataType="Int32" Description="Keys数" />
+      <Column Name="ExpiredKeys" DataType="Int32" Description="过期Keys" />
+      <Column Name="EvictedKeys" DataType="Int32" Description="驱逐Keys。由于 maxmemory 限制，而被回收内存的 key 的总数" />
+      <Column Name="CommandsProcessed" DataType="Int64" Description="命令数" />
+      <Column Name="AvgTtl" DataType="Int32" Description="平均过期。平均过期时间，单位秒" />
+      <Column Name="CreateUser" DataType="String" Description="创建人" />
+      <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="Remark" DataType="String" Length="500" Description="备注" />
+    </Columns>
+    <Indexes>
+      <Index Columns="RedisId,Id" />
     </Indexes>
   </Table>
 </Tables>
