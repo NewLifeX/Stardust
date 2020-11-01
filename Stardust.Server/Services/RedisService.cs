@@ -152,7 +152,7 @@ namespace Stardust.Server.Services
                         if (mq.Category.IsNullOrEmpty()) mq.Category = node.Category;
                         if (mq.Type.IsNullOrEmpty())
                         {
-                            mq.Type = topic.EndsWithIgnoreCase(":Delay") ? "Delay" : "List";
+                            mq.Type = topic.EndsWithIgnoreCase(":Delay") ? "Delay" : "Queue";
                         }
 
                         mq.SaveAsync();
@@ -199,11 +199,11 @@ namespace Stardust.Server.Services
         {
             var rds = GetOrAdd(queue.Redis, queue.Db);
 
-            switch (queue.Type)
+            switch (queue.Type?.ToLower())
             {
-                case "List":
+                case "queue":
                     {
-                        var mq = rds.GetReliableQueue<Object>(queue.Topic);
+                        var mq = rds.GetQueue<Object>(queue.Topic);
                         queue.Messages = mq.Count;
 
                         var cs = rds.Search($"{queue.Topic}:Status:*", 1000).ToArray();
@@ -216,6 +216,26 @@ namespace Stardust.Server.Services
                             queue.FirstConsumer = sts.Min(e => e.Value.CreateTime);
                             queue.LastActive = sts.Max(e => e.Value.LastActive);
                             queue.Remark = sts.ToJson();
+                        }
+                    }
+                    break;
+                case "delay":
+                    {
+                        var mq = rds.GetDelayQueue<Object>(queue.Topic);
+                        queue.Messages = mq.Count;
+                    }
+                    break;
+                case "stream":
+                    {
+                        var mq = rds.GetStream<Object>(queue.Topic);
+                        //queue.Messages = mq.Count;
+                        queue.Total = mq.Count;
+
+                        var gs = mq.GetGroups();
+                        if (gs != null)
+                        {
+                            queue.Consumers = gs.Sum(e => e.Consumers);
+                            queue.Remark = gs.ToJson();
                         }
                     }
                     break;
