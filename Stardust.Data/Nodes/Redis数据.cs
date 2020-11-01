@@ -179,70 +179,6 @@ namespace Stardust.Data.Nodes
         [BindColumn("TopCommand", "最忙命令", "")]
         public String TopCommand { get => _TopCommand; set { if (OnPropertyChanging("TopCommand", value)) { _TopCommand = value; OnPropertyChanged("TopCommand"); } } }
 
-        private Int64 _Db0Keys;
-        /// <summary>db0个数</summary>
-        [DisplayName("db0个数")]
-        [Description("db0个数")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Db0Keys", "db0个数", "")]
-        public Int64 Db0Keys { get => _Db0Keys; set { if (OnPropertyChanging("Db0Keys", value)) { _Db0Keys = value; OnPropertyChanged("Db0Keys"); } } }
-
-        private Int64 _Db0Expires;
-        /// <summary>db0过期</summary>
-        [DisplayName("db0过期")]
-        [Description("db0过期")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Db0Expires", "db0过期", "")]
-        public Int64 Db0Expires { get => _Db0Expires; set { if (OnPropertyChanging("Db0Expires", value)) { _Db0Expires = value; OnPropertyChanged("Db0Expires"); } } }
-
-        private Int64 _Db1Keys;
-        /// <summary>db1个数</summary>
-        [DisplayName("db1个数")]
-        [Description("db1个数")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Db1Keys", "db1个数", "")]
-        public Int64 Db1Keys { get => _Db1Keys; set { if (OnPropertyChanging("Db1Keys", value)) { _Db1Keys = value; OnPropertyChanged("Db1Keys"); } } }
-
-        private Int64 _Db1Expires;
-        /// <summary>db1过期</summary>
-        [DisplayName("db1过期")]
-        [Description("db1过期")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Db1Expires", "db1过期", "")]
-        public Int64 Db1Expires { get => _Db1Expires; set { if (OnPropertyChanging("Db1Expires", value)) { _Db1Expires = value; OnPropertyChanged("Db1Expires"); } } }
-
-        private Int64 _Db2Keys;
-        /// <summary>db2个数</summary>
-        [DisplayName("db2个数")]
-        [Description("db2个数")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Db2Keys", "db2个数", "")]
-        public Int64 Db2Keys { get => _Db2Keys; set { if (OnPropertyChanging("Db2Keys", value)) { _Db2Keys = value; OnPropertyChanged("Db2Keys"); } } }
-
-        private Int64 _Db2Expires;
-        /// <summary>db2过期</summary>
-        [DisplayName("db2过期")]
-        [Description("db2过期")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Db2Expires", "db2过期", "")]
-        public Int64 Db2Expires { get => _Db2Expires; set { if (OnPropertyChanging("Db2Expires", value)) { _Db2Expires = value; OnPropertyChanged("Db2Expires"); } } }
-
-        private Int64 _Db3Keys;
-        /// <summary>db3个数</summary>
-        [DisplayName("db3个数")]
-        [Description("db3个数")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Db3Keys", "db3个数", "")]
-        public Int64 Db3Keys { get => _Db3Keys; set { if (OnPropertyChanging("Db3Keys", value)) { _Db3Keys = value; OnPropertyChanged("Db3Keys"); } } }
-
-        private Int64 _Db3Expires;
-        /// <summary>db3过期</summary>
-        [DisplayName("db3过期")]
-        [Description("db3过期")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Db3Expires", "db3过期", "")]
-        public Int64 Db3Expires { get => _Db3Expires; set { if (OnPropertyChanging("Db3Expires", value)) { _Db3Expires = value; OnPropertyChanged("Db3Expires"); } } }
-
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
         [DisplayName("创建时间")]
@@ -250,14 +186,6 @@ namespace Stardust.Data.Nodes
         [DataObjectField(false, false, true, 0)]
         [BindColumn("CreateTime", "创建时间", "")]
         public DateTime CreateTime { get => _CreateTime; set { if (OnPropertyChanging("CreateTime", value)) { _CreateTime = value; OnPropertyChanged("CreateTime"); } } }
-
-        private String _CreateIP;
-        /// <summary>创建地址</summary>
-        [DisplayName("创建地址")]
-        [Description("创建地址")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("CreateIP", "创建地址", "")]
-        public String CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
 
         private String _Remark;
         /// <summary>备注</summary>
@@ -298,16 +226,7 @@ namespace Stardust.Data.Nodes
                     case "Writes": return _Writes;
                     case "AvgTtl": return _AvgTtl;
                     case "TopCommand": return _TopCommand;
-                    case "Db0Keys": return _Db0Keys;
-                    case "Db0Expires": return _Db0Expires;
-                    case "Db1Keys": return _Db1Keys;
-                    case "Db1Expires": return _Db1Expires;
-                    case "Db2Keys": return _Db2Keys;
-                    case "Db2Expires": return _Db2Expires;
-                    case "Db3Keys": return _Db3Keys;
-                    case "Db3Expires": return _Db3Expires;
                     case "CreateTime": return _CreateTime;
-                    case "CreateIP": return _CreateIP;
                     case "Remark": return _Remark;
                     default: return base[name];
                 }
@@ -336,16 +255,7 @@ namespace Stardust.Data.Nodes
                     case "Writes": _Writes = value.ToLong(); break;
                     case "AvgTtl": _AvgTtl = value.ToInt(); break;
                     case "TopCommand": _TopCommand = Convert.ToString(value); break;
-                    case "Db0Keys": _Db0Keys = value.ToLong(); break;
-                    case "Db0Expires": _Db0Expires = value.ToLong(); break;
-                    case "Db1Keys": _Db1Keys = value.ToLong(); break;
-                    case "Db1Expires": _Db1Expires = value.ToLong(); break;
-                    case "Db2Keys": _Db2Keys = value.ToLong(); break;
-                    case "Db2Expires": _Db2Expires = value.ToLong(); break;
-                    case "Db3Keys": _Db3Keys = value.ToLong(); break;
-                    case "Db3Expires": _Db3Expires = value.ToLong(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                    case "CreateIP": _CreateIP = Convert.ToString(value); break;
                     case "Remark": _Remark = Convert.ToString(value); break;
                     default: base[name] = value; break;
                 }
@@ -417,35 +327,8 @@ namespace Stardust.Data.Nodes
             /// <summary>最忙命令</summary>
             public static readonly Field TopCommand = FindByName("TopCommand");
 
-            /// <summary>db0个数</summary>
-            public static readonly Field Db0Keys = FindByName("Db0Keys");
-
-            /// <summary>db0过期</summary>
-            public static readonly Field Db0Expires = FindByName("Db0Expires");
-
-            /// <summary>db1个数</summary>
-            public static readonly Field Db1Keys = FindByName("Db1Keys");
-
-            /// <summary>db1过期</summary>
-            public static readonly Field Db1Expires = FindByName("Db1Expires");
-
-            /// <summary>db2个数</summary>
-            public static readonly Field Db2Keys = FindByName("Db2Keys");
-
-            /// <summary>db2过期</summary>
-            public static readonly Field Db2Expires = FindByName("Db2Expires");
-
-            /// <summary>db3个数</summary>
-            public static readonly Field Db3Keys = FindByName("Db3Keys");
-
-            /// <summary>db3过期</summary>
-            public static readonly Field Db3Expires = FindByName("Db3Expires");
-
             /// <summary>创建时间</summary>
             public static readonly Field CreateTime = FindByName("CreateTime");
-
-            /// <summary>创建地址</summary>
-            public static readonly Field CreateIP = FindByName("CreateIP");
 
             /// <summary>备注</summary>
             public static readonly Field Remark = FindByName("Remark");
@@ -516,35 +399,8 @@ namespace Stardust.Data.Nodes
             /// <summary>最忙命令</summary>
             public const String TopCommand = "TopCommand";
 
-            /// <summary>db0个数</summary>
-            public const String Db0Keys = "Db0Keys";
-
-            /// <summary>db0过期</summary>
-            public const String Db0Expires = "Db0Expires";
-
-            /// <summary>db1个数</summary>
-            public const String Db1Keys = "Db1Keys";
-
-            /// <summary>db1过期</summary>
-            public const String Db1Expires = "Db1Expires";
-
-            /// <summary>db2个数</summary>
-            public const String Db2Keys = "Db2Keys";
-
-            /// <summary>db2过期</summary>
-            public const String Db2Expires = "Db2Expires";
-
-            /// <summary>db3个数</summary>
-            public const String Db3Keys = "Db3Keys";
-
-            /// <summary>db3过期</summary>
-            public const String Db3Expires = "Db3Expires";
-
             /// <summary>创建时间</summary>
             public const String CreateTime = "CreateTime";
-
-            /// <summary>创建地址</summary>
-            public const String CreateIP = "CreateIP";
 
             /// <summary>备注</summary>
             public const String Remark = "Remark";

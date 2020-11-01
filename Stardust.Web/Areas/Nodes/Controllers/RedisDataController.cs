@@ -19,6 +19,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             MenuOrder = 40;
 
             ListFields.RemoveField("Id");
+            ListFields.RemoveField("TopCommand");
         }
 
         protected override IEnumerable<RedisData> Search(Pager p)

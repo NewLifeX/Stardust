@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
+using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using NewLife.Serialization;
@@ -102,6 +104,15 @@ namespace Stardust.Data.Nodes
         #endregion
 
         #region 扩展属性
+        /// <summary>节点</summary>
+        [XmlIgnore, IgnoreDataMember]
+        public RedisNode Redis => Extends.Get(nameof(Redis), k => RedisNode.FindById(RedisId));
+
+        /// <summary>节点</summary>
+        [XmlIgnore, IgnoreDataMember]
+        [Map(nameof(RedisId), typeof(RedisNode), "Id")]
+        public String RedisName => Redis?.Name;
+
         /// <summary>开机时间</summary>
         [Map(nameof(Uptime))]
         public String UptimeName => TimeSpan.FromSeconds(Uptime).ToString().TrimEnd("0000").TrimStart("00:");
@@ -150,7 +161,7 @@ namespace Stardust.Data.Nodes
             var exp = new WhereExpression();
 
             if (redisId >= 0) exp &= _.RedisId == redisId;
-            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.TopCommand.Contains(key) | _.CreateIP.Contains(key) | _.Remark.Contains(key);
+            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.TopCommand.Contains(key) | _.Remark.Contains(key);
             exp &= _.Id.Between(start, end, Meta.Factory.Snow);
 
             return FindAll(exp, page);
@@ -219,26 +230,26 @@ namespace Stardust.Data.Nodes
             }
             Keys = dbs.Where(e => e != null).Sum(e => Keys);
             AvgTtl = (Int32)dbs.Where(e => e != null).Average(e => Keys * e.AvgTtl);
-            if (dbs[0] != null)
-            {
-                Db0Keys = dbs[0].Keys;
-                Db0Expires = dbs[0].Expires;
-            }
-            if (dbs[1] != null)
-            {
-                Db1Keys = dbs[1].Keys;
-                Db1Expires = dbs[1].Expires;
-            }
-            if (dbs[2] != null)
-            {
-                Db2Keys = dbs[2].Keys;
-                Db2Expires = dbs[2].Expires;
-            }
-            if (dbs[3] != null)
-            {
-                Db3Keys = dbs[3].Keys;
-                Db3Expires = dbs[3].Expires;
-            }
+            //if (dbs[0] != null)
+            //{
+            //    Db0Keys = dbs[0].Keys;
+            //    Db0Expires = dbs[0].Expires;
+            //}
+            //if (dbs[1] != null)
+            //{
+            //    Db1Keys = dbs[1].Keys;
+            //    Db1Expires = dbs[1].Expires;
+            //}
+            //if (dbs[2] != null)
+            //{
+            //    Db2Keys = dbs[2].Keys;
+            //    Db2Expires = dbs[2].Expires;
+            //}
+            //if (dbs[3] != null)
+            //{
+            //    Db3Keys = dbs[3].Keys;
+            //    Db3Expires = dbs[3].Expires;
+            //}
 
             Remark = sb.ToString().Trim();
 

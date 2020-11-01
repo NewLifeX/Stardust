@@ -253,16 +253,7 @@
       <Column Name="Writes" DataType="Int64" Description="写入数" />
       <Column Name="AvgTtl" DataType="Int32" Description="平均过期。平均过期时间，单位秒" />
       <Column Name="TopCommand" DataType="String" Length="200" Description="最忙命令" />
-      <Column Name="Db0Keys" DataType="Int64" Description="db0个数" />
-      <Column Name="Db0Expires" DataType="Int64" Description="db0过期" />
-      <Column Name="Db1Keys" DataType="Int64" Description="db1个数" />
-      <Column Name="Db1Expires" DataType="Int64" Description="db1过期" />
-      <Column Name="Db2Keys" DataType="Int64" Description="db2个数" />
-      <Column Name="Db2Expires" DataType="Int64" Description="db2过期" />
-      <Column Name="Db3Keys" DataType="Int64" Description="db3个数" />
-      <Column Name="Db3Expires" DataType="Int64" Description="db3过期" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" />
       <Column Name="Remark" DataType="String" Length="500" Description="备注" />
     </Columns>
     <Indexes>

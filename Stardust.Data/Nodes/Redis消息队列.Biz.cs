@@ -115,6 +115,14 @@ namespace Stardust.Data.Nodes
         #endregion
 
         #region 扩展属性
+        /// <summary>节点</summary>
+        [XmlIgnore, IgnoreDataMember]
+        public RedisNode Redis => Extends.Get(nameof(Redis), k => RedisNode.FindById(RedisId));
+
+        /// <summary>节点</summary>
+        [XmlIgnore, IgnoreDataMember]
+        [Map(nameof(RedisId), typeof(RedisNode), "Id")]
+        public String RedisName => Redis?.Name;
         #endregion
 
         #region 扩展查询
