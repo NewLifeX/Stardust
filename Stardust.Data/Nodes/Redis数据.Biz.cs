@@ -229,8 +229,9 @@ namespace Stardust.Data.Nodes
                     sb.AppendLine($"db{i}:{db}");
                 }
             }
-            Keys = dbs.Where(e => e != null).Sum(e => Keys);
-            AvgTtl = (Int32)dbs.Where(e => e != null).Average(e => Keys * e.AvgTtl);
+            var dbs2 = dbs.Where(e => e != null);
+            Keys = dbs2.Sum(e => Keys);
+            if (Keys > 0) AvgTtl = (Int32)(dbs2.Sum(e => Keys * e.AvgTtl) / Keys);
             //if (dbs[0] != null)
             //{
             //    Db0Keys = dbs[0].Keys;
