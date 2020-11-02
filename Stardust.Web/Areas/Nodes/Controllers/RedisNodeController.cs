@@ -5,15 +5,25 @@ using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Data;
+using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data.Nodes;
+using Stardust.Server.Services;
+using XCode.Membership;
 
 namespace Stardust.Web.Areas.Nodes.Controllers
 {
     [NodesArea]
     public class RedisNodeController : EntityController<RedisNode>
     {
+        private readonly IRedisService _redisService;
+
         static RedisNodeController() => MenuOrder = 50;
+
+        public RedisNodeController(IRedisService redisService)
+        {
+            this._redisService = redisService;
+        }
 
         protected override IEnumerable<RedisNode> Search(Pager p)
         {
@@ -55,6 +65,26 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                 e.Server,
                 e.Category,
             }).ToArray());
+        }
+
+        [EntityAuthorize(PermissionFlags.Update)]
+        public ActionResult Refresh(Int32 id)
+        {
+            var node = RedisNode.FindById(id);
+            if (node != null)
+            {
+                XTrace.WriteLine("刷新 {0}/{1} {2}", node.Name, node.Id, node.Server);
+
+                _redisService.TraceNode(node);
+
+                var queues = RedisMessageQueue.FindAllByRedisId(node.Id);
+                foreach (var item in queues)
+                {
+                    _redisService.TraceQueue(item);
+                }
+            }
+
+            return JsonRefresh($"刷新[{node}]成功！");
         }
     }
 }

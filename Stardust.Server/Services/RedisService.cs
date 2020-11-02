@@ -15,6 +15,9 @@ namespace Stardust.Server.Services
 {
     public interface IRedisService
     {
+        void TraceNode(RedisNode node);
+
+        void TraceQueue(RedisMessageQueue queue);
     }
 
     public class RedisService : IHostedService, IRedisService
@@ -91,7 +94,7 @@ namespace Stardust.Server.Services
             return rds;
         }
 
-        private void TraceNode(RedisNode node)
+        public void TraceNode(RedisNode node)
         {
             if (!_servers.TryGetValue(node.Id, out var rds)) _servers[node.Id] = rds = new FullRedis();
 
@@ -195,7 +198,7 @@ namespace Stardust.Server.Services
             }
         }
 
-        private void TraceQueue(RedisMessageQueue queue)
+        public void TraceQueue(RedisMessageQueue queue)
         {
             var rds = GetOrAdd(queue.Redis, queue.Db);
 

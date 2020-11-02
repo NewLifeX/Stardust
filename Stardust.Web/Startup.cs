@@ -44,6 +44,8 @@ namespace Stardust.Web
             AppDayStatController.AppStat = appService;
             AppDayStatController.TraceStat = traceService;
 
+            services.AddSingleton<IRedisService, RedisService>();
+
             services.AddCube();
         }
 

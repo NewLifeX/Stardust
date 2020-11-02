@@ -34,6 +34,7 @@
             <th class="text-center" title="队列。自动扫描发现消息队列，默认true"><a href="@Html.Raw(page.GetSortUrl("ScanQueue"))">队列</a></th>
             <th class="text-center">监控</th>
             <th class="text-center">队列</th>
+            <th class="text-center">刷新</th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("UpdateTime"))">更新时间</a></th>
             @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
             {
@@ -68,6 +69,7 @@
                 </td>
                 <td><a href="RedisData?redisId=@entity.Id">监控</a></td>
                 <td><a href="RedisMessageQueue?redisId=@entity.Id">队列</a></td>
+                <td><a href="RedisNode/Refresh?id=@entity.Id" data-action="action" title="刷新该节点数据">刷新</a></td>
                 <td class="text-center">@entity.UpdateTime.ToFullString("")</td>
                 @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
                 {
