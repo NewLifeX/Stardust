@@ -163,13 +163,13 @@ namespace Stardust.Data.Nodes
         [BindColumn("Writes", "写入数", "")]
         public Int64 Writes { get => _Writes; set { if (OnPropertyChanging("Writes", value)) { _Writes = value; OnPropertyChanged("Writes"); } } }
 
-        private Int32 _AvgTtl;
-        /// <summary>平均过期。平均过期时间，单位秒</summary>
+        private Int64 _AvgTtl;
+        /// <summary>平均过期。平均过期时间，单位毫秒</summary>
         [DisplayName("平均过期")]
-        [Description("平均过期。平均过期时间，单位秒")]
+        [Description("平均过期。平均过期时间，单位毫秒")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("AvgTtl", "平均过期。平均过期时间，单位秒", "")]
-        public Int32 AvgTtl { get => _AvgTtl; set { if (OnPropertyChanging("AvgTtl", value)) { _AvgTtl = value; OnPropertyChanged("AvgTtl"); } } }
+        [BindColumn("AvgTtl", "平均过期。平均过期时间，单位毫秒", "")]
+        public Int64 AvgTtl { get => _AvgTtl; set { if (OnPropertyChanging("AvgTtl", value)) { _AvgTtl = value; OnPropertyChanged("AvgTtl"); } } }
 
         private String _TopCommand;
         /// <summary>最忙命令</summary>
@@ -253,7 +253,7 @@ namespace Stardust.Data.Nodes
                     case "Commands": _Commands = value.ToLong(); break;
                     case "Reads": _Reads = value.ToLong(); break;
                     case "Writes": _Writes = value.ToLong(); break;
-                    case "AvgTtl": _AvgTtl = value.ToInt(); break;
+                    case "AvgTtl": _AvgTtl = value.ToLong(); break;
                     case "TopCommand": _TopCommand = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "Remark": _Remark = Convert.ToString(value); break;
@@ -321,7 +321,7 @@ namespace Stardust.Data.Nodes
             /// <summary>写入数</summary>
             public static readonly Field Writes = FindByName("Writes");
 
-            /// <summary>平均过期。平均过期时间，单位秒</summary>
+            /// <summary>平均过期。平均过期时间，单位毫秒</summary>
             public static readonly Field AvgTtl = FindByName("AvgTtl");
 
             /// <summary>最忙命令</summary>
@@ -393,7 +393,7 @@ namespace Stardust.Data.Nodes
             /// <summary>写入数</summary>
             public const String Writes = "Writes";
 
-            /// <summary>平均过期。平均过期时间，单位秒</summary>
+            /// <summary>平均过期。平均过期时间，单位毫秒</summary>
             public const String AvgTtl = "AvgTtl";
 
             /// <summary>最忙命令</summary>

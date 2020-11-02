@@ -251,7 +251,7 @@
       <Column Name="Commands" DataType="Int64" Description="命令数" />
       <Column Name="Reads" DataType="Int64" Description="读取数" />
       <Column Name="Writes" DataType="Int64" Description="写入数" />
-      <Column Name="AvgTtl" DataType="Int32" Description="平均过期。平均过期时间，单位秒" />
+      <Column Name="AvgTtl" DataType="Int64" Description="平均过期。平均过期时间，单位毫秒" />
       <Column Name="TopCommand" DataType="String" Length="200" Description="最忙命令" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="Remark" DataType="String" Length="500" Description="备注" />

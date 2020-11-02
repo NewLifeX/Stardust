@@ -6,7 +6,6 @@ using System.Text;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
-using NewLife.Serialization;
 using Stardust.Data.Models;
 using XCode;
 using XCode.Membership;
@@ -117,6 +116,10 @@ namespace Stardust.Data.Nodes
         /// <summary>开机时间</summary>
         [Map(nameof(Uptime))]
         public String UptimeName => TimeSpan.FromSeconds(Uptime).ToString().TrimEnd("0000").TrimStart("00:");
+
+        /// <summary>平均存活时间</summary>
+        [Map(nameof(AvgTtl))]
+        public String AvgTtlName => TimeSpan.FromMilliseconds(AvgTtl).ToString().TrimEnd("0000").TrimStart("00:");
         #endregion
 
         #region 扩展查询
@@ -195,13 +198,13 @@ namespace Stardust.Data.Nodes
 
             FragmentationRatio = inf["mem_fragmentation_ratio"].ToDouble();
 
-            ExpiredKeys = inf["expired_keys"].ToInt();
-            EvictedKeys = inf["evicted_keys"].ToInt();
-            KeySpaceHits = inf["keyspace_hits"].ToInt();
-            KeySpaceMisses = inf["keyspace_misses"].ToInt();
-            Commands = inf["total_commands_processed"].ToInt();
-            Reads = inf["total_reads_processed"].ToInt();
-            Writes = inf["total_writes_processed"].ToInt();
+            ExpiredKeys = inf["expired_keys"].ToLong();
+            EvictedKeys = inf["evicted_keys"].ToLong();
+            KeySpaceHits = inf["keyspace_hits"].ToLong();
+            KeySpaceMisses = inf["keyspace_misses"].ToLong();
+            Commands = inf["total_commands_processed"].ToLong();
+            Reads = inf["total_reads_processed"].ToLong();
+            Writes = inf["total_writes_processed"].ToLong();
 
             // 命令统计。cmdstat_lpush:calls=40,usec=816,usec_per_call=20.40
             var cmds = inf.Where(e => e.Key.StartsWith("cmdstat_")).ToDictionary(e => e.Key.TrimStart("cmdstat_"), e => e.Value);
@@ -229,9 +232,9 @@ namespace Stardust.Data.Nodes
                     sb.AppendLine($"db{i}:{db}");
                 }
             }
-            var dbs2 = dbs.Where(e => e != null);
-            Keys = dbs2.Sum(e => Keys);
-            if (Keys > 0) AvgTtl = (Int32)(dbs2.Sum(e => Keys * e.AvgTtl) / Keys);
+            var dbs2 = dbs.Where(e => e != null).ToArray();
+            Keys = dbs2.Sum(e => e.Keys);
+            if (Keys > 0) AvgTtl = (Int32)(dbs2.Sum(e => (Int64)e.Keys * e.AvgTtl) / Keys);
             //if (dbs[0] != null)
             //{
             //    Db0Keys = dbs[0].Keys;
