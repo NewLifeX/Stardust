@@ -10,7 +10,14 @@ namespace Stardust.Web.Areas.Nodes.Controllers
     [NodesArea]
     public class RedisMessageQueueController : EntityController<RedisMessageQueue>
     {
-        static RedisMessageQueueController() => MenuOrder = 30;
+        static RedisMessageQueueController()
+        {
+            MenuOrder = 30;
+
+            ListFields.RemoveCreateField();
+            ListFields.RemoveUpdateField();
+            ListFields.AddField("UpdateTime");
+        }
 
         protected override IEnumerable<RedisMessageQueue> Search(Pager p)
         {

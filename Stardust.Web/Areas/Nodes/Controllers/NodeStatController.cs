@@ -21,7 +21,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
     {
         static NodeStatController()
         {
-            MenuOrder = 30;
+            MenuOrder = 55;
 
             //// 计算统计
             //_timer = new TimerX(DoNodeStat, null, 10_000, 60_000) { Async = true };

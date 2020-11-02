@@ -46,7 +46,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             if (list.Count > 0)
             {
                 // 绘制日期曲线图
-                var node = Node.FindByID(redisId);
+                var node = RedisNode.FindById(redisId);
                 if (redisId >= 0 && node != null)
                 {
                     var list2 = list.OrderBy(e => e.Id).ToList();
