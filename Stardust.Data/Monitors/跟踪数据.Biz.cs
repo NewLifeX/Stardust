@@ -31,6 +31,9 @@ namespace Stardust.Data.Monitors
             // 如果没有脏数据，则不需要进行任何处理
             if (!HasDirty) return;
 
+            var len = _.Name.Length;
+            if (Name.Length > len) Name = Name.Cut(len);
+
             //StatDate = StartTime.ToDateTime().ToLocalTime().Date;
             Cost = Total == 0 ? 0 : (Int32)(TotalCost / Total);
         }

@@ -32,6 +32,9 @@ namespace Stardust.Data.Monitors
             // 如果没有脏数据，则不需要进行任何处理
             if (!HasDirty) return;
 
+            var len = _.TraceId.Length;
+            if (TraceId.Length > len) TraceId = TraceId.Cut(len);
+
             Cost = (Int32)(EndTime - StartTime);
         }
         #endregion
