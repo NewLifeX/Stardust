@@ -33,7 +33,7 @@ namespace Stardust.Data.Monitors
             if (!HasDirty) return;
 
             var len = _.TraceId.Length;
-            if (TraceId.Length > len) TraceId = TraceId.Cut(len);
+            if (!TraceId.IsNullOrEmpty() && TraceId.Length > len) TraceId = TraceId.Cut(len);
 
             Cost = (Int32)(EndTime - StartTime);
         }

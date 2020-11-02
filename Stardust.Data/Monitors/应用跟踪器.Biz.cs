@@ -41,7 +41,7 @@ namespace Stardust.Data.Monitors
             if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), "名称不能为空！");
 
             var len = _.Nodes.Length;
-            if (Nodes.Length > len) Nodes = Nodes.Cut(len);
+            if (!Nodes.IsNullOrEmpty() && Nodes.Length > len) Nodes = Nodes.Cut(len);
 
             if (isNew)
             {
