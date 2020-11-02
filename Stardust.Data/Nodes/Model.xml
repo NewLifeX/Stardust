@@ -237,8 +237,8 @@
       <Column Name="RedisId" DataType="Int32" Description="Redis节点" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
       <Column Name="Speed" DataType="Int32" Description="速度。每秒操作数，instantaneous_ops_per_sec" />
-      <Column Name="InputKbps" DataType="Int32" Description="入流量。单位kbps" />
-      <Column Name="OutputKbps" DataType="Int32" Description="出流量。单位kbps" />
+      <Column Name="InputKbps" DataType="Double" Description="入流量。单位kbps" />
+      <Column Name="OutputKbps" DataType="Double" Description="出流量。单位kbps" />
       <Column Name="Uptime" DataType="Int32" Description="启动时间。单位秒" />
       <Column Name="ConnectedClients" DataType="Int32" Description="连接数" />
       <Column Name="UsedMemory" DataType="Int32" Description="已用内存。单位MB" />

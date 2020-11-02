@@ -185,8 +185,8 @@ namespace Stardust.Data.Nodes
         public RedisDbEntry[] Fill(IDictionary<String, String> inf)
         {
             Speed = inf["instantaneous_ops_per_sec"].ToInt();
-            InputKbps = inf["instantaneous_input_kbps"].ToInt();
-            OutputKbps = inf["instantaneous_output_kbps"].ToInt();
+            InputKbps = inf["instantaneous_input_kbps"].ToDouble();
+            OutputKbps = inf["instantaneous_output_kbps"].ToDouble();
 
             Uptime = inf["uptime_in_seconds"].ToInt();
             ConnectedClients = inf["connected_clients"].ToInt();

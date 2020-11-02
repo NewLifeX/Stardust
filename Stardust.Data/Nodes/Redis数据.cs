@@ -51,21 +51,21 @@ namespace Stardust.Data.Nodes
         [BindColumn("Speed", "速度。每秒操作数，instantaneous_ops_per_sec", "")]
         public Int32 Speed { get => _Speed; set { if (OnPropertyChanging("Speed", value)) { _Speed = value; OnPropertyChanged("Speed"); } } }
 
-        private Int32 _InputKbps;
+        private Double _InputKbps;
         /// <summary>入流量。单位kbps</summary>
         [DisplayName("入流量")]
         [Description("入流量。单位kbps")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("InputKbps", "入流量。单位kbps", "")]
-        public Int32 InputKbps { get => _InputKbps; set { if (OnPropertyChanging("InputKbps", value)) { _InputKbps = value; OnPropertyChanged("InputKbps"); } } }
+        public Double InputKbps { get => _InputKbps; set { if (OnPropertyChanging("InputKbps", value)) { _InputKbps = value; OnPropertyChanged("InputKbps"); } } }
 
-        private Int32 _OutputKbps;
+        private Double _OutputKbps;
         /// <summary>出流量。单位kbps</summary>
         [DisplayName("出流量")]
         [Description("出流量。单位kbps")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("OutputKbps", "出流量。单位kbps", "")]
-        public Int32 OutputKbps { get => _OutputKbps; set { if (OnPropertyChanging("OutputKbps", value)) { _OutputKbps = value; OnPropertyChanged("OutputKbps"); } } }
+        public Double OutputKbps { get => _OutputKbps; set { if (OnPropertyChanging("OutputKbps", value)) { _OutputKbps = value; OnPropertyChanged("OutputKbps"); } } }
 
         private Int32 _Uptime;
         /// <summary>启动时间。单位秒</summary>
@@ -239,8 +239,8 @@ namespace Stardust.Data.Nodes
                     case "RedisId": _RedisId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Speed": _Speed = value.ToInt(); break;
-                    case "InputKbps": _InputKbps = value.ToInt(); break;
-                    case "OutputKbps": _OutputKbps = value.ToInt(); break;
+                    case "InputKbps": _InputKbps = value.ToDouble(); break;
+                    case "OutputKbps": _OutputKbps = value.ToDouble(); break;
                     case "Uptime": _Uptime = value.ToInt(); break;
                     case "ConnectedClients": _ConnectedClients = value.ToInt(); break;
                     case "UsedMemory": _UsedMemory = value.ToInt(); break;
