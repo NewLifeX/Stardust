@@ -114,6 +114,16 @@ namespace Stardust.Monitors
             }
         }
 
+        private Boolean _inited;
+        private void Init()
+        {
+            if (_inited) return;
+
+            WriteLog("StarTracer.Start AppId={0} ClientId={1} Server={2}", AppId, ClientId, Client);
+
+            _inited = true;
+        }
+
         /// <summary>处理Span集合。默认输出日志，可重定义输出控制台</summary>
         protected override void ProcessSpans(ISpanBuilder[] builders)
         {
@@ -123,6 +133,9 @@ namespace Stardust.Monitors
             if (Excludes != null) builders = builders.Where(e => !Excludes.Any(y => y.IsMatch(e.Name))).ToArray();
             builders = builders.Where(e => !e.Name.EndsWithIgnoreCase("/Trace/Report")).ToArray();
             if (builders.Length == 0) return;
+
+            // 初始化
+            Init();
 
             // 构建应用信息
             var info = new AppInfo(_process);
@@ -178,9 +191,10 @@ namespace Stardust.Monitors
                     if (rs.Excludes != null) Excludes = rs.Excludes;
                 }
             }
-            catch /*(Exception ex)*/
+            catch (Exception ex)
             {
                 //XTrace.WriteException(ex);
+                Log?.Error(ex + "");
                 //throw;
 
                 if (_fails.Count < MaxFails) _fails.Enqueue(model);
