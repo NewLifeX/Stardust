@@ -141,10 +141,14 @@ namespace Stardust.Monitors
 
             if (info.Connections == 0 && !Runtime.Windows)
             {
-                // 暂时无法区分连接属于哪个进程，使用全局连接数
-                var properties = IPGlobalProperties.GetIPGlobalProperties();
-                var connections = properties.GetActiveTcpConnections();
-                info.Connections = connections.Length;
+                try
+                {
+                    // 暂时无法区分连接属于哪个进程，使用全局连接数
+                    var properties = IPGlobalProperties.GetIPGlobalProperties();
+                    var connections = properties.GetActiveTcpConnections();
+                    info.Connections = connections.Length;
+                }
+                catch { }
             }
 
             // 发送，失败后进入队列
