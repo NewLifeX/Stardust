@@ -91,7 +91,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             return list;
         }
 
-        [EntityAuthorize(PermissionFlags.Update)]
+        [EntityAuthorize(PermissionFlags.Detail)]
         public ActionResult RetryStat()
         {
             foreach (var item in SelectKeys)

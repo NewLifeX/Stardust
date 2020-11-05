@@ -95,7 +95,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             return RedirectToAction("Index", "SampleData", new { traceId = list[0].TraceId });
         }
 
-        [EntityAuthorize(PermissionFlags.Update)]
+        [EntityAuthorize(PermissionFlags.Detail)]
         public ActionResult Exclude(Int64 id)
         {
             var td = TraceData.FindById(id);
