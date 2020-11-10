@@ -40,7 +40,7 @@ namespace Stardust
             //var ts = new List<Task<Process>>();
             foreach (var service in Services)
             {
-                WriteLog("启动应用[{0}]：{1} {2}", service.Name, service.FileName, service.Arguments);
+                WriteLog("启动应用[{0}]：{1} {2} {3}", service.Name, service.FileName, service.Arguments, service.WorkingDirectory);
 
                 //if (item.AutoStart) ts.Add(Task.Run(() => StartService(item)));
                 if (service.AutoStart) StartService(service);
@@ -89,6 +89,12 @@ namespace Stardust
                 file = file.GetFullPath();
                 if (workDir.IsNullOrEmpty()) workDir = Path.GetDirectoryName(file);
             }
+            else if (!Path.IsPathRooted(file))
+            {
+                file = workDir.CombinePath(file).GetFullPath();
+            }
+
+            WriteLog("启动进程：{0} {1} {2}", file, service.Arguments, workDir);
 
             var si = new ProcessStartInfo
             {
