@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
@@ -71,6 +69,7 @@ namespace Stardust
                             WriteLog("应用[{0}/{1}]已启动，直接接管", service.Name, ss[0]);
 
                             _processes[service.Name] = p;
+
                             return p;
                         }
                     }
@@ -89,9 +88,33 @@ namespace Stardust
                 file = file.GetFullPath();
                 if (workDir.IsNullOrEmpty()) workDir = Path.GetDirectoryName(file);
             }
-            else if (!Path.IsPathRooted(file))
+
+            var fullFile = file;
+            if (!workDir.IsNullOrEmpty() && !Path.IsPathRooted(fullFile))
             {
-                file = workDir.CombinePath(file).GetFullPath();
+                fullFile = workDir.CombinePath(fullFile).GetFullPath();
+            }
+
+            if (/*service.Arguments.IsNullOrEmpty() ||*/ service.Singleton)
+            {
+                // 遍历进程，检查是否已驱动
+                foreach (var p in Process.GetProcesses())
+                {
+                    try
+                    {
+                        if (p.ProcessName.EqualIgnoreCase(service.Name) || p.MainModule.FileName.EqualIgnoreCase(fullFile))
+                        {
+                            WriteLog("应用[{0}/{1}]已启动，直接接管", service.Name, p.Id);
+
+                            _processes[service.Name] = p;
+                            pidFile.EnsureDirectory(true);
+                            File.WriteAllText(pidFile, $"{p.Id},{p.ProcessName}");
+
+                            return p;
+                        }
+                    }
+                    catch { }
+                }
             }
 
             WriteLog("启动进程：{0} {1} {2}", file, service.Arguments, workDir);

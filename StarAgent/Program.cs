@@ -125,6 +125,16 @@ namespace StarAgent
             base.StartWork(reason);
         }
 
+        /// <summary>服务管理线程</summary>
+        /// <param name="data"></param>
+        protected override void DoCheck(Object data)
+        {
+            // 支持动态更新
+            _Manager.Services = Setting.Current.Services;
+
+            base.DoCheck(data);
+        }
+
         /// <summary>服务停止</summary>
         /// <remarks>
         /// 安装Windows服务后，服务停止会执行该方法。

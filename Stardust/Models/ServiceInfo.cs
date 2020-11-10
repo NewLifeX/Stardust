@@ -35,6 +35,10 @@ namespace Stardust.Models
         [XmlAttribute]
         public Boolean AutoRestart { get; set; } = true;
 
+        /// <summary>是否单实例。按文件路径确保唯一实例，默认false</summary>
+        [XmlAttribute]
+        public Boolean Singleton { get; set; }
+
         ///// <summary>重启退出代码。仅有该退出代码才会重启</summary>
         //[XmlAttribute]
         //public String RestartExistCodes { get; set; }
