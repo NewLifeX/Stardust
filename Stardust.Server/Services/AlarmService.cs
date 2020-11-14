@@ -26,8 +26,8 @@ namespace Stardust.Server.Services
 
         private TimerX _timer;
         private readonly ConcurrentBag<Int32> _bag = new ConcurrentBag<Int32>();
-        private WeiXinClient _weixin;
-        private DingTalkClient _dingTalk;
+        //private WeiXinClient _weixin;
+        //private DingTalkClient _dingTalk;
         private ICache _cache = new MemoryCache();
 
         public AlarmService()
@@ -138,7 +138,7 @@ namespace Stardust.Server.Services
 
         private void SendWeixin(AppTracer app, AppMinuteStat st)
         {
-            if (_weixin == null) _weixin = new WeiXinClient { Url = app.AlarmRobot };
+            var _weixin = new WeiXinClient { Url = app.AlarmRobot };
 
             var msg = GetMarkdown(app, st, true);
 
@@ -147,7 +147,7 @@ namespace Stardust.Server.Services
 
         private void SendDingTalk(AppTracer app, AppMinuteStat st)
         {
-            if (_dingTalk == null) _dingTalk = new DingTalkClient { Url = app.AlarmRobot };
+            var _dingTalk = new DingTalkClient { Url = app.AlarmRobot };
 
             var msg = GetMarkdown(app, st, false);
 
