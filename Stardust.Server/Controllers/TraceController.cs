@@ -125,16 +125,22 @@ namespace Stardust.Server.Controllers
             _appStat.Add(now.Date);
             if (now.Hour == 0 && now.Minute <= 10) _appStat.Add(now.Date.AddDays(-1));
 
-            // 应用节点数
-            var nodes = app.Nodes?.Split(",").ToList() ?? new List<String>();
-            if (!nodes.Contains(ip))
+            if (!ip.IsNullOrEmpty() && ip.Length >= 3)
             {
-                // 如果超过一定时间没有更新，则刷新它
-                if (_cache.Add("appNodes:" + app.ID, 1, 3600)) nodes.Clear();
+                // 应用节点数
+                var nodes = app.Nodes?.Split(",").ToList() ?? new List<String>();
+                if (!nodes.Contains(ip))
+                {
+                    // 如果超过一定时间没有更新，则刷新它
+                    if (_cache.Add("appNodes:" + app.ID, 1, 3600)) nodes.Clear();
 
-                nodes.Add(ip);
-                app.Nodes = nodes.OrderBy(e => e).Join();
-                app.SaveAsync();
+                    nodes.Insert(0, ip);
+                    if (nodes.Count > 32) nodes = nodes.Take(32).ToList();
+
+                    // 排序，避免Nodes字段频繁更新
+                    app.Nodes = nodes.OrderBy(e => e).Join();
+                    app.SaveAsync();
+                }
             }
         }
     }
