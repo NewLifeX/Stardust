@@ -123,6 +123,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("WebHook", "告警机器人。钉钉、企业微信等", "")]
         public String WebHook { get => _WebHook; set { if (OnPropertyChanging("WebHook", value)) { _WebHook = value; OnPropertyChanged("WebHook"); } } }
 
+        private Int32 _AlarmMemoryRate;
+        /// <summary>内存告警。内存告警的百分比阈值，百分之一</summary>
+        [DisplayName("内存告警")]
+        [Description("内存告警。内存告警的百分比阈值，百分之一")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AlarmMemoryRate", "内存告警。内存告警的百分比阈值，百分之一", "")]
+        public Int32 AlarmMemoryRate { get => _AlarmMemoryRate; set { if (OnPropertyChanging("AlarmMemoryRate", value)) { _AlarmMemoryRate = value; OnPropertyChanged("AlarmMemoryRate"); } } }
+
         private String _CreateUser;
         /// <summary>创建人</summary>
         [DisplayName("创建人")]
@@ -219,6 +227,7 @@ namespace Stardust.Data.Nodes
                     case "Enable": return _Enable;
                     case "ScanQueue": return _ScanQueue;
                     case "WebHook": return _WebHook;
+                    case "AlarmMemoryRate": return _AlarmMemoryRate;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -248,6 +257,7 @@ namespace Stardust.Data.Nodes
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "ScanQueue": _ScanQueue = value.ToBoolean(); break;
                     case "WebHook": _WebHook = Convert.ToString(value); break;
+                    case "AlarmMemoryRate": _AlarmMemoryRate = value.ToInt(); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -305,6 +315,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public static readonly Field WebHook = FindByName("WebHook");
+
+            /// <summary>内存告警。内存告警的百分比阈值，百分之一</summary>
+            public static readonly Field AlarmMemoryRate = FindByName("AlarmMemoryRate");
 
             /// <summary>创建人</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
@@ -377,6 +390,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public const String WebHook = "WebHook";
+
+            /// <summary>内存告警。内存告警的百分比阈值，百分之一</summary>
+            public const String AlarmMemoryRate = "AlarmMemoryRate";
 
             /// <summary>创建人</summary>
             public const String CreateUser = "CreateUser";

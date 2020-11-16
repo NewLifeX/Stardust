@@ -150,6 +150,16 @@ namespace Stardust.Data.Nodes
 
             return FindAll(_.RedisId == redisId & _.Id == id);
         }
+
+        /// <summary>获取最后一条Redis数据</summary>
+        /// <param name="redisId"></param>
+        /// <returns></returns>
+        public static RedisData FindLast(Int32 redisId)
+        {
+            if (redisId <= 0) return null;
+
+            return FindAll(_.RedisId == redisId, _.Id.Desc(), null, 0, 1).FirstOrDefault();
+        }
         #endregion
 
         #region 高级查询

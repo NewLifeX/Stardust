@@ -164,13 +164,86 @@ namespace Stardust.Server.Services
         }
         #endregion
 
-        #region Redis队列告警
+        #region Redis告警
         private void ProcessRedisNode(RedisNode node)
         {
             if (node == null || !node.Enable || node.WebHook.IsNullOrEmpty()) return;
 
             var robot = node.WebHook;
             if (robot.IsNullOrEmpty()) return;
+
+            ProcessRedisData(node);
+            ProcessRedisQueue(node);
+        }
+
+        private void ProcessRedisData(RedisNode node)
+        {
+            var robot = node.WebHook;
+            if (node.AlarmMemoryRate <= 0 || node.MaxMemory <= 0) return;
+
+            // 最新数据
+            var data = RedisData.FindLast(node.Id);
+            if (data == null) return;
+
+            // 判断告警
+            var rate = data.UsedMemory * 100 / node.MaxMemory;
+            if (rate >= node.AlarmMemoryRate)
+            {
+                // 一定时间内不要重复报错，除非错误翻倍
+                var error2 = _cache.Get<Int32>("alarm:RedisMemory:" + node.Id);
+                if (error2 == 0 || rate > error2 * 2)
+                {
+                    _cache.Set("alarm:RedisMemory:" + node.Id, rate, 5 * 60);
+
+                    if (robot.Contains("qyapi.weixin"))
+                    {
+                        var _weixin = new WeiXinClient { Url = robot };
+
+                        var msg = GetMarkdown(node, data, true);
+
+                        _weixin.SendMarkDown(msg);
+                    }
+                    else if (robot.Contains("dingtalk"))
+                    {
+                        var _dingTalk = new DingTalkClient { Url = robot };
+
+                        var msg = GetMarkdown(node, data, false);
+
+                        _dingTalk.SendMarkDown("Redis内存告警", msg, null);
+                    }
+                }
+            }
+        }
+
+        private String GetMarkdown(RedisNode node, RedisData data, Boolean includeTitle)
+        {
+            var sb = new StringBuilder();
+            if (includeTitle) sb.AppendLine($"### [{node}]Redis内存告警");
+            sb.AppendLine($">**分类：**<font color=\"info\">{node.Category}</font>");
+            sb.AppendLine($">**版本：**<font color=\"info\">{node.Version}</font>");
+            sb.AppendLine($">**已用内存：**<font color=\"info\">{data.UsedMemory:n0}</font>");
+            sb.AppendLine($">**内存容量：**<font color=\"info\">{node.MaxMemory:n0}</font>");
+            sb.AppendLine($">**服务器：**<font color=\"info\">{node.Server}</font>");
+
+            var str = sb.ToString();
+            if (str.Length > 2000) str = str.Substring(0, 2000);
+
+            // 构造网址
+            var url = Setting.Current.WebUrl;
+            if (!url.IsNullOrEmpty())
+            {
+                url = url.EnsureEnd("/") + "Nodes/RedisNode?id=" + node.Id;
+                str += Environment.NewLine + $"[更多信息]({url})";
+            }
+
+            return str;
+        }
+        #endregion
+
+        #region Redis队列告警
+        private void ProcessRedisQueue(RedisNode node)
+        {
+            var robot = node.WebHook;
 
             // 所有队列
             var list = RedisMessageQueue.FindAllByRedisId(node.Id);
