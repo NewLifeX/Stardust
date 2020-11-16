@@ -7,6 +7,7 @@ using NewLife;
 using NewLife.Caching;
 using NewLife.Threading;
 using Stardust.Data.Monitors;
+using Stardust.Data.Nodes;
 using Stardust.DingTalk;
 using Stardust.WeiXin;
 
@@ -51,18 +52,28 @@ namespace Stardust.Server.Services
             var list = AppTracer.FindAllWithCache();
             foreach (var item in list)
             {
-                Process(item.ID);
+                ProcessAppTracer(item);
+            }
+
+            var rnodes = RedisNode.FindAllWithCache();
+            foreach (var item in rnodes)
+            {
+                ProcessRedisNode(item);
             }
 
             if (Period > 0) _timer.Period = Period * 1000;
         }
 
-        private void Process(Int32 appId)
+        #region 应用性能跟踪告警
+        private void ProcessAppTracer(AppTracer app)
         {
             // 应用是否需要告警
-            var app = AppTracer.FindByID(appId);
+            //var app = AppTracer.FindByID(appId);
             if (app == null || !app.Enable || app.AlarmThreshold <= 0) return;
-            if (app.AlarmRobot.IsNullOrEmpty()) return;
+
+            var appId = app.ID;
+            var robot = app.AlarmRobot;
+            if (robot.IsNullOrEmpty()) return;
 
             // 最近一段时间的5分钟级数据
             var time = DateTime.Now;
@@ -74,14 +85,14 @@ namespace Stardust.Server.Services
             if (st.Errors >= app.AlarmThreshold)
             {
                 // 一定时间内不要重复报错，除非错误翻倍
-                var error2 = _cache.Get<Int32>("alarm:" + appId);
+                var error2 = _cache.Get<Int32>("alarm:AppTracer:" + appId);
                 if (error2 == 0 || st.Errors > error2 * 2)
                 {
-                    _cache.Set("alarm:" + appId, st.Errors, 5 * 60);
+                    _cache.Set("alarm:AppTracer:" + appId, st.Errors, 5 * 60);
 
-                    if (app.AlarmRobot.Contains("qyapi.weixin"))
+                    if (robot.Contains("qyapi.weixin"))
                         SendWeixin(app, st);
-                    else if (app.AlarmRobot.Contains("dingtalk"))
+                    else if (robot.Contains("dingtalk"))
                         SendDingTalk(app, st);
                 }
             }
@@ -151,5 +162,73 @@ namespace Stardust.Server.Services
 
             _dingTalk.SendMarkDown("系统告警", msg, null);
         }
+        #endregion
+
+        #region Redis队列告警
+        private void ProcessRedisNode(RedisNode node)
+        {
+            if (node == null || !node.Enable || node.WebHook.IsNullOrEmpty()) return;
+
+            var robot = node.WebHook;
+            if (robot.IsNullOrEmpty()) return;
+
+            // 所有队列
+            var list = RedisMessageQueue.FindAllByRedisId(node.Id);
+            foreach (var queue in list)
+            {
+                // 判断告警
+                if (queue.Enable && queue.MaxMessages > 0 && queue.Messages >= queue.MaxMessages)
+                {
+                    // 一定时间内不要重复报错，除非错误翻倍
+                    var error2 = _cache.Get<Int32>("alarm:RedisMessageQueue:" + queue.Id);
+                    if (error2 == 0 || queue.Messages > error2 * 2)
+                    {
+                        _cache.Set("alarm:RedisMessageQueue:" + queue.Id, queue.Messages, 5 * 60);
+
+                        if (robot.Contains("qyapi.weixin"))
+                        {
+                            var _weixin = new WeiXinClient { Url = robot };
+
+                            var msg = GetMarkdown(node, queue, true);
+
+                            _weixin.SendMarkDown(msg);
+                        }
+                        else if (robot.Contains("dingtalk"))
+                        {
+                            var _dingTalk = new DingTalkClient { Url = robot };
+
+                            var msg = GetMarkdown(node, queue, false);
+
+                            _dingTalk.SendMarkDown("消息队列告警", msg, null);
+                        }
+                    }
+                }
+            }
+        }
+
+        private String GetMarkdown(RedisNode node, RedisMessageQueue queue, Boolean includeTitle)
+        {
+            var sb = new StringBuilder();
+            if (includeTitle) sb.AppendLine($"### [{queue.Name}/{node}]消息队列告警");
+            sb.AppendLine($">**主题：**<font color=\"info\">{queue.Topic}</font>");
+            sb.AppendLine($">**积压：**<font color=\"info\">{queue.Messages:n0} > {queue.MaxMessages:n0}</font>");
+            sb.AppendLine($">**消费者：**<font color=\"info\">{queue.Consumers}</font>");
+            sb.AppendLine($">**总消费：**<font color=\"info\">{queue.Total:n0}</font>");
+            sb.AppendLine($">**服务器：**<font color=\"info\">{node.Server}</font>");
+
+            var str = sb.ToString();
+            if (str.Length > 2000) str = str.Substring(0, 2000);
+
+            // 构造网址
+            var url = Setting.Current.WebUrl;
+            if (!url.IsNullOrEmpty())
+            {
+                url = url.EnsureEnd("/") + "Nodes/RedisMessageQueue?redisId=" + queue.RedisId;
+                str += Environment.NewLine + $"[更多信息]({url})";
+            }
+
+            return str;
+        }
+        #endregion
     }
 }
