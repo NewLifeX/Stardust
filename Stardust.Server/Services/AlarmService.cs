@@ -106,7 +106,7 @@ namespace Stardust.Server.Services
 
             // 找找具体接口错误
             var names = new List<String>();
-            var sts = TraceMinuteStat.FindAllByAppIdAndTime(st.AppId, st.StatTime).OrderByDescending(e => e.StatTime).ToList();
+            var sts = TraceMinuteStat.FindAllByAppIdAndTime(st.AppId, st.StatTime).OrderByDescending(e => e.Errors).ToList();
             foreach (var item in sts)
             {
                 if (item.Errors > 0)
