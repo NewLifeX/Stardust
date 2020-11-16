@@ -24,17 +24,15 @@ namespace Stardust.Server.Services
         /// <summary>计算周期。默认30秒</summary>
         public Int32 Period { get; set; } = 30;
 
-        private TimerX _timer;
+        private readonly TimerX _timer;
         private readonly ConcurrentBag<Int32> _bag = new ConcurrentBag<Int32>();
         //private WeiXinClient _weixin;
         //private DingTalkClient _dingTalk;
-        private ICache _cache = new MemoryCache();
+        private readonly ICache _cache = new MemoryCache();
 
-        public AlarmService()
-        {
+        public AlarmService() =>
             // 初始化定时器
             _timer = new TimerX(DoAlarm, null, 5_000, Period * 1000) { Async = true };
-        }
 
         /// <summary>添加需要统计的应用，去重</summary>
         /// <param name="appId"></param>

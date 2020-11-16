@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFrameworks>netcoreapp3.1;net5.0</TargetFrameworks>
     <AssemblyName>StarServer</AssemblyName>
     <AssemblyTitle>星尘分布式服务</AssemblyTitle>
     <Description>星尘，分布式服务框架。分布式资源调度，服务自动注册和发现，负载均衡，动态伸缩，故障转移，性能监控。</Description>
@@ -36,7 +36,7 @@
 
   <ItemGroup>
     <PackageReference Include="NewLife.Redis" Version="3.8.2020.1101" />
-    <PackageReference Include="NewLife.XCode" Version="10.0.2020.1101" />
+    <PackageReference Include="NewLife.XCode" Version="10.0.2020.1115-beta2" />
   </ItemGroup>
 
   <ItemGroup>
