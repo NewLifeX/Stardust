@@ -38,17 +38,17 @@ namespace Stardust.Server.Services
             if (set.DataRetention <= 0) return;
 
             // 保留数据的起点
-            var date = DateTime.Today.AddDays(-set.DataRetention);
+            var time = DateTime.Now.AddDays(-set.DataRetention);
 
             // 删除节点数据
-            var rs = NodeData.DeleteBefore(date);
-            XTrace.WriteLine("删除[{0}]之前的NodeData共：{1:n0}", date.ToFullString(), rs);
+            var rs = NodeData.DeleteBefore(time);
+            XTrace.WriteLine("删除[{0}]之前的NodeData共：{1:n0}", time.ToFullString(), rs);
 
             // 删除节点数据
-            rs = TraceData.DeleteBefore(date);
-            XTrace.WriteLine("删除[{0}]之前的TraceData共：{1:n0}", date.ToFullString(), rs);
-            rs = SampleData.DeleteBefore(date);
-            XTrace.WriteLine("删除[{0}]之前的SampleData共：{1:n0}", date.ToFullString(), rs);
+            rs = TraceData.DeleteBefore(time);
+            XTrace.WriteLine("删除[{0}]之前的TraceData共：{1:n0}", time.ToFullString(), rs);
+            rs = SampleData.DeleteBefore(time);
+            XTrace.WriteLine("删除[{0}]之前的SampleData共：{1:n0}", time.ToFullString(), rs);
         }
     }
 }
