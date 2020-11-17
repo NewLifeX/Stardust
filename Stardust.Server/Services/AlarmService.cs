@@ -122,9 +122,17 @@ namespace Stardust.Server.Services
                             var sms = SampleData.FindAllByDataIds(ds.Select(e => e.Id).ToArray()).Where(e => !e.Error.IsNullOrEmpty()).ToList();
                             if (sms.Count > 0)
                             {
-                                sb.AppendLine($">**错误内容：**{sms[0].Error?.Trim()}");
+                                var msg = sms[0].Error?.Trim();
+                                if (!msg.IsNullOrEmpty())
+                                {
+                                    // 错误内容取第一行，详情看更多
+                                    var p = msg.IndexOf(Environment.NewLine);
+                                    if (p > 0) msg = msg.Substring(0, p);
 
-                                names.Add(item.Name);
+                                    sb.AppendLine($">**错误内容：**{msg}");
+
+                                    names.Add(item.Name);
+                                }
                             }
                         }
                     }
