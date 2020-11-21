@@ -65,7 +65,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="8.10.2020.1115-beta2" />
+    <PackageReference Include="NewLife.Core" Version="8.10.2020.1121-beta3" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' != 'net40'">
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="5.0.0" />
