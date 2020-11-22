@@ -131,6 +131,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("LastActive", "最后活跃", "")]
         public DateTime LastActive { get => _LastActive; set { if (OnPropertyChanging("LastActive", value)) { _LastActive = value; OnPropertyChanged("LastActive"); } } }
 
+        private String _WebHook;
+        /// <summary>告警机器人。钉钉、企业微信等</summary>
+        [DisplayName("告警机器人")]
+        [Description("告警机器人。钉钉、企业微信等")]
+        [DataObjectField(false, false, true, 500)]
+        [BindColumn("WebHook", "告警机器人。钉钉、企业微信等", "")]
+        public String WebHook { get => _WebHook; set { if (OnPropertyChanging("WebHook", value)) { _WebHook = value; OnPropertyChanged("WebHook"); } } }
+
         private String _CreateUser;
         /// <summary>创建人</summary>
         [DisplayName("创建人")]
@@ -228,6 +236,7 @@ namespace Stardust.Data.Nodes
                     case "Enable": return _Enable;
                     case "FirstConsumer": return _FirstConsumer;
                     case "LastActive": return _LastActive;
+                    case "WebHook": return _WebHook;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -258,6 +267,7 @@ namespace Stardust.Data.Nodes
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "FirstConsumer": _FirstConsumer = value.ToDateTime(); break;
                     case "LastActive": _LastActive = value.ToDateTime(); break;
+                    case "WebHook": _WebHook = Convert.ToString(value); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -318,6 +328,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>最后活跃</summary>
             public static readonly Field LastActive = FindByName("LastActive");
+
+            /// <summary>告警机器人。钉钉、企业微信等</summary>
+            public static readonly Field WebHook = FindByName("WebHook");
 
             /// <summary>创建人</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
@@ -393,6 +406,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>最后活跃</summary>
             public const String LastActive = "LastActive";
+
+            /// <summary>告警机器人。钉钉、企业微信等</summary>
+            public const String WebHook = "WebHook";
 
             /// <summary>创建人</summary>
             public const String CreateUser = "CreateUser";

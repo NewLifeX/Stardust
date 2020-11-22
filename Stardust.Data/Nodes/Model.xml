@@ -277,6 +277,7 @@
       <Column Name="Enable" DataType="Boolean" Description="启用。停用的节点不再执行监控" />
       <Column Name="FirstConsumer" DataType="DateTime" Description="最早消费者" />
       <Column Name="LastActive" DataType="DateTime" Description="最后活跃" />
+      <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
       <Column Name="CreateUser" DataType="String" Description="创建人" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />

@@ -98,7 +98,7 @@ namespace Stardust.Server.Services
             }
         }
 
-        private String GetMarkdown(AppTracer app, AppMinuteStat st, Boolean includeTitle)
+        private static String GetMarkdown(AppTracer app, AppMinuteStat st, Boolean includeTitle)
         {
             var sb = new StringBuilder();
             if (includeTitle) sb.AppendLine($"### [{app}]系统告警");
@@ -177,9 +177,6 @@ namespace Stardust.Server.Services
         {
             if (node == null || !node.Enable || node.WebHook.IsNullOrEmpty()) return;
 
-            var robot = node.WebHook;
-            if (robot.IsNullOrEmpty()) return;
-
             ProcessRedisData(node);
             ProcessRedisQueue(node);
         }
@@ -187,7 +184,7 @@ namespace Stardust.Server.Services
         private void ProcessRedisData(RedisNode node)
         {
             var robot = node.WebHook;
-            if (node.AlarmMemoryRate <= 0 || node.MaxMemory <= 0) return;
+            if (robot.IsNullOrEmpty() || node.AlarmMemoryRate <= 0 || node.MaxMemory <= 0) return;
 
             // 最新数据
             var data = RedisData.FindLast(node.Id);
@@ -223,7 +220,7 @@ namespace Stardust.Server.Services
             }
         }
 
-        private String GetMarkdown(RedisNode node, RedisData data, Boolean includeTitle)
+        private static String GetMarkdown(RedisNode node, RedisData data, Boolean includeTitle)
         {
             var sb = new StringBuilder();
             if (includeTitle) sb.AppendLine($"### [{node}]Redis内存告警");
@@ -251,14 +248,15 @@ namespace Stardust.Server.Services
         #region Redis队列告警
         private void ProcessRedisQueue(RedisNode node)
         {
-            var robot = node.WebHook;
-
             // 所有队列
             var list = RedisMessageQueue.FindAllByRedisId(node.Id);
             foreach (var queue in list)
             {
+                var robot = queue.WebHook;
+                if (robot.IsNullOrEmpty()) robot = node.WebHook;
+
                 // 判断告警
-                if (queue.Enable && queue.MaxMessages > 0 && queue.Messages >= queue.MaxMessages)
+                if (!robot.IsNullOrEmpty() && queue.Enable && queue.MaxMessages > 0 && queue.Messages >= queue.MaxMessages)
                 {
                     // 一定时间内不要重复报错，除非错误翻倍
                     var error2 = _cache.Get<Int32>("alarm:RedisMessageQueue:" + queue.Id);
@@ -287,7 +285,7 @@ namespace Stardust.Server.Services
             }
         }
 
-        private String GetMarkdown(RedisNode node, RedisMessageQueue queue, Boolean includeTitle)
+        private static String GetMarkdown(RedisNode node, RedisMessageQueue queue, Boolean includeTitle)
         {
             var sb = new StringBuilder();
             if (includeTitle) sb.AppendLine($"### [{queue.Name}/{node}]消息队列告警");
