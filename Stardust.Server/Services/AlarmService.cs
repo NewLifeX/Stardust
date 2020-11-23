@@ -357,23 +357,21 @@ namespace Stardust.Server.Services
             sb.AppendLine($">**分类：**<font color=\"info\">{node.Category}</font>");
             sb.AppendLine($">**系统：**<font color=\"info\">{node.OS}</font>");
             sb.AppendLine($">**CPU核心：**<font color=\"info\">{node.Cpu}</font>");
-            sb.AppendLine($">**内存容量：**<font color=\"info\">{node.Memory:n0}M</font>");
-            sb.AppendLine($">**磁盘容量：**<font color=\"info\">{node.TotalSize:n0}M</font>");
+            sb.AppendLine($">**内存容量：**<font color=\"info\">{node.Memory:n0}M，可用 {data.AvailableMemory:n0}M</font>");
+            sb.AppendLine($">**磁盘容量：**<font color=\"info\">{node.TotalSize:n0}M，可用 {data.AvailableFreeSpace:n0}M</font>");
 
             switch (kind)
             {
                 case "cpu":
-                    sb.AppendLine($">**CPU使用率：**<font color=\"info\">{data.CpuRate:p0} >= {node.AlarmCpuRate:p0}</font>");
+                    sb.AppendLine($">**CPU使用率：**<font color=\"info\">{data.CpuRate:p0} >= {node.AlarmCpuRate / 100d:p0}</font>");
                     break;
                 case "memory":
-                    var memory = data.AvailableMemory;
                     var rate1 = 1 - (node.Memory == 0 ? 0 : (data.AvailableMemory / node.Memory));
-                    sb.AppendLine($">**内存使用率：**<font color=\"info\">{rate1:p0} >= {node.AlarmMemoryRate:p0}，可用{memory:n0}M</font>");
+                    sb.AppendLine($">**内存使用率：**<font color=\"info\">{rate1:p0} >= {node.AlarmMemoryRate / 100d:p0}</font>");
                     break;
                 case "disk":
-                    var disk = data.AvailableFreeSpace;
                     var rate2 = 1 - (node.TotalSize == 0 ? 0 : (data.AvailableFreeSpace / node.TotalSize));
-                    sb.AppendLine($">**磁盘使用率：**<font color=\"info\"> {rate2:p0} >= {node.AlarmDiskRate:p0}，可用{disk:n0}M</font>");
+                    sb.AppendLine($">**磁盘使用率：**<font color=\"info\"> {rate2:p0} >= {node.AlarmDiskRate / 100d:p0}</font>");
                     break;
                 case "tcp":
                     if (data.TcpConnections >= node.AlarmTcp)
