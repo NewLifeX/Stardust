@@ -226,7 +226,7 @@ namespace Stardust.Server.Services
             // 内存告警
             if (node.AlarmMemoryRate > 0 && node.Memory > 0)
             {
-                var rate = (node.Memory - data.AvailableMemory) * 100 / node.Memory;
+                var rate = (node.Memory - data.AvailableMemory) * 100d / node.Memory;
                 if (rate >= node.AlarmMemoryRate)
                 {
                     // 一定时间内不要重复报错，除非错误翻倍
@@ -255,7 +255,7 @@ namespace Stardust.Server.Services
             // 磁盘告警
             if (node.AlarmDiskRate > 0 && node.TotalSize > 0)
             {
-                var rate = (node.TotalSize - data.AvailableFreeSpace) * 100 / node.TotalSize;
+                var rate = (node.TotalSize - data.AvailableFreeSpace) * 100d / node.TotalSize;
                 if (rate >= node.AlarmDiskRate)
                 {
                     // 一定时间内不要重复报错，除非错误翻倍
@@ -366,11 +366,11 @@ namespace Stardust.Server.Services
                     sb.AppendLine($">**CPU使用率：**<font color=\"info\">{data.CpuRate:p0} >= {node.AlarmCpuRate / 100d:p0}</font>");
                     break;
                 case "memory":
-                    var rate1 = 1 - (node.Memory == 0 ? 0 : (data.AvailableMemory / node.Memory));
+                    var rate1 = 1 - (node.Memory == 0 ? 0 : ((Double)data.AvailableMemory / node.Memory));
                     sb.AppendLine($">**内存使用率：**<font color=\"info\">{rate1:p0} >= {node.AlarmMemoryRate / 100d:p0}</font>");
                     break;
                 case "disk":
-                    var rate2 = 1 - (node.TotalSize == 0 ? 0 : (data.AvailableFreeSpace / node.TotalSize));
+                    var rate2 = 1 - (node.TotalSize == 0 ? 0 : ((Double)data.AvailableFreeSpace / node.TotalSize));
                     sb.AppendLine($">**磁盘使用率：**<font color=\"info\"> {rate2:p0} >= {node.AlarmDiskRate / 100d:p0}</font>");
                     break;
                 case "tcp":
