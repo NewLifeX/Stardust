@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using NewLife;
@@ -84,6 +85,16 @@ namespace Stardust.Data.Nodes
             if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.NodeID == nodeId);
 
             return FindAll(_.NodeID == nodeId);
+        }
+
+        /// <summary>获取最后一条节点数据</summary>
+        /// <param name="nodeId"></param>
+        /// <returns></returns>
+        public static NodeData FindLast(Int32 nodeId)
+        {
+            if (nodeId <= 0) return null;
+
+            return FindAll(_.NodeID == nodeId, _.ID.Desc(), null, 0, 1).FirstOrDefault();
         }
         #endregion
 

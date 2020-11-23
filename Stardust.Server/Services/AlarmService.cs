@@ -49,12 +49,21 @@ namespace Stardust.Server.Services
                 //Process(appId);
             }
 
+            // 应用告警
             var list = AppTracer.FindAllWithCache();
             foreach (var item in list)
             {
                 ProcessAppTracer(item);
             }
 
+            // 节点告警
+            var nodes = Node.FindAllWithCache();
+            foreach (var item in nodes)
+            {
+                ProcessNode(item);
+            }
+
+            // Redis告警
             var rnodes = RedisNode.FindAllWithCache();
             foreach (var item in rnodes)
             {
@@ -169,6 +178,188 @@ namespace Stardust.Server.Services
             var msg = GetMarkdown(app, st, false);
 
             _dingTalk.SendMarkDown("系统告警", msg, null);
+        }
+        #endregion
+
+        #region 节点告警
+        private void ProcessNode(Node node)
+        {
+            if (node == null || !node.Enable || node.WebHook.IsNullOrEmpty()) return;
+
+            var robot = node.WebHook;
+            if (node.AlarmCpuRate <= 0 && node.AlarmMemoryRate <= 0 && node.AlarmDiskRate <= 0) return;
+
+            // 最新数据
+            var data = NodeData.FindLast(node.ID);
+            if (data == null) return;
+
+            // CPU告警
+            if (node.AlarmCpuRate > 0)
+            {
+                var rate = data.CpuRate;
+                if (rate >= node.AlarmCpuRate)
+                {
+                    // 一定时间内不要重复报错，除非错误翻倍
+                    var error2 = _cache.Get<Int32>("alarm:CpuRate:" + node.ID);
+                    if (error2 == 0 || rate > error2 * 2)
+                    {
+                        _cache.Set("alarm:CpuRate:" + node.ID, rate, 5 * 60);
+
+                        var title = $"[{node}]CPU告警";
+                        if (robot.Contains("qyapi.weixin"))
+                        {
+                            var weixin = new WeiXinClient { Url = robot };
+                            var msg = GetMarkdown("cpu", node, data, title);
+                            weixin.SendMarkDown(msg);
+                        }
+                        else if (robot.Contains("dingtalk"))
+                        {
+                            var dingTalk = new DingTalkClient { Url = robot };
+                            var msg = GetMarkdown("cpu", node, data, null);
+                            dingTalk.SendMarkDown(title, msg, null);
+                        }
+                    }
+                }
+            }
+
+            // 内存告警
+            if (node.AlarmMemoryRate > 0 && node.Memory > 0)
+            {
+                var rate = data.AvailableMemory / node.Memory;
+                if (rate >= node.AlarmMemoryRate)
+                {
+                    // 一定时间内不要重复报错，除非错误翻倍
+                    var error2 = _cache.Get<Int32>("alarm:MemoryRate:" + node.ID);
+                    if (error2 == 0 || rate > error2 * 2)
+                    {
+                        _cache.Set("alarm:MemoryRate:" + node.ID, rate, 5 * 60);
+
+                        var title = $"[{node}]内存告警";
+                        if (robot.Contains("qyapi.weixin"))
+                        {
+                            var weixin = new WeiXinClient { Url = robot };
+                            var msg = GetMarkdown("memory", node, data, title);
+                            weixin.SendMarkDown(msg);
+                        }
+                        else if (robot.Contains("dingtalk"))
+                        {
+                            var dingTalk = new DingTalkClient { Url = robot };
+                            var msg = GetMarkdown("memory", node, data, null);
+                            dingTalk.SendMarkDown(title, msg, null);
+                        }
+                    }
+                }
+            }
+
+            // 磁盘告警
+            if (node.AlarmDiskRate > 0 && node.TotalSize > 0)
+            {
+                var rate = data.AvailableFreeSpace / node.TotalSize;
+                if (rate >= node.AlarmDiskRate)
+                {
+                    // 一定时间内不要重复报错，除非错误翻倍
+                    var error2 = _cache.Get<Int32>("alarm:DiskRate:" + node.ID);
+                    if (error2 == 0 || rate > error2 * 2)
+                    {
+                        _cache.Set("alarm:DiskRate:" + node.ID, rate, 5 * 60);
+
+                        var title = $"[{node}]磁盘告警";
+                        if (robot.Contains("qyapi.weixin"))
+                        {
+                            var weixin = new WeiXinClient { Url = robot };
+                            var msg = GetMarkdown("disk", node, data, title);
+                            weixin.SendMarkDown(msg);
+                        }
+                        else if (robot.Contains("dingtalk"))
+                        {
+                            var dingTalk = new DingTalkClient { Url = robot };
+                            var msg = GetMarkdown("disk", node, data, null);
+                            dingTalk.SendMarkDown(title, msg, null);
+                        }
+                    }
+                }
+            }
+
+            // TCP告警
+            if (node.AlarmTcp > 0)
+            {
+                var tcp = data.TcpConnections;
+                if (tcp < data.TcpTimeWait) tcp = data.TcpTimeWait;
+                if (tcp < data.TcpCloseWait) tcp = data.TcpCloseWait;
+                if (tcp >= node.AlarmTcp)
+                {
+                    // 一定时间内不要重复报错，除非错误翻倍
+                    var error2 = _cache.Get<Int32>("alarm:Tcp:" + node.ID);
+                    if (error2 == 0 || tcp > error2 * 2)
+                    {
+                        _cache.Set("alarm:Tcp:" + node.ID, tcp, 5 * 60);
+
+                        var title = $"[{node}]Tcp告警";
+                        if (robot.Contains("qyapi.weixin"))
+                        {
+                            var weixin = new WeiXinClient { Url = robot };
+                            var msg = GetMarkdown("tcp", node, data, title);
+                            weixin.SendMarkDown(msg);
+                        }
+                        else if (robot.Contains("dingtalk"))
+                        {
+                            var dingTalk = new DingTalkClient { Url = robot };
+                            var msg = GetMarkdown("tcp", node, data, null);
+                            dingTalk.SendMarkDown(title, msg, null);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static String GetMarkdown(String kind, Node node, NodeData data, String title)
+        {
+            var sb = new StringBuilder();
+            if (!title.IsNullOrEmpty()) sb.AppendLine($"### [{node}]Redis内存告警");
+            sb.AppendLine($">**节点：**<font color=\"info\">{node.Name} / {node.IP}</font>");
+            sb.AppendLine($">**分类：**<font color=\"info\">{node.Category}</font>");
+            sb.AppendLine($">**系统：**<font color=\"info\">{node.OS}</font>");
+            sb.AppendLine($">**CPU核心：**<font color=\"info\">{node.Cpu}</font>");
+            sb.AppendLine($">**内存容量：**<font color=\"info\">{node.Memory:n0}M</font>");
+            sb.AppendLine($">**磁盘容量：**<font color=\"info\">{node.TotalSize:n0}M</font>");
+
+            switch (kind)
+            {
+                case "cpu":
+                    sb.AppendLine($">**CPU使用率：**<font color=\"info\">{data.CpuRate:p0} >= {node.AlarmCpuRate:p0}</font>");
+                    break;
+                case "memory":
+                    var memory = data.AvailableMemory;
+                    var rate1 = 1 - (node.Memory == 0 ? 0 : (data.AvailableMemory / node.Memory));
+                    sb.AppendLine($">**内存使用率：**<font color=\"info\">{rate1:p0} >= {node.AlarmMemoryRate:p0}，可用{memory:n0}M</font>");
+                    break;
+                case "disk":
+                    var disk = data.AvailableFreeSpace;
+                    var rate2 = 1 - (node.TotalSize == 0 ? 0 : (data.AvailableFreeSpace / node.TotalSize));
+                    sb.AppendLine($">**磁盘使用率：**<font color=\"info\"> {rate2:p0} >= {node.AlarmDiskRate:p0}，可用{disk:n0}M</font>");
+                    break;
+                case "tcp":
+                    if (data.TcpConnections >= node.AlarmTcp)
+                        sb.AppendLine($">**TCP连接数：**<font color=\"info\">{data.TcpConnections:n0} >= {node.AlarmTcp:n0}</font>");
+                    if (data.TcpTimeWait >= node.AlarmTcp)
+                        sb.AppendLine($">**TCP主动关闭：**<font color=\"info\">{data.TcpTimeWait:n0} >= {node.AlarmTcp:n0}</font>");
+                    if (data.TcpCloseWait >= node.AlarmTcp)
+                        sb.AppendLine($">**TCP被动关闭：**<font color=\"info\">{data.TcpCloseWait:n0} >= {node.AlarmTcp:n0}</font>");
+                    break;
+            }
+
+            var str = sb.ToString();
+            if (str.Length > 2000) str = str.Substring(0, 2000);
+
+            // 构造网址
+            var url = Setting.Current.WebUrl;
+            if (!url.IsNullOrEmpty())
+            {
+                url = url.EnsureEnd("/") + "Nodes/NodeData?nodeId=" + node.ID;
+                str += Environment.NewLine + $"[更多信息]({url})";
+            }
+
+            return str;
         }
         #endregion
 

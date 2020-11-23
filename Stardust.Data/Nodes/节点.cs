@@ -261,6 +261,46 @@ namespace Stardust.Data.Nodes
         [BindColumn("Period", "采样周期。默认60秒", "")]
         public Int32 Period { get => _Period; set { if (OnPropertyChanging("Period", value)) { _Period = value; OnPropertyChanged("Period"); } } }
 
+        private String _WebHook;
+        /// <summary>告警机器人。钉钉、企业微信等</summary>
+        [DisplayName("告警机器人")]
+        [Description("告警机器人。钉钉、企业微信等")]
+        [DataObjectField(false, false, true, 500)]
+        [BindColumn("WebHook", "告警机器人。钉钉、企业微信等", "")]
+        public String WebHook { get => _WebHook; set { if (OnPropertyChanging("WebHook", value)) { _WebHook = value; OnPropertyChanged("WebHook"); } } }
+
+        private Int32 _AlarmCpuRate;
+        /// <summary>CPU告警。CPU告警的百分比阈值，百分之一</summary>
+        [DisplayName("CPU告警")]
+        [Description("CPU告警。CPU告警的百分比阈值，百分之一")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AlarmCpuRate", "CPU告警。CPU告警的百分比阈值，百分之一", "")]
+        public Int32 AlarmCpuRate { get => _AlarmCpuRate; set { if (OnPropertyChanging("AlarmCpuRate", value)) { _AlarmCpuRate = value; OnPropertyChanged("AlarmCpuRate"); } } }
+
+        private Int32 _AlarmMemoryRate;
+        /// <summary>内存告警。内存告警的百分比阈值，百分之一</summary>
+        [DisplayName("内存告警")]
+        [Description("内存告警。内存告警的百分比阈值，百分之一")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AlarmMemoryRate", "内存告警。内存告警的百分比阈值，百分之一", "")]
+        public Int32 AlarmMemoryRate { get => _AlarmMemoryRate; set { if (OnPropertyChanging("AlarmMemoryRate", value)) { _AlarmMemoryRate = value; OnPropertyChanged("AlarmMemoryRate"); } } }
+
+        private Int32 _AlarmDiskRate;
+        /// <summary>磁盘告警。磁盘告警的百分比阈值，百分之一</summary>
+        [DisplayName("磁盘告警")]
+        [Description("磁盘告警。磁盘告警的百分比阈值，百分之一")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AlarmDiskRate", "磁盘告警。磁盘告警的百分比阈值，百分之一", "")]
+        public Int32 AlarmDiskRate { get => _AlarmDiskRate; set { if (OnPropertyChanging("AlarmDiskRate", value)) { _AlarmDiskRate = value; OnPropertyChanged("AlarmDiskRate"); } } }
+
+        private Int32 _AlarmTcp;
+        /// <summary>连接数告警。TCP连接数告警，包括连接数、主动关闭和被动关闭</summary>
+        [DisplayName("连接数告警")]
+        [Description("连接数告警。TCP连接数告警，包括连接数、主动关闭和被动关闭")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AlarmTcp", "连接数告警。TCP连接数告警，包括连接数、主动关闭和被动关闭", "")]
+        public Int32 AlarmTcp { get => _AlarmTcp; set { if (OnPropertyChanging("AlarmTcp", value)) { _AlarmTcp = value; OnPropertyChanged("AlarmTcp"); } } }
+
         private Int32 _Logins;
         /// <summary>登录次数</summary>
         [DisplayName("登录次数")]
@@ -390,6 +430,11 @@ namespace Stardust.Data.Nodes
                     case "CityID": return _CityID;
                     case "Address": return _Address;
                     case "Period": return _Period;
+                    case "WebHook": return _WebHook;
+                    case "AlarmCpuRate": return _AlarmCpuRate;
+                    case "AlarmMemoryRate": return _AlarmMemoryRate;
+                    case "AlarmDiskRate": return _AlarmDiskRate;
+                    case "AlarmTcp": return _AlarmTcp;
                     case "Logins": return _Logins;
                     case "LastLogin": return _LastLogin;
                     case "LastLoginIP": return _LastLoginIP;
@@ -438,6 +483,11 @@ namespace Stardust.Data.Nodes
                     case "CityID": _CityID = value.ToInt(); break;
                     case "Address": _Address = Convert.ToString(value); break;
                     case "Period": _Period = value.ToInt(); break;
+                    case "WebHook": _WebHook = Convert.ToString(value); break;
+                    case "AlarmCpuRate": _AlarmCpuRate = value.ToInt(); break;
+                    case "AlarmMemoryRate": _AlarmMemoryRate = value.ToInt(); break;
+                    case "AlarmDiskRate": _AlarmDiskRate = value.ToInt(); break;
+                    case "AlarmTcp": _AlarmTcp = value.ToInt(); break;
                     case "Logins": _Logins = value.ToInt(); break;
                     case "LastLogin": _LastLogin = value.ToDateTime(); break;
                     case "LastLoginIP": _LastLoginIP = Convert.ToString(value); break;
@@ -548,6 +598,21 @@ namespace Stardust.Data.Nodes
 
             /// <summary>采样周期。默认60秒</summary>
             public static readonly Field Period = FindByName("Period");
+
+            /// <summary>告警机器人。钉钉、企业微信等</summary>
+            public static readonly Field WebHook = FindByName("WebHook");
+
+            /// <summary>CPU告警。CPU告警的百分比阈值，百分之一</summary>
+            public static readonly Field AlarmCpuRate = FindByName("AlarmCpuRate");
+
+            /// <summary>内存告警。内存告警的百分比阈值，百分之一</summary>
+            public static readonly Field AlarmMemoryRate = FindByName("AlarmMemoryRate");
+
+            /// <summary>磁盘告警。磁盘告警的百分比阈值，百分之一</summary>
+            public static readonly Field AlarmDiskRate = FindByName("AlarmDiskRate");
+
+            /// <summary>连接数告警。TCP连接数告警，包括连接数、主动关闭和被动关闭</summary>
+            public static readonly Field AlarmTcp = FindByName("AlarmTcp");
 
             /// <summary>登录次数</summary>
             public static readonly Field Logins = FindByName("Logins");
@@ -677,6 +742,21 @@ namespace Stardust.Data.Nodes
 
             /// <summary>采样周期。默认60秒</summary>
             public const String Period = "Period";
+
+            /// <summary>告警机器人。钉钉、企业微信等</summary>
+            public const String WebHook = "WebHook";
+
+            /// <summary>CPU告警。CPU告警的百分比阈值，百分之一</summary>
+            public const String AlarmCpuRate = "AlarmCpuRate";
+
+            /// <summary>内存告警。内存告警的百分比阈值，百分之一</summary>
+            public const String AlarmMemoryRate = "AlarmMemoryRate";
+
+            /// <summary>磁盘告警。磁盘告警的百分比阈值，百分之一</summary>
+            public const String AlarmDiskRate = "AlarmDiskRate";
+
+            /// <summary>连接数告警。TCP连接数告警，包括连接数、主动关闭和被动关闭</summary>
+            public const String AlarmTcp = "AlarmTcp";
 
             /// <summary>登录次数</summary>
             public const String Logins = "Logins";
