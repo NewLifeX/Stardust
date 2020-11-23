@@ -33,10 +33,11 @@
       <Column Name="Address" DataType="String" Length="200" Description="地址" />
       <Column Name="Period" DataType="Int32" Description="采样周期。默认60秒" />
       <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
-      <Column Name="AlarmCpuRate" DataType="Int32" Description="CPU告警。CPU告警的百分比阈值，百分之一" />
-      <Column Name="AlarmMemoryRate" DataType="Int32" Description="内存告警。内存告警的百分比阈值，百分之一" />
-      <Column Name="AlarmDiskRate" DataType="Int32" Description="磁盘告警。磁盘告警的百分比阈值，百分之一" />
-      <Column Name="AlarmTcp" DataType="Int32" Description="连接数告警。TCP连接数告警，包括连接数、主动关闭和被动关闭" />
+      <Column Name="AlarmCpuRate" DataType="Int32" Description="CPU告警。CPU告警的百分比阈值，CPU使用率达到该值时告警，百分之一" />
+      <Column Name="AlarmMemoryRate" DataType="Int32" Description="内存告警。内存告警的百分比阈值，内存使用率达到该值时告警，百分之一" />
+      <Column Name="AlarmDiskRate" DataType="Int32" Description="磁盘告警。磁盘告警的百分比阈值，磁盘使用率达到该值时告警，百分之一" />
+      <Column Name="AlarmTcp" DataType="Int32" Description="连接数告警。TCP连接数达到该值时告警，包括连接数、主动关闭和被动关闭" />
+      <Column Name="AlarmProcesses" DataType="String" Description="进程告警。要守护的进程不存在时告警，多进程逗号隔开" />
       <Column Name="Logins" DataType="Int32" Description="登录次数" />
       <Column Name="LastLogin" DataType="DateTime" Description="最后登录" />
       <Column Name="LastLoginIP" DataType="String" Description="最后IP。最后的公网IP地址" />

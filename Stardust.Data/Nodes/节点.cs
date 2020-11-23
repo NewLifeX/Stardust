@@ -270,36 +270,44 @@ namespace Stardust.Data.Nodes
         public String WebHook { get => _WebHook; set { if (OnPropertyChanging("WebHook", value)) { _WebHook = value; OnPropertyChanged("WebHook"); } } }
 
         private Int32 _AlarmCpuRate;
-        /// <summary>CPU告警。CPU告警的百分比阈值，百分之一</summary>
+        /// <summary>CPU告警。CPU告警的百分比阈值，CPU使用率达到该值时告警，百分之一</summary>
         [DisplayName("CPU告警")]
-        [Description("CPU告警。CPU告警的百分比阈值，百分之一")]
+        [Description("CPU告警。CPU告警的百分比阈值，CPU使用率达到该值时告警，百分之一")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("AlarmCpuRate", "CPU告警。CPU告警的百分比阈值，百分之一", "")]
+        [BindColumn("AlarmCpuRate", "CPU告警。CPU告警的百分比阈值，CPU使用率达到该值时告警，百分之一", "")]
         public Int32 AlarmCpuRate { get => _AlarmCpuRate; set { if (OnPropertyChanging("AlarmCpuRate", value)) { _AlarmCpuRate = value; OnPropertyChanged("AlarmCpuRate"); } } }
 
         private Int32 _AlarmMemoryRate;
-        /// <summary>内存告警。内存告警的百分比阈值，百分之一</summary>
+        /// <summary>内存告警。内存告警的百分比阈值，内存使用率达到该值时告警，百分之一</summary>
         [DisplayName("内存告警")]
-        [Description("内存告警。内存告警的百分比阈值，百分之一")]
+        [Description("内存告警。内存告警的百分比阈值，内存使用率达到该值时告警，百分之一")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("AlarmMemoryRate", "内存告警。内存告警的百分比阈值，百分之一", "")]
+        [BindColumn("AlarmMemoryRate", "内存告警。内存告警的百分比阈值，内存使用率达到该值时告警，百分之一", "")]
         public Int32 AlarmMemoryRate { get => _AlarmMemoryRate; set { if (OnPropertyChanging("AlarmMemoryRate", value)) { _AlarmMemoryRate = value; OnPropertyChanged("AlarmMemoryRate"); } } }
 
         private Int32 _AlarmDiskRate;
-        /// <summary>磁盘告警。磁盘告警的百分比阈值，百分之一</summary>
+        /// <summary>磁盘告警。磁盘告警的百分比阈值，磁盘使用率达到该值时告警，百分之一</summary>
         [DisplayName("磁盘告警")]
-        [Description("磁盘告警。磁盘告警的百分比阈值，百分之一")]
+        [Description("磁盘告警。磁盘告警的百分比阈值，磁盘使用率达到该值时告警，百分之一")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("AlarmDiskRate", "磁盘告警。磁盘告警的百分比阈值，百分之一", "")]
+        [BindColumn("AlarmDiskRate", "磁盘告警。磁盘告警的百分比阈值，磁盘使用率达到该值时告警，百分之一", "")]
         public Int32 AlarmDiskRate { get => _AlarmDiskRate; set { if (OnPropertyChanging("AlarmDiskRate", value)) { _AlarmDiskRate = value; OnPropertyChanged("AlarmDiskRate"); } } }
 
         private Int32 _AlarmTcp;
-        /// <summary>连接数告警。TCP连接数告警，包括连接数、主动关闭和被动关闭</summary>
+        /// <summary>连接数告警。TCP连接数达到该值时告警，包括连接数、主动关闭和被动关闭</summary>
         [DisplayName("连接数告警")]
-        [Description("连接数告警。TCP连接数告警，包括连接数、主动关闭和被动关闭")]
+        [Description("连接数告警。TCP连接数达到该值时告警，包括连接数、主动关闭和被动关闭")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("AlarmTcp", "连接数告警。TCP连接数告警，包括连接数、主动关闭和被动关闭", "")]
+        [BindColumn("AlarmTcp", "连接数告警。TCP连接数达到该值时告警，包括连接数、主动关闭和被动关闭", "")]
         public Int32 AlarmTcp { get => _AlarmTcp; set { if (OnPropertyChanging("AlarmTcp", value)) { _AlarmTcp = value; OnPropertyChanged("AlarmTcp"); } } }
+
+        private String _AlarmProcesses;
+        /// <summary>进程告警。要守护的进程不存在时告警，多进程逗号隔开</summary>
+        [DisplayName("进程告警")]
+        [Description("进程告警。要守护的进程不存在时告警，多进程逗号隔开")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("AlarmProcesses", "进程告警。要守护的进程不存在时告警，多进程逗号隔开", "")]
+        public String AlarmProcesses { get => _AlarmProcesses; set { if (OnPropertyChanging("AlarmProcesses", value)) { _AlarmProcesses = value; OnPropertyChanged("AlarmProcesses"); } } }
 
         private Int32 _Logins;
         /// <summary>登录次数</summary>
@@ -435,6 +443,7 @@ namespace Stardust.Data.Nodes
                     case "AlarmMemoryRate": return _AlarmMemoryRate;
                     case "AlarmDiskRate": return _AlarmDiskRate;
                     case "AlarmTcp": return _AlarmTcp;
+                    case "AlarmProcesses": return _AlarmProcesses;
                     case "Logins": return _Logins;
                     case "LastLogin": return _LastLogin;
                     case "LastLoginIP": return _LastLoginIP;
@@ -488,6 +497,7 @@ namespace Stardust.Data.Nodes
                     case "AlarmMemoryRate": _AlarmMemoryRate = value.ToInt(); break;
                     case "AlarmDiskRate": _AlarmDiskRate = value.ToInt(); break;
                     case "AlarmTcp": _AlarmTcp = value.ToInt(); break;
+                    case "AlarmProcesses": _AlarmProcesses = Convert.ToString(value); break;
                     case "Logins": _Logins = value.ToInt(); break;
                     case "LastLogin": _LastLogin = value.ToDateTime(); break;
                     case "LastLoginIP": _LastLoginIP = Convert.ToString(value); break;
@@ -602,17 +612,20 @@ namespace Stardust.Data.Nodes
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public static readonly Field WebHook = FindByName("WebHook");
 
-            /// <summary>CPU告警。CPU告警的百分比阈值，百分之一</summary>
+            /// <summary>CPU告警。CPU告警的百分比阈值，CPU使用率达到该值时告警，百分之一</summary>
             public static readonly Field AlarmCpuRate = FindByName("AlarmCpuRate");
 
-            /// <summary>内存告警。内存告警的百分比阈值，百分之一</summary>
+            /// <summary>内存告警。内存告警的百分比阈值，内存使用率达到该值时告警，百分之一</summary>
             public static readonly Field AlarmMemoryRate = FindByName("AlarmMemoryRate");
 
-            /// <summary>磁盘告警。磁盘告警的百分比阈值，百分之一</summary>
+            /// <summary>磁盘告警。磁盘告警的百分比阈值，磁盘使用率达到该值时告警，百分之一</summary>
             public static readonly Field AlarmDiskRate = FindByName("AlarmDiskRate");
 
-            /// <summary>连接数告警。TCP连接数告警，包括连接数、主动关闭和被动关闭</summary>
+            /// <summary>连接数告警。TCP连接数达到该值时告警，包括连接数、主动关闭和被动关闭</summary>
             public static readonly Field AlarmTcp = FindByName("AlarmTcp");
+
+            /// <summary>进程告警。要守护的进程不存在时告警，多进程逗号隔开</summary>
+            public static readonly Field AlarmProcesses = FindByName("AlarmProcesses");
 
             /// <summary>登录次数</summary>
             public static readonly Field Logins = FindByName("Logins");
@@ -746,17 +759,20 @@ namespace Stardust.Data.Nodes
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public const String WebHook = "WebHook";
 
-            /// <summary>CPU告警。CPU告警的百分比阈值，百分之一</summary>
+            /// <summary>CPU告警。CPU告警的百分比阈值，CPU使用率达到该值时告警，百分之一</summary>
             public const String AlarmCpuRate = "AlarmCpuRate";
 
-            /// <summary>内存告警。内存告警的百分比阈值，百分之一</summary>
+            /// <summary>内存告警。内存告警的百分比阈值，内存使用率达到该值时告警，百分之一</summary>
             public const String AlarmMemoryRate = "AlarmMemoryRate";
 
-            /// <summary>磁盘告警。磁盘告警的百分比阈值，百分之一</summary>
+            /// <summary>磁盘告警。磁盘告警的百分比阈值，磁盘使用率达到该值时告警，百分之一</summary>
             public const String AlarmDiskRate = "AlarmDiskRate";
 
-            /// <summary>连接数告警。TCP连接数告警，包括连接数、主动关闭和被动关闭</summary>
+            /// <summary>连接数告警。TCP连接数达到该值时告警，包括连接数、主动关闭和被动关闭</summary>
             public const String AlarmTcp = "AlarmTcp";
+
+            /// <summary>进程告警。要守护的进程不存在时告警，多进程逗号隔开</summary>
+            public const String AlarmProcesses = "AlarmProcesses";
 
             /// <summary>登录次数</summary>
             public const String Logins = "Logins";

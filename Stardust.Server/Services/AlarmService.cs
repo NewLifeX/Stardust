@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using NewLife;
 using NewLife.Caching;
+using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust.Data.Monitors;
 using Stardust.Data.Nodes;
@@ -187,7 +188,7 @@ namespace Stardust.Server.Services
             if (node == null || !node.Enable || node.WebHook.IsNullOrEmpty()) return;
 
             var robot = node.WebHook;
-            if (node.AlarmCpuRate <= 0 && node.AlarmMemoryRate <= 0 && node.AlarmDiskRate <= 0) return;
+            if (node.AlarmCpuRate <= 0 && node.AlarmMemoryRate <= 0 && node.AlarmDiskRate <= 0 && node.AlarmProcesses.IsNullOrEmpty()) return;
 
             // 最新数据
             var data = NodeData.FindLast(node.ID);
@@ -310,9 +311,45 @@ namespace Stardust.Server.Services
                     }
                 }
             }
+
+            // 进程告警
+            if (!node.AlarmProcesses.IsNullOrEmpty() && !data.Data.IsNullOrEmpty())
+            {
+                var alarms = node.AlarmProcesses.Split(",", StringSplitOptions.RemoveEmptyEntries);
+                var dic = JsonParser.Decode(data.Data);
+                var ps = (dic["Processes"] as String)?.Split(",", StringSplitOptions.RemoveEmptyEntries);
+                if (alarms != null && alarms.Length > 0 && ps != null && ps.Length > 0)
+                {
+                    // 查找丢失的进程
+                    var ps2 = alarms.Where(e => !ps.Contains(e)).ToList();
+                    if (ps2.Count > 0)
+                    {
+                        // 一定时间内不要重复报错
+                        var error2 = _cache.Get<Int32>("alarm:Process:" + node.ID);
+                        if (error2 == 0 || ps2.Count > error2 * 2)
+                        {
+                            _cache.Set("alarm:Process:" + node.ID, ps2.Count, 5 * 60);
+
+                            var title = $"[{node}]进程告警";
+                            if (robot.Contains("qyapi.weixin"))
+                            {
+                                var weixin = new WeiXinClient { Url = robot };
+                                var msg = GetMarkdown("process", node, data, title, ps2.Join());
+                                weixin.SendMarkDown(msg);
+                            }
+                            else if (robot.Contains("dingtalk"))
+                            {
+                                var dingTalk = new DingTalkClient { Url = robot };
+                                var msg = GetMarkdown("process", node, data, null, ps2.Join());
+                                dingTalk.SendMarkDown(title, msg, null);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        private static String GetMarkdown(String kind, Node node, NodeData data, String title)
+        private static String GetMarkdown(String kind, Node node, NodeData data, String title, String msg = null)
         {
             var sb = new StringBuilder();
             if (!title.IsNullOrEmpty()) sb.AppendLine($"### [{node}]Redis内存告警");
@@ -345,6 +382,9 @@ namespace Stardust.Server.Services
                         sb.AppendLine($">**TCP主动关闭：**<font color=\"info\">{data.TcpTimeWait:n0} >= {node.AlarmTcp:n0}</font>");
                     if (data.TcpCloseWait >= node.AlarmTcp)
                         sb.AppendLine($">**TCP被动关闭：**<font color=\"info\">{data.TcpCloseWait:n0} >= {node.AlarmTcp:n0}</font>");
+                    break;
+                case "process":
+                    sb.AppendLine($">**进程已退出：**<font color=\"info\">{msg}</font>");
                     break;
             }
 
