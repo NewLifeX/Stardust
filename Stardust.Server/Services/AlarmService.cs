@@ -197,7 +197,7 @@ namespace Stardust.Server.Services
             // CPU告警
             if (node.AlarmCpuRate > 0)
             {
-                var rate = data.CpuRate;
+                var rate = data.CpuRate * 100;
                 if (rate >= node.AlarmCpuRate)
                 {
                     // 一定时间内不要重复报错，除非错误翻倍
@@ -206,7 +206,7 @@ namespace Stardust.Server.Services
                     {
                         _cache.Set("alarm:CpuRate:" + node.ID, rate, 5 * 60);
 
-                        var title = $"[{node}]CPU告警";
+                        var title = $"[{node.Name}]CPU告警";
                         if (robot.Contains("qyapi.weixin"))
                         {
                             var weixin = new WeiXinClient { Url = robot };
@@ -226,7 +226,7 @@ namespace Stardust.Server.Services
             // 内存告警
             if (node.AlarmMemoryRate > 0 && node.Memory > 0)
             {
-                var rate = data.AvailableMemory / node.Memory;
+                var rate = data.AvailableMemory * 100 / node.Memory;
                 if (rate >= node.AlarmMemoryRate)
                 {
                     // 一定时间内不要重复报错，除非错误翻倍
@@ -235,7 +235,7 @@ namespace Stardust.Server.Services
                     {
                         _cache.Set("alarm:MemoryRate:" + node.ID, rate, 5 * 60);
 
-                        var title = $"[{node}]内存告警";
+                        var title = $"[{node.Name}]内存告警";
                         if (robot.Contains("qyapi.weixin"))
                         {
                             var weixin = new WeiXinClient { Url = robot };
@@ -255,7 +255,7 @@ namespace Stardust.Server.Services
             // 磁盘告警
             if (node.AlarmDiskRate > 0 && node.TotalSize > 0)
             {
-                var rate = data.AvailableFreeSpace / node.TotalSize;
+                var rate = data.AvailableFreeSpace * 100 / node.TotalSize;
                 if (rate >= node.AlarmDiskRate)
                 {
                     // 一定时间内不要重复报错，除非错误翻倍
@@ -264,7 +264,7 @@ namespace Stardust.Server.Services
                     {
                         _cache.Set("alarm:DiskRate:" + node.ID, rate, 5 * 60);
 
-                        var title = $"[{node}]磁盘告警";
+                        var title = $"[{node.Name}]磁盘告警";
                         if (robot.Contains("qyapi.weixin"))
                         {
                             var weixin = new WeiXinClient { Url = robot };
@@ -295,7 +295,7 @@ namespace Stardust.Server.Services
                     {
                         _cache.Set("alarm:Tcp:" + node.ID, tcp, 5 * 60);
 
-                        var title = $"[{node}]Tcp告警";
+                        var title = $"[{node.Name}]Tcp告警";
                         if (robot.Contains("qyapi.weixin"))
                         {
                             var weixin = new WeiXinClient { Url = robot };
@@ -330,7 +330,7 @@ namespace Stardust.Server.Services
                         {
                             _cache.Set("alarm:Process:" + node.ID, ps2.Count, 5 * 60);
 
-                            var title = $"[{node}]进程告警";
+                            var title = $"[{node.Name}]进程守护告警";
                             if (robot.Contains("qyapi.weixin"))
                             {
                                 var weixin = new WeiXinClient { Url = robot };
@@ -352,8 +352,8 @@ namespace Stardust.Server.Services
         private static String GetMarkdown(String kind, Node node, NodeData data, String title, String msg = null)
         {
             var sb = new StringBuilder();
-            if (!title.IsNullOrEmpty()) sb.AppendLine($"### [{node}]Redis内存告警");
-            sb.AppendLine($">**节点：**<font color=\"info\">{node.Name} / {node.IP}</font>");
+            if (!title.IsNullOrEmpty()) sb.AppendLine($"### {title}");
+            sb.AppendLine($">**节点：**<font color=\"info\">{node} / {node.IP}</font>");
             sb.AppendLine($">**分类：**<font color=\"info\">{node.Category}</font>");
             sb.AppendLine($">**系统：**<font color=\"info\">{node.OS}</font>");
             sb.AppendLine($">**CPU核心：**<font color=\"info\">{node.Cpu}</font>");
