@@ -226,7 +226,7 @@ namespace Stardust.Server.Services
             // 内存告警
             if (node.AlarmMemoryRate > 0 && node.Memory > 0)
             {
-                var rate = data.AvailableMemory * 100 / node.Memory;
+                var rate = (node.Memory - data.AvailableMemory) * 100 / node.Memory;
                 if (rate >= node.AlarmMemoryRate)
                 {
                     // 一定时间内不要重复报错，除非错误翻倍
@@ -255,7 +255,7 @@ namespace Stardust.Server.Services
             // 磁盘告警
             if (node.AlarmDiskRate > 0 && node.TotalSize > 0)
             {
-                var rate = data.AvailableFreeSpace * 100 / node.TotalSize;
+                var rate = (node.TotalSize - data.AvailableFreeSpace) * 100 / node.TotalSize;
                 if (rate >= node.AlarmDiskRate)
                 {
                     // 一定时间内不要重复报错，除非错误翻倍
@@ -326,7 +326,7 @@ namespace Stardust.Server.Services
                     {
                         // 一定时间内不要重复报错
                         var error2 = _cache.Get<Int32>("alarm:Process:" + node.ID);
-                        if (error2 == 0 || ps2.Count > error2 * 2)
+                        if (error2 == 0 || ps2.Count > error2)
                         {
                             _cache.Set("alarm:Process:" + node.ID, ps2.Count, 5 * 60);
 
