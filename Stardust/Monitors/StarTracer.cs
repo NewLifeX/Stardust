@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.NetworkInformation;
 using System.Reflection;
 using NewLife;
 using NewLife.Common;
@@ -152,18 +151,6 @@ namespace Stardust.Monitors
             }
             catch { }
 
-            if (info.Connections == 0 && !Runtime.Windows)
-            {
-                try
-                {
-                    // 暂时无法区分连接属于哪个进程，使用全局连接数
-                    var properties = IPGlobalProperties.GetIPGlobalProperties();
-                    var connections = properties.GetActiveTcpConnections();
-                    info.Connections = connections.Length;
-                }
-                catch { }
-            }
-
             // 发送，失败后进入队列
             var model = new TraceModel
             {
@@ -191,6 +178,10 @@ namespace Stardust.Monitors
                     if (rs.Excludes != null) Excludes = rs.Excludes;
                 }
             }
+            catch (ApiException ex)
+            {
+                Log?.Error(ex + "");
+            }
             catch (Exception ex)
             {
                 //XTrace.WriteException(ex);
@@ -209,9 +200,18 @@ namespace Stardust.Monitors
                 {
                     Client.Invoke<Object>("Trace/Report", model);
                 }
-                catch
+                catch (ApiException ex)
                 {
-                    _fails.Enqueue(model);
+                    Log?.Error(ex + "");
+                }
+                catch (Exception ex)
+                {
+                    XTrace.WriteLine("二次上报失败，放弃该批次采样数据，{0}", model.Builders.FirstOrDefault()?.StartTime.ToDateTime());
+                    XTrace.WriteException(ex);
+                    //Log?.Error(ex + "");
+
+                    // 星尘收集器上报，二次失败后放弃该批次数据，因其很可能是错误数据
+                    //_fails.Enqueue(model);
                     break;
                 }
             }
