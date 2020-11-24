@@ -73,7 +73,12 @@
                         <text>@entity.Nodes</text>
                     }
                 </td>
-                <td><a href="../Star/AppMeter?appId=@appId">性能</a></td>
+                <td>
+                    @if (appId > 0)
+                    {
+                        <a href="../Star/AppMeter?appId=@appId">性能</a>
+                    }
+                </td>
                 <td>@entity.UpdateUser</td>
                 <td class="text-center">@entity.UpdateTime.ToFullString("")</td>
                 <td class="text-center" title="@entity.UpdateIP.IPToAddress()">@entity.UpdateIP</td>
