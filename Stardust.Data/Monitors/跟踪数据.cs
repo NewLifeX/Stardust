@@ -17,6 +17,7 @@ namespace Stardust.Data.Monitors
     [BindIndex("IX_TraceData_StatDate_AppId_Name_StartTime", false, "StatDate,AppId,Name,StartTime")]
     [BindIndex("IX_TraceData_StatHour_AppId_Name", false, "StatHour,AppId,Name")]
     [BindIndex("IX_TraceData_StatMinute_AppId_Name", false, "StatMinute,AppId,Name")]
+    [BindIndex("IX_TraceData_AppId_StatMinute", false, "AppId,StatMinute")]
     [BindTable("TraceData", Description = "跟踪数据。应用定时上报采样得到的埋点跟踪原始数据，应用端已完成初步统计，后端将再次向上汇总", ConnName = "MonitorLog", DbType = DatabaseType.None)]
     public partial class TraceData
     {

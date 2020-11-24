@@ -54,6 +54,7 @@
       <Index Columns="StatDate,AppId,Name,StartTime" />
       <Index Columns="StatHour,AppId,Name" />
       <Index Columns="StatMinute,AppId,Name" />
+      <Index Columns="AppId,StatMinute" />
     </Indexes>
   </Table>
   <Table Name="SampleData" Description="采样数据。具体调用或异常详情，每次跟踪统计携带少量样板，用于链路分析以及异常跟踪" ConnName="MonitorLog">
