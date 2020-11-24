@@ -6,6 +6,7 @@ using NewLife;
 using NewLife.Log;
 using NewLife.Security;
 using NewLife.Threading;
+using Stardust.Data;
 using Stardust.Data.Monitors;
 using Stardust.Data.Nodes;
 
@@ -44,7 +45,11 @@ namespace Stardust.Server.Services
             var rs = NodeData.DeleteBefore(time);
             XTrace.WriteLine("删除[{0}]之前的NodeData共：{1:n0}", time.ToFullString(), rs);
 
-            // 删除节点数据
+            // 删除应用性能数据
+            rs = AppMeter.DeleteBefore(time);
+            XTrace.WriteLine("删除[{0}]之前的AppMeter共：{1:n0}", time.ToFullString(), rs);
+
+            // 删除监控明细数据
             rs = TraceData.DeleteBefore(time);
             XTrace.WriteLine("删除[{0}]之前的TraceData共：{1:n0}", time.ToFullString(), rs);
             rs = SampleData.DeleteBefore(time);
