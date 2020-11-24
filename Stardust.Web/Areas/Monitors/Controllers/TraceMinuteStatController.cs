@@ -46,7 +46,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 p.PageSize = 24 * 60 / 5;
             }
 
-            p.RetrieveState = true;
+            if (appId > 0) p.RetrieveState = true;
 
             var list = TraceMinuteStat.Search(appId, name, start, end, p["Q"], p);
 
