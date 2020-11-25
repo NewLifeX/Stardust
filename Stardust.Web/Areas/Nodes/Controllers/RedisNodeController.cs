@@ -83,6 +83,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                     foreach (var item in queues)
                     {
                         _redisService.TraceQueue(item);
+                        item.SaveAsync();
                     }
                 }
                 catch (Exception ex)
