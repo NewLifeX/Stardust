@@ -136,7 +136,7 @@ namespace Stardust.Server.Services
                                 if (!msg.IsNullOrEmpty())
                                 {
                                     // 错误内容取第一行，详情看更多
-                                    var p = msg.IndexOf(Environment.NewLine);
+                                    var p = msg.IndexOfAny(new[] { '\r', '\n' });
                                     if (p > 0) msg = msg.Substring(0, p);
 
                                     sb.AppendLine($">**错误内容：**{msg}");
