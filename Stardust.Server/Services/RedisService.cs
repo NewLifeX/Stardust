@@ -159,6 +159,7 @@ namespace Stardust.Server.Services
                             queues.Add(mq);
                         }
 
+                        mq.Enable = true;
                         if (mq.Name.IsNullOrEmpty()) mq.Name = node.Name;
                         if (mq.Category.IsNullOrEmpty()) mq.Category = node.Category;
                         if (mq.Type.IsNullOrEmpty())
@@ -237,6 +238,10 @@ namespace Stardust.Server.Services
                                 queue.LastActive = sts.Max(e => e.Value.LastActive);
                                 queue.Remark = sts.ToJson();
                             }
+                        }
+                        else
+                        {
+                            queue.Enable = false;
                         }
                     }
                     break;

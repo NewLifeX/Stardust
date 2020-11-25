@@ -17,6 +17,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             ListFields.RemoveCreateField();
             ListFields.RemoveUpdateField();
             ListFields.AddField("UpdateTime");
+            ListFields.AddField("WebHook");
         }
 
         protected override IEnumerable<RedisMessageQueue> Search(Pager p)
