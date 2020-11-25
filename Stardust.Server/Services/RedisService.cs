@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using NewLife;
 using NewLife.Caching;
+using NewLife.Log;
 using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust.Data.Models;
@@ -64,17 +65,21 @@ namespace Stardust.Server.Services
 
                             _cache.Remove(key);
                         }
-                        catch
+                        catch (Exception ex)
                         {
                             errors = _cache.Increment(key, 1);
                             if (errors <= 1)
                                 _cache.SetExpire(key, TimeSpan.FromMinutes(10));
+
+                            XTrace.WriteException(ex);
                         }
                     }
                     else
                     {
                         item.Enable = false;
                         item.SaveAsync();
+
+                        _cache.Remove(key);
                     }
                 }
             }
@@ -90,6 +95,7 @@ namespace Stardust.Server.Services
             rds.Server = node.Server;
             rds.Password = node.Password;
             rds.Db = db;
+            rds.Tracer = DefaultTracer.Instance;
 
             return rds;
         }
@@ -101,6 +107,7 @@ namespace Stardust.Server.Services
             // 可能后面更新了服务器地址和密码
             rds.Server = node.Server;
             rds.Password = node.Password;
+            rds.Tracer = DefaultTracer.Instance;
 
             //var inf = rds.GetInfo(true);
             var inf = rds.GetInfo(false);
@@ -136,6 +143,7 @@ namespace Stardust.Server.Services
                     {
                         var ss = item.Split(":");
                         var topic = ss.Take(ss.Length - 2).Join(":");
+                        if (topic.IsNullOrEmpty()) continue;
 
                         var mq = queues.FirstOrDefault(e => e.Db == i && e.Topic == topic);
                         if (mq == null)
@@ -182,17 +190,22 @@ namespace Stardust.Server.Services
 
                             _cache.Remove(key);
                         }
-                        catch
+                        catch (Exception ex)
                         {
                             errors = _cache.Increment(key, 1);
                             if (errors <= 1)
                                 _cache.SetExpire(key, TimeSpan.FromMinutes(10));
+
+                            XTrace.WriteException(ex);
                         }
                     }
                     else
                     {
                         item.Enable = false;
+
+                        _cache.Remove(key);
                     }
+
                     item.SaveAsync();
                 }
             }
@@ -200,6 +213,8 @@ namespace Stardust.Server.Services
 
         public void TraceQueue(RedisMessageQueue queue)
         {
+            if (queue.Topic.IsNullOrEmpty()) return;
+
             var rds = GetOrAdd(queue.Redis, queue.Db);
 
             switch (queue.Type?.ToLower())
@@ -212,13 +227,16 @@ namespace Stardust.Server.Services
                         var cs = rds.Search($"{queue.Topic}:Status:*", 1000).ToArray();
                         queue.Consumers = cs.Length;
 
-                        var sts = rds.GetAll<RedisQueueStatus>(cs);
-                        if (sts != null)
+                        if (cs.Length > 0)
                         {
-                            queue.Total = sts.Sum(e => e.Value.Consumes);
-                            queue.FirstConsumer = sts.Min(e => e.Value.CreateTime);
-                            queue.LastActive = sts.Max(e => e.Value.LastActive);
-                            queue.Remark = sts.ToJson();
+                            var sts = rds.GetAll<RedisQueueStatus>(cs);
+                            if (sts != null)
+                            {
+                                queue.Total = sts.Sum(e => e.Value.Consumes);
+                                queue.FirstConsumer = sts.Min(e => e.Value.CreateTime);
+                                queue.LastActive = sts.Max(e => e.Value.LastActive);
+                                queue.Remark = sts.ToJson();
+                            }
                         }
                     }
                     break;

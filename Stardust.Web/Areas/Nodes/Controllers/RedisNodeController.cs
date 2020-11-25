@@ -75,12 +75,21 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             {
                 XTrace.WriteLine("刷新 {0}/{1} {2}", node.Name, node.Id, node.Server);
 
-                _redisService.TraceNode(node);
-
-                var queues = RedisMessageQueue.FindAllByRedisId(node.Id);
-                foreach (var item in queues)
+                try
                 {
-                    _redisService.TraceQueue(item);
+                    _redisService.TraceNode(node);
+
+                    var queues = RedisMessageQueue.FindAllByRedisId(node.Id);
+                    foreach (var item in queues)
+                    {
+                        _redisService.TraceQueue(item);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogProvider.Provider.WriteLog("RedisNode", "Refresh", false, ex?.GetMessage());
+
+                    throw;
                 }
             }
 
