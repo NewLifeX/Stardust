@@ -50,6 +50,9 @@ namespace Stardust.Models
                 Name = process.ProcessName;
                 //StartTime = process.StartTime;
                 //ProcessorTime = (Int64)process.TotalProcessorTime.TotalMilliseconds;
+
+                process.Refresh();
+
                 WorkingSet = process.WorkingSet64;
                 Threads = process.Threads.Count;
                 Handles = process.HandleCount;

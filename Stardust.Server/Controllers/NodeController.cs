@@ -13,7 +13,6 @@ using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Common;
 using XCode;
-using XCode.Membership;
 
 namespace Stardust.Server.Controllers
 {
@@ -477,8 +476,8 @@ namespace Stardust.Server.Controllers
             // 找到所有产品版本
             var list = NodeVersion.GetValids(ch);
 
-            // 应用过滤规则
-            var pv = list.FirstOrDefault(e => e.Match(node));
+            // 应用过滤规则，使用最新的一个版本
+            var pv = list.Where(e => e.Match(node)).OrderByDescending(e => e.Version).FirstOrDefault();
             if (pv == null) return null;
             //if (pv == null) throw new ApiException(509, "没有升级规则");
 

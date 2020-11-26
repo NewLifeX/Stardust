@@ -6,6 +6,7 @@ using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
 using NewLife.Reflection;
+using NewLife.Remoting;
 using NewLife.Threading;
 using Stardust;
 using Stardust.Monitors;
@@ -37,6 +38,8 @@ namespace StarAgent
             // 注册菜单，在控制台菜单中按 t 可以执行Test函数，主要用于临时处理数据
             AddMenu('s', "使用星尘", UseStarServer);
             AddMenu('t', "服务器信息", ShowMachineInfo);
+
+            MachineInfo.RegisterAsync();
         }
 
         TimerX _timer;
@@ -78,28 +81,31 @@ namespace StarAgent
                 Log = XTrace.Log
             };
             DefaultTracer.Instance = tracer;
+            ApiHelper.Tracer = tracer;
             client.Tracer = tracer;
 
             // 使用跟踪
             client.UseTrace();
 
+            _Client = client;
+
             // 可能需要多次尝试
             _timer = new TimerX(TryConnectServer, client, 0, 5_000) { Async = true };
-
-            _Client = client;
         }
 
         private void TryConnectServer(Object state)
         {
             var client = state as StarClient;
-            var set = Setting.Current;
             client.Login().Wait();
-            CheckUpgrade(client, set.Channel);
+            CheckUpgrade(client);
 
             // 登录成功，销毁定时器
             //TimerX.Current.Period = 0;
+            //_timer.TryDispose();
+            //_timer = null;
+
             _timer.TryDispose();
-            _timer = null;
+            _timer = new TimerX(CheckUpgrade, null, 600_000, 600_000) { Async = true };
         }
 
         /// <summary>服务启动</summary>
@@ -144,6 +150,9 @@ namespace StarAgent
         {
             base.StopWork(reason);
 
+            _timer.TryDispose();
+            _timer = null;
+
             _Manager.Stop(reason);
             //_Manager.TryDispose();
 
@@ -151,8 +160,14 @@ namespace StarAgent
             _Client = null;
         }
 
-        private void CheckUpgrade(StarClient client, String channel)
+        private void CheckUpgrade(Object data)
         {
+            var client = _Client;
+
+            // 运行过程中可能改变配置文件的通道
+            var set = Setting.Current;
+            var channel = set.Channel;
+
             // 检查更新
             var ur = client.Upgrade(channel).Result;
             if (ur != null)

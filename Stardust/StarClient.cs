@@ -416,7 +416,7 @@ namespace Stardust
                 {
                     var fileName = Path.GetFileName(url);
                     if (!fileName.EndsWithIgnoreCase(".zip")) fileName = Rand.NextString(8) + ".zip";
-                    fileName = Path.GetTempPath().CombinePath(fileName).EnsureDirectory(true);
+                    fileName = "Update".CombinePath(fileName).EnsureDirectory(true);
 
                     // 清理
                     NewLife.Net.Upgrade.DeleteBuckup(dest);
