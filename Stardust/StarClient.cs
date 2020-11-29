@@ -7,7 +7,6 @@ using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using NewLife;
 using NewLife.Http;
