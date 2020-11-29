@@ -23,9 +23,9 @@ namespace StarAgent
         [Description("密钥")]
         public String Secret { get; set; }
 
-        ///// <summary>服务地址端口。默认为空，子网内自动发现</summary>
-        //[Description("服务地址端口。默认为空，子网内自动发现")]
-        //public String Server { get; set; } = "";
+        /// <summary>本地服务。默认udp://127.0.0.1:5500</summary>
+        [Description("本地服务。默认udp://127.0.0.1:5500")]
+        public String LocalServer { get; set; } = "udp://127.0.0.1:5500";
 
         /// <summary>更新通道。默认Release</summary>
         [Description("更新通道。默认Release")]

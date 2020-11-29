@@ -35,18 +35,12 @@ namespace Stardust
         /// <summary>开始管理，拉起应用进程</summary>
         public void Start()
         {
-            //var ts = new List<Task<Process>>();
             foreach (var service in Services)
             {
                 WriteLog("启动应用[{0}]：{1} {2} {3}", service.Name, service.FileName, service.Arguments, service.WorkingDirectory);
 
-                //if (item.AutoStart) ts.Add(Task.Run(() => StartService(item)));
                 if (service.AutoStart) StartService(service);
             }
-
-            //// 等待全部完成
-            //var ps = Task.WhenAll(ts).Result;
-            //_processes.AddRange(ps.Where(e => e != null));
 
             _timer = new TimerX(DoWork, null, 30_000, 30_000) { Async = true };
         }

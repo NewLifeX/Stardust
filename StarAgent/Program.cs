@@ -5,6 +5,7 @@ using System.Reflection;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
+using NewLife.Net;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Threading;
@@ -42,9 +43,11 @@ namespace StarAgent
             MachineInfo.RegisterAsync();
         }
 
+        ApiServer _server;
         TimerX _timer;
         StarClient _Client;
         ServiceManager _Manager;
+
         private void StartClient()
         {
             var set = Setting.Current;
@@ -117,8 +120,6 @@ namespace StarAgent
         {
             var set = Setting.Current;
 
-            StartClient();
-
             // 应用服务管理
             _Manager = new ServiceManager
             {
@@ -126,6 +127,27 @@ namespace StarAgent
 
                 Log = XTrace.Log,
             };
+
+            // 监听端口，用于本地通信
+            if (!set.LocalServer.IsNullOrEmpty())
+            {
+                var svr = new ApiServer(new NetUri(set.LocalServer))
+                {
+                    Log = XTrace.Log
+                };
+                svr.Register(new StarService
+                {
+                    Manager = _Manager,
+                    Log = XTrace.Log
+                }, null);
+                svr.Start();
+
+                _server = svr;
+            }
+
+            // 启动星尘客户端，连接服务端
+            StartClient();
+
             _Manager.Start();
 
             base.StartWork(reason);
@@ -158,6 +180,9 @@ namespace StarAgent
 
             _Client.TryDispose();
             _Client = null;
+
+            _server.TryDispose();
+            _server = null;
         }
 
         private void CheckUpgrade(Object data)
