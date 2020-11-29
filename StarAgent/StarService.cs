@@ -41,7 +41,11 @@ namespace StarAgent
 
                 try
                 {
-                    p.Kill();
+                    if (!p.HasExited)
+                    {
+                        p.Kill();
+                        p.WaitForExit(5_000);
+                    }
                 }
                 catch (Exception ex)
                 {
