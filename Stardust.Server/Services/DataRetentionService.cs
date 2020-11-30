@@ -49,15 +49,15 @@ namespace Stardust.Server.Services
             rs = AppMeter.DeleteBefore(time);
             XTrace.WriteLine("删除[{0}]之前的AppMeter共：{1:n0}", time.ToFullString(), rs);
 
+            // 删除跟踪分钟统计数据
+            rs = TraceMinuteStat.DeleteBefore(time);
+            XTrace.WriteLine("删除[{0}]之前的TraceMinuteStat共：{1:n0}", time.ToFullString(), rs);
+
             // 删除监控明细数据
             rs = TraceData.DeleteBefore(time);
             XTrace.WriteLine("删除[{0}]之前的TraceData共：{1:n0}", time.ToFullString(), rs);
             rs = SampleData.DeleteBefore(time);
             XTrace.WriteLine("删除[{0}]之前的SampleData共：{1:n0}", time.ToFullString(), rs);
-
-            // 删除跟踪分钟统计数据
-            rs = TraceMinuteStat.DeleteBefore(time);
-            XTrace.WriteLine("删除[{0}]之前的TraceMinuteStat共：{1:n0}", time.ToFullString(), rs);
         }
     }
 }
