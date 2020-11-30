@@ -148,7 +148,7 @@
       <Column Name="Enable" DataType="Boolean" Description="启用。启用/停用" />
       <Column Name="Force" DataType="Boolean" Description="强制。强制升级" />
       <Column Name="Channel" DataType="Int32" Description="升级通道" Type="NodeChannels" />
-      <Column Name="Strategy" DataType="String" Length="500" Description="策略。升级策略" />
+      <Column Name="Strategy" DataType="String" Length="500" Description="策略。升级策略，node=abcd;version=1.0,1.1" />
       <Column Name="Source" DataType="String" Length="200" Description="升级源" />
       <Column Name="Executor" DataType="String" Length="200" Description="执行命令。空格前后为文件名和参数" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
