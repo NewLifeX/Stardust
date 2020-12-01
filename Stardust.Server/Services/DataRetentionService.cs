@@ -18,7 +18,7 @@ namespace Stardust.Server.Services
         public Task StartAsync(CancellationToken cancellationToken)
         {
             // 每小时执行
-            _timer = new TimerX(DoWork, null, DateTime.Today.AddMinutes(Rand.Next(60)), 3600 * 1000) { Async = true };
+            _timer = new TimerX(DoWork, null, DateTime.Today.AddMinutes(Rand.Next(60)), 600 * 1000) { Async = true };
 
             // 临时来一次
             TimerX.Delay(DoWork, 10_000);
