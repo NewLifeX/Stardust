@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using NewLife;
 using NewLife.Log;
@@ -29,6 +30,15 @@ namespace Stardust
             var set = Setting.Current;
             if (set.Debug) _client.EncoderLog = XTrace.Log;
         }
+
+        /// <summary>获取信息</summary>
+        /// <returns></returns>
+        public IDictionary<String, Object> GetInfo()
+        {
+            Init();
+
+            return _client.Invoke<Object>("Api/Info") as IDictionary<String, Object>;
+        }
         #endregion
 
         #region 进程控制
@@ -55,6 +65,16 @@ namespace Stardust
             //p.Kill();
 
             return !rs.IsNullOrEmpty();
+        }
+        #endregion
+
+        #region 安装星尘代理
+        /// <summary>探测并安装星尘代理</summary>
+        /// <param name="url"></param>
+        /// <param name="version"></param>
+        public Boolean TestAndInstall(String url, String version)
+        {
+            if (url.IsNullOrEmpty()) throw new ArgumentNullException(nameof(url));
         }
         #endregion
     }
