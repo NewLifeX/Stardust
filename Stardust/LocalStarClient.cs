@@ -4,11 +4,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using NewLife;
 using NewLife.Http;
 using NewLife.Log;
 using NewLife.Net;
 using NewLife.Remoting;
+using Stardust.Models;
 
 namespace Stardust
 {
@@ -16,6 +18,9 @@ namespace Stardust
     public class LocalStarClient
     {
         #region 属性
+        /// <summary>代理信息</summary>
+        public AgentInfo Info { get; private set; }
+
         private ApiClient _client;
         #endregion
 
@@ -39,11 +44,11 @@ namespace Stardust
 
         /// <summary>获取信息</summary>
         /// <returns></returns>
-        public IDictionary<String, Object> GetInfo()
+        public AgentInfo GetInfo()
         {
             Init();
 
-            return _client.Invoke<Object>("Api/Info") as IDictionary<String, Object>;
+            return Info = _client.Invoke<AgentInfo>("Info");
         }
         #endregion
 
@@ -56,14 +61,15 @@ namespace Stardust
 
             var p = Process.GetCurrentProcess();
             var fileName = p.MainModule.FileName;
+            var args = Environment.CommandLine.TrimStart(Path.ChangeExtension(fileName, ".dll")).Trim();
 
             // 发起命令
             var rs = _client.Invoke<String>("KillAndStart", new
             {
                 processId = p.Id,
                 delay = 3,
-                fileName = fileName,
-                arguments = Environment.CommandLine,
+                fileName,
+                arguments = args,
                 workingDirectory = Environment.CurrentDirectory,
             });
 
@@ -94,29 +100,30 @@ namespace Stardust
             }
 
             // 尝试连接，获取版本
-            var ver = "";
-            var pid = 0;
             try
             {
                 var info = GetInfo();
 
                 // 比目标版本高，不需要安装
-                ver = info["Version"] + "";
-                if (String.Compare(ver, version) >= 0) return true;
+                if (String.Compare(info.Version, version) >= 0) return true;
 
-                if (info["Process"] is IDictionary<String, Object> dic) pid = dic["ProcessId"].ToInt();
+                if (target.IsNullOrEmpty()) target = Path.GetDirectoryName(info.FileName);
 
-                if (target.IsNullOrEmpty() && pid > 0)
-                {
-                    var p = Process.GetProcessById(pid);
-                    if (p != null) target = Path.GetDirectoryName(p.MainModule.FileName);
-                }
-
-                XTrace.WriteLine("StarAgent在用版本 v{0}，低于目标版本 v{1}", ver, version);
+                XTrace.WriteLine("StarAgent在用版本 v{0}，低于目标版本 v{1}", info.Version, version);
             }
             catch (Exception ex)
             {
                 XTrace.WriteLine("没有探测到StarAgent，{0}", ex.GetTrue().Message);
+            }
+
+            if (target.IsNullOrEmpty())
+            {
+                // 在进程中查找
+                var p = Process.GetProcesses().FirstOrDefault(e => e.ProcessName == "StarAgent");
+                if (p != null)
+                {
+                    target = Path.GetDirectoryName(p.MainWindowTitle);
+                }
             }
 
             // 准备安装，甭管是否能够成功重启，先覆盖了文件再说
@@ -148,23 +155,68 @@ namespace Stardust
 
             {
                 // 在进程中查找
-                var p = Process.GetProcesses().FirstOrDefault(e => e.ProcessName == "StarAgent");
-                if (p == null && pid > 0) p = Process.GetProcessById(pid);
+                var info = Info;
+                var p = info != null && info.ProcessId > 0 ?
+                    Process.GetProcessById(info.ProcessId) :
+                    Process.GetProcesses().FirstOrDefault(e => e.ProcessName == "StarAgent");
+
+                // 让对方自己退出
+                if (info != null)
+                {
+                    //_client.Invoke<String>("KillAndStart", new { processId = info.ProcessId });
+                    _client.Invoke<String>("KillAndStart", new
+                    {
+                        processId = p.Id,
+                        fileName = info.FileName,
+                    });
+                    Thread.Sleep(1000);
+
+                    return true;
+                }
 
                 // 重启目标
-                if (p != null) p.Kill();
+                if (p != null)
+                {
+                    try
+                    {
+                        if (!p.HasExited) p.Kill();
+                    }
+                    catch (Exception ex)
+                    {
+                        XTrace.WriteException(ex);
+                    }
+                }
 
-                var fileName = target.CombinePath("StarAgent.exe");
+                var fileName = info?.FileName ?? target.CombinePath("StarAgent.exe");
                 if (File.Exists(fileName))
                 {
-                    if (Runtime.Linux) Process.Start("chmod", $"+x {fileName}");
-
-                    var si = new ProcessStartInfo(fileName, "-run")
+                    if (Runtime.Linux)
                     {
-                        WorkingDirectory = Path.GetDirectoryName(fileName),
-                        UseShellExecute = true
-                    };
-                    Process.Start(si);
+                        Process.Start("chmod", $"+x {fileName}");
+
+                        var si = new ProcessStartInfo(fileName, "-run")
+                        {
+                            WorkingDirectory = Path.GetDirectoryName(fileName),
+                            UseShellExecute = true
+                        };
+                        Process.Start(si);
+                    }
+                    else
+                    {
+                        if (info?.Arguments == "-s")
+                        {
+                            Process.Start(fileName, "-start");
+                        }
+                        else
+                        {
+                            var si = new ProcessStartInfo(fileName, "-run")
+                            {
+                                WorkingDirectory = Path.GetDirectoryName(fileName),
+                                UseShellExecute = true
+                            };
+                            Process.Start(si);
+                        }
+                    }
                 }
             }
 

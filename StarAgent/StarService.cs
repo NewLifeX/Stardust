@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using NewLife;
+using NewLife.Agent;
 using NewLife.Log;
+using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Threading;
 using Stardust;
+using Stardust.Models;
 
 namespace StarAgent
 {
@@ -13,11 +17,36 @@ namespace StarAgent
     public class StarService
     {
         #region 属性
+        /// <summary>服务对象</summary>
+        public ServiceBase Service { get; set; }
+
+        /// <summary>服务主机</summary>
+        public IHost Host { get; set; }
+
         /// <summary>本地应用服务管理</summary>
         public ServiceManager Manager { get; set; }
         #endregion
 
         #region 业务
+        /// <summary>信息</summary>
+        /// <returns></returns>
+        [Api(nameof(Info))]
+        public AgentInfo Info()
+        {
+            var p = Process.GetCurrentProcess();
+            var asmx = AssemblyX.Entry;
+            var fileName = p.MainModule.FileName;
+            var args = Environment.CommandLine.TrimStart(Path.ChangeExtension(fileName, ".dll")).Trim();
+
+            return new AgentInfo
+            {
+                Version = asmx?.Version,
+                ProcessId = p.Id,
+                FileName = fileName,
+                Arguments = args,
+            };
+        }
+
         /// <summary>杀死并启动进程</summary>
         /// <param name="processId">进程</param>
         /// <param name="delay">延迟结束的秒数</param>
@@ -38,6 +67,13 @@ namespace StarAgent
                 WriteLog("杀死进程 {0}/{1}，等待 {2}秒", processId, p.ProcessName, delay);
 
                 if (delay > 0) Thread.Sleep(delay * 1000);
+
+                // 如果要杀的是自己，则重启服务
+                if (processId == Process.GetCurrentProcess().Id && !fileName.IsNullOrEmpty())
+                {
+                    Host.Restart(Service.ServiceName);
+                    return;
+                }
 
                 try
                 {

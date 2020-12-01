@@ -137,6 +137,8 @@ namespace StarAgent
                 };
                 svr.Register(new StarService
                 {
+                    Service = this,
+                    Host = Host,
                     Manager = _Manager,
                     Log = XTrace.Log
                 }, null);
