@@ -204,8 +204,8 @@ namespace StarAgent
                 {
                     StopWork("Upgrade");
 
+                    Environment.Exit(0);
                     var p = Process.GetCurrentProcess();
-                    p.Close();
                     p.Kill();
                 }
             }

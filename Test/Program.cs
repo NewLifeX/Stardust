@@ -16,8 +16,7 @@ namespace Test
         {
             XTrace.UseConsole();
 
-            Test2();
-            //Thread.Sleep(-1);
+            Test3();
 
             Console.WriteLine("OK!");
             Console.ReadKey();
@@ -55,6 +54,12 @@ namespace Test
             var dal = DAL.Create("mysql");
             var rs = dal.RestoreAll("../data/Node_20200903215342.zip", null);
             //Assert.NotNull(rs);
+        }
+
+        static void Test3()
+        {
+            var client = new LocalStarClient();
+            client.ProbeAndInstall(null, "1.1");
         }
     }
 }

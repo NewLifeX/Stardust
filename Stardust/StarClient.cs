@@ -445,11 +445,20 @@ namespace Stardust
                 {
                     XTrace.WriteLine("执行更新命令：{0}", cmd);
 
+                    var si = new ProcessStartInfo
+                    {
+                        UseShellExecute = true,
+                    };
                     var p = cmd.IndexOf(' ');
                     if (p < 0)
-                        Process.Start(cmd);
+                        si.FileName = cmd;
                     else
-                        Process.Start(cmd.Substring(0, p), cmd.Substring(p + 1));
+                    {
+                        si.FileName = cmd.Substring(0, p);
+                        si.Arguments = cmd.Substring(p + 1);
+                    }
+
+                    Process.Start(si);
                 }
 
                 return true;
