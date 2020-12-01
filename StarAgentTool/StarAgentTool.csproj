@@ -8,15 +8,12 @@
     <Description>星尘，分布式资源调度，客户端代理部署于每一台机器节点，接受服务端命令，获取目标应用包并拉起进程。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2020 NewLife</Copyright>
-    <Version>1.0.2020.1101</Version>
-    <FileVersion>1.0.2020.1101</FileVersion>
+    <Version>1.0.2020.1201</Version>
+    <FileVersion>1.0.2020.1201</FileVersion>
     <AssemblyVersion>1.0.*</AssemblyVersion>
     <Deterministic>false</Deterministic>
     <OutputPath>..\Bin\AgentTool</OutputPath>
     <!--<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>-->
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <DefineConstants>TRACE</DefineConstants>
     <LangVersion>latest</LangVersion>
     <PackAsTool>true</PackAsTool>
   </PropertyGroup>
@@ -54,7 +51,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Agent" Version="8.7.2020.1101" />
+    <PackageReference Include="NewLife.Agent" Version="8.7.2020.1201" />
   </ItemGroup>
 
   <ItemGroup>

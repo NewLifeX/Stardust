@@ -46,6 +46,7 @@ namespace Stardust.Web
 
             services.AddSingleton<IRedisService, RedisService>();
 
+            services.AddControllersWithViews();
             services.AddCube();
         }
 
@@ -59,21 +60,21 @@ namespace Stardust.Web
             else
                 app.UseExceptionHandler("/CubeHome/Error");
 
-            app.UseStaticFiles();
+            //app.UseStaticFiles();
 
-            app.UseRouting();
+            //app.UseRouting();
 
-            app.UseAuthorization();
+            //app.UseAuthorization();
 
             //if (!set.Server.IsNullOrEmpty()) app.UseMiddleware<TracerMiddleware>();
 
-            app.UseCube();
+            app.UseCube(env);
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=CubeHome}/{action=Index}/{id?}");
             });
         }
     }
