@@ -6,7 +6,6 @@ using NewLife;
 using NewLife.Data;
 using NewLife.Log;
 using XCode;
-using XCode.Cache;
 using XCode.Membership;
 
 namespace Stardust.Data.Monitors
@@ -83,55 +82,23 @@ namespace Stardust.Data.Monitors
         /// <param name="dataIds"></param>
         /// <returns></returns>
         public static IList<SampleData> FindAllByDataIds(Int64[] dataIds) => FindAll(_.DataId.In(dataIds));
-
-        /// <summary>根据跟踪标识查找</summary>
-        /// <param name="traceId">跟踪标识</param>
-        /// <returns>实体列表</returns>
-        public static IList<SampleData> FindAllByTraceId(String traceId) => FindAll(_.TraceId == traceId);
         #endregion
 
         #region 高级查询
         /// <summary>高级查询</summary>
         /// <param name="dataId">数据</param>
-        /// <param name="appId">应用</param>
-        /// <param name="name">名称</param>
         /// <param name="traceId">跟踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</param>
-        /// <param name="spanId">片段标识</param>
-        /// <param name="parentId">父级标识</param>
-        /// <param name="success">是否成功</param>
-        /// <param name="start">时间开始</param>
-        /// <param name="end">时间结束</param>
-        /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<SampleData> Search(Int64 dataId, Int32 appId, String name, String traceId, String spanId, String parentId, Boolean? success, Int64 start, Int64 end, String key, PageParameter page)
+        public static IList<SampleData> Search(Int64 dataId, String traceId, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (dataId >= 0) exp &= _.DataId == dataId;
-            if (appId >= 0) exp &= _.AppId == appId;
-            if (!name.IsNullOrEmpty()) exp &= _.Name == name;
             if (!traceId.IsNullOrEmpty()) exp &= _.TraceId == traceId;
-            if (!spanId.IsNullOrEmpty()) exp &= _.SpanId == spanId;
-            if (!parentId.IsNullOrEmpty()) exp &= _.ParentId == parentId;
-            if (success != null) exp &= _.Success == success;
-            if (start > 0) exp &= _.StartTime >= start;
-            if (end > 0) exp &= _.StartTime <= end;
-            //exp &= _.CreateTime.Between(start, end);
-            if (!key.IsNullOrEmpty()) exp &= _.TraceId == key | _.SpanId == key | _.ParentId == key | _.Tag.Contains(key) | _.Error.Contains(key);
 
             return FindAll(exp, page);
         }
-
-        //// Select Count(ID) as ID,TraceId From SampleData Where CreateTime>'2020-01-24 00:00:00' Group By TraceId Order By ID Desc limit 20
-        //static readonly FieldCache<SampleData> _TraceIdCache = new FieldCache<SampleData>(nameof(TraceId))
-        //{
-        //    //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-        //};
-
-        ///// <summary>获取跟踪标识列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-        ///// <returns></returns>
-        //public static IDictionary<String, String> GetTraceIdList() => _TraceIdCache.FindAllName();
         #endregion
 
         #region 业务操作

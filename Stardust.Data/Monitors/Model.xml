@@ -16,11 +16,11 @@
       <Column Name="AlarmThreshold" DataType="Int32" Description="告警阈值。错误数达到该值时触发告警，0表示不启用" />
       <Column Name="AlarmRobot" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
       <Column Name="CreateUser" DataType="String" Description="创建者" />
-      <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
+      <Column Name="CreateUserID" DataType="Int32" Description="创建人" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
       <Column Name="UpdateUser" DataType="String" Description="更新者" />
-      <Column Name="UpdateUserID" DataType="Int32" Description="更新者" />
+      <Column Name="UpdateUserID" DataType="Int32" Description="更新人" />
       <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
       <Column Name="UpdateIP" DataType="String" Description="更新地址" />
     </Columns>
@@ -77,6 +77,30 @@
     </Columns>
     <Indexes>
       <Index Columns="DataId" />
+      <Index Columns="TraceId" />
+    </Indexes>
+  </Table>
+  <Table Name="SampleData2" Description="采样数据2。采样备份，用于链路分析以及异常跟踪">
+    <Columns>
+      <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+      <Column Name="DataId" DataType="Int64" Description="数据" />
+      <Column Name="AppId" DataType="Int32" Description="应用" />
+      <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
+      <Column Name="Success" DataType="Boolean" Description="正常" />
+      <Column Name="StartTime" DataType="Int64" Description="开始时间。Unix毫秒" />
+      <Column Name="EndTime" DataType="Int64" Description="结束时间。Unix毫秒" />
+      <Column Name="Cost" DataType="Int32" Description="耗时。毫秒" />
+      <Column Name="TraceId" DataType="String" Description="跟踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
+      <Column Name="SpanId" DataType="String" Description="唯一标识。随线程上下文、Http、Rpc传递，作为内部片段的父级" />
+      <Column Name="ParentId" DataType="String" Description="父级标识" />
+      <Column Name="Tag" DataType="String" Length="2000" Description="数据标签。记录一些附加数据" />
+      <Column Name="Error" DataType="String" Length="8000" Description="错误信息" />
+      <Column Name="CreateUser" DataType="String" Description="创建者" />
+      <Column Name="CreateUserID" DataType="Int32" Description="创建人" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+    </Columns>
+    <Indexes>
       <Index Columns="TraceId" />
     </Indexes>
   </Table>

@@ -6,6 +6,7 @@ using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Monitors;
 using XCode;
+using XCode.Membership;
 
 namespace Stardust.Web.Areas.Monitors.Controllers
 {
@@ -22,17 +23,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         protected override IEnumerable<SampleData> Search(Pager p)
         {
             var dataId = p["dataId"].ToLong(-1);
-            var appId = p["appId"].ToInt(-1);
-            var name = p["name"] + "";
             var traceId = p["traceId"];
-            var spanId = p["spanId"];
-            var parentId = p["parentId"];
-            var success = p["success"]?.ToBoolean();
-
-            //var start = p["dtStart"].ToDateTime();
-            //var end = p["dtEnd"].ToDateTime();
-            var start = p["start"].ToLong(-1);
-            var end = p["end"].ToLong(-1);
 
             // 指定跟踪标识后，分页500
             if (!traceId.IsNullOrEmpty())
@@ -41,8 +32,37 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             }
             if (p.Sort.IsNullOrEmpty()) p.OrderBy = SampleData._.Id.Desc();
 
-            var list = SampleData.Search(dataId, appId, name, traceId, spanId, parentId, success, start, end, p["Q"], p);
-            if (list.Count == 0) return list;
+            var list = SampleData.Search(dataId, traceId, p);
+            if (list.Count == 0)
+            {
+                // 如果是查看调用链，去备份表查一下
+                if (!traceId.IsNullOrEmpty())
+                {
+                    var list2 = SampleData2.Search(traceId, null, p);
+                    if (list2.Count > 0)
+                    {
+                        foreach (var item in list2)
+                        {
+                            var entity = new SampleData();
+                            entity.CopyFrom(item);
+
+                            list.Add(entity);
+                        }
+                    }
+                }
+
+                if (list.Count == 0) return list;
+            }
+            else
+            {
+                if (!traceId.IsNullOrEmpty() && list.Count < p.PageSize)
+                {
+                    var user = ManageProvider.User;
+
+                    // 备份调用链，用于将来查询
+                    SampleData2.Backup(traceId, list, user?.ID ?? 0, user + "");
+                }
+            }
 
             // 如果有traceId，则按照要求排序，深度搜索算法
             if (!traceId.IsNullOrEmpty() && list.Count > 0)
@@ -93,9 +113,12 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 list = rs;
             }
 
-            if (appId <= 0 && list.Count > 0) appId = list[0].AppId;
-            var ar = AppTracer.FindByID(appId);
-            if (ar != null) ViewBag.Title = $"{ar}采样";
+            if (list.Count > 0)
+            {
+                var appId = list[0].AppId;
+                var ar = AppTracer.FindByID(appId);
+                if (ar != null) ViewBag.Title = $"{ar}采样";
+            }
 
             return list;
         }

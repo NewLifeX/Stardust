@@ -132,11 +132,11 @@ namespace Stardust.Data.Monitors
         public String CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
 
         private Int32 _CreateUserID;
-        /// <summary>创建者</summary>
-        [DisplayName("创建者")]
-        [Description("创建者")]
+        /// <summary>创建人</summary>
+        [DisplayName("创建人")]
+        [Description("创建人")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("CreateUserID", "创建者", "")]
+        [BindColumn("CreateUserID", "创建人", "")]
         public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
 
         private DateTime _CreateTime;
@@ -164,11 +164,11 @@ namespace Stardust.Data.Monitors
         public String UpdateUser { get => _UpdateUser; set { if (OnPropertyChanging("UpdateUser", value)) { _UpdateUser = value; OnPropertyChanged("UpdateUser"); } } }
 
         private Int32 _UpdateUserID;
-        /// <summary>更新者</summary>
-        [DisplayName("更新者")]
-        [Description("更新者")]
+        /// <summary>更新人</summary>
+        [DisplayName("更新人")]
+        [Description("更新人")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("UpdateUserID", "更新者", "")]
+        [BindColumn("UpdateUserID", "更新人", "")]
         public Int32 UpdateUserID { get => _UpdateUserID; set { if (OnPropertyChanging("UpdateUserID", value)) { _UpdateUserID = value; OnPropertyChanged("UpdateUserID"); } } }
 
         private DateTime _UpdateTime;
@@ -299,7 +299,7 @@ namespace Stardust.Data.Monitors
             /// <summary>创建者</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
 
-            /// <summary>创建者</summary>
+            /// <summary>创建人</summary>
             public static readonly Field CreateUserID = FindByName("CreateUserID");
 
             /// <summary>创建时间</summary>
@@ -311,7 +311,7 @@ namespace Stardust.Data.Monitors
             /// <summary>更新者</summary>
             public static readonly Field UpdateUser = FindByName("UpdateUser");
 
-            /// <summary>更新者</summary>
+            /// <summary>更新人</summary>
             public static readonly Field UpdateUserID = FindByName("UpdateUserID");
 
             /// <summary>更新时间</summary>
@@ -368,7 +368,7 @@ namespace Stardust.Data.Monitors
             /// <summary>创建者</summary>
             public const String CreateUser = "CreateUser";
 
-            /// <summary>创建者</summary>
+            /// <summary>创建人</summary>
             public const String CreateUserID = "CreateUserID";
 
             /// <summary>创建时间</summary>
@@ -380,7 +380,7 @@ namespace Stardust.Data.Monitors
             /// <summary>更新者</summary>
             public const String UpdateUser = "UpdateUser";
 
-            /// <summary>更新者</summary>
+            /// <summary>更新人</summary>
             public const String UpdateUserID = "UpdateUserID";
 
             /// <summary>更新时间</summary>
