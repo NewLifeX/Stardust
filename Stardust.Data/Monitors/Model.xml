@@ -77,7 +77,6 @@
     </Columns>
     <Indexes>
       <Index Columns="DataId" />
-      <Index Columns="AppId,StartTime" />
       <Index Columns="TraceId" />
     </Indexes>
   </Table>
