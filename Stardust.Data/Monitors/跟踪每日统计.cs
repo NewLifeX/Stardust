@@ -109,6 +109,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("MinCost", "最小耗时。单位毫秒", "")]
         public Int32 MinCost { get => _MinCost; set { if (OnPropertyChanging("MinCost", value)) { _MinCost = value; OnPropertyChanged("MinCost"); } } }
 
+        private String _TraceId;
+        /// <summary>跟踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        [DisplayName("跟踪标识")]
+        [Description("跟踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("TraceId", "跟踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
+        public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
+
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
         [DisplayName("创建时间")]
@@ -147,6 +155,7 @@ namespace Stardust.Data.Monitors
                     case "Cost": return _Cost;
                     case "MaxCost": return _MaxCost;
                     case "MinCost": return _MinCost;
+                    case "TraceId": return _TraceId;
                     case "CreateTime": return _CreateTime;
                     case "UpdateTime": return _UpdateTime;
                     default: return base[name];
@@ -167,6 +176,7 @@ namespace Stardust.Data.Monitors
                     case "Cost": _Cost = value.ToInt(); break;
                     case "MaxCost": _MaxCost = value.ToInt(); break;
                     case "MinCost": _MinCost = value.ToInt(); break;
+                    case "TraceId": _TraceId = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
                     default: base[name] = value; break;
@@ -212,6 +222,9 @@ namespace Stardust.Data.Monitors
             /// <summary>最小耗时。单位毫秒</summary>
             public static readonly Field MinCost = FindByName("MinCost");
 
+            /// <summary>跟踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            public static readonly Field TraceId = FindByName("TraceId");
+
             /// <summary>创建时间</summary>
             public static readonly Field CreateTime = FindByName("CreateTime");
 
@@ -256,6 +269,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>最小耗时。单位毫秒</summary>
             public const String MinCost = "MinCost";
+
+            /// <summary>跟踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            public const String TraceId = "TraceId";
 
             /// <summary>创建时间</summary>
             public const String CreateTime = "CreateTime";

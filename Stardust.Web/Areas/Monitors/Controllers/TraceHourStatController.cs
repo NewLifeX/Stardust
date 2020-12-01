@@ -96,13 +96,28 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var st = TraceHourStat.FindByID(id);
             if (st == null) throw new InvalidDataException("找不到统计数据");
 
-            var ds = TraceData.Search(st.AppId, st.Name, "hour", st.StatTime, 20);
-            if (ds.Count == 0) throw new InvalidDataException("找不到跟踪数据");
+            var traceId = st.TraceId;
 
-            var list = SampleData.FindAllByDataIds(ds.Select(e => e.Id).ToArray());
-            if (list.Count == 0) throw new InvalidDataException("找不到采样数据");
+            // 如果有新的TraceId，则直接使用，否则使用原来的
+            try
+            {
+                var ds = TraceData.Search(st.AppId, st.Name, "hour", st.StatTime, 20);
+                if (ds.Count == 0) throw new InvalidDataException("找不到跟踪数据");
 
-            return RedirectToAction("Index", "SampleData", new { traceId = list[0].TraceId });
+                var list = SampleData.FindAllByDataIds(ds.Select(e => e.Id).ToArray());
+                if (list.Count == 0) throw new InvalidDataException("找不到采样数据");
+
+                traceId = list[0].TraceId;
+                st.TraceId = traceId;
+
+                st.Update();
+            }
+            catch
+            {
+                if (traceId.IsNullOrEmpty()) throw;
+            }
+
+            return RedirectToAction("Index", "SampleData", new { traceId });
         }
     }
 }

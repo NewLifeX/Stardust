@@ -117,6 +117,7 @@
       <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数" />
       <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
       <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
+      <Column Name="TraceId" DataType="String" Description="跟踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
     </Columns>
@@ -138,6 +139,7 @@
       <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数" />
       <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
       <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
+      <Column Name="TraceId" DataType="String" Description="跟踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
     </Columns>
@@ -158,6 +160,7 @@
       <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数" />
       <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
       <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
+      <Column Name="TraceId" DataType="String" Description="跟踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
     </Columns>
