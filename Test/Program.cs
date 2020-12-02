@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Threading;
 using NewLife.Log;
-using NewLife.Net;
 using NewLife.Remoting;
 using Stardust;
-using XCode.DataAccessLayer;
 
 namespace Test
 {
@@ -46,18 +42,14 @@ namespace Test
             _Server = sc;
         }
 
-        static void Test2()
-        {
-            //DAL.AddConnStr("node", "Data Source=..\\Data\\Node.db", null, "sqlite");
-            DAL.AddConnStr("mysql", "Server=.;Port=3306;Database=Node;Uid=root;Pwd=root;", null, "mysql");
-
-            var dal = DAL.Create("mysql");
-            var rs = dal.RestoreAll("../data/Node_20200903215342.zip", null);
-            //Assert.NotNull(rs);
-        }
-
         static void Test3()
         {
+            //foreach (Environment.SpecialFolder item in Enum.GetValues(typeof(Environment.SpecialFolder)))
+            //{
+            //    var v = Environment.GetFolderPath(item);
+            //    Console.WriteLine("{0}:\t{1}", item, v);
+            //}
+
             var client = new LocalStarClient();
             client.ProbeAndInstall(null, "1.1");
         }

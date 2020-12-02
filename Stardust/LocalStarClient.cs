@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -107,6 +106,7 @@ namespace Stardust
                 // 比目标版本高，不需要安装
                 if (String.Compare(info.Version, version) >= 0) return true;
 
+                if (!info.FileName.IsNullOrEmpty()) info.FileName = info.FileName.TrimEnd(" (deleted)");
                 if (target.IsNullOrEmpty()) target = Path.GetDirectoryName(info.FileName);
 
                 XTrace.WriteLine("StarAgent在用版本 v{0}，低于目标版本 v{1}", info.Version, version);
@@ -128,16 +128,15 @@ namespace Stardust
 
             // 准备安装，甭管是否能够成功重启，先覆盖了文件再说
             {
-                if (target.IsNullOrEmpty())
-                {
-                    target = Runtime.Windows ? "C:\\StarAgent" : $"\\home\\{Environment.UserName}";
-                }
+                if (target.IsNullOrEmpty()) target = "..\\staragent";
                 target = target.GetFullPath();
                 target.EnsureDirectory(false);
 
+                XTrace.WriteLine("目标：{0}", target);
+
                 var ug = new Upgrade
                 {
-                    SourceFile = Path.GetFileName(url),
+                    SourceFile = Path.GetFileName(url).GetFullPath(),
                     DestinationPath = target,
 
                     Log = XTrace.Log,
@@ -160,10 +159,13 @@ namespace Stardust
                     Process.GetProcessById(info.ProcessId) :
                     Process.GetProcesses().FirstOrDefault(e => e.ProcessName == "StarAgent");
 
+                // 在Linux中设置执行权限
+                var fileName = info?.FileName ?? target.CombinePath(Runtime.Linux ? "StarAgent" : "StarAgent.exe");
+                if (File.Exists(fileName) && Runtime.Linux) Process.Start("chmod", $"+x {fileName}");
+
                 // 让对方自己退出
                 if (info != null)
                 {
-                    //_client.Invoke<String>("KillAndStart", new { processId = info.ProcessId });
                     _client.Invoke<String>("KillAndStart", new
                     {
                         processId = p.Id,
@@ -187,35 +189,20 @@ namespace Stardust
                     }
                 }
 
-                var fileName = info?.FileName ?? target.CombinePath("StarAgent.exe");
                 if (File.Exists(fileName))
                 {
-                    if (Runtime.Linux)
+                    if (info?.Arguments == "-s")
                     {
-                        Process.Start("chmod", $"+x {fileName}");
-
+                        Process.Start(fileName, "-restart");
+                    }
+                    else
+                    {
                         var si = new ProcessStartInfo(fileName, "-run")
                         {
                             WorkingDirectory = Path.GetDirectoryName(fileName),
                             UseShellExecute = true
                         };
                         Process.Start(si);
-                    }
-                    else
-                    {
-                        if (info?.Arguments == "-s")
-                        {
-                            Process.Start(fileName, "-start");
-                        }
-                        else
-                        {
-                            var si = new ProcessStartInfo(fileName, "-run")
-                            {
-                                WorkingDirectory = Path.GetDirectoryName(fileName),
-                                UseShellExecute = true
-                            };
-                            Process.Start(si);
-                        }
                     }
                 }
             }

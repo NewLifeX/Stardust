@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using NewLife;
 using NewLife.Agent;
@@ -69,10 +70,18 @@ namespace StarAgent
                 if (delay > 0) Thread.Sleep(delay * 1000);
 
                 // 如果要杀的是自己，则重启服务
-                if (processId == Process.GetCurrentProcess().Id && !fileName.IsNullOrEmpty())
+                var args = Environment.CommandLine.Split(" ");
+                if (processId == Process.GetCurrentProcess().Id && args.Contains("-s"))
                 {
-                    Host.Restart(Service.ServiceName);
-                    return;
+                    try
+                    {
+                        Host.Restart(Service.ServiceName);
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        XTrace.WriteException(ex);
+                    }
                 }
 
                 try
