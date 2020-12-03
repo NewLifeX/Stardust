@@ -131,20 +131,27 @@ namespace StarAgent
             // 监听端口，用于本地通信
             if (!set.LocalServer.IsNullOrEmpty())
             {
-                var svr = new ApiServer(new NetUri(set.LocalServer))
+                try
                 {
-                    Log = XTrace.Log
-                };
-                svr.Register(new StarService
-                {
-                    Service = this,
-                    Host = Host,
-                    Manager = _Manager,
-                    Log = XTrace.Log
-                }, null);
-                svr.Start();
+                    var svr = new ApiServer(new NetUri(set.LocalServer))
+                    {
+                        Log = XTrace.Log
+                    };
+                    svr.Register(new StarService
+                    {
+                        Service = this,
+                        Host = Host,
+                        Manager = _Manager,
+                        Log = XTrace.Log
+                    }, null);
+                    svr.Start();
 
-                _server = svr;
+                    _server = svr;
+                }
+                catch (Exception ex)
+                {
+                    XTrace.WriteException(ex);
+                }
             }
 
             // 启动星尘客户端，连接服务端
