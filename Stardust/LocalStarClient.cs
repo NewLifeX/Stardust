@@ -1,9 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Threading;
+using System.Threading.Tasks;
 using NewLife;
 using NewLife.Http;
 using NewLife.Log;
@@ -122,7 +123,16 @@ namespace Stardust
                 var p = Process.GetProcesses().FirstOrDefault(e => e.ProcessName == "StarAgent");
                 if (p != null)
                 {
-                    target = Path.GetDirectoryName(p.MainWindowTitle);
+                    try
+                    {
+                        target = Path.GetDirectoryName(p.MainModule.FileName);
+                    }
+                    catch
+                    {
+                        target = Path.GetDirectoryName(p.MainWindowTitle);
+                    }
+
+                    XTrace.WriteLine("发现进程StarAgent，ProcessId={0}，target={1}", p.Id, target);
                 }
             }
 
@@ -163,26 +173,14 @@ namespace Stardust
                 var fileName = info?.FileName ?? target.CombinePath(Runtime.Linux ? "StarAgent" : "StarAgent.exe");
                 if (File.Exists(fileName) && Runtime.Linux) Process.Start("chmod", $"+x {fileName}");
 
-                // 让对方自己退出
-                if (info != null)
-                {
-                    _client.Invoke<String>("KillAndStart", new
-                    {
-                        processId = p.Id,
-                        fileName = info.FileName,
-                    });
-                    Thread.Sleep(1000);
-
-                    return true;
-                }
-
                 // 重启目标
                 if (p != null)
                 {
                     try
                     {
-                        if (!p.HasExited) p.Kill();
+                        p.Kill();
                     }
+                    catch (Win32Exception) { }
                     catch (Exception ex)
                     {
                         XTrace.WriteException(ex);
@@ -193,7 +191,7 @@ namespace Stardust
                 {
                     if (info?.Arguments == "-s")
                     {
-                        Process.Start(fileName, "-restart");
+                        Process.Start(fileName, "-start");
                     }
                     else
                     {
@@ -208,6 +206,19 @@ namespace Stardust
             }
 
             return true;
+        }
+
+        /// <summary>探测并安装星尘代理</summary>
+        /// <param name="url">zip包下载源</param>
+        /// <param name="version">版本号</param>
+        /// <param name="target">目标目录</param>
+        public static Task ProbeAsync(String url = null, String version = null, String target = null)
+        {
+            return Task.Run(() =>
+            {
+                var client = new LocalStarClient();
+                client.ProbeAndInstall(url, version, target);
+            });
         }
         #endregion
     }

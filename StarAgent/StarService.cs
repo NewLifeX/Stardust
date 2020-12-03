@@ -69,21 +69,6 @@ namespace StarAgent
 
                 if (delay > 0) Thread.Sleep(delay * 1000);
 
-                // 如果要杀的是自己，则重启服务
-                var args = Environment.CommandLine.Split(" ");
-                if (processId == Process.GetCurrentProcess().Id && args.Contains("-s"))
-                {
-                    try
-                    {
-                        Host.Restart(Service.ServiceName);
-                        return;
-                    }
-                    catch (Exception ex)
-                    {
-                        XTrace.WriteException(ex);
-                    }
-                }
-
                 try
                 {
                     if (!p.HasExited)
