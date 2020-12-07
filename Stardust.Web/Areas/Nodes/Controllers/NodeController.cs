@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
@@ -8,6 +9,7 @@ using NewLife.Data;
 using NewLife.Web;
 using Stardust.Data.Nodes;
 using XCode;
+using XCode.Membership;
 using static Stardust.Data.Nodes.Node;
 
 namespace Stardust.Web.Areas.Nodes.Controllers
@@ -73,6 +75,38 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             }
 
             return RedirectToAction("Index");
+        }
+
+        protected override Boolean Valid(Node entity, DataObjectMethodType type, Boolean post)
+        {
+            if (!post) return base.Valid(entity, type, post);
+
+            var act = type switch
+            {
+                DataObjectMethodType.Update => "修改",
+                DataObjectMethodType.Insert => "添加",
+                DataObjectMethodType.Delete => "删除",
+                _ => type + "",
+            };
+
+            // 必须提前写修改日志，否则修改后脏数据失效，保存的日志为空
+            if (type == DataObjectMethodType.Update && (entity as IEntity).HasDirty)
+                LogProvider.Provider.WriteLog(act, entity);
+
+            var err = "";
+            try
+            {
+                return base.Valid(entity, type, post);
+            }
+            catch (Exception ex)
+            {
+                err = ex.Message;
+                throw;
+            }
+            finally
+            {
+                LogProvider.Provider.WriteLog(act, entity, err);
+            }
         }
     }
 }

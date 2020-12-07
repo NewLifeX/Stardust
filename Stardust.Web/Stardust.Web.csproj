@@ -12,11 +12,7 @@
     <Deterministic>false</Deterministic>
     <OutputPath>..\Bin\Web</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <DefineConstants>TRACE</DefineConstants>
     <LangVersion>latest</LangVersion>
-    <UserSecretsId>e3e3a3d0-b0bb-4ba7-b3f8-b0f7ba5314fa</UserSecretsId>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
