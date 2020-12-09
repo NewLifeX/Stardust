@@ -413,13 +413,14 @@ namespace Stardust.Server.Services
         private void ProcessRedisData(RedisNode node)
         {
             var robot = node.WebHook;
-            if (robot.IsNullOrEmpty() || node.AlarmMemoryRate <= 0 || node.MaxMemory <= 0) return;
+            if (robot.IsNullOrEmpty()) return;
+            if (node.AlarmMemoryRate <= 0 || node.AlarmConnections == 0) return;
 
             // 最新数据
             var data = RedisData.FindLast(node.Id);
             if (data == null) return;
 
-            // 判断告警
+            // 内存告警
             var rate = data.UsedMemory * 100 / node.MaxMemory;
             if (rate >= node.AlarmMemoryRate)
             {
@@ -433,7 +434,7 @@ namespace Stardust.Server.Services
                     {
                         var _weixin = new WeiXinClient { Url = robot };
 
-                        var msg = GetMarkdown(node, data, true);
+                        var msg = GetMarkdown(node, data, "Redis内存告警");
 
                         _weixin.SendMarkDown(msg);
                     }
@@ -441,23 +442,64 @@ namespace Stardust.Server.Services
                     {
                         var _dingTalk = new DingTalkClient { Url = robot };
 
-                        var msg = GetMarkdown(node, data, false);
+                        var msg = GetMarkdown(node, data, null);
 
                         _dingTalk.SendMarkDown("Redis内存告警", msg, null);
                     }
                 }
             }
+
+            // 连接数告警
+            var cs = data.ConnectedClients;
+            if (node.AlarmConnections > 0 && cs >= node.AlarmConnections)
+            {
+                // 一定时间内不要重复报错，除非错误翻倍
+                var error2 = _cache.Get<Int32>("alarm:RedisConnections:" + node.Id);
+                if (error2 == 0 || cs > error2 * 2)
+                {
+                    _cache.Set("alarm:RedisConnections:" + node.Id, cs, 5 * 60);
+
+                    if (robot.Contains("qyapi.weixin"))
+                    {
+                        var _weixin = new WeiXinClient { Url = robot };
+
+                        var msg = GetMarkdown(node, data, "Redis连接告警");
+
+                        _weixin.SendMarkDown(msg);
+                    }
+                    else if (robot.Contains("dingtalk"))
+                    {
+                        var _dingTalk = new DingTalkClient { Url = robot };
+
+                        var msg = GetMarkdown(node, data, null);
+
+                        _dingTalk.SendMarkDown("Redis连接告警", msg, null);
+                    }
+                }
+            }
         }
 
-        private static String GetMarkdown(RedisNode node, RedisData data, Boolean includeTitle)
+        private static String GetMarkdown(RedisNode node, RedisData data, String title)
         {
             var sb = new StringBuilder();
-            if (includeTitle) sb.AppendLine($"### [{node}]Redis内存告警");
+            if (!title.IsNullOrEmpty()) sb.AppendLine($"### [{node}]{title}");
             sb.AppendLine($">**分类：**<font color=\"info\">{node.Category}</font>");
             sb.AppendLine($">**版本：**<font color=\"info\">{node.Version}</font>");
             sb.AppendLine($">**已用内存：**<font color=\"info\">{data.UsedMemory:n0}</font>");
             sb.AppendLine($">**内存容量：**<font color=\"info\">{node.MaxMemory:n0}</font>");
+            sb.AppendLine($">**连接数：**<font color=\"info\">{data.ConnectedClients:n0}</font>");
             sb.AppendLine($">**服务器：**<font color=\"info\">{node.Server}</font>");
+
+            var rate = node.MaxMemory == 0 ? 0 : (data.UsedMemory * 100 / node.MaxMemory);
+            if (rate >= node.AlarmMemoryRate && node.AlarmMemoryRate > 0)
+            {
+                sb.AppendLine($">**内存告警：**<font color=\"info\">{data.UsedMemory}/{node.MaxMemory} >= {node.AlarmMemoryRate:p0}</font>");
+            }
+
+            if (node.AlarmConnections > 0 && data.ConnectedClients >= node.AlarmConnections)
+            {
+                sb.AppendLine($">**连接告警：**<font color=\"info\">{data.ConnectedClients:n0} >= {node.AlarmConnections:n0}</font>");
+            }
 
             var str = sb.ToString();
             if (str.Length > 2000) str = str.Substring(0, 2000);
