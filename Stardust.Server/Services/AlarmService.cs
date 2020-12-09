@@ -492,21 +492,24 @@ namespace Stardust.Server.Services
                 }
             }
 
-            if (robot.Contains("qyapi.weixin"))
+            if (actions.Count > 0)
             {
-                var _weixin = new WeiXinClient { Url = robot };
+                if (robot.Contains("qyapi.weixin"))
+                {
+                    var _weixin = new WeiXinClient { Url = robot };
 
-                var msg = GetMarkdown(node, data, "Redis告警", actions);
+                    var msg = GetMarkdown(node, data, "Redis告警", actions);
 
-                _weixin.SendMarkDown(msg);
-            }
-            else if (robot.Contains("dingtalk"))
-            {
-                var _dingTalk = new DingTalkClient { Url = robot };
+                    _weixin.SendMarkDown(msg);
+                }
+                else if (robot.Contains("dingtalk"))
+                {
+                    var _dingTalk = new DingTalkClient { Url = robot };
 
-                var msg = GetMarkdown(node, data, null, actions);
+                    var msg = GetMarkdown(node, data, null, actions);
 
-                _dingTalk.SendMarkDown("Redis告警", msg, null);
+                    _dingTalk.SendMarkDown("Redis告警", msg, null);
+                }
             }
         }
 
