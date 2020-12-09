@@ -139,6 +139,30 @@ namespace Stardust.Data.Nodes
         [BindColumn("AlarmConnections", "连接告警。连接数告警阈值", "")]
         public Int32 AlarmConnections { get => _AlarmConnections; set { if (OnPropertyChanging("AlarmConnections", value)) { _AlarmConnections = value; OnPropertyChanged("AlarmConnections"); } } }
 
+        private Int32 _AlarmSpeed;
+        /// <summary>速度告警。速度告警阈值</summary>
+        [DisplayName("速度告警")]
+        [Description("速度告警。速度告警阈值")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AlarmSpeed", "速度告警。速度告警阈值", "")]
+        public Int32 AlarmSpeed { get => _AlarmSpeed; set { if (OnPropertyChanging("AlarmSpeed", value)) { _AlarmSpeed = value; OnPropertyChanged("AlarmSpeed"); } } }
+
+        private Int32 _AlarmInputKbps;
+        /// <summary>入流量告警。入流量告警阈值</summary>
+        [DisplayName("入流量告警")]
+        [Description("入流量告警。入流量告警阈值")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AlarmInputKbps", "入流量告警。入流量告警阈值", "")]
+        public Int32 AlarmInputKbps { get => _AlarmInputKbps; set { if (OnPropertyChanging("AlarmInputKbps", value)) { _AlarmInputKbps = value; OnPropertyChanged("AlarmInputKbps"); } } }
+
+        private Int32 _AlarmOutputKbps;
+        /// <summary>出流量告警。出流量告警阈值</summary>
+        [DisplayName("出流量告警")]
+        [Description("出流量告警。出流量告警阈值")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AlarmOutputKbps", "出流量告警。出流量告警阈值", "")]
+        public Int32 AlarmOutputKbps { get => _AlarmOutputKbps; set { if (OnPropertyChanging("AlarmOutputKbps", value)) { _AlarmOutputKbps = value; OnPropertyChanged("AlarmOutputKbps"); } } }
+
         private String _CreateUser;
         /// <summary>创建人</summary>
         [DisplayName("创建人")]
@@ -237,6 +261,9 @@ namespace Stardust.Data.Nodes
                     case "WebHook": return _WebHook;
                     case "AlarmMemoryRate": return _AlarmMemoryRate;
                     case "AlarmConnections": return _AlarmConnections;
+                    case "AlarmSpeed": return _AlarmSpeed;
+                    case "AlarmInputKbps": return _AlarmInputKbps;
+                    case "AlarmOutputKbps": return _AlarmOutputKbps;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -268,6 +295,9 @@ namespace Stardust.Data.Nodes
                     case "WebHook": _WebHook = Convert.ToString(value); break;
                     case "AlarmMemoryRate": _AlarmMemoryRate = value.ToInt(); break;
                     case "AlarmConnections": _AlarmConnections = value.ToInt(); break;
+                    case "AlarmSpeed": _AlarmSpeed = value.ToInt(); break;
+                    case "AlarmInputKbps": _AlarmInputKbps = value.ToInt(); break;
+                    case "AlarmOutputKbps": _AlarmOutputKbps = value.ToInt(); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -331,6 +361,15 @@ namespace Stardust.Data.Nodes
 
             /// <summary>连接告警。连接数告警阈值</summary>
             public static readonly Field AlarmConnections = FindByName("AlarmConnections");
+
+            /// <summary>速度告警。速度告警阈值</summary>
+            public static readonly Field AlarmSpeed = FindByName("AlarmSpeed");
+
+            /// <summary>入流量告警。入流量告警阈值</summary>
+            public static readonly Field AlarmInputKbps = FindByName("AlarmInputKbps");
+
+            /// <summary>出流量告警。出流量告警阈值</summary>
+            public static readonly Field AlarmOutputKbps = FindByName("AlarmOutputKbps");
 
             /// <summary>创建人</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
@@ -409,6 +448,15 @@ namespace Stardust.Data.Nodes
 
             /// <summary>连接告警。连接数告警阈值</summary>
             public const String AlarmConnections = "AlarmConnections";
+
+            /// <summary>速度告警。速度告警阈值</summary>
+            public const String AlarmSpeed = "AlarmSpeed";
+
+            /// <summary>入流量告警。入流量告警阈值</summary>
+            public const String AlarmInputKbps = "AlarmInputKbps";
+
+            /// <summary>出流量告警。出流量告警阈值</summary>
+            public const String AlarmOutputKbps = "AlarmOutputKbps";
 
             /// <summary>创建人</summary>
             public const String CreateUser = "CreateUser";

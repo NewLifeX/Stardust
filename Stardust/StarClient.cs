@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using NewLife;
 using NewLife.Http;
 using NewLife.Log;
+using NewLife.Net;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Security;
@@ -418,7 +419,9 @@ namespace Stardust
                     fileName = "Update".CombinePath(fileName).EnsureDirectory(true);
 
                     // 清理
-                    NewLife.Net.Upgrade.DeleteBuckup(dest);
+                    //NewLife.Net.Upgrade.DeleteBuckup(dest);
+                    var ug = new Upgrade { Log = XTrace.Log };
+                    ug.DeleteBackup(dest);
 
                     // 下载
                     var sw = Stopwatch.StartNew();
@@ -435,7 +438,9 @@ namespace Stardust
                     fileName.AsFile().Extract(source, true);
 
                     // 覆盖
-                    NewLife.Net.Upgrade.CopyAndReplace(source, dest);
+                    //NewLife.Net.Upgrade.CopyAndReplace(source, dest);
+                    ug.CopyAndReplace(source, dest);
+
                     if (Directory.Exists(source)) Directory.Delete(source, true);
                 }
 
