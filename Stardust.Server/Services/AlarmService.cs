@@ -432,7 +432,7 @@ namespace Stardust.Server.Services
                 {
                     _cache.Set("alarm:RedisMemory:" + node.Id, rate, 5 * 60);
 
-                    actions.Add(sb => sb.AppendLine($">**内存告警：**<font color=\"info\">{rate:p0} >= {node.AlarmMemoryRate:p0}</font>"));
+                    actions.Add(sb => sb.AppendLine($">**内存告警：**<font color=\"info\">{rate / 100:p0} >= {node.AlarmMemoryRate / 100:p0}</font>"));
                 }
             }
 
