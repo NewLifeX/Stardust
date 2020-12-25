@@ -15,8 +15,8 @@ namespace Stardust
         [Description("调试开关。默认true")]
         public Boolean Debug { get; set; } = true;
 
-        /// <summary>服务端地址。如http://star.newlifex.com:6600，默认为空，子网内自动发现</summary>
-        [Description("服务端地址。如http://star.newlifex.com:6600，默认为空，子网内自动发现")]
+        /// <summary>服务端地址。如http://star.newlifex.com:6600，默认为空</summary>
+        [Description("服务端地址。如http://star.newlifex.com:6600，默认为空")]
         public String Server { get; set; } = "";
 
         /// <summary>应用标识</summary>
