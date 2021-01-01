@@ -419,7 +419,8 @@ namespace Stardust
                     fileName = "Update".CombinePath(fileName).EnsureDirectory(true);
 
                     // 清理
-                    var ug = new Upgrade();
+                    //NewLife.Net.Upgrade.DeleteBuckup(dest);
+                    var ug = new Upgrade { Log = XTrace.Log };
                     ug.DeleteBackup(dest);
 
                     // 下载
