@@ -118,7 +118,8 @@ namespace Stardust.Monitors
         {
             if (_inited) return;
 
-            WriteLog("StarTracer.Start AppId={0} ClientId={1} Server={2}", AppId, ClientId, Client);
+            var server = Client is ApiHttpClient http ? http.Services.Join(",", e => e.Address) : (Client + "");
+            WriteLog("StarTracer.Start AppId={0} ClientId={1} Server={2}", AppId, ClientId, server);
 
             _inited = true;
         }
