@@ -98,6 +98,8 @@ namespace Stardust.Monitors
                 });
                 Client.Token = _token.AccessToken;
 
+                WriteLog("申请令牌：{0}", _token.AccessToken);
+
                 // 提前一分钟过期
                 _expire = DateTime.Now.AddSeconds(_token.ExpireIn - 60);
             }
@@ -110,6 +112,8 @@ namespace Stardust.Monitors
                     refresh_token = _token.RefreshToken,
                 });
                 Client.Token = _token.AccessToken;
+
+                WriteLog("刷新令牌：{0}", _token.AccessToken);
             }
         }
 
