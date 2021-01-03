@@ -118,6 +118,18 @@ namespace Stardust.Monitors
         {
             if (_inited) return;
 
+            // 自动从本地星尘代理获取地址
+            if (Client == null)
+            {
+                try
+                {
+                    var client = new LocalStarClient();
+                    var inf = client.GetInfo();
+                    if (!inf.Server.IsNullOrEmpty()) Client = new ApiHttpClient(inf.Server);
+                }
+                catch { }
+            }
+
             var server = Client is ApiHttpClient http ? http.Services.Join(",", e => e.Address) : (Client + "");
             WriteLog("StarTracer.Start AppId={0} ClientId={1} Server={2}", AppId, ClientId, server);
 

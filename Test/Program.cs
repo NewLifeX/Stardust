@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Threading;
 using NewLife.Log;
 using NewLife.Remoting;
 using Stardust;
+using Stardust.Monitors;
 
 namespace Test
 {
@@ -12,7 +14,7 @@ namespace Test
         {
             XTrace.UseConsole();
 
-            Test3();
+            Test2();
 
             Console.WriteLine("OK!");
             Console.ReadKey();
@@ -40,6 +42,15 @@ namespace Test
             sc.Start();
 
             _Server = sc;
+        }
+
+        static void Test2()
+        {
+            var tracer = new StarTracer { Log = XTrace.Log };
+            var http = tracer.CreateHttpClient();
+            http.GetStringAsync("https://x.newlifex.com").Wait();
+
+            Thread.Sleep(10_000);
         }
 
         static void Test3()

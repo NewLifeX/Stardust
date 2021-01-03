@@ -16,5 +16,8 @@ namespace Stardust.Models
 
         /// <summary>命令参数</summary>
         public String Arguments { get; set; }
+
+        /// <summary>服务端地址</summary>
+        public String Server { get; set; }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using NewLife;
 using NewLife.Agent;
@@ -39,12 +38,15 @@ namespace StarAgent
             var fileName = p.MainModule.FileName;
             var args = Environment.CommandLine.TrimStart(Path.ChangeExtension(fileName, ".dll")).Trim();
 
+            var set = Stardust.Setting.Current;
+
             return new AgentInfo
             {
                 Version = asmx?.Version,
                 ProcessId = p.Id,
                 FileName = fileName,
                 Arguments = args,
+                Server = set.Server,
             };
         }
 
