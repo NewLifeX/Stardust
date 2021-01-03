@@ -5,9 +5,9 @@
     <AssemblyName>StarWeb</AssemblyName>
     <AssemblyTitle>星尘控制台</AssemblyTitle>
     <Company>新生命开发团队</Company>
-    <Copyright>©2002-2020 NewLife</Copyright>
-    <Version>1.0.2020.1123</Version>
-    <FileVersion>1.0.2020.1123</FileVersion>
+    <Copyright>©2002-2021 NewLife</Copyright>
+    <Version>1.0.2021.0103</Version>
+    <FileVersion>1.0.2021.0103</FileVersion>
     <AssemblyVersion>1.0.*</AssemblyVersion>
     <Deterministic>false</Deterministic>
     <OutputPath>..\Bin\Web</OutputPath>
