@@ -15,7 +15,7 @@ namespace Stardust.Server.Controllers
         private readonly AppService _service = new AppService();
 
         [ApiFilter]
-        public TokenModel Token(TokenInModel model)
+        public TokenModel Token([FromBody] TokenInModel model)
         {
             var set = Setting.Current;
 

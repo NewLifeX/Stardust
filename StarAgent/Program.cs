@@ -79,8 +79,8 @@ namespace StarAgent
             var tracer = new StarTracer
             {
                 AppId = "StarAgent",
-                AppSecret = null,
-                Client = client,
+                //AppSecret = null,
+                Client = new ApiHttpClient(server),
                 Log = XTrace.Log
             };
             DefaultTracer.Instance = tracer;
