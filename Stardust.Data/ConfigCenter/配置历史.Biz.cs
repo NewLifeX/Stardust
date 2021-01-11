@@ -33,7 +33,7 @@ namespace Stardust.Data.ConfigCenter
         {
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
             //var df = Meta.Factory.AdditionalFields;
-            //df.Add(nameof(ConfigId));
+            //df.Add(nameof(AppId));
 
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Modules.Add<UserModule>();
@@ -76,6 +76,7 @@ namespace Stardust.Data.ConfigCenter
 
         //    var entity = new ConfigHistory();
         //    entity.Id = 0;
+        //    entity.AppId = 0;
         //    entity.ConfigId = 0;
         //    entity.Action = "abc";
         //    entity.Field = "abc";
@@ -124,6 +125,18 @@ namespace Stardust.Data.ConfigCenter
             //return Find(_.Id == id);
         }
 
+        /// <summary>根据应用、配置查找</summary>
+        /// <param name="appId">应用</param>
+        /// <param name="configId">配置</param>
+        /// <returns>实体列表</returns>
+        public static IList<ConfigHistory> FindAllByAppIdAndConfigId(Int32 appId, Int32 configId)
+        {
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.ConfigId == configId);
+
+            return FindAll(_.AppId == appId & _.ConfigId == configId);
+        }
+
         /// <summary>根据配置查找</summary>
         /// <param name="configId">配置</param>
         /// <returns>实体列表</returns>
@@ -138,15 +151,20 @@ namespace Stardust.Data.ConfigCenter
 
         #region 高级查询
         /// <summary>高级查询</summary>
+        /// <param name="appId">应用</param>
         /// <param name="configId">配置</param>
+        /// <param name="start">创建时间开始</param>
+        /// <param name="end">创建时间结束</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<ConfigHistory> Search(Int32 configId, String key, PageParameter page)
+        public static IList<ConfigHistory> Search(Int32 appId, Int32 configId, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
+            if (appId >= 0) exp &= _.AppId == appId;
             if (configId >= 0) exp &= _.ConfigId == configId;
+            exp &= _.CreateTime.Between(start, end);
             if (!key.IsNullOrEmpty()) exp &= _.Action.Contains(key) | _.Field.Contains(key) | _.Value.Contains(key) | _.CreateIP.Contains(key);
 
             return FindAll(exp, page);

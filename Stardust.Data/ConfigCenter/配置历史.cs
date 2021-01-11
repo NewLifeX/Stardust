@@ -14,7 +14,9 @@ namespace Stardust.Data.ConfigCenter
     [Serializable]
     [DataObject]
     [Description("配置历史。记录配置变更历史")]
-    [BindIndex("IX_ConfigHistory_ConfigID", false, "ConfigID")]
+    [BindIndex("IX_ConfigHistory_AppId_ConfigId", false, "AppId,ConfigId")]
+    [BindIndex("IX_ConfigHistory_ConfigId", false, "ConfigId")]
+    [BindIndex("IX_ConfigHistory_CreateTime", false, "CreateTime")]
     [BindTable("ConfigHistory", Description = "配置历史。记录配置变更历史", ConnName = "ConfigCenter", DbType = DatabaseType.None)]
     public partial class ConfigHistory
     {
@@ -26,6 +28,14 @@ namespace Stardust.Data.ConfigCenter
         [DataObjectField(true, true, false, 0)]
         [BindColumn("Id", "编号", "")]
         public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
+
+        private Int32 _AppId;
+        /// <summary>应用</summary>
+        [DisplayName("应用")]
+        [Description("应用")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AppId", "应用", "")]
+        public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
         private Int32 _ConfigId;
         /// <summary>配置</summary>
@@ -103,6 +113,7 @@ namespace Stardust.Data.ConfigCenter
                 switch (name)
                 {
                     case "Id": return _Id;
+                    case "AppId": return _AppId;
                     case "ConfigId": return _ConfigId;
                     case "Action": return _Action;
                     case "Field": return _Field;
@@ -119,6 +130,7 @@ namespace Stardust.Data.ConfigCenter
                 switch (name)
                 {
                     case "Id": _Id = value.ToInt(); break;
+                    case "AppId": _AppId = value.ToInt(); break;
                     case "ConfigId": _ConfigId = value.ToInt(); break;
                     case "Action": _Action = Convert.ToString(value); break;
                     case "Field": _Field = Convert.ToString(value); break;
@@ -139,6 +151,9 @@ namespace Stardust.Data.ConfigCenter
         {
             /// <summary>编号</summary>
             public static readonly Field Id = FindByName("Id");
+
+            /// <summary>应用</summary>
+            public static readonly Field AppId = FindByName("AppId");
 
             /// <summary>配置</summary>
             public static readonly Field ConfigId = FindByName("ConfigId");
@@ -172,6 +187,9 @@ namespace Stardust.Data.ConfigCenter
         {
             /// <summary>编号</summary>
             public const String Id = "Id";
+
+            /// <summary>应用</summary>
+            public const String AppId = "AppId";
 
             /// <summary>配置</summary>
             public const String ConfigId = "ConfigId";

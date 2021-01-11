@@ -55,6 +55,7 @@
   <Table Name="ConfigHistory" Description="配置历史。记录配置变更历史">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="ConfigId" DataType="Int32" Description="配置" />
       <Column Name="Action" DataType="String" Nullable="False" Description="操作" />
       <Column Name="Field" DataType="String" Description="字段。变更的字段名" />
@@ -65,7 +66,9 @@
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
     </Columns>
     <Indexes>
-      <Index Columns="ConfigID" />
+      <Index Columns="AppId,ConfigId" />
+      <Index Columns="ConfigId" />
+      <Index Columns="CreateTime" />
     </Indexes>
   </Table>
 </Tables>
