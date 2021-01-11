@@ -51,6 +51,8 @@ namespace Stardust.Server
             var alarmService = new AlarmService { Period = set2.AlarmPeriod };
             services.AddSingleton<IAlarmService>(alarmService);
 
+            services.AddSingleton<ConfigService>();
+
             services.AddHttpClient();
 
             // 后台服务。数据保留，定时删除过期数据
