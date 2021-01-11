@@ -14,7 +14,7 @@ namespace Stardust.Data.ConfigCenter
     [Serializable]
     [DataObject]
     [Description("配置数据")]
-    [BindIndex("IU_ConfigData_AppId_Name_Scope", true, "AppId,Name,Scope")]
+    [BindIndex("IU_ConfigData_AppId_Key_Scope", true, "AppId,Key,Scope")]
     [BindTable("ConfigData", Description = "配置数据", ConnName = "ConfigCenter", DbType = DatabaseType.None)]
     public partial class ConfigData
     {
@@ -35,13 +35,13 @@ namespace Stardust.Data.ConfigCenter
         [BindColumn("AppId", "应用", "")]
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
-        private String _Name;
+        private String _Key;
         /// <summary>名称</summary>
         [DisplayName("名称")]
         [Description("名称")]
         [DataObjectField(false, false, false, 50)]
-        [BindColumn("Name", "名称", "", Master = true)]
-        public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
+        [BindColumn("Key", "名称", "", Master = true)]
+        public String Key { get => _Key; set { if (OnPropertyChanging("Key", value)) { _Key = value; OnPropertyChanged("Key"); } } }
 
         private String _Scope;
         /// <summary>作用域</summary>
@@ -144,7 +144,7 @@ namespace Stardust.Data.ConfigCenter
                 {
                     case "Id": return _Id;
                     case "AppId": return _AppId;
-                    case "Name": return _Name;
+                    case "Key": return _Key;
                     case "Scope": return _Scope;
                     case "Value": return _Value;
                     case "Enable": return _Enable;
@@ -165,7 +165,7 @@ namespace Stardust.Data.ConfigCenter
                 {
                     case "Id": _Id = value.ToInt(); break;
                     case "AppId": _AppId = value.ToInt(); break;
-                    case "Name": _Name = Convert.ToString(value); break;
+                    case "Key": _Key = Convert.ToString(value); break;
                     case "Scope": _Scope = Convert.ToString(value); break;
                     case "Value": _Value = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
@@ -194,7 +194,7 @@ namespace Stardust.Data.ConfigCenter
             public static readonly Field AppId = FindByName("AppId");
 
             /// <summary>名称</summary>
-            public static readonly Field Name = FindByName("Name");
+            public static readonly Field Key = FindByName("Key");
 
             /// <summary>作用域</summary>
             public static readonly Field Scope = FindByName("Scope");
@@ -242,7 +242,7 @@ namespace Stardust.Data.ConfigCenter
             public const String AppId = "AppId";
 
             /// <summary>名称</summary>
-            public const String Name = "Name";
+            public const String Key = "Key";
 
             /// <summary>作用域</summary>
             public const String Scope = "Scope";

@@ -1,26 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
-using NewLife.Log;
-using NewLife.Model;
-using NewLife.Reflection;
-using NewLife.Threading;
-using NewLife.Web;
+using NewLife.Serialization;
 using XCode;
-using XCode.Cache;
-using XCode.Configuration;
-using XCode.DataAccessLayer;
 using XCode.Membership;
 
 namespace Stardust.Data.ConfigCenter
@@ -49,74 +35,71 @@ namespace Stardust.Data.ConfigCenter
             if (!HasDirty) return;
 
             // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
-            if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), "名称不能为空！");
+            if (Key.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Key), "名称不能为空！");
             if (Scope.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Scope), "作用域不能为空！");
 
             // 建议先调用基类方法，基类方法会做一些统一处理
             base.Valid(isNew);
 
-            // 在新插入数据或者修改了指定字段时进行修正
-            // 处理当前已登录用户信息，可以由UserModule过滤器代劳
-            /*var user = ManageProvider.User;
-            if (user != null)
-            {
-                if (isNew && !Dirtys[nameof(CreateUserID)]) CreateUserID = user.ID;
-                if (!Dirtys[nameof(UpdateUserID)]) UpdateUserID = user.ID;
-            }*/
-            //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
-            //if (!Dirtys[nameof(UpdateTime)]) UpdateTime = DateTime.Now;
-            //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
-            //if (!Dirtys[nameof(UpdateIP)]) UpdateIP = ManageProvider.UserHost;
-
-            // 检查唯一索引
-            // CheckExist(isNew, nameof(AppId), nameof(Name), nameof(Scope));
+            Key = Key?.Trim();
+            Value = Value?.Trim();
+            Scope = Scope?.Trim();
         }
 
-        ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
-        //[EditorBrowsable(EditorBrowsableState.Never)]
-        //protected override void InitData()
-        //{
-        //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
-        //    if (Meta.Session.Count > 0) return;
+        /// <summary>添加</summary>
+        /// <returns></returns>
+        protected override Int32 OnInsert()
+        {
+            var rs = base.OnInsert();
 
-        //    if (XTrace.Debug) XTrace.WriteLine("开始初始化ConfigData[配置数据]数据……");
+            ConfigHistory.Add(Id, "Insert", null, this.ToJson(), 0);
 
-        //    var entity = new ConfigData();
-        //    entity.Id = 0;
-        //    entity.AppId = 0;
-        //    entity.Name = "abc";
-        //    entity.Scope = "abc";
-        //    entity.Value = "abc";
-        //    entity.Enable = true;
-        //    entity.Internal = true;
-        //    entity.CreateUserID = 0;
-        //    entity.CreateTime = DateTime.Now;
-        //    entity.CreateIP = "abc";
-        //    entity.UpdateUserID = 0;
-        //    entity.UpdateTime = DateTime.Now;
-        //    entity.UpdateIP = "abc";
-        //    entity.Remark = "abc";
-        //    entity.Insert();
+            return rs;
+        }
 
-        //    if (XTrace.Debug) XTrace.WriteLine("完成初始化ConfigData[配置数据]数据！");
-        //}
+        /// <summary>更新</summary>
+        /// <returns></returns>
+        protected override Int32 OnUpdate()
+        {
+            var cfg = Find(_.Id == Id);
+            if (cfg != null)
+            {
+                var ns = new[] { __.Key, __.AppId, __.Scope, __.Value, __.Enable };
+                foreach (var item in ns)
+                {
+                    if (Dirtys[item])
+                    {
+                        ConfigHistory.Add(Id, "Update", item, cfg[item] + "", 0);
+                    }
+                }
+            }
 
-        ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
-        ///// <returns></returns>
-        //public override Int32 Insert()
-        //{
-        //    return base.Insert();
-        //}
+            return base.OnUpdate();
+        }
 
-        ///// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>
-        ///// <returns></returns>
-        //protected override Int32 OnDelete()
-        //{
-        //    return base.OnDelete();
-        //}
+        /// <summary>删除</summary>
+        /// <returns></returns>
+        protected override Int32 OnDelete()
+        {
+            ConfigHistory.Add(Id, "Delete", null, this.ToJson(), 0);
+
+            return base.OnDelete();
+        }
+
+        /// <summary>已重载。</summary>
+        /// <returns></returns>
+        public override String ToString() => Scope.IsNullOrEmpty() ? Key : $"{Key}-{Scope}";
         #endregion
 
         #region 扩展属性
+        /// <summary>应用系统</summary>
+        [XmlIgnore, ScriptIgnore]
+        public App App => Extends.Get(nameof(App), k => App.FindByID(AppId));
+
+        /// <summary>应用名称</summary>
+        [XmlIgnore, ScriptIgnore]
+        [Map(__.AppId, typeof(App), "ID")]
+        public String AppName => App + "";
         #endregion
 
         #region 扩展查询
@@ -135,6 +118,26 @@ namespace Stardust.Data.ConfigCenter
 
             //return Find(_.Id == id);
         }
+
+        /// <summary>根据key查找</summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static IList<ConfigData> FindAllByKey(String key)
+        {
+            key = key?.Trim();
+            if (key.IsNullOrEmpty()) return new List<ConfigData>();
+
+            if (Meta.Count < 1000) return Meta.Cache.FindAll(e => e.Key.EqualIgnoreCase(key));
+
+            return FindAll(_.Key == key);
+        }
+
+        /// <summary>
+        /// 根据应用查询所属配置，
+        /// </summary>
+        /// <param name="appid">=0查询全局</param>
+        /// <returns></returns>
+        public static IList<ConfigData> FindAllByApp(Int32 appid) => FindAll(_.AppId == appid);
         #endregion
 
         #region 高级查询
@@ -152,26 +155,92 @@ namespace Stardust.Data.ConfigCenter
             var exp = new WhereExpression();
 
             if (appId >= 0) exp &= _.AppId == appId;
-            if (!name.IsNullOrEmpty()) exp &= _.Name == name;
+            if (!name.IsNullOrEmpty()) exp &= _.Key == name;
             if (!scope.IsNullOrEmpty()) exp &= _.Scope == scope;
             exp &= _.UpdateTime.Between(start, end);
             if (!key.IsNullOrEmpty()) exp &= _.Value.Contains(key) | _.CreateIP.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
 
             return FindAll(exp, page);
         }
-
-        // Select Count(Id) as Id,Category From ConfigData Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
-        //static readonly FieldCache<ConfigData> _CategoryCache = new FieldCache<ConfigData>(nameof(Category))
-        //{
-        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-        //};
-
-        ///// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-        ///// <returns></returns>
-        //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
         #endregion
 
         #region 业务操作
+        /// <summary>申请配置</summary>
+        /// <param name="appid">应用</param>
+        /// <param name="key">键</param>
+        /// <param name="scope">作用域</param>
+        /// <returns></returns>
+        public static ConfigData Acquire(Int32 appid, String key, String scope)
+        {
+            // 找到该key下所有可用配置
+            var list = FindAllByKey(key).Where(d => d.Enable).ToList();
+            if (list.Count == 0) return null;
+
+            // 混合应用配置表
+            var qs = AppQuote.FindAllByAppId(appid);
+            //var cs = qs.Where(e => e.Enable).Select(e => e.ConfigID).ToList();
+
+            // 如果未指定作用域
+            if (scope.IsNullOrEmpty())
+            {
+                #region 空作用域
+                // 空作用域
+                list = list.Where(e => e.Scope.IsNullOrEmpty()).ToList();
+
+                // 该应用
+                var cfg = list.FirstOrDefault(e => e.AppId == appid);
+                if (cfg != null) return cfg;
+
+                //// 其它授权
+                //cfg = list.FirstOrDefault(e => cs.Contains(e.ID));
+                //if (cfg != null) return cfg;
+
+                // 全局
+                cfg = list.FirstOrDefault(e => e.AppId == 0);
+                if (cfg != null) return cfg;
+
+                //// 找一个优先级最高的返回
+                //return list.OrderByDescending(e => e.Priority).FirstOrDefault();
+                #endregion
+            }
+            else
+            {
+                #region 优先匹配作用域
+                var list2 = list.Where(e => e.Scope.EqualIgnoreCase(scope)).ToList();
+
+                // 查找指定作用域
+                var cfg = list2.FirstOrDefault(e => e.AppId == appid);
+                if (cfg != null) return cfg;
+
+                //// 其它授权
+                //cfg = list2.FirstOrDefault(e => cs.Contains(e.Id));
+                //if (cfg != null) return cfg;
+
+                // 查找全局
+                cfg = list2.FirstOrDefault(e => e.AppId == 0);
+                if (cfg != null) return cfg;
+                #endregion
+
+                #region 默认空作用域
+                list2 = list.Where(e => e.Scope.IsNullOrEmpty()).ToList();
+
+                // 该应用下空作用域
+                cfg = list2.FirstOrDefault(e => e.AppId == appid);
+                if (cfg != null) return cfg;
+
+                //// 其它授权空作用域
+                //cfg = list2.FirstOrDefault(e => cs.Contains(e.Id));
+                //if (cfg != null) return cfg;
+
+                // 全局空作用域
+                cfg = list2.FirstOrDefault(e => e.AppId == 0);
+                if (cfg != null) return cfg;
+                #endregion
+            }
+
+            // 都没有就返回空，要求去配置
+            return null;
+        }
         #endregion
     }
 }

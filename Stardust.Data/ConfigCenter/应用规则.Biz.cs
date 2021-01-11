@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -41,70 +41,24 @@ namespace Stardust.Data.ConfigCenter
             Meta.Modules.Add<IPModule>();
         }
 
-        /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
-        /// <param name="isNew">是否插入</param>
-        public override void Valid(Boolean isNew)
+        /// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected override void InitData()
         {
-            // 如果没有脏数据，则不需要进行任何处理
-            if (!HasDirty) return;
+            // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
+            if (Meta.Count > 0) return;
 
-            // 建议先调用基类方法，基类方法会做一些统一处理
-            base.Valid(isNew);
+            if (XTrace.Debug) XTrace.WriteLine("开始初始化AppRule[应用规则]数据……");
 
-            // 在新插入数据或者修改了指定字段时进行修正
-            // 处理当前已登录用户信息，可以由UserModule过滤器代劳
-            /*var user = ManageProvider.User;
-            if (user != null)
+            var entity = new AppRule
             {
-                if (isNew && !Dirtys[nameof(CreateUserID)]) CreateUserID = user.ID;
-                if (!Dirtys[nameof(UpdateUserID)]) UpdateUserID = user.ID;
-            }*/
-            //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
-            //if (!Dirtys[nameof(UpdateTime)]) UpdateTime = DateTime.Now;
-            //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
-            //if (!Dirtys[nameof(UpdateIP)]) UpdateIP = ManageProvider.UserHost;
+                Rule = "IP=192.168.0.*",
+                Result = "Scope=dev"
+            };
+            entity.Insert();
+
+            if (XTrace.Debug) XTrace.WriteLine("完成初始化AppRule[应用规则]数据！");
         }
-
-        ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
-        //[EditorBrowsable(EditorBrowsableState.Never)]
-        //protected override void InitData()
-        //{
-        //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
-        //    if (Meta.Session.Count > 0) return;
-
-        //    if (XTrace.Debug) XTrace.WriteLine("开始初始化AppRule[应用规则]数据……");
-
-        //    var entity = new AppRule();
-        //    entity.Id = 0;
-        //    entity.Rule = "abc";
-        //    entity.Result = "abc";
-        //    entity.Priority = 0;
-        //    entity.Enable = true;
-        //    entity.CreateUserID = 0;
-        //    entity.CreateTime = DateTime.Now;
-        //    entity.CreateIP = "abc";
-        //    entity.UpdateUserID = 0;
-        //    entity.UpdateTime = DateTime.Now;
-        //    entity.UpdateIP = "abc";
-        //    entity.Remark = "abc";
-        //    entity.Insert();
-
-        //    if (XTrace.Debug) XTrace.WriteLine("完成初始化AppRule[应用规则]数据！");
-        //}
-
-        ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
-        ///// <returns></returns>
-        //public override Int32 Insert()
-        //{
-        //    return base.Insert();
-        //}
-
-        ///// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>
-        ///// <returns></returns>
-        //protected override Int32 OnDelete()
-        //{
-        //    return base.OnDelete();
-        //}
         #endregion
 
         #region 扩展属性
@@ -142,6 +96,38 @@ namespace Stardust.Data.ConfigCenter
         #endregion
 
         #region 业务操作
+        /// <summary>计算作用域</summary>
+        /// <param name="appid"></param>
+        /// <param name="ip"></param>
+        /// <returns></returns>
+        public static String CheckScope(Int32 appid, String ip)
+        {
+            if (appid == 0 || ip.IsNullOrEmpty()) return null;
+
+            var list = Meta.Cache.Entities.FindAll(e => e.Enable);
+            list = list.Where(e => 
+            !e.Rule.IsNullOrEmpty() && e.Rule.StartsWithIgnoreCase("IP=") && 
+            !e.Result.IsNullOrEmpty() && e.Result.StartsWithIgnoreCase("Scope="))
+            .OrderByDescending(e => e.Priority)
+            .ToList();
+            if (list.Count == 0) return null;
+
+            var rule = list.FirstOrDefault(e =>
+            {
+                var item = e.Rule.Trim().Substring(3);
+                if (item.EqualIgnoreCase(ip)) return true;
+
+                if (item.EndsWith("*") && ip.StartsWith(item.TrimEnd("*"))) return true;
+                if (item.StartsWith("*") && ip.EndsWith(item.TrimStart("*"))) return true;
+
+                return false;
+            });
+
+            if (rule == null) return null;
+
+            var rs = rule.Result;
+            return rs.Substring(rs.IndexOf("=") + 1);
+        }
         #endregion
     }
 }

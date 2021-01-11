@@ -31,11 +31,25 @@
       <Column Name="Remark" DataType="String" Length="500" Description="备注" />
     </Columns>
   </Table>
+  <Table Name="AppQuote" Description="应用依赖。应用可以引用依赖另一个应用">
+    <Columns>
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="AppId" DataType="Int32" Description="应用。原始应用，该应用依赖别人" />
+      <Column Name="TargetAppId" DataType="Int32" Description="目标应用。被原始应用依赖的应用" />
+      <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+    </Columns>
+    <Indexes>
+      <Index Columns="AppId" />
+      <Index Columns="TargetAppId" />
+    </Indexes>
+  </Table>
   <Table Name="ConfigData" Description="配置数据">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
+      <Column Name="Key" DataType="String" Master="True" Nullable="False" Description="名称" />
       <Column Name="Scope" DataType="String" Nullable="False" Description="作用域" />
       <Column Name="Value" DataType="String" Length="2000" Description="数值" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
@@ -49,7 +63,7 @@
       <Column Name="Remark" DataType="String" Length="500" Description="备注" />
     </Columns>
     <Indexes>
-      <Index Columns="AppId,Name,Scope" Unique="True" />
+      <Index Columns="AppId,Key,Scope" Unique="True" />
     </Indexes>
   </Table>
   <Table Name="ConfigHistory" Description="配置历史。记录配置变更历史">
