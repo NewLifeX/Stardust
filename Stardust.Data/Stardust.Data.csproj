@@ -53,9 +53,14 @@
 
   <ItemGroup>
     <None Remove="Build.tt" />
+    <None Remove="ConfigCenter\Build.tt" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="ConfigCenter\Build.tt">
+      <LastGenOutput>Build.log</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </Content>
     <Content Include="Entity\Build.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Build.log</LastGenOutput>
@@ -76,6 +81,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="ConfigCenter\Build.log">
+      <DependentUpon>Build.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </None>
     <None Update="Entity\Build.log">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

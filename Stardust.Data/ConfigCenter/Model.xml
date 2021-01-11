@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data.ConfigCenter" ConnName="ConfigCenter" BaseClass="Entity" Output="" xmlns="http://www.newlifex.com/Model2020.xsd">
+  <Table Name="AppConfig" Description="应用配置。需要管理配置的应用系统列表">
+    <Columns>
+      <Column Name="Id" DataType="Int32" PrimaryKey="True" Description="编号" />
+      <Column Name="Name" DataType="String" Master="True" Description="名称" />
+      <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="Version" DataType="Int32" Description="版本。客户端获取配置时，如果版本相同则不返回配置信息" />
+      <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="UpdateUserID" DataType="Int32" Description="更新者" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" />
+      <Column Name="Remark" DataType="String" Length="500" Description="备注" />
+    </Columns>
+  </Table>
+  <Table Name="AppRule" Description="应用规则。针对应用设置的规则，比如根据IP段设置作用域">
+    <Columns>
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="Rule" DataType="String" Description="规则。比如IP=10.0.0.*" />
+      <Column Name="Result" DataType="String" Description="结果。比如Scope=dev" />
+      <Column Name="Priority" DataType="Int32" Description="优先级。数字越大优先级越高" />
+      <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="UpdateUserID" DataType="Int32" Description="更新者" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" />
+      <Column Name="Remark" DataType="String" Length="500" Description="备注" />
+    </Columns>
+  </Table>
+  <Table Name="ConfigData" Description="配置数据">
+    <Columns>
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="AppId" DataType="Int32" Description="应用" />
+      <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
+      <Column Name="Scope" DataType="String" Nullable="False" Description="作用域" />
+      <Column Name="Value" DataType="String" Length="2000" Description="数值" />
+      <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="Internal" DataType="Boolean" Description="内部。内部的配置只能用于内嵌，而不能直接请求使用" />
+      <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="UpdateUserID" DataType="Int32" Description="更新者" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" />
+      <Column Name="Remark" DataType="String" Length="500" Description="备注" />
+    </Columns>
+    <Indexes>
+      <Index Columns="AppId,Name,Scope" Unique="True" />
+    </Indexes>
+  </Table>
+  <Table Name="ConfigHistory" Description="配置历史。记录配置变更历史">
+    <Columns>
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="ConfigId" DataType="Int32" Description="配置" />
+      <Column Name="Action" DataType="String" Nullable="False" Description="操作" />
+      <Column Name="Field" DataType="String" Description="字段。变更的字段名" />
+      <Column Name="Value" DataType="String" Length="2000" Description="数值。变更前数值" />
+      <Column Name="Version" DataType="Int32" Description="版本。变更前版本" />
+      <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+    </Columns>
+    <Indexes>
+      <Index Columns="ConfigID" />
+    </Indexes>
+  </Table>
+</Tables>
