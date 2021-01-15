@@ -64,10 +64,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="8.10.2021.101" />
+    <PackageReference Include="NewLife.Core" Version="8.10.2021.115-beta1" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' != 'net40'">
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="5.0.0" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="5.0.1" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='net45'">
