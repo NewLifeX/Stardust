@@ -50,8 +50,8 @@
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="Key" DataType="String" Master="True" Nullable="False" Description="名称。下划线开头表示仅用于内嵌，不能返回给客户端" />
-      <Column Name="Scope" DataType="String" Nullable="False" Description="作用域" />
-      <Column Name="Value" DataType="String" Length="2000" Description="数值" />
+      <Column Name="Scope" DataType="String" Description="作用域" />
+      <Column Name="Value" DataType="String" Length="2000" Description="数值。支持内嵌 ${key@app:scope}" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />

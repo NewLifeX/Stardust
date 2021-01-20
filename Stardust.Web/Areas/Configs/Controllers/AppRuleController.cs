@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using NewLife.Cube;
 using NewLife.Web;
-using Stardust.Data.ConfigCenter;
+using Stardust.Data.Configs;
 
 namespace Stardust.Web.Areas.Configs.Controllers
 {

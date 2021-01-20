@@ -47,16 +47,16 @@ namespace Stardust.Data.Configs
         /// <summary>作用域</summary>
         [DisplayName("作用域")]
         [Description("作用域")]
-        [DataObjectField(false, false, false, 50)]
+        [DataObjectField(false, false, true, 50)]
         [BindColumn("Scope", "作用域", "")]
         public String Scope { get => _Scope; set { if (OnPropertyChanging("Scope", value)) { _Scope = value; OnPropertyChanged("Scope"); } } }
 
         private String _Value;
-        /// <summary>数值</summary>
+        /// <summary>数值。支持内嵌 ${key@app:scope}</summary>
         [DisplayName("数值")]
-        [Description("数值")]
+        [Description("数值。支持内嵌 ${key@app:scope}")]
         [DataObjectField(false, false, true, 2000)]
-        [BindColumn("Value", "数值", "")]
+        [BindColumn("Value", "数值。支持内嵌 ${key@app:scope}", "")]
         public String Value { get => _Value; set { if (OnPropertyChanging("Value", value)) { _Value = value; OnPropertyChanged("Value"); } } }
 
         private Boolean _Enable;
@@ -189,7 +189,7 @@ namespace Stardust.Data.Configs
             /// <summary>作用域</summary>
             public static readonly Field Scope = FindByName("Scope");
 
-            /// <summary>数值</summary>
+            /// <summary>数值。支持内嵌 ${key@app:scope}</summary>
             public static readonly Field Value = FindByName("Value");
 
             /// <summary>启用</summary>
@@ -234,7 +234,7 @@ namespace Stardust.Data.Configs
             /// <summary>作用域</summary>
             public const String Scope = "Scope";
 
-            /// <summary>数值</summary>
+            /// <summary>数值。支持内嵌 ${key@app:scope}</summary>
             public const String Value = "Value";
 
             /// <summary>启用</summary>

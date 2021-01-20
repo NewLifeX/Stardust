@@ -7,8 +7,14 @@ namespace Stardust.Server.Services
 {
     public class ConfigService
     {
-        public String Acquire(App app, String key, String value, String scope)
+        /// <summary>为应用解析指定键的值，处理内嵌</summary>
+        /// <param name="app"></param>
+        /// <param name="cfg"></param>
+        /// <param name="scope"></param>
+        /// <returns></returns>
+        public String Resolve(App app, ConfigData cfg, String scope)
         {
+            var value = cfg?.Value;
             if (value.IsNullOrEmpty()) return value;
 
             // 要求内嵌全部解析
@@ -23,7 +29,7 @@ namespace Stardust.Server.Services
 
                 // 替换
                 var item = value.Substring(p1 + 2, p2 - p1 - 2);
-                // 拆分 ${ztbi@db:huzhou}
+                // 拆分 ${key@app:scope}
                 var ss = item.Split("@", ":");
                 var key2 = ss[0];
                 var app2 = ss.Length > 1 ? ss[1] : "";
@@ -31,7 +37,11 @@ namespace Stardust.Server.Services
 
                 //item = replace(key, app, scope) + "";
                 {
-                    var data = ConfigData.Acquire((App.FindByName(app2) ?? app).ID, key2, scope2 ?? scope);
+                    var ap2 = App.FindByName(app2);
+                    var cfg2 = ConfigData.Acquire((ap2 ?? app).ID, key2, scope2 ?? scope);
+                    if (cfg2 == null) throw new Exception($"在应用[{app}]的[{cfg.Key}]中无法解析[{item}]");
+
+                    item = Resolve(ap2 ?? app, cfg2, scope2 ?? scope);
                 }
 
                 // 重新组合
