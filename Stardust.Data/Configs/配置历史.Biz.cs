@@ -23,7 +23,7 @@ using XCode.Configuration;
 using XCode.DataAccessLayer;
 using XCode.Membership;
 
-namespace Stardust.Data.ConfigCenter
+namespace Stardust.Data.Configs
 {
     /// <summary>配置历史。记录配置变更历史</summary>
     public partial class ConfigHistory : Entity<ConfigHistory>

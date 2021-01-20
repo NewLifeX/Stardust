@@ -23,7 +23,7 @@ using XCode.Configuration;
 using XCode.DataAccessLayer;
 using XCode.Membership;
 
-namespace Stardust.Data.ConfigCenter
+namespace Stardust.Data.Configs
 {
     /// <summary>应用规则。针对应用设置的规则，比如根据IP段设置作用域</summary>
     public partial class AppRule : Entity<AppRule>

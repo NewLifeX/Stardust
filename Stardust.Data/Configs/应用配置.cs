@@ -8,47 +8,31 @@ using XCode;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
 
-namespace Stardust.Data.ConfigCenter
+namespace Stardust.Data.Configs
 {
-    /// <summary>应用规则。针对应用设置的规则，比如根据IP段设置作用域</summary>
+    /// <summary>应用配置。需要管理配置的应用系统列表</summary>
     [Serializable]
     [DataObject]
-    [Description("应用规则。针对应用设置的规则，比如根据IP段设置作用域")]
-    [BindTable("AppRule", Description = "应用规则。针对应用设置的规则，比如根据IP段设置作用域", ConnName = "ConfigCenter", DbType = DatabaseType.None)]
-    public partial class AppRule
+    [Description("应用配置。需要管理配置的应用系统列表")]
+    [BindTable("AppConfig", Description = "应用配置。需要管理配置的应用系统列表", ConnName = "ConfigCenter", DbType = DatabaseType.None)]
+    public partial class AppConfig
     {
         #region 属性
         private Int32 _Id;
         /// <summary>编号</summary>
         [DisplayName("编号")]
         [Description("编号")]
-        [DataObjectField(true, true, false, 0)]
+        [DataObjectField(true, false, false, 0)]
         [BindColumn("Id", "编号", "")]
         public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
-        private String _Rule;
-        /// <summary>规则。比如IP=10.0.0.*</summary>
-        [DisplayName("规则")]
-        [Description("规则。比如IP=10.0.0.*")]
+        private String _Name;
+        /// <summary>名称</summary>
+        [DisplayName("名称")]
+        [Description("名称")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("Rule", "规则。比如IP=10.0.0.*", "")]
-        public String Rule { get => _Rule; set { if (OnPropertyChanging("Rule", value)) { _Rule = value; OnPropertyChanged("Rule"); } } }
-
-        private String _Result;
-        /// <summary>结果。比如Scope=dev</summary>
-        [DisplayName("结果")]
-        [Description("结果。比如Scope=dev")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("Result", "结果。比如Scope=dev", "")]
-        public String Result { get => _Result; set { if (OnPropertyChanging("Result", value)) { _Result = value; OnPropertyChanged("Result"); } } }
-
-        private Int32 _Priority;
-        /// <summary>优先级。数字越大优先级越高</summary>
-        [DisplayName("优先级")]
-        [Description("优先级。数字越大优先级越高")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Priority", "优先级。数字越大优先级越高", "")]
-        public Int32 Priority { get => _Priority; set { if (OnPropertyChanging("Priority", value)) { _Priority = value; OnPropertyChanged("Priority"); } } }
+        [BindColumn("Name", "名称", "", Master = true)]
+        public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
         private Boolean _Enable;
         /// <summary>启用</summary>
@@ -57,6 +41,14 @@ namespace Stardust.Data.ConfigCenter
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Enable", "启用", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
+
+        private Int32 _Version;
+        /// <summary>版本。客户端获取配置时，如果版本相同则不返回配置信息</summary>
+        [DisplayName("版本")]
+        [Description("版本。客户端获取配置时，如果版本相同则不返回配置信息")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Version", "版本。客户端获取配置时，如果版本相同则不返回配置信息", "")]
+        public Int32 Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
         private Int32 _CreateUserID;
         /// <summary>创建者</summary>
@@ -126,10 +118,9 @@ namespace Stardust.Data.ConfigCenter
                 switch (name)
                 {
                     case "Id": return _Id;
-                    case "Rule": return _Rule;
-                    case "Result": return _Result;
-                    case "Priority": return _Priority;
+                    case "Name": return _Name;
                     case "Enable": return _Enable;
+                    case "Version": return _Version;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -145,10 +136,9 @@ namespace Stardust.Data.ConfigCenter
                 switch (name)
                 {
                     case "Id": _Id = value.ToInt(); break;
-                    case "Rule": _Rule = Convert.ToString(value); break;
-                    case "Result": _Result = Convert.ToString(value); break;
-                    case "Priority": _Priority = value.ToInt(); break;
+                    case "Name": _Name = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
+                    case "Version": _Version = value.ToInt(); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -163,23 +153,20 @@ namespace Stardust.Data.ConfigCenter
         #endregion
 
         #region 字段名
-        /// <summary>取得应用规则字段信息的快捷方式</summary>
+        /// <summary>取得应用配置字段信息的快捷方式</summary>
         public partial class _
         {
             /// <summary>编号</summary>
             public static readonly Field Id = FindByName("Id");
 
-            /// <summary>规则。比如IP=10.0.0.*</summary>
-            public static readonly Field Rule = FindByName("Rule");
-
-            /// <summary>结果。比如Scope=dev</summary>
-            public static readonly Field Result = FindByName("Result");
-
-            /// <summary>优先级。数字越大优先级越高</summary>
-            public static readonly Field Priority = FindByName("Priority");
+            /// <summary>名称</summary>
+            public static readonly Field Name = FindByName("Name");
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
+
+            /// <summary>版本。客户端获取配置时，如果版本相同则不返回配置信息</summary>
+            public static readonly Field Version = FindByName("Version");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUserID = FindByName("CreateUserID");
@@ -205,23 +192,20 @@ namespace Stardust.Data.ConfigCenter
             static Field FindByName(String name) => Meta.Table.FindByName(name);
         }
 
-        /// <summary>取得应用规则字段名称的快捷方式</summary>
+        /// <summary>取得应用配置字段名称的快捷方式</summary>
         public partial class __
         {
             /// <summary>编号</summary>
             public const String Id = "Id";
 
-            /// <summary>规则。比如IP=10.0.0.*</summary>
-            public const String Rule = "Rule";
-
-            /// <summary>结果。比如Scope=dev</summary>
-            public const String Result = "Result";
-
-            /// <summary>优先级。数字越大优先级越高</summary>
-            public const String Priority = "Priority";
+            /// <summary>名称</summary>
+            public const String Name = "Name";
 
             /// <summary>启用</summary>
             public const String Enable = "Enable";
+
+            /// <summary>版本。客户端获取配置时，如果版本相同则不返回配置信息</summary>
+            public const String Version = "Version";
 
             /// <summary>创建者</summary>
             public const String CreateUserID = "CreateUserID";

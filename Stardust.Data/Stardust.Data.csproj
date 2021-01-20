@@ -52,17 +52,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="ConfigCenter\应用配置.Biz.cs" />
-    <Compile Remove="ConfigCenter\应用配置.cs" />
+    <Compile Remove="Configs\应用配置.Biz.cs" />
+    <Compile Remove="Configs\应用配置.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <None Remove="Build.tt" />
-    <None Remove="ConfigCenter\Build.tt" />
+    <None Remove="Configs\Build.tt" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="ConfigCenter\Build.tt">
+    <Content Include="Configs\Build.tt">
       <LastGenOutput>Build.log</LastGenOutput>
       <Generator>TextTemplatingFileGenerator</Generator>
     </Content>
@@ -86,7 +86,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="ConfigCenter\Build.log">
+    <None Update="Configs\Build.log">
       <DependentUpon>Build.tt</DependentUpon>
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

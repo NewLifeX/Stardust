@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -23,7 +23,7 @@ using XCode.Configuration;
 using XCode.DataAccessLayer;
 using XCode.Membership;
 
-namespace Stardust.Data.ConfigCenter
+namespace Stardust.Data.Configs
 {
     /// <summary>应用依赖。应用可以引用依赖另一个应用</summary>
     public partial class AppQuote : Entity<AppQuote>

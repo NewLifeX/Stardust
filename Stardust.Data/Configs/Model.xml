@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data.ConfigCenter" ConnName="ConfigCenter" BaseClass="Entity" Output="" xmlns="http://www.newlifex.com/Model2020.xsd">
+<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data.Configs" ConnName="ConfigCenter" BaseClass="Entity" Output="" xmlns="http://www.newlifex.com/Model2020.xsd">
   <Table Name="AppConfig" Description="应用配置。需要管理配置的应用系统列表">
     <Columns>
       <Column Name="Id" DataType="Int32" PrimaryKey="True" Description="编号" />

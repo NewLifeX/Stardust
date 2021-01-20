@@ -8,7 +8,7 @@ using XCode;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
 
-namespace Stardust.Data.ConfigCenter
+namespace Stardust.Data.Configs
 {
     /// <summary>配置历史。记录配置变更历史</summary>
     [Serializable]

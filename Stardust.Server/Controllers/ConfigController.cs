@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using Stardust.Data;
-using Stardust.Data.ConfigCenter;
+using Stardust.Data.Configs;
 using Stardust.Server.Common;
 using Stardust.Server.Services;
 

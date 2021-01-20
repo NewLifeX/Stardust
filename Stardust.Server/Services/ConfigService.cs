@@ -1,7 +1,7 @@
 ﻿using System;
 using NewLife;
 using Stardust.Data;
-using Stardust.Data.ConfigCenter;
+using Stardust.Data.Configs;
 
 namespace Stardust.Server.Services
 {

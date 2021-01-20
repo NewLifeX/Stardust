@@ -8,7 +8,7 @@ using XCode;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
 
-namespace Stardust.Data.ConfigCenter
+namespace Stardust.Data.Configs
 {
     /// <summary>配置数据</summary>
     [Serializable]

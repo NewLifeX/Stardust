@@ -8,7 +8,7 @@ using XCode;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
 
-namespace Stardust.Data.ConfigCenter
+namespace Stardust.Data.Configs
 {
     /// <summary>应用依赖。应用可以引用依赖另一个应用</summary>
     [Serializable]

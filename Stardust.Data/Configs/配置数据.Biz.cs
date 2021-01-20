@@ -9,7 +9,7 @@ using NewLife.Serialization;
 using XCode;
 using XCode.Membership;
 
-namespace Stardust.Data.ConfigCenter
+namespace Stardust.Data.Configs
 {
     /// <summary>配置数据</summary>
     public partial class ConfigData : Entity<ConfigData>
