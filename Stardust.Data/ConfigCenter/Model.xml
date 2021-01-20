@@ -49,11 +49,10 @@
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="Key" DataType="String" Master="True" Nullable="False" Description="名称" />
+      <Column Name="Key" DataType="String" Master="True" Nullable="False" Description="名称。下划线开头表示仅用于内嵌，不能返回给客户端" />
       <Column Name="Scope" DataType="String" Nullable="False" Description="作用域" />
       <Column Name="Value" DataType="String" Length="2000" Description="数值" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
-      <Column Name="Internal" DataType="Boolean" Description="内部。内部的配置只能用于内嵌，而不能直接请求使用" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />

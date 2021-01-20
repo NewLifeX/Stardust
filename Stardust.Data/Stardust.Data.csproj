@@ -52,6 +52,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="ConfigCenter\应用配置.Biz.cs" />
+    <Compile Remove="ConfigCenter\应用配置.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Build.tt" />
     <None Remove="ConfigCenter\Build.tt" />
   </ItemGroup>
@@ -68,8 +73,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="8.10.2021.115-beta1" />
-    <PackageReference Include="NewLife.XCode" Version="10.0.2021.115-beta1" />
+    <PackageReference Include="NewLife.Core" Version="8.10.2021.120-beta2" />
+    <PackageReference Include="NewLife.XCode" Version="10.0.2021.120-beta2" />
   </ItemGroup>
 
   <ItemGroup>

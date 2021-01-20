@@ -138,6 +138,16 @@ namespace Stardust.Data.ConfigCenter
         /// <param name="appid">=0查询全局</param>
         /// <returns></returns>
         public static IList<ConfigData> FindAllByApp(Int32 appid) => FindAll(_.AppId == appid);
+
+        /// <summary>查找应用的有效配置</summary>
+        /// <param name="appid"></param>
+        /// <returns></returns>
+        public static IList<ConfigData> FindAllValid(Int32 appid)
+        {
+            if (Meta.Count < 1000) return Meta.Cache.FindAll(_ => _.AppId == appid && _.Enable);
+
+            return FindAll(_.AppId == appid & _.Enable == true);
+        }
         #endregion
 
         #region 高级查询
@@ -165,77 +175,53 @@ namespace Stardust.Data.ConfigCenter
         #endregion
 
         #region 业务操作
-        /// <summary>申请配置</summary>
+        /// <summary>申请配置，优先本应用，其次共享应用，如有指定作用域则优先作用域</summary>
         /// <param name="appid">应用</param>
         /// <param name="key">键</param>
         /// <param name="scope">作用域</param>
         /// <returns></returns>
         public static ConfigData Acquire(Int32 appid, String key, String scope)
         {
-            // 找到该key下所有可用配置
-            var list = FindAllByKey(key).Where(d => d.Enable).ToList();
-            if (list.Count == 0) return null;
+            var locals = FindAllValid(appid).Where(_ => _.Key.EqualIgnoreCase(key)).ToList();
 
             // 混合应用配置表
             var qs = AppQuote.FindAllByAppId(appid);
-            //var cs = qs.Where(e => e.Enable).Select(e => e.ConfigID).ToList();
+            var shares = qs.SelectMany(_ => FindAllValid(_.TargetAppId).Where(_ => _.Key.EqualIgnoreCase(key))).ToList();
+
+            if (locals.Count == 0 && shares.Count == 0) return null;
 
             // 如果未指定作用域
             if (scope.IsNullOrEmpty())
             {
-                #region 空作用域
-                // 空作用域
-                list = list.Where(e => e.Scope.IsNullOrEmpty()).ToList();
-
-                // 该应用
-                var cfg = list.FirstOrDefault(e => e.AppId == appid);
+                // 优先空作用域
+                var cfg = locals.FirstOrDefault(_ => _.Scope.IsNullOrEmpty());
                 if (cfg != null) return cfg;
 
-                //// 其它授权
-                //cfg = list.FirstOrDefault(e => cs.Contains(e.ID));
-                //if (cfg != null) return cfg;
-
-                // 全局
-                cfg = list.FirstOrDefault(e => e.AppId == 0);
+                // 共享应用空作用域
+                cfg = shares.FirstOrDefault(_ => _.Scope.IsNullOrEmpty());
                 if (cfg != null) return cfg;
 
-                //// 找一个优先级最高的返回
-                //return list.OrderByDescending(e => e.Priority).FirstOrDefault();
-                #endregion
+                // 任意作用域，最新优先
+                if (locals.Count > 0) return locals.OrderByDescending(_ => _.Id).FirstOrDefault();
+                if (shares.Count > 0) return shares.OrderByDescending(_ => _.Id).FirstOrDefault();
             }
             else
             {
-                #region 优先匹配作用域
-                var list2 = list.Where(e => e.Scope.EqualIgnoreCase(scope)).ToList();
-
-                // 查找指定作用域
-                var cfg = list2.FirstOrDefault(e => e.AppId == appid);
+                // 优先匹配作用域
+                var cfg = locals.FirstOrDefault(_ => _.Scope.EqualIgnoreCase(scope));
                 if (cfg != null) return cfg;
 
-                //// 其它授权
-                //cfg = list2.FirstOrDefault(e => cs.Contains(e.Id));
-                //if (cfg != null) return cfg;
-
-                // 查找全局
-                cfg = list2.FirstOrDefault(e => e.AppId == 0);
-                if (cfg != null) return cfg;
-                #endregion
-
-                #region 默认空作用域
-                list2 = list.Where(e => e.Scope.IsNullOrEmpty()).ToList();
-
-                // 该应用下空作用域
-                cfg = list2.FirstOrDefault(e => e.AppId == appid);
+                // 共享应用该作用域
+                cfg = shares.FirstOrDefault(_ => _.Scope.EqualIgnoreCase(scope));
                 if (cfg != null) return cfg;
 
-                //// 其它授权空作用域
-                //cfg = list2.FirstOrDefault(e => cs.Contains(e.Id));
-                //if (cfg != null) return cfg;
-
-                // 全局空作用域
-                cfg = list2.FirstOrDefault(e => e.AppId == 0);
+                // 没有找到匹配作用域，使用空作用域
+                cfg = locals.FirstOrDefault(_ => _.Scope.IsNullOrEmpty());
                 if (cfg != null) return cfg;
-                #endregion
+
+                // 共享应用空作用域
+                cfg = shares.FirstOrDefault(_ => _.Scope.IsNullOrEmpty());
+                if (cfg != null) return cfg;
             }
 
             // 都没有就返回空，要求去配置

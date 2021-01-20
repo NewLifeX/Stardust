@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using Stardust.Data;
 using Stardust.Data.ConfigCenter;
-using Stardust.Data.Models;
 using Stardust.Server.Common;
 using Stardust.Server.Services;
 
@@ -20,34 +19,65 @@ namespace Stardust.Server.Controllers
         public ConfigController(ConfigService configService) => _configService = configService;
 
         [ApiFilter]
-        public Object GetAll(String appId, String keys, Int32 version, String scope = null)
+        public IDictionary<String, String> GetAll(String appId, String secrect, String scope)
         {
-            if (keys.IsNullOrEmpty()) throw new ArgumentNullException(nameof(keys));
+            if (appId.IsNullOrEmpty()) throw new ArgumentNullException(nameof(appId));
 
             // 验证
             //var ap = Check(app, out var ip);
-            var ap = App.FindByName(appId);
+            var app = App.FindByName(appId);
             var ip = HttpContext.Connection?.RemoteIpAddress + "";
 
             // 作用域为空时重写
-            scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(ap.ID, ip) : scope;
+            scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.ID, ip) : scope;
 
-            var list = new List<ConfigItem>();
-            var ks = keys.Split(",", ";");
-            //var vs = version.SplitAsInt(",", ";");
-            for (var i = 0; i < ks.Length; i++)
+            var list = ConfigData.FindAllValid(app.ID);
+            //return list.ToDictionary(_ => _.Key, _ => _.Value);
+
+            var dic = new Dictionary<String, String>(StringComparer.OrdinalIgnoreCase);
+            // 本应用
+            foreach (var cfg in list)
             {
-                var ver = -1;
-                //if (i < vs.Length) ver = vs[i];
+                // 跳过内部
+                if (cfg.Key.IsNullOrEmpty() || cfg.Key[0] == '_') continue;
 
-                // 申请配置
-                var ci = _configService.Acquire(ks[i], ap, scope, ver, ip);
-                // 只返回新版本
-                if (ci != null && ver != ci.Version) list.Add(ci);
+                // 解析内嵌
+                dic[cfg.Key] = _configService.Acquire(app, cfg.Key, cfg.Value, scope);
             }
-            //if (list.Count == 0) throw new InvalidOperationException("配置未找到或未启用！");
 
-            return list;
+            // 共享应用
+            var qs = AppQuote.FindAllByAppId(app.ID);
+            foreach (var item in qs)
+            {
+                foreach (var cfg in ConfigData.FindAllValid(item.TargetAppId))
+                {
+                    // 跳过内部
+                    if (cfg.Key.IsNullOrEmpty() || cfg.Key[0] == '_') continue;
+
+                    // 仅添加还没有的键
+                    if (!dic.ContainsKey(cfg.Key))
+                        dic[cfg.Key] = _configService.Acquire(App.FindByID(item.TargetAppId), cfg.Key, cfg.Value, scope);
+                }
+            }
+
+            return dic;
+
+            //var list = new List<ConfigItem>();
+            //var ks = keys.Split(",", ";");
+            ////var vs = version.SplitAsInt(",", ";");
+            //for (var i = 0; i < ks.Length; i++)
+            //{
+            //    var ver = -1;
+            //    //if (i < vs.Length) ver = vs[i];
+
+            //    // 申请配置
+            //    var ci = _configService.Acquire(ks[i], app, scope, ver, ip);
+            //    // 只返回新版本
+            //    if (ci != null && ver != ci.Version) list.Add(ci);
+            //}
+            ////if (list.Count == 0) throw new InvalidOperationException("配置未找到或未启用！");
+
+            //return list;
         }
     }
 }

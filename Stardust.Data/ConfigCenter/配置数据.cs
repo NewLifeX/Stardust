@@ -36,11 +36,11 @@ namespace Stardust.Data.ConfigCenter
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
         private String _Key;
-        /// <summary>名称</summary>
+        /// <summary>名称。下划线开头表示仅用于内嵌，不能返回给客户端</summary>
         [DisplayName("名称")]
-        [Description("名称")]
+        [Description("名称。下划线开头表示仅用于内嵌，不能返回给客户端")]
         [DataObjectField(false, false, false, 50)]
-        [BindColumn("Key", "名称", "", Master = true)]
+        [BindColumn("Key", "名称。下划线开头表示仅用于内嵌，不能返回给客户端", "", Master = true)]
         public String Key { get => _Key; set { if (OnPropertyChanging("Key", value)) { _Key = value; OnPropertyChanged("Key"); } } }
 
         private String _Scope;
@@ -66,14 +66,6 @@ namespace Stardust.Data.ConfigCenter
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Enable", "启用", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
-
-        private Boolean _Internal;
-        /// <summary>内部。内部的配置只能用于内嵌，而不能直接请求使用</summary>
-        [DisplayName("内部")]
-        [Description("内部。内部的配置只能用于内嵌，而不能直接请求使用")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Internal", "内部。内部的配置只能用于内嵌，而不能直接请求使用", "")]
-        public Boolean Internal { get => _Internal; set { if (OnPropertyChanging("Internal", value)) { _Internal = value; OnPropertyChanged("Internal"); } } }
 
         private Int32 _CreateUserID;
         /// <summary>创建者</summary>
@@ -148,7 +140,6 @@ namespace Stardust.Data.ConfigCenter
                     case "Scope": return _Scope;
                     case "Value": return _Value;
                     case "Enable": return _Enable;
-                    case "Internal": return _Internal;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -169,7 +160,6 @@ namespace Stardust.Data.ConfigCenter
                     case "Scope": _Scope = Convert.ToString(value); break;
                     case "Value": _Value = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
-                    case "Internal": _Internal = value.ToBoolean(); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -193,7 +183,7 @@ namespace Stardust.Data.ConfigCenter
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
 
-            /// <summary>名称</summary>
+            /// <summary>名称。下划线开头表示仅用于内嵌，不能返回给客户端</summary>
             public static readonly Field Key = FindByName("Key");
 
             /// <summary>作用域</summary>
@@ -204,9 +194,6 @@ namespace Stardust.Data.ConfigCenter
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
-
-            /// <summary>内部。内部的配置只能用于内嵌，而不能直接请求使用</summary>
-            public static readonly Field Internal = FindByName("Internal");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUserID = FindByName("CreateUserID");
@@ -241,7 +228,7 @@ namespace Stardust.Data.ConfigCenter
             /// <summary>应用</summary>
             public const String AppId = "AppId";
 
-            /// <summary>名称</summary>
+            /// <summary>名称。下划线开头表示仅用于内嵌，不能返回给客户端</summary>
             public const String Key = "Key";
 
             /// <summary>作用域</summary>
@@ -252,9 +239,6 @@ namespace Stardust.Data.ConfigCenter
 
             /// <summary>启用</summary>
             public const String Enable = "Enable";
-
-            /// <summary>内部。内部的配置只能用于内嵌，而不能直接请求使用</summary>
-            public const String Internal = "Internal";
 
             /// <summary>创建者</summary>
             public const String CreateUserID = "CreateUserID";
