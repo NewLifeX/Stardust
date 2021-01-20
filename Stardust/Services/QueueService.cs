@@ -14,7 +14,7 @@ namespace Stardust.Services
         /// <param name="topic">主题</param>
         /// <param name="value">消息</param>
         /// <returns></returns>
-        Int32 Public(String topic, T value);
+        Int32 Publish(String topic, T value);
 
         /// <summary>订阅</summary>
         /// <param name="clientId">客户标识</param>
@@ -51,7 +51,7 @@ namespace Stardust.Services
         /// <param name="topic">主题</param>
         /// <param name="value">消息</param>
         /// <returns></returns>
-        public Int32 Public(String topic, T value)
+        public Int32 Publish(String topic, T value)
         {
             var rs = 0;
             if (_topics.TryGetValue(topic, out var clients))

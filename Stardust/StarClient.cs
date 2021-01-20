@@ -336,7 +336,7 @@ namespace Stardust
                     {
                         foreach (var item in rs.Commands)
                         {
-                            CommandQueue.Public(item.Command, item);
+                            CommandQueue.Publish(item.Command, item);
                         }
                     }
                 }
