@@ -40,18 +40,23 @@ namespace Stardust.Server.Services
 
             // 保留数据的起点
             var time = DateTime.Now.AddDays(-set.DataRetention);
+            var time2 = DateTime.Now.AddDays(-set.DataRetention2);
 
             // 删除节点数据
-            var rs = NodeData.DeleteBefore(time);
-            XTrace.WriteLine("删除[{0}]之前的NodeData共：{1:n0}", time.ToFullString(), rs);
+            var rs = NodeData.DeleteBefore(time2);
+            XTrace.WriteLine("删除[{0}]之前的NodeData共：{1:n0}", time2.ToFullString(), rs);
 
             // 删除应用性能数据
-            rs = AppMeter.DeleteBefore(time);
-            XTrace.WriteLine("删除[{0}]之前的AppMeter共：{1:n0}", time.ToFullString(), rs);
+            rs = AppMeter.DeleteBefore(time2);
+            XTrace.WriteLine("删除[{0}]之前的AppMeter共：{1:n0}", time2.ToFullString(), rs);
 
             // 删除跟踪分钟统计数据
             rs = TraceMinuteStat.DeleteBefore(time);
             XTrace.WriteLine("删除[{0}]之前的TraceMinuteStat共：{1:n0}", time.ToFullString(), rs);
+
+            // 删除跟踪小时统计数据
+            rs = TraceHourStat.DeleteBefore(time2);
+            XTrace.WriteLine("删除[{0}]之前的TraceHourStat共：{1:n0}", time2.ToFullString(), rs);
 
             // 删除监控明细数据
             rs = TraceData.DeleteBefore(time);

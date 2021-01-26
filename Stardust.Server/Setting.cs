@@ -55,9 +55,13 @@ namespace Stardust.Server
         [Description("控制台地址。用于监控告警地址")]
         public String WebUrl { get; set; } = "";
 
-        /// <summary>数据保留时间。默认30天</summary>
-        [Description("数据保留时间。默认30天")]
-        public Int32 DataRetention { get; set; } = 30;
+        /// <summary>数据保留时间。默认3天</summary>
+        [Description("数据保留时间。默认3天")]
+        public Int32 DataRetention { get; set; } = 3;
+
+        /// <summary>大颗粒数据保留时间。默认30天</summary>
+        [Description("大颗粒数据保留时间。默认30天")]
+        public Int32 DataRetention2 { get; set; } = 30;
         #endregion
 
         #region 方法
