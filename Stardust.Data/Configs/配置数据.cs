@@ -14,7 +14,7 @@ namespace Stardust.Data.Configs
     [Serializable]
     [DataObject]
     [Description("配置数据")]
-    [BindIndex("IU_ConfigData_AppId_Key_Scope", true, "AppId,Key,Scope")]
+    [BindIndex("IU_ConfigData_AppId_Key_Scope_Version", true, "AppId,Key,Scope,Version")]
     [BindTable("ConfigData", Description = "配置数据", ConnName = "ConfigCenter", DbType = DatabaseType.None)]
     public partial class ConfigData
     {
@@ -58,6 +58,14 @@ namespace Stardust.Data.Configs
         [DataObjectField(false, false, true, 2000)]
         [BindColumn("Value", "数值。支持内嵌 ${key@app:scope}", "")]
         public String Value { get => _Value; set { if (OnPropertyChanging("Value", value)) { _Value = value; OnPropertyChanged("Value"); } } }
+
+        private Int32 _Version;
+        /// <summary>版本。当前版本号，每次修改都是应用版本加一</summary>
+        [DisplayName("版本")]
+        [Description("版本。当前版本号，每次修改都是应用版本加一")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Version", "版本。当前版本号，每次修改都是应用版本加一", "")]
+        public Int32 Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
         private Boolean _Enable;
         /// <summary>启用</summary>
@@ -139,6 +147,7 @@ namespace Stardust.Data.Configs
                     case "Key": return _Key;
                     case "Scope": return _Scope;
                     case "Value": return _Value;
+                    case "Version": return _Version;
                     case "Enable": return _Enable;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -159,6 +168,7 @@ namespace Stardust.Data.Configs
                     case "Key": _Key = Convert.ToString(value); break;
                     case "Scope": _Scope = Convert.ToString(value); break;
                     case "Value": _Value = Convert.ToString(value); break;
+                    case "Version": _Version = value.ToInt(); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -191,6 +201,9 @@ namespace Stardust.Data.Configs
 
             /// <summary>数值。支持内嵌 ${key@app:scope}</summary>
             public static readonly Field Value = FindByName("Value");
+
+            /// <summary>版本。当前版本号，每次修改都是应用版本加一</summary>
+            public static readonly Field Version = FindByName("Version");
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
@@ -236,6 +249,9 @@ namespace Stardust.Data.Configs
 
             /// <summary>数值。支持内嵌 ${key@app:scope}</summary>
             public const String Value = "Value";
+
+            /// <summary>版本。当前版本号，每次修改都是应用版本加一</summary>
+            public const String Version = "Version";
 
             /// <summary>启用</summary>
             public const String Enable = "Enable";

@@ -43,12 +43,20 @@ namespace Stardust.Data.Configs
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
         private Int32 _Version;
-        /// <summary>版本。客户端获取配置时，如果版本相同则不返回配置信息</summary>
+        /// <summary>版本。应用正在使用的版本号，返回小于等于该版本的配置</summary>
         [DisplayName("版本")]
-        [Description("版本。客户端获取配置时，如果版本相同则不返回配置信息")]
+        [Description("版本。应用正在使用的版本号，返回小于等于该版本的配置")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Version", "版本。客户端获取配置时，如果版本相同则不返回配置信息", "")]
+        [BindColumn("Version", "版本。应用正在使用的版本号，返回小于等于该版本的配置", "")]
         public Int32 Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
+
+        private Int32 _NextVersion;
+        /// <summary>下一版本。下一个将要发布的版本，发布后两者相同</summary>
+        [DisplayName("下一版本")]
+        [Description("下一版本。下一个将要发布的版本，发布后两者相同")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("NextVersion", "下一版本。下一个将要发布的版本，发布后两者相同", "")]
+        public Int32 NextVersion { get => _NextVersion; set { if (OnPropertyChanging("NextVersion", value)) { _NextVersion = value; OnPropertyChanged("NextVersion"); } } }
 
         private Int32 _CreateUserID;
         /// <summary>创建者</summary>
@@ -121,6 +129,7 @@ namespace Stardust.Data.Configs
                     case "Name": return _Name;
                     case "Enable": return _Enable;
                     case "Version": return _Version;
+                    case "NextVersion": return _NextVersion;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -139,6 +148,7 @@ namespace Stardust.Data.Configs
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Version": _Version = value.ToInt(); break;
+                    case "NextVersion": _NextVersion = value.ToInt(); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -165,8 +175,11 @@ namespace Stardust.Data.Configs
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
 
-            /// <summary>版本。客户端获取配置时，如果版本相同则不返回配置信息</summary>
+            /// <summary>版本。应用正在使用的版本号，返回小于等于该版本的配置</summary>
             public static readonly Field Version = FindByName("Version");
+
+            /// <summary>下一版本。下一个将要发布的版本，发布后两者相同</summary>
+            public static readonly Field NextVersion = FindByName("NextVersion");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUserID = FindByName("CreateUserID");
@@ -204,8 +217,11 @@ namespace Stardust.Data.Configs
             /// <summary>启用</summary>
             public const String Enable = "Enable";
 
-            /// <summary>版本。客户端获取配置时，如果版本相同则不返回配置信息</summary>
+            /// <summary>版本。应用正在使用的版本号，返回小于等于该版本的配置</summary>
             public const String Version = "Version";
+
+            /// <summary>下一版本。下一个将要发布的版本，发布后两者相同</summary>
+            public const String NextVersion = "NextVersion";
 
             /// <summary>创建者</summary>
             public const String CreateUserID = "CreateUserID";

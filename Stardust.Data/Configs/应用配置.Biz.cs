@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -23,7 +23,7 @@ using XCode.Configuration;
 using XCode.DataAccessLayer;
 using XCode.Membership;
 
-namespace Stardust.Data.ConfigCenter
+namespace Stardust.Data.Configs
 {
     /// <summary>应用配置。需要管理配置的应用系统列表</summary>
     public partial class AppConfig : Entity<AppConfig>
@@ -79,6 +79,7 @@ namespace Stardust.Data.ConfigCenter
         //    entity.Name = "abc";
         //    entity.Enable = true;
         //    entity.Version = 0;
+        //    entity.NextVersion = 0;
         //    entity.CreateUserID = 0;
         //    entity.CreateTime = DateTime.Now;
         //    entity.CreateIP = "abc";
@@ -125,6 +126,19 @@ namespace Stardust.Data.ConfigCenter
 
             //return Find(_.Id == id);
         }
+
+        /// <summary>根据名称查找</summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static AppConfig FindByName(String name)
+        {
+            if (name.IsNullOrEmpty()) return null;
+
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Name.EqualIgnoreCase(name));
+
+            return Find(_.Name == name);
+        }
         #endregion
 
         #region 高级查询
@@ -141,6 +155,27 @@ namespace Stardust.Data.ConfigCenter
         #endregion
 
         #region 业务操作
+        /// <summary>同步数据</summary>
+        /// <returns></returns>
+        public static Int32 Sync()
+        {
+            var listA = App.FindAll();
+            var listB = AppConfig.FindAll();
+            foreach (var item in listA)
+            {
+                var app = listB.FirstOrDefault(e => e.Id == item.ID);
+                if (app == null)
+                {
+                    app = new AppConfig { Id = item.ID };
+                    listB.Add(app);
+                }
+
+                app.Name = item.Name;
+                app.Enable = item.Enable;
+            }
+
+            return listB.Save();
+        }
         #endregion
     }
 }

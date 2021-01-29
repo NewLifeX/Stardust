@@ -12,7 +12,7 @@ namespace Stardust.Server.Services
         /// <param name="cfg"></param>
         /// <param name="scope"></param>
         /// <returns></returns>
-        public String Resolve(App app, ConfigData cfg, String scope)
+        public String Resolve(AppConfig app, ConfigData cfg, String scope)
         {
             var value = cfg?.Value;
             if (value.IsNullOrEmpty()) return value;
@@ -37,9 +37,9 @@ namespace Stardust.Server.Services
 
                 //item = replace(key, app, scope) + "";
                 {
-                    var ap2 = App.FindByName(app2);
+                    var ap2 = AppConfig.FindByName(app2);
                     var scope3 = !scope2.IsNullOrEmpty() ? scope2 : scope;
-                    var cfg2 = ConfigData.Acquire((ap2 ?? app).ID, key2, scope3);
+                    var cfg2 = ConfigData.Acquire((ap2 ?? app).Id, key2, scope3);
                     if (cfg2 == null) throw new Exception($"在应用[{app}]的[{cfg.Key}]中无法解析[{item}]");
 
                     item = Resolve(ap2 ?? app, cfg2, scope3);

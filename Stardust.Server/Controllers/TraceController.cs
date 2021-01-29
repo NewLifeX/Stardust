@@ -19,15 +19,16 @@ namespace Stardust.Server.Controllers
     [Route("[controller]")]
     public class TraceController : ControllerBase
     {
-        private readonly AppService _service = new AppService();
+        private readonly AppService _service ;
         private readonly ITraceStatService _stat;
         private readonly IAppDayStatService _appStat;
         private static readonly ICache _cache = new NewLife.Caching.MemoryCache();
 
-        public TraceController(ITraceStatService stat, IAppDayStatService appStat)
+        public TraceController(ITraceStatService stat, IAppDayStatService appStat, AppService appService)
         {
             _stat = stat;
             _appStat = appStat;
+            _service = appService;
         }
 
         [ApiFilter]

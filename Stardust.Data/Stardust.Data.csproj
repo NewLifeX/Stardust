@@ -52,11 +52,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Configs\应用配置.Biz.cs" />
-    <Compile Remove="Configs\应用配置.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="Build.tt" />
     <None Remove="Configs\Build.tt" />
   </ItemGroup>

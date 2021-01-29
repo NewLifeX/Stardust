@@ -94,11 +94,10 @@ namespace Stardust.Data.Configs
         #region 扩展属性
         /// <summary>应用系统</summary>
         [XmlIgnore, ScriptIgnore]
-        public App App => Extends.Get(nameof(App), k => App.FindByID(AppId));
+        public AppConfig App => Extends.Get(nameof(App), k => AppConfig.FindById(AppId));
 
         /// <summary>应用名称</summary>
-        [XmlIgnore, ScriptIgnore]
-        [Map(__.AppId, typeof(App), "ID")]
+        [Map(__.AppId, typeof(AppConfig), "ID")]
         public String AppName => App + "";
         #endregion
 

@@ -51,6 +51,7 @@ namespace Stardust.Server
             var alarmService = new AlarmService { Period = set2.AlarmPeriod };
             services.AddSingleton<IAlarmService>(alarmService);
 
+            services.AddSingleton<AppService>();
             services.AddSingleton<ConfigService>();
 
             services.AddHttpClient();
