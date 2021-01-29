@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
+using NewLife.Remoting;
 using NewLife.Web;
 using Stardust.Data.Configs;
 
@@ -32,6 +34,8 @@ namespace Stardust.Web.Areas.Configs.Controllers
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
+            PageSetting.EnableSelect = false;
+
             // 如果选择了应用，特殊处理版本
             if (appId > 0)
             {
@@ -41,6 +45,10 @@ namespace Stardust.Web.Areas.Configs.Controllers
 
                 // 选择每个版本最大的一个
                 list = ConfigData.SelectNewest(list);
+
+                // 控制发布按钮
+                var app = AppConfig.FindById(appId);
+                PageSetting.EnableSelect = list.Any(e => e.Version > app.Version);
 
                 return list;
             }
@@ -78,6 +86,26 @@ namespace Stardust.Web.Areas.Configs.Controllers
             base.Edit(entity);
 
             return RedirectToAction("Index", new { appId = entity.AppId });
+        }
+
+        public ActionResult Publish(Int32 appId)
+        {
+            try
+            {
+                var app = AppConfig.FindById(appId);
+                if (app == null) throw new ArgumentNullException(nameof(appId));
+
+                if (app.Version >= app.NextVersion) throw new ApiException(701, "已经是最新版本！");
+
+                app.Version = app.NextVersion;
+                app.Update();
+
+                return JsonRefresh("发布成功！", 3);
+            }
+            catch (Exception ex)
+            {
+                return Json(0, ex.Message, ex);
+            }
         }
     }
 }

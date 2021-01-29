@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
 using NewLife.Remoting;
-using Stardust.Data;
 using Stardust.Data.Configs;
 
 namespace Stardust.Web.Areas.Configs.Controllers
@@ -20,6 +18,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
                 var df = ListFields.AddDataField("Configs", "Enable");
                 df.Header = "配置";
                 df.DisplayName = "配置";
+                df.Title = "查看该应用所有配置数据";
                 df.Url = "ConfigData?appId={Id}";
             }
 
