@@ -23,6 +23,19 @@ namespace Stardust.Web.Areas.Configs.Controllers
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
+            // 如果选择了应用，特殊处理版本
+            if (appId > 0)
+            {
+                if (p.PageSize == 20) p.PageSize = 500;
+
+                var list = ConfigData.Search(appId, name, scope, start, end, p["Q"], p);
+
+                // 选择每个版本最大的一个
+                list = ConfigData.SelectNewest(list);
+
+                return list;
+            }
+
             return ConfigData.Search(appId, name, scope, start, end, p["Q"], p);
         }
     }

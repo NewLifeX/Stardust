@@ -35,6 +35,7 @@ namespace Stardust.Data.Configs
             if (!HasDirty) return;
 
             // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
+            if (AppId <= 0) throw new ArgumentNullException(nameof(AppId), "应用不能为空！");
             if (Key.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Key), "名称不能为空！");
             //if (Scope.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Scope), "作用域不能为空！");
 
@@ -44,6 +45,8 @@ namespace Stardust.Data.Configs
             Key = Key?.Trim();
             Value = Value?.Trim();
             Scope = Scope?.Trim();
+
+            if (Version <= 0) Version = 1;
         }
 
         /// <summary>添加</summary>
@@ -225,6 +228,55 @@ namespace Stardust.Data.Configs
 
             // 都没有就返回空，要求去配置
             return null;
+        }
+
+        /// <summary>选择最新的配置版本</summary>
+        /// <param name="list"></param>
+        /// <returns></returns>
+        public static IList<ConfigData> SelectNewest(IList<ConfigData> list)
+        {
+            // 选择每个版本最大的一个
+            //var gp = list.ToLookup(e => $"{name}-{scope}").Select(e => e.OrderByDescending(y => y.Version).FirstOrDefault());
+            var dic = new Dictionary<String, ConfigData>();
+            foreach (var item in list)
+            {
+                var key = $"{item.AppId}-{item.Key}-{item.Scope}";
+                if (dic.TryGetValue(key, out var cfg))
+                {
+                    if (cfg.Version < item.Version) dic[key] = item;
+                }
+                else
+                {
+                    dic[key] = item;
+                }
+            }
+
+            return dic.Values.ToList();
+        }
+
+        /// <summary>选择指定版本</summary>
+        /// <param name="list"></param>
+        /// <param name="version"></param>
+        /// <returns></returns>
+        public static IList<ConfigData> SelectVersion(IList<ConfigData> list, Int32 version)
+        {
+            // 选择每个版本最大的一个
+            //var gp = list.ToLookup(e => $"{name}-{scope}").Select(e => e.OrderByDescending(y => y.Version).FirstOrDefault());
+            var dic = new Dictionary<String, ConfigData>();
+            foreach (var item in list)
+            {
+                var key = $"{item.AppId}-{item.Key}-{item.Scope}";
+                if (dic.TryGetValue(key, out var cfg))
+                {
+                    if (cfg.Version < item.Version && item.Version <= version) dic[key] = item;
+                }
+                else
+                {
+                    dic[key] = item;
+                }
+            }
+
+            return dic.Values.ToList();
         }
         #endregion
     }
