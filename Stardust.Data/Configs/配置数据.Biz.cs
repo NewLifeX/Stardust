@@ -265,10 +265,12 @@ namespace Stardust.Data.Configs
             var dic = new Dictionary<String, ConfigData>();
             foreach (var item in list)
             {
+                if (version > 0 && item.Version > version) continue;
+
                 var key = $"{item.AppId}-{item.Key}-{item.Scope}";
                 if (dic.TryGetValue(key, out var cfg))
                 {
-                    if (cfg.Version < item.Version && item.Version <= version) dic[key] = item;
+                    if (cfg.Version < item.Version) dic[key] = item;
                 }
                 else
                 {

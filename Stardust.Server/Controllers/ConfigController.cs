@@ -41,6 +41,7 @@ namespace Stardust.Server.Controllers
             scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip) : scope;
 
             var list = ConfigData.FindAllValid(app.Id);
+            list = ConfigData.SelectVersion(list, app.Version);
 
             var dic = new Dictionary<String, String>(StringComparer.OrdinalIgnoreCase);
 
