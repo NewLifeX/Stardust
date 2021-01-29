@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
 using NewLife.Web;
@@ -45,6 +46,24 @@ namespace Stardust.Web.Areas.Configs.Controllers
             }
 
             return ConfigData.Search(appId, name, scope, start, end, p["Q"], p);
+        }
+
+        protected override Boolean Valid(ConfigData entity, DataObjectMethodType type, Boolean post)
+        {
+            if (post)
+            {
+                switch (type)
+                {
+                    case DataObjectMethodType.Update:
+                    case DataObjectMethodType.Insert:
+                        entity.Version = entity.App.AcquireNewVersion();
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            return base.Valid(entity, type, post);
         }
 
         public override ActionResult Add(ConfigData entity)

@@ -95,6 +95,18 @@ namespace Stardust.Data.Configs
         #endregion
 
         #region 业务操作
+        /// <summary>申请新版本，如果已有未发布版本，则直接返回</summary>
+        /// <returns></returns>
+        public Int32 AcquireNewVersion()
+        {
+            if (NextVersion <= Version) NextVersion = Version + 1;
+            if (NextVersion == 0) NextVersion = 1;
+
+            Update();
+
+            return NextVersion;
+        }
+
         /// <summary>同步数据</summary>
         /// <returns></returns>
         public static Int32 Sync()
