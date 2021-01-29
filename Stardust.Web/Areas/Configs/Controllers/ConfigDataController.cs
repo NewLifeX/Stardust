@@ -56,26 +56,9 @@ namespace Stardust.Web.Areas.Configs.Controllers
             return ConfigData.Search(appId, name, scope, start, end, p["Q"], p);
         }
 
-        protected override Boolean Valid(ConfigData entity, DataObjectMethodType type, Boolean post)
-        {
-            if (post)
-            {
-                switch (type)
-                {
-                    case DataObjectMethodType.Update:
-                    case DataObjectMethodType.Insert:
-                        entity.Version = entity.App.AcquireNewVersion();
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            return base.Valid(entity, type, post);
-        }
-
         public override ActionResult Add(ConfigData entity)
         {
+            entity.Version = entity.App.AcquireNewVersion();
             base.Add(entity);
 
             return RedirectToAction("Index", new { appId = entity.AppId });
@@ -83,7 +66,21 @@ namespace Stardust.Web.Areas.Configs.Controllers
 
         public override ActionResult Edit(ConfigData entity)
         {
-            base.Edit(entity);
+            var ver = entity.App.AcquireNewVersion();
+
+            // 如果当前版本是待发布版本，则编辑，否则添加
+            if (entity.Version >= ver)
+            {
+                entity.Version = ver;
+                base.Edit(entity);
+            }
+            else
+            {
+                // 强行改为添加
+                entity.Id = 0;
+                entity.Version = ver;
+                base.Add(entity);
+            }
 
             return RedirectToAction("Index", new { appId = entity.AppId });
         }

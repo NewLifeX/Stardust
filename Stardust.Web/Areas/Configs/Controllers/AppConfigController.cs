@@ -14,6 +14,8 @@ namespace Stardust.Web.Areas.Configs.Controllers
         {
             MenuOrder = 58;
 
+            ListFields.RemoveCreateField();
+
             {
                 var df = ListFields.AddDataField("Configs", "Enable");
                 df.Header = "配置";
@@ -34,6 +36,11 @@ namespace Stardust.Web.Areas.Configs.Controllers
             {
                 Task.Run(() => AppConfig.Sync());
             }
+        }
+
+        public AppConfigController()
+        {
+            PageSetting.EnableAdd = false;
         }
 
         //protected override IEnumerable<AppConfig> Search(Pager p)
