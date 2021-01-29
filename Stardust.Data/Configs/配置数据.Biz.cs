@@ -100,7 +100,7 @@ namespace Stardust.Data.Configs
         public AppConfig App => Extends.Get(nameof(App), k => AppConfig.FindById(AppId));
 
         /// <summary>应用名称</summary>
-        [Map(__.AppId, typeof(AppConfig), "ID")]
+        [Map(__.AppId, typeof(AppConfig), "Id")]
         public String AppName => App + "";
         #endregion
 

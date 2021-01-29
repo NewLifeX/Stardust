@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Configs;
@@ -12,6 +13,13 @@ namespace Stardust.Web.Areas.Configs.Controllers
         static ConfigDataController()
         {
             ListFields.AddField("Scope", "Value");
+
+            AddFormFields.RemoveCreateField();
+            AddFormFields.RemoveField("Version");
+
+            EditFormFields.RemoveCreateField();
+            EditFormFields.RemoveUpdateField();
+            EditFormFields.RemoveField("Version");
         }
 
         protected override IEnumerable<ConfigData> Search(Pager p)
@@ -37,6 +45,20 @@ namespace Stardust.Web.Areas.Configs.Controllers
             }
 
             return ConfigData.Search(appId, name, scope, start, end, p["Q"], p);
+        }
+
+        public override ActionResult Add(ConfigData entity)
+        {
+            base.Add(entity);
+
+            return RedirectToAction("Index", new { appId = entity.AppId });
+        }
+
+        public override ActionResult Edit(ConfigData entity)
+        {
+            base.Edit(entity);
+
+            return RedirectToAction("Index", new { appId = entity.AppId });
         }
     }
 }
