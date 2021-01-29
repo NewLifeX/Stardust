@@ -25,7 +25,7 @@ namespace Stardust.Server.Controllers
         }
 
         [ApiFilter]
-        public ConfigInfo GetAll(String appId, String secrect, String scope)
+        public ConfigInfo GetAll(String appId, String secrect, String scope, Int32 version)
         {
             if (appId.IsNullOrEmpty()) throw new ArgumentNullException(nameof(appId));
 
@@ -33,6 +33,9 @@ namespace Stardust.Server.Controllers
             var app = Valid(appId, secrect);
             //var app = App.FindByName(appId);
             var ip = HttpContext.Connection?.RemoteIpAddress + "";
+
+            // 版本没有变化时，不做计算处理，不返回配置数据
+            if (version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
 
             // 作用域为空时重写
             scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip) : scope;
