@@ -2,6 +2,7 @@
 using System.Linq;
 using NewLife;
 using NewLife.Remoting;
+using NewLife.Serialization;
 using XCode;
 using XCode.Membership;
 
@@ -108,13 +109,27 @@ namespace Stardust.Data.Configs
             return NextVersion;
         }
 
+        /// <summary>申请可用版本，内置定时发布处理</summary>
+        /// <returns></returns>
+        public Int32 GetValidVersion()
+        {
+            if (NextVersion != Version && PublishTime.Year > 2000 & PublishTime < DateTime.Now)
+            {
+                Publish();
+            }
+
+            return Version;
+        }
+
         /// <summary>发布</summary>
         /// <returns></returns>
         public Int32 Publish()
         {
-            if (Version >= NextVersion) throw new ApiException(701, "已经是最新版本！");
+            ConfigHistory.Add(Id, "Publish", this.ToJson());
 
             Version = NextVersion;
+            PublishTime = DateTime.MinValue;
+
             return Update();
         }
 

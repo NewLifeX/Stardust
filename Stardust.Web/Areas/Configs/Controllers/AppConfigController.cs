@@ -32,6 +32,14 @@ namespace Stardust.Web.Areas.Configs.Controllers
                 df.DataAction = "action";
             }
 
+            {
+                var df = ListFields.AddDataField("History", "PublishTime");
+                df.Header = "历史";
+                df.DisplayName = "历史";
+                df.Title = "查看该应用的配置历史";
+                df.Url = "ConfigHistory?appId={Id}";
+            }
+
             // 异步同步应用
             {
                 Task.Run(() => AppConfig.Sync());
@@ -60,6 +68,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
                 var app = AppConfig.FindById(appId);
                 if (app == null) throw new ArgumentNullException(nameof(appId));
 
+                if (app.Version >= app.NextVersion) throw new ApiException(701, "已经是最新版本！");
                 app.Publish();
 
                 return JsonRefresh("发布成功！", 3);

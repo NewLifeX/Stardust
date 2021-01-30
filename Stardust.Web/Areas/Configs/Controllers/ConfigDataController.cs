@@ -92,6 +92,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
                 var app = AppConfig.FindById(appId);
                 if (app == null) throw new ArgumentNullException(nameof(appId));
 
+                if (app.Version >= app.NextVersion) throw new ApiException(701, "已经是最新版本！");
                 app.Publish();
 
                 return JsonRefresh("发布成功！", 3);

@@ -77,8 +77,9 @@ namespace Stardust.Server.Controllers
             return new ConfigInfo
             {
                 Version = app.Version,
-                NextVersion = app.NextVersion,
                 Scope = scope,
+                NextVersion = app.NextVersion,
+                NextPublish = app.PublishTime,
                 UpdateTime = app.UpdateTime,
                 Configs = dic,
             };
