@@ -178,17 +178,31 @@ namespace Stardust.Data.Configs
 
         #region 业务操作
         /// <summary>申请配置，优先本应用，其次共享应用，如有指定作用域则优先作用域</summary>
-        /// <param name="appid">应用</param>
+        /// <param name="app">应用</param>
         /// <param name="key">键</param>
         /// <param name="scope">作用域</param>
         /// <returns></returns>
-        public static ConfigData Acquire(Int32 appid, String key, String scope)
+        public static ConfigData Acquire(AppConfig app, String key, String scope)
         {
-            var locals = FindAllValid(appid).Where(_ => _.Key.EqualIgnoreCase(key)).ToList();
+            var appid = app.Id;
+            var locals = FindAllValid(appid);
+            locals = locals.Where(_ => _.Key.EqualIgnoreCase(key)).ToList();
+            locals = SelectVersion(locals, app.Version);
 
             // 混合应用配置表
             var qs = AppQuote.FindAllByAppId(appid);
-            var shares = qs.SelectMany(_ => FindAllValid(_.TargetAppId).Where(_ => _.Key.EqualIgnoreCase(key))).ToList();
+            //var shares = qs.SelectMany(_ => FindAllValid(_.TargetAppId).Where(_ => _.Key.EqualIgnoreCase(key))).ToList();
+            var shares = new List<ConfigData>();
+            foreach (var item in qs)
+            {
+                if (item.TargetApp == null) continue;
+
+                var list = FindAllValid(item.TargetAppId);
+                list = list.Where(_ => _.Key.EqualIgnoreCase(key)).ToList();
+                list = SelectVersion(list, item.TargetApp.Version);
+
+                if (list.Count > 0) shares.AddRange(list);
+            }
 
             if (locals.Count == 0 && shares.Count == 0) return null;
 
@@ -233,7 +247,7 @@ namespace Stardust.Data.Configs
         /// <summary>选择最新的配置版本</summary>
         /// <param name="list"></param>
         /// <returns></returns>
-        public static IList<ConfigData> SelectNewest(IList<ConfigData> list)
+        public static IList<ConfigData> SelectNewest(IEnumerable<ConfigData> list)
         {
             // 选择每个版本最大的一个
             //var gp = list.ToLookup(e => $"{name}-{scope}").Select(e => e.OrderByDescending(y => y.Version).FirstOrDefault());
@@ -258,7 +272,7 @@ namespace Stardust.Data.Configs
         /// <param name="list"></param>
         /// <param name="version"></param>
         /// <returns></returns>
-        public static IList<ConfigData> SelectVersion(IList<ConfigData> list, Int32 version)
+        public static IList<ConfigData> SelectVersion(IEnumerable<ConfigData> list, Int32 version)
         {
             // 选择每个版本最大的一个
             //var gp = list.ToLookup(e => $"{name}-{scope}").Select(e => e.OrderByDescending(y => y.Version).FirstOrDefault());

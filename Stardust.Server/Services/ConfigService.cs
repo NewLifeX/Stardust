@@ -39,7 +39,7 @@ namespace Stardust.Server.Services
                 {
                     var ap2 = AppConfig.FindByName(app2);
                     var scope3 = !scope2.IsNullOrEmpty() ? scope2 : scope;
-                    var cfg2 = ConfigData.Acquire((ap2 ?? app).Id, key2, scope3);
+                    var cfg2 = ConfigData.Acquire(ap2 ?? app, key2, scope3);
                     if (cfg2 == null) throw new Exception($"在应用[{app}]的[{cfg.Key}]中无法解析[{item}]");
 
                     item = Resolve(ap2 ?? app, cfg2, scope3);

@@ -59,7 +59,9 @@ namespace Stardust.Server.Controllers
             var qs = AppQuote.FindAllByAppId(app.Id);
             foreach (var item in qs)
             {
-                foreach (var cfg in ConfigData.FindAllValid(item.TargetAppId))
+                var list2 = ConfigData.FindAllValid(item.TargetAppId);
+                list2 = ConfigData.SelectVersion(list2, item.TargetApp.Version);
+                foreach (var cfg in list2)
                 {
                     // 跳过内部
                     if (cfg.Key.IsNullOrEmpty() || cfg.Key[0] == '_') continue;
@@ -75,6 +77,7 @@ namespace Stardust.Server.Controllers
             return new ConfigInfo
             {
                 Version = app.Version,
+                NextVersion = app.NextVersion,
                 Scope = scope,
                 UpdateTime = app.UpdateTime,
                 Configs = dic,
