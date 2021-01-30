@@ -7,6 +7,7 @@
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Version" DataType="Int32" Description="版本。应用正在使用的版本号，返回小于等于该版本的配置" />
       <Column Name="NextVersion" DataType="Int32" Description="下一版本。下一个将要发布的版本，发布后两者相同" />
+      <Column Name="PublishTime" DataType="DateTime" Description="定时发布。在指定时间自动发布新版本" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
@@ -71,18 +72,14 @@
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="ConfigId" DataType="Int32" Description="配置" />
       <Column Name="Action" DataType="String" Nullable="False" Description="操作" />
-      <Column Name="Field" DataType="String" Description="字段。变更的字段名" />
-      <Column Name="Value" DataType="String" Length="2000" Description="数值。变更前数值" />
-      <Column Name="Version" DataType="Int32" Description="版本。变更前版本" />
+      <Column Name="Success" DataType="Boolean" Description="成功" />
+      <Column Name="Remark" DataType="String" Length="2000" Description="内容" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
     </Columns>
     <Indexes>
-      <Index Columns="AppId,ConfigId" />
-      <Index Columns="ConfigId" />
       <Index Columns="CreateTime" />
     </Indexes>
   </Table>

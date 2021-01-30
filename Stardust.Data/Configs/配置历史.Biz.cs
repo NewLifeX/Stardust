@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using NewLife;
 using NewLife.Data;
 using XCode;
+using XCode.Cache;
 using XCode.Membership;
 
 namespace Stardust.Data.Configs
@@ -67,76 +69,58 @@ namespace Stardust.Data.Configs
 
             //return Find(_.Id == id);
         }
-
-        /// <summary>根据应用、配置查找</summary>
-        /// <param name="appId">应用</param>
-        /// <param name="configId">配置</param>
-        /// <returns>实体列表</returns>
-        public static IList<ConfigHistory> FindAllByAppIdAndConfigId(Int32 appId, Int32 configId)
-        {
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.ConfigId == configId);
-
-            return FindAll(_.AppId == appId & _.ConfigId == configId);
-        }
-
-        /// <summary>根据配置查找</summary>
-        /// <param name="configId">配置</param>
-        /// <returns>实体列表</returns>
-        public static IList<ConfigHistory> FindAllByConfigId(Int32 configId)
-        {
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ConfigId == configId);
-
-            return FindAll(_.ConfigId == configId);
-        }
         #endregion
 
         #region 高级查询
         /// <summary>高级查询</summary>
         /// <param name="appId">应用</param>
-        /// <param name="configId">配置</param>
+        /// <param name="action">操作</param>
+        /// <param name="success">成功</param>
         /// <param name="start">创建时间开始</param>
         /// <param name="end">创建时间结束</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<ConfigHistory> Search(Int32 appId, Int32 configId, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<ConfigHistory> Search(Int32 appId, String action, Boolean? success, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (appId >= 0) exp &= _.AppId == appId;
-            if (configId >= 0) exp &= _.ConfigId == configId;
+            if (!action.IsNullOrEmpty()) exp &= _.Action == action;
+            if (success != null) exp &= _.Success == success;
             exp &= _.CreateTime.Between(start, end);
-            if (!key.IsNullOrEmpty()) exp &= _.Action.Contains(key) | _.Field.Contains(key) | _.Value.Contains(key) | _.CreateIP.Contains(key);
+            if (!key.IsNullOrEmpty()) exp &= _.Remark.Contains(key) | _.CreateIP.Contains(key);
 
             return FindAll(exp, page);
         }
 
-        // Select Count(Id) as Id,Category From ConfigHistory Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
-        //static readonly FieldCache<ConfigHistory> _CategoryCache = new FieldCache<ConfigHistory>(nameof(Category))
-        //{
-        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-        //};
+        /// <summary>类别名实体缓存，异步，缓存10分钟</summary>
+        static Lazy<FieldCache<ConfigHistory>> ActionCache = new Lazy<FieldCache<ConfigHistory>>(() => new FieldCache<ConfigHistory>(__.Action)
+        {
+            MaxRows = 50
+        });
 
-        ///// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-        ///// <returns></returns>
-        //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
+        /// <summary>获取所有类别名称</summary>
+        /// <returns></returns>
+        public static IDictionary<String, String> FindAllActions() => ActionCache.Value.FindAllName().OrderByDescending(e => e.Key).ToDictionary(e => e.Key, e => e.Value);
         #endregion
 
         #region 业务操作
-        public static ConfigHistory Add(Int32 cid, String action, String field, String value, Int32 ver)
+        /// <summary>新增历史</summary>
+        /// <param name="appId"></param>
+        /// <param name="action"></param>
+        /// <param name="remark"></param>
+        /// <returns></returns>
+        public static ConfigHistory Add(Int32 appId, String action, String remark)
         {
-            if (cid == 0) throw new ArgumentNullException(nameof(cid));
+            if (appId == 0) throw new ArgumentNullException(nameof(appId));
             if (action.IsNullOrEmpty()) throw new ArgumentNullException(nameof(action));
 
             var hi = new ConfigHistory
             {
-                ConfigId = cid,
+                AppId = appId,
                 Action = action,
-                Field = field,
-                Value = value,
-                Version = ver,
+                Remark = remark,
             };
             hi.Insert();
 

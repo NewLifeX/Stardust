@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using NewLife;
+using NewLife.Remoting;
 using XCode;
 using XCode.Membership;
 
@@ -105,6 +106,16 @@ namespace Stardust.Data.Configs
             Update();
 
             return NextVersion;
+        }
+
+        /// <summary>发布</summary>
+        /// <returns></returns>
+        public Int32 Publish()
+        {
+            if (Version >= NextVersion) throw new ApiException(701, "已经是最新版本！");
+
+            Version = NextVersion;
+            return Update();
         }
 
         /// <summary>同步数据</summary>

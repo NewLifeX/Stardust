@@ -14,8 +14,6 @@ namespace Stardust.Data.Configs
     [Serializable]
     [DataObject]
     [Description("配置历史。记录配置变更历史")]
-    [BindIndex("IX_ConfigHistory_AppId_ConfigId", false, "AppId,ConfigId")]
-    [BindIndex("IX_ConfigHistory_ConfigId", false, "ConfigId")]
     [BindIndex("IX_ConfigHistory_CreateTime", false, "CreateTime")]
     [BindTable("ConfigHistory", Description = "配置历史。记录配置变更历史", ConnName = "ConfigCenter", DbType = DatabaseType.None)]
     public partial class ConfigHistory
@@ -37,14 +35,6 @@ namespace Stardust.Data.Configs
         [BindColumn("AppId", "应用", "")]
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
-        private Int32 _ConfigId;
-        /// <summary>配置</summary>
-        [DisplayName("配置")]
-        [Description("配置")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("ConfigId", "配置", "")]
-        public Int32 ConfigId { get => _ConfigId; set { if (OnPropertyChanging("ConfigId", value)) { _ConfigId = value; OnPropertyChanged("ConfigId"); } } }
-
         private String _Action;
         /// <summary>操作</summary>
         [DisplayName("操作")]
@@ -53,29 +43,21 @@ namespace Stardust.Data.Configs
         [BindColumn("Action", "操作", "")]
         public String Action { get => _Action; set { if (OnPropertyChanging("Action", value)) { _Action = value; OnPropertyChanged("Action"); } } }
 
-        private String _Field;
-        /// <summary>字段。变更的字段名</summary>
-        [DisplayName("字段")]
-        [Description("字段。变更的字段名")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("Field", "字段。变更的字段名", "")]
-        public String Field { get => _Field; set { if (OnPropertyChanging("Field", value)) { _Field = value; OnPropertyChanged("Field"); } } }
-
-        private String _Value;
-        /// <summary>数值。变更前数值</summary>
-        [DisplayName("数值")]
-        [Description("数值。变更前数值")]
-        [DataObjectField(false, false, true, 2000)]
-        [BindColumn("Value", "数值。变更前数值", "")]
-        public String Value { get => _Value; set { if (OnPropertyChanging("Value", value)) { _Value = value; OnPropertyChanged("Value"); } } }
-
-        private Int32 _Version;
-        /// <summary>版本。变更前版本</summary>
-        [DisplayName("版本")]
-        [Description("版本。变更前版本")]
+        private Boolean _Success;
+        /// <summary>成功</summary>
+        [DisplayName("成功")]
+        [Description("成功")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Version", "版本。变更前版本", "")]
-        public Int32 Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
+        [BindColumn("Success", "成功", "")]
+        public Boolean Success { get => _Success; set { if (OnPropertyChanging("Success", value)) { _Success = value; OnPropertyChanged("Success"); } } }
+
+        private String _Remark;
+        /// <summary>内容</summary>
+        [DisplayName("内容")]
+        [Description("内容")]
+        [DataObjectField(false, false, true, 2000)]
+        [BindColumn("Remark", "内容", "")]
+        public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
 
         private Int32 _CreateUserID;
         /// <summary>创建者</summary>
@@ -114,11 +96,9 @@ namespace Stardust.Data.Configs
                 {
                     case "Id": return _Id;
                     case "AppId": return _AppId;
-                    case "ConfigId": return _ConfigId;
                     case "Action": return _Action;
-                    case "Field": return _Field;
-                    case "Value": return _Value;
-                    case "Version": return _Version;
+                    case "Success": return _Success;
+                    case "Remark": return _Remark;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -131,11 +111,9 @@ namespace Stardust.Data.Configs
                 {
                     case "Id": _Id = value.ToInt(); break;
                     case "AppId": _AppId = value.ToInt(); break;
-                    case "ConfigId": _ConfigId = value.ToInt(); break;
                     case "Action": _Action = Convert.ToString(value); break;
-                    case "Field": _Field = Convert.ToString(value); break;
-                    case "Value": _Value = Convert.ToString(value); break;
-                    case "Version": _Version = value.ToInt(); break;
+                    case "Success": _Success = value.ToBoolean(); break;
+                    case "Remark": _Remark = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -155,20 +133,14 @@ namespace Stardust.Data.Configs
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
 
-            /// <summary>配置</summary>
-            public static readonly Field ConfigId = FindByName("ConfigId");
-
             /// <summary>操作</summary>
             public static readonly Field Action = FindByName("Action");
 
-            /// <summary>字段。变更的字段名</summary>
-            public static readonly Field Field = FindByName("Field");
+            /// <summary>成功</summary>
+            public static readonly Field Success = FindByName("Success");
 
-            /// <summary>数值。变更前数值</summary>
-            public static readonly Field Value = FindByName("Value");
-
-            /// <summary>版本。变更前版本</summary>
-            public static readonly Field Version = FindByName("Version");
+            /// <summary>内容</summary>
+            public static readonly Field Remark = FindByName("Remark");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUserID = FindByName("CreateUserID");
@@ -191,20 +163,14 @@ namespace Stardust.Data.Configs
             /// <summary>应用</summary>
             public const String AppId = "AppId";
 
-            /// <summary>配置</summary>
-            public const String ConfigId = "ConfigId";
-
             /// <summary>操作</summary>
             public const String Action = "Action";
 
-            /// <summary>字段。变更的字段名</summary>
-            public const String Field = "Field";
+            /// <summary>成功</summary>
+            public const String Success = "Success";
 
-            /// <summary>数值。变更前数值</summary>
-            public const String Value = "Value";
-
-            /// <summary>版本。变更前版本</summary>
-            public const String Version = "Version";
+            /// <summary>内容</summary>
+            public const String Remark = "Remark";
 
             /// <summary>创建者</summary>
             public const String CreateUserID = "CreateUserID";

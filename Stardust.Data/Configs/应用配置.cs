@@ -58,6 +58,14 @@ namespace Stardust.Data.Configs
         [BindColumn("NextVersion", "下一版本。下一个将要发布的版本，发布后两者相同", "")]
         public Int32 NextVersion { get => _NextVersion; set { if (OnPropertyChanging("NextVersion", value)) { _NextVersion = value; OnPropertyChanged("NextVersion"); } } }
 
+        private DateTime _PublishTime;
+        /// <summary>定时发布。在指定时间自动发布新版本</summary>
+        [DisplayName("定时发布")]
+        [Description("定时发布。在指定时间自动发布新版本")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("PublishTime", "定时发布。在指定时间自动发布新版本", "")]
+        public DateTime PublishTime { get => _PublishTime; set { if (OnPropertyChanging("PublishTime", value)) { _PublishTime = value; OnPropertyChanged("PublishTime"); } } }
+
         private Int32 _CreateUserID;
         /// <summary>创建者</summary>
         [DisplayName("创建者")]
@@ -130,6 +138,7 @@ namespace Stardust.Data.Configs
                     case "Enable": return _Enable;
                     case "Version": return _Version;
                     case "NextVersion": return _NextVersion;
+                    case "PublishTime": return _PublishTime;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -149,6 +158,7 @@ namespace Stardust.Data.Configs
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Version": _Version = value.ToInt(); break;
                     case "NextVersion": _NextVersion = value.ToInt(); break;
+                    case "PublishTime": _PublishTime = value.ToDateTime(); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -180,6 +190,9 @@ namespace Stardust.Data.Configs
 
             /// <summary>下一版本。下一个将要发布的版本，发布后两者相同</summary>
             public static readonly Field NextVersion = FindByName("NextVersion");
+
+            /// <summary>定时发布。在指定时间自动发布新版本</summary>
+            public static readonly Field PublishTime = FindByName("PublishTime");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUserID = FindByName("CreateUserID");
@@ -222,6 +235,9 @@ namespace Stardust.Data.Configs
 
             /// <summary>下一版本。下一个将要发布的版本，发布后两者相同</summary>
             public const String NextVersion = "NextVersion";
+
+            /// <summary>定时发布。在指定时间自动发布新版本</summary>
+            public const String PublishTime = "PublishTime";
 
             /// <summary>创建者</summary>
             public const String CreateUserID = "CreateUserID";

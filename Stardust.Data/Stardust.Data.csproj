@@ -25,6 +25,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Configs\Config\**" />
+    <Compile Remove="Configs\Log\**" />
     <Compile Remove="Config\**" />
     <Compile Remove="Entity\Config\**" />
     <Compile Remove="Entity\Log\**" />
@@ -33,6 +35,8 @@
     <Compile Remove="Monitors\Log\**" />
     <Compile Remove="Nodes\Config\**" />
     <Compile Remove="Nodes\Log\**" />
+    <EmbeddedResource Remove="Configs\Config\**" />
+    <EmbeddedResource Remove="Configs\Log\**" />
     <EmbeddedResource Remove="Config\**" />
     <EmbeddedResource Remove="Entity\Config\**" />
     <EmbeddedResource Remove="Entity\Log\**" />
@@ -41,6 +45,8 @@
     <EmbeddedResource Remove="Monitors\Log\**" />
     <EmbeddedResource Remove="Nodes\Config\**" />
     <EmbeddedResource Remove="Nodes\Log\**" />
+    <None Remove="Configs\Config\**" />
+    <None Remove="Configs\Log\**" />
     <None Remove="Config\**" />
     <None Remove="Entity\Config\**" />
     <None Remove="Entity\Log\**" />
@@ -49,6 +55,11 @@
     <None Remove="Monitors\Log\**" />
     <None Remove="Nodes\Config\**" />
     <None Remove="Nodes\Log\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="BracketHelper.cs" />
+    <Compile Remove="Models\ConfigItem.cs" />
   </ItemGroup>
 
   <ItemGroup>
