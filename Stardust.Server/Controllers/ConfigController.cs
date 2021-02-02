@@ -79,7 +79,7 @@ namespace Stardust.Server.Controllers
                 Version = app.Version,
                 Scope = scope,
                 NextVersion = app.NextVersion,
-                NextPublish = app.PublishTime,
+                NextPublish = app.PublishTime.ToFullString(""),
                 UpdateTime = app.UpdateTime,
                 Configs = dic,
             };

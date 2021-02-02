@@ -16,7 +16,7 @@ namespace Stardust.Models
         public Int32 NextVersion { get; set; }
 
         /// <summary>下次发布时间。用于定时发布</summary>
-        public DateTime NextPublish { get; set; }
+        public String NextPublish { get; set; }
 
         /// <summary>更新时间</summary>
         public DateTime UpdateTime { get; set; }
