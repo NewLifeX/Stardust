@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NET50
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Http;
@@ -66,3 +67,4 @@ namespace Stardust.Monitors
         }
     }
 }
+#endif
