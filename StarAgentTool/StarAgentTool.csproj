@@ -51,7 +51,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Agent" Version="8.7.2021.101" />
+    <PackageReference Include="NewLife.Agent" Version="8.7.2021.204" />
   </ItemGroup>
 
   <ItemGroup>
