@@ -29,12 +29,8 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             if (!traceId.IsNullOrEmpty())
             {
                 if (p.PageSize == 20) p.PageSize = 500;
-                if (p.Sort.IsNullOrEmpty()) p.OrderBy = SampleData._.StartTime.Asc();
             }
-            else
-            {
-                if (p.Sort.IsNullOrEmpty()) p.OrderBy = SampleData._.Id.Desc();
-            }
+            if (p.Sort.IsNullOrEmpty()) p.OrderBy = SampleData._.Id.Desc();
 
             var list = SampleData.Search(dataId, traceId, p);
             if (list.Count == 0)
