@@ -98,12 +98,16 @@ namespace Stardust.Data.Configs
         #endregion
 
         #region 业务操作
+        /// <summary>获取可用节点</summary>
+        /// <returns></returns>
+        public static IList<AppConfig> GetValids() => FindAllWithCache().Where(e => e.Enable).ToList();
+
         /// <summary>获取所有引用的应用</summary>
         /// <returns></returns>
         public IList<AppConfig> GetQuotes()
         {
             var ids = Quotes.SplitAsInt();
-            return FindAllWithCache().Where(e => ids.Contains(e.Id)).ToList();
+            return GetValids().Where(e => ids.Contains(e.Id)).ToList();
         }
 
         /// <summary>申请新版本，如果已有未发布版本，则直接返回</summary>
