@@ -42,6 +42,14 @@ namespace Stardust.Web.Areas.Configs.Controllers
             }
 
             {
+                var df = ListFields.AddDataField("Preview", "PublishTime");
+                df.Header = "预览";
+                df.DisplayName = "预览";
+                df.Title = "查看该应用的配置数据";
+                df.Url = "/config/getall?appId={Name}";
+            }
+
+            {
                 var df = AddFormFields.AddDataField("Quotes");
                 df.DataSource = (entity, field) => AppConfig.FindAllWithCache().Where(e => e.CanBeQuoted).ToDictionary(e => e.Id, e => e.Name);
             }

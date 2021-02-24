@@ -36,6 +36,8 @@ namespace Stardust.Web
 
             services.AddSingleton<IRedisService, RedisService>();
 
+            services.AddSingleton<ConfigService>();
+
             services.AddControllersWithViews();
             services.AddCube();
         }

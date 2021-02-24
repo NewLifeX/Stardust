@@ -34,19 +34,24 @@ namespace Stardust.Data.Configs
 
             // 建议先调用基类方法，基类方法会做一些统一处理
             base.Valid(isNew);
+        }
 
-            // 在新插入数据或者修改了指定字段时进行修正
-            // 处理当前已登录用户信息，可以由UserModule过滤器代劳
-            /*var user = ManageProvider.User;
-            if (user != null)
+        /// <summary>初始化数据</summary>
+        protected override void InitData()
+        {
+            if (Meta.Count > 0) return;
+
+            var entity = new AppConfig
             {
-                if (isNew && !Dirtys[nameof(CreateUserID)]) CreateUserID = user.ID;
-                if (!Dirtys[nameof(UpdateUserID)]) UpdateUserID = user.ID;
-            }*/
-            //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
-            //if (!Dirtys[nameof(UpdateTime)]) UpdateTime = DateTime.Now;
-            //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
-            //if (!Dirtys[nameof(UpdateIP)]) UpdateIP = ManageProvider.UserHost;
+                Name = "Common",
+
+                Enable = true,
+                CanBeQuoted = true,
+                IsGlobal = true,
+
+                Remark = "全局通用配置",
+            };
+            entity.Insert();
         }
         #endregion
 
