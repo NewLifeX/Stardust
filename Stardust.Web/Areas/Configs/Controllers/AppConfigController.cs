@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
@@ -38,6 +39,16 @@ namespace Stardust.Web.Areas.Configs.Controllers
                 df.DisplayName = "历史";
                 df.Title = "查看该应用的配置历史";
                 df.Url = "ConfigHistory?appId={Id}";
+            }
+
+            {
+                var df = AddFormFields.AddDataField("Quotes");
+                df.DataSource = (entity, field) => AppConfig.FindAllWithCache().Where(e => e.CanBeQuoted).ToDictionary(e => e.Id, e => e.Name);
+            }
+
+            {
+                var df = EditFormFields.AddDataField("Quotes");
+                df.DataSource = (entity, field) => AppConfig.FindAllWithCache().Where(e => e.CanBeQuoted).ToDictionary(e => e.Id, e => e.Name);
             }
 
             // 异步同步应用

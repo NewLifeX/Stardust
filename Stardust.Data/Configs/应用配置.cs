@@ -66,6 +66,30 @@ namespace Stardust.Data.Configs
         [BindColumn("PublishTime", "定时发布。在指定时间自动发布新版本", "")]
         public DateTime PublishTime { get => _PublishTime; set { if (OnPropertyChanging("PublishTime", value)) { _PublishTime = value; OnPropertyChanged("PublishTime"); } } }
 
+        private Boolean _CanBeQuoted;
+        /// <summary>可被依赖。打开后，才能被其它应用依赖</summary>
+        [DisplayName("可被依赖")]
+        [Description("可被依赖。打开后，才能被其它应用依赖")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("CanBeQuoted", "可被依赖。打开后，才能被其它应用依赖", "")]
+        public Boolean CanBeQuoted { get => _CanBeQuoted; set { if (OnPropertyChanging("CanBeQuoted", value)) { _CanBeQuoted = value; OnPropertyChanged("CanBeQuoted"); } } }
+
+        private String _Quotes;
+        /// <summary>依赖应用。所依赖应用的集合</summary>
+        [DisplayName("依赖应用")]
+        [Description("依赖应用。所依赖应用的集合")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Quotes", "依赖应用。所依赖应用的集合", "")]
+        public String Quotes { get => _Quotes; set { if (OnPropertyChanging("Quotes", value)) { _Quotes = value; OnPropertyChanged("Quotes"); } } }
+
+        private Boolean _IsGlobal;
+        /// <summary>全局。该应用下的配置数据作为全局数据，请求任意应用配置都返回</summary>
+        [DisplayName("全局")]
+        [Description("全局。该应用下的配置数据作为全局数据，请求任意应用配置都返回")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("IsGlobal", "全局。该应用下的配置数据作为全局数据，请求任意应用配置都返回", "")]
+        public Boolean IsGlobal { get => _IsGlobal; set { if (OnPropertyChanging("IsGlobal", value)) { _IsGlobal = value; OnPropertyChanged("IsGlobal"); } } }
+
         private Int32 _CreateUserID;
         /// <summary>创建者</summary>
         [DisplayName("创建者")]
@@ -139,6 +163,9 @@ namespace Stardust.Data.Configs
                     case "Version": return _Version;
                     case "NextVersion": return _NextVersion;
                     case "PublishTime": return _PublishTime;
+                    case "CanBeQuoted": return _CanBeQuoted;
+                    case "Quotes": return _Quotes;
+                    case "IsGlobal": return _IsGlobal;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -159,6 +186,9 @@ namespace Stardust.Data.Configs
                     case "Version": _Version = value.ToInt(); break;
                     case "NextVersion": _NextVersion = value.ToInt(); break;
                     case "PublishTime": _PublishTime = value.ToDateTime(); break;
+                    case "CanBeQuoted": _CanBeQuoted = value.ToBoolean(); break;
+                    case "Quotes": _Quotes = Convert.ToString(value); break;
+                    case "IsGlobal": _IsGlobal = value.ToBoolean(); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -193,6 +223,15 @@ namespace Stardust.Data.Configs
 
             /// <summary>定时发布。在指定时间自动发布新版本</summary>
             public static readonly Field PublishTime = FindByName("PublishTime");
+
+            /// <summary>可被依赖。打开后，才能被其它应用依赖</summary>
+            public static readonly Field CanBeQuoted = FindByName("CanBeQuoted");
+
+            /// <summary>依赖应用。所依赖应用的集合</summary>
+            public static readonly Field Quotes = FindByName("Quotes");
+
+            /// <summary>全局。该应用下的配置数据作为全局数据，请求任意应用配置都返回</summary>
+            public static readonly Field IsGlobal = FindByName("IsGlobal");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUserID = FindByName("CreateUserID");
@@ -238,6 +277,15 @@ namespace Stardust.Data.Configs
 
             /// <summary>定时发布。在指定时间自动发布新版本</summary>
             public const String PublishTime = "PublishTime";
+
+            /// <summary>可被依赖。打开后，才能被其它应用依赖</summary>
+            public const String CanBeQuoted = "CanBeQuoted";
+
+            /// <summary>依赖应用。所依赖应用的集合</summary>
+            public const String Quotes = "Quotes";
+
+            /// <summary>全局。该应用下的配置数据作为全局数据，请求任意应用配置都返回</summary>
+            public const String IsGlobal = "IsGlobal";
 
             /// <summary>创建者</summary>
             public const String CreateUserID = "CreateUserID";

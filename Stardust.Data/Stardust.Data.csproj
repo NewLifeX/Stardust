@@ -59,6 +59,8 @@
 
   <ItemGroup>
     <Compile Remove="BracketHelper.cs" />
+    <Compile Remove="Configs\应用依赖.Biz.cs" />
+    <Compile Remove="Configs\应用依赖.cs" />
     <Compile Remove="Models\ConfigItem.cs" />
   </ItemGroup>
 

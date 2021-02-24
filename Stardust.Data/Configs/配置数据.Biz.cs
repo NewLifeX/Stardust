@@ -179,16 +179,13 @@ namespace Stardust.Data.Configs
             locals = SelectVersion(locals, app.Version);
 
             // 混合应用配置表
-            var qs = AppQuote.FindAllByAppId(appid);
-            //var shares = qs.SelectMany(_ => FindAllValid(_.TargetAppId).Where(_ => _.Key.EqualIgnoreCase(key))).ToList();
+            var qs = app.GetQuotes();
             var shares = new List<ConfigData>();
             foreach (var item in qs)
             {
-                if (item.TargetApp == null) continue;
-
-                var list = FindAllValid(item.TargetAppId);
+                var list = FindAllValid(item.Id);
                 list = list.Where(_ => _.Key.EqualIgnoreCase(key)).ToList();
-                list = SelectVersion(list, item.TargetApp.Version);
+                list = SelectVersion(list, item.Version);
 
                 if (list.Count > 0) shares.AddRange(list);
             }

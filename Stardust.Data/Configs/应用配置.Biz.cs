@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using NewLife;
 using NewLife.Remoting;
@@ -97,6 +98,14 @@ namespace Stardust.Data.Configs
         #endregion
 
         #region 业务操作
+        /// <summary>获取所有引用的应用</summary>
+        /// <returns></returns>
+        public IList<AppConfig> GetQuotes()
+        {
+            var ids = Quotes.SplitAsInt();
+            return FindAllWithCache().Where(e => ids.Contains(e.Id)).ToList();
+        }
+
         /// <summary>申请新版本，如果已有未发布版本，则直接返回</summary>
         /// <returns></returns>
         public Int32 AcquireNewVersion()

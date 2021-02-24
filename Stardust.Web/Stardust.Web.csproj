@@ -26,6 +26,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Areas\Configs\Controllers\AppQuoteController.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\Stardust.Server\Services\AppDayStatService.cs" Link="Services\AppDayStatService.cs" />
     <Compile Include="..\Stardust.Server\Services\RedisService.cs" Link="Services\RedisService.cs" />
     <Compile Include="..\Stardust.Server\Services\TraceStatService.cs" Link="Services\TraceStatService.cs" />

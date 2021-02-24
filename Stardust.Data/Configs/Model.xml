@@ -8,6 +8,9 @@
       <Column Name="Version" DataType="Int32" Description="版本。应用正在使用的版本号，返回小于等于该版本的配置" />
       <Column Name="NextVersion" DataType="Int32" Description="下一版本。下一个将要发布的版本，发布后两者相同" />
       <Column Name="PublishTime" DataType="DateTime" Description="定时发布。在指定时间自动发布新版本" />
+      <Column Name="CanBeQuoted" DataType="Boolean" Description="可被依赖。打开后，才能被其它应用依赖" />
+      <Column Name="Quotes" DataType="String" Description="依赖应用。所依赖应用的集合" />
+      <Column Name="IsGlobal" DataType="Boolean" Description="全局。该应用下的配置数据作为全局数据，请求任意应用配置都返回" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />

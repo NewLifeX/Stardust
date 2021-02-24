@@ -56,11 +56,11 @@ namespace Stardust.Server.Controllers
             }
 
             // 共享应用
-            var qs = AppQuote.FindAllByAppId(app.Id);
+            var qs = app.GetQuotes();
             foreach (var item in qs)
             {
-                var list2 = ConfigData.FindAllValid(item.TargetAppId);
-                list2 = ConfigData.SelectVersion(list2, item.TargetApp.Version);
+                var list2 = ConfigData.FindAllValid(item.Id);
+                list2 = ConfigData.SelectVersion(list2, item.Version);
                 foreach (var cfg in list2)
                 {
                     // 跳过内部
@@ -70,7 +70,7 @@ namespace Stardust.Server.Controllers
                     if (dic.ContainsKey(cfg.Key)) continue;
 
                     // 为该key选择最合适的值，解析内嵌
-                    dic[cfg.Key] = _configService.Resolve(item.TargetApp, cfg, scope);
+                    dic[cfg.Key] = _configService.Resolve(item, cfg, scope);
                 }
             }
 
