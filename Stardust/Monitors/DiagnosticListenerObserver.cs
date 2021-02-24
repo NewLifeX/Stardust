@@ -12,7 +12,7 @@ namespace Stardust.Monitors
     /// <summary>诊断监听器的观察者</summary>
     public class DiagnosticListenerObserver : IObserver<DiagnosticListener>
     {
-        /// <summary>跟踪器</summary>
+        /// <summary>追踪器</summary>
         public ITracer Tracer { get; set; }
 
         private readonly Dictionary<String, TraceDiagnosticListener> _listeners = new Dictionary<String, TraceDiagnosticListener>();
@@ -69,7 +69,7 @@ namespace Stardust.Monitors
         }
     }
 
-    /// <summary>跟踪诊断监听器</summary>
+    /// <summary>追踪诊断监听器</summary>
     public class TraceDiagnosticListener : IObserver<KeyValuePair<String, Object>>
     {
         #region 属性
@@ -85,7 +85,7 @@ namespace Stardust.Monitors
         /// <summary>异常名称</summary>
         public String ErrorName { get; set; }
 
-        /// <summary>跟踪器</summary>
+        /// <summary>追踪器</summary>
         public ITracer Tracer { get; set; }
         #endregion
 

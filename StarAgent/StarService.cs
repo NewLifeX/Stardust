@@ -31,7 +31,7 @@ namespace StarAgent
         /// <summary>信息</summary>
         /// <returns></returns>
         [Api(nameof(Info))]
-        public AgentInfo Info()
+        public AgentInfo Info(AgentInfo info)
         {
             var p = Process.GetCurrentProcess();
             var asmx = AssemblyX.Entry;
@@ -44,6 +44,7 @@ namespace StarAgent
             {
                 Version = asmx?.Version,
                 ProcessId = p.Id,
+                ProcessName = p.ProcessName,
                 FileName = fileName,
                 Arguments = args,
                 Server = set.Server,

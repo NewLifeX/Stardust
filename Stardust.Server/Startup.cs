@@ -10,11 +10,9 @@ using Microsoft.Extensions.Hosting;
 using NewLife;
 using NewLife.Cube.WebMiddleware;
 using NewLife.Log;
-using NewLife.Remoting;
 using Stardust.Monitors;
 using Stardust.Server.Common;
 using Stardust.Server.Services;
-using XCode.DataAccessLayer;
 
 namespace Stardust.Server
 {
@@ -28,18 +26,8 @@ namespace Stardust.Server
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            var set = Stardust.Setting.Current;
-            if (!set.Server.IsNullOrEmpty())
-            {
-                // APM跟踪器
-                var tracer = new StarTracer(set.Server) { Log = XTrace.Log };
-                DefaultTracer.Instance = tracer;
-                ApiHelper.Tracer = tracer;
-                DAL.GlobalTracer = tracer;
-                TracerMiddleware.Tracer = tracer;
-
-                services.AddSingleton<ITracer>(tracer);
-            }
+            var tracer = StarTracer.Register();
+            services.AddSingleton<ITracer>(tracer);
 
             var set2 = Stardust.Server.Setting.Current;
 

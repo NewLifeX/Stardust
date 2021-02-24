@@ -4,7 +4,7 @@ using Stardust.Models;
 
 namespace Stardust.Monitors
 {
-    /// <summary>跟踪请求模型</summary>
+    /// <summary>追踪请求模型</summary>
     public class TraceModel
     {
         /// <summary>应用标识</summary>
@@ -22,11 +22,11 @@ namespace Stardust.Monitors
         /// <summary>应用信息</summary>
         public AppInfo Info { get; set; }
 
-        /// <summary>跟踪数据</summary>
+        /// <summary>追踪数据</summary>
         public ISpanBuilder[] Builders { get; set; }
     }
 
-    /// <summary>跟踪响应模型</summary>
+    /// <summary>追踪响应模型</summary>
     public class TraceResponse
     {
         /// <summary>采样周期。默认15s</summary>

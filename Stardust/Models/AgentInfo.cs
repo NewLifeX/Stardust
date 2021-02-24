@@ -8,6 +8,9 @@ namespace Stardust.Models
         /// <summary>进程标识</summary>
         public Int32 ProcessId { get; set; }
 
+        /// <summary>进程名称</summary>
+        public String ProcessName { get; set; }
+
         /// <summary>版本</summary>
         public String Version { get; set; }
 

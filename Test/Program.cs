@@ -46,11 +46,13 @@ namespace Test
 
         static void Test2()
         {
-            var tracer = new StarTracer { Log = XTrace.Log };
-            var http = tracer.CreateHttpClient();
-            http.GetStringAsync("https://x.newlifex.com").Wait();
+            //var tracer = new StarTracer { Log = XTrace.Log };
+            //var http = tracer.CreateHttpClient();
+            //http.GetStringAsync("https://x.newlifex.com").Wait();
 
-            Thread.Sleep(10_000);
+            //Thread.Sleep(10_000);
+
+            var tracer = StarTracer.Register();
         }
 
         static void Test3()

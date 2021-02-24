@@ -23,18 +23,8 @@ namespace Stardust.Web
 
         public void ConfigureServices(IServiceCollection services)
         {
-            var set = Stardust.Setting.Current;
-            if (!set.Server.IsNullOrEmpty())
-            {
-                // APM跟踪器
-                var tracer = new StarTracer(set.Server) { Log = XTrace.Log };
-                DefaultTracer.Instance = tracer;
-                ApiHelper.Tracer = tracer;
-                DAL.GlobalTracer = tracer;
-                TracerMiddleware.Tracer = tracer;
-
-                services.AddSingleton<ITracer>(tracer);
-            }
+            var tracer = StarTracer.Register();
+            services.AddSingleton<ITracer>(tracer);
 
             // 统计
             var appService = new AppDayStatService();

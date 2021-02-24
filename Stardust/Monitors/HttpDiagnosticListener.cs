@@ -13,21 +13,12 @@ namespace Stardust.Monitors
     public class HttpDiagnosticListener : TraceDiagnosticListener
     {
         /// <summary>实例化</summary>
-        public HttpDiagnosticListener()
-        {
-            Name = "HttpHandlerDiagnosticListener";
-        }
+        public HttpDiagnosticListener() => Name = "HttpHandlerDiagnosticListener";
 
         /// <summary>下一步</summary>
         /// <param name="value"></param>
         public override void OnNext(KeyValuePair<String, Object> value)
         {
-            //base.OnNext(value);
-
-#if DEBUG
-            XTrace.WriteLine(value.Key);
-#endif
-
             switch (value.Key)
             {
                 case "System.Net.Http.HttpRequestOut.Start":

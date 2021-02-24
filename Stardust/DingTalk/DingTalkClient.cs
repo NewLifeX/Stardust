@@ -17,7 +17,7 @@ namespace Stardust.DingTalk
         /// <summary>服务地址</summary>
         public String Url { get; set; } = "https://oapi.dingtalk.com/robot/send?access_token={access_token}";
 
-        /// <summary>性能跟踪</summary>
+        /// <summary>性能追踪</summary>
         public ITracer Tracer { get; set; } = DefaultTracer.Instance;
 
         private HttpClient _Client;

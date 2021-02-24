@@ -7,8 +7,8 @@
     <Description>星尘，分布式服务框架。分布式资源调度，服务自动注册和发现，负载均衡，动态伸缩，故障转移，性能监控。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2021 NewLife</Copyright>
-    <Version>1.2.2021.0103</Version>
-    <FileVersion>1.2.2021.0103</FileVersion>
+    <Version>1.3.2021.0224-beta1</Version>
+    <FileVersion>1.3.2021.0224</FileVersion>
     <AssemblyVersion>1.2.*</AssemblyVersion>
     <Deterministic>false</Deterministic>
     <OutputPath>..\Bin</OutputPath>
@@ -24,7 +24,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>支持.NET5.0；增加客户端连接本地代理</PackageReleaseNotes>
+    <PackageReleaseNotes>星尘监控用法标准化</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>

@@ -12,13 +12,13 @@ using System.Windows.Forms;
 
 namespace Stardust.Services
 {
-    /// <summary>跟踪服务</summary>
+    /// <summary>追踪服务</summary>
     public class TraceService
     {
         /// <summary>消息服务</summary>
         public IQueueService<CommandModel> Queue { get; set; }
 
-        /// <summary>跟踪结果回调</summary>
+        /// <summary>追踪结果回调</summary>
         public Action<Int32, Byte[]> Callback { get; set; }
 
         private String _clientId;

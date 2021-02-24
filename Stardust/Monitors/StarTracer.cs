@@ -12,7 +12,7 @@ using Stardust.Models;
 
 namespace Stardust.Monitors
 {
-    /// <summary>星尘性能跟踪器，跟踪数据提交到星尘平台</summary>
+    /// <summary>星尘性能追踪器，追踪数据提交到星尘平台</summary>
     /// <remarks>其它项目有可能直接使用这个类代码，用于提交监控数据</remarks>
     public class StarTracer : DefaultTracer
     {
@@ -70,7 +70,7 @@ namespace Stardust.Monitors
             catch { }
         }
 
-        /// <summary>指定服务端地址来实例化跟踪器</summary>
+        /// <summary>指定服务端地址来实例化追踪器</summary>
         /// <param name="server"></param>
         public StarTracer(String server) : this()
         {
@@ -236,17 +236,51 @@ namespace Stardust.Monitors
         #endregion
 
         #region 全局注册
-        /// <summary>全局注册星尘性能跟踪器</summary>
-        /// <param name="server">星尘监控中心地址</param>
+        /// <summary>全局注册星尘性能追踪器</summary>
+        /// <param name="server">星尘监控中心地址，为空时自动从本地探测</param>
         /// <returns></returns>
-        public static StarTracer Register(String server)
+        public static StarTracer Register(String server = null)
         {
+            if (server.IsNullOrEmpty())
+            {
+                var set = Setting.Current;
+                server = set.Server;
+            }
+            if (server.IsNullOrEmpty())
+            {
+                var local = new LocalStarClient();
+                var inf = local.GetInfo();
+                server = inf?.Server;
+
+                if (!server.IsNullOrEmpty()) XTrace.WriteLine("星尘探测：{0}", server);
+            }
             if (server.IsNullOrEmpty()) return null;
 
             if (Instance is StarTracer tracer && tracer.Client is ApiHttpClient) return tracer;
 
             tracer = new StarTracer(server) { Log = XTrace.Log };
             DefaultTracer.Instance = tracer;
+            ApiHelper.Tracer = tracer;
+
+#if NET50
+            // 订阅Http事件
+            var observer = new DiagnosticListenerObserver { Tracer = tracer };
+            observer.Subscribe(new HttpDiagnosticListener());
+#endif
+
+            // 反射处理XCode追踪
+            {
+                var type = "XCode.DataAccessLayer.DAL".GetTypeEx(false);
+                var pi = type?.GetPropertyEx("GlobalTracer");
+                if (pi != null && pi.PropertyType == typeof(ITracer)) pi.SetValue(null, tracer);
+            }
+
+            // 反射处理Cube追踪
+            {
+                var type = "NewLife.Cube.WebMiddleware.TracerMiddleware".GetTypeEx(false);
+                var pi = type?.GetPropertyEx("Tracer");
+                if (pi != null && pi.PropertyType == typeof(ITracer)) pi.SetValue(null, tracer);
+            }
 
             return tracer;
         }

@@ -16,7 +16,7 @@ namespace Stardust.WeiXin
         /// <summary>服务地址</summary>
         public String Url { get; set; } = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key={key}";
 
-        /// <summary>性能跟踪</summary>
+        /// <summary>性能追踪</summary>
         public ITracer Tracer { get; set; } = DefaultTracer.Instance;
 
         private HttpClient _Client;

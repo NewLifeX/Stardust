@@ -9,6 +9,7 @@ using NewLife;
 using NewLife.Http;
 using NewLife.Log;
 using NewLife.Net;
+using NewLife.Reflection;
 using NewLife.Remoting;
 using Stardust.Models;
 
@@ -21,10 +22,31 @@ namespace Stardust
         /// <summary>代理信息</summary>
         public AgentInfo Info { get; private set; }
 
+        private AgentInfo _local;
         private ApiClient _client;
         #endregion
 
         #region 构造
+        /// <summary>实例化</summary>
+        public LocalStarClient()
+        {
+            var p = Process.GetCurrentProcess();
+            var asmx = AssemblyX.Entry;
+            var fileName = p.MainModule.FileName;
+            var args = Environment.CommandLine.TrimStart(Path.ChangeExtension(fileName, ".dll")).Trim();
+
+            var set = Stardust.Setting.Current;
+
+            _local = new AgentInfo
+            {
+                Version = asmx?.Version,
+                ProcessId = p.Id,
+                ProcessName = p.ProcessName,
+                FileName = fileName,
+                Arguments = args,
+                Server = set.Server,
+            };
+        }
         #endregion
 
         #region 方法
@@ -48,7 +70,7 @@ namespace Stardust
         {
             Init();
 
-            return Info = _client.Invoke<AgentInfo>("Info");
+            return Info = _client.Invoke<AgentInfo>("Info", _local);
         }
         #endregion
 

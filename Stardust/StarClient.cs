@@ -364,7 +364,7 @@ namespace Stardust
         private async Task<PingResponse> PingAsync(PingInfo inf) => await PostAsync<PingResponse>("Node/Ping", inf);
 
         private TraceService _trace;
-        /// <summary>使用跟踪服务</summary>
+        /// <summary>使用追踪服务</summary>
         public void UseTrace()
         {
             _trace = new TraceService
