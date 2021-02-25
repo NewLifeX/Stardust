@@ -306,6 +306,10 @@ namespace Stardust.Server.Services
         {
             if (appId <= 0 || start.Year < 2000 || end.Year < 2000) return;
 
+            // 排除项
+            var app = AppTracer.FindByID(appId);
+            var excludes = app.Excludes.Split(",", ";") ?? new String[0];
+
             start = start.Date.AddHours(start.Hour).AddMinutes(start.Minute / 5 * 5);
             end = end.Date.AddHours(end.Hour).AddMinutes(end.Minute / 5 * 5);
 
@@ -313,6 +317,9 @@ namespace Stardust.Server.Services
             var list = TraceData.SearchGroupAppAndName(appId, start, end);
             list = list.Where(e => !e.Name.IsNullOrEmpty()).ToList();
             if (list.Count == 0) return;
+
+            // 剔除指定项
+            list = list.Where(e => !e.Name.IsNullOrEmpty() && !excludes.Any(y => y.IsMatch(e.Name))).ToList();
 
             // 聚合
             foreach (var item in list)
