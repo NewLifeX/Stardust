@@ -244,7 +244,7 @@ namespace Stardust.Server.Services
             var date = time.Date;
 
             // 统计数据。分钟级统计可能因埋点名称污染，导致产生大量数据，这里过滤最要最大1000行
-            var list = TraceMinuteStat.FindAllByAppIdWithCache(appId, date, 1000);
+            var list = TraceMinuteStat.FindAllByAppIdWithCache(appId, date, 24 * 60 / 5 * 1000);
             if (list.Count == 0) return;
 
             // 聚合
@@ -278,7 +278,7 @@ namespace Stardust.Server.Services
             time = time.Date.AddHours(time.Hour);
 
             // 统计数据。分钟级统计可能因埋点名称污染，导致产生大量数据，这里过滤最要最大1000行
-            var list = TraceMinuteStat.FindAllByAppIdWithCache(appId, time.Date, 1000);
+            var list = TraceMinuteStat.FindAllByAppIdWithCache(appId, time.Date, 24 * 60 / 5 * 1000);
             list = list.Where(e => e.StatTime >= time & e.StatTime < time.AddHours(1)).ToList();
             if (list.Count == 0) return;
 

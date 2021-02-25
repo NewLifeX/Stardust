@@ -144,7 +144,7 @@ namespace Stardust.Data.Monitors
             var key = $"TraceMinuteStat:FindByTrace:{model.Key}";
             if (cache && _cache.TryGetValue<TraceMinuteStat>(key, out var st)) return st;
 
-            st = FindAllByAppIdWithCache(model.AppId, model.Time.Date, 1000)
+            st = FindAllByAppIdWithCache(model.AppId, model.Time.Date, 24 * 60 / 5 * 1000)
                 .FirstOrDefault(e => e.StatTime == model.Time && e.Name.EqualIgnoreCase(model.Name));
 
             // 查询数据库
