@@ -78,14 +78,15 @@ namespace Stardust.Data.Monitors
         /// <summary>查询某应用某天的所有统计，带缓存</summary>
         /// <param name="appId"></param>
         /// <param name="date"></param>
+        /// <param name="maximumRows"></param>
         /// <returns></returns>
-        public static IList<TraceMinuteStat> FindAllByAppIdWithCache(Int32 appId, DateTime date)
+        public static IList<TraceMinuteStat> FindAllByAppIdWithCache(Int32 appId, DateTime date, Int32 maximumRows)
         {
             var key = $"TraceMinuteStat:FindAllByAppIdWithCache:{appId}#{date:yyyyMMdd}";
             if (_cache.TryGetValue<IList<TraceMinuteStat>>(key, out var list) && list != null) return list;
 
             // 查询数据库，即时空值也缓存，避免缓存穿透
-            list = FindAll(_.AppId == appId & _.StatTime >= date & _.StatTime < date.AddDays(1));
+            list = FindAll(_.AppId == appId & _.StatTime >= date & _.StatTime < date.AddDays(1), _.Total.Desc(), null, 0, maximumRows);
 
             _cache.Set(key, list, 10);
 
@@ -143,7 +144,7 @@ namespace Stardust.Data.Monitors
             var key = $"TraceMinuteStat:FindByTrace:{model.Key}";
             if (cache && _cache.TryGetValue<TraceMinuteStat>(key, out var st)) return st;
 
-            st = FindAllByAppIdWithCache(model.AppId, model.Time.Date)
+            st = FindAllByAppIdWithCache(model.AppId, model.Time.Date, 1000)
                 .FirstOrDefault(e => e.StatTime == model.Time && e.Name.EqualIgnoreCase(model.Name));
 
             // 查询数据库
