@@ -44,6 +44,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             }
 
             p.RetrieveState = true;
+            PageSetting.EnableSelect = true;
 
             var list = AppDayStat.Search(appId, start, end, p["Q"], p);
 
