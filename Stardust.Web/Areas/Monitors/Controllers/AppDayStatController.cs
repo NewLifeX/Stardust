@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
@@ -18,12 +17,15 @@ namespace Stardust.Web.Areas.Monitors.Controllers
     [MonitorsArea]
     public class AppDayStatController : ReadOnlyEntityController<AppDayStat>
     {
-        public static IAppDayStatService AppStat { get; set; }
-        public static ITraceStatService TraceStat { get; set; }
+        private readonly IAppDayStatService _appStat;
+        private readonly ITraceStatService _traceStat;
 
-        static AppDayStatController()
+        static AppDayStatController() => MenuOrder = 80;
+
+        public AppDayStatController(IAppDayStatService appStat, ITraceStatService traceStat)
         {
-            MenuOrder = 80;
+            _appStat = appStat;
+            _traceStat = traceStat;
         }
 
         protected override IEnumerable<AppDayStat> Search(Pager p)
@@ -101,13 +103,13 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 {
                     XTrace.WriteLine("重新统计 {0}/{1} {2}", stat.AppName, stat.AppId, stat.StatDate);
 
-                    AppStat.Add(stat.StatDate);
+                    _appStat.Add(stat.StatDate);
                     //TraceStat.Add(stat.AppId, stat.StatDate);
                     //TraceStat.Add(stat.AppId, stat.StatDate.AddDays(1));
                     //TraceStat.Add(stat.AppId, stat.StatDate.AddDays(1).AddSeconds(-1));
                     for (var time = stat.StatDate; time < stat.StatDate.AddDays(1); time = time.AddMinutes(5))
                     {
-                        TraceStat.Add(stat.AppId, time);
+                        _traceStat.Add(stat.AppId, time);
                     }
                 }
             }

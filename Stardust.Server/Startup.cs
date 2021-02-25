@@ -29,14 +29,14 @@ namespace Stardust.Server
             var tracer = StarTracer.Register();
             services.AddSingleton<ITracer>(tracer);
 
-            var set2 = Stardust.Server.Setting.Current;
+            var set = Stardust.Server.Setting.Current;
 
             // 统计服务
-            var traceService = new TraceStatService { FlowPeriod = set2.MonitorFlowPeriod, BatchPeriod = set2.MonitorBatchPeriod };
+            var traceService = new TraceStatService { FlowPeriod = set.MonitorFlowPeriod, BatchPeriod = set.MonitorBatchPeriod };
             services.AddSingleton<ITraceStatService>(traceService);
-            var appStatService = new AppDayStatService { BatchPeriod = set2.MonitorBatchPeriod };
+            var appStatService = new AppDayStatService { BatchPeriod = set.MonitorBatchPeriod };
             services.AddSingleton<IAppDayStatService>(appStatService);
-            var alarmService = new AlarmService { Period = set2.AlarmPeriod };
+            var alarmService = new AlarmService { Period = set.AlarmPeriod };
             services.AddSingleton<IAlarmService>(alarmService);
 
             services.AddSingleton<AppService>();
