@@ -123,6 +123,7 @@
     </Columns>
     <Indexes>
       <Index Columns="StatDate,AppId,Name" Unique="True" />
+      <Index Columns="StatDate,AppId,Type" />
       <Index Columns="AppId,Name,Id" />
       <Index Columns="AppId,Type,StatDate" />
     </Indexes>

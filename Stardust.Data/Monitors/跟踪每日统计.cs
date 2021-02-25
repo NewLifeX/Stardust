@@ -15,6 +15,7 @@ namespace Stardust.Data.Monitors
     [DataObject]
     [Description("跟踪每日统计。每应用每接口每日统计，用于分析接口健康状况")]
     [BindIndex("IU_TraceDayStat_StatDate_AppId_Name", true, "StatDate,AppId,Name")]
+    [BindIndex("IX_TraceDayStat_StatDate_AppId_Type", false, "StatDate,AppId,Type")]
     [BindIndex("IX_TraceDayStat_AppId_Name_Id", false, "AppId,Name,Id")]
     [BindIndex("IX_TraceDayStat_AppId_Type_StatDate", false, "AppId,Type,StatDate")]
     [BindTable("TraceDayStat", Description = "跟踪每日统计。每应用每接口每日统计，用于分析接口健康状况", ConnName = "Monitor", DbType = DatabaseType.None)]
