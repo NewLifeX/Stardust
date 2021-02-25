@@ -244,11 +244,23 @@ namespace Stardust.Data.Monitors
 
             return td;
         }
-        
+
         /// <summary>删除指定日期之前的数据</summary>
         /// <param name="date"></param>
         /// <returns></returns>
-        public static Int32 DeleteBefore(DateTime date) => Delete(_.Id < Meta.Factory.Snow.GetId(date));
+        public static Int32 DeleteBefore(DateTime date)
+        {
+            //Delete(_.Id < Meta.Factory.Snow.GetId(date));
+
+            var snow = Meta.Factory.Snow;
+            var whereExp = _.Id < snow.GetId(date);
+
+            // 使用底层接口，加大执行时间
+            var session = Meta.Session;
+            using var cmd = session.Dal.Session.CreateCommand($"Delete From {session.FormatedTableName} Where {whereExp}");
+            cmd.CommandTimeout = 5 * 60;
+            return session.Dal.Session.Execute(cmd);
+        }
         #endregion
     }
 }
