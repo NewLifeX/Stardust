@@ -51,8 +51,10 @@ namespace Stardust.Server.Services
         private void Process(DateTime date)
         {
             // 统计数据，每日跟踪根据应用和类型分组
-            var list = TraceDayStat.SearchGroupApp(date);
+            var list = TraceDayStat.SearchGroupAppAndType(date);
             if (list.Count == 0) return;
+
+            var ns = TraceDayStat.SearchGroupAppAndName(date);
 
             // 统计对象
             var sts = AppDayStat.Search(date, null);
@@ -85,6 +87,9 @@ namespace Stardust.Server.Services
                 st.Mqs = ds.Where(e => e.Type == "mq").Sum(e => e.Total);
                 st.Redis = ds.Where(e => e.Type == "redis").Sum(e => e.Total);
                 st.Others = ds.Where(e => e.Type == "other").Sum(e => e.Total);
+
+                // 计算埋点个数
+                st.Names = ns.Where(e => e.AppId == appId).Count();
             }
 
             // 保存统计

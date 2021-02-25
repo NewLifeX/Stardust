@@ -43,6 +43,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("AppId", "应用", "")]
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
+        private Int32 _Names;
+        /// <summary>埋点数</summary>
+        [DisplayName("埋点数")]
+        [Description("埋点数")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Names", "埋点数", "")]
+        public Int32 Names { get => _Names; set { if (OnPropertyChanging("Names", value)) { _Names = value; OnPropertyChanged("Names"); } } }
+
         private Int64 _Total;
         /// <summary>总次数</summary>
         [DisplayName("总次数")]
@@ -169,6 +177,7 @@ namespace Stardust.Data.Monitors
                     case "ID": return _ID;
                     case "StatDate": return _StatDate;
                     case "AppId": return _AppId;
+                    case "Names": return _Names;
                     case "Total": return _Total;
                     case "Errors": return _Errors;
                     case "TotalCost": return _TotalCost;
@@ -193,6 +202,7 @@ namespace Stardust.Data.Monitors
                     case "ID": _ID = value.ToInt(); break;
                     case "StatDate": _StatDate = value.ToDateTime(); break;
                     case "AppId": _AppId = value.ToInt(); break;
+                    case "Names": _Names = value.ToInt(); break;
                     case "Total": _Total = value.ToLong(); break;
                     case "Errors": _Errors = value.ToLong(); break;
                     case "TotalCost": _TotalCost = value.ToLong(); break;
@@ -225,6 +235,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
+
+            /// <summary>埋点数</summary>
+            public static readonly Field Names = FindByName("Names");
 
             /// <summary>总次数</summary>
             public static readonly Field Total = FindByName("Total");
@@ -282,6 +295,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>应用</summary>
             public const String AppId = "AppId";
+
+            /// <summary>埋点数</summary>
+            public const String Names = "Names";
 
             /// <summary>总次数</summary>
             public const String Total = "Total";
