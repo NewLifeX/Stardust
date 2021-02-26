@@ -30,7 +30,7 @@
             <th class="text-center" title="平均耗时。总耗时除以总次数"><a href="@Html.Raw(page.GetSortUrl("Cost"))">平均耗时</a></th>
             <th class="text-center" title="最大耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MaxCost"))">最大耗时</a></th>
             <th class="text-center" title="最小耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MinCost"))">最小耗时</a></th>
-            <th title="跨多系统查看调用链">跟踪</th>
+            <th title="跨多系统查看调用链">追踪</th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("CreateTime"))">创建时间</a></th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("UpdateTime"))">更新时间</a></th>
             @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
@@ -54,12 +54,12 @@
                 <td class="text-center">@entity.StatTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
                 <td><a href="@url1" title="应用最近的监控图表">@entity.AppName</a></td>
                 <td style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url3" title="该应用操作在最近一段时间内的监控图表">@entity.Name</a></td>
-                <td class="text-right"><a href="@url2" title="该应用操作在该日的所有监控跟踪数据">@entity.Total.ToString("n0")</a></td>
+                <td class="text-right"><a href="@url2" title="该应用操作在该日的所有监控追踪数据">@entity.Total.ToString("n0")</a></td>
                 <td class="text-right">@entity.Errors.ToString("n0")</td>
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>
                 <td class="text-right">@entity.MinCost.ToString("n0")</td>
-                <td><a href="TraceMinuteStat/Trace?id=@entity.ID" title="跨多系统查看调用链">跟踪</a></td>
+                <td><a href="TraceMinuteStat/Trace?id=@entity.ID" title="跨多系统查看调用链">追踪</a></td>
                 <td class="text-center">@entity.CreateTime.ToFullString("")</td>
                 <td class="text-center">@entity.UpdateTime.ToFullString("")</td>
                 @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))

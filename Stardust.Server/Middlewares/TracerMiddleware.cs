@@ -7,12 +7,12 @@ using NewLife.Log;
 
 namespace NewLife.Cube.WebMiddleware
 {
-    /// <summary>性能跟踪中间件</summary>
+    /// <summary>性能追踪中间件</summary>
     public class TracerMiddleware
     {
         private readonly RequestDelegate _next;
 
-        /// <summary>跟踪器</summary>
+        /// <summary>追踪器</summary>
         public static ITracer Tracer { get; set; }
 
         /// <summary>实例化</summary>
@@ -27,7 +27,7 @@ namespace NewLife.Cube.WebMiddleware
         /// <returns></returns>
         public async Task Invoke(HttpContext ctx)
         {
-            // APM跟踪
+            // APM追踪
             //var span = Tracer?.NewSpan(ctx.Request.Path);
             ISpan span = null;
             if (Tracer != null)

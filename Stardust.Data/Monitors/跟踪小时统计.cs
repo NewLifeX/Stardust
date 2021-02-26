@@ -101,11 +101,11 @@ namespace Stardust.Data.Monitors
         public Int32 MinCost { get => _MinCost; set { if (OnPropertyChanging("MinCost", value)) { _MinCost = value; OnPropertyChanged("MinCost"); } } }
 
         private String _TraceId;
-        /// <summary>跟踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
-        [DisplayName("跟踪标识")]
-        [Description("跟踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
+        /// <summary>追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        [DisplayName("追踪标识")]
+        [Description("追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("TraceId", "跟踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
+        [BindColumn("TraceId", "追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
         public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
 
         private DateTime _CreateTime;
@@ -208,7 +208,7 @@ namespace Stardust.Data.Monitors
             /// <summary>最小耗时。单位毫秒</summary>
             public static readonly Field MinCost = FindByName("MinCost");
 
-            /// <summary>跟踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            /// <summary>追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
             public static readonly Field TraceId = FindByName("TraceId");
 
             /// <summary>创建时间</summary>
@@ -253,7 +253,7 @@ namespace Stardust.Data.Monitors
             /// <summary>最小耗时。单位毫秒</summary>
             public const String MinCost = "MinCost";
 
-            /// <summary>跟踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            /// <summary>追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
             public const String TraceId = "TraceId";
 
             /// <summary>创建时间</summary>

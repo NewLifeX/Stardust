@@ -56,11 +56,11 @@ namespace Stardust.Server.Services
                 rs = AppMeter.DeleteBefore(time2);
                 XTrace.WriteLine("删除[{0}]之前的AppMeter共：{1:n0}", time2.ToFullString(), rs);
 
-                // 删除跟踪分钟统计数据
+                // 删除追踪分钟统计数据
                 rs = TraceMinuteStat.DeleteBefore(time);
                 XTrace.WriteLine("删除[{0}]之前的TraceMinuteStat共：{1:n0}", time.ToFullString(), rs);
 
-                // 删除跟踪小时统计数据
+                // 删除追踪小时统计数据
                 rs = TraceHourStat.DeleteBefore(time2);
                 XTrace.WriteLine("删除[{0}]之前的TraceHourStat共：{1:n0}", time2.ToFullString(), rs);
 

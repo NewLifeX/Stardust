@@ -33,7 +33,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stardust.ServerTests", "Sta
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StarAgentTool", "StarAgentTool\StarAgentTool.csproj", "{4DA8CFA1-A2B9-4DD0-86C1-19925BA076B2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StarGateway", "StarGateway\StarGateway.csproj", "{94CCBB9E-628D-4381-8E2C-DF349EFD204F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StarGateway", "StarGateway\StarGateway.csproj", "{94CCBB9E-628D-4381-8E2C-DF349EFD204F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

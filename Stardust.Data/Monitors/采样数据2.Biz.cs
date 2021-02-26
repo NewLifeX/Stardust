@@ -10,7 +10,7 @@ using XCode.Membership;
 
 namespace Stardust.Data.Monitors
 {
-    /// <summary>采样数据2。采样备份，用于链路分析以及异常跟踪</summary>
+    /// <summary>采样数据2。采样备份，用于链路分析以及异常追踪</summary>
     public partial class SampleData2 : Entity<SampleData2>
     {
         #region 对象操作
@@ -76,15 +76,15 @@ namespace Stardust.Data.Monitors
             //return Find(_.Id == id);
         }
 
-        /// <summary>根据跟踪标识查找</summary>
-        /// <param name="traceId">跟踪标识</param>
+        /// <summary>根据追踪标识查找</summary>
+        /// <param name="traceId">追踪标识</param>
         /// <returns>实体列表</returns>
         public static IList<SampleData2> FindAllByTraceId(String traceId) => FindAll(_.TraceId == traceId);
         #endregion
 
         #region 高级查询
         /// <summary>高级查询</summary>
-        /// <param name="traceId">跟踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</param>
+        /// <param name="traceId">追踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>

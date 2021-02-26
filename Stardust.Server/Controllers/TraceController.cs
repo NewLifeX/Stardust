@@ -53,7 +53,7 @@ namespace Stardust.Server.Controllers
             }
             Data.App.UpdateInfo(model, ip);
 
-            // 该应用的跟踪配置信息
+            // 该应用的追踪配置信息
             var app = AppTracer.FindByName(model.AppId);
             if (app == null)
             {

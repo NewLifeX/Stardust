@@ -81,7 +81,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             }
 
             var ar = AppTracer.FindByID(appId);
-            if (ar != null) ViewBag.Title = $"{ar}跟踪";
+            if (ar != null) ViewBag.Title = $"{ar}追踪";
 
             return list;
         }

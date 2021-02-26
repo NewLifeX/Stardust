@@ -80,7 +80,7 @@ namespace Stardust.Server.Services
             if (Period > 0) _timer.Period = Period * 1000;
         }
 
-        #region 应用性能跟踪告警
+        #region 应用性能追踪告警
         private void ProcessAppTracer(AppTracer app)
         {
             // 应用是否需要告警

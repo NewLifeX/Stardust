@@ -63,7 +63,7 @@ namespace Stardust.Server.Services
 
         private void Process(DateTime date)
         {
-            // 统计数据，每日跟踪根据应用和类型分组
+            // 统计数据，每日追踪根据应用和类型分组
             var list = TraceDayStat.SearchGroupAppAndType(date);
             if (list.Count == 0) return;
 

@@ -24,7 +24,7 @@
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AppId"))">应用</a></th>
             <th class="text-center" title="实例。应用可能多实例部署，ip@proccessid"><a href="@Html.Raw(page.GetSortUrl("ClientId"))">实例</a></th>
             <th class="text-center" title="操作名。接口名或埋点名"><a href="@Html.Raw(page.GetSortUrl("Name"))">操作名</a></th>
-            <th title="跨多系统查看调用链">跟踪</th>
+            <th title="跨多系统查看调用链">追踪</th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Total"))">总次数</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Errors"))">错误数</a></th>
             <th class="text-center" title="平均耗时。总耗时除以总次数"><a href="@Html.Raw(page.GetSortUrl("Cost"))">平均耗时</a></th>
@@ -54,14 +54,14 @@
                 <td class="text-center">@entity.AppName</td>
                 <td>@entity.ClientId</td>
                 <td style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url1" title="该应用操作在最近一段时间内的监控图表">@entity.Name</a></td>
-                <td><a href="TraceData/Trace?id=@entity.Id" title="跨多系统查看调用链">跟踪</a></td>
-                <td class="text-right"><a href="@url2" title="本次跟踪的少量采样数据">@entity.Total.ToString("n0")</a></td>
+                <td><a href="TraceData/Trace?id=@entity.Id" title="跨多系统查看调用链">追踪</a></td>
+                <td class="text-right"><a href="@url2" title="本次追踪的少量采样数据">@entity.Total.ToString("n0")</a></td>
                 <td class="text-right">@entity.Errors.ToString("n0")</td>
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>
                 <td class="text-right">@entity.MinCost.ToString("n0")</td>
-                <td class="text-right"><a href="@url2&success=1" title="本次跟踪的正常调用采样数据">@entity.Samples.ToString("n0")</a></td>
-                <td class="text-right"><a href="@url2&success=0" title="本次跟踪的异常调用采样数据，包含错误信息">@entity.ErrorSamples.ToString("n0")</a></td>
+                <td class="text-right"><a href="@url2&success=1" title="本次追踪的正常调用采样数据">@entity.Samples.ToString("n0")</a></td>
+                <td class="text-right"><a href="@url2&success=0" title="本次追踪的异常调用采样数据，包含错误信息">@entity.ErrorSamples.ToString("n0")</a></td>
                 <td><a href="TraceData/Exclude?id=@entity.Id" title="把该操作名加入排除名单，不再收集其信息">屏蔽</a></td>
                 <td class="text-center">@entity.CreateTime.ToFullString("")</td>
                 @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))

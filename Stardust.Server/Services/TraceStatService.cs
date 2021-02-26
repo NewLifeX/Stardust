@@ -12,10 +12,10 @@ using XCode.Model;
 
 namespace Stardust.Server.Services
 {
-    /// <summary>跟踪统计服务</summary>
+    /// <summary>追踪统计服务</summary>
     public interface ITraceStatService
     {
-        /// <summary>添加需要统计的跟踪数据</summary>
+        /// <summary>添加需要统计的追踪数据</summary>
         /// <param name="traces"></param>
         void Add(IList<TraceData> traces);
 
@@ -25,7 +25,7 @@ namespace Stardust.Server.Services
         void Add(Int32 appId, DateTime time);
     }
 
-    /// <summary>跟踪统计服务</summary>
+    /// <summary>追踪统计服务</summary>
     public class TraceStatService : ITraceStatService
     {
         /// <summary>流计算周期。默认5秒</summary>
@@ -52,7 +52,7 @@ namespace Stardust.Server.Services
 
         public TraceStatService(ITracer tracer) => _tracer = tracer;
 
-        /// <summary>添加需要统计的跟踪数据</summary>
+        /// <summary>添加需要统计的追踪数据</summary>
         /// <param name="traces"></param>
         public void Add(IList<TraceData> traces)
         {
@@ -248,7 +248,7 @@ namespace Stardust.Server.Services
             if (appId <= 0 || time.Year < 2000) return;
 
             var date = time.Date;
-            using var span = _tracer?.NewSpan("TraceBatchtat-Day", time);
+            using var span = _tracer?.NewSpan("TraceBatchStat-Day", time);
 
             // 统计数据。分钟级统计可能因埋点名称污染，导致产生大量数据，这里过滤最要最大1000行
             var list = TraceMinuteStat.FindAllByAppIdWithCache(appId, date, 24 * 60 / 5 * 1000);

@@ -10,12 +10,12 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Monitors
 {
-    /// <summary>采样数据2。采样备份，用于链路分析以及异常跟踪</summary>
+    /// <summary>采样数据2。采样备份，用于链路分析以及异常追踪</summary>
     [Serializable]
     [DataObject]
-    [Description("采样数据2。采样备份，用于链路分析以及异常跟踪")]
+    [Description("采样数据2。采样备份，用于链路分析以及异常追踪")]
     [BindIndex("IX_SampleData2_TraceId", false, "TraceId")]
-    [BindTable("SampleData2", Description = "采样数据2。采样备份，用于链路分析以及异常跟踪", ConnName = "Monitor", DbType = DatabaseType.None)]
+    [BindTable("SampleData2", Description = "采样数据2。采样备份，用于链路分析以及异常追踪", ConnName = "Monitor", DbType = DatabaseType.None)]
     public partial class SampleData2
     {
         #region 属性
@@ -84,11 +84,11 @@ namespace Stardust.Data.Monitors
         public Int32 Cost { get => _Cost; set { if (OnPropertyChanging("Cost", value)) { _Cost = value; OnPropertyChanged("Cost"); } } }
 
         private String _TraceId;
-        /// <summary>跟踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
-        [DisplayName("跟踪标识")]
-        [Description("跟踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
+        /// <summary>追踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        [DisplayName("追踪标识")]
+        [Description("追踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("TraceId", "跟踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
+        [BindColumn("TraceId", "追踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
         public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
 
         private String _SpanId;
@@ -241,7 +241,7 @@ namespace Stardust.Data.Monitors
             /// <summary>耗时。毫秒</summary>
             public static readonly Field Cost = FindByName("Cost");
 
-            /// <summary>跟踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            /// <summary>追踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
             public static readonly Field TraceId = FindByName("TraceId");
 
             /// <summary>唯一标识。随线程上下文、Http、Rpc传递，作为内部片段的父级</summary>
@@ -298,7 +298,7 @@ namespace Stardust.Data.Monitors
             /// <summary>耗时。毫秒</summary>
             public const String Cost = "Cost";
 
-            /// <summary>跟踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            /// <summary>追踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
             public const String TraceId = "TraceId";
 
             /// <summary>唯一标识。随线程上下文、Http、Rpc传递，作为内部片段的父级</summary>

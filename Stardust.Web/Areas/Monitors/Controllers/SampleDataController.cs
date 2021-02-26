@@ -25,7 +25,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var dataId = p["dataId"].ToLong(-1);
             var traceId = p["traceId"];
 
-            // 指定跟踪标识后，分页500
+            // 指定追踪标识后，分页500
             if (!traceId.IsNullOrEmpty())
             {
                 if (p.PageSize == 20) p.PageSize = 500;

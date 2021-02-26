@@ -18,8 +18,8 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             ListFields.RemoveField("DataId");
 
             var df = ListFields.AddDataField("trace", "TraceId");
-            df.DisplayName = "跟踪";
-            df.Header = "跟踪";
+            df.DisplayName = "追踪";
+            df.Header = "追踪";
             df.Url = "/Monitors/SampleData?traceId={TraceId}";
         }
 
@@ -27,7 +27,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         {
             var traceId = p["traceId"];
 
-            // 指定跟踪标识后，分页500
+            // 指定追踪标识后，分页500
             if (!traceId.IsNullOrEmpty())
             {
                 if (p.PageSize == 20) p.PageSize = 500;

@@ -10,12 +10,12 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Monitors
 {
-    /// <summary>应用跟踪器。负责跟踪的应用管理和参数设置</summary>
+    /// <summary>应用跟踪器。负责追踪的应用管理和参数设置</summary>
     [Serializable]
     [DataObject]
-    [Description("应用跟踪器。负责跟踪的应用管理和参数设置")]
+    [Description("应用跟踪器。负责追踪的应用管理和参数设置")]
     [BindIndex("IU_AppTracer_Name", true, "Name")]
-    [BindTable("AppTracer", Description = "应用跟踪器。负责跟踪的应用管理和参数设置", ConnName = "Monitor", DbType = DatabaseType.None)]
+    [BindTable("AppTracer", Description = "应用跟踪器。负责追踪的应用管理和参数设置", ConnName = "Monitor", DbType = DatabaseType.None)]
     public partial class AppTracer
     {
         #region 属性

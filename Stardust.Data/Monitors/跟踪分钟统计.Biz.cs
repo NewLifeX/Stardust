@@ -12,7 +12,7 @@ using XCode.Membership;
 
 namespace Stardust.Data.Monitors
 {
-    /// <summary>跟踪分钟统计。每应用每接口每5分钟统计，用于分析接口健康状况</summary>
+    /// <summary>追踪分钟统计。每应用每接口每5分钟统计，用于分析接口健康状况</summary>
     public partial class TraceMinuteStat : Entity<TraceMinuteStat>
     {
         #region 对象操作
