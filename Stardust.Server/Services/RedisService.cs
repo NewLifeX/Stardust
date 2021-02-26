@@ -29,6 +29,9 @@ namespace Stardust.Server.Services
         private TimerX _traceNode;
         private TimerX _traceQueue;
         private readonly ICache _cache = new MemoryCache();
+        private readonly ITracer _tracer;
+
+        public RedisService(ITracer tracer) => _tracer = tracer;
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
@@ -87,6 +90,7 @@ namespace Stardust.Server.Services
 
         private readonly IDictionary<Int32, FullRedis> _servers = new Dictionary<Int32, FullRedis>();
         private readonly IDictionary<String, FullRedis> _servers2 = new Dictionary<String, FullRedis>();
+
         private FullRedis GetOrAdd(RedisNode node, Int32 db)
         {
             var key = $"{node.Id}-{db}";
@@ -102,6 +106,8 @@ namespace Stardust.Server.Services
 
         public void TraceNode(RedisNode node)
         {
+            using var span = _tracer?.NewSpan($"RedisService-TraceNode", node);
+
             if (!_servers.TryGetValue(node.Id, out var rds)) _servers[node.Id] = rds = new FullRedis();
 
             // 可能后面更新了服务器地址和密码
@@ -215,6 +221,8 @@ namespace Stardust.Server.Services
         public void TraceQueue(RedisMessageQueue queue)
         {
             if (queue.Topic.IsNullOrEmpty()) return;
+
+            using var span = _tracer?.NewSpan($"RedisService-TraceQueue", queue);
 
             var rds = GetOrAdd(queue.Redis, queue.Db);
 

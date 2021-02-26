@@ -14,7 +14,10 @@ namespace Stardust.Server.Services
 {
     public class DataRetentionService : IHostedService
     {
+        private readonly ITracer _tracer;
         private TimerX _timer;
+        public DataRetentionService(ITracer tracer) => _tracer = tracer;
+
         public Task StartAsync(CancellationToken cancellationToken)
         {
             // 每小时执行
@@ -33,7 +36,7 @@ namespace Stardust.Server.Services
             return Task.CompletedTask;
         }
 
-        void DoWork(Object state)
+        private void DoWork(Object state)
         {
             var set = Setting.Current;
             if (set.DataRetention <= 0) return;
@@ -42,27 +45,35 @@ namespace Stardust.Server.Services
             var time = DateTime.Now.AddDays(-set.DataRetention);
             var time2 = DateTime.Now.AddDays(-set.DataRetention2);
 
-            // 删除节点数据
-            var rs = NodeData.DeleteBefore(time2);
-            XTrace.WriteLine("删除[{0}]之前的NodeData共：{1:n0}", time2.ToFullString(), rs);
+            using var span = _tracer?.NewSpan("DataRetention", $"{time} {time2}");
+            try
+            {
+                // 删除节点数据
+                var rs = NodeData.DeleteBefore(time2);
+                XTrace.WriteLine("删除[{0}]之前的NodeData共：{1:n0}", time2.ToFullString(), rs);
 
-            // 删除应用性能数据
-            rs = AppMeter.DeleteBefore(time2);
-            XTrace.WriteLine("删除[{0}]之前的AppMeter共：{1:n0}", time2.ToFullString(), rs);
+                // 删除应用性能数据
+                rs = AppMeter.DeleteBefore(time2);
+                XTrace.WriteLine("删除[{0}]之前的AppMeter共：{1:n0}", time2.ToFullString(), rs);
 
-            // 删除跟踪分钟统计数据
-            rs = TraceMinuteStat.DeleteBefore(time);
-            XTrace.WriteLine("删除[{0}]之前的TraceMinuteStat共：{1:n0}", time.ToFullString(), rs);
+                // 删除跟踪分钟统计数据
+                rs = TraceMinuteStat.DeleteBefore(time);
+                XTrace.WriteLine("删除[{0}]之前的TraceMinuteStat共：{1:n0}", time.ToFullString(), rs);
 
-            // 删除跟踪小时统计数据
-            rs = TraceHourStat.DeleteBefore(time2);
-            XTrace.WriteLine("删除[{0}]之前的TraceHourStat共：{1:n0}", time2.ToFullString(), rs);
+                // 删除跟踪小时统计数据
+                rs = TraceHourStat.DeleteBefore(time2);
+                XTrace.WriteLine("删除[{0}]之前的TraceHourStat共：{1:n0}", time2.ToFullString(), rs);
 
-            // 删除监控明细数据
-            rs = TraceData.DeleteBefore(time);
-            XTrace.WriteLine("删除[{0}]之前的TraceData共：{1:n0}", time.ToFullString(), rs);
-            rs = SampleData.DeleteBefore(time);
-            XTrace.WriteLine("删除[{0}]之前的SampleData共：{1:n0}", time.ToFullString(), rs);
+                // 删除监控明细数据
+                rs = TraceData.DeleteBefore(time);
+                XTrace.WriteLine("删除[{0}]之前的TraceData共：{1:n0}", time.ToFullString(), rs);
+                rs = SampleData.DeleteBefore(time);
+                XTrace.WriteLine("删除[{0}]之前的SampleData共：{1:n0}", time.ToFullString(), rs);
+            }
+            catch (Exception ex)
+            {
+                span?.SetError(ex, null);
+            }
         }
     }
 }

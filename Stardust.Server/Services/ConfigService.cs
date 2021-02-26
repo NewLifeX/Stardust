@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NewLife;
+using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Data.Configs;
 
@@ -10,9 +11,9 @@ namespace Stardust.Server.Services
     public class ConfigService
     {
         private TimerX _timer;
-        public ConfigService()
-        {
-        }
+        private readonly ITracer _tracer;
+
+        public ConfigService(ITracer tracer) => _tracer = tracer;
 
         /// <summary>为应用解析指定键的值，处理内嵌</summary>
         /// <param name="app"></param>
@@ -83,6 +84,8 @@ namespace Stardust.Server.Services
             {
                 if (!item.Enable || item.PublishTime.Year < 2000) continue;
 
+                using var span = _tracer?.NewSpan("AutoPublish", item);
+
                 // 时间到了，发布，或者计算最近一个到期应用
                 if (item.PublishTime <= DateTime.Now)
                     item.Publish();
@@ -100,6 +103,8 @@ namespace Stardust.Server.Services
 
         public IDictionary<String, String> GetConfigs(AppConfig app, String scope, String ip)
         {
+            using var span = _tracer?.NewSpan(nameof(GetConfigs), $"{app} {scope} {ip}");
+
             var dic = new Dictionary<String, String>(StringComparer.OrdinalIgnoreCase);
 
             // 作用域为空时重写
