@@ -192,7 +192,7 @@ namespace Stardust.Monitors
                     if (rs.MaxSamples > 0) MaxSamples = rs.MaxSamples;
                     if (rs.MaxErrors > 0) MaxErrors = rs.MaxErrors;
                     if (rs.Timeout > 0) Timeout = rs.Timeout;
-                    if (rs.Excludes != null) Excludes = rs.Excludes;
+                    Excludes = rs.Excludes;
                 }
             }
             catch (ApiException ex)
