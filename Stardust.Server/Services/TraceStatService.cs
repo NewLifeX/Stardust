@@ -251,7 +251,7 @@ namespace Stardust.Server.Services
             using var span = _tracer?.NewSpan("TraceBatchtat-Day", time);
 
             // 统计数据。分钟级统计可能因埋点名称污染，导致产生大量数据，这里过滤最要最大1000行
-            var list = TraceMinuteStat.FindAllByAppIdWithCache(appId, date, 1000);
+            var list = TraceMinuteStat.FindAllByAppIdWithCache(appId, date, 24 * 60 / 5 * 1000);
             if (list.Count == 0) return;
 
             // 聚合
@@ -286,7 +286,7 @@ namespace Stardust.Server.Services
             time = time.Date.AddHours(time.Hour);
 
             // 统计数据。分钟级统计可能因埋点名称污染，导致产生大量数据，这里过滤最要最大1000行
-            var list = TraceMinuteStat.FindAllByAppIdWithCache(appId, time.Date, 1000);
+            var list = TraceMinuteStat.FindAllByAppIdWithCache(appId, time.Date, 24 * 60 / 5 * 1000);
             list = list.Where(e => e.StatTime >= time & e.StatTime < time.AddHours(1)).ToList();
             if (list.Count == 0) return;
 
@@ -316,6 +316,10 @@ namespace Stardust.Server.Services
 
             using var span = _tracer?.NewSpan("TraceBatchStat-Minute", $"{start.ToFullString()}-{end.ToFullString()}");
 
+            // 排除项
+            var app = AppTracer.FindByID(appId);
+            var excludes = app.Excludes.Split(",", ";") ?? new String[0];
+
             start = start.Date.AddHours(start.Hour).AddMinutes(start.Minute / 5 * 5);
             end = end.Date.AddHours(end.Hour).AddMinutes(end.Minute / 5 * 5);
 
@@ -323,6 +327,9 @@ namespace Stardust.Server.Services
             var list = TraceData.SearchGroupAppAndName(appId, start, end);
             list = list.Where(e => !e.Name.IsNullOrEmpty()).ToList();
             if (list.Count == 0) return;
+
+            // 剔除指定项
+            list = list.Where(e => !e.Name.IsNullOrEmpty() && !excludes.Any(y => y.IsMatch(e.Name))).ToList();
 
             // 聚合
             foreach (var item in list)

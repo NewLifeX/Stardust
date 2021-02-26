@@ -137,12 +137,23 @@ namespace Stardust.Data.Monitors
         /// <summary>根据应用和类型分组统计</summary>
         /// <param name="date"></param>
         /// <returns></returns>
-        public static IList<TraceDayStat> SearchGroupApp(DateTime date)
+        public static IList<TraceDayStat> SearchGroupAppAndType(DateTime date)
         {
             var selects = _.Total.Sum() & _.Errors.Sum() & _.TotalCost.Sum() & _.MaxCost.Max() & _.MinCost.Min() & _.AppId & _.Type;
             var where = new WhereExpression() & _.StatDate == date;
 
             return FindAll(where.GroupBy(_.AppId, _.Type), null, selects);
+        }
+
+        /// <summary>根据应用和名称分组统计</summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public static IList<TraceDayStat> SearchGroupAppAndName(DateTime date)
+        {
+            var selects = _.ID.Count() & _.AppId & _.Name;
+            var where = new WhereExpression() & _.StatDate == date;
+
+            return FindAll(where.GroupBy(_.AppId, _.Name), null, selects);
         }
         #endregion
 
