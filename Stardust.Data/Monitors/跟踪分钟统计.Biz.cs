@@ -89,7 +89,7 @@ namespace Stardust.Data.Monitors
             // 查询数据库，即时空值也缓存，避免缓存穿透
             list = FindAll(_.AppId == appId & _.StatTime >= date & _.StatTime < date.AddDays(1), _.Total.Desc(), null, 0, maximumRows);
 
-            _cache.Set(key, list, 30);
+            _cache.Set(key, list, 60);
 
             return list;
         }
@@ -153,7 +153,7 @@ namespace Stardust.Data.Monitors
             // 查询数据库
             if (st == null) st = Find(_.StatTime == model.Time & _.AppId == model.AppId & _.Name == model.Name);
 
-            if (st != null) _cache.Set(key, st, 60);
+            if (st != null) _cache.Set(key, st, 600);
 
             return st;
         }

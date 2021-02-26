@@ -130,7 +130,7 @@ namespace Stardust.Data.Monitors
             // 查询数据库
             if (st == null) st = Find(_.StatTime == model.Time & _.AppId == model.AppId & _.Name == model.Name);
 
-            if (st != null) _cache.Set(key, st, 60);
+            if (st != null) _cache.Set(key, st, 300);
 
             return st;
         }
