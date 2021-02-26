@@ -6,6 +6,7 @@ using System.Xml.Serialization;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Data;
+using NewLife.Log;
 using XCode;
 using XCode.Membership;
 
@@ -88,7 +89,7 @@ namespace Stardust.Data.Monitors
             // 查询数据库，即时空值也缓存，避免缓存穿透
             list = FindAll(_.AppId == appId & _.StatTime >= date & _.StatTime < date.AddDays(1), _.Total.Desc(), null, 0, maximumRows);
 
-            _cache.Set(key, list, 10);
+            _cache.Set(key, list, 30);
 
             return list;
         }
@@ -143,6 +144,8 @@ namespace Stardust.Data.Monitors
         {
             var key = $"TraceMinuteStat:FindByTrace:{model.Key}";
             if (cache && _cache.TryGetValue<TraceMinuteStat>(key, out var st)) return st;
+
+            using var span = DefaultTracer.Instance?.NewSpan("TraceMinuteStat-FindByTrace", model.Key);
 
             st = FindAllByAppIdWithCache(model.AppId, model.Time.Date, 1000)
                 .FirstOrDefault(e => e.StatTime == model.Time && e.Name.EqualIgnoreCase(model.Name));

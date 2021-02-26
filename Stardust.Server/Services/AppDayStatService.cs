@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Data.Monitors;
 using XCode;
@@ -23,6 +24,9 @@ namespace Stardust.Server.Services
 
         private TimerX _timer;
         private readonly ConcurrentBag<DateTime> _bag = new ConcurrentBag<DateTime>();
+        private readonly ITracer _tracer;
+
+        public AppDayStatService(ITracer tracer) => _tracer = tracer;
 
         /// <summary>添加需要统计的应用，去重</summary>
         /// <param name="date"></param>
@@ -44,7 +48,16 @@ namespace Stardust.Server.Services
         {
             while (_bag.TryTake(out var time))
             {
-                Process(time.Date);
+                using var span = _tracer?.NewSpan("AppDayStat-Process", time.Date);
+                try
+                {
+                    Process(time.Date);
+                }
+                catch (Exception ex)
+                {
+                    span.SetError(ex, null);
+                    throw;
+                }
             }
         }
 

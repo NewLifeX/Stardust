@@ -32,11 +32,11 @@ namespace Stardust.Server
             var set = Stardust.Server.Setting.Current;
 
             // 统计服务
-            var traceService = new TraceStatService { FlowPeriod = set.MonitorFlowPeriod, BatchPeriod = set.MonitorBatchPeriod };
+            var traceService = new TraceStatService(tracer) { FlowPeriod = set.MonitorFlowPeriod, BatchPeriod = set.MonitorBatchPeriod };
             services.AddSingleton<ITraceStatService>(traceService);
-            var appStatService = new AppDayStatService { BatchPeriod = set.MonitorBatchPeriod };
+            var appStatService = new AppDayStatService(tracer) { BatchPeriod = set.MonitorBatchPeriod };
             services.AddSingleton<IAppDayStatService>(appStatService);
-            var alarmService = new AlarmService { Period = set.AlarmPeriod };
+            var alarmService = new AlarmService(tracer) { Period = set.AlarmPeriod };
             services.AddSingleton<IAlarmService>(alarmService);
 
             services.AddSingleton<AppService>();

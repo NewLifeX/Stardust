@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NewLife;
+using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Data.Monitors;
 using XCode;
@@ -47,6 +48,9 @@ namespace Stardust.Server.Services
         private readonly AppMinuteQueue _appMinuteQueue = new AppMinuteQueue { Period = 60 };
 
         private Int32 _count;
+        private readonly ITracer _tracer;
+
+        public TraceStatService(ITracer tracer) => _tracer = tracer;
 
         /// <summary>添加需要统计的跟踪数据</summary>
         /// <param name="traces"></param>
@@ -134,6 +138,8 @@ namespace Stardust.Server.Services
         private void DoFlowStat(Object state)
         {
             if (_queue.IsEmpty) return;
+
+            using var span = _tracer?.NewSpan("TraceFlowStat");
 
             // 限制每次只处理这么多
             var count = 100_000;
@@ -242,6 +248,7 @@ namespace Stardust.Server.Services
             if (appId <= 0 || time.Year < 2000) return;
 
             var date = time.Date;
+            using var span = _tracer?.NewSpan("TraceBatchtat-Day", time);
 
             // 统计数据。分钟级统计可能因埋点名称污染，导致产生大量数据，这里过滤最要最大1000行
             var list = TraceMinuteStat.FindAllByAppIdWithCache(appId, date, 1000);
@@ -275,6 +282,7 @@ namespace Stardust.Server.Services
         {
             if (appId <= 0 || time.Year < 2000) return;
 
+            using var span = _tracer?.NewSpan("TraceBatchStat-Hour", time);
             time = time.Date.AddHours(time.Hour);
 
             // 统计数据。分钟级统计可能因埋点名称污染，导致产生大量数据，这里过滤最要最大1000行
@@ -305,6 +313,8 @@ namespace Stardust.Server.Services
         private void ProcessMinute(Int32 appId, DateTime start, DateTime end)
         {
             if (appId <= 0 || start.Year < 2000 || end.Year < 2000) return;
+
+            using var span = _tracer?.NewSpan("TraceBatchStat-Minute", $"{start.ToFullString()}-{end.ToFullString()}");
 
             start = start.Date.AddHours(start.Hour).AddMinutes(start.Minute / 5 * 5);
             end = end.Date.AddHours(end.Hour).AddMinutes(end.Minute / 5 * 5);

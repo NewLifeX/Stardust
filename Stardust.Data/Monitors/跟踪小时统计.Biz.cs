@@ -6,6 +6,7 @@ using System.Xml.Serialization;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Data;
+using NewLife.Log;
 using XCode;
 using XCode.Membership;
 
@@ -120,6 +121,8 @@ namespace Stardust.Data.Monitors
         {
             var key = $"TraceHourStat:FindByTrace:{model.Key}";
             if (cache && _cache.TryGetValue<TraceHourStat>(key, out var st)) return st;
+
+            using var span = DefaultTracer.Instance?.NewSpan("TraceHourStat-FindByTrace", model.Key);
 
             st = FindAllByAppIdWithCache(model.AppId, model.Time.Date)
                 .FirstOrDefault(e => e.StatTime == model.Time && e.Name.EqualIgnoreCase(model.Name));

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using NewLife;
 using NewLife.Caching;
+using NewLife.Log;
 using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust.Data.Monitors;
@@ -31,10 +32,15 @@ namespace Stardust.Server.Services
         //private WeiXinClient _weixin;
         //private DingTalkClient _dingTalk;
         private readonly ICache _cache = new MemoryCache();
+        private readonly ITracer _tracer;
 
-        public AlarmService() =>
+        public AlarmService(ITracer tracer)
+        {
             // 初始化定时器
             _timer = new TimerX(DoAlarm, null, 5_000, Period * 1000) { Async = true };
+
+            _tracer = tracer;
+        }
 
         /// <summary>添加需要统计的应用，去重</summary>
         /// <param name="appId"></param>
@@ -84,6 +90,8 @@ namespace Stardust.Server.Services
             var appId = app.ID;
             var robot = app.AlarmRobot;
             if (robot.IsNullOrEmpty()) return;
+
+            using var span = _tracer?.NewSpan($"Alarm:{nameof(AppTracer)}");
 
             // 最近一段时间的5分钟级数据
             var time = DateTime.Now;
@@ -165,6 +173,8 @@ namespace Stardust.Server.Services
 
         private void SendWeixin(AppTracer app, AppMinuteStat st)
         {
+            using var span = _tracer?.NewSpan(nameof(SendWeixin));
+
             var _weixin = new WeiXinClient { Url = app.AlarmRobot };
 
             var msg = GetMarkdown(app, st, true);
@@ -174,6 +184,8 @@ namespace Stardust.Server.Services
 
         private void SendDingTalk(AppTracer app, AppMinuteStat st)
         {
+            using var span = _tracer?.NewSpan(nameof(SendDingTalk));
+
             var _dingTalk = new DingTalkClient { Url = app.AlarmRobot };
 
             var msg = GetMarkdown(app, st, false);
@@ -189,6 +201,8 @@ namespace Stardust.Server.Services
 
             var robot = node.WebHook;
             if (node.AlarmCpuRate <= 0 && node.AlarmMemoryRate <= 0 && node.AlarmDiskRate <= 0 && node.AlarmProcesses.IsNullOrEmpty()) return;
+
+            using var span = _tracer?.NewSpan($"Alarm:{nameof(Node)}");
 
             // 最新数据
             var data = NodeData.FindLast(node.ID);
@@ -206,19 +220,7 @@ namespace Stardust.Server.Services
                     {
                         _cache.Set("alarm:CpuRate:" + node.ID, rate, 5 * 60);
 
-                        var title = $"[{node.Name}]CPU告警";
-                        if (robot.Contains("qyapi.weixin"))
-                        {
-                            var weixin = new WeiXinClient { Url = robot };
-                            var msg = GetMarkdown("cpu", node, data, title);
-                            weixin.SendMarkDown(msg);
-                        }
-                        else if (robot.Contains("dingtalk"))
-                        {
-                            var dingTalk = new DingTalkClient { Url = robot };
-                            var msg = GetMarkdown("cpu", node, data, null);
-                            dingTalk.SendMarkDown(title, msg, null);
-                        }
+                        SendAlarm(robot, "cpu", node, data, $"[{node.Name}]CPU告警");
                     }
                 }
             }
@@ -235,19 +237,7 @@ namespace Stardust.Server.Services
                     {
                         _cache.Set("alarm:MemoryRate:" + node.ID, rate, 5 * 60);
 
-                        var title = $"[{node.Name}]内存告警";
-                        if (robot.Contains("qyapi.weixin"))
-                        {
-                            var weixin = new WeiXinClient { Url = robot };
-                            var msg = GetMarkdown("memory", node, data, title);
-                            weixin.SendMarkDown(msg);
-                        }
-                        else if (robot.Contains("dingtalk"))
-                        {
-                            var dingTalk = new DingTalkClient { Url = robot };
-                            var msg = GetMarkdown("memory", node, data, null);
-                            dingTalk.SendMarkDown(title, msg, null);
-                        }
+                        SendAlarm(robot, "memory", node, data, $"[{node.Name}]内存告警");
                     }
                 }
             }
@@ -264,19 +254,7 @@ namespace Stardust.Server.Services
                     {
                         _cache.Set("alarm:DiskRate:" + node.ID, rate, 5 * 60);
 
-                        var title = $"[{node.Name}]磁盘告警";
-                        if (robot.Contains("qyapi.weixin"))
-                        {
-                            var weixin = new WeiXinClient { Url = robot };
-                            var msg = GetMarkdown("disk", node, data, title);
-                            weixin.SendMarkDown(msg);
-                        }
-                        else if (robot.Contains("dingtalk"))
-                        {
-                            var dingTalk = new DingTalkClient { Url = robot };
-                            var msg = GetMarkdown("disk", node, data, null);
-                            dingTalk.SendMarkDown(title, msg, null);
-                        }
+                        SendAlarm(robot, "disk", node, data, $"[{node.Name}]磁盘告警");
                     }
                 }
             }
@@ -295,19 +273,7 @@ namespace Stardust.Server.Services
                     {
                         _cache.Set("alarm:Tcp:" + node.ID, tcp, 5 * 60);
 
-                        var title = $"[{node.Name}]Tcp告警";
-                        if (robot.Contains("qyapi.weixin"))
-                        {
-                            var weixin = new WeiXinClient { Url = robot };
-                            var msg = GetMarkdown("tcp", node, data, title);
-                            weixin.SendMarkDown(msg);
-                        }
-                        else if (robot.Contains("dingtalk"))
-                        {
-                            var dingTalk = new DingTalkClient { Url = robot };
-                            var msg = GetMarkdown("tcp", node, data, null);
-                            dingTalk.SendMarkDown(title, msg, null);
-                        }
+                        SendAlarm(robot, "tcp", node, data, $"[{node.Name}]Tcp告警");
                     }
                 }
             }
@@ -330,22 +296,30 @@ namespace Stardust.Server.Services
                         {
                             _cache.Set("alarm:Process:" + node.ID, ps2.Count, 5 * 60);
 
-                            var title = $"[{node.Name}]进程守护告警";
-                            if (robot.Contains("qyapi.weixin"))
-                            {
-                                var weixin = new WeiXinClient { Url = robot };
-                                var msg = GetMarkdown("process", node, data, title, ps2.Join());
-                                weixin.SendMarkDown(msg);
-                            }
-                            else if (robot.Contains("dingtalk"))
-                            {
-                                var dingTalk = new DingTalkClient { Url = robot };
-                                var msg = GetMarkdown("process", node, data, null, ps2.Join());
-                                dingTalk.SendMarkDown(title, msg, null);
-                            }
+                            SendAlarm(robot, "process", node, data, $"[{node.Name}]进程守护告警", ps2.Join());
                         }
                     }
                 }
+            }
+        }
+
+        private void SendAlarm(String robot, String kind, Node node, NodeData data, String title, String info = null)
+        {
+            if (robot.Contains("qyapi.weixin"))
+            {
+                var weixin = new WeiXinClient { Url = robot };
+                var msg = GetMarkdown("process", node, data, title, info);
+
+                using var span = _tracer?.NewSpan(nameof(SendWeixin), msg);
+                weixin.SendMarkDown(msg);
+            }
+            else if (robot.Contains("dingtalk"))
+            {
+                var dingTalk = new DingTalkClient { Url = robot };
+                var msg = GetMarkdown("process", node, data, null, info);
+
+                using var span = _tracer?.NewSpan(nameof(SendDingTalk), msg);
+                dingTalk.SendMarkDown(title, msg, null);
             }
         }
 
@@ -419,6 +393,8 @@ namespace Stardust.Server.Services
             // 最新数据
             var data = RedisData.FindLast(node.Id);
             if (data == null) return;
+
+            using var span = _tracer?.NewSpan($"Alarm:{nameof(RedisNode)}");
 
             var actions = new List<Action<StringBuilder>>();
 
@@ -500,6 +476,7 @@ namespace Stardust.Server.Services
 
                     var msg = GetMarkdown(node, data, "Redis告警", actions);
 
+                    using var span2 = _tracer?.NewSpan(nameof(SendWeixin), msg);
                     _weixin.SendMarkDown(msg);
                 }
                 else if (robot.Contains("dingtalk"))
@@ -508,6 +485,7 @@ namespace Stardust.Server.Services
 
                     var msg = GetMarkdown(node, data, null, actions);
 
+                    using var span2 = _tracer?.NewSpan(nameof(SendDingTalk), msg);
                     _dingTalk.SendMarkDown("Redis告警", msg, null);
                 }
             }
@@ -557,6 +535,8 @@ namespace Stardust.Server.Services
         #region Redis队列告警
         private void ProcessRedisQueue(RedisNode node)
         {
+            using var span = _tracer?.NewSpan($"Alarm:{nameof(RedisMessageQueue)}");
+
             // 所有队列
             var list = RedisMessageQueue.FindAllByRedisId(node.Id);
             foreach (var queue in list)
@@ -579,6 +559,7 @@ namespace Stardust.Server.Services
 
                             var msg = GetMarkdown(node, queue, true);
 
+                            using var span2 = _tracer?.NewSpan(nameof(SendWeixin), msg);
                             _weixin.SendMarkDown(msg);
                         }
                         else if (robot.Contains("dingtalk"))
@@ -587,6 +568,7 @@ namespace Stardust.Server.Services
 
                             var msg = GetMarkdown(node, queue, false);
 
+                            using var span2 = _tracer?.NewSpan(nameof(SendDingTalk), msg);
                             _dingTalk.SendMarkDown("消息队列告警", msg, null);
                         }
                     }
