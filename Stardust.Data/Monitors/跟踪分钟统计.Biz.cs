@@ -147,7 +147,6 @@ namespace Stardust.Data.Monitors
 
             using var span = DefaultTracer.Instance?.NewSpan("TraceMinuteStat-FindByTrace", model.Key);
 
-            st = FindAllByAppIdWithCache(model.AppId, model.Time.Date, 1000)
             st = FindAllByAppIdWithCache(model.AppId, model.Time.Date, 24 * 60 / 5 * 1000)
                 .FirstOrDefault(e => e.StatTime == model.Time && e.Name.EqualIgnoreCase(model.Name));
 
