@@ -117,7 +117,8 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 if (traceId.IsNullOrEmpty()) throw;
             }
 
-            return RedirectToAction("Index", "SampleData", new { traceId });
+            //return RedirectToAction("Index", "Trace", new { traceId });
+            return Redirect($"/trace?id={traceId}");
         }
     }
 }

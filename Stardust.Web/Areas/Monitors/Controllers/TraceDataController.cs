@@ -93,7 +93,8 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var list = SampleData.FindAllByDataId(id);
             if (list.Count == 0) throw new InvalidDataException("找不到采样数据");
 
-            return RedirectToAction("Index", "SampleData", new { traceId = list[0].TraceId });
+            //return RedirectToAction("Index", "SampleData", new { traceId = list[0].TraceId });
+            return Redirect($"/trace?id={list[0].TraceId}");
         }
 
         [EntityAuthorize(PermissionFlags.Detail)]

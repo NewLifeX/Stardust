@@ -13,8 +13,8 @@
 <table class="table table-bordered table-hover table-striped table-condensed">
     <thead>
         <tr>
-            <th class="text-center">应用</th>
-            <th class="text-center" title="操作名。接口名或埋点名">操作名</th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AppId"))">应用</a></th>
+            <th class="text-center" title="操作名。接口名或埋点名"><a href="@Html.Raw(page.GetSortUrl("Name"))">操作名</a></th>
             <th style="width:80%">时间轴</th>
         </tr>
     </thead>
