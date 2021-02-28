@@ -20,7 +20,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var df = ListFields.AddDataField("trace", "TraceId");
             df.DisplayName = "追踪";
             df.Header = "追踪";
-            df.Url = "/Monitors/SampleData?traceId={TraceId}";
+            df.Url = "/trace?id={TraceId}";
         }
 
         protected override IEnumerable<SampleData2> Search(Pager p)

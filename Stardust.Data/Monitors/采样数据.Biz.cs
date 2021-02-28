@@ -94,7 +94,7 @@ namespace Stardust.Data.Monitors
         {
             var exp = new WhereExpression();
 
-            if (dataId >= 0) exp &= _.DataId == dataId;
+            if (dataId > 0) exp &= _.DataId == dataId;
             if (!traceId.IsNullOrEmpty()) exp &= _.TraceId == traceId;
 
             return FindAll(exp, page);
