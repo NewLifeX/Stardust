@@ -67,13 +67,13 @@ namespace Stardust.Data.Monitors
         {
             if (id <= 0) return null;
 
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
+            //// 实体缓存
+            //if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
 
-            // 单对象缓存
-            return Meta.SingleCache[id];
+            //// 单对象缓存
+            //return Meta.SingleCache[id];
 
-            //return Find(_.Id == id);
+            return Find(_.Id == id);
         }
 
         /// <summary>根据追踪标识查找</summary>

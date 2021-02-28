@@ -122,5 +122,22 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
             return list;
         }
+
+        protected override SampleData Find(Object key)
+        {
+            //var entity = base.Find(key);
+            var entity = SampleData.FindById(key.ToLong());
+            if (entity != null) return entity;
+
+            var entity2 = SampleData2.FindById(key.ToLong());
+            if (entity2 != null)
+            {
+                entity = new SampleData();
+                entity.CopyFrom(entity2, false);
+                return entity;
+            }
+
+            throw new Exception($"无法找到数据[{key}]！");
+        }
     }
 }
