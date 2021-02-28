@@ -28,6 +28,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         {
             var appId = p["appId"].ToInt(-1);
             var name = p["name"];
+            var minError = p["minError"].ToInt(-1);
 
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
@@ -41,7 +42,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             if (appId > 0 && p.PageSize == 20) p.PageSize = 100;
             if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.Id.Desc();
 
-            var list = TraceData.Search(appId, name, kind, start, end, p["Q"], p);
+            var list = TraceData.Search(appId, name, kind, minError, start, end, p["Q"], p);
 
             if (list.Count > 0 && appId > 0 && !name.IsNullOrEmpty())
             {

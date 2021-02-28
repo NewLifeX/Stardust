@@ -44,8 +44,9 @@
         @foreach (var entity in Model)
         {
             //var url1 = $"appDayStat?appId={entity.AppId}";
-            //var url2 = $"traceData?appId={entity.AppId}&date={entity.StatDate:yyyy-MM-dd}&name={HttpUtility.UrlEncode(entity.Name)}";
+            var url2 = $"traceData?appId={entity.AppId}&date={entity.StatDate:yyyy-MM-dd}&name={HttpUtility.UrlEncode(entity.Name)}";
             var url3 = $"?appId={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}";
+            var url4 = url2 + "&minError=1";
             var color = "";
             if (entity.Type == "db")
             {
@@ -69,8 +70,17 @@
                 <td>@entity.AppName</td>
                 <td><a href="?appId=@entity.AppId&type=@entity.Type&date=@entity.StatDate.ToString("yyyy-MM-dd")">@entity.Type</a></td>
                 <td style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url3" title="该应用操作在最近一段时间内的监控图表" style="color: @color">@entity.Name</a></td>
-                <td class="text-right">@entity.Total.ToString("n0")</td>
-                <td class="text-right">@entity.Errors.ToString("n0")</td>
+                <td class="text-right"><a href="@url2" title="该应用操作在该日的所有监控追踪数据">@entity.Total.ToString("n0")</a></td>
+                <td class="text-right">
+                    @if (entity.Errors > 0)
+                    {
+                        <a href="@url4" title="查看具体出错的追踪数据">@entity.Errors.ToString("n0")</a>
+                    }
+                    else
+                    {
+                        <text>@entity.Errors.ToString("n0")</text>
+                    }
+                </td>
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>
                 <td class="text-right">@entity.MinCost.ToString("n0")</td>

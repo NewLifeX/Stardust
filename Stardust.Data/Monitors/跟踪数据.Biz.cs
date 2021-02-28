@@ -92,18 +92,20 @@ namespace Stardust.Data.Monitors
         /// <param name="appId">应用</param>
         /// <param name="name">操作名。接口名或埋点名</param>
         /// <param name="kind">时间种类。day/hour/minute</param>
+        /// <param name="minError">最小错误数。指定后，只返回错误数大于等于该值的数据</param>
         /// <param name="start">创建时间开始</param>
         /// <param name="end">创建时间结束</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<TraceData> Search(Int32 appId, String name, String kind, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<TraceData> Search(Int32 appId, String name, String kind, Int32 minError, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (appId >= 0) exp &= _.AppId == appId;
             if (!name.IsNullOrEmpty()) exp &= _.Name == name;
             if (!key.IsNullOrEmpty()) exp &= _.ClientId == key | _.Name == key;
+            if (minError > 0) exp &= _.Errors >= minError;
 
             if (appId > 0 && start.Year > 2000)
             {
