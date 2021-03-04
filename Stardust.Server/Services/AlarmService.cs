@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Web;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
@@ -122,6 +123,15 @@ namespace Stardust.Server.Services
             if (includeTitle) sb.AppendLine($"### [{app}]系统告警");
             sb.AppendLine($">**总数：**<font color=\"info\">{st.Errors}</font>");
 
+            var url = Setting.Current.WebUrl;
+            var appUrl = "";
+            var traceUrl = "";
+            if (!url.IsNullOrEmpty())
+            {
+                appUrl = url.EnsureEnd("/") + "Monitors/appMinuteStat?appId=" + st.AppId + "&minError=1";
+                traceUrl = url.EnsureEnd("/") + "Monitors/traceMinuteStat?appId=" + st.AppId + "&minError=1";
+            }
+
             // 找找具体接口错误
             var names = new List<String>();
             var sts = TraceMinuteStat.FindAllByAppIdAndTime(st.AppId, st.StatTime).OrderByDescending(e => e.Errors).ToList();
@@ -129,7 +139,7 @@ namespace Stardust.Server.Services
             {
                 if (item.Errors > 0)
                 {
-                    sb.AppendLine($">**错误：**<font color=\"info\">{item.StatTime.ToFullString()} 埋点[{item.Name}]共报错[{item.Errors:n0}]次</font>");
+                    sb.AppendLine($">**错误：**<font color=\"info\">{item.StatTime.ToFullString()} 埋点[{item.Name}]共报错[{item.Errors:n0}]次</font>[更多]({traceUrl}&name={HttpUtility.UrlEncode(item.Name)})");
 
                     // 相同接口的错误，不要报多次
                     if (!names.Contains(item.Name))
@@ -158,14 +168,12 @@ namespace Stardust.Server.Services
             }
 
             var str = sb.ToString();
-            if (str.Length > 2000) str = str.Substring(0, 2000);
+            if (str.Length > 1600) str = str.Substring(0, 1600);
 
             // 构造网址
-            var url = Setting.Current.WebUrl;
-            if (!url.IsNullOrEmpty())
+            if (!appUrl.IsNullOrEmpty())
             {
-                url = url.EnsureEnd("/") + "Monitors/appMinuteStat?appId=" + st.AppId;
-                str += Environment.NewLine + $"[更多信息]({url})";
+                str += Environment.NewLine + $"[更多信息]({appUrl})";
             }
 
             return str;
@@ -593,7 +601,7 @@ namespace Stardust.Server.Services
             var url = Setting.Current.WebUrl;
             if (!url.IsNullOrEmpty())
             {
-                url = url.EnsureEnd("/") + "Nodes/RedisMessageQueue?redisId=" + queue.RedisId;
+                url = url.EnsureEnd("/") + "Nodes/RedisMessageQueue?redisId=" + queue.RedisId + "&q=" + queue.Name;
                 str += Environment.NewLine + $"[更多信息]({url})";
             }
 
