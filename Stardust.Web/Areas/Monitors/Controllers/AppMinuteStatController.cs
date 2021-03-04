@@ -21,6 +21,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         protected override IEnumerable<AppMinuteStat> Search(Pager p)
         {
             var appId = p["appId"].ToInt(-1);
+            var minError = p["minError"].ToInt(-1);
 
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
@@ -61,7 +62,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
             p.RetrieveState = true;
 
-            var list = AppMinuteStat.Search(appId, start, end, p["Q"], p);
+            var list = AppMinuteStat.Search(appId, minError, start, end, p["Q"], p);
 
             if (list.Count > 0 && appId >= 0)
             {
