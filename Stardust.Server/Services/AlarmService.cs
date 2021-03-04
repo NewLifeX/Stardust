@@ -308,7 +308,7 @@ namespace Stardust.Server.Services
             if (robot.Contains("qyapi.weixin"))
             {
                 var weixin = new WeiXinClient { Url = robot };
-                var msg = GetMarkdown("process", node, data, title, info);
+                var msg = GetMarkdown(kind, node, data, title, info);
 
                 using var span = _tracer?.NewSpan(nameof(SendWeixin), msg);
                 weixin.SendMarkDown(msg);
@@ -316,7 +316,7 @@ namespace Stardust.Server.Services
             else if (robot.Contains("dingtalk"))
             {
                 var dingTalk = new DingTalkClient { Url = robot };
-                var msg = GetMarkdown("process", node, data, null, info);
+                var msg = GetMarkdown(kind, node, data, null, info);
 
                 using var span = _tracer?.NewSpan(nameof(SendDingTalk), msg);
                 dingTalk.SendMarkDown(title, msg, null);
