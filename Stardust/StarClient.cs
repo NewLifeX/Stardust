@@ -255,6 +255,9 @@ namespace Stardust
                     var name = item.ProcessName;
                     if (name.EqualIgnoreCase(_excludes)) continue;
 
+                    // 特殊处理dotnet
+                    if (name == "dotnet") name = GetProcessName(item);
+
                     if (!pcs.Contains(name)) pcs.Add(name);
                 }
                 catch { }
@@ -299,16 +302,36 @@ namespace Stardust
             return ext;
         }
 
-        //[DllImport("kernel32.dll")]
-        //private static extern UInt64 GetTickCount64();
+        private String GetProcessName(Process item)
+        {
+            if (Runtime.Linux)
+            {
+                try
+                {
+                    var line = File.ReadAllText($"/proc/{item.Id}/cmdline").TrimStart("\0", "dotnet", " ", "./");
+                    if (!line.IsNullOrEmpty())
+                    {
+                        var p = line.IndexOf('\0');
+                        if (p < 0) p = line.IndexOf(' ');
+                        if (p < 0) p = line.IndexOf('-');
+                        if (p < 0) p = line.IndexOf(".dll");
+                        if (p > 0)
+                            return line.Substring(0, p);
+                        else
+                            return line;
+                    }
+                }
+                catch { }
+            }
+
+            return item.ProcessName;
+        }
 
         private TimerX _timer;
         /// <summary>心跳</summary>
         /// <returns></returns>
         public async Task<Object> Ping()
         {
-            //XTrace.WriteLine("心跳");
-
             var inf = GetHeartInfo();
 
             try
@@ -352,6 +375,7 @@ namespace Stardust
                     return Login();
                 }
 
+                XTrace.WriteLine(inf.ToJson());
                 XTrace.WriteLine("心跳异常 {0}", (String)ex.GetTrue().Message);
 
                 throw;

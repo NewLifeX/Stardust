@@ -74,7 +74,7 @@ namespace Stardust.Server
             }
 
             //app.UseHttpsRedirection();
-            if (!set.Server.IsNullOrEmpty()) app.UseMiddleware<TracerMiddleware>();
+            app.UseMiddleware<TracerMiddleware>();
 
             app.UseRouting();
 
