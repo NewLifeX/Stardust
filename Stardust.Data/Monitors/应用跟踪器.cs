@@ -99,6 +99,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("Timeout", "超时时间。超过该时间时强制采样，默认5000毫秒", "")]
         public Int32 Timeout { get => _Timeout; set { if (OnPropertyChanging("Timeout", value)) { _Timeout = value; OnPropertyChanged("Timeout"); } } }
 
+        private String _TimeoutExcludes;
+        /// <summary>超时排除项。不判断超时的操作名，支持*模糊匹配</summary>
+        [DisplayName("超时排除项")]
+        [Description("超时排除项。不判断超时的操作名，支持*模糊匹配")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("TimeoutExcludes", "超时排除项。不判断超时的操作名，支持*模糊匹配", "")]
+        public String TimeoutExcludes { get => _TimeoutExcludes; set { if (OnPropertyChanging("TimeoutExcludes", value)) { _TimeoutExcludes = value; OnPropertyChanged("TimeoutExcludes"); } } }
+
         private String _Nodes;
         /// <summary>节点集。该应用最近一段时间所涉及的来源地址</summary>
         [DisplayName("节点集")]
@@ -208,6 +216,7 @@ namespace Stardust.Data.Monitors
                     case "MaxErrors": return _MaxErrors;
                     case "Excludes": return _Excludes;
                     case "Timeout": return _Timeout;
+                    case "TimeoutExcludes": return _TimeoutExcludes;
                     case "Nodes": return _Nodes;
                     case "AlarmThreshold": return _AlarmThreshold;
                     case "AlarmRobot": return _AlarmRobot;
@@ -236,6 +245,7 @@ namespace Stardust.Data.Monitors
                     case "MaxErrors": _MaxErrors = value.ToInt(); break;
                     case "Excludes": _Excludes = Convert.ToString(value); break;
                     case "Timeout": _Timeout = value.ToInt(); break;
+                    case "TimeoutExcludes": _TimeoutExcludes = Convert.ToString(value); break;
                     case "Nodes": _Nodes = Convert.ToString(value); break;
                     case "AlarmThreshold": _AlarmThreshold = value.ToInt(); break;
                     case "AlarmRobot": _AlarmRobot = Convert.ToString(value); break;
@@ -286,6 +296,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>超时时间。超过该时间时强制采样，默认5000毫秒</summary>
             public static readonly Field Timeout = FindByName("Timeout");
+
+            /// <summary>超时排除项。不判断超时的操作名，支持*模糊匹配</summary>
+            public static readonly Field TimeoutExcludes = FindByName("TimeoutExcludes");
 
             /// <summary>节点集。该应用最近一段时间所涉及的来源地址</summary>
             public static readonly Field Nodes = FindByName("Nodes");
@@ -355,6 +368,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>超时时间。超过该时间时强制采样，默认5000毫秒</summary>
             public const String Timeout = "Timeout";
+
+            /// <summary>超时排除项。不判断超时的操作名，支持*模糊匹配</summary>
+            public const String TimeoutExcludes = "TimeoutExcludes";
 
             /// <summary>节点集。该应用最近一段时间所涉及的来源地址</summary>
             public const String Nodes = "Nodes";

@@ -12,6 +12,7 @@
       <Column Name="MaxErrors" DataType="Int32" Description="异常数。最大异常采样数，采样周期内，最多只记录指定数量的异常事件，默认10" />
       <Column Name="Excludes" DataType="String" Length="2000" Description="排除项。要排除的操作名，支持*模糊匹配" />
       <Column Name="Timeout" DataType="Int32" Description="超时时间。超过该时间时强制采样，默认5000毫秒" />
+      <Column Name="TimeoutExcludes" DataType="String" Description="超时排除项。不判断超时的操作名，支持*模糊匹配" />
       <Column Name="Nodes" DataType="String" Length="500" Description="节点集。该应用最近一段时间所涉及的来源地址" />
       <Column Name="AlarmThreshold" DataType="Int32" Description="告警阈值。错误数达到该值时触发告警，0表示不启用" />
       <Column Name="AlarmRobot" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />

@@ -19,7 +19,7 @@ namespace Stardust.Server.Controllers
     [Route("[controller]")]
     public class TraceController : ControllerBase
     {
-        private readonly AppService _service ;
+        private readonly AppService _service;
         private readonly ITraceStatService _stat;
         private readonly IAppDayStatService _appStat;
         private static readonly ICache _cache = new NewLife.Caching.MemoryCache();
@@ -92,6 +92,7 @@ namespace Stardust.Server.Controllers
         {
             // 排除项
             var excludes = app.Excludes.Split(",", ";") ?? new String[0];
+            var timeoutExcludes = app.TimeoutExcludes.Split(",", ";") ?? new String[0];
 
             var now = DateTime.Now;
             var traces = new List<TraceData>();
@@ -114,8 +115,17 @@ namespace Stardust.Server.Controllers
 
                 traces.Add(td);
 
-                samples.AddRange(SampleData.Create(td, item.Samples, true));
+                //samples.AddRange(SampleData.Create(td, item.Samples, true));
                 samples.AddRange(SampleData.Create(td, item.ErrorSamples, false));
+
+                // 超时处理为异常
+                if (app.Timeout <= 0 || timeoutExcludes.Any(e => e.IsMatch(item.Name)))
+                    samples.AddRange(SampleData.Create(td, item.Samples, true));
+                else
+                {
+                    samples.AddRange(SampleData.Create(td, item.Samples.Where(e => e.EndTime - e.StartTime > app.Timeout).ToList(), false));
+                    samples.AddRange(SampleData.Create(td, item.Samples.Where(e => e.EndTime - e.StartTime <= app.Timeout).ToList(), true));
+                }
             }
 
             traces.Insert(true);
