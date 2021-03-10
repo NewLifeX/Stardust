@@ -7,8 +7,8 @@
     <Description>星尘，分布式资源调度，客户端代理部署于每一台机器节点，接受服务端命令，获取目标应用包并拉起进程。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2021 NewLife</Copyright>
-    <Version>1.1.2021.0304</Version>
-    <FileVersion>1.1.2021.0304</FileVersion>
+    <Version>1.1.2021.0310</Version>
+    <FileVersion>1.1.2021.0310</FileVersion>
     <AssemblyVersion>1.0.*</AssemblyVersion>
     <Deterministic>false</Deterministic>
     <OutputPath>..\Bin\Agent</OutputPath>
