@@ -81,6 +81,37 @@ namespace Stardust
         }
         #endregion
 
+        #region 方法
+        /// <summary>远程调用拦截，支持重新登录</summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="method"></param>
+        /// <param name="action"></param>
+        /// <param name="args"></param>
+        /// <param name="onRequest"></param>
+        /// <returns></returns>
+        public override async Task<TResult> InvokeAsync<TResult>(HttpMethod method, String action, Object args = null, Action<HttpRequestMessage> onRequest = null)
+        {
+            try
+            {
+                return await base.InvokeAsync<TResult>(method, action, args, onRequest);
+            }
+            catch (Exception ex)
+            {
+                var ex2 = ex.GetTrue();
+                if (ex2 is ApiException aex && (aex.Code == 402 || aex.Code == 403) && !action.EqualIgnoreCase("Node/Login", "Node/Logout"))
+                {
+                    XTrace.WriteException(ex);
+                    XTrace.WriteLine("重新登录！");
+                    await Login();
+
+                    return await base.InvokeAsync<TResult>(method, action, args, onRequest);
+                }
+
+                throw;
+            }
+        }
+        #endregion
+
         #region 登录
         /// <summary>登录</summary>
         /// <returns></returns>
@@ -332,10 +363,10 @@ namespace Stardust
         /// <returns></returns>
         public async Task<Object> Ping()
         {
-            var inf = GetHeartInfo();
-
             try
             {
+                var inf = GetHeartInfo();
+
                 var rs = await PingAsync(inf);
                 if (rs != null)
                 {
@@ -375,7 +406,7 @@ namespace Stardust
                     return Login();
                 }
 
-                XTrace.WriteLine(inf.ToJson());
+                //XTrace.WriteLine(inf.ToJson());
                 XTrace.WriteLine("心跳异常 {0}", (String)ex.GetTrue().Message);
 
                 throw;
