@@ -22,7 +22,7 @@ namespace Stardust.Data.Configs
         /// <summary>编号</summary>
         [DisplayName("编号")]
         [Description("编号")]
-        [DataObjectField(true, false, false, 0)]
+        [DataObjectField(true, true, false, 0)]
         [BindColumn("Id", "编号", "")]
         public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
@@ -89,6 +89,38 @@ namespace Stardust.Data.Configs
         [DataObjectField(false, false, false, 0)]
         [BindColumn("IsGlobal", "全局。该应用下的配置数据作为全局数据，请求任意应用配置都返回", "")]
         public Boolean IsGlobal { get => _IsGlobal; set { if (OnPropertyChanging("IsGlobal", value)) { _IsGlobal = value; OnPropertyChanged("IsGlobal"); } } }
+
+        private Boolean _EnableApollo;
+        /// <summary>阿波罗</summary>
+        [DisplayName("阿波罗")]
+        [Description("阿波罗")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("EnableApollo", "阿波罗", "")]
+        public Boolean EnableApollo { get => _EnableApollo; set { if (OnPropertyChanging("EnableApollo", value)) { _EnableApollo = value; OnPropertyChanged("EnableApollo"); } } }
+
+        private String _ApolloMetaServer;
+        /// <summary>阿波罗地址</summary>
+        [DisplayName("阿波罗地址")]
+        [Description("阿波罗地址")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("ApolloMetaServer", "阿波罗地址", "")]
+        public String ApolloMetaServer { get => _ApolloMetaServer; set { if (OnPropertyChanging("ApolloMetaServer", value)) { _ApolloMetaServer = value; OnPropertyChanged("ApolloMetaServer"); } } }
+
+        private String _ApolloAppId;
+        /// <summary>阿波罗账号</summary>
+        [DisplayName("阿波罗账号")]
+        [Description("阿波罗账号")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("ApolloAppId", "阿波罗账号", "")]
+        public String ApolloAppId { get => _ApolloAppId; set { if (OnPropertyChanging("ApolloAppId", value)) { _ApolloAppId = value; OnPropertyChanged("ApolloAppId"); } } }
+
+        private String _ApolloNameSpace;
+        /// <summary>阿波罗命名空间。默认application，也可以填依赖的公共命名空间，但建议为公共命名空间建立应用依赖。</summary>
+        [DisplayName("阿波罗命名空间")]
+        [Description("阿波罗命名空间。默认application，也可以填依赖的公共命名空间，但建议为公共命名空间建立应用依赖。")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("ApolloNameSpace", "阿波罗命名空间。默认application，也可以填依赖的公共命名空间，但建议为公共命名空间建立应用依赖。", "")]
+        public String ApolloNameSpace { get => _ApolloNameSpace; set { if (OnPropertyChanging("ApolloNameSpace", value)) { _ApolloNameSpace = value; OnPropertyChanged("ApolloNameSpace"); } } }
 
         private Int32 _CreateUserID;
         /// <summary>创建者</summary>
@@ -166,6 +198,10 @@ namespace Stardust.Data.Configs
                     case "CanBeQuoted": return _CanBeQuoted;
                     case "Quotes": return _Quotes;
                     case "IsGlobal": return _IsGlobal;
+                    case "EnableApollo": return _EnableApollo;
+                    case "ApolloMetaServer": return _ApolloMetaServer;
+                    case "ApolloAppId": return _ApolloAppId;
+                    case "ApolloNameSpace": return _ApolloNameSpace;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -189,6 +225,10 @@ namespace Stardust.Data.Configs
                     case "CanBeQuoted": _CanBeQuoted = value.ToBoolean(); break;
                     case "Quotes": _Quotes = Convert.ToString(value); break;
                     case "IsGlobal": _IsGlobal = value.ToBoolean(); break;
+                    case "EnableApollo": _EnableApollo = value.ToBoolean(); break;
+                    case "ApolloMetaServer": _ApolloMetaServer = Convert.ToString(value); break;
+                    case "ApolloAppId": _ApolloAppId = Convert.ToString(value); break;
+                    case "ApolloNameSpace": _ApolloNameSpace = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -232,6 +272,18 @@ namespace Stardust.Data.Configs
 
             /// <summary>全局。该应用下的配置数据作为全局数据，请求任意应用配置都返回</summary>
             public static readonly Field IsGlobal = FindByName("IsGlobal");
+
+            /// <summary>阿波罗</summary>
+            public static readonly Field EnableApollo = FindByName("EnableApollo");
+
+            /// <summary>阿波罗地址</summary>
+            public static readonly Field ApolloMetaServer = FindByName("ApolloMetaServer");
+
+            /// <summary>阿波罗账号</summary>
+            public static readonly Field ApolloAppId = FindByName("ApolloAppId");
+
+            /// <summary>阿波罗命名空间。默认application，也可以填依赖的公共命名空间，但建议为公共命名空间建立应用依赖。</summary>
+            public static readonly Field ApolloNameSpace = FindByName("ApolloNameSpace");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUserID = FindByName("CreateUserID");
@@ -286,6 +338,18 @@ namespace Stardust.Data.Configs
 
             /// <summary>全局。该应用下的配置数据作为全局数据，请求任意应用配置都返回</summary>
             public const String IsGlobal = "IsGlobal";
+
+            /// <summary>阿波罗</summary>
+            public const String EnableApollo = "EnableApollo";
+
+            /// <summary>阿波罗地址</summary>
+            public const String ApolloMetaServer = "ApolloMetaServer";
+
+            /// <summary>阿波罗账号</summary>
+            public const String ApolloAppId = "ApolloAppId";
+
+            /// <summary>阿波罗命名空间。默认application，也可以填依赖的公共命名空间，但建议为公共命名空间建立应用依赖。</summary>
+            public const String ApolloNameSpace = "ApolloNameSpace";
 
             /// <summary>创建者</summary>
             public const String CreateUserID = "CreateUserID";

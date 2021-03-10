@@ -31,6 +31,7 @@
 
   <ItemGroup>
     <Compile Include="..\Stardust.Server\Common\ApiFilterAttribute.cs" Link="Services\ApiFilterAttribute.cs" />
+    <Compile Include="..\Stardust.Server\Services\ApolloService.cs" Link="Services\ApolloService.cs" />
     <Compile Include="..\Stardust.Server\Services\AppDayStatService.cs" Link="Services\AppDayStatService.cs" />
     <Compile Include="..\Stardust.Server\Services\ConfigService.cs" Link="Services\ConfigService.cs" />
     <Compile Include="..\Stardust.Server\Services\RedisService.cs" Link="Services\RedisService.cs" />

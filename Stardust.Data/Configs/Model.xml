@@ -2,7 +2,7 @@
 <Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data.Configs" ConnName="ConfigCenter" BaseClass="Entity" Output="" xmlns="http://www.newlifex.com/Model2020.xsd">
   <Table Name="AppConfig" Description="应用配置。需要管理配置的应用系统列表">
     <Columns>
-      <Column Name="Id" DataType="Int32" PrimaryKey="True" Description="编号" />
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Version" DataType="Int32" Description="版本。应用正在使用的版本号，返回小于等于该版本的配置" />
@@ -11,6 +11,10 @@
       <Column Name="CanBeQuoted" DataType="Boolean" Description="可被依赖。打开后，才能被其它应用依赖" />
       <Column Name="Quotes" DataType="String" Description="依赖应用。所依赖应用的集合" />
       <Column Name="IsGlobal" DataType="Boolean" Description="全局。该应用下的配置数据作为全局数据，请求任意应用配置都返回" />
+      <Column Name="EnableApollo" DataType="Boolean" Description="阿波罗" />
+      <Column Name="ApolloMetaServer" DataType="String" Description="阿波罗地址" />
+      <Column Name="ApolloAppId" DataType="String" Description="阿波罗账号" />
+      <Column Name="ApolloNameSpace" DataType="String" Description="阿波罗命名空间。默认application，也可以填依赖的公共命名空间，但建议为公共命名空间建立应用依赖。" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />

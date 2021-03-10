@@ -56,6 +56,7 @@ namespace Stardust.Server
             services.AddHostedService<DataRetentionService>();
             services.AddHostedService<RedisService>();
             services.AddHostedService<NodeOnlineService>();
+            services.AddHostedService<ApolloService>();
 
             services.AddControllers()
                 .AddJsonOptions(options =>
