@@ -13,6 +13,7 @@ using NewLife.Log;
 using Stardust.Monitors;
 using Stardust.Server.Common;
 using Stardust.Server.Services;
+using XCode.DataAccessLayer;
 
 namespace Stardust.Server
 {
@@ -28,6 +29,13 @@ namespace Stardust.Server
 
             var tracer = StarTracer.Register();
             services.AddSingleton<ITracer>(tracer);
+
+            // 默认连接字符串，如果配置文件没有设置，则采用该值
+            DAL.ConnStrs.TryAdd("ConfigCenter", "MapTo=Stardust");
+            DAL.ConnStrs.TryAdd("Monitor", "MapTo=Stardust");
+            DAL.ConnStrs.TryAdd("MonitorLog", "MapTo=Stardust");
+            DAL.ConnStrs.TryAdd("Node", "MapTo=Stardust");
+            DAL.ConnStrs.TryAdd("NodeLog", "MapTo=Stardust");
 
             var set = Stardust.Server.Setting.Current;
 

@@ -7,6 +7,7 @@ using NewLife.Cube;
 using NewLife.Log;
 using Stardust.Monitors;
 using Stardust.Server.Services;
+using XCode.DataAccessLayer;
 
 namespace Stardust.Web
 {
@@ -20,6 +21,13 @@ namespace Stardust.Web
         {
             var tracer = StarTracer.Register();
             services.AddSingleton<ITracer>(tracer);
+
+            // 默认连接字符串，如果配置文件没有设置，则采用该值
+            DAL.ConnStrs.TryAdd("ConfigCenter", "MapTo=Stardust");
+            DAL.ConnStrs.TryAdd("Monitor", "MapTo=Stardust");
+            DAL.ConnStrs.TryAdd("MonitorLog", "MapTo=Stardust");
+            DAL.ConnStrs.TryAdd("Node", "MapTo=Stardust");
+            DAL.ConnStrs.TryAdd("NodeLog", "MapTo=Stardust");
 
             // 统计
             services.AddSingleton<IAppDayStatService, AppDayStatService>();
