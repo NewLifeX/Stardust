@@ -68,7 +68,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                     chart.Add(list2, _.TcpTimeWait);
                     chart.Add(list2, _.TcpCloseWait);
                     chart.Add(list2, _.Temperature);
-                    //chart.Add(list2, _.Delay);
+                    chart.Add(list2, _.Battery);
                     //chart.Add(list2, _.Offset);
                     chart.SetTooltip();
                     ViewBag.Charts = new[] { chart };

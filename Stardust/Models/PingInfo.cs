@@ -18,6 +18,9 @@ namespace Stardust.Models
         /// <summary>温度</summary>
         public Double Temperature { get; set; }
 
+        /// <summary>电量</summary>
+        public Double Battery { get; set; }
+
         /// <summary>MAC地址</summary>
         public String Macs { get; set; }
 

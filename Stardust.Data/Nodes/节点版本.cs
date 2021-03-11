@@ -176,7 +176,7 @@ namespace Stardust.Data.Nodes
                     case "Version": _Version = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Force": _Force = value.ToBoolean(); break;
-                    case "Channel": _Channel = (NodeChannels)value; break;
+                    case "Channel": _Channel = (NodeChannels)value.ToInt(); break;
                     case "Strategy": _Strategy = Convert.ToString(value); break;
                     case "Source": _Source = Convert.ToString(value); break;
                     case "Executor": _Executor = Convert.ToString(value); break;

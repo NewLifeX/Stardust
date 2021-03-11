@@ -308,6 +308,7 @@ namespace Stardust
                 AvailableFreeSpace = (UInt64)driveInfo.AvailableFreeSpace,
                 CpuRate = mi.CpuRate,
                 Temperature = mi.Temperature,
+                //Battery = mi.Battery,
                 ProcessCount = ps.Length,
                 TcpConnections = connections.Count(e => e.State == TcpState.Established),
                 TcpTimeWait = connections.Count(e => e.State == TcpState.TimeWait),

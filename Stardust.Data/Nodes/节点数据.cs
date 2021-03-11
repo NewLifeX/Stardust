@@ -75,6 +75,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("Temperature", "温度", "")]
         public Double Temperature { get => _Temperature; set { if (OnPropertyChanging("Temperature", value)) { _Temperature = value; OnPropertyChanged("Temperature"); } } }
 
+        private Double _Battery;
+        /// <summary>电量</summary>
+        [DisplayName("电量")]
+        [Description("电量")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Battery", "电量", "")]
+        public Double Battery { get => _Battery; set { if (OnPropertyChanging("Battery", value)) { _Battery = value; OnPropertyChanged("Battery"); } } }
+
         private Int32 _ProcessCount;
         /// <summary>进程数</summary>
         [DisplayName("进程数")]
@@ -189,6 +197,7 @@ namespace Stardust.Data.Nodes
                     case "AvailableFreeSpace": return _AvailableFreeSpace;
                     case "CpuRate": return _CpuRate;
                     case "Temperature": return _Temperature;
+                    case "Battery": return _Battery;
                     case "ProcessCount": return _ProcessCount;
                     case "TcpConnections": return _TcpConnections;
                     case "TcpTimeWait": return _TcpTimeWait;
@@ -215,6 +224,7 @@ namespace Stardust.Data.Nodes
                     case "AvailableFreeSpace": _AvailableFreeSpace = value.ToInt(); break;
                     case "CpuRate": _CpuRate = value.ToDouble(); break;
                     case "Temperature": _Temperature = value.ToDouble(); break;
+                    case "Battery": _Battery = value.ToDouble(); break;
                     case "ProcessCount": _ProcessCount = value.ToInt(); break;
                     case "TcpConnections": _TcpConnections = value.ToInt(); break;
                     case "TcpTimeWait": _TcpTimeWait = value.ToInt(); break;
@@ -257,6 +267,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>温度</summary>
             public static readonly Field Temperature = FindByName("Temperature");
+
+            /// <summary>电量</summary>
+            public static readonly Field Battery = FindByName("Battery");
 
             /// <summary>进程数</summary>
             public static readonly Field ProcessCount = FindByName("ProcessCount");
@@ -320,6 +333,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>温度</summary>
             public const String Temperature = "Temperature";
+
+            /// <summary>电量</summary>
+            public const String Battery = "Battery";
 
             /// <summary>进程数</summary>
             public const String ProcessCount = "ProcessCount";

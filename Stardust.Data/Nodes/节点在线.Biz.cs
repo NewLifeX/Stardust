@@ -198,6 +198,7 @@ namespace Stardust.Data.Nodes
             if (inf.AvailableFreeSpace > 0) olt.AvailableFreeSpace = (Int32)(inf.AvailableFreeSpace / 1024 / 1024);
             if (inf.CpuRate > 0) olt.CpuRate = inf.CpuRate;
             if (inf.Temperature > 0) olt.Temperature = inf.Temperature;
+            if (inf.Battery > 0) olt.Battery = inf.Battery;
             if (inf.ProcessCount > 0) olt.ProcessCount = inf.ProcessCount;
             if (inf.TcpConnections > 0) olt.TcpConnections = inf.TcpConnections;
             if (inf.TcpTimeWait > 0) olt.TcpTimeWait = inf.TcpTimeWait;
@@ -225,6 +226,7 @@ namespace Stardust.Data.Nodes
                 AvailableFreeSpace = olt.AvailableFreeSpace,
                 CpuRate = inf.CpuRate,
                 Temperature = inf.Temperature,
+                Battery = inf.Battery,
                 ProcessCount = inf.ProcessCount,
                 TcpConnections = inf.TcpConnections,
                 TcpTimeWait = inf.TcpTimeWait,
