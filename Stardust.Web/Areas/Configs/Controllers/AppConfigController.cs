@@ -59,10 +59,10 @@ namespace Stardust.Web.Areas.Configs.Controllers
                 df.DataSource = (entity, field) => AppConfig.FindAllWithCache().Where(e => e.CanBeQuoted).ToDictionary(e => e.Id, e => e.Name);
             }
 
-            // 异步同步应用
-            {
-                Task.Run(() => AppConfig.Sync());
-            }
+            //// 异步同步应用
+            //{
+            //    Task.Run(() => AppConfig.Sync());
+            //}
         }
 
         public AppConfigController()
