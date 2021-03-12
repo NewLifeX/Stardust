@@ -22,7 +22,7 @@ using Stardust.Services;
 
 namespace Stardust
 {
-    /// <summary>星星客户端</summary>
+    /// <summary>星星客户端。每个设备节点有一个客户端连接服务端</summary>
     public class StarClient : ApiHttpClient
     {
         #region 属性

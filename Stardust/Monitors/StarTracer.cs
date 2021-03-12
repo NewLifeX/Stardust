@@ -24,7 +24,7 @@ namespace Stardust.Monitors
         public String AppName { get; set; }
 
         /// <summary>应用密钥</summary>
-        public String AppSecret { get; set; }
+        public String Secret { get; set; }
 
         /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
         public String ClientId { get; set; }
@@ -56,7 +56,7 @@ namespace Stardust.Monitors
 
             var set = Setting.Current;
             AppId = set.AppKey;
-            AppSecret = set.Secret;
+            Secret = set.Secret;
 
             if (set.Debug) Log = XTrace.Log;
 
@@ -95,7 +95,7 @@ namespace Stardust.Monitors
                 {
                     grant_type = "password",
                     username = AppId,
-                    password = AppSecret
+                    password = Secret
                 });
                 Client.Token = _token.AccessToken;
 
@@ -174,7 +174,7 @@ namespace Stardust.Monitors
             try
             {
                 // 检查令牌
-                if (!AppSecret.IsNullOrEmpty()) CheckAuthorize();
+                if (!Secret.IsNullOrEmpty()) CheckAuthorize();
 
                 var rs = Client.Invoke<TraceResponse>("Trace/Report", model);
                 // 处理响应参数
@@ -225,6 +225,35 @@ namespace Stardust.Monitors
         }
         #endregion
 
+        #region 方法
+        /// <summary>全局注入</summary>
+        public void AttachGlobal()
+        {
+            DefaultTracer.Instance = this;
+            ApiHelper.Tracer = this;
+
+#if NET50
+            // 订阅Http事件
+            var observer = new DiagnosticListenerObserver { Tracer = this };
+            observer.Subscribe(new HttpDiagnosticListener());
+#endif
+
+            // 反射处理XCode追踪
+            {
+                var type = "XCode.DataAccessLayer.DAL".GetTypeEx(false);
+                var pi = type?.GetPropertyEx("GlobalTracer");
+                if (pi != null && pi.PropertyType == typeof(ITracer)) pi.SetValue(null, this);
+            }
+
+            // 反射处理Cube追踪
+            {
+                var type = "NewLife.Cube.WebMiddleware.TracerMiddleware".GetTypeEx(false);
+                var pi = type?.GetPropertyEx("Tracer");
+                if (pi != null && pi.PropertyType == typeof(ITracer)) pi.SetValue(null, this);
+            }
+        }
+        #endregion
+
         #region 全局注册
         /// <summary>全局注册星尘性能追踪器</summary>
         /// <param name="server">星尘监控中心地址，为空时自动从本地探测</param>
@@ -249,28 +278,7 @@ namespace Stardust.Monitors
             if (Instance is StarTracer tracer && tracer.Client is ApiHttpClient) return tracer;
 
             tracer = new StarTracer(server) { Log = XTrace.Log };
-            DefaultTracer.Instance = tracer;
-            ApiHelper.Tracer = tracer;
-
-#if NET50
-            // 订阅Http事件
-            var observer = new DiagnosticListenerObserver { Tracer = tracer };
-            observer.Subscribe(new HttpDiagnosticListener());
-#endif
-
-            // 反射处理XCode追踪
-            {
-                var type = "XCode.DataAccessLayer.DAL".GetTypeEx(false);
-                var pi = type?.GetPropertyEx("GlobalTracer");
-                if (pi != null && pi.PropertyType == typeof(ITracer)) pi.SetValue(null, tracer);
-            }
-
-            // 反射处理Cube追踪
-            {
-                var type = "NewLife.Cube.WebMiddleware.TracerMiddleware".GetTypeEx(false);
-                var pi = type?.GetPropertyEx("Tracer");
-                if (pi != null && pi.PropertyType == typeof(ITracer)) pi.SetValue(null, tracer);
-            }
+            tracer.AttachGlobal();
 
             return tracer;
         }
