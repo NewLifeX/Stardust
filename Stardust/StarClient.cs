@@ -287,7 +287,7 @@ namespace Stardust
                     if (name.EqualIgnoreCase(_excludes)) continue;
 
                     // 特殊处理dotnet
-                    if (name == "dotnet") name = GetProcessName(item);
+                    if (name == "dotnet") name = AppInfo.GetProcessName(item);
 
                     if (!pcs.Contains(name)) pcs.Add(name);
                 }
@@ -332,31 +332,6 @@ namespace Stardust
             if (Stopwatch.IsHighResolution) ext.Uptime = (Int32)(Stopwatch.GetTimestamp() / Stopwatch.Frequency);
 
             return ext;
-        }
-
-        private String GetProcessName(Process item)
-        {
-            if (Runtime.Linux)
-            {
-                try
-                {
-                    var line = File.ReadAllText($"/proc/{item.Id}/cmdline").TrimStart("\0", "dotnet", " ", "./");
-                    if (!line.IsNullOrEmpty())
-                    {
-                        var p = line.IndexOf('\0');
-                        if (p < 0) p = line.IndexOf(' ');
-                        if (p < 0) p = line.IndexOf('-');
-                        if (p < 0) p = line.IndexOf(".dll");
-                        if (p > 0)
-                            return line.Substring(0, p);
-                        else
-                            return line;
-                    }
-                }
-                catch { }
-            }
-
-            return item.ProcessName;
         }
 
         private TimerX _timer;

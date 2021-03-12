@@ -38,9 +38,10 @@ namespace Stardust.Monitors
         /// <summary>Api客户端</summary>
         public IApiClient Client { get; set; }
 
-        private String _version;
-        private Process _process = Process.GetCurrentProcess();
+        private readonly String _version;
+        private readonly Process _process = Process.GetCurrentProcess();
         private readonly Queue<TraceModel> _fails = new Queue<TraceModel>();
+        private AppInfo _appInfo;
         #endregion
 
         #region 构造
@@ -154,19 +155,10 @@ namespace Stardust.Monitors
             Init();
 
             // 构建应用信息
-            var info = new AppInfo(_process);
-
-            try
-            {
-                // 调用WindowApi获取进程的连接数
-                var tcps = NetHelper.GetAllTcpConnections();
-                if (tcps != null && tcps.Length > 0)
-                {
-                    var pid = Process.GetCurrentProcess().Id;
-                    info.Connections = tcps.Count(e => e.ProcessId == pid);
-                }
-            }
-            catch { }
+            if (_appInfo == null)
+                _appInfo = new AppInfo(_process);
+            else
+                _appInfo.Refresh();
 
             // 发送，失败后进入队列
             var model = new TraceModel
@@ -175,7 +167,7 @@ namespace Stardust.Monitors
                 AppName = AppName,
                 ClientId = ClientId,
                 Version = _version,
-                Info = info,
+                Info = _appInfo,
 
                 Builders = builders
             };
@@ -201,9 +193,7 @@ namespace Stardust.Monitors
             }
             catch (Exception ex)
             {
-                //XTrace.WriteException(ex);
                 Log?.Error(ex + "");
-                //throw;
 
                 if (_fails.Count < MaxFails) _fails.Enqueue(model);
                 return;
