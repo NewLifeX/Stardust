@@ -18,18 +18,21 @@ namespace Stardust.Web.Controllers
         public ConfigController(ConfigService configService) => _configService = configService;
 
         [ApiFilter]
-        public ConfigInfo GetAll(String appId, String secrect, String scope, Int32 version)
+        public ConfigInfo GetAll(String appId, String secret, String scope, Int32 version)
         {
             if (appId.IsNullOrEmpty()) throw new ArgumentNullException(nameof(appId));
 
             // 验证
-            var app = Valid(appId, secrect);
+            var app = Valid(appId, secret);
             var ip = HttpContext.Connection?.RemoteIpAddress + "";
 
             // 版本没有变化时，不做计算处理，不返回配置数据
             if (version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
 
-            var dic = _configService.GetConfigs(app, scope, ip);
+            // 作用域为空时重写
+            scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip) : scope;
+
+            var dic = _configService.GetConfigs(app, scope);
 
             return new ConfigInfo
             {

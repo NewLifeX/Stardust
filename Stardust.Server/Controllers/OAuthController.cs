@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using NewLife;
 using Stardust.Models;
 using Stardust.Server.Common;
 using Stardust.Server.Models;
@@ -12,13 +13,15 @@ namespace Stardust.Server.Controllers
     [Route("[controller]/[action]")]
     public class OAuthController : ControllerBase
     {
-        private readonly AppService _service ;
+        private readonly AppService _service;
         public OAuthController(AppService appService) => _service = appService;
 
         [ApiFilter]
         public TokenModel Token([FromBody] TokenInModel model)
         {
             var set = Setting.Current;
+
+            if (model.grant_type.IsNullOrEmpty()) model.grant_type = "password";
 
             // 密码模式
             if (model.grant_type == "password")

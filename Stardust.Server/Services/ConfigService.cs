@@ -101,14 +101,11 @@ namespace Stardust.Server.Services
             }
         }
 
-        public IDictionary<String, String> GetConfigs(AppConfig app, String scope, String ip)
+        public IDictionary<String, String> GetConfigs(AppConfig app, String scope)
         {
-            using var span = _tracer?.NewSpan(nameof(GetConfigs), $"{app} {scope} {ip}");
+            using var span = _tracer?.NewSpan(nameof(GetConfigs), $"{app} {scope}");
 
             var dic = new Dictionary<String, String>(StringComparer.OrdinalIgnoreCase);
-
-            // 作用域为空时重写
-            scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip) : scope;
 
             var list = ConfigData.FindAllValid(app.Id);
             list = ConfigData.SelectVersion(list, app.Version);
