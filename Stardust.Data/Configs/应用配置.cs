@@ -122,6 +122,22 @@ namespace Stardust.Data.Configs
         [BindColumn("ApolloNameSpace", "阿波罗命名空间。默认application，也可以填依赖的公共命名空间，但建议为公共命名空间建立应用依赖。", "")]
         public String ApolloNameSpace { get => _ApolloNameSpace; set { if (OnPropertyChanging("ApolloNameSpace", value)) { _ApolloNameSpace = value; OnPropertyChanged("ApolloNameSpace"); } } }
 
+        private String _UsedKeys;
+        /// <summary>已使用。用过的配置项</summary>
+        [DisplayName("已使用")]
+        [Description("已使用。用过的配置项")]
+        [DataObjectField(false, false, true, 2000)]
+        [BindColumn("UsedKeys", "已使用。用过的配置项", "")]
+        public String UsedKeys { get => _UsedKeys; set { if (OnPropertyChanging("UsedKeys", value)) { _UsedKeys = value; OnPropertyChanged("UsedKeys"); } } }
+
+        private String _MissedKeys;
+        /// <summary>缺失键。没有读取到的配置项</summary>
+        [DisplayName("缺失键")]
+        [Description("缺失键。没有读取到的配置项")]
+        [DataObjectField(false, false, true, 2000)]
+        [BindColumn("MissedKeys", "缺失键。没有读取到的配置项", "")]
+        public String MissedKeys { get => _MissedKeys; set { if (OnPropertyChanging("MissedKeys", value)) { _MissedKeys = value; OnPropertyChanged("MissedKeys"); } } }
+
         private Int32 _CreateUserID;
         /// <summary>创建者</summary>
         [DisplayName("创建者")]
@@ -202,6 +218,8 @@ namespace Stardust.Data.Configs
                     case "ApolloMetaServer": return _ApolloMetaServer;
                     case "ApolloAppId": return _ApolloAppId;
                     case "ApolloNameSpace": return _ApolloNameSpace;
+                    case "UsedKeys": return _UsedKeys;
+                    case "MissedKeys": return _MissedKeys;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -229,6 +247,8 @@ namespace Stardust.Data.Configs
                     case "ApolloMetaServer": _ApolloMetaServer = Convert.ToString(value); break;
                     case "ApolloAppId": _ApolloAppId = Convert.ToString(value); break;
                     case "ApolloNameSpace": _ApolloNameSpace = Convert.ToString(value); break;
+                    case "UsedKeys": _UsedKeys = Convert.ToString(value); break;
+                    case "MissedKeys": _MissedKeys = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -284,6 +304,12 @@ namespace Stardust.Data.Configs
 
             /// <summary>阿波罗命名空间。默认application，也可以填依赖的公共命名空间，但建议为公共命名空间建立应用依赖。</summary>
             public static readonly Field ApolloNameSpace = FindByName("ApolloNameSpace");
+
+            /// <summary>已使用。用过的配置项</summary>
+            public static readonly Field UsedKeys = FindByName("UsedKeys");
+
+            /// <summary>缺失键。没有读取到的配置项</summary>
+            public static readonly Field MissedKeys = FindByName("MissedKeys");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUserID = FindByName("CreateUserID");
@@ -350,6 +376,12 @@ namespace Stardust.Data.Configs
 
             /// <summary>阿波罗命名空间。默认application，也可以填依赖的公共命名空间，但建议为公共命名空间建立应用依赖。</summary>
             public const String ApolloNameSpace = "ApolloNameSpace";
+
+            /// <summary>已使用。用过的配置项</summary>
+            public const String UsedKeys = "UsedKeys";
+
+            /// <summary>缺失键。没有读取到的配置项</summary>
+            public const String MissedKeys = "MissedKeys";
 
             /// <summary>创建者</summary>
             public const String CreateUserID = "CreateUserID";

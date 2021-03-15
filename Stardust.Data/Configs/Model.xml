@@ -15,6 +15,8 @@
       <Column Name="ApolloMetaServer" DataType="String" Description="阿波罗地址" />
       <Column Name="ApolloAppId" DataType="String" Description="阿波罗账号" />
       <Column Name="ApolloNameSpace" DataType="String" Description="阿波罗命名空间。默认application，也可以填依赖的公共命名空间，但建议为公共命名空间建立应用依赖。" />
+      <Column Name="UsedKeys" DataType="String" Length="2000" Description="已使用。用过的配置项" />
+      <Column Name="MissedKeys" DataType="String" Length="2000" Description="缺失键。没有读取到的配置项" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />

@@ -19,5 +19,11 @@ namespace Stardust.Server.Models
 
         /// <summary>版本</summary>
         public Int32 Version { get; set; }
+
+        /// <summary>已使用的键</summary>
+        public String UsedKeys { get; set; }
+
+        /// <summary>缺失的键</summary>
+        public String MissedKeys { get; set; }
     }
 }
