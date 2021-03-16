@@ -7,10 +7,8 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using NewLife;
 using NewLife.Cube.WebMiddleware;
 using NewLife.Log;
-using Stardust.Monitors;
 using Stardust.Server.Common;
 using Stardust.Server.Services;
 using XCode.DataAccessLayer;
@@ -27,7 +25,9 @@ namespace Stardust.Server
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            var tracer = StarTracer.Register();
+            var star = new StarFactory(null, "StarServer", null);
+
+            var tracer = star.Tracer;
             services.AddSingleton<ITracer>(tracer);
 
             // 默认连接字符串，如果配置文件没有设置，则采用该值

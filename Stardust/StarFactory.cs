@@ -79,13 +79,13 @@ namespace Stardust
         #endregion
 
         #region 监控中心
-        private StarTracer _Monitor;
+        private StarTracer _tracer;
         /// <summary>监控中心</summary>
-        public ITracer Monitor
+        public ITracer Tracer
         {
             get
             {
-                if (_Monitor == null)
+                if (_tracer == null)
                 {
                     Valid();
 
@@ -98,22 +98,22 @@ namespace Stardust
                     };
                     tracer.AttachGlobal();
 
-                    _Monitor = tracer;
+                    _tracer = tracer;
                 }
 
-                return _Monitor;
+                return _tracer;
             }
         }
         #endregion
 
         #region 配置中心
-        private HttpConfigProvider _configProvider;
+        private HttpConfigProvider _config;
         /// <summary>配置中心</summary>
-        public IConfigProvider ConfigProvider
+        public IConfigProvider Config
         {
             get
             {
-                if (_configProvider == null)
+                if (_config == null)
                 {
                     Valid();
 
@@ -125,10 +125,10 @@ namespace Stardust
                     };
                     http.LoadAll();
 
-                    _configProvider = http;
+                    _config = http;
                 }
 
-                return _configProvider;
+                return _config;
             }
         }
         #endregion
@@ -153,7 +153,7 @@ namespace Stardust
                     };
                     client.OnLogined += (s, e) =>
                     {
-                        if (_Monitor.Client is ApiHttpClient client) client.Token = _dustClient.Token;
+                        if (_tracer.Client is ApiHttpClient client) client.Token = _dustClient.Token;
                         //if (_configProvider.Client is ApiHttpClient client) client.Token = _dustClient.Token;
                     };
 

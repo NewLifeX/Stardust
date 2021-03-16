@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NewLife.Cube;
 using NewLife.Log;
-using Stardust.Monitors;
 using Stardust.Server.Services;
 using XCode.DataAccessLayer;
 
@@ -19,7 +18,9 @@ namespace Stardust.Web
 
         public void ConfigureServices(IServiceCollection services)
         {
-            var tracer = StarTracer.Register();
+            var star = new StarFactory(null, "StarWeb", null);
+
+            var tracer = star.Tracer;
             services.AddSingleton<ITracer>(tracer);
 
             // 默认连接字符串，如果配置文件没有设置，则采用该值
