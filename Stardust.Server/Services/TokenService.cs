@@ -5,12 +5,11 @@ using NewLife.Remoting;
 using NewLife.Security;
 using NewLife.Web;
 using Stardust.Data;
-using Stardust.Models;
 
 namespace Stardust.Server.Services
 {
     /// <summary>应用服务</summary>
-    public class AppService
+    public class TokenService
     {
         /// <summary>验证应用密码</summary>
         /// <param name="username"></param>

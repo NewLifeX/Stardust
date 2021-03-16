@@ -49,7 +49,7 @@ namespace Stardust.Server
             var alarmService = new AlarmService(tracer) { Period = set.AlarmPeriod };
             services.AddSingleton<IAlarmService>(alarmService);
 
-            services.AddSingleton<AppService>();
+            services.AddSingleton<TokenService>();
             services.AddSingleton<ConfigService>();
 
             services.AddHttpClient();

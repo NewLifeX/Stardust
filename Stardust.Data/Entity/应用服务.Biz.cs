@@ -50,12 +50,23 @@ namespace Stardust.Data
         /// <summary>根据应用查找</summary>
         /// <param name="appId">应用</param>
         /// <returns>实体对象</returns>
-        public static AppService FindByAppId(Int32 appId)
+        public static IList<AppService> FindAllByAppId(Int32 appId)
         {
             // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.AppId == appId);
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId);
 
-            return Find(_.AppId == appId);
+            return FindAll(_.AppId == appId);
+        }
+
+        /// <summary>根据服务名查找</summary>
+        /// <param name="serviceName">应用</param>
+        /// <returns>实体对象</returns>
+        public static IList<AppService> FindAllByService(String serviceName)
+        {
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ServiceName == serviceName);
+
+            return FindAll(_.ServiceName == serviceName);
         }
         #endregion
 

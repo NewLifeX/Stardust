@@ -58,7 +58,7 @@ namespace Stardust
             catch (Exception ex)
             {
                 var ex2 = ex.GetTrue();
-                if (ex2 is ApiException aex && (aex.Code == 402 || aex.Code == 403) && !action.EqualIgnoreCase("Node/Login", "Node/Logout"))
+                if (ex2 is ApiException aex && (aex.Code == 402 || aex.Code == 403) && !action.EqualIgnoreCase("OAuth/Token"))
                 {
                     XTrace.WriteException(ex);
                     XTrace.WriteLine("重新登录！");
@@ -141,14 +141,21 @@ namespace Stardust
         }
         #endregion
 
-        #region 核心方法
-        /// <summary>上报服务</summary>
-        /// <param name="nameSpace"></param>
-        /// <param name="services"></param>
+        #region 发布、消费
+        /// <summary>发布</summary>
+        /// <param name="service"></param>
         /// <returns></returns>
-        public async Task<Boolean> ReportAsync(String nameSpace, String[] services)
+        public async Task<Boolean> PublishAsync(PublishServiceInfo service)
         {
-            return await PostAsync<Boolean>("Report", new { nameSpace, services });
+            return await PostAsync<Boolean>("Publish", service);
+        }
+
+        /// <summary>消费</summary>
+        /// <param name="service"></param>
+        /// <returns></returns>
+        public async Task<Boolean> ConsumeAsync(ConsumeServiceInfo service)
+        {
+            return await PostAsync<Boolean>("Consume", service);
         }
         #endregion
 

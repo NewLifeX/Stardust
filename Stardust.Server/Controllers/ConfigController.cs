@@ -9,7 +9,7 @@ using Stardust.Models;
 using Stardust.Server.Common;
 using Stardust.Server.Models;
 using Stardust.Server.Services;
-using AppService = Stardust.Server.Services.AppService;
+using TokenService = Stardust.Server.Services.TokenService;
 
 namespace Stardust.Server.Controllers
 {
@@ -18,12 +18,12 @@ namespace Stardust.Server.Controllers
     public class ConfigController : ControllerBase
     {
         private readonly ConfigService _configService;
-        private readonly AppService _appService;
+        private readonly TokenService _tokenService;
 
-        public ConfigController(ConfigService configService, AppService appService)
+        public ConfigController(ConfigService configService, TokenService tokenService)
         {
             _configService = configService;
-            _appService = appService;
+            _tokenService = tokenService;
         }
 
         [ApiFilter]
@@ -93,14 +93,14 @@ namespace Stardust.Server.Controllers
         {
             if (appId.IsNullOrEmpty() && !token.IsNullOrEmpty())
             {
-                var ap = _appService.DecodeToken(token, Setting.Current);
+                var ap = _tokenService.DecodeToken(token, Setting.Current);
                 appId = ap?.Name;
             }
 
             var app = AppConfig.FindByName(appId);
             if (app == null)
             {
-                var ap = _appService.Authorize(appId, secret, true);
+                var ap = _tokenService.Authorize(appId, secret, true);
 
                 app = new AppConfig
                 {

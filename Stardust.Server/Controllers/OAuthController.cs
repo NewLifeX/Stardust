@@ -13,8 +13,8 @@ namespace Stardust.Server.Controllers
     [Route("[controller]/[action]")]
     public class OAuthController : ControllerBase
     {
-        private readonly AppService _service;
-        public OAuthController(AppService appService) => _service = appService;
+        private readonly TokenService _service;
+        public OAuthController(TokenService appService) => _service = appService;
 
         [ApiFilter]
         public TokenModel Token([FromBody] TokenInModel model)
