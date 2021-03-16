@@ -139,6 +139,22 @@ namespace Stardust.Data.Configs
 
             return FindAll(_.AppId == appid & _.Enable == true);
         }
+
+        /// <summary>查找应用最后发布的配置</summary>
+        /// <param name="appid"></param>
+        /// <param name="version"></param>
+        /// <returns></returns>
+        public static IList<ConfigData> FindAllLastRelease(Int32 appid, Int32 version)
+        {
+            var list = Meta.Count < 1000 ?
+                Meta.Cache.FindAll(_ => _.AppId == appid) :
+                FindAll(_.AppId == appid, _.Id.Desc(), null, 0, 10000);
+
+            // 先选择版本，再剔除被禁用项
+            list = SelectVersion(list, version);
+
+            return list.Where(e => e.Enable).ToList();
+        }
         #endregion
 
         #region 高级查询
@@ -173,18 +189,18 @@ namespace Stardust.Data.Configs
         /// <returns></returns>
         public static ConfigData Acquire(AppConfig app, String key, String scope)
         {
-            var locals = FindAllValid(app.Id);
+            var locals = app.LastRelease;
             locals = locals.Where(_ => _.Key.EqualIgnoreCase(key)).ToList();
-            locals = SelectVersion(locals, app.Version);
+            //locals = SelectVersion(locals, app.Version);
 
             // 混合应用配置表
             var qs = app.GetQuotes();
             var shares = new List<ConfigData>();
             foreach (var item in qs)
             {
-                var list = FindAllValid(item.Id);
+                var list = item.LastRelease;
                 list = list.Where(_ => _.Key.EqualIgnoreCase(key)).ToList();
-                list = SelectVersion(list, item.Version);
+                //list = SelectVersion(list, item.Version);
 
                 if (list.Count > 0) shares.AddRange(list);
             }

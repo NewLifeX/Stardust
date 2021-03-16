@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Web.Script.Serialization;
+using System.Xml.Serialization;
 using NewLife;
 using NewLife.Remoting;
 using NewLife.Serialization;
@@ -56,6 +59,9 @@ namespace Stardust.Data.Configs
         #endregion
 
         #region 扩展属性
+        /// <summary>本应用最后发布的配置数据，借助扩展属性缓存</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public IList<ConfigData> LastRelease => Extends.Get(nameof(LastRelease), k => ConfigData.FindAllLastRelease(Id, Version));
         #endregion
 
         #region 扩展查询
