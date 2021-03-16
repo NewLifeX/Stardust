@@ -18,7 +18,7 @@ namespace Stardust.Web
 
         public void ConfigureServices(IServiceCollection services)
         {
-            var star = new StarFactory(null, "StarWeb", null);
+            var star = new StarFactory("StarWeb");
 
             var tracer = star.Tracer;
             services.AddSingleton<ITracer>(tracer);

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NewLife;
 using NewLife.Cube.WebMiddleware;
 using NewLife.Log;
 using Stardust.Server.Common;
@@ -25,7 +26,8 @@ namespace Stardust.Server
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            var star = new StarFactory(null, "StarServer", null);
+            var star = new StarFactory("StarServer");
+            if (star.Server.IsNullOrEmpty()) star.Server = "http://127.0.0.1:6600";
 
             var tracer = star.Tracer;
             services.AddSingleton<ITracer>(tracer);

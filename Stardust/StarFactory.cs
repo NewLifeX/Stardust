@@ -23,30 +23,32 @@ namespace Stardust
 
         #region 构造
         /// <summary>创建工厂</summary>
+        /// <param name="appId">应用</param>
         /// <returns></returns>
-        public StarFactory()
+        public StarFactory(String appId)
         {
-            var set = Setting.Current;
-            Server = set.Server;
-            AppId = set.AppKey;
-            Secret = set.Secret;
-
-            Init();
-        }
-
-        /// <summary>指定地址、应用和密钥，创建工厂</summary>
-        /// <param name="server"></param>
-        /// <param name="appId"></param>
-        /// <param name="secrect"></param>
-        /// <returns></returns>
-        public StarFactory(String server, String appId, String secrect)
-        {
-            Server = server;
             AppId = appId;
-            Secret = secrect;
+            //var set = Setting.Current;
+            //Server = set.Server;
+            //AppId = set.AppKey;
+            //Secret = set.Secret;
 
             Init();
         }
+
+        ///// <summary>指定地址、应用和密钥，创建工厂</summary>
+        ///// <param name="server"></param>
+        ///// <param name="appId"></param>
+        ///// <param name="secrect"></param>
+        ///// <returns></returns>
+        //public StarFactory(String server, String appId, String secrect)
+        //{
+        //    Server = server;
+        //    AppId = appId;
+        //    Secret = secrect;
+
+        //    Init();
+        //}
         #endregion
 
         #region 方法
@@ -67,12 +69,31 @@ namespace Stardust
 
             if (Server.IsNullOrEmpty())
             {
-                var inf = Local.GetInfo();
-                var server = inf?.Server;
-                if (!server.IsNullOrEmpty())
+                try
                 {
-                    Server = server;
-                    XTrace.WriteLine("星尘探测：{0}", server);
+                    var inf = Local.GetInfo();
+                    var server = inf?.Server;
+                    if (!server.IsNullOrEmpty())
+                    {
+                        Server = server;
+                        XTrace.WriteLine("星尘探测：{0}", server);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    XTrace.WriteException(ex);
+                }
+            }
+
+            // 如果探测不到本地应用，则使用配置
+            if (Server.IsNullOrEmpty())
+            {
+                var set = Setting.Current;
+                Server = set.Server;
+                if (AppId.IsNullOrEmpty())
+                {
+                    AppId = set.AppKey;
+                    Secret = set.Secret;
                 }
             }
         }
