@@ -8,6 +8,7 @@ using NewLife.Common;
 using NewLife.Log;
 using NewLife.Reflection;
 using NewLife.Remoting;
+using NewLife.Web;
 using Stardust.Models;
 
 namespace Stardust.Monitors

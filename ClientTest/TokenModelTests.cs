@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using NewLife.Security;
 using NewLife.Serialization;
+using NewLife.Web;
 using Stardust.Models;
 using Xunit;
 

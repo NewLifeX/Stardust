@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using NewLife.Remoting;
+using NewLife.Web;
 using Stardust.Models;
 using Stardust.Server.Models;
 using Xunit;

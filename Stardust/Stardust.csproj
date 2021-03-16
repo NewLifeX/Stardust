@@ -53,6 +53,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Models\TokenModel.cs" />
     <Compile Remove="Monitors\AspNetCoreDiagnosticListener.cs" />
     <Compile Remove="Monitors\MyBuilder.cs" />
     <Compile Remove="Monitors\MySpan.cs" />
