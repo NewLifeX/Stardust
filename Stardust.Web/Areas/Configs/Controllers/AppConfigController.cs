@@ -65,10 +65,10 @@ namespace Stardust.Web.Areas.Configs.Controllers
             //}
         }
 
-        public AppConfigController()
-        {
-            PageSetting.EnableAdd = false;
-        }
+        //public AppConfigController()
+        //{
+        //    PageSetting.EnableAdd = false;
+        //}
 
         //protected override IEnumerable<AppConfig> Search(Pager p)
         //{
