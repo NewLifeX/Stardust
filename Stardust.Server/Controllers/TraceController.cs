@@ -35,9 +35,8 @@ namespace Stardust.Server.Controllers
         [HttpPost(nameof(Report))]
         public TraceResponse Report([FromBody] TraceModel model, String token)
         {
-            var builders = model?.Builders.Cast<ISpanBuilder>().ToArray();
-            //var builders = new ISpanBuilder[0];
-            if (model == null || model.AppId.IsNullOrEmpty() || builders == null || builders.Length == 0) return null;
+            var builders = model?.Builders;
+            if (model == null || model.AppId.IsNullOrEmpty()) return null;
 
             var ip = HttpContext.GetUserHost();
             if (ip.IsNullOrEmpty()) ip = ManageProvider.UserHost;
@@ -70,7 +69,7 @@ namespace Stardust.Server.Controllers
             if (app == null || !app.Enable) throw new Exception($"无效应用[{model.AppId}/{model.AppName}]");
 
             // 插入数据
-            Task.Run(() => ProcessData(app, model, ip, builders));
+            if (builders != null && builders.Length > 0) Task.Run(() => ProcessData(app, model, ip, builders));
 
             // 构造响应
             var rs = new TraceResponse
