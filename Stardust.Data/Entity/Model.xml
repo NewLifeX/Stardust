@@ -2,7 +2,7 @@
 <Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data" ConnName="Stardust" Output="" BaseClass="EntityBase" xmlns="http://www.newlifex.com/Model2020.xsd">
   <Table Name="App" Description="应用系统。服务提供者和消费者">
     <Columns>
-      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
       <Column Name="DisplayName" DataType="String" Description="显示名" />
       <Column Name="Secret" DataType="String" Description="密钥" />
@@ -30,8 +30,8 @@
   </Table>
   <Table Name="AppOnline" Description="应用在线。一个应用有多个部署，每个在线会话对应一个服务地址">
     <Columns>
-      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="AppID" DataType="Int32" Description="应用" />
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="Session" DataType="String" Description="实例。IP加端口" />
       <Column Name="Client" DataType="String" Description="客户端。IP加进程" />
       <Column Name="Name" DataType="String" Master="True" Description="名称。机器名称" />
@@ -54,13 +54,13 @@
     <Indexes>
       <Index Columns="Session" Unique="True" />
       <Index Columns="Client" />
-      <Index Columns="AppID" />
+      <Index Columns="AppId" />
     </Indexes>
   </Table>
   <Table Name="AppHistory" Description="应用历史">
     <Columns>
-      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="AppID" DataType="Int32" Description="应用" />
+      <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+      <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="Version" DataType="String" Description="版本" />
       <Column Name="Action" DataType="String" Description="操作" />
       <Column Name="Success" DataType="Boolean" Description="成功" />
@@ -71,7 +71,7 @@
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
     </Columns>
     <Indexes>
-      <Index Columns="AppID" />
+      <Index Columns="AppId" />
     </Indexes>
   </Table>
   <Table Name="AppMeter" Description="应用性能。保存应用上报的性能数据，如CPU、内存、线程、句柄等">

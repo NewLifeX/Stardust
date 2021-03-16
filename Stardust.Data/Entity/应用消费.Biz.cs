@@ -11,10 +11,6 @@ namespace Stardust.Data
         #region 对象操作
         static AppConsume()
         {
-            // 累加字段
-            //var df = Meta.Factory.AdditionalFields;
-            //df.Add(__.AppID);
-
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Modules.Add<TimeModule>();
             Meta.Modules.Add<IPModule>();
@@ -25,7 +21,7 @@ namespace Stardust.Data
         /// <summary>应用</summary>
         [XmlIgnore]
         //[ScriptIgnore]
-        public App App => Extends.Get(nameof(App), k => App.FindByID(AppId));
+        public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
 
         /// <summary>应用</summary>
         [Map(__.AppId, typeof(App), "Id")]

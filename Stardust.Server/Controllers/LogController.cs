@@ -66,7 +66,7 @@ namespace Stardust.Server.Controllers
                             }
                             msg = sb.Put(true);
 
-                            AppLog.Create(app.ID, clientId, ss, msg, ip);
+                            AppLog.Create(app.Id, clientId, ss, msg, ip);
                             sb.Clear();
                         }
                     }

@@ -49,7 +49,7 @@ namespace Stardust.Data
         /// <summary>应用</summary>
         [XmlIgnore, IgnoreDataMember]
         //[ScriptIgnore]
-        public App App => Extends.Get(nameof(App), k => App.FindByID(AppId));
+        public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
 
         /// <summary>应用</summary>
         [XmlIgnore, IgnoreDataMember]
@@ -155,7 +155,7 @@ namespace Stardust.Data
             // 插入节点数据
             var data = new AppMeter
             {
-                AppId = app.ID,
+                AppId = app.Id,
                 ClientId = clientId,
                 Memory = (Int32)(info.WorkingSet / 1024 / 1024),
                 ProcessorTime = info.ProcessorTime,

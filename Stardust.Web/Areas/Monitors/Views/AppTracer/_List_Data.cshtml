@@ -46,7 +46,7 @@
         @foreach (var entity in Model)
         {
             var ap = Stardust.Data.App.FindByName(entity.Name);
-            var appId = ap?.ID ?? 0;
+            var appId = ap?.Id ?? 0;
             var node = Stardust.Data.Nodes.Node.FindAllByIPs(entity.Nodes?.Split(",")).FirstOrDefault();
             <tr>
                 @if (set.EnableSelect && ukey != null)

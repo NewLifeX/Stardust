@@ -16,26 +16,26 @@ namespace Stardust.Data
     [Description("应用在线。一个应用有多个部署，每个在线会话对应一个服务地址")]
     [BindIndex("IU_AppOnline_Session", true, "Session")]
     [BindIndex("IX_AppOnline_Client", false, "Client")]
-    [BindIndex("IX_AppOnline_AppID", false, "AppID")]
+    [BindIndex("IX_AppOnline_AppId", false, "AppId")]
     [BindTable("AppOnline", Description = "应用在线。一个应用有多个部署，每个在线会话对应一个服务地址", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppOnline
     {
         #region 属性
-        private Int32 _ID;
+        private Int32 _Id;
         /// <summary>编号</summary>
         [DisplayName("编号")]
         [Description("编号")]
         [DataObjectField(true, true, false, 0)]
-        [BindColumn("ID", "编号", "")]
-        public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+        [BindColumn("Id", "编号", "")]
+        public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
-        private Int32 _AppID;
+        private Int32 _AppId;
         /// <summary>应用</summary>
         [DisplayName("应用")]
         [Description("应用")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("AppID", "应用", "")]
-        public Int32 AppID { get => _AppID; set { if (OnPropertyChanging("AppID", value)) { _AppID = value; OnPropertyChanged("AppID"); } } }
+        [BindColumn("AppId", "应用", "")]
+        public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
         private String _Session;
         /// <summary>实例。IP加端口</summary>
@@ -192,8 +192,8 @@ namespace Stardust.Data
             {
                 switch (name)
                 {
-                    case "ID": return _ID;
-                    case "AppID": return _AppID;
+                    case "Id": return _Id;
+                    case "AppId": return _AppId;
                     case "Session": return _Session;
                     case "Client": return _Client;
                     case "Name": return _Name;
@@ -219,8 +219,8 @@ namespace Stardust.Data
             {
                 switch (name)
                 {
-                    case "ID": _ID = value.ToInt(); break;
-                    case "AppID": _AppID = value.ToInt(); break;
+                    case "Id": _Id = value.ToInt(); break;
+                    case "AppId": _AppId = value.ToInt(); break;
                     case "Session": _Session = Convert.ToString(value); break;
                     case "Client": _Client = Convert.ToString(value); break;
                     case "Name": _Name = Convert.ToString(value); break;
@@ -250,10 +250,10 @@ namespace Stardust.Data
         public partial class _
         {
             /// <summary>编号</summary>
-            public static readonly Field ID = FindByName("ID");
+            public static readonly Field Id = FindByName("Id");
 
             /// <summary>应用</summary>
-            public static readonly Field AppID = FindByName("AppID");
+            public static readonly Field AppId = FindByName("AppId");
 
             /// <summary>实例。IP加端口</summary>
             public static readonly Field Session = FindByName("Session");
@@ -316,10 +316,10 @@ namespace Stardust.Data
         public partial class __
         {
             /// <summary>编号</summary>
-            public const String ID = "ID";
+            public const String Id = "Id";
 
             /// <summary>应用</summary>
-            public const String AppID = "AppID";
+            public const String AppId = "AppId";
 
             /// <summary>实例。IP加端口</summary>
             public const String Session = "Session";

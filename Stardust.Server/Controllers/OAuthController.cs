@@ -60,7 +60,7 @@ namespace Stardust.Server.Controllers
             var app = _service.DecodeToken(token, set);
             return new
             {
-                app.ID,
+                app.Id,
                 app.Name,
                 app.DisplayName,
                 app.Category,

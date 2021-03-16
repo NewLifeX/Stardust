@@ -53,7 +53,7 @@ namespace Stardust.Web.Areas.Star.Controllers
             if (list.Count > 0 && !clientId.IsNullOrEmpty())
             {
                 // 绘制日期曲线图
-                var app = App.FindByID(appId);
+                var app = App.FindById(appId);
                 if (appId >= 0 && app != null)
                 {
                     var list2 = list.OrderBy(e => e.Id).ToList();

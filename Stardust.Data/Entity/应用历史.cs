@@ -14,26 +14,26 @@ namespace Stardust.Data
     [Serializable]
     [DataObject]
     [Description("应用历史")]
-    [BindIndex("IX_AppHistory_AppID", false, "AppID")]
+    [BindIndex("IX_AppHistory_AppId", false, "AppId")]
     [BindTable("AppHistory", Description = "应用历史", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppHistory
     {
         #region 属性
-        private Int32 _ID;
+        private Int64 _Id;
         /// <summary>编号</summary>
         [DisplayName("编号")]
         [Description("编号")]
-        [DataObjectField(true, true, false, 0)]
-        [BindColumn("ID", "编号", "")]
-        public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+        [DataObjectField(true, false, false, 0)]
+        [BindColumn("Id", "编号", "")]
+        public Int64 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
-        private Int32 _AppID;
+        private Int32 _AppId;
         /// <summary>应用</summary>
         [DisplayName("应用")]
         [Description("应用")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("AppID", "应用", "")]
-        public Int32 AppID { get => _AppID; set { if (OnPropertyChanging("AppID", value)) { _AppID = value; OnPropertyChanged("AppID"); } } }
+        [BindColumn("AppId", "应用", "")]
+        public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
         private String _Version;
         /// <summary>版本</summary>
@@ -110,8 +110,8 @@ namespace Stardust.Data
             {
                 switch (name)
                 {
-                    case "ID": return _ID;
-                    case "AppID": return _AppID;
+                    case "Id": return _Id;
+                    case "AppId": return _AppId;
                     case "Version": return _Version;
                     case "Action": return _Action;
                     case "Success": return _Success;
@@ -127,8 +127,8 @@ namespace Stardust.Data
             {
                 switch (name)
                 {
-                    case "ID": _ID = value.ToInt(); break;
-                    case "AppID": _AppID = value.ToInt(); break;
+                    case "Id": _Id = value.ToLong(); break;
+                    case "AppId": _AppId = value.ToInt(); break;
                     case "Version": _Version = Convert.ToString(value); break;
                     case "Action": _Action = Convert.ToString(value); break;
                     case "Success": _Success = value.ToBoolean(); break;
@@ -148,10 +148,10 @@ namespace Stardust.Data
         public partial class _
         {
             /// <summary>编号</summary>
-            public static readonly Field ID = FindByName("ID");
+            public static readonly Field Id = FindByName("Id");
 
             /// <summary>应用</summary>
-            public static readonly Field AppID = FindByName("AppID");
+            public static readonly Field AppId = FindByName("AppId");
 
             /// <summary>版本</summary>
             public static readonly Field Version = FindByName("Version");
@@ -184,10 +184,10 @@ namespace Stardust.Data
         public partial class __
         {
             /// <summary>编号</summary>
-            public const String ID = "ID";
+            public const String Id = "Id";
 
             /// <summary>应用</summary>
-            public const String AppID = "AppID";
+            public const String AppId = "AppId";
 
             /// <summary>版本</summary>
             public const String Version = "Version";

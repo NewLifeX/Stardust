@@ -15,10 +15,6 @@ namespace Stardust.Data
         #region 对象操作
         static AppOnline()
         {
-            // 累加字段
-            //var df = Meta.Factory.AdditionalFields;
-            //df.Add(__.AppID);
-
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Modules.Add<TimeModule>();
             Meta.Modules.Add<IPModule>();
@@ -39,13 +35,10 @@ namespace Stardust.Data
         /// <summary>应用</summary>
         [XmlIgnore]
         //[ScriptIgnore]
-        public App App => Extends.Get(nameof(App), k => App.FindByID(AppID));
+        public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
 
         /// <summary>应用</summary>
-        [XmlIgnore]
-        //[ScriptIgnore]
-        [DisplayName("应用")]
-        [Map(__.AppID, typeof(App), "ID")]
+        [Map(__.AppId, typeof(App), "Id")]
         public String AppName => App?.Name;
         #endregion
 
@@ -53,12 +46,12 @@ namespace Stardust.Data
         /// <summary>根据编号查找</summary>
         /// <param name="id">编号</param>
         /// <returns>实体对象</returns>
-        public static AppOnline FindByID(Int32 id)
+        public static AppOnline FindById(Int32 id)
         {
             if (id <= 0) return null;
 
             // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
 
             // 单对象缓存
             return Meta.SingleCache[id];
@@ -95,7 +88,7 @@ namespace Stardust.Data
         /// <param name="info"></param>
         public void UpdateInfo(App app, AppInfo info)
         {
-            AppID = app.ID;
+            AppId = app.Id;
             Name = app.Name;
             UserName = info.UserName;
             ProcessId = info.Id;

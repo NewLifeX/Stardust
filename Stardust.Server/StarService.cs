@@ -46,7 +46,7 @@ namespace Stardust.Server
             {
                 if (app == null) app = new App();
 
-                if (app.ID == 0)
+                if (app.Id == 0)
                 {
                     app.Name = user;
                     //app.Secret = pass;
@@ -179,7 +179,7 @@ namespace Stardust.Server
             var ip = ns.Remote.Host;
             var ins = ns.Remote.EndPoint + "";
             online = AppOnline.FindBySession(ins) ?? new AppOnline { CreateIP = ip };
-            online.AppID = app.ID;
+            online.AppId = app.Id;
             online.Session = ins;
 
             return online;

@@ -28,12 +28,12 @@ namespace Stardust.Server.Services.Tests
             Assert.NotNull(rs);
 
             Assert.NotNull(app);
-            Assert.Equal(app.ID, rs.ID);
+            Assert.Equal(app.Id, rs.Id);
 
             // 再次验证
             var rs2 = service.Authorize("test", "xxx", false);
             Assert.NotNull(rs2);
-            Assert.Equal(app.ID, rs.ID);
+            Assert.Equal(app.Id, rs.Id);
 
             // 错误验证
             Assert.Throws<InvalidOperationException>(() => service.Authorize("test", "yyy", true));

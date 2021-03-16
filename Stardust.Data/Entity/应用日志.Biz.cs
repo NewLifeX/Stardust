@@ -49,7 +49,7 @@ namespace Stardust.Data
         /// <summary>应用</summary>
         [XmlIgnore, IgnoreDataMember]
         //[ScriptIgnore]
-        public App App => Extends.Get(nameof(App), k => App.FindByID(AppId));
+        public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
 
         /// <summary>应用</summary>
         [XmlIgnore, IgnoreDataMember]
