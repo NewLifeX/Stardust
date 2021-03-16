@@ -67,6 +67,15 @@ namespace Stardust
         {
             Local = new LocalStarClient();
 
+            // 读取本地appsetting
+            if (Server.IsNullOrEmpty())
+            {
+                var json = new JsonConfigProvider { FileName = "appsettings.json" };
+                json.LoadAll();
+
+                Server = json["StarServer"];
+            }
+
             if (Server.IsNullOrEmpty())
             {
                 try
@@ -90,11 +99,12 @@ namespace Stardust
             {
                 var set = Setting.Current;
                 Server = set.Server;
-                if (AppId.IsNullOrEmpty())
-                {
-                    AppId = set.AppKey;
-                    Secret = set.Secret;
-                }
+            }
+            if (AppId.IsNullOrEmpty())
+            {
+                var set = Setting.Current;
+                AppId = set.AppKey;
+                Secret = set.Secret;
             }
         }
         #endregion

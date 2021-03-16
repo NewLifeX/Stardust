@@ -10,7 +10,12 @@ namespace Stardust.Web.Areas.Star.Controllers
     [StarArea]
     public class AppController : EntityController<App>
     {
-        static AppController() => MenuOrder = 99;
+        static AppController()
+        {
+            MenuOrder = 99;
+
+            ListFields.RemoveField("Secret");
+        }
 
         protected override Boolean Valid(App entity, DataObjectMethodType type, Boolean post)
         {
