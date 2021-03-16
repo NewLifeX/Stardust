@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
 using NewLife.Remoting;
+using NewLife.Web;
 using Stardust.Data.Configs;
 
 namespace Stardust.Web.Areas.Configs.Controllers
@@ -70,15 +72,20 @@ namespace Stardust.Web.Areas.Configs.Controllers
         //    PageSetting.EnableAdd = false;
         //}
 
-        //protected override IEnumerable<AppConfig> Search(Pager p)
-        //{
-        //    var appId = p["appId"].ToInt(-1);
+        protected override IEnumerable<AppConfig> Search(Pager p)
+        {
+            var id = p["id"].ToInt(-1);
+            if (id > 0)
+            {
+                var entity = AppConfig.FindById(id);
+                if (entity != null) return new List<AppConfig> { entity };
+            }
 
-        //    var start = p["dtStart"].ToDateTime();
-        //    var end = p["dtEnd"].ToDateTime();
+            var start = p["dtStart"].ToDateTime();
+            var end = p["dtEnd"].ToDateTime();
 
-        //    return AppConfig.Search(appId, start, end, p["Q"], p);
-        //}
+            return AppConfig.Search(start, end, p["Q"], p);
+        }
 
         public ActionResult Publish(Int32 appId)
         {

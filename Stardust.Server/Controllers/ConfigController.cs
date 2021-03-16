@@ -36,7 +36,7 @@ namespace Stardust.Server.Controllers
             var ip = HttpContext.Connection?.RemoteIpAddress + "";
 
             // 版本没有变化时，不做计算处理，不返回配置数据
-            if (version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
+            if (version > 0 && version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
 
             // 作用域为空时重写
             scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip) : scope;
@@ -70,7 +70,7 @@ namespace Stardust.Server.Controllers
             app.Update();
 
             // 版本没有变化时，不做计算处理，不返回配置数据
-            if (model.Version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
+            if (model.Version > 0 && model.Version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
 
             // 作用域为空时重写
             var scope = model.Scope;
@@ -104,10 +104,11 @@ namespace Stardust.Server.Controllers
 
                 app = new AppConfig
                 {
-                    Id = ap.ID,
                     Name = ap.Name,
                     Enable = ap.Enable,
                 };
+
+                app.Insert();
             }
 
             return app;

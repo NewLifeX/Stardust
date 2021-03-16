@@ -173,8 +173,7 @@ namespace Stardust.Data.Configs
         /// <returns></returns>
         public static ConfigData Acquire(AppConfig app, String key, String scope)
         {
-            var appid = app.Id;
-            var locals = FindAllValid(appid);
+            var locals = FindAllValid(app.Id);
             locals = locals.Where(_ => _.Key.EqualIgnoreCase(key)).ToList();
             locals = SelectVersion(locals, app.Version);
 

@@ -54,10 +54,11 @@ namespace Stardust.Web.Controllers
 
                 app = new AppConfig
                 {
-                    Id = ap.ID,
                     Name = ap.Name,
                     Enable = ap.Enable,
                 };
+
+                app.Insert();
             }
 
             return app;
