@@ -308,7 +308,7 @@ namespace Stardust
                 AvailableFreeSpace = (UInt64)driveInfo.AvailableFreeSpace,
                 CpuRate = mi.CpuRate,
                 Temperature = mi.Temperature,
-                //Battery = mi.Battery,
+                Battery = mi.Battery,
                 ProcessCount = ps.Length,
                 TcpConnections = connections.Count(e => e.State == TcpState.Established),
                 TcpTimeWait = connections.Count(e => e.State == TcpState.TimeWait),
@@ -420,6 +420,10 @@ namespace Stardust
         public async Task<UpgradeInfo> Upgrade(String channel)
         {
             XTrace.WriteLine("检查更新：{0}", channel);
+
+            // 清理
+            var ug = new Upgrade { Log = XTrace.Log };
+            ug.DeleteBackup(".");
 
             var rs = await UpgradeAsync(channel);
             if (rs != null)
