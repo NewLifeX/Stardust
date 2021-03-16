@@ -64,7 +64,7 @@ namespace Stardust.Data.Configs
         /// <returns></returns>
         protected override Int32 OnUpdate()
         {
-            ConfigHistory.Add(AppId, "Update", Dirtys.ToDictionary(e => e, e => this[e]).ToJson());
+            if (HasDirty) ConfigHistory.Add(AppId, "Update", Dirtys.ToDictionary(e => e, e => this[e]).ToJson());
 
             return base.OnUpdate();
         }
