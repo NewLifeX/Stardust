@@ -61,6 +61,14 @@
     <Compile Remove="BracketHelper.cs" />
     <Compile Remove="Configs\应用依赖.Biz.cs" />
     <Compile Remove="Configs\应用依赖.cs" />
+    <Compile Remove="Entity\IP统计.Biz.cs" />
+    <Compile Remove="Entity\IP统计.cs" />
+    <Compile Remove="Entity\应用统计.Biz.cs" />
+    <Compile Remove="Entity\应用统计.cs" />
+    <Compile Remove="Entity\服务.Biz.cs" />
+    <Compile Remove="Entity\服务.cs" />
+    <Compile Remove="Entity\服务统计.Biz.cs" />
+    <Compile Remove="Entity\服务统计.cs" />
     <Compile Remove="Models\ConfigItem.cs" />
   </ItemGroup>
 

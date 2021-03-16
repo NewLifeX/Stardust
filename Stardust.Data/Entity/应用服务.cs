@@ -14,34 +14,43 @@ namespace Stardust.Data
     [Serializable]
     [DataObject]
     [Description("应用服务。应用提供的服务")]
-    [BindIndex("IU_AppService_AppID_ServiceID", true, "AppID,ServiceID")]
+    [BindIndex("IX_AppService_AppId", false, "AppId")]
+    [BindIndex("IX_AppService_ServiceName", false, "ServiceName")]
     [BindTable("AppService", Description = "应用服务。应用提供的服务", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppService
     {
         #region 属性
-        private Int32 _ID;
+        private Int32 _Id;
         /// <summary>编号</summary>
         [DisplayName("编号")]
         [Description("编号")]
         [DataObjectField(true, true, false, 0)]
-        [BindColumn("ID", "编号", "")]
-        public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+        [BindColumn("Id", "编号", "")]
+        public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
-        private Int32 _AppID;
+        private Int32 _AppId;
         /// <summary>应用</summary>
         [DisplayName("应用")]
         [Description("应用")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("AppID", "应用", "")]
-        public Int32 AppID { get => _AppID; set { if (OnPropertyChanging("AppID", value)) { _AppID = value; OnPropertyChanged("AppID"); } } }
+        [BindColumn("AppId", "应用", "")]
+        public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
-        private Int32 _ServiceID;
-        /// <summary>服务</summary>
-        [DisplayName("服务")]
-        [Description("服务")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("ServiceID", "服务", "")]
-        public Int32 ServiceID { get => _ServiceID; set { if (OnPropertyChanging("ServiceID", value)) { _ServiceID = value; OnPropertyChanged("ServiceID"); } } }
+        private String _ServiceName;
+        /// <summary>服务名</summary>
+        [DisplayName("服务名")]
+        [Description("服务名")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("ServiceName", "服务名", "")]
+        public String ServiceName { get => _ServiceName; set { if (OnPropertyChanging("ServiceName", value)) { _ServiceName = value; OnPropertyChanged("ServiceName"); } } }
+
+        private String _Client;
+        /// <summary>客户端。IP加进程</summary>
+        [DisplayName("客户端")]
+        [Description("客户端。IP加进程")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Client", "客户端。IP加进程", "")]
+        public String Client { get => _Client; set { if (OnPropertyChanging("Client", value)) { _Client = value; OnPropertyChanged("Client"); } } }
 
         private Boolean _Enable;
         /// <summary>启用</summary>
@@ -51,21 +60,45 @@ namespace Stardust.Data
         [BindColumn("Enable", "启用", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
-        private String _CreateUser;
-        /// <summary>创建者</summary>
-        [DisplayName("创建者")]
-        [Description("创建者")]
+        private String _Version;
+        /// <summary>版本</summary>
+        [DisplayName("版本")]
+        [Description("版本")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("CreateUser", "创建者", "")]
-        public String CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
+        [BindColumn("Version", "版本", "")]
+        public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
-        private Int32 _CreateUserID;
-        /// <summary>创建者</summary>
-        [DisplayName("创建者")]
-        [Description("创建者")]
+        private String _Address;
+        /// <summary>地址。服务地址，如http://127.0.0.1:1234</summary>
+        [DisplayName("地址")]
+        [Description("地址。服务地址，如http://127.0.0.1:1234")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Address", "地址。服务地址，如http://127.0.0.1:1234", "")]
+        public String Address { get => _Address; set { if (OnPropertyChanging("Address", value)) { _Address = value; OnPropertyChanged("Address"); } } }
+
+        private String _HealthCheck;
+        /// <summary>健康监测</summary>
+        [DisplayName("健康监测")]
+        [Description("健康监测")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("HealthCheck", "健康监测", "")]
+        public String HealthCheck { get => _HealthCheck; set { if (OnPropertyChanging("HealthCheck", value)) { _HealthCheck = value; OnPropertyChanged("HealthCheck"); } } }
+
+        private Int32 _Weight;
+        /// <summary>权重</summary>
+        [DisplayName("权重")]
+        [Description("权重")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("CreateUserID", "创建者", "")]
-        public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
+        [BindColumn("Weight", "权重", "")]
+        public Int32 Weight { get => _Weight; set { if (OnPropertyChanging("Weight", value)) { _Weight = value; OnPropertyChanged("Weight"); } } }
+
+        private String _Tag;
+        /// <summary>标签。带有指定特性，逗号分隔</summary>
+        [DisplayName("标签")]
+        [Description("标签。带有指定特性，逗号分隔")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Tag", "标签。带有指定特性，逗号分隔", "")]
+        public String Tag { get => _Tag; set { if (OnPropertyChanging("Tag", value)) { _Tag = value; OnPropertyChanged("Tag"); } } }
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
@@ -83,22 +116,6 @@ namespace Stardust.Data
         [BindColumn("CreateIP", "创建地址", "")]
         public String CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
 
-        private String _UpdateUser;
-        /// <summary>更新者</summary>
-        [DisplayName("更新者")]
-        [Description("更新者")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("UpdateUser", "更新者", "")]
-        public String UpdateUser { get => _UpdateUser; set { if (OnPropertyChanging("UpdateUser", value)) { _UpdateUser = value; OnPropertyChanged("UpdateUser"); } } }
-
-        private Int32 _UpdateUserID;
-        /// <summary>更新者</summary>
-        [DisplayName("更新者")]
-        [Description("更新者")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("UpdateUserID", "更新者", "")]
-        public Int32 UpdateUserID { get => _UpdateUserID; set { if (OnPropertyChanging("UpdateUserID", value)) { _UpdateUserID = value; OnPropertyChanged("UpdateUserID"); } } }
-
         private DateTime _UpdateTime;
         /// <summary>更新时间</summary>
         [DisplayName("更新时间")]
@@ -106,14 +123,6 @@ namespace Stardust.Data
         [DataObjectField(false, false, true, 0)]
         [BindColumn("UpdateTime", "更新时间", "")]
         public DateTime UpdateTime { get => _UpdateTime; set { if (OnPropertyChanging("UpdateTime", value)) { _UpdateTime = value; OnPropertyChanged("UpdateTime"); } } }
-
-        private String _UpdateIP;
-        /// <summary>更新地址</summary>
-        [DisplayName("更新地址")]
-        [Description("更新地址")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("UpdateIP", "更新地址", "")]
-        public String UpdateIP { get => _UpdateIP; set { if (OnPropertyChanging("UpdateIP", value)) { _UpdateIP = value; OnPropertyChanged("UpdateIP"); } } }
         #endregion
 
         #region 获取/设置 字段值
@@ -126,18 +135,19 @@ namespace Stardust.Data
             {
                 switch (name)
                 {
-                    case "ID": return _ID;
-                    case "AppID": return _AppID;
-                    case "ServiceID": return _ServiceID;
+                    case "Id": return _Id;
+                    case "AppId": return _AppId;
+                    case "ServiceName": return _ServiceName;
+                    case "Client": return _Client;
                     case "Enable": return _Enable;
-                    case "CreateUser": return _CreateUser;
-                    case "CreateUserID": return _CreateUserID;
+                    case "Version": return _Version;
+                    case "Address": return _Address;
+                    case "HealthCheck": return _HealthCheck;
+                    case "Weight": return _Weight;
+                    case "Tag": return _Tag;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
-                    case "UpdateUser": return _UpdateUser;
-                    case "UpdateUserID": return _UpdateUserID;
                     case "UpdateTime": return _UpdateTime;
-                    case "UpdateIP": return _UpdateIP;
                     default: return base[name];
                 }
             }
@@ -145,18 +155,19 @@ namespace Stardust.Data
             {
                 switch (name)
                 {
-                    case "ID": _ID = value.ToInt(); break;
-                    case "AppID": _AppID = value.ToInt(); break;
-                    case "ServiceID": _ServiceID = value.ToInt(); break;
+                    case "Id": _Id = value.ToInt(); break;
+                    case "AppId": _AppId = value.ToInt(); break;
+                    case "ServiceName": _ServiceName = Convert.ToString(value); break;
+                    case "Client": _Client = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
-                    case "CreateUser": _CreateUser = Convert.ToString(value); break;
-                    case "CreateUserID": _CreateUserID = value.ToInt(); break;
+                    case "Version": _Version = Convert.ToString(value); break;
+                    case "Address": _Address = Convert.ToString(value); break;
+                    case "HealthCheck": _HealthCheck = Convert.ToString(value); break;
+                    case "Weight": _Weight = value.ToInt(); break;
+                    case "Tag": _Tag = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
-                    case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
-                    case "UpdateUserID": _UpdateUserID = value.ToInt(); break;
                     case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
-                    case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
                     default: base[name] = value; break;
                 }
             }
@@ -168,22 +179,34 @@ namespace Stardust.Data
         public partial class _
         {
             /// <summary>编号</summary>
-            public static readonly Field ID = FindByName("ID");
+            public static readonly Field Id = FindByName("Id");
 
             /// <summary>应用</summary>
-            public static readonly Field AppID = FindByName("AppID");
+            public static readonly Field AppId = FindByName("AppId");
 
-            /// <summary>服务</summary>
-            public static readonly Field ServiceID = FindByName("ServiceID");
+            /// <summary>服务名</summary>
+            public static readonly Field ServiceName = FindByName("ServiceName");
+
+            /// <summary>客户端。IP加进程</summary>
+            public static readonly Field Client = FindByName("Client");
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
 
-            /// <summary>创建者</summary>
-            public static readonly Field CreateUser = FindByName("CreateUser");
+            /// <summary>版本</summary>
+            public static readonly Field Version = FindByName("Version");
 
-            /// <summary>创建者</summary>
-            public static readonly Field CreateUserID = FindByName("CreateUserID");
+            /// <summary>地址。服务地址，如http://127.0.0.1:1234</summary>
+            public static readonly Field Address = FindByName("Address");
+
+            /// <summary>健康监测</summary>
+            public static readonly Field HealthCheck = FindByName("HealthCheck");
+
+            /// <summary>权重</summary>
+            public static readonly Field Weight = FindByName("Weight");
+
+            /// <summary>标签。带有指定特性，逗号分隔</summary>
+            public static readonly Field Tag = FindByName("Tag");
 
             /// <summary>创建时间</summary>
             public static readonly Field CreateTime = FindByName("CreateTime");
@@ -191,17 +214,8 @@ namespace Stardust.Data
             /// <summary>创建地址</summary>
             public static readonly Field CreateIP = FindByName("CreateIP");
 
-            /// <summary>更新者</summary>
-            public static readonly Field UpdateUser = FindByName("UpdateUser");
-
-            /// <summary>更新者</summary>
-            public static readonly Field UpdateUserID = FindByName("UpdateUserID");
-
             /// <summary>更新时间</summary>
             public static readonly Field UpdateTime = FindByName("UpdateTime");
-
-            /// <summary>更新地址</summary>
-            public static readonly Field UpdateIP = FindByName("UpdateIP");
 
             static Field FindByName(String name) => Meta.Table.FindByName(name);
         }
@@ -210,22 +224,34 @@ namespace Stardust.Data
         public partial class __
         {
             /// <summary>编号</summary>
-            public const String ID = "ID";
+            public const String Id = "Id";
 
             /// <summary>应用</summary>
-            public const String AppID = "AppID";
+            public const String AppId = "AppId";
 
-            /// <summary>服务</summary>
-            public const String ServiceID = "ServiceID";
+            /// <summary>服务名</summary>
+            public const String ServiceName = "ServiceName";
+
+            /// <summary>客户端。IP加进程</summary>
+            public const String Client = "Client";
 
             /// <summary>启用</summary>
             public const String Enable = "Enable";
 
-            /// <summary>创建者</summary>
-            public const String CreateUser = "CreateUser";
+            /// <summary>版本</summary>
+            public const String Version = "Version";
 
-            /// <summary>创建者</summary>
-            public const String CreateUserID = "CreateUserID";
+            /// <summary>地址。服务地址，如http://127.0.0.1:1234</summary>
+            public const String Address = "Address";
+
+            /// <summary>健康监测</summary>
+            public const String HealthCheck = "HealthCheck";
+
+            /// <summary>权重</summary>
+            public const String Weight = "Weight";
+
+            /// <summary>标签。带有指定特性，逗号分隔</summary>
+            public const String Tag = "Tag";
 
             /// <summary>创建时间</summary>
             public const String CreateTime = "CreateTime";
@@ -233,17 +259,8 @@ namespace Stardust.Data
             /// <summary>创建地址</summary>
             public const String CreateIP = "CreateIP";
 
-            /// <summary>更新者</summary>
-            public const String UpdateUser = "UpdateUser";
-
-            /// <summary>更新者</summary>
-            public const String UpdateUserID = "UpdateUserID";
-
             /// <summary>更新时间</summary>
             public const String UpdateTime = "UpdateTime";
-
-            /// <summary>更新地址</summary>
-            public const String UpdateIP = "UpdateIP";
         }
         #endregion
     }
