@@ -88,7 +88,7 @@ namespace Stardust.Monitors
         private DateTime _expire;
         private void CheckAuthorize()
         {
-            if (_token == null && Client.Token.IsNullOrEmpty())
+            if (_token == null || Client.Token.IsNullOrEmpty())
             {
                 // 申请令牌
                 _token = Client.Invoke<TokenModel>("OAuth/Token", new
@@ -102,7 +102,7 @@ namespace Stardust.Monitors
                 WriteLog("申请令牌：{0}", _token.AccessToken);
 
                 // 提前一分钟过期
-                _expire = DateTime.Now.AddSeconds(_token.ExpireIn - 60);
+                _expire = DateTime.Now.AddSeconds(_token.ExpireIn - 600);
             }
             else if (_token != null && DateTime.Now > _expire)
             {
@@ -189,10 +189,14 @@ namespace Stardust.Monitors
             }
             catch (ApiException ex)
             {
+                if (ex.Code == 401 || ex.Code == 403) _token = null;
+
                 Log?.Error(ex + "");
             }
             catch (Exception ex)
             {
+                if (ex is ApiException ae && (ae.Code == 401 || ae.Code == 403)) _token = null;
+
                 Log?.Error(ex + "");
 
                 if (_fails.Count < MaxFails) _fails.Enqueue(model);

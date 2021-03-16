@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using NewLife;
+using NewLife.Remoting;
 using NewLife.Security;
 using NewLife.Web;
 using Stardust.Data;
@@ -88,7 +89,7 @@ namespace Stardust.Server.Services
                 Algorithm = ss[0],
                 Secret = ss[1],
             };
-            if (!jwt.TryDecode(token, out var message)) throw new InvalidOperationException($"非法访问 {message}");
+            if (!jwt.TryDecode(token, out var message)) throw new ApiException(403, $"非法访问 {message}");
 
             // 验证应用
             var app = App.FindByName(jwt.Subject);
