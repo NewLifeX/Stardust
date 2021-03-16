@@ -95,9 +95,12 @@ namespace Stardust.Data
             // 更新应用信息
             if (app != null && model.Info != null)
             {
-                //ap.WriteHistory("Report", true, "");
                 var clientId = model.ClientId ?? ip;
+                var ss = clientId.Split('@');
+                if (ss.Length == 3) clientId = $"{ss[0]}@{ss[1]}";
+
                 var online = Data.AppOnline.GetOrAddSession(clientId);
+                online.Version = model.Version;
                 online.UpdateInfo(app, model.Info);
 
                 // 优先使用clientId内部的内网本机IP作为跟踪数据客户端实例

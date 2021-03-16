@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
+using NewLife;
+using NewLife.Reflection;
 using Stardust.Models;
 using XCode;
 using XCode.Membership;
@@ -29,14 +31,7 @@ namespace Stardust.Data
             // 如果没有脏数据，则不需要进行任何处理
             if (!HasDirty) return;
 
-            // 在新插入数据或者修改了指定字段时进行修正
-            //if (isNew && !Dirtys[nameof(CreateTime)]) nameof(CreateTime) = DateTime.Now;
-            //if (!Dirtys[nameof(UpdateTime)]) nameof(UpdateTime) = DateTime.Now;
-            //if (isNew && !Dirtys[nameof(CreateIP)]) nameof(CreateIP) = ManageProvider.UserHost;
-
-            // 检查唯一索引
-            // CheckExist(isNew, __.Session);
-            // CheckExist(isNew, __.AppID, __.Instance);
+            if (!Version.IsNullOrEmpty() && !Dirtys[nameof(Compile)]) Compile = AssemblyX.GetCompileTime(Version);
         }
         #endregion
 
