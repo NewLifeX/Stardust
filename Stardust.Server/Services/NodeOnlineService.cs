@@ -63,14 +63,14 @@ namespace Stardust.Server.Services
                                 node.SaveAsync();
                             }
 
-                            CheckOffline(node);
+                            CheckOffline(node, "超时下线");
                         }
                     }
                 }
             }
         }
 
-        public static void CheckOffline(Node node)
+        public static void CheckOffline(Node node, String reason)
         {
             // 下线告警
             if (node.AlarmOnOffline && !node.WebHook.IsNullOrEmpty())
@@ -79,7 +79,7 @@ namespace Stardust.Server.Services
                 var olts = NodeOnline.FindAllByNodeId(node.ID);
                 if (olts.Count == 0)
                 {
-                    var msg = $"节点[{node.Name}]已下线！IP={node.IP}";
+                    var msg = $"节点[{node.Name}]已下线！{reason} IP={node.IP}";
                     SendAlarm(node.WebHook, "节点下线告警", msg);
                 }
             }

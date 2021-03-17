@@ -126,7 +126,7 @@ namespace Stardust.Server.Controllers
                         node.SaveAsync();
                     }
 
-                    NodeOnlineService.CheckOffline(node);
+                    NodeOnlineService.CheckOffline(node, "注销");
                 }
             }
 
