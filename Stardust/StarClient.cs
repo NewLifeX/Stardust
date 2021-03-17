@@ -77,6 +77,9 @@ namespace Stardust
         {
             Logout(disposing ? "Dispose" : "GC").Wait(1_000);
 
+            _timer.TryDispose();
+            _timer = null;
+
             base.Dispose(disposing);
         }
         #endregion
@@ -247,6 +250,9 @@ namespace Stardust
                     // 更新令牌
                     Token = rs.Token;
                 }
+
+                _timer.TryDispose();
+                _timer = null;
 
                 Logined = false;
 
