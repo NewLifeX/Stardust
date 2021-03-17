@@ -1,8 +1,10 @@
 ﻿using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using NewLife;
 using NewLife.Cube.WebMiddleware;
 using NewLife.Log;
+using Stardust.Data;
 using Stardust.Server.Common;
 using Stardust.Server.Services;
 using XCode.DataAccessLayer;
@@ -65,6 +68,9 @@ namespace Stardust.Server
             services.AddHostedService<NodeOnlineService>();
             services.AddHostedService<ApolloService>();
 
+            // 异步初始化
+            Task.Run(InitAsync);
+
             services.AddControllers()
                 .AddJsonOptions(options =>
                 {
@@ -102,6 +108,28 @@ namespace Stardust.Server
             {
                 endpoints.MapControllers();
             });
+
+            var feature = app.ServerFeatures.Get<IServerAddressesFeature>();
+            //foreach (var item in feature.Addresses)
+            //{
+            //    XTrace.WriteLine("{0}", item);
+            //}
+            XTrace.WriteLine("{0}", feature?.Addresses.Join());
+        }
+
+        private static void InitAsync()
+        {
+            // 配置
+            var set = NewLife.Setting.Current;
+            if (set.IsNew)
+            {
+                set.DataPath = "../Data";
+                set.Save();
+            }
+
+            // 初始化数据库
+            var n = App.Meta.Count;
+            //AppStat.Meta.Session.Dal.Db.ShowSQL = false;
         }
     }
 }

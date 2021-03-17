@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using NewLife;
 using NewLife.Log;
+using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Threading;
 using NewLife.Web;
@@ -145,9 +146,33 @@ namespace Stardust
         /// <summary>发布</summary>
         /// <param name="service"></param>
         /// <returns></returns>
-        public async Task<Boolean> PublishAsync(PublishServiceInfo service)
+        public async Task<Object> PublishAsync(PublishServiceInfo service)
         {
-            return await PostAsync<Boolean>("Publish", service);
+            return await PostAsync<Object>("Publish", service);
+        }
+
+        /// <summary>发布</summary>
+        /// <param name="serviceName">服务名</param>
+        /// <param name="address">服务地址</param>
+        /// <param name="tag">特性标签</param>
+        /// <returns></returns>
+        public async Task<Object> PublishAsync(String serviceName, String address, String tag = null)
+        {
+            var ip = NetHelper.MyIP();
+            var p = Process.GetCurrentProcess();
+            var asmx = AssemblyX.Entry;
+
+            var info = new PublishServiceInfo
+            {
+                ServiceName = serviceName,
+                Address = address,
+                Tag = tag,
+
+                Client = $"{ip}@{p.Id}",
+                Version = asmx.Version,
+            };
+
+            return await PublishAsync(info);
         }
 
         /// <summary>消费</summary>

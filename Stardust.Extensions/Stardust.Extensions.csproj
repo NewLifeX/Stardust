@@ -1,9 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net45;netstandard2.0;net5.0</TargetFrameworks>
-    <AssemblyName>Stardust</AssemblyName>
-    <AssemblyTitle>星尘分布式服务扩展</AssemblyTitle>
+    <TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
+    <AssemblyTitle>星尘分布式服务框架</AssemblyTitle>
     <Description>星尘，分布式服务框架。分布式资源调度，服务自动注册和发现，负载均衡，动态伸缩，故障转移，性能监控。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2021 NewLife</Copyright>
@@ -45,31 +44,23 @@
   <PropertyGroup Condition="'$(TargetFramework)'=='net45'">
     <DefineConstants>$(DefineConstants);__WIN__;NET45</DefineConstants>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Models\TokenModel.cs" />
-    <Compile Remove="Monitors\AspNetCoreDiagnosticListener.cs" />
-    <Compile Remove="Monitors\MyBuilder.cs" />
-    <Compile Remove="Monitors\MySpan.cs" />
-    <Compile Remove="Monitors\MyTraceModel.cs" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions">
+      <Version>5.0.0</Version>
+    </PackageReference>
   </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="..\Doc\leaf.png" Link="leaf.png" PackagePath="\" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions">
+      <Version>5.0.0</Version>
+    </PackageReference>
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="8.10.2021.316-beta2" />
+    <PackageReference Include="Microsoft.AspNetCore.Hosting.Server.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="5.0.0" />
   </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)'=='net45'">
-    <Reference Include="System.Net.Http" />
+  <ItemGroup>
+    <ProjectReference Include="..\Stardust\Stardust.csproj" />
   </ItemGroup>
 
 </Project>

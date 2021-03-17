@@ -1,10 +1,14 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NewLife;
 using NewLife.Cube;
 using NewLife.Log;
+using Stardust.Data;
 using Stardust.Server.Services;
 using XCode.DataAccessLayer;
 
@@ -18,7 +22,7 @@ namespace Stardust.Web
 
         public void ConfigureServices(IServiceCollection services)
         {
-            var star = new StarFactory("StarWeb");
+            var star = services.AddStardust("StarWeb");
 
             var tracer = star.Tracer;
             services.AddSingleton<ITracer>(tracer);
@@ -41,6 +45,9 @@ namespace Stardust.Web
             // 后台服务。数据保留，定时删除过期数据
             services.AddHostedService<ApolloService>();
 
+            // 异步初始化
+            Task.Run(InitAsync);
+
             services.AddControllersWithViews();
             services.AddCube();
         }
@@ -61,6 +68,24 @@ namespace Stardust.Web
                     name: "default",
                     pattern: "{controller=CubeHome}/{action=Index}/{id?}");
             });
+
+            //// 发布服务到星尘注册中心
+            //app.PublishService("StarWeb");
+        }
+
+        private static void InitAsync()
+        {
+            // 配置
+            var set = NewLife.Setting.Current;
+            if (set.IsNew)
+            {
+                set.DataPath = "../Data";
+                set.Save();
+            }
+
+            // 初始化数据库
+            var n = App.Meta.Count;
+            //AppStat.Meta.Session.Dal.Db.ShowSQL = false;
         }
     }
 }

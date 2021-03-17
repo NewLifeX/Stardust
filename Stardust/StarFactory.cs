@@ -2,6 +2,7 @@
 using NewLife;
 using NewLife.Configuration;
 using NewLife.Log;
+using NewLife.Reflection;
 using NewLife.Remoting;
 using Stardust.Monitors;
 
@@ -19,6 +20,9 @@ namespace Stardust
 
         /// <summary>应用密钥</summary>
         public String Secret { get; set; }
+
+        /// <summary>服务名</summary>
+        public String ServiceName { get; set; }
         #endregion
 
         #region 构造
@@ -27,6 +31,8 @@ namespace Stardust
         /// <returns></returns>
         public StarFactory(String appId)
         {
+            if (appId.IsNullOrEmpty()) appId = AssemblyX.Entry.Name;
+
             AppId = appId;
             //var set = Setting.Current;
             //Server = set.Server;
