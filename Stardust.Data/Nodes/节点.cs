@@ -309,6 +309,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("AlarmProcesses", "进程告警。要守护的进程不存在时告警，多进程逗号隔开", "")]
         public String AlarmProcesses { get => _AlarmProcesses; set { if (OnPropertyChanging("AlarmProcesses", value)) { _AlarmProcesses = value; OnPropertyChanged("AlarmProcesses"); } } }
 
+        private Boolean _AlarmOnOffline;
+        /// <summary>下线告警。节点下线时，发送告警</summary>
+        [DisplayName("下线告警")]
+        [Description("下线告警。节点下线时，发送告警")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AlarmOnOffline", "下线告警。节点下线时，发送告警", "")]
+        public Boolean AlarmOnOffline { get => _AlarmOnOffline; set { if (OnPropertyChanging("AlarmOnOffline", value)) { _AlarmOnOffline = value; OnPropertyChanged("AlarmOnOffline"); } } }
+
         private Int32 _Logins;
         /// <summary>登录次数</summary>
         [DisplayName("登录次数")]
@@ -444,6 +452,7 @@ namespace Stardust.Data.Nodes
                     case "AlarmDiskRate": return _AlarmDiskRate;
                     case "AlarmTcp": return _AlarmTcp;
                     case "AlarmProcesses": return _AlarmProcesses;
+                    case "AlarmOnOffline": return _AlarmOnOffline;
                     case "Logins": return _Logins;
                     case "LastLogin": return _LastLogin;
                     case "LastLoginIP": return _LastLoginIP;
@@ -498,6 +507,7 @@ namespace Stardust.Data.Nodes
                     case "AlarmDiskRate": _AlarmDiskRate = value.ToInt(); break;
                     case "AlarmTcp": _AlarmTcp = value.ToInt(); break;
                     case "AlarmProcesses": _AlarmProcesses = Convert.ToString(value); break;
+                    case "AlarmOnOffline": _AlarmOnOffline = value.ToBoolean(); break;
                     case "Logins": _Logins = value.ToInt(); break;
                     case "LastLogin": _LastLogin = value.ToDateTime(); break;
                     case "LastLoginIP": _LastLoginIP = Convert.ToString(value); break;
@@ -626,6 +636,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>进程告警。要守护的进程不存在时告警，多进程逗号隔开</summary>
             public static readonly Field AlarmProcesses = FindByName("AlarmProcesses");
+
+            /// <summary>下线告警。节点下线时，发送告警</summary>
+            public static readonly Field AlarmOnOffline = FindByName("AlarmOnOffline");
 
             /// <summary>登录次数</summary>
             public static readonly Field Logins = FindByName("Logins");
@@ -773,6 +786,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>进程告警。要守护的进程不存在时告警，多进程逗号隔开</summary>
             public const String AlarmProcesses = "AlarmProcesses";
+
+            /// <summary>下线告警。节点下线时，发送告警</summary>
+            public const String AlarmOnOffline = "AlarmOnOffline";
 
             /// <summary>登录次数</summary>
             public const String Logins = "Logins";

@@ -85,6 +85,11 @@ namespace Stardust.Data.Nodes
 
             return Meta.SingleCache.GetItemWithSlaveKey(sessionid) as NodeOnline;
         }
+
+        /// <summary>根据节点查找所有在线记录</summary>
+        /// <param name="nodeId"></param>
+        /// <returns></returns>
+        public static IList<NodeOnline> FindAllByNodeId(Int32 nodeId) => FindAll(_.NodeID == nodeId);
         #endregion
 
         #region 高级查询

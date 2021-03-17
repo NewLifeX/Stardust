@@ -6,6 +6,8 @@ using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Data.Nodes;
+using Stardust.DingTalk;
+using Stardust.WeiXin;
 
 namespace Stardust.Server.Services
 {
@@ -60,9 +62,46 @@ namespace Stardust.Server.Services
                                 node.OnlineTime += (Int32)(olt.UpdateTime - olt.CreateTime).TotalSeconds;
                                 node.SaveAsync();
                             }
+
+                            CheckOffline(node);
                         }
                     }
                 }
+            }
+        }
+
+        public static void CheckOffline(Node node)
+        {
+            // 下线告警
+            if (node.AlarmOnOffline && !node.WebHook.IsNullOrEmpty())
+            {
+                // 查找该节点还有没有其它实例在线
+                var olts = NodeOnline.FindAllByNodeId(node.ID);
+                if (olts.Count == 0)
+                {
+                    var msg = $"节点[{node.Name}]已下线！IP={node.IP}";
+                    SendAlarm(node.WebHook, "节点下线告警", msg);
+                }
+            }
+        }
+
+        private static void SendAlarm(String robot, String title, String msg)
+        {
+            XTrace.WriteLine(msg);
+
+            if (robot.Contains("qyapi.weixin"))
+            {
+                var weixin = new WeiXinClient { Url = robot };
+
+                using var span = DefaultTracer.Instance?.NewSpan("SendWeixin", msg);
+                weixin.SendMarkDown(msg);
+            }
+            else if (robot.Contains("dingtalk"))
+            {
+                var dingTalk = new DingTalkClient { Url = robot };
+
+                using var span = DefaultTracer.Instance?.NewSpan("SendDingTalk", msg);
+                dingTalk.SendMarkDown(title, msg, null);
             }
         }
         #endregion

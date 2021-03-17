@@ -12,6 +12,7 @@ using NewLife.Serialization;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Common;
+using Stardust.Server.Services;
 using XCode;
 
 namespace Stardust.Server.Controllers
@@ -124,6 +125,8 @@ namespace Stardust.Server.Controllers
                         node.OnlineTime += (Int32)(DateTime.Now - olt.CreateTime).TotalSeconds;
                         node.SaveAsync();
                     }
+
+                    NodeOnlineService.CheckOffline(node);
                 }
             }
 
@@ -307,6 +310,7 @@ namespace Stardust.Server.Controllers
 
         private static IList<NodeCommand> _commands;
         private static DateTime _nextTime;
+
         private static CommandModel[] AcquireCommands(Int32 nodeId)
         {
             // 缓存最近1000个未执行命令，用于快速过滤，避免大量节点在线时频繁查询命令表
