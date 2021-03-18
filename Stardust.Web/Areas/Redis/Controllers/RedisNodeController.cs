@@ -13,9 +13,9 @@ using Stardust.Server.Services;
 using XCode;
 using XCode.Membership;
 
-namespace Stardust.Web.Areas.Nodes.Controllers
+namespace Stardust.Web.Areas.Redis.Controllers
 {
-    [NodesArea]
+    [RedisArea]
     public class RedisNodeController : EntityController<RedisNode>
     {
         private readonly IRedisService _redisService;

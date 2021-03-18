@@ -9,9 +9,9 @@ using Stardust.Data.Nodes;
 using XCode;
 using static Stardust.Data.Nodes.RedisData;
 
-namespace Stardust.Web.Areas.Nodes.Controllers
+namespace Stardust.Web.Areas.Redis.Controllers
 {
-    [NodesArea]
+    [RedisArea]
     public class RedisDataController : ReadOnlyEntityController<RedisData>
     {
         static RedisDataController()

@@ -7,9 +7,9 @@ using Stardust.Data.Nodes;
 using XCode;
 using XCode.Membership;
 
-namespace Stardust.Web.Areas.Nodes.Controllers
+namespace Stardust.Web.Areas.Redis.Controllers
 {
-    [NodesArea]
+    [RedisArea]
     public class RedisMessageQueueController : EntityController<RedisMessageQueue>
     {
         static RedisMessageQueueController()
