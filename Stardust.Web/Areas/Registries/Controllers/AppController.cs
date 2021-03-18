@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
+using Microsoft.AspNetCore.Mvc;
+using NewLife;
 using NewLife.Cube;
 using Stardust.Data;
 using XCode;
@@ -47,6 +49,25 @@ namespace Stardust.Web.Areas.Registries.Controllers
             {
                 LogProvider.Provider.WriteLog(act, entity, err);
             }
+        }
+
+        /// <summary>启用禁用下线告警</summary>
+        /// <param name="enable"></param>
+        /// <returns></returns>
+        [EntityAuthorize(PermissionFlags.Update)]
+        public ActionResult SetAlarm(Boolean enable = true)
+        {
+            foreach (var item in SelectKeys)
+            {
+                var dt = App.FindById(item.ToInt());
+                if (dt != null)
+                {
+                    dt.AlarmOnOffline = enable;
+                    dt.Save();
+                }
+            }
+
+            return JsonRefresh("操作成功！");
         }
     }
 }

@@ -1,0 +1,18 @@
+﻿@using NewLife.Common;
+@using System.Collections.Generic;
+@{
+    var set = ViewBag.PageSetting as PageSetting;
+}
+@if (set.EnableSelect)
+{
+    <button type="button" class="btn btn-success btn-sm" data-action="action" data-url="@Url.Action("SetAlarm")?enable=true" data-fields="keys" disabled>
+        启用告警
+    </button>
+    <button type="button" class="btn btn-error btn-sm" data-action="action" data-url="@Url.Action("SetAlarm")?enable=false" data-fields="keys" disabled>
+        禁用告警
+    </button>
+    <input type="number" name="alarmRate" value="80" title="设置CPU、内存、磁盘等阈值" style="width:40px" />
+    <button type="button" class="btn btn-warning btn-sm" data-action="action" data-url="@Url.Action("ResetAlarm")" data-fields="keys,alarmRate" disabled>
+        重置阈值
+    </button>
+}

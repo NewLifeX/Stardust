@@ -108,5 +108,38 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                 LogProvider.Provider.WriteLog(act, entity, err);
             }
         }
+
+        [EntityAuthorize(PermissionFlags.Update)]
+        public ActionResult SetAlarm(Boolean enable = true)
+        {
+            foreach (var item in SelectKeys)
+            {
+                var dt = Node.FindByID(item.ToInt());
+                if (dt != null)
+                {
+                    dt.AlarmOnOffline = enable;
+                    dt.Save();
+                }
+            }
+
+            return JsonRefresh("操作成功！");
+        }
+        [EntityAuthorize(PermissionFlags.Update)]
+        public ActionResult ResetAlarm(Int32 alarmRate = 0)
+        {
+            foreach (var item in SelectKeys)
+            {
+                var dt = Node.FindByID(item.ToInt());
+                if (dt != null)
+                {
+                    dt.AlarmCpuRate = alarmRate;
+                    dt.AlarmMemoryRate = alarmRate;
+                    dt.AlarmDiskRate = alarmRate;
+                    dt.Save();
+                }
+            }
+
+            return JsonRefresh("操作成功！");
+        }
     }
 }
