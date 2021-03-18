@@ -17,6 +17,9 @@ namespace Stardust.Models
         /// <summary>名称</summary>
         public String Name { get; set; }
 
+        /// <summary>版本</summary>
+        public String Version { get; set; }
+
         /// <summary>用户名</summary>
         public String UserName { get; set; }
 
@@ -38,7 +41,7 @@ namespace Stardust.Models
         /// <summary>连接数</summary>
         public Int32 Connections { get; set; }
 
-        private Process _process;
+        private readonly Process _process;
         #endregion
 
         #region 构造

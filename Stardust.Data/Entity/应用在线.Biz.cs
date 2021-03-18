@@ -90,6 +90,7 @@ namespace Stardust.Data
         {
             AppId = app.Id;
             Name = app.Name;
+            Version = info.Version;
             UserName = info.UserName;
             ProcessId = info.Id;
             ProcessName = info.Name;

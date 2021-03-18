@@ -64,10 +64,9 @@ namespace Stardust.Monitors
             try
             {
                 var executing = AssemblyX.Create(Assembly.GetExecutingAssembly());
-                if (executing != null) _version = executing.Version;
+                _version = (AssemblyX.Entry ?? executing)?.Version;
 
-                var asm = AssemblyX.Entry ?? executing;
-                ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}@{asm?.Version}";
+                ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}";
             }
             catch { }
         }
@@ -137,7 +136,7 @@ namespace Stardust.Monitors
             }
 
             var server = Client is ApiHttpClient http ? http.Services.Join(",", e => e.Address) : (Client + "");
-            WriteLog("StarTracer.Start AppId={0} ClientId={1} Server={2}", AppId, ClientId, server);
+            WriteLog("星尘监控中心 Server={0} AppId={1} ClientId={2}", server, AppId, ClientId);
 
             _inited = true;
         }
@@ -157,7 +156,7 @@ namespace Stardust.Monitors
 
             // 构建应用信息
             if (_appInfo == null)
-                _appInfo = new AppInfo(_process);
+                _appInfo = new AppInfo(_process) { Version = _version };
             else
                 _appInfo.Refresh();
 
