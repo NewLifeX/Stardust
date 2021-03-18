@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using NewLife;
 using NewLife.Reflection;
@@ -23,6 +24,12 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddSingleton(star.Config);
 
             //services.AddHostedService<StarService>();
+
+            services.AddSingleton(serviceProvider =>
+            {
+                var server = serviceProvider.GetRequiredService<IServer>();
+                return server.Features.Get<IServerAddressesFeature>();
+            });
 
             return star;
         }
