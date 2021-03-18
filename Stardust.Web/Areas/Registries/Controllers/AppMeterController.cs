@@ -9,9 +9,9 @@ using Stardust.Data;
 using XCode;
 using static Stardust.Data.AppMeter;
 
-namespace Stardust.Web.Areas.Star.Controllers
+namespace Stardust.Web.Areas.Registries.Controllers
 {
-    [StarArea]
+    [RegistryArea]
     public class AppMeterController : EntityController<AppMeter>
     {
         static AppMeterController()

@@ -23,7 +23,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddSingleton(star.Tracer);
             services.AddSingleton(star.Config);
 
-            services.AddHostedService<StarService>();
+            //services.AddHostedService<StarService>();
 
             return star;
         }

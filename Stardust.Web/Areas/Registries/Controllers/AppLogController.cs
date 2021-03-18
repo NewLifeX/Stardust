@@ -4,9 +4,9 @@ using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data;
 
-namespace Stardust.Web.Areas.Star.Controllers
+namespace Stardust.Web.Areas.Registries.Controllers
 {
-    [StarArea]
+    [RegistryArea]
     public class AppLogController : ReadOnlyEntityController<AppLog>
     {
         static AppLogController()

@@ -5,9 +5,9 @@ using Stardust.Data;
 using XCode;
 using XCode.Membership;
 
-namespace Stardust.Web.Areas.Star.Controllers
+namespace Stardust.Web.Areas.Registries.Controllers
 {
-    [StarArea]
+    [RegistryArea]
     public class AppController : EntityController<App>
     {
         static AppController()
