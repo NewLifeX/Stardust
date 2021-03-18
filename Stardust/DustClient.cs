@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using NewLife;
 using NewLife.Log;
+using NewLife.Net;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
@@ -121,7 +122,7 @@ namespace Stardust
                     {
                         XTrace.WriteLine("星尘分注册中心 Server={0} AppId={1}", Services.Join(",", e => e.Address), AppId);
 
-                        _timer = new TimerX(DoWork, null, 1_000, 60_000) { Async = true };
+                        _timer = new TimerX(DoWork, null, 3_000, 60_000) { Async = true };
                     }
                 }
             }
@@ -158,7 +159,20 @@ namespace Stardust
 
             foreach (var item in _publishServices)
             {
-                PublishAsync(item.Value).Wait();
+                var svc = item.Value;
+                if (svc.Address.IsNullOrEmpty() && svc.AddressCallback != null)
+                {
+                    var address = svc.AddressCallback();
+                    if (address.IsNullOrEmpty()) continue;
+
+                    var ps = address.Split(",");
+                    var uri = new NetUri(ps[0]);
+                    var ip = NetHelper.MyIP();
+                    svc.Client = $"{ip}:{uri.Port}";
+                    svc.Address = address;
+                }
+
+                PublishAsync(svc).Wait();
             }
         }
         #endregion
@@ -176,8 +190,14 @@ namespace Stardust
         /// <returns></returns>
         public void Publish(String serviceName, String address, String tag = null)
         {
+            // 解析端口
+            var ps = address.Split(",");
+            if (ps == null || ps.Length == 0) throw new ArgumentNullException(nameof(address));
+
+            var uri = new NetUri(ps[0]);
+
             var ip = NetHelper.MyIP();
-            var p = Process.GetCurrentProcess();
+            //var p = Process.GetCurrentProcess();
             var asmx = AssemblyX.Entry;
 
             var service = new PublishServiceInfo
@@ -186,7 +206,34 @@ namespace Stardust
                 Address = address,
                 Tag = tag,
 
-                Client = $"{ip}@{p.Id}",
+                Client = $"{ip}:{uri.Port}",
+                Version = asmx.Version,
+            };
+
+            XTrace.WriteLine("注册服务 {0}", service.ToJson());
+
+            _publishServices.TryAdd(service.ServiceName, service);
+
+            InitTimer();
+        }
+
+        /// <summary>发布</summary>
+        /// <param name="serviceName">服务名</param>
+        /// <param name="addressCallback">服务地址</param>
+        /// <param name="tag">特性标签</param>
+        /// <returns></returns>
+        public void Publish(String serviceName, Func<String> addressCallback, String tag = null)
+        {
+            if (addressCallback == null) throw new ArgumentNullException(nameof(addressCallback));
+
+            var asmx = AssemblyX.Entry;
+
+            var service = new PublishServiceInfo
+            {
+                ServiceName = serviceName,
+                AddressCallback = addressCallback,
+                Tag = tag,
+
                 Version = asmx.Version,
             };
 

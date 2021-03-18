@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using NewLife;
+using NewLife.Log;
 using NewLife.Reflection;
 using Stardust;
 using Stardust.Extensions;
@@ -31,21 +32,33 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <summary>发布服务到注册中心</summary>
         /// <param name="app"></param>
         /// <param name="serviceName">服务名</param>
-        /// <param name="tag"></param>
+        /// <param name="address">服务地址</param>
+        /// <param name="tag">特性标签</param>
         /// <returns></returns>
-        public static IApplicationBuilder PublishService(this IApplicationBuilder app, String serviceName, String tag = null)
+        public static IApplicationBuilder PublishService(this IApplicationBuilder app, String serviceName, String address = null, String tag = null)
         {
             var star = app.ApplicationServices.GetRequiredService<StarFactory>();
             if (star == null) throw new InvalidOperationException("未注册StarFactory，需要AddStardust注册。");
 
-            var feature = app.ServerFeatures.Get<IServerAddressesFeature>();
-            var addrs = feature?.Addresses.Join();
-            if (addrs.IsNullOrEmpty()) return app;
-            //XTrace.WriteLine("{0}", feature?.Addresses.Join());
-
             if (serviceName.IsNullOrEmpty()) serviceName = AssemblyX.Entry.Name;
 
-            star.Dust.Publish(serviceName, addrs, tag);
+            if (address.IsNullOrEmpty())
+            {
+                var feature = app.ServerFeatures.Get<IServerAddressesFeature>();
+                address = feature?.Addresses.Join();
+
+                if (address.IsNullOrEmpty())
+                {
+                    if (feature != null)
+                        star.Dust.Publish(serviceName, () => feature?.Addresses.Join(), tag);
+                    else
+                        throw new Exception("尘埃客户端未能取得本地服务地址。");
+
+                    return app;
+                }
+            }
+
+            star.Dust.Publish(serviceName, address, tag);
 
             return app;
         }
