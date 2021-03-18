@@ -50,7 +50,7 @@ namespace Stardust.Server.Controllers
             svc.PingCount++;
             svc.Tag = service.Tag;
             svc.Version = service.Version;
-            svc.Address = service.Address?.Replace("://*", $"://{UserHost}");
+            svc.Address = service.Address?.Replace("://*", $"://{UserHost}").Replace("://[::]", $"://{UserHost}");
 
             svc.Save();
 
