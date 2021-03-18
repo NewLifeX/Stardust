@@ -8,7 +8,7 @@ using Stardust.Server.Services;
 
 namespace Stardust.Server.Controllers
 {
-    [Route("[controller]/[action]")]
+    [Route("[action]")]
     public class DustController : ControllerBase
     {
         /// <summary>用户主机</summary>
@@ -21,42 +21,10 @@ namespace Stardust.Server.Controllers
             _tokenService = tokenService;
         }
 
-        #region 心跳
-        [ApiFilter]
-        [HttpPost]
-        public PingResponse Ping(PingInfo inf)
-        {
-            var rs = new PingResponse
-            {
-                Time = inf.Time,
-                ServerTime = DateTime.UtcNow,
-            };
-
-            //if (Session["Node"] is Node node)
-            //{
-            //    var code = node.Code;
-            //    node.FixArea();
-            //    node.SaveAsync();
-
-            //    rs.Period = node.Period;
-
-            //    //var olt = GetOnline(code, node) ?? CreateOnline(code, node);
-            //    //olt.Name = node.Name;
-            //    //olt.Category = node.Category;
-            //    //olt.Save(null, inf, Token);
-
-            //    //// 拉取命令
-            //    //rs.Commands = AcquireCommands(node.ID);
-            //}
-
-            return rs;
-        }
-        #endregion
-
         #region 发布、消费
         [ApiFilter]
         [HttpPost]
-        public AppService Publish([FromBody] PublishServiceInfo service, String token)
+        public AppService RegisterService([FromBody] PublishServiceInfo service, String token)
         {
             var app = _tokenService.DecodeToken(token, Setting.Current);
 
@@ -75,6 +43,8 @@ namespace Stardust.Server.Controllers
 
                     CreateIP = UserHost,
                 };
+
+                app.WriteHistory("RegisterService", true, $"注册服务[{service.ServiceName}] {service.Client}", UserHost);
             }
 
             svc.PingCount++;
@@ -89,7 +59,26 @@ namespace Stardust.Server.Controllers
 
         [ApiFilter]
         [HttpPost]
-        public ServiceModel[] Consume([FromBody] ConsumeServiceInfo service, String token)
+        public AppService UnregisterService([FromBody] PublishServiceInfo service, String token)
+        {
+            var app = _tokenService.DecodeToken(token, Setting.Current);
+
+            // 该应用所有服务
+            var services = AppService.FindAllByAppId(app.Id);
+            var svc = services.FirstOrDefault(e => e.ServiceName == service.ServiceName && e.Client == service.Client);
+            if (svc != null)
+            {
+                svc.Delete();
+
+                app.WriteHistory("UnregisterService", true, $"服务[{service.ServiceName}]下线 {service.Client}", UserHost);
+            }
+
+            return svc;
+        }
+
+        [ApiFilter]
+        [HttpPost]
+        public ServiceModel[] ResolveService([FromBody] ConsumeServiceInfo service, String token)
         {
             var app = _tokenService.DecodeToken(token, Setting.Current);
 

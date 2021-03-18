@@ -174,30 +174,35 @@ namespace Stardust
                     svc.Address = address;
                 }
 
-                PublishAsync(svc).Wait();
+                RegisterAsync(svc).Wait();
             }
 
             foreach (var item in _consumeServices)
             {
                 var svc = item.Value;
-                var ms = ConsumeAsync(svc).Result;
+                var ms = ResolveAsync(svc).Result;
                 if (ms != null && ms.Length > 0) _consumes.TryAdd(svc.ServiceName, ms);
             }
         }
         #endregion
 
         #region 发布、消费
-        /// <summary>发布</summary>
+        /// <summary>发布服务</summary>
         /// <param name="service"></param>
         /// <returns></returns>
-        public async Task<Object> PublishAsync(PublishServiceInfo service) => await PostAsync<Object>("Dust/Publish", service);
+        public async Task<Object> RegisterAsync(PublishServiceInfo service) => await PostAsync<Object>("RegisterService", service);
+
+        /// <summary>取消服务</summary>
+        /// <param name="service"></param>
+        /// <returns></returns>
+        public async Task<Object> UnregisterAsync(PublishServiceInfo service) => await PostAsync<Object>("UnregisterService", service);
 
         /// <summary>发布</summary>
         /// <param name="serviceName">服务名</param>
         /// <param name="address">服务地址</param>
         /// <param name="tag">特性标签</param>
         /// <returns></returns>
-        public void Publish(String serviceName, String address, String tag = null)
+        public void Register(String serviceName, String address, String tag = null)
         {
             // 解析端口
             var ps = address.Split(",");
@@ -231,7 +236,7 @@ namespace Stardust
         /// <param name="addressCallback">服务地址</param>
         /// <param name="tag">特性标签</param>
         /// <returns></returns>
-        public void Publish(String serviceName, Func<String> addressCallback, String tag = null)
+        public void Register(String serviceName, Func<String> addressCallback, String tag = null)
         {
             if (addressCallback == null) throw new ArgumentNullException(nameof(addressCallback));
 
@@ -253,17 +258,30 @@ namespace Stardust
             InitTimer();
         }
 
+        /// <summary>取消服务</summary>
+        /// <param name="serviceName"></param>
+        /// <returns></returns>
+        public Boolean Unregister(String serviceName)
+        {
+            if (!_publishServices.TryGetValue(serviceName, out var service)) return false;
+            if (service == null) return false;
+
+            UnregisterAsync(service).Wait();
+
+            return true;
+        }
+
         /// <summary>消费</summary>
         /// <param name="service"></param>
         /// <returns></returns>
-        public async Task<ServiceModel[]> ConsumeAsync(ConsumeServiceInfo service) => await PostAsync<ServiceModel[]>("Dust/Consume", service);
+        public async Task<ServiceModel[]> ResolveAsync(ConsumeServiceInfo service) => await PostAsync<ServiceModel[]>("ResolveService", service);
 
         /// <summary>消费得到服务地址信息</summary>
         /// <param name="serviceName"></param>
         /// <param name="minVersion"></param>
         /// <param name="tag"></param>
         /// <returns></returns>
-        public ServiceModel[] Consume(String serviceName, String minVersion = null, String tag = null)
+        public ServiceModel[] Resolve(String serviceName, String minVersion = null, String tag = null)
         {
             if (!_consumeServices.ContainsKey(serviceName))
             {
