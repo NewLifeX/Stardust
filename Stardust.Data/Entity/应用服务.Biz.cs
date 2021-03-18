@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
-using NewLife.Data;
 using XCode;
 using XCode.Membership;
 
@@ -13,6 +12,9 @@ namespace Stardust.Data
         #region 对象操作
         static AppService()
         {
+            var df = Meta.Factory.AdditionalFields;
+            df.Add(__.PingCount);
+
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Modules.Add<TimeModule>();
             Meta.Modules.Add<IPModule>();

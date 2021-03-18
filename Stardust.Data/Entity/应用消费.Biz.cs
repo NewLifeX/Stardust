@@ -12,6 +12,9 @@ namespace Stardust.Data
         #region 对象操作
         static AppConsume()
         {
+            var df = Meta.Factory.AdditionalFields;
+            df.Add(__.PingCount);
+
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Modules.Add<TimeModule>();
             Meta.Modules.Add<IPModule>();

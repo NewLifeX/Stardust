@@ -60,6 +60,14 @@ namespace Stardust.Data
         [BindColumn("Enable", "启用", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
+        private Int32 _PingCount;
+        /// <summary>心跳</summary>
+        [DisplayName("心跳")]
+        [Description("心跳")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("PingCount", "心跳", "")]
+        public Int32 PingCount { get => _PingCount; set { if (OnPropertyChanging("PingCount", value)) { _PingCount = value; OnPropertyChanged("PingCount"); } } }
+
         private String _Version;
         /// <summary>版本</summary>
         [DisplayName("版本")]
@@ -140,6 +148,7 @@ namespace Stardust.Data
                     case "ServiceName": return _ServiceName;
                     case "Client": return _Client;
                     case "Enable": return _Enable;
+                    case "PingCount": return _PingCount;
                     case "Version": return _Version;
                     case "Address": return _Address;
                     case "HealthCheck": return _HealthCheck;
@@ -160,6 +169,7 @@ namespace Stardust.Data
                     case "ServiceName": _ServiceName = Convert.ToString(value); break;
                     case "Client": _Client = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
+                    case "PingCount": _PingCount = value.ToInt(); break;
                     case "Version": _Version = Convert.ToString(value); break;
                     case "Address": _Address = Convert.ToString(value); break;
                     case "HealthCheck": _HealthCheck = Convert.ToString(value); break;
@@ -192,6 +202,9 @@ namespace Stardust.Data
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
+
+            /// <summary>心跳</summary>
+            public static readonly Field PingCount = FindByName("PingCount");
 
             /// <summary>版本</summary>
             public static readonly Field Version = FindByName("Version");
@@ -237,6 +250,9 @@ namespace Stardust.Data
 
             /// <summary>启用</summary>
             public const String Enable = "Enable";
+
+            /// <summary>心跳</summary>
+            public const String PingCount = "PingCount";
 
             /// <summary>版本</summary>
             public const String Version = "Version";

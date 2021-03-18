@@ -32,28 +32,21 @@
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="Session" DataType="String" Description="实例。IP加端口" />
-      <Column Name="Client" DataType="String" Description="客户端。IP加进程" />
       <Column Name="Name" DataType="String" Master="True" Description="名称。机器名称" />
-      <Column Name="ProcessId" DataType="Int32" Description="进程Id" />
+      <Column Name="Client" DataType="String" Description="客户端。IP加进程" />
+      <Column Name="PingCount" DataType="Int32" Description="心跳" />
+      <Column Name="ProcessId" DataType="Int32" Description="进程" />
       <Column Name="ProcessName" DataType="String" Description="进程名称" />
       <Column Name="UserName" DataType="String" Description="用户名。启动该进程的用户名" />
       <Column Name="StartTime" DataType="DateTime" Description="进程时间" />
       <Column Name="Version" DataType="String" Description="版本。客户端" />
       <Column Name="Compile" DataType="DateTime" Description="编译时间。客户端" />
-      <Column Name="Server" DataType="String" Description="服务端。客户端登录到哪个服务端，IP加端口" />
-      <Column Name="Active" DataType="Boolean" Description="激活。只有激活的应用，才提供服务" />
-      <Column Name="Address" DataType="String" Description="服务地址。tcp://ip:port" />
-      <Column Name="Services" DataType="Int32" Description="服务数。该应用提供的服务数" />
-      <Column Name="Actions" DataType="String" Length="500" Description="功能列表" />
-      <Column Name="Clients" DataType="Int32" Description="客户端数。服务提供者当前服务的客户端数" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
       <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
     </Columns>
     <Indexes>
-      <Index Columns="Session" Unique="True" />
-      <Index Columns="Client" />
+      <Index Columns="Client" Unique="True" />
       <Index Columns="AppId" />
     </Indexes>
   </Table>
@@ -100,6 +93,7 @@
       <Column Name="ServiceName" DataType="String" Description="服务名" />
       <Column Name="Client" DataType="String" Description="客户端。IP加进程" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="PingCount" DataType="Int32" Description="心跳" />
       <Column Name="Version" DataType="String" Description="版本" />
       <Column Name="Address" DataType="String" Description="地址。服务地址，如http://127.0.0.1:1234" />
       <Column Name="HealthCheck" DataType="String" Description="健康监测" />
@@ -120,6 +114,7 @@
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="ServiceName" DataType="String" Description="服务名" />
       <Column Name="Client" DataType="String" Description="客户端。IP加进程" />
+      <Column Name="PingCount" DataType="Int32" Description="心跳" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="MinVersion" DataType="String" Description="最低版本。要求返回大于等于该版本的服务提供者" />
       <Column Name="Tag" DataType="String" Description="标签。带有指定特性，逗号分隔" />

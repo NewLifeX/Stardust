@@ -99,7 +99,7 @@ namespace Stardust.Data
                 var ss = clientId.Split('@');
                 if (ss.Length == 3) clientId = $"{ss[0]}@{ss[1]}";
 
-                var online = Data.AppOnline.GetOrAddSession(clientId);
+                var online = Data.AppOnline.GetOrAddClient(clientId);
                 online.Version = model.Version;
                 online.UpdateInfo(app, model.Info);
 

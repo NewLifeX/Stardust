@@ -156,7 +156,7 @@ namespace Stardust.Server
 
             // 服务器特性
             pid = Process.GetCurrentProcess().Id;
-            online.Server = Local.EndPoint + "@" + pid;
+            //online.Server = Local.EndPoint + "@" + pid;
             online.Save();
 
             // 真正的用户
@@ -178,9 +178,9 @@ namespace Stardust.Server
 
             var ip = ns.Remote.Host;
             var ins = ns.Remote.EndPoint + "";
-            online = AppOnline.FindBySession(ins) ?? new AppOnline { CreateIP = ip };
+            online = AppOnline.FindByClient(ins) ?? new AppOnline { CreateIP = ip };
             online.AppId = app.Id;
-            online.Session = ins;
+            online.Client = ins;
 
             return online;
         }

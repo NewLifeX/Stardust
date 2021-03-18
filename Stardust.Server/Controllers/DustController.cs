@@ -70,7 +70,6 @@ namespace Stardust.Server.Controllers
                     AppId = app.Id,
                     ServiceName = service.ServiceName,
                     Client = service.Client,
-                    Tag = service.Tag,
 
                     Enable = app.AutoActive,
 
@@ -78,6 +77,8 @@ namespace Stardust.Server.Controllers
                 };
             }
 
+            svc.PingCount++;
+            svc.Tag = service.Tag;
             svc.Version = service.Version;
             svc.Address = service.Address;
 
@@ -102,12 +103,13 @@ namespace Stardust.Server.Controllers
                     AppId = app.Id,
                     ServiceName = service.ServiceName,
                     Client = service.Client,
-                    Tag = service.Tag,
 
                     Enable = true,
                 };
             }
 
+            svc.PingCount++;
+            svc.Tag = service.Tag;
             svc.MinVersion = service.MinVersion;
 
             svc.Save();

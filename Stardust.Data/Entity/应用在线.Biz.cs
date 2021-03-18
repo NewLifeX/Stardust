@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Reflection;
@@ -15,6 +14,9 @@ namespace Stardust.Data
         #region 对象操作
         static AppOnline()
         {
+            var df = Meta.Factory.AdditionalFields;
+            df.Add(__.PingCount);
+
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Modules.Add<TimeModule>();
             Meta.Modules.Add<IPModule>();
@@ -60,14 +62,14 @@ namespace Stardust.Data
         }
 
         /// <summary>根据会话查找</summary>
-        /// <param name="session">会话</param>
+        /// <param name="client">会话</param>
         /// <returns>实体对象</returns>
-        public static AppOnline FindBySession(String session)
+        public static AppOnline FindByClient(String client)
         {
             // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Session == session);
+            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Client == client);
 
-            return Find(_.Session == session);
+            return Find(_.Client == client);
         }
         #endregion
 
@@ -76,11 +78,11 @@ namespace Stardust.Data
 
         #region 业务操作
         /// <summary>获取 或 创建 会话</summary>
-        /// <param name="session"></param>
+        /// <param name="client"></param>
         /// <returns></returns>
-        public static AppOnline GetOrAddSession(String session)
+        public static AppOnline GetOrAddClient(String client)
         {
-            return GetOrAdd(session, (k, c) => Find(_.Session == k), k => new AppOnline { Session = k });
+            return GetOrAdd(client, (k, c) => Find(_.Client == k), k => new AppOnline { Client = k });
         }
 
         /// <summary>更新信息</summary>
