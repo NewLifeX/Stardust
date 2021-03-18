@@ -69,8 +69,8 @@ namespace Stardust.Web
                     pattern: "{controller=CubeHome}/{action=Index}/{id?}");
             });
 
-            //// 发布服务到星尘注册中心
-            //app.PublishService("StarWeb");
+            // 发布服务到星尘注册中心，需要指定服务名
+            app.PublishService("StarWeb");
         }
 
         private static void InitAsync()

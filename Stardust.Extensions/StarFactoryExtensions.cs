@@ -45,7 +45,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             if (serviceName.IsNullOrEmpty()) serviceName = AssemblyX.Entry.Name;
 
-            star.Dust.PublishAsync(serviceName, addrs, tag).Wait();
+            star.Dust.Publish(serviceName, addrs, tag);
 
             return app;
         }

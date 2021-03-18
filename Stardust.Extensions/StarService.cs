@@ -32,7 +32,7 @@ namespace Stardust.Extensions
 
                 // 发布服务到星尘注册中心
                 XTrace.WriteLine("发布服务[{0}]到星尘注册中心。", serviceName);
-                _starFactory.Dust.PublishAsync(serviceName, addrs).Wait();
+                _starFactory.Dust.Publish(serviceName, addrs);
             }
 
             return Task.CompletedTask;

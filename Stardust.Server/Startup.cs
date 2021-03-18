@@ -108,13 +108,6 @@ namespace Stardust.Server
             {
                 endpoints.MapControllers();
             });
-
-            var feature = app.ServerFeatures.Get<IServerAddressesFeature>();
-            //foreach (var item in feature.Addresses)
-            //{
-            //    XTrace.WriteLine("{0}", item);
-            //}
-            XTrace.WriteLine("{0}", feature?.Addresses.Join());
         }
 
         private static void InitAsync()

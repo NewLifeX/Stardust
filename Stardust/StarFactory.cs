@@ -1,6 +1,7 @@
 ﻿using System;
 using NewLife;
 using NewLife.Configuration;
+using NewLife.Http;
 using NewLife.Log;
 using NewLife.Reflection;
 using NewLife.Remoting;
@@ -69,6 +70,8 @@ namespace Stardust
         /// <summary>本地星尘代理</summary>
         public LocalStarClient Local { get; private set; }
 
+        private TokenHttpFilter _tokenFilter;
+
         private void Init()
         {
             Local = new LocalStarClient();
@@ -112,6 +115,14 @@ namespace Stardust
                 AppId = set.AppKey;
                 Secret = set.Secret;
             }
+
+            if (!AppId.IsNullOrEmpty()) _tokenFilter = new TokenHttpFilter
+            {
+                UserName = AppId,
+                Password = Secret,
+            };
+
+            XTrace.WriteLine("星尘分布式服务 Server={0} AppId={1}", Server, AppId);
         }
         #endregion
 
@@ -133,6 +144,8 @@ namespace Stardust
 
                         Log = Log
                     };
+                    if (tracer.Client is ApiHttpClient http) http.Filter = _tokenFilter;
+
                     tracer.AttachGlobal();
 
                     _tracer = tracer;
@@ -154,12 +167,15 @@ namespace Stardust
                 {
                     Valid();
 
+                    XTrace.WriteLine("星尘配置中心 Server={0} AppId={1}", Server, AppId);
+
                     var http = new HttpConfigProvider
                     {
                         Server = Server,
                         AppId = AppId,
                         Secret = Secret,
                     };
+                    if (http.Client is ApiHttpClient http2) http2.Filter = _tokenFilter;
                     http.LoadAll();
 
                     _config = http;
@@ -186,6 +202,7 @@ namespace Stardust
                         AppId = AppId,
                         Secret = Secret,
 
+                        Filter = _tokenFilter,
                         Log = Log,
                     };
                     client.OnLogined += (s, e) =>

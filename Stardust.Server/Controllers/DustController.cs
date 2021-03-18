@@ -8,11 +8,12 @@ using Stardust.Server.Services;
 
 namespace Stardust.Server.Controllers
 {
-    [ApiController]
-    [Route("[controller]")]
-    [ApiFilter]
+    [Route("[controller]/[action]")]
     public class DustController : ControllerBase
     {
+        /// <summary>用户主机</summary>
+        public String UserHost => HttpContext.GetUserHost();
+
         private readonly TokenService _tokenService;
 
         public DustController(TokenService tokenService)
@@ -55,7 +56,7 @@ namespace Stardust.Server.Controllers
         #region 发布、消费
         [ApiFilter]
         [HttpPost]
-        public Object Publish(PublishServiceInfo service, String token)
+        public AppService Publish([FromBody] PublishServiceInfo service, String token)
         {
             var app = _tokenService.DecodeToken(token, Setting.Current);
 
@@ -72,6 +73,8 @@ namespace Stardust.Server.Controllers
                     Tag = service.Tag,
 
                     Enable = app.AutoActive,
+
+                    CreateIP = UserHost,
                 };
             }
 
@@ -80,7 +83,7 @@ namespace Stardust.Server.Controllers
 
             svc.Save();
 
-            return null;
+            return svc;
         }
 
         [ApiFilter]

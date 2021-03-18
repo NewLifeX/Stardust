@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Http;
@@ -7,6 +8,7 @@ using NewLife;
 using NewLife.Log;
 using NewLife.Reflection;
 using NewLife.Remoting;
+using NewLife.Serialization;
 using NewLife.Threading;
 using NewLife.Web;
 using Stardust.Models;
@@ -31,6 +33,8 @@ namespace Stardust
 
         /// <summary>最后一次登录成功后的消息</summary>
         public IDictionary<String, Object> Info { get; private set; }
+
+        private readonly ConcurrentDictionary<String, PublishServiceInfo> _publishServices = new();
         #endregion
 
         #region 构造
@@ -98,16 +102,7 @@ namespace Stardust
 
             OnLogined?.Invoke(this, EventArgs.Empty);
 
-            if (Logined && _timer == null)
-            {
-                lock (this)
-                {
-                    if (_timer == null)
-                    {
-                        _timer = new TimerX(s => Ping().Wait(), null, 5_000, 60_000) { Async = true };
-                    }
-                }
-            }
+            if (Logined) InitTimer();
 
             return rs;
         }
@@ -116,6 +111,22 @@ namespace Stardust
         #region 心跳报告
         private AppInfo _appInfo;
         private TimerX _timer;
+        private void InitTimer()
+        {
+            if (_timer == null)
+            {
+                lock (this)
+                {
+                    if (_timer == null)
+                    {
+                        XTrace.WriteLine("星尘分注册中心 Server={0} AppId={1}", Services.Join(",", e => e.Address), AppId);
+
+                        _timer = new TimerX(DoWork, null, 1_000, 60_000) { Async = true };
+                    }
+                }
+            }
+        }
+
         /// <summary>心跳</summary>
         /// <returns></returns>
         public async Task<Object> Ping()
@@ -140,29 +151,36 @@ namespace Stardust
                 throw;
             }
         }
+
+        private void DoWork(Object state)
+        {
+            //Ping().Wait();
+
+            foreach (var item in _publishServices)
+            {
+                PublishAsync(item.Value).Wait();
+            }
+        }
         #endregion
 
         #region 发布、消费
         /// <summary>发布</summary>
         /// <param name="service"></param>
         /// <returns></returns>
-        public async Task<Object> PublishAsync(PublishServiceInfo service)
-        {
-            return await PostAsync<Object>("Publish", service);
-        }
+        public async Task<Object> PublishAsync(PublishServiceInfo service) => await PostAsync<Object>("Dust/Publish", service);
 
         /// <summary>发布</summary>
         /// <param name="serviceName">服务名</param>
         /// <param name="address">服务地址</param>
         /// <param name="tag">特性标签</param>
         /// <returns></returns>
-        public async Task<Object> PublishAsync(String serviceName, String address, String tag = null)
+        public void Publish(String serviceName, String address, String tag = null)
         {
             var ip = NetHelper.MyIP();
             var p = Process.GetCurrentProcess();
             var asmx = AssemblyX.Entry;
 
-            var info = new PublishServiceInfo
+            var service = new PublishServiceInfo
             {
                 ServiceName = serviceName,
                 Address = address,
@@ -172,16 +190,17 @@ namespace Stardust
                 Version = asmx.Version,
             };
 
-            return await PublishAsync(info);
+            XTrace.WriteLine("注册服务 {0}", service.ToJson());
+
+            _publishServices.TryAdd(service.ServiceName, service);
+
+            InitTimer();
         }
 
         /// <summary>消费</summary>
         /// <param name="service"></param>
         /// <returns></returns>
-        public async Task<Boolean> ConsumeAsync(ConsumeServiceInfo service)
-        {
-            return await PostAsync<Boolean>("Consume", service);
-        }
+        public async Task<Boolean> ConsumeAsync(ConsumeServiceInfo service) => await PostAsync<Boolean>("Dust/Consume", service);
         #endregion
 
         #region 辅助
