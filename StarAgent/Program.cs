@@ -8,9 +8,10 @@ using NewLife.Log;
 using NewLife.Net;
 using NewLife.Reflection;
 using NewLife.Remoting;
+using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust;
-using Stardust.Monitors;
+using Stardust.Models;
 
 namespace StarAgent
 {
@@ -39,6 +40,7 @@ namespace StarAgent
             // 注册菜单，在控制台菜单中按 t 可以执行Test函数，主要用于临时处理数据
             AddMenu('s', "使用星尘", UseStarServer);
             AddMenu('t', "服务器信息", ShowMachineInfo);
+            AddMenu('w', "测试微服务", UseMicroService);
 
             MachineInfo.RegisterAsync();
         }
@@ -46,6 +48,7 @@ namespace StarAgent
         ApiServer _server;
         TimerX _timer;
         StarClient _Client;
+        StarFactory _factory;
         ServiceManager _Manager;
 
         private void StartClient()
@@ -76,16 +79,7 @@ namespace StarAgent
             };
 
             // APM埋点。独立应用名
-            var tracer = new StarTracer
-            {
-                AppId = "StarAgent",
-                //AppSecret = null,
-                Client = new ApiHttpClient(server),
-                Log = XTrace.Log
-            };
-            DefaultTracer.Instance = tracer;
-            ApiHelper.Tracer = tracer;
-            client.Tracer = tracer;
+            client.Tracer = _factory.Tracer;
 
             // 使用跟踪
             client.UseTrace();
@@ -94,6 +88,15 @@ namespace StarAgent
 
             // 可能需要多次尝试
             _timer = new TimerX(TryConnectServer, client, 0, 5_000) { Async = true };
+        }
+
+        private void StartFactory()
+        {
+            if (_factory == null)
+            {
+                var server = Stardust.Setting.Current.Server;
+                _factory = new StarFactory(server, "StarAgent", null);
+            }
         }
 
         private void TryConnectServer(Object state)
@@ -154,6 +157,8 @@ namespace StarAgent
                 }
             }
 
+            StartFactory();
+
             // 启动星尘客户端，连接服务端
             StartClient();
 
@@ -189,6 +194,8 @@ namespace StarAgent
 
             _Client.TryDispose();
             _Client = null;
+
+            _factory = null;
 
             _server.TryDispose();
             _server = null;
@@ -258,6 +265,28 @@ namespace StarAgent
             {
                 XTrace.WriteLine("{0}:\t{1}", pi.Name, mi.GetValue(pi));
             }
+        }
+
+        private String _lastService;
+        public void UseMicroService()
+        {
+            if (_lastService.IsNullOrEmpty())
+                Console.WriteLine("请输入要测试的微服务名称：");
+            else
+                Console.WriteLine("请输入要测试的微服务名称（{0}）：", _lastService);
+
+            var serviceName = Console.ReadLine();
+            if (serviceName.IsNullOrEmpty()) serviceName = _lastService;
+            if (serviceName.IsNullOrEmpty()) return;
+
+            _lastService = serviceName;
+
+            StartFactory();
+
+            var models = _factory.Dust.Consume(serviceName);
+            if (models == null) models = _factory.Dust.ConsumeAsync(new ConsumeServiceInfo { ServiceName = serviceName }).Result;
+
+            Console.WriteLine(models.ToJson(true));
         }
     }
 }

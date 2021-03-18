@@ -114,8 +114,8 @@
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="ServiceName" DataType="String" Description="服务名" />
       <Column Name="Client" DataType="String" Description="客户端。IP加进程" />
-      <Column Name="PingCount" DataType="Int32" Description="心跳" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="PingCount" DataType="Int32" Description="心跳" />
       <Column Name="MinVersion" DataType="String" Description="最低版本。要求返回大于等于该版本的服务提供者" />
       <Column Name="Tag" DataType="String" Description="标签。带有指定特性，逗号分隔" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />

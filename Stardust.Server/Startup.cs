@@ -4,7 +4,6 @@ using System.Text.Unicode;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,7 +28,7 @@ namespace Stardust.Server
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            var star = new StarFactory("StarServer");
+            var star = new StarFactory(null, "StarServer", null);
             if (star.Server.IsNullOrEmpty()) star.Server = "http://127.0.0.1:6600";
 
             var tracer = star.Tracer;

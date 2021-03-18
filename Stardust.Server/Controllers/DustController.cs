@@ -89,7 +89,7 @@ namespace Stardust.Server.Controllers
 
         [ApiFilter]
         [HttpPost]
-        public Object Consume(ConsumeServiceInfo service, String token)
+        public ServiceModel[] Consume([FromBody] ConsumeServiceInfo service, String token)
         {
             var app = _tokenService.DecodeToken(token, Setting.Current);
 
@@ -105,6 +105,8 @@ namespace Stardust.Server.Controllers
                     Client = service.Client,
 
                     Enable = true,
+
+                    CreateIP = UserHost,
                 };
             }
 
@@ -116,8 +118,18 @@ namespace Stardust.Server.Controllers
 
             // 该服务所有生产
             var services2 = AppService.FindAllByService(service.ServiceName);
+            services2 = services2.Where(e => e.Enable).ToList();
 
-            return null;
+            //todo 匹配minversion和tag
+
+            return services2.Select(e => new ServiceModel
+            {
+                ServiceName = e.ServiceName,
+                Client = e.Client,
+                Version = e.Version,
+                Address = e.Address,
+                LastActive = e.UpdateTime,
+            }).ToArray();
         }
         #endregion
     }

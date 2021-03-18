@@ -1,13 +1,10 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using NewLife;
 using NewLife.Cube;
-using NewLife.Log;
 using Stardust.Data;
 using Stardust.Server.Services;
 using XCode.DataAccessLayer;
@@ -23,9 +20,6 @@ namespace Stardust.Web
         public void ConfigureServices(IServiceCollection services)
         {
             var star = services.AddStardust("StarWeb");
-
-            var tracer = star.Tracer;
-            services.AddSingleton<ITracer>(tracer);
 
             // 默认连接字符串，如果配置文件没有设置，则采用该值
             DAL.ConnStrs.TryAdd("ConfigCenter", "MapTo=Stardust");
@@ -71,6 +65,9 @@ namespace Stardust.Web
 
             // 发布服务到星尘注册中心，需要指定服务名
             app.PublishService("StarWeb");
+
+            //// 从星尘注册中心消费服务，指定需要消费的服务名
+            //app.ConsumeService("StarWeb");
         }
 
         private static void InitAsync()

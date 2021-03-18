@@ -36,6 +36,8 @@ namespace Stardust
         public IDictionary<String, Object> Info { get; private set; }
 
         private readonly ConcurrentDictionary<String, PublishServiceInfo> _publishServices = new();
+        private readonly ConcurrentDictionary<String, ConsumeServiceInfo> _consumeServices = new();
+        private readonly ConcurrentDictionary<String, ServiceModel[]> _consumes = new();
         #endregion
 
         #region 构造
@@ -174,6 +176,13 @@ namespace Stardust
 
                 PublishAsync(svc).Wait();
             }
+
+            foreach (var item in _consumeServices)
+            {
+                var svc = item.Value;
+                var ms = ConsumeAsync(svc).Result;
+                if (ms != null && ms.Length > 0) _consumes.TryAdd(svc.ServiceName, ms);
+            }
         }
         #endregion
 
@@ -247,7 +256,43 @@ namespace Stardust
         /// <summary>消费</summary>
         /// <param name="service"></param>
         /// <returns></returns>
-        public async Task<Boolean> ConsumeAsync(ConsumeServiceInfo service) => await PostAsync<Boolean>("Dust/Consume", service);
+        public async Task<ServiceModel[]> ConsumeAsync(ConsumeServiceInfo service) => await PostAsync<ServiceModel[]>("Dust/Consume", service);
+
+        /// <summary>消费得到服务地址信息</summary>
+        /// <param name="serviceName"></param>
+        /// <param name="minVersion"></param>
+        /// <param name="tag"></param>
+        /// <returns></returns>
+        public ServiceModel[] Consume(String serviceName, String minVersion = null, String tag = null)
+        {
+            if (!_consumeServices.ContainsKey(serviceName))
+            {
+                var ip = NetHelper.MyIP();
+                var p = Process.GetCurrentProcess();
+
+                var service = new ConsumeServiceInfo
+                {
+                    ServiceName = serviceName,
+                    MinVersion = minVersion,
+                    Tag = tag,
+
+                    Client = $"{ip}@{p.Id}",
+                };
+
+                XTrace.WriteLine("消费服务 {0}", service.ToJson());
+
+                _consumeServices.TryAdd(service.ServiceName, service);
+
+                InitTimer();
+
+                //// 首次同步调用
+                //return ConsumeAsync(service).Result;
+            }
+
+            if (_consumes.TryGetValue(serviceName, out var models)) return models;
+
+            return null;
+        }
         #endregion
 
         #region 辅助

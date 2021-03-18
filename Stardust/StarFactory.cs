@@ -27,35 +27,21 @@ namespace Stardust
         #endregion
 
         #region 构造
-        /// <summary>创建工厂</summary>
-        /// <param name="appId">应用</param>
+        /// <summary>指定地址、应用和密钥，创建工厂</summary>
+        /// <param name="server"></param>
+        /// <param name="appId"></param>
+        /// <param name="secrect"></param>
         /// <returns></returns>
-        public StarFactory(String appId)
+        public StarFactory(String server, String appId, String secrect)
         {
             if (appId.IsNullOrEmpty()) appId = AssemblyX.Entry.Name;
 
+            Server = server;
             AppId = appId;
-            //var set = Setting.Current;
-            //Server = set.Server;
-            //AppId = set.AppKey;
-            //Secret = set.Secret;
+            Secret = secrect;
 
             Init();
         }
-
-        ///// <summary>指定地址、应用和密钥，创建工厂</summary>
-        ///// <param name="server"></param>
-        ///// <param name="appId"></param>
-        ///// <param name="secrect"></param>
-        ///// <returns></returns>
-        //public StarFactory(String server, String appId, String secrect)
-        //{
-        //    Server = server;
-        //    AppId = appId;
-        //    Secret = secrect;
-
-        //    Init();
-        //}
         #endregion
 
         #region 方法
@@ -216,6 +202,15 @@ namespace Stardust
 
                 return _dustClient;
             }
+        }
+
+        /// <summary>为指定服务创建客户端，从星尘注册中心获取服务地址</summary>
+        /// <param name="serviceName"></param>
+        /// <param name="tag"></param>
+        /// <returns></returns>
+        public IApiClient CreateForService(String serviceName, String tag = null)
+        {
+            return null;
         }
         #endregion
 

@@ -52,14 +52,6 @@ namespace Stardust.Data
         [BindColumn("Client", "客户端。IP加进程", "")]
         public String Client { get => _Client; set { if (OnPropertyChanging("Client", value)) { _Client = value; OnPropertyChanged("Client"); } } }
 
-        private Int32 _PingCount;
-        /// <summary>心跳</summary>
-        [DisplayName("心跳")]
-        [Description("心跳")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("PingCount", "心跳", "")]
-        public Int32 PingCount { get => _PingCount; set { if (OnPropertyChanging("PingCount", value)) { _PingCount = value; OnPropertyChanged("PingCount"); } } }
-
         private Boolean _Enable;
         /// <summary>启用</summary>
         [DisplayName("启用")]
@@ -67,6 +59,14 @@ namespace Stardust.Data
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Enable", "启用", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
+
+        private Int32 _PingCount;
+        /// <summary>心跳</summary>
+        [DisplayName("心跳")]
+        [Description("心跳")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("PingCount", "心跳", "")]
+        public Int32 PingCount { get => _PingCount; set { if (OnPropertyChanging("PingCount", value)) { _PingCount = value; OnPropertyChanged("PingCount"); } } }
 
         private String _MinVersion;
         /// <summary>最低版本。要求返回大于等于该版本的服务提供者</summary>
@@ -123,8 +123,8 @@ namespace Stardust.Data
                     case "AppId": return _AppId;
                     case "ServiceName": return _ServiceName;
                     case "Client": return _Client;
-                    case "PingCount": return _PingCount;
                     case "Enable": return _Enable;
+                    case "PingCount": return _PingCount;
                     case "MinVersion": return _MinVersion;
                     case "Tag": return _Tag;
                     case "CreateTime": return _CreateTime;
@@ -141,8 +141,8 @@ namespace Stardust.Data
                     case "AppId": _AppId = value.ToInt(); break;
                     case "ServiceName": _ServiceName = Convert.ToString(value); break;
                     case "Client": _Client = Convert.ToString(value); break;
-                    case "PingCount": _PingCount = value.ToInt(); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
+                    case "PingCount": _PingCount = value.ToInt(); break;
                     case "MinVersion": _MinVersion = Convert.ToString(value); break;
                     case "Tag": _Tag = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -170,11 +170,11 @@ namespace Stardust.Data
             /// <summary>客户端。IP加进程</summary>
             public static readonly Field Client = FindByName("Client");
 
-            /// <summary>心跳</summary>
-            public static readonly Field PingCount = FindByName("PingCount");
-
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
+
+            /// <summary>心跳</summary>
+            public static readonly Field PingCount = FindByName("PingCount");
 
             /// <summary>最低版本。要求返回大于等于该版本的服务提供者</summary>
             public static readonly Field MinVersion = FindByName("MinVersion");
@@ -209,11 +209,11 @@ namespace Stardust.Data
             /// <summary>客户端。IP加进程</summary>
             public const String Client = "Client";
 
-            /// <summary>心跳</summary>
-            public const String PingCount = "PingCount";
-
             /// <summary>启用</summary>
             public const String Enable = "Enable";
+
+            /// <summary>心跳</summary>
+            public const String PingCount = "PingCount";
 
             /// <summary>最低版本。要求返回大于等于该版本的服务提供者</summary>
             public const String MinVersion = "MinVersion";

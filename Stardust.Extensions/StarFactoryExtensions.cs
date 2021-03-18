@@ -2,10 +2,8 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using NewLife;
-using NewLife.Log;
 using NewLife.Reflection;
 using Stardust;
-using Stardust.Extensions;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -18,7 +16,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns></returns>
         public static StarFactory AddStardust(this IServiceCollection services, String appId)
         {
-            var star = new StarFactory(appId);
+            var star = new StarFactory(null, appId, null);
 
             services.AddSingleton(star);
             services.AddSingleton(star.Tracer);
@@ -62,5 +60,22 @@ namespace Microsoft.Extensions.DependencyInjection
 
             return app;
         }
+
+        ///// <summary>从注册中心消费服务</summary>
+        ///// <param name="app"></param>
+        ///// <param name="serviceName">服务名</param>
+        ///// <param name="tag">特性标签</param>
+        ///// <returns></returns>
+        //public static ServiceModel[] ConsumeService(this IApplicationBuilder app, String serviceName, String tag = null)
+        //{
+        //    var star = app.ApplicationServices.GetRequiredService<StarFactory>();
+        //    if (star == null) throw new InvalidOperationException("未注册StarFactory，需要AddStardust注册。");
+
+        //    if (serviceName.IsNullOrEmpty()) serviceName = AssemblyX.Entry.Name;
+
+        //    var models = star.Dust.Consume(serviceName, tag);
+
+        //    return models;
+        //}
     }
 }
