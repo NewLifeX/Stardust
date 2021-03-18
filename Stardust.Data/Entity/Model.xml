@@ -9,9 +9,8 @@
       <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="AutoActive" DataType="Boolean" Description="自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务" />
-      <Column Name="Namespace" DataType="String" Description="命名空间。限制该应用只能发布指定命名空间的服务，多个用逗号分隔" />
-      <Column Name="Services" DataType="Int32" Description="服务数。该应用提供的服务数" />
-      <Column Name="Actions" DataType="Int32" Description="功能数。该应用提供的功能数" />
+      <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
+      <Column Name="AlarmOnOffline" DataType="Boolean" Description="下线告警。节点下线时，发送告警" />
       <Column Name="LastLogin" DataType="DateTime" Description="最后登录" />
       <Column Name="LastIP" DataType="String" Description="最后IP" />
       <Column Name="Remark" DataType="String" Length="500" Description="内容" />
@@ -41,6 +40,7 @@
       <Column Name="StartTime" DataType="DateTime" Description="进程时间" />
       <Column Name="Version" DataType="String" Description="版本。客户端" />
       <Column Name="Compile" DataType="DateTime" Description="编译时间。客户端" />
+      <Column Name="Creator" DataType="String" Description="创建者。服务端节点" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
       <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
@@ -48,6 +48,7 @@
     <Indexes>
       <Index Columns="Client" Unique="True" />
       <Index Columns="AppId" />
+      <Index Columns="UpdateTime" />
     </Indexes>
   </Table>
   <Table Name="AppHistory" Description="应用历史">
@@ -58,8 +59,7 @@
       <Column Name="Action" DataType="String" Description="操作" />
       <Column Name="Success" DataType="Boolean" Description="成功" />
       <Column Name="Remark" DataType="String" Length="500" Description="内容" />
-      <Column Name="CreateUser" DataType="String" Description="创建者" />
-      <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
+      <Column Name="Creator" DataType="String" Description="创建者。服务端节点" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
     </Columns>
@@ -106,6 +106,7 @@
     <Indexes>
       <Index Columns="AppId" />
       <Index Columns="ServiceName" />
+      <Index Columns="UpdateTime" />
     </Indexes>
   </Table>
   <Table Name="AppConsume" Description="应用消费。应用消费的服务">
@@ -125,6 +126,7 @@
     <Indexes>
       <Index Columns="AppId" />
       <Index Columns="ServiceName" />
+      <Index Columns="UpdateTime" />
     </Indexes>
   </Table>
   <Table Name="AppLog" Description="应用日志" ConnName="AppLog">

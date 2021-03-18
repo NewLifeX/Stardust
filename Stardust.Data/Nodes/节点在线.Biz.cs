@@ -135,14 +135,14 @@ namespace Stardust.Data.Nodes
         public static NodeOnline GetOrAdd(String sessionid) => GetOrAdd(sessionid, FindBySessionID, k => new NodeOnline { SessionID = k });
 
         /// <summary>删除过期，指定过期时间</summary>
-        /// <param name="secTimeout">超时时间，秒</param>
+        /// <param name="expire">超时时间，秒</param>
         /// <returns></returns>
-        public static IList<NodeOnline> ClearExpire(Int32 secTimeout)
+        public static IList<NodeOnline> ClearExpire(TimeSpan expire)
         {
             if (Meta.Count == 0) return null;
 
             // 10分钟不活跃将会被删除
-            var exp = _.UpdateTime < DateTime.Now.AddSeconds(-secTimeout);
+            var exp = _.UpdateTime < DateTime.Now.Subtract(expire);
             var list = FindAll(exp, null, null, 0, 0);
             list.Delete();
 

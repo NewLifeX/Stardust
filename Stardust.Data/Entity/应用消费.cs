@@ -16,6 +16,7 @@ namespace Stardust.Data
     [Description("应用消费。应用消费的服务")]
     [BindIndex("IX_AppConsume_AppId", false, "AppId")]
     [BindIndex("IX_AppConsume_ServiceName", false, "ServiceName")]
+    [BindIndex("IX_AppConsume_UpdateTime", false, "UpdateTime")]
     [BindTable("AppConsume", Description = "应用消费。应用消费的服务", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppConsume
     {

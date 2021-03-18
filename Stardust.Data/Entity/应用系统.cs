@@ -75,29 +75,21 @@ namespace Stardust.Data
         [BindColumn("AutoActive", "自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务", "")]
         public Boolean AutoActive { get => _AutoActive; set { if (OnPropertyChanging("AutoActive", value)) { _AutoActive = value; OnPropertyChanged("AutoActive"); } } }
 
-        private String _Namespace;
-        /// <summary>命名空间。限制该应用只能发布指定命名空间的服务，多个用逗号分隔</summary>
-        [DisplayName("命名空间")]
-        [Description("命名空间。限制该应用只能发布指定命名空间的服务，多个用逗号分隔")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("Namespace", "命名空间。限制该应用只能发布指定命名空间的服务，多个用逗号分隔", "")]
-        public String Namespace { get => _Namespace; set { if (OnPropertyChanging("Namespace", value)) { _Namespace = value; OnPropertyChanged("Namespace"); } } }
+        private String _WebHook;
+        /// <summary>告警机器人。钉钉、企业微信等</summary>
+        [DisplayName("告警机器人")]
+        [Description("告警机器人。钉钉、企业微信等")]
+        [DataObjectField(false, false, true, 500)]
+        [BindColumn("WebHook", "告警机器人。钉钉、企业微信等", "")]
+        public String WebHook { get => _WebHook; set { if (OnPropertyChanging("WebHook", value)) { _WebHook = value; OnPropertyChanged("WebHook"); } } }
 
-        private Int32 _Services;
-        /// <summary>服务数。该应用提供的服务数</summary>
-        [DisplayName("服务数")]
-        [Description("服务数。该应用提供的服务数")]
+        private Boolean _AlarmOnOffline;
+        /// <summary>下线告警。节点下线时，发送告警</summary>
+        [DisplayName("下线告警")]
+        [Description("下线告警。节点下线时，发送告警")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Services", "服务数。该应用提供的服务数", "")]
-        public Int32 Services { get => _Services; set { if (OnPropertyChanging("Services", value)) { _Services = value; OnPropertyChanged("Services"); } } }
-
-        private Int32 _Actions;
-        /// <summary>功能数。该应用提供的功能数</summary>
-        [DisplayName("功能数")]
-        [Description("功能数。该应用提供的功能数")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Actions", "功能数。该应用提供的功能数", "")]
-        public Int32 Actions { get => _Actions; set { if (OnPropertyChanging("Actions", value)) { _Actions = value; OnPropertyChanged("Actions"); } } }
+        [BindColumn("AlarmOnOffline", "下线告警。节点下线时，发送告警", "")]
+        public Boolean AlarmOnOffline { get => _AlarmOnOffline; set { if (OnPropertyChanging("AlarmOnOffline", value)) { _AlarmOnOffline = value; OnPropertyChanged("AlarmOnOffline"); } } }
 
         private DateTime _LastLogin;
         /// <summary>最后登录</summary>
@@ -205,9 +197,8 @@ namespace Stardust.Data
                     case "Category": return _Category;
                     case "Enable": return _Enable;
                     case "AutoActive": return _AutoActive;
-                    case "Namespace": return _Namespace;
-                    case "Services": return _Services;
-                    case "Actions": return _Actions;
+                    case "WebHook": return _WebHook;
+                    case "AlarmOnOffline": return _AlarmOnOffline;
                     case "LastLogin": return _LastLogin;
                     case "LastIP": return _LastIP;
                     case "Remark": return _Remark;
@@ -233,9 +224,8 @@ namespace Stardust.Data
                     case "Category": _Category = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "AutoActive": _AutoActive = value.ToBoolean(); break;
-                    case "Namespace": _Namespace = Convert.ToString(value); break;
-                    case "Services": _Services = value.ToInt(); break;
-                    case "Actions": _Actions = value.ToInt(); break;
+                    case "WebHook": _WebHook = Convert.ToString(value); break;
+                    case "AlarmOnOffline": _AlarmOnOffline = value.ToBoolean(); break;
                     case "LastLogin": _LastLogin = value.ToDateTime(); break;
                     case "LastIP": _LastIP = Convert.ToString(value); break;
                     case "Remark": _Remark = Convert.ToString(value); break;
@@ -278,14 +268,11 @@ namespace Stardust.Data
             /// <summary>自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务</summary>
             public static readonly Field AutoActive = FindByName("AutoActive");
 
-            /// <summary>命名空间。限制该应用只能发布指定命名空间的服务，多个用逗号分隔</summary>
-            public static readonly Field Namespace = FindByName("Namespace");
+            /// <summary>告警机器人。钉钉、企业微信等</summary>
+            public static readonly Field WebHook = FindByName("WebHook");
 
-            /// <summary>服务数。该应用提供的服务数</summary>
-            public static readonly Field Services = FindByName("Services");
-
-            /// <summary>功能数。该应用提供的功能数</summary>
-            public static readonly Field Actions = FindByName("Actions");
+            /// <summary>下线告警。节点下线时，发送告警</summary>
+            public static readonly Field AlarmOnOffline = FindByName("AlarmOnOffline");
 
             /// <summary>最后登录</summary>
             public static readonly Field LastLogin = FindByName("LastLogin");
@@ -347,14 +334,11 @@ namespace Stardust.Data
             /// <summary>自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务</summary>
             public const String AutoActive = "AutoActive";
 
-            /// <summary>命名空间。限制该应用只能发布指定命名空间的服务，多个用逗号分隔</summary>
-            public const String Namespace = "Namespace";
+            /// <summary>告警机器人。钉钉、企业微信等</summary>
+            public const String WebHook = "WebHook";
 
-            /// <summary>服务数。该应用提供的服务数</summary>
-            public const String Services = "Services";
-
-            /// <summary>功能数。该应用提供的功能数</summary>
-            public const String Actions = "Actions";
+            /// <summary>下线告警。节点下线时，发送告警</summary>
+            public const String AlarmOnOffline = "AlarmOnOffline";
 
             /// <summary>最后登录</summary>
             public const String LastLogin = "LastLogin";

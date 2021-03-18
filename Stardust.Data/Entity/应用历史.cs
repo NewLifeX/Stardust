@@ -67,21 +67,13 @@ namespace Stardust.Data
         [BindColumn("Remark", "内容", "")]
         public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
 
-        private String _CreateUser;
-        /// <summary>创建者</summary>
+        private String _Creator;
+        /// <summary>创建者。服务端节点</summary>
         [DisplayName("创建者")]
-        [Description("创建者")]
+        [Description("创建者。服务端节点")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("CreateUser", "创建者", "")]
-        public String CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
-
-        private Int32 _CreateUserID;
-        /// <summary>创建者</summary>
-        [DisplayName("创建者")]
-        [Description("创建者")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("CreateUserID", "创建者", "")]
-        public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
+        [BindColumn("Creator", "创建者。服务端节点", "")]
+        public String Creator { get => _Creator; set { if (OnPropertyChanging("Creator", value)) { _Creator = value; OnPropertyChanged("Creator"); } } }
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
@@ -116,8 +108,7 @@ namespace Stardust.Data
                     case "Action": return _Action;
                     case "Success": return _Success;
                     case "Remark": return _Remark;
-                    case "CreateUser": return _CreateUser;
-                    case "CreateUserID": return _CreateUserID;
+                    case "Creator": return _Creator;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
                     default: return base[name];
@@ -133,8 +124,7 @@ namespace Stardust.Data
                     case "Action": _Action = Convert.ToString(value); break;
                     case "Success": _Success = value.ToBoolean(); break;
                     case "Remark": _Remark = Convert.ToString(value); break;
-                    case "CreateUser": _CreateUser = Convert.ToString(value); break;
-                    case "CreateUserID": _CreateUserID = value.ToInt(); break;
+                    case "Creator": _Creator = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
                     default: base[name] = value; break;
@@ -165,11 +155,8 @@ namespace Stardust.Data
             /// <summary>内容</summary>
             public static readonly Field Remark = FindByName("Remark");
 
-            /// <summary>创建者</summary>
-            public static readonly Field CreateUser = FindByName("CreateUser");
-
-            /// <summary>创建者</summary>
-            public static readonly Field CreateUserID = FindByName("CreateUserID");
+            /// <summary>创建者。服务端节点</summary>
+            public static readonly Field Creator = FindByName("Creator");
 
             /// <summary>创建时间</summary>
             public static readonly Field CreateTime = FindByName("CreateTime");
@@ -201,11 +188,8 @@ namespace Stardust.Data
             /// <summary>内容</summary>
             public const String Remark = "Remark";
 
-            /// <summary>创建者</summary>
-            public const String CreateUser = "CreateUser";
-
-            /// <summary>创建者</summary>
-            public const String CreateUserID = "CreateUserID";
+            /// <summary>创建者。服务端节点</summary>
+            public const String Creator = "Creator";
 
             /// <summary>创建时间</summary>
             public const String CreateTime = "CreateTime";

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Reflection;
@@ -98,7 +99,24 @@ namespace Stardust.Data
             ProcessName = info.Name;
             StartTime = info.StartTime;
 
+            Creator = Environment.MachineName;
+
             SaveAsync();
+        }
+
+        /// <summary>删除过期，指定过期时间</summary>
+        /// <param name="expire">超时时间，秒</param>
+        /// <returns></returns>
+        public static IList<AppOnline> ClearExpire(TimeSpan expire)
+        {
+            if (Meta.Count == 0) return null;
+
+            // 10分钟不活跃将会被删除
+            var exp = _.UpdateTime < DateTime.Now.Subtract(expire);
+            var list = FindAll(exp, null, null, 0, 0);
+            list.Delete();
+
+            return list;
         }
         #endregion
     }

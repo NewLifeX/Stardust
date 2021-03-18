@@ -78,9 +78,13 @@ namespace Stardust.Data
         /// <param name="action"></param>
         /// <param name="success"></param>
         /// <param name="remark"></param>
+        /// <param name="creator"></param>
+        /// <param name="ip"></param>
         /// <returns></returns>
-        public static AppHistory Create(App app, String action, Boolean success, String remark)
+        public static AppHistory Create(App app, String action, Boolean success, String remark, String creator, String ip)
         {
+            if (app == null) app = new App();
+
             var history = new AppHistory
             {
                 AppId = app.Id,
@@ -90,8 +94,12 @@ namespace Stardust.Data
                 Success = success,
                 Remark = remark,
 
+                Creator = creator,
                 CreateTime = DateTime.Now,
+                CreateIP = ip,
             };
+
+            history.SaveAsync();
 
             return history;
         }

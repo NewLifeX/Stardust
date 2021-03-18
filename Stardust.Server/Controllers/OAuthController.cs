@@ -13,6 +13,9 @@ namespace Stardust.Server.Controllers
     [Route("[controller]/[action]")]
     public class OAuthController : ControllerBase
     {
+        /// <summary>用户主机</summary>
+        public String UserHost => HttpContext.GetUserHost();
+
         private readonly TokenService _service;
         public OAuthController(TokenService appService) => _service = appService;
 
@@ -33,7 +36,7 @@ namespace Stardust.Server.Controllers
                 app.LastIP = HttpContext.GetUserHost();
                 app.SaveAsync();
 
-                app.WriteHistory("Authorize", true, model.UserName);
+                app.WriteHistory("Authorize", true, model.UserName, UserHost);
 
                 return _service.IssueToken(app, set);
             }
@@ -42,7 +45,7 @@ namespace Stardust.Server.Controllers
             {
                 var app = _service.DecodeToken(model.refresh_token, set);
 
-                app.WriteHistory("RefreshToken", true, model.refresh_token);
+                app.WriteHistory("RefreshToken", true, model.refresh_token, UserHost);
 
                 return _service.IssueToken(app, set);
             }

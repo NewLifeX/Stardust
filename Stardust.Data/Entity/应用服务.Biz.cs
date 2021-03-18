@@ -76,6 +76,34 @@ namespace Stardust.Data
         #endregion
 
         #region 业务操作
+
+        /// <summary>删除过期，指定过期时间</summary>
+        /// <param name="expire">超时时间，秒</param>
+        /// <returns></returns>
+        public static IList<AppService> ClearExpire(TimeSpan expire)
+        {
+            if (Meta.Count == 0) return null;
+
+            {
+                // 短时间不活跃设置为禁用
+                var exp = _.UpdateTime < DateTime.Now.Subtract(TimeSpan.FromMinutes(5));
+                var list = FindAll(exp, null, null, 0, 0);
+                foreach (var item in list)
+                {
+                    item.Enable = false;
+                }
+                list.Save();
+            }
+
+            {
+                // 长时间不活跃将会被删除
+                var exp = _.UpdateTime < DateTime.Now.Subtract(expire);
+                var list = FindAll(exp, null, null, 0, 0);
+                list.Delete();
+
+                return list;
+            }
+        }
         #endregion
     }
 }

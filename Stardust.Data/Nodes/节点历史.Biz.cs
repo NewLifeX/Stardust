@@ -138,13 +138,12 @@ namespace Stardust.Data.Nodes
         {
             if (node == null) node = new Node();
 
-            var hi = new NodeHistory
+            var history = new NodeHistory
             {
                 NodeID = node.ID,
                 Name = node.Name,
                 Action = action,
                 Success = success,
-                Creator = creator,
 
                 ProvinceID = node.ProvinceID,
                 CityID = node.CityID,
@@ -154,13 +153,14 @@ namespace Stardust.Data.Nodes
 
                 Remark = remark,
 
+                Creator = creator,
                 CreateTime = DateTime.Now,
                 CreateIP = ip,
             };
 
-            hi.SaveAsync();
+            history.SaveAsync();
 
-            return hi;
+            return history;
         }
 
         static Lazy<FieldCache<NodeHistory>> NameCache = new Lazy<FieldCache<NodeHistory>>(() => new FieldCache<NodeHistory>(__.Action));
