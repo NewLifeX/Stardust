@@ -215,4 +215,39 @@
       <Index Columns="AppId,Id" />
     </Indexes>
   </Table>
+  <Table Name="AlarmGroup" Description="告警组。按照项目组设置告警，便于管理多节点和多应用，节点和应用的分类名对应组名">
+    <Columns>
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
+      <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
+      <Column Name="CreateUser" DataType="String" Description="创建者" />
+      <Column Name="CreateUserID" DataType="Int32" Description="创建人" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="UpdateUser" DataType="String" Description="更新者" />
+      <Column Name="UpdateUserID" DataType="Int32" Description="更新人" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" />
+    </Columns>
+    <Indexes>
+      <Index Columns="Name" Unique="True" />
+    </Indexes>
+  </Table>
+  <Table Name="AlarmHistory" Description="告警历史。记录告警内容">
+    <Columns>
+      <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+      <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
+      <Column Name="GroupId" DataType="Int32" Description="告警组" />
+      <Column Name="Category" DataType="String" Description="类别。钉钉、企业微信" />
+      <Column Name="Action" DataType="String" Description="操作" />
+      <Column Name="Success" DataType="Boolean" Description="成功" />
+      <Column Name="Content" DataType="String" Length="2000" Description="内容" />
+      <Column Name="Creator" DataType="String" Description="创建者。服务端节点" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+    </Columns>
+    <Indexes>
+      <Index Columns="GroupId,Id" />
+    </Indexes>
+  </Table>
 </Tables>
