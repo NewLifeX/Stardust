@@ -271,6 +271,28 @@ namespace Stardust.Server.Services
                     {
                         var mq = rds.GetDelayQueue<Object>(queue.Topic);
                         queue.Messages = mq.Count;
+
+                        var topic = queue.Topic.TrimEnd(":Delay");
+                        //var st = rds.Get<RedisQueueStatus>(topic);
+
+                        var cs = rds.Search($"{topic}:Status:*", 1000).ToArray();
+                        queue.Consumers = cs.Length;
+
+                        if (cs.Length > 0)
+                        {
+                            var sts = rds.GetAll<RedisQueueStatus>(cs);
+                            if (sts != null)
+                            {
+                                queue.Total = sts.Sum(e => e.Value.Consumes);
+                                queue.FirstConsumer = sts.Min(e => e.Value.CreateTime);
+                                queue.LastActive = sts.Max(e => e.Value.LastActive);
+                                queue.Remark = sts.ToJson();
+                            }
+                        }
+                        else
+                        {
+                            queue.Enable = false;
+                        }
                     }
                     break;
                 case "stream":
@@ -283,7 +305,26 @@ namespace Stardust.Server.Services
                         if (gs != null)
                         {
                             queue.Consumers = gs.Sum(e => e.Consumers);
-                            queue.Remark = gs.ToJson();
+                            //queue.Remark = gs.ToJson();
+                        }
+
+                        var inf = mq.GetInfo();
+                        if (inf != null)
+                        {
+                            if (!inf.FirstId.IsNullOrEmpty())
+                            {
+                                var p = inf.FirstId.IndexOf('-');
+                                var str = p > 0 ? inf.FirstId.Substring(0, p) : inf.FirstId;
+                                queue.FirstConsumer = str.ToLong().ToDateTime().ToLocalTime();
+                            }
+                            if (!inf.LastId.IsNullOrEmpty())
+                            {
+                                var p = inf.LastId.IndexOf('-');
+                                var str = p > 0 ? inf.LastId.Substring(0, p) : inf.LastId;
+                                queue.LastActive = str.ToLong().ToDateTime().ToLocalTime();
+                            }
+
+                            queue.Remark = inf.ToJson();
                         }
                     }
                     break;
