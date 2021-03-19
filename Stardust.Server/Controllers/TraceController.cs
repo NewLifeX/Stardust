@@ -117,13 +117,16 @@ namespace Stardust.Server.Controllers
                 //samples.AddRange(SampleData.Create(td, item.Samples, true));
                 samples.AddRange(SampleData.Create(td, item.ErrorSamples, false));
 
-                // 超时处理为异常
-                if (app.Timeout <= 0 || timeoutExcludes.Any(e => e.IsMatch(item.Name)))
-                    samples.AddRange(SampleData.Create(td, item.Samples, true));
-                else
+                if (item.Samples != null && item.Samples.Count > 0)
                 {
-                    samples.AddRange(SampleData.Create(td, item.Samples.Where(e => e.EndTime - e.StartTime > app.Timeout).ToList(), false));
-                    samples.AddRange(SampleData.Create(td, item.Samples.Where(e => e.EndTime - e.StartTime <= app.Timeout).ToList(), true));
+                    // 超时处理为异常
+                    if (app.Timeout <= 0 || timeoutExcludes.Any(e => e.IsMatch(item.Name)))
+                        samples.AddRange(SampleData.Create(td, item.Samples, true));
+                    else
+                    {
+                        samples.AddRange(SampleData.Create(td, item.Samples.Where(e => e.EndTime - e.StartTime > app.Timeout).ToList(), false));
+                        samples.AddRange(SampleData.Create(td, item.Samples.Where(e => e.EndTime - e.StartTime <= app.Timeout).ToList(), true));
+                    }
                 }
             }
 

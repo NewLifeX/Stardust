@@ -99,7 +99,7 @@ namespace Stardust.Server.Services
             rds.Server = node.Server;
             rds.Password = node.Password;
             rds.Db = db;
-            rds.Tracer = DefaultTracer.Instance;
+            rds.Tracer = _tracer;
 
             return rds;
         }
@@ -113,7 +113,7 @@ namespace Stardust.Server.Services
             // 可能后面更新了服务器地址和密码
             rds.Server = node.Server;
             rds.Password = node.Password;
-            rds.Tracer = DefaultTracer.Instance;
+            rds.Tracer = _tracer;
 
             //var inf = rds.GetInfo(true);
             var inf = rds.GetInfo(false);
@@ -151,32 +151,46 @@ namespace Stardust.Server.Services
                         var topic = ss.Take(ss.Length - 2).Join(":");
                         if (topic.IsNullOrEmpty()) continue;
 
-                        var mq = queues.FirstOrDefault(e => e.Db == i && e.Topic == topic);
-                        if (mq == null)
+                        // 可信队列
                         {
-                            mq = new RedisMessageQueue
-                            {
-                                RedisId = node.Id,
-                                Db = i,
-                                Topic = topic,
-                                Enable = true,
-                            };
-
-                            queues.Add(mq);
+                            SaveQueue(node, i, queues, topic);
                         }
 
-                        mq.Enable = true;
-                        if (mq.Name.IsNullOrEmpty()) mq.Name = node.Name;
-                        if (mq.Category.IsNullOrEmpty()) mq.Category = node.Category;
-                        if (mq.Type.IsNullOrEmpty())
+                        // 延迟队列
                         {
-                            mq.Type = topic.EndsWithIgnoreCase(":Delay") ? "Delay" : "Queue";
+                            topic += ":Delay";
+                            if (rds2.ContainsKey(topic)) SaveQueue(node, i, queues, topic);
                         }
-
-                        mq.SaveAsync();
                     }
                 }
             }
+        }
+
+        private void SaveQueue(RedisNode node, Int32 i, IList<RedisMessageQueue> queues, String topic)
+        {
+            var mq = queues.FirstOrDefault(e => e.Db == i && e.Topic == topic);
+            if (mq == null)
+            {
+                mq = new RedisMessageQueue
+                {
+                    RedisId = node.Id,
+                    Db = i,
+                    Topic = topic,
+                    Enable = true,
+                };
+
+                queues.Add(mq);
+            }
+
+            mq.Enable = true;
+            if (mq.Name.IsNullOrEmpty()) mq.Name = topic;
+            if (mq.Category.IsNullOrEmpty()) mq.Category = node.Category;
+            if (mq.Type.IsNullOrEmpty())
+            {
+                mq.Type = topic.EndsWithIgnoreCase(":Delay") ? "Delay" : "Queue";
+            }
+
+            mq.SaveAsync();
         }
 
         private void DoTraceQueue(Object state)
