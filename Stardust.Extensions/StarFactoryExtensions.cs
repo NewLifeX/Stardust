@@ -52,6 +52,7 @@ namespace Microsoft.Extensions.DependencyInjection
             var lifetime = app.ApplicationServices.GetRequiredService<IHostApplicationLifetime>();
             lifetime.ApplicationStarted.Register(() =>
             {
+                if (address.IsNullOrEmpty()) address = Stardust.Setting.Current.ServiceAddress;
                 if (address.IsNullOrEmpty())
                 {
                     var feature = app.ServerFeatures.Get<IServerAddressesFeature>();

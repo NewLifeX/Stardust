@@ -26,6 +26,10 @@ namespace Stardust
         /// <summary>应用密钥</summary>
         [Description("应用密钥")]
         public String Secret { get; set; }
+
+        /// <summary>本地服务地址。用于提交注册中心，默认为空，自动识别</summary>
+        [Description("本地服务地址。用于提交注册中心，默认为空，自动识别")]
+        public String ServiceAddress { get; set; }
         #endregion
 
         #region 方法
