@@ -1,18 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Web;
 using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Monitors;
-using XCode;
-using XCode.Membership;
 
 namespace Stardust.Web.Areas.Monitors.Controllers
 {
     [MonitorsArea]
     public class AlarmGroupController : EntityController<AlarmGroup>
     {
-        static AlarmGroupController() => MenuOrder = 90;
+        static AlarmGroupController()
+        {
+            MenuOrder = 90;
+
+            {
+                var df = ListFields.AddDataField("History", null, "Enable");
+                df.DisplayName = "告警历史";
+                df.Header = "告警历史";
+                df.Url = "AlarmHistory?appId={Id}";
+            }
+            {
+                var df = ListFields.AddDataField("Log", "CreateUser");
+                df.DisplayName = "修改日志";
+                df.Header = "修改日志";
+                df.Url = $"/Admin/Log?category={HttpUtility.UrlEncode("告警组")}&linkId={{Id}}";
+            }
+        }
 
         protected override IEnumerable<AlarmGroup> Search(Pager p)
         {
