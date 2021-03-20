@@ -90,7 +90,7 @@ namespace Stardust.DingTalk
                 at = new
                 {
                     atMobiles = mobiles,
-                    isAll = mentions.Contains("all"),
+                    isAll = mentions != null && mentions.Contains("all"),
                 },
             };
 
