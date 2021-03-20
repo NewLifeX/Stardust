@@ -136,6 +136,24 @@ namespace Stardust.Data.Nodes
                     (name.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(name)))) return false;
             }
 
+            if (Rules.TryGetValue("runtime", out vs))
+            {
+                var runtime = node.Runtime;
+                if (runtime.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(runtime))) return false;
+            }
+
+            if (Rules.TryGetValue("province", out vs))
+            {
+                var province = node.ProvinceID + "";
+                if (province.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(province))) return false;
+            }
+
+            if (Rules.TryGetValue("city", out vs))
+            {
+                var city = node.CityID + "";
+                if (city.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(city))) return false;
+            }
+
             return true;
         }
         #endregion
