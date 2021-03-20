@@ -25,6 +25,29 @@ namespace Stardust.Web.Areas.Redis.Controllers
         {
             MenuOrder = 50;
 
+            ListFields.RemoveField("WebHook", "AlarmMemoryRate", "AlarmConnections", "AlarmSpeed", "AlarmInputKbps", "AlarmOutputKbps");
+            ListFields.RemoveCreateField();
+            ListFields.RemoveField("UpdateUser", "UpdateUserID", "UpdateIP", "Remark");
+
+            {
+                var df = ListFields.AddDataField("Monitor", "UpdateTime");
+                df.DisplayName = "监控";
+                df.Header = "监控";
+                df.Url = "RedisData?redisId={Id}";
+            }
+            {
+                var df = ListFields.AddDataField("Queue", "UpdateTime");
+                df.DisplayName = "队列";
+                df.Header = "队列";
+                df.Url = "RedisMessageQueue?redisId={Id}";
+            }
+            {
+                var df = ListFields.AddDataField("Refresh", "UpdateTime");
+                df.DisplayName = "刷新";
+                df.Header = "刷新";
+                df.Url = "RedisNode/Refresh?Id={Id}";
+                df.DataAction = "action";
+            }
             {
                 var df = ListFields.AddDataField("Log", "UpdateTime");
                 df.DisplayName = "修改日志";
