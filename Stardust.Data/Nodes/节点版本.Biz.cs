@@ -125,13 +125,15 @@ namespace Stardust.Data.Nodes
             if (Rules.TryGetValue("version", out var vs))
             {
                 var ver = node.Version;
-                if (ver.IsNullOrEmpty() || !vs.Contains(ver)) return false;
+                if (ver.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(ver))) return false;
             }
 
             if (Rules.TryGetValue("node", out vs))
             {
                 var code = node.Code;
-                if (code.IsNullOrEmpty() || !vs.Contains(code)) return false;
+                var name = node.Name;
+                if ((code.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(code))) &&
+                    (name.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(name)))) return false;
             }
 
             return true;

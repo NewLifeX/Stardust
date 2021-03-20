@@ -116,7 +116,7 @@ namespace Stardust.Server.Services
                 var olts = NodeOnline.FindAllByNodeId(app.Id);
                 if (olts.Count == 0)
                 {
-                    var msg = $"应用[{app.Name}]（{app.DisplayName}）已下线！{reason} IP={app.Id}";
+                    var msg = $"应用[{app.Name}]（{app.DisplayName}）已下线！{reason} IP={app.LastIP}";
                     RobotHelper.SendAlarm(app.Category, app.WebHook, "应用下线告警", msg);
                 }
             }

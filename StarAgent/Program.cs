@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
@@ -17,7 +18,12 @@ namespace StarAgent
 {
     class Program
     {
-        static void Main(String[] args) => new MyService().Main(args);
+        static void Main(String[] args)
+        {
+            if ("-upgrade".EqualIgnoreCase(args)) Thread.Sleep(5_000);
+
+            new MyService().Main(args);
+        }
     }
 
     /// <summary>服务类。名字可以自定义</summary>
@@ -219,6 +225,18 @@ namespace StarAgent
                 if (rs && ur.Force)
                 {
                     StopWork("Upgrade");
+
+                    // 重新拉起进程
+                    var star = "";
+                    if (Runtime.Windows)
+                        star = "StarAgent.exe";
+                    else if (Runtime.Linux)
+                        star = "StarAgent";
+                    if (!star.IsNullOrEmpty())
+                    {
+                        XTrace.WriteLine("强制升级，拉起进程 {0} -run -upgrade", star.GetFullPath());
+                        Process.Start(star.GetFullPath(), "-run -upgrade");
+                    }
 
                     Environment.Exit(0);
                     var p = Process.GetCurrentProcess();
