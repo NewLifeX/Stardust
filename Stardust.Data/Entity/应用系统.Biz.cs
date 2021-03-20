@@ -1,12 +1,13 @@
 ﻿using System;
 using NewLife;
 using Stardust.Monitors;
+using XCode;
 using XCode.Membership;
 
 namespace Stardust.Data
 {
     /// <summary>应用系统。服务提供者和消费者</summary>
-    public partial class App : EntityBase<App>
+    public partial class App : Entity<App>
     {
         #region 对象操作
         static App()
@@ -100,6 +101,7 @@ namespace Stardust.Data
                 if (ss.Length == 3) clientId = $"{ss[0]}@{ss[1]}";
 
                 var online = Data.AppOnline.GetOrAddClient(clientId);
+                online.PingCount++;
                 online.Version = model.Version;
                 online.UpdateInfo(app, model.Info);
 

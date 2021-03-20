@@ -11,7 +11,7 @@ using XCode.Membership;
 namespace Stardust.Data
 {
     /// <summary>应用日志</summary>
-    public partial class AppLog : EntityBase<AppLog>
+    public partial class AppLog : Entity<AppLog>
     {
         #region 对象操作
         static AppLog()

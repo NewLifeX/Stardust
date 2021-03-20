@@ -10,7 +10,7 @@ using XCode.Membership;
 namespace Stardust.Data
 {
     /// <summary>应用在线。一个应用有多个部署，每个在线会话对应一个服务地址</summary>
-    public partial class AppOnline : EntityBase<AppOnline>
+    public partial class AppOnline : Entity<AppOnline>
     {
         #region 对象操作
         static AppOnline()

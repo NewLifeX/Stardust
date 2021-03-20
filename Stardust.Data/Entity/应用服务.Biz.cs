@@ -7,7 +7,7 @@ using XCode.Membership;
 namespace Stardust.Data
 {
     /// <summary>应用服务。应用提供的服务</summary>
-    public partial class AppService : EntityBase<AppService>
+    public partial class AppService : Entity<AppService>
     {
         #region 对象操作
         static AppService()

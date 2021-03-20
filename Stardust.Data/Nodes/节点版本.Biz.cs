@@ -24,7 +24,7 @@ namespace Stardust.Data.Nodes
     }
 
     /// <summary>节点版本。发布更新</summary>
-    public partial class NodeVersion : EntityBase<NodeVersion>
+    public partial class NodeVersion : Entity<NodeVersion>
     {
         #region 对象操作
         static NodeVersion()

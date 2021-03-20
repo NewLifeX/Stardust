@@ -14,7 +14,7 @@ using XCode.Membership;
 namespace Stardust.Data.Nodes
 {
     /// <summary>节点在线</summary>
-    public partial class NodeOnline : EntityBase<NodeOnline>
+    public partial class NodeOnline : Entity<NodeOnline>
     {
         #region 对象操作
         static NodeOnline()

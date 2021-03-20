@@ -1,26 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
-using System.Web.Script.Serialization;
-using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using NewLife.Log;
-using NewLife.Model;
-using NewLife.Reflection;
-using NewLife.Threading;
-using NewLife.Web;
 using XCode;
 using XCode.Cache;
-using XCode.Configuration;
-using XCode.DataAccessLayer;
 using XCode.Membership;
 
 namespace Stardust.Data.Nodes
@@ -89,20 +74,6 @@ namespace Stardust.Data.Nodes
 
             if (XTrace.Debug) XTrace.WriteLine("完成初始化RedisNode[Redis节点]数据！");
         }
-
-        /// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
-        /// <returns></returns>
-        public override Int32 Insert()
-        {
-            return base.Insert();
-        }
-
-        /// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>
-        /// <returns></returns>
-        protected override Int32 OnDelete()
-        {
-            return base.OnDelete();
-        }
         #endregion
 
         #region 扩展属性
@@ -162,7 +133,7 @@ namespace Stardust.Data.Nodes
         }
 
         // Select Count(Id) as Id,Category From RedisNode Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
-        static readonly FieldCache<RedisNode> _CategoryCache = new FieldCache<RedisNode>(nameof(Category));
+        private static readonly FieldCache<RedisNode> _CategoryCache = new FieldCache<RedisNode>(nameof(Category));
 
         /// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
         /// <returns></returns>

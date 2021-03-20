@@ -15,7 +15,7 @@ using XCode.Membership;
 namespace Stardust.Data
 {
     /// <summary>应用性能。保存应用上报的性能数据，如CPU、内存、线程、句柄等</summary>
-    public partial class AppMeter : EntityBase<AppMeter>
+    public partial class AppMeter : Entity<AppMeter>
     {
         #region 对象操作
         static AppMeter()

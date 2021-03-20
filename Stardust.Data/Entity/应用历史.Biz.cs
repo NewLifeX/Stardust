@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
@@ -10,7 +9,7 @@ using XCode.Membership;
 namespace Stardust.Data
 {
     /// <summary>应用历史</summary>
-    public partial class AppHistory : EntityBase<AppHistory>
+    public partial class AppHistory : Entity<AppHistory>
     {
         #region 对象操作
         static AppHistory()

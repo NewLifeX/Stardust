@@ -11,7 +11,7 @@ using XCode.Membership;
 namespace Stardust.Data.Nodes
 {
     /// <summary>节点历史</summary>
-    public partial class NodeHistory : EntityBase<NodeHistory>
+    public partial class NodeHistory : Entity<NodeHistory>
     {
         #region 对象操作
         static NodeHistory()

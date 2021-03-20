@@ -8,7 +8,7 @@ using XCode.Membership;
 namespace Stardust.Data.Monitors
 {
     /// <summary>告警组。按照项目组设置告警，便于管理多节点和多应用，节点和应用的分类名对应组名</summary>
-    public partial class AlarmGroup : LogEntity<AlarmGroup>
+    public partial class AlarmGroup : Entity<AlarmGroup>
     {
         #region 对象操作
         static AlarmGroup()

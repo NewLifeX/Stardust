@@ -7,7 +7,7 @@ using XCode.Membership;
 namespace Stardust.Data
 {
     /// <summary>应用消费。应用消费的服务</summary>
-    public partial class AppConsume : EntityBase<AppConsume>
+    public partial class AppConsume : Entity<AppConsume>
     {
         #region 对象操作
         static AppConsume()
