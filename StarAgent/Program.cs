@@ -260,10 +260,17 @@ namespace StarAgent
             XTrace.WriteLine("TempPath:{0}", Path.GetTempPath());
 
             var mi = MachineInfo.Current ?? MachineInfo.RegisterAsync().Result;
+            mi.Refresh();
 
             foreach (var pi in mi.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                XTrace.WriteLine("{0}:\t{1}", pi.Name, mi.GetValue(pi));
+                var val = mi.GetValue(pi);
+                if (pi.Name.EndsWithIgnoreCase("Memory"))
+                    val = val.ToLong().ToGMK();
+                else if (pi.Name.EndsWithIgnoreCase("Rate", "Battery"))
+                    val = val.ToDouble().ToString("p2");
+
+                XTrace.WriteLine("{0}:\t{1}", pi.Name, val);
             }
         }
 
