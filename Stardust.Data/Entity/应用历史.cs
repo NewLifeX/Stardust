@@ -14,7 +14,7 @@ namespace Stardust.Data
     [Serializable]
     [DataObject]
     [Description("应用历史")]
-    [BindIndex("IX_AppHistory_AppId", false, "AppId")]
+    [BindIndex("IX_AppHistory_AppId_Client", false, "AppId,Client")]
     [BindTable("AppHistory", Description = "应用历史", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppHistory
     {
@@ -34,6 +34,14 @@ namespace Stardust.Data
         [DataObjectField(false, false, false, 0)]
         [BindColumn("AppId", "应用", "")]
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
+
+        private String _Client;
+        /// <summary>客户端。IP加进程</summary>
+        [DisplayName("客户端")]
+        [Description("客户端。IP加进程")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Client", "客户端。IP加进程", "")]
+        public String Client { get => _Client; set { if (OnPropertyChanging("Client", value)) { _Client = value; OnPropertyChanged("Client"); } } }
 
         private String _Version;
         /// <summary>版本</summary>
@@ -104,6 +112,7 @@ namespace Stardust.Data
                 {
                     case "Id": return _Id;
                     case "AppId": return _AppId;
+                    case "Client": return _Client;
                     case "Version": return _Version;
                     case "Action": return _Action;
                     case "Success": return _Success;
@@ -120,6 +129,7 @@ namespace Stardust.Data
                 {
                     case "Id": _Id = value.ToLong(); break;
                     case "AppId": _AppId = value.ToInt(); break;
+                    case "Client": _Client = Convert.ToString(value); break;
                     case "Version": _Version = Convert.ToString(value); break;
                     case "Action": _Action = Convert.ToString(value); break;
                     case "Success": _Success = value.ToBoolean(); break;
@@ -142,6 +152,9 @@ namespace Stardust.Data
 
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
+
+            /// <summary>客户端。IP加进程</summary>
+            public static readonly Field Client = FindByName("Client");
 
             /// <summary>版本</summary>
             public static readonly Field Version = FindByName("Version");
@@ -175,6 +188,9 @@ namespace Stardust.Data
 
             /// <summary>应用</summary>
             public const String AppId = "AppId";
+
+            /// <summary>客户端。IP加进程</summary>
+            public const String Client = "Client";
 
             /// <summary>版本</summary>
             public const String Version = "Version";

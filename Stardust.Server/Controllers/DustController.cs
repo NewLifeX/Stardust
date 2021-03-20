@@ -44,7 +44,9 @@ namespace Stardust.Server.Controllers
                     CreateIP = UserHost,
                 };
 
-                app.WriteHistory("RegisterService", true, $"注册服务[{service.ServiceName}] {service.Client}", UserHost);
+                var history = AppHistory.Create(app, "RegisterService", true, $"注册服务[{service.ServiceName}] {service.Client}", Environment.NewLine, UserHost);
+                history.Client = service.Client;
+                history.SaveAsync();
             }
 
             svc.PingCount++;
@@ -70,7 +72,9 @@ namespace Stardust.Server.Controllers
             {
                 svc.Delete();
 
-                app.WriteHistory("UnregisterService", true, $"服务[{service.ServiceName}]下线 {service.Client}", UserHost);
+                var history = AppHistory.Create(app, "UnregisterService", true, $"服务[{service.ServiceName}]下线 {svc.Client}", Environment.NewLine, UserHost);
+                history.Client = svc.Client;
+                history.SaveAsync();
             }
 
             return svc;

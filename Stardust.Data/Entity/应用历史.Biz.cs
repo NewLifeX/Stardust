@@ -87,7 +87,7 @@ namespace Stardust.Data
             var history = new AppHistory
             {
                 AppId = app.Id,
-                Version = app.Name,
+                //Version = app.Name,
 
                 Action = action,
                 Success = success,
@@ -98,7 +98,7 @@ namespace Stardust.Data
                 CreateIP = ip,
             };
 
-            history.SaveAsync();
+            //history.SaveAsync();
 
             return history;
         }

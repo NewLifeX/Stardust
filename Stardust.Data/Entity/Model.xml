@@ -55,6 +55,7 @@
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
+      <Column Name="Client" DataType="String" Description="客户端。IP加进程" />
       <Column Name="Version" DataType="String" Description="版本" />
       <Column Name="Action" DataType="String" Description="操作" />
       <Column Name="Success" DataType="Boolean" Description="成功" />
@@ -64,7 +65,7 @@
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
     </Columns>
     <Indexes>
-      <Index Columns="AppId" />
+      <Index Columns="AppId,Client" />
     </Indexes>
   </Table>
   <Table Name="AppMeter" Description="应用性能。保存应用上报的性能数据，如CPU、内存、线程、句柄等">
