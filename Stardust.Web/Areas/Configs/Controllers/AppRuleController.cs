@@ -13,7 +13,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
         static AppRuleController()
         {
             {
-                var df = ListFields.AddDataField("Log", "CreateUser");
+                var df = ListFields.AddDataField("Log", "CreateUserID");
                 df.DisplayName = "修改日志";
                 df.Header = "修改日志";
                 df.Url = "/Admin/Log?category=应用规则&linkId={Id}";

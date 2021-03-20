@@ -20,6 +20,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
             MenuOrder = 58;
 
             ListFields.RemoveCreateField();
+            ListFields.RemoveField("ApolloMetaServer");
 
             {
                 var df = ListFields.AddDataField("Configs", "Enable");
@@ -30,7 +31,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
             }
 
             {
-                var df = ListFields.AddDataField("Publish", "CreateUserID");
+                var df = ListFields.AddDataField("Publish", "PublishTime");
                 df.Header = "发布";
                 df.DisplayName = "发布";
                 df.Url = "Appconfig/Publish?appId={Id}";
@@ -54,7 +55,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
             }
 
             {
-                var df = ListFields.AddDataField("Log", "CreateUser");
+                var df = ListFields.AddDataField("Log", "UpdateUserID");
                 df.DisplayName = "修改日志";
                 df.Header = "修改日志";
                 df.Url = "/Admin/Log?category=应用配置&linkId={Id}";
