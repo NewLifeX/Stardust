@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
+using System.Web.Script.Serialization;
 using System.Xml.Serialization;
+using NewLife;
+using NewLife.Data;
 using XCode;
 using XCode.Membership;
 
@@ -23,8 +28,7 @@ namespace Stardust.Data
 
         #region 扩展属性
         /// <summary>应用</summary>
-        [XmlIgnore]
-        //[ScriptIgnore]
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember, JsonIgnore]
         public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
 
         /// <summary>应用</summary>
@@ -73,6 +77,24 @@ namespace Stardust.Data
         #endregion
 
         #region 高级查询
+        /// <summary>高级搜索</summary>
+        /// <param name="appId"></param>
+        /// <param name="serviceName"></param>
+        /// <param name="enable"></param>
+        /// <param name="key"></param>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        public static IList<AppService> Search(Int32 appId, String serviceName, Boolean? enable, String key, PageParameter page)
+        {
+            var exp = new WhereExpression();
+
+            if (appId >= 0) exp &= _.AppId == appId;
+            if (!serviceName.IsNullOrEmpty()) exp &= _.ServiceName == serviceName;
+            if (enable != null) exp &= _.Enable == enable;
+            if (!key.IsNullOrEmpty()) exp &= _.ServiceName.Contains(key) | _.Client.Contains(key) | _.Address.Contains(key);
+
+            return FindAll(exp, page);
+        }
         #endregion
 
         #region 业务操作

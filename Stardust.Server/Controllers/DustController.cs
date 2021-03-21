@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using NewLife.Data;
 using Stardust.Data;
 using Stardust.Models;
 using Stardust.Server.Common;
@@ -16,10 +18,7 @@ namespace Stardust.Server.Controllers
 
         private readonly TokenService _tokenService;
 
-        public DustController(TokenService tokenService)
-        {
-            _tokenService = tokenService;
-        }
+        public DustController(TokenService tokenService) => _tokenService = tokenService;
 
         #region 发布、消费
         [ApiFilter]
@@ -39,7 +38,7 @@ namespace Stardust.Server.Controllers
                     ServiceName = service.ServiceName,
                     Client = service.Client,
 
-                    Enable = app.AutoActive,
+                    //Enable = app.AutoActive,
 
                     CreateIP = UserHost,
                 };
@@ -49,6 +48,7 @@ namespace Stardust.Server.Controllers
                 history.SaveAsync();
             }
 
+            svc.Enable = app.AutoActive;
             svc.PingCount++;
             svc.Tag = service.Tag;
             svc.Version = service.Version;
@@ -125,5 +125,8 @@ namespace Stardust.Server.Controllers
             }).ToArray();
         }
         #endregion
+
+        [ApiFilter]
+        public IList<AppService> SearchService(String serviceName, String key) => AppService.Search(-1, serviceName, true, key, new PageParameter { PageSize = 100 });
     }
 }
