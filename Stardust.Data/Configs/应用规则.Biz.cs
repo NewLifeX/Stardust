@@ -36,7 +36,7 @@ namespace Stardust.Data.Configs
 
             var entity = new AppRule
             {
-                Rule = "IP=192.168.0.*",
+                Rule = "IP=192.*,127.*,::1",
                 Result = "Scope=dev"
             };
             entity.Insert();
@@ -89,28 +89,35 @@ namespace Stardust.Data.Configs
             if (appid == 0 || ip.IsNullOrEmpty()) return null;
 
             var list = Meta.Cache.Entities.FindAll(e => e.Enable);
-            list = list.Where(e => 
-            !e.Rule.IsNullOrEmpty() && e.Rule.StartsWithIgnoreCase("IP=") && 
+            list = list.Where(e =>
+            !e.Rule.IsNullOrEmpty() && e.Rule.StartsWithIgnoreCase("IP=") &&
             !e.Result.IsNullOrEmpty() && e.Result.StartsWithIgnoreCase("Scope="))
             .OrderByDescending(e => e.Priority)
             .ToList();
             if (list.Count == 0) return null;
 
-            var rule = list.FirstOrDefault(e =>
-            {
-                var item = e.Rule.Trim().Substring(3);
-                if (item.EqualIgnoreCase(ip)) return true;
-
-                if (item.EndsWith("*") && ip.StartsWith(item.TrimEnd("*"))) return true;
-                if (item.StartsWith("*") && ip.EndsWith(item.TrimStart("*"))) return true;
-
-                return false;
-            });
-
+            var rule = list.Where(e => e.Match(ip)).OrderByDescending(e => e.Priority).ThenByDescending(e => e.Id).FirstOrDefault();
             if (rule == null) return null;
 
             var rs = rule.Result;
-            return rs.Substring(rs.IndexOf("=") + 1);
+            return rs.Substring(rs.IndexOf('=') + 1);
+        }
+
+        /// <summary>匹配规则</summary>
+        /// <param name="ip"></param>
+        /// <returns></returns>
+        public Boolean Match(String ip)
+        {
+            var dic = Rule.SplitAsDictionary("=", ";");
+            var rules = dic.ToDictionary(e => e.Key, e => e.Value.Split(","));
+
+            // 没有使用该规则，直接过
+            if (rules.TryGetValue("ip", out var vs))
+            {
+                if (ip.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(ip))) return false;
+            }
+
+            return true;
         }
         #endregion
     }
