@@ -295,6 +295,26 @@ namespace Stardust.Data.Configs
 
             return dic.Values.ToList();
         }
+
+        /// <summary>选择指定作用域</summary>
+        /// <param name="list"></param>
+        /// <param name="scope"></param>
+        /// <returns></returns>
+        public static IList<ConfigData> SelectScope(IEnumerable<ConfigData> list, String scope)
+        {
+            var dic = new Dictionary<String, ConfigData>();
+            foreach (var item in list)
+            {
+                // 要么相同作用域，要么选择默认空域
+                var key = $"{item.AppId}-{item.Key}";
+                if (item.Scope.EqualIgnoreCase(scope))
+                    dic[key] = item;
+                else if (item.Scope.IsNullOrEmpty() && !dic.ContainsKey(key))
+                    dic[key] = item;
+            }
+
+            return dic.Values.ToList();
+        }
         #endregion
     }
 }

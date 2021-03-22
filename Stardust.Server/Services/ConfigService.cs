@@ -108,7 +108,7 @@ namespace Stardust.Server.Services
             var dic = new Dictionary<String, String>(StringComparer.OrdinalIgnoreCase);
 
             var list = app.LastRelease;
-            //list = ConfigData.SelectVersion(list, app.Version);
+            list = ConfigData.SelectScope(list, scope);
 
             // 本应用
             foreach (var cfg in list)
@@ -125,7 +125,7 @@ namespace Stardust.Server.Services
             foreach (var item in qs)
             {
                 var list2 = item.LastRelease;
-                //list2 = ConfigData.SelectVersion(list2, item.Version);
+                list2 = ConfigData.SelectScope(list2, scope);
                 foreach (var cfg in list2)
                 {
                     // 跳过内部
@@ -143,7 +143,7 @@ namespace Stardust.Server.Services
             foreach (var item in AppConfig.GetValids().Where(e => e.IsGlobal))
             {
                 var list2 = item.LastRelease;
-                //list2 = ConfigData.SelectVersion(list2, item.Version);
+                list2 = ConfigData.SelectScope(list2, scope);
                 foreach (var cfg in list2)
                 {
                     // 跳过内部
