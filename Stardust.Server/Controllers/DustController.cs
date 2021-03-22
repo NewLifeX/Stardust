@@ -121,6 +121,7 @@ namespace Stardust.Server.Controllers
                 Client = e.Client,
                 Version = e.Version,
                 Address = e.Address,
+                Weight = e.Weight,
                 LastActive = e.UpdateTime,
             }).ToArray();
         }

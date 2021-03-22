@@ -17,6 +17,9 @@ namespace Stardust.Models
         /// <summary>地址</summary>
         public String Address { get; set; }
 
+        /// <summary>权重</summary>
+        public Int32 Weight { get; set; }
+
         /// <summary>最后活跃时间</summary>
         public DateTime LastActive { get; set; }
     }

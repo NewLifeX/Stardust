@@ -38,6 +38,7 @@ namespace Stardust
         private readonly ConcurrentDictionary<String, PublishServiceInfo> _publishServices = new();
         private readonly ConcurrentDictionary<String, ConsumeServiceInfo> _consumeServices = new();
         private readonly ConcurrentDictionary<String, ServiceModel[]> _consumes = new();
+        private readonly ConcurrentDictionary<String, IList<Delegate>> _consumeEvents = new();
         #endregion
 
         #region 构造
@@ -181,7 +182,18 @@ namespace Stardust
             {
                 var svc = item.Value;
                 var ms = ResolveAsync(svc).Result;
-                if (ms != null && ms.Length > 0) _consumes.TryAdd(svc.ServiceName, ms);
+                if (ms != null && ms.Length > 0)
+                {
+                    _consumes.TryAdd(svc.ServiceName, ms);
+
+                    if (_consumeEvents.TryGetValue(svc.ServiceName, out var list))
+                    {
+                        foreach (var action in list)
+                        {
+                            (action as Action<String, ServiceModel[]>)?.Invoke(svc.ServiceName, ms);
+                        }
+                    }
+                }
             }
         }
         #endregion
@@ -310,6 +322,15 @@ namespace Stardust
             if (_consumes.TryGetValue(serviceName, out var models)) return models;
 
             return null;
+        }
+
+        /// <summary>绑定消费服务名到指定事件，服务改变时通知外部</summary>
+        /// <param name="serviceName"></param>
+        /// <param name="callback"></param>
+        public void Bind(String serviceName, Action<String, ServiceModel[]> callback)
+        {
+            var list = _consumeEvents.GetOrAdd(serviceName, k => new List<Delegate>());
+            list.Add(callback);
         }
         #endregion
 

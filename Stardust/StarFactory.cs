@@ -210,7 +210,30 @@ namespace Stardust
         /// <returns></returns>
         public IApiClient CreateForService(String serviceName, String tag = null)
         {
-            return null;
+            var ms = Dust.Resolve(serviceName, null, tag);
+
+            var client = new ApiHttpClient
+            {
+                RoundRobin = true,
+
+                Tracer = Tracer,
+            };
+
+            if (ms != null && ms.Length > 0)
+            {
+                foreach (var item in ms)
+                {
+                    //client.Add(item.Client, item.Address);
+                    client.Services.Add(new ApiHttpClient.Service
+                    {
+                        Name = item.Client,
+                        Address = new Uri(item.Address),
+                        Weight = item.Weight,
+                    });
+                }
+            }
+
+            return client;
         }
         #endregion
 
