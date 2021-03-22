@@ -18,7 +18,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                 var df = ListFields.AddDataField("Log", "CreateUserID");
                 df.DisplayName = "修改日志";
                 df.Header = "修改日志";
-                df.Url = "/Admin/Log?category=节点版本&linkId={Id}";
+                df.Url = "/Admin/Log?category=节点版本&linkId={ID}";
             }
         }
 
