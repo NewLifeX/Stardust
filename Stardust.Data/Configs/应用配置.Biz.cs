@@ -149,7 +149,7 @@ namespace Stardust.Data.Configs
         /// <returns></returns>
         public Int32 Publish()
         {
-            ConfigHistory.Add(Id, "Publish", this.ToJson());
+            ConfigHistory.Add(Id, "Publish", true, this.ToJson());
 
             Version = NextVersion;
             PublishTime = DateTime.MinValue;

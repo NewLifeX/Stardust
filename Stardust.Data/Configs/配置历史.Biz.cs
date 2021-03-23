@@ -118,9 +118,10 @@ namespace Stardust.Data.Configs
         /// <summary>新增历史</summary>
         /// <param name="appId"></param>
         /// <param name="action"></param>
+        /// <param name="success"></param>
         /// <param name="remark"></param>
         /// <returns></returns>
-        public static ConfigHistory Add(Int32 appId, String action, String remark)
+        public static ConfigHistory Add(Int32 appId, String action, Boolean success, String remark)
         {
             if (appId == 0) throw new ArgumentNullException(nameof(appId));
             if (action.IsNullOrEmpty()) throw new ArgumentNullException(nameof(action));
@@ -129,6 +130,7 @@ namespace Stardust.Data.Configs
             {
                 AppId = appId,
                 Action = action,
+                Success = success,
                 Remark = remark,
             };
             hi.Insert();

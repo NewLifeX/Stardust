@@ -12,6 +12,9 @@ namespace Stardust.Models
         /// <summary>作用域。dev/test/stag/pro</summary>
         public String Scope { get; set; }
 
+        /// <summary>来源IP地址</summary>
+        public String SourceIP { get; set; }
+
         /// <summary>下一个版本。如果不同于的当前版本，则说明有新版本等待发布</summary>
         public Int32 NextVersion { get; set; }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
+using NewLife.Cube;
 using Stardust.Data;
 using Stardust.Data.Configs;
 using Stardust.Models;
@@ -24,7 +25,7 @@ namespace Stardust.Web.Controllers
 
             // 验证
             var app = Valid(appId, secret);
-            var ip = HttpContext.Connection?.RemoteIpAddress + "";
+            var ip = HttpContext.GetUserHost();
 
             // 版本没有变化时，不做计算处理，不返回配置数据
             if (version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
@@ -38,6 +39,7 @@ namespace Stardust.Web.Controllers
             {
                 Version = app.Version,
                 Scope = scope,
+                SourceIP = ip,
                 NextVersion = app.NextVersion,
                 NextPublish = app.PublishTime.ToFullString(""),
                 UpdateTime = app.UpdateTime,

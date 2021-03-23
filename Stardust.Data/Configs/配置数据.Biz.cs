@@ -55,7 +55,7 @@ namespace Stardust.Data.Configs
         {
             var rs = base.OnInsert();
 
-            ConfigHistory.Add(AppId, "Insert", this.ToJson());
+            ConfigHistory.Add(AppId, "Insert", true, this.ToJson());
 
             return rs;
         }
@@ -64,7 +64,7 @@ namespace Stardust.Data.Configs
         /// <returns></returns>
         protected override Int32 OnUpdate()
         {
-            if (HasDirty) ConfigHistory.Add(AppId, "Update", Dirtys.ToDictionary(e => e, e => this[e]).ToJson());
+            if (HasDirty) ConfigHistory.Add(AppId, "Update", true, Dirtys.ToDictionary(e => e, e => this[e]).ToJson());
 
             return base.OnUpdate();
         }
@@ -73,7 +73,7 @@ namespace Stardust.Data.Configs
         /// <returns></returns>
         protected override Int32 OnDelete()
         {
-            ConfigHistory.Add(AppId, "Delete", this.ToJson());
+            ConfigHistory.Add(AppId, "Delete", true, this.ToJson());
 
             return base.OnDelete();
         }

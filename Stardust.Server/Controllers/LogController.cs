@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Collections;
 using Stardust.Data;
+using Stardust.Server.Common;
 
 namespace Stardust.Server.Controllers
 {
@@ -25,7 +26,7 @@ namespace Stardust.Server.Controllers
             {
                 var appId = Request.Headers["X-AppId"] + "";
                 var clientId = Request.Headers["X-ClientId"] + "";
-                var ip = HttpContext.Connection?.RemoteIpAddress.MapToIPv4() + "";
+                var ip = HttpContext.GetUserHost();
                 var set = Setting.Current;
 
                 // 验证应用

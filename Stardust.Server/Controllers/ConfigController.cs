@@ -33,7 +33,7 @@ namespace Stardust.Server.Controllers
 
             // 验证
             var app = Valid(appId, secret, token);
-            var ip = HttpContext.Connection?.RemoteIpAddress + "";
+            var ip = HttpContext.GetUserHost();
 
             // 版本没有变化时，不做计算处理，不返回配置数据
             if (version > 0 && version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
@@ -47,6 +47,7 @@ namespace Stardust.Server.Controllers
             {
                 Version = app.Version,
                 Scope = scope,
+                SourceIP = ip,
                 NextVersion = app.NextVersion,
                 NextPublish = app.PublishTime.ToFullString(""),
                 UpdateTime = app.UpdateTime,
@@ -62,7 +63,7 @@ namespace Stardust.Server.Controllers
 
             // 验证
             var app = Valid(model.AppId, model.Secret, token);
-            var ip = HttpContext.Connection?.RemoteIpAddress + "";
+            var ip = HttpContext.GetUserHost();
 
             // 使用键和缺失键
             if (!model.UsedKeys.IsNullOrEmpty()) app.UsedKeys = model.UsedKeys;
@@ -82,6 +83,7 @@ namespace Stardust.Server.Controllers
             {
                 Version = app.Version,
                 Scope = scope,
+                SourceIP = ip,
                 NextVersion = app.NextVersion,
                 NextPublish = app.PublishTime.ToFullString(""),
                 UpdateTime = app.UpdateTime,
