@@ -109,7 +109,7 @@ namespace Stardust.Data.Configs
         public Boolean Match(String ip)
         {
             var dic = Rule.SplitAsDictionary("=", ";");
-            var rules = dic.ToDictionary(e => e.Key, e => e.Value.Split(","));
+            var rules = dic.ToDictionary(e => e.Key, e => e.Value.Split(","), StringComparer.OrdinalIgnoreCase);
 
             // 没有使用该规则，直接过
             if (rules.TryGetValue("ip", out var vs))

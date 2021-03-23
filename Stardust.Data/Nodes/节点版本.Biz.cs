@@ -68,7 +68,7 @@ namespace Stardust.Data.Nodes
             base.OnLoad();
 
             var dic = Strategy.SplitAsDictionary("=", ";");
-            Rules = dic.ToDictionary(e => e.Key, e => e.Value.Split(","));
+            Rules = dic.ToDictionary(e => e.Key, e => e.Value.Split(","), StringComparer.OrdinalIgnoreCase);
         }
         #endregion
 
