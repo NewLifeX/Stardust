@@ -95,15 +95,15 @@ namespace Stardust.Server.Controllers
         {
             if (appId.IsNullOrEmpty() && !token.IsNullOrEmpty())
             {
-                var ap = _tokenService.DecodeToken(token, Setting.Current);
-                appId = ap?.Name;
+                var ap1 = _tokenService.DecodeToken(token, Setting.Current);
+                appId = ap1?.Name;
             }
+
+            var ap = _tokenService.Authorize(appId, secret, Setting.Current.AutoRegister);
 
             var app = AppConfig.FindByName(appId);
             if (app == null)
             {
-                var ap = _tokenService.Authorize(appId, secret, true);
-
                 app = new AppConfig
                 {
                     Name = ap.Name,
@@ -112,6 +112,9 @@ namespace Stardust.Server.Controllers
 
                 app.Insert();
             }
+
+            // 检查应用有效性
+            if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
 
             return app;
         }

@@ -47,13 +47,13 @@ namespace Stardust.Web.Controllers
             };
         }
 
-        private AppConfig Valid(String appId, String secrect)
+        private AppConfig Valid(String appId, String secret)
         {
+            var ap = Authorize(appId, secret, true);
+
             var app = AppConfig.FindByName(appId);
             if (app == null)
             {
-                var ap = Authorize(appId, secrect, true);
-
                 app = new AppConfig
                 {
                     Name = ap.Name,
@@ -63,21 +63,25 @@ namespace Stardust.Web.Controllers
                 app.Insert();
             }
 
+            // 检查应用有效性
+            if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
+
             return app;
         }
 
-        private App Authorize(String username, String password, Boolean autoRegister)
+        private App Authorize(String appId, String secret, Boolean autoRegister)
         {
-            if (username.IsNullOrEmpty()) throw new ArgumentNullException(nameof(username));
+            if (appId.IsNullOrEmpty()) throw new ArgumentNullException(nameof(appId));
             //if (password.IsNullOrEmpty()) throw new ArgumentNullException(nameof(password));
 
             // 查找应用
-            var app = App.FindByName(username);
-            if (app == null) return null;
+            var app = App.FindByName(appId);
+            //if (app == null) return null;
+            if (app == null) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]不存在！");
 
             // 检查应用有效性
-            if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(username), $"应用[{username}]已禁用！");
-            if (!app.Secret.IsNullOrEmpty() && password != app.Secret) throw new InvalidOperationException($"非法访问应用[{username}]！");
+            if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
+            if (!app.Secret.IsNullOrEmpty() && secret != app.Secret) throw new InvalidOperationException($"非法访问应用[{appId}]！");
 
             return app;
         }

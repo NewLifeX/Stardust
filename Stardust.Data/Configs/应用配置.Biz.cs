@@ -62,6 +62,10 @@ namespace Stardust.Data.Configs
         /// <summary>本应用最后发布的配置数据，借助扩展属性缓存</summary>
         [XmlIgnore, ScriptIgnore, IgnoreDataMember]
         public IList<ConfigData> LastRelease => Extends.Get(nameof(LastRelease), k => ConfigData.FindAllLastRelease(Id, Version));
+
+        /// <summary>应用密钥。用于web端做预览</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public String AppSecret => App.FindByName(Name)?.Secret;
         #endregion
 
         #region 扩展查询

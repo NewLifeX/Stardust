@@ -30,15 +30,15 @@ namespace Stardust
         /// <summary>指定地址、应用和密钥，创建工厂</summary>
         /// <param name="server"></param>
         /// <param name="appId"></param>
-        /// <param name="secrect"></param>
+        /// <param name="secret"></param>
         /// <returns></returns>
-        public StarFactory(String server, String appId, String secrect)
+        public StarFactory(String server, String appId, String secret)
         {
             if (appId.IsNullOrEmpty()) appId = AssemblyX.Entry.Name;
 
             Server = server;
             AppId = appId;
-            Secret = secrect;
+            Secret = secret;
 
             Init();
         }

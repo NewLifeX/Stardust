@@ -51,7 +51,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
                 df.Header = "预览";
                 df.DisplayName = "预览";
                 df.Title = "查看该应用的配置数据";
-                df.Url = "/config/getall?appId={Name}";
+                df.Url = "/config/getall?appId={Name}&secret={appSecret}";
             }
 
             {
