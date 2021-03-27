@@ -7,8 +7,8 @@
     <Description>星尘，分布式服务框架。分布式资源调度，服务自动注册和发现，负载均衡，动态伸缩，故障转移，性能监控。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2021 NewLife</Copyright>
-    <Version>1.4.2021.0322-beta3</Version>
-    <FileVersion>1.4.2021.0322</FileVersion>
+    <Version>1.4.2021.0327-rc1</Version>
+    <FileVersion>1.4.2021.0327</FileVersion>
     <AssemblyVersion>1.4.*</AssemblyVersion>
     <Deterministic>false</Deterministic>
     <OutputPath>..\Bin</OutputPath>
@@ -65,7 +65,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="8.10.2021.320-beta3" />
+    <PackageReference Include="NewLife.Core" Version="8.10.2021.327-rc1" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='net45'">
