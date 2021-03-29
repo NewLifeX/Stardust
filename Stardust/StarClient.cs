@@ -478,6 +478,21 @@ namespace Stardust
                     source.EnsureDirectory(false);
                     fileName.AsFile().Extract(source, true);
 
+                    // 更新覆盖之前，再次清理exe/dll/pdb
+                    foreach (var item in dest.AsDirectory().GetAllFiles("*.exe;*.dll;*.pdb", true))
+                    {
+                        WriteLog("Delete {0}", item);
+                        try
+                        {
+                            item.Delete();
+                        }
+                        catch
+                        {
+                            var del = item.FullName + $".{Rand.Next(100000, 999999)}.del";
+                            item.MoveTo(del);
+                        }
+                    }
+
                     // 覆盖
                     ug.CopyAndReplace(source, dest);
                     if (Directory.Exists(source)) Directory.Delete(source, true);
