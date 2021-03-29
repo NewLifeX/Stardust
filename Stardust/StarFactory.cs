@@ -5,6 +5,7 @@ using NewLife.Http;
 using NewLife.Log;
 using NewLife.Reflection;
 using NewLife.Remoting;
+using Stardust.Models;
 using Stardust.Monitors;
 
 namespace Stardust
@@ -210,7 +211,7 @@ namespace Stardust
         /// <returns></returns>
         public IApiClient CreateForService(String serviceName, String tag = null)
         {
-            var ms = Dust.Resolve(serviceName, null, tag);
+            //var ms = Dust.Resolve(serviceName, null, tag);
 
             var client = new ApiHttpClient
             {
@@ -219,6 +220,14 @@ namespace Stardust
                 Tracer = Tracer,
             };
 
+            Bind(client, Dust.Resolve(serviceName, null, tag));
+            Dust.Bind(serviceName, (k, ms) => Bind(client, ms));
+
+            return client;
+        }
+
+        private void Bind(ApiHttpClient client, ServiceModel[] ms)
+        {
             if (ms != null && ms.Length > 0)
             {
                 foreach (var item in ms)
@@ -232,8 +241,6 @@ namespace Stardust
                     });
                 }
             }
-
-            return client;
         }
         #endregion
 

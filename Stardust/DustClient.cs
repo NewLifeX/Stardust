@@ -331,6 +331,8 @@ namespace Stardust
         {
             var list = _consumeEvents.GetOrAdd(serviceName, k => new List<Delegate>());
             list.Add(callback);
+
+            InitTimer();
         }
         #endregion
 
