@@ -22,7 +22,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 var df = ListFields.AddDataField("History", null, "Enable");
                 df.DisplayName = "告警历史";
                 df.Header = "告警历史";
-                df.Url = "AlarmHistory?appId={Id}";
+                df.Url = "AlarmHistory?groupId={Id}";
             }
             {
                 var df = ListFields.AddDataField("Log", "CreateUser");
