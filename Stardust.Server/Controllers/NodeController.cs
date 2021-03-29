@@ -299,6 +299,8 @@ namespace Stardust.Server.Controllers
                 var olt = GetOnline(code, node) ?? CreateOnline(code, node);
                 olt.Name = node.Name;
                 olt.Category = node.Category;
+                olt.Version = node.Version;
+                olt.CompileTime = node.CompileTime;
                 olt.Save(null, inf, Token);
 
                 // 拉取命令
