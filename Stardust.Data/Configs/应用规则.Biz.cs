@@ -36,8 +36,37 @@ namespace Stardust.Data.Configs
 
             var entity = new AppRule
             {
-                Rule = "IP=192.*,127.*,::1",
-                Result = "Scope=dev"
+                Rule = "IP=*",
+                Result = "Scope=dev",
+                Priority = -1,
+                Remark = "全局默认开发",
+            };
+            entity.Insert();
+
+            entity = new AppRule
+            {
+                Rule = "IP=172.*,10.*",
+                Result = "Scope=pro",
+                Priority = 10,
+                Remark = "正式环境",
+            };
+            entity.Insert();
+
+            entity = new AppRule
+            {
+                Rule = "IP=192.*",
+                Result = "Scope=test",
+                Priority = 20,
+                Remark = "测试环境",
+            };
+            entity.Insert();
+
+            entity = new AppRule
+            {
+                Rule = "IP=127.*,::1",
+                Result = "Scope=dev",
+                Priority = 20,
+                Remark = "本机开发",
             };
             entity.Insert();
 
