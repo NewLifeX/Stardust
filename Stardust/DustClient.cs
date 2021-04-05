@@ -184,7 +184,8 @@ namespace Stardust
                 var ms = ResolveAsync(svc).Result;
                 if (ms != null && ms.Length > 0)
                 {
-                    _consumes.TryAdd(svc.ServiceName, ms);
+                    //_consumes.TryAdd(svc.ServiceName, ms);
+                    _consumes[svc.ServiceName] = ms;
 
                     if (_consumeEvents.TryGetValue(svc.ServiceName, out var list))
                     {
@@ -238,7 +239,8 @@ namespace Stardust
 
             XTrace.WriteLine("注册服务 {0}", service.ToJson());
 
-            _publishServices.TryAdd(service.ServiceName, service);
+            //_publishServices.TryAdd(service.ServiceName, service);
+            _publishServices[service.ServiceName] = service;
 
             InitTimer();
         }
@@ -265,7 +267,8 @@ namespace Stardust
 
             XTrace.WriteLine("注册服务 {0}", service.ToJson());
 
-            _publishServices.TryAdd(service.ServiceName, service);
+            //_publishServices.TryAdd(service.ServiceName, service);
+            _publishServices[service.ServiceName] = service;
 
             InitTimer();
         }
@@ -311,7 +314,8 @@ namespace Stardust
 
                 XTrace.WriteLine("消费服务 {0}", service.ToJson());
 
-                _consumeServices.TryAdd(service.ServiceName, service);
+                //_consumeServices.TryAdd(service.ServiceName, service);
+                _consumeServices[service.ServiceName] = service;
 
                 InitTimer();
 
