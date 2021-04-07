@@ -326,8 +326,8 @@ namespace StarAgent
 
             StartFactory();
 
-            var models = _factory.Dust.ResolveAsync(serviceName);
-            if (models == null) models = _factory.Dust.ResolveAsync(new ConsumeServiceInfo { ServiceName = serviceName }).Result;
+            var models = _factory.Dust.ResolveAsync(serviceName).Result;
+            //if (models == null) models = _factory.Dust.ResolveAsync(new ConsumeServiceInfo { ServiceName = serviceName }).Result;
 
             Console.WriteLine(models.ToJson(true));
         }

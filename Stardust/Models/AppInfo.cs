@@ -65,6 +65,7 @@ namespace Stardust.Models
                 Refresh();
             }
             catch (Win32Exception) { }
+            catch (InvalidOperationException) { }
         }
         #endregion
 

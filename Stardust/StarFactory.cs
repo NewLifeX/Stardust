@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using NewLife;
 using NewLife.Configuration;
 using NewLife.Http;
@@ -209,15 +210,16 @@ namespace Stardust
             }
         }
 
+        //private IDictionary<String, IApiClient> _services = new Dictionary<String, IApiClient>();
         /// <summary>为指定服务创建客户端，从星尘注册中心获取服务地址。单例，应避免频繁创建客户端</summary>
         /// <param name="serviceName"></param>
         /// <param name="tag"></param>
         /// <returns></returns>
         public IApiClient CreateForService(String serviceName, String tag = null)
         {
-            //var ms = Dust.Resolve(serviceName, null, tag);
+            //if (_services.TryGetValue(serviceName, out var client)) return client;
 
-            var client = new ApiHttpClient
+            var http = new ApiHttpClient
             {
                 RoundRobin = true,
 
@@ -226,11 +228,13 @@ namespace Stardust
 
             var models = Dust.ResolveAsync(serviceName, null, tag).Result;
 
-            Bind(client, models);
+            Bind(http, models);
 
-            Dust.Bind(serviceName, (k, ms) => Bind(client, ms));
+            Dust.Bind(serviceName, (k, ms) => Bind(http, ms));
 
-            return client;
+            //_services[serviceName] = http;
+
+            return http;
         }
 
         private void Bind(ApiHttpClient client, ServiceModel[] ms)
