@@ -5,10 +5,10 @@ using System.Linq;
 using System.Reflection;
 using NewLife;
 using NewLife.Common;
+using NewLife.Http;
 using NewLife.Log;
 using NewLife.Reflection;
 using NewLife.Remoting;
-using NewLife.Web;
 using Stardust.Models;
 
 namespace Stardust.Monitors
@@ -24,8 +24,8 @@ namespace Stardust.Monitors
         /// <summary>应用名</summary>
         public String AppName { get; set; }
 
-        /// <summary>应用密钥</summary>
-        public String Secret { get; set; }
+        ///// <summary>应用密钥</summary>
+        //public String Secret { get; set; }
 
         /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
         public String ClientId { get; set; }
@@ -57,7 +57,7 @@ namespace Stardust.Monitors
 
             var set = Setting.Current;
             AppId = set.AppKey;
-            Secret = set.Secret;
+            //Secret = set.Secret;
 
             if (set.Debug) Log = XTrace.Log;
 
@@ -80,43 +80,47 @@ namespace Stardust.Monitors
                 Tracer = this
             };
             Client = http;
+
+            var set = Setting.Current;
+            if (!AppId.IsNullOrEmpty() && !set.Secret.IsNullOrEmpty())
+                http.Filter = new TokenHttpFilter { UserName = AppId, Password = set.Secret };
         }
         #endregion
 
         #region 核心业务
-        private TokenModel _token;
-        private DateTime _expire;
-        private void CheckAuthorize()
-        {
-            if (_token == null || Client.Token.IsNullOrEmpty())
-            {
-                // 申请令牌
-                _token = Client.Invoke<TokenModel>("OAuth/Token", new
-                {
-                    grant_type = "password",
-                    username = AppId,
-                    password = Secret
-                });
-                Client.Token = _token.AccessToken;
+        //private TokenModel _token;
+        //private DateTime _expire;
+        //private void CheckAuthorize()
+        //{
+        //    if (_token == null || Client.Token.IsNullOrEmpty())
+        //    {
+        //        // 申请令牌
+        //        _token = Client.Invoke<TokenModel>("OAuth/Token", new
+        //        {
+        //            grant_type = "password",
+        //            username = AppId,
+        //            password = Secret
+        //        });
+        //        Client.Token = _token.AccessToken;
 
-                WriteLog("申请令牌：{0}", _token.AccessToken);
+        //        WriteLog("申请令牌：{0}", _token.AccessToken);
 
-                // 提前一分钟过期
-                _expire = DateTime.Now.AddSeconds(_token.ExpireIn - 600);
-            }
-            else if (_token != null && DateTime.Now > _expire)
-            {
-                // 刷新令牌
-                _token = Client.Invoke<TokenModel>("OAuth/Token", new
-                {
-                    grant_type = "refresh_token",
-                    refresh_token = _token.RefreshToken,
-                });
-                Client.Token = _token.AccessToken;
+        //        // 提前一分钟过期
+        //        _expire = DateTime.Now.AddSeconds(_token.ExpireIn - 600);
+        //    }
+        //    else if (_token != null && DateTime.Now > _expire)
+        //    {
+        //        // 刷新令牌
+        //        _token = Client.Invoke<TokenModel>("OAuth/Token", new
+        //        {
+        //            grant_type = "refresh_token",
+        //            refresh_token = _token.RefreshToken,
+        //        });
+        //        Client.Token = _token.AccessToken;
 
-                WriteLog("刷新令牌：{0}", _token.AccessToken);
-            }
-        }
+        //        WriteLog("刷新令牌：{0}", _token.AccessToken);
+        //    }
+        //}
 
         private Boolean _inited;
         private void Init()
@@ -173,8 +177,8 @@ namespace Stardust.Monitors
             };
             try
             {
-                // 检查令牌
-                if (!Secret.IsNullOrEmpty()) CheckAuthorize();
+                //// 检查令牌
+                //if (!Secret.IsNullOrEmpty()) CheckAuthorize();
 
                 var rs = Client.Invoke<TraceResponse>("Trace/Report", model);
                 // 处理响应参数
@@ -189,13 +193,13 @@ namespace Stardust.Monitors
             }
             catch (ApiException ex)
             {
-                if (ex.Code == 401 || ex.Code == 403) _token = null;
+                //if (ex.Code == 401 || ex.Code == 403) _token = null;
 
                 Log?.Error(ex + "");
             }
             catch (Exception ex)
             {
-                if (ex is ApiException ae && (ae.Code == 401 || ae.Code == 403)) _token = null;
+                //if (ex is ApiException ae && (ae.Code == 401 || ae.Code == 403)) _token = null;
 
                 Log?.Error(ex + "");
 

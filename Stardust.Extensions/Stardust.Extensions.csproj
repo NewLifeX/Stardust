@@ -44,6 +44,9 @@
   <PropertyGroup Condition="'$(TargetFramework)'=='net45'">
     <DefineConstants>$(DefineConstants);__WIN__;NET45</DefineConstants>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="StarService.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include="..\Doc\leaf.png" Link="leaf.png" PackagePath="\" />

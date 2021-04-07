@@ -23,8 +23,14 @@ namespace Stardust
         /// <summary>应用密钥</summary>
         public String Secret { get; set; }
 
-        /// <summary>服务名</summary>
-        public String ServiceName { get; set; }
+        ///// <summary>服务名</summary>
+        //public String ServiceName { get; set; }
+
+        /// <summary>客户端</summary>
+        public IApiClient Client => _client;
+
+        private ApiHttpClient _client;
+        private TokenHttpFilter _tokenFilter;
         #endregion
 
         #region 构造
@@ -50,14 +56,23 @@ namespace Stardust
         {
             if (Server.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Server));
             if (AppId.IsNullOrEmpty()) throw new ArgumentNullException(nameof(AppId));
+
+            if (_client == null)
+            {
+                if (!AppId.IsNullOrEmpty()) _tokenFilter = new TokenHttpFilter
+                {
+                    UserName = AppId,
+                    Password = Secret,
+                };
+
+                _client = new ApiHttpClient(Server) { Filter = _tokenFilter };
+            }
         }
         #endregion
 
         #region 本地代理
         /// <summary>本地星尘代理</summary>
         public LocalStarClient Local { get; private set; }
-
-        private TokenHttpFilter _tokenFilter;
 
         private void Init()
         {
@@ -91,23 +106,10 @@ namespace Stardust
             }
 
             // 如果探测不到本地应用，则使用配置
-            if (Server.IsNullOrEmpty())
-            {
-                var set = Setting.Current;
-                Server = set.Server;
-            }
-            if (AppId.IsNullOrEmpty())
-            {
-                var set = Setting.Current;
-                AppId = set.AppKey;
-                Secret = set.Secret;
-            }
-
-            if (!AppId.IsNullOrEmpty()) _tokenFilter = new TokenHttpFilter
-            {
-                UserName = AppId,
-                Password = Secret,
-            };
+            var set = Setting.Current;
+            if (Server.IsNullOrEmpty()) Server = set.Server;
+            if (AppId.IsNullOrEmpty()) AppId = set.AppKey;
+            if (Secret.IsNullOrEmpty()) Secret = set.Secret;
 
             XTrace.WriteLine("星尘分布式服务 Server={0} AppId={1}", Server, AppId);
         }
@@ -127,11 +129,12 @@ namespace Stardust
                     var tracer = new StarTracer(Server)
                     {
                         AppId = AppId,
-                        Secret = Secret,
+                        //Secret = Secret,
+                        Client = _client,
 
                         Log = Log
                     };
-                    if (tracer.Client is ApiHttpClient http) http.Filter = _tokenFilter;
+                    //if (tracer.Client is ApiHttpClient http) http.Filter = _tokenFilter;
 
                     tracer.AttachGlobal();
 
@@ -154,18 +157,18 @@ namespace Stardust
                 {
                     Valid();
 
-                    XTrace.WriteLine("星尘配置中心 Server={0} AppId={1}", Server, AppId);
-
-                    var http = new HttpConfigProvider
+                    var config = new HttpConfigProvider
                     {
                         Server = Server,
                         AppId = AppId,
-                        Secret = Secret,
+                        //Secret = Secret,
+                        Client = _client,
                     };
-                    if (http.Client is ApiHttpClient http2) http2.Filter = _tokenFilter;
-                    http.LoadAll();
+                    config.LoadAll();
+                    //// 需要使用一次以后，才能够得到Client实例
+                    //if (config.Client is ApiHttpClient http) http.Filter = _tokenFilter;
 
-                    _config = http;
+                    _config = config;
                 }
 
                 return _config;
@@ -187,16 +190,17 @@ namespace Stardust
                     var client = new DustClient(Server)
                     {
                         AppId = AppId,
-                        Secret = Secret,
+                        //Secret = Secret,
+                        Client = _client,
 
-                        Filter = _tokenFilter,
-                        Log = Log,
+                        //Filter = _tokenFilter,
+                        //Log = Log,
                     };
-                    client.OnLogined += (s, e) =>
-                    {
-                        if (_tracer.Client is ApiHttpClient client) client.Token = _dustClient.Token;
-                        //if (_configProvider.Client is ApiHttpClient client) client.Token = _dustClient.Token;
-                    };
+                    //client.OnLogined += (s, e) =>
+                    //{
+                    //    if (_tracer.Client is ApiHttpClient client) client.Token = _dustClient.Token;
+                    //    //if (_configProvider.Client is ApiHttpClient client) client.Token = _dustClient.Token;
+                    //};
 
                     _dustClient = client;
                 }
