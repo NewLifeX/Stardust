@@ -16,9 +16,9 @@ using Stardust.Models;
 
 namespace StarAgent
 {
-    class Program
+    internal class Program
     {
-        static void Main(String[] args)
+        private static void Main(String[] args)
         {
             if ("-upgrade".EqualIgnoreCase(args)) Thread.Sleep(5_000);
 
@@ -27,7 +27,7 @@ namespace StarAgent
     }
 
     /// <summary>服务类。名字可以自定义</summary>
-    class MyService : ServiceBase
+    internal class MyService : ServiceBase
     {
         public MyService()
         {
@@ -49,13 +49,31 @@ namespace StarAgent
             AddMenu('w', "测试微服务", UseMicroService);
 
             MachineInfo.RegisterAsync();
+
+            // 处理 -server 参数
+            var args = Environment.GetCommandLineArgs();
+            if (args != null && args.Length > 0)
+            {
+                for (var i = 0; i < args.Length; i++)
+                {
+                    if (args[i].EqualIgnoreCase("-server") && i + 1 < args.Length)
+                    {
+                        var addr = args[i + 1];
+
+                        set.Server = addr;
+                        set.Save();
+
+                        WriteLog("服务端修改为：{0}", addr);
+                    }
+                }
+            }
         }
 
-        ApiServer _server;
-        TimerX _timer;
-        StarClient _Client;
-        StarFactory _factory;
-        ServiceManager _Manager;
+        private ApiServer _server;
+        private TimerX _timer;
+        private StarClient _Client;
+        private StarFactory _factory;
+        private ServiceManager _Manager;
 
         private void StartClient()
         {
