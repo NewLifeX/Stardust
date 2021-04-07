@@ -209,7 +209,7 @@ namespace Stardust
             }
         }
 
-        /// <summary>为指定服务创建客户端，从星尘注册中心获取服务地址</summary>
+        /// <summary>为指定服务创建客户端，从星尘注册中心获取服务地址。单例，应避免频繁创建客户端</summary>
         /// <param name="serviceName"></param>
         /// <param name="tag"></param>
         /// <returns></returns>
@@ -224,7 +224,10 @@ namespace Stardust
                 Tracer = Tracer,
             };
 
-            Bind(client, Dust.Resolve(serviceName, null, tag));
+            var models = Dust.ResolveAsync(serviceName, null, tag).Result;
+
+            Bind(client, models);
+
             Dust.Bind(serviceName, (k, ms) => Bind(client, ms));
 
             return client;

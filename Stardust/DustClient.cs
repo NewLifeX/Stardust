@@ -226,7 +226,7 @@ namespace Stardust
         /// <param name="minVersion"></param>
         /// <param name="tag"></param>
         /// <returns></returns>
-        public ServiceModel[] Resolve(String serviceName, String minVersion = null, String tag = null)
+        public async Task<ServiceModel[]> ResolveAsync(String serviceName, String minVersion = null, String tag = null)
         {
             if (!_consumeServices.ContainsKey(serviceName))
             {
@@ -249,8 +249,7 @@ namespace Stardust
 
                 InitTimer();
 
-                //// 首次同步调用
-                //return ConsumeAsync(service).Result;
+                return await ResolveAsync(service);
             }
 
             if (_consumes.TryGetValue(serviceName, out var models)) return models;

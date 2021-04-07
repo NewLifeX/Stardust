@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NewLife;
 using NewLife.Configuration;
 using NewLife.Http;
 using NewLife.Reflection;
@@ -19,7 +20,7 @@ namespace ClientTest
         [Fact]
         public void Normal()
         {
-            var set = Setting.Current;
+            var set = Stardust.Setting.Current;
             var secret = Rand.NextString(8, true);
             set.Secret = secret;
 
@@ -39,9 +40,17 @@ namespace ClientTest
 
             var config = star.Config as HttpConfigProvider;
             Assert.NotNull(config);
+            Assert.Equal("NewLife开发团队", config["Title"]);
 
             var dust = star.Dust;
             Assert.NotNull(dust);
+            
+            dust.Register("testService", "http://localhost:1234", "tA,tagB,ttC");
+
+            var client = star.CreateForService("testService", "tagB") as ApiHttpClient;
+            Assert.NotNull(client);
+            Assert.True(client.RoundRobin);
+            Assert.Equal("http://localhost:1234/", client.Services.Join(",", e => e.Address));
 
             var filter = star.GetValue("_tokenFilter") as TokenHttpFilter;
             Assert.NotNull(filter);
