@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
+using NewLife;
+using NewLife.Data;
 using XCode;
 using XCode.Membership;
 
@@ -61,7 +63,7 @@ namespace Stardust.Data
         }
 
         /// <summary>根据服务名查找</summary>
-        /// <param name="serviceName">应用</param>
+        /// <param name="serviceName">服务</param>
         /// <returns>实体对象</returns>
         public static IList<AppConsume> FindAllByService(String serviceName)
         {
@@ -70,9 +72,38 @@ namespace Stardust.Data
 
             return FindAll(_.ServiceName == serviceName);
         }
+
+        /// <summary>根据服务查找</summary>
+        /// <param name="serviceId">服务</param>
+        /// <returns>实体对象</returns>
+        public static IList<AppConsume> FindAllByService(Int32 serviceId)
+        {
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ServiceId == serviceId);
+
+            return FindAll(_.ServiceId == serviceId);
+        }
         #endregion
 
         #region 高级查询
+        /// <summary>高级搜索</summary>
+        /// <param name="appId"></param>
+        /// <param name="serviceId"></param>
+        /// <param name="enable"></param>
+        /// <param name="key"></param>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        public static IList<AppConsume> Search(Int32 appId, Int32 serviceId, Boolean? enable, String key, PageParameter page)
+        {
+            var exp = new WhereExpression();
+
+            if (appId >= 0) exp &= _.AppId == appId;
+            if (serviceId > 0) exp &= _.ServiceId == serviceId;
+            if (enable != null) exp &= _.Enable == enable;
+            if (!key.IsNullOrEmpty()) exp &= _.ServiceName.Contains(key) | _.Client.Contains(key) | _.Tag.Contains(key);
+
+            return FindAll(exp, page);
+        }
         #endregion
 
         #region 业务操作

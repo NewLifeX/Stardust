@@ -15,7 +15,7 @@ namespace Stardust.Data
     [DataObject]
     [Description("应用服务。应用提供的服务")]
     [BindIndex("IX_AppService_AppId", false, "AppId")]
-    [BindIndex("IX_AppService_ServiceName", false, "ServiceName")]
+    [BindIndex("IX_AppService_ServiceId", false, "ServiceId")]
     [BindIndex("IX_AppService_UpdateTime", false, "UpdateTime")]
     [BindTable("AppService", Description = "应用服务。应用提供的服务", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppService
@@ -37,6 +37,14 @@ namespace Stardust.Data
         [BindColumn("AppId", "应用", "")]
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
+        private Int32 _ServiceId;
+        /// <summary>服务</summary>
+        [DisplayName("服务")]
+        [Description("服务")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("ServiceId", "服务", "")]
+        public Int32 ServiceId { get => _ServiceId; set { if (OnPropertyChanging("ServiceId", value)) { _ServiceId = value; OnPropertyChanged("ServiceId"); } } }
+
         private String _ServiceName;
         /// <summary>服务名</summary>
         [DisplayName("服务名")]
@@ -46,11 +54,11 @@ namespace Stardust.Data
         public String ServiceName { get => _ServiceName; set { if (OnPropertyChanging("ServiceName", value)) { _ServiceName = value; OnPropertyChanged("ServiceName"); } } }
 
         private String _Client;
-        /// <summary>客户端。IP加进程</summary>
+        /// <summary>客户端。IP加端口</summary>
         [DisplayName("客户端")]
-        [Description("客户端。IP加进程")]
+        [Description("客户端。IP加端口")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("Client", "客户端。IP加进程", "")]
+        [BindColumn("Client", "客户端。IP加端口", "")]
         public String Client { get => _Client; set { if (OnPropertyChanging("Client", value)) { _Client = value; OnPropertyChanged("Client"); } } }
 
         private Boolean _Enable;
@@ -146,6 +154,7 @@ namespace Stardust.Data
                 {
                     case "Id": return _Id;
                     case "AppId": return _AppId;
+                    case "ServiceId": return _ServiceId;
                     case "ServiceName": return _ServiceName;
                     case "Client": return _Client;
                     case "Enable": return _Enable;
@@ -167,6 +176,7 @@ namespace Stardust.Data
                 {
                     case "Id": _Id = value.ToInt(); break;
                     case "AppId": _AppId = value.ToInt(); break;
+                    case "ServiceId": _ServiceId = value.ToInt(); break;
                     case "ServiceName": _ServiceName = Convert.ToString(value); break;
                     case "Client": _Client = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
@@ -195,10 +205,13 @@ namespace Stardust.Data
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
 
+            /// <summary>服务</summary>
+            public static readonly Field ServiceId = FindByName("ServiceId");
+
             /// <summary>服务名</summary>
             public static readonly Field ServiceName = FindByName("ServiceName");
 
-            /// <summary>客户端。IP加进程</summary>
+            /// <summary>客户端。IP加端口</summary>
             public static readonly Field Client = FindByName("Client");
 
             /// <summary>启用</summary>
@@ -243,10 +256,13 @@ namespace Stardust.Data
             /// <summary>应用</summary>
             public const String AppId = "AppId";
 
+            /// <summary>服务</summary>
+            public const String ServiceId = "ServiceId";
+
             /// <summary>服务名</summary>
             public const String ServiceName = "ServiceName";
 
-            /// <summary>客户端。IP加进程</summary>
+            /// <summary>客户端。IP加端口</summary>
             public const String Client = "Client";
 
             /// <summary>启用</summary>

@@ -10,38 +10,30 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data
 {
-    /// <summary>服务。服务提供者发布的服务</summary>
+    /// <summary>服务信息。服务提供者发布的服务</summary>
     [Serializable]
     [DataObject]
-    [Description("服务。服务提供者发布的服务")]
+    [Description("服务信息。服务提供者发布的服务")]
     [BindIndex("IU_Service_Name", true, "Name")]
-    [BindTable("Service", Description = "服务。服务提供者发布的服务", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("Service", Description = "服务信息。服务提供者发布的服务", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class Service
     {
         #region 属性
-        private Int32 _ID;
+        private Int32 _Id;
         /// <summary>编号</summary>
         [DisplayName("编号")]
         [Description("编号")]
         [DataObjectField(true, true, false, 0)]
-        [BindColumn("ID", "编号", "")]
-        public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+        [BindColumn("Id", "编号", "")]
+        public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
         private String _Name;
-        /// <summary>名称。调用Api的字符串：Data/GetSite中的Data</summary>
+        /// <summary>名称。服务名，提供一个地址，包含多个接口</summary>
         [DisplayName("名称")]
-        [Description("名称。调用Api的字符串：Data/GetSite中的Data")]
+        [Description("名称。服务名，提供一个地址，包含多个接口")]
         [DataObjectField(false, false, false, 50)]
-        [BindColumn("Name", "名称。调用Api的字符串：Data/GetSite中的Data", "", Master = true)]
+        [BindColumn("Name", "名称。服务名，提供一个地址，包含多个接口", "", Master = true)]
         public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
-
-        private String _ServiceType;
-        /// <summary>服务类型。带命名空间的全名</summary>
-        [DisplayName("服务类型")]
-        [Description("服务类型。带命名空间的全名")]
-        [DataObjectField(false, false, false, 50)]
-        [BindColumn("ServiceType", "服务类型。带命名空间的全名", "", Master = true)]
-        public String ServiceType { get => _ServiceType; set { if (OnPropertyChanging("ServiceType", value)) { _ServiceType = value; OnPropertyChanged("ServiceType"); } } }
 
         private String _DisplayName;
         /// <summary>显示名</summary>
@@ -51,6 +43,14 @@ namespace Stardust.Data
         [BindColumn("DisplayName", "显示名", "")]
         public String DisplayName { get => _DisplayName; set { if (OnPropertyChanging("DisplayName", value)) { _DisplayName = value; OnPropertyChanged("DisplayName"); } } }
 
+        private String _Category;
+        /// <summary>类别</summary>
+        [DisplayName("类别")]
+        [Description("类别")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Category", "类别", "")]
+        public String Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
+
         private Boolean _Enable;
         /// <summary>启用</summary>
         [DisplayName("启用")]
@@ -59,29 +59,21 @@ namespace Stardust.Data
         [BindColumn("Enable", "启用", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
-        private Boolean _Anonymous;
-        /// <summary>匿名</summary>
-        [DisplayName("匿名")]
-        [Description("匿名")]
+        private Int32 _Providers;
+        /// <summary>提供者</summary>
+        [DisplayName("提供者")]
+        [Description("提供者")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Anonymous", "匿名", "")]
-        public Boolean Anonymous { get => _Anonymous; set { if (OnPropertyChanging("Anonymous", value)) { _Anonymous = value; OnPropertyChanged("Anonymous"); } } }
+        [BindColumn("Providers", "提供者", "")]
+        public Int32 Providers { get => _Providers; set { if (OnPropertyChanging("Providers", value)) { _Providers = value; OnPropertyChanged("Providers"); } } }
 
-        private String _Actions;
-        /// <summary>功能列表</summary>
-        [DisplayName("功能列表")]
-        [Description("功能列表")]
-        [DataObjectField(false, false, true, 500)]
-        [BindColumn("Actions", "功能列表", "")]
-        public String Actions { get => _Actions; set { if (OnPropertyChanging("Actions", value)) { _Actions = value; OnPropertyChanged("Actions"); } } }
-
-        private String _Apps;
-        /// <summary>应用。提供该服务的应用列表</summary>
-        [DisplayName("应用")]
-        [Description("应用。提供该服务的应用列表")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("Apps", "应用。提供该服务的应用列表", "")]
-        public String Apps { get => _Apps; set { if (OnPropertyChanging("Apps", value)) { _Apps = value; OnPropertyChanged("Apps"); } } }
+        private Int32 _Consumers;
+        /// <summary>消费者</summary>
+        [DisplayName("消费者")]
+        [Description("消费者")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Consumers", "消费者", "")]
+        public Int32 Consumers { get => _Consumers; set { if (OnPropertyChanging("Consumers", value)) { _Consumers = value; OnPropertyChanged("Consumers"); } } }
 
         private String _Remark;
         /// <summary>内容</summary>
@@ -166,14 +158,13 @@ namespace Stardust.Data
             {
                 switch (name)
                 {
-                    case "ID": return _ID;
+                    case "Id": return _Id;
                     case "Name": return _Name;
-                    case "ServiceType": return _ServiceType;
                     case "DisplayName": return _DisplayName;
+                    case "Category": return _Category;
                     case "Enable": return _Enable;
-                    case "Anonymous": return _Anonymous;
-                    case "Actions": return _Actions;
-                    case "Apps": return _Apps;
+                    case "Providers": return _Providers;
+                    case "Consumers": return _Consumers;
                     case "Remark": return _Remark;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
@@ -190,14 +181,13 @@ namespace Stardust.Data
             {
                 switch (name)
                 {
-                    case "ID": _ID = value.ToInt(); break;
+                    case "Id": _Id = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
-                    case "ServiceType": _ServiceType = Convert.ToString(value); break;
                     case "DisplayName": _DisplayName = Convert.ToString(value); break;
+                    case "Category": _Category = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
-                    case "Anonymous": _Anonymous = value.ToBoolean(); break;
-                    case "Actions": _Actions = Convert.ToString(value); break;
-                    case "Apps": _Apps = Convert.ToString(value); break;
+                    case "Providers": _Providers = value.ToInt(); break;
+                    case "Consumers": _Consumers = value.ToInt(); break;
                     case "Remark": _Remark = Convert.ToString(value); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
@@ -214,32 +204,29 @@ namespace Stardust.Data
         #endregion
 
         #region 字段名
-        /// <summary>取得服务字段信息的快捷方式</summary>
+        /// <summary>取得服务信息字段信息的快捷方式</summary>
         public partial class _
         {
             /// <summary>编号</summary>
-            public static readonly Field ID = FindByName("ID");
+            public static readonly Field Id = FindByName("Id");
 
-            /// <summary>名称。调用Api的字符串：Data/GetSite中的Data</summary>
+            /// <summary>名称。服务名，提供一个地址，包含多个接口</summary>
             public static readonly Field Name = FindByName("Name");
-
-            /// <summary>服务类型。带命名空间的全名</summary>
-            public static readonly Field ServiceType = FindByName("ServiceType");
 
             /// <summary>显示名</summary>
             public static readonly Field DisplayName = FindByName("DisplayName");
 
+            /// <summary>类别</summary>
+            public static readonly Field Category = FindByName("Category");
+
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
 
-            /// <summary>匿名</summary>
-            public static readonly Field Anonymous = FindByName("Anonymous");
+            /// <summary>提供者</summary>
+            public static readonly Field Providers = FindByName("Providers");
 
-            /// <summary>功能列表</summary>
-            public static readonly Field Actions = FindByName("Actions");
-
-            /// <summary>应用。提供该服务的应用列表</summary>
-            public static readonly Field Apps = FindByName("Apps");
+            /// <summary>消费者</summary>
+            public static readonly Field Consumers = FindByName("Consumers");
 
             /// <summary>内容</summary>
             public static readonly Field Remark = FindByName("Remark");
@@ -271,32 +258,29 @@ namespace Stardust.Data
             static Field FindByName(String name) => Meta.Table.FindByName(name);
         }
 
-        /// <summary>取得服务字段名称的快捷方式</summary>
+        /// <summary>取得服务信息字段名称的快捷方式</summary>
         public partial class __
         {
             /// <summary>编号</summary>
-            public const String ID = "ID";
+            public const String Id = "Id";
 
-            /// <summary>名称。调用Api的字符串：Data/GetSite中的Data</summary>
+            /// <summary>名称。服务名，提供一个地址，包含多个接口</summary>
             public const String Name = "Name";
-
-            /// <summary>服务类型。带命名空间的全名</summary>
-            public const String ServiceType = "ServiceType";
 
             /// <summary>显示名</summary>
             public const String DisplayName = "DisplayName";
 
+            /// <summary>类别</summary>
+            public const String Category = "Category";
+
             /// <summary>启用</summary>
             public const String Enable = "Enable";
 
-            /// <summary>匿名</summary>
-            public const String Anonymous = "Anonymous";
+            /// <summary>提供者</summary>
+            public const String Providers = "Providers";
 
-            /// <summary>功能列表</summary>
-            public const String Actions = "Actions";
-
-            /// <summary>应用。提供该服务的应用列表</summary>
-            public const String Apps = "Apps";
+            /// <summary>消费者</summary>
+            public const String Consumers = "Consumers";
 
             /// <summary>内容</summary>
             public const String Remark = "Remark";

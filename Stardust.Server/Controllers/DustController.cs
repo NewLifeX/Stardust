@@ -21,20 +21,35 @@ namespace Stardust.Server.Controllers
         public DustController(TokenService tokenService) => _tokenService = tokenService;
 
         #region 发布、消费
+        private Service GetService(String serviceName)
+        {
+            var info = Service.FindByName(serviceName);
+            if (info == null)
+            {
+                info = new Service { Name = serviceName, Enable = true };
+                info.Insert();
+            }
+            if (!info.Enable) throw new InvalidOperationException($"服务[{serviceName}]已停用！");
+
+            return info;
+        }
+
         [ApiFilter]
         [HttpPost]
         public AppService RegisterService([FromBody] PublishServiceInfo service, String token)
         {
             var app = _tokenService.DecodeToken(token, Setting.Current);
+            var info = GetService(service.ServiceName);
 
-            // 该应用所有服务
-            var services = AppService.FindAllByAppId(app.Id);
-            var svc = services.FirstOrDefault(e => e.ServiceName == service.ServiceName && e.Client == service.Client);
+            // 所有服务
+            var services = AppService.FindAllByService(info.Id);
+            var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == service.Client);
             if (svc == null)
             {
                 svc = new AppService
                 {
                     AppId = app.Id,
+                    ServiceId = info.Id,
                     ServiceName = service.ServiceName,
                     Client = service.Client,
 
@@ -42,6 +57,7 @@ namespace Stardust.Server.Controllers
 
                     CreateIP = UserHost,
                 };
+                services.Add(svc);
 
                 var history = AppHistory.Create(app, "RegisterService", true, $"注册服务[{service.ServiceName}] {service.Client}", Environment.MachineName, UserHost);
                 history.Client = service.Client;
@@ -56,6 +72,9 @@ namespace Stardust.Server.Controllers
 
             svc.Save();
 
+            info.Providers = services.Count;
+            info.Save();
+
             return svc;
         }
 
@@ -64,20 +83,26 @@ namespace Stardust.Server.Controllers
         public AppService UnregisterService([FromBody] PublishServiceInfo service, String token)
         {
             var app = _tokenService.DecodeToken(token, Setting.Current);
+            var info = GetService(service.ServiceName);
 
-            // 该应用所有服务
-            var services = AppService.FindAllByAppId(app.Id);
-            var svc = services.FirstOrDefault(e => e.ServiceName == service.ServiceName && e.Client == service.Client);
+            // 所有服务
+            var services = AppService.FindAllByService(info.Id);
+            var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == service.Client);
             if (svc != null)
             {
                 //svc.Delete();
                 svc.Enable = false;
                 svc.Update();
 
+                services.Remove(svc);
+
                 var history = AppHistory.Create(app, "UnregisterService", true, $"服务[{service.ServiceName}]下线 {svc.Client}", Environment.MachineName, UserHost);
                 history.Client = svc.Client;
                 history.SaveAsync();
             }
+
+            info.Providers = services.Count;
+            info.Save();
 
             return svc;
         }
@@ -87,10 +112,11 @@ namespace Stardust.Server.Controllers
         public ServiceModel[] ResolveService([FromBody] ConsumeServiceInfo service, String token)
         {
             var app = _tokenService.DecodeToken(token, Setting.Current);
+            var info = GetService(service.ServiceName);
 
-            // 该服务所有消费
-            var services = AppConsume.FindAllByService(service.ServiceName);
-            var svc = services.FirstOrDefault(e => e.ServiceName == service.ServiceName && e.Client == service.Client);
+            // 所有消费
+            var services = AppConsume.FindAllByService(info.Id);
+            var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == service.Client);
             if (svc == null)
             {
                 svc = new AppConsume
@@ -103,6 +129,7 @@ namespace Stardust.Server.Controllers
 
                     CreateIP = UserHost,
                 };
+                services.Add(svc);
             }
 
             svc.PingCount++;
@@ -110,6 +137,9 @@ namespace Stardust.Server.Controllers
             svc.MinVersion = service.MinVersion;
 
             svc.Save();
+
+            info.Consumers = services.Count;
+            info.Save();
 
             // 该服务所有生产
             var services2 = AppService.FindAllByService(service.ServiceName);
@@ -130,6 +160,12 @@ namespace Stardust.Server.Controllers
         #endregion
 
         [ApiFilter]
-        public IList<AppService> SearchService(String serviceName, String key) => AppService.Search(-1, serviceName, true, key, new PageParameter { PageSize = 100 });
+        public IList<AppService> SearchService(String serviceName, String key)
+        {
+            var svc = Service.FindByName(serviceName);
+            if (svc == null) return null;
+
+            return AppService.Search(-1, svc.Id, true, key, new PageParameter { PageSize = 100 });
+        }
     }
 }
