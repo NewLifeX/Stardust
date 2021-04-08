@@ -122,6 +122,7 @@ namespace Stardust.Server.Controllers
                 svc = new AppConsume
                 {
                     AppId = app.Id,
+                    ServiceId = info.Id,
                     ServiceName = service.ServiceName,
                     Client = service.Client,
 
@@ -142,7 +143,7 @@ namespace Stardust.Server.Controllers
             info.Save();
 
             // 该服务所有生产
-            var services2 = AppService.FindAllByService(service.ServiceName);
+            var services2 = AppService.FindAllByService(info.Id);
             services2 = services2.Where(e => e.Enable).ToList();
 
             //todo 匹配minversion和tag
@@ -150,11 +151,13 @@ namespace Stardust.Server.Controllers
             return services2.Select(e => new ServiceModel
             {
                 ServiceName = e.ServiceName,
+                DisplayName = info.DisplayName,
                 Client = e.Client,
                 Version = e.Version,
                 Address = e.Address,
                 Weight = e.Weight,
-                LastActive = e.UpdateTime,
+                CreateTime = e.CreateTime,
+                UpdateTime = e.UpdateTime,
             }).ToArray();
         }
         #endregion

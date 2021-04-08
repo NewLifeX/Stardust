@@ -8,6 +8,9 @@ namespace Stardust.Models
         /// <summary>服务名</summary>
         public String ServiceName { get; set; }
 
+        /// <summary>显示名</summary>
+        public String DisplayName { get; set; }
+
         /// <summary>客户端。IP加进程</summary>
         public String Client { get; set; }
 
@@ -20,7 +23,10 @@ namespace Stardust.Models
         /// <summary>权重</summary>
         public Int32 Weight { get; set; }
 
+        /// <summary>创建时间</summary>
+        public DateTime CreateTime { get; set; }
+
         /// <summary>最后活跃时间</summary>
-        public DateTime LastActive { get; set; }
+        public DateTime UpdateTime { get; set; }
     }
 }
