@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
 using NewLife.Web;
 using Stardust.Data;
 using XCode;
+using XCode.Membership;
 using static Stardust.Data.AppMeter;
 
 namespace Stardust.Web.Areas.Registries.Controllers
@@ -75,6 +77,20 @@ namespace Stardust.Web.Areas.Registries.Controllers
             }
 
             return list;
+        }
+
+        /// <summary>菜单不可见</summary>
+        /// <param name="menu"></param>
+        /// <returns></returns>
+        protected override IDictionary<MethodInfo, Int32> ScanActionMenu(IMenu menu)
+        {
+            if (menu.Visible)
+            {
+                menu.Visible = false;
+                (menu as IEntity).Update();
+            }
+
+            return base.ScanActionMenu(menu);
         }
     }
 }

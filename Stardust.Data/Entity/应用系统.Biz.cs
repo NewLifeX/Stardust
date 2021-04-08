@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Web.Script.Serialization;
+using System.Xml.Serialization;
 using NewLife;
 using Stardust.Monitors;
 using XCode;
@@ -42,6 +46,13 @@ namespace Stardust.Data
         #endregion
 
         #region 扩展属性
+        /// <summary>服务提供者</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public IList<AppService> Providers => Extends.Get(nameof(Providers), k => AppService.FindAllByAppId(Id));
+
+        /// <summary>服务消费者</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public IList<AppConsume> Consumers => Extends.Get(nameof(Consumers), k => AppConsume.FindAllByAppId(Id));
         #endregion
 
         #region 扩展查询
