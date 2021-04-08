@@ -12,7 +12,7 @@ using Stardust.Monitors;
 namespace Stardust
 {
     /// <summary>星尘工厂</summary>
-    public class StarFactory
+    public class StarFactory : DisposeBase
     {
         #region 属性
         /// <summary>服务器地址</summary>
@@ -49,6 +49,17 @@ namespace Stardust
             Secret = secret;
 
             Init();
+        }
+
+        /// <summary>销毁</summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(Boolean disposing)
+        {
+            base.Dispose(disposing);
+
+            _tracer.TryDispose();
+            _config.TryDispose();
+            _dustClient.TryDispose();
         }
         #endregion
 
@@ -179,8 +190,8 @@ namespace Stardust
 
         #region 注册中心
         private DustClient _dustClient;
-        /// <summary>注册中心</summary>
-        public DustClient Dust
+        /// <summary>注册中心，服务注册与发现</summary>
+        public DustClient Service
         {
             get
             {
@@ -226,11 +237,11 @@ namespace Stardust
                 Tracer = Tracer,
             };
 
-            var models = Dust.ResolveAsync(serviceName, null, tag).Result;
+            var models = Service.ResolveAsync(serviceName, null, tag).Result;
 
             Bind(http, models);
 
-            Dust.Bind(serviceName, (k, ms) => Bind(http, ms));
+            Service.Bind(serviceName, (k, ms) => Bind(http, ms));
 
             //_services[serviceName] = http;
 

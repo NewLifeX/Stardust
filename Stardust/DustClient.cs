@@ -15,7 +15,7 @@ using Stardust.Models;
 namespace Stardust
 {
     /// <summary>尘埃客户端。每个应用有一个客户端连接星尘服务端</summary>
-    public class DustClient
+    public class DustClient : DisposeBase
     {
         #region 属性
         /// <summary>应用</summary>
@@ -43,6 +43,22 @@ namespace Stardust
                 //Tracer = this
             };
             Client = http;
+        }
+
+        /// <summary>销毁</summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(Boolean disposing)
+        {
+            base.Dispose(disposing);
+
+            _timer.TryDispose();
+            _timer = null;
+
+            foreach (var item in _publishServices)
+            {
+                //UnregisterAsync(item.Value).Wait();
+                Unregister(item.Key);
+            }
         }
         #endregion
 
@@ -145,7 +161,7 @@ namespace Stardust
         /// <param name="address">服务地址</param>
         /// <param name="tag">特性标签</param>
         /// <returns></returns>
-        public void Register(String serviceName, String address, String tag = null)
+        public async Task<Object> RegisterAsync(String serviceName, String address, String tag = null)
         {
             // 解析端口
             var ps = address.Split(",");
@@ -169,10 +185,15 @@ namespace Stardust
 
             XTrace.WriteLine("注册服务 {0}", service.ToJson());
 
+            var rs = await RegisterAsync(service);
+            XTrace.WriteLine("注册完成 {0}", rs.ToJson());
+
             //_publishServices.TryAdd(service.ServiceName, service);
             _publishServices[service.ServiceName] = service;
 
             InitTimer();
+
+            return rs;
         }
 
         /// <summary>发布</summary>
@@ -211,6 +232,7 @@ namespace Stardust
             if (!_publishServices.TryGetValue(serviceName, out var service)) return false;
             if (service == null) return false;
 
+            XTrace.WriteLine("取消注册 {0}", service.ToJson());
             UnregisterAsync(service).Wait();
 
             return true;

@@ -24,7 +24,7 @@ namespace ClientTest
             var secret = Rand.NextString(8, true);
             set.Secret = secret;
 
-            var star = new StarFactory(null, "StarWeb", null);
+            using var star = new StarFactory(null, "StarWeb", null);
 
             Assert.NotNull(star.Local);
             Assert.Equal("http://star.newlifex.com:6600", star.Server);
@@ -42,15 +42,8 @@ namespace ClientTest
             Assert.NotNull(config);
             Assert.Equal("NewLife开发团队", config["Title"]);
 
-            var dust = star.Dust;
+            var dust = star.Service;
             Assert.NotNull(dust);
-            
-            dust.Register("testService", "http://localhost:1234", "tA,tagB,ttC");
-
-            var client = star.CreateForService("testService", "tagB") as ApiHttpClient;
-            Assert.NotNull(client);
-            Assert.True(client.RoundRobin);
-            Assert.Equal("http://localhost:1234/", client.Services.Join(",", e => e.Address));
 
             var filter = star.GetValue("_tokenFilter") as TokenHttpFilter;
             Assert.NotNull(filter);
@@ -59,6 +52,18 @@ namespace ClientTest
             Assert.Equal(filter, (tracer.Client as ApiHttpClient).Filter);
             Assert.Equal(filter, (config.Client as ApiHttpClient).Filter);
             Assert.Equal(filter, (dust.Client as ApiHttpClient).Filter);
+        }
+
+        [Fact]
+        public async void CreateForService()
+        {
+            using var star = new StarFactory("http://127.0.0.1:6600", "test", null);
+            await star.Service.RegisterAsync("testService", "http://localhost:1234", "tA,tagB,ttC");
+
+            var client = star.CreateForService("testService", "tagB") as ApiHttpClient;
+            Assert.NotNull(client);
+            Assert.True(client.RoundRobin);
+            Assert.Equal("http://localhost:1234/", client.Services.Join(",", e => e.Address));
         }
     }
 }

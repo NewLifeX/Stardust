@@ -61,7 +61,7 @@ namespace Microsoft.Extensions.DependencyInjection
                     if (address.IsNullOrEmpty())
                     {
                         if (feature != null)
-                            star.Dust.Register(serviceName, () => feature?.Addresses.Join(), tag);
+                            star.Service.Register(serviceName, () => feature?.Addresses.Join(), tag);
                         else
                             throw new Exception("尘埃客户端未能取得本地服务地址。");
 
@@ -69,13 +69,13 @@ namespace Microsoft.Extensions.DependencyInjection
                     }
                 }
 
-                star.Dust.Register(serviceName, address, tag);
+                star.Service.RegisterAsync(serviceName, address, tag).Wait();
             });
 
             // 停止的时候移除服务
             lifetime.ApplicationStopped.Register(() =>
             {
-                star.Dust.Unregister(serviceName);
+                star.Service.Unregister(serviceName);
             });
 
             return app;
