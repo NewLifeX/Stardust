@@ -36,14 +36,12 @@ namespace Stardust
 
         #region 构造
         /// <summary>指定地址、应用和密钥，创建工厂</summary>
-        /// <param name="server"></param>
-        /// <param name="appId"></param>
-        /// <param name="secret"></param>
+        /// <param name="server">服务端地址。为空时先后读取appsettings.json、本地StarAgent、star.config</param>
+        /// <param name="appId">应用标识。为空时读取star.config</param>
+        /// <param name="secret">应用密钥。为空时读取star.config</param>
         /// <returns></returns>
         public StarFactory(String server, String appId, String secret)
         {
-            if (appId.IsNullOrEmpty()) appId = AssemblyX.Entry.Name;
-
             Server = server;
             AppId = appId;
             Secret = secret;
@@ -128,6 +126,8 @@ namespace Stardust
             if (Server.IsNullOrEmpty()) Server = set.Server;
             if (AppId.IsNullOrEmpty()) AppId = set.AppKey;
             if (Secret.IsNullOrEmpty()) Secret = set.Secret;
+
+            if (AppId.IsNullOrEmpty()) AppId = AssemblyX.Entry.Name;
 
             XTrace.WriteLine("星尘分布式服务 Server={0} AppId={1}", Server, AppId);
         }
