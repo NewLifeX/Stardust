@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using NewLife;
 using NewLife.Configuration;
 using NewLife.Http;
+using NewLife.Log;
+using NewLife.Model;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Security;
@@ -64,6 +66,30 @@ namespace ClientTest
             Assert.NotNull(client);
             Assert.True(client.RoundRobin);
             Assert.Equal("http://localhost:1234/", client.Services.Join(",", e => e.Address));
+        }
+
+        [Fact]
+        public void IocTest()
+        {
+            using var star = new StarFactory("http://127.0.0.1:6600", "test", null);
+
+            var provider = ObjectContainer.Provider;
+
+            var factory = provider.GetRequiredService<StarFactory>();
+            Assert.NotNull(factory);
+            Assert.Equal(star, factory);
+
+            var tracer = provider.GetRequiredService<ITracer>();
+            Assert.NotNull(tracer);
+            Assert.Equal(star.Tracer, tracer);
+
+            var config = provider.GetRequiredService<IConfigProvider>();
+            Assert.NotNull(config);
+            Assert.Equal(star.Config, config);
+
+            var service = provider.GetRequiredService<DustClient>();
+            Assert.NotNull(service);
+            Assert.Equal(star.Service, service);
         }
     }
 }

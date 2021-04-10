@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using NewLife;
 using NewLife.Configuration;
 using NewLife.Http;
 using NewLife.Log;
+using NewLife.Model;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using Stardust.Models;
@@ -49,6 +49,12 @@ namespace Stardust
             Secret = secret;
 
             Init();
+
+            var ioc = ObjectContainer.Current;
+            ioc.AddSingleton(this);
+            ioc.AddSingleton(p => Tracer);
+            ioc.AddSingleton(p => Config);
+            ioc.AddSingleton(p => Service);
         }
 
         /// <summary>销毁</summary>
