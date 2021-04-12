@@ -530,7 +530,8 @@ namespace Stardust.Server.Controllers
 
         private String DecodeToken(String token, String tokenSecret)
         {
-            if (token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(token));
+            //if (token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(token));
+            if (token.IsNullOrEmpty()) throw new ApiException(402, "节点未登录");
 
             // 解码令牌
             var ss = tokenSecret.Split(':');

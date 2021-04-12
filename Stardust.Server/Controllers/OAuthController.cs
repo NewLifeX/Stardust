@@ -45,7 +45,7 @@ namespace Stardust.Server.Controllers
             {
                 var (app, ex) = _service.TryDecodeToken(model.refresh_token, set.TokenSecret);
 
-                if (ex == null)
+                if (ex != null)
                 {
                     app.WriteHistory("RefreshToken", false, ex.ToString(), UserHost);
                     throw ex;
