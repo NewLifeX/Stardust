@@ -188,6 +188,7 @@ namespace Stardust.Data.Nodes
             online.LocalTime = di.Time.ToLocalTime();
             online.MACs = di.Macs;
             //online.COMs = di.COMs;
+            online.IP = di.IP;
 
             if (di.AvailableMemory > 0) online.AvailableMemory = (Int32)(di.AvailableMemory / 1024 / 1024);
             if (di.AvailableFreeSpace > 0) online.AvailableFreeSpace = (Int32)(di.AvailableFreeSpace / 1024 / 1024);
@@ -221,6 +222,7 @@ namespace Stardust.Data.Nodes
             if (!inf.Processes.IsNullOrEmpty()) olt.Processes = inf.Processes;
             if (!inf.Macs.IsNullOrEmpty()) olt.MACs = inf.Macs;
             //if (!inf.COMs.IsNullOrEmpty()) olt.COMs = inf.COMs;
+            if (!inf.IP.IsNullOrEmpty()) olt.IP = inf.IP;
 
             // 插入节点数据
             var data = new NodeData

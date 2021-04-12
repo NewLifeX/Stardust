@@ -53,6 +53,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("Name", "名称", "", Master = true)]
         public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
+        private String _IP;
+        /// <summary>本地IP</summary>
+        [DisplayName("本地IP")]
+        [Description("本地IP")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("IP", "本地IP", "")]
+        public String IP { get => _IP; set { if (OnPropertyChanging("IP", value)) { _IP = value; OnPropertyChanged("IP"); } } }
+
         private String _Category;
         /// <summary>分类</summary>
         [DisplayName("分类")]
@@ -284,6 +292,7 @@ namespace Stardust.Data.Nodes
                     case "SessionID": return _SessionID;
                     case "NodeID": return _NodeID;
                     case "Name": return _Name;
+                    case "IP": return _IP;
                     case "Category": return _Category;
                     case "ProvinceID": return _ProvinceID;
                     case "CityID": return _CityID;
@@ -322,6 +331,7 @@ namespace Stardust.Data.Nodes
                     case "SessionID": _SessionID = Convert.ToString(value); break;
                     case "NodeID": _NodeID = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
+                    case "IP": _IP = Convert.ToString(value); break;
                     case "Category": _Category = Convert.ToString(value); break;
                     case "ProvinceID": _ProvinceID = value.ToInt(); break;
                     case "CityID": _CityID = value.ToInt(); break;
@@ -370,6 +380,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>名称</summary>
             public static readonly Field Name = FindByName("Name");
+
+            /// <summary>本地IP</summary>
+            public static readonly Field IP = FindByName("IP");
 
             /// <summary>分类</summary>
             public static readonly Field Category = FindByName("Category");
@@ -469,6 +482,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>名称</summary>
             public const String Name = "Name";
+
+            /// <summary>本地IP</summary>
+            public const String IP = "IP";
 
             /// <summary>分类</summary>
             public const String Category = "Category";

@@ -184,6 +184,7 @@ namespace Stardust
             //var ps = System.IO.Ports.SerialPort.GetPortNames();
             var mcs = NetHelper.GetMacs().Select(e => e.ToHex("-")).OrderBy(e => e).Join(",");
             var driveInfo = new DriveInfo(Path.GetPathRoot(".".GetFullPath()));
+            var ip = NetHelper.GetIPsWithCache().Where(ip => ip.IsIPv4() && !IPAddress.IsLoopback(ip) && ip.GetAddressBytes()[0] != 169).Join();
             var di = new NodeInfo
             {
                 Version = asm?.FileVersion,
@@ -194,7 +195,7 @@ namespace Stardust
 
                 MachineName = Environment.MachineName,
                 UserName = Environment.UserName,
-                IP = NetHelper.GetIPsWithCache().Where(ip => ip.IsIPv4() && !IPAddress.IsLoopback(ip) && ip.GetAddressBytes()[0] != 169).Join(),
+                IP = ip,
 
                 ProcessorCount = Environment.ProcessorCount,
                 Memory = mi.Memory,
@@ -308,6 +309,7 @@ namespace Stardust
 
             var mcs = NetHelper.GetMacs().Select(e => e.ToHex("-")).OrderBy(e => e).Join(",");
             var driveInfo = new DriveInfo(Path.GetPathRoot(".".GetFullPath()));
+            var ip = NetHelper.GetIPsWithCache().Where(ip => ip.IsIPv4() && !IPAddress.IsLoopback(ip) && ip.GetAddressBytes()[0] != 169).Join();
             var ext = new PingInfo
             {
                 AvailableMemory = mi.AvailableMemory,
@@ -323,6 +325,7 @@ namespace Stardust
 
                 Macs = mcs,
                 //COMs = ps.Join(","),
+                IP = ip,
 
                 Processes = pcs.Join(),
 

@@ -24,6 +24,7 @@
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Category"))">类别</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("NodeID"))">设备</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Name"))">名称</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("IP"))">本地IP</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("PingCount"))">心跳</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Version"))">版本</a></th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("CompileTime"))">编译时间</a></th>
@@ -63,6 +64,7 @@
                 <td class="text-center"><a href="?category=@entity.Category">@entity.Category</a></td>
                 <td class="text-center"><a href="Node?id=@entity.NodeID">@entity.NodeName</a></td>
                 <td>@entity.Name</td>
+                <td title="@entity.IP" style="max-width:200px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;">@entity.IP</td>
                 <td class="text-right">@entity.PingCount.ToString("n0")</td>
                 <td>@entity.Version</td>
                 <td class="text-center">@entity.CompileTime.ToFullString("")</td>

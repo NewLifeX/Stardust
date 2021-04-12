@@ -27,6 +27,9 @@ namespace Stardust.Models
         ///// <summary>串口</summary>
         //public String COMs { get; set; }
 
+        /// <summary>串口</summary>
+        public String IP { get; set; }
+
         /// <summary>进程列表</summary>
         public String Processes { get; set; }
 

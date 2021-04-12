@@ -382,6 +382,7 @@ namespace Stardust.Server.Controllers
             var olt = NodeOnline.GetOrAdd(sid);
             olt.NodeID = node.ID;
             olt.Name = node.Name;
+            olt.IP = node.IP;
             olt.Category = node.Category;
             olt.ProvinceID = node.ProvinceID;
             olt.CityID = node.CityID;

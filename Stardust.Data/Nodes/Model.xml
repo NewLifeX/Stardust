@@ -63,6 +63,7 @@
       <Column Name="SessionID" DataType="String" Description="会话" />
       <Column Name="NodeID" DataType="Int32" Description="节点" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
+      <Column Name="IP" DataType="String" Description="本地IP" />
       <Column Name="Category" DataType="String" Description="分类" />
       <Column Name="ProvinceID" DataType="Int32" Description="省份" />
       <Column Name="CityID" DataType="Int32" Description="城市" />
