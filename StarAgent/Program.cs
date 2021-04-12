@@ -129,11 +129,6 @@ namespace StarAgent
             client.Login().Wait();
             CheckUpgrade(client);
 
-            // 登录成功，销毁定时器
-            //TimerX.Current.Period = 0;
-            //_timer.TryDispose();
-            //_timer = null;
-
             _timer.TryDispose();
             _timer = new TimerX(CheckUpgrade, null, 600_000, 600_000) { Async = true };
         }

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NewLife;
+using NewLife.Caching;
 using NewLife.Cube.WebMiddleware;
 using NewLife.Log;
 using Stardust.Data;
@@ -40,6 +41,9 @@ namespace Stardust.Server
             DAL.ConnStrs.TryAdd("MonitorLog", "MapTo=Stardust");
             DAL.ConnStrs.TryAdd("Node", "MapTo=Stardust");
             DAL.ConnStrs.TryAdd("NodeLog", "MapTo=Stardust");
+
+            var cache = MemoryCache.Default;
+            services.AddSingleton(cache);
 
             var set = Stardust.Server.Setting.Current;
 

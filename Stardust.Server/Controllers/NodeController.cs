@@ -2,26 +2,57 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
-using NewLife.Log;
+using NewLife.Caching;
 using NewLife.Remoting;
 using NewLife.Security;
 using NewLife.Serialization;
+using NewLife.Web;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Common;
 using Stardust.Server.Services;
 using XCode;
+using IActionFilter = Microsoft.AspNetCore.Mvc.Filters.IActionFilter;
 
 namespace Stardust.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
     [ApiFilter]
-    public class NodeController : BaseController
+    public class NodeController : ControllerBase, IActionFilter
     {
+        /// <summary>用户主机</summary>
+        public String UserHost => HttpContext.GetUserHost();
+
+        /// <summary>节点引用，令牌无效时使用</summary>
+        protected Node _nodeForHistory;
+
+        private readonly ICache _cache;
+
+        public NodeController(ICache cache) => _cache = cache;
+
+        void IActionFilter.OnActionExecuting(ActionExecutingContext context) { }
+
+        /// <summary>请求处理后</summary>
+        /// <param name="context"></param>
+        public void OnActionExecuted(ActionExecutedContext context)
+        {
+            if (context.Exception != null)
+            {
+                // 拦截全局异常，写日志
+                var action = context.HttpContext.Request.Path + "";
+                if (context.ActionDescriptor is ControllerActionDescriptor act) action = $"{act.ControllerName}/{act.ActionName}";
+
+                WriteHistory(_nodeForHistory, action, false, context.Exception?.GetTrue() + "");
+            }
+        }
+
         #region 登录
         [HttpPost(nameof(Login))]
         public LoginResponse Login(LoginInfo inf)
@@ -34,8 +65,6 @@ namespace Stardust.Server.Controllers
             _nodeForHistory = node;
 
             // 校验唯一编码，防止客户端拷贝配置
-            if (node != null) node = CheckNode(node, di);
-
             var autoReg = false;
             if (node == null)
             {
@@ -44,6 +73,7 @@ namespace Stardust.Server.Controllers
             else
             {
                 if (!node.Enable) throw new ApiException(99, "禁止登录");
+                node = CheckNode(node, di);
 
                 // 登录密码未设置或者未提交，则执行动态注册
                 if (node.Secret.IsNullOrEmpty() || secret.IsNullOrEmpty())
@@ -54,42 +84,22 @@ namespace Stardust.Server.Controllers
 
             _nodeForHistory = node ?? throw new ApiException(12, "节点鉴权失败");
 
-            var msg = "";
-            var success = false;
-            try
-            {
-                node.Login(di, UserHost);
+            node.Login(di, UserHost);
 
-                // 设置令牌，可能已经进行用户登录
-                CreateToken(node.Code);
+            // 设置令牌
+            var tm = IssueToken(node.Code, Setting.Current);
 
-                if (Session != null) Session["Node"] = node;
+            // 在线记录
+            var olt = GetOnline(code, node) ?? CreateOnline(code, node, tm.AccessToken);
+            olt.Save(di, null, tm.AccessToken);
 
-                // 在线记录
-                var olt = GetOnline(code, node) ?? CreateOnline(code, node);
-                olt.Save(di, null, Token);
-
-                msg = $"[{node.Name}/{node.Code}]鉴权成功 ";
-
-                success = true;
-            }
-            catch (Exception ex)
-            {
-                msg = ex.GetTrue().Message + " ";
-                throw;
-            }
-            finally
-            {
-                // 登录历史
-                WriteHistory("节点鉴权", success, node, msg + di.ToJson(false, false, false));
-
-                XTrace.WriteLine("登录{0} {1}", success ? "成功" : "失败", msg);
-            }
+            // 登录历史
+            WriteHistory(node, "节点鉴权", true, $"[{node.Name}/{node.Code}]鉴权成功 " + di.ToJson(false, false, false));
 
             var rs = new LoginResponse
             {
                 Name = node.Name,
-                Token = Token,
+                Token = tm.AccessToken,
             };
 
             // 动态注册，下发节点证书
@@ -104,12 +114,14 @@ namespace Stardust.Server.Controllers
 
         /// <summary>注销</summary>
         /// <param name="reason">注销原因</param>
+        /// <param name="token">令牌</param>
         /// <returns></returns>
         [HttpGet(nameof(Logout))]
         [HttpPost(nameof(Logout))]
-        public LoginResponse Logout(String reason)
+        public LoginResponse Logout(String reason, String token)
         {
-            var node = Session["Node"] as Node;
+            var code = DecodeToken(token, Setting.Current.TokenSecret);
+            var node = Node.FindByCode(code);
             if (node != null)
             {
                 var olt = GetOnline(node.Code, node);
@@ -118,6 +130,9 @@ namespace Stardust.Server.Controllers
                     var msg = $"{reason} [{node}]]登录于{olt.CreateTime}，最后活跃于{olt.UpdateTime}";
                     WriteHistory(node, "节点下线", true, msg);
                     olt.Delete();
+
+                    var sid = $"{node.ID}@{UserHost}";
+                    _cache.Remove($"NodeOnline:{sid}");
 
                     // 计算在线时长
                     if (olt.CreateTime.Year > 2000)
@@ -130,14 +145,10 @@ namespace Stardust.Server.Controllers
                 }
             }
 
-            // 销毁会话，更新令牌
-            Session["Node"] = null;
-            CreateToken(null);
-
             return new LoginResponse
             {
                 Name = node?.Name,
-                Token = Token,
+                Token = null,
             };
         }
 
@@ -155,24 +166,24 @@ namespace Stardust.Server.Controllers
             var diskid = di.DiskID;
             if (!uuid.IsNullOrEmpty() && uuid != node.Uuid)
             {
-                WriteHistory("登录校验", false, node, $"唯一标识不符！{uuid}!={node.Uuid}");
+                WriteHistory(node, "登录校验", false, $"唯一标识不符！{uuid}!={node.Uuid}");
                 return null;
             }
             if (!guid.IsNullOrEmpty() && guid != node.MachineGuid)
             {
-                WriteHistory("登录校验", false, node, $"机器标识不符！{guid}!={node.MachineGuid}");
+                WriteHistory(node, "登录校验", false, $"机器标识不符！{guid}!={node.MachineGuid}");
                 return null;
             }
             if (!diskid.IsNullOrEmpty() && diskid != node.DiskID)
             {
-                WriteHistory("登录校验", false, node, $"磁盘序列号不符！{diskid}!={node.DiskID}");
+                WriteHistory(node, "登录校验", false, $"磁盘序列号不符！{diskid}!={node.DiskID}");
                 return null;
             }
 
             // 机器名
             if (di.MachineName != node.MachineName)
             {
-                WriteHistory("登录校验", false, node, $"机器名不符！{di.MachineName}!={node.MachineName}");
+                WriteHistory(node, "登录校验", false, $"机器名不符！{di.MachineName}!={node.MachineName}");
             }
 
             // 网卡地址
@@ -183,7 +194,7 @@ namespace Stardust.Server.Controllers
                 // 任意网卡匹配则通过
                 if (!nodems.Any(e => dims.Contains(e)))
                 {
-                    WriteHistory("登录校验", false, node, $"网卡地址不符！{di.Macs}!={node.MACs}");
+                    WriteHistory(node, "登录校验", false, $"网卡地址不符！{di.Macs}!={node.MACs}");
                 }
             }
 
@@ -198,8 +209,14 @@ namespace Stardust.Server.Controllers
             var di = inf.Node;
             if (node == null)
             {
+                var formula = set.NodeCodeFormula + "";
+
                 // 该硬件的所有节点信息
-                var list = Node.Search(di.UUID, di.MachineGuid, di.Macs);
+                //var list = Node.Search(di.UUID, di.MachineGuid, di.Macs);
+                IList<Node> list = null;
+                if ((list == null || list.Count == 0) && formula.Contains("{Macs}")) list = Node.Search(null, null, di.Macs);
+                if ((list == null || list.Count == 0) && formula.Contains("{UUID}")) list = Node.Search(di.UUID, null, null);
+                if ((list == null || list.Count == 0) && formula.Contains("{MachineGuid}")) list = Node.Search(null, di.MachineGuid, null);
 
                 // 当前节点信息，取较老者
                 list = list.OrderBy(e => e.ID).ToList();
@@ -237,7 +254,7 @@ namespace Stardust.Server.Controllers
             node.Save();
             autoReg = true;
 
-            WriteHistory("动态注册", true, node, inf.ToJson(false, false, false));
+            WriteHistory(node, "动态注册", true, inf.ToJson(false, false, false));
 
             return node;
         }
@@ -246,7 +263,7 @@ namespace Stardust.Server.Controllers
         {
             var set = Setting.Current;
             //var uid = $"{di.UUID}@{di.MachineGuid}@{di.Macs}";
-            var ss = set.NodeCodeFormula.Split(new[] { '(', ')' });
+            var ss = (set.NodeCodeFormula + "").Split(new[] { '(', ')' });
             if (ss.Length >= 2)
             {
                 var uid = ss[1];
@@ -277,10 +294,9 @@ namespace Stardust.Server.Controllers
         #endregion
 
         #region 心跳
-        [TokenFilter]
         //[HttpGet(nameof(Ping))]
         [HttpPost(nameof(Ping))]
-        public PingResponse Ping(PingInfo inf)
+        public PingResponse Ping(PingInfo inf, String token)
         {
             var rs = new PingResponse
             {
@@ -288,20 +304,21 @@ namespace Stardust.Server.Controllers
                 ServerTime = DateTime.UtcNow,
             };
 
-            if (Session["Node"] is Node node)
+            var code = DecodeToken(token, Setting.Current.TokenSecret);
+            var node = Node.FindByCode(code);
+            if (node != null)
             {
-                var code = node.Code;
                 node.FixArea();
                 node.SaveAsync();
 
                 rs.Period = node.Period;
 
-                var olt = GetOnline(code, node) ?? CreateOnline(code, node);
+                var olt = GetOnline(code, node) ?? CreateOnline(code, node, token);
                 olt.Name = node.Name;
                 olt.Category = node.Category;
                 olt.Version = node.Version;
                 olt.CompileTime = node.CompileTime;
-                olt.Save(null, inf, Token);
+                olt.Save(null, inf, token);
 
                 // 拉取命令
                 rs.Commands = AcquireCommands(node.ID);
@@ -363,22 +380,18 @@ namespace Stardust.Server.Controllers
         /// <returns></returns>
         protected virtual NodeOnline GetOnline(String code, Node node)
         {
-            var olt = Session["Online"] as NodeOnline;
+            var sid = $"{node.ID}@{UserHost}";
+            var olt = _cache.Get<NodeOnline>($"NodeOnline:{sid}");
             if (olt != null) return olt;
 
-            var ip = UserHost;
-            var port = HttpContext.Connection.RemotePort;
-            var sid = $"{node.ID}@{ip}:{port}";
             return NodeOnline.FindBySessionID(sid);
         }
 
         /// <summary>检查在线</summary>
         /// <returns></returns>
-        protected virtual NodeOnline CreateOnline(String code, Node node)
+        protected virtual NodeOnline CreateOnline(String code, Node node, String token)
         {
-            var ip = UserHost;
-            var port = HttpContext.Connection.RemotePort;
-            var sid = $"{node.ID}@{ip}:{port}";
+            var sid = $"{node.ID}@{UserHost}";
             var olt = NodeOnline.GetOrAdd(sid);
             olt.NodeID = node.ID;
             olt.Name = node.Name;
@@ -392,12 +405,12 @@ namespace Stardust.Server.Controllers
             olt.Memory = node.Memory;
             olt.MACs = node.MACs;
             //olt.COMs = node.COMs;
-            olt.Token = Token;
-            olt.CreateIP = ip;
+            olt.Token = token;
+            olt.CreateIP = UserHost;
 
             olt.Creator = Environment.MachineName;
 
-            Session["Online"] = olt;
+            _cache.Set($"NodeOnline:{sid}", olt, 600);
 
             return olt;
         }
@@ -408,9 +421,10 @@ namespace Stardust.Server.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpPost(nameof(Report))]
-        public async Task<Object> Report(Int32 id)
+        public async Task<Object> Report(Int32 id, String token)
         {
-            var node = Session["Node"] as Node;
+            var code = DecodeToken(token, Setting.Current.TokenSecret);
+            var node = Node.FindByCode(code);
             if (node == null) throw new ApiException(402, "节点未登录");
 
             var cmd = NodeCommand.FindByID(id);
@@ -457,23 +471,17 @@ namespace Stardust.Server.Controllers
 
             return file;
         }
-
-        protected virtual NodeHistory WriteHistory(String action, Boolean success, Node node, String remark = null)
-        {
-            var ip = UserHost;
-            return NodeHistory.Create(node, action, success, remark, Environment.MachineName, ip);
-        }
         #endregion
 
         #region 升级
         /// <summary>升级检查</summary>
         /// <param name="channel">更新通道</param>
         /// <returns></returns>
-        [TokenFilter]
         [HttpGet(nameof(Upgrade))]
-        public UpgradeInfo Upgrade(String channel)
+        public UpgradeInfo Upgrade(String channel, String token)
         {
-            var node = Session["Node"] as Node;
+            var code = DecodeToken(token, Setting.Current.TokenSecret);
+            var node = Node.FindByCode(code);
             if (node == null) throw new ApiException(402, "节点未登录");
 
             // 默认Release通道
@@ -488,7 +496,7 @@ namespace Stardust.Server.Controllers
             if (pv == null) return null;
             //if (pv == null) throw new ApiException(509, "没有升级规则");
 
-            WriteHistory("自动更新", true, node, $"channel={ch} => [{pv.ID}] {pv.Version} {pv.Source} {pv.Executor}");
+            WriteHistory(node, "自动更新", true, $"channel={ch} => [{pv.ID}] {pv.Version} {pv.Source} {pv.Executor}");
 
             return new UpgradeInfo
             {
@@ -499,6 +507,51 @@ namespace Stardust.Server.Controllers
                 Description = pv.Description,
             };
         }
+        #endregion
+
+        #region 辅助
+        private TokenModel IssueToken(String name, Setting set)
+        {
+            // 颁发令牌
+            var ss = set.TokenSecret.Split(':');
+            var jwt = new JwtBuilder
+            {
+                Issuer = Assembly.GetEntryAssembly().GetName().Name,
+                Subject = name,
+                Id = Rand.NextString(8),
+                Expire = DateTime.Now.AddSeconds(set.TokenExpire),
+
+                Algorithm = ss[0],
+                Secret = ss[1],
+            };
+
+            return new TokenModel
+            {
+                AccessToken = jwt.Encode(null),
+                TokenType = jwt.Type ?? "JWT",
+                ExpireIn = set.TokenExpire,
+                RefreshToken = jwt.Encode(null),
+            };
+        }
+
+        private String DecodeToken(String token, String tokenSecret)
+        {
+            if (token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(token));
+
+            // 解码令牌
+            var ss = tokenSecret.Split(':');
+            var jwt = new JwtBuilder
+            {
+                Algorithm = ss[0],
+                Secret = ss[1],
+            };
+
+            if (!jwt.TryDecode(token, out var message)) throw new ApiException(403, $"非法访问 {message}");
+
+            return jwt.Subject;
+        }
+
+        private void WriteHistory(Node node, String action, Boolean success, String remark) => NodeHistory.Create(node, action, success, remark, Environment.MachineName, UserHost);
         #endregion
     }
 }

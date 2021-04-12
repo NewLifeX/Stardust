@@ -35,6 +35,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Common\TokenFilter.cs" />
+    <Compile Remove="Common\TokenSession.cs" />
+    <Compile Remove="Controllers\BaseController.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="NewLife.Redis" Version="3.9.2021.407" />
     <PackageReference Include="NewLife.XCode" Version="10.1.2021.404" />
   </ItemGroup>
