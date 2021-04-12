@@ -96,5 +96,31 @@ namespace Stardust.Server.Services
 
             return app;
         }
+
+        /// <summary>解码令牌</summary>
+        /// <param name="token"></param>
+        /// <param name="tokenSecret"></param>
+        /// <returns></returns>
+        public (App, Exception) TryDecodeToken(String token, String tokenSecret)
+        {
+            if (token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(token));
+
+            // 解码令牌
+            var ss = tokenSecret.Split(':');
+            var jwt = new JwtBuilder
+            {
+                Algorithm = ss[0],
+                Secret = ss[1],
+            };
+
+            Exception ex = null;
+            if (!jwt.TryDecode(token, out var message)) ex = new ApiException(403, $"非法访问 {message}");
+
+            // 验证应用
+            var app = App.FindByName(jwt.Subject);
+            if ((app == null || !app.Enable) && ex == null) ex = new InvalidOperationException($"无效应用[{jwt.Subject}]");
+
+            return (app, ex);
+        }
     }
 }

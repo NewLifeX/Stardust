@@ -43,7 +43,13 @@ namespace Stardust.Server.Controllers
             // 刷新令牌
             else if (model.grant_type == "refresh_token")
             {
-                var app = _service.DecodeToken(model.refresh_token, set);
+                var (app, ex) = _service.TryDecodeToken(model.refresh_token, set.TokenSecret);
+
+                if (ex == null)
+                {
+                    app.WriteHistory("RefreshToken", false, ex.ToString(), UserHost);
+                    throw ex;
+                }
 
                 app.WriteHistory("RefreshToken", true, model.refresh_token, UserHost);
 
