@@ -209,14 +209,8 @@ namespace Stardust.Server.Controllers
             var di = inf.Node;
             if (node == null)
             {
-                var formula = set.NodeCodeFormula + "";
-
                 // 该硬件的所有节点信息
-                //var list = Node.Search(di.UUID, di.MachineGuid, di.Macs);
-                IList<Node> list = null;
-                if ((list == null || list.Count == 0) && formula.Contains("{Macs}")) list = Node.Search(null, null, di.Macs);
-                if ((list == null || list.Count == 0) && formula.Contains("{UUID}")) list = Node.Search(di.UUID, null, null);
-                if ((list == null || list.Count == 0) && formula.Contains("{MachineGuid}")) list = Node.Search(null, di.MachineGuid, null);
+                var list = Node.Search(di.UUID, di.MachineGuid, di.Macs);
 
                 // 当前节点信息，取较老者
                 list = list.OrderBy(e => e.ID).ToList();
