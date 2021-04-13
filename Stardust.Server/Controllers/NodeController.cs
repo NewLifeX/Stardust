@@ -90,7 +90,7 @@ namespace Stardust.Server.Controllers
             var tm = IssueToken(node.Code, Setting.Current);
 
             // 在线记录
-            var olt = GetOnline(code, node) ?? CreateOnline(code, node, tm.AccessToken);
+            var olt = GetOnline(node) ?? CreateOnline(node, tm.AccessToken);
             olt.Save(di, null, tm.AccessToken);
 
             // 登录历史
@@ -120,11 +120,10 @@ namespace Stardust.Server.Controllers
         [HttpPost(nameof(Logout))]
         public LoginResponse Logout(String reason, String token)
         {
-            var code = DecodeToken(token, Setting.Current.TokenSecret);
-            var node = Node.FindByCode(code);
+            var node = DecodeToken(token, Setting.Current.TokenSecret);
             if (node != null)
             {
-                var olt = GetOnline(node.Code, node);
+                var olt = GetOnline(node);
                 if (olt != null)
                 {
                     var msg = $"{reason} [{node}]]登录于{olt.CreateTime}，最后活跃于{olt.UpdateTime}";
@@ -298,8 +297,7 @@ namespace Stardust.Server.Controllers
                 ServerTime = DateTime.UtcNow,
             };
 
-            var code = DecodeToken(token, Setting.Current.TokenSecret);
-            var node = Node.FindByCode(code);
+            var node = DecodeToken(token, Setting.Current.TokenSecret);
             if (node != null)
             {
                 node.FixArea();
@@ -307,7 +305,7 @@ namespace Stardust.Server.Controllers
 
                 rs.Period = node.Period;
 
-                var olt = GetOnline(code, node) ?? CreateOnline(code, node, token);
+                var olt = GetOnline(node) ?? CreateOnline(node, token);
                 olt.Name = node.Name;
                 olt.Category = node.Category;
                 olt.Version = node.Version;
@@ -369,10 +367,9 @@ namespace Stardust.Server.Controllers
         }
 
         /// <summary></summary>
-        /// <param name="code"></param>
         /// <param name="node"></param>
         /// <returns></returns>
-        protected virtual NodeOnline GetOnline(String code, Node node)
+        protected virtual NodeOnline GetOnline(Node node)
         {
             var sid = $"{node.ID}@{UserHost}";
             var olt = _cache.Get<NodeOnline>($"NodeOnline:{sid}");
@@ -382,8 +379,9 @@ namespace Stardust.Server.Controllers
         }
 
         /// <summary>检查在线</summary>
+        /// <param name="node"></param>
         /// <returns></returns>
-        protected virtual NodeOnline CreateOnline(String code, Node node, String token)
+        protected virtual NodeOnline CreateOnline(Node node, String token)
         {
             var sid = $"{node.ID}@{UserHost}";
             var olt = NodeOnline.GetOrAdd(sid);
@@ -417,8 +415,7 @@ namespace Stardust.Server.Controllers
         [HttpPost(nameof(Report))]
         public async Task<Object> Report(Int32 id, String token)
         {
-            var code = DecodeToken(token, Setting.Current.TokenSecret);
-            var node = Node.FindByCode(code);
+            var node = DecodeToken(token, Setting.Current.TokenSecret);
             if (node == null) throw new ApiException(402, "节点未登录");
 
             var cmd = NodeCommand.FindByID(id);
@@ -474,8 +471,7 @@ namespace Stardust.Server.Controllers
         [HttpGet(nameof(Upgrade))]
         public UpgradeInfo Upgrade(String channel, String token)
         {
-            var code = DecodeToken(token, Setting.Current.TokenSecret);
-            var node = Node.FindByCode(code);
+            var node = DecodeToken(token, Setting.Current.TokenSecret);
             if (node == null) throw new ApiException(402, "节点未登录");
 
             // 默认Release通道
@@ -528,7 +524,7 @@ namespace Stardust.Server.Controllers
             };
         }
 
-        private String DecodeToken(String token, String tokenSecret)
+        private Node DecodeToken(String token, String tokenSecret)
         {
             //if (token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(token));
             if (token.IsNullOrEmpty()) throw new ApiException(402, "节点未登录");
@@ -541,9 +537,12 @@ namespace Stardust.Server.Controllers
                 Secret = ss[1],
             };
 
-            if (!jwt.TryDecode(token, out var message)) throw new ApiException(403, $"非法访问 {message}");
+            var rs = jwt.TryDecode(token, out var message);
+            var node = Node.FindByCode(jwt.Subject);
+            _nodeForHistory = node;
+            if (!rs) throw new ApiException(403, $"非法访问 {message}");
 
-            return jwt.Subject;
+            return node;
         }
 
         private void WriteHistory(Node node, String action, Boolean success, String remark) => NodeHistory.Create(node, action, success, remark, Environment.MachineName, UserHost);
