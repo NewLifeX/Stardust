@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using NewLife;
 using NewLife.Log;
 
-namespace NewLife.Cube.WebMiddleware
+namespace Stardust.Server.Middlewares
 {
     /// <summary>性能追踪中间件</summary>
     public class TracerMiddleware

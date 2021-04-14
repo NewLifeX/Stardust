@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using System.Threading.Tasks;
@@ -10,10 +11,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NewLife;
 using NewLife.Caching;
-using NewLife.Cube.WebMiddleware;
 using NewLife.Log;
 using Stardust.Data;
 using Stardust.Server.Common;
+using Stardust.Server.Middlewares;
 using Stardust.Server.Services;
 using XCode.DataAccessLayer;
 
@@ -100,8 +101,13 @@ namespace Stardust.Server
 
             app.UseCors("star_cors");
 
-            //app.UseHttpsRedirection();
             app.UseMiddleware<TracerMiddleware>();
+
+            app.UseWebSockets(new WebSocketOptions()
+            {
+                KeepAliveInterval = TimeSpan.FromSeconds(120),
+            });
+            app.UseMiddleware<NodeSocketMiddleware>();
 
             app.UseRouting();
 
