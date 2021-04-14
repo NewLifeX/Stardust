@@ -31,7 +31,7 @@ namespace Stardust.Server.Controllers.Tests
 
             var response = await client.GetAsync<HttpResponseMessage>("api", new { state });
             response.EnsureSuccessStatusCode();
-            Assert.Equal("application/json; charset=utf-8", response.Content.Headers.ContentType + "");
+            Assert.Equal("application/json", response.Content.Headers.ContentType + "");
 
             var rs = await client.GetAsync<IDictionary<String, Object>>("api", new { state });
             Assert.Null(rs["state"]);

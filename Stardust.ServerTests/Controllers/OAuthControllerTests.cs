@@ -30,7 +30,7 @@ namespace Stardust.Server.Controllers.Tests
 
             var client = _server.CreateClient();
 
-            var rs = await client.GetAsync<TokenModel>("oauth/token", model);
+            var rs = await client.PostAsync<TokenModel>("oauth/token", model);
             Assert.NotNull(rs);
             Assert.NotEmpty(rs.AccessToken);
             Assert.NotEmpty(rs.RefreshToken);
@@ -47,11 +47,11 @@ namespace Stardust.Server.Controllers.Tests
             {
                 var model = new TokenInModel
                 {
-                    grant_type = "refresh_token",
+                    grant_type = "password",
                     UserName = "stone",
                 };
 
-                var rs = await client.GetAsync<TokenModel>("oauth/token", model);
+                var rs = await client.PostAsync<TokenModel>("oauth/token", model);
                 Assert.NotNull(rs);
                 Assert.NotEmpty(rs.RefreshToken);
 
@@ -66,7 +66,7 @@ namespace Stardust.Server.Controllers.Tests
                     refresh_token = refresh_token,
                 };
 
-                var rs2 = await client.GetAsync<TokenModel>("oauth/token", model2);
+                var rs2 = await client.PostAsync<TokenModel>("oauth/token", model2);
                 Assert.NotNull(rs2);
                 Assert.NotEmpty(rs2.AccessToken);
                 Assert.NotEmpty(rs2.RefreshToken);
