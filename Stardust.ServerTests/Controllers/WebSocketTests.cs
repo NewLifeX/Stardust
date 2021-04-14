@@ -5,7 +5,11 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using NewLife;
+using NewLife.Log;
+using NewLife.Remoting;
 using NewLife.Security;
+using NewLife.Serialization;
+using Stardust.Models;
 using Xunit;
 
 namespace Stardust.Server.Controllers.Tests
@@ -46,6 +50,35 @@ namespace Stardust.Server.Controllers.Tests
                 var rs = buf.ToStr(null, 0, data.Count);
 
                 Assert.Equal("got " + str, rs);
+            }
+        }
+
+        [Fact]
+        public async Task WebSocketClient2()
+        {
+            var http = _server.CreateClient();
+            var rs = await http.PostAsync<LoginResponse>("node/login", new
+            {
+                code = "",
+                node = new
+                {
+                    MachineName = "test",
+                    macs = "xxyyzz"
+                }
+            });
+            XTrace.WriteLine(rs.ToJson());
+
+            var client = _server.CreateWebSocketClient();
+            client.ConfigureRequest = q => { q.Headers.Add("Authorization", "Bearer " + rs.Token); };
+            var socket = await client.ConnectAsync(new Uri("http://localhost:6600/node_ws"), default);
+
+            for (var i = 0; i < 3; i++)
+            {
+                var buf = new Byte[1024];
+                var data = await socket.ReceiveAsync(buf, default);
+                var rs2 = buf.ToStr(null, 0, data.Count);
+
+                Assert.Equal(rs.Code + "-" + (i + 1), rs2);
             }
         }
     }
