@@ -107,7 +107,7 @@ namespace Stardust.Server
             {
                 KeepAliveInterval = TimeSpan.FromSeconds(60),
             });
-            app.UseMiddleware<NodeSocketMiddleware>();
+            //app.UseMiddleware<NodeSocketMiddleware>();
 
             app.UseRouting();
 

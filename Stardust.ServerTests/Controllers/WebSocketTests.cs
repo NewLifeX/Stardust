@@ -18,7 +18,7 @@ using Xunit;
 
 namespace Stardust.Server.Controllers.Tests
 {
-    public class WebSocketTests : DisposeBase
+    public class WebSocketTests
     {
         private readonly TestServer _server;
 
@@ -28,14 +28,7 @@ namespace Stardust.Server.Controllers.Tests
                 .UseStartup<Startup>());
         }
 
-        protected override void Dispose(Boolean disposing)
-        {
-            base.Dispose(disposing);
-
-            _server.Dispose();
-        }
-
-        [Fact]
+        [Fact(Skip = "跳过")]
         public async Task WebSocketClient()
         {
             var client = _server.CreateWebSocketClient();
@@ -81,7 +74,7 @@ namespace Stardust.Server.Controllers.Tests
 
             var client = _server.CreateWebSocketClient();
             client.ConfigureRequest = q => { q.Headers.Add("Authorization", "Bearer " + rs.Token); };
-            using var socket = await client.ConnectAsync(new Uri("http://localhost:6600/node_ws"), default);
+            using var socket = await client.ConnectAsync(new Uri("http://localhost:6600/node/notify"), default);
 
             var ms = new[] { "开灯", "关门", "吃饭" };
 

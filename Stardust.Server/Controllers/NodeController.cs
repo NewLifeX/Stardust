@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Caching;
+using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Security;
 using NewLife.Serialization;
@@ -496,6 +499,61 @@ namespace Stardust.Server.Controllers
                 Force = pv.Force,
                 Description = pv.Description,
             };
+        }
+        #endregion
+
+        #region 下行通知
+        /// <summary>下行通知</summary>
+        /// <returns></returns>
+        [HttpGet("/node/notify")]
+        public async Task Notify()
+        {
+            if (HttpContext.WebSockets.IsWebSocketRequest)
+            {
+                var token = (HttpContext.Request.Headers["Authorization"] + "").TrimStart("Bearer ");
+                var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+                var source = new CancellationTokenSource();
+                try
+                {
+                    await Handle(webSocket, token, source.Token);
+                }
+                catch (Exception ex)
+                {
+                    source.Cancel();
+                    await webSocket.CloseAsync(WebSocketCloseStatus.InternalServerError, ex.Message, default);
+                }
+            }
+            else
+            {
+                HttpContext.Response.StatusCode = 400;
+            }
+        }
+
+        private async Task Handle(WebSocket websocket, String token, CancellationToken cancellationToken)
+        {
+            var node = DecodeToken(token, Setting.Current.TokenSecret);
+            if (node == null) throw new InvalidOperationException("未登录！");
+
+            XTrace.WriteLine("websocket连接/node_ws {0}", node);
+
+            var queue = _cache.GetQueue<String>($"cmd:{node.Code}");
+            while (!cancellationToken.IsCancellationRequested && websocket.State == WebSocketState.Open)
+            {
+                var msg = await queue.TakeOneAsync(10_000);
+                if (msg != null)
+                {
+                    await websocket.SendAsync(msg.GetBytes(), WebSocketMessageType.Text, true, cancellationToken);
+                }
+                else
+                {
+                    // 后续MemoryQueue升级到异步阻塞版以后，这里可以缩小
+                    await Task.Delay(1_000);
+                }
+            }
+
+            XTrace.WriteLine("websocket关闭/node_ws {0}", node);
+
+            await websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", cancellationToken);
         }
         #endregion
 
