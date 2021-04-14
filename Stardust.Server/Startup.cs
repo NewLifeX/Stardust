@@ -105,7 +105,7 @@ namespace Stardust.Server
 
             app.UseWebSockets(new WebSocketOptions()
             {
-                KeepAliveInterval = TimeSpan.FromSeconds(120),
+                KeepAliveInterval = TimeSpan.FromSeconds(60),
             });
             app.UseMiddleware<NodeSocketMiddleware>();
 

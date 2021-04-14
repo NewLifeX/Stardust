@@ -1,20 +1,24 @@
 ﻿using System;
 using System.Net.WebSockets;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using NewLife;
+using NewLife.Caching;
 using NewLife.Log;
+using NewLife.Model;
 using NewLife.Remoting;
 using NewLife.Security;
 using NewLife.Serialization;
+using NewLife.Threading;
 using Stardust.Models;
 using Xunit;
 
 namespace Stardust.Server.Controllers.Tests
 {
-    public class WebSocketTests
+    public class WebSocketTests : DisposeBase
     {
         private readonly TestServer _server;
 
@@ -24,11 +28,18 @@ namespace Stardust.Server.Controllers.Tests
                 .UseStartup<Startup>());
         }
 
+        protected override void Dispose(Boolean disposing)
+        {
+            base.Dispose(disposing);
+
+            _server.Dispose();
+        }
+
         [Fact]
         public async Task WebSocketClient()
         {
             var client = _server.CreateWebSocketClient();
-            var socket = await client.ConnectAsync(new Uri("http://localhost:6600/node_ws"), default);
+            var socket = await client.ConnectAsync(new Uri("http://localhost:6600/test_ws"), default);
 
             {
                 var str = "hello Stone";
@@ -70,16 +81,38 @@ namespace Stardust.Server.Controllers.Tests
 
             var client = _server.CreateWebSocketClient();
             client.ConfigureRequest = q => { q.Headers.Add("Authorization", "Bearer " + rs.Token); };
-            var socket = await client.ConnectAsync(new Uri("http://localhost:6600/node_ws"), default);
+            using var socket = await client.ConnectAsync(new Uri("http://localhost:6600/node_ws"), default);
+
+            var ms = new[] { "开灯", "关门", "吃饭" };
+
+            // 模拟推送指令到队列
+            ThreadPoolX.QueueUserWorkItem(() =>
+            {
+                var cache = _server.Services.GetRequiredService<ICache>();
+                var queue = cache.GetQueue<String>($"cmd:{rs.Code}");
+                for (var j = 0; j < 3; j++)
+                {
+                    Thread.Sleep(500);
+
+                    var msg = $"{ms[j]}";
+                    XTrace.WriteLine("Add Command: {0}", msg);
+                    queue.Add(msg);
+                }
+            });
 
             for (var i = 0; i < 3; i++)
             {
                 var buf = new Byte[1024];
                 var data = await socket.ReceiveAsync(buf, default);
-                var rs2 = buf.ToStr(null, 0, data.Count);
+                var cmd = buf.ToStr(null, 0, data.Count);
 
-                Assert.Equal(rs.Code + "-" + (i + 1), rs2);
+                XTrace.WriteLine("Got Command: {0}", cmd);
+
+                Assert.Equal($"{ms[i]}", cmd);
             }
+
+            //await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "end", default);
+            socket.Dispose();
         }
     }
 }
