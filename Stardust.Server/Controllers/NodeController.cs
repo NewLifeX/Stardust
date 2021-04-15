@@ -27,7 +27,6 @@ namespace Stardust.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [ApiFilter]
     public class NodeController : ControllerBase, IActionFilter
     {
         /// <summary>用户主机</summary>
@@ -57,6 +56,7 @@ namespace Stardust.Server.Controllers
         }
 
         #region 登录
+        [ApiFilter]
         [HttpPost(nameof(Login))]
         public LoginResponse Login(LoginInfo inf)
         {
@@ -119,6 +119,7 @@ namespace Stardust.Server.Controllers
         /// <param name="reason">注销原因</param>
         /// <param name="token">令牌</param>
         /// <returns></returns>
+        [ApiFilter]
         [HttpGet(nameof(Logout))]
         [HttpPost(nameof(Logout))]
         public LoginResponse Logout(String reason, String token)
@@ -290,7 +291,7 @@ namespace Stardust.Server.Controllers
         #endregion
 
         #region 心跳
-        //[HttpGet(nameof(Ping))]
+        [ApiFilter]
         [HttpPost(nameof(Ping))]
         public PingResponse Ping(PingInfo inf, String token)
         {
@@ -358,7 +359,7 @@ namespace Stardust.Server.Controllers
             return rs;
         }
 
-        //[TokenFilter]
+        [ApiFilter]
         [HttpGet(nameof(Ping))]
         public PingResponse Ping()
         {
@@ -415,6 +416,7 @@ namespace Stardust.Server.Controllers
         /// <summary>上报数据，针对命令</summary>
         /// <param name="id"></param>
         /// <returns></returns>
+        [ApiFilter]
         [HttpPost(nameof(Report))]
         public async Task<Object> Report(Int32 id, String token)
         {
@@ -471,6 +473,7 @@ namespace Stardust.Server.Controllers
         /// <summary>升级检查</summary>
         /// <param name="channel">更新通道</param>
         /// <returns></returns>
+        [ApiFilter]
         [HttpGet(nameof(Upgrade))]
         public UpgradeInfo Upgrade(String channel, String token)
         {
@@ -511,17 +514,9 @@ namespace Stardust.Server.Controllers
             if (HttpContext.WebSockets.IsWebSocketRequest)
             {
                 var token = (HttpContext.Request.Headers["Authorization"] + "").TrimStart("Bearer ");
-                var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-                var source = new CancellationTokenSource();
-                try
-                {
-                    await Handle(webSocket, token, source.Token);
-                }
-                catch (Exception ex)
-                {
-                    source.Cancel();
-                    await webSocket.CloseAsync(WebSocketCloseStatus.InternalServerError, ex.Message, default);
-                }
+                using var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+
+                await Handle(socket, token);
             }
             else
             {
@@ -529,33 +524,62 @@ namespace Stardust.Server.Controllers
             }
         }
 
-        private async Task Handle(WebSocket websocket, String token, CancellationToken cancellationToken)
+        private async Task Handle(WebSocket socket, String token)
         {
             var node = DecodeToken(token, Setting.Current.TokenSecret);
             if (node == null) throw new InvalidOperationException("未登录！");
 
-            XTrace.WriteLine("websocket连接/node_ws {0}", node);
-            WriteHistory(node, "WebSocket连接", true, websocket + "");
+            XTrace.WriteLine("WebSocket连接 {0}", node);
+            WriteHistory(node, "WebSocket连接", true, socket.State + "");
 
+            var source = new CancellationTokenSource();
+            _ = Task.Run(() => consumeMessage(socket, node, source.Token));
+            try
+            {
+                var buf = new Byte[4 * 1024];
+                while (socket.State == WebSocketState.Open)
+                {
+                    var data = await socket.ReceiveAsync(new ArraySegment<Byte>(buf), default);
+                    if (data.MessageType == WebSocketMessageType.Close) break;
+                    if (data.MessageType == WebSocketMessageType.Text)
+                    {
+                        var str = buf.ToStr(null, 0, data.Count);
+                        XTrace.WriteLine("WebSocket接收 {0} {1}", node, str);
+                        WriteHistory(node, "WebSocket接收", true, str);
+                    }
+                }
+
+                source.Cancel();
+                XTrace.WriteLine("WebSocket断开 {0}", node);
+                WriteHistory(node, "WebSocket断开", true, socket.State + "");
+
+                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
+            }
+            finally
+            {
+                source.Cancel();
+            }
+        }
+
+        private async Task consumeMessage(WebSocket socket, Node node, CancellationToken cancellationToken)
+        {
             var queue = _cache.GetQueue<String>($"cmd:{node.Code}");
-            while (!cancellationToken.IsCancellationRequested && websocket.State == WebSocketState.Open)
+            while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
             {
                 var msg = await queue.TakeOneAsync(10_000);
                 if (msg != null)
                 {
-                    await websocket.SendAsync(msg.GetBytes(), WebSocketMessageType.Text, true, cancellationToken);
+                    XTrace.WriteLine("WebSocket发送 {0} {1}", node, msg);
+                    WriteHistory(node, "WebSocket发送", true, msg);
+
+                    await socket.SendAsync(msg.GetBytes(), WebSocketMessageType.Text, true, cancellationToken);
                 }
                 else
                 {
                     // 后续MemoryQueue升级到异步阻塞版以后，这里可以缩小
-                    await Task.Delay(1_000);
+                    await Task.Delay(1_000, cancellationToken);
                 }
             }
-
-            XTrace.WriteLine("websocket关闭/node_ws {0}", node);
-            WriteHistory(node, "WebSocket断开", true, websocket + "");
-
-            await websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", cancellationToken);
         }
         #endregion
 

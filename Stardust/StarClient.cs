@@ -436,6 +436,7 @@ namespace Stardust
             _timer.TryDispose();
             _timer = null;
 
+            if (_websocket.State == WebSocketState.Open) _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default).Wait();
             _source.Cancel();
 
             //_websocket.TryDispose();
