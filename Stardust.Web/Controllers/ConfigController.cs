@@ -2,11 +2,13 @@
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
+using NewLife.Remoting;
 using Stardust.Data;
 using Stardust.Data.Configs;
 using Stardust.Models;
 using Stardust.Server.Common;
 using Stardust.Server.Services;
+using XCode.Membership;
 
 namespace Stardust.Web.Controllers
 {
@@ -22,6 +24,7 @@ namespace Stardust.Web.Controllers
         public ConfigInfo GetAll(String appId, String secret, String scope, Int32 version)
         {
             if (appId.IsNullOrEmpty()) throw new ArgumentNullException(nameof(appId));
+            if (ManageProvider.User == null) throw new ApiException(403, "未登录！");
 
             // 验证
             var app = Valid(appId, secret);
