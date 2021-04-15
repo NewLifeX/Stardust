@@ -93,6 +93,7 @@ namespace Stardust.Server.Controllers.Tests
                 }
             });
 
+            // 客户端接收服务端推送的指令
             for (var i = 0; i < 3; i++)
             {
                 var buf = new Byte[1024];

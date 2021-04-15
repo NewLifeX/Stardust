@@ -535,6 +535,7 @@ namespace Stardust.Server.Controllers
             if (node == null) throw new InvalidOperationException("未登录！");
 
             XTrace.WriteLine("websocket连接/node_ws {0}", node);
+            WriteHistory(node, "WebSocket连接", true, websocket + "");
 
             var queue = _cache.GetQueue<String>($"cmd:{node.Code}");
             while (!cancellationToken.IsCancellationRequested && websocket.State == WebSocketState.Open)
@@ -552,6 +553,7 @@ namespace Stardust.Server.Controllers
             }
 
             XTrace.WriteLine("websocket关闭/node_ws {0}", node);
+            WriteHistory(node, "WebSocket断开", true, websocket + "");
 
             await websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", cancellationToken);
         }
