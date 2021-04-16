@@ -13,7 +13,12 @@ namespace Stardust.Server.Services
         private TimerX _timer;
         private readonly ITracer _tracer;
 
-        public ConfigService(ITracer tracer) => _tracer = tracer;
+        public ConfigService(ITracer tracer)
+        {
+            _tracer = tracer;
+
+            StartTimer();
+        }
 
         /// <summary>为应用解析指定键的值，处理内嵌</summary>
         /// <param name="app"></param>

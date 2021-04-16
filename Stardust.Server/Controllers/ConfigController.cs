@@ -35,9 +35,6 @@ namespace Stardust.Server.Controllers
             var app = Valid(appId, secret, token);
             var ip = HttpContext.GetUserHost();
 
-            // 获取可用版本，激活定时
-            app.GetValidVersion();
-
             // 版本没有变化时，不做计算处理，不返回配置数据
             if (version > 0 && version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
 
@@ -67,9 +64,6 @@ namespace Stardust.Server.Controllers
             // 验证
             var app = Valid(model.AppId, model.Secret, token);
             var ip = HttpContext.GetUserHost();
-
-            // 获取可用版本，激活定时
-            app.GetValidVersion();
 
             // 使用键和缺失键
             if (!model.UsedKeys.IsNullOrEmpty()) app.UsedKeys = model.UsedKeys;

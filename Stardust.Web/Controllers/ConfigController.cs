@@ -30,9 +30,6 @@ namespace Stardust.Web.Controllers
             var app = Valid(appId, secret);
             var ip = HttpContext.GetUserHost();
 
-            // 获取可用版本，激活定时
-            app.GetValidVersion();
-
             // 版本没有变化时，不做计算处理，不返回配置数据
             if (version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
 
