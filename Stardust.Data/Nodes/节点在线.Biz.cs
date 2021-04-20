@@ -236,6 +236,8 @@ namespace Stardust.Data.Nodes
                 CpuRate = inf.CpuRate,
                 Temperature = inf.Temperature,
                 Battery = inf.Battery,
+                UplinkSpeed = (Int64)inf.UplinkSpeed,
+                DownlinkSpeed = (Int64)inf.DownlinkSpeed,
                 ProcessCount = inf.ProcessCount,
                 TcpConnections = inf.TcpConnections,
                 TcpTimeWait = inf.TcpTimeWait,

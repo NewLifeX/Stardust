@@ -63,6 +63,10 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                     series.Name = "已用内存";
                     series = chart.Add(list2, _.AvailableFreeSpace, "line", e => node.TotalSize == 0 ? 0 : (100 - (e.AvailableFreeSpace * 100 / node.TotalSize)));
                     series.Name = "已用磁盘";
+                    series = chart.Add(list2, _.UplinkSpeed, "line", e => e.UplinkSpeed / 10000);
+                    series.Name = "网络上行";
+                    series = chart.Add(list2, _.DownlinkSpeed, "line", e => e.DownlinkSpeed / 10000);
+                    series.Name = "网络下行";
 
                     chart.Add(list2, _.TcpConnections);
                     chart.Add(list2, _.TcpTimeWait);

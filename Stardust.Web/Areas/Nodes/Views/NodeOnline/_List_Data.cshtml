@@ -25,6 +25,7 @@
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("NodeID"))">设备</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Name"))">名称</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("IP"))">本地IP</a></th>
+            <th class="text-center">数据</th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("PingCount"))">心跳</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Version"))">版本</a></th>
             <th class="text-center" title="内存。单位M"><a href="@Html.Raw(page.GetSortUrl("Memory"))">内存</a></th>
@@ -42,7 +43,6 @@
             <th class="text-center" title="延迟。网络延迟，单位ms"><a href="@Html.Raw(page.GetSortUrl("Delay"))">延迟</a></th>
             <th class="text-center" title="偏移。客户端时间减服务端时间，单位s"><a href="@Html.Raw(page.GetSortUrl("Offset"))">偏移</a></th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("LocalTime"))">本地时间</a></th>
-            <th class="text-center">数据</th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Creator"))">创建者</a></th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("CreateTime"))">创建时间</a></th>
             <th class="text-center" title="创建者。服务器节点"><a href="@Html.Raw(page.GetSortUrl("CreateIP"))">创建地址</a></th>
@@ -66,6 +66,7 @@
                 <td class="text-center"><a href="Node?id=@entity.NodeID">@entity.NodeName</a></td>
                 <td>@entity.Name</td>
                 <td title="@entity.IP" style="max-width:200px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;">@entity.IP</td>
+                <td><a href="NodeData?nodeId=@entity.NodeID">数据</a></td>
                 <td class="text-right">@entity.PingCount.ToString("n0")</td>
                 <td title="@entity.CompileTime.ToFullString("")">@entity.Version</td>
                 <td class="text-right">@entity.Memory.ToString("n0")</td>
@@ -83,7 +84,6 @@
                 <td class="text-right">@entity.Delay.ToString("n0")</td>
                 <td class="text-right">@entity.Offset.ToString("n0")</td>
                 <td class="text-center">@entity.LocalTime.ToFullString("")</td>
-                <td><a href="NodeData?nodeId=@entity.NodeID">数据</a></td>
                 <td class="text-center">@entity.Creator</td>
                 <td class="text-center">@entity.CreateTime.ToFullString("")</td>
                 <td class="text-center" title="@entity.CreateIP.IPToAddress()">@entity.CreateIP</td>
