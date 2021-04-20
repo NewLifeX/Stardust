@@ -79,7 +79,7 @@ namespace Stardust.Server.Controllers
                 node = CheckNode(node, di);
 
                 // 登录密码未设置或者未提交，则执行动态注册
-                if (node.Secret.IsNullOrEmpty() || secret.IsNullOrEmpty())
+                if (node == null || node.Secret.IsNullOrEmpty() || secret.IsNullOrEmpty())
                     node = AutoRegister(node, inf, out autoReg);
                 else if (node.Secret.MD5() != secret)
                     node = AutoRegister(node, inf, out autoReg);
