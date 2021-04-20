@@ -180,7 +180,8 @@
       <Column Name="Expire" DataType="DateTime" Description="过期时间。未指定时表示不限制" />
       <Column Name="Finished" DataType="Boolean" Description="完成。客户端是否已执行" />
       <Column Name="Result" DataType="String" Length="500" Description="结果" />
-      <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
+      <Column Name="CreateUser" DataType="String" Description="创建者" />
+      <Column Name="CreateUserID" DataType="Int32" Description="创建人" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
       <Column Name="UpdateUserID" DataType="Int32" Description="更新者" />

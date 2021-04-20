@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
@@ -17,10 +18,12 @@ namespace Stardust.Web.Areas.Nodes.Controllers
     [NodesArea]
     public class NodeController : EntityController<Node>
     {
+        private readonly StarFactory _starFactory;
+
         static NodeController()
         {
             MenuOrder = 90;
-        
+
             //{
             //    var df = ListFields.AddDataField("Log", "UpdateTime");
             //    df.DisplayName = "修改日志";
@@ -28,6 +31,8 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             //    df.Url = "/Admin/Log?category=节点&linkId={Id}";
             //}
         }
+
+        public NodeController(StarFactory starFactory) => _starFactory = starFactory;
 
         protected override IEnumerable<Node> Search(Pager p)
         {
@@ -75,13 +80,16 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             }).ToArray());
         }
 
-        public ActionResult Trace(Int32 id)
+        public async Task<ActionResult> Trace(Int32 id)
         {
             var node = Node.FindByID(id);
             if (node != null)
             {
-                NodeCommand.Add(node, "截屏");
-                NodeCommand.Add(node, "抓日志");
+                //NodeCommand.Add(node, "截屏");
+                //NodeCommand.Add(node, "抓日志");
+
+                await _starFactory.SendNodeCommand(node.Code, "截屏");
+                await _starFactory.SendNodeCommand(node.Code, "抓日志");
             }
 
             return RedirectToAction("Index");

@@ -76,12 +76,20 @@ namespace Stardust.Data.Nodes
         [BindColumn("Result", "结果", "")]
         public String Result { get => _Result; set { if (OnPropertyChanging("Result", value)) { _Result = value; OnPropertyChanged("Result"); } } }
 
-        private Int32 _CreateUserID;
+        private String _CreateUser;
         /// <summary>创建者</summary>
         [DisplayName("创建者")]
         [Description("创建者")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("CreateUser", "创建者", "")]
+        public String CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
+
+        private Int32 _CreateUserID;
+        /// <summary>创建人</summary>
+        [DisplayName("创建人")]
+        [Description("创建人")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("CreateUserID", "创建者", "")]
+        [BindColumn("CreateUserID", "创建人", "")]
         public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
 
         private DateTime _CreateTime;
@@ -142,6 +150,7 @@ namespace Stardust.Data.Nodes
                     case "Expire": return _Expire;
                     case "Finished": return _Finished;
                     case "Result": return _Result;
+                    case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -162,6 +171,7 @@ namespace Stardust.Data.Nodes
                     case "Expire": _Expire = value.ToDateTime(); break;
                     case "Finished": _Finished = value.ToBoolean(); break;
                     case "Result": _Result = Convert.ToString(value); break;
+                    case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -200,6 +210,9 @@ namespace Stardust.Data.Nodes
             public static readonly Field Result = FindByName("Result");
 
             /// <summary>创建者</summary>
+            public static readonly Field CreateUser = FindByName("CreateUser");
+
+            /// <summary>创建人</summary>
             public static readonly Field CreateUserID = FindByName("CreateUserID");
 
             /// <summary>创建时间</summary>
@@ -245,6 +258,9 @@ namespace Stardust.Data.Nodes
             public const String Result = "Result";
 
             /// <summary>创建者</summary>
+            public const String CreateUser = "CreateUser";
+
+            /// <summary>创建人</summary>
             public const String CreateUserID = "CreateUserID";
 
             /// <summary>创建时间</summary>

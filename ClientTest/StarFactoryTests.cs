@@ -59,7 +59,7 @@ namespace ClientTest
         [Fact]
         public async void CreateForService()
         {
-            using var star = new StarFactory("http://127.0.0.1:6600", "test", null);
+            using var star = new StarFactory("http://127.0.0.1:6600", "test", "xxx");
             await star.Service.RegisterAsync("testService", "http://localhost:1234", "tA,tagB,ttC");
 
             var client = star.CreateForService("testService", "tagB") as ApiHttpClient;
@@ -90,6 +90,15 @@ namespace ClientTest
             var service = provider.GetRequiredService<DustClient>();
             Assert.NotNull(service);
             Assert.Equal(star.Service, service);
+        }
+
+        [Fact]
+        public async void SendNodeCommand()
+        {
+            using var star = new StarFactory("http://127.0.0.1:6600", "test", "xxx");
+
+            var rs = await star.SendNodeCommand("7F0F011A", "hello", "stone", DateTime.Now.AddMinutes(33));
+            Assert.True(rs > 0);
         }
     }
 }

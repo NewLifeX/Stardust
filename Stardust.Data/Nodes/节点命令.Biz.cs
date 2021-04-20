@@ -5,6 +5,7 @@ using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using Stardust.Models;
 using XCode;
 using XCode.Membership;
 
@@ -114,6 +115,19 @@ namespace Stardust.Data.Nodes
             cmd.Insert();
 
             return cmd;
+        }
+
+        /// <summary>转为模型</summary>
+        /// <returns></returns>
+        public CommandModel ToModel()
+        {
+            return new CommandModel
+            {
+                Id = ID,
+                Command = Command,
+                Argument = Argument,
+                Expire = Expire,
+            };
         }
         #endregion
     }

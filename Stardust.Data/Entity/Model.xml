@@ -13,6 +13,7 @@
       <Column Name="AlarmOnOffline" DataType="Boolean" Description="下线告警。节点下线时，发送告警" />
       <Column Name="LastLogin" DataType="DateTime" Description="最后登录" />
       <Column Name="LastIP" DataType="String" Description="最后IP" />
+      <Column Name="AllowControlNodes" DataType="String" Description="节点控制。允许该应用发指令控制的节点，*表示全部节点" />
       <Column Name="Remark" DataType="String" Length="500" Description="内容" />
       <Column Name="CreateUser" DataType="String" Description="创建者" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />

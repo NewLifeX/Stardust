@@ -19,6 +19,7 @@ using NewLife.Web;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Common;
+using Stardust.Server.Models;
 using Stardust.Server.Services;
 using XCode;
 using IActionFilter = Microsoft.AspNetCore.Mvc.Filters.IActionFilter;
@@ -35,10 +36,15 @@ namespace Stardust.Server.Controllers
         /// <summary>节点引用，令牌无效时使用</summary>
         protected Node _nodeForHistory;
 
-        private static ICache _cache = new MemoryCache();
+        private static readonly ICache _cache = new MemoryCache();
         private readonly ICache _queue;
+        private readonly TokenService _tokenService;
 
-        public NodeController(ICache queue) => _queue = queue;
+        public NodeController(ICache queue, TokenService tokenService)
+        {
+            _queue = queue;
+            _tokenService = tokenService;
+        }
 
         void IActionFilter.OnActionExecuting(ActionExecutingContext context) { }
 
@@ -342,13 +348,7 @@ namespace Stardust.Server.Controllers
             var cmds = NodeCommand.AcquireCommands(nodeId, 100);
             if (cmds == null) return null;
 
-            var rs = cmds.Select(e => new CommandModel
-            {
-                Id = e.ID,
-                Command = e.Command,
-                Argument = e.Argument,
-                Expire = e.Expire,
-            }).ToArray();
+            var rs = cmds.Select(e => e.ToModel()).ToArray();
 
             foreach (var item in cmds)
             {
@@ -577,6 +577,44 @@ namespace Stardust.Server.Controllers
                     await Task.Delay(1_000, cancellationToken);
                 }
             }
+        }
+
+        /// <summary>向节点发送命令</summary>
+        /// <param name="model"></param>
+        /// <param name="token">应用令牌</param>
+        /// <returns></returns>
+        [ApiFilter]
+        [HttpPost(nameof(SendCommand))]
+        public Int32 SendCommand(CommandInModel model, String token)
+        {
+            if (model.NodeCode.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.NodeCode), "必须指定节点");
+            if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
+
+            var node = Node.FindByCode(model.NodeCode);
+            if (node == null) throw new ArgumentOutOfRangeException(nameof(model.NodeCode), "无效节点");
+
+            var app = _tokenService.DecodeToken(token, Setting.Current);
+            if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new InvalidOperationException("无权操作！");
+
+            if (app.AllowControlNodes != "*" && !node.Code.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
+                throw new InvalidOperationException($"[{app}]无权操作节点[{node}]！");
+
+            var cmd = new NodeCommand
+            {
+                NodeID = node.ID,
+                Command = model.Command,
+                Argument = model.Argument,
+                //Expire = model.Expire,
+
+                CreateUser = app.Name,
+            };
+            if (model.Expire > 0) cmd.Expire = DateTime.Now.AddSeconds(model.Expire);
+            cmd.Insert();
+
+            var queue = _queue.GetQueue<String>($"cmd:{node.Code}");
+            queue.Add(cmd.ToModel().ToJson());
+
+            return cmd.ID;
         }
         #endregion
 

@@ -480,7 +480,7 @@ namespace Stardust
                     var cmd = buf.ToStr(null, 0, data.Count).ToJsonEntity<CommandModel>();
                     if (cmd != null)
                     {
-                        XTrace.WriteLine("Got Command: {0}", cmd);
+                        XTrace.WriteLine("Got Command: {0}", cmd.ToJson());
                         CommandQueue.Publish(cmd.Command, cmd);
                     }
                 }
