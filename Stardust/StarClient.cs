@@ -311,6 +311,8 @@ namespace Stardust
                 CpuRate = mi.CpuRate,
                 Temperature = mi.Temperature,
                 Battery = mi.Battery,
+                UplinkSpeed = mi.UplinkSpeed,
+                DownlinkSpeed = mi.DownlinkSpeed,
                 ProcessCount = ps.Length,
                 TcpConnections = connections.Count(e => e.State == TcpState.Established),
                 TcpTimeWait = connections.Count(e => e.State == TcpState.TimeWait),

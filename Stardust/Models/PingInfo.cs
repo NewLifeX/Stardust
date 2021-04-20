@@ -21,6 +21,12 @@ namespace Stardust.Models
         /// <summary>电量</summary>
         public Double Battery { get; set; }
 
+        /// <summary>上行速度。网络发送速度，字节每秒</summary>
+        public UInt64 UplinkSpeed { get; set; }
+
+        /// <summary>下行速度。网络接收速度，字节每秒</summary>
+        public UInt64 DownlinkSpeed { get; set; }
+
         /// <summary>MAC地址</summary>
         public String Macs { get; set; }
 

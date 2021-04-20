@@ -157,6 +157,22 @@ namespace Stardust.Data.Nodes
         [BindColumn("Battery", "电量", "")]
         public Double Battery { get => _Battery; set { if (OnPropertyChanging("Battery", value)) { _Battery = value; OnPropertyChanged("Battery"); } } }
 
+        private Int64 _UplinkSpeed;
+        /// <summary>上行速度。网络发送速度，字节每秒</summary>
+        [DisplayName("上行速度")]
+        [Description("上行速度。网络发送速度，字节每秒")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("UplinkSpeed", "上行速度。网络发送速度，字节每秒", "")]
+        public Int64 UplinkSpeed { get => _UplinkSpeed; set { if (OnPropertyChanging("UplinkSpeed", value)) { _UplinkSpeed = value; OnPropertyChanged("UplinkSpeed"); } } }
+
+        private Int64 _DownlinkSpeed;
+        /// <summary>下行速度。网络接收速度，字节每秒</summary>
+        [DisplayName("下行速度")]
+        [Description("下行速度。网络接收速度，字节每秒")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("DownlinkSpeed", "下行速度。网络接收速度，字节每秒", "")]
+        public Int64 DownlinkSpeed { get => _DownlinkSpeed; set { if (OnPropertyChanging("DownlinkSpeed", value)) { _DownlinkSpeed = value; OnPropertyChanged("DownlinkSpeed"); } } }
+
         private Int32 _ProcessCount;
         /// <summary>进程数</summary>
         [DisplayName("进程数")]
@@ -305,6 +321,8 @@ namespace Stardust.Data.Nodes
                     case "CpuRate": return _CpuRate;
                     case "Temperature": return _Temperature;
                     case "Battery": return _Battery;
+                    case "UplinkSpeed": return _UplinkSpeed;
+                    case "DownlinkSpeed": return _DownlinkSpeed;
                     case "ProcessCount": return _ProcessCount;
                     case "TcpConnections": return _TcpConnections;
                     case "TcpTimeWait": return _TcpTimeWait;
@@ -344,6 +362,8 @@ namespace Stardust.Data.Nodes
                     case "CpuRate": _CpuRate = value.ToDouble(); break;
                     case "Temperature": _Temperature = value.ToDouble(); break;
                     case "Battery": _Battery = value.ToDouble(); break;
+                    case "UplinkSpeed": _UplinkSpeed = value.ToLong(); break;
+                    case "DownlinkSpeed": _DownlinkSpeed = value.ToLong(); break;
                     case "ProcessCount": _ProcessCount = value.ToInt(); break;
                     case "TcpConnections": _TcpConnections = value.ToInt(); break;
                     case "TcpTimeWait": _TcpTimeWait = value.ToInt(); break;
@@ -419,6 +439,12 @@ namespace Stardust.Data.Nodes
 
             /// <summary>电量</summary>
             public static readonly Field Battery = FindByName("Battery");
+
+            /// <summary>上行速度。网络发送速度，字节每秒</summary>
+            public static readonly Field UplinkSpeed = FindByName("UplinkSpeed");
+
+            /// <summary>下行速度。网络接收速度，字节每秒</summary>
+            public static readonly Field DownlinkSpeed = FindByName("DownlinkSpeed");
 
             /// <summary>进程数</summary>
             public static readonly Field ProcessCount = FindByName("ProcessCount");
@@ -521,6 +547,12 @@ namespace Stardust.Data.Nodes
 
             /// <summary>电量</summary>
             public const String Battery = "Battery";
+
+            /// <summary>上行速度。网络发送速度，字节每秒</summary>
+            public const String UplinkSpeed = "UplinkSpeed";
+
+            /// <summary>下行速度。网络接收速度，字节每秒</summary>
+            public const String DownlinkSpeed = "DownlinkSpeed";
 
             /// <summary>进程数</summary>
             public const String ProcessCount = "ProcessCount";

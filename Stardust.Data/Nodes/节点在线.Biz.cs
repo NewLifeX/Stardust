@@ -205,6 +205,8 @@ namespace Stardust.Data.Nodes
             if (inf.CpuRate > 0) olt.CpuRate = inf.CpuRate;
             if (inf.Temperature > 0) olt.Temperature = inf.Temperature;
             if (inf.Battery > 0) olt.Battery = inf.Battery;
+            if (inf.UplinkSpeed > 0) olt.UplinkSpeed = (Int64)inf.UplinkSpeed;
+            if (inf.DownlinkSpeed > 0) olt.DownlinkSpeed = (Int64)inf.DownlinkSpeed;
             if (inf.ProcessCount > 0) olt.ProcessCount = inf.ProcessCount;
             if (inf.TcpConnections > 0) olt.TcpConnections = inf.TcpConnections;
             if (inf.TcpTimeWait > 0) olt.TcpTimeWait = inf.TcpTimeWait;

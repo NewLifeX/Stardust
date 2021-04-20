@@ -10,7 +10,33 @@ namespace Stardust.Web.Areas.Nodes.Controllers
     [NodesArea]
     public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
     {
-        static NodeOnlineController() => MenuOrder = 70;
+        static NodeOnlineController()
+        {
+            MenuOrder = 70;
+
+            ListFields.RemoveField("SessionID", "IP", "ProvinceID", "CityID", "Macs", "Token");
+
+            //{
+            //    var df = ListFields.AddDataField("Category");
+            //    df.Header = "分类";
+            //    df.DisplayName = "{Category}";
+            //    df.Url = "?category={Category}";
+            //}
+            //{
+            //    var df = ListFields.AddDataField("NodeName");
+            //    df.Header = "设备";
+            //    df.Url = "Node?id={NodeID}";
+            //}
+            //{
+            //    var df = ListFields.AddDataField("NodeData", null, "NodeName");
+            //    df.DisplayName = "数据";
+            //    df.Url = "NodeData?nodeId={NodeID}";
+            //}
+            //{
+            //    var df = ListFields.AddDataField("Temperature");
+            //    df.DisplayName = "{Temperature}°C";
+            //}
+        }
 
         protected override IEnumerable<NodeOnline> Search(Pager p)
         {

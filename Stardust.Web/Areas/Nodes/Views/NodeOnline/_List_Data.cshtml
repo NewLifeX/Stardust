@@ -27,13 +27,14 @@
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("IP"))">本地IP</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("PingCount"))">心跳</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Version"))">版本</a></th>
-            <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("CompileTime"))">编译时间</a></th>
             <th class="text-center" title="内存。单位M"><a href="@Html.Raw(page.GetSortUrl("Memory"))">内存</a></th>
             <th class="text-center" title="可用内存。单位M"><a href="@Html.Raw(page.GetSortUrl("AvailableMemory"))">可用内存</a></th>
             <th class="text-center" title="可用磁盘。应用所在盘，单位M"><a href="@Html.Raw(page.GetSortUrl("AvailableFreeSpace"))">可用磁盘</a></th>
             <th class="text-center" title="CPU率。占用率"><a href="@Html.Raw(page.GetSortUrl("CpuRate"))">CPU率</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Temperature"))">温度</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Battery"))">电量</a></th>
+            <th class="text-center" title="上行速度。网络发送速度，字节每秒"><a href="@Html.Raw(page.GetSortUrl("UplinkSpeed"))">上行速度</a></th>
+            <th class="text-center" title="下行速度。网络接收速度，字节每秒"><a href="@Html.Raw(page.GetSortUrl("DownlinkSpeed"))">下行速度</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ProcessCount"))">进程数</a></th>
             <th class="text-center" title="传输数据Established的Tcp网络连接数"><a href="@Html.Raw(page.GetSortUrl("TcpConnections"))">连接数</a></th>
             <th class="text-center" title="主动关闭后TimeWait的Tcp网络连接数，下一步Closed"><a href="@Html.Raw(page.GetSortUrl("TcpTimeWait"))">主动关闭</a></th>
@@ -66,14 +67,15 @@
                 <td>@entity.Name</td>
                 <td title="@entity.IP" style="max-width:200px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;">@entity.IP</td>
                 <td class="text-right">@entity.PingCount.ToString("n0")</td>
-                <td>@entity.Version</td>
-                <td class="text-center">@entity.CompileTime.ToFullString("")</td>
+                <td title="@entity.CompileTime.ToFullString("")">@entity.Version</td>
                 <td class="text-right">@entity.Memory.ToString("n0")</td>
                 <td class="text-right">@entity.AvailableMemory.ToString("n0")</td>
                 <td class="text-right">@entity.AvailableFreeSpace.ToString("n0")</td>
                 <td class="text-center">@entity.CpuRate.ToString("p2")</td>
                 <td class="text-center">@entity.Temperature.ToString("N1") °C</td>
                 <td class="text-center">@entity.Battery.ToString("p0")</td>
+                <td class="text-right">@entity.UplinkSpeed.ToString("n0")</td>
+                <td class="text-right">@entity.DownlinkSpeed.ToString("n0")</td>
                 <td class="text-right">@entity.ProcessCount.ToString("n0")</td>
                 <td class="text-right">@entity.TcpConnections.ToString("n0")</td>
                 <td class="text-right">@entity.TcpTimeWait.ToString("n0")</td>
