@@ -11,6 +11,22 @@ using XCode.Membership;
 
 namespace Stardust.Data.Nodes
 {
+    /// <summary>命令状态</summary>
+    public enum CommandStatus
+    {
+        /// <summary>就绪</summary>
+        就绪 = 0,
+
+        /// <summary>处理中</summary>
+        处理中 = 1,
+
+        /// <summary>已完成</summary>
+        已完成 = 2,
+
+        /// <summary>取消</summary>
+        取消 = 3,
+    }
+
     /// <summary>节点命令</summary>
     public partial class NodeCommand : Entity<NodeCommand>
     {
@@ -97,7 +113,7 @@ namespace Stardust.Data.Nodes
         /// <param name="nodeId"></param>
         /// <param name="count"></param>
         /// <returns></returns>
-        public static IList<NodeCommand> AcquireCommands(Int32 nodeId, Int32 count = 100) => FindAll(_.NodeID == nodeId & _.Finished == false, _.ID.Asc(), null, 0, count);
+        public static IList<NodeCommand> AcquireCommands(Int32 nodeId, Int32 count = 100) => FindAll(_.NodeID == nodeId & _.Status <= CommandStatus.处理中, _.ID.Asc(), null, 0, count);
 
         /// <summary>添加节点命令</summary>
         /// <param name="node"></param>

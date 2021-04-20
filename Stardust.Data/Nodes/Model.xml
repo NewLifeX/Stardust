@@ -178,7 +178,8 @@
       <Column Name="Command" DataType="String" Master="True" Description="命令" />
       <Column Name="Argument" DataType="String" Length="500" Description="参数" />
       <Column Name="Expire" DataType="DateTime" Description="过期时间。未指定时表示不限制" />
-      <Column Name="Finished" DataType="Boolean" Description="完成。客户端是否已执行" />
+      <Column Name="Status" DataType="Int32" Description="状态。命令状态" Type="CommandStatus" />
+      <Column Name="Times" DataType="Int32" Description="次数。一共执行多少次，超过10次后取消" />
       <Column Name="Result" DataType="String" Length="500" Description="结果" />
       <Column Name="CreateUser" DataType="String" Description="创建者" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建人" />
@@ -189,6 +190,7 @@
       <Column Name="UpdateIP" DataType="String" Description="更新地址" />
     </Columns>
     <Indexes>
+      <Index Columns="NodeID,Status" />
       <Index Columns="NodeID,Command" />
       <Index Columns="UpdateTime,NodeID,Command" />
     </Indexes>

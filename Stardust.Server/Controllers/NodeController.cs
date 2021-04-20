@@ -348,16 +348,22 @@ namespace Stardust.Server.Controllers
             var cmds = NodeCommand.AcquireCommands(nodeId, 100);
             if (cmds == null) return null;
 
-            var rs = cmds.Select(e => e.ToModel()).ToArray();
-
+            var rs = new List<CommandModel>();
             foreach (var item in cmds)
             {
-                item.Finished = true;
+                item.Times++;
+                if (item.Times > 10 || item.Expire.Year > 2000 && item.Expire < DateTime.Now)
+                    item.Status = CommandStatus.取消;
+                else
+                {
+                    item.Status = CommandStatus.处理中;
+                    rs.Add(item.ToModel());
+                }
                 item.UpdateTime = DateTime.Now;
             }
             cmds.Update(false);
 
-            return rs;
+            return rs.ToArray();
         }
 
         [ApiFilter]
@@ -442,6 +448,7 @@ namespace Stardust.Server.Controllers
                     };
                     if (!rs.IsNullOrEmpty())
                     {
+                        cmd.Status = CommandStatus.已完成;
                         cmd.Result = rs;
                         cmd.Save();
 
@@ -605,6 +612,7 @@ namespace Stardust.Server.Controllers
                 Command = model.Command,
                 Argument = model.Argument,
                 //Expire = model.Expire,
+                Times = 1,
 
                 CreateUser = app.Name,
             };

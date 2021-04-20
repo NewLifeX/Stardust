@@ -14,6 +14,7 @@ namespace Stardust.Data.Nodes
     [Serializable]
     [DataObject]
     [Description("节点命令")]
+    [BindIndex("IX_NodeCommand_NodeID_Status", false, "NodeID,Status")]
     [BindIndex("IX_NodeCommand_NodeID_Command", false, "NodeID,Command")]
     [BindIndex("IX_NodeCommand_UpdateTime_NodeID_Command", false, "UpdateTime,NodeID,Command")]
     [BindTable("NodeCommand", Description = "节点命令", ConnName = "Node", DbType = DatabaseType.None)]
@@ -60,13 +61,21 @@ namespace Stardust.Data.Nodes
         [BindColumn("Expire", "过期时间。未指定时表示不限制", "")]
         public DateTime Expire { get => _Expire; set { if (OnPropertyChanging("Expire", value)) { _Expire = value; OnPropertyChanged("Expire"); } } }
 
-        private Boolean _Finished;
-        /// <summary>完成。客户端是否已执行</summary>
-        [DisplayName("完成")]
-        [Description("完成。客户端是否已执行")]
+        private CommandStatus _Status;
+        /// <summary>状态。命令状态</summary>
+        [DisplayName("状态")]
+        [Description("状态。命令状态")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Finished", "完成。客户端是否已执行", "")]
-        public Boolean Finished { get => _Finished; set { if (OnPropertyChanging("Finished", value)) { _Finished = value; OnPropertyChanged("Finished"); } } }
+        [BindColumn("Status", "状态。命令状态", "")]
+        public CommandStatus Status { get => _Status; set { if (OnPropertyChanging("Status", value)) { _Status = value; OnPropertyChanged("Status"); } } }
+
+        private Int32 _Times;
+        /// <summary>次数。一共执行多少次，超过10次后取消</summary>
+        [DisplayName("次数")]
+        [Description("次数。一共执行多少次，超过10次后取消")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Times", "次数。一共执行多少次，超过10次后取消", "")]
+        public Int32 Times { get => _Times; set { if (OnPropertyChanging("Times", value)) { _Times = value; OnPropertyChanged("Times"); } } }
 
         private String _Result;
         /// <summary>结果</summary>
@@ -148,7 +157,8 @@ namespace Stardust.Data.Nodes
                     case "Command": return _Command;
                     case "Argument": return _Argument;
                     case "Expire": return _Expire;
-                    case "Finished": return _Finished;
+                    case "Status": return _Status;
+                    case "Times": return _Times;
                     case "Result": return _Result;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
@@ -169,7 +179,8 @@ namespace Stardust.Data.Nodes
                     case "Command": _Command = Convert.ToString(value); break;
                     case "Argument": _Argument = Convert.ToString(value); break;
                     case "Expire": _Expire = value.ToDateTime(); break;
-                    case "Finished": _Finished = value.ToBoolean(); break;
+                    case "Status": _Status = (CommandStatus)value.ToInt(); break;
+                    case "Times": _Times = value.ToInt(); break;
                     case "Result": _Result = Convert.ToString(value); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
@@ -203,8 +214,11 @@ namespace Stardust.Data.Nodes
             /// <summary>过期时间。未指定时表示不限制</summary>
             public static readonly Field Expire = FindByName("Expire");
 
-            /// <summary>完成。客户端是否已执行</summary>
-            public static readonly Field Finished = FindByName("Finished");
+            /// <summary>状态。命令状态</summary>
+            public static readonly Field Status = FindByName("Status");
+
+            /// <summary>次数。一共执行多少次，超过10次后取消</summary>
+            public static readonly Field Times = FindByName("Times");
 
             /// <summary>结果</summary>
             public static readonly Field Result = FindByName("Result");
@@ -251,8 +265,11 @@ namespace Stardust.Data.Nodes
             /// <summary>过期时间。未指定时表示不限制</summary>
             public const String Expire = "Expire";
 
-            /// <summary>完成。客户端是否已执行</summary>
-            public const String Finished = "Finished";
+            /// <summary>状态。命令状态</summary>
+            public const String Status = "Status";
+
+            /// <summary>次数。一共执行多少次，超过10次后取消</summary>
+            public const String Times = "Times";
 
             /// <summary>结果</summary>
             public const String Result = "Result";

@@ -97,7 +97,7 @@ namespace ClientTest
         {
             using var star = new StarFactory("http://127.0.0.1:6600", "test", "xxx");
 
-            var rs = await star.SendNodeCommand("7F0F011A", "hello", "stone", DateTime.Now.AddMinutes(33));
+            var rs = await star.SendNodeCommand("7F0F011A", "hello", "stone", 33);
             Assert.True(rs > 0);
         }
     }
