@@ -414,7 +414,7 @@ namespace Stardust
         /// <param name="id"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        private async Task<Object> ReportAsync(Int32 id, Byte[] data) => await PostAsync<Object>("Device/Report?Id=" + id, data);
+        private async Task<Object> ReportAsync(Int32 id, Byte[] data) => await PostAsync<Object>("Node/Report?Id=" + id, data);
         #endregion
 
         #region 长连接
