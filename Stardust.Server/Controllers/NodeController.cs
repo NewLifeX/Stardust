@@ -35,9 +35,10 @@ namespace Stardust.Server.Controllers
         /// <summary>节点引用，令牌无效时使用</summary>
         protected Node _nodeForHistory;
 
-        private readonly ICache _cache;
+        private static ICache _cache = new MemoryCache();
+        private readonly ICache _queue;
 
-        public NodeController(ICache cache) => _cache = cache;
+        public NodeController(ICache queue) => _queue = queue;
 
         void IActionFilter.OnActionExecuting(ActionExecutingContext context) { }
 
@@ -377,7 +378,11 @@ namespace Stardust.Server.Controllers
         {
             var sid = $"{node.ID}@{UserHost}";
             var olt = _cache.Get<NodeOnline>($"NodeOnline:{sid}");
-            if (olt != null) return olt;
+            if (olt != null)
+            {
+                _cache.SetExpire($"NodeOnline:{sid}", TimeSpan.FromSeconds(600));
+                return olt;
+            }
 
             return NodeOnline.FindBySessionID(sid);
         }
@@ -429,20 +434,12 @@ namespace Stardust.Server.Controllers
                 var ms = Request.Body;
                 if (Request.ContentLength > 0)
                 {
-                    var rs = "";
-                    switch (cmd.Command)
+                    var rs = cmd.Command switch
                     {
-                        case "截屏":
-                            rs = await SaveFileAsync(cmd, ms, "png");
-                            break;
-                        case "抓日志":
-                            rs = await SaveFileAsync(cmd, ms, "log");
-                            break;
-                        default:
-                            rs = await SaveFileAsync(cmd, ms, "bin");
-                            break;
-                    }
-
+                        "截屏" => await SaveFileAsync(cmd, ms, "png"),
+                        "抓日志" => await SaveFileAsync(cmd, ms, "log"),
+                        _ => await SaveFileAsync(cmd, ms, "bin"),
+                    };
                     if (!rs.IsNullOrEmpty())
                     {
                         cmd.Result = rs;
@@ -563,7 +560,7 @@ namespace Stardust.Server.Controllers
 
         private async Task consumeMessage(WebSocket socket, Node node, CancellationToken cancellationToken)
         {
-            var queue = _cache.GetQueue<String>($"cmd:{node.Code}");
+            var queue = _queue.GetQueue<String>($"cmd:{node.Code}");
             while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
             {
                 var msg = await queue.TakeOneAsync(10_000);
