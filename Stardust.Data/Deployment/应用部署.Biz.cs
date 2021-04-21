@@ -48,7 +48,14 @@ namespace Stardust.Data.Deployment
             // 如果没有脏数据，则不需要进行任何处理
             if (!HasDirty) return;
 
-            if (Name.IsNullOrEmpty()) Name = App?.DisplayName ?? App?.Name;
+            var app = App;
+            if (app != null)
+            {
+                if (Name.IsNullOrEmpty()) Name = app.DisplayName ?? app.Name;
+                if (!app.Category.IsNullOrEmpty()) Category = app.Category;
+            }
+
+            if (!isNew) Nodes = AppDeployNode.FindAllByDeployId(Id).Count;
         }
         #endregion
 

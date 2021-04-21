@@ -27,6 +27,14 @@ namespace Stardust.Data.Deployment
         [BindColumn("Id", "编号", "")]
         public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
+        private String _Category;
+        /// <summary>类别</summary>
+        [DisplayName("类别")]
+        [Description("类别")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Category", "类别", "")]
+        public String Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
+
         private Int32 _AppId;
         /// <summary>应用。原始应用</summary>
         [DisplayName("应用")]
@@ -58,6 +66,14 @@ namespace Stardust.Data.Deployment
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Enable", "启用", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
+
+        private Int32 _Nodes;
+        /// <summary>节点。该应用部署集所拥有的节点数</summary>
+        [DisplayName("节点")]
+        [Description("节点。该应用部署集所拥有的节点数")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Nodes", "节点。该应用部署集所拥有的节点数", "")]
+        public Int32 Nodes { get => _Nodes; set { if (OnPropertyChanging("Nodes", value)) { _Nodes = value; OnPropertyChanged("Nodes"); } } }
 
         private Int32 _Version;
         /// <summary>版本。应用正在使用的版本号</summary>
@@ -167,10 +183,12 @@ namespace Stardust.Data.Deployment
                 switch (name)
                 {
                     case "Id": return _Id;
+                    case "Category": return _Category;
                     case "AppId": return _AppId;
                     case "Name": return _Name;
                     case "Environment": return _Environment;
                     case "Enable": return _Enable;
+                    case "Nodes": return _Nodes;
                     case "Version": return _Version;
                     case "FileName": return _FileName;
                     case "Arguments": return _Arguments;
@@ -191,10 +209,12 @@ namespace Stardust.Data.Deployment
                 switch (name)
                 {
                     case "Id": _Id = value.ToInt(); break;
+                    case "Category": _Category = Convert.ToString(value); break;
                     case "AppId": _AppId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Environment": _Environment = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
+                    case "Nodes": _Nodes = value.ToInt(); break;
                     case "Version": _Version = value.ToInt(); break;
                     case "FileName": _FileName = Convert.ToString(value); break;
                     case "Arguments": _Arguments = Convert.ToString(value); break;
@@ -220,6 +240,9 @@ namespace Stardust.Data.Deployment
             /// <summary>编号</summary>
             public static readonly Field Id = FindByName("Id");
 
+            /// <summary>类别</summary>
+            public static readonly Field Category = FindByName("Category");
+
             /// <summary>应用。原始应用</summary>
             public static readonly Field AppId = FindByName("AppId");
 
@@ -231,6 +254,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
+
+            /// <summary>节点。该应用部署集所拥有的节点数</summary>
+            public static readonly Field Nodes = FindByName("Nodes");
 
             /// <summary>版本。应用正在使用的版本号</summary>
             public static readonly Field Version = FindByName("Version");
@@ -277,6 +303,9 @@ namespace Stardust.Data.Deployment
             /// <summary>编号</summary>
             public const String Id = "Id";
 
+            /// <summary>类别</summary>
+            public const String Category = "Category";
+
             /// <summary>应用。原始应用</summary>
             public const String AppId = "AppId";
 
@@ -288,6 +317,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>启用</summary>
             public const String Enable = "Enable";
+
+            /// <summary>节点。该应用部署集所拥有的节点数</summary>
+            public const String Nodes = "Nodes";
 
             /// <summary>版本。应用正在使用的版本号</summary>
             public const String Version = "Version";

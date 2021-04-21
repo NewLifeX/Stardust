@@ -3,10 +3,12 @@
   <Table Name="AppDeploy" Description="应用部署。应用部署的实例，每个应用在不同环境下有不同的部署集，关联不同的节点服务器组">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="AppId" DataType="Int32" Description="应用。原始应用" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
       <Column Name="Environment" DataType="String" Description="环境。prod/test/dev/uat等" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="Nodes" DataType="Int32" Description="节点。该应用部署集所拥有的节点数" />
       <Column Name="Version" DataType="Int32" Description="版本。应用正在使用的版本号" />
       <Column Name="FileName" DataType="String" Description="文件。应用启动文件" />
       <Column Name="Arguments" DataType="String" Description="参数。启动应用的参数" />

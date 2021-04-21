@@ -28,6 +28,14 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             }
 
             {
+                var df = ListFields.AddDataField("Nodes");
+                df.Header = "节点";
+                //df.DisplayName = "添加节点";
+                //df.Title = "添加服务器节点";
+                df.Url = "AppDeployNode?deployId={Id}";
+            }
+
+            {
                 var df = ListFields.AddDataField("Log", "UpdateUserId");
                 df.DisplayName = "修改日志";
                 df.Header = "修改日志";
