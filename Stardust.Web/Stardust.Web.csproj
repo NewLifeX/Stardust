@@ -26,7 +26,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Areas\Nodes\Views\Shared\**" />
+    <Content Remove="Areas\Nodes\Views\Shared\**" />
+    <EmbeddedResource Remove="Areas\Nodes\Views\Shared\**" />
+    <None Remove="Areas\Nodes\Views\Shared\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="Areas\Configs\Controllers\AppQuoteController.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Views\Shared\_SelectApp.cshtml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -53,6 +64,10 @@
 
   <ItemGroup>
     <Folder Include="Services\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Views\Shared\_SelectApp.cshtml" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

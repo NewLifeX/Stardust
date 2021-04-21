@@ -4,6 +4,7 @@ using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
+using NewLife.Data;
 using Stardust.Monitors;
 using XCode;
 using XCode.Membership;
@@ -90,6 +91,25 @@ namespace Stardust.Data
         #endregion
 
         #region 高级查询
+        /// <summary>高级搜索</summary>
+        /// <param name="category"></param>
+        /// <param name="start"></param>
+        /// <param name="enable"></param>
+        /// <param name="end"></param>
+        /// <param name="key"></param>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        public static IList<App> Search(String category, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+        {
+            var exp = new WhereExpression();
+
+            if (!category.IsNullOrEmpty()) exp &= _.Category == category;
+            if (enable != null) exp &= _.Enable == enable;
+            exp &= _.UpdateTime.Between(start, end);
+            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.DisplayName.Contains(key);
+
+            return FindAll(exp, page);
+        }
         #endregion
 
         #region 业务操作

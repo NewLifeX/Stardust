@@ -19,5 +19,5 @@
     <label for="success" class="control-label">状态：</label>
     @Html.ForDropDownList("success", dic, page["success"], "全部", true)
 </div>
-@await Html.PartialAsync("_SelectNode", "nodeId")
+@await Html.PartialAsync("_SelectNode", new Stardust.Web.Models.SelectNodeModel { Id = "nodeId" })
 @await Html.PartialAsync("_DateRange")

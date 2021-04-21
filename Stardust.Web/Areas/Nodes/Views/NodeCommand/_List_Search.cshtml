@@ -6,5 +6,5 @@
     var fact = ViewBag.Factory as IEntityFactory;
     var page = ViewBag.Page as Pager;
 }
-@await Html.PartialAsync("_SelectNode", "nodeId")
+@await Html.PartialAsync("_SelectNode", new Stardust.Web.Models.SelectNodeModel { Id = "nodeId" })
 @await Html.PartialAsync("_DateRange")

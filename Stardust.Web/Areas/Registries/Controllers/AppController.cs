@@ -1,7 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using NewLife;
 using NewLife.Cube;
+using NewLife.Data;
 using Stardust.Data;
 using XCode;
 using XCode.Membership;
@@ -16,7 +19,7 @@ namespace Stardust.Web.Areas.Registries.Controllers
             MenuOrder = 99;
 
             ListFields.RemoveField("Secret");
-          
+
             {
                 var df = ListFields.AddDataField("History", null, "AutoActive");
                 df.DisplayName = "历史";
@@ -67,6 +70,28 @@ namespace Stardust.Web.Areas.Registries.Controllers
             {
                 if (type != DataObjectMethodType.Update) LogProvider.Provider.WriteLog(type + "", entity, err);
             }
+        }
+
+        /// <summary>搜索</summary>
+        /// <param name="category"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public ActionResult AppSearch(String category, String key = null)
+        {
+            var page = new PageParameter { PageSize = 20 };
+
+            //// 默认排序
+            //if (page.Sort.IsNullOrEmpty()) page.Sort = _.Name;
+
+            var list = App.Search(category, true, DateTime.MinValue, DateTime.MinValue, key, page);
+
+            return Json(0, null, list.Select(e => new
+            {
+                e.Id,
+                e.Name,
+                e.DisplayName,
+                e.Category,
+            }).ToArray());
         }
 
         /// <summary>启用禁用下线告警</summary>

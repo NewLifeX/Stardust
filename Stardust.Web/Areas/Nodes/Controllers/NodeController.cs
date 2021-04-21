@@ -58,18 +58,17 @@ namespace Stardust.Web.Areas.Nodes.Controllers
         }
 
         /// <summary>搜索</summary>
-        /// <param name="provinceId"></param>
-        /// <param name="cityId"></param>
+        /// <param name="category"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        public ActionResult NodeSearch(Int32 provinceId = -1, Int32 cityId = -1, String key = null)
+        public ActionResult NodeSearch(String category, String key = null)
         {
             var page = new PageParameter { PageSize = 20 };
 
             // 默认排序
             if (page.Sort.IsNullOrEmpty()) page.Sort = _.Name;
 
-            var list = Node.Search(provinceId, cityId, null, null, null, DateTime.MinValue, DateTime.MinValue, key, page);
+            var list = Node.Search(-1, -1, category, null, true, DateTime.MinValue, DateTime.MinValue, key, page);
 
             return Json(0, null, list.Select(e => new
             {
