@@ -1,0 +1,22 @@
+﻿@using NewLife;
+@using NewLife.Web;
+@using NewLife.Cube;
+@using XCode;
+@using Stardust.Data.Configs;
+@{
+    var fact = ViewBag.Factory as IEntityFactory;
+    var page = ViewBag.Page as Pager;
+
+    var dic = new Dictionary<Int32, String>();
+    dic[1] = "成功";
+    dic[0] = "失败";
+}
+<div class="form-group">
+    <label for="action" class="control-label">类别：</label>
+    @Html.ForDropDownList("action", ConfigHistory.FindAllActions(), page["action"], "全部", true)
+</div>
+<div class="form-group">
+    <label for="success" class="control-label">状态：</label>
+    @Html.ForDropDownList("success", dic, page["success"], "全部", true)
+</div>
+@await Html.PartialAsync("_DateRange")
