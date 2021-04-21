@@ -107,6 +107,14 @@ namespace Stardust.Data
         [BindColumn("LastIP", "最后IP", "")]
         public String LastIP { get => _LastIP; set { if (OnPropertyChanging("LastIP", value)) { _LastIP = value; OnPropertyChanged("LastIP"); } } }
 
+        private String _AllowControlNodes;
+        /// <summary>节点控制。允许该应用发指令控制的节点，*表示全部节点</summary>
+        [DisplayName("节点控制")]
+        [Description("节点控制。允许该应用发指令控制的节点，*表示全部节点")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("AllowControlNodes", "节点控制。允许该应用发指令控制的节点，*表示全部节点", "")]
+        public String AllowControlNodes { get => _AllowControlNodes; set { if (OnPropertyChanging("AllowControlNodes", value)) { _AllowControlNodes = value; OnPropertyChanged("AllowControlNodes"); } } }
+
         private String _Remark;
         /// <summary>内容</summary>
         [DisplayName("内容")]
@@ -201,6 +209,7 @@ namespace Stardust.Data
                     case "AlarmOnOffline": return _AlarmOnOffline;
                     case "LastLogin": return _LastLogin;
                     case "LastIP": return _LastIP;
+                    case "AllowControlNodes": return _AllowControlNodes;
                     case "Remark": return _Remark;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
@@ -228,6 +237,7 @@ namespace Stardust.Data
                     case "AlarmOnOffline": _AlarmOnOffline = value.ToBoolean(); break;
                     case "LastLogin": _LastLogin = value.ToDateTime(); break;
                     case "LastIP": _LastIP = Convert.ToString(value); break;
+                    case "AllowControlNodes": _AllowControlNodes = Convert.ToString(value); break;
                     case "Remark": _Remark = Convert.ToString(value); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
@@ -279,6 +289,9 @@ namespace Stardust.Data
 
             /// <summary>最后IP</summary>
             public static readonly Field LastIP = FindByName("LastIP");
+
+            /// <summary>节点控制。允许该应用发指令控制的节点，*表示全部节点</summary>
+            public static readonly Field AllowControlNodes = FindByName("AllowControlNodes");
 
             /// <summary>内容</summary>
             public static readonly Field Remark = FindByName("Remark");
@@ -345,6 +358,9 @@ namespace Stardust.Data
 
             /// <summary>最后IP</summary>
             public const String LastIP = "LastIP";
+
+            /// <summary>节点控制。允许该应用发指令控制的节点，*表示全部节点</summary>
+            public const String AllowControlNodes = "AllowControlNodes";
 
             /// <summary>内容</summary>
             public const String Remark = "Remark";

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using NewLife;
 using NewLife.Configuration;
 using NewLife.Http;
@@ -269,6 +270,21 @@ namespace Stardust
                     });
                 }
             }
+        }
+        #endregion
+
+        #region 其它
+        /// <summary>发送节点命令</summary>
+        /// <param name="nodeCode"></param>
+        /// <param name="command"></param>
+        /// <param name="argument"></param>
+        /// <param name="expire"></param>
+        /// <returns></returns>
+        public async Task<Int32> SendNodeCommand(String nodeCode, String command, String argument = null, Int32 expire = 3600)
+        {
+            Valid();
+
+            return await _client.PostAsync<Int32>("Node/SendCommand", new { nodeCode, command, argument, expire });
         }
         #endregion
 

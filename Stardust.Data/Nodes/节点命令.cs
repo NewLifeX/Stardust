@@ -14,6 +14,7 @@ namespace Stardust.Data.Nodes
     [Serializable]
     [DataObject]
     [Description("节点命令")]
+    [BindIndex("IX_NodeCommand_NodeID_Status", false, "NodeID,Status")]
     [BindIndex("IX_NodeCommand_NodeID_Command", false, "NodeID,Command")]
     [BindIndex("IX_NodeCommand_UpdateTime_NodeID_Command", false, "UpdateTime,NodeID,Command")]
     [BindTable("NodeCommand", Description = "节点命令", ConnName = "Node", DbType = DatabaseType.None)]
@@ -60,13 +61,21 @@ namespace Stardust.Data.Nodes
         [BindColumn("Expire", "过期时间。未指定时表示不限制", "")]
         public DateTime Expire { get => _Expire; set { if (OnPropertyChanging("Expire", value)) { _Expire = value; OnPropertyChanged("Expire"); } } }
 
-        private Boolean _Finished;
-        /// <summary>完成。客户端是否已执行</summary>
-        [DisplayName("完成")]
-        [Description("完成。客户端是否已执行")]
+        private CommandStatus _Status;
+        /// <summary>状态。命令状态</summary>
+        [DisplayName("状态")]
+        [Description("状态。命令状态")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Finished", "完成。客户端是否已执行", "")]
-        public Boolean Finished { get => _Finished; set { if (OnPropertyChanging("Finished", value)) { _Finished = value; OnPropertyChanged("Finished"); } } }
+        [BindColumn("Status", "状态。命令状态", "")]
+        public CommandStatus Status { get => _Status; set { if (OnPropertyChanging("Status", value)) { _Status = value; OnPropertyChanged("Status"); } } }
+
+        private Int32 _Times;
+        /// <summary>次数。一共执行多少次，超过10次后取消</summary>
+        [DisplayName("次数")]
+        [Description("次数。一共执行多少次，超过10次后取消")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Times", "次数。一共执行多少次，超过10次后取消", "")]
+        public Int32 Times { get => _Times; set { if (OnPropertyChanging("Times", value)) { _Times = value; OnPropertyChanged("Times"); } } }
 
         private String _Result;
         /// <summary>结果</summary>
@@ -76,12 +85,20 @@ namespace Stardust.Data.Nodes
         [BindColumn("Result", "结果", "")]
         public String Result { get => _Result; set { if (OnPropertyChanging("Result", value)) { _Result = value; OnPropertyChanged("Result"); } } }
 
-        private Int32 _CreateUserID;
+        private String _CreateUser;
         /// <summary>创建者</summary>
         [DisplayName("创建者")]
         [Description("创建者")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("CreateUser", "创建者", "")]
+        public String CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
+
+        private Int32 _CreateUserID;
+        /// <summary>创建人</summary>
+        [DisplayName("创建人")]
+        [Description("创建人")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("CreateUserID", "创建者", "")]
+        [BindColumn("CreateUserID", "创建人", "")]
         public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
 
         private DateTime _CreateTime;
@@ -140,8 +157,10 @@ namespace Stardust.Data.Nodes
                     case "Command": return _Command;
                     case "Argument": return _Argument;
                     case "Expire": return _Expire;
-                    case "Finished": return _Finished;
+                    case "Status": return _Status;
+                    case "Times": return _Times;
                     case "Result": return _Result;
+                    case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -160,8 +179,10 @@ namespace Stardust.Data.Nodes
                     case "Command": _Command = Convert.ToString(value); break;
                     case "Argument": _Argument = Convert.ToString(value); break;
                     case "Expire": _Expire = value.ToDateTime(); break;
-                    case "Finished": _Finished = value.ToBoolean(); break;
+                    case "Status": _Status = (CommandStatus)value.ToInt(); break;
+                    case "Times": _Times = value.ToInt(); break;
                     case "Result": _Result = Convert.ToString(value); break;
+                    case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -193,13 +214,19 @@ namespace Stardust.Data.Nodes
             /// <summary>过期时间。未指定时表示不限制</summary>
             public static readonly Field Expire = FindByName("Expire");
 
-            /// <summary>完成。客户端是否已执行</summary>
-            public static readonly Field Finished = FindByName("Finished");
+            /// <summary>状态。命令状态</summary>
+            public static readonly Field Status = FindByName("Status");
+
+            /// <summary>次数。一共执行多少次，超过10次后取消</summary>
+            public static readonly Field Times = FindByName("Times");
 
             /// <summary>结果</summary>
             public static readonly Field Result = FindByName("Result");
 
             /// <summary>创建者</summary>
+            public static readonly Field CreateUser = FindByName("CreateUser");
+
+            /// <summary>创建人</summary>
             public static readonly Field CreateUserID = FindByName("CreateUserID");
 
             /// <summary>创建时间</summary>
@@ -238,13 +265,19 @@ namespace Stardust.Data.Nodes
             /// <summary>过期时间。未指定时表示不限制</summary>
             public const String Expire = "Expire";
 
-            /// <summary>完成。客户端是否已执行</summary>
-            public const String Finished = "Finished";
+            /// <summary>状态。命令状态</summary>
+            public const String Status = "Status";
+
+            /// <summary>次数。一共执行多少次，超过10次后取消</summary>
+            public const String Times = "Times";
 
             /// <summary>结果</summary>
             public const String Result = "Result";
 
             /// <summary>创建者</summary>
+            public const String CreateUser = "CreateUser";
+
+            /// <summary>创建人</summary>
             public const String CreateUserID = "CreateUserID";
 
             /// <summary>创建时间</summary>

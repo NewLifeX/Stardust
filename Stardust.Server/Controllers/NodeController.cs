@@ -19,6 +19,7 @@ using NewLife.Web;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Common;
+using Stardust.Server.Models;
 using Stardust.Server.Services;
 using XCode;
 using IActionFilter = Microsoft.AspNetCore.Mvc.Filters.IActionFilter;
@@ -35,9 +36,15 @@ namespace Stardust.Server.Controllers
         /// <summary>节点引用，令牌无效时使用</summary>
         protected Node _nodeForHistory;
 
-        private readonly ICache _cache;
+        private static readonly ICache _cache = new MemoryCache();
+        private readonly ICache _queue;
+        private readonly TokenService _tokenService;
 
-        public NodeController(ICache cache) => _cache = cache;
+        public NodeController(ICache queue, TokenService tokenService)
+        {
+            _queue = queue;
+            _tokenService = tokenService;
+        }
 
         void IActionFilter.OnActionExecuting(ActionExecutingContext context) { }
 
@@ -341,22 +348,22 @@ namespace Stardust.Server.Controllers
             var cmds = NodeCommand.AcquireCommands(nodeId, 100);
             if (cmds == null) return null;
 
-            var rs = cmds.Select(e => new CommandModel
-            {
-                Id = e.ID,
-                Command = e.Command,
-                Argument = e.Argument,
-                Expire = e.Expire,
-            }).ToArray();
-
+            var rs = new List<CommandModel>();
             foreach (var item in cmds)
             {
-                item.Finished = true;
+                item.Times++;
+                if (item.Times > 10 || item.Expire.Year > 2000 && item.Expire < DateTime.Now)
+                    item.Status = CommandStatus.取消;
+                else
+                {
+                    item.Status = CommandStatus.处理中;
+                    rs.Add(item.ToModel());
+                }
                 item.UpdateTime = DateTime.Now;
             }
             cmds.Update(false);
 
-            return rs;
+            return rs.ToArray();
         }
 
         [ApiFilter]
@@ -377,7 +384,11 @@ namespace Stardust.Server.Controllers
         {
             var sid = $"{node.ID}@{UserHost}";
             var olt = _cache.Get<NodeOnline>($"NodeOnline:{sid}");
-            if (olt != null) return olt;
+            if (olt != null)
+            {
+                _cache.SetExpire($"NodeOnline:{sid}", TimeSpan.FromSeconds(600));
+                return olt;
+            }
 
             return NodeOnline.FindBySessionID(sid);
         }
@@ -429,22 +440,15 @@ namespace Stardust.Server.Controllers
                 var ms = Request.Body;
                 if (Request.ContentLength > 0)
                 {
-                    var rs = "";
-                    switch (cmd.Command)
+                    var rs = cmd.Command switch
                     {
-                        case "截屏":
-                            rs = await SaveFileAsync(cmd, ms, "png");
-                            break;
-                        case "抓日志":
-                            rs = await SaveFileAsync(cmd, ms, "log");
-                            break;
-                        default:
-                            rs = await SaveFileAsync(cmd, ms, "bin");
-                            break;
-                    }
-
+                        "截屏" => await SaveFileAsync(cmd, ms, "png"),
+                        "抓日志" => await SaveFileAsync(cmd, ms, "log"),
+                        _ => await SaveFileAsync(cmd, ms, "bin"),
+                    };
                     if (!rs.IsNullOrEmpty())
                     {
+                        cmd.Status = CommandStatus.已完成;
                         cmd.Result = rs;
                         cmd.Save();
 
@@ -563,7 +567,7 @@ namespace Stardust.Server.Controllers
 
         private async Task consumeMessage(WebSocket socket, Node node, CancellationToken cancellationToken)
         {
-            var queue = _cache.GetQueue<String>($"cmd:{node.Code}");
+            var queue = _queue.GetQueue<String>($"cmd:{node.Code}");
             while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
             {
                 var msg = await queue.TakeOneAsync(10_000);
@@ -580,6 +584,45 @@ namespace Stardust.Server.Controllers
                     await Task.Delay(1_000, cancellationToken);
                 }
             }
+        }
+
+        /// <summary>向节点发送命令</summary>
+        /// <param name="model"></param>
+        /// <param name="token">应用令牌</param>
+        /// <returns></returns>
+        [ApiFilter]
+        [HttpPost(nameof(SendCommand))]
+        public Int32 SendCommand(CommandInModel model, String token)
+        {
+            if (model.NodeCode.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.NodeCode), "必须指定节点");
+            if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
+
+            var node = Node.FindByCode(model.NodeCode);
+            if (node == null) throw new ArgumentOutOfRangeException(nameof(model.NodeCode), "无效节点");
+
+            var app = _tokenService.DecodeToken(token, Setting.Current);
+            if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new InvalidOperationException("无权操作！");
+
+            if (app.AllowControlNodes != "*" && !node.Code.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
+                throw new InvalidOperationException($"[{app}]无权操作节点[{node}]！");
+
+            var cmd = new NodeCommand
+            {
+                NodeID = node.ID,
+                Command = model.Command,
+                Argument = model.Argument,
+                //Expire = model.Expire,
+                Times = 1,
+
+                CreateUser = app.Name,
+            };
+            if (model.Expire > 0) cmd.Expire = DateTime.Now.AddSeconds(model.Expire);
+            cmd.Insert();
+
+            var queue = _queue.GetQueue<String>($"cmd:{node.Code}");
+            queue.Add(cmd.ToModel().ToJson());
+
+            return cmd.ID;
         }
         #endregion
 
