@@ -30,9 +30,9 @@
 <script type="text/javascript">
     $(function () {
         $("#@(id)_select").bsSuggest({
-            url: "/Registries/App/AppSearch?category=@Model.Category&key=",
+            url: "/Registry/App/AppSearch?category=@Model.Category&key=",
             getDataMethod:"url",
-            effectiveFieldsAlias: { ID: "编号", Name: "名称", DisplayName: "显示名", Category: "类别" },
+            effectiveFieldsAlias: { id: "编号", name: "名称", displayName: "显示名", category: "类别" },
             ignorecase: true,
             showHeader: true,
             delayUntilKeyup: true, //获取数据的方式为 firstByUrl 时，延迟到有输入/获取到焦点时才请求数据

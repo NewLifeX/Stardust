@@ -10,7 +10,7 @@ using XCode.Membership;
 namespace Stardust.Web.Areas.Deployment.Controllers
 {
     [DeploymentArea]
-    public class AppDeployHistoryController : EntityController<AppDeployHistory>
+    public class AppDeployHistoryController : ReadOnlyEntityController<AppDeployHistory>
     {
         static AppDeployHistoryController()
         {

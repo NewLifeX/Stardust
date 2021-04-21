@@ -33,6 +33,8 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
+            PageSetting.EnableAdd = false;
+
             return AppDeployNode.Search(start, end, p["Q"], p);
         }
 

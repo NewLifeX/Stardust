@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
@@ -25,8 +27,7 @@ namespace Stardust.Data
 
         #region 扩展属性
         /// <summary>应用</summary>
-        [XmlIgnore]
-        //[ScriptIgnore]
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
         public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
 
         /// <summary>应用</summary>

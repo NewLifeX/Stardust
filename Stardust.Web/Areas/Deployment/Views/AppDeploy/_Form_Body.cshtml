@@ -1,0 +1,35 @@
+﻿@model AppDeploy
+@using Stardust.Data.Deployment;
+@using NewLife;
+@using NewLife.Web;
+@using XCode;
+@using XCode.Configuration;
+@using XCode.Membership;
+@using NewLife.Cube;
+@using Stardust.Web.Models;
+@{
+    var entity = Model;
+    var fields = ViewBag.Fields as IList<FieldItem>;
+    var isNew = (entity as IEntity).IsNullKey;
+}
+@foreach (var item in fields)
+{
+    if (!item.IsIdentity)
+    {
+        if (item.Name == "AppId")
+        {
+            <div class="form-group col-xs-12 col-sm-6 col-lg-4">
+                <label class="control-label col-xs-3 col-sm-3">应用</label>
+                <div class="input-group col-xs-9 col-sm-9">
+                    @await Html.PartialAsync("_SelectApp", new SelectAppModel { Id = "appId" })
+                </div>
+            </div>
+        }
+        else
+        {
+            @await Html.PartialAsync("_Form_Group", new ValueTuple<IEntity, FieldItem>(entity, item))
+        }
+    }
+}
+@await Html.PartialAsync("_Form_Footer", entity)
+@await Html.PartialAsync("_Form_Action", entity)

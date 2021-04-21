@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Deployment;
-using Stardust.Data.Nodes;
 using XCode;
 using XCode.Membership;
 
@@ -22,52 +20,18 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             ListFields.RemoveField("ApolloMetaServer");
 
             {
-                var df = ListFields.AddDataField("Configs", "Enable");
-                df.Header = "配置";
-                df.DisplayName = "配置";
-                df.Title = "查看该应用所有配置数据";
-                df.Url = "ConfigData?appId={Id}";
+                var df = ListFields.AddDataField("AddNode", null, "Enable");
+                df.Header = "节点";
+                df.DisplayName = "添加节点";
+                df.Title = "添加服务器节点";
+                df.Url = "AppDeployNode/Add?appId={AppId}&deployId={Id}";
             }
 
             {
-                var df = ListFields.AddDataField("Publish", "PublishTime");
-                df.Header = "发布";
-                df.DisplayName = "发布";
-                df.Url = "Appconfig/Publish?appId={Id}";
-                df.DataAction = "action";
-            }
-
-            {
-                var df = ListFields.AddDataField("History", "PublishTime");
-                df.Header = "历史";
-                df.DisplayName = "历史";
-                df.Title = "查看该应用的配置历史";
-                df.Url = "ConfigHistory?appId={Id}";
-            }
-
-            {
-                var df = ListFields.AddDataField("Preview", "PublishTime");
-                df.Header = "预览";
-                df.DisplayName = "预览";
-                df.Title = "查看该应用的配置数据";
-                df.Url = "/config/getall?appId={Name}&secret={appSecret}";
-            }
-
-            {
-                var df = ListFields.AddDataField("Log", "UpdateUserID");
+                var df = ListFields.AddDataField("Log", "UpdateUserId");
                 df.DisplayName = "修改日志";
                 df.Header = "修改日志";
-                df.Url = "/Admin/Log?category=应用配置&linkId={Id}";
-            }
-
-            {
-                var df = AddFormFields.AddDataField("Nodes");
-                df.DataSource = (entity, field) => Node.FindAllWithCache().Where(e => e.Enable).ToDictionary(e => e.ID, e => e.Name);
-            }
-
-            {
-                var df = EditFormFields.AddDataField("Nodes");
-                df.DataSource = (entity, field) => Node.FindAllWithCache().Where(e => e.Enable).ToDictionary(e => e.ID, e => e.Name);
+                df.Url = "/Admin/Log?category=应用部署&linkId={Id}";
             }
         }
 
@@ -88,7 +52,16 @@ namespace Stardust.Web.Areas.Deployment.Controllers
 
         protected override Boolean Valid(AppDeploy entity, DataObjectMethodType type, Boolean post)
         {
-            if (!post) return base.Valid(entity, type, post);
+            if (!post)
+            {
+                if (type == DataObjectMethodType.Insert)
+                {
+                    entity.Enable = true;
+                    entity.AutoStart = true;
+                }
+
+                return base.Valid(entity, type, post);
+            }
 
             // 必须提前写修改日志，否则修改后脏数据失效，保存的日志为空
             if (type == DataObjectMethodType.Update && (entity as IEntity).HasDirty)
