@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -61,46 +61,24 @@ namespace Stardust.Data.Deployment
             //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
             //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
         }
-
-        ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
-        //[EditorBrowsable(EditorBrowsableState.Never)]
-        //protected override void InitData()
-        //{
-        //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
-        //    if (Meta.Session.Count > 0) return;
-
-        //    if (XTrace.Debug) XTrace.WriteLine("开始初始化AppDeployNode[部署节点]数据……");
-
-        //    var entity = new AppDeployNode();
-        //    entity.Id = 0;
-        //    entity.AppId = 0;
-        //    entity.DeployId = 0;
-        //    entity.NodeId = 0;
-        //    entity.Sort = 0;
-        //    entity.CreateUserId = 0;
-        //    entity.CreateTime = DateTime.Now;
-        //    entity.CreateIP = "abc";
-        //    entity.Insert();
-
-        //    if (XTrace.Debug) XTrace.WriteLine("完成初始化AppDeployNode[部署节点]数据！");
-        //}
-
-        ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
-        ///// <returns></returns>
-        //public override Int32 Insert()
-        //{
-        //    return base.Insert();
-        //}
-
-        ///// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>
-        ///// <returns></returns>
-        //protected override Int32 OnDelete()
-        //{
-        //    return base.OnDelete();
-        //}
         #endregion
 
         #region 扩展属性
+        /// <summary>应用</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
+
+        /// <summary>应用</summary>
+        [Map(__.AppId, typeof(App), "Id")]
+        public String AppName => App?.Name;
+
+        /// <summary>部署</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public AppDeploy AppDeploy => Extends.Get(nameof(AppDeploy), k => AppDeploy.FindById(DeployId));
+
+        /// <summary>部署</summary>
+        [Map(__.DeployId, typeof(AppDeploy), "Id")]
+        public String DeployName => AppDeploy?.Name;
         #endregion
 
         #region 扩展查询
