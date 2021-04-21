@@ -473,7 +473,7 @@ namespace Stardust
         {
             try
             {
-                var buf = new Byte[1024];
+                var buf = new Byte[4 * 1024];
                 while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
                 {
                     var data = await socket.ReceiveAsync(new ArraySegment<Byte>(buf), cancellationToken);

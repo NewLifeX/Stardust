@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data.Deployment" ConnName="Stardust" BaseClass="Entity" Output="" xmlns="http://www.newlifex.com/Model2020.xsd">
+  <Table Name="AppDeploy" Description="应用部署。应用部署的实例，每个应用在不同环境下有不同的部署集，关联不同的节点服务器组">
+    <Columns>
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="AppId" DataType="Int32" Description="应用。原始应用" />
+      <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
+      <Column Name="Environment" DataType="String" Description="环境。prod/test/dev/uat等" />
+      <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="Version" DataType="Int32" Description="版本。应用正在使用的版本号" />
+      <Column Name="FileName" DataType="String" Description="文件。应用启动文件" />
+      <Column Name="Arguments" DataType="String" Description="参数。启动应用的参数" />
+      <Column Name="WorkingDirectory" DataType="String" Description="工作目录。应用根目录" />
+      <Column Name="AutoStart" DataType="Boolean" Description="自动启动。系统重启时，或应用退出后，自动拉起应用" />
+      <Column Name="CreateUserId" DataType="Int32" Description="创建者" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="UpdateUserId" DataType="Int32" Description="更新者" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" />
+      <Column Name="Remark" DataType="String" Length="500" Description="备注" />
+    </Columns>
+    <Indexes>
+      <Index Columns="AppId" />
+    </Indexes>
+  </Table>
+  <Table Name="AppDeployNode" Description="部署节点。应用和节点服务器的依赖关系">
+    <Columns>
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="AppId" DataType="Int32" Description="应用。原始应用" />
+      <Column Name="DeployId" DataType="Int32" Description="部署集。应用部署集" />
+      <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
+      <Column Name="Sort" DataType="Int32" Description="顺序。较大在前" />
+      <Column Name="CreateUserId" DataType="Int32" Description="创建人" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+    </Columns>
+    <Indexes>
+      <Index Columns="AppId" />
+      <Index Columns="DeployId" />
+      <Index Columns="NodeId" />
+    </Indexes>
+  </Table>
+  <Table Name="AppDeployVersion" Description="部署版本">
+    <Columns>
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="AppId" DataType="Int32" Description="应用" />
+      <Column Name="Version" DataType="String" Master="True" Nullable="False" Description="版本" />
+      <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="Url" DataType="String" ItemType="file" Description="资源" />
+      <Column Name="CreateUserId" DataType="Int32" Description="创建者" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="UpdateUserId" DataType="Int32" Description="更新者" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" />
+      <Column Name="Remark" DataType="String" Length="500" Description="备注" />
+    </Columns>
+    <Indexes>
+      <Index Columns="AppId,Version" Unique="True" />
+    </Indexes>
+  </Table>
+  <Table Name="AppDeployHistory" Description="部署历史。记录应用集部署历史">
+    <Columns>
+      <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+      <Column Name="AppId" DataType="Int32" Description="应用" />
+      <Column Name="DeployId" DataType="Int32" Description="部署集。应用部署集" />
+      <Column Name="Action" DataType="String" Nullable="False" Description="操作" />
+      <Column Name="Success" DataType="Boolean" Description="成功" />
+      <Column Name="Remark" DataType="String" Length="2000" Description="内容" />
+      <Column Name="CreateUserId" DataType="Int32" Description="创建者" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+    </Columns>
+    <Indexes>
+      <Index Columns="AppId,Id" />
+      <Index Columns="DeployId,Id" />
+      <Index Columns="DeployId,Action,Id" />
+    </Indexes>
+  </Table>
+</Tables>

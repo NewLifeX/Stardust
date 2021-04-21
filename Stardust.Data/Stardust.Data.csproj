@@ -74,10 +74,15 @@
 
   <ItemGroup>
     <None Remove="Build.tt" />
+    <None Remove="Deployment\Build.tt" />
     <None Remove="Configs\Build.tt" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Deployment\Build.tt">
+      <LastGenOutput>Build.log</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </Content>
     <Content Include="Configs\Build.tt">
       <LastGenOutput>Build.log</LastGenOutput>
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -102,6 +107,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Deployment\Build.log">
+      <DependentUpon>Build.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </None>
     <None Update="Configs\Build.log">
       <DependentUpon>Build.tt</DependentUpon>
       <DesignTime>True</DesignTime>
