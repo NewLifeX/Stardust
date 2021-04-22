@@ -39,6 +39,23 @@ namespace StarAgent
             var args = Environment.CommandLine.TrimStart(Path.ChangeExtension(fileName, ".dll")).Trim();
 
             var set = Stardust.Setting.Current;
+            // 使用对方送过来的星尘服务端地址
+            if (set.Server.IsNullOrEmpty() && !info.Server.IsNullOrEmpty())
+            {
+                set.Server = info.Server;
+                set.Save();
+
+                XTrace.WriteLine("StarAgent使用应用[{0}]送过来的星尘服务端地址：{1}", info.ProcessName, info.Server);
+
+                if (Service is MyService svc)
+                {
+                    ThreadPoolX.QueueUserWorkItem(() =>
+                    {
+                        svc.StartClient();
+                        svc.StartFactory();
+                    });
+                }
+            }
 
             return new AgentInfo
             {

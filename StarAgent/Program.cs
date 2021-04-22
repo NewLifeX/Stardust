@@ -75,14 +75,14 @@ namespace StarAgent
         private StarFactory _factory;
         private ServiceManager _Manager;
 
-        private void StartClient()
+        public void StartClient()
         {
-            var set = Setting.Current;
             var server = Stardust.Setting.Current.Server;
             if (server.IsNullOrEmpty()) return;
 
             WriteLog("初始化服务端地址：{0}", server);
 
+            var set = Setting.Current;
             var client = new StarClient(server)
             {
                 Code = set.Code,
@@ -114,12 +114,12 @@ namespace StarAgent
             _timer = new TimerX(TryConnectServer, client, 0, 5_000) { Async = true };
         }
 
-        private void StartFactory()
+        public void StartFactory()
         {
             if (_factory == null)
             {
                 var server = Stardust.Setting.Current.Server;
-                _factory = new StarFactory(server, "StarAgent", null);
+                if (!server.IsNullOrEmpty()) _factory = new StarFactory(server, "StarAgent", null);
             }
         }
 
