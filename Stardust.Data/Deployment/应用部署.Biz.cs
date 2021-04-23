@@ -101,16 +101,20 @@ namespace Stardust.Data.Deployment
         #region 高级查询
         /// <summary>高级查询</summary>
         /// <param name="appId">应用。原始应用</param>
+        /// <param name="category">分类</param>
+        /// <param name="enable">启用</param>
         /// <param name="start">更新时间开始</param>
         /// <param name="end">更新时间结束</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<AppDeploy> Search(Int32 appId, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<AppDeploy> Search(Int32 appId, String category, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
-            if (appId >= 0) exp &= _.AppId == appId;
+            if (appId > 0) exp &= _.AppId == appId;
+            if (!category.IsNullOrEmpty()) exp &= _.Category == category;
+            if (enable != null) exp &= _.Enable == enable;
             exp &= _.UpdateTime.Between(start, end);
             if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Environment.Contains(key) | _.FileName.Contains(key) | _.Arguments.Contains(key) | _.WorkingDirectory.Contains(key) | _.CreateIP.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
 
@@ -118,14 +122,11 @@ namespace Stardust.Data.Deployment
         }
 
         // Select Count(Id) as Id,Category From AppDeploy Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
-        //static readonly FieldCache<AppDeploy> _CategoryCache = new FieldCache<AppDeploy>(nameof(Category))
-        //{
-        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-        //};
+        static readonly FieldCache<AppDeploy> _CategoryCache = new FieldCache<AppDeploy>(nameof(Category));
 
-        ///// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-        ///// <returns></returns>
-        //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
+        /// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
+        /// <returns></returns>
+        public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
         #endregion
 
         #region 业务操作

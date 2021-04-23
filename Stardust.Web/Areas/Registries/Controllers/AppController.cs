@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Data;
+using NewLife.Web;
 using Stardust.Data;
 using XCode;
 using XCode.Membership;
@@ -27,6 +29,12 @@ namespace Stardust.Web.Areas.Registries.Controllers
                 df.Url = "AppHistory?appId={Id}";
             }
             {
+                var df = ListFields.AddDataField("Deploy", null, "AutoActive");
+                df.DisplayName = "部署";
+                df.Header = "部署";
+                df.Url = "/Deployment/AppDeploy?appId={Id}";
+            }
+            {
                 var df = ListFields.AddDataField("Providers", null, "AutoActive");
                 df.DisplayName = "提供服务";
                 df.Header = "提供服务";
@@ -46,6 +54,24 @@ namespace Stardust.Web.Areas.Registries.Controllers
                 df.Header = "修改日志";
                 df.Url = "/Admin/Log?category=应用系统&linkId={Id}";
             }
+        }
+
+        protected override IEnumerable<App> Search(Pager p)
+        {
+            var id = p["Id"].ToInt(-1);
+            if (id > 0)
+            {
+                var node = App.FindById(id);
+                if (node != null) return new[] { node };
+            }
+
+            var category = p["category"];
+            var enable = p["enable"]?.ToBoolean();
+
+            var start = p["dtStart"].ToDateTime();
+            var end = p["dtEnd"].ToDateTime();
+
+            return App.Search(category, enable, start, end, p["Q"], p);
         }
 
         protected override Boolean Valid(App entity, DataObjectMethodType type, Boolean post)

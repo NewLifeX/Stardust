@@ -16,12 +16,12 @@
 {
     if (!item.IsIdentity)
     {
-        if (item.Name == "AppId")
+        if (item.Name == "AppName")
         {
             <div class="form-group col-xs-12 col-sm-6 col-lg-4">
                 <label class="control-label col-xs-3 col-sm-3">应用</label>
                 <div class="input-group col-xs-9 col-sm-9">
-                    @await Html.PartialAsync("_SelectApp", new SelectAppModel { Id = "appId" })
+                    @await Html.PartialAsync("_SelectApp", new SelectAppModel { Id = "appId", AppId = entity.AppId })
                 </div>
             </div>
         }

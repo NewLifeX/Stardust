@@ -10,8 +10,9 @@
     var page = ViewBag.Page as Pager;
 
     if (id.IsNullOrEmpty()) { id = "appId"; }
-    var appId = page[id];
-    var showValue = App.FindById(appId.ToInt())?.Name;
+    var appId = Model.AppId;
+    if (appId <= 0) appId = page[id].ToInt();
+    var showValue = App.FindById(appId)?.Name;
 }
 
 <div class="form-group" style="position:relative">

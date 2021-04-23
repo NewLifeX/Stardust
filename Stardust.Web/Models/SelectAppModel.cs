@@ -10,5 +10,7 @@ namespace Stardust.Web.Models
         public String Id { get; set; }
 
         public String Category { get; set; }
+
+        public Int32 AppId { get; set; }
     }
 }

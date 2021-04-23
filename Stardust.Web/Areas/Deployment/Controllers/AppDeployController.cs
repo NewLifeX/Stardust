@@ -36,6 +36,12 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             }
 
             {
+                var df = ListFields.AddDataField("AppName");
+                df.Header = "应用";
+                df.Url = "/Registry/App?Id={AppId}";
+            }
+
+            {
                 var df = ListFields.AddDataField("Log", "UpdateUserId");
                 df.DisplayName = "修改日志";
                 df.Header = "修改日志";
@@ -52,10 +58,14 @@ namespace Stardust.Web.Areas.Deployment.Controllers
                 if (entity != null) return new List<AppDeploy> { entity };
             }
 
+            var appId = p["appId"].ToInt(-1);
+            var category = p["category"];
+            var enable = p["enable"]?.ToBoolean();
+
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            return AppDeploy.Search(start, end, p["Q"], p);
+            return AppDeploy.Search(appId, category, enable, start, end, p["Q"], p);
         }
 
         protected override Boolean Valid(AppDeploy entity, DataObjectMethodType type, Boolean post)
