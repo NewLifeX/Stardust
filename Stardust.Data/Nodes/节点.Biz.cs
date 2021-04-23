@@ -200,6 +200,25 @@ namespace Stardust.Data.Nodes
             return FindAll(exp, page);
         }
 
+        /// <summary>根据类别搜索</summary>
+        /// <param name="category"></param>
+        /// <param name="enable"></param>
+        /// <param name="key"></param>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        public static IList<Node> SearchByCategory(String category, Boolean? enable, String key, PageParameter page)
+        {
+            var exp = new WhereExpression();
+
+            if (!category.IsNullOrEmpty()) exp &= _.Category == category | _.Category.IsNullOrEmpty();
+
+            if (enable != null) exp &= _.Enable == enable.Value;
+
+            if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+            return FindAll(exp, page);
+        }
+
         internal static IList<Node> SearchByCreateDate(DateTime date)
         {
             // 先用带有索引的UpdateTime过滤一次

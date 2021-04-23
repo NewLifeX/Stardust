@@ -129,6 +129,19 @@ namespace Stardust.Data.Deployment
         #endregion
 
         #region 业务操作
+        /// <summary>修正数据</summary>
+        /// <returns></returns>
+        public Int32 Fix()
+        {
+            var rs = 0;
+
+            var list = AppDeployNode.FindAllByDeployId(Id);
+            Nodes = list.Count;
+
+            rs += Update();
+
+            return rs;
+        }
         #endregion
     }
 }

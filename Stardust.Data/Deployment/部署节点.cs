@@ -14,8 +14,8 @@ namespace Stardust.Data.Deployment
     [Serializable]
     [DataObject]
     [Description("部署节点。应用和节点服务器的依赖关系")]
+    [BindIndex("IU_AppDeployNode_DeployId_NodeId", true, "DeployId,NodeId")]
     [BindIndex("IX_AppDeployNode_AppId", false, "AppId")]
-    [BindIndex("IX_AppDeployNode_DeployId", false, "DeployId")]
     [BindIndex("IX_AppDeployNode_NodeId", false, "NodeId")]
     [BindTable("AppDeployNode", Description = "部署节点。应用和节点服务器的依赖关系", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppDeployNode

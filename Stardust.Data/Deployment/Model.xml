@@ -38,8 +38,8 @@
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
     </Columns>
     <Indexes>
+      <Index Columns="DeployId,NodeId" Unique="True" />
       <Index Columns="AppId" />
-      <Index Columns="DeployId" />
       <Index Columns="NodeId" />
     </Indexes>
   </Table>

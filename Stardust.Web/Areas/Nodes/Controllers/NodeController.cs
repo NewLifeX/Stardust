@@ -68,7 +68,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             // 默认排序
             if (page.Sort.IsNullOrEmpty()) page.Sort = _.Name;
 
-            var list = Node.Search(-1, -1, category, null, true, DateTime.MinValue, DateTime.MinValue, key, page);
+            var list = Node.SearchByCategory(category, true, key, page);
 
             return Json(0, null, list.Select(e => new
             {

@@ -10,8 +10,9 @@
     var page = ViewBag.Page as Pager;
 
     if (id.IsNullOrEmpty()) { id = "nodeId"; }
-    var nodeId = page[id];
-    var showValue = Node.FindByID(nodeId.ToInt())?.Name;
+    var nodeId = Model.NodeId;
+    if (nodeId <= 0) nodeId = page[id].ToInt();
+    var showValue = Node.FindByID(nodeId)?.Name;
 }
 
 <div class="form-group" style="position:relative">

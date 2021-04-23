@@ -11,17 +11,21 @@
     var entity = Model;
     var fields = ViewBag.Fields as IList<FieldItem>;
     var isNew = (entity as IEntity).IsNullKey;
+
+    var set = NewLife.Cube.Setting.Current;
+    var cls = set.FormGroupClass;
+    if (cls.IsNullOrEmpty()) { cls = "form-group col-xs-12 col-sm-6 col-lg-4"; }
 }
 @foreach (var item in fields)
 {
     if (!item.IsIdentity)
     {
-        if (item.Name == "NodeId")
+        if (item.Name == "NodeName")
         {
-            <div class="form-group col-xs-12 col-sm-6 col-lg-4">
+            <div class="@cls">
                 <label class="control-label col-xs-3 col-sm-3">节点</label>
                 <div class="input-group col-xs-9 col-sm-9">
-                    @await Html.PartialAsync("_SelectNode", new SelectNodeModel { Id = "appId", Category = entity?.App?.Category })
+                    @await Html.PartialAsync("_SelectNode", new SelectNodeModel { Id = "nodeId", NodeId = entity.NodeId, Category = entity?.App?.Category })
                 </div>
             </div>
         }

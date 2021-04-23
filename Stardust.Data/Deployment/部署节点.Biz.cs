@@ -1,26 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
-using NewLife.Log;
-using NewLife.Model;
-using NewLife.Reflection;
-using NewLife.Threading;
-using NewLife.Web;
+using Stardust.Data.Nodes;
 using XCode;
-using XCode.Cache;
-using XCode.Configuration;
-using XCode.DataAccessLayer;
 using XCode.Membership;
 
 namespace Stardust.Data.Deployment
@@ -48,18 +34,9 @@ namespace Stardust.Data.Deployment
             // 如果没有脏数据，则不需要进行任何处理
             if (!HasDirty) return;
 
-            // 建议先调用基类方法，基类方法会做一些统一处理
-            base.Valid(isNew);
-
-            // 在新插入数据或者修改了指定字段时进行修正
-            // 处理当前已登录用户信息，可以由UserModule过滤器代劳
-            /*var user = ManageProvider.User;
-            if (user != null)
-            {
-                if (isNew && !Dirtys[nameof(CreateUserId)]) CreateUserId = user.ID;
-            }*/
-            //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
-            //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
+            if (DeployId <= 0) throw new ArgumentNullException(nameof(DeployId));
+            if (AppId <= 0) throw new ArgumentNullException(nameof(AppId));
+            if (NodeId <= 0) throw new ArgumentNullException(nameof(NodeId));
         }
         #endregion
 
@@ -69,16 +46,24 @@ namespace Stardust.Data.Deployment
         public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
 
         /// <summary>应用</summary>
-        [Map(__.AppId, typeof(App), "Id")]
+        [Map(__.AppId)]
         public String AppName => App?.Name;
 
         /// <summary>部署</summary>
         [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-        public AppDeploy AppDeploy => Extends.Get(nameof(AppDeploy), k => AppDeploy.FindById(DeployId));
+        public AppDeploy Deploy => Extends.Get(nameof(Deploy), k => AppDeploy.FindById(DeployId));
 
         /// <summary>部署</summary>
         [Map(__.DeployId, typeof(AppDeploy), "Id")]
-        public String DeployName => AppDeploy?.Name;
+        public String DeployName => Deploy?.Name;
+
+        /// <summary>节点</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public Node Node => Extends.Get(nameof(Node), k => Node.FindByID(NodeId));
+
+        /// <summary>节点</summary>
+        [Map(__.NodeId)]
+        public String NodeName => Node?.Name;
         #endregion
 
         #region 扩展查询
@@ -151,16 +136,6 @@ namespace Stardust.Data.Deployment
 
             return FindAll(exp, page);
         }
-
-        // Select Count(Id) as Id,Category From AppDeployNode Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
-        //static readonly FieldCache<AppDeployNode> _CategoryCache = new FieldCache<AppDeployNode>(nameof(Category))
-        //{
-        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-        //};
-
-        ///// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-        ///// <returns></returns>
-        //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
         #endregion
 
         #region 业务操作
