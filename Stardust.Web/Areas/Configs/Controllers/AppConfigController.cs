@@ -24,8 +24,8 @@ namespace Stardust.Web.Areas.Configs.Controllers
 
             {
                 var df = ListFields.AddDataField("Configs", "Enable");
-                df.Header = "配置";
-                df.DisplayName = "配置";
+                df.Header = "管理配置";
+                df.DisplayName = "管理配置";
                 df.Title = "查看该应用所有配置数据";
                 df.Url = "ConfigData?appId={Id}";
             }
@@ -36,6 +36,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
                 df.DisplayName = "发布";
                 df.Url = "Appconfig/Publish?appId={Id}";
                 df.DataAction = "action";
+                df.DataVisible = (e, f) => (e is AppConfig ac && ac.Version < ac.NextVersion);
             }
 
             {
