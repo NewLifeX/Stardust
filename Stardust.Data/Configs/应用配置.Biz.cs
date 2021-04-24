@@ -66,6 +66,10 @@ namespace Stardust.Data.Configs
         /// <summary>应用密钥。用于web端做预览</summary>
         [XmlIgnore, ScriptIgnore, IgnoreDataMember]
         public String AppSecret => App.FindByName(Name)?.Secret;
+
+        /// <summary>依赖应用</summary>
+        [Map(nameof(Quotes))]
+        public String QuoteNames => Extends.Get(nameof(QuoteNames), k => Quotes?.SplitAsInt().Select(FindById).Join());
         #endregion
 
         #region 扩展查询

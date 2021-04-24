@@ -20,7 +20,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
             MenuOrder = 58;
 
             ListFields.RemoveCreateField();
-            ListFields.RemoveField("ApolloMetaServer");
+            ListFields.RemoveField("EnableApollo", "ApolloMetaServer", "ApolloAppId", "ApolloNameSpace");
 
             {
                 var df = ListFields.AddDataField("Configs", "Enable");
