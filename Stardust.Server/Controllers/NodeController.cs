@@ -16,6 +16,7 @@ using NewLife.Remoting;
 using NewLife.Security;
 using NewLife.Serialization;
 using NewLife.Web;
+using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Common;
@@ -325,6 +326,9 @@ namespace Stardust.Server.Controllers
 
                 // 拉取命令
                 rs.Commands = AcquireCommands(node.ID);
+
+                // 下发部署的应用服务
+                rs.Services = GetServices(node.ID);
             }
 
             return rs;
@@ -364,6 +368,32 @@ namespace Stardust.Server.Controllers
             cmds.Update(false);
 
             return rs.ToArray();
+        }
+
+        private ServiceInfo[] GetServices(Int32 nodeId)
+        {
+            var list = AppDeployNode.FindAllByNodeId(nodeId);
+            list = list.Where(e => e.Enable).ToList();
+            if (list.Count == 0) return null;
+
+            var svcs = new List<ServiceInfo>();
+            foreach (var item in list)
+            {
+                var deploy = item.Deploy;
+                if (deploy == null) continue;
+
+                var svc = new ServiceInfo
+                {
+                    Name = deploy.Name,
+                    FileName = deploy.FileName,
+                    Arguments = deploy.Arguments,
+                    WorkingDirectory = deploy.WorkingDirectory,
+                    AutoStart = deploy.AutoStart,
+                };
+                svcs.Add(svc);
+            }
+
+            return svcs.ToArray();
         }
 
         [ApiFilter]

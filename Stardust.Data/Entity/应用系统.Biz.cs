@@ -127,9 +127,11 @@ namespace Stardust.Data
             // 更新应用信息
             if (app != null && model.Info != null)
             {
-                var clientId = model.ClientId ?? ip;
-                var ss = clientId.Split('@');
-                if (ss.Length == 3) clientId = $"{ss[0]}@{ss[1]}";
+                // 严格来说，应该采用公网IP+内外IP+进程ID才能够保证比较高的唯一性，这里为了简单，直接使用公网IP
+                // 同时，还可能存在多层NAT网络的情况，很难保证绝对唯一
+                var clientId = ip;
+                var ss = model.ClientId.Split('@');
+                if (ss.Length >= 2) clientId = $"{ip}@{ss[1]}";
 
                 var online = Data.AppOnline.GetOrAddClient(clientId);
                 online.PingCount++;

@@ -88,6 +88,8 @@ namespace StarAgent
                 Code = set.Code,
                 Secret = set.Secret,
                 Log = XTrace.Log,
+
+                Manager = _Manager,
             };
 
             // 登录后保存证书

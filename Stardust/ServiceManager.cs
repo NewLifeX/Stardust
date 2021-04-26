@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using NewLife;
 using NewLife.Log;
@@ -32,6 +33,19 @@ namespace Stardust
         #endregion
 
         #region 方法
+        /// <summary>添加应用服务</summary>
+        /// <param name="services">应用服务集合</param>
+        public void Add(ServiceInfo[] services)
+        {
+            var list = Services.ToList();
+            foreach (var item in services)
+            {
+                if (!list.Any(e => e.Name.EqualIgnoreCase(item.Name))) list.Add(item);
+            }
+
+            Services = list.ToArray();
+        }
+
         /// <summary>开始管理，拉起应用进程</summary>
         public void Start()
         {
@@ -44,6 +58,9 @@ namespace Stardust
 
             _timer = new TimerX(DoWork, null, 30_000, 30_000) { Async = true };
         }
+
+        /// <summary>检查服务。一般用于改变服务后，让其即时生效</summary>
+        public void CheckService() => DoWork(null);
 
         private Process StartService(ServiceInfo service)
         {
@@ -173,11 +190,20 @@ namespace Stardust
         {
             foreach (var svc in Services)
             {
-                if (svc != null && svc.AutoRestart && _processes.TryGetValue(svc.Name, out var p))
+                if (svc != null && svc.AutoStart)
                 {
-                    if (p == null || p.HasExited)
+                    if (_processes.TryGetValue(svc.Name, out var p))
                     {
-                        WriteLog("应用[{0}/{1}]已退出，准备重新启动！", svc.Name, p?.Id);
+                        if (svc.AutoRestart && (p == null || p.HasExited))
+                        {
+                            WriteLog("应用[{0}/{1}]已退出，准备重新启动！", svc.Name, p?.Id);
+
+                            StartService(svc);
+                        }
+                    }
+                    else
+                    {
+                        WriteLog("新增应用[{0}]，准备启动！", svc.Name);
 
                         StartService(svc);
                     }

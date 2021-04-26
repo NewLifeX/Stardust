@@ -13,6 +13,11 @@ using Stardust.Monitors;
 namespace Stardust
 {
     /// <summary>星尘工厂</summary>
+    /// <remarks>
+    /// 星尘代理 https://www.yuque.com/smartstone/blood/staragent_install
+    /// 监控中心 https://www.yuque.com/smartstone/blood/stardust_monitor
+    /// 配置中心 https://www.yuque.com/smartstone/blood/stardust_configcenter
+    /// </remarks>
     public class StarFactory : DisposeBase
     {
         #region 属性
@@ -168,6 +173,9 @@ namespace Stardust
         #region 配置中心
         private HttpConfigProvider _config;
         /// <summary>配置中心</summary>
+        /// <remarks>
+        /// 文档 https://www.yuque.com/smartstone/blood/stardust_configcenter
+        /// </remarks>
         public IConfigProvider Config
         {
             get

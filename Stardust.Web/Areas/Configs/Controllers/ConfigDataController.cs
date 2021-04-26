@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using NewLife;
 using NewLife.Cube;
 using NewLife.Remoting;
 using NewLife.Web;
 using Stardust.Data.Configs;
+using XCode;
 
 namespace Stardust.Web.Areas.Configs.Controllers
 {
@@ -82,6 +84,23 @@ namespace Stardust.Web.Areas.Configs.Controllers
             }
 
             return RedirectToAction("Index", new { appId = entity.AppId });
+        }
+
+        protected override Int32 OnDelete(ConfigData entity)
+        {
+            var rs = base.OnDelete(entity);
+
+            // 同时删除该应用该Key该域下，不同版本的配置数据
+            var list = ConfigData.FindAllByApp(entity.AppId);
+            list = list.Where(e => e.Key.EqualIgnoreCase(entity.Key) && e.Scope.EqualIgnoreCase(entity.Scope)).ToList();
+
+            //rs += list.Delete(true);
+            foreach (var item in list)
+            {
+                rs += item.Delete();
+            }
+
+            return rs;
         }
 
         public ActionResult Publish(Int32 appId)

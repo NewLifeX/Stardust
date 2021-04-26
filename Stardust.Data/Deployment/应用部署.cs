@@ -14,6 +14,7 @@ namespace Stardust.Data.Deployment
     [Serializable]
     [DataObject]
     [Description("应用部署。应用部署的实例，每个应用在不同环境下有不同的部署集，关联不同的节点服务器组")]
+    [BindIndex("IU_AppDeploy_Name", true, "Name")]
     [BindIndex("IX_AppDeploy_AppId", false, "AppId")]
     [BindTable("AppDeploy", Description = "应用部署。应用部署的实例，每个应用在不同环境下有不同的部署集，关联不同的节点服务器组", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppDeploy
@@ -44,11 +45,11 @@ namespace Stardust.Data.Deployment
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
         private String _Name;
-        /// <summary>名称</summary>
+        /// <summary>名称。全局唯一，默认应用名，根据场景可以加dev等后缀</summary>
         [DisplayName("名称")]
-        [Description("名称")]
+        [Description("名称。全局唯一，默认应用名，根据场景可以加dev等后缀")]
         [DataObjectField(false, false, false, 50)]
-        [BindColumn("Name", "名称", "", Master = true)]
+        [BindColumn("Name", "名称。全局唯一，默认应用名，根据场景可以加dev等后缀", "", Master = true)]
         public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
         private String _Environment;
@@ -246,7 +247,7 @@ namespace Stardust.Data.Deployment
             /// <summary>应用。原始应用</summary>
             public static readonly Field AppId = FindByName("AppId");
 
-            /// <summary>名称</summary>
+            /// <summary>名称。全局唯一，默认应用名，根据场景可以加dev等后缀</summary>
             public static readonly Field Name = FindByName("Name");
 
             /// <summary>环境。prod/test/dev/uat等</summary>
@@ -309,7 +310,7 @@ namespace Stardust.Data.Deployment
             /// <summary>应用。原始应用</summary>
             public const String AppId = "AppId";
 
-            /// <summary>名称</summary>
+            /// <summary>名称。全局唯一，默认应用名，根据场景可以加dev等后缀</summary>
             public const String Name = "Name";
 
             /// <summary>环境。prod/test/dev/uat等</summary>

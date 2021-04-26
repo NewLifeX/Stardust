@@ -10,15 +10,15 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Deployment
 {
-    /// <summary>应用节点。应用和节点服务器的依赖关系</summary>
+    /// <summary>部署在线。应用已部署的在运行中进程的在线记录</summary>
     [Serializable]
     [DataObject]
-    [Description("应用节点。应用和节点服务器的依赖关系")]
-    [BindIndex("IU_AppDeployNode_DeployId_NodeId", true, "DeployId,NodeId")]
-    [BindIndex("IX_AppDeployNode_AppId", false, "AppId")]
-    [BindIndex("IX_AppDeployNode_NodeId", false, "NodeId")]
-    [BindTable("AppDeployNode", Description = "应用节点。应用和节点服务器的依赖关系", ConnName = "Stardust", DbType = DatabaseType.None)]
-    public partial class AppDeployNode
+    [Description("部署在线。应用已部署的在运行中进程的在线记录")]
+    [BindIndex("IX_AppDeployOnline_DeployId_NodeId", false, "DeployId,NodeId")]
+    [BindIndex("IX_AppDeployOnline_AppId", false, "AppId")]
+    [BindIndex("IX_AppDeployOnline_NodeId", false, "NodeId")]
+    [BindTable("AppDeployOnline", Description = "部署在线。应用已部署的在运行中进程的在线记录", ConnName = "Stardust", DbType = DatabaseType.None)]
+    public partial class AppDeployOnline
     {
         #region 属性
         private Int32 _Id;
@@ -53,29 +53,21 @@ namespace Stardust.Data.Deployment
         [BindColumn("NodeId", "节点。节点服务器", "")]
         public Int32 NodeId { get => _NodeId; set { if (OnPropertyChanging("NodeId", value)) { _NodeId = value; OnPropertyChanged("NodeId"); } } }
 
-        private Int32 _Sort;
-        /// <summary>顺序。较大在前</summary>
-        [DisplayName("顺序")]
-        [Description("顺序。较大在前")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Sort", "顺序。较大在前", "")]
-        public Int32 Sort { get => _Sort; set { if (OnPropertyChanging("Sort", value)) { _Sort = value; OnPropertyChanged("Sort"); } } }
+        private String _IP;
+        /// <summary>IP地址。节点本地IP地址</summary>
+        [DisplayName("IP地址")]
+        [Description("IP地址。节点本地IP地址")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("IP", "IP地址。节点本地IP地址", "")]
+        public String IP { get => _IP; set { if (OnPropertyChanging("IP", value)) { _IP = value; OnPropertyChanged("IP"); } } }
 
-        private Boolean _Enable;
-        /// <summary>启用</summary>
-        [DisplayName("启用")]
-        [Description("启用")]
+        private Int32 _ProcessId;
+        /// <summary>进程。应用在该节点上的进程</summary>
+        [DisplayName("进程")]
+        [Description("进程。应用在该节点上的进程")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Enable", "启用", "")]
-        public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
-
-        private Int32 _CreateUserId;
-        /// <summary>创建人</summary>
-        [DisplayName("创建人")]
-        [Description("创建人")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("CreateUserId", "创建人", "")]
-        public Int32 CreateUserId { get => _CreateUserId; set { if (OnPropertyChanging("CreateUserId", value)) { _CreateUserId = value; OnPropertyChanged("CreateUserId"); } } }
+        [BindColumn("ProcessId", "进程。应用在该节点上的进程", "")]
+        public Int32 ProcessId { get => _ProcessId; set { if (OnPropertyChanging("ProcessId", value)) { _ProcessId = value; OnPropertyChanged("ProcessId"); } } }
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
@@ -92,6 +84,14 @@ namespace Stardust.Data.Deployment
         [DataObjectField(false, false, true, 50)]
         [BindColumn("CreateIP", "创建地址", "")]
         public String CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
+
+        private DateTime _UpdateTime;
+        /// <summary>更新时间</summary>
+        [DisplayName("更新时间")]
+        [Description("更新时间")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("UpdateTime", "更新时间", "")]
+        public DateTime UpdateTime { get => _UpdateTime; set { if (OnPropertyChanging("UpdateTime", value)) { _UpdateTime = value; OnPropertyChanged("UpdateTime"); } } }
         #endregion
 
         #region 获取/设置 字段值
@@ -108,11 +108,11 @@ namespace Stardust.Data.Deployment
                     case "AppId": return _AppId;
                     case "DeployId": return _DeployId;
                     case "NodeId": return _NodeId;
-                    case "Sort": return _Sort;
-                    case "Enable": return _Enable;
-                    case "CreateUserId": return _CreateUserId;
+                    case "IP": return _IP;
+                    case "ProcessId": return _ProcessId;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
+                    case "UpdateTime": return _UpdateTime;
                     default: return base[name];
                 }
             }
@@ -124,11 +124,11 @@ namespace Stardust.Data.Deployment
                     case "AppId": _AppId = value.ToInt(); break;
                     case "DeployId": _DeployId = value.ToInt(); break;
                     case "NodeId": _NodeId = value.ToInt(); break;
-                    case "Sort": _Sort = value.ToInt(); break;
-                    case "Enable": _Enable = value.ToBoolean(); break;
-                    case "CreateUserId": _CreateUserId = value.ToInt(); break;
+                    case "IP": _IP = Convert.ToString(value); break;
+                    case "ProcessId": _ProcessId = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
+                    case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
                     default: base[name] = value; break;
                 }
             }
@@ -136,7 +136,7 @@ namespace Stardust.Data.Deployment
         #endregion
 
         #region 字段名
-        /// <summary>取得应用节点字段信息的快捷方式</summary>
+        /// <summary>取得部署在线字段信息的快捷方式</summary>
         public partial class _
         {
             /// <summary>编号</summary>
@@ -151,14 +151,11 @@ namespace Stardust.Data.Deployment
             /// <summary>节点。节点服务器</summary>
             public static readonly Field NodeId = FindByName("NodeId");
 
-            /// <summary>顺序。较大在前</summary>
-            public static readonly Field Sort = FindByName("Sort");
+            /// <summary>IP地址。节点本地IP地址</summary>
+            public static readonly Field IP = FindByName("IP");
 
-            /// <summary>启用</summary>
-            public static readonly Field Enable = FindByName("Enable");
-
-            /// <summary>创建人</summary>
-            public static readonly Field CreateUserId = FindByName("CreateUserId");
+            /// <summary>进程。应用在该节点上的进程</summary>
+            public static readonly Field ProcessId = FindByName("ProcessId");
 
             /// <summary>创建时间</summary>
             public static readonly Field CreateTime = FindByName("CreateTime");
@@ -166,10 +163,13 @@ namespace Stardust.Data.Deployment
             /// <summary>创建地址</summary>
             public static readonly Field CreateIP = FindByName("CreateIP");
 
+            /// <summary>更新时间</summary>
+            public static readonly Field UpdateTime = FindByName("UpdateTime");
+
             static Field FindByName(String name) => Meta.Table.FindByName(name);
         }
 
-        /// <summary>取得应用节点字段名称的快捷方式</summary>
+        /// <summary>取得部署在线字段名称的快捷方式</summary>
         public partial class __
         {
             /// <summary>编号</summary>
@@ -184,20 +184,20 @@ namespace Stardust.Data.Deployment
             /// <summary>节点。节点服务器</summary>
             public const String NodeId = "NodeId";
 
-            /// <summary>顺序。较大在前</summary>
-            public const String Sort = "Sort";
+            /// <summary>IP地址。节点本地IP地址</summary>
+            public const String IP = "IP";
 
-            /// <summary>启用</summary>
-            public const String Enable = "Enable";
-
-            /// <summary>创建人</summary>
-            public const String CreateUserId = "CreateUserId";
+            /// <summary>进程。应用在该节点上的进程</summary>
+            public const String ProcessId = "ProcessId";
 
             /// <summary>创建时间</summary>
             public const String CreateTime = "CreateTime";
 
             /// <summary>创建地址</summary>
             public const String CreateIP = "CreateIP";
+
+            /// <summary>更新时间</summary>
+            public const String UpdateTime = "UpdateTime";
         }
         #endregion
     }
