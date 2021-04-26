@@ -3,11 +3,11 @@ using System.Xml.Serialization;
 
 namespace Stardust.Models
 {
-    /// <summary>服务信息</summary>
+    /// <summary>应用服务信息</summary>
     public class ServiceInfo
     {
         #region 属性
-        /// <summary>名称</summary>
+        /// <summary>名称。全局唯一，默认应用名，根据场景可以加dev等后缀</summary>
         [XmlAttribute]
         public String Name { get; set; }
 

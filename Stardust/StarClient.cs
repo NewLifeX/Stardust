@@ -46,6 +46,9 @@ namespace Stardust
         /// <summary>请求到服务端并返回的延迟时间。单位ms</summary>
         public Int32 Delay { get; set; }
 
+        /// <summary>本地应用服务管理</summary>
+        public ServiceManager Manager { get; set; }
+
         /// <summary>命令队列</summary>
         public IQueueService<CommandModel> CommandQueue { get; } = new QueueService<CommandModel>();
         #endregion
@@ -372,6 +375,13 @@ namespace Stardust
                         {
                             CommandQueue.Publish(item.Command, item);
                         }
+                    }
+
+                    // 应用服务
+                    if (rs.Services != null && rs.Services.Length > 0)
+                    {
+                        Manager.Add(rs.Services);
+                        Manager.CheckService();
                     }
                 }
 

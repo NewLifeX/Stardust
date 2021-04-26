@@ -61,6 +61,14 @@ namespace Stardust.Data.Deployment
         [BindColumn("Sort", "顺序。较大在前", "")]
         public Int32 Sort { get => _Sort; set { if (OnPropertyChanging("Sort", value)) { _Sort = value; OnPropertyChanged("Sort"); } } }
 
+        private Boolean _Enable;
+        /// <summary>启用</summary>
+        [DisplayName("启用")]
+        [Description("启用")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Enable", "启用", "")]
+        public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
+
         private Int32 _CreateUserId;
         /// <summary>创建人</summary>
         [DisplayName("创建人")]
@@ -101,6 +109,7 @@ namespace Stardust.Data.Deployment
                     case "DeployId": return _DeployId;
                     case "NodeId": return _NodeId;
                     case "Sort": return _Sort;
+                    case "Enable": return _Enable;
                     case "CreateUserId": return _CreateUserId;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -116,6 +125,7 @@ namespace Stardust.Data.Deployment
                     case "DeployId": _DeployId = value.ToInt(); break;
                     case "NodeId": _NodeId = value.ToInt(); break;
                     case "Sort": _Sort = value.ToInt(); break;
+                    case "Enable": _Enable = value.ToBoolean(); break;
                     case "CreateUserId": _CreateUserId = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -143,6 +153,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>顺序。较大在前</summary>
             public static readonly Field Sort = FindByName("Sort");
+
+            /// <summary>启用</summary>
+            public static readonly Field Enable = FindByName("Enable");
 
             /// <summary>创建人</summary>
             public static readonly Field CreateUserId = FindByName("CreateUserId");
@@ -173,6 +186,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>顺序。较大在前</summary>
             public const String Sort = "Sort";
+
+            /// <summary>启用</summary>
+            public const String Enable = "Enable";
 
             /// <summary>创建人</summary>
             public const String CreateUserId = "CreateUserId";

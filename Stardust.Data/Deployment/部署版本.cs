@@ -52,11 +52,11 @@ namespace Stardust.Data.Deployment
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
         private String _Url;
-        /// <summary>资源</summary>
-        [DisplayName("资源")]
-        [Description("资源")]
+        /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
+        [DisplayName("资源地址")]
+        [Description("资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("Url", "资源", "", ItemType = "file")]
+        [BindColumn("Url", "资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖", "", ItemType = "file")]
         public String Url { get => _Url; set { if (OnPropertyChanging("Url", value)) { _Url = value; OnPropertyChanged("Url"); } } }
 
         private Int32 _CreateUserId;
@@ -179,7 +179,7 @@ namespace Stardust.Data.Deployment
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
 
-            /// <summary>资源</summary>
+            /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
             public static readonly Field Url = FindByName("Url");
 
             /// <summary>创建者</summary>
@@ -221,7 +221,7 @@ namespace Stardust.Data.Deployment
             /// <summary>启用</summary>
             public const String Enable = "Enable";
 
-            /// <summary>资源</summary>
+            /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
             public const String Url = "Url";
 
             /// <summary>创建者</summary>

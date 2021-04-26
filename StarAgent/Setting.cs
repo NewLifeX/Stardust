@@ -1,8 +1,10 @@
-﻿using NewLife.Configuration;
+﻿using NewLife;
+using NewLife.Configuration;
 using NewLife.Xml;
 using Stardust.Models;
 using System;
 using System.ComponentModel;
+using System.Linq;
 
 namespace StarAgent
 {
@@ -37,10 +39,6 @@ namespace StarAgent
         #endregion
 
         #region 构造
-        ///// <summary>实例化</summary>
-        //public Setting()
-        //{
-        //}
         #endregion
 
         #region 方法
@@ -63,6 +61,19 @@ namespace StarAgent
             }
 
             base.OnLoaded();
+        }
+
+        /// <summary>添加应用服务</summary>
+        /// <param name="services">应用服务集合</param>
+        public void Add(ServiceInfo[] services)
+        {
+            var list = Services.ToList();
+            foreach (var item in services)
+            {
+                if (!list.Any(e => e.Name.EqualIgnoreCase(item.Name))) list.Add(item);
+            }
+
+            Services = list.ToArray();
         }
         #endregion
     }
