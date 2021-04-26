@@ -10,14 +10,14 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Deployment
 {
-    /// <summary>部署节点。应用和节点服务器的依赖关系</summary>
+    /// <summary>应用节点。应用和节点服务器的依赖关系</summary>
     [Serializable]
     [DataObject]
-    [Description("部署节点。应用和节点服务器的依赖关系")]
+    [Description("应用节点。应用和节点服务器的依赖关系")]
     [BindIndex("IU_AppDeployNode_DeployId_NodeId", true, "DeployId,NodeId")]
     [BindIndex("IX_AppDeployNode_AppId", false, "AppId")]
     [BindIndex("IX_AppDeployNode_NodeId", false, "NodeId")]
-    [BindTable("AppDeployNode", Description = "部署节点。应用和节点服务器的依赖关系", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("AppDeployNode", Description = "应用节点。应用和节点服务器的依赖关系", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppDeployNode
     {
         #region 属性
@@ -126,7 +126,7 @@ namespace Stardust.Data.Deployment
         #endregion
 
         #region 字段名
-        /// <summary>取得部署节点字段信息的快捷方式</summary>
+        /// <summary>取得应用节点字段信息的快捷方式</summary>
         public partial class _
         {
             /// <summary>编号</summary>
@@ -156,7 +156,7 @@ namespace Stardust.Data.Deployment
             static Field FindByName(String name) => Meta.Table.FindByName(name);
         }
 
-        /// <summary>取得部署节点字段名称的快捷方式</summary>
+        /// <summary>取得应用节点字段名称的快捷方式</summary>
         public partial class __
         {
             /// <summary>编号</summary>

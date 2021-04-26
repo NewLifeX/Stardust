@@ -26,7 +26,7 @@
       <Index Columns="AppId" />
     </Indexes>
   </Table>
-  <Table Name="AppDeployNode" Description="部署节点。应用和节点服务器的依赖关系">
+  <Table Name="AppDeployNode" Description="应用节点。应用和节点服务器的依赖关系">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用。原始应用" />
