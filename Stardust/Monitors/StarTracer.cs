@@ -250,14 +250,14 @@ namespace Stardust.Monitors
             {
                 var type = "XCode.DataAccessLayer.DAL".GetTypeEx(false);
                 var pi = type?.GetPropertyEx("GlobalTracer");
-                if (pi != null && pi.PropertyType == typeof(ITracer)) pi.SetValue(null, this);
+                if (pi != null && pi.PropertyType == typeof(ITracer)) pi.SetValue(null, this, null);
             }
 
             // 反射处理Cube追踪
             {
                 var type = "NewLife.Cube.WebMiddleware.TracerMiddleware".GetTypeEx(false);
                 var pi = type?.GetPropertyEx("Tracer");
-                if (pi != null && pi.PropertyType == typeof(ITracer)) pi.SetValue(null, this);
+                if (pi != null && pi.PropertyType == typeof(ITracer)) pi.SetValue(null, this, null);
             }
         }
         #endregion

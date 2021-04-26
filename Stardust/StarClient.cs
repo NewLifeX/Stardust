@@ -6,7 +6,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
-using System.Net.WebSockets;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,13 +20,16 @@ using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust.Models;
 using Stardust.Services;
+#if !NET4
+using System.Net.WebSockets;
+#endif
 
 namespace Stardust
 {
     /// <summary>星星客户端。每个设备节点有一个客户端连接服务端</summary>
     public class StarClient : ApiHttpClient
     {
-        #region 属性
+#region 属性
         /// <summary>证书</summary>
         public String Code { get; set; }
 
@@ -51,9 +53,9 @@ namespace Stardust
 
         /// <summary>命令队列</summary>
         public IQueueService<CommandModel> CommandQueue { get; } = new QueueService<CommandModel>();
-        #endregion
+#endregion
 
-        #region 构造
+#region 构造
         /// <summary>实例化</summary>
         public StarClient()
         {
@@ -88,9 +90,9 @@ namespace Stardust
 
             base.Dispose(disposing);
         }
-        #endregion
+#endregion
 
-        #region 方法
+#region 方法
         /// <summary>远程调用拦截，支持重新登录</summary>
         /// <typeparam name="TResult"></typeparam>
         /// <param name="method"></param>
@@ -119,9 +121,9 @@ namespace Stardust
                 throw;
             }
         }
-        #endregion
+#endregion
 
-        #region 登录
+#region 登录
         /// <summary>登录</summary>
         /// <returns></returns>
         public async Task<Object> Login()
@@ -272,9 +274,9 @@ namespace Stardust
         /// <summary>注销</summary>
         /// <returns></returns>
         private async Task<LoginResponse> LogoutAsync(String reason) => await GetAsync<LoginResponse>("Node/Logout", new { reason });
-        #endregion
+#endregion
 
-        #region 心跳报告
+#region 心跳报告
         private readonly String[] _excludes = new[] { "Idle", "System", "Registry", "smss", "csrss", "lsass", "wininit", "services", "winlogon", "fontdrvhost", "dwm", "svchost", "dllhost", "conhost", "taskhostw", "explorer", "ctfmon", "ChsIME", "WmiPrvSE", "WUDFHost", "igfxCUIServiceN", "igfxEMN", "sihost", "RuntimeBroker", "StartMenuExperienceHost", "SecurityHealthSystray", "SecurityHealthService", "ShellExperienceHost", "PerfWatson2", "audiodg" };
 
         /// <summary>获取心跳信息</summary>
@@ -425,9 +427,9 @@ namespace Stardust
         /// <param name="data"></param>
         /// <returns></returns>
         private async Task<Object> ReportAsync(Int32 id, Byte[] data) => await PostAsync<Object>("Node/Report?Id=" + id, data);
-        #endregion
+#endregion
 
-        #region 长连接
+#region 长连接
         private TimerX _timer;
         private void StartTimer()
         {
@@ -437,7 +439,11 @@ namespace Stardust
                 {
                     if (_timer == null)
                     {
+#if !NET4
                         _timer = new TimerX(DoPing, null, 1_000, 60_000, "Device") { Async = true };
+#else
+                        _timer = new TimerX(s=>Ping().Wait(), null, 1_000, 60_000, "Device") { Async = true };
+#endif
                     }
                 }
             }
@@ -448,13 +454,16 @@ namespace Stardust
             _timer.TryDispose();
             _timer = null;
 
+#if !NET4
             if (_websocket.State == WebSocketState.Open) _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default).Wait();
             _source.Cancel();
 
             //_websocket.TryDispose();
             _websocket = null;
+#endif
         }
 
+#if !NET4
         private WebSocket _websocket;
         private CancellationTokenSource _source;
         private async Task DoPing(Object state)
@@ -502,9 +511,10 @@ namespace Stardust
 
             if (socket.State == WebSocketState.Open) await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
         }
-        #endregion
+#endif
+#endregion
 
-        #region 更新
+#region 更新
         /// <summary>获取更新信息</summary>
         /// <param name="channel"></param>
         /// <returns></returns>
@@ -620,6 +630,6 @@ namespace Stardust
         /// <param name="channel"></param>
         /// <returns></returns>
         public async Task<UpgradeInfo> UpgradeAsync(String channel) => await GetAsync<UpgradeInfo>("Node/Upgrade", new { channel });
-        #endregion
+#endregion
     }
 }
