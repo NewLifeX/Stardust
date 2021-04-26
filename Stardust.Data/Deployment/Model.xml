@@ -43,6 +43,24 @@
       <Index Columns="NodeId" />
     </Indexes>
   </Table>
+  <Table Name="AppDeployOnline" Description="部署在线。应用已部署的在运行中进程的在线记录">
+    <Columns>
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="AppId" DataType="Int32" Description="应用。原始应用" />
+      <Column Name="DeployId" DataType="Int32" Description="部署集。应用部署集" />
+      <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
+      <Column Name="IP" DataType="String" Description="IP地址。节点本地IP地址" />
+      <Column Name="ProcessId" DataType="Int32" Description="进程。应用在该节点上的进程" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+    </Columns>
+    <Indexes>
+      <Index Columns="DeployId,NodeId" />
+      <Index Columns="AppId" />
+      <Index Columns="NodeId" />
+    </Indexes>
+  </Table>
   <Table Name="AppDeployVersion" Description="部署版本">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
