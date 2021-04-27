@@ -70,7 +70,7 @@
                 <td>@entity.Name</td>
                 <td title="@entity.IP" style="max-width:200px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;">@entity.IP</td>
                 <td><a href="NodeData?nodeId=@entity.NodeID">数据</a></td>
-                <td><a href="Node/Trace/@entity.ID">诊断</a></td>
+                <td><a href="Node/Trace/@entity.NodeID">诊断</a></td>
                 <td class="text-right">@entity.PingCount.ToString("n0")</td>
                 <td title="@entity.CompileTime.ToFullString("")">@entity.Version</td>
                 <td class="text-right">@entity.Memory.ToString("n0")</td>
