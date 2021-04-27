@@ -589,6 +589,11 @@ namespace Stardust.Server.Controllers
 
                 await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
             }
+            catch (WebSocketException ex)
+            {
+                XTrace.WriteLine("WebSocket异常 {0}", node);
+                XTrace.WriteLine(ex.Message);
+            }
             finally
             {
                 source.Cancel();
