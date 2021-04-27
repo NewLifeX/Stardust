@@ -355,11 +355,13 @@ namespace Stardust.Server.Controllers
             var rs = new List<CommandModel>();
             foreach (var item in cmds)
             {
-                item.Times++;
                 if (item.Times > 10 || item.Expire.Year > 2000 && item.Expire < DateTime.Now)
                     item.Status = CommandStatus.取消;
                 else
                 {
+                    if (item.Status == CommandStatus.处理中 && item.UpdateTime.AddMinutes(10) < DateTime.Now) continue;
+
+                    item.Times++;
                     item.Status = CommandStatus.处理中;
                     rs.Add(item.ToModel());
                 }
@@ -380,7 +382,7 @@ namespace Stardust.Server.Controllers
             foreach (var item in list)
             {
                 var deploy = item.Deploy;
-                if (deploy == null) continue;
+                if (deploy == null || !deploy.Enable) continue;
 
                 var svc = new ServiceInfo
                 {
@@ -648,6 +650,7 @@ namespace Stardust.Server.Controllers
                 Argument = model.Argument,
                 //Expire = model.Expire,
                 Times = 1,
+                Status = CommandStatus.处理中,
 
                 CreateUser = app.Name,
             };

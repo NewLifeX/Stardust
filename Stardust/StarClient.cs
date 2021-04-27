@@ -29,7 +29,7 @@ namespace Stardust
     /// <summary>星星客户端。每个设备节点有一个客户端连接服务端</summary>
     public class StarClient : ApiHttpClient
     {
-#region 属性
+        #region 属性
         /// <summary>证书</summary>
         public String Code { get; set; }
 
@@ -53,9 +53,9 @@ namespace Stardust
 
         /// <summary>命令队列</summary>
         public IQueueService<CommandModel> CommandQueue { get; } = new QueueService<CommandModel>();
-#endregion
+        #endregion
 
-#region 构造
+        #region 构造
         /// <summary>实例化</summary>
         public StarClient()
         {
@@ -90,9 +90,9 @@ namespace Stardust
 
             base.Dispose(disposing);
         }
-#endregion
+        #endregion
 
-#region 方法
+        #region 方法
         /// <summary>远程调用拦截，支持重新登录</summary>
         /// <typeparam name="TResult"></typeparam>
         /// <param name="method"></param>
@@ -121,9 +121,9 @@ namespace Stardust
                 throw;
             }
         }
-#endregion
+        #endregion
 
-#region 登录
+        #region 登录
         /// <summary>登录</summary>
         /// <returns></returns>
         public async Task<Object> Login()
@@ -274,9 +274,9 @@ namespace Stardust
         /// <summary>注销</summary>
         /// <returns></returns>
         private async Task<LoginResponse> LogoutAsync(String reason) => await GetAsync<LoginResponse>("Node/Logout", new { reason });
-#endregion
+        #endregion
 
-#region 心跳报告
+        #region 心跳报告
         private readonly String[] _excludes = new[] { "Idle", "System", "Registry", "smss", "csrss", "lsass", "wininit", "services", "winlogon", "fontdrvhost", "dwm", "svchost", "dllhost", "conhost", "taskhostw", "explorer", "ctfmon", "ChsIME", "WmiPrvSE", "WUDFHost", "igfxCUIServiceN", "igfxEMN", "sihost", "RuntimeBroker", "StartMenuExperienceHost", "SecurityHealthSystray", "SecurityHealthService", "ShellExperienceHost", "PerfWatson2", "audiodg" };
 
         /// <summary>获取心跳信息</summary>
@@ -427,9 +427,9 @@ namespace Stardust
         /// <param name="data"></param>
         /// <returns></returns>
         private async Task<Object> ReportAsync(Int32 id, Byte[] data) => await PostAsync<Object>("Node/Report?Id=" + id, data);
-#endregion
+        #endregion
 
-#region 长连接
+        #region 长连接
         private TimerX _timer;
         private void StartTimer()
         {
@@ -500,7 +500,19 @@ namespace Stardust
                     if (cmd != null)
                     {
                         XTrace.WriteLine("Got Command: {0}", cmd.ToJson());
-                        CommandQueue.Publish(cmd.Command, cmd);
+                        if (cmd.Expire.Year < 2000 || cmd.Expire > DateTime.Now)
+                        {
+                            switch (cmd.Command)
+                            {
+                                case "Deploy":
+                                    // 发布中心通知有应用需要部署，马上执行一次心跳，拉取最新应用信息
+                                    _ = Task.Run(Ping);
+                                    break;
+                                default:
+                                    CommandQueue.Publish(cmd.Command, cmd);
+                                    break;
+                            }
+                        }
                     }
                 }
             }
@@ -512,9 +524,9 @@ namespace Stardust
             if (socket.State == WebSocketState.Open) await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
         }
 #endif
-#endregion
+        #endregion
 
-#region 更新
+        #region 更新
         /// <summary>获取更新信息</summary>
         /// <param name="channel"></param>
         /// <returns></returns>
@@ -630,6 +642,6 @@ namespace Stardust
         /// <param name="channel"></param>
         /// <returns></returns>
         public async Task<UpgradeInfo> UpgradeAsync(String channel) => await GetAsync<UpgradeInfo>("Node/Upgrade", new { channel });
-#endregion
+        #endregion
     }
 }

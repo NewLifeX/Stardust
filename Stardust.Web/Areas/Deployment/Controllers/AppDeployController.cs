@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Deployment;
+using Stardust.Data.Nodes;
 using XCode;
 using XCode.Membership;
 
@@ -12,6 +15,8 @@ namespace Stardust.Web.Areas.Deployment.Controllers
     [DeploymentArea]
     public class AppDeployController : EntityController<AppDeploy>
     {
+        private readonly StarFactory _starFactory;
+
         static AppDeployController()
         {
             MenuOrder = 90;
@@ -48,6 +53,8 @@ namespace Stardust.Web.Areas.Deployment.Controllers
                 df.Url = "/Admin/Log?category=应用部署&linkId={Id}";
             }
         }
+
+        public AppDeployController(StarFactory starFactory) => _starFactory = starFactory;
 
         protected override IEnumerable<AppDeploy> Search(Pager p)
         {
@@ -99,6 +106,35 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             {
                 if (type != DataObjectMethodType.Update) LogProvider.Provider.WriteLog(type + "", entity, err);
             }
+        }
+
+        protected override Int32 OnUpdate(AppDeploy entity)
+        {
+            // 如果执行了启用，则通知节点
+            if ((entity as IEntity).Dirtys["Enable"]) Task.Run(() => NotifyChange(entity.Id));
+
+            return base.OnUpdate(entity);
+        }
+
+        public async Task<ActionResult> NotifyChange(Int32 id)
+        {
+            var deploy = AppDeploy.FindById(id);
+            if (deploy != null)
+            {
+                // 通知该发布集之下所有节点，应用服务数据有变化，需要马上执行心跳
+                var list = AppDeployNode.FindAllByDeployId(deploy.Id);
+                foreach (var item in list)
+                {
+                    var node = item.Node;
+                    if (node != null)
+                    {
+                        // 通过接口发送指令给StarServer
+                        await _starFactory.SendNodeCommand(node.Code, "Deploy");
+                    }
+                }
+            }
+
+            return RedirectToAction("Index");
         }
     }
 }
