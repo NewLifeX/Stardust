@@ -37,8 +37,10 @@ namespace Stardust.Data.Monitors
             // 识别操作类型
             if (Type.IsNullOrEmpty() && !Name.IsNullOrEmpty())
             {
-                if (Name.StartsWithIgnoreCase("/", "rps:", "net:"))
+                if (Name.StartsWithIgnoreCase("/", "rps:"))
                     Type = "api";
+                else if (Name.StartsWithIgnoreCase("net:"))
+                    Type = "net";
                 else if (Name.StartsWithIgnoreCase("http:", "https:", "rpc:"))
                     Type = "http";
                 else if (Name.StartsWithIgnoreCase("db:"))
