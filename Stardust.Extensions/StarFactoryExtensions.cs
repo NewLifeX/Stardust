@@ -21,8 +21,9 @@ namespace Microsoft.Extensions.DependencyInjection
             var star = new StarFactory(null, appId, null);
 
             services.AddSingleton(star);
-            services.AddSingleton(star.Tracer);
-            services.AddSingleton(star.Config);
+            services.AddSingleton(P => star.Tracer);
+            services.AddSingleton(P => star.Config);
+            services.AddSingleton(p => star.Service);
 
             //services.AddHostedService<StarService>();
 
