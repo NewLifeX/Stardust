@@ -7,17 +7,17 @@ using Stardust.Data;
 using XCode;
 using XCode.Membership;
 
-namespace Stardust.Web.Areas.Registries.Controllers
+namespace Stardust.Web.Areas.Registry.Controllers
 {
     [RegistryArea]
-    public class AppConsumeController : EntityController<AppConsume>
+    public class AppServiceController : EntityController<AppService>
     {
-        static AppConsumeController()
+        static AppServiceController()
         {
-            MenuOrder = 73;
+            MenuOrder = 75;
         }
 
-        protected override IEnumerable<AppConsume> Search(Pager p)
+        protected override IEnumerable<AppService> Search(Pager p)
         {
             PageSetting.EnableAdd = false;
             PageSetting.EnableNavbar = false;
@@ -26,7 +26,7 @@ namespace Stardust.Web.Areas.Registries.Controllers
             var serviceId = p["serviceId"].ToInt(-1);
             var enable = p["enable"]?.ToBoolean();
 
-            return AppConsume.Search(appId, serviceId, enable, p["Q"], p);
+            return AppService.Search(appId, serviceId, enable, p["Q"], p);
         }
 
         /// <summary>菜单不可见</summary>

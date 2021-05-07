@@ -11,7 +11,7 @@ using Stardust.Data;
 using XCode;
 using XCode.Membership;
 
-namespace Stardust.Web.Areas.Registries.Controllers
+namespace Stardust.Web.Areas.Registry.Controllers
 {
     [RegistryArea]
     public class AppController : EntityController<App>
@@ -27,6 +27,12 @@ namespace Stardust.Web.Areas.Registries.Controllers
                 df.DisplayName = "历史";
                 df.Header = "历史";
                 df.Url = "AppHistory?appId={Id}";
+            }
+            {
+                var df = ListFields.AddDataField("Meter", null, "AutoActive");
+                df.DisplayName = "性能";
+                df.Header = "性能";
+                df.Url = "AppMeter?appId={Id}";
             }
             {
                 var df = ListFields.AddDataField("Deploy", null, "AutoActive");

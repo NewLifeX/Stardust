@@ -3,7 +3,7 @@ using System.ComponentModel;
 using NewLife;
 using NewLife.Cube;
 
-namespace Stardust.Web.Areas.Registries
+namespace Stardust.Web.Areas.Registry
 {
     [DisplayName("注册中心")]
     public class RegistryArea : AreaBase

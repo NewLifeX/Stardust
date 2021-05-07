@@ -11,7 +11,7 @@ using XCode;
 using XCode.Membership;
 using static Stardust.Data.AppMeter;
 
-namespace Stardust.Web.Areas.Registries.Controllers
+namespace Stardust.Web.Areas.Registry.Controllers
 {
     [RegistryArea]
     public class AppMeterController : EntityController<AppMeter>

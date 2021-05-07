@@ -121,8 +121,8 @@ namespace Stardust.Data
 
             // 计算应用的ClientIds时，采取Id降序，较新活跃的客户端在前面
             var exp = new WhereExpression();
-            exp &= _.AppId == appId & _.Id >= Meta.Factory.Snow.GetId(DateTime.Today);
-            var list = FindAll(exp.GroupBy(_.ClientId), null, _.Id.Max() & _.ClientId);
+            exp &= _.AppId == appId & _.Id >= Meta.Factory.Snow.GetId(DateTime.Today.AddMonths(-1));
+            var list = FindAll(exp.GroupBy(_.ClientId), null, _.Id.Count() & _.ClientId);
             value = list.OrderByDescending(e => e.Id).ToDictionary(e => e.ClientId ?? "null", e => $"{e.ClientId}({e.Id})");
 
             _cache.Set(key, value);

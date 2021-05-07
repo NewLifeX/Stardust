@@ -7,7 +7,7 @@ using Stardust.Data;
 using XCode;
 using XCode.Membership;
 
-namespace Stardust.Web.Areas.Registries.Controllers
+namespace Stardust.Web.Areas.Registry.Controllers
 {
     [RegistryArea]
     public class AppLogController : ReadOnlyEntityController<AppLog>

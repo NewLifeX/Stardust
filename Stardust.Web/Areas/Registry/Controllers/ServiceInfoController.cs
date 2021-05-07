@@ -7,7 +7,7 @@ using XCode;
 using XCode.Membership;
 using static Stardust.Data.Service;
 
-namespace Stardust.Web.Areas.Registries.Controllers
+namespace Stardust.Web.Areas.Registry.Controllers
 {
     [RegistryArea]
     public class ServiceInfoController : EntityController<Service>
