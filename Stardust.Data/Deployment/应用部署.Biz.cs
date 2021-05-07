@@ -1,26 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
-using System.Web.Script.Serialization;
-using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
-using NewLife.Log;
-using NewLife.Model;
-using NewLife.Reflection;
-using NewLife.Threading;
-using NewLife.Web;
 using XCode;
 using XCode.Cache;
-using XCode.Configuration;
-using XCode.DataAccessLayer;
 using XCode.Membership;
 
 namespace Stardust.Data.Deployment
@@ -48,25 +32,17 @@ namespace Stardust.Data.Deployment
             // 如果没有脏数据，则不需要进行任何处理
             if (!HasDirty) return;
 
-            var app = App;
+            var app = App.FindByName(Name);
             if (app != null)
             {
-                if (Name.IsNullOrEmpty()) Name = app.DisplayName ?? app.Name;
                 if (!app.Category.IsNullOrEmpty()) Category = app.Category;
             }
 
-            if (!isNew) Nodes = AppDeployNode.FindAllByDeployId(Id).Count;
+            if (!isNew) Nodes = AppDeployNode.FindAllByAppId(Id).Count;
         }
         #endregion
 
         #region 扩展属性
-        /// <summary>应用</summary>
-        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-        public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
-
-        /// <summary>应用</summary>
-        [Map(__.AppId, typeof(App), "Id")]
-        public String AppName => App?.Name;
         #endregion
 
         #region 扩展查询
@@ -86,21 +62,21 @@ namespace Stardust.Data.Deployment
             //return Find(_.Id == id);
         }
 
-        /// <summary>根据应用查找</summary>
-        /// <param name="appId">应用</param>
-        /// <returns>实体列表</returns>
-        public static IList<AppDeploy> FindAllByAppId(Int32 appId)
+        /// <summary>根据名称查找</summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static AppDeploy FindByName(String name)
         {
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId);
+            if (name.IsNullOrEmpty()) return null;
 
-            return FindAll(_.AppId == appId);
+            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Name.EqualIgnoreCase(name));
+
+            return Find(_.Name == name);
         }
         #endregion
 
         #region 高级查询
         /// <summary>高级查询</summary>
-        /// <param name="appId">应用。原始应用</param>
         /// <param name="category">分类</param>
         /// <param name="enable">启用</param>
         /// <param name="start">更新时间开始</param>
@@ -108,15 +84,14 @@ namespace Stardust.Data.Deployment
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<AppDeploy> Search(Int32 appId, String category, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<AppDeploy> Search(String category, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
-            if (appId > 0) exp &= _.AppId == appId;
             if (!category.IsNullOrEmpty()) exp &= _.Category == category;
             if (enable != null) exp &= _.Enable == enable;
             exp &= _.UpdateTime.Between(start, end);
-            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Environment.Contains(key) | _.FileName.Contains(key) | _.Arguments.Contains(key) | _.WorkingDirectory.Contains(key) | _.CreateIP.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
+            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.FileName.Contains(key) | _.Arguments.Contains(key) | _.WorkingDirectory.Contains(key) | _.CreateIP.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
 
             return FindAll(exp, page);
         }
@@ -136,8 +111,8 @@ namespace Stardust.Data.Deployment
         {
             var rs = 0;
 
-            var list = AppDeployNode.FindAllByDeployId(Id);
-            Nodes = list.Count;
+            var list = AppDeployNode.FindAllByAppId(Id);
+            Nodes = list.Count(e => e.Enable);
 
             rs += Update();
 

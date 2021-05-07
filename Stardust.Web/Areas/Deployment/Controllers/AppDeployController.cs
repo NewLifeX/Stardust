@@ -65,14 +65,13 @@ namespace Stardust.Web.Areas.Deployment.Controllers
                 if (entity != null) return new List<AppDeploy> { entity };
             }
 
-            var appId = p["appId"].ToInt(-1);
             var category = p["category"];
             var enable = p["enable"]?.ToBoolean();
 
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            return AppDeploy.Search(appId, category, enable, start, end, p["Q"], p);
+            return AppDeploy.Search(category, enable, start, end, p["Q"], p);
         }
 
         protected override Boolean Valid(AppDeploy entity, DataObjectMethodType type, Boolean post)
@@ -122,7 +121,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             if (deploy != null)
             {
                 // 通知该发布集之下所有节点，应用服务数据有变化，需要马上执行心跳
-                var list = AppDeployNode.FindAllByDeployId(deploy.Id);
+                var list = AppDeployNode.FindAllByAppId(deploy.Id);
                 foreach (var item in list)
                 {
                     var node = item.Node;

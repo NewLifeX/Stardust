@@ -381,7 +381,7 @@ namespace Stardust.Server.Controllers
             var svcs = new List<ServiceInfo>();
             foreach (var item in list)
             {
-                var deploy = item.Deploy;
+                var deploy = item.App;
                 if (deploy == null || !deploy.Enable) continue;
 
                 var svc = new ServiceInfo
@@ -392,6 +392,9 @@ namespace Stardust.Server.Controllers
                     WorkingDirectory = deploy.WorkingDirectory,
                     AutoStart = deploy.AutoStart,
                 };
+                if (!item.Arguments.IsNullOrEmpty()) svc.Arguments = item.Arguments;
+                if (!item.WorkingDirectory.IsNullOrEmpty()) svc.WorkingDirectory = item.WorkingDirectory;
+
                 svcs.Add(svc);
             }
 

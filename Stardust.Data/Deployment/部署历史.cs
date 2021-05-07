@@ -15,8 +15,7 @@ namespace Stardust.Data.Deployment
     [DataObject]
     [Description("部署历史。记录应用集部署历史")]
     [BindIndex("IX_AppDeployHistory_AppId_Id", false, "AppId,Id")]
-    [BindIndex("IX_AppDeployHistory_DeployId_Id", false, "DeployId,Id")]
-    [BindIndex("IX_AppDeployHistory_DeployId_Action_Id", false, "DeployId,Action,Id")]
+    [BindIndex("IX_AppDeployHistory_AppId_Action_Id", false, "AppId,Action,Id")]
     [BindTable("AppDeployHistory", Description = "部署历史。记录应用集部署历史", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppDeployHistory
     {
@@ -36,14 +35,6 @@ namespace Stardust.Data.Deployment
         [DataObjectField(false, false, false, 0)]
         [BindColumn("AppId", "应用", "")]
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
-
-        private Int32 _DeployId;
-        /// <summary>部署集。应用部署集</summary>
-        [DisplayName("部署集")]
-        [Description("部署集。应用部署集")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("DeployId", "部署集。应用部署集", "")]
-        public Int32 DeployId { get => _DeployId; set { if (OnPropertyChanging("DeployId", value)) { _DeployId = value; OnPropertyChanged("DeployId"); } } }
 
         private String _Action;
         /// <summary>操作</summary>
@@ -106,7 +97,6 @@ namespace Stardust.Data.Deployment
                 {
                     case "Id": return _Id;
                     case "AppId": return _AppId;
-                    case "DeployId": return _DeployId;
                     case "Action": return _Action;
                     case "Success": return _Success;
                     case "Remark": return _Remark;
@@ -122,7 +112,6 @@ namespace Stardust.Data.Deployment
                 {
                     case "Id": _Id = value.ToLong(); break;
                     case "AppId": _AppId = value.ToInt(); break;
-                    case "DeployId": _DeployId = value.ToInt(); break;
                     case "Action": _Action = Convert.ToString(value); break;
                     case "Success": _Success = value.ToBoolean(); break;
                     case "Remark": _Remark = Convert.ToString(value); break;
@@ -144,9 +133,6 @@ namespace Stardust.Data.Deployment
 
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
-
-            /// <summary>部署集。应用部署集</summary>
-            public static readonly Field DeployId = FindByName("DeployId");
 
             /// <summary>操作</summary>
             public static readonly Field Action = FindByName("Action");
@@ -177,9 +163,6 @@ namespace Stardust.Data.Deployment
 
             /// <summary>应用</summary>
             public const String AppId = "AppId";
-
-            /// <summary>部署集。应用部署集</summary>
-            public const String DeployId = "DeployId";
 
             /// <summary>操作</summary>
             public const String Action = "Action";

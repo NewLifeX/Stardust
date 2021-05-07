@@ -5,7 +5,6 @@ using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
-using NewLife.Remoting;
 using NewLife.Serialization;
 using XCode;
 using XCode.Membership;
@@ -164,28 +163,6 @@ namespace Stardust.Data.Configs
 
             return Update();
         }
-
-        ///// <summary>同步数据</summary>
-        ///// <returns></returns>
-        //public static Int32 Sync()
-        //{
-        //    var listA = App.FindAll();
-        //    var listB = AppConfig.FindAll();
-        //    foreach (var item in listA)
-        //    {
-        //        var app = listB.FirstOrDefault(e => e.Id == item.ID);
-        //        if (app == null)
-        //        {
-        //            app = new AppConfig { Id = item.ID };
-        //            listB.Add(app);
-        //        }
-
-        //        app.Name = item.Name;
-        //        app.Enable = item.Enable;
-        //    }
-
-        //    return listB.Save();
-        //}
         #endregion
     }
 }

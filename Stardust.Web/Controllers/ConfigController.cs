@@ -55,6 +55,7 @@ namespace Stardust.Web.Controllers
             var ap = Authorize(appId, secret, true);
 
             var app = AppConfig.FindByName(appId);
+            if (app == null) app = AppConfig.Find(AppConfig._.Name == appId);
             if (app == null)
             {
                 app = new AppConfig

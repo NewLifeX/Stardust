@@ -3,6 +3,7 @@
   <Table Name="AppConfig" Description="应用配置。需要管理配置的应用系统列表">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Version" DataType="Int32" Description="版本。应用正在使用的版本号，返回小于等于该版本的配置" />
@@ -25,6 +26,9 @@
       <Column Name="UpdateIP" DataType="String" Description="更新地址" />
       <Column Name="Remark" DataType="String" Length="500" Description="备注" />
     </Columns>
+    <Indexes>
+      <Index Columns="Name" Unique="True" />
+    </Indexes>
   </Table>
   <Table Name="AppRule" Description="应用规则。针对应用设置的规则，比如根据IP段设置作用域">
     <Columns>

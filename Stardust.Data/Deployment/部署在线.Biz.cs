@@ -1,27 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
-using NewLife.Log;
-using NewLife.Model;
-using NewLife.Reflection;
-using NewLife.Threading;
-using NewLife.Web;
 using Stardust.Data.Nodes;
 using XCode;
-using XCode.Cache;
-using XCode.Configuration;
-using XCode.DataAccessLayer;
 using XCode.Membership;
 
 namespace Stardust.Data.Deployment
@@ -61,19 +46,11 @@ namespace Stardust.Data.Deployment
         #region 扩展属性
         /// <summary>应用</summary>
         [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-        public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
+        public AppDeploy App => Extends.Get(nameof(App), k => AppDeploy.FindById(AppId));
 
         /// <summary>应用</summary>
         [Map(__.AppId)]
         public String AppName => App?.Name;
-
-        /// <summary>部署</summary>
-        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-        public AppDeploy Deploy => Extends.Get(nameof(Deploy), k => AppDeploy.FindById(DeployId));
-
-        /// <summary>部署</summary>
-        [Map(__.DeployId, typeof(AppDeploy), "Id")]
-        public String DeployName => Deploy?.Name;
 
         /// <summary>节点</summary>
         [XmlIgnore, ScriptIgnore, IgnoreDataMember]
@@ -99,18 +76,6 @@ namespace Stardust.Data.Deployment
             return Meta.SingleCache[id];
 
             //return Find(_.Id == id);
-        }
-
-        /// <summary>根据部署集、节点查找</summary>
-        /// <param name="deployId">部署集</param>
-        /// <param name="nodeId">节点</param>
-        /// <returns>实体列表</returns>
-        public static IList<AppDeployOnline> FindAllByDeployIdAndNodeId(Int32 deployId, Int32 nodeId)
-        {
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.DeployId == deployId && e.NodeId == nodeId);
-
-            return FindAll(_.DeployId == deployId & _.NodeId == nodeId);
         }
 
         /// <summary>根据应用查找</summary>
@@ -139,35 +104,23 @@ namespace Stardust.Data.Deployment
         #region 高级查询
         /// <summary>高级查询</summary>
         /// <param name="appId">应用。原始应用</param>
-        /// <param name="deployId">部署集。应用部署集</param>
         /// <param name="nodeId">节点。节点服务器</param>
         /// <param name="start">更新时间开始</param>
         /// <param name="end">更新时间结束</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<AppDeployOnline> Search(Int32 appId, Int32 deployId, Int32 nodeId, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<AppDeployOnline> Search(Int32 appId, Int32 nodeId, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (appId >= 0) exp &= _.AppId == appId;
-            if (deployId >= 0) exp &= _.DeployId == deployId;
             if (nodeId >= 0) exp &= _.NodeId == nodeId;
             exp &= _.UpdateTime.Between(start, end);
             if (!key.IsNullOrEmpty()) exp &= _.IP.Contains(key) | _.CreateIP.Contains(key);
 
             return FindAll(exp, page);
         }
-
-        // Select Count(Id) as Id,Category From AppDeployOnline Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
-        //static readonly FieldCache<AppDeployOnline> _CategoryCache = new FieldCache<AppDeployOnline>(nameof(Category))
-        //{
-        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-        //};
-
-        ///// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-        ///// <returns></returns>
-        //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
         #endregion
 
         #region 业务操作

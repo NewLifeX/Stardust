@@ -14,7 +14,7 @@ namespace Stardust.Data.Deployment
     [Serializable]
     [DataObject]
     [Description("部署在线。应用已部署的在运行中进程的在线记录")]
-    [BindIndex("IX_AppDeployOnline_DeployId_NodeId", false, "DeployId,NodeId")]
+    [BindIndex("IX_AppDeployOnline_AppId_NodeId", false, "AppId,NodeId")]
     [BindIndex("IX_AppDeployOnline_AppId", false, "AppId")]
     [BindIndex("IX_AppDeployOnline_NodeId", false, "NodeId")]
     [BindTable("AppDeployOnline", Description = "部署在线。应用已部署的在运行中进程的在线记录", ConnName = "Stardust", DbType = DatabaseType.None)]
@@ -30,20 +30,12 @@ namespace Stardust.Data.Deployment
         public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
         private Int32 _AppId;
-        /// <summary>应用。原始应用</summary>
+        /// <summary>应用</summary>
         [DisplayName("应用")]
-        [Description("应用。原始应用")]
+        [Description("应用")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("AppId", "应用。原始应用", "")]
+        [BindColumn("AppId", "应用", "")]
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
-
-        private Int32 _DeployId;
-        /// <summary>部署集。应用部署集</summary>
-        [DisplayName("部署集")]
-        [Description("部署集。应用部署集")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("DeployId", "部署集。应用部署集", "")]
-        public Int32 DeployId { get => _DeployId; set { if (OnPropertyChanging("DeployId", value)) { _DeployId = value; OnPropertyChanged("DeployId"); } } }
 
         private Int32 _NodeId;
         /// <summary>节点。节点服务器</summary>
@@ -52,6 +44,14 @@ namespace Stardust.Data.Deployment
         [DataObjectField(false, false, false, 0)]
         [BindColumn("NodeId", "节点。节点服务器", "")]
         public Int32 NodeId { get => _NodeId; set { if (OnPropertyChanging("NodeId", value)) { _NodeId = value; OnPropertyChanged("NodeId"); } } }
+
+        private String _Environment;
+        /// <summary>环境。prod/test/dev/uat等</summary>
+        [DisplayName("环境")]
+        [Description("环境。prod/test/dev/uat等")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Environment", "环境。prod/test/dev/uat等", "")]
+        public String Environment { get => _Environment; set { if (OnPropertyChanging("Environment", value)) { _Environment = value; OnPropertyChanged("Environment"); } } }
 
         private String _IP;
         /// <summary>IP地址。节点本地IP地址</summary>
@@ -106,8 +106,8 @@ namespace Stardust.Data.Deployment
                 {
                     case "Id": return _Id;
                     case "AppId": return _AppId;
-                    case "DeployId": return _DeployId;
                     case "NodeId": return _NodeId;
+                    case "Environment": return _Environment;
                     case "IP": return _IP;
                     case "ProcessId": return _ProcessId;
                     case "CreateTime": return _CreateTime;
@@ -122,8 +122,8 @@ namespace Stardust.Data.Deployment
                 {
                     case "Id": _Id = value.ToInt(); break;
                     case "AppId": _AppId = value.ToInt(); break;
-                    case "DeployId": _DeployId = value.ToInt(); break;
                     case "NodeId": _NodeId = value.ToInt(); break;
+                    case "Environment": _Environment = Convert.ToString(value); break;
                     case "IP": _IP = Convert.ToString(value); break;
                     case "ProcessId": _ProcessId = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -142,14 +142,14 @@ namespace Stardust.Data.Deployment
             /// <summary>编号</summary>
             public static readonly Field Id = FindByName("Id");
 
-            /// <summary>应用。原始应用</summary>
+            /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
-
-            /// <summary>部署集。应用部署集</summary>
-            public static readonly Field DeployId = FindByName("DeployId");
 
             /// <summary>节点。节点服务器</summary>
             public static readonly Field NodeId = FindByName("NodeId");
+
+            /// <summary>环境。prod/test/dev/uat等</summary>
+            public static readonly Field Environment = FindByName("Environment");
 
             /// <summary>IP地址。节点本地IP地址</summary>
             public static readonly Field IP = FindByName("IP");
@@ -175,14 +175,14 @@ namespace Stardust.Data.Deployment
             /// <summary>编号</summary>
             public const String Id = "Id";
 
-            /// <summary>应用。原始应用</summary>
+            /// <summary>应用</summary>
             public const String AppId = "AppId";
-
-            /// <summary>部署集。应用部署集</summary>
-            public const String DeployId = "DeployId";
 
             /// <summary>节点。节点服务器</summary>
             public const String NodeId = "NodeId";
+
+            /// <summary>环境。prod/test/dev/uat等</summary>
+            public const String Environment = "Environment";
 
             /// <summary>IP地址。节点本地IP地址</summary>
             public const String IP = "IP";

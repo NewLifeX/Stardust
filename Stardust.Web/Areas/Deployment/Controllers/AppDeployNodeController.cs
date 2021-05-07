@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Deployment;
-using Stardust.Data.Nodes;
 using XCode;
 using XCode.Membership;
 
@@ -30,13 +28,12 @@ namespace Stardust.Web.Areas.Deployment.Controllers
                 if (entity != null) return new List<AppDeployNode> { entity };
             }
 
-            var deployId = p["deployId"].ToInt(-1);
             var appId = p["appId"].ToInt(-1);
             var nodeId = p["nodeId"].ToInt(-1);
 
             PageSetting.EnableAdd = false;
 
-            return AppDeployNode.Search(appId, deployId, nodeId, p["Q"], p);
+            return AppDeployNode.Search(appId,  nodeId, p["Q"], p);
         }
 
         protected override Boolean Valid(AppDeployNode entity, DataObjectMethodType type, Boolean post)
@@ -50,7 +47,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             var err = "";
             try
             {
-                entity.Deploy?.Fix();
+                entity.App?.Fix();
 
                 return base.Valid(entity, type, post);
             }

@@ -1,26 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
-using System.Web.Script.Serialization;
-using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
-using NewLife.Log;
-using NewLife.Model;
-using NewLife.Reflection;
-using NewLife.Threading;
-using NewLife.Web;
 using XCode;
-using XCode.Cache;
-using XCode.Configuration;
-using XCode.DataAccessLayer;
 using XCode.Membership;
 
 namespace Stardust.Data.Deployment
@@ -135,49 +117,25 @@ namespace Stardust.Data.Deployment
 
             return FindAll(_.AppId == appId & _.Id == id);
         }
-
-        /// <summary>根据部署集、编号查找</summary>
-        /// <param name="deployId">部署集</param>
-        /// <param name="id">编号</param>
-        /// <returns>实体列表</returns>
-        public static IList<AppDeployHistory> FindAllByDeployIdAndId(Int32 deployId, Int64 id)
-        {
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.DeployId == deployId && e.Id == id);
-
-            return FindAll(_.DeployId == deployId & _.Id == id);
-        }
         #endregion
 
         #region 高级查询
         /// <summary>高级查询</summary>
         /// <param name="appId">应用</param>
-        /// <param name="deployId">部署集。应用部署集</param>
         /// <param name="action">操作</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<AppDeployHistory> Search(Int32 appId, Int32 deployId, String action, String key, PageParameter page)
+        public static IList<AppDeployHistory> Search(Int32 appId,  String action, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (appId >= 0) exp &= _.AppId == appId;
-            if (deployId >= 0) exp &= _.DeployId == deployId;
             if (!action.IsNullOrEmpty()) exp &= _.Action == action;
             if (!key.IsNullOrEmpty()) exp &= _.Remark.Contains(key) | _.CreateIP.Contains(key);
 
             return FindAll(exp, page);
         }
-
-        // Select Count(Id) as Id,Category From AppDeployHistory Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
-        //static readonly FieldCache<AppDeployHistory> _CategoryCache = new FieldCache<AppDeployHistory>(nameof(Category))
-        //{
-        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-        //};
-
-        ///// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-        ///// <returns></returns>
-        //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
         #endregion
 
         #region 业务操作

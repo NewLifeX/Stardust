@@ -10,13 +10,12 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Deployment
 {
-    /// <summary>应用部署。应用部署的实例，每个应用在不同环境下有不同的部署集，关联不同的节点服务器组</summary>
+    /// <summary>应用部署。关联多个版本，关联多个节点服务器</summary>
     [Serializable]
     [DataObject]
-    [Description("应用部署。应用部署的实例，每个应用在不同环境下有不同的部署集，关联不同的节点服务器组")]
+    [Description("应用部署。关联多个版本，关联多个节点服务器")]
     [BindIndex("IU_AppDeploy_Name", true, "Name")]
-    [BindIndex("IX_AppDeploy_AppId", false, "AppId")]
-    [BindTable("AppDeploy", Description = "应用部署。应用部署的实例，每个应用在不同环境下有不同的部署集，关联不同的节点服务器组", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("AppDeploy", Description = "应用部署。关联多个版本，关联多个节点服务器", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppDeploy
     {
         #region 属性
@@ -36,29 +35,13 @@ namespace Stardust.Data.Deployment
         [BindColumn("Category", "类别", "")]
         public String Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
 
-        private Int32 _AppId;
-        /// <summary>应用。原始应用</summary>
-        [DisplayName("应用")]
-        [Description("应用。原始应用")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("AppId", "应用。原始应用", "")]
-        public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
-
         private String _Name;
-        /// <summary>名称。全局唯一，默认应用名，根据场景可以加dev等后缀</summary>
+        /// <summary>名称。应用名</summary>
         [DisplayName("名称")]
-        [Description("名称。全局唯一，默认应用名，根据场景可以加dev等后缀")]
-        [DataObjectField(false, false, false, 50)]
-        [BindColumn("Name", "名称。全局唯一，默认应用名，根据场景可以加dev等后缀", "", Master = true)]
-        public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
-
-        private String _Environment;
-        /// <summary>环境。prod/test/dev/uat等</summary>
-        [DisplayName("环境")]
-        [Description("环境。prod/test/dev/uat等")]
+        [Description("名称。应用名")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("Environment", "环境。prod/test/dev/uat等", "")]
-        public String Environment { get => _Environment; set { if (OnPropertyChanging("Environment", value)) { _Environment = value; OnPropertyChanged("Environment"); } } }
+        [BindColumn("Name", "名称。应用名", "", Master = true)]
+        public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
         private Boolean _Enable;
         /// <summary>启用</summary>
@@ -185,9 +168,7 @@ namespace Stardust.Data.Deployment
                 {
                     case "Id": return _Id;
                     case "Category": return _Category;
-                    case "AppId": return _AppId;
                     case "Name": return _Name;
-                    case "Environment": return _Environment;
                     case "Enable": return _Enable;
                     case "Nodes": return _Nodes;
                     case "Version": return _Version;
@@ -211,9 +192,7 @@ namespace Stardust.Data.Deployment
                 {
                     case "Id": _Id = value.ToInt(); break;
                     case "Category": _Category = Convert.ToString(value); break;
-                    case "AppId": _AppId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
-                    case "Environment": _Environment = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Nodes": _Nodes = value.ToInt(); break;
                     case "Version": _Version = value.ToInt(); break;
@@ -244,14 +223,8 @@ namespace Stardust.Data.Deployment
             /// <summary>类别</summary>
             public static readonly Field Category = FindByName("Category");
 
-            /// <summary>应用。原始应用</summary>
-            public static readonly Field AppId = FindByName("AppId");
-
-            /// <summary>名称。全局唯一，默认应用名，根据场景可以加dev等后缀</summary>
+            /// <summary>名称。应用名</summary>
             public static readonly Field Name = FindByName("Name");
-
-            /// <summary>环境。prod/test/dev/uat等</summary>
-            public static readonly Field Environment = FindByName("Environment");
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
@@ -307,14 +280,8 @@ namespace Stardust.Data.Deployment
             /// <summary>类别</summary>
             public const String Category = "Category";
 
-            /// <summary>应用。原始应用</summary>
-            public const String AppId = "AppId";
-
-            /// <summary>名称。全局唯一，默认应用名，根据场景可以加dev等后缀</summary>
+            /// <summary>名称。应用名</summary>
             public const String Name = "Name";
-
-            /// <summary>环境。prod/test/dev/uat等</summary>
-            public const String Environment = "Environment";
 
             /// <summary>启用</summary>
             public const String Enable = "Enable";

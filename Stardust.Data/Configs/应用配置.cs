@@ -14,6 +14,7 @@ namespace Stardust.Data.Configs
     [Serializable]
     [DataObject]
     [Description("应用配置。需要管理配置的应用系统列表")]
+    [BindIndex("IU_AppConfig_Name", true, "Name")]
     [BindTable("AppConfig", Description = "应用配置。需要管理配置的应用系统列表", ConnName = "ConfigCenter", DbType = DatabaseType.None)]
     public partial class AppConfig
     {
@@ -25,6 +26,14 @@ namespace Stardust.Data.Configs
         [DataObjectField(true, true, false, 0)]
         [BindColumn("Id", "编号", "")]
         public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
+
+        private String _Category;
+        /// <summary>类别</summary>
+        [DisplayName("类别")]
+        [Description("类别")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Category", "类别", "")]
+        public String Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
 
         private String _Name;
         /// <summary>名称</summary>
@@ -206,6 +215,7 @@ namespace Stardust.Data.Configs
                 switch (name)
                 {
                     case "Id": return _Id;
+                    case "Category": return _Category;
                     case "Name": return _Name;
                     case "Enable": return _Enable;
                     case "Version": return _Version;
@@ -235,6 +245,7 @@ namespace Stardust.Data.Configs
                 switch (name)
                 {
                     case "Id": _Id = value.ToInt(); break;
+                    case "Category": _Category = Convert.ToString(value); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Version": _Version = value.ToInt(); break;
@@ -268,6 +279,9 @@ namespace Stardust.Data.Configs
         {
             /// <summary>编号</summary>
             public static readonly Field Id = FindByName("Id");
+
+            /// <summary>类别</summary>
+            public static readonly Field Category = FindByName("Category");
 
             /// <summary>名称</summary>
             public static readonly Field Name = FindByName("Name");
@@ -340,6 +354,9 @@ namespace Stardust.Data.Configs
         {
             /// <summary>编号</summary>
             public const String Id = "Id";
+
+            /// <summary>类别</summary>
+            public const String Category = "Category";
 
             /// <summary>名称</summary>
             public const String Name = "Name";

@@ -102,6 +102,7 @@ namespace Stardust.Server.Controllers
             var ap = _tokenService.Authorize(appId, secret, Setting.Current.AutoRegister);
 
             var app = AppConfig.FindByName(appId);
+            if (app == null) app = AppConfig.Find(AppConfig._.Name == appId);
             if (app == null)
             {
                 app = new AppConfig

@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data.Deployment" ConnName="Stardust" BaseClass="Entity" Output="" xmlns="http://www.newlifex.com/Model2020.xsd">
-  <Table Name="AppDeploy" Description="应用部署。应用部署的实例，每个应用在不同环境下有不同的部署集，关联不同的节点服务器组">
+  <Table Name="AppDeploy" Description="应用部署。关联多个版本，关联多个节点服务器">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="Category" DataType="String" Description="类别" />
-      <Column Name="AppId" DataType="Int32" Description="应用。原始应用" />
-      <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称。全局唯一，默认应用名，根据场景可以加dev等后缀" />
-      <Column Name="Environment" DataType="String" Description="环境。prod/test/dev/uat等" />
+      <Column Name="Name" DataType="String" Master="True" Description="名称。应用名" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Nodes" DataType="Int32" Description="节点。该应用部署集所拥有的节点数" />
       <Column Name="Version" DataType="Int32" Description="版本。应用正在使用的版本号" />
@@ -24,23 +22,23 @@
     </Columns>
     <Indexes>
       <Index Columns="Name" Unique="True" />
-      <Index Columns="AppId" />
     </Indexes>
   </Table>
   <Table Name="AppDeployNode" Description="应用节点。应用和节点服务器的依赖关系">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用。原始应用" />
-      <Column Name="DeployId" DataType="Int32" Description="部署集。应用部署集" />
       <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
       <Column Name="Sort" DataType="Int32" Description="顺序。较大在前" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="Environment" DataType="String" Description="环境。prod/test/dev/uat等" />
+      <Column Name="Arguments" DataType="String" Description="参数。启动应用的参数" />
+      <Column Name="WorkingDirectory" DataType="String" Description="工作目录。应用根目录" />
       <Column Name="CreateUserId" DataType="Int32" Description="创建人" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
     </Columns>
     <Indexes>
-      <Index Columns="DeployId,NodeId" Unique="True" />
       <Index Columns="AppId" />
       <Index Columns="NodeId" />
     </Indexes>
@@ -48,9 +46,9 @@
   <Table Name="AppDeployOnline" Description="部署在线。应用已部署的在运行中进程的在线记录">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="AppId" DataType="Int32" Description="应用。原始应用" />
-      <Column Name="DeployId" DataType="Int32" Description="部署集。应用部署集" />
+      <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
+      <Column Name="Environment" DataType="String" Description="环境。prod/test/dev/uat等" />
       <Column Name="IP" DataType="String" Description="IP地址。节点本地IP地址" />
       <Column Name="ProcessId" DataType="Int32" Description="进程。应用在该节点上的进程" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
@@ -58,7 +56,7 @@
       <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
     </Columns>
     <Indexes>
-      <Index Columns="DeployId,NodeId" />
+      <Index Columns="AppId,NodeId" />
       <Index Columns="AppId" />
       <Index Columns="NodeId" />
     </Indexes>
@@ -86,7 +84,6 @@
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="DeployId" DataType="Int32" Description="部署集。应用部署集" />
       <Column Name="Action" DataType="String" Nullable="False" Description="操作" />
       <Column Name="Success" DataType="Boolean" Description="成功" />
       <Column Name="Remark" DataType="String" Length="2000" Description="内容" />
@@ -96,8 +93,7 @@
     </Columns>
     <Indexes>
       <Index Columns="AppId,Id" />
-      <Index Columns="DeployId,Id" />
-      <Index Columns="DeployId,Action,Id" />
+      <Index Columns="AppId,Action,Id" />
     </Indexes>
   </Table>
 </Tables>
