@@ -22,22 +22,21 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             MenuOrder = 90;
 
             ListFields.RemoveCreateField();
+            ListFields.RemoveField("WorkingDirectory");
             ListFields.RemoveField("ApolloMetaServer");
-
-            {
-                var df = ListFields.AddDataField("AddNode", null, "Enable");
-                df.Header = "节点";
-                df.DisplayName = "添加节点";
-                df.Title = "添加服务器节点";
-                df.Url = "AppDeployNode/Add?appId={Id}";
-            }
 
             {
                 var df = ListFields.AddDataField("Nodes");
                 df.Header = "节点";
-                //df.DisplayName = "添加节点";
-                //df.Title = "添加服务器节点";
+                df.Title = "管理服务器节点";
                 df.Url = "AppDeployNode?appId={Id}";
+            }
+
+            {
+                var df = ListFields.AddDataField("Version");
+                df.Header = "版本";
+                df.Title = "管理应用版本";
+                df.Url = "AppDeployVersion?appId={Id}";
             }
 
             {
@@ -94,6 +93,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             var err = "";
             try
             {
+                entity.Refresh();
                 return base.Valid(entity, type, post);
             }
             catch (Exception ex)

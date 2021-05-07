@@ -59,13 +59,13 @@ namespace Stardust.Data.Deployment
         [BindColumn("Nodes", "节点。该应用部署集所拥有的节点数", "")]
         public Int32 Nodes { get => _Nodes; set { if (OnPropertyChanging("Nodes", value)) { _Nodes = value; OnPropertyChanged("Nodes"); } } }
 
-        private Int32 _Version;
+        private String _Version;
         /// <summary>版本。应用正在使用的版本号</summary>
         [DisplayName("版本")]
         [Description("版本。应用正在使用的版本号")]
-        [DataObjectField(false, false, false, 0)]
+        [DataObjectField(false, false, true, 50)]
         [BindColumn("Version", "版本。应用正在使用的版本号", "")]
-        public Int32 Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
+        public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
         private String _FileName;
         /// <summary>文件。应用启动文件</summary>
@@ -195,7 +195,7 @@ namespace Stardust.Data.Deployment
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Nodes": _Nodes = value.ToInt(); break;
-                    case "Version": _Version = value.ToInt(); break;
+                    case "Version": _Version = Convert.ToString(value); break;
                     case "FileName": _FileName = Convert.ToString(value); break;
                     case "Arguments": _Arguments = Convert.ToString(value); break;
                     case "WorkingDirectory": _WorkingDirectory = Convert.ToString(value); break;

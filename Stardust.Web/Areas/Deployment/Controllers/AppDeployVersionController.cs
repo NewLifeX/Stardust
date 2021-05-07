@@ -17,6 +17,8 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             MenuOrder = 80;
 
             ListFields.RemoveCreateField();
+
+            AddFormFields.RemoveCreateField();
         }
 
         protected override IEnumerable<AppDeployVersion> Search(Pager p)
@@ -28,12 +30,13 @@ namespace Stardust.Web.Areas.Deployment.Controllers
                 if (entity != null) return new List<AppDeployVersion> { entity };
             }
 
+            var appId = p["appId"].ToInt(-1);
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            PageSetting.EnableAdd = false;
+            PageSetting.EnableAdd = appId > 0;
 
-            return AppDeployVersion.Search(start, end, p["Q"], p);
+            return AppDeployVersion.Search(appId, null, start, end, p["Q"], p);
         }
 
         protected override Boolean Valid(AppDeployVersion entity, DataObjectMethodType type, Boolean post)
@@ -47,6 +50,8 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             var err = "";
             try
             {
+                entity.App?.Fix();
+
                 return base.Valid(entity, type, post);
             }
             catch (Exception ex)

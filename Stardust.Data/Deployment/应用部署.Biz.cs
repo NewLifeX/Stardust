@@ -38,7 +38,7 @@ namespace Stardust.Data.Deployment
                 if (!app.Category.IsNullOrEmpty()) Category = app.Category;
             }
 
-            if (!isNew) Nodes = AppDeployNode.FindAllByAppId(Id).Count;
+            //if (!isNew) Nodes = AppDeployNode.FindAllByAppId(Id).Count;
         }
         #endregion
 
@@ -111,12 +111,24 @@ namespace Stardust.Data.Deployment
         {
             var rs = 0;
 
-            var list = AppDeployNode.FindAllByAppId(Id);
-            Nodes = list.Count(e => e.Enable);
+            Refresh();
 
             rs += Update();
 
             return rs;
+        }
+
+        /// <summary>刷新</summary>
+        public void Refresh()
+        {
+            var list = AppDeployNode.FindAllByAppId(Id);
+            Nodes = list.Count(e => e.Enable);
+
+            if (Version.IsNullOrEmpty())
+            {
+                var list2 = AppDeployVersion.FindAllByAppId(Id, 1);
+                if (list2.Count > 0) Version = list2[0].Version;
+            }
         }
         #endregion
     }

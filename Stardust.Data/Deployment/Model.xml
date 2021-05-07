@@ -7,7 +7,7 @@
       <Column Name="Name" DataType="String" Master="True" Description="名称。应用名" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Nodes" DataType="Int32" Description="节点。该应用部署集所拥有的节点数" />
-      <Column Name="Version" DataType="Int32" Description="版本。应用正在使用的版本号" />
+      <Column Name="Version" DataType="String" Description="版本。应用正在使用的版本号" />
       <Column Name="FileName" DataType="String" Description="文件。应用启动文件" />
       <Column Name="Arguments" DataType="String" Description="参数。启动应用的参数" />
       <Column Name="WorkingDirectory" DataType="String" Description="工作目录。应用根目录" />
@@ -32,8 +32,8 @@
       <Column Name="Sort" DataType="Int32" Description="顺序。较大在前" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Environment" DataType="String" Description="环境。prod/test/dev/uat等" />
-      <Column Name="Arguments" DataType="String" Description="参数。启动应用的参数" />
-      <Column Name="WorkingDirectory" DataType="String" Description="工作目录。应用根目录" />
+      <Column Name="Arguments" DataType="String" Description="参数。启动应用的参数，节点专用配置优先于应用配置" />
+      <Column Name="WorkingDirectory" DataType="String" Description="工作目录。应用根目录，节点专用配置优先于应用配置" />
       <Column Name="CreateUserId" DataType="Int32" Description="创建人" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />

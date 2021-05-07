@@ -31,7 +31,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             var appId = p["appId"].ToInt(-1);
             var nodeId = p["nodeId"].ToInt(-1);
 
-            PageSetting.EnableAdd = false;
+            PageSetting.EnableAdd = appId > 0;
 
             return AppDeployNode.Search(appId,  nodeId, p["Q"], p);
         }

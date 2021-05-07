@@ -69,19 +69,19 @@ namespace Stardust.Data.Deployment
         public String Environment { get => _Environment; set { if (OnPropertyChanging("Environment", value)) { _Environment = value; OnPropertyChanged("Environment"); } } }
 
         private String _Arguments;
-        /// <summary>参数。启动应用的参数</summary>
+        /// <summary>参数。启动应用的参数，节点专用配置优先于应用配置</summary>
         [DisplayName("参数")]
-        [Description("参数。启动应用的参数")]
+        [Description("参数。启动应用的参数，节点专用配置优先于应用配置")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("Arguments", "参数。启动应用的参数", "")]
+        [BindColumn("Arguments", "参数。启动应用的参数，节点专用配置优先于应用配置", "")]
         public String Arguments { get => _Arguments; set { if (OnPropertyChanging("Arguments", value)) { _Arguments = value; OnPropertyChanged("Arguments"); } } }
 
         private String _WorkingDirectory;
-        /// <summary>工作目录。应用根目录</summary>
+        /// <summary>工作目录。应用根目录，节点专用配置优先于应用配置</summary>
         [DisplayName("工作目录")]
-        [Description("工作目录。应用根目录")]
+        [Description("工作目录。应用根目录，节点专用配置优先于应用配置")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("WorkingDirectory", "工作目录。应用根目录", "")]
+        [BindColumn("WorkingDirectory", "工作目录。应用根目录，节点专用配置优先于应用配置", "")]
         public String WorkingDirectory { get => _WorkingDirectory; set { if (OnPropertyChanging("WorkingDirectory", value)) { _WorkingDirectory = value; OnPropertyChanged("WorkingDirectory"); } } }
 
         private Int32 _CreateUserId;
@@ -176,10 +176,10 @@ namespace Stardust.Data.Deployment
             /// <summary>环境。prod/test/dev/uat等</summary>
             public static readonly Field Environment = FindByName("Environment");
 
-            /// <summary>参数。启动应用的参数</summary>
+            /// <summary>参数。启动应用的参数，节点专用配置优先于应用配置</summary>
             public static readonly Field Arguments = FindByName("Arguments");
 
-            /// <summary>工作目录。应用根目录</summary>
+            /// <summary>工作目录。应用根目录，节点专用配置优先于应用配置</summary>
             public static readonly Field WorkingDirectory = FindByName("WorkingDirectory");
 
             /// <summary>创建人</summary>
@@ -215,10 +215,10 @@ namespace Stardust.Data.Deployment
             /// <summary>环境。prod/test/dev/uat等</summary>
             public const String Environment = "Environment";
 
-            /// <summary>参数。启动应用的参数</summary>
+            /// <summary>参数。启动应用的参数，节点专用配置优先于应用配置</summary>
             public const String Arguments = "Arguments";
 
-            /// <summary>工作目录。应用根目录</summary>
+            /// <summary>工作目录。应用根目录，节点专用配置优先于应用配置</summary>
             public const String WorkingDirectory = "WorkingDirectory";
 
             /// <summary>创建人</summary>
