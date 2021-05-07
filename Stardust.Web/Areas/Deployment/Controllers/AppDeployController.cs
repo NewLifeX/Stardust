@@ -29,7 +29,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers
                 df.Header = "节点";
                 df.DisplayName = "添加节点";
                 df.Title = "添加服务器节点";
-                df.Url = "AppDeployNode/Add?appId={AppId}&deployId={Id}";
+                df.Url = "AppDeployNode/Add?appId={Id}";
             }
 
             {
@@ -37,13 +37,13 @@ namespace Stardust.Web.Areas.Deployment.Controllers
                 df.Header = "节点";
                 //df.DisplayName = "添加节点";
                 //df.Title = "添加服务器节点";
-                df.Url = "AppDeployNode?deployId={Id}";
+                df.Url = "AppDeployNode?appId={Id}";
             }
 
             {
-                var df = ListFields.AddDataField("AppName");
-                df.Header = "应用";
-                df.Url = "/Registry/App?Id={AppId}";
+                var df = ListFields.AddDataField(AppDeploy._.Name);
+                //df.Header = "应用";
+                df.Url = "/Registry/App?q={Name}";
             }
 
             {
