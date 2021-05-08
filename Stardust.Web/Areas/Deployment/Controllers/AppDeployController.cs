@@ -26,6 +26,8 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             ListFields.RemoveField("ApolloMetaServer");
             AddFormFields.RemoveCreateField();
 
+            LogOnChange = true;
+
             {
                 var df = ListFields.AddDataField("Nodes");
                 df.Header = "节点";
@@ -94,25 +96,8 @@ namespace Stardust.Web.Areas.Deployment.Controllers
                 return base.Valid(entity, type, post);
             }
 
-            // 必须提前写修改日志，否则修改后脏数据失效，保存的日志为空
-            if (type == DataObjectMethodType.Update && (entity as IEntity).HasDirty)
-                LogProvider.Provider.WriteLog(type + "", entity);
-
-            var err = "";
-            try
-            {
-                entity.Refresh();
-                return base.Valid(entity, type, post);
-            }
-            catch (Exception ex)
-            {
-                err = ex.Message;
-                throw;
-            }
-            finally
-            {
-                if (type != DataObjectMethodType.Update) LogProvider.Provider.WriteLog(type + "", entity, err);
-            }
+            entity.Refresh();
+            return base.Valid(entity, type, post);
         }
 
         protected override Int32 OnUpdate(AppDeploy entity)

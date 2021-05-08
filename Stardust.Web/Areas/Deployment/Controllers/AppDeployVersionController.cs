@@ -19,6 +19,8 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             ListFields.RemoveCreateField();
 
             AddFormFields.RemoveCreateField();
+
+            LogOnChange = true;
         }
 
         protected override IEnumerable<AppDeployVersion> Search(Pager p)
@@ -37,33 +39,14 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             PageSetting.EnableAdd = appId > 0;
             PageSetting.EnableNavbar = false;
 
-            return AppDeployVersion.Search(appId, null, start, end, p["Q"], p);
+            return AppDeployVersion.Search(appId, null, null, start, end, p["Q"], p);
         }
 
-        protected override Boolean Valid(AppDeployVersion entity, DataObjectMethodType type, Boolean post)
+        protected override Int32 OnInsert(AppDeployVersion entity)
         {
-            if (!post) return base.Valid(entity, type, post);
-
-            // 必须提前写修改日志，否则修改后脏数据失效，保存的日志为空
-            if (type == DataObjectMethodType.Update && (entity as IEntity).HasDirty)
-                LogProvider.Provider.WriteLog(type + "", entity);
-
-            var err = "";
-            try
-            {
-                entity.App?.Fix();
-
-                return base.Valid(entity, type, post);
-            }
-            catch (Exception ex)
-            {
-                err = ex.Message;
-                throw;
-            }
-            finally
-            {
-                if (type != DataObjectMethodType.Update) LogProvider.Provider.WriteLog(type + "", entity, err);
-            }
+            var rs = base.OnInsert(entity);
+            entity.App?.Fix();
+            return rs;
         }
     }
 }

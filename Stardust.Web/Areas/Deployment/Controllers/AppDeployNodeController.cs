@@ -18,6 +18,8 @@ namespace Stardust.Web.Areas.Deployment.Controllers
 
             ListFields.RemoveCreateField();
             AddFormFields.RemoveCreateField();
+
+            LogOnChange = true;
         }
 
         protected override IEnumerable<AppDeployNode> Search(Pager p)
@@ -35,33 +37,16 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             PageSetting.EnableAdd = appId > 0;
             PageSetting.EnableNavbar = false;
 
-            return AppDeployNode.Search(appId,  nodeId, p["Q"], p);
+            return AppDeployNode.Search(appId, nodeId, p["Q"], p);
         }
 
         protected override Boolean Valid(AppDeployNode entity, DataObjectMethodType type, Boolean post)
         {
             if (!post) return base.Valid(entity, type, post);
 
-            // 必须提前写修改日志，否则修改后脏数据失效，保存的日志为空
-            if (type == DataObjectMethodType.Update && (entity as IEntity).HasDirty)
-                LogProvider.Provider.WriteLog(type + "", entity);
+            entity.App?.Fix();
 
-            var err = "";
-            try
-            {
-                entity.App?.Fix();
-
-                return base.Valid(entity, type, post);
-            }
-            catch (Exception ex)
-            {
-                err = ex.Message;
-                throw;
-            }
-            finally
-            {
-                if (type != DataObjectMethodType.Update) LogProvider.Provider.WriteLog(type + "", entity, err);
-            }
+            return base.Valid(entity, type, post);
         }
     }
 }

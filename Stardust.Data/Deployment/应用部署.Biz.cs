@@ -126,7 +126,9 @@ namespace Stardust.Data.Deployment
 
             if (Version.IsNullOrEmpty())
             {
-                var list2 = AppDeployVersion.FindAllByAppId(Id, 1);
+                var list2 = AppDeployVersion.FindAllByAppId(Id, 100);
+                list2 = list2.Where(e => e.Enable).ToList();
+                if (list2.Count == 0) list2 = AppDeployVersion.Search(Id, null, true, DateTime.MinValue, DateTime.MinValue, null, null);
                 if (list2.Count > 0) Version = list2[0].Version;
             }
         }
