@@ -17,6 +17,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             MenuOrder = 88;
 
             ListFields.RemoveCreateField();
+            AddFormFields.RemoveCreateField();
         }
 
         protected override IEnumerable<AppDeployNode> Search(Pager p)
@@ -32,6 +33,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             var nodeId = p["nodeId"].ToInt(-1);
 
             PageSetting.EnableAdd = appId > 0;
+            PageSetting.EnableNavbar = false;
 
             return AppDeployNode.Search(appId,  nodeId, p["Q"], p);
         }

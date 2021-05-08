@@ -24,6 +24,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             ListFields.RemoveCreateField();
             ListFields.RemoveField("WorkingDirectory");
             ListFields.RemoveField("ApolloMetaServer");
+            AddFormFields.RemoveCreateField();
 
             {
                 var df = ListFields.AddDataField("Nodes");
@@ -37,6 +38,13 @@ namespace Stardust.Web.Areas.Deployment.Controllers
                 df.Header = "版本";
                 df.Title = "管理应用版本";
                 df.Url = "AppDeployVersion?appId={Id}";
+            }
+            {
+                var df = ListFields.AddDataField("AddVersion", "FileName");
+                df.Header = "版本";
+                df.DisplayName = "添加版本";
+                df.Title = "添加应用版本";
+                df.Url = "AppDeployVersion/Add?appId={Id}";
             }
 
             {

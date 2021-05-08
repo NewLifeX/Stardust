@@ -35,6 +35,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             var end = p["dtEnd"].ToDateTime();
 
             PageSetting.EnableAdd = appId > 0;
+            PageSetting.EnableNavbar = false;
 
             return AppDeployVersion.Search(appId, null, start, end, p["Q"], p);
         }
