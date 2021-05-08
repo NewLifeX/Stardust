@@ -1,4 +1,7 @@
 ﻿using System;
+using System.IO;
+using System.Text;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Collections;
@@ -15,13 +18,13 @@ namespace Stardust.Server.Controllers
         public Object Get() => "LogController";
 
         [HttpPost]
-        public EmptyResult Post()
+        public async Task<EmptyResult> Post()
         {
             //var buffer = Request.BodyReader.ReadAsync().Result.Buffer;
             //var content = Encoding.UTF8.GetString(buffer.FirstSpan);
-            //var r = new StreamReader(Request.Body);
-            //var content = r.ReadToEnd();
-            var content = Request.Body.ToStr();
+            var r = new StreamReader(Request.Body);
+            var content = await r.ReadToEndAsync();
+            //var content = Request.Body.ToStr();
             if (!content.IsNullOrEmpty())
             {
                 var appId = Request.Headers["X-AppId"] + "";
