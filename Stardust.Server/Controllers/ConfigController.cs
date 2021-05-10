@@ -104,13 +104,21 @@ namespace Stardust.Server.Controllers
             var app = AppConfig.FindByName(appId);
             if (app == null)
             {
-                app = new AppConfig
+                var obj = AppConfig.Meta.Table;
+                lock (obj)
                 {
-                    Name = ap.Name,
-                    Enable = ap.Enable,
-                };
+                    app = AppConfig.FindByName(appId);
+                    if (app == null)
+                    {
+                        app = new AppConfig
+                        {
+                            Name = ap.Name,
+                            Enable = ap.Enable,
+                        };
 
-                app.Insert();
+                        app.Insert();
+                    }
+                }
             }
 
             // 检查应用有效性
