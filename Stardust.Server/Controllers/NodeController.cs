@@ -218,6 +218,10 @@ namespace Stardust.Server.Controllers
             if (!set.AutoRegister) throw new ApiException(12, "禁止自动注册");
 
             var di = inf.Node;
+            var code = BuildCode(di);
+            if (code.IsNullOrEmpty()) code = Rand.NextString(8);
+            if (node == null) node = Node.FindByCode(code);
+
             if (node == null)
             {
                 // 该硬件的所有节点信息
@@ -249,8 +253,7 @@ namespace Stardust.Server.Controllers
             if (node.Name.IsNullOrEmpty()) node.Name = name;
 
             // 优先使用节点散列来生成节点证书，确保节点路由到其它接入网关时保持相同证书代码
-            node.Code = BuildCode(di);
-            if (node.Code.IsNullOrEmpty()) node.Code = Rand.NextString(8);
+            node.Code = code;
 
             node.Secret = Rand.NextString(16);
             node.UpdateIP = ip;
