@@ -94,8 +94,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="8.10.2021.508-beta1" />
-    <PackageReference Include="NewLife.XCode" Version="10.1.2021.508-beta1" />
+    <PackageReference Include="NewLife.Core" Version="8.10.2021.511-beta3" />
+    <PackageReference Include="NewLife.XCode" Version="10.1.2021.511-beta3" />
   </ItemGroup>
 
   <ItemGroup>
