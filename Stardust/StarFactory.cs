@@ -27,6 +27,9 @@ namespace Stardust
         /// <summary>应用</summary>
         public String AppId { get; set; }
 
+        /// <summary>应用名</summary>
+        public String AppName { get; set; }
+
         /// <summary>应用密钥</summary>
         public String Secret { get; set; }
 
@@ -103,7 +106,7 @@ namespace Stardust
             // 读取本地appsetting
             if (Server.IsNullOrEmpty())
             {
-                var json = new JsonConfigProvider { FileName = "appsettings.json" };
+                using var json = new JsonConfigProvider { FileName = "appsettings.json" };
                 json.LoadAll();
 
                 Server = json["StarServer"];
@@ -123,7 +126,8 @@ namespace Stardust
                 }
                 catch (Exception ex)
                 {
-                    XTrace.WriteException(ex);
+                    //XTrace.WriteException(ex);
+                    XTrace.Log.Error("星尘探测失败！{0}", ex.Message);
                 }
             }
 
@@ -133,7 +137,12 @@ namespace Stardust
             if (AppId.IsNullOrEmpty()) AppId = set.AppKey;
             if (Secret.IsNullOrEmpty()) Secret = set.Secret;
 
-            if (AppId.IsNullOrEmpty()) AppId = AssemblyX.Entry.Name;
+            var asm = AssemblyX.Entry;
+            if (asm != null)
+            {
+                if (AppId.IsNullOrEmpty()) AppId = asm.Name;
+                if (AppName.IsNullOrEmpty()) AppName = asm.Title;
+            }
 
             XTrace.WriteLine("星尘分布式服务 Server={0} AppId={1}", Server, AppId);
         }
@@ -153,12 +162,12 @@ namespace Stardust
                     var tracer = new StarTracer(Server)
                     {
                         AppId = AppId,
+                        AppName = AppName,
                         //Secret = Secret,
                         Client = _client,
 
                         Log = Log
                     };
-                    //if (tracer.Client is ApiHttpClient http) http.Filter = _tokenFilter;
 
                     tracer.AttachGlobal();
 
@@ -192,8 +201,6 @@ namespace Stardust
                         Client = _client,
                     };
                     config.LoadAll();
-                    //// 需要使用一次以后，才能够得到Client实例
-                    //if (config.Client is ApiHttpClient http) http.Filter = _tokenFilter;
 
                     _config = config;
                 }
@@ -219,15 +226,7 @@ namespace Stardust
                         AppId = AppId,
                         //Secret = Secret,
                         Client = _client,
-
-                        //Filter = _tokenFilter,
-                        //Log = Log,
                     };
-                    //client.OnLogined += (s, e) =>
-                    //{
-                    //    if (_tracer.Client is ApiHttpClient client) client.Token = _dustClient.Token;
-                    //    //if (_configProvider.Client is ApiHttpClient client) client.Token = _dustClient.Token;
-                    //};
 
                     _dustClient = client;
                 }

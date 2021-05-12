@@ -33,13 +33,13 @@ namespace Stardust
         #endregion
 
         #region 方法
-        /// <summary>加载时</summary>
-        protected override void OnLoaded()
-        {
-            if (AppKey.IsNullOrEmpty()) AppKey = SysConfig.Current.Name;
+        ///// <summary>加载时</summary>
+        //protected override void OnLoaded()
+        //{
+        //    if (AppKey.IsNullOrEmpty()) AppKey = SysConfig.Current.Name;
 
-            base.OnLoaded();
-        }
+        //    base.OnLoaded();
+        //}
         #endregion
     }
 }

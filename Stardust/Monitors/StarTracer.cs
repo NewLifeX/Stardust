@@ -51,10 +51,6 @@ namespace Stardust.Monitors
         {
             Period = 60;
 
-            var sys = SysConfig.Current;
-            //AppId = sys.Name;
-            AppName = sys.DisplayName;
-
             var set = Setting.Current;
             AppId = set.AppKey;
             //Secret = set.Secret;
@@ -64,7 +60,13 @@ namespace Stardust.Monitors
             try
             {
                 var executing = AssemblyX.Create(Assembly.GetExecutingAssembly());
-                _version = (AssemblyX.Entry ?? executing)?.Version;
+                var asm = AssemblyX.Entry ?? executing;
+                if (asm != null)
+                {
+                    if (AppId == null) AppId = asm.Name;
+                    AppName = asm.Title;
+                    _version = asm.Version;
+                }
 
                 ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}";
             }
