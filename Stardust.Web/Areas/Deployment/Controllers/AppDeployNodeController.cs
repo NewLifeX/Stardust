@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
+using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data.Deployment;
 using XCode;
@@ -64,7 +65,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             var dn = AppDeployNode.FindById(id);
             if (dn == null || dn.Node == null || dn.App == null) return Json(500, $"[{id}]不存在");
 
-            await _starFactory.SendNodeCommand(dn.Node.Code, act, dn.AppName);
+            await _starFactory.SendNodeCommand(dn.Node.Code, act,new { dn.Id, dn.AppName }.ToJson());
 
             return JsonRefresh($"在节点[{dn.Node}]上对应用[{dn.App}]执行[{act}]操作", 3);
         }

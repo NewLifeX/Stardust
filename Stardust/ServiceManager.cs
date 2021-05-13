@@ -6,8 +6,10 @@ using System.Linq;
 using System.Threading;
 using NewLife;
 using NewLife.Log;
+using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust.Models;
+using Stardust.Services;
 
 namespace Stardust
 {
@@ -169,6 +171,24 @@ namespace Stardust
             return null;
         }
 
+        private void StopService(ServiceInfo service)
+        {
+            if (_processes.TryGetValue(service.Name, out var p))
+            {
+                try
+                {
+                    p.CloseMainWindow();
+                }
+                catch { }
+
+                try
+                {
+                    if (!p.HasExited) p.Kill();
+                }
+                catch { }
+            }
+        }
+
         /// <summary>停止管理，按需杀掉进程</summary>
         /// <param name="reason"></param>
         public void Stop(String reason)
@@ -209,6 +229,59 @@ namespace Stardust
                     }
                 }
             }
+        }
+        #endregion
+
+        #region 队列
+        /// <summary>关联订阅事件</summary>
+        /// <param name="queue"></param>
+        public void Attach(IQueueService<CommandModel, Byte[]> queue)
+        {
+            queue.Subscribe("publish", DoControl);
+            queue.Subscribe("start", DoControl);
+            queue.Subscribe("stop", DoControl);
+            queue.Subscribe("restart", DoControl);
+        }
+
+        private Byte[] DoControl(CommandModel cmd)
+        {
+            //var js = JsonParser.Decode(cmd.Argument);
+            var my = cmd.Argument.ToJsonEntity<MyApp>();
+
+            XTrace.WriteLine("{0} Id={1} Name={2}", cmd.Command, my.Id, my.AppName);
+
+            var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(my.AppName));
+            switch (cmd.Command)
+            {
+                case "publish":
+                    break;
+                case "start":
+                    if (svc != null) StartService(svc);
+                    break;
+                case "stop":
+                    if (svc != null) StopService(svc);
+                    break;
+                case "restart":
+                    if (svc != null)
+                    {
+                        StopService(svc);
+                        StartService(svc);
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            var rs = "成功";
+
+            return rs.GetBytes();
+        }
+
+        class MyApp
+        {
+            public Int32 Id { get; set; }
+
+            public String AppName { get; set; }
         }
         #endregion
 
