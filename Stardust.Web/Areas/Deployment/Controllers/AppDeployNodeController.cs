@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Deployment;
@@ -47,6 +48,19 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             entity.App?.Fix();
 
             return base.Valid(entity, type, post);
+        }
+
+        /// <summary>执行操作</summary>
+        /// <param name="act"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [EntityAuthorize(PermissionFlags.Update)]
+        public ActionResult Operate(String act, Int32 id)
+        {
+            var dn = AppDeployNode.FindById(id);
+            if (dn == null) return Json(500, $"[{id}]不存在");
+
+            return JsonRefresh($"在节点[{dn.Node}]上对应用[{dn.App}]执行[{act}]操作", 3);
         }
     }
 }
