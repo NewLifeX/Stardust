@@ -107,6 +107,8 @@ namespace StarAgent
             // APM埋点。独立应用名
             client.Tracer = _factory.Tracer;
 
+            _Manager.Attach(client.CommandQueue);
+
             // 使用跟踪
             client.UseTrace();
 

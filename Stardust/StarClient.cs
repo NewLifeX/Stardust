@@ -52,7 +52,7 @@ namespace Stardust
         public ServiceManager Manager { get; set; }
 
         /// <summary>命令队列</summary>
-        public IQueueService<CommandModel> CommandQueue { get; } = new QueueService<CommandModel>();
+        public IQueueService<CommandModel, Byte[]> CommandQueue { get; } = new QueueService<CommandModel, Byte[]>();
         #endregion
 
         #region 构造
@@ -414,12 +414,14 @@ namespace Stardust
         /// <summary>使用追踪服务</summary>
         public void UseTrace()
         {
-            _trace = new TraceService
-            {
-                Queue = CommandQueue,
-                Callback = (id, data) => ReportAsync(id, data).Wait(),
-            };
-            _trace.Init();
+            //_trace = new TraceService
+            //{
+            //    Queue = CommandQueue,
+            //    Callback = (id, data) => ReportAsync(id, data).Wait(),
+            //};
+            //_trace.Init();
+            _trace = new TraceService();
+            _trace.Attach(CommandQueue);
         }
 
         /// <summary>上报命令结果，如截屏、抓日志</summary>
@@ -509,7 +511,8 @@ namespace Stardust
                                     _ = Task.Run(Ping);
                                     break;
                                 default:
-                                    CommandQueue.Publish(cmd.Command, cmd);
+                                    var rs = CommandQueue.Publish(cmd.Command, cmd);
+                                    if (rs != null) await ReportAsync(cmd.Id, rs);
                                     break;
                             }
                         }

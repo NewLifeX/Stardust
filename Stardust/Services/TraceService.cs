@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
 using NewLife.Log;
-using NewLife.Serialization;
-using NewLife.Threading;
 using Stardust.Models;
 #if !__CORE__
 using System.Drawing;
@@ -15,57 +13,33 @@ namespace Stardust.Services
     /// <summary>追踪服务</summary>
     public class TraceService
     {
-        /// <summary>消息服务</summary>
-        public IQueueService<CommandModel> Queue { get; set; }
-
-        /// <summary>追踪结果回调</summary>
-        public Action<Int32, Byte[]> Callback { get; set; }
-
-        private String _clientId;
-
         /// <summary>初始化</summary>
-        public void Init()
+        public void Attach(IQueueService<CommandModel, Byte[]> queue)
         {
-            _clientId = GetType().Name;
-
-            Queue.Subscribe(_clientId, "截屏");
-            Queue.Subscribe(_clientId, "抓日志");
-
-            _timer = new TimerX(DoTrace, null, 1_000, 5_000) { Async = true };
+            queue.Subscribe("截屏", DoCapture);
+            queue.Subscribe("抓日志", DoGetLog);
         }
 
-        private TimerX _timer;
-        private void DoTrace(Object state)
+        private Byte[] DoCapture(CommandModel command)
         {
-            // 截屏
-            var ms = Queue.Consume(_clientId, "截屏", 1);
-            if (ms != null && ms.Length > 0)
-            {
 #if !__CORE__
-                var cmd = ms[0];
-                XTrace.WriteLine(cmd.ToJson());
-
-                if (cmd.Expire.Year < 2000 || cmd.Expire > DateTime.Now)
-                {
-                    var data = GetScreenCapture();
-                    Callback?.Invoke(cmd.Id, data);
-                }
-#endif
-            }
-
-            // 抓日志
-            ms = Queue.Consume(_clientId, "抓日志", 1);
-            if (ms != null && ms.Length > 0)
+            if (command.Expire.Year < 2000 || command.Expire > DateTime.Now)
             {
-                var cmd = ms[0];
-                XTrace.WriteLine(cmd.ToJson());
-
-                if (cmd.Expire.Year < 2000 || cmd.Expire > DateTime.Now)
-                {
-                    var data = GetLog();
-                    Callback?.Invoke(cmd.Id, data);
-                }
+                return GetScreenCapture();
             }
+#endif
+
+            return null;
+        }
+
+        private Byte[] DoGetLog(CommandModel command)
+        {
+            if (command.Expire.Year < 2000 || command.Expire > DateTime.Now)
+            {
+                return GetLog();
+            }
+
+            return null;
         }
 
 #if !__CORE__

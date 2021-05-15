@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
+using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data.Deployment;
 using XCode;
@@ -21,6 +24,9 @@ namespace Stardust.Web.Areas.Deployment.Controllers
 
             LogOnChange = true;
         }
+
+        private readonly StarFactory _starFactory;
+        public AppDeployNodeController(StarFactory starFactory) => _starFactory = starFactory;
 
         protected override IEnumerable<AppDeployNode> Search(Pager p)
         {
@@ -47,6 +53,21 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             entity.App?.Fix();
 
             return base.Valid(entity, type, post);
+        }
+
+        /// <summary>执行操作</summary>
+        /// <param name="act"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [EntityAuthorize(PermissionFlags.Update)]
+        public async Task<ActionResult> Operate(String act, Int32 id)
+        {
+            var dn = AppDeployNode.FindById(id);
+            if (dn == null || dn.Node == null || dn.App == null) return Json(500, $"[{id}]不存在");
+
+            await _starFactory.SendNodeCommand(dn.Node.Code, act,new { dn.Id, dn.AppName }.ToJson());
+
+            return JsonRefresh($"在节点[{dn.Node}]上对应用[{dn.App}]执行[{act}]操作", 3);
         }
     }
 }

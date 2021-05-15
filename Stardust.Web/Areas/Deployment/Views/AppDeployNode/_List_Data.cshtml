@@ -56,16 +56,16 @@
                 <td>@entity.WorkingDirectory</td>
                 <td class="text-center">
                     <i class="glyphicon glyphicon-save" style="color: green;"></i>
-                    <a href="?action=startProcess&id=@entity.Id" onclick="return confirm('危险操作！\n确认执行？')" title="发布应用">发布</a>
+                    <a data-action="action" data-url="@Url.Action("Operate",new { act="publish",id=entity.Id})" onclick="return confirm('危险操作！\n确认执行？')" title="发布应用">发布</a>
                     &nbsp;
                     <i class="glyphicon glyphicon-play" style="color: green;"></i>
-                    <a href="?action=startProcess&id=@entity.Id" onclick="return confirm('危险操作！\n确认执行？')" title="拉起进程">启动</a>
+                    <a data-action="action" data-url="@Url.Action("Operate",new { act="start",id=entity.Id})" onclick="return confirm('危险操作！\n确认执行？')" title="拉起进程">启动</a>
                     &nbsp;
                     <i class="glyphicon glyphicon-stop" style="color: red;"></i>
-                    <a href="?action=killProcess&id=@entity.Id" onclick="return confirm('危险操作！\n确认执行？')" title="杀死进程">杀死</a>
+                    <a data-action="action" data-url="@Url.Action("Operate",new { act="stop",id=entity.Id})" onclick="return confirm('危险操作！\n确认执行？')" title="终止进程">终止</a>
                     &nbsp;
                     <i class="glyphicon glyphicon-refresh" style="color: coral;"></i>
-                    <a href="?action=restartProcess&id=@entity.Id" onclick="return confirm('危险操作！\n确认执行？')" title="重启进程">重启</a>
+                    <a data-action="action" data-url="@Url.Action("Operate",new { act="restart",id=entity.Id})" onclick="return confirm('危险操作！\n确认执行？')" title="重启进程">重启</a>
                 </td>
                 @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
                 {
