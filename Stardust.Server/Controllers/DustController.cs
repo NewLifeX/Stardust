@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using NewLife;
 using NewLife.Data;
+using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Models;
 using Stardust.Server.Common;
@@ -109,52 +111,58 @@ namespace Stardust.Server.Controllers
 
         [ApiFilter]
         [HttpPost]
-        public ServiceModel[] ResolveService([FromBody] ConsumeServiceInfo service, String token)
+        public ServiceModel[] ResolveService([FromBody] ConsumeServiceInfo model, String token)
         {
             var app = _tokenService.DecodeToken(token, Setting.Current);
-            var info = GetService(service.ServiceName);
+            var info = GetService(model.ServiceName);
 
             // 所有消费
-            var services = AppConsume.FindAllByService(info.Id);
-            var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == service.Client);
+            var consumes = AppConsume.FindAllByService(info.Id);
+            var svc = consumes.FirstOrDefault(e => e.AppId == app.Id && e.Client == model.Client);
             if (svc == null)
             {
                 svc = new AppConsume
                 {
                     AppId = app.Id,
                     ServiceId = info.Id,
-                    ServiceName = service.ServiceName,
-                    Client = service.Client,
+                    ServiceName = model.ServiceName,
+                    Client = model.Client,
 
                     Enable = true,
 
                     CreateIP = UserHost,
                 };
-                services.Add(svc);
+                consumes.Add(svc);
+
+                var history = AppHistory.Create(app, "ResolveService", true, $"消费服务[{model.ServiceName}] {model.ToJson()}", Environment.MachineName, UserHost);
+                history.Client = svc.Client;
+                history.SaveAsync();
             }
 
             svc.PingCount++;
-            svc.Tag = service.Tag;
-            svc.MinVersion = service.MinVersion;
+            svc.Tag = model.Tag;
+            svc.MinVersion = model.MinVersion;
 
             svc.Save();
 
-            info.Consumers = services.Count;
+            info.Consumers = consumes.Count;
             info.Save();
 
             // 该服务所有生产
-            var services2 = AppService.FindAllByService(info.Id);
-            services2 = services2.Where(e => e.Enable).ToList();
+            var services = AppService.FindAllByService(info.Id);
+            services = services.Where(e => e.Enable).ToList();
 
-            //todo 匹配minversion和tag
+            // 匹配minversion和tag
+            services = services.Where(e => e.Match(model.MinVersion, model.Tag?.Split(","))).ToList();
 
-            return services2.Select(e => new ServiceModel
+            return services.Select(e => new ServiceModel
             {
                 ServiceName = e.ServiceName,
                 DisplayName = info.DisplayName,
                 Client = e.Client,
                 Version = e.Version,
                 Address = e.Address,
+                Tag = e.Tag,
                 Weight = e.Weight,
                 CreateTime = e.CreateTime,
                 UpdateTime = e.UpdateTime,

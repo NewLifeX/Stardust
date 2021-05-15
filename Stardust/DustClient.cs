@@ -185,13 +185,13 @@ namespace Stardust
 
             XTrace.WriteLine("注册服务 {0}", service.ToJson());
 
-            var rs = await RegisterAsync(service);
-            XTrace.WriteLine("注册完成 {0}", rs.ToJson());
-
             //_publishServices.TryAdd(service.ServiceName, service);
             _publishServices[service.ServiceName] = service;
 
             InitTimer();
+
+            var rs = await RegisterAsync(service);
+            XTrace.WriteLine("注册完成 {0}", rs.ToJson());
 
             return rs;
         }

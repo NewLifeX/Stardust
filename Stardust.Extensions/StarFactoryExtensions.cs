@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Hosting;
 using NewLife;
+using NewLife.Log;
 using NewLife.Reflection;
 using Stardust;
 
@@ -53,30 +54,43 @@ namespace Microsoft.Extensions.DependencyInjection
             var lifetime = app.ApplicationServices.GetRequiredService<IHostApplicationLifetime>();
             lifetime.ApplicationStarted.Register(() =>
             {
-                if (address.IsNullOrEmpty()) address = Stardust.Setting.Current.ServiceAddress;
-                if (address.IsNullOrEmpty())
+                try
                 {
-                    var feature = app.ServerFeatures.Get<IServerAddressesFeature>();
-                    address = feature?.Addresses.Join();
-
+                    if (address.IsNullOrEmpty()) address = Stardust.Setting.Current.ServiceAddress;
                     if (address.IsNullOrEmpty())
                     {
-                        if (feature != null)
+                        var feature = app.ServerFeatures.Get<IServerAddressesFeature>();
+                        address = feature?.Addresses.Join();
+
+                        if (address.IsNullOrEmpty())
+                        {
+                            if (feature == null) throw new Exception("尘埃客户端未能取得本地服务地址。");
+
                             star.Service.Register(serviceName, () => feature?.Addresses.Join(), tag);
-                        else
-                            throw new Exception("尘埃客户端未能取得本地服务地址。");
 
-                        return;
+                            return;
+                        }
                     }
-                }
 
-                star.Service.RegisterAsync(serviceName, address, tag).Wait();
+                    star.Service.RegisterAsync(serviceName, address, tag).Wait();
+                }
+                catch (Exception ex)
+                {
+                    XTrace.WriteException(ex);
+                }
             });
 
             // 停止的时候移除服务
             lifetime.ApplicationStopped.Register(() =>
             {
-                star.Service.Unregister(serviceName);
+                try
+                {
+                    star.Service.Unregister(serviceName);
+                }
+                catch (Exception ex)
+                {
+                    XTrace.WriteException(ex);
+                }
             });
 
             return app;

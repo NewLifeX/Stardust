@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
@@ -108,6 +109,23 @@ namespace Stardust.Data
         #endregion
 
         #region 业务操作
+        /// <summary>匹配版本和数据标签</summary>
+        /// <param name="minVersion"></param>
+        /// <param name="tags"></param>
+        /// <returns></returns>
+        public Boolean Match(String minVersion, String[] tags)
+        {
+            if (!minVersion.IsNullOrEmpty() && String.Compare(Version, minVersion) < 0) return false;
+            if (tags != null && tags.Length > 0)
+            {
+                if (Tag.IsNullOrEmpty()) return false;
+
+                var ts = Tag.Split(",");
+                if (tags.Any(e => !ts.Contains(e))) return false;
+            }
+
+            return true;
+        }
 
         /// <summary>删除过期，指定过期时间</summary>
         /// <param name="expire">超时时间，秒</param>

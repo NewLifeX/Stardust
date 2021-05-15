@@ -69,6 +69,22 @@ namespace ClientTest
         }
 
         [Fact]
+        public async void CreateForService2()
+        {
+            using var star = new StarFactory("http://127.0.0.1:6600", "test", "xxx");
+
+            var client = star.CreateForService("StarWeb", "tagB") as ApiHttpClient;
+            Assert.NotNull(client);
+            Assert.True(client.RoundRobin);
+            Assert.Equal(0, client.Services.Count);
+
+            var client2 = star.CreateForService("StarWeb", "Development") as ApiHttpClient;
+            Assert.NotNull(client2);
+            Assert.True(client2.RoundRobin);
+            Assert.Equal("https://localhost:5001/,http://localhost:5000/", client2.Services.Join(",", e => e.Address));
+        }
+
+        [Fact]
         public void IocTest()
         {
             using var star = new StarFactory("http://127.0.0.1:6600", "test", null);

@@ -20,6 +20,9 @@ namespace Stardust.Models
         /// <summary>地址</summary>
         public String Address { get; set; }
 
+        /// <summary>标签</summary>
+        public String Tag { get; set; }
+
         /// <summary>权重</summary>
         public Int32 Weight { get; set; }
 

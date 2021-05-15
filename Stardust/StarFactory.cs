@@ -91,6 +91,9 @@ namespace Stardust
                 };
 
                 _client = new ApiHttpClient(Server) { Filter = _tokenFilter };
+
+                var set = Setting.Current;
+                if (set.Debug) _client.Log = XTrace.Log;
             }
         }
         #endregion
@@ -268,13 +271,16 @@ namespace Stardust
             {
                 foreach (var item in ms)
                 {
-                    //client.Add(item.Client, item.Address);
-                    client.Services.Add(new ApiHttpClient.Service
+                    var addrs = item.Address.Split(",");
+                    foreach (var elm in addrs)
                     {
-                        Name = item.Client,
-                        Address = new Uri(item.Address),
-                        Weight = item.Weight,
-                    });
+                        client.Services.Add(new ApiHttpClient.Service
+                        {
+                            Name = item.Client,
+                            Address = new Uri(elm),
+                            Weight = item.Weight,
+                        });
+                    }
                 }
             }
         }
