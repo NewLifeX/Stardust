@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using NewLife;
+using NewLife.IO;
 using NewLife.Log;
 using NewLife.Serialization;
 using NewLife.Threading;
@@ -20,10 +21,20 @@ namespace Stardust
         /// <summary>应用服务集合</summary>
         public ServiceInfo[] Services { get; set; }
 
+        private CsvDb<ProcessInfo> _services;
         private readonly Dictionary<String, Process> _processes = new Dictionary<String, Process>();
         #endregion
 
         #region 构造
+        /// <summary>实例化</summary>
+        public ServiceManager()
+        {
+            var data = NewLife.Setting.Current.DataPath;
+            _services = new CsvDb<ProcessInfo>((x, y) => x.Name == y.Name) { FileName = data.CombinePath("Service.csv") };
+
+            _services.Remove(e => e.UpdateTime.AddDays(1) < DateTime.Now);
+        }
+
         /// <summary>销毁</summary>
         /// <param name="disposing"></param>
         protected override void Dispose(Boolean disposing)
@@ -67,24 +78,19 @@ namespace Stardust
         private Process StartService(ServiceInfo service)
         {
             // 检查应用是否已启动
-            var pidFile = NewLife.Setting.Current.DataPath.CombinePath($"{service.Name}.pid").GetBasePath();
-            if (File.Exists(pidFile))
+            var pi = _services.Find(e => e.Name.EqualIgnoreCase(service.Name));
+            if (pi != null)
             {
                 try
                 {
-                    // 读取 pid,procss_name
-                    var ss = File.ReadAllText(pidFile).Split(",");
-                    if (ss != null && ss.Length >= 2)
+                    var p = Process.GetProcessById(pi.ProcessId);
+                    if (p != null && !p.HasExited && p.ProcessName == pi.ProcessName)
                     {
-                        var p = Process.GetProcessById(ss[0].ToInt());
-                        if (p != null && !p.HasExited && p.ProcessName == ss[1])
-                        {
-                            WriteLog("应用[{0}/{1}]已启动，直接接管", service.Name, ss[0]);
+                        WriteLog("应用[{0}/{1}]已启动，直接接管", service.Name, p.Id);
 
-                            _processes[service.Name] = p;
+                        _processes[service.Name] = p;
 
-                            return p;
-                        }
+                        return p;
                     }
                 }
                 catch (Exception ex)
@@ -92,6 +98,7 @@ namespace Stardust
                     if (!(ex is ArgumentException)) XTrace.WriteException(ex);
                 }
             }
+            if (pi == null) pi = new ProcessInfo { Name = service.Name };
 
             // 修正路径
             var workDir = service.WorkingDirectory;
@@ -108,9 +115,9 @@ namespace Stardust
                 fullFile = workDir.CombinePath(fullFile).GetFullPath();
             }
 
-            if (/*service.Arguments.IsNullOrEmpty() ||*/ service.Singleton)
+            if (service.Singleton)
             {
-                // 遍历进程，检查是否已驱动
+                // 遍历进程，检查是否已启动
                 foreach (var p in Process.GetProcesses())
                 {
                     try
@@ -120,8 +127,7 @@ namespace Stardust
                             WriteLog("应用[{0}/{1}]已启动，直接接管", service.Name, p.Id);
 
                             _processes[service.Name] = p;
-                            pidFile.EnsureDirectory(true);
-                            File.WriteAllText(pidFile, $"{p.Id},{p.ProcessName}");
+                            pi.Save(_services, p);
 
                             return p;
                         }
@@ -155,8 +161,7 @@ namespace Stardust
 
                     // 记录进程信息，避免宿主重启后无法继续管理
                     _processes[service.Name] = p;
-                    pidFile.EnsureDirectory(true);
-                    File.WriteAllText(pidFile, $"{p.Id},{p.ProcessName}");
+                    pi.Save(_services, p);
 
                     return p;
                 }
@@ -186,7 +191,11 @@ namespace Stardust
                     if (!p.HasExited) p.Kill();
                 }
                 catch { }
+
+                _processes.Remove(service.Name);
             }
+
+            _services.Remove(e => e.Name == service.Name);
         }
 
         /// <summary>停止管理，按需杀掉进程</summary>
@@ -195,14 +204,14 @@ namespace Stardust
         {
             _timer?.TryDispose();
 
-            foreach (var item in _processes)
-            {
-                var p = item.Value;
-                WriteLog("停止应用[{0}] PID={1} {2}", item.Key, p.Id, reason);
+            //foreach (var item in _processes)
+            //{
+            //    var p = item.Value;
+            //    WriteLog("停止应用[{0}] PID={1} {2}", item.Key, p.Id, reason);
 
-                //p.Kill();
-            }
-            _processes.Clear();
+            //    //p.Kill();
+            //}
+            //_processes.Clear();
         }
 
         private TimerX _timer;
@@ -265,6 +274,7 @@ namespace Stardust
                     if (svc != null)
                     {
                         StopService(svc);
+                        Thread.Sleep(1000);
                         StartService(svc);
                     }
                     break;
@@ -282,6 +292,38 @@ namespace Stardust
             public Int32 Id { get; set; }
 
             public String AppName { get; set; }
+        }
+        #endregion
+
+        #region 辅助
+        /// <summary>服务运行信息</summary>
+        class ProcessInfo
+        {
+            public String Name { get; set; }
+
+            public Int32 ProcessId { get; set; }
+
+            public String ProcessName { get; set; }
+
+            public DateTime CreateTime { get; set; }
+
+            public DateTime UpdateTime { get; set; }
+
+            public void Save(CsvDb<ProcessInfo> db, Process p)
+            {
+                var add = ProcessId == 0;
+
+                ProcessId = p.Id;
+                ProcessName = p.ProcessName;
+
+                if (add) CreateTime = DateTime.Now;
+                UpdateTime = DateTime.Now;
+
+                if (add)
+                    db.Add(this);
+                else
+                    db.Update(this);
+            }
         }
         #endregion
 
