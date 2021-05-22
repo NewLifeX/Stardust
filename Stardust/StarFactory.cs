@@ -203,7 +203,7 @@ namespace Stardust
                         //Secret = Secret,
                         Client = _client,
                     };
-                    config.LoadAll();
+                    //config.LoadAll();
 
                     _config = config;
                 }

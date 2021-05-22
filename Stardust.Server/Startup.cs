@@ -72,9 +72,6 @@ namespace Stardust.Server
             services.AddHostedService<NodeOnlineService>();
             services.AddHostedService<ApolloService>();
 
-            // 异步初始化
-            Task.Run(InitAsync);
-
             services.AddControllers()
                 .AddJsonOptions(options =>
                 {
@@ -117,6 +114,9 @@ namespace Stardust.Server
             {
                 endpoints.MapControllers();
             });
+
+            // 异步初始化
+            Task.Run(InitAsync);
         }
 
         private static void InitAsync()
