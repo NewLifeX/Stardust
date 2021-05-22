@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using NewLife;
 using NewLife.Log;
+using Stardust.Server.Common;
+using XCode.Membership;
 
 namespace Stardust.Server.Middlewares
 {
@@ -41,6 +43,7 @@ namespace Stardust.Server.Middlewares
                 }
             }
 
+            ManageProvider.UserHost = ctx.GetUserHost();
             try
             {
                 await _next.Invoke(ctx);
@@ -53,6 +56,7 @@ namespace Stardust.Server.Middlewares
             }
             finally
             {
+                ManageProvider.UserHost = null;
                 span?.Dispose();
             }
         }

@@ -315,6 +315,10 @@ namespace Stardust.Server.Controllers
             var node = DecodeToken(token, Setting.Current.TokenSecret);
             if (node != null)
             {
+                var ip = UserHost;
+
+                if (!inf.IP.IsNullOrEmpty()) node.IP = inf.IP;
+                node.UpdateIP = ip;
                 node.FixArea();
                 node.SaveAsync();
 

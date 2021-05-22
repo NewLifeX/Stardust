@@ -70,7 +70,7 @@
                 <td><a href="Node/Trace/@entity.ID">诊断</a></td>
                 <td><a href="/Admin/Log?category=节点&linkId=@entity.ID">日志</a></td>
                 <td title="@entity.CompileTime.ToFullString("")">@entity.Version</td>
-                <td>@entity.IP</td>
+                <td title="@entity.IP" style="max-width:200px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;">@entity.IP</td>
                 <td title="@entity.OSVersion">@entity.OS</td>
                 <td>@entity.MachineName</td>
                 <td>@entity.UserName</td>

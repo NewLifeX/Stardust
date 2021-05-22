@@ -33,7 +33,7 @@ namespace Stardust.Models
         ///// <summary>串口</summary>
         //public String COMs { get; set; }
 
-        /// <summary>串口</summary>
+        /// <summary>本地IP</summary>
         public String IP { get; set; }
 
         /// <summary>进程列表</summary>
