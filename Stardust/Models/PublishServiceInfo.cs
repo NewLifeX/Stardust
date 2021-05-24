@@ -11,6 +11,9 @@ namespace Stardust.Models
         /// <summary>客户端。IP加进程</summary>
         public String Client { get; set; }
 
+        /// <summary>本地IP地址</summary>
+        public String IP { get; set; }
+
         /// <summary>版本</summary>
         public String Version { get; set; }
 

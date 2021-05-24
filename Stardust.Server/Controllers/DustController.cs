@@ -66,11 +66,20 @@ namespace Stardust.Server.Controllers
                 history.SaveAsync();
             }
 
+            // 地址处理。本地任意地址，更换为IP地址
+            var ip = service.IP;
+            if (ip.IsNullOrEmpty()) ip = service.Client.Substring(null, ":");
+            if (ip.IsNullOrEmpty()) ip = UserHost;
+            var addrs = service.Address
+                ?.Replace("://*", $"://{ip}")
+                .Replace("://0.0.0.0", $"://{ip}")
+                .Replace("://[::]", $"://{ip}");
+
             svc.Enable = app.AutoActive;
             svc.PingCount++;
             svc.Tag = service.Tag;
             svc.Version = service.Version;
-            svc.Address = service.Address?.Replace("://*", $"://{UserHost}").Replace("://[::]", $"://{UserHost}");
+            svc.Address = addrs;
 
             svc.Save();
 

@@ -118,6 +118,7 @@ namespace Stardust
                     var uri = new NetUri(ps[0]);
                     var ip = NetHelper.MyIP();
                     svc.Client = $"{ip}:{uri.Port}";
+                    svc.IP = ip + "";
                     svc.Address = address;
                 }
 
@@ -180,6 +181,7 @@ namespace Stardust
                 Tag = tag,
 
                 Client = $"{ip}:{uri.Port}",
+                IP = ip + "",
                 Version = asmx.Version,
             };
 
