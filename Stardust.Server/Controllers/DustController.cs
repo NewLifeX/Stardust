@@ -6,6 +6,7 @@ using NewLife;
 using NewLife.Data;
 using NewLife.Serialization;
 using Stardust.Data;
+using Stardust.Data.Configs;
 using Stardust.Models;
 using Stardust.Server.Common;
 using Stardust.Server.Services;
@@ -65,6 +66,9 @@ namespace Stardust.Server.Controllers
                 history.Client = service.Client;
                 history.SaveAsync();
             }
+
+            // 作用域
+            svc.Scope = AppRule.CheckScope(-1, UserHost);
 
             // 地址处理。本地任意地址，更换为IP地址
             var ip = service.IP;
@@ -148,6 +152,8 @@ namespace Stardust.Server.Controllers
                 history.SaveAsync();
             }
 
+            // 作用域
+            svc.Scope = AppRule.CheckScope(-1, UserHost);
             svc.PingCount++;
             svc.Tag = model.Tag;
             svc.MinVersion = model.MinVersion;
@@ -162,7 +168,7 @@ namespace Stardust.Server.Controllers
             services = services.Where(e => e.Enable).ToList();
 
             // 匹配minversion和tag
-            services = services.Where(e => e.Match(model.MinVersion, model.Tag?.Split(","))).ToList();
+            services = services.Where(e => e.Match(model.MinVersion, svc.Scope, model.Tag?.Split(","))).ToList();
 
             return services.Select(e => new ServiceModel
             {
@@ -171,6 +177,7 @@ namespace Stardust.Server.Controllers
                 Client = e.Client,
                 Version = e.Version,
                 Address = e.Address,
+                Scope = e.Scope,
                 Tag = e.Tag,
                 Weight = e.Weight,
                 CreateTime = e.CreateTime,

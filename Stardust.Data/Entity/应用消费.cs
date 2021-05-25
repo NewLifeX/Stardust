@@ -85,6 +85,14 @@ namespace Stardust.Data
         [BindColumn("MinVersion", "最低版本。要求返回大于等于该版本的服务提供者", "")]
         public String MinVersion { get => _MinVersion; set { if (OnPropertyChanging("MinVersion", value)) { _MinVersion = value; OnPropertyChanged("MinVersion"); } } }
 
+        private String _Scope;
+        /// <summary>作用域。根据配置中心应用规则计算，禁止跨域访问服务</summary>
+        [DisplayName("作用域")]
+        [Description("作用域。根据配置中心应用规则计算，禁止跨域访问服务")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Scope", "作用域。根据配置中心应用规则计算，禁止跨域访问服务", "")]
+        public String Scope { get => _Scope; set { if (OnPropertyChanging("Scope", value)) { _Scope = value; OnPropertyChanged("Scope"); } } }
+
         private String _Tag;
         /// <summary>标签。带有指定特性，逗号分隔</summary>
         [DisplayName("标签")]
@@ -136,6 +144,7 @@ namespace Stardust.Data
                     case "Enable": return _Enable;
                     case "PingCount": return _PingCount;
                     case "MinVersion": return _MinVersion;
+                    case "Scope": return _Scope;
                     case "Tag": return _Tag;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -155,6 +164,7 @@ namespace Stardust.Data
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "PingCount": _PingCount = value.ToInt(); break;
                     case "MinVersion": _MinVersion = Convert.ToString(value); break;
+                    case "Scope": _Scope = Convert.ToString(value); break;
                     case "Tag": _Tag = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -192,6 +202,9 @@ namespace Stardust.Data
 
             /// <summary>最低版本。要求返回大于等于该版本的服务提供者</summary>
             public static readonly Field MinVersion = FindByName("MinVersion");
+
+            /// <summary>作用域。根据配置中心应用规则计算，禁止跨域访问服务</summary>
+            public static readonly Field Scope = FindByName("Scope");
 
             /// <summary>标签。带有指定特性，逗号分隔</summary>
             public static readonly Field Tag = FindByName("Tag");
@@ -234,6 +247,9 @@ namespace Stardust.Data
 
             /// <summary>最低版本。要求返回大于等于该版本的服务提供者</summary>
             public const String MinVersion = "MinVersion";
+
+            /// <summary>作用域。根据配置中心应用规则计算，禁止跨域访问服务</summary>
+            public const String Scope = "Scope";
 
             /// <summary>标签。带有指定特性，逗号分隔</summary>
             public const String Tag = "Tag";

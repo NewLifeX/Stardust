@@ -111,11 +111,16 @@ namespace Stardust.Data
         #region 业务操作
         /// <summary>匹配版本和数据标签</summary>
         /// <param name="minVersion"></param>
+        /// <param name="scope"></param>
         /// <param name="tags"></param>
         /// <returns></returns>
-        public Boolean Match(String minVersion, String[] tags)
+        public Boolean Match(String minVersion, String scope, String[] tags)
         {
             if (!minVersion.IsNullOrEmpty() && String.Compare(Version, minVersion) < 0) return false;
+
+            // 应用服务没有Scope时，谁都可以消费，否则必须匹配
+            if (!Scope.IsNullOrEmpty() && Scope != scope) return false;
+
             if (tags != null && tags.Length > 0)
             {
                 if (Tag.IsNullOrEmpty()) return false;

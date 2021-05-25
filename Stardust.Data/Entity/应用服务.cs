@@ -109,6 +109,14 @@ namespace Stardust.Data
         [BindColumn("Weight", "权重", "")]
         public Int32 Weight { get => _Weight; set { if (OnPropertyChanging("Weight", value)) { _Weight = value; OnPropertyChanged("Weight"); } } }
 
+        private String _Scope;
+        /// <summary>作用域。根据配置中心应用规则计算，禁止跨域访问服务</summary>
+        [DisplayName("作用域")]
+        [Description("作用域。根据配置中心应用规则计算，禁止跨域访问服务")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Scope", "作用域。根据配置中心应用规则计算，禁止跨域访问服务", "")]
+        public String Scope { get => _Scope; set { if (OnPropertyChanging("Scope", value)) { _Scope = value; OnPropertyChanged("Scope"); } } }
+
         private String _Tag;
         /// <summary>标签。带有指定特性，逗号分隔</summary>
         [DisplayName("标签")]
@@ -163,6 +171,7 @@ namespace Stardust.Data
                     case "Address": return _Address;
                     case "HealthCheck": return _HealthCheck;
                     case "Weight": return _Weight;
+                    case "Scope": return _Scope;
                     case "Tag": return _Tag;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -185,6 +194,7 @@ namespace Stardust.Data
                     case "Address": _Address = Convert.ToString(value); break;
                     case "HealthCheck": _HealthCheck = Convert.ToString(value); break;
                     case "Weight": _Weight = value.ToInt(); break;
+                    case "Scope": _Scope = Convert.ToString(value); break;
                     case "Tag": _Tag = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -231,6 +241,9 @@ namespace Stardust.Data
 
             /// <summary>权重</summary>
             public static readonly Field Weight = FindByName("Weight");
+
+            /// <summary>作用域。根据配置中心应用规则计算，禁止跨域访问服务</summary>
+            public static readonly Field Scope = FindByName("Scope");
 
             /// <summary>标签。带有指定特性，逗号分隔</summary>
             public static readonly Field Tag = FindByName("Tag");
@@ -282,6 +295,9 @@ namespace Stardust.Data
 
             /// <summary>权重</summary>
             public const String Weight = "Weight";
+
+            /// <summary>作用域。根据配置中心应用规则计算，禁止跨域访问服务</summary>
+            public const String Scope = "Scope";
 
             /// <summary>标签。带有指定特性，逗号分隔</summary>
             public const String Tag = "Tag";

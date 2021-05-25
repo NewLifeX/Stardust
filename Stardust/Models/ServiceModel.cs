@@ -20,6 +20,9 @@ namespace Stardust.Models
         /// <summary>地址</summary>
         public String Address { get; set; }
 
+        /// <summary>作用域</summary>
+        public String Scope { get; set; }
+
         /// <summary>标签</summary>
         public String Tag { get; set; }
 

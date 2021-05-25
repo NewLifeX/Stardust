@@ -124,6 +124,7 @@
       <Column Name="Address" DataType="String" Description="地址。服务地址，如http://127.0.0.1:1234" />
       <Column Name="HealthCheck" DataType="String" Description="健康监测" />
       <Column Name="Weight" DataType="Int32" Description="权重" />
+      <Column Name="Scope" DataType="String" Description="作用域。根据配置中心应用规则计算，禁止跨域访问服务" />
       <Column Name="Tag" DataType="String" Description="标签。带有指定特性，逗号分隔" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
@@ -145,6 +146,7 @@
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="PingCount" DataType="Int32" Description="心跳" />
       <Column Name="MinVersion" DataType="String" Description="最低版本。要求返回大于等于该版本的服务提供者" />
+      <Column Name="Scope" DataType="String" Description="作用域。根据配置中心应用规则计算，禁止跨域访问服务" />
       <Column Name="Tag" DataType="String" Description="标签。带有指定特性，逗号分隔" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
