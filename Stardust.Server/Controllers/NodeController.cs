@@ -580,7 +580,7 @@ namespace Stardust.Server.Controllers
             WriteHistory(node, "WebSocket连接", true, socket.State + "");
 
             var source = new CancellationTokenSource();
-            _ = Task.Run(() => consumeMessage(socket, node, source.Token));
+            _ = Task.Run(() => consumeMessage(socket, node, source));
             try
             {
                 var buf = new Byte[4 * 1024];
@@ -613,24 +613,36 @@ namespace Stardust.Server.Controllers
             }
         }
 
-        private async Task consumeMessage(WebSocket socket, Node node, CancellationToken cancellationToken)
+        private async Task consumeMessage(WebSocket socket, Node node, CancellationTokenSource source)
         {
+            var cancellationToken = source.Token;
             var queue = _queue.GetQueue<String>($"cmd:{node.Code}");
-            while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
+            try
             {
-                var msg = await queue.TakeOneAsync(10_000);
-                if (msg != null)
+                while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
                 {
-                    XTrace.WriteLine("WebSocket发送 {0} {1}", node, msg);
-                    WriteHistory(node, "WebSocket发送", true, msg);
+                    var msg = await queue.TakeOneAsync(10_000);
+                    if (msg != null)
+                    {
+                        XTrace.WriteLine("WebSocket发送 {0} {1}", node, msg);
+                        WriteHistory(node, "WebSocket发送", true, msg);
 
-                    await socket.SendAsync(msg.GetBytes(), WebSocketMessageType.Text, true, cancellationToken);
+                        await socket.SendAsync(msg.GetBytes(), WebSocketMessageType.Text, true, cancellationToken);
+                    }
+                    else
+                    {
+                        // 后续MemoryQueue升级到异步阻塞版以后，这里可以缩小
+                        await Task.Delay(1_000, cancellationToken);
+                    }
                 }
-                else
-                {
-                    // 后续MemoryQueue升级到异步阻塞版以后，这里可以缩小
-                    await Task.Delay(1_000, cancellationToken);
-                }
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+            }
+            finally
+            {
+                source.Cancel();
             }
         }
 
