@@ -144,15 +144,22 @@ namespace Stardust.Data.Configs
 
         /// <summary>更新信息</summary>
         /// <param name="app"></param>
-        public void UpdateInfo(App app)
+        /// <param name="online"></param>
+        public void UpdateInfo(App app, AppOnline online)
         {
+            PingCount++;
+
             AppId = app.Id;
             Name = app.Name;
-            Version = info.Version;
-            UserName = info.UserName;
-            ProcessId = info.Id;
-            ProcessName = info.Name;
-            StartTime = info.StartTime;
+
+            if (online != null)
+            {
+                Version = online.Version;
+                UserName = online.UserName;
+                ProcessId = online.Id;
+                ProcessName = online.Name;
+                StartTime = online.StartTime;
+            }
 
             Creator = Environment.MachineName;
 

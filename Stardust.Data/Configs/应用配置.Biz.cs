@@ -167,29 +167,24 @@ namespace Stardust.Data.Configs
         /// <summary>更新信息</summary>
         /// <param name="app"></param>
         /// <param name="ip"></param>
-        public Int32 UpdateInfo(App app, String ip)
+        public void UpdateInfo(App app, String ip)
         {
             // 修复数据
             if (app != null)
             {
-                if (app.DisplayName.IsNullOrEmpty()) app.DisplayName = app.DisplayName;
-                if (app.Category.IsNullOrEmpty()) app.Category = app.Category;
+                if (!app.DisplayName.IsNullOrEmpty()) DisplayName = app.DisplayName;
+                if (!app.Category.IsNullOrEmpty()) Category = app.Category;
 
                 // 更新应用信息
-
-                // 严格来说，应该采用公网IP+内外IP+进程ID才能够保证比较高的唯一性，这里为了简单，直接使用公网IP
-                // 同时，还可能存在多层NAT网络的情况，很难保证绝对唯一
-                var clientId = ip;
-                var ss = model.ClientId.Split('@');
-                if (ss.Length >= 2) clientId = $"{ip}@{ss[1]}";
-
+                var clientId = $"{ip}#{Id}";
                 var online = ConfigOnline.GetOrAddClient(clientId);
-                online.PingCount++;
-                online.Version = model.Version;
-                online.UpdateInfo(app, model.Info);
-            }
+                online.Category = Category;
 
-            return Update();
+                // 找到第一个应用在线，拷贝它的信息
+                var list = online.ProcessId > 0 ? null : AppOnline.FindAllByApp(app.Id);
+
+                online.UpdateInfo(app, list?.FirstOrDefault(e => e.Client.StartsWith($"{ip}@")));
+            }
         }
         #endregion
     }

@@ -2,8 +2,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
-using NewLife.Remoting;
-using NewLife.Web;
 using Stardust.Data.Configs;
 using Stardust.Models;
 using Stardust.Server.Common;
@@ -68,9 +66,7 @@ namespace Stardust.Server.Controllers
             // 使用键和缺失键
             if (!model.UsedKeys.IsNullOrEmpty()) app.UsedKeys = model.UsedKeys;
             if (!model.MissedKeys.IsNullOrEmpty()) app.MissedKeys = model.MissedKeys;
-            //app.Update();
-
-            // 更新心跳信息
+            app.Update();
 
             // 版本没有变化时，不做计算处理，不返回配置数据
             if (model.Version > 0 && model.Version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
@@ -115,6 +111,10 @@ namespace Stardust.Server.Controllers
 
                 app.Insert();
             }
+
+            // 更新心跳信息
+            var ip = HttpContext.GetUserHost();
+            app.UpdateInfo(ap, ip);
 
             // 检查应用有效性
             if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");

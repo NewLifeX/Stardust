@@ -134,6 +134,7 @@ namespace Stardust.Data
                 if (ss.Length >= 2) clientId = $"{ip}@{ss[1]}";
 
                 var online = Data.AppOnline.GetOrAddClient(clientId);
+                online.Category = app.Category;
                 online.PingCount++;
                 online.Version = model.Version;
                 online.UpdateInfo(app, model.Info);

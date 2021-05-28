@@ -43,6 +43,14 @@ namespace Stardust.Data.Configs
         [BindColumn("Name", "名称", "", Master = true)]
         public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
+        private String _DisplayName;
+        /// <summary>显示名</summary>
+        [DisplayName("显示名")]
+        [Description("显示名")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("DisplayName", "显示名", "")]
+        public String DisplayName { get => _DisplayName; set { if (OnPropertyChanging("DisplayName", value)) { _DisplayName = value; OnPropertyChanged("DisplayName"); } } }
+
         private Boolean _Enable;
         /// <summary>启用</summary>
         [DisplayName("启用")]
@@ -217,6 +225,7 @@ namespace Stardust.Data.Configs
                     case "Id": return _Id;
                     case "Category": return _Category;
                     case "Name": return _Name;
+                    case "DisplayName": return _DisplayName;
                     case "Enable": return _Enable;
                     case "Version": return _Version;
                     case "NextVersion": return _NextVersion;
@@ -247,6 +256,7 @@ namespace Stardust.Data.Configs
                     case "Id": _Id = value.ToInt(); break;
                     case "Category": _Category = Convert.ToString(value); break;
                     case "Name": _Name = Convert.ToString(value); break;
+                    case "DisplayName": _DisplayName = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Version": _Version = value.ToInt(); break;
                     case "NextVersion": _NextVersion = value.ToInt(); break;
@@ -285,6 +295,9 @@ namespace Stardust.Data.Configs
 
             /// <summary>名称</summary>
             public static readonly Field Name = FindByName("Name");
+
+            /// <summary>显示名</summary>
+            public static readonly Field DisplayName = FindByName("DisplayName");
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
@@ -360,6 +373,9 @@ namespace Stardust.Data.Configs
 
             /// <summary>名称</summary>
             public const String Name = "Name";
+
+            /// <summary>显示名</summary>
+            public const String DisplayName = "DisplayName";
 
             /// <summary>启用</summary>
             public const String Enable = "Enable";

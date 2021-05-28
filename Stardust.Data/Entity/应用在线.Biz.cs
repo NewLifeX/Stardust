@@ -73,6 +73,16 @@ namespace Stardust.Data
 
             return Find(_.Client == client);
         }
+
+        /// <summary>根据应用查找所有在线记录</summary>
+        /// <param name="appId"></param>
+        /// <returns></returns>
+        public static IList<AppOnline> FindAllByApp(Int32 appId)
+        {
+            //if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId);
+
+            return FindAll(_.AppId == appId);
+        }
         #endregion
 
         #region 高级查询

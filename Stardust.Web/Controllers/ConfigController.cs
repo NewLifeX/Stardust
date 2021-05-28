@@ -67,6 +67,10 @@ namespace Stardust.Web.Controllers
                 app.Insert();
             }
 
+            // 更新心跳信息
+            var ip = HttpContext.GetUserHost();
+            app.UpdateInfo(ap, ip);
+
             // 检查应用有效性
             if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
 
