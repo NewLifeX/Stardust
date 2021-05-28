@@ -68,7 +68,9 @@ namespace Stardust.Server.Controllers
             // 使用键和缺失键
             if (!model.UsedKeys.IsNullOrEmpty()) app.UsedKeys = model.UsedKeys;
             if (!model.MissedKeys.IsNullOrEmpty()) app.MissedKeys = model.MissedKeys;
-            app.Update();
+            //app.Update();
+
+            // 更新心跳信息
 
             // 版本没有变化时，不做计算处理，不返回配置数据
             if (model.Version > 0 && model.Version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };

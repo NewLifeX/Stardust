@@ -8,17 +8,17 @@ using XCode;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
 
-namespace Stardust.Data
+namespace Stardust.Data.Configs
 {
-    /// <summary>应用在线。一个应用有多个部署，每个在线会话对应一个服务地址</summary>
+    /// <summary>配置在线。一个应用有多个部署，每个在线会话对应一个服务地址</summary>
     [Serializable]
     [DataObject]
-    [Description("应用在线。一个应用有多个部署，每个在线会话对应一个服务地址")]
-    [BindIndex("IU_AppOnline_Client", true, "Client")]
-    [BindIndex("IX_AppOnline_AppId", false, "AppId")]
-    [BindIndex("IX_AppOnline_UpdateTime", false, "UpdateTime")]
-    [BindTable("AppOnline", Description = "应用在线。一个应用有多个部署，每个在线会话对应一个服务地址", ConnName = "Stardust", DbType = DatabaseType.None)]
-    public partial class AppOnline
+    [Description("配置在线。一个应用有多个部署，每个在线会话对应一个服务地址")]
+    [BindIndex("IU_ConfigOnline_Client", true, "Client")]
+    [BindIndex("IX_ConfigOnline_AppId", false, "AppId")]
+    [BindIndex("IX_ConfigOnline_UpdateTime", false, "UpdateTime")]
+    [BindTable("ConfigOnline", Description = "配置在线。一个应用有多个部署，每个在线会话对应一个服务地址", ConnName = "ConfigCenter", DbType = DatabaseType.None)]
+    public partial class ConfigOnline
     {
         #region 属性
         private Int32 _Id;
@@ -206,7 +206,7 @@ namespace Stardust.Data
         #endregion
 
         #region 字段名
-        /// <summary>取得应用在线字段信息的快捷方式</summary>
+        /// <summary>取得配置在线字段信息的快捷方式</summary>
         public partial class _
         {
             /// <summary>编号</summary>
@@ -260,7 +260,7 @@ namespace Stardust.Data
             static Field FindByName(String name) => Meta.Table.FindByName(name);
         }
 
-        /// <summary>取得应用在线字段名称的快捷方式</summary>
+        /// <summary>取得配置在线字段名称的快捷方式</summary>
         public partial class __
         {
             /// <summary>编号</summary>

@@ -31,6 +31,7 @@
   <Table Name="AppOnline" Description="应用在线。一个应用有多个部署，每个在线会话对应一个服务地址">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="Name" DataType="String" Master="True" Description="名称。机器名称" />
       <Column Name="Client" DataType="String" Description="客户端。IP加进程" />
