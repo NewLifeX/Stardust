@@ -104,6 +104,7 @@
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="Name" DataType="String" Master="True" Description="名称。机器名称" />
       <Column Name="Client" DataType="String" Description="客户端。IP加进程" />
+      <Column Name="Scope" DataType="String" Description="作用域" />
       <Column Name="PingCount" DataType="Int32" Description="心跳" />
       <Column Name="ProcessId" DataType="Int32" Description="进程" />
       <Column Name="ProcessName" DataType="String" Description="进程名称" />

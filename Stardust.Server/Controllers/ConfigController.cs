@@ -30,7 +30,7 @@ namespace Stardust.Server.Controllers
             if (appId.IsNullOrEmpty() && token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(appId));
 
             // 验证
-            var app = Valid(appId, secret, token);
+            var app = Valid(appId, secret, token, out var online);
             var ip = HttpContext.GetUserHost();
 
             // 版本没有变化时，不做计算处理，不返回配置数据
@@ -38,6 +38,7 @@ namespace Stardust.Server.Controllers
 
             // 作用域为空时重写
             scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip) : scope;
+            online.Scope = scope;
 
             var dic = _configService.GetConfigs(app, scope);
 
@@ -60,7 +61,7 @@ namespace Stardust.Server.Controllers
             if (model.AppId.IsNullOrEmpty() && token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.AppId));
 
             // 验证
-            var app = Valid(model.AppId, model.Secret, token);
+            var app = Valid(model.AppId, model.Secret, token, out var online);
             var ip = HttpContext.GetUserHost();
 
             // 使用键和缺失键
@@ -74,6 +75,7 @@ namespace Stardust.Server.Controllers
             // 作用域为空时重写
             var scope = model.Scope;
             scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip) : scope;
+            online.Scope = scope;
 
             var dic = _configService.GetConfigs(app, scope);
 
@@ -89,7 +91,7 @@ namespace Stardust.Server.Controllers
             };
         }
 
-        private AppConfig Valid(String appId, String secret, String token)
+        private AppConfig Valid(String appId, String secret, String token, out ConfigOnline online)
         {
             if (appId.IsNullOrEmpty() && !token.IsNullOrEmpty())
             {
@@ -114,7 +116,7 @@ namespace Stardust.Server.Controllers
 
             // 更新心跳信息
             var ip = HttpContext.GetUserHost();
-            app.UpdateInfo(ap, ip);
+            online = app.UpdateInfo(ap, ip);
 
             // 检查应用有效性
             if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");

@@ -167,7 +167,7 @@ namespace Stardust.Data.Configs
         /// <summary>更新信息</summary>
         /// <param name="app"></param>
         /// <param name="ip"></param>
-        public void UpdateInfo(App app, String ip)
+        public ConfigOnline UpdateInfo(App app, String ip)
         {
             // 修复数据
             if (app != null)
@@ -184,7 +184,11 @@ namespace Stardust.Data.Configs
                 var list = online.ProcessId > 0 ? null : AppOnline.FindAllByApp(app.Id);
 
                 online.UpdateInfo(app, list?.FirstOrDefault(e => e.Client.StartsWith($"{ip}@")));
+
+                return online;
             }
+
+            return null;
         }
         #endregion
     }

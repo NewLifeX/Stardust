@@ -27,7 +27,7 @@ namespace Stardust.Web.Controllers
             if (ManageProvider.User == null) throw new ApiException(403, "未登录！");
 
             // 验证
-            var app = Valid(appId, secret);
+            var app = Valid(appId, secret, out var online);
             var ip = HttpContext.GetUserHost();
 
             // 版本没有变化时，不做计算处理，不返回配置数据
@@ -35,6 +35,7 @@ namespace Stardust.Web.Controllers
 
             // 作用域为空时重写
             scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip) : scope;
+            online.Scope = scope;
 
             var dic = _configService.GetConfigs(app, scope);
 
@@ -50,7 +51,7 @@ namespace Stardust.Web.Controllers
             };
         }
 
-        private AppConfig Valid(String appId, String secret)
+        private AppConfig Valid(String appId, String secret, out ConfigOnline online)
         {
             var ap = Authorize(appId, secret, true);
 
@@ -69,7 +70,7 @@ namespace Stardust.Web.Controllers
 
             // 更新心跳信息
             var ip = HttpContext.GetUserHost();
-            app.UpdateInfo(ap, ip);
+            online = app.UpdateInfo(ap, ip);
 
             // 检查应用有效性
             if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");

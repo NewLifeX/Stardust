@@ -61,6 +61,14 @@ namespace Stardust.Data.Configs
         [BindColumn("Client", "客户端。IP加进程", "")]
         public String Client { get => _Client; set { if (OnPropertyChanging("Client", value)) { _Client = value; OnPropertyChanged("Client"); } } }
 
+        private String _Scope;
+        /// <summary>作用域</summary>
+        [DisplayName("作用域")]
+        [Description("作用域")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Scope", "作用域", "")]
+        public String Scope { get => _Scope; set { if (OnPropertyChanging("Scope", value)) { _Scope = value; OnPropertyChanged("Scope"); } } }
+
         private Int32 _PingCount;
         /// <summary>心跳</summary>
         [DisplayName("心跳")]
@@ -165,6 +173,7 @@ namespace Stardust.Data.Configs
                     case "AppId": return _AppId;
                     case "Name": return _Name;
                     case "Client": return _Client;
+                    case "Scope": return _Scope;
                     case "PingCount": return _PingCount;
                     case "ProcessId": return _ProcessId;
                     case "ProcessName": return _ProcessName;
@@ -188,6 +197,7 @@ namespace Stardust.Data.Configs
                     case "AppId": _AppId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Client": _Client = Convert.ToString(value); break;
+                    case "Scope": _Scope = Convert.ToString(value); break;
                     case "PingCount": _PingCount = value.ToInt(); break;
                     case "ProcessId": _ProcessId = value.ToInt(); break;
                     case "ProcessName": _ProcessName = Convert.ToString(value); break;
@@ -223,6 +233,9 @@ namespace Stardust.Data.Configs
 
             /// <summary>客户端。IP加进程</summary>
             public static readonly Field Client = FindByName("Client");
+
+            /// <summary>作用域</summary>
+            public static readonly Field Scope = FindByName("Scope");
 
             /// <summary>心跳</summary>
             public static readonly Field PingCount = FindByName("PingCount");
@@ -277,6 +290,9 @@ namespace Stardust.Data.Configs
 
             /// <summary>客户端。IP加进程</summary>
             public const String Client = "Client";
+
+            /// <summary>作用域</summary>
+            public const String Scope = "Scope";
 
             /// <summary>心跳</summary>
             public const String PingCount = "PingCount";
