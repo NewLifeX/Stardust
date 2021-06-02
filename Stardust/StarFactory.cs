@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using NewLife;
 using NewLife.Configuration;
@@ -107,7 +108,14 @@ namespace Stardust
             Local = new LocalStarClient();
 
             // 读取本地appsetting
-            if (Server.IsNullOrEmpty())
+            if (Server.IsNullOrEmpty() && File.Exists("appsettings.Development.json".GetFullPath()))
+            {
+                using var json = new JsonConfigProvider { FileName = "appsettings.Development.json" };
+                json.LoadAll();
+
+                Server = json["StarServer"];
+            }
+            if (Server.IsNullOrEmpty() && File.Exists("appsettings.json".GetFullPath()))
             {
                 using var json = new JsonConfigProvider { FileName = "appsettings.json" };
                 json.LoadAll();
