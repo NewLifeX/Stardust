@@ -24,7 +24,7 @@ namespace Stardust.Web.Areas.Registry.Controllers
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            if (start.Year < 2000) start = DateTime.Today;
+            if (appId > 0 && start.Year < 2000) p["dtStart"] = (start = DateTime.Today).ToFullString();
 
             return AppHistory.Search(appId, start, end, p["Q"], p);
         }
