@@ -45,7 +45,9 @@ namespace Stardust.Web.Controllers
             }
             //if (p.Sort.IsNullOrEmpty()) p.OrderBy = SampleData._.Id.Desc();
 
-            var list = SampleData.Search(-1, traceId, p);
+            var start = DateTime.Today.AddDays(-30);
+            var end = DateTime.Today;
+            var list = SampleData.Search(-1, traceId, start, end, p);
             if (list.Count == 0)
             {
                 // 如果是查看调用链，去备份表查一下

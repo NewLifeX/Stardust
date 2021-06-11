@@ -7,6 +7,7 @@ using NewLife.Data;
 using NewLife.Log;
 using XCode;
 using XCode.Membership;
+using XCode.Shards;
 
 namespace Stardust.Data.Monitors
 {
@@ -16,6 +17,15 @@ namespace Stardust.Data.Monitors
         #region 对象操作
         static TraceData()
         {
+            // 配置自动分表策略，一般在实体类静态构造函数中配置
+            var shard = new TimeShardPolicy2
+            {
+                Field = _.Id,
+                TablePolicy = "{0}_{1:yyyyMMdd}",
+                AllowSearch = false,
+            };
+            Meta.ShardPolicy = shard;
+
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
             //var df = Meta.Factory.AdditionalFields;
             //df.Add(nameof(AppId));
@@ -124,6 +134,9 @@ namespace Stardust.Data.Monitors
             }
             else
                 exp &= _.Id.Between(start, end, Meta.Factory.Snow);
+
+            var model = (Meta.ShardPolicy as TimeShardPolicy2).Get(start);
+            using var split = Meta.CreateSplit(model.ConnName, model.TableName);
 
             return FindAll(exp, page);
         }

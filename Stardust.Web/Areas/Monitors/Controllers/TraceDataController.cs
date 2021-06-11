@@ -39,6 +39,15 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var time = p["time"].ToDateTime();
             if (start.Year < 2000 && end.Year < 2000) start = end = time;
 
+            if (start.Year < 2000 && end.Year < 2000)
+            {
+                var dt = DateTime.Today;
+                start = new DateTime(dt.Year, dt.Month, 1);
+                end = dt;
+                p["dtStart"] = start.ToString("yyyy-MM-dd");
+                p["dtEnd"] = end.ToString("yyyy-MM-dd");
+            }
+
             if (appId > 0 && p.PageSize == 20) p.PageSize = 100;
             if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.Id.Desc();
 

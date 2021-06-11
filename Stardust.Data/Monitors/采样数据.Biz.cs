@@ -16,6 +16,15 @@ namespace Stardust.Data.Monitors
         #region 对象操作
         static SampleData()
         {
+            // 配置自动分表策略，一般在实体类静态构造函数中配置
+            var shard = new TimeShardPolicy2
+            {
+                Field = _.Id,
+                TablePolicy = "{0}_{1:yyyyMMdd}",
+                AllowSearch = false,
+            };
+            Meta.ShardPolicy = shard;
+
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
             //var df = Meta.Factory.AdditionalFields;
             //df.Add(nameof(DataId));
@@ -90,14 +99,24 @@ namespace Stardust.Data.Monitors
         /// <param name="traceId">追踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<SampleData> Search(Int64 dataId, String traceId, PageParameter page)
+        public static IList<SampleData> Search(Int64 dataId, String traceId, DateTime start, DateTime end, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (dataId > 0) exp &= _.DataId == dataId;
             if (!traceId.IsNullOrEmpty()) exp &= _.TraceId == traceId;
 
-            return FindAll(exp, page);
+            // 搜索最近一段时间
+            for (var dt = end; dt >= start; dt = dt.AddDays(-1))
+            {
+                var model = (Meta.ShardPolicy as TimeShardPolicy2).Get(dt);
+                using var split = Meta.CreateSplit(model.ConnName, model.TableName);
+
+                var list = FindAll(exp, page);
+                if (list.Count > 0) return list;
+            }
+
+            return new List<SampleData>();
         }
         #endregion
 
