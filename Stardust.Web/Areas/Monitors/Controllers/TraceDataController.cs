@@ -42,7 +42,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             if (start.Year < 2000 && end.Year < 2000)
             {
                 var dt = DateTime.Today;
-                start = new DateTime(dt.Year, dt.Month, 1);
+                start = dt;
                 end = dt;
                 p["dtStart"] = start.ToString("yyyy-MM-dd");
                 p["dtEnd"] = end.ToString("yyyy-MM-dd");
