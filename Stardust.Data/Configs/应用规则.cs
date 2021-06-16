@@ -30,7 +30,7 @@ namespace Stardust.Data.Configs
         /// <summary>规则。比如IP=10.0.0.*</summary>
         [DisplayName("规则")]
         [Description("规则。比如IP=10.0.0.*")]
-        [DataObjectField(false, false, true, 50)]
+        [DataObjectField(false, false, true, 500)]
         [BindColumn("Rule", "规则。比如IP=10.0.0.*", "")]
         public String Rule { get => _Rule; set { if (OnPropertyChanging("Rule", value)) { _Rule = value; OnPropertyChanged("Rule"); } } }
 

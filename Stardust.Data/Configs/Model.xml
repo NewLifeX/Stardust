@@ -29,7 +29,7 @@
   <Table Name="AppRule" Description="应用规则。针对应用设置的规则，比如根据IP段设置作用域">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="Rule" DataType="String" Description="规则。比如IP=10.0.0.*" />
+      <Column Name="Rule" DataType="String" Length="500" Description="规则。比如IP=10.0.0.*" />
       <Column Name="Result" DataType="String" Description="结果。比如Scope=dev" />
       <Column Name="Priority" DataType="Int32" Description="优先级。数字越大优先级越高" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
