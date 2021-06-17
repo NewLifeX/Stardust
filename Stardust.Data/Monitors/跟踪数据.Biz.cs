@@ -164,6 +164,9 @@ namespace Stardust.Data.Monitors
             };
             exp &= fi == time;
 
+            var model = (Meta.ShardPolicy as TimeShardPolicy2).Get(time);
+            using var split = Meta.CreateSplit(model.ConnName, model.TableName);
+
             return FindAll(exp, new PageParameter { PageSize = count });
         }
 
@@ -203,6 +206,9 @@ namespace Stardust.Data.Monitors
             var exp = new WhereExpression();
             exp &= _.AppId == appId;
             exp &= _.StatMinute >= start & _.StatMinute <= end;
+
+            var model = (Meta.ShardPolicy as TimeShardPolicy2).Get(start);
+            using var split = Meta.CreateSplit(model.ConnName, model.TableName);
 
             return FindAll(exp.GroupBy(_.AppId, _.Name, _.StatMinute), null, selects);
         }
