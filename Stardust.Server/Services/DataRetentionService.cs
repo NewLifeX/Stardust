@@ -20,7 +20,6 @@ namespace Stardust.Server.Services
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            // 每小时执行
             _timer = new TimerX(DoWork, null, DateTime.Today.AddMinutes(Rand.Next(60)), 600 * 1000) { Async = true };
 
             // 临时来一次
@@ -64,11 +63,11 @@ namespace Stardust.Server.Services
                 rs = TraceHourStat.DeleteBefore(time2);
                 XTrace.WriteLine("删除[{0}]之前的TraceHourStat共：{1:n0}", time2.ToFullString(), rs);
 
-                // 删除监控明细数据
-                rs = TraceData.DeleteBefore(time);
-                XTrace.WriteLine("删除[{0}]之前的TraceData共：{1:n0}", time.ToFullString(), rs);
-                rs = SampleData.DeleteBefore(time);
-                XTrace.WriteLine("删除[{0}]之前的SampleData共：{1:n0}", time.ToFullString(), rs);
+                //// 删除监控明细数据
+                //rs = TraceData.DeleteBefore(time);
+                //XTrace.WriteLine("删除[{0}]之前的TraceData共：{1:n0}", time.ToFullString(), rs);
+                //rs = SampleData.DeleteBefore(time);
+                //XTrace.WriteLine("删除[{0}]之前的SampleData共：{1:n0}", time.ToFullString(), rs);
             }
             catch (Exception ex)
             {
