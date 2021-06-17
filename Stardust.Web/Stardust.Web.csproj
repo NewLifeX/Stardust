@@ -6,9 +6,9 @@
     <AssemblyTitle>星尘控制台</AssemblyTitle>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2021 NewLife</Copyright>
-    <Version>1.0.2021.0513</Version>
-    <FileVersion>1.0.2021.0513</FileVersion>
-    <AssemblyVersion>1.0.*</AssemblyVersion>
+    <Version>1.1.2021.0617</Version>
+    <FileVersion>1.1.2021.0617</FileVersion>
+    <AssemblyVersion>1.1.*</AssemblyVersion>
     <Deterministic>false</Deterministic>
     <OutputPath>..\Bin\Web</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
