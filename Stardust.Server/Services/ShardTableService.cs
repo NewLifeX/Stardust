@@ -43,6 +43,8 @@ namespace Stardust.Server.Services
             var today = DateTime.Today;
             var endday = today.AddDays(-set.DataRetention);
 
+            XTrace.WriteLine("检查数据分表，保留数据起始日期：{0:yyyy-MM-dd}", endday);
+
             using var span = _tracer?.NewSpan("ShardTable", $"{endday.ToFullString()}");
             try
             {
@@ -73,21 +75,31 @@ namespace Stardust.Server.Services
                     ts.Add(table);
                 }
                 {
-                    var table = TraceData.Meta.Table.DataTable.Clone() as IDataTable;
+                    var table = SampleData.Meta.Table.DataTable.Clone() as IDataTable;
                     table.TableName = $"SampleData_{today:yyyyMMdd}";
                     ts.Add(table);
                 }
                 {
-                    var table = TraceData.Meta.Table.DataTable.Clone() as IDataTable;
+                    var table = SampleData.Meta.Table.DataTable.Clone() as IDataTable;
                     table.TableName = $"SampleData_{today.AddDays(1):yyyyMMdd}";
                     ts.Add(table);
                 }
-                dal.SetTables(ts.ToArray());
+
+                if (ts.Count > 0)
+                {
+                    XTrace.WriteLine("创建或更新数据表[{0}]：{1}", ts.Count, ts.Join(",", e => e.TableName));
+
+                    //dal.SetTables(ts.ToArray());
+                    dal.Db.CreateMetaData().SetTables(Migration.On, ts.ToArray());
+                }
             }
             catch (Exception ex)
             {
                 span?.SetError(ex, null);
+                throw;
             }
+
+            XTrace.WriteLine("检查数据表完成");
         }
     }
 }
