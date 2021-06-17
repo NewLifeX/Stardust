@@ -11,6 +11,13 @@
     var appId = page["appId"].ToInt(-1);
     var name = page["name"];
 }
+@if (appId > 0)
+{
+    var app = AppTracer.FindByID(appId);
+    <div class="form-group" style="width:160px;">
+        <a href="appDayStat?appId=@appId" class="btn btn-success btn-sm" title="应用最近的监控图表">@app</a>
+    </div>
+}
 @if (appId > 0 && !name.IsNullOrEmpty())
 {
     <div class="form-group">

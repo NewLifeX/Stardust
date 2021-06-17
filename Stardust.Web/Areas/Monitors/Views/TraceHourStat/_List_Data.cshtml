@@ -13,6 +13,7 @@
     var fields = ViewBag.Fields as IList<FieldItem>;
     var set = ViewBag.PageSetting as PageSetting;
     //var provider = ManageProvider.Provider;
+    var appId = page["appId"].ToInt(-1);
 }
 <table class="table table-bordered table-hover table-striped table-condensed">
     <thead>
@@ -23,7 +24,10 @@
             }
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ID"))">编号</a></th>
             <th class="text-center" style="min-width:80px;"><a href="@Html.Raw(page.GetSortUrl("StatTime"))">统计时间</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AppId"))">应用</a></th>
+            @if (appId <= 0)
+            {
+                <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AppId"))">应用</a></th>
+            }
             <th class="text-center" title="操作名。接口名或埋点名"><a href="@Html.Raw(page.GetSortUrl("Name"))">操作名</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Total"))">总次数</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Errors"))">错误数</a></th>
@@ -53,7 +57,10 @@
                 }
                 <td class="text-center">@entity.ID</td>
                 <td class="text-center">@entity.StatTime.ToString("yyyy-MM-dd HH:mm")</td>
-                <td><a href="@url1" title="应用最近的监控图表">@entity.AppName</a></td>
+                @if (appId <= 0)
+                {
+                    <td>@entity.AppName</td>
+                }
                 <td style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url3" title="该应用操作在最近一段时间内的监控图表">@entity.Name</a></td>
                 <td class="text-right"><a href="@url2" title="该应用操作在该日的所有监控追踪数据">@entity.Total.ToString("n0")</a></td>
                 <td class="text-right">
@@ -90,7 +97,10 @@
                 }
                 <td class="text-center">总计</td>
                 <td></td>
-                <td></td>
+                @if (appId <= 0)
+                {
+                    <td></td>
+                }
                 <td></td>
                 <td class="text-right">@entity.Total.ToString("n0")</td>
                 <td class="text-right">@entity.Errors.ToString("n0")</td>

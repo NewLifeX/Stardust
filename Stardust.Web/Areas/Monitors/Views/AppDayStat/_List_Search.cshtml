@@ -12,6 +12,10 @@
 }
 @if (appId > 0)
 {
+    var app = AppTracer.FindByID(appId);
+    <div class="form-group" style="width:160px;">
+        <a href="appTracer?Id=@appId" class="btn btn-success btn-sm">@app</a>
+    </div>
     <div class="form-group">
         @Html.ActionLink("每分钟", null, "appMinuteStat", new { appId })
         @Html.ActionLink("每天", null, "appDayStat", new { appId })

@@ -79,10 +79,19 @@ namespace Stardust.Web
                 set.DataPath = "../Data";
                 set.Save();
             }
+            var set2 = XCode.Setting.Current;
+            if (set2.IsNew)
+            {
+                set2.Migration = Migration.ReadOnly;
+                set2.Save();
+            }
 
             // 初始化数据库
-            var n = App.Meta.Count;
+            //var n = App.Meta.Count;
             //AppStat.Meta.Session.Dal.Db.ShowSQL = false;
+         
+            var dal = App.Meta.Session.Dal;
+            dal.CheckTables();
         }
     }
 }
