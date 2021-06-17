@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
@@ -24,6 +25,7 @@ namespace Stardust.Data.Monitors
                 AllowSearch = false,
             };
             Meta.ShardPolicy = shard;
+            if (shard.Field == null) Task.Run(() => { Task.Delay(1000); shard.Field = _.Id; });
 
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
             //var df = Meta.Factory.AdditionalFields;
