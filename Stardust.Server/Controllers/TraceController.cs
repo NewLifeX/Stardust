@@ -131,14 +131,12 @@ namespace Stardust.Server.Controllers
             // 分表
             var time = builders[0].StartTime.ToDateTime().ToLocalTime();
             {
-                var shard = (TraceData.Meta.ShardPolicy as TimeShardPolicy2).Get(time);
-                using var split = TraceData.Meta.CreateSplit(shard.ConnName, shard.TableName);
+                using var split = TraceData.Meta.CreateShard(time);
 
                 traces.Insert(true);
             }
             {
-                var shard = (SampleData.Meta.ShardPolicy as TimeShardPolicy2).Get(time);
-                using var split = SampleData.Meta.CreateSplit(shard.ConnName, shard.TableName);
+                using var split = SampleData.Meta.CreateShard(time);
 
                 samples.Insert(true);
             }

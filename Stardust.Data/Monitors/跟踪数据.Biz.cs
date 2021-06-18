@@ -18,15 +18,11 @@ namespace Stardust.Data.Monitors
         #region 对象操作
         static TraceData()
         {
-            //// 配置自动分表策略，一般在实体类静态构造函数中配置
-            //var shard = new TimeShardPolicy2
-            //{
-            //    Field = _.Id,
-            //    TablePolicy = "{0}_{1:yyyyMMdd}",
-            //    AllowSearch = false,
-            //};
-            //Meta.ShardPolicy = shard;
-            //if (shard.Field == null) Task.Run(() => { Task.Delay(1000); shard.Field = _.Id; });
+            // 配置自动分表策略，一般在实体类静态构造函数中配置
+            Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
+            {
+                TablePolicy = "{0}_{1:yyyyMMdd}",
+            };
 
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
             //var df = Meta.Factory.AdditionalFields;
@@ -34,18 +30,6 @@ namespace Stardust.Data.Monitors
 
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Modules.Add<TimeModule>();
-        }
-
-        /// <summary>实体配置，分表等</summary>
-        public static void Configure()
-        {
-            var shard = new TimeShardPolicy2
-            {
-                Field = _.Id,
-                TablePolicy = "{0}_{1:yyyyMMdd}",
-                AllowSearch = false,
-            };
-            Meta.ShardPolicy = shard;
         }
 
         /// <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>
@@ -149,8 +133,7 @@ namespace Stardust.Data.Monitors
             else
                 exp &= _.Id.Between(start, end, Meta.Factory.Snow);
 
-            var model = (Meta.ShardPolicy as TimeShardPolicy2).Get(start);
-            using var split = Meta.CreateSplit(model.ConnName, model.TableName);
+            using var split = Meta.CreateShard(start);
 
             return FindAll(exp, page);
         }
@@ -178,8 +161,7 @@ namespace Stardust.Data.Monitors
             };
             exp &= fi == time;
 
-            var model = (Meta.ShardPolicy as TimeShardPolicy2).Get(time);
-            using var split = Meta.CreateSplit(model.ConnName, model.TableName);
+            using var split = Meta.CreateShard(time);
 
             return FindAll(exp, new PageParameter { PageSize = count });
         }
@@ -221,8 +203,7 @@ namespace Stardust.Data.Monitors
             exp &= _.AppId == appId;
             exp &= _.StatMinute >= start & _.StatMinute <= end;
 
-            var model = (Meta.ShardPolicy as TimeShardPolicy2).Get(start);
-            using var split = Meta.CreateSplit(model.ConnName, model.TableName);
+            using var split = Meta.CreateShard(start);
 
             return FindAll(exp.GroupBy(_.AppId, _.Name, _.StatMinute), null, selects);
         }

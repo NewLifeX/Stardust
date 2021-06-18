@@ -70,6 +70,7 @@
     <Compile Remove="Entity\服务统计.Biz.cs" />
     <Compile Remove="Entity\服务统计.cs" />
     <Compile Remove="Models\ConfigItem.cs" />
+    <Compile Remove="TimeShardPolicy2.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -94,8 +95,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="8.10.2021.604" />
-    <PackageReference Include="NewLife.XCode" Version="10.2.2021.604" />
+    <PackageReference Include="NewLife.Core" Version="8.10.2021.618-beta1" />
+    <PackageReference Include="NewLife.XCode" Version="10.2.2021.618-beta1" />
   </ItemGroup>
 
   <ItemGroup>

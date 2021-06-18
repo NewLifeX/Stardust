@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -8,6 +9,7 @@ using NewLife.Data;
 using NewLife.Log;
 using XCode;
 using XCode.Membership;
+using XCode.Shards;
 
 namespace Stardust.Data.Monitors
 {
@@ -17,15 +19,11 @@ namespace Stardust.Data.Monitors
         #region 对象操作
         static SampleData()
         {
-            //// 配置自动分表策略，一般在实体类静态构造函数中配置
-            //var shard = new TimeShardPolicy2
-            //{
-            //    Field = _.Id,
-            //    TablePolicy = "{0}_{1:yyyyMMdd}",
-            //    AllowSearch = false,
-            //};
-            //Meta.ShardPolicy = shard;
-            //if (shard.Field == null) Task.Run(() => { Task.Delay(1000); shard.Field = _.Id; });
+            // 配置自动分表策略，一般在实体类静态构造函数中配置
+            Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
+            {
+                TablePolicy = "{0}_{1:yyyyMMdd}",
+            };
 
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
             //var df = Meta.Factory.AdditionalFields;
@@ -33,18 +31,6 @@ namespace Stardust.Data.Monitors
 
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Modules.Add<TimeModule>();
-        }
-
-        /// <summary>实体配置，分表等</summary>
-        public static void Configure()
-        {
-            var shard = new TimeShardPolicy2
-            {
-                Field = _.Id,
-                TablePolicy = "{0}_{1:yyyyMMdd}",
-                AllowSearch = false,
-            };
-            Meta.ShardPolicy = shard;
         }
 
         /// <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>
@@ -109,8 +95,7 @@ namespace Stardust.Data.Monitors
         {
             if (date.Year < 2000) throw new ArgumentOutOfRangeException(nameof(date));
 
-            var model = (Meta.ShardPolicy as TimeShardPolicy2).Get(date);
-            using var split = Meta.CreateSplit(model.ConnName, model.TableName);
+            using var split = Meta.CreateShard(date);
 
             return FindAll(_.DataId.In(dataIds));
         }
@@ -129,17 +114,19 @@ namespace Stardust.Data.Monitors
             if (dataId > 0) exp &= _.DataId == dataId;
             if (!traceId.IsNullOrEmpty()) exp &= _.TraceId == traceId;
 
-            // 搜索最近一段时间
-            for (var dt = end; dt >= start; dt = dt.AddDays(-1))
-            {
-                var model = (Meta.ShardPolicy as TimeShardPolicy2).Get(dt);
-                using var split = Meta.CreateSplit(model.ConnName, model.TableName);
+            //// 搜索最近一段时间
+            //for (var dt = end; dt >= start; dt = dt.AddDays(-1))
+            //{
+            //    var model = (Meta.ShardPolicy as TimeShardPolicy2).Get(dt);
+            //    using var split = Meta.CreateSplit(model.ConnName, model.TableName);
 
-                var list = FindAll(exp, page);
-                if (list.Count > 0) return list;
-            }
+            //    var list = FindAll(exp, page);
+            //    if (list.Count > 0) return list;
+            //}
 
-            return new List<SampleData>();
+            //return new List<SampleData>();
+
+            return Meta.AutoShard(end.AddSeconds(1), start, () => FindAll(exp, page)).FirstOrDefault();
         }
         #endregion
 

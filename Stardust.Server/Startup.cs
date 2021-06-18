@@ -36,10 +36,6 @@ namespace Stardust.Server
             var tracer = star.Tracer;
             services.AddSingleton<ITracer>(tracer);
 
-            // 配置分表
-            TraceData.Configure();
-            SampleData.Configure();
-
             // 默认连接字符串，如果配置文件没有设置，则采用该值
             DAL.ConnStrs.TryAdd("ConfigCenter", "MapTo=Stardust");
             DAL.ConnStrs.TryAdd("Monitor", "MapTo=Stardust");

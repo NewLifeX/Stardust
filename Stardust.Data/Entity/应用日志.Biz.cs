@@ -7,6 +7,7 @@ using NewLife;
 using NewLife.Data;
 using XCode;
 using XCode.Membership;
+using XCode.Shards;
 
 namespace Stardust.Data
 {
@@ -16,6 +17,13 @@ namespace Stardust.Data
         #region 对象操作
         static AppLog()
         {
+            // 分表分库
+            Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
+            {
+                ConnPolicy = "{0}_{1:yyyyMM}",
+                TablePolicy = "{0}_{1:yyyyMMdd}",
+            };
+
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
             //var df = Meta.Factory.AdditionalFields;
             //df.Add(nameof(AppId));
@@ -24,9 +32,9 @@ namespace Stardust.Data
             Meta.Modules.Add<TimeModule>();
             Meta.Modules.Add<IPModule>();
 
-            // 分表分库
-            Meta.ShardConnName = e => $"AppLog_{e.CreateTime:yyyyMM}";
-            Meta.ShardTableName = e => $"AppLog_{e.CreateTime:yyyyMMdd}";
+            //// 分表分库
+            //Meta.ShardConnName = e => $"AppLog_{e.CreateTime:yyyyMM}";
+            //Meta.ShardTableName = e => $"AppLog_{e.CreateTime:yyyyMMdd}";
         }
 
         /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
@@ -68,8 +76,7 @@ namespace Stardust.Data
             if (id <= 0) return null;
 
             // 分表
-            Meta.Factory.Snow.TryParse(id, out var time, out var _, out var _);
-            using var split = Meta.AutoSplit(new AppLog { CreateTime = time });
+            using var split = Meta.CreateShard(id);
 
             return Find(_.Id == id);
         }
@@ -94,7 +101,7 @@ namespace Stardust.Data
 
             // 分表
             //using var split = Meta.CreateSplit($"AppLog_{start:yyyyMMdd}", $"AppLog_{appId}");
-            using var split = Meta.AutoSplit(new AppLog { AppId = appId, CreateTime = start });
+            //using var split = Meta.AutoSplit(new AppLog { AppId = appId, CreateTime = start });
 
             var exp = new WhereExpression();
 
