@@ -17,15 +17,15 @@ namespace Stardust.Data.Monitors
         #region 对象操作
         static SampleData()
         {
-            // 配置自动分表策略，一般在实体类静态构造函数中配置
-            var shard = new TimeShardPolicy2
-            {
-                Field = _.Id,
-                TablePolicy = "{0}_{1:yyyyMMdd}",
-                AllowSearch = false,
-            };
-            Meta.ShardPolicy = shard;
-            if (shard.Field == null) Task.Run(() => { Task.Delay(1000); shard.Field = _.Id; });
+            //// 配置自动分表策略，一般在实体类静态构造函数中配置
+            //var shard = new TimeShardPolicy2
+            //{
+            //    Field = _.Id,
+            //    TablePolicy = "{0}_{1:yyyyMMdd}",
+            //    AllowSearch = false,
+            //};
+            //Meta.ShardPolicy = shard;
+            //if (shard.Field == null) Task.Run(() => { Task.Delay(1000); shard.Field = _.Id; });
 
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
             //var df = Meta.Factory.AdditionalFields;
@@ -33,6 +33,18 @@ namespace Stardust.Data.Monitors
 
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Modules.Add<TimeModule>();
+        }
+
+        /// <summary>实体配置，分表等</summary>
+        public static void Configure()
+        {
+            var shard = new TimeShardPolicy2
+            {
+                Field = _.Id,
+                TablePolicy = "{0}_{1:yyyyMMdd}",
+                AllowSearch = false,
+            };
+            Meta.ShardPolicy = shard;
         }
 
         /// <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>
@@ -91,8 +103,17 @@ namespace Stardust.Data.Monitors
 
         /// <summary>根据数据编号查找</summary>
         /// <param name="dataIds"></param>
+        /// <param name="date">分表日期</param>
         /// <returns></returns>
-        public static IList<SampleData> FindAllByDataIds(Int64[] dataIds) => FindAll(_.DataId.In(dataIds));
+        public static IList<SampleData> FindAllByDataIds(Int64[] dataIds, DateTime date)
+        {
+            if (date.Year < 2000) throw new ArgumentOutOfRangeException(nameof(date));
+
+            var model = (Meta.ShardPolicy as TimeShardPolicy2).Get(date);
+            using var split = Meta.CreateSplit(model.ConnName, model.TableName);
+
+            return FindAll(_.DataId.In(dataIds));
+        }
         #endregion
 
         #region 高级查询

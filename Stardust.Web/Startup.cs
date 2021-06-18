@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NewLife.Cube;
 using Stardust.Data;
+using Stardust.Data.Monitors;
 using Stardust.Server.Services;
 using XCode.DataAccessLayer;
 
@@ -20,6 +21,10 @@ namespace Stardust.Web
         public void ConfigureServices(IServiceCollection services)
         {
             var star = services.AddStardust("StarWeb");
+
+            // 配置分表
+            TraceData.Configure();
+            SampleData.Configure();
 
             // 默认连接字符串，如果配置文件没有设置，则采用该值
             DAL.ConnStrs.TryAdd("ConfigCenter", "MapTo=Stardust");

@@ -128,7 +128,8 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         protected override SampleData Find(Object key)
         {
             //var entity = base.Find(key);
-            var entity = SampleData.FindById(key.ToLong());
+            //var entity = SampleData.FindById(key.ToLong());
+            var entity = SampleData.FindByKeyForEdit(key);
             if (entity != null) return entity;
 
             var entity2 = SampleData2.FindById(key.ToLong());

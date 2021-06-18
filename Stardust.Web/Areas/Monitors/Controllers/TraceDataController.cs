@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
+using NewLife.Data;
 using NewLife.Web;
 using Stardust.Data.Monitors;
 using XCode;
@@ -99,7 +100,10 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         [EntityAuthorize(PermissionFlags.Detail)]
         public ActionResult Trace(Int64 id)
         {
-            var list = SampleData.FindAllByDataId(id);
+            //var list = SampleData.FindAllByDataId(id);
+            var start = DateTime.Today.AddDays(-30);
+            var end = DateTime.Today;
+            var list = SampleData.Search(id, null, start, end, new PageParameter { PageSize = 1000 });
             if (list.Count == 0) throw new InvalidDataException("找不到采样数据");
 
             //return RedirectToAction("Index", "SampleData", new { traceId = list[0].TraceId });

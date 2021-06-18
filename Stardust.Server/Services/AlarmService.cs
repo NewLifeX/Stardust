@@ -144,7 +144,7 @@ namespace Stardust.Server.Services
                         var ds = TraceData.Search(st.AppId, item.Name, "minute", item.StatTime, 20);
                         if (ds.Count > 0)
                         {
-                            var sms = SampleData.FindAllByDataIds(ds.Select(e => e.Id).ToArray()).Where(e => !e.Error.IsNullOrEmpty()).ToList();
+                            var sms = SampleData.FindAllByDataIds(ds.Select(e => e.Id).ToArray(), item.StatTime).Where(e => !e.Error.IsNullOrEmpty()).ToList();
                             if (sms.Count > 0)
                             {
                                 var msg = sms[0].Error?.Trim();

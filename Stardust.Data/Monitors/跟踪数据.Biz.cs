@@ -18,15 +18,15 @@ namespace Stardust.Data.Monitors
         #region 对象操作
         static TraceData()
         {
-            // 配置自动分表策略，一般在实体类静态构造函数中配置
-            var shard = new TimeShardPolicy2
-            {
-                Field = _.Id,
-                TablePolicy = "{0}_{1:yyyyMMdd}",
-                AllowSearch = false,
-            };
-            Meta.ShardPolicy = shard;
-            if (shard.Field == null) Task.Run(() => { Task.Delay(1000); shard.Field = _.Id; });
+            //// 配置自动分表策略，一般在实体类静态构造函数中配置
+            //var shard = new TimeShardPolicy2
+            //{
+            //    Field = _.Id,
+            //    TablePolicy = "{0}_{1:yyyyMMdd}",
+            //    AllowSearch = false,
+            //};
+            //Meta.ShardPolicy = shard;
+            //if (shard.Field == null) Task.Run(() => { Task.Delay(1000); shard.Field = _.Id; });
 
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
             //var df = Meta.Factory.AdditionalFields;
@@ -34,6 +34,18 @@ namespace Stardust.Data.Monitors
 
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Modules.Add<TimeModule>();
+        }
+
+        /// <summary>实体配置，分表等</summary>
+        public static void Configure()
+        {
+            var shard = new TimeShardPolicy2
+            {
+                Field = _.Id,
+                TablePolicy = "{0}_{1:yyyyMMdd}",
+                AllowSearch = false,
+            };
+            Meta.ShardPolicy = shard;
         }
 
         /// <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>
