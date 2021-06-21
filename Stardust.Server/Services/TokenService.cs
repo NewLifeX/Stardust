@@ -92,7 +92,15 @@ namespace Stardust.Server.Services
 
             // 验证应用
             var app = App.FindByName(jwt.Subject);
-            if (app == null || !app.Enable) throw new InvalidOperationException($"无效应用[{jwt.Subject}]");
+            if (app == null)
+            {
+                // 可能是StarAgent混用了token
+                var node = Stardust.Data.Nodes.Node.FindByCode(jwt.Subject);
+                if (node == null) throw new InvalidOperationException($"无效应用[{jwt.Subject}]");
+
+                app = new App { Name = node.Code, DisplayName = node.Name, Enable = true };
+            }
+            if (!app.Enable) throw new InvalidOperationException($"已停用应用[{jwt.Subject}]");
 
             return app;
         }
