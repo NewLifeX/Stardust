@@ -49,7 +49,8 @@ namespace Stardust.Server.Controllers
             if (!token.IsNullOrEmpty() && token.Split(".").Length == 3)
             {
                 ap = _service.DecodeToken(token, set);
-                if (ap == null || ap.Name != model.AppId) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{ap.Name}]！");
+                //if (ap == null || ap.Name != model.AppId) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{ap?.Name}]！");
+                if (ap == null) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{ap?.Name}]！");
             }
             Data.App.UpdateInfo(model, ip);
 
@@ -95,6 +96,7 @@ namespace Stardust.Server.Controllers
             var timeoutExcludes = app.TimeoutExcludes.Split(",", ";") ?? new String[0];
 
             var now = DateTime.Now;
+            var startTime = now.AddDays(-Setting.Current.DataRetention);
             var traces = new List<TraceData>();
             var samples = new List<SampleData>();
             foreach (var item in builders)
@@ -106,6 +108,9 @@ namespace Stardust.Server.Controllers
 
                 // 拒收超长项
                 if (item.Name.Length > TraceData._.Name.Length) continue;
+
+                // 拒收超期数据
+                if (item.StartTime.ToDateTime().ToLocalTime() < startTime) continue;
 
                 var td = TraceData.Create(item);
                 td.AppId = app.ID;
