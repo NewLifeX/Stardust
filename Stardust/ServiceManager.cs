@@ -180,6 +180,8 @@ namespace Stardust
         {
             if (_processes.TryGetValue(service.Name, out var p))
             {
+                WriteLog("停止应用[{0}] PID={1} {2}", service, p.Id, p.ProcessName);
+
                 try
                 {
                     p.CloseMainWindow();
@@ -204,13 +206,10 @@ namespace Stardust
         {
             _timer?.TryDispose();
 
-            //foreach (var item in _processes)
-            //{
-            //    var p = item.Value;
-            //    WriteLog("停止应用[{0}] PID={1} {2}", item.Key, p.Id, reason);
-
-            //    //p.Kill();
-            //}
+            foreach (var item in Services)
+            {
+                if (item.AutoStop) StopService(item);
+            }
             //_processes.Clear();
         }
 

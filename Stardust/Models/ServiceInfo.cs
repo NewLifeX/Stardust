@@ -27,6 +27,10 @@ namespace Stardust.Models
         [XmlAttribute]
         public Boolean AutoStart { get; set; }
 
+        /// <summary>是否自动停止。随着宿主的退出，同时停止该应用进程</summary>
+        [XmlAttribute]
+        public Boolean AutoStop { get; set; }
+
         /// <summary>启动失败时的重试次数，默认3次</summary>
         [XmlAttribute]
         public Int32 Retry { get; set; } = 3;
