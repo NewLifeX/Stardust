@@ -80,12 +80,12 @@ namespace Stardust.Web
                 set.DataPath = "../Data";
                 set.Save();
             }
-            var set2 = XCode.Setting.Current;
-            if (set2.IsNew)
-            {
-                set2.Migration = Migration.ReadOnly;
-                set2.Save();
-            }
+            //var set2 = XCode.Setting.Current;
+            //if (set2.IsNew)
+            //{
+            //    set2.Migration = Migration.ReadOnly;
+            //    set2.Save();
+            //}
 
             // 初始化数据库
             //var n = App.Meta.Count;
