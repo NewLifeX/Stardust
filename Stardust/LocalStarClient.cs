@@ -71,9 +71,23 @@ namespace Stardust
         /// <returns></returns>
         public AgentInfo GetInfo()
         {
+            //Init();
+
+            //return Info = _client.Invoke<AgentInfo>("Info", _local);
+
+            var task = GetInfoAsync();
+            if (task.Wait(500)) return task.Result;
+
+            return null;
+        }
+
+        /// <summary>获取信息</summary>
+        /// <returns></returns>
+        public async Task<AgentInfo> GetInfoAsync()
+        {
             Init();
 
-            return Info = _client.Invoke<AgentInfo>("Info", _local);
+            return Info = await _client.InvokeAsync<AgentInfo>("Info", _local);
         }
         #endregion
 
