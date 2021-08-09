@@ -43,7 +43,7 @@
 
   <ItemGroup>
     <PackageReference Include="NewLife.Redis" Version="3.9.2021.709" />
-    <PackageReference Include="NewLife.XCode" Version="10.2.2021.708" />
+    <PackageReference Include="NewLife.XCode" Version="10.2.2021.809" />
   </ItemGroup>
 
   <ItemGroup>
