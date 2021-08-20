@@ -78,10 +78,12 @@ namespace Stardust
         #endregion
 
         #region 方法
-        private void Valid()
+        private Boolean Valid()
         {
-            if (Server.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Server));
-            if (AppId.IsNullOrEmpty()) throw new ArgumentNullException(nameof(AppId));
+            //if (Server.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Server));
+            //if (AppId.IsNullOrEmpty()) throw new ArgumentNullException(nameof(AppId));
+
+            if (Server.IsNullOrEmpty() || AppId.IsNullOrEmpty()) return false;
 
             if (_client == null)
             {
@@ -96,6 +98,8 @@ namespace Stardust
                 var set = Setting.Current;
                 if (set.Debug) _client.Log = XTrace.Log;
             }
+
+            return true;
         }
         #endregion
 
@@ -168,7 +172,7 @@ namespace Stardust
             {
                 if (_tracer == null)
                 {
-                    Valid();
+                    if (!Valid()) return null;
 
                     var tracer = new StarTracer(Server)
                     {
@@ -202,7 +206,7 @@ namespace Stardust
             {
                 if (_config == null)
                 {
-                    Valid();
+                    if (!Valid()) return null;
 
                     var config = new HttpConfigProvider
                     {
@@ -230,7 +234,7 @@ namespace Stardust
             {
                 if (_dustClient == null)
                 {
-                    Valid();
+                    if (!Valid()) return null;
 
                     var client = new DustClient(Server)
                     {
@@ -303,7 +307,7 @@ namespace Stardust
         /// <returns></returns>
         public async Task<Int32> SendNodeCommand(String nodeCode, String command, String argument = null, Int32 expire = 3600)
         {
-            Valid();
+            if (!Valid()) return -1;
 
             return await _client.PostAsync<Int32>("Node/SendCommand", new { nodeCode, command, argument, expire });
         }
