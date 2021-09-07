@@ -22,6 +22,7 @@ using Stardust.Models;
 using Stardust.Services;
 #if !NET4
 using System.Net.WebSockets;
+using WebSocket = System.Net.WebSockets.WebSocket;
 #endif
 
 namespace Stardust

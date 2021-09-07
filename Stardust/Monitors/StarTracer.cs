@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using NewLife;
-using NewLife.Common;
 using NewLife.Http;
 using NewLife.Log;
 using NewLife.Reflection;
@@ -203,7 +203,8 @@ namespace Stardust.Monitors
             {
                 //if (ex is ApiException ae && (ae.Code == 401 || ae.Code == 403)) _token = null;
 
-                Log?.Error(ex + "");
+                if (ex.GetTrue() is not HttpRequestException)
+                    Log?.Error(ex + "");
 
                 if (_fails.Count < MaxFails) _fails.Enqueue(model);
                 return;
