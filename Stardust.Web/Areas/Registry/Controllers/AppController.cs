@@ -23,39 +23,39 @@ namespace Stardust.Web.Areas.Registry.Controllers
             ListFields.RemoveField("Secret");
 
             {
-                var df = ListFields.AddDataField("History", null, "AutoActive");
+                var df = ListFields.AddListField("History", null, "AutoActive");
                 df.DisplayName = "历史";
                 df.Header = "历史";
                 df.Url = "AppHistory?appId={Id}";
             }
             {
-                var df = ListFields.AddDataField("Meter", null, "AutoActive");
+                var df = ListFields.AddListField("Meter", null, "AutoActive");
                 df.DisplayName = "性能";
                 df.Header = "性能";
                 df.Url = "AppMeter?appId={Id}";
             }
             {
-                var df = ListFields.AddDataField("Deploy", null, "AutoActive");
+                var df = ListFields.AddListField("Deploy", null, "AutoActive");
                 df.DisplayName = "部署";
                 df.Header = "部署";
                 df.Url = "/Deployment/AppDeploy?appId={Id}";
             }
             {
-                var df = ListFields.AddDataField("Providers", null, "AutoActive");
+                var df = ListFields.AddListField("Providers", null, "AutoActive");
                 df.DisplayName = "提供服务";
                 df.Header = "提供服务";
                 df.Url = "AppService?appId={Id}";
                 df.DataVisible = (e, f) => (e as App).Providers.Count > 0;
             }
             {
-                var df = ListFields.AddDataField("Consumers", null, "AutoActive");
+                var df = ListFields.AddListField("Consumers", null, "AutoActive");
                 df.DisplayName = "消费服务";
                 df.Header = "消费服务";
                 df.Url = "AppConsume?appId={Id}";
                 df.DataVisible = (e, f) => (e as App).Consumers.Count > 0;
             }
             {
-                var df = ListFields.AddDataField("Log", "CreateUser");
+                var df = ListFields.AddListField("Log", "CreateUser");
                 df.DisplayName = "修改日志";
                 df.Header = "修改日志";
                 df.Url = "/Admin/Log?category=应用系统&linkId={Id}";

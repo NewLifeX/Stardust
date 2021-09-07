@@ -17,7 +17,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             ListFields.RemoveField("ID");
             ListFields.RemoveField("DataId");
 
-            var df = ListFields.AddDataField("trace", "TraceId");
+            var df = ListFields.AddListField("trace", "TraceId");
             df.DisplayName = "追踪";
             df.Header = "追踪";
             df.Url = "/trace?id={TraceId}";

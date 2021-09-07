@@ -18,7 +18,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             MenuOrder = 90;
 
             {
-                var df = ListFields.AddDataField("Log", "CreateUser");
+                var df = ListFields.AddListField("Log", "CreateUser");
                 df.DisplayName = "修改日志";
                 df.Header = "修改日志";
                 df.Url = "/Admin/Log?category=应用跟踪器&linkId={Id}";

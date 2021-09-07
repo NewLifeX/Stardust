@@ -23,7 +23,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
             ListFields.RemoveField("EnableApollo", "ApolloMetaServer", "ApolloAppId", "ApolloNameSpace");
 
             {
-                var df = ListFields.AddDataField("Configs", "Enable");
+                var df = ListFields.AddListField("Configs", "Enable");
                 df.Header = "管理配置";
                 df.DisplayName = "管理配置";
                 df.Title = "查看该应用所有配置数据";
@@ -31,7 +31,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
             }
 
             {
-                var df = ListFields.AddDataField("Publish", "PublishTime");
+                var df = ListFields.AddListField("Publish", "PublishTime");
                 df.Header = "发布";
                 df.DisplayName = "发布";
                 df.Url = "Appconfig/Publish?appId={Id}";
@@ -40,7 +40,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
             }
 
             {
-                var df = ListFields.AddDataField("History", "PublishTime");
+                var df = ListFields.AddListField("History", "PublishTime");
                 df.Header = "历史";
                 df.DisplayName = "历史";
                 df.Title = "查看该应用的配置历史";
@@ -48,7 +48,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
             }
 
             {
-                var df = ListFields.AddDataField("Preview", "PublishTime");
+                var df = ListFields.AddListField("Preview", "PublishTime");
                 df.Header = "预览";
                 df.DisplayName = "预览";
                 df.Title = "查看该应用的配置数据";
@@ -56,7 +56,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
             }
 
             {
-                var df = ListFields.AddDataField("Log", "UpdateUserID");
+                var df = ListFields.AddListField("Log", "UpdateUserID");
                 df.DisplayName = "修改日志";
                 df.Header = "修改日志";
                 df.Url = "/Admin/Log?category=应用配置&linkId={Id}";

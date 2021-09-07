@@ -11,7 +11,7 @@ namespace Stardust.Web.Areas.Registry.Controllers
             MenuOrder = 95;
 
             {
-                var df = ListFields.AddDataField("Meter", null, "PingCount");
+                var df = ListFields.AddListField("Meter", null, "PingCount");
                 df.DisplayName = "性能";
                 df.Header = "性能";
                 df.Url = "AppMeter?appId={AppId}";

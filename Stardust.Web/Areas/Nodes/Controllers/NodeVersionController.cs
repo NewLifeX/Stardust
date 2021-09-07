@@ -15,7 +15,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             MenuOrder = 89;
 
             {
-                var df = ListFields.AddDataField("Log", "CreateUserID");
+                var df = ListFields.AddListField("Log", "CreateUserID");
                 df.DisplayName = "修改日志";
                 df.Header = "修改日志";
                 df.Url = "/Admin/Log?category=节点版本&linkId={ID}";

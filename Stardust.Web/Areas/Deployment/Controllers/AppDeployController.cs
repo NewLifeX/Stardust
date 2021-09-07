@@ -29,20 +29,20 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             LogOnChange = true;
 
             {
-                var df = ListFields.AddDataField("Nodes");
+                var df = ListFields.AddListField("Nodes");
                 df.Header = "节点";
                 df.Title = "管理服务器节点";
                 df.Url = "AppDeployNode?appId={Id}";
             }
 
             {
-                var df = ListFields.AddDataField("Version");
+                var df = ListFields.AddListField("Version");
                 df.Header = "版本";
                 df.Title = "管理应用版本";
                 df.Url = "AppDeployVersion?appId={Id}";
             }
             {
-                var df = ListFields.AddDataField("AddVersion", "FileName");
+                var df = ListFields.AddListField("AddVersion", "FileName");
                 df.Header = "版本";
                 df.DisplayName = "添加版本";
                 df.Title = "添加应用版本";
@@ -50,13 +50,13 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             }
 
             {
-                var df = ListFields.AddDataField(AppDeploy._.Name);
+                var df = ListFields.AddListField(AppDeploy._.Name);
                 //df.Header = "应用";
                 df.Url = "/Registry/App?q={Name}";
             }
 
             {
-                var df = ListFields.AddDataField("Log", "UpdateUserId");
+                var df = ListFields.AddListField("Log", "UpdateUserId");
                 df.DisplayName = "修改日志";
                 df.Header = "修改日志";
                 df.Url = "/Admin/Log?category=应用部署&linkId={Id}";

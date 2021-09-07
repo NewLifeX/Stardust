@@ -19,13 +19,13 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             MenuOrder = 90;
 
             {
-                var df = ListFields.AddDataField("History", null, "Enable");
+                var df = ListFields.AddListField("History", null, "Enable");
                 df.DisplayName = "告警历史";
                 df.Header = "告警历史";
                 df.Url = "AlarmHistory?groupId={Id}";
             }
             {
-                var df = ListFields.AddDataField("Log", "CreateUser");
+                var df = ListFields.AddListField("Log", "CreateUser");
                 df.DisplayName = "修改日志";
                 df.Header = "修改日志";
                 df.Url = "/Admin/Log?category=告警组&linkId={Id}";

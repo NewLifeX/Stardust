@@ -22,7 +22,7 @@ namespace Stardust.Web.Areas.Redis.Controllers
             ListFields.RemoveField("WebHook");
 
             {
-                var df = ListFields.AddDataField("Log", "UpdateTime");
+                var df = ListFields.AddListField("Log", "UpdateTime");
                 df.DisplayName = "修改日志";
                 df.Header = "修改日志";
                 df.Url = "/Admin/Log?category=Redis消息队列&linkId={Id}";

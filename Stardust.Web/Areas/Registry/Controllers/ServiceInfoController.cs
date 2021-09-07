@@ -19,11 +19,11 @@ namespace Stardust.Web.Areas.Registry.Controllers
             ListFields.RemoveField("Secret");
           
             {
-                var df = ListFields.AddDataField(_.Providers);
+                var df = ListFields.AddListField(_.Providers);
                 df.Url = "AppService?serviceId={Id}";
             }
             {
-                var df = ListFields.AddDataField(_.Consumers);
+                var df = ListFields.AddListField(_.Consumers);
                 df.Url = "AppConsume?serviceId={Id}";
             }
         }
