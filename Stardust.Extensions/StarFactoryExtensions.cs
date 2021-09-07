@@ -22,7 +22,7 @@ namespace Microsoft.Extensions.DependencyInjection
             var star = new StarFactory(null, appId, null);
 
             services.AddSingleton(star);
-            services.AddSingleton(P => star.Tracer);
+            services.AddSingleton(P => star.Tracer ?? DefaultTracer.Instance ?? (DefaultTracer.Instance ??= new DefaultTracer()));
             services.AddSingleton(P => star.Config);
             services.AddSingleton(p => star.Service);
 
