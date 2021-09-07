@@ -91,7 +91,9 @@ namespace Stardust.Server.Services
                 st.Errors = ds.Sum(e => e.Errors);
                 st.TotalCost = ds.Sum(e => e.TotalCost);
                 st.MaxCost = ds.Max(e => e.MaxCost);
-                st.MinCost = ds.Min(e => e.MinCost);
+                //st.MinCost = ds.Min(e => e.MinCost);
+                var vs2 = ds.Where(e => e.MinCost > 0).ToList();
+                if (vs2.Count > 0) st.MinCost = vs2.Min(e => e.MinCost);
 
                 // 分类统计，应用有可能缺失某些类别
                 st.Apis = ds.Where(e => e.Type == "api").Sum(e => e.Total);
