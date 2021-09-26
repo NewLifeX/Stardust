@@ -85,8 +85,6 @@ namespace Stardust
         {
             Logout(disposing ? "Dispose" : "GC").Wait(1_000);
 
-            //_timer.TryDispose();
-            //_timer = null;
             StopTimer();
 
             base.Dispose(disposing);
@@ -252,8 +250,7 @@ namespace Stardust
                     Token = rs.Token;
                 }
 
-                _timer.TryDispose();
-                _timer = null;
+                StopTimer();
 
                 Logined = false;
 
