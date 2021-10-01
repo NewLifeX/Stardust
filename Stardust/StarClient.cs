@@ -229,7 +229,35 @@ namespace Stardust
             catch { }
 #endif
 
+            if (Runtime.Linux) di.MaxOpenFiles = Execute("bash", "-c \"ulimit -n\"")?.Trim().ToInt() ?? 0;
+
             return di;
+        }
+
+        private static String Execute(String cmd, String arguments = null)
+        {
+            try
+            {
+                var psi = new ProcessStartInfo(cmd, arguments)
+                {
+                    // UseShellExecute 必须 false，以便于后续重定向输出流
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true
+                };
+                var process = Process.Start(psi);
+                if (!process.WaitForExit(3_000))
+                {
+                    process.Kill();
+                    return null;
+                }
+
+                return process.StandardOutput.ReadToEnd();
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteLine(ex.Message);
+                return null;
+            }
         }
 
         /// <summary>注销</summary>

@@ -18,6 +18,7 @@
       <Column Name="Cpu" DataType="Int32" Description="CPU" />
       <Column Name="Memory" DataType="Int32" Description="内存。单位M" />
       <Column Name="TotalSize" DataType="Int32" Description="磁盘。应用所在盘，单位M" />
+      <Column Name="MaxOpenFiles" DataType="Int32" Description="最大打开文件。Linux上的ulimit -n" />
       <Column Name="Dpi" DataType="String" Description="像素点。默认96*96" />
       <Column Name="Resolution" DataType="String" Description="分辨率。例如1024*768" />
       <Column Name="Processor" DataType="String" Length="200" Description="处理器" />

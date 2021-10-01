@@ -328,6 +328,7 @@ namespace Stardust.Data.Nodes
             if (di.ProcessorCount > 0) node.Cpu = di.ProcessorCount;
             if (di.Memory > 0) node.Memory = (Int32)(di.Memory / 1024 / 1024);
             if (di.TotalSize > 0) node.TotalSize = (Int32)(di.TotalSize / 1024 / 1024);
+            if (di.MaxOpenFiles > 0) node.MaxOpenFiles = di.MaxOpenFiles;
             if (!di.Dpi.IsNullOrEmpty()) node.Dpi = di.Dpi;
             if (!di.Resolution.IsNullOrEmpty()) node.Resolution = di.Resolution;
             if (!di.Macs.IsNullOrEmpty()) node.MACs = di.Macs;
