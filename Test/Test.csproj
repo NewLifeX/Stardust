@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="8.11.2021.923-beta1" />
+    <PackageReference Include="NewLife.Core" Version="8.11.2021.1001" />
     <PackageReference Include="SSH.NET" Version="2020.0.1" />
   </ItemGroup>
 
