@@ -174,6 +174,8 @@ namespace Stardust
                 {
                     if (!Valid()) return null;
 
+                    XTrace.WriteLine("初始化星尘监控中心，采样并定期上报应用性能数据");
+
                     var tracer = new StarTracer(Server)
                     {
                         AppId = AppId,
@@ -208,6 +210,8 @@ namespace Stardust
                 {
                     if (!Valid()) return null;
 
+                    XTrace.WriteLine("初始化星尘配置中心，提供集中配置管理能力");
+
                     var config = new HttpConfigProvider
                     {
                         Server = Server,
@@ -235,6 +239,8 @@ namespace Stardust
                 if (_dustClient == null)
                 {
                     if (!Valid()) return null;
+
+                    XTrace.WriteLine("初始化星尘注册中心，提供服务注册与发布能力");
 
                     var client = new DustClient(Server)
                     {

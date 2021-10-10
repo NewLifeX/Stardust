@@ -42,6 +42,9 @@ namespace Stardust.Models
         /// <summary>磁盘可用空间。应用所在盘</summary>
         public UInt64 AvailableFreeSpace { get; set; }
 
+        /// <summary>最大打开文件。Linux上的ulimit -n</summary>
+        public Int32 MaxOpenFiles { get; set; }
+
         /// <summary>像素点。默认96*96</summary>
         public String Dpi { get; set; }
 

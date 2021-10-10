@@ -128,7 +128,7 @@ namespace Stardust.Data.Monitors
 
             //return new List<SampleData>();
 
-            return Meta.AutoShard(end.AddSeconds(1), start, () => FindAll(exp, page)).FirstOrDefault(e => e.Count > 0);
+            return Meta.AutoShard(end.AddSeconds(1), start, () => FindAll(exp, page)).FirstOrDefault(e => e.Count > 0) ?? new List<SampleData>();
         }
         #endregion
 

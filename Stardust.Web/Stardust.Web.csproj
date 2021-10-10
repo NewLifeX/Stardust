@@ -6,8 +6,8 @@
     <AssemblyTitle>星尘控制台</AssemblyTitle>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2021 NewLife</Copyright>
-    <Version>1.1.2021.0926-beta1</Version>
-    <FileVersion>1.1.2021.0926</FileVersion>
+    <Version>1.1.2021.1001</Version>
+    <FileVersion>1.1.2021.1001</FileVersion>
     <AssemblyVersion>1.1.*</AssemblyVersion>
     <Deterministic>false</Deterministic>
     <OutputPath>..\Bin\Web</OutputPath>
@@ -46,10 +46,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="8.11.2021.923-beta1" />
-    <PackageReference Include="NewLife.Cube.Core" Version="4.0.2021.923-beta3" />
-    <PackageReference Include="NewLife.Redis" Version="3.9.2021.904" />
-    <PackageReference Include="NewLife.XCode" Version="10.2.2021.923-beta1" />
+    <PackageReference Include="NewLife.Core" Version="8.11.2021.1001" />
+    <PackageReference Include="NewLife.Cube.Core" Version="4.0.2021.1003" />
+    <PackageReference Include="NewLife.Redis" Version="3.9.2021.1001" />
+    <PackageReference Include="NewLife.XCode" Version="10.2.2021.1001" />
   </ItemGroup>
 
   <ItemGroup>

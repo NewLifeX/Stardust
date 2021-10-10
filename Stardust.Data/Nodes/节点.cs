@@ -149,6 +149,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("TotalSize", "磁盘。应用所在盘，单位M", "")]
         public Int32 TotalSize { get => _TotalSize; set { if (OnPropertyChanging("TotalSize", value)) { _TotalSize = value; OnPropertyChanged("TotalSize"); } } }
 
+        private Int32 _MaxOpenFiles;
+        /// <summary>最大打开文件。Linux上的ulimit -n</summary>
+        [DisplayName("最大打开文件")]
+        [Description("最大打开文件。Linux上的ulimit -n")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("MaxOpenFiles", "最大打开文件。Linux上的ulimit -n", "")]
+        public Int32 MaxOpenFiles { get => _MaxOpenFiles; set { if (OnPropertyChanging("MaxOpenFiles", value)) { _MaxOpenFiles = value; OnPropertyChanged("MaxOpenFiles"); } } }
+
         private String _Dpi;
         /// <summary>像素点。默认96*96</summary>
         [DisplayName("像素点")]
@@ -432,6 +440,7 @@ namespace Stardust.Data.Nodes
                     case "Cpu": return _Cpu;
                     case "Memory": return _Memory;
                     case "TotalSize": return _TotalSize;
+                    case "MaxOpenFiles": return _MaxOpenFiles;
                     case "Dpi": return _Dpi;
                     case "Resolution": return _Resolution;
                     case "Processor": return _Processor;
@@ -487,6 +496,7 @@ namespace Stardust.Data.Nodes
                     case "Cpu": _Cpu = value.ToInt(); break;
                     case "Memory": _Memory = value.ToInt(); break;
                     case "TotalSize": _TotalSize = value.ToInt(); break;
+                    case "MaxOpenFiles": _MaxOpenFiles = value.ToInt(); break;
                     case "Dpi": _Dpi = Convert.ToString(value); break;
                     case "Resolution": _Resolution = Convert.ToString(value); break;
                     case "Processor": _Processor = Convert.ToString(value); break;
@@ -576,6 +586,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>磁盘。应用所在盘，单位M</summary>
             public static readonly Field TotalSize = FindByName("TotalSize");
+
+            /// <summary>最大打开文件。Linux上的ulimit -n</summary>
+            public static readonly Field MaxOpenFiles = FindByName("MaxOpenFiles");
 
             /// <summary>像素点。默认96*96</summary>
             public static readonly Field Dpi = FindByName("Dpi");
@@ -726,6 +739,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>磁盘。应用所在盘，单位M</summary>
             public const String TotalSize = "TotalSize";
+
+            /// <summary>最大打开文件。Linux上的ulimit -n</summary>
+            public const String MaxOpenFiles = "MaxOpenFiles";
 
             /// <summary>像素点。默认96*96</summary>
             public const String Dpi = "Dpi";
