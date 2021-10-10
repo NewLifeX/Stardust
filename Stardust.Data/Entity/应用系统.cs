@@ -14,8 +14,8 @@ namespace Stardust.Data
     [Serializable]
     [DataObject]
     [Description("应用系统。服务提供者和消费者")]
-    [BindIndex("IU_App_Name", true, "Name")]
-    [BindTable("App", Description = "应用系统。服务提供者和消费者", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindIndex("IU_StarApp_Name", true, "Name")]
+    [BindTable("StarApp", Description = "应用系统。服务提供者和消费者", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class App
     {
         #region 属性
