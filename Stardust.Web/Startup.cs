@@ -1,10 +1,13 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NewLife;
 using NewLife.Cube;
+using NewLife.Log;
 using Stardust.Data;
 using Stardust.Data.Monitors;
 using Stardust.Server.Services;
@@ -28,6 +31,9 @@ namespace Stardust.Web
             DAL.ConnStrs.TryAdd("MonitorLog", "MapTo=Stardust");
             DAL.ConnStrs.TryAdd("Node", "MapTo=Stardust");
             DAL.ConnStrs.TryAdd("NodeLog", "MapTo=Stardust");
+
+            // 调整应用表名
+            FixAppTableName();
 
             // 统计
             services.AddSingleton<IAppDayStatService, AppDayStatService>();
@@ -93,6 +99,26 @@ namespace Stardust.Web
          
             var dal = App.Meta.Session.Dal;
             dal.CheckTables();
+        }
+
+        private static void FixAppTableName()
+        {
+            var dal = DAL.Create("Stardust");
+            var tables = dal.Tables;
+            if (!tables.Any(e => e.TableName.EqualIgnoreCase("StarApp")))
+            {
+                XTrace.WriteLine("未发现Star应用新表 StarApp");
+
+                // 验证表名和部分字段名，避免误改其它表
+                var dt = tables.FirstOrDefault(e => e.TableName.EqualIgnoreCase("App"));
+                if (dt != null && dt.Columns.Any(e => e.ColumnName.EqualIgnoreCase("AutoActive")))
+                {
+                    XTrace.WriteLine("发现Star应用旧表 App ，准备重命名");
+
+                    var rs = dal.Execute($"Alter Table App Rename To StarApp");
+                    XTrace.WriteLine("重命名结果：{0}", rs);
+                }
+            }
         }
     }
 }
