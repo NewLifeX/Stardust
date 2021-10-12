@@ -396,6 +396,12 @@ namespace Stardust
                             Delay = ms;
                     }
 
+                    // 令牌
+                    if (!rs.Token.IsNullOrEmpty())
+                    {
+                        Token = rs.Token;
+                    }
+
                     // 推队列
                     if (rs.Commands != null && rs.Commands.Length > 0)
                     {

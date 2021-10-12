@@ -331,6 +331,16 @@ namespace Stardust.Server.Controllers
                 olt.CompileTime = node.CompileTime;
                 olt.Save(null, inf, token);
 
+                // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌。
+                //todo 这里将来由客户端提交刷新令牌，才能颁发新的访问令牌。
+                var tm = ValidAndIssueToken(node.Code, token);
+                if (tm != null)
+                {
+                    rs.Token = tm.AccessToken;
+
+                    WriteHistory(node, "刷新令牌", true, tm.ToJson());
+                }
+
                 // 拉取命令
                 rs.Commands = AcquireCommands(node.ID);
 
@@ -731,6 +741,24 @@ namespace Stardust.Server.Controllers
             if (!rs) throw new ApiException(403, $"非法访问 {message}");
 
             return node;
+        }
+
+        public TokenModel ValidAndIssueToken(String deviceCode, String token)
+        {
+            if (token.IsNullOrEmpty()) return null;
+            var set = Setting.Current;
+
+            // 令牌有效期检查，10分钟内过期者，重新颁发令牌
+            var ss = set.TokenSecret.Split(':');
+            var jwt = new JwtBuilder
+            {
+                Algorithm = ss[0],
+                Secret = ss[1],
+            };
+            var rs = jwt.TryDecode(token, out var message);
+            if (!rs || jwt == null || jwt.Expire.AddMinutes(10) < DateTime.Now) return null;
+
+            return IssueToken(deviceCode, set);
         }
 
         private void WriteHistory(Node node, String action, Boolean success, String remark) => NodeHistory.Create(node, action, success, remark, Environment.MachineName, UserHost);
