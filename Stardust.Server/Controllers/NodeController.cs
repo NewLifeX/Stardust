@@ -756,9 +756,11 @@ namespace Stardust.Server.Controllers
                 Secret = ss[1],
             };
             var rs = jwt.TryDecode(token, out var message);
-            if (!rs || jwt == null || jwt.Expire.AddMinutes(10) < DateTime.Now) return null;
+            if (!rs || jwt == null) return null;
 
-            return IssueToken(deviceCode, set);
+            if (DateTime.Now.AddMinutes(10) > jwt.Expire) return IssueToken(deviceCode, set);
+
+            return null;
         }
 
         private void WriteHistory(Node node, String action, Boolean success, String remark) => NodeHistory.Create(node, action, success, remark, Environment.MachineName, UserHost);
