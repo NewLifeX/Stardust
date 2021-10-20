@@ -7,6 +7,7 @@ using NewLife;
 using NewLife.Log;
 using NewLife.Reflection;
 using Stardust;
+using Stardust.Extensions;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -35,6 +36,20 @@ namespace Microsoft.Extensions.DependencyInjection
             });
 
             return star;
+        }
+
+        /// <summary>使用星尘，注入跟踪中间件</summary>
+        /// <param name="app"></param>
+        /// <returns></returns>
+        public static IApplicationBuilder UseStardust(this IApplicationBuilder app)
+        {
+            var provider = app.ApplicationServices;
+            var tracer = provider.GetRequiredService<ITracer>();
+
+            if (TracerMiddleware.Tracer == null) TracerMiddleware.Tracer = tracer;
+            if (TracerMiddleware.Tracer != null) app.UseMiddleware<TracerMiddleware>();
+
+            return app;
         }
 
         /// <summary>发布服务到注册中心</summary>

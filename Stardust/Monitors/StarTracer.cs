@@ -262,6 +262,13 @@ namespace Stardust.Monitors
                 var pi = type?.GetPropertyEx("Tracer");
                 if (pi != null && pi.PropertyType == typeof(ITracer)) pi.SetValue(null, this, null);
             }
+
+            // 反射处理Star追踪
+            {
+                var type = "Stardust.Extensions.TracerMiddleware".GetTypeEx(false);
+                var pi = type?.GetPropertyEx("Tracer");
+                if (pi != null && pi.PropertyType == typeof(ITracer)) pi.SetValue(null, this, null);
+            }
         }
         #endregion
 

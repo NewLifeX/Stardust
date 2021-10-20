@@ -13,9 +13,7 @@ using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
 using Stardust.Data;
-using Stardust.Data.Monitors;
 using Stardust.Server.Common;
-using Stardust.Server.Middlewares;
 using Stardust.Server.Services;
 using XCode.DataAccessLayer;
 
@@ -103,7 +101,8 @@ namespace Stardust.Server
 
             app.UseCors("star_cors");
 
-            app.UseMiddleware<TracerMiddleware>();
+            //app.UseMiddleware<TracerMiddleware>();
+            app.UseStardust();
 
             app.UseWebSockets(new WebSocketOptions()
             {

@@ -35,19 +35,26 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Middlewares\**" />
+    <Content Remove="Middlewares\**" />
+    <EmbeddedResource Remove="Middlewares\**" />
+    <None Remove="Middlewares\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="Common\TokenFilter.cs" />
     <Compile Remove="Common\TokenSession.cs" />
     <Compile Remove="Controllers\BaseController.cs" />
-    <Compile Remove="Middlewares\NodeSocketMiddleware.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="NewLife.Redis" Version="3.9.2021.1001" />
-    <PackageReference Include="NewLife.XCode" Version="10.2.2021.1001" />
+    <PackageReference Include="NewLife.XCode" Version="10.3.2021.1020-beta2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Stardust.Data\Stardust.Data.csproj" />
+    <ProjectReference Include="..\Stardust.Extensions\Stardust.Extensions.csproj" />
     <ProjectReference Include="..\Stardust\Stardust.csproj" />
   </ItemGroup>
 

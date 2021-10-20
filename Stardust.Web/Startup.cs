@@ -9,8 +9,8 @@ using NewLife;
 using NewLife.Cube;
 using NewLife.Log;
 using Stardust.Data;
-using Stardust.Data.Monitors;
 using Stardust.Server.Services;
+using XCode;
 using XCode.DataAccessLayer;
 
 namespace Stardust.Web
@@ -32,9 +32,6 @@ namespace Stardust.Web
             DAL.ConnStrs.TryAdd("Node", "MapTo=Stardust");
             DAL.ConnStrs.TryAdd("NodeLog", "MapTo=Stardust");
 
-            // 调整应用表名
-            FixAppTableName();
-
             // 统计
             services.AddSingleton<IAppDayStatService, AppDayStatService>();
             services.AddSingleton<ITraceStatService, TraceStatService>();
@@ -55,6 +52,11 @@ namespace Stardust.Web
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            EntityFactory.InitConnection("Stardust");
+
+            // 调整应用表名
+            FixAppTableName();
+
             // 使用Cube前添加自己的管道
             if (env.IsDevelopment())
                 app.UseDeveloperExceptionPage();
@@ -92,13 +94,6 @@ namespace Stardust.Web
             //    set2.Migration = Migration.ReadOnly;
             //    set2.Save();
             //}
-
-            // 初始化数据库
-            //var n = App.Meta.Count;
-            //AppStat.Meta.Session.Dal.Db.ShowSQL = false;
-         
-            var dal = App.Meta.Session.Dal;
-            dal.CheckTables();
         }
 
         private static void FixAppTableName()
