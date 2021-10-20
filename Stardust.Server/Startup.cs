@@ -15,6 +15,7 @@ using NewLife.Log;
 using Stardust.Data;
 using Stardust.Server.Common;
 using Stardust.Server.Services;
+using XCode;
 using XCode.DataAccessLayer;
 
 namespace Stardust.Server
@@ -34,6 +35,7 @@ namespace Stardust.Server
 
             var tracer = star.Tracer;
             services.AddSingleton<ITracer>(tracer);
+            using var span = tracer?.NewSpan(nameof(ConfigureServices));
 
             // 默认连接字符串，如果配置文件没有设置，则采用该值
             DAL.ConnStrs.TryAdd("ConfigCenter", "MapTo=Stardust");
@@ -41,9 +43,6 @@ namespace Stardust.Server
             DAL.ConnStrs.TryAdd("MonitorLog", "MapTo=Stardust");
             DAL.ConnStrs.TryAdd("Node", "MapTo=Stardust");
             DAL.ConnStrs.TryAdd("NodeLog", "MapTo=Stardust");
-
-            // 调整应用表名
-            FixAppTableName();
 
             var cache = MemoryCache.Default;
             services.AddSingleton(cache);
@@ -92,7 +91,15 @@ namespace Stardust.Server
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            var tracer = app.ApplicationServices.GetRequiredService<ITracer>();
+            using var span = tracer?.NewSpan(nameof(Configure));
+
             var set = Stardust.Setting.Current;
+
+            EntityFactory.InitConnection("Stardust");
+
+            // 调整应用表名
+            FixAppTableName();
 
             if (env.IsDevelopment())
             {

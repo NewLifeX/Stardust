@@ -49,11 +49,12 @@ namespace Stardust.Monitors
         /// <summary>实例化</summary>
         public StarTracer()
         {
-            Period = 60;
-
             var set = Setting.Current;
             AppId = set.AppKey;
             //Secret = set.Secret;
+            Period = set.TracerPeriod;
+            MaxSamples = set.MaxSamples;
+            MaxErrors = set.MaxErrors;
 
             if (set.Debug) Log = XTrace.Log;
 
@@ -191,6 +192,16 @@ namespace Stardust.Monitors
                     if (rs.MaxErrors > 0) MaxErrors = rs.MaxErrors;
                     if (rs.Timeout > 0) Timeout = rs.Timeout;
                     Excludes = rs.Excludes;
+
+                    // 保存到配置文件
+                    if (rs.Period > 0 || rs.MaxSamples > 0 | rs.MaxErrors > 0)
+                    {
+                        var set = Setting.Current;
+                        set.TracerPeriod = Period;
+                        set.MaxSamples = MaxSamples;
+                        set.MaxErrors = MaxErrors;
+                        set.Save();
+                    }
                 }
             }
             catch (ApiException ex)

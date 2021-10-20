@@ -29,8 +29,8 @@ namespace Stardust.Monitors
     /// <summary>追踪响应模型</summary>
     public class TraceResponse
     {
-        /// <summary>采样周期。默认15s</summary>
-        public Int32 Period { get; set; } = 15;
+        /// <summary>采样周期。默认60s</summary>
+        public Int32 Period { get; set; } = 60;
 
         /// <summary>最大正常采样数。采样周期内，最多只记录指定数量的正常事件，用于绘制依赖关系</summary>
         public Int32 MaxSamples { get; set; } = 1;

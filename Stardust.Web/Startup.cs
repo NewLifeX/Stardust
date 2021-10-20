@@ -24,6 +24,7 @@ namespace Stardust.Web
         public void ConfigureServices(IServiceCollection services)
         {
             var star = services.AddStardust("StarWeb");
+            using var span = star.Tracer?.NewSpan(nameof(ConfigureServices));
 
             // 默认连接字符串，如果配置文件没有设置，则采用该值
             DAL.ConnStrs.TryAdd("ConfigCenter", "MapTo=Stardust");
@@ -52,6 +53,9 @@ namespace Stardust.Web
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            var tracer = app.ApplicationServices.GetRequiredService<ITracer>();
+            using var span = tracer?.NewSpan(nameof(Configure));
+
             EntityFactory.InitConnection("Stardust");
 
             // 调整应用表名
