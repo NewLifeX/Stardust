@@ -12,7 +12,7 @@ namespace Stardust.Web
     public class TracerModule : IHttpModule
     {
         /// <summary>跟踪器</summary>
-        public static ITracer Tracer { get; set; }
+        public static ITracer Tracer { get; set; } = DefaultTracer.Instance;
 
         void IHttpModule.Dispose() { }
 
