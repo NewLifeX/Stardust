@@ -56,10 +56,10 @@ namespace Stardust.Web
             var tracer = app.ApplicationServices.GetRequiredService<ITracer>();
             using var span = tracer?.NewSpan(nameof(Configure));
 
-            EntityFactory.InitConnection("Stardust");
-
             // 调整应用表名
             FixAppTableName();
+
+            EntityFactory.InitConnection("Stardust");
 
             // 使用Cube前添加自己的管道
             if (env.IsDevelopment())
@@ -67,6 +67,7 @@ namespace Stardust.Web
             else
                 app.UseExceptionHandler("/CubeHome/Error");
 
+            //app.UseStardust();
             app.UseCube(env);
 
             app.UseEndpoints(endpoints =>

@@ -38,7 +38,7 @@ namespace Microsoft.Extensions.DependencyInjection
             return star;
         }
 
-        /// <summary>使用星尘，注入跟踪中间件</summary>
+        /// <summary>使用星尘，注入跟踪中间件。不需要跟魔方一起使用</summary>
         /// <param name="app"></param>
         /// <returns></returns>
         public static IApplicationBuilder UseStardust(this IApplicationBuilder app)

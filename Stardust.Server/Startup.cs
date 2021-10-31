@@ -96,10 +96,10 @@ namespace Stardust.Server
 
             var set = Stardust.Setting.Current;
 
-            EntityFactory.InitConnection("Stardust");
-
             // 调整应用表名
             FixAppTableName();
+
+            EntityFactory.InitConnection("Stardust");
 
             if (env.IsDevelopment())
             {
