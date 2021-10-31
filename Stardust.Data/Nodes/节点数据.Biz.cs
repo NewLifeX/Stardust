@@ -119,7 +119,7 @@ namespace Stardust.Data.Nodes
             else
                 exp &= _.CreateTime.Between(start, end);
 
-            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Data.Contains(key) | _.Creator.Contains(key) | _.CreateIP.Contains(key);
+            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Creator.Contains(key) | _.CreateIP.Contains(key);
 
             return FindAll(exp, page);
         }

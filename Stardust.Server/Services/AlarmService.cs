@@ -12,8 +12,6 @@ using NewLife.Threading;
 using Stardust.Data;
 using Stardust.Data.Monitors;
 using Stardust.Data.Nodes;
-using Stardust.DingTalk;
-using Stardust.WeiXin;
 
 namespace Stardust.Server.Services
 {
@@ -261,24 +259,28 @@ namespace Stardust.Server.Services
             }
 
             // 进程告警
-            if (!node.AlarmProcesses.IsNullOrEmpty() && !data.Data.IsNullOrEmpty())
+            if (!node.AlarmProcesses.IsNullOrEmpty())
             {
-                var alarms = node.AlarmProcesses.Split(",", StringSplitOptions.RemoveEmptyEntries);
-                var dic = JsonParser.Decode(data.Data);
-                var ps = (dic["Processes"] as String)?.Split(",", StringSplitOptions.RemoveEmptyEntries);
-                if (alarms != null && alarms.Length > 0 && ps != null && ps.Length > 0)
+                var olt = NodeOnline.FindByNodeId(node.ID);
+                if (olt != null && !olt.Data.IsNullOrEmpty())
                 {
-                    // 查找丢失的进程
-                    var ps2 = alarms.Where(e => !ps.Contains(e)).ToList();
-                    if (ps2.Count > 0)
+                    var alarms = node.AlarmProcesses.Split(",", StringSplitOptions.RemoveEmptyEntries);
+                    var dic = JsonParser.Decode(olt.Data);
+                    var ps = (dic["Processes"] as String)?.Split(",", StringSplitOptions.RemoveEmptyEntries);
+                    if (alarms != null && alarms.Length > 0 && ps != null && ps.Length > 0)
                     {
-                        // 一定时间内不要重复报错
-                        var error2 = _cache.Get<Int32>("alarm:Process:" + node.ID);
-                        if (error2 == 0 || ps2.Count > error2)
+                        // 查找丢失的进程
+                        var ps2 = alarms.Where(e => !ps.Contains(e)).ToList();
+                        if (ps2.Count > 0)
                         {
-                            _cache.Set("alarm:Process:" + node.ID, ps2.Count, 5 * 60);
+                            // 一定时间内不要重复报错
+                            var error2 = _cache.Get<Int32>("alarm:Process:" + node.ID);
+                            if (error2 == 0 || ps2.Count > error2)
+                            {
+                                _cache.Set("alarm:Process:" + node.ID, ps2.Count, 5 * 60);
 
-                            SendAlarm("process", node, data, $"[{node.Name}]进程守护告警", ps2.Join());
+                                SendAlarm("process", node, data, $"[{node.Name}]进程守护告警", ps2.Join());
+                            }
                         }
                     }
                 }

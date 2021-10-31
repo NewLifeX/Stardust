@@ -261,6 +261,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("Token", "令牌", "")]
         public String Token { get => _Token; set { if (OnPropertyChanging("Token", value)) { _Token = value; OnPropertyChanged("Token"); } } }
 
+        private String _Data;
+        /// <summary>数据</summary>
+        [DisplayName("数据")]
+        [Description("数据")]
+        [DataObjectField(false, false, true, -1)]
+        [BindColumn("Data", "数据", "")]
+        public String Data { get => _Data; set { if (OnPropertyChanging("Data", value)) { _Data = value; OnPropertyChanged("Data"); } } }
+
         private String _Creator;
         /// <summary>创建者。服务端节点</summary>
         [DisplayName("创建者")]
@@ -342,6 +350,7 @@ namespace Stardust.Data.Nodes
                     case "MACs": return _MACs;
                     case "Processes": return _Processes;
                     case "Token": return _Token;
+                    case "Data": return _Data;
                     case "Creator": return _Creator;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -384,6 +393,7 @@ namespace Stardust.Data.Nodes
                     case "MACs": _MACs = Convert.ToString(value); break;
                     case "Processes": _Processes = Convert.ToString(value); break;
                     case "Token": _Token = Convert.ToString(value); break;
+                    case "Data": _Data = Convert.ToString(value); break;
                     case "Creator": _Creator = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -488,6 +498,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>令牌</summary>
             public static readonly Field Token = FindByName("Token");
+
+            /// <summary>数据</summary>
+            public static readonly Field Data = FindByName("Data");
 
             /// <summary>创建者。服务端节点</summary>
             public static readonly Field Creator = FindByName("Creator");
@@ -599,6 +612,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>令牌</summary>
             public const String Token = "Token";
+
+            /// <summary>数据</summary>
+            public const String Data = "Data";
 
             /// <summary>创建者。服务端节点</summary>
             public const String Creator = "Creator";

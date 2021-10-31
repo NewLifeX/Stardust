@@ -73,7 +73,7 @@ namespace Stardust.Data.Nodes
         /// <summary>根据会话查找</summary>
         /// <param name="deviceid">会话</param>
         /// <returns></returns>
-        public static NodeOnline FindByNodeID(Int32 deviceid) => Find(__.NodeID, deviceid);
+        public static NodeOnline FindByNodeId(Int32 deviceid) => Find(__.NodeID, deviceid);
 
         /// <summary>根据会话查找</summary>
         /// <param name="sessionid">会话</param>
@@ -114,7 +114,7 @@ namespace Stardust.Data.Nodes
 
             exp &= _.CreateTime.Between(start, end);
 
-            if (!key.IsNullOrEmpty()) exp &= (_.Name.Contains(key) | _.SessionID.Contains(key));
+            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Data.Contains(key) | _.SessionID.Contains(key);
 
             return FindAll(exp, page);
         }
@@ -228,6 +228,8 @@ namespace Stardust.Data.Nodes
             if (!inf.Macs.IsNullOrEmpty()) olt.MACs = inf.Macs;
             //if (!inf.COMs.IsNullOrEmpty()) olt.COMs = inf.COMs;
             if (!inf.IP.IsNullOrEmpty()) olt.IP = inf.IP;
+
+            olt.Data = inf.ToJson();
         }
 
         private void CreateData(PingInfo inf, String ip)
@@ -256,7 +258,6 @@ namespace Stardust.Data.Nodes
                 Delay = inf.Delay,
                 LocalTime = dt,
                 Offset = olt.Offset,
-                Data = inf.ToJson(),
                 CreateIP = ip,
                 Creator = Environment.MachineName,
             };
