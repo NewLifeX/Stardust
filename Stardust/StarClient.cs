@@ -20,6 +20,7 @@ using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust.Models;
 using Stardust.Services;
+using System.Runtime.InteropServices;
 #if !NET4
 using System.Net.WebSockets;
 using WebSocket = System.Net.WebSockets.WebSocket;
@@ -190,6 +191,7 @@ namespace Stardust
 
                 OSName = mi.OSName,
                 OSVersion = mi.OSVersion,
+                //Architecture = RuntimeInformation.ProcessArchitecture,
 
                 MachineName = Environment.MachineName,
                 UserName = Environment.UserName,
@@ -217,7 +219,9 @@ namespace Stardust
                 Time = DateTime.UtcNow,
             };
 
-#if !__CORE__
+#if __CORE__
+            di.Architecture = RuntimeInformation.ProcessArchitecture + "";
+#else
             try
             {
                 // 收集屏幕相关信息。Mono+Linux无法获取

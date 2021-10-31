@@ -12,6 +12,7 @@
       <Column Name="CompileTime" DataType="DateTime" Description="编译时间" />
       <Column Name="OS" DataType="String" Description="操作系统" />
       <Column Name="OSVersion" DataType="String" Description="系统版本" />
+      <Column Name="Architecture" DataType="String" Description="架构。处理器架构，X86/X64/Arm/Arm64" />
       <Column Name="MachineName" DataType="String" Description="机器名称" />
       <Column Name="UserName" DataType="String" Description="用户名称" />
       <Column Name="IP" DataType="String" Description="本地IP" />

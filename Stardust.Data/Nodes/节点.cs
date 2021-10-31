@@ -101,6 +101,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("OSVersion", "系统版本", "")]
         public String OSVersion { get => _OSVersion; set { if (OnPropertyChanging("OSVersion", value)) { _OSVersion = value; OnPropertyChanged("OSVersion"); } } }
 
+        private String _Architecture;
+        /// <summary>架构。处理器架构，X86/X64/Arm/Arm64</summary>
+        [DisplayName("架构")]
+        [Description("架构。处理器架构，X86/X64/Arm/Arm64")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Architecture", "架构。处理器架构，X86/X64/Arm/Arm64", "")]
+        public String Architecture { get => _Architecture; set { if (OnPropertyChanging("Architecture", value)) { _Architecture = value; OnPropertyChanged("Architecture"); } } }
+
         private String _MachineName;
         /// <summary>机器名称</summary>
         [DisplayName("机器名称")]
@@ -434,6 +442,7 @@ namespace Stardust.Data.Nodes
                     case "CompileTime": return _CompileTime;
                     case "OS": return _OS;
                     case "OSVersion": return _OSVersion;
+                    case "Architecture": return _Architecture;
                     case "MachineName": return _MachineName;
                     case "UserName": return _UserName;
                     case "IP": return _IP;
@@ -490,6 +499,7 @@ namespace Stardust.Data.Nodes
                     case "CompileTime": _CompileTime = value.ToDateTime(); break;
                     case "OS": _OS = Convert.ToString(value); break;
                     case "OSVersion": _OSVersion = Convert.ToString(value); break;
+                    case "Architecture": _Architecture = Convert.ToString(value); break;
                     case "MachineName": _MachineName = Convert.ToString(value); break;
                     case "UserName": _UserName = Convert.ToString(value); break;
                     case "IP": _IP = Convert.ToString(value); break;
@@ -568,6 +578,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>系统版本</summary>
             public static readonly Field OSVersion = FindByName("OSVersion");
+
+            /// <summary>架构。处理器架构，X86/X64/Arm/Arm64</summary>
+            public static readonly Field Architecture = FindByName("Architecture");
 
             /// <summary>机器名称</summary>
             public static readonly Field MachineName = FindByName("MachineName");
@@ -721,6 +734,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>系统版本</summary>
             public const String OSVersion = "OSVersion";
+
+            /// <summary>架构。处理器架构，X86/X64/Arm/Arm64</summary>
+            public const String Architecture = "Architecture";
 
             /// <summary>机器名称</summary>
             public const String MachineName = "MachineName";

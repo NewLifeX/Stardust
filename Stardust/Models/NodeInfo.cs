@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Stardust.Models
 {
@@ -17,6 +18,9 @@ namespace Stardust.Models
 
         /// <summary>系统版本</summary>
         public String OSVersion { get; set; }
+
+        /// <summary>处理器架构</summary>
+        public String Architecture { get; set; }
 
         /// <summary>机器名</summary>
         public String MachineName { get; set; }

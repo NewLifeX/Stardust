@@ -6,8 +6,8 @@
     <AssemblyTitle>星尘管理平台</AssemblyTitle>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2021 NewLife</Copyright>
-    <Version>1.1.2021.1001</Version>
-    <FileVersion>1.1.2021.1001</FileVersion>
+    <Version>1.1.2021.1031</Version>
+    <FileVersion>1.1.2021.1031</FileVersion>
     <AssemblyVersion>1.1.*</AssemblyVersion>
     <Deterministic>false</Deterministic>
     <OutputPath>..\Bin\Web</OutputPath>

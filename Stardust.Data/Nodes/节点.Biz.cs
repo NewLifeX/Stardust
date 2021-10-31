@@ -313,6 +313,7 @@ namespace Stardust.Data.Nodes
 
             if (!di.OSName.IsNullOrEmpty()) node.OS = di.OSName;
             if (!di.OSVersion.IsNullOrEmpty()) node.OSVersion = di.OSVersion;
+            if (!di.Architecture.IsNullOrEmpty()) node.Architecture = di.Architecture;
             if (!di.Version.IsNullOrEmpty()) node.Version = di.Version;
             if (di.Compile.Year > 2000) node.CompileTime = di.Compile;
 
