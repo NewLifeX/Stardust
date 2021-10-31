@@ -163,6 +163,11 @@ namespace Stardust.Data.Monitors
             // 高并发下获取或新增对象
             return GetOrAdd(model, FindByTrace, m => new AppMinuteStat { StatTime = m.Time, AppId = m.AppId });
         }
+
+        /// <summary>删除指定时间之前的数据</summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public static Int32 DeleteBefore(DateTime time) => Delete(_.StatTime < time);
         #endregion
     }
 }

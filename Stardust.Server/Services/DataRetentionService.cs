@@ -43,6 +43,7 @@ namespace Stardust.Server.Services
             // 保留数据的起点
             var time = DateTime.Now.AddDays(-set.DataRetention);
             var time2 = DateTime.Now.AddDays(-set.DataRetention2);
+            var time3 = DateTime.Now.AddDays(-set.DataRetention2 * 10);
 
             using var span = _tracer?.NewSpan("DataRetention", $"{time} {time2}");
             try
@@ -51,9 +52,17 @@ namespace Stardust.Server.Services
                 var rs = NodeData.DeleteBefore(time2);
                 XTrace.WriteLine("删除[{0}]之前的NodeData共：{1:n0}", time2.ToFullString(), rs);
 
+                // 删除Redis节点数据
+                rs = RedisData.DeleteBefore(time2);
+                XTrace.WriteLine("删除[{0}]之前的RedisData共：{1:n0}", time2.ToFullString(), rs);
+
                 // 删除应用性能数据
                 rs = AppMeter.DeleteBefore(time2);
                 XTrace.WriteLine("删除[{0}]之前的AppMeter共：{1:n0}", time2.ToFullString(), rs);
+
+                // 删除应用分钟统计数据
+                rs = AppMinuteStat.DeleteBefore(time);
+                XTrace.WriteLine("删除[{0}]之前的AppMinuteStat共：{1:n0}", time.ToFullString(), rs);
 
                 // 删除追踪分钟统计数据
                 rs = TraceMinuteStat.DeleteBefore(time);
@@ -62,6 +71,9 @@ namespace Stardust.Server.Services
                 // 删除追踪小时统计数据
                 rs = TraceHourStat.DeleteBefore(time2);
                 XTrace.WriteLine("删除[{0}]之前的TraceHourStat共：{1:n0}", time2.ToFullString(), rs);
+
+                rs = TraceDayStat.DeleteBefore(time3);
+                XTrace.WriteLine("删除[{0}]之前的TraceDayStat共：{1:n0}", time3.ToFullString(), rs);
 
                 //// 删除监控明细数据
                 //rs = TraceData.DeleteBefore(time);
