@@ -292,6 +292,14 @@ namespace Stardust.Data.Nodes
         [DataObjectField(false, false, true, 0)]
         [BindColumn("UpdateTime", "更新时间", "")]
         public DateTime UpdateTime { get => _UpdateTime; set { if (OnPropertyChanging("UpdateTime", value)) { _UpdateTime = value; OnPropertyChanged("UpdateTime"); } } }
+
+        private String _UpdateIP;
+        /// <summary>更新地址</summary>
+        [DisplayName("更新地址")]
+        [Description("更新地址")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("UpdateIP", "更新地址", "")]
+        public String UpdateIP { get => _UpdateIP; set { if (OnPropertyChanging("UpdateIP", value)) { _UpdateIP = value; OnPropertyChanged("UpdateIP"); } } }
         #endregion
 
         #region 获取/设置 字段值
@@ -338,6 +346,7 @@ namespace Stardust.Data.Nodes
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
                     case "UpdateTime": return _UpdateTime;
+                    case "UpdateIP": return _UpdateIP;
                     default: return base[name];
                 }
             }
@@ -379,6 +388,7 @@ namespace Stardust.Data.Nodes
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
                     case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
+                    case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
                     default: base[name] = value; break;
                 }
             }
@@ -491,6 +501,9 @@ namespace Stardust.Data.Nodes
             /// <summary>更新时间</summary>
             public static readonly Field UpdateTime = FindByName("UpdateTime");
 
+            /// <summary>更新地址</summary>
+            public static readonly Field UpdateIP = FindByName("UpdateIP");
+
             static Field FindByName(String name) => Meta.Table.FindByName(name);
         }
 
@@ -598,6 +611,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>更新时间</summary>
             public const String UpdateTime = "UpdateTime";
+
+            /// <summary>更新地址</summary>
+            public const String UpdateIP = "UpdateIP";
         }
         #endregion
     }

@@ -153,7 +153,8 @@ namespace Stardust.Data.Nodes
         /// <param name="di"></param>
         /// <param name="pi"></param>
         /// <param name="token"></param>
-        public void Save(NodeInfo di, PingInfo pi, String token)
+        /// <param name="ip"></param>
+        public void Save(NodeInfo di, PingInfo pi, String token, String ip)
         {
             var olt = this;
 
@@ -167,10 +168,12 @@ namespace Stardust.Data.Nodes
             else
             {
                 olt.Fill(pi);
+                olt.CreateData(pi, ip);
             }
 
             olt.Token = token;
             olt.PingCount++;
+            olt.UpdateIP = ip;
 
             // 5秒内直接保存
             if (olt.CreateTime.AddSeconds(5) > DateTime.Now)
@@ -225,6 +228,13 @@ namespace Stardust.Data.Nodes
             if (!inf.Macs.IsNullOrEmpty()) olt.MACs = inf.Macs;
             //if (!inf.COMs.IsNullOrEmpty()) olt.COMs = inf.COMs;
             if (!inf.IP.IsNullOrEmpty()) olt.IP = inf.IP;
+        }
+
+        private void CreateData(PingInfo inf, String ip)
+        {
+            var olt = this;
+
+            var dt = inf.Time.ToDateTime().ToLocalTime();
 
             // 插入节点数据
             var data = new NodeData
@@ -247,6 +257,7 @@ namespace Stardust.Data.Nodes
                 LocalTime = dt,
                 Offset = olt.Offset,
                 Data = inf.ToJson(),
+                CreateIP = ip,
                 Creator = Environment.MachineName,
             };
 

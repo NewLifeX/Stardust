@@ -102,7 +102,7 @@ namespace Stardust.Server.Controllers
 
             // 在线记录
             var olt = GetOnline(node) ?? CreateOnline(node, tm.AccessToken);
-            olt.Save(di, null, tm.AccessToken);
+            olt.Save(di, null, tm.AccessToken, UserHost);
 
             // 登录历史
             WriteHistory(node, "节点鉴权", true, $"[{node.Name}/{node.Code}]鉴权成功 " + di.ToJson(false, false, false));
@@ -329,7 +329,7 @@ namespace Stardust.Server.Controllers
                 olt.Category = node.Category;
                 olt.Version = node.Version;
                 olt.CompileTime = node.CompileTime;
-                olt.Save(null, inf, token);
+                olt.Save(null, inf, token, ip);
 
                 // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌。
                 //todo 这里将来由客户端提交刷新令牌，才能颁发新的访问令牌。
