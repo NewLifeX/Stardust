@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Reflection;
+using System.Threading.Tasks;
 using NewLife;
 using NewLife.Http;
 using NewLife.Log;
@@ -214,7 +216,13 @@ namespace Stardust.Monitors
             {
                 //if (ex is ApiException ae && (ae.Code == 401 || ae.Code == 403)) _token = null;
 
-                if (ex.GetTrue() is not HttpRequestException)
+                var ex2 = ex is AggregateException aex ? aex.InnerException : ex;
+                if (ex2 is TaskCanceledException || 
+                    ex2 is HttpRequestException ||
+                    ex2 is SocketException) 
+                    Log?.Error("无法连接服务端：{0}", (Client as ApiHttpClient)?.Source);
+
+                if (ex2 is not HttpRequestException)
                     Log?.Error(ex + "");
 
                 if (_fails.Count < MaxFails) _fails.Enqueue(model);
