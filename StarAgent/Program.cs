@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Threading;
 using NewLife;
@@ -306,6 +308,25 @@ namespace StarAgent
                     val = val.ToDouble().ToString("p2");
 
                 XTrace.WriteLine("{0}:\t{1}", pi.Name, val);
+            }
+
+            // 网络信息
+            XTrace.WriteLine("NetworkAvailable:{0}", NetworkInterface.GetIsNetworkAvailable());
+            foreach (var item in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                //if (item.OperationalStatus != OperationalStatus.Up) continue;
+                if (item.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
+
+                XTrace.WriteLine("{0}\t{1}\t{2}\t{3}", item.NetworkInterfaceType, item.OperationalStatus, item.GetPhysicalAddress().GetAddressBytes().ToHex("-"), item.Name);
+                var ipp = item.GetIPProperties();
+                if (ipp != null && ipp.UnicastAddresses.Any(e => e.Address.IsIPv4()))
+                {
+                    XTrace.WriteLine("\tIP:\t{0}", ipp.UnicastAddresses.Where(e => e.Address.IsIPv4()).Join(",", e => e.Address));
+                    if (ipp.GatewayAddresses.Any(e => e.Address.IsIPv4()))
+                        XTrace.WriteLine("\tGateway:{0}", ipp.GatewayAddresses.Where(e => e.Address.IsIPv4()).Join(",", e => e.Address));
+                    if (ipp.DnsAddresses.Any(e => e.IsIPv4()))
+                        XTrace.WriteLine("\tDns:\t{0}", ipp.DnsAddresses.Where(e => e.IsIPv4()).Join());
+                }
             }
         }
 
