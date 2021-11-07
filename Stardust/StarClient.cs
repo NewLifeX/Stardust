@@ -493,8 +493,8 @@ namespace Stardust
             _timer = null;
 
 #if !NET4
-            if (_websocket.State == WebSocketState.Open) _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default).Wait();
-            _source.Cancel();
+            if (_websocket != null && _websocket.State == WebSocketState.Open) _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default).Wait();
+            _source?.Cancel();
 
             //_websocket.TryDispose();
             _websocket = null;
@@ -627,22 +627,17 @@ namespace Stardust
                     //WriteLog("dis={0} {1}", dis.Length, source);
 
                     //!!! 此处递归删除，导致也删掉了Update里面的文件
-                    //// 更新覆盖之前，再次清理exe/dll/pdb
-                    //var time = DateTime.Now.ToString("yyMMddHHmmss");
-                    //foreach (var item in dest.AsDirectory().GetAllFiles("*.exe;*.dll;*.pdb", true))
-                    //{
-                    //    WriteLog("Delete {0}", item);
-                    //    try
-                    //    {
-                    //        item.Delete();
-                    //    }
-                    //    catch
-                    //    {
-                    //        var del = item.FullName + $".{time}.del";
-                    //        WriteLog("MoveTo {0}", del);
-                    //        item.MoveTo(del);
-                    //    }
-                    //}
+                    // 更新覆盖之前，需要把exe/dll可执行文件移走，否则Linux下覆盖运行中文件会报段错误
+                    var time = DateTime.Now.ToString("yyMMddHHmmss");
+                    foreach (var item in dest.AsDirectory().GetAllFiles("*.exe;*.dll", false))
+                    {
+                        //WriteLog("Delete {0}", item);
+
+                        var del = item.FullName + $".{time}.del";
+                        WriteLog("MoveTo {0}", del);
+                        if (File.Exists(del)) File.Delete(del);
+                        item.MoveTo(del);
+                    }
 
                     // 覆盖
                     ug.CopyAndReplace(source, dest);

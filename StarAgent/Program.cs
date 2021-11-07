@@ -14,7 +14,6 @@ using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust;
-using Stardust.Models;
 
 namespace StarAgent
 {
@@ -234,6 +233,18 @@ namespace StarAgent
             var set = Setting.Current;
             var channel = set.Channel;
 
+            // 去除多余入口文件
+            if (Runtime.Windows || Runtime.Mono)
+            {
+                var file = "StarAgent".GetFullPath();
+                if (File.Exists(file)) File.Delete(file);
+            }
+            else if (Runtime.Linux)
+            {
+                var file = "StarAgent.exe".GetFullPath();
+                if (File.Exists(file)) File.Delete(file);
+            }
+
             // 检查更新
             var ur = client.Upgrade(channel).Result;
             if (ur != null)
@@ -253,8 +264,26 @@ namespace StarAgent
                         star = "StarAgent";
                     if (!star.IsNullOrEmpty())
                     {
-                        XTrace.WriteLine("强制升级，拉起进程 {0} -run -upgrade", star.GetFullPath());
-                        Process.Start(star.GetFullPath(), "-run -upgrade");
+                        var file = star.GetFullPath();
+                        if (Runtime.Linux)
+                        {
+                            XTrace.WriteLine("Linux系统需要给予文件可执行权限");
+                            //Process.Start("chmod", "+x " + file);
+                            Process.Start(new ProcessStartInfo("chmod", "+x " + file) { UseShellExecute = true });
+                            // 授权文件可执行权限以后，需要等一会才能生效
+                            Thread.Sleep(1000);
+                        }
+
+                        XTrace.WriteLine("强制升级，拉起进程 {0} -run -upgrade", file);
+                        Process.Start(file, "-run -upgrade");
+                    }
+                    else
+                    {
+                        star = "StarAgent.dll";
+                        if (File.Exists(star))
+                        {
+                            Process.Start("dotnet", $"{star} -run -upgrade");
+                        }
                     }
 
                     Environment.Exit(0);
