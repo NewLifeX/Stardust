@@ -68,6 +68,14 @@ namespace StarAgent
                     }
                 }
             }
+
+            // 定时重启
+            var set2 = NewLife.Agent.Setting.Current;
+            if (set2.AutoRestart == 0)
+            {
+                set2.AutoRestart = 24 * 60;
+                set2.Save();
+            }
         }
 
         private ApiServer _server;
@@ -268,6 +276,7 @@ namespace StarAgent
                         if (Runtime.Linux)
                         {
                             XTrace.WriteLine("Linux系统需要给予文件可执行权限");
+                            // 执行Shell命令，要求 UseShellExecute = true
                             //Process.Start("chmod", "+x " + file);
                             Process.Start(new ProcessStartInfo("chmod", "+x " + file) { UseShellExecute = true });
                             // 授权文件可执行权限以后，需要等一会才能生效
