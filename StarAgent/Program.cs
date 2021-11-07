@@ -317,7 +317,9 @@ namespace StarAgent
                 //if (item.OperationalStatus != OperationalStatus.Up) continue;
                 if (item.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
 
-                XTrace.WriteLine("{0}\t{1}\t{2}\t{3}", item.NetworkInterfaceType, item.OperationalStatus, item.GetPhysicalAddress().GetAddressBytes().ToHex("-"), item.Name);
+                XTrace.WriteLine("{0} {1} {2}", item.NetworkInterfaceType, item.OperationalStatus, item.Name);
+                XTrace.WriteLine("\tDescription:\t{0}", item.Description);
+                XTrace.WriteLine("\tMac:\t{0}", item.GetPhysicalAddress().GetAddressBytes().ToHex("-"));
                 var ipp = item.GetIPProperties();
                 if (ipp != null && ipp.UnicastAddresses.Any(e => e.Address.IsIPv4()))
                 {
