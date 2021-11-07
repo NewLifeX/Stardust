@@ -142,6 +142,12 @@ namespace Stardust.Data.Nodes
                 if (runtime.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(runtime))) return false;
             }
 
+            if (Rules.TryGetValue("os", out vs))
+            {
+                var os = node.OS;
+                if (os.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(os))) return false;
+            }
+
             if (Rules.TryGetValue("province", out vs))
             {
                 var province = node.ProvinceID + "";

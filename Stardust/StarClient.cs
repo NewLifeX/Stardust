@@ -623,25 +623,30 @@ namespace Stardust
                     if (Directory.Exists(source)) Directory.Delete(source, true);
                     source.EnsureDirectory(false);
                     fileName.AsFile().Extract(source, true);
+                    //var dis = source.AsDirectory().GetAllFiles(null, true).ToArray();
+                    //WriteLog("dis={0} {1}", dis.Length, source);
 
-                    // 更新覆盖之前，再次清理exe/dll/pdb
-                    foreach (var item in dest.AsDirectory().GetAllFiles("*.exe;*.dll;*.pdb", true))
-                    {
-                        WriteLog("Delete {0}", item);
-                        try
-                        {
-                            item.Delete();
-                        }
-                        catch
-                        {
-                            var del = item.FullName + $".{Rand.Next(100000, 999999)}.del";
-                            item.MoveTo(del);
-                        }
-                    }
+                    //!!! 此处递归删除，导致也删掉了Update里面的文件
+                    //// 更新覆盖之前，再次清理exe/dll/pdb
+                    //var time = DateTime.Now.ToString("yyMMddHHmmss");
+                    //foreach (var item in dest.AsDirectory().GetAllFiles("*.exe;*.dll;*.pdb", true))
+                    //{
+                    //    WriteLog("Delete {0}", item);
+                    //    try
+                    //    {
+                    //        item.Delete();
+                    //    }
+                    //    catch
+                    //    {
+                    //        var del = item.FullName + $".{time}.del";
+                    //        WriteLog("MoveTo {0}", del);
+                    //        item.MoveTo(del);
+                    //    }
+                    //}
 
                     // 覆盖
                     ug.CopyAndReplace(source, dest);
-                    if (Directory.Exists(source)) Directory.Delete(source, true);
+                    //if (Directory.Exists(source)) Directory.Delete(source, true);
                 }
 
                 // 升级处理命令，可选
