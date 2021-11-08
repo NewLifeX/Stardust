@@ -102,7 +102,7 @@ namespace Stardust
             }
         }
 
-        private void DoWork(Object state)
+        private async Task DoWork(Object state)
         {
             //Ping().Wait();
 
@@ -122,13 +122,13 @@ namespace Stardust
                     svc.Address = address;
                 }
 
-                RegisterAsync(svc).Wait();
+                await RegisterAsync(svc);
             }
 
             foreach (var item in _consumeServices)
             {
                 var svc = item.Value;
-                var ms = ResolveAsync(svc).Result;
+                var ms = await ResolveAsync(svc);
                 if (ms != null && ms.Length > 0)
                 {
                     //_consumes.TryAdd(svc.ServiceName, ms);

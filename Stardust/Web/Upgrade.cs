@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 using NewLife;
 using NewLife.Http;
 using NewLife.Log;
-using NewLife.Security;
-using Stardust.Models;
 #if !NET40
 using TaskEx = System.Threading.Tasks.Task;
 #endif
@@ -51,7 +49,7 @@ namespace Stardust.Web
 
         #region 方法
         /// <summary>开始更新</summary>
-        public virtual Boolean Download()
+        public virtual async Task<Boolean> Download()
         {
             var url = Url;
             if (url.IsNullOrEmpty()) return false;
@@ -67,7 +65,7 @@ namespace Stardust.Web
             var sw = Stopwatch.StartNew();
 
             var web = CreateClient();
-            TaskEx.Run(() => web.DownloadFileAsync(url, file)).Wait();
+            await web.DownloadFileAsync(url, file);
 
             sw.Stop();
             WriteLog("下载完成！大小{0:n0}字节，耗时{1:n0}ms", file.AsFile().Length, sw.ElapsedMilliseconds);
@@ -134,17 +132,22 @@ namespace Stardust.Web
             if (Runtime.Linux)
             {
                 // 执行Shell命令，要求 UseShellExecute = true
-                Process.Start(new ProcessStartInfo("chmod", "+x " + file) { UseShellExecute = true });
+                RunShell("chmod", "+x " + file);
                 // 授权文件可执行权限以后，需要等一会才能生效
                 Thread.Sleep(1000);
             }
 
             WriteLog("拉起进程 {0} {1}", file, args);
             if (file.EndsWithIgnoreCase(".dll"))
-                Process.Start("dotnet", $"{file} {args}");
+                RunShell("dotnet", $"{file} {args}");
             else
-                Process.Start(file, args);
+                RunShell(file, args);
             Thread.Sleep(1000);
+        }
+
+        static void RunShell(String fileName, String args)
+        {
+            Process.Start(new ProcessStartInfo(fileName, args) { UseShellExecute = true });
         }
 
         /// <summary>
@@ -170,20 +173,15 @@ namespace Stardust.Web
 
             WriteLog("执行命令：{0}", cmd);
 
-            var si = new ProcessStartInfo
-            {
-                UseShellExecute = true,
-            };
+            var args = "";
             var p = cmd.IndexOf(' ');
-            if (p < 0)
-                si.FileName = cmd;
-            else
+            if (p > 0)
             {
-                si.FileName = cmd.Substring(0, p);
-                si.Arguments = cmd.Substring(p + 1);
+                args = cmd.Substring(p + 1);
+                cmd = cmd.Substring(0, p);
             }
 
-            Process.Start(si);
+            RunShell(cmd, args);
         }
 
         /// <summary>
@@ -202,95 +200,6 @@ namespace Stardust.Web
             {
                 var file = (name2 + ".exe").GetFullPath();
                 if (File.Exists(file)) File.Delete(file);
-            }
-        }
-
-        /// <summary>执行更新</summary>
-        /// <param name="ur"></param>
-        /// <returns></returns>
-        public Boolean ProcessUpgrade(UpgradeInfo ur)
-        {
-            XTrace.WriteLine("执行更新：{0} {1}", ur.Version, ur.Source);
-
-            var dest = ".";
-            var url = ur.Source;
-
-            try
-            {
-                // 需要下载更新包
-                if (!url.IsNullOrEmpty())
-                {
-                    var fileName = Path.GetFileName(url);
-                    if (!fileName.EndsWithIgnoreCase(".zip")) fileName = Rand.NextString(8) + ".zip";
-                    fileName = "Update".CombinePath(fileName).EnsureDirectory(true);
-
-                    // 清理
-                    DeleteBackup(dest);
-
-                    // 下载
-                    var sw = Stopwatch.StartNew();
-                    var client = new HttpClient();
-                    client.DownloadFileAsync(url, fileName).Wait();
-
-                    sw.Stop();
-                    XTrace.WriteLine("下载 {0} 到 {1} 完成，耗时 {2} 。", url, fileName, sw.Elapsed);
-
-                    // 解压
-                    var source = fileName.TrimEnd(".zip");
-                    if (Directory.Exists(source)) Directory.Delete(source, true);
-                    source.EnsureDirectory(false);
-                    fileName.AsFile().Extract(source, true);
-                    //var dis = source.AsDirectory().GetAllFiles(null, true).ToArray();
-                    //WriteLog("dis={0} {1}", dis.Length, source);
-
-                    //!!! 此处递归删除，导致也删掉了Update里面的文件
-                    // 更新覆盖之前，需要把exe/dll可执行文件移走，否则Linux下覆盖运行中文件会报段错误
-                    var time = DateTime.Now.ToString("yyMMddHHmmss");
-                    foreach (var item in dest.AsDirectory().GetAllFiles("*.exe;*.dll", false))
-                    {
-                        //WriteLog("Delete {0}", item);
-
-                        var del = item.FullName + $".{time}.del";
-                        WriteLog("MoveTo {0}", del);
-                        if (File.Exists(del)) File.Delete(del);
-                        item.MoveTo(del);
-                    }
-
-                    // 覆盖
-                    CopyAndReplace(source, dest);
-                    //if (Directory.Exists(source)) Directory.Delete(source, true);
-                }
-
-                // 升级处理命令，可选
-                var cmd = ur.Executor?.Trim();
-                if (!cmd.IsNullOrEmpty())
-                {
-                    XTrace.WriteLine("执行更新命令：{0}", cmd);
-
-                    var si = new ProcessStartInfo
-                    {
-                        UseShellExecute = true,
-                    };
-                    var p = cmd.IndexOf(' ');
-                    if (p < 0)
-                        si.FileName = cmd;
-                    else
-                    {
-                        si.FileName = cmd.Substring(0, p);
-                        si.Arguments = cmd.Substring(p + 1);
-                    }
-
-                    Process.Start(si);
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                XTrace.WriteLine("更新失败！");
-                XTrace.WriteException(ex);
-
-                return false;
             }
         }
         #endregion

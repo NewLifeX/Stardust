@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
@@ -137,11 +138,11 @@ namespace StarAgent
             }
         }
 
-        private void TryConnectServer(Object state)
+        private async Task TryConnectServer(Object state)
         {
             var client = state as StarClient;
-            client.Login().Wait();
-            CheckUpgrade(client);
+            await client.Login();
+            await CheckUpgrade(client);
 
             _timer.TryDispose();
             _timer = new TimerX(CheckUpgrade, null, 600_000, 600_000) { Async = true };
@@ -234,24 +235,24 @@ namespace StarAgent
             _server = null;
         }
 
-        private void CheckUpgrade(Object data)
+        private async Task CheckUpgrade(Object data)
         {
             var client = _Client;
 
             // 运行过程中可能改变配置文件的通道
             var set = Setting.Current;
             var channel = set.Channel;
-            var ug = new Upgrade {  Log = XTrace.Log };
+            var ug = new Upgrade { Log = XTrace.Log };
 
             // 去除多余入口文件
             ug.Trim("StarAgent");
 
             // 检查更新
-            var ur = client.Upgrade(channel).Result;
+            var ur = await client.Upgrade(channel);
             if (ur != null)
             {
                 ug.Url = ur.Source;
-                ug.Download();
+                await ug.Download();
                 var rs = ug.Update();
                 if (rs && !ur.Executor.IsNullOrEmpty()) ug.Run(ur.Executor);
 
