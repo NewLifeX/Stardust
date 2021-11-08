@@ -158,7 +158,7 @@ namespace Stardust.Server
         {
             var dal = DAL.Create("Stardust");
             var tables = dal.Tables;
-            if (!tables.Any(e => e.TableName.EqualIgnoreCase("StarApp")))
+            if (tables != null && !tables.Any(e => e.TableName.EqualIgnoreCase("StarApp")))
             {
                 XTrace.WriteLine("未发现Star应用新表 StarApp");
 
