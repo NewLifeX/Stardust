@@ -94,7 +94,7 @@ namespace Stardust.Data.Nodes
         {
             var exp = new WhereExpression();
 
-            if (nodeId >= 0) exp &= _.NodeID == nodeId;
+            if (nodeId > 0) exp &= _.NodeID == nodeId;
             if (provinceId >= 0) exp &= _.ProvinceID == provinceId;
             if (cityId >= 0) exp &= _.CityID == cityId;
             if (!action.IsNullOrEmpty()) exp &= _.Action.In(action.Split(","));

@@ -493,8 +493,8 @@ namespace Stardust
             _timer = null;
 
 #if !NET4
-            if (_websocket.State == WebSocketState.Open) _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default).Wait();
-            _source.Cancel();
+            if (_websocket != null && _websocket.State == WebSocketState.Open) _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default).Wait();
+            _source?.Cancel();
 
             //_websocket.TryDispose();
             _websocket = null;
@@ -584,97 +584,6 @@ namespace Stardust
             }
 
             return rs;
-        }
-
-        /// <summary>执行更新</summary>
-        /// <param name="ur"></param>
-        /// <returns></returns>
-        public Boolean ProcessUpgrade(UpgradeInfo ur)
-        {
-            XTrace.WriteLine("执行更新：{0} {1}", ur.Version, ur.Source);
-
-            var dest = ".";
-            var url = ur.Source;
-
-            try
-            {
-                // 需要下载更新包
-                if (!url.IsNullOrEmpty())
-                {
-                    var fileName = Path.GetFileName(url);
-                    if (!fileName.EndsWithIgnoreCase(".zip")) fileName = Rand.NextString(8) + ".zip";
-                    fileName = "Update".CombinePath(fileName).EnsureDirectory(true);
-
-                    // 清理
-                    //NewLife.Net.Upgrade.DeleteBuckup(dest);
-                    var ug = new Upgrade { Log = XTrace.Log };
-                    ug.DeleteBackup(dest);
-
-                    // 下载
-                    var sw = Stopwatch.StartNew();
-                    var client = new HttpClient();
-                    client.DownloadFileAsync(url, fileName).Wait();
-
-                    sw.Stop();
-                    XTrace.WriteLine("下载 {0} 到 {1} 完成，耗时 {2} 。", url, fileName, sw.Elapsed);
-
-                    // 解压
-                    var source = fileName.TrimEnd(".zip");
-                    if (Directory.Exists(source)) Directory.Delete(source, true);
-                    source.EnsureDirectory(false);
-                    fileName.AsFile().Extract(source, true);
-
-                    // 更新覆盖之前，再次清理exe/dll/pdb
-                    foreach (var item in dest.AsDirectory().GetAllFiles("*.exe;*.dll;*.pdb", true))
-                    {
-                        WriteLog("Delete {0}", item);
-                        try
-                        {
-                            item.Delete();
-                        }
-                        catch
-                        {
-                            var del = item.FullName + $".{Rand.Next(100000, 999999)}.del";
-                            item.MoveTo(del);
-                        }
-                    }
-
-                    // 覆盖
-                    ug.CopyAndReplace(source, dest);
-                    if (Directory.Exists(source)) Directory.Delete(source, true);
-                }
-
-                // 升级处理命令，可选
-                var cmd = ur.Executor?.Trim();
-                if (!cmd.IsNullOrEmpty())
-                {
-                    XTrace.WriteLine("执行更新命令：{0}", cmd);
-
-                    var si = new ProcessStartInfo
-                    {
-                        UseShellExecute = true,
-                    };
-                    var p = cmd.IndexOf(' ');
-                    if (p < 0)
-                        si.FileName = cmd;
-                    else
-                    {
-                        si.FileName = cmd.Substring(0, p);
-                        si.Arguments = cmd.Substring(p + 1);
-                    }
-
-                    Process.Start(si);
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                XTrace.WriteLine("更新失败！");
-                XTrace.WriteException(ex);
-
-                return false;
-            }
         }
 
         /// <summary>更新</summary>

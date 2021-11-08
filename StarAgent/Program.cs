@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Threading;
 using NewLife;
@@ -12,7 +14,7 @@ using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust;
-using Stardust.Models;
+using Upgrade = Stardust.Web.Upgrade;
 
 namespace StarAgent
 {
@@ -66,6 +68,14 @@ namespace StarAgent
                         WriteLog("服务端修改为：{0}", addr);
                     }
                 }
+            }
+
+            // 定时重启
+            var set2 = NewLife.Agent.Setting.Current;
+            if (set2.AutoRestart == 0)
+            {
+                set2.AutoRestart = 24 * 60;
+                set2.Save();
             }
         }
 
@@ -231,33 +241,32 @@ namespace StarAgent
             // 运行过程中可能改变配置文件的通道
             var set = Setting.Current;
             var channel = set.Channel;
+            var ug = new Upgrade {  Log = XTrace.Log };
+
+            // 去除多余入口文件
+            ug.Trim("StarAgent");
 
             // 检查更新
             var ur = client.Upgrade(channel).Result;
             if (ur != null)
             {
-                var rs = client.ProcessUpgrade(ur);
+                ug.Url = ur.Source;
+                ug.Download();
+                var rs = ug.Update();
+                if (rs && !ur.Executor.IsNullOrEmpty()) ug.Run(ur.Executor);
+
+                // 去除多余入口文件
+                ug.Trim("StarAgent");
 
                 // 强制更新时，马上重启
                 if (rs && ur.Force)
                 {
+                    // 重新拉起进程
+                    ug.Run("StarAgent", "-run -upgrade");
+
                     StopWork("Upgrade");
 
-                    // 重新拉起进程
-                    var star = "";
-                    if (Runtime.Windows)
-                        star = "StarAgent.exe";
-                    else if (Runtime.Linux)
-                        star = "StarAgent";
-                    if (!star.IsNullOrEmpty())
-                    {
-                        XTrace.WriteLine("强制升级，拉起进程 {0} -run -upgrade", star.GetFullPath());
-                        Process.Start(star.GetFullPath(), "-run -upgrade");
-                    }
-
-                    Environment.Exit(0);
-                    var p = Process.GetCurrentProcess();
-                    p.Kill();
+                    ug.KillSelf();
                 }
             }
         }
@@ -306,6 +315,27 @@ namespace StarAgent
                     val = val.ToDouble().ToString("p2");
 
                 XTrace.WriteLine("{0}:\t{1}", pi.Name, val);
+            }
+
+            // 网络信息
+            XTrace.WriteLine("NetworkAvailable:{0}", NetworkInterface.GetIsNetworkAvailable());
+            foreach (var item in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                //if (item.OperationalStatus != OperationalStatus.Up) continue;
+                if (item.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
+
+                XTrace.WriteLine("{0} {1} {2}", item.NetworkInterfaceType, item.OperationalStatus, item.Name);
+                XTrace.WriteLine("\tDescription:\t{0}", item.Description);
+                XTrace.WriteLine("\tMac:\t{0}", item.GetPhysicalAddress().GetAddressBytes().ToHex("-"));
+                var ipp = item.GetIPProperties();
+                if (ipp != null && ipp.UnicastAddresses.Any(e => e.Address.IsIPv4()))
+                {
+                    XTrace.WriteLine("\tIP:\t{0}", ipp.UnicastAddresses.Where(e => e.Address.IsIPv4()).Join(",", e => e.Address));
+                    if (ipp.GatewayAddresses.Any(e => e.Address.IsIPv4()))
+                        XTrace.WriteLine("\tGateway:{0}", ipp.GatewayAddresses.Where(e => e.Address.IsIPv4()).Join(",", e => e.Address));
+                    if (ipp.DnsAddresses.Any(e => e.IsIPv4()))
+                        XTrace.WriteLine("\tDns:\t{0}", ipp.DnsAddresses.Where(e => e.IsIPv4()).Join());
+                }
             }
         }
 
