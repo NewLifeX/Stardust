@@ -14,6 +14,7 @@ using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust;
+using Upgrade = Stardust.Web.Upgrade;
 
 namespace StarAgent
 {
@@ -240,64 +241,32 @@ namespace StarAgent
             // 运行过程中可能改变配置文件的通道
             var set = Setting.Current;
             var channel = set.Channel;
+            var ug = new Upgrade {  Log = XTrace.Log };
 
             // 去除多余入口文件
-            if (Runtime.Windows || Runtime.Mono)
-            {
-                var file = "StarAgent".GetFullPath();
-                if (File.Exists(file)) File.Delete(file);
-            }
-            else if (Runtime.Linux)
-            {
-                var file = "StarAgent.exe".GetFullPath();
-                if (File.Exists(file)) File.Delete(file);
-            }
+            ug.Trim("StarAgent");
 
             // 检查更新
             var ur = client.Upgrade(channel).Result;
             if (ur != null)
             {
-                var rs = client.ProcessUpgrade(ur);
+                ug.Url = ur.Source;
+                ug.Download();
+                var rs = ug.Update();
+                if (rs && !ur.Executor.IsNullOrEmpty()) ug.Run(ur.Executor);
+
+                // 去除多余入口文件
+                ug.Trim("StarAgent");
 
                 // 强制更新时，马上重启
                 if (rs && ur.Force)
                 {
+                    // 重新拉起进程
+                    ug.Run("StarAgent", "-run -upgrade");
+
                     StopWork("Upgrade");
 
-                    // 重新拉起进程
-                    var star = "";
-                    if (Runtime.Windows)
-                        star = "StarAgent.exe";
-                    else if (Runtime.Linux)
-                        star = "StarAgent";
-                    if (!star.IsNullOrEmpty())
-                    {
-                        var file = star.GetFullPath();
-                        if (Runtime.Linux)
-                        {
-                            XTrace.WriteLine("Linux系统需要给予文件可执行权限");
-                            // 执行Shell命令，要求 UseShellExecute = true
-                            //Process.Start("chmod", "+x " + file);
-                            Process.Start(new ProcessStartInfo("chmod", "+x " + file) { UseShellExecute = true });
-                            // 授权文件可执行权限以后，需要等一会才能生效
-                            Thread.Sleep(1000);
-                        }
-
-                        XTrace.WriteLine("强制升级，拉起进程 {0} -run -upgrade", file);
-                        Process.Start(file, "-run -upgrade");
-                    }
-                    else
-                    {
-                        star = "StarAgent.dll";
-                        if (File.Exists(star))
-                        {
-                            Process.Start("dotnet", $"{star} -run -upgrade");
-                        }
-                    }
-
-                    Environment.Exit(0);
-                    var p = Process.GetCurrentProcess();
-                    p.Kill();
+                    ug.KillSelf();
                 }
             }
         }
