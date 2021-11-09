@@ -129,7 +129,11 @@ namespace Stardust.Web
                 file = name + ".dll";
 
             file = file.GetFullPath();
-            if (Runtime.Linux)
+
+            // 如果入口文件不存在，则直接使用dll启动
+            if (!File.Exists(file))
+                file = (name + ".dll").GetFullPath();
+            else if (Runtime.Linux)
             {
                 // 执行Shell命令，要求 UseShellExecute = true
                 RunShell("chmod", "+x " + file);
