@@ -262,10 +262,18 @@ namespace StarAgent
                 // 强制更新时，马上重启
                 if (rs && ur.Force)
                 {
-                    // 重新拉起进程
-                    ug.Run("StarAgent", "-run -upgrade");
+                    // 以服务方式运行时，重启服务，否则采取拉起进程的方式
+                    if (Host is Host host && host.InService)
+                    {
+                        Host.Restart("StarAgent");
+                    }
+                    else
+                    {
+                        // 重新拉起进程
+                        ug.Run("StarAgent", "-run -upgrade");
 
-                    StopWork("Upgrade");
+                        StopWork("Upgrade");
+                    }
 
                     ug.KillSelf();
                 }

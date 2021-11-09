@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net50;netcoreapp3.1;net45;net40;net60</TargetFrameworks>
+    <TargetFrameworks>net5.0;netcoreapp3.1;net45;net40;net6.0</TargetFrameworks>
     <AssemblyTitle>星尘代理</AssemblyTitle>
     <Description>星尘，分布式资源调度，客户端代理部署于每一台机器节点，接受服务端命令，获取目标应用包并拉起进程。</Description>
     <Company>新生命开发团队</Company>
@@ -43,21 +43,12 @@
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='netcoreapp2.1'">
-    <PackageReference Include="System.ServiceProcess.ServiceController" Version="4.5.0" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NewLife.Agent" Version="8.8.2021.1109" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Stardust\Stardust.csproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
-    <PackageReference Include="NewLife.Agent">
-      <Version>8.1.2019.618</Version>
-    </PackageReference>
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
