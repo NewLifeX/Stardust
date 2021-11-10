@@ -131,7 +131,7 @@ namespace Stardust.Web
         }
 
         /// <summary>启动当前应用的新进程。当前进程退出</summary>
-        public void Run(String name, String args)
+        public Boolean Run(String name, String args)
         {
             var file = "";
             if (Runtime.Windows || Runtime.Mono)
@@ -155,17 +155,15 @@ namespace Stardust.Web
             }
 
             WriteLog("拉起进程 {0} {1}", file, args);
-            if (file.EndsWithIgnoreCase(".dll"))
-                RunShell("dotnet", $"{file} {args}");
-            else
+            var p = file.EndsWithIgnoreCase(".dll") ?
+                RunShell("dotnet", $"{file} {args}") :
                 RunShell(file, args);
-            Thread.Sleep(1000);
+
+            // 如果进程在指定时间退出，说明启动失败
+            return !p.WaitForExit(1000);
         }
 
-        static void RunShell(String fileName, String args)
-        {
-            Process.Start(new ProcessStartInfo(fileName, args) { UseShellExecute = true });
-        }
+        static Process RunShell(String fileName, String args) => Process.Start(new ProcessStartInfo(fileName, args) { UseShellExecute = true });
 
         /// <summary>
         /// 自杀

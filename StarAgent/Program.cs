@@ -270,17 +270,17 @@ namespace StarAgent
                         // 以服务方式运行时，重启服务，否则采取拉起进程的方式
                         if (Host is Host host && host.InService)
                         {
-                            Host.Restart("StarAgent");
+                            rs = Host.Restart("StarAgent");
                         }
                         else
                         {
                             // 重新拉起进程
-                            ug.Run("StarAgent", "-run -upgrade");
+                            rs = ug.Run("StarAgent", "-run -upgrade");
 
-                            StopWork("Upgrade");
+                            if (rs) StopWork("Upgrade");
                         }
 
-                        ug.KillSelf();
+                        if (rs) ug.KillSelf();
                     }
                 }
             }
