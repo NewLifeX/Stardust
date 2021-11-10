@@ -552,8 +552,10 @@ namespace Stardust.Server.Controllers
             var url = pv.Version;
             if (!url.StartsWithIgnoreCase("http://", "https://"))
             {
-                url = HttpContext.Request.Path + "";
-                url += "/Node/GetFile?id=" + pv.ID;
+                var uri = Request.GetRawUrl().ToString();
+                var p = uri.IndexOf('/', "https://".Length);
+                if (p > 0) uri = uri.Substring(0, p);
+                url = $"{uri}/Node/GetFile?id={pv.ID}";
             }
 
             WriteHistory(node, "自动更新", true, $"channel={ch} => [{pv.ID}] {pv.Version} {url} {pv.Executor}");
@@ -575,11 +577,11 @@ namespace Stardust.Server.Controllers
             var nv = NodeVersion.FindByID(id);
             if (nv == null || !nv.Enable) throw new Exception("非法参数");
 
-            var updatePath = "Uploads";
-            var file = updatePath.CombinePath(nv.Source).GetFullPath();
-            if (!System.IO.File.Exists(file)) throw new Exception("非法参数");
+            var updatePath = "../Uploads";
+            var fi = updatePath.CombinePath(nv.Source).AsFile();
+            if (!fi.Exists) throw new Exception("文件不存在");
 
-            return File(file, null);
+            return File(fi.OpenRead(), "application/octet-stream", Path.GetFileName(nv.Source));
         }
         #endregion
 

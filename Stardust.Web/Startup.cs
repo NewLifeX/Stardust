@@ -93,12 +93,12 @@ namespace Stardust.Web
                 set.DataPath = "../Data";
                 set.Save();
             }
-            //var set2 = XCode.Setting.Current;
-            //if (set2.IsNew)
-            //{
-            //    set2.Migration = Migration.ReadOnly;
-            //    set2.Save();
-            //}
+            var set2 = NewLife.Cube.Setting.Current;
+            if (set2.IsNew)
+            {
+                set2.UploadPath = "../Uploads";
+                set2.Save();
+            }
         }
 
         private static void FixAppTableName()

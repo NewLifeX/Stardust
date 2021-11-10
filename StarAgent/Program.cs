@@ -253,29 +253,35 @@ namespace StarAgent
             {
                 ug.Url = ur.Source;
                 await ug.Download();
-                var rs = ug.Update();
-                if (rs && !ur.Executor.IsNullOrEmpty()) ug.Run(ur.Executor);
 
-                // 去除多余入口文件
-                ug.Trim("StarAgent");
-
-                // 强制更新时，马上重启
-                if (rs && ur.Force)
+                // 检查文件完整性
+                if (ur.FileHash.IsNullOrEmpty() || ug.CheckFileHash(ur.FileHash))
                 {
-                    // 以服务方式运行时，重启服务，否则采取拉起进程的方式
-                    if (Host is Host host && host.InService)
-                    {
-                        Host.Restart("StarAgent");
-                    }
-                    else
-                    {
-                        // 重新拉起进程
-                        ug.Run("StarAgent", "-run -upgrade");
+                    // 执行更新，解压缩覆盖文件
+                    var rs = ug.Update();
+                    if (rs && !ur.Executor.IsNullOrEmpty()) ug.Run(ur.Executor);
 
-                        StopWork("Upgrade");
-                    }
+                    // 去除多余入口文件
+                    ug.Trim("StarAgent");
 
-                    ug.KillSelf();
+                    // 强制更新时，马上重启
+                    if (rs && ur.Force)
+                    {
+                        // 以服务方式运行时，重启服务，否则采取拉起进程的方式
+                        if (Host is Host host && host.InService)
+                        {
+                            Host.Restart("StarAgent");
+                        }
+                        else
+                        {
+                            // 重新拉起进程
+                            ug.Run("StarAgent", "-run -upgrade");
+
+                            StopWork("Upgrade");
+                        }
+
+                        ug.KillSelf();
+                    }
                 }
             }
         }

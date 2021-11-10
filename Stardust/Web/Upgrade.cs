@@ -6,11 +6,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using NewLife;
-using NewLife.Http;
 using NewLife.Log;
-#if !NET40
-using TaskEx = System.Threading.Tasks.Task;
-#endif
 
 namespace Stardust.Web
 {
@@ -60,19 +56,36 @@ namespace Stardust.Web
             var file = UpdatePath.CombinePath(fileName).GetBasePath();
             if (File.Exists(file)) File.Delete(file); ;
 
-            WriteLog("准备下载 {0} 到 {1}", url, file);
+            WriteLog("准备下载 {0}", url);
 
             var sw = Stopwatch.StartNew();
 
             var web = CreateClient();
-            await web.DownloadFileAsync(url, file);
+            //await web.DownloadFileAsync(url, file);
+            file = await DownloadFileAsync(web, url, file);
 
             sw.Stop();
-            WriteLog("下载完成！大小{0:n0}字节，耗时{1:n0}ms", file.AsFile().Length, sw.ElapsedMilliseconds);
+            WriteLog("下载完成！{2} 大小{0:n0}字节，耗时{1:n0}ms", file.AsFile().Length, sw.ElapsedMilliseconds, file);
 
             SourceFile = file;
 
             return true;
+        }
+
+        /// <summary>
+        /// 检查文件散列，避免文件损坏
+        /// </summary>
+        /// <param name="hash"></param>
+        /// <returns></returns>
+        public Boolean CheckFileHash(String hash)
+        {
+            if (hash.IsNullOrEmpty()) return false;
+
+            var fi = SourceFile.AsFile();
+            if (!fi.Exists) return false;
+
+            var md5 = fi.MD5().ToHex();
+            return md5.EqualIgnoreCase(hash);
         }
 
         /// <summary>检查并执行更新操作</summary>
@@ -215,6 +228,27 @@ namespace Stardust.Web
             if (_Client != null) return _Client;
 
             return _Client = new HttpClient();
+        }
+
+        /// <summary>下载文件</summary>
+        /// <param name="client"></param>
+        /// <param name="address"></param>
+        /// <param name="fileName"></param>
+        public static async Task<String> DownloadFileAsync(HttpClient client, String address, String fileName)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, address);
+            var rs = await client.SendAsync(request);
+            rs.EnsureSuccessStatusCode();
+
+            var file2 = rs.Content.Headers?.ContentDisposition?.FileName;
+            if (!file2.IsNullOrEmpty()) fileName = Path.GetDirectoryName(fileName).CombinePath(file2);
+            fileName.EnsureDirectory(true);
+
+            var ms = rs.Content;
+            using var fs = new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            await ms.CopyToAsync(fs);
+
+            return fileName;
         }
 
         /// <summary>删除备份文件</summary>
