@@ -94,6 +94,18 @@ namespace Stardust.Data.Nodes
 
             //return Find(_.ID == id);
         }
+
+        /// <summary>
+        /// 根据版本查找
+        /// </summary>
+        /// <param name="version"></param>
+        /// <returns></returns>
+        public static NodeVersion FindByVersion(String version)
+        {
+            if (version.IsNullOrEmpty()) return null;
+
+            return Find(_.Version == version);
+        }
         #endregion
 
         #region 高级查询
