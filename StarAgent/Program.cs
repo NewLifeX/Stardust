@@ -85,6 +85,7 @@ namespace StarAgent
         private StarClient _Client;
         private StarFactory _factory;
         private ServiceManager _Manager;
+        private String _lastVersion;
 
         public void StartClient()
         {
@@ -249,7 +250,7 @@ namespace StarAgent
 
             // 检查更新
             var ur = await client.Upgrade(channel);
-            if (ur != null)
+            if (ur != null && ur.Version != _lastVersion)
             {
                 ug.Url = ur.Source;
                 await ug.Download();
@@ -260,6 +261,7 @@ namespace StarAgent
                     // 执行更新，解压缩覆盖文件
                     var rs = ug.Update();
                     if (rs && !ur.Executor.IsNullOrEmpty()) ug.Run(ur.Executor);
+                    _lastVersion = ur.Version;
 
                     // 去除多余入口文件
                     ug.Trim("StarAgent");
