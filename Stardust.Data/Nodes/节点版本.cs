@@ -72,8 +72,16 @@ namespace Stardust.Data.Nodes
         [DisplayName("升级源")]
         [Description("升级源")]
         [DataObjectField(false, false, true, 200)]
-        [BindColumn("Source", "升级源", "")]
+        [BindColumn("Source", "升级源", "", ItemType = "file")]
         public String Source { get => _Source; set { if (OnPropertyChanging("Source", value)) { _Source = value; OnPropertyChanged("Source"); } } }
+
+        private String _FileHash;
+        /// <summary>文件哈希。MD5散列</summary>
+        [DisplayName("文件哈希")]
+        [Description("文件哈希。MD5散列")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("FileHash", "文件哈希。MD5散列", "")]
+        public String FileHash { get => _FileHash; set { if (OnPropertyChanging("FileHash", value)) { _FileHash = value; OnPropertyChanged("FileHash"); } } }
 
         private String _Executor;
         /// <summary>执行命令。空格前后为文件名和参数</summary>
@@ -157,6 +165,7 @@ namespace Stardust.Data.Nodes
                     case "Channel": return _Channel;
                     case "Strategy": return _Strategy;
                     case "Source": return _Source;
+                    case "FileHash": return _FileHash;
                     case "Executor": return _Executor;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -179,6 +188,7 @@ namespace Stardust.Data.Nodes
                     case "Channel": _Channel = (NodeChannels)value.ToInt(); break;
                     case "Strategy": _Strategy = Convert.ToString(value); break;
                     case "Source": _Source = Convert.ToString(value); break;
+                    case "FileHash": _FileHash = Convert.ToString(value); break;
                     case "Executor": _Executor = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -217,6 +227,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>升级源</summary>
             public static readonly Field Source = FindByName("Source");
+
+            /// <summary>文件哈希。MD5散列</summary>
+            public static readonly Field FileHash = FindByName("FileHash");
 
             /// <summary>执行命令。空格前后为文件名和参数</summary>
             public static readonly Field Executor = FindByName("Executor");
@@ -268,6 +281,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>升级源</summary>
             public const String Source = "Source";
+
+            /// <summary>文件哈希。MD5散列</summary>
+            public const String FileHash = "FileHash";
 
             /// <summary>执行命令。空格前后为文件名和参数</summary>
             public const String Executor = "Executor";

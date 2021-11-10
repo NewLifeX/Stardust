@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
+using NewLife;
 using NewLife.Cube;
 using Stardust.Data.Nodes;
 using XCode;
@@ -44,6 +47,23 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             {
                 if (type != DataObjectMethodType.Update) LogProvider.Provider.WriteLog(type + "", entity, err);
             }
+        }
+
+        protected override IList<String> SaveFiles(NodeVersion entity, String uploadPath = null)
+        {
+            var rs = base.SaveFiles(entity, uploadPath);
+
+            // 更新文件哈希
+            if (rs.Count > 0 && !entity.Source.IsNullOrEmpty())
+            {
+                var fi = NewLife.Cube.Setting.Current.UploadPath.CombinePath(entity.Source).AsFile();
+                if (fi.Exists)
+                {
+                    entity.FileHash = fi.ReadBytes().MD5().ToHex();
+                }
+            }
+
+            return rs;
         }
     }
 }

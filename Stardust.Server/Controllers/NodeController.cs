@@ -549,16 +549,37 @@ namespace Stardust.Server.Controllers
             if (pv == null) return null;
             //if (pv == null) throw new ApiException(509, "没有升级规则");
 
-            WriteHistory(node, "自动更新", true, $"channel={ch} => [{pv.ID}] {pv.Version} {pv.Source} {pv.Executor}");
+            var url = pv.Version;
+            if (!url.StartsWithIgnoreCase("http://", "https://"))
+            {
+                url = HttpContext.Request.Path + "";
+                url += "/Node/GetFile?id=" + pv.ID;
+            }
+
+            WriteHistory(node, "自动更新", true, $"channel={ch} => [{pv.ID}] {pv.Version} {url} {pv.Executor}");
 
             return new UpgradeInfo
             {
                 Version = pv.Version,
-                Source = pv.Source,
+                Source = url,
+                FileHash = pv.FileHash,
                 Executor = pv.Executor,
                 Force = pv.Force,
                 Description = pv.Description,
             };
+        }
+
+        [HttpGet(nameof(GetFile))]
+        public ActionResult GetFile(Int32 id)
+        {
+            var nv = NodeVersion.FindByID(id);
+            if (nv == null || !nv.Enable) throw new Exception("非法参数");
+
+            var updatePath = "Uploads";
+            var file = updatePath.CombinePath(nv.Source).GetFullPath();
+            if (!System.IO.File.Exists(file)) throw new Exception("非法参数");
+
+            return File(file, null);
         }
         #endregion
 

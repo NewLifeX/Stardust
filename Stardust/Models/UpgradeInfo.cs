@@ -11,6 +11,9 @@ namespace Stardust.Models
         /// <summary>更新源，Url地址</summary>
         public String Source { get; set; }
 
+        /// <summary>文件哈希</summary>
+        public String FileHash { get; set; }
+
         /// <summary>更新后要执行的命令</summary>
         public String Executor { get; set; }
 

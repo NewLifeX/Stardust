@@ -51,6 +51,10 @@ namespace Stardust.Server
         [Description("监控告警周期。默认30秒")]
         public Int32 AlarmPeriod { get; set; } = 30;
 
+        /// <summary>服务端地址。用于下载更新包</summary>
+        [Description("服务端地址。用于下载更新包")]
+        public String ServerUrl { get; set; } = "";
+
         /// <summary>控制台地址。用于监控告警地址</summary>
         [Description("控制台地址。用于监控告警地址")]
         public String WebUrl { get; set; } = "";
