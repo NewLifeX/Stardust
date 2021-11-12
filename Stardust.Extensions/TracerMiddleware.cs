@@ -37,7 +37,7 @@ namespace Stardust.Extensions
                 if (!action.IsNullOrEmpty())
                 {
                     // 聚合请求头作为强制采样的数据标签
-                    var vs = ctx.Request.Headers.ToDictionary(e => e.Key, e => e.Value + "");
+                    var vs = ctx.Request.Headers.Where(e => !e.Key.EqualIgnoreCase(ExcludeHeaders)).ToDictionary(e => e.Key, e => e.Value + "");
 
                     span = Tracer.NewSpan(action);
                     span.Tag = $"{ctx.GetUserHost()} {ctx.Request.Method} {ctx.Request.GetRawUrl()}";
@@ -69,6 +69,11 @@ namespace Stardust.Extensions
                 span?.Dispose();
             }
         }
+
+        /// <summary>忽略的头部</summary>
+        public static String[] ExcludeHeaders { get; set; } = new[] {
+            "traceparent", "Authorization", "Cookie"
+        };
 
         /// <summary>忽略的后缀</summary>
         public static String[] ExcludeSuffixes { get; set; } = new[] {
