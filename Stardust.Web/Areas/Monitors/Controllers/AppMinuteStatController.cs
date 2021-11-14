@@ -155,5 +155,19 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
             return list;
         }
+
+        /// <summary>菜单不可见</summary>
+        /// <param name="menu"></param>
+        /// <returns></returns>
+        protected override IDictionary<System.Reflection.MethodInfo, Int32> ScanActionMenu(XCode.Membership.IMenu menu)
+        {
+            if (menu.Visible)
+            {
+                menu.Visible = false;
+                (menu as XCode.IEntity).Update();
+            }
+
+            return base.ScanActionMenu(menu);
+        }
     }
 }
