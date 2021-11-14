@@ -318,11 +318,11 @@ namespace Stardust.Data.Nodes
         public Int32 AlarmTcp { get => _AlarmTcp; set { if (OnPropertyChanging("AlarmTcp", value)) { _AlarmTcp = value; OnPropertyChanged("AlarmTcp"); } } }
 
         private String _AlarmProcesses;
-        /// <summary>进程告警。要守护的进程不存在时告警，多进程逗号隔开</summary>
+        /// <summary>进程告警。要守护的进程不存在时告警，多进程逗号隔开，支持*模糊匹配</summary>
         [DisplayName("进程告警")]
-        [Description("进程告警。要守护的进程不存在时告警，多进程逗号隔开")]
+        [Description("进程告警。要守护的进程不存在时告警，多进程逗号隔开，支持*模糊匹配")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("AlarmProcesses", "进程告警。要守护的进程不存在时告警，多进程逗号隔开", "")]
+        [BindColumn("AlarmProcesses", "进程告警。要守护的进程不存在时告警，多进程逗号隔开，支持*模糊匹配", "")]
         public String AlarmProcesses { get => _AlarmProcesses; set { if (OnPropertyChanging("AlarmProcesses", value)) { _AlarmProcesses = value; OnPropertyChanged("AlarmProcesses"); } } }
 
         private Boolean _AlarmOnOffline;
@@ -660,7 +660,7 @@ namespace Stardust.Data.Nodes
             /// <summary>连接数告警。TCP连接数达到该值时告警，包括连接数、主动关闭和被动关闭</summary>
             public static readonly Field AlarmTcp = FindByName("AlarmTcp");
 
-            /// <summary>进程告警。要守护的进程不存在时告警，多进程逗号隔开</summary>
+            /// <summary>进程告警。要守护的进程不存在时告警，多进程逗号隔开，支持*模糊匹配</summary>
             public static readonly Field AlarmProcesses = FindByName("AlarmProcesses");
 
             /// <summary>下线告警。节点下线时，发送告警</summary>
@@ -816,7 +816,7 @@ namespace Stardust.Data.Nodes
             /// <summary>连接数告警。TCP连接数达到该值时告警，包括连接数、主动关闭和被动关闭</summary>
             public const String AlarmTcp = "AlarmTcp";
 
-            /// <summary>进程告警。要守护的进程不存在时告警，多进程逗号隔开</summary>
+            /// <summary>进程告警。要守护的进程不存在时告警，多进程逗号隔开，支持*模糊匹配</summary>
             public const String AlarmProcesses = "AlarmProcesses";
 
             /// <summary>下线告警。节点下线时，发送告警</summary>

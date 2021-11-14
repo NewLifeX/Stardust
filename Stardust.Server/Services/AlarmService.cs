@@ -262,11 +262,10 @@ namespace Stardust.Server.Services
             if (!node.AlarmProcesses.IsNullOrEmpty())
             {
                 var olt = NodeOnline.FindByNodeId(node.ID);
-                if (olt != null && !olt.Data.IsNullOrEmpty())
+                if (olt != null && !olt.Processes.IsNullOrEmpty())
                 {
                     var alarms = node.AlarmProcesses.Split(",", StringSplitOptions.RemoveEmptyEntries);
-                    var dic = JsonParser.Decode(olt.Data);
-                    var ps = (dic["Processes"] as String)?.Split(",", StringSplitOptions.RemoveEmptyEntries);
+                    var ps = olt.Processes?.Split(",", StringSplitOptions.RemoveEmptyEntries);
                     if (alarms != null && alarms.Length > 0 && ps != null && ps.Length > 0)
                     {
                         // 查找丢失的进程

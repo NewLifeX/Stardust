@@ -307,11 +307,16 @@ namespace Stardust
         #endregion
 
         #region 心跳报告
-        private readonly String[] _excludes = new[] { "Idle", "System", "Registry", "smss", "csrss", "lsass", "wininit", "services", "winlogon", "fontdrvhost", "dwm", "svchost", "dllhost", "conhost", "taskhostw", "explorer", "ctfmon", "ChsIME", "WmiPrvSE", "WUDFHost", "igfxCUIServiceN", "igfxEMN", "sihost", "RuntimeBroker", "StartMenuExperienceHost", "SecurityHealthSystray", "SecurityHealthService", "ShellExperienceHost", "PerfWatson2", "audiodg" };
+        private readonly String[] _excludes = new[] { "Idle", "System", "Registry", "smss", "csrss", "lsass", "wininit", "services", "winlogon", "LogonUI", "SearchUI", "fontdrvhost", "dwm", "svchost", "dllhost", "conhost", "taskhostw", "explorer", "ctfmon", "ChsIME", "WmiPrvSE", "WUDFHost", "TabTip*", "igfxCUIServiceN", "igfxEMN", "smartscreen", "sihost", "RuntimeBroker", "StartMenuExperienceHost", "SecurityHealthSystray", "SecurityHealthService", "ShellExperienceHost", "PerfWatson2", "audiodg", "spoolsv",
+            "*ServiceHub*",
+            "systemd*", "cron", "rsyslogd", "sudo", "dbus*", "bash", "login", "networkd*", "kworker*", "ksoftirqd*", "migration*", "auditd", "polkitd", "atd"
+        };
 
         /// <summary>获取心跳信息</summary>
         public PingInfo GetHeartInfo()
         {
+            var exs = _excludes.Where(e => e.Contains("*")).ToArray();
+
             var ps = Process.GetProcesses();
             var pcs = new List<String>();
             foreach (var item in ps)
@@ -319,11 +324,13 @@ namespace Stardust
                 // 有些进程可能已退出，无法获取详细信息
                 try
                 {
+                    if (Runtime.Linux && item.SessionId == 0) continue;
+
                     var name = item.ProcessName;
-                    if (name.EqualIgnoreCase(_excludes)) continue;
+                    if (name.EqualIgnoreCase(_excludes) || exs.Any(e => e.IsMatch(name))) continue;
 
                     // 特殊处理dotnet
-                    if (name == "dotnet") name = AppInfo.GetProcessName(item);
+                    if (name == "dotnet" || "*/dotnet".IsMatch(name)) name = AppInfo.GetProcessName(item);
 
                     if (!pcs.Contains(name)) pcs.Add(name);
                 }
@@ -506,6 +513,8 @@ namespace Stardust
         private CancellationTokenSource _source;
         private async Task DoPing(Object state)
         {
+            DefaultSpan.Current = null;
+
             await Ping();
 
             var svc = _currentService;

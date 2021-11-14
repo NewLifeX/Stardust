@@ -229,7 +229,10 @@ namespace Stardust.Data.Nodes
             //if (!inf.COMs.IsNullOrEmpty()) olt.COMs = inf.COMs;
             if (!inf.IP.IsNullOrEmpty()) olt.IP = inf.IP;
 
-            olt.Data = inf.ToJson();
+            //olt.Data = inf.ToJson();
+            var dic = inf.ToDictionary();
+            dic.Remove("Processes");
+            olt.Data = dic.ToJson();
         }
 
         private void CreateData(PingInfo inf, String ip)

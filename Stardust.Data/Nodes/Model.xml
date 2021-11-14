@@ -39,7 +39,7 @@
       <Column Name="AlarmMemoryRate" DataType="Int32" Description="内存告警。内存告警的百分比阈值，内存使用率达到该值时告警，百分之一" />
       <Column Name="AlarmDiskRate" DataType="Int32" Description="磁盘告警。磁盘告警的百分比阈值，磁盘使用率达到该值时告警，百分之一" />
       <Column Name="AlarmTcp" DataType="Int32" Description="连接数告警。TCP连接数达到该值时告警，包括连接数、主动关闭和被动关闭" />
-      <Column Name="AlarmProcesses" DataType="String" Description="进程告警。要守护的进程不存在时告警，多进程逗号隔开" />
+      <Column Name="AlarmProcesses" DataType="String" Description="进程告警。要守护的进程不存在时告警，多进程逗号隔开，支持*模糊匹配" />
       <Column Name="AlarmOnOffline" DataType="Boolean" Description="下线告警。节点下线时，发送告警" />
       <Column Name="Logins" DataType="Int32" Description="登录次数" />
       <Column Name="LastLogin" DataType="DateTime" Description="最后登录" />

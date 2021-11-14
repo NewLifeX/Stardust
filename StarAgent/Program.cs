@@ -227,7 +227,8 @@ namespace StarAgent
             _Manager.Stop(reason);
             //_Manager.TryDispose();
 
-            _Client.TryDispose();
+            _Client?.Logout(reason);
+            //_Client.TryDispose();
             _Client = null;
 
             _factory = null;
