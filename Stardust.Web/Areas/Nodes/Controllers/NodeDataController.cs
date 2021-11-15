@@ -57,7 +57,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                     };
                     chart.SetX(list2, _.LocalTime, e => e.LocalTime.ToString("HH:mm"));
                     chart.SetY("指标");
-                    chart.AddLine(list2, _.CpuRate, e => (Int32)(e.CpuRate * 100), true);
+                    chart.AddLine(list2, _.CpuRate, e => Math.Round(e.CpuRate * 100), true);
 
                     var series = chart.Add(list2, _.AvailableMemory, "line", e => node.Memory == 0 ? 0 : (100 - (e.AvailableMemory * 100 / node.Memory)));
                     series.Name = "已用内存";
@@ -71,8 +71,8 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                     chart.Add(list2, _.TcpConnections);
                     chart.Add(list2, _.TcpTimeWait);
                     chart.Add(list2, _.TcpCloseWait);
-                    chart.Add(list2, _.Temperature);
-                    chart.Add(list2, _.Battery);
+                    chart.AddLine(list2, _.Temperature, e => Math.Round(e.Temperature, 2), true);
+                    chart.AddLine(list2, _.Battery, e => Math.Round(e.Battery * 100), true);
                     //chart.Add(list2, _.Offset);
                     chart.SetTooltip();
                     ViewBag.Charts = new[] { chart };
