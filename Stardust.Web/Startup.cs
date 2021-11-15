@@ -94,7 +94,7 @@ namespace Stardust.Web
                 set.Save();
             }
             var set2 = NewLife.Cube.Setting.Current;
-            if (set2.IsNew)
+            if (set2.IsNew && set2.UploadPath == "Uploads")
             {
                 set2.UploadPath = "../Uploads";
                 set2.Save();
