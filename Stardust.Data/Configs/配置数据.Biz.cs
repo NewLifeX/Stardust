@@ -175,7 +175,7 @@ namespace Stardust.Data.Configs
             if (!name.IsNullOrEmpty()) exp &= _.Key == name;
             if (!scope.IsNullOrEmpty()) exp &= _.Scope == scope;
             exp &= _.UpdateTime.Between(start, end);
-            if (!key.IsNullOrEmpty()) exp &= _.Value.Contains(key) | _.CreateIP.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
+            if (!key.IsNullOrEmpty()) exp &= _.Key.Contains(key) | _.Value.Contains(key) | _.CreateIP.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
 
             return FindAll(exp, page);
         }

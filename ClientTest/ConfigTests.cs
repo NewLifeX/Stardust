@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NewLife.Caching;
 using NewLife.Configuration;
+using NewLife.Model;
+using Stardust;
 using Xunit;
 
 namespace ClientTest
@@ -40,6 +43,22 @@ namespace ClientTest
                 var shop = prv["conn_shop"];
                 Assert.Equal("server=192.168.0.1;user=dev;pass=dev1234", shop);
             }
+        }
+
+        [Fact]
+        public void Redis_ConfigTest()
+        {
+            var star = new StarFactory("http://star.newlifex.com:6600", "Test", null);
+
+            var services = ObjectContainer.Current;
+            services.AddSingleton(star.Config);
+
+            services.AddSingleton(p => new Redis(p, "redis6"));
+
+            var provider = services.BuildServiceProvider();
+
+            var rds = provider.GetService<Redis>();
+            Assert.Equal(6, rds.Db);
         }
     }
 }
