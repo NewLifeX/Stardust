@@ -12,7 +12,7 @@ using NewLife.Net;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using Stardust.Models;
-#if !NET4
+#if !NET40
 using TaskEx = System.Threading.Tasks.Task;
 #endif
 

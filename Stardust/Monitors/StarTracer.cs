@@ -262,7 +262,7 @@ namespace Stardust.Monitors
             DefaultTracer.Instance = this;
             ApiHelper.Tracer = this;
 
-#if NET50
+#if NET5_0_OR_GREATER
             // 订阅Http事件
             var observer = new DiagnosticListenerObserver { Tracer = this };
             observer.Subscribe(new HttpDiagnosticListener());

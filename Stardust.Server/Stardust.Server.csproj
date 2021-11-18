@@ -4,11 +4,11 @@
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>StarServer</AssemblyName>
     <AssemblyTitle>星尘服务平台</AssemblyTitle>
-    <Description>星尘，分布式服务框架。分布式资源调度，服务自动注册和发现，负载均衡，动态伸缩，故障转移，性能监控。</Description>
+    <Description>星尘，分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2021 NewLife</Copyright>
-    <Version>1.1.2021.1031</Version>
-    <FileVersion>1.1.2021.1031</FileVersion>
+    <Version>1.1.2021.1118</Version>
+    <FileVersion>1.1.2021.1118</FileVersion>
     <AssemblyVersion>1.1.*</AssemblyVersion>
     <Deterministic>false</Deterministic>
     <OutputPath>..\Bin\Server</OutputPath>
@@ -18,14 +18,6 @@
     <DefineConstants>TRACE</DefineConstants>
     <LangVersion>latest</LangVersion>
     <UserSecretsId>377ee3b4-0b0b-46ea-9059-cca0d3fa451e</UserSecretsId>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp2.1'">
-    <DefineConstants>$(DefineConstants);NETSTANDARD2_0</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)'=='net45'">
-    <DefineConstants>$(DefineConstants);__WIN__</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -49,7 +41,6 @@
 
   <ItemGroup>
     <PackageReference Include="NewLife.Redis" Version="3.9.2021.1001" />
-    <PackageReference Include="NewLife.XCode" Version="10.3.2021.1109" />
   </ItemGroup>
 
   <ItemGroup>

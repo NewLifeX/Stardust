@@ -21,7 +21,7 @@ using NewLife.Threading;
 using Stardust.Models;
 using Stardust.Services;
 using System.Runtime.InteropServices;
-#if !NET4
+#if !NET40
 using System.Net.WebSockets;
 using WebSocket = System.Net.WebSockets.WebSocket;
 #endif
@@ -219,9 +219,7 @@ namespace Stardust
                 Time = DateTime.UtcNow,
             };
 
-#if __CORE__
-            di.Architecture = RuntimeInformation.ProcessArchitecture + "";
-#else
+#if NET40_OR_GREATER
             try
             {
                 // 收集屏幕相关信息。Mono+Linux无法获取
@@ -231,6 +229,8 @@ namespace Stardust
                 di.Resolution = $"{screen.Bounds.Width}*{screen.Bounds.Height}";
             }
             catch { }
+#else
+            di.Architecture = RuntimeInformation.ProcessArchitecture + "";
 #endif
 
             if (Runtime.Linux) di.MaxOpenFiles = Execute("bash", "-c \"ulimit -n\"")?.Trim().ToInt() ?? 0;
@@ -370,9 +370,7 @@ namespace Stardust
                 Time = DateTime.UtcNow.ToLong(),
                 Delay = Delay,
             };
-#if __CORE__
             //ext.Uptime = Environment.TickCount64 / 1000;
-#endif
             // 开始时间 Environment.TickCount 很容易溢出，导致开机24天后变成负数。
             // 后来在 netcore3.0 增加了Environment.TickCount64
             // 现在借助 Stopwatch 来解决
@@ -484,7 +482,7 @@ namespace Stardust
                 {
                     if (_timer == null)
                     {
-#if !NET4
+#if !NET40
                         _timer = new TimerX(DoPing, null, 1_000, 60_000, "Device") { Async = true };
 #else
                         _timer = new TimerX(s=>Ping().Wait(), null, 1_000, 60_000, "Device") { Async = true };
@@ -499,7 +497,7 @@ namespace Stardust
             _timer.TryDispose();
             _timer = null;
 
-#if !NET4
+#if !NET40
             if (_websocket != null && _websocket.State == WebSocketState.Open) _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default).Wait();
             _source?.Cancel();
 
@@ -508,7 +506,7 @@ namespace Stardust
 #endif
         }
 
-#if !NET4
+#if !NET40
         private WebSocket _websocket;
         private CancellationTokenSource _source;
         private async Task DoPing(Object state)

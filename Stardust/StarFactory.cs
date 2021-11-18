@@ -45,7 +45,12 @@ namespace Stardust
         #endregion
 
         #region 构造
-        /// <summary>指定地址、应用和密钥，创建工厂</summary>
+        /// <summary>
+        /// 实例化星尘工厂，先后读取appsettings.json、本地StarAgent、star.config
+        /// </summary>
+        public StarFactory() => Init();
+
+        /// <summary>实例化星尘工厂，指定地址、应用和密钥，创建工厂</summary>
         /// <param name="server">服务端地址。为空时先后读取appsettings.json、本地StarAgent、star.config</param>
         /// <param name="appId">应用标识。为空时读取star.config</param>
         /// <param name="secret">应用密钥。为空时读取star.config</param>
@@ -57,12 +62,6 @@ namespace Stardust
             Secret = secret;
 
             Init();
-
-            var ioc = ObjectContainer.Current;
-            ioc.AddSingleton(this);
-            ioc.AddSingleton(p => Tracer);
-            ioc.AddSingleton(p => Config);
-            ioc.AddSingleton(p => Service);
         }
 
         /// <summary>销毁</summary>
@@ -160,6 +159,12 @@ namespace Stardust
             }
 
             XTrace.WriteLine("星尘分布式服务 Server={0} AppId={1}", Server, AppId);
+
+            var ioc = ObjectContainer.Current;
+            ioc.AddSingleton(this);
+            ioc.AddSingleton(p => Tracer);
+            ioc.AddSingleton(p => Config);
+            ioc.AddSingleton(p => Service);
         }
         #endregion
 
@@ -320,7 +325,7 @@ namespace Stardust
         #endregion
 
         #region 日志
-        /// <summary>日志</summary>
+        /// <summary>日志。默认 XTrace.Log</summary>
         public ILog Log { get; set; } = XTrace.Log;
         #endregion
     }

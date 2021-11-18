@@ -2,7 +2,7 @@
 using System.IO;
 using NewLife.Log;
 using Stardust.Models;
-#if !__CORE__
+#if NET40_OR_GREATER
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
@@ -22,7 +22,7 @@ namespace Stardust.Services
 
         private Byte[] DoCapture(CommandModel command)
         {
-#if !__CORE__
+#if NET40_OR_GREATER
             if (command.Expire.Year < 2000 || command.Expire > DateTime.Now)
             {
                 return GetScreenCapture();
@@ -42,7 +42,7 @@ namespace Stardust.Services
             return null;
         }
 
-#if !__CORE__
+#if NET40_OR_GREATER
         private Byte[] GetScreenCapture()
         {
             // 获取dpi，需要 app.manifest 打开感知dpi
