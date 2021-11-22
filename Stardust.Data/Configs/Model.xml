@@ -13,6 +13,7 @@
       <Column Name="CanBeQuoted" DataType="Boolean" Description="可被依赖。打开后，才能被其它应用依赖" />
       <Column Name="Quotes" DataType="String" Description="依赖应用。所依赖应用的集合" />
       <Column Name="IsGlobal" DataType="Boolean" Description="全局。该应用下的配置数据作为全局数据，请求任意应用配置都返回" />
+      <Column Name="Readonly" DataType="Boolean" Description="只读。只读应用，不支持客户端上传配置数据，可用于保护数据避免被错误修改" />
       <Column Name="EnableApollo" DataType="Boolean" Description="阿波罗" />
       <Column Name="ApolloMetaServer" DataType="String" Description="阿波罗地址" />
       <Column Name="ApolloAppId" DataType="String" Description="阿波罗账号" />

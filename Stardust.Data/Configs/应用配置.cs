@@ -107,6 +107,14 @@ namespace Stardust.Data.Configs
         [BindColumn("IsGlobal", "全局。该应用下的配置数据作为全局数据，请求任意应用配置都返回", "")]
         public Boolean IsGlobal { get => _IsGlobal; set { if (OnPropertyChanging("IsGlobal", value)) { _IsGlobal = value; OnPropertyChanged("IsGlobal"); } } }
 
+        private Boolean _Readonly;
+        /// <summary>只读。只读应用，不支持客户端上传配置数据，可用于保护数据避免被错误修改</summary>
+        [DisplayName("只读")]
+        [Description("只读。只读应用，不支持客户端上传配置数据，可用于保护数据避免被错误修改")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Readonly", "只读。只读应用，不支持客户端上传配置数据，可用于保护数据避免被错误修改", "")]
+        public Boolean Readonly { get => _Readonly; set { if (OnPropertyChanging("Readonly", value)) { _Readonly = value; OnPropertyChanged("Readonly"); } } }
+
         private Boolean _EnableApollo;
         /// <summary>阿波罗</summary>
         [DisplayName("阿波罗")]
@@ -233,6 +241,7 @@ namespace Stardust.Data.Configs
                     case "CanBeQuoted": return _CanBeQuoted;
                     case "Quotes": return _Quotes;
                     case "IsGlobal": return _IsGlobal;
+                    case "Readonly": return _Readonly;
                     case "EnableApollo": return _EnableApollo;
                     case "ApolloMetaServer": return _ApolloMetaServer;
                     case "ApolloAppId": return _ApolloAppId;
@@ -264,6 +273,7 @@ namespace Stardust.Data.Configs
                     case "CanBeQuoted": _CanBeQuoted = value.ToBoolean(); break;
                     case "Quotes": _Quotes = Convert.ToString(value); break;
                     case "IsGlobal": _IsGlobal = value.ToBoolean(); break;
+                    case "Readonly": _Readonly = value.ToBoolean(); break;
                     case "EnableApollo": _EnableApollo = value.ToBoolean(); break;
                     case "ApolloMetaServer": _ApolloMetaServer = Convert.ToString(value); break;
                     case "ApolloAppId": _ApolloAppId = Convert.ToString(value); break;
@@ -319,6 +329,9 @@ namespace Stardust.Data.Configs
 
             /// <summary>全局。该应用下的配置数据作为全局数据，请求任意应用配置都返回</summary>
             public static readonly Field IsGlobal = FindByName("IsGlobal");
+
+            /// <summary>只读。只读应用，不支持客户端上传配置数据，可用于保护数据避免被错误修改</summary>
+            public static readonly Field Readonly = FindByName("Readonly");
 
             /// <summary>阿波罗</summary>
             public static readonly Field EnableApollo = FindByName("EnableApollo");
@@ -397,6 +410,9 @@ namespace Stardust.Data.Configs
 
             /// <summary>全局。该应用下的配置数据作为全局数据，请求任意应用配置都返回</summary>
             public const String IsGlobal = "IsGlobal";
+
+            /// <summary>只读。只读应用，不支持客户端上传配置数据，可用于保护数据避免被错误修改</summary>
+            public const String Readonly = "Readonly";
 
             /// <summary>阿波罗</summary>
             public const String EnableApollo = "EnableApollo";

@@ -30,7 +30,7 @@ namespace Stardust.Server.Controllers
             if (appId.IsNullOrEmpty() && token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(appId));
 
             // 验证
-            var app = Valid(appId, secret, token, out var online);
+            var (app, online) = Valid(appId, secret, token);
             var ip = HttpContext.GetUserHost();
 
             // 版本没有变化时，不做计算处理，不返回配置数据
@@ -61,7 +61,7 @@ namespace Stardust.Server.Controllers
             if (model.AppId.IsNullOrEmpty() && token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.AppId));
 
             // 验证
-            var app = Valid(model.AppId, model.Secret, token, out var online);
+            var (app, online) = Valid(model.AppId, model.Secret, token);
             var ip = HttpContext.GetUserHost();
 
             // 使用键和缺失键
@@ -91,7 +91,7 @@ namespace Stardust.Server.Controllers
             };
         }
 
-        private AppConfig Valid(String appId, String secret, String token, out ConfigOnline online)
+        private (AppConfig, ConfigOnline) Valid(String appId, String secret, String token)
         {
             if (appId.IsNullOrEmpty() && !token.IsNullOrEmpty())
             {
@@ -124,12 +124,25 @@ namespace Stardust.Server.Controllers
 
             // 更新心跳信息
             var ip = HttpContext.GetUserHost();
-            online = app.UpdateInfo(ap, ip);
+            var online = app.UpdateInfo(ap, ip);
 
             // 检查应用有效性
             if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
 
-            return app;
+            return (app, online);
+        }
+
+        [ApiFilter]
+        [HttpPost]
+        public Int32 SetAll([FromBody] SetConfigModel model, String token)
+        {
+            if (model.AppId.IsNullOrEmpty() && token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.AppId));
+
+            // 验证
+            var (app, online) = Valid(model.AppId, model.Secret, token);
+            if (app.Readonly) throw new Exception($"应用[{app}]处于只读模式，禁止修改");
+
+            return _configService.SetConfigs(app, model.Configs);
         }
     }
 }

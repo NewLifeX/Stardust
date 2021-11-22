@@ -164,5 +164,34 @@ namespace Stardust.Server.Services
 
             return dic;
         }
+
+        public Int32 SetConfigs(AppConfig app, IDictionary<String, Object> configs)
+        {
+            var ver = app.AcquireNewVersion();
+
+            // 开启事务，整体完成
+            using var tran = ConfigData.Meta.CreateTrans();
+
+            // 逐行插入数据
+            foreach (var item in configs)
+            {
+                var data = new ConfigData
+                {
+                    AppId = app.Id,
+                    Key = item.Key,
+                    Value = item.Value + "",
+                    Version = ver,
+                    Enable = true,
+                };
+                data.Insert();
+            }
+
+            // 整体发布
+            app.Publish();
+
+            tran.Commit();
+
+            return configs.Count;
+        }
     }
 }

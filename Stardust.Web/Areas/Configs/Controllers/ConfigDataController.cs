@@ -7,7 +7,6 @@ using NewLife.Cube;
 using NewLife.Remoting;
 using NewLife.Web;
 using Stardust.Data.Configs;
-using XCode;
 
 namespace Stardust.Web.Areas.Configs.Controllers
 {
