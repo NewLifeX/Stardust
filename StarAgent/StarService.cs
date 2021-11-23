@@ -7,6 +7,7 @@ using NewLife.Agent;
 using NewLife.Log;
 using NewLife.Reflection;
 using NewLife.Remoting;
+using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust;
 using Stardust.Models;
@@ -33,6 +34,8 @@ namespace StarAgent
         [Api(nameof(Info))]
         public AgentInfo Info(AgentInfo info)
         {
+            XTrace.WriteLine(info.ToJson());
+
             var p = Process.GetCurrentProcess();
             var asmx = AssemblyX.Entry;
             var fileName = p.MainModule.FileName;

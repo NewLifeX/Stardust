@@ -54,10 +54,17 @@ namespace StarAgent
 
                     AutoStart = false,
                     AutoRestart = true,
-                    //RestartExistCodes = "0,1,3",
+                };
+                var si2 = new ServiceInfo
+                {
+                    Name = "test2",
+                    FileName = "cmd",
+                    Arguments = "ping newlifex.com",
+
+                    AutoStart = false,
                 };
 
-                Services = new[] { si };
+                Services = new[] { si, si2 };
             }
 
             base.OnLoaded();

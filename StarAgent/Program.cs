@@ -184,9 +184,9 @@ namespace StarAgent
                         Manager = _Manager,
                         Log = XTrace.Log
                     }, null);
-                    svr.Start();
 
                     _server = svr;
+                    svr.Start();
                 }
                 catch (Exception ex)
                 {
@@ -200,12 +200,13 @@ namespace StarAgent
                     {
                         Log = XTrace.Log
                     };
-                    svr2.Register(new StarService2
-                    {
-                        Service = this,
-                        Host = Host,
-                        Manager = _Manager,
-                    }, null);
+                    //svr2.Register(new StarService2
+                    //{
+                    //    Service = this,
+                    //    Host = Host,
+                    //    Manager = _Manager,
+                    //}, null);
+                    svr2.Manager.Services["*"] = _server.Manager.Services["Info"];
                     svr2.Start();
 
                     _server2 = svr2;

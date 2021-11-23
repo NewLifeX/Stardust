@@ -1,7 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
+using NewLife;
 using NewLife.Log;
+using NewLife.Messaging;
 using NewLife.Remoting;
 using Renci.SshNet;
 using Stardust;
@@ -16,7 +20,7 @@ namespace Test
         {
             XTrace.UseConsole();
 
-            Test2();
+            Test4();
 
             Console.WriteLine("OK!");
             Console.ReadKey();
@@ -71,7 +75,7 @@ namespace Test
                 XTrace.WriteLine("连接成功");
 
                 scp.Upload("Test.exe".AsFile(), "./Test.exe");
-           
+
                 XTrace.WriteLine("Scp下载文件");
                 scp.Download("./aspnetcore-runtime-3.1.5-linux-x64.tar.gz", "./".AsDirectory());
             }
@@ -82,7 +86,7 @@ namespace Test
                 XTrace.WriteLine("连接成功");
 
                 ftp.UploadFile("Test.exe".AsFile().OpenRead(), "./Test.exe");
-            
+
                 XTrace.WriteLine("Ftp下载文件");
                 ftp.DownloadFile("./aspnetcore-runtime-3.1.5-linux-x64.tar.gz", "asp.gz".AsFile().OpenWrite());
             }
@@ -99,6 +103,29 @@ namespace Test
 
             var client = new LocalStarClient();
             client.ProbeAndInstall(null, "1.1");
+        }
+
+        static void Test4()
+        {
+            //var buf = "hello".GetBytes(); 
+            var ms = new MemoryStream();
+            var writer = new BinaryWriter(ms);
+            writer.Write("hello");
+            writer.Write(0);
+
+            var msg = new DefaultMessage();
+            msg.Payload = ms.ToArray();
+            var buf = msg.ToPacket().ToArray();
+            XTrace.WriteLine(buf.ToHex());
+
+            var udp = new UdpClient();
+            udp.Send(buf, buf.Length, new IPEndPoint(IPAddress.Broadcast, 5500));
+
+            IPEndPoint ep = null;
+            var rs = udp.Receive(ref ep);
+
+            XTrace.WriteLine(ep + "");
+            XTrace.WriteLine(rs.ToStr());
         }
     }
 }

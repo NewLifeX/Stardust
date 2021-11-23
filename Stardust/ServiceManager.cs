@@ -64,9 +64,12 @@ namespace Stardust
         {
             foreach (var service in Services)
             {
-                WriteLog("启动应用[{0}]：{1} {2} {3}", service.Name, service.FileName, service.Arguments, service.WorkingDirectory);
+                if (service.AutoStart)
+                {
+                    WriteLog("启动应用[{0}]：{1} {2} {3}", service.Name, service.FileName, service.Arguments, service.WorkingDirectory);
 
-                if (service.AutoStart) StartService(service);
+                    StartService(service);
+                }
             }
 
             _timer = new TimerX(DoWork, null, 30_000, 30_000) { Async = true };
