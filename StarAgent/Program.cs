@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Threading;
@@ -81,6 +81,7 @@ namespace StarAgent
         }
 
         private ApiServer _server;
+        private ApiServer _server2;
         private TimerX _timer;
         private StarClient _Client;
         private StarFactory _factory;
@@ -169,9 +170,10 @@ namespace StarAgent
             // 监听端口，用于本地通信
             if (!set.LocalServer.IsNullOrEmpty())
             {
+                var uri = new NetUri(set.LocalServer);
                 try
                 {
-                    var svr = new ApiServer(new NetUri(set.LocalServer))
+                    var svr = new ApiServer(uri)
                     {
                         Log = XTrace.Log
                     };
@@ -185,6 +187,28 @@ namespace StarAgent
                     svr.Start();
 
                     _server = svr;
+                }
+                catch (Exception ex)
+                {
+                    XTrace.WriteException(ex);
+                }
+
+                try
+                {
+                    var uri2 = new NetUri(uri.Type, IPAddress.Any, uri.Port);
+                    var svr2 = new ApiServer(uri2)
+                    {
+                        Log = XTrace.Log
+                    };
+                    svr2.Register(new StarService2
+                    {
+                        Service = this,
+                        Host = Host,
+                        Manager = _Manager,
+                    }, null);
+                    svr2.Start();
+
+                    _server2 = svr2;
                 }
                 catch (Exception ex)
                 {
@@ -235,6 +259,8 @@ namespace StarAgent
 
             _server.TryDispose();
             _server = null;
+            _server2.TryDispose();
+            _server2 = null;
         }
 
         private async Task CheckUpgrade(Object data)
