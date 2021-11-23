@@ -29,7 +29,8 @@
       <Column Name="DiskID" DataType="String" Length="200" Description="磁盘序列号" />
       <Column Name="MACs" DataType="String" Length="200" Description="网卡" />
       <Column Name="InstallPath" DataType="String" Length="200" Description="安装路径" />
-      <Column Name="Runtime" DataType="String" Description="运行时。.Net版本" />
+      <Column Name="Runtime" DataType="String" Description="运行时。.Net运行时版本，可知道本地已安装版本" />
+      <Column Name="Framework" DataType="String" Description="目标框架。编译程序集时的目标版本" />
       <Column Name="ProvinceID" DataType="Int32" Description="省份" />
       <Column Name="CityID" DataType="Int32" Description="城市" />
       <Column Name="Address" DataType="String" Length="200" Description="地址" />
@@ -159,7 +160,7 @@
       <Column Name="Enable" DataType="Boolean" Description="启用。启用/停用" />
       <Column Name="Force" DataType="Boolean" Description="强制。强制升级" />
       <Column Name="Channel" DataType="Int32" Description="升级通道" Type="NodeChannels" />
-      <Column Name="Strategy" DataType="String" Length="500" Description="策略。升级策略，node=abcd;version=1.0,1.1;runtime=5.0.*;os=*Linux*;arch=Arm;province=31*;city=4509*" />
+      <Column Name="Strategy" DataType="String" Length="500" Description="策略。升级策略，node=abcd;version=1.0,1.1;runtime=5.0.*;framework=5.*;os=*Linux*;arch=Arm;province=31*;city=4509*" />
       <Column Name="Source" DataType="String" ItemType="file" Length="200" Description="升级源" />
       <Column Name="FileHash" DataType="String" Description="文件哈希。MD5散列" />
       <Column Name="Executor" DataType="String" Length="200" Description="执行命令。空格前后为文件名和参数" />

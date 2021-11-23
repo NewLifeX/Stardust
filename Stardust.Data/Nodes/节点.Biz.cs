@@ -336,6 +336,7 @@ namespace Stardust.Data.Nodes
             //if (!di.COMs.IsNullOrEmpty()) node.COMs = di.COMs;
             if (!di.InstallPath.IsNullOrEmpty()) node.InstallPath = di.InstallPath;
             if (!di.Runtime.IsNullOrEmpty()) node.Runtime = di.Runtime;
+            if (!di.Framework.IsNullOrEmpty()) node.Framework = di.Framework;
         }
 
         /// <summary>修正地区</summary>

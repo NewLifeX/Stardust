@@ -238,12 +238,20 @@ namespace Stardust.Data.Nodes
         public String InstallPath { get => _InstallPath; set { if (OnPropertyChanging("InstallPath", value)) { _InstallPath = value; OnPropertyChanged("InstallPath"); } } }
 
         private String _Runtime;
-        /// <summary>运行时。.Net版本</summary>
+        /// <summary>运行时。.Net运行时版本，可知道本地已安装版本</summary>
         [DisplayName("运行时")]
-        [Description("运行时。.Net版本")]
+        [Description("运行时。.Net运行时版本，可知道本地已安装版本")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("Runtime", "运行时。.Net版本", "")]
+        [BindColumn("Runtime", "运行时。.Net运行时版本，可知道本地已安装版本", "")]
         public String Runtime { get => _Runtime; set { if (OnPropertyChanging("Runtime", value)) { _Runtime = value; OnPropertyChanged("Runtime"); } } }
+
+        private String _Framework;
+        /// <summary>目标框架。编译程序集时的目标版本</summary>
+        [DisplayName("目标框架")]
+        [Description("目标框架。编译程序集时的目标版本")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Framework", "目标框架。编译程序集时的目标版本", "")]
+        public String Framework { get => _Framework; set { if (OnPropertyChanging("Framework", value)) { _Framework = value; OnPropertyChanged("Framework"); } } }
 
         private Int32 _ProvinceID;
         /// <summary>省份</summary>
@@ -460,6 +468,7 @@ namespace Stardust.Data.Nodes
                     case "MACs": return _MACs;
                     case "InstallPath": return _InstallPath;
                     case "Runtime": return _Runtime;
+                    case "Framework": return _Framework;
                     case "ProvinceID": return _ProvinceID;
                     case "CityID": return _CityID;
                     case "Address": return _Address;
@@ -517,6 +526,7 @@ namespace Stardust.Data.Nodes
                     case "MACs": _MACs = Convert.ToString(value); break;
                     case "InstallPath": _InstallPath = Convert.ToString(value); break;
                     case "Runtime": _Runtime = Convert.ToString(value); break;
+                    case "Framework": _Framework = Convert.ToString(value); break;
                     case "ProvinceID": _ProvinceID = value.ToInt(); break;
                     case "CityID": _CityID = value.ToInt(); break;
                     case "Address": _Address = Convert.ToString(value); break;
@@ -630,8 +640,11 @@ namespace Stardust.Data.Nodes
             /// <summary>安装路径</summary>
             public static readonly Field InstallPath = FindByName("InstallPath");
 
-            /// <summary>运行时。.Net版本</summary>
+            /// <summary>运行时。.Net运行时版本，可知道本地已安装版本</summary>
             public static readonly Field Runtime = FindByName("Runtime");
+
+            /// <summary>目标框架。编译程序集时的目标版本</summary>
+            public static readonly Field Framework = FindByName("Framework");
 
             /// <summary>省份</summary>
             public static readonly Field ProvinceID = FindByName("ProvinceID");
@@ -786,8 +799,11 @@ namespace Stardust.Data.Nodes
             /// <summary>安装路径</summary>
             public const String InstallPath = "InstallPath";
 
-            /// <summary>运行时。.Net版本</summary>
+            /// <summary>运行时。.Net运行时版本，可知道本地已安装版本</summary>
             public const String Runtime = "Runtime";
+
+            /// <summary>目标框架。编译程序集时的目标版本</summary>
+            public const String Framework = "Framework";
 
             /// <summary>省份</summary>
             public const String ProvinceID = "ProvinceID";

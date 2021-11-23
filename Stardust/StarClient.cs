@@ -21,6 +21,7 @@ using NewLife.Threading;
 using Stardust.Models;
 using Stardust.Services;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 #if !NET40
 using System.Net.WebSockets;
 using WebSocket = System.Net.WebSockets.WebSocket;
@@ -219,7 +220,28 @@ namespace Stardust
                 Time = DateTime.UtcNow,
             };
 
+            // 目标框架
+            var ver = "";
+            var tar = asm.Asm.GetCustomAttribute<TargetFrameworkAttribute>();
+            if (tar != null) ver = !tar.FrameworkDisplayName.IsNullOrEmpty() ? tar.FrameworkDisplayName : tar.FrameworkName;
+
+#if NETCOREAPP || NETSTANDARD
+            ver = RuntimeInformation.FrameworkDescription;
+#endif
+            di.Framework = ver?.TrimStart(".NET Framework", ".NET Core", ".NET Native", ".NET").Trim();
+
 #if NET40_OR_GREATER
+            // .NET45以上运行时
+            if (Runtime.Windows && Environment.Version >= new Version("4.0.30319.42000"))
+            {
+                var reg = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full");
+                if (reg != null)
+                {
+                    var str = reg.GetValue("Version") + "";
+                    if (!str.IsNullOrEmpty()) di.Runtime = str;
+                }
+            }
+
             try
             {
                 // 收集屏幕相关信息。Mono+Linux无法获取
@@ -485,7 +507,7 @@ namespace Stardust
 #if !NET40
                         _timer = new TimerX(DoPing, null, 1_000, 60_000, "Device") { Async = true };
 #else
-                        _timer = new TimerX(s=>Ping().Wait(), null, 1_000, 60_000, "Device") { Async = true };
+                        _timer = new TimerX(s => Ping().Wait(), null, 1_000, 60_000, "Device") { Async = true };
 #endif
                     }
                 }

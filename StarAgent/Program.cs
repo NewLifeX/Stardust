@@ -195,7 +195,7 @@ namespace StarAgent
 
                 try
                 {
-                    var uri2 = new NetUri(uri.Type, IPAddress.Any, uri.Port);
+                    var uri2 = new NetUri(NetType.Unknown, IPAddress.Any, uri.Port);
                     var svr2 = new ApiServer(uri2)
                     {
                         Log = XTrace.Log
