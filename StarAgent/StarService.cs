@@ -54,8 +54,8 @@ namespace StarAgent
                 {
                     ThreadPoolX.QueueUserWorkItem(() =>
                     {
-                        svc.StartClient();
                         svc.StartFactory();
+                        svc.StartClient();
                     });
                 }
             }

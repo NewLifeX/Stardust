@@ -25,6 +25,9 @@ namespace Stardust
         /// <summary>代理信息</summary>
         public AgentInfo Info { get; private set; }
 
+        /// <summary>本地服务端地址</summary>
+        public String Server { get => _local?.Server; set => _local.Server = value; }
+
         private AgentInfo _local;
         private ApiClient _client;
         #endregion
@@ -71,10 +74,6 @@ namespace Stardust
         /// <returns></returns>
         public AgentInfo GetInfo()
         {
-            //Init();
-
-            //return Info = _client.Invoke<AgentInfo>("Info", _local);
-
             var task = GetInfoAsync();
             if (task.Wait(500)) return task.Result;
 
@@ -130,12 +129,15 @@ namespace Stardust
             if (url.IsNullOrEmpty())
             {
                 var set = NewLife.Setting.Current;
-                if (Environment.Version.Major >= 5)
-                    url = set.PluginServer.CombinePath("staragent50.zip");
+                url = set.PluginServer.CombinePath("star");
+                if (Environment.Version.Major >= 6)
+                    url = url.CombinePath("staragent60.zip");
+                else if (Environment.Version.Major >= 5)
+                    url = url.CombinePath("staragent50.zip");
                 else if (Environment.Version.Major >= 4)
-                    url = set.PluginServer.CombinePath("staragent45.zip");
+                    url = url.CombinePath("staragent45.zip");
                 else
-                    url = set.PluginServer.CombinePath("staragent31.zip");
+                    url = url.CombinePath("staragent31.zip");
             }
 
             // 尝试连接，获取版本

@@ -15,7 +15,7 @@ namespace Stardust.Monitors
         /// <summary>追踪器</summary>
         public ITracer Tracer { get; set; }
 
-        private readonly Dictionary<String, TraceDiagnosticListener> _listeners = new Dictionary<String, TraceDiagnosticListener>();
+        private readonly Dictionary<String, TraceDiagnosticListener> _listeners = new();
 
         private Int32 _inited;
         private void Init()

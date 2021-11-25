@@ -126,23 +126,21 @@ namespace Stardust
                 Server = json["StarServer"];
             }
 
-            if (Server.IsNullOrEmpty())
+            if (!Server.IsNullOrEmpty() && Local.Server.IsNullOrEmpty()) Local.Server = Server;
+
+            try
             {
-                try
+                var inf = Local.GetInfo();
+                var server = inf?.Server;
+                if (!server.IsNullOrEmpty())
                 {
-                    var inf = Local.GetInfo();
-                    var server = inf?.Server;
-                    if (!server.IsNullOrEmpty())
-                    {
-                        Server = server;
-                        XTrace.WriteLine("星尘探测：{0}", server);
-                    }
+                    if (Server.IsNullOrEmpty()) Server = server;
+                    XTrace.WriteLine("星尘探测：{0}", server);
                 }
-                catch (Exception ex)
-                {
-                    //XTrace.WriteException(ex);
-                    XTrace.Log.Error("星尘探测失败！{0}", ex.Message);
-                }
+            }
+            catch (Exception ex)
+            {
+                XTrace.Log.Error("星尘探测失败！{0}", ex.Message);
             }
 
             // 如果探测不到本地应用，则使用配置

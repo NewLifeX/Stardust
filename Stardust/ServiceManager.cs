@@ -22,7 +22,7 @@ namespace Stardust
         public ServiceInfo[] Services { get; set; }
 
         private CsvDb<ProcessInfo> _services;
-        private readonly Dictionary<String, Process> _processes = new Dictionary<String, Process>();
+        private readonly Dictionary<String, Process> _processes = new();
         #endregion
 
         #region 构造

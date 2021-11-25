@@ -26,9 +26,6 @@ namespace Stardust.Monitors
         /// <summary>应用名</summary>
         public String AppName { get; set; }
 
-        ///// <summary>应用密钥</summary>
-        //public String Secret { get; set; }
-
         /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
         public String ClientId { get; set; }
 
@@ -43,7 +40,7 @@ namespace Stardust.Monitors
 
         private readonly String _version;
         private readonly Process _process = Process.GetCurrentProcess();
-        private readonly Queue<TraceModel> _fails = new Queue<TraceModel>();
+        private readonly Queue<TraceModel> _fails = new();
         private AppInfo _appInfo;
         #endregion
 
@@ -93,56 +90,13 @@ namespace Stardust.Monitors
         #endregion
 
         #region 核心业务
-        //private TokenModel _token;
-        //private DateTime _expire;
-        //private void CheckAuthorize()
-        //{
-        //    if (_token == null || Client.Token.IsNullOrEmpty())
-        //    {
-        //        // 申请令牌
-        //        _token = Client.Invoke<TokenModel>("OAuth/Token", new
-        //        {
-        //            grant_type = "password",
-        //            username = AppId,
-        //            password = Secret
-        //        });
-        //        Client.Token = _token.AccessToken;
-
-        //        WriteLog("申请令牌：{0}", _token.AccessToken);
-
-        //        // 提前一分钟过期
-        //        _expire = DateTime.Now.AddSeconds(_token.ExpireIn - 600);
-        //    }
-        //    else if (_token != null && DateTime.Now > _expire)
-        //    {
-        //        // 刷新令牌
-        //        _token = Client.Invoke<TokenModel>("OAuth/Token", new
-        //        {
-        //            grant_type = "refresh_token",
-        //            refresh_token = _token.RefreshToken,
-        //        });
-        //        Client.Token = _token.AccessToken;
-
-        //        WriteLog("刷新令牌：{0}", _token.AccessToken);
-        //    }
-        //}
-
         private Boolean _inited;
         private void Init()
         {
             if (_inited) return;
 
             // 自动从本地星尘代理获取地址
-            if (Client == null)
-            {
-                try
-                {
-                    var client = new LocalStarClient();
-                    var inf = client.GetInfo();
-                    if (!inf.Server.IsNullOrEmpty()) Client = new ApiHttpClient(inf.Server);
-                }
-                catch { }
-            }
+            if (Client == null) throw new ArgumentNullException(nameof(Client));
 
             var server = Client is ApiHttpClient http ? http.Services.Join(",", e => e.Address) : (Client + "");
             WriteLog("星尘监控中心 Server={0} AppId={1} ClientId={2}", server, AppId, ClientId);
@@ -182,9 +136,6 @@ namespace Stardust.Monitors
             };
             try
             {
-                //// 检查令牌
-                //if (!Secret.IsNullOrEmpty()) CheckAuthorize();
-
                 var rs = Client.Invoke<TraceResponse>("Trace/Report", model);
                 // 处理响应参数
                 if (rs != null)
@@ -208,18 +159,14 @@ namespace Stardust.Monitors
             }
             catch (ApiException ex)
             {
-                //if (ex.Code == 401 || ex.Code == 403) _token = null;
-
                 Log?.Error(ex + "");
             }
             catch (Exception ex)
             {
-                //if (ex is ApiException ae && (ae.Code == 401 || ae.Code == 403)) _token = null;
-
                 var ex2 = ex is AggregateException aex ? aex.InnerException : ex;
-                if (ex2 is TaskCanceledException || 
+                if (ex2 is TaskCanceledException ||
                     ex2 is HttpRequestException ||
-                    ex2 is SocketException) 
+                    ex2 is SocketException)
                     Log?.Error("无法连接服务端：{0}", (Client as ApiHttpClient)?.Source);
 
                 if (ex2 is not HttpRequestException)
@@ -304,8 +251,8 @@ namespace Stardust.Monitors
             }
             if (server.IsNullOrEmpty())
             {
-                var local = new LocalStarClient();
-                var inf = local.GetInfo();
+                var client = new LocalStarClient();
+                var inf = client.GetInfo();
                 server = inf?.Server;
 
                 if (!server.IsNullOrEmpty()) XTrace.WriteLine("星尘探测：{0}", server);
