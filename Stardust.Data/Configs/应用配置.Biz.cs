@@ -62,7 +62,7 @@ namespace Stardust.Data.Configs
         #region 扩展属性
         /// <summary>本应用最后发布的配置数据，借助扩展属性缓存</summary>
         [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-        public IList<ConfigData> LastRelease => Extends.Get(nameof(LastRelease), k => ConfigData.FindAllLastRelease(Id, Version));
+        public IList<ConfigData> Configs => Extends.Get(nameof(Configs), k => ConfigData.FindAllByApp(Id).Where(e => e.Enable).ToList());
 
         /// <summary>应用密钥。用于web端做预览</summary>
         [XmlIgnore, ScriptIgnore, IgnoreDataMember]

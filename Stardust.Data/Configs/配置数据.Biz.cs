@@ -32,6 +32,16 @@ namespace Stardust.Data.Configs
         /// </summary>
         public const String DELETED = "[[Deleted]]";
 
+        /// <summary>
+        /// 启用标识
+        /// </summary>
+        public const String ENABLED = "[[Enabled]]";
+
+        /// <summary>
+        /// 禁用标识
+        /// </summary>
+        public const String DISABLED = "[[Disabled]]";
+
         /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
         /// <param name="isNew">是否插入</param>
         public override void Valid(Boolean isNew)
@@ -199,7 +209,7 @@ namespace Stardust.Data.Configs
         /// <returns></returns>
         public static ConfigData Acquire(AppConfig app, String key, String scope)
         {
-            var locals = app.LastRelease;
+            var locals = app.Configs;
             locals = locals.Where(_ => _.Key.EqualIgnoreCase(key)).ToList();
             //locals = SelectVersion(locals, app.Version);
 
@@ -208,7 +218,7 @@ namespace Stardust.Data.Configs
             var shares = new List<ConfigData>();
             foreach (var item in qs)
             {
-                var list = item.LastRelease;
+                var list = item.Configs;
                 list = list.Where(_ => _.Key.EqualIgnoreCase(key)).ToList();
                 //list = SelectVersion(list, item.Version);
 
@@ -332,7 +342,7 @@ namespace Stardust.Data.Configs
         /// <returns></returns>
         public static Int32 Publish(IEnumerable<ConfigData> list, Int32 version)
         {
-           using var tran = Meta.CreateTrans();
+            using var tran = Meta.CreateTrans();
 
             var rs = 0;
             foreach (var item in list)
@@ -342,6 +352,18 @@ namespace Stardust.Data.Configs
                     if (item.DesiredValue.EqualIgnoreCase(DELETED))
                     {
                         rs += item.Delete();
+                    }
+                    else if (item.DesiredValue.EqualIgnoreCase(ENABLED))
+                    {
+                        item.Enable = true;
+                        item.DesiredValue = null;
+                        rs += item.Update();
+                    }
+                    else if (item.DesiredValue.EqualIgnoreCase(DISABLED))
+                    {
+                        item.Enable = false;
+                        item.DesiredValue = null;
+                        rs += item.Update();
                     }
                     else
                     {

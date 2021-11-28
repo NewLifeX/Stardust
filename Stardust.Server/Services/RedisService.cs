@@ -314,13 +314,13 @@ namespace Stardust.Server.Services
                             if (!inf.FirstId.IsNullOrEmpty())
                             {
                                 var p = inf.FirstId.IndexOf('-');
-                                var str = p > 0 ? inf.FirstId.Substring(0, p) : inf.FirstId;
+                                var str = p > 0 ? inf.FirstId[..p] : inf.FirstId;
                                 queue.FirstConsumer = str.ToLong().ToDateTime().ToLocalTime();
                             }
                             if (!inf.LastId.IsNullOrEmpty())
                             {
                                 var p = inf.LastId.IndexOf('-');
-                                var str = p > 0 ? inf.LastId.Substring(0, p) : inf.LastId;
+                                var str = p > 0 ? inf.LastId[..p] : inf.LastId;
                                 queue.LastActive = str.ToLong().ToDateTime().ToLocalTime();
                             }
 

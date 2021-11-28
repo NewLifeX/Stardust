@@ -48,23 +48,21 @@ namespace Stardust.Web.Areas.Configs.Controllers
             PageSetting.EnableSelect = false;
 
             // 如果选择了应用，特殊处理版本
+            if (appId > 0 && p.PageSize == 20) p.PageSize = 500;
+
+            var list = ConfigData.Search(appId, name, scope, start, end, p["Q"], p);
+
+            PageSetting.EnableAdd = false;
             if (appId > 0)
             {
-                if (p.PageSize == 20) p.PageSize = 500;
-
-                var list = ConfigData.Search(appId, name, scope, start, end, p["Q"], p);
-
-                //// 选择每个版本最大的一个
-                //list = ConfigData.SelectNewest(list);
+                PageSetting.EnableAdd = true;
 
                 // 控制发布按钮
                 var app = AppConfig.FindById(appId);
                 PageSetting.EnableSelect = list.Any(e => e.Version > app.Version);
-
-                return list;
             }
 
-            return ConfigData.Search(appId, name, scope, start, end, p["Q"], p);
+            return list;
         }
 
         public override ActionResult Add(ConfigData entity)
@@ -75,19 +73,33 @@ namespace Stardust.Web.Areas.Configs.Controllers
             return RedirectToAction("Index", new { appId = entity.AppId });
         }
 
-        public override ActionResult Edit(ConfigData entity)
+        //public override ActionResult Edit(ConfigData entity)
+        //{
+        //    base.Edit(entity);
+
+        //    return RedirectToAction("Index", new { appId = entity.AppId });
+        //}
+
+        protected override Int32 OnUpdate(ConfigData entity)
         {
             var e = entity as IEntity;
             if (e.HasDirty)
             {
+                if (e.Dirtys[nameof(entity.Key)]) throw new ArgumentException("禁止修改名称，建议新增配置", nameof(entity.Key));
+                if (e.Dirtys[nameof(entity.Scope)]) throw new ArgumentException("禁止修改作用域，建议新增配置", nameof(entity.Scope));
                 if (e.Dirtys[nameof(entity.Value)]) throw new ArgumentException("禁止修改正在使用的数值！", nameof(entity.Value));
 
                 var ver = entity.App.AcquireNewVersion();
                 entity.Version = ver;
-                base.Edit(entity);
+            }
+            if (e.Dirtys[nameof(entity.Enable)])
+            {
+                // 禁用启用修改为期望值，发布后才能执行
+                entity.DesiredValue = entity.Enable ? ConfigData.ENABLED : ConfigData.DISABLED;
+                entity.Enable = !entity.Enable;
             }
 
-            return RedirectToAction("Index", new { appId = entity.AppId });
+            return base.OnUpdate(entity);
         }
 
         protected override Int32 OnDelete(ConfigData entity)

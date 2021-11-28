@@ -554,7 +554,7 @@ namespace Stardust.Server.Controllers
             {
                 var uri = Request.GetRawUrl().ToString();
                 var p = uri.IndexOf('/', "https://".Length);
-                if (p > 0) uri = uri.Substring(0, p);
+                if (p > 0) uri = uri[..p];
                 //url = $"{uri}/Node/GetFile?id={pv.ID}";
                 url = $"{uri}/Node/GetVersion/{pv.Version}.zip";
             }

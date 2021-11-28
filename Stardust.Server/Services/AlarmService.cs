@@ -150,7 +150,7 @@ namespace Stardust.Server.Services
                                 {
                                     // 错误内容取第一行，详情看更多
                                     var p = msg.IndexOfAny(new[] { '\r', '\n' });
-                                    if (p > 0) msg = msg.Substring(0, p);
+                                    if (p > 0) msg = msg[..p];
 
                                     sb.AppendLine($">**错误内容：**{msg}");
 
@@ -163,7 +163,7 @@ namespace Stardust.Server.Services
             }
 
             var str = sb.ToString();
-            if (str.Length > 1600) str = str.Substring(0, 1600);
+            if (str.Length > 1600) str = str[..1600];
 
             // 构造网址
             if (!appUrl.IsNullOrEmpty())
@@ -330,7 +330,7 @@ namespace Stardust.Server.Services
             }
 
             var str = sb.ToString();
-            if (str.Length > 2000) str = str.Substring(0, 2000);
+            if (str.Length > 2000) str = str[..2000];
 
             // 构造网址
             var url = Setting.Current.WebUrl;
@@ -470,7 +470,7 @@ namespace Stardust.Server.Services
             }
 
             var str = sb.ToString();
-            if (str.Length > 2000) str = str.Substring(0, 2000);
+            if (str.Length > 2000) str = str[..2000];
 
             // 构造网址
             var url = Setting.Current.WebUrl;
@@ -523,7 +523,7 @@ namespace Stardust.Server.Services
             sb.AppendLine($">**服务器：**<font color=\"info\">{node.Server}</font>");
 
             var str = sb.ToString();
-            if (str.Length > 2000) str = str.Substring(0, 2000);
+            if (str.Length > 2000) str = str[..2000];
 
             // 构造网址
             var url = Setting.Current.WebUrl;

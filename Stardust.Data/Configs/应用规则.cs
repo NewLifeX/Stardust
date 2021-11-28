@@ -10,11 +10,11 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Configs
 {
-    /// <summary>应用规则。针对应用设置的规则，比如根据IP段设置作用域</summary>
+    /// <summary>应用规则。针对应用设置的规则，比如根据IP段设置作用域，可用于划分生产环境和开发测试环境</summary>
     [Serializable]
     [DataObject]
-    [Description("应用规则。针对应用设置的规则，比如根据IP段设置作用域")]
-    [BindTable("AppRule", Description = "应用规则。针对应用设置的规则，比如根据IP段设置作用域", ConnName = "ConfigCenter", DbType = DatabaseType.None)]
+    [Description("应用规则。针对应用设置的规则，比如根据IP段设置作用域，可用于划分生产环境和开发测试环境")]
+    [BindTable("AppRule", Description = "应用规则。针对应用设置的规则，比如根据IP段设置作用域，可用于划分生产环境和开发测试环境", ConnName = "ConfigCenter", DbType = DatabaseType.None)]
     public partial class AppRule
     {
         #region 属性

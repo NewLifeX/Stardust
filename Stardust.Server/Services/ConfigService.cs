@@ -59,8 +59,8 @@ namespace Stardust.Server.Services
                 }
 
                 // 重新组合
-                var left = value.Substring(0, p1);
-                var right = value.Substring(p2 + 1);
+                var left = value[..p1];
+                var right = value[(p2 + 1)..];
                 value = left + item + right;
 
                 // 移动游标，加速下一次处理
@@ -112,7 +112,7 @@ namespace Stardust.Server.Services
 
             var dic = new Dictionary<String, String>(StringComparer.OrdinalIgnoreCase);
 
-            var list = app.LastRelease;
+            var list = app.Configs;
             list = ConfigData.SelectScope(list, scope);
 
             // 本应用
@@ -129,7 +129,7 @@ namespace Stardust.Server.Services
             var qs = app.GetQuotes();
             foreach (var item in qs)
             {
-                var list2 = item.LastRelease;
+                var list2 = item.Configs;
                 list2 = ConfigData.SelectScope(list2, scope);
                 foreach (var cfg in list2)
                 {
@@ -147,7 +147,7 @@ namespace Stardust.Server.Services
             // 全局应用
             foreach (var item in AppConfig.GetValids().Where(e => e.IsGlobal))
             {
-                var list2 = item.LastRelease;
+                var list2 = item.Configs;
                 list2 = ConfigData.SelectScope(list2, scope);
                 foreach (var cfg in list2)
                 {

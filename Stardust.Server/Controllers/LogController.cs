@@ -54,7 +54,7 @@ namespace Stardust.Server.Controllers
                         var p = ReadExpect(lines[i], ' ', ss);
                         if (p > 0 && ss[0] != null && ss[0].Length == 12 && ss[1].ToInt() > 0)
                         {
-                            var msg = lines[i].Substring(p)?.Trim();
+                            var msg = lines[i][p..]?.Trim();
                             var sb = Pool.StringBuilder.Get();
                             sb.AppendLine(msg);
 
@@ -88,7 +88,7 @@ namespace Stardust.Server.Controllers
                 var p2 = value.IndexOf(ch, p);
                 if (p2 < 0) break;
 
-                ss[i] = value.Substring(p, p2 - p);
+                ss[i] = value[p..p2];
 
                 p = p2 + 1;
 
