@@ -61,7 +61,7 @@ namespace Stardust.Data.Configs
             Value = Value?.Trim();
             Scope = Scope?.Trim();
 
-            if (Version <= 0) Version = 1;
+            //if (Version <= 0) Version = 1;
         }
 
         /// <summary>添加</summary>
@@ -125,19 +125,6 @@ namespace Stardust.Data.Configs
             //return Find(_.Id == id);
         }
 
-        ///// <summary>根据key查找</summary>
-        ///// <param name="key"></param>
-        ///// <returns></returns>
-        //public static IList<ConfigData> FindAllByKey(String key)
-        //{
-        //    key = key?.Trim();
-        //    if (key.IsNullOrEmpty()) return new List<ConfigData>();
-
-        //    if (Meta.Count < 1000) return Meta.Cache.FindAll(e => e.Key.EqualIgnoreCase(key));
-
-        //    return FindAll(_.Key == key);
-        //}
-
         /// <summary>
         /// 根据应用查询所属配置，
         /// </summary>
@@ -152,17 +139,7 @@ namespace Stardust.Data.Configs
             return FindAll(_.AppId == appid);
         }
 
-        ///// <summary>查找应用的有效配置</summary>
-        ///// <param name="appid"></param>
-        ///// <returns></returns>
-        //public static IList<ConfigData> FindAllValid(Int32 appid)
-        //{
-        //    if (Meta.Count < 1000) return Meta.Cache.FindAll(_ => _.AppId == appid && _.Enable);
-
-        //    return FindAll(_.AppId == appid & _.Enable == true);
-        //}
-
-        /// <summary>查找应用最后发布的配置</summary>
+        /// <summary>查找应用正在使用的配置，不包括未发布的新增和修改</summary>
         /// <param name="appid"></param>
         /// <param name="version"></param>
         /// <returns></returns>
@@ -173,7 +150,7 @@ namespace Stardust.Data.Configs
             // 先选择版本，再剔除被禁用项
             //list = SelectVersion(list, version);
 
-            return list.Where(e => e.Version > version && e.Enable).ToList();
+            return list.Where(e => e.Version <= version && e.Enable).ToList();
         }
         #endregion
 
@@ -265,57 +242,6 @@ namespace Stardust.Data.Configs
             return null;
         }
 
-        /// <summary>选择最新的配置版本</summary>
-        /// <param name="list"></param>
-        /// <returns></returns>
-        public static IList<ConfigData> SelectNewest(IEnumerable<ConfigData> list)
-        {
-            // 选择每个版本最大的一个
-            //var gp = list.ToLookup(e => $"{name}-{scope}").Select(e => e.OrderByDescending(y => y.Version).FirstOrDefault());
-            var dic = new Dictionary<String, ConfigData>();
-            foreach (var item in list)
-            {
-                var key = $"{item.AppId}-{item.Key}-{item.Scope}";
-                if (dic.TryGetValue(key, out var cfg))
-                {
-                    if (cfg.Version < item.Version) dic[key] = item;
-                }
-                else
-                {
-                    dic[key] = item;
-                }
-            }
-
-            return dic.Values.ToList();
-        }
-
-        /// <summary>选择指定版本</summary>
-        /// <param name="list"></param>
-        /// <param name="version"></param>
-        /// <returns></returns>
-        public static IList<ConfigData> SelectVersion(IEnumerable<ConfigData> list, Int32 version)
-        {
-            // 选择每个版本最大的一个
-            //var gp = list.ToLookup(e => $"{name}-{scope}").Select(e => e.OrderByDescending(y => y.Version).FirstOrDefault());
-            var dic = new Dictionary<String, ConfigData>();
-            foreach (var item in list)
-            {
-                if (version > 0 && item.Version > version) continue;
-
-                var key = $"{item.AppId}-{item.Key}-{item.Scope}";
-                if (dic.TryGetValue(key, out var cfg))
-                {
-                    if (cfg.Version < item.Version) dic[key] = item;
-                }
-                else
-                {
-                    dic[key] = item;
-                }
-            }
-
-            return dic.Values.ToList();
-        }
-
         /// <summary>选择指定作用域</summary>
         /// <param name="list"></param>
         /// <param name="scope"></param>
@@ -347,28 +273,30 @@ namespace Stardust.Data.Configs
             var rs = 0;
             foreach (var item in list)
             {
-                if (item.Version == version)
+                // 发布指定版本
+                if (item.NewVersion == version)
                 {
-                    if (item.DesiredValue.EqualIgnoreCase(DELETED))
+                    // 删除
+                    if (item.NewStatus.EqualIgnoreCase(DELETED))
                     {
                         rs += item.Delete();
                     }
-                    else if (item.DesiredValue.EqualIgnoreCase(ENABLED))
-                    {
-                        item.Enable = true;
-                        item.DesiredValue = null;
-                        rs += item.Update();
-                    }
-                    else if (item.DesiredValue.EqualIgnoreCase(DISABLED))
-                    {
-                        item.Enable = false;
-                        item.DesiredValue = null;
-                        rs += item.Update();
-                    }
                     else
                     {
-                        item.Value = item.DesiredValue;
-                        item.DesiredValue = null;
+                        if (item.NewStatus.EqualIgnoreCase(ENABLED))
+                        {
+                            item.Enable = true;
+                        }
+                        else if (item.NewStatus.EqualIgnoreCase(DISABLED))
+                        {
+                            item.Enable = false;
+                        }
+
+                        if (!item.NewValue.IsNullOrEmpty()) item.Value = item.NewValue;
+                        item.NewValue = null;
+                        item.NewStatus = null;
+                        item.Version = version;
+
                         rs += item.Update();
                     }
                 }

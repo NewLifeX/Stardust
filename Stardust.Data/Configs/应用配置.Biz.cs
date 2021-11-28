@@ -60,9 +60,9 @@ namespace Stardust.Data.Configs
         #endregion
 
         #region 扩展属性
-        /// <summary>本应用最后发布的配置数据，借助扩展属性缓存</summary>
+        /// <summary>本应用正在使用的配置数据，不包括未发布的新增和修改，借助扩展属性缓存</summary>
         [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-        public IList<ConfigData> Configs => Extends.Get(nameof(Configs), k => ConfigData.FindAllByApp(Id).Where(e => e.Enable).ToList());
+        public IList<ConfigData> Configs => Extends.Get(nameof(Configs), k => ConfigData.FindAllLastRelease(Id, Version));
 
         /// <summary>应用密钥。用于web端做预览</summary>
         [XmlIgnore, ScriptIgnore, IgnoreDataMember]
@@ -204,7 +204,7 @@ namespace Stardust.Data.Configs
                     var cd = ds[0];
                     if (cd.Version > Version)
                     {
-                        cd.DesiredValue = cd.Value;
+                        cd.NewValue = cd.Value;
                         cd.Value = ds[1].Value;
                         cd.Update();
                     }
@@ -253,7 +253,7 @@ namespace Stardust.Data.Configs
                 // 找到第一个应用在线，拷贝它的信息
                 var list = online.ProcessId > 0 ? null : AppOnline.FindAllByApp(app.Id);
 
-                online.UpdateInfo(app, list?.FirstOrDefault(e => e.Client.StartsWith($"{ip}@")));
+                online.UpdateInfo(this, list?.FirstOrDefault(e => e.Client.StartsWith($"{ip}@")));
 
                 return online;
             }

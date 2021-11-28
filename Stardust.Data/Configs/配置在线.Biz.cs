@@ -145,7 +145,7 @@ namespace Stardust.Data.Configs
         /// <summary>更新信息</summary>
         /// <param name="app"></param>
         /// <param name="online"></param>
-        public void UpdateInfo(App app, AppOnline online)
+        public void UpdateInfo(AppConfig app, AppOnline online)
         {
             PingCount++;
 

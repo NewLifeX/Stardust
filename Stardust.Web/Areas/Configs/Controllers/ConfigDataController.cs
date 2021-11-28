@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using NewLife;
 using NewLife.Cube;
 using NewLife.Remoting;
 using NewLife.Web;
@@ -17,19 +16,16 @@ namespace Stardust.Web.Areas.Configs.Controllers
         static ConfigDataController()
         {
             ListFields.AddField("Scope", "Value");
+            ListFields.RemoveField("Remark");
 
             AddFormFields.RemoveCreateField();
             AddFormFields.RemoveUpdateField();
-            AddFormFields.RemoveField("Version");
+            AddFormFields.RemoveField("Version", "NewVersion", "NewValue", "NewStatus");
 
             EditFormFields.RemoveCreateField();
             EditFormFields.RemoveUpdateField();
-            EditFormFields.RemoveField("Version");
+            EditFormFields.RemoveField("Version", "NewVersion");
 
-            {
-                var df = AddFormFields.GetField("Value");
-                df.Readonly = true;
-            }
             {
                 var df = EditFormFields.GetField("Value");
                 df.Readonly = true;
@@ -59,7 +55,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
 
                 // 控制发布按钮
                 var app = AppConfig.FindById(appId);
-                PageSetting.EnableSelect = list.Any(e => e.Version > app.Version);
+                PageSetting.EnableSelect = list.Any(e => e.NewVersion > app.Version);
             }
 
             return list;
@@ -67,7 +63,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
 
         public override ActionResult Add(ConfigData entity)
         {
-            entity.Version = entity.App.AcquireNewVersion();
+            entity.NewVersion = entity.App.AcquireNewVersion();
             base.Add(entity);
 
             return RedirectToAction("Index", new { appId = entity.AppId });
@@ -85,18 +81,26 @@ namespace Stardust.Web.Areas.Configs.Controllers
             var e = entity as IEntity;
             if (e.HasDirty)
             {
-                if (e.Dirtys[nameof(entity.Key)]) throw new ArgumentException("禁止修改名称，建议新增配置", nameof(entity.Key));
-                if (e.Dirtys[nameof(entity.Scope)]) throw new ArgumentException("禁止修改作用域，建议新增配置", nameof(entity.Scope));
-                if (e.Dirtys[nameof(entity.Value)]) throw new ArgumentException("禁止修改正在使用的数值！", nameof(entity.Value));
+                // 在用版本禁止修改，未发布的新版本可以
+                if (entity.Version > 0)
+                {
+                    if (e.Dirtys[nameof(entity.Key)]) throw new ArgumentException("禁止修改名称，建议新增配置", nameof(entity.Key));
+                    if (e.Dirtys[nameof(entity.Scope)]) throw new ArgumentException("禁止修改作用域，建议新增配置", nameof(entity.Scope));
+                    if (e.Dirtys[nameof(entity.Value)]) throw new ArgumentException("禁止修改正在使用的数值！", nameof(entity.Value));
+                }
 
                 var ver = entity.App.AcquireNewVersion();
-                entity.Version = ver;
+                entity.NewVersion = ver;
             }
             if (e.Dirtys[nameof(entity.Enable)])
             {
-                // 禁用启用修改为期望值，发布后才能执行
-                entity.DesiredValue = entity.Enable ? ConfigData.ENABLED : ConfigData.DISABLED;
-                entity.Enable = !entity.Enable;
+                // 在用版本禁止修改，未发布的新版本可以
+                if (entity.Version > 0)
+                {
+                    // 禁用启用修改为期望值，发布后才能执行
+                    entity.NewStatus = entity.Enable ? ConfigData.ENABLED : ConfigData.DISABLED;
+                    entity.Enable = !entity.Enable;
+                }
             }
 
             return base.OnUpdate(entity);
@@ -104,13 +108,15 @@ namespace Stardust.Web.Areas.Configs.Controllers
 
         protected override Int32 OnDelete(ConfigData entity)
         {
+            // 在用版本禁止修改，未发布的新版本可以
+            if (entity.Version == 0) return base.OnDelete(entity);
+
             // 删除操作，直接修改为即将被删除
             var ver = entity.App.AcquireNewVersion();
             entity.Version = ver;
-            entity.DesiredValue = ConfigData.DELETED;
-            var rs = base.OnUpdate(entity);
+            entity.NewStatus = ConfigData.DELETED;
 
-            return rs;
+            return base.OnUpdate(entity);
         }
 
         public ActionResult Publish(Int32 appId)

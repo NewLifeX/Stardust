@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data.Configs" ConnName="ConfigCenter" BaseClass="Entity" Output="" xmlns="http://www.newlifex.com/Model2020.xsd">
-  <Table Name="AppConfig" Description="应用配置。需要管理配置的应用系统列表">
+  <Table Name="AppConfig" Description="应用配置。需要管理配置的应用系统列表，每个应用以命令对形式管理配置数据，支持版本发布">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="Category" DataType="String" Description="类别" />
@@ -62,16 +62,18 @@
       <Index Columns="TargetAppId" />
     </Indexes>
   </Table>
-  <Table Name="ConfigData" Description="配置数据">
+  <Table Name="ConfigData" Description="配置数据。配置名值对，发布后才能生效，支持多作用域划分生产和开发测试环境">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="Key" DataType="String" Master="True" Nullable="False" Description="名称。下划线开头表示仅用于内嵌，不能返回给客户端；多级名称用冒号分隔" />
       <Column Name="Scope" DataType="String" Description="作用域" />
       <Column Name="Value" DataType="String" Length="2000" Description="数值。正在使用的值，支持内嵌 ${key@app:scope}" />
-      <Column Name="DesiredValue" DataType="String" Length="2000" Description="期望值。已被修改，尚未发布的值，支持内嵌 ${key@app:scope}" />
       <Column Name="Version" DataType="Int32" Description="版本。当前版本号，每次修改都是应用版本加一" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="NewValue" DataType="String" Length="2000" Description="期望值。已被修改，尚未发布的值，支持内嵌 ${key@app:scope}" />
+      <Column Name="NewVersion" DataType="Int32" Description="新版本。下一个将要发布的版本，发布后两者相同" />
+      <Column Name="NewStatus" DataType="String" Description="新状态。启用/禁用/删除" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />

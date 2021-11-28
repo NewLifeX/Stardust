@@ -172,22 +172,28 @@ namespace Stardust.Server.Services
             // 开启事务，整体完成
             using var tran = ConfigData.Meta.CreateTrans();
 
-            // 逐行插入数据
+            var list = ConfigData.FindAllByApp(app.Id);
+
+            // 逐行插入数据，不能覆盖已存在数据
             foreach (var item in configs)
             {
-                var data = new ConfigData
+                var data = list.FirstOrDefault(e => e.Key.EqualIgnoreCase(item.Key));
+                if (data == null)
                 {
-                    AppId = app.Id,
-                    Key = item.Key,
-                    Value = item.Value + "",
-                    Version = ver,
-                    Enable = true,
-                };
-                data.Insert();
+                    data = new ConfigData
+                    {
+                        AppId = app.Id,
+                        Key = item.Key,
+                        Value = item.Value + "",
+                        Version = ver,
+                        Enable = true,
+                    };
+                    data.Insert();
+                }
             }
 
-            // 整体发布
-            app.Publish();
+            //// 整体发布
+            //app.Publish();
 
             tran.Commit();
 

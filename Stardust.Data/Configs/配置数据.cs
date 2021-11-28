@@ -59,14 +59,6 @@ namespace Stardust.Data.Configs
         [BindColumn("Value", "数值。正在使用的值，支持内嵌 ${key@app:scope}", "")]
         public String Value { get => _Value; set { if (OnPropertyChanging("Value", value)) { _Value = value; OnPropertyChanged("Value"); } } }
 
-        private String _DesiredValue;
-        /// <summary>期望值。已被修改，尚未发布的值，支持内嵌 ${key@app:scope}</summary>
-        [DisplayName("期望值")]
-        [Description("期望值。已被修改，尚未发布的值，支持内嵌 ${key@app:scope}")]
-        [DataObjectField(false, false, true, 2000)]
-        [BindColumn("DesiredValue", "期望值。已被修改，尚未发布的值，支持内嵌 ${key@app:scope}", "")]
-        public String DesiredValue { get => _DesiredValue; set { if (OnPropertyChanging("DesiredValue", value)) { _DesiredValue = value; OnPropertyChanged("DesiredValue"); } } }
-
         private Int32 _Version;
         /// <summary>版本。当前版本号，每次修改都是应用版本加一</summary>
         [DisplayName("版本")]
@@ -82,6 +74,30 @@ namespace Stardust.Data.Configs
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Enable", "启用", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
+
+        private String _NewValue;
+        /// <summary>期望值。已被修改，尚未发布的值，支持内嵌 ${key@app:scope}</summary>
+        [DisplayName("期望值")]
+        [Description("期望值。已被修改，尚未发布的值，支持内嵌 ${key@app:scope}")]
+        [DataObjectField(false, false, true, 2000)]
+        [BindColumn("NewValue", "期望值。已被修改，尚未发布的值，支持内嵌 ${key@app:scope}", "")]
+        public String NewValue { get => _NewValue; set { if (OnPropertyChanging("NewValue", value)) { _NewValue = value; OnPropertyChanged("NewValue"); } } }
+
+        private Int32 _NewVersion;
+        /// <summary>新版本。下一个将要发布的版本，发布后两者相同</summary>
+        [DisplayName("新版本")]
+        [Description("新版本。下一个将要发布的版本，发布后两者相同")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("NewVersion", "新版本。下一个将要发布的版本，发布后两者相同", "")]
+        public Int32 NewVersion { get => _NewVersion; set { if (OnPropertyChanging("NewVersion", value)) { _NewVersion = value; OnPropertyChanged("NewVersion"); } } }
+
+        private String _NewStatus;
+        /// <summary>新状态。启用/禁用/删除</summary>
+        [DisplayName("新状态")]
+        [Description("新状态。启用/禁用/删除")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("NewStatus", "新状态。启用/禁用/删除", "")]
+        public String NewStatus { get => _NewStatus; set { if (OnPropertyChanging("NewStatus", value)) { _NewStatus = value; OnPropertyChanged("NewStatus"); } } }
 
         private Int32 _CreateUserID;
         /// <summary>创建者</summary>
@@ -155,9 +171,11 @@ namespace Stardust.Data.Configs
                     case "Key": return _Key;
                     case "Scope": return _Scope;
                     case "Value": return _Value;
-                    case "DesiredValue": return _DesiredValue;
                     case "Version": return _Version;
                     case "Enable": return _Enable;
+                    case "NewValue": return _NewValue;
+                    case "NewVersion": return _NewVersion;
+                    case "NewStatus": return _NewStatus;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -177,9 +195,11 @@ namespace Stardust.Data.Configs
                     case "Key": _Key = Convert.ToString(value); break;
                     case "Scope": _Scope = Convert.ToString(value); break;
                     case "Value": _Value = Convert.ToString(value); break;
-                    case "DesiredValue": _DesiredValue = Convert.ToString(value); break;
                     case "Version": _Version = value.ToInt(); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
+                    case "NewValue": _NewValue = Convert.ToString(value); break;
+                    case "NewVersion": _NewVersion = value.ToInt(); break;
+                    case "NewStatus": _NewStatus = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -212,14 +232,20 @@ namespace Stardust.Data.Configs
             /// <summary>数值。正在使用的值，支持内嵌 ${key@app:scope}</summary>
             public static readonly Field Value = FindByName("Value");
 
-            /// <summary>期望值。已被修改，尚未发布的值，支持内嵌 ${key@app:scope}</summary>
-            public static readonly Field DesiredValue = FindByName("DesiredValue");
-
             /// <summary>版本。当前版本号，每次修改都是应用版本加一</summary>
             public static readonly Field Version = FindByName("Version");
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
+
+            /// <summary>期望值。已被修改，尚未发布的值，支持内嵌 ${key@app:scope}</summary>
+            public static readonly Field NewValue = FindByName("NewValue");
+
+            /// <summary>新版本。下一个将要发布的版本，发布后两者相同</summary>
+            public static readonly Field NewVersion = FindByName("NewVersion");
+
+            /// <summary>新状态。启用/禁用/删除</summary>
+            public static readonly Field NewStatus = FindByName("NewStatus");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUserID = FindByName("CreateUserID");
@@ -263,14 +289,20 @@ namespace Stardust.Data.Configs
             /// <summary>数值。正在使用的值，支持内嵌 ${key@app:scope}</summary>
             public const String Value = "Value";
 
-            /// <summary>期望值。已被修改，尚未发布的值，支持内嵌 ${key@app:scope}</summary>
-            public const String DesiredValue = "DesiredValue";
-
             /// <summary>版本。当前版本号，每次修改都是应用版本加一</summary>
             public const String Version = "Version";
 
             /// <summary>启用</summary>
             public const String Enable = "Enable";
+
+            /// <summary>期望值。已被修改，尚未发布的值，支持内嵌 ${key@app:scope}</summary>
+            public const String NewValue = "NewValue";
+
+            /// <summary>新版本。下一个将要发布的版本，发布后两者相同</summary>
+            public const String NewVersion = "NewVersion";
+
+            /// <summary>新状态。启用/禁用/删除</summary>
+            public const String NewStatus = "NewStatus";
 
             /// <summary>创建者</summary>
             public const String CreateUserID = "CreateUserID";
