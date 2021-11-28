@@ -29,7 +29,7 @@ namespace Stardust
         /// <summary>实例化</summary>
         public ServiceManager()
         {
-            var data = NewLife.Setting.Current.DataPath;
+            var data = Setting.Current.DataPath;
             _services = new CsvDb<ProcessInfo>((x, y) => x.Name == y.Name) { FileName = data.CombinePath("Service.csv") };
 
             _services.Remove(e => e.UpdateTime.AddDays(1) < DateTime.Now);

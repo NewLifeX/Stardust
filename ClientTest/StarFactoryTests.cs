@@ -22,7 +22,7 @@ namespace ClientTest
         [Fact]
         public void Normal()
         {
-            var set = Stardust.Setting.Current;
+            var set = Stardust.StarSetting.Current;
             var secret = Rand.NextString(8, true);
             set.Secret = secret;
 

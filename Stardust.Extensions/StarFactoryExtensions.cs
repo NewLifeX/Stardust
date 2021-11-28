@@ -71,7 +71,7 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 try
                 {
-                    if (address.IsNullOrEmpty()) address = Stardust.Setting.Current.ServiceAddress;
+                    if (address.IsNullOrEmpty()) address = Stardust.StarSetting.Current.ServiceAddress;
                     if (address.IsNullOrEmpty())
                     {
                         var feature = app.ServerFeatures.Get<IServerAddressesFeature>();

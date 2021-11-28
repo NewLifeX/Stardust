@@ -37,7 +37,7 @@ namespace StarAgent
             var fileName = p.MainModule.FileName;
             var args = Environment.CommandLine.TrimStart(Path.ChangeExtension(fileName, ".dll")).Trim();
 
-            var set = Stardust.Setting.Current;
+            var set = StarSetting.Current;
             // 使用对方送过来的星尘服务端地址
             if (set.Server.IsNullOrEmpty() && !info.Server.IsNullOrEmpty())
             {

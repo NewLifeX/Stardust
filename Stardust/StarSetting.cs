@@ -1,14 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
-using NewLife;
-using NewLife.Common;
 using NewLife.Configuration;
 
 namespace Stardust
 {
     /// <summary>星尘客户端配置</summary>
     [Config("Star")]
-    public class Setting : Config<Setting>
+    public class StarSetting : Config<StarSetting>
     {
         #region 属性
         /// <summary>调试开关。默认true</summary>
@@ -42,16 +40,6 @@ namespace Stardust
         /// <summary>最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10</summary>
         [Description("最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10")]
         public Int32 MaxErrors { get; set; } = 10;
-        #endregion
-
-        #region 方法
-        ///// <summary>加载时</summary>
-        //protected override void OnLoaded()
-        //{
-        //    if (AppKey.IsNullOrEmpty()) AppKey = SysConfig.Current.Name;
-
-        //    base.OnLoaded();
-        //}
         #endregion
     }
 }

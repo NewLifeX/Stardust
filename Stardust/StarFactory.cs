@@ -94,7 +94,7 @@ namespace Stardust
 
                 _client = new ApiHttpClient(Server) { Filter = _tokenFilter };
 
-                var set = Setting.Current;
+                var set = StarSetting.Current;
                 if (set.Debug) _client.Log = XTrace.Log;
             }
 
@@ -144,7 +144,7 @@ namespace Stardust
             }
 
             // 如果探测不到本地应用，则使用配置
-            var set = Setting.Current;
+            var set = StarSetting.Current;
             if (Server.IsNullOrEmpty()) Server = set.Server;
             if (AppId.IsNullOrEmpty()) AppId = set.AppKey;
             if (Secret.IsNullOrEmpty()) Secret = set.Secret;

@@ -28,7 +28,7 @@ namespace Stardust
         /// <summary>本地服务端地址</summary>
         public String Server { get => _local?.Server; set => _local.Server = value; }
 
-        private AgentInfo _local;
+        private readonly AgentInfo _local;
         private ApiClient _client;
         #endregion
 
@@ -41,7 +41,7 @@ namespace Stardust
             var fileName = p.MainModule.FileName;
             var args = Environment.CommandLine.TrimStart(Path.ChangeExtension(fileName, ".dll")).Trim();
 
-            var set = Stardust.Setting.Current;
+            var set = StarSetting.Current;
 
             _local = new AgentInfo
             {
@@ -66,7 +66,7 @@ namespace Stardust
                 Log = XTrace.Log,
             };
 
-            var set = Setting.Current;
+            var set = StarSetting.Current;
             if (set.Debug) _client.EncoderLog = XTrace.Log;
         }
 

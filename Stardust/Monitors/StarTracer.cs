@@ -48,7 +48,7 @@ namespace Stardust.Monitors
         /// <summary>实例化</summary>
         public StarTracer()
         {
-            var set = Setting.Current;
+            var set = StarSetting.Current;
             AppId = set.AppKey;
             //Secret = set.Secret;
             Period = set.TracerPeriod;
@@ -83,7 +83,7 @@ namespace Stardust.Monitors
             };
             Client = http;
 
-            var set = Setting.Current;
+            var set = StarSetting.Current;
             if (!AppId.IsNullOrEmpty() && !set.Secret.IsNullOrEmpty())
                 http.Filter = new TokenHttpFilter { UserName = AppId, Password = set.Secret };
         }
@@ -149,7 +149,7 @@ namespace Stardust.Monitors
                     // 保存到配置文件
                     if (rs.Period > 0 || rs.MaxSamples > 0 | rs.MaxErrors > 0)
                     {
-                        var set = Setting.Current;
+                        var set = StarSetting.Current;
                         set.TracerPeriod = Period;
                         set.MaxSamples = MaxSamples;
                         set.MaxErrors = MaxErrors;
@@ -206,7 +206,7 @@ namespace Stardust.Monitors
         /// <summary>全局注入</summary>
         public void AttachGlobal()
         {
-            DefaultTracer.Instance = this;
+            Instance = this;
             ApiHelper.Tracer = this;
 
 #if NET5_0_OR_GREATER
@@ -246,7 +246,7 @@ namespace Stardust.Monitors
         {
             if (server.IsNullOrEmpty())
             {
-                var set = Setting.Current;
+                var set = StarSetting.Current;
                 server = set.Server;
             }
             if (server.IsNullOrEmpty())

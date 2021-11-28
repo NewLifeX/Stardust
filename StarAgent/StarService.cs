@@ -26,6 +26,9 @@ namespace StarAgent
 
         /// <summary>本地应用服务管理</summary>
         public ServiceManager Manager { get; set; }
+
+        /// <summary>星尘设置</summary>
+        public StarSetting Setting { get; set; }
         #endregion
 
         #region 业务
@@ -41,7 +44,7 @@ namespace StarAgent
             var fileName = p.MainModule.FileName;
             var args = Environment.CommandLine.TrimStart(Path.ChangeExtension(fileName, ".dll")).Trim();
 
-            var set = Stardust.Setting.Current;
+            var set = Setting;
             // 使用对方送过来的星尘服务端地址
             if (set.Server.IsNullOrEmpty() && !info.Server.IsNullOrEmpty())
             {

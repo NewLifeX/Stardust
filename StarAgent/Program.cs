@@ -25,18 +25,7 @@ namespace StarAgent
         {
             if ("-upgrade".EqualIgnoreCase(args)) Thread.Sleep(5_000);
 
-            new MyService().Main(args);
-        }
-    }
-
-    /// <summary>服务类。名字可以自定义</summary>
-    internal class MyService : ServiceBase
-    {
-        public MyService()
-        {
-            ServiceName = "StarAgent";
-
-            var set = Stardust.Setting.Current;
+            var set = StarSetting.Current;
             if (set.IsNew)
             {
 #if DEBUG
@@ -46,15 +35,7 @@ namespace StarAgent
                 set.Save();
             }
 
-            // 注册菜单，在控制台菜单中按 t 可以执行Test函数，主要用于临时处理数据
-            AddMenu('s', "使用星尘", UseStarServer);
-            AddMenu('t', "服务器信息", ShowMachineInfo);
-            AddMenu('w', "测试微服务", UseMicroService);
-
-            MachineInfo.RegisterAsync();
-
-            // 处理 -server 参数
-            var args = Environment.GetCommandLineArgs();
+            // 处理 -server 参数，建议在-start启动时添加
             if (args != null && args.Length > 0)
             {
                 for (var i = 0; i < args.Length; i++)
@@ -66,10 +47,36 @@ namespace StarAgent
                         set.Server = addr;
                         set.Save();
 
-                        WriteLog("服务端修改为：{0}", addr);
+                        XTrace.WriteLine("服务端修改为：{0}", addr);
                     }
                 }
             }
+
+            new MyService
+            {
+                StarSetting = set,
+                AgentSetting = Setting.Current
+            }.Main(args);
+        }
+    }
+
+    /// <summary>服务类。名字可以自定义</summary>
+    internal class MyService : ServiceBase
+    {
+        public StarSetting StarSetting { get; set; }
+
+        public StarAgent.Setting AgentSetting { get; set; }
+
+        public MyService()
+        {
+            ServiceName = "StarAgent";
+
+            // 注册菜单，在控制台菜单中按 t 可以执行Test函数，主要用于临时处理数据
+            AddMenu('s', "使用星尘", UseStarServer);
+            AddMenu('t', "服务器信息", ShowMachineInfo);
+            AddMenu('w', "测试微服务", UseMicroService);
+
+            MachineInfo.RegisterAsync();
 
             // 定时重启
             var set2 = NewLife.Agent.Setting.Current;
@@ -90,12 +97,12 @@ namespace StarAgent
 
         public void StartClient()
         {
-            var server = Stardust.Setting.Current.Server;
+            var server = StarSetting.Server;
             if (server.IsNullOrEmpty()) return;
 
             WriteLog("初始化服务端地址：{0}", server);
 
-            var set = Setting.Current;
+            var set = AgentSetting;
             var client = new StarClient(server)
             {
                 Code = set.Code,
@@ -135,7 +142,7 @@ namespace StarAgent
         {
             if (_factory == null)
             {
-                var server = Stardust.Setting.Current.Server;
+                var server = StarSetting.Server;
                 if (!server.IsNullOrEmpty()) _factory = new StarFactory(server, "StarAgent", null);
             }
         }
@@ -157,7 +164,7 @@ namespace StarAgent
         /// </remarks>
         protected override void StartWork(String reason)
         {
-            var set = Setting.Current;
+            var set = AgentSetting;
 
             // 应用服务管理
             _Manager = new ServiceManager
@@ -182,6 +189,7 @@ namespace StarAgent
                         Service = this,
                         Host = Host,
                         Manager = _Manager,
+                        Setting = StarSetting,
                         Log = XTrace.Log
                     }, null);
 
@@ -232,7 +240,7 @@ namespace StarAgent
         protected override void DoCheck(Object data)
         {
             // 支持动态更新
-            _Manager.Services = Setting.Current.Services;
+            _Manager.Services = AgentSetting.Services;
 
             base.DoCheck(data);
         }
@@ -269,8 +277,7 @@ namespace StarAgent
             var client = _Client;
 
             // 运行过程中可能改变配置文件的通道
-            var set = Setting.Current;
-            var channel = set.Channel;
+            var channel = AgentSetting.Channel;
             var ug = new Upgrade { Log = XTrace.Log };
 
             // 去除多余入口文件
@@ -320,15 +327,14 @@ namespace StarAgent
         {
             base.ShowMenu();
 
-            var set = Stardust.Setting.Current;
+            var set = StarSetting;
             if (!set.Server.IsNullOrEmpty()) Console.WriteLine("服务端：{0}", set.Server);
             Console.WriteLine();
         }
 
         public void UseStarServer()
         {
-            var set = Stardust.Setting.Current;
-
+            var set = StarSetting;
             if (!set.Server.IsNullOrEmpty()) Console.WriteLine("服务端：{0}", set.Server);
 
             Console.WriteLine("请输入新的服务端：");

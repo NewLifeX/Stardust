@@ -94,8 +94,6 @@ namespace Stardust.Server
             var tracer = app.ApplicationServices.GetRequiredService<ITracer>();
             using var span = tracer?.NewSpan(nameof(Configure));
 
-            var set = Stardust.Setting.Current;
-
             // 调整应用表名
             FixAppTableName();
 
