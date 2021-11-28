@@ -7,6 +7,7 @@ using NewLife.Cube;
 using NewLife.Remoting;
 using NewLife.Web;
 using Stardust.Data.Configs;
+using XCode;
 
 namespace Stardust.Web.Areas.Configs.Controllers
 {
@@ -18,11 +19,21 @@ namespace Stardust.Web.Areas.Configs.Controllers
             ListFields.AddField("Scope", "Value");
 
             AddFormFields.RemoveCreateField();
+            AddFormFields.RemoveUpdateField();
             AddFormFields.RemoveField("Version");
 
             EditFormFields.RemoveCreateField();
             EditFormFields.RemoveUpdateField();
             EditFormFields.RemoveField("Version");
+
+            {
+                var df = AddFormFields.GetField("Value");
+                df.Readonly = true;
+            }
+            {
+                var df = EditFormFields.GetField("Value");
+                df.Readonly = true;
+            }
         }
 
         protected override IEnumerable<ConfigData> Search(Pager p)
@@ -43,8 +54,8 @@ namespace Stardust.Web.Areas.Configs.Controllers
 
                 var list = ConfigData.Search(appId, name, scope, start, end, p["Q"], p);
 
-                // 选择每个版本最大的一个
-                list = ConfigData.SelectNewest(list);
+                //// 选择每个版本最大的一个
+                //list = ConfigData.SelectNewest(list);
 
                 // 控制发布按钮
                 var app = AppConfig.FindById(appId);
@@ -66,20 +77,14 @@ namespace Stardust.Web.Areas.Configs.Controllers
 
         public override ActionResult Edit(ConfigData entity)
         {
-            var ver = entity.App.AcquireNewVersion();
-
-            // 如果当前版本是待发布版本，则编辑，否则添加
-            if (entity.Version >= ver)
+            var e = entity as IEntity;
+            if (e.HasDirty)
             {
+                if (e.Dirtys[nameof(entity.Value)]) throw new ArgumentException("禁止修改正在使用的数值！", nameof(entity.Value));
+
+                var ver = entity.App.AcquireNewVersion();
                 entity.Version = ver;
                 base.Edit(entity);
-            }
-            else
-            {
-                // 强行改为添加
-                entity.Id = 0;
-                entity.Version = ver;
-                base.Add(entity);
             }
 
             return RedirectToAction("Index", new { appId = entity.AppId });
@@ -87,17 +92,11 @@ namespace Stardust.Web.Areas.Configs.Controllers
 
         protected override Int32 OnDelete(ConfigData entity)
         {
-            var rs = base.OnDelete(entity);
-
-            // 同时删除该应用该Key该域下，不同版本的配置数据
-            var list = ConfigData.FindAllByApp(entity.AppId);
-            list = list.Where(e => e.Key.EqualIgnoreCase(entity.Key) && e.Scope.EqualIgnoreCase(entity.Scope)).ToList();
-
-            //rs += list.Delete(true);
-            foreach (var item in list)
-            {
-                rs += item.Delete();
-            }
+            // 删除操作，直接修改为即将被删除
+            var ver = entity.App.AcquireNewVersion();
+            entity.Version = ver;
+            entity.DesiredValue = ConfigData.DELETED;
+            var rs = base.OnUpdate(entity);
 
             return rs;
         }

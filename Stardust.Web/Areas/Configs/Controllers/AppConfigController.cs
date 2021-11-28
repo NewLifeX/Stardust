@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
@@ -8,7 +7,6 @@ using NewLife.Remoting;
 using NewLife.Web;
 using Stardust.Data.Configs;
 using XCode;
-using XCode.Membership;
 
 namespace Stardust.Web.Areas.Configs.Controllers
 {
@@ -18,6 +16,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
         static AppConfigController()
         {
             MenuOrder = 58;
+            LogOnChange = true;
 
             ListFields.RemoveCreateField();
             ListFields.RemoveField("EnableApollo", "ApolloMetaServer", "ApolloAppId", "ApolloNameSpace");
@@ -96,30 +95,6 @@ namespace Stardust.Web.Areas.Configs.Controllers
             var end = p["dtEnd"].ToDateTime();
 
             return AppConfig.Search(start, end, p["Q"], p);
-        }
-
-        protected override Boolean Valid(AppConfig entity, DataObjectMethodType type, Boolean post)
-        {
-            if (!post) return base.Valid(entity, type, post);
-
-            // 必须提前写修改日志，否则修改后脏数据失效，保存的日志为空
-            if (type == DataObjectMethodType.Update && (entity as IEntity).HasDirty)
-                LogProvider.Provider.WriteLog(type + "", entity);
-
-            var err = "";
-            try
-            {
-                return base.Valid(entity, type, post);
-            }
-            catch (Exception ex)
-            {
-                err = ex.Message;
-                throw;
-            }
-            finally
-            {
-                if (type != DataObjectMethodType.Update) LogProvider.Provider.WriteLog(type + "", entity, err);
-            }
         }
 
         public ActionResult Publish(Int32 appId)

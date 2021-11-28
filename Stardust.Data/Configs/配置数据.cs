@@ -14,7 +14,7 @@ namespace Stardust.Data.Configs
     [Serializable]
     [DataObject]
     [Description("配置数据")]
-    [BindIndex("IU_ConfigData_AppId_Key_Scope_Version", true, "AppId,Key,Scope,Version")]
+    [BindIndex("IU_ConfigData_AppId_Key_Scope", true, "AppId,Key,Scope")]
     [BindTable("ConfigData", Description = "配置数据", ConnName = "ConfigCenter", DbType = DatabaseType.None)]
     public partial class ConfigData
     {
@@ -36,11 +36,11 @@ namespace Stardust.Data.Configs
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
         private String _Key;
-        /// <summary>名称。下划线开头表示仅用于内嵌，不能返回给客户端</summary>
+        /// <summary>名称。下划线开头表示仅用于内嵌，不能返回给客户端；多级名称用冒号分隔</summary>
         [DisplayName("名称")]
-        [Description("名称。下划线开头表示仅用于内嵌，不能返回给客户端")]
+        [Description("名称。下划线开头表示仅用于内嵌，不能返回给客户端；多级名称用冒号分隔")]
         [DataObjectField(false, false, false, 50)]
-        [BindColumn("Key", "名称。下划线开头表示仅用于内嵌，不能返回给客户端", "", Master = true)]
+        [BindColumn("Key", "名称。下划线开头表示仅用于内嵌，不能返回给客户端；多级名称用冒号分隔", "", Master = true)]
         public String Key { get => _Key; set { if (OnPropertyChanging("Key", value)) { _Key = value; OnPropertyChanged("Key"); } } }
 
         private String _Scope;
@@ -52,12 +52,20 @@ namespace Stardust.Data.Configs
         public String Scope { get => _Scope; set { if (OnPropertyChanging("Scope", value)) { _Scope = value; OnPropertyChanged("Scope"); } } }
 
         private String _Value;
-        /// <summary>数值。支持内嵌 ${key@app:scope}</summary>
+        /// <summary>数值。正在使用的值，支持内嵌 ${key@app:scope}</summary>
         [DisplayName("数值")]
-        [Description("数值。支持内嵌 ${key@app:scope}")]
+        [Description("数值。正在使用的值，支持内嵌 ${key@app:scope}")]
         [DataObjectField(false, false, true, 2000)]
-        [BindColumn("Value", "数值。支持内嵌 ${key@app:scope}", "")]
+        [BindColumn("Value", "数值。正在使用的值，支持内嵌 ${key@app:scope}", "")]
         public String Value { get => _Value; set { if (OnPropertyChanging("Value", value)) { _Value = value; OnPropertyChanged("Value"); } } }
+
+        private String _DesiredValue;
+        /// <summary>期望值。已被修改，尚未发布的值，支持内嵌 ${key@app:scope}</summary>
+        [DisplayName("期望值")]
+        [Description("期望值。已被修改，尚未发布的值，支持内嵌 ${key@app:scope}")]
+        [DataObjectField(false, false, true, 2000)]
+        [BindColumn("DesiredValue", "期望值。已被修改，尚未发布的值，支持内嵌 ${key@app:scope}", "")]
+        public String DesiredValue { get => _DesiredValue; set { if (OnPropertyChanging("DesiredValue", value)) { _DesiredValue = value; OnPropertyChanged("DesiredValue"); } } }
 
         private Int32 _Version;
         /// <summary>版本。当前版本号，每次修改都是应用版本加一</summary>
@@ -147,6 +155,7 @@ namespace Stardust.Data.Configs
                     case "Key": return _Key;
                     case "Scope": return _Scope;
                     case "Value": return _Value;
+                    case "DesiredValue": return _DesiredValue;
                     case "Version": return _Version;
                     case "Enable": return _Enable;
                     case "CreateUserID": return _CreateUserID;
@@ -168,6 +177,7 @@ namespace Stardust.Data.Configs
                     case "Key": _Key = Convert.ToString(value); break;
                     case "Scope": _Scope = Convert.ToString(value); break;
                     case "Value": _Value = Convert.ToString(value); break;
+                    case "DesiredValue": _DesiredValue = Convert.ToString(value); break;
                     case "Version": _Version = value.ToInt(); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
@@ -193,14 +203,17 @@ namespace Stardust.Data.Configs
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
 
-            /// <summary>名称。下划线开头表示仅用于内嵌，不能返回给客户端</summary>
+            /// <summary>名称。下划线开头表示仅用于内嵌，不能返回给客户端；多级名称用冒号分隔</summary>
             public static readonly Field Key = FindByName("Key");
 
             /// <summary>作用域</summary>
             public static readonly Field Scope = FindByName("Scope");
 
-            /// <summary>数值。支持内嵌 ${key@app:scope}</summary>
+            /// <summary>数值。正在使用的值，支持内嵌 ${key@app:scope}</summary>
             public static readonly Field Value = FindByName("Value");
+
+            /// <summary>期望值。已被修改，尚未发布的值，支持内嵌 ${key@app:scope}</summary>
+            public static readonly Field DesiredValue = FindByName("DesiredValue");
 
             /// <summary>版本。当前版本号，每次修改都是应用版本加一</summary>
             public static readonly Field Version = FindByName("Version");
@@ -241,14 +254,17 @@ namespace Stardust.Data.Configs
             /// <summary>应用</summary>
             public const String AppId = "AppId";
 
-            /// <summary>名称。下划线开头表示仅用于内嵌，不能返回给客户端</summary>
+            /// <summary>名称。下划线开头表示仅用于内嵌，不能返回给客户端；多级名称用冒号分隔</summary>
             public const String Key = "Key";
 
             /// <summary>作用域</summary>
             public const String Scope = "Scope";
 
-            /// <summary>数值。支持内嵌 ${key@app:scope}</summary>
+            /// <summary>数值。正在使用的值，支持内嵌 ${key@app:scope}</summary>
             public const String Value = "Value";
+
+            /// <summary>期望值。已被修改，尚未发布的值，支持内嵌 ${key@app:scope}</summary>
+            public const String DesiredValue = "DesiredValue";
 
             /// <summary>版本。当前版本号，每次修改都是应用版本加一</summary>
             public const String Version = "Version";

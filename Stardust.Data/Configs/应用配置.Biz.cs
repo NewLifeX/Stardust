@@ -36,6 +36,8 @@ namespace Stardust.Data.Configs
 
             // 建议先调用基类方法，基类方法会做一些统一处理
             base.Valid(isNew);
+
+            if (Version <= 0) Version = 1;
         }
 
         /// <summary>初始化数据</summary>
@@ -51,7 +53,7 @@ namespace Stardust.Data.Configs
                 CanBeQuoted = true,
                 IsGlobal = true,
 
-                Remark = "全局通用配置",
+                Remark = "全局通用配置，其它应用启动合并该应用下的配置项",
             };
             entity.Insert();
         }
@@ -158,10 +160,28 @@ namespace Stardust.Data.Configs
         {
             ConfigHistory.Add(Id, "Publish", true, this.ToJson());
 
-            Version = NextVersion;
-            PublishTime = DateTime.MinValue;
+            var rs = 0;
+            using var tran = Meta.CreateTrans();
+            try
+            {
+                Version = NextVersion;
+                PublishTime = DateTime.MinValue;
 
-            return Update();
+                var list = ConfigData.FindAllByApp(Id);
+                rs += ConfigData.Publish(list, Version);
+
+                rs += Update();
+
+                tran.Commit();
+            }
+            catch (Exception ex)
+            {
+                ConfigHistory.Add(Id, "Publish", false, ex.GetMessage());
+
+                throw;
+            }
+
+            return rs;
         }
 
         /// <summary>更新信息</summary>

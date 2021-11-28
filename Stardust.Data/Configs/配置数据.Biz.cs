@@ -27,6 +27,11 @@ namespace Stardust.Data.Configs
             Meta.Modules.Add<IPModule>();
         }
 
+        /// <summary>
+        /// 已删除标识
+        /// </summary>
+        public const String DELETED = "[[Deleted]]";
+
         /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
         /// <param name="isNew">是否插入</param>
         public override void Valid(Boolean isNew)
@@ -110,35 +115,42 @@ namespace Stardust.Data.Configs
             //return Find(_.Id == id);
         }
 
-        /// <summary>根据key查找</summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public static IList<ConfigData> FindAllByKey(String key)
-        {
-            key = key?.Trim();
-            if (key.IsNullOrEmpty()) return new List<ConfigData>();
+        ///// <summary>根据key查找</summary>
+        ///// <param name="key"></param>
+        ///// <returns></returns>
+        //public static IList<ConfigData> FindAllByKey(String key)
+        //{
+        //    key = key?.Trim();
+        //    if (key.IsNullOrEmpty()) return new List<ConfigData>();
 
-            if (Meta.Count < 1000) return Meta.Cache.FindAll(e => e.Key.EqualIgnoreCase(key));
+        //    if (Meta.Count < 1000) return Meta.Cache.FindAll(e => e.Key.EqualIgnoreCase(key));
 
-            return FindAll(_.Key == key);
-        }
+        //    return FindAll(_.Key == key);
+        //}
 
         /// <summary>
         /// 根据应用查询所属配置，
         /// </summary>
         /// <param name="appid">=0查询全局</param>
         /// <returns></returns>
-        public static IList<ConfigData> FindAllByApp(Int32 appid) => FindAll(_.AppId == appid);
-
-        /// <summary>查找应用的有效配置</summary>
-        /// <param name="appid"></param>
-        /// <returns></returns>
-        public static IList<ConfigData> FindAllValid(Int32 appid)
+        public static IList<ConfigData> FindAllByApp(Int32 appid)
         {
-            if (Meta.Count < 1000) return Meta.Cache.FindAll(_ => _.AppId == appid && _.Enable);
+            if (appid <= 0) return new List<ConfigData>();
 
-            return FindAll(_.AppId == appid & _.Enable == true);
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appid);
+
+            return FindAll(_.AppId == appid);
         }
+
+        ///// <summary>查找应用的有效配置</summary>
+        ///// <param name="appid"></param>
+        ///// <returns></returns>
+        //public static IList<ConfigData> FindAllValid(Int32 appid)
+        //{
+        //    if (Meta.Count < 1000) return Meta.Cache.FindAll(_ => _.AppId == appid && _.Enable);
+
+        //    return FindAll(_.AppId == appid & _.Enable == true);
+        //}
 
         /// <summary>查找应用最后发布的配置</summary>
         /// <param name="appid"></param>
@@ -146,14 +158,12 @@ namespace Stardust.Data.Configs
         /// <returns></returns>
         public static IList<ConfigData> FindAllLastRelease(Int32 appid, Int32 version)
         {
-            var list = Meta.Count < 1000 ?
-                Meta.Cache.FindAll(_ => _.AppId == appid) :
-                FindAll(_.AppId == appid, _.Id.Desc(), null, 0, 10000);
+            var list = FindAllByApp(appid);
 
             // 先选择版本，再剔除被禁用项
-            list = SelectVersion(list, version);
+            //list = SelectVersion(list, version);
 
-            return list.Where(e => e.Enable).ToList();
+            return list.Where(e => e.Version > version && e.Enable).ToList();
         }
         #endregion
 
@@ -175,7 +185,7 @@ namespace Stardust.Data.Configs
             if (!name.IsNullOrEmpty()) exp &= _.Key == name;
             if (!scope.IsNullOrEmpty()) exp &= _.Scope == scope;
             exp &= _.UpdateTime.Between(start, end);
-            if (!key.IsNullOrEmpty()) exp &= _.Key.Contains(key) | _.Value.Contains(key) | _.CreateIP.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
+            if (!key.IsNullOrEmpty()) exp &= _.Key.Contains(key) | _.Value.Contains(key) | _.Scope.Contains(key) | _.CreateIP.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
 
             return FindAll(exp, page);
         }
@@ -314,6 +324,37 @@ namespace Stardust.Data.Configs
             }
 
             return dic.Values.ToList();
+        }
+
+        /// <summary>发布应用下的修改数据</summary>
+        /// <param name="list"></param>
+        /// <param name="version"></param>
+        /// <returns></returns>
+        public static Int32 Publish(IEnumerable<ConfigData> list, Int32 version)
+        {
+           using var tran = Meta.CreateTrans();
+
+            var rs = 0;
+            foreach (var item in list)
+            {
+                if (item.Version == version)
+                {
+                    if (item.DesiredValue.EqualIgnoreCase(DELETED))
+                    {
+                        rs += item.Delete();
+                    }
+                    else
+                    {
+                        item.Value = item.DesiredValue;
+                        item.DesiredValue = null;
+                        rs += item.Update();
+                    }
+                }
+            }
+
+            tran.Commit();
+
+            return rs;
         }
         #endregion
     }
