@@ -184,6 +184,56 @@ namespace Stardust.Data.Configs
             return rs;
         }
 
+        /// <summary>
+        /// 清理旧数据。把原来多行的配置数据，修改为单行
+        /// </summary>
+        /// <returns></returns>
+        public Int32 TrimOld()
+        {
+            var rs = 0;
+            var list = ConfigData.FindAllByApp(Id);
+            var dic = list.GroupBy(e => $"{e.Key}#{e.Scope}").ToDictionary(e => e.Key, e => e.ToList());
+            foreach (var item in dic)
+            {
+                // 多行，保留最大一行
+                if (item.Value.Count > 1)
+                {
+                    var ds = item.Value.OrderByDescending(e => e.Version).ToList();
+
+                    // 如果最新行未发布，则特殊处理
+                    var cd = ds[0];
+                    if (cd.Version > Version)
+                    {
+                        cd.DesiredValue = cd.Value;
+                        cd.Value = ds[1].Value;
+                        cd.Update();
+                    }
+                    for (var i = 1; i < ds.Count; i++)
+                    {
+                        rs += ds[i].Delete();
+                    }
+                }
+            }
+
+            return rs;
+        }
+
+        /// <summary>
+        /// 清理旧数据。把原来多行的配置数据，修改为单行
+        /// </summary>
+        /// <returns></returns>
+        public static Int32 TrimAll()
+        {
+            var rs = 0;
+            var list = FindAll();
+            foreach (var item in list)
+            {
+                rs += item.TrimOld();
+            }
+
+            return rs;
+        }
+
         /// <summary>更新信息</summary>
         /// <param name="app"></param>
         /// <param name="ip"></param>

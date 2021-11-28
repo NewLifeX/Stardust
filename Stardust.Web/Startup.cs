@@ -8,7 +8,7 @@ using Microsoft.Extensions.Hosting;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Log;
-using Stardust.Data;
+using Stardust.Data.Configs;
 using Stardust.Server.Services;
 using XCode;
 using XCode.DataAccessLayer;
@@ -60,6 +60,8 @@ namespace Stardust.Web
             FixAppTableName();
 
             EntityFactory.InitConnection("Stardust");
+
+            TrimOldAppConfig();
 
             // 使用Cube前添加自己的管道
             if (env.IsDevelopment())
@@ -120,6 +122,11 @@ namespace Stardust.Web
                     XTrace.WriteLine("重命名结果：{0}", rs);
                 }
             }
+        }
+
+        private static void TrimOldAppConfig()
+        {
+            AppConfig.TrimAll();
         }
     }
 }
