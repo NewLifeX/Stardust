@@ -89,7 +89,7 @@ namespace Stardust.Data
         /// <summary>地址。服务地址，如http://127.0.0.1:1234</summary>
         [DisplayName("地址")]
         [Description("地址。服务地址，如http://127.0.0.1:1234")]
-        [DataObjectField(false, false, true, 50)]
+        [DataObjectField(false, false, true, 500)]
         [BindColumn("Address", "地址。服务地址，如http://127.0.0.1:1234", "")]
         public String Address { get => _Address; set { if (OnPropertyChanging("Address", value)) { _Address = value; OnPropertyChanged("Address"); } } }
 
