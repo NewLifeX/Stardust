@@ -90,14 +90,6 @@ namespace Stardust.Data.Monitors
         [DataObjectField(false, false, true, 0)]
         [BindColumn("CreateTime", "创建时间", "")]
         public DateTime CreateTime { get => _CreateTime; set { if (OnPropertyChanging("CreateTime", value)) { _CreateTime = value; OnPropertyChanged("CreateTime"); } } }
-
-        private String _CreateIP;
-        /// <summary>创建地址</summary>
-        [DisplayName("创建地址")]
-        [Description("创建地址")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("CreateIP", "创建地址", "")]
-        public String CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
         #endregion
 
         #region 获取/设置 字段值
@@ -119,7 +111,6 @@ namespace Stardust.Data.Monitors
                     case "Content": return _Content;
                     case "Creator": return _Creator;
                     case "CreateTime": return _CreateTime;
-                    case "CreateIP": return _CreateIP;
                     default: return base[name];
                 }
             }
@@ -136,7 +127,6 @@ namespace Stardust.Data.Monitors
                     case "Content": _Content = Convert.ToString(value); break;
                     case "Creator": _Creator = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                    case "CreateIP": _CreateIP = Convert.ToString(value); break;
                     default: base[name] = value; break;
                 }
             }
@@ -174,9 +164,6 @@ namespace Stardust.Data.Monitors
             /// <summary>创建时间</summary>
             public static readonly Field CreateTime = FindByName("CreateTime");
 
-            /// <summary>创建地址</summary>
-            public static readonly Field CreateIP = FindByName("CreateIP");
-
             static Field FindByName(String name) => Meta.Table.FindByName(name);
         }
 
@@ -209,9 +196,6 @@ namespace Stardust.Data.Monitors
 
             /// <summary>创建时间</summary>
             public const String CreateTime = "CreateTime";
-
-            /// <summary>创建地址</summary>
-            public const String CreateIP = "CreateIP";
         }
         #endregion
     }

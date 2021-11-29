@@ -83,6 +83,13 @@ namespace Stardust.Server.Controllers
                 //Excludes = app.Excludes?.Split(",", ";"),
             };
 
+            // Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配
+            if (app.IsVip(model.ClientId))
+            {
+                rs.Period = 10;
+                rs.MaxSamples = 100;
+            }
+
             // 新版本才返回Excludes，老版本客户端在处理Excludes时有BUG，错误处理/
             if (!model.Version.IsNullOrEmpty()) rs.Excludes = app.Excludes?.Split(",", ";");
 

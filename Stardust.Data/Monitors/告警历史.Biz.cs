@@ -1,26 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
-using System.Web.Script.Serialization;
-using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
-using NewLife.Log;
-using NewLife.Model;
-using NewLife.Reflection;
-using NewLife.Threading;
-using NewLife.Web;
 using XCode;
-using XCode.Cache;
-using XCode.Configuration;
-using XCode.DataAccessLayer;
 using XCode.Membership;
 
 namespace Stardust.Data.Monitors
@@ -104,7 +86,7 @@ namespace Stardust.Data.Monitors
 
             if (groupId >= 0) exp &= _.GroupId == groupId;
             exp &= _.Id.Between(start, end, Meta.Factory.Snow);
-            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Category.Contains(key) | _.Action.Contains(key) | _.Content.Contains(key) | _.Creator.Contains(key) | _.CreateIP.Contains(key);
+            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Category.Contains(key) | _.Action.Contains(key) | _.Content.Contains(key) | _.Creator.Contains(key);
 
             return FindAll(exp, page);
         }

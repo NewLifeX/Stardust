@@ -141,6 +141,23 @@ namespace Stardust.Data.Monitors
                 Excludes = es.Distinct().Join();
             }
         }
+
+        /// <summary>
+        /// 判断指定客户端是否Vip客户端
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <returns></returns>
+        public Boolean IsVip(String clientId)
+        {
+            if (VipClients.IsNullOrEmpty() || clientId.IsNullOrEmpty()) return false;
+
+            foreach (var item in VipClients.Split(","))
+            {
+                if (item.IsMatch(item)) return true;
+            }
+
+            return false;
+        }
         #endregion
     }
 }
