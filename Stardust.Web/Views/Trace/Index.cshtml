@@ -41,8 +41,8 @@
         <tbody>
             @foreach (var entity in list)
             {
-                var url1 = $"appDayStat?appId={entity.AppId}";
-                var url2 = $"traceDayStat?appid={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}";
+                var url1 = $"/Monitors/appDayStat?appId={entity.AppId}";
+                var url2 = $"/Monitors/traceDayStat?appid={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}";
                 var color2 = "";
                 if (entity.Name.StartsWithIgnoreCase("db:"))
                 {
