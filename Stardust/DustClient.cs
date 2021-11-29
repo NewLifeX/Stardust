@@ -168,7 +168,8 @@ namespace Stardust
             var ps = address.Split(",");
             if (ps == null || ps.Length == 0) throw new ArgumentNullException(nameof(address));
 
-            var uri = new NetUri(ps[0]);
+            //var uri = new NetUri(ps[0]);
+            var port = ps[0].Substring(":", null).ToInt();
 
             var ip = NetHelper.MyIP();
             //var p = Process.GetCurrentProcess();
@@ -180,7 +181,7 @@ namespace Stardust
                 Address = address,
                 Tag = tag,
 
-                Client = $"{ip}:{uri.Port}",
+                Client = $"{ip}:{port}",
                 IP = ip + "",
                 Version = asmx.Version,
             };
