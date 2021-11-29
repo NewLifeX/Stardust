@@ -116,7 +116,7 @@ namespace Stardust.Server.Services
         {
             var sb = new StringBuilder();
             if (includeTitle) sb.AppendLine($"### [{app}]系统告警");
-            sb.AppendLine($">**总数：**<font color=\"info\">{st.Errors}</font>");
+            sb.AppendLine($">**总数：**<font color=\"red\">{st.Errors}</font>");
 
             var url = Setting.Current.WebUrl;
             var appUrl = "";
@@ -134,7 +134,7 @@ namespace Stardust.Server.Services
             {
                 if (item.Errors > 0)
                 {
-                    sb.AppendLine($">**错误：**<font color=\"info\">{item.StatTime.ToFullString()} 埋点[{item.Name}]共报错[{item.Errors:n0}]次</font>[更多]({traceUrl}&name={HttpUtility.UrlEncode(item.Name)})");
+                    sb.AppendLine($">**错误：**<font color=\"red\">{item.StatTime.ToFullString()} 埋点[{item.Name}]共报错[{item.Errors:n0}]次</font>[更多]({traceUrl}&name={HttpUtility.UrlEncode(item.Name)})");
 
                     // 相同接口的错误，不要报多次
                     if (!names.Contains(item.Name))
@@ -296,36 +296,36 @@ namespace Stardust.Server.Services
         {
             var sb = new StringBuilder();
             if (!title.IsNullOrEmpty()) sb.AppendLine($"### {title}");
-            sb.AppendLine($">**节点：**<font color=\"info\">{node} / {node.IP}</font>");
-            sb.AppendLine($">**分类：**<font color=\"info\">{node.Category}</font>");
-            sb.AppendLine($">**系统：**<font color=\"info\">{node.OS}</font>");
-            sb.AppendLine($">**CPU核心：**<font color=\"info\">{node.Cpu}</font>");
-            sb.AppendLine($">**内存容量：**<font color=\"info\">{node.Memory:n0}M，可用 {data.AvailableMemory:n0}M</font>");
-            sb.AppendLine($">**磁盘容量：**<font color=\"info\">{node.TotalSize:n0}M，可用 {data.AvailableFreeSpace:n0}M</font>");
+            sb.AppendLine($">**节点：**<font color=\"gray\">{node} / {node.IP}</font>");
+            sb.AppendLine($">**分类：**<font color=\"gray\">{node.Category}</font>");
+            sb.AppendLine($">**系统：**<font color=\"gray\">{node.OS}</font>");
+            sb.AppendLine($">**CPU核心：**<font color=\"gray\">{node.Cpu}</font>");
+            sb.AppendLine($">**内存容量：**<font color=\"gray\">{node.Memory:n0}M，可用 {data.AvailableMemory:n0}M</font>");
+            sb.AppendLine($">**磁盘容量：**<font color=\"gray\">{node.TotalSize:n0}M，可用 {data.AvailableFreeSpace:n0}M</font>");
 
             switch (kind)
             {
                 case "cpu":
-                    sb.AppendLine($">**CPU使用率：**<font color=\"info\">{data.CpuRate:p0} >= {node.AlarmCpuRate / 100d:p0}</font>");
+                    sb.AppendLine($">**CPU使用率：**<font color=\"red\">{data.CpuRate:p0} >= {node.AlarmCpuRate / 100d:p0}</font>");
                     break;
                 case "memory":
                     var rate1 = 1 - (node.Memory == 0 ? 0 : ((Double)data.AvailableMemory / node.Memory));
-                    sb.AppendLine($">**内存使用率：**<font color=\"info\">{rate1:p0} >= {node.AlarmMemoryRate / 100d:p0}</font>");
+                    sb.AppendLine($">**内存使用率：**<font color=\"red\">{rate1:p0} >= {node.AlarmMemoryRate / 100d:p0}</font>");
                     break;
                 case "disk":
                     var rate2 = 1 - (node.TotalSize == 0 ? 0 : ((Double)data.AvailableFreeSpace / node.TotalSize));
-                    sb.AppendLine($">**磁盘使用率：**<font color=\"info\"> {rate2:p0} >= {node.AlarmDiskRate / 100d:p0}</font>");
+                    sb.AppendLine($">**磁盘使用率：**<font color=\"red\"> {rate2:p0} >= {node.AlarmDiskRate / 100d:p0}</font>");
                     break;
                 case "tcp":
                     if (data.TcpConnections >= node.AlarmTcp)
-                        sb.AppendLine($">**TCP连接数：**<font color=\"info\">{data.TcpConnections:n0} >= {node.AlarmTcp:n0}</font>");
+                        sb.AppendLine($">**TCP连接数：**<font color=\"red\">{data.TcpConnections:n0} >= {node.AlarmTcp:n0}</font>");
                     if (data.TcpTimeWait >= node.AlarmTcp)
-                        sb.AppendLine($">**TCP主动关闭：**<font color=\"info\">{data.TcpTimeWait:n0} >= {node.AlarmTcp:n0}</font>");
+                        sb.AppendLine($">**TCP主动关闭：**<font color=\"red\">{data.TcpTimeWait:n0} >= {node.AlarmTcp:n0}</font>");
                     if (data.TcpCloseWait >= node.AlarmTcp)
-                        sb.AppendLine($">**TCP被动关闭：**<font color=\"info\">{data.TcpCloseWait:n0} >= {node.AlarmTcp:n0}</font>");
+                        sb.AppendLine($">**TCP被动关闭：**<font color=\"red\">{data.TcpCloseWait:n0} >= {node.AlarmTcp:n0}</font>");
                     break;
                 case "process":
-                    sb.AppendLine($">**进程已退出：**<font color=\"info\">{msg}</font>");
+                    sb.AppendLine($">**进程已退出：**<font color=\"red\">{msg}</font>");
                     break;
             }
 
@@ -376,7 +376,7 @@ namespace Stardust.Server.Services
                 {
                     _cache.Set("alarm:RedisMemory:" + node.Id, rate, 5 * 60);
 
-                    actions.Add(sb => sb.AppendLine($">**内存告警：**<font color=\"info\">{rate / 100:p0} >= {node.AlarmMemoryRate / 100:p0}</font>"));
+                    actions.Add(sb => sb.AppendLine($">**内存告警：**<font color=\"red\">{rate / 100:p0} >= {node.AlarmMemoryRate / 100:p0}</font>"));
                 }
             }
 
@@ -390,7 +390,7 @@ namespace Stardust.Server.Services
                 {
                     _cache.Set("alarm:RedisConnections:" + node.Id, cs, 5 * 60);
 
-                    actions.Add(sb => sb.AppendLine($">**连接数告警：**<font color=\"info\">{cs:n0} >= {node.AlarmConnections:n0}</font>"));
+                    actions.Add(sb => sb.AppendLine($">**连接数告警：**<font color=\"red\">{cs:n0} >= {node.AlarmConnections:n0}</font>"));
                 }
             }
 
@@ -404,7 +404,7 @@ namespace Stardust.Server.Services
                 {
                     _cache.Set("alarm:RedisSpeed:" + node.Id, speed, 5 * 60);
 
-                    actions.Add(sb => sb.AppendLine($">**速度告警：**<font color=\"info\">{speed:n0} >= {node.AlarmSpeed:n0}</font>"));
+                    actions.Add(sb => sb.AppendLine($">**速度告警：**<font color=\"red\">{speed:n0} >= {node.AlarmSpeed:n0}</font>"));
                 }
             }
 
@@ -418,7 +418,7 @@ namespace Stardust.Server.Services
                 {
                     _cache.Set("alarm:RedisInputKbps:" + node.Id, input, 5 * 60);
 
-                    actions.Add(sb => sb.AppendLine($">**入流量告警：**<font color=\"info\">{input:n0} >= {node.AlarmInputKbps:n0}</font>"));
+                    actions.Add(sb => sb.AppendLine($">**入流量告警：**<font color=\"red\">{input:n0} >= {node.AlarmInputKbps:n0}</font>"));
                 }
             }
 
@@ -432,7 +432,7 @@ namespace Stardust.Server.Services
                 {
                     _cache.Set("alarm:RedisOutputKbps:" + node.Id, output, 5 * 60);
 
-                    actions.Add(sb => sb.AppendLine($">**出流量告警：**<font color=\"info\">{output:n0} >= {node.AlarmOutputKbps:n0}</font>"));
+                    actions.Add(sb => sb.AppendLine($">**出流量告警：**<font color=\"red\">{output:n0} >= {node.AlarmOutputKbps:n0}</font>"));
                 }
             }
 
@@ -447,12 +447,12 @@ namespace Stardust.Server.Services
         {
             var sb = new StringBuilder();
             if (!title.IsNullOrEmpty()) sb.AppendLine($"### [{node}]{title}");
-            sb.AppendLine($">**分类：**<font color=\"info\">{node.Category}</font>");
-            sb.AppendLine($">**版本：**<font color=\"info\">{node.Version}</font>");
-            sb.AppendLine($">**已用内存：**<font color=\"info\">{data.UsedMemory:n0}</font>");
-            sb.AppendLine($">**内存容量：**<font color=\"info\">{node.MaxMemory:n0}</font>");
-            sb.AppendLine($">**连接数：**<font color=\"info\">{data.ConnectedClients:n0}</font>");
-            sb.AppendLine($">**服务器：**<font color=\"info\">{node.Server}</font>");
+            sb.AppendLine($">**分类：**<font color=\"gray\">{node.Category}</font>");
+            sb.AppendLine($">**版本：**<font color=\"gray\">{node.Version}</font>");
+            sb.AppendLine($">**已用内存：**<font color=\"gray\">{data.UsedMemory:n0}</font>");
+            sb.AppendLine($">**内存容量：**<font color=\"gray\">{node.MaxMemory:n0}</font>");
+            sb.AppendLine($">**连接数：**<font color=\"gray\">{data.ConnectedClients:n0}</font>");
+            sb.AppendLine($">**服务器：**<font color=\"gray\">{node.Server}</font>");
 
             //var rate = node.MaxMemory == 0 ? 0 : (data.UsedMemory * 100 / node.MaxMemory);
             //if (rate >= node.AlarmMemoryRate && node.AlarmMemoryRate > 0)
@@ -516,11 +516,11 @@ namespace Stardust.Server.Services
         {
             var sb = new StringBuilder();
             if (includeTitle) sb.AppendLine($"### [{queue.Name}/{node}]消息队列告警");
-            sb.AppendLine($">**主题：**<font color=\"info\">{queue.Topic}</font>");
-            sb.AppendLine($">**积压：**<font color=\"info\">{queue.Messages:n0} > {queue.MaxMessages:n0}</font>");
-            sb.AppendLine($">**消费者：**<font color=\"info\">{queue.Consumers}</font>");
-            sb.AppendLine($">**总消费：**<font color=\"info\">{queue.Total:n0}</font>");
-            sb.AppendLine($">**服务器：**<font color=\"info\">{node.Server}</font>");
+            sb.AppendLine($">**主题：**<font color=\"gray\">{queue.Topic}</font>");
+            sb.AppendLine($">**积压：**<font color=\"red\">{queue.Messages:n0} > {queue.MaxMessages:n0}</font>");
+            sb.AppendLine($">**消费者：**<font color=\"green\">{queue.Consumers}</font>");
+            sb.AppendLine($">**总消费：**<font color=\"green\">{queue.Total:n0}</font>");
+            sb.AppendLine($">**服务器：**<font color=\"gray\">{node.Server}</font>");
 
             var str = sb.ToString();
             if (str.Length > 2000) str = str[..2000];

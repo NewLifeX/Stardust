@@ -64,6 +64,8 @@ namespace Stardust.Data
                     hi.Category = "DingTalk";
 
                     var dingTalk = new DingTalkClient { Url = webhook };
+                    message = dingTalk.FormatMarkdown(message);
+                    hi.Content = message;
 
                     using var span = DefaultTracer.Instance?.NewSpan("SendDingTalk", message);
                     dingTalk.SendMarkDown(title, message, null);

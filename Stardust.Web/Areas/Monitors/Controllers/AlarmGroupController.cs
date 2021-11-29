@@ -19,7 +19,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             MenuOrder = 90;
 
             {
-                var df = ListFields.AddListField("History", null, "Enable");
+                var df = ListFields.AddListField("History", "CreateUser");
                 df.DisplayName = "告警历史";
                 df.Header = "告警历史";
                 df.Url = "AlarmHistory?groupId={Id}";

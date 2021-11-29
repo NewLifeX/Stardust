@@ -63,6 +63,23 @@ namespace Stardust.DingTalk
             PostAsync(msg).Wait();
         }
 
+        /// <summary>
+        /// 格式化Markdown数据
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public String FormatMarkdown(String text)
+        {
+            // 换行
+            text = text.Replace(Environment.NewLine, "\n\n");
+
+            text = text.Replace("<font color=\"info\">", "<font color=\"gray\">");
+            text = text.Replace("<font color=\"warn\">", "<font color=\"yellow\">");
+            text = text.Replace("<font color=\"success\">", "<font color=\"green\">");
+
+            return text;
+        }
+
         /// <summary>发送markdown</summary>
         /// <param name="title"></param>
         /// <param name="text"></param>
@@ -74,7 +91,7 @@ namespace Stardust.DingTalk
             // 超长阶段
             if (text.Length > 2048) text = text.Substring(0, 2048);
 
-            WriteLog(text);
+            //WriteLog(text);
 
             // 分解手机号
             var mobiles = mentions?.Where(e => e.Length == 11 && e.ToLong() > 0).ToArray();

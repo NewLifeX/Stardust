@@ -45,7 +45,7 @@ namespace Stardust.WeiXin
             var mentioned_list = mentions?.Where(e => e.Length != 11 || e.ToLong() == 0).ToArray();
             var mentioned_mobile_list = mentions?.Where(e => e.Length == 11 && e.ToLong() > 0).ToArray();
 
-            WriteLog(content);
+            //WriteLog(content);
 
             var msg = new
             {
