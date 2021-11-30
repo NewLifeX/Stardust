@@ -46,11 +46,6 @@ namespace StarAgent
         {
             XTrace.WriteLine(info.ToJson());
 
-            var p = Process.GetCurrentProcess();
-            var asmx = AssemblyX.Entry;
-            var fileName = p.MainModule.FileName;
-            var args = Environment.CommandLine.TrimStart(Path.ChangeExtension(fileName, ".dll")).Trim();
-
             var set = Setting;
             // 使用对方送过来的星尘服务端地址
             if (set.Server.IsNullOrEmpty() && !info.Server.IsNullOrEmpty())
@@ -70,16 +65,11 @@ namespace StarAgent
                 }
             }
 
-            return new AgentInfo
-            {
-                Version = asmx?.Version,
-                ProcessId = p.Id,
-                ProcessName = p.ProcessName,
-                FileName = fileName,
-                Arguments = args,
-                Server = set.Server,
-                Services = Manager?.Services.Select(e => e.Name).ToArray(),
-            };
+            var ai = AgentInfo.GetLocal();
+            ai.Server = set.Server;
+            ai.Services = Manager?.Services.Select(e => e.Name).ToArray();
+
+            return ai;
         }
 
         /// <summary>杀死并启动进程</summary>

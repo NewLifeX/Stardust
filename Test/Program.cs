@@ -7,6 +7,7 @@ using NewLife;
 using NewLife.Log;
 using NewLife.Messaging;
 using NewLife.Remoting;
+using NewLife.Serialization;
 using Renci.SshNet;
 using Stardust;
 using Stardust.Monitors;
@@ -20,7 +21,7 @@ namespace Test
         {
             XTrace.UseConsole();
 
-            Test4();
+            Test5();
 
             Console.WriteLine("OK!");
             Console.ReadKey();
@@ -126,6 +127,15 @@ namespace Test
 
             XTrace.WriteLine(ep + "");
             XTrace.WriteLine(rs.ToStr());
+        }
+
+        static void Test5()
+        {
+            var rs = LocalStarClient.Scan();
+            foreach (var item in rs)
+            {
+                XTrace.WriteLine(item.ToJson());
+            }
         }
     }
 }
