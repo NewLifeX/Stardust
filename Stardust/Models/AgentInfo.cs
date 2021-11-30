@@ -22,5 +22,10 @@ namespace Stardust.Models
 
         /// <summary>服务端地址</summary>
         public String Server { get; set; }
+
+        /// <summary>
+        /// 应用服务
+        /// </summary>
+        public String[] Services { get; set; }
     }
 }

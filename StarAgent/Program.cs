@@ -88,7 +88,6 @@ namespace StarAgent
         }
 
         private ApiServer _server;
-        private ApiServer _server2;
         private TimerX _timer;
         private StarClient _Client;
         private StarFactory _factory;
@@ -175,12 +174,12 @@ namespace StarAgent
             };
 
             // 监听端口，用于本地通信
-            if (!set.LocalServer.IsNullOrEmpty())
+            if (set.LocalPort > 0)
             {
-                var uri = new NetUri(set.LocalServer);
+                //var uri = new NetUri(set.LocalServer);
                 try
                 {
-                    var svr = new ApiServer(uri)
+                    var svr = new ApiServer(set.LocalPort)
                     {
                         Log = XTrace.Log
                     };
@@ -195,29 +194,6 @@ namespace StarAgent
 
                     _server = svr;
                     svr.Start();
-                }
-                catch (Exception ex)
-                {
-                    XTrace.WriteException(ex);
-                }
-
-                try
-                {
-                    var uri2 = new NetUri(NetType.Unknown, IPAddress.Any, uri.Port);
-                    var svr2 = new ApiServer(uri2)
-                    {
-                        Log = XTrace.Log
-                    };
-                    //svr2.Register(new StarService2
-                    //{
-                    //    Service = this,
-                    //    Host = Host,
-                    //    Manager = _Manager,
-                    //}, null);
-                    svr2.Manager.Services["*"] = _server.Manager.Services["Info"];
-                    svr2.Start();
-
-                    _server2 = svr2;
                 }
                 catch (Exception ex)
                 {
@@ -268,8 +244,6 @@ namespace StarAgent
 
             _server.TryDispose();
             _server = null;
-            _server2.TryDispose();
-            _server2 = null;
         }
 
         private async Task CheckUpgrade(Object data)

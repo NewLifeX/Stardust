@@ -98,7 +98,7 @@ namespace Stardust
                 }
                 catch (Exception ex)
                 {
-                    if (!(ex is ArgumentException)) XTrace.WriteException(ex);
+                    if (ex is not ArgumentException) XTrace.WriteException(ex);
                 }
             }
             if (pi == null) pi = new ProcessInfo { Name = service.Name };
