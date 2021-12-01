@@ -1,13 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using NewLife;
 using NewLife.Http;
 using NewLife.Log;
+using NewLife.Messaging;
 using NewLife.Net;
 using NewLife.Reflection;
 using NewLife.Remoting;
@@ -36,22 +40,8 @@ namespace Stardust
         /// <summary>实例化</summary>
         public LocalStarClient()
         {
-            var p = Process.GetCurrentProcess();
-            var asmx = AssemblyX.Entry;
-            var fileName = p.MainModule.FileName;
-            var args = Environment.CommandLine.TrimStart(Path.ChangeExtension(fileName, ".dll")).Trim();
-
-            var set = StarSetting.Current;
-
-            _local = new AgentInfo
-            {
-                Version = asmx?.Version,
-                ProcessId = p.Id,
-                ProcessName = p.ProcessName,
-                FileName = fileName,
-                Arguments = args,
-                Server = set.Server,
-            };
+            _local = AgentInfo.GetLocal();
+            _local.Server = StarSetting.Current.Server;
         }
         #endregion
 
@@ -260,6 +250,55 @@ namespace Stardust
                 var client = new LocalStarClient();
                 client.ProbeAndInstall(url, version, target);
             });
+        }
+        #endregion
+
+        #region 搜索
+        /// <summary>在局域网中广播扫描所有StarAgent</summary>
+        /// <param name="local">本地信息，用于告知对方我是谁</param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public static IEnumerable<AgentInfo> Scan(AgentInfo local = null, Int32 timeout = 15_000)
+        {
+            var encoder = new JsonEncoder { Log = XTrace.Log };
+            // 构造请求消息
+            //var ms = new MemoryStream();
+            //var writer = new BinaryWriter(ms);
+            //writer.Write("Info");
+            //writer.Write(0);
+
+            //var msg = new DefaultMessage
+            //{
+            //    Payload = ms.ToArray()
+            //};
+            //var buf = msg.ToPacket().ToArray();
+
+            var buf = encoder.CreateRequest("Info", null).ToPacket().ToArray();
+
+            // 广播消息
+            var udp = new UdpClient();
+            udp.Send(buf, buf.Length, new IPEndPoint(IPAddress.Broadcast, 5500));
+
+            var end = DateTime.Now.AddSeconds(timeout);
+            while (DateTime.Now < end)
+            {
+                var rs = new DefaultMessage();
+                IPEndPoint ep = null;
+                buf = udp.Receive(ref ep);
+                if (buf != null && rs.Read(buf) && encoder.Decode(rs, out var action, out _, out var data))
+                {
+                    //ms = rs.Payload.GetStream();
+                    //var reader=new BinaryReader(ms);
+                    //var name=reader.ReadString();
+                    //var code = reader.ReadInt32();
+                    //var data=reader
+
+                    var js = encoder.DecodeResult(action, data, rs);
+                    var info = (AgentInfo)encoder.Convert(js, typeof(AgentInfo));
+
+                    yield return info;
+                }
+            }
         }
         #endregion
     }

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
+using NewLife.Net;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
@@ -15,9 +17,14 @@ using Stardust.Models;
 namespace StarAgent
 {
     [Api(null)]
-    public class StarService
+    public class StarService : IApi
     {
         #region 属性
+        /// <summary>
+        /// 网络会话
+        /// </summary>
+        public IApiSession Session { get; set; }
+
         /// <summary>服务对象</summary>
         public ServiceBase Service { get; set; }
 
@@ -39,11 +46,6 @@ namespace StarAgent
         {
             XTrace.WriteLine(info.ToJson());
 
-            var p = Process.GetCurrentProcess();
-            var asmx = AssemblyX.Entry;
-            var fileName = p.MainModule.FileName;
-            var args = Environment.CommandLine.TrimStart(Path.ChangeExtension(fileName, ".dll")).Trim();
-
             var set = Setting;
             // 使用对方送过来的星尘服务端地址
             if (set.Server.IsNullOrEmpty() && !info.Server.IsNullOrEmpty())
@@ -63,15 +65,11 @@ namespace StarAgent
                 }
             }
 
-            return new AgentInfo
-            {
-                Version = asmx?.Version,
-                ProcessId = p.Id,
-                ProcessName = p.ProcessName,
-                FileName = fileName,
-                Arguments = args,
-                Server = set.Server,
-            };
+            var ai = AgentInfo.GetLocal();
+            ai.Server = set.Server;
+            ai.Services = Manager?.Services.Select(e => e.Name).ToArray();
+
+            return ai;
         }
 
         /// <summary>杀死并启动进程</summary>
@@ -82,12 +80,15 @@ namespace StarAgent
         /// <param name="workingDirectory">工作目录</param>
         /// <returns></returns>
         [Api(nameof(KillAndStart))]
-        public String KillAndStart(Int32 processId, Int32 delay, String fileName, String arguments, String workingDirectory)
+        public Object KillAndStart(Int32 processId, Int32 delay, String fileName, String arguments, String workingDirectory)
         {
+            if (Session is INetSession ns && !ns.Remote.Address.IsLocal()) throw new InvalidOperationException("禁止非本机操作！");
+
             var p = Process.GetProcessById(processId);
             if (p == null) throw new InvalidOperationException($"无效进程Id[{processId}]");
 
             var name = p.ProcessName;
+            var pid = 0;
 
             ThreadPoolX.QueueUserWorkItem(() =>
             {
@@ -125,12 +126,13 @@ namespace StarAgent
                     };
 
                     var p2 = Process.Start(si);
+                    pid = p2.Id;
 
                     WriteLog("应用[{0}]启动成功 PID={1}", p2.ProcessName, p2.Id);
                 }
             });
 
-            return name;
+            return new { name, pid };
         }
         #endregion
 
