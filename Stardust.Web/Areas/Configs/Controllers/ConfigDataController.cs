@@ -16,7 +16,9 @@ namespace Stardust.Web.Areas.Configs.Controllers
         static ConfigDataController()
         {
             ListFields.AddField("Scope", "Value");
-            ListFields.RemoveField("Remark");
+            ListFields.AddField("NewStatus", "NewValue");
+            //ListFields.RemoveField("Remark");
+            ListFields.RemoveField("CreateIP", "UpdateIP");
 
             AddFormFields.RemoveCreateField();
             AddFormFields.RemoveUpdateField();

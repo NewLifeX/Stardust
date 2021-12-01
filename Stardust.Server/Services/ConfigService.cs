@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
@@ -184,11 +185,38 @@ namespace Stardust.Server.Services
                     {
                         AppId = app.Id,
                         Key = item.Key,
-                        Value = item.Value + "",
+                        //Value = item.Value + "",
                         Version = ver,
                         Enable = true,
                     };
+
+                    if (item.Value is IDictionary<String, Object> dic)
+                    {
+                        if (dic.TryGetValue("Value", out var v)) data.Value = v + "";
+                        if (dic.TryGetValue("Comment", out v)) data.Remark = v + "";
+                    }
+                    else if (item.Value is JsonElement json)
+                    {
+                        if (json.TryGetProperty("Value", out var v)) data.Value = v + "";
+                        if (json.TryGetProperty("Comment", out v)) data.Remark = v + "";
+                    }
+                    else
+                        data.Value = item.Value + "";
+
                     data.Insert();
+                }
+                else
+                {
+                    if (item.Value is IDictionary<String, Object> dic)
+                    {
+                        if (dic.TryGetValue("Comment", out var v)) data.Remark = v + "";
+                    }
+                    else if (item.Value is JsonElement json)
+                    {
+                        if (json.TryGetProperty("Comment", out var v)) data.Remark = v + "";
+                    }
+
+                    data.Update();
                 }
             }
 
