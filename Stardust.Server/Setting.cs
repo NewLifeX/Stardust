@@ -35,6 +35,10 @@ namespace Stardust.Server
         [Description("自动注册。允许客户端自动注册，默认true")]
         public Boolean AutoRegister { get; set; } = true;
 
+        /// <summary>准入白名单。若指定，仅允许符合IP条件的节点进行注册，多个逗号隔开，支持*模糊匹配</summary>
+        [Description("准入白名单。若指定，仅允许符合IP条件的节点进行注册，多个逗号隔开，支持*模糊匹配")]
+        public String WhiteIP { get; set; } = "";
+
         /// <summary>节点编码公式。选择NodeInfo哪些硬件信息来计算节点编码，支持Crc/Crc16/MD5/MD5_16，默认Crc({UUID}@{MachineGuid}@{Macs})</summary>
         [Description("节点编码公式。选择NodeInfo哪些硬件信息来计算节点编码，支持Crc/Crc16/MD5/MD5_16，默认Crc({UUID}@{MachineGuid}@{Macs})")]
         public String NodeCodeFormula { get; set; } = "Crc({UUID}@{MachineGuid}@{Macs})";

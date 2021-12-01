@@ -217,6 +217,10 @@ namespace Stardust.Server.Controllers
             var set = Setting.Current;
             if (!set.AutoRegister) throw new ApiException(12, "禁止自动注册");
 
+            // 检查白名单
+            var ip = UserHost;
+            if (IsMatchWhiteIP(set.WhiteIP, ip)) throw new ApiException(13, "非法来源，禁止注册");
+
             var di = inf.Node;
             var code = BuildCode(di);
             if (code.IsNullOrEmpty()) code = Rand.NextString(8);
@@ -234,7 +238,6 @@ namespace Stardust.Server.Controllers
                 if (node == null) node = list.FirstOrDefault();
             }
 
-            var ip = UserHost;
             var name = "";
             if (name.IsNullOrEmpty()) name = di.MachineName;
             if (name.IsNullOrEmpty()) name = di.UserName;
@@ -265,6 +268,26 @@ namespace Stardust.Server.Controllers
             WriteHistory(node, "动态注册", true, inf.ToJson(false, false, false));
 
             return node;
+        }
+
+        /// <summary>
+        /// 是否匹配白名单，未设置则直接通过
+        /// </summary>
+        /// <param name="whiteIp"></param>
+        /// <param name="ip"></param>
+        /// <returns></returns>
+        private Boolean IsMatchWhiteIP(String whiteIp, String ip)
+        {
+            if (ip.IsNullOrEmpty()) return true;
+            if (whiteIp.IsNullOrEmpty()) return true;
+
+            var ss = whiteIp.Split(",");
+            foreach (var item in ss)
+            {
+                if (item.IsMatch(ip)) return true;
+            }
+
+            return false;
         }
 
         private String BuildCode(NodeInfo di)
