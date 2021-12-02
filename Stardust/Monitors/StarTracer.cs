@@ -29,8 +29,8 @@ namespace Stardust.Monitors
         /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
         public String ClientId { get; set; }
 
-        /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认120</summary>
-        public Int32 MaxFails { get; set; } = 120;
+        /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认10</summary>
+        public Int32 MaxFails { get; set; } = 10;
 
         /// <summary>要排除的操作名</summary>
         public String[] Excludes { get; set; }
