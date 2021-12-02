@@ -219,7 +219,7 @@ namespace Stardust.Server.Controllers
 
             // 检查白名单
             var ip = UserHost;
-            if (IsMatchWhiteIP(set.WhiteIP, ip)) throw new ApiException(13, "非法来源，禁止注册");
+            if (!IsMatchWhiteIP(set.WhiteIP, ip)) throw new ApiException(13, "非法来源，禁止注册");
 
             var di = inf.Node;
             var code = BuildCode(di);
