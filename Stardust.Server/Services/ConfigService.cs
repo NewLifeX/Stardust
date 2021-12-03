@@ -195,7 +195,7 @@ namespace Stardust.Server.Services
                         if (dic.TryGetValue("Value", out var v)) data.Value = v + "";
                         if (dic.TryGetValue("Comment", out v)) data.Remark = v + "";
                     }
-                    else if (item.Value is JsonElement json)
+                    else if (item.Value is JsonElement json && json.ValueKind == JsonValueKind.Object)
                     {
                         if (json.TryGetProperty("Value", out var v)) data.Value = v + "";
                         if (json.TryGetProperty("Comment", out v)) data.Remark = v + "";
@@ -211,7 +211,7 @@ namespace Stardust.Server.Services
                     {
                         if (dic.TryGetValue("Comment", out var v)) data.Remark = v + "";
                     }
-                    else if (item.Value is JsonElement json)
+                    else if (item.Value is JsonElement json && json.ValueKind == JsonValueKind.Object)
                     {
                         if (json.TryGetProperty("Comment", out var v)) data.Remark = v + "";
                     }
