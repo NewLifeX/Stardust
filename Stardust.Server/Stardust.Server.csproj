@@ -40,7 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Redis" Version="3.9.2021.1001" />
+    <PackageReference Include="NewLife.Redis" Version="3.9.2021.1204" />
   </ItemGroup>
 
   <ItemGroup>

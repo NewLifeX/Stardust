@@ -119,22 +119,23 @@ namespace Stardust
             if (url.IsNullOrEmpty())
             {
                 var set = NewLife.Setting.Current;
-                url = set.PluginServer.CombinePath("star");
+                url = set.PluginServer.EnsureEnd("/");
+                url += "star/";
                 if (Environment.Version.Major >= 6)
-                    url = url.CombinePath("staragent60.zip");
+                    url += "staragent60.zip";
                 else if (Environment.Version.Major >= 5)
-                    url = url.CombinePath("staragent50.zip");
+                    url += "staragent50.zip";
                 else if (Environment.Version.Major >= 4)
-                    url = url.CombinePath("staragent45.zip");
+                    url += "staragent45.zip";
                 else
-                    url = url.CombinePath("staragent31.zip");
+                    url += "staragent31.zip";
             }
 
             // 尝试连接，获取版本
             try
             {
                 var info = GetInfo();
-                if (info == null)
+                if (info != null)
                 {
                     // 比目标版本高，不需要安装
                     if (String.Compare(info.Version, version) >= 0) return true;
@@ -198,16 +199,13 @@ namespace Stardust
             {
                 // 在进程中查找
                 var info = Info;
+                var inService = info?.Arguments == "-s";
                 var p = info != null && info.ProcessId > 0 ?
                     Process.GetProcessById(info.ProcessId) :
                     Process.GetProcesses().FirstOrDefault(e => e.ProcessName == "StarAgent");
 
-                // 在Linux中设置执行权限
-                var fileName = info?.FileName ?? target.CombinePath(Runtime.Linux ? "StarAgent" : "StarAgent.exe");
-                if (File.Exists(fileName) && Runtime.Linux) Process.Start("chmod", $"+x {fileName}");
-
                 // 重启目标
-                if (p != null)
+                if (p != null && !inService)
                 {
                     try
                     {
@@ -220,22 +218,108 @@ namespace Stardust
                     }
                 }
 
-                if (File.Exists(fileName))
+                var fileName = info?.FileName;
+                if (!fileName.IsNullOrEmpty() && Path.GetFullPath(fileName).EqualIgnoreCase("dotnet.exe")) fileName = info.Arguments;
+
+                var rs = false;
+                if (Runtime.Windows)
+                    rs = RunAgentOnWindows(fileName, target, inService);
+                else if (Runtime.Linux)
+                    rs = RunAgentOnLinux(fileName, target, inService);
+                if (!rs)
+                    rs = RunAgentOnDotnet(fileName, target, inService);
+            }
+
+            return true;
+        }
+
+        private static Boolean RunAgentOnWindows(String fileName, String target, Boolean inService)
+        {
+            if (!fileName.IsNullOrEmpty() && Path.GetExtension(fileName) == ".dll") return false;
+            if (fileName.IsNullOrEmpty()) fileName = target.CombinePath("StarAgent.exe").GetFullPath();
+            if (!File.Exists(fileName)) return false;
+
+            XTrace.WriteLine("RunAgentOnWindows fileName={0}, inService={1}", fileName, inService);
+
+            if (inService)
+            {
+                Process.Start(fileName, "-stop");
+                Process.Start(fileName, "-start");
+
+                XTrace.WriteLine("启动服务成功");
+            }
+            else
+            {
+                var si = new ProcessStartInfo(fileName, "-run")
                 {
-                    if (info?.Arguments == "-s")
-                    {
-                        Process.Start(fileName, "-start");
-                    }
-                    else
-                    {
-                        var si = new ProcessStartInfo(fileName, "-run")
-                        {
-                            WorkingDirectory = Path.GetDirectoryName(fileName),
-                            UseShellExecute = true
-                        };
-                        Process.Start(si);
-                    }
-                }
+                    WorkingDirectory = Path.GetDirectoryName(fileName),
+                    UseShellExecute = true
+                };
+                var p = Process.Start(si);
+
+                XTrace.WriteLine("启动进程成功 pid={0}", p.Id);
+            }
+
+            return true;
+        }
+
+        private static Boolean RunAgentOnLinux(String fileName, String target, Boolean inService)
+        {
+            if (!fileName.IsNullOrEmpty() && Path.GetExtension(fileName) == ".dll") return false;
+            if (fileName.IsNullOrEmpty()) fileName = target.CombinePath("StarAgent").GetFullPath();
+            if (!File.Exists(fileName)) return false;
+
+            XTrace.WriteLine("RunAgentOnLinux fileName={0}, inService={1}", fileName, inService);
+
+            // 在Linux中设置执行权限
+            Process.Start("chmod", $"+x {fileName}");
+
+            if (inService)
+            {
+                Process.Start(fileName, "-stop");
+                Process.Start(fileName, "-start");
+
+                XTrace.WriteLine("启动服务成功");
+            }
+            else
+            {
+                var si = new ProcessStartInfo(fileName, "-run")
+                {
+                    WorkingDirectory = Path.GetDirectoryName(fileName),
+                    UseShellExecute = true
+                };
+                var p = Process.Start(si);
+
+                XTrace.WriteLine("启动进程成功 pid={0}", p.Id);
+            }
+
+            return true;
+        }
+
+        private static Boolean RunAgentOnDotnet(String fileName, String target, Boolean inService)
+        {
+            if (fileName.IsNullOrEmpty()) fileName = target.CombinePath("StarAgent.dll").GetFullPath();
+            if (!File.Exists(fileName)) return false;
+
+            XTrace.WriteLine("RunAgentOnDotnet fileName={0}, inService={1}", fileName, inService);
+
+            if (inService)
+            {
+                Process.Start("dotnet", $"{fileName} -stop");
+                Process.Start("dotnet", $"{fileName} -start");
+
+                XTrace.WriteLine("启动服务成功");
+            }
+            else
+            {
+                var si = new ProcessStartInfo("dotnet", $"{fileName} -run")
+                {
+                    WorkingDirectory = Path.GetDirectoryName(fileName),
+                    UseShellExecute = true
+                };
+                var p = Process.Start(si);
+
+                XTrace.WriteLine("启动进程成功 pid={0}", p.Id);
             }
 
             return true;

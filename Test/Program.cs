@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -21,7 +22,7 @@ namespace Test
         {
             XTrace.UseConsole();
 
-            Test5();
+            Test3();
 
             Console.WriteLine("OK!");
             Console.ReadKey();
@@ -103,7 +104,15 @@ namespace Test
             //}
 
             var client = new LocalStarClient();
-            client.ProbeAndInstall(null, "1.1");
+            client.ProbeAndInstall(null, "1.6");
+
+            //var p = Process.GetCurrentProcess();
+            //var name = p.MainModule.FileName;
+            //var str = name + Environment.NewLine + name.ToJson();
+            //str += Environment.NewLine + name.ToJson().ToJsonEntity<String>();
+
+            //XTrace.WriteLine(str);
+            //File.WriteAllText("aa.txt".GetFullPath(), str);
         }
 
         static void Test4()
