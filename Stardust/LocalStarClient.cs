@@ -134,14 +134,16 @@ namespace Stardust
             try
             {
                 var info = GetInfo();
+                if (info == null)
+                {
+                    // 比目标版本高，不需要安装
+                    if (String.Compare(info.Version, version) >= 0) return true;
 
-                // 比目标版本高，不需要安装
-                if (String.Compare(info.Version, version) >= 0) return true;
+                    if (!info.FileName.IsNullOrEmpty()) info.FileName = info.FileName.TrimEnd(" (deleted)");
+                    if (target.IsNullOrEmpty()) target = Path.GetDirectoryName(info.FileName);
 
-                if (!info.FileName.IsNullOrEmpty()) info.FileName = info.FileName.TrimEnd(" (deleted)");
-                if (target.IsNullOrEmpty()) target = Path.GetDirectoryName(info.FileName);
-
-                XTrace.WriteLine("StarAgent在用版本 v{0}，低于目标版本 v{1}", info.Version, version);
+                    XTrace.WriteLine("StarAgent在用版本 v{0}，低于目标版本 v{1}", info.Version, version);
+                }
             }
             catch (Exception ex)
             {
