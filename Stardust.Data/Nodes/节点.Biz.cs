@@ -56,6 +56,9 @@ namespace Stardust.Data.Nodes
             len = _.DiskID.Length;
             if (DiskID != null && len > 0 && DiskID.Length > len) DiskID = DiskID.Substring(0, len);
 
+            len = _.OS.Length;
+            if (OS != null && len > 0 && OS.Length > len) OS = OS.Substring(0, len);
+
             if (Period == 0) Period = 60;
         }
 
