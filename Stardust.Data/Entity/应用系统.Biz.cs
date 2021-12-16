@@ -128,17 +128,18 @@ namespace Stardust.Data
             // 更新应用信息
             if (app != null && model.Info != null)
             {
-                // 严格来说，应该采用公网IP+内外IP+进程ID才能够保证比较高的唯一性，这里为了简单，直接使用公网IP
-                // 同时，还可能存在多层NAT网络的情况，很难保证绝对唯一
-                var clientId = ip;
-                var ss = model.ClientId.Split('@');
-                if (ss.Length >= 2) clientId = $"{ip}@{ss[1]}";
+                //// 严格来说，应该采用公网IP+内外IP+进程ID才能够保证比较高的唯一性，这里为了简单，直接使用公网IP
+                //// 同时，还可能存在多层NAT网络的情况，很难保证绝对唯一
+                //var clientId = ip;
+                //var ss = model.ClientId.Split('@');
+                //if (ss.Length >= 2) clientId = $"{ip}@{ss[1]}";
 
-                var online = Data.AppOnline.GetOrAddClient(clientId);
-                online.Category = app.Category;
-                online.PingCount++;
-                online.Version = model.Version;
-                online.UpdateInfo(app, model.Info);
+                //var online = Data.AppOnline.GetOrAddClient(clientId);
+                //online.Category = app.Category;
+                //online.PingCount++;
+                //online.Version = model.Version;
+                //if (online.CreateIP.IsNullOrEmpty()) online.CreateIP = ip;
+                //online.UpdateInfo(app, model.Info);
 
                 // 优先使用clientId内部的内网本机IP作为跟踪数据客户端实例
                 if (!model.ClientId.IsNullOrEmpty() && model.ClientId.Contains("@")) ip = model.ClientId.Substring(null, "@");

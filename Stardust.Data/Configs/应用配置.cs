@@ -10,12 +10,12 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Configs
 {
-    /// <summary>应用配置。需要管理配置的应用系统列表</summary>
+    /// <summary>应用配置。需要管理配置的应用系统列表，每个应用以命令对形式管理配置数据，支持版本发布</summary>
     [Serializable]
     [DataObject]
-    [Description("应用配置。需要管理配置的应用系统列表")]
+    [Description("应用配置。需要管理配置的应用系统列表，每个应用以命令对形式管理配置数据，支持版本发布")]
     [BindIndex("IU_AppConfig_Name", true, "Name")]
-    [BindTable("AppConfig", Description = "应用配置。需要管理配置的应用系统列表", ConnName = "ConfigCenter", DbType = DatabaseType.None)]
+    [BindTable("AppConfig", Description = "应用配置。需要管理配置的应用系统列表，每个应用以命令对形式管理配置数据，支持版本发布", ConnName = "ConfigCenter", DbType = DatabaseType.None)]
     public partial class AppConfig
     {
         #region 属性

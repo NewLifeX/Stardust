@@ -17,6 +17,7 @@ namespace Stardust.Data
     [BindIndex("IU_AppOnline_Client", true, "Client")]
     [BindIndex("IX_AppOnline_AppId", false, "AppId")]
     [BindIndex("IX_AppOnline_UpdateTime", false, "UpdateTime")]
+    [BindIndex("IX_AppOnline_Token", false, "Token")]
     [BindTable("AppOnline", Description = "应用在线。一个应用有多个部署，每个在线会话对应一个服务地址", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppOnline
     {
@@ -117,6 +118,14 @@ namespace Stardust.Data
         [BindColumn("Compile", "编译时间。客户端", "")]
         public DateTime Compile { get => _Compile; set { if (OnPropertyChanging("Compile", value)) { _Compile = value; OnPropertyChanged("Compile"); } } }
 
+        private String _Token;
+        /// <summary>令牌</summary>
+        [DisplayName("令牌")]
+        [Description("令牌")]
+        [DataObjectField(false, false, true, 200)]
+        [BindColumn("Token", "令牌", "")]
+        public String Token { get => _Token; set { if (OnPropertyChanging("Token", value)) { _Token = value; OnPropertyChanged("Token"); } } }
+
         private String _Creator;
         /// <summary>创建者。服务端节点</summary>
         [DisplayName("创建者")]
@@ -172,6 +181,7 @@ namespace Stardust.Data
                     case "StartTime": return _StartTime;
                     case "Version": return _Version;
                     case "Compile": return _Compile;
+                    case "Token": return _Token;
                     case "Creator": return _Creator;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -195,6 +205,7 @@ namespace Stardust.Data
                     case "StartTime": _StartTime = value.ToDateTime(); break;
                     case "Version": _Version = Convert.ToString(value); break;
                     case "Compile": _Compile = value.ToDateTime(); break;
+                    case "Token": _Token = Convert.ToString(value); break;
                     case "Creator": _Creator = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -244,6 +255,9 @@ namespace Stardust.Data
 
             /// <summary>编译时间。客户端</summary>
             public static readonly Field Compile = FindByName("Compile");
+
+            /// <summary>令牌</summary>
+            public static readonly Field Token = FindByName("Token");
 
             /// <summary>创建者。服务端节点</summary>
             public static readonly Field Creator = FindByName("Creator");
@@ -298,6 +312,9 @@ namespace Stardust.Data
 
             /// <summary>编译时间。客户端</summary>
             public const String Compile = "Compile";
+
+            /// <summary>令牌</summary>
+            public const String Token = "Token";
 
             /// <summary>创建者。服务端节点</summary>
             public const String Creator = "Creator";

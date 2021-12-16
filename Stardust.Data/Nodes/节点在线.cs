@@ -15,6 +15,7 @@ namespace Stardust.Data.Nodes
     [DataObject]
     [Description("节点在线")]
     [BindIndex("IU_NodeOnline_SessionID", true, "SessionID")]
+    [BindIndex("IX_NodeOnline_Token", false, "Token")]
     [BindIndex("IX_NodeOnline_UpdateTime", false, "UpdateTime")]
     [BindIndex("IX_NodeOnline_ProvinceID_CityID", false, "ProvinceID,CityID")]
     [BindTable("NodeOnline", Description = "节点在线", ConnName = "Node", DbType = DatabaseType.None)]

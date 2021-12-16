@@ -101,6 +101,7 @@
     </Columns>
     <Indexes>
       <Index Columns="SessionID" Unique="True" />
+      <Index Columns="Token" />
       <Index Columns="UpdateTime" />
       <Index Columns="ProvinceID,CityID" />
     </Indexes>

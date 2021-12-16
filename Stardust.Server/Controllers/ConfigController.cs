@@ -39,6 +39,7 @@ namespace Stardust.Server.Controllers
             // 作用域为空时重写
             scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip) : scope;
             online.Scope = scope;
+            online.SaveAsync();
 
             var dic = _configService.GetConfigs(app, scope);
 
@@ -76,6 +77,7 @@ namespace Stardust.Server.Controllers
             var scope = model.Scope;
             scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip) : scope;
             online.Scope = scope;
+            online.SaveAsync();
 
             var dic = _configService.GetConfigs(app, scope);
 
@@ -124,7 +126,7 @@ namespace Stardust.Server.Controllers
 
             // 更新心跳信息
             var ip = HttpContext.GetUserHost();
-            var online = app.UpdateInfo(ap, ip);
+            var online = ConfigOnline.UpdateOnline(app, ip, token);
 
             // 检查应用有效性
             if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");

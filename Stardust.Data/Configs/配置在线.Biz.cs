@@ -1,26 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
-using NewLife.Log;
-using NewLife.Model;
 using NewLife.Reflection;
-using NewLife.Threading;
-using NewLife.Web;
 using XCode;
-using XCode.Cache;
-using XCode.Configuration;
-using XCode.DataAccessLayer;
 using XCode.Membership;
 
 namespace Stardust.Data.Configs
@@ -38,6 +24,11 @@ namespace Stardust.Data.Configs
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Modules.Add<TimeModule>();
             Meta.Modules.Add<IPModule>();
+
+            // 单对象缓存
+            var sc = Meta.SingleCache;
+            sc.FindSlaveKeyMethod = k => Find(_.Client == k);
+            sc.GetSlaveKeyMethod = e => e.Client;
         }
 
         /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
@@ -86,7 +77,20 @@ namespace Stardust.Data.Configs
             // 实体缓存
             if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Client.EqualIgnoreCase(client));
 
-            return Find(_.Client == client);
+            //return Find(_.Client == client);
+
+            return Meta.SingleCache.GetItemWithSlaveKey(client) as ConfigOnline;
+        }
+
+        /// <summary>根据令牌查找</summary>
+        /// <param name="token">令牌</param>
+        /// <returns>实体对象</returns>
+        public static ConfigOnline FindByToken(String token)
+        {
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Token == token);
+
+            return Find(_.Token == token);
         }
 
         /// <summary>根据应用查找</summary>
@@ -142,15 +146,58 @@ namespace Stardust.Data.Configs
             return GetOrAdd(client, (k, c) => Find(_.Client == k), k => new ConfigOnline { Client = k });
         }
 
+        /// <summary>
+        /// 获取 或 创建  会话
+        /// </summary>
+        /// <param name="ip"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        public static ConfigOnline GetOrAddClient(String ip, String token)
+        {
+            var key = token.GetBytes().Crc16().GetBytes().ToHex();
+            var client = $"{ip}#{key}";
+            var online = FindByClient(client);
+            if (online == null) online = FindByToken(token);
+            if (online != null) return online;
+
+            return GetOrAddClient(client);
+        }
+
+        /// <summary>
+        /// 更新在线状态
+        /// </summary>
+        /// <param name="app"></param>
+        /// <param name="ip"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        public static ConfigOnline UpdateOnline(AppConfig app, String ip, String token)
+        {
+            var online = GetOrAddClient(ip, token);
+            online.AppId = app.Id;
+            online.Name = app.Name;
+            online.Category = app.Category;
+            online.Token = token;
+            online.PingCount++;
+            if (online.CreateIP.IsNullOrEmpty()) online.CreateIP = ip;
+            online.Creator = Environment.MachineName;
+
+            var appOnline = AppOnline.FindByToken(token);
+            if (appOnline != null) online.UpdateInfo(app, appOnline);
+
+            online.SaveAsync();
+
+            return online;
+        }
+
         /// <summary>更新信息</summary>
         /// <param name="app"></param>
         /// <param name="online"></param>
         public void UpdateInfo(AppConfig app, AppOnline online)
         {
-            PingCount++;
+            //PingCount++;
 
-            AppId = app.Id;
-            Name = app.Name;
+            //AppId = app.Id;
+            //Name = app.Name;
 
             if (online != null)
             {
@@ -161,9 +208,9 @@ namespace Stardust.Data.Configs
                 StartTime = online.StartTime;
             }
 
-            Creator = Environment.MachineName;
+            //Creator = Environment.MachineName;
 
-            SaveAsync();
+            //SaveAsync();
         }
 
         /// <summary>删除过期，指定过期时间</summary>
