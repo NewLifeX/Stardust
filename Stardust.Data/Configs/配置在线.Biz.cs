@@ -174,7 +174,7 @@ namespace Stardust.Data.Configs
         {
             var online = GetOrAddClient(ip, token);
             online.AppId = app.Id;
-            online.Name = app.Name;
+            //online.Name = app.Name;
             online.Category = app.Category;
             online.Token = token;
             online.PingCount++;
@@ -201,10 +201,11 @@ namespace Stardust.Data.Configs
 
             if (online != null)
             {
+                Name = online.Name;
                 Version = online.Version;
                 UserName = online.UserName;
                 ProcessId = online.Id;
-                ProcessName = online.Name;
+                ProcessName = online.ProcessName;
                 StartTime = online.StartTime;
             }
 

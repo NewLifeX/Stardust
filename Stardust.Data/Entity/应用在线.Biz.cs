@@ -166,12 +166,13 @@ namespace Stardust.Data
             if (app != null)
             {
                 AppId = app.Id;
-                Name = app.Name;
+                //Name = app.Name;
                 Category = app.Category;
             }
 
             if (info != null)
             {
+                Name = info.MachineName;
                 Version = info.Version;
                 UserName = info.UserName;
                 ProcessId = info.Id;
