@@ -237,7 +237,8 @@ namespace Stardust.Data.Configs
         /// <summary>更新信息</summary>
         /// <param name="app"></param>
         /// <param name="ip"></param>
-        public ConfigOnline UpdateInfo(App app, String ip)
+        /// <param name="key"></param>
+        public ConfigOnline UpdateInfo(App app, String ip, String key)
         {
             // 修复数据
             if (app != null)
@@ -245,17 +246,19 @@ namespace Stardust.Data.Configs
                 if (!app.DisplayName.IsNullOrEmpty()) DisplayName = app.DisplayName;
                 if (!app.Category.IsNullOrEmpty()) Category = app.Category;
 
-                // 更新应用信息
-                var clientId = $"{ip}#{Id}";
-                var online = ConfigOnline.GetOrAddClient(clientId);
-                online.Category = Category;
+                //// 更新应用信息
+                //var clientId = $"{ip}#{key}";
+                //var online = ConfigOnline.GetOrAddClient(clientId);
+                //online.Category = Category;
 
-                // 找到第一个应用在线，拷贝它的信息
-                var list = online.ProcessId > 0 ? null : AppOnline.FindAllByApp(app.Id);
+                //// 找到第一个应用在线，拷贝它的信息
+                //var list = online.ProcessId > 0 ? null : AppOnline.FindAllByApp(app.Id);
 
-                online.UpdateInfo(this, list?.FirstOrDefault(e => e.Client.StartsWith($"{ip}@")));
+                //if (online.CreateIP.IsNullOrEmpty()) online.CreateIP = ip;
+                //online.UpdateTime = DateTime.Now;
+                //online.UpdateInfo(this, list?.FirstOrDefault(e => e.Client.StartsWith($"{ip}@")));
 
-                return online;
+                //return online;
             }
 
             return null;

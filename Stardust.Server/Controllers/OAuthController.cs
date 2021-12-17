@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Web;
+using Stardust.Data;
 using Stardust.Server.Common;
 using Stardust.Server.Models;
 using Stardust.Server.Services;
@@ -26,6 +27,8 @@ namespace Stardust.Server.Controllers
 
             if (model.grant_type.IsNullOrEmpty()) model.grant_type = "password";
 
+            var ip = HttpContext.GetUserHost();
+
             // 密码模式
             if (model.grant_type == "password")
             {
@@ -33,12 +36,16 @@ namespace Stardust.Server.Controllers
 
                 // 更新应用信息
                 app.LastLogin = DateTime.Now;
-                app.LastIP = HttpContext.GetUserHost();
+                app.LastIP = ip;
                 app.SaveAsync();
 
                 app.WriteHistory("Authorize", true, model.UserName, UserHost);
 
-                return _service.IssueToken(app, set);
+                var tokenModel = _service.IssueToken(app, set);
+
+                AppOnline.UpdateOnline(app, ip, tokenModel.AccessToken);
+
+                return tokenModel;
             }
             // 刷新令牌
             else if (model.grant_type == "refresh_token")
@@ -53,7 +60,11 @@ namespace Stardust.Server.Controllers
 
                 app.WriteHistory("RefreshToken", true, model.refresh_token, UserHost);
 
-                return _service.IssueToken(app, set);
+                var tokenModel = _service.IssueToken(app, set);
+
+                AppOnline.UpdateOnline(app, ip, tokenModel.AccessToken);
+
+                return tokenModel;
             }
             else
             {

@@ -39,3 +39,5 @@ bld/
 /Stardust.Data/Configs/Config
 /Stardust.Data/Deployment/Config
 /Stardust.Data/Entity/Data
+/Stardust.Data/Nodes/Data
+/Stardust.Data/Configs/Data

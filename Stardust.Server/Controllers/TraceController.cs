@@ -45,14 +45,15 @@ namespace Stardust.Server.Controllers
             var set = Setting.Current;
 
             // 新版验证方式，访问令牌
-            Data.App ap = null;
+            App ap = null;
             if (!token.IsNullOrEmpty() && token.Split(".").Length == 3)
             {
                 ap = _service.DecodeToken(token, set);
                 //if (ap == null || ap.Name != model.AppId) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{ap?.Name}]！");
                 if (ap == null) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{ap?.Name}]！");
             }
-            Data.App.UpdateInfo(model, ip);
+            App.UpdateInfo(model, ip);
+            AppOnline.UpdateOnline(ap, ip, token, model.Info);
 
             // 该应用的追踪配置信息
             var app = AppTracer.FindByName(model.AppId);

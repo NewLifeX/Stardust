@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -7,7 +6,6 @@ using System.IO;
 using System.Linq;
 using NewLife;
 using NewLife.Caching;
-using NewLife.Log;
 
 namespace Stardust.Models
 {
@@ -15,10 +13,10 @@ namespace Stardust.Models
     public class AppInfo
     {
         #region 属性
-        /// <summary>标识</summary>
+        /// <summary>进程标识</summary>
         public Int32 Id { get; set; }
 
-        /// <summary>名称</summary>
+        /// <summary>进程名称</summary>
         public String Name { get; set; }
 
         /// <summary>版本</summary>
@@ -26,6 +24,9 @@ namespace Stardust.Models
 
         /// <summary>用户名</summary>
         public String UserName { get; set; }
+
+        /// <summary>机器名</summary>
+        public String MachineName { get; set; }
 
         /// <summary>开始时间</summary>
         public DateTime StartTime { get; set; }
@@ -86,6 +87,7 @@ namespace Stardust.Models
                 Handles = _process.HandleCount;
 
                 UserName = Environment.UserName;
+                MachineName = Environment.MachineName;
                 StartTime = _process.StartTime;
                 ProcessorTime = (Int32)_process.TotalProcessorTime.TotalMilliseconds;
 

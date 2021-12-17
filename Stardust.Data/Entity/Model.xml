@@ -42,6 +42,7 @@
       <Column Name="StartTime" DataType="DateTime" Description="进程时间" />
       <Column Name="Version" DataType="String" Description="版本。客户端" />
       <Column Name="Compile" DataType="DateTime" Description="编译时间。客户端" />
+      <Column Name="Token" DataType="String" Length="200" Description="令牌" />
       <Column Name="Creator" DataType="String" Description="创建者。服务端节点" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
@@ -51,6 +52,7 @@
       <Index Columns="Client" Unique="True" />
       <Index Columns="AppId" />
       <Index Columns="UpdateTime" />
+      <Index Columns="Token" />
     </Indexes>
   </Table>
   <Table Name="AppHistory" Description="应用历史">

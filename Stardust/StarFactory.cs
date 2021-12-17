@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using NewLife;
@@ -8,6 +9,7 @@ using NewLife.Log;
 using NewLife.Model;
 using NewLife.Reflection;
 using NewLife.Remoting;
+using NewLife.Serialization;
 using Stardust.Models;
 using Stardust.Monitors;
 
@@ -215,7 +217,7 @@ namespace Stardust
 
                     XTrace.WriteLine("初始化星尘配置中心，提供集中配置管理能力，自动从配置中心加载配置数据");
 
-                    var config = new HttpConfigProvider
+                    var config = new MyHttpConfigProvider
                     {
                         Server = Server,
                         AppId = AppId,
@@ -228,6 +230,31 @@ namespace Stardust
                 }
 
                 return _config;
+            }
+        }
+
+        class MyHttpConfigProvider : HttpConfigProvider
+        {
+            public ConfigInfo ConfigInfo { get; set; }
+
+            private Int32 _version = -1;
+            protected override IDictionary<String, Object> GetAll()
+            {
+                var rs = base.GetAll();
+
+                var inf = Info;
+                if (inf != null && inf.TryGetValue("version", out var v) && v + "" != _version + "")
+                {
+                    ConfigInfo = JsonHelper.Convert<ConfigInfo>(inf);
+
+                    var dic = new Dictionary<String, Object>(inf);
+                    dic.Remove("configs");
+                    XTrace.WriteLine("从配置中心加载：{0}", dic.ToJson());
+
+                    _version = v.ToInt();
+                }
+
+                return rs;
             }
         }
         #endregion

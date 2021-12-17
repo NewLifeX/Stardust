@@ -89,7 +89,7 @@ namespace Stardust.Data.Nodes
         /// <summary>操作系统</summary>
         [DisplayName("操作系统")]
         [Description("操作系统")]
-        [DataObjectField(false, false, true, 50)]
+        [DataObjectField(false, false, true, 100)]
         [BindColumn("OS", "操作系统", "")]
         public String OS { get => _OS; set { if (OnPropertyChanging("OS", value)) { _OS = value; OnPropertyChanged("OS"); } } }
 
