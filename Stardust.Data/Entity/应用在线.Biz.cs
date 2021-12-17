@@ -112,6 +112,8 @@ namespace Stardust.Data
         /// <returns></returns>
         public static AppOnline GetOrAddClient(String client)
         {
+            if (client.IsNullOrEmpty()) return null;
+
             return GetOrAdd(client, (k, c) => Find(_.Client == k), k => new AppOnline { Client = k });
         }
 
@@ -136,13 +138,14 @@ namespace Stardust.Data
         /// 更新在线状态
         /// </summary>
         /// <param name="app"></param>
+        /// <param name="clientId"></param>
         /// <param name="ip"></param>
         /// <param name="token"></param>
         /// <param name="info"></param>
         /// <returns></returns>
-        public static AppOnline UpdateOnline(App app, String ip, String token, AppInfo info = null)
+        public static AppOnline UpdateOnline(App app, String clientId, String ip, String token, AppInfo info = null)
         {
-            var online = GetOrAddClient(ip, token);
+            var online = GetOrAddClient(clientId) ?? GetOrAddClient(ip, token);
             //online.AppId = app.Id;
             //online.Name = app.Name;
             //online.Category = app.Category;
@@ -179,10 +182,6 @@ namespace Stardust.Data
                 ProcessName = info.Name;
                 StartTime = info.StartTime;
             }
-
-            //Creator = Environment.MachineName;
-
-            //SaveAsync();
         }
 
         /// <summary>删除过期，指定过期时间</summary>

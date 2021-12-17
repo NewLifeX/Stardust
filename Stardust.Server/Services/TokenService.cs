@@ -50,15 +50,17 @@ namespace Stardust.Server.Services
         /// <param name="secret"></param>
         /// <param name="expire"></param>
         /// <returns></returns>
-        public TokenModel IssueToken(String name, String secret, Int32 expire)
+        public TokenModel IssueToken(String name, String secret, Int32 expire, String id = null)
         {
+            if (id.IsNullOrEmpty()) id = Rand.NextString(8);
+
             // 颁发令牌
             var ss = secret.Split(':');
             var jwt = new JwtBuilder
             {
                 Issuer = Assembly.GetEntryAssembly().GetName().Name,
                 Subject = name,
-                Id = Rand.NextString(8),
+                Id = id,
                 Expire = DateTime.Now.AddSeconds(expire),
 
                 Algorithm = ss[0],

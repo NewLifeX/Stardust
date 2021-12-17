@@ -95,14 +95,17 @@ namespace Stardust.Server.Controllers
 
         private (AppConfig, ConfigOnline) Valid(String appId, String secret, String token)
         {
+            var set = Setting.Current;
+
             if (appId.IsNullOrEmpty() && !token.IsNullOrEmpty())
             {
-                var ap1 = _tokenService.DecodeToken(token, Setting.Current);
+                var ap1 = _tokenService.DecodeToken(token, set);
                 appId = ap1?.Name;
             }
 
-            var ap = _tokenService.Authorize(appId, secret, Setting.Current.AutoRegister);
+            var ap = _tokenService.Authorize(appId, secret, set.AutoRegister);
 
+            // 新建应用配置
             var app = AppConfig.FindByName(appId);
             if (app == null) app = AppConfig.Find(AppConfig._.Name == appId);
             if (app == null)
@@ -124,9 +127,12 @@ namespace Stardust.Server.Controllers
                 }
             }
 
+            var (jwt, ex) = _tokenService.DecodeToken(token, set.TokenSecret);
+            var clientId = jwt?.Id;
+
             // 更新心跳信息
             var ip = HttpContext.GetUserHost();
-            var online = ConfigOnline.UpdateOnline(app, ip, token);
+            var online = ConfigOnline.UpdateOnline(app, clientId, ip, token);
 
             // 检查应用有效性
             if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
