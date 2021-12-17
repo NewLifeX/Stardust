@@ -41,7 +41,7 @@ namespace Stardust.Server.Controllers
 
                 app.WriteHistory("Authorize", true, model.UserName, UserHost);
 
-                var tokenModel = _service.IssueToken(app, set);
+                var tokenModel = _service.IssueToken(app.Name, set.TokenSecret, set.TokenExpire);
 
                 AppOnline.UpdateOnline(app, ip, tokenModel.AccessToken);
 
@@ -60,7 +60,7 @@ namespace Stardust.Server.Controllers
 
                 app.WriteHistory("RefreshToken", true, model.refresh_token, UserHost);
 
-                var tokenModel = _service.IssueToken(app, set);
+                var tokenModel = _service.IssueToken(app.Name, set.TokenSecret, set.TokenExpire);
 
                 AppOnline.UpdateOnline(app, ip, tokenModel.AccessToken);
 
