@@ -177,7 +177,7 @@ namespace Stardust
                 {
                     if (!Valid()) return null;
 
-                    XTrace.WriteLine("初始化星尘监控中心，采样并定期上报应用性能数据");
+                    XTrace.WriteLine("初始化星尘监控中心，采样并定期上报应用性能埋点数据，包括Api接口、Http请求、数据库操作、Redis操作等");
 
                     var tracer = new StarTracer(Server)
                     {
@@ -213,7 +213,7 @@ namespace Stardust
                 {
                     if (!Valid()) return null;
 
-                    XTrace.WriteLine("初始化星尘配置中心，提供集中配置管理能力");
+                    XTrace.WriteLine("初始化星尘配置中心，提供集中配置管理能力，自动从配置中心加载配置数据");
 
                     var config = new HttpConfigProvider
                     {
