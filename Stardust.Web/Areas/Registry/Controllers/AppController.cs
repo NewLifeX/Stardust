@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using NewLife;
 using NewLife.Cube;
 using NewLife.Data;
 using NewLife.Web;
@@ -14,12 +13,11 @@ using XCode.Membership;
 namespace Stardust.Web.Areas.Registry.Controllers
 {
     [RegistryArea]
+    [Menu(99)]
     public class AppController : EntityController<App>
     {
         static AppController()
         {
-            MenuOrder = 99;
-
             ListFields.RemoveField("Secret");
 
             {
@@ -53,6 +51,12 @@ namespace Stardust.Web.Areas.Registry.Controllers
                 df.Header = "消费服务";
                 df.Url = "AppConsume?appId={Id}";
                 df.DataVisible = (e, f) => (e as App).Consumers.Count > 0;
+            }
+            {
+                var df = ListFields.AddListField("AppLog", null, "AutoActive");
+                df.DisplayName = "应用日志";
+                df.Header = "应用日志";
+                df.Url = "AppLog?appId={Id}";
             }
             {
                 var df = ListFields.AddListField("Log", "CreateUser");
