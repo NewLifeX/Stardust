@@ -33,14 +33,16 @@ namespace Stardust.Server.Controllers
             var (app, online) = Valid(appId, secret, token);
             var ip = HttpContext.GetUserHost();
 
-            // 版本没有变化时，不做计算处理，不返回配置数据
-            if (version > 0 && version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
-
             // 作用域为空时重写
             scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip) : scope;
-            online.Scope = scope;
-            online.SaveAsync();
 
+            // 作用域有改变时，也要返回配置数据
+            var change = online.Scope != scope;
+            online.Scope = scope;
+            online.SaveAsync(3_000);
+
+            // 版本没有变化时，不做计算处理，不返回配置数据
+            if (!change && version > 0 && version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
             var dic = _configService.GetConfigs(app, scope);
 
             return new ConfigInfo
@@ -70,14 +72,17 @@ namespace Stardust.Server.Controllers
             if (!model.MissedKeys.IsNullOrEmpty()) app.MissedKeys = model.MissedKeys;
             app.Update();
 
-            // 版本没有变化时，不做计算处理，不返回配置数据
-            if (model.Version > 0 && model.Version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
-
             // 作用域为空时重写
             var scope = model.Scope;
             scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip) : scope;
+
+            // 作用域有改变时，也要返回配置数据
+            var change = online.Scope != scope;
             online.Scope = scope;
             online.SaveAsync(3_000);
+
+            // 版本没有变化时，不做计算处理，不返回配置数据
+            if (!change && model.Version > 0 && model.Version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
 
             var dic = _configService.GetConfigs(app, scope);
 
