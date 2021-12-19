@@ -4,23 +4,21 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
+using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Deployment;
-using Stardust.Data.Nodes;
 using XCode;
-using XCode.Membership;
 
 namespace Stardust.Web.Areas.Deployment.Controllers
 {
     [DeploymentArea]
+    [Menu(90)]
     public class AppDeployController : EntityController<AppDeploy>
     {
         private readonly StarFactory _starFactory;
 
         static AppDeployController()
         {
-            MenuOrder = 90;
-
             ListFields.RemoveCreateField();
             ListFields.RemoveField("WorkingDirectory");
             ListFields.RemoveField("ApolloMetaServer");
@@ -50,7 +48,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             }
 
             {
-                var df = ListFields.AddListField(AppDeploy._.Name);
+                var df = ListFields.GetField("Name") as ListField;
                 //df.Header = "应用";
                 df.Url = "/Registry/App?q={Name}";
             }

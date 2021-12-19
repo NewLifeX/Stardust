@@ -28,6 +28,7 @@ namespace Stardust.Server.Controllers
             if (model.grant_type.IsNullOrEmpty()) model.grant_type = "password";
 
             var ip = HttpContext.GetUserHost();
+            var clientId = model.ClientId;
 
             // 密码模式
             if (model.grant_type == "password")
@@ -41,16 +42,20 @@ namespace Stardust.Server.Controllers
 
                 app.WriteHistory("Authorize", true, model.UserName, UserHost);
 
-                var tokenModel = _service.IssueToken(app, set);
+                var tokenModel = _service.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
 
-                AppOnline.UpdateOnline(app, ip, tokenModel.AccessToken);
+                AppOnline.UpdateOnline(app, clientId, ip, tokenModel.AccessToken);
 
                 return tokenModel;
             }
             // 刷新令牌
             else if (model.grant_type == "refresh_token")
             {
-                var (app, ex) = _service.TryDecodeToken(model.refresh_token, set.TokenSecret);
+                var (jwt, ex) = _service.DecodeToken(model.refresh_token, set.TokenSecret);
+
+                // 验证应用
+                var app = App.FindByName(jwt?.Subject);
+                if ((app == null || !app.Enable) && ex == null) ex = new InvalidOperationException($"无效应用[{jwt.Subject}]");
 
                 if (ex != null)
                 {
@@ -58,11 +63,13 @@ namespace Stardust.Server.Controllers
                     throw ex;
                 }
 
+                if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
+
                 app.WriteHistory("RefreshToken", true, model.refresh_token, UserHost);
 
-                var tokenModel = _service.IssueToken(app, set);
+                var tokenModel = _service.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
 
-                AppOnline.UpdateOnline(app, ip, tokenModel.AccessToken);
+                AppOnline.UpdateOnline(app, clientId, ip, tokenModel.AccessToken);
 
                 return tokenModel;
             }

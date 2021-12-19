@@ -4,7 +4,7 @@ using Stardust.Data;
 namespace Stardust.Web.Areas.Registry.Controllers
 {
     [RegistryArea]
-    [Menu(95, true)]
+    [Menu(95)]
     public class AppOnlineController : EntityController<AppOnline>
     {
         static AppOnlineController()

@@ -143,6 +143,8 @@ namespace Stardust.Data.Configs
         /// <returns></returns>
         public static ConfigOnline GetOrAddClient(String client)
         {
+            if (client.IsNullOrEmpty()) return null;
+
             return GetOrAdd(client, (k, c) => Find(_.Client == k), k => new ConfigOnline { Client = k });
         }
 
@@ -167,12 +169,13 @@ namespace Stardust.Data.Configs
         /// 更新在线状态
         /// </summary>
         /// <param name="app"></param>
+        /// <param name="clientId"></param>
         /// <param name="ip"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        public static ConfigOnline UpdateOnline(AppConfig app, String ip, String token)
+        public static ConfigOnline UpdateOnline(AppConfig app, String clientId, String ip, String token)
         {
-            var online = GetOrAddClient(ip, token);
+            var online = GetOrAddClient(clientId) ?? GetOrAddClient(ip, token);
             online.AppId = app.Id;
             //online.Name = app.Name;
             online.Category = app.Category;

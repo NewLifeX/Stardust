@@ -46,19 +46,22 @@ namespace Stardust.Server.Services
         }
 
         /// <summary>颁发令牌</summary>
-        /// <param name="app"></param>
-        /// <param name="set"></param>
+        /// <param name="name"></param>
+        /// <param name="secret"></param>
+        /// <param name="expire"></param>
         /// <returns></returns>
-        public TokenModel IssueToken(App app, Setting set)
+        public TokenModel IssueToken(String name, String secret, Int32 expire, String id = null)
         {
+            if (id.IsNullOrEmpty()) id = Rand.NextString(8);
+
             // 颁发令牌
-            var ss = set.TokenSecret.Split(':');
+            var ss = secret.Split(':');
             var jwt = new JwtBuilder
             {
                 Issuer = Assembly.GetEntryAssembly().GetName().Name,
-                Subject = app.Name,
-                Id = Rand.NextString(8),
-                Expire = DateTime.Now.AddSeconds(set.TokenExpire),
+                Subject = name,
+                Id = id,
+                Expire = DateTime.Now.AddSeconds(expire),
 
                 Algorithm = ss[0],
                 Secret = ss[1],
@@ -68,9 +71,31 @@ namespace Stardust.Server.Services
             {
                 AccessToken = jwt.Encode(null),
                 TokenType = jwt.Type ?? "JWT",
-                ExpireIn = set.TokenExpire,
+                ExpireIn = expire,
                 RefreshToken = jwt.Encode(null),
             };
+        }
+
+        /// <summary>解码令牌</summary>
+        /// <param name="token"></param>
+        /// <param name="tokenSecret"></param>
+        /// <returns></returns>
+        public (JwtBuilder, Exception) DecodeToken(String token, String tokenSecret)
+        {
+            if (token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(token));
+
+            // 解码令牌
+            var ss = tokenSecret.Split(':');
+            var jwt = new JwtBuilder
+            {
+                Algorithm = ss[0],
+                Secret = ss[1],
+            };
+
+            Exception ex = null;
+            if (!jwt.TryDecode(token, out var message)) ex = new ApiException(403, $"非法访问 {message}");
+
+            return (jwt, ex);
         }
 
         /// <summary>解码令牌</summary>

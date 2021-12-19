@@ -53,7 +53,14 @@ namespace Stardust.Server.Controllers
                 if (ap == null) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{ap?.Name}]！");
             }
             App.UpdateInfo(model, ip);
-            AppOnline.UpdateOnline(ap, ip, token, model.Info);
+
+            var clientId = model.ClientId;
+            if (clientId.IsNullOrEmpty())
+            {
+                var (jwt, ex) = _service.DecodeToken(token, set.TokenSecret);
+                clientId = jwt?.Id;
+            }
+            AppOnline.UpdateOnline(ap, clientId, ip, token, model.Info);
 
             // 该应用的追踪配置信息
             var app = AppTracer.FindByName(model.AppId);

@@ -47,7 +47,7 @@ namespace Stardust.Server.Services.Tests
             var set = Setting.Current;
             var service = new TokenService();
 
-            var model = service.IssueToken(app, set);
+            var model = service.IssueToken(app.Name, set.TokenSecret, set.TokenExpire);
             Assert.NotNull(model);
 
             Assert.Equal(3, model.AccessToken.Split('.').Length);
@@ -69,7 +69,7 @@ namespace Stardust.Server.Services.Tests
             var set = Setting.Current;
             var service = new TokenService();
 
-            var model = service.IssueToken(app, set);
+            var model = service.IssueToken(app.Name, set.TokenSecret, set.TokenExpire);
             Assert.NotNull(model);
 
             // 马上解码

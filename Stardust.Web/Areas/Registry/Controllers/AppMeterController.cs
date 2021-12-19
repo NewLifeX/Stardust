@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
@@ -14,12 +13,11 @@ using static Stardust.Data.AppMeter;
 namespace Stardust.Web.Areas.Registry.Controllers
 {
     [RegistryArea]
+    [Menu(0, false)]
     public class AppMeterController : EntityController<AppMeter>
     {
         static AppMeterController()
         {
-            MenuOrder = 93;
-
             ListFields.RemoveField("Id");
         }
 
@@ -77,20 +75,6 @@ namespace Stardust.Web.Areas.Registry.Controllers
             }
 
             return list;
-        }
-
-        /// <summary>菜单不可见</summary>
-        /// <param name="menu"></param>
-        /// <returns></returns>
-        protected override IDictionary<MethodInfo, Int32> ScanActionMenu(IMenu menu)
-        {
-            if (menu.Visible)
-            {
-                menu.Visible = false;
-                (menu as IEntity).Update();
-            }
-
-            return base.ScanActionMenu(menu);
         }
     }
 }
