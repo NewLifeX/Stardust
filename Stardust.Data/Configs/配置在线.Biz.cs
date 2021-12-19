@@ -184,7 +184,7 @@ namespace Stardust.Data.Configs
             var appOnline = AppOnline.FindByToken(token);
             if (appOnline != null) online.UpdateInfo(app, appOnline);
 
-            online.SaveAsync();
+            online.SaveAsync(3_000);
 
             return online;
         }

@@ -77,7 +77,7 @@ namespace Stardust.Server.Controllers
             var scope = model.Scope;
             scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip) : scope;
             online.Scope = scope;
-            online.SaveAsync();
+            online.SaveAsync(3_000);
 
             var dic = _configService.GetConfigs(app, scope);
 
