@@ -78,13 +78,13 @@ namespace StarAgent
 
             MachineInfo.RegisterAsync();
 
-            // 定时重启
-            var set2 = NewLife.Agent.Setting.Current;
-            if (set2.AutoRestart == 0)
-            {
-                set2.AutoRestart = 24 * 60;
-                set2.Save();
-            }
+            //// 定时重启
+            //var set2 = NewLife.Agent.Setting.Current;
+            //if (set2.AutoRestart == 0)
+            //{
+            //    set2.AutoRestart = 24 * 60;
+            //    set2.Save();
+            //}
         }
 
         private ApiServer _server;
