@@ -58,7 +58,7 @@ namespace Stardust.Data.Nodes
         /// <summary>本地IP</summary>
         [DisplayName("本地IP")]
         [Description("本地IP")]
-        [DataObjectField(false, false, true, 50)]
+        [DataObjectField(false, false, true, 200)]
         [BindColumn("IP", "本地IP", "")]
         public String IP { get => _IP; set { if (OnPropertyChanging("IP", value)) { _IP = value; OnPropertyChanged("IP"); } } }
 
