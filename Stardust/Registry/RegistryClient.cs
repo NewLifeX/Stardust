@@ -120,6 +120,7 @@ namespace Stardust.Registry
                     //_consumes.TryAdd(svc.ServiceName, ms);
                     _consumes[svc.ServiceName] = ms;
 
+                    //todo 需要判断，只有服务改变才调用相应事件
                     if (_consumeEvents.TryGetValue(svc.ServiceName, out var list))
                     {
                         foreach (var action in list)
