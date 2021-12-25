@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -11,7 +10,6 @@ using NewLife.Log;
 using NewLife.Model;
 using NewLife.Reflection;
 using NewLife.Remoting;
-using NewLife.Serialization;
 using Stardust.Configs;
 using Stardust.Models;
 using Stardust.Monitors;
@@ -313,6 +311,7 @@ namespace Stardust
         {
             if (ms != null && ms.Length > 0)
             {
+                var count = client.Services.Count;
                 foreach (var item in ms)
                 {
                     var addrs = item.Address.Split(",");
@@ -325,6 +324,12 @@ namespace Stardust
                             Weight = item.Weight,
                         });
                     }
+                }
+
+                // 删掉旧的
+                for (var i = count - 1; i >= 0; i--)
+                {
+                    client.Services.RemoveAt(i);
                 }
             }
         }
