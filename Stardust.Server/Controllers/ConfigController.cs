@@ -132,11 +132,15 @@ namespace Stardust.Server.Controllers
                 }
             }
 
-            var (jwt, ex) = _tokenService.DecodeToken(token, set.TokenSecret);
-            var clientId = jwt?.Id;
+            var ip = HttpContext.GetUserHost();
+            var clientId = ip;
+            if (!token.IsNullOrEmpty())
+            {
+                var (jwt, ex) = _tokenService.DecodeToken(token, set.TokenSecret);
+                clientId = jwt?.Id;
+            }
 
             // 更新心跳信息
-            var ip = HttpContext.GetUserHost();
             var online = ConfigOnline.UpdateOnline(app, clientId, ip, token);
 
             // 检查应用有效性
