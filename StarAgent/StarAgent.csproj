@@ -7,8 +7,8 @@
     <Description>星尘，分布式资源调度，部署于每一个节点，连接服务端，支持节点监控、远程发布。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2021 NewLife</Copyright>
-    <Version>1.5.2021.1216</Version>
-    <FileVersion>1.5.2021.1216</FileVersion>
+    <Version>1.5.2021.1225</Version>
+    <FileVersion>1.5.2021.1225</FileVersion>
     <AssemblyVersion>1.5.*</AssemblyVersion>
     <Deterministic>false</Deterministic>
     <OutputPath>..\Bin\Agent</OutputPath>

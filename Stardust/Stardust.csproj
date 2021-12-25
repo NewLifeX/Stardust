@@ -7,8 +7,8 @@
     <Description>星尘，分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2021 NewLife</Copyright>
-    <Version>1.5.2021.1216-beta1</Version>
-    <FileVersion>1.5.2021.1216</FileVersion>
+    <Version>1.5.2021.1225</Version>
+    <FileVersion>1.5.2021.1225</FileVersion>
     <AssemblyVersion>1.5.*</AssemblyVersion>
     <Deterministic>false</Deterministic>
     <OutputPath>..\..\Bin</OutputPath>
@@ -24,7 +24,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>新增星尘发布中心；新增WebSocket支持</PackageReleaseNotes>
+    <PackageReleaseNotes>这是最后一个支持NET40/NET45/NET46/NET47/NET48/NETSTANDARD2.0的版本，2022年将从NETSTANDARD2.1开始，感谢有你一路陪伴！</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -52,7 +52,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="8.11.2021.1223-beta3" />
+    <PackageReference Include="NewLife.Core" Version="8.11.2021.1225" />
   </ItemGroup>
 
 </Project>
