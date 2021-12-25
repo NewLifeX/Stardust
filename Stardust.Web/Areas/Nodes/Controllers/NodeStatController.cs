@@ -43,7 +43,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                 start = DateTime.Today.AddDays(-30);
                 p["dtStart"] = start.ToString("yyyy-MM-dd");
 
-                p.Sort = NodeStat.__.StatDate;
+                p.Sort = __.StatDate;
                 p.Desc = false;
                 p.PageSize = 100;
 

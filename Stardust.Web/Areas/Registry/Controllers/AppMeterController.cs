@@ -39,7 +39,7 @@ namespace Stardust.Web.Areas.Registry.Controllers
                 // 自动客户端
                 if (clientId.IsNullOrEmpty())
                 {
-                    var clients = AppMeter.GetClientIds(appId);
+                    var clients = GetClientIds(appId);
                     if (clients != null && clients.Count > 0) clientId = clients.FirstOrDefault(e => e.Key != "null").Key;
                 }
 

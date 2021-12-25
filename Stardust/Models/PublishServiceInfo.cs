@@ -17,8 +17,11 @@ namespace Stardust.Models
         /// <summary>版本</summary>
         public String Version { get; set; }
 
-        /// <summary>地址</summary>
+        /// <summary>服务地址</summary>
         public String Address { get; set; }
+
+        /// <summary>健康检测地址</summary>
+        public String Heath{ get; set; }
 
         /// <summary>标签。带有指定特性，逗号分隔</summary>
         public String Tag { get; set; }

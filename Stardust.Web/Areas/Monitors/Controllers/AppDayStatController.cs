@@ -99,7 +99,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         {
             foreach (var item in SelectKeys)
             {
-                var stat = AppDayStat.FindByID(item.ToInt());
+                var stat = FindByID(item.ToInt());
                 if (stat != null)
                 {
                     XTrace.WriteLine("重新统计 {0}/{1} {2}", stat.AppName, stat.AppId, stat.StatDate);

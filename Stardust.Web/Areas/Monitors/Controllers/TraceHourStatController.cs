@@ -93,7 +93,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         [EntityAuthorize(PermissionFlags.Detail)]
         public ActionResult Trace(Int32 id)
         {
-            var st = TraceHourStat.FindByID(id);
+            var st = FindByID(id);
             if (st == null) throw new InvalidDataException("找不到统计数据");
 
             var traceId = st.TraceId;

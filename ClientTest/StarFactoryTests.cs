@@ -13,6 +13,7 @@ using NewLife.Remoting;
 using NewLife.Security;
 using Stardust;
 using Stardust.Monitors;
+using Stardust.Registry;
 using Xunit;
 
 namespace ClientTest
@@ -22,7 +23,7 @@ namespace ClientTest
         [Fact]
         public void Normal()
         {
-            var set = Stardust.StarSetting.Current;
+            var set = StarSetting.Current;
             var secret = Rand.NextString(8, true);
             set.Secret = secret;
 
@@ -44,7 +45,7 @@ namespace ClientTest
             Assert.NotNull(config);
             Assert.Equal("NewLife开发团队", config["Title"]);
 
-            var dust = star.Service;
+            var dust = star.Service as RegistryClient;
             Assert.NotNull(dust);
 
             var filter = star.GetValue("_tokenFilter") as TokenHttpFilter;
@@ -103,7 +104,7 @@ namespace ClientTest
             Assert.NotNull(config);
             Assert.Equal(star.Config, config);
 
-            var service = provider.GetRequiredService<DustClient>();
+            var service = provider.GetRequiredService<IRegistry>();
             Assert.NotNull(service);
             Assert.Equal(star.Service, service);
         }

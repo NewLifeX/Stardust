@@ -15,6 +15,7 @@ using NewLife.Serialization;
 using Stardust.Configs;
 using Stardust.Models;
 using Stardust.Monitors;
+using Stardust.Registry;
 
 namespace Stardust
 {
@@ -254,9 +255,9 @@ namespace Stardust
         #endregion
 
         #region 注册中心
-        private DustClient _dustClient;
+        private RegistryClient _dustClient;
         /// <summary>注册中心，服务注册与发现</summary>
-        public DustClient Service
+        public IRegistry Service
         {
             get
             {
@@ -266,7 +267,7 @@ namespace Stardust
 
                     XTrace.WriteLine("初始化星尘注册中心，提供服务注册与发布能力");
 
-                    var client = new DustClient(Server)
+                    var client = new RegistryClient
                     {
                         AppId = AppId,
                         //Secret = Secret,

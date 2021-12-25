@@ -113,7 +113,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         [EntityAuthorize(PermissionFlags.Detail)]
         public ActionResult Exclude(Int64 id)
         {
-            var td = TraceData.FindById(id);
+            var td = FindById(id);
             var app = td?.App;
             if (app != null && !td.Name.IsNullOrEmpty())
             {
