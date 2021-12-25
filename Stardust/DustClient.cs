@@ -21,6 +21,9 @@ namespace Stardust
         /// <summary>应用</summary>
         public String AppId { get; set; }
 
+        /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
+        public String ClientId { get; set; }
+
         /// <summary>客户端</summary>
         public IApiClient Client { get; set; }
 

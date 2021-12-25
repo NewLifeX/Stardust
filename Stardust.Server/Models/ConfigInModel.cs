@@ -14,6 +14,9 @@ namespace Stardust.Server.Models
         /// <summary>密钥</summary>
         public String Secret { get; set; }
 
+        /// <summary>客户端标识</summary>
+        public String ClientId { get; set; }
+
         /// <summary>作用域</summary>
         public String Scope { get; set; }
 

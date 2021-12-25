@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Net.Http;
-using System.Net.Http.Headers;
+using System.Reflection;
 using System.Threading.Tasks;
 using NewLife;
 using NewLife.Configuration;
@@ -13,7 +12,7 @@ using NewLife.Model;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
-using NewLife.Web;
+using Stardust.Configs;
 using Stardust.Models;
 using Stardust.Monitors;
 
@@ -40,11 +39,17 @@ namespace Stardust
         /// <summary>应用密钥</summary>
         public String Secret { get; set; }
 
+        /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
+        public String ClientId { get; set; }
+
         ///// <summary>服务名</summary>
         //public String ServiceName { get; set; }
 
         /// <summary>客户端</summary>
         public IApiClient Client => _client;
+
+        /// <summary>配置信息。从配置中心返回的信息头</summary>
+        public ConfigInfo ConfigInfo { get; set; }
 
         private ApiHttpClient _client;
         private TokenHttpFilter _tokenFilter;
@@ -92,7 +97,7 @@ namespace Stardust
 
             if (_client == null)
             {
-                if (!AppId.IsNullOrEmpty()) _tokenFilter = new MyTokenHttpFilter
+                if (!AppId.IsNullOrEmpty()) _tokenFilter = new TokenHttpFilter
                 {
                     UserName = AppId,
                     Password = Secret,
@@ -105,78 +110,6 @@ namespace Stardust
             }
 
             return true;
-        }
-
-        /// <summary>自定义令牌过滤器。升级新版TokenHttpFilter后去掉</summary>
-        class MyTokenHttpFilter : TokenHttpFilter
-        {
-            /// <summary>客户端唯一标识。一般是IP@进程</summary>
-            public String ClientId { get; set; }
-
-            /// <summary>实例化令牌过滤器</summary>
-            public MyTokenHttpFilter() => ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}";
-
-            private DateTime _refresh;
-
-            /// <summary>请求前</summary>
-            /// <param name="client">客户端</param>
-            /// <param name="request">请求消息</param>
-            /// <param name="state">状态数据</param>
-            /// <returns></returns>
-            public override async Task OnRequest(HttpClient client, HttpRequestMessage request, Object state)
-            {
-                if (request.Headers.Authorization != null) return;
-
-                var path = client.BaseAddress == null ? request.RequestUri.AbsoluteUri : request.RequestUri.OriginalString;
-                if (path.StartsWithIgnoreCase(Action.EnsureStart("/"))) return;
-
-                // 申请令牌。没有令牌，或者令牌已过期
-                if (Token == null || Expire < DateTime.Now)
-                {
-                    var pass = EncodePassword(UserName, Password);
-                    Token = await client.PostAsync<TokenModel>(Action, new
-                    {
-                        grant_type = "password",
-                        username = UserName,
-                        password = pass,
-                        clientid = ClientId,
-                    });
-
-                    // 过期时间和刷新令牌的时间
-                    Expire = DateTime.Now.AddSeconds(Token.ExpireIn);
-                    _refresh = DateTime.Now.AddSeconds(Token.ExpireIn / 2);
-                }
-
-                // 刷新令牌。要求已有令牌，且未过期，且达到了刷新时间
-                if (Token != null && Expire > DateTime.Now && _refresh < DateTime.Now)
-                {
-                    try
-                    {
-                        Token = await client.PostAsync<TokenModel>(Action, new
-                        {
-                            grant_type = "refresh_token",
-                            refresh_token = Token.RefreshToken,
-                        });
-
-                        // 过期时间和刷新令牌的时间
-                        Expire = DateTime.Now.AddSeconds(Token.ExpireIn);
-                        _refresh = DateTime.Now.AddSeconds(Token.ExpireIn / 2);
-                    }
-                    catch (Exception ex)
-                    {
-                        XTrace.WriteLine("刷新令牌异常 {0}", Token.ToJson());
-                        XTrace.WriteException(ex);
-                    }
-                }
-
-                // 使用令牌。要求已有令牌，且未过期
-                if (Token != null && Expire > DateTime.Now)
-                {
-                    var type = Token.TokenType;
-                    if (type.IsNullOrEmpty() || type.EqualIgnoreCase("Token", "JWT")) type = "Bearer";
-                    request.Headers.Authorization = new AuthenticationHeaderValue(type, Token.AccessToken);
-                }
-            }
         }
         #endregion
 
@@ -227,12 +160,19 @@ namespace Stardust
             if (AppId.IsNullOrEmpty()) AppId = set.AppKey;
             if (Secret.IsNullOrEmpty()) Secret = set.Secret;
 
-            var asm = AssemblyX.Entry;
-            if (asm != null)
+            try
             {
-                if (AppId.IsNullOrEmpty()) AppId = asm.Name;
-                if (AppName.IsNullOrEmpty()) AppName = asm.Title;
+                var executing = AssemblyX.Create(Assembly.GetExecutingAssembly());
+                var asm = AssemblyX.Entry ?? executing;
+                if (asm != null)
+                {
+                    if (AppId.IsNullOrEmpty()) AppId = asm.Name;
+                    if (AppName.IsNullOrEmpty()) AppName = asm.Title;
+                }
+
+                ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}";
             }
+            catch { }
 
             XTrace.WriteLine("星尘分布式服务 Server={0} AppId={1}", Server, AppId);
 
@@ -266,6 +206,7 @@ namespace Stardust
 
                         Log = Log
                     };
+                    if (!ClientId.IsNullOrEmpty()) tracer.ClientId = ClientId;
 
                     tracer.AttachGlobal();
 
@@ -293,44 +234,21 @@ namespace Stardust
 
                     XTrace.WriteLine("初始化星尘配置中心，提供集中配置管理能力，自动从配置中心加载配置数据");
 
-                    var config = new MyHttpConfigProvider
+                    var config = new StarHttpConfigProvider
                     {
                         Server = Server,
                         AppId = AppId,
                         //Secret = Secret,
+                        Factory = this,
                         Client = _client,
                     };
                     //config.LoadAll();
+                    //if (!ClientId.IsNullOrEmpty()) config.ClientId = ClientId;
 
                     _config = config;
                 }
 
                 return _config;
-            }
-        }
-
-        class MyHttpConfigProvider : HttpConfigProvider
-        {
-            public ConfigInfo ConfigInfo { get; set; }
-
-            private Int32 _version = -1;
-            protected override IDictionary<String, Object> GetAll()
-            {
-                var rs = base.GetAll();
-
-                var inf = Info;
-                if (inf != null && inf.TryGetValue("version", out var v) && v + "" != _version + "")
-                {
-                    ConfigInfo = JsonHelper.Convert<ConfigInfo>(inf);
-
-                    var dic = new Dictionary<String, Object>(inf);
-                    dic.Remove("configs");
-                    XTrace.WriteLine("从配置中心加载：{0}", dic.ToJson());
-
-                    _version = v.ToInt();
-                }
-
-                return rs;
             }
         }
         #endregion
@@ -354,6 +272,7 @@ namespace Stardust
                         //Secret = Secret,
                         Client = _client,
                     };
+                    if (!ClientId.IsNullOrEmpty()) client.ClientId = ClientId;
 
                     _dustClient = client;
                 }
