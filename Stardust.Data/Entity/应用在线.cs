@@ -122,7 +122,7 @@ namespace Stardust.Data
         /// <summary>令牌</summary>
         [DisplayName("令牌")]
         [Description("令牌")]
-        [DataObjectField(false, false, true, 200)]
+        [DataObjectField(false, false, true, 500)]
         [BindColumn("Token", "令牌", "")]
         public String Token { get => _Token; set { if (OnPropertyChanging("Token", value)) { _Token = value; OnPropertyChanged("Token"); } } }
 
