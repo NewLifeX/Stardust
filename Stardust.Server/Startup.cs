@@ -107,14 +107,14 @@ namespace Stardust.Server
 
             app.UseCors("star_cors");
 
-            //app.UseMiddleware<TracerMiddleware>();
-            app.UseStardust();
-
             app.UseWebSockets(new WebSocketOptions()
             {
                 KeepAliveInterval = TimeSpan.FromSeconds(60),
             });
             //app.UseMiddleware<NodeSocketMiddleware>();
+
+            //app.UseMiddleware<TracerMiddleware>();
+            app.UseStardust();
 
             app.UseRouting();
 
