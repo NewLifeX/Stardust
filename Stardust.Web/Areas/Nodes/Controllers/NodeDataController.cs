@@ -11,15 +11,11 @@ using static Stardust.Data.Nodes.NodeData;
 
 namespace Stardust.Web.Areas.Nodes.Controllers
 {
+    [Menu(60)]
     [NodesArea]
     public class NodeDataController : ReadOnlyEntityController<NodeData>
     {
-        static NodeDataController()
-        {
-            MenuOrder = 60;
-
-            ListFields.RemoveField("Id");
-        }
+        static NodeDataController() => ListFields.RemoveField("Id");
 
         protected override IEnumerable<NodeData> Search(Pager p)
         {

@@ -9,15 +9,11 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Deployment.Controllers
 {
+    [Menu(70)]
     [DeploymentArea]
     public class AppDeployHistoryController : ReadOnlyEntityController<AppDeployHistory>
     {
-        static AppDeployHistoryController()
-        {
-            MenuOrder = 70;
-
-            ListFields.RemoveCreateField();
-        }
+        static AppDeployHistoryController() => ListFields.RemoveCreateField();
 
         protected override IEnumerable<AppDeployHistory> Search(Pager p)
         {

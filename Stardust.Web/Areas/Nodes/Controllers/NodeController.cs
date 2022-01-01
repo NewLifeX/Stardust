@@ -15,22 +15,11 @@ using static Stardust.Data.Nodes.Node;
 
 namespace Stardust.Web.Areas.Nodes.Controllers
 {
+    [Menu(90)]
     [NodesArea]
     public class NodeController : EntityController<Node>
     {
         private readonly StarFactory _starFactory;
-
-        static NodeController()
-        {
-            MenuOrder = 90;
-
-            //{
-            //    var df = ListFields.AddDataField("Log", "UpdateTime");
-            //    df.DisplayName = "修改日志";
-            //    df.Header = "修改日志";
-            //    df.Url = "/Admin/Log?category=节点&linkId={Id}";
-            //}
-        }
 
         public NodeController(StarFactory starFactory) => _starFactory = starFactory;
 

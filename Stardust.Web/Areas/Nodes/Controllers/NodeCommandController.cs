@@ -6,11 +6,10 @@ using Stardust.Data.Nodes;
 
 namespace Stardust.Web.Areas.Nodes.Controllers
 {
+    [Menu(58)]
     [NodesArea]
     public class NodeCommandController : EntityController<NodeCommand>
     {
-        static NodeCommandController() => MenuOrder = 58;
-
         protected override IEnumerable<NodeCommand> Search(Pager p)
         {
             var nodeId = p["nodeId"].ToInt(-1);

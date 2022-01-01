@@ -1,14 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
-using NewLife.Log;
-using NewLife.Remoting;
-using NewLife.Threading;
 using NewLife.Web;
 using Stardust.Data.Nodes;
 using XCode.Membership;
@@ -16,21 +10,10 @@ using static Stardust.Data.Nodes.NodeStat;
 
 namespace Stardust.Web.Areas.Nodes.Controllers
 {
+    [Menu(55)]
     [NodesArea]
     public class NodeStatController : ReadOnlyEntityController<NodeStat>
     {
-        static NodeStatController()
-        {
-            MenuOrder = 55;
-
-            //// 计算统计
-            //_timer = new TimerX(DoNodeStat, null, 10_000, 60_000) { Async = true };
-            //_timerReport = new TimerX(DoReport, null, DateTime.Today.AddHours(8), 12 * 3600 * 1000) { Async = true };
-
-            //// 先来一次
-            //_timerReport.SetNext(10_000);
-        }
-
         protected override IEnumerable<NodeStat> Search(Pager p)
         {
             var areaId = p["areaId"].ToInt(-1);

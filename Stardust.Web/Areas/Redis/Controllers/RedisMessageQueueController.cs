@@ -9,13 +9,12 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Redis.Controllers
 {
+    [Menu(30)]
     [RedisArea]
     public class RedisMessageQueueController : EntityController<RedisMessageQueue>
     {
         static RedisMessageQueueController()
         {
-            MenuOrder = 30;
-
             ListFields.RemoveCreateField();
             ListFields.RemoveUpdateField();
             ListFields.AddField("UpdateTime");

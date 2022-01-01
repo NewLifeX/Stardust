@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Web;
 using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Monitors;
@@ -10,13 +9,12 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Monitors.Controllers
 {
+    [Menu(90)]
     [MonitorsArea]
     public class AppTracerController : EntityController<AppTracer>
     {
         static AppTracerController()
         {
-            MenuOrder = 90;
-
             {
                 var df = ListFields.AddListField("Log", "CreateUser");
                 df.DisplayName = "修改日志";

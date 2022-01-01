@@ -8,15 +8,11 @@ using XCode;
 
 namespace Stardust.Web.Areas.Nodes.Controllers
 {
+    [Menu(60)]
     [NodesArea]
     public class NodeHistoryController : ReadOnlyEntityController<NodeHistory>
     {
-        static NodeHistoryController()
-        {
-            MenuOrder = 60;
-
-            ListFields.RemoveField("ID");
-        }
+        static NodeHistoryController() => ListFields.RemoveField("ID");
 
         protected override IEnumerable<NodeHistory> Search(Pager p)
         {

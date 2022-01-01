@@ -10,14 +10,10 @@ using static Stardust.Data.Monitors.AppMinuteStat;
 
 namespace Stardust.Web.Areas.Monitors.Controllers
 {
+    [Menu(0, false)]
     [MonitorsArea]
     public class AppMinuteStatController : ReadOnlyEntityController<AppMinuteStat>
     {
-        static AppMinuteStatController()
-        {
-            MenuOrder = 78;
-        }
-
         protected override IEnumerable<AppMinuteStat> Search(Pager p)
         {
             var appId = p["appId"].ToInt(-1);
@@ -154,20 +150,6 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             if (ar != null) ViewBag.Title = $"{ar}分钟统计";
 
             return list;
-        }
-
-        /// <summary>菜单不可见</summary>
-        /// <param name="menu"></param>
-        /// <returns></returns>
-        protected override IDictionary<System.Reflection.MethodInfo, Int32> ScanActionMenu(XCode.Membership.IMenu menu)
-        {
-            if (menu.Visible)
-            {
-                menu.Visible = false;
-                (menu as XCode.IEntity).Update();
-            }
-
-            return base.ScanActionMenu(menu);
         }
     }
 }

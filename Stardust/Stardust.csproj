@@ -1,15 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net40;net45;netstandard2.0;net5.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>net40;net45;netstandard2.0;netstandard2.1;net5.0;net6.0</TargetFrameworks>
     <AssemblyName>Stardust</AssemblyName>
     <AssemblyTitle>星尘分布式服务扩展</AssemblyTitle>
     <Description>星尘，分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
     <Company>新生命开发团队</Company>
-    <Copyright>©2002-2021 NewLife</Copyright>
-    <Version>1.5.2021.1225</Version>
-    <FileVersion>1.5.2021.1225</FileVersion>
-    <AssemblyVersion>1.5.*</AssemblyVersion>
+    <Copyright>©2002-2022 NewLife</Copyright>
+    <Version>2.0.2022.0101</Version>
+    <FileVersion>2.0.2022.0101</FileVersion>
+    <AssemblyVersion>2.0.*</AssemblyVersion>
     <Deterministic>false</Deterministic>
     <OutputPath>..\..\Bin</OutputPath>
     <DocumentationFile>$(OutputPath)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
@@ -24,7 +24,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>这是最后一个支持NET40/NET45/NET46/NET47/NET48/NETSTANDARD2.0的版本，2022年将从NETSTANDARD2.1开始，感谢有你一路陪伴！</PackageReleaseNotes>
+    <PackageReleaseNotes></PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -51,7 +51,10 @@
     <Content Include="..\Doc\leaf.png" Link="leaf.png" PackagePath="\" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
+    <PackageReference Include="NewLife.Core" Version="9.0.2022.0101" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'!='netstandard2.1'">
     <PackageReference Include="NewLife.Core" Version="8.11.2021.1225" />
   </ItemGroup>
 

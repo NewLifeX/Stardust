@@ -1,23 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Web;
 using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Monitors;
-using Stardust.Data.Nodes;
 using XCode;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Monitors.Controllers
 {
+    [Menu(20)]
     [MonitorsArea]
     public class AlarmGroupController : EntityController<AlarmGroup>
     {
         static AlarmGroupController()
         {
-            MenuOrder = 90;
-
             {
                 var df = ListFields.AddListField("History", "CreateUser");
                 df.DisplayName = "告警历史";

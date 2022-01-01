@@ -15,15 +15,11 @@ using static Stardust.Data.Monitors.TraceData;
 
 namespace Stardust.Web.Areas.Monitors.Controllers
 {
+    [Menu(0, false)]
     [MonitorsArea]
     public class TraceDataController : ReadOnlyEntityController<TraceData>
     {
-        static TraceDataController()
-        {
-            MenuOrder = 60;
-
-            ListFields.RemoveField("ID");
-        }
+        static TraceDataController() => ListFields.RemoveField("ID");
 
         protected override IEnumerable<TraceData> Search(Pager p)
         {
@@ -126,20 +122,6 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             if (!url.IsNullOrEmpty()) return Redirect(url);
 
             return RedirectToAction("Index");
-        }
-
-        /// <summary>菜单不可见</summary>
-        /// <param name="menu"></param>
-        /// <returns></returns>
-        protected override IDictionary<System.Reflection.MethodInfo, Int32> ScanActionMenu(XCode.Membership.IMenu menu)
-        {
-            if (menu.Visible)
-            {
-                menu.Visible = false;
-                (menu as XCode.IEntity).Update();
-            }
-
-            return base.ScanActionMenu(menu);
         }
     }
 }
