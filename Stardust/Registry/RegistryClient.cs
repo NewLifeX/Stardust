@@ -51,7 +51,7 @@ namespace Stardust.Registry
         }
         #endregion
 
-        #region 心跳报告
+        #region 心跳
         private AppInfo _appInfo;
         private TimerX _timer;
         private void InitTimer()
