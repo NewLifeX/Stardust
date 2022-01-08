@@ -362,9 +362,6 @@ namespace Stardust
             var mi = MachineInfo.Current ?? _task.Result;
             mi.Refresh();
 
-            var properties = IPGlobalProperties.GetIPGlobalProperties();
-            var connections = properties.GetActiveTcpConnections();
-
             var mcs = NetHelper.GetMacs().Select(e => e.ToHex("-")).OrderBy(e => e).Join(",");
             var driveInfo = new DriveInfo(Path.GetPathRoot(".".GetFullPath()));
             var ip = NetHelper.GetIPsWithCache().Where(ip => ip.IsIPv4() && !IPAddress.IsLoopback(ip) && ip.GetAddressBytes()[0] != 169).Join();
@@ -378,9 +375,6 @@ namespace Stardust
                 UplinkSpeed = mi.UplinkSpeed,
                 DownlinkSpeed = mi.DownlinkSpeed,
                 ProcessCount = ps.Length,
-                TcpConnections = connections.Count(e => e.State == TcpState.Established),
-                TcpTimeWait = connections.Count(e => e.State == TcpState.TimeWait),
-                TcpCloseWait = connections.Count(e => e.State == TcpState.CloseWait),
                 Uptime = Environment.TickCount / 1000,
 
                 Macs = mcs,
@@ -397,6 +391,18 @@ namespace Stardust
             // 后来在 netcore3.0 增加了Environment.TickCount64
             // 现在借助 Stopwatch 来解决
             if (Stopwatch.IsHighResolution) ext.Uptime = (Int32)(Stopwatch.GetTimestamp() / Stopwatch.Frequency);
+
+            // 获取Tcp连接信息，某些Linux平台不支持
+            try
+            {
+                var properties = IPGlobalProperties.GetIPGlobalProperties();
+                var connections = properties.GetActiveTcpConnections();
+
+                ext.TcpConnections = connections.Count(e => e.State == TcpState.Established);
+                ext.TcpTimeWait = connections.Count(e => e.State == TcpState.TimeWait);
+                ext.TcpCloseWait = connections.Count(e => e.State == TcpState.CloseWait);
+            }
+            catch { }
 
             return ext;
         }
