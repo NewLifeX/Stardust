@@ -1,0 +1,16 @@
+﻿@using NewLife;
+@using NewLife.Web;
+@using NewLife.Cube;
+@using Stardust.Data
+@using XCode;
+@using Stardust.Data.Nodes;
+@{
+    var fact = ViewBag.Factory as IEntityFactory;
+    var page = ViewBag.Page as Pager;
+}
+<div class="form-group">
+    <label for="category" class="control-label">类别：</label>
+    @Html.ForDropDownList("category", App.FindAllCategory(), page["category"], "全部", true)
+</div>
+@*@await Html.PartialAsync("_Area2", "")*@
+@await Html.PartialAsync("_DateRange")

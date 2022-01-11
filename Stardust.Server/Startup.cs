@@ -44,10 +44,10 @@ namespace Stardust.Server
             DAL.ConnStrs.TryAdd("Node", "MapTo=Stardust");
             DAL.ConnStrs.TryAdd("NodeLog", "MapTo=Stardust");
 
-            var cache = MemoryCache.Default;
+            var cache = Cache.Default;
             services.AddSingleton(cache);
 
-            var set = Stardust.Server.Setting.Current;
+            var set = Setting.Current;
 
             // 统计服务
             var traceService = new TraceStatService(tracer) { FlowPeriod = set.MonitorFlowPeriod, BatchPeriod = set.MonitorBatchPeriod };
@@ -107,14 +107,14 @@ namespace Stardust.Server
 
             app.UseCors("star_cors");
 
-            //app.UseMiddleware<TracerMiddleware>();
-            app.UseStardust();
-
             app.UseWebSockets(new WebSocketOptions()
             {
                 KeepAliveInterval = TimeSpan.FromSeconds(60),
             });
             //app.UseMiddleware<NodeSocketMiddleware>();
+
+            //app.UseMiddleware<TracerMiddleware>();
+            app.UseStardust();
 
             app.UseRouting();
 

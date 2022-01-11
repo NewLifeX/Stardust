@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
@@ -7,6 +8,7 @@ using NewLife;
 using NewLife.Data;
 using Stardust.Monitors;
 using XCode;
+using XCode.Cache;
 using XCode.Membership;
 
 namespace Stardust.Data
@@ -111,6 +113,17 @@ namespace Stardust.Data
 
             return FindAll(exp, page);
         }
+
+        /// <summary>类别名实体缓存，异步，缓存10分钟</summary>
+        private static readonly Lazy<FieldCache<App>> CategoryCache = new(() => new FieldCache<App>(__.Category)
+        {
+            Where = _.UpdateTime > DateTime.Today.AddDays(-30) & Expression.Empty,
+            MaxRows = 50
+        });
+
+        /// <summary>获取所有类别名称</summary>
+        /// <returns></returns>
+        public static IDictionary<String, String> FindAllCategory() => CategoryCache.Value.FindAllName().OrderByDescending(e => e.Key).ToDictionary(e => e.Key, e => e.Value);
         #endregion
 
         #region 业务操作

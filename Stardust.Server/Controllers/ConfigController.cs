@@ -25,12 +25,12 @@ namespace Stardust.Server.Controllers
         }
 
         [ApiFilter]
-        public ConfigInfo GetAll(String appId, String secret, String token, String scope, Int32 version)
+        public ConfigInfo GetAll(String appId, String secret, String clientId, String token, String scope, Int32 version)
         {
             if (appId.IsNullOrEmpty() && token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(appId));
 
             // 验证
-            var (app, online) = Valid(appId, secret, token);
+            var (app, online) = Valid(appId, secret, clientId, token);
             var ip = HttpContext.GetUserHost();
 
             // 作用域为空时重写
@@ -64,7 +64,7 @@ namespace Stardust.Server.Controllers
             if (model.AppId.IsNullOrEmpty() && token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.AppId));
 
             // 验证
-            var (app, online) = Valid(model.AppId, model.Secret, token);
+            var (app, online) = Valid(model.AppId, model.Secret, model.ClientId, token);
             var ip = HttpContext.GetUserHost();
 
             // 使用键和缺失键
@@ -98,7 +98,7 @@ namespace Stardust.Server.Controllers
             };
         }
 
-        private (AppConfig, ConfigOnline) Valid(String appId, String secret, String token)
+        private (AppConfig, ConfigOnline) Valid(String appId, String secret, String clientId, String token)
         {
             var set = Setting.Current;
 
@@ -132,11 +132,18 @@ namespace Stardust.Server.Controllers
                 }
             }
 
-            var (jwt, ex) = _tokenService.DecodeToken(token, set.TokenSecret);
-            var clientId = jwt?.Id;
+            var ip = HttpContext.GetUserHost();
+            if (clientId.IsNullOrEmpty())
+            {
+                clientId = ip;
+                if (!token.IsNullOrEmpty())
+                {
+                    var (jwt, _) = _tokenService.DecodeToken(token, set.TokenSecret);
+                    clientId = jwt?.Id;
+                }
+            }
 
             // 更新心跳信息
-            var ip = HttpContext.GetUserHost();
             var online = ConfigOnline.UpdateOnline(app, clientId, ip, token);
 
             // 检查应用有效性
@@ -152,7 +159,7 @@ namespace Stardust.Server.Controllers
             if (model.AppId.IsNullOrEmpty() && token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.AppId));
 
             // 验证
-            var (app, online) = Valid(model.AppId, model.Secret, token);
+            var (app, online) = Valid(model.AppId, model.Secret, model.ClientId, token);
             if (app.Readonly) throw new Exception($"应用[{app}]处于只读模式，禁止修改");
 
             return _configService.SetConfigs(app, model.Configs);

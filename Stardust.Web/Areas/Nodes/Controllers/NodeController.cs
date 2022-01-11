@@ -15,22 +15,11 @@ using static Stardust.Data.Nodes.Node;
 
 namespace Stardust.Web.Areas.Nodes.Controllers
 {
+    [Menu(90)]
     [NodesArea]
     public class NodeController : EntityController<Node>
     {
         private readonly StarFactory _starFactory;
-
-        static NodeController()
-        {
-            MenuOrder = 90;
-
-            //{
-            //    var df = ListFields.AddDataField("Log", "UpdateTime");
-            //    df.DisplayName = "修改日志";
-            //    df.Header = "修改日志";
-            //    df.Url = "/Admin/Log?category=节点&linkId={Id}";
-            //}
-        }
 
         public NodeController(StarFactory starFactory) => _starFactory = starFactory;
 
@@ -39,7 +28,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             var nodeId = p["Id"].ToInt(-1);
             if (nodeId > 0)
             {
-                var node = Node.FindByID(nodeId);
+                var node = FindByID(nodeId);
                 if (node != null) return new[] { node };
             }
 
@@ -68,7 +57,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             // 默认排序
             if (page.Sort.IsNullOrEmpty()) page.Sort = _.Name;
 
-            var list = Node.SearchByCategory(category, true, key, page);
+            var list = SearchByCategory(category, true, key, page);
 
             return Json(0, null, list.Select(e => new
             {
@@ -81,7 +70,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
 
         public async Task<ActionResult> Trace(Int32 id)
         {
-            var node = Node.FindByID(id);
+            var node = FindByID(id);
             if (node != null)
             {
                 //NodeCommand.Add(node, "截屏");
@@ -123,7 +112,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
         {
             foreach (var item in SelectKeys)
             {
-                var dt = Node.FindByID(item.ToInt());
+                var dt = FindByID(item.ToInt());
                 if (dt != null)
                 {
                     dt.AlarmOnOffline = enable;
@@ -138,7 +127,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
         {
             foreach (var item in SelectKeys)
             {
-                var dt = Node.FindByID(item.ToInt());
+                var dt = FindByID(item.ToInt());
                 if (dt != null)
                 {
                     dt.AlarmCpuRate = alarmRate;

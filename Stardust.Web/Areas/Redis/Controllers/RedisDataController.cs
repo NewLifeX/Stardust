@@ -11,13 +11,12 @@ using static Stardust.Data.Nodes.RedisData;
 
 namespace Stardust.Web.Areas.Redis.Controllers
 {
+    [Menu(40)]
     [RedisArea]
     public class RedisDataController : ReadOnlyEntityController<RedisData>
     {
         static RedisDataController()
         {
-            MenuOrder = 40;
-
             ListFields.RemoveField("Id");
             ListFields.RemoveField("TopCommand");
         }

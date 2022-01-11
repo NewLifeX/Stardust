@@ -14,13 +14,12 @@ using static Stardust.Data.Monitors.AppDayStat;
 
 namespace Stardust.Web.Areas.Monitors.Controllers
 {
+    [Menu(80)]
     [MonitorsArea]
     public class AppDayStatController : ReadOnlyEntityController<AppDayStat>
     {
         private readonly IAppDayStatService _appStat;
         private readonly ITraceStatService _traceStat;
-
-        static AppDayStatController() => MenuOrder = 80;
 
         public AppDayStatController(IAppDayStatService appStat, ITraceStatService traceStat)
         {
@@ -99,7 +98,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         {
             foreach (var item in SelectKeys)
             {
-                var stat = AppDayStat.FindByID(item.ToInt());
+                var stat = FindByID(item.ToInt());
                 if (stat != null)
                 {
                     XTrace.WriteLine("重新统计 {0}/{1} {2}", stat.AppName, stat.AppId, stat.StatDate);

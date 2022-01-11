@@ -13,14 +13,10 @@ using static Stardust.Data.Monitors.TraceDayStat;
 
 namespace Stardust.Web.Areas.Monitors.Controllers
 {
+    [Menu(0, false)]
     [MonitorsArea]
     public class TraceDayStatController : ReadOnlyEntityController<TraceDayStat>
     {
-        static TraceDayStatController()
-        {
-            MenuOrder = 70;
-        }
-
         protected override IEnumerable<TraceDayStat> Search(Pager p)
         {
             var appId = p["appId"].ToInt(-1);
@@ -94,7 +90,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         [EntityAuthorize(PermissionFlags.Detail)]
         public ActionResult Trace(Int32 id)
         {
-            var st = TraceDayStat.FindByID(id);
+            var st = FindByID(id);
             if (st == null) throw new InvalidDataException("找不到统计数据");
 
             var traceId = st.TraceId;
@@ -120,20 +116,6 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
             //return RedirectToAction("Index", "SampleData", new { traceId });
             return Redirect($"/trace?id={traceId}");
-        }
-
-        /// <summary>菜单不可见</summary>
-        /// <param name="menu"></param>
-        /// <returns></returns>
-        protected override IDictionary<System.Reflection.MethodInfo, Int32> ScanActionMenu(XCode.Membership.IMenu menu)
-        {
-            if (menu.Visible)
-            {
-                menu.Visible = false;
-                (menu as XCode.IEntity).Update();
-            }
-
-            return base.ScanActionMenu(menu);
         }
     }
 }

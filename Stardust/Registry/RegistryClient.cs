@@ -12,14 +12,17 @@ using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust.Models;
 
-namespace Stardust
+namespace Stardust.Registry
 {
     /// <summary>尘埃客户端。每个应用有一个客户端连接星尘服务端</summary>
-    public class DustClient : DisposeBase
+    public class RegistryClient : DisposeBase, IRegistry
     {
         #region 属性
         /// <summary>应用</summary>
         public String AppId { get; set; }
+
+        /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
+        public String ClientId { get; set; }
 
         /// <summary>客户端</summary>
         public IApiClient Client { get; set; }
@@ -31,20 +34,6 @@ namespace Stardust
         #endregion
 
         #region 构造
-        /// <summary>实例化</summary>
-        public DustClient() { }
-
-        /// <summary>实例化</summary>
-        /// <param name="server"></param>
-        public DustClient(String server) : this()
-        {
-            var http = new ApiHttpClient(server)
-            {
-                //Tracer = this
-            };
-            Client = http;
-        }
-
         /// <summary>销毁</summary>
         /// <param name="disposing"></param>
         protected override void Dispose(Boolean disposing)
@@ -62,7 +51,7 @@ namespace Stardust
         }
         #endregion
 
-        #region 心跳报告
+        #region 心跳
         private AppInfo _appInfo;
         private TimerX _timer;
         private void InitTimer()
@@ -106,6 +95,7 @@ namespace Stardust
         {
             //Ping().Wait();
 
+            // 刷新已发布服务
             foreach (var item in _publishServices)
             {
                 var svc = item.Value;
@@ -114,17 +104,13 @@ namespace Stardust
                     var address = svc.AddressCallback();
                     if (address.IsNullOrEmpty()) continue;
 
-                    var ps = address.Split(",");
-                    var uri = new NetUri(ps[0]);
-                    var ip = NetHelper.MyIP();
-                    svc.Client = $"{ip}:{uri.Port}";
-                    svc.IP = ip + "";
                     svc.Address = address;
                 }
 
                 await RegisterAsync(svc);
             }
 
+            // 刷新已消费服务
             foreach (var item in _consumeServices)
             {
                 var svc = item.Value;
@@ -134,6 +120,7 @@ namespace Stardust
                     //_consumes.TryAdd(svc.ServiceName, ms);
                     _consumes[svc.ServiceName] = ms;
 
+                    //todo 需要判断，只有服务改变才调用相应事件
                     if (_consumeEvents.TryGetValue(svc.ServiceName, out var list))
                     {
                         foreach (var action in list)
@@ -148,50 +135,48 @@ namespace Stardust
 
         #region 发布、消费
         /// <summary>发布服务</summary>
-        /// <param name="service"></param>
+        /// <param name="service">应用服务</param>
         /// <returns></returns>
         public async Task<Object> RegisterAsync(PublishServiceInfo service) => await Client.InvokeAsync<Object>("RegisterService", service);
 
         /// <summary>取消服务</summary>
-        /// <param name="service"></param>
+        /// <param name="service">应用服务</param>
         /// <returns></returns>
         public async Task<Object> UnregisterAsync(PublishServiceInfo service) => await Client.InvokeAsync<Object>("UnregisterService", service);
 
-        /// <summary>发布</summary>
+        private void AddService(PublishServiceInfo service)
+        {
+            var asmx = AssemblyX.Entry;
+            var ip = NetHelper.MyIP();
+
+            service.Client = ClientId;
+            service.IP = ip + "";
+            service.Version = asmx?.Version;
+
+            XTrace.WriteLine("注册服务 {0}", service.ToJson());
+
+            _publishServices[service.ServiceName] = service;
+
+            InitTimer();
+        }
+
+        /// <summary>发布服务</summary>
         /// <param name="serviceName">服务名</param>
         /// <param name="address">服务地址</param>
         /// <param name="tag">特性标签</param>
         /// <returns></returns>
         public async Task<Object> RegisterAsync(String serviceName, String address, String tag = null)
         {
-            // 解析端口
-            var ps = address.Split(",");
-            if (ps == null || ps.Length == 0) throw new ArgumentNullException(nameof(address));
-
-            //var uri = new NetUri(ps[0]);
-            var port = ps[0].Substring(":", null).ToInt();
-
-            var ip = NetHelper.MyIP();
-            //var p = Process.GetCurrentProcess();
-            var asmx = AssemblyX.Entry;
+            if (address == null) throw new ArgumentNullException(nameof(address));
 
             var service = new PublishServiceInfo
             {
                 ServiceName = serviceName,
                 Address = address,
                 Tag = tag,
-
-                Client = $"{ip}:{port}",
-                IP = ip + "",
-                Version = asmx.Version,
             };
 
-            XTrace.WriteLine("注册服务 {0}", service.ToJson());
-
-            //_publishServices.TryAdd(service.ServiceName, service);
-            _publishServices[service.ServiceName] = service;
-
-            InitTimer();
+            AddService(service);
 
             var rs = await RegisterAsync(service);
             XTrace.WriteLine("注册完成 {0}", rs.ToJson());
@@ -199,36 +184,27 @@ namespace Stardust
             return rs;
         }
 
-        /// <summary>发布</summary>
+        /// <summary>发布服务</summary>
         /// <param name="serviceName">服务名</param>
-        /// <param name="addressCallback">服务地址</param>
+        /// <param name="addressCallback">服务地址回调</param>
         /// <param name="tag">特性标签</param>
         /// <returns></returns>
         public void Register(String serviceName, Func<String> addressCallback, String tag = null)
         {
             if (addressCallback == null) throw new ArgumentNullException(nameof(addressCallback));
 
-            var asmx = AssemblyX.Entry;
-
             var service = new PublishServiceInfo
             {
                 ServiceName = serviceName,
                 AddressCallback = addressCallback,
                 Tag = tag,
-
-                Version = asmx.Version,
             };
 
-            XTrace.WriteLine("注册服务 {0}", service.ToJson());
-
-            //_publishServices.TryAdd(service.ServiceName, service);
-            _publishServices[service.ServiceName] = service;
-
-            InitTimer();
+            AddService(service);
         }
 
         /// <summary>取消服务</summary>
-        /// <param name="serviceName"></param>
+        /// <param name="serviceName">服务名</param>
         /// <returns></returns>
         public Boolean Unregister(String serviceName)
         {
@@ -241,15 +217,15 @@ namespace Stardust
             return true;
         }
 
-        /// <summary>消费</summary>
-        /// <param name="service"></param>
+        /// <summary>消费服务</summary>
+        /// <param name="service">应用服务</param>
         /// <returns></returns>
         public async Task<ServiceModel[]> ResolveAsync(ConsumeServiceInfo service) => await Client.InvokeAsync<ServiceModel[]>("ResolveService", service);
 
         /// <summary>消费得到服务地址信息</summary>
-        /// <param name="serviceName"></param>
-        /// <param name="minVersion"></param>
-        /// <param name="tag"></param>
+        /// <param name="serviceName">服务名</param>
+        /// <param name="minVersion">最小版本</param>
+        /// <param name="tag">特性标签。只要包含该特性的服务提供者</param>
         /// <returns></returns>
         public async Task<ServiceModel[]> ResolveAsync(String serviceName, String minVersion = null, String tag = null)
         {
@@ -283,8 +259,8 @@ namespace Stardust
         }
 
         /// <summary>绑定消费服务名到指定事件，服务改变时通知外部</summary>
-        /// <param name="serviceName"></param>
-        /// <param name="callback"></param>
+        /// <param name="serviceName">服务名</param>
+        /// <param name="callback">回调方法</param>
         public void Bind(String serviceName, Action<String, ServiceModel[]> callback)
         {
             var list = _consumeEvents.GetOrAdd(serviceName, k => new List<Delegate>());

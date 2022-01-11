@@ -10,12 +10,12 @@ using XCode;
 
 namespace Stardust.Web.Areas.Configs.Controllers
 {
+    [Menu(58)]
     [ConfigsArea]
     public class AppConfigController : EntityController<AppConfig>
     {
         static AppConfigController()
         {
-            MenuOrder = 58;
             LogOnChange = true;
 
             ListFields.RemoveCreateField();

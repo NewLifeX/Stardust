@@ -16,6 +16,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Redis.Controllers
 {
+    [Menu(50)]
     [RedisArea]
     public class RedisNodeController : EntityController<RedisNode>
     {
@@ -23,8 +24,6 @@ namespace Stardust.Web.Areas.Redis.Controllers
 
         static RedisNodeController()
         {
-            MenuOrder = 50;
-
             ListFields.RemoveField("WebHook", "AlarmMemoryRate", "AlarmConnections", "AlarmSpeed", "AlarmInputKbps", "AlarmOutputKbps");
             ListFields.RemoveCreateField();
             ListFields.RemoveField("UpdateUser", "UpdateUserID", "UpdateIP", "Remark");

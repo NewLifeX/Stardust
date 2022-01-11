@@ -6,15 +6,11 @@ using Stardust.Data.Deployment;
 
 namespace Stardust.Web.Areas.Deployment.Controllers
 {
+    [Menu(88)]
     [DeploymentArea]
     public class AppDeployOnlineController : ReadOnlyEntityController<AppDeployOnline>
     {
-        static AppDeployOnlineController()
-        {
-            MenuOrder = 88;
-
-            ListFields.RemoveCreateField();
-        }
+        static AppDeployOnlineController() => ListFields.RemoveCreateField();
 
         protected override IEnumerable<AppDeployOnline> Search(Pager p)
         {

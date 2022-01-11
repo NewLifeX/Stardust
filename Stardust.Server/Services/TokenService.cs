@@ -120,7 +120,7 @@ namespace Stardust.Server.Services
             if (app == null)
             {
                 // 可能是StarAgent混用了token
-                var node = Stardust.Data.Nodes.Node.FindByCode(jwt.Subject);
+                var node = Data.Nodes.Node.FindByCode(jwt.Subject);
                 if (node == null) throw new InvalidOperationException($"无效应用[{jwt.Subject}]");
 
                 app = new App { Name = node.Code, DisplayName = node.Name, Enable = true };

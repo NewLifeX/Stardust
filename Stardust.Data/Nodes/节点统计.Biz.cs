@@ -292,4 +292,4 @@ namespace Stardust.Data.Nodes
         }
         #endregion
     }
-    }
+}

@@ -10,15 +10,11 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Monitors.Controllers
 {
+    [Menu(0, false)]
     [MonitorsArea]
     public class SampleDataController : ReadOnlyEntityController<SampleData>
     {
-        static SampleDataController()
-        {
-            MenuOrder = 50;
-
-            ListFields.RemoveField("ID");
-        }
+        static SampleDataController() => ListFields.RemoveField("ID");
 
         protected override IEnumerable<SampleData> Search(Pager p)
         {
@@ -141,20 +137,6 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             }
 
             throw new Exception($"无法找到数据[{key}]！");
-        }
-
-        /// <summary>菜单不可见</summary>
-        /// <param name="menu"></param>
-        /// <returns></returns>
-        protected override IDictionary<System.Reflection.MethodInfo, Int32> ScanActionMenu(XCode.Membership.IMenu menu)
-        {
-            if (menu.Visible)
-            {
-                menu.Visible = false;
-                (menu as XCode.IEntity).Update();
-            }
-
-            return base.ScanActionMenu(menu);
         }
     }
 }

@@ -9,6 +9,7 @@ using Stardust.Data.Nodes;
 
 namespace Stardust.Web.Areas.Nodes.Controllers
 {
+    [Menu(70)]
     [NodesArea]
     public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
     {
@@ -16,8 +17,6 @@ namespace Stardust.Web.Areas.Nodes.Controllers
 
         static NodeOnlineController()
         {
-            MenuOrder = 70;
-
             ListFields.RemoveField("SessionID", "IP", "ProvinceID", "CityID", "Macs", "Token");
 
             //{

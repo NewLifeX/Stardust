@@ -10,13 +10,12 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Nodes.Controllers
 {
+    [Menu(89)]
     [NodesArea]
     public class NodeVersionController : EntityController<NodeVersion>
     {
         static NodeVersionController()
         {
-            MenuOrder = 89;
-
             {
                 var df = ListFields.AddListField("Log", "CreateUserID");
                 df.DisplayName = "修改日志";

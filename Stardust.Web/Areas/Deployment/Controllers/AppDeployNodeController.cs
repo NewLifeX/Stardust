@@ -12,13 +12,12 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Deployment.Controllers
 {
+    [Menu(88)]
     [DeploymentArea]
     public class AppDeployNodeController : EntityController<AppDeployNode>
     {
         static AppDeployNodeController()
         {
-            MenuOrder = 88;
-
             ListFields.RemoveCreateField();
             AddFormFields.RemoveCreateField();
 
