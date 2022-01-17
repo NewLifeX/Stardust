@@ -52,7 +52,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
-    <PackageReference Include="NewLife.Core" Version="9.0.2022.0101" />
+    <PackageReference Include="NewLife.Core" Version="9.0.2022.0116-beta1" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'!='netstandard2.1'">
     <PackageReference Include="NewLife.Core" Version="8.11.2021.1225" />

@@ -56,10 +56,30 @@ namespace Stardust.Server.Services
                 for (var dt = today.AddYears(-1); dt < endday; dt = dt.AddDays(1))
                 {
                     var name = $"SampleData_{dt:yyyyMMdd}";
-                    if (name.EqualIgnoreCase(tnames)) dal.Execute($"Drop Table {name}");
+                    if (name.EqualIgnoreCase(tnames))
+                    {
+                        try
+                        {
+                            dal.Execute($"Drop Table {name}");
+                        }
+                        catch (Exception ex)
+                        {
+                            XTrace.WriteException(ex);
+                        }
+                    }
 
                     name = $"TraceData_{dt:yyyyMMdd}";
-                    if (name.EqualIgnoreCase(tnames)) dal.Execute($"Drop Table {name}");
+                    if (name.EqualIgnoreCase(tnames))
+                    {
+                        try
+                        {
+                            dal.Execute($"Drop Table {name}");
+                        }
+                        catch (Exception ex)
+                        {
+                            XTrace.WriteException(ex);
+                        }
+                    }
                 }
 
                 // 新建今天明天的表
