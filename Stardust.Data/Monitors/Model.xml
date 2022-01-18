@@ -69,6 +69,7 @@
       <Column Name="StartTime" DataType="Int64" Description="开始时间。Unix毫秒" />
       <Column Name="EndTime" DataType="Int64" Description="结束时间。Unix毫秒" />
       <Column Name="Cost" DataType="Int32" Description="耗时。毫秒" />
+      <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@proccessid" />
       <Column Name="TraceId" DataType="String" Description="追踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
       <Column Name="SpanId" DataType="String" Description="唯一标识。随线程上下文、Http、Rpc传递，作为内部片段的父级" />
       <Column Name="ParentId" DataType="String" Description="父级标识" />
@@ -92,6 +93,7 @@
       <Column Name="StartTime" DataType="Int64" Description="开始时间。Unix毫秒" />
       <Column Name="EndTime" DataType="Int64" Description="结束时间。Unix毫秒" />
       <Column Name="Cost" DataType="Int32" Description="耗时。毫秒" />
+      <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@proccessid" />
       <Column Name="TraceId" DataType="String" Description="追踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
       <Column Name="SpanId" DataType="String" Description="唯一标识。随线程上下文、Http、Rpc传递，作为内部片段的父级" />
       <Column Name="ParentId" DataType="String" Description="父级标识" />

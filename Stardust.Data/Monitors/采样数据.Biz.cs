@@ -151,6 +151,7 @@ namespace Stardust.Data.Monitors
                     Id = snow.NewId(),
                     DataId = data.Id,
                     AppId = data.AppId,
+                    ClientId = data.ClientId,
                     Name = data.Name,
 
                     TraceId = item.TraceId,

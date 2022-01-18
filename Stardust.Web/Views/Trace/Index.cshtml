@@ -32,9 +32,10 @@
                 <th class="text-center" style="min-width:134px;" title="开始时间。Unix毫秒"><a href="@Html.Raw(page.GetSortUrl("StartTime"))">开始时间</a></th>
                 <th class="text-center" style="min-width:134px;" title="结束时间。Unix毫秒"><a href="@Html.Raw(page.GetSortUrl("EndTime"))">结束时间</a></th>
                 <th class="text-center" title="耗时。毫秒"><a href="@Html.Raw(page.GetSortUrl("Cost"))">耗时</a></th>
-                <th class="text-center" title="追踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递"><a href="@Html.Raw(page.GetSortUrl("TraceId"))">追踪标识</a></th>
+                <th class="text-center" title="实例。应用可能多实例部署，ip@proccessid"><a href="@Html.Raw(page.GetSortUrl("ClientId"))">追踪标识</a></th>
                 <th class="text-center" title="唯一标识。随线程上下文、Http、Rpc传递，作为内部片段的父级"><a href="@Html.Raw(page.GetSortUrl("SpanId"))">唯一标识</a></th>
                 <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ParentId"))">父级标识</a></th>
+                <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("CreateIP"))">创建地址</a></th>
                 <th class="text-center">操作</th>
             </tr>
         </thead>
@@ -63,11 +64,12 @@
                         <i class="glyphicon glyphicon-@(entity.Success ? "ok" : "remove")" style="color: @(entity.Success ? "green" : "red");"></i>
                     </td>
                     <td class="text-center" title="@entity.StartTime">@entity.Start.ToFullString("")</td>
-                    <td class="text-center" title="@entity.EndTime">@entity.End.ToFullString("")</td>
+                    <td class="text-center" title="@entity.EndTime">@entity.End.ToString("HH:mm:ss")</td>
                     <td class="text-right">@entity.Cost.ToString("n0")</td>
-                    <td>@entity.TraceId</td>
+                    <td>@entity.ClientId</td>
                     <td>@entity.SpanId</td>
                     <td>@entity.ParentId</td>
+                    <td>@entity.CreateIP</td>
                     <td class="text-center">
                         <a href="/monitors/sampledata/detail/@entity.Id">查看</a>
                     </td>

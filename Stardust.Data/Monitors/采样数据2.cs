@@ -83,6 +83,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("Cost", "耗时。毫秒", "")]
         public Int32 Cost { get => _Cost; set { if (OnPropertyChanging("Cost", value)) { _Cost = value; OnPropertyChanged("Cost"); } } }
 
+        private String _ClientId;
+        /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
+        [DisplayName("实例")]
+        [Description("实例。应用可能多实例部署，ip@proccessid")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("ClientId", "实例。应用可能多实例部署，ip@proccessid", "")]
+        public String ClientId { get => _ClientId; set { if (OnPropertyChanging("ClientId", value)) { _ClientId = value; OnPropertyChanged("ClientId"); } } }
+
         private String _TraceId;
         /// <summary>追踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
         [DisplayName("追踪标识")]
@@ -174,6 +182,7 @@ namespace Stardust.Data.Monitors
                     case "StartTime": return _StartTime;
                     case "EndTime": return _EndTime;
                     case "Cost": return _Cost;
+                    case "ClientId": return _ClientId;
                     case "TraceId": return _TraceId;
                     case "SpanId": return _SpanId;
                     case "ParentId": return _ParentId;
@@ -198,6 +207,7 @@ namespace Stardust.Data.Monitors
                     case "StartTime": _StartTime = value.ToLong(); break;
                     case "EndTime": _EndTime = value.ToLong(); break;
                     case "Cost": _Cost = value.ToInt(); break;
+                    case "ClientId": _ClientId = Convert.ToString(value); break;
                     case "TraceId": _TraceId = Convert.ToString(value); break;
                     case "SpanId": _SpanId = Convert.ToString(value); break;
                     case "ParentId": _ParentId = Convert.ToString(value); break;
@@ -240,6 +250,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>耗时。毫秒</summary>
             public static readonly Field Cost = FindByName("Cost");
+
+            /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
+            public static readonly Field ClientId = FindByName("ClientId");
 
             /// <summary>追踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
             public static readonly Field TraceId = FindByName("TraceId");
@@ -297,6 +310,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>耗时。毫秒</summary>
             public const String Cost = "Cost";
+
+            /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
+            public const String ClientId = "ClientId";
 
             /// <summary>追踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
             public const String TraceId = "TraceId";
