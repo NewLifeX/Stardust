@@ -78,6 +78,7 @@ namespace Microsoft.Extensions.DependencyInjection
             var lifetime = app.ApplicationServices.GetRequiredService<IHostApplicationLifetime>();
             lifetime.ApplicationStarted.Register(() =>
             {
+                DefaultSpan.Current = null;
                 try
                 {
                     if (address.IsNullOrEmpty()) address = StarSetting.Current.ServiceAddress;
@@ -107,6 +108,8 @@ namespace Microsoft.Extensions.DependencyInjection
             // 停止的时候移除服务
             lifetime.ApplicationStopped.Register(() =>
             {
+                DefaultSpan.Current = null;
+
                 // 从注册中心释放服务提供者和消费者
                 star.Service.TryDispose();
                 //try
