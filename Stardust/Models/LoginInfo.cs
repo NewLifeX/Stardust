@@ -12,6 +12,9 @@ namespace Stardust.Models
         /// <summary>节点密钥</summary>
         public String Secret { get; set; }
 
+        /// <summary>产品编码</summary>
+        public String ProductCode { get; set; }
+
         /// <summary>节点信息</summary>
         public NodeInfo Node { get; set; }
         #endregion

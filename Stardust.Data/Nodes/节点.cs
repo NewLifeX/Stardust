@@ -61,6 +61,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("Enable", "启用", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
+        private String _ProductCode;
+        /// <summary>产品。产品编码，用于区分不同类型节点</summary>
+        [DisplayName("产品")]
+        [Description("产品。产品编码，用于区分不同类型节点")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("ProductCode", "产品。产品编码，用于区分不同类型节点", "")]
+        public String ProductCode { get => _ProductCode; set { if (OnPropertyChanging("ProductCode", value)) { _ProductCode = value; OnPropertyChanged("ProductCode"); } } }
+
         private String _Category;
         /// <summary>分类</summary>
         [DisplayName("分类")]
@@ -445,6 +453,7 @@ namespace Stardust.Data.Nodes
                     case "Code": return _Code;
                     case "Secret": return _Secret;
                     case "Enable": return _Enable;
+                    case "ProductCode": return _ProductCode;
                     case "Category": return _Category;
                     case "Version": return _Version;
                     case "CompileTime": return _CompileTime;
@@ -503,6 +512,7 @@ namespace Stardust.Data.Nodes
                     case "Code": _Code = Convert.ToString(value); break;
                     case "Secret": _Secret = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
+                    case "ProductCode": _ProductCode = Convert.ToString(value); break;
                     case "Category": _Category = Convert.ToString(value); break;
                     case "Version": _Version = Convert.ToString(value); break;
                     case "CompileTime": _CompileTime = value.ToDateTime(); break;
@@ -573,6 +583,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
+
+            /// <summary>产品。产品编码，用于区分不同类型节点</summary>
+            public static readonly Field ProductCode = FindByName("ProductCode");
 
             /// <summary>分类</summary>
             public static readonly Field Category = FindByName("Category");
@@ -732,6 +745,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>启用</summary>
             public const String Enable = "Enable";
+
+            /// <summary>产品。产品编码，用于区分不同类型节点</summary>
+            public const String ProductCode = "ProductCode";
 
             /// <summary>分类</summary>
             public const String Category = "Category";

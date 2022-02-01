@@ -250,6 +250,8 @@ namespace Stardust.Server.Controllers
                 CreateTime = DateTime.Now,
             };
 
+            if (!inf.ProductCode.IsNullOrEmpty()) node.ProductCode = inf.ProductCode;
+
             // 如果未打开动态注册，则把节点修改为禁用
             node.Enable = set.AutoRegister;
 

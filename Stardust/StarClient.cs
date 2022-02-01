@@ -39,6 +39,9 @@ namespace Stardust
         /// <summary>密钥</summary>
         public String Secret { get; set; }
 
+        /// <summary>产品编码</summary>
+        public String ProductCode { get; set; }
+
         /// <summary>是否已登录</summary>
         public Boolean Logined { get; set; }
 
@@ -166,6 +169,7 @@ namespace Stardust
             {
                 Code = Code,
                 Secret = Secret.IsNullOrEmpty() ? null : Secret.MD5(),
+                ProductCode = ProductCode,
 
                 Node = di,
             };

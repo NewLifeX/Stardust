@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Threading;
@@ -9,7 +8,6 @@ using System.Threading.Tasks;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
-using NewLife.Net;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
@@ -106,6 +104,7 @@ namespace StarAgent
             {
                 Code = set.Code,
                 Secret = set.Secret,
+                ProductCode = "StarAgent",
                 Log = XTrace.Log,
 
                 Manager = _Manager,

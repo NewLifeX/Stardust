@@ -7,6 +7,7 @@
       <Column Name="Code" DataType="String" Description="编码。NodeKey" />
       <Column Name="Secret" DataType="String" Description="密钥。NodeSecret" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="ProductCode" DataType="String" Description="产品。产品编码，用于区分不同类型节点" />
       <Column Name="Category" DataType="String" Description="分类" />
       <Column Name="Version" DataType="String" Description="版本" />
       <Column Name="CompileTime" DataType="DateTime" Description="编译时间" />
