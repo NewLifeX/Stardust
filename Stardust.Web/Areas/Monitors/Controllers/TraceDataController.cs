@@ -24,6 +24,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         protected override IEnumerable<TraceData> Search(Pager p)
         {
             var appId = p["appId"].ToInt(-1);
+            var itemId = p["itemId"].ToInt(-1);
             var name = p["name"];
             var minError = p["minError"].ToInt(-1);
 
@@ -48,9 +49,9 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             if (appId > 0 && p.PageSize == 20) p.PageSize = 100;
             if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.Id.Desc();
 
-            var list = TraceData.Search(appId, name, kind, minError, start, end, p["Q"], p);
+            var list = TraceData.Search(appId, itemId, name, kind, minError, start, end, p["Q"], p);
 
-            if (list.Count > 0 && appId > 0 && !name.IsNullOrEmpty())
+            if (list.Count > 0 && appId > 0 && itemId > 0)
             {
                 var list2 = list.OrderBy(e => e.Id).ToList();
 
