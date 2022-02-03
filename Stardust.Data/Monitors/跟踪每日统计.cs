@@ -14,7 +14,6 @@ namespace Stardust.Data.Monitors
     [Serializable]
     [DataObject]
     [Description("跟踪每日统计。每应用每接口每日统计，用于分析接口健康状况")]
-    [BindIndex("IX_TraceDayStat_StatDate_AppId_Name", false, "StatDate,AppId,Name")]
     [BindIndex("IX_TraceDayStat_StatDate_AppId_Type", false, "StatDate,AppId,Type")]
     [BindIndex("IX_TraceDayStat_StatDate_AppId_ItemId", false, "StatDate,AppId,ItemId")]
     [BindIndex("IX_TraceDayStat_AppId_ItemId_Id", false, "AppId,ItemId,Id")]

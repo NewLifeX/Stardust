@@ -14,7 +14,6 @@ namespace Stardust.Data.Monitors
     [Serializable]
     [DataObject]
     [Description("跟踪小时统计。每应用每接口每小时统计，用于分析接口健康状况")]
-    [BindIndex("IX_TraceHourStat_StatTime_AppId_Name", false, "StatTime,AppId,Name")]
     [BindIndex("IX_TraceHourStat_StatTime_AppId_ItemId", false, "StatTime,AppId,ItemId")]
     [BindIndex("IX_TraceHourStat_AppId_ItemId_Id", false, "AppId,ItemId,Id")]
     [BindTable("TraceHourStat", Description = "跟踪小时统计。每应用每接口每小时统计，用于分析接口健康状况", ConnName = "Monitor", DbType = DatabaseType.None)]

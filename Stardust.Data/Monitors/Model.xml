@@ -150,7 +150,6 @@
       <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
     </Columns>
     <Indexes>
-      <Index Columns="StatDate,AppId,Name" />
       <Index Columns="StatDate,AppId,Type" />
       <Index Columns="StatDate,AppId,ItemId" />
       <Index Columns="AppId,ItemId,Id" />
@@ -175,7 +174,6 @@
       <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
     </Columns>
     <Indexes>
-      <Index Columns="StatTime,AppId,Name" />
       <Index Columns="StatTime,AppId,ItemId" />
       <Index Columns="AppId,ItemId,Id" />
     </Indexes>
@@ -198,7 +196,6 @@
       <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
     </Columns>
     <Indexes>
-      <Index Columns="StatTime,AppId,Name" />
       <Index Columns="StatTime,AppId,ItemId" />
       <Index Columns="AppId,ItemId,Id" />
     </Indexes>
