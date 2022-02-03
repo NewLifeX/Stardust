@@ -59,6 +59,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("Enable", "启用", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
+        private Boolean _Strict;
+        /// <summary>严格。严格模式下，仅统计已知跟踪项，避免其它埋点干扰</summary>
+        [DisplayName("严格")]
+        [Description("严格。严格模式下，仅统计已知跟踪项，避免其它埋点干扰")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Strict", "严格。严格模式下，仅统计已知跟踪项，避免其它埋点干扰", "")]
+        public Boolean Strict { get => _Strict; set { if (OnPropertyChanging("Strict", value)) { _Strict = value; OnPropertyChanged("Strict"); } } }
+
         private Int32 _Period;
         /// <summary>采样周期。单位秒</summary>
         [DisplayName("采样周期")]
@@ -138,6 +146,14 @@ namespace Stardust.Data.Monitors
         [DataObjectField(false, false, true, 500)]
         [BindColumn("AlarmRobot", "告警机器人。钉钉、企业微信等", "")]
         public String AlarmRobot { get => _AlarmRobot; set { if (OnPropertyChanging("AlarmRobot", value)) { _AlarmRobot = value; OnPropertyChanged("AlarmRobot"); } } }
+
+        private Int32 _ItemCount;
+        /// <summary>跟踪项</summary>
+        [DisplayName("跟踪项")]
+        [Description("跟踪项")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("ItemCount", "跟踪项", "")]
+        public Int32 ItemCount { get => _ItemCount; set { if (OnPropertyChanging("ItemCount", value)) { _ItemCount = value; OnPropertyChanged("ItemCount"); } } }
 
         private String _CreateUser;
         /// <summary>创建者</summary>
@@ -219,6 +235,7 @@ namespace Stardust.Data.Monitors
                     case "DisplayName": return _DisplayName;
                     case "Category": return _Category;
                     case "Enable": return _Enable;
+                    case "Strict": return _Strict;
                     case "Period": return _Period;
                     case "MaxSamples": return _MaxSamples;
                     case "MaxErrors": return _MaxErrors;
@@ -229,6 +246,7 @@ namespace Stardust.Data.Monitors
                     case "Nodes": return _Nodes;
                     case "AlarmThreshold": return _AlarmThreshold;
                     case "AlarmRobot": return _AlarmRobot;
+                    case "ItemCount": return _ItemCount;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -249,6 +267,7 @@ namespace Stardust.Data.Monitors
                     case "DisplayName": _DisplayName = Convert.ToString(value); break;
                     case "Category": _Category = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
+                    case "Strict": _Strict = value.ToBoolean(); break;
                     case "Period": _Period = value.ToInt(); break;
                     case "MaxSamples": _MaxSamples = value.ToInt(); break;
                     case "MaxErrors": _MaxErrors = value.ToInt(); break;
@@ -259,6 +278,7 @@ namespace Stardust.Data.Monitors
                     case "Nodes": _Nodes = Convert.ToString(value); break;
                     case "AlarmThreshold": _AlarmThreshold = value.ToInt(); break;
                     case "AlarmRobot": _AlarmRobot = Convert.ToString(value); break;
+                    case "ItemCount": _ItemCount = value.ToInt(); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -292,6 +312,9 @@ namespace Stardust.Data.Monitors
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
 
+            /// <summary>严格。严格模式下，仅统计已知跟踪项，避免其它埋点干扰</summary>
+            public static readonly Field Strict = FindByName("Strict");
+
             /// <summary>采样周期。单位秒</summary>
             public static readonly Field Period = FindByName("Period");
 
@@ -321,6 +344,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public static readonly Field AlarmRobot = FindByName("AlarmRobot");
+
+            /// <summary>跟踪项</summary>
+            public static readonly Field ItemCount = FindByName("ItemCount");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
@@ -367,6 +393,9 @@ namespace Stardust.Data.Monitors
             /// <summary>启用</summary>
             public const String Enable = "Enable";
 
+            /// <summary>严格。严格模式下，仅统计已知跟踪项，避免其它埋点干扰</summary>
+            public const String Strict = "Strict";
+
             /// <summary>采样周期。单位秒</summary>
             public const String Period = "Period";
 
@@ -396,6 +425,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public const String AlarmRobot = "AlarmRobot";
+
+            /// <summary>跟踪项</summary>
+            public const String ItemCount = "ItemCount";
 
             /// <summary>创建者</summary>
             public const String CreateUser = "CreateUser";

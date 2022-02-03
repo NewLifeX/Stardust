@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
 using NewLife.Data;
 using NewLife.Web;
 using Stardust.Data;
-using XCode;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Registry.Controllers
@@ -18,6 +16,8 @@ namespace Stardust.Web.Areas.Registry.Controllers
     {
         static AppController()
         {
+            LogOnChange = true;
+
             ListFields.RemoveField("Secret");
 
             {
@@ -82,30 +82,6 @@ namespace Stardust.Web.Areas.Registry.Controllers
             var end = p["dtEnd"].ToDateTime();
 
             return App.Search(category, enable, start, end, p["Q"], p);
-        }
-
-        protected override Boolean Valid(App entity, DataObjectMethodType type, Boolean post)
-        {
-            if (!post) return base.Valid(entity, type, post);
-
-            // 必须提前写修改日志，否则修改后脏数据失效，保存的日志为空
-            if (type == DataObjectMethodType.Update && (entity as IEntity).HasDirty)
-                LogProvider.Provider.WriteLog(type + "", entity);
-
-            var err = "";
-            try
-            {
-                return base.Valid(entity, type, post);
-            }
-            catch (Exception ex)
-            {
-                err = ex.Message;
-                throw;
-            }
-            finally
-            {
-                if (type != DataObjectMethodType.Update) LogProvider.Provider.WriteLog(type + "", entity, err);
-            }
         }
 
         /// <summary>搜索</summary>

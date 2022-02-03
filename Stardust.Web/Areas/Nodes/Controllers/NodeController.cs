@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +8,6 @@ using NewLife.Cube;
 using NewLife.Data;
 using NewLife.Web;
 using Stardust.Data.Nodes;
-using XCode;
 using XCode.Membership;
 using static Stardust.Data.Nodes.Node;
 
@@ -21,7 +19,12 @@ namespace Stardust.Web.Areas.Nodes.Controllers
     {
         private readonly StarFactory _starFactory;
 
-        public NodeController(StarFactory starFactory) => _starFactory = starFactory;
+        public NodeController(StarFactory starFactory)
+        {
+            LogOnChange = true;
+
+            _starFactory = starFactory;
+        }
 
         protected override IEnumerable<Node> Search(Pager p)
         {
@@ -81,30 +84,6 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             }
 
             return RedirectToAction("Index");
-        }
-
-        protected override Boolean Valid(Node entity, DataObjectMethodType type, Boolean post)
-        {
-            if (!post) return base.Valid(entity, type, post);
-
-            // 必须提前写修改日志，否则修改后脏数据失效，保存的日志为空
-            if (type == DataObjectMethodType.Update && (entity as IEntity).HasDirty)
-                LogProvider.Provider.WriteLog(type + "", entity);
-
-            var err = "";
-            try
-            {
-                return base.Valid(entity, type, post);
-            }
-            catch (Exception ex)
-            {
-                err = ex.Message;
-                throw;
-            }
-            finally
-            {
-                if (type != DataObjectMethodType.Update) LogProvider.Provider.WriteLog(type + "", entity, err);
-            }
         }
 
         [EntityAuthorize(PermissionFlags.Update)]
