@@ -72,6 +72,11 @@ namespace Stardust.Data.Monitors
             //return Find(_.ID == id);
         }
 
+        /// <summary>查询某应用的所有统计</summary>
+        /// <param name="appId"></param>
+        /// <returns></returns>
+        public static IList<TraceHourStat> FindAllByAppId(Int32 appId) => FindAll(_.AppId == appId);
+
         /// <summary>查询某应用某天的所有统计，带缓存</summary>
         /// <param name="appId"></param>
         /// <param name="date"></param>
@@ -81,7 +86,7 @@ namespace Stardust.Data.Monitors
             var key = $"TraceHourStat:FindAllByAppIdWithCache:{appId}#{date:yyyyMMdd}";
             if (_cache.TryGetValue<IList<TraceHourStat>>(key, out var list) && list != null) return list;
 
-            // 查询数据库，即时空值也缓存，避免缓存穿透
+            // 查询数据库，即使空值也缓存，避免缓存穿透
             list = FindAll(_.AppId == appId & _.StatTime >= date & _.StatTime < date.AddDays(1));
 
             _cache.Set(key, list, 10);

@@ -185,6 +185,8 @@ namespace Stardust.Data.Monitors
             ti.Enable = !Strict;
             ti.Insert();
 
+            list.Add(ti);
+
             return ti;
         }
         #endregion

@@ -6,6 +6,9 @@
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
       <Column Name="DisplayName" DataType="String" Description="显示名" />
       <Column Name="Category" DataType="String" Description="类别" />
+      <Column Name="ItemCount" DataType="Int32" Description="跟踪项。共有多少个埋点" />
+      <Column Name="Days" DataType="Int32" Description="天数。共统计了多少天" />
+      <Column Name="Total" DataType="Int64" Description="总次数。累计埋点采样次数" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Strict" DataType="Boolean" Description="严格。严格模式下，仅统计已知跟踪项，避免其它埋点干扰" />
       <Column Name="Period" DataType="Int32" Description="采样周期。单位秒" />
@@ -18,7 +21,6 @@
       <Column Name="Nodes" DataType="String" Length="500" Description="节点集。该应用最近一段时间所涉及的来源地址" />
       <Column Name="AlarmThreshold" DataType="Int32" Description="告警阈值。错误数达到该值时触发告警，0表示不启用" />
       <Column Name="AlarmRobot" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
-      <Column Name="ItemCount" DataType="Int32" Description="跟踪项" />
       <Column Name="CreateUser" DataType="String" Description="创建者" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建人" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
@@ -40,6 +42,8 @@
       <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
       <Column Name="Rules" DataType="String" Length="200" Description="规则。支持多个埋点操作名按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开。" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="Days" DataType="Int32" Description="天数。共统计了多少天" />
+      <Column Name="Total" DataType="Int64" Description="总次数。累计埋点采样次数" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="UpdateUser" DataType="String" Description="更新者" />

@@ -67,6 +67,22 @@ namespace Stardust.Data.Monitors
         [BindColumn("Enable", "启用", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
+        private Int32 _Days;
+        /// <summary>天数。共统计了多少天</summary>
+        [DisplayName("天数")]
+        [Description("天数。共统计了多少天")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Days", "天数。共统计了多少天", "")]
+        public Int32 Days { get => _Days; set { if (OnPropertyChanging("Days", value)) { _Days = value; OnPropertyChanged("Days"); } } }
+
+        private Int64 _Total;
+        /// <summary>总次数。累计埋点采样次数</summary>
+        [DisplayName("总次数")]
+        [Description("总次数。累计埋点采样次数")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Total", "总次数。累计埋点采样次数", "")]
+        public Int64 Total { get => _Total; set { if (OnPropertyChanging("Total", value)) { _Total = value; OnPropertyChanged("Total"); } } }
+
         private String _CreateIP;
         /// <summary>创建地址</summary>
         [DisplayName("创建地址")]
@@ -140,6 +156,8 @@ namespace Stardust.Data.Monitors
                     case "Name": return _Name;
                     case "Rules": return _Rules;
                     case "Enable": return _Enable;
+                    case "Days": return _Days;
+                    case "Total": return _Total;
                     case "CreateIP": return _CreateIP;
                     case "CreateTime": return _CreateTime;
                     case "UpdateUser": return _UpdateUser;
@@ -160,6 +178,8 @@ namespace Stardust.Data.Monitors
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Rules": _Rules = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
+                    case "Days": _Days = value.ToInt(); break;
+                    case "Total": _Total = value.ToLong(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
@@ -194,6 +214,12 @@ namespace Stardust.Data.Monitors
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
+
+            /// <summary>天数。共统计了多少天</summary>
+            public static readonly Field Days = FindByName("Days");
+
+            /// <summary>总次数。累计埋点采样次数</summary>
+            public static readonly Field Total = FindByName("Total");
 
             /// <summary>创建地址</summary>
             public static readonly Field CreateIP = FindByName("CreateIP");
@@ -239,6 +265,12 @@ namespace Stardust.Data.Monitors
 
             /// <summary>启用</summary>
             public const String Enable = "Enable";
+
+            /// <summary>天数。共统计了多少天</summary>
+            public const String Days = "Days";
+
+            /// <summary>总次数。累计埋点采样次数</summary>
+            public const String Total = "Total";
 
             /// <summary>创建地址</summary>
             public const String CreateIP = "CreateIP";

@@ -24,9 +24,11 @@
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ID"))">编号</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Name"))">名称</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("DisplayName"))">显示名</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Category"))">类别</a></th>
             <th class="text-center">每日监控</th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ItemCount"))">跟踪项</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Category"))">类别</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Day"))" title="共统计了多少天">天数</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Total"))" title="累计埋点采样次数">总次数</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Enable"))">启用</a></th>
             <th class="text-center" title="采样周期。单位秒"><a href="@Html.Raw(page.GetSortUrl("Period"))">采样周期</a></th>
             <th class="text-center" title="最大正常采样数。采样周期内，最多只记录指定数量的正常事件，用于绘制依赖关系"><a href="@Html.Raw(page.GetSortUrl("MaxSamples"))">最大正常采样数</a></th>
@@ -58,9 +60,11 @@
                 <td class="text-center">@entity.ID</td>
                 <td class="text-center">@entity.Name</td>
                 <td class="text-center">@entity.DisplayName</td>
+                <td>@entity.Category</td>
                 <td class="text-center"><a href="AppDaystat?appId=@entity.ID" title="该应用每日监控数据">每日监控</a></td>
                 <td class="text-right"><a href="TraceItem?appId=@entity.ID">@entity.ItemCount</a></td>
-                <td>@entity.Category</td>
+                <td class="text-right">@entity.Days.ToString("n0")</td>
+                <td class="text-right">@entity.Total.ToString("n0")</td>
                 <td class="text-center">
                     <i class="glyphicon glyphicon-@(entity.Enable ? "ok" : "remove")" style="color: @(entity.Enable ? "green" : "red");"></i>
                 </td>

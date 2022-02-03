@@ -96,7 +96,7 @@ namespace Stardust.Data.Monitors
             var key = $"AppMinuteStat:FindAllByAppIdWithCache:{appId}#{date:yyyyMMdd}";
             if (_cache.TryGetValue<IList<AppMinuteStat>>(key, out var list) && list != null) return list;
 
-            // 查询数据库，即时空值也缓存，避免缓存穿透
+            // 查询数据库，即使空值也缓存，避免缓存穿透
             list = FindAll(_.AppId == appId & _.StatTime >= date & _.StatTime < date.AddDays(1));
 
             _cache.Set(key, list, 10);

@@ -43,7 +43,7 @@ namespace Stardust.Server.Services
             // 保留数据的起点
             var time = DateTime.Now.AddDays(-set.DataRetention);
             var time2 = DateTime.Now.AddDays(-set.DataRetention2);
-            var time3 = DateTime.Now.AddDays(-set.DataRetention2 * 10);
+            //var time3 = DateTime.Now.AddDays(-set.DataRetention2 * 10);
 
             using var span = _tracer?.NewSpan("DataRetention", $"{time} {time2}");
             try
@@ -72,8 +72,8 @@ namespace Stardust.Server.Services
                 rs = TraceHourStat.DeleteBefore(time2);
                 XTrace.WriteLine("删除[{0}]之前的TraceHourStat共：{1:n0}", time2.ToFullString(), rs);
 
-                rs = TraceDayStat.DeleteBefore(time3);
-                XTrace.WriteLine("删除[{0}]之前的TraceDayStat共：{1:n0}", time3.ToFullString(), rs);
+                //rs = TraceDayStat.DeleteBefore(time3);
+                //XTrace.WriteLine("删除[{0}]之前的TraceDayStat共：{1:n0}", time3.ToFullString(), rs);
 
                 //// 删除监控明细数据
                 //rs = TraceData.DeleteBefore(time);

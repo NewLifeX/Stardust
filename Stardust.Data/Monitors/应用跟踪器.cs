@@ -51,6 +51,30 @@ namespace Stardust.Data.Monitors
         [BindColumn("Category", "类别", "")]
         public String Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
 
+        private Int32 _ItemCount;
+        /// <summary>跟踪项。共有多少个埋点</summary>
+        [DisplayName("跟踪项")]
+        [Description("跟踪项。共有多少个埋点")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("ItemCount", "跟踪项。共有多少个埋点", "")]
+        public Int32 ItemCount { get => _ItemCount; set { if (OnPropertyChanging("ItemCount", value)) { _ItemCount = value; OnPropertyChanged("ItemCount"); } } }
+
+        private Int32 _Days;
+        /// <summary>天数。共统计了多少天</summary>
+        [DisplayName("天数")]
+        [Description("天数。共统计了多少天")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Days", "天数。共统计了多少天", "")]
+        public Int32 Days { get => _Days; set { if (OnPropertyChanging("Days", value)) { _Days = value; OnPropertyChanged("Days"); } } }
+
+        private Int64 _Total;
+        /// <summary>总次数。累计埋点采样次数</summary>
+        [DisplayName("总次数")]
+        [Description("总次数。累计埋点采样次数")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Total", "总次数。累计埋点采样次数", "")]
+        public Int64 Total { get => _Total; set { if (OnPropertyChanging("Total", value)) { _Total = value; OnPropertyChanged("Total"); } } }
+
         private Boolean _Enable;
         /// <summary>启用</summary>
         [DisplayName("启用")]
@@ -147,14 +171,6 @@ namespace Stardust.Data.Monitors
         [BindColumn("AlarmRobot", "告警机器人。钉钉、企业微信等", "")]
         public String AlarmRobot { get => _AlarmRobot; set { if (OnPropertyChanging("AlarmRobot", value)) { _AlarmRobot = value; OnPropertyChanged("AlarmRobot"); } } }
 
-        private Int32 _ItemCount;
-        /// <summary>跟踪项</summary>
-        [DisplayName("跟踪项")]
-        [Description("跟踪项")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("ItemCount", "跟踪项", "")]
-        public Int32 ItemCount { get => _ItemCount; set { if (OnPropertyChanging("ItemCount", value)) { _ItemCount = value; OnPropertyChanged("ItemCount"); } } }
-
         private String _CreateUser;
         /// <summary>创建者</summary>
         [DisplayName("创建者")]
@@ -234,6 +250,9 @@ namespace Stardust.Data.Monitors
                     case "Name": return _Name;
                     case "DisplayName": return _DisplayName;
                     case "Category": return _Category;
+                    case "ItemCount": return _ItemCount;
+                    case "Days": return _Days;
+                    case "Total": return _Total;
                     case "Enable": return _Enable;
                     case "Strict": return _Strict;
                     case "Period": return _Period;
@@ -246,7 +265,6 @@ namespace Stardust.Data.Monitors
                     case "Nodes": return _Nodes;
                     case "AlarmThreshold": return _AlarmThreshold;
                     case "AlarmRobot": return _AlarmRobot;
-                    case "ItemCount": return _ItemCount;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -266,6 +284,9 @@ namespace Stardust.Data.Monitors
                     case "Name": _Name = Convert.ToString(value); break;
                     case "DisplayName": _DisplayName = Convert.ToString(value); break;
                     case "Category": _Category = Convert.ToString(value); break;
+                    case "ItemCount": _ItemCount = value.ToInt(); break;
+                    case "Days": _Days = value.ToInt(); break;
+                    case "Total": _Total = value.ToLong(); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Strict": _Strict = value.ToBoolean(); break;
                     case "Period": _Period = value.ToInt(); break;
@@ -278,7 +299,6 @@ namespace Stardust.Data.Monitors
                     case "Nodes": _Nodes = Convert.ToString(value); break;
                     case "AlarmThreshold": _AlarmThreshold = value.ToInt(); break;
                     case "AlarmRobot": _AlarmRobot = Convert.ToString(value); break;
-                    case "ItemCount": _ItemCount = value.ToInt(); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -308,6 +328,15 @@ namespace Stardust.Data.Monitors
 
             /// <summary>类别</summary>
             public static readonly Field Category = FindByName("Category");
+
+            /// <summary>跟踪项。共有多少个埋点</summary>
+            public static readonly Field ItemCount = FindByName("ItemCount");
+
+            /// <summary>天数。共统计了多少天</summary>
+            public static readonly Field Days = FindByName("Days");
+
+            /// <summary>总次数。累计埋点采样次数</summary>
+            public static readonly Field Total = FindByName("Total");
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
@@ -344,9 +373,6 @@ namespace Stardust.Data.Monitors
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public static readonly Field AlarmRobot = FindByName("AlarmRobot");
-
-            /// <summary>跟踪项</summary>
-            public static readonly Field ItemCount = FindByName("ItemCount");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
@@ -390,6 +416,15 @@ namespace Stardust.Data.Monitors
             /// <summary>类别</summary>
             public const String Category = "Category";
 
+            /// <summary>跟踪项。共有多少个埋点</summary>
+            public const String ItemCount = "ItemCount";
+
+            /// <summary>天数。共统计了多少天</summary>
+            public const String Days = "Days";
+
+            /// <summary>总次数。累计埋点采样次数</summary>
+            public const String Total = "Total";
+
             /// <summary>启用</summary>
             public const String Enable = "Enable";
 
@@ -425,9 +460,6 @@ namespace Stardust.Data.Monitors
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public const String AlarmRobot = "AlarmRobot";
-
-            /// <summary>跟踪项</summary>
-            public const String ItemCount = "ItemCount";
 
             /// <summary>创建者</summary>
             public const String CreateUser = "CreateUser";
