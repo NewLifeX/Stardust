@@ -36,16 +36,16 @@ namespace Stardust.Server.Services
 
         private TimerX _timerFlow;
         private TimerX _timerBatch;
-        private readonly ConcurrentBag<String> _bagDay = new ConcurrentBag<String>();
-        private readonly ConcurrentBag<String> _bagHour = new ConcurrentBag<String>();
-        private readonly ConcurrentDictionary<String, ConcurrentBag<DateTime>> _bagMinute = new ConcurrentDictionary<String, ConcurrentBag<DateTime>>();
-        private readonly ConcurrentQueue<TraceData> _queue = new ConcurrentQueue<TraceData>();
+        private readonly ConcurrentBag<String> _bagDay = new();
+        private readonly ConcurrentBag<String> _bagHour = new();
+        private readonly ConcurrentDictionary<String, ConcurrentBag<DateTime>> _bagMinute = new();
+        private readonly ConcurrentQueue<TraceData> _queue = new();
 
         /* 延迟队列技术 */
-        private readonly DayQueue _dayQueue = new DayQueue { Period = 60 };
-        private readonly HourQueue _hourQueue = new HourQueue { Period = 60 };
-        private readonly MinuteQueue _minuteQueue = new MinuteQueue { Period = 60 };
-        private readonly AppMinuteQueue _appMinuteQueue = new AppMinuteQueue { Period = 60 };
+        private readonly DayQueue _dayQueue = new() { Period = 60 };
+        private readonly HourQueue _hourQueue = new() { Period = 60 };
+        private readonly MinuteQueue _minuteQueue = new() { Period = 60 };
+        private readonly AppMinuteQueue _appMinuteQueue = new() { Period = 60 };
 
         private Int32 _count;
         private readonly ITracer _tracer;

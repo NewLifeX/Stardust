@@ -28,7 +28,7 @@ namespace Stardust.Server.Services
         public Int32 Period { get; set; } = 30;
 
         private readonly TimerX _timer;
-        private readonly ConcurrentBag<Int32> _bag = new ConcurrentBag<Int32>();
+        private readonly ConcurrentBag<Int32> _bag = new();
         //private WeiXinClient _weixin;
         //private DingTalkClient _dingTalk;
         private readonly ICache _cache = new MemoryCache();
