@@ -140,17 +140,17 @@ namespace Stardust.Data.Monitors
 
         /// <summary>根据时间类型搜索</summary>
         /// <param name="appId"></param>
-        /// <param name="name"></param>
+        /// <param name="itemId"></param>
         /// <param name="kind"></param>
         /// <param name="time"></param>
         /// <param name="count"></param>
         /// <returns></returns>
-        public static IList<TraceData> Search(Int32 appId, String name, String kind, DateTime time, Int32 count)
+        public static IList<TraceData> Search(Int32 appId, Int32 itemId, String kind, DateTime time, Int32 count)
         {
             var exp = new WhereExpression();
 
             if (appId >= 0) exp &= _.AppId == appId;
-            if (!name.IsNullOrEmpty()) exp &= _.Name == name;
+            if (itemId > 0) exp &= _.ItemId == itemId;
 
             var fi = kind switch
             {

@@ -107,6 +107,7 @@ namespace Stardust.Data.Monitors
         #region 高级查询
         /// <summary>高级查询</summary>
         /// <param name="appId">应用</param>
+        /// <param name="itemId">跟踪项</param>
         /// <param name="name">操作名。接口名或埋点名</param>
         /// <param name="type">操作类型</param>
         /// <param name="start">统计日期开始</param>
@@ -114,11 +115,12 @@ namespace Stardust.Data.Monitors
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<TraceDayStat> Search(Int32 appId, String name, String type, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<TraceDayStat> Search(Int32 appId, Int32 itemId, String name, String type, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (appId >= 0) exp &= _.AppId == appId;
+            if (itemId > 0) exp &= _.ItemId == itemId;
             if (!name.IsNullOrEmpty()) exp &= _.Name == name;
             if (!type.IsNullOrEmpty()) exp &= _.Type == type;
 

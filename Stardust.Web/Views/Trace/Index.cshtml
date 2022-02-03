@@ -44,7 +44,7 @@
             {
                     var ti = entity.TraceItem;
                 var url1 = $"/Monitors/appDayStat?appId={entity.AppId}";
-                var url2 = $"/Monitors/traceDayStat?appid={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}";
+                var url2 = $"/Monitors/traceDayStat?appid={entity.AppId}&itemId={entity.ItemId}";
                 var color2 = "";
                 if (ti.Kind.EqualIgnoreCase("db"))
                 {

@@ -43,7 +43,7 @@
     <tbody>
         @foreach (var entity in Model)
         {
-            var url1 = $"?appid={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}";
+            var url1 = $"?appid={entity.AppId}&itemId={entity.ItemId}";
             //var url2 = $"SampleData?appid={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}&start={entity.StartTime}&end={entity.EndTime}";
             var url2 = $"SampleData?dataid={entity.Id}";
             <tr>

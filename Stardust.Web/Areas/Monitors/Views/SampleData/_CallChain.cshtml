@@ -63,7 +63,7 @@
                 color2 = "palevioletred";
             }
             var url1 = $"appDayStat?appId={entity.AppId}";
-            var url2 = $"traceDayStat?appid={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}";
+            var url2 = $"traceDayStat?appid={entity.AppId}&itemId={entity.ItemId}";
             <tr>
                 <td class="text-center"><a href="@url1" title="应用最近的监控图表">@entity.AppName</a></td>
                 <td title="@entity.Tag" style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url2" style="color: @color2">@entity.Name</a></td>

@@ -47,8 +47,8 @@
         @foreach (var entity in Model)
         {
             var url1 = $"appDayStat?appId={entity.AppId}";
-            var url2 = $"traceData?appId={entity.AppId}&kind=hour&time={entity.StatTime:yyyy-MM-dd HH:mm}&name={HttpUtility.UrlEncode(entity.Name)}";
-            var url3 = $"?appId={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}";
+            var url2 = $"traceData?appId={entity.AppId}&kind=hour&time={entity.StatTime:yyyy-MM-dd HH:mm}&itemId={entity.ItemId}";
+            var url3 = $"?appId={entity.AppId}&itemId={entity.ItemId}";
             var url4 = url2 + "&minError=1";
             <tr>
                 @if (set.EnableSelect)

@@ -20,6 +20,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         protected override IEnumerable<TraceMinuteStat> Search(Pager p)
         {
             var appId = p["appId"].ToInt(-1);
+            var itemId = p["itemId"].ToInt(-1);
             var name = p["name"];
             var minError = p["minError"].ToInt(-1);
 
@@ -45,9 +46,9 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
             if (appId > 0) p.RetrieveState = true;
 
-            var list = TraceMinuteStat.Search(appId, name, minError, start, end, p["Q"], p);
+            var list = TraceMinuteStat.Search(appId, itemId, name, minError, start, end, p["Q"], p);
 
-            if (list.Count > 0 && appId >= 0 && !name.IsNullOrEmpty())
+            if (list.Count > 0 && appId >= 0 && itemId > 0)
             {
                 var list2 = list.OrderBy(e => e.StatTime).ToList();
 
@@ -98,7 +99,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             // 如果有新的TraceId，则直接使用，否则使用原来的
             try
             {
-                var ds = TraceData.Search(st.AppId, st.Name, "minute", st.StatTime, 20);
+                var ds = TraceData.Search(st.AppId, st.ItemId, "minute", st.StatTime, 20);
                 if (ds.Count == 0) throw new InvalidDataException("找不到追踪数据");
 
                 var list = SampleData.FindAllByDataIds(ds.Select(e => e.Id).ToArray(), st.StatTime);

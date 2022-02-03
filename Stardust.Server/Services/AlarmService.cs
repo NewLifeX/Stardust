@@ -134,12 +134,12 @@ namespace Stardust.Server.Services
             {
                 if (item.Errors > 0)
                 {
-                    sb.AppendLine($">**错误：**<font color=\"red\">{item.StatTime.ToFullString()} 埋点[{item.Name}]共报错[{item.Errors:n0}]次</font>[更多]({traceUrl}&name={HttpUtility.UrlEncode(item.Name)})");
+                    sb.AppendLine($">**错误：**<font color=\"red\">{item.StatTime.ToFullString()} 埋点[{item.Name}]共报错[{item.Errors:n0}]次</font>[更多]({traceUrl}&itemId={item.ItemId})");
 
                     // 相同接口的错误，不要报多次
                     if (!names.Contains(item.Name))
                     {
-                        var ds = TraceData.Search(st.AppId, item.Name, "minute", item.StatTime, 20);
+                        var ds = TraceData.Search(st.AppId, item.ItemId, "minute", item.StatTime, 20);
                         if (ds.Count > 0)
                         {
                             var sms = SampleData.FindAllByDataIds(ds.Select(e => e.Id).ToArray(), item.StatTime).Where(e => !e.Error.IsNullOrEmpty()).ToList();

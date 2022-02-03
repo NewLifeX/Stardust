@@ -48,8 +48,8 @@
         @foreach (var entity in Model)
         {
             //var url1 = $"appDayStat?appId={entity.AppId}";
-            var url2 = $"traceData?appId={entity.AppId}&date={entity.StatDate:yyyy-MM-dd}&name={HttpUtility.UrlEncode(entity.Name)}";
-            var url3 = $"?appId={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}";
+            var url2 = $"traceData?appId={entity.AppId}&date={entity.StatDate:yyyy-MM-dd}&itemId={entity.ItemId}";
+            var url3 = $"?appId={entity.AppId}&itemId={entity.ItemId}";
             var url4 = url2 + "&minError=1";
             var color = "";
             if (entity.Type == "db")
