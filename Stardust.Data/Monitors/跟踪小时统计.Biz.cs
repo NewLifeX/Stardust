@@ -39,6 +39,8 @@ namespace Stardust.Data.Monitors
             // 建议先调用基类方法，基类方法会做一些统一处理
             base.Valid(isNew);
 
+            if (Name.IsNullOrEmpty()) Name = TraceItem.FindById(ItemId)?.Name;
+
             Cost = Total == 0 ? 0 : (Int32)(TotalCost / Total);
         }
         #endregion
@@ -125,10 +127,10 @@ namespace Stardust.Data.Monitors
             using var span = DefaultTracer.Instance?.NewSpan("TraceHourStat-FindByTrace", model.Key);
 
             st = FindAllByAppIdWithCache(model.AppId, model.Time.Date)
-                .FirstOrDefault(e => e.StatTime == model.Time && e.Name.EqualIgnoreCase(model.Name));
+                .FirstOrDefault(e => e.StatTime == model.Time && e.ItemId == model.ItemId);
 
             // 查询数据库
-            if (st == null) st = Find(_.StatTime == model.Time & _.AppId == model.AppId & _.Name == model.Name);
+            if (st == null) st = Find(_.StatTime == model.Time & _.AppId == model.AppId & _.ItemId == model.ItemId);
 
             if (st != null) _cache.Set(key, st, 300);
 
@@ -141,7 +143,7 @@ namespace Stardust.Data.Monitors
         public static TraceHourStat FindOrAdd(TraceStatModel model)
         {
             // 高并发下获取或新增对象
-            return GetOrAdd(model, FindByTrace, m => new TraceHourStat { StatTime = m.Time, AppId = m.AppId, Name = m.Name });
+            return GetOrAdd(model, FindByTrace, m => new TraceHourStat { StatTime = m.Time, AppId = m.AppId, ItemId = m.ItemId });
         }
 
         /// <summary>删除指定时间之前的数据</summary>

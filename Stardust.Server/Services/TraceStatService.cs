@@ -153,7 +153,7 @@ namespace Stardust.Server.Services
 
                 // 每日
                 {
-                    var st = _dayQueue.GetOrAdd(td.StatDate, td.AppId, td.Name, out var key);
+                    var st = _dayQueue.GetOrAdd(td.StatDate, td.AppId, td.ItemId, out var key);
 
                     st.Total += td.Total;
                     st.Errors += td.Errors;
@@ -166,7 +166,7 @@ namespace Stardust.Server.Services
 
                 // 小时
                 {
-                    var st = _hourQueue.GetOrAdd(td.StatHour, td.AppId, td.Name, out var key);
+                    var st = _hourQueue.GetOrAdd(td.StatHour, td.AppId, td.ItemId, out var key);
 
                     st.Total += td.Total;
                     st.Errors += td.Errors;
@@ -179,7 +179,7 @@ namespace Stardust.Server.Services
 
                 // 分钟
                 {
-                    var st = _minuteQueue.GetOrAdd(td.StatMinute, td.AppId, td.Name, out var key);
+                    var st = _minuteQueue.GetOrAdd(td.StatMinute, td.AppId, td.ItemId, out var key);
 
                     st.Total += td.Total;
                     st.Errors += td.Errors;
@@ -256,12 +256,11 @@ namespace Stardust.Server.Services
 
             // 聚合
             // 分组聚合，这里包含了每个接口在该日内的所有分钟统计，需要求和
-            foreach (var item in list.GroupBy(e => e.Name))
+            foreach (var item in list.GroupBy(e => e.ItemId))
             {
-                var name = item.Key;
-                if (name.IsNullOrEmpty()) continue;
+                if (item.Key == 0) continue;
 
-                var st = _dayQueue.GetOrAdd(date, appId, name, out var key);
+                var st = _dayQueue.GetOrAdd(date, appId, item.Key, out var key);
 
                 var vs = item.ToList();
                 st.Total = vs.Sum(e => e.Total);
@@ -291,12 +290,11 @@ namespace Stardust.Server.Services
             if (list.Count == 0) return;
 
             // 分组聚合，这里包含了每个接口在该小时内的所有分钟统计，需要求和
-            foreach (var item in list.GroupBy(e => e.Name))
+            foreach (var item in list.GroupBy(e => e.ItemId))
             {
-                var name = item.Key;
-                if (name.IsNullOrEmpty()) continue;
+                if (item.Key == 0) continue;
 
-                var st = _hourQueue.GetOrAdd(time, appId, name, out var key);
+                var st = _hourQueue.GetOrAdd(time, appId, item.Key, out var key);
 
                 var vs = item.ToList();
                 st.Total = vs.Sum(e => e.Total);
@@ -334,7 +332,7 @@ namespace Stardust.Server.Services
             // 聚合
             foreach (var item in list)
             {
-                var st = _minuteQueue.GetOrAdd(item.StatMinute, appId, item.Name, out var key);
+                var st = _minuteQueue.GetOrAdd(item.StatMinute, appId, item.ItemId, out var key);
 
                 st.Total = item.Total;
                 st.Errors = item.Errors;
@@ -366,9 +364,9 @@ namespace Stardust.Server.Services
 
     class DayQueue : MyQueue
     {
-        public TraceDayStat GetOrAdd(DateTime date, Int32 appId, String name, out String key)
+        public TraceDayStat GetOrAdd(DateTime date, Int32 appId, Int32 itemId, out String key)
         {
-            var model = new TraceStatModel { Time = date, AppId = appId, Name = name };
+            var model = new TraceStatModel { Time = date, AppId = appId, ItemId = itemId };
             key = model.Key;
             return GetOrAdd(key, k => TraceDayStat.FindOrAdd(model));
         }
@@ -376,9 +374,9 @@ namespace Stardust.Server.Services
 
     class HourQueue : MyQueue
     {
-        public TraceHourStat GetOrAdd(DateTime date, Int32 appId, String name, out String key)
+        public TraceHourStat GetOrAdd(DateTime date, Int32 appId, Int32 itemId, out String key)
         {
-            var model = new TraceStatModel { Time = date, AppId = appId, Name = name };
+            var model = new TraceStatModel { Time = date, AppId = appId, ItemId = itemId };
             key = model.Key;
             return GetOrAdd(key, k => TraceHourStat.FindOrAdd(model));
         }
@@ -386,9 +384,9 @@ namespace Stardust.Server.Services
 
     class MinuteQueue : MyQueue
     {
-        public TraceMinuteStat GetOrAdd(DateTime date, Int32 appId, String name, out String key)
+        public TraceMinuteStat GetOrAdd(DateTime date, Int32 appId, Int32 itemId, out String key)
         {
-            var model = new TraceStatModel { Time = date, AppId = appId, Name = name };
+            var model = new TraceStatModel { Time = date, AppId = appId, ItemId = itemId };
             key = model.Key;
             return GetOrAdd(key, k => TraceMinuteStat.FindOrAdd(model));
         }

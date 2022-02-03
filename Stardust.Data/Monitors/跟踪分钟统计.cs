@@ -14,8 +14,9 @@ namespace Stardust.Data.Monitors
     [Serializable]
     [DataObject]
     [Description("跟踪分钟统计。每应用每接口每5分钟统计，用于分析接口健康状况")]
-    [BindIndex("IU_TraceMinuteStat_StatTime_AppId_Name", true, "StatTime,AppId,Name")]
-    [BindIndex("IX_TraceMinuteStat_AppId_Name_Id", false, "AppId,Name,Id")]
+    [BindIndex("IX_TraceMinuteStat_StatTime_AppId_Name", false, "StatTime,AppId,Name")]
+    [BindIndex("IX_TraceMinuteStat_StatTime_AppId_ItemId", false, "StatTime,AppId,ItemId")]
+    [BindIndex("IX_TraceMinuteStat_AppId_ItemId_Id", false, "AppId,ItemId,Id")]
     [BindTable("TraceMinuteStat", Description = "跟踪分钟统计。每应用每接口每5分钟统计，用于分析接口健康状况", ConnName = "Monitor", DbType = DatabaseType.None)]
     public partial class TraceMinuteStat
     {
@@ -43,6 +44,14 @@ namespace Stardust.Data.Monitors
         [DataObjectField(false, false, false, 0)]
         [BindColumn("AppId", "应用", "")]
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
+
+        private Int32 _ItemId;
+        /// <summary>跟踪项</summary>
+        [DisplayName("跟踪项")]
+        [Description("跟踪项")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("ItemId", "跟踪项", "")]
+        public Int32 ItemId { get => _ItemId; set { if (OnPropertyChanging("ItemId", value)) { _ItemId = value; OnPropertyChanged("ItemId"); } } }
 
         private String _Name;
         /// <summary>操作名。接口名或埋点名</summary>
@@ -138,6 +147,7 @@ namespace Stardust.Data.Monitors
                     case "ID": return _ID;
                     case "StatTime": return _StatTime;
                     case "AppId": return _AppId;
+                    case "ItemId": return _ItemId;
                     case "Name": return _Name;
                     case "Total": return _Total;
                     case "Errors": return _Errors;
@@ -158,6 +168,7 @@ namespace Stardust.Data.Monitors
                     case "ID": _ID = value.ToInt(); break;
                     case "StatTime": _StatTime = value.ToDateTime(); break;
                     case "AppId": _AppId = value.ToInt(); break;
+                    case "ItemId": _ItemId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Total": _Total = value.ToInt(); break;
                     case "Errors": _Errors = value.ToInt(); break;
@@ -186,6 +197,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
+
+            /// <summary>跟踪项</summary>
+            public static readonly Field ItemId = FindByName("ItemId");
 
             /// <summary>操作名。接口名或埋点名</summary>
             public static readonly Field Name = FindByName("Name");
@@ -231,6 +245,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>应用</summary>
             public const String AppId = "AppId";
+
+            /// <summary>跟踪项</summary>
+            public const String ItemId = "ItemId";
 
             /// <summary>操作名。接口名或埋点名</summary>
             public const String Name = "Name";

@@ -11,10 +11,13 @@ namespace Stardust.Data.Monitors
         /// <summary>应用</summary>
         public Int32 AppId { get; set; }
 
-        /// <summary>操作名</summary>
-        public String Name { get; set; }
+        ///// <summary>操作名</summary>
+        //public String Name { get; set; }
+
+        /// <summary>跟踪项</summary>
+        public Int32 ItemId { get; set; }
 
         /// <summary>用于统计的唯一Key</summary>
-        public String Key => $"{Time}#{AppId}#{Name}";
+        public String Key => $"{Time}#{AppId}#{ItemId}";
     }
 }
