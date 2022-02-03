@@ -23,7 +23,7 @@ namespace Stardust.Monitors
             {
                 case "System.Net.Http.HttpRequestOut.Start":
                     {
-                        if (value.Value.GetValue("Request") is HttpRequestMessage request)
+                        if (value.Value.GetValue("Request") is HttpRequestMessage request && !request.Headers.Contains("traceparent"))
                         {
                             Tracer.NewSpan(request);
                         }
