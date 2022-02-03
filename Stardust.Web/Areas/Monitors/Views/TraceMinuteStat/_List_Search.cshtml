@@ -9,7 +9,7 @@
 
     var dic = AppTracer.FindAllWithCache().ToDictionary(e => e.ID, e => e + "");
     var appId = page["appId"].ToInt(-1);
-    var name = page["name"];
+    var itemId = page["itemId"].ToInt(-1);
 }
 @if (appId > 0)
 {
@@ -18,12 +18,12 @@
         <a href="appDayStat?appId=@appId" class="btn btn-success btn-sm" title="应用最近的监控图表">@app</a>
     </div>
 }
-@if (appId > 0 && !name.IsNullOrEmpty())
+@if (appId > 0 && itemId > 0)
 {
     <div class="form-group">
-        @Html.ActionLink("24小时", null, "traceMinuteStat", new { appId, name })
-        @Html.ActionLink("7天", null, "traceHourStat", new { appId, name })
-        @Html.ActionLink("90天", null, "traceDayStat", new { appId, name })
+        @Html.ActionLink("24小时", null, "traceMinuteStat", new { appId, itemId })
+        @Html.ActionLink("7天", null, "traceHourStat", new { appId, itemId })
+        @Html.ActionLink("90天", null, "traceDayStat", new { appId, itemId })
     </div>
 }
 <div class="form-group">
