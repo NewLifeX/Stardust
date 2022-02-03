@@ -35,9 +35,14 @@ namespace Stardust.Data.Monitors
             // 建议先调用基类方法，基类方法会做一些统一处理
             base.Valid(isNew);
 
-            // 在新插入数据或者修改了指定字段时进行修正
-            //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
-            //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
+            var len = _.TraceId.Length;
+            if (len > 0 && !TraceId.IsNullOrEmpty() && TraceId.Length > len) TraceId = TraceId[..len];
+
+            len = _.Tag.Length;
+            if (len > 0 && !Tag.IsNullOrEmpty() && Tag.Length > len) Tag = Tag[..len];
+
+            len = _.Error.Length;
+            if (len > 0 && !Error.IsNullOrEmpty() && Error.Length > len) Error = Error[..len];
         }
         #endregion
 
@@ -117,6 +122,9 @@ namespace Stardust.Data.Monitors
                 {
                     var entity = new SampleData2();
                     entity.CopyFrom(item);
+
+                    entity.AppId = item.TraceItem?.AppId ?? 0;
+                    entity.Name = item.Name;
 
                     entity.CreateUserID = userId;
                     entity.CreateUser = user;

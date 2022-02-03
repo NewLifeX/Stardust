@@ -113,9 +113,8 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
             if (list.Count > 0)
             {
-                var appId = list[0].AppId;
-                var ar = AppTracer.FindByID(appId);
-                if (ar != null) ViewBag.Title = $"{ar}采样";
+                var appName = list[0].AppName;
+                if (appName.IsNullOrEmpty()) ViewBag.Title = $"{appName}采样";
             }
 
             return list;

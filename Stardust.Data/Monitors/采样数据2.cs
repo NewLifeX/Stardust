@@ -43,6 +43,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("AppId", "应用", "")]
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
+        private Int32 _ItemId;
+        /// <summary>跟踪项</summary>
+        [DisplayName("跟踪项")]
+        [Description("跟踪项")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("ItemId", "跟踪项", "")]
+        public Int32 ItemId { get => _ItemId; set { if (OnPropertyChanging("ItemId", value)) { _ItemId = value; OnPropertyChanged("ItemId"); } } }
+
         private String _Name;
         /// <summary>操作名。接口名或埋点名</summary>
         [DisplayName("操作名")]
@@ -127,7 +135,7 @@ namespace Stardust.Data.Monitors
         /// <summary>错误信息</summary>
         [DisplayName("错误信息")]
         [Description("错误信息")]
-        [DataObjectField(false, false, true, 8000)]
+        [DataObjectField(false, false, true, 2000)]
         [BindColumn("Error", "错误信息", "")]
         public String Error { get => _Error; set { if (OnPropertyChanging("Error", value)) { _Error = value; OnPropertyChanged("Error"); } } }
 
@@ -177,6 +185,7 @@ namespace Stardust.Data.Monitors
                     case "Id": return _Id;
                     case "DataId": return _DataId;
                     case "AppId": return _AppId;
+                    case "ItemId": return _ItemId;
                     case "Name": return _Name;
                     case "Success": return _Success;
                     case "StartTime": return _StartTime;
@@ -202,6 +211,7 @@ namespace Stardust.Data.Monitors
                     case "Id": _Id = value.ToLong(); break;
                     case "DataId": _DataId = value.ToLong(); break;
                     case "AppId": _AppId = value.ToInt(); break;
+                    case "ItemId": _ItemId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Success": _Success = value.ToBoolean(); break;
                     case "StartTime": _StartTime = value.ToLong(); break;
@@ -235,6 +245,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
+
+            /// <summary>跟踪项</summary>
+            public static readonly Field ItemId = FindByName("ItemId");
 
             /// <summary>操作名。接口名或埋点名</summary>
             public static readonly Field Name = FindByName("Name");
@@ -295,6 +308,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>应用</summary>
             public const String AppId = "AppId";
+
+            /// <summary>跟踪项</summary>
+            public const String ItemId = "ItemId";
 
             /// <summary>操作名。接口名或埋点名</summary>
             public const String Name = "Name";

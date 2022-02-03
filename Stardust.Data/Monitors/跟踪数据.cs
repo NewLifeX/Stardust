@@ -70,6 +70,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("ClientId", "实例。应用可能多实例部署，ip@proccessid", "")]
         public String ClientId { get => _ClientId; set { if (OnPropertyChanging("ClientId", value)) { _ClientId = value; OnPropertyChanged("ClientId"); } } }
 
+        private Int32 _ItemId;
+        /// <summary>跟踪项</summary>
+        [DisplayName("跟踪项")]
+        [Description("跟踪项")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("ItemId", "跟踪项", "")]
+        public Int32 ItemId { get => _ItemId; set { if (OnPropertyChanging("ItemId", value)) { _ItemId = value; OnPropertyChanged("ItemId"); } } }
+
         private String _Name;
         /// <summary>操作名。接口名或埋点名</summary>
         [DisplayName("操作名")]
@@ -191,6 +199,7 @@ namespace Stardust.Data.Monitors
                     case "StatMinute": return _StatMinute;
                     case "AppId": return _AppId;
                     case "ClientId": return _ClientId;
+                    case "ItemId": return _ItemId;
                     case "Name": return _Name;
                     case "StartTime": return _StartTime;
                     case "EndTime": return _EndTime;
@@ -217,6 +226,7 @@ namespace Stardust.Data.Monitors
                     case "StatMinute": _StatMinute = value.ToDateTime(); break;
                     case "AppId": _AppId = value.ToInt(); break;
                     case "ClientId": _ClientId = Convert.ToString(value); break;
+                    case "ItemId": _ItemId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "StartTime": _StartTime = value.ToLong(); break;
                     case "EndTime": _EndTime = value.ToLong(); break;
@@ -257,6 +267,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
             public static readonly Field ClientId = FindByName("ClientId");
+
+            /// <summary>跟踪项</summary>
+            public static readonly Field ItemId = FindByName("ItemId");
 
             /// <summary>操作名。接口名或埋点名</summary>
             public static readonly Field Name = FindByName("Name");
@@ -320,6 +333,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
             public const String ClientId = "ClientId";
+
+            /// <summary>跟踪项</summary>
+            public const String ItemId = "ItemId";
 
             /// <summary>操作名。接口名或埋点名</summary>
             public const String Name = "Name";

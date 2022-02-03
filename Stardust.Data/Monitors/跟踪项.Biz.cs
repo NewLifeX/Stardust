@@ -1,28 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
-using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
-using NewLife.Log;
-using NewLife.Model;
-using NewLife.Reflection;
-using NewLife.Threading;
-using NewLife.Web;
 using XCode;
-using XCode.Cache;
-using XCode.Configuration;
-using XCode.DataAccessLayer;
 using XCode.Membership;
-using XCode.Shards;
 
 namespace Stardust.Data.Monitors
 {
@@ -52,64 +35,24 @@ namespace Stardust.Data.Monitors
             // 建议先调用基类方法，基类方法会做一些统一处理
             base.Valid(isNew);
 
-            // 在新插入数据或者修改了指定字段时进行修正
-            // 处理当前已登录用户信息，可以由UserModule过滤器代劳
-            /*var user = ManageProvider.User;
-            if (user != null)
-            {
-                if (!Dirtys[nameof(UpdateUserID)]) UpdateUserID = user.ID;
-            }*/
-            //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
-            //if (!Dirtys[nameof(UpdateTime)]) UpdateTime = DateTime.Now;
-            //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
-            //if (!Dirtys[nameof(UpdateIP)]) UpdateIP = ManageProvider.UserHost;
-
-            // 检查唯一索引
-            // CheckExist(isNew, nameof(AppId), nameof(Name));
+            if (Kind == null) Kind = GetKind(Name);
         }
 
-        ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
-        //[EditorBrowsable(EditorBrowsableState.Never)]
-        //protected override void InitData()
-        //{
-        //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
-        //    if (Meta.Session.Count > 0) return;
-
-        //    if (XTrace.Debug) XTrace.WriteLine("开始初始化TraceItem[跟踪项]数据……");
-
-        //    var entity = new TraceItem();
-        //    entity.AppId = 0;
-        //    entity.Name = "abc";
-        //    entity.Rules = "abc";
-        //    entity.Enable = true;
-        //    entity.CreateIP = "abc";
-        //    entity.CreateTime = DateTime.Now;
-        //    entity.UpdateUser = "abc";
-        //    entity.UpdateUserID = 0;
-        //    entity.UpdateTime = DateTime.Now;
-        //    entity.UpdateIP = "abc";
-        //    entity.Remark = "abc";
-        //    entity.Insert();
-
-        //    if (XTrace.Debug) XTrace.WriteLine("完成初始化TraceItem[跟踪项]数据！");
-        //}
-
-        ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
-        ///// <returns></returns>
-        //public override Int32 Insert()
-        //{
-        //    return base.Insert();
-        //}
-
-        ///// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>
-        ///// <returns></returns>
-        //protected override Int32 OnDelete()
-        //{
-        //    return base.OnDelete();
-        //}
+        /// <summary>
+        /// 已重载。
+        /// </summary>
+        /// <returns></returns>
+        public override String ToString() => Name;
         #endregion
 
         #region 扩展属性
+        /// <summary>应用</summary>
+        [XmlIgnore, IgnoreDataMember]
+        public AppTracer App => Extends.Get(nameof(App), k => AppTracer.FindByID(AppId));
+
+        /// <summary>应用</summary>
+        [Map(nameof(AppId))]
+        public String AppName => App + "";
         #endregion
 
         #region 扩展查询
@@ -127,6 +70,21 @@ namespace Stardust.Data.Monitors
             return Meta.SingleCache[id];
 
             //return Find(_.Id == id);
+        }
+
+        /// <summary>
+        /// 根据应用查找
+        /// </summary>
+        /// <param name="appId"></param>
+        /// <returns></returns>
+        public static IList<TraceItem> FindAllByApp(Int32 appId)
+        {
+            if (appId <= 0) return new List<TraceItem>();
+
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId);
+
+            return FindAll(_.AppId == appId);
         }
 
         /// <summary>根据应用、操作名查找</summary>
@@ -177,6 +135,23 @@ namespace Stardust.Data.Monitors
         #endregion
 
         #region 业务操作
+        /// <summary>
+        /// 获取种类
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static String GetKind(String name)
+        {
+            if (name.IsNullOrEmpty()) return null;
+
+            if (name.StartsWithIgnoreCase("/")) return "api";
+            if (name.StartsWithIgnoreCase("http://", "https://")) return "http";
+
+            var p = name.IndexOf(':');
+            if (p > 0) return name[..p];
+
+            return null;
+        }
         #endregion
     }
 }

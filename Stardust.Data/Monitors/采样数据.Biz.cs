@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
@@ -41,20 +40,32 @@ namespace Stardust.Data.Monitors
             if (!HasDirty) return;
 
             var len = _.TraceId.Length;
-            if (!TraceId.IsNullOrEmpty() && TraceId.Length > len) TraceId = TraceId.Cut(len);
+            if (len > 0 && !TraceId.IsNullOrEmpty() && TraceId.Length > len) TraceId = TraceId[..len];
+
+            len = _.Tag.Length;
+            if (len > 0 && !Tag.IsNullOrEmpty() && Tag.Length > len) Tag = Tag[..len];
+
+            len = _.Error.Length;
+            if (len > 0 && !Error.IsNullOrEmpty() && Error.Length > len) Error = Error[..len];
 
             Cost = (Int32)(EndTime - StartTime);
         }
         #endregion
 
         #region 扩展属性
-        /// <summary>应用</summary>
+        /// <summary>跟踪项</summary>
         [XmlIgnore, IgnoreDataMember]
-        public AppTracer App => Extends.Get(nameof(App), k => AppTracer.FindByID(AppId));
+        public TraceItem TraceItem => Extends.Get(nameof(TraceItem), k => TraceItem.FindById(ItemId));
+
+        /// <summary>跟踪项</summary>
+        [Map(nameof(ItemId))]
+        public String Name => TraceItem + "";
+
+        /// <summary>应用编号</summary>
+        public Int32 AppId => TraceItem?.AppId ?? 0;
 
         /// <summary>应用</summary>
-        [Map(nameof(AppId))]
-        public String AppName => App + "";
+        public String AppName => TraceItem?.AppName;
 
         /// <summary>开始时间</summary>
         [Map(nameof(StartTime))]
@@ -150,9 +161,10 @@ namespace Stardust.Data.Monitors
                 {
                     Id = snow.NewId(),
                     DataId = data.Id,
-                    AppId = data.AppId,
+                    //AppId = data.AppId,
+                    ItemId = data.ItemId,
                     ClientId = data.ClientId,
-                    Name = data.Name,
+                    //Name = data.Name,
 
                     TraceId = item.TraceId,
                     SpanId = item.Id,

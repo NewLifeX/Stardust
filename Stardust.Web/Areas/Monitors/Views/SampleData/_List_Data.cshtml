@@ -29,48 +29,49 @@
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ParentId"))">父级标识</a></th>
             @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
             {
-                <th class="text-center">操作</th>
+                    <th class="text-center">操作</th>
             }
         </tr>
     </thead>
     <tbody>
         @foreach (var entity in Model)
         {
+            var ti = entity.TraceItem;
             var url1 = $"appDayStat?appId={entity.AppId}";
             var url2 = $"traceDayStat?appid={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}";
             var color2 = "";
-            if (entity.Name.StartsWithIgnoreCase("db:"))
+            if (ti.Kind.EqualIgnoreCase("db"))
             {
                 color2 = "orange";
             }
-            else if (entity.Name.StartsWithIgnoreCase("mq:", "redismq:", "mqtt:", "mns:", "emq:"))
+            else if (ti.Kind.EqualIgnoreCase("mq", "redismq", "mqtt", "mns", "emq"))
             {
                 color2 = "mediumpurple";
             }
-            else if (entity.Name.StartsWithIgnoreCase("redis:"))
+            else if (ti.Kind.EqualIgnoreCase("redis"))
             {
                 color2 = "palevioletred";
             }
-            <tr>
-                <td class="text-center"><a href="@url1" title="应用最近的监控图表">@entity.AppName</a></td>
-                <td title="@entity.Tag" style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url2" style="color: @color2">@entity.Name</a></td>
-                <td class="text-center">
-                    <i class="glyphicon glyphicon-@(entity.Success ? "ok" : "remove")" style="color: @(entity.Success ? "green" : "red");"></i>
-                </td>
-                <td class="text-center" title="@entity.StartTime">@entity.Start.ToFullString("")</td>
-                <td class="text-center" title="@entity.EndTime">@entity.End.ToFullString("")</td>
-                <td class="text-right">@entity.Cost.ToString("n0")</td>
-                <td><a href="?traceId=@entity.TraceId" title="跨多系统查看调用链">追踪</a></td>
-                <td><a href="?traceId=@entity.TraceId">@entity.TraceId</a></td>
-                <td>@entity.SpanId</td>
-                <td>@entity.ParentId</td>
+                <tr>
+                    <td class="text-center"><a href="@url1" title="应用最近的监控图表">@entity.AppName</a></td>
+                    <td title="@entity.Tag" style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url2" style="color: @color2">@entity.Name</a></td>
+                    <td class="text-center">
+                        <i class="glyphicon glyphicon-@(entity.Success ? "ok" : "remove")" style="color: @(entity.Success ? "green" : "red");"></i>
+                    </td>
+                    <td class="text-center" title="@entity.StartTime">@entity.Start.ToFullString("")</td>
+                    <td class="text-center" title="@entity.EndTime">@entity.End.ToFullString("")</td>
+                    <td class="text-right">@entity.Cost.ToString("n0")</td>
+                    <td><a href="?traceId=@entity.TraceId" title="跨多系统查看调用链">追踪</a></td>
+                    <td><a href="?traceId=@entity.TraceId">@entity.TraceId</a></td>
+                    <td>@entity.SpanId</td>
+                    <td>@entity.ParentId</td>
                 @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
                 {
-                    <td class="text-center">
+                            <td class="text-center">
                         @await Html.PartialAsync("_List_Data_Action", (Object)entity)
-                    </td>
+                            </td>
                 }
-            </tr>
+                </tr>
         }
     </tbody>
 </table>

@@ -27,6 +27,7 @@
         }
         @foreach (var entity in Model)
         {
+            var ti = entity.TraceItem;
             var msg = entity.Error ?? entity.Tag;
 
             var ms = entity.EndTime - entity.StartTime;
@@ -39,24 +40,24 @@
             {
                 color = "palevioletred";
             }
-            else if (entity.Name.StartsWithIgnoreCase("db:"))
+            else if (ti.Kind.EqualIgnoreCase("db"))
             {
                 color = "orange";
             }
-            else if (entity.Name.StartsWithIgnoreCase("net:", "rpc:", "mq:", "redismq:", "mqtt:", "mns:", "emq:"))
+            else if (ti.Kind.EqualIgnoreCase("net", "rpc", "mq", "redismq", "mqtt", "mns", "emq"))
             {
                 color = "mediumpurple";
             }
             var color2 = "";
-            if (entity.Name.StartsWithIgnoreCase("db:"))
+            if (ti.Kind.EqualIgnoreCase("db"))
             {
                 color2 = "orange";
             }
-            else if (entity.Name.StartsWithIgnoreCase("mq:", "redismq:", "mqtt:", "mns:", "emq:"))
+            else if (ti.Kind.EqualIgnoreCase("mq", "redismq", "mqtt", "mns", "emq"))
             {
                 color2 = "mediumpurple";
             }
-            else if (entity.Name.StartsWithIgnoreCase("redis:"))
+            else if (ti.Kind.EqualIgnoreCase("redis"))
             {
                 color2 = "palevioletred";
             }

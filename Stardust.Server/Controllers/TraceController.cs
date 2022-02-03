@@ -127,8 +127,13 @@ namespace Stardust.Server.Controllers
                 // 拒收超期数据
                 if (item.StartTime.ToDateTime().ToLocalTime() < startTime) continue;
 
+                // 检查跟踪项
+                var ti = app.GetOrAddItem(item.Name);
+                if (ti == null || !ti.Enable) continue;
+
                 var td = TraceData.Create(item);
                 td.AppId = app.ID;
+                td.ItemId = ti.Id;
                 td.ClientId = model.ClientId ?? ip;
                 td.CreateIP = ip;
                 td.CreateTime = now;

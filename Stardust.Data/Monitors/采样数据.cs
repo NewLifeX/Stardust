@@ -36,21 +36,13 @@ namespace Stardust.Data.Monitors
         [BindColumn("DataId", "数据", "")]
         public Int64 DataId { get => _DataId; set { if (OnPropertyChanging("DataId", value)) { _DataId = value; OnPropertyChanged("DataId"); } } }
 
-        private Int32 _AppId;
-        /// <summary>应用</summary>
-        [DisplayName("应用")]
-        [Description("应用")]
+        private Int32 _ItemId;
+        /// <summary>跟踪项</summary>
+        [DisplayName("跟踪项")]
+        [Description("跟踪项")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("AppId", "应用", "")]
-        public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
-
-        private String _Name;
-        /// <summary>操作名。接口名或埋点名</summary>
-        [DisplayName("操作名")]
-        [Description("操作名。接口名或埋点名")]
-        [DataObjectField(false, false, true, 200)]
-        [BindColumn("Name", "操作名。接口名或埋点名", "", Master = true)]
-        public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
+        [BindColumn("ItemId", "跟踪项", "")]
+        public Int32 ItemId { get => _ItemId; set { if (OnPropertyChanging("ItemId", value)) { _ItemId = value; OnPropertyChanged("ItemId"); } } }
 
         private Boolean _Success;
         /// <summary>正常</summary>
@@ -128,7 +120,7 @@ namespace Stardust.Data.Monitors
         /// <summary>错误信息</summary>
         [DisplayName("错误信息")]
         [Description("错误信息")]
-        [DataObjectField(false, false, true, 8000)]
+        [DataObjectField(false, false, true, 2000)]
         [BindColumn("Error", "错误信息", "")]
         public String Error { get => _Error; set { if (OnPropertyChanging("Error", value)) { _Error = value; OnPropertyChanged("Error"); } } }
 
@@ -161,8 +153,7 @@ namespace Stardust.Data.Monitors
                 {
                     case "Id": return _Id;
                     case "DataId": return _DataId;
-                    case "AppId": return _AppId;
-                    case "Name": return _Name;
+                    case "ItemId": return _ItemId;
                     case "Success": return _Success;
                     case "StartTime": return _StartTime;
                     case "EndTime": return _EndTime;
@@ -184,8 +175,7 @@ namespace Stardust.Data.Monitors
                 {
                     case "Id": _Id = value.ToLong(); break;
                     case "DataId": _DataId = value.ToLong(); break;
-                    case "AppId": _AppId = value.ToInt(); break;
-                    case "Name": _Name = Convert.ToString(value); break;
+                    case "ItemId": _ItemId = value.ToInt(); break;
                     case "Success": _Success = value.ToBoolean(); break;
                     case "StartTime": _StartTime = value.ToLong(); break;
                     case "EndTime": _EndTime = value.ToLong(); break;
@@ -214,11 +204,8 @@ namespace Stardust.Data.Monitors
             /// <summary>数据</summary>
             public static readonly Field DataId = FindByName("DataId");
 
-            /// <summary>应用</summary>
-            public static readonly Field AppId = FindByName("AppId");
-
-            /// <summary>操作名。接口名或埋点名</summary>
-            public static readonly Field Name = FindByName("Name");
+            /// <summary>跟踪项</summary>
+            public static readonly Field ItemId = FindByName("ItemId");
 
             /// <summary>正常</summary>
             public static readonly Field Success = FindByName("Success");
@@ -268,11 +255,8 @@ namespace Stardust.Data.Monitors
             /// <summary>数据</summary>
             public const String DataId = "DataId";
 
-            /// <summary>应用</summary>
-            public const String AppId = "AppId";
-
-            /// <summary>操作名。接口名或埋点名</summary>
-            public const String Name = "Name";
+            /// <summary>跟踪项</summary>
+            public const String ItemId = "ItemId";
 
             /// <summary>正常</summary>
             public const String Success = "Success";

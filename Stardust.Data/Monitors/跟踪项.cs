@@ -35,6 +35,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("AppId", "应用", "")]
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
+        private String _Kind;
+        /// <summary>种类</summary>
+        [DisplayName("种类")]
+        [Description("种类")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Kind", "种类", "")]
+        public String Kind { get => _Kind; set { if (OnPropertyChanging("Kind", value)) { _Kind = value; OnPropertyChanged("Kind"); } } }
+
         private String _Name;
         /// <summary>操作名。接口名或埋点名</summary>
         [DisplayName("操作名")]
@@ -128,6 +136,7 @@ namespace Stardust.Data.Monitors
                 {
                     case "Id": return _Id;
                     case "AppId": return _AppId;
+                    case "Kind": return _Kind;
                     case "Name": return _Name;
                     case "Rules": return _Rules;
                     case "Enable": return _Enable;
@@ -147,6 +156,7 @@ namespace Stardust.Data.Monitors
                 {
                     case "Id": _Id = value.ToInt(); break;
                     case "AppId": _AppId = value.ToInt(); break;
+                    case "Kind": _Kind = Convert.ToString(value); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Rules": _Rules = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
@@ -172,6 +182,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
+
+            /// <summary>种类</summary>
+            public static readonly Field Kind = FindByName("Kind");
 
             /// <summary>操作名。接口名或埋点名</summary>
             public static readonly Field Name = FindByName("Name");
@@ -214,6 +227,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>应用</summary>
             public const String AppId = "AppId";
+
+            /// <summary>种类</summary>
+            public const String Kind = "Kind";
 
             /// <summary>操作名。接口名或埋点名</summary>
             public const String Name = "Name";

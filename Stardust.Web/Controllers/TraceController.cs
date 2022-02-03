@@ -22,9 +22,8 @@ namespace Stardust.Web.Controllers
 
             if (list.Count > 0)
             {
-                var appId = list[0].AppId;
-                var ar = AppTracer.FindByID(appId);
-                if (ar != null) ViewBag.Title = $"{ar}调用链";
+                var appName = list[0].AppName;
+                if (appName.IsNullOrEmpty()) ViewBag.Title = $"{appName}调用链";
             }
 
             var model = new TraceViewModel

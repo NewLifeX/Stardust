@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using XCode;
@@ -50,6 +52,10 @@ namespace Stardust.Data.Monitors
                 if (!Dirtys[nameof(MaxErrors)]) MaxErrors = 10;
                 if (!Dirtys[nameof(Timeout)]) Timeout = 5000;
             }
+            else
+            {
+                ItemCount = Items.Count;
+            }
         }
 
         /// <summary>已重载。</summary>
@@ -58,6 +64,11 @@ namespace Stardust.Data.Monitors
         #endregion
 
         #region 扩展属性
+        /// <summary>
+        /// 跟踪项集合
+        /// </summary>
+        [XmlIgnore, IgnoreDataMember]
+        public IList<TraceItem> TraceItems => Extends.Get(nameof(TraceItems), k => TraceItem.FindAllByApp(ID));
         #endregion
 
         #region 扩展查询
@@ -157,6 +168,24 @@ namespace Stardust.Data.Monitors
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// 获取或添加跟踪项
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public TraceItem GetOrAddItem(String name)
+        {
+            var list = TraceItems;
+            var ti = list.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
+            if (ti != null) return ti;
+
+            ti = new TraceItem { AppId = ID, Name = name };
+            ti.Enable = !Strict;
+            ti.Insert();
+
+            return ti;
         }
         #endregion
     }
