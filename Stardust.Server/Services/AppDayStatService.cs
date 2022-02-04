@@ -67,7 +67,7 @@ namespace Stardust.Server.Services
             var list = TraceDayStat.SearchGroupAppAndType(date);
             if (list.Count == 0) return;
 
-            var ns = TraceDayStat.SearchGroupAppAndName(date);
+            var ns = TraceDayStat.SearchGroupAppAndItem(date);
 
             // 统计对象
             var sts = AppDayStat.Search(date, null);

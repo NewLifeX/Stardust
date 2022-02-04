@@ -44,6 +44,8 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
+            p.RetrieveState = true;
+
             return AppTracer.Search(category, enable, start, end, p["Q"], p);
         }
 
@@ -57,20 +59,25 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 {
                     XTrace.WriteLine("修正 {0}/{1}", app.Name, app.ID);
 
+                    var flag = DateTime.Today < new DateTime(2022, 2, 10);
                     {
                         var list = TraceDayStat.FindAllByAppId(app.ID);
-                        foreach (var st in list)
+                        if (flag)
                         {
-                            if (st.ItemId == 0 && !st.Name.IsNullOrEmpty())
+                            foreach (var st in list)
                             {
-                                var ti = app.GetOrAddItem(st.Name);
-                                st.ItemId = ti.Id;
-                                st.Update();
+                                if (st.ItemId == 0 && !st.Name.IsNullOrEmpty())
+                                {
+                                    var ti = app.GetOrAddItem(st.Name);
+                                    st.ItemId = ti.Id;
+                                    st.SaveAsync();
+                                }
                             }
                         }
-                        app.Days = list.Count;
+                        app.Days = list.DistinctBy(e => e.StatDate.Date).Count();
                         app.Total = list.Sum(e => e.Total);
                     }
+                    if (flag)
                     {
                         var list = TraceHourStat.FindAllByAppId(app.ID);
                         foreach (var st in list)
@@ -79,11 +86,12 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                             {
                                 var ti = app.GetOrAddItem(st.Name);
                                 st.ItemId = ti.Id;
-                                st.Update();
+                                st.SaveAsync();
                             }
                         }
                     }
 
+                    app.ItemCount = app.TraceItems.Count;
                     app.Update();
                 }
             }
