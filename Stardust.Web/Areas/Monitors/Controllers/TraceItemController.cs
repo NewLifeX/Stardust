@@ -34,12 +34,13 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
             var appId = p["appId"].ToInt(-1);
             var name = p["name"];
+            var kind = p["kind"];
             var enable = p["enable"]?.ToBoolean();
 
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            return TraceItem.Search(appId, name, enable, start, end, p["Q"], p);
+            return TraceItem.Search(appId, name, kind, enable, start, end, p["Q"], p);
         }
     }
 }

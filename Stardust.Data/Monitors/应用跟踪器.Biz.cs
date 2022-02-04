@@ -194,8 +194,8 @@ namespace Stardust.Data.Monitors
             var ti = list.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
             if (ti != null) return ti;
 
-            // 如果只跟踪已存在埋点，则跳过。数据库操作例外
-            if (Mode == TraceModes.Existing && !name.StartsWithIgnoreCase("db:")) return null;
+            // 如果只跟踪已存在埋点，则跳过。仅针对API
+            if (Mode == TraceModes.Existing && name.StartsWith('/')) return null;
 
             ti = new TraceItem { AppId = ID, Name = name };
             ti.Enable = Mode == TraceModes.All;

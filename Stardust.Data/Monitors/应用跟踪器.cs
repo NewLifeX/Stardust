@@ -84,11 +84,11 @@ namespace Stardust.Data.Monitors
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
         private TraceModes _Mode;
-        /// <summary>跟踪模式。跟踪所有项，或者新增项不跟踪</summary>
+        /// <summary>跟踪模式。仅针对api类型，过滤被扫描的数据</summary>
         [DisplayName("跟踪模式")]
-        [Description("跟踪模式。跟踪所有项，或者新增项不跟踪")]
+        [Description("跟踪模式。仅针对api类型，过滤被扫描的数据")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Mode", "跟踪模式。跟踪所有项，或者新增项不跟踪", "")]
+        [BindColumn("Mode", "跟踪模式。仅针对api类型，过滤被扫描的数据", "")]
         public TraceModes Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
 
         private Int32 _Period;
@@ -341,7 +341,7 @@ namespace Stardust.Data.Monitors
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
 
-            /// <summary>跟踪模式。跟踪所有项，或者新增项不跟踪</summary>
+            /// <summary>跟踪模式。仅针对api类型，过滤被扫描的数据</summary>
             public static readonly Field Mode = FindByName("Mode");
 
             /// <summary>采样周期。单位秒</summary>
@@ -428,7 +428,7 @@ namespace Stardust.Data.Monitors
             /// <summary>启用</summary>
             public const String Enable = "Enable";
 
-            /// <summary>跟踪模式。跟踪所有项，或者新增项不跟踪</summary>
+            /// <summary>跟踪模式。仅针对api类型，过滤被扫描的数据</summary>
             public const String Mode = "Mode";
 
             /// <summary>采样周期。单位秒</summary>

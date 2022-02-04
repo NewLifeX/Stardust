@@ -104,18 +104,20 @@ namespace Stardust.Data.Monitors
         /// <summary>高级查询</summary>
         /// <param name="appId">应用</param>
         /// <param name="name">操作名。接口名或埋点名</param>
+        /// <param name="kind">应用</param>
         /// <param name="enable">启用</param>
         /// <param name="start">更新时间开始</param>
         /// <param name="end">更新时间结束</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<TraceItem> Search(Int32 appId, String name, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<TraceItem> Search(Int32 appId, String name, String kind, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (appId >= 0) exp &= _.AppId == appId;
             if (!name.IsNullOrEmpty()) exp &= _.Name == name;
+            if (!kind.IsNullOrEmpty()) exp &= _.Kind == kind;
             if (enable != null) exp &= _.Enable == enable;
             exp &= _.UpdateTime.Between(start, end);
             if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Rules.Contains(key) | _.CreateIP.Contains(key) | _.UpdateUser.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
