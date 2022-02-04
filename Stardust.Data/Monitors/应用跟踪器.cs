@@ -83,13 +83,13 @@ namespace Stardust.Data.Monitors
         [BindColumn("Enable", "启用", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
-        private Boolean _Strict;
-        /// <summary>严格。严格模式下，仅统计已知跟踪项，避免其它埋点干扰</summary>
-        [DisplayName("严格")]
-        [Description("严格。严格模式下，仅统计已知跟踪项，避免其它埋点干扰")]
+        private TraceModes _Mode;
+        /// <summary>跟踪模式。跟踪所有项，或者新增项不跟踪</summary>
+        [DisplayName("跟踪模式")]
+        [Description("跟踪模式。跟踪所有项，或者新增项不跟踪")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Strict", "严格。严格模式下，仅统计已知跟踪项，避免其它埋点干扰", "")]
-        public Boolean Strict { get => _Strict; set { if (OnPropertyChanging("Strict", value)) { _Strict = value; OnPropertyChanged("Strict"); } } }
+        [BindColumn("Mode", "跟踪模式。跟踪所有项，或者新增项不跟踪", "")]
+        public TraceModes Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
 
         private Int32 _Period;
         /// <summary>采样周期。单位秒</summary>
@@ -254,7 +254,7 @@ namespace Stardust.Data.Monitors
                     case "Days": return _Days;
                     case "Total": return _Total;
                     case "Enable": return _Enable;
-                    case "Strict": return _Strict;
+                    case "Mode": return _Mode;
                     case "Period": return _Period;
                     case "MaxSamples": return _MaxSamples;
                     case "MaxErrors": return _MaxErrors;
@@ -288,7 +288,7 @@ namespace Stardust.Data.Monitors
                     case "Days": _Days = value.ToInt(); break;
                     case "Total": _Total = value.ToLong(); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
-                    case "Strict": _Strict = value.ToBoolean(); break;
+                    case "Mode": _Mode = (TraceModes)value.ToInt(); break;
                     case "Period": _Period = value.ToInt(); break;
                     case "MaxSamples": _MaxSamples = value.ToInt(); break;
                     case "MaxErrors": _MaxErrors = value.ToInt(); break;
@@ -341,8 +341,8 @@ namespace Stardust.Data.Monitors
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
 
-            /// <summary>严格。严格模式下，仅统计已知跟踪项，避免其它埋点干扰</summary>
-            public static readonly Field Strict = FindByName("Strict");
+            /// <summary>跟踪模式。跟踪所有项，或者新增项不跟踪</summary>
+            public static readonly Field Mode = FindByName("Mode");
 
             /// <summary>采样周期。单位秒</summary>
             public static readonly Field Period = FindByName("Period");
@@ -428,8 +428,8 @@ namespace Stardust.Data.Monitors
             /// <summary>启用</summary>
             public const String Enable = "Enable";
 
-            /// <summary>严格。严格模式下，仅统计已知跟踪项，避免其它埋点干扰</summary>
-            public const String Strict = "Strict";
+            /// <summary>跟踪模式。跟踪所有项，或者新增项不跟踪</summary>
+            public const String Mode = "Mode";
 
             /// <summary>采样周期。单位秒</summary>
             public const String Period = "Period";

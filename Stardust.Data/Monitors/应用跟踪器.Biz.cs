@@ -11,6 +11,19 @@ using XCode.Membership;
 
 namespace Stardust.Data.Monitors
 {
+    /// <summary>跟踪模式。跟踪所有项，或者新增项不跟踪</summary>
+    public enum TraceModes
+    {
+        /// <summary>跟踪所有项</summary>
+        All = 0,
+
+        /// <summary>仅新增跟踪项但不跟踪</summary>
+        CreateNew = 1,
+
+        /// <summary>仅跟踪已有项</summary>
+        Existing = 2
+    }
+
     /// <summary>应用跟踪器。负责跟踪的应用管理</summary>
     public partial class AppTracer : Entity<AppTracer>
     {
@@ -181,8 +194,10 @@ namespace Stardust.Data.Monitors
             var ti = list.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
             if (ti != null) return ti;
 
+            if (Mode == TraceModes.Existing) return null;
+
             ti = new TraceItem { AppId = ID, Name = name };
-            ti.Enable = !Strict;
+            ti.Enable = Mode == TraceModes.All;
             ti.Insert();
 
             list.Add(ti);
