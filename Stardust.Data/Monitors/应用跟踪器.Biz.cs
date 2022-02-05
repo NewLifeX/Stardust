@@ -67,7 +67,7 @@ namespace Stardust.Data.Monitors
             }
             else
             {
-                ItemCount = TraceItems.Count;
+                ItemCount = TraceItems.Count(e => e.Enable);
             }
         }
 

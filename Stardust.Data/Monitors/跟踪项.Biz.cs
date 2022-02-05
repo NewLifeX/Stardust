@@ -5,6 +5,7 @@ using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using XCode;
+using XCode.Cache;
 using XCode.Membership;
 
 namespace Stardust.Data.Monitors
@@ -125,15 +126,15 @@ namespace Stardust.Data.Monitors
             return FindAll(exp, page);
         }
 
-        // Select Count(Id) as Id,Category From TraceItem Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
-        //static readonly FieldCache<TraceItem> _CategoryCache = new FieldCache<TraceItem>(nameof(Category))
-        //{
-        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-        //};
+        // Select Count(Id) as Id,Kind From TraceItem Where CreateTime>'2020-01-24 00:00:00' Group By Kind Order By Id Desc limit 20
+        static readonly FieldCache<TraceItem> _KindCache = new FieldCache<TraceItem>(nameof(Kind))
+        {
+            Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
+        };
 
-        ///// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-        ///// <returns></returns>
-        //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
+        /// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
+        /// <returns></returns>
+        public static IDictionary<String, String> GetKinds() => _KindCache.FindAllName();
         #endregion
 
         #region 业务操作

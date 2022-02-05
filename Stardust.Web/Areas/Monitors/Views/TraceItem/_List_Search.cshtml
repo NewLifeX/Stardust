@@ -12,5 +12,9 @@
     <label for="appId" class="control-label">应用：</label>
     @Html.ForDropDownList("appId", dic, page["appId"], "全部", true)
 </div>
+<div class="form-group">
+    <label for="kind" class="control-label">类别：</label>
+    @Html.ForDropDownList("kind", TraceItem.GetKinds(), page["kind"], "全部", true)
+</div>
 @await Html.PartialAsync("_Enable", "")
 @await Html.PartialAsync("_DateRange")
