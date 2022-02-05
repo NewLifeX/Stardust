@@ -127,18 +127,7 @@ namespace Stardust.Data.Monitors
             if (dataId > 0) exp &= _.DataId == dataId;
             if (!traceId.IsNullOrEmpty()) exp &= _.TraceId == traceId;
 
-            //// 搜索最近一段时间
-            //for (var dt = end; dt >= start; dt = dt.AddDays(-1))
-            //{
-            //    var model = (Meta.ShardPolicy as TimeShardPolicy2).Get(dt);
-            //    using var split = Meta.CreateSplit(model.ConnName, model.TableName);
-
-            //    var list = FindAll(exp, page);
-            //    if (list.Count > 0) return list;
-            //}
-
-            //return new List<SampleData>();
-
+            // 时间区间倒序，为了从后往前查
             return Meta.AutoShard(end.AddSeconds(1), start, () => FindAll(exp, page)).FirstOrDefault(e => e.Count > 0) ?? new List<SampleData>();
         }
         #endregion

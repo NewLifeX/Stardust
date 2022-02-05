@@ -70,7 +70,8 @@ namespace Stardust.Web.Controllers
                 var first = list.OrderBy(e => e.Id).First().CreateTime;
                 if (first.Year > 2000 && first.Hour == 0 && first.Minute == 0 && first.Second <= 5)
                 {
-                    var list2 = SampleData.Search(-1, traceId, first.Date.AddDays(-1), first.Date.AddDays(-1), p);
+                    var date = first.Date.AddDays(-1);
+                    var list2 = SampleData.Search(-1, traceId, date, date, p);
                     if (list2.Count > 0) (list as List<SampleData>).AddRange(list2);
                 }
 
