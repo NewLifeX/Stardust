@@ -91,6 +91,7 @@ namespace StarAgent
         private StarFactory _factory;
         private ServiceManager _Manager;
         private String _lastVersion;
+        private InfoService _infoService;
 
         public void StartClient()
         {
@@ -207,6 +208,9 @@ namespace StarAgent
 
             _Manager.Start();
 
+            _infoService = new InfoService();
+            _infoService.Start();
+
             base.StartWork(reason);
         }
 
@@ -228,6 +232,8 @@ namespace StarAgent
         protected override void StopWork(String reason)
         {
             base.StopWork(reason);
+
+            _infoService.Stop();
 
             _timer.TryDispose();
             _timer = null;
