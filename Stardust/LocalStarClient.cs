@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -13,12 +14,9 @@ using NewLife.Http;
 using NewLife.Log;
 using NewLife.Messaging;
 using NewLife.Net;
-using NewLife.Reflection;
 using NewLife.Remoting;
+using NewLife.Serialization;
 using Stardust.Models;
-#if !NET40
-using TaskEx = System.Threading.Tasks.Task;
-#endif
 
 namespace Stardust
 {
@@ -34,6 +32,7 @@ namespace Stardust
 
         private readonly AgentInfo _local;
         private ApiClient _client;
+        private MemoryMappedFile _mmf;
         #endregion
 
         #region 构造
@@ -58,12 +57,21 @@ namespace Stardust
 
             var set = StarSetting.Current;
             if (set.Debug) _client.EncoderLog = XTrace.Log;
+
+            var mapName = "MMF_Star";
+            _mmf = MemoryMappedFile.CreateOrOpen(mapName, 1024 * 1024);
         }
 
         /// <summary>获取信息</summary>
         /// <returns></returns>
         public AgentInfo GetInfo()
         {
+            Init();
+
+            var ms = _mmf.CreateViewStream(0, 1024, MemoryMappedFileAccess.Read);
+            var inf = Binary.FastRead<AgentInfo>(ms);
+            if (inf != null && inf.ProcessId > 0) return inf;
+
             var task = GetInfoAsync();
             if (task.Wait(500)) return task.Result;
 
@@ -331,7 +339,7 @@ namespace Stardust
         /// <param name="target">目标目录</param>
         public static Task ProbeAsync(String url = null, String version = null, String target = null)
         {
-            return TaskEx.Run(() =>
+            return Task.Run(() =>
             {
                 var client = new LocalStarClient();
                 client.ProbeAndInstall(url, version, target);

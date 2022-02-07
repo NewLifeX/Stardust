@@ -208,7 +208,7 @@ namespace StarAgent
 
             _Manager.Start();
 
-            _infoService = new InfoService();
+            _infoService = new InfoService { Manager = _Manager };
             _infoService.Start();
 
             base.StartWork(reason);
