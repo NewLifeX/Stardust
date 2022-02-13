@@ -9,7 +9,7 @@ namespace Stardust.Models
         public String ServiceName { get; set; }
 
         /// <summary>客户端。IP加进程</summary>
-        public String Client { get; set; }
+        public String ClientId { get; set; }
 
         /// <summary>最低版本</summary>
         public String MinVersion { get; set; }

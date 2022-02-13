@@ -34,7 +34,7 @@ namespace Stardust.Server.Controllers
             var ip = HttpContext.GetUserHost();
 
             // 作用域为空时重写
-            scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip) : scope;
+            scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip, clientId) : scope;
 
             // 作用域有改变时，也要返回配置数据
             var change = online.Scope != scope;
@@ -74,7 +74,7 @@ namespace Stardust.Server.Controllers
 
             // 作用域为空时重写
             var scope = model.Scope;
-            scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip) : scope;
+            scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip, model.ClientId) : scope;
 
             // 作用域有改变时，也要返回配置数据
             var change = online.Scope != scope;

@@ -111,31 +111,35 @@ namespace Stardust.Data.Configs
         #region 业务操作
         /// <summary>计算作用域</summary>
         /// <param name="appid"></param>
-        /// <param name="ip"></param>
+        /// <param name="ip">远程IP地址</param>
+        /// <param name="localIp">本地IP地址</param>
         /// <returns></returns>
-        public static String CheckScope(Int32 appid, String ip)
+        public static String CheckScope(Int32 appid, String ip, String localIp)
         {
             if (appid == 0 || ip.IsNullOrEmpty()) return null;
 
             var list = Meta.Cache.Entities.FindAll(e => e.Enable);
             list = list.Where(e =>
-            !e.Rule.IsNullOrEmpty() && e.Rule.StartsWithIgnoreCase("IP=") &&
+            !e.Rule.IsNullOrEmpty() && /*e.Rule.StartsWithIgnoreCase("IP=") &&*/
             !e.Result.IsNullOrEmpty() && e.Result.StartsWithIgnoreCase("Scope="))
             .OrderByDescending(e => e.Priority)
             .ToList();
             if (list.Count == 0) return null;
 
-            var rule = list.Where(e => e.Match(ip)).OrderByDescending(e => e.Priority).ThenByDescending(e => e.Id).FirstOrDefault();
+            var rule = list.Where(e => e.Match(ip, localIp)).OrderByDescending(e => e.Priority).ThenByDescending(e => e.Id).FirstOrDefault();
             if (rule == null) return null;
 
-            var rs = rule.Result;
-            return rs.Substring(rs.IndexOf('=') + 1);
+            var dic = rule.Result.SplitAsDictionary("=", ";");
+            if (dic.TryGetValue("Scope", out var str)) return str;
+
+            return null;
         }
 
         /// <summary>匹配规则</summary>
-        /// <param name="ip"></param>
+        /// <param name="ip">远程IP地址</param>
+        /// <param name="localIp">本地IP地址</param>
         /// <returns></returns>
-        public Boolean Match(String ip)
+        public Boolean Match(String ip, String localIp)
         {
             var dic = Rule.SplitAsDictionary("=", ";");
             var rules = dic.ToDictionary(e => e.Key, e => e.Value.Split(","), StringComparer.OrdinalIgnoreCase);
@@ -144,6 +148,10 @@ namespace Stardust.Data.Configs
             if (rules.TryGetValue("ip", out var vs))
             {
                 if (ip.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(ip))) return false;
+            }
+            if (rules.TryGetValue("localIp", out vs))
+            {
+                if (localIp.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(localIp))) return false;
             }
 
             return true;

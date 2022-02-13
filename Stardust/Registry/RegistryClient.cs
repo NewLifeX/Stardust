@@ -149,7 +149,7 @@ namespace Stardust.Registry
             var asmx = AssemblyX.Entry;
             var ip = NetHelper.MyIP();
 
-            service.Client = ClientId;
+            service.ClientId = ClientId;
             service.IP = ip + "";
             service.Version = asmx?.Version;
 
@@ -240,7 +240,7 @@ namespace Stardust.Registry
                     MinVersion = minVersion,
                     Tag = tag,
 
-                    Client = $"{ip}@{p.Id}",
+                    ClientId = $"{ip}@{p.Id}",
                 };
 
                 XTrace.WriteLine("消费服务 {0}", service.ToJson());

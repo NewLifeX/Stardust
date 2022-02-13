@@ -27,11 +27,11 @@ namespace Stardust.Data.Configs
         public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
         private String _Rule;
-        /// <summary>规则。比如IP=10.0.0.*</summary>
+        /// <summary>规则。分号分段，逗号间隔多项匹配值，比如IP=10.*,172.*;LocalIP=192.*</summary>
         [DisplayName("规则")]
-        [Description("规则。比如IP=10.0.0.*")]
+        [Description("规则。分号分段，逗号间隔多项匹配值，比如IP=10.*,172.*;LocalIP=192.*")]
         [DataObjectField(false, false, true, 500)]
-        [BindColumn("Rule", "规则。比如IP=10.0.0.*", "")]
+        [BindColumn("Rule", "规则。分号分段，逗号间隔多项匹配值，比如IP=10.*,172.*;LocalIP=192.*", "")]
         public String Rule { get => _Rule; set { if (OnPropertyChanging("Rule", value)) { _Rule = value; OnPropertyChanged("Rule"); } } }
 
         private String _Result;
@@ -169,7 +169,7 @@ namespace Stardust.Data.Configs
             /// <summary>编号</summary>
             public static readonly Field Id = FindByName("Id");
 
-            /// <summary>规则。比如IP=10.0.0.*</summary>
+            /// <summary>规则。分号分段，逗号间隔多项匹配值，比如IP=10.*,172.*;LocalIP=192.*</summary>
             public static readonly Field Rule = FindByName("Rule");
 
             /// <summary>结果。比如Scope=dev</summary>
@@ -211,7 +211,7 @@ namespace Stardust.Data.Configs
             /// <summary>编号</summary>
             public const String Id = "Id";
 
-            /// <summary>规则。比如IP=10.0.0.*</summary>
+            /// <summary>规则。分号分段，逗号间隔多项匹配值，比如IP=10.*,172.*;LocalIP=192.*</summary>
             public const String Rule = "Rule";
 
             /// <summary>结果。比如Scope=dev</summary>

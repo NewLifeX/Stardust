@@ -46,7 +46,7 @@ namespace Stardust.Server.Controllers
 
             // 所有服务
             var services = AppService.FindAllByService(info.Id);
-            var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == service.Client);
+            var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == service.ClientId);
             if (svc == null)
             {
                 svc = new AppService
@@ -54,7 +54,7 @@ namespace Stardust.Server.Controllers
                     AppId = app.Id,
                     ServiceId = info.Id,
                     ServiceName = service.ServiceName,
-                    Client = service.Client,
+                    Client = service.ClientId,
 
                     //Enable = app.AutoActive,
 
@@ -62,17 +62,17 @@ namespace Stardust.Server.Controllers
                 };
                 services.Add(svc);
 
-                var history = AppHistory.Create(app, "RegisterService", true, $"注册服务[{service.ServiceName}] {service.Client}", Environment.MachineName, UserHost);
-                history.Client = service.Client;
+                var history = AppHistory.Create(app, "RegisterService", true, $"注册服务[{service.ServiceName}] {service.ClientId}", Environment.MachineName, UserHost);
+                history.Client = service.ClientId;
                 history.SaveAsync();
             }
 
             // 作用域
-            svc.Scope = AppRule.CheckScope(-1, UserHost);
+            svc.Scope = AppRule.CheckScope(-1, UserHost, service.ClientId);
 
             // 地址处理。本地任意地址，更换为IP地址
             var ip = service.IP;
-            if (ip.IsNullOrEmpty()) ip = service.Client.Substring(null, ":");
+            if (ip.IsNullOrEmpty()) ip = service.ClientId.Substring(null, ":");
             if (ip.IsNullOrEmpty()) ip = UserHost;
             var addrs = service.Address
                 ?.Replace("://*", $"://{ip}")
@@ -102,7 +102,7 @@ namespace Stardust.Server.Controllers
 
             // 所有服务
             var services = AppService.FindAllByService(info.Id);
-            var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == service.Client);
+            var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == service.ClientId);
             if (svc != null)
             {
                 //svc.Delete();
@@ -131,7 +131,7 @@ namespace Stardust.Server.Controllers
 
             // 所有消费
             var consumes = AppConsume.FindAllByService(info.Id);
-            var svc = consumes.FirstOrDefault(e => e.AppId == app.Id && e.Client == model.Client);
+            var svc = consumes.FirstOrDefault(e => e.AppId == app.Id && e.Client == model.ClientId);
             if (svc == null)
             {
                 svc = new AppConsume
@@ -139,7 +139,7 @@ namespace Stardust.Server.Controllers
                     AppId = app.Id,
                     ServiceId = info.Id,
                     ServiceName = model.ServiceName,
-                    Client = model.Client,
+                    Client = model.ClientId,
 
                     Enable = true,
 
@@ -153,7 +153,7 @@ namespace Stardust.Server.Controllers
             }
 
             // 作用域
-            svc.Scope = AppRule.CheckScope(-1, UserHost);
+            svc.Scope = AppRule.CheckScope(-1, UserHost, model.ClientId);
             svc.PingCount++;
             svc.Tag = model.Tag;
             svc.MinVersion = model.MinVersion;

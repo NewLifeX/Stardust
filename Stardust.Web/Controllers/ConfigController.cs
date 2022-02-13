@@ -34,7 +34,7 @@ namespace Stardust.Web.Controllers
             if (version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
 
             // 作用域为空时重写
-            scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip) : scope;
+            scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip, null) : scope;
             online.Scope = scope;
 
             var dic = _configService.GetConfigs(app, scope);
