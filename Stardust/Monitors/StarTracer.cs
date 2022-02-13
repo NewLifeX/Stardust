@@ -168,9 +168,11 @@ namespace Stardust.Monitors
                     ex2 is HttpRequestException ||
                     ex2 is SocketException)
                     Log?.Error("无法连接服务端：{0}", (Client as ApiHttpClient)?.Source);
-
-                if (ex2 is not HttpRequestException)
+                else
                     Log?.Error(ex + "");
+
+                //if (ex2 is not HttpRequestException)
+                //    Log?.Error(ex + "");
 
                 if (_fails.Count < MaxFails) _fails.Enqueue(model);
                 return;
@@ -190,8 +192,8 @@ namespace Stardust.Monitors
                 }
                 catch (Exception ex)
                 {
-                    XTrace.WriteLine("二次上报失败，放弃该批次采样数据，{0}", model.Builders.FirstOrDefault()?.StartTime.ToDateTime());
-                    XTrace.WriteException(ex);
+                    Log?.Info("二次上报失败，放弃该批次采样数据，{0}", model.Builders.FirstOrDefault()?.StartTime.ToDateTime());
+                    if (Log != null & Log.Level <= LogLevel.Debug) Log?.Error(ex + "");
                     //Log?.Error(ex + "");
 
                     // 星尘收集器上报，二次失败后放弃该批次数据，因其很可能是错误数据
