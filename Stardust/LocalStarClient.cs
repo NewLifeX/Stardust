@@ -13,12 +13,8 @@ using NewLife.Http;
 using NewLife.Log;
 using NewLife.Messaging;
 using NewLife.Net;
-using NewLife.Reflection;
 using NewLife.Remoting;
 using Stardust.Models;
-#if !NET40
-using TaskEx = System.Threading.Tasks.Task;
-#endif
 
 namespace Stardust
 {
@@ -331,7 +327,7 @@ namespace Stardust
         /// <param name="target">目标目录</param>
         public static Task ProbeAsync(String url = null, String version = null, String target = null)
         {
-            return TaskEx.Run(() =>
+            return Task.Run(() =>
             {
                 var client = new LocalStarClient();
                 client.ProbeAndInstall(url, version, target);

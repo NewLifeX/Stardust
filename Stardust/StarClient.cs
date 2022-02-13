@@ -10,22 +10,18 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using NewLife;
-using NewLife.Http;
 using NewLife.Log;
 using NewLife.Net;
 using NewLife.Reflection;
 using NewLife.Remoting;
-using NewLife.Security;
 using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust.Models;
 using Stardust.Services;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-#if !NET40
 using System.Net.WebSockets;
 using WebSocket = System.Net.WebSockets.WebSocket;
-#endif
 
 namespace Stardust
 {
@@ -514,11 +510,7 @@ namespace Stardust
                 {
                     if (_timer == null)
                     {
-#if !NET40
                         _timer = new TimerX(DoPing, null, 1_000, 60_000, "Device") { Async = true };
-#else
-                        _timer = new TimerX(s => Ping().Wait(), null, 1_000, 60_000, "Device") { Async = true };
-#endif
                     }
                 }
             }
@@ -529,16 +521,13 @@ namespace Stardust
             _timer.TryDispose();
             _timer = null;
 
-#if !NET40
             if (_websocket != null && _websocket.State == WebSocketState.Open) _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default).Wait();
             _source?.Cancel();
 
             //_websocket.TryDispose();
             _websocket = null;
-#endif
         }
 
-#if !NET40
         private WebSocket _websocket;
         private CancellationTokenSource _source;
         private async Task DoPing(Object state)
@@ -601,7 +590,6 @@ namespace Stardust
 
             if (socket.State == WebSocketState.Open) await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
         }
-#endif
         #endregion
 
         #region 更新
