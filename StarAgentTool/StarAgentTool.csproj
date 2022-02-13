@@ -31,7 +31,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\StarAgent\InfoService.cs" Link="InfoService.cs" />
     <Compile Include="..\StarAgent\Program.cs" Link="Program.cs" />
     <Compile Include="..\StarAgent\Setting.cs" Link="Setting.cs" />
     <Compile Include="..\StarAgent\StarService.cs" Link="StarService.cs" />

@@ -104,9 +104,7 @@ namespace Test
             //}
 
             var client = new LocalStarClient();
-            //client.ProbeAndInstall(null, "1.6");
-            var inf = client.GetInfo();
-            XTrace.WriteLine(inf.ToJson(true));
+            client.ProbeAndInstall(null, "1.6");
 
             //var p = Process.GetCurrentProcess();
             //var name = p.MainModule.FileName;
