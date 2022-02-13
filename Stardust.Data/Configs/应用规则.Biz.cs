@@ -116,7 +116,7 @@ namespace Stardust.Data.Configs
         /// <returns></returns>
         public static String CheckScope(Int32 appid, String ip, String localIp)
         {
-            if (appid == 0 || ip.IsNullOrEmpty()) return null;
+            if (ip.IsNullOrEmpty() && localIp.IsNullOrEmpty()) return null;
 
             var list = Meta.Cache.Entities.FindAll(e => e.Enable);
             list = list.Where(e =>
