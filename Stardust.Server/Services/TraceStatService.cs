@@ -270,8 +270,16 @@ namespace Stardust.Server.Services
                 var vs2 = vs.Where(e => e.MinCost > 0).ToList();
                 if (vs2.Count > 0) st.MinCost = vs2.Min(e => e.MinCost);
 
-                // 强制触发种类计算
-                st.Valid(false);
+                // 计算种类
+                var ti = TraceItem.FindById(item.Key);
+                if (ti != null)
+                {
+                    st.Type = ti.Kind;
+                    st.Name = ti + "";
+                }
+
+                //// 强制触发种类计算
+                //st.Valid(false);
 
                 _dayQueue.Commit(key);
             }
