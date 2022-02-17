@@ -48,6 +48,20 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             return AppTracer.Search(category, enable, start, end, p["Q"], p);
         }
 
+        protected override Int32 OnDelete(AppTracer entity)
+        {
+            using var tran = AppTracer.Meta.CreateTrans();
+
+            var rs = base.OnDelete(entity);
+
+            var list = AppDayStat.FindAllByAppId(entity.ID);
+            list.Delete();
+
+            tran.Commit();
+
+            return rs;
+        }
+
         [EntityAuthorize(PermissionFlags.Update)]
         public ActionResult Fix()
         {
@@ -106,27 +120,23 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 var app = AppTracer.FindByID(item.ToInt());
                 if (app != null)
                 {
-                    XTrace.WriteLine("修正 {0}/{1}", app.Name, app.ID);
+                    XTrace.WriteLine("修正旧数据 {0}/{1}", app.Name, app.ID);
 
-                    var flag = DateTime.Today < new DateTime(2022, 2, 10);
                     {
                         var list = TraceDayStat.FindAllByAppId(app.ID);
-                        if (flag)
+                        foreach (var st in list)
                         {
-                            foreach (var st in list)
+                            if (st.ItemId == 0 && !st.Name.IsNullOrEmpty())
                             {
-                                if (st.ItemId == 0 && !st.Name.IsNullOrEmpty())
-                                {
-                                    var ti = app.GetOrAddItem(st.Name);
-                                    st.ItemId = ti.Id;
-                                    st.SaveAsync();
-                                }
+                                var ti = app.GetOrAddItem(st.Name);
+                                st.ItemId = ti.Id;
+                                st.SaveAsync();
                             }
                         }
+
                         app.Days = list.DistinctBy(e => e.StatDate.Date).Count();
                         app.Total = list.Sum(e => e.Total);
                     }
-                    if (flag)
                     {
                         var list = TraceHourStat.FindAllByAppId(app.ID);
                         foreach (var st in list)

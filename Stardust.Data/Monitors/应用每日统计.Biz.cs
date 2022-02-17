@@ -68,6 +68,18 @@ namespace Stardust.Data.Monitors
 
             //return Find(_.ID == id);
         }
+
+        /// <summary>
+        /// 根据应用查找
+        /// </summary>
+        /// <param name="appId"></param>
+        /// <returns></returns>
+        public static IList<AppDayStat> FindAllByAppId(Int32 appId)
+        {
+            if (appId <= 0) return new List<AppDayStat>();
+
+            return FindAll(_.AppId == appId);
+        }
         #endregion
 
         #region 高级查询
