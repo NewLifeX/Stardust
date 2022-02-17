@@ -166,7 +166,7 @@ namespace Stardust.Data.Monitors
         public Boolean IsMatch(String name)
         {
             if (name.IsNullOrEmpty()) return false;
-            if (!Rules.IsNullOrEmpty()) return false;
+            if (Rules.IsNullOrEmpty()) return false;
 
             if (_rules == null) _rules = Rules.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 

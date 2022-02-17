@@ -129,7 +129,7 @@ namespace Stardust.Server.Services
             data.Insert();
 
             // 扫描队列
-            if (node.ScanQueue && dbs != null) ScanQueue(node, dbs);
+            if (node.ScanQueue && dbs != null && dbs.Length > 0) ScanQueue(node, dbs);
         }
 
         private void ScanQueue(RedisNode node, RedisDbEntry[] dbs)
@@ -140,12 +140,12 @@ namespace Stardust.Server.Services
             {
                 if (dbs[i] == null) continue;
 
-                var rds2 = GetOrAdd(node, i);
+                var rds = GetOrAdd(node, i);
 
                 // keys个数太大不支持扫描
-                if (rds2.Count < 10000)
+                if (rds.Count < 10000)
                 {
-                    foreach (var item in rds2.Search("*:Status:*", 1000))
+                    foreach (var item in rds.Search("*:Status:*", 1000))
                     {
                         var ss = item.Split(":");
                         var topic = ss.Take(ss.Length - 2).Join(":");
@@ -153,28 +153,40 @@ namespace Stardust.Server.Services
 
                         // 可信队列
                         {
-                            SaveQueue(node, i, queues, topic);
+                            SaveQueue(node, i, queues, topic, "Queue");
                         }
 
                         // 延迟队列
                         {
                             topic += ":Delay";
-                            if (rds2.ContainsKey(topic)) SaveQueue(node, i, queues, topic);
+                            if (rds.ContainsKey(topic)) SaveQueue(node, i, queues, topic, "Delay");
+                        }
+                    }
+                }
+                // 搜索RedisStream队列
+                if (rds.Count < 100)
+                {
+                    foreach (var item in rds.Keys)
+                    {
+                        var type = rds.Execute(item, r => r.Execute<String>("TYPE", item), false);
+                        if (type.EqualIgnoreCase("stream"))
+                        {
+                            SaveQueue(node, i, queues, item, type);
                         }
                     }
                 }
             }
         }
 
-        private void SaveQueue(RedisNode node, Int32 i, IList<RedisMessageQueue> queues, String topic)
+        private void SaveQueue(RedisNode node, Int32 db, IList<RedisMessageQueue> queues, String topic, String type)
         {
-            var mq = queues.FirstOrDefault(e => e.Db == i && e.Topic == topic);
+            var mq = queues.FirstOrDefault(e => e.Db == db && e.Topic == topic);
             if (mq == null)
             {
                 mq = new RedisMessageQueue
                 {
                     RedisId = node.Id,
-                    Db = i,
+                    Db = db,
                     Topic = topic,
                     Enable = true,
                 };
@@ -185,10 +197,7 @@ namespace Stardust.Server.Services
             mq.Enable = true;
             if (mq.Name.IsNullOrEmpty()) mq.Name = topic;
             if (mq.Category.IsNullOrEmpty()) mq.Category = node.Category;
-            if (mq.Type.IsNullOrEmpty())
-            {
-                mq.Type = topic.EndsWithIgnoreCase(":Delay") ? "Delay" : "Queue";
-            }
+            if (mq.Type.IsNullOrEmpty()) mq.Type = type;
 
             mq.SaveAsync();
         }
