@@ -212,6 +212,23 @@ namespace Stardust.Data.Monitors
         /// <param name="time"></param>
         /// <returns></returns>
         public static Int32 DeleteBefore(DateTime time) => Delete(_.StatDate < time);
+
+        /// <summary>
+        /// 按照应用和埋点删除
+        /// </summary>
+        /// <param name="appId"></param>
+        /// <param name="itemId"></param>
+        /// <returns></returns>
+        public static Int32 DeleteByAppAndItem(Int32 appId, Int32 itemId)
+        {
+            if (appId == 0 && itemId == 0) return 0;
+
+            var where = new WhereExpression();
+            if (appId > 0) where &= _.AppId == appId;
+            if (itemId > 0) where &= _.ItemId == itemId;
+
+            return Delete(where);
+        }
         #endregion
     }
 }

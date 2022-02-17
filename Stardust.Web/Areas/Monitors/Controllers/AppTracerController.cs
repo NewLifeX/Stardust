@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
@@ -57,7 +58,29 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var list = AppDayStat.FindAllByAppId(entity.ID);
             list.Delete();
 
+            //var list2 = TraceDayStat.FindAllByAppId(entity.ID);
+            //list2.Delete();
+            TraceDayStat.DeleteByAppAndItem(entity.ID, 0);
+
             tran.Commit();
+
+            return rs;
+        }
+
+        protected override Boolean Valid(AppTracer entity, DataObjectMethodType type, Boolean post)
+        {
+            var rs = base.Valid(entity, type, post);
+
+            if (post && type == DataObjectMethodType.Delete)
+            {
+                var list = AppDayStat.FindAllByAppId(entity.ID);
+                list.Delete();
+
+                var list2 = TraceItem.FindAllByApp(entity.ID);
+                list2.Delete();
+
+                TraceDayStat.DeleteByAppAndItem(entity.ID, 0);
+            }
 
             return rs;
         }

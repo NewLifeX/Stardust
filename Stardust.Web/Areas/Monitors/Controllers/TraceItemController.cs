@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Monitors;
@@ -41,6 +42,15 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             var end = p["dtEnd"].ToDateTime();
 
             return TraceItem.Search(appId, name, kind, enable, start, end, p["Q"], p);
+        }
+
+        protected override Boolean Valid(TraceItem entity, DataObjectMethodType type, Boolean post)
+        {
+            var rs = base.Valid(entity, type, post);
+
+            if (post && type == DataObjectMethodType.Delete) TraceDayStat.DeleteByAppAndItem(entity.AppId, entity.Id);
+
+            return rs;
         }
     }
 }
