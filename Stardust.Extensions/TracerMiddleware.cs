@@ -101,11 +101,14 @@ namespace Stardust.Extensions
             var p = ctx.Request.Path + "";
             if (p.EndsWithIgnoreCase(ExcludeSuffixes)) return null;
 
-            var ss = p.Split('/');
+            var ss = p.Split('/', StringSplitOptions.RemoveEmptyEntries);
             if (ss.Length == 0) return p;
 
-            // 如果是魔方格式，保留3段
-            if (ss.Length >= 4 && ss[3].EqualIgnoreCase("detail", "add", "edit")) p = "/" + ss.Take(4).Join("/");
+            // 如果是魔方格式，保留3段，其它webapi接口只留2段
+            if (ss.Length >= 3 && ss[2].EqualIgnoreCase("detail", "add", "edit", "delete"))
+                p = "/" + ss.Take(3).Join("/");
+            else
+                p = "/" + ss.Take(2).Join("/");
 
             return p;
         }
