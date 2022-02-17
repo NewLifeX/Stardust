@@ -194,6 +194,10 @@ namespace Stardust.Data.Monitors
             var ti = list.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
             if (ti != null) return ti;
 
+            // 通过规则匹配，支持把多个埋点聚合到一起
+            ti = list.FirstOrDefault(e => e.IsMatch(name));
+            if (ti != null) return ti;
+
             // 如果只跟踪已存在埋点，则跳过。仅针对API
             if (Mode == TraceModes.Existing && name.StartsWith('/')) return null;
 

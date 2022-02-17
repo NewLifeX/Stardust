@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using NewLife;
@@ -154,6 +155,22 @@ namespace Stardust.Data.Monitors
             if (p > 0) return name[..p];
 
             return null;
+        }
+
+        private String[] _rules;
+        /// <summary>
+        /// 是否匹配该规则
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public Boolean IsMatch(String name)
+        {
+            if (name.IsNullOrEmpty()) return false;
+            if (!Rules.IsNullOrEmpty()) return false;
+
+            if (_rules == null) _rules = Rules.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+
+            return _rules.Any(e => e.IsMatch(name));
         }
         #endregion
     }
