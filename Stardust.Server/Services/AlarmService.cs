@@ -347,7 +347,7 @@ namespace Stardust.Server.Services
         #region Redis告警
         private void ProcessRedisNode(RedisNode node)
         {
-            if (node == null || !node.Enable || node.WebHook.IsNullOrEmpty()) return;
+            if (node == null || !node.Enable) return;
 
             ProcessRedisData(node);
             ProcessRedisQueue(node);
