@@ -14,9 +14,9 @@ namespace Stardust.Data.Monitors
     [Serializable]
     [DataObject]
     [Description("跟踪数据。应用定时上报采样得到的埋点追踪原始数据，应用端已完成初步统计，后端将再次向上汇总")]
-    [BindIndex("IX_TraceData_StatDate_AppId_Name_StartTime", false, "StatDate,AppId,Name,StartTime")]
-    [BindIndex("IX_TraceData_StatHour_AppId_Name", false, "StatHour,AppId,Name")]
-    [BindIndex("IX_TraceData_StatMinute_AppId_Name", false, "StatMinute,AppId,Name")]
+    [BindIndex("IX_TraceData_StatDate_AppId_ItemId_StartTime", false, "StatDate,AppId,ItemId,StartTime")]
+    [BindIndex("IX_TraceData_StatHour_AppId_ItemId", false, "StatHour,AppId,ItemId")]
+    [BindIndex("IX_TraceData_StatMinute_AppId_ItemId", false, "StatMinute,AppId,ItemId")]
     [BindIndex("IX_TraceData_AppId_StatMinute", false, "AppId,StatMinute")]
     [BindTable("TraceData", Description = "跟踪数据。应用定时上报采样得到的埋点追踪原始数据，应用端已完成初步统计，后端将再次向上汇总", ConnName = "MonitorLog", DbType = DatabaseType.None)]
     public partial class TraceData
@@ -79,11 +79,11 @@ namespace Stardust.Data.Monitors
         public Int32 ItemId { get => _ItemId; set { if (OnPropertyChanging("ItemId", value)) { _ItemId = value; OnPropertyChanged("ItemId"); } } }
 
         private String _Name;
-        /// <summary>操作名。接口名或埋点名</summary>
+        /// <summary>操作名。原始接口名或埋点名</summary>
         [DisplayName("操作名")]
-        [Description("操作名。接口名或埋点名")]
+        [Description("操作名。原始接口名或埋点名")]
         [DataObjectField(false, false, true, 200)]
-        [BindColumn("Name", "操作名。接口名或埋点名", "", Master = true)]
+        [BindColumn("Name", "操作名。原始接口名或埋点名", "", Master = true)]
         public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
         private Int64 _StartTime;
@@ -271,7 +271,7 @@ namespace Stardust.Data.Monitors
             /// <summary>跟踪项</summary>
             public static readonly Field ItemId = FindByName("ItemId");
 
-            /// <summary>操作名。接口名或埋点名</summary>
+            /// <summary>操作名。原始接口名或埋点名</summary>
             public static readonly Field Name = FindByName("Name");
 
             /// <summary>开始时间。Unix毫秒</summary>
@@ -337,7 +337,7 @@ namespace Stardust.Data.Monitors
             /// <summary>跟踪项</summary>
             public const String ItemId = "ItemId";
 
-            /// <summary>操作名。接口名或埋点名</summary>
+            /// <summary>操作名。原始接口名或埋点名</summary>
             public const String Name = "Name";
 
             /// <summary>开始时间。Unix毫秒</summary>

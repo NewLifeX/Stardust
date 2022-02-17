@@ -81,9 +81,9 @@
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
     </Columns>
     <Indexes>
-      <Index Columns="StatDate,AppId,Name,StartTime" />
-      <Index Columns="StatHour,AppId,Name" />
-      <Index Columns="StatMinute,AppId,Name" />
+      <Index Columns="StatDate,AppId,ItemId,StartTime" />
+      <Index Columns="StatHour,AppId,ItemId" />
+      <Index Columns="StatMinute,AppId,ItemId" />
       <Index Columns="AppId,StatMinute" />
     </Indexes>
   </Table>
