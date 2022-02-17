@@ -75,6 +75,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("Type", "类型。消息队列类型", "")]
         public String Type { get => _Type; set { if (OnPropertyChanging("Type", value)) { _Type = value; OnPropertyChanged("Type"); } } }
 
+        private String _Groups;
+        /// <summary>消费组。消费组名称</summary>
+        [DisplayName("消费组")]
+        [Description("消费组。消费组名称")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Groups", "消费组。消费组名称", "")]
+        public String Groups { get => _Groups; set { if (OnPropertyChanging("Groups", value)) { _Groups = value; OnPropertyChanged("Groups"); } } }
+
         private Int32 _Consumers;
         /// <summary>消费者。消费者个数</summary>
         [DisplayName("消费者")]
@@ -115,12 +123,20 @@ namespace Stardust.Data.Nodes
         [BindColumn("Enable", "启用。停用的节点不再执行监控", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
+        private String _ConsumerInfo;
+        /// <summary>消费者信息</summary>
+        [DisplayName("消费者信息")]
+        [Description("消费者信息")]
+        [DataObjectField(false, false, true, -1)]
+        [BindColumn("ConsumerInfo", "消费者信息", "")]
+        public String ConsumerInfo { get => _ConsumerInfo; set { if (OnPropertyChanging("ConsumerInfo", value)) { _ConsumerInfo = value; OnPropertyChanged("ConsumerInfo"); } } }
+
         private DateTime _FirstConsumer;
-        /// <summary>最早消费者</summary>
-        [DisplayName("最早消费者")]
-        [Description("最早消费者")]
+        /// <summary>最早消费</summary>
+        [DisplayName("最早消费")]
+        [Description("最早消费")]
         [DataObjectField(false, false, true, 0)]
-        [BindColumn("FirstConsumer", "最早消费者", "")]
+        [BindColumn("FirstConsumer", "最早消费", "")]
         public DateTime FirstConsumer { get => _FirstConsumer; set { if (OnPropertyChanging("FirstConsumer", value)) { _FirstConsumer = value; OnPropertyChanged("FirstConsumer"); } } }
 
         private DateTime _LastActive;
@@ -229,11 +245,13 @@ namespace Stardust.Data.Nodes
                     case "Db": return _Db;
                     case "Topic": return _Topic;
                     case "Type": return _Type;
+                    case "Groups": return _Groups;
                     case "Consumers": return _Consumers;
                     case "Total": return _Total;
                     case "Messages": return _Messages;
                     case "MaxMessages": return _MaxMessages;
                     case "Enable": return _Enable;
+                    case "ConsumerInfo": return _ConsumerInfo;
                     case "FirstConsumer": return _FirstConsumer;
                     case "LastActive": return _LastActive;
                     case "WebHook": return _WebHook;
@@ -260,11 +278,13 @@ namespace Stardust.Data.Nodes
                     case "Db": _Db = value.ToInt(); break;
                     case "Topic": _Topic = Convert.ToString(value); break;
                     case "Type": _Type = Convert.ToString(value); break;
+                    case "Groups": _Groups = Convert.ToString(value); break;
                     case "Consumers": _Consumers = value.ToInt(); break;
                     case "Total": _Total = value.ToLong(); break;
                     case "Messages": _Messages = value.ToInt(); break;
                     case "MaxMessages": _MaxMessages = value.ToInt(); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
+                    case "ConsumerInfo": _ConsumerInfo = Convert.ToString(value); break;
                     case "FirstConsumer": _FirstConsumer = value.ToDateTime(); break;
                     case "LastActive": _LastActive = value.ToDateTime(); break;
                     case "WebHook": _WebHook = Convert.ToString(value); break;
@@ -308,6 +328,9 @@ namespace Stardust.Data.Nodes
             /// <summary>类型。消息队列类型</summary>
             public static readonly Field Type = FindByName("Type");
 
+            /// <summary>消费组。消费组名称</summary>
+            public static readonly Field Groups = FindByName("Groups");
+
             /// <summary>消费者。消费者个数</summary>
             public static readonly Field Consumers = FindByName("Consumers");
 
@@ -323,7 +346,10 @@ namespace Stardust.Data.Nodes
             /// <summary>启用。停用的节点不再执行监控</summary>
             public static readonly Field Enable = FindByName("Enable");
 
-            /// <summary>最早消费者</summary>
+            /// <summary>消费者信息</summary>
+            public static readonly Field ConsumerInfo = FindByName("ConsumerInfo");
+
+            /// <summary>最早消费</summary>
             public static readonly Field FirstConsumer = FindByName("FirstConsumer");
 
             /// <summary>最后活跃</summary>
@@ -386,6 +412,9 @@ namespace Stardust.Data.Nodes
             /// <summary>类型。消息队列类型</summary>
             public const String Type = "Type";
 
+            /// <summary>消费组。消费组名称</summary>
+            public const String Groups = "Groups";
+
             /// <summary>消费者。消费者个数</summary>
             public const String Consumers = "Consumers";
 
@@ -401,7 +430,10 @@ namespace Stardust.Data.Nodes
             /// <summary>启用。停用的节点不再执行监控</summary>
             public const String Enable = "Enable";
 
-            /// <summary>最早消费者</summary>
+            /// <summary>消费者信息</summary>
+            public const String ConsumerInfo = "ConsumerInfo";
+
+            /// <summary>最早消费</summary>
             public const String FirstConsumer = "FirstConsumer";
 
             /// <summary>最后活跃</summary>

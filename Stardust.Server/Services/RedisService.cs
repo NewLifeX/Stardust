@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using NewLife;
 using NewLife.Caching;
+using NewLife.Caching.Models;
 using NewLife.Log;
 using NewLife.Serialization;
 using NewLife.Threading;
@@ -194,7 +195,7 @@ namespace Stardust.Server.Services
                 queues.Add(mq);
             }
 
-            mq.Enable = true;
+            //mq.Enable = true;
             if (mq.Name.IsNullOrEmpty()) mq.Name = topic;
             if (mq.Category.IsNullOrEmpty()) mq.Category = node.Category;
             if (mq.Type.IsNullOrEmpty()) mq.Type = type;
@@ -313,8 +314,21 @@ namespace Stardust.Server.Services
                         var gs = mq.GetGroups();
                         if (gs != null)
                         {
+                            queue.Groups = gs.Join(",", e => e.Name);
                             queue.Consumers = gs.Sum(e => e.Consumers);
+                            queue.Messages = gs.Sum(e => e.Pending);
                             //queue.Remark = gs.ToJson();
+
+                            if (gs.Length > 0)
+                            {
+                                var dic = new Dictionary<String, Object>();
+                                foreach (var g in gs)
+                                {
+                                    var cs = mq.GetConsumers(g.Name);
+                                    if (cs != null && cs.Length > 0) dic.Add(g.Name, cs);
+                                }
+                                queue.ConsumerInfo = dic.ToJson();
+                            }
                         }
 
                         var inf = mq.GetInfo();

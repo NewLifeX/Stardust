@@ -31,6 +31,7 @@
     <Compile Remove="Entity\Config\**" />
     <Compile Remove="Entity\Log\**" />
     <Compile Remove="Log\**" />
+    <Compile Remove="Models\**" />
     <Compile Remove="Monitors\Config\**" />
     <Compile Remove="Monitors\Log\**" />
     <Compile Remove="Nodes\Config\**" />
@@ -41,6 +42,7 @@
     <EmbeddedResource Remove="Entity\Config\**" />
     <EmbeddedResource Remove="Entity\Log\**" />
     <EmbeddedResource Remove="Log\**" />
+    <EmbeddedResource Remove="Models\**" />
     <EmbeddedResource Remove="Monitors\Config\**" />
     <EmbeddedResource Remove="Monitors\Log\**" />
     <EmbeddedResource Remove="Nodes\Config\**" />
@@ -51,6 +53,7 @@
     <None Remove="Entity\Config\**" />
     <None Remove="Entity\Log\**" />
     <None Remove="Log\**" />
+    <None Remove="Models\**" />
     <None Remove="Monitors\Config\**" />
     <None Remove="Monitors\Log\**" />
     <None Remove="Nodes\Config\**" />
@@ -69,7 +72,6 @@
     <Compile Remove="Entity\服务.cs" />
     <Compile Remove="Entity\服务统计.Biz.cs" />
     <Compile Remove="Entity\服务统计.cs" />
-    <Compile Remove="Models\ConfigItem.cs" />
     <Compile Remove="TimeShardPolicy2.cs" />
   </ItemGroup>
 
@@ -79,13 +81,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="Models\RedisDbEntry.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="Deployment\Build.tt">
       <LastGenOutput>Build.log</LastGenOutput>
       <Generator>TextTemplatingFileGenerator</Generator>
-    </Content>
-    <Content Include="Entity\Build.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Build.log</LastGenOutput>
     </Content>
   </ItemGroup>
 
@@ -106,20 +108,6 @@
       <DependentUpon>Build.tt</DependentUpon>
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-    </None>
-    <None Update="Entity\Build.log">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Build.tt</DependentUpon>
-    </None>
-    <None Update="Nodes\Build.log">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Build.tt</DependentUpon>
-    </None>
-    <None Update="Nodes\Build.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Build.log</LastGenOutput>
     </None>
   </ItemGroup>
 

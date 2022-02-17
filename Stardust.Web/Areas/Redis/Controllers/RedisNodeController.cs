@@ -112,11 +112,13 @@ namespace Stardust.Web.Areas.Redis.Controllers
                     _redisService.TraceNode(node);
 
                     var queues = RedisMessageQueue.FindAllByRedisId(node.Id);
-                    foreach (var item in queues)
+                    foreach (var item in queues.Where(e => e.Enable))
                     {
                         _redisService.TraceQueue(item);
                         item.SaveAsync();
                     }
+
+                    LogProvider.Provider.WriteLog("RedisNode", "Refresh", true, $"刷新Redis节点[{node}]成功");
                 }
                 catch (Exception ex)
                 {
