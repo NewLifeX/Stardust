@@ -123,29 +123,34 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                         var list = TraceDayStat.FindAllByAppId(app.ID);
                         foreach (var st in list)
                         {
+                            var ti = app.GetOrAddItem(st.Name);
                             if (st.ItemId == 0 && !st.Name.IsNullOrEmpty())
                             {
-                                var ti = app.GetOrAddItem(st.Name);
                                 st.ItemId = ti.Id;
                                 st.SaveAsync();
+                            }
+                            if (ti.CreateTime.Year < 2000 || ti.CreateTime > st.CreateTime)
+                            {
+                                ti.CreateTime = st.CreateTime;
+                                ti.SaveAsync(3_000);
                             }
                         }
 
                         app.Days = list.DistinctBy(e => e.StatDate.Date).Count();
                         app.Total = list.Sum(e => e.Total);
                     }
-                    {
-                        var list = TraceHourStat.FindAllByAppId(app.ID);
-                        foreach (var st in list)
-                        {
-                            if (st.ItemId == 0 && !st.Name.IsNullOrEmpty())
-                            {
-                                var ti = app.GetOrAddItem(st.Name);
-                                st.ItemId = ti.Id;
-                                st.SaveAsync();
-                            }
-                        }
-                    }
+                    //{
+                    //    var list = TraceHourStat.FindAllByAppId(app.ID);
+                    //    foreach (var st in list)
+                    //    {
+                    //        if (st.ItemId == 0 && !st.Name.IsNullOrEmpty())
+                    //        {
+                    //            var ti = app.GetOrAddItem(st.Name);
+                    //            st.ItemId = ti.Id;
+                    //            st.SaveAsync();
+                    //        }
+                    //    }
+                    //}
 
                     app.ItemCount = app.TraceItems.Count(e => e.Enable);
                     app.Update();
