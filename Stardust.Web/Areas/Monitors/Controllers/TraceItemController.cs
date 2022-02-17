@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
+using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data.Monitors;
 using XCode.Membership;
@@ -51,6 +54,29 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             if (post && type == DataObjectMethodType.Delete) TraceDayStat.DeleteByAppAndItem(entity.AppId, entity.Id);
 
             return rs;
+        }
+
+        [EntityAuthorize(PermissionFlags.Update)]
+        public ActionResult Fix()
+        {
+            foreach (var item in SelectKeys)
+            {
+                var ti = TraceItem.FindById(item.ToInt());
+                if (ti != null)
+                {
+                    XTrace.WriteLine("修正 {0}/{1}", ti.Name, ti.Id);
+
+                    {
+                        var list = TraceDayStat.FindAllByAppAndItem(ti.AppId, ti.Id);
+                        ti.Days = list.DistinctBy(e => e.StatDate.Date).Count();
+                        ti.Total = list.Sum(e => e.Total);
+                    }
+
+                    ti.Update();
+                }
+            }
+
+            return JsonRefresh("成功！");
         }
     }
 }

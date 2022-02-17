@@ -95,37 +95,11 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 {
                     XTrace.WriteLine("修正 {0}/{1}", app.Name, app.ID);
 
-                    //var flag = DateTime.Today < new DateTime(2022, 2, 10);
                     {
                         var list = TraceDayStat.FindAllByAppId(app.ID);
-                        //if (flag)
-                        //{
-                        //    foreach (var st in list)
-                        //    {
-                        //        if (st.ItemId == 0 && !st.Name.IsNullOrEmpty())
-                        //        {
-                        //            var ti = app.GetOrAddItem(st.Name);
-                        //            st.ItemId = ti.Id;
-                        //            st.SaveAsync();
-                        //        }
-                        //    }
-                        //}
                         app.Days = list.DistinctBy(e => e.StatDate.Date).Count();
                         app.Total = list.Sum(e => e.Total);
                     }
-                    //if (flag)
-                    //{
-                    //    var list = TraceHourStat.FindAllByAppId(app.ID);
-                    //    foreach (var st in list)
-                    //    {
-                    //        if (st.ItemId == 0 && !st.Name.IsNullOrEmpty())
-                    //        {
-                    //            var ti = app.GetOrAddItem(st.Name);
-                    //            st.ItemId = ti.Id;
-                    //            st.SaveAsync();
-                    //        }
-                    //    }
-                    //}
 
                     app.ItemCount = app.TraceItems.Count(e => e.Enable);
                     app.Update();

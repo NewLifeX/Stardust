@@ -91,6 +91,23 @@ namespace Stardust.Data.Monitors
         /// <returns></returns>
         public static IList<TraceDayStat> FindAllByAppId(Int32 appId) => FindAll(_.AppId == appId);
 
+        /// <summary>
+        /// 根据应用和跟踪项查询
+        /// </summary>
+        /// <param name="appId"></param>
+        /// <param name="itemId"></param>
+        /// <returns></returns>
+        public static IList<TraceDayStat> FindAllByAppAndItem(Int32 appId, Int32 itemId)
+        {
+            if (appId == 0 && itemId == 0) throw new ArgumentNullException(nameof(appId));
+
+            var where = new WhereExpression();
+            if (appId > 0) where &= _.AppId == appId;
+            if (itemId > 0) where &= _.ItemId == itemId;
+
+            return FindAll(where);
+        }
+
         /// <summary>查询某应用某天的所有统计，带缓存</summary>
         /// <param name="appId"></param>
         /// <param name="date"></param>
