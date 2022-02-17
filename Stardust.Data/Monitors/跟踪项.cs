@@ -51,6 +51,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("Name", "操作名。接口名或埋点名", "", Master = true)]
         public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
+        private String _DisplayName;
+        /// <summary>显示名</summary>
+        [DisplayName("显示名")]
+        [Description("显示名")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("DisplayName", "显示名", "")]
+        public String DisplayName { get => _DisplayName; set { if (OnPropertyChanging("DisplayName", value)) { _DisplayName = value; OnPropertyChanged("DisplayName"); } } }
+
         private String _Rules;
         /// <summary>规则。支持多个埋点操作名按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开。</summary>
         [DisplayName("规则")]
@@ -154,6 +162,7 @@ namespace Stardust.Data.Monitors
                     case "AppId": return _AppId;
                     case "Kind": return _Kind;
                     case "Name": return _Name;
+                    case "DisplayName": return _DisplayName;
                     case "Rules": return _Rules;
                     case "Enable": return _Enable;
                     case "Days": return _Days;
@@ -176,6 +185,7 @@ namespace Stardust.Data.Monitors
                     case "AppId": _AppId = value.ToInt(); break;
                     case "Kind": _Kind = Convert.ToString(value); break;
                     case "Name": _Name = Convert.ToString(value); break;
+                    case "DisplayName": _DisplayName = Convert.ToString(value); break;
                     case "Rules": _Rules = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Days": _Days = value.ToInt(); break;
@@ -208,6 +218,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>操作名。接口名或埋点名</summary>
             public static readonly Field Name = FindByName("Name");
+
+            /// <summary>显示名</summary>
+            public static readonly Field DisplayName = FindByName("DisplayName");
 
             /// <summary>规则。支持多个埋点操作名按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开。</summary>
             public static readonly Field Rules = FindByName("Rules");
@@ -259,6 +272,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>操作名。接口名或埋点名</summary>
             public const String Name = "Name";
+
+            /// <summary>显示名</summary>
+            public const String DisplayName = "DisplayName";
 
             /// <summary>规则。支持多个埋点操作名按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开。</summary>
             public const String Rules = "Rules";

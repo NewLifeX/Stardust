@@ -32,7 +32,7 @@ namespace Stardust.Data.Monitors
         /// <param name="isNew">是否插入</param>
         public override void Valid(Boolean isNew)
         {
-            if (Name.IsNullOrEmpty()) Name = TraceItem.FindById(ItemId)?.Name;
+            if (Name.IsNullOrEmpty()) Name = TraceItem.FindById(ItemId) + "";
 
             Cost = Total == 0 ? 0 : (Int32)(TotalCost / Total);
 

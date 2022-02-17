@@ -40,6 +40,7 @@
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="Kind" DataType="String" Description="种类" />
       <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
+      <Column Name="DisplayName" DataType="String" Description="显示名" />
       <Column Name="Rules" DataType="String" Length="200" Description="规则。支持多个埋点操作名按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开。" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Days" DataType="Int32" Description="天数。共统计了多少天" />

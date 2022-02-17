@@ -43,7 +43,7 @@ namespace Stardust.Data.Monitors
         /// 已重载。
         /// </summary>
         /// <returns></returns>
-        public override String ToString() => Name;
+        public override String ToString() => !DisplayName.IsNullOrEmpty() ? DisplayName : Name;
         #endregion
 
         #region 扩展属性
