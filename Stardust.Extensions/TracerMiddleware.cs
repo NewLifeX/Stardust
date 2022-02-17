@@ -41,6 +41,7 @@ namespace Stardust.Extensions
 
                     span = Tracer.NewSpan(action);
                     span.Tag = $"{ctx.GetUserHost()} {req.Method} {req.GetRawUrl()}";
+                    span.Detach(req.Headers);
                     if (span is DefaultSpan ds && ds.TraceFlag > 0)
                     {
                         if (req.ContentLength != null && req.ContentLength < 1024 * 8)
@@ -58,7 +59,6 @@ namespace Stardust.Extensions
                             span.Tag += Environment.NewLine + vs.Join(Environment.NewLine, e => $"{e.Key}:{e.Value}");
                         }
                     }
-                    span.Detach(req.Headers);
                 }
             }
 
