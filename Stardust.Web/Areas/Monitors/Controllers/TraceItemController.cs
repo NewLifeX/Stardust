@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
+using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data.Monitors;
@@ -19,6 +20,12 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         {
             LogOnChange = true;
 
+            {
+                var df = ListFields.AddListField("Monitor", null, "Name");
+                df.DisplayName = "每日监控";
+                df.Header = "每日监控";
+                df.Url = "TraceDayStat?appId={AppId}&itemId={Id}";
+            }
             {
                 var df = ListFields.AddListField("Log", "CreateUser");
                 df.DisplayName = "修改日志";
@@ -43,6 +50,8 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
+
+            p.RetrieveState = true;
 
             return TraceItem.Search(appId, name, kind, enable, start, end, p["Q"], p);
         }
