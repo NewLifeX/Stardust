@@ -42,7 +42,7 @@
         <tbody>
             @foreach (var entity in list)
             {
-                    var ti = entity.TraceItem;
+                var ti = entity.TraceItem??new TraceItem();
                 var url1 = $"/Monitors/appDayStat?appId={entity.AppId}";
                 var url2 = $"/Monitors/traceDayStat?appid={entity.AppId}&itemId={entity.ItemId}";
                 var color2 = "";
@@ -58,23 +58,23 @@
                 {
                     color2 = "palevioletred";
                 }
-                    <tr>
-                        <td class="text-center"><a href="@url1" title="应用最近的监控图表">@entity.AppName</a></td>
-                        <td title="@entity.Tag" style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url2" style="color: @color2">@entity.Name</a></td>
-                        <td class="text-center">
-                            <i class="glyphicon glyphicon-@(entity.Success ? "ok" : "remove")" style="color: @(entity.Success ? "green" : "red");"></i>
-                        </td>
-                        <td class="text-center" title="@entity.StartTime">@entity.Start.ToFullString("")</td>
-                        <td class="text-center" title="@entity.EndTime">@entity.End.ToString("HH:mm:ss")</td>
-                        <td class="text-right">@entity.Cost.ToString("n0")</td>
-                        <td>@entity.ClientId</td>
-                        <td>@entity.SpanId</td>
-                        <td>@entity.ParentId</td>
-                        <td>@entity.CreateIP</td>
-                        <td class="text-center">
-                            <a href="/monitors/sampledata/detail/@entity.Id">查看</a>
-                        </td>
-                    </tr>
+                <tr>
+                    <td class="text-center"><a href="@url1" title="应用最近的监控图表">@entity.AppName</a></td>
+                    <td title="@entity.Tag" style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url2" style="color: @color2">@entity.Name</a></td>
+                    <td class="text-center">
+                        <i class="glyphicon glyphicon-@(entity.Success ? "ok" : "remove")" style="color: @(entity.Success ? "green" : "red");"></i>
+                    </td>
+                    <td class="text-center" title="@entity.StartTime">@entity.Start.ToFullString("")</td>
+                    <td class="text-center" title="@entity.EndTime">@entity.End.ToString("HH:mm:ss")</td>
+                    <td class="text-right">@entity.Cost.ToString("n0")</td>
+                    <td>@entity.ClientId</td>
+                    <td>@entity.SpanId</td>
+                    <td>@entity.ParentId</td>
+                    <td>@entity.CreateIP</td>
+                    <td class="text-center">
+                        <a href="/monitors/sampledata/detail/@entity.Id">查看</a>
+                    </td>
+                </tr>
             }
         </tbody>
     </table>

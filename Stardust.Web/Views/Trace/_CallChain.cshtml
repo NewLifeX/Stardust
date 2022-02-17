@@ -27,7 +27,7 @@
         }
         @foreach (var entity in Model)
         {
-            var ti = entity.TraceItem;
+            var ti = entity.TraceItem ?? new TraceItem();
             var msg = entity.Error ?? entity.Tag;
 
             var ms = entity.EndTime - entity.StartTime;

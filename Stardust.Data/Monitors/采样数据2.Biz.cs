@@ -124,6 +124,7 @@ namespace Stardust.Data.Monitors
                     entity.CopyFrom(item);
 
                     entity.AppId = item.TraceItem?.AppId ?? 0;
+                    entity.ItemId = item.ItemId;
                     entity.Name = item.Name;
 
                     entity.CreateUserID = userId;
