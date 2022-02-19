@@ -198,11 +198,13 @@ namespace Stardust.Data.Monitors
             ti = list.FirstOrDefault(e => e.IsMatch(name));
             if (ti != null) return ti;
 
+            var isApi = name.StartsWith('/');
+
             // 如果只跟踪已存在埋点，则跳过。仅针对API
-            if (Mode == TraceModes.Existing && name.StartsWith('/')) return null;
+            if (Mode == TraceModes.Existing && isApi) return null;
 
             ti = new TraceItem { AppId = ID, Name = name };
-            ti.Enable = Mode == TraceModes.All;
+            ti.Enable = Mode == TraceModes.All || !isApi;
             ti.Insert();
 
             list.Add(ti);
