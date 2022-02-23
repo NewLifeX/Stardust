@@ -134,7 +134,7 @@ namespace Stardust.Server.Services
             {
                 if (item.Errors > 0)
                 {
-                    sb.AppendLine($">**错误：**<font color=\"red\">{item.StatTime.ToFullString()} 埋点[{item.Name}]共报错[{item.Errors:n0}]次</font>[更多]({traceUrl}&itemId={item.ItemId})");
+                    sb.AppendLine($">**错误：**<font color=\"red\">{item.StatTime:HH:mm:ss} 埋点[{item.Name}]报错[{item.Errors:n0}]次</font>[更多]({traceUrl}&itemId={item.ItemId})");
 
                     // 相同接口的错误，不要报多次
                     if (!names.Contains(item.Name))
@@ -152,7 +152,7 @@ namespace Stardust.Server.Services
                                     var p = msg.IndexOfAny(new[] { '\r', '\n' });
                                     if (p > 0) msg = msg[..p];
 
-                                    sb.AppendLine($">**错误内容：**{msg}");
+                                    sb.AppendLine($">**内容：**{msg}");
 
                                     names.Add(item.Name);
                                 }
