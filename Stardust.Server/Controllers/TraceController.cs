@@ -121,15 +121,15 @@ namespace Stardust.Server.Controllers
                 if (excludes != null && excludes.Any(e => e.IsMatch(item.Name))) continue;
                 if (item.Name.EndsWithIgnoreCase("/Trace/Report")) continue;
 
-                // 拒收超长项
-                if (item.Name.Length > TraceData._.Name.Length) continue;
-
                 // 拒收超期数据
                 if (item.StartTime.ToDateTime().ToLocalTime() < startTime) continue;
 
                 // 检查跟踪项
                 var ti = app.GetOrAddItem(item.Name);
                 if (ti == null || !ti.Enable) continue;
+
+                // 拒收超长项
+                if (item.Name.Length > TraceData._.Name.Length) continue;
 
                 var td = TraceData.Create(item);
                 td.AppId = app.ID;
@@ -143,14 +143,17 @@ namespace Stardust.Server.Controllers
                 //samples.AddRange(SampleData.Create(td, item.Samples, true));
                 samples.AddRange(SampleData.Create(td, item.ErrorSamples, false));
 
+                var isTimeout = app.Timeout > 0 && !timeoutExcludes.Any(e => e.IsMatch(item.Name));
                 if (item.Samples != null && item.Samples.Count > 0)
                 {
                     // 超时处理为异常，累加到错误数之中
-                    if (app.Timeout > 0 && !timeoutExcludes.Any(e => e.IsMatch(item.Name)))
-                        td.Errors += item.Samples.Count(e => e.EndTime - e.StartTime > app.Timeout);
+                    if (isTimeout) td.Errors += item.Samples.Count(e => e.EndTime - e.StartTime > app.Timeout);
 
                     samples.AddRange(SampleData.Create(td, item.Samples, true));
                 }
+
+                // 如果最小耗时都超过了超时设置，则全部标记为错误
+                if (isTimeout && td.MinCost >= app.Timeout && td.Errors < td.Total) td.Errors = td.Total;
             }
 
             // 分表
