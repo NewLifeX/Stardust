@@ -23,12 +23,14 @@ namespace Stardust.Server.Controllers
         private readonly TokenService _service;
         private readonly ITraceStatService _stat;
         private readonly IAppDayStatService _appStat;
-        private static readonly ICache _cache = new NewLife.Caching.MemoryCache();
+        private readonly ITraceItemStatService _itemStat;
+        private static readonly ICache _cache = new MemoryCache();
 
-        public TraceController(ITraceStatService stat, IAppDayStatService appStat, TokenService appService)
+        public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService appService)
         {
             _stat = stat;
             _appStat = appStat;
+            _itemStat = itemStat;
             _service = appService;
         }
 
@@ -173,6 +175,7 @@ namespace Stardust.Server.Controllers
             _stat.Add(traces);
             _appStat.Add(now.Date);
             if (now.Hour == 0 && now.Minute <= 10) _appStat.Add(now.Date.AddDays(-1));
+            _itemStat.Add(app.ID);
 
             if (!ip.IsNullOrEmpty() && ip.Length >= 3)
             {
