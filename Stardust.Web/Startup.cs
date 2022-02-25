@@ -35,6 +35,7 @@ namespace Stardust.Web
 
             // 统计
             services.AddSingleton<IAppDayStatService, AppDayStatService>();
+            services.AddSingleton<ITraceItemStatService, TraceItemStatService>();
             services.AddSingleton<ITraceStatService, TraceStatService>();
 
             services.AddSingleton<IRedisService, RedisService>();

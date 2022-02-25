@@ -190,6 +190,8 @@ namespace Stardust.Data.Monitors
         /// <returns></returns>
         public TraceItem GetOrAddItem(String name)
         {
+            if (name.IsNullOrEmpty()) return null;
+
             var list = TraceItems;
             var ti = list.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
             if (ti != null) return ti;

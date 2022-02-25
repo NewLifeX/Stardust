@@ -8,6 +8,7 @@ using NewLife.Cube;
 using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data.Monitors;
+using Stardust.Server.Services;
 using XCode;
 using XCode.Membership;
 
@@ -17,6 +18,8 @@ namespace Stardust.Web.Areas.Monitors.Controllers
     [MonitorsArea]
     public class AppTracerController : EntityController<AppTracer>
     {
+        private readonly ITraceItemStatService _traceItemStatService;
+
         static AppTracerController()
         {
             LogOnChange = true;
@@ -28,6 +31,8 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 df.Url = "/Admin/Log?category=应用跟踪器&linkId={Id}";
             }
         }
+
+        public AppTracerController(ITraceItemStatService traceItemStatService) => _traceItemStatService = traceItemStatService;
 
         protected override IEnumerable<AppTracer> Search(Pager p)
         {
@@ -94,6 +99,9 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 if (app != null)
                 {
                     XTrace.WriteLine("修正 {0}/{1}", app.Name, app.ID);
+
+                    //_traceItemStatService.Add(app.ID);
+                    _traceItemStatService.Process(app.ID);
 
                     {
                         var list = TraceDayStat.FindAllByAppId(app.ID);

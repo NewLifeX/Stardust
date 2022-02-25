@@ -194,6 +194,17 @@ namespace Stardust.Data.Monitors
 
             return FindAll(where.GroupBy(_.AppId, _.ItemId), null, selects);
         }
+
+        /// <summary>根据应用分组统计</summary>
+        /// <param name="appId"></param>
+        /// <returns></returns>
+        public static IList<TraceDayStat> SearchGroupItemByApp(Int32 appId)
+        {
+            var selects = _.ID.Count() & _.Total.Sum() & _.ItemId;
+            var where = new WhereExpression() & _.AppId == appId;
+
+            return FindAll(where.GroupBy(_.ItemId), null, selects);
+        }
         #endregion
 
         #region 业务操作
