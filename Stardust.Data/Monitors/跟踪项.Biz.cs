@@ -37,7 +37,7 @@ namespace Stardust.Data.Monitors
             // 建议先调用基类方法，基类方法会做一些统一处理
             base.Valid(isNew);
 
-            if (Kind == null) Kind = GetKind(Name);
+            if (Kind.IsNullOrEmpty() || Kind == "redismq") Kind = GetKind(Name);
         }
 
         /// <summary>
@@ -128,9 +128,9 @@ namespace Stardust.Data.Monitors
         }
 
         // Select Count(Id) as Id,Kind From TraceItem Where CreateTime>'2020-01-24 00:00:00' Group By Kind Order By Id Desc limit 20
-        static readonly FieldCache<TraceItem> _KindCache = new FieldCache<TraceItem>(nameof(Kind))
+        static readonly FieldCache<TraceItem> _KindCache = new(nameof(Kind))
         {
-            Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
+            Where = _.CreateTime > DateTime.Today.AddYears(-1) & Expression.Empty
         };
 
         /// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
@@ -146,15 +146,16 @@ namespace Stardust.Data.Monitors
         /// <returns></returns>
         public static String GetKind(String name)
         {
-            if (name.IsNullOrEmpty()) return null;
+            if (name.IsNullOrEmpty()) return "other";
 
             if (name.StartsWithIgnoreCase("/")) return "api";
             if (name.StartsWithIgnoreCase("http://", "https://")) return "http";
+            if (name.StartsWithIgnoreCase("redismq:")) return "mq";
 
             var p = name.IndexOf(':');
             if (p > 0) return name[..p];
 
-            return null;
+            return "other";
         }
 
         private String[] _rules;
