@@ -801,7 +801,7 @@ namespace Stardust.Server.Controllers
             var rs = jwt.TryDecode(token, out var message);
             var node = Node.FindByCode(jwt.Subject);
             _nodeForHistory = node;
-            if (!rs) throw new ApiException(403, $"非法访问 {message}");
+            if (!rs) throw new ApiException(403, $"[{node.Name}/{node.Code}]非法访问 {message}");
 
             return node;
         }
