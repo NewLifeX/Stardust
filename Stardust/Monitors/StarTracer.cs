@@ -38,6 +38,9 @@ namespace Stardust.Monitors
         /// <summary>Api客户端</summary>
         public IApiClient Client { get; set; }
 
+        /// <summary>剔除埋点调用自己。默认true</summary>
+        public Boolean TrimSelf { get; set; } = true;
+
         private readonly String _version;
         private readonly Process _process = Process.GetCurrentProcess();
         private readonly Queue<TraceModel> _fails = new();
@@ -111,7 +114,7 @@ namespace Stardust.Monitors
 
             // 剔除项
             if (Excludes != null) builders = builders.Where(e => !Excludes.Any(y => y.IsMatch(e.Name))).ToArray();
-            builders = builders.Where(e => !e.Name.EndsWithIgnoreCase("/Trace/Report")).ToArray();
+            if (TrimSelf) builders = builders.Where(e => !e.Name.EndsWithIgnoreCase("/Trace/Report")).ToArray();
             if (builders.Length == 0) return;
 
             // 初始化
@@ -166,11 +169,11 @@ namespace Stardust.Monitors
                 var source = (Client as ApiHttpClient)?.Source;
                 var ex2 = ex is AggregateException aex ? aex.InnerException : ex;
                 if (ex2 is TaskCanceledException tce)
-                    Log?.Error("{0} 无法连接服务端：{1} TaskId={2}", ex2.GetType().Name, source, tce.Task?.Id);
-                else if (ex2 is HttpRequestException)
-                    Log?.Error("{0} 无法连接服务端：{1}", ex2.GetType().Name, source);
+                    Log?.Error("无法连接服务端[{0}] {1} TaskId={2}", source, ex2.GetType().Name, tce.Task?.Id);
+                else if (ex2 is HttpRequestException hre)
+                    Log?.Error("无法连接服务端[{0}] {1} {2}", source, ex2.GetType().Name, hre.Message);
                 else if (ex2 is SocketException se)
-                    Log?.Error("{0} 无法连接服务端：{1} SocketErrorCode={2}", ex2.GetType().Name, source, se.SocketErrorCode);
+                    Log?.Error("无法连接服务端[{0}] {1} SocketErrorCode={2}", source, ex2.GetType().Name, se.SocketErrorCode);
                 else
                     Log?.Error(ex + "");
 

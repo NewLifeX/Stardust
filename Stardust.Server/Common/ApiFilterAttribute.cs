@@ -15,8 +15,8 @@ namespace Stardust.Server.Common
         /// <param name="context"></param>
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            if (!context.ModelState.IsValid)
-                throw new ApplicationException(context.ModelState.Values.First(p => p.Errors.Count > 0).Errors[0].ErrorMessage);
+            //if (!context.ModelState.IsValid)
+            //    throw new ApplicationException(context.ModelState.Values.First(p => p.Errors.Count > 0).Errors[0].ErrorMessage);
 
             // 访问令牌
             var request = context.HttpContext.Request;

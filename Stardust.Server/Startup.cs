@@ -13,6 +13,7 @@ using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
 using Stardust.Data;
+using Stardust.Monitors;
 using Stardust.Server.Common;
 using Stardust.Server.Services;
 using XCode;
@@ -36,6 +37,7 @@ namespace Stardust.Server
             var tracer = star.Tracer;
             services.AddSingleton<ITracer>(tracer);
             using var span = tracer?.NewSpan(nameof(ConfigureServices));
+            if (tracer is StarTracer st) st.TrimSelf = false;
 
             // 默认连接字符串，如果配置文件没有设置，则采用该值
             DAL.ConnStrs.TryAdd("ConfigCenter", "MapTo=Stardust");
