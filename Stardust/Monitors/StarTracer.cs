@@ -163,11 +163,14 @@ namespace Stardust.Monitors
             }
             catch (Exception ex)
             {
+                var source = (Client as ApiHttpClient)?.Source;
                 var ex2 = ex is AggregateException aex ? aex.InnerException : ex;
-                if (ex2 is TaskCanceledException ||
-                    ex2 is HttpRequestException ||
-                    ex2 is SocketException)
-                    Log?.Error("无法连接服务端：{0}", (Client as ApiHttpClient)?.Source);
+                if (ex2 is TaskCanceledException tce)
+                    Log?.Error("{0} 无法连接服务端：{1} TaskId={2}", ex2.GetType().Name, source, tce.Task?.Id);
+                else if (ex2 is HttpRequestException)
+                    Log?.Error("{0} 无法连接服务端：{1}", ex2.GetType().Name, source);
+                else if (ex2 is SocketException se)
+                    Log?.Error("{0} 无法连接服务端：{1} SocketErrorCode={2}", ex2.GetType().Name, source, se.SocketErrorCode);
                 else
                     Log?.Error(ex + "");
 
