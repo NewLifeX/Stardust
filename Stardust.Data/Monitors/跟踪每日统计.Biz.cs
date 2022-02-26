@@ -200,7 +200,7 @@ namespace Stardust.Data.Monitors
         /// <returns></returns>
         public static IList<TraceDayStat> SearchGroupItemByApp(Int32 appId)
         {
-            var selects = _.ID.Count() & _.Total.Sum() & _.ItemId;
+            var selects = _.ID.Count() & _.Total.Sum() & _.Errors.Sum() & _.Cost.Avg() & _.ItemId;
             var where = new WhereExpression() & _.AppId == appId;
 
             return FindAll(where.GroupBy(_.ItemId), null, selects);

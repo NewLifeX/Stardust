@@ -80,6 +80,8 @@ namespace Stardust.Server.Services
 
                 ti.Days = st.ID;
                 ti.Total = st.Total;
+                ti.Errors = st.Errors;
+                ti.Cost = st.Cost;
                 ti.Update();
             }
         }

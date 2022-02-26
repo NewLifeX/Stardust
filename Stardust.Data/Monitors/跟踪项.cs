@@ -91,6 +91,22 @@ namespace Stardust.Data.Monitors
         [BindColumn("Total", "总次数。累计埋点采样次数", "")]
         public Int64 Total { get => _Total; set { if (OnPropertyChanging("Total", value)) { _Total = value; OnPropertyChanged("Total"); } } }
 
+        private Int32 _Errors;
+        /// <summary>错误数</summary>
+        [DisplayName("错误数")]
+        [Description("错误数")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Errors", "错误数", "")]
+        public Int32 Errors { get => _Errors; set { if (OnPropertyChanging("Errors", value)) { _Errors = value; OnPropertyChanged("Errors"); } } }
+
+        private Int32 _Cost;
+        /// <summary>平均耗时。总耗时除以总次数，单位毫秒</summary>
+        [DisplayName("平均耗时")]
+        [Description("平均耗时。总耗时除以总次数，单位毫秒")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Cost", "平均耗时。总耗时除以总次数，单位毫秒", "")]
+        public Int32 Cost { get => _Cost; set { if (OnPropertyChanging("Cost", value)) { _Cost = value; OnPropertyChanged("Cost"); } } }
+
         private String _CreateIP;
         /// <summary>创建地址</summary>
         [DisplayName("创建地址")]
@@ -167,6 +183,8 @@ namespace Stardust.Data.Monitors
                     case "Enable": return _Enable;
                     case "Days": return _Days;
                     case "Total": return _Total;
+                    case "Errors": return _Errors;
+                    case "Cost": return _Cost;
                     case "CreateIP": return _CreateIP;
                     case "CreateTime": return _CreateTime;
                     case "UpdateUser": return _UpdateUser;
@@ -190,6 +208,8 @@ namespace Stardust.Data.Monitors
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Days": _Days = value.ToInt(); break;
                     case "Total": _Total = value.ToLong(); break;
+                    case "Errors": _Errors = value.ToInt(); break;
+                    case "Cost": _Cost = value.ToInt(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
@@ -233,6 +253,12 @@ namespace Stardust.Data.Monitors
 
             /// <summary>总次数。累计埋点采样次数</summary>
             public static readonly Field Total = FindByName("Total");
+
+            /// <summary>错误数</summary>
+            public static readonly Field Errors = FindByName("Errors");
+
+            /// <summary>平均耗时。总耗时除以总次数，单位毫秒</summary>
+            public static readonly Field Cost = FindByName("Cost");
 
             /// <summary>创建地址</summary>
             public static readonly Field CreateIP = FindByName("CreateIP");
@@ -287,6 +313,12 @@ namespace Stardust.Data.Monitors
 
             /// <summary>总次数。累计埋点采样次数</summary>
             public const String Total = "Total";
+
+            /// <summary>错误数</summary>
+            public const String Errors = "Errors";
+
+            /// <summary>平均耗时。总耗时除以总次数，单位毫秒</summary>
+            public const String Cost = "Cost";
 
             /// <summary>创建地址</summary>
             public const String CreateIP = "CreateIP";

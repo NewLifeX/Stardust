@@ -45,6 +45,8 @@
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Days" DataType="Int32" Description="天数。共统计了多少天" />
       <Column Name="Total" DataType="Int64" Description="总次数。累计埋点采样次数" />
+      <Column Name="Errors" DataType="Int32" Description="错误数" />
+      <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数，单位毫秒" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="UpdateUser" DataType="String" Description="更新者" />
@@ -147,7 +149,7 @@
       <Column Name="Total" DataType="Int32" Description="总次数" />
       <Column Name="Errors" DataType="Int32" Description="错误数" />
       <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
-      <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数" />
+      <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数，单位毫秒" />
       <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
       <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
       <Column Name="TraceId" DataType="String" Description="追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
