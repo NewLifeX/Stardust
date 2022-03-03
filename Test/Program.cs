@@ -22,7 +22,7 @@ namespace Test
         {
             XTrace.UseConsole();
 
-            Test3();
+            Test6();
 
             Console.WriteLine("OK!");
             Console.ReadKey();
@@ -144,6 +144,21 @@ namespace Test
             foreach (var item in rs)
             {
                 XTrace.WriteLine(item.ToJson());
+            }
+        }
+
+        static async void Test6()
+        {
+            var client = new LocalStarClient();
+            client.GetInfo();
+
+            try
+            {
+                await client.GetInfoAsync();
+            }
+            catch (Exception ex)
+            {
+                XTrace.Log.Error("星尘探测失败！{0}", ex.Message);
             }
         }
     }
