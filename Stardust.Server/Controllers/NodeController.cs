@@ -709,6 +709,7 @@ namespace Stardust.Server.Controllers
                     }
                 }
             }
+            catch (TaskCanceledException) { }
             catch (Exception ex)
             {
                 XTrace.WriteException(ex);
