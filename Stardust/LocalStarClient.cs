@@ -60,7 +60,7 @@ namespace Stardust
         /// <returns></returns>
         public AgentInfo GetInfo()
         {
-            var task = GetInfoAsync().ContinueWith<AgentInfo>(t => null, TaskContinuationOptions.OnlyOnFaulted);
+            var task = GetInfoAsync().ContinueWith(t => t.IsCompleted ? t.Result : null);
             if (task.Wait(500)) return task.Result;
 
             return null;

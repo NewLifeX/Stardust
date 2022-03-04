@@ -149,6 +149,8 @@ namespace Test
 
         static async void Test6()
         {
+            XTrace.WriteLine("Test6");
+
             var client = new LocalStarClient();
             client.GetInfo();
 
