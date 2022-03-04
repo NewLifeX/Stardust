@@ -238,7 +238,7 @@ namespace Stardust
                         Server = Server,
                         AppId = AppId,
                         //Secret = Secret,
-                        Factory = this,
+                        ClientId = ClientId,
                         Client = _client,
                     };
                     //config.LoadAll();
