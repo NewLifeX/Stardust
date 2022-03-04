@@ -126,6 +126,14 @@ namespace Stardust.Data.Configs
         [BindColumn("Compile", "编译时间。客户端", "")]
         public DateTime Compile { get => _Compile; set { if (OnPropertyChanging("Compile", value)) { _Compile = value; OnPropertyChanged("Compile"); } } }
 
+        private Int32 _WorkerId;
+        /// <summary>雪花标识</summary>
+        [DisplayName("雪花标识")]
+        [Description("雪花标识")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("WorkerId", "雪花标识", "")]
+        public Int32 WorkerId { get => _WorkerId; set { if (OnPropertyChanging("WorkerId", value)) { _WorkerId = value; OnPropertyChanged("WorkerId"); } } }
+
         private String _Token;
         /// <summary>令牌</summary>
         [DisplayName("令牌")]
@@ -190,6 +198,7 @@ namespace Stardust.Data.Configs
                     case "StartTime": return _StartTime;
                     case "Version": return _Version;
                     case "Compile": return _Compile;
+                    case "WorkerId": return _WorkerId;
                     case "Token": return _Token;
                     case "Creator": return _Creator;
                     case "CreateTime": return _CreateTime;
@@ -215,6 +224,7 @@ namespace Stardust.Data.Configs
                     case "StartTime": _StartTime = value.ToDateTime(); break;
                     case "Version": _Version = Convert.ToString(value); break;
                     case "Compile": _Compile = value.ToDateTime(); break;
+                    case "WorkerId": _WorkerId = value.ToInt(); break;
                     case "Token": _Token = Convert.ToString(value); break;
                     case "Creator": _Creator = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -268,6 +278,9 @@ namespace Stardust.Data.Configs
 
             /// <summary>编译时间。客户端</summary>
             public static readonly Field Compile = FindByName("Compile");
+
+            /// <summary>雪花标识</summary>
+            public static readonly Field WorkerId = FindByName("WorkerId");
 
             /// <summary>令牌</summary>
             public static readonly Field Token = FindByName("Token");
@@ -328,6 +341,9 @@ namespace Stardust.Data.Configs
 
             /// <summary>编译时间。客户端</summary>
             public const String Compile = "Compile";
+
+            /// <summary>雪花标识</summary>
+            public const String WorkerId = "WorkerId";
 
             /// <summary>令牌</summary>
             public const String Token = "Token";

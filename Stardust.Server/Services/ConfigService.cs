@@ -13,6 +13,7 @@ namespace Stardust.Server.Services
     {
         private TimerX _timer;
         private readonly ITracer _tracer;
+        public String WorkerIdName { get; set; } = "NewLife.WorkerId";
 
         public ConfigService(ITracer tracer)
         {
@@ -164,6 +165,38 @@ namespace Stardust.Server.Services
             }
 
             return dic;
+        }
+
+        /// <summary>刷新WorkerId</summary>
+        /// <param name="app"></param>
+        /// <param name="online"></param>
+        /// <returns></returns>
+        public Int32 RefreshWorkerId(AppConfig app, ConfigOnline online)
+        {
+            if (!app.EnableWorkerId) return -1;
+
+            var cfg = app.Configs.FirstOrDefault(e => e.Key.EqualIgnoreCase(WorkerIdName));
+            if (cfg == null)
+            {
+                cfg = new ConfigData
+                {
+                    AppId = app.Id,
+                    Key = WorkerIdName,
+                    Version = app.Version,
+                    Enable = true
+                };
+            }
+
+            var id = cfg.Value.ToInt();
+            id++;
+
+            cfg.Value = id + "";
+            cfg.Save();
+
+            online.WorkerId = id;
+            online.Save();
+
+            return id;
         }
 
         public Int32 SetConfigs(AppConfig app, IDictionary<String, Object> configs)

@@ -62,7 +62,7 @@ namespace Stardust.Server.Services
                     }
                 }
 
-                var rs3 = ConfigOnline.ClearExpire(TimeSpan.FromSeconds(sessionTimeout));
+                var rs3 = ConfigOnline.ClearExpire(TimeSpan.FromDays(7));
             }
 
             // 注册中心

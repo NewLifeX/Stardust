@@ -1,11 +1,28 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
+using System.Web;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using NewLife.Log;
+using NewLife.Model;
+using NewLife.Reflection;
+using NewLife.Threading;
+using NewLife.Web;
 using XCode;
+using XCode.Cache;
+using XCode.Configuration;
+using XCode.DataAccessLayer;
 using XCode.Membership;
+using XCode.Shards;
 
 namespace Stardust.Data.Configs
 {
@@ -45,24 +62,43 @@ namespace Stardust.Data.Configs
             //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
             //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
         }
+
+        ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
+        //[EditorBrowsable(EditorBrowsableState.Never)]
+        //protected override void InitData()
+        //{
+        //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
+        //    if (Meta.Session.Count > 0) return;
+
+        //    if (XTrace.Debug) XTrace.WriteLine("开始初始化AppQuote[应用依赖]数据……");
+
+        //    var entity = new AppQuote();
+        //    entity.AppId = 0;
+        //    entity.TargetAppId = 0;
+        //    entity.CreateUserID = 0;
+        //    entity.CreateTime = DateTime.Now;
+        //    entity.CreateIP = "abc";
+        //    entity.Insert();
+
+        //    if (XTrace.Debug) XTrace.WriteLine("完成初始化AppQuote[应用依赖]数据！");
+        //}
+
+        ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
+        ///// <returns></returns>
+        //public override Int32 Insert()
+        //{
+        //    return base.Insert();
+        //}
+
+        ///// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>
+        ///// <returns></returns>
+        //protected override Int32 OnDelete()
+        //{
+        //    return base.OnDelete();
+        //}
         #endregion
 
         #region 扩展属性
-        /// <summary>应用系统</summary>
-        [XmlIgnore, ScriptIgnore]
-        public AppConfig App => Extends.Get(nameof(App), k => AppConfig.FindById(AppId));
-
-        /// <summary>应用名称</summary>
-        [Map(__.AppId, typeof(AppConfig), "Id")]
-        public String AppName => App + "";
-
-        /// <summary>目标应用</summary>
-        [XmlIgnore, ScriptIgnore]
-        public AppConfig TargetApp => Extends.Get(nameof(TargetApp), k => AppConfig.FindById(TargetAppId));
-
-        /// <summary>目标应用</summary>
-        [Map(__.TargetAppId, typeof(AppConfig), "Id")]
-        public String TargetAppName => TargetApp + "";
         #endregion
 
         #region 扩展查询
@@ -109,15 +145,18 @@ namespace Stardust.Data.Configs
         /// <summary>高级查询</summary>
         /// <param name="appId">应用。原始应用，该应用依赖别人</param>
         /// <param name="targetAppId">目标应用。被原始应用依赖的应用</param>
+        /// <param name="start">创建时间开始</param>
+        /// <param name="end">创建时间结束</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<AppQuote> Search(Int32 appId, Int32 targetAppId, String key, PageParameter page)
+        public static IList<AppQuote> Search(Int32 appId, Int32 targetAppId, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (appId >= 0) exp &= _.AppId == appId;
             if (targetAppId >= 0) exp &= _.TargetAppId == targetAppId;
+            exp &= _.CreateTime.Between(start, end);
             if (!key.IsNullOrEmpty()) exp &= _.CreateIP.Contains(key);
 
             return FindAll(exp, page);

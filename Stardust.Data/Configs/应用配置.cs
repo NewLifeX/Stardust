@@ -163,6 +163,14 @@ namespace Stardust.Data.Configs
         [BindColumn("MissedKeys", "缺失键。没有读取到的配置项", "")]
         public String MissedKeys { get => _MissedKeys; set { if (OnPropertyChanging("MissedKeys", value)) { _MissedKeys = value; OnPropertyChanged("MissedKeys"); } } }
 
+        private Boolean _EnableWorkerId;
+        /// <summary>雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增</summary>
+        [DisplayName("雪花标识")]
+        [Description("雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("EnableWorkerId", "雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增", "")]
+        public Boolean EnableWorkerId { get => _EnableWorkerId; set { if (OnPropertyChanging("EnableWorkerId", value)) { _EnableWorkerId = value; OnPropertyChanged("EnableWorkerId"); } } }
+
         private Int32 _CreateUserID;
         /// <summary>创建者</summary>
         [DisplayName("创建者")]
@@ -248,6 +256,7 @@ namespace Stardust.Data.Configs
                     case "ApolloNameSpace": return _ApolloNameSpace;
                     case "UsedKeys": return _UsedKeys;
                     case "MissedKeys": return _MissedKeys;
+                    case "EnableWorkerId": return _EnableWorkerId;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -280,6 +289,7 @@ namespace Stardust.Data.Configs
                     case "ApolloNameSpace": _ApolloNameSpace = Convert.ToString(value); break;
                     case "UsedKeys": _UsedKeys = Convert.ToString(value); break;
                     case "MissedKeys": _MissedKeys = Convert.ToString(value); break;
+                    case "EnableWorkerId": _EnableWorkerId = value.ToBoolean(); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -350,6 +360,9 @@ namespace Stardust.Data.Configs
 
             /// <summary>缺失键。没有读取到的配置项</summary>
             public static readonly Field MissedKeys = FindByName("MissedKeys");
+
+            /// <summary>雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增</summary>
+            public static readonly Field EnableWorkerId = FindByName("EnableWorkerId");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUserID = FindByName("CreateUserID");
@@ -431,6 +444,9 @@ namespace Stardust.Data.Configs
 
             /// <summary>缺失键。没有读取到的配置项</summary>
             public const String MissedKeys = "MissedKeys";
+
+            /// <summary>雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增</summary>
+            public const String EnableWorkerId = "EnableWorkerId";
 
             /// <summary>创建者</summary>
             public const String CreateUserID = "CreateUserID";

@@ -39,6 +39,10 @@ namespace Stardust.Web.Controllers
 
             var dic = _configService.GetConfigs(app, scope);
 
+            // 返回WorkerId
+            if (app.EnableWorkerId && dic.ContainsKey(_configService.WorkerIdName))
+                dic[_configService.WorkerIdName] = online.WorkerId + "";
+
             return new ConfigInfo
             {
                 Version = app.Version,
@@ -74,6 +78,9 @@ namespace Stardust.Web.Controllers
 
             // 检查应用有效性
             if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
+
+            // 刷新WorkerId
+            if (app.EnableWorkerId && online.WorkerId <= 0) _configService.RefreshWorkerId(app, online);
 
             return app;
         }

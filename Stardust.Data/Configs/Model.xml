@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data.Configs" ConnName="ConfigCenter" BaseClass="Entity" Output="" xmlns="http://www.newlifex.com/Model2020.xsd">
+<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2022.xsd" NameSpace="Stardust.Data.Configs" ConnName="ConfigCenter" BaseClass="Entity" Output="" Version="11.0.2022.0304" Document="https://www.yuque.com/smartstone/xcode/model" xmlns="http://www.newlifex.com/Model2022.xsd">
   <Table Name="AppConfig" Description="应用配置。需要管理配置的应用系统列表，每个应用以命令对形式管理配置数据，支持版本发布">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
@@ -20,6 +20,7 @@
       <Column Name="ApolloNameSpace" DataType="String" Description="阿波罗命名空间。默认application，也可以填依赖的公共命名空间，但建议为公共命名空间建立应用依赖。" />
       <Column Name="UsedKeys" DataType="String" Length="2000" Description="已使用。用过的配置项" />
       <Column Name="MissedKeys" DataType="String" Length="2000" Description="缺失键。没有读取到的配置项" />
+      <Column Name="EnableWorkerId" DataType="Boolean" Description="雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
@@ -116,6 +117,7 @@
       <Column Name="StartTime" DataType="DateTime" Description="进程时间" />
       <Column Name="Version" DataType="String" Description="版本。客户端" />
       <Column Name="Compile" DataType="DateTime" Description="编译时间。客户端" />
+      <Column Name="WorkerId" DataType="Int32" Description="雪花标识" />
       <Column Name="Token" DataType="String" Length="200" Description="令牌" />
       <Column Name="Creator" DataType="String" Description="创建者。服务端节点" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
