@@ -18,97 +18,12 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-  </PropertyGroup>
-
   <ItemGroup>
-    <Compile Remove="Configs\Config\**" />
-    <Compile Remove="Configs\Log\**" />
-    <Compile Remove="Config\**" />
-    <Compile Remove="Entity\Config\**" />
-    <Compile Remove="Entity\Log\**" />
-    <Compile Remove="Log\**" />
-    <Compile Remove="Models\**" />
-    <Compile Remove="Monitors\Config\**" />
-    <Compile Remove="Monitors\Log\**" />
-    <Compile Remove="Nodes\Config\**" />
-    <Compile Remove="Nodes\Log\**" />
-    <EmbeddedResource Remove="Configs\Config\**" />
-    <EmbeddedResource Remove="Configs\Log\**" />
-    <EmbeddedResource Remove="Config\**" />
-    <EmbeddedResource Remove="Entity\Config\**" />
-    <EmbeddedResource Remove="Entity\Log\**" />
-    <EmbeddedResource Remove="Log\**" />
-    <EmbeddedResource Remove="Models\**" />
-    <EmbeddedResource Remove="Monitors\Config\**" />
-    <EmbeddedResource Remove="Monitors\Log\**" />
-    <EmbeddedResource Remove="Nodes\Config\**" />
-    <EmbeddedResource Remove="Nodes\Log\**" />
-    <None Remove="Configs\Config\**" />
-    <None Remove="Configs\Log\**" />
-    <None Remove="Config\**" />
-    <None Remove="Entity\Config\**" />
-    <None Remove="Entity\Log\**" />
-    <None Remove="Log\**" />
-    <None Remove="Models\**" />
-    <None Remove="Monitors\Config\**" />
-    <None Remove="Monitors\Log\**" />
-    <None Remove="Nodes\Config\**" />
-    <None Remove="Nodes\Log\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="BracketHelper.cs" />
-    <Compile Remove="Configs\应用依赖.Biz.cs" />
-    <Compile Remove="Configs\应用依赖.cs" />
-    <Compile Remove="Entity\IP统计.Biz.cs" />
-    <Compile Remove="Entity\IP统计.cs" />
-    <Compile Remove="Entity\应用统计.Biz.cs" />
-    <Compile Remove="Entity\应用统计.cs" />
-    <Compile Remove="Entity\服务.Biz.cs" />
-    <Compile Remove="Entity\服务.cs" />
-    <Compile Remove="Entity\服务统计.Biz.cs" />
-    <Compile Remove="Entity\服务统计.cs" />
-    <Compile Remove="TimeShardPolicy2.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="Build.tt" />
-    <None Remove="Deployment\Build.tt" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="Models\RedisDbEntry.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="Deployment\Build.tt">
-      <LastGenOutput>Build.log</LastGenOutput>
-      <Generator>TextTemplatingFileGenerator</Generator>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="NewLife.XCode" Version="11.0.2022.216-beta2" />
+    <PackageReference Include="NewLife.XCode" Version="11.0.2022.304" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Stardust\Stardust.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Deployment\Build.log">
-      <DependentUpon>Build.tt</DependentUpon>
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-    </None>
   </ItemGroup>
 
 </Project>
