@@ -26,6 +26,9 @@ namespace Stardust.Web
             var star = services.AddStardust("StarWeb");
             using var span = star.Tracer?.NewSpan(nameof(ConfigureServices));
 
+            // 启用配置中心，务必在数据库操作和生成雪花Id之前
+            _ = star.Config;
+
             // 默认连接字符串，如果配置文件没有设置，则采用该值
             DAL.ConnStrs.TryAdd("ConfigCenter", "MapTo=Stardust");
             DAL.ConnStrs.TryAdd("Monitor", "MapTo=Stardust");

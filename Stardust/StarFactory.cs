@@ -48,7 +48,7 @@ namespace Stardust
         public IApiClient Client => _client;
 
         /// <summary>配置信息。从配置中心返回的信息头</summary>
-        public ConfigInfo ConfigInfo { get; set; }
+        public ConfigInfo ConfigInfo => (_config as StarHttpConfigProvider)?.ConfigInfo;
 
         private ApiHttpClient _client;
         private TokenHttpFilter _tokenFilter;
@@ -173,7 +173,7 @@ namespace Stardust
             }
             catch { }
 
-            XTrace.WriteLine("星尘分布式服务 Server={0} AppId={1}", Server, AppId);
+            XTrace.WriteLine("星尘分布式服务 Server={0} AppId={1} ClientId={2}", Server, AppId, ClientId);
 
             var ioc = ObjectContainer.Current;
             ioc.AddSingleton(this);
@@ -194,7 +194,7 @@ namespace Stardust
                 {
                     if (!Valid()) return null;
 
-                    XTrace.WriteLine("初始化星尘监控中心，采样并定期上报应用性能埋点数据，包括Api接口、Http请求、数据库操作、Redis操作等");
+                    XTrace.WriteLine("初始化星尘监控中心，采样并定期上报应用性能埋点数据，包括Api接口、Http请求、数据库操作、Redis操作等。可用于监控系统健康状态，分析分布式系统的性能瓶颈。");
 
                     var tracer = new StarTracer(Server)
                     {
@@ -219,7 +219,7 @@ namespace Stardust
 
         #region 配置中心
         private HttpConfigProvider _config;
-        /// <summary>配置中心</summary>
+        /// <summary>配置中心。务必在数据库操作和生成雪花Id之前使用激活</summary>
         /// <remarks>
         /// 文档 https://www.yuque.com/smartstone/blood/stardust_configcenter
         /// </remarks>
@@ -231,18 +231,18 @@ namespace Stardust
                 {
                     if (!Valid()) return null;
 
-                    XTrace.WriteLine("初始化星尘配置中心，提供集中配置管理能力，自动从配置中心加载配置数据");
+                    XTrace.WriteLine("初始化星尘配置中心，提供集中配置管理能力，自动从配置中心加载配置数据，包括XCode数据库连接。配置中心同时支持分配应用实例的唯一WorkerId，确保Snowflake算法能够生成绝对唯一的雪花Id");
 
                     var config = new StarHttpConfigProvider
                     {
                         Server = Server,
                         AppId = AppId,
                         //Secret = Secret,
-                        ClientId = ClientId,
+                        //ClientId = ClientId,
                         Client = _client,
                     };
-                    //config.LoadAll();
-                    //if (!ClientId.IsNullOrEmpty()) config.ClientId = ClientId;
+                    if (!ClientId.IsNullOrEmpty()) config.ClientId = ClientId;
+                    config.LoadAll();
 
                     _config = config;
                 }
