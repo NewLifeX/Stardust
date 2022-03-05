@@ -30,8 +30,8 @@ namespace Stardust
         /// <summary>客户端</summary>
         public IApiClient Client { get; set; }
 
-        /// <summary>命令队列</summary>
-        public IQueueService<CommandModel, Byte[]> CommandQueue { get; } = new QueueService<CommandModel, Byte[]>();
+        /// <summary>收到命令时触发</summary>
+        public event EventHandler<CommandEventArgs> Received;
 
         private AppInfo _appInfo;
         private readonly ConcurrentDictionary<String, PublishServiceInfo> _publishServices = new();
@@ -174,13 +174,13 @@ namespace Stardust
                 while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
                 {
                     var data = await socket.ReceiveAsync(new ArraySegment<Byte>(buf), cancellationToken);
-                    var cmd = buf.ToStr(null, 0, data.Count).ToJsonEntity<CommandModel>();
-                    if (cmd != null)
+                    var model = buf.ToStr(null, 0, data.Count).ToJsonEntity<CommandModel>();
+                    if (model != null)
                     {
-                        XTrace.WriteLine("Got Command: {0}", cmd.ToJson());
-                        if (cmd.Expire.Year < 2000 || cmd.Expire > DateTime.Now)
+                        XTrace.WriteLine("Got Command: {0}", model.ToJson());
+                        if (model.Expire.Year < 2000 || model.Expire > DateTime.Now)
                         {
-                            var rs = CommandQueue.Publish(cmd.Command, cmd);
+                            OnReceiveCommand(model);
                         }
                     }
                 }
@@ -191,6 +191,18 @@ namespace Stardust
             }
 
             if (socket.State == WebSocketState.Open) await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
+        }
+
+        /// <summary>
+        /// 触发收到命令的动作
+        /// </summary>
+        /// <param name="model"></param>
+        protected virtual void OnReceiveCommand(CommandModel model)
+        {
+            var e = new CommandEventArgs { Model = model };
+            Received?.Invoke(this, e);
+
+            //if (e.Reply != null) ServiceReply(e.Reply).Wait();
         }
         #endregion
 
