@@ -61,13 +61,13 @@ namespace Stardust.Data.Nodes
         [BindColumn("Expire", "过期时间。未指定时表示不限制", "")]
         public DateTime Expire { get => _Expire; set { if (OnPropertyChanging("Expire", value)) { _Expire = value; OnPropertyChanged("Expire"); } } }
 
-        private CommandStatus _Status;
+        private Stardust.Models.CommandStatus _Status;
         /// <summary>状态。命令状态</summary>
         [DisplayName("状态")]
         [Description("状态。命令状态")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Status", "状态。命令状态", "")]
-        public CommandStatus Status { get => _Status; set { if (OnPropertyChanging("Status", value)) { _Status = value; OnPropertyChanged("Status"); } } }
+        public Stardust.Models.CommandStatus Status { get => _Status; set { if (OnPropertyChanging("Status", value)) { _Status = value; OnPropertyChanged("Status"); } } }
 
         private Int32 _Times;
         /// <summary>次数。一共执行多少次，超过10次后取消</summary>
@@ -179,7 +179,7 @@ namespace Stardust.Data.Nodes
                     case "Command": _Command = Convert.ToString(value); break;
                     case "Argument": _Argument = Convert.ToString(value); break;
                     case "Expire": _Expire = value.ToDateTime(); break;
-                    case "Status": _Status = (CommandStatus)value.ToInt(); break;
+                    case "Status": _Status = (Stardust.Models.CommandStatus)value.ToInt(); break;
                     case "Times": _Times = value.ToInt(); break;
                     case "Result": _Result = Convert.ToString(value); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;

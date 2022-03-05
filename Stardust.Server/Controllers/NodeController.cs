@@ -549,6 +549,26 @@ namespace Stardust.Server.Controllers
 
             return file;
         }
+
+        /// <summary>设备端响应服务调用</summary>
+        /// <param name="model">服务</param>
+        /// <returns></returns>
+        [ApiFilter]
+        [HttpPost(nameof(CommandReply))]
+        public Int32 CommandReply(CommandReplyModel model, String token)
+        {
+            var node = DecodeToken(token, Setting.Current.TokenSecret);
+            if (node == null) throw new ApiException(402, "节点未登录");
+
+            var cmd = NodeCommand.FindByID(model.Id);
+            if (cmd == null) return 0;
+
+            cmd.Status = model.Status;
+            cmd.Result = model.Data;
+            cmd.Update();
+
+            return 1;
+        }
         #endregion
 
         #region 升级

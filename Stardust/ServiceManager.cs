@@ -245,16 +245,38 @@ namespace Stardust
 
         #region 队列
         /// <summary>关联订阅事件</summary>
-        /// <param name="queue"></param>
-        public void Attach(IQueueService<CommandModel, Byte[]> queue)
+        /// <param name="client"></param>
+        public void Attach(StarClient client)
         {
-            queue.Subscribe("publish", DoControl);
-            queue.Subscribe("start", DoControl);
-            queue.Subscribe("stop", DoControl);
-            queue.Subscribe("restart", DoControl);
+            client.Received += ExecuteCommand;
         }
 
-        private Byte[] DoControl(CommandModel cmd)
+        private void ExecuteCommand(Object sender, CommandEventArgs e)
+        {
+            var cmd = e?.Model?.Command?.ToLower();
+            if (cmd.IsNullOrEmpty()) return;
+
+            var rs = new CommandReplyModel { Id = e.Model.Id };
+            try
+            {
+                var result = cmd switch
+                {
+                    "publish" => DoControl(e.Model),
+                    "start" => DoControl(e.Model),
+                    "stop" => DoControl(e.Model),
+                    "restart" => DoControl(e.Model),
+                    _ => null,
+                };
+            }
+            catch (Exception ex)
+            {
+                rs.Data = ex.Message;
+            }
+
+            e.Reply = rs;
+        }
+
+        private String DoControl(CommandModel cmd)
         {
             //var js = JsonParser.Decode(cmd.Argument);
             var my = cmd.Argument.ToJsonEntity<MyApp>();
@@ -284,9 +306,7 @@ namespace Stardust
                     break;
             }
 
-            var rs = "成功";
-
-            return rs.GetBytes();
+            return "成功";
         }
 
         class MyApp

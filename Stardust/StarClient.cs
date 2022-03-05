@@ -53,8 +53,11 @@ namespace Stardust
         /// <summary>本地应用服务管理</summary>
         public ServiceManager Manager { get; set; }
 
-        /// <summary>命令队列</summary>
-        public IQueueService<CommandModel, Byte[]> CommandQueue { get; } = new QueueService<CommandModel, Byte[]>();
+        /// <summary>收到命令时触发</summary>
+        public event EventHandler<CommandEventArgs> Received;
+
+        ///// <summary>命令队列</summary>
+        //public IQueueService<CommandModel, Byte[]> CommandQueue { get; } = new QueueService<CommandModel, Byte[]>();
         #endregion
 
         #region 构造
@@ -444,7 +447,8 @@ namespace Stardust
                     {
                         foreach (var item in rs.Commands)
                         {
-                            CommandQueue.Publish(item.Command, item);
+                            //CommandQueue.Publish(item.Command, item);
+                            OnReceiveCommand(item);
                         }
                     }
 
@@ -490,7 +494,7 @@ namespace Stardust
             //};
             //_trace.Init();
             _trace = new TraceService();
-            _trace.Attach(CommandQueue);
+            //_trace.Attach(CommandQueue);
         }
 
         /// <summary>上报命令结果，如截屏、抓日志</summary>
@@ -498,6 +502,11 @@ namespace Stardust
         /// <param name="data"></param>
         /// <returns></returns>
         private async Task<Object> ReportAsync(Int32 id, Byte[] data) => await PostAsync<Object>("Node/Report?Id=" + id, data);
+
+        /// <summary>上报服务调用结果</summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public virtual async Task<Object> ServiceReply(CommandReplyModel model) => await PostAsync<Object>("Node/CommandReply", model);
         #endregion
 
         #region 长连接
@@ -562,23 +571,24 @@ namespace Stardust
                 while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
                 {
                     var data = await socket.ReceiveAsync(new ArraySegment<Byte>(buf), cancellationToken);
-                    var cmd = buf.ToStr(null, 0, data.Count).ToJsonEntity<CommandModel>();
-                    if (cmd != null)
+                    var model = buf.ToStr(null, 0, data.Count).ToJsonEntity<CommandModel>();
+                    if (model != null)
                     {
-                        XTrace.WriteLine("Got Command: {0}", cmd.ToJson());
-                        if (cmd.Expire.Year < 2000 || cmd.Expire > DateTime.Now)
+                        XTrace.WriteLine("Got Command: {0}", model.ToJson());
+                        if (model.Expire.Year < 2000 || model.Expire > DateTime.Now)
                         {
-                            switch (cmd.Command)
-                            {
-                                case "Deploy":
-                                    // 发布中心通知有应用需要部署，马上执行一次心跳，拉取最新应用信息
-                                    _ = Task.Run(Ping);
-                                    break;
-                                default:
-                                    var rs = CommandQueue.Publish(cmd.Command, cmd);
-                                    if (rs != null) await ReportAsync(cmd.Id, rs);
-                                    break;
-                            }
+                            OnReceiveCommand(model);
+                            //switch (model.Command)
+                            //{
+                            //    case "Deploy":
+                            //        // 发布中心通知有应用需要部署，马上执行一次心跳，拉取最新应用信息
+                            //        _ = Task.Run(Ping);
+                            //        break;
+                            //    default:
+                            //        var rs = CommandQueue.Publish(model.Command, model);
+                            //        if (rs != null) await ReportAsync(model.Id, rs);
+                            //        break;
+                            //}
                         }
                     }
                 }
@@ -589,6 +599,18 @@ namespace Stardust
             }
 
             if (socket.State == WebSocketState.Open) await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
+        }
+
+        /// <summary>
+        /// 触发收到命令的动作
+        /// </summary>
+        /// <param name="model"></param>
+        protected virtual void OnReceiveCommand(CommandModel model)
+        {
+            var e = new CommandEventArgs { Model = model };
+            Received?.Invoke(this, e);
+
+            if (e.Reply != null) ServiceReply(e.Reply).Wait();
         }
         #endregion
 

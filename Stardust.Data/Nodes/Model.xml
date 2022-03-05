@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data.Nodes" ConnName="Node" Output="" BaseClass="Entity" xmlns="http://www.newlifex.com/Model2020.xsd">
+<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2022.xsd" NameSpace="Stardust.Data.Nodes" ConnName="Node" Output="" BaseClass="Entity" Version="11.0.2022.0304" Document="https://www.yuque.com/smartstone/xcode/model" xmlns="http://www.newlifex.com/Model2022.xsd">
   <Table Name="Node" Description="节点">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
@@ -185,7 +185,7 @@
       <Column Name="Command" DataType="String" Master="True" Description="命令" />
       <Column Name="Argument" DataType="String" Length="500" Description="参数" />
       <Column Name="Expire" DataType="DateTime" Description="过期时间。未指定时表示不限制" />
-      <Column Name="Status" DataType="Int32" Description="状态。命令状态" Type="CommandStatus" />
+      <Column Name="Status" DataType="Int32" Description="状态。命令状态" Type="Stardust.Models.CommandStatus" />
       <Column Name="Times" DataType="Int32" Description="次数。一共执行多少次，超过10次后取消" />
       <Column Name="Result" DataType="String" Length="500" Description="结果" />
       <Column Name="CreateUser" DataType="String" Description="创建者" />
