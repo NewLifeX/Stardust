@@ -45,7 +45,7 @@ namespace ClientTest
             Assert.NotNull(config);
             Assert.Equal("NewLife开发团队", config["Title"]);
 
-            var dust = star.Service as RegistryClient;
+            var dust = star.Service as AppClient;
             Assert.NotNull(dust);
 
             var filter = star.GetValue("_tokenFilter") as TokenHttpFilter;

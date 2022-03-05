@@ -70,13 +70,11 @@ namespace Stardust.Data
 
         /// <summary>根据会话查找</summary>
         /// <param name="client">会话</param>
-        /// <returns>实体对象</returns>
-        public static AppOnline FindByClient(String client)
+        /// <param name="cache">是否走缓存</param>
+        /// <returns></returns>
+        public static AppOnline FindByClient(String client, Boolean cache = true)
         {
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Client == client);
-
-            //return Find(_.Client == client);
+            if (!cache) return Find(_.Client == client);
 
             return Meta.SingleCache.GetItemWithSlaveKey(client) as AppOnline;
         }
@@ -107,6 +105,11 @@ namespace Stardust.Data
         #endregion
 
         #region 业务操作
+        /// <summary>根据编码查询或添加</summary>
+        /// <param name="client"></param>
+        /// <returns></returns>
+        public static AppOnline GetOrAdd(String client) => GetOrAdd(client, FindByClient, k => new AppOnline { Client = k });
+
         /// <summary>获取 或 创建 会话</summary>
         /// <param name="client"></param>
         /// <returns></returns>
@@ -154,7 +157,7 @@ namespace Stardust.Data
             if (online.CreateIP.IsNullOrEmpty()) online.CreateIP = ip;
             online.Creator = Environment.MachineName;
 
-            online.UpdateInfo(app, info);
+            online.Fill(app, info);
 
             online.SaveAsync();
 
@@ -164,7 +167,7 @@ namespace Stardust.Data
         /// <summary>更新信息</summary>
         /// <param name="app"></param>
         /// <param name="info"></param>
-        public void UpdateInfo(App app, AppInfo info)
+        public void Fill(App app, AppInfo info)
         {
             if (app != null)
             {

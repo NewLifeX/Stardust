@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2020.xsd" NameSpace="Stardust.Data" ConnName="Stardust" Output="" BaseClass="" xmlns="http://www.newlifex.com/Model2020.xsd">
+<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2022.xsd" NameSpace="Stardust.Data" ConnName="Stardust" Output="" BaseClass="" Version="11.0.2022.0304" Document="https://www.yuque.com/smartstone/xcode/model" xmlns="http://www.newlifex.com/Model2022.xsd">
   <Table Name="App" TableName="StarApp" Description="应用系统。服务提供者和消费者">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
@@ -70,6 +70,26 @@
     </Columns>
     <Indexes>
       <Index Columns="AppId,Client" />
+    </Indexes>
+  </Table>
+  <Table Name="AppCommand" Description="应用命令">
+    <Columns>
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="AppId" DataType="Int32" Description="应用" />
+      <Column Name="Command" DataType="String" Master="True" Description="命令" />
+      <Column Name="Argument" DataType="String" Length="500" Description="参数" />
+      <Column Name="Expire" DataType="DateTime" Description="过期时间。未指定时表示不限制" />
+      <Column Name="CreateUser" DataType="String" Description="创建者" />
+      <Column Name="CreateUserID" DataType="Int32" Description="创建人" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="UpdateUserID" DataType="Int32" Description="更新者" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" />
+    </Columns>
+    <Indexes>
+      <Index Columns="AppId,Command" />
+      <Index Columns="UpdateTime,AppId,Command" />
     </Indexes>
   </Table>
   <Table Name="AppMeter" Description="应用性能。保存应用上报的性能数据，如CPU、内存、线程、句柄等">

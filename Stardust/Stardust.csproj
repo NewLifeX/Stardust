@@ -45,6 +45,7 @@
     <Compile Remove="Monitors\MyBuilder.cs" />
     <Compile Remove="Monitors\MySpan.cs" />
     <Compile Remove="Monitors\MyTraceModel.cs" />
+    <Compile Remove="Registry\RegistryClient.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -47,11 +47,15 @@ namespace Stardust
         /// <summary>客户端</summary>
         public IApiClient Client => _client;
 
+        /// <summary>应用客户端</summary>
+        public AppClient App => _appClient;
+
         /// <summary>配置信息。从配置中心返回的信息头</summary>
         public ConfigInfo ConfigInfo => (_config as StarHttpConfigProvider)?.ConfigInfo;
 
         private ApiHttpClient _client;
         private TokenHttpFilter _tokenFilter;
+        private AppClient _appClient;
         #endregion
 
         #region 构造
@@ -82,7 +86,7 @@ namespace Stardust
 
             _tracer.TryDispose();
             _config.TryDispose();
-            _dustClient.TryDispose();
+            _appClient.TryDispose();
         }
         #endregion
 
@@ -102,7 +106,9 @@ namespace Stardust
                     Password = Secret,
                 };
 
-                _client = new ApiHttpClient(Server) { Filter = _tokenFilter };
+                var client = new AppClient(Server) { Filter = _tokenFilter };
+                _appClient = client;
+                _client = client;
 
                 var set = StarSetting.Current;
                 if (set.Debug) _client.Log = XTrace.Log;
@@ -175,11 +181,29 @@ namespace Stardust
 
             XTrace.WriteLine("星尘分布式服务 Server={0} AppId={1} ClientId={2}", Server, AppId, ClientId);
 
+            InitApp();
+
             var ioc = ObjectContainer.Current;
             ioc.AddSingleton(this);
             ioc.AddSingleton(p => Tracer);
             ioc.AddSingleton(p => Config);
             ioc.AddSingleton(p => Service);
+        }
+
+        void InitApp()
+        {
+            if (!Valid()) return;
+
+            var client = new AppClient
+            {
+                AppId = AppId,
+                Client = _client,
+            };
+            if (!ClientId.IsNullOrEmpty()) client.ClientId = ClientId;
+
+            client.Start();
+
+            _appClient = client;
         }
         #endregion
 
@@ -253,30 +277,19 @@ namespace Stardust
         #endregion
 
         #region 注册中心
-        private RegistryClient _dustClient;
         /// <summary>注册中心，服务注册与发现</summary>
         public IRegistry Service
         {
             get
             {
-                if (_dustClient == null)
+                if (_appClient == null)
                 {
                     if (!Valid()) return null;
 
                     XTrace.WriteLine("初始化星尘注册中心，提供服务注册与发布能力");
-
-                    var client = new RegistryClient
-                    {
-                        AppId = AppId,
-                        //Secret = Secret,
-                        Client = _client,
-                    };
-                    if (!ClientId.IsNullOrEmpty()) client.ClientId = ClientId;
-
-                    _dustClient = client;
                 }
 
-                return _dustClient;
+                return _appClient;
             }
         }
 

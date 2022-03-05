@@ -689,7 +689,7 @@ namespace Stardust.Server.Controllers
         private async Task consumeMessage(WebSocket socket, Node node, CancellationTokenSource source)
         {
             var cancellationToken = source.Token;
-            var queue = _queue.GetQueue<String>($"cmd:{node.Code}");
+            var queue = _queue.GetQueue<String>($"nodecmd:{node.Code}");
             try
             {
                 while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
@@ -728,11 +728,11 @@ namespace Stardust.Server.Controllers
         [HttpPost(nameof(SendCommand))]
         public Int32 SendCommand(CommandInModel model, String token)
         {
-            if (model.NodeCode.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.NodeCode), "必须指定节点");
+            if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定节点");
             if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
 
-            var node = Node.FindByCode(model.NodeCode);
-            if (node == null) throw new ArgumentOutOfRangeException(nameof(model.NodeCode), "无效节点");
+            var node = Node.FindByCode(model.Code);
+            if (node == null) throw new ArgumentOutOfRangeException(nameof(model.Code), "无效节点");
 
             var app = _tokenService.DecodeToken(token, Setting.Current);
             if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new InvalidOperationException("无权操作！");
@@ -754,7 +754,7 @@ namespace Stardust.Server.Controllers
             if (model.Expire > 0) cmd.Expire = DateTime.Now.AddSeconds(model.Expire);
             cmd.Insert();
 
-            var queue = _queue.GetQueue<String>($"cmd:{node.Code}");
+            var queue = _queue.GetQueue<String>($"nodecmd:{node.Code}");
             queue.Add(cmd.ToModel().ToJson());
 
             return cmd.ID;

@@ -22,6 +22,9 @@ namespace Stardust.Models
         /// <summary>版本</summary>
         public String Version { get; set; }
 
+        /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
+        public String ClientId { get; set; }
+
         /// <summary>用户名</summary>
         public String UserName { get; set; }
 

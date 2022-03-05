@@ -5,7 +5,7 @@ namespace Stardust.Server.Models
     public class CommandInModel
     {
         /// <summary>节点编码</summary>
-        public String NodeCode { get; set; }
+        public String Code { get; set; }
 
         /// <summary>命令</summary>
         public String Command { get; set; }
