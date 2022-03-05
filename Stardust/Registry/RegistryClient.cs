@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using NewLife;
 using NewLife.Log;
-using NewLife.Net;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;

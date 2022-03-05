@@ -15,7 +15,6 @@ namespace Stardust.Data.Deployment
     [DataObject]
     [Description("部署在线。应用已部署的在运行中进程的在线记录")]
     [BindIndex("IX_AppDeployOnline_AppId_NodeId", false, "AppId,NodeId")]
-    [BindIndex("IX_AppDeployOnline_AppId", false, "AppId")]
     [BindIndex("IX_AppDeployOnline_NodeId", false, "NodeId")]
     [BindTable("AppDeployOnline", Description = "部署在线。应用已部署的在运行中进程的在线记录", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppDeployOnline
