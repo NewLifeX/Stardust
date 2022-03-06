@@ -15,7 +15,7 @@ namespace Stardust.Data.Monitors
     [DataObject]
     [Description("应用每日统计。每应用每日统计，用于分析应用健康状况")]
     [BindIndex("IU_AppDayStat_StatDate_AppId", true, "StatDate,AppId")]
-    [BindTable("AppDayStat", Description = "应用每日统计。每应用每日统计，用于分析应用健康状况", ConnName = "Monitor", DbType = DatabaseType.None)]
+    [BindTable("AppDayStat", Description = "应用每日统计。每应用每日统计，用于分析应用健康状况", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppDayStat
     {
         #region 属性

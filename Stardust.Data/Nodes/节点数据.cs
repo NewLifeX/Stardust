@@ -15,17 +15,17 @@ namespace Stardust.Data.Nodes
     [DataObject]
     [Description("节点数据。保存设备上来的一些数据，如心跳状态")]
     [BindIndex("IX_NodeData_NodeID", false, "NodeID")]
-    [BindTable("NodeData", Description = "节点数据。保存设备上来的一些数据，如心跳状态", ConnName = "NodeLog", DbType = DatabaseType.None)]
+    [BindTable("NodeData", Description = "节点数据。保存设备上来的一些数据，如心跳状态", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class NodeData
     {
         #region 属性
-        private Int64 _ID;
+        private Int64 _Id;
         /// <summary>编号</summary>
         [DisplayName("编号")]
         [Description("编号")]
         [DataObjectField(true, false, false, 0)]
-        [BindColumn("ID", "编号", "")]
-        public Int64 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+        [BindColumn("Id", "编号", "")]
+        public Int64 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
         private Int32 _NodeID;
         /// <summary>节点</summary>
@@ -198,7 +198,7 @@ namespace Stardust.Data.Nodes
             {
                 switch (name)
                 {
-                    case "ID": return _ID;
+                    case "Id": return _Id;
                     case "NodeID": return _NodeID;
                     case "Name": return _Name;
                     case "AvailableMemory": return _AvailableMemory;
@@ -226,7 +226,7 @@ namespace Stardust.Data.Nodes
             {
                 switch (name)
                 {
-                    case "ID": _ID = value.ToLong(); break;
+                    case "Id": _Id = value.ToLong(); break;
                     case "NodeID": _NodeID = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "AvailableMemory": _AvailableMemory = value.ToInt(); break;
@@ -258,7 +258,7 @@ namespace Stardust.Data.Nodes
         public partial class _
         {
             /// <summary>编号</summary>
-            public static readonly Field ID = FindByName("ID");
+            public static readonly Field Id = FindByName("Id");
 
             /// <summary>节点</summary>
             public static readonly Field NodeID = FindByName("NodeID");
@@ -327,7 +327,7 @@ namespace Stardust.Data.Nodes
         public partial class __
         {
             /// <summary>编号</summary>
-            public const String ID = "ID";
+            public const String Id = "Id";
 
             /// <summary>节点</summary>
             public const String NodeID = "NodeID";

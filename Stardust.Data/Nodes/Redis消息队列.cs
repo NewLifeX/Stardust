@@ -15,7 +15,7 @@ namespace Stardust.Data.Nodes
     [DataObject]
     [Description("Redis消息队列。Redis消息队列状态监控")]
     [BindIndex("IX_RedisMessageQueue_RedisId", false, "RedisId")]
-    [BindTable("RedisMessageQueue", Description = "Redis消息队列。Redis消息队列状态监控", ConnName = "Node", DbType = DatabaseType.None)]
+    [BindTable("RedisMessageQueue", Description = "Redis消息队列。Redis消息队列状态监控", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class RedisMessageQueue
     {
         #region 属性

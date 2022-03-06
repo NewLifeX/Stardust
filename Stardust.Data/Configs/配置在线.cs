@@ -18,7 +18,7 @@ namespace Stardust.Data.Configs
     [BindIndex("IX_ConfigOnline_AppId", false, "AppId")]
     [BindIndex("IX_ConfigOnline_UpdateTime", false, "UpdateTime")]
     [BindIndex("IX_ConfigOnline_Token", false, "Token")]
-    [BindTable("ConfigOnline", Description = "配置在线。一个应用有多个部署，每个在线会话对应一个服务地址", ConnName = "ConfigCenter", DbType = DatabaseType.None)]
+    [BindTable("ConfigOnline", Description = "配置在线。一个应用有多个部署，每个在线会话对应一个服务地址", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class ConfigOnline
     {
         #region 属性

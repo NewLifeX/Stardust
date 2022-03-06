@@ -135,11 +135,11 @@ namespace Stardust.Data
         public DateTime Compile { get => _Compile; set { if (OnPropertyChanging("Compile", value)) { _Compile = value; OnPropertyChanged("Compile"); } } }
 
         private String _IP;
-        /// <summary>IP地址。节点本地IP地址</summary>
-        [DisplayName("IP地址")]
-        [Description("IP地址。节点本地IP地址")]
+        /// <summary>本地IP。节点本地IP地址</summary>
+        [DisplayName("本地IP")]
+        [Description("本地IP。节点本地IP地址")]
         [DataObjectField(false, false, true, 200)]
-        [BindColumn("IP", "IP地址。节点本地IP地址", "")]
+        [BindColumn("IP", "本地IP。节点本地IP地址", "")]
         public String IP { get => _IP; set { if (OnPropertyChanging("IP", value)) { _IP = value; OnPropertyChanged("IP"); } } }
 
         private Int32 _WorkerId;
@@ -302,7 +302,7 @@ namespace Stardust.Data
             /// <summary>编译时间。客户端</summary>
             public static readonly Field Compile = FindByName("Compile");
 
-            /// <summary>IP地址。节点本地IP地址</summary>
+            /// <summary>本地IP。节点本地IP地址</summary>
             public static readonly Field IP = FindByName("IP");
 
             /// <summary>雪花标识</summary>
@@ -371,7 +371,7 @@ namespace Stardust.Data
             /// <summary>编译时间。客户端</summary>
             public const String Compile = "Compile";
 
-            /// <summary>IP地址。节点本地IP地址</summary>
+            /// <summary>本地IP。节点本地IP地址</summary>
             public const String IP = "IP";
 
             /// <summary>雪花标识</summary>

@@ -27,7 +27,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            if (p.Sort.IsNullOrEmpty()) p.OrderBy = NodeHistory._.ID.Desc();
+            if (p.Sort.IsNullOrEmpty()) p.OrderBy = NodeHistory._.Id.Desc();
 
             return NodeHistory.Search(nodeId, provinceId, cityId, action, success, start, end, p["Q"], p);
         }

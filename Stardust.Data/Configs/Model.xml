@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2022.xsd" NameSpace="Stardust.Data.Configs" ConnName="ConfigCenter" BaseClass="Entity" Output="" Version="11.0.2022.0304" Document="https://www.yuque.com/smartstone/xcode/model" xmlns="http://www.newlifex.com/Model2022.xsd">
+<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2022.xsd" NameSpace="Stardust.Data.Configs" ConnName="Stardust" BaseClass="Entity" Output="" Version="11.0.2022.0304" Document="https://www.yuque.com/smartstone/xcode/model" xmlns="http://www.newlifex.com/Model2022.xsd">
   <Table Name="AppConfig" Description="应用配置。需要管理配置的应用系统列表，每个应用以命令对形式管理配置数据，支持版本发布">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />

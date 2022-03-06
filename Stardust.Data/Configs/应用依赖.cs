@@ -16,7 +16,7 @@ namespace Stardust.Data.Configs
     [Description("应用依赖。应用可以引用依赖另一个应用")]
     [BindIndex("IX_AppQuote_AppId", false, "AppId")]
     [BindIndex("IX_AppQuote_TargetAppId", false, "TargetAppId")]
-    [BindTable("AppQuote", Description = "应用依赖。应用可以引用依赖另一个应用", ConnName = "ConfigCenter", DbType = DatabaseType.None)]
+    [BindTable("AppQuote", Description = "应用依赖。应用可以引用依赖另一个应用", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppQuote
     {
         #region 属性

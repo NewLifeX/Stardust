@@ -39,13 +39,6 @@ namespace Stardust.Server
             using var span = tracer?.NewSpan(nameof(ConfigureServices));
             if (tracer is StarTracer st) st.TrimSelf = false;
 
-            // 默认连接字符串，如果配置文件没有设置，则采用该值
-            DAL.ConnStrs.TryAdd("ConfigCenter", "MapTo=Stardust");
-            DAL.ConnStrs.TryAdd("Monitor", "MapTo=Stardust");
-            DAL.ConnStrs.TryAdd("MonitorLog", "MapTo=Stardust");
-            DAL.ConnStrs.TryAdd("Node", "MapTo=Stardust");
-            DAL.ConnStrs.TryAdd("NodeLog", "MapTo=Stardust");
-
             var cache = Cache.Default;
             services.AddSingleton(cache);
 

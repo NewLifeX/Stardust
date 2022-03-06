@@ -15,7 +15,7 @@ namespace Stardust.Data.Monitors
     [DataObject]
     [Description("跟踪项。应用下的多个埋点")]
     [BindIndex("IU_TraceItem_AppId_Name", true, "AppId,Name")]
-    [BindTable("TraceItem", Description = "跟踪项。应用下的多个埋点", ConnName = "Monitor", DbType = DatabaseType.None)]
+    [BindTable("TraceItem", Description = "跟踪项。应用下的多个埋点", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class TraceItem
     {
         #region 属性

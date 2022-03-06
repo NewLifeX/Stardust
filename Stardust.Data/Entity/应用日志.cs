@@ -16,7 +16,7 @@ namespace Stardust.Data
     [Description("应用日志")]
     [BindIndex("IX_AppLog_AppId_ClientId_ThreadId_Id", false, "AppId,ClientId,ThreadId,Id")]
     [BindIndex("IX_AppLog_AppId_Id", false, "AppId,Id")]
-    [BindTable("AppLog", Description = "应用日志", ConnName = "AppLog", DbType = DatabaseType.None)]
+    [BindTable("AppLog", Description = "应用日志", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppLog
     {
         #region 属性

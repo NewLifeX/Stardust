@@ -29,13 +29,6 @@ namespace Stardust.Web
             // 启用配置中心，务必在数据库操作和生成雪花Id之前
             _ = star.Config;
 
-            // 默认连接字符串，如果配置文件没有设置，则采用该值
-            DAL.ConnStrs.TryAdd("ConfigCenter", "MapTo=Stardust");
-            DAL.ConnStrs.TryAdd("Monitor", "MapTo=Stardust");
-            DAL.ConnStrs.TryAdd("MonitorLog", "MapTo=Stardust");
-            DAL.ConnStrs.TryAdd("Node", "MapTo=Stardust");
-            DAL.ConnStrs.TryAdd("NodeLog", "MapTo=Stardust");
-
             // 统计
             services.AddSingleton<IAppDayStatService, AppDayStatService>();
             services.AddSingleton<ITraceItemStatService, TraceItemStatService>();

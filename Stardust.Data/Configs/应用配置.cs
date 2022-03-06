@@ -16,7 +16,7 @@ namespace Stardust.Data.Configs
     [Description("应用配置。需要管理配置的应用系统列表，每个应用以命令对形式管理配置数据，支持版本发布")]
     [BindIndex("IU_AppConfig_Name", true, "Name")]
     [BindIndex("IX_AppConfig_AppId", false, "AppId")]
-    [BindTable("AppConfig", Description = "应用配置。需要管理配置的应用系统列表，每个应用以命令对形式管理配置数据，支持版本发布", ConnName = "ConfigCenter", DbType = DatabaseType.None)]
+    [BindTable("AppConfig", Description = "应用配置。需要管理配置的应用系统列表，每个应用以命令对形式管理配置数据，支持版本发布", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppConfig
     {
         #region 属性

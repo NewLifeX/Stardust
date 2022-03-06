@@ -14,7 +14,7 @@ namespace Stardust.Data.Configs
     [Serializable]
     [DataObject]
     [Description("应用规则。针对应用设置的规则，比如根据IP段设置作用域，可用于划分生产环境和开发测试环境")]
-    [BindTable("AppRule", Description = "应用规则。针对应用设置的规则，比如根据IP段设置作用域，可用于划分生产环境和开发测试环境", ConnName = "ConfigCenter", DbType = DatabaseType.None)]
+    [BindTable("AppRule", Description = "应用规则。针对应用设置的规则，比如根据IP段设置作用域，可用于划分生产环境和开发测试环境", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppRule
     {
         #region 属性

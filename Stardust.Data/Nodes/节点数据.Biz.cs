@@ -63,12 +63,12 @@ namespace Stardust.Data.Nodes
         /// <summary>根据编号查找</summary>
         /// <param name="id">编号</param>
         /// <returns>实体对象</returns>
-        public static NodeData FindByID(Int32 id)
+        public static NodeData FindById(Int32 id)
         {
             if (id <= 0) return null;
 
             // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
 
             // 单对象缓存
             return Meta.SingleCache[id];
@@ -94,7 +94,7 @@ namespace Stardust.Data.Nodes
         {
             if (nodeId <= 0) return null;
 
-            return FindAll(_.NodeID == nodeId, _.ID.Desc(), null, 0, 1).FirstOrDefault();
+            return FindAll(_.NodeID == nodeId, _.Id.Desc(), null, 0, 1).FirstOrDefault();
         }
         #endregion
 
@@ -115,7 +115,7 @@ namespace Stardust.Data.Nodes
             // 主键带有时间戳
             var flow = Meta.Factory.Snow;
             if (flow != null)
-                exp &= _.ID.Between(start, end, flow);
+                exp &= _.Id.Between(start, end, flow);
             else
                 exp &= _.CreateTime.Between(start, end);
 
@@ -139,7 +139,7 @@ namespace Stardust.Data.Nodes
         /// <summary>删除指定日期之前的数据</summary>
         /// <param name="date"></param>
         /// <returns></returns>
-        public static Int32 DeleteBefore(DateTime date) => Delete(_.ID < Meta.Factory.Snow.GetId(date));
+        public static Int32 DeleteBefore(DateTime date) => Delete(_.Id < Meta.Factory.Snow.GetId(date));
         #endregion
     }
 }

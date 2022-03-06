@@ -16,7 +16,7 @@ namespace Stardust.Data.Monitors
     [Description("应用跟踪器。负责追踪的应用管理和参数设置")]
     [BindIndex("IU_AppTracer_Name", true, "Name")]
     [BindIndex("IX_AppTracer_AppId", false, "AppId")]
-    [BindTable("AppTracer", Description = "应用跟踪器。负责追踪的应用管理和参数设置", ConnName = "Monitor", DbType = DatabaseType.None)]
+    [BindTable("AppTracer", Description = "应用跟踪器。负责追踪的应用管理和参数设置", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppTracer
     {
         #region 属性

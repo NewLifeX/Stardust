@@ -15,7 +15,7 @@ namespace Stardust.Data.Nodes
     [DataObject]
     [Description("节点版本。发布更新")]
     [BindIndex("IU_NodeVersion_Version", true, "Version")]
-    [BindTable("NodeVersion", Description = "节点版本。发布更新", ConnName = "Node", DbType = DatabaseType.None)]
+    [BindTable("NodeVersion", Description = "节点版本。发布更新", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class NodeVersion
     {
         #region 属性

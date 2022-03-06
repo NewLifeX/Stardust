@@ -34,7 +34,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                 PageSetting.EnableNavbar = false;
             }
 
-            if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.ID.Desc();
+            if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.Id.Desc();
 
             var list = NodeData.Search(nodeId, start, end, p["Q"], p);
 
@@ -44,7 +44,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                 var node = Node.FindByID(nodeId);
                 if (nodeId >= 0 && node != null)
                 {
-                    var list2 = list.OrderBy(e => e.ID).ToList();
+                    var list2 = list.OrderBy(e => e.Id).ToList();
 
                     var chart = new ECharts
                     {

@@ -15,7 +15,7 @@ namespace Stardust.Data.Monitors
     [DataObject]
     [Description("告警组。按照项目组设置告警，便于管理多节点和多应用，节点和应用的分类名对应组名")]
     [BindIndex("IU_AlarmGroup_Name", true, "Name")]
-    [BindTable("AlarmGroup", Description = "告警组。按照项目组设置告警，便于管理多节点和多应用，节点和应用的分类名对应组名", ConnName = "Monitor", DbType = DatabaseType.None)]
+    [BindTable("AlarmGroup", Description = "告警组。按照项目组设置告警，便于管理多节点和多应用，节点和应用的分类名对应组名", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AlarmGroup
     {
         #region 属性

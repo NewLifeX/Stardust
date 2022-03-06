@@ -15,7 +15,7 @@ namespace Stardust.Data.Configs
     [DataObject]
     [Description("配置数据。配置名值对，发布后才能生效，支持多作用域划分生产和开发测试环境")]
     [BindIndex("IU_ConfigData_AppId_Key_Scope", true, "AppId,Key,Scope")]
-    [BindTable("ConfigData", Description = "配置数据。配置名值对，发布后才能生效，支持多作用域划分生产和开发测试环境", ConnName = "ConfigCenter", DbType = DatabaseType.None)]
+    [BindTable("ConfigData", Description = "配置数据。配置名值对，发布后才能生效，支持多作用域划分生产和开发测试环境", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class ConfigData
     {
         #region 属性

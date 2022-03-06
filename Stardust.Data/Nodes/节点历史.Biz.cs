@@ -64,7 +64,7 @@ namespace Stardust.Data.Nodes
         /// <summary>根据编号查找</summary>
         /// <param name="id">编号</param>
         /// <returns>实体对象</returns>
-        public static NodeHistory FindByID(Int32 id)
+        public static NodeHistory FindById(Int32 id)
         {
             if (id <= 0) return null;
 
@@ -74,7 +74,7 @@ namespace Stardust.Data.Nodes
             //// 单对象缓存
             //return Meta.SingleCache[id];
 
-            return Find(_.ID == id);
+            return Find(_.Id == id);
         }
         #endregion
 
@@ -103,7 +103,7 @@ namespace Stardust.Data.Nodes
             // 主键带有时间戳
             var flow = Meta.Factory.Snow;
             if (flow != null)
-                exp &= _.ID.Between(start, end, flow);
+                exp &= _.Id.Between(start, end, flow);
             else
                 exp &= _.CreateTime.Between(start, end);
 

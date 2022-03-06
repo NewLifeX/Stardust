@@ -15,7 +15,7 @@ namespace Stardust.Data.Monitors
     [DataObject]
     [Description("告警历史。记录告警内容")]
     [BindIndex("IX_AlarmHistory_GroupId_Id", false, "GroupId,Id")]
-    [BindTable("AlarmHistory", Description = "告警历史。记录告警内容", ConnName = "Monitor", DbType = DatabaseType.None)]
+    [BindTable("AlarmHistory", Description = "告警历史。记录告警内容", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AlarmHistory
     {
         #region 属性

@@ -15,7 +15,7 @@ namespace Stardust.Data.Nodes
     [DataObject]
     [Description("Redis节点。Redis管理")]
     [BindIndex("IU_RedisNode_Server", true, "Server")]
-    [BindTable("RedisNode", Description = "Redis节点。Redis管理", ConnName = "Node", DbType = DatabaseType.None)]
+    [BindTable("RedisNode", Description = "Redis节点。Redis管理", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class RedisNode
     {
         #region 属性

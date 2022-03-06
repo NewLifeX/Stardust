@@ -18,7 +18,7 @@ namespace Stardust.Data.Nodes
     [BindIndex("IX_NodeOnline_Token", false, "Token")]
     [BindIndex("IX_NodeOnline_UpdateTime", false, "UpdateTime")]
     [BindIndex("IX_NodeOnline_ProvinceID_CityID", false, "ProvinceID,CityID")]
-    [BindTable("NodeOnline", Description = "节点在线", ConnName = "Node", DbType = DatabaseType.None)]
+    [BindTable("NodeOnline", Description = "节点在线", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class NodeOnline
     {
         #region 属性

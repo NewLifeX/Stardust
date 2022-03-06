@@ -16,7 +16,7 @@ namespace Stardust.Data.Nodes
     [Description("节点统计。每日统计")]
     [BindIndex("IU_NodeStat_StatDate_AreaID", true, "StatDate,AreaID")]
     [BindIndex("IX_NodeStat_UpdateTime_AreaID", false, "UpdateTime,AreaID")]
-    [BindTable("NodeStat", Description = "节点统计。每日统计", ConnName = "Node", DbType = DatabaseType.None)]
+    [BindTable("NodeStat", Description = "节点统计。每日统计", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class NodeStat
     {
         #region 属性
