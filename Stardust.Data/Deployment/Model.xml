@@ -2,7 +2,7 @@
 <Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://www.newlifex.com http://www.newlifex.com/Model2022.xsd" NameSpace="Stardust.Data.Deployment" ConnName="Stardust" BaseClass="Entity" Output="" Version="11.0.2022.0304" Document="https://www.yuque.com/smartstone/xcode/model" xmlns="http://www.newlifex.com/Model2022.xsd">
   <Table Name="AppDeploy" Description="应用部署。关联多个版本，关联多个节点服务器">
     <Columns>
-      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="Id" DataType="Int32" PrimaryKey="True" Description="编号" />
       <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="Name" DataType="String" Master="True" Description="名称。应用名" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />

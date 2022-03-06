@@ -169,9 +169,12 @@ namespace Stardust.Data
         public static AppOnline UpdateOnline(App app, String clientId, String ip, String token, AppInfo info = null)
         {
             var online = GetOrAddClient(clientId) ?? GetOrAddClient(ip, token);
-            //online.AppId = app.Id;
-            //online.Name = app.Name;
-            //online.Category = app.Category;
+            //if (app != null)
+            //{
+            //    online.AppId = app.Id;
+            //    online.Name = app.Name;
+            //    online.Category = app.Category;
+            //}
             online.Token = token;
             online.PingCount++;
             if (online.CreateIP.IsNullOrEmpty()) online.CreateIP = ip;
@@ -192,7 +195,7 @@ namespace Stardust.Data
             if (app != null)
             {
                 AppId = app.Id;
-                //Name = app.Name;
+                Name = app.Name;
                 Category = app.Category;
             }
 

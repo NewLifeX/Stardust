@@ -34,7 +34,9 @@
       <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="Name" DataType="String" Master="True" Description="名称。机器名称" />
+      <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
       <Column Name="Client" DataType="String" Description="客户端。IP加进程" />
+      <Column Name="Scope" DataType="String" Description="作用域" />
       <Column Name="PingCount" DataType="Int32" Description="心跳" />
       <Column Name="ProcessId" DataType="Int32" Description="进程" />
       <Column Name="ProcessName" DataType="String" Description="进程名称" />
@@ -42,6 +44,8 @@
       <Column Name="StartTime" DataType="DateTime" Description="进程时间" />
       <Column Name="Version" DataType="String" Description="版本。客户端" />
       <Column Name="Compile" DataType="DateTime" Description="编译时间。客户端" />
+      <Column Name="IP" DataType="String" Length="200" Description="IP地址。节点本地IP地址" />
+      <Column Name="WorkerId" DataType="Int32" Description="雪花标识" />
       <Column Name="Token" DataType="String" Length="500" Description="令牌" />
       <Column Name="Creator" DataType="String" Description="创建者。服务端节点" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
@@ -51,8 +55,8 @@
     <Indexes>
       <Index Columns="Client" Unique="True" />
       <Index Columns="AppId" />
-      <Index Columns="UpdateTime" />
       <Index Columns="Token" />
+      <Index Columns="UpdateTime" />
     </Indexes>
   </Table>
   <Table Name="AppHistory" Description="应用历史">

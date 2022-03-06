@@ -17,8 +17,13 @@ namespace Stardust.Web.Controllers
     public class ConfigController : ControllerBase
     {
         private readonly ConfigService _configService;
+        private readonly TokenService _tokenService;
 
-        public ConfigController(ConfigService configService) => _configService = configService;
+        public ConfigController(ConfigService configService, TokenService tokenService)
+        {
+            _configService = configService;
+            _tokenService = tokenService;
+        }
 
         [ApiFilter]
         public ConfigInfo GetAll(String appId, String secret, String scope, Int32 version)
@@ -55,9 +60,9 @@ namespace Stardust.Web.Controllers
             };
         }
 
-        private AppConfig Valid(String appId, String secret, out ConfigOnline online)
+        private AppConfig Valid(String appId, String secret, out AppOnline online)
         {
-            var ap = Authorize(appId, secret, true);
+            var ap = _tokenService.Authorize(appId, secret, false);
 
             var app = AppConfig.FindByName(appId);
             if (app == null) app = AppConfig.Find(AppConfig._.Name == appId);
@@ -74,30 +79,13 @@ namespace Stardust.Web.Controllers
 
             // 更新心跳信息
             var ip = HttpContext.GetUserHost();
-            online = ConfigOnline.UpdateOnline(app, null, ip, appId);
+            online = AppOnline.UpdateOnline(ap, null, ip, appId);
 
             // 检查应用有效性
             if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
 
             // 刷新WorkerId
             if (app.EnableWorkerId && online.WorkerId <= 0) _configService.RefreshWorkerId(app, online);
-
-            return app;
-        }
-
-        private App Authorize(String appId, String secret, Boolean autoRegister)
-        {
-            if (appId.IsNullOrEmpty()) throw new ArgumentNullException(nameof(appId));
-            //if (password.IsNullOrEmpty()) throw new ArgumentNullException(nameof(password));
-
-            // 查找应用
-            var app = App.FindByName(appId);
-            //if (app == null) return null;
-            if (app == null) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]不存在！");
-
-            // 检查应用有效性
-            if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
-            if (!app.Secret.IsNullOrEmpty() && secret != app.Secret) throw new InvalidOperationException($"非法访问应用[{appId}]！");
 
             return app;
         }

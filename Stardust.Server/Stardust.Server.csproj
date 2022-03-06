@@ -13,25 +13,9 @@
     <Deterministic>false</Deterministic>
     <OutputPath>..\Bin\Server</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <DefineConstants>TRACE</DefineConstants>
+    <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
-    <UserSecretsId>377ee3b4-0b0b-46ea-9059-cca0d3fa451e</UserSecretsId>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Middlewares\**" />
-    <Content Remove="Middlewares\**" />
-    <EmbeddedResource Remove="Middlewares\**" />
-    <None Remove="Middlewares\**" />
-  </ItemGroup>
 
   <ItemGroup>
     <Compile Remove="Common\TokenFilter.cs" />

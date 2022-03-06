@@ -5,6 +5,7 @@ using System.Text.Json;
 using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
+using Stardust.Data;
 using Stardust.Data.Configs;
 
 namespace Stardust.Server.Services
@@ -171,7 +172,7 @@ namespace Stardust.Server.Services
         /// <param name="app"></param>
         /// <param name="online"></param>
         /// <returns></returns>
-        public Int32 RefreshWorkerId(AppConfig app, ConfigOnline online)
+        public Int32 RefreshWorkerId(AppConfig app, AppOnline online)
         {
             if (!app.EnableWorkerId) return -1;
 

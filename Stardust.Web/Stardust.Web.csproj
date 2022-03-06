@@ -13,28 +13,14 @@
     <Deterministic>false</Deterministic>
     <OutputPath>..\Bin\Web</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <DefineConstants>TRACE</DefineConstants>
+    <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
-    <UserSecretsId>e3e3a3d0-b0bb-4ba7-b3f8-b0f7ba5314fa</UserSecretsId>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Areas\Nodes\Views\Shared\**" />
-    <Content Remove="Areas\Nodes\Views\Shared\**" />
-    <EmbeddedResource Remove="Areas\Nodes\Views\Shared\**" />
-    <None Remove="Areas\Nodes\Views\Shared\**" />
-  </ItemGroup>
 
   <ItemGroup>
     <Compile Remove="Areas\Configs\Controllers\AppQuoteController.cs" />
+    <Compile Remove="Areas\Configs\Controllers\ConfigOnlineController.cs" />
+    <Compile Remove="Areas\Deployment\Controllers\AppDeployOnlineController.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,6 +29,7 @@
     <Compile Include="..\Stardust.Server\Services\AppDayStatService.cs" Link="Services\AppDayStatService.cs" />
     <Compile Include="..\Stardust.Server\Services\ConfigService.cs" Link="Services\ConfigService.cs" />
     <Compile Include="..\Stardust.Server\Services\RedisService.cs" Link="Services\RedisService.cs" />
+    <Compile Include="..\Stardust.Server\Services\TokenService.cs" Link="Services\TokenService.cs" />
     <Compile Include="..\Stardust.Server\Services\TraceItemStatService.cs" Link="Services\TraceItemStatService.cs" />
     <Compile Include="..\Stardust.Server\Services\TraceStatService.cs" Link="Services\TraceStatService.cs" />
   </ItemGroup>
@@ -60,6 +47,10 @@
 
   <ItemGroup>
     <Folder Include="Services\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Areas\Nodes\Views\Shared\_SelectNode.cshtml" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

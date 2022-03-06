@@ -754,7 +754,7 @@ namespace Stardust.Server.Controllers
             var node = Node.FindByCode(model.Code);
             if (node == null) throw new ArgumentOutOfRangeException(nameof(model.Code), "无效节点");
 
-            var app = _tokenService.DecodeToken(token, Setting.Current);
+            var app = _tokenService.DecodeToken(token, Setting.Current.TokenSecret);
             if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new InvalidOperationException("无权操作！");
 
             if (app.AllowControlNodes != "*" && !node.Code.EqualIgnoreCase(app.AllowControlNodes.Split(",")))

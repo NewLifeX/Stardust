@@ -79,6 +79,8 @@ namespace Stardust.Data.Deployment
         /// <returns>实体列表</returns>
         public static IList<AppDeployNode> FindAllByAppId(Int32 appId)
         {
+            if (appId <= 0) return new List<AppDeployNode>();
+
             // 实体缓存
             if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId);
 

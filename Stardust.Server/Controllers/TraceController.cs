@@ -50,7 +50,7 @@ namespace Stardust.Server.Controllers
             App ap = null;
             if (!token.IsNullOrEmpty() && token.Split(".").Length == 3)
             {
-                ap = _service.DecodeToken(token, set);
+                ap = _service.DecodeToken(token, set.TokenSecret);
                 //if (ap == null || ap.Name != model.AppId) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{ap?.Name}]！");
                 if (ap == null) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{ap?.Name}]！");
             }
@@ -59,7 +59,7 @@ namespace Stardust.Server.Controllers
             var clientId = model.ClientId;
             if (clientId.IsNullOrEmpty())
             {
-                var (jwt, ex) = _service.DecodeToken(token, set.TokenSecret);
+                var (jwt, ex) = _service.DecodeTokenWithError(token, set.TokenSecret);
                 clientId = jwt?.Id;
             }
             AppOnline.UpdateOnline(ap, clientId, ip, token, model.Info);

@@ -51,7 +51,7 @@ namespace Stardust.Server.Controllers
             // 刷新令牌
             else if (model.grant_type == "refresh_token")
             {
-                var (jwt, ex) = _service.DecodeToken(model.refresh_token, set.TokenSecret);
+                var (jwt, ex) = _service.DecodeTokenWithError(model.refresh_token, set.TokenSecret);
 
                 // 验证应用
                 var app = App.FindByName(jwt?.Subject);
@@ -84,7 +84,7 @@ namespace Stardust.Server.Controllers
         {
             var set = Setting.Current;
 
-            var app = _service.DecodeToken(token, set);
+            var app = _service.DecodeToken(token, set.TokenSecret);
             return new
             {
                 app.Id,

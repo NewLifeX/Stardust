@@ -47,7 +47,7 @@ namespace Stardust.Server.Controllers
                 ServerTime = DateTime.UtcNow,
             };
 
-            var app = _tokenService.DecodeToken(token, Setting.Current);
+            var app = _tokenService.DecodeToken(token, Setting.Current.TokenSecret);
             if (app != null)
             {
                 var ip = UserHost;
@@ -110,7 +110,7 @@ namespace Stardust.Server.Controllers
 
         private async Task Handle(WebSocket socket, String token)
         {
-            var app = _tokenService.DecodeToken(token, Setting.Current);
+            var app = _tokenService.DecodeToken(token, Setting.Current.TokenSecret);
             if (app == null) throw new InvalidOperationException("未登录！");
 
             XTrace.WriteLine("WebSocket连接 {0}", app);
@@ -197,7 +197,7 @@ namespace Stardust.Server.Controllers
             var node = App.FindByName(model.Code);
             if (node == null) throw new ArgumentOutOfRangeException(nameof(model.Code), "无效应用");
 
-            var app = _tokenService.DecodeToken(token, Setting.Current);
+            var app = _tokenService.DecodeToken(token, Setting.Current.TokenSecret);
             if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new InvalidOperationException("无权操作！");
 
             if (app.AllowControlNodes != "*" && !node.Name.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
@@ -240,7 +240,7 @@ namespace Stardust.Server.Controllers
         [HttpPost]
         public AppService RegisterService([FromBody] PublishServiceInfo service, String token)
         {
-            var app = _tokenService.DecodeToken(token, Setting.Current);
+            var app = _tokenService.DecodeToken(token, Setting.Current.TokenSecret);
             var info = GetService(service.ServiceName);
 
             // 所有服务
@@ -296,7 +296,7 @@ namespace Stardust.Server.Controllers
         [HttpPost]
         public AppService UnregisterService([FromBody] PublishServiceInfo service, String token)
         {
-            var app = _tokenService.DecodeToken(token, Setting.Current);
+            var app = _tokenService.DecodeToken(token, Setting.Current.TokenSecret);
             var info = GetService(service.ServiceName);
 
             // 所有服务
@@ -325,7 +325,7 @@ namespace Stardust.Server.Controllers
         [HttpPost]
         public ServiceModel[] ResolveService([FromBody] ConsumeServiceInfo model, String token)
         {
-            var app = _tokenService.DecodeToken(token, Setting.Current);
+            var app = _tokenService.DecodeToken(token, Setting.Current.TokenSecret);
             var info = GetService(model.ServiceName);
 
             // 所有消费

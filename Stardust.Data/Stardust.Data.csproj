@@ -19,6 +19,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Configs\配置在线.Biz.cs" />
+    <Compile Remove="Configs\配置在线.cs" />
+    <Compile Remove="Deployment\部署在线.Biz.cs" />
+    <Compile Remove="Deployment\部署在线.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="NewLife.XCode" Version="11.0.2022.304" />
   </ItemGroup>
 

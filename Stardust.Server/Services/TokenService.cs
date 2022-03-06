@@ -11,7 +11,7 @@ namespace Stardust.Server.Services
     /// <summary>应用服务</summary>
     public class TokenService
     {
-        /// <summary>验证应用密码</summary>
+        /// <summary>验证应用密码，不存在时新增</summary>
         /// <param name="username"></param>
         /// <param name="password"></param>
         /// <param name="autoRegister"></param>
@@ -80,7 +80,7 @@ namespace Stardust.Server.Services
         /// <param name="token"></param>
         /// <param name="tokenSecret"></param>
         /// <returns></returns>
-        public (JwtBuilder, Exception) DecodeToken(String token, String tokenSecret)
+        public (JwtBuilder, Exception) DecodeTokenWithError(String token, String tokenSecret)
         {
             if (token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(token));
 
@@ -100,14 +100,14 @@ namespace Stardust.Server.Services
 
         /// <summary>解码令牌</summary>
         /// <param name="token"></param>
-        /// <param name="set"></param>
+        /// <param name="tokenSecret"></param>
         /// <returns></returns>
-        public App DecodeToken(String token, Setting set)
+        public App DecodeToken(String token, String tokenSecret)
         {
             if (token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(token));
 
             // 解码令牌
-            var ss = set.TokenSecret.Split(':');
+            var ss = tokenSecret.Split(':');
             var jwt = new JwtBuilder
             {
                 Algorithm = ss[0],

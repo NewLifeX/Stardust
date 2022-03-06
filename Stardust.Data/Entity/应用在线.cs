@@ -16,8 +16,8 @@ namespace Stardust.Data
     [Description("应用在线。一个应用有多个部署，每个在线会话对应一个服务地址")]
     [BindIndex("IU_AppOnline_Client", true, "Client")]
     [BindIndex("IX_AppOnline_AppId", false, "AppId")]
-    [BindIndex("IX_AppOnline_UpdateTime", false, "UpdateTime")]
     [BindIndex("IX_AppOnline_Token", false, "Token")]
+    [BindIndex("IX_AppOnline_UpdateTime", false, "UpdateTime")]
     [BindTable("AppOnline", Description = "应用在线。一个应用有多个部署，每个在线会话对应一个服务地址", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppOnline
     {
@@ -54,6 +54,14 @@ namespace Stardust.Data
         [BindColumn("Name", "名称。机器名称", "", Master = true)]
         public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
+        private Int32 _NodeId;
+        /// <summary>节点。节点服务器</summary>
+        [DisplayName("节点")]
+        [Description("节点。节点服务器")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("NodeId", "节点。节点服务器", "")]
+        public Int32 NodeId { get => _NodeId; set { if (OnPropertyChanging("NodeId", value)) { _NodeId = value; OnPropertyChanged("NodeId"); } } }
+
         private String _Client;
         /// <summary>客户端。IP加进程</summary>
         [DisplayName("客户端")]
@@ -61,6 +69,14 @@ namespace Stardust.Data
         [DataObjectField(false, false, true, 50)]
         [BindColumn("Client", "客户端。IP加进程", "")]
         public String Client { get => _Client; set { if (OnPropertyChanging("Client", value)) { _Client = value; OnPropertyChanged("Client"); } } }
+
+        private String _Scope;
+        /// <summary>作用域</summary>
+        [DisplayName("作用域")]
+        [Description("作用域")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Scope", "作用域", "")]
+        public String Scope { get => _Scope; set { if (OnPropertyChanging("Scope", value)) { _Scope = value; OnPropertyChanged("Scope"); } } }
 
         private Int32 _PingCount;
         /// <summary>心跳</summary>
@@ -118,6 +134,22 @@ namespace Stardust.Data
         [BindColumn("Compile", "编译时间。客户端", "")]
         public DateTime Compile { get => _Compile; set { if (OnPropertyChanging("Compile", value)) { _Compile = value; OnPropertyChanged("Compile"); } } }
 
+        private String _IP;
+        /// <summary>IP地址。节点本地IP地址</summary>
+        [DisplayName("IP地址")]
+        [Description("IP地址。节点本地IP地址")]
+        [DataObjectField(false, false, true, 200)]
+        [BindColumn("IP", "IP地址。节点本地IP地址", "")]
+        public String IP { get => _IP; set { if (OnPropertyChanging("IP", value)) { _IP = value; OnPropertyChanged("IP"); } } }
+
+        private Int32 _WorkerId;
+        /// <summary>雪花标识</summary>
+        [DisplayName("雪花标识")]
+        [Description("雪花标识")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("WorkerId", "雪花标识", "")]
+        public Int32 WorkerId { get => _WorkerId; set { if (OnPropertyChanging("WorkerId", value)) { _WorkerId = value; OnPropertyChanged("WorkerId"); } } }
+
         private String _Token;
         /// <summary>令牌</summary>
         [DisplayName("令牌")]
@@ -173,7 +205,9 @@ namespace Stardust.Data
                     case "Category": return _Category;
                     case "AppId": return _AppId;
                     case "Name": return _Name;
+                    case "NodeId": return _NodeId;
                     case "Client": return _Client;
+                    case "Scope": return _Scope;
                     case "PingCount": return _PingCount;
                     case "ProcessId": return _ProcessId;
                     case "ProcessName": return _ProcessName;
@@ -181,6 +215,8 @@ namespace Stardust.Data
                     case "StartTime": return _StartTime;
                     case "Version": return _Version;
                     case "Compile": return _Compile;
+                    case "IP": return _IP;
+                    case "WorkerId": return _WorkerId;
                     case "Token": return _Token;
                     case "Creator": return _Creator;
                     case "CreateTime": return _CreateTime;
@@ -197,7 +233,9 @@ namespace Stardust.Data
                     case "Category": _Category = Convert.ToString(value); break;
                     case "AppId": _AppId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
+                    case "NodeId": _NodeId = value.ToInt(); break;
                     case "Client": _Client = Convert.ToString(value); break;
+                    case "Scope": _Scope = Convert.ToString(value); break;
                     case "PingCount": _PingCount = value.ToInt(); break;
                     case "ProcessId": _ProcessId = value.ToInt(); break;
                     case "ProcessName": _ProcessName = Convert.ToString(value); break;
@@ -205,6 +243,8 @@ namespace Stardust.Data
                     case "StartTime": _StartTime = value.ToDateTime(); break;
                     case "Version": _Version = Convert.ToString(value); break;
                     case "Compile": _Compile = value.ToDateTime(); break;
+                    case "IP": _IP = Convert.ToString(value); break;
+                    case "WorkerId": _WorkerId = value.ToInt(); break;
                     case "Token": _Token = Convert.ToString(value); break;
                     case "Creator": _Creator = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -232,8 +272,14 @@ namespace Stardust.Data
             /// <summary>名称。机器名称</summary>
             public static readonly Field Name = FindByName("Name");
 
+            /// <summary>节点。节点服务器</summary>
+            public static readonly Field NodeId = FindByName("NodeId");
+
             /// <summary>客户端。IP加进程</summary>
             public static readonly Field Client = FindByName("Client");
+
+            /// <summary>作用域</summary>
+            public static readonly Field Scope = FindByName("Scope");
 
             /// <summary>心跳</summary>
             public static readonly Field PingCount = FindByName("PingCount");
@@ -255,6 +301,12 @@ namespace Stardust.Data
 
             /// <summary>编译时间。客户端</summary>
             public static readonly Field Compile = FindByName("Compile");
+
+            /// <summary>IP地址。节点本地IP地址</summary>
+            public static readonly Field IP = FindByName("IP");
+
+            /// <summary>雪花标识</summary>
+            public static readonly Field WorkerId = FindByName("WorkerId");
 
             /// <summary>令牌</summary>
             public static readonly Field Token = FindByName("Token");
@@ -289,8 +341,14 @@ namespace Stardust.Data
             /// <summary>名称。机器名称</summary>
             public const String Name = "Name";
 
+            /// <summary>节点。节点服务器</summary>
+            public const String NodeId = "NodeId";
+
             /// <summary>客户端。IP加进程</summary>
             public const String Client = "Client";
+
+            /// <summary>作用域</summary>
+            public const String Scope = "Scope";
 
             /// <summary>心跳</summary>
             public const String PingCount = "PingCount";
@@ -312,6 +370,12 @@ namespace Stardust.Data
 
             /// <summary>编译时间。客户端</summary>
             public const String Compile = "Compile";
+
+            /// <summary>IP地址。节点本地IP地址</summary>
+            public const String IP = "IP";
+
+            /// <summary>雪花标识</summary>
+            public const String WorkerId = "WorkerId";
 
             /// <summary>令牌</summary>
             public const String Token = "Token";

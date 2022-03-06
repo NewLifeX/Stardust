@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
+using Stardust.Data;
 using Stardust.Data.Configs;
 using Stardust.Models;
 using Stardust.Server.Common;
@@ -106,13 +107,13 @@ namespace Stardust.Server.Controllers
             };
         }
 
-        private (AppConfig, ConfigOnline) Valid(String appId, String secret, String clientId, String token)
+        private (AppConfig, AppOnline) Valid(String appId, String secret, String clientId, String token)
         {
             var set = Setting.Current;
 
             if (appId.IsNullOrEmpty() && !token.IsNullOrEmpty())
             {
-                var ap1 = _tokenService.DecodeToken(token, set);
+                var ap1 = _tokenService.DecodeToken(token, set.TokenSecret);
                 appId = ap1?.Name;
             }
 
@@ -146,13 +147,13 @@ namespace Stardust.Server.Controllers
                 clientId = ip;
                 if (!token.IsNullOrEmpty())
                 {
-                    var (jwt, _) = _tokenService.DecodeToken(token, set.TokenSecret);
+                    var (jwt, _) = _tokenService.DecodeTokenWithError(token, set.TokenSecret);
                     clientId = jwt?.Id;
                 }
             }
 
             // 更新心跳信息
-            var online = ConfigOnline.UpdateOnline(app, clientId, ip, token);
+            var online = AppOnline.UpdateOnline(ap, clientId, ip, token);
 
             // 检查应用有效性
             if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");

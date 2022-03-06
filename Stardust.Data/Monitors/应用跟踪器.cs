@@ -15,6 +15,7 @@ namespace Stardust.Data.Monitors
     [DataObject]
     [Description("应用跟踪器。负责追踪的应用管理和参数设置")]
     [BindIndex("IU_AppTracer_Name", true, "Name")]
+    [BindIndex("IX_AppTracer_AppId", false, "AppId")]
     [BindTable("AppTracer", Description = "应用跟踪器。负责追踪的应用管理和参数设置", ConnName = "Monitor", DbType = DatabaseType.None)]
     public partial class AppTracer
     {
@@ -26,6 +27,14 @@ namespace Stardust.Data.Monitors
         [DataObjectField(true, true, false, 0)]
         [BindColumn("ID", "编号", "")]
         public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+
+        private Int32 _AppId;
+        /// <summary>应用</summary>
+        [DisplayName("应用")]
+        [Description("应用")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AppId", "应用", "")]
+        public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
         private String _Name;
         /// <summary>名称</summary>
@@ -247,6 +256,7 @@ namespace Stardust.Data.Monitors
                 switch (name)
                 {
                     case "ID": return _ID;
+                    case "AppId": return _AppId;
                     case "Name": return _Name;
                     case "DisplayName": return _DisplayName;
                     case "Category": return _Category;
@@ -281,6 +291,7 @@ namespace Stardust.Data.Monitors
                 switch (name)
                 {
                     case "ID": _ID = value.ToInt(); break;
+                    case "AppId": _AppId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "DisplayName": _DisplayName = Convert.ToString(value); break;
                     case "Category": _Category = Convert.ToString(value); break;
@@ -319,6 +330,9 @@ namespace Stardust.Data.Monitors
         {
             /// <summary>编号</summary>
             public static readonly Field ID = FindByName("ID");
+
+            /// <summary>应用</summary>
+            public static readonly Field AppId = FindByName("AppId");
 
             /// <summary>名称</summary>
             public static readonly Field Name = FindByName("Name");
@@ -406,6 +420,9 @@ namespace Stardust.Data.Monitors
         {
             /// <summary>编号</summary>
             public const String ID = "ID";
+
+            /// <summary>应用</summary>
+            public const String AppId = "AppId";
 
             /// <summary>名称</summary>
             public const String Name = "Name";

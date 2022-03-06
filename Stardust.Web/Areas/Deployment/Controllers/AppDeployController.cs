@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
+using Stardust.Data;
 using Stardust.Data.Deployment;
 using XCode;
 
@@ -93,6 +94,10 @@ namespace Stardust.Web.Areas.Deployment.Controllers
 
                 return base.Valid(entity, type, post);
             }
+
+            // 从应用表继承ID
+            var app = App.FindByName(entity.Name);
+            if (app != null) entity.Id = app.Id;
 
             entity.Refresh();
             return base.Valid(entity, type, post);
