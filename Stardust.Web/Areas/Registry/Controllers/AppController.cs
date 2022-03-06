@@ -18,8 +18,21 @@ namespace Stardust.Web.Areas.Registry.Controllers
         {
             LogOnChange = true;
 
-            ListFields.RemoveField("Secret");
+            ListFields.RemoveField("Secret", "WebHook");
+            ListFields.RemoveCreateField();
 
+            {
+                var df = ListFields.AddListField("Online", "LastLogin");
+                df.DisplayName = "在线";
+                df.Header = "在线";
+                df.Url = "AppOnline?appId={Id}";
+            }
+            {
+                var df = ListFields.AddListField("AppLog", "LastLogin");
+                df.DisplayName = "应用日志";
+                df.Header = "应用日志";
+                df.Url = "AppLog?appId={Id}";
+            }
             {
                 var df = ListFields.AddListField("History", null, "AutoActive");
                 df.DisplayName = "历史";
@@ -51,12 +64,6 @@ namespace Stardust.Web.Areas.Registry.Controllers
                 df.Header = "消费服务";
                 df.Url = "AppConsume?appId={Id}";
                 df.DataVisible = (e, f) => (e as App).Consumers.Count > 0;
-            }
-            {
-                var df = ListFields.AddListField("AppLog", null, "AutoActive");
-                df.DisplayName = "应用日志";
-                df.Header = "应用日志";
-                df.Url = "AppLog?appId={Id}";
             }
             {
                 var df = ListFields.AddListField("Log", "CreateUser");
