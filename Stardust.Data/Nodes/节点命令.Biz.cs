@@ -54,12 +54,12 @@ namespace Stardust.Data.Nodes
         /// <summary>根据编号查找</summary>
         /// <param name="id">编号</param>
         /// <returns>实体对象</returns>
-        public static NodeCommand FindByID(Int32 id)
+        public static NodeCommand FindById(Int32 id)
         {
             if (id <= 0) return null;
 
             // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
 
             // 单对象缓存
             return Meta.SingleCache[id];
@@ -97,7 +97,7 @@ namespace Stardust.Data.Nodes
         /// <param name="nodeId"></param>
         /// <param name="count"></param>
         /// <returns></returns>
-        public static IList<NodeCommand> AcquireCommands(Int32 nodeId, Int32 count = 100) => FindAll(_.NodeID == nodeId & _.Status <= CommandStatus.处理中, _.ID.Asc(), null, 0, count);
+        public static IList<NodeCommand> AcquireCommands(Int32 nodeId, Int32 count = 100) => FindAll(_.NodeID == nodeId & _.Status <= CommandStatus.处理中, _.Id.Asc(), null, 0, count);
 
         /// <summary>添加节点命令</summary>
         /// <param name="node"></param>
@@ -123,7 +123,7 @@ namespace Stardust.Data.Nodes
         {
             return new CommandModel
             {
-                Id = ID,
+                Id = Id,
                 Command = Command,
                 Argument = Argument,
                 Expire = Expire,

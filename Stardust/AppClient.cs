@@ -180,7 +180,7 @@ namespace Stardust
                         XTrace.WriteLine("Got Command: {0}", model.ToJson());
                         if (model.Expire.Year < 2000 || model.Expire > DateTime.Now)
                         {
-                            OnReceiveCommand(model);
+                            await OnReceiveCommand(model);
                         }
                     }
                 }
@@ -197,13 +197,18 @@ namespace Stardust
         /// 触发收到命令的动作
         /// </summary>
         /// <param name="model"></param>
-        protected virtual void OnReceiveCommand(CommandModel model)
+        protected virtual async Task OnReceiveCommand(CommandModel model)
         {
             var e = new CommandEventArgs { Model = model };
             Received?.Invoke(this, e);
 
-            //if (e.Reply != null) ServiceReply(e.Reply).Wait();
+            if (e.Reply != null) await CommandReply(e.Reply);
         }
+
+        /// <summary>上报服务调用结果</summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public virtual async Task<Object> CommandReply(CommandReplyModel model) => await PostAsync<Object>("Node/CommandReply", model);
         #endregion
 
         #region 发布、消费

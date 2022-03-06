@@ -180,7 +180,7 @@
   </Table>
   <Table Name="NodeCommand" Description="节点命令">
     <Columns>
-      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="NodeID" DataType="Int32" Description="节点" />
       <Column Name="Command" DataType="String" Master="True" Description="命令" />
       <Column Name="Argument" DataType="String" Length="500" Description="参数" />

@@ -270,6 +270,7 @@ namespace Stardust
             }
             catch (Exception ex)
             {
+                rs.Status = CommandStatus.错误;
                 rs.Data = ex.Message;
             }
 

@@ -512,7 +512,7 @@ namespace Stardust.Server.Controllers
             var node = DecodeToken(token, Setting.Current.TokenSecret);
             if (node == null) throw new ApiException(402, "节点未登录");
 
-            var cmd = NodeCommand.FindByID(id);
+            var cmd = NodeCommand.FindById(id);
             if (cmd != null && cmd.NodeID == node.ID)
             {
                 var ms = Request.Body;
@@ -540,7 +540,7 @@ namespace Stardust.Server.Controllers
 
         private async Task<String> SaveFileAsync(NodeCommand cmd, Stream ms, String ext)
         {
-            var file = $"../{cmd.Command}/{DateTime.Today:yyyyMMdd}/{cmd.NodeID}_{cmd.ID}.{ext}";
+            var file = $"../{cmd.Command}/{DateTime.Today:yyyyMMdd}/{cmd.NodeID}_{cmd.Id}.{ext}";
             file.EnsureDirectory(true);
 
             using var fs = file.AsFile().OpenWrite();
@@ -560,7 +560,7 @@ namespace Stardust.Server.Controllers
             var node = DecodeToken(token, Setting.Current.TokenSecret);
             if (node == null) throw new ApiException(402, "节点未登录");
 
-            var cmd = NodeCommand.FindByID(model.Id);
+            var cmd = NodeCommand.FindById(model.Id);
             if (cmd == null) return 0;
 
             cmd.Status = model.Status;
@@ -777,7 +777,7 @@ namespace Stardust.Server.Controllers
             var queue = _queue.GetQueue<String>($"nodecmd:{node.Code}");
             queue.Add(cmd.ToModel().ToJson());
 
-            return cmd.ID;
+            return cmd.Id;
         }
         #endregion
 

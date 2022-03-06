@@ -21,13 +21,13 @@ namespace Stardust.Data.Nodes
     public partial class NodeCommand
     {
         #region 属性
-        private Int32 _ID;
+        private Int32 _Id;
         /// <summary>编号</summary>
         [DisplayName("编号")]
         [Description("编号")]
         [DataObjectField(true, true, false, 0)]
-        [BindColumn("ID", "编号", "")]
-        public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+        [BindColumn("Id", "编号", "")]
+        public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
         private Int32 _NodeID;
         /// <summary>节点</summary>
@@ -152,7 +152,7 @@ namespace Stardust.Data.Nodes
             {
                 switch (name)
                 {
-                    case "ID": return _ID;
+                    case "Id": return _Id;
                     case "NodeID": return _NodeID;
                     case "Command": return _Command;
                     case "Argument": return _Argument;
@@ -174,7 +174,7 @@ namespace Stardust.Data.Nodes
             {
                 switch (name)
                 {
-                    case "ID": _ID = value.ToInt(); break;
+                    case "Id": _Id = value.ToInt(); break;
                     case "NodeID": _NodeID = value.ToInt(); break;
                     case "Command": _Command = Convert.ToString(value); break;
                     case "Argument": _Argument = Convert.ToString(value); break;
@@ -200,7 +200,7 @@ namespace Stardust.Data.Nodes
         public partial class _
         {
             /// <summary>编号</summary>
-            public static readonly Field ID = FindByName("ID");
+            public static readonly Field Id = FindByName("Id");
 
             /// <summary>节点</summary>
             public static readonly Field NodeID = FindByName("NodeID");
@@ -251,7 +251,7 @@ namespace Stardust.Data.Nodes
         public partial class __
         {
             /// <summary>编号</summary>
-            public const String ID = "ID";
+            public const String Id = "Id";
 
             /// <summary>节点</summary>
             public const String NodeID = "NodeID";

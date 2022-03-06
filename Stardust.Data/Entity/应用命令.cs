@@ -60,6 +60,30 @@ namespace Stardust.Data
         [BindColumn("Expire", "过期时间。未指定时表示不限制", "")]
         public DateTime Expire { get => _Expire; set { if (OnPropertyChanging("Expire", value)) { _Expire = value; OnPropertyChanged("Expire"); } } }
 
+        private Stardust.Models.CommandStatus _Status;
+        /// <summary>状态。命令状态</summary>
+        [DisplayName("状态")]
+        [Description("状态。命令状态")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Status", "状态。命令状态", "")]
+        public Stardust.Models.CommandStatus Status { get => _Status; set { if (OnPropertyChanging("Status", value)) { _Status = value; OnPropertyChanged("Status"); } } }
+
+        private Int32 _Times;
+        /// <summary>次数。一共执行多少次，超过10次后取消</summary>
+        [DisplayName("次数")]
+        [Description("次数。一共执行多少次，超过10次后取消")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Times", "次数。一共执行多少次，超过10次后取消", "")]
+        public Int32 Times { get => _Times; set { if (OnPropertyChanging("Times", value)) { _Times = value; OnPropertyChanged("Times"); } } }
+
+        private String _Result;
+        /// <summary>结果</summary>
+        [DisplayName("结果")]
+        [Description("结果")]
+        [DataObjectField(false, false, true, 500)]
+        [BindColumn("Result", "结果", "")]
+        public String Result { get => _Result; set { if (OnPropertyChanging("Result", value)) { _Result = value; OnPropertyChanged("Result"); } } }
+
         private String _CreateUser;
         /// <summary>创建者</summary>
         [DisplayName("创建者")]
@@ -132,6 +156,9 @@ namespace Stardust.Data
                     case "Command": return _Command;
                     case "Argument": return _Argument;
                     case "Expire": return _Expire;
+                    case "Status": return _Status;
+                    case "Times": return _Times;
+                    case "Result": return _Result;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -151,6 +178,9 @@ namespace Stardust.Data
                     case "Command": _Command = Convert.ToString(value); break;
                     case "Argument": _Argument = Convert.ToString(value); break;
                     case "Expire": _Expire = value.ToDateTime(); break;
+                    case "Status": _Status = (Stardust.Models.CommandStatus)value.ToInt(); break;
+                    case "Times": _Times = value.ToInt(); break;
+                    case "Result": _Result = Convert.ToString(value); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -182,6 +212,15 @@ namespace Stardust.Data
 
             /// <summary>过期时间。未指定时表示不限制</summary>
             public static readonly Field Expire = FindByName("Expire");
+
+            /// <summary>状态。命令状态</summary>
+            public static readonly Field Status = FindByName("Status");
+
+            /// <summary>次数。一共执行多少次，超过10次后取消</summary>
+            public static readonly Field Times = FindByName("Times");
+
+            /// <summary>结果</summary>
+            public static readonly Field Result = FindByName("Result");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
@@ -224,6 +263,15 @@ namespace Stardust.Data
 
             /// <summary>过期时间。未指定时表示不限制</summary>
             public const String Expire = "Expire";
+
+            /// <summary>状态。命令状态</summary>
+            public const String Status = "Status";
+
+            /// <summary>次数。一共执行多少次，超过10次后取消</summary>
+            public const String Times = "Times";
+
+            /// <summary>结果</summary>
+            public const String Result = "Result";
 
             /// <summary>创建者</summary>
             public const String CreateUser = "CreateUser";

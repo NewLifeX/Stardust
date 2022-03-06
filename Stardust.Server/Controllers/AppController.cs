@@ -9,6 +9,7 @@ using NewLife;
 using NewLife.Caching;
 using NewLife.Data;
 using NewLife.Log;
+using NewLife.Remoting;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
@@ -219,6 +220,26 @@ namespace Stardust.Server.Controllers
             queue.Add(cmd.ToModel().ToJson());
 
             return cmd.Id;
+        }
+
+        /// <summary>设备端响应服务调用</summary>
+        /// <param name="model">服务</param>
+        /// <returns></returns>
+        [ApiFilter]
+        [HttpPost(nameof(CommandReply))]
+        public Int32 CommandReply(CommandReplyModel model, String token)
+        {
+            var node = _tokenService.DecodeToken(token, Setting.Current.TokenSecret);
+            if (node == null) throw new ApiException(402, "节点未登录");
+
+            var cmd = AppCommand.FindById(model.Id);
+            if (cmd == null) return 0;
+
+            cmd.Status = model.Status;
+            cmd.Result = model.Data;
+            cmd.Update();
+
+            return 1;
         }
         #endregion
 
