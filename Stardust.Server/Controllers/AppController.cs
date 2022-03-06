@@ -264,7 +264,7 @@ namespace Stardust.Server.Controllers
         }
         #endregion
 
-        #region 发布、消费
+        #region 服务发布与消费
         private Service GetService(String serviceName)
         {
             var info = Service.FindByName(serviceName);
@@ -279,7 +279,7 @@ namespace Stardust.Server.Controllers
         }
 
         [ApiFilter]
-        [HttpPost]
+        [HttpPost(nameof(RegisterService))]
         public AppService RegisterService([FromBody] PublishServiceInfo service, String token)
         {
             var app = _app;
@@ -333,7 +333,7 @@ namespace Stardust.Server.Controllers
         }
 
         [ApiFilter]
-        [HttpPost]
+        [HttpPost(nameof(UnregisterService))]
         public AppService UnregisterService([FromBody] PublishServiceInfo service, String token)
         {
             var app = _app;
@@ -360,7 +360,7 @@ namespace Stardust.Server.Controllers
         }
 
         [ApiFilter]
-        [HttpPost]
+        [HttpPost(nameof(ResolveService))]
         public ServiceModel[] ResolveService([FromBody] ConsumeServiceInfo model, String token)
         {
             var app = _app;
@@ -419,9 +419,9 @@ namespace Stardust.Server.Controllers
                 UpdateTime = e.UpdateTime,
             }).ToArray();
         }
-        #endregion
 
         [ApiFilter]
+        [HttpPost(nameof(SearchService))]
         public IList<AppService> SearchService(String serviceName, String key)
         {
             var svc = Service.FindByName(serviceName);
@@ -429,6 +429,7 @@ namespace Stardust.Server.Controllers
 
             return AppService.Search(-1, svc.Id, true, key, new PageParameter { PageSize = 100 });
         }
+        #endregion
 
         #region 辅助
         private void WriteHistory(String action, Boolean success, String remark, String clientId)
