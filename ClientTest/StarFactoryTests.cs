@@ -54,7 +54,7 @@ namespace ClientTest
             Assert.Equal(star.Secret, filter.Password);
             Assert.Equal(filter, (tracer.Client as ApiHttpClient).Filter);
             Assert.Equal(filter, (config.Client as ApiHttpClient).Filter);
-            Assert.Equal(filter, (dust.Client as ApiHttpClient).Filter);
+            Assert.Equal(filter, (dust as ApiHttpClient).Filter);
         }
 
         [Fact]

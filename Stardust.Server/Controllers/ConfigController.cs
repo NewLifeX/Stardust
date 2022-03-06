@@ -113,8 +113,9 @@ namespace Stardust.Server.Controllers
 
             if (appId.IsNullOrEmpty() && !token.IsNullOrEmpty())
             {
-                var ap1 = _tokenService.DecodeToken(token, set.TokenSecret);
+                var (jwt, ap1) = _tokenService.DecodeToken(token, set.TokenSecret);
                 appId = ap1?.Name;
+                if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
             }
 
             var ap = _tokenService.Authorize(appId, secret, set.AutoRegister);
@@ -145,11 +146,6 @@ namespace Stardust.Server.Controllers
             if (clientId.IsNullOrEmpty())
             {
                 clientId = ip;
-                if (!token.IsNullOrEmpty())
-                {
-                    var (jwt, _) = _tokenService.DecodeTokenWithError(token, set.TokenSecret);
-                    clientId = jwt?.Id;
-                }
             }
 
             // 更新心跳信息

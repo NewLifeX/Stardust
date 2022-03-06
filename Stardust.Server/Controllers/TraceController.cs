@@ -50,7 +50,7 @@ namespace Stardust.Server.Controllers
             App ap = null;
             if (!token.IsNullOrEmpty() && token.Split(".").Length == 3)
             {
-                ap = _service.DecodeToken(token, set.TokenSecret);
+                (_, ap) = _service.DecodeToken(token, set.TokenSecret);
                 //if (ap == null || ap.Name != model.AppId) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{ap?.Name}]！");
                 if (ap == null) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{ap?.Name}]！");
             }

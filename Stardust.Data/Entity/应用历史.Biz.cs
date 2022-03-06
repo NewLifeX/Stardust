@@ -88,7 +88,6 @@ namespace Stardust.Data
             var history = new AppHistory
             {
                 AppId = app.Id,
-                //Version = app.Name,
 
                 Action = action,
                 Success = success,

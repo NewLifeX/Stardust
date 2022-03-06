@@ -10,6 +10,7 @@ using NewLife.Log;
 using NewLife.Model;
 using NewLife.Reflection;
 using NewLife.Remoting;
+using NewLife.Security;
 using Stardust.Configs;
 using Stardust.Models;
 using Stardust.Monitors;
@@ -53,6 +54,9 @@ namespace Stardust
         /// <summary>配置信息。从配置中心返回的信息头</summary>
         public ConfigInfo ConfigInfo => (_config as StarHttpConfigProvider)?.ConfigInfo;
 
+        /// <summary>本地星尘代理</summary>
+        public LocalStarClient Local { get; private set; }
+
         private ApiHttpClient _client;
         private TokenHttpFilter _tokenFilter;
         private AppClient _appClient;
@@ -88,39 +92,6 @@ namespace Stardust
             _config.TryDispose();
             _appClient.TryDispose();
         }
-        #endregion
-
-        #region 方法
-        private Boolean Valid()
-        {
-            //if (Server.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Server));
-            //if (AppId.IsNullOrEmpty()) throw new ArgumentNullException(nameof(AppId));
-
-            if (Server.IsNullOrEmpty() || AppId.IsNullOrEmpty()) return false;
-
-            if (_client == null)
-            {
-                if (!AppId.IsNullOrEmpty()) _tokenFilter = new TokenHttpFilter
-                {
-                    UserName = AppId,
-                    Password = Secret,
-                };
-
-                var client = new AppClient(Server) { Filter = _tokenFilter };
-                _appClient = client;
-                _client = client;
-
-                var set = StarSetting.Current;
-                if (set.Debug) _client.Log = XTrace.Log;
-            }
-
-            return true;
-        }
-        #endregion
-
-        #region 本地代理
-        /// <summary>本地星尘代理</summary>
-        public LocalStarClient Local { get; private set; }
 
         private void Init()
         {
@@ -144,6 +115,7 @@ namespace Stardust
 
             if (!Server.IsNullOrEmpty() && Local.Server.IsNullOrEmpty()) Local.Server = Server;
 
+            // 借助本地StarAgent获取服务器地址
             try
             {
                 var inf = Local.GetInfo();
@@ -165,6 +137,7 @@ namespace Stardust
             if (AppId.IsNullOrEmpty()) AppId = set.AppKey;
             if (Secret.IsNullOrEmpty()) Secret = set.Secret;
 
+            // 生成ClientId，用于唯一标识当前实例，默认IP@pid
             try
             {
                 var executing = AssemblyX.Create(Assembly.GetExecutingAssembly());
@@ -177,11 +150,14 @@ namespace Stardust
 
                 ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}";
             }
-            catch { }
+            catch
+            {
+                ClientId = Rand.NextString(8);
+            }
 
             XTrace.WriteLine("星尘分布式服务 Server={0} AppId={1} ClientId={2}", Server, AppId, ClientId);
 
-            InitApp();
+            Valid();
 
             var ioc = ObjectContainer.Current;
             ioc.AddSingleton(this);
@@ -190,20 +166,40 @@ namespace Stardust
             ioc.AddSingleton(p => Service);
         }
 
-        void InitApp()
+        private Boolean Valid()
         {
-            if (!Valid()) return;
+            //if (Server.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Server));
+            //if (AppId.IsNullOrEmpty()) throw new ArgumentNullException(nameof(AppId));
 
-            var client = new AppClient
+            if (Server.IsNullOrEmpty() || AppId.IsNullOrEmpty()) return false;
+
+            if (_client == null)
             {
-                AppId = AppId,
-                Client = _client,
-            };
-            if (!ClientId.IsNullOrEmpty()) client.ClientId = ClientId;
+                if (!AppId.IsNullOrEmpty()) _tokenFilter = new TokenHttpFilter
+                {
+                    UserName = AppId,
+                    Password = Secret,
+                    ClientId = ClientId,
+                };
 
-            client.Start();
+                var client = new AppClient(Server)
+                {
+                    AppId = AppId,
+                    AppName = AppName,
+                    ClientId = ClientId,
+                    Filter = _tokenFilter
+                };
 
-            _appClient = client;
+                var set = StarSetting.Current;
+                if (set.Debug) client.Log = XTrace.Log;
+
+                client.Start();
+
+                //_appClient = client;
+                _client = client;
+            }
+
+            return true;
         }
         #endregion
 
@@ -225,11 +221,12 @@ namespace Stardust
                         AppId = AppId,
                         AppName = AppName,
                         //Secret = Secret,
+                        ClientId = ClientId,
                         Client = _client,
 
                         Log = Log
                     };
-                    if (!ClientId.IsNullOrEmpty()) tracer.ClientId = ClientId;
+                    //if (!ClientId.IsNullOrEmpty()) tracer.ClientId = ClientId;
 
                     tracer.AttachGlobal();
 
@@ -262,10 +259,10 @@ namespace Stardust
                         Server = Server,
                         AppId = AppId,
                         //Secret = Secret,
-                        //ClientId = ClientId,
+                        ClientId = ClientId,
                         Client = _client,
                     };
-                    if (!ClientId.IsNullOrEmpty()) config.ClientId = ClientId;
+                    //if (!ClientId.IsNullOrEmpty()) config.ClientId = ClientId;
                     config.LoadAll();
 
                     _config = config;
@@ -285,6 +282,8 @@ namespace Stardust
                 if (_appClient == null)
                 {
                     if (!Valid()) return null;
+
+                    _appClient = _client as AppClient;
 
                     XTrace.WriteLine("初始化星尘注册中心，提供服务注册与发布能力");
                 }

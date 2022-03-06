@@ -73,10 +73,12 @@ namespace Stardust.Server.Services.Tests
             Assert.NotNull(model);
 
             // 马上解码
-            var app2 = service.DecodeToken(model.AccessToken, set.TokenSecret);
+            var (jwt, app2) = service.DecodeToken(model.AccessToken, set.TokenSecret);
+            Assert.NotNull(jwt);
             Assert.NotNull(app2);
 
-            app2 = service.DecodeToken(model.RefreshToken, set.TokenSecret);
+            (jwt, app2) = service.DecodeToken(model.RefreshToken, set.TokenSecret);
+            Assert.NotNull(jwt);
             Assert.NotNull(app2);
         }
     }

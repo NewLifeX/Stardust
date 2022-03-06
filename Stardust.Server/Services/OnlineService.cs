@@ -52,13 +52,13 @@ namespace Stardust.Server.Services
                     foreach (var olt in rs2)
                     {
                         var app = olt?.App;
-                        var msg = $"[{app}]登录于{olt.CreateTime}，最后活跃于{olt.UpdateTime}";
-                        var history = AppHistory.Create(app, "超时下线", true, msg, Environment.MachineName, olt.CreateIP);
-                        history.Client = olt.Client;
-                        history.Version = olt.Version;
-                        history.SaveAsync();
+                        if (app != null)
+                        {
+                            var msg = $"[{app}]登录于{olt.CreateTime}，最后活跃于{olt.UpdateTime}";
+                            app.WriteHistory("超时下线", true, msg, olt.CreateIP, olt.Client);
 
-                        if (app != null) CheckOffline(app, "超时下线");
+                            CheckOffline(app, "超时下线");
+                        }
                     }
                 }
 

@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Net.WebSockets;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Data;
 using NewLife.Log;
-using NewLife.Remoting;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
@@ -21,12 +17,16 @@ using Stardust.Server.Services;
 namespace Stardust.Server.Controllers
 {
     /// <summary>应用接口控制器</summary>
+    [ApiController]
     [Route("[controller]")]
-    public class AppController : ControllerBase
+    public class AppController : ControllerBase, IActionFilter
     {
         /// <summary>用户主机</summary>
         public String UserHost => HttpContext.GetUserHost();
 
+        private String _token;
+        private App _app;
+        private String _clientId;
         private readonly TokenService _tokenService;
         private static readonly ICache _cache = new MemoryCache();
         private readonly ICache _queue;
@@ -37,10 +37,38 @@ namespace Stardust.Server.Controllers
             _tokenService = tokenService;
         }
 
+        #region 令牌验证
+        void IActionFilter.OnActionExecuting(ActionExecutingContext context)
+        {
+            // 从令牌解码应用
+            _token = ApiFilterAttribute.GetToken(HttpContext);
+            if (!_token.IsNullOrEmpty())
+            {
+                var (jwt, app) = _tokenService.DecodeToken(_token, Setting.Current.TokenSecret);
+                _app = app;
+                _clientId = jwt.Id;
+            }
+        }
+
+        /// <summary>请求处理后</summary>
+        /// <param name="context"></param>
+        public void OnActionExecuted(ActionExecutedContext context)
+        {
+            if (context.Exception != null)
+            {
+                // 拦截全局异常，写日志
+                var action = context.HttpContext.Request.Path + "";
+                if (context.ActionDescriptor is ControllerActionDescriptor act) action = $"{act.ControllerName}/{act.ActionName}";
+
+                WriteHistory(action, false, context.Exception?.GetTrue() + "", _clientId);
+            }
+        }
+        #endregion
+
         #region 心跳
         [ApiFilter]
         [HttpPost(nameof(Ping))]
-        public PingResponse Ping(AppInfo inf, String token)
+        public PingResponse Ping(AppInfo inf)
         {
             var rs = new PingResponse
             {
@@ -48,23 +76,26 @@ namespace Stardust.Server.Controllers
                 ServerTime = DateTime.UtcNow,
             };
 
-            var app = _tokenService.DecodeToken(token, Setting.Current.TokenSecret);
+            var app = _app;
             if (app != null)
             {
                 var ip = UserHost;
 
+                if (app.DisplayName.IsNullOrEmpty()) app.DisplayName = inf.AppName;
                 app.UpdateIP = ip;
                 app.SaveAsync();
 
                 //rs.Period = app.Period;
 
-                if (!inf.ClientId.IsNullOrEmpty())
+                var clientId = inf.ClientId;
+                if (clientId.IsNullOrEmpty()) clientId = _clientId;
+                if (!clientId.IsNullOrEmpty())
                 {
-                    var olt = AppOnline.GetOrAdd(inf.ClientId);
+                    var olt = AppOnline.GetOrAdd(clientId);
                     olt.Name = app.Name;
                     olt.Category = app.Category;
                     olt.Version = inf.Version;
-                    olt.Token = token;
+                    olt.Token = _token;
                     olt.PingCount++;
                     if (olt.CreateIP.IsNullOrEmpty()) olt.CreateIP = ip;
                     olt.Creator = Environment.MachineName;
@@ -80,14 +111,7 @@ namespace Stardust.Server.Controllers
 
         [ApiFilter]
         [HttpGet(nameof(Ping))]
-        public PingResponse Ping()
-        {
-            return new PingResponse
-            {
-                Time = 0,
-                ServerTime = DateTime.Now,
-            };
-        }
+        public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.Now, };
         #endregion
 
         #region 下行通知
@@ -98,10 +122,9 @@ namespace Stardust.Server.Controllers
         {
             if (HttpContext.WebSockets.IsWebSocketRequest)
             {
-                var token = (HttpContext.Request.Headers["Authorization"] + "").TrimStart("Bearer ");
                 using var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
-                await Handle(socket, token);
+                await Handle(socket, _app, _clientId);
             }
             else
             {
@@ -109,16 +132,15 @@ namespace Stardust.Server.Controllers
             }
         }
 
-        private async Task Handle(WebSocket socket, String token)
+        private async Task Handle(WebSocket socket, App app, String clientId)
         {
-            var app = _tokenService.DecodeToken(token, Setting.Current.TokenSecret);
             if (app == null) throw new InvalidOperationException("未登录！");
 
             XTrace.WriteLine("WebSocket连接 {0}", app);
-            WriteHistory(app, "WebSocket连接", true, socket.State + "");
+            WriteHistory("WebSocket连接", true, socket.State + "", clientId);
 
             var source = new CancellationTokenSource();
-            _ = Task.Run(() => consumeMessage(socket, app, source));
+            _ = Task.Run(() => consumeMessage(socket, app, clientId, source));
             try
             {
                 var buf = new Byte[4 * 1024];
@@ -130,13 +152,13 @@ namespace Stardust.Server.Controllers
                     {
                         var str = buf.ToStr(null, 0, data.Count);
                         XTrace.WriteLine("WebSocket接收 {0} {1}", app, str);
-                        WriteHistory(app, "WebSocket接收", true, str);
+                        WriteHistory("WebSocket接收", true, str, clientId);
                     }
                 }
 
                 source.Cancel();
                 XTrace.WriteLine("WebSocket断开 {0}", app);
-                WriteHistory(app, "WebSocket断开", true, socket.State + "");
+                WriteHistory("WebSocket断开", true, socket.State + "", clientId);
 
                 await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
             }
@@ -151,7 +173,7 @@ namespace Stardust.Server.Controllers
             }
         }
 
-        private async Task consumeMessage(WebSocket socket, App app, CancellationTokenSource source)
+        private async Task consumeMessage(WebSocket socket, App app, String clientId, CancellationTokenSource source)
         {
             var cancellationToken = source.Token;
             var queue = _queue.GetQueue<String>($"appcmd:{app.Name}");
@@ -163,7 +185,7 @@ namespace Stardust.Server.Controllers
                     if (msg != null)
                     {
                         XTrace.WriteLine("WebSocket发送 {0} {1}", app, msg);
-                        WriteHistory(app, "WebSocket发送", true, msg);
+                        WriteHistory("WebSocket发送", true, msg, clientId);
 
                         await socket.SendAsync(msg.GetBytes(), WebSocketMessageType.Text, true, cancellationToken);
                     }
@@ -190,7 +212,7 @@ namespace Stardust.Server.Controllers
         /// <returns></returns>
         [ApiFilter]
         [HttpPost(nameof(SendCommand))]
-        public Int32 SendCommand(CommandInModel model, String token)
+        public Int32 SendCommand(CommandInModel model)
         {
             if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定应用");
             if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
@@ -198,7 +220,7 @@ namespace Stardust.Server.Controllers
             var node = App.FindByName(model.Code);
             if (node == null) throw new ArgumentOutOfRangeException(nameof(model.Code), "无效应用");
 
-            var app = _tokenService.DecodeToken(token, Setting.Current.TokenSecret);
+            var app = _app;
             if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new InvalidOperationException("无权操作！");
 
             if (app.AllowControlNodes != "*" && !node.Name.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
@@ -227,10 +249,9 @@ namespace Stardust.Server.Controllers
         /// <returns></returns>
         [ApiFilter]
         [HttpPost(nameof(CommandReply))]
-        public Int32 CommandReply(CommandReplyModel model, String token)
+        public Int32 CommandReply(CommandReplyModel model)
         {
-            var node = _tokenService.DecodeToken(token, Setting.Current.TokenSecret);
-            if (node == null) throw new ApiException(402, "节点未登录");
+            if (_app == null) throw new NewLife.Remoting.ApiException(402, "节点未登录");
 
             var cmd = AppCommand.FindById(model.Id);
             if (cmd == null) return 0;
@@ -261,7 +282,7 @@ namespace Stardust.Server.Controllers
         [HttpPost]
         public AppService RegisterService([FromBody] PublishServiceInfo service, String token)
         {
-            var app = _tokenService.DecodeToken(token, Setting.Current.TokenSecret);
+            var app = _app;
             var info = GetService(service.ServiceName);
 
             // 所有服务
@@ -282,9 +303,7 @@ namespace Stardust.Server.Controllers
                 };
                 services.Add(svc);
 
-                var history = AppHistory.Create(app, "RegisterService", true, $"注册服务[{service.ServiceName}] {service.ClientId}", Environment.MachineName, UserHost);
-                history.Client = service.ClientId;
-                history.SaveAsync();
+                WriteHistory("RegisterService", true, $"注册服务[{service.ServiceName}] {service.ClientId}", service.ClientId);
             }
 
             // 作用域
@@ -317,7 +336,7 @@ namespace Stardust.Server.Controllers
         [HttpPost]
         public AppService UnregisterService([FromBody] PublishServiceInfo service, String token)
         {
-            var app = _tokenService.DecodeToken(token, Setting.Current.TokenSecret);
+            var app = _app;
             var info = GetService(service.ServiceName);
 
             // 所有服务
@@ -331,9 +350,7 @@ namespace Stardust.Server.Controllers
 
                 services.Remove(svc);
 
-                var history = AppHistory.Create(app, "UnregisterService", true, $"服务[{service.ServiceName}]下线 {svc.Client}", Environment.MachineName, UserHost);
-                history.Client = svc.Client;
-                history.SaveAsync();
+                app.WriteHistory("UnregisterService", true, $"服务[{service.ServiceName}]下线 {svc.Client}", UserHost, svc.Client);
             }
 
             info.Providers = services.Count;
@@ -346,7 +363,7 @@ namespace Stardust.Server.Controllers
         [HttpPost]
         public ServiceModel[] ResolveService([FromBody] ConsumeServiceInfo model, String token)
         {
-            var app = _tokenService.DecodeToken(token, Setting.Current.TokenSecret);
+            var app = _app;
             var info = GetService(model.ServiceName);
 
             // 所有消费
@@ -367,9 +384,7 @@ namespace Stardust.Server.Controllers
                 };
                 consumes.Add(svc);
 
-                var history = AppHistory.Create(app, "ResolveService", true, $"消费服务[{model.ServiceName}] {model.ToJson()}", Environment.MachineName, UserHost);
-                history.Client = svc.Client;
-                history.SaveAsync();
+                app.WriteHistory("ResolveService", true, $"消费服务[{model.ServiceName}] {model.ToJson()}", UserHost, svc.Client);
             }
 
             // 作用域
@@ -416,7 +431,12 @@ namespace Stardust.Server.Controllers
         }
 
         #region 辅助
-        private void WriteHistory(App node, String action, Boolean success, String remark) => AppHistory.Create(node, action, success, remark, Environment.MachineName, UserHost);
+        private void WriteHistory(String action, Boolean success, String remark, String clientId)
+        {
+            var hi = AppHistory.Create(_app, action, success, remark, Environment.MachineName, UserHost);
+            hi.Client = clientId ?? _clientId;
+            hi.SaveAsync();
+        }
         #endregion
     }
 }

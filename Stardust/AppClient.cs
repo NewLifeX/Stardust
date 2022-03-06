@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
 using NewLife;
 using NewLife.Log;
 using NewLife.Reflection;
@@ -13,7 +9,6 @@ using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust.Models;
 using Stardust.Registry;
-using Stardust.Services;
 
 namespace Stardust
 {
@@ -24,11 +19,14 @@ namespace Stardust
         /// <summary>应用</summary>
         public String AppId { get; set; }
 
+        /// <summary>应用名</summary>
+        public String AppName { get; set; }
+
         /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
         public String ClientId { get; set; }
 
-        /// <summary>客户端</summary>
-        public IApiClient Client { get; set; }
+        ///// <summary>客户端</summary>
+        //public IApiClient Client { get; set; }
 
         /// <summary>收到命令时触发</summary>
         public event EventHandler<CommandEventArgs> Received;
@@ -91,8 +89,9 @@ namespace Stardust
                 else
                     _appInfo.Refresh();
 
+                _appInfo.AppName = AppName;
                 _appInfo.ClientId = ClientId;
-                var rs = await Client.InvokeAsync<PingResponse>("App/Ping", _appInfo);
+                var rs = await PostAsync<PingResponse>("App/Ping", _appInfo);
                 if (rs != null)
                 {
                     // 由服务器改变采样频率
@@ -208,19 +207,19 @@ namespace Stardust
         /// <summary>上报服务调用结果</summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public virtual async Task<Object> CommandReply(CommandReplyModel model) => await PostAsync<Object>("Node/CommandReply", model);
+        public virtual async Task<Object> CommandReply(CommandReplyModel model) => await PostAsync<Object>("App/CommandReply", model);
         #endregion
 
         #region 发布、消费
         /// <summary>发布服务</summary>
         /// <param name="service">应用服务</param>
         /// <returns></returns>
-        public async Task<Object> RegisterAsync(PublishServiceInfo service) => await Client.InvokeAsync<Object>("RegisterService", service);
+        public async Task<Object> RegisterAsync(PublishServiceInfo service) => await PostAsync<Object>("App/RegisterService", service);
 
         /// <summary>取消服务</summary>
         /// <param name="service">应用服务</param>
         /// <returns></returns>
-        public async Task<Object> UnregisterAsync(PublishServiceInfo service) => await Client.InvokeAsync<Object>("UnregisterService", service);
+        public async Task<Object> UnregisterAsync(PublishServiceInfo service) => await PostAsync<Object>("App/UnregisterService", service);
 
         private void AddService(PublishServiceInfo service)
         {
@@ -298,7 +297,7 @@ namespace Stardust
         /// <summary>消费服务</summary>
         /// <param name="service">应用服务</param>
         /// <returns></returns>
-        public async Task<ServiceModel[]> ResolveAsync(ConsumeServiceInfo service) => await Client.InvokeAsync<ServiceModel[]>("ResolveService", service);
+        public async Task<ServiceModel[]> ResolveAsync(ConsumeServiceInfo service) => await PostAsync<ServiceModel[]>("App/ResolveService", service);
 
         /// <summary>消费得到服务地址信息</summary>
         /// <param name="serviceName">服务名</param>

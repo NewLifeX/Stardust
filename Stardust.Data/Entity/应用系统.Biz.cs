@@ -165,10 +165,11 @@ namespace Stardust.Data
         /// <param name="success"></param>
         /// <param name="remark"></param>
         /// <param name="ip"></param>
-        public void WriteHistory(String action, Boolean success, String remark, String ip)
+        /// <param name="clientId"></param>
+        public void WriteHistory(String action, Boolean success, String remark, String ip, String clientId)
         {
             var history = AppHistory.Create(this, action, success, remark, Environment.MachineName, ip);
-
+            history.Client = clientId;
             history.SaveAsync();
         }
         #endregion

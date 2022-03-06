@@ -15,6 +15,8 @@ namespace Stardust.Data
     [DataObject]
     [Description("应用历史")]
     [BindIndex("IX_AppHistory_AppId_Client", false, "AppId,Client")]
+    [BindIndex("IX_AppHistory_AppId_Action", false, "AppId,Action")]
+    [BindIndex("IX_AppHistory_Action_Success", false, "Action,Success")]
     [BindTable("AppHistory", Description = "应用历史", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppHistory
     {
@@ -42,14 +44,6 @@ namespace Stardust.Data
         [DataObjectField(false, false, true, 50)]
         [BindColumn("Client", "客户端。IP加进程", "")]
         public String Client { get => _Client; set { if (OnPropertyChanging("Client", value)) { _Client = value; OnPropertyChanged("Client"); } } }
-
-        private String _Version;
-        /// <summary>版本</summary>
-        [DisplayName("版本")]
-        [Description("版本")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("Version", "版本", "")]
-        public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
         private String _Action;
         /// <summary>操作</summary>
@@ -113,7 +107,6 @@ namespace Stardust.Data
                     case "Id": return _Id;
                     case "AppId": return _AppId;
                     case "Client": return _Client;
-                    case "Version": return _Version;
                     case "Action": return _Action;
                     case "Success": return _Success;
                     case "Remark": return _Remark;
@@ -130,7 +123,6 @@ namespace Stardust.Data
                     case "Id": _Id = value.ToLong(); break;
                     case "AppId": _AppId = value.ToInt(); break;
                     case "Client": _Client = Convert.ToString(value); break;
-                    case "Version": _Version = Convert.ToString(value); break;
                     case "Action": _Action = Convert.ToString(value); break;
                     case "Success": _Success = value.ToBoolean(); break;
                     case "Remark": _Remark = Convert.ToString(value); break;
@@ -155,9 +147,6 @@ namespace Stardust.Data
 
             /// <summary>客户端。IP加进程</summary>
             public static readonly Field Client = FindByName("Client");
-
-            /// <summary>版本</summary>
-            public static readonly Field Version = FindByName("Version");
 
             /// <summary>操作</summary>
             public static readonly Field Action = FindByName("Action");
@@ -191,9 +180,6 @@ namespace Stardust.Data
 
             /// <summary>客户端。IP加进程</summary>
             public const String Client = "Client";
-
-            /// <summary>版本</summary>
-            public const String Version = "Version";
 
             /// <summary>操作</summary>
             public const String Action = "Action";

@@ -102,7 +102,7 @@ namespace Stardust.Server.Services
         /// <param name="token"></param>
         /// <param name="tokenSecret"></param>
         /// <returns></returns>
-        public App DecodeToken(String token, String tokenSecret)
+        public (JwtBuilder, App) DecodeToken(String token, String tokenSecret)
         {
             if (token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(token));
 
@@ -127,7 +127,7 @@ namespace Stardust.Server.Services
             }
             if (!app.Enable) throw new InvalidOperationException($"已停用应用[{jwt.Subject}]");
 
-            return app;
+            return (jwt, app);
         }
 
         /// <summary>解码令牌</summary>

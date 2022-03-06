@@ -1,6 +1,4 @@
-﻿using System;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Web;
 using Stardust.Data;
@@ -17,8 +15,8 @@ namespace Stardust.Server.Controllers
         /// <summary>用户主机</summary>
         public String UserHost => HttpContext.GetUserHost();
 
-        private readonly TokenService _service;
-        public OAuthController(TokenService appService) => _service = appService;
+        private readonly TokenService _tokenService;
+        public OAuthController(TokenService tokenService) => _tokenService = tokenService;
 
         [ApiFilter]
         public TokenModel Token([FromBody] TokenInModel model)
@@ -33,16 +31,16 @@ namespace Stardust.Server.Controllers
             // 密码模式
             if (model.grant_type == "password")
             {
-                var app = _service.Authorize(model.UserName, model.Password, set.AutoRegister);
+                var app = _tokenService.Authorize(model.UserName, model.Password, set.AutoRegister);
 
                 // 更新应用信息
                 app.LastLogin = DateTime.Now;
                 app.LastIP = ip;
                 app.SaveAsync();
 
-                app.WriteHistory("Authorize", true, model.UserName, UserHost);
+                app.WriteHistory("Authorize", true, model.UserName, UserHost, clientId);
 
-                var tokenModel = _service.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
+                var tokenModel = _tokenService.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
 
                 AppOnline.UpdateOnline(app, clientId, ip, tokenModel.AccessToken);
 
@@ -51,7 +49,7 @@ namespace Stardust.Server.Controllers
             // 刷新令牌
             else if (model.grant_type == "refresh_token")
             {
-                var (jwt, ex) = _service.DecodeTokenWithError(model.refresh_token, set.TokenSecret);
+                var (jwt, ex) = _tokenService.DecodeTokenWithError(model.refresh_token, set.TokenSecret);
 
                 // 验证应用
                 var app = App.FindByName(jwt?.Subject);
@@ -59,15 +57,15 @@ namespace Stardust.Server.Controllers
 
                 if (ex != null)
                 {
-                    app.WriteHistory("RefreshToken", false, ex.ToString(), UserHost);
+                    app.WriteHistory("RefreshToken", false, ex.ToString(), UserHost, clientId);
                     throw ex;
                 }
 
                 if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
 
-                app.WriteHistory("RefreshToken", true, model.refresh_token, UserHost);
+                app.WriteHistory("RefreshToken", true, model.refresh_token, UserHost, clientId);
 
-                var tokenModel = _service.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
+                var tokenModel = _tokenService.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
 
                 AppOnline.UpdateOnline(app, clientId, ip, tokenModel.AccessToken);
 
@@ -84,7 +82,7 @@ namespace Stardust.Server.Controllers
         {
             var set = Setting.Current;
 
-            var app = _service.DecodeToken(token, set.TokenSecret);
+            var (_, app) = _tokenService.DecodeToken(token, set.TokenSecret);
             return new
             {
                 app.Id,

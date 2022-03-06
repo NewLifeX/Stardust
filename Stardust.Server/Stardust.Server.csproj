@@ -21,6 +21,7 @@
     <Compile Remove="Common\TokenFilter.cs" />
     <Compile Remove="Common\TokenSession.cs" />
     <Compile Remove="Controllers\BaseController.cs" />
+    <Compile Remove="Controllers\DustController.cs" />
   </ItemGroup>
 
   <ItemGroup>

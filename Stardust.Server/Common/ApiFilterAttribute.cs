@@ -11,6 +11,20 @@ namespace Stardust.Server.Common
     /// <summary>统一Api过滤处理</summary>
     public sealed class ApiFilterAttribute : ActionFilterAttribute
     {
+        /// <summary>从请求头中获取令牌</summary>
+        /// <param name="httpContext"></param>
+        /// <returns></returns>
+        public static String GetToken(HttpContext httpContext)
+        {
+            var request = httpContext.Request;
+            var token = request.Query["Token"] + "";
+            if (token.IsNullOrEmpty()) token = (request.Headers["Authorization"] + "").TrimStart("Bearer ");
+            if (token.IsNullOrEmpty()) token = request.Headers["X-Token"] + "";
+            if (token.IsNullOrEmpty()) token = request.Cookies["Token"] + "";
+
+            return token;
+        }
+
         /// <summary>执行前，验证模型</summary>
         /// <param name="context"></param>
         public override void OnActionExecuting(ActionExecutingContext context)
@@ -19,11 +33,7 @@ namespace Stardust.Server.Common
             //    throw new ApplicationException(context.ModelState.Values.First(p => p.Errors.Count > 0).Errors[0].ErrorMessage);
 
             // 访问令牌
-            var request = context.HttpContext.Request;
-            var token = request.Query["Token"] + "";
-            if (token.IsNullOrEmpty()) token = (request.Headers["Authorization"] + "").TrimStart("Bearer ");
-            if (token.IsNullOrEmpty()) token = request.Headers["X-Token"] + "";
-            if (token.IsNullOrEmpty()) token = request.Cookies["Token"] + "";
+            var token = GetToken(context.HttpContext);
             context.HttpContext.Items["Token"] = token;
             if (!context.ActionArguments.ContainsKey("token")) context.ActionArguments.Add("token", token);
 
