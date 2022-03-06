@@ -263,6 +263,7 @@ namespace Stardust
                         Client = _client,
                     };
                     //if (!ClientId.IsNullOrEmpty()) config.ClientId = ClientId;
+                    config.Attach(_appClient);
                     config.LoadAll();
 
                     _config = config;

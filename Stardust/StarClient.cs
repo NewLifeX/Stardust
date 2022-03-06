@@ -22,11 +22,12 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Net.WebSockets;
 using WebSocket = System.Net.WebSockets.WebSocket;
+using System.Collections.Concurrent;
 
 namespace Stardust
 {
     /// <summary>星星客户端。每个设备节点有一个客户端连接服务端</summary>
-    public class StarClient : ApiHttpClient
+    public class StarClient : ApiHttpClient, ICommandClient
     {
         #region 属性
         /// <summary>证书</summary>
@@ -52,6 +53,10 @@ namespace Stardust
 
         /// <summary>本地应用服务管理</summary>
         public ServiceManager Manager { get; set; }
+
+        private ConcurrentDictionary<String, Delegate> _commands = new(StringComparer.OrdinalIgnoreCase);
+        /// <summary>命令集合</summary>
+        public IDictionary<String, Delegate> Commands => _commands;
 
         /// <summary>收到命令时触发</summary>
         public event EventHandler<CommandEventArgs> Received;
@@ -609,6 +614,9 @@ namespace Stardust
         {
             var e = new CommandEventArgs { Model = model };
             Received?.Invoke(this, e);
+
+            var rs = this.ExecuteCommand(model);
+            if (e.Reply == null) e.Reply = rs;
 
             if (e.Reply != null) await CommandReply(e.Reply);
         }

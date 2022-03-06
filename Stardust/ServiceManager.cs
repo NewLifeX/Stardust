@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading;
+﻿using System.Diagnostics;
 using NewLife;
 using NewLife.IO;
 using NewLife.Log;
@@ -248,34 +243,36 @@ namespace Stardust
         /// <param name="client"></param>
         public void Attach(StarClient client)
         {
-            client.Received += ExecuteCommand;
+            //client.Received += ExecuteCommand;
+
+            client.RegisterCommand("deploy/publish", DoControl);
         }
 
-        private void ExecuteCommand(Object sender, CommandEventArgs e)
-        {
-            var cmd = e?.Model?.Command?.ToLower();
-            if (cmd.IsNullOrEmpty()) return;
+        //private void ExecuteCommand(Object sender, CommandEventArgs e)
+        //{
+        //    var cmd = e?.Model?.Command?.ToLower();
+        //    if (cmd.IsNullOrEmpty()) return;
 
-            var rs = new CommandReplyModel { Id = e.Model.Id };
-            try
-            {
-                var result = cmd switch
-                {
-                    "publish" => DoControl(e.Model),
-                    "start" => DoControl(e.Model),
-                    "stop" => DoControl(e.Model),
-                    "restart" => DoControl(e.Model),
-                    _ => null,
-                };
-            }
-            catch (Exception ex)
-            {
-                rs.Status = CommandStatus.错误;
-                rs.Data = ex.Message;
-            }
+        //    var rs = new CommandReplyModel { Id = e.Model.Id };
+        //    try
+        //    {
+        //        var result = cmd switch
+        //        {
+        //            "publish" => DoControl(e.Model),
+        //            "start" => DoControl(e.Model),
+        //            "stop" => DoControl(e.Model),
+        //            "restart" => DoControl(e.Model),
+        //            _ => null,
+        //        };
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        rs.Status = CommandStatus.错误;
+        //        rs.Data = ex.Message;
+        //    }
 
-            e.Reply = rs;
-        }
+        //    e.Reply = rs;
+        //}
 
         private String DoControl(CommandModel cmd)
         {

@@ -9,11 +9,12 @@ using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust.Models;
 using Stardust.Registry;
+using Stardust.Services;
 
 namespace Stardust
 {
     /// <summary>应用客户端。每个应用有一个客户端连接星尘服务端</summary>
-    public class AppClient : ApiHttpClient, IRegistry
+    public class AppClient : ApiHttpClient, ICommandClient, IRegistry
     {
         #region 属性
         /// <summary>应用</summary>
@@ -27,6 +28,10 @@ namespace Stardust
 
         ///// <summary>客户端</summary>
         //public IApiClient Client { get; set; }
+
+        private ConcurrentDictionary<String, Delegate> _commands = new(StringComparer.OrdinalIgnoreCase);
+        /// <summary>命令集合</summary>
+        public IDictionary<String, Delegate> Commands => _commands;
 
         /// <summary>收到命令时触发</summary>
         public event EventHandler<CommandEventArgs> Received;
@@ -191,7 +196,9 @@ namespace Stardust
 
             if (socket.State == WebSocketState.Open) await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
         }
+        #endregion
 
+        #region 命令调度
         /// <summary>
         /// 触发收到命令的动作
         /// </summary>
@@ -200,6 +207,9 @@ namespace Stardust
         {
             var e = new CommandEventArgs { Model = model };
             Received?.Invoke(this, e);
+
+            var rs = this.ExecuteCommand(model);
+            if (e.Reply == null) e.Reply = rs;
 
             if (e.Reply != null) await CommandReply(e.Reply);
         }
