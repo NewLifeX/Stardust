@@ -115,6 +115,11 @@ namespace Stardust
                     Version = _version,
                     NodeCode = NodeCode,
                 };
+                try
+                {
+                    inf.IP = NetHelper.MyIP() + "";
+                }
+                catch { }
                 var rs = await PostAsync<PingResponse>("App/Register", inf);
                 if (rs != null)
                 {

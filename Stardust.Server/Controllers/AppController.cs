@@ -100,8 +100,18 @@ namespace Stardust.Server.Controllers
                     if (olt.CreateIP.IsNullOrEmpty()) olt.CreateIP = ip;
                     olt.Creator = Environment.MachineName;
 
+                    // 本地IP
+                    if (!inf.IP.IsNullOrEmpty())
+                        olt.IP = inf.IP;
+                    else
+                    {
+                        var p = clientId.IndexOf('@');
+                        if (p > 0) olt.IP = clientId[..p];
+                    }
+
                     // 关联节点
                     var node = Node.FindByCode(inf.NodeCode);
+                    if (node == null) node = Node.FindAllByIPs(olt.IP).FirstOrDefault();
                     if (node != null) olt.NodeId = node.ID;
 
                     olt.SaveAsync();

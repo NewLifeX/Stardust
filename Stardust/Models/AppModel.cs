@@ -9,13 +9,16 @@
         /// <summary>应用名</summary>
         public String AppName { get; set; }
 
+        /// <summary>版本</summary>
+        public String Version { get; set; }
+
         /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
         public String ClientId { get; set; }
 
+        /// <summary>本地IP地址</summary>
+        public String IP { get; set; }
+
         /// <summary>节点编码</summary>
         public String NodeCode { get; set; }
-
-        /// <summary>版本</summary>
-        public String Version { get; set; }
     }
 }

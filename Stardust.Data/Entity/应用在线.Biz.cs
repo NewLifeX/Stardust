@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
@@ -189,12 +190,6 @@ namespace Stardust.Data
         public static AppOnline UpdateOnline(App app, String clientId, String ip, String token, AppInfo info = null)
         {
             var online = GetOrAddClient(clientId) ?? GetOrAddClient(ip, token);
-            //if (app != null)
-            //{
-            //    online.AppId = app.Id;
-            //    online.Name = app.Name;
-            //    online.Category = app.Category;
-            //}
             online.Token = token;
             online.PingCount++;
             if (online.CreateIP.IsNullOrEmpty()) online.CreateIP = ip;
@@ -203,6 +198,20 @@ namespace Stardust.Data
             // 更新跟踪标识
             var traceId = DefaultSpan.Current?.TraceId;
             if (!traceId.IsNullOrEmpty()) online.TraceId = traceId;
+
+            // 本地IP
+            if (!clientId.IsNullOrEmpty())
+            {
+                var p = clientId.IndexOf('@');
+                if (p > 0) online.IP = clientId[..p];
+            }
+
+            // 关联节点
+            if (online.NodeId == 0)
+            {
+                var node = Node.FindAllByIPs(online.IP).FirstOrDefault();
+                if (node != null) online.NodeId = node.ID;
+            }
 
             online.Fill(app, info);
 
