@@ -90,15 +90,14 @@ namespace Stardust.Server.Controllers
                 if (clientId.IsNullOrEmpty()) clientId = _clientId;
                 if (!clientId.IsNullOrEmpty())
                 {
-                    var olt = AppOnline.GetOrAdd(clientId);
+                    var olt = AppOnline.GetOrAddClient(clientId);
                     olt.AppId = app.Id;
-                    olt.Name = app.Name;
+                    olt.Name = app.ToString();
                     olt.Category = app.Category;
                     olt.Version = inf.Version;
                     olt.Token = _token;
                     olt.PingCount++;
                     if (olt.CreateIP.IsNullOrEmpty()) olt.CreateIP = ip;
-                    olt.Creator = Environment.MachineName;
 
                     // 本地IP
                     if (!inf.IP.IsNullOrEmpty())
@@ -139,14 +138,14 @@ namespace Stardust.Server.Controllers
                 var clientId = _clientId;
                 if (!clientId.IsNullOrEmpty())
                 {
-                    var olt = AppOnline.GetOrAdd(clientId);
-                    olt.Name = app.Name;
+                    var olt = AppOnline.GetOrAddClient(clientId);
+                    olt.AppId = app.Id;
+                    olt.Name = app.ToString();
                     olt.Category = app.Category;
                     olt.Version = inf.Version;
                     olt.Token = _token;
                     olt.PingCount++;
                     if (olt.CreateIP.IsNullOrEmpty()) olt.CreateIP = ip;
-                    olt.Creator = Environment.MachineName;
 
                     olt.Fill(app, inf);
                     olt.SaveAsync();

@@ -41,6 +41,7 @@
       <Column Name="ProcessId" DataType="Int32" Description="进程" />
       <Column Name="ProcessName" DataType="String" Description="进程名称" />
       <Column Name="UserName" DataType="String" Description="用户名。启动该进程的用户名" />
+      <Column Name="MachineName" DataType="String" Description="机器名" />
       <Column Name="StartTime" DataType="DateTime" Description="进程时间" />
       <Column Name="Version" DataType="String" Description="版本。客户端" />
       <Column Name="Compile" DataType="DateTime" Description="编译时间。客户端" />

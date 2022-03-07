@@ -146,11 +146,6 @@ namespace Stardust.Data
         #endregion
 
         #region 业务操作
-        /// <summary>根据编码查询或添加</summary>
-        /// <param name="client"></param>
-        /// <returns></returns>
-        public static AppOnline GetOrAdd(String client) => GetOrAdd(client, FindByClient, k => new AppOnline { Client = k });
-
         /// <summary>获取 或 创建 会话</summary>
         /// <param name="client"></param>
         /// <returns></returns>
@@ -158,7 +153,7 @@ namespace Stardust.Data
         {
             if (client.IsNullOrEmpty()) return null;
 
-            return GetOrAdd(client, FindByClient, k => new AppOnline { Client = k });
+            return GetOrAdd(client, FindByClient, k => new AppOnline { Client = k, Creator = Environment.MachineName });
         }
 
         /// <summary>
@@ -193,7 +188,6 @@ namespace Stardust.Data
             online.Token = token;
             online.PingCount++;
             if (online.CreateIP.IsNullOrEmpty()) online.CreateIP = ip;
-            online.Creator = Environment.MachineName;
 
             // 更新跟踪标识
             var traceId = DefaultSpan.Current?.TraceId;
@@ -234,9 +228,10 @@ namespace Stardust.Data
 
             if (info != null)
             {
-                Name = info.MachineName;
+                //Name = info.MachineName;
                 Version = info.Version;
                 UserName = info.UserName;
+                MachineName = info.MachineName;
                 ProcessId = info.Id;
                 ProcessName = info.Name;
                 StartTime = info.StartTime;
