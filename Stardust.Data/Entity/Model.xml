@@ -47,6 +47,7 @@
       <Column Name="IP" DataType="String" Length="200" Description="本地IP。节点本地IP地址" />
       <Column Name="WorkerId" DataType="Int32" Description="雪花标识" />
       <Column Name="Token" DataType="String" Length="500" Description="令牌" />
+      <Column Name="TraceId" DataType="String" Description="追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
       <Column Name="Creator" DataType="String" Description="创建者。服务端节点" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />

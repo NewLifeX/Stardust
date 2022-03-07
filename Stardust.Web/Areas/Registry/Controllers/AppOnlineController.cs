@@ -1,6 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using NewLife;
 using NewLife.Cube;
+using NewLife.Cube.Extensions;
+using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data;
 
@@ -19,6 +20,12 @@ namespace Stardust.Web.Areas.Registry.Controllers
                 df.DisplayName = "性能";
                 df.Header = "性能";
                 df.Url = "AppMeter?appId={AppId}";
+            }
+            {
+                var df = ListFields.GetField("TraceId") as ListField;
+                df.DisplayName = "跟踪";
+                df.Url = StarHelper.BuildUrl("{TraceId}");
+                df.DataVisible = (e, f) => e is AppOnline entity && !entity.TraceId.IsNullOrEmpty();
             }
         }
 

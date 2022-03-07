@@ -5,6 +5,7 @@ using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using NewLife.Log;
 using NewLife.Reflection;
 using Stardust.Data.Nodes;
 using Stardust.Models;
@@ -40,6 +41,8 @@ namespace Stardust.Data
             if (!HasDirty) return;
 
             if (!Version.IsNullOrEmpty() && !Dirtys[nameof(Compile)]) Compile = AssemblyX.GetCompileTime(Version);
+
+            if (TraceId.IsNullOrEmpty()) TraceId = DefaultSpan.Current?.TraceId;
         }
         #endregion
 
@@ -51,7 +54,7 @@ namespace Stardust.Data
         /// <summary>应用</summary>
         [Map(__.AppId, typeof(App), "Id")]
         public String AppName => App?.Name;
-       
+
         /// <summary>节点</summary>
         [XmlIgnore, ScriptIgnore, IgnoreDataMember]
         public Node Node => Extends.Get(nameof(Node), k => Node.FindByID(NodeId));
@@ -84,7 +87,7 @@ namespace Stardust.Data
         /// <returns></returns>
         public static AppOnline FindByClient(String client, Boolean cache = true)
         {
-            if(client.IsNullOrEmpty()) return null; 
+            if (client.IsNullOrEmpty()) return null;
 
             if (!cache) return Find(_.Client == client);
 
@@ -192,6 +195,10 @@ namespace Stardust.Data
             online.PingCount++;
             if (online.CreateIP.IsNullOrEmpty()) online.CreateIP = ip;
             online.Creator = Environment.MachineName;
+
+            // 更新跟踪标识
+            var traceId = DefaultSpan.Current?.TraceId;
+            if (!traceId.IsNullOrEmpty()) online.TraceId = traceId;
 
             online.Fill(app, info);
 

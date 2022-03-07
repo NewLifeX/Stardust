@@ -158,6 +158,14 @@ namespace Stardust.Data
         [BindColumn("Token", "令牌", "")]
         public String Token { get => _Token; set { if (OnPropertyChanging("Token", value)) { _Token = value; OnPropertyChanged("Token"); } } }
 
+        private String _TraceId;
+        /// <summary>追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        [DisplayName("追踪标识")]
+        [Description("追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("TraceId", "追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
+        public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
+
         private String _Creator;
         /// <summary>创建者。服务端节点</summary>
         [DisplayName("创建者")]
@@ -218,6 +226,7 @@ namespace Stardust.Data
                     case "IP": return _IP;
                     case "WorkerId": return _WorkerId;
                     case "Token": return _Token;
+                    case "TraceId": return _TraceId;
                     case "Creator": return _Creator;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -246,6 +255,7 @@ namespace Stardust.Data
                     case "IP": _IP = Convert.ToString(value); break;
                     case "WorkerId": _WorkerId = value.ToInt(); break;
                     case "Token": _Token = Convert.ToString(value); break;
+                    case "TraceId": _TraceId = Convert.ToString(value); break;
                     case "Creator": _Creator = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -310,6 +320,9 @@ namespace Stardust.Data
 
             /// <summary>令牌</summary>
             public static readonly Field Token = FindByName("Token");
+
+            /// <summary>追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            public static readonly Field TraceId = FindByName("TraceId");
 
             /// <summary>创建者。服务端节点</summary>
             public static readonly Field Creator = FindByName("Creator");
@@ -379,6 +392,9 @@ namespace Stardust.Data
 
             /// <summary>令牌</summary>
             public const String Token = "Token";
+
+            /// <summary>追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            public const String TraceId = "TraceId";
 
             /// <summary>创建者。服务端节点</summary>
             public const String Creator = "Creator";
