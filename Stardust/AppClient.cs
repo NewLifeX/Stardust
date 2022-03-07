@@ -129,7 +129,7 @@ namespace Stardust
                 catch { }
 
                 var rs = await PostAsync<String>("App/Register", inf);
-                WriteLog("接入注册中心：{0}", rs);
+                WriteLog("接入星尘服务端：{0}", rs);
 
                 return rs;
             }
@@ -204,7 +204,7 @@ namespace Stardust
         {
             DefaultSpan.Current = null;
 
-            await Register();
+            //await Register();
             await Ping();
 
             var svc = _currentService;

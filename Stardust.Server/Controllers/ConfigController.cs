@@ -111,14 +111,18 @@ namespace Stardust.Server.Controllers
         {
             var set = Setting.Current;
 
-            if (appId.IsNullOrEmpty() && !token.IsNullOrEmpty())
+            // 优先令牌解码
+            App ap = null;
+            if (!token.IsNullOrEmpty())
             {
                 var (jwt, ap1) = _tokenService.DecodeToken(token, set.TokenSecret);
-                appId = ap1?.Name;
+                if (appId.IsNullOrEmpty()) appId = ap1?.Name;
                 if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
+
+                ap = ap1;
             }
 
-            var ap = _tokenService.Authorize(appId, secret, set.AutoRegister);
+            if (ap == null) ap = _tokenService.Authorize(appId, secret, set.AutoRegister);
 
             // 新建应用配置
             var app = AppConfig.FindByName(appId);
