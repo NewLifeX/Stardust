@@ -99,7 +99,14 @@ namespace Stardust
 
         #region 方法
         /// <summary>开始客户端</summary>
-        public void Start() => StartTimer();
+        public void Start()
+        {
+            StartTimer();
+
+            // 等待注册到平台
+            var task = Task.Run(Register);
+            task.Wait(1_000);
+        }
 
         /// <summary>注册</summary>
         /// <returns></returns>
@@ -120,12 +127,9 @@ namespace Stardust
                     inf.IP = NetHelper.MyIP() + "";
                 }
                 catch { }
-                var rs = await PostAsync<PingResponse>("App/Register", inf);
-                if (rs != null)
-                {
-                    // 由服务器改变采样频率
-                    if (rs.Period > 0) _timer.Period = rs.Period * 1000;
-                }
+
+                var rs = await PostAsync<String>("App/Register", inf);
+                WriteLog("接入注册中心：{0}", rs);
 
                 return rs;
             }

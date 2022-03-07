@@ -69,14 +69,8 @@ namespace Stardust.Server.Controllers
         #region 注册&心跳
         [ApiFilter]
         [HttpPost(nameof(Register))]
-        public PingResponse Register(AppModel inf)
+        public String Register(AppModel inf)
         {
-            var rs = new PingResponse
-            {
-                //Time = inf.Time,
-                ServerTime = DateTime.UtcNow,
-            };
-
             var app = _app;
             if (app != null)
             {
@@ -117,7 +111,7 @@ namespace Stardust.Server.Controllers
                 }
             }
 
-            return rs;
+            return app?.ToString();
         }
 
         [ApiFilter]
