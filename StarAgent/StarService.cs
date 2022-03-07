@@ -35,7 +35,10 @@ namespace StarAgent
         public ServiceManager Manager { get; set; }
 
         /// <summary>星尘设置</summary>
-        public StarSetting Setting { get; set; }
+        public StarSetting StarSetting { get; set; }
+
+        /// <summary>星尘代理设置</summary>
+        public StarAgent.Setting AgentSetting { get; set; }
         #endregion
 
         #region 业务
@@ -46,7 +49,7 @@ namespace StarAgent
         {
             XTrace.WriteLine(info.ToJson());
 
-            var set = Setting;
+            var set = StarSetting;
             // 使用对方送过来的星尘服务端地址
             if (set.Server.IsNullOrEmpty() && !info.Server.IsNullOrEmpty())
             {
@@ -68,6 +71,7 @@ namespace StarAgent
             var ai = AgentInfo.GetLocal();
             ai.Server = set.Server;
             ai.Services = Manager?.Services.Select(e => e.Name).ToArray();
+            ai.Code = AgentSetting.Code;
 
             return ai;
         }

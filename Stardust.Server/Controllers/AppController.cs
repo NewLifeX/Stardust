@@ -9,6 +9,7 @@ using NewLife.Log;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
+using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Common;
 using Stardust.Server.Models;
@@ -65,10 +66,10 @@ namespace Stardust.Server.Controllers
         }
         #endregion
 
-        #region 心跳
+        #region 注册&心跳
         [ApiFilter]
-        [HttpPost(nameof(Ping))]
-        public PingResponse Ping(AppPingInfo inf)
+        [HttpPost(nameof(Register))]
+        public PingResponse Register(AppModel inf)
         {
             var rs = new PingResponse
             {
@@ -85,10 +86,47 @@ namespace Stardust.Server.Controllers
                 app.UpdateIP = ip;
                 app.SaveAsync();
 
-                //rs.Period = app.Period;
-
                 var clientId = inf.ClientId;
                 if (clientId.IsNullOrEmpty()) clientId = _clientId;
+                if (!clientId.IsNullOrEmpty())
+                {
+                    var olt = AppOnline.GetOrAdd(clientId);
+                    olt.AppId = app.Id;
+                    olt.Name = app.Name;
+                    olt.Category = app.Category;
+                    olt.Version = inf.Version;
+                    olt.Token = _token;
+                    olt.PingCount++;
+                    if (olt.CreateIP.IsNullOrEmpty()) olt.CreateIP = ip;
+                    olt.Creator = Environment.MachineName;
+
+                    // 关联节点
+                    var node = Node.FindByCode(inf.NodeCode);
+                    if (node != null) olt.NodeId = node.ID;
+
+                    olt.SaveAsync();
+                }
+            }
+
+            return rs;
+        }
+
+        [ApiFilter]
+        [HttpPost(nameof(Ping))]
+        public PingResponse Ping(AppInfo inf)
+        {
+            var rs = new PingResponse
+            {
+                //Time = inf.Time,
+                ServerTime = DateTime.UtcNow,
+            };
+
+            var app = _app;
+            if (app != null)
+            {
+                var ip = UserHost;
+
+                var clientId = _clientId;
                 if (!clientId.IsNullOrEmpty())
                 {
                     var olt = AppOnline.GetOrAdd(clientId);
@@ -100,8 +138,7 @@ namespace Stardust.Server.Controllers
                     if (olt.CreateIP.IsNullOrEmpty()) olt.CreateIP = ip;
                     olt.Creator = Environment.MachineName;
 
-                    //olt.Save(null, inf, token, ip);
-                    olt.Fill(app, inf.Info);
+                    olt.Fill(app, inf);
                     olt.SaveAsync();
                 }
             }

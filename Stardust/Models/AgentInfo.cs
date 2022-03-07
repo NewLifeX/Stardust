@@ -27,17 +27,16 @@ namespace Stardust.Models
         /// <summary>命令参数</summary>
         public String Arguments { get; set; }
 
-        /// <summary>
-        /// 本地IP地址
-        /// </summary>
+        /// <summary>本地IP地址</summary>
         public String IP { get; set; }
 
         /// <summary>服务端地址</summary>
         public String Server { get; set; }
 
-        /// <summary>
-        /// 应用服务
-        /// </summary>
+        /// <summary>节点编码</summary>
+        public String Code { get; set; }
+
+        /// <summary>应用服务</summary>
         public String[] Services { get; set; }
         #endregion
 

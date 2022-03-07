@@ -27,8 +27,8 @@ namespace Stardust
         /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
         public String ClientId { get; set; }
 
-        ///// <summary>客户端</summary>
-        //public IApiClient Client { get; set; }
+        /// <summary>节点编码</summary>
+        public String NodeCode { get; set; }
 
         private ConcurrentDictionary<String, Delegate> _commands = new(StringComparer.OrdinalIgnoreCase);
         /// <summary>命令集合</summary>
@@ -100,9 +100,38 @@ namespace Stardust
         #region 方法
         /// <summary>开始客户端</summary>
         public void Start() => StartTimer();
-        #endregion
 
-        #region 心跳
+        /// <summary>注册</summary>
+        /// <returns></returns>
+        public async Task<Object> Register()
+        {
+            try
+            {
+                var inf = new AppModel
+                {
+                    AppId = AppId,
+                    AppName = AppName,
+                    ClientId = ClientId,
+                    Version = _version,
+                    NodeCode = NodeCode,
+                };
+                var rs = await PostAsync<PingResponse>("App/Register", inf);
+                if (rs != null)
+                {
+                    // 由服务器改变采样频率
+                    if (rs.Period > 0) _timer.Period = rs.Period * 1000;
+                }
+
+                return rs;
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteLine("心跳异常 {0}", ex.GetTrue().Message);
+
+                throw;
+            }
+        }
+
         /// <summary>心跳</summary>
         /// <returns></returns>
         public async Task<Object> Ping()
@@ -114,15 +143,7 @@ namespace Stardust
                 else
                     _appInfo.Refresh();
 
-                var inf = new AppPingInfo
-                {
-                    AppId = AppId,
-                    AppName = AppName,
-                    ClientId = ClientId,
-                    Version = _version,
-                    Info = _appInfo
-                };
-                var rs = await PostAsync<PingResponse>("App/Ping", inf);
+                var rs = await PostAsync<PingResponse>("App/Ping", _appInfo);
                 if (rs != null)
                 {
                     // 由服务器改变采样频率
@@ -174,6 +195,7 @@ namespace Stardust
         {
             DefaultSpan.Current = null;
 
+            await Register();
             await Ping();
 
             var svc = _currentService;

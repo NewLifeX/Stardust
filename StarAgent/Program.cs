@@ -187,7 +187,8 @@ namespace StarAgent
                         Service = this,
                         Host = Host,
                         Manager = _Manager,
-                        Setting = StarSetting,
+                        StarSetting = StarSetting,
+                        AgentSetting = AgentSetting,
                         Log = XTrace.Log
                     }, null);
 

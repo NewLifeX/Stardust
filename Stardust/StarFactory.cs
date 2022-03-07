@@ -187,6 +187,7 @@ namespace Stardust
                     AppId = AppId,
                     AppName = AppName,
                     ClientId = ClientId,
+                    NodeCode = Local?.Info?.Code,
                     Filter = _tokenFilter
                 };
 

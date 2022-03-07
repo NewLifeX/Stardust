@@ -47,6 +47,12 @@ namespace Stardust.Data
 
             if (isNew && !Dirtys[__.AutoActive]) AutoActive = true;
         }
+
+        /// <summary>
+        /// 已重载。显示友好名称
+        /// </summary>
+        /// <returns></returns>
+        public override String ToString() => !DisplayName.IsNullOrEmpty() ? DisplayName : Name;
         #endregion
 
         #region 扩展属性
