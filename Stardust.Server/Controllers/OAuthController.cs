@@ -55,13 +55,13 @@ namespace Stardust.Server.Controllers
                 var app = App.FindByName(jwt?.Subject);
                 if ((app == null || !app.Enable) && ex == null) ex = new InvalidOperationException($"无效应用[{jwt.Subject}]");
 
+                if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
+
                 if (ex != null)
                 {
                     app.WriteHistory("RefreshToken", false, ex.ToString(), UserHost, clientId);
                     throw ex;
                 }
-
-                if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
 
                 app.WriteHistory("RefreshToken", true, model.refresh_token, UserHost, clientId);
 

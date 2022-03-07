@@ -16,18 +16,18 @@ namespace Stardust.Server.Controllers
     [Route("[controller]")]
     public class TraceController : ControllerBase
     {
-        private readonly TokenService _service;
+        private readonly TokenService _tokenService;
         private readonly ITraceStatService _stat;
         private readonly IAppDayStatService _appStat;
         private readonly ITraceItemStatService _itemStat;
         private static readonly ICache _cache = new MemoryCache();
 
-        public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService appService)
+        public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService)
         {
             _stat = stat;
             _appStat = appStat;
             _itemStat = itemStat;
-            _service = appService;
+            _tokenService = tokenService;
         }
 
         [ApiFilter]
@@ -42,37 +42,8 @@ namespace Stardust.Server.Controllers
 
             var set = Setting.Current;
 
-            // 新版验证方式，访问令牌
-            App ap = null;
-            var clientId = model.ClientId;
-            if (!token.IsNullOrEmpty() && token.Split(".").Length == 3)
-            {
-                var (jwt, app2) = _service.DecodeToken(token, set.TokenSecret);
-                //if (ap == null || ap.Name != model.AppId) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{ap?.Name}]！");
-                if (app2 == null) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{app2?.Name}]！");
-
-                ap = app2;
-                if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
-            }
-            App.UpdateInfo(model, ip);
-            AppOnline.UpdateOnline(ap, clientId, ip, token, model.Info);
-
-            // 该应用的追踪配置信息
-            var app = AppTracer.FindByName(model.AppId);
-            if (app == null)
-            {
-                app = new AppTracer
-                {
-                    Name = model.AppId,
-                    DisplayName = model.AppName,
-                    AppId = ap.Id,
-                    Enable = set.AutoRegister,
-                };
-                app.Save();
-            }
-
-            // 校验应用
-            if (app == null || !app.Enable) throw new Exception($"无效应用[{model.AppId}/{model.AppName}]");
+            // 验证
+            var (app, online) = Valid(model.AppId, model, model.ClientId, token);
 
             // 插入数据
             if (builders != null && builders.Length > 0) Task.Run(() => ProcessData(app, model, ip, builders));
@@ -98,6 +69,73 @@ namespace Stardust.Server.Controllers
             if (!model.Version.IsNullOrEmpty()) rs.Excludes = app.Excludes?.Split(",", ";");
 
             return rs;
+        }
+
+        private (AppTracer, AppOnline) Valid(String appId, TraceModel model, String clientId, String token)
+        {
+            var set = Setting.Current;
+
+            // 新版验证方式，访问令牌
+            App ap = null;
+            if (!token.IsNullOrEmpty() && token.Split(".").Length == 3)
+            {
+                var (jwt, ap1) = _tokenService.DecodeToken(token, set.TokenSecret);
+                if (appId.IsNullOrEmpty()) appId = ap1?.Name;
+                if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
+
+                ap = ap1;
+            }
+
+            //ap = _tokenService.Authorize(appId, null, set.AutoRegister);
+            if (ap == null) ap = App.FindByName(model.AppId);
+
+            // 新建应用配置
+            var app = AppTracer.FindByName(appId);
+            if (app == null) app = AppTracer.Find(AppTracer._.Name == appId);
+            if (app == null)
+            {
+                var obj = AppTracer.Meta.Table;
+                lock (obj)
+                {
+                    app = AppTracer.FindByName(appId);
+                    if (app == null)
+                    {
+                        app = new AppTracer
+                        {
+                            Name = model.AppId,
+                            DisplayName = model.AppName,
+                            //AppId = ap.Id,
+                            //Enable = ap.Enable,
+                        };
+                        if (ap != null)
+                        {
+                            app.AppId = ap.Id;
+                            app.Enable = ap.Enable;
+                        }
+
+                        app.Insert();
+                    }
+                }
+            }
+
+            if (app.AppId == 0 && ap != null)
+            {
+                app.AppId = ap.Id;
+                app.Update();
+            }
+
+            var ip = HttpContext.GetUserHost();
+            if (clientId.IsNullOrEmpty()) clientId = ip;
+
+            App.WriteMeter(model, ip);
+
+            // 更新心跳信息
+            var online = AppOnline.UpdateOnline(ap, clientId, ip, token, model.Info);
+
+            // 检查应用有效性
+            if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
+
+            return (app, online);
         }
 
         private void ProcessData(AppTracer app, TraceModel model, String ip, ISpanBuilder[] builders)

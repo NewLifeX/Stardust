@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net.WebSockets;
+using System.Reflection;
 using NewLife;
 using NewLife.Log;
 using NewLife.Reflection;
@@ -37,6 +38,7 @@ namespace Stardust
         public event EventHandler<CommandEventArgs> Received;
 
         private AppInfo _appInfo;
+        private readonly String _version;
         private readonly ConcurrentDictionary<String, PublishServiceInfo> _publishServices = new();
         private readonly ConcurrentDictionary<String, ConsumeServiceInfo> _consumeServices = new();
         private readonly ConcurrentDictionary<String, ServiceModel[]> _consumes = new();
@@ -45,7 +47,25 @@ namespace Stardust
 
         #region 构造
         /// <summary>实例化</summary>
-        public AppClient() => Log = XTrace.Log;
+        public AppClient()
+        {
+            try
+            {
+                var executing = AssemblyX.Create(Assembly.GetExecutingAssembly());
+                var asm = AssemblyX.Entry ?? executing;
+                if (asm != null)
+                {
+                    if (AppId == null) AppId = asm.Name;
+                    AppName = asm.Title;
+                    _version = asm.Version;
+                }
+
+                ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}";
+            }
+            catch { }
+
+            Log = XTrace.Log;
+        }
 
         /// <summary>实例化</summary>
         /// <param name="urls"></param>
@@ -90,13 +110,19 @@ namespace Stardust
             try
             {
                 if (_appInfo == null)
-                    _appInfo = new AppInfo(Process.GetCurrentProcess());
+                    _appInfo = new AppInfo(Process.GetCurrentProcess()) { Version = _version };
                 else
                     _appInfo.Refresh();
 
-                _appInfo.AppName = AppName;
-                _appInfo.ClientId = ClientId;
-                var rs = await PostAsync<PingResponse>("App/Ping", _appInfo);
+                var inf = new AppPingInfo
+                {
+                    AppId = AppId,
+                    AppName = AppName,
+                    ClientId = ClientId,
+                    Version = _version,
+                    Info = _appInfo
+                };
+                var rs = await PostAsync<PingResponse>("App/Ping", inf);
                 if (rs != null)
                 {
                     // 由服务器改变采样频率

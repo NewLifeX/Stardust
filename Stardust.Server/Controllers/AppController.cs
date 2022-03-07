@@ -68,7 +68,7 @@ namespace Stardust.Server.Controllers
         #region 心跳
         [ApiFilter]
         [HttpPost(nameof(Ping))]
-        public PingResponse Ping(AppInfo inf)
+        public PingResponse Ping(AppPingInfo inf)
         {
             var rs = new PingResponse
             {
@@ -101,7 +101,7 @@ namespace Stardust.Server.Controllers
                     olt.Creator = Environment.MachineName;
 
                     //olt.Save(null, inf, token, ip);
-                    olt.Fill(app, inf);
+                    olt.Fill(app, inf.Info);
                     olt.SaveAsync();
                 }
             }

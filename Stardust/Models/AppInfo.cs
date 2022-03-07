@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using NewLife;
 using NewLife.Caching;
 
@@ -22,11 +18,11 @@ namespace Stardust.Models
         /// <summary>版本</summary>
         public String Version { get; set; }
 
-        /// <summary>应用名</summary>
-        public String AppName { get; set; }
+        ///// <summary>应用名</summary>
+        //public String AppName { get; set; }
 
-        /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
-        public String ClientId { get; set; }
+        ///// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
+        //public String ClientId { get; set; }
 
         /// <summary>用户名</summary>
         public String UserName { get; set; }

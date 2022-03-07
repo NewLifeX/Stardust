@@ -130,7 +130,7 @@ namespace Stardust.Data
         /// <summary>更新信息</summary>
         /// <param name="model"></param>
         /// <param name="ip"></param>
-        public static void UpdateInfo(TraceModel model, String ip)
+        public static void WriteMeter(TraceModel model, String ip)
         {
             // 修复数据
             var app = FindByName(model.AppId);
