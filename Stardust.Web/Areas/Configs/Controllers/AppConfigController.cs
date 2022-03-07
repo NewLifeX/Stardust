@@ -19,7 +19,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
             LogOnChange = true;
 
             ListFields.RemoveCreateField();
-            ListFields.RemoveField("EnableApollo", "ApolloMetaServer", "ApolloAppId", "ApolloNameSpace");
+            ListFields.RemoveField("AppId", "EnableApollo", "ApolloMetaServer", "ApolloAppId", "ApolloNameSpace");
 
             {
                 var df = ListFields.AddListField("Configs", "Enable");
@@ -52,6 +52,15 @@ namespace Stardust.Web.Areas.Configs.Controllers
                 df.DisplayName = "预览";
                 df.Title = "查看该应用的配置数据";
                 df.Url = "/config/getall?appId={Name}&secret={appSecret}";
+            }
+
+            {
+                var df = ListFields.AddListField("Online", "PublishTime");
+                df.Header = "在线实例";
+                df.DisplayName = "在线实例";
+                df.Title = "查看该应用的在线实例应用";
+                df.Url = "/registry/AppOnline?appId={AppId}";
+                df.DataVisible = (e, f) => (e is AppConfig ac && ac.AppId > 0);
             }
 
             {

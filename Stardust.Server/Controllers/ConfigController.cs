@@ -134,6 +134,7 @@ namespace Stardust.Server.Controllers
                         app = new AppConfig
                         {
                             Name = ap.Name,
+                            AppId = ap.Id,
                             Enable = ap.Enable,
                         };
 
@@ -142,11 +143,14 @@ namespace Stardust.Server.Controllers
                 }
             }
 
-            var ip = HttpContext.GetUserHost();
-            if (clientId.IsNullOrEmpty())
+            if (app.AppId == 0)
             {
-                clientId = ip;
+                app.AppId = ap.Id;
+                app.Update();
             }
+
+            var ip = HttpContext.GetUserHost();
+            if (clientId.IsNullOrEmpty()) clientId = ip;
 
             // 更新心跳信息
             var online = AppOnline.UpdateOnline(ap, clientId, ip, token);
@@ -167,7 +171,7 @@ namespace Stardust.Server.Controllers
             if (model.AppId.IsNullOrEmpty() && token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.AppId));
 
             // 验证
-            var (app, online) = Valid(model.AppId, model.Secret, model.ClientId, token);
+            var (app, _) = Valid(model.AppId, model.Secret, model.ClientId, token);
             if (app.Readonly) throw new Exception($"应用[{app}]处于只读模式，禁止修改");
 
             return _configService.SetConfigs(app, model.Configs);

@@ -71,10 +71,17 @@ namespace Stardust.Web.Controllers
                 app = new AppConfig
                 {
                     Name = ap.Name,
+                    AppId = ap.Id,
                     Enable = ap.Enable,
                 };
 
                 app.Insert();
+            }
+
+            if (app.AppId == 0)
+            {
+                app.AppId = ap.Id;
+                app.Update();
             }
 
             // 更新心跳信息
