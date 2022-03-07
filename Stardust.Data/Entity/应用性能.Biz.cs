@@ -146,7 +146,8 @@ namespace Stardust.Data
         /// <param name="app"></param>
         /// <param name="info"></param>
         /// <param name="clientId"></param>
-        public static void WriteData(App app, AppInfo info, String clientId)
+        /// <param name="ip"></param>
+        public static void WriteData(App app, AppInfo info, String clientId, String ip)
         {
             // 插入节点数据
             var data = new AppMeter
@@ -161,6 +162,7 @@ namespace Stardust.Data
 
                 Data = info.ToJson(),
                 Creator = Environment.MachineName,
+                CreateIP = ip,
             };
 
             data.SaveAsync();
