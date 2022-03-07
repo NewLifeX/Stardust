@@ -16,9 +16,15 @@ namespace Stardust.Web.Areas.Registry.Controllers
             ListFields.RemoveField("Token");
 
             {
+                var df = ListFields.GetField("NodeName") as ListField;
+                df.Header = "节点";
+                df.DisplayName = "{NodeName}";
+                df.Url = "/Nodes/Node?nodeId={NodeId}";
+            }
+            {
                 var df = ListFields.AddListField("Meter", null, "PingCount");
-                df.DisplayName = "性能";
                 df.Header = "性能";
+                df.DisplayName = "性能";
                 df.Url = "AppMeter?appId={AppId}";
             }
             {

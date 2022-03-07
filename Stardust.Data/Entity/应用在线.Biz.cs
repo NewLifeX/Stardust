@@ -40,7 +40,11 @@ namespace Stardust.Data
             // 如果没有脏数据，则不需要进行任何处理
             if (!HasDirty) return;
 
-            if (!Version.IsNullOrEmpty() && !Dirtys[nameof(Compile)]) Compile = AssemblyX.GetCompileTime(Version);
+            if (!Version.IsNullOrEmpty() && !Dirtys[nameof(Compile)])
+            {
+                var dt = AssemblyX.GetCompileTime(Version);
+                if (dt.Year > 2000) Compile = dt;
+            }
 
             if (TraceId.IsNullOrEmpty()) TraceId = DefaultSpan.Current?.TraceId;
         }
@@ -215,7 +219,7 @@ namespace Stardust.Data
             if (app != null)
             {
                 AppId = app.Id;
-                Name = app.Name;
+                Name = app.ToString();
                 Category = app.Category;
             }
 
