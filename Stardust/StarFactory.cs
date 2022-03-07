@@ -49,7 +49,7 @@ namespace Stardust
         public IApiClient Client => _client;
 
         /// <summary>应用客户端</summary>
-        public AppClient App => _appClient;
+        public AppClient App => _client;
 
         /// <summary>配置信息。从配置中心返回的信息头</summary>
         public ConfigInfo ConfigInfo => (_config as StarHttpConfigProvider)?.ConfigInfo;
@@ -57,9 +57,9 @@ namespace Stardust
         /// <summary>本地星尘代理</summary>
         public LocalStarClient Local { get; private set; }
 
-        private ApiHttpClient _client;
+        private AppClient _client;
         private TokenHttpFilter _tokenFilter;
-        private AppClient _appClient;
+        //private AppClient _appClient;
         #endregion
 
         #region 构造
@@ -90,7 +90,7 @@ namespace Stardust
 
             _tracer.TryDispose();
             _config.TryDispose();
-            _appClient.TryDispose();
+            //_appClient.TryDispose();
         }
 
         private void Init()
@@ -263,7 +263,7 @@ namespace Stardust
                         Client = _client,
                     };
                     //if (!ClientId.IsNullOrEmpty()) config.ClientId = ClientId;
-                    config.Attach(_appClient);
+                    config.Attach(_client);
                     config.LoadAll();
 
                     _config = config;
@@ -275,21 +275,23 @@ namespace Stardust
         #endregion
 
         #region 注册中心
+        private Boolean _initService;
         /// <summary>注册中心，服务注册与发现</summary>
         public IRegistry Service
         {
             get
             {
-                if (_appClient == null)
+                if (!_initService)
                 {
                     if (!Valid()) return null;
 
-                    _appClient = _client as AppClient;
+                    _initService = true;
+                    //_appClient = _client as AppClient;
 
                     XTrace.WriteLine("初始化星尘注册中心，提供服务注册与发布能力");
                 }
 
-                return _appClient;
+                return _client;
             }
         }
 
