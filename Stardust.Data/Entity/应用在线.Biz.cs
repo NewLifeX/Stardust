@@ -184,8 +184,11 @@ namespace Stardust.Data
         /// <returns></returns>
         public static AppOnline UpdateOnline(App app, String clientId, String ip, String token, AppInfo info = null)
         {
-            var online = GetOrAddClient(clientId) ?? GetOrAddClient(ip, token);
-            online.Token = token;
+            // 首先根据ClientId和Token直接查找应用在线
+            var online = FindByClient(clientId) ?? FindByToken(token);
+            if (online == null) online = GetOrAddClient(clientId) ?? GetOrAddClient(ip, token);
+            if (clientId.IsNullOrEmpty()) online.Client = clientId;
+            if (token.IsNullOrEmpty()) online.Token = token;
             online.PingCount++;
             if (online.CreateIP.IsNullOrEmpty()) online.CreateIP = ip;
 
