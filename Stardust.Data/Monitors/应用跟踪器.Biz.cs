@@ -213,6 +213,17 @@ namespace Stardust.Data.Monitors
 
             return ti;
         }
+
+        /// <summary>修正数据</summary>
+        public void Fix()
+        {
+            var list = TraceDayStat.FindAllByAppId(ID);
+            //Days = list.DistinctBy(e => e.StatDate.Date).Count();
+            Days = list.Select(e => e.StatDate.ToFullString()).Distinct().Count();
+            Total = list.Sum(e => e.Total);
+
+            ItemCount = TraceItems.Count(e => e.Enable);
+        }
         #endregion
     }
 }

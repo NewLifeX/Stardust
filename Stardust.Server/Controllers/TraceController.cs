@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
@@ -48,20 +44,17 @@ namespace Stardust.Server.Controllers
 
             // 新版验证方式，访问令牌
             App ap = null;
+            var clientId = model.ClientId;
             if (!token.IsNullOrEmpty() && token.Split(".").Length == 3)
             {
-                (_, ap) = _service.DecodeToken(token, set.TokenSecret);
+                var (jwt, app2) = _service.DecodeToken(token, set.TokenSecret);
                 //if (ap == null || ap.Name != model.AppId) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{ap?.Name}]！");
-                if (ap == null) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{ap?.Name}]！");
+                if (app2 == null) throw new InvalidOperationException($"授权不匹配[{model.AppId}]!=[{app2?.Name}]！");
+
+                ap = app2;
+                if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
             }
             App.UpdateInfo(model, ip);
-
-            var clientId = model.ClientId;
-            if (clientId.IsNullOrEmpty())
-            {
-                var (jwt, ex) = _service.DecodeTokenWithError(token, set.TokenSecret);
-                clientId = jwt?.Id;
-            }
             AppOnline.UpdateOnline(ap, clientId, ip, token, model.Info);
 
             // 该应用的追踪配置信息
@@ -72,6 +65,7 @@ namespace Stardust.Server.Controllers
                 {
                     Name = model.AppId,
                     DisplayName = model.AppName,
+                    AppId = ap.Id,
                     Enable = set.AutoRegister,
                 };
                 app.Save();

@@ -62,7 +62,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
                 df.DisplayName = "在线实例";
                 df.Title = "查看该应用的在线实例应用";
                 df.Url = "/registry/AppOnline?appId={AppId}";
-                df.DataVisible = (e, f) => (e is AppConfig ac && ac.AppId > 0);
+                df.DataVisible = (e, f) => (e is AppConfig entity && entity.AppId > 0);
             }
 
             {

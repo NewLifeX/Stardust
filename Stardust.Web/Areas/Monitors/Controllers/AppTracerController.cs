@@ -5,8 +5,10 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
+using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
+using Stardust.Data;
 using Stardust.Data.Monitors;
 using Stardust.Server.Services;
 using XCode;
@@ -24,11 +26,46 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         {
             LogOnChange = true;
 
+            ListFields.RemoveField("AppId", "TimeoutExcludes", "VipClients", "AlarmRobot");
+            ListFields.RemoveCreateField();
+
             {
-                var df = ListFields.AddListField("Log", "CreateUser");
+                var df = ListFields.AddListField("DayMonitor", null, "Category");
+                df.Header = "每日监控";
+                df.DisplayName = "每日监控";
+                df.Title = "该应用每日监控数据";
+                df.Url = "AppDaystat?appId={ID}";
+            }
+
+            {
+                var df = ListFields.GetField("ItemCount") as ListField;
+                //df.Header = "每日监控";
+                df.DisplayName = "{ItemCount}";
+                //df.Title = "该应用每日监控数据";
+                df.Url = "TraceItem?appId={ID}";
+            }
+
+            {
+                var df = ListFields.AddListField("Online", "UpdateUser");
+                df.Header = "在线实例";
+                df.DisplayName = "在线实例";
+                df.Title = "查看该应用的在线实例应用";
+                df.Url = "/registry/AppOnline?appId={AppId}";
+                df.DataVisible = (e, f) => (e is AppTracer entity && entity.AppId > 0);
+            }
+
+            {
+                var df = ListFields.AddListField("Meter", "UpdateUser");
+                df.DisplayName = "性能";
+                df.Header = "性能";
+                df.Url = "/Registry/AppMeter?appId={ID}";
+            }
+
+            {
+                var df = ListFields.AddListField("Log", "UpdateUser");
                 df.DisplayName = "修改日志";
                 df.Header = "修改日志";
-                df.Url = "/Admin/Log?category=应用跟踪器&linkId={Id}";
+                df.Url = "/Admin/Log?category=应用跟踪器&linkId={ID}";
             }
         }
 
@@ -74,6 +111,33 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
         protected override Boolean Valid(AppTracer entity, DataObjectMethodType type, Boolean post)
         {
+            if (post)
+            {
+                // 更新时关联应用
+                switch (type)
+                {
+                    case DataObjectMethodType.Update:
+                    case DataObjectMethodType.Insert:
+                        if (entity.AppId == 0)
+                        {
+                            var app = App.FindByName(entity.Name);
+                            if (app != null) entity.AppId = app.Id;
+                        }
+
+                        break;
+                }
+
+                // 修正埋点数
+                switch (type)
+                {
+                    case DataObjectMethodType.Update:
+                        entity.Fix();
+                        entity.Update();
+
+                        break;
+                }
+            }
+
             var rs = base.Valid(entity, type, post);
 
             if (post && type == DataObjectMethodType.Delete)
@@ -103,13 +167,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                     //_traceItemStatService.Add(app.ID);
                     _traceItemStatService.Process(app.ID);
 
-                    {
-                        var list = TraceDayStat.FindAllByAppId(app.ID);
-                        app.Days = list.DistinctBy(e => e.StatDate.Date).Count();
-                        app.Total = list.Sum(e => e.Total);
-                    }
-
-                    app.ItemCount = app.TraceItems.Count(e => e.Enable);
+                    app.Fix();
                     app.Update();
                 }
             }
