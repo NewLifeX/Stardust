@@ -36,12 +36,12 @@ namespace Stardust.Web.Areas.Registry.Controllers
                 // 最近24小时
                 if (p.PageSize == 20 && appId > 0) p.PageSize = 1440;
 
-                // 自动客户端
-                if (clientId.IsNullOrEmpty())
-                {
-                    var clients = GetClientIds(appId);
-                    if (clients != null && clients.Count > 0) clientId = clients.FirstOrDefault(e => e.Key != "null").Key;
-                }
+                //// 自动客户端
+                //if (clientId.IsNullOrEmpty())
+                //{
+                //    var clients = GetClientIds(appId);
+                //    if (clients != null && clients.Count > 0) clientId = clients.FirstOrDefault(e => e.Key != "null").Key;
+                //}
 
                 PageSetting.EnableNavbar = false;
             }

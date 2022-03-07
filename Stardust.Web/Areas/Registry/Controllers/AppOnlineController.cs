@@ -13,7 +13,7 @@ namespace Stardust.Web.Areas.Registry.Controllers
     {
         static AppOnlineController()
         {
-            ListFields.RemoveField("Token");
+            ListFields.RemoveField("Token", "Compile");
 
             {
                 var df = ListFields.GetField("NodeName") as ListField;
@@ -25,7 +25,7 @@ namespace Stardust.Web.Areas.Registry.Controllers
                 var df = ListFields.AddListField("Meter", null, "PingCount");
                 df.Header = "性能";
                 df.DisplayName = "性能";
-                df.Url = "AppMeter?appId={AppId}";
+                df.Url = "AppMeter?appId={AppId}&clientId={IP}";
             }
             {
                 var df = ListFields.GetField("TraceId") as ListField;
