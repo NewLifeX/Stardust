@@ -12,10 +12,10 @@ using XCode.Shards;
 namespace Stardust.Data
 {
     /// <summary>应用日志</summary>
-    public partial class AppLog : Entity<AppLog>
+    public partial class AppClientLog : Entity<AppClientLog>
     {
         #region 对象操作
-        static AppLog()
+        static AppClientLog()
         {
             // 分表分库
             Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
@@ -71,7 +71,7 @@ namespace Stardust.Data
         /// <summary>根据编号查找</summary>
         /// <param name="id">编号</param>
         /// <returns>实体对象</returns>
-        public static AppLog FindById(Int64 id)
+        public static AppClientLog FindById(Int64 id)
         {
             if (id <= 0) return null;
 
@@ -92,12 +92,12 @@ namespace Stardust.Data
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<AppLog> Search(Int32 appId, String clientId, Int32 threadId, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<AppClientLog> Search(Int32 appId, String clientId, Int32 threadId, DateTime start, DateTime end, String key, PageParameter page)
         {
             //if (appId <= 0) throw new ArgumentNullException(nameof(appId));
             //if (start.Year < 2000) throw new ArgumentNullException(nameof(start));
             //if (end.Year < 2000) throw new ArgumentNullException(nameof(end));
-            if (appId <= 0 || start.Year < 2000) return new List<AppLog>();
+            if (appId <= 0 || start.Year < 2000) return new List<AppClientLog>();
 
             // 分表
             //using var split = Meta.CreateSplit($"AppLog_{start:yyyyMMdd}", $"AppLog_{appId}");
@@ -136,9 +136,9 @@ namespace Stardust.Data
         /// <param name="message"></param>
         /// <param name="ip"></param>
         /// <returns></returns>
-        public static AppLog Create(Int32 appId, String clientId, String[] ss, String message, String ip)
+        public static AppClientLog Create(Int32 appId, String clientId, String[] ss, String message, String ip)
         {
-            var log = new AppLog
+            var log = new AppClientLog
             {
                 AppId = appId,
                 ClientId = clientId,

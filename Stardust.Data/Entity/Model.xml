@@ -192,7 +192,7 @@
       <Index Columns="UpdateTime" />
     </Indexes>
   </Table>
-  <Table Name="AppLog" Description="应用日志">
+  <Table Name="AppClientLog" Description="应用日志">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Master="True" Description="应用" />

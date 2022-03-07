@@ -14,10 +14,10 @@ namespace Stardust.Data
     [Serializable]
     [DataObject]
     [Description("应用日志")]
-    [BindIndex("IX_AppLog_AppId_ClientId_ThreadId_Id", false, "AppId,ClientId,ThreadId,Id")]
-    [BindIndex("IX_AppLog_AppId_Id", false, "AppId,Id")]
-    [BindTable("AppLog", Description = "应用日志", ConnName = "Stardust", DbType = DatabaseType.None)]
-    public partial class AppLog
+    [BindIndex("IX_AppClientLog_AppId_ClientId_ThreadId_Id", false, "AppId,ClientId,ThreadId,Id")]
+    [BindIndex("IX_AppClientLog_AppId_Id", false, "AppId,Id")]
+    [BindTable("AppClientLog", Description = "应用日志", ConnName = "Stardust", DbType = DatabaseType.None)]
+    public partial class AppClientLog
     {
         #region 属性
         private Int64 _Id;

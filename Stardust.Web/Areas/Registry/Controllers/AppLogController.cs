@@ -9,11 +9,11 @@ namespace Stardust.Web.Areas.Registry.Controllers
 {
     [RegistryArea]
     [Menu(0, false)]
-    public class AppLogController : ReadOnlyEntityController<AppLog>
+    public class AppLogController : ReadOnlyEntityController<AppClientLog>
     {
-        protected override AppLog Find(Object key) => AppLog.FindById(key.ToLong());
+        protected override AppClientLog Find(Object key) => AppClientLog.FindById(key.ToLong());
 
-        protected override IEnumerable<AppLog> Search(Pager p)
+        protected override IEnumerable<AppClientLog> Search(Pager p)
         {
             PageSetting.EnableAdd = false;
             PageSetting.EnableNavbar = false;
@@ -31,7 +31,7 @@ namespace Stardust.Web.Areas.Registry.Controllers
                 p["dtStart"] = start.ToString("yyyy-MM-dd");
             }
 
-            return AppLog.Search(appId, clientId, threadId, start, end, p["Q"], p);
+            return AppClientLog.Search(appId, clientId, threadId, start, end, p["Q"], p);
         }
     }
 }
