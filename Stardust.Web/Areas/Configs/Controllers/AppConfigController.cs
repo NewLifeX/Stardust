@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
 using NewLife.Remoting;
 using NewLife.Web;
+using Stardust.Data;
 using Stardust.Data.Configs;
 using XCode;
 
@@ -104,6 +106,27 @@ namespace Stardust.Web.Areas.Configs.Controllers
             var end = p["dtEnd"].ToDateTime();
 
             return AppConfig.Search(start, end, p["Q"], p);
+        }
+
+        protected override Boolean Valid(AppConfig entity, DataObjectMethodType type, Boolean post)
+        {
+            if (post)
+            {
+                // 更新时关联应用
+                switch (type)
+                {
+                    case DataObjectMethodType.Update:
+                    case DataObjectMethodType.Insert:
+                        if (entity.AppId == 0)
+                        {
+                            var app = App.FindByName(entity.Name);
+                            if (app != null) entity.AppId = app.Id;
+                        }
+                        break;
+                }
+            }
+
+            return base.Valid(entity, type, post);
         }
 
         public ActionResult Publish(Int32 appId)
