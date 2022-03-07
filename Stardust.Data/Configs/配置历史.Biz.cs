@@ -5,6 +5,7 @@ using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using NewLife.Log;
 using XCode;
 using XCode.Cache;
 using XCode.Membership;
@@ -40,15 +41,7 @@ namespace Stardust.Data.Configs
             // 建议先调用基类方法，基类方法会做一些统一处理
             base.Valid(isNew);
 
-            // 在新插入数据或者修改了指定字段时进行修正
-            // 处理当前已登录用户信息，可以由UserModule过滤器代劳
-            /*var user = ManageProvider.User;
-            if (user != null)
-            {
-                if (isNew && !Dirtys[nameof(CreateUserID)]) CreateUserID = user.ID;
-            }*/
-            //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
-            //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
+            if (TraceId.IsNullOrEmpty()) TraceId = DefaultSpan.Current?.TraceId;
         }
         #endregion
 

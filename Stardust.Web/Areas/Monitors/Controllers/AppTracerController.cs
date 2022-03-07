@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
@@ -26,7 +23,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         {
             LogOnChange = true;
 
-            ListFields.RemoveField("AppId", "TimeoutExcludes", "VipClients", "AlarmRobot");
+            ListFields.RemoveField("AppId", "TimeoutExcludes", "VipClients", "Nodes", "AlarmRobot");
             ListFields.RemoveCreateField();
 
             {

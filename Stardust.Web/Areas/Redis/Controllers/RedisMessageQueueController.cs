@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using NewLife;
 using NewLife.Cube;
+using NewLife.Cube.Extensions;
+using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Nodes;
 using XCode.Membership;
@@ -20,6 +23,12 @@ namespace Stardust.Web.Areas.Redis.Controllers
             ListFields.AddField("UpdateTime");
             ListFields.RemoveField("WebHook");
 
+            {
+                var df = ListFields.GetField("TraceId") as ListField;
+                df.DisplayName = "跟踪";
+                df.Url = StarHelper.BuildUrl("{TraceId}");
+                df.DataVisible = (e, f) => e is RedisMessageQueue entity && !entity.TraceId.IsNullOrEmpty();
+            }
             {
                 var df = ListFields.AddListField("Log", "UpdateTime");
                 df.DisplayName = "修改日志";

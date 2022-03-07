@@ -66,6 +66,7 @@
       <Column Name="Client" DataType="String" Description="客户端。IP加进程" />
       <Column Name="Action" DataType="String" Description="操作" />
       <Column Name="Success" DataType="Boolean" Description="成功" />
+      <Column Name="TraceId" DataType="String" Description="追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
       <Column Name="Remark" DataType="String" Length="500" Description="内容" />
       <Column Name="Creator" DataType="String" Description="创建者。服务端节点" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
@@ -87,6 +88,7 @@
       <Column Name="Status" DataType="Int32" Description="状态。命令状态" Type="Stardust.Models.CommandStatus" />
       <Column Name="Times" DataType="Int32" Description="次数。一共执行多少次，超过10次后取消" />
       <Column Name="Result" DataType="String" Length="500" Description="结果" />
+      <Column Name="TraceId" DataType="String" Description="追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
       <Column Name="CreateUser" DataType="String" Description="创建者" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建人" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />

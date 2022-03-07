@@ -84,6 +84,8 @@ namespace Stardust.Data
         /// <returns></returns>
         public static AppOnline FindByClient(String client, Boolean cache = true)
         {
+            if(client.IsNullOrEmpty()) return null; 
+
             if (!cache) return Find(_.Client == client);
 
             return Meta.SingleCache.GetItemWithSlaveKey(client) as AppOnline;
@@ -94,6 +96,8 @@ namespace Stardust.Data
         /// <returns>实体对象</returns>
         public static AppOnline FindByToken(String token)
         {
+            if (token.IsNullOrEmpty()) return null;
+
             // 实体缓存
             if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Token == token);
 
@@ -146,7 +150,7 @@ namespace Stardust.Data
         {
             if (client.IsNullOrEmpty()) return null;
 
-            return GetOrAdd(client, (k, c) => Find(_.Client == k), k => new AppOnline { Client = k });
+            return GetOrAdd(client, FindByClient, k => new AppOnline { Client = k });
         }
 
         /// <summary>

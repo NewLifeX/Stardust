@@ -5,6 +5,7 @@ using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using NewLife.Log;
 using XCode;
 using XCode.Membership;
 
@@ -20,6 +21,19 @@ namespace Stardust.Data
             Meta.Modules.Add<UserModule>();
             Meta.Modules.Add<TimeModule>();
             Meta.Modules.Add<IPModule>();
+        }
+
+        /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
+        /// <param name="isNew">是否插入</param>
+        public override void Valid(Boolean isNew)
+        {
+            // 如果没有脏数据，则不需要进行任何处理
+            if (!HasDirty) return;
+
+            // 建议先调用基类方法，基类方法会做一些统一处理
+            base.Valid(isNew);
+
+            if (TraceId.IsNullOrEmpty()) TraceId = DefaultSpan.Current?.TraceId;
         }
         #endregion
 

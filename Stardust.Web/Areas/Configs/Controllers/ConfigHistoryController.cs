@@ -1,6 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using NewLife;
 using NewLife.Cube;
+using NewLife.Cube.Extensions;
+using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Configs;
 
@@ -13,6 +14,13 @@ namespace Stardust.Web.Areas.Configs.Controllers
         {
             // 日志列表需要显示详细信息
             ListFields.AddDataField("Remark", null, "Action");
+
+            {
+                var df = ListFields.GetField("TraceId") as ListField;
+                df.DisplayName = "跟踪";
+                df.Url = StarHelper.BuildUrl("{TraceId}");
+                df.DataVisible = (e, f) => e is ConfigHistory entity && !entity.TraceId.IsNullOrEmpty();
+            }
         }
 
         protected override IEnumerable<ConfigHistory> Search(Pager p)

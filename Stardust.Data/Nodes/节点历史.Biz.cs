@@ -1,5 +1,6 @@
 ﻿using NewLife;
 using NewLife.Data;
+using NewLife.Log;
 using System;
 using System.Collections.Generic;
 using System.Web.Script.Serialization;
@@ -31,6 +32,8 @@ namespace Stardust.Data.Nodes
             // 截断日志
             var len = _.Remark.Length;
             if (!Remark.IsNullOrEmpty() && len > 0 && Remark.Length > len) Remark = Remark.Substring(0, len);
+         
+            if (TraceId.IsNullOrEmpty()) TraceId = DefaultSpan.Current?.TraceId;
         }
         #endregion
 

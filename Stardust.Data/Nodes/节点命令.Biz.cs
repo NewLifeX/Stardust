@@ -5,6 +5,7 @@ using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using NewLife.Log;
 using Stardust.Models;
 using XCode;
 using XCode.Membership;
@@ -33,6 +34,10 @@ namespace Stardust.Data.Nodes
         {
             // 如果没有脏数据，则不需要进行任何处理
             if (!HasDirty) return;
+
+            base.Valid(isNew);
+
+            if (TraceId.IsNullOrEmpty()) TraceId = DefaultSpan.Current?.TraceId;
         }
         #endregion
 

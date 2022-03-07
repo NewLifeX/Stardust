@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using NewLife;
+﻿using NewLife;
 using NewLife.Cube;
+using NewLife.Cube.Extensions;
+using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Nodes;
 using XCode;
@@ -12,7 +12,17 @@ namespace Stardust.Web.Areas.Nodes.Controllers
     [NodesArea]
     public class NodeHistoryController : ReadOnlyEntityController<NodeHistory>
     {
-        static NodeHistoryController() => ListFields.RemoveField("ID");
+        static NodeHistoryController()
+        {
+            ListFields.RemoveField("ID");
+
+            {
+                var df = ListFields.GetField("TraceId") as ListField;
+                df.DisplayName = "跟踪";
+                df.Url = StarHelper.BuildUrl("{TraceId}");
+                df.DataVisible = (e, f) => e is NodeHistory entity && !entity.TraceId.IsNullOrEmpty();
+            }
+        }
 
         protected override IEnumerable<NodeHistory> Search(Pager p)
         {

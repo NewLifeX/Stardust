@@ -91,6 +91,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("CompileTime", "编译时间", "")]
         public DateTime CompileTime { get => _CompileTime; set { if (OnPropertyChanging("CompileTime", value)) { _CompileTime = value; OnPropertyChanged("CompileTime"); } } }
 
+        private String _TraceId;
+        /// <summary>追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        [DisplayName("追踪标识")]
+        [Description("追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("TraceId", "追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
+        public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
+
         private String _Creator;
         /// <summary>创建者。服务端节点</summary>
         [DisplayName("创建者")]
@@ -143,6 +151,7 @@ namespace Stardust.Data.Nodes
                     case "Success": return _Success;
                     case "Version": return _Version;
                     case "CompileTime": return _CompileTime;
+                    case "TraceId": return _TraceId;
                     case "Creator": return _Creator;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -163,6 +172,7 @@ namespace Stardust.Data.Nodes
                     case "Success": _Success = value.ToBoolean(); break;
                     case "Version": _Version = Convert.ToString(value); break;
                     case "CompileTime": _CompileTime = value.ToDateTime(); break;
+                    case "TraceId": _TraceId = Convert.ToString(value); break;
                     case "Creator": _Creator = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -203,6 +213,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>编译时间</summary>
             public static readonly Field CompileTime = FindByName("CompileTime");
+
+            /// <summary>追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            public static readonly Field TraceId = FindByName("TraceId");
 
             /// <summary>创建者。服务端节点</summary>
             public static readonly Field Creator = FindByName("Creator");
@@ -248,6 +261,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>编译时间</summary>
             public const String CompileTime = "CompileTime";
+
+            /// <summary>追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            public const String TraceId = "TraceId";
 
             /// <summary>创建者。服务端节点</summary>
             public const String Creator = "Creator";

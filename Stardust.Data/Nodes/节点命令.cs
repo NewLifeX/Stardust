@@ -85,6 +85,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("Result", "结果", "")]
         public String Result { get => _Result; set { if (OnPropertyChanging("Result", value)) { _Result = value; OnPropertyChanged("Result"); } } }
 
+        private String _TraceId;
+        /// <summary>追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        [DisplayName("追踪标识")]
+        [Description("追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("TraceId", "追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
+        public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
+
         private String _CreateUser;
         /// <summary>创建者</summary>
         [DisplayName("创建者")]
@@ -160,6 +168,7 @@ namespace Stardust.Data.Nodes
                     case "Status": return _Status;
                     case "Times": return _Times;
                     case "Result": return _Result;
+                    case "TraceId": return _TraceId;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -182,6 +191,7 @@ namespace Stardust.Data.Nodes
                     case "Status": _Status = (Stardust.Models.CommandStatus)value.ToInt(); break;
                     case "Times": _Times = value.ToInt(); break;
                     case "Result": _Result = Convert.ToString(value); break;
+                    case "TraceId": _TraceId = Convert.ToString(value); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -222,6 +232,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>结果</summary>
             public static readonly Field Result = FindByName("Result");
+
+            /// <summary>追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            public static readonly Field TraceId = FindByName("TraceId");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
@@ -273,6 +286,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>结果</summary>
             public const String Result = "Result";
+
+            /// <summary>追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            public const String TraceId = "TraceId";
 
             /// <summary>创建者</summary>
             public const String CreateUser = "CreateUser";
