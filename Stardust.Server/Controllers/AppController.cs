@@ -29,13 +29,15 @@ namespace Stardust.Server.Controllers
         private App _app;
         private String _clientId;
         private readonly TokenService _tokenService;
+        private readonly ITracer _tracer;
         private static readonly ICache _cache = new MemoryCache();
         private readonly ICache _queue;
 
-        public AppController(ICache queue, TokenService tokenService)
+        public AppController(ICache queue, TokenService tokenService, ITracer tracer)
         {
             _queue = queue;
             _tokenService = tokenService;
+            _tracer = tracer;
         }
 
         #region 令牌验证
@@ -180,7 +182,7 @@ namespace Stardust.Server.Controllers
             WriteHistory("WebSocket连接", true, socket.State + "", clientId);
 
             var source = new CancellationTokenSource();
-            _ = Task.Run(() => consumeMessage(socket, app, clientId, source));
+            _ = Task.Run(() => consumeMessage(socket, app, clientId, UserHost, source));
             try
             {
                 var buf = new Byte[4 * 1024];
@@ -213,21 +215,46 @@ namespace Stardust.Server.Controllers
             }
         }
 
-        private async Task consumeMessage(WebSocket socket, App app, String clientId, CancellationTokenSource source)
+        private async Task consumeMessage(WebSocket socket, App app, String clientId, String ip, CancellationTokenSource source)
         {
+            DefaultSpan.Current = null;
             var cancellationToken = source.Token;
             var queue = _queue.GetQueue<String>($"appcmd:{app.Name}");
             try
             {
                 while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
                 {
-                    var msg = await queue.TakeOneAsync(10_000);
-                    if (msg != null)
+                    ISpan span = null;
+                    var mqMsg = await queue.TakeOneAsync(10_000);
+                    if (mqMsg != null)
                     {
-                        XTrace.WriteLine("WebSocket发送 {0} {1}", app, msg);
-                        WriteHistory("WebSocket发送", true, msg, clientId);
+                        // 埋点
+                        span = _tracer?.NewSpan($"mq:AppCommand", mqMsg);
 
-                        await socket.SendAsync(msg.GetBytes(), WebSocketMessageType.Text, true, cancellationToken);
+                        // 解码
+                        var dic = JsonParser.Decode(mqMsg);
+                        var msg = JsonHelper.Convert<CommandModel>(dic);
+                        if (dic.TryGetValue("traceParent", out var tp)) span.Detach(tp + "");
+
+                        if (msg == null || msg.Id == 0 || msg.Expire.Year > 2000 && msg.Expire < DateTime.Now)
+                            WriteHistory("WebSocket发送", false, "消息无效。" + mqMsg, ip);
+                        else
+                        {
+                            //XTrace.WriteLine("WebSocket发送 {0} {1}", app, mqMsg);
+                            WriteHistory("WebSocket发送", true, mqMsg, clientId);
+
+                            if (msg.TraceId.IsNullOrEmpty()) msg.TraceId = span?.TraceId;
+
+                            var log = AppCommand.FindById(msg.Id);
+                            if (log != null)
+                            {
+                                if (log.TraceId.IsNullOrEmpty()) log.TraceId = span?.TraceId;
+                                log.Status = CommandStatus.处理中;
+                                log.Update();
+                            }
+
+                            await socket.SendAsync(mqMsg.GetBytes(), WebSocketMessageType.Text, true, cancellationToken);
+                        }
                     }
                     else
                     {

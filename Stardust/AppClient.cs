@@ -101,11 +101,11 @@ namespace Stardust
         /// <summary>开始客户端</summary>
         public void Start()
         {
-            StartTimer();
-
             // 等待注册到平台
             var task = Task.Run(Register);
             task.Wait(1_000);
+
+            StartTimer();
         }
 
         /// <summary>注册</summary>
@@ -130,6 +130,8 @@ namespace Stardust
 
                 var rs = await PostAsync<String>("App/Register", inf);
                 WriteLog("接入星尘服务端：{0}", rs);
+
+                if (Filter is NewLife.Http.TokenHttpFilter thf) Token = thf.Token?.AccessToken;
 
                 return rs;
             }

@@ -453,7 +453,7 @@ namespace Stardust
                         foreach (var item in rs.Commands)
                         {
                             //CommandQueue.Publish(item.Command, item);
-                            OnReceiveCommand(item);
+                            await OnReceiveCommand(item);
                         }
                     }
 
