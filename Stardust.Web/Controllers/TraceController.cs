@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Web;
 using Stardust.Data.Monitors;
 using Stardust.Web.Models;
-using XCode;
 using XCode.Membership;
 
 namespace Stardust.Web.Controllers
@@ -90,11 +86,13 @@ namespace Stardust.Web.Controllers
                 var rs = new List<SampleData>();
                 var stack = new Stack<SampleData>();
 
-                // 有些数据有pid，但是pid对应的span实际不存在
-                var pids = list.Where(e => !e.ParentId.IsNullOrEmpty()).OrderByDescending(e => e.StartTime).Select(e => e.ParentId).Distinct().ToArray();
+                // 找到所有parentId，包括空字符串，首次出现的parentId优先
+                var pids = list.OrderByDescending(e => e.StartTime).Select(e => e.ParentId + "").Distinct().ToArray();
+                // 找到顶级parentId，它所对应的span不存在，包括空字符串
                 foreach (var item in pids.Where(e => !list.Any(y => y.SpanId == e)))
                 {
-                    foreach (var elm in list.Where(e => e.ParentId == item))
+                    // 这些parentId的子级，按照时间降序后入栈，它们作为一级树
+                    foreach (var elm in list.Where(e => e.ParentId + "" == item).OrderByDescending(e => e.StartTime))
                     {
                         stack.Push(elm);
                     }
@@ -104,10 +102,13 @@ namespace Stardust.Web.Controllers
                     list.Remove(item);
                 }
 
-                var pid = "";
+                // 依次弹出parentId，深度搜索
+                var sd = stack.Pop();
+                rs.Add(sd);
+                var pid = sd.SpanId;
                 while (true)
                 {
-                    // 降序入栈
+                    // 当前span的下级，按时间降序入栈
                     var ps = list.Where(e => e.ParentId + "" == pid).OrderByDescending(e => e.StartTime).ToList();
                     foreach (var item in ps)
                     {
@@ -119,7 +120,7 @@ namespace Stardust.Web.Controllers
                     if (stack.Count == 0) break;
 
                     // 出栈，加入结果，处理它的下级
-                    if (stack.TryPop(out var sd))
+                    if (stack.TryPop(out sd))
                     {
                         rs.Add(sd);
                         pid = sd.SpanId;
@@ -129,7 +130,6 @@ namespace Stardust.Web.Controllers
                 // 残留的异常数据
                 rs.AddRange(list);
 
-                //return rs;
                 list = rs;
             }
 
