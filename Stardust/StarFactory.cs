@@ -194,6 +194,20 @@ namespace Stardust
                 var set = StarSetting.Current;
                 if (set.Debug) client.Log = XTrace.Log;
 
+                var tracer = new StarTracer(Server)
+                {
+                    AppId = AppId,
+                    AppName = AppName,
+                    ClientId = ClientId,
+                    //Client = _client,
+
+                    Log = Log
+                };
+                client.Tracer = tracer;
+                tracer.Client = client;
+
+                tracer.AttachGlobal();
+
                 client.Start();
 
                 //_appClient = client;
@@ -217,21 +231,21 @@ namespace Stardust
 
                     XTrace.WriteLine("初始化星尘监控中心，采样并定期上报应用性能埋点数据，包括Api接口、Http请求、数据库操作、Redis操作等。可用于监控系统健康状态，分析分布式系统的性能瓶颈。");
 
-                    var tracer = new StarTracer(Server)
-                    {
-                        AppId = AppId,
-                        AppName = AppName,
-                        //Secret = Secret,
-                        ClientId = ClientId,
-                        Client = _client,
+                    //var tracer = new StarTracer(Server)
+                    //{
+                    //    AppId = AppId,
+                    //    AppName = AppName,
+                    //    //Secret = Secret,
+                    //    ClientId = ClientId,
+                    //    Client = _client,
 
-                        Log = Log
-                    };
-                    //if (!ClientId.IsNullOrEmpty()) tracer.ClientId = ClientId;
+                    //    Log = Log
+                    //};
+                    //_client.Tracer = tracer;
 
-                    tracer.AttachGlobal();
+                    //tracer.AttachGlobal();
 
-                    _tracer = tracer;
+                    _tracer = _client.Tracer as StarTracer;
                 }
 
                 return _tracer;
@@ -362,7 +376,20 @@ namespace Stardust
         {
             if (!Valid()) return -1;
 
-            return await _client.PostAsync<Int32>("Node/SendCommand", new { nodeCode, command, argument, expire });
+            return await _client.PostAsync<Int32>("Node/SendCommand", new { Code = nodeCode, command, argument, expire });
+        }
+
+        /// <summary>发送应用命令</summary>
+        /// <param name="appId"></param>
+        /// <param name="command"></param>
+        /// <param name="argument"></param>
+        /// <param name="expire"></param>
+        /// <returns></returns>
+        public async Task<Int32> SendAppCommand(String appId, String command, String argument = null, Int32 expire = 3600)
+        {
+            if (!Valid()) return -1;
+
+            return await _client.PostAsync<Int32>("App/SendCommand", new { Code = appId, command, argument, expire });
         }
         #endregion
 

@@ -3,7 +3,6 @@ using NewLife.Data;
 using NewLife.Log;
 using NewLife.Reflection;
 using NewLife.Serialization;
-using NewLife.Threading;
 using Stardust.Models;
 using Stardust.Services;
 
@@ -76,8 +75,9 @@ namespace Stardust.Configs
         private String DoPublish(String argument)
         {
             //todo 临时采用反射办法。后面直接调用DoRefresh
-            var timer = this.GetValue("_timer") as TimerX;
-            if (timer != null) timer.SetNext(-1);
+            //var timer = this.GetValue("_timer") as TimerX;
+            //if (timer != null) timer.SetNext(-1);
+            this.Invoke("DoRefresh", new Object[] { null });
 
             return "刷新配置成功";
         }

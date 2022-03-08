@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
+using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Web;
 using Stardust.Data;
@@ -88,10 +86,14 @@ namespace Stardust.Web.Areas.Configs.Controllers
             //}
         }
 
-        //public AppConfigController()
-        //{
-        //    PageSetting.EnableAdd = false;
-        //}
+        private readonly StarFactory _starFactory;
+        private readonly ITracer _tracer;
+
+        public AppConfigController(StarFactory starFactory, ITracer tracer)
+        {
+            _starFactory = starFactory;
+            _tracer = tracer;
+        }
 
         protected override IEnumerable<AppConfig> Search(Pager p)
         {
@@ -129,8 +131,9 @@ namespace Stardust.Web.Areas.Configs.Controllers
             return base.Valid(entity, type, post);
         }
 
-        public ActionResult Publish(Int32 appId)
+        public async Task<ActionResult> Publish(Int32 appId)
         {
+            using var span = _tracer?.NewSpan(nameof(Publish), appId + "");
             try
             {
                 var app = AppConfig.FindById(appId);
@@ -139,10 +142,14 @@ namespace Stardust.Web.Areas.Configs.Controllers
                 if (app.Version >= app.NextVersion) throw new ApiException(701, "已经是最新版本！");
                 app.Publish();
 
+                await _starFactory.SendAppCommand(app.Name, "config/publish", "");
+
                 return JsonRefresh("发布成功！", 3);
             }
             catch (Exception ex)
             {
+                span?.SetError(ex, null);
+
                 return Json(0, ex.Message, ex);
             }
         }

@@ -1,11 +1,4 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using NewLife;
+﻿using NewLife;
 using NewLife.Cube;
 using NewLife.Log;
 using Stardust.Data.Configs;
@@ -36,6 +29,7 @@ namespace Stardust.Web
 
             services.AddSingleton<IRedisService, RedisService>();
 
+            services.AddSingleton<TokenService>();
             services.AddSingleton<ConfigService>();
 
             // 后台服务。数据保留，定时删除过期数据

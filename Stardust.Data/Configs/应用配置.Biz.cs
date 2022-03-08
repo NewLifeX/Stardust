@@ -71,6 +71,14 @@ namespace Stardust.Data.Configs
         /// <summary>依赖应用</summary>
         [Map(nameof(Quotes))]
         public String QuoteNames => Extends.Get(nameof(QuoteNames), k => Quotes?.SplitAsInt().Select(FindById).Join());
+       
+        /// <summary>应用</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
+
+        /// <summary>应用</summary>
+        [Map(__.AppId, typeof(App), "Id")]
+        public String AppName => App?.Name;
         #endregion
 
         #region 扩展查询
