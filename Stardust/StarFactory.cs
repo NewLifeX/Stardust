@@ -194,19 +194,19 @@ namespace Stardust
                 var set = StarSetting.Current;
                 if (set.Debug) client.Log = XTrace.Log;
 
-                var tracer = new StarTracer(Server)
-                {
-                    AppId = AppId,
-                    AppName = AppName,
-                    ClientId = ClientId,
-                    //Client = _client,
+                //var tracer = new StarTracer(Server)
+                //{
+                //    AppId = AppId,
+                //    AppName = AppName,
+                //    ClientId = ClientId,
+                //    //Client = _client,
 
-                    Log = Log
-                };
-                client.Tracer = tracer;
-                tracer.Client = client;
+                //    Log = Log
+                //};
+                //client.Tracer = tracer;
+                //tracer.Client = client;
 
-                tracer.AttachGlobal();
+                //tracer.AttachGlobal();
 
                 client.Start();
 
@@ -231,21 +231,21 @@ namespace Stardust
 
                     XTrace.WriteLine("初始化星尘监控中心，采样并定期上报应用性能埋点数据，包括Api接口、Http请求、数据库操作、Redis操作等。可用于监控系统健康状态，分析分布式系统的性能瓶颈。");
 
-                    //var tracer = new StarTracer(Server)
-                    //{
-                    //    AppId = AppId,
-                    //    AppName = AppName,
-                    //    //Secret = Secret,
-                    //    ClientId = ClientId,
-                    //    Client = _client,
+                    var tracer = new StarTracer(Server)
+                    {
+                        AppId = AppId,
+                        AppName = AppName,
+                        //Secret = Secret,
+                        ClientId = ClientId,
+                        Client = _client,
 
-                    //    Log = Log
-                    //};
-                    //_client.Tracer = tracer;
+                        Log = Log
+                    };
+                    _client.Tracer = tracer;
 
-                    //tracer.AttachGlobal();
-
-                    _tracer = _client.Tracer as StarTracer;
+                    tracer.AttachGlobal();
+                    _tracer = tracer;
+                    //_tracer = _client.Tracer as StarTracer;
                 }
 
                 return _tracer;
