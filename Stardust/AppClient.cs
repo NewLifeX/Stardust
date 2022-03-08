@@ -231,6 +231,7 @@ namespace Stardust
 
         private async Task DoPull(WebSocket socket, CancellationToken cancellationToken)
         {
+            DefaultSpan.Current = null;
             try
             {
                 var buf = new Byte[4 * 1024];
@@ -240,10 +241,20 @@ namespace Stardust
                     var model = buf.ToStr(null, 0, data.Count).ToJsonEntity<CommandModel>();
                     if (model != null)
                     {
-                        XTrace.WriteLine("Got Command: {0}", model.ToJson());
-                        if (model.Expire.Year < 2000 || model.Expire > DateTime.Now)
+                        // 建立追踪链路
+                        using var span = Tracer?.NewSpan("cmd:" + model.Command, model);
+                        if (span != null && !model.TraceId.IsNullOrEmpty()) span.TraceId = model.TraceId;
+                        try
                         {
-                            await OnReceiveCommand(model);
+                            XTrace.WriteLine("Got Command: {0}", model.ToJson());
+                            if (model.Expire.Year < 2000 || model.Expire > DateTime.Now)
+                            {
+                                await OnReceiveCommand(model);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            span?.SetError(ex, null);
                         }
                     }
                 }

@@ -570,6 +570,7 @@ namespace Stardust
 
         private async Task DoPull(WebSocket socket, CancellationToken cancellationToken)
         {
+            DefaultSpan.Current = null;
             try
             {
                 var buf = new Byte[4 * 1024];

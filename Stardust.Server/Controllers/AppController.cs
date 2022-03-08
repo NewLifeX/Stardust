@@ -219,7 +219,8 @@ namespace Stardust.Server.Controllers
         {
             DefaultSpan.Current = null;
             var cancellationToken = source.Token;
-            var queue = _queue.GetQueue<String>($"appcmd:{app.Name}");
+            var topic = $"appcmd:{app.Name}:{clientId}";
+            var queue = _queue.GetQueue<String>(topic);
             try
             {
                 while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
@@ -237,11 +238,11 @@ namespace Stardust.Server.Controllers
                         if (dic.TryGetValue("traceParent", out var tp)) span.Detach(tp + "");
 
                         if (msg == null || msg.Id == 0 || msg.Expire.Year > 2000 && msg.Expire < DateTime.Now)
-                            WriteHistory("WebSocket发送", false, "消息无效。" + mqMsg, ip);
+                            WriteHistory("WebSocket发送", false, "消息无效。" + mqMsg, clientId, ip);
                         else
                         {
                             //XTrace.WriteLine("WebSocket发送 {0} {1}", app, mqMsg);
-                            WriteHistory("WebSocket发送", true, mqMsg, clientId);
+                            WriteHistory("WebSocket发送", true, mqMsg, clientId, ip);
 
                             if (msg.TraceId.IsNullOrEmpty()) msg.TraceId = span?.TraceId;
 
@@ -258,6 +259,8 @@ namespace Stardust.Server.Controllers
                     }
                     else
                     {
+                        // 设置过期时间，过期自动清理
+                        _queue.SetExpire(topic, TimeSpan.FromMinutes(30));
                         await Task.Delay(100, cancellationToken);
                     }
                 }
@@ -299,14 +302,20 @@ namespace Stardust.Server.Controllers
                 Command = model.Command,
                 Argument = model.Argument,
                 //Expire = model.Expire,
+                TraceId = DefaultSpan.Current?.TraceId,
 
                 CreateUser = app.Name,
             };
             if (model.Expire > 0) cmd.Expire = DateTime.Now.AddSeconds(model.Expire);
             cmd.Insert();
 
-            var queue = _queue.GetQueue<String>($"appcmd:{node.Name}");
-            queue.Add(cmd.ToModel().ToJson());
+            // 分发命令给该应用的所有实例
+            var cmdModel = cmd.ToModel().ToJson();
+            foreach (var item in AppOnline.FindAllByApp(node.Id))
+            {
+                var queue = _queue.GetQueue<String>($"appcmd:{node.Name}:{item.Client}");
+                queue.Add(cmdModel);
+            }
 
             return cmd.Id;
         }
@@ -499,11 +508,11 @@ namespace Stardust.Server.Controllers
         #endregion
 
         #region 辅助
-        private void WriteHistory(String action, Boolean success, String remark, String clientId)
+        private void WriteHistory(String action, Boolean success, String remark, String clientId, String ip = null)
         {
-            var hi = AppHistory.Create(_app, action, success, remark, Environment.MachineName, UserHost);
+            var hi = AppHistory.Create(_app, action, success, remark, Environment.MachineName, ip ?? UserHost);
             hi.Client = clientId ?? _clientId;
-            hi.SaveAsync();
+            hi.Insert();
         }
         #endregion
     }

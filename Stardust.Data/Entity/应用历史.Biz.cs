@@ -110,6 +110,7 @@ namespace Stardust.Data
                 Success = success,
                 Remark = remark,
 
+                TraceId = DefaultSpan.Current?.TraceId,
                 Creator = creator,
                 CreateTime = DateTime.Now,
                 CreateIP = ip,
