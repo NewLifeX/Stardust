@@ -7,9 +7,9 @@
     <Description>星尘，分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2022 NewLife</Copyright>
-    <Version>1.1.2022.0304</Version>
-    <FileVersion>1.1.2022.0304</FileVersion>
-    <AssemblyVersion>1.1.*</AssemblyVersion>
+    <Version>2.0.2022.0309</Version>
+    <FileVersion>2.0.2022.0309</FileVersion>
+    <AssemblyVersion>2.0.*</AssemblyVersion>
     <Deterministic>false</Deterministic>
     <OutputPath>..\Bin\Server</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -21,7 +21,6 @@
     <Compile Remove="Common\TokenFilter.cs" />
     <Compile Remove="Common\TokenSession.cs" />
     <Compile Remove="Controllers\BaseController.cs" />
-    <Compile Remove="Controllers\DustController.cs" />
     <Compile Remove="StarService.cs" />
   </ItemGroup>
 
