@@ -131,7 +131,7 @@ namespace Stardust
                 var rs = await PostAsync<String>("App/Register", inf);
                 WriteLog("接入星尘服务端：{0}", rs);
 
-                if (Filter is NewLife.Http.TokenHttpFilter thf) Token = thf.Token?.AccessToken;
+                //if (Filter is NewLife.Http.TokenHttpFilter thf) Token = thf.Token?.AccessToken;
 
                 return rs;
             }
@@ -210,14 +210,19 @@ namespace Stardust
             await Ping();
 
             var svc = _currentService;
-            if (svc == null || Token == null) return;
+            if (svc == null) return;
+
+            // 使用过滤器内部token，因为它有过期刷新机制
+            var token = Token;
+            if (Filter is NewLife.Http.TokenHttpFilter thf) token = thf.Token?.AccessToken;
+            if (token.IsNullOrEmpty()) return;
 
             if (_websocket == null || _websocket.State != WebSocketState.Open)
             {
                 var url = svc.Address.ToString().Replace("http://", "ws://").Replace("https://", "wss://");
                 var uri = new Uri(new Uri(url), "/app/notify");
                 var client = new ClientWebSocket();
-                client.Options.SetRequestHeader("Authorization", "Bearer " + Token);
+                client.Options.SetRequestHeader("Authorization", "Bearer " + token);
                 await client.ConnectAsync(uri, default);
 
                 _websocket = client;
