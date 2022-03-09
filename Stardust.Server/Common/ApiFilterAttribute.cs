@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Log;
@@ -71,6 +69,9 @@ namespace Stardust.Server.Common
                     context.Result = new JsonResult(new { code = 500, data = ex.Message });
 
                 context.ExceptionHandled = true;
+
+                var span = DefaultSpan.Current;
+                span?.SetError(ex, null);
 
                 // 输出异常日志
                 if (XTrace.Debug) XTrace.WriteException(ex);
