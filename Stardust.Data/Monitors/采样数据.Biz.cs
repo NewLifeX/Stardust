@@ -62,6 +62,7 @@ namespace Stardust.Data.Monitors
         public String Name => TraceItem + "";
 
         /// <summary>应用编号</summary>
+        [XmlIgnore, IgnoreDataMember]
         public Int32 AppId => TraceItem?.AppId ?? 0;
 
         /// <summary>应用</summary>
@@ -128,7 +129,8 @@ namespace Stardust.Data.Monitors
             if (!traceId.IsNullOrEmpty()) exp &= _.TraceId == traceId;
 
             // 时间区间倒序，为了从后往前查
-            return Meta.AutoShard(end.AddSeconds(1), start, () => FindAll(exp, page)).FirstOrDefault(e => e.Count > 0) ?? new List<SampleData>();
+            return Meta.AutoShard(end.AddSeconds(1), start, () => FindAll(exp, page))
+                .FirstOrDefault(e => e.Count > 0) ?? new List<SampleData>();
         }
         #endregion
 
