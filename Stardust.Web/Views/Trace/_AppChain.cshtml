@@ -9,25 +9,41 @@
 @using System.Web;
 @{
     var page = ViewBag.Page as Pager;
+    var list = Model;
+
+    // 连续应用，构建为一行，取最大最小时间
+    var rs = new List<SampleData>();
+
+    SampleData current = null;
+    foreach (var item in list)
+    {
+        if (current == null || current.AppId != item.AppId)
+        {
+            current = new SampleData { ItemId = item.ItemId, StartTime = item.StartTime, EndTime = item.EndTime };
+            rs.Add(current);
+        }
+        else
+        {
+            if (item.StartTime < current.StartTime) current.StartTime = item.StartTime;
+            if (item.EndTime > current.EndTime) current.EndTime = item.EndTime;
+        }
+    }
 }
 <table class="table table-bordered table-hover table-striped table-condensed">
     <thead>
         <tr>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AppId"))">应用</a></th>
-            <th class="text-center" title="操作名。接口名或埋点名"><a href="@Html.Raw(page.GetSortUrl("Name"))">操作名</a></th>
+            <th class="text-center">应用</th>
             <th style="width:80%">时间轴</th>
         </tr>
     </thead>
     <tbody>
         @{
-            //var sd = Model.OrderByDescending(e => e.EndTime - e.StartTime).FirstOrDefault();
             var min = Model.Min(e => e.StartTime);
             var max = Model.Max(e => e.EndTime);
             var length = max - min;
         }
-        @foreach (var entity in Model)
+        @foreach (var entity in rs)
         {
-            var ti = entity.TraceItem;
             var msg = entity.Error ?? entity.Tag;
 
             var ms = entity.EndTime - entity.StartTime;
@@ -36,36 +52,9 @@
             var w = (Double)ms / length;
             if (w > 0.01) w -= 0.01;
             var color = "lightgreen";
-            if (!entity.Success)
-            {
-                color = "palevioletred";
-            }
-            else if (ti.Kind.EqualIgnoreCase("db"))
-            {
-                color = "orange";
-            }
-            else if (ti.Kind.EqualIgnoreCase("net", "rpc", "mq", "redismq", "mqtt", "mns", "emq"))
-            {
-                color = "mediumpurple";
-            }
-            var color2 = "";
-            if (ti.Kind.EqualIgnoreCase("db"))
-            {
-                color2 = "orange";
-            }
-            else if (ti.Kind.EqualIgnoreCase("mq", "redismq", "mqtt", "mns", "emq"))
-            {
-                color2 = "mediumpurple";
-            }
-            else if (ti.Kind.EqualIgnoreCase("redis"))
-            {
-                color2 = "palevioletred";
-            }
             var url1 = $"/Monitors/appDayStat?appId={entity.AppId}";
-            var url2 = $"/Monitors/traceDayStat?appid={entity.AppId}&itemId={entity.ItemId}";
             <tr>
                 <td class="text-center"><a href="@url1" title="应用最近的监控图表">@entity.AppName</a></td>
-                <td title="@entity.Tag" style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url2" style="color: @color2">@entity.Name</a></td>
                 <td title="@msg">
                     @if (left < 0.96)
                     {

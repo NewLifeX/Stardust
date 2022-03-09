@@ -13,9 +13,10 @@
 
     var page = Model.Page;
     var list = Model.Data;
+    var traceId = page["id"];
 }
 <div class="table-responsive">
-    @if (!page["traceId"].IsNullOrEmpty() && list.Select(e => e.AppId).Distinct().Count() > 1)
+    @if (!traceId.IsNullOrEmpty() && list.Select(e => e.AppId).Distinct().Count() > 1)
     {
         await Html.RenderPartialAsync("_AppChain", list);
     }
