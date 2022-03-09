@@ -101,13 +101,24 @@ namespace Stardust
         /// <summary>开始客户端</summary>
         public void Start()
         {
-            // 等待注册到平台
-            var task = Task.Run(Register);
-            task.Wait(1_000);
+            try
+            {
+                if (AppId != "StarServer")
+                {
+                    // 等待注册到平台
+                    var task = Task.Run(Register);
+                    task.Wait(1_000);
+                }
+            }
+            catch (Exception ex)
+            {
+                XTrace.Log.Error("注册失败：{0}", ex.GetTrue().Message);
+            }
 
             StartTimer();
         }
 
+        private String _appName;
         /// <summary>注册</summary>
         /// <returns></returns>
         public async Task<Object> Register()
@@ -130,6 +141,7 @@ namespace Stardust
 
                 var rs = await PostAsync<String>("App/Register", inf);
                 WriteLog("接入星尘服务端：{0}", rs);
+                _appName = rs + "";
 
                 //if (Filter is NewLife.Http.TokenHttpFilter thf) Token = thf.Token?.AccessToken;
 
@@ -137,7 +149,7 @@ namespace Stardust
             }
             catch (Exception ex)
             {
-                XTrace.WriteLine("心跳异常 {0}", ex.GetTrue().Message);
+                XTrace.WriteLine("注册异常 {0}", ex.GetTrue().Message);
 
                 throw;
             }
@@ -206,7 +218,7 @@ namespace Stardust
         {
             DefaultSpan.Current = null;
 
-            //await Register();
+            if (_appName == null) await Register();
             await Ping();
 
             var svc = _currentService;
