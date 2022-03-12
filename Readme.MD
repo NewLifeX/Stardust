@@ -1,7 +1,7 @@
 ﻿# NewLife.Stardust - 星尘分布式平台
 
-![GitHub top language](https://img.shields.io/github/languages/top/newlifex/newlife.stardust?logo=github)
-![GitHub License](https://img.shields.io/github/license/newlifex/newlife.stardust?logo=github)
+![GitHub top language](https://img.shields.io/github/languages/top/newlifex/stardust?logo=github)
+![GitHub License](https://img.shields.io/github/license/newlifex/stardust?logo=github)
 ![Nuget Downloads](https://img.shields.io/nuget/dt/newlife.stardust?logo=nuget)
 ![Nuget](https://img.shields.io/nuget/v/newlife.stardust?logo=nuget)
 ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/newlife.stardust?label=dev%20nuget&logo=nuget)
