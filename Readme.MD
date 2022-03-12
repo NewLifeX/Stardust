@@ -1,4 +1,16 @@
-﻿#星尘
+﻿# NewLife.Stardust - 星尘分布式平台
+
+![GitHub top language](https://img.shields.io/github/languages/top/newlifex/newlife.stardust?logo=github)
+![GitHub License](https://img.shields.io/github/license/newlifex/newlife.stardust?logo=github)
+![Nuget Downloads](https://img.shields.io/nuget/dt/newlife.stardust?logo=nuget)
+![Nuget](https://img.shields.io/nuget/v/newlife.stardust?logo=nuget)
+![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/newlife.stardust?label=dev%20nuget&logo=nuget)
+
+![Nuget Downloads](https://img.shields.io/nuget/dt/newlife.stardust.extensions?logo=nuget)
+![Nuget](https://img.shields.io/nuget/v/newlife.stardust.extensions?logo=nuget)
+![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/newlife.stardust.extensions?label=dev%20nuget&logo=nuget)
+
+#星尘
 Stardust  星尘，轻量级分布式服务框架！  
 设计理念: 简单，易于维护扩展！  
 配置中心、集群管理、远程自动发布、服务治理。服务自动注册和发现，负载均衡，动态伸缩，故障转移，性能监控。
