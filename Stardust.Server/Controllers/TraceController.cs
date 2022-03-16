@@ -112,6 +112,10 @@ namespace Stardust.Server.Controllers
                             app.AppId = ap.Id;
                             app.Enable = ap.Enable;
                         }
+                        else
+                        {
+                            app.Enable = set.AutoRegister;
+                        }
 
                         app.Insert();
                     }
