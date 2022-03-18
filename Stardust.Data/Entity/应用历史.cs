@@ -17,7 +17,7 @@ namespace Stardust.Data
     [BindIndex("IX_AppHistory_AppId_Client", false, "AppId,Client")]
     [BindIndex("IX_AppHistory_AppId_Action", false, "AppId,Action")]
     [BindIndex("IX_AppHistory_Action_Success", false, "Action,Success")]
-    [BindTable("AppHistory", Description = "应用历史", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("AppHistory", Description = "应用历史", ConnName = "StardustData", DbType = DatabaseType.None)]
     public partial class AppHistory
     {
         #region 属性

@@ -61,7 +61,7 @@
       <Index Columns="AppId,Name" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="TraceData" Description="跟踪数据。应用定时上报采样得到的埋点追踪原始数据，应用端已完成初步统计，后端将再次向上汇总">
+  <Table Name="TraceData" Description="跟踪数据。应用定时上报采样得到的埋点追踪原始数据，应用端已完成初步统计，后端将再次向上汇总" ConnName="StardustData">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
@@ -91,7 +91,7 @@
       <Index Columns="AppId,StatMinute" />
     </Indexes>
   </Table>
-  <Table Name="SampleData" Description="采样数据。具体调用或异常详情，每次追踪统计携带少量样板，用于链路分析以及异常追踪">
+  <Table Name="SampleData" Description="采样数据。具体调用或异常详情，每次追踪统计携带少量样板，用于链路分析以及异常追踪" ConnName="StardustData">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="DataId" DataType="Int64" Description="数据" />
@@ -114,7 +114,7 @@
       <Index Columns="TraceId" />
     </Indexes>
   </Table>
-  <Table Name="SampleData2" Description="采样数据2。采样备份，用于链路分析以及异常追踪">
+  <Table Name="SampleData2" Description="采样数据2。采样备份，用于链路分析以及异常追踪" ConnName="StardustData">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="DataId" DataType="Int64" Description="数据" />
@@ -165,7 +165,7 @@
       <Index Columns="AppId,Type,StatDate" />
     </Indexes>
   </Table>
-  <Table Name="TraceHourStat" Description="跟踪小时统计。每应用每接口每小时统计，用于分析接口健康状况">
+  <Table Name="TraceHourStat" Description="跟踪小时统计。每应用每接口每小时统计，用于分析接口健康状况" ConnName="StardustData">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="StatTime" DataType="DateTime" Description="统计小时" />
@@ -187,7 +187,7 @@
       <Index Columns="AppId,ItemId,Id" />
     </Indexes>
   </Table>
-  <Table Name="TraceMinuteStat" Description="跟踪分钟统计。每应用每接口每5分钟统计，用于分析接口健康状况">
+  <Table Name="TraceMinuteStat" Description="跟踪分钟统计。每应用每接口每5分钟统计，用于分析接口健康状况" ConnName="StardustData">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="StatTime" DataType="DateTime" Description="统计分钟" />
@@ -234,7 +234,7 @@
       <Index Columns="StatDate,AppId" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="AppMinuteStat" Description="应用分钟统计。每应用每5分钟统计，用于分析应用健康状况">
+  <Table Name="AppMinuteStat" Description="应用分钟统计。每应用每5分钟统计，用于分析应用健康状况" ConnName="StardustData">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="StatTime" DataType="DateTime" Description="统计分钟" />
@@ -272,7 +272,7 @@
       <Index Columns="Name" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="AlarmHistory" Description="告警历史。记录告警内容">
+  <Table Name="AlarmHistory" Description="告警历史。记录告警内容" ConnName="StardustData">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />

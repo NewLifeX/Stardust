@@ -16,7 +16,7 @@ namespace Stardust.Data
     [Description("应用命令")]
     [BindIndex("IX_AppCommand_AppId_Command", false, "AppId,Command")]
     [BindIndex("IX_AppCommand_UpdateTime_AppId_Command", false, "UpdateTime,AppId,Command")]
-    [BindTable("AppCommand", Description = "应用命令", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("AppCommand", Description = "应用命令", ConnName = "StardustData", DbType = DatabaseType.None)]
     public partial class AppCommand
     {
         #region 属性

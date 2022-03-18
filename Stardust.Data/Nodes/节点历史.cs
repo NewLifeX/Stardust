@@ -15,7 +15,7 @@ namespace Stardust.Data.Nodes
     [DataObject]
     [Description("节点历史")]
     [BindIndex("IX_NodeHistory_NodeID_Action", false, "NodeID,Action")]
-    [BindTable("NodeHistory", Description = "节点历史", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("NodeHistory", Description = "节点历史", ConnName = "StardustData", DbType = DatabaseType.None)]
     public partial class NodeHistory
     {
         #region 属性

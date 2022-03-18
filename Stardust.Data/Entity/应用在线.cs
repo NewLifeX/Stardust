@@ -18,7 +18,7 @@ namespace Stardust.Data
     [BindIndex("IX_AppOnline_AppId", false, "AppId")]
     [BindIndex("IX_AppOnline_Token", false, "Token")]
     [BindIndex("IX_AppOnline_UpdateTime", false, "UpdateTime")]
-    [BindTable("AppOnline", Description = "应用在线。一个应用有多个部署，每个在线会话对应一个服务地址", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("AppOnline", Description = "应用在线。一个应用有多个部署，每个在线会话对应一个服务地址", ConnName = "StardustData", DbType = DatabaseType.None)]
     public partial class AppOnline
     {
         #region 属性

@@ -15,7 +15,7 @@ namespace Stardust.Data.Nodes
     [DataObject]
     [Description("节点数据。保存设备上来的一些数据，如心跳状态")]
     [BindIndex("IX_NodeData_NodeID", false, "NodeID")]
-    [BindTable("NodeData", Description = "节点数据。保存设备上来的一些数据，如心跳状态", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("NodeData", Description = "节点数据。保存设备上来的一些数据，如心跳状态", ConnName = "StardustData", DbType = DatabaseType.None)]
     public partial class NodeData
     {
         #region 属性

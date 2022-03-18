@@ -28,7 +28,7 @@
       <Index Columns="Name" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="AppOnline" Description="应用在线。一个应用有多个部署，每个在线会话对应一个服务地址">
+  <Table Name="AppOnline" Description="应用在线。一个应用有多个部署，每个在线会话对应一个服务地址" ConnName="StardustData">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="Category" DataType="String" Description="类别" />
@@ -61,7 +61,7 @@
       <Index Columns="UpdateTime" />
     </Indexes>
   </Table>
-  <Table Name="AppHistory" Description="应用历史">
+  <Table Name="AppHistory" Description="应用历史" ConnName="StardustData">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
@@ -80,7 +80,7 @@
       <Index Columns="Action,Success" />
     </Indexes>
   </Table>
-  <Table Name="AppCommand" Description="应用命令">
+  <Table Name="AppCommand" Description="应用命令" ConnName="StardustData">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
@@ -104,7 +104,7 @@
       <Index Columns="UpdateTime,AppId,Command" />
     </Indexes>
   </Table>
-  <Table Name="AppMeter" Description="应用性能。保存应用上报的性能数据，如CPU、内存、线程、句柄等">
+  <Table Name="AppMeter" Description="应用性能。保存应用上报的性能数据，如CPU、内存、线程、句柄等" ConnName="StardustData">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
@@ -193,7 +193,7 @@
       <Index Columns="UpdateTime" />
     </Indexes>
   </Table>
-  <Table Name="AppClientLog" Description="应用日志">
+  <Table Name="AppClientLog" Description="应用日志" ConnName="StardustData">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Master="True" Description="应用" />

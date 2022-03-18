@@ -61,7 +61,7 @@
       <Index Columns="UpdateTime" />
     </Indexes>
   </Table>
-  <Table Name="NodeOnline" Description="节点在线">
+  <Table Name="NodeOnline" Description="节点在线" ConnName="StardustData">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="SessionID" DataType="String" Description="会话" />
@@ -107,7 +107,7 @@
       <Index Columns="ProvinceID,CityID" />
     </Indexes>
   </Table>
-  <Table Name="NodeHistory" Description="节点历史">
+  <Table Name="NodeHistory" Description="节点历史" ConnName="StardustData">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="NodeID" DataType="Int32" Description="节点" />
@@ -128,7 +128,7 @@
       <Index Columns="NodeID,Action" />
     </Indexes>
   </Table>
-  <Table Name="NodeData" Description="节点数据。保存设备上来的一些数据，如心跳状态">
+  <Table Name="NodeData" Description="节点数据。保存设备上来的一些数据，如心跳状态" ConnName="StardustData">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="NodeID" DataType="Int32" Description="节点" />
@@ -179,7 +179,7 @@
       <Index Columns="Version" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="NodeCommand" Description="节点命令">
+  <Table Name="NodeCommand" Description="节点命令" ConnName="StardustData">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="NodeID" DataType="Int32" Description="节点" />
@@ -262,7 +262,7 @@
       <Index Columns="Server" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="RedisData" Description="Redis数据。Redis监控">
+  <Table Name="RedisData" Description="Redis数据。Redis监控" ConnName="StardustData">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="RedisId" DataType="Int32" Description="Redis节点" />
