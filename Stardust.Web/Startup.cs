@@ -60,7 +60,7 @@ namespace Stardust.Web
                 else if (conns.ContainsKey("NodeLog"))
                     target = "NodeLog";
                 else if (conns.ContainsKey("Stardust"))
-                    target = "";
+                    target = "Stardust";
 
                 if (!target.IsNullOrEmpty()) DAL.AddConnStr("StardustData", $"MapTo={target}", null, null);
             }
