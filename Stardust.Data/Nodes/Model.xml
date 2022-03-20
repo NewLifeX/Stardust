@@ -17,7 +17,7 @@
       <Column Name="MachineName" DataType="String" Description="机器名称" />
       <Column Name="UserName" DataType="String" Description="用户名称" />
       <Column Name="IP" DataType="String" Length="200" Description="本地IP" />
-      <Column Name="Cpu" DataType="Int32" Description="CPU" />
+      <Column Name="Cpu" DataType="Int32" Description="CPU。处理器核心数" />
       <Column Name="Memory" DataType="Int32" Description="内存。单位M" />
       <Column Name="TotalSize" DataType="Int32" Description="磁盘。应用所在盘，单位M" />
       <Column Name="MaxOpenFiles" DataType="Int32" Description="最大打开文件。Linux上的ulimit -n" />
