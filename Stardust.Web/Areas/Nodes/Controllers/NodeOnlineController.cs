@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
+using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Nodes;
 
@@ -17,30 +18,43 @@ namespace Stardust.Web.Areas.Nodes.Controllers
 
         static NodeOnlineController()
         {
-            ListFields.RemoveField("SessionID", "IP", "ProvinceID", "CityID", "Macs", "Token");
+            //ListFields.RemoveField("SessionID", "IP", "ProvinceID", "CityID", "Macs", "Token");
 
+            var list = ListFields;
+            list.Clear();
+            var allows = new[] { "ID", "Name", "Code", "Category", "CityName", "PingCount", "Version", "IP", "AvailableMemory", "AvailableFreeSpace", "CpuRate", "ProcessCount", "UplinkSpeed", "DownlinkSpeed", "LocalTime", "CreateTime", "CreateIP", "UpdateTime" };
+            foreach (var item in allows)
+            {
+                list.AddListField(item);
+            }
+
+            {
+                var df = ListFields.GetField("Name") as ListField;
+                df.DisplayName = "{Name}";
+                df.Url = "Node?Id={NodeID}";
+            }
             //{
-            //    var df = ListFields.AddDataField("Category");
-            //    df.Header = "分类";
-            //    df.DisplayName = "{Category}";
-            //    df.Url = "?category={Category}";
+            //    var df = ListFields.AddListField("History", "Version");
+            //    df.DisplayName = "历史";
+            //    df.Url = "NodeHistory?nodeId={NodeID}";
             //}
+            {
+                var df = ListFields.AddListField("Meter", "Version");
+                df.DisplayName = "性能";
+                df.Url = "NodeData?nodeId={NodeID}";
+            }
+            {
+                var df = ListFields.AddListField("App", "Version");
+                df.DisplayName = "应用实例";
+                df.Url = "/Registry/AppOnline?nodeId={NodeID}";
+            }
             //{
-            //    var df = ListFields.AddDataField("NodeName");
-            //    df.Header = "设备";
-            //    df.Url = "Node?id={NodeID}";
-            //}
-            //{
-            //    var df = ListFields.AddDataField("NodeData", null, "NodeName");
-            //    df.DisplayName = "数据";
-            //    df.Url = "NodeData?nodeId={NodeID}";
-            //}
-            //{
-            //    var df = ListFields.AddDataField("Temperature");
-            //    df.DisplayName = "{Temperature}°C";
+            //    var df = ListFields.AddListField("Log", "Version");
+            //    df.DisplayName = "日志";
+            //    df.Url = "/Admin/Log?category=节点&linkId={NodeID}";
             //}
         }
-       
+
         public NodeOnlineController(StarFactory starFactory) => _starFactory = starFactory;
 
         protected override IEnumerable<NodeOnline> Search(Pager p)
