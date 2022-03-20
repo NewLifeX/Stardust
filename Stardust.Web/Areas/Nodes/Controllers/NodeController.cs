@@ -19,6 +19,40 @@ namespace Stardust.Web.Areas.Nodes.Controllers
     {
         private readonly StarFactory _starFactory;
 
+        static NodeController()
+        {
+            //ListFields.RemoveField("Secret", "ProductCode", "CompileTime", "OSVersion", "Architecture", "Dpi", "Resolution", "Processor", "CpuID", "Uuid", "MachineGuid", "DiskID", "MACS", "InstallPath", "Runtime", "Framework", "ProvinceID");
+
+            var list = ListFields;
+            list.Clear();
+            var allows = new[] { "ID", "Name", "Code", "Category", "CityName", "Enable", "Version", "IP", "OS", "MachineName", "CPU", "Memory", "TotalSize", "Logins", "LastLogin", "OnlineTime", "UpdateTime", "UpdateAddress" };
+            foreach (var item in allows)
+            {
+                list.AddListField(item);
+            }
+
+            {
+                var df = ListFields.AddListField("History", "Version");
+                df.DisplayName = "历史";
+                df.Url = "NodeHistory?nodeId={ID}";
+            }
+            {
+                var df = ListFields.AddListField("Meter", "Version");
+                df.DisplayName = "性能";
+                df.Url = "NodeData?nodeId={ID}";
+            }
+            {
+                var df = ListFields.AddListField("App", "Version");
+                df.DisplayName = "应用实例";
+                df.Url = "/Registry/AppOnline?nodeId={ID}";
+            }
+            {
+                var df = ListFields.AddListField("Log", "Version");
+                df.DisplayName = "日志";
+                df.Url = "/Admin/Log?category=节点&linkId={ID}";
+            }
+        }
+
         public NodeController(StarFactory starFactory)
         {
             LogOnChange = true;

@@ -126,17 +126,19 @@ namespace Stardust.Data
         #region 高级查询
         /// <summary>高级搜索</summary>
         /// <param name="appId"></param>
+        /// <param name="nodeId"></param>
         /// <param name="category"></param>
         /// <param name="start"></param>
         /// <param name="end"></param>
         /// <param name="key"></param>
         /// <param name="page"></param>
         /// <returns></returns>
-        public static IList<AppOnline> Search(Int32 appId, String category, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<AppOnline> Search(Int32 appId, Int32 nodeId, String category, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (appId >= 0) exp &= _.AppId == appId;
+            if (nodeId >= 0) exp &= _.NodeId == nodeId;
             if (!category.IsNullOrEmpty()) exp &= _.Category == category;
             exp &= _.UpdateTime.Between(start, end);
             if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.ProcessName.Contains(key);

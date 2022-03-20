@@ -38,12 +38,13 @@ namespace Stardust.Web.Areas.Registry.Controllers
         protected override IEnumerable<AppOnline> Search(Pager p)
         {
             var appId = p["appId"].ToInt(-1);
+            var nodeId = p["nodeId"].ToInt(-1);
             var category = p["category"];
 
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            return AppOnline.Search(appId, category, start, end, p["Q"], p);
+            return AppOnline.Search(appId, nodeId, category, start, end, p["Q"], p);
         }
     }
 }
