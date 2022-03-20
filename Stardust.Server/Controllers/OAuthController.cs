@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
+using NewLife.Remoting;
 using NewLife.Web;
 using Stardust.Data;
 using Stardust.Server.Common;
@@ -53,7 +54,10 @@ namespace Stardust.Server.Controllers
 
                 // 验证应用
                 var app = App.FindByName(jwt?.Subject);
-                if ((app == null || !app.Enable) && ex == null) ex = new InvalidOperationException($"无效应用[{jwt.Subject}]");
+                if (app == null || !app.Enable)
+                {
+                    if (ex == null) ex = new ApiException(403, $"无效应用[{jwt.Subject}]");
+                }
 
                 if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
 

@@ -15,7 +15,7 @@ namespace Stardust.Data.Configs
     [DataObject]
     [Description("配置历史。记录配置变更历史")]
     [BindIndex("IX_ConfigHistory_CreateTime", false, "CreateTime")]
-    [BindTable("ConfigHistory", Description = "配置历史。记录配置变更历史", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("ConfigHistory", Description = "配置历史。记录配置变更历史", ConnName = "StardustData", DbType = DatabaseType.None)]
     public partial class ConfigHistory
     {
         #region 属性

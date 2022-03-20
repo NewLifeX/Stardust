@@ -89,7 +89,7 @@
       <Index Columns="AppId,Key,Scope" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="ConfigHistory" Description="配置历史。记录配置变更历史">
+  <Table Name="ConfigHistory" Description="配置历史。记录配置变更历史" ConnName="StardustData">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />

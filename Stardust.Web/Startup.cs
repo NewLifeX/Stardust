@@ -50,7 +50,22 @@ namespace Stardust.Web
             // 调整应用表名
             FixAppTableName();
 
+            // 初始化数据库连接
+            var conns = DAL.ConnStrs;
+            if (!conns.ContainsKey("StardustData"))
+            {
+                var target = "";
+                if (conns.ContainsKey("MonitorLog"))
+                    target = "MonitorLog";
+                else if (conns.ContainsKey("NodeLog"))
+                    target = "NodeLog";
+                else if (conns.ContainsKey("Stardust"))
+                    target = "Stardust";
+
+                if (!target.IsNullOrEmpty()) DAL.AddConnStr("StardustData", $"MapTo={target}", null, null);
+            }
             EntityFactory.InitConnection("Stardust");
+            EntityFactory.InitConnection("StardustData");
 
             TrimOldAppConfig();
 

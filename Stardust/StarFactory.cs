@@ -97,6 +97,11 @@ namespace Stardust
         {
             Local = new LocalStarClient();
 
+            // 从环境变量读取星尘地址、应用Id、密钥，方便容器化部署
+            if (Server.IsNullOrEmpty()) Server = Environment.GetEnvironmentVariable("StarServer");
+            if (AppId.IsNullOrEmpty()) AppId = Environment.GetEnvironmentVariable("AppId");
+            if (Secret.IsNullOrEmpty()) Secret = Environment.GetEnvironmentVariable("Secret");
+
             // 读取本地appsetting
             if (Server.IsNullOrEmpty() && File.Exists("appsettings.Development.json".GetFullPath()))
             {

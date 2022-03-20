@@ -79,7 +79,7 @@
       <Index Columns="AppId,Version" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="AppDeployHistory" Description="部署历史。记录应用集部署历史">
+  <Table Name="AppDeployHistory" Description="部署历史。记录应用集部署历史" ConnName="StardustData">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />

@@ -17,7 +17,7 @@ namespace Stardust.Data.Nodes
     [BindIndex("IX_NodeCommand_NodeID_Status", false, "NodeID,Status")]
     [BindIndex("IX_NodeCommand_NodeID_Command", false, "NodeID,Command")]
     [BindIndex("IX_NodeCommand_UpdateTime_NodeID_Command", false, "UpdateTime,NodeID,Command")]
-    [BindTable("NodeCommand", Description = "节点命令", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("NodeCommand", Description = "节点命令", ConnName = "StardustData", DbType = DatabaseType.None)]
     public partial class NodeCommand
     {
         #region 属性

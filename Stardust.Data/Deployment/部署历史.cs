@@ -16,7 +16,7 @@ namespace Stardust.Data.Deployment
     [Description("部署历史。记录应用集部署历史")]
     [BindIndex("IX_AppDeployHistory_AppId_Id", false, "AppId,Id")]
     [BindIndex("IX_AppDeployHistory_AppId_Action_Id", false, "AppId,Action,Id")]
-    [BindTable("AppDeployHistory", Description = "部署历史。记录应用集部署历史", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("AppDeployHistory", Description = "部署历史。记录应用集部署历史", ConnName = "StardustData", DbType = DatabaseType.None)]
     public partial class AppDeployHistory
     {
         #region 属性

@@ -16,7 +16,7 @@ namespace Stardust.Data.Monitors
     [Description("采样数据。具体调用或异常详情，每次追踪统计携带少量样板，用于链路分析以及异常追踪")]
     [BindIndex("IX_SampleData_DataId", false, "DataId")]
     [BindIndex("IX_SampleData_TraceId", false, "TraceId")]
-    [BindTable("SampleData", Description = "采样数据。具体调用或异常详情，每次追踪统计携带少量样板，用于链路分析以及异常追踪", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("SampleData", Description = "采样数据。具体调用或异常详情，每次追踪统计携带少量样板，用于链路分析以及异常追踪", ConnName = "StardustData", DbType = DatabaseType.None)]
     public partial class SampleData
     {
         #region 属性

@@ -16,7 +16,7 @@ namespace Stardust.Data.Monitors
     [Description("跟踪小时统计。每应用每接口每小时统计，用于分析接口健康状况")]
     [BindIndex("IX_TraceHourStat_StatTime_AppId_ItemId", false, "StatTime,AppId,ItemId")]
     [BindIndex("IX_TraceHourStat_AppId_ItemId_Id", false, "AppId,ItemId,Id")]
-    [BindTable("TraceHourStat", Description = "跟踪小时统计。每应用每接口每小时统计，用于分析接口健康状况", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("TraceHourStat", Description = "跟踪小时统计。每应用每接口每小时统计，用于分析接口健康状况", ConnName = "StardustData", DbType = DatabaseType.None)]
     public partial class TraceHourStat
     {
         #region 属性
