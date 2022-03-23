@@ -19,7 +19,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
             LogOnChange = true;
 
             ListFields.RemoveCreateField();
-            ListFields.RemoveField("AppId", "EnableApollo", "ApolloMetaServer", "ApolloAppId", "ApolloNameSpace");
+            ListFields.RemoveField("AppId", "AppName", "PublishTime", "Quotes", "EnableApollo", "ApolloMetaServer", "ApolloAppId", "ApolloNameSpace", "Remark");
 
             {
                 var df = ListFields.AddListField("Configs", "Enable");
@@ -104,10 +104,13 @@ namespace Stardust.Web.Areas.Configs.Controllers
                 if (entity != null) return new List<AppConfig> { entity };
             }
 
+            var category = p["category"];
+            var enable = p["enable"]?.ToBoolean();
+
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            return AppConfig.Search(start, end, p["Q"], p);
+            return AppConfig.Search(category, enable, start, end, p["Q"], p);
         }
 
         protected override Boolean Valid(AppConfig entity, DataObjectMethodType type, Boolean post)

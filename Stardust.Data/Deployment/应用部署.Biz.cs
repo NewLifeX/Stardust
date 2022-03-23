@@ -97,7 +97,7 @@ namespace Stardust.Data.Deployment
         }
 
         // Select Count(Id) as Id,Category From AppDeploy Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
-        static readonly FieldCache<AppDeploy> _CategoryCache = new FieldCache<AppDeploy>(nameof(Category));
+        static readonly FieldCache<AppDeploy> _CategoryCache = new(nameof(Category));
 
         /// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
         /// <returns></returns>

@@ -5,8 +5,10 @@ using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
+using NewLife.Data;
 using NewLife.Serialization;
 using XCode;
+using XCode.Cache;
 using XCode.Membership;
 
 namespace Stardust.Data.Configs
@@ -71,7 +73,7 @@ namespace Stardust.Data.Configs
         /// <summary>依赖应用</summary>
         [Map(nameof(Quotes))]
         public String QuoteNames => Extends.Get(nameof(QuoteNames), k => Quotes?.SplitAsInt().Select(FindById).Join());
-       
+
         /// <summary>应用</summary>
         [XmlIgnore, ScriptIgnore, IgnoreDataMember]
         public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
@@ -113,16 +115,31 @@ namespace Stardust.Data.Configs
         #endregion
 
         #region 高级查询
+        /// <summary>高级查询</summary>
+        /// <param name="category">分类</param>
+        /// <param name="enable">启用</param>
+        /// <param name="start">更新时间开始</param>
+        /// <param name="end">更新时间结束</param>
+        /// <param name="key">关键字</param>
+        /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+        /// <returns>实体列表</returns>
+        public static IList<AppConfig> Search(String category, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+        {
+            var exp = new WhereExpression();
 
-        // Select Count(Id) as Id,Category From AppConfig Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
-        //static readonly FieldCache<AppConfig> _CategoryCache = new FieldCache<AppConfig>(nameof(Category))
-        //{
-        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-        //};
+            if (!category.IsNullOrEmpty()) exp &= _.Category == category;
+            if (enable != null) exp &= _.Enable == enable;
+            exp &= _.UpdateTime.Between(start, end);
+            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.CreateIP.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
 
-        ///// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-        ///// <returns></returns>
-        //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
+            return FindAll(exp, page);
+        }
+        // Select Count(Id) as Id,Category From AppDeploy Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
+        static readonly FieldCache<AppConfig> _CategoryCache = new(nameof(Category));
+
+        /// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
+        /// <returns></returns>
+        public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
         #endregion
 
         #region 业务操作
