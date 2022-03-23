@@ -19,10 +19,10 @@ namespace Stardust.Web.Areas.Configs.Controllers
             LogOnChange = true;
 
             ListFields.RemoveCreateField();
-            ListFields.RemoveField("AppId", "AppName", "PublishTime", "Quotes", "EnableApollo", "ApolloMetaServer", "ApolloAppId", "ApolloNameSpace", "Remark");
+            ListFields.RemoveField("AppId", "AppName", "PublishTime", "Quotes", "QuoteNames", "EnableApollo", "ApolloMetaServer", "ApolloAppId", "ApolloNameSpace", "Remark");
 
             {
-                var df = ListFields.AddListField("Configs", "Enable");
+                var df = ListFields.AddListField("ConfigData", "Enable");
                 df.Header = "管理配置";
                 df.DisplayName = "管理配置";
                 df.Title = "查看该应用所有配置数据";
