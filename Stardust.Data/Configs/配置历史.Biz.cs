@@ -90,7 +90,7 @@ namespace Stardust.Data.Configs
             if (appId >= 0) exp &= _.AppId == appId;
             if (!action.IsNullOrEmpty()) exp &= _.Action == action;
             if (success != null) exp &= _.Success == success;
-            exp &= _.Id.Between(start, end, Meta.Factory.Snow);
+            exp &= _.CreateTime.Between(start, end);
             if (!key.IsNullOrEmpty()) exp &= _.Remark.Contains(key) | _.CreateIP.Contains(key);
 
             return FindAll(exp, page);
