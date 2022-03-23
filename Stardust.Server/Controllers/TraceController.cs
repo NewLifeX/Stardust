@@ -111,6 +111,7 @@ namespace Stardust.Server.Controllers
                         {
                             app.AppId = ap.Id;
                             app.Enable = ap.Enable;
+                            app.Category = ap.Category;
                         }
                         else
                         {
@@ -122,9 +123,18 @@ namespace Stardust.Server.Controllers
                 }
             }
 
-            if (app.AppId == 0 && ap != null)
+            if (ap != null)
             {
-                app.AppId = ap.Id;
+                // 双向同步应用分类
+                if (!ap.Category.IsNullOrEmpty())
+                    app.Category = ap.Category;
+                else if (!app.Category.IsNullOrEmpty())
+                {
+                    ap.Category = app.Category;
+                    ap.Update();
+                }
+
+                if (app.AppId == 0) app.AppId = ap.Id;
                 app.Update();
             }
 
