@@ -52,14 +52,14 @@ namespace Stardust.Web.Areas.Registry.Controllers
                 df.Url = "/Deployment/AppDeploy?appId={Id}";
             }
             {
-                var df = ListFields.AddListField("Providers", null, "AutoActive");
+                var df = ListFields.AddListField("AppService", null, "AutoActive");
                 df.DisplayName = "提供服务";
                 df.Header = "提供服务";
                 df.Url = "AppService?appId={Id}";
                 df.DataVisible = (e, f) => (e as App).Providers.Count > 0;
             }
             {
-                var df = ListFields.AddListField("Consumers", null, "AutoActive");
+                var df = ListFields.AddListField("AppConsume", null, "AutoActive");
                 df.DisplayName = "消费服务";
                 df.Header = "消费服务";
                 df.Url = "AppConsume?appId={Id}";
