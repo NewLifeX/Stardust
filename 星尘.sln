@@ -1,16 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28922.388
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32319.34
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stardust", "Stardust\Stardust.csproj", "{AADBD913-749C-467E-A63F-C118C4C82351}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stardust.Web", "Stardust.Web\Stardust.Web.csproj", "{25331DEF-FEE3-44D5-A4E9-864078441F71}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Others", "Others", "{0EA980BB-BB15-41A3-B75B-537BC42E985B}"
-	ProjectSection(SolutionItems) = preProject
-		Readme.MD = Readme.MD
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stardust.Data", "Stardust.Data\Stardust.Data.csproj", "{8B5FC187-6592-4717-99C3-D97743062FD3}"
 EndProject
@@ -23,6 +18,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8D122272-87BB-4968-8A2F-CFF04CE47B29}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		.github\workflows\publish-beta.yml = .github\workflows\publish-beta.yml
+		.github\workflows\publish.yml = .github\workflows\publish.yml
+		Readme.MD = Readme.MD
+		.github\workflows\test.yml = .github\workflows\test.yml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClientTest", "ClientTest\ClientTest.csproj", "{7DE10A4D-1749-4474-A6B2-F52CA8462813}"
@@ -35,7 +34,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StarAgentTool", "StarAgentT
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StarGateway", "StarGateway\StarGateway.csproj", "{94CCBB9E-628D-4381-8E2C-DF349EFD204F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stardust.Extensions", "Stardust.Extensions\Stardust.Extensions.csproj", "{28C1DC01-2A89-47B6-8E9D-6351C12722AC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stardust.Extensions", "Stardust.Extensions\Stardust.Extensions.csproj", "{28C1DC01-2A89-47B6-8E9D-6351C12722AC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
