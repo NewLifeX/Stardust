@@ -35,7 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Cube.Core" Version="5.0.2022.320-beta1428" />
+    <PackageReference Include="NewLife.Cube.Core" Version="5.0.2022.323-beta1533" />
     <PackageReference Include="NewLife.Redis" Version="4.0.2022.320-beta0642" />
   </ItemGroup>
 
@@ -52,9 +52,5 @@
   <ItemGroup>
     <None Include="Areas\Nodes\Views\Shared\_SelectNode.cshtml" />
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="del &quot;$(TargetDir)*.xml&quot; /q" />
-  </Target>
 
 </Project>
