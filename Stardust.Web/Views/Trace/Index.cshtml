@@ -71,7 +71,7 @@
                     <td>@entity.ClientId</td>
                     <td>@entity.SpanId</td>
                     <td>@entity.ParentId</td>
-                    <td>@entity.CreateIP</td>
+                    <td title="@entity.CreateIP.IPToAddress()">@entity.CreateIP</td>
                     <td class="text-center">
                         <a href="/monitors/sampledata/detail/@entity.Id">查看</a>
                     </td>
