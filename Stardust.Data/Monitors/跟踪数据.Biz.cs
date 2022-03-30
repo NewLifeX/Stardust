@@ -99,6 +99,7 @@ namespace Stardust.Data.Monitors
         /// <summary>高级查询</summary>
         /// <param name="appId">应用</param>
         /// <param name="itemId">跟踪项</param>
+        /// <param name="clientId">客户端实例</param>
         /// <param name="name">操作名。接口名或埋点名</param>
         /// <param name="kind">时间种类。day/hour/minute</param>
         /// <param name="minError">最小错误数。指定后，只返回错误数大于等于该值的数据</param>
@@ -107,12 +108,13 @@ namespace Stardust.Data.Monitors
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<TraceData> Search(Int32 appId, Int32 itemId, String name, String kind, Int32 minError, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<TraceData> Search(Int32 appId, Int32 itemId, String clientId, String name, String kind, Int32 minError, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (appId >= 0) exp &= _.AppId == appId;
             if (itemId > 0) exp &= _.ItemId == itemId;
+            if (!clientId.IsNullOrEmpty()) exp &= _.ClientId == clientId;
             if (!name.IsNullOrEmpty()) exp &= _.Name == name;
             if (!key.IsNullOrEmpty()) exp &= _.ClientId == key | _.Name == key;
             if (minError > 0) exp &= _.Errors >= minError;

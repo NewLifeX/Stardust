@@ -25,6 +25,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         {
             var appId = p["appId"].ToInt(-1);
             var itemId = p["itemId"].ToInt(-1);
+            var clientId = p["clientId"];
             var name = p["name"];
             var minError = p["minError"].ToInt(-1);
 
@@ -49,7 +50,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             if (appId > 0 && p.PageSize == 20) p.PageSize = 100;
             if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.Id.Desc();
 
-            var list = TraceData.Search(appId, itemId, name, kind, minError, start, end, p["Q"], p);
+            var list = TraceData.Search(appId, itemId, clientId, name, kind, minError, start, end, p["Q"], p);
 
             if (list.Count > 0 && appId > 0 && itemId > 0)
             {

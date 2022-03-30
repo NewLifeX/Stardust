@@ -47,13 +47,14 @@
             var url1 = $"?appid={entity.AppId}&itemId={entity.ItemId}";
             //var url2 = $"SampleData?appid={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}&start={entity.StartTime}&end={entity.EndTime}";
             var url2 = $"SampleData?dataid={entity.Id}";
+            var url3 = $"?appid={entity.AppId}&clientId={entity.ClientId}";
             <tr>
                 @if (set.EnableSelect)
                 {
                     <td class="text-center"><input type="checkbox" name="keys" value="@entity.Id" /></td>
                 }
                 <td class="text-center">@entity.AppName</td>
-                <td>@entity.ClientId</td>
+                <td><a href="@url3" title="该实例的相关埋点数据">@entity.ClientId</a></td>
                 <td style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url1" title="该应用操作在最近一段时间内的监控图表">@entity.Name</a></td>
                 <td><a href="TraceData/Trace?id=@entity.Id" title="跨多系统查看调用链">追踪</a></td>
                 <td class="text-right"><a href="@url2" title="本次追踪的少量采样数据">@entity.Total.ToString("n0")</a></td>

@@ -89,6 +89,7 @@
       <Index Columns="StatHour,AppId,ItemId" />
       <Index Columns="StatMinute,AppId,ItemId" />
       <Index Columns="AppId,StatMinute" />
+      <Index Columns="AppId,ClientId" />
     </Indexes>
   </Table>
   <Table Name="SampleData" Description="采样数据。具体调用或异常详情，每次追踪统计携带少量样板，用于链路分析以及异常追踪" ConnName="StardustData">
