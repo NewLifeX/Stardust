@@ -32,9 +32,6 @@ namespace Stardust.Data.Monitors
             // 如果没有脏数据，则不需要进行任何处理
             if (!HasDirty) return;
 
-            // 建议先调用基类方法，基类方法会做一些统一处理
-            base.Valid(isNew);
-
             var len = _.TraceId.Length;
             if (len > 0 && !TraceId.IsNullOrEmpty() && TraceId.Length > len) TraceId = TraceId[..len];
 
@@ -43,6 +40,9 @@ namespace Stardust.Data.Monitors
 
             len = _.Error.Length;
             if (len > 0 && !Error.IsNullOrEmpty() && Error.Length > len) Error = Error[..len];
+
+            // 建议先调用基类方法，基类方法会做一些统一处理
+            base.Valid(isNew);
         }
         #endregion
 

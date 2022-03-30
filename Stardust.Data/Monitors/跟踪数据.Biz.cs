@@ -42,6 +42,9 @@ namespace Stardust.Data.Monitors
             var len = _.Name.Length;
             if (Name.Length > len) Name = Name.Cut(len);
 
+            // 建议先调用基类方法，基类方法会做一些统一处理
+            base.Valid(isNew);
+
             //StatDate = StartTime.ToDateTime().ToLocalTime().Date;
             Cost = Total == 0 ? 0 : (Int32)(TotalCost / Total);
         }

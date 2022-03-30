@@ -46,18 +46,24 @@ namespace Stardust.Data.Nodes
 
             var len = _.CpuID.Length;
             if (CpuID != null && len > 0 && CpuID.Length > len) CpuID = CpuID.Substring(0, len);
+
             len = _.Uuid.Length;
             if (Uuid != null && len > 0 && Uuid.Length > len) Uuid = Uuid.Substring(0, len);
+
             len = _.MachineGuid.Length;
             if (MachineGuid != null && len > 0 && MachineGuid.Length > len) MachineGuid = MachineGuid.Substring(0, len);
 
             len = _.MACs.Length;
             if (MACs != null && len > 0 && MACs.Length > len) MACs = MACs.Substring(0, len);
+
             len = _.DiskID.Length;
             if (DiskID != null && len > 0 && DiskID.Length > len) DiskID = DiskID.Substring(0, len);
 
             len = _.OS.Length;
             if (OS != null && len > 0 && OS.Length > len) OS = OS.Substring(0, len);
+
+            // 建议先调用基类方法，基类方法会做一些统一处理
+            base.Valid(isNew);
 
             if (Period == 0) Period = 60;
         }

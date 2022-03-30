@@ -58,6 +58,9 @@ namespace Stardust.Data.Monitors
             var len = _.Nodes.Length;
             if (!Nodes.IsNullOrEmpty() && Nodes.Length > len) Nodes = Nodes.Cut(len);
 
+            // 建议先调用基类方法，基类方法会做一些统一处理
+            base.Valid(isNew);
+
             if (isNew)
             {
                 if (!Dirtys[nameof(Period)]) Period = 60;

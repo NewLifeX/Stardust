@@ -35,8 +35,11 @@ namespace Stardust.Data.Nodes
         public override void Valid(Boolean isNew)
         {
             // 截取部分进程字段，避免过长无法保存
-            if (Processes != null && Processes.Length > 2000) Processes = Processes.Substring(0, 1999);
-            if (MACs != null && MACs.Length > 200) MACs = MACs.Substring(0, 1999);
+            var len = _.Processes.Length;
+            if (len > 0 && Processes != null && Processes.Length > len) Processes = Processes[..len];
+
+            len = _.MACs.Length;
+            if (len > 0 && MACs != null && MACs.Length > len) MACs = MACs[..len];
             //if (COMs != null && COMs.Length > 200) COMs = COMs.Substring(0, 199);
 
             base.Valid(isNew);

@@ -27,12 +27,13 @@ namespace Stardust.Data.Nodes
         /// <param name="isNew"></param>
         public override void Valid(Boolean isNew)
         {
-            base.Valid(isNew);
-
             // 截断日志
             var len = _.Remark.Length;
-            if (!Remark.IsNullOrEmpty() && len > 0 && Remark.Length > len) Remark = Remark.Substring(0, len);
-         
+            if (len > 0 && !Remark.IsNullOrEmpty() && len > 0 && Remark.Length > len) Remark = Remark[..len];
+
+            // 建议先调用基类方法，基类方法会做一些统一处理
+            base.Valid(isNew);
+
             if (TraceId.IsNullOrEmpty()) TraceId = DefaultSpan.Current?.TraceId;
         }
         #endregion

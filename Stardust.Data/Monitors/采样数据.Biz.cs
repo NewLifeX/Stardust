@@ -48,6 +48,9 @@ namespace Stardust.Data.Monitors
             len = _.Error.Length;
             if (len > 0 && !Error.IsNullOrEmpty() && Error.Length > len) Error = Error[..len];
 
+            // 建议先调用基类方法，基类方法会做一些统一处理
+            base.Valid(isNew);
+
             Cost = (Int32)(EndTime - StartTime);
         }
         #endregion

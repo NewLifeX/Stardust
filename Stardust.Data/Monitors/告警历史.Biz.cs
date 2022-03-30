@@ -32,10 +32,11 @@ namespace Stardust.Data.Monitors
             //// 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
             //if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), "名称不能为空！");
 
+            var len = _.Content.Length;
+            if (len > 0 && !Content.IsNullOrEmpty() && Content.Length > len) Content = Content[..len];
+
             // 建议先调用基类方法，基类方法会做一些统一处理
             base.Valid(isNew);
-
-            if (!Content.IsNullOrEmpty() && Content.Length > _.Content.Length) Content = Content.Substring(0, _.Content.Length);
         }
         #endregion
 
