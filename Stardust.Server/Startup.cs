@@ -99,7 +99,12 @@ namespace Stardust.Server
                 else if (conns.ContainsKey("Stardust"))
                     target = "Stardust";
 
-                if (!target.IsNullOrEmpty()) DAL.AddConnStr("StardustData", $"MapTo={target}", null, null);
+                if (!target.IsNullOrEmpty())
+                {
+                    XTrace.WriteLine("兼容旧配置，[StardustData]使用[{0}]的连接配置，建议直接设置[StardustData]的连接字符串", target);
+                    var dal = DAL.Create(target);
+                    DAL.AddConnStr("StardustData", dal.ConnStr, null, dal.DbType + "");
+                }
             }
             EntityFactory.InitConnection("Stardust");
             EntityFactory.InitConnection("StardustData");
