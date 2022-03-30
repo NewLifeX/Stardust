@@ -191,17 +191,21 @@ namespace Stardust.Server.Controllers
                 //samples.AddRange(SampleData.Create(td, item.Samples, true));
                 samples.AddRange(SampleData.Create(td, item.ErrorSamples, false));
 
-                var isTimeout = app.Timeout > 0 && !timeoutExcludes.Any(e => e.IsMatch(item.Name));
+                // 超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时
+                var timeout = ti.Timeout;
+                if (timeout == 0) timeout = app.Timeout;
+
+                var isTimeout = timeout > 0 && !timeoutExcludes.Any(e => e.IsMatch(item.Name));
                 if (item.Samples != null && item.Samples.Count > 0)
                 {
                     // 超时处理为异常，累加到错误数之中
-                    if (isTimeout) td.Errors += item.Samples.Count(e => e.EndTime - e.StartTime > app.Timeout);
+                    if (isTimeout) td.Errors += item.Samples.Count(e => e.EndTime - e.StartTime > timeout);
 
                     samples.AddRange(SampleData.Create(td, item.Samples, true));
                 }
 
                 // 如果最小耗时都超过了超时设置，则全部标记为错误
-                if (isTimeout && td.MinCost >= app.Timeout && td.Errors < td.Total) td.Errors = td.Total;
+                if (isTimeout && td.MinCost >= timeout && td.Errors < td.Total) td.Errors = td.Total;
             }
 
             // 分表

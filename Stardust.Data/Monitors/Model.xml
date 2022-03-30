@@ -45,6 +45,7 @@
       <Column Name="DisplayName" DataType="String" Description="显示名" />
       <Column Name="Rules" DataType="String" Length="200" Description="规则。支持多个埋点操作名按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开。" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="Timeout" DataType="Int32" Description="超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时" />
       <Column Name="Days" DataType="Int32" Description="天数。共统计了多少天" />
       <Column Name="Total" DataType="Int64" Description="总次数。累计埋点采样次数" />
       <Column Name="Errors" DataType="Int32" Description="错误数" />

@@ -75,6 +75,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("Enable", "启用", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
+        private Int32 _Timeout;
+        /// <summary>超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时</summary>
+        [DisplayName("超时时间")]
+        [Description("超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Timeout", "超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时", "")]
+        public Int32 Timeout { get => _Timeout; set { if (OnPropertyChanging("Timeout", value)) { _Timeout = value; OnPropertyChanged("Timeout"); } } }
+
         private Int32 _Days;
         /// <summary>天数。共统计了多少天</summary>
         [DisplayName("天数")]
@@ -181,6 +189,7 @@ namespace Stardust.Data.Monitors
                     case "DisplayName": return _DisplayName;
                     case "Rules": return _Rules;
                     case "Enable": return _Enable;
+                    case "Timeout": return _Timeout;
                     case "Days": return _Days;
                     case "Total": return _Total;
                     case "Errors": return _Errors;
@@ -206,6 +215,7 @@ namespace Stardust.Data.Monitors
                     case "DisplayName": _DisplayName = Convert.ToString(value); break;
                     case "Rules": _Rules = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
+                    case "Timeout": _Timeout = value.ToInt(); break;
                     case "Days": _Days = value.ToInt(); break;
                     case "Total": _Total = value.ToLong(); break;
                     case "Errors": _Errors = value.ToInt(); break;
@@ -247,6 +257,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
+
+            /// <summary>超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时</summary>
+            public static readonly Field Timeout = FindByName("Timeout");
 
             /// <summary>天数。共统计了多少天</summary>
             public static readonly Field Days = FindByName("Days");
@@ -307,6 +320,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>启用</summary>
             public const String Enable = "Enable";
+
+            /// <summary>超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时</summary>
+            public const String Timeout = "Timeout";
 
             /// <summary>天数。共统计了多少天</summary>
             public const String Days = "Days";
