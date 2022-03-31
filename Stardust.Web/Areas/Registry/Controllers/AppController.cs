@@ -24,51 +24,53 @@ namespace Stardust.Web.Areas.Registry.Controllers
             {
                 var df = ListFields.AddListField("Online", "LastLogin");
                 df.DisplayName = "在线";
-                df.Header = "在线";
                 df.Url = "AppOnline?appId={Id}";
             }
             {
                 var df = ListFields.AddListField("AppLog", "LastLogin");
                 df.DisplayName = "应用日志";
-                df.Header = "应用日志";
                 df.Url = "AppLog?appId={Id}";
             }
             {
                 var df = ListFields.AddListField("History", null, "AutoActive");
                 df.DisplayName = "历史";
-                df.Header = "历史";
                 df.Url = "AppHistory?appId={Id}";
             }
             {
                 var df = ListFields.AddListField("Meter", null, "AutoActive");
                 df.DisplayName = "性能";
-                df.Header = "性能";
                 df.Url = "AppMeter?appId={Id}";
             }
             {
                 var df = ListFields.AddListField("Deploy", null, "AutoActive");
                 df.DisplayName = "部署";
-                df.Header = "部署";
                 df.Url = "/Deployment/AppDeploy?appId={Id}";
+            }
+            {
+                var df = ListFields.AddListField("Config", null, "AutoActive");
+                df.DisplayName = "配置";
+                df.Url = "/Configs/AppConfig?appId={Id}";
+            }
+            {
+                var df = ListFields.AddListField("Monitor", null, "AutoActive");
+                df.DisplayName = "监控";
+                df.Url = "/Monitors/AppTracer?appId={Id}";
             }
             {
                 var df = ListFields.AddListField("AppService", null, "AutoActive");
                 df.DisplayName = "提供服务";
-                df.Header = "提供服务";
                 df.Url = "AppService?appId={Id}";
                 df.DataVisible = (e, f) => (e as App).Providers.Count > 0;
             }
             {
                 var df = ListFields.AddListField("AppConsume", null, "AutoActive");
                 df.DisplayName = "消费服务";
-                df.Header = "消费服务";
                 df.Url = "AppConsume?appId={Id}";
                 df.DataVisible = (e, f) => (e as App).Consumers.Count > 0;
             }
             {
                 var df = ListFields.AddListField("Log", "CreateUser");
                 df.DisplayName = "修改日志";
-                df.Header = "修改日志";
                 df.Url = "/Admin/Log?category=应用系统&linkId={Id}";
             }
         }

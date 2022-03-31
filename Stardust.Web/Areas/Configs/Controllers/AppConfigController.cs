@@ -103,6 +103,12 @@ namespace Stardust.Web.Areas.Configs.Controllers
                 var entity = AppConfig.FindById(id);
                 if (entity != null) return new List<AppConfig> { entity };
             }
+            var appId = p["appId"].ToInt(-1);
+            if (appId > 0)
+            {
+                var entity = AppConfig.FindByAppId(appId);
+                if (entity != null) return new List<AppConfig> { entity };
+            }
 
             var category = p["category"];
             var enable = p["enable"]?.ToBoolean();

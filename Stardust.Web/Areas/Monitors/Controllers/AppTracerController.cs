@@ -76,6 +76,12 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 var app = AppTracer.FindByID(id);
                 if (app != null) return new[] { app };
             }
+            var appId = p["appId"].ToInt(-1);
+            if (appId > 0)
+            {
+                var entity = AppTracer.FindByAppId(appId);
+                if (entity != null) return new List<AppTracer> { entity };
+            }
 
             var category = p["category"];
             var enable = p["enable"]?.ToBoolean();
