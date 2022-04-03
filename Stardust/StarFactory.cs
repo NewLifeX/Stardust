@@ -303,15 +303,18 @@ namespace Stardust
             }
         }
 
-        //private IDictionary<String, IApiClient> _services = new Dictionary<String, IApiClient>();
         /// <summary>为指定服务创建客户端，从星尘注册中心获取服务地址。单例，应避免频繁创建客户端</summary>
         /// <param name="serviceName"></param>
         /// <param name="tag"></param>
         /// <returns></returns>
-        public IApiClient CreateForService(String serviceName, String tag = null)
-        {
-            //if (_services.TryGetValue(serviceName, out var client)) return client;
+        public IApiClient CreateForService(String serviceName, String tag = null) => Task.Run(() => CreateForServiceAsync(serviceName, tag)).Result;
 
+        /// <summary>为指定服务创建客户端，从星尘注册中心获取服务地址。单例，应避免频繁创建客户端</summary>
+        /// <param name="serviceName"></param>
+        /// <param name="tag"></param>
+        /// <returns></returns>
+        public async Task<IApiClient> CreateForServiceAsync(String serviceName, String tag = null)
+        {
             var http = new ApiHttpClient
             {
                 RoundRobin = true,
@@ -319,18 +322,16 @@ namespace Stardust
                 Tracer = Tracer,
             };
 
-            var models = Service.ResolveAsync(serviceName, null, tag).Result;
+            var models = await Service.ResolveAsync(serviceName, null, tag);
 
             Bind(http, models);
 
             Service.Bind(serviceName, (k, ms) => Bind(http, ms));
 
-            //_services[serviceName] = http;
-
             return http;
         }
 
-        private void Bind(ApiHttpClient client, ServiceModel[] ms)
+        private static void Bind(ApiHttpClient client, ServiceModel[] ms)
         {
             if (ms != null && ms.Length > 0)
             {
@@ -355,6 +356,40 @@ namespace Stardust
                     client.Services.RemoveAt(i);
                 }
             }
+        }
+
+        /// <summary>发布服务</summary>
+        /// <param name="serviceName">服务名</param>
+        /// <param name="address">服务地址</param>
+        /// <param name="tag">特性标签</param>
+        /// <returns></returns>
+        public Task<Object> RegisterAsync(String serviceName, String address, String tag = null) => Service.RegisterAsync(serviceName, address, tag);
+
+        /// <summary>消费得到服务地址信息</summary>
+        /// <param name="serviceName">服务名</param>
+        /// <param name="minVersion">最小版本</param>
+        /// <param name="tag">特性标签。只要包含该特性的服务提供者</param>
+        /// <returns></returns>
+        public async Task<String[]> ResolveAsync(String serviceName, String minVersion = null, String tag = null)
+        {
+            var ms = await Service.ResolveAsync(serviceName, minVersion, tag);
+            //return ms?.Select(e => e.Address).ToArray();
+            if (ms == null) return null;
+
+            var addrs = new List<String>();
+            foreach (var item in ms)
+            {
+                if (!item.Address.IsNullOrEmpty())
+                {
+                    var ss = item.Address.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var elm in ss)
+                    {
+                        if (!elm.IsNullOrEmpty() && !addrs.Contains(elm)) addrs.Add(elm);
+                    }
+                }
+            }
+
+            return addrs.ToArray();
         }
         #endregion
 
