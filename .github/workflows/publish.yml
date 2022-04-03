@@ -3,9 +3,10 @@ name: publish
 on:
   push:
     tags: [ v* ]
+  workflow_dispatch:
 
 jobs:
-  build-publish:
+  build:
 
     runs-on: ubuntu-latest
 
@@ -23,6 +24,12 @@ jobs:
       run: |
         dotnet pack --no-restore --version-suffix $(date "+%Y.%m%d") -c Release -o out Stardust/Stardust.csproj
         dotnet pack --no-restore --version-suffix $(date "+%Y.%m%d") -c Release -o out Stardust.Extensions/Stardust.Extensions.csproj
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
     - name: Publish
       run: |
         # dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://nuget.pkg.github.com/NewLifeX/index.json --api-key ${{ github.token }}
