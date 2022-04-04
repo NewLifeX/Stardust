@@ -1,0 +1,98 @@
+﻿@model GraphViewModel
+@using NewLife.Serialization
+@using Stardust.Data.Monitors
+@using NewLife;
+@using NewLife.Web;
+@using XCode;
+@using XCode.Configuration;
+@using XCode.Membership;
+@using NewLife.Cube;
+@using System.Web;
+@using Stardust.Web.Models;
+@{
+    Layout = null;
+
+    var title = Model.Title + "";
+    if (title != "" && !title.Contains(" - "))
+    {
+        title += " - " + NewLife.Common.SysConfig.Current.DisplayName;
+    }
+
+    var set = NewLife.Cube.Setting.Current;
+
+    var res = set.ResourceUrl;
+    if (String.IsNullOrEmpty(res)) res = "/Content";
+    res = res.TrimEnd('/');
+}
+<!DOCTYPE html>
+<html style="height: 100%">
+<head>
+    <meta charset="utf-8">
+    <title>@title</title>
+</head>
+<body style="height: 100%; margin: 0">
+    <div id="container" style="height: 100%"></div>
+    <script src="@res/js/jquery-3.6.0.min.js"></script>
+    <script src="@res/echarts/echarts.min.js"></script>
+    @{
+        // 图表主题
+        var name = set.EChartsTheme;
+        if (name.EqualIgnoreCase("Default")) name = "";
+        if (!name.IsNullOrEmpty())
+        {
+            <script src="@res/echarts/theme/@(name).js"></script>
+        }
+    }
+    <script type="text/javascript">
+        var dom = document.getElementById("container");
+        var myChart = echarts.init(dom);
+        var app = {};
+
+        var graph = @Html.Raw(Model.ToJson(true, true, true));
+
+         var option = {
+            tooltip: {},
+            legend: [
+              {
+                data: graph.categories.map(function (a) {
+                  return a.name;
+                })
+              }
+            ],
+            series: [
+              {
+                name: '@Model.Title',
+                type: 'graph',
+                layout: 'none',
+                data: graph.nodes,
+                links: graph.links,
+                categories: graph.categories,
+                roam: true,
+                label: {
+                  show: true,
+                  position: 'right',
+                  formatter: '{b}'
+                },
+                labelLayout: {
+                  hideOverlap: true
+                },
+                scaleLimit: {
+                  min: 0.4,
+                  max: 2
+                },
+                lineStyle: {
+                  color: 'source',
+                  curveness: 0.3
+                }
+              }
+            ]
+          };
+          myChart.setOption(option);
+
+        if (option && typeof option === 'object') {
+            myChart.setOption(option);
+        }
+
+    </script>
+</body>
+</html>

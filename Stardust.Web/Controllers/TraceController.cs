@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Log;
+using NewLife.Security;
 using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data.Monitors;
@@ -15,6 +16,10 @@ namespace Stardust.Web.Controllers
         public ActionResult Index(String id, Pager pager)
         {
             if (id.IsNullOrEmpty()) throw new ArgumentNullException(nameof(id));
+
+            // id可能不是traceId，而是traceParent
+            var ss = id.Split('-');
+            if (ss.Length == 4) id = ss[1];
 
             var list = Search(id, pager);
 
@@ -31,6 +36,88 @@ namespace Stardust.Web.Controllers
             };
 
             return View("Index", model);
+        }
+
+        [Route("[controller]/[action]")]
+        public ActionResult Graph(String id, Pager pager)
+        {
+            if (id.IsNullOrEmpty()) throw new ArgumentNullException(nameof(id));
+
+            // id可能不是traceId，而是traceParent
+            var ss = id.Split('-');
+            if (ss.Length == 4) id = ss[1];
+
+            var list = Search(id, pager);
+
+            var maxCost = list.Max(e => e.Cost);
+
+            // 解析得到关系数据
+            var cats = new List<String>();
+            var nodes = new List<GraphNode>();
+            var links = new Dictionary<String, GraphLink>();
+            foreach (var item in list)
+            {
+                var cat = "App";
+                var node = item.AppName;
+                var ti = item.TraceItem;
+                if (ti != null && ti.Kind.EqualIgnoreCase("db", "redis", "mq", "modbus"))
+                {
+                    var ns = item.Name?.Split(':');
+                    if (ns != null && ns.Length >= 2)
+                    {
+                        cat = ns[0];
+                        node = ns[1];
+                    }
+                }
+
+                // 分类
+                var idx = cats.IndexOf(cat);
+                if (idx < 0)
+                {
+                    cats.Add(cat);
+                    idx = cats.Count - 1;
+                }
+
+                // 节点
+                var cost = 100 * (double)item.Cost / maxCost;
+                nodes.Add(new GraphNode
+                {
+                    Id = item.Id + "",
+                    Name = item.Name,
+                    Value = cost,
+                    Category = idx,
+
+                    SymbolSize = cost,
+                    X = Rand.Next(100),
+                    Y = Rand.Next(100),
+                });
+
+                // 关系
+                var parent = list.FirstOrDefault(e => e.SpanId == item.ParentId);
+                if (parent != null)
+                {
+                    var src = parent.Id + "";
+                    var dst = item.Id + "";
+                    var key = $"{src}-{dst}";
+                    if (!links.ContainsKey(key)) links.Add(key, new GraphLink { Source = src, Target = dst });
+                }
+            }
+
+            var model = new GraphViewModel
+            {
+                Title = "关系图",
+                Categories = cats.Select(e => new GraphCategory { Name = e }).ToArray(),
+                Links = links.Values.ToArray(),
+                Nodes = nodes.ToArray(),
+            };
+
+            if (list.Count > 0)
+            {
+                var appName = list[0].AppName;
+                if (appName.IsNullOrEmpty()) model.Title = $"{appName}关系图";
+            }
+
+            return View(model);
         }
 
         private IList<SampleData> Search(String traceId, Pager p)

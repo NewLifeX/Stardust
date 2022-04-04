@@ -12,6 +12,5 @@ namespace Stardust.Web.Models
         public Pager Page { get; set; }
 
         public IList<SampleData> Data { get; set; }
-
     }
 }
