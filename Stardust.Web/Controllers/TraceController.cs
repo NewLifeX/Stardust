@@ -59,25 +59,30 @@ namespace Stardust.Web.Controllers
                 var ti = item.TraceItem;
                 if (ti != null && ti.Kind.EqualIgnoreCase("http", "db", "redis", "mq", "mqtt", "modbus"))
                 {
-                    var ns = item.Name?.Split(':');
-                    if (ns != null && ns.Length >= 2)
-                    {
-                        cat = ti.Kind ?? ns[0];
-                        name = ns[1]?.TrimStart("//");
+                    cat = ti.Kind;
+                    name = ti.DisplayName ?? ti.Name;
+                    var ns = name.Split(':');
 
-                        // 特殊处理
-                        switch (ti.Kind)
-                        {
-                            case "db":
-                                if (ns.Length <= 2) name = null;
-                                break;
-                            case "mq":
-                                if (ns[0] == "redismq" && ns[1] == "Add" && ns.Length >= 3) name = ns[2];
-                                break;
-                            case "modbus":
-                                if (ns.Length <= 2) name = "IoTDevice";
-                                break;
-                        }
+                    // 特殊处理
+                    switch (ti.Kind)
+                    {
+                        case "http":
+                            var p = name.IndexOf('/', "https://".Length);
+                            name = p > 0 ? name[..p] : name;
+                            break;
+                        case "db":
+                            if (ns.Length >= 2) name = ns[1];
+                            break;
+                        case "mq":
+                            if (ns.Length >= 2) name = $"{ns[0]}:{ns[1]}";
+                            if (ns.Length >= 3 && ns[0] == "redismq" && ns[1] == "Add") name = $"{ns[0]}:{ns[2]}";
+                            break;
+                        case "modbus":
+                            name = ns.Length >= 3 ? ns[1] : "IoTDevice";
+                            break;
+                        default:
+                            if (ns.Length >= 2) name = $"{ns[0]}:{ns[1]}";
+                            break;
                     }
                 }
                 if (name == null) name = item.AppName;
@@ -97,7 +102,7 @@ namespace Stardust.Web.Controllers
                 {
                     node = new GraphNode
                     {
-                        //Id = item.Id + "",
+                        Id = item.Id + "",
                         Name = name,
                         Value = item.Cost,
                         Category = idx,
@@ -113,13 +118,14 @@ namespace Stardust.Web.Controllers
                     node.Value += item.Cost;
                     node.SymbolSize += item.Cost;
                 }
+                item["node_id"] = node.Id;
 
                 // 关系
                 var parent = list.FirstOrDefault(e => e.SpanId == item.ParentId);
                 if (parent != null)
                 {
-                    var src = parent["node_name"] + "";
-                    var dst = item["node_name"] + "";
+                    var src = parent["node_id"] + "";
+                    var dst = item["node_id"] + "";
                     var key = $"{src}-{dst}";
                     if (src != dst && !links.ContainsKey(key)) links.Add(key, new GraphLink { Source = src, Target = dst });
                 }
