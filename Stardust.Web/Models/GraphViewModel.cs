@@ -4,6 +4,8 @@
     {
         public String Title { get; set; }
 
+        public String Layout { get; set; }
+
         public GraphCategory[] Categories { get; set; }
 
         public GraphLink[] Links { get; set; }
@@ -25,18 +27,22 @@
 
     public class GraphNode
     {
-        public String Id { get; set; }
+        //public String Id { get; set; }
 
         public String Name { get; set; }
 
+        public Int32 Category { get; set; }
+
         public Double SymbolSize { get; set; }
 
-        public Double X { get; set; }
+        //public Boolean Draggable { get; set; } = true;
 
-        public Double Y { get; set; }
+        //public Boolean Fixed { get; set; } = false;
+
+        //public Double X { get; set; }
+
+        //public Double Y { get; set; }
 
         public Double Value { get; set; }
-
-        public Int32 Category { get; set; }
     }
 }

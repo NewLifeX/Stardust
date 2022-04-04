@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
-using NewLife.Log;
 using NewLife.Security;
-using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data.Monitors;
 using Stardust.Web.Models;
@@ -49,26 +47,40 @@ namespace Stardust.Web.Controllers
 
             var list = Search(id, pager);
 
-            var maxCost = list.Max(e => e.Cost);
-
             // 解析得到关系数据
-            var cats = new List<String>();
+            var cats = new List<String> { "App", "http", "db", "redis" };
             var nodes = new List<GraphNode>();
             var links = new Dictionary<String, GraphLink>();
             foreach (var item in list)
             {
                 var cat = "App";
-                var node = item.AppName;
+                var name = item.AppName;
                 var ti = item.TraceItem;
-                if (ti != null && ti.Kind.EqualIgnoreCase("db", "redis", "mq", "modbus"))
+                if (ti != null && ti.Kind.EqualIgnoreCase("http", "db", "redis", "mq", "modbus"))
                 {
                     var ns = item.Name?.Split(':');
                     if (ns != null && ns.Length >= 2)
                     {
-                        cat = ns[0];
-                        node = ns[1];
+                        cat = ti.Kind ?? ns[0];
+                        name = ns[1]?.TrimStart("//");
+
+                        // 特殊处理
+                        switch (ti.Kind)
+                        {
+                            case "db":
+                                if (ns.Length <= 2) name = null;
+                                break;
+                            case "mq":
+                                if (ns[0] == "redismq" && ns[1] == "Add" && ns.Length >= 3) name = ns[2];
+                                break;
+                            case "modbus":
+                                if (ns.Length <= 2) name = "IoTDevice";
+                                break;
+                        }
                     }
                 }
+                if (name == null) name = item.AppName;
+                item["node_name"] = name;
 
                 // 分类
                 var idx = cats.IndexOf(cat);
@@ -79,37 +91,57 @@ namespace Stardust.Web.Controllers
                 }
 
                 // 节点
-                var cost = 100 * (double)item.Cost / maxCost;
-                nodes.Add(new GraphNode
+                var node = nodes.FirstOrDefault(e => e.Name == name);
+                if (node == null)
                 {
-                    Id = item.Id + "",
-                    Name = item.Name,
-                    Value = cost,
-                    Category = idx,
+                    node = new GraphNode
+                    {
+                        //Id = item.Id + "",
+                        Name = name,
+                        Value = item.Cost,
+                        Category = idx,
 
-                    SymbolSize = cost,
-                    X = Rand.Next(100),
-                    Y = Rand.Next(100),
-                });
+                        SymbolSize = item.Cost,
+                        //X = Rand.Next(20, 100),
+                        //Y = Rand.Next(20, 100),
+                    };
+                    nodes.Add(node);
+                }
+                else
+                {
+                    node.Value += item.Cost;
+                    node.SymbolSize += item.Cost;
+                }
 
                 // 关系
                 var parent = list.FirstOrDefault(e => e.SpanId == item.ParentId);
                 if (parent != null)
                 {
-                    var src = parent.Id + "";
-                    var dst = item.Id + "";
+                    var src = parent["node_name"] + "";
+                    var dst = item["node_name"] + "";
                     var key = $"{src}-{dst}";
-                    if (!links.ContainsKey(key)) links.Add(key, new GraphLink { Source = src, Target = dst });
+                    if (src != dst && !links.ContainsKey(key)) links.Add(key, new GraphLink { Source = src, Target = dst });
                 }
+            }
+
+            // 处理图标大小
+            var maxCost = nodes.Max(e => e.Value);
+            var minCost = nodes.Min(e => e.Value);
+            foreach (var node in nodes)
+            {
+                var cost = (Int32)Math.Round(100 * (Double)node.Value / (maxCost - minCost));
+                node.SymbolSize = cost < 20 ? 20 : cost;
             }
 
             var model = new GraphViewModel
             {
                 Title = "关系图",
+                Layout = pager["layout"],
                 Categories = cats.Select(e => new GraphCategory { Name = e }).ToArray(),
                 Links = links.Values.ToArray(),
                 Nodes = nodes.ToArray(),
             };
+            if (model.Layout.IsNullOrEmpty()) model.Layout = "force";
 
             if (list.Count > 0)
             {

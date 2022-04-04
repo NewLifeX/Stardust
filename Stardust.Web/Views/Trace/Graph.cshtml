@@ -63,7 +63,7 @@
               {
                 name: '@Model.Title',
                 type: 'graph',
-                layout: 'none',
+                layout: '@Model.Layout',
                 data: graph.nodes,
                 links: graph.links,
                 categories: graph.categories,
@@ -76,13 +76,24 @@
                 labelLayout: {
                   hideOverlap: true
                 },
+                edgeSymbol: ['circle', 'arrow'],
+                edgeSymbolSize: [4, 10],
                 scaleLimit: {
                   min: 0.4,
                   max: 2
                 },
+                force: {
+                    initLayout: 'circular',
+                    repulsion: 100,
+                    gravity: 0.1,
+                    edgeLength: [50, 600],
+                    layoutAnimation: true,
+                    friction: 0.2,
+                },
                 lineStyle: {
                   color: 'source',
-                  curveness: 0.3
+                  curveness: 0.3,
+                  width: 3
                 }
               }
             ]
