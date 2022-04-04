@@ -134,9 +134,11 @@ namespace Stardust.Web.Controllers
             // 处理图标大小
             var maxCost = nodes.Max(e => e.Value);
             var minCost = nodes.Min(e => e.Value);
+            var len = maxCost - minCost;
+            if (len <= 0) len = 1;
             foreach (var node in nodes)
             {
-                var cost = (Int32)Math.Round(100 * (Double)node.Value / (maxCost - minCost));
+                var cost = (Int32)Math.Round(100 * (Double)(node.Value - minCost) / (maxCost - minCost));
                 node.SymbolSize = cost < 40 ? 40 : cost;
             }
 
