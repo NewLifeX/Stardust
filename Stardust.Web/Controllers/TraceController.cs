@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
+using NewLife.Log;
+using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data.Monitors;
 using Stardust.Web.Models;
@@ -102,10 +104,14 @@ namespace Stardust.Web.Controllers
                     list.Remove(item);
                 }
 
+                //!!! 判断每个应用的第一次出现，根据父子关系，整体调整应用的时间偏移
+                // 每个应用的时间偏移量
+                var dic = new Dictionary<Int32, Int32>();
+
                 // 依次弹出parentId，深度搜索
-                var sd = stack.Pop();
-                rs.Add(sd);
-                var pid = sd.SpanId;
+                var parent = stack.Pop();
+                rs.Add(parent);
+                var pid = parent.SpanId;
                 while (true)
                 {
                     // 当前span的下级，按时间降序入栈
@@ -114,21 +120,48 @@ namespace Stardust.Web.Controllers
                     {
                         stack.Push(item);
                         list.Remove(item);
+
+                        // 深度
+                        item.Level = parent.Level + 1;
+
+                        // 如果子级时间小于父级，可能是跨应用时间差，强行调整
+                        if (parent.AppId != item.AppId)
+                        {
+                            if (!dic.TryGetValue(parent.AppId, out var parentTs)) parentTs = 0;
+
+                            // 负数合理，正数不合理
+                            var ts = (Int32)(parent.StartTime - item.StartTime);
+                            if (ts > 0)
+                            {
+                                if (!dic.TryGetValue(item.AppId, out var itemTs) || ts > itemTs)
+                                    dic[item.AppId] = itemTs = ts + parentTs;
+                            }
+                        }
                     }
 
                     // 没有数据，跳出
                     if (stack.Count == 0) break;
 
                     // 出栈，加入结果，处理它的下级
-                    if (stack.TryPop(out sd))
+                    if (stack.TryPop(out parent))
                     {
-                        rs.Add(sd);
-                        pid = sd.SpanId;
+                        rs.Add(parent);
+                        pid = parent.SpanId;
                     }
                 }
 
                 // 残留的异常数据
                 rs.AddRange(list);
+
+                // 各应用整体后移
+                foreach (var item in rs)
+                {
+                    if (dic.TryGetValue(item.AppId, out var ts))
+                    {
+                        item.StartTime += ts;
+                        item.EndTime += ts;
+                    }
+                }
 
                 list = rs;
             }

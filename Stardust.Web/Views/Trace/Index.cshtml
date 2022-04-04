@@ -30,7 +30,7 @@
                 <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AppId"))">应用</a></th>
                 <th class="text-center" title="操作名。接口名或埋点名"><a href="@Html.Raw(page.GetSortUrl("Name"))">操作名</a></th>
                 <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Success"))">正常</a></th>
-                <th class="text-center" style="min-width:134px;" title="开始时间。Unix毫秒"><a href="@Html.Raw(page.GetSortUrl("StartTime"))">开始时间</a></th>
+                <th class="text-center" title="开始时间。Unix毫秒"><a href="@Html.Raw(page.GetSortUrl("StartTime"))">开始时间</a></th>
                 <th class="text-center" title="结束时间。Unix毫秒"><a href="@Html.Raw(page.GetSortUrl("EndTime"))">结束时间</a></th>
                 <th class="text-center" title="耗时。毫秒"><a href="@Html.Raw(page.GetSortUrl("Cost"))">耗时</a></th>
                 <th class="text-center" title="实例。应用可能多实例部署，ip@proccessid"><a href="@Html.Raw(page.GetSortUrl("ClientId"))">客户端实例</a></th>
@@ -43,7 +43,7 @@
         <tbody>
             @foreach (var entity in list)
             {
-                var ti = entity.TraceItem??new TraceItem();
+                var ti = entity.TraceItem ?? new TraceItem();
                 var url1 = $"/Monitors/appDayStat?appId={entity.AppId}";
                 var url2 = $"/Monitors/traceDayStat?appid={entity.AppId}&itemId={entity.ItemId}";
                 var color2 = "";
@@ -59,14 +59,18 @@
                 {
                     color2 = "palevioletred";
                 }
+                var tabs = new String('　', entity.Level);
                 <tr>
                     <td class="text-center"><a href="@url1" title="应用最近的监控图表">@entity.AppName</a></td>
-                    <td title="@entity.Tag" style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url2" style="color: @color2">@entity.Name</a></td>
+                    <td title="@entity.Tag" style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;">
+                        @Html.Raw(tabs)
+                        <a href="@url2" style="color: @color2">@entity.Name</a>
+                    </td>
                     <td class="text-center">
                         <i class="glyphicon glyphicon-@(entity.Success ? "ok" : "remove")" style="color: @(entity.Success ? "green" : "red");"></i>
                     </td>
-                    <td class="text-center" title="@entity.StartTime">@entity.Start.ToFullString("")</td>
-                    <td class="text-center" title="@entity.EndTime">@entity.End.ToString("HH:mm:ss")</td>
+                    <td class="text-center" title="@entity.StartTime">@entity.Start.ToString("HH:mm:ss.fff")</td>
+                    <td class="text-center" title="@entity.EndTime">@entity.End.ToString("HH:mm:ss.fff")</td>
                     <td class="text-right">@entity.Cost.ToString("n0")</td>
                     <td>@entity.ClientId</td>
                     <td>@entity.SpanId</td>

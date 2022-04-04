@@ -63,9 +63,18 @@
             }
             var url1 = $"/Monitors/appDayStat?appId={entity.AppId}";
             var url2 = $"/Monitors/traceDayStat?appid={entity.AppId}&itemId={entity.ItemId}";
+            @*var tabs = "";
+                for (var i = 0; i < entity.Level; i++)
+                {
+                tabs += "&nbsp;&nbsp;";
+                }*@
+            var tabs = new String('　', entity.Level);
             <tr>
                 <td class="text-center"><a href="@url1" title="应用最近的监控图表">@entity.AppName</a></td>
-                <td title="@entity.Tag" style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url2" style="color: @color2">@entity.Name</a></td>
+                <td title="@entity.Tag" style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;">
+                    @Html.Raw(tabs)
+                    <a href="@url2" style="color: @color2">@entity.Name</a>
+                </td>
                 <td title="@msg">
                     @if (left < 0.96)
                     {

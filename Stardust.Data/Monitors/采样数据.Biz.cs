@@ -78,6 +78,10 @@ namespace Stardust.Data.Monitors
         /// <summary>结束时间</summary>
         [Map(nameof(EndTime))]
         public DateTime End => EndTime.ToDateTime().ToLocalTime();
+
+        /// <summary>层次深度</summary>
+        [XmlIgnore, IgnoreDataMember]
+        public Int32 Level { get; set; }
         #endregion
 
         #region 扩展查询
