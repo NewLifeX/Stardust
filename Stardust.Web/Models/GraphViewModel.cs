@@ -2,6 +2,8 @@
 {
     public class GraphViewModel
     {
+        public String TraceId { get; set; }
+
         public String Title { get; set; }
 
         public String Layout { get; set; }

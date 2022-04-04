@@ -1,0 +1,9 @@
+﻿@model String
+@{
+    var traceId = Model;
+}
+<div class="text-center">
+    <a href="/trace?id=@traceId">调用链</a>
+    <a href="/trace/graph?id=@traceId&layout=force">关系图</a>
+    <a href="/trace/graph?id=@traceId&layout=circular">关系环</a>
+</div>

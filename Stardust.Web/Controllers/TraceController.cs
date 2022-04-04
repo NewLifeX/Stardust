@@ -135,6 +135,7 @@ namespace Stardust.Web.Controllers
 
             var model = new GraphViewModel
             {
+                TraceId = id,
                 Title = "关系图",
                 Layout = pager["layout"],
                 Categories = cats.Select(e => new GraphCategory { Name = e }).ToArray(),

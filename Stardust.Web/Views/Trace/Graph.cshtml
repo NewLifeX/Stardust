@@ -12,6 +12,7 @@
 @{
     Layout = null;
 
+    var traceId = Model.TraceId;
     var title = Model.Title + "";
     if (title != "" && !title.Contains(" - "))
     {
@@ -29,8 +30,13 @@
 <head>
     <meta charset="utf-8">
     <title>@title</title>
+    <link rel="stylesheet" href="@res/bootstrap/css/bootstrap.min.css">
 </head>
 <body style="height: 100%; margin: 0">
+    @if (!traceId.IsNullOrEmpty())
+    {
+        await Html.RenderPartialAsync("_Nav", traceId);
+    }
     <div id="container" style="height: 100%"></div>
     <script src="@res/js/jquery-3.6.0.min.js"></script>
     <script src="@res/echarts/echarts.min.js"></script>

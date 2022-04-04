@@ -16,6 +16,10 @@
     var traceId = page["id"];
 }
 <div class="table-responsive">
+    @if (!traceId.IsNullOrEmpty())
+    {
+        await Html.RenderPartialAsync("_Nav", traceId);
+    }
     @if (!traceId.IsNullOrEmpty() && list.Select(e => e.AppId).Distinct().Count() > 1)
     {
         await Html.RenderPartialAsync("_AppChain", list);
