@@ -36,7 +36,7 @@ namespace Stardust.Web.Controllers
             return View("Index", model);
         }
 
-        [Route("[controller]/[action]")]
+        [Route("[action]")]
         public ActionResult Graph(String id, Pager pager)
         {
             if (id.IsNullOrEmpty()) throw new ArgumentNullException(nameof(id));
@@ -48,7 +48,8 @@ namespace Stardust.Web.Controllers
             var list = Search(id, pager);
 
             // 解析得到关系数据
-            var cats = new List<String> { "App", "http", "db", "redis" };
+            var cats = new List<String>();
+            //var cats = new List<String> { "App", "http", "db", "redis" };
             var nodes = new List<GraphNode>();
             var links = new Dictionary<String, GraphLink>();
             foreach (var item in list)
@@ -56,7 +57,7 @@ namespace Stardust.Web.Controllers
                 var cat = "App";
                 var name = item.AppName;
                 var ti = item.TraceItem;
-                if (ti != null && ti.Kind.EqualIgnoreCase("http", "db", "redis", "mq", "modbus"))
+                if (ti != null && ti.Kind.EqualIgnoreCase("http", "db", "redis", "mq", "mqtt", "modbus"))
                 {
                     var ns = item.Name?.Split(':');
                     if (ns != null && ns.Length >= 2)
@@ -130,7 +131,29 @@ namespace Stardust.Web.Controllers
             foreach (var node in nodes)
             {
                 var cost = (Int32)Math.Round(100 * (Double)node.Value / (maxCost - minCost));
-                node.SymbolSize = cost < 20 ? 20 : cost;
+                node.SymbolSize = cost < 40 ? 40 : cost;
+            }
+
+            // 分类图标
+            var cts = new List<GraphCategory>();
+            foreach (var item in cats)
+            {
+                var cat = new GraphCategory
+                {
+                    Name = item,
+                };
+                cat.Symbol = item switch
+                {
+                    "App" => "image:///icons/app.svg",
+                    "http" => "image:///icons/http.svg",
+                    "db" => "image:///icons/db.svg",
+                    "redis" => "image:///icons/redis.svg",
+                    "mq" => "image:///icons/mq.svg",
+                    "mqtt" => "image:///icons/mqtt.svg",
+                    "modbus" => "image:///icons/modbus.svg",
+                    _ => "circle",
+                };
+                cts.Add(cat);
             }
 
             var model = new GraphViewModel
@@ -138,7 +161,7 @@ namespace Stardust.Web.Controllers
                 TraceId = id,
                 Title = "关系图",
                 Layout = pager["layout"],
-                Categories = cats.Select(e => new GraphCategory { Name = e }).ToArray(),
+                Categories = cts.ToArray(),
                 Links = links.Values.ToArray(),
                 Nodes = nodes.ToArray(),
             };

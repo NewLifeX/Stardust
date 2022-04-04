@@ -50,7 +50,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Areas\Nodes\Views\Shared\_SelectNode.cshtml" />
+    <EmbeddedResource Include="wwwroot\**\*" />
   </ItemGroup>
 
 </Project>

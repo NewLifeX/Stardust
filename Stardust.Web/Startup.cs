@@ -1,5 +1,8 @@
-﻿using NewLife;
+﻿using System.Reflection;
+using Microsoft.Extensions.FileProviders;
+using NewLife;
 using NewLife.Cube;
+using NewLife.Cube.Extensions;
 using NewLife.Log;
 using Stardust.Data.Configs;
 using Stardust.Server.Services;
@@ -80,6 +83,8 @@ namespace Stardust.Web
             else
                 app.UseExceptionHandler("/CubeHome/Error");
 
+            Usewwwroot(app, env);
+
             //app.UseStardust();
             app.UseCube(env);
 
@@ -135,9 +140,22 @@ namespace Stardust.Web
             }
         }
 
-        private static void TrimOldAppConfig()
+        private static void TrimOldAppConfig() => AppConfig.TrimAll();
+
+        private static IApplicationBuilder Usewwwroot(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            AppConfig.TrimAll();
+            // 独立静态文件设置，魔方自己的静态资源内嵌在程序集里面
+            var options = new StaticFileOptions();
+            {
+                var embeddedProvider = new CubeEmbeddedFileProvider(Assembly.GetExecutingAssembly(), "Stardust.Web.wwwroot");
+                if (!env.WebRootPath.IsNullOrEmpty() && Directory.Exists(env.WebRootPath))
+                    options.FileProvider = new CompositeFileProvider(new PhysicalFileProvider(env.WebRootPath), embeddedProvider);
+                else
+                    options.FileProvider = embeddedProvider;
+            }
+            app.UseStaticFiles(options);
+
+            return app;
         }
     }
 }

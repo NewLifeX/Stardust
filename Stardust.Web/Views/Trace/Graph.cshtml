@@ -80,14 +80,11 @@
                   formatter: '{b}'
                 },
                 labelLayout: {
-                  hideOverlap: true
+                  hideOverlap: true,
+                  moveOverlap: true,
                 },
                 edgeSymbol: ['circle', 'arrow'],
                 edgeSymbolSize: [4, 10],
-                scaleLimit: {
-                  min: 0.4,
-                  max: 2
-                },
                 force: {
                     initLayout: 'circular',
                     repulsion: 100,
@@ -97,8 +94,9 @@
                     friction: 0.2,
                 },
                 lineStyle: {
-                  color: 'source',
+                  color: 'target',
                   curveness: 0.3,
+                  opacity: 0.8,
                   width: 3
                 }
               }

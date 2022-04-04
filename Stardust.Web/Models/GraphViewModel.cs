@@ -18,6 +18,8 @@
     public class GraphCategory
     {
         public String Name { get; set; }
+
+        public String Symbol { get; set; }
     }
 
     public class GraphLink
