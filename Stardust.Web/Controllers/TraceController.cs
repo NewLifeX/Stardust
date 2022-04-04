@@ -75,7 +75,10 @@ namespace Stardust.Web.Controllers
                             break;
                         case "mq":
                             if (ns.Length >= 2) name = $"{ns[0]}:{ns[1]}";
-                            if (ns.Length >= 3 && ns[0] == "redismq" && ns[1] == "Add") name = $"{ns[0]}:{ns[2]}";
+                            if (ns.Length >= 3 && ns[0] == "redismq" && ns[1] == "Add")
+                                name = $"{ns[0]}:{ns[2]}";
+                            else if (ns.Length >= 4 && ns[0] == "redismq" && ns[2] == "Add")
+                                name = $"{ns[0]}:{ns[3]}";
                             break;
                         case "modbus":
                             name = ns.Length >= 3 ? ns[1] : "IoTDevice";
