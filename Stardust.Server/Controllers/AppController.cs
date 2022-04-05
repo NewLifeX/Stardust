@@ -29,14 +29,16 @@ namespace Stardust.Server.Controllers
         private App _app;
         private String _clientId;
         private readonly TokenService _tokenService;
+        private readonly RegistryService _registryService;
         private readonly ITracer _tracer;
         private static readonly ICache _cache = new MemoryCache();
         private readonly ICache _queue;
 
-        public AppController(ICache queue, TokenService tokenService, ITracer tracer)
+        public AppController(TokenService tokenService, RegistryService registryService, ICache queue, ITracer tracer)
         {
-            _queue = queue;
             _tokenService = tokenService;
+            _registryService = registryService;
+            _queue = queue;
             _tracer = tracer;
         }
 
@@ -73,47 +75,9 @@ namespace Stardust.Server.Controllers
         [HttpPost(nameof(Register))]
         public String Register(AppModel inf)
         {
-            var app = _app;
-            if (app != null)
-            {
-                var ip = UserHost;
+            _registryService.Register(_app, inf, UserHost, _clientId, _token);
 
-                if (app.DisplayName.IsNullOrEmpty()) app.DisplayName = inf.AppName;
-                app.UpdateIP = ip;
-                app.SaveAsync();
-
-                var clientId = inf.ClientId;
-                if (clientId.IsNullOrEmpty()) clientId = _clientId;
-                if (!clientId.IsNullOrEmpty())
-                {
-                    var olt = AppOnline.GetOrAddClient(clientId);
-                    olt.AppId = app.Id;
-                    olt.Name = app.ToString();
-                    olt.Category = app.Category;
-                    olt.Version = inf.Version;
-                    olt.Token = _token;
-                    olt.PingCount++;
-                    if (olt.CreateIP.IsNullOrEmpty()) olt.CreateIP = ip;
-
-                    // 本地IP
-                    if (!inf.IP.IsNullOrEmpty())
-                        olt.IP = inf.IP;
-                    else
-                    {
-                        var p = clientId.IndexOf('@');
-                        if (p > 0) olt.IP = clientId[..p];
-                    }
-
-                    // 关联节点
-                    var node = Node.FindByCode(inf.NodeCode);
-                    if (node == null) node = Node.FindAllByIPs(olt.IP).FirstOrDefault();
-                    if (node != null) olt.NodeId = node.ID;
-
-                    olt.SaveAsync();
-                }
-            }
-
-            return app?.ToString();
+            return _app?.ToString();
         }
 
         [ApiFilter]
@@ -126,27 +90,7 @@ namespace Stardust.Server.Controllers
                 ServerTime = DateTime.UtcNow,
             };
 
-            var app = _app;
-            if (app != null)
-            {
-                var ip = UserHost;
-
-                var clientId = _clientId;
-                if (!clientId.IsNullOrEmpty())
-                {
-                    var olt = AppOnline.GetOrAddClient(clientId);
-                    olt.AppId = app.Id;
-                    olt.Name = app.ToString();
-                    olt.Category = app.Category;
-                    olt.Version = inf.Version;
-                    olt.Token = _token;
-                    olt.PingCount++;
-                    if (olt.CreateIP.IsNullOrEmpty()) olt.CreateIP = ip;
-
-                    olt.Fill(app, inf);
-                    olt.SaveAsync();
-                }
-            }
+            _registryService.Ping(_app, inf, UserHost, _clientId, _token);
 
             return rs;
         }
@@ -226,7 +170,7 @@ namespace Stardust.Server.Controllers
                 while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
                 {
                     ISpan span = null;
-                    var mqMsg = await queue.TakeOneAsync(10_000);
+                    var mqMsg = await queue.TakeOneAsync(30);
                     if (mqMsg != null)
                     {
                         // 埋点
@@ -235,16 +179,16 @@ namespace Stardust.Server.Controllers
                         // 解码
                         var dic = JsonParser.Decode(mqMsg);
                         var msg = JsonHelper.Convert<CommandModel>(dic);
-                        if (dic.TryGetValue("traceParent", out var tp)) span.Detach(tp + "");
+                        span.Detach(dic);
 
                         if (msg == null || msg.Id == 0 || msg.Expire.Year > 2000 && msg.Expire < DateTime.Now)
                             WriteHistory("WebSocket发送", false, "消息无效。" + mqMsg, clientId, ip);
                         else
                         {
-                            //XTrace.WriteLine("WebSocket发送 {0} {1}", app, mqMsg);
                             WriteHistory("WebSocket发送", true, mqMsg, clientId, ip);
 
-                            if (msg.TraceId.IsNullOrEmpty()) msg.TraceId = span?.TraceId;
+                            // 向客户端传递埋点信息，构建完整调用链
+                            msg.TraceId = span + "";
 
                             var log = AppCommand.FindById(msg.Id);
                             if (log != null)
@@ -259,8 +203,6 @@ namespace Stardust.Server.Controllers
                     }
                     else
                     {
-                        // 设置过期时间，过期自动清理
-                        _queue.SetExpire(topic, TimeSpan.FromMinutes(30));
                         await Task.Delay(100, cancellationToken);
                     }
                 }
@@ -296,26 +238,7 @@ namespace Stardust.Server.Controllers
             if (app.AllowControlNodes != "*" && !node.Name.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
                 throw new InvalidOperationException($"[{app}]无权操作应用[{node}]！");
 
-            var cmd = new AppCommand
-            {
-                AppId = node.Id,
-                Command = model.Command,
-                Argument = model.Argument,
-                //Expire = model.Expire,
-                TraceId = DefaultSpan.Current?.TraceId,
-
-                CreateUser = app.Name,
-            };
-            if (model.Expire > 0) cmd.Expire = DateTime.Now.AddSeconds(model.Expire);
-            cmd.Insert();
-
-            // 分发命令给该应用的所有实例
-            var cmdModel = cmd.ToModel().ToJson();
-            foreach (var item in AppOnline.FindAllByApp(node.Id))
-            {
-                var queue = _queue.GetQueue<String>($"appcmd:{node.Name}:{item.Client}");
-                queue.Add(cmdModel);
-            }
+            var cmd = _registryService.SendCommand(node, model, app + "");
 
             return cmd.Id;
         }
@@ -329,14 +252,9 @@ namespace Stardust.Server.Controllers
         {
             if (_app == null) throw new NewLife.Remoting.ApiException(402, "节点未登录");
 
-            var cmd = AppCommand.FindById(model.Id);
-            if (cmd == null) return 0;
+            var cmd = _registryService.CommandReply(_app, model);
 
-            cmd.Status = model.Status;
-            cmd.Result = model.Data;
-            cmd.Update();
-
-            return 1;
+            return cmd != null ? 1 : 0;
         }
         #endregion
 
@@ -363,6 +281,7 @@ namespace Stardust.Server.Controllers
 
             // 所有服务
             var services = AppService.FindAllByService(info.Id);
+            var isNew = false;
             var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == service.ClientId);
             if (svc == null)
             {
@@ -379,6 +298,7 @@ namespace Stardust.Server.Controllers
                 };
                 services.Add(svc);
 
+                isNew = true;
                 WriteHistory("RegisterService", true, $"注册服务[{service.ServiceName}] {service.ClientId}", service.ClientId);
             }
 
@@ -405,6 +325,12 @@ namespace Stardust.Server.Controllers
             info.Providers = services.Count;
             info.Save();
 
+            // 发布消息通知消费者
+            if (isNew)
+            {
+                SendCommand(new CommandInModel { Command = "regitry/register" });
+            }
+
             return svc;
         }
 
@@ -417,6 +343,7 @@ namespace Stardust.Server.Controllers
 
             // 所有服务
             var services = AppService.FindAllByService(info.Id);
+            var flag = false;
             var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == service.ClientId);
             if (svc != null)
             {
@@ -426,11 +353,18 @@ namespace Stardust.Server.Controllers
 
                 services.Remove(svc);
 
+                flag = true;
                 app.WriteHistory("UnregisterService", true, $"服务[{service.ServiceName}]下线 {svc.Client}", UserHost, svc.Client);
             }
 
             info.Providers = services.Count;
             info.Save();
+
+            // 发布消息通知消费者
+            if (flag)
+            {
+                SendCommand(new CommandInModel { Command = "regitry/unregister" });
+            }
 
             return svc;
         }

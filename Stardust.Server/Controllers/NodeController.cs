@@ -708,7 +708,7 @@ namespace Stardust.Server.Controllers
             {
                 while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
                 {
-                    var msg = await queue.TakeOneAsync(10_000);
+                    var msg = await queue.TakeOneAsync(30);
                     if (msg != null)
                     {
                         XTrace.WriteLine("WebSocket发送 {0} {1}", node, msg);

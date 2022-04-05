@@ -17,7 +17,7 @@ namespace Stardust.Models
         /// <summary>过期时间。未指定时表示不限制</summary>
         public DateTime Expire { get; set; }
 
-        /// <summary>跟踪标识。用于建立全局调用链，便于查找问题</summary>
+        /// <summary>跟踪标识。传输traceParent，用于建立全局调用链，便于查找问题</summary>
         public String TraceId { get; set; }
     }
 }

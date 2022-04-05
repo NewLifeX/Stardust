@@ -48,6 +48,7 @@ namespace Stardust.Server
 
             services.AddSingleton<TokenService>();
             services.AddSingleton<ConfigService>();
+            services.AddSingleton<RegistryService>();
 
             services.AddHttpClient();
 
