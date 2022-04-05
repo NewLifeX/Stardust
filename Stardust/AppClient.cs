@@ -282,6 +282,7 @@ namespace Stardust
                     }
                 }
             }
+            catch (WebSocketException) { }
             catch (Exception ex)
             {
                 XTrace.WriteException(ex);
@@ -327,7 +328,12 @@ namespace Stardust
         /// <summary>取消服务</summary>
         /// <param name="service">应用服务</param>
         /// <returns></returns>
-        public async Task<Object> UnregisterAsync(PublishServiceInfo service) => await PostAsync<Object>("App/UnregisterService", service);
+        public async Task<Object> UnregisterAsync(PublishServiceInfo service)
+        {
+            _publishServices.TryRemove(service.ServiceName, out _);
+
+            return await PostAsync<Object>("App/UnregisterService", service);
+        }
 
         private void AddService(PublishServiceInfo service)
         {

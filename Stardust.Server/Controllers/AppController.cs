@@ -272,7 +272,7 @@ namespace Stardust.Server.Controllers
 
         [ApiFilter]
         [HttpPost(nameof(RegisterService))]
-        public AppService RegisterService([FromBody] PublishServiceInfo service, String token)
+        public AppService RegisterService([FromBody] PublishServiceInfo service)
         {
             var app = _app;
             var info = GetService(service.ServiceName);
@@ -326,7 +326,7 @@ namespace Stardust.Server.Controllers
             // 发布消息通知消费者
             if (isNew)
             {
-                _registryService.SendCommand(app, "regitry/register", service.ServiceName, app + "");
+                _registryService.NotifyConsumers(info, "registry/register", app + "");
             }
 
             return svc;
@@ -334,7 +334,7 @@ namespace Stardust.Server.Controllers
 
         [ApiFilter]
         [HttpPost(nameof(UnregisterService))]
-        public AppService UnregisterService([FromBody] PublishServiceInfo service, String token)
+        public AppService UnregisterService([FromBody] PublishServiceInfo service)
         {
             var app = _app;
             var info = GetService(service.ServiceName);
@@ -361,7 +361,7 @@ namespace Stardust.Server.Controllers
             // 发布消息通知消费者
             if (flag)
             {
-                _registryService.SendCommand(app, "regitry/unregister", service.ServiceName, app + "");
+                _registryService.NotifyConsumers(info, "registry/unregister", app + "");
             }
 
             return svc;
@@ -369,7 +369,7 @@ namespace Stardust.Server.Controllers
 
         [ApiFilter]
         [HttpPost(nameof(ResolveService))]
-        public ServiceModel[] ResolveService([FromBody] ConsumeServiceInfo model, String token)
+        public ServiceModel[] ResolveService([FromBody] ConsumeServiceInfo model)
         {
             var app = _app;
             var info = GetService(model.ServiceName);

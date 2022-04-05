@@ -143,5 +143,21 @@ namespace Stardust.Server.Services
 
             return cmd;
         }
+
+        /// <summary>通知该服务的所有消费者，服务信息有变更</summary>
+        /// <param name="service"></param>
+        /// <param name="command"></param>
+        /// <param name="user"></param>
+        public void NotifyConsumers(Service service, String command, String user = null)
+        {
+            var list = AppConsume.FindAllByService(service.Id);
+            if (list.Count == 0) return;
+
+            foreach (var item in list.Select(e => e.AppId).Distinct())
+            {
+                var app = App.FindById(item);
+                if (app != null) SendCommand(app, command, null, user);
+            }
+        }
     }
 }

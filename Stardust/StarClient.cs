@@ -599,6 +599,7 @@ namespace Stardust
                     }
                 }
             }
+            catch (WebSocketException) { }
             catch (Exception ex)
             {
                 XTrace.WriteException(ex);
