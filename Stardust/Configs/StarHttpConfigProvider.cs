@@ -74,10 +74,12 @@ namespace Stardust.Configs
 
         private String DoPublish(String argument)
         {
-            //todo 临时采用反射办法。后面直接调用DoRefresh
+            // 临时采用反射办法。后面直接调用DoRefresh
             //var timer = this.GetValue("_timer") as TimerX;
             //if (timer != null) timer.SetNext(-1);
-            this.Invoke("DoRefresh", new Object[] { null });
+            //this.Invoke("DoRefresh", new Object[] { null });
+
+            DoRefresh(null);
 
             return "刷新配置成功";
         }

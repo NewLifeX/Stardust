@@ -8,6 +8,7 @@ using NewLife.Model;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Security;
+using NewLife.Serialization;
 using Stardust.Configs;
 using Stardust.Models;
 using Stardust.Monitors;
@@ -226,7 +227,7 @@ namespace Stardust
             }
         }
 
-        void InitTracer()
+        private void InitTracer()
         {
             XTrace.WriteLine("初始化星尘监控中心，采样并定期上报应用性能埋点数据，包括Api接口、Http请求、数据库操作、Redis操作等。可用于监控系统健康状态，分析分布式系统的性能瓶颈。");
 
@@ -335,25 +336,50 @@ namespace Stardust
         {
             if (ms != null && ms.Length > 0)
             {
-                var count = client.Services.Count;
+                var serviceName = ms[0].ServiceName;
+                var services = client.Services;
+                var dic = services.ToDictionary(e => e.Name, e => e);
+                var names = new List<String>();
                 foreach (var item in ms)
                 {
+                    var name = item.Client;
                     var addrs = item.Address.Split(",");
-                    foreach (var elm in addrs)
+                    for (var i = 0; i < addrs.Length; i++)
                     {
-                        client.Services.Add(new ApiHttpClient.Service
+                        // 第一个使用Client名，后续地址增加#2后缀
+                        var svcName = i <= 0 ? name : $"{name}#{i + 1}";
+                        if (!dic.TryGetValue(svcName, out var svc))
                         {
-                            Name = item.Client,
-                            Address = new Uri(elm),
-                            Weight = item.Weight,
-                        });
+                            svc = new ApiHttpClient.Service
+                            {
+                                Name = svcName,
+                                Address = new Uri(addrs[i]),
+                                Weight = item.Weight,
+                            };
+                            services.Add(svc);
+                            dic.Add(svcName, svc);
+
+                            XTrace.WriteLine("服务[{0}]新增地址：name={1} address={2} weight={3}", serviceName, svcName, svc.Address, item.Weight);
+                        }
+                        else
+                        {
+                            svc.Address = new Uri(addrs[i]);
+                            svc.Weight = item.Weight;
+                        }
+                        names.Add(svcName);
                     }
                 }
 
                 // 删掉旧的
-                for (var i = count - 1; i >= 0; i--)
+                for (var i = services.Count - 1; i >= 0; i--)
                 {
-                    client.Services.RemoveAt(i);
+                    if (!names.Contains(services[i].Name))
+                    {
+                        var svc = services[i];
+                        XTrace.WriteLine("服务[{0}]删除地址：name={1} address={2} weight={3}", serviceName, svc.Name, svc.Address, svc.Weight);
+
+                        services.RemoveAt(i);
+                    }
                 }
             }
         }

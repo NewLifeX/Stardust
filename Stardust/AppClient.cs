@@ -39,7 +39,11 @@ namespace Stardust
 
         private AppInfo _appInfo;
         private readonly String _version;
+
+        /// <summary>已发布服务，记录下来，定时注册刷新</summary>
         private readonly ConcurrentDictionary<String, PublishServiceInfo> _publishServices = new();
+
+        /// <summary>已消费服务，记录下来，定时刷新获取新的地址信息</summary>
         private readonly ConcurrentDictionary<String, ConsumeServiceInfo> _consumeServices = new();
         private readonly ConcurrentDictionary<String, ServiceModel[]> _consumes = new();
         private readonly ConcurrentDictionary<String, IList<Delegate>> _consumeEvents = new();
@@ -308,10 +312,15 @@ namespace Stardust
         #endregion
 
         #region 发布、消费
-        /// <summary>发布服务</summary>
+        /// <summary>发布服务。定时反复执行，让服务端更新注册信息</summary>
         /// <param name="service">应用服务</param>
         /// <returns></returns>
-        public async Task<Object> RegisterAsync(PublishServiceInfo service) => await PostAsync<Object>("App/RegisterService", service);
+        public async Task<Object> RegisterAsync(PublishServiceInfo service)
+        {
+            AddService(service);
+
+            return await PostAsync<Object>("App/RegisterService", service);
+        }
 
         /// <summary>取消服务</summary>
         /// <param name="service">应用服务</param>
@@ -320,18 +329,32 @@ namespace Stardust
 
         private void AddService(PublishServiceInfo service)
         {
+            if (_publishServices.TryAdd(service.ServiceName, service))
+            {
+                XTrace.WriteLine("注册服务 {0}", service.ToJson());
+
+                StartTimer();
+            }
+        }
+
+        /// <summary>创建服务对象，用于自定义需要，再通过RegisterAsync发布到注册中心</summary>
+        /// <param name="serviceName">服务名</param>
+        /// <returns></returns>
+        public PublishServiceInfo CreatePublishService(String serviceName)
+        {
             var asmx = AssemblyX.Entry;
             var ip = NetHelper.MyIP();
 
-            service.ClientId = ClientId;
-            service.IP = ip + "";
-            service.Version = asmx?.Version;
+            var service = new PublishServiceInfo
+            {
+                ServiceName = serviceName,
 
-            XTrace.WriteLine("注册服务 {0}", service.ToJson());
+                ClientId = ClientId,
+                IP = ip + "",
+                Version = asmx?.Version,
+            };
 
-            _publishServices[service.ServiceName] = service;
-
-            StartTimer();
+            return service;
         }
 
         /// <summary>发布服务</summary>
@@ -343,14 +366,9 @@ namespace Stardust
         {
             if (address == null) throw new ArgumentNullException(nameof(address));
 
-            var service = new PublishServiceInfo
-            {
-                ServiceName = serviceName,
-                Address = address,
-                Tag = tag,
-            };
-
-            AddService(service);
+            var service = CreatePublishService(serviceName);
+            service.Address = address;
+            service.Tag = tag;
 
             var rs = await RegisterAsync(service);
             XTrace.WriteLine("注册完成 {0}", rs.ToJson());
@@ -358,7 +376,7 @@ namespace Stardust
             return rs;
         }
 
-        /// <summary>发布服务</summary>
+        /// <summary>发布服务（延迟），直到回调函数返回地址信息才做真正发布</summary>
         /// <param name="serviceName">服务名</param>
         /// <param name="addressCallback">服务地址回调</param>
         /// <param name="tag">特性标签</param>
@@ -367,12 +385,9 @@ namespace Stardust
         {
             if (addressCallback == null) throw new ArgumentNullException(nameof(addressCallback));
 
-            var service = new PublishServiceInfo
-            {
-                ServiceName = serviceName,
-                AddressCallback = addressCallback,
-                Tag = tag,
-            };
+            var service = CreatePublishService(serviceName);
+            service.AddressCallback = addressCallback;
+            service.Tag = tag;
 
             AddService(service);
         }
@@ -403,21 +418,18 @@ namespace Stardust
         /// <returns></returns>
         public async Task<ServiceModel[]> ResolveAsync(String serviceName, String minVersion = null, String tag = null)
         {
-            if (!_consumeServices.ContainsKey(serviceName))
+            var service = new ConsumeServiceInfo
             {
-                var service = new ConsumeServiceInfo
-                {
-                    ServiceName = serviceName,
-                    MinVersion = minVersion,
-                    Tag = tag,
+                ServiceName = serviceName,
+                MinVersion = minVersion,
+                Tag = tag,
 
-                    ClientId = ClientId,
-                };
+                ClientId = ClientId,
+            };
 
+            if (_consumeServices.TryAdd(serviceName, service))
+            {
                 XTrace.WriteLine("消费服务 {0}", service.ToJson());
-
-                //_consumeServices.TryAdd(service.ServiceName, service);
-                _consumeServices[service.ServiceName] = service;
 
                 StartTimer();
 
@@ -454,12 +466,10 @@ namespace Stardust
                 if (svc.Address.IsNullOrEmpty() && svc.AddressCallback != null)
                 {
                     var address = svc.AddressCallback();
-                    if (address.IsNullOrEmpty()) continue;
-
-                    svc.Address = address;
+                    if (!address.IsNullOrEmpty()) svc.Address = address;
                 }
 
-                await RegisterAsync(svc);
+                if (!svc.Address.IsNullOrEmpty()) await RegisterAsync(svc);
             }
 
             // 刷新已消费服务
@@ -469,10 +479,9 @@ namespace Stardust
                 var ms = await ResolveAsync(svc);
                 if (ms != null && ms.Length > 0)
                 {
-                    //_consumes.TryAdd(svc.ServiceName, ms);
                     _consumes[svc.ServiceName] = ms;
 
-                    //todo 需要判断，只有服务改变才调用相应事件
+                    // 需要判断，只有服务改变才调用相应事件
                     if (_consumeEvents.TryGetValue(svc.ServiceName, out var list))
                     {
                         foreach (var action in list)
