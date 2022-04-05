@@ -616,7 +616,7 @@ namespace Stardust
             var e = new CommandEventArgs { Model = model };
             Received?.Invoke(this, e);
 
-            var rs = this.ExecuteCommand(model);
+            var rs = await this.ExecuteCommand(model);
             if (e.Reply == null) e.Reply = rs;
 
             if (e.Reply != null) await CommandReply(e.Reply);

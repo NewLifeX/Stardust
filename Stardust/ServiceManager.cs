@@ -274,7 +274,7 @@ namespace Stardust
         //    e.Reply = rs;
         //}
 
-        private String DoControl(CommandModel cmd)
+        private CommandReplyModel DoControl(CommandModel cmd)
         {
             //var js = JsonParser.Decode(cmd.Argument);
             var my = cmd.Argument.ToJsonEntity<MyApp>();
@@ -304,7 +304,7 @@ namespace Stardust
                     break;
             }
 
-            return "成功";
+            return new CommandReplyModel { Data = "成功" };
         }
 
         class MyApp

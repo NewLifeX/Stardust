@@ -40,7 +40,35 @@ namespace Stardust.Services
         /// <param name="command"></param>
         /// <param name="method"></param>
         /// <exception cref="ArgumentNullException"></exception>
-        public static void RegisterCommand(this ICommandClient client, String command, Func<CommandModel, String> method)
+        public static void RegisterCommand(this ICommandClient client, String command, Func<String, Task<String>> method)
+        {
+            if (command.IsNullOrEmpty()) command = method.Method.Name;
+
+            client.Commands[command] = method;
+        }
+
+        /// <summary>
+        /// 注册服务。收到平台下发的服务调用时，执行注册的方法
+        /// </summary>
+        /// <param name="client">命令客户端</param>
+        /// <param name="command"></param>
+        /// <param name="method"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static void RegisterCommand(this ICommandClient client, String command, Func<CommandModel, CommandReplyModel> method)
+        {
+            if (command.IsNullOrEmpty()) command = method.Method.Name;
+
+            client.Commands[command] = method;
+        }
+
+        /// <summary>
+        /// 注册服务。收到平台下发的服务调用时，执行注册的方法
+        /// </summary>
+        /// <param name="client">命令客户端</param>
+        /// <param name="command"></param>
+        /// <param name="method"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static void RegisterCommand(this ICommandClient client, String command, Func<CommandModel, Task<CommandReplyModel>> method)
         {
             if (command.IsNullOrEmpty()) command = method.Method.Name;
 
@@ -51,13 +79,22 @@ namespace Stardust.Services
         /// <param name="client">命令客户端</param>
         /// <param name="model"></param>
         /// <returns></returns>
-        public static CommandReplyModel ExecuteCommand(this ICommandClient client, CommandModel model)
+        public static async Task<CommandReplyModel> ExecuteCommand(this ICommandClient client, CommandModel model)
         {
             using var span = DefaultTracer.Instance?.NewSpan("ExecuteCommand", $"{model.Command}({model.Argument})");
             var rs = new CommandReplyModel { Id = model.Id, Status = CommandStatus.已完成 };
             try
             {
-                var result = OnCommand(client, model);
+                var result = await OnCommand(client, model);
+                if (result is CommandReplyModel reply)
+                {
+                    reply.Id = model.Id;
+                    if (reply.Status == CommandStatus.就绪 || reply.Status == CommandStatus.处理中)
+                        reply.Status = CommandStatus.已完成;
+
+                    return reply;
+                }
+
                 rs.Data = result?.ToJson();
                 return rs;
             }
@@ -80,14 +117,17 @@ namespace Stardust.Services
         /// <summary>分发执行服务</summary>
         /// <param name="client">命令客户端</param>
         /// <param name="model"></param>
-        private static Object OnCommand(ICommandClient client, CommandModel model)
+        private static async Task<Object> OnCommand(ICommandClient client, CommandModel model)
         {
             //WriteLog("OnCommand {0}", model.ToJson());
 
             if (!client.Commands.TryGetValue(model.Command, out var d)) throw new ApiException(400, $"找不到服务[{model.Command}]");
 
             if (d is Func<String, String> func) return func(model.Argument);
-            if (d is Func<CommandModel, String> func2) return func2(model);
+            if (d is Func<CommandModel, CommandReplyModel> func2) return func2(model);
+
+            if (d is Func<String, Task<String>> func3) return await func3(model.Argument);
+            if (d is Func<CommandModel, Task<CommandReplyModel>> func4) return await func4(model);
 
             return null;
         }

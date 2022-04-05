@@ -46,32 +46,6 @@ namespace Stardust.Configs
 
         public void Attach(ICommandClient client) => client.RegisterCommand("config/publish", DoPublish);
 
-        //private void Client_Received(Object sender, CommandEventArgs e)
-        //{
-        //    var cmd = e.Model?.Command;
-        //    if (cmd.IsNullOrEmpty()) return;
-        //    if (!cmd.StartsWithIgnoreCase("config/")) return;
-
-        //    var rs = new CommandReplyModel { Id = e.Model.Id };
-        //    try
-        //    {
-        //        var result = cmd.ToLower() switch
-        //        {
-        //            "config/publish" => DoPublish(e.Model.Argument),
-        //            _ => null,
-        //        };
-        //        rs.Status = CommandStatus.已完成;
-        //        rs.Data = result;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        rs.Status = CommandStatus.错误;
-        //        rs.Data = ex.Message;
-        //    }
-
-        //    if (rs.Data != null) e.Reply = rs;
-        //}
-
         private String DoPublish(String argument)
         {
             // 临时采用反射办法。后面直接调用DoRefresh

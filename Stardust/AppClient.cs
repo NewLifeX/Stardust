@@ -299,7 +299,7 @@ namespace Stardust
             var e = new CommandEventArgs { Model = model };
             Received?.Invoke(this, e);
 
-            var rs = this.ExecuteCommand(model);
+            var rs = await this.ExecuteCommand(model);
             if (e.Reply == null) e.Reply = rs;
 
             if (e.Reply != null) await CommandReply(e.Reply);
@@ -491,6 +491,23 @@ namespace Stardust
                     }
                 }
             }
+        }
+        #endregion
+
+        #region 刷新
+        /// <summary>附加刷新命令</summary>
+        /// <param name="client"></param>
+        public void Attach(ICommandClient client)
+        {
+            client.RegisterCommand("registry/register", DoRefresh);
+            client.RegisterCommand("registry/unregister", DoRefresh);
+        }
+
+        private async Task<String> DoRefresh(String argument)
+        {
+            await OnWorkService();
+
+            return "刷新服务成功";
         }
         #endregion
 
