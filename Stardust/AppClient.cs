@@ -405,16 +405,13 @@ namespace Stardust
         {
             if (!_consumeServices.ContainsKey(serviceName))
             {
-                var ip = NetHelper.MyIP();
-                var p = Process.GetCurrentProcess();
-
                 var service = new ConsumeServiceInfo
                 {
                     ServiceName = serviceName,
                     MinVersion = minVersion,
                     Tag = tag,
 
-                    ClientId = $"{ip}@{p.Id}",
+                    ClientId = ClientId,
                 };
 
                 XTrace.WriteLine("消费服务 {0}", service.ToJson());
@@ -424,12 +421,17 @@ namespace Stardust
 
                 StartTimer();
 
-                return await ResolveAsync(service);
+                var models = await ResolveAsync(service);
+                _consumes[serviceName] = models;
+
+                return models;
             }
+            else
+            {
+                if (_consumes.TryGetValue(serviceName, out var models)) return models;
 
-            if (_consumes.TryGetValue(serviceName, out var models)) return models;
-
-            return null;
+                return null;
+            }
         }
 
         /// <summary>绑定消费服务名到指定事件，服务改变时通知外部</summary>
