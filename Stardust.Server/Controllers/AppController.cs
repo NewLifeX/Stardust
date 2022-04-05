@@ -31,10 +31,9 @@ namespace Stardust.Server.Controllers
         private readonly TokenService _tokenService;
         private readonly RegistryService _registryService;
         private readonly ITracer _tracer;
-        private static readonly ICache _cache = new MemoryCache();
-        private readonly ICache _queue;
+        private readonly AppQueueService _queue;
 
-        public AppController(TokenService tokenService, RegistryService registryService, ICache queue, ITracer tracer)
+        public AppController(TokenService tokenService, RegistryService registryService, AppQueueService queue, ITracer tracer)
         {
             _tokenService = tokenService;
             _registryService = registryService;
@@ -163,8 +162,7 @@ namespace Stardust.Server.Controllers
         {
             DefaultSpan.Current = null;
             var cancellationToken = source.Token;
-            var topic = $"appcmd:{app.Name}:{clientId}";
-            var queue = _queue.GetQueue<String>(topic);
+            var queue = _queue.GetQueue(app.Name, clientId);
             try
             {
                 while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
@@ -328,7 +326,7 @@ namespace Stardust.Server.Controllers
             // 发布消息通知消费者
             if (isNew)
             {
-                SendCommand(new CommandInModel { Command = "regitry/register" });
+                _registryService.SendCommand(app, "regitry/register", service.ServiceName, app + "");
             }
 
             return svc;
@@ -363,7 +361,7 @@ namespace Stardust.Server.Controllers
             // 发布消息通知消费者
             if (flag)
             {
-                SendCommand(new CommandInModel { Command = "regitry/unregister" });
+                _registryService.SendCommand(app, "regitry/unregister", service.ServiceName, app + "");
             }
 
             return svc;

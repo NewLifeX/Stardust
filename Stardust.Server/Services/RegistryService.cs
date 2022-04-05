@@ -1,7 +1,5 @@
 ﻿using NewLife;
-using NewLife.Caching;
 using NewLife.Log;
-using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Nodes;
 using Stardust.Models;
@@ -11,9 +9,9 @@ namespace Stardust.Server.Services
 {
     public class RegistryService
     {
-        private readonly ICache _queue;
+        private readonly AppQueueService _queue;
 
-        public RegistryService(ICache queue) => _queue = queue;
+        public RegistryService(AppQueueService queue) => _queue = queue;
 
         public AppOnline Register(App app, AppModel inf, String ip, String clientId, String token)
         {
@@ -109,18 +107,23 @@ namespace Stardust.Server.Services
             cmd.Insert();
 
             // 分发命令给该应用的所有实例
-            var cmdModel = cmd.ToModel().ToJson();
+            var cmdModel = cmd.ToModel();
             foreach (var item in AppOnline.FindAllByApp(app.Id))
             {
-                var topic = $"appcmd:{app.Name}:{item.Client}";
-                var queue = _queue.GetQueue<String>(topic);
-                queue.Add(cmdModel);
-
-                // 设置过期时间，过期自动清理
-                _queue.SetExpire(topic, TimeSpan.FromMinutes(30));
+                _queue.Publish(app.Name, item.Client, cmdModel);
             }
 
             return cmd;
+        }
+
+        public AppCommand SendCommand(App app, String command, String argument, String user = null)
+        {
+            var model = new CommandInModel
+            {
+                Command = command,
+                Argument = argument,
+            };
+            return SendCommand(app, model, user);
         }
 
         public AppCommand CommandReply(App app, CommandReplyModel model)
@@ -134,6 +137,9 @@ namespace Stardust.Server.Services
             cmd.Status = model.Status;
             cmd.Result = model.Data;
             cmd.Update();
+
+            // 推入服务响应队列，让服务调用方得到响应
+            _queue.Publish(model);
 
             return cmd;
         }

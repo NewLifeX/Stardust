@@ -198,7 +198,9 @@ namespace Stardust
                 {
                     if (_timer == null)
                     {
-                        _timer = new TimerX(DoPing, null, 1_000, 60_000) { Async = true };
+                        _timer = new TimerX(DoPing, null, 5_000, 60_000) { Async = true };
+
+                        Attach(this);
                     }
                 }
             }

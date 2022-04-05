@@ -3,6 +3,7 @@ using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using NewLife;
 using NewLife.Caching;
+using NewLife.Configuration;
 using NewLife.Log;
 using Stardust.Data;
 using Stardust.Monitors;
@@ -26,10 +27,15 @@ namespace Stardust.Server
             var star = new StarFactory(null, "StarServer", null);
             if (star.Server.IsNullOrEmpty()) star.Server = "http://127.0.0.1:6600";
 
+            // 埋点跟踪
             var tracer = star.Tracer;
-            services.AddSingleton<ITracer>(tracer);
+            services.AddSingleton(tracer);
             using var span = tracer?.NewSpan(nameof(ConfigureServices));
             if (tracer is StarTracer st) st.TrimSelf = false;
+
+            // 配置
+            var config = new JsonConfigProvider { FileName = "appsettings.json" };
+            services.AddSingleton<IConfigProvider>(config);
 
             var cache = Cache.Default;
             services.AddSingleton(cache);
@@ -46,6 +52,8 @@ namespace Stardust.Server
             var alarmService = new AlarmService(tracer) { Period = set.AlarmPeriod };
             services.AddSingleton<IAlarmService>(alarmService);
 
+            // 业务服务
+            services.AddSingleton<AppQueueService>();
             services.AddSingleton<TokenService>();
             services.AddSingleton<ConfigService>();
             services.AddSingleton<RegistryService>();
