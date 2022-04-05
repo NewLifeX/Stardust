@@ -43,11 +43,11 @@ namespace Stardust
             _client = new ApiClient("udp://127.0.0.1:5500")
             {
                 Timeout = 3_000,
-                Log = XTrace.Log,
+                Log = Log,
             };
 
             var set = StarSetting.Current;
-            if (set.Debug) _client.EncoderLog = XTrace.Log;
+            if (set.Debug) _client.EncoderLog = Log;
         }
 
         /// <summary>获取信息</summary>
@@ -133,12 +133,12 @@ namespace Stardust
                     if (!info.FileName.IsNullOrEmpty()) info.FileName = info.FileName.TrimEnd(" (deleted)");
                     if (target.IsNullOrEmpty()) target = Path.GetDirectoryName(info.FileName);
 
-                    XTrace.WriteLine("StarAgent在用版本 v{0}，低于目标版本 v{1}", info.Version, version);
+                    WriteLog("StarAgent在用版本 v{0}，低于目标版本 v{1}", info.Version, version);
                 }
             }
             catch (Exception ex)
             {
-                XTrace.WriteLine("没有探测到StarAgent，{0}", ex.GetTrue().Message);
+                WriteLog("没有探测到StarAgent，{0}", ex.GetTrue().Message);
             }
 
             if (target.IsNullOrEmpty())
@@ -156,7 +156,7 @@ namespace Stardust
                         target = Path.GetDirectoryName(p.MainWindowTitle);
                     }
 
-                    XTrace.WriteLine("发现进程StarAgent，ProcessId={0}，target={1}", p.Id, target);
+                    WriteLog("发现进程StarAgent，ProcessId={0}，target={1}", p.Id, target);
                 }
             }
 
@@ -166,7 +166,7 @@ namespace Stardust
                 target = target.GetFullPath();
                 target.EnsureDirectory(false);
 
-                XTrace.WriteLine("目标：{0}", target);
+                WriteLog("目标：{0}", target);
 
                 var ug = new Upgrade
                 {
@@ -176,7 +176,7 @@ namespace Stardust
                     Log = XTrace.Log,
                 };
 
-                XTrace.WriteLine("下载：{0}", url);
+                WriteLog("下载：{0}", url);
 
                 var client = new HttpClient();
                 client.DownloadFileAsync(url, ug.SourceFile).Wait();
@@ -223,20 +223,20 @@ namespace Stardust
             return true;
         }
 
-        private static Boolean RunAgentOnWindows(String fileName, String target, Boolean inService)
+        private Boolean RunAgentOnWindows(String fileName, String target, Boolean inService)
         {
             if (!fileName.IsNullOrEmpty() && Path.GetExtension(fileName) == ".dll") return false;
             if (fileName.IsNullOrEmpty()) fileName = target.CombinePath("StarAgent.exe").GetFullPath();
             if (!File.Exists(fileName)) return false;
 
-            XTrace.WriteLine("RunAgentOnWindows fileName={0}, inService={1}", fileName, inService);
+            WriteLog("RunAgentOnWindows fileName={0}, inService={1}", fileName, inService);
 
             if (inService)
             {
                 Process.Start(fileName, "-stop");
                 Process.Start(fileName, "-start");
 
-                XTrace.WriteLine("启动服务成功");
+                WriteLog("启动服务成功");
             }
             else
             {
@@ -247,19 +247,19 @@ namespace Stardust
                 };
                 var p = Process.Start(si);
 
-                XTrace.WriteLine("启动进程成功 pid={0}", p.Id);
+                WriteLog("启动进程成功 pid={0}", p.Id);
             }
 
             return true;
         }
 
-        private static Boolean RunAgentOnLinux(String fileName, String target, Boolean inService)
+        private Boolean RunAgentOnLinux(String fileName, String target, Boolean inService)
         {
             if (!fileName.IsNullOrEmpty() && Path.GetExtension(fileName) == ".dll") return false;
             if (fileName.IsNullOrEmpty()) fileName = target.CombinePath("StarAgent").GetFullPath();
             if (!File.Exists(fileName)) return false;
 
-            XTrace.WriteLine("RunAgentOnLinux fileName={0}, inService={1}", fileName, inService);
+            WriteLog("RunAgentOnLinux fileName={0}, inService={1}", fileName, inService);
 
             // 在Linux中设置执行权限
             Process.Start("chmod", $"+x {fileName}");
@@ -269,7 +269,7 @@ namespace Stardust
                 Process.Start(fileName, "-stop");
                 Process.Start(fileName, "-start");
 
-                XTrace.WriteLine("启动服务成功");
+                WriteLog("启动服务成功");
             }
             else
             {
@@ -280,25 +280,25 @@ namespace Stardust
                 };
                 var p = Process.Start(si);
 
-                XTrace.WriteLine("启动进程成功 pid={0}", p.Id);
+                WriteLog("启动进程成功 pid={0}", p.Id);
             }
 
             return true;
         }
 
-        private static Boolean RunAgentOnDotnet(String fileName, String target, Boolean inService)
+        private Boolean RunAgentOnDotnet(String fileName, String target, Boolean inService)
         {
             if (fileName.IsNullOrEmpty()) fileName = target.CombinePath("StarAgent.dll").GetFullPath();
             if (!File.Exists(fileName)) return false;
 
-            XTrace.WriteLine("RunAgentOnDotnet fileName={0}, inService={1}", fileName, inService);
+            WriteLog("RunAgentOnDotnet fileName={0}, inService={1}", fileName, inService);
 
             if (inService)
             {
                 Process.Start("dotnet", $"{fileName} -stop");
                 Process.Start("dotnet", $"{fileName} -start");
 
-                XTrace.WriteLine("启动服务成功");
+                WriteLog("启动服务成功");
             }
             else
             {
@@ -309,7 +309,7 @@ namespace Stardust
                 };
                 var p = Process.Start(si);
 
-                XTrace.WriteLine("启动进程成功 pid={0}", p.Id);
+                WriteLog("启动进程成功 pid={0}", p.Id);
             }
 
             return true;
@@ -376,6 +376,16 @@ namespace Stardust
                 }
             }
         }
+        #endregion
+
+        #region 日志
+        /// <summary>日志</summary>
+        public ILog Log { get; set; }
+
+        /// <summary>写日志</summary>
+        /// <param name="format"></param>
+        /// <param name="args"></param>
+        public void WriteLog(String format, params Object[] args) => Log?.Info(format, args);
         #endregion
     }
 }

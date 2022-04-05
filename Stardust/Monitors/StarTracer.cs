@@ -264,7 +264,7 @@ namespace Stardust.Monitors
 
             if (Instance is StarTracer tracer && tracer.Client is ApiHttpClient) return tracer;
 
-            tracer = new StarTracer(server) { Log = XTrace.Log };
+            tracer = new StarTracer(server);
             tracer.AttachGlobal();
 
             return tracer;

@@ -116,7 +116,7 @@ namespace Stardust
             }
             catch (Exception ex)
             {
-                XTrace.Log.Error("注册失败：{0}", ex.GetTrue().Message);
+                Log?.Error("注册失败：{0}", ex.GetTrue().Message);
             }
 
             StartTimer();
@@ -153,7 +153,7 @@ namespace Stardust
             }
             catch (Exception ex)
             {
-                XTrace.WriteLine("注册异常 {0}", ex.GetTrue().Message);
+                WriteLog("注册异常 {0}", ex.GetTrue().Message);
 
                 throw;
             }
@@ -181,9 +181,13 @@ namespace Stardust
             }
             catch (Exception ex)
             {
-                XTrace.WriteLine("心跳异常 {0}", ex.GetTrue().Message);
+                if (Log != null && Log.Level <= LogLevel.Debug)
+                {
+                    WriteLog("心跳异常 {0}", ex.GetTrue().Message);
 
-                throw;
+                    throw;
+                }
+                return null;
             }
         }
         #endregion
@@ -269,7 +273,7 @@ namespace Stardust
                         if (span != null && !model.TraceId.IsNullOrEmpty()) span.TraceId = model.TraceId;
                         try
                         {
-                            XTrace.WriteLine("Got Command: {0}", model.ToJson());
+                            WriteLog("Got Command: {0}", model.ToJson());
                             if (model.Expire.Year < 2000 || model.Expire > DateTime.Now)
                             {
                                 await OnReceiveCommand(model);
@@ -339,7 +343,7 @@ namespace Stardust
         {
             if (_publishServices.TryAdd(service.ServiceName, service))
             {
-                XTrace.WriteLine("注册服务 {0}", service.ToJson());
+                WriteLog("注册服务 {0}", service.ToJson());
 
                 StartTimer();
             }
@@ -379,7 +383,7 @@ namespace Stardust
             service.Tag = tag;
 
             var rs = await RegisterAsync(service);
-            XTrace.WriteLine("注册完成 {0}", rs.ToJson());
+            WriteLog("注册完成 {0}", rs.ToJson());
 
             return rs;
         }
@@ -408,7 +412,7 @@ namespace Stardust
             if (!_publishServices.TryGetValue(serviceName, out var service)) return false;
             if (service == null) return false;
 
-            XTrace.WriteLine("取消注册 {0}", service.ToJson());
+            WriteLog("取消注册 {0}", service.ToJson());
             UnregisterAsync(service).Wait();
 
             return true;
@@ -437,7 +441,7 @@ namespace Stardust
 
             if (_consumeServices.TryAdd(serviceName, service))
             {
-                XTrace.WriteLine("消费服务 {0}", service.ToJson());
+                WriteLog("消费服务 {0}", service.ToJson());
 
                 StartTimer();
 

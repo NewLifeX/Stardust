@@ -191,11 +191,13 @@ namespace Stardust
                     AppName = AppName,
                     ClientId = ClientId,
                     NodeCode = Local?.Info?.Code,
-                    Filter = _tokenFilter
+                    Filter = _tokenFilter,
+
+                    Log = Log,
                 };
 
-                var set = StarSetting.Current;
-                if (set.Debug) client.Log = XTrace.Log;
+                //var set = StarSetting.Current;
+                //if (set.Debug) client.Log = XTrace.Log;
 
                 _client = client;
 

@@ -9,9 +9,9 @@ namespace Stardust
     public class StarSetting : Config<StarSetting>
     {
         #region 属性
-        /// <summary>调试开关。默认true</summary>
-        [Description("调试开关。默认true")]
-        public Boolean Debug { get; set; } = true;
+        /// <summary>调试开关。默认false</summary>
+        [Description("调试开关。默认false")]
+        public Boolean Debug { get; set; }
 
         /// <summary>服务端地址。如http://star.newlifex.com:6600，默认为空</summary>
         [Description("服务端地址。如http://star.newlifex.com:6600，默认为空")]
