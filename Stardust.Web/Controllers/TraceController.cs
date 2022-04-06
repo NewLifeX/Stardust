@@ -47,6 +47,9 @@ namespace Stardust.Web.Controllers
 
             var list = Search(id, pager);
 
+            // 每个应用的第一个节点，必须以App分类展示，其它节点才可以定制化
+            var appids = new List<Int32>();
+
             // 解析得到关系数据
             var cats = new List<String>();
             //var cats = new List<String> { "App", "http", "db", "redis" };
@@ -57,7 +60,7 @@ namespace Stardust.Web.Controllers
                 var cat = "App";
                 var name = item.AppName;
                 var ti = item.TraceItem;
-                if (ti != null && ti.Kind.EqualIgnoreCase("http", "db", "redis", "mq", "mqtt", "modbus"))
+                if (appids.Contains(item.AppId) && ti != null && ti.Kind.EqualIgnoreCase("http", "db", "redis", "mq", "mqtt", "modbus"))
                 {
                     cat = ti.Kind;
                     name = ti.DisplayName ?? ti.Name;
@@ -88,6 +91,8 @@ namespace Stardust.Web.Controllers
                             break;
                     }
                 }
+                if (!appids.Contains(item.AppId)) appids.Add(item.AppId);
+
                 if (name == null) name = item.AppName;
                 item["node_name"] = name;
 
