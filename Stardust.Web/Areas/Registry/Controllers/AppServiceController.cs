@@ -14,7 +14,7 @@ namespace Stardust.Web.Areas.Registry.Controllers
         protected override IEnumerable<AppService> Search(Pager p)
         {
             PageSetting.EnableAdd = false;
-            PageSetting.EnableNavbar = false;
+            //PageSetting.EnableNavbar = false;
 
             var appId = p["appId"].ToInt(-1);
             var serviceId = p["serviceId"].ToInt(-1);
