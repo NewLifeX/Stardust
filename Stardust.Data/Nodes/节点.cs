@@ -142,11 +142,11 @@ namespace Stardust.Data.Nodes
         public String IP { get => _IP; set { if (OnPropertyChanging("IP", value)) { _IP = value; OnPropertyChanged("IP"); } } }
 
         private Int32 _Cpu;
-        /// <summary>CPU</summary>
+        /// <summary>CPU。处理器核心数</summary>
         [DisplayName("CPU")]
-        [Description("CPU")]
+        [Description("CPU。处理器核心数")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Cpu", "CPU", "")]
+        [BindColumn("Cpu", "CPU。处理器核心数", "")]
         public Int32 Cpu { get => _Cpu; set { if (OnPropertyChanging("Cpu", value)) { _Cpu = value; OnPropertyChanged("Cpu"); } } }
 
         private Int32 _Memory;
@@ -614,7 +614,7 @@ namespace Stardust.Data.Nodes
             /// <summary>本地IP</summary>
             public static readonly Field IP = FindByName("IP");
 
-            /// <summary>CPU</summary>
+            /// <summary>CPU。处理器核心数</summary>
             public static readonly Field Cpu = FindByName("Cpu");
 
             /// <summary>内存。单位M</summary>
@@ -776,7 +776,7 @@ namespace Stardust.Data.Nodes
             /// <summary>本地IP</summary>
             public const String IP = "IP";
 
-            /// <summary>CPU</summary>
+            /// <summary>CPU。处理器核心数</summary>
             public const String Cpu = "Cpu";
 
             /// <summary>内存。单位M</summary>

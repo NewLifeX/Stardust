@@ -20,22 +20,6 @@ namespace Stardust.Server.Services
         #endregion
 
         #region 构造
-        ///// <summary>
-        ///// 实例化队列服务
-        ///// </summary>
-        //public AppQueueService(IServiceProvider provider, ICache cache, ITracer tracer)
-        //{
-        //    if (provider != null)
-        //    {
-        //        // 如果外部有注册Redis，则使用
-        //        var redis = provider.GetService<Redis>();
-        //        if (redis != null) cache = redis;
-        //    }
-
-        //    Host = cache;
-        //    _tracer = tracer;
-        //}
-
         /// <summary>
         /// 实例化队列服务
         /// </summary>

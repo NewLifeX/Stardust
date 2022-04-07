@@ -62,11 +62,11 @@ namespace Stardust.Data
         public Boolean Success { get => _Success; set { if (OnPropertyChanging("Success", value)) { _Success = value; OnPropertyChanged("Success"); } } }
 
         private String _TraceId;
-        /// <summary>追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
-        [DisplayName("追踪标识")]
-        [Description("追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
+        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        [DisplayName("追踪")]
+        [Description("追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("TraceId", "追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
+        [BindColumn("TraceId", "追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
         public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
 
         private String _Remark;
@@ -164,7 +164,7 @@ namespace Stardust.Data
             /// <summary>成功</summary>
             public static readonly Field Success = FindByName("Success");
 
-            /// <summary>追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
             public static readonly Field TraceId = FindByName("TraceId");
 
             /// <summary>内容</summary>
@@ -200,7 +200,7 @@ namespace Stardust.Data
             /// <summary>成功</summary>
             public const String Success = "Success";
 
-            /// <summary>追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
             public const String TraceId = "TraceId";
 
             /// <summary>内容</summary>

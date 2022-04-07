@@ -156,11 +156,11 @@ namespace Stardust.Data.Nodes
         public String WebHook { get => _WebHook; set { if (OnPropertyChanging("WebHook", value)) { _WebHook = value; OnPropertyChanged("WebHook"); } } }
 
         private String _TraceId;
-        /// <summary>追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
-        [DisplayName("追踪标识")]
-        [Description("追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
+        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        [DisplayName("追踪")]
+        [Description("追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("TraceId", "追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
+        [BindColumn("TraceId", "追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
         public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
 
         private String _CreateUser;
@@ -368,7 +368,7 @@ namespace Stardust.Data.Nodes
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public static readonly Field WebHook = FindByName("WebHook");
 
-            /// <summary>追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
             public static readonly Field TraceId = FindByName("TraceId");
 
             /// <summary>创建人</summary>
@@ -455,7 +455,7 @@ namespace Stardust.Data.Nodes
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public const String WebHook = "WebHook";
 
-            /// <summary>追踪标识。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
             public const String TraceId = "TraceId";
 
             /// <summary>创建人</summary>
