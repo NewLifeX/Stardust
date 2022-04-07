@@ -91,13 +91,13 @@ namespace Microsoft.Extensions.DependencyInjection
                         {
                             if (feature == null) throw new Exception("尘埃客户端未能取得本地服务地址。");
 
-                            star.Service.Register(serviceName, () => feature?.Addresses.Join(), tag);
+                            star.Service?.Register(serviceName, () => feature?.Addresses.Join(), tag);
 
                             return;
                         }
                     }
 
-                    star.Service.RegisterAsync(serviceName, address, tag).Wait();
+                    star.Service?.RegisterAsync(serviceName, address, tag).Wait();
                 }
                 catch (Exception ex)
                 {
