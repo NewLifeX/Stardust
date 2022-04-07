@@ -253,7 +253,8 @@ namespace Stardust
                 _ = Task.Run(() => DoPull(client, _source.Token));
             }
 
-            await OnWorkService();
+            await RefreshPublish();
+            await RefreshConsume();
         }
 
         private async Task DoPull(WebSocket socket, CancellationToken cancellationToken)
@@ -469,7 +470,7 @@ namespace Stardust
             StartTimer();
         }
 
-        private async Task OnWorkService()
+        private async Task RefreshPublish()
         {
             // 刷新已发布服务
             foreach (var item in _publishServices)
@@ -483,7 +484,10 @@ namespace Stardust
 
                 if (!svc.Address.IsNullOrEmpty()) await RegisterAsync(svc);
             }
+        }
 
+        private async Task RefreshConsume()
+        {
             // 刷新已消费服务
             foreach (var item in _consumeServices)
             {
@@ -517,7 +521,7 @@ namespace Stardust
 
         private async Task<String> DoRefresh(String argument)
         {
-            await OnWorkService();
+            await RefreshConsume();
 
             return "刷新服务成功";
         }

@@ -10,8 +10,13 @@ namespace Stardust.Server.Services
     public class RegistryService
     {
         private readonly AppQueueService _queue;
+        private readonly ITracer _tracer;
 
-        public RegistryService(AppQueueService queue) => _queue = queue;
+        public RegistryService(AppQueueService queue, ITracer tracer)
+        {
+            _queue = queue;
+            this._tracer = tracer;
+        }
 
         public AppOnline Register(App app, AppModel inf, String ip, String clientId, String token)
         {
@@ -153,7 +158,11 @@ namespace Stardust.Server.Services
             var list = AppConsume.FindAllByService(service.Id);
             if (list.Count == 0) return;
 
-            foreach (var item in list.Select(e => e.AppId).Distinct())
+            var appIds = list.Select(e => e.AppId).Distinct().ToArray();
+
+            using var span = _tracer?.NewSpan(nameof(NotifyConsumers), $"{command} appIds={appIds.Join()} user={user}");
+
+            foreach (var item in appIds)
             {
                 var app = App.FindById(item);
                 if (app != null) SendCommand(app, command, null, user);
