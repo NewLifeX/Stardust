@@ -86,6 +86,14 @@ namespace Stardust.Data
         [BindColumn("PingCount", "心跳", "")]
         public Int32 PingCount { get => _PingCount; set { if (OnPropertyChanging("PingCount", value)) { _PingCount = value; OnPropertyChanged("PingCount"); } } }
 
+        private Boolean _WebSocket;
+        /// <summary>长连接。WebSocket长连接</summary>
+        [DisplayName("长连接")]
+        [Description("长连接。WebSocket长连接")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("WebSocket", "长连接。WebSocket长连接", "")]
+        public Boolean WebSocket { get => _WebSocket; set { if (OnPropertyChanging("WebSocket", value)) { _WebSocket = value; OnPropertyChanged("WebSocket"); } } }
+
         private Int32 _ProcessId;
         /// <summary>进程</summary>
         [DisplayName("进程")]
@@ -225,6 +233,7 @@ namespace Stardust.Data
                     case "Client": return _Client;
                     case "Scope": return _Scope;
                     case "PingCount": return _PingCount;
+                    case "WebSocket": return _WebSocket;
                     case "ProcessId": return _ProcessId;
                     case "ProcessName": return _ProcessName;
                     case "UserName": return _UserName;
@@ -255,6 +264,7 @@ namespace Stardust.Data
                     case "Client": _Client = Convert.ToString(value); break;
                     case "Scope": _Scope = Convert.ToString(value); break;
                     case "PingCount": _PingCount = value.ToInt(); break;
+                    case "WebSocket": _WebSocket = value.ToBoolean(); break;
                     case "ProcessId": _ProcessId = value.ToInt(); break;
                     case "ProcessName": _ProcessName = Convert.ToString(value); break;
                     case "UserName": _UserName = Convert.ToString(value); break;
@@ -303,6 +313,9 @@ namespace Stardust.Data
 
             /// <summary>心跳</summary>
             public static readonly Field PingCount = FindByName("PingCount");
+
+            /// <summary>长连接。WebSocket长连接</summary>
+            public static readonly Field WebSocket = FindByName("WebSocket");
 
             /// <summary>进程</summary>
             public static readonly Field ProcessId = FindByName("ProcessId");
@@ -378,6 +391,9 @@ namespace Stardust.Data
 
             /// <summary>心跳</summary>
             public const String PingCount = "PingCount";
+
+            /// <summary>长连接。WebSocket长连接</summary>
+            public const String WebSocket = "WebSocket";
 
             /// <summary>进程</summary>
             public const String ProcessId = "ProcessId";

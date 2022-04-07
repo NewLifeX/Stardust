@@ -124,6 +124,13 @@ namespace Stardust.Server.Controllers
             XTrace.WriteLine("WebSocket连接 {0}", app);
             WriteHistory("WebSocket连接", true, socket.State + "", clientId);
 
+            var olt = AppOnline.GetOrAddClient(clientId);
+            if(olt != null)
+            {
+                olt.WebSocket = true;
+                olt.SaveAsync();
+            }
+
             var source = new CancellationTokenSource();
             _ = Task.Run(() => consumeMessage(socket, app, clientId, UserHost, source));
             try
@@ -155,6 +162,12 @@ namespace Stardust.Server.Controllers
             finally
             {
                 source.Cancel();
+
+                if (olt != null)
+                {
+                    olt.WebSocket = false;
+                    olt.SaveAsync();
+                }
             }
         }
 

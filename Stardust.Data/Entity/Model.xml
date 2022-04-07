@@ -38,6 +38,7 @@
       <Column Name="Client" DataType="String" Description="客户端。IP加进程" />
       <Column Name="Scope" DataType="String" Description="作用域" />
       <Column Name="PingCount" DataType="Int32" Description="心跳" />
+      <Column Name="WebSocket" DataType="Boolean" Description="长连接。WebSocket长连接" />
       <Column Name="ProcessId" DataType="Int32" Description="进程" />
       <Column Name="ProcessName" DataType="String" Description="进程名称" />
       <Column Name="UserName" DataType="String" Description="用户名。启动该进程的用户名" />

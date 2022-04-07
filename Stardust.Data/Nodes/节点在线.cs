@@ -94,6 +94,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("PingCount", "心跳", "")]
         public Int32 PingCount { get => _PingCount; set { if (OnPropertyChanging("PingCount", value)) { _PingCount = value; OnPropertyChanged("PingCount"); } } }
 
+        private Boolean _WebSocket;
+        /// <summary>长连接。WebSocket长连接</summary>
+        [DisplayName("长连接")]
+        [Description("长连接。WebSocket长连接")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("WebSocket", "长连接。WebSocket长连接", "")]
+        public Boolean WebSocket { get => _WebSocket; set { if (OnPropertyChanging("WebSocket", value)) { _WebSocket = value; OnPropertyChanged("WebSocket"); } } }
+
         private String _Version;
         /// <summary>版本</summary>
         [DisplayName("版本")]
@@ -330,6 +338,7 @@ namespace Stardust.Data.Nodes
                     case "ProvinceID": return _ProvinceID;
                     case "CityID": return _CityID;
                     case "PingCount": return _PingCount;
+                    case "WebSocket": return _WebSocket;
                     case "Version": return _Version;
                     case "CompileTime": return _CompileTime;
                     case "Memory": return _Memory;
@@ -373,6 +382,7 @@ namespace Stardust.Data.Nodes
                     case "ProvinceID": _ProvinceID = value.ToInt(); break;
                     case "CityID": _CityID = value.ToInt(); break;
                     case "PingCount": _PingCount = value.ToInt(); break;
+                    case "WebSocket": _WebSocket = value.ToBoolean(); break;
                     case "Version": _Version = Convert.ToString(value); break;
                     case "CompileTime": _CompileTime = value.ToDateTime(); break;
                     case "Memory": _Memory = value.ToInt(); break;
@@ -436,6 +446,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>心跳</summary>
             public static readonly Field PingCount = FindByName("PingCount");
+
+            /// <summary>长连接。WebSocket长连接</summary>
+            public static readonly Field WebSocket = FindByName("WebSocket");
 
             /// <summary>版本</summary>
             public static readonly Field Version = FindByName("Version");
@@ -550,6 +563,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>心跳</summary>
             public const String PingCount = "PingCount";
+
+            /// <summary>长连接。WebSocket长连接</summary>
+            public const String WebSocket = "WebSocket";
 
             /// <summary>版本</summary>
             public const String Version = "Version";

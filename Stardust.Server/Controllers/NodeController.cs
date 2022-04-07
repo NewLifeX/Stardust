@@ -666,6 +666,13 @@ namespace Stardust.Server.Controllers
             XTrace.WriteLine("WebSocket连接 {0}", node);
             WriteHistory(node, "WebSocket连接", true, socket.State + "");
 
+            var olt = GetOnline(node) ?? CreateOnline(node, token);
+            if (olt != null)
+            {
+                olt.WebSocket = true;
+                olt.SaveAsync();
+            }
+
             var source = new CancellationTokenSource();
             _ = Task.Run(() => consumeMessage(socket, node, source));
             try
@@ -697,6 +704,12 @@ namespace Stardust.Server.Controllers
             finally
             {
                 source.Cancel();
+
+                if (olt != null)
+                {
+                    olt.WebSocket = false;
+                    olt.SaveAsync();
+                }
             }
         }
 

@@ -72,6 +72,7 @@
       <Column Name="ProvinceID" DataType="Int32" Description="省份" />
       <Column Name="CityID" DataType="Int32" Description="城市" />
       <Column Name="PingCount" DataType="Int32" Description="心跳" />
+      <Column Name="WebSocket" DataType="Boolean" Description="长连接。WebSocket长连接" />
       <Column Name="Version" DataType="String" Description="版本" />
       <Column Name="CompileTime" DataType="DateTime" Description="编译时间" />
       <Column Name="Memory" DataType="Int32" Description="内存。单位M" />
