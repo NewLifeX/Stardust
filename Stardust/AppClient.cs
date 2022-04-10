@@ -388,7 +388,7 @@ namespace Stardust
         /// <param name="address">服务地址</param>
         /// <param name="tag">特性标签</param>
         /// <returns></returns>
-        public async Task<Object> RegisterAsync(String serviceName, String address, String tag = null)
+        public async Task<PublishServiceInfo> RegisterAsync(String serviceName, String address, String tag = null)
         {
             if (address == null) throw new ArgumentNullException(nameof(address));
 
@@ -399,7 +399,7 @@ namespace Stardust
             var rs = await RegisterAsync(service);
             WriteLog("注册完成 {0}", rs.ToJson());
 
-            return rs;
+            return service;
         }
 
         /// <summary>发布服务（延迟），直到回调函数返回地址信息才做真正发布</summary>
@@ -407,7 +407,7 @@ namespace Stardust
         /// <param name="addressCallback">服务地址回调</param>
         /// <param name="tag">特性标签</param>
         /// <returns></returns>
-        public void Register(String serviceName, Func<String> addressCallback, String tag = null)
+        public PublishServiceInfo Register(String serviceName, Func<String> addressCallback, String tag = null)
         {
             if (addressCallback == null) throw new ArgumentNullException(nameof(addressCallback));
 
@@ -416,20 +416,22 @@ namespace Stardust
             service.Tag = tag;
 
             AddService(service);
+
+            return service;
         }
 
         /// <summary>取消服务</summary>
         /// <param name="serviceName">服务名</param>
         /// <returns></returns>
-        public Boolean Unregister(String serviceName)
+        public PublishServiceInfo Unregister(String serviceName)
         {
-            if (!_publishServices.TryGetValue(serviceName, out var service)) return false;
-            if (service == null) return false;
+            if (!_publishServices.TryGetValue(serviceName, out var service)) return null;
+            if (service == null) return null;
 
             WriteLog("取消注册 {0}", service.ToJson());
             UnregisterAsync(service).Wait();
 
-            return true;
+            return service;
         }
 
         /// <summary>消费服务</summary>
@@ -466,6 +468,7 @@ namespace Stardust
             }
             else
             {
+                _consumeServices[serviceName] = service;
                 if (_consumes.TryGetValue(serviceName, out var models)) return models;
 
                 return null;

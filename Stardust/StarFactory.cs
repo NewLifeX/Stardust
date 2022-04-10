@@ -317,109 +317,21 @@ namespace Stardust
         /// <param name="serviceName"></param>
         /// <param name="tag"></param>
         /// <returns></returns>
-        public async Task<IApiClient> CreateForServiceAsync(String serviceName, String tag = null)
-        {
-            var http = new ApiHttpClient
-            {
-                RoundRobin = true,
-
-                Tracer = Tracer,
-            };
-
-            var models = await Service.ResolveAsync(serviceName, null, tag);
-
-            Bind(http, models);
-
-            Service.Bind(serviceName, (k, ms) => Bind(http, ms));
-
-            return http;
-        }
-
-        private static void Bind(ApiHttpClient client, ServiceModel[] ms)
-        {
-            if (ms != null && ms.Length > 0)
-            {
-                var serviceName = ms[0].ServiceName;
-                var services = client.Services;
-                var dic = services.ToDictionary(e => e.Name, e => e);
-                var names = new List<String>();
-                foreach (var item in ms)
-                {
-                    var name = item.Client;
-                    var addrs = item.Address.Split(",");
-                    for (var i = 0; i < addrs.Length; i++)
-                    {
-                        // 第一个使用Client名，后续地址增加#2后缀
-                        var svcName = i <= 0 ? name : $"{name}#{i + 1}";
-                        if (!dic.TryGetValue(svcName, out var svc))
-                        {
-                            svc = new ApiHttpClient.Service
-                            {
-                                Name = svcName,
-                                Address = new Uri(addrs[i]),
-                                Weight = item.Weight,
-                            };
-                            services.Add(svc);
-                            dic.Add(svcName, svc);
-
-                            XTrace.WriteLine("服务[{0}]新增地址：name={1} address={2} weight={3}", serviceName, svcName, svc.Address, item.Weight);
-                        }
-                        else
-                        {
-                            svc.Address = new Uri(addrs[i]);
-                            svc.Weight = item.Weight;
-                        }
-                        names.Add(svcName);
-                    }
-                }
-
-                // 删掉旧的
-                for (var i = services.Count - 1; i >= 0; i--)
-                {
-                    if (!names.Contains(services[i].Name))
-                    {
-                        var svc = services[i];
-                        XTrace.WriteLine("服务[{0}]删除地址：name={1} address={2} weight={3}", serviceName, svc.Name, svc.Address, svc.Weight);
-
-                        services.RemoveAt(i);
-                    }
-                }
-            }
-        }
+        public Task<IApiClient> CreateForServiceAsync(String serviceName, String tag = null) => Service.CreateForServiceAsync(serviceName, tag);
 
         /// <summary>发布服务</summary>
         /// <param name="serviceName">服务名</param>
         /// <param name="address">服务地址</param>
         /// <param name="tag">特性标签</param>
         /// <returns></returns>
-        public Task<Object> RegisterAsync(String serviceName, String address, String tag = null) => Service.RegisterAsync(serviceName, address, tag);
+        public Task<PublishServiceInfo> RegisterAsync(String serviceName, String address, String tag = null) => Service.RegisterAsync(serviceName, address, tag);
 
         /// <summary>消费得到服务地址信息</summary>
         /// <param name="serviceName">服务名</param>
         /// <param name="minVersion">最小版本</param>
         /// <param name="tag">特性标签。只要包含该特性的服务提供者</param>
         /// <returns></returns>
-        public async Task<String[]> ResolveAsync(String serviceName, String minVersion = null, String tag = null)
-        {
-            var ms = await Service.ResolveAsync(serviceName, minVersion, tag);
-            //return ms?.Select(e => e.Address).ToArray();
-            if (ms == null) return null;
-
-            var addrs = new List<String>();
-            foreach (var item in ms)
-            {
-                if (!item.Address.IsNullOrEmpty())
-                {
-                    var ss = item.Address.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var elm in ss)
-                    {
-                        if (!elm.IsNullOrEmpty() && !addrs.Contains(elm)) addrs.Add(elm);
-                    }
-                }
-            }
-
-            return addrs.ToArray();
-        }
+        public Task<String[]> ResolveAsync(String serviceName, String minVersion = null, String tag = null) => Service.ResolveAddressAsync(serviceName, minVersion, tag);
         #endregion
 
         #region 其它
