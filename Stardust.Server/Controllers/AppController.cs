@@ -131,8 +131,9 @@ namespace Stardust.Server.Controllers
                 olt.SaveAsync();
             }
 
+            var ip = UserHost;
             var source = new CancellationTokenSource();
-            _ = Task.Run(() => consumeMessage(socket, app, clientId, UserHost, source));
+            _ = Task.Run(() => consumeMessage(socket, app, clientId, ip, source));
             try
             {
                 var buf = new Byte[4 * 1024];
@@ -156,7 +157,7 @@ namespace Stardust.Server.Controllers
             }
             catch (WebSocketException ex)
             {
-                XTrace.WriteLine("WebSocket异常 {0}", app);
+                XTrace.WriteLine("WebSocket异常 app={0} ip={1}", app, ip);
                 XTrace.WriteLine(ex.Message);
             }
             finally
@@ -221,6 +222,7 @@ namespace Stardust.Server.Controllers
             catch (TaskCanceledException) { }
             catch (Exception ex)
             {
+                XTrace.WriteLine("WebSocket异常 app={0} ip={1}", app, ip);
                 XTrace.WriteException(ex);
             }
             finally

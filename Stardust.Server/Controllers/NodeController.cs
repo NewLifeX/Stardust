@@ -680,8 +680,9 @@ namespace Stardust.Server.Controllers
                 olt.SaveAsync();
             }
 
+            var ip = UserHost;
             var source = new CancellationTokenSource();
-            _ = Task.Run(() => consumeMessage(socket, node, source));
+            _ = Task.Run(() => consumeMessage(socket, node, ip, source));
             try
             {
                 var buf = new Byte[4 * 1024];
@@ -705,7 +706,7 @@ namespace Stardust.Server.Controllers
             }
             catch (WebSocketException ex)
             {
-                XTrace.WriteLine("WebSocket异常 {0}", node);
+                XTrace.WriteLine("WebSocket异常 node={0} ip={1}", node, ip);
                 XTrace.WriteLine(ex.Message);
             }
             finally
@@ -720,7 +721,7 @@ namespace Stardust.Server.Controllers
             }
         }
 
-        private async Task consumeMessage(WebSocket socket, Node node, CancellationTokenSource source)
+        private async Task consumeMessage(WebSocket socket, Node node, String ip, CancellationTokenSource source)
         {
             var cancellationToken = source.Token;
             var queue = _queue.GetQueue<String>($"nodecmd:{node.Code}");
@@ -731,8 +732,7 @@ namespace Stardust.Server.Controllers
                     var msg = await queue.TakeOneAsync(30);
                     if (msg != null)
                     {
-                        XTrace.WriteLine("WebSocket发送 {0} {1}", node, msg);
-                        WriteHistory(node, "WebSocket发送", true, msg);
+                        WriteHistory(node, "WebSocket发送", true, msg, ip);
 
                         await socket.SendAsync(msg.GetBytes(), WebSocketMessageType.Text, true, cancellationToken);
                     }
@@ -746,6 +746,7 @@ namespace Stardust.Server.Controllers
             catch (TaskCanceledException) { }
             catch (Exception ex)
             {
+                XTrace.WriteLine("WebSocket异常 node={0} ip={1}", node, ip);
                 XTrace.WriteException(ex);
             }
             finally
@@ -861,7 +862,7 @@ namespace Stardust.Server.Controllers
             return null;
         }
 
-        private void WriteHistory(Node node, String action, Boolean success, String remark) => NodeHistory.Create(node, action, success, remark, Environment.MachineName, UserHost);
+        private void WriteHistory(Node node, String action, Boolean success, String remark, String ip = null) => NodeHistory.Create(node, action, success, remark, Environment.MachineName, ip ?? UserHost);
         #endregion
     }
 }
