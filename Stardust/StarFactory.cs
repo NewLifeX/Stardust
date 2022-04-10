@@ -192,6 +192,7 @@ namespace Stardust
                     ClientId = ClientId,
                     NodeCode = Local?.Info?.Code,
                     Filter = _tokenFilter,
+                    UseWebSocket = true,
 
                     Log = Log,
                 };

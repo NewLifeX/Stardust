@@ -30,6 +30,9 @@ namespace Stardust
         /// <summary>节点编码</summary>
         public String NodeCode { get; set; }
 
+        /// <summary>WebSocket长连接。建立长连接后，可以实时感知配置更新和注册服务更新，默认false</summary>
+        public Boolean UseWebSocket { get; set; }
+
         private ConcurrentDictionary<String, Delegate> _commands = new(StringComparer.OrdinalIgnoreCase);
         /// <summary>命令集合</summary>
         public IDictionary<String, Delegate> Commands => _commands;
@@ -231,30 +234,31 @@ namespace Stardust
             if (_appName == null) await Register();
             await Ping();
 
-            var svc = _currentService;
-            if (svc == null) return;
-
-            // 使用过滤器内部token，因为它有过期刷新机制
-            var token = Token;
-            if (Filter is NewLife.Http.TokenHttpFilter thf) token = thf.Token?.AccessToken;
-            if (token.IsNullOrEmpty()) return;
-
-            if (_websocket == null || _websocket.State != WebSocketState.Open)
-            {
-                var url = svc.Address.ToString().Replace("http://", "ws://").Replace("https://", "wss://");
-                var uri = new Uri(new Uri(url), "/app/notify");
-                var client = new ClientWebSocket();
-                client.Options.SetRequestHeader("Authorization", "Bearer " + token);
-                await client.ConnectAsync(uri, default);
-
-                _websocket = client;
-
-                _source = new CancellationTokenSource();
-                _ = Task.Run(() => DoPull(client, _source.Token));
-            }
-
             await RefreshPublish();
             await RefreshConsume();
+
+            var svc = _currentService;
+            if (svc != null && UseWebSocket)
+            {
+                // 使用过滤器内部token，因为它有过期刷新机制
+                var token = Token;
+                if (Filter is NewLife.Http.TokenHttpFilter thf) token = thf.Token?.AccessToken;
+                if (token.IsNullOrEmpty()) return;
+
+                if (_websocket == null || _websocket.State != WebSocketState.Open)
+                {
+                    var url = svc.Address.ToString().Replace("http://", "ws://").Replace("https://", "wss://");
+                    var uri = new Uri(new Uri(url), "/app/notify");
+                    var client = new ClientWebSocket();
+                    client.Options.SetRequestHeader("Authorization", "Bearer " + token);
+                    await client.ConnectAsync(uri, default);
+
+                    _websocket = client;
+
+                    _source = new CancellationTokenSource();
+                    _ = Task.Run(() => DoPull(client, _source.Token));
+                }
+            }
         }
 
         private async Task DoPull(WebSocket socket, CancellationToken cancellationToken)
