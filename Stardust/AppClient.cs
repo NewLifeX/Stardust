@@ -560,7 +560,7 @@ namespace Stardust
             var count = 0;
             foreach (var service in _publishServices.Values.ToArray())
             {
-                if (service.Address.IsNullOrEmpty() || service.Address.Contains("localhost") || service.AddressCallback != null )
+                if (service.Address.IsNullOrEmpty() || service.Address.Contains("localhost") || service.Address.Contains("//*") || service.AddressCallback != null )
                 {
                     service.Address = serverAddress;
                     count++;
