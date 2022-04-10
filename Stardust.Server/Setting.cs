@@ -39,9 +39,9 @@ namespace Stardust.Server
         [Description("准入白名单。若指定，仅允许符合IP条件的节点进行注册，多个逗号隔开，支持*模糊匹配")]
         public String WhiteIP { get; set; } = "";
 
-        /// <summary>节点编码公式。选择NodeInfo哪些硬件信息来计算节点编码，支持Crc/Crc16/MD5/MD5_16，默认Crc({UUID}@{MachineGuid}@{Macs})</summary>
-        [Description("节点编码公式。选择NodeInfo哪些硬件信息来计算节点编码，支持Crc/Crc16/MD5/MD5_16，默认Crc({UUID}@{MachineGuid}@{Macs})")]
-        public String NodeCodeFormula { get; set; } = "Crc({UUID}@{MachineGuid}@{Macs})";
+        /// <summary>节点编码公式。选择NodeInfo哪些硬件信息来计算节点编码，支持Crc/Crc16/MD5/MD5_16，默认Crc({ProductCode}@{UUID}@{DiskID}@{Macs})</summary>
+        [Description("节点编码公式。选择NodeInfo哪些硬件信息来计算节点编码，支持Crc/Crc16/MD5/MD5_16，默认Crc({ProductCode}@{UUID}@{DiskID}@{Macs})")]
+        public String NodeCodeFormula { get; set; } = "Crc({ProductCode}@{UUID}@{DiskID}@{Macs})";
 
         /// <summary>监控流统计。默认5秒</summary>
         [Description("监控流统计。默认5秒")]

@@ -78,7 +78,7 @@ namespace Stardust.Server.Controllers
             else
             {
                 if (!node.Enable) throw new ApiException(99, "禁止登录");
-                node = CheckNode(node, di);
+                node = CheckNode(node, di, inf.ProductCode);
 
                 // 登录密码未设置或者未提交，则执行动态注册
                 if (node == null || node.Secret.IsNullOrEmpty() || secret.IsNullOrEmpty())
@@ -101,7 +101,7 @@ namespace Stardust.Server.Controllers
             olt.Save(di, null, tm.AccessToken, UserHost);
 
             // 登录历史
-            WriteHistory(node, "节点鉴权", true, $"[{node.Name}/{node.Code}]鉴权成功 " + di.ToJson(false, false, false));
+            WriteHistory(node, "节点鉴权", true, $"[{node.Name}/{node.Code}]鉴权成功 " + inf.ToJson(false, false, false));
 
             var rs = new LoginResponse
             {
@@ -165,7 +165,7 @@ namespace Stardust.Server.Controllers
         /// <param name="node"></param>
         /// <param name="ps"></param>
         /// <returns></returns>
-        private Node CheckNode(Node node, NodeInfo di)
+        private Node CheckNode(Node node, NodeInfo di, String productCode)
         {
             // 校验唯一编码，防止客户端拷贝配置
             var uuid = di.UUID;
@@ -184,6 +184,11 @@ namespace Stardust.Server.Controllers
             if (!diskid.IsNullOrEmpty() && diskid != node.DiskID)
             {
                 WriteHistory(node, "登录校验", false, $"磁盘序列号不符！{diskid}!={node.DiskID}");
+                return null;
+            }
+            if (!node.ProductCode.IsNullOrEmpty() && !productCode.IsNullOrEmpty() && !node.ProductCode.EqualIgnoreCase(productCode))
+            {
+                WriteHistory(node, "登录校验", false, $"产品编码不符！{productCode}!={node.ProductCode}");
                 return null;
             }
 
@@ -218,7 +223,7 @@ namespace Stardust.Server.Controllers
             if (!IsMatchWhiteIP(set.WhiteIP, ip)) throw new ApiException(13, "非法来源，禁止注册");
 
             var di = inf.Node;
-            var code = BuildCode(di);
+            var code = BuildCode(di, inf.ProductCode);
             if (code.IsNullOrEmpty()) code = Rand.NextString(8);
             if (node == null) node = Node.FindByCode(code);
 
@@ -286,18 +291,20 @@ namespace Stardust.Server.Controllers
             return false;
         }
 
-        private String BuildCode(NodeInfo di)
+        private String BuildCode(NodeInfo di, String productCode)
         {
             var set = Setting.Current;
             //var uid = $"{di.UUID}@{di.MachineGuid}@{di.Macs}";
-            var ss = (set.NodeCodeFormula + "").Split(new[] { '(', ')' });
+            var ss = (set.NodeCodeFormula + "").Split('(', ')');
             if (ss.Length >= 2)
             {
                 var uid = ss[1];
+                uid = uid.Replace("{ProductCode}", productCode);
                 foreach (var pi in di.GetType().GetProperties())
                 {
                     uid = uid.Replace($"{{{pi.Name}}}", pi.GetValue(di) + "");
                 }
+                if (uid.Contains("{") || uid.Contains("}")) XTrace.WriteLine("节点编码公式有误，存在未解析变量，uid={0}", uid);
                 if (!uid.IsNullOrEmpty())
                 {
                     // 使用产品类别加密一下，确保不同类别有不同编码
