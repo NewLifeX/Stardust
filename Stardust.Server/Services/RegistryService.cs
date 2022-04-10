@@ -144,7 +144,8 @@ namespace Stardust.Server.Services
                 if (!url.StartsWithIgnoreCase("http://", "https://"))
                 {
                     var ss = svc.Address.Split(',');
-                    url = ss[0] + url.EnsureStart("/");
+                    var uri = new Uri(new Uri(ss[0]), url);
+                    url = uri.ToString();
                 }
 
                 var http = _tracer.CreateHttpClient();
