@@ -36,6 +36,10 @@ namespace Stardust.Data
         [Map(__.AppId, typeof(App), "Id")]
         public String AppName => App?.Name;
 
+        /// <summary>服务</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public Service Service => Extends.Get(nameof(Service), k => Service.FindById(ServiceId));
+
         /// <summary>节点</summary>
         [XmlIgnore, ScriptIgnore, IgnoreDataMember]
         public Node Node => Extends.Get(nameof(Node), k => Node.FindByID(NodeId));

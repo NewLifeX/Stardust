@@ -1,12 +1,8 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
-using NewLife;
+﻿using NewLife;
+using NewLife.Data;
 using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Data;
-using Stardust.Data.Configs;
 
 namespace Stardust.Server.Services
 {
@@ -15,6 +11,7 @@ namespace Stardust.Server.Services
     {
         #region 属性
         private TimerX _timer;
+        private TimerX _timer2;
         private readonly ITracer _tracer;
         #endregion
 
@@ -26,6 +23,7 @@ namespace Stardust.Server.Services
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _timer = new TimerX(CheckOnline, null, 5_000, 30_000) { Async = true };
+            _timer2 = new TimerX(CheckHealth, null, 5_000, 60_000) { Async = true };
 
             return Task.CompletedTask;
         }
@@ -33,6 +31,7 @@ namespace Stardust.Server.Services
         public Task StopAsync(CancellationToken cancellationToken)
         {
             _timer.TryDispose();
+            _timer2.TryDispose();
 
             return Task.CompletedTask;
         }
@@ -69,6 +68,42 @@ namespace Stardust.Server.Services
             {
                 var rs = AppService.ClearExpire(TimeSpan.FromDays(7));
                 var rs2 = AppConsume.ClearExpire(TimeSpan.FromSeconds(sessionTimeout));
+            }
+        }
+
+        private async Task CheckHealth(Object state)
+        {
+            using var span = _tracer?.NewSpan(nameof(CheckHealth));
+            var client = _tracer.CreateHttpClient();
+
+            var page = new PageParameter { PageSize = 1000 };
+            while (true)
+            {
+                var list = AppService.Search(-1, -1, true, null, page);
+                if (list.Count == 0) break;
+
+                foreach (var svc in list)
+                {
+                    if (!svc.Enable || svc.Address.IsNullOrEmpty()) continue;
+
+                    var url = svc.Service?.HealthCheck;
+                    if (url.IsNullOrEmpty()) continue;
+
+                    try
+                    {
+                        var ss = svc.Address.Split(';');
+                        url = ss[0] + url.EnsureStart("/");
+                        XTrace.WriteLine("HealthCheck: {0}", url);
+
+                        await client.GetStringAsync(url);
+
+                        svc.LastCheck = DateTime.Now;
+                        svc.Update();
+                    }
+                    catch { }
+                }
+
+                page.PageIndex++;
             }
         }
 

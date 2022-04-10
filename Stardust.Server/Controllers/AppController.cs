@@ -288,70 +288,15 @@ namespace Stardust.Server.Controllers
 
         [ApiFilter]
         [HttpPost(nameof(RegisterService))]
-        public AppService RegisterService([FromBody] PublishServiceInfo service)
+        public AppService RegisterService([FromBody] PublishServiceInfo model)
         {
             var app = _app;
-            var info = GetService(service.ServiceName);
+            var info = GetService(model.ServiceName);
 
-            // 单例部署服务，每个节点只有一个实例，使用本地IP作为唯一标识，无需进程ID，减少应用服务关联数
-            var clientId = service.ClientId;
-            if (info.Singleton && !clientId.IsNullOrEmpty())
-            {
-                var p = clientId.IndexOf('@');
-                if (p > 0) clientId = clientId[..p];
-            }
-
-            // 所有服务
-            var services = AppService.FindAllByService(info.Id);
-            var isNew = false;
-            var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == clientId);
-            if (svc == null)
-            {
-                svc = new AppService
-                {
-                    AppId = app.Id,
-                    ServiceId = info.Id,
-                    ServiceName = service.ServiceName,
-                    Client = clientId,
-
-                    CreateIP = UserHost,
-                };
-                services.Add(svc);
-
-                isNew = true;
-                WriteHistory("RegisterService", true, $"注册服务[{service.ServiceName}] {service.ClientId}", clientId);
-            }
-
-            // 节点信息
-            var olt = AppOnline.GetOrAddClient(service.ClientId);
-            if (olt != null) svc.NodeId = olt.NodeId;
-
-            // 作用域
-            svc.Scope = AppRule.CheckScope(-1, UserHost, clientId);
-
-            // 地址处理。本地任意地址，更换为IP地址
-            var ip = service.IP;
-            if (ip.IsNullOrEmpty()) ip = clientId;
-            if (ip.IsNullOrEmpty()) ip = UserHost;
-            var addrs = service.Address
-                ?.Replace("://*", $"://{ip}")
-                .Replace("://0.0.0.0", $"://{ip}")
-                .Replace("://[::]", $"://{ip}");
-
-            svc.Enable = app.AutoActive;
-            svc.PingCount++;
-            svc.Tag = service.Tag;
-            svc.Version = service.Version;
-            svc.Address = addrs;
-
-            svc.Save();
-
-            if (!service.Health.IsNullOrEmpty()) info.HealthCheck = service.Health;
-            info.Providers = services.Count;
-            info.Save();
+            var svc = _registryService.RegisterService(app, info, model, UserHost, out var changed);
 
             // 发布消息通知消费者
-            if (isNew)
+            if (changed)
             {
                 _registryService.NotifyConsumers(info, "registry/register", app + "");
             }
@@ -361,40 +306,15 @@ namespace Stardust.Server.Controllers
 
         [ApiFilter]
         [HttpPost(nameof(UnregisterService))]
-        public AppService UnregisterService([FromBody] PublishServiceInfo service)
+        public AppService UnregisterService([FromBody] PublishServiceInfo model)
         {
             var app = _app;
-            var info = GetService(service.ServiceName);
+            var info = GetService(model.ServiceName);
 
-            // 单例部署服务，每个节点只有一个实例，使用本地IP作为唯一标识，无需进程ID，减少应用服务关联数
-            var clientId = service.ClientId;
-            if (info.Singleton && !clientId.IsNullOrEmpty())
-            {
-                var p = clientId.IndexOf('@');
-                if (p > 0) clientId = clientId[..p];
-            }
-
-            // 所有服务
-            var services = AppService.FindAllByService(info.Id);
-            var flag = false;
-            var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == clientId);
-            if (svc != null)
-            {
-                //svc.Delete();
-                svc.Enable = false;
-                svc.Update();
-
-                services.Remove(svc);
-
-                flag = true;
-                WriteHistory("UnregisterService", true, $"服务[{service.ServiceName}]下线 {svc.Client}", svc.Client);
-            }
-
-            info.Providers = services.Count;
-            info.Save();
+            var svc = _registryService.UnregisterService(app, info, model, UserHost, out var changed);
 
             // 发布消息通知消费者
-            if (flag)
+            if (changed)
             {
                 _registryService.NotifyConsumers(info, "registry/unregister", app + "");
             }
@@ -445,26 +365,7 @@ namespace Stardust.Server.Controllers
             info.Consumers = consumes.Count;
             info.Save();
 
-            // 该服务所有生产
-            var services = AppService.FindAllByService(info.Id);
-            services = services.Where(e => e.Enable).ToList();
-
-            // 匹配minversion和tag
-            services = services.Where(e => e.Match(model.MinVersion, svc.Scope, model.Tag?.Split(","))).ToList();
-
-            return services.Select(e => new ServiceModel
-            {
-                ServiceName = e.ServiceName,
-                DisplayName = info.DisplayName,
-                Client = e.Client,
-                Version = e.Version,
-                Address = e.Address,
-                Scope = e.Scope,
-                Tag = e.Tag,
-                Weight = e.Weight,
-                CreateTime = e.CreateTime,
-                UpdateTime = e.UpdateTime,
-            }).ToArray();
+            return _registryService.ResolveService(info, model, svc.Scope);
         }
 
         [ApiFilter]
@@ -483,7 +384,7 @@ namespace Stardust.Server.Controllers
         {
             var hi = AppHistory.Create(_app, action, success, remark, Environment.MachineName, ip ?? UserHost);
             hi.Client = clientId ?? _clientId;
-            hi.Insert();
+            hi.SaveAsync();
         }
         #endregion
     }

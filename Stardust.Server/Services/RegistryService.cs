@@ -1,6 +1,7 @@
 ﻿using NewLife;
 using NewLife.Log;
 using Stardust.Data;
+using Stardust.Data.Configs;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Models;
@@ -51,6 +52,172 @@ namespace Stardust.Server.Services
             }
 
             return null;
+        }
+
+        public AppService RegisterService(App app, Service service, PublishServiceInfo model, String ip, out Boolean changed)
+        {
+            // 单例部署服务，每个节点只有一个实例，使用本地IP作为唯一标识，无需进程ID，减少应用服务关联数
+            var clientId = model.ClientId;
+            if (service.Singleton && !clientId.IsNullOrEmpty())
+            {
+                var p = clientId.IndexOf('@');
+                if (p > 0) clientId = clientId[..p];
+            }
+
+            // 所有服务
+            var services = AppService.FindAllByService(service.Id);
+            changed = false;
+            var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == clientId);
+            if (svc == null)
+            {
+                svc = new AppService
+                {
+                    AppId = app.Id,
+                    ServiceId = service.Id,
+                    ServiceName = model.ServiceName,
+                    Client = clientId,
+
+                    CreateIP = ip,
+                };
+                services.Add(svc);
+
+                changed = true;
+                WriteHistory(app, "RegisterService", true, $"注册服务[{model.ServiceName}] {model.ClientId}", clientId);
+            }
+            else
+            {
+                if (!svc.Enable)
+                {
+                    svc.Enable = app.AutoActive;
+
+                    if (svc.Enable) changed = true;
+                }
+            }
+
+            // 节点信息
+            var olt = AppOnline.GetOrAddClient(model.ClientId);
+            if (olt != null) svc.NodeId = olt.NodeId;
+
+            // 作用域
+            svc.Scope = AppRule.CheckScope(-1, ip, clientId);
+
+            // 地址处理。本地任意地址，更换为IP地址
+            var serverAddress = model.IP;
+            if (serverAddress.IsNullOrEmpty()) serverAddress = clientId;
+            if (serverAddress.IsNullOrEmpty()) serverAddress = ip;
+            var addrs = model.Address
+                ?.Replace("://*", $"://{serverAddress}")
+                .Replace("://0.0.0.0", $"://{serverAddress}")
+                .Replace("://[::]", $"://{serverAddress}");
+
+            svc.Enable = app.AutoActive;
+            svc.PingCount++;
+            svc.Tag = model.Tag;
+            svc.Version = model.Version;
+            svc.Address = addrs;
+
+            svc.Save();
+
+            if (!model.Health.IsNullOrEmpty()) service.HealthCheck = model.Health;
+            service.Providers = services.Count;
+            service.Save();
+
+            // 如果有改变，异步监测健康状况
+            if (changed && !service.HealthCheck.IsNullOrEmpty() && svc.LastCheck.AddMinutes(2) < DateTime.Now)
+            {
+                _ = Task.Run(() => DoHealthCheck(service, svc));
+            }
+
+            return svc;
+        }
+
+        async void DoHealthCheck(Service service, AppService svc)
+        {
+            try
+            {
+                var ss = svc.Address.Split(';');
+                var url = ss[0] + service.HealthCheck.EnsureStart("/");
+                XTrace.WriteLine("HealthCheck: {0}", url);
+
+                var http = _tracer.CreateHttpClient();
+                await http.GetStringAsync(url);
+
+                svc.LastCheck = DateTime.Now;
+
+                svc.Update();
+            }
+            catch { }
+        }
+
+        public AppService UnregisterService(App app, Service info, PublishServiceInfo model, String ip, out Boolean changed)
+        {
+            // 单例部署服务，每个节点只有一个实例，使用本地IP作为唯一标识，无需进程ID，减少应用服务关联数
+            var clientId = model.ClientId;
+            if (info.Singleton && !clientId.IsNullOrEmpty())
+            {
+                var p = clientId.IndexOf('@');
+                if (p > 0) clientId = clientId[..p];
+            }
+
+            // 所有服务
+            var services = AppService.FindAllByService(info.Id);
+            changed = false;
+            var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == clientId);
+            if (svc != null)
+            {
+                //svc.Delete();
+                svc.Enable = false;
+                svc.Update();
+
+                services.Remove(svc);
+
+                changed = true;
+                WriteHistory(app, "UnregisterService", true, $"服务[{model.ServiceName}]下线 {svc.Client}", svc.Client, ip);
+            }
+
+            info.Providers = services.Count;
+            info.Save();
+
+            return svc;
+        }
+
+        public ServiceModel[] ResolveService(Service service, ConsumeServiceInfo model, String scope)
+        {
+            var list = new List<ServiceModel>();
+            var tags = model.Tag?.Split(",");
+
+            // 该服务所有生产
+            var services = AppService.FindAllByService(service.Id);
+            foreach (var item in services)
+            {
+                // 启用，匹配规则，没有健康监测或最近五分钟有监测
+                if (item.Enable && item.Match(model.MinVersion, scope, tags) &&
+                    (item.LastCheck.AddMinutes(5) > DateTime.Now || (item.Service?.HealthCheck).IsNullOrEmpty()))
+                {
+                    list.Add(new ServiceModel
+                    {
+                        ServiceName = item.ServiceName,
+                        DisplayName = service.DisplayName,
+                        Client = item.Client,
+                        Version = item.Version,
+                        Address = item.Address,
+                        Scope = item.Scope,
+                        Tag = item.Tag,
+                        Weight = item.Weight,
+                        CreateTime = item.CreateTime,
+                        UpdateTime = item.UpdateTime,
+                    });
+                }
+            }
+
+            return list.ToArray();
+        }
+
+        private void WriteHistory(App app, String action, Boolean success, String remark, String clientId, String ip = null)
+        {
+            var hi = AppHistory.Create(app, action, success, remark, Environment.MachineName, ip);
+            hi.Client = clientId;
+            hi.SaveAsync();
         }
 
         public AppOnline GetOrAddOnline(App app, String version, String ip, String clientId, String token)
