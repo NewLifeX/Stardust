@@ -131,6 +131,8 @@
       <Column Name="DisplayName" DataType="String" Description="显示名" />
       <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="Singleton" DataType="Boolean" Description="单例。每个节点只部署一个实例，此时使用本地IP作为唯一标识，便于设置权重" />
+      <Column Name="HealthCheck" DataType="String" Description="健康监测。健康监测接口地址，定时检测" />
       <Column Name="Providers" DataType="Int32" Description="提供者" />
       <Column Name="Consumers" DataType="Int32" Description="消费者" />
       <Column Name="Remark" DataType="String" Length="500" Description="内容" />
@@ -154,14 +156,15 @@
       <Column Name="ServiceId" DataType="Int32" Description="服务" />
       <Column Name="ServiceName" DataType="String" Description="服务名" />
       <Column Name="Client" DataType="String" Description="客户端。IP加端口" />
+      <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="PingCount" DataType="Int32" Description="心跳" />
       <Column Name="Version" DataType="String" Description="版本" />
       <Column Name="Address" DataType="String" Length="500" Description="地址。服务地址，如http://127.0.0.1:1234" />
-      <Column Name="HealthCheck" DataType="String" Description="健康监测" />
       <Column Name="Weight" DataType="Int32" Description="权重" />
       <Column Name="Scope" DataType="String" Description="作用域。根据配置中心应用规则计算，禁止跨域访问服务" />
       <Column Name="Tag" DataType="String" Description="标签。带有指定特性，逗号分隔" />
+      <Column Name="LastCheck" DataType="DateTime" Description="监测时间。最后一次监测时间，一段时间监测失败后禁用" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
       <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
@@ -179,6 +182,7 @@
       <Column Name="ServiceId" DataType="Int32" Description="服务" />
       <Column Name="ServiceName" DataType="String" Description="服务名" />
       <Column Name="Client" DataType="String" Description="客户端。IP加进程" />
+      <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="PingCount" DataType="Int32" Description="心跳" />
       <Column Name="MinVersion" DataType="String" Description="最低版本。要求返回大于等于该版本的服务提供者" />

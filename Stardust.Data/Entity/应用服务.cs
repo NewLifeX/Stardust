@@ -61,6 +61,14 @@ namespace Stardust.Data
         [BindColumn("Client", "客户端。IP加端口", "")]
         public String Client { get => _Client; set { if (OnPropertyChanging("Client", value)) { _Client = value; OnPropertyChanged("Client"); } } }
 
+        private Int32 _NodeId;
+        /// <summary>节点。节点服务器</summary>
+        [DisplayName("节点")]
+        [Description("节点。节点服务器")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("NodeId", "节点。节点服务器", "")]
+        public Int32 NodeId { get => _NodeId; set { if (OnPropertyChanging("NodeId", value)) { _NodeId = value; OnPropertyChanged("NodeId"); } } }
+
         private Boolean _Enable;
         /// <summary>启用</summary>
         [DisplayName("启用")]
@@ -93,14 +101,6 @@ namespace Stardust.Data
         [BindColumn("Address", "地址。服务地址，如http://127.0.0.1:1234", "")]
         public String Address { get => _Address; set { if (OnPropertyChanging("Address", value)) { _Address = value; OnPropertyChanged("Address"); } } }
 
-        private String _HealthCheck;
-        /// <summary>健康监测</summary>
-        [DisplayName("健康监测")]
-        [Description("健康监测")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("HealthCheck", "健康监测", "")]
-        public String HealthCheck { get => _HealthCheck; set { if (OnPropertyChanging("HealthCheck", value)) { _HealthCheck = value; OnPropertyChanged("HealthCheck"); } } }
-
         private Int32 _Weight;
         /// <summary>权重</summary>
         [DisplayName("权重")]
@@ -124,6 +124,14 @@ namespace Stardust.Data
         [DataObjectField(false, false, true, 50)]
         [BindColumn("Tag", "标签。带有指定特性，逗号分隔", "")]
         public String Tag { get => _Tag; set { if (OnPropertyChanging("Tag", value)) { _Tag = value; OnPropertyChanged("Tag"); } } }
+
+        private DateTime _LastCheck;
+        /// <summary>监测时间。最后一次监测时间，一段时间监测失败后禁用</summary>
+        [DisplayName("监测时间")]
+        [Description("监测时间。最后一次监测时间，一段时间监测失败后禁用")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("LastCheck", "监测时间。最后一次监测时间，一段时间监测失败后禁用", "")]
+        public DateTime LastCheck { get => _LastCheck; set { if (OnPropertyChanging("LastCheck", value)) { _LastCheck = value; OnPropertyChanged("LastCheck"); } } }
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
@@ -165,14 +173,15 @@ namespace Stardust.Data
                     case "ServiceId": return _ServiceId;
                     case "ServiceName": return _ServiceName;
                     case "Client": return _Client;
+                    case "NodeId": return _NodeId;
                     case "Enable": return _Enable;
                     case "PingCount": return _PingCount;
                     case "Version": return _Version;
                     case "Address": return _Address;
-                    case "HealthCheck": return _HealthCheck;
                     case "Weight": return _Weight;
                     case "Scope": return _Scope;
                     case "Tag": return _Tag;
+                    case "LastCheck": return _LastCheck;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
                     case "UpdateTime": return _UpdateTime;
@@ -188,14 +197,15 @@ namespace Stardust.Data
                     case "ServiceId": _ServiceId = value.ToInt(); break;
                     case "ServiceName": _ServiceName = Convert.ToString(value); break;
                     case "Client": _Client = Convert.ToString(value); break;
+                    case "NodeId": _NodeId = value.ToInt(); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "PingCount": _PingCount = value.ToInt(); break;
                     case "Version": _Version = Convert.ToString(value); break;
                     case "Address": _Address = Convert.ToString(value); break;
-                    case "HealthCheck": _HealthCheck = Convert.ToString(value); break;
                     case "Weight": _Weight = value.ToInt(); break;
                     case "Scope": _Scope = Convert.ToString(value); break;
                     case "Tag": _Tag = Convert.ToString(value); break;
+                    case "LastCheck": _LastCheck = value.ToDateTime(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
                     case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
@@ -224,6 +234,9 @@ namespace Stardust.Data
             /// <summary>客户端。IP加端口</summary>
             public static readonly Field Client = FindByName("Client");
 
+            /// <summary>节点。节点服务器</summary>
+            public static readonly Field NodeId = FindByName("NodeId");
+
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
 
@@ -236,9 +249,6 @@ namespace Stardust.Data
             /// <summary>地址。服务地址，如http://127.0.0.1:1234</summary>
             public static readonly Field Address = FindByName("Address");
 
-            /// <summary>健康监测</summary>
-            public static readonly Field HealthCheck = FindByName("HealthCheck");
-
             /// <summary>权重</summary>
             public static readonly Field Weight = FindByName("Weight");
 
@@ -247,6 +257,9 @@ namespace Stardust.Data
 
             /// <summary>标签。带有指定特性，逗号分隔</summary>
             public static readonly Field Tag = FindByName("Tag");
+
+            /// <summary>监测时间。最后一次监测时间，一段时间监测失败后禁用</summary>
+            public static readonly Field LastCheck = FindByName("LastCheck");
 
             /// <summary>创建时间</summary>
             public static readonly Field CreateTime = FindByName("CreateTime");
@@ -278,6 +291,9 @@ namespace Stardust.Data
             /// <summary>客户端。IP加端口</summary>
             public const String Client = "Client";
 
+            /// <summary>节点。节点服务器</summary>
+            public const String NodeId = "NodeId";
+
             /// <summary>启用</summary>
             public const String Enable = "Enable";
 
@@ -290,9 +306,6 @@ namespace Stardust.Data
             /// <summary>地址。服务地址，如http://127.0.0.1:1234</summary>
             public const String Address = "Address";
 
-            /// <summary>健康监测</summary>
-            public const String HealthCheck = "HealthCheck";
-
             /// <summary>权重</summary>
             public const String Weight = "Weight";
 
@@ -301,6 +314,9 @@ namespace Stardust.Data
 
             /// <summary>标签。带有指定特性，逗号分隔</summary>
             public const String Tag = "Tag";
+
+            /// <summary>监测时间。最后一次监测时间，一段时间监测失败后禁用</summary>
+            public const String LastCheck = "LastCheck";
 
             /// <summary>创建时间</summary>
             public const String CreateTime = "CreateTime";

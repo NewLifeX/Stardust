@@ -11,6 +11,11 @@ namespace Stardust.Web.Areas.Registry.Controllers
     [Menu(0, false)]
     public class AppServiceController : EntityController<AppService>
     {
+        static AppServiceController()
+        {
+            ListFields.RemoveField("ServiceId");
+        }
+
         protected override IEnumerable<AppService> Search(Pager p)
         {
             PageSetting.EnableAdd = false;

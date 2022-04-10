@@ -61,6 +61,14 @@ namespace Stardust.Data
         [BindColumn("Client", "客户端。IP加进程", "")]
         public String Client { get => _Client; set { if (OnPropertyChanging("Client", value)) { _Client = value; OnPropertyChanged("Client"); } } }
 
+        private Int32 _NodeId;
+        /// <summary>节点。节点服务器</summary>
+        [DisplayName("节点")]
+        [Description("节点。节点服务器")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("NodeId", "节点。节点服务器", "")]
+        public Int32 NodeId { get => _NodeId; set { if (OnPropertyChanging("NodeId", value)) { _NodeId = value; OnPropertyChanged("NodeId"); } } }
+
         private Boolean _Enable;
         /// <summary>启用</summary>
         [DisplayName("启用")]
@@ -141,6 +149,7 @@ namespace Stardust.Data
                     case "ServiceId": return _ServiceId;
                     case "ServiceName": return _ServiceName;
                     case "Client": return _Client;
+                    case "NodeId": return _NodeId;
                     case "Enable": return _Enable;
                     case "PingCount": return _PingCount;
                     case "MinVersion": return _MinVersion;
@@ -161,6 +170,7 @@ namespace Stardust.Data
                     case "ServiceId": _ServiceId = value.ToInt(); break;
                     case "ServiceName": _ServiceName = Convert.ToString(value); break;
                     case "Client": _Client = Convert.ToString(value); break;
+                    case "NodeId": _NodeId = value.ToInt(); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "PingCount": _PingCount = value.ToInt(); break;
                     case "MinVersion": _MinVersion = Convert.ToString(value); break;
@@ -193,6 +203,9 @@ namespace Stardust.Data
 
             /// <summary>客户端。IP加进程</summary>
             public static readonly Field Client = FindByName("Client");
+
+            /// <summary>节点。节点服务器</summary>
+            public static readonly Field NodeId = FindByName("NodeId");
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
@@ -238,6 +251,9 @@ namespace Stardust.Data
 
             /// <summary>客户端。IP加进程</summary>
             public const String Client = "Client";
+
+            /// <summary>节点。节点服务器</summary>
+            public const String NodeId = "NodeId";
 
             /// <summary>启用</summary>
             public const String Enable = "Enable";

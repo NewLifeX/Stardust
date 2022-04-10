@@ -6,6 +6,7 @@ using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using Stardust.Data.Nodes;
 using XCode;
 using XCode.Membership;
 
@@ -34,6 +35,14 @@ namespace Stardust.Data
         /// <summary>应用</summary>
         [Map(__.AppId, typeof(App), "Id")]
         public String AppName => App?.Name;
+
+        /// <summary>节点</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public Node Node => Extends.Get(nameof(Node), k => Node.FindByID(NodeId));
+
+        /// <summary>节点</summary>
+        [Map(__.NodeId)]
+        public String NodeName => Node?.Name;
         #endregion
 
         #region 扩展查询

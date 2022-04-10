@@ -293,10 +293,18 @@ namespace Stardust.Server.Controllers
             var app = _app;
             var info = GetService(service.ServiceName);
 
+            // 单例部署服务，每个节点只有一个实例，使用本地IP作为唯一标识，无需进程ID，减少应用服务关联数
+            var clientId = service.ClientId;
+            if (info.Singleton && !clientId.IsNullOrEmpty())
+            {
+                var p = clientId.IndexOf('@');
+                if (p > 0) clientId = clientId[..p];
+            }
+
             // 所有服务
             var services = AppService.FindAllByService(info.Id);
             var isNew = false;
-            var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == service.ClientId);
+            var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == clientId);
             if (svc == null)
             {
                 svc = new AppService
@@ -304,22 +312,26 @@ namespace Stardust.Server.Controllers
                     AppId = app.Id,
                     ServiceId = info.Id,
                     ServiceName = service.ServiceName,
-                    Client = service.ClientId,
+                    Client = clientId,
 
                     CreateIP = UserHost,
                 };
                 services.Add(svc);
 
                 isNew = true;
-                WriteHistory("RegisterService", true, $"注册服务[{service.ServiceName}] {service.ClientId}", service.ClientId);
+                WriteHistory("RegisterService", true, $"注册服务[{service.ServiceName}] {service.ClientId}", clientId);
             }
 
+            // 节点信息
+            var olt = AppOnline.GetOrAddClient(service.ClientId);
+            if (olt != null) svc.NodeId = olt.NodeId;
+
             // 作用域
-            svc.Scope = AppRule.CheckScope(-1, UserHost, service.ClientId);
+            svc.Scope = AppRule.CheckScope(-1, UserHost, clientId);
 
             // 地址处理。本地任意地址，更换为IP地址
             var ip = service.IP;
-            if (ip.IsNullOrEmpty()) ip = service.ClientId.Substring(null, ":");
+            if (ip.IsNullOrEmpty()) ip = clientId;
             if (ip.IsNullOrEmpty()) ip = UserHost;
             var addrs = service.Address
                 ?.Replace("://*", $"://{ip}")
@@ -331,10 +343,10 @@ namespace Stardust.Server.Controllers
             svc.Tag = service.Tag;
             svc.Version = service.Version;
             svc.Address = addrs;
-            svc.HealthCheck = service.Health;
 
             svc.Save();
 
+            if (!service.Health.IsNullOrEmpty()) info.HealthCheck = service.Health;
             info.Providers = services.Count;
             info.Save();
 
@@ -354,10 +366,18 @@ namespace Stardust.Server.Controllers
             var app = _app;
             var info = GetService(service.ServiceName);
 
+            // 单例部署服务，每个节点只有一个实例，使用本地IP作为唯一标识，无需进程ID，减少应用服务关联数
+            var clientId = service.ClientId;
+            if (info.Singleton && !clientId.IsNullOrEmpty())
+            {
+                var p = clientId.IndexOf('@');
+                if (p > 0) clientId = clientId[..p];
+            }
+
             // 所有服务
             var services = AppService.FindAllByService(info.Id);
             var flag = false;
-            var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == service.ClientId);
+            var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == clientId);
             if (svc != null)
             {
                 //svc.Delete();
@@ -409,6 +429,10 @@ namespace Stardust.Server.Controllers
 
                 WriteHistory("ResolveService", true, $"消费服务[{model.ServiceName}] {model.ToJson()}", svc.Client);
             }
+
+            // 节点信息
+            var olt = AppOnline.GetOrAddClient(model.ClientId);
+            if (olt != null) svc.NodeId = olt.NodeId;
 
             // 作用域
             svc.Scope = AppRule.CheckScope(-1, UserHost, model.ClientId);

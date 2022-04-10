@@ -59,6 +59,22 @@ namespace Stardust.Data
         [BindColumn("Enable", "启用", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
+        private Boolean _Singleton;
+        /// <summary>单例。每个节点只部署一个实例，此时使用本地IP作为唯一标识，便于设置权重</summary>
+        [DisplayName("单例")]
+        [Description("单例。每个节点只部署一个实例，此时使用本地IP作为唯一标识，便于设置权重")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Singleton", "单例。每个节点只部署一个实例，此时使用本地IP作为唯一标识，便于设置权重", "")]
+        public Boolean Singleton { get => _Singleton; set { if (OnPropertyChanging("Singleton", value)) { _Singleton = value; OnPropertyChanged("Singleton"); } } }
+
+        private String _HealthCheck;
+        /// <summary>健康监测。健康监测接口地址，定时检测</summary>
+        [DisplayName("健康监测")]
+        [Description("健康监测。健康监测接口地址，定时检测")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("HealthCheck", "健康监测。健康监测接口地址，定时检测", "")]
+        public String HealthCheck { get => _HealthCheck; set { if (OnPropertyChanging("HealthCheck", value)) { _HealthCheck = value; OnPropertyChanged("HealthCheck"); } } }
+
         private Int32 _Providers;
         /// <summary>提供者</summary>
         [DisplayName("提供者")]
@@ -163,6 +179,8 @@ namespace Stardust.Data
                     case "DisplayName": return _DisplayName;
                     case "Category": return _Category;
                     case "Enable": return _Enable;
+                    case "Singleton": return _Singleton;
+                    case "HealthCheck": return _HealthCheck;
                     case "Providers": return _Providers;
                     case "Consumers": return _Consumers;
                     case "Remark": return _Remark;
@@ -186,6 +204,8 @@ namespace Stardust.Data
                     case "DisplayName": _DisplayName = Convert.ToString(value); break;
                     case "Category": _Category = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
+                    case "Singleton": _Singleton = value.ToBoolean(); break;
+                    case "HealthCheck": _HealthCheck = Convert.ToString(value); break;
                     case "Providers": _Providers = value.ToInt(); break;
                     case "Consumers": _Consumers = value.ToInt(); break;
                     case "Remark": _Remark = Convert.ToString(value); break;
@@ -221,6 +241,12 @@ namespace Stardust.Data
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
+
+            /// <summary>单例。每个节点只部署一个实例，此时使用本地IP作为唯一标识，便于设置权重</summary>
+            public static readonly Field Singleton = FindByName("Singleton");
+
+            /// <summary>健康监测。健康监测接口地址，定时检测</summary>
+            public static readonly Field HealthCheck = FindByName("HealthCheck");
 
             /// <summary>提供者</summary>
             public static readonly Field Providers = FindByName("Providers");
@@ -275,6 +301,12 @@ namespace Stardust.Data
 
             /// <summary>启用</summary>
             public const String Enable = "Enable";
+
+            /// <summary>单例。每个节点只部署一个实例，此时使用本地IP作为唯一标识，便于设置权重</summary>
+            public const String Singleton = "Singleton";
+
+            /// <summary>健康监测。健康监测接口地址，定时检测</summary>
+            public const String HealthCheck = "HealthCheck";
 
             /// <summary>提供者</summary>
             public const String Providers = "Providers";
