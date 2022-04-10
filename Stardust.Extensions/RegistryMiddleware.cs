@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,14 +25,6 @@ namespace Stardust.Extensions
         {
             _next = next ?? throw new ArgumentNullException(nameof(next));
             _serviceProvider = serviceProvider;
-
-            // 加载本地缓存
-            var file = NewLife.Setting.Current.DataPath.CombinePath("server_address.config").GetBasePath();
-            if (File.Exists(file))
-            {
-                var str = File.ReadAllText(file);
-                if (!str.IsNullOrEmpty()) UserUri = new Uri(str);
-            }
         }
 
         /// <summary>调用</summary>
@@ -70,13 +61,6 @@ namespace Stardust.Extensions
             {
                 app.SetServerAddress(url);
             }
-
-            try
-            {
-                var file = NewLife.Setting.Current.DataPath.CombinePath("server_address.config").GetBasePath();
-                File.WriteAllText(file, url);
-            }
-            catch { }
         }
     }
 }

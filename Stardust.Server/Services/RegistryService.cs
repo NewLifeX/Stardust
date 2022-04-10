@@ -16,7 +16,7 @@ namespace Stardust.Server.Services
         public RegistryService(AppQueueService queue, ITracer tracer)
         {
             _queue = queue;
-            this._tracer = tracer;
+            _tracer = tracer;
         }
 
         public AppOnline Register(App app, AppModel inf, String ip, String clientId, String token)
@@ -116,37 +116,53 @@ namespace Stardust.Server.Services
             svc.Version = model.Version;
             svc.Address = addrs;
 
+            // 无需健康监测，直接标记为健康
+            if (!model.Health.IsNullOrEmpty()) service.HealthAddress = model.Health;
+            if (!service.HealthCheck || service.HealthAddress.IsNullOrEmpty()) svc.Healthy = true;
+
             svc.Save();
 
-            if (!model.Health.IsNullOrEmpty()) service.HealthCheck = model.Health;
             service.Providers = services.Count;
             service.Save();
 
             // 如果有改变，异步监测健康状况
-            if (changed && !service.HealthCheck.IsNullOrEmpty() && svc.LastCheck.AddMinutes(2) < DateTime.Now)
+            if (changed && service.HealthCheck && !service.HealthAddress.IsNullOrEmpty())
             {
-                _ = Task.Run(() => DoHealthCheck(service, svc));
+                _ = Task.Run(() => HealthCheck(svc));
             }
 
             return svc;
         }
 
-        async void DoHealthCheck(Service service, AppService svc)
+        public async Task HealthCheck(AppService svc)
         {
+            var url = svc.Service?.HealthAddress;
+            if (url.IsNullOrEmpty()) return;
+
             try
             {
-                var ss = svc.Address.Split(';');
-                var url = ss[0] + service.HealthCheck.EnsureStart("/");
-                XTrace.WriteLine("HealthCheck: {0}", url);
+                if (!url.StartsWithIgnoreCase("http://", "https://"))
+                {
+                    var ss = svc.Address.Split(',');
+                    url = ss[0] + url.EnsureStart("/");
+                }
 
                 var http = _tracer.CreateHttpClient();
                 await http.GetStringAsync(url);
 
-                svc.LastCheck = DateTime.Now;
-
-                svc.Update();
+                svc.Healthy = true;
             }
-            catch { }
+            catch (Exception ex)
+            {
+                svc.Healthy = false;
+
+                XTrace.WriteLine("HealthCheck: {0}", url);
+                XTrace.Log.Error(ex.Message);
+            }
+
+            svc.CheckTimes++;
+            svc.LastCheck = DateTime.Now;
+            svc.Update();
         }
 
         public AppService UnregisterService(App app, Service info, PublishServiceInfo model, String ip, out Boolean changed)
@@ -167,6 +183,7 @@ namespace Stardust.Server.Services
             {
                 //svc.Delete();
                 svc.Enable = false;
+                svc.Healthy = false;
                 svc.Update();
 
                 services.Remove(svc);
@@ -190,9 +207,8 @@ namespace Stardust.Server.Services
             var services = AppService.FindAllByService(service.Id);
             foreach (var item in services)
             {
-                // 启用，匹配规则，没有健康监测或最近五分钟有监测
-                if (item.Enable && item.Match(model.MinVersion, scope, tags) &&
-                    (item.LastCheck.AddMinutes(5) > DateTime.Now || (item.Service?.HealthCheck).IsNullOrEmpty()))
+                // 启用，匹配规则，健康
+                if (item.Enable && item.Healthy && item.Match(model.MinVersion, scope, tags))
                 {
                     list.Add(new ServiceModel
                     {

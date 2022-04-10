@@ -67,13 +67,21 @@ namespace Stardust.Data
         [BindColumn("Singleton", "单例。每个节点只部署一个实例，此时使用本地IP作为唯一标识，便于设置权重", "")]
         public Boolean Singleton { get => _Singleton; set { if (OnPropertyChanging("Singleton", value)) { _Singleton = value; OnPropertyChanged("Singleton"); } } }
 
-        private String _HealthCheck;
-        /// <summary>健康监测。健康监测接口地址，定时检测</summary>
+        private Boolean _HealthCheck;
+        /// <summary>健康监测。定时检测服务是否可用</summary>
         [DisplayName("健康监测")]
-        [Description("健康监测。健康监测接口地址，定时检测")]
+        [Description("健康监测。定时检测服务是否可用")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("HealthCheck", "健康监测。定时检测服务是否可用", "")]
+        public Boolean HealthCheck { get => _HealthCheck; set { if (OnPropertyChanging("HealthCheck", value)) { _HealthCheck = value; OnPropertyChanged("HealthCheck"); } } }
+
+        private String _HealthAddress;
+        /// <summary>监测地址。健康监测接口地址，相对地址或绝对地址</summary>
+        [DisplayName("监测地址")]
+        [Description("监测地址。健康监测接口地址，相对地址或绝对地址")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("HealthCheck", "健康监测。健康监测接口地址，定时检测", "")]
-        public String HealthCheck { get => _HealthCheck; set { if (OnPropertyChanging("HealthCheck", value)) { _HealthCheck = value; OnPropertyChanged("HealthCheck"); } } }
+        [BindColumn("HealthAddress", "监测地址。健康监测接口地址，相对地址或绝对地址", "")]
+        public String HealthAddress { get => _HealthAddress; set { if (OnPropertyChanging("HealthAddress", value)) { _HealthAddress = value; OnPropertyChanged("HealthAddress"); } } }
 
         private Int32 _Providers;
         /// <summary>提供者</summary>
@@ -181,6 +189,7 @@ namespace Stardust.Data
                     case "Enable": return _Enable;
                     case "Singleton": return _Singleton;
                     case "HealthCheck": return _HealthCheck;
+                    case "HealthAddress": return _HealthAddress;
                     case "Providers": return _Providers;
                     case "Consumers": return _Consumers;
                     case "Remark": return _Remark;
@@ -205,7 +214,8 @@ namespace Stardust.Data
                     case "Category": _Category = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Singleton": _Singleton = value.ToBoolean(); break;
-                    case "HealthCheck": _HealthCheck = Convert.ToString(value); break;
+                    case "HealthCheck": _HealthCheck = value.ToBoolean(); break;
+                    case "HealthAddress": _HealthAddress = Convert.ToString(value); break;
                     case "Providers": _Providers = value.ToInt(); break;
                     case "Consumers": _Consumers = value.ToInt(); break;
                     case "Remark": _Remark = Convert.ToString(value); break;
@@ -245,8 +255,11 @@ namespace Stardust.Data
             /// <summary>单例。每个节点只部署一个实例，此时使用本地IP作为唯一标识，便于设置权重</summary>
             public static readonly Field Singleton = FindByName("Singleton");
 
-            /// <summary>健康监测。健康监测接口地址，定时检测</summary>
+            /// <summary>健康监测。定时检测服务是否可用</summary>
             public static readonly Field HealthCheck = FindByName("HealthCheck");
+
+            /// <summary>监测地址。健康监测接口地址，相对地址或绝对地址</summary>
+            public static readonly Field HealthAddress = FindByName("HealthAddress");
 
             /// <summary>提供者</summary>
             public static readonly Field Providers = FindByName("Providers");
@@ -305,8 +318,11 @@ namespace Stardust.Data
             /// <summary>单例。每个节点只部署一个实例，此时使用本地IP作为唯一标识，便于设置权重</summary>
             public const String Singleton = "Singleton";
 
-            /// <summary>健康监测。健康监测接口地址，定时检测</summary>
+            /// <summary>健康监测。定时检测服务是否可用</summary>
             public const String HealthCheck = "HealthCheck";
+
+            /// <summary>监测地址。健康监测接口地址，相对地址或绝对地址</summary>
+            public const String HealthAddress = "HealthAddress";
 
             /// <summary>提供者</summary>
             public const String Providers = "Providers";

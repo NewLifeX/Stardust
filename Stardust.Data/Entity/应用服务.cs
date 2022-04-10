@@ -125,6 +125,22 @@ namespace Stardust.Data
         [BindColumn("Tag", "标签。带有指定特性，逗号分隔", "")]
         public String Tag { get => _Tag; set { if (OnPropertyChanging("Tag", value)) { _Tag = value; OnPropertyChanged("Tag"); } } }
 
+        private Int32 _CheckTimes;
+        /// <summary>监测次数。健康监测次数</summary>
+        [DisplayName("监测次数")]
+        [Description("监测次数。健康监测次数")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("CheckTimes", "监测次数。健康监测次数", "")]
+        public Int32 CheckTimes { get => _CheckTimes; set { if (OnPropertyChanging("CheckTimes", value)) { _CheckTimes = value; OnPropertyChanged("CheckTimes"); } } }
+
+        private Boolean _Healthy;
+        /// <summary>健康。无需健康监测，或监测后服务可用</summary>
+        [DisplayName("健康")]
+        [Description("健康。无需健康监测，或监测后服务可用")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Healthy", "健康。无需健康监测，或监测后服务可用", "")]
+        public Boolean Healthy { get => _Healthy; set { if (OnPropertyChanging("Healthy", value)) { _Healthy = value; OnPropertyChanged("Healthy"); } } }
+
         private DateTime _LastCheck;
         /// <summary>监测时间。最后一次监测时间，一段时间监测失败后禁用</summary>
         [DisplayName("监测时间")]
@@ -181,6 +197,8 @@ namespace Stardust.Data
                     case "Weight": return _Weight;
                     case "Scope": return _Scope;
                     case "Tag": return _Tag;
+                    case "CheckTimes": return _CheckTimes;
+                    case "Healthy": return _Healthy;
                     case "LastCheck": return _LastCheck;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -205,6 +223,8 @@ namespace Stardust.Data
                     case "Weight": _Weight = value.ToInt(); break;
                     case "Scope": _Scope = Convert.ToString(value); break;
                     case "Tag": _Tag = Convert.ToString(value); break;
+                    case "CheckTimes": _CheckTimes = value.ToInt(); break;
+                    case "Healthy": _Healthy = value.ToBoolean(); break;
                     case "LastCheck": _LastCheck = value.ToDateTime(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -257,6 +277,12 @@ namespace Stardust.Data
 
             /// <summary>标签。带有指定特性，逗号分隔</summary>
             public static readonly Field Tag = FindByName("Tag");
+
+            /// <summary>监测次数。健康监测次数</summary>
+            public static readonly Field CheckTimes = FindByName("CheckTimes");
+
+            /// <summary>健康。无需健康监测，或监测后服务可用</summary>
+            public static readonly Field Healthy = FindByName("Healthy");
 
             /// <summary>监测时间。最后一次监测时间，一段时间监测失败后禁用</summary>
             public static readonly Field LastCheck = FindByName("LastCheck");
@@ -314,6 +340,12 @@ namespace Stardust.Data
 
             /// <summary>标签。带有指定特性，逗号分隔</summary>
             public const String Tag = "Tag";
+
+            /// <summary>监测次数。健康监测次数</summary>
+            public const String CheckTimes = "CheckTimes";
+
+            /// <summary>健康。无需健康监测，或监测后服务可用</summary>
+            public const String Healthy = "Healthy";
 
             /// <summary>监测时间。最后一次监测时间，一段时间监测失败后禁用</summary>
             public const String LastCheck = "LastCheck";

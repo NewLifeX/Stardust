@@ -12,11 +12,16 @@ namespace Stardust.Server.Services
         #region 属性
         private TimerX _timer;
         private TimerX _timer2;
+        private readonly RegistryService _registryService;
         private readonly ITracer _tracer;
         #endregion
 
         #region 构造
-        public OnlineService(ITracer tracer) => _tracer = tracer;
+        public OnlineService(RegistryService registryService, ITracer tracer)
+        {
+            _registryService = registryService;
+            _tracer = tracer;
+        }
         #endregion
 
         #region 方法
@@ -74,7 +79,6 @@ namespace Stardust.Server.Services
         private async Task CheckHealth(Object state)
         {
             using var span = _tracer?.NewSpan(nameof(CheckHealth));
-            var client = _tracer.CreateHttpClient();
 
             var page = new PageParameter { PageSize = 1000 };
             while (true)
@@ -86,21 +90,11 @@ namespace Stardust.Server.Services
                 {
                     if (!svc.Enable || svc.Address.IsNullOrEmpty()) continue;
 
-                    var url = svc.Service?.HealthCheck;
-                    if (url.IsNullOrEmpty()) continue;
+                    var service = svc.Service;
+                    var url = service?.HealthAddress;
+                    if (service == null || !service.HealthCheck || url.IsNullOrEmpty()) continue;
 
-                    try
-                    {
-                        var ss = svc.Address.Split(';');
-                        url = ss[0] + url.EnsureStart("/");
-                        XTrace.WriteLine("HealthCheck: {0}", url);
-
-                        await client.GetStringAsync(url);
-
-                        svc.LastCheck = DateTime.Now;
-                        svc.Update();
-                    }
-                    catch { }
+                    await _registryService.HealthCheck(svc);
                 }
 
                 page.PageIndex++;

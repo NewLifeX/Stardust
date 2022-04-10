@@ -1116,12 +1116,23 @@
         <tr>
             <td>HealthCheck</td>
             <td>健康监测</td>
+            <td>Boolean</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>定时检测服务是否可用</td>
+        </tr>
+
+        <tr>
+            <td>HealthAddress</td>
+            <td>监测地址</td>
             <td>String</td>
             <td>50</td>
             <td></td>
             <td></td>
             <td></td>
-            <td>健康监测接口地址，定时检测</td>
+            <td>健康监测接口地址，相对地址或绝对地址</td>
         </tr>
 
         <tr>
@@ -1403,6 +1414,28 @@
             <td></td>
             <td></td>
             <td>带有指定特性，逗号分隔</td>
+        </tr>
+
+        <tr>
+            <td>CheckTimes</td>
+            <td>监测次数</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>健康监测次数</td>
+        </tr>
+
+        <tr>
+            <td>Healthy</td>
+            <td>健康</td>
+            <td>Boolean</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>无需健康监测，或监测后服务可用</td>
         </tr>
 
         <tr>
