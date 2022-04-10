@@ -544,6 +544,31 @@ namespace Stardust
         #endregion
 
         #region 辅助
+        String _serverAddress;
+        /// <summary>
+        /// 设置服务地址
+        /// </summary>
+        /// <param name="serverAddress"></param>
+        public void SetServerAddress(String serverAddress)
+        {
+            if (serverAddress == null || serverAddress == _serverAddress) return;
+
+            var count = 0;
+            foreach (var service in _publishServices.Values.ToArray())
+            {
+                if (service.Address.IsNullOrEmpty() || service.Address.Contains("localhost") || service.AddressCallback != null )
+                {
+                    service.Address = serverAddress;
+                    count++;
+                }
+            }
+
+            WriteLog("设置服务地址为：{0}", serverAddress);
+
+            if (count > 0) _timer.SetNext(-1);
+
+            _serverAddress = serverAddress;
+        }
         #endregion
     }
 }

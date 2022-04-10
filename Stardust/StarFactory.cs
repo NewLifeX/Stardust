@@ -331,7 +331,7 @@ namespace Stardust
         /// <param name="minVersion">最小版本</param>
         /// <param name="tag">特性标签。只要包含该特性的服务提供者</param>
         /// <returns></returns>
-        public Task<String[]> ResolveAsync(String serviceName, String minVersion = null, String tag = null) => Service.ResolveAddressAsync(serviceName, minVersion, tag);
+        public Task<String[]> ResolveAddressAsync(String serviceName, String minVersion = null, String tag = null) => Service.ResolveAddressAsync(serviceName, minVersion, tag);
         #endregion
 
         #region 其它

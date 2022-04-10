@@ -85,7 +85,7 @@ namespace Stardust.Web
 
             Usewwwroot(app, env);
 
-            //app.UseStardust();
+            app.UseStardust();
             app.UseCube(env);
 
             app.UseEndpoints(endpoints =>

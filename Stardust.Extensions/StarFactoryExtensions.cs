@@ -49,14 +49,7 @@ namespace Microsoft.Extensions.DependencyInjection
             if (TracerMiddleware.Tracer == null) TracerMiddleware.Tracer = tracer;
             if (TracerMiddleware.Tracer != null) app.UseMiddleware<TracerMiddleware>();
 
-            //// 停止的时候移除服务
-            //var star = provider.GetRequiredService<StarFactory>();
-            //var lifetime = provider.GetRequiredService<IHostApplicationLifetime>();
-            //lifetime.ApplicationStopped.Register(() =>
-            //{
-            //    // 从注册中心释放服务提供者和消费者
-            //    star.Service.TryDispose();
-            //});
+            app.UseMiddleware<RegistryMiddleware>();
 
             return app;
         }
@@ -82,6 +75,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 try
                 {
                     if (address.IsNullOrEmpty()) address = StarSetting.Current.ServiceAddress;
+                    if (address.IsNullOrEmpty()) address = RegistryMiddleware.UserUri?.ToString();
                     if (address.IsNullOrEmpty())
                     {
                         var feature = app.ServerFeatures.Get<IServerAddressesFeature>();
@@ -112,14 +106,6 @@ namespace Microsoft.Extensions.DependencyInjection
 
                 // 从注册中心释放服务提供者和消费者
                 star.Service.TryDispose();
-                //try
-                //{
-                //    star.Service.Unregister(serviceName);
-                //}
-                //catch (Exception ex)
-                //{
-                //    XTrace.WriteException(ex);
-                //}
             });
 
             return app;
