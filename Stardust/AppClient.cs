@@ -352,6 +352,11 @@ namespace Stardust
 
                 StartTimer();
             }
+            else
+            {
+                // 如果服务已注册，则更新，用于更新服务地址等信息
+                _publishServices[service.ServiceName] = service;
+            }
         }
 
         /// <summary>创建服务对象，用于自定义需要，再通过RegisterAsync发布到注册中心</summary>
@@ -375,6 +380,10 @@ namespace Stardust
         }
 
         /// <summary>发布服务</summary>
+        /// <remarks>
+        /// 可以多次调用注册，用于更新服务地址和特性标签等信息。
+        /// 例如web应用，刚开始时可能并不知道自己的外部地址（域名和端口），有用户访问以后，即可得知并更新。
+        /// </remarks>
         /// <param name="serviceName">服务名</param>
         /// <param name="address">服务地址</param>
         /// <param name="tag">特性标签</param>
