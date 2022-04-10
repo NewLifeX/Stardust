@@ -65,8 +65,9 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="serviceName">服务名</param>
         /// <param name="address">服务地址</param>
         /// <param name="tag">特性标签</param>
+        /// <param name="health">健康监测接口地址</param>
         /// <returns></returns>
-        public static IApplicationBuilder RegisterService(this IApplicationBuilder app, String serviceName, String address = null, String tag = null)
+        public static IApplicationBuilder RegisterService(this IApplicationBuilder app, String serviceName, String address = null, String tag = null, String health = null)
         {
             var star = app.ApplicationServices.GetRequiredService<StarFactory>();
             if (star == null) throw new InvalidOperationException("未注册StarFactory，需要AddStardust注册。");
@@ -81,7 +82,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 try
                 {
                     if (address.IsNullOrEmpty()) address = StarSetting.Current.ServiceAddress;
-                    if (address.IsNullOrEmpty()) address = RegistryMiddleware.UserUri?.ToString();
+                    if (address.IsNullOrEmpty()) address = RegistryMiddleware.UserUri?.ToString().TrimEnd('/');
                     if (address.IsNullOrEmpty())
                     {
                         var feature = app.ServerFeatures.Get<IServerAddressesFeature>();
@@ -91,13 +92,13 @@ namespace Microsoft.Extensions.DependencyInjection
                         {
                             if (feature == null) throw new Exception("尘埃客户端未能取得本地服务地址。");
 
-                            star.Service?.Register(serviceName, () => feature?.Addresses.Join(), tag);
+                            star.Service?.Register(serviceName, () => feature?.Addresses.Join(), tag, health);
 
                             return;
                         }
                     }
 
-                    star.Service?.RegisterAsync(serviceName, address, tag).Wait();
+                    star.Service?.RegisterAsync(serviceName, address, tag, health).Wait();
                 }
                 catch (Exception ex)
                 {

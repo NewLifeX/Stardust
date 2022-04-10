@@ -96,7 +96,7 @@ namespace Stardust.Web
             });
 
             // 发布服务到星尘注册中心，需要指定服务名
-            app.RegisterService("StarWeb", null, env.EnvironmentName);
+            app.RegisterService("StarWeb", null, env.EnvironmentName, "/cube/info");
 
             //// 从星尘注册中心消费服务，指定需要消费的服务名
             //app.ConsumeService("StarWeb");

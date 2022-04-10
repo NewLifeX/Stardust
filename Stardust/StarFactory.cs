@@ -323,8 +323,9 @@ namespace Stardust
         /// <param name="serviceName">服务名</param>
         /// <param name="address">服务地址</param>
         /// <param name="tag">特性标签</param>
+        /// <param name="health">健康监测接口地址</param>
         /// <returns></returns>
-        public Task<PublishServiceInfo> RegisterAsync(String serviceName, String address, String tag = null) => Service.RegisterAsync(serviceName, address, tag);
+        public Task<PublishServiceInfo> RegisterAsync(String serviceName, String address, String tag = null, String health = null) => Service.RegisterAsync(serviceName, address, tag, health);
 
         /// <summary>消费得到服务地址信息</summary>
         /// <param name="serviceName">服务名</param>

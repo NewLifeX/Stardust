@@ -387,14 +387,16 @@ namespace Stardust
         /// <param name="serviceName">服务名</param>
         /// <param name="address">服务地址</param>
         /// <param name="tag">特性标签</param>
+        /// <param name="health">健康监测接口地址</param>
         /// <returns></returns>
-        public async Task<PublishServiceInfo> RegisterAsync(String serviceName, String address, String tag = null)
+        public async Task<PublishServiceInfo> RegisterAsync(String serviceName, String address, String tag = null, String health = null)
         {
             if (address == null) throw new ArgumentNullException(nameof(address));
 
             var service = CreatePublishService(serviceName);
             service.Address = address;
             service.Tag = tag;
+            service.Health = health;
 
             var rs = await RegisterAsync(service);
             WriteLog("注册完成 {0}", rs.ToJson());
@@ -406,14 +408,16 @@ namespace Stardust
         /// <param name="serviceName">服务名</param>
         /// <param name="addressCallback">服务地址回调</param>
         /// <param name="tag">特性标签</param>
+        /// <param name="health">健康监测接口地址</param>
         /// <returns></returns>
-        public PublishServiceInfo Register(String serviceName, Func<String> addressCallback, String tag = null)
+        public PublishServiceInfo Register(String serviceName, Func<String> addressCallback, String tag = null, String health = null)
         {
             if (addressCallback == null) throw new ArgumentNullException(nameof(addressCallback));
 
             var service = CreatePublishService(serviceName);
             service.AddressCallback = addressCallback;
             service.Tag = tag;
+            service.Health = health;
 
             AddService(service);
 

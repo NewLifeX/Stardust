@@ -306,8 +306,6 @@ namespace Stardust.Server.Controllers
                     ServiceName = service.ServiceName,
                     Client = service.ClientId,
 
-                    //Enable = app.AutoActive,
-
                     CreateIP = UserHost,
                 };
                 services.Add(svc);
@@ -333,6 +331,7 @@ namespace Stardust.Server.Controllers
             svc.Tag = service.Tag;
             svc.Version = service.Version;
             svc.Address = addrs;
+            svc.HealthCheck = service.Health;
 
             svc.Save();
 

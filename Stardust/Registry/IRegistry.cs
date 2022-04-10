@@ -18,16 +18,18 @@ namespace Stardust.Registry
         /// <summary>发布服务</summary>
         /// <param name="serviceName">服务名</param>
         /// <param name="addressCallback">服务地址</param>
+        /// <param name="health">健康监测接口地址</param>
         /// <param name="tag">特性标签</param>
         /// <returns></returns>
-        PublishServiceInfo Register(String serviceName, Func<String> addressCallback, String tag = null);
+        PublishServiceInfo Register(String serviceName, Func<String> addressCallback, String tag = null, String health = null);
 
         /// <summary>发布服务</summary>
         /// <param name="serviceName">服务名</param>
         /// <param name="address">服务地址</param>
         /// <param name="tag">特性标签</param>
+        /// <param name="health">健康监测接口地址</param>
         /// <returns></returns>
-        Task<PublishServiceInfo> RegisterAsync(String serviceName, String address, String tag = null);
+        Task<PublishServiceInfo> RegisterAsync(String serviceName, String address, String tag = null, String health = null);
 
         /// <summary>发布服务</summary>
         /// <param name="service">应用服务</param>

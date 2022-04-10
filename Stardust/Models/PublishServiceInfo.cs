@@ -21,7 +21,7 @@ namespace Stardust.Models
         public String Address { get; set; }
 
         /// <summary>健康检测地址</summary>
-        public String Heath{ get; set; }
+        public String Health{ get; set; }
 
         /// <summary>标签。带有指定特性，逗号分隔</summary>
         public String Tag { get; set; }
