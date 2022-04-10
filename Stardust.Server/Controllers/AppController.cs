@@ -224,6 +224,7 @@ namespace Stardust.Server.Controllers
             {
                 XTrace.WriteLine("WebSocket异常 app={0} ip={1}", app, ip);
                 XTrace.WriteException(ex);
+                WriteHistory("WebSocket断开", false, ex.ToString(), clientId, ip);
             }
             finally
             {
