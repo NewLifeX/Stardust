@@ -43,11 +43,17 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns></returns>
         public static IApplicationBuilder UseStardust(this IApplicationBuilder app)
         {
-            var provider = app.ApplicationServices;
-            var tracer = provider.GetRequiredService<ITracer>();
+            // 如果已引入追踪中间件，则这里不再引入
+            if (!app.Properties.ContainsKey(nameof(TracerMiddleware)))
+            {
+                var provider = app.ApplicationServices;
+                var tracer = provider.GetRequiredService<ITracer>();
 
-            if (TracerMiddleware.Tracer == null) TracerMiddleware.Tracer = tracer;
-            if (TracerMiddleware.Tracer != null) app.UseMiddleware<TracerMiddleware>();
+                if (TracerMiddleware.Tracer == null) TracerMiddleware.Tracer = tracer;
+                if (TracerMiddleware.Tracer != null) app.UseMiddleware<TracerMiddleware>();
+
+                app.Properties[nameof(TracerMiddleware)] = typeof(TracerMiddleware);
+            }
 
             app.UseMiddleware<RegistryMiddleware>();
 
