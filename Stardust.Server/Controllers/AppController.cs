@@ -125,7 +125,7 @@ namespace Stardust.Server.Controllers
             WriteHistory("WebSocket连接", true, socket.State + "", clientId);
 
             var olt = AppOnline.GetOrAddClient(clientId);
-            if(olt != null)
+            if (olt != null)
             {
                 olt.WebSocket = true;
                 olt.SaveAsync();
@@ -365,7 +365,7 @@ namespace Stardust.Server.Controllers
                 services.Remove(svc);
 
                 flag = true;
-                app.WriteHistory("UnregisterService", true, $"服务[{service.ServiceName}]下线 {svc.Client}", UserHost, svc.Client);
+                WriteHistory("UnregisterService", true, $"服务[{service.ServiceName}]下线 {svc.Client}", svc.Client);
             }
 
             info.Providers = services.Count;
@@ -405,7 +405,7 @@ namespace Stardust.Server.Controllers
                 };
                 consumes.Add(svc);
 
-                app.WriteHistory("ResolveService", true, $"消费服务[{model.ServiceName}] {model.ToJson()}", UserHost, svc.Client);
+                WriteHistory("ResolveService", true, $"消费服务[{model.ServiceName}] {model.ToJson()}", svc.Client);
             }
 
             // 作用域

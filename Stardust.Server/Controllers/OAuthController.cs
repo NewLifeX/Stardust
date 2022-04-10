@@ -13,9 +13,6 @@ namespace Stardust.Server.Controllers
     [Route("[controller]/[action]")]
     public class OAuthController : ControllerBase
     {
-        /// <summary>用户主机</summary>
-        public String UserHost => HttpContext.GetUserHost();
-
         private readonly TokenService _tokenService;
         public OAuthController(TokenService tokenService) => _tokenService = tokenService;
 
@@ -29,55 +26,65 @@ namespace Stardust.Server.Controllers
             var ip = HttpContext.GetUserHost();
             var clientId = model.ClientId;
 
-            // 密码模式
-            if (model.grant_type == "password")
+            try
             {
-                var app = _tokenService.Authorize(model.UserName, model.Password, set.AutoRegister);
-
-                // 更新应用信息
-                app.LastLogin = DateTime.Now;
-                app.LastIP = ip;
-                app.SaveAsync();
-
-                app.WriteHistory("Authorize", true, model.UserName, UserHost, clientId);
-
-                var tokenModel = _tokenService.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
-
-                AppOnline.UpdateOnline(app, clientId, ip, tokenModel.AccessToken);
-
-                return tokenModel;
-            }
-            // 刷新令牌
-            else if (model.grant_type == "refresh_token")
-            {
-                var (jwt, ex) = _tokenService.DecodeTokenWithError(model.refresh_token, set.TokenSecret);
-
-                // 验证应用
-                var app = App.FindByName(jwt?.Subject);
-                if (app == null || !app.Enable)
+                // 密码模式
+                if (model.grant_type == "password")
                 {
-                    if (ex == null) ex = new ApiException(403, $"无效应用[{jwt.Subject}]");
+                    var app = _tokenService.Authorize(model.UserName, model.Password, set.AutoRegister);
+
+                    // 更新应用信息
+                    app.LastLogin = DateTime.Now;
+                    app.LastIP = ip;
+                    app.SaveAsync();
+
+                    app.WriteHistory("Authorize", true, model.UserName, ip, clientId);
+
+                    var tokenModel = _tokenService.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
+
+                    AppOnline.UpdateOnline(app, clientId, ip, tokenModel.AccessToken);
+
+                    return tokenModel;
                 }
-
-                if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
-
-                if (ex != null)
+                // 刷新令牌
+                else if (model.grant_type == "refresh_token")
                 {
-                    app.WriteHistory("RefreshToken", false, ex.ToString(), UserHost, clientId);
-                    throw ex;
+                    var (jwt, ex) = _tokenService.DecodeTokenWithError(model.refresh_token, set.TokenSecret);
+
+                    // 验证应用
+                    var app = App.FindByName(jwt?.Subject);
+                    if (app == null || !app.Enable)
+                    {
+                        if (ex == null) ex = new ApiException(403, $"无效应用[{jwt.Subject}]");
+                    }
+
+                    if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
+
+                    if (ex != null)
+                    {
+                        app.WriteHistory("RefreshToken", false, ex.ToString(), ip, clientId);
+                        throw ex;
+                    }
+
+                    app.WriteHistory("RefreshToken", true, model.refresh_token, ip, clientId);
+
+                    var tokenModel = _tokenService.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
+
+                    AppOnline.UpdateOnline(app, clientId, ip, tokenModel.AccessToken);
+
+                    return tokenModel;
                 }
-
-                app.WriteHistory("RefreshToken", true, model.refresh_token, UserHost, clientId);
-
-                var tokenModel = _tokenService.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
-
-                AppOnline.UpdateOnline(app, clientId, ip, tokenModel.AccessToken);
-
-                return tokenModel;
+                else
+                {
+                    throw new NotSupportedException($"未支持 grant_type={model.grant_type}");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                throw new NotSupportedException($"未支持 grant_type={model.grant_type}");
+                var app = App.FindByName(model.UserName);
+                app?.WriteHistory("Authorize", false, ex.ToString(), ip, clientId);
+
+                throw;
             }
         }
 
