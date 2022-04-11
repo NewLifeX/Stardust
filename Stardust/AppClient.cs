@@ -474,20 +474,28 @@ namespace Stardust
                 WriteLog("消费服务 {0}", service.ToJson());
 
                 StartTimer();
+
+                // 消费即使报错，也要往下走，借助缓存
+                try
+                {
+                    var models = await ResolveAsync(service);
+                    _consumes[serviceName] = models;
+
+                    SaveConsumeServices(_consumes);
+                }
+                catch (Exception ex)
+                {
+                    WriteLog("消费服务[{0}]报错：{1}", serviceName, ex.Message);
+                }
             }
             else
             {
                 _consumeServices[serviceName] = service;
             }
 
-            if (_consumes.TryGetValue(serviceName, out var models)) return models;
+            if (_consumes.TryGetValue(serviceName, out var models2)) return models2;
 
-            models = await ResolveAsync(service);
-            _consumes[serviceName] = models;
-
-            SaveConsumeServices(_consumes);
-
-            return models;
+            return null;
         }
 
         /// <summary>绑定消费服务名到指定事件，服务改变时通知外部</summary>
