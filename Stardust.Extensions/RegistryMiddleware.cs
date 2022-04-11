@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using NewLife;
+using NewLife.Log;
 using NewLife.Web;
 using Stardust.Registry;
 using HttpContext = Microsoft.AspNetCore.Http.HttpContext;
@@ -54,6 +55,16 @@ namespace Stardust.Extensions
 
             UserUri = new Uri(url);
             _inited = true;
+
+            // 保存外部访问地址
+            var set = StarSetting.Current;
+            if (url != set.AccessAddress)
+            {
+                XTrace.WriteLine("更新访问地址[{0}]", url);
+
+                set.AccessAddress = url;
+                set.Save();
+            }
 
             // 更新地址
             var registry = _serviceProvider.GetService<IRegistry>();

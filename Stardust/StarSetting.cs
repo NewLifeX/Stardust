@@ -25,9 +25,17 @@ namespace Stardust
         [Description("应用密钥")]
         public String Secret { get; set; }
 
-        /// <summary>本地服务地址。用于提交注册中心，默认为空，自动识别</summary>
-        [Description("本地服务地址。用于提交注册中心，默认为空，自动识别")]
+        /// <summary>服务地址。人工设定，用于提交注册中心，默认为空，自动识别</summary>
+        [Description("服务地址。人工设定，用于提交注册中心，默认为空，自动识别")]
         public String ServiceAddress { get; set; }
+
+        /// <summary>本地地址。启动时本机监听地址，用于判断是否有改变</summary>
+        [Description("本地地址。启动时本机监听地址，用于判断是否有改变")]
+        public String LocalAddress { get; set; }
+
+        /// <summary>外部地址。当本地地址没有改变时的外部访问地址，用于无ServiceAddress时，替代提交注册中心</summary>
+        [Description("外部地址。当本地地址没有改变时的外部访问地址，用于无ServiceAddress时，替代提交注册中心")]
+        public String AccessAddress { get; set; }
 
         /// <summary>跟踪采样周期。默认60s</summary>
         [Description("跟踪采样周期。默认60s")]

@@ -81,18 +81,27 @@ namespace Microsoft.Extensions.DependencyInjection
                 DefaultSpan.Current = null;
                 try
                 {
-                    if (address.IsNullOrEmpty()) address = StarSetting.Current.ServiceAddress;
-                    if (address.IsNullOrEmpty()) address = RegistryMiddleware.UserUri?.ToString().TrimEnd('/');
+                    /*
+                     * 服务地址获取逻辑：
+                     * 1，外部传参 address
+                     * 2，配置指定 ServiceAddress
+                     * 3，获取监听地址，若未改变，则使用 AccessAddress
+                     * 4，若监听地址已改变，则使用监听地址
+                     * 5，若监听地址获取失败，则注册回调
+                     */
+                    var set = StarSetting.Current;
+                    if (address.IsNullOrEmpty()) address = set.ServiceAddress;
+                    //if (address.IsNullOrEmpty()) address = RegistryMiddleware.UserUri?.ToString().TrimEnd('/');
                     if (address.IsNullOrEmpty())
                     {
                         var feature = app.ServerFeatures.Get<IServerAddressesFeature>();
-                        address = feature?.Addresses.Join();
+                        address = ResolveAddress(feature);
 
                         if (address.IsNullOrEmpty())
                         {
                             if (feature == null) throw new Exception("尘埃客户端未能取得本地服务地址。");
 
-                            star.Service?.Register(serviceName, () => feature?.Addresses.Join(), tag, health);
+                            star.Service?.Register(serviceName, () => ResolveAddress(feature), tag, health);
 
                             return;
                         }
@@ -116,6 +125,36 @@ namespace Microsoft.Extensions.DependencyInjection
             });
 
             return app;
+        }
+
+        static String ResolveAddress(IServerAddressesFeature feature)
+        {
+            // 获取监听地址
+            var address = feature?.Addresses.Join();
+            if (address.IsNullOrEmpty()) return null;
+
+            var set = StarSetting.Current;
+
+            // 若监听地址未改变，则使用 AccessAddress ，否则清空 AccessAddress 并返回监听地址
+            if (address == set.LocalAddress)
+            {
+                if (!set.AccessAddress.IsNullOrEmpty())
+                {
+                    XTrace.WriteLine("监听地址[{0}]未发生改变，继续使用访问地址[{1}]作为服务地址，提交注册中心", address, set.AccessAddress);
+
+                    address = set.AccessAddress;
+                }
+            }
+            else
+            {
+                XTrace.WriteLine("监听地址[{0}]发生了改变，清空访问地址[{1}]", address, set.AccessAddress);
+
+                set.LocalAddress = address;
+                set.AccessAddress = null;
+                set.Save();
+            }
+
+            return address;
         }
     }
 }
