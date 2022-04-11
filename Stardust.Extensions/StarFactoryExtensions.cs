@@ -108,6 +108,7 @@ namespace Microsoft.Extensions.DependencyInjection
                     }
 
                     star.Service?.RegisterAsync(serviceName, address, tag, health).Wait();
+                    star.Service.ResolveAsync(serviceName);
                 }
                 catch (Exception ex)
                 {

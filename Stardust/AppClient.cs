@@ -56,6 +56,16 @@ namespace Stardust
         /// <summary>实例化</summary>
         public AppClient()
         {
+            // 加载已保存数据
+            var dic = LoadConsumeServicese();
+            if (dic != null && dic.Count > 0)
+            {
+                foreach (var item in dic)
+                {
+                    _consumes[item.Key] = item.Value;
+                }
+            }
+
             try
             {
                 var executing = AssemblyX.Create(Assembly.GetExecutingAssembly());
@@ -464,19 +474,20 @@ namespace Stardust
                 WriteLog("消费服务 {0}", service.ToJson());
 
                 StartTimer();
-
-                var models = await ResolveAsync(service);
-                _consumes[serviceName] = models;
-
-                return models;
             }
             else
             {
                 _consumeServices[serviceName] = service;
-                if (_consumes.TryGetValue(serviceName, out var models)) return models;
-
-                return null;
             }
+
+            if (_consumes.TryGetValue(serviceName, out var models)) return models;
+
+            models = await ResolveAsync(service);
+            _consumes[serviceName] = models;
+
+            SaveConsumeServices(_consumes);
+
+            return models;
         }
 
         /// <summary>绑定消费服务名到指定事件，服务改变时通知外部</summary>
@@ -525,8 +536,36 @@ namespace Stardust
                             (action as Action<String, ServiceModel[]>)?.Invoke(svc.ServiceName, ms);
                         }
                     }
+
+                    SaveConsumeServices(_consumes);
                 }
             }
+        }
+
+        IDictionary<String, ServiceModel[]> LoadConsumeServicese()
+        {
+            var file = NewLife.Setting.Current.DataPath.CombinePath("star_services.json").GetBasePath();
+            if (!File.Exists(file)) return null;
+
+            try
+            {
+                var json = File.ReadAllText(file);
+                return json.ToJsonEntity<IDictionary<String, ServiceModel[]>>();
+            }
+            catch { return null; }
+        }
+
+        void SaveConsumeServices(IDictionary<String, ServiceModel[]> models)
+        {
+            try
+            {
+                var file = NewLife.Setting.Current.DataPath.CombinePath("star_services.json").GetBasePath();
+                file.EnsureDirectory(true);
+
+                var json = models.ToJson(true);
+                File.WriteAllText(file, json);
+            }
+            catch { }
         }
         #endregion
 
@@ -560,7 +599,7 @@ namespace Stardust
             var count = 0;
             foreach (var service in _publishServices.Values.ToArray())
             {
-                if (service.Address.IsNullOrEmpty() || service.Address.Contains("localhost") || service.Address.Contains("//*") || service.AddressCallback != null )
+                if (service.Address.IsNullOrEmpty() || service.Address.Contains("localhost") || service.Address.Contains("//*") || service.AddressCallback != null)
                 {
                     service.Address = serverAddress;
                     count++;
