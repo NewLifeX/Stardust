@@ -149,6 +149,14 @@ namespace Stardust.Data
         [BindColumn("LastCheck", "监测时间。最后一次监测时间，一段时间监测失败后禁用", "")]
         public DateTime LastCheck { get => _LastCheck; set { if (OnPropertyChanging("LastCheck", value)) { _LastCheck = value; OnPropertyChanged("LastCheck"); } } }
 
+        private String _CheckResult;
+        /// <summary>监测结果。检测结果，错误信息等</summary>
+        [DisplayName("监测结果")]
+        [Description("监测结果。检测结果，错误信息等")]
+        [DataObjectField(false, false, true, 2000)]
+        [BindColumn("CheckResult", "监测结果。检测结果，错误信息等", "")]
+        public String CheckResult { get => _CheckResult; set { if (OnPropertyChanging("CheckResult", value)) { _CheckResult = value; OnPropertyChanged("CheckResult"); } } }
+
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
         [DisplayName("创建时间")]
@@ -200,6 +208,7 @@ namespace Stardust.Data
                     case "CheckTimes": return _CheckTimes;
                     case "Healthy": return _Healthy;
                     case "LastCheck": return _LastCheck;
+                    case "CheckResult": return _CheckResult;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
                     case "UpdateTime": return _UpdateTime;
@@ -226,6 +235,7 @@ namespace Stardust.Data
                     case "CheckTimes": _CheckTimes = value.ToInt(); break;
                     case "Healthy": _Healthy = value.ToBoolean(); break;
                     case "LastCheck": _LastCheck = value.ToDateTime(); break;
+                    case "CheckResult": _CheckResult = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
                     case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
@@ -286,6 +296,9 @@ namespace Stardust.Data
 
             /// <summary>监测时间。最后一次监测时间，一段时间监测失败后禁用</summary>
             public static readonly Field LastCheck = FindByName("LastCheck");
+
+            /// <summary>监测结果。检测结果，错误信息等</summary>
+            public static readonly Field CheckResult = FindByName("CheckResult");
 
             /// <summary>创建时间</summary>
             public static readonly Field CreateTime = FindByName("CreateTime");
@@ -349,6 +362,9 @@ namespace Stardust.Data
 
             /// <summary>监测时间。最后一次监测时间，一段时间监测失败后禁用</summary>
             public const String LastCheck = "LastCheck";
+
+            /// <summary>监测结果。检测结果，错误信息等</summary>
+            public const String CheckResult = "CheckResult";
 
             /// <summary>创建时间</summary>
             public const String CreateTime = "CreateTime";

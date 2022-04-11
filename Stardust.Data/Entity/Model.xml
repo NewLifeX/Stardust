@@ -168,6 +168,7 @@
       <Column Name="CheckTimes" DataType="Int32" Description="监测次数。健康监测次数" />
       <Column Name="Healthy" DataType="Boolean" Description="健康。无需健康监测，或监测后服务可用" />
       <Column Name="LastCheck" DataType="DateTime" Description="监测时间。最后一次监测时间，一段时间监测失败后禁用" />
+      <Column Name="CheckResult" DataType="String" Length="2000" Description="监测结果。检测结果，错误信息等" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
       <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />

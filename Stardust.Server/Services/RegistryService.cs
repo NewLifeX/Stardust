@@ -149,13 +149,15 @@ namespace Stardust.Server.Services
                 }
 
                 var http = _tracer.CreateHttpClient();
-                await http.GetStringAsync(url);
+                var rs = await http.GetStringAsync(url);
 
                 svc.Healthy = true;
+                svc.CheckResult = rs;
             }
             catch (Exception ex)
             {
                 svc.Healthy = false;
+                svc.CheckResult = ex.ToString();
 
                 XTrace.WriteLine("HealthCheck: {0}", url);
                 XTrace.Log.Error(ex.Message);
