@@ -44,7 +44,7 @@ namespace Stardust.Data.Nodes
         public Node Node => Extends.Get(nameof(Node), k => Node.FindByID(NodeID));
 
         /// <summary>节点</summary>
-        [Map(__.NodeID)]
+        [Map(__.NodeID, typeof(Node), "ID")]
         public String NodeName => Node + "";
 
         /// <summary>省份</summary>
@@ -105,15 +105,11 @@ namespace Stardust.Data.Nodes
             if (success != null) exp &= _.Success == success;
 
             // 主键带有时间戳
-            var flow = Meta.Factory.Snow;
-            if (flow != null)
-                exp &= _.Id.Between(start, end, flow);
-            else
-                exp &= _.CreateTime.Between(start, end);
+            exp &= _.Id.Between(start, end, Meta.Factory.Snow);
 
             if (!key.IsNullOrEmpty())
             {
-                exp &= (_.Name.Contains(key) | _.Remark.Contains(key) | _.CreateIP.Contains(key));
+                exp &= _.Name.Contains(key) | _.Remark.Contains(key) | _.CreateIP == key;
             }
 
             return FindAll(exp, page);

@@ -14,13 +14,19 @@ namespace Stardust.Web.Areas.Nodes.Controllers
     {
         static NodeHistoryController()
         {
-            ListFields.RemoveField("ID");
+            ListFields.RemoveField("ID", "ProvinceName", "Version", "CompileTime");
+            ListFields.AddListField("Remark", null, "Success");
 
             {
                 var df = ListFields.GetField("TraceId") as ListField;
                 df.DisplayName = "跟踪";
                 df.Url = StarHelper.BuildUrl("{TraceId}");
                 df.DataVisible = (e, f) => e is NodeHistory entity && !entity.TraceId.IsNullOrEmpty();
+            }
+
+            {
+                var df = ListFields.GetField("Action") as ListField;
+                df.Url = "?nodeId={NodeId}&action={Action}";
             }
         }
 
