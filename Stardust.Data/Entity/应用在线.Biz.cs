@@ -141,7 +141,7 @@ namespace Stardust.Data
             if (nodeId >= 0) exp &= _.NodeId == nodeId;
             if (!category.IsNullOrEmpty()) exp &= _.Category == category;
             exp &= _.UpdateTime.Between(start, end);
-            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.ProcessName.Contains(key);
+            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Client.Contains(key) | _.Version.Contains(key) | _.ProcessName.Contains(key);
 
             return FindAll(exp, page);
         }
@@ -229,7 +229,7 @@ namespace Stardust.Data
                 AppId = app.Id;
                 Name = app.ToString();
                 Category = app.Category;
-                if (info.Version.IsNullOrEmpty()) app.Version = info.Version;
+                if (info != null && !info.Version.IsNullOrEmpty()) app.Version = info.Version;
             }
 
             if (info != null)

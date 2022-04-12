@@ -122,7 +122,7 @@ namespace Stardust.Data.Monitors
             if (!kind.IsNullOrEmpty()) exp &= _.Kind == kind;
             if (enable != null) exp &= _.Enable == enable;
             exp &= _.UpdateTime.Between(start, end);
-            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Rules.Contains(key) | _.CreateIP.Contains(key) | _.UpdateUser.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
+            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.DisplayName.Contains(key) | _.Rules.Contains(key) | _.CreateIP.Contains(key) | _.UpdateUser.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
 
             return FindAll(exp, page);
         }
