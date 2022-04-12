@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
 using NewLife.Data;
 using NewLife.Web;
@@ -18,8 +15,9 @@ namespace Stardust.Web.Areas.Registry.Controllers
         {
             LogOnChange = true;
 
-            ListFields.RemoveField("Secret", "WebHook");
+            ListFields.RemoveField("Secret", "WebHook", "AllowControlNodes", "Remark");
             ListFields.RemoveCreateField();
+            ListFields.RemoveUpdateField();
 
             {
                 var df = ListFields.AddListField("Online", "LastLogin");
