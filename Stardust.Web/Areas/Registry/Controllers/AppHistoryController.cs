@@ -22,6 +22,16 @@ namespace Stardust.Web.Areas.Registry.Controllers
                 df.Url = StarHelper.BuildUrl("{TraceId}");
                 df.DataVisible = (e, f) => e is AppHistory entity && !entity.TraceId.IsNullOrEmpty();
             }
+
+            {
+                var df = ListFields.GetField("Client") as ListField;
+                df.Url = "?appId={AppId}&client={Client}";
+            }
+
+            {
+                var df = ListFields.GetField("Action") as ListField;
+                df.Url = "?appId={AppId}&action={Action}";
+            }
         }
 
         protected override IEnumerable<AppHistory> Search(Pager p)
@@ -30,13 +40,15 @@ namespace Stardust.Web.Areas.Registry.Controllers
             //PageSetting.EnableNavbar = false;
 
             var appId = p["appId"].ToInt(-1);
+            var client = p["client"];
+            var action = p["action"];
 
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            if (appId > 0 && start.Year < 2000) p["dtStart"] = (start = DateTime.Today).ToFullString();
+            //if (appId > 0 && start.Year < 2000) p["dtStart"] = (start = DateTime.Today).ToString("yyyy-MM-dd");
 
-            return AppHistory.Search(appId, start, end, p["Q"], p);
+            return AppHistory.Search(appId, client, action, start, end, p["Q"], p);
         }
     }
 }

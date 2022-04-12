@@ -71,19 +71,24 @@ namespace Stardust.Data
         #region 高级查询
         /// <summary>查询</summary>
         /// <param name="appId"></param>
+        /// <param name="client"></param>
+        /// <param name="action"></param>
         /// <param name="start"></param>
         /// <param name="end"></param>
         /// <param name="key"></param>
         /// <param name="page"></param>
         /// <returns></returns>
-        public static IList<AppHistory> Search(Int32 appId, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<AppHistory> Search(Int32 appId, String client, String action, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (appId >= 0) exp &= _.AppId == appId;
+            if (!client.IsNullOrEmpty()) exp &= _.Client == client;
+            if (!action.IsNullOrEmpty()) exp &= _.Action == action;
+
             exp &= _.Id.Between(start, end, Meta.Factory.Snow);
 
-            if (!key.IsNullOrEmpty()) exp &= _.Action == key;
+            if (!key.IsNullOrEmpty()) exp &= _.Action == key | _.Client.StartsWith(key);
 
             return FindAll(exp, page);
         }
