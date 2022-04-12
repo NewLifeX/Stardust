@@ -229,6 +229,7 @@ namespace Stardust.Data
                 AppId = app.Id;
                 Name = app.ToString();
                 Category = app.Category;
+                if (info.Version.IsNullOrEmpty()) app.Version = info.Version;
             }
 
             if (info != null)

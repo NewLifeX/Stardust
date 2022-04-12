@@ -234,7 +234,10 @@ namespace Stardust.Server.Services
 
         private void WriteHistory(App app, String action, Boolean success, String remark, String clientId, String ip = null)
         {
-            var hi = AppHistory.Create(app, action, success, remark, Environment.MachineName, ip);
+            var olt = AppOnline.FindByClient(clientId);
+            var version = olt?.Version;
+
+            var hi = AppHistory.Create(app, action, success, remark, version, Environment.MachineName, ip);
             hi.Client = clientId;
             hi.SaveAsync();
         }

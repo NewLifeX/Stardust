@@ -382,7 +382,9 @@ namespace Stardust.Server.Controllers
         #region 辅助
         private void WriteHistory(String action, Boolean success, String remark, String clientId, String ip = null)
         {
-            var hi = AppHistory.Create(_app, action, success, remark, Environment.MachineName, ip ?? UserHost);
+            var olt = AppOnline.FindByClient(clientId);
+
+            var hi = AppHistory.Create(_app, action, success, remark, olt?.Version, Environment.MachineName, ip ?? UserHost);
             hi.Client = clientId ?? _clientId;
             hi.SaveAsync();
         }

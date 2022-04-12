@@ -75,6 +75,14 @@ namespace Stardust.Data
         [BindColumn("AutoActive", "自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务", "")]
         public Boolean AutoActive { get => _AutoActive; set { if (OnPropertyChanging("AutoActive", value)) { _AutoActive = value; OnPropertyChanged("AutoActive"); } } }
 
+        private String _Version;
+        /// <summary>版本</summary>
+        [DisplayName("版本")]
+        [Description("版本")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Version", "版本", "")]
+        public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
+
         private String _WebHook;
         /// <summary>告警机器人。钉钉、企业微信等</summary>
         [DisplayName("告警机器人")]
@@ -205,6 +213,7 @@ namespace Stardust.Data
                     case "Category": return _Category;
                     case "Enable": return _Enable;
                     case "AutoActive": return _AutoActive;
+                    case "Version": return _Version;
                     case "WebHook": return _WebHook;
                     case "AlarmOnOffline": return _AlarmOnOffline;
                     case "LastLogin": return _LastLogin;
@@ -233,6 +242,7 @@ namespace Stardust.Data
                     case "Category": _Category = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "AutoActive": _AutoActive = value.ToBoolean(); break;
+                    case "Version": _Version = Convert.ToString(value); break;
                     case "WebHook": _WebHook = Convert.ToString(value); break;
                     case "AlarmOnOffline": _AlarmOnOffline = value.ToBoolean(); break;
                     case "LastLogin": _LastLogin = value.ToDateTime(); break;
@@ -277,6 +287,9 @@ namespace Stardust.Data
 
             /// <summary>自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务</summary>
             public static readonly Field AutoActive = FindByName("AutoActive");
+
+            /// <summary>版本</summary>
+            public static readonly Field Version = FindByName("Version");
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public static readonly Field WebHook = FindByName("WebHook");
@@ -346,6 +359,9 @@ namespace Stardust.Data
 
             /// <summary>自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务</summary>
             public const String AutoActive = "AutoActive";
+
+            /// <summary>版本</summary>
+            public const String Version = "Version";
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public const String WebHook = "WebHook";

@@ -59,7 +59,7 @@ namespace Stardust.Server.Services
                         if (app != null)
                         {
                             var msg = $"[{app}]登录于{olt.CreateTime}，最后活跃于{olt.UpdateTime}";
-                            app.WriteHistory("超时下线", true, msg, olt.CreateIP, olt.Client);
+                            app.WriteHistory("超时下线", true, msg, olt.Version, olt.CreateIP, olt.Client);
 
                             CheckOffline(app, "超时下线");
                         }

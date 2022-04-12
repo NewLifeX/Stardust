@@ -100,12 +100,14 @@ namespace Stardust.Data
         /// <param name="action"></param>
         /// <param name="success"></param>
         /// <param name="remark"></param>
+        /// <param name="version"></param>
         /// <param name="creator"></param>
         /// <param name="ip"></param>
         /// <returns></returns>
-        public static AppHistory Create(App app, String action, Boolean success, String remark, String creator, String ip)
+        public static AppHistory Create(App app, String action, Boolean success, String remark, String version, String creator, String ip)
         {
             if (app == null) app = new App();
+            if (version.IsNullOrEmpty()) version = app.Version;
 
             var history = new AppHistory
             {
@@ -113,6 +115,7 @@ namespace Stardust.Data
 
                 Action = action,
                 Success = success,
+                Version = version,
                 Remark = remark,
 
                 TraceId = DefaultSpan.Current?.TraceId,

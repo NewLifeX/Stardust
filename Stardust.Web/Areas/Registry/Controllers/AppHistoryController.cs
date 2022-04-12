@@ -14,7 +14,7 @@ namespace Stardust.Web.Areas.Registry.Controllers
     {
         static AppHistoryController()
         {
-            ListFields.RemoveField("Id");
+            ListFields.RemoveField("Id", "Version");
 
             {
                 var df = ListFields.GetField("TraceId") as ListField;

@@ -45,6 +45,14 @@ namespace Stardust.Data
         [BindColumn("Client", "客户端。IP加进程", "")]
         public String Client { get => _Client; set { if (OnPropertyChanging("Client", value)) { _Client = value; OnPropertyChanged("Client"); } } }
 
+        private String _Version;
+        /// <summary>版本。客户端实例版本</summary>
+        [DisplayName("版本")]
+        [Description("版本。客户端实例版本")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Version", "版本。客户端实例版本", "")]
+        public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
+
         private String _Action;
         /// <summary>操作</summary>
         [DisplayName("操作")]
@@ -115,6 +123,7 @@ namespace Stardust.Data
                     case "Id": return _Id;
                     case "AppId": return _AppId;
                     case "Client": return _Client;
+                    case "Version": return _Version;
                     case "Action": return _Action;
                     case "Success": return _Success;
                     case "TraceId": return _TraceId;
@@ -132,6 +141,7 @@ namespace Stardust.Data
                     case "Id": _Id = value.ToLong(); break;
                     case "AppId": _AppId = value.ToInt(); break;
                     case "Client": _Client = Convert.ToString(value); break;
+                    case "Version": _Version = Convert.ToString(value); break;
                     case "Action": _Action = Convert.ToString(value); break;
                     case "Success": _Success = value.ToBoolean(); break;
                     case "TraceId": _TraceId = Convert.ToString(value); break;
@@ -157,6 +167,9 @@ namespace Stardust.Data
 
             /// <summary>客户端。IP加进程</summary>
             public static readonly Field Client = FindByName("Client");
+
+            /// <summary>版本。客户端实例版本</summary>
+            public static readonly Field Version = FindByName("Version");
 
             /// <summary>操作</summary>
             public static readonly Field Action = FindByName("Action");
@@ -193,6 +206,9 @@ namespace Stardust.Data
 
             /// <summary>客户端。IP加进程</summary>
             public const String Client = "Client";
+
+            /// <summary>版本。客户端实例版本</summary>
+            public const String Version = "Version";
 
             /// <summary>操作</summary>
             public const String Action = "Action";
