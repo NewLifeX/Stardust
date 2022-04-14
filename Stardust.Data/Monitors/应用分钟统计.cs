@@ -60,6 +60,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("Errors", "错误数", "")]
         public Int32 Errors { get => _Errors; set { if (OnPropertyChanging("Errors", value)) { _Errors = value; OnPropertyChanged("Errors"); } } }
 
+        private Double _ErrorRate;
+        /// <summary>错误率。错误数除以总次数</summary>
+        [DisplayName("错误率")]
+        [Description("错误率。错误数除以总次数")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("ErrorRate", "错误率。错误数除以总次数", "")]
+        public Double ErrorRate { get => _ErrorRate; set { if (OnPropertyChanging("ErrorRate", value)) { _ErrorRate = value; OnPropertyChanged("ErrorRate"); } } }
+
         private Int64 _TotalCost;
         /// <summary>总耗时。单位毫秒</summary>
         [DisplayName("总耗时")]
@@ -124,6 +132,7 @@ namespace Stardust.Data.Monitors
                     case "AppId": return _AppId;
                     case "Total": return _Total;
                     case "Errors": return _Errors;
+                    case "ErrorRate": return _ErrorRate;
                     case "TotalCost": return _TotalCost;
                     case "Cost": return _Cost;
                     case "MaxCost": return _MaxCost;
@@ -142,6 +151,7 @@ namespace Stardust.Data.Monitors
                     case "AppId": _AppId = value.ToInt(); break;
                     case "Total": _Total = value.ToInt(); break;
                     case "Errors": _Errors = value.ToInt(); break;
+                    case "ErrorRate": _ErrorRate = value.ToDouble(); break;
                     case "TotalCost": _TotalCost = value.ToLong(); break;
                     case "Cost": _Cost = value.ToInt(); break;
                     case "MaxCost": _MaxCost = value.ToInt(); break;
@@ -172,6 +182,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>错误数</summary>
             public static readonly Field Errors = FindByName("Errors");
+
+            /// <summary>错误率。错误数除以总次数</summary>
+            public static readonly Field ErrorRate = FindByName("ErrorRate");
 
             /// <summary>总耗时。单位毫秒</summary>
             public static readonly Field TotalCost = FindByName("TotalCost");
@@ -211,6 +224,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>错误数</summary>
             public const String Errors = "Errors";
+
+            /// <summary>错误率。错误数除以总次数</summary>
+            public const String ErrorRate = "ErrorRate";
 
             /// <summary>总耗时。单位毫秒</summary>
             public const String TotalCost = "TotalCost";

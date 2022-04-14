@@ -32,6 +32,7 @@
             <th class="text-center" title="操作名。接口名或埋点名"><a href="@Html.Raw(page.GetSortUrl("Name"))">操作名</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Total"))">总次数</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Errors"))">错误数</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ErrorRate"))">错误率</a></th>
             <th class="text-center" title="平均耗时。总耗时除以总次数"><a href="@Html.Raw(page.GetSortUrl("Cost"))">平均耗时</a></th>
             <th class="text-center" title="最大耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MaxCost"))">最大耗时</a></th>
             <th class="text-center" title="最小耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MinCost"))">最小耗时</a></th>
@@ -64,7 +65,12 @@
             {
                 color = "palevioletred";
             }
-            <tr>
+            var bgcolor = "";
+            if (entity.ErrorRate >= 0.1)
+                bgcolor = "danger";
+            else if (entity.ErrorRate >= 0.01)
+                bgcolor = "warning";
+            <tr class="@bgcolor">
                 @if (set.EnableSelect)
                 {
                     <td class="text-center"><input type="checkbox" name="keys" value="@entity.ID" /></td>
@@ -88,6 +94,7 @@
                         <text>@entity.Errors.ToString("n0")</text>
                     }
                 </td>
+                <td class="text-right">@entity.ErrorRate.ToString("p2")</td>
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>
                 <td class="text-right">@entity.MinCost.ToString("n0")</td>
@@ -105,6 +112,7 @@
         @if (page.State is TraceDayStat)
         {
             var entity = page.State as TraceDayStat;
+            entity.Valid(false);
             <tr>
                 @if (set.EnableSelect)
                 {
@@ -120,6 +128,7 @@
                 <td></td>
                 <td class="text-right">@entity.Total.ToString("n0")</td>
                 <td class="text-right">@entity.Errors.ToString("n0")</td>
+                <td class="text-right">@entity.ErrorRate.ToString("p2")</td>
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>
                 <td class="text-right">@entity.MinCost.ToString("n0")</td>
