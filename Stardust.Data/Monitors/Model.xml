@@ -51,6 +51,9 @@
       <Column Name="Total" DataType="Int64" Description="总次数。累计埋点采样次数" />
       <Column Name="Errors" DataType="Int32" Description="错误数" />
       <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数，单位毫秒" />
+      <Column Name="AlarmThreshold" DataType="Int32" Description="告警阈值。错误数达到该值时触发告警，0表示不启用" />
+      <Column Name="AlarmErrorRate" DataType="Double" Description="告警错误率。错误率达到该值时触发告警，0表示不启用" />
+      <Column Name="AlarmRobot" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
       <Column Name="UpdateUser" DataType="String" Description="更新者" />

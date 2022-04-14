@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
-using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data.Monitors;
@@ -19,6 +15,11 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         static TraceItemController()
         {
             LogOnChange = true;
+
+            ListFields.RemoveField("AlarmRobot");
+            ListFields.RemoveCreateField();
+            ListFields.RemoveUpdateField();
+            ListFields.RemoveRemarkField();
 
             {
                 var df = ListFields.AddListField("Monitor", null, "Name");

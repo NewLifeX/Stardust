@@ -115,6 +115,30 @@ namespace Stardust.Data.Monitors
         [BindColumn("Cost", "平均耗时。总耗时除以总次数，单位毫秒", "")]
         public Int32 Cost { get => _Cost; set { if (OnPropertyChanging("Cost", value)) { _Cost = value; OnPropertyChanged("Cost"); } } }
 
+        private Int32 _AlarmThreshold;
+        /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用</summary>
+        [DisplayName("告警阈值")]
+        [Description("告警阈值。错误数达到该值时触发告警，0表示不启用")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AlarmThreshold", "告警阈值。错误数达到该值时触发告警，0表示不启用", "")]
+        public Int32 AlarmThreshold { get => _AlarmThreshold; set { if (OnPropertyChanging("AlarmThreshold", value)) { _AlarmThreshold = value; OnPropertyChanged("AlarmThreshold"); } } }
+
+        private Double _AlarmErrorRate;
+        /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用</summary>
+        [DisplayName("告警错误率")]
+        [Description("告警错误率。错误率达到该值时触发告警，0表示不启用")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AlarmErrorRate", "告警错误率。错误率达到该值时触发告警，0表示不启用", "")]
+        public Double AlarmErrorRate { get => _AlarmErrorRate; set { if (OnPropertyChanging("AlarmErrorRate", value)) { _AlarmErrorRate = value; OnPropertyChanged("AlarmErrorRate"); } } }
+
+        private String _AlarmRobot;
+        /// <summary>告警机器人。钉钉、企业微信等</summary>
+        [DisplayName("告警机器人")]
+        [Description("告警机器人。钉钉、企业微信等")]
+        [DataObjectField(false, false, true, 500)]
+        [BindColumn("AlarmRobot", "告警机器人。钉钉、企业微信等", "")]
+        public String AlarmRobot { get => _AlarmRobot; set { if (OnPropertyChanging("AlarmRobot", value)) { _AlarmRobot = value; OnPropertyChanged("AlarmRobot"); } } }
+
         private String _CreateIP;
         /// <summary>创建地址</summary>
         [DisplayName("创建地址")]
@@ -194,6 +218,9 @@ namespace Stardust.Data.Monitors
                     case "Total": return _Total;
                     case "Errors": return _Errors;
                     case "Cost": return _Cost;
+                    case "AlarmThreshold": return _AlarmThreshold;
+                    case "AlarmErrorRate": return _AlarmErrorRate;
+                    case "AlarmRobot": return _AlarmRobot;
                     case "CreateIP": return _CreateIP;
                     case "CreateTime": return _CreateTime;
                     case "UpdateUser": return _UpdateUser;
@@ -220,6 +247,9 @@ namespace Stardust.Data.Monitors
                     case "Total": _Total = value.ToLong(); break;
                     case "Errors": _Errors = value.ToInt(); break;
                     case "Cost": _Cost = value.ToInt(); break;
+                    case "AlarmThreshold": _AlarmThreshold = value.ToInt(); break;
+                    case "AlarmErrorRate": _AlarmErrorRate = value.ToDouble(); break;
+                    case "AlarmRobot": _AlarmRobot = Convert.ToString(value); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
@@ -272,6 +302,15 @@ namespace Stardust.Data.Monitors
 
             /// <summary>平均耗时。总耗时除以总次数，单位毫秒</summary>
             public static readonly Field Cost = FindByName("Cost");
+
+            /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用</summary>
+            public static readonly Field AlarmThreshold = FindByName("AlarmThreshold");
+
+            /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用</summary>
+            public static readonly Field AlarmErrorRate = FindByName("AlarmErrorRate");
+
+            /// <summary>告警机器人。钉钉、企业微信等</summary>
+            public static readonly Field AlarmRobot = FindByName("AlarmRobot");
 
             /// <summary>创建地址</summary>
             public static readonly Field CreateIP = FindByName("CreateIP");
@@ -335,6 +374,15 @@ namespace Stardust.Data.Monitors
 
             /// <summary>平均耗时。总耗时除以总次数，单位毫秒</summary>
             public const String Cost = "Cost";
+
+            /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用</summary>
+            public const String AlarmThreshold = "AlarmThreshold";
+
+            /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用</summary>
+            public const String AlarmErrorRate = "AlarmErrorRate";
+
+            /// <summary>告警机器人。钉钉、企业微信等</summary>
+            public const String AlarmRobot = "AlarmRobot";
 
             /// <summary>创建地址</summary>
             public const String CreateIP = "CreateIP";

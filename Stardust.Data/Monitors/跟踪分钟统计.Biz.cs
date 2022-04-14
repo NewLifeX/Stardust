@@ -120,6 +120,24 @@ namespace Stardust.Data.Monitors
             return FindAll(exp, page);
         }
 
+        /// <summary>
+        /// 查询指定应用指定埋点
+        /// </summary>
+        /// <param name="appId"></param>
+        /// <param name="time"></param>
+        /// <param name="itemIds"></param>
+        /// <returns></returns>
+        public static IList<TraceMinuteStat> Search(Int32 appId, DateTime time, Int32[] itemIds)
+        {
+            var exp = new WhereExpression();
+
+            if (appId >= 0) exp &= _.AppId == appId;
+            if (time.Year > 0) exp &= _.StatTime == time;
+            if (itemIds != null && itemIds.Length > 0) exp &= _.ItemId.In(itemIds);
+
+            return FindAll(exp, new PageParameter { PageSize = 1000 });
+        }
+
         /// <summary>查找一批统计</summary>
         /// <param name="time"></param>
         /// <param name="appIds"></param>
