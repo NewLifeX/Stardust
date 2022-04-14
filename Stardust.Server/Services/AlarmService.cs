@@ -198,8 +198,9 @@ namespace Stardust.Server.Services
                     var ti = tis.FirstOrDefault(e => e.Id == st.ItemId);
                     if (ti != null)
                     {
-                        if (ti.AlarmThreshold > 0 && st.Errors >= ti.AlarmThreshold ||
-                            ti.AlarmErrorRate > 0 && st.ErrorRate >= ti.AlarmErrorRate)
+                        // 必须两个条件同时满足，才能告警。前面的条件确保至少有一个设置了阈值
+                        if ((ti.AlarmThreshold <= 0 || st.Errors >= ti.AlarmThreshold) &&
+                            (ti.AlarmErrorRate <= 0 || st.ErrorRate >= ti.AlarmErrorRate))
                         {
                             // 一定时间内不要重复报错，除非错误翻倍
                             var error2 = _cache.Get<Int32>("alarm:TraceMinuteStat:" + ti.Id);
