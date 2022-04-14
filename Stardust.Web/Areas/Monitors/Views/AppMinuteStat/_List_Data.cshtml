@@ -44,7 +44,12 @@
             var url1 = $"appDayStat?appId={entity.AppId}";
             var url2 = $"traceData?appId={entity.AppId}&kind=minute&time={entity.StatTime:yyyy-MM-dd HH:mm:ss}";
             var url3 = $"?appId={entity.AppId}";
-            <tr>
+            var bgcolor = "";
+            if (entity.ErrorRate >= 0.01)
+                bgcolor = "danger";
+            else if (entity.ErrorRate >= 0.001)
+                bgcolor = "warning";
+            <tr class="@bgcolor">
                 @if (set.EnableSelect)
                 {
                     <td class="text-center"><input type="checkbox" name="keys" value="@entity.ID" /></td>

@@ -55,7 +55,12 @@
         {
             var url1 = $"traceDayStat?appId={entity.AppId}&date={entity.StatDate:yyyy-MM-dd}";
             //var url2 = $"traceData?appId={entity.AppId}&date={entity.StatDate:yyyy-MM-dd}";
-            <tr>
+            var bgcolor = "";
+            if (entity.ErrorRate >= 0.01)
+                bgcolor = "danger";
+            else if (entity.ErrorRate >= 0.001)
+                bgcolor = "warning";
+            <tr class="@bgcolor">
                 @if (set.EnableSelect)
                 {
                     <td class="text-center"><input type="checkbox" name="keys" value="@entity.ID" /></td>

@@ -66,9 +66,9 @@
                 color = "palevioletred";
             }
             var bgcolor = "";
-            if (entity.ErrorRate >= 0.1)
+            if (entity.ErrorRate >= 0.01)
                 bgcolor = "danger";
-            else if (entity.ErrorRate >= 0.01)
+            else if (entity.ErrorRate >= 0.001)
                 bgcolor = "warning";
             <tr class="@bgcolor">
                 @if (set.EnableSelect)

@@ -84,7 +84,8 @@ namespace Stardust.Server.Services
         private void ProcessAppTracer(AppTracer app)
         {
             // 应用是否需要告警
-            if (app == null || !app.Enable || app.AlarmThreshold <= 0) return;
+            if (app == null || !app.Enable) return;
+            if (app.AlarmThreshold <= 0 && app.AlarmErrorRate <= 0) return;
 
             var appId = app.ID;
             if (!RobotHelper.CanAlarm(app.Category, app.AlarmRobot)) return;
@@ -98,7 +99,8 @@ namespace Stardust.Server.Services
             if (st == null) return;
 
             // 判断告警
-            if (st.Errors >= app.AlarmThreshold)
+            if (app.AlarmThreshold > 0 && st.Errors >= app.AlarmThreshold ||
+                app.AlarmErrorRate > 0 && st.ErrorRate >= app.AlarmErrorRate)
             {
                 // 一定时间内不要重复报错，除非错误翻倍
                 var error2 = _cache.Get<Int32>("alarm:AppTracer:" + appId);
@@ -117,6 +119,7 @@ namespace Stardust.Server.Services
             var sb = new StringBuilder();
             if (includeTitle) sb.AppendLine($"### [{app}]系统告警");
             sb.AppendLine($">**总数：**<font color=\"red\">{st.Errors}</font>");
+            sb.AppendLine($">错误率：**<font color=\"red\">{st.ErrorRate:p2}</font>");
 
             var url = Setting.Current.WebUrl;
             var appUrl = "";
