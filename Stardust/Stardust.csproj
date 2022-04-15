@@ -22,7 +22,7 @@
   <PropertyGroup>
     <PackageId>NewLife.$(AssemblyName)</PackageId>
     <Authors>$(Company)</Authors>
-    <PackageProjectUrl>https://www.yuque.com/smartstone/blood/stardust</PackageProjectUrl>
+    <PackageProjectUrl>https://newlifex.com/blood/stardust</PackageProjectUrl>
     <PackageIcon>leaf.png</PackageIcon>
     <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -58,7 +58,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="9.0.2022.409-beta1553" />
+    <PackageReference Include="NewLife.Core" Version="9.0.2022.415-beta0444" />
   </ItemGroup>
 
 </Project>

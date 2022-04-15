@@ -63,10 +63,10 @@ namespace Stardust.Web.Areas.Configs.Controllers
             return list;
         }
 
-        public override ActionResult Add(ConfigData entity)
+        public override async Task<ActionResult> Add(ConfigData entity)
         {
             entity.NewVersion = entity.App.AcquireNewVersion();
-            base.Add(entity);
+            await base.Add(entity);
 
             return RedirectToAction("Index", new { appId = entity.AppId });
         }

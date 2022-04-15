@@ -18,9 +18,9 @@ namespace Stardust
 {
     /// <summary>星尘工厂</summary>
     /// <remarks>
-    /// 星尘代理 https://www.yuque.com/smartstone/blood/staragent_install
-    /// 监控中心 https://www.yuque.com/smartstone/blood/stardust_monitor
-    /// 配置中心 https://www.yuque.com/smartstone/blood/stardust_configcenter
+    /// 星尘代理 https://newlifex.com/blood/staragent_install
+    /// 监控中心 https://newlifex.com/blood/stardust_monitor
+    /// 配置中心 https://newlifex.com/blood/stardust_configcenter
     /// </remarks>
     public class StarFactory : DisposeBase
     {
@@ -254,7 +254,7 @@ namespace Stardust
         private HttpConfigProvider _config;
         /// <summary>配置中心。务必在数据库操作和生成雪花Id之前使用激活</summary>
         /// <remarks>
-        /// 文档 https://www.yuque.com/smartstone/blood/stardust_configcenter
+        /// 文档 https://newlifex.com/blood/stardust_configcenter
         /// </remarks>
         public IConfigProvider Config
         {

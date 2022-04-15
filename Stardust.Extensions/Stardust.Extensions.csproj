@@ -23,7 +23,7 @@
     <IsPackable>true</IsPackable>
     <PackageId>NewLife.$(AssemblyName)</PackageId>
     <Authors>$(Company)</Authors>
-    <PackageProjectUrl>https://www.yuque.com/smartstone/blood/stardust</PackageProjectUrl>
+    <PackageProjectUrl>https://newlifex.com/blood/stardust</PackageProjectUrl>
     <PackageIcon>leaf.png</PackageIcon>
     <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
     <RepositoryType>git</RepositoryType>

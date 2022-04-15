@@ -17,7 +17,7 @@ namespace ClientTest
             observer.Subscribe(new HttpDiagnosticListener());
 
             var http = new HttpClient();
-            await http.GetStringAsync("http://www.newlifex.com?id=1234");
+            await http.GetStringAsync("http://newlifex.com?id=1234");
 
             var builders = tracer.TakeAll();
             Assert.Single(builders);
@@ -35,7 +35,7 @@ namespace ClientTest
             observer.Subscribe("HttpHandlerDiagnosticListener", "System.Net.Http.HttpRequestOut.Start", "System.Net.Http.HttpRequestOut.Stop", "System.Net.Http.Exception");
 
             var http = new HttpClient();
-            await http.GetStringAsync("http://www.newlifex.com?id=1234");
+            await http.GetStringAsync("http://newlifex.com?id=1234");
 
             var builders = tracer.TakeAll();
             Assert.Single(builders);
@@ -53,7 +53,7 @@ namespace ClientTest
             observer.Subscribe("HttpHandlerDiagnosticListener", null, null, null);
 
             var http = new HttpClient();
-            await http.GetStringAsync("http://www.newlifex.com?id=1234");
+            await http.GetStringAsync("http://newlifex.com?id=1234");
 
             var builders = tracer.TakeAll();
             Assert.Single(builders);

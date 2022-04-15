@@ -24,9 +24,9 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             }
         }
 
-        protected override IList<String> SaveFiles(NodeVersion entity, String uploadPath = null)
+        protected override async Task<IList<String>> SaveFiles(NodeVersion entity, String uploadPath = null)
         {
-            var rs = base.SaveFiles(entity, uploadPath);
+            var rs = await base.SaveFiles(entity, uploadPath);
 
             // 更新文件哈希
             if (rs.Count > 0 && !entity.Source.IsNullOrEmpty())
