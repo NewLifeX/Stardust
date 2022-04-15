@@ -94,12 +94,20 @@ namespace Stardust.Data
         public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
         private String _Address;
-        /// <summary>地址。服务地址，如http://127.0.0.1:1234</summary>
+        /// <summary>地址。本地局域网服务地址，如http://127.0.0.1:1234</summary>
         [DisplayName("地址")]
-        [Description("地址。服务地址，如http://127.0.0.1:1234")]
+        [Description("地址。本地局域网服务地址，如http://127.0.0.1:1234")]
         [DataObjectField(false, false, true, 500)]
-        [BindColumn("Address", "地址。服务地址，如http://127.0.0.1:1234", "")]
+        [BindColumn("Address", "地址。本地局域网服务地址，如http://127.0.0.1:1234", "")]
         public String Address { get => _Address; set { if (OnPropertyChanging("Address", value)) { _Address = value; OnPropertyChanged("Address"); } } }
+
+        private String _Address2;
+        /// <summary>外部地址。经过网关之前的外部地址</summary>
+        [DisplayName("外部地址")]
+        [Description("外部地址。经过网关之前的外部地址")]
+        [DataObjectField(false, false, true, 500)]
+        [BindColumn("Address2", "外部地址。经过网关之前的外部地址", "")]
+        public String Address2 { get => _Address2; set { if (OnPropertyChanging("Address2", value)) { _Address2 = value; OnPropertyChanged("Address2"); } } }
 
         private Int32 _Weight;
         /// <summary>权重</summary>
@@ -202,6 +210,7 @@ namespace Stardust.Data
                     case "PingCount": return _PingCount;
                     case "Version": return _Version;
                     case "Address": return _Address;
+                    case "Address2": return _Address2;
                     case "Weight": return _Weight;
                     case "Scope": return _Scope;
                     case "Tag": return _Tag;
@@ -229,6 +238,7 @@ namespace Stardust.Data
                     case "PingCount": _PingCount = value.ToInt(); break;
                     case "Version": _Version = Convert.ToString(value); break;
                     case "Address": _Address = Convert.ToString(value); break;
+                    case "Address2": _Address2 = Convert.ToString(value); break;
                     case "Weight": _Weight = value.ToInt(); break;
                     case "Scope": _Scope = Convert.ToString(value); break;
                     case "Tag": _Tag = Convert.ToString(value); break;
@@ -276,8 +286,11 @@ namespace Stardust.Data
             /// <summary>版本</summary>
             public static readonly Field Version = FindByName("Version");
 
-            /// <summary>地址。服务地址，如http://127.0.0.1:1234</summary>
+            /// <summary>地址。本地局域网服务地址，如http://127.0.0.1:1234</summary>
             public static readonly Field Address = FindByName("Address");
+
+            /// <summary>外部地址。经过网关之前的外部地址</summary>
+            public static readonly Field Address2 = FindByName("Address2");
 
             /// <summary>权重</summary>
             public static readonly Field Weight = FindByName("Weight");
@@ -342,8 +355,11 @@ namespace Stardust.Data
             /// <summary>版本</summary>
             public const String Version = "Version";
 
-            /// <summary>地址。服务地址，如http://127.0.0.1:1234</summary>
+            /// <summary>地址。本地局域网服务地址，如http://127.0.0.1:1234</summary>
             public const String Address = "Address";
+
+            /// <summary>外部地址。经过网关之前的外部地址</summary>
+            public const String Address2 = "Address2";
 
             /// <summary>权重</summary>
             public const String Weight = "Weight";

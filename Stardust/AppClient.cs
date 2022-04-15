@@ -341,6 +341,9 @@ namespace Stardust
         {
             AddService(service);
 
+            // 如果没有设置地址，则不要调用接口
+            if (service.Address.IsNullOrEmpty() && service.Address2.IsNullOrEmpty()) return null;
+
             return await PostAsync<Object>("App/RegisterService", service);
         }
 
@@ -356,6 +359,8 @@ namespace Stardust
 
         private void AddService(PublishServiceInfo service)
         {
+            if (_publishServices.TryGetValue(service.ServiceName, out var svc) && svc == service) return;
+
             if (_publishServices.TryAdd(service.ServiceName, service))
             {
                 WriteLog("注册服务 {0}", service.ToJson());
@@ -405,6 +410,31 @@ namespace Stardust
 
             var service = CreatePublishService(serviceName);
             service.Address = address;
+            service.Tag = tag;
+            service.Health = health;
+
+            var rs = await RegisterAsync(service);
+            WriteLog("注册完成 {0}", rs.ToJson());
+
+            return service;
+        }
+
+        /// <summary>发布服务</summary>
+        /// <remarks>
+        /// 可以多次调用注册，用于更新服务地址和特性标签等信息。
+        /// 例如web应用，刚开始时可能并不知道自己的外部地址（域名和端口），有用户访问以后，即可得知并更新。
+        /// </remarks>
+        /// <param name="serviceName">服务名</param>
+        /// <param name="address">服务地址</param>
+        /// <param name="tag">特性标签</param>
+        /// <param name="health">健康监测接口地址</param>
+        /// <returns></returns>
+        public async Task<PublishServiceInfo> RegisterAsync2(String serviceName, String address, String tag = null, String health = null)
+        {
+            if (address == null) throw new ArgumentNullException(nameof(address));
+
+            var service = CreatePublishService(serviceName);
+            service.Address2 = address;
             service.Tag = tag;
             service.Health = health;
 
@@ -521,7 +551,7 @@ namespace Stardust
                     if (!address.IsNullOrEmpty()) svc.Address = address;
                 }
 
-                if (!svc.Address.IsNullOrEmpty()) await RegisterAsync(svc);
+                if (!svc.Address.IsNullOrEmpty() || !svc.Address2.IsNullOrEmpty()) await RegisterAsync(svc);
             }
         }
 
@@ -607,9 +637,9 @@ namespace Stardust
             var count = 0;
             foreach (var service in _publishServices.Values.ToArray())
             {
-                if (service.Address.IsNullOrEmpty() || service.Address.Contains("localhost") || service.Address.Contains("//*") || service.AddressCallback != null)
+                if (service.Address2.IsNullOrEmpty())
                 {
-                    service.Address = serverAddress;
+                    service.Address2 = serverAddress;
                     count++;
                 }
             }

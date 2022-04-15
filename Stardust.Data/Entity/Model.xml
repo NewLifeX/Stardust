@@ -163,7 +163,8 @@
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="PingCount" DataType="Int32" Description="心跳" />
       <Column Name="Version" DataType="String" Description="版本" />
-      <Column Name="Address" DataType="String" Length="500" Description="地址。服务地址，如http://127.0.0.1:1234" />
+      <Column Name="Address" DataType="String" Length="500" Description="地址。本地局域网服务地址，如http://127.0.0.1:1234" />
+      <Column Name="Address2" DataType="String" Length="500" Description="外部地址。经过网关之前的外部地址" />
       <Column Name="Weight" DataType="Int32" Description="权重" />
       <Column Name="Scope" DataType="String" Description="作用域。根据配置中心应用规则计算，禁止跨域访问服务" />
       <Column Name="Tag" DataType="String" Description="标签。带有指定特性，逗号分隔" />

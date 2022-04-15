@@ -68,8 +68,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
             entity.NewVersion = entity.App.AcquireNewVersion();
             await base.Add(entity);
 
-            var rs = RedirectToAction("Index", new { appId = entity.AppId });
-            return Task.FromResult<ActionResult>(rs);
+            return RedirectToAction("Index", new { appId = entity.AppId });
         }
 
         //public override ActionResult Edit(ConfigData entity)

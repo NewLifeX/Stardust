@@ -97,10 +97,16 @@ namespace Stardust.Registry
                 var names = new List<String>();
                 foreach (var item in ms)
                 {
+                    // 同时考虑两个地址
                     var name = item.Client;
-                    var addrs = item.Address.Split(",");
+                    var addrs = (item.Address + "," + item.Address2).Split(",", StringSplitOptions.RemoveEmptyEntries);
+                    var set = new HashSet<String>();
                     for (var i = 0; i < addrs.Length; i++)
                     {
+                        var addr = addrs[i];
+                        if (set.Contains(addr)) continue;
+                        set.Add(addr);
+
                         // 第一个使用Client名，后续地址增加#2后缀
                         var svcName = i <= 0 ? name : $"{name}#{i + 1}";
                         if (!dic.TryGetValue(svcName, out var svc))
@@ -108,7 +114,7 @@ namespace Stardust.Registry
                             svc = new ApiHttpClient.Service
                             {
                                 Name = svcName,
-                                Address = new Uri(addrs[i]),
+                                Address = new Uri(addr),
                                 Weight = item.Weight,
                             };
                             services.Add(svc);
@@ -118,7 +124,7 @@ namespace Stardust.Registry
                         }
                         else
                         {
-                            svc.Address = new Uri(addrs[i]);
+                            svc.Address = new Uri(addr);
                             svc.Weight = item.Weight;
                         }
                         names.Add(svcName);

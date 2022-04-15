@@ -17,8 +17,11 @@ namespace Stardust.Models
         /// <summary>版本</summary>
         public String Version { get; set; }
 
-        /// <summary>地址</summary>
+        /// <summary>服务地址。本地局域网地址</summary>
         public String Address { get; set; }
+
+        /// <summary>外部地址。经过网关之前的外部地址</summary>
+        public String Address2 { get; set; }
 
         /// <summary>作用域</summary>
         public String Scope { get; set; }

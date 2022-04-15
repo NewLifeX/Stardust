@@ -91,9 +91,14 @@ namespace Microsoft.Extensions.DependencyInjection
                      */
                     var set = StarSetting.Current;
                     if (address.IsNullOrEmpty()) address = set.ServiceAddress;
-                    //if (address.IsNullOrEmpty()) address = RegistryMiddleware.UserUri?.ToString().TrimEnd('/');
-                    if (address.IsNullOrEmpty())
+                    if (!address.IsNullOrEmpty())
                     {
+                        // 外部传参和配置，都属于外网地址，在网关外面
+                        (star.Service as AppClient)?.RegisterAsync2(serviceName, address, tag, health).Wait();
+                    }
+                    else
+                    {
+                        // 本地监听地址，属于内部地址
                         var feature = app.ServerFeatures.Get<IServerAddressesFeature>();
                         address = ResolveAddress(feature);
 
@@ -105,9 +110,11 @@ namespace Microsoft.Extensions.DependencyInjection
 
                             return;
                         }
+                        else
+                        {
+                            star.Service?.RegisterAsync(serviceName, address, tag, health).Wait();
+                        }
                     }
-
-                    star.Service?.RegisterAsync(serviceName, address, tag, health).Wait();
                 }
                 catch (Exception ex)
                 {

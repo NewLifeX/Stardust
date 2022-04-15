@@ -56,13 +56,16 @@ namespace Stardust.Server.Services
 
         public AppService RegisterService(App app, Service service, PublishServiceInfo model, String ip, out Boolean changed)
         {
-            // 单例部署服务，每个节点只有一个实例，使用本地IP作为唯一标识，无需进程ID，减少应用服务关联数
             var clientId = model.ClientId;
-            if (service.Singleton && !clientId.IsNullOrEmpty())
+            var localIp = clientId;
+            if (!localIp.IsNullOrEmpty())
             {
-                var p = clientId.IndexOf('@');
-                if (p > 0) clientId = clientId[..p];
+                var p = localIp.IndexOf('@');
+                if (p > 0) localIp = localIp[..p];
             }
+
+            // 单例部署服务，每个节点只有一个实例，使用本地IP作为唯一标识，无需进程ID，减少应用服务关联数
+            if (service.Singleton) clientId = localIp;
 
             // 所有服务
             var services = AppService.FindAllByService(service.Id);
@@ -99,11 +102,11 @@ namespace Stardust.Server.Services
             if (olt != null) svc.NodeId = olt.NodeId;
 
             // 作用域
-            svc.Scope = AppRule.CheckScope(-1, ip, clientId);
+            svc.Scope = AppRule.CheckScope(-1, ip, localIp);
 
             // 地址处理。本地任意地址，更换为IP地址
             var serverAddress = model.IP;
-            if (serverAddress.IsNullOrEmpty()) serverAddress = clientId;
+            if (serverAddress.IsNullOrEmpty()) serverAddress = localIp;
             if (serverAddress.IsNullOrEmpty()) serverAddress = ip;
             var addrs = model.Address
                 ?.Replace("://*", $"://{serverAddress}")
@@ -115,6 +118,7 @@ namespace Stardust.Server.Services
             svc.Tag = model.Tag;
             svc.Version = model.Version;
             svc.Address = addrs;
+            svc.Address2 = model.Address2;
 
             // 无需健康监测，直接标记为健康
             if (!model.Health.IsNullOrEmpty()) service.HealthAddress = model.Health;
@@ -220,6 +224,7 @@ namespace Stardust.Server.Services
                         Client = item.Client,
                         Version = item.Version,
                         Address = item.Address,
+                        Address2 = item.Address2,
                         Scope = item.Scope,
                         Tag = item.Tag,
                         Weight = item.Weight,
