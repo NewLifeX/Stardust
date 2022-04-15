@@ -172,6 +172,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("AlarmThreshold", "告警阈值。错误数达到该值时触发告警，0表示不启用", "")]
         public Int32 AlarmThreshold { get => _AlarmThreshold; set { if (OnPropertyChanging("AlarmThreshold", value)) { _AlarmThreshold = value; OnPropertyChanged("AlarmThreshold"); } } }
 
+        private Double _AlarmErrorRate;
+        /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用</summary>
+        [DisplayName("告警错误率")]
+        [Description("告警错误率。错误率达到该值时触发告警，0表示不启用")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AlarmErrorRate", "告警错误率。错误率达到该值时触发告警，0表示不启用", "")]
+        public Double AlarmErrorRate { get => _AlarmErrorRate; set { if (OnPropertyChanging("AlarmErrorRate", value)) { _AlarmErrorRate = value; OnPropertyChanged("AlarmErrorRate"); } } }
+
         private String _AlarmRobot;
         /// <summary>告警机器人。钉钉、企业微信等</summary>
         [DisplayName("告警机器人")]
@@ -274,6 +282,7 @@ namespace Stardust.Data.Monitors
                     case "VipClients": return _VipClients;
                     case "Nodes": return _Nodes;
                     case "AlarmThreshold": return _AlarmThreshold;
+                    case "AlarmErrorRate": return _AlarmErrorRate;
                     case "AlarmRobot": return _AlarmRobot;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
@@ -309,6 +318,7 @@ namespace Stardust.Data.Monitors
                     case "VipClients": _VipClients = Convert.ToString(value); break;
                     case "Nodes": _Nodes = Convert.ToString(value); break;
                     case "AlarmThreshold": _AlarmThreshold = value.ToInt(); break;
+                    case "AlarmErrorRate": _AlarmErrorRate = value.ToDouble(); break;
                     case "AlarmRobot": _AlarmRobot = Convert.ToString(value); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
@@ -384,6 +394,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用</summary>
             public static readonly Field AlarmThreshold = FindByName("AlarmThreshold");
+
+            /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用</summary>
+            public static readonly Field AlarmErrorRate = FindByName("AlarmErrorRate");
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public static readonly Field AlarmRobot = FindByName("AlarmRobot");
@@ -474,6 +487,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用</summary>
             public const String AlarmThreshold = "AlarmThreshold";
+
+            /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用</summary>
+            public const String AlarmErrorRate = "AlarmErrorRate";
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public const String AlarmRobot = "AlarmRobot";

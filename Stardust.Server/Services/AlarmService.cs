@@ -61,6 +61,7 @@ namespace Stardust.Server.Services
             foreach (var item in list)
             {
                 ProcessAppTracer(item);
+                ProcessTraceItem(item);
             }
 
             // 节点告警
@@ -84,7 +85,8 @@ namespace Stardust.Server.Services
         private void ProcessAppTracer(AppTracer app)
         {
             // 应用是否需要告警
-            if (app == null || !app.Enable || app.AlarmThreshold <= 0) return;
+            if (app == null || !app.Enable) return;
+            if (app.AlarmThreshold <= 0 && app.AlarmErrorRate <= 0) return;
 
             var appId = app.ID;
             if (!RobotHelper.CanAlarm(app.Category, app.AlarmRobot)) return;
@@ -94,20 +96,23 @@ namespace Stardust.Server.Services
             // 最近一段时间的5分钟级数据
             var time = DateTime.Now;
             var minute = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
+
             var st = AppMinuteStat.FindByAppIdAndTime(appId, minute);
-            if (st == null) return;
-
-            // 判断告警
-            if (st.Errors >= app.AlarmThreshold)
+            if (st != null)
             {
-                // 一定时间内不要重复报错，除非错误翻倍
-                var error2 = _cache.Get<Int32>("alarm:AppTracer:" + appId);
-                if (error2 == 0 || st.Errors > error2 * 2)
+                // 判断告警
+                if (app.AlarmThreshold > 0 && st.Errors >= app.AlarmThreshold ||
+                    app.AlarmErrorRate > 0 && st.ErrorRate >= app.AlarmErrorRate)
                 {
-                    _cache.Set("alarm:AppTracer:" + appId, st.Errors, 5 * 60);
+                    // 一定时间内不要重复报错，除非错误翻倍
+                    var error2 = _cache.Get<Int32>("alarm:AppTracer:" + appId);
+                    if (error2 == 0 || st.Errors > error2 * 2)
+                    {
+                        _cache.Set("alarm:AppTracer:" + appId, st.Errors, 5 * 60);
 
-                    var msg = GetMarkdown(app, st, true);
-                    RobotHelper.SendAlarm(app.Category, app.AlarmRobot, "系统告警", msg);
+                        var msg = GetMarkdown(app, st, true);
+                        RobotHelper.SendAlarm(app.Category, app.AlarmRobot, "应用告警", msg);
+                    }
                 }
             }
         }
@@ -115,8 +120,9 @@ namespace Stardust.Server.Services
         private static String GetMarkdown(AppTracer app, AppMinuteStat st, Boolean includeTitle)
         {
             var sb = new StringBuilder();
-            if (includeTitle) sb.AppendLine($"### [{app}]系统告警");
+            if (includeTitle) sb.AppendLine($"### [{app}]应用告警");
             sb.AppendLine($">**总数：**<font color=\"red\">{st.Errors}</font>");
+            sb.AppendLine($">**错误率：**<font color=\"red\">{st.ErrorRate:p2}</font>");
 
             var url = Setting.Current.WebUrl;
             var appUrl = "";
@@ -152,7 +158,7 @@ namespace Stardust.Server.Services
                                     var p = msg.IndexOfAny(new[] { '\r', '\n' });
                                     if (p > 0) msg = msg[..p];
 
-                                    sb.AppendLine($">**内容：**{msg}");
+                                    sb.AppendLine($">内容：{msg}");
 
                                     names.Add(item.Name);
                                 }
@@ -169,6 +175,91 @@ namespace Stardust.Server.Services
             if (!appUrl.IsNullOrEmpty())
             {
                 str += Environment.NewLine + $"[更多信息]({appUrl})";
+            }
+
+            return str;
+        }
+
+        private void ProcessTraceItem(AppTracer app)
+        {
+            if (app == null || !app.Enable) return;
+
+            // 监控项单独告警
+            var tis = app.TraceItems.Where(e => e.AlarmThreshold > 0 || e.AlarmErrorRate > 0).ToList();
+            if (tis.Count > 0)
+            {
+                // 最近一段时间的5分钟级数据
+                var time = DateTime.Now;
+                var minute = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
+
+                var list = TraceMinuteStat.Search(app.ID, minute, tis.Select(e => e.Id).ToArray());
+                foreach (var st in list)
+                {
+                    var ti = tis.FirstOrDefault(e => e.Id == st.ItemId);
+                    if (ti != null)
+                    {
+                        // 必须两个条件同时满足，才能告警。前面的条件确保至少有一个设置了阈值
+                        if ((ti.AlarmThreshold <= 0 || st.Errors >= ti.AlarmThreshold) &&
+                            (ti.AlarmErrorRate <= 0 || st.ErrorRate >= ti.AlarmErrorRate))
+                        {
+                            // 一定时间内不要重复报错，除非错误翻倍
+                            var error2 = _cache.Get<Int32>("alarm:TraceMinuteStat:" + ti.Id);
+                            if (error2 == 0 || st.Errors > error2 * 2)
+                            {
+                                _cache.Set("alarm:TraceMinuteStat:" + ti.Id, st.Errors, 5 * 60);
+
+                                var msg = GetMarkdown(app, st, true);
+                                RobotHelper.SendAlarm(app.Category, app.AlarmRobot, "埋点告警", msg);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private static String GetMarkdown(AppTracer app, TraceMinuteStat st, Boolean includeTitle)
+        {
+            var sb = new StringBuilder();
+            if (includeTitle) sb.AppendLine($"### [{app}]埋点告警");
+            sb.AppendLine($">**总数：**<font color=\"red\">{st.Errors}</font>");
+            sb.AppendLine($">**错误率：**<font color=\"red\">{st.ErrorRate:p2}</font>");
+
+            var url = Setting.Current.WebUrl;
+            var traceUrl = "";
+            if (!url.IsNullOrEmpty())
+            {
+                traceUrl = url.EnsureEnd("/") + "Monitors/traceMinuteStat?appId=" + st.AppId + "&minError=1";
+            }
+
+            // 找找具体接口错误
+            var item = st;
+            sb.AppendLine($">**错误：**<font color=\"red\">{item.StatTime:HH:mm:ss} 埋点[{item.Name}]报错[{item.Errors:n0}]次</font>");
+
+            var ds = TraceData.Search(st.AppId, item.ItemId, "minute", item.StatTime, 20);
+            if (ds.Count > 0)
+            {
+                var sms = SampleData.FindAllByDataIds(ds.Select(e => e.Id).ToArray(), item.StatTime).Where(e => !e.Error.IsNullOrEmpty()).ToList();
+                if (sms.Count > 0)
+                {
+                    var msg = sms[0].Error?.Trim();
+                    if (!msg.IsNullOrEmpty())
+                    {
+                        // 错误内容取第一行，详情看更多
+                        var p = msg.IndexOfAny(new[] { '\r', '\n' });
+                        if (p > 0) msg = msg[..p];
+
+                        sb.AppendLine($">内容：{msg}");
+                    }
+                }
+            }
+
+            var str = sb.ToString();
+            if (str.Length > 1600) str = str[..1600];
+
+            // 构造网址
+            if (!traceUrl.IsNullOrEmpty())
+            {
+                str += Environment.NewLine + $"[更多信息]({traceUrl})";
             }
 
             return str;

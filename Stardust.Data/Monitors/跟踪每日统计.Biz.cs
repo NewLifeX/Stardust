@@ -32,9 +32,12 @@ namespace Stardust.Data.Monitors
         /// <param name="isNew">是否插入</param>
         public override void Valid(Boolean isNew)
         {
+            base.Valid(isNew);
+
             if (Name.IsNullOrEmpty()) Name = TraceItem.FindById(ItemId) + "";
 
             Cost = Total == 0 ? 0 : (Int32)(TotalCost / Total);
+            ErrorRate = Total == 0 ? 0 : Math.Round((Double)Errors / Total, 4);
 
             // 识别操作类型
             if (Type.IsNullOrEmpty() && !Name.IsNullOrEmpty())

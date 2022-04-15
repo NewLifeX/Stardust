@@ -33,15 +33,13 @@ namespace Stardust.Data.Monitors
         /// <param name="isNew">是否插入</param>
         public override void Valid(Boolean isNew)
         {
-            // 如果没有脏数据，则不需要进行任何处理
-            if (!HasDirty) return;
-
             // 建议先调用基类方法，基类方法会做一些统一处理
             base.Valid(isNew);
 
             if (Name.IsNullOrEmpty()) Name = TraceItem.FindById(ItemId) + "";
 
             Cost = Total == 0 ? 0 : (Int32)(TotalCost / Total);
+            ErrorRate = Total == 0 ? 0 : Math.Round((Double)Errors / Total, 4);
         }
         #endregion
 
