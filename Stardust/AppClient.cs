@@ -150,11 +150,7 @@ namespace Stardust
                     Version = _version,
                     NodeCode = NodeCode,
                 };
-                try
-                {
-                    inf.IP = NetHelper.MyIP() + "";
-                }
-                catch { }
+                inf.IP = AgentInfo.GetIps();
 
                 var rs = await PostAsync<String>("App/Register", inf);
                 WriteLog("接入星尘服务端：{0}", rs);
@@ -380,14 +376,14 @@ namespace Stardust
         public PublishServiceInfo CreatePublishService(String serviceName)
         {
             var asmx = AssemblyX.Entry;
-            var ip = NetHelper.MyIP();
+            var ip = AgentInfo.GetIps();
 
             var service = new PublishServiceInfo
             {
                 ServiceName = serviceName,
 
                 ClientId = ClientId,
-                IP = ip + "",
+                IP = ip,
                 Version = asmx?.Version,
             };
 

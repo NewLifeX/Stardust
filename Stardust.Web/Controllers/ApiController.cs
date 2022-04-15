@@ -6,6 +6,7 @@ using NewLife.Cube;
 using NewLife.Data;
 using NewLife.Reflection;
 using NewLife.Serialization;
+using Stardust.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -25,7 +26,7 @@ namespace Stardust.Web.Controllers
         private static readonly String _OS = Environment.OSVersion + "";
         private static readonly String _MachineName = Environment.MachineName;
         private static readonly String _UserName = Environment.UserName;
-        private static readonly String _LocalIP = NetHelper.MyIP() + "";
+        private static readonly String _LocalIP = AgentInfo.GetIps();
         /// <summary>服务器信息，用户健康检测</summary>
         /// <param name="state">状态信息</param>
         /// <returns></returns>

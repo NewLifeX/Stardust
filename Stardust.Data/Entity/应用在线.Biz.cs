@@ -38,9 +38,6 @@ namespace Stardust.Data
         /// <param name="isNew">是否插入</param>
         public override void Valid(Boolean isNew)
         {
-            // 如果没有脏数据，则不需要进行任何处理
-            if (!HasDirty) return;
-
             if (!Version.IsNullOrEmpty() && !Dirtys[nameof(Compile)])
             {
                 var dt = AssemblyX.GetCompileTime(Version);
@@ -48,6 +45,11 @@ namespace Stardust.Data
             }
 
             if (TraceId.IsNullOrEmpty()) TraceId = DefaultSpan.Current?.TraceId;
+
+            var len = _.IP.Length;
+            if (len > 0 && !IP.IsNullOrEmpty() && IP.Length > len) IP = IP[..len];
+
+            base.Valid(isNew);
         }
         #endregion
 
@@ -199,7 +201,7 @@ namespace Stardust.Data
             if (!traceId.IsNullOrEmpty()) online.TraceId = traceId;
 
             // 本地IP
-            if (!clientId.IsNullOrEmpty())
+            if (online.IP.IsNullOrEmpty() && !clientId.IsNullOrEmpty())
             {
                 var p = clientId.IndexOf('@');
                 if (p > 0) online.IP = clientId[..p];

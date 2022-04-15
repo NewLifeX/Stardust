@@ -1,7 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Net;
 using NewLife;
 using NewLife.Reflection;
@@ -51,7 +48,7 @@ namespace Stardust.Models
             var asmx = AssemblyX.Entry;
             var fileName = p.MainModule.FileName;
             var args = Environment.CommandLine.TrimStart(Path.ChangeExtension(fileName, ".dll")).Trim();
-            var ip = NetHelper.GetIPsWithCache().Where(ip => ip.IsIPv4() && !IPAddress.IsLoopback(ip) && ip.GetAddressBytes()[0] != 169).Join();
+            var ip = GetIps();
 
             return new AgentInfo
             {
@@ -62,6 +59,24 @@ namespace Stardust.Models
                 Arguments = args,
                 IP = ip,
             };
+        }
+
+        /// <summary>
+        /// 获取本地IP地址
+        /// </summary>
+        /// <returns></returns>
+        public static String GetIps()
+        {
+            try
+            {
+                return NetHelper.GetIPsWithCache()
+                    .Where(ip => ip.IsIPv4() && !IPAddress.IsLoopback(ip) && ip.GetAddressBytes()[0] != 169)
+                    .Join();
+            }
+            catch
+            {
+                return null;
+            }
         }
         #endregion
     }

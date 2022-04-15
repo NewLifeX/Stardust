@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Reflection;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Net.Http.Headers;
@@ -11,6 +7,7 @@ using NewLife;
 using NewLife.Data;
 using NewLife.Reflection;
 using NewLife.Serialization;
+using Stardust.Models;
 using Stardust.Server.Common;
 
 namespace Stardust.Server.Controllers
@@ -28,7 +25,7 @@ namespace Stardust.Server.Controllers
         private static readonly String _OS = Environment.OSVersion + "";
         private static readonly String _MachineName = Environment.MachineName;
         private static readonly String _UserName = Environment.UserName;
-        private static readonly String _LocalIP = NetHelper.MyIP() + "";
+        private static readonly String _LocalIP = AgentInfo.GetIps();
         /// <summary>服务器信息，用户健康检测</summary>
         /// <param name="state">状态信息</param>
         /// <returns></returns>
