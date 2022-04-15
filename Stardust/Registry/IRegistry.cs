@@ -34,7 +34,7 @@ namespace Stardust.Registry
         /// <summary>发布服务</summary>
         /// <param name="service">应用服务</param>
         /// <returns></returns>
-        Task<Object> RegisterAsync(PublishServiceInfo service);
+        Task<ServiceModel> RegisterAsync(PublishServiceInfo service);
 
         /// <summary>消费服务</summary>
         /// <param name="service">应用服务</param>
@@ -56,7 +56,7 @@ namespace Stardust.Registry
         /// <summary>取消服务</summary>
         /// <param name="service">应用服务</param>
         /// <returns></returns>
-        Task<Object> UnregisterAsync(PublishServiceInfo service);
+        Task<ServiceModel> UnregisterAsync(PublishServiceInfo service);
     }
 
     /// <summary>

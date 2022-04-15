@@ -333,24 +333,24 @@ namespace Stardust
         /// <summary>发布服务。定时反复执行，让服务端更新注册信息</summary>
         /// <param name="service">应用服务</param>
         /// <returns></returns>
-        public async Task<Object> RegisterAsync(PublishServiceInfo service)
+        public async Task<ServiceModel> RegisterAsync(PublishServiceInfo service)
         {
             AddService(service);
 
             // 如果没有设置地址，则不要调用接口
             if (service.Address.IsNullOrEmpty() && service.Address2.IsNullOrEmpty()) return null;
 
-            return await PostAsync<Object>("App/RegisterService", service);
+            return await PostAsync<ServiceModel>("App/RegisterService", service);
         }
 
         /// <summary>取消服务</summary>
         /// <param name="service">应用服务</param>
         /// <returns></returns>
-        public async Task<Object> UnregisterAsync(PublishServiceInfo service)
+        public async Task<ServiceModel> UnregisterAsync(PublishServiceInfo service)
         {
             _publishServices.TryRemove(service.ServiceName, out _);
 
-            return await PostAsync<Object>("App/UnregisterService", service);
+            return await PostAsync<ServiceModel>("App/UnregisterService", service);
         }
 
         private void AddService(PublishServiceInfo service)
@@ -621,14 +621,18 @@ namespace Stardust
         #endregion
 
         #region 辅助
-        String _serverAddress;
         /// <summary>
         /// 设置服务地址
         /// </summary>
         /// <param name="serverAddress"></param>
         public void SetServerAddress(String serverAddress)
         {
-            if (serverAddress == null || serverAddress == _serverAddress) return;
+            if (serverAddress == null) return;
+
+            var set = StarSetting.Current;
+            if (serverAddress == set.ServiceAddress) return;
+
+            WriteLog("设置服务地址为：{0}", serverAddress);
 
             var count = 0;
             foreach (var service in _publishServices.Values.ToArray())
@@ -640,11 +644,10 @@ namespace Stardust
                 }
             }
 
-            WriteLog("设置服务地址为：{0}", serverAddress);
-
             if (count > 0) _timer.SetNext(-1);
 
-            _serverAddress = serverAddress;
+            set.ServiceAddress = serverAddress;
+            set.Save();
         }
         #endregion
     }

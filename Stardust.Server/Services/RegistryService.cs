@@ -1,5 +1,6 @@
 ﻿using NewLife;
 using NewLife.Log;
+using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
 using Stardust.Data.Nodes;
@@ -27,6 +28,8 @@ namespace Stardust.Server.Services
             app.UpdateIP = ip;
             app.SaveAsync();
 
+            app.WriteHistory("Register", true, inf.ToJson(), inf.Version, clientId, ip);
+
             if (!inf.ClientId.IsNullOrEmpty()) clientId = inf.ClientId;
             if (!clientId.IsNullOrEmpty())
             {
@@ -35,7 +38,7 @@ namespace Stardust.Server.Services
                 // 本地IP
                 if (!inf.IP.IsNullOrEmpty())
                     olt.IP = inf.IP;
-                else
+                else if (olt.IP.IsNullOrEmpty())
                 {
                     var p = clientId.IndexOf('@');
                     if (p > 0) olt.IP = clientId[..p];
@@ -54,7 +57,7 @@ namespace Stardust.Server.Services
             return null;
         }
 
-        public AppService RegisterService(App app, Service service, PublishServiceInfo model, String ip, out Boolean changed)
+        public (AppService, Boolean changed) RegisterService(App app, Service service, PublishServiceInfo model, String ip)
         {
             var clientId = model.ClientId;
             var localIp = clientId;
@@ -69,7 +72,7 @@ namespace Stardust.Server.Services
 
             // 所有服务
             var services = AppService.FindAllByService(service.Id);
-            changed = false;
+            var changed = false;
             var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == clientId);
             if (svc == null)
             {
@@ -85,7 +88,7 @@ namespace Stardust.Server.Services
                 services.Add(svc);
 
                 changed = true;
-                WriteHistory(app, "RegisterService", true, $"注册服务[{model.ServiceName}] {model.ClientId}", clientId);
+                WriteHistory(app, "RegisterService", true, $"注册服务[{model.ServiceName}] {model.ClientId}", ip, clientId);
             }
             else
             {
@@ -108,16 +111,29 @@ namespace Stardust.Server.Services
             var serverAddress = model.IP;
             if (serverAddress.IsNullOrEmpty()) serverAddress = localIp;
             if (serverAddress.IsNullOrEmpty()) serverAddress = ip;
-            var addrs = model.Address
-                ?.Replace("://*", $"://{serverAddress}")
-                .Replace("://0.0.0.0", $"://{serverAddress}")
-                .Replace("://[::]", $"://{serverAddress}");
+
+            var ds = new List<String>();
+            foreach (var item in serverAddress.Split(","))
+            {
+                var addrs = model.Address
+                    ?.Replace("://*", $"://{serverAddress}")
+                    .Replace("://0.0.0.0", $"://{serverAddress}")
+                    .Replace("://[::]", $"://{serverAddress}")
+                    .Split(",");
+                if (addrs != null)
+                {
+                    foreach (var elm in addrs)
+                    {
+                        if (!ds.Contains(elm)) ds.Add(elm);
+                    }
+                }
+            }
 
             svc.Enable = app.AutoActive;
             svc.PingCount++;
             svc.Tag = model.Tag;
             svc.Version = model.Version;
-            svc.Address = addrs;
+            svc.Address = ds.Join(",");
             svc.Address2 = model.Address2;
 
             // 无需健康监测，直接标记为健康
@@ -135,7 +151,7 @@ namespace Stardust.Server.Services
                 _ = Task.Run(() => HealthCheck(svc));
             }
 
-            return svc;
+            return (svc, changed);
         }
 
         public async Task HealthCheck(AppService svc)
@@ -172,7 +188,7 @@ namespace Stardust.Server.Services
             svc.Update();
         }
 
-        public AppService UnregisterService(App app, Service info, PublishServiceInfo model, String ip, out Boolean changed)
+        public (AppService, Boolean changed) UnregisterService(App app, Service info, PublishServiceInfo model, String ip)
         {
             // 单例部署服务，每个节点只有一个实例，使用本地IP作为唯一标识，无需进程ID，减少应用服务关联数
             var clientId = model.ClientId;
@@ -184,7 +200,7 @@ namespace Stardust.Server.Services
 
             // 所有服务
             var services = AppService.FindAllByService(info.Id);
-            changed = false;
+            var changed = false;
             var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == clientId);
             if (svc != null)
             {
@@ -196,13 +212,13 @@ namespace Stardust.Server.Services
                 services.Remove(svc);
 
                 changed = true;
-                WriteHistory(app, "UnregisterService", true, $"服务[{model.ServiceName}]下线 {svc.Client}", svc.Client, ip);
+                WriteHistory(app, "UnregisterService", true, $"服务[{model.ServiceName}]下线 {svc.Client}", ip, svc.Client);
             }
 
             info.Providers = services.Count;
             info.Save();
 
-            return svc;
+            return (svc, changed);
         }
 
         public ServiceModel[] ResolveService(Service service, ConsumeServiceInfo model, String scope)
@@ -217,27 +233,14 @@ namespace Stardust.Server.Services
                 // 启用，匹配规则，健康
                 if (item.Enable && item.Healthy && item.Match(model.MinVersion, scope, tags))
                 {
-                    list.Add(new ServiceModel
-                    {
-                        ServiceName = item.ServiceName,
-                        DisplayName = service.DisplayName,
-                        Client = item.Client,
-                        Version = item.Version,
-                        Address = item.Address,
-                        Address2 = item.Address2,
-                        Scope = item.Scope,
-                        Tag = item.Tag,
-                        Weight = item.Weight,
-                        CreateTime = item.CreateTime,
-                        UpdateTime = item.UpdateTime,
-                    });
+                    list.Add(item.ToModel());
                 }
             }
 
             return list.ToArray();
         }
 
-        private void WriteHistory(App app, String action, Boolean success, String remark, String clientId, String ip = null)
+        private void WriteHistory(App app, String action, Boolean success, String remark, String ip, String clientId)
         {
             var olt = AppOnline.FindByClient(clientId);
             var version = olt?.Version;

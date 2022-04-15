@@ -288,12 +288,12 @@ namespace Stardust.Server.Controllers
 
         [ApiFilter]
         [HttpPost(nameof(RegisterService))]
-        public AppService RegisterService([FromBody] PublishServiceInfo model)
+        public ServiceModel RegisterService([FromBody] PublishServiceInfo model)
         {
             var app = _app;
             var info = GetService(model.ServiceName);
 
-            var svc = _registryService.RegisterService(app, info, model, UserHost, out var changed);
+            var (svc, changed) = _registryService.RegisterService(app, info, model, UserHost);
 
             // 发布消息通知消费者
             if (changed)
@@ -301,17 +301,17 @@ namespace Stardust.Server.Controllers
                 _registryService.NotifyConsumers(info, "registry/register", app + "");
             }
 
-            return svc;
+            return svc?.ToModel();
         }
 
         [ApiFilter]
         [HttpPost(nameof(UnregisterService))]
-        public AppService UnregisterService([FromBody] PublishServiceInfo model)
+        public ServiceModel UnregisterService([FromBody] PublishServiceInfo model)
         {
             var app = _app;
             var info = GetService(model.ServiceName);
 
-            var svc = _registryService.UnregisterService(app, info, model, UserHost, out var changed);
+            var (svc, changed) = _registryService.UnregisterService(app, info, model, UserHost);
 
             // 发布消息通知消费者
             if (changed)
@@ -319,7 +319,7 @@ namespace Stardust.Server.Controllers
                 _registryService.NotifyConsumers(info, "registry/unregister", app + "");
             }
 
-            return svc;
+            return svc?.ToModel();
         }
 
         [ApiFilter]

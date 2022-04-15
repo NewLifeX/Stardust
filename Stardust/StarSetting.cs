@@ -25,8 +25,8 @@ namespace Stardust
         [Description("应用密钥")]
         public String Secret { get; set; }
 
-        /// <summary>服务地址。人工设定，用于提交注册中心，默认为空，自动识别</summary>
-        [Description("服务地址。人工设定，用于提交注册中心，默认为空，自动识别")]
+        /// <summary>服务地址。人工设定，用于提交注册中心，默认为空，自动识别外部访问地址</summary>
+        [Description("服务地址。人工设定，用于提交注册中心，默认为空，自动识别外部访问地址")]
         public String ServiceAddress { get; set; }
 
         /// <summary>本地地址。启动时本机监听地址，用于判断是否有改变</summary>

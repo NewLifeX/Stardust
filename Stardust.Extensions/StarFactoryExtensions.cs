@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -137,31 +140,28 @@ namespace Microsoft.Extensions.DependencyInjection
         static String ResolveAddress(IServerAddressesFeature feature)
         {
             // 获取监听地址
-            var address = feature?.Addresses.Join();
-            if (address.IsNullOrEmpty()) return null;
+            var addrs = feature?.Addresses;
+            if (addrs == null || addrs.Count == 0) return null;
 
-            var set = StarSetting.Current;
+            var ips = NetHelper.GetIPsWithCache()
+                .Where(ip => ip.IsIPv4() && !IPAddress.IsLoopback(ip) && ip.GetAddressBytes()[0] != 169)
+                .ToArray();
 
-            // 若监听地址未改变，则使用 AccessAddress ，否则清空 AccessAddress 并返回监听地址
-            if (address == set.LocalAddress)
+            // 每个地址，相对于本地每个IP
+            var list = new List<String>();
+            foreach (var item in addrs)
             {
-                if (!set.AccessAddress.IsNullOrEmpty())
+                foreach (var ip in ips)
                 {
-                    XTrace.WriteLine("监听地址[{0}]未发生改变，继续使用访问地址[{1}]作为服务地址，提交注册中心", address, set.AccessAddress);
-
-                    address = set.AccessAddress;
+                    var addr = item
+                        .Replace("://*", $"://{ip}")
+                        .Replace("://0.0.0.0", $"://{ip}")
+                        .Replace("://[::]", $"://{ip}");
+                    if (!list.Contains(addr)) list.Add(addr);
                 }
             }
-            else
-            {
-                XTrace.WriteLine("监听地址[{0}]发生了改变，清空访问地址[{1}]", address, set.AccessAddress);
 
-                set.LocalAddress = address;
-                set.AccessAddress = null;
-                set.Save();
-            }
-
-            return address;
+            return list.Join();
         }
     }
 }

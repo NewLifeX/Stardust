@@ -7,6 +7,7 @@ using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using Stardust.Data.Nodes;
+using Stardust.Models;
 using XCode;
 using XCode.Membership;
 
@@ -181,6 +182,28 @@ namespace Stardust.Data
 
                 return list;
             }
+        }
+
+        /// <summary>
+        /// 转为服务模型
+        /// </summary>
+        /// <returns></returns>
+        public ServiceModel ToModel()
+        {
+            return new ServiceModel
+            {
+                ServiceName = ServiceName,
+                DisplayName = Service?.DisplayName,
+                Client = Client,
+                Version = Version,
+                Address = Address,
+                Address2 = Address2,
+                Scope = Scope,
+                Tag = Tag,
+                Weight = Weight,
+                CreateTime = CreateTime,
+                UpdateTime = UpdateTime,
+            };
         }
         #endregion
     }
