@@ -236,7 +236,7 @@ namespace Stardust.Data.Monitors
             var list = TraceDayStat.FindAllByAppId(ID);
             //Days = list.DistinctBy(e => e.StatDate.Date).Count();
             Days = list.Select(e => e.StatDate.ToFullString()).Distinct().Count();
-            Total = list.Sum(e => e.Total);
+            Total = list.Sum(e => (Int64)e.Total);
 
             ItemCount = TraceItems.Count(e => e.Enable);
         }
