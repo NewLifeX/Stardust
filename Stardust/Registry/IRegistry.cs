@@ -66,7 +66,7 @@ namespace Stardust.Registry
     {
         /// <summary>为指定服务创建客户端，从星尘注册中心获取服务地址。单例，应避免频繁创建客户端</summary>
         /// <param name="registry">服务注册客户端</param>
-        /// <param name="serviceName"></param>
+        /// <param name="serviceName">服务名</param>
         /// <param name="tag"></param>
         /// <returns></returns>
         public static async Task<IApiClient> CreateForServiceAsync(this IRegistry registry, String serviceName, String tag = null)
@@ -146,6 +146,7 @@ namespace Stardust.Registry
         }
 
         /// <summary>消费得到服务地址信息</summary>
+        /// <param name="registry">服务注册客户端</param>
         /// <param name="serviceName">服务名</param>
         /// <param name="minVersion">最小版本</param>
         /// <param name="tag">特性标签。只要包含该特性的服务提供者</param>
