@@ -160,6 +160,7 @@ namespace Stardust.Server.Controllers
 
             var now = DateTime.Now;
             var startTime = now.AddDays(-Setting.Current.DataRetention);
+            var endTime = now.AddDays(1);
             var traces = new List<TraceData>();
             var samples = new List<SampleData>();
             foreach (var item in builders)
@@ -169,8 +170,9 @@ namespace Stardust.Server.Controllers
                 if (excludes != null && excludes.Any(e => e.IsMatch(item.Name))) continue;
                 //if (item.Name.EndsWithIgnoreCase("/Trace/Report")) continue;
 
-                // 拒收超期数据
-                if (item.StartTime.ToDateTime().ToLocalTime() < startTime) continue;
+                // 拒收超期数据，拒收未来数据
+                var timestamp = item.StartTime.ToDateTime().ToLocalTime();
+                if (timestamp < startTime || timestamp > endTime) continue;
 
                 // 检查跟踪项
                 var ti = app.GetOrAddItem(item.Name);
