@@ -243,40 +243,14 @@ namespace Stardust
         /// <param name="client"></param>
         public void Attach(StarClient client)
         {
-            //client.Received += ExecuteCommand;
-
             client.RegisterCommand("deploy/publish", DoControl);
+            client.RegisterCommand("deploy/start", DoControl);
+            client.RegisterCommand("deploy/stop", DoControl);
+            client.RegisterCommand("deploy/restart", DoControl);
         }
-
-        //private void ExecuteCommand(Object sender, CommandEventArgs e)
-        //{
-        //    var cmd = e?.Model?.Command?.ToLower();
-        //    if (cmd.IsNullOrEmpty()) return;
-
-        //    var rs = new CommandReplyModel { Id = e.Model.Id };
-        //    try
-        //    {
-        //        var result = cmd switch
-        //        {
-        //            "publish" => DoControl(e.Model),
-        //            "start" => DoControl(e.Model),
-        //            "stop" => DoControl(e.Model),
-        //            "restart" => DoControl(e.Model),
-        //            _ => null,
-        //        };
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        rs.Status = CommandStatus.错误;
-        //        rs.Data = ex.Message;
-        //    }
-
-        //    e.Reply = rs;
-        //}
 
         private CommandReplyModel DoControl(CommandModel cmd)
         {
-            //var js = JsonParser.Decode(cmd.Argument);
             var my = cmd.Argument.ToJsonEntity<MyApp>();
 
             XTrace.WriteLine("{0} Id={1} Name={2}", cmd.Command, my.Id, my.AppName);
@@ -284,15 +258,15 @@ namespace Stardust
             var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(my.AppName));
             switch (cmd.Command)
             {
-                case "publish":
+                case "deploy/publish":
                     break;
-                case "start":
+                case "deploy/start":
                     if (svc != null) StartService(svc);
                     break;
-                case "stop":
+                case "deploy/stop":
                     if (svc != null) StopService(svc);
                     break;
-                case "restart":
+                case "deploy/restart":
                     if (svc != null)
                     {
                         StopService(svc);
