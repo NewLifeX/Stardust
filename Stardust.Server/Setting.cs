@@ -70,6 +70,10 @@ namespace Stardust.Server
         /// <summary>大颗粒数据保留时间。默认30天</summary>
         [Description("大颗粒数据保留时间。默认30天")]
         public Int32 DataRetention2 { get; set; } = 30;
+
+        /// <summary>上传目录。存放升级包，需要跟StarWeb配置为同一个目录，默认../Uploads</summary>
+        [Description("上传目录。存放升级包，需要跟StarWeb配置为同一个目录，默认../Uploads")]
+        public String UploadPath { get; set; } = "../Uploads";
         #endregion
 
         #region 方法

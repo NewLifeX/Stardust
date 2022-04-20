@@ -638,11 +638,13 @@ namespace Stardust.Server.Controllers
             var nv = NodeVersion.FindByVersion(name.TrimEnd(".zip"));
             if (nv == null || !nv.Enable) throw new Exception("非法参数");
 
-            var updatePath = "../Uploads";
+            var set = Setting.Current;
+            var updatePath = set.UploadPath;
             var fi = updatePath.CombinePath(nv.Source).AsFile();
             if (!fi.Exists) throw new Exception("文件不存在");
 
-            return File(fi.OpenRead(), "application/octet-stream", Path.GetFileName(nv.Source));
+            //return File(fi.OpenRead(), "application/octet-stream", Path.GetFileName(nv.Source));
+            return PhysicalFile(fi.FullName, "application/octet-stream", name);
         }
         #endregion
 
