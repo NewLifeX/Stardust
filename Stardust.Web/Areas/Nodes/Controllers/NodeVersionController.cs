@@ -58,12 +58,12 @@ namespace Stardust.Web.Areas.Nodes.Controllers
         {
             var name = id;
             var nv = NodeVersion.FindByVersion(name.TrimEnd(".zip"));
-            if (nv == null) throw new Exception("非法参数");
+            if (nv == null) return NotFound("非法参数");
 
             var set = NewLife.Cube.Setting.Current;
             var updatePath = set.UploadPath;
             var fi = updatePath.CombinePath(nv.Source).AsFile();
-            if (!fi.Exists) throw new Exception("文件不存在");
+            if (!fi.Exists) return NotFound("文件不存在");
 
             return PhysicalFile(fi.FullName, "application/octet-stream", name);
         }

@@ -636,12 +636,12 @@ namespace Stardust.Server.Controllers
         public ActionResult GetVersion(String name)
         {
             var nv = NodeVersion.FindByVersion(name.TrimEnd(".zip"));
-            if (nv == null || !nv.Enable) throw new Exception("非法参数");
+            if (nv == null || !nv.Enable) return NotFound("非法参数");
 
             var set = Setting.Current;
             var updatePath = set.UploadPath;
             var fi = updatePath.CombinePath(nv.Source).AsFile();
-            if (!fi.Exists) throw new Exception("文件不存在");
+            if (!fi.Exists) return NotFound("文件不存在");
 
             //return File(fi.OpenRead(), "application/octet-stream", Path.GetFileName(nv.Source));
             return PhysicalFile(fi.FullName, "application/octet-stream", name);
