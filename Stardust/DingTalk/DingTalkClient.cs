@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using NewLife;
+﻿using NewLife;
 using NewLife.Log;
 using NewLife.Remoting;
 using Stardust.WeiXin;
@@ -28,7 +23,7 @@ namespace Stardust.DingTalk
         {
             if (_Client == null)
             {
-                _Client = Tracer?.CreateHttpClient() ?? new HttpClient();
+                _Client = Tracer.CreateHttpClient();
             }
 
             return await _Client.PostAsync<Object>(Url, msg);

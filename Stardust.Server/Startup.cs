@@ -59,6 +59,7 @@ namespace Stardust.Server
             services.AddSingleton<RegistryService>();
 
             services.AddHttpClient();
+            services.AddResponseCompression();
 
             services.AddCors(options => options.AddPolicy("star_cors", builder =>
             {
@@ -134,6 +135,7 @@ namespace Stardust.Server
             //app.UseMiddleware<TracerMiddleware>();
             app.UseStardust();
 
+            app.UseResponseCompression();
             app.UseRouting();
 
             app.UseAuthorization();

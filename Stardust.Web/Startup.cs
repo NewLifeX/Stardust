@@ -35,6 +35,8 @@ namespace Stardust.Web
             services.AddSingleton<TokenService>();
             services.AddSingleton<ConfigService>();
 
+            services.AddResponseCompression();
+
             // 后台服务。数据保留，定时删除过期数据
             services.AddHostedService<ApolloService>();
 
@@ -86,6 +88,7 @@ namespace Stardust.Web
             Usewwwroot(app, env);
 
             app.UseStardust();
+            app.UseResponseCompression();
             app.UseCube(env);
 
             app.UseEndpoints(endpoints =>

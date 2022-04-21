@@ -158,7 +158,7 @@ namespace Stardust.Server.Services
         {
             var url = svc.Service?.HealthAddress;
             if (url.IsNullOrEmpty()) return;
-
+             
             try
             {
                 if (!url.StartsWithIgnoreCase("http://", "https://"))

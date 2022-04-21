@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using NewLife;
+﻿using NewLife;
 using NewLife.Log;
 using NewLife.Remoting;
 
@@ -27,7 +22,7 @@ namespace Stardust.WeiXin
         {
             if (_Client == null)
             {
-                _Client = Tracer?.CreateHttpClient() ?? new HttpClient();
+                _Client = Tracer.CreateHttpClient();
                 //_Client.BaseAddress = new Uri(Url.Replace("{key}", Key));
             }
 
