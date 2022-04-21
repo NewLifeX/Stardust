@@ -58,7 +58,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 app.Properties[nameof(TracerMiddleware)] = typeof(TracerMiddleware);
             }
 
-            app.UseMiddleware<RegistryMiddleware>();
+            //app.UseMiddleware<RegistryMiddleware>();
 
             return app;
         }
@@ -98,13 +98,13 @@ namespace Microsoft.Extensions.DependencyInjection
                     {
                         // 本地监听地址，属于内部地址
                         var feature = app.ServerFeatures.Get<IServerAddressesFeature>();
-                        address = ResolveAddress(feature);
+                        address = feature?.Addresses.Join(",");
 
                         if (address.IsNullOrEmpty())
                         {
                             if (feature == null) throw new Exception("尘埃客户端未能取得本地服务地址。");
 
-                            star.Service?.Register(serviceName, () => ResolveAddress(feature), tag, health);
+                            star.Service?.Register(serviceName, () => feature?.Addresses.Join(","), tag, health);
 
                             return;
                         }
@@ -127,34 +127,6 @@ namespace Microsoft.Extensions.DependencyInjection
             });
 
             return app;
-        }
-
-        static String ResolveAddress(IServerAddressesFeature feature)
-        {
-            // 获取监听地址
-            var addrs = feature?.Addresses;
-            if (addrs == null || addrs.Count == 0) return null;
-
-            var ips = NetHelper.GetIPsWithCache()
-                .Where(ip => ip.IsIPv4() && !IPAddress.IsLoopback(ip) && ip.GetAddressBytes()[0] != 169)
-                .ToArray();
-
-            // 每个地址，相对于本地每个IP
-            var list = new List<String>();
-            foreach (var item in addrs)
-            {
-                foreach (var ip in ips)
-                {
-                    var addr = item
-                        .Replace("://*", $"://{ip}")
-                        .Replace("://+", $"://{ip}")
-                        .Replace("://0.0.0.0", $"://{ip}")
-                        .Replace("://[::]", $"://{ip}");
-                    if (!list.Contains(addr)) list.Add(addr);
-                }
-            }
-
-            return list.Join();
         }
     }
 }

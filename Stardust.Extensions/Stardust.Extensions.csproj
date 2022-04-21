@@ -45,6 +45,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="RegistryMiddleware.cs" />
     <Compile Remove="StarService.cs" />
   </ItemGroup>
 

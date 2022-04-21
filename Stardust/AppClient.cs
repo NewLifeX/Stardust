@@ -625,7 +625,12 @@ namespace Stardust
             set.Save();
         }
 
-        static Boolean IsLocal(String address)
+        /// <summary>
+        /// 是否本地地址
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        public static Boolean IsLocal(String address)
         {
             if (address.IsNullOrEmpty()) return false;
 

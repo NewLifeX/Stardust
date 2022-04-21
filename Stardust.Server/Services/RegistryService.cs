@@ -107,6 +107,11 @@ namespace Stardust.Server.Services
             // 作用域
             svc.Scope = AppRule.CheckScope(-1, ip, localIp);
 
+            svc.Enable = app.AutoActive;
+            svc.PingCount++;
+            svc.Tag = model.Tag;
+            svc.Version = model.Version;
+
             // 地址处理。本地任意地址，更换为IP地址
             var serverAddress = model.IP;
             if (serverAddress.IsNullOrEmpty()) serverAddress = localIp;
@@ -116,9 +121,10 @@ namespace Stardust.Server.Services
             foreach (var item in serverAddress.Split(","))
             {
                 var addrs = model.Address
-                    ?.Replace("://*", $"://{serverAddress}")
-                    .Replace("://0.0.0.0", $"://{serverAddress}")
-                    .Replace("://[::]", $"://{serverAddress}")
+                    ?.Replace("://*", $"://{item}")
+                    ?.Replace("://+", $"://{item}")
+                    .Replace("://0.0.0.0", $"://{item}")
+                    .Replace("://[::]", $"://{item}")
                     .Split(",");
                 if (addrs != null)
                 {
@@ -129,17 +135,29 @@ namespace Stardust.Server.Services
                 }
             }
 
-            svc.Enable = app.AutoActive;
-            svc.PingCount++;
-            svc.Tag = model.Tag;
-            svc.Version = model.Version;
-
-            // 地址模版
             if (service.Address.IsNullOrEmpty())
+            {
                 svc.Address = ds.Join(",");
+            }
             else
             {
-                svc.Address = service.Address.Replace("{IP}", ip)/*.Replace("{Port}", ds[0].Substring(":", null))*/;
+                // 地址模版
+                var addr = service.Address.Replace("{IP}", ip);
+                if (addr.Contains("{Port}"))
+                {
+                    var port = 0;
+                    foreach (var item in ds)
+                    {
+                        var p = item.IndexOf(":", "http://".Length);
+                        if (p >= 0)
+                        {
+                            port = item[p..].TrimEnd('/').ToInt();
+                            if (port > 0) break;
+                        }
+                    }
+                    addr = addr.Replace("{Port}", port + "");
+                }
+                svc.Address = addr;
             }
 
             // 无需健康监测，直接标记为健康
