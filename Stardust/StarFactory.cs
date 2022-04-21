@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections;
+using System.Diagnostics;
 using System.Reflection;
 using NewLife;
 using NewLife.Configuration;
@@ -99,6 +100,17 @@ namespace Stardust
             if (Server.IsNullOrEmpty()) Server = Environment.GetEnvironmentVariable("StarServer");
             if (AppId.IsNullOrEmpty()) AppId = Environment.GetEnvironmentVariable("AppId");
             if (Secret.IsNullOrEmpty()) Secret = Environment.GetEnvironmentVariable("Secret");
+            // 不区分大小写识别环境变量
+            foreach (DictionaryEntry item in Environment.GetEnvironmentVariables())
+            {
+                var key = item.Key + "";
+                if (Server.IsNullOrEmpty() && key.EqualIgnoreCase("StarServer"))
+                    Server = item.Value + "";
+                else if (AppId.IsNullOrEmpty() && key.EqualIgnoreCase("AppId"))
+                    AppId = item.Value + "";
+                else if (Secret.IsNullOrEmpty() && key.EqualIgnoreCase("Secret"))
+                    Secret = item.Value + "";
+            }
 
             // 读取本地appsetting
             if (Server.IsNullOrEmpty() && File.Exists("appsettings.Development.json".GetFullPath()))
