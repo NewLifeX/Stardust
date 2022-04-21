@@ -17,11 +17,8 @@ namespace Stardust.Models
         /// <summary>版本</summary>
         public String Version { get; set; }
 
-        /// <summary>服务地址。本地局域网地址</summary>
+        /// <summary>服务地址。本地服务地址，可能是固定地址，也可能是http://*:8080,https://*:8001之类的形式</summary>
         public String Address { get; set; }
-
-        /// <summary>外部地址。经过网关之前的外部地址</summary>
-        public String Address2 { get; set; }
 
         /// <summary>健康检测地址</summary>
         public String Health{ get; set; }

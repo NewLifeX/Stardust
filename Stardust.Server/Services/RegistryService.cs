@@ -141,7 +141,6 @@ namespace Stardust.Server.Services
             {
                 svc.Address = service.Address.Replace("{IP}", ip)/*.Replace("{Port}", ds[0].Substring(":", null))*/;
             }
-            //svc.Address2 = model.Address2;
 
             // 无需健康监测，直接标记为健康
             if (!model.Health.IsNullOrEmpty()) service.HealthAddress = model.Health;

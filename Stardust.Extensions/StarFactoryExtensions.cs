@@ -94,12 +94,7 @@ namespace Microsoft.Extensions.DependencyInjection
                      */
                     var set = StarSetting.Current;
                     if (address.IsNullOrEmpty()) address = set.ServiceAddress;
-                    if (!address.IsNullOrEmpty())
-                    {
-                        // 外部传参和配置，都属于外网地址，在网关外面
-                        (star.Service as AppClient)?.RegisterAsync2(serviceName, address, tag, health).Wait();
-                    }
-                    else
+                    if (address.IsNullOrEmpty())
                     {
                         // 本地监听地址，属于内部地址
                         var feature = app.ServerFeatures.Get<IServerAddressesFeature>();
@@ -113,11 +108,8 @@ namespace Microsoft.Extensions.DependencyInjection
 
                             return;
                         }
-                        else
-                        {
-                            star.Service?.RegisterAsync(serviceName, address, tag, health).Wait();
-                        }
                     }
+                    star.Service?.RegisterAsync(serviceName, address, tag, health).Wait();
                 }
                 catch (Exception ex)
                 {
@@ -155,6 +147,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 {
                     var addr = item
                         .Replace("://*", $"://{ip}")
+                        .Replace("://+", $"://{ip}")
                         .Replace("://0.0.0.0", $"://{ip}")
                         .Replace("://[::]", $"://{ip}");
                     if (!list.Contains(addr)) list.Add(addr);
