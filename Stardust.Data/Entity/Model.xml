@@ -134,6 +134,7 @@
       <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Singleton" DataType="Boolean" Description="单例。每个节点只部署一个实例，此时使用本地IP作为唯一标识，便于设置权重" />
+      <Column Name="Address" DataType="String" Description="服务地址模版。固定的网关地址，或地址模版如http://{IP}:{Port}，默认不填写，自动识别地址" />
       <Column Name="HealthCheck" DataType="Boolean" Description="健康监测。定时检测服务是否可用" />
       <Column Name="HealthAddress" DataType="String" Description="监测地址。健康监测接口地址，相对地址或绝对地址" />
       <Column Name="Providers" DataType="Int32" Description="提供者" />
@@ -164,7 +165,6 @@
       <Column Name="PingCount" DataType="Int32" Description="心跳" />
       <Column Name="Version" DataType="String" Description="版本" />
       <Column Name="Address" DataType="String" Length="500" Description="地址。本地局域网服务地址，如http://127.0.0.1:1234" />
-      <Column Name="Address2" DataType="String" Length="500" Description="外部地址。经过网关之前的外部地址" />
       <Column Name="Weight" DataType="Int32" Description="权重" />
       <Column Name="Scope" DataType="String" Description="作用域。根据配置中心应用规则计算，禁止跨域访问服务" />
       <Column Name="Tag" DataType="String" Description="标签。带有指定特性，逗号分隔" />

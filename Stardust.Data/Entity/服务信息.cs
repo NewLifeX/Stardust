@@ -67,6 +67,14 @@ namespace Stardust.Data
         [BindColumn("Singleton", "单例。每个节点只部署一个实例，此时使用本地IP作为唯一标识，便于设置权重", "")]
         public Boolean Singleton { get => _Singleton; set { if (OnPropertyChanging("Singleton", value)) { _Singleton = value; OnPropertyChanged("Singleton"); } } }
 
+        private String _Address;
+        /// <summary>服务地址模版。固定的网关地址，或地址模版如http://{IP}:{Port}，默认不填写，自动识别地址</summary>
+        [DisplayName("服务地址模版")]
+        [Description("服务地址模版。固定的网关地址，或地址模版如http://{IP}:{Port}，默认不填写，自动识别地址")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Address", "服务地址模版。固定的网关地址，或地址模版如http://{IP}:{Port}，默认不填写，自动识别地址", "")]
+        public String Address { get => _Address; set { if (OnPropertyChanging("Address", value)) { _Address = value; OnPropertyChanged("Address"); } } }
+
         private Boolean _HealthCheck;
         /// <summary>健康监测。定时检测服务是否可用</summary>
         [DisplayName("健康监测")]
@@ -188,6 +196,7 @@ namespace Stardust.Data
                     case "Category": return _Category;
                     case "Enable": return _Enable;
                     case "Singleton": return _Singleton;
+                    case "Address": return _Address;
                     case "HealthCheck": return _HealthCheck;
                     case "HealthAddress": return _HealthAddress;
                     case "Providers": return _Providers;
@@ -214,6 +223,7 @@ namespace Stardust.Data
                     case "Category": _Category = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Singleton": _Singleton = value.ToBoolean(); break;
+                    case "Address": _Address = Convert.ToString(value); break;
                     case "HealthCheck": _HealthCheck = value.ToBoolean(); break;
                     case "HealthAddress": _HealthAddress = Convert.ToString(value); break;
                     case "Providers": _Providers = value.ToInt(); break;
@@ -254,6 +264,9 @@ namespace Stardust.Data
 
             /// <summary>单例。每个节点只部署一个实例，此时使用本地IP作为唯一标识，便于设置权重</summary>
             public static readonly Field Singleton = FindByName("Singleton");
+
+            /// <summary>服务地址模版。固定的网关地址，或地址模版如http://{IP}:{Port}，默认不填写，自动识别地址</summary>
+            public static readonly Field Address = FindByName("Address");
 
             /// <summary>健康监测。定时检测服务是否可用</summary>
             public static readonly Field HealthCheck = FindByName("HealthCheck");
@@ -317,6 +330,9 @@ namespace Stardust.Data
 
             /// <summary>单例。每个节点只部署一个实例，此时使用本地IP作为唯一标识，便于设置权重</summary>
             public const String Singleton = "Singleton";
+
+            /// <summary>服务地址模版。固定的网关地址，或地址模版如http://{IP}:{Port}，默认不填写，自动识别地址</summary>
+            public const String Address = "Address";
 
             /// <summary>健康监测。定时检测服务是否可用</summary>
             public const String HealthCheck = "HealthCheck";

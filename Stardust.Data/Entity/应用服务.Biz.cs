@@ -197,7 +197,7 @@ namespace Stardust.Data
                 Client = Client,
                 Version = Version,
                 Address = Address,
-                Address2 = Address2,
+                //Address2 = Address2,
                 Scope = Scope,
                 Tag = Tag,
                 Weight = Weight,

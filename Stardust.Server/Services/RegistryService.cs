@@ -133,8 +133,15 @@ namespace Stardust.Server.Services
             svc.PingCount++;
             svc.Tag = model.Tag;
             svc.Version = model.Version;
-            svc.Address = ds.Join(",");
-            svc.Address2 = model.Address2;
+
+            // 地址模版
+            if (service.Address.IsNullOrEmpty())
+                svc.Address = ds.Join(",");
+            else
+            {
+                svc.Address = service.Address.Replace("{IP}", ip)/*.Replace("{Port}", ds[0].Substring(":", null))*/;
+            }
+            //svc.Address2 = model.Address2;
 
             // 无需健康监测，直接标记为健康
             if (!model.Health.IsNullOrEmpty()) service.HealthAddress = model.Health;
@@ -158,7 +165,7 @@ namespace Stardust.Server.Services
         {
             var url = svc.Service?.HealthAddress;
             if (url.IsNullOrEmpty()) return;
-             
+
             try
             {
                 if (!url.StartsWithIgnoreCase("http://", "https://"))
