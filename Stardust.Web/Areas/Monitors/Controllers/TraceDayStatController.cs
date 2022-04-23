@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
@@ -60,9 +56,16 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                         Height = 400,
                     };
                     chart.SetX(list2, _.StatDate, e => e.StatDate.ToString("MM-dd"));
-                    chart.SetY("调用次数");
+                    //chart.SetY("调用次数");
+                    chart.YAxis = new[] {
+                        new { name = "调用次数", type = "value" },
+                        new { name = "错误数", type = "value" }
+                    };
                     chart.AddLine(list2, _.Total, null, true);
-                    chart.Add(list2, _.Errors);
+
+                    var line = chart.Add(list2, _.Errors);
+                    line["yAxisIndex"] = 1;
+
                     chart.SetTooltip();
                     ViewBag.Charts = new[] { chart };
                 }
@@ -73,10 +76,17 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                         Height = 400,
                     };
                     chart.SetX(list2, _.StatDate, e => e.StatDate.ToString("MM-dd"));
-                    chart.SetY("耗时");
+                    //chart.SetY("耗时");
+                    chart.YAxis = new[] {
+                        new { name = "耗时（ms）", type = "value" },
+                        new { name = "最大耗时（ms）", type = "value" }
+                    };
                     chart.AddLine(list2, _.Cost, null, true);
-                    chart.Add(list2, _.MaxCost);
                     chart.Add(list2, _.MinCost);
+
+                    var line = chart.Add(list2, _.MaxCost);
+                    line["yAxisIndex"] = 1;
+
                     chart.SetTooltip();
                     ViewBag.Charts2 = new[] { chart };
                 }
