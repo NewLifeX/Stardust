@@ -191,7 +191,9 @@ namespace Stardust
             var asm = AssemblyX.Entry ?? AssemblyX.Create(Assembly.GetExecutingAssembly());
             //var ps = System.IO.Ports.SerialPort.GetPortNames();
             var mcs = NetHelper.GetMacs().Select(e => e.ToHex("-")).OrderBy(e => e).Join(",");
-            var driveInfo = new DriveInfo(Path.GetPathRoot(".".GetFullPath()));
+            //var driveInfo = new DriveInfo(Path.GetPathRoot(".".GetFullPath()));
+            var path = ".".GetFullPath();
+            var driveInfo = DriveInfo.GetDrives().FirstOrDefault(e => path.StartsWithIgnoreCase(e.Name));
             var ip = AgentInfo.GetIps();
             var di = new NodeInfo
             {
@@ -209,8 +211,8 @@ namespace Stardust
                 ProcessorCount = Environment.ProcessorCount,
                 Memory = mi.Memory,
                 AvailableMemory = mi.AvailableMemory,
-                TotalSize = (UInt64)driveInfo.TotalSize,
-                AvailableFreeSpace = (UInt64)driveInfo.AvailableFreeSpace,
+                TotalSize = (UInt64)driveInfo?.TotalSize,
+                AvailableFreeSpace = (UInt64)driveInfo?.AvailableFreeSpace,
 
                 Processor = mi.Processor,
                 CpuID = mi.CpuID,
@@ -371,12 +373,13 @@ namespace Stardust
             mi.Refresh();
 
             var mcs = NetHelper.GetMacs().Select(e => e.ToHex("-")).OrderBy(e => e).Join(",");
-            var driveInfo = new DriveInfo(Path.GetPathRoot(".".GetFullPath()));
+            var path = ".".GetFullPath();
+            var driveInfo = DriveInfo.GetDrives().FirstOrDefault(e => path.StartsWithIgnoreCase(e.Name));
             var ip = AgentInfo.GetIps();
             var ext = new PingInfo
             {
                 AvailableMemory = mi.AvailableMemory,
-                AvailableFreeSpace = (UInt64)driveInfo.AvailableFreeSpace,
+                AvailableFreeSpace = (UInt64)driveInfo?.AvailableFreeSpace,
                 CpuRate = mi.CpuRate,
                 Temperature = mi.Temperature,
                 Battery = mi.Battery,
