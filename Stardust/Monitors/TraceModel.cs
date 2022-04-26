@@ -41,6 +41,9 @@ namespace Stardust.Monitors
         /// <summary>超时时间。超过该时间时，当作异常来进行采样，默认5000毫秒</summary>
         public Int32 Timeout { get; set; }
 
+        /// <summary>最大标签长度。超过该长度时将截断，默认1024字符</summary>
+        public Int32 MaxTagLength { get; set; } = 1024;
+
         /// <summary>要排除的操作名</summary>
         public String[] Excludes { get; set; }
     }

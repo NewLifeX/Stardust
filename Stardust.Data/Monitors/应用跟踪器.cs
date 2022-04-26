@@ -148,6 +148,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("TimeoutExcludes", "超时排除项。不判断超时的操作名，支持*模糊匹配", "")]
         public String TimeoutExcludes { get => _TimeoutExcludes; set { if (OnPropertyChanging("TimeoutExcludes", value)) { _TimeoutExcludes = value; OnPropertyChanged("TimeoutExcludes"); } } }
 
+        private Int32 _MaxTagLength;
+        /// <summary>最长标签。超过该长度时将截断，默认1024字符</summary>
+        [DisplayName("最长标签")]
+        [Description("最长标签。超过该长度时将截断，默认1024字符")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("MaxTagLength", "最长标签。超过该长度时将截断，默认1024字符", "")]
+        public Int32 MaxTagLength { get => _MaxTagLength; set { if (OnPropertyChanging("MaxTagLength", value)) { _MaxTagLength = value; OnPropertyChanged("MaxTagLength"); } } }
+
         private String _VipClients;
         /// <summary>Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配</summary>
         [DisplayName("Vip客户端")]
@@ -279,6 +287,7 @@ namespace Stardust.Data.Monitors
                     case "Excludes": return _Excludes;
                     case "Timeout": return _Timeout;
                     case "TimeoutExcludes": return _TimeoutExcludes;
+                    case "MaxTagLength": return _MaxTagLength;
                     case "VipClients": return _VipClients;
                     case "Nodes": return _Nodes;
                     case "AlarmThreshold": return _AlarmThreshold;
@@ -315,6 +324,7 @@ namespace Stardust.Data.Monitors
                     case "Excludes": _Excludes = Convert.ToString(value); break;
                     case "Timeout": _Timeout = value.ToInt(); break;
                     case "TimeoutExcludes": _TimeoutExcludes = Convert.ToString(value); break;
+                    case "MaxTagLength": _MaxTagLength = value.ToInt(); break;
                     case "VipClients": _VipClients = Convert.ToString(value); break;
                     case "Nodes": _Nodes = Convert.ToString(value); break;
                     case "AlarmThreshold": _AlarmThreshold = value.ToInt(); break;
@@ -385,6 +395,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>超时排除项。不判断超时的操作名，支持*模糊匹配</summary>
             public static readonly Field TimeoutExcludes = FindByName("TimeoutExcludes");
+
+            /// <summary>最长标签。超过该长度时将截断，默认1024字符</summary>
+            public static readonly Field MaxTagLength = FindByName("MaxTagLength");
 
             /// <summary>Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配</summary>
             public static readonly Field VipClients = FindByName("VipClients");
@@ -478,6 +491,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>超时排除项。不判断超时的操作名，支持*模糊匹配</summary>
             public const String TimeoutExcludes = "TimeoutExcludes";
+
+            /// <summary>最长标签。超过该长度时将截断，默认1024字符</summary>
+            public const String MaxTagLength = "MaxTagLength";
 
             /// <summary>Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配</summary>
             public const String VipClients = "VipClients";

@@ -55,7 +55,8 @@ namespace Stardust.Server.Controllers
                 MaxSamples = app.MaxSamples,
                 MaxErrors = app.MaxErrors,
                 Timeout = app.Timeout,
-                //Excludes = app.Excludes?.Split(",", ";"),
+                Excludes = app.Excludes?.Split(",", ";"),
+                MaxTagLength = app.MaxTagLength,
             };
 
             // Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配
