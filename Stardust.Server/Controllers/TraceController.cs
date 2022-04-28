@@ -224,6 +224,10 @@ namespace Stardust.Server.Controllers
                 samples.Insert(true);
             }
 
+            ////todo 更新XCode后，支持批量插入的自动分表
+            //traces.Insert(true);
+            //samples.Insert(true);
+
             // 更新统计
             _stat.Add(traces);
             _appStat.Add(now.Date);
