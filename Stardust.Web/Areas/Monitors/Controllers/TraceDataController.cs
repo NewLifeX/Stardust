@@ -54,7 +54,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
             if (list.Count > 0 && appId > 0 && itemId > 0)
             {
-                var list2 = list.OrderBy(e => e.Id).ToList();
+                var list2 = list.OrderBy(e => e.StartTime).ToList();
 
                 // 绘制日期曲线图
                 var app = AppTracer.FindByID(appId);
@@ -62,13 +62,20 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 {
                     var chart = new ECharts
                     {
-                        Title = new ChartTitle { Text = "调用次数" },
+                        //Title = new ChartTitle { Text = "调用次数" },
                         Height = 400,
                     };
                     chart.SetX(list2, _.StartTime, e => e.StartTime.ToDateTime().ToLocalTime().ToString("HH:mm:ss"));
-                    chart.SetY("次数");
+                    //chart.SetY("次数");
+                    chart.YAxis = new[] {
+                        new { name = "调用次数", type = "value" },
+                        new { name = "错误数", type = "value" }
+                    };
                     chart.AddLine(list2, _.Total, null, true);
-                    chart.Add(list2, _.Errors);
+                   
+                    var line = chart.Add(list2, _.Errors);
+                    line["yAxisIndex"] = 1;
+
                     chart.SetTooltip();
                     ViewBag.Charts = new[] { chart };
                 }
@@ -76,14 +83,21 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 {
                     var chart = new ECharts
                     {
-                        Title = new ChartTitle { Text = "耗时" },
+                        //Title = new ChartTitle { Text = "耗时" },
                         Height = 400,
                     };
                     chart.SetX(list2, _.StartTime, e => e.StartTime.ToDateTime().ToLocalTime().ToString("HH:mm:ss"));
-                    chart.SetY("耗时");
+                    //chart.SetY("耗时");
+                    chart.YAxis = new[] {
+                        new { name = "耗时（ms）", type = "value" },
+                        new { name = "最大耗时（ms）", type = "value" }
+                    };
                     chart.AddLine(list2, _.Cost, null, true);
-                    chart.Add(list2, _.MaxCost);
                     chart.Add(list2, _.MinCost);
+                   
+                    var line = chart.Add(list2, _.MaxCost);
+                    line["yAxisIndex"] = 1;
+
                     chart.SetTooltip();
                     ViewBag.Charts2 = new[] { chart };
                 }
