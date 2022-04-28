@@ -7,4 +7,4 @@
     var page = ViewBag.Page as Pager;
 }
 @await Html.PartialAsync("_SelectNode", new Stardust.Web.Models.SelectNodeModel { Id= "nodeId" })
-@await Html.PartialAsync("_DateRange")
+@await Html.PartialAsync("_DateRange", "yyyy-MM-dd HH:mm:ss")

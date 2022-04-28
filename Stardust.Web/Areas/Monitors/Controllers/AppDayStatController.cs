@@ -36,7 +36,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             {
                 p.Sort = __.StatDate;
                 p.Desc = true;
-                p.PageSize = 100;
+                p.PageSize = 30;
             }
 
             p.RetrieveState = true;

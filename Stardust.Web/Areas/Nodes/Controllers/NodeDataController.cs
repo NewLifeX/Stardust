@@ -32,6 +32,12 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                 if (p.PageSize == 20 && nodeId > 0) p.PageSize = 24 * 60;
 
                 PageSetting.EnableNavbar = false;
+
+                if (start.Year < 2000)
+                {
+                    start = DateTime.Today;
+                    p["dtStart"] = start.ToFullString();
+                }
             }
 
             if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.Id.Desc();
@@ -51,28 +57,58 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                         Title = new ChartTitle { Text = node.Name },
                         Height = 400,
                     };
-                    chart.SetX(list2, _.LocalTime, e => e.LocalTime.ToString("HH:mm"));
-                    chart.SetY("指标");
+                    chart.SetX(list2, _.LocalTime);
+                    //chart.SetY("指标");
+                    chart.YAxis = new[] {
+                        new { name = "指标", type = "value" },
+                        new { name = "网络", type = "value" }
+                    };
                     chart.AddLine(list2, _.CpuRate, e => Math.Round(e.CpuRate * 100), true);
 
                     var series = chart.Add(list2, _.AvailableMemory, "line", e => node.Memory == 0 ? 0 : (100 - (e.AvailableMemory * 100 / node.Memory)));
                     series.Name = "已用内存";
                     series = chart.Add(list2, _.AvailableFreeSpace, "line", e => node.TotalSize == 0 ? 0 : (100 - (e.AvailableFreeSpace * 100 / node.TotalSize)));
                     series.Name = "已用磁盘";
-                    series = chart.Add(list2, _.UplinkSpeed, "line", e => e.UplinkSpeed / 10000);
-                    series.Name = "网络上行";
-                    series = chart.Add(list2, _.DownlinkSpeed, "line", e => e.DownlinkSpeed / 10000);
-                    series.Name = "网络下行";
 
-                    chart.Add(list2, _.TcpConnections);
-                    chart.Add(list2, _.TcpTimeWait);
-                    chart.Add(list2, _.TcpCloseWait);
-                    chart.AddLine(list2, _.Temperature, e => Math.Round(e.Temperature, 2), true);
-                    chart.AddLine(list2, _.Battery, e => Math.Round(e.Battery * 100), true);
+                    if (list2.Any(e => e.Temperature > 0))
+                        chart.AddLine(list2, _.Temperature, e => Math.Round(e.Temperature, 2), true);
+                    if (list2.Any(e => e.Battery > 0))
+                        chart.AddLine(list2, _.Battery, e => Math.Round(e.Battery * 100), true);
+
+                    if (list2.Any(e => e.UplinkSpeed > 0))
+                    {
+                        var line = chart.Add(list2, _.UplinkSpeed, "line", e => e.UplinkSpeed / 10000);
+                        line.Name = "网络上行";
+                        line["yAxisIndex"] = 1;
+                    }
+                    if (list2.Any(e => e.DownlinkSpeed > 0))
+                    {
+                        var line = chart.Add(list2, _.DownlinkSpeed, "line", e => e.DownlinkSpeed / 10000);
+                        line.Name = "网络下行";
+                        line["yAxisIndex"] = 1;
+                    }
+
+                    if (list2.Any(e => e.TcpConnections > 0))
+                    {
+                        var line = chart.Add(list2, _.TcpConnections);
+                        line["yAxisIndex"] = 1;
+                    }
+                    if (list2.Any(e => e.TcpTimeWait > 0))
+                    {
+                        var line = chart.Add(list2, _.TcpTimeWait);
+                        line["yAxisIndex"] = 1;
+                    }
+                    if (list2.Any(e => e.TcpCloseWait > 0))
+                    {
+                        var line = chart.Add(list2, _.TcpCloseWait);
+                        line["yAxisIndex"] = 1;
+                    }
                     //chart.Add(list2, _.Offset);
                     chart.SetTooltip();
                     ViewBag.Charts = new[] { chart };
                 }
+
+                if (list.Count > 1000) list = list.Take(1000).ToList();
             }
 
             return list;
