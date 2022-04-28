@@ -83,6 +83,14 @@ namespace Stardust.Data
         [BindColumn("Version", "版本", "")]
         public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
+        private Int32 _Period;
+        /// <summary>采样周期。默认60秒</summary>
+        [DisplayName("采样周期")]
+        [Description("采样周期。默认60秒")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Period", "采样周期。默认60秒", "")]
+        public Int32 Period { get => _Period; set { if (OnPropertyChanging("Period", value)) { _Period = value; OnPropertyChanged("Period"); } } }
+
         private String _WebHook;
         /// <summary>告警机器人。钉钉、企业微信等</summary>
         [DisplayName("告警机器人")]
@@ -214,6 +222,7 @@ namespace Stardust.Data
                     case "Enable": return _Enable;
                     case "AutoActive": return _AutoActive;
                     case "Version": return _Version;
+                    case "Period": return _Period;
                     case "WebHook": return _WebHook;
                     case "AlarmOnOffline": return _AlarmOnOffline;
                     case "LastLogin": return _LastLogin;
@@ -243,6 +252,7 @@ namespace Stardust.Data
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "AutoActive": _AutoActive = value.ToBoolean(); break;
                     case "Version": _Version = Convert.ToString(value); break;
+                    case "Period": _Period = value.ToInt(); break;
                     case "WebHook": _WebHook = Convert.ToString(value); break;
                     case "AlarmOnOffline": _AlarmOnOffline = value.ToBoolean(); break;
                     case "LastLogin": _LastLogin = value.ToDateTime(); break;
@@ -290,6 +300,9 @@ namespace Stardust.Data
 
             /// <summary>版本</summary>
             public static readonly Field Version = FindByName("Version");
+
+            /// <summary>采样周期。默认60秒</summary>
+            public static readonly Field Period = FindByName("Period");
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public static readonly Field WebHook = FindByName("WebHook");
@@ -362,6 +375,9 @@ namespace Stardust.Data
 
             /// <summary>版本</summary>
             public const String Version = "Version";
+
+            /// <summary>采样周期。默认60秒</summary>
+            public const String Period = "Period";
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public const String WebHook = "WebHook";

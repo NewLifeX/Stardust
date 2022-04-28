@@ -10,6 +10,7 @@
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="AutoActive" DataType="Boolean" Description="自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务" />
       <Column Name="Version" DataType="String" Description="版本" />
+      <Column Name="Period" DataType="Int32" Description="采样周期。默认60秒" />
       <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
       <Column Name="AlarmOnOffline" DataType="Boolean" Description="下线告警。节点下线时，发送告警" />
       <Column Name="LastLogin" DataType="DateTime" Description="最后登录" />

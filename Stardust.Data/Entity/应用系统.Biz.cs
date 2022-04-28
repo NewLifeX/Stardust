@@ -46,6 +46,8 @@ namespace Stardust.Data
             if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), "名称不能为空！");
 
             if (isNew && !Dirtys[__.AutoActive]) AutoActive = true;
+
+            if (Period == 0) Period = 60;
         }
 
         /// <summary>

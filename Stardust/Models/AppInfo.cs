@@ -104,7 +104,7 @@ namespace Stardust.Models
                 else
                 {
                     var ms = _stopwatch.ElapsedMilliseconds;
-                    if (ms > 0) CpuUsage = (ProcessorTime - _last) / ms;
+                    if (ms > 0) CpuUsage = (Double)(ProcessorTime - _last) / ms;
                 }
                 _last = ProcessorTime;
 

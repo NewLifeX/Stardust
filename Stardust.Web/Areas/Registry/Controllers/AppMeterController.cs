@@ -72,6 +72,7 @@ namespace Stardust.Web.Areas.Registry.Controllers
                     chart.SetX(list2, _.CreateTime, e => e.CreateTime.ToString("HH:mm"));
                     chart.SetY("指标");
                     chart.AddLine(list2, _.Memory, null, true);
+                    chart.AddLine(list2, _.CpuUsage, null, true);
                     chart.Add(list2, _.Threads);
                     chart.Add(list2, _.Handles);
                     chart.Add(list2, _.Connections);

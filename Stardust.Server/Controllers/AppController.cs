@@ -87,6 +87,7 @@ namespace Stardust.Server.Controllers
             {
                 //Time = inf.Time,
                 ServerTime = DateTime.UtcNow,
+                Period = _app.Period,
             };
 
             _registryService.Ping(_app, inf, UserHost, _clientId, _token);
