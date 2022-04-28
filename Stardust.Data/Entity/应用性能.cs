@@ -59,6 +59,14 @@ namespace Stardust.Data
         [BindColumn("ProcessorTime", "处理器。处理器时间，单位ms", "")]
         public Int32 ProcessorTime { get => _ProcessorTime; set { if (OnPropertyChanging("ProcessorTime", value)) { _ProcessorTime = value; OnPropertyChanged("ProcessorTime"); } } }
 
+        private Double _CpuUsage;
+        /// <summary>CPU负载。处理器时间除以物理时间的占比</summary>
+        [DisplayName("CPU负载")]
+        [Description("CPU负载。处理器时间除以物理时间的占比")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("CpuUsage", "CPU负载。处理器时间除以物理时间的占比", "")]
+        public Double CpuUsage { get => _CpuUsage; set { if (OnPropertyChanging("CpuUsage", value)) { _CpuUsage = value; OnPropertyChanged("CpuUsage"); } } }
+
         private Int32 _Threads;
         /// <summary>线程数</summary>
         [DisplayName("线程数")]
@@ -131,6 +139,7 @@ namespace Stardust.Data
                     case "ClientId": return _ClientId;
                     case "Memory": return _Memory;
                     case "ProcessorTime": return _ProcessorTime;
+                    case "CpuUsage": return _CpuUsage;
                     case "Threads": return _Threads;
                     case "Handles": return _Handles;
                     case "Connections": return _Connections;
@@ -150,6 +159,7 @@ namespace Stardust.Data
                     case "ClientId": _ClientId = Convert.ToString(value); break;
                     case "Memory": _Memory = value.ToInt(); break;
                     case "ProcessorTime": _ProcessorTime = value.ToInt(); break;
+                    case "CpuUsage": _CpuUsage = value.ToDouble(); break;
                     case "Threads": _Threads = value.ToInt(); break;
                     case "Handles": _Handles = value.ToInt(); break;
                     case "Connections": _Connections = value.ToInt(); break;
@@ -181,6 +191,9 @@ namespace Stardust.Data
 
             /// <summary>处理器。处理器时间，单位ms</summary>
             public static readonly Field ProcessorTime = FindByName("ProcessorTime");
+
+            /// <summary>CPU负载。处理器时间除以物理时间的占比</summary>
+            public static readonly Field CpuUsage = FindByName("CpuUsage");
 
             /// <summary>线程数</summary>
             public static readonly Field Threads = FindByName("Threads");
@@ -223,6 +236,9 @@ namespace Stardust.Data
 
             /// <summary>处理器。处理器时间，单位ms</summary>
             public const String ProcessorTime = "ProcessorTime";
+
+            /// <summary>CPU负载。处理器时间除以物理时间的占比</summary>
+            public const String CpuUsage = "CpuUsage";
 
             /// <summary>线程数</summary>
             public const String Threads = "Threads";

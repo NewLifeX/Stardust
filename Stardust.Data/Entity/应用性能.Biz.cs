@@ -156,6 +156,7 @@ namespace Stardust.Data
                 ClientId = clientId,
                 Memory = (Int32)(info.WorkingSet / 1024 / 1024),
                 ProcessorTime = info.ProcessorTime,
+                CpuUsage = info.CpuUsage,
                 Threads = info.Threads,
                 Handles = info.Handles,
                 Connections = info.Connections,

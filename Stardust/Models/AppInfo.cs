@@ -36,6 +36,9 @@ namespace Stardust.Models
         /// <summary>处理器时间。单位ms</summary>
         public Int32 ProcessorTime { get; set; }
 
+        /// <summary>CPU负载。处理器时间除以物理时间的占比</summary>
+        public Double CpuUsage { get; set; }
+
         /// <summary>物理内存</summary>
         public Int64 WorkingSet { get; set; }
 
@@ -77,6 +80,9 @@ namespace Stardust.Models
         #endregion
 
         #region 方法
+        private Stopwatch _stopwatch;
+        private Int64 _last;
+
         /// <summary>刷新进程相关信息</summary>
         public void Refresh()
         {
@@ -92,6 +98,15 @@ namespace Stardust.Models
                 MachineName = Environment.MachineName;
                 StartTime = _process.StartTime;
                 ProcessorTime = (Int32)_process.TotalProcessorTime.TotalMilliseconds;
+
+                if (_stopwatch == null)
+                    _stopwatch = Stopwatch.StartNew();
+                else
+                {
+                    var ms = _stopwatch.ElapsedMilliseconds;
+                    if (ms > 0) CpuUsage = (ProcessorTime - _last) / ms;
+                }
+                _last = ProcessorTime;
 
                 try
                 {

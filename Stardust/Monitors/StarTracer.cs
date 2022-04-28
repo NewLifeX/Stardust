@@ -221,21 +221,21 @@ namespace Stardust.Monitors
 
             // 反射处理XCode追踪
             {
-                var type = "XCode.DataAccessLayer.DAL".GetTypeEx(false);
+                var type = "XCode.DataAccessLayer.DAL".GetTypeEx();
                 var pi = type?.GetPropertyEx("GlobalTracer");
                 if (pi != null && pi.PropertyType == typeof(ITracer)) pi.SetValue(null, this, null);
             }
 
             // 反射处理Cube追踪
             {
-                var type = "NewLife.Cube.WebMiddleware.TracerMiddleware".GetTypeEx(false);
+                var type = "NewLife.Cube.WebMiddleware.TracerMiddleware".GetTypeEx();
                 var pi = type?.GetPropertyEx("Tracer");
                 if (pi != null && pi.PropertyType == typeof(ITracer)) pi.SetValue(null, this, null);
             }
 
             // 反射处理Star追踪
             {
-                var type = "Stardust.Extensions.TracerMiddleware".GetTypeEx(false);
+                var type = "Stardust.Extensions.TracerMiddleware".GetTypeEx();
                 var pi = type?.GetPropertyEx("Tracer");
                 if (pi != null && pi.PropertyType == typeof(ITracer)) pi.SetValue(null, this, null);
             }

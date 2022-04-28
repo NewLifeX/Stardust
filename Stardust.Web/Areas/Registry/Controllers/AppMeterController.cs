@@ -44,6 +44,12 @@ namespace Stardust.Web.Areas.Registry.Controllers
                 //}
 
                 PageSetting.EnableNavbar = false;
+
+                if (start.Year < 2000)
+                {
+                    start = DateTime.Today;
+                    p["dtStart"] = start.ToFullString();
+                }
             }
 
             if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.Id.Desc();
