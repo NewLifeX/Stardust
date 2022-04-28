@@ -142,7 +142,7 @@ namespace Stardust.Monitors
                     if (rs.MaxSamples > 0) MaxSamples = rs.MaxSamples;
                     if (rs.MaxErrors > 0) MaxErrors = rs.MaxErrors;
                     if (rs.Timeout > 0) Timeout = rs.Timeout;
-                    //if (rs.MaxTagLength > 0) MaxTagLength = rs.MaxTagLength;
+                    if (rs.MaxTagLength > 0) MaxTagLength = rs.MaxTagLength;
                     Excludes = rs.Excludes;
 
                     // 保存到配置文件

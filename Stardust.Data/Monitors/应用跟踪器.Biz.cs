@@ -67,6 +67,7 @@ namespace Stardust.Data.Monitors
                 if (!Dirtys[nameof(MaxSamples)]) MaxSamples = 1;
                 if (!Dirtys[nameof(MaxErrors)]) MaxErrors = 10;
                 if (!Dirtys[nameof(Timeout)]) Timeout = 5000;
+                if (!Dirtys[nameof(MaxTagLength)]) MaxTagLength = 1024;
             }
             else
             {
