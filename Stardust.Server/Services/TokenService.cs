@@ -196,9 +196,9 @@ namespace Stardust.Server.Services
             // 早期客户端没有clientId
             if (online == null) online = AppOnline.GetOrAddClient(clientId) ?? AppOnline.GetOrAddClient(ip, token);
 
-            if (clientId.IsNullOrEmpty()) online.Client = clientId;
-            if (token.IsNullOrEmpty()) online.Token = token;
             online.PingCount++;
+            if (!clientId.IsNullOrEmpty()) online.Client = clientId;
+            if (!token.IsNullOrEmpty()) online.Token = token;
             if (online.CreateIP.IsNullOrEmpty()) online.CreateIP = ip;
 
             // 更新跟踪标识
@@ -206,7 +206,7 @@ namespace Stardust.Server.Services
             if (!traceId.IsNullOrEmpty()) online.TraceId = traceId;
 
             // 本地IP
-            if (online.IP.IsNullOrEmpty() && !localIp.IsNullOrEmpty()) online.IP = localIp;
+            if (online.IP.IsNullOrEmpty()) online.IP = localIp;
 
             // 关联节点
             if (online.NodeId == 0)
