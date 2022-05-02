@@ -19,7 +19,7 @@ namespace Stardust.Web.Areas.Registry.Controllers
                 var df = ListFields.GetField("NodeName") as ListField;
                 df.Header = "节点";
                 df.DisplayName = "{NodeName}";
-                df.Url = "/Nodes/Node?nodeId={NodeId}";
+                df.Url = "/Nodes/Node?Id={NodeId}";
             }
             {
                 var df = ListFields.AddListField("Meter", null, "PingCount");
