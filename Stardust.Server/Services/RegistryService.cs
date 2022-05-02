@@ -38,7 +38,7 @@ namespace Stardust.Server.Services
             {
                 // 关联节点，根据NodeCode匹配，如果未匹配上，则在未曾关联节点时才使用IP匹配
                 var node = Node.FindByCode(inf.NodeCode);
-                if (node == null && olt.NodeId == 0) node = Node.FindAllByIPs(inf.IP).FirstOrDefault();
+                if (node == null && olt.NodeId == 0) node = Node.FindAllByIP(inf.IP).FirstOrDefault();
                 if (node != null) olt.NodeId = node.ID;
 
                 olt.Version = inf.Version;

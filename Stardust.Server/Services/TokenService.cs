@@ -211,7 +211,7 @@ namespace Stardust.Server.Services
             // 关联节点
             if (online.NodeId == 0)
             {
-                var node = Node.FindAllByIPs(online.IP).FirstOrDefault();
+                var node = Node.FindAllByIP(online.IP).FirstOrDefault();
                 if (node != null) online.NodeId = node.ID;
             }
 

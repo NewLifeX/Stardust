@@ -160,6 +160,19 @@ namespace Stardust.Data.Nodes
 
             return FindAll(_.IP.In(ips));
         }
+
+        /// <summary>根据IP查找节点</summary>
+        /// <param name="ip"></param>
+        /// <returns></returns>
+        public static IList<Node> FindAllByIP(String ip)
+        {
+            if (ip.IsNullOrEmpty()) return new List<Node>();
+
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => ip == e.IP);
+
+            return FindAll(_.IP == ip);
+        }
         #endregion
 
         #region 高级查询
