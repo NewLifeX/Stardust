@@ -218,21 +218,27 @@ namespace Stardust.Data
             if (Meta.Count == 0) return null;
 
             // 10分钟不活跃将会被删除
-            var exp = _.UpdateTime < DateTime.Now.Subtract(expire);
+            var end = DateTime.Now.Subtract(expire);
+            var exp = _.UpdateTime < end;
             var list = FindAll(exp, null, null, 0, 0);
 
             // 单例应用使用大颗粒超时时间
-            var end = DateTime.Now.Subtract(expire2);
-            //var list2 = list.Where(e => e.App == null || !e.App.Singleton || e.UpdateTime < end).ToList();
-            //list2.Delete();
+            var end2 = DateTime.Now.Subtract(expire2);
 
             var list2 = new List<AppOnline>();
-            foreach (var item in list.OrderBy(e => e.Id))
+            foreach (var item in list.OrderByDescending(e => e.UpdateTime))
             {
-                if (item.App == null || !item.App.Singleton)
+                if (item.App == null || !item.App.Singleton || item.IP.IsNullOrEmpty())
                     list2.Add(item);
-                else if (item.UpdateTime < end || list2.Any(e => e.AppId == item.AppId))
+                else if (item.UpdateTime < end2)
                     list2.Add(item);
+                else
+                {
+                    // 单例应用，又没有达到最大时间，如果有活跃，则删除当前
+                    var list3 = FindAllByApp(item.AppId);
+                    if (list3.Any(e => e.IP == item.IP && e.UpdateTime >= end))
+                        list2.Add(item);
+                }
             }
             list2.Delete();
 
