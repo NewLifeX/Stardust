@@ -211,22 +211,22 @@ namespace Stardust.Server.Controllers
                 if (isTimeout && td.MinCost >= timeout && td.Errors < td.Total) td.Errors = td.Total;
             }
 
-            // 分表
-            var time = builders[0].StartTime.ToDateTime().ToLocalTime();
-            {
-                using var split = TraceData.Meta.CreateShard(time);
+            //// 分表
+            //var time = builders[0].StartTime.ToDateTime().ToLocalTime();
+            //{
+            //    using var split = TraceData.Meta.CreateShard(time);
 
-                traces.Insert(true);
-            }
-            {
-                using var split = SampleData.Meta.CreateShard(time);
+            //    traces.Insert(true);
+            //}
+            //{
+            //    using var split = SampleData.Meta.CreateShard(time);
 
-                samples.Insert(true);
-            }
+            //    samples.Insert(true);
+            //}
 
-            ////todo 更新XCode后，支持批量插入的自动分表
-            //traces.Insert(true);
-            //samples.Insert(true);
+            // 更新XCode后，支持批量插入的自动分表，内部按照实体类所属分表进行分组插入
+            traces.Insert(true);
+            samples.Insert(true);
 
             // 更新统计
             _stat.Add(traces);

@@ -21,6 +21,7 @@ namespace Stardust.Data.Monitors
             // 配置自动分表策略，一般在实体类静态构造函数中配置
             Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
             {
+                ConnPolicy = "{0}",
                 TablePolicy = "{0}_{1:yyyyMMdd}",
             };
 
