@@ -176,13 +176,10 @@ namespace Stardust.Data
         /// <param name="ip"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        public static AppOnline GetOrAddClient(String ip, String token)
+        static AppOnline GetOrAddClient(String ip, String token)
         {
             var key = token.GetBytes().Crc16().GetBytes().ToHex();
             var client = $"{ip}#{key}";
-            var online = FindByClient(client);
-            if (online == null) online = FindByToken(token);
-            if (online != null) return online;
 
             return GetOrAddClient(client);
         }
@@ -200,6 +197,8 @@ namespace Stardust.Data
         {
             // 首先根据ClientId和Token直接查找应用在线
             var online = FindByClient(clientId) ?? FindByToken(token);
+
+            // 早期客户端没有clientId
             if (online == null) online = GetOrAddClient(clientId) ?? GetOrAddClient(ip, token);
 
             if (clientId.IsNullOrEmpty()) online.Client = clientId;

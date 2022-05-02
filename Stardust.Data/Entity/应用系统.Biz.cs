@@ -182,7 +182,7 @@ namespace Stardust.Data
         /// <param name="clientId"></param>
         public void WriteHistory(String action, Boolean success, String remark, String version, String ip, String clientId)
         {
-            var history = AppHistory.Create(this, action, success, remark, version, Environment.MachineName, ip);
+            var history = AppHistory.Create(this, action, success, remark, version ?? Version, Environment.MachineName, ip);
             history.Client = clientId;
             history.SaveAsync();
         }
