@@ -125,7 +125,7 @@ namespace Stardust.Server.Controllers
             XTrace.WriteLine("WebSocket连接 {0}", app);
             WriteHistory("WebSocket连接", true, socket.State + "", clientId);
 
-            var olt = AppOnline.GetOrAddClient(clientId);
+            var olt = AppOnline.FindByClient(clientId);
             if (olt != null)
             {
                 olt.WebSocket = true;
@@ -352,7 +352,7 @@ namespace Stardust.Server.Controllers
             }
 
             // 节点信息
-            var olt = AppOnline.GetOrAddClient(model.ClientId);
+            var olt = AppOnline.FindByClient(model.ClientId);
             if (olt != null) svc.NodeId = olt.NodeId;
 
             // 作用域

@@ -194,7 +194,6 @@ namespace Stardust
             //var driveInfo = new DriveInfo(Path.GetPathRoot(".".GetFullPath()));
             var path = ".".GetFullPath();
             var driveInfo = DriveInfo.GetDrives().FirstOrDefault(e => path.StartsWithIgnoreCase(e.Name));
-            var ip = AgentInfo.GetIps();
             var di = new NodeInfo
             {
                 Version = asm?.FileVersion,
@@ -206,7 +205,7 @@ namespace Stardust
 
                 MachineName = Environment.MachineName,
                 UserName = Environment.UserName,
-                IP = ip,
+                IP = AgentInfo.GetIps(),
 
                 ProcessorCount = Environment.ProcessorCount,
                 Memory = mi.Memory,

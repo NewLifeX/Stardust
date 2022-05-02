@@ -30,6 +30,9 @@ namespace Stardust.Models
         /// <summary>机器名</summary>
         public String MachineName { get; set; }
 
+        /// <summary>本地IP地址。随着网卡变动，可能改变</summary>
+        public String IP { get; set; }
+
         /// <summary>开始时间</summary>
         public DateTime StartTime { get; set; }
 
@@ -96,6 +99,7 @@ namespace Stardust.Models
 
                 UserName = Environment.UserName;
                 MachineName = Environment.MachineName;
+                IP = AgentInfo.GetIps();
                 StartTime = _process.StartTime;
                 ProcessorTime = (Int32)_process.TotalProcessorTime.TotalMilliseconds;
 

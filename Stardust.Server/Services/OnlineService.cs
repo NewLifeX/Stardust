@@ -50,7 +50,7 @@ namespace Stardust.Server.Services
             {
                 using var span = _tracer?.NewSpan(nameof(CheckOnline));
 
-                var rs2 = AppOnline.ClearExpire(TimeSpan.FromSeconds(sessionTimeout));
+                var rs2 = AppOnline.ClearExpire(TimeSpan.FromSeconds(sessionTimeout), TimeSpan.FromDays(7));
                 if (rs2 != null)
                 {
                     foreach (var olt in rs2)

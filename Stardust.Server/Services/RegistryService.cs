@@ -31,30 +31,21 @@ namespace Stardust.Server.Services
             app.WriteHistory("Register", true, inf.ToJson(), inf.Version, clientId, ip);
 
             if (!inf.ClientId.IsNullOrEmpty()) clientId = inf.ClientId;
-            if (!clientId.IsNullOrEmpty())
+
+            // 更新在线记录
+            var olt = GetOrAddOnline(app, clientId, token, inf.IP, ip);
+            if (olt != null)
             {
-                var olt = GetOrAddOnline(app, inf.Version, ip, clientId, token);
-
-                // 本地IP
-                if (!inf.IP.IsNullOrEmpty())
-                    olt.IP = inf.IP;
-                else if (olt.IP.IsNullOrEmpty())
-                {
-                    var p = clientId.IndexOf('@');
-                    if (p > 0) olt.IP = clientId[..p];
-                }
-
-                // 关联节点
+                // 关联节点，根据NodeCode匹配，如果未匹配上，则在未曾关联节点时才使用IP匹配
                 var node = Node.FindByCode(inf.NodeCode);
-                if (node == null) node = Node.FindAllByIPs(olt.IP).FirstOrDefault();
+                if (node == null && olt.NodeId == 0) node = Node.FindAllByIPs(inf.IP).FirstOrDefault();
                 if (node != null) olt.NodeId = node.ID;
 
+                olt.Version = inf.Version;
                 olt.SaveAsync();
-
-                return olt;
             }
 
-            return null;
+            return olt;
         }
 
         public (AppService, Boolean changed) RegisterService(App app, Service service, PublishServiceInfo model, String ip)
@@ -101,7 +92,7 @@ namespace Stardust.Server.Services
             }
 
             // 节点信息
-            var olt = AppOnline.GetOrAddClient(model.ClientId);
+            var olt = AppOnline.FindByClient(model.ClientId);
             if (olt != null) svc.NodeId = olt.NodeId;
 
             // 作用域
@@ -274,20 +265,36 @@ namespace Stardust.Server.Services
             hi.SaveAsync();
         }
 
-        public AppOnline GetOrAddOnline(App app, String version, String ip, String clientId, String token)
+        public AppOnline GetOrAddOnline(App app, String clientId, String token, String localIp, String ip)
         {
             if (app == null) return null;
 
             if (clientId.IsNullOrEmpty()) return null;
 
-            var olt = AppOnline.GetOrAddClient(clientId);
-            olt.AppId = app.Id;
-            olt.Name = app.ToString();
-            olt.Category = app.Category;
-            olt.Version = version;
-            olt.Token = token;
-            olt.PingCount++;
-            if (olt.CreateIP.IsNullOrEmpty()) olt.CreateIP = ip;
+            // 找到在线会话，先查ClientId和Token。客户端刚启动时可能没有拿到本机IP，而后来心跳拿到了
+            var olt = AppOnline.FindByClient(clientId) ?? AppOnline.FindByToken(token);
+
+            // 如果是每节点单例部署，则使用本地IP作为会话匹配。可能是应用重启，前一次会话还在
+            if (olt == null && app.Singleton)
+            {
+                var list = AppOnline.FindAllByIP(localIp);
+                olt = list.FirstOrDefault(e => e.AppId == app.Id);
+            }
+
+            if (olt == null) olt = AppOnline.GetOrAddClient(clientId);
+
+            if (olt != null)
+            {
+                olt.AppId = app.Id;
+                olt.Name = app.ToString();
+                olt.Category = app.Category;
+                olt.PingCount++;
+
+                if (!clientId.IsNullOrEmpty()) olt.Client = clientId;
+                if (!token.IsNullOrEmpty()) olt.Token = token;
+                if (!localIp.IsNullOrEmpty()) olt.IP = localIp;
+                if (olt.CreateIP.IsNullOrEmpty()) olt.CreateIP = ip;
+            }
 
             return olt;
         }
@@ -296,17 +303,16 @@ namespace Stardust.Server.Services
         {
             if (app == null) return null;
 
-            if (!clientId.IsNullOrEmpty())
+            // 更新在线记录
+            var olt = GetOrAddOnline(app, clientId, token, inf.IP, ip);
+            if (olt != null)
             {
-                var olt = GetOrAddOnline(app, inf.Version, ip, clientId, token);
-
+                olt.Version = app.Version;
                 olt.Fill(app, inf);
                 olt.SaveAsync();
-
-                return olt;
             }
 
-            return null;
+            return olt;
         }
 
         /// <summary>向应用发送命令</summary>

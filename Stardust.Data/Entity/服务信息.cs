@@ -60,11 +60,11 @@ namespace Stardust.Data
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
         private Boolean _Singleton;
-        /// <summary>单例。每个节点只部署一个实例，此时使用本地IP作为唯一标识，便于设置权重</summary>
+        /// <summary>单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于设置权重</summary>
         [DisplayName("单例")]
-        [Description("单例。每个节点只部署一个实例，此时使用本地IP作为唯一标识，便于设置权重")]
+        [Description("单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于设置权重")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Singleton", "单例。每个节点只部署一个实例，此时使用本地IP作为唯一标识，便于设置权重", "")]
+        [BindColumn("Singleton", "单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于设置权重", "")]
         public Boolean Singleton { get => _Singleton; set { if (OnPropertyChanging("Singleton", value)) { _Singleton = value; OnPropertyChanged("Singleton"); } } }
 
         private String _Address;
@@ -262,7 +262,7 @@ namespace Stardust.Data
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
 
-            /// <summary>单例。每个节点只部署一个实例，此时使用本地IP作为唯一标识，便于设置权重</summary>
+            /// <summary>单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于设置权重</summary>
             public static readonly Field Singleton = FindByName("Singleton");
 
             /// <summary>服务地址模版。固定的网关地址，或地址模版如http://{IP}:{Port}，默认不填写，自动识别地址</summary>
@@ -328,7 +328,7 @@ namespace Stardust.Data
             /// <summary>启用</summary>
             public const String Enable = "Enable";
 
-            /// <summary>单例。每个节点只部署一个实例，此时使用本地IP作为唯一标识，便于设置权重</summary>
+            /// <summary>单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于设置权重</summary>
             public const String Singleton = "Singleton";
 
             /// <summary>服务地址模版。固定的网关地址，或地址模版如http://{IP}:{Port}，默认不填写，自动识别地址</summary>

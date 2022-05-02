@@ -79,8 +79,8 @@ namespace Stardust.Data
         {
             if (id <= 0) return null;
 
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
+            //// 实体缓存
+            //if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
 
             // 单对象缓存
             return Meta.SingleCache[id];
@@ -108,8 +108,8 @@ namespace Stardust.Data
         {
             if (token.IsNullOrEmpty()) return null;
 
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Token == token);
+            //// 实体缓存
+            //if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Token == token);
 
             return Find(_.Token == token);
         }
@@ -119,9 +119,19 @@ namespace Stardust.Data
         /// <returns></returns>
         public static IList<AppOnline> FindAllByApp(Int32 appId)
         {
-            //if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId);
+            if (appId == 0) return new List<AppOnline>();
 
             return FindAll(_.AppId == appId);
+        }
+
+        /// <summary>根据IP查找所有在线记录</summary>
+        /// <param name="ip"></param>
+        /// <returns></returns>
+        public static IList<AppOnline> FindAllByIP(String ip)
+        {
+            if (ip.IsNullOrEmpty()) return new List<AppOnline>();
+
+            return FindAll(_.IP == ip);
         }
         #endregion
 
@@ -191,6 +201,7 @@ namespace Stardust.Data
             // 首先根据ClientId和Token直接查找应用在线
             var online = FindByClient(clientId) ?? FindByToken(token);
             if (online == null) online = GetOrAddClient(clientId) ?? GetOrAddClient(ip, token);
+
             if (clientId.IsNullOrEmpty()) online.Client = clientId;
             if (token.IsNullOrEmpty()) online.Token = token;
             online.PingCount++;
@@ -247,18 +258,23 @@ namespace Stardust.Data
         }
 
         /// <summary>删除过期，指定过期时间</summary>
-        /// <param name="expire">超时时间，秒</param>
+        /// <param name="expire">超时时间</param>
+        /// <param name="expire2">大颗粒超时时间，为单例应用准备</param>
         /// <returns></returns>
-        public static IList<AppOnline> ClearExpire(TimeSpan expire)
+        public static IList<AppOnline> ClearExpire(TimeSpan expire, TimeSpan expire2)
         {
             if (Meta.Count == 0) return null;
 
             // 10分钟不活跃将会被删除
             var exp = _.UpdateTime < DateTime.Now.Subtract(expire);
             var list = FindAll(exp, null, null, 0, 0);
-            list.Delete();
 
-            return list;
+            // 单例应用使用大颗粒超时时间
+            var end = DateTime.Now.Subtract(expire2);
+            var list2 = list.Where(e => e.App == null || !e.App.Singleton || e.UpdateTime < end).ToList();
+            list2.Delete();
+
+            return list2;
         }
         #endregion
     }

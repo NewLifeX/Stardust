@@ -11,6 +11,7 @@
       <Column Name="AutoActive" DataType="Boolean" Description="自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务" />
       <Column Name="Version" DataType="String" Description="版本" />
       <Column Name="Period" DataType="Int32" Description="采样周期。默认60秒" />
+      <Column Name="Singleton" DataType="Boolean" Description="单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于管理实例" />
       <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
       <Column Name="AlarmOnOffline" DataType="Boolean" Description="下线告警。节点下线时，发送告警" />
       <Column Name="LastLogin" DataType="DateTime" Description="最后登录" />
@@ -61,6 +62,7 @@
       <Index Columns="Client" Unique="True" />
       <Index Columns="AppId" />
       <Index Columns="Token" />
+      <Index Columns="IP" />
       <Index Columns="UpdateTime" />
     </Indexes>
   </Table>
@@ -135,7 +137,7 @@
       <Column Name="DisplayName" DataType="String" Description="显示名" />
       <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
-      <Column Name="Singleton" DataType="Boolean" Description="单例。每个节点只部署一个实例，此时使用本地IP作为唯一标识，便于设置权重" />
+      <Column Name="Singleton" DataType="Boolean" Description="单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于设置权重" />
       <Column Name="Address" DataType="String" Description="服务地址模版。固定的网关地址，或地址模版如http://{IP}:{Port}，默认不填写，自动识别地址" />
       <Column Name="HealthCheck" DataType="Boolean" Description="健康监测。定时检测服务是否可用" />
       <Column Name="HealthAddress" DataType="String" Description="监测地址。健康监测接口地址，相对地址或绝对地址" />

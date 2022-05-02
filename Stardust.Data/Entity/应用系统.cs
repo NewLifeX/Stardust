@@ -91,6 +91,14 @@ namespace Stardust.Data
         [BindColumn("Period", "采样周期。默认60秒", "")]
         public Int32 Period { get => _Period; set { if (OnPropertyChanging("Period", value)) { _Period = value; OnPropertyChanged("Period"); } } }
 
+        private Boolean _Singleton;
+        /// <summary>单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于管理实例</summary>
+        [DisplayName("单例")]
+        [Description("单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于管理实例")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Singleton", "单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于管理实例", "")]
+        public Boolean Singleton { get => _Singleton; set { if (OnPropertyChanging("Singleton", value)) { _Singleton = value; OnPropertyChanged("Singleton"); } } }
+
         private String _WebHook;
         /// <summary>告警机器人。钉钉、企业微信等</summary>
         [DisplayName("告警机器人")]
@@ -223,6 +231,7 @@ namespace Stardust.Data
                     case "AutoActive": return _AutoActive;
                     case "Version": return _Version;
                     case "Period": return _Period;
+                    case "Singleton": return _Singleton;
                     case "WebHook": return _WebHook;
                     case "AlarmOnOffline": return _AlarmOnOffline;
                     case "LastLogin": return _LastLogin;
@@ -253,6 +262,7 @@ namespace Stardust.Data
                     case "AutoActive": _AutoActive = value.ToBoolean(); break;
                     case "Version": _Version = Convert.ToString(value); break;
                     case "Period": _Period = value.ToInt(); break;
+                    case "Singleton": _Singleton = value.ToBoolean(); break;
                     case "WebHook": _WebHook = Convert.ToString(value); break;
                     case "AlarmOnOffline": _AlarmOnOffline = value.ToBoolean(); break;
                     case "LastLogin": _LastLogin = value.ToDateTime(); break;
@@ -303,6 +313,9 @@ namespace Stardust.Data
 
             /// <summary>采样周期。默认60秒</summary>
             public static readonly Field Period = FindByName("Period");
+
+            /// <summary>单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于管理实例</summary>
+            public static readonly Field Singleton = FindByName("Singleton");
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public static readonly Field WebHook = FindByName("WebHook");
@@ -378,6 +391,9 @@ namespace Stardust.Data
 
             /// <summary>采样周期。默认60秒</summary>
             public const String Period = "Period";
+
+            /// <summary>单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于管理实例</summary>
+            public const String Singleton = "Singleton";
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public const String WebHook = "WebHook";

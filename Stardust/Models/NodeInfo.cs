@@ -28,7 +28,7 @@ namespace Stardust.Models
         /// <summary>用户名</summary>
         public String UserName { get; set; }
 
-        /// <summary>本地IP地址</summary>
+        /// <summary>本地IP地址。随着网卡变动，可能改变</summary>
         public String IP { get; set; }
 
         /// <summary>核心数</summary>

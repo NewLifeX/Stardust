@@ -15,7 +15,7 @@
         /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
         public String ClientId { get; set; }
 
-        /// <summary>本地IP地址</summary>
+        /// <summary>本地IP地址。随着网卡变动，可能改变</summary>
         public String IP { get; set; }
 
         /// <summary>节点编码</summary>
