@@ -176,59 +176,12 @@ namespace Stardust.Data
         /// <param name="ip"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        static AppOnline GetOrAddClient(String ip, String token)
+        public static AppOnline GetOrAddClient(String ip, String token)
         {
             var key = token.GetBytes().Crc16().GetBytes().ToHex();
             var client = $"{ip}#{key}";
 
             return GetOrAddClient(client);
-        }
-
-        /// <summary>
-        /// 更新在线状态
-        /// </summary>
-        /// <param name="app"></param>
-        /// <param name="clientId"></param>
-        /// <param name="ip"></param>
-        /// <param name="token"></param>
-        /// <param name="info"></param>
-        /// <returns></returns>
-        public static AppOnline UpdateOnline(App app, String clientId, String ip, String token, AppInfo info = null)
-        {
-            // 首先根据ClientId和Token直接查找应用在线
-            var online = FindByClient(clientId) ?? FindByToken(token);
-
-            // 早期客户端没有clientId
-            if (online == null) online = GetOrAddClient(clientId) ?? GetOrAddClient(ip, token);
-
-            if (clientId.IsNullOrEmpty()) online.Client = clientId;
-            if (token.IsNullOrEmpty()) online.Token = token;
-            online.PingCount++;
-            if (online.CreateIP.IsNullOrEmpty()) online.CreateIP = ip;
-
-            // 更新跟踪标识
-            var traceId = DefaultSpan.Current?.TraceId;
-            if (!traceId.IsNullOrEmpty()) online.TraceId = traceId;
-
-            // 本地IP
-            if (online.IP.IsNullOrEmpty() && !clientId.IsNullOrEmpty())
-            {
-                var p = clientId.IndexOf('@');
-                if (p > 0) online.IP = clientId[..p];
-            }
-
-            // 关联节点
-            if (online.NodeId == 0)
-            {
-                var node = Node.FindAllByIPs(online.IP).FirstOrDefault();
-                if (node != null) online.NodeId = node.ID;
-            }
-
-            online.Fill(app, info);
-
-            online.SaveAsync();
-
-            return online;
         }
 
         /// <summary>更新信息</summary>
@@ -270,7 +223,17 @@ namespace Stardust.Data
 
             // 单例应用使用大颗粒超时时间
             var end = DateTime.Now.Subtract(expire2);
-            var list2 = list.Where(e => e.App == null || !e.App.Singleton || e.UpdateTime < end).ToList();
+            //var list2 = list.Where(e => e.App == null || !e.App.Singleton || e.UpdateTime < end).ToList();
+            //list2.Delete();
+
+            var list2 = new List<AppOnline>();
+            foreach (var item in list.OrderBy(e => e.Id))
+            {
+                if (item.App == null || !item.App.Singleton)
+                    list2.Add(item);
+                else if (item.UpdateTime < end || list2.Any(e => e.AppId == item.AppId))
+                    list2.Add(item);
+            }
             list2.Delete();
 
             return list2;

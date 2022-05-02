@@ -1,9 +1,12 @@
 ﻿using System.Reflection;
 using NewLife;
+using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Security;
 using NewLife.Web;
 using Stardust.Data;
+using Stardust.Data.Nodes;
+using Stardust.Models;
 
 namespace Stardust.Server.Services
 {
@@ -153,6 +156,70 @@ namespace Stardust.Server.Services
             if ((app == null || !app.Enable) && ex == null) ex = new InvalidOperationException($"无效应用[{jwt.Subject}]");
 
             return (app, ex);
+        }
+
+        /// <summary>
+        /// 更新在线状态
+        /// </summary>
+        /// <param name="app"></param>
+        /// <param name="clientId"></param>
+        /// <param name="ip"></param>
+        /// <param name="token"></param>
+        /// <param name="info"></param>
+        /// <returns></returns>
+        public AppOnline UpdateOnline(App app, String clientId, String ip, String token, AppInfo info = null)
+        {
+            // 首先根据ClientId和Token直接查找应用在线
+            var online = AppOnline.FindByClient(clientId) ?? AppOnline.FindByToken(token);
+
+            var localIp = "";
+            if (!clientId.IsNullOrEmpty())
+            {
+                var p = clientId.IndexOf('@');
+                if (p > 0) localIp = clientId[..p];
+            }
+
+            // 如果是每节点单例部署，则使用本地IP作为会话匹配。可能是应用重启，前一次会话还在
+            if (online == null && app.Singleton && !localIp.IsNullOrEmpty())
+            {
+                var list = AppOnline.FindAllByIP(localIp);
+                online = list.OrderBy(e => e.Id).FirstOrDefault(e => e.AppId == app.Id);
+
+                // 处理多IP
+                if (online == null)
+                {
+                    list = AppOnline.FindAllByApp(app.Id);
+                    online = list.OrderBy(e => e.Id).FirstOrDefault(e => !e.IP.IsNullOrEmpty() && e.IP.Contains(ip));
+                }
+            }
+
+            // 早期客户端没有clientId
+            if (online == null) online = AppOnline.GetOrAddClient(clientId) ?? AppOnline.GetOrAddClient(ip, token);
+
+            if (clientId.IsNullOrEmpty()) online.Client = clientId;
+            if (token.IsNullOrEmpty()) online.Token = token;
+            online.PingCount++;
+            if (online.CreateIP.IsNullOrEmpty()) online.CreateIP = ip;
+
+            // 更新跟踪标识
+            var traceId = DefaultSpan.Current?.TraceId;
+            if (!traceId.IsNullOrEmpty()) online.TraceId = traceId;
+
+            // 本地IP
+            if (online.IP.IsNullOrEmpty() && !localIp.IsNullOrEmpty()) online.IP = localIp;
+
+            // 关联节点
+            if (online.NodeId == 0)
+            {
+                var node = Node.FindAllByIPs(online.IP).FirstOrDefault();
+                if (node != null) online.NodeId = node.ID;
+            }
+
+            online.Fill(app, info);
+
+            online.SaveAsync();
+
+            return online;
         }
     }
 }

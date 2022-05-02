@@ -278,7 +278,7 @@ namespace Stardust.Server.Services
             if (olt == null && app.Singleton)
             {
                 var list = AppOnline.FindAllByIP(localIp);
-                olt = list.FirstOrDefault(e => e.AppId == app.Id);
+                olt = list.OrderBy(e => e.Id).FirstOrDefault(e => e.AppId == app.Id);
             }
 
             if (olt == null) olt = AppOnline.GetOrAddClient(clientId);

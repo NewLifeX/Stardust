@@ -166,7 +166,7 @@ namespace Stardust.Server.Controllers
             if (clientId.IsNullOrEmpty()) clientId = ip;
 
             // 更新心跳信息
-            var online = AppOnline.UpdateOnline(ap, clientId, ip, token);
+            var online = _tokenService.UpdateOnline(ap, clientId, ip, token);
 
             // 检查应用有效性
             if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");

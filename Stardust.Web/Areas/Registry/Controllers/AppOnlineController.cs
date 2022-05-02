@@ -13,7 +13,7 @@ namespace Stardust.Web.Areas.Registry.Controllers
     {
         static AppOnlineController()
         {
-            ListFields.RemoveField("Token", "Compile");
+            ListFields.RemoveField("ProcessName", "MachineName", "UserName", "Token", "Compile");
 
             {
                 var df = ListFields.GetField("NodeName") as ListField;

@@ -3,6 +3,9 @@ using NewLife.Cube;
 using NewLife.Data;
 using NewLife.Web;
 using Stardust.Data;
+using Stardust.Data.Configs;
+using Stardust.Data.Deployment;
+using Stardust.Data.Monitors;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Registry.Controllers
@@ -20,51 +23,54 @@ namespace Stardust.Web.Areas.Registry.Controllers
             ListFields.RemoveUpdateField();
 
             {
-                var df = ListFields.AddListField("Online", "LastLogin");
-                df.DisplayName = "在线";
+                var df = ListFields.AddListField("Online", "Version");
+                df.DisplayName = "实例";
                 df.Url = "AppOnline?appId={Id}";
             }
             {
-                var df = ListFields.AddListField("AppLog", "LastLogin");
-                df.DisplayName = "应用日志";
-                df.Url = "AppLog?appId={Id}";
+                var df = ListFields.AddListField("Monitor", "Version");
+                df.DisplayName = "监控";
+                df.Url = "/Monitors/AppTracer?appId={Id}";
+                df.DataVisible = (e, f) => AppTracer.FindByAppId((e as App).Id) != null;
             }
             {
-                var df = ListFields.AddListField("History", null, "AutoActive");
-                df.DisplayName = "历史";
-                df.Url = "AppHistory?appId={Id}";
+                var df = ListFields.AddListField("Config", "Version");
+                df.DisplayName = "配置";
+                df.Url = "/Configs/AppConfig?appId={Id}";
+                df.DataVisible = (e, f) => AppConfig.FindByAppId((e as App).Id) != null;
             }
             {
-                var df = ListFields.AddListField("Meter", null, "AutoActive");
+                var df = ListFields.AddListField("Deploy", "Version");
+                df.DisplayName = "部署";
+                df.Url = "/Deployment/AppDeploy?appId={Id}";
+                df.DataVisible = (e, f) => AppDeploy.FindById((e as App).Id) != null;
+            }
+            {
+                var df = ListFields.AddListField("Meter", "Version");
                 df.DisplayName = "性能";
                 df.Url = "AppMeter?appId={Id}";
             }
             {
-                var df = ListFields.AddListField("Deploy", null, "AutoActive");
-                df.DisplayName = "部署";
-                df.Url = "/Deployment/AppDeploy?appId={Id}";
+                var df = ListFields.AddListField("History", "Version");
+                df.DisplayName = "历史";
+                df.Url = "AppHistory?appId={Id}";
             }
             {
-                var df = ListFields.AddListField("Config", null, "AutoActive");
-                df.DisplayName = "配置";
-                df.Url = "/Configs/AppConfig?appId={Id}";
-            }
-            {
-                var df = ListFields.AddListField("Monitor", null, "AutoActive");
-                df.DisplayName = "监控";
-                df.Url = "/Monitors/AppTracer?appId={Id}";
-            }
-            {
-                var df = ListFields.AddListField("AppService", null, "AutoActive");
+                var df = ListFields.AddListField("AppService", "Version");
                 df.DisplayName = "提供服务";
                 df.Url = "AppService?appId={Id}";
                 df.DataVisible = (e, f) => (e as App).Providers.Count > 0;
             }
             {
-                var df = ListFields.AddListField("AppConsume", null, "AutoActive");
+                var df = ListFields.AddListField("AppConsume", "Version");
                 df.DisplayName = "消费服务";
                 df.Url = "AppConsume?appId={Id}";
                 df.DataVisible = (e, f) => (e as App).Consumers.Count > 0;
+            }
+            {
+                var df = ListFields.AddListField("AppLog", "Version");
+                df.DisplayName = "应用日志";
+                df.Url = "AppLog?appId={Id}";
             }
             {
                 var df = ListFields.AddListField("Log", "CreateUser");

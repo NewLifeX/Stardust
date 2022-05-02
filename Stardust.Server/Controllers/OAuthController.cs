@@ -25,7 +25,6 @@ namespace Stardust.Server.Controllers
 
             var ip = HttpContext.GetUserHost();
             var clientId = model.ClientId;
-            var olt = AppOnline.FindByClient(clientId);
 
             try
             {
@@ -39,11 +38,11 @@ namespace Stardust.Server.Controllers
                     app.LastIP = ip;
                     app.SaveAsync();
 
-                    app.WriteHistory("Authorize", true, model.UserName, olt?.Version, ip, clientId);
-
                     var tokenModel = _tokenService.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
 
-                    AppOnline.UpdateOnline(app, clientId, ip, tokenModel.AccessToken);
+                    var olt = _tokenService.UpdateOnline(app, clientId, ip, tokenModel.AccessToken);
+
+                    app.WriteHistory("Authorize", true, model.UserName, olt?.Version, ip, clientId);
 
                     return tokenModel;
                 }
@@ -63,15 +62,15 @@ namespace Stardust.Server.Controllers
 
                     if (ex != null)
                     {
-                        app.WriteHistory("RefreshToken", false, ex.ToString(), olt?.Version, ip, clientId);
+                        app.WriteHistory("RefreshToken", false, ex.ToString(), null, ip, clientId);
                         throw ex;
                     }
 
-                    app.WriteHistory("RefreshToken", true, model.refresh_token, olt?.Version, ip, clientId);
-
                     var tokenModel = _tokenService.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
 
-                    AppOnline.UpdateOnline(app, clientId, ip, tokenModel.AccessToken);
+                    var olt = _tokenService.UpdateOnline(app, clientId, ip, tokenModel.AccessToken);
+
+                    app.WriteHistory("RefreshToken", true, model.refresh_token, olt?.Version, ip, clientId);
 
                     return tokenModel;
                 }
@@ -83,7 +82,7 @@ namespace Stardust.Server.Controllers
             catch (Exception ex)
             {
                 var app = App.FindByName(model.UserName);
-                app?.WriteHistory("Authorize", false, ex.ToString(), olt?.Version, ip, clientId);
+                app?.WriteHistory("Authorize", false, ex.ToString(), null, ip, clientId);
 
                 throw;
             }
