@@ -236,7 +236,7 @@ namespace Stardust.Data
                 {
                     // 单例应用，又没有达到最大时间，如果有活跃，则删除当前
                     var list3 = FindAllByApp(item.AppId);
-                    if (list3.Any(e => e.IP == item.IP && e.UpdateTime >= end))
+                    if (list3.Any(e => e.IP == item.IP && e.UpdateIP == item.UpdateIP && e.UpdateTime >= end))
                         list2.Add(item);
                 }
             }
