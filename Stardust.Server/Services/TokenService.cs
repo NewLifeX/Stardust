@@ -182,14 +182,15 @@ namespace Stardust.Server.Services
             // 如果是每节点单例部署，则使用本地IP作为会话匹配。可能是应用重启，前一次会话还在
             if (online == null && app.Singleton && !localIp.IsNullOrEmpty())
             {
+                // 要求内网IP与外网IP都匹配，才能认为是相同会话，因为有可能不同客户端部署在各自内网而具有相同本地IP
                 var list = AppOnline.FindAllByIP(localIp);
-                online = list.OrderBy(e => e.Id).FirstOrDefault(e => e.AppId == app.Id);
+                online = list.OrderBy(e => e.Id).FirstOrDefault(e => e.AppId == app.Id && e.UpdateIP == ip);
 
                 // 处理多IP
                 if (online == null)
                 {
                     list = AppOnline.FindAllByApp(app.Id);
-                    online = list.OrderBy(e => e.Id).FirstOrDefault(e => !e.IP.IsNullOrEmpty() && e.IP.Contains(ip));
+                    online = list.OrderBy(e => e.Id).FirstOrDefault(e => !e.IP.IsNullOrEmpty() && e.IP.Contains(localIp) && e.UpdateIP == ip);
                 }
             }
 
@@ -200,6 +201,7 @@ namespace Stardust.Server.Services
             if (!clientId.IsNullOrEmpty()) online.Client = clientId;
             if (!token.IsNullOrEmpty()) online.Token = token;
             if (online.CreateIP.IsNullOrEmpty()) online.CreateIP = ip;
+            if (!ip.IsNullOrEmpty()) online.UpdateIP = ip;
 
             // 更新跟踪标识
             var traceId = DefaultSpan.Current?.TraceId;

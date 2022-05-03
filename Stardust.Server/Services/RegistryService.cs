@@ -272,31 +272,40 @@ namespace Stardust.Server.Services
             if (clientId.IsNullOrEmpty()) return null;
 
             // 找到在线会话，先查ClientId和Token。客户端刚启动时可能没有拿到本机IP，而后来心跳拿到了
-            var olt = AppOnline.FindByClient(clientId) ?? AppOnline.FindByToken(token);
+            var online = AppOnline.FindByClient(clientId) ?? AppOnline.FindByToken(token);
 
             // 如果是每节点单例部署，则使用本地IP作为会话匹配。可能是应用重启，前一次会话还在
-            if (olt == null && app.Singleton)
+            if (online == null && app.Singleton && !localIp.IsNullOrEmpty())
             {
+                // 要求内网IP与外网IP都匹配，才能认为是相同会话，因为有可能不同客户端部署在各自内网而具有相同本地IP
                 var list = AppOnline.FindAllByIP(localIp);
-                olt = list.OrderBy(e => e.Id).FirstOrDefault(e => e.AppId == app.Id);
+                online = list.OrderBy(e => e.Id).FirstOrDefault(e => e.AppId == app.Id && e.UpdateIP == ip);
+
+                // 处理多IP
+                if (online == null)
+                {
+                    list = AppOnline.FindAllByApp(app.Id);
+                    online = list.OrderBy(e => e.Id).FirstOrDefault(e => !e.IP.IsNullOrEmpty() && e.IP.Contains(localIp) && e.UpdateIP == ip);
+                }
             }
 
-            if (olt == null) olt = AppOnline.GetOrAddClient(clientId);
+            if (online == null) online = AppOnline.GetOrAddClient(clientId);
 
-            if (olt != null)
+            if (online != null)
             {
-                olt.AppId = app.Id;
-                olt.Name = app.ToString();
-                olt.Category = app.Category;
-                olt.PingCount++;
+                online.AppId = app.Id;
+                online.Name = app.ToString();
+                online.Category = app.Category;
+                online.PingCount++;
 
-                if (!clientId.IsNullOrEmpty()) olt.Client = clientId;
-                if (!token.IsNullOrEmpty()) olt.Token = token;
-                if (!localIp.IsNullOrEmpty()) olt.IP = localIp;
-                if (olt.CreateIP.IsNullOrEmpty()) olt.CreateIP = ip;
+                if (!clientId.IsNullOrEmpty()) online.Client = clientId;
+                if (!token.IsNullOrEmpty()) online.Token = token;
+                if (!localIp.IsNullOrEmpty()) online.IP = localIp;
+                if (online.CreateIP.IsNullOrEmpty()) online.CreateIP = ip;
+                if (!ip.IsNullOrEmpty()) online.UpdateIP = ip;
             }
 
-            return olt;
+            return online;
         }
 
         public AppOnline Ping(App app, AppInfo inf, String ip, String clientId, String token)
