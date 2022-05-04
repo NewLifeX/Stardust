@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="http://newlifex.com http://newlifex.com/Model2022.xsd" NameSpace="Stardust.Data.Nodes" ConnName="Stardust" Output="" BaseClass="Entity" Version="11.0.2022.0304" Document="https://newlifex.com/xcode/model" xmlns="http://newlifex.com/Model2022.xsd">
+<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2022.xsd" NameSpace="Stardust.Data.Nodes" ConnName="Stardust" Output="" BaseClass="Entity" Version="11.1.2022.0504" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model2022.xsd">
   <Table Name="Node" Description="节点">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
@@ -34,7 +34,7 @@
       <Column Name="Framework" DataType="String" Description="目标框架。编译程序集时的目标版本" />
       <Column Name="ProvinceID" DataType="Int32" Description="省份" />
       <Column Name="CityID" DataType="Int32" Description="城市" />
-      <Column Name="Address" DataType="String" Length="200" Description="地址" />
+      <Column Name="Address" DataType="String" Length="200" Description="地址。该节点所处位置" />
       <Column Name="Period" DataType="Int32" Description="采样周期。默认60秒" />
       <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
       <Column Name="AlarmCpuRate" DataType="Int32" Description="CPU告警。CPU告警的百分比阈值，CPU使用率达到该值时告警，百分之一" />
@@ -58,6 +58,7 @@
     <Indexes>
       <Index Columns="Code" Unique="True" />
       <Index Columns="Uuid,MachineGuid,MACs" />
+      <Index Columns="IP" />
       <Index Columns="UpdateTime" />
     </Indexes>
   </Table>
@@ -228,6 +229,23 @@
       <Index Columns="StatDate,AreaID" Unique="True" />
       <Index Columns="UpdateTime,AreaID" />
     </Indexes>
+  </Table>
+  <Table Name="NodeRule" Description="节点规则。根据IP规则，自动识别匹配节点名称">
+    <Columns>
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="Rule" DataType="String" Description="规则。支持*模糊匹配，比如10.0.*" />
+      <Column Name="Name" DataType="String" Master="True" Description="名称。匹配规则的节点所应该具有的名称" />
+      <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="Priority" DataType="Int32" Description="优先级。数字越大优先级越高" />
+      <Column Name="NewNode" DataType="Boolean" Description="新节点。新匹配IP如果不存在节点，则新建节点" />
+      <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="UpdateUserID" DataType="Int32" Description="更新者" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" />
+      <Column Name="Remark" DataType="String" Length="500" Description="备注" />
+    </Columns>
   </Table>
   <Table Name="RedisNode" Description="Redis节点。Redis管理">
     <Columns>

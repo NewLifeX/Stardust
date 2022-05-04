@@ -16,6 +16,7 @@ namespace Stardust.Data.Nodes
     [Description("节点")]
     [BindIndex("IU_Node_Code", true, "Code")]
     [BindIndex("IX_Node_Uuid_MachineGuid_MACs", false, "Uuid,MachineGuid,MACs")]
+    [BindIndex("IX_Node_IP", false, "IP")]
     [BindIndex("IX_Node_UpdateTime", false, "UpdateTime")]
     [BindTable("Node", Description = "节点", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class Node
@@ -278,11 +279,11 @@ namespace Stardust.Data.Nodes
         public Int32 CityID { get => _CityID; set { if (OnPropertyChanging("CityID", value)) { _CityID = value; OnPropertyChanged("CityID"); } } }
 
         private String _Address;
-        /// <summary>地址</summary>
+        /// <summary>地址。该节点所处位置</summary>
         [DisplayName("地址")]
-        [Description("地址")]
+        [Description("地址。该节点所处位置")]
         [DataObjectField(false, false, true, 200)]
-        [BindColumn("Address", "地址", "")]
+        [BindColumn("Address", "地址。该节点所处位置", "")]
         public String Address { get => _Address; set { if (OnPropertyChanging("Address", value)) { _Address = value; OnPropertyChanged("Address"); } } }
 
         private Int32 _Period;
@@ -665,7 +666,7 @@ namespace Stardust.Data.Nodes
             /// <summary>城市</summary>
             public static readonly Field CityID = FindByName("CityID");
 
-            /// <summary>地址</summary>
+            /// <summary>地址。该节点所处位置</summary>
             public static readonly Field Address = FindByName("Address");
 
             /// <summary>采样周期。默认60秒</summary>
@@ -827,7 +828,7 @@ namespace Stardust.Data.Nodes
             /// <summary>城市</summary>
             public const String CityID = "CityID";
 
-            /// <summary>地址</summary>
+            /// <summary>地址。该节点所处位置</summary>
             public const String Address = "Address";
 
             /// <summary>采样周期。默认60秒</summary>
