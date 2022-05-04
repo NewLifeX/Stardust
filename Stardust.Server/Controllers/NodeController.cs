@@ -91,6 +91,7 @@ namespace Stardust.Server.Controllers
 
             if (!inf.ProductCode.IsNullOrEmpty()) node.ProductCode = inf.ProductCode;
 
+            node.FixNameByRule();
             node.Login(di, UserHost);
 
             // 设置令牌
@@ -346,6 +347,7 @@ namespace Stardust.Server.Controllers
                 if (!inf.IP.IsNullOrEmpty()) node.IP = inf.IP;
                 node.UpdateIP = ip;
                 node.FixArea();
+                node.FixNameByRule();
                 node.SaveAsync();
 
                 rs.Period = node.Period;

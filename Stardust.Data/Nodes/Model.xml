@@ -235,6 +235,7 @@
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="Rule" DataType="String" Description="规则。支持*模糊匹配，比如10.0.*" />
       <Column Name="Name" DataType="String" Master="True" Description="名称。匹配规则的节点所应该具有的名称" />
+      <Column Name="Category" DataType="String" Description="分类。匹配规则的节点所应该具有的分类" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Priority" DataType="Int32" Description="优先级。数字越大优先级越高" />
       <Column Name="NewNode" DataType="Boolean" Description="新节点。新匹配IP如果不存在节点，则新建节点" />

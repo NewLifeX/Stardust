@@ -367,24 +367,27 @@ namespace Stardust.Data.Nodes
             var node = this;
             if (node.UpdateIP.IsNullOrEmpty()) return;
 
-            var ip = node.UpdateIP.IPToAddress();
+            var rs = Area.SearchIP(node.UpdateIP);
+            if (rs.Count > 0) node.ProvinceID = rs[0].ID;
+            if (rs.Count > 1) node.CityID = rs[^1].ID;
+        }
+
+        /// <summary>
+        /// 根据IP地址修正名称和分类
+        /// </summary>
+        public void FixNameByRule()
+        {
+            var ip = IP;
             if (ip.IsNullOrEmpty()) return;
 
-            if (ip.StartsWith("广西")) ip = "广西自治区" + ip.Substring(2);
-            var addrs = ip.Split("省", "自治区", "市", "区", "县");
-            if (addrs != null && addrs.Length >= 2)
+            var rule = NodeResolver.Instance.Match(ip);
+            if (rule != null)
             {
-                var prov = Area.FindByName(0, addrs[0]);
-                if (prov != null)
-                {
-                    node.ProvinceID = prov.ID;
+                if ((Name.IsNullOrEmpty() || Name == MachineName) && !rule.Name.IsNullOrEmpty())
+                    Name = rule.Name;
 
-                    var city = Area.FindByNames(addrs);
-                    if (city != null)
-                        node.CityID = city.ID;
-                    else
-                        node.CityID = 0;
-                }
+                if (!rule.Category.IsNullOrEmpty())
+                    Category = rule.Category;
             }
         }
         #endregion

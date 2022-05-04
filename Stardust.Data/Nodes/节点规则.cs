@@ -42,6 +42,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("Name", "名称。匹配规则的节点所应该具有的名称", "", Master = true)]
         public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
+        private String _Category;
+        /// <summary>分类。匹配规则的节点所应该具有的分类</summary>
+        [DisplayName("分类")]
+        [Description("分类。匹配规则的节点所应该具有的分类")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Category", "分类。匹配规则的节点所应该具有的分类", "")]
+        public String Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
+
         private Boolean _Enable;
         /// <summary>启用</summary>
         [DisplayName("启用")]
@@ -136,6 +144,7 @@ namespace Stardust.Data.Nodes
                     case "Id": return _Id;
                     case "Rule": return _Rule;
                     case "Name": return _Name;
+                    case "Category": return _Category;
                     case "Enable": return _Enable;
                     case "Priority": return _Priority;
                     case "NewNode": return _NewNode;
@@ -156,6 +165,7 @@ namespace Stardust.Data.Nodes
                     case "Id": _Id = value.ToInt(); break;
                     case "Rule": _Rule = Convert.ToString(value); break;
                     case "Name": _Name = Convert.ToString(value); break;
+                    case "Category": _Category = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Priority": _Priority = value.ToInt(); break;
                     case "NewNode": _NewNode = value.ToBoolean(); break;
@@ -184,6 +194,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>名称。匹配规则的节点所应该具有的名称</summary>
             public static readonly Field Name = FindByName("Name");
+
+            /// <summary>分类。匹配规则的节点所应该具有的分类</summary>
+            public static readonly Field Category = FindByName("Category");
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
@@ -229,6 +242,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>名称。匹配规则的节点所应该具有的名称</summary>
             public const String Name = "Name";
+
+            /// <summary>分类。匹配规则的节点所应该具有的分类</summary>
+            public const String Category = "Category";
 
             /// <summary>启用</summary>
             public const String Enable = "Enable";
