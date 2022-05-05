@@ -74,6 +74,7 @@ namespace Stardust.Server.Services
                     {
                         Code = Rand.NextString(8),
                         Name = rule.Name,
+                        ProductCode = "App",
                         Category = rule.Category,
                         IP = ip,
                         Version = inf.Version,
