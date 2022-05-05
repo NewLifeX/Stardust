@@ -18,11 +18,13 @@ namespace Stardust.Server.Controllers
     {
         private readonly ConfigService _configService;
         private readonly TokenService _tokenService;
+        private readonly AppOnlineService _appOnline;
 
-        public ConfigController(ConfigService configService, TokenService tokenService)
+        public ConfigController(ConfigService configService, TokenService tokenService, AppOnlineService appOnline)
         {
             _configService = configService;
             _tokenService = tokenService;
+            _appOnline = appOnline;
         }
 
         [ApiFilter]
@@ -166,7 +168,7 @@ namespace Stardust.Server.Controllers
             if (clientId.IsNullOrEmpty()) clientId = ip;
 
             // 更新心跳信息
-            var online = _tokenService.UpdateOnline(ap, clientId, ip, token);
+            var online = _appOnline.UpdateOnline(ap, clientId, ip, token);
 
             // 检查应用有效性
             if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");

@@ -17,17 +17,19 @@ namespace Stardust.Server.Controllers
     public class TraceController : ControllerBase
     {
         private readonly TokenService _tokenService;
+        private readonly AppOnlineService _appOnline;
         private readonly ITraceStatService _stat;
         private readonly IAppDayStatService _appStat;
         private readonly ITraceItemStatService _itemStat;
         private static readonly ICache _cache = new MemoryCache();
 
-        public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService)
+        public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService, AppOnlineService appOnline)
         {
             _stat = stat;
             _appStat = appStat;
             _itemStat = itemStat;
             _tokenService = tokenService;
+            _appOnline = appOnline;
         }
 
         [ApiFilter]
@@ -145,7 +147,7 @@ namespace Stardust.Server.Controllers
             App.WriteMeter(model, ip);
 
             // 更新心跳信息
-            var online = _tokenService.UpdateOnline(ap, clientId, ip, token, model.Info);
+            var online = _appOnline.UpdateOnline(ap, clientId, ip, token, model.Info);
 
             // 检查应用有效性
             if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");

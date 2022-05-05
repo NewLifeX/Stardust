@@ -34,6 +34,7 @@ namespace Stardust.Web
 
             services.AddSingleton<TokenService>();
             services.AddSingleton<ConfigService>();
+            services.AddSingleton<AppOnlineService>();
 
             services.AddResponseCompression();
 

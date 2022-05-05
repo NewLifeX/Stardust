@@ -28,9 +28,9 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             }
 
             {
-                var df = ListFields.AddListField("History", "Version");
-                df.DisplayName = "历史";
-                df.Url = "NodeHistory?nodeId={ID}";
+                var df = ListFields.AddListField("App", "Version");
+                df.DisplayName = "应用实例";
+                df.Url = "/Registry/AppOnline?nodeId={ID}";
             }
             {
                 var df = ListFields.AddListField("Meter", "Version");
@@ -38,9 +38,9 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                 df.Url = "NodeData?nodeId={ID}";
             }
             {
-                var df = ListFields.AddListField("App", "Version");
-                df.DisplayName = "应用实例";
-                df.Url = "/Registry/AppOnline?nodeId={ID}";
+                var df = ListFields.AddListField("History", "Version");
+                df.DisplayName = "历史";
+                df.Url = "NodeHistory?nodeId={ID}";
             }
             {
                 var df = ListFields.AddListField("Log", "Version");

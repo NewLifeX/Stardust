@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Remoting;
@@ -18,11 +17,13 @@ namespace Stardust.Web.Controllers
     {
         private readonly ConfigService _configService;
         private readonly TokenService _tokenService;
+        private readonly AppOnlineService _appOnline;
 
-        public ConfigController(ConfigService configService, TokenService tokenService)
+        public ConfigController(ConfigService configService, TokenService tokenService, AppOnlineService appOnline)
         {
             _configService = configService;
             _tokenService = tokenService;
+            _appOnline = appOnline;
         }
 
         [ApiFilter]
@@ -86,7 +87,7 @@ namespace Stardust.Web.Controllers
 
             // 更新心跳信息
             var ip = HttpContext.GetUserHost();
-            online = _tokenService.UpdateOnline(ap, null, ip, appId);
+            online = _appOnline.UpdateOnline(ap, null, ip, appId);
 
             // 检查应用有效性
             if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");

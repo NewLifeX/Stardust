@@ -22,10 +22,15 @@ namespace Stardust.Web.Areas.Registry.Controllers
                 df.Url = "/Nodes/Node?Id={NodeId}";
             }
             {
-                var df = ListFields.AddListField("Meter", null, "PingCount");
+                var df = ListFields.AddListField("Meter", "WebSocket");
                 df.Header = "性能";
                 df.DisplayName = "性能";
                 df.Url = "AppMeter?appId={AppId}&clientId={IP}";
+            }
+            {
+                var df = ListFields.AddListField("History", "WebSocket");
+                df.DisplayName = "历史";
+                df.Url = "AppHistory?appId={AppId}&client={Client}";
             }
             {
                 var df = ListFields.GetField("TraceId") as ListField;

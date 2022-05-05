@@ -14,7 +14,13 @@ namespace Stardust.Server.Controllers
     public class OAuthController : ControllerBase
     {
         private readonly TokenService _tokenService;
-        public OAuthController(TokenService tokenService) => _tokenService = tokenService;
+        private readonly AppOnlineService _appOnline;
+
+        public OAuthController(TokenService tokenService, AppOnlineService appOnline)
+        {
+            _tokenService = tokenService;
+            _appOnline = appOnline;
+        }
 
         [ApiFilter]
         public TokenModel Token([FromBody] TokenInModel model)
@@ -40,7 +46,7 @@ namespace Stardust.Server.Controllers
 
                     var tokenModel = _tokenService.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
 
-                    var olt = _tokenService.UpdateOnline(app, clientId, ip, tokenModel.AccessToken);
+                    var olt = _appOnline.UpdateOnline(app, clientId, ip, tokenModel.AccessToken);
 
                     app.WriteHistory("Authorize", true, model.UserName, olt?.Version, ip, clientId);
 
@@ -68,7 +74,7 @@ namespace Stardust.Server.Controllers
 
                     var tokenModel = _tokenService.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
 
-                    var olt = _tokenService.UpdateOnline(app, clientId, ip, tokenModel.AccessToken);
+                    var olt = _appOnline.UpdateOnline(app, clientId, ip, tokenModel.AccessToken);
 
                     app.WriteHistory("RefreshToken", true, model.refresh_token, olt?.Version, ip, clientId);
 

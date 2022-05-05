@@ -13,11 +13,13 @@ namespace Stardust.Server.Services
     public class RegistryService
     {
         private readonly AppQueueService _queue;
+        private readonly AppOnlineService _appOnline;
         private readonly ITracer _tracer;
 
-        public RegistryService(AppQueueService queue, ITracer tracer)
+        public RegistryService(AppQueueService queue, AppOnlineService appOnline, ITracer tracer)
         {
             _queue = queue;
+            _appOnline = appOnline;
             _tracer = tracer;
         }
 
@@ -33,38 +35,31 @@ namespace Stardust.Server.Services
 
             if (!inf.ClientId.IsNullOrEmpty()) clientId = inf.ClientId;
 
-            var localIp = inf?.IP;
-            if (localIp.IsNullOrEmpty() && !clientId.IsNullOrEmpty())
-            {
-                var p = clientId.IndexOf('@');
-                if (p > 0) localIp = clientId[..p];
-            }
-
             // 更新在线记录
-            var olt = GetOrAddOnline(app, clientId, token, localIp, ip);
-            if (olt != null)
+            var (online, _) = _appOnline.GetOnline(app, clientId, token, inf?.IP, ip);
+            if (online != null)
             {
                 // 关联节点，根据NodeCode匹配，如果未匹配上，则在未曾关联节点时才使用IP匹配
                 var node = Node.FindByCode(inf.NodeCode);
-                if (node == null && olt.NodeId == 0) node = Node.SearchByIP(inf.IP).FirstOrDefault();
-                if (node != null) olt.NodeId = node.ID;
+                if (node == null && online.NodeId == 0) node = Node.SearchByIP(inf.IP).FirstOrDefault();
+                if (node != null) online.NodeId = node.ID;
 
-                olt.Version = inf.Version;
-                olt.SaveAsync();
+                online.Version = inf.Version;
+                online.SaveAsync();
             }
 
             // 根据节点IP规则，自动创建节点
-            if (olt.NodeId == 0)
+            if (online.NodeId == 0)
             {
-                var node = GetOrAddNode(inf, localIp, ip);
+                var node = GetOrAddNode(inf, online.IP, ip);
                 if (node != null)
                 {
-                    olt.NodeId = node.ID;
-                    olt.SaveAsync();
+                    online.NodeId = node.ID;
+                    online.SaveAsync();
                 }
             }
 
-            return olt;
+            return online;
         }
 
         public Node GetOrAddNode(AppModel inf, String localIp, String ip)
@@ -318,63 +313,20 @@ namespace Stardust.Server.Services
             hi.SaveAsync();
         }
 
-        public AppOnline GetOrAddOnline(App app, String clientId, String token, String localIp, String ip)
-        {
-            if (app == null) return null;
-
-            if (clientId.IsNullOrEmpty()) return null;
-
-            // 找到在线会话，先查ClientId和Token。客户端刚启动时可能没有拿到本机IP，而后来心跳拿到了
-            var online = AppOnline.FindByClient(clientId) ?? AppOnline.FindByToken(token);
-
-            // 如果是每节点单例部署，则使用本地IP作为会话匹配。可能是应用重启，前一次会话还在
-            if (online == null && app.Singleton && !localIp.IsNullOrEmpty())
-            {
-                // 要求内网IP与外网IP都匹配，才能认为是相同会话，因为有可能不同客户端部署在各自内网而具有相同本地IP
-                var list = AppOnline.FindAllByIP(localIp);
-                online = list.OrderBy(e => e.Id).FirstOrDefault(e => e.AppId == app.Id && e.UpdateIP == ip);
-
-                // 处理多IP
-                if (online == null)
-                {
-                    list = AppOnline.FindAllByApp(app.Id);
-                    online = list.OrderBy(e => e.Id).FirstOrDefault(e => !e.IP.IsNullOrEmpty() && e.IP.Contains(localIp) && e.UpdateIP == ip);
-                }
-            }
-
-            if (online == null) online = AppOnline.GetOrAddClient(clientId);
-
-            if (online != null)
-            {
-                online.AppId = app.Id;
-                online.Name = app.ToString();
-                online.Category = app.Category;
-                online.PingCount++;
-
-                if (!clientId.IsNullOrEmpty()) online.Client = clientId;
-                if (!token.IsNullOrEmpty()) online.Token = token;
-                if (!localIp.IsNullOrEmpty()) online.IP = localIp;
-                if (online.CreateIP.IsNullOrEmpty()) online.CreateIP = ip;
-                if (!ip.IsNullOrEmpty()) online.UpdateIP = ip;
-            }
-
-            return online;
-        }
-
         public AppOnline Ping(App app, AppInfo inf, String ip, String clientId, String token)
         {
             if (app == null) return null;
 
             // 更新在线记录
-            var olt = GetOrAddOnline(app, clientId, token, inf.IP, ip);
-            if (olt != null)
+            var (online, _) = _appOnline.GetOnline(app, clientId, token, inf?.IP, ip);
+            if (online != null)
             {
-                olt.Version = app.Version;
-                olt.Fill(app, inf);
-                olt.SaveAsync();
+                online.Version = app.Version;
+                online.Fill(app, inf);
+                online.SaveAsync();
             }
 
-            return olt;
+            return online;
         }
 
         /// <summary>向应用发送命令</summary>
