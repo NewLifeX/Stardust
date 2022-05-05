@@ -135,6 +135,7 @@ public class AppOnlineService
                     node.MachineName = inf.MachineName;
                     node.UserName = inf.UserName;
                 }
+                if (node.Name.IsNullOrEmpty()) node.Name = rule.Category;
                 if (node.Name.IsNullOrEmpty()) node.Name = inf?.Name;
                 if (node.Name.IsNullOrEmpty()) node.Name = node.Code;
                 node.Insert();
