@@ -421,6 +421,20 @@ namespace Stardust.Data.Nodes
                     Category = rule.Category;
             }
         }
+
+        /// <summary>写历史</summary>
+        /// <param name="action"></param>
+        /// <param name="success"></param>
+        /// <param name="remark"></param>
+        /// <param name="ip"></param>
+        /// <returns></returns>
+        public NodeHistory WriteHistory(String action, Boolean success, String remark, String ip)
+        {
+            var hi = NodeHistory.Create(this, action, success, remark, Environment.MachineName, ip);
+            hi.SaveAsync();
+
+            return hi;
+        }
         #endregion
     }
 }

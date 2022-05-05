@@ -158,7 +158,7 @@ namespace Stardust.Data.Nodes
                 CreateIP = ip,
             };
 
-            history.SaveAsync();
+            //history.SaveAsync();
 
             return history;
         }

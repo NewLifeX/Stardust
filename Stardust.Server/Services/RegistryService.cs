@@ -49,7 +49,7 @@ namespace Stardust.Server.Services
             // 根据节点IP规则，自动创建节点
             if (olt.NodeId == 0)
             {
-                var node = GetOrAddNode(inf);
+                var node = GetOrAddNode(inf, ip);
                 if (node != null)
                 {
                     olt.NodeId = node.ID;
@@ -60,14 +60,16 @@ namespace Stardust.Server.Services
             return olt;
         }
 
-        public Node GetOrAddNode(AppModel inf)
+        public Node GetOrAddNode(AppModel inf, String ip)
         {
+            if (inf == null) return null;
+
             // 根据节点IP规则，自动创建节点
-            var ip = inf.IP;
-            var rule = NodeResolver.Instance.Match(null, ip);
+            var localIp = inf.IP;
+            var rule = NodeResolver.Instance.Match(null, localIp);
             if (rule != null && rule.NewNode)
             {
-                var nodes = Node.SearchByIP(ip);
+                var nodes = Node.SearchByIP(localIp);
                 if (nodes.Count == 0)
                 {
                     var node = new Node
@@ -76,13 +78,15 @@ namespace Stardust.Server.Services
                         Name = rule.Name,
                         ProductCode = "App",
                         Category = rule.Category,
-                        IP = ip,
+                        IP = localIp,
                         Version = inf.Version,
                         Enable = true,
                     };
                     if (node.Name.IsNullOrEmpty()) node.Name = inf.AppName;
                     if (node.Name.IsNullOrEmpty()) node.Name = node.Code;
                     node.Insert();
+
+                    node.WriteHistory("AppAddNode", true, inf.ToJson(), ip);
 
                     return node;
                 }

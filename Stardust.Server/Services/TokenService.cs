@@ -3,6 +3,7 @@ using NewLife;
 using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Security;
+using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data;
 using Stardust.Data.Nodes;
@@ -214,7 +215,7 @@ namespace Stardust.Server.Services
             if (online.NodeId == 0)
             {
                 var node = Node.SearchByIP(online.IP).FirstOrDefault();
-                if (node == null) node = GetOrAddNode(info);
+                if (node == null) node = GetOrAddNode(info, ip);
                 if (node != null)
                     online.NodeId = node.ID;
                 else
@@ -228,14 +229,16 @@ namespace Stardust.Server.Services
             return online;
         }
 
-        public Node GetOrAddNode(AppInfo inf)
+        public Node GetOrAddNode(AppInfo inf, String ip)
         {
+            if (inf == null) return null;
+
             // 根据节点IP规则，自动创建节点
-            var ip = inf.IP;
-            var rule = NodeResolver.Instance.Match(null, ip);
+            var localIp = inf.IP;
+            var rule = NodeResolver.Instance.Match(null, localIp);
             if (rule != null && rule.NewNode)
             {
-                var nodes = Node.SearchByIP(ip);
+                var nodes = Node.SearchByIP(localIp);
                 if (nodes.Count == 0)
                 {
                     var node = new Node
@@ -244,7 +247,7 @@ namespace Stardust.Server.Services
                         Name = rule.Name,
                         ProductCode = "App",
                         Category = rule.Category,
-                        IP = ip,
+                        IP = localIp,
                         Version = inf.Version,
                         MachineName = inf.MachineName,
                         UserName = inf.UserName,
@@ -253,6 +256,8 @@ namespace Stardust.Server.Services
                     if (node.Name.IsNullOrEmpty()) node.Name = inf.Name;
                     if (node.Name.IsNullOrEmpty()) node.Name = node.Code;
                     node.Insert();
+
+                    node.WriteHistory("AppAddNode", true, inf.ToJson(), ip);
 
                     return node;
                 }
