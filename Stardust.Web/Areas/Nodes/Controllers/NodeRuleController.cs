@@ -5,7 +5,7 @@ using Stardust.Web.Areas.Configs;
 
 namespace Stardust.Web.Areas.Nodes.Controllers
 {
-    [ConfigsArea]
+    [NodesArea]
     public class NodeRuleController : EntityController<NodeRule>
     {
         static NodeRuleController()
