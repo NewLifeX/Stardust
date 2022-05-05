@@ -14,6 +14,13 @@ namespace Stardust.Server.Services
     /// <summary>应用服务</summary>
     public class TokenService
     {
+        private readonly ITracer _tracer;
+
+        public TokenService(ITracer tracer)
+        {
+            _tracer = tracer;
+        }
+
         /// <summary>验证应用密码，不存在时新增</summary>
         /// <param name="username"></param>
         /// <param name="password"></param>
@@ -173,8 +180,8 @@ namespace Stardust.Server.Services
             // 首先根据ClientId和Token直接查找应用在线
             var online = AppOnline.FindByClient(clientId) ?? AppOnline.FindByToken(token);
 
-            var localIp = "";
-            if (!clientId.IsNullOrEmpty())
+            var localIp = info?.IP;
+            if (localIp.IsNullOrEmpty() && !clientId.IsNullOrEmpty())
             {
                 var p = clientId.IndexOf('@');
                 if (p > 0) localIp = clientId[..p];
@@ -183,6 +190,8 @@ namespace Stardust.Server.Services
             // 如果是每节点单例部署，则使用本地IP作为会话匹配。可能是应用重启，前一次会话还在
             if (online == null && app.Singleton && !localIp.IsNullOrEmpty())
             {
+                using var span = _tracer.NewSpan("UpdateOnlineForSingleton", info);
+
                 // 要求内网IP与外网IP都匹配，才能认为是相同会话，因为有可能不同客户端部署在各自内网而具有相同本地IP
                 var list = AppOnline.FindAllByIP(localIp);
                 online = list.OrderBy(e => e.Id).FirstOrDefault(e => e.AppId == app.Id && e.UpdateIP == ip);
@@ -215,7 +224,7 @@ namespace Stardust.Server.Services
             if (online.NodeId == 0)
             {
                 var node = Node.SearchByIP(online.IP).FirstOrDefault();
-                if (node == null) node = GetOrAddNode(info, ip);
+                if (node == null) node = GetOrAddNode(info, online.IP, ip);
                 if (node != null)
                     online.NodeId = node.ID;
                 else
@@ -229,15 +238,14 @@ namespace Stardust.Server.Services
             return online;
         }
 
-        public Node GetOrAddNode(AppInfo inf, String ip)
+        public Node GetOrAddNode(AppInfo inf, String localIp, String ip)
         {
-            if (inf == null) return null;
-
             // 根据节点IP规则，自动创建节点
-            var localIp = inf.IP;
             var rule = NodeResolver.Instance.Match(null, localIp);
             if (rule != null && rule.NewNode)
             {
+                using var span = _tracer?.NewSpan("AddNodeForApp", rule);
+
                 var nodes = Node.SearchByIP(localIp);
                 if (nodes.Count == 0)
                 {
@@ -248,12 +256,15 @@ namespace Stardust.Server.Services
                         ProductCode = "App",
                         Category = rule.Category,
                         IP = localIp,
-                        Version = inf.Version,
-                        MachineName = inf.MachineName,
-                        UserName = inf.UserName,
                         Enable = true,
                     };
-                    if (node.Name.IsNullOrEmpty()) node.Name = inf.Name;
+                    if (inf != null)
+                    {
+                        node.Version = inf.Version;
+                        node.MachineName = inf.MachineName;
+                        node.UserName = inf.UserName;
+                    }
+                    if (node.Name.IsNullOrEmpty()) node.Name = inf?.Name;
                     if (node.Name.IsNullOrEmpty()) node.Name = node.Code;
                     node.Insert();
 

@@ -29,12 +29,19 @@ namespace Stardust.Server.Services
             app.UpdateIP = ip;
             app.SaveAsync();
 
-            app.WriteHistory("Register", true, inf.ToJson(), inf.Version, clientId, ip);
+            app.WriteHistory("Register", true, inf.ToJson(), inf.Version, ip, clientId);
 
             if (!inf.ClientId.IsNullOrEmpty()) clientId = inf.ClientId;
 
+            var localIp = inf?.IP;
+            if (localIp.IsNullOrEmpty() && !clientId.IsNullOrEmpty())
+            {
+                var p = clientId.IndexOf('@');
+                if (p > 0) localIp = clientId[..p];
+            }
+
             // 更新在线记录
-            var olt = GetOrAddOnline(app, clientId, token, inf.IP, ip);
+            var olt = GetOrAddOnline(app, clientId, token, localIp, ip);
             if (olt != null)
             {
                 // 关联节点，根据NodeCode匹配，如果未匹配上，则在未曾关联节点时才使用IP匹配
@@ -49,7 +56,7 @@ namespace Stardust.Server.Services
             // 根据节点IP规则，自动创建节点
             if (olt.NodeId == 0)
             {
-                var node = GetOrAddNode(inf, ip);
+                var node = GetOrAddNode(inf, localIp, ip);
                 if (node != null)
                 {
                     olt.NodeId = node.ID;
@@ -60,15 +67,14 @@ namespace Stardust.Server.Services
             return olt;
         }
 
-        public Node GetOrAddNode(AppModel inf, String ip)
+        public Node GetOrAddNode(AppModel inf, String localIp, String ip)
         {
-            if (inf == null) return null;
-
             // 根据节点IP规则，自动创建节点
-            var localIp = inf.IP;
             var rule = NodeResolver.Instance.Match(null, localIp);
             if (rule != null && rule.NewNode)
             {
+                using var span = _tracer?.NewSpan("AddNodeForApp", rule);
+
                 var nodes = Node.SearchByIP(localIp);
                 if (nodes.Count == 0)
                 {
@@ -79,10 +85,10 @@ namespace Stardust.Server.Services
                         ProductCode = "App",
                         Category = rule.Category,
                         IP = localIp,
-                        Version = inf.Version,
+                        Version = inf?.Version,
                         Enable = true,
                     };
-                    if (node.Name.IsNullOrEmpty()) node.Name = inf.AppName;
+                    if (node.Name.IsNullOrEmpty()) node.Name = inf?.AppName;
                     if (node.Name.IsNullOrEmpty()) node.Name = node.Code;
                     node.Insert();
 

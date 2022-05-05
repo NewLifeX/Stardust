@@ -14,6 +14,7 @@ using NewLife.Remoting;
 using NewLife.Serialization;
 using Renci.SshNet;
 using Stardust;
+using Stardust.Data;
 using Stardust.Data.Nodes;
 using Stardust.Monitors;
 
@@ -26,7 +27,7 @@ namespace Test
         {
             XTrace.UseConsole();
 
-            Test7();
+            Test1();
 
             Console.WriteLine("OK!");
             Console.ReadKey();
@@ -34,26 +35,9 @@ namespace Test
 
         static void Test1()
         {
-            var sc = new RpcServer()
-            {
-                Port = 1234,
-                Log = XTrace.Log,
-                EncoderLog = XTrace.Log,
-
-                NameSpace = "NewLife.Test",
-            };
-
-            var star = new StarClient("tcp://127.0.0.1:6666")
-            {
-                Code = "test",
-                Secret = "pass"
-            };
-
-            sc.Star = star;
-
-            sc.Start();
-
-            _Server = sc;
+            var ip = "10.39.21.36@10512";
+            var rule = NodeResolver.Instance.Match(null, ip);
+            XTrace.WriteLine(rule.ToJson(true));
         }
 
         static void Test2()

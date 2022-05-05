@@ -12,7 +12,7 @@ namespace Stardust.Server.Services.Tests
             var app = App.FindByName("test");
             if (app != null) app.Delete();
 
-            var service = new TokenService();
+            var service = new TokenService(null);
 
             // 没有自动注册
             var ex = Assert.Throws<ArgumentOutOfRangeException>(() => service.Authorize("test", "xxx", false));
@@ -45,7 +45,7 @@ namespace Stardust.Server.Services.Tests
             var app = new App { Name = "test" };
 
             var set = Setting.Current;
-            var service = new TokenService();
+            var service = new TokenService(null);
 
             var model = service.IssueToken(app.Name, set.TokenSecret, set.TokenExpire);
             Assert.NotNull(model);
@@ -67,7 +67,7 @@ namespace Stardust.Server.Services.Tests
             }
 
             var set = Setting.Current;
-            var service = new TokenService();
+            var service = new TokenService(null);
 
             var model = service.IssueToken(app.Name, set.TokenSecret, set.TokenExpire);
             Assert.NotNull(model);
