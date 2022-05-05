@@ -222,6 +222,37 @@ namespace Stardust.Data.Nodes
             return FindAll(exp, page);
         }
 
+        /// <summary>根据IP查找节点</summary>
+        /// <param name="ip"></param>
+        /// <returns></returns>
+        public static IList<Node> SearchByIP(String ip)
+        {
+            if (ip.IsNullOrEmpty()) return new List<Node>();
+
+            var ips = ip.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+            // 模糊匹配IP
+            IList<Node> list;
+            if (Meta.Session.Count < 1000)
+            {
+                list = Meta.Cache.FindAll(e => !e.IP.IsNullOrEmpty() && ips.Any(y => e.IP.Contains(y)));
+            }
+            else
+            {
+                var exp = new WhereExpression();
+                foreach (var item in ips)
+                {
+                    exp |= _.IP.Contains(item);
+                }
+                list = FindAll(exp);
+            }
+
+            // 精确匹配IP
+            list = list.Where(e => !e.IP.IsNullOrEmpty() && e.IP.Split(',').Any(y => ips.Contains(y))).ToList();
+
+            return list;
+        }
+
         /// <summary>根据类别搜索</summary>
         /// <param name="category"></param>
         /// <param name="enable"></param>
@@ -377,10 +408,10 @@ namespace Stardust.Data.Nodes
         /// </summary>
         public void FixNameByRule()
         {
-            var ip = IP;
-            if (ip.IsNullOrEmpty()) return;
+            //var ip = IP;
+            //if (ip.IsNullOrEmpty()) return;
 
-            var rule = NodeResolver.Instance.Match(ip);
+            var rule = NodeResolver.Instance.Match(IP, UpdateIP);
             if (rule != null)
             {
                 if ((Name.IsNullOrEmpty() || Name == MachineName) && !rule.Name.IsNullOrEmpty())

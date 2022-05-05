@@ -1,7 +1,6 @@
 ﻿using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Nodes;
-using Stardust.Web.Areas.Configs;
 
 namespace Stardust.Web.Areas.Nodes.Controllers
 {
@@ -11,6 +10,8 @@ namespace Stardust.Web.Areas.Nodes.Controllers
         static NodeRuleController()
         {
             LogOnChange = true;
+
+            ListFields.RemoveField("Remark");
 
             {
                 var df = ListFields.AddListField("Log", "CreateUserID");

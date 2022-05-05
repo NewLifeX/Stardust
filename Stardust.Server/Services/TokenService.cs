@@ -213,8 +213,12 @@ namespace Stardust.Server.Services
             // 关联节点
             if (online.NodeId == 0)
             {
-                var node = Node.FindAllByIP(online.IP).FirstOrDefault();
-                if (node != null) online.NodeId = node.ID;
+                var node = Node.SearchByIP(online.IP).FirstOrDefault();
+                if (node == null) node = GetOrAddNode(info);
+                if (node != null)
+                    online.NodeId = node.ID;
+                else
+                    online.NodeId = -1;
             }
 
             online.Fill(app, info);
@@ -222,6 +226,38 @@ namespace Stardust.Server.Services
             online.SaveAsync();
 
             return online;
+        }
+
+        public Node GetOrAddNode(AppInfo inf)
+        {
+            // 根据节点IP规则，自动创建节点
+            var ip = inf.IP;
+            var rule = NodeResolver.Instance.Match(null, ip);
+            if (rule != null && rule.NewNode)
+            {
+                var nodes = Node.SearchByIP(ip);
+                if (nodes.Count == 0)
+                {
+                    var node = new Node
+                    {
+                        Code = Rand.NextString(8),
+                        Name = rule.Name,
+                        Category = rule.Category,
+                        IP = ip,
+                        Version = inf.Version,
+                        MachineName = inf.MachineName,
+                        UserName = inf.UserName,
+                        Enable = true,
+                    };
+                    if (node.Name.IsNullOrEmpty()) node.Name = inf.Name;
+                    if (node.Name.IsNullOrEmpty()) node.Name = node.Code;
+                    node.Insert();
+
+                    return node;
+                }
+            }
+
+            return null;
         }
     }
 }

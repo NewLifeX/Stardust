@@ -91,6 +91,7 @@ namespace Stardust.Server.Controllers
 
             if (!inf.ProductCode.IsNullOrEmpty()) node.ProductCode = inf.ProductCode;
 
+            node.UpdateIP = UserHost;
             node.FixNameByRule();
             node.Login(di, UserHost);
 

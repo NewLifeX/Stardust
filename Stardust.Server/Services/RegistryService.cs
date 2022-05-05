@@ -1,5 +1,6 @@
 ﻿using NewLife;
 using NewLife.Log;
+using NewLife.Security;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
@@ -38,14 +39,55 @@ namespace Stardust.Server.Services
             {
                 // 关联节点，根据NodeCode匹配，如果未匹配上，则在未曾关联节点时才使用IP匹配
                 var node = Node.FindByCode(inf.NodeCode);
-                if (node == null && olt.NodeId == 0) node = Node.FindAllByIP(inf.IP).FirstOrDefault();
+                if (node == null && olt.NodeId == 0) node = Node.SearchByIP(inf.IP).FirstOrDefault();
                 if (node != null) olt.NodeId = node.ID;
 
                 olt.Version = inf.Version;
                 olt.SaveAsync();
             }
 
+            // 根据节点IP规则，自动创建节点
+            if (olt.NodeId == 0)
+            {
+                var node = GetOrAddNode(inf);
+                if (node != null)
+                {
+                    olt.NodeId = node.ID;
+                    olt.SaveAsync();
+                }
+            }
+
             return olt;
+        }
+
+        public Node GetOrAddNode(AppModel inf)
+        {
+            // 根据节点IP规则，自动创建节点
+            var ip = inf.IP;
+            var rule = NodeResolver.Instance.Match(null, ip);
+            if (rule != null && rule.NewNode)
+            {
+                var nodes = Node.SearchByIP(ip);
+                if (nodes.Count == 0)
+                {
+                    var node = new Node
+                    {
+                        Code = Rand.NextString(8),
+                        Name = rule.Name,
+                        Category = rule.Category,
+                        IP = ip,
+                        Version = inf.Version,
+                        Enable = true,
+                    };
+                    if (node.Name.IsNullOrEmpty()) node.Name = inf.AppName;
+                    if (node.Name.IsNullOrEmpty()) node.Name = node.Code;
+                    node.Insert();
+
+                    return node;
+                }
+            }
+
+            return null;
         }
 
         public (AppService, Boolean changed) RegisterService(App app, Service service, PublishServiceInfo model, String ip)

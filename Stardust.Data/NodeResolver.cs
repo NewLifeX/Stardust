@@ -54,7 +54,7 @@ public class NodeResolver
         var list = NodeRule.FindAllWithCache().Where(e => e.Enable).ToList();
 
         // 多IP地址
-        var ss = ip.Split(',');
+        var ss = ip.Split(',', StringSplitOptions.RemoveEmptyEntries);
         foreach (var item in ss)
         {
             // 去掉后缀
@@ -73,10 +73,13 @@ public class NodeResolver
     /// 匹配IP地址所对应的节点信息
     /// </summary>
     /// <param name="ip"></param>
+    /// <param name="localIp"></param>
     /// <returns></returns>
-    public NodeRule Match(String ip)
+    public NodeRule Match(String ip, String localIp)
     {
-        if (ip.IsNullOrEmpty()) return null;
+        if (ip.IsNullOrEmpty() && localIp.IsNullOrEmpty()) return null;
+
+        ip += "," + localIp;
 
         var list = Matchs(ip).OrderByDescending(e => e.Priority).ToList();
 
