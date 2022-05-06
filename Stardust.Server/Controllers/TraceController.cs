@@ -177,12 +177,12 @@ namespace Stardust.Server.Controllers
                 var timestamp = item.StartTime.ToDateTime().ToLocalTime();
                 if (timestamp < startTime || timestamp > endTime) continue;
 
+                // 拒收超长项
+                if (item.Name.Length > TraceData._.Name.Length) continue;
+
                 // 检查跟踪项
                 var ti = app.GetOrAddItem(item.Name);
                 if (ti == null || !ti.Enable) continue;
-
-                // 拒收超长项
-                if (item.Name.Length > TraceData._.Name.Length) continue;
 
                 var td = TraceData.Create(item);
                 td.AppId = app.ID;
