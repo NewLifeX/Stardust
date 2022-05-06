@@ -21,7 +21,7 @@ public class AppOnlineService
         if (app == null) return (null, false);
 
         // 找到在线会话，先查ClientId和Token。客户端刚启动时可能没有拿到本机IP，而后来心跳拿到了
-        var online = AppOnline.FindByClient(clientId) ?? AppOnline.FindByToken(token);
+        var online = GetOnline(clientId) ?? AppOnline.FindByToken(token);
 
         if (localIp.IsNullOrEmpty() && !clientId.IsNullOrEmpty())
         {
@@ -75,6 +75,19 @@ public class AppOnlineService
         }
 
         return (online, isNew);
+    }
+
+    AppOnline GetOnline(String clientId)
+    {
+        if (clientId.IsNullOrEmpty()) return null;
+
+        if (_cache.TryGetValue<AppOnline>(clientId, out var online)) return online;
+
+        online = AppOnline.FindByClient(clientId);
+
+        if (online != null) _cache.Set(clientId, online, 600);
+
+        return online;
     }
 
     /// <summary>
