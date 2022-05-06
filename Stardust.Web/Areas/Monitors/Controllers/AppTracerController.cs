@@ -221,7 +221,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                         }
                     }
 
-                    app.ItemCount = app.TraceItems.Count(e => e.Enable);
+                    app.ItemCount = app.TraceItems.Count;
                     app.Update();
                 }
             }

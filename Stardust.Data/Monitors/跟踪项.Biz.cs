@@ -140,6 +140,21 @@ namespace Stardust.Data.Monitors
 
         #region 业务操作
         /// <summary>
+        /// 获取应用下可用跟踪项
+        /// </summary>
+        /// <param name="appId"></param>
+        /// <returns></returns>
+        public static IList<TraceItem> GetValids(Int32 appId)
+        {
+            if (appId <= 0) return new List<TraceItem>();
+
+            //// 实体缓存
+            //if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId);
+
+            return FindAll(_.AppId == appId & _.Enable == true);
+        }
+
+        /// <summary>
         /// 获取种类
         /// </summary>
         /// <param name="name"></param>

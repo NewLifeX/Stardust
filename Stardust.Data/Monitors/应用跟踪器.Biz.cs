@@ -71,7 +71,7 @@ namespace Stardust.Data.Monitors
             }
             else
             {
-                ItemCount = TraceItems.Count(e => e.Enable);
+                ItemCount = TraceItems.Count;
             }
         }
 
@@ -82,10 +82,10 @@ namespace Stardust.Data.Monitors
 
         #region 扩展属性
         /// <summary>
-        /// 跟踪项集合
+        /// 有效跟踪项集合
         /// </summary>
         [XmlIgnore, IgnoreDataMember]
-        public IList<TraceItem> TraceItems => Extends.Get(nameof(TraceItems), k => TraceItem.FindAllByApp(ID));
+        public IList<TraceItem> TraceItems => Extends.Get(nameof(TraceItems), k => TraceItem.GetValids(ID));
         #endregion
 
         #region 扩展查询
@@ -209,8 +209,14 @@ namespace Stardust.Data.Monitors
         {
             if (name.IsNullOrEmpty()) return null;
 
+            // 现在有效集合中查找
             var list = TraceItems;
             var ti = list.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
+            if (ti != null) return ti;
+
+            // 再查全量
+            list = TraceItem.FindAllByApp(ID);
+            ti = list.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
             if (ti != null) return ti;
 
             // 通过规则匹配，支持把多个埋点聚合到一起
@@ -239,7 +245,7 @@ namespace Stardust.Data.Monitors
             Days = list.Select(e => e.StatDate.ToFullString()).Distinct().Count();
             Total = list.Sum(e => (Int64)e.Total);
 
-            ItemCount = TraceItems.Count(e => e.Enable);
+            ItemCount = TraceItems.Count;
         }
         #endregion
     }
