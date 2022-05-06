@@ -1,9 +1,12 @@
 ﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
+using NewLife;
 using NewLife.Cube;
 using NewLife.Log;
 using NewLife.Web;
+using Stardust.Data;
 using Stardust.Data.Monitors;
+using Stardust.Data.Nodes;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Monitors.Controllers
@@ -83,6 +86,46 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                     }
 
                     ti.Update();
+                }
+            }
+
+            return JsonRefresh("成功！");
+        }
+
+        [EntityAuthorize(PermissionFlags.Update)]
+        public ActionResult FixDisplay()
+        {
+            var rules = NodeRule.FindAllWithCache().Where(e => e.Enable).OrderByDescending(e => e.Priority).ToList();
+            if (rules.Count > 0)
+            {
+                foreach (var item in SelectKeys)
+                {
+                    var ti = TraceItem.FindById(item.ToInt());
+                    if (ti != null && ti.DisplayName.IsNullOrEmpty())
+                    {
+                        // 去掉 http:// https:// 等前缀
+                        var name = ti.Name;
+                        var p = name.IndexOf("://");
+                        if (p >= 0)
+                        {
+                            name = name[(p + 3)..];
+                            if (!name.IsNullOrEmpty())
+                            {
+                                var rule = rules.FirstOrDefault(e => e.Rule.IsMatch(name));
+                                if (rule != null)
+                                {
+                                    XTrace.WriteLine("修正显示 {0}/{1}", ti.Name, ti.Id);
+
+                                    var dis = !rule.Name.IsNullOrEmpty() ? rule.Name : rule.Category;
+
+                                    var ss = name.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                                    ti.DisplayName = $"{dis}/{ss[^1]}";
+
+                                    ti.Update();
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
