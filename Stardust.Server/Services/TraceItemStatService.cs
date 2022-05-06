@@ -69,20 +69,22 @@ namespace Stardust.Server.Services
         public void Process(Int32 appId)
         {
             var app = AppTracer.FindByID(appId);
-            var list = TraceItem.FindAllByApp(appId);
+            var list = TraceItem.GetValids(appId);
             var sts = TraceDayStat.SearchGroupItemByApp(appId);
             foreach (var st in sts)
             {
                 var ti = list.FirstOrDefault(e => e.Id == st.ItemId);
-                if (ti == null) ti = app.GetOrAddItem(st.Name);
+                if (ti == null) ti = TraceItem.FindByAppIdAndName(appId, st.Name);
 
-                if (ti == null) continue;
-
-                ti.Days = st.ID;
-                ti.Total = st.Total;
-                ti.Errors = st.Errors;
-                ti.Cost = st.Cost;
-                ti.Update();
+                // 只统计能找到的跟踪项
+                if (ti != null)
+                {
+                    ti.Days = st.ID;
+                    ti.Total = st.Total;
+                    ti.Errors = st.Errors;
+                    ti.Cost = st.Cost;
+                    ti.Update();
+                }
             }
         }
     }
