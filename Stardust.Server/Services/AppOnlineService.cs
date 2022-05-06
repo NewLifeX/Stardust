@@ -123,6 +123,8 @@ public class AppOnlineService
 
     private Node GetNodeByIP(String ip)
     {
+        if (ip.IsNullOrEmpty()) return null;
+
         // 借助缓存，降低IP搜索节点次数
         if (_cache.TryGetValue<Node>(ip, out var node)) return node;
 
