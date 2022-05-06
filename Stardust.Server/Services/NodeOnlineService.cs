@@ -25,7 +25,7 @@ namespace Stardust.Server.Services
         #region 方法
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _timer = new TimerX(CheckOnline, null, 5_000, 30_000) { Async = true };
+            _timer = new TimerX(CheckNodeOnline, null, 5_000, 30_000) { Async = true };
 
             return Task.CompletedTask;
         }
@@ -37,14 +37,14 @@ namespace Stardust.Server.Services
             return Task.CompletedTask;
         }
 
-        private void CheckOnline(Object state)
+        private void CheckNodeOnline(Object state)
         {
             // 节点超时
             var set = Setting.Current;
             var sessionTimeout = set.SessionTimeout;
             if (sessionTimeout > 0)
             {
-                using var span = _tracer?.NewSpan(nameof(CheckOnline));
+                using var span = _tracer?.NewSpan(nameof(CheckNodeOnline));
 
                 var rs = NodeOnline.ClearExpire(TimeSpan.FromSeconds(sessionTimeout));
                 if (rs != null)

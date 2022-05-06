@@ -44,7 +44,7 @@ namespace Stardust.Server.Services
                 if (node == null && online.NodeId == 0) node = Node.SearchByIP(inf.IP).FirstOrDefault();
                 if (node != null) online.NodeId = node.ID;
 
-                online.Version = inf.Version;
+                if (!inf.Version.IsNullOrEmpty()) online.Version = inf.Version;
                 online.SaveAsync();
             }
 
@@ -321,7 +321,7 @@ namespace Stardust.Server.Services
             var (online, _) = _appOnline.GetOnline(app, clientId, token, inf?.IP, ip);
             if (online != null)
             {
-                online.Version = app.Version;
+                //online.Version = app.Version;
                 online.Fill(app, inf);
                 online.SaveAsync();
             }

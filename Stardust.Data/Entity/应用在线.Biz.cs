@@ -194,7 +194,16 @@ namespace Stardust.Data
                 AppId = app.Id;
                 Name = app.ToString();
                 Category = app.Category;
-                if (info != null && !info.Version.IsNullOrEmpty()) app.Version = info.Version;
+                if (info != null && !info.Version.IsNullOrEmpty())
+                {
+                    if (app.Version.IsNullOrEmpty())
+                        app.Version = info.Version;
+                    // 比较版本，只要最新版
+                    else if (new Version(info.Version) > new Version(app.Version))
+                        app.Version = info.Version;
+
+                    if (Version.IsNullOrEmpty()) Version = app.Version;
+                }
             }
 
             if (info != null)

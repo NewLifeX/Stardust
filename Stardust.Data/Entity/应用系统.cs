@@ -76,11 +76,11 @@ namespace Stardust.Data
         public Boolean AutoActive { get => _AutoActive; set { if (OnPropertyChanging("AutoActive", value)) { _AutoActive = value; OnPropertyChanged("AutoActive"); } } }
 
         private String _Version;
-        /// <summary>版本</summary>
+        /// <summary>版本。多版本实例使用时，仅记录最新版本</summary>
         [DisplayName("版本")]
-        [Description("版本")]
+        [Description("版本。多版本实例使用时，仅记录最新版本")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("Version", "版本", "")]
+        [BindColumn("Version", "版本。多版本实例使用时，仅记录最新版本", "")]
         public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
         private Int32 _Period;
@@ -308,7 +308,7 @@ namespace Stardust.Data
             /// <summary>自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务</summary>
             public static readonly Field AutoActive = FindByName("AutoActive");
 
-            /// <summary>版本</summary>
+            /// <summary>版本。多版本实例使用时，仅记录最新版本</summary>
             public static readonly Field Version = FindByName("Version");
 
             /// <summary>采样周期。默认60秒</summary>
@@ -386,7 +386,7 @@ namespace Stardust.Data
             /// <summary>自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务</summary>
             public const String AutoActive = "AutoActive";
 
-            /// <summary>版本</summary>
+            /// <summary>版本。多版本实例使用时，仅记录最新版本</summary>
             public const String Version = "Version";
 
             /// <summary>采样周期。默认60秒</summary>
