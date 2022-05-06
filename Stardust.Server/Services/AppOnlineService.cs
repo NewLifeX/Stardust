@@ -1,4 +1,5 @@
 ﻿using NewLife;
+using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Security;
 using NewLife.Serialization;
@@ -11,6 +12,7 @@ namespace Stardust.Server.Services;
 public class AppOnlineService
 {
     private readonly ITracer _tracer;
+    ICache _cache = new MemoryCache();
 
     public AppOnlineService(ITracer tracer) => _tracer = tracer;
 
@@ -90,14 +92,11 @@ public class AppOnlineService
         if (online == null) return null;
 
         // 关联节点
-        if (online.NodeId == 0)
+        if (online.NodeId <= 0)
         {
-            var node = Node.SearchByIP(online.IP).FirstOrDefault();
+            var node = GetNodeByIP(online.IP);
             if (node == null) node = GetOrAddNode(info, online.IP, ip);
-            if (node != null)
-                online.NodeId = node.ID;
-            else
-                online.NodeId = -1;
+            if (node != null) online.NodeId = node.ID;
         }
 
         online.Fill(app, info);
@@ -107,6 +106,18 @@ public class AppOnlineService
             app.WriteHistory("关联上线", true, info.ToJson(), info?.Version, ip, clientId);
 
         return online;
+    }
+
+    private Node GetNodeByIP(String ip)
+    {
+        // 借助缓存，降低IP搜索节点次数
+        if (_cache.TryGetValue<Node>(ip, out var node)) return node;
+
+        node = Node.SearchByIP(ip).FirstOrDefault();
+
+        _cache.Add(ip, node, 3600);
+
+        return node;
     }
 
     public Node GetOrAddNode(AppInfo inf, String localIp, String ip)
