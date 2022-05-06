@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using NewLife;
+using NewLife.Caching;
 using NewLife.Data;
 using XCode;
 using XCode.Cache;
@@ -15,6 +16,7 @@ namespace Stardust.Data.Monitors
     public partial class TraceItem : Entity<TraceItem>
     {
         #region 对象操作
+        private static ICache _cache = Cache.Default;
         static TraceItem()
         {
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
@@ -148,10 +150,15 @@ namespace Stardust.Data.Monitors
         {
             if (appId <= 0) return new List<TraceItem>();
 
-            //// 实体缓存
-            //if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId);
+            var key = $"TraceItem:GetValids:{appId}";
+            if (_cache.TryGetValue<IList<TraceItem>>(key, out var list) && list != null) return list;
 
-            return FindAll(_.AppId == appId & _.Enable == true);
+            list = FindAll(_.AppId == appId & _.Enable == true);
+
+            // 查询数据库，即使空值也缓存，避免缓存穿透
+            _cache.Set(key, list, 60);
+
+            return list;
         }
 
         /// <summary>
