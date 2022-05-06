@@ -164,14 +164,6 @@ namespace Stardust.Data.Monitors
         [BindColumn("VipClients", "Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配", "")]
         public String VipClients { get => _VipClients; set { if (OnPropertyChanging("VipClients", value)) { _VipClients = value; OnPropertyChanged("VipClients"); } } }
 
-        private String _Nodes;
-        /// <summary>节点集。该应用最近一段时间所涉及的来源地址</summary>
-        [DisplayName("节点集")]
-        [Description("节点集。该应用最近一段时间所涉及的来源地址")]
-        [DataObjectField(false, false, true, 500)]
-        [BindColumn("Nodes", "节点集。该应用最近一段时间所涉及的来源地址", "")]
-        public String Nodes { get => _Nodes; set { if (OnPropertyChanging("Nodes", value)) { _Nodes = value; OnPropertyChanged("Nodes"); } } }
-
         private Int32 _AlarmThreshold;
         /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用</summary>
         [DisplayName("告警阈值")]
@@ -289,7 +281,6 @@ namespace Stardust.Data.Monitors
                     case "TimeoutExcludes": return _TimeoutExcludes;
                     case "MaxTagLength": return _MaxTagLength;
                     case "VipClients": return _VipClients;
-                    case "Nodes": return _Nodes;
                     case "AlarmThreshold": return _AlarmThreshold;
                     case "AlarmErrorRate": return _AlarmErrorRate;
                     case "AlarmRobot": return _AlarmRobot;
@@ -326,7 +317,6 @@ namespace Stardust.Data.Monitors
                     case "TimeoutExcludes": _TimeoutExcludes = Convert.ToString(value); break;
                     case "MaxTagLength": _MaxTagLength = value.ToInt(); break;
                     case "VipClients": _VipClients = Convert.ToString(value); break;
-                    case "Nodes": _Nodes = Convert.ToString(value); break;
                     case "AlarmThreshold": _AlarmThreshold = value.ToInt(); break;
                     case "AlarmErrorRate": _AlarmErrorRate = value.ToDouble(); break;
                     case "AlarmRobot": _AlarmRobot = Convert.ToString(value); break;
@@ -401,9 +391,6 @@ namespace Stardust.Data.Monitors
 
             /// <summary>Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配</summary>
             public static readonly Field VipClients = FindByName("VipClients");
-
-            /// <summary>节点集。该应用最近一段时间所涉及的来源地址</summary>
-            public static readonly Field Nodes = FindByName("Nodes");
 
             /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用</summary>
             public static readonly Field AlarmThreshold = FindByName("AlarmThreshold");
@@ -497,9 +484,6 @@ namespace Stardust.Data.Monitors
 
             /// <summary>Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配</summary>
             public const String VipClients = "VipClients";
-
-            /// <summary>节点集。该应用最近一段时间所涉及的来源地址</summary>
-            public const String Nodes = "Nodes";
 
             /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用</summary>
             public const String AlarmThreshold = "AlarmThreshold";
