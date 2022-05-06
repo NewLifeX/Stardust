@@ -75,17 +75,18 @@ namespace Stardust.Data.Monitors
         /// <returns></returns>
         public static IList<TraceHourStat> FindAllByAppId(Int32 appId) => FindAll(_.AppId == appId);
 
-        /// <summary>查询某应用某天的所有统计，带缓存</summary>
+        /// <summary>查询某应用指定时间段的所有统计，带缓存</summary>
         /// <param name="appId"></param>
-        /// <param name="date"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
         /// <returns></returns>
-        public static IList<TraceHourStat> FindAllByAppIdWithCache(Int32 appId, DateTime date)
+        public static IList<TraceHourStat> FindAllByAppIdWithCache(Int32 appId, DateTime start, DateTime end)
         {
-            var key = $"TraceHourStat:FindAllByAppIdWithCache:{appId}#{date:yyyyMMdd}";
+            var key = $"TraceHourStat:FindAllByAppIdWithCache:{appId}#{start:yyyyMMddHHmm}#{end:yyyyMMddHHmm}";
             if (_cache.TryGetValue<IList<TraceHourStat>>(key, out var list) && list != null) return list;
 
             // 查询数据库，即使空值也缓存，避免缓存穿透
-            list = FindAll(_.AppId == appId & _.StatTime >= date & _.StatTime < date.AddDays(1));
+            list = FindAll(_.AppId == appId & _.StatTime >= start & _.StatTime < end);
 
             _cache.Set(key, list, 10);
 
@@ -131,7 +132,7 @@ namespace Stardust.Data.Monitors
 
             using var span = DefaultTracer.Instance?.NewSpan("TraceHourStat-FindByTrace", model.Key);
 
-            st = FindAllByAppIdWithCache(model.AppId, model.Time.Date)
+            st = FindAllByAppIdWithCache(model.AppId, model.Time, model.Time.AddHours(1))
                 .FirstOrDefault(e => e.StatTime == model.Time && e.ItemId == model.ItemId);
 
             // 查询数据库

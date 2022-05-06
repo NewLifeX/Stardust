@@ -16,6 +16,7 @@ namespace Stardust.Data.Monitors
     public partial class TraceDayStat : Entity<TraceDayStat>
     {
         #region 对象操作
+        private static readonly ICache _cache = Cache.Default;
         static TraceDayStat()
         {
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
@@ -211,7 +212,6 @@ namespace Stardust.Data.Monitors
         #endregion
 
         #region 业务操作
-        private static ICache _cache = Cache.Default;
         private static TraceDayStat FindByTrace(TraceStatModel model, Boolean cache)
         {
             var key = $"TraceDayStat:FindByTrace:{model.Key}";
@@ -233,11 +233,9 @@ namespace Stardust.Data.Monitors
         /// <summary>查找统计行</summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public static TraceDayStat FindOrAdd(TraceStatModel model)
-        {
+        public static TraceDayStat FindOrAdd(TraceStatModel model) =>
             // 高并发下获取或新增对象
-            return GetOrAdd(model, FindByTrace, m => new TraceDayStat { StatDate = m.Time, AppId = m.AppId, ItemId = m.ItemId });
-        }
+            GetOrAdd(model, FindByTrace, m => new TraceDayStat { StatDate = m.Time, AppId = m.AppId, ItemId = m.ItemId });
 
         /// <summary>删除指定时间之前的数据</summary>
         /// <param name="time"></param>

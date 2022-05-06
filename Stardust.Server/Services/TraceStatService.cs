@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
+﻿using System.Collections.Concurrent;
 using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
@@ -58,14 +54,15 @@ namespace Stardust.Server.Services
         {
             if (traces == null || traces.Count == 0) return;
 
+            // 放入队列包，凑批处理
             foreach (var item in traces)
             {
                 {
-                    var key = $"{ item.AppId}_{item.StatDate.ToFullString()}";
+                    var key = $"{item.AppId}_{item.StatDate.ToFullString()}";
                     if (!_bagDay.Contains(key)) _bagDay.Add(key);
                 }
                 {
-                    var key = $"{ item.AppId}_{item.StatHour.ToFullString()}";
+                    var key = $"{item.AppId}_{item.StatHour.ToFullString()}";
                     if (!_bagHour.Contains(key)) _bagHour.Add(key);
                 }
                 {
@@ -250,8 +247,8 @@ namespace Stardust.Server.Services
             var date = time.Date;
             using var span = _tracer?.NewSpan("TraceBatchStat-Day", time);
 
-            // 统计数据。分钟级统计可能因埋点名称污染，导致产生大量数据，这里过滤要最大1000行
-            var list = TraceMinuteStat.FindAllByAppIdWithCache(appId, date, 24 * 60 / 5 * 1000);
+            // 统计数据。由小时级汇总
+            var list = TraceHourStat.FindAllByAppIdWithCache(appId, date, date.AddDays(1));
             if (list.Count == 0) return;
 
             // 聚合
@@ -293,7 +290,7 @@ namespace Stardust.Server.Services
             time = time.Date.AddHours(time.Hour);
 
             // 统计数据。分钟级统计可能因埋点名称污染，导致产生大量数据，这里过滤要最大1000行
-            var list = TraceMinuteStat.FindAllByAppIdWithCache(appId, time.Date, 24 * 60 / 5 * 1000);
+            var list = TraceMinuteStat.FindAllByAppIdWithCache(appId, time, time.AddHours(1), 24 * 60 / 5 * 1000);
             list = list.Where(e => e.StatTime >= time & e.StatTime < time.AddHours(1)).ToList();
             if (list.Count == 0) return;
 
@@ -370,7 +367,7 @@ namespace Stardust.Server.Services
         }
     }
 
-    class DayQueue : MyQueue
+    internal class DayQueue : MyQueue
     {
         public TraceDayStat GetOrAdd(DateTime date, Int32 appId, Int32 itemId, out String key)
         {
@@ -380,7 +377,7 @@ namespace Stardust.Server.Services
         }
     }
 
-    class HourQueue : MyQueue
+    internal class HourQueue : MyQueue
     {
         public TraceHourStat GetOrAdd(DateTime date, Int32 appId, Int32 itemId, out String key)
         {
@@ -390,7 +387,7 @@ namespace Stardust.Server.Services
         }
     }
 
-    class MinuteQueue : MyQueue
+    internal class MinuteQueue : MyQueue
     {
         public TraceMinuteStat GetOrAdd(DateTime date, Int32 appId, Int32 itemId, out String key)
         {
@@ -400,7 +397,7 @@ namespace Stardust.Server.Services
         }
     }
 
-    class AppMinuteQueue : MyQueue
+    internal class AppMinuteQueue : MyQueue
     {
         public AppMinuteStat GetOrAdd(DateTime date, Int32 appId, out String key)
         {
@@ -410,7 +407,7 @@ namespace Stardust.Server.Services
         }
     }
 
-    class MyQueue : EntityDeferredQueue
+    internal class MyQueue : EntityDeferredQueue
     {
         #region 方法
         /// <summary>处理一批</summary>

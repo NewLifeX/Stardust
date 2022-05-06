@@ -76,20 +76,21 @@ namespace Stardust.Data.Monitors
         /// <returns></returns>
         public static IList<TraceMinuteStat> FindAllByAppIdAndTime(Int32 appId, DateTime time) => FindAll(_.AppId == appId & _.StatTime == time);
 
-        /// <summary>查询某应用某天的所有统计，带缓存</summary>
+        /// <summary>查询某应用指定区间的所有统计，带缓存</summary>
         /// <param name="appId"></param>
-        /// <param name="date"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
         /// <param name="maximumRows"></param>
         /// <returns></returns>
-        public static IList<TraceMinuteStat> FindAllByAppIdWithCache(Int32 appId, DateTime date, Int32 maximumRows)
+        public static IList<TraceMinuteStat> FindAllByAppIdWithCache(Int32 appId, DateTime start, DateTime end, Int32 maximumRows)
         {
-            var key = $"TraceMinuteStat:FindAllByAppIdWithCache:{appId}#{date:yyyyMMdd}";
+            var key = $"TraceMinuteStat:FindAllByAppIdWithCache:{appId}#{start:yyyyMMddHHmm}#{end:yyyyMMddHHmm}";
             if (_cache.TryGetValue<IList<TraceMinuteStat>>(key, out var list) && list != null) return list;
 
             // 查询数据库，即使空值也缓存，避免缓存穿透
-            list = FindAll(_.AppId == appId & _.StatTime >= date & _.StatTime < date.AddDays(1), _.Total.Desc(), null, 0, maximumRows);
+            list = FindAll(_.AppId == appId & _.StatTime >= start & _.StatTime < end, _.Total.Desc(), null, 0, maximumRows);
 
-            _cache.Set(key, list, 60);
+            _cache.Set(key, list, 10);
 
             return list;
         }
@@ -169,13 +170,13 @@ namespace Stardust.Data.Monitors
 
             using var span = DefaultTracer.Instance?.NewSpan("TraceMinuteStat-FindByTrace", model.Key);
 
-            st = FindAllByAppIdWithCache(model.AppId, model.Time.Date, 24 * 60 / 5 * 1000)
+            st = FindAllByAppIdWithCache(model.AppId, model.Time, model.Time.AddMinutes(5), 24 * 60 / 5 * 1000)
                 .FirstOrDefault(e => e.StatTime == model.Time && e.ItemId == model.ItemId);
 
             // 查询数据库
             if (st == null) st = Find(_.StatTime == model.Time & _.AppId == model.AppId & _.ItemId == model.ItemId);
 
-            if (st != null) _cache.Set(key, st, 600);
+            if (st != null) _cache.Set(key, st, 300);
 
             return st;
         }
