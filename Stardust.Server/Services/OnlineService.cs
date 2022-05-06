@@ -50,7 +50,7 @@ namespace Stardust.Server.Services
             {
                 using var span = _tracer?.NewSpan(nameof(CheckAppOnline));
 
-                var rs2 = AppOnline.ClearExpire(TimeSpan.FromSeconds(sessionTimeout), TimeSpan.FromDays(7));
+                var rs2 = AppOnline.ClearExpire(TimeSpan.FromSeconds(sessionTimeout), TimeSpan.FromDays(2));
                 if (rs2 != null)
                 {
                     foreach (var olt in rs2)
@@ -71,7 +71,7 @@ namespace Stardust.Server.Services
 
             // 注册中心
             {
-                var rs = AppService.ClearExpire(TimeSpan.FromDays(7));
+                var rs = AppService.ClearExpire(TimeSpan.FromDays(2));
                 var rs2 = AppConsume.ClearExpire(TimeSpan.FromSeconds(sessionTimeout));
             }
         }
