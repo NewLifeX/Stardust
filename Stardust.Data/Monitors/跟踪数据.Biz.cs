@@ -23,6 +23,7 @@ namespace Stardust.Data.Monitors
             {
                 ConnPolicy = "{0}",
                 TablePolicy = "{0}_{1:yyyyMMdd}",
+                Step = TimeSpan.FromDays(1),
             };
 
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx

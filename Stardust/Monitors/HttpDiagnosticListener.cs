@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Net;
 using System.Net.Http;
 using NewLife;
 using NewLife.Log;
@@ -45,7 +46,7 @@ namespace Stardust.Monitors
                         var span = DefaultSpan.Current;
                         if (span != null)
                         {
-                            if (value.Value.GetValue("Response") is HttpResponseMessage response && !response.IsSuccessStatusCode)
+                            if (value.Value.GetValue("Response") is HttpResponseMessage response && response.StatusCode > (HttpStatusCode)299)
                             {
                                 if (span.Error.IsNullOrEmpty()) span.Error = response.ReasonPhrase;
                             }
