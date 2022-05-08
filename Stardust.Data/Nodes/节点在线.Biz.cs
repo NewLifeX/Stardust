@@ -224,7 +224,8 @@ namespace Stardust.Data.Nodes
             if (dt.Year > 2000)
             {
                 olt.LocalTime = dt;
-                olt.Offset = (Int32)Math.Round((dt - DateTime.Now).TotalSeconds);
+                //olt.Offset = (Int32)Math.Round((dt - DateTime.Now).TotalSeconds);
+                olt.Offset = (Int32)(inf.Time - DateTime.UtcNow.ToLong());
             }
 
             if (!inf.Processes.IsNullOrEmpty()) olt.Processes = inf.Processes;

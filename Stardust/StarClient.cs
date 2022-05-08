@@ -436,7 +436,7 @@ namespace Stardust
                     {
                         // 计算延迟
                         var ts = DateTime.UtcNow - dt;
-                        var ms = (Int32)ts.TotalMilliseconds;
+                        var ms = (Int32)Math.Round(ts.TotalMilliseconds);
                         if (Delay > 0)
                             Delay = (Delay + ms) / 2;
                         else

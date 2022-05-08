@@ -88,8 +88,8 @@
       <Column Name="TcpConnections" DataType="Int32" Description="连接数。传输数据Established的Tcp网络连接数" />
       <Column Name="TcpTimeWait" DataType="Int32" Description="主动关闭。主动关闭后TimeWait的Tcp网络连接数，下一步Closed" />
       <Column Name="TcpCloseWait" DataType="Int32" Description="被动关闭。被动关闭后CloseWait的Tcp网络连接数，下一步TimeWait" />
-      <Column Name="Delay" DataType="Int32" Description="延迟。网络延迟，单位ms" />
-      <Column Name="Offset" DataType="Int32" Description="偏移。客户端时间减服务端时间，单位s" />
+      <Column Name="Delay" DataType="Int32" Description="延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms" />
+      <Column Name="Offset" DataType="Int32" Description="偏移。客户端UTC时间减服务端UTC时间，单位ms" />
       <Column Name="LocalTime" DataType="DateTime" Description="本地时间" />
       <Column Name="Uptime" DataType="Int32" Description="开机时间。单位s" />
       <Column Name="MACs" DataType="String" Length="200" Description="网卡" />
@@ -146,8 +146,8 @@
       <Column Name="TcpConnections" DataType="Int32" Description="连接数。传输数据Established的Tcp网络连接数" />
       <Column Name="TcpTimeWait" DataType="Int32" Description="主动关闭。主动关闭后TimeWait的Tcp网络连接数，下一步Closed" />
       <Column Name="TcpCloseWait" DataType="Int32" Description="被动关闭。被动关闭后CloseWait的Tcp网络连接数，下一步TimeWait" />
-      <Column Name="Delay" DataType="Int32" Description="延迟。网络延迟，单位ms" />
-      <Column Name="Offset" DataType="Int32" Description="偏移。客户端时间减服务端时间，单位s" />
+      <Column Name="Delay" DataType="Int32" Description="延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms" />
+      <Column Name="Offset" DataType="Int32" Description="偏移。客户端UTC时间减服务端UTC时间，单位ms" />
       <Column Name="LocalTime" DataType="DateTime" Description="本地时间" />
       <Column Name="Uptime" DataType="Int32" Description="开机时间。单位s" />
       <Column Name="Creator" DataType="String" Description="创建者。服务端节点" />
