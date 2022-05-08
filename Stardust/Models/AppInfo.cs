@@ -223,7 +223,9 @@ namespace Stardust.Models
                 {
                     // UseShellExecute 必须 false，以便于后续重定向输出流
                     UseShellExecute = false,
-                    RedirectStandardOutput = true
+                    CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    RedirectStandardOutput = true,
                 };
                 var process = Process.Start(psi);
                 if (!process.WaitForExit(3_000))

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.1;net5.0;net6.0</TargetFrameworks>
     <AssemblyName>Stardust</AssemblyName>
-    <AssemblyTitle>星尘分布式服务扩展</AssemblyTitle>
+    <AssemblyTitle>星尘分布式服务核心</AssemblyTitle>
     <Description>星尘，分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2022 NewLife</Copyright>
