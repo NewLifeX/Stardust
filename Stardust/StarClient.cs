@@ -190,7 +190,7 @@ namespace Stardust
 
             var asm = AssemblyX.Entry ?? AssemblyX.Create(Assembly.GetExecutingAssembly());
             //var ps = System.IO.Ports.SerialPort.GetPortNames();
-            var mcs = NetHelper.GetMacs().Select(e => e.ToHex("-")).OrderBy(e => e).Join(",");
+            var mcs = NetHelper.GetMacs().Select(e => e.ToHex("-")).Where(e => e != "00-00-00-00-00-00").OrderBy(e => e).Join(",");
             //var driveInfo = new DriveInfo(Path.GetPathRoot(".".GetFullPath()));
             var path = ".".GetFullPath();
             var driveInfo = DriveInfo.GetDrives().FirstOrDefault(e => path.StartsWithIgnoreCase(e.Name));
@@ -214,7 +214,7 @@ namespace Stardust
                 AvailableFreeSpace = (UInt64)driveInfo?.AvailableFreeSpace,
 
                 Processor = mi.Processor,
-                CpuID = mi.CpuID,
+                //CpuID = mi.CpuID,
                 CpuRate = mi.CpuRate,
                 UUID = mi.UUID,
                 MachineGuid = mi.Guid,

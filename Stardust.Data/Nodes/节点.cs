@@ -198,14 +198,6 @@ namespace Stardust.Data.Nodes
         [BindColumn("Processor", "处理器", "")]
         public String Processor { get => _Processor; set { if (OnPropertyChanging("Processor", value)) { _Processor = value; OnPropertyChanged("Processor"); } } }
 
-        private String _CpuID;
-        /// <summary>CPU标识</summary>
-        [DisplayName("CPU标识")]
-        [Description("CPU标识")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("CpuID", "CPU标识", "")]
-        public String CpuID { get => _CpuID; set { if (OnPropertyChanging("CpuID", value)) { _CpuID = value; OnPropertyChanged("CpuID"); } } }
-
         private String _Uuid;
         /// <summary>唯一标识</summary>
         [DisplayName("唯一标识")]
@@ -471,7 +463,6 @@ namespace Stardust.Data.Nodes
                     case "Dpi": return _Dpi;
                     case "Resolution": return _Resolution;
                     case "Processor": return _Processor;
-                    case "CpuID": return _CpuID;
                     case "Uuid": return _Uuid;
                     case "MachineGuid": return _MachineGuid;
                     case "DiskID": return _DiskID;
@@ -530,7 +521,6 @@ namespace Stardust.Data.Nodes
                     case "Dpi": _Dpi = Convert.ToString(value); break;
                     case "Resolution": _Resolution = Convert.ToString(value); break;
                     case "Processor": _Processor = Convert.ToString(value); break;
-                    case "CpuID": _CpuID = Convert.ToString(value); break;
                     case "Uuid": _Uuid = Convert.ToString(value); break;
                     case "MachineGuid": _MachineGuid = Convert.ToString(value); break;
                     case "DiskID": _DiskID = Convert.ToString(value); break;
@@ -635,9 +625,6 @@ namespace Stardust.Data.Nodes
 
             /// <summary>处理器</summary>
             public static readonly Field Processor = FindByName("Processor");
-
-            /// <summary>CPU标识</summary>
-            public static readonly Field CpuID = FindByName("CpuID");
 
             /// <summary>唯一标识</summary>
             public static readonly Field Uuid = FindByName("Uuid");
@@ -797,9 +784,6 @@ namespace Stardust.Data.Nodes
 
             /// <summary>处理器</summary>
             public const String Processor = "Processor";
-
-            /// <summary>CPU标识</summary>
-            public const String CpuID = "CpuID";
 
             /// <summary>唯一标识</summary>
             public const String Uuid = "Uuid";

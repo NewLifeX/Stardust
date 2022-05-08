@@ -24,7 +24,6 @@
       <Column Name="Dpi" DataType="String" Description="像素点。默认96*96" />
       <Column Name="Resolution" DataType="String" Description="分辨率。例如1024*768" />
       <Column Name="Processor" DataType="String" Length="200" Description="处理器" />
-      <Column Name="CpuID" DataType="String" Description="CPU标识" />
       <Column Name="Uuid" DataType="String" Description="唯一标识" />
       <Column Name="MachineGuid" DataType="String" Description="机器标识" />
       <Column Name="DiskID" DataType="String" Length="200" Description="磁盘序列号" />

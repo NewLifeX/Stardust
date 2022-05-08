@@ -58,8 +58,8 @@ namespace Stardust.Models
         /// <summary>处理器</summary>
         public String Processor { get; set; }
 
-        /// <summary>处理器标识</summary>
-        public String CpuID { get; set; }
+        ///// <summary>处理器标识</summary>
+        //public String CpuID { get; set; }
 
         /// <summary>主频</summary>
         public Single CpuRate { get; set; }

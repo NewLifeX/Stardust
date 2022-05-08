@@ -44,10 +44,10 @@ namespace Stardust.Data.Nodes
 
             if (Name.IsNullOrEmpty()) throw new ArgumentNullException(__.Name, _.Name.DisplayName + "不能为空！");
 
-            var len = _.CpuID.Length;
-            if (CpuID != null && len > 0 && CpuID.Length > len) CpuID = CpuID.Substring(0, len);
+            //var len = _.CpuID.Length;
+            //if (CpuID != null && len > 0 && CpuID.Length > len) CpuID = CpuID.Substring(0, len);
 
-            len = _.Uuid.Length;
+            var len = _.Uuid.Length;
             if (Uuid != null && len > 0 && Uuid.Length > len) Uuid = Uuid.Substring(0, len);
 
             len = _.MachineGuid.Length;
@@ -374,7 +374,7 @@ namespace Stardust.Data.Nodes
             if (!di.UserName.IsNullOrEmpty()) node.UserName = di.UserName;
             if (!di.IP.IsNullOrEmpty()) node.IP = di.IP;
             if (!di.Processor.IsNullOrEmpty()) node.Processor = di.Processor;
-            if (!di.CpuID.IsNullOrEmpty()) node.CpuID = di.CpuID;
+            //if (!di.CpuID.IsNullOrEmpty()) node.CpuID = di.CpuID;
             if (!di.UUID.IsNullOrEmpty()) node.Uuid = di.UUID;
             if (!di.MachineGuid.IsNullOrEmpty()) node.MachineGuid = di.MachineGuid;
             if (!di.DiskID.IsNullOrEmpty()) node.DiskID = di.DiskID;
