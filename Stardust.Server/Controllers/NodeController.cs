@@ -743,7 +743,6 @@ namespace Stardust.Server.Controllers
                     }
                     else
                     {
-                        // 后续MemoryQueue升级到异步阻塞版以后，这里可以缩小
                         await Task.Delay(1_000, cancellationToken);
                     }
                 }

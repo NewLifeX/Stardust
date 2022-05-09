@@ -109,7 +109,16 @@ public class AppOnlineService
         {
             var node = GetNodeByIP(online.IP);
             if (node == null) node = GetOrAddNode(info, online.IP, ip);
-            if (node != null) online.NodeId = node.ID;
+            if (node != null)
+            {
+                online.NodeId = node.ID;
+
+                if (node.ProductCode.IsNullOrEmpty() || node.ProductCode == "App")
+                {
+                    node.ProductCode = info?.Name;
+                    node.Update();
+                }
+            }
         }
 
         online.Fill(app, info);
@@ -149,8 +158,8 @@ public class AppOnlineService
                 var node = new Node
                 {
                     Code = Rand.NextString(8),
-                    Name = rule.Name,
-                    ProductCode = "App",
+                    Name = inf?.MachineName ?? rule.Name,
+                    ProductCode = inf?.Name ?? "App",
                     Category = rule.Category,
                     IP = localIp,
                     Enable = true,
