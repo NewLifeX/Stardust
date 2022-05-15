@@ -68,9 +68,9 @@ namespace Stardust
         public StarFactory() => Init();
 
         /// <summary>实例化星尘工厂，指定地址、应用和密钥，创建工厂</summary>
-        /// <param name="server">服务端地址。为空时先后读取appsettings.json、本地StarAgent、star.config</param>
-        /// <param name="appId">应用标识。为空时读取star.config</param>
-        /// <param name="secret">应用密钥。为空时读取star.config</param>
+        /// <param name="server">服务端地址。为空时先后读取appsettings.json、本地StarAgent、star.config，初始值为空，不连接服务端</param>
+        /// <param name="appId">应用标识。为空时读取star.config，初始值为入口程序集名称</param>
+        /// <param name="secret">应用密钥。为空时读取star.config，初始值为空</param>
         /// <returns></returns>
         public StarFactory(String server, String appId, String secret)
         {
