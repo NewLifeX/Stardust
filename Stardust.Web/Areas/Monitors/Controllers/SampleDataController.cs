@@ -1,5 +1,6 @@
 ﻿using NewLife;
 using NewLife.Cube;
+using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Monitors;
@@ -37,11 +38,12 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 df.Title = "{Tag}";
                 df.Url = "traceDayStat?appId={AppId}&itemId={ItemId}";
             }
-            {
-                var df = ListFields.AddListField("TraceId2", "TraceId");
-                df.DisplayName = "追踪";
-                df.Url = "/trace?id={TraceId}";
-            }
+            ListFields.TraceUrl();
+            //{
+            //    var df = ListFields.AddListField("TraceId2", "TraceId");
+            //    df.DisplayName = "追踪";
+            //    df.Url = "/trace?id={TraceId}";
+            //}
             {
                 var df = ListFields.GetField("TraceId") as ListField;
                 df.DisplayName = "{TraceId}";

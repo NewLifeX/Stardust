@@ -1,0 +1,26 @@
+﻿@{
+    var theme = NewLife.Cube.Setting.Current.Theme;
+    if (String.IsNullOrEmpty(theme)) theme = "ACE";
+
+    Layout = "~/Views/" + theme + "/_Layout.cshtml";
+}<div class="clearfix">
+    <div class="tableTools-container">
+        <h3>全链路追踪</h3>
+        <div class="form-inline">
+            <form action="/trace" method="get" role="form">
+                <div class="input-group">
+                    <span class="input-group-addon">
+                        <i class="ace-icon fa fa-check"></i>
+                    </span>
+                    <input name="id" type="search" id="id" class="form-control" placeholder="搜索TraceId" />
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn-purple btn-sm">
+                            <span class="ace-icon fa fa-search icon-on-right bigger-110"></span>
+                            查询
+                        </button>
+                    </span>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
