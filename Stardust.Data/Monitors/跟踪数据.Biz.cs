@@ -78,26 +78,26 @@ namespace Stardust.Data.Monitors
         {
             if (id <= 0) return null;
 
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
+            //// 实体缓存
+            //if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
 
-            // 单对象缓存
-            return Meta.SingleCache[id];
+            //// 单对象缓存
+            //return Meta.SingleCache[id];
 
-            //return Find(_.ID == id);
+            return Find(_.Id == id);
         }
 
-        /// <summary>根据应用、操作名查找</summary>
-        /// <param name="appId">应用</param>
-        /// <param name="name">操作名</param>
-        /// <returns>实体列表</returns>
-        public static IList<TraceData> FindAllByAppIdAndName(Int32 appId, String name)
-        {
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.Name == name);
+        ///// <summary>根据应用、操作名查找</summary>
+        ///// <param name="appId">应用</param>
+        ///// <param name="name">操作名</param>
+        ///// <returns>实体列表</returns>
+        //public static IList<TraceData> FindAllByAppIdAndName(Int32 appId, String name)
+        //{
+        //    //// 实体缓存
+        //    //if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.Name == name);
 
-            return FindAll(_.AppId == appId & _.Name == name);
-        }
+        //    return FindAll(_.AppId == appId & _.Name == name);
+        //}
         #endregion
 
         #region 高级查询
