@@ -38,7 +38,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.4" />
     <PackageReference Include="NewLife.Cube.Core" Version="5.1.2022.515-beta0744" />
     <PackageReference Include="NewLife.Redis" Version="4.1.2022.501" />
   </ItemGroup>
