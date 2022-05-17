@@ -112,7 +112,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 var ds = TraceData.Search(st.AppId, st.ItemId, "day", st.StatDate, 20);
                 if (ds.Count == 0) throw new InvalidDataException("找不到追踪数据");
 
-                var list = SampleData.FindAllByDataIds(ds.Select(e => e.Id).ToArray(), st.StatDate);
+                var list = SampleData.FindAllByDataIds(ds.Select(e => e.LinkId > 0 ? e.LinkId : e.Id).ToArray(), st.StatDate);
                 if (list.Count == 0) throw new InvalidDataException("找不到采样数据");
 
                 traceId = list[0].TraceId;

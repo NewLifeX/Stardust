@@ -167,6 +167,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("ErrorSamples", "异常采样", "")]
         public Int32 ErrorSamples { get => _ErrorSamples; set { if (OnPropertyChanging("ErrorSamples", value)) { _ErrorSamples = value; OnPropertyChanged("ErrorSamples"); } } }
 
+        private Int64 _LinkId;
+        /// <summary>关联项。当前跟踪数据为克隆数据时，采用数据落在关联项所指定的跟踪数据之下</summary>
+        [DisplayName("关联项")]
+        [Description("关联项。当前跟踪数据为克隆数据时，采用数据落在关联项所指定的跟踪数据之下")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("LinkId", "关联项。当前跟踪数据为克隆数据时，采用数据落在关联项所指定的跟踪数据之下", "")]
+        public Int64 LinkId { get => _LinkId; set { if (OnPropertyChanging("LinkId", value)) { _LinkId = value; OnPropertyChanged("LinkId"); } } }
+
         private String _CreateIP;
         /// <summary>创建地址</summary>
         [DisplayName("创建地址")]
@@ -212,6 +220,7 @@ namespace Stardust.Data.Monitors
                     case "MinCost": return _MinCost;
                     case "Samples": return _Samples;
                     case "ErrorSamples": return _ErrorSamples;
+                    case "LinkId": return _LinkId;
                     case "CreateIP": return _CreateIP;
                     case "CreateTime": return _CreateTime;
                     default: return base[name];
@@ -239,6 +248,7 @@ namespace Stardust.Data.Monitors
                     case "MinCost": _MinCost = value.ToInt(); break;
                     case "Samples": _Samples = value.ToInt(); break;
                     case "ErrorSamples": _ErrorSamples = value.ToInt(); break;
+                    case "LinkId": _LinkId = value.ToLong(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     default: base[name] = value; break;
@@ -305,6 +315,9 @@ namespace Stardust.Data.Monitors
             /// <summary>异常采样</summary>
             public static readonly Field ErrorSamples = FindByName("ErrorSamples");
 
+            /// <summary>关联项。当前跟踪数据为克隆数据时，采用数据落在关联项所指定的跟踪数据之下</summary>
+            public static readonly Field LinkId = FindByName("LinkId");
+
             /// <summary>创建地址</summary>
             public static readonly Field CreateIP = FindByName("CreateIP");
 
@@ -370,6 +383,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>异常采样</summary>
             public const String ErrorSamples = "ErrorSamples";
+
+            /// <summary>关联项。当前跟踪数据为克隆数据时，采用数据落在关联项所指定的跟踪数据之下</summary>
+            public const String LinkId = "LinkId";
 
             /// <summary>创建地址</summary>
             public const String CreateIP = "CreateIP";

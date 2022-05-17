@@ -72,7 +72,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                         new { name = "错误数", type = "value" }
                     };
                     chart.AddLine(list2, _.Total, null, true);
-                   
+
                     var line = chart.Add(list2, _.Errors);
                     line["yAxisIndex"] = 1;
 
@@ -94,7 +94,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                     };
                     chart.AddLine(list2, _.Cost, null, true);
                     chart.Add(list2, _.MinCost);
-                   
+
                     var line = chart.Add(list2, _.MaxCost);
                     line["yAxisIndex"] = 1;
 
@@ -112,6 +112,9 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         [EntityAuthorize(PermissionFlags.Detail)]
         public ActionResult Trace(Int64 id)
         {
+            var td = TraceData.FindById(id);
+            if (td != null && td.LinkId > 0) id = td.LinkId;
+
             //var list = SampleData.FindAllByDataId(id);
             var start = DateTime.Today.AddDays(-30);
             var end = DateTime.Today;

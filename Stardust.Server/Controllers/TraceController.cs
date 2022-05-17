@@ -216,7 +216,9 @@ namespace Stardust.Server.Controllers
                 foreach (var elm in app.GetClones(item.Name, model.ClientId))
                 {
                     var td2 = td.CloneEntity(true);
+                    td2.Id = 0;
                     td2.ItemId = elm.Id;
+                    td2.LinkId = td.Id;
 
                     traces.Add(td2);
                 }

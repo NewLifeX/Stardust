@@ -87,6 +87,7 @@
       <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
       <Column Name="Samples" DataType="Int32" Description="正常采样" />
       <Column Name="ErrorSamples" DataType="Int32" Description="异常采样" />
+      <Column Name="LinkId" DataType="Int64" Description="关联项。当前跟踪数据为克隆数据时，采用数据落在关联项所指定的跟踪数据之下" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
     </Columns>
