@@ -209,7 +209,7 @@ namespace Stardust.Data.Monitors
         {
             if (name.IsNullOrEmpty()) return null;
 
-            // 现在有效集合中查找
+            // 先在有效集合中查找
             var list = TraceItems;
             var ti = list.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
             if (ti != null) return ti;
@@ -220,7 +220,7 @@ namespace Stardust.Data.Monitors
             if (ti != null) return ti;
 
             // 通过规则匹配，支持把多个埋点聚合到一起
-            ti = list.FirstOrDefault(e => e.IsMatch(name));
+            ti = list.FirstOrDefault(e => !e.Cloned && e.IsMatch(name));
             if (ti != null) return ti;
 
             var isApi = name.StartsWith('/');
@@ -235,6 +235,25 @@ namespace Stardust.Data.Monitors
             list.Add(ti);
 
             return ti;
+        }
+
+        /// <summary>根据操作名和客户端标识返回可克隆的跟踪项</summary>
+        /// <param name="name"></param>
+        /// <param name="clientId"></param>
+        /// <returns></returns>
+        public IEnumerable<TraceItem> GetClones(String name, String clientId)
+        {
+            if (name.IsNullOrEmpty() && clientId.IsNullOrEmpty()) yield break;
+
+            // 先在有效集合中查找
+            var list = TraceItems.Where(e => e.Cloned).ToList();
+            if (list.Count == 0) yield break;
+
+            foreach (var item in list)
+            {
+                if (!name.IsNullOrEmpty() && item.IsMatch(name)) yield return item;
+                if (!clientId.IsNullOrEmpty() && item.IsMatch(clientId)) yield return item;
+            }
         }
 
         /// <summary>修正数据</summary>

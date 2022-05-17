@@ -59,6 +59,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("DisplayName", "显示名", "")]
         public String DisplayName { get => _DisplayName; set { if (OnPropertyChanging("DisplayName", value)) { _DisplayName = value; OnPropertyChanged("DisplayName"); } } }
 
+        private Boolean _Enable;
+        /// <summary>启用</summary>
+        [DisplayName("启用")]
+        [Description("启用")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Enable", "启用", "")]
+        public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
+
         private String _Rules;
         /// <summary>规则。支持多个埋点操作名按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开。</summary>
         [DisplayName("规则")]
@@ -67,13 +75,13 @@ namespace Stardust.Data.Monitors
         [BindColumn("Rules", "规则。支持多个埋点操作名按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开。", "")]
         public String Rules { get => _Rules; set { if (OnPropertyChanging("Rules", value)) { _Rules = value; OnPropertyChanged("Rules"); } } }
 
-        private Boolean _Enable;
-        /// <summary>启用</summary>
-        [DisplayName("启用")]
-        [Description("启用")]
+        private Boolean _Cloned;
+        /// <summary>克隆。根据规则匹配，把跟踪数据克隆一份，形成另一个维度的统计数据</summary>
+        [DisplayName("克隆")]
+        [Description("克隆。根据规则匹配，把跟踪数据克隆一份，形成另一个维度的统计数据")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Enable", "启用", "")]
-        public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
+        [BindColumn("Cloned", "克隆。根据规则匹配，把跟踪数据克隆一份，形成另一个维度的统计数据", "")]
+        public Boolean Cloned { get => _Cloned; set { if (OnPropertyChanging("Cloned", value)) { _Cloned = value; OnPropertyChanged("Cloned"); } } }
 
         private Int32 _Timeout;
         /// <summary>超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时</summary>
@@ -211,8 +219,9 @@ namespace Stardust.Data.Monitors
                     case "Kind": return _Kind;
                     case "Name": return _Name;
                     case "DisplayName": return _DisplayName;
-                    case "Rules": return _Rules;
                     case "Enable": return _Enable;
+                    case "Rules": return _Rules;
+                    case "Cloned": return _Cloned;
                     case "Timeout": return _Timeout;
                     case "Days": return _Days;
                     case "Total": return _Total;
@@ -240,8 +249,9 @@ namespace Stardust.Data.Monitors
                     case "Kind": _Kind = Convert.ToString(value); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "DisplayName": _DisplayName = Convert.ToString(value); break;
-                    case "Rules": _Rules = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
+                    case "Rules": _Rules = Convert.ToString(value); break;
+                    case "Cloned": _Cloned = value.ToBoolean(); break;
                     case "Timeout": _Timeout = value.ToInt(); break;
                     case "Days": _Days = value.ToInt(); break;
                     case "Total": _Total = value.ToLong(); break;
@@ -282,11 +292,14 @@ namespace Stardust.Data.Monitors
             /// <summary>显示名</summary>
             public static readonly Field DisplayName = FindByName("DisplayName");
 
+            /// <summary>启用</summary>
+            public static readonly Field Enable = FindByName("Enable");
+
             /// <summary>规则。支持多个埋点操作名按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开。</summary>
             public static readonly Field Rules = FindByName("Rules");
 
-            /// <summary>启用</summary>
-            public static readonly Field Enable = FindByName("Enable");
+            /// <summary>克隆。根据规则匹配，把跟踪数据克隆一份，形成另一个维度的统计数据</summary>
+            public static readonly Field Cloned = FindByName("Cloned");
 
             /// <summary>超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时</summary>
             public static readonly Field Timeout = FindByName("Timeout");
@@ -354,11 +367,14 @@ namespace Stardust.Data.Monitors
             /// <summary>显示名</summary>
             public const String DisplayName = "DisplayName";
 
+            /// <summary>启用</summary>
+            public const String Enable = "Enable";
+
             /// <summary>规则。支持多个埋点操作名按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开。</summary>
             public const String Rules = "Rules";
 
-            /// <summary>启用</summary>
-            public const String Enable = "Enable";
+            /// <summary>克隆。根据规则匹配，把跟踪数据克隆一份，形成另一个维度的统计数据</summary>
+            public const String Cloned = "Cloned";
 
             /// <summary>超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时</summary>
             public const String Timeout = "Timeout";

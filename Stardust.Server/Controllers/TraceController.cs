@@ -57,7 +57,7 @@ namespace Stardust.Server.Controllers
                 MaxSamples = app.MaxSamples,
                 MaxErrors = app.MaxErrors,
                 Timeout = app.Timeout,
-                Excludes = app.Excludes?.Split(",", ";"),
+                //Excludes = app.Excludes?.Split(",", ";"),
                 MaxTagLength = app.MaxTagLength,
             };
 
@@ -211,6 +211,15 @@ namespace Stardust.Server.Controllers
 
                 // 如果最小耗时都超过了超时设置，则全部标记为错误
                 if (isTimeout && td.MinCost >= timeout && td.Errors < td.Total) td.Errors = td.Total;
+
+                // 处理克隆。拷贝一份入库，归属新的跟踪项，但名称不变
+                foreach (var elm in app.GetClones(item.Name, model.ClientId))
+                {
+                    var td2 = td.CloneEntity(true);
+                    td2.ItemId = elm.Id;
+
+                    traces.Add(td2);
+                }
             }
 
             // 更新XCode后，支持批量插入的自动分表，内部按照实体类所属分表进行分组插入
