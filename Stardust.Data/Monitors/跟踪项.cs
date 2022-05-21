@@ -68,11 +68,11 @@ namespace Stardust.Data.Monitors
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
         private String _Rules;
-        /// <summary>规则。支持多个埋点操作名按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开。</summary>
+        /// <summary>规则。支持多个埋点操作按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开，多组规则分号隔开。如name=*/check*,*/ping*;clientId=10.10.*</summary>
         [DisplayName("规则")]
-        [Description("规则。支持多个埋点操作名按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开。")]
+        [Description("规则。支持多个埋点操作按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开，多组规则分号隔开。如name=*/check*,*/ping*;clientId=10.10.*")]
         [DataObjectField(false, false, true, 200)]
-        [BindColumn("Rules", "规则。支持多个埋点操作名按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开。", "")]
+        [BindColumn("Rules", "规则。支持多个埋点操作按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开，多组规则分号隔开。如name=*/check*,*/ping*;clientId=10.10.*", "")]
         public String Rules { get => _Rules; set { if (OnPropertyChanging("Rules", value)) { _Rules = value; OnPropertyChanged("Rules"); } } }
 
         private Boolean _Cloned;
@@ -295,7 +295,7 @@ namespace Stardust.Data.Monitors
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
 
-            /// <summary>规则。支持多个埋点操作名按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开。</summary>
+            /// <summary>规则。支持多个埋点操作按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开，多组规则分号隔开。如name=*/check*,*/ping*;clientId=10.10.*</summary>
             public static readonly Field Rules = FindByName("Rules");
 
             /// <summary>克隆。根据规则匹配，把跟踪数据克隆一份，形成另一个维度的统计数据</summary>
@@ -370,7 +370,7 @@ namespace Stardust.Data.Monitors
             /// <summary>启用</summary>
             public const String Enable = "Enable";
 
-            /// <summary>规则。支持多个埋点操作名按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开。</summary>
+            /// <summary>规则。支持多个埋点操作按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开，多组规则分号隔开。如name=*/check*,*/ping*;clientId=10.10.*</summary>
             public const String Rules = "Rules";
 
             /// <summary>克隆。根据规则匹配，把跟踪数据克隆一份，形成另一个维度的统计数据</summary>

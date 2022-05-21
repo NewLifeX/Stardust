@@ -251,8 +251,7 @@ namespace Stardust.Data.Monitors
 
             foreach (var item in list)
             {
-                if (!name.IsNullOrEmpty() && item.IsMatch(name)) yield return item;
-                if (!clientId.IsNullOrEmpty() && item.IsMatch(clientId)) yield return item;
+                if (item.IsMatch(name, clientId)) yield return item;
             }
         }
 

@@ -40,6 +40,8 @@ namespace Stardust.Data.Monitors
             base.Valid(isNew);
 
             if (Kind.IsNullOrEmpty() || Kind == "redismq") Kind = GetKind(Name);
+
+            if (!Rules.IsNullOrEmpty() && !Rules.Contains("=")) Rules = $"name={Rules}";
         }
 
         /// <summary>
@@ -180,7 +182,58 @@ namespace Stardust.Data.Monitors
             return "other";
         }
 
-        private String[] _rules;
+        /// <summary>
+        /// 获取规则字典
+        /// </summary>
+        /// <returns></returns>
+        public IDictionary<String, String[]> GetRules()
+        {
+            var dic = new Dictionary<String, String[]>(StringComparer.OrdinalIgnoreCase);
+            if (Rules.IsNullOrEmpty()) return dic;
+
+            // 简版规则（旧版）没有等于号，默认匹配到name上
+            if (!Rules.Contains("="))
+            {
+                dic["name"] = Rules.Split(",", StringSplitOptions.RemoveEmptyEntries);
+
+                return dic;
+            }
+
+            var dic2 = Rules.SplitAsDictionary("=", ";");
+            var rules = dic2.ToDictionary(e => e.Key, e => e.Value.Split(",", StringSplitOptions.RemoveEmptyEntries), StringComparer.OrdinalIgnoreCase);
+            return rules;
+        }
+
+        private IDictionary<String, String[]> _rules;
+        /// <summary>
+        /// 是否匹配该规则
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="clientId"></param>
+        /// <returns></returns>
+        public Boolean IsMatch(String name, String clientId)
+        {
+            //if (name.IsNullOrEmpty()) return false;
+            //if (clientId.IsNullOrEmpty()) return false;
+
+            if (_rules == null) _rules = GetRules();
+
+            // 没有使用该规则，直接过
+            if (_rules.TryGetValue("name", out var vs))
+            {
+                if (name.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(name))) return false;
+            }
+            if (_rules.TryGetValue("clientId", out vs))
+            {
+                if (clientId.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(clientId))) return false;
+            }
+
+            // 过滤其它项
+            if (_rules.Keys.Any(e => !e.EqualIgnoreCase("name", "clientId"))) return false;
+
+            return true;
+        }
+
         /// <summary>
         /// 是否匹配该规则
         /// </summary>
@@ -191,9 +244,17 @@ namespace Stardust.Data.Monitors
             if (name.IsNullOrEmpty()) return false;
             if (Rules.IsNullOrEmpty()) return false;
 
-            if (_rules == null) _rules = Rules.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+            if (_rules == null) _rules = GetRules();
 
-            return _rules.Any(e => e.IsMatch(name));
+            if (_rules.TryGetValue("name", out var vs))
+            {
+                if (name.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(name))) return false;
+            }
+
+            // 过滤其它项
+            if (_rules.Keys.Any(e => !e.EqualIgnoreCase("name"))) return false;
+
+            return true;
         }
         #endregion
     }
