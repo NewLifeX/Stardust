@@ -38,16 +38,11 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 df.Title = "{Tag}";
                 df.Url = "traceDayStat?appId={AppId}&itemId={ItemId}";
             }
-            ListFields.TraceUrl();
-            //{
-            //    var df = ListFields.AddListField("TraceId2", "TraceId");
-            //    df.DisplayName = "追踪";
-            //    df.Url = "/trace?id={TraceId}";
-            //}
+            //ListFields.TraceUrl();
             {
                 var df = ListFields.GetField("TraceId") as ListField;
-                df.DisplayName = "{TraceId}";
-                df.Url = "?traceId={TraceId}";
+                df.Text = "追踪";
+                df.Url = "/trace?id={TraceId}";
             }
         }
 
