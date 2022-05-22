@@ -1,7 +1,9 @@
 ﻿@model IList<TraceData>
+@using Stardust.Data
 @using Stardust.Data.Monitors
 @using NewLife;
 @using NewLife.Web;
+@using Stardust.Data.Nodes
 @using XCode;
 @using XCode.Configuration;
 @using XCode.Membership;
@@ -23,6 +25,7 @@
             }
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("AppId"))">应用</a></th>
             <th class="text-center" title="实例。应用可能多实例部署，ip@proccessid"><a href="@Html.Raw(page.GetSortUrl("ClientId"))">实例</a></th>
+            <th title="应用系统所在节点">应用节点</th>
             <th class="text-center" title="操作名。接口名或埋点名"><a href="@Html.Raw(page.GetSortUrl("Name"))">操作名</a></th>
             <th title="跨多系统查看调用链">追踪</th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Total"))">总数</a></th>
@@ -35,6 +38,7 @@
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Start"))">开始时间</a></th>
             @*<th title="把该操作名加入排除名单，不再收集其信息">屏蔽</th>*@
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("CreateTime"))">创建时间</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("CreateIP"))">创建地址</a></th>
             @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
             {
                 <th class="text-center">操作</th>
@@ -48,6 +52,13 @@
             //var url2 = $"SampleData?appid={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}&start={entity.StartTime}&end={entity.EndTime}";
             var url2 = $"SampleData?dataid={(entity.LinkId > 0 ? entity.LinkId : entity.Id)}";
             var url3 = $"?appid={entity.AppId}&clientId={HttpUtility.UrlEncode(entity.ClientId)}";
+
+            var online = AppOnline.FindByClient(entity.ClientId);
+            var node = online?.Node;
+            @*if (node == null) node = Node.FindAllByIP(entity.ClientId.Substring(null, "@")).FirstOrDefault();*@
+            var nodeName = node?.Name ?? node?.Code;
+            var url4 = $"/Nodes/Node?Id={node?.ID}";
+
             <tr>
                 @if (set.EnableSelect)
                 {
@@ -55,6 +66,7 @@
                 }
                 <td class="text-center">@entity.AppName</td>
                 <td><a href="@url3" title="该实例的相关埋点数据">@entity.ClientId</a></td>
+                <td><a href="@url4" title="应用系统所在节点">@nodeName</a></td>
                 <td style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url1" title="该应用操作在最近一段时间内的监控图表">@entity.Name</a></td>
                 <td><a href="TraceData/Trace?id=@entity.Id" title="跨多系统查看调用链">追踪</a></td>
                 <td class="text-right"><a href="@url2" title="本次追踪的少量采样数据">@entity.Total.ToString("n0")</a></td>
@@ -67,6 +79,7 @@
                 @*<td><a href="TraceData/Exclude?id=@entity.Id" title="把该操作名加入排除名单，不再收集其信息">屏蔽</a></td>*@
                 <td class="text-center">@entity.Start.ToFullString("")</td>
                 <td class="text-center">@entity.CreateTime.ToFullString("")</td>
+                <td class="text-center" title="@(entity.CreateIP.IPToAddress())">@entity.CreateIP</td>
                 @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
                 {
                     <td class="text-center">
@@ -87,6 +100,7 @@
                 <td></td>
                 <td></td>
                 <td></td>
+                <td></td>
                 <td class="text-right">@entity.Total.ToString("n0")</td>
                 <td class="text-right">@entity.Errors.ToString("n0")</td>
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
@@ -95,6 +109,7 @@
                 <td class="text-right">@entity.Samples.ToString("n0")</td>
                 <td class="text-right">@entity.ErrorSamples.ToString("n0")</td>
                 @*<td></td>*@
+                <td></td>
                 <td></td>
                 <td></td>
                 <td></td>
