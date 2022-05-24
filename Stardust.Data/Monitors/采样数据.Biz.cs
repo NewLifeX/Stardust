@@ -126,16 +126,18 @@ namespace Stardust.Data.Monitors
         /// <summary>高级查询</summary>
         /// <param name="dataId">数据</param>
         /// <param name="traceId">追踪标识。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</param>
+        /// <param name="success">是否成功</param>
         /// <param name="start">开始时间</param>
         /// <param name="end">结束时间</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<SampleData> Search(Int64 dataId, String traceId, DateTime start, DateTime end, PageParameter page)
+        public static IList<SampleData> Search(Int64 dataId, String traceId, Boolean? success, DateTime start, DateTime end, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (dataId > 0) exp &= _.DataId == dataId;
             if (!traceId.IsNullOrEmpty()) exp &= _.TraceId == traceId;
+            if (success != null) exp &= _.Success != success;
 
             // 时间区间倒序，为了从后往前查
             return Meta.AutoShard(end.AddSeconds(1), start, () => FindAll(exp, page))

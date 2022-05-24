@@ -118,7 +118,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             //var list = SampleData.FindAllByDataId(id);
             var start = DateTime.Today.AddDays(-30);
             var end = DateTime.Today;
-            var list = SampleData.Search(id, null, start, end, new PageParameter { PageSize = 1000 });
+            var list = SampleData.Search(id, null, null, start, end, new PageParameter { PageSize = 1000 });
             if (list.Count == 0) throw new InvalidDataException("找不到采样数据");
 
             //return RedirectToAction("Index", "SampleData", new { traceId = list[0].TraceId });

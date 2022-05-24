@@ -203,7 +203,7 @@ namespace Stardust.Web.Controllers
 
             var start = DateTime.Today.AddDays(-30);
             var end = DateTime.Today;
-            var list = SampleData.Search(-1, traceId, start, end, p);
+            var list = SampleData.Search(-1, traceId, null, start, end, p);
             if (list.Count == 0)
             {
                 // 如果是查看调用链，去备份表查一下
@@ -228,7 +228,7 @@ namespace Stardust.Web.Controllers
                 if (first.Year > 2000 && first.Hour == 0 && first.Minute == 0 && first.Second <= 5)
                 {
                     var date = first.Date.AddDays(-1);
-                    var list2 = SampleData.Search(-1, traceId, date, date, p);
+                    var list2 = SampleData.Search(-1, traceId, null, date, date, p);
                     if (list2.Count > 0) (list as List<SampleData>).AddRange(list2);
                 }
 

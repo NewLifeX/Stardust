@@ -50,6 +50,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         {
             var dataId = p["dataId"].ToLong(-1);
             var traceId = p["traceId"];
+            var success = p["success"]?.ToBoolean();
 
             // 指定追踪标识后，分页500
             if (!traceId.IsNullOrEmpty())
@@ -60,7 +61,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
             var start = DateTime.Today.AddDays(-30);
             var end = DateTime.Today;
-            return SampleData.Search(dataId, traceId, start, end, p);
+            return SampleData.Search(dataId, traceId, success, start, end, p);
         }
 
         protected override SampleData Find(Object key)
