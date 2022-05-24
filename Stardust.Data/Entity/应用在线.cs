@@ -15,7 +15,7 @@ namespace Stardust.Data
     [DataObject]
     [Description("应用在线。一个应用有多个部署，每个在线会话对应一个服务地址")]
     [BindIndex("IU_AppOnline_Client", true, "Client")]
-    [BindIndex("IX_AppOnline_AppId", false, "AppId")]
+    [BindIndex("IX_AppOnline_AppId_IP", false, "AppId,IP")]
     [BindIndex("IX_AppOnline_Token", false, "Token")]
     [BindIndex("IX_AppOnline_IP", false, "IP")]
     [BindIndex("IX_AppOnline_UpdateTime", false, "UpdateTime")]
@@ -64,11 +64,11 @@ namespace Stardust.Data
         public Int32 NodeId { get => _NodeId; set { if (OnPropertyChanging("NodeId", value)) { _NodeId = value; OnPropertyChanged("NodeId"); } } }
 
         private String _Client;
-        /// <summary>客户端。IP加进程</summary>
+        /// <summary>客户端。IP加进程，不同应用的Client可能相同，但几率很低，暂不考虑</summary>
         [DisplayName("客户端")]
-        [Description("客户端。IP加进程")]
+        [Description("客户端。IP加进程，不同应用的Client可能相同，但几率很低，暂不考虑")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("Client", "客户端。IP加进程", "")]
+        [BindColumn("Client", "客户端。IP加进程，不同应用的Client可能相同，但几率很低，暂不考虑", "")]
         public String Client { get => _Client; set { if (OnPropertyChanging("Client", value)) { _Client = value; OnPropertyChanged("Client"); } } }
 
         private String _Scope;
@@ -316,7 +316,7 @@ namespace Stardust.Data
             /// <summary>节点。节点服务器</summary>
             public static readonly Field NodeId = FindByName("NodeId");
 
-            /// <summary>客户端。IP加进程</summary>
+            /// <summary>客户端。IP加进程，不同应用的Client可能相同，但几率很低，暂不考虑</summary>
             public static readonly Field Client = FindByName("Client");
 
             /// <summary>作用域</summary>
@@ -397,7 +397,7 @@ namespace Stardust.Data
             /// <summary>节点。节点服务器</summary>
             public const String NodeId = "NodeId";
 
-            /// <summary>客户端。IP加进程</summary>
+            /// <summary>客户端。IP加进程，不同应用的Client可能相同，但几率很低，暂不考虑</summary>
             public const String Client = "Client";
 
             /// <summary>作用域</summary>

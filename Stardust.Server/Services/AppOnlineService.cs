@@ -35,7 +35,7 @@ public class AppOnlineService
             using var span = _tracer.NewSpan("GetOnlineForSingleton", localIp);
 
             // 要求内网IP与外网IP都匹配，才能认为是相同会话，因为有可能不同客户端部署在各自内网而具有相同本地IP
-            var list = AppOnline.FindAllByIP(localIp);
+            var list = AppOnline.FindAllByAppAndIP(app.Id, localIp);
             online = list.OrderBy(e => e.Id).FirstOrDefault(e => e.AppId == app.Id && e.UpdateIP == ip);
 
             // 处理多IP

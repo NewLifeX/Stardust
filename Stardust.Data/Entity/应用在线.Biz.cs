@@ -133,6 +133,18 @@ namespace Stardust.Data
 
             return FindAll(_.IP == ip);
         }
+
+        /// <summary>根据应用和本地IP查找在线记录</summary>
+        /// <param name="appId"></param>
+        /// <param name="localIp"></param>
+        /// <returns></returns>
+        public static IList<AppOnline> FindAllByAppAndIP(Int32 appId, String localIp)
+        {
+            if (appId == 0) return new List<AppOnline>();
+            if (localIp.IsNullOrEmpty()) return new List<AppOnline>();
+
+            return FindAll(_.AppId == appId & _.IP == localIp);
+        }
         #endregion
 
         #region 高级查询

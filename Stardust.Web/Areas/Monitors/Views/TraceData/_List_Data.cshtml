@@ -15,6 +15,8 @@
     var fields = ViewBag.Fields as IList<FieldItem>;
     var set = ViewBag.PageSetting as PageSetting;
     //var provider = ManageProvider.Provider;
+
+    var nodes = new Dictionary<String, Node>();
 }
 <table class="table table-bordered table-hover table-striped table-condensed">
     <thead>
@@ -53,20 +55,28 @@
             var url2 = $"SampleData?dataid={(entity.LinkId > 0 ? entity.LinkId : entity.Id)}";
             var url3 = $"?appid={entity.AppId}&clientId={HttpUtility.UrlEncode(entity.ClientId)}";
 
-            var online = AppOnline.FindByClient(entity.ClientId);
-            var node = online?.Node;
-            @*if (node == null) node = Node.FindAllByIP(entity.ClientId.Substring(null, "@")).FirstOrDefault();*@
+            // 带缓存，避免重复查询节点
+            if (!nodes.TryGetValue(entity.ClientId + "", out var node))
+            {
+                var online = AppOnline.FindByClient(entity.ClientId);
+                if (online == null && entity.App != null && entity.App.AppId > 0)
+                    online = AppOnline.FindAllByAppAndIP(entity.App.AppId, entity.ClientId.Substring(null, "@")).FirstOrDefault();
+                node = online?.Node;
+                if (node == null)
+                    node = Node.SearchByIP(entity.ClientId.Substring(null, "@")).FirstOrDefault();
+
+                nodes.Add(entity.ClientId + "", node);
+            }
             var nodeName = node?.Name ?? node?.Code;
-            var url4 = $"/Nodes/Node?Id={node?.ID}";
 
             <tr>
                 @if (set.EnableSelect)
                 {
                     <td class="text-center"><input type="checkbox" name="keys" value="@entity.Id" /></td>
                 }
-                <td class="text-center">@entity.AppName</td>
+                <td class="text-center"><a href="?appId=@entity.AppId">@entity.AppName</a></td>
                 <td><a href="@url3" title="该实例的相关埋点数据">@entity.ClientId</a></td>
-                <td><a href="@url4" title="应用系统所在节点">@nodeName</a></td>
+                <td><a href="/Nodes/Node?Id=@node?.ID" title="应用系统所在节点">@nodeName</a></td>
                 <td style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url1" title="该应用操作在最近一段时间内的监控图表">@entity.Name</a></td>
                 <td><a href="TraceData/Trace?id=@entity.Id" title="跨多系统查看调用链">追踪</a></td>
                 <td class="text-right"><a href="@url2" title="本次追踪的少量采样数据">@entity.Total.ToString("n0")</a></td>
