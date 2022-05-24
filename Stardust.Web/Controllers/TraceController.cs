@@ -312,15 +312,15 @@ namespace Stardust.Web.Controllers
                 // 残留的异常数据
                 rs.AddRange(list);
 
-                // 各应用整体后移
-                foreach (var item in rs)
-                {
-                    if (dic.TryGetValue(item.AppId, out var ts))
-                    {
-                        item.StartTime += ts;
-                        item.EndTime += ts;
-                    }
-                }
+                //// 各应用整体后移
+                //foreach (var item in rs)
+                //{
+                //    if (dic.TryGetValue(item.AppId, out var ts))
+                //    {
+                //        item.StartTime += ts;
+                //        item.EndTime += ts;
+                //    }
+                //}
 
                 list = rs;
             }
