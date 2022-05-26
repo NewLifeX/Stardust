@@ -128,6 +128,8 @@ namespace Stardust.Server.Controllers
 
             if (ap != null)
             {
+                if (ap.DisplayName.IsNullOrEmpty() || ap.DisplayName == ap.Name) ap.DisplayName = model.AppName;
+
                 // 双向同步应用分类
                 if (!ap.Category.IsNullOrEmpty())
                     app.Category = ap.Category;
@@ -138,6 +140,7 @@ namespace Stardust.Server.Controllers
                 }
 
                 if (app.AppId == 0) app.AppId = ap.Id;
+                if (app.DisplayName.IsNullOrEmpty() || app.DisplayName == app.Name) app.DisplayName = ap.DisplayName;
                 app.Update();
             }
 
