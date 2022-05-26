@@ -13,6 +13,8 @@ namespace Stardust.Monitors
     /// <summary>Http诊断监听器</summary>
     public class HttpDiagnosticListener : TraceDiagnosticListener
     {
+        private static HttpRequestOptionsKey<ISpan> _spanKey = new("Span");
+
         /// <summary>实例化</summary>
         public HttpDiagnosticListener() => Name = "HttpHandlerDiagnosticListener";
 
@@ -26,25 +28,27 @@ namespace Stardust.Monitors
                     {
                         if (value.Value.GetValue("Request") is HttpRequestMessage request && !request.Headers.Contains("traceparent"))
                         {
-                            Tracer.NewSpan(request);
+                            var span = Tracer.NewSpan(request);
+                            request.Options.Set(_spanKey, span);
                         }
 
                         break;
                     }
                 case "System.Net.Http.Exception":
                     {
-                        var span = DefaultSpan.Current;
-                        if (span != null && value.Value.GetValue("Exception") is Exception ex)
+                        if (value.Value.GetValue("Request") is HttpRequestMessage request && request.Options.TryGetValue(_spanKey, out var span))
                         {
-                            span.SetError(ex, null);
+                            if (value.Value.GetValue("Exception") is Exception ex)
+                            {
+                                span.SetError(ex, null);
+                            }
                         }
                         break;
                     }
 
                 case "System.Net.Http.HttpRequestOut.Stop":
                     {
-                        var span = DefaultSpan.Current;
-                        if (span != null)
+                        if (value.Value.GetValue("Request") is HttpRequestMessage request && request.Options.TryGetValue(_spanKey, out var span))
                         {
                             if (value.Value.GetValue("Response") is HttpResponseMessage response && response.StatusCode > (HttpStatusCode)299)
                             {
