@@ -1,10 +1,5 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Net.NetworkInformation;
+﻿using System.Net.NetworkInformation;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
@@ -13,6 +8,7 @@ using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust;
+using Stardust.Managers;
 using Upgrade = Stardust.Web.Upgrade;
 
 namespace StarAgent
@@ -63,7 +59,7 @@ namespace StarAgent
     {
         public StarSetting StarSetting { get; set; }
 
-        public StarAgent.Setting AgentSetting { get; set; }
+        public Setting AgentSetting { get; set; }
 
         public MyService()
         {
@@ -123,7 +119,7 @@ namespace StarAgent
             };
 
             // APM埋点。独立应用名
-            client.Tracer = _factory.Tracer;
+            client.Tracer = _factory?.Tracer;
 
             _Manager.Attach(client);
 
@@ -164,11 +160,14 @@ namespace StarAgent
         {
             var set = AgentSetting;
 
+            StartFactory();
+
             // 应用服务管理
             _Manager = new ServiceManager
             {
                 Services = set.Services,
 
+                Tracer = _factory?.Tracer,
                 Log = XTrace.Log,
             };
 
@@ -180,6 +179,7 @@ namespace StarAgent
                 {
                     var svr = new ApiServer(set.LocalPort)
                     {
+                        Tracer = _factory?.Tracer,
                         Log = XTrace.Log
                     };
                     svr.Register(new StarService
@@ -200,8 +200,6 @@ namespace StarAgent
                     XTrace.WriteException(ex);
                 }
             }
-
-            StartFactory();
 
             // 启动星尘客户端，连接服务端
             StartClient();

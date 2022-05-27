@@ -7,6 +7,7 @@ using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust;
+using Stardust.Managers;
 using Stardust.Models;
 
 namespace StarAgent
@@ -33,7 +34,7 @@ namespace StarAgent
         public StarSetting StarSetting { get; set; }
 
         /// <summary>星尘代理设置</summary>
-        public StarAgent.Setting AgentSetting { get; set; }
+        public Setting AgentSetting { get; set; }
         #endregion
 
         #region 业务

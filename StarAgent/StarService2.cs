@@ -8,6 +8,7 @@ using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Threading;
 using Stardust;
+using Stardust.Managers;
 using Stardust.Models;
 
 namespace StarAgent

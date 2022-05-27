@@ -7,7 +7,7 @@ using NewLife.Threading;
 using Stardust.Models;
 using Stardust.Services;
 
-namespace Stardust
+namespace Stardust.Managers
 {
     /// <summary>应用服务管理</summary>
     public class ServiceManager : DisposeBase
@@ -16,18 +16,18 @@ namespace Stardust
         /// <summary>应用服务集合</summary>
         public ServiceInfo[] Services { get; set; }
 
-        private CsvDb<ProcessInfo> _services;
-        private readonly Dictionary<String, Process> _processes = new();
+        private readonly List<ServiceController> _services = new();
+        private readonly CsvDb<ProcessInfo> _db;
         #endregion
 
         #region 构造
-        /// <summary>实例化</summary>
+        /// <summary>实例化应用服务管理</summary>
         public ServiceManager()
         {
             var data = Setting.Current.DataPath;
-            _services = new CsvDb<ProcessInfo>((x, y) => x.Name == y.Name) { FileName = data.CombinePath("Service.csv") };
+            _db = new CsvDb<ProcessInfo>((x, y) => x.Name == y.Name) { FileName = data.CombinePath("Service.csv") };
 
-            _services.Remove(e => e.UpdateTime.AddDays(1) < DateTime.Now);
+            _db.Remove(e => e.UpdateTime.AddDays(1) < DateTime.Now);
         }
 
         /// <summary>销毁</summary>
@@ -47,9 +47,7 @@ namespace Stardust
         {
             var list = Services.ToList();
             foreach (var item in services)
-            {
                 if (!list.Any(e => e.Name.EqualIgnoreCase(item.Name))) list.Add(item);
-            }
 
             Services = list.ToArray();
         }
@@ -73,30 +71,34 @@ namespace Stardust
         /// <summary>检查服务。一般用于改变服务后，让其即时生效</summary>
         public void CheckService() => DoWork(null);
 
-        private Process StartService(ServiceInfo service)
+        private ServiceController StartService(ServiceInfo service)
         {
             // 检查应用是否已启动
-            var pi = _services.Find(e => e.Name.EqualIgnoreCase(service.Name));
-            if (pi != null)
+            var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
+            if (svc != null)
             {
                 try
                 {
-                    var p = Process.GetProcessById(pi.ProcessId);
-                    if (p != null && !p.HasExited && p.ProcessName == pi.ProcessName)
+                    var p = svc.Process ?? Process.GetProcessById(svc.ProcessId);
+                    if (p != null && !p.HasExited && p.ProcessName == svc.ProcessName)
                     {
                         WriteLog("应用[{0}/{1}]已启动，直接接管", service.Name, p.Id);
 
-                        _processes[service.Name] = p;
+                        svc.SetProcess(p);
+                        svc.Save(_db);
 
-                        return p;
+                        return svc;
                     }
+
+                    _services.Remove(svc);
                 }
                 catch (Exception ex)
                 {
                     if (ex is not ArgumentException) XTrace.WriteException(ex);
                 }
             }
-            if (pi == null) pi = new ProcessInfo { Name = service.Name };
+
+            svc = new ServiceController { Name = service.Name, Info = service };
 
             // 修正路径
             var workDir = service.WorkingDirectory;
@@ -107,32 +109,31 @@ namespace Stardust
                 if (workDir.IsNullOrEmpty()) workDir = Path.GetDirectoryName(file);
             }
 
-            var fullFile = file;
-            if (!workDir.IsNullOrEmpty() && !Path.IsPathRooted(fullFile))
-            {
-                fullFile = workDir.CombinePath(fullFile).GetFullPath();
-            }
+            //var fullFile = file;
+            //if (!workDir.IsNullOrEmpty() && !Path.IsPathRooted(fullFile))
+            //    fullFile = workDir.CombinePath(fullFile).GetFullPath();
 
-            if (service.Singleton)
-            {
-                // 遍历进程，检查是否已启动
-                foreach (var p in Process.GetProcesses())
-                {
-                    try
-                    {
-                        if (p.ProcessName.EqualIgnoreCase(service.Name) || p.MainModule.FileName.EqualIgnoreCase(fullFile))
-                        {
-                            WriteLog("应用[{0}/{1}]已启动，直接接管", service.Name, p.Id);
+            //// 单实例
+            //if (service.Singleton)
+            //{
+            //    // 遍历进程，检查是否已启动
+            //    foreach (var p in Process.GetProcesses())
+            //    {
+            //        try
+            //        {
+            //            if (p.ProcessName.EqualIgnoreCase(service.Name) || p.MainModule.FileName.EqualIgnoreCase(fullFile))
+            //            {
+            //                WriteLog("应用[{0}/{1}]已启动，直接接管", service.Name, p.Id);
 
-                            _processes[service.Name] = p;
-                            pi.Save(_services, p);
+            //                svc.SetProcess(p);
+            //                svc.Save(_db);
 
-                            return p;
-                        }
-                    }
-                    catch { }
-                }
-            }
+            //                return svc;
+            //            }
+            //        }
+            //        catch { }
+            //    }
+            //}
 
             WriteLog("启动进程：{0} {1} {2}", file, service.Arguments, workDir);
 
@@ -147,55 +148,62 @@ namespace Stardust
                 UseShellExecute = true,
             };
 
-            var retry = service.Retry;
-            if (retry <= 0) retry = 1024;
-            for (var i = 0; i < retry; i++)
+            //var retry = service.Retry;
+            //if (retry <= 0) retry = 1024;
+            //for (var i = 0; i < retry; i++)
+            //{
+            try
             {
-                try
-                {
-                    var p = Process.Start(si);
+                var p = Process.Start(si);
 
-                    WriteLog("应用[{0}]启动成功 PID={1}", service.Name, p.Id);
+                WriteLog("应用[{0}]启动成功 PID={1}", service.Name, p.Id);
 
-                    // 记录进程信息，避免宿主重启后无法继续管理
-                    _processes[service.Name] = p;
-                    pi.Save(_services, p);
+                // 记录进程信息，避免宿主重启后无法继续管理
+                svc.SetProcess(p);
+                svc.Save(_db);
+                _services.Add(svc);
 
-                    return p;
-                }
-                catch (Exception ex)
-                {
-                    Log?.Write(LogLevel.Error, "{0}", ex);
-
-                    Thread.Sleep(5_000);
-                }
+                return svc;
             }
+            catch (Exception ex)
+            {
+                Log?.Write(LogLevel.Error, "{0}", ex);
+
+                //Thread.Sleep(5_000);
+            }
+            //}
 
             return null;
         }
 
         private void StopService(ServiceInfo service)
         {
-            if (_processes.TryGetValue(service.Name, out var p))
+            var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
+            if (svc != null)
             {
-                WriteLog("停止应用[{0}] PID={1} {2}", service, p.Id, p.ProcessName);
-
-                try
+                var p = svc.Process;
+                if (p != null)
                 {
-                    p.CloseMainWindow();
-                }
-                catch { }
+                    WriteLog("停止应用[{0}] PID={1} {2}", service, p.Id, p.ProcessName);
 
-                try
-                {
-                    if (!p.HasExited) p.Kill();
-                }
-                catch { }
+                    try
+                    {
+                        p.CloseMainWindow();
+                    }
+                    catch { }
 
-                _processes.Remove(service.Name);
+                    try
+                    {
+                        if (!p.HasExited) p.Kill();
+                    }
+                    catch { }
+
+                    svc.SetProcess(null);
+                }
+
+                _services.Remove(svc);
+                _db.Remove(e => e.Name == service.Name);
             }
-
-            _services.Remove(e => e.Name == service.Name);
         }
 
         /// <summary>停止管理，按需杀掉进程</summary>
@@ -208,37 +216,38 @@ namespace Stardust
             {
                 if (item.AutoStop) StopService(item);
             }
-            //_processes.Clear();
         }
 
         private TimerX _timer;
         private void DoWork(Object state)
         {
-            foreach (var svc in Services)
+            foreach (var item in Services)
             {
-                if (svc != null && svc.AutoStart)
+                if (item != null && item.AutoStart)
                 {
-                    if (_processes.TryGetValue(svc.Name, out var p))
+                    var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(item.Name));
+                    if (svc != null)
                     {
-                        if (svc.AutoRestart && (p == null || p.HasExited))
+                        var p = svc.Process;
+                        if (item.AutoRestart && (p == null || p.HasExited))
                         {
-                            WriteLog("应用[{0}/{1}]已退出，准备重新启动！", svc.Name, p?.Id);
+                            WriteLog("应用[{0}/{1}]已退出，准备重新启动！", item.Name, p?.Id);
 
-                            StartService(svc);
+                            StartService(item);
                         }
-                    }
-                    else
-                    {
-                        WriteLog("新增应用[{0}]，准备启动！", svc.Name);
+                        else
+                        {
+                            WriteLog("新增应用[{0}]，准备启动！", item.Name);
 
-                        StartService(svc);
+                            StartService(item);
+                        }
                     }
                 }
             }
         }
         #endregion
 
-        #region 队列
+        #region 发布事件
         /// <summary>关联订阅事件</summary>
         /// <param name="client"></param>
         public void Attach(StarClient client)
@@ -281,7 +290,7 @@ namespace Stardust
             return new CommandReplyModel { Data = "成功" };
         }
 
-        class MyApp
+        private class MyApp
         {
             public Int32 Id { get; set; }
 
@@ -289,39 +298,10 @@ namespace Stardust
         }
         #endregion
 
-        #region 辅助
-        /// <summary>服务运行信息</summary>
-        class ProcessInfo
-        {
-            public String Name { get; set; }
-
-            public Int32 ProcessId { get; set; }
-
-            public String ProcessName { get; set; }
-
-            public DateTime CreateTime { get; set; }
-
-            public DateTime UpdateTime { get; set; }
-
-            public void Save(CsvDb<ProcessInfo> db, Process p)
-            {
-                var add = ProcessId == 0;
-
-                ProcessId = p.Id;
-                ProcessName = p.ProcessName;
-
-                if (add) CreateTime = DateTime.Now;
-                UpdateTime = DateTime.Now;
-
-                if (add)
-                    db.Add(this);
-                else
-                    db.Update(this);
-            }
-        }
-        #endregion
-
         #region 日志
+        /// <summary>性能追踪</summary>
+        public ITracer Tracer { get; set; }
+
         /// <summary>日志</summary>
         public ILog Log { get; set; }
 

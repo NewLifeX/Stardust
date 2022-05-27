@@ -1,10 +1,7 @@
-﻿using NewLife;
+﻿using System.ComponentModel;
+using NewLife;
 using NewLife.Configuration;
-using NewLife.Xml;
 using Stardust.Models;
-using System;
-using System.ComponentModel;
-using System.Linq;
 
 namespace StarAgent
 {
@@ -53,8 +50,8 @@ namespace StarAgent
                 var si = new ServiceInfo
                 {
                     Name = "test",
-                    FileName = "cmd",
-                    Arguments = "ping newlifex.com",
+                    FileName = "ping",
+                    Arguments = "newlifex.com",
 
                     AutoStart = false,
                     AutoRestart = true,
@@ -62,8 +59,8 @@ namespace StarAgent
                 var si2 = new ServiceInfo
                 {
                     Name = "test2",
-                    FileName = "cmd",
-                    Arguments = "ping newlifex.com",
+                    FileName = "ping",
+                    Arguments = "feifan.link",
 
                     AutoStart = false,
                 };

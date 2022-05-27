@@ -437,7 +437,7 @@ namespace Stardust.Server.Controllers
                     Arguments = deploy.Arguments,
                     WorkingDirectory = deploy.WorkingDirectory,
                     AutoStart = deploy.AutoStart,
-                    Singleton = true,
+                    //Singleton = true,
                 };
                 if (!item.Arguments.IsNullOrEmpty()) svc.Arguments = item.Arguments;
                 if (!item.WorkingDirectory.IsNullOrEmpty()) svc.WorkingDirectory = item.WorkingDirectory;
