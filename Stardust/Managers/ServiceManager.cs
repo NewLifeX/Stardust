@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using NewLife;
+﻿using NewLife;
 using NewLife.IO;
 using NewLife.Log;
 using NewLife.Serialization;
@@ -47,7 +46,9 @@ namespace Stardust.Managers
         {
             var list = Services.ToList();
             foreach (var item in services)
+            {
                 if (!list.Any(e => e.Name.EqualIgnoreCase(item.Name))) list.Add(item);
+            }
 
             Services = list.ToArray();
         }
@@ -55,155 +56,21 @@ namespace Stardust.Managers
         /// <summary>开始管理，拉起应用进程</summary>
         public void Start()
         {
-            foreach (var service in Services)
+            if (_timer != null) return;
+
+            foreach (var item in _db.FindAll())
             {
-                if (service.AutoStart)
+                _services.Add(new ServiceController
                 {
-                    WriteLog("启动应用[{0}]：{1} {2} {3}", service.Name, service.FileName, service.Arguments, service.WorkingDirectory);
+                    Name = item.Name,
+                    ProcessId = item.ProcessId,
 
-                    StartService(service);
-                }
+                    Tracer = Tracer,
+                    Log = Log,
+                });
             }
 
-            _timer = new TimerX(DoWork, null, 30_000, 30_000) { Async = true };
-        }
-
-        /// <summary>检查服务。一般用于改变服务后，让其即时生效</summary>
-        public void CheckService() => DoWork(null);
-
-        private ServiceController StartService(ServiceInfo service)
-        {
-            // 检查应用是否已启动
-            var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
-            if (svc != null)
-            {
-                try
-                {
-                    var p = svc.Process ?? Process.GetProcessById(svc.ProcessId);
-                    if (p != null && !p.HasExited && p.ProcessName == svc.ProcessName)
-                    {
-                        WriteLog("应用[{0}/{1}]已启动，直接接管", service.Name, p.Id);
-
-                        svc.SetProcess(p);
-                        svc.Save(_db);
-
-                        return svc;
-                    }
-
-                    _services.Remove(svc);
-                }
-                catch (Exception ex)
-                {
-                    if (ex is not ArgumentException) XTrace.WriteException(ex);
-                }
-            }
-
-            svc = new ServiceController { Name = service.Name, Info = service };
-
-            // 修正路径
-            var workDir = service.WorkingDirectory;
-            var file = service.FileName;
-            if (file.Contains("/") || file.Contains("\\"))
-            {
-                file = file.GetFullPath();
-                if (workDir.IsNullOrEmpty()) workDir = Path.GetDirectoryName(file);
-            }
-
-            //var fullFile = file;
-            //if (!workDir.IsNullOrEmpty() && !Path.IsPathRooted(fullFile))
-            //    fullFile = workDir.CombinePath(fullFile).GetFullPath();
-
-            //// 单实例
-            //if (service.Singleton)
-            //{
-            //    // 遍历进程，检查是否已启动
-            //    foreach (var p in Process.GetProcesses())
-            //    {
-            //        try
-            //        {
-            //            if (p.ProcessName.EqualIgnoreCase(service.Name) || p.MainModule.FileName.EqualIgnoreCase(fullFile))
-            //            {
-            //                WriteLog("应用[{0}/{1}]已启动，直接接管", service.Name, p.Id);
-
-            //                svc.SetProcess(p);
-            //                svc.Save(_db);
-
-            //                return svc;
-            //            }
-            //        }
-            //        catch { }
-            //    }
-            //}
-
-            WriteLog("启动进程：{0} {1} {2}", file, service.Arguments, workDir);
-
-            var si = new ProcessStartInfo
-            {
-                FileName = file,
-                Arguments = service.Arguments,
-                WorkingDirectory = workDir,
-
-                // false时目前控制台合并到当前控制台，一起退出；
-                // true时目标控制台独立窗口，不会一起退出；
-                UseShellExecute = true,
-            };
-
-            //var retry = service.Retry;
-            //if (retry <= 0) retry = 1024;
-            //for (var i = 0; i < retry; i++)
-            //{
-            try
-            {
-                var p = Process.Start(si);
-
-                WriteLog("应用[{0}]启动成功 PID={1}", service.Name, p.Id);
-
-                // 记录进程信息，避免宿主重启后无法继续管理
-                svc.SetProcess(p);
-                svc.Save(_db);
-                _services.Add(svc);
-
-                return svc;
-            }
-            catch (Exception ex)
-            {
-                Log?.Write(LogLevel.Error, "{0}", ex);
-
-                //Thread.Sleep(5_000);
-            }
-            //}
-
-            return null;
-        }
-
-        private void StopService(ServiceInfo service)
-        {
-            var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
-            if (svc != null)
-            {
-                var p = svc.Process;
-                if (p != null)
-                {
-                    WriteLog("停止应用[{0}] PID={1} {2}", service, p.Id, p.ProcessName);
-
-                    try
-                    {
-                        p.CloseMainWindow();
-                    }
-                    catch { }
-
-                    try
-                    {
-                        if (!p.HasExited) p.Kill();
-                    }
-                    catch { }
-
-                    svc.SetProcess(null);
-                }
-
-                _services.Remove(svc);
-                _db.Remove(e => e.Name == service.Name);
-            }
+            _timer = new TimerX(DoWork, null, 0, 30_000) { Async = true };
         }
 
         /// <summary>停止管理，按需杀掉进程</summary>
@@ -211,10 +78,60 @@ namespace Stardust.Managers
         public void Stop(String reason)
         {
             _timer?.TryDispose();
+            _timer = null;
 
-            foreach (var item in Services)
+            foreach (var item in _services)
             {
-                if (item.AutoStop) StopService(item);
+                var svc = item.Info;
+                if (svc != null && svc.AutoStop) StopService(svc, reason);
+            }
+        }
+
+        /// <summary>检查服务。一般用于改变服务后，让其即时生效</summary>
+        public void CheckService() => DoWork(null);
+        #endregion
+
+        #region 服务控制
+        private ServiceController StartService(ServiceInfo service)
+        {
+            // 检查应用是否已启动
+            var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
+            if (svc != null)
+            {
+                if (svc.Check())
+                {
+                    svc.Save(_db);
+                    return svc;
+                }
+            }
+
+            var isNew = false;
+            if (svc == null)
+            {
+                svc = new ServiceController { Name = service.Name };
+                isNew = true;
+            }
+            svc.Info = service;
+
+            if (svc.Start())
+            {
+                svc.Save(_db);
+
+                if (isNew) _services.Add(svc);
+            }
+
+            return null;
+        }
+
+        private void StopService(ServiceInfo service, String reason)
+        {
+            var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
+            if (svc != null)
+            {
+                svc.Stop(reason);
+
+                _services.Remove(svc);
+                _db.Remove(e => e.Name == service.Name);
             }
         }
 
@@ -228,20 +145,46 @@ namespace Stardust.Managers
                     var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(item.Name));
                     if (svc != null)
                     {
-                        var p = svc.Process;
-                        if (item.AutoRestart && (p == null || p.HasExited))
+                        svc.Info = item;
+                        svc.Check();
+                    }
+                    else
+                    {
+                        svc = new ServiceController { Name = item.Name, Info = item };
+                        if (svc.Start())
                         {
-                            WriteLog("应用[{0}/{1}]已退出，准备重新启动！", item.Name, p?.Id);
-
-                            StartService(item);
-                        }
-                        else
-                        {
-                            WriteLog("新增应用[{0}]，准备启动！", item.Name);
-
-                            StartService(item);
+                            _services.Add(svc);
+                            svc.Save(_db);
                         }
                     }
+                    //if (svc != null)
+                    //{
+                    //    var p = svc.Process;
+                    //    if (item.AutoRestart && (p == null || p.HasExited))
+                    //    {
+                    //        WriteLog("应用[{0}/{1}]已退出，准备重新启动！", item.Name, p?.Id);
+
+                    //        StartService(item);
+                    //    }
+                    //    else
+                    //    {
+                    //        WriteLog("新增应用[{0}]，准备启动！", item.Name);
+
+                    //        StartService(item);
+                    //    }
+                    //}
+                }
+            }
+
+            // 停止不再使用的服务
+            for (var i = _services.Count - 1; i >= 0; i--)
+            {
+                var svc = _services[i];
+                var service = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(svc.Name));
+                if (service == null)
+                {
+                    svc.Stop("配置停止");
+                    _services.RemoveAt(i);
                 }
             }
         }
@@ -273,12 +216,12 @@ namespace Stardust.Managers
                     if (svc != null) StartService(svc);
                     break;
                 case "deploy/stop":
-                    if (svc != null) StopService(svc);
+                    if (svc != null) StopService(svc, cmd.Command);
                     break;
                 case "deploy/restart":
                     if (svc != null)
                     {
-                        StopService(svc);
+                        StopService(svc, cmd.Command);
                         Thread.Sleep(1000);
                         StartService(svc);
                     }
