@@ -34,6 +34,10 @@ namespace StarAgent
         [Description("更新通道。默认Release")]
         public String Channel { get; set; } = "Release";
 
+        /// <summary>延迟时间。重启进程或服务的延迟时间，默认3000ms</summary>
+        [Description("延迟时间。重启进程或服务的延迟时间，默认3000ms")]
+        public Int32 Delay { get; set; } = 3000;
+
         /// <summary>应用服务集合</summary>
         [Description("应用服务集合")]
         public ServiceInfo[] Services { get; set; }

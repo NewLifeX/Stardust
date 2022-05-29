@@ -166,6 +166,7 @@ namespace StarAgent
             _Manager = new ServiceManager
             {
                 Services = set.Services,
+                Delay = set.Delay,
 
                 Tracer = _factory?.Tracer,
                 Log = XTrace.Log,

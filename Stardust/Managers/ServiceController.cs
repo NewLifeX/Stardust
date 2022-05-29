@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using NewLife;
-using NewLife.IO;
 using NewLife.Log;
+using NewLife.Threading;
 using Stardust.Models;
 
 namespace Stardust.Managers;
@@ -9,7 +9,7 @@ namespace Stardust.Managers;
 /// <summary>
 /// 应用服务控制器
 /// </summary>
-internal class ServiceController
+internal class ServiceController : DisposeBase
 {
     #region 属性
     /// <summary>服务名</summary>
@@ -27,8 +27,26 @@ internal class ServiceController
     /// <summary>进程</summary>
     public Process Process { get; set; }
 
+    /// <summary>监视文件改变的周期。默认5000ms</summary>
+    public Int32 MonitorPeriod { get; set; } = 5000;
+
+    /// <summary>延迟时间。重启进程或服务的延迟时间，默认3000ms</summary>
+    public Int32 Delay { get; set; } = 3000;
+
     /// <summary>开始时间</summary>
     public DateTime StartTime { get; set; }
+
+    private String _workdir;
+    private TimerX _timer;
+    #endregion
+
+    #region 构造
+    protected override void Dispose(Boolean disposing)
+    {
+        base.Dispose(disposing);
+
+        _timer.TryDispose();
+    }
     #endregion
 
     #region 方法
@@ -50,6 +68,7 @@ internal class ServiceController
             file = file.GetFullPath();
             if (workDir.IsNullOrEmpty()) workDir = Path.GetDirectoryName(file);
         }
+        _workdir = workDir;
 
         var args = service.Arguments?.Trim();
         WriteLog("启动应用：{0} {1} {2}", file, args, workDir);
@@ -76,6 +95,9 @@ internal class ServiceController
             SetProcess(p);
 
             StartTime = DateTime.Now;
+
+            // 定时检查文件是否有改变
+            if (service.ReloadOnChange) StartMonitor();
 
             return true;
         }
@@ -138,6 +160,7 @@ internal class ServiceController
                     WriteLog("应用[{0}/{1}]已启动，直接接管", Name, p.Id);
 
                     SetProcess(p);
+                    if (Info != null && Info.ReloadOnChange) StartMonitor();
 
                     if (StartTime.Year < 2000) StartTime = DateTime.Now;
 
@@ -168,6 +191,51 @@ internal class ServiceController
         {
             ProcessId = 0;
             ProcessName = null;
+        }
+    }
+
+    private void StartMonitor()
+    {
+        // 定时检查文件是否有改变
+        if (_timer == null) _timer = new TimerX(MonitorFileChange, null, 1_000, MonitorPeriod) { Async = true };
+    }
+
+    private readonly Dictionary<String, DateTime> _files = new();
+
+    private void MonitorFileChange(Object state)
+    {
+        var first = _files.Count == 0;
+        var changed = "";
+
+        // 检查目标目录所有 *.dll 文件
+        var di = !_workdir.IsNullOrEmpty() ? _workdir.AsDirectory() : Info?.WorkingDirectory?.AsDirectory();
+        if (di == null || !di.Exists) return;
+
+        if (first) WriteLog("监视文件改变：{0}", di.FullName);
+
+        foreach (var fi in di.GetAllFiles("*.dll;*.exe"))
+        {
+            var time = fi.LastWriteTime.Trim();
+            if (_files.TryGetValue(fi.FullName, out var dt))
+            {
+                if (dt < time)
+                {
+                    _files[fi.FullName] = time;
+                    changed = fi.FullName;
+                }
+            }
+            else
+            {
+                _files[fi.FullName] = time;
+                changed = fi.FullName;
+            }
+        }
+
+        if (!first && !changed.IsNullOrEmpty())
+        {
+            Stop($"文件[{changed}]发生改变");
+            Thread.Sleep(Delay);
+            Start();
         }
     }
     #endregion

@@ -15,6 +15,9 @@ namespace Stardust.Managers
         /// <summary>应用服务集合</summary>
         public ServiceInfo[] Services { get; set; }
 
+        /// <summary>延迟时间。重启进程或服务的延迟时间，默认3000ms</summary>
+        public Int32 Delay { get; set; } = 3000;
+
         private readonly List<ServiceController> _services = new();
         private readonly CsvDb<ProcessInfo> _db;
         #endregion
@@ -69,6 +72,7 @@ namespace Stardust.Managers
                     ProcessId = item.ProcessId,
                     ProcessName = item.ProcessName,
                     StartTime = item.CreateTime,
+                    Delay = Delay,
 
                     Tracer = Tracer,
                     Log = Log,
@@ -233,7 +237,7 @@ namespace Stardust.Managers
                     if (svc != null)
                     {
                         changed |= StopService(svc, cmd.Command);
-                        Thread.Sleep(1000);
+                        Thread.Sleep(Delay);
                         changed |= StartService(svc);
                     }
                     break;
