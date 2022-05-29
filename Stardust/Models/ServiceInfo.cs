@@ -49,7 +49,7 @@ namespace Stardust.Models
 
         /// <summary>检测文件变动。当文件发生改变时，自动重启应用</summary>
         [XmlAttribute]
-        public Boolean DetectFile { get; set; }
+        public Boolean ReloadOnChange { get; set; }
         #endregion
     }
 }

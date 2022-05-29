@@ -15,20 +15,4 @@ internal class ProcessInfo
     public DateTime CreateTime { get; set; }
 
     public DateTime UpdateTime { get; set; }
-
-    public void Save(CsvDb<ProcessInfo> db, Process p)
-    {
-        var add = ProcessId == 0;
-
-        ProcessId = p.Id;
-        ProcessName = p.ProcessName;
-
-        if (add) CreateTime = DateTime.Now;
-        UpdateTime = DateTime.Now;
-
-        if (add)
-            db.Add(this);
-        else
-            db.Update(this);
-    }
 }

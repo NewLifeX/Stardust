@@ -58,12 +58,17 @@ namespace Stardust.Managers
         {
             if (_timer != null) return;
 
+            WriteLog("启动应用服务管理");
+
+            // 从数据库加载应用状态
             foreach (var item in _db.FindAll())
             {
                 _services.Add(new ServiceController
                 {
                     Name = item.Name,
                     ProcessId = item.ProcessId,
+                    ProcessName = item.ProcessName,
+                    StartTime = item.CreateTime,
 
                     Tracer = Tracer,
                     Log = Log,
@@ -77,14 +82,41 @@ namespace Stardust.Managers
         /// <param name="reason"></param>
         public void Stop(String reason)
         {
+            WriteLog("停止应用服务管理：{0}", reason);
+
             _timer?.TryDispose();
             _timer = null;
 
-            foreach (var item in _services)
+            // 伴随服务停止一起退出
+            for (var i = _services.Count - 1; i >= 0; i--)
             {
-                var svc = item.Info;
-                if (svc != null && svc.AutoStop) StopService(svc, reason);
+                var svc = _services[i];
+                if (svc.Info != null && svc.Info.AutoStop)
+                {
+                    svc.Stop(reason);
+                    _services.RemoveAt(i);
+                }
             }
+
+            SaveDb();
+        }
+
+        /// <summary>保存应用状态到数据库</summary>
+        void SaveDb()
+        {
+            var list = _services.Select(e => new ProcessInfo
+            {
+                Name = e.Name,
+                ProcessId = e.ProcessId,
+                ProcessName = e.ProcessName,
+                CreateTime = DateTime.Now,
+                UpdateTime = DateTime.Now,
+            }).ToList();
+
+            if (list.Count == 0)
+                _db.Clear();
+            else
+                _db.Write(list, false);
         }
 
         /// <summary>检查服务。一般用于改变服务后，让其即时生效</summary>
@@ -92,38 +124,38 @@ namespace Stardust.Managers
         #endregion
 
         #region 服务控制
-        private ServiceController StartService(ServiceInfo service)
+        /// <summary>启动服务</summary>
+        /// <param name="service"></param>
+        /// <returns>本次是否成功启动，原来已启动返回false</returns>
+        private Boolean StartService(ServiceInfo service)
         {
-            // 检查应用是否已启动
             var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
             if (svc != null)
             {
-                if (svc.Check())
+                svc.Info = service;
+                return svc.Check();
+            }
+            else
+            {
+                svc = new ServiceController
                 {
-                    svc.Save(_db);
-                    return svc;
+                    Name = service.Name,
+                    Info = service,
+
+                    Tracer = Tracer,
+                    Log = Log,
+                };
+                if (svc.Start())
+                {
+                    _services.Add(svc);
+                    return true;
                 }
             }
 
-            var isNew = false;
-            if (svc == null)
-            {
-                svc = new ServiceController { Name = service.Name };
-                isNew = true;
-            }
-            svc.Info = service;
-
-            if (svc.Start())
-            {
-                svc.Save(_db);
-
-                if (isNew) _services.Add(svc);
-            }
-
-            return null;
+            return false;
         }
 
-        private void StopService(ServiceInfo service, String reason)
+        private Boolean StopService(ServiceInfo service, String reason)
         {
             var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
             if (svc != null)
@@ -131,48 +163,22 @@ namespace Stardust.Managers
                 svc.Stop(reason);
 
                 _services.Remove(svc);
-                _db.Remove(e => e.Name == service.Name);
+
+                return true;
             }
+
+            return false;
         }
 
         private TimerX _timer;
         private void DoWork(Object state)
         {
+            var changed = false;
             foreach (var item in Services)
             {
                 if (item != null && item.AutoStart)
                 {
-                    var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(item.Name));
-                    if (svc != null)
-                    {
-                        svc.Info = item;
-                        svc.Check();
-                    }
-                    else
-                    {
-                        svc = new ServiceController { Name = item.Name, Info = item };
-                        if (svc.Start())
-                        {
-                            _services.Add(svc);
-                            svc.Save(_db);
-                        }
-                    }
-                    //if (svc != null)
-                    //{
-                    //    var p = svc.Process;
-                    //    if (item.AutoRestart && (p == null || p.HasExited))
-                    //    {
-                    //        WriteLog("应用[{0}/{1}]已退出，准备重新启动！", item.Name, p?.Id);
-
-                    //        StartService(item);
-                    //    }
-                    //    else
-                    //    {
-                    //        WriteLog("新增应用[{0}]，准备启动！", item.Name);
-
-                    //        StartService(item);
-                    //    }
-                    //}
+                    changed |= StartService(item);
                 }
             }
 
@@ -185,8 +191,12 @@ namespace Stardust.Managers
                 {
                     svc.Stop("配置停止");
                     _services.RemoveAt(i);
+                    changed = true;
                 }
             }
+
+            // 保存状态
+            if (changed) SaveDb();
         }
         #endregion
 
@@ -205,30 +215,34 @@ namespace Stardust.Managers
         {
             var my = cmd.Argument.ToJsonEntity<MyApp>();
 
-            XTrace.WriteLine("{0} Id={1} Name={2}", cmd.Command, my.Id, my.AppName);
+            WriteLog("{0} Id={1} Name={2}", cmd.Command, my.Id, my.AppName);
 
+            var changed = false;
             var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(my.AppName));
             switch (cmd.Command)
             {
                 case "deploy/publish":
                     break;
                 case "deploy/start":
-                    if (svc != null) StartService(svc);
+                    if (svc != null) changed |= StartService(svc);
                     break;
                 case "deploy/stop":
-                    if (svc != null) StopService(svc, cmd.Command);
+                    if (svc != null) changed |= StopService(svc, cmd.Command);
                     break;
                 case "deploy/restart":
                     if (svc != null)
                     {
-                        StopService(svc, cmd.Command);
+                        changed |= StopService(svc, cmd.Command);
                         Thread.Sleep(1000);
-                        StartService(svc);
+                        changed |= StartService(svc);
                     }
                     break;
                 default:
                     break;
             }
+
+            // 保存状态
+            if (changed) SaveDb();
 
             return new CommandReplyModel { Data = "成功" };
         }

@@ -26,14 +26,17 @@ internal class ServiceController
 
     /// <summary>进程</summary>
     public Process Process { get; set; }
+
+    /// <summary>开始时间</summary>
+    public DateTime StartTime { get; set; }
     #endregion
 
     #region 方法
     /// <summary>检查并启动应用</summary>
-    /// <returns></returns>
+    /// <returns>本次是否成功启动，原来已启动返回false</returns>
     public Boolean Start()
     {
-        if (Process != null) return true;
+        if (Process != null) return false;
 
         var service = Info;
 
@@ -62,6 +65,7 @@ internal class ServiceController
             UseShellExecute = true,
         };
 
+        using var span = Tracer?.NewSpan("StartService", service);
         try
         {
             var p = Process.Start(si);
@@ -71,10 +75,13 @@ internal class ServiceController
             // 记录进程信息，避免宿主重启后无法继续管理
             SetProcess(p);
 
+            StartTime = DateTime.Now;
+
             return true;
         }
         catch (Exception ex)
         {
+            span?.SetError(ex, null);
             Log?.Write(LogLevel.Error, "{0}", ex);
         }
 
@@ -90,6 +97,7 @@ internal class ServiceController
 
         WriteLog("停止应用 PID={0}/{0} 原因：{2}", p.Id, p.ProcessName, reason);
 
+        using var span = Tracer?.NewSpan("StopService", Info);
         try
         {
             p.CloseMainWindow();
@@ -100,21 +108,27 @@ internal class ServiceController
         {
             if (!p.HasExited) p.Kill();
         }
-        catch { }
+        catch (Exception ex)
+        {
+            span?.SetError(ex, null);
+        }
 
         SetProcess(null);
     }
 
     /// <summary>检查已存在进程并接管，如果进程已退出则重启</summary>
-    /// <returns></returns>
+    /// <returns>本次是否成功启动（或接管），原来已启动返回false</returns>
     public Boolean Check()
     {
         var p = Process;
         if (p != null)
         {
+            if (!p.HasExited) return false;
 
+            Process = null;
+            WriteLog("应用[{0}/{1}]已退出！", p.ProcessName, p.Id);
         }
-        else
+        else if (ProcessId > 0)
         {
             try
             {
@@ -125,6 +139,8 @@ internal class ServiceController
 
                     SetProcess(p);
 
+                    if (StartTime.Year < 2000) StartTime = DateTime.Now;
+
                     return true;
                 }
             }
@@ -134,7 +150,10 @@ internal class ServiceController
             }
         }
 
-        return false;
+        // 准备启动进程
+        var rs = Start();
+
+        return rs;
     }
 
     public void SetProcess(Process process)
@@ -150,14 +169,6 @@ internal class ServiceController
             ProcessId = 0;
             ProcessName = null;
         }
-    }
-
-    public void Save(CsvDb<ProcessInfo> db)
-    {
-        var pi = db.Find(e => e.Name.EqualIgnoreCase(Name));
-        if (pi == null) pi = new ProcessInfo { Name = Name };
-
-        pi.Save(db, Process);
     }
     #endregion
 

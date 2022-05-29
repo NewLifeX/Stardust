@@ -54,7 +54,7 @@ namespace StarAgent
                     Arguments = "newlifex.com",
 
                     AutoStart = false,
-                    AutoRestart = true,
+                    ReloadOnChange = true,
                 };
                 var si2 = new ServiceInfo
                 {
