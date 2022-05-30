@@ -205,7 +205,7 @@ namespace StarAgent
                         Service = this,
                         Host = Host,
                         Manager = _Manager,
-                        PluginManager = _PluginManager,
+                        //PluginManager = _PluginManager,
                         StarSetting = StarSetting,
                         AgentSetting = AgentSetting,
                         Log = XTrace.Log

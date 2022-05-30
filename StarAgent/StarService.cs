@@ -32,8 +32,8 @@ namespace StarAgent
         /// <summary>应用服务管理</summary>
         public ServiceManager Manager { get; set; }
 
-        /// <summary>插件管理</summary>
-        public PluginManager PluginManager { get; set; }
+        ///// <summary>插件管理</summary>
+        //public PluginManager PluginManager { get; set; }
 
         /// <summary>星尘设置</summary>
         public StarSetting StarSetting { get; set; }
@@ -48,7 +48,7 @@ namespace StarAgent
         [Api(nameof(Info))]
         public AgentInfo Info(AgentInfo info)
         {
-            XTrace.WriteLine(info.ToJson());
+            XTrace.WriteLine("Info<={0}", info.ToJson());
 
             var set = StarSetting;
             // 使用对方送过来的星尘服务端地址
@@ -77,6 +77,11 @@ namespace StarAgent
             return ai;
         }
 
+        void CheckLocal()
+        {
+            if (Session is INetSession ns && !ns.Remote.Address.IsLocal()) throw new InvalidOperationException("禁止非本机操作！");
+        }
+
         /// <summary>杀死并启动进程</summary>
         /// <param name="processId">进程</param>
         /// <param name="delay">延迟结束的秒数</param>
@@ -87,7 +92,7 @@ namespace StarAgent
         [Api(nameof(KillAndStart))]
         public Object KillAndStart(Int32 processId, Int32 delay, String fileName, String arguments, String workingDirectory)
         {
-            if (Session is INetSession ns && !ns.Remote.Address.IsLocal()) throw new InvalidOperationException("禁止非本机操作！");
+            CheckLocal();
 
             var p = Process.GetProcessById(processId);
             if (p == null) throw new InvalidOperationException($"无效进程Id[{processId}]");
@@ -138,6 +143,48 @@ namespace StarAgent
             });
 
             return new { name, pid };
+        }
+
+        /// <summary>安装应用服务（星尘代理守护）</summary>
+        /// <param name="service"></param>
+        /// <returns></returns>
+        [Api(nameof(Install))]
+        public ProcessInfo Install(ServiceInfo service)
+        {
+            XTrace.WriteLine("Install<={0}", service.ToJson());
+
+            CheckLocal();
+
+            var rs = Manager.Install(service);
+            if (rs != null)
+            {
+                var set = Setting.Current;
+                set.Services = Manager.Services;
+                set.Save();
+            }
+
+            return rs;
+        }
+
+        /// <summary>卸载应用服务</summary>
+        /// <param name="serviceName"></param>
+        /// <returns></returns>
+        [Api(nameof(Uninstall))]
+        public Boolean Uninstall(String serviceName)
+        {
+            XTrace.WriteLine("Uninstall<={0}", serviceName);
+
+            CheckLocal();
+
+            var rs = Manager.Uninstall(serviceName, "ServiceUninstall");
+            if (rs)
+            {
+                var set = Setting.Current;
+                set.Services = Manager.Services;
+                set.Save();
+            }
+
+            return rs;
         }
         #endregion
 

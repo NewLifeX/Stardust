@@ -27,7 +27,7 @@ namespace Test
         {
             XTrace.UseConsole();
 
-            Test1();
+            Test6();
 
             Console.WriteLine("OK!");
             Console.ReadKey();
@@ -140,11 +140,18 @@ namespace Test
             XTrace.WriteLine("Test6");
 
             var client = new LocalStarClient();
-            client.GetInfo();
+            //client.GetInfo();
 
             try
             {
-                await client.GetInfoAsync();
+                //await client.GetInfoAsync();
+                var rs = await client.Install("test666", "ping", "qq.com");
+                XTrace.WriteLine("Install={0}", rs.ToJson(true));
+
+                Thread.Sleep(3000);
+
+                var rs2 = await client.Uninstall("test666");
+                XTrace.WriteLine("Uninstall={0}", rs2);
             }
             catch (Exception ex)
             {

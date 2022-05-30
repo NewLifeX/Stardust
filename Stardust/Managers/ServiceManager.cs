@@ -43,14 +43,24 @@ namespace Stardust.Managers
         #endregion
 
         #region 方法
-        /// <summary>添加应用服务</summary>
+        /// <summary>添加应用服务，或替换同名服务</summary>
         /// <param name="services">应用服务集合</param>
-        public void Add(ServiceInfo[] services)
+        public void Add(params ServiceInfo[] services)
         {
             var list = Services.ToList();
             foreach (var item in services)
             {
-                if (!list.Any(e => e.Name.EqualIgnoreCase(item.Name))) list.Add(item);
+                //if (!list.Any(e => e.Name.EqualIgnoreCase(item.Name))) list.Add(item);
+                var flag = false;
+                for (var i = 0; i < list.Count; i++)
+                {
+                    if (list[i].Name.EqualIgnoreCase(item.Name))
+                    {
+                        list[i] = item;
+                        flag = true;
+                    }
+                }
+                if (!flag) list.Add(item);
             }
 
             Services = list.ToArray();
@@ -106,16 +116,9 @@ namespace Stardust.Managers
         }
 
         /// <summary>保存应用状态到数据库</summary>
-        void SaveDb()
+        private void SaveDb()
         {
-            var list = _services.Select(e => new ProcessInfo
-            {
-                Name = e.Name,
-                ProcessId = e.ProcessId,
-                ProcessName = e.ProcessName,
-                CreateTime = DateTime.Now,
-                UpdateTime = DateTime.Now,
-            }).ToList();
+            var list = _services.Select(e => e.ToModel()).ToList();
 
             if (list.Count == 0)
                 _db.Clear();
@@ -159,6 +162,10 @@ namespace Stardust.Managers
             return false;
         }
 
+        /// <summary>停止服务</summary>
+        /// <param name="service"></param>
+        /// <param name="reason"></param>
+        /// <returns></returns>
         private Boolean StopService(ServiceInfo service, String reason)
         {
             var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
@@ -201,6 +208,38 @@ namespace Stardust.Managers
 
             // 保存状态
             if (changed) SaveDb();
+        }
+        #endregion
+
+        #region 安装卸载
+        /// <summary>安装服务，添加后启动</summary>
+        /// <param name="service"></param>
+        /// <returns></returns>
+        public ProcessInfo Install(ServiceInfo service)
+        {
+            Add(service);
+
+            if (!StartService(service)) return null;
+
+            SaveDb();
+
+            return _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name))?.ToModel();
+        }
+
+        /// <summary>卸载服务</summary>
+        /// <param name="name"></param>
+        /// <param name="reason"></param>
+        /// <returns></returns>
+        public Boolean Uninstall(String name, String reason)
+        {
+            var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
+            if (svc == null) return false;
+
+            StopService(svc, reason);
+
+            SaveDb();
+
+            return true;
         }
         #endregion
 

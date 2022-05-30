@@ -94,6 +94,8 @@ namespace Stardust
 
         private void Init()
         {
+            XTrace.WriteLine("正在初始化星尘……");
+
             Local = new LocalStarClient();
 
             // 从环境变量读取星尘地址、应用Id、密钥，方便容器化部署

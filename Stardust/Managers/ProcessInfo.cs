@@ -1,18 +1,20 @@
-﻿using System.Diagnostics;
-using NewLife.IO;
-
-namespace Stardust.Managers;
+﻿namespace Stardust.Managers;
 
 /// <summary>服务运行信息</summary>
-internal class ProcessInfo
+public class ProcessInfo
 {
+    /// <summary>名称</summary>
     public String Name { get; set; }
 
+    /// <summary>进程Id</summary>
     public Int32 ProcessId { get; set; }
 
+    /// <summary>进程名</summary>
     public String ProcessName { get; set; }
 
+    /// <summary>创建时间</summary>
     public DateTime CreateTime { get; set; }
 
+    /// <summary>更新时间</summary>
     public DateTime UpdateTime { get; set; }
 }

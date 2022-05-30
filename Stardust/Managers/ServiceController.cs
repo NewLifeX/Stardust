@@ -194,6 +194,20 @@ internal class ServiceController : DisposeBase
         }
     }
 
+    /// <summary>获取进程信息</summary>
+    /// <returns></returns>
+    public ProcessInfo ToModel()
+    {
+        return new ProcessInfo
+        {
+            Name = Name,
+            ProcessId = ProcessId,
+            ProcessName = ProcessName,
+            CreateTime = StartTime,
+            UpdateTime = DateTime.Now,
+        };
+    }
+
     private void StartMonitor()
     {
         // 定时检查文件是否有改变

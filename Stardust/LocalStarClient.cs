@@ -8,6 +8,7 @@ using NewLife.Log;
 using NewLife.Messaging;
 using NewLife.Net;
 using NewLife.Remoting;
+using Stardust.Managers;
 using Stardust.Models;
 
 namespace Stardust
@@ -55,9 +56,7 @@ namespace Stardust
         public AgentInfo GetInfo()
         {
             var task = GetInfoAsync().ContinueWith(t => t.IsCompleted ? t.Result : null);
-            if (task.Wait(500)) return task.Result;
-
-            return null;
+            return task.Wait(500) ? task.Result : null;
         }
 
         /// <summary>获取信息</summary>
@@ -327,6 +326,50 @@ namespace Stardust
                 client.ProbeAndInstall(url, version, target);
             });
         }
+        #endregion
+
+        #region 安装卸载应用服务
+        /// <summary>安装应用服务（星尘代理守护）</summary>
+        /// <param name="service"></param>
+        /// <returns></returns>
+        public async Task<ProcessInfo> Install(ServiceInfo service)
+        {
+            Init();
+
+            return await _client.InvokeAsync<ProcessInfo>("Install", service);
+        }
+
+        /// <summary>安装应用服务（星尘代理守护）</summary>
+        /// <param name="name">服务名，唯一标识</param>
+        /// <param name="fileName">文件</param>
+        /// <param name="arguments">参数</param>
+        /// <param name="workingDirectory">工作目录</param>
+        /// <returns></returns>
+        public async Task<ProcessInfo> Install(String name, String fileName, String arguments = null, String workingDirectory = null)
+        {
+            Init();
+
+            return await _client.InvokeAsync<ProcessInfo>("Install", new ServiceInfo
+            {
+                Name = name,
+                FileName = fileName,
+                Arguments = arguments,
+                WorkingDirectory = workingDirectory,
+                AutoStart = true,
+                ReloadOnChange = true,
+            });
+        }
+
+        /// <summary>卸载应用服务</summary>
+        /// <param name="serviceName"></param>
+        /// <returns></returns>
+        public async Task<Boolean> Uninstall(String serviceName)
+        {
+            Init();
+
+            return await _client.InvokeAsync<Boolean>("Uninstall", serviceName);
+        }
+
         #endregion
 
         #region 搜索
