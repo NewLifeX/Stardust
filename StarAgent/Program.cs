@@ -3,12 +3,16 @@ using System.Reflection;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
+using NewLife.Model;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust;
 using Stardust.Managers;
+using Stardust.Plugins;
+using Host = NewLife.Agent.Host;
+using IHost = NewLife.Agent.IHost;
 using Upgrade = Stardust.Web.Upgrade;
 
 namespace StarAgent
@@ -55,11 +59,14 @@ namespace StarAgent
     }
 
     /// <summary>服务类。名字可以自定义</summary>
-    internal class MyService : ServiceBase
+    internal class MyService : ServiceBase, IServiceProvider
     {
         public StarSetting StarSetting { get; set; }
 
         public Setting AgentSetting { get; set; }
+
+        /// <summary>宿主服务提供者</summary>
+        public IServiceProvider Provider { get; set; }
 
         public MyService()
         {
@@ -86,6 +93,7 @@ namespace StarAgent
         private StarClient _Client;
         private StarFactory _factory;
         private ServiceManager _Manager;
+        private PluginManager _PluginManager;
         private String _lastVersion;
 
         public void StartClient()
@@ -172,6 +180,15 @@ namespace StarAgent
                 Log = XTrace.Log,
             };
 
+            // 插件管理器
+            _PluginManager = new PluginManager
+            {
+                Identity = "StarAgent",
+                Provider = this,
+
+                Log = XTrace.Log,
+            };
+
             // 监听端口，用于本地通信
             if (set.LocalPort > 0)
             {
@@ -188,6 +205,7 @@ namespace StarAgent
                         Service = this,
                         Host = Host,
                         Manager = _Manager,
+                        PluginManager = _PluginManager,
                         StarSetting = StarSetting,
                         AgentSetting = AgentSetting,
                         Log = XTrace.Log
@@ -206,6 +224,15 @@ namespace StarAgent
             StartClient();
 
             _Manager.Start();
+
+            // 启动插件
+            WriteLog("启动插件[{0}]", _PluginManager.Identity);
+            _PluginManager.Load();
+            _PluginManager.Init();
+            foreach (var item in _PluginManager.Plugins)
+            {
+                if (item is IAgentPlugin plugin) plugin.Start();
+            }
 
             base.StartWork(reason);
         }
@@ -243,6 +270,13 @@ namespace StarAgent
 
             _server.TryDispose();
             _server = null;
+
+            // 停止插件
+            WriteLog("停止插件[{0}]", _PluginManager.Identity);
+            foreach (var item in _PluginManager.Plugins)
+            {
+                if (item is IAgentPlugin plugin) plugin.Stop(reason);
+            }
         }
 
         private async Task CheckUpgrade(Object data)
@@ -384,5 +418,19 @@ namespace StarAgent
 
             Console.WriteLine(models.ToJson(true));
         }
+
+        #region IServiceProvider 成员
+        Object IServiceProvider.GetService(Type serviceType)
+        {
+            if (serviceType == typeof(ServiceManager)) return _Manager;
+            if (serviceType == typeof(StarClient)) return _Client;
+            if (serviceType == typeof(StarFactory)) return _factory;
+            if (serviceType == typeof(ApiServer)) return _server;
+            if (serviceType == typeof(ServiceBase)) return this;
+            if (serviceType == typeof(IHost)) return Host;
+
+            return Provider?.GetService(serviceType);
+        }
+        #endregion
     }
 }

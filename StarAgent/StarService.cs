@@ -2,6 +2,7 @@
 using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
+using NewLife.Model;
 using NewLife.Net;
 using NewLife.Remoting;
 using NewLife.Serialization;
@@ -9,6 +10,7 @@ using NewLife.Threading;
 using Stardust;
 using Stardust.Managers;
 using Stardust.Models;
+using IHost = NewLife.Agent.IHost;
 
 namespace StarAgent
 {
@@ -27,8 +29,11 @@ namespace StarAgent
         /// <summary>服务主机</summary>
         public IHost Host { get; set; }
 
-        /// <summary>本地应用服务管理</summary>
+        /// <summary>应用服务管理</summary>
         public ServiceManager Manager { get; set; }
+
+        /// <summary>插件管理</summary>
+        public PluginManager PluginManager { get; set; }
 
         /// <summary>星尘设置</summary>
         public StarSetting StarSetting { get; set; }
