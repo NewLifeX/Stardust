@@ -3,6 +3,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using NewLife;
 using NewLife.Log;
@@ -37,6 +38,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddSingleton(p => star.Service);
 
             //services.AddHostedService<StarService>();
+            services.TryAddSingleton(XTrace.Log);
 
             services.AddSingleton(serviceProvider =>
             {
