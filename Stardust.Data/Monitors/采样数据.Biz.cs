@@ -137,7 +137,7 @@ namespace Stardust.Data.Monitors
 
             if (dataId > 0) exp &= _.DataId == dataId;
             if (!traceId.IsNullOrEmpty()) exp &= _.TraceId == traceId;
-            if (success != null) exp &= _.Success != success;
+            if (success != null) exp &= _.Success == success;
 
             // 时间区间倒序，为了从后往前查
             return Meta.AutoShard(end.AddSeconds(1), start, () => FindAll(exp, page))
