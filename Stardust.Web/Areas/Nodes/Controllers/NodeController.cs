@@ -70,13 +70,14 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             var cityId = rids.Length > 1 ? rids[1] : -1;
 
             var category = p["category"];
+            var product = p["product"];
             var version = p["version"];
             var enable = p["enable"]?.ToBoolean();
 
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
-            return Node.Search(provinceId, cityId, category, version, enable, start, end, p["Q"], p);
+            return Node.Search(provinceId, cityId, category, product, version, enable, start, end, p["Q"], p);
         }
 
         /// <summary>搜索</summary>

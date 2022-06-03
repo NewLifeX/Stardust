@@ -197,6 +197,7 @@ namespace Stardust.Data.Nodes
         /// <param name="provinceId">省份</param>
         /// <param name="cityId">城市</param>
         /// <param name="category">类别</param>
+        /// <param name="product">类别</param>
         /// <param name="version">版本</param>
         /// <param name="enable"></param>
         /// <param name="start"></param>
@@ -204,13 +205,14 @@ namespace Stardust.Data.Nodes
         /// <param name="key"></param>
         /// <param name="page"></param>
         /// <returns></returns>
-        public static IList<Node> Search(Int32 provinceId, Int32 cityId, String category, String version, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<Node> Search(Int32 provinceId, Int32 cityId, String category, String product, String version, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (provinceId >= 0) exp &= _.ProvinceID == provinceId;
             if (cityId >= 0) exp &= _.CityID == cityId;
             if (!category.IsNullOrEmpty()) exp &= _.Category == category;
+            if (!product.IsNullOrEmpty()) exp &= _.ProductCode == product;
             if (!version.IsNullOrEmpty()) exp &= _.Version == version;
             if (enable != null) exp &= _.Enable == enable.Value;
 
@@ -305,7 +307,7 @@ namespace Stardust.Data.Nodes
 
         #region 扩展操作
         /// <summary>类别名实体缓存，异步，缓存10分钟</summary>
-        static Lazy<FieldCache<Node>> VersionCache = new Lazy<FieldCache<Node>>(() => new FieldCache<Node>(__.Version)
+        static Lazy<FieldCache<Node>> VersionCache = new(() => new FieldCache<Node>(__.Version)
         {
             Where = _.UpdateTime > DateTime.Today.AddDays(-30) & Expression.Empty,
             MaxRows = 50
@@ -316,7 +318,7 @@ namespace Stardust.Data.Nodes
         public static IDictionary<String, String> FindAllVersion() => VersionCache.Value.FindAllName().OrderByDescending(e => e.Key).ToDictionary(e => e.Key, e => e.Value);
 
         /// <summary>类别名实体缓存，异步，缓存10分钟</summary>
-        static Lazy<FieldCache<Node>> CategoryCache = new Lazy<FieldCache<Node>>(() => new FieldCache<Node>(__.Category)
+        static Lazy<FieldCache<Node>> CategoryCache = new(() => new FieldCache<Node>(__.Category)
         {
             Where = _.UpdateTime > DateTime.Today.AddDays(-30) & Expression.Empty,
             MaxRows = 50
@@ -324,7 +326,18 @@ namespace Stardust.Data.Nodes
 
         /// <summary>获取所有类别名称</summary>
         /// <returns></returns>
-        public static IDictionary<String, String> FindAllCategory() => CategoryCache.Value.FindAllName().OrderByDescending(e => e.Key).ToDictionary(e => e.Key, e => e.Value);
+        public static IDictionary<String, String> FindAllCategory() => CategoryCache.Value.FindAllName();
+
+        /// <summary>类别名实体缓存，异步，缓存10分钟</summary>
+        static Lazy<FieldCache<Node>> ProductCache = new(() => new FieldCache<Node>(__.ProductCode)
+        {
+            Where = _.UpdateTime > DateTime.Today.AddDays(-30) & Expression.Empty,
+            MaxRows = 50
+        });
+
+        /// <summary>获取所有类别名称</summary>
+        /// <returns></returns>
+        public static IDictionary<String, String> FindAllProduct() => ProductCache.Value.FindAllName();
         #endregion
 
         #region 业务

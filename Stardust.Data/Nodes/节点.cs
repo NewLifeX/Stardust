@@ -17,6 +17,8 @@ namespace Stardust.Data.Nodes
     [BindIndex("IU_Node_Code", true, "Code")]
     [BindIndex("IX_Node_Uuid_MachineGuid_MACs", false, "Uuid,MachineGuid,MACs")]
     [BindIndex("IX_Node_IP", false, "IP")]
+    [BindIndex("IX_Node_Category", false, "Category")]
+    [BindIndex("IX_Node_ProductCode", false, "ProductCode")]
     [BindIndex("IX_Node_UpdateTime", false, "UpdateTime")]
     [BindTable("Node", Description = "节点", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class Node

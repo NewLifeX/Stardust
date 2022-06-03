@@ -58,6 +58,8 @@
       <Index Columns="Code" Unique="True" />
       <Index Columns="Uuid,MachineGuid,MACs" />
       <Index Columns="IP" />
+      <Index Columns="Category" />
+      <Index Columns="ProductCode" />
       <Index Columns="UpdateTime" />
     </Indexes>
   </Table>
