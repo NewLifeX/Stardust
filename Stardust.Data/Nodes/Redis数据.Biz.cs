@@ -6,6 +6,7 @@ using System.Text;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using NewLife.Log;
 using Stardust.Data.Models;
 using XCode;
 using XCode.Membership;
@@ -266,6 +267,7 @@ namespace Stardust.Data.Nodes
             //    Db3Expires = dbs[3].Expires;
             //}
 
+            TraceId = DefaultSpan.Current?.TraceId;
             Remark = sb.ToString().Trim();
 
             return dbs;

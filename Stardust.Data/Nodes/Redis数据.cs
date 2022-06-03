@@ -188,6 +188,15 @@ namespace Stardust.Data.Nodes
         [BindColumn("CreateTime", "创建时间", "")]
         public DateTime CreateTime { get => _CreateTime; set { if (OnPropertyChanging("CreateTime", value)) { _CreateTime = value; OnPropertyChanged("CreateTime"); } } }
 
+        private String _TraceId;
+        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        [Category("扩展")]
+        [DisplayName("追踪")]
+        [Description("追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("TraceId", "追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
+        public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
+
         private String _Remark;
         /// <summary>备注</summary>
         [Category("扩展")]
@@ -229,6 +238,7 @@ namespace Stardust.Data.Nodes
                     case "AvgTtl": return _AvgTtl;
                     case "TopCommand": return _TopCommand;
                     case "CreateTime": return _CreateTime;
+                    case "TraceId": return _TraceId;
                     case "Remark": return _Remark;
                     default: return base[name];
                 }
@@ -258,6 +268,7 @@ namespace Stardust.Data.Nodes
                     case "AvgTtl": _AvgTtl = value.ToLong(); break;
                     case "TopCommand": _TopCommand = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
+                    case "TraceId": _TraceId = Convert.ToString(value); break;
                     case "Remark": _Remark = Convert.ToString(value); break;
                     default: base[name] = value; break;
                 }
@@ -332,6 +343,9 @@ namespace Stardust.Data.Nodes
             /// <summary>创建时间</summary>
             public static readonly Field CreateTime = FindByName("CreateTime");
 
+            /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            public static readonly Field TraceId = FindByName("TraceId");
+
             /// <summary>备注</summary>
             public static readonly Field Remark = FindByName("Remark");
 
@@ -403,6 +417,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>创建时间</summary>
             public const String CreateTime = "CreateTime";
+
+            /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            public const String TraceId = "TraceId";
 
             /// <summary>备注</summary>
             public const String Remark = "Remark";

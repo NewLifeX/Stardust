@@ -306,6 +306,7 @@
       <Column Name="AvgTtl" DataType="Int64" Description="平均过期。平均过期时间，单位毫秒" />
       <Column Name="TopCommand" DataType="String" Length="200" Description="最忙命令" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+      <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
       <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
     </Columns>
     <Indexes>
