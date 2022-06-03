@@ -74,7 +74,7 @@ namespace Stardust.Server.Services
             foreach (var st in sts)
             {
                 var ti = list.FirstOrDefault(e => e.Id == st.ItemId);
-                if (ti == null) ti = TraceItem.FindByAppIdAndName(appId, st.Name);
+                if (ti == null && st.ItemId > 0) ti = TraceItem.FindById(st.ItemId);
 
                 // 只统计能找到的跟踪项
                 if (ti != null)
