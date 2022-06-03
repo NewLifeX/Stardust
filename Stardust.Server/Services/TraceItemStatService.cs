@@ -69,7 +69,7 @@ namespace Stardust.Server.Services
         public void Process(Int32 appId)
         {
             var app = AppTracer.FindByID(appId);
-            var list = TraceItem.GetValids(appId);
+            var list = TraceItem.GetValids(appId, DateTime.Today.AddDays(-7));
             var sts = TraceDayStat.SearchGroupItemByApp(appId);
             foreach (var st in sts)
             {

@@ -85,7 +85,7 @@ namespace Stardust.Data.Monitors
         /// 有效跟踪项集合
         /// </summary>
         [XmlIgnore, IgnoreDataMember]
-        public IList<TraceItem> TraceItems => Extends.Get(nameof(TraceItems), k => TraceItem.GetValids(ID));
+        public IList<TraceItem> TraceItems => Extends.Get(nameof(TraceItems), k => TraceItem.GetValids(ID, DateTime.Today.AddDays(-30)));
         #endregion
 
         #region 扩展查询

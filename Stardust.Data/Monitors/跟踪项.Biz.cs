@@ -27,6 +27,9 @@ namespace Stardust.Data.Monitors
             Meta.Modules.Add<UserModule>();
             Meta.Modules.Add<TimeModule>();
             Meta.Modules.Add<IPModule>();
+
+            var sc = Meta.SingleCache;
+            sc.Expire = 60;
         }
 
         /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
@@ -147,15 +150,21 @@ namespace Stardust.Data.Monitors
         /// 获取应用下可用跟踪项
         /// </summary>
         /// <param name="appId"></param>
+        /// <param name="startTime"></param>
         /// <returns></returns>
-        public static IList<TraceItem> GetValids(Int32 appId)
+        public static IList<TraceItem> GetValids(Int32 appId, DateTime startTime)
         {
             if (appId <= 0) return new List<TraceItem>();
 
-            var key = $"TraceItem:GetValids:{appId}";
+            var key = $"TraceItem:GetValids:{appId}:{startTime.ToFullString()}";
             if (_cache.TryGetValue<IList<TraceItem>>(key, out var list) && list != null) return list;
 
-            list = FindAll(_.AppId == appId & _.Enable == true);
+            var exp = new WhereExpression();
+            exp &= _.AppId == appId;
+            exp &= _.Enable == true;
+            if (startTime.Year > 2000) exp &= _.UpdateTime >= startTime;
+
+            list = FindAll(exp);
 
             // 查询数据库，即使空值也缓存，避免缓存穿透
             _cache.Set(key, list, 60);
