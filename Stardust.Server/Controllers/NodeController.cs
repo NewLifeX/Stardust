@@ -867,7 +867,11 @@ namespace Stardust.Server.Controllers
             return null;
         }
 
-        private void WriteHistory(Node node, String action, Boolean success, String remark, String ip = null) => node.WriteHistory(action, success, remark, ip ?? UserHost);
+        private void WriteHistory(Node node, String action, Boolean success, String remark, String ip = null)
+        {
+            var hi = NodeHistory.Create(node, action, success, remark, Environment.MachineName, ip ?? UserHost);
+            hi.SaveAsync();
+        }
         #endregion
     }
 }
