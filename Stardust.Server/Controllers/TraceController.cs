@@ -18,18 +18,20 @@ namespace Stardust.Server.Controllers
     {
         private readonly TokenService _tokenService;
         private readonly AppOnlineService _appOnline;
+        private readonly Setting _setting;
         private readonly ITraceStatService _stat;
         private readonly IAppDayStatService _appStat;
         private readonly ITraceItemStatService _itemStat;
         private static readonly ICache _cache = new MemoryCache();
 
-        public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService, AppOnlineService appOnline)
+        public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService, AppOnlineService appOnline, Setting setting)
         {
             _stat = stat;
             _appStat = appStat;
             _itemStat = itemStat;
             _tokenService = tokenService;
             _appOnline = appOnline;
+            _setting = setting;
         }
 
         [ApiFilter]
@@ -76,7 +78,7 @@ namespace Stardust.Server.Controllers
 
         private (AppTracer, AppOnline) Valid(String appId, TraceModel model, String clientId, String token)
         {
-            var set = Setting.Current;
+            var set = _setting;
 
             // 新版验证方式，访问令牌
             App ap = null;
@@ -166,7 +168,7 @@ namespace Stardust.Server.Controllers
 
             var tracer = DefaultTracer.Instance;
             var now = DateTime.Now;
-            var startTime = now.AddDays(-Setting.Current.DataRetention);
+            var startTime = now.AddDays(-_setting.DataRetention);
             var endTime = now.AddDays(1);
             var traces = new List<TraceData>();
             var samples = new List<SampleData>();

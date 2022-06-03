@@ -19,12 +19,14 @@ namespace Stardust.Server.Controllers
         private readonly ConfigService _configService;
         private readonly TokenService _tokenService;
         private readonly AppOnlineService _appOnline;
+        private readonly Setting _setting;
 
-        public ConfigController(ConfigService configService, TokenService tokenService, AppOnlineService appOnline)
+        public ConfigController(ConfigService configService, TokenService tokenService, AppOnlineService appOnline, Setting setting)
         {
             _configService = configService;
             _tokenService = tokenService;
             _appOnline = appOnline;
+            _setting = setting;
         }
 
         [ApiFilter]
@@ -111,20 +113,18 @@ namespace Stardust.Server.Controllers
 
         private (AppConfig, AppOnline) Valid(String appId, String secret, String clientId, String token)
         {
-            var set = Setting.Current;
-
             // 优先令牌解码
             App ap = null;
             if (!token.IsNullOrEmpty())
             {
-                var (jwt, ap1) = _tokenService.DecodeToken(token, set.TokenSecret);
+                var (jwt, ap1) = _tokenService.DecodeToken(token, _setting.TokenSecret);
                 if (appId.IsNullOrEmpty()) appId = ap1?.Name;
                 if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
 
                 ap = ap1;
             }
 
-            if (ap == null) ap = _tokenService.Authorize(appId, secret, set.AutoRegister);
+            if (ap == null) ap = _tokenService.Authorize(appId, secret, _setting.AutoRegister);
 
             // 新建应用配置
             var app = AppConfig.FindByName(appId);

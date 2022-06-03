@@ -15,17 +15,19 @@ namespace Stardust.Server.Controllers
     {
         private readonly TokenService _tokenService;
         private readonly AppOnlineService _appOnline;
+        private readonly Setting _setting;
 
-        public OAuthController(TokenService tokenService, AppOnlineService appOnline)
+        public OAuthController(TokenService tokenService, AppOnlineService appOnline, Setting setting)
         {
             _tokenService = tokenService;
             _appOnline = appOnline;
+            _setting = setting;
         }
 
         [ApiFilter]
         public TokenModel Token([FromBody] TokenInModel model)
         {
-            var set = Setting.Current;
+            var set = _setting;
 
             if (model.grant_type.IsNullOrEmpty()) model.grant_type = "password";
 
@@ -97,9 +99,7 @@ namespace Stardust.Server.Controllers
         [ApiFilter]
         public Object UserInfo(String token)
         {
-            var set = Setting.Current;
-
-            var (_, app) = _tokenService.DecodeToken(token, set.TokenSecret);
+            var (_, app) = _tokenService.DecodeToken(token, _setting.TokenSecret);
             return new
             {
                 app.Id,

@@ -17,8 +17,13 @@ namespace Stardust.Server.Controllers
         public String UserHost => HttpContext.GetUserHost();
 
         private readonly TokenService _tokenService;
+        private readonly Setting _setting;
 
-        public DustController(TokenService tokenService) => _tokenService = tokenService;
+        public DustController(TokenService tokenService,Setting setting)
+        {
+            _tokenService = tokenService;
+            _setting = setting;
+        }
 
         #region 发布、消费
         private Service GetService(String serviceName)
@@ -38,7 +43,7 @@ namespace Stardust.Server.Controllers
         [HttpPost]
         public AppService RegisterService([FromBody] PublishServiceInfo service, String token)
         {
-            var (_, app) = _tokenService.DecodeToken(token, Setting.Current.TokenSecret);
+            var (_, app) = _tokenService.DecodeToken(token, _setting.TokenSecret);
             var info = GetService(service.ServiceName);
 
             // 所有服务
@@ -94,7 +99,7 @@ namespace Stardust.Server.Controllers
         [HttpPost]
         public AppService UnregisterService([FromBody] PublishServiceInfo service, String token)
         {
-            var (_, app) = _tokenService.DecodeToken(token, Setting.Current.TokenSecret);
+            var (_, app) = _tokenService.DecodeToken(token, _setting.TokenSecret);
             var info = GetService(service.ServiceName);
 
             // 所有服务
@@ -123,7 +128,7 @@ namespace Stardust.Server.Controllers
         [HttpPost]
         public ServiceModel[] ResolveService([FromBody] ConsumeServiceInfo model, String token)
         {
-            var (_, app) = _tokenService.DecodeToken(token, Setting.Current.TokenSecret);
+            var (_, app) = _tokenService.DecodeToken(token, _setting.TokenSecret);
             var info = GetService(model.ServiceName);
 
             // 所有消费

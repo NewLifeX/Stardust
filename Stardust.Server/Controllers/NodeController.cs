@@ -1,5 +1,4 @@
 ﻿using System.Net.WebSockets;
-using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -7,16 +6,11 @@ using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Remoting;
-using NewLife.Security;
-using NewLife.Serialization;
 using NewLife.Web;
-using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Common;
-using Stardust.Server.Models;
 using Stardust.Server.Services;
-using XCode;
 using IActionFilter = Microsoft.AspNetCore.Mvc.Filters.IActionFilter;
 
 namespace Stardust.Server.Controllers
@@ -28,20 +22,30 @@ namespace Stardust.Server.Controllers
         /// <summary>用户主机</summary>
         public String UserHost => HttpContext.GetUserHost();
 
-        /// <summary>节点引用，令牌无效时使用</summary>
-        protected Node _nodeForHistory;
-
-        private static readonly ICache _cache = new MemoryCache();
+        private String _token;
+        private Node _node;
         private readonly ICache _queue;
+        private readonly NodeService _nodeService;
         private readonly TokenService _tokenService;
+        private readonly Setting _setting;
 
-        public NodeController(ICache queue, TokenService tokenService)
+        public NodeController(NodeService nodeService, TokenService tokenService, Setting setting, ICache queue)
         {
             _queue = queue;
+            _nodeService = nodeService;
             _tokenService = tokenService;
+            _setting = setting;
         }
 
-        void IActionFilter.OnActionExecuting(ActionExecutingContext context) { }
+        #region 令牌验证
+        void IActionFilter.OnActionExecuting(ActionExecutingContext context)
+        {
+            var token = _token = ApiFilterAttribute.GetToken(context.HttpContext);
+            if (!token.IsNullOrEmpty())
+            {
+                _node = _nodeService.DecodeToken(token, _setting.TokenSecret);
+            }
+        }
 
         /// <summary>请求处理后</summary>
         /// <param name="context"></param>
@@ -53,9 +57,10 @@ namespace Stardust.Server.Controllers
                 var action = context.HttpContext.Request.Path + "";
                 if (context.ActionDescriptor is ControllerActionDescriptor act) action = $"{act.ControllerName}/{act.ActionName}";
 
-                WriteHistory(_nodeForHistory, action, false, context.Exception?.GetTrue() + "");
+                WriteHistory(_node, action, false, context.Exception?.GetTrue() + "");
             }
         }
+        #endregion
 
         #region 登录
         [ApiFilter]
@@ -63,56 +68,28 @@ namespace Stardust.Server.Controllers
         public LoginResponse Login(LoginInfo inf)
         {
             var code = inf.Code;
-            var secret = inf.Secret;
-
             var node = Node.FindByCode(code, true);
-            var di = inf.Node;
-            _nodeForHistory = node;
+            var oldSecret = node?.Secret;
+            _node = node;
 
-            // 校验唯一编码，防止客户端拷贝配置
-            var autoReg = false;
-            if (node == null)
-            {
-                node = AutoRegister(null, inf, out autoReg);
-            }
-            else
-            {
-                if (!node.Enable) throw new ApiException(99, "禁止登录");
-                node = CheckNode(node, di, inf.ProductCode);
+            if (node != null && !node.Enable) throw new ApiException(99, "禁止登录");
 
-                // 登录密码未设置或者未提交，则执行动态注册
-                if (node == null || node.Secret.IsNullOrEmpty() || secret.IsNullOrEmpty())
-                    node = AutoRegister(node, inf, out autoReg);
-                else if (node.Secret.MD5() != secret)
-                    node = AutoRegister(node, inf, out autoReg);
-            }
+            // 设备不存在或者验证失败，执行注册流程
+            if (node == null || !_nodeService.Auth(node, inf.Secret))
+                node = _nodeService.Register(inf, UserHost);
 
-            _nodeForHistory = node ?? throw new ApiException(12, "节点鉴权失败");
+            if (node == null) throw new ApiException(12, "节点鉴权失败");
 
-            if (!inf.ProductCode.IsNullOrEmpty()) node.ProductCode = inf.ProductCode;
-
-            node.UpdateIP = UserHost;
-            node.FixNameByRule();
-            node.Login(di, UserHost);
-
-            // 设置令牌
-            var tm = IssueToken(node.Code, Setting.Current);
-
-            // 在线记录
-            var olt = GetOnline(node) ?? CreateOnline(node, tm.AccessToken);
-            olt.Save(di, null, tm.AccessToken, UserHost);
-
-            // 登录历史
-            WriteHistory(node, "节点鉴权", true, $"[{node.Name}/{node.Code}]鉴权成功 " + inf.ToJson(false, false, false));
+            var tokenModel = _nodeService.Login(node, inf, UserHost);
 
             var rs = new LoginResponse
             {
                 Name = node.Name,
-                Token = tm.AccessToken,
+                Token = tokenModel.AccessToken,
             };
 
             // 动态注册，下发节点证书
-            if (autoReg)
+            if (node.Code != code || node.Secret != oldSecret)
             {
                 rs.Code = node.Code;
                 rs.Secret = node.Secret;
@@ -123,386 +100,30 @@ namespace Stardust.Server.Controllers
 
         /// <summary>注销</summary>
         /// <param name="reason">注销原因</param>
-        /// <param name="token">令牌</param>
         /// <returns></returns>
         [ApiFilter]
         [HttpGet(nameof(Logout))]
         [HttpPost(nameof(Logout))]
-        public LoginResponse Logout(String reason, String token)
+        public LoginResponse Logout(String reason)
         {
-            var node = DecodeToken(token, Setting.Current.TokenSecret);
-            if (node != null)
-            {
-                var olt = GetOnline(node);
-                if (olt != null)
-                {
-                    var msg = $"{reason} [{node}]]登录于{olt.CreateTime}，最后活跃于{olt.UpdateTime}";
-                    WriteHistory(node, "节点下线", true, msg);
-                    olt.Delete();
-
-                    var sid = $"{node.ID}@{UserHost}";
-                    _cache.Remove($"NodeOnline:{sid}");
-
-                    // 计算在线时长
-                    if (olt.CreateTime.Year > 2000)
-                    {
-                        node.OnlineTime += (Int32)(DateTime.Now - olt.CreateTime).TotalSeconds;
-                        node.SaveAsync();
-                    }
-
-                    NodeOnlineService.CheckOffline(node, "注销");
-                }
-            }
+            if (_node != null) _nodeService.Logout(_node, reason, UserHost);
 
             return new LoginResponse
             {
-                Name = node?.Name,
+                Name = _node?.Name,
                 Token = null,
             };
-        }
-
-        /// <summary>
-        /// 校验节点密钥
-        /// </summary>
-        /// <param name="node"></param>
-        /// <param name="ps"></param>
-        /// <returns></returns>
-        private Node CheckNode(Node node, NodeInfo di, String productCode)
-        {
-            // 校验唯一编码，防止客户端拷贝配置
-            var uuid = di.UUID;
-            var guid = di.MachineGuid;
-            var diskid = di.DiskID;
-            if (!uuid.IsNullOrEmpty() && uuid != node.Uuid)
-            {
-                WriteHistory(node, "登录校验", false, $"唯一标识不符！{uuid}!={node.Uuid}");
-                return null;
-            }
-            if (!guid.IsNullOrEmpty() && guid != node.MachineGuid)
-            {
-                WriteHistory(node, "登录校验", false, $"机器标识不符！{guid}!={node.MachineGuid}");
-                return null;
-            }
-            if (!diskid.IsNullOrEmpty() && diskid != node.DiskID)
-            {
-                WriteHistory(node, "登录校验", false, $"磁盘序列号不符！{diskid}!={node.DiskID}");
-                return null;
-            }
-            if (!node.ProductCode.IsNullOrEmpty() && !productCode.IsNullOrEmpty() && !node.ProductCode.EqualIgnoreCase(productCode))
-            {
-                WriteHistory(node, "登录校验", false, $"产品编码不符！{productCode}!={node.ProductCode}");
-                return null;
-            }
-
-            // 机器名
-            if (di.MachineName != node.MachineName)
-            {
-                WriteHistory(node, "登录校验", false, $"机器名不符！{di.MachineName}!={node.MachineName}");
-            }
-
-            // 网卡地址
-            if (di.Macs != node.MACs)
-            {
-                var dims = di.Macs?.Split(",") ?? new String[0];
-                var nodems = node.MACs?.Split(",") ?? new String[0];
-                // 任意网卡匹配则通过
-                if (!nodems.Any(e => dims.Contains(e)))
-                {
-                    WriteHistory(node, "登录校验", false, $"网卡地址不符！{di.Macs}!={node.MACs}");
-                }
-            }
-
-            return node;
-        }
-
-        private Node AutoRegister(Node node, LoginInfo inf, out Boolean autoReg)
-        {
-            var set = Setting.Current;
-            if (!set.AutoRegister) throw new ApiException(12, "禁止自动注册");
-
-            // 检查白名单
-            var ip = UserHost;
-            if (!IsMatchWhiteIP(set.WhiteIP, ip)) throw new ApiException(13, "非法来源，禁止注册");
-
-            var di = inf.Node;
-            var code = BuildCode(di, inf.ProductCode);
-            if (code.IsNullOrEmpty()) code = Rand.NextString(8);
-            if (node == null) node = Node.FindByCode(code);
-
-            if (node == null)
-            {
-                // 该硬件的所有节点信息
-                var list = Node.Search(di.UUID, di.MachineGuid, di.Macs);
-
-                // 当前节点信息，取较老者
-                list = list.OrderBy(e => e.ID).ToList();
-
-                // 找到节点
-                if (node == null) node = list.FirstOrDefault();
-            }
-
-            var name = "";
-            if (name.IsNullOrEmpty()) name = di.MachineName;
-            if (name.IsNullOrEmpty()) name = di.UserName;
-
-            if (node == null) node = new Node
-            {
-                Enable = true,
-
-                CreateIP = ip,
-                CreateTime = DateTime.Now,
-            };
-
-            // 如果未打开动态注册，则把节点修改为禁用
-            node.Enable = set.AutoRegister;
-
-            if (node.Name.IsNullOrEmpty()) node.Name = name;
-
-            // 优先使用节点散列来生成节点证书，确保节点路由到其它接入网关时保持相同证书代码
-            node.Code = code;
-
-            node.Secret = Rand.NextString(16);
-            node.UpdateIP = ip;
-            node.UpdateTime = DateTime.Now;
-
-            node.Save();
-            autoReg = true;
-
-            WriteHistory(node, "动态注册", true, inf.ToJson(false, false, false));
-
-            return node;
-        }
-
-        /// <summary>
-        /// 是否匹配白名单，未设置则直接通过
-        /// </summary>
-        /// <param name="whiteIp"></param>
-        /// <param name="ip"></param>
-        /// <returns></returns>
-        private Boolean IsMatchWhiteIP(String whiteIp, String ip)
-        {
-            if (ip.IsNullOrEmpty()) return true;
-            if (whiteIp.IsNullOrEmpty()) return true;
-
-            var ss = whiteIp.Split(",");
-            foreach (var item in ss)
-            {
-                if (item.IsMatch(ip)) return true;
-            }
-
-            return false;
-        }
-
-        private String BuildCode(NodeInfo di, String productCode)
-        {
-            var set = Setting.Current;
-            //var uid = $"{di.UUID}@{di.MachineGuid}@{di.Macs}";
-            var ss = (set.NodeCodeFormula + "").Split('(', ')');
-            if (ss.Length >= 2)
-            {
-                var uid = ss[1];
-                uid = uid.Replace("{ProductCode}", productCode);
-                foreach (var pi in di.GetType().GetProperties())
-                {
-                    uid = uid.Replace($"{{{pi.Name}}}", pi.GetValue(di) + "");
-                }
-                if (uid.Contains("{") || uid.Contains("}")) XTrace.WriteLine("节点编码公式有误，存在未解析变量，uid={0}", uid);
-                if (!uid.IsNullOrEmpty())
-                {
-                    // 使用产品类别加密一下，确保不同类别有不同编码
-                    var buf = uid.GetBytes();
-                    //code = buf.Crc().GetBytes().ToHex();
-                    switch (ss[0].ToLower())
-                    {
-                        case "crc": buf = buf.Crc().GetBytes(); break;
-                        case "crc16": buf = buf.Crc16().GetBytes(); break;
-                        case "md5": buf = buf.MD5(); break;
-                        case "md5_16": buf = uid.MD5_16().ToHex(); break;
-                        default:
-                            break;
-                    }
-                    return buf.ToHex();
-                }
-            }
-
-            return null;
         }
         #endregion
 
         #region 心跳
         [ApiFilter]
         [HttpPost(nameof(Ping))]
-        public PingResponse Ping(PingInfo inf, String token)
-        {
-            var rs = new PingResponse
-            {
-                Time = inf.Time,
-                ServerTime = DateTime.UtcNow,
-            };
-
-            var node = DecodeToken(token, Setting.Current.TokenSecret);
-            if (node != null)
-            {
-                var ip = UserHost;
-
-                if (!inf.IP.IsNullOrEmpty()) node.IP = inf.IP;
-                node.UpdateIP = ip;
-                node.FixArea();
-                node.FixNameByRule();
-                node.SaveAsync();
-
-                rs.Period = node.Period;
-
-                var olt = GetOnline(node) ?? CreateOnline(node, token);
-                olt.Name = node.Name;
-                olt.Category = node.Category;
-                olt.Version = node.Version;
-                olt.CompileTime = node.CompileTime;
-                olt.Save(null, inf, token, ip);
-
-                // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌。
-                //todo 这里将来由客户端提交刷新令牌，才能颁发新的访问令牌。
-                var tm = ValidAndIssueToken(node.Code, token);
-                if (tm != null)
-                {
-                    rs.Token = tm.AccessToken;
-
-                    WriteHistory(node, "刷新令牌", true, tm.ToJson());
-                }
-
-                // 拉取命令
-                rs.Commands = AcquireCommands(node.ID);
-
-                // 下发部署的应用服务
-                rs.Services = GetServices(node.ID);
-            }
-
-            return rs;
-        }
-
-        private static IList<NodeCommand> _commands;
-        private static DateTime _nextTime;
-
-        private static CommandModel[] AcquireCommands(Int32 nodeId)
-        {
-            // 缓存最近1000个未执行命令，用于快速过滤，避免大量节点在线时频繁查询命令表
-            if (_nextTime < DateTime.Now)
-            {
-                _commands = NodeCommand.AcquireCommands(-1, 1000);
-                _nextTime = DateTime.Now.AddMinutes(1);
-            }
-
-            // 是否有本节点
-            if (!_commands.Any(e => e.NodeID == nodeId)) return null;
-
-            var cmds = NodeCommand.AcquireCommands(nodeId, 100);
-            if (cmds == null) return null;
-
-            var rs = new List<CommandModel>();
-            foreach (var item in cmds)
-            {
-                if (item.Times > 10 || item.Expire.Year > 2000 && item.Expire < DateTime.Now)
-                    item.Status = CommandStatus.取消;
-                else
-                {
-                    if (item.Status == CommandStatus.处理中 && item.UpdateTime.AddMinutes(10) < DateTime.Now) continue;
-
-                    item.Times++;
-                    item.Status = CommandStatus.处理中;
-                    rs.Add(item.ToModel());
-                }
-                item.UpdateTime = DateTime.Now;
-            }
-            cmds.Update(false);
-
-            return rs.ToArray();
-        }
-
-        private ServiceInfo[] GetServices(Int32 nodeId)
-        {
-            var list = AppDeployNode.FindAllByNodeId(nodeId);
-            list = list.Where(e => e.Enable).ToList();
-            if (list.Count == 0) return null;
-
-            var svcs = new List<ServiceInfo>();
-            foreach (var item in list)
-            {
-                var deploy = item.App;
-                if (deploy == null || !deploy.Enable) continue;
-
-                var svc = new ServiceInfo
-                {
-                    Name = deploy.Name,
-                    FileName = deploy.FileName,
-                    Arguments = deploy.Arguments,
-                    WorkingDirectory = deploy.WorkingDirectory,
-                    AutoStart = deploy.AutoStart,
-                    //Singleton = true,
-                };
-                if (!item.Arguments.IsNullOrEmpty()) svc.Arguments = item.Arguments;
-                if (!item.WorkingDirectory.IsNullOrEmpty()) svc.WorkingDirectory = item.WorkingDirectory;
-
-                svcs.Add(svc);
-            }
-
-            return svcs.ToArray();
-        }
+        public PingResponse Ping(PingInfo inf) => _nodeService.Ping(_node, inf, _token, UserHost);
 
         [ApiFilter]
         [HttpGet(nameof(Ping))]
-        public PingResponse Ping()
-        {
-            return new PingResponse
-            {
-                Time = 0,
-                ServerTime = DateTime.Now,
-            };
-        }
-
-        /// <summary></summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
-        protected virtual NodeOnline GetOnline(Node node)
-        {
-            var sid = $"{node.ID}@{UserHost}";
-            var olt = _cache.Get<NodeOnline>($"NodeOnline:{sid}");
-            if (olt != null)
-            {
-                _cache.SetExpire($"NodeOnline:{sid}", TimeSpan.FromSeconds(600));
-                return olt;
-            }
-
-            return NodeOnline.FindBySessionID(sid);
-        }
-
-        /// <summary>检查在线</summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
-        protected virtual NodeOnline CreateOnline(Node node, String token)
-        {
-            var sid = $"{node.ID}@{UserHost}";
-            var olt = NodeOnline.GetOrAdd(sid);
-            olt.NodeID = node.ID;
-            olt.Name = node.Name;
-            olt.IP = node.IP;
-            olt.Category = node.Category;
-            olt.ProvinceID = node.ProvinceID;
-            olt.CityID = node.CityID;
-
-            olt.Version = node.Version;
-            olt.CompileTime = node.CompileTime;
-            olt.Memory = node.Memory;
-            olt.MACs = node.MACs;
-            //olt.COMs = node.COMs;
-            olt.Token = token;
-            olt.CreateIP = UserHost;
-
-            olt.Creator = Environment.MachineName;
-
-            _cache.Set($"NodeOnline:{sid}", olt, 600);
-
-            return olt;
-        }
+        public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.Now, };
         #endregion
 
         #region 历史
@@ -511,9 +132,9 @@ namespace Stardust.Server.Controllers
         /// <returns></returns>
         [ApiFilter]
         [HttpPost(nameof(Report))]
-        public async Task<Object> Report(Int32 id, String token)
+        public async Task<Object> Report(Int32 id)
         {
-            var node = DecodeToken(token, Setting.Current.TokenSecret);
+            var node = _node;
             if (node == null) throw new ApiException(402, "节点未登录");
 
             var cmd = NodeCommand.FindById(id);
@@ -559,19 +180,11 @@ namespace Stardust.Server.Controllers
         /// <returns></returns>
         [ApiFilter]
         [HttpPost(nameof(CommandReply))]
-        public Int32 CommandReply(CommandReplyModel model, String token)
+        public Int32 CommandReply(CommandReplyModel model)
         {
-            var node = DecodeToken(token, Setting.Current.TokenSecret);
-            if (node == null) throw new ApiException(402, "节点未登录");
+            if (_node == null) throw new ApiException(402, "节点未登录");
 
-            var cmd = NodeCommand.FindById(model.Id);
-            if (cmd == null) return 0;
-
-            cmd.Status = model.Status;
-            cmd.Result = model.Data;
-            cmd.Update();
-
-            return 1;
+            return _nodeService.CommandReply(model, _token);
         }
         #endregion
 
@@ -581,22 +194,13 @@ namespace Stardust.Server.Controllers
         /// <returns></returns>
         [ApiFilter]
         [HttpGet(nameof(Upgrade))]
-        public UpgradeInfo Upgrade(String channel, String token)
+        public UpgradeInfo Upgrade(String channel)
         {
-            var node = DecodeToken(token, Setting.Current.TokenSecret);
+            var node = _node;
             if (node == null) throw new ApiException(402, "节点未登录");
 
-            // 默认Release通道
-            if (!Enum.TryParse<NodeChannels>(channel, true, out var ch)) ch = NodeChannels.Release;
-            if (ch < NodeChannels.Release) ch = NodeChannels.Release;
-
-            // 找到所有产品版本
-            var list = NodeVersion.GetValids(ch);
-
-            // 应用过滤规则，使用最新的一个版本
-            var pv = list.Where(e => e.Match(node)).OrderByDescending(e => e.Version).FirstOrDefault();
+            var pv = _nodeService.Upgrade(node, channel, UserHost);
             if (pv == null) return null;
-            //if (pv == null) throw new ApiException(509, "没有升级规则");
 
             var url = pv.Version;
             if (!url.StartsWithIgnoreCase("http://", "https://"))
@@ -607,8 +211,6 @@ namespace Stardust.Server.Controllers
                 //url = $"{uri}/Node/GetFile?id={pv.ID}";
                 url = $"{uri}/Node/GetVersion/{pv.Version}.zip";
             }
-
-            WriteHistory(node, "自动更新", true, $"channel={ch} => [{pv.ID}] {pv.Version} {url} {pv.Executor}");
 
             return new UpgradeInfo
             {
@@ -629,9 +231,7 @@ namespace Stardust.Server.Controllers
 
             var updatePath = "../Uploads";
             var fi = updatePath.CombinePath(nv.Source).AsFile();
-            if (!fi.Exists) throw new Exception("文件不存在");
-
-            return File(fi.OpenRead(), "application/octet-stream", Path.GetFileName(nv.Source));
+            return !fi.Exists ? throw new Exception("文件不存在") : (ActionResult)File(fi.OpenRead(), "application/octet-stream", Path.GetFileName(nv.Source));
         }
 
         //[Route("Node/GetVersion/{name}")]
@@ -641,8 +241,7 @@ namespace Stardust.Server.Controllers
             var nv = NodeVersion.FindByVersion(name.TrimEnd(".zip"));
             if (nv == null || !nv.Enable) return NotFound("非法参数");
 
-            var set = Setting.Current;
-            var updatePath = set.UploadPath;
+            var updatePath = _setting.UploadPath;
             var fi = updatePath.CombinePath(nv.Source).AsFile();
             if (!fi.Exists) return NotFound("文件不存在");
 
@@ -659,18 +258,19 @@ namespace Stardust.Server.Controllers
         {
             if (HttpContext.WebSockets.IsWebSocketRequest)
             {
+                var ip = UserHost;
                 var token = (HttpContext.Request.Headers["Authorization"] + "").TrimStart("Bearer ");
                 using var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
                 try
                 {
-                    await Handle(socket, token);
+                    await Handle(socket, token, ip);
                 }
                 catch (Exception ex)
                 {
-                    XTrace.WriteLine("WebSocket异常 node={0} ip={1}", _nodeForHistory, UserHost);
+                    XTrace.WriteLine("WebSocket异常 node={0} ip={1}", _node, UserHost);
                     XTrace.WriteException(ex);
 
-                    WriteHistory(_nodeForHistory, "Node/Notify", false, ex?.GetTrue() + "");
+                    WriteHistory(_node, "Node/Notify", false, ex?.GetTrue() + "");
 
                     await Response.WriteAsync("closed");
                 }
@@ -681,22 +281,21 @@ namespace Stardust.Server.Controllers
             }
         }
 
-        private async Task Handle(WebSocket socket, String token)
+        private async Task Handle(WebSocket socket, String token, String ip)
         {
-            var node = DecodeToken(token, Setting.Current.TokenSecret);
-            if (node == null) throw new InvalidOperationException($"未登录！[ip={UserHost}]");
+            var node = _nodeService.DecodeToken(token, _setting.TokenSecret);
+            if (node == null) throw new InvalidOperationException($"未登录！[ip={ip}]");
 
-            XTrace.WriteLine("WebSocket连接 {0}", node);
+            //XTrace.WriteLine("WebSocket连接 {0}", node);
             WriteHistory(node, "WebSocket连接", true, socket.State + "");
 
-            var olt = GetOnline(node) ?? CreateOnline(node, token);
+            var olt = _nodeService.GetOnline(node, ip) ?? _nodeService.CreateOnline(node, token, ip);
             if (olt != null)
             {
                 olt.WebSocket = true;
                 olt.SaveAsync();
             }
 
-            var ip = UserHost;
             var source = new CancellationTokenSource();
             _ = Task.Run(() => consumeMessage(socket, node, ip, source));
             try
@@ -715,7 +314,7 @@ namespace Stardust.Server.Controllers
                 }
 
                 source.Cancel();
-                XTrace.WriteLine("WebSocket断开 {0}", node);
+                //XTrace.WriteLine("WebSocket断开 {0}", node);
                 WriteHistory(node, "WebSocket断开", true, socket.State + "");
 
                 await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
@@ -770,123 +369,12 @@ namespace Stardust.Server.Controllers
                 source.Cancel();
             }
         }
-
-        /// <summary>向节点发送命令</summary>
-        /// <param name="model"></param>
-        /// <param name="token">应用令牌</param>
-        /// <returns></returns>
-        [ApiFilter]
-        [HttpPost(nameof(SendCommand))]
-        public Int32 SendCommand(CommandInModel model, String token)
-        {
-            if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定节点");
-            if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
-
-            var node = Node.FindByCode(model.Code);
-            if (node == null) throw new ArgumentOutOfRangeException(nameof(model.Code), "无效节点");
-
-            var (_, app) = _tokenService.DecodeToken(token, Setting.Current.TokenSecret);
-            if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new InvalidOperationException("无权操作！");
-
-            if (app.AllowControlNodes != "*" && !node.Code.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
-                throw new InvalidOperationException($"[{app}]无权操作节点[{node}]！");
-
-            var cmd = new NodeCommand
-            {
-                NodeID = node.ID,
-                Command = model.Command,
-                Argument = model.Argument,
-                //Expire = model.Expire,
-                Times = 1,
-                Status = CommandStatus.处理中,
-
-                CreateUser = app.Name,
-            };
-            if (model.Expire > 0) cmd.Expire = DateTime.Now.AddSeconds(model.Expire);
-            cmd.Insert();
-
-            var queue = _queue.GetQueue<String>($"nodecmd:{node.Code}");
-            queue.Add(cmd.ToModel().ToJson());
-
-            return cmd.Id;
-        }
         #endregion
 
         #region 辅助
-        private TokenModel IssueToken(String name, Setting set)
-        {
-            // 颁发令牌
-            var ss = set.TokenSecret.Split(':');
-            var jwt = new JwtBuilder
-            {
-                Issuer = Assembly.GetEntryAssembly().GetName().Name,
-                Subject = name,
-                Id = Rand.NextString(8),
-                Expire = DateTime.Now.AddSeconds(set.TokenExpire),
-
-                Algorithm = ss[0],
-                Secret = ss[1],
-            };
-
-            return new TokenModel
-            {
-                AccessToken = jwt.Encode(null),
-                TokenType = jwt.Type ?? "JWT",
-                ExpireIn = set.TokenExpire,
-                RefreshToken = jwt.Encode(null),
-            };
-        }
-
-        private Node DecodeToken(String token, String tokenSecret)
-        {
-            //if (token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(token));
-            if (token.IsNullOrEmpty()) throw new ApiException(402, $"节点未登录[ip={UserHost}]");
-
-            // 解码令牌
-            var ss = tokenSecret.Split(':');
-            var jwt = new JwtBuilder
-            {
-                Algorithm = ss[0],
-                Secret = ss[1],
-            };
-
-            var rs = jwt.TryDecode(token, out var message);
-            var node = Node.FindByCode(jwt.Subject);
-            _nodeForHistory = node;
-            if (!rs || node == null)
-            {
-                if (node != null)
-                    throw new ApiException(403, $"[{node.Name}/{node.Code}]非法访问 {message}");
-                else
-                    throw new ApiException(403, $"[{jwt.Subject}]非法访问 {message}");
-            }
-
-            return node;
-        }
-
-        public TokenModel ValidAndIssueToken(String deviceCode, String token)
-        {
-            if (token.IsNullOrEmpty()) return null;
-            var set = Setting.Current;
-
-            // 令牌有效期检查，10分钟内过期者，重新颁发令牌
-            var ss = set.TokenSecret.Split(':');
-            var jwt = new JwtBuilder
-            {
-                Algorithm = ss[0],
-                Secret = ss[1],
-            };
-            var rs = jwt.TryDecode(token, out var message);
-            if (!rs || jwt == null) return null;
-
-            if (DateTime.Now.AddMinutes(10) > jwt.Expire) return IssueToken(deviceCode, set);
-
-            return null;
-        }
-
         private void WriteHistory(Node node, String action, Boolean success, String remark, String ip = null)
         {
-            var hi = NodeHistory.Create(node, action, success, remark, Environment.MachineName, ip ?? UserHost);
+            var hi = NodeHistory.Create(node ?? _node, action, success, remark, Environment.MachineName, ip ?? UserHost);
             hi.SaveAsync();
         }
         #endregion

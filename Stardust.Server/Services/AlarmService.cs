@@ -32,14 +32,17 @@ namespace Stardust.Server.Services
         //private WeiXinClient _weixin;
         //private DingTalkClient _dingTalk;
         private readonly ICache _cache = new MemoryCache();
+        private readonly Setting _setting;
         private readonly ITracer _tracer;
 
-        public AlarmService(ITracer tracer)
+        public AlarmService(Setting setting, ITracer tracer)
         {
             // 初始化定时器
             _timer = new TimerX(DoAlarm, null, 5_000, Period * 1000) { Async = true };
-
+            _setting = setting;
             _tracer = tracer;
+
+            Period = setting.AlarmPeriod;
         }
 
         /// <summary>添加需要统计的应用，去重</summary>
@@ -117,14 +120,14 @@ namespace Stardust.Server.Services
             }
         }
 
-        private static String GetMarkdown(AppTracer app, AppMinuteStat st, Boolean includeTitle)
+        private String GetMarkdown(AppTracer app, AppMinuteStat st, Boolean includeTitle)
         {
             var sb = new StringBuilder();
             if (includeTitle) sb.AppendLine($"### [{app}]应用告警");
             sb.AppendLine($">**总数：**<font color=\"red\">{st.Errors}</font>");
             sb.AppendLine($">**错误率：**<font color=\"red\">{st.ErrorRate:p2}</font>");
 
-            var url = Setting.Current.WebUrl;
+            var url = _setting.WebUrl;
             var appUrl = "";
             var traceUrl = "";
             if (!url.IsNullOrEmpty())
@@ -217,14 +220,14 @@ namespace Stardust.Server.Services
             }
         }
 
-        private static String GetMarkdown(AppTracer app, TraceMinuteStat st, Boolean includeTitle)
+        private String GetMarkdown(AppTracer app, TraceMinuteStat st, Boolean includeTitle)
         {
             var sb = new StringBuilder();
             if (includeTitle) sb.AppendLine($"### [{app}]埋点告警");
             sb.AppendLine($">**总数：**<font color=\"red\">{st.Errors}</font>");
             sb.AppendLine($">**错误率：**<font color=\"red\">{st.ErrorRate:p2}</font>");
 
-            var url = Setting.Current.WebUrl;
+            var url = _setting.WebUrl;
             var traceUrl = "";
             if (!url.IsNullOrEmpty())
             {
@@ -383,7 +386,7 @@ namespace Stardust.Server.Services
             RobotHelper.SendAlarm(node.Category, node.WebHook, title, msg);
         }
 
-        private static String GetMarkdown(String kind, Node node, NodeData data, String title, String msg = null)
+        private String GetMarkdown(String kind, Node node, NodeData data, String title, String msg = null)
         {
             var sb = new StringBuilder();
             if (!title.IsNullOrEmpty()) sb.AppendLine($"### {title}");
@@ -424,7 +427,7 @@ namespace Stardust.Server.Services
             if (str.Length > 2000) str = str[..2000];
 
             // 构造网址
-            var url = Setting.Current.WebUrl;
+            var url = _setting.WebUrl;
             if (!url.IsNullOrEmpty())
             {
                 url = url.EnsureEnd("/") + "Nodes/NodeData?nodeId=" + node.ID;
@@ -534,7 +537,7 @@ namespace Stardust.Server.Services
             }
         }
 
-        private static String GetMarkdown(RedisNode node, RedisData data, String title, IList<Action<StringBuilder>> actions)
+        private String GetMarkdown(RedisNode node, RedisData data, String title, IList<Action<StringBuilder>> actions)
         {
             var sb = new StringBuilder();
             if (!title.IsNullOrEmpty()) sb.AppendLine($"### [{node}]{title}");
@@ -564,7 +567,7 @@ namespace Stardust.Server.Services
             if (str.Length > 2000) str = str[..2000];
 
             // 构造网址
-            var url = Setting.Current.WebUrl;
+            var url = _setting.WebUrl;
             if (!url.IsNullOrEmpty())
             {
                 url = url.EnsureEnd("/") + "Nodes/RedisNode?id=" + node.Id;
@@ -603,7 +606,7 @@ namespace Stardust.Server.Services
             }
         }
 
-        private static String GetMarkdown(RedisNode node, RedisMessageQueue queue, Boolean includeTitle)
+        private String GetMarkdown(RedisNode node, RedisMessageQueue queue, Boolean includeTitle)
         {
             var sb = new StringBuilder();
             if (includeTitle) sb.AppendLine($"### [{queue.Name}/{node}]消息队列告警");
@@ -617,7 +620,7 @@ namespace Stardust.Server.Services
             if (str.Length > 2000) str = str[..2000];
 
             // 构造网址
-            var url = Setting.Current.WebUrl;
+            var url = _setting.WebUrl;
             if (!url.IsNullOrEmpty())
             {
                 url = url.EnsureEnd("/") + "Nodes/RedisMessageQueue?redisId=" + queue.RedisId + "&q=" + queue.Name;

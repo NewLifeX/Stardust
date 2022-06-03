@@ -1,8 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Collections;
 using Stardust.Data;
@@ -14,6 +10,10 @@ namespace Stardust.Server.Controllers
     [Route("[controller]")]
     public class LogController : ControllerBase
     {
+        private readonly Setting _setting;
+
+        public LogController(Setting setting) => _setting = setting;
+
         [HttpGet]
         public Object Get() => "LogController";
 
@@ -30,7 +30,6 @@ namespace Stardust.Server.Controllers
                 var appId = Request.Headers["X-AppId"] + "";
                 var clientId = Request.Headers["X-ClientId"] + "";
                 var ip = HttpContext.GetUserHost();
-                var set = Setting.Current;
 
                 // 验证应用
                 var app = App.FindByName(appId);
@@ -39,7 +38,7 @@ namespace Stardust.Server.Controllers
                     app = new App
                     {
                         Name = appId,
-                        Enable = set.AutoRegister,
+                        Enable = _setting.AutoRegister,
                     };
                     app.Insert();
                 }

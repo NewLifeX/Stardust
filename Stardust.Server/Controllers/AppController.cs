@@ -32,12 +32,14 @@ namespace Stardust.Server.Controllers
         private readonly RegistryService _registryService;
         private readonly ITracer _tracer;
         private readonly AppQueueService _queue;
+        private readonly Setting _setting;
 
-        public AppController(TokenService tokenService, RegistryService registryService, AppQueueService queue, ITracer tracer)
+        public AppController(TokenService tokenService, RegistryService registryService, AppQueueService queue, Setting setting, ITracer tracer)
         {
             _tokenService = tokenService;
             _registryService = registryService;
             _queue = queue;
+            _setting = setting;
             _tracer = tracer;
         }
 
@@ -48,7 +50,7 @@ namespace Stardust.Server.Controllers
             _token = ApiFilterAttribute.GetToken(HttpContext);
             if (!_token.IsNullOrEmpty())
             {
-                var (jwt, app) = _tokenService.DecodeToken(_token, Setting.Current.TokenSecret);
+                var (jwt, app) = _tokenService.DecodeToken(_token, _setting.TokenSecret);
                 _app = app;
                 _clientId = jwt.Id;
             }

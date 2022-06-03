@@ -41,18 +41,18 @@ namespace Stardust.Server
             services.AddSingleton(cache);
 
             var set = Setting.Current;
+            services.AddSingleton(set);
 
             // 统计服务
             var traceService = new TraceStatService(tracer) { FlowPeriod = set.MonitorFlowPeriod, BatchPeriod = set.MonitorBatchPeriod };
             services.AddSingleton<ITraceStatService>(traceService);
             var appStatService = new AppDayStatService(tracer) { BatchPeriod = set.MonitorBatchPeriod };
             services.AddSingleton<IAppDayStatService>(appStatService);
-            var traceItemStatService = new TraceItemStatService(tracer) { };
-            services.AddSingleton<ITraceItemStatService>(traceItemStatService);
-            var alarmService = new AlarmService(tracer) { Period = set.AlarmPeriod };
-            services.AddSingleton<IAlarmService>(alarmService);
+            services.AddSingleton<ITraceItemStatService, TraceItemStatService>();
+            services.AddSingleton<IAlarmService, AlarmService>();
 
             // 业务服务
+            services.AddSingleton<NodeService>();
             services.AddSingleton<AppQueueService>();
             services.AddSingleton<TokenService>();
             services.AddSingleton<ConfigService>();
