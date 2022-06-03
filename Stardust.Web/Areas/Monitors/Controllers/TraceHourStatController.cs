@@ -91,8 +91,14 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 }
             }
 
-            var ar = AppTracer.FindByID(appId);
-            if (ar != null) ViewBag.Title = $"{ar}小时统计";
+            var ti = TraceItem.FindById(itemId);
+            if (ti != null)
+                ViewBag.Title = $"{ti}每小时统计";
+            else
+            {
+                var ar = AppTracer.FindByID(appId);
+                if (ar != null) ViewBag.Title = $"{ar}每小时统计";
+            }
 
             return list;
         }

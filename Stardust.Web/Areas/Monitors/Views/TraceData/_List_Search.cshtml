@@ -8,6 +8,22 @@
     var page = ViewBag.Page as Pager;
 
     var dic = AppTracer.FindAllWithCache().ToDictionary(e => e.ID, e => e + "");
+    var appId = page["appId"].ToInt(-1);
+    var itemId = page["itemId"].ToInt(-1);
+}
+@if (itemId > 0)
+{
+    var ti = TraceItem.FindById(itemId);
+    <div class="form-group">
+        <a href="traceMinuteStat?appId=@appId&itemId=@itemId" class="btn btn-success btn-sm">@ti</a>
+    </div>
+}
+@if (appId > 0)
+{
+    var app = AppTracer.FindByID(appId);
+    <div class="form-group">
+        <a href="appMinuteStat?appId=@appId" class="btn btn-success btn-sm" title="应用最近的监控图表">@app</a>
+    </div>
 }
 <div class="form-group">
     <label for="appId" class="control-label">应用：</label>
