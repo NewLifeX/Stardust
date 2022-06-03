@@ -168,7 +168,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                     XTrace.WriteLine("修正 {0}/{1}", app.Name, app.ID);
 
                     //_traceItemStatService.Add(app.ID);
-                    _traceItemStatService.Process(app.ID);
+                    _traceItemStatService.Process(app.ID, 30);
 
                     app.Fix();
                     app.Update();

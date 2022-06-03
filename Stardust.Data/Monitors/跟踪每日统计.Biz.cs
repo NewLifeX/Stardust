@@ -201,11 +201,14 @@ namespace Stardust.Data.Monitors
 
         /// <summary>根据应用分组统计</summary>
         /// <param name="appId"></param>
+        /// <param name="startTime"></param>
         /// <returns></returns>
-        public static IList<TraceDayStat> SearchGroupItemByApp(Int32 appId)
+        public static IList<TraceDayStat> SearchGroupItemByApp(Int32 appId, DateTime startTime)
         {
             var selects = _.ID.Count() & _.Total.Sum() & _.Errors.Sum() & _.Cost.Avg() & _.ItemId;
-            var where = new WhereExpression() & _.AppId == appId;
+            var where = new WhereExpression();
+            where &= _.AppId == appId;
+            if (startTime.Year > 2000) where &= _.StatDate >= startTime;
 
             return FindAll(where.GroupBy(_.ItemId), null, selects);
         }

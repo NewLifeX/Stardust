@@ -16,7 +16,8 @@ namespace Stardust.Server.Services
 
         /// <summary>统计指定应用</summary>
         /// <param name="appId"></param>
-        void Process(Int32 appId);
+        /// <param name="days"></param>
+        void Process(Int32 appId, Int32 days);
     }
 
     /// <summary>跟踪项统计服务</summary>
@@ -56,7 +57,7 @@ namespace Stardust.Server.Services
                 using var span = _tracer?.NewSpan("TraceItemStat-Process", appId);
                 try
                 {
-                    Process(appId);
+                    Process(appId, 7);
                 }
                 catch (Exception ex)
                 {
@@ -66,11 +67,13 @@ namespace Stardust.Server.Services
             }
         }
 
-        public void Process(Int32 appId)
+        public void Process(Int32 appId, Int32 days = 7)
         {
+            var startTime = DateTime.Today.AddDays(-days);
+
             var app = AppTracer.FindByID(appId);
-            var list = TraceItem.GetValids(appId, DateTime.Today.AddDays(-7));
-            var sts = TraceDayStat.SearchGroupItemByApp(appId);
+            var list = TraceItem.GetValids(appId, startTime);
+            var sts = TraceDayStat.SearchGroupItemByApp(appId, startTime);
             foreach (var st in sts)
             {
                 var ti = list.FirstOrDefault(e => e.Id == st.ItemId);
