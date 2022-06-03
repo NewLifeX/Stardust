@@ -661,8 +661,19 @@ namespace Stardust.Server.Controllers
             {
                 var token = (HttpContext.Request.Headers["Authorization"] + "").TrimStart("Bearer ");
                 using var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+                try
+                {
+                    await Handle(socket, token);
+                }
+                catch (Exception ex)
+                {
+                    XTrace.WriteLine("WebSocket异常 node={0} ip={1}", _nodeForHistory, UserHost);
+                    XTrace.WriteException(ex);
 
-                await Handle(socket, token);
+                    WriteHistory(_nodeForHistory, "Node/Notify", false, ex?.GetTrue() + "");
+
+                    await Response.WriteAsync("closed");
+                }
             }
             else
             {
@@ -673,7 +684,7 @@ namespace Stardust.Server.Controllers
         private async Task Handle(WebSocket socket, String token)
         {
             var node = DecodeToken(token, Setting.Current.TokenSecret);
-            if (node == null) throw new InvalidOperationException("未登录！");
+            if (node == null) throw new InvalidOperationException($"未登录！[ip={UserHost}]");
 
             XTrace.WriteLine("WebSocket连接 {0}", node);
             WriteHistory(node, "WebSocket连接", true, socket.State + "");
@@ -829,7 +840,7 @@ namespace Stardust.Server.Controllers
         private Node DecodeToken(String token, String tokenSecret)
         {
             //if (token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(token));
-            if (token.IsNullOrEmpty()) throw new ApiException(402, "节点未登录");
+            if (token.IsNullOrEmpty()) throw new ApiException(402, $"节点未登录[ip={UserHost}]");
 
             // 解码令牌
             var ss = tokenSecret.Split(':');
@@ -842,7 +853,13 @@ namespace Stardust.Server.Controllers
             var rs = jwt.TryDecode(token, out var message);
             var node = Node.FindByCode(jwt.Subject);
             _nodeForHistory = node;
-            if (!rs) throw new ApiException(403, $"[{node.Name}/{node.Code}]非法访问 {message}");
+            if (!rs || node == null)
+            {
+                if (node != null)
+                    throw new ApiException(403, $"[{node.Name}/{node.Code}]非法访问 {message}");
+                else
+                    throw new ApiException(403, $"[{jwt.Subject}]非法访问 {message}");
+            }
 
             return node;
         }
