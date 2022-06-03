@@ -98,6 +98,7 @@ namespace Stardust.Data.Nodes
 
         private String _OS;
         /// <summary>操作系统</summary>
+        [Category("硬件信息")]
         [DisplayName("操作系统")]
         [Description("操作系统")]
         [DataObjectField(false, false, true, 100)]
@@ -106,6 +107,7 @@ namespace Stardust.Data.Nodes
 
         private String _OSVersion;
         /// <summary>系统版本</summary>
+        [Category("硬件信息")]
         [DisplayName("系统版本")]
         [Description("系统版本")]
         [DataObjectField(false, false, true, 50)]
@@ -114,6 +116,7 @@ namespace Stardust.Data.Nodes
 
         private String _Architecture;
         /// <summary>架构。处理器架构，X86/X64/Arm/Arm64</summary>
+        [Category("硬件信息")]
         [DisplayName("架构")]
         [Description("架构。处理器架构，X86/X64/Arm/Arm64")]
         [DataObjectField(false, false, true, 50)]
@@ -122,6 +125,7 @@ namespace Stardust.Data.Nodes
 
         private String _MachineName;
         /// <summary>机器名称</summary>
+        [Category("硬件信息")]
         [DisplayName("机器名称")]
         [Description("机器名称")]
         [DataObjectField(false, false, true, 50)]
@@ -130,6 +134,7 @@ namespace Stardust.Data.Nodes
 
         private String _UserName;
         /// <summary>用户名称</summary>
+        [Category("硬件信息")]
         [DisplayName("用户名称")]
         [Description("用户名称")]
         [DataObjectField(false, false, true, 50)]
@@ -138,6 +143,7 @@ namespace Stardust.Data.Nodes
 
         private String _IP;
         /// <summary>本地IP</summary>
+        [Category("硬件信息")]
         [DisplayName("本地IP")]
         [Description("本地IP")]
         [DataObjectField(false, false, true, 200)]
@@ -146,6 +152,7 @@ namespace Stardust.Data.Nodes
 
         private Int32 _Cpu;
         /// <summary>CPU。处理器核心数</summary>
+        [Category("硬件信息")]
         [DisplayName("CPU")]
         [Description("CPU。处理器核心数")]
         [DataObjectField(false, false, false, 0)]
@@ -154,6 +161,7 @@ namespace Stardust.Data.Nodes
 
         private Int32 _Memory;
         /// <summary>内存。单位M</summary>
+        [Category("硬件信息")]
         [DisplayName("内存")]
         [Description("内存。单位M")]
         [DataObjectField(false, false, false, 0)]
@@ -162,6 +170,7 @@ namespace Stardust.Data.Nodes
 
         private Int32 _TotalSize;
         /// <summary>磁盘。应用所在盘，单位M</summary>
+        [Category("硬件信息")]
         [DisplayName("磁盘")]
         [Description("磁盘。应用所在盘，单位M")]
         [DataObjectField(false, false, false, 0)]
@@ -170,6 +179,7 @@ namespace Stardust.Data.Nodes
 
         private Int32 _MaxOpenFiles;
         /// <summary>最大打开文件。Linux上的ulimit -n</summary>
+        [Category("硬件信息")]
         [DisplayName("最大打开文件")]
         [Description("最大打开文件。Linux上的ulimit -n")]
         [DataObjectField(false, false, false, 0)]
@@ -178,6 +188,7 @@ namespace Stardust.Data.Nodes
 
         private String _Dpi;
         /// <summary>像素点。默认96*96</summary>
+        [Category("硬件信息")]
         [DisplayName("像素点")]
         [Description("像素点。默认96*96")]
         [DataObjectField(false, false, true, 50)]
@@ -186,6 +197,7 @@ namespace Stardust.Data.Nodes
 
         private String _Resolution;
         /// <summary>分辨率。例如1024*768</summary>
+        [Category("硬件信息")]
         [DisplayName("分辨率")]
         [Description("分辨率。例如1024*768")]
         [DataObjectField(false, false, true, 50)]
@@ -194,6 +206,7 @@ namespace Stardust.Data.Nodes
 
         private String _Processor;
         /// <summary>处理器</summary>
+        [Category("硬件信息")]
         [DisplayName("处理器")]
         [Description("处理器")]
         [DataObjectField(false, false, true, 200)]
@@ -202,6 +215,7 @@ namespace Stardust.Data.Nodes
 
         private String _Uuid;
         /// <summary>唯一标识</summary>
+        [Category("硬件信息")]
         [DisplayName("唯一标识")]
         [Description("唯一标识")]
         [DataObjectField(false, false, true, 50)]
@@ -210,6 +224,7 @@ namespace Stardust.Data.Nodes
 
         private String _MachineGuid;
         /// <summary>机器标识</summary>
+        [Category("硬件信息")]
         [DisplayName("机器标识")]
         [Description("机器标识")]
         [DataObjectField(false, false, true, 50)]
@@ -218,6 +233,7 @@ namespace Stardust.Data.Nodes
 
         private String _DiskID;
         /// <summary>磁盘序列号</summary>
+        [Category("硬件信息")]
         [DisplayName("磁盘序列号")]
         [Description("磁盘序列号")]
         [DataObjectField(false, false, true, 200)]
@@ -226,6 +242,7 @@ namespace Stardust.Data.Nodes
 
         private String _MACs;
         /// <summary>网卡</summary>
+        [Category("硬件信息")]
         [DisplayName("网卡")]
         [Description("网卡")]
         [DataObjectField(false, false, true, 200)]
@@ -234,6 +251,7 @@ namespace Stardust.Data.Nodes
 
         private String _InstallPath;
         /// <summary>安装路径</summary>
+        [Category("硬件信息")]
         [DisplayName("安装路径")]
         [Description("安装路径")]
         [DataObjectField(false, false, true, 200)]
@@ -242,6 +260,7 @@ namespace Stardust.Data.Nodes
 
         private String _Runtime;
         /// <summary>运行时。.Net运行时版本，可知道本地已安装版本</summary>
+        [Category("硬件信息")]
         [DisplayName("运行时")]
         [Description("运行时。.Net运行时版本，可知道本地已安装版本")]
         [DataObjectField(false, false, true, 50)]
@@ -250,6 +269,7 @@ namespace Stardust.Data.Nodes
 
         private String _Framework;
         /// <summary>目标框架。编译程序集时的目标版本</summary>
+        [Category("硬件信息")]
         [DisplayName("目标框架")]
         [Description("目标框架。编译程序集时的目标版本")]
         [DataObjectField(false, false, true, 50)]
@@ -290,6 +310,7 @@ namespace Stardust.Data.Nodes
 
         private String _WebHook;
         /// <summary>告警机器人。钉钉、企业微信等</summary>
+        [Category("告警")]
         [DisplayName("告警机器人")]
         [Description("告警机器人。钉钉、企业微信等")]
         [DataObjectField(false, false, true, 500)]
@@ -298,6 +319,7 @@ namespace Stardust.Data.Nodes
 
         private Int32 _AlarmCpuRate;
         /// <summary>CPU告警。CPU告警的百分比阈值，CPU使用率达到该值时告警，百分之一</summary>
+        [Category("告警")]
         [DisplayName("CPU告警")]
         [Description("CPU告警。CPU告警的百分比阈值，CPU使用率达到该值时告警，百分之一")]
         [DataObjectField(false, false, false, 0)]
@@ -306,6 +328,7 @@ namespace Stardust.Data.Nodes
 
         private Int32 _AlarmMemoryRate;
         /// <summary>内存告警。内存告警的百分比阈值，内存使用率达到该值时告警，百分之一</summary>
+        [Category("告警")]
         [DisplayName("内存告警")]
         [Description("内存告警。内存告警的百分比阈值，内存使用率达到该值时告警，百分之一")]
         [DataObjectField(false, false, false, 0)]
@@ -314,6 +337,7 @@ namespace Stardust.Data.Nodes
 
         private Int32 _AlarmDiskRate;
         /// <summary>磁盘告警。磁盘告警的百分比阈值，磁盘使用率达到该值时告警，百分之一</summary>
+        [Category("告警")]
         [DisplayName("磁盘告警")]
         [Description("磁盘告警。磁盘告警的百分比阈值，磁盘使用率达到该值时告警，百分之一")]
         [DataObjectField(false, false, false, 0)]
@@ -322,6 +346,7 @@ namespace Stardust.Data.Nodes
 
         private Int32 _AlarmTcp;
         /// <summary>连接数告警。TCP连接数达到该值时告警，包括连接数、主动关闭和被动关闭</summary>
+        [Category("告警")]
         [DisplayName("连接数告警")]
         [Description("连接数告警。TCP连接数达到该值时告警，包括连接数、主动关闭和被动关闭")]
         [DataObjectField(false, false, false, 0)]
@@ -330,6 +355,7 @@ namespace Stardust.Data.Nodes
 
         private String _AlarmProcesses;
         /// <summary>进程告警。要守护的进程不存在时告警，多进程逗号隔开，支持*模糊匹配</summary>
+        [Category("告警")]
         [DisplayName("进程告警")]
         [Description("进程告警。要守护的进程不存在时告警，多进程逗号隔开，支持*模糊匹配")]
         [DataObjectField(false, false, true, 50)]
@@ -338,6 +364,7 @@ namespace Stardust.Data.Nodes
 
         private Boolean _AlarmOnOffline;
         /// <summary>下线告警。节点下线时，发送告警</summary>
+        [Category("告警")]
         [DisplayName("下线告警")]
         [Description("下线告警。节点下线时，发送告警")]
         [DataObjectField(false, false, false, 0)]
@@ -378,6 +405,7 @@ namespace Stardust.Data.Nodes
 
         private Int32 _CreateUserID;
         /// <summary>创建者</summary>
+        [Category("扩展")]
         [DisplayName("创建者")]
         [Description("创建者")]
         [DataObjectField(false, false, false, 0)]
@@ -386,6 +414,7 @@ namespace Stardust.Data.Nodes
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
+        [Category("扩展")]
         [DisplayName("创建时间")]
         [Description("创建时间")]
         [DataObjectField(false, false, true, 0)]
@@ -394,6 +423,7 @@ namespace Stardust.Data.Nodes
 
         private String _CreateIP;
         /// <summary>创建地址</summary>
+        [Category("扩展")]
         [DisplayName("创建地址")]
         [Description("创建地址")]
         [DataObjectField(false, false, true, 50)]
@@ -402,6 +432,7 @@ namespace Stardust.Data.Nodes
 
         private Int32 _UpdateUserID;
         /// <summary>更新者</summary>
+        [Category("扩展")]
         [DisplayName("更新者")]
         [Description("更新者")]
         [DataObjectField(false, false, false, 0)]
@@ -410,6 +441,7 @@ namespace Stardust.Data.Nodes
 
         private DateTime _UpdateTime;
         /// <summary>更新时间</summary>
+        [Category("扩展")]
         [DisplayName("更新时间")]
         [Description("更新时间")]
         [DataObjectField(false, false, true, 0)]
@@ -418,6 +450,7 @@ namespace Stardust.Data.Nodes
 
         private String _UpdateIP;
         /// <summary>更新地址</summary>
+        [Category("扩展")]
         [DisplayName("更新地址")]
         [Description("更新地址")]
         [DataObjectField(false, false, true, 50)]
@@ -426,6 +459,7 @@ namespace Stardust.Data.Nodes
 
         private String _Remark;
         /// <summary>备注</summary>
+        [Category("扩展")]
         [DisplayName("备注")]
         [Description("备注")]
         [DataObjectField(false, false, true, 500)]

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2022.xsd" NameSpace="Stardust.Data.Deployment" ConnName="Stardust" BaseClass="Entity" Output="" Version="11.1.2022.0504" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model2022.xsd">
+<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2022.xsd" NameSpace="Stardust.Data.Deployment" ConnName="Stardust" BaseClass="Entity" Output="" Version="11.1.2022.0523" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model2022.xsd">
   <Table Name="AppDeploy" Description="应用部署。关联多个版本，关联多个节点服务器">
     <Columns>
       <Column Name="Id" DataType="Int32" PrimaryKey="True" Description="编号" />
@@ -12,13 +12,13 @@
       <Column Name="Arguments" DataType="String" Description="参数。启动应用的参数" />
       <Column Name="WorkingDirectory" DataType="String" Description="工作目录。应用根目录" />
       <Column Name="AutoStart" DataType="Boolean" Description="自动启动。系统重启时，或应用退出后，自动拉起应用" />
-      <Column Name="CreateUserId" DataType="Int32" Description="创建者" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" />
-      <Column Name="UpdateUserId" DataType="Int32" Description="更新者" />
-      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
-      <Column Name="UpdateIP" DataType="String" Description="更新地址" />
-      <Column Name="Remark" DataType="String" Length="500" Description="备注" />
+      <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+      <Column Name="UpdateUserId" DataType="Int32" Description="更新者" Category="扩展" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+      <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
     </Columns>
     <Indexes>
       <Index Columns="Name" Unique="True" />
@@ -34,9 +34,9 @@
       <Column Name="Environment" DataType="String" Description="环境。prod/test/dev/uat等" />
       <Column Name="Arguments" DataType="String" Description="参数。启动应用的参数，节点专用配置优先于应用配置" />
       <Column Name="WorkingDirectory" DataType="String" Description="工作目录。应用根目录，节点专用配置优先于应用配置" />
-      <Column Name="CreateUserId" DataType="Int32" Description="创建人" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="CreateUserId" DataType="Int32" Description="创建人" Category="扩展" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
     </Columns>
     <Indexes>
       <Index Columns="AppId" />
@@ -51,9 +51,9 @@
       <Column Name="Environment" DataType="String" Description="环境。prod/test/dev/uat等" />
       <Column Name="IP" DataType="String" Description="IP地址。节点本地IP地址" />
       <Column Name="ProcessId" DataType="Int32" Description="进程。应用在该节点上的进程" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" />
-      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
     </Columns>
     <Indexes>
       <Index Columns="AppId,NodeId" />
@@ -67,13 +67,13 @@
       <Column Name="Version" DataType="String" Master="True" Nullable="False" Description="版本" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Url" DataType="String" ItemType="file" Description="资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖" />
-      <Column Name="CreateUserId" DataType="Int32" Description="创建者" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" />
-      <Column Name="UpdateUserId" DataType="Int32" Description="更新者" />
-      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
-      <Column Name="UpdateIP" DataType="String" Description="更新地址" />
-      <Column Name="Remark" DataType="String" Length="500" Description="备注" />
+      <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+      <Column Name="UpdateUserId" DataType="Int32" Description="更新者" Category="扩展" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+      <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
     </Columns>
     <Indexes>
       <Index Columns="AppId,Version" Unique="True" />
@@ -86,10 +86,10 @@
       <Column Name="Action" DataType="String" Nullable="False" Description="操作" />
       <Column Name="Success" DataType="Boolean" Description="成功" />
       <Column Name="Remark" DataType="String" Length="2000" Description="内容" />
-      <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
-      <Column Name="CreateUserId" DataType="Int32" Description="创建者" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" />
+      <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
+      <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
     </Columns>
     <Indexes>
       <Index Columns="AppId,Id" />

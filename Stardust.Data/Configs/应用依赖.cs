@@ -46,6 +46,7 @@ namespace Stardust.Data.Configs
 
         private Int32 _CreateUserID;
         /// <summary>创建者</summary>
+        [Category("扩展")]
         [DisplayName("创建者")]
         [Description("创建者")]
         [DataObjectField(false, false, false, 0)]
@@ -54,6 +55,7 @@ namespace Stardust.Data.Configs
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
+        [Category("扩展")]
         [DisplayName("创建时间")]
         [Description("创建时间")]
         [DataObjectField(false, false, true, 0)]
@@ -62,6 +64,7 @@ namespace Stardust.Data.Configs
 
         private String _CreateIP;
         /// <summary>创建地址</summary>
+        [Category("扩展")]
         [DisplayName("创建地址")]
         [Description("创建地址")]
         [DataObjectField(false, false, true, 50)]

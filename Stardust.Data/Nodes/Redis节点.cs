@@ -117,6 +117,7 @@ namespace Stardust.Data.Nodes
 
         private String _WebHook;
         /// <summary>告警机器人。钉钉、企业微信等</summary>
+        [Category("告警")]
         [DisplayName("告警机器人")]
         [Description("告警机器人。钉钉、企业微信等")]
         [DataObjectField(false, false, true, 500)]
@@ -125,6 +126,7 @@ namespace Stardust.Data.Nodes
 
         private Int32 _AlarmMemoryRate;
         /// <summary>内存告警。内存告警的百分比阈值，百分之一</summary>
+        [Category("告警")]
         [DisplayName("内存告警")]
         [Description("内存告警。内存告警的百分比阈值，百分之一")]
         [DataObjectField(false, false, false, 0)]
@@ -133,6 +135,7 @@ namespace Stardust.Data.Nodes
 
         private Int32 _AlarmConnections;
         /// <summary>连接告警。连接数告警阈值</summary>
+        [Category("告警")]
         [DisplayName("连接告警")]
         [Description("连接告警。连接数告警阈值")]
         [DataObjectField(false, false, false, 0)]
@@ -141,6 +144,7 @@ namespace Stardust.Data.Nodes
 
         private Int32 _AlarmSpeed;
         /// <summary>速度告警。速度告警阈值</summary>
+        [Category("告警")]
         [DisplayName("速度告警")]
         [Description("速度告警。速度告警阈值")]
         [DataObjectField(false, false, false, 0)]
@@ -149,6 +153,7 @@ namespace Stardust.Data.Nodes
 
         private Int32 _AlarmInputKbps;
         /// <summary>入流量告警。入流量告警阈值</summary>
+        [Category("告警")]
         [DisplayName("入流量告警")]
         [Description("入流量告警。入流量告警阈值")]
         [DataObjectField(false, false, false, 0)]
@@ -157,6 +162,7 @@ namespace Stardust.Data.Nodes
 
         private Int32 _AlarmOutputKbps;
         /// <summary>出流量告警。出流量告警阈值</summary>
+        [Category("告警")]
         [DisplayName("出流量告警")]
         [Description("出流量告警。出流量告警阈值")]
         [DataObjectField(false, false, false, 0)]
@@ -165,6 +171,7 @@ namespace Stardust.Data.Nodes
 
         private String _CreateUser;
         /// <summary>创建人</summary>
+        [Category("扩展")]
         [DisplayName("创建人")]
         [Description("创建人")]
         [DataObjectField(false, false, true, 50)]
@@ -173,6 +180,7 @@ namespace Stardust.Data.Nodes
 
         private Int32 _CreateUserID;
         /// <summary>创建者</summary>
+        [Category("扩展")]
         [DisplayName("创建者")]
         [Description("创建者")]
         [DataObjectField(false, false, false, 0)]
@@ -181,6 +189,7 @@ namespace Stardust.Data.Nodes
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
+        [Category("扩展")]
         [DisplayName("创建时间")]
         [Description("创建时间")]
         [DataObjectField(false, false, true, 0)]
@@ -189,6 +198,7 @@ namespace Stardust.Data.Nodes
 
         private String _CreateIP;
         /// <summary>创建地址</summary>
+        [Category("扩展")]
         [DisplayName("创建地址")]
         [Description("创建地址")]
         [DataObjectField(false, false, true, 50)]
@@ -197,6 +207,7 @@ namespace Stardust.Data.Nodes
 
         private String _UpdateUser;
         /// <summary>更新人</summary>
+        [Category("扩展")]
         [DisplayName("更新人")]
         [Description("更新人")]
         [DataObjectField(false, false, true, 50)]
@@ -205,6 +216,7 @@ namespace Stardust.Data.Nodes
 
         private Int32 _UpdateUserID;
         /// <summary>更新者</summary>
+        [Category("扩展")]
         [DisplayName("更新者")]
         [Description("更新者")]
         [DataObjectField(false, false, false, 0)]
@@ -213,6 +225,7 @@ namespace Stardust.Data.Nodes
 
         private DateTime _UpdateTime;
         /// <summary>更新时间</summary>
+        [Category("扩展")]
         [DisplayName("更新时间")]
         [Description("更新时间")]
         [DataObjectField(false, false, true, 0)]
@@ -221,6 +234,7 @@ namespace Stardust.Data.Nodes
 
         private String _UpdateIP;
         /// <summary>更新地址</summary>
+        [Category("扩展")]
         [DisplayName("更新地址")]
         [Description("更新地址")]
         [DataObjectField(false, false, true, 50)]
@@ -229,6 +243,7 @@ namespace Stardust.Data.Nodes
 
         private String _Remark;
         /// <summary>备注</summary>
+        [Category("扩展")]
         [DisplayName("备注")]
         [Description("备注")]
         [DataObjectField(false, false, true, 500)]

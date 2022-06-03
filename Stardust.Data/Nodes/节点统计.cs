@@ -126,6 +126,7 @@ namespace Stardust.Data.Nodes
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
+        [Category("扩展")]
         [DisplayName("创建时间")]
         [Description("创建时间")]
         [DataObjectField(false, false, true, 0)]
@@ -134,6 +135,7 @@ namespace Stardust.Data.Nodes
 
         private DateTime _UpdateTime;
         /// <summary>更新时间</summary>
+        [Category("扩展")]
         [DisplayName("更新时间")]
         [Description("更新时间")]
         [DataObjectField(false, false, true, 0)]
@@ -142,6 +144,7 @@ namespace Stardust.Data.Nodes
 
         private String _Remark;
         /// <summary>备注</summary>
+        [Category("扩展")]
         [DisplayName("备注")]
         [Description("备注")]
         [DataObjectField(false, false, true, 500)]

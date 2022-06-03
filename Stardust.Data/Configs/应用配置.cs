@@ -126,6 +126,7 @@ namespace Stardust.Data.Configs
 
         private Boolean _EnableApollo;
         /// <summary>阿波罗</summary>
+        [Category("阿波罗")]
         [DisplayName("阿波罗")]
         [Description("阿波罗")]
         [DataObjectField(false, false, false, 0)]
@@ -134,6 +135,7 @@ namespace Stardust.Data.Configs
 
         private String _ApolloMetaServer;
         /// <summary>阿波罗地址</summary>
+        [Category("阿波罗")]
         [DisplayName("阿波罗地址")]
         [Description("阿波罗地址")]
         [DataObjectField(false, false, true, 50)]
@@ -142,6 +144,7 @@ namespace Stardust.Data.Configs
 
         private String _ApolloAppId;
         /// <summary>阿波罗账号</summary>
+        [Category("阿波罗")]
         [DisplayName("阿波罗账号")]
         [Description("阿波罗账号")]
         [DataObjectField(false, false, true, 50)]
@@ -150,6 +153,7 @@ namespace Stardust.Data.Configs
 
         private String _ApolloNameSpace;
         /// <summary>阿波罗命名空间。默认application，也可以填依赖的公共命名空间，但建议为公共命名空间建立应用依赖。</summary>
+        [Category("阿波罗")]
         [DisplayName("阿波罗命名空间")]
         [Description("阿波罗命名空间。默认application，也可以填依赖的公共命名空间，但建议为公共命名空间建立应用依赖。")]
         [DataObjectField(false, false, true, 50)]
@@ -182,6 +186,7 @@ namespace Stardust.Data.Configs
 
         private Int32 _CreateUserID;
         /// <summary>创建者</summary>
+        [Category("扩展")]
         [DisplayName("创建者")]
         [Description("创建者")]
         [DataObjectField(false, false, false, 0)]
@@ -190,6 +195,7 @@ namespace Stardust.Data.Configs
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
+        [Category("扩展")]
         [DisplayName("创建时间")]
         [Description("创建时间")]
         [DataObjectField(false, false, true, 0)]
@@ -198,6 +204,7 @@ namespace Stardust.Data.Configs
 
         private String _CreateIP;
         /// <summary>创建地址</summary>
+        [Category("扩展")]
         [DisplayName("创建地址")]
         [Description("创建地址")]
         [DataObjectField(false, false, true, 50)]
@@ -206,6 +213,7 @@ namespace Stardust.Data.Configs
 
         private Int32 _UpdateUserID;
         /// <summary>更新者</summary>
+        [Category("扩展")]
         [DisplayName("更新者")]
         [Description("更新者")]
         [DataObjectField(false, false, false, 0)]
@@ -214,6 +222,7 @@ namespace Stardust.Data.Configs
 
         private DateTime _UpdateTime;
         /// <summary>更新时间</summary>
+        [Category("扩展")]
         [DisplayName("更新时间")]
         [Description("更新时间")]
         [DataObjectField(false, false, true, 0)]
@@ -222,6 +231,7 @@ namespace Stardust.Data.Configs
 
         private String _UpdateIP;
         /// <summary>更新地址</summary>
+        [Category("扩展")]
         [DisplayName("更新地址")]
         [Description("更新地址")]
         [DataObjectField(false, false, true, 50)]
@@ -230,6 +240,7 @@ namespace Stardust.Data.Configs
 
         private String _Remark;
         /// <summary>备注</summary>
+        [Category("扩展")]
         [DisplayName("备注")]
         [Description("备注")]
         [DataObjectField(false, false, true, 500)]

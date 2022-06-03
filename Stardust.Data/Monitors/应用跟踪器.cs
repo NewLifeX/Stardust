@@ -166,6 +166,7 @@ namespace Stardust.Data.Monitors
 
         private Int32 _AlarmThreshold;
         /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用</summary>
+        [Category("告警")]
         [DisplayName("告警阈值")]
         [Description("告警阈值。错误数达到该值时触发告警，0表示不启用")]
         [DataObjectField(false, false, false, 0)]
@@ -174,6 +175,7 @@ namespace Stardust.Data.Monitors
 
         private Double _AlarmErrorRate;
         /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用</summary>
+        [Category("告警")]
         [DisplayName("告警错误率")]
         [Description("告警错误率。错误率达到该值时触发告警，0表示不启用")]
         [DataObjectField(false, false, false, 0)]
@@ -182,6 +184,7 @@ namespace Stardust.Data.Monitors
 
         private String _AlarmRobot;
         /// <summary>告警机器人。钉钉、企业微信等</summary>
+        [Category("告警")]
         [DisplayName("告警机器人")]
         [Description("告警机器人。钉钉、企业微信等")]
         [DataObjectField(false, false, true, 500)]
@@ -190,6 +193,7 @@ namespace Stardust.Data.Monitors
 
         private String _CreateUser;
         /// <summary>创建者</summary>
+        [Category("扩展")]
         [DisplayName("创建者")]
         [Description("创建者")]
         [DataObjectField(false, false, true, 50)]
@@ -197,15 +201,17 @@ namespace Stardust.Data.Monitors
         public String CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
 
         private Int32 _CreateUserID;
-        /// <summary>创建人</summary>
-        [DisplayName("创建人")]
-        [Description("创建人")]
+        /// <summary>创建者</summary>
+        [Category("扩展")]
+        [DisplayName("创建者")]
+        [Description("创建者")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("CreateUserID", "创建人", "")]
+        [BindColumn("CreateUserID", "创建者", "")]
         public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
+        [Category("扩展")]
         [DisplayName("创建时间")]
         [Description("创建时间")]
         [DataObjectField(false, false, true, 0)]
@@ -214,6 +220,7 @@ namespace Stardust.Data.Monitors
 
         private String _CreateIP;
         /// <summary>创建地址</summary>
+        [Category("扩展")]
         [DisplayName("创建地址")]
         [Description("创建地址")]
         [DataObjectField(false, false, true, 50)]
@@ -222,6 +229,7 @@ namespace Stardust.Data.Monitors
 
         private String _UpdateUser;
         /// <summary>更新者</summary>
+        [Category("扩展")]
         [DisplayName("更新者")]
         [Description("更新者")]
         [DataObjectField(false, false, true, 50)]
@@ -230,6 +238,7 @@ namespace Stardust.Data.Monitors
 
         private Int32 _UpdateUserID;
         /// <summary>更新人</summary>
+        [Category("扩展")]
         [DisplayName("更新人")]
         [Description("更新人")]
         [DataObjectField(false, false, false, 0)]
@@ -238,6 +247,7 @@ namespace Stardust.Data.Monitors
 
         private DateTime _UpdateTime;
         /// <summary>更新时间</summary>
+        [Category("扩展")]
         [DisplayName("更新时间")]
         [Description("更新时间")]
         [DataObjectField(false, false, true, 0)]
@@ -246,6 +256,7 @@ namespace Stardust.Data.Monitors
 
         private String _UpdateIP;
         /// <summary>更新地址</summary>
+        [Category("扩展")]
         [DisplayName("更新地址")]
         [Description("更新地址")]
         [DataObjectField(false, false, true, 50)]
@@ -404,7 +415,7 @@ namespace Stardust.Data.Monitors
             /// <summary>创建者</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
 
-            /// <summary>创建人</summary>
+            /// <summary>创建者</summary>
             public static readonly Field CreateUserID = FindByName("CreateUserID");
 
             /// <summary>创建时间</summary>
@@ -497,7 +508,7 @@ namespace Stardust.Data.Monitors
             /// <summary>创建者</summary>
             public const String CreateUser = "CreateUser";
 
-            /// <summary>创建人</summary>
+            /// <summary>创建者</summary>
             public const String CreateUserID = "CreateUserID";
 
             /// <summary>创建时间</summary>

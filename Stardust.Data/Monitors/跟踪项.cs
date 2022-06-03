@@ -149,6 +149,7 @@ namespace Stardust.Data.Monitors
 
         private String _CreateIP;
         /// <summary>创建地址</summary>
+        [Category("扩展")]
         [DisplayName("创建地址")]
         [Description("创建地址")]
         [DataObjectField(false, false, true, 50)]
@@ -157,6 +158,7 @@ namespace Stardust.Data.Monitors
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
+        [Category("扩展")]
         [DisplayName("创建时间")]
         [Description("创建时间")]
         [DataObjectField(false, false, true, 0)]
@@ -165,6 +167,7 @@ namespace Stardust.Data.Monitors
 
         private String _UpdateUser;
         /// <summary>更新者</summary>
+        [Category("扩展")]
         [DisplayName("更新者")]
         [Description("更新者")]
         [DataObjectField(false, false, true, 50)]
@@ -173,6 +176,7 @@ namespace Stardust.Data.Monitors
 
         private Int32 _UpdateUserID;
         /// <summary>更新人</summary>
+        [Category("扩展")]
         [DisplayName("更新人")]
         [Description("更新人")]
         [DataObjectField(false, false, false, 0)]
@@ -181,6 +185,7 @@ namespace Stardust.Data.Monitors
 
         private DateTime _UpdateTime;
         /// <summary>更新时间</summary>
+        [Category("扩展")]
         [DisplayName("更新时间")]
         [Description("更新时间")]
         [DataObjectField(false, false, true, 0)]
@@ -189,6 +194,7 @@ namespace Stardust.Data.Monitors
 
         private String _UpdateIP;
         /// <summary>更新地址</summary>
+        [Category("扩展")]
         [DisplayName("更新地址")]
         [Description("更新地址")]
         [DataObjectField(false, false, true, 50)]
@@ -197,6 +203,7 @@ namespace Stardust.Data.Monitors
 
         private String _Remark;
         /// <summary>备注</summary>
+        [Category("扩展")]
         [DisplayName("备注")]
         [Description("备注")]
         [DataObjectField(false, false, true, 500)]

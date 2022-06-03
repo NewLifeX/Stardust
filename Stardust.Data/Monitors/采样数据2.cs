@@ -141,6 +141,7 @@ namespace Stardust.Data.Monitors
 
         private String _CreateUser;
         /// <summary>创建者</summary>
+        [Category("扩展")]
         [DisplayName("创建者")]
         [Description("创建者")]
         [DataObjectField(false, false, true, 50)]
@@ -148,15 +149,17 @@ namespace Stardust.Data.Monitors
         public String CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
 
         private Int32 _CreateUserID;
-        /// <summary>创建人</summary>
-        [DisplayName("创建人")]
-        [Description("创建人")]
+        /// <summary>创建者</summary>
+        [Category("扩展")]
+        [DisplayName("创建者")]
+        [Description("创建者")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("CreateUserID", "创建人", "")]
+        [BindColumn("CreateUserID", "创建者", "")]
         public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
 
         private String _CreateIP;
         /// <summary>创建地址</summary>
+        [Category("扩展")]
         [DisplayName("创建地址")]
         [Description("创建地址")]
         [DataObjectField(false, false, true, 50)]
@@ -165,6 +168,7 @@ namespace Stardust.Data.Monitors
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
+        [Category("扩展")]
         [DisplayName("创建时间")]
         [Description("创建时间")]
         [DataObjectField(false, false, true, 0)]
@@ -285,7 +289,7 @@ namespace Stardust.Data.Monitors
             /// <summary>创建者</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
 
-            /// <summary>创建人</summary>
+            /// <summary>创建者</summary>
             public static readonly Field CreateUserID = FindByName("CreateUserID");
 
             /// <summary>创建地址</summary>
@@ -348,7 +352,7 @@ namespace Stardust.Data.Monitors
             /// <summary>创建者</summary>
             public const String CreateUser = "CreateUser";
 
-            /// <summary>创建人</summary>
+            /// <summary>创建者</summary>
             public const String CreateUserID = "CreateUserID";
 
             /// <summary>创建地址</summary>

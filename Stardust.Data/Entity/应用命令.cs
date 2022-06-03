@@ -86,6 +86,7 @@ namespace Stardust.Data
 
         private String _TraceId;
         /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        [Category("扩展")]
         [DisplayName("追踪")]
         [Description("追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
         [DataObjectField(false, false, true, 50)]
@@ -94,6 +95,7 @@ namespace Stardust.Data
 
         private String _CreateUser;
         /// <summary>创建者</summary>
+        [Category("扩展")]
         [DisplayName("创建者")]
         [Description("创建者")]
         [DataObjectField(false, false, true, 50)]
@@ -101,15 +103,17 @@ namespace Stardust.Data
         public String CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
 
         private Int32 _CreateUserID;
-        /// <summary>创建人</summary>
-        [DisplayName("创建人")]
-        [Description("创建人")]
+        /// <summary>创建者</summary>
+        [Category("扩展")]
+        [DisplayName("创建者")]
+        [Description("创建者")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("CreateUserID", "创建人", "")]
+        [BindColumn("CreateUserID", "创建者", "")]
         public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
+        [Category("扩展")]
         [DisplayName("创建时间")]
         [Description("创建时间")]
         [DataObjectField(false, false, true, 0)]
@@ -118,6 +122,7 @@ namespace Stardust.Data
 
         private String _CreateIP;
         /// <summary>创建地址</summary>
+        [Category("扩展")]
         [DisplayName("创建地址")]
         [Description("创建地址")]
         [DataObjectField(false, false, true, 50)]
@@ -126,6 +131,7 @@ namespace Stardust.Data
 
         private Int32 _UpdateUserID;
         /// <summary>更新者</summary>
+        [Category("扩展")]
         [DisplayName("更新者")]
         [Description("更新者")]
         [DataObjectField(false, false, false, 0)]
@@ -134,6 +140,7 @@ namespace Stardust.Data
 
         private DateTime _UpdateTime;
         /// <summary>更新时间</summary>
+        [Category("扩展")]
         [DisplayName("更新时间")]
         [Description("更新时间")]
         [DataObjectField(false, false, true, 0)]
@@ -142,6 +149,7 @@ namespace Stardust.Data
 
         private String _UpdateIP;
         /// <summary>更新地址</summary>
+        [Category("扩展")]
         [DisplayName("更新地址")]
         [Description("更新地址")]
         [DataObjectField(false, false, true, 50)]
@@ -238,7 +246,7 @@ namespace Stardust.Data
             /// <summary>创建者</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
 
-            /// <summary>创建人</summary>
+            /// <summary>创建者</summary>
             public static readonly Field CreateUserID = FindByName("CreateUserID");
 
             /// <summary>创建时间</summary>
@@ -292,7 +300,7 @@ namespace Stardust.Data
             /// <summary>创建者</summary>
             public const String CreateUser = "CreateUser";
 
-            /// <summary>创建人</summary>
+            /// <summary>创建者</summary>
             public const String CreateUserID = "CreateUserID";
 
             /// <summary>创建时间</summary>

@@ -71,6 +71,7 @@ namespace Stardust.Data
 
         private String _TraceId;
         /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        [Category("扩展")]
         [DisplayName("追踪")]
         [Description("追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
         [DataObjectField(false, false, true, 50)]
@@ -87,6 +88,7 @@ namespace Stardust.Data
 
         private String _Creator;
         /// <summary>创建者。服务端节点</summary>
+        [Category("扩展")]
         [DisplayName("创建者")]
         [Description("创建者。服务端节点")]
         [DataObjectField(false, false, true, 50)]
@@ -95,6 +97,7 @@ namespace Stardust.Data
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
+        [Category("扩展")]
         [DisplayName("创建时间")]
         [Description("创建时间")]
         [DataObjectField(false, false, true, 0)]
@@ -103,6 +106,7 @@ namespace Stardust.Data
 
         private String _CreateIP;
         /// <summary>创建地址</summary>
+        [Category("扩展")]
         [DisplayName("创建地址")]
         [Description("创建地址")]
         [DataObjectField(false, false, true, 50)]
