@@ -176,7 +176,9 @@ public class NodeService
         var di = inf.Node;
         var code = BuildCode(di, inf.ProductCode, set);
         if (code.IsNullOrEmpty()) code = Rand.NextString(8);
-        if (node == null) node = Node.FindByCode(code);
+
+        // 如果节点编码有改变，则倾向于新建节点
+        if (node == null || node.Code != code) node = Node.FindByCode(code);
 
         if (node == null)
         {
@@ -184,7 +186,7 @@ public class NodeService
             var list = Node.Search(di.UUID, di.MachineGuid, di.Macs);
 
             // 当前节点信息，取较老者
-            list = list.OrderBy(e => e.ID).ToList();
+            list = list.Where(e => e.ProductCode.IsNullOrEmpty() || e.ProductCode == inf.ProductCode).OrderBy(e => e.ID).ToList();
 
             // 找到节点
             if (node == null) node = list.FirstOrDefault();
@@ -258,6 +260,8 @@ public class NodeService
             if (uid.Contains('{') || uid.Contains('}')) XTrace.WriteLine("节点编码公式有误，存在未解析变量，uid={0}", uid);
             if (!uid.IsNullOrEmpty())
             {
+                XTrace.WriteLine("生成节点编码 uid={0} alg={1}", uid, ss[0]);
+
                 // 使用产品类别加密一下，确保不同类别有不同编码
                 var buf = uid.GetBytes();
                 //code = buf.Crc().GetBytes().ToHex();
@@ -553,7 +557,7 @@ public class NodeService
         };
     }
 
-    public Node DecodeToken(String token, String tokenSecret)
+    public (Node, Exception) DecodeToken(String token, String tokenSecret)
     {
         if (token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(token));
         //if (token.IsNullOrEmpty()) throw new ApiException(402, $"节点未登录[ip={UserHost}]");
@@ -568,15 +572,17 @@ public class NodeService
 
         var rs = jwt.TryDecode(token, out var message);
         var node = Node.FindByCode(jwt.Subject);
+
+        Exception ex = null;
         if (!rs || node == null)
         {
             if (node != null)
-                throw new ApiException(403, $"[{node.Name}/{node.Code}]非法访问 {message}");
+                ex = new ApiException(403, $"[{node.Name}/{node.Code}]非法访问 {message}");
             else
-                throw new ApiException(403, $"[{jwt.Subject}]非法访问 {message}");
+                ex = new ApiException(403, $"[{jwt.Subject}]非法访问 {message}");
         }
 
-        return node;
+        return (node, ex);
     }
 
     public TokenModel ValidAndIssueToken(String deviceCode, String token, Setting set)

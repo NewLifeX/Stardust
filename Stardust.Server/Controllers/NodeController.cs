@@ -35,8 +35,11 @@ public class NodeController : BaseController
     #region 令牌验证
     protected override Boolean OnAuthorize(String token)
     {
-        _node = _nodeService.DecodeToken(token, _setting.TokenSecret);
-        return _node != null;
+        var (node, ex) = _nodeService.DecodeToken(token, _setting.TokenSecret);
+        _node = node;
+        if (ex != null) throw ex;
+
+        return node != null;
     }
 
     protected override void OnWriteError(String action, String message) => WriteHistory(_node, action, false, message, UserHost);
@@ -254,8 +257,11 @@ public class NodeController : BaseController
 
     private async Task Handle(WebSocket socket, String token, String ip)
     {
-        var node = _nodeService.DecodeToken(token, _setting.TokenSecret);
+        var (node, error) = _nodeService.DecodeToken(token, _setting.TokenSecret);
         if (node == null) throw new InvalidOperationException($"未登录！[ip={ip}]");
+
+        _node = node;
+        if (error != null) throw error;
 
         //XTrace.WriteLine("WebSocket连接 {0}", node);
         WriteHistory(node, "WebSocket连接", true, socket.State + "");
