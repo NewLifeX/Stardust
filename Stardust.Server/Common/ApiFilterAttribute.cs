@@ -46,6 +46,8 @@ public sealed class ApiFilterAttribute : ActionFilterAttribute
     /// <param name="context"></param>
     public override void OnActionExecuted(ActionExecutedContext context)
     {
+        if (context.HttpContext.WebSockets.IsWebSocketRequest) return;
+
         if (context.Result != null)
         {
             if (context.Result is ObjectResult obj)
