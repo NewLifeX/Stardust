@@ -1,8 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
-using NewLife;
+﻿using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Data;
@@ -15,11 +11,16 @@ namespace Stardust.Server.Services
     {
         #region 属性
         private TimerX _timer;
+        private readonly Setting _setting;
         private readonly ITracer _tracer;
         #endregion
 
         #region 构造
-        public NodeOnlineService(ITracer tracer) => _tracer = tracer;
+        public NodeOnlineService(Setting setting, ITracer tracer)
+        {
+            _setting = setting;
+            _tracer = tracer;
+        }
         #endregion
 
         #region 方法
@@ -40,7 +41,7 @@ namespace Stardust.Server.Services
         private void CheckNodeOnline(Object state)
         {
             // 节点超时
-            var set = Setting.Current;
+            var set = _setting;
             var sessionTimeout = set.SessionTimeout;
             if (sessionTimeout > 0)
             {

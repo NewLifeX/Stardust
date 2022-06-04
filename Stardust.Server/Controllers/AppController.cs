@@ -74,6 +74,7 @@ public class AppController : BaseController
         return rs;
     }
 
+    [AllowAnonymous]
     [HttpGet(nameof(Ping))]
     public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.Now, };
     #endregion
@@ -221,16 +222,16 @@ public class AppController : BaseController
         if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定应用");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
 
-        var node = App.FindByName(model.Code);
-        if (node == null) throw new ArgumentOutOfRangeException(nameof(model.Code), "无效应用");
+        var target = App.FindByName(model.Code);
+        if (target == null) throw new ArgumentOutOfRangeException(nameof(model.Code), "无效应用");
 
         var app = _app;
         if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new InvalidOperationException("无权操作！");
 
-        if (app.AllowControlNodes != "*" && !node.Name.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
-            throw new InvalidOperationException($"[{app}]无权操作应用[{node}]！");
+        if (app.AllowControlNodes != "*" && !target.Name.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
+            throw new InvalidOperationException($"[{app}]无权操作应用[{target}]！");
 
-        var cmd = _registryService.SendCommand(node, model, app + "");
+        var cmd = _registryService.SendCommand(target, model, app + "");
 
         return cmd.Id;
     }

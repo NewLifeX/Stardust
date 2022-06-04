@@ -9,6 +9,7 @@ using NewLife.Web;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Common;
+using Stardust.Server.Models;
 using Stardust.Server.Services;
 
 namespace Stardust.Server.Controllers;
@@ -46,6 +47,7 @@ public class NodeController : BaseController
     [HttpPost(nameof(Login))]
     public LoginResponse Login(LoginInfo inf)
     {
+        var ip = UserHost;
         var code = inf.Code;
         var node = Node.FindByCode(code, true);
         var oldSecret = node?.Secret;
@@ -54,12 +56,12 @@ public class NodeController : BaseController
         if (node != null && !node.Enable) throw new ApiException(99, "禁止登录");
 
         // 设备不存在或者验证失败，执行注册流程
-        if (node == null || !_nodeService.Auth(node, inf.Secret))
-            node = _nodeService.Register(inf, UserHost);
+        if (node == null || !_nodeService.Auth(node, inf.Secret, inf, ip))
+            node = _nodeService.Register(inf, ip, _setting);
 
         if (node == null) throw new ApiException(12, "节点鉴权失败");
 
-        var tokenModel = _nodeService.Login(node, inf, UserHost);
+        var tokenModel = _nodeService.Login(node, inf, ip, _setting);
 
         var rs = new LoginResponse
         {
@@ -96,8 +98,9 @@ public class NodeController : BaseController
 
     #region 心跳
     [HttpPost(nameof(Ping))]
-    public PingResponse Ping(PingInfo inf) => _nodeService.Ping(_node, inf, Token, UserHost);
+    public PingResponse Ping(PingInfo inf) => _nodeService.Ping(_node, inf, Token, UserHost, _setting);
 
+    [AllowAnonymous]
     [HttpGet(nameof(Ping))]
     public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.Now, };
     #endregion
@@ -265,7 +268,7 @@ public class NodeController : BaseController
         }
 
         var source = new CancellationTokenSource();
-        _ = Task.Run(() => consumeMessage(socket, node, ip, source));
+        _ = Task.Run(() => ConsumeMessage(socket, node, ip, source));
         try
         {
             var buf = new Byte[4 * 1024];
@@ -304,7 +307,7 @@ public class NodeController : BaseController
         }
     }
 
-    private async Task consumeMessage(WebSocket socket, Node node, String ip, CancellationTokenSource source)
+    private async Task ConsumeMessage(WebSocket socket, Node node, String ip, CancellationTokenSource source)
     {
         var cancellationToken = source.Token;
         var queue = _queue.GetQueue<String>($"nodecmd:{node.Code}");
@@ -336,6 +339,20 @@ public class NodeController : BaseController
         {
             source.Cancel();
         }
+    }
+
+    /// <summary>向节点发送命令</summary>
+    /// <param name="model"></param>
+    /// <param name="token">应用令牌</param>
+    /// <returns></returns>
+    [AllowAnonymous]
+    [HttpPost(nameof(SendCommand))]
+    public Int32 SendCommand(CommandInModel model, String token)
+    {
+        if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定节点");
+        if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
+
+        return _nodeService.SendCommand(model, token, _setting);
     }
     #endregion
 
