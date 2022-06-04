@@ -1,38 +1,27 @@
 ﻿using System.Net.WebSockets;
-using System.Reflection;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Remoting;
-using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Common;
 using Stardust.Server.Services;
-using IActionFilter = Microsoft.AspNetCore.Mvc.Filters.IActionFilter;
 
 namespace Stardust.Server.Controllers;
 
-[ApiFilter]
 [ApiController]
 [Route("[controller]")]
-public class NodeController : ControllerBase, IActionFilter
+public class NodeController : BaseController
 {
-    /// <summary>用户主机</summary>
-    public String UserHost => HttpContext.GetUserHost();
-
-    private String _token;
     private Node _node;
     private readonly ICache _queue;
     private readonly NodeService _nodeService;
     private readonly TokenService _tokenService;
     private readonly Setting _setting;
-    private IDictionary<String, Object> _args;
 
     public NodeController(NodeService nodeService, TokenService tokenService, Setting setting, ICache queue)
     {
@@ -43,48 +32,17 @@ public class NodeController : ControllerBase, IActionFilter
     }
 
     #region 令牌验证
-    void IActionFilter.OnActionExecuting(ActionExecutingContext context)
+    protected override Boolean OnAuthorize(String token)
     {
-        _args = context.ActionArguments;
-
-        var token = _token = ApiFilterAttribute.GetToken(context.HttpContext);
-
-        try
-        {
-            if (!token.IsNullOrEmpty()) _node = _nodeService.DecodeToken(token, _setting.TokenSecret);
-
-            if (_node == null && context.ActionDescriptor is ControllerActionDescriptor act && !act.MethodInfo.IsDefined(typeof(AllowAnonymousAttribute)))
-            {
-                throw new ApiException(403, "节点认证失败");
-            }
-        }
-        catch (Exception ex)
-        {
-            var traceId = DefaultSpan.Current?.TraceId;
-            context.Result = ex is ApiException aex
-                ? new JsonResult(new { code = aex.Code, data = aex.Message, traceId })
-                : new JsonResult(new { code = 500, data = ex.Message, traceId });
-
-            WriteError(ex, context);
-        }
+        _node = _nodeService.DecodeToken(token, _setting.TokenSecret);
+        return _node != null;
     }
 
-    void IActionFilter.OnActionExecuted(ActionExecutedContext context)
-    {
-        if (context.Exception != null) WriteError(context.Exception, context);
-    }
-
-    private void WriteError(Exception ex, ActionContext context)
-    {
-        // 拦截全局异常，写日志
-        var action = context.HttpContext.Request.Path + "";
-        if (context.ActionDescriptor is ControllerActionDescriptor act) action = $"{act.ControllerName}/{act.ActionName}";
-
-        WriteHistory(_node, action, false, ex?.GetTrue() + Environment.NewLine + _args?.ToJson(true), UserHost);
-    }
+    protected override void OnWriteError(String action, String message) => WriteHistory(_node, action, false, message, UserHost);
     #endregion
 
     #region 登录
+    [AllowAnonymous]
     [HttpPost(nameof(Login))]
     public LoginResponse Login(LoginInfo inf)
     {
@@ -138,7 +96,7 @@ public class NodeController : ControllerBase, IActionFilter
 
     #region 心跳
     [HttpPost(nameof(Ping))]
-    public PingResponse Ping(PingInfo inf) => _nodeService.Ping(_node, inf, _token, UserHost);
+    public PingResponse Ping(PingInfo inf) => _nodeService.Ping(_node, inf, Token, UserHost);
 
     [HttpGet(nameof(Ping))]
     public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.Now, };
@@ -196,7 +154,7 @@ public class NodeController : ControllerBase, IActionFilter
     /// <param name="model">服务</param>
     /// <returns></returns>
     [HttpPost(nameof(CommandReply))]
-    public Int32 CommandReply(CommandReplyModel model) => _node == null ? throw new ApiException(402, "节点未登录") : _nodeService.CommandReply(model, _token);
+    public Int32 CommandReply(CommandReplyModel model) => _node == null ? throw new ApiException(402, "节点未登录") : _nodeService.CommandReply(model, Token);
     #endregion
 
     #region 升级

@@ -22,7 +22,6 @@
   <ItemGroup>
     <Compile Remove="Common\TokenFilter.cs" />
     <Compile Remove="Common\TokenSession.cs" />
-    <Compile Remove="Controllers\BaseController.cs" />
     <Compile Remove="StarService.cs" />
   </ItemGroup>
 

@@ -1,13 +1,9 @@
 ﻿using System.Net.WebSockets;
-using System.Reflection;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Data;
 using NewLife.Log;
-using NewLife.Remoting;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
@@ -15,20 +11,14 @@ using Stardust.Models;
 using Stardust.Server.Common;
 using Stardust.Server.Models;
 using Stardust.Server.Services;
-using IActionFilter = Microsoft.AspNetCore.Mvc.Filters.IActionFilter;
 
 namespace Stardust.Server.Controllers;
 
 /// <summary>应用接口控制器</summary>
-[ApiFilter]
 [ApiController]
 [Route("[controller]")]
-public class AppController : ControllerBase, IActionFilter
+public class AppController : BaseController
 {
-    /// <summary>用户主机</summary>
-    public String UserHost => HttpContext.GetUserHost();
-
-    private String _token;
     private App _app;
     private String _clientId;
     private readonly TokenService _tokenService;
@@ -36,7 +26,6 @@ public class AppController : ControllerBase, IActionFilter
     private readonly ITracer _tracer;
     private readonly AppQueueService _queue;
     private readonly Setting _setting;
-    private IDictionary<String, Object> _args;
 
     public AppController(TokenService tokenService, RegistryService registryService, AppQueueService queue, Setting setting, ITracer tracer)
     {
@@ -48,57 +37,24 @@ public class AppController : ControllerBase, IActionFilter
     }
 
     #region 令牌验证
-    void IActionFilter.OnActionExecuting(ActionExecutingContext context)
+    protected override Boolean OnAuthorize(String token)
     {
-        _args = context.ActionArguments;
+        var (jwt, app) = _tokenService.DecodeToken(token, _setting.TokenSecret);
+        _app = app;
+        _clientId = jwt.Id;
 
-        var token = _token = ApiFilterAttribute.GetToken(HttpContext);
-
-        try
-        {
-            if (!token.IsNullOrEmpty())
-            {
-                var (jwt, app) = _tokenService.DecodeToken(token, _setting.TokenSecret);
-                _app = app;
-                _clientId = jwt.Id;
-            }
-
-            if (_app == null && context.ActionDescriptor is ControllerActionDescriptor act && !act.MethodInfo.IsDefined(typeof(AllowAnonymousAttribute)))
-            {
-                throw new ApiException(403, "应用认证失败");
-            }
-        }
-        catch (Exception ex)
-        {
-            var traceId = DefaultSpan.Current?.TraceId;
-            context.Result = ex is ApiException aex
-                ? new JsonResult(new { code = aex.Code, data = aex.Message, traceId })
-                : new JsonResult(new { code = 500, data = ex.Message, traceId });
-
-            WriteError(ex, context);
-        }
+        return app != null;
     }
 
-    void IActionFilter.OnActionExecuted(ActionExecutedContext context)
-    {
-        if (context.Exception != null) WriteError(context.Exception, context);
-    }
-
-    private void WriteError(Exception ex, ActionContext context)
-    {
-        // 拦截全局异常，写日志
-        var action = context.HttpContext.Request.Path + "";
-        if (context.ActionDescriptor is ControllerActionDescriptor act) action = $"{act.ControllerName}/{act.ActionName}";
-
-        WriteHistory(action, false, ex?.GetTrue() + Environment.NewLine + _args?.ToJson(true), _clientId, UserHost);
-    }
+    protected override void OnWriteError(String action, String message) => WriteHistory(action, false, message, _clientId, UserHost);
     #endregion
 
     #region 注册&心跳
+    [AllowAnonymous]
     [HttpPost(nameof(Register))]
     public String Register(AppModel inf)
     {
-        _registryService.Register(_app, inf, UserHost, _clientId, _token);
+        _registryService.Register(_app, inf, UserHost, _clientId, Token);
 
         return _app?.ToString();
     }
@@ -113,7 +69,7 @@ public class AppController : ControllerBase, IActionFilter
             Period = _app.Period,
         };
 
-        _registryService.Ping(_app, inf, UserHost, _clientId, _token);
+        _registryService.Ping(_app, inf, UserHost, _clientId, Token);
 
         return rs;
     }
@@ -156,7 +112,7 @@ public class AppController : ControllerBase, IActionFilter
 
         var ip = UserHost;
         var source = new CancellationTokenSource();
-        _ = Task.Run(() => consumeMessage(socket, app, clientId, ip, source));
+        _ = Task.Run(() => ConsumeMessage(socket, app, clientId, ip, source));
         try
         {
             var buf = new Byte[4 * 1024];
@@ -195,7 +151,7 @@ public class AppController : ControllerBase, IActionFilter
         }
     }
 
-    private async Task consumeMessage(WebSocket socket, App app, String clientId, String ip, CancellationTokenSource source)
+    private async Task ConsumeMessage(WebSocket socket, App app, String clientId, String ip, CancellationTokenSource source)
     {
         DefaultSpan.Current = null;
         var cancellationToken = source.Token;
