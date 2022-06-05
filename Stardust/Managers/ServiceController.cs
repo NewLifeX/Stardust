@@ -216,6 +216,10 @@ internal class ServiceController : DisposeBase
 
     private readonly Dictionary<String, DateTime> _files = new();
 
+    /// <summary>是否已准备。发生文件变化时，进入就绪状态，持续5秒没有改变后执行重启</summary>
+    private Boolean _ready;
+    private DateTime _readyTime;
+
     private void MonitorFileChange(Object state)
     {
         var first = _files.Count == 0;
@@ -247,10 +251,36 @@ internal class ServiceController : DisposeBase
 
         if (!first && !changed.IsNullOrEmpty())
         {
-            Stop($"文件[{changed}]发生改变");
-            Thread.Sleep(Delay);
-            Start();
+            var msg = $"文件[{changed}]发生改变";
+            XTrace.WriteLine(msg);
+
+            // 进入就绪状态
+            if (!_ready)
+            {
+                Stop(msg);
+
+                _ready = true;
+
+                // 快速再次检查
+                _timer.SetNext(1000);
+            }
+
+            // 更新最后就绪时间，该时间之后5秒再启动
+            _readyTime = DateTime.Now;
         }
+
+        if (_ready && _readyTime.AddMilliseconds(Delay) < DateTime.Now)
+        {
+            Start();
+
+            _ready = false;
+        }
+    }
+
+    enum Status
+    {
+        None = 0,
+        Ready = 1,
     }
     #endregion
 

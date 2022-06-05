@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using NewLife;
 using NewLife.Configuration;
 using Stardust.Models;
 
@@ -75,18 +74,18 @@ namespace StarAgent
             base.OnLoaded();
         }
 
-        /// <summary>添加应用服务</summary>
-        /// <param name="services">应用服务集合</param>
-        public void Add(ServiceInfo[] services)
-        {
-            var list = Services.ToList();
-            foreach (var item in services)
-            {
-                if (!list.Any(e => e.Name.EqualIgnoreCase(item.Name))) list.Add(item);
-            }
+        ///// <summary>添加应用服务</summary>
+        ///// <param name="services">应用服务集合</param>
+        //public void Add(ServiceInfo[] services)
+        //{
+        //    var list = Services.ToList();
+        //    foreach (var item in services)
+        //    {
+        //        if (!list.Any(e => e.Name.EqualIgnoreCase(item.Name))) list.Add(item);
+        //    }
 
-            Services = list.ToArray();
-        }
+        //    Services = list.ToArray();
+        //}
         #endregion
     }
 }
