@@ -44,6 +44,9 @@ namespace Stardust.Web
             // 异步初始化
             Task.Run(InitAsync);
 
+            // 启用接口响应压缩
+            services.AddResponseCompression();
+
             services.AddControllersWithViews();
             services.AddCube();
         }
@@ -91,6 +94,8 @@ namespace Stardust.Web
             app.UseStardust();
             app.UseResponseCompression();
             app.UseCube(env);
+
+            app.UseResponseCompression();
 
             app.UseEndpoints(endpoints =>
             {

@@ -75,6 +75,9 @@ namespace Stardust.Server
             services.AddHostedService<ApolloService>();
             services.AddHostedService<ShardTableService>();
 
+            // 启用接口响应压缩
+            services.AddResponseCompression();
+
             services.AddControllers()
                 .AddJsonOptions(options =>
                 {
@@ -140,6 +143,8 @@ namespace Stardust.Server
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.UseResponseCompression();
 
             app.UseEndpoints(endpoints =>
             {
