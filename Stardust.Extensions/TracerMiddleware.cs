@@ -20,6 +20,11 @@ namespace Stardust.Extensions
         /// <summary>跟踪器</summary>
         public static ITracer Tracer { get; set; }
 
+        /// <summary>支持作为标签数据的内容类型</summary>
+        public static String[] TagTypes { get; set; } = new[] {
+            "text/plain", "text/xml", "application/json", "application/xml", "application/x-www-form-urlencoded"
+        };
+
         /// <summary>实例化</summary>
         /// <param name="next"></param>
         public TracerMiddleware(RequestDelegate next) => _next = next ?? throw new ArgumentNullException(nameof(next));
@@ -44,7 +49,10 @@ namespace Stardust.Extensions
                     span.Detach(req.Headers);
                     if (span is DefaultSpan ds && ds.TraceFlag > 0)
                     {
-                        if (req.ContentLength != null && req.ContentLength < 1024 * 8)
+                        if (req.ContentLength != null &&
+                            req.ContentLength < 1024 * 8 &&
+                            req.ContentType != null &&
+                            req.ContentType.StartsWithIgnoreCase(TagTypes))
                         {
                             req.EnableBuffering();
 

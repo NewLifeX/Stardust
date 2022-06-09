@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
+using NewLife.Log;
 using NewLife.Serialization;
 
 namespace Stardust.Server.Common;
@@ -63,6 +65,7 @@ public sealed class ApiFilterAttribute : ActionFilterAttribute
             }
             else if (context.Result is EmptyResult)
             {
+                DefaultTracer.Instance?.NewSpan("apiFilter-EmptyResult");
                 context.Result = new JsonResult(new { code = 0, data = new { } });
             }
         }
@@ -72,7 +75,15 @@ public sealed class ApiFilterAttribute : ActionFilterAttribute
             if (ex is NewLife.Remoting.ApiException aex)
                 context.Result = new JsonResult(new { code = aex.Code, data = aex.Message });
             else
+            {
                 context.Result = new JsonResult(new { code = 500, data = ex.Message });
+
+                // 埋点拦截业务异常
+                var action = context.HttpContext.Request.Path + "";
+                if (context.ActionDescriptor is ControllerActionDescriptor act) action = $"/{act.ControllerName}/{act.ActionName}";
+
+                DefaultTracer.Instance?.NewError(action, ex);
+            }
 
             context.ExceptionHandled = true;
         }
