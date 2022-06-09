@@ -6,6 +6,7 @@ using NewLife.Http;
 using NewLife.Log;
 using NewLife.Reflection;
 using NewLife.Remoting;
+using NewLife.Serialization;
 using Stardust.Models;
 
 namespace Stardust.Monitors
@@ -132,12 +133,27 @@ namespace Stardust.Monitors
 
                 Builders = builders
             };
+            //XTrace.WriteLine("StarProcess[{0}]: {1}", builders.Length, builders.Where(e => e.Name[0] == '/').Join());
+            //XTrace.WriteLine("Length={0}", model.ToJson().Length);
             try
             {
-                var rs = Client.Invoke<TraceResponse>("Trace/Report", model);
+                // 数据过大时，以压缩格式上传
+                var body = model.ToJson();
+                var rs = body.Length > 1024 ?
+                     Client.Invoke<TraceResponse>("Trace/ReportRaw", body.GetBytes().Compress()) :
+                     Client.Invoke<TraceResponse>("Trace/Report", model);
+                //var res = body.Length > 1024 ?
+                //     Client.Invoke<HttpResponseMessage>("Trace/ReportRaw", body.GetBytes().Compress()) :
+                //     Client.Invoke<HttpResponseMessage>("Trace/Report", model);
+                //res.EnsureSuccessStatusCode();
+                //var str = res.Content.ReadAsStringAsync().Result;
+                //var dic = JsonParser.Decode(str);
+                //var rs = JsonHelper.Convert<TraceResponse>(dic["data"]);
                 // 处理响应参数
                 if (rs != null)
                 {
+                    XTrace.WriteLine("excludes={0} MaxTagLength={1}", rs.Excludes?.Join(), rs.MaxTagLength);
+
                     if (rs.Period > 0) Period = rs.Period;
                     if (rs.MaxSamples > 0) MaxSamples = rs.MaxSamples;
                     if (rs.MaxErrors > 0) MaxErrors = rs.MaxErrors;
@@ -154,6 +170,12 @@ namespace Stardust.Monitors
                         set.MaxErrors = MaxErrors;
                         set.Save();
                     }
+                }
+                else
+                {
+                    //XTrace.WriteLine("rs=null {0}", str);
+                    XTrace.WriteLine("rs=null");
+                    XTrace.WriteLine(model.ToJson());
                 }
             }
             catch (ApiException ex)

@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.IO.Compression;
+using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
+using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Monitors;
 using Stardust.Monitors;
@@ -19,12 +21,13 @@ public class TraceController : ControllerBase
     private readonly TokenService _tokenService;
     private readonly AppOnlineService _appOnline;
     private readonly Setting _setting;
+    private readonly ITracer _tracer;
     private readonly ITraceStatService _stat;
     private readonly IAppDayStatService _appStat;
     private readonly ITraceItemStatService _itemStat;
     private static readonly ICache _cache = new MemoryCache();
 
-    public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService, AppOnlineService appOnline, Setting setting)
+    public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService, AppOnlineService appOnline, Setting setting, ITracer tracer)
     {
         _stat = stat;
         _appStat = appStat;
@@ -32,6 +35,7 @@ public class TraceController : ControllerBase
         _tokenService = tokenService;
         _appOnline = appOnline;
         _setting = setting;
+        _tracer = tracer;
     }
 
     [ApiFilter]
@@ -44,7 +48,7 @@ public class TraceController : ControllerBase
         var ip = HttpContext.GetUserHost();
         if (ip.IsNullOrEmpty()) ip = ManageProvider.UserHost;
 
-        //var set = Setting.Current;
+        using var span = _tracer?.NewSpan($"traceReport-{model.AppId}", new { ip, model.ClientId });
 
         // 验证
         var (app, online) = Valid(model.AppId, model, model.ClientId, token);
@@ -74,6 +78,26 @@ public class TraceController : ControllerBase
         if (!model.Version.IsNullOrEmpty()) rs.Excludes = app.Excludes?.Split(",", ";");
 
         return rs;
+    }
+
+    [ApiFilter]
+    [HttpPost(nameof(ReportRaw))]
+    public async Task<TraceResponse> ReportRaw(String token)
+    {
+        var req = Request;
+        if (req.ContentLength <= 0) return null;
+
+        var ms = new MemoryStream();
+        using (var gs = new GZipStream(req.Body, CompressionMode.Decompress))
+        {
+            await gs.CopyToAsync(ms);
+        }
+
+        ms.Position = 0;
+        var body = ms.ToStr();
+        var model = body.ToJsonEntity<TraceModel>();
+
+        return Report(model, token);
     }
 
     private (AppTracer, AppOnline) Valid(String appId, TraceModel model, String clientId, String token)
@@ -166,7 +190,6 @@ public class TraceController : ControllerBase
         var excludes = app.Excludes.Split(",", ";") ?? new String[0];
         var timeoutExcludes = app.TimeoutExcludes.Split(",", ";") ?? new String[0];
 
-        var tracer = DefaultTracer.Instance;
         var now = DateTime.Now;
         var startTime = now.AddDays(-_setting.DataRetention);
         var endTime = now.AddDays(1);
@@ -176,9 +199,10 @@ public class TraceController : ControllerBase
         {
             // 剔除指定项
             if (item.Name.IsNullOrEmpty()) continue;
+            //if (app.ID == 30 && item.Name[0] == '/') XTrace.WriteLine("TraceProcess: {0}", item.Name);
             if (excludes != null && excludes.Any(e => e.IsMatch(item.Name)))
             {
-                tracer?.NewSpan("traceReport-Exclude", item.Name);
+                _tracer?.NewSpan("traceReport-Exclude", item.Name);
                 continue;
             }
             //if (item.Name.EndsWithIgnoreCase("/Trace/Report")) continue;
@@ -187,14 +211,14 @@ public class TraceController : ControllerBase
             var timestamp = item.StartTime.ToDateTime().ToLocalTime();
             if (timestamp < startTime || timestamp > endTime)
             {
-                tracer?.NewSpan("traceReport-ErrorTime", $"{item.Name}-{timestamp.ToFullString()}");
+                _tracer?.NewSpan("traceReport-ErrorTime", $"{item.Name}-{timestamp.ToFullString()}");
                 continue;
             }
 
             // 拒收超长项
             if (item.Name.Length > TraceData._.Name.Length)
             {
-                tracer?.NewSpan("traceReport-LongName", item.Name);
+                _tracer?.NewSpan("traceReport-LongName", item.Name);
                 continue;
             }
 
@@ -202,7 +226,7 @@ public class TraceController : ControllerBase
             var ti = app.GetOrAddItem(item.Name);
             if (ti == null || !ti.Enable)
             {
-                tracer?.NewSpan("traceReport-ErrorItem", item.Name);
+                _tracer?.NewSpan("traceReport-ErrorItem", item.Name);
                 continue;
             }
 
