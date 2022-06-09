@@ -28,6 +28,13 @@ namespace Stardust.Web.Areas.Registry.Controllers
             var appId = p["appId"].ToInt(-1);
             var clientId = p["clientId"];
 
+            // 应用在线多IP时，只取第一个
+            if (!clientId.IsNullOrEmpty())
+            {
+                var idx = clientId.IndexOf(',');
+                if (idx > 0) clientId = clientId[..idx];
+            }
+
             var start = p["dtStart"].ToDateTime();
             var end = p["dtEnd"].ToDateTime();
 
