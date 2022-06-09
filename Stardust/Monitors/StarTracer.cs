@@ -140,7 +140,7 @@ namespace Stardust.Monitors
                 // 数据过大时，以压缩格式上传
                 var body = model.ToJson();
                 var rs = body.Length > 1024 ?
-                     Client.Invoke<TraceResponse>("Trace/ReportRaw", body.GetBytes().Compress()) :
+                     Client.Invoke<TraceResponse>("Trace/ReportRaw", body.GetBytes()) :
                      Client.Invoke<TraceResponse>("Trace/Report", model);
                 //var res = body.Length > 1024 ?
                 //     Client.Invoke<HttpResponseMessage>("Trace/ReportRaw", body.GetBytes().Compress()) :
@@ -152,7 +152,7 @@ namespace Stardust.Monitors
                 // 处理响应参数
                 if (rs != null)
                 {
-                    XTrace.WriteLine("excludes={0} MaxTagLength={1}", rs.Excludes?.Join(), rs.MaxTagLength);
+                    //XTrace.WriteLine("excludes={0} MaxTagLength={1}", rs.Excludes?.Join(), rs.MaxTagLength);
 
                     if (rs.Period > 0) Period = rs.Period;
                     if (rs.MaxSamples > 0) MaxSamples = rs.MaxSamples;

@@ -48,7 +48,7 @@ public class TraceController : ControllerBase
         var ip = HttpContext.GetUserHost();
         if (ip.IsNullOrEmpty()) ip = ManageProvider.UserHost;
 
-        using var span = _tracer?.NewSpan($"traceReport-{model.AppId}", new { ip, model.ClientId });
+        using var span = _tracer?.NewSpan($"traceReport-{model.AppId}", new { ip, model.ClientId, count = model.Builders?.Length });
 
         // 验证
         var (app, online) = Valid(model.AppId, model, model.ClientId, token);
@@ -88,9 +88,14 @@ public class TraceController : ControllerBase
         if (req.ContentLength <= 0) return null;
 
         var ms = new MemoryStream();
-        using (var gs = new GZipStream(req.Body, CompressionMode.Decompress))
+        if (req.ContentType == "application/x-gzip")
         {
+            using var gs = new GZipStream(req.Body, CompressionMode.Decompress);
             await gs.CopyToAsync(ms);
+        }
+        else
+        {
+            await req.Body.CopyToAsync(ms);
         }
 
         ms.Position = 0;
