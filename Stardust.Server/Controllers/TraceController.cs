@@ -48,7 +48,7 @@ public class TraceController : ControllerBase
         var ip = HttpContext.GetUserHost();
         if (ip.IsNullOrEmpty()) ip = ManageProvider.UserHost;
 
-        using var span = _tracer?.NewSpan($"traceReport-{model.AppId}", new { ip, model.ClientId, count = model.Builders?.Length });
+        using var span = _tracer?.NewSpan($"traceReport-{model.AppId}", new { ip, model.ClientId, count = model.Builders?.Length, names = model.Builders?.Join(",", e => e.Name) });
 
         // 验证
         var (app, online) = Valid(model.AppId, model, model.ClientId, token);

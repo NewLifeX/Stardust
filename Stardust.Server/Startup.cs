@@ -144,8 +144,6 @@ namespace Stardust.Server
 
             app.UseAuthorization();
 
-            app.UseResponseCompression();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

@@ -95,8 +95,6 @@ namespace Stardust.Web
             app.UseResponseCompression();
             app.UseCube(env);
 
-            app.UseResponseCompression();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
