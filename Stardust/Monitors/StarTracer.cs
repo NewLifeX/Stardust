@@ -187,13 +187,13 @@ namespace Stardust.Monitors
                 var source = (Client as ApiHttpClient)?.Source;
                 var ex2 = ex is AggregateException aex ? aex.InnerException : ex;
                 if (ex2 is TaskCanceledException tce)
-                    Log?.Error("无法连接服务端[{0}] {1} TaskId={2}", source, ex2.GetType().Name, tce.Task?.Id);
+                    Log?.Debug("无法连接服务端[{0}] {1} TaskId={2}", source, ex2.GetType().Name, tce.Task?.Id);
                 else if (ex2 is HttpRequestException hre)
-                    Log?.Error("无法连接服务端[{0}] {1} {2}", source, ex2.GetType().Name, hre.Message);
+                    Log?.Debug("无法连接服务端[{0}] {1} {2}", source, ex2.GetType().Name, hre.Message);
                 else if (ex2 is SocketException se)
-                    Log?.Error("无法连接服务端[{0}] {1} SocketErrorCode={2}", source, ex2.GetType().Name, se.SocketErrorCode);
+                    Log?.Debug("无法连接服务端[{0}] {1} SocketErrorCode={2}", source, ex2.GetType().Name, se.SocketErrorCode);
                 else
-                    Log?.Error(ex + "");
+                    Log?.Debug("无法连接服务端[{0}] {1}", source, ex);
 
                 //if (ex2 is not HttpRequestException)
                 //    Log?.Error(ex + "");
@@ -217,8 +217,8 @@ namespace Stardust.Monitors
                 catch (Exception ex)
                 {
                     Log?.Info("二次上报失败，放弃该批次采样数据，{0}", model.Builders.FirstOrDefault()?.StartTime.ToDateTime());
-                    if (Log != null & Log.Level <= LogLevel.Debug) Log?.Error(ex + "");
-                    //Log?.Error(ex + "");
+                    //if (Log != null & Log.Level <= LogLevel.Debug) Log?.Error(ex + "");
+                    Log?.Debug("{0}", ex);
 
                     // 星尘收集器上报，二次失败后放弃该批次数据，因其很可能是错误数据
                     //_fails.Enqueue(model);

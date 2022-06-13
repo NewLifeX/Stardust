@@ -149,8 +149,8 @@ namespace Stardust
                     ClientId = ClientId,
                     Version = _version,
                     NodeCode = NodeCode,
+                    IP = AgentInfo.GetIps()
                 };
-                inf.IP = AgentInfo.GetIps();
 
                 var rs = await PostAsync<String>("App/Register", inf);
                 WriteLog("接入星尘服务端：{0}", rs);
@@ -162,7 +162,7 @@ namespace Stardust
             }
             catch (Exception ex)
             {
-                WriteLog("注册异常 {0}", ex.GetTrue().Message);
+                Log?.Debug("注册异常[{0}] {1}", Source, ex.GetTrue().Message);
 
                 throw;
             }
@@ -190,13 +190,9 @@ namespace Stardust
             }
             catch (Exception ex)
             {
-                if (Log != null && Log.Level <= LogLevel.Debug)
-                {
-                    WriteLog("心跳异常 {0}", ex.GetTrue().Message);
+                Log?.Debug("心跳异常 {0}", ex.GetTrue().Message);
 
-                    throw;
-                }
-                return null;
+                throw;
             }
         }
         #endregion
@@ -236,34 +232,40 @@ namespace Stardust
         private async Task DoPing(Object state)
         {
             DefaultSpan.Current = null;
-
-            if (_appName == null) await Register();
-            await Ping();
-
-            await RefreshPublish();
-            await RefreshConsume();
-
-            var svc = _currentService;
-            if (svc != null && UseWebSocket)
+            try
             {
-                // 使用过滤器内部token，因为它有过期刷新机制
-                var token = Token;
-                if (Filter is NewLife.Http.TokenHttpFilter thf) token = thf.Token?.AccessToken;
-                if (token.IsNullOrEmpty()) return;
+                if (_appName == null) await Register();
+                await Ping();
 
-                if (_websocket == null || _websocket.State != WebSocketState.Open)
+                await RefreshPublish();
+                await RefreshConsume();
+
+                var svc = _currentService;
+                if (svc != null && UseWebSocket)
                 {
-                    var url = svc.Address.ToString().Replace("http://", "ws://").Replace("https://", "wss://");
-                    var uri = new Uri(new Uri(url), "/app/notify");
-                    var client = new ClientWebSocket();
-                    client.Options.SetRequestHeader("Authorization", "Bearer " + token);
-                    await client.ConnectAsync(uri, default);
+                    // 使用过滤器内部token，因为它有过期刷新机制
+                    var token = Token;
+                    if (Filter is NewLife.Http.TokenHttpFilter thf) token = thf.Token?.AccessToken;
+                    if (token.IsNullOrEmpty()) return;
 
-                    _websocket = client;
+                    if (_websocket == null || _websocket.State != WebSocketState.Open)
+                    {
+                        var url = svc.Address.ToString().Replace("http://", "ws://").Replace("https://", "wss://");
+                        var uri = new Uri(new Uri(url), "/app/notify");
+                        var client = new ClientWebSocket();
+                        client.Options.SetRequestHeader("Authorization", "Bearer " + token);
+                        await client.ConnectAsync(uri, default);
 
-                    _source = new CancellationTokenSource();
-                    _ = Task.Run(() => DoPull(client, _source.Token));
+                        _websocket = client;
+
+                        _source = new CancellationTokenSource();
+                        _ = Task.Run(() => DoPull(client, _source.Token));
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Log?.Debug("{0}", ex);
             }
         }
 
@@ -300,7 +302,8 @@ namespace Stardust
             catch (WebSocketException) { }
             catch (Exception ex)
             {
-                XTrace.WriteException(ex);
+                Log?.Debug("{0}", ex);
+                //XTrace.WriteException(ex);
             }
 
             if (socket.State == WebSocketState.Open) await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);

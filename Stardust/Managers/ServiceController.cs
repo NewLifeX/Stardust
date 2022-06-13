@@ -169,7 +169,7 @@ internal class ServiceController : DisposeBase
             }
             catch (Exception ex)
             {
-                if (ex is not ArgumentException) XTrace.WriteException(ex);
+                if (ex is not ArgumentException) Log?.Error("{0}", ex);
             }
         }
 

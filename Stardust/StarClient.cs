@@ -120,8 +120,9 @@ namespace Stardust
                 var ex2 = ex.GetTrue();
                 if (ex2 is ApiException aex && (aex.Code == 402 || aex.Code == 403) && !action.EqualIgnoreCase("Node/Login", "Node/Logout"))
                 {
-                    XTrace.WriteException(ex);
-                    XTrace.WriteLine("重新登录！");
+                    Log?.Debug("{0}", ex);
+                    //XTrace.WriteException(ex);
+                    WriteLog("重新登录！");
                     await Login();
 
                     return await base.InvokeAsync<TResult>(method, action, args, onRequest);
@@ -322,7 +323,8 @@ namespace Stardust
             }
             catch (Exception ex)
             {
-                XTrace.WriteException(ex);
+                Log?.Debug("{0}", ex);
+                //XTrace.WriteException(ex);
 
                 return null;
             }
@@ -550,24 +552,30 @@ namespace Stardust
         private async Task DoPing(Object state)
         {
             DefaultSpan.Current = null;
-
-            await Ping();
-
-            var svc = _currentService;
-            if (svc == null || Token == null) return;
-
-            if (_websocket == null || _websocket.State != WebSocketState.Open)
+            try
             {
-                var url = svc.Address.ToString().Replace("http://", "ws://").Replace("https://", "wss://");
-                var uri = new Uri(new Uri(url), "/node/notify");
-                var client = new ClientWebSocket();
-                client.Options.SetRequestHeader("Authorization", "Bearer " + Token);
-                await client.ConnectAsync(uri, default);
+                await Ping();
 
-                _websocket = client;
+                var svc = _currentService;
+                if (svc == null || Token == null) return;
 
-                _source = new CancellationTokenSource();
-                _ = Task.Run(() => DoPull(client, _source.Token));
+                if (_websocket == null || _websocket.State != WebSocketState.Open)
+                {
+                    var url = svc.Address.ToString().Replace("http://", "ws://").Replace("https://", "wss://");
+                    var uri = new Uri(new Uri(url), "/node/notify");
+                    var client = new ClientWebSocket();
+                    client.Options.SetRequestHeader("Authorization", "Bearer " + Token);
+                    await client.ConnectAsync(uri, default);
+
+                    _websocket = client;
+
+                    _source = new CancellationTokenSource();
+                    _ = Task.Run(() => DoPull(client, _source.Token));
+                }
+            }
+            catch (Exception ex)
+            {
+                Log?.Debug("{0}", ex);
             }
         }
 
@@ -605,7 +613,8 @@ namespace Stardust
             catch (WebSocketException) { }
             catch (Exception ex)
             {
-                XTrace.WriteException(ex);
+                Log?.Debug("{0}", ex);
+                //XTrace.WriteException(ex);
             }
 
             if (socket.State == WebSocketState.Open) await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
