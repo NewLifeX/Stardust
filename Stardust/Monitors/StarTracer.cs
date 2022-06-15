@@ -187,13 +187,13 @@ namespace Stardust.Monitors
                 var source = (Client as ApiHttpClient)?.Source;
                 var ex2 = ex is AggregateException aex ? aex.InnerException : ex;
                 if (ex2 is TaskCanceledException tce)
-                    Log?.Debug("无法连接服务端[{0}] {1} TaskId={2}", source, ex2.GetType().Name, tce.Task?.Id);
+                    Log?.Debug("监控中心[{0}]出错 {1} TaskId={2}", source, ex2.GetType().Name, tce.Task?.Id);
                 else if (ex2 is HttpRequestException hre)
-                    Log?.Debug("无法连接服务端[{0}] {1} {2}", source, ex2.GetType().Name, hre.Message);
+                    Log?.Debug("监控中心[{0}]出错 {1} {2}", source, ex2.GetType().Name, hre.Message);
                 else if (ex2 is SocketException se)
-                    Log?.Debug("无法连接服务端[{0}] {1} SocketErrorCode={2}", source, ex2.GetType().Name, se.SocketErrorCode);
+                    Log?.Debug("监控中心[{0}]出错 {1} SocketErrorCode={2}", source, ex2.GetType().Name, se.SocketErrorCode);
                 else
-                    Log?.Debug("无法连接服务端[{0}] {1}", source, ex);
+                    Log?.Debug("监控中心[{0}]出错 {1}", source, ex);
 
                 //if (ex2 is not HttpRequestException)
                 //    Log?.Error(ex + "");
