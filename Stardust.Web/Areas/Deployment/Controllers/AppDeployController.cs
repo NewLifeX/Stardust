@@ -28,14 +28,15 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             LogOnChange = true;
 
             {
-                var df = ListFields.AddListField("Nodes");
+                var df = ListFields.GetField("Nodes") as ListField;
                 df.Header = "节点";
                 df.Title = "管理服务器节点";
+                df.DisplayName = "{Nodes}";
                 df.Url = "AppDeployNode?appId={Id}";
             }
 
             {
-                var df = ListFields.AddListField("Version");
+                var df = ListFields.GetField("Version") as ListField;
                 df.Header = "版本";
                 df.Title = "管理应用版本";
                 df.Url = "AppDeployVersion?appId={Id}";
