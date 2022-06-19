@@ -32,13 +32,13 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 p.Desc = true;
                 p.PageSize = 90;
             }
-            //// 选了应用和时间，按照接口调用次数降序
-            //else if (appId >= 0 && start.Year > 2000 && p.Sort.IsNullOrEmpty())
-            //{
-            //    p.Sort = __.Total;
-            //    p.Desc = true;
-            //    p.PageSize = 100;
-            //}
+            // 选了应用和时间，按照接口调用次数降序
+            else if (appId >= 0 && itemId < 0 && start.Year > 2000 && p.Sort.IsNullOrEmpty())
+            {
+                p.Sort = __.Total;
+                p.Desc = true;
+                p.PageSize = 100;
+            }
 
             p.RetrieveState = true;
 
