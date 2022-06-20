@@ -31,22 +31,6 @@ namespace Stardust.Models
         [XmlAttribute]
         public Boolean AutoStop { get; set; }
 
-        ///// <summary>启动失败时的重试次数，默认3次</summary>
-        //[XmlAttribute]
-        //public Int32 Retry { get; set; } = 3;
-
-        ///// <summary>是否自动重启。应用进程退出后，自动拉起，默认true</summary>
-        //[XmlAttribute]
-        //public Boolean AutoRestart { get; set; } = true;
-
-        ///// <summary>是否单实例。按文件路径确保唯一实例，默认false</summary>
-        //[XmlAttribute]
-        //public Boolean Singleton { get; set; }
-
-        ///// <summary>重启退出代码。仅有该退出代码才会重启</summary>
-        //[XmlAttribute]
-        //public String RestartExistCodes { get; set; }
-
         /// <summary>检测文件变动。当文件发生改变时，自动重启应用</summary>
         [XmlAttribute]
         public Boolean ReloadOnChange { get; set; }
