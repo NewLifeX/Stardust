@@ -36,43 +36,11 @@ namespace Stardust.Extensions
         {
             // APM跟踪
             ISpan span = null;
-            if (Tracer != null && !ctx.WebSockets.IsWebSocketRequest)
-            {
-                var action = GetAction(ctx);
-                if (!action.IsNullOrEmpty())
-                {
-                    // 请求主体作为强制采样的数据标签，便于分析链路
-                    var req = ctx.Request;
-
-                    span = Tracer.NewSpan(action);
-                    span.Tag = $"{ctx.GetUserHost()} {req.Method} {req.GetRawUrl()}";
-                    span.Detach(req.Headers);
-                    if (span is DefaultSpan ds && ds.TraceFlag > 0)
-                    {
-                        if (req.ContentLength != null &&
-                            req.ContentLength < 1024 * 8 &&
-                            req.ContentType != null &&
-                            req.ContentType.StartsWithIgnoreCase(TagTypes))
-                        {
-                            req.EnableBuffering();
-
-                            var buf = new Byte[1024];
-                            var count = await req.Body.ReadAsync(buf, 0, buf.Length);
-                            span.Tag = Environment.NewLine + buf.ToStr(null, 0, count);
-                            req.Body.Position = 0;
-                        }
-
-                        if (span.Tag.Length < 500)
-                        {
-                            var vs = req.Headers.Where(e => !e.Key.EqualIgnoreCase(ExcludeHeaders)).ToDictionary(e => e.Key, e => e.Value + "");
-                            span.Tag += Environment.NewLine + vs.Join(Environment.NewLine, e => $"{e.Key}:{e.Value}");
-                        }
-                    }
-                }
-            }
-
             try
             {
+                if (Tracer != null && !ctx.WebSockets.IsWebSocketRequest)
+                    span = await BuildSpan(ctx);
+
                 await _next.Invoke(ctx);
 
                 // 根据状态码识别异常
@@ -86,12 +54,50 @@ namespace Stardust.Extensions
             {
                 span?.SetError(ex, null);
 
+                XTrace.WriteException(ex);
+
                 throw;
             }
             finally
             {
                 span?.Dispose();
             }
+        }
+
+        async Task<ISpan> BuildSpan(HttpContext ctx)
+        {
+            var action = GetAction(ctx);
+            if (action.IsNullOrEmpty()) return null;
+
+            // 请求主体作为强制采样的数据标签，便于分析链路
+            var req = ctx.Request;
+
+            var span = Tracer.NewSpan(action);
+            span.Tag = $"{ctx.GetUserHost()} {req.Method} {req.GetRawUrl()}";
+            span.Detach(req.Headers);
+            if (span is DefaultSpan ds && ds.TraceFlag > 0)
+            {
+                if (req.ContentLength != null &&
+                    req.ContentLength < 1024 * 8 &&
+                    req.ContentType != null &&
+                    req.ContentType.StartsWithIgnoreCase(TagTypes))
+                {
+                    req.EnableBuffering();
+
+                    var buf = new Byte[1024];
+                    var count = await req.Body.ReadAsync(buf, 0, buf.Length);
+                    span.Tag = Environment.NewLine + buf.ToStr(null, 0, count);
+                    req.Body.Position = 0;
+                }
+
+                if (span.Tag.Length < 500)
+                {
+                    var vs = req.Headers.Where(e => !e.Key.EqualIgnoreCase(ExcludeHeaders)).ToDictionary(e => e.Key, e => e.Value + "");
+                    span.Tag += Environment.NewLine + vs.Join(Environment.NewLine, e => $"{e.Key}:{e.Value}");
+                }
+            }
+
+            return span;
         }
 
         /// <summary>忽略的头部</summary>
