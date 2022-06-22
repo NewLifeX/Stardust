@@ -200,6 +200,7 @@ namespace Stardust.Data.Monitors
             return false;
         }
 
+        private IList<TraceItem> _full;
         /// <summary>
         /// 获取或添加跟踪项
         /// </summary>
@@ -215,7 +216,7 @@ namespace Stardust.Data.Monitors
             if (ti != null) return ti;
 
             // 再查全量
-            list = TraceItem.FindAllByApp(ID);
+            list = _full ??= TraceItem.FindAllByApp(ID);
             ti = list.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
             if (ti != null) return ti;
 
@@ -228,8 +229,12 @@ namespace Stardust.Data.Monitors
             // 如果只跟踪已存在埋点，则跳过。仅针对API
             if (Mode == TraceModes.Existing && isApi) return null;
 
-            ti = new TraceItem { AppId = ID, Name = name };
-            ti.Enable = Mode == TraceModes.All || !isApi;
+            ti = new TraceItem
+            {
+                AppId = ID,
+                Name = name,
+                Enable = Mode == TraceModes.All || !isApi
+            };
             ti.Insert();
 
             list.Add(ti);

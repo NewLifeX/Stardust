@@ -207,7 +207,7 @@ public class TraceController : ControllerBase
             //if (app.ID == 30 && item.Name[0] == '/') XTrace.WriteLine("TraceProcess: {0}", item.Name);
             if (excludes != null && excludes.Any(e => e.IsMatch(item.Name)))
             {
-                _tracer?.NewSpan("traceReport-Exclude", item.Name);
+                _tracer?.NewSpan("trace-Exclude", item.Name);
                 continue;
             }
             //if (item.Name.EndsWithIgnoreCase("/Trace/Report")) continue;
@@ -216,14 +216,14 @@ public class TraceController : ControllerBase
             var timestamp = item.StartTime.ToDateTime().ToLocalTime();
             if (timestamp < startTime || timestamp > endTime)
             {
-                _tracer?.NewSpan("traceReport-ErrorTime", $"{item.Name}-{timestamp.ToFullString()}");
+                _tracer?.NewSpan("trace-ErrorTime", $"{item.Name}-{timestamp.ToFullString()}");
                 continue;
             }
 
             // 拒收超长项
             if (item.Name.Length > TraceData._.Name.Length)
             {
-                _tracer?.NewSpan("traceReport-LongName", item.Name);
+                _tracer?.NewSpan("trace-LongName", item.Name);
                 continue;
             }
 
@@ -231,7 +231,7 @@ public class TraceController : ControllerBase
             var ti = app.GetOrAddItem(item.Name);
             if (ti == null || !ti.Enable)
             {
-                _tracer?.NewSpan("traceReport-ErrorItem", item.Name);
+                _tracer?.NewSpan("trace-ErrorItem", item.Name);
                 continue;
             }
 
