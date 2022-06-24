@@ -47,8 +47,9 @@ public class ShardTableService : IHostedService
         using var span = _tracer?.NewSpan("ShardTable", $"{endday.ToFullString()}");
         try
         {
-            // 所有表
+            // 取所有表，清空缓存
             var dal = TraceData.Meta.Session.Dal;
+            dal.Tables = null;
             var tables = dal.Tables;
             var tnames = tables.Select(e => e.TableName).ToArray();
 

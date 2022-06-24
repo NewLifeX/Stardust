@@ -36,7 +36,9 @@ public class AppOnlineService
 
             // 要求内网IP与外网IP都匹配，才能认为是相同会话，因为有可能不同客户端部署在各自内网而具有相同本地IP
             var list = AppOnline.FindAllByAppAndIP(app.Id, localIp);
-            online = list.OrderBy(e => e.Id).FirstOrDefault(e => e.AppId == app.Id && e.UpdateIP == ip);
+            online = list.FirstOrDefault(e => e.Client == clientId);
+            if (online == null)
+                online = list.OrderBy(e => e.Id).FirstOrDefault(e => e.UpdateIP == ip);
 
             // 处理多IP
             if (online == null)
