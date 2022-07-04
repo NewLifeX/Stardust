@@ -64,7 +64,7 @@ namespace Stardust.Data.Nodes
         [DisplayName("CPU率")]
         [Description("CPU率。占用率")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("CpuRate", "CPU率。占用率", "")]
+        [BindColumn("CpuRate", "CPU率。占用率", "", ItemType = "percent")]
         public Double CpuRate { get => _CpuRate; set { if (OnPropertyChanging("CpuRate", value)) { _CpuRate = value; OnPropertyChanged("CpuRate"); } } }
 
         private Double _Temperature;

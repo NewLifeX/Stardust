@@ -54,6 +54,12 @@ namespace Stardust.Models
         /// <summary>连接数</summary>
         public Int32 Connections { get; set; }
 
+        /// <summary>GC暂停时间占比</summary>
+        public Double GCPause { get; set; }
+
+        /// <summary>二代GC次数</summary>
+        public Int32 GC2 { get; set; }
+
         private readonly Process _process;
         #endregion
 
@@ -124,6 +130,12 @@ namespace Stardust.Models
                     }
                 }
                 catch { }
+
+#if NET5_0_OR_GREATER
+                var memory = GC.GetGCMemoryInfo();
+                GCPause = memory.PauseTimePercentage;
+#endif
+                GC2 = GC.CollectionCount(2);
             }
             catch (Win32Exception) { }
         }

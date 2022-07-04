@@ -138,7 +138,7 @@
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
       <Column Name="AvailableMemory" DataType="Int32" Description="可用内存。单位M" />
       <Column Name="AvailableFreeSpace" DataType="Int32" Description="可用磁盘。应用所在盘，单位M" />
-      <Column Name="CpuRate" DataType="Double" Description="CPU率。占用率" />
+      <Column Name="CpuRate" DataType="Double" ItemType="percent" Description="CPU率。占用率" />
       <Column Name="Temperature" DataType="Double" Description="温度" />
       <Column Name="Battery" DataType="Double" Description="电量" />
       <Column Name="UplinkSpeed" DataType="Int64" Description="上行速度。网络发送速度，字节每秒" />

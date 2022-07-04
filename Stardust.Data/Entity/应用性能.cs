@@ -64,7 +64,7 @@ namespace Stardust.Data
         [DisplayName("CPU负载")]
         [Description("CPU负载。处理器时间除以物理时间的占比")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("CpuUsage", "CPU负载。处理器时间除以物理时间的占比", "")]
+        [BindColumn("CpuUsage", "CPU负载。处理器时间除以物理时间的占比", "", ItemType = "percent")]
         public Double CpuUsage { get => _CpuUsage; set { if (OnPropertyChanging("CpuUsage", value)) { _CpuUsage = value; OnPropertyChanged("CpuUsage"); } } }
 
         private Int32 _Threads;
@@ -90,6 +90,22 @@ namespace Stardust.Data
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Connections", "连接数", "")]
         public Int32 Connections { get => _Connections; set { if (OnPropertyChanging("Connections", value)) { _Connections = value; OnPropertyChanged("Connections"); } } }
+
+        private Double _GCPause;
+        /// <summary>GC暂停。时间占比</summary>
+        [DisplayName("GC暂停")]
+        [Description("GC暂停。时间占比")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("GCPause", "GC暂停。时间占比", "", ItemType = "percent")]
+        public Double GCPause { get => _GCPause; set { if (OnPropertyChanging("GCPause", value)) { _GCPause = value; OnPropertyChanged("GCPause"); } } }
+
+        private Int32 _Gc2;
+        /// <summary>二代GC。次数</summary>
+        [DisplayName("二代GC")]
+        [Description("二代GC。次数")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Gc2", "二代GC。次数", "")]
+        public Int32 Gc2 { get => _Gc2; set { if (OnPropertyChanging("Gc2", value)) { _Gc2 = value; OnPropertyChanged("Gc2"); } } }
 
         private String _Data;
         /// <summary>数据</summary>
@@ -146,6 +162,8 @@ namespace Stardust.Data
                     case "Threads": return _Threads;
                     case "Handles": return _Handles;
                     case "Connections": return _Connections;
+                    case "GCPause": return _GCPause;
+                    case "Gc2": return _Gc2;
                     case "Data": return _Data;
                     case "Creator": return _Creator;
                     case "CreateTime": return _CreateTime;
@@ -166,6 +184,8 @@ namespace Stardust.Data
                     case "Threads": _Threads = value.ToInt(); break;
                     case "Handles": _Handles = value.ToInt(); break;
                     case "Connections": _Connections = value.ToInt(); break;
+                    case "GCPause": _GCPause = value.ToDouble(); break;
+                    case "Gc2": _Gc2 = value.ToInt(); break;
                     case "Data": _Data = Convert.ToString(value); break;
                     case "Creator": _Creator = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -206,6 +226,12 @@ namespace Stardust.Data
 
             /// <summary>连接数</summary>
             public static readonly Field Connections = FindByName("Connections");
+
+            /// <summary>GC暂停。时间占比</summary>
+            public static readonly Field GCPause = FindByName("GCPause");
+
+            /// <summary>二代GC。次数</summary>
+            public static readonly Field Gc2 = FindByName("Gc2");
 
             /// <summary>数据</summary>
             public static readonly Field Data = FindByName("Data");
@@ -251,6 +277,12 @@ namespace Stardust.Data
 
             /// <summary>连接数</summary>
             public const String Connections = "Connections";
+
+            /// <summary>GC暂停。时间占比</summary>
+            public const String GCPause = "GCPause";
+
+            /// <summary>二代GC。次数</summary>
+            public const String Gc2 = "Gc2";
 
             /// <summary>数据</summary>
             public const String Data = "Data";

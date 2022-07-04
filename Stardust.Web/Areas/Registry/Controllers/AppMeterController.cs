@@ -77,12 +77,24 @@ namespace Stardust.Web.Areas.Registry.Controllers
                         Height = 400,
                     };
                     chart.SetX(list2, _.CreateTime, e => e.CreateTime.ToString("HH:mm"));
-                    chart.SetY("指标");
+                    //chart.SetY("指标");
+                    chart.YAxis = new[] {
+                        new { name = "指标", type = "value" },
+                        new { name = "百分比（ms）", type = "value" }
+                    };
                     chart.AddLine(list2, _.Memory, null, true);
-                    chart.AddLine(list2, _.CpuUsage, null, true);
+
+                    var line = chart.AddLine(list2, _.CpuUsage, null, true);
+                    line["yAxisIndex"] = 1;
+
                     chart.Add(list2, _.Threads);
                     chart.Add(list2, _.Handles);
                     chart.Add(list2, _.Connections);
+
+                    line = chart.Add(list2, _.GCPause);
+                    line["yAxisIndex"] = 1;
+
+                    chart.Add(list2, _.Gc2);
                     chart.SetTooltip();
                     ViewBag.Charts = new[] { chart };
                 }

@@ -160,6 +160,8 @@ namespace Stardust.Data
                 Threads = info.Threads,
                 Handles = info.Handles,
                 Connections = info.Connections,
+                GCPause = Math.Round(info.GCPause, 4),
+                Gc2 = info.GC2,
 
                 Data = info.ToJson(),
                 Creator = Environment.MachineName,
