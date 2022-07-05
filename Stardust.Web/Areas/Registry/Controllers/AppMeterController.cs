@@ -94,7 +94,7 @@ namespace Stardust.Web.Areas.Registry.Controllers
                     line = chart.Add(list2, _.GCPause);
                     line["yAxisIndex"] = 1;
 
-                    chart.Add(list2, _.Gc2);
+                    chart.Add(list2, _.FullGC);
                     chart.SetTooltip();
                     ViewBag.Charts = new[] { chart };
                 }

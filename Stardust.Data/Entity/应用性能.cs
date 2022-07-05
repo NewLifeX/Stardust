@@ -92,20 +92,20 @@ namespace Stardust.Data
         public Int32 Connections { get => _Connections; set { if (OnPropertyChanging("Connections", value)) { _Connections = value; OnPropertyChanged("Connections"); } } }
 
         private Double _GCPause;
-        /// <summary>GC暂停。时间占比</summary>
+        /// <summary>GC暂停。时间占比，百分之一</summary>
         [DisplayName("GC暂停")]
-        [Description("GC暂停。时间占比")]
+        [Description("GC暂停。时间占比，百分之一")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("GCPause", "GC暂停。时间占比", "", ItemType = "percent")]
+        [BindColumn("GCPause", "GC暂停。时间占比，百分之一", "")]
         public Double GCPause { get => _GCPause; set { if (OnPropertyChanging("GCPause", value)) { _GCPause = value; OnPropertyChanged("GCPause"); } } }
 
-        private Int32 _Gc2;
-        /// <summary>二代GC。次数</summary>
-        [DisplayName("二代GC")]
-        [Description("二代GC。次数")]
+        private Int32 _FullGC;
+        /// <summary>完全GC。周期时间内发生二代GC的次数</summary>
+        [DisplayName("完全GC")]
+        [Description("完全GC。周期时间内发生二代GC的次数")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Gc2", "二代GC。次数", "")]
-        public Int32 Gc2 { get => _Gc2; set { if (OnPropertyChanging("Gc2", value)) { _Gc2 = value; OnPropertyChanged("Gc2"); } } }
+        [BindColumn("FullGC", "完全GC。周期时间内发生二代GC的次数", "")]
+        public Int32 FullGC { get => _FullGC; set { if (OnPropertyChanging("FullGC", value)) { _FullGC = value; OnPropertyChanged("FullGC"); } } }
 
         private String _Data;
         /// <summary>数据</summary>
@@ -163,7 +163,7 @@ namespace Stardust.Data
                     case "Handles": return _Handles;
                     case "Connections": return _Connections;
                     case "GCPause": return _GCPause;
-                    case "Gc2": return _Gc2;
+                    case "FullGC": return _FullGC;
                     case "Data": return _Data;
                     case "Creator": return _Creator;
                     case "CreateTime": return _CreateTime;
@@ -185,7 +185,7 @@ namespace Stardust.Data
                     case "Handles": _Handles = value.ToInt(); break;
                     case "Connections": _Connections = value.ToInt(); break;
                     case "GCPause": _GCPause = value.ToDouble(); break;
-                    case "Gc2": _Gc2 = value.ToInt(); break;
+                    case "FullGC": _FullGC = value.ToInt(); break;
                     case "Data": _Data = Convert.ToString(value); break;
                     case "Creator": _Creator = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -227,11 +227,11 @@ namespace Stardust.Data
             /// <summary>连接数</summary>
             public static readonly Field Connections = FindByName("Connections");
 
-            /// <summary>GC暂停。时间占比</summary>
+            /// <summary>GC暂停。时间占比，百分之一</summary>
             public static readonly Field GCPause = FindByName("GCPause");
 
-            /// <summary>二代GC。次数</summary>
-            public static readonly Field Gc2 = FindByName("Gc2");
+            /// <summary>完全GC。周期时间内发生二代GC的次数</summary>
+            public static readonly Field FullGC = FindByName("FullGC");
 
             /// <summary>数据</summary>
             public static readonly Field Data = FindByName("Data");
@@ -278,11 +278,11 @@ namespace Stardust.Data
             /// <summary>连接数</summary>
             public const String Connections = "Connections";
 
-            /// <summary>GC暂停。时间占比</summary>
+            /// <summary>GC暂停。时间占比，百分之一</summary>
             public const String GCPause = "GCPause";
 
-            /// <summary>二代GC。次数</summary>
-            public const String Gc2 = "Gc2";
+            /// <summary>完全GC。周期时间内发生二代GC的次数</summary>
+            public const String FullGC = "FullGC";
 
             /// <summary>数据</summary>
             public const String Data = "Data";

@@ -54,11 +54,11 @@ namespace Stardust.Models
         /// <summary>连接数</summary>
         public Int32 Connections { get; set; }
 
-        /// <summary>GC暂停时间占比</summary>
+        /// <summary>GC暂停时间占比，百分之一，最大值10</summary>
         public Double GCPause { get; set; }
 
-        /// <summary>二代GC次数</summary>
-        public Int32 GC2 { get; set; }
+        /// <summary>采样周期内发生的二代GC次数</summary>
+        public Int32 FullGC { get; set; }
 
         private readonly Process _process;
         #endregion
@@ -91,6 +91,7 @@ namespace Stardust.Models
         #region 方法
         private Stopwatch _stopwatch;
         private Int64 _last;
+        private Int32 _lastGC2;
 
         /// <summary>刷新进程相关信息</summary>
         public void Refresh()
@@ -135,7 +136,9 @@ namespace Stardust.Models
                 var memory = GC.GetGCMemoryInfo();
                 GCPause = memory.PauseTimePercentage;
 #endif
-                GC2 = GC.CollectionCount(2);
+                var gc2 = GC.CollectionCount(2);
+                FullGC = gc2 - _lastGC2;
+                _lastGC2 = gc2;
             }
             catch (Win32Exception) { }
         }
