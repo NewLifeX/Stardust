@@ -61,6 +61,10 @@ namespace Stardust.Data.Monitors
         [Map(nameof(AppId))]
         public String AppName => App + "";
 
+        /// <summary>关联项</summary>
+        [XmlIgnore, IgnoreDataMember]
+        public TraceData Link => Extends.Get(nameof(TraceData), k => FindById(LinkId));
+
         /// <summary>开始时间</summary>
         [Map(nameof(StartTime))]
         public DateTime Start => StartTime.ToDateTime().ToLocalTime();
@@ -81,10 +85,10 @@ namespace Stardust.Data.Monitors
             //// 实体缓存
             //if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
 
-            //// 单对象缓存
-            //return Meta.SingleCache[id];
+            // 单对象缓存
+            return Meta.SingleCache[id];
 
-            return Find(_.Id == id);
+            //return Find(_.Id == id);
         }
 
         ///// <summary>根据应用、操作名查找</summary>

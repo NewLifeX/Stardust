@@ -50,7 +50,8 @@
     <tbody>
         @foreach (var entity in Model)
         {
-            var url1 = $"?appid={entity.AppId}&itemId={entity.ItemId}";
+            var itemId = entity.Link?.ItemId ?? entity.ItemId;
+            var url1 = $"?appid={entity.AppId}&itemId={itemId}";
             //var url2 = $"SampleData?appid={entity.AppId}&name={HttpUtility.UrlEncode(entity.Name)}&start={entity.StartTime}&end={entity.EndTime}";
             var url2 = $"SampleData?dataid={(entity.LinkId > 0 ? entity.LinkId : entity.Id)}";
             var url3 = $"?appid={entity.AppId}&clientId={HttpUtility.UrlEncode(entity.ClientId)}";
