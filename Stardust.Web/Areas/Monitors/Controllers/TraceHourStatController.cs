@@ -64,6 +64,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
 
                     var line = chart.Add(list2, _.Errors);
                     line["yAxisIndex"] = 1;
+                    line["itemStyle"] = new { color = "rgba(255, 0, 0, 0.5)", };
 
                     chart.SetTooltip();
                     ViewBag.Charts = new[] { chart };
