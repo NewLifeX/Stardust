@@ -272,6 +272,7 @@
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
+      <Column Name="Content" DataType="String" Description="内容。用于测试机器人的模版内容" />
       <Column Name="CreateUser" DataType="String" Description="创建者" Category="扩展" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
@@ -294,6 +295,7 @@
       <Column Name="Action" DataType="String" Description="操作" />
       <Column Name="Success" DataType="Boolean" Description="成功" />
       <Column Name="Content" DataType="String" Length="2000" Description="内容" />
+      <Column Name="Error" DataType="String" Length="500" Description="错误" />
       <Column Name="Creator" DataType="String" Description="创建者。服务端节点" Category="扩展" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
     </Columns>

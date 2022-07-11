@@ -61,7 +61,8 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                     //chart.SetY("指标");
                     chart.YAxis = new[] {
                         new { name = "指标", type = "value" },
-                        new { name = "网络", type = "value" }
+                        new { name = "网络", type = "value" },
+                        new { name = "连接", type = "value" }
                     };
                     chart.AddLine(list2, _.CpuRate, e => Math.Round(e.CpuRate * 100), true);
 
@@ -77,13 +78,13 @@ namespace Stardust.Web.Areas.Nodes.Controllers
 
                     if (list2.Any(e => e.UplinkSpeed > 0))
                     {
-                        var line = chart.Add(list2, _.UplinkSpeed, "line", e => e.UplinkSpeed / 10000);
+                        var line = chart.Add(list2, _.UplinkSpeed, "line", e => e.UplinkSpeed / 1000);
                         line.Name = "网络上行";
                         line["yAxisIndex"] = 1;
                     }
                     if (list2.Any(e => e.DownlinkSpeed > 0))
                     {
-                        var line = chart.Add(list2, _.DownlinkSpeed, "line", e => e.DownlinkSpeed / 10000);
+                        var line = chart.Add(list2, _.DownlinkSpeed, "line", e => e.DownlinkSpeed / 1000);
                         line.Name = "网络下行";
                         line["yAxisIndex"] = 1;
                     }
@@ -91,17 +92,17 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                     if (list2.Any(e => e.TcpConnections > 0))
                     {
                         var line = chart.Add(list2, _.TcpConnections);
-                        line["yAxisIndex"] = 1;
+                        line["yAxisIndex"] = 2;
                     }
                     if (list2.Any(e => e.TcpTimeWait > 0))
                     {
                         var line = chart.Add(list2, _.TcpTimeWait);
-                        line["yAxisIndex"] = 1;
+                        line["yAxisIndex"] = 2;
                     }
                     if (list2.Any(e => e.TcpCloseWait > 0))
                     {
                         var line = chart.Add(list2, _.TcpCloseWait);
-                        line["yAxisIndex"] = 1;
+                        line["yAxisIndex"] = 2;
                     }
                     //chart.Add(list2, _.Offset);
                     chart.SetTooltip();

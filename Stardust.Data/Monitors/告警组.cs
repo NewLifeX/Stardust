@@ -51,6 +51,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("WebHook", "告警机器人。钉钉、企业微信等", "")]
         public String WebHook { get => _WebHook; set { if (OnPropertyChanging("WebHook", value)) { _WebHook = value; OnPropertyChanged("WebHook"); } } }
 
+        private String _Content;
+        /// <summary>内容。用于测试机器人的模版内容</summary>
+        [DisplayName("内容")]
+        [Description("内容。用于测试机器人的模版内容")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Content", "内容。用于测试机器人的模版内容", "")]
+        public String Content { get => _Content; set { if (OnPropertyChanging("Content", value)) { _Content = value; OnPropertyChanged("Content"); } } }
+
         private String _CreateUser;
         /// <summary>创建者</summary>
         [Category("扩展")]
@@ -138,6 +146,7 @@ namespace Stardust.Data.Monitors
                     case "Name": return _Name;
                     case "Enable": return _Enable;
                     case "WebHook": return _WebHook;
+                    case "Content": return _Content;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -157,6 +166,7 @@ namespace Stardust.Data.Monitors
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "WebHook": _WebHook = Convert.ToString(value); break;
+                    case "Content": _Content = Convert.ToString(value); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -186,6 +196,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public static readonly Field WebHook = FindByName("WebHook");
+
+            /// <summary>内容。用于测试机器人的模版内容</summary>
+            public static readonly Field Content = FindByName("Content");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
@@ -228,6 +241,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public const String WebHook = "WebHook";
+
+            /// <summary>内容。用于测试机器人的模版内容</summary>
+            public const String Content = "Content";
 
             /// <summary>创建者</summary>
             public const String CreateUser = "CreateUser";

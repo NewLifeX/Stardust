@@ -75,6 +75,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("Content", "内容", "")]
         public String Content { get => _Content; set { if (OnPropertyChanging("Content", value)) { _Content = value; OnPropertyChanged("Content"); } } }
 
+        private String _Error;
+        /// <summary>错误</summary>
+        [DisplayName("错误")]
+        [Description("错误")]
+        [DataObjectField(false, false, true, 500)]
+        [BindColumn("Error", "错误", "")]
+        public String Error { get => _Error; set { if (OnPropertyChanging("Error", value)) { _Error = value; OnPropertyChanged("Error"); } } }
+
         private String _Creator;
         /// <summary>创建者。服务端节点</summary>
         [Category("扩展")]
@@ -111,6 +119,7 @@ namespace Stardust.Data.Monitors
                     case "Action": return _Action;
                     case "Success": return _Success;
                     case "Content": return _Content;
+                    case "Error": return _Error;
                     case "Creator": return _Creator;
                     case "CreateTime": return _CreateTime;
                     default: return base[name];
@@ -127,6 +136,7 @@ namespace Stardust.Data.Monitors
                     case "Action": _Action = Convert.ToString(value); break;
                     case "Success": _Success = value.ToBoolean(); break;
                     case "Content": _Content = Convert.ToString(value); break;
+                    case "Error": _Error = Convert.ToString(value); break;
                     case "Creator": _Creator = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     default: base[name] = value; break;
@@ -160,6 +170,9 @@ namespace Stardust.Data.Monitors
             /// <summary>内容</summary>
             public static readonly Field Content = FindByName("Content");
 
+            /// <summary>错误</summary>
+            public static readonly Field Error = FindByName("Error");
+
             /// <summary>创建者。服务端节点</summary>
             public static readonly Field Creator = FindByName("Creator");
 
@@ -192,6 +205,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>内容</summary>
             public const String Content = "Content";
+
+            /// <summary>错误</summary>
+            public const String Error = "Error";
 
             /// <summary>创建者。服务端节点</summary>
             public const String Creator = "Creator";
