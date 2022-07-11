@@ -165,21 +165,21 @@ namespace Stardust.Data.Monitors
         public String VipClients { get => _VipClients; set { if (OnPropertyChanging("VipClients", value)) { _VipClients = value; OnPropertyChanged("VipClients"); } } }
 
         private Int32 _AlarmThreshold;
-        /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用</summary>
+        /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值满足其一</summary>
         [Category("告警")]
         [DisplayName("告警阈值")]
-        [Description("告警阈值。错误数达到该值时触发告警，0表示不启用")]
+        [Description("告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值满足其一")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("AlarmThreshold", "告警阈值。错误数达到该值时触发告警，0表示不启用", "")]
+        [BindColumn("AlarmThreshold", "告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值满足其一", "")]
         public Int32 AlarmThreshold { get => _AlarmThreshold; set { if (OnPropertyChanging("AlarmThreshold", value)) { _AlarmThreshold = value; OnPropertyChanged("AlarmThreshold"); } } }
 
         private Double _AlarmErrorRate;
-        /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用</summary>
+        /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值满足其一</summary>
         [Category("告警")]
         [DisplayName("告警错误率")]
-        [Description("告警错误率。错误率达到该值时触发告警，0表示不启用")]
+        [Description("告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值满足其一")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("AlarmErrorRate", "告警错误率。错误率达到该值时触发告警，0表示不启用", "")]
+        [BindColumn("AlarmErrorRate", "告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值满足其一", "")]
         public Double AlarmErrorRate { get => _AlarmErrorRate; set { if (OnPropertyChanging("AlarmErrorRate", value)) { _AlarmErrorRate = value; OnPropertyChanged("AlarmErrorRate"); } } }
 
         private String _AlarmRobot;
@@ -403,10 +403,10 @@ namespace Stardust.Data.Monitors
             /// <summary>Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配</summary>
             public static readonly Field VipClients = FindByName("VipClients");
 
-            /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用</summary>
+            /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值满足其一</summary>
             public static readonly Field AlarmThreshold = FindByName("AlarmThreshold");
 
-            /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用</summary>
+            /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值满足其一</summary>
             public static readonly Field AlarmErrorRate = FindByName("AlarmErrorRate");
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
@@ -496,10 +496,10 @@ namespace Stardust.Data.Monitors
             /// <summary>Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配</summary>
             public const String VipClients = "VipClients";
 
-            /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用</summary>
+            /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值满足其一</summary>
             public const String AlarmThreshold = "AlarmThreshold";
 
-            /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用</summary>
+            /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值满足其一</summary>
             public const String AlarmErrorRate = "AlarmErrorRate";
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>

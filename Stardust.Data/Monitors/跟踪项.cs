@@ -124,19 +124,19 @@ namespace Stardust.Data.Monitors
         public Int32 Cost { get => _Cost; set { if (OnPropertyChanging("Cost", value)) { _Cost = value; OnPropertyChanged("Cost"); } } }
 
         private Int32 _AlarmThreshold;
-        /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用</summary>
+        /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值必须同时满足</summary>
         [DisplayName("告警阈值")]
-        [Description("告警阈值。错误数达到该值时触发告警，0表示不启用")]
+        [Description("告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值必须同时满足")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("AlarmThreshold", "告警阈值。错误数达到该值时触发告警，0表示不启用", "")]
+        [BindColumn("AlarmThreshold", "告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值必须同时满足", "")]
         public Int32 AlarmThreshold { get => _AlarmThreshold; set { if (OnPropertyChanging("AlarmThreshold", value)) { _AlarmThreshold = value; OnPropertyChanged("AlarmThreshold"); } } }
 
         private Double _AlarmErrorRate;
-        /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用</summary>
+        /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足</summary>
         [DisplayName("告警错误率")]
-        [Description("告警错误率。错误率达到该值时触发告警，0表示不启用")]
+        [Description("告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("AlarmErrorRate", "告警错误率。错误率达到该值时触发告警，0表示不启用", "")]
+        [BindColumn("AlarmErrorRate", "告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足", "")]
         public Double AlarmErrorRate { get => _AlarmErrorRate; set { if (OnPropertyChanging("AlarmErrorRate", value)) { _AlarmErrorRate = value; OnPropertyChanged("AlarmErrorRate"); } } }
 
         private String _AlarmRobot;
@@ -323,10 +323,10 @@ namespace Stardust.Data.Monitors
             /// <summary>平均耗时。总耗时除以总次数，单位毫秒</summary>
             public static readonly Field Cost = FindByName("Cost");
 
-            /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用</summary>
+            /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值必须同时满足</summary>
             public static readonly Field AlarmThreshold = FindByName("AlarmThreshold");
 
-            /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用</summary>
+            /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足</summary>
             public static readonly Field AlarmErrorRate = FindByName("AlarmErrorRate");
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
@@ -398,10 +398,10 @@ namespace Stardust.Data.Monitors
             /// <summary>平均耗时。总耗时除以总次数，单位毫秒</summary>
             public const String Cost = "Cost";
 
-            /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用</summary>
+            /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值必须同时满足</summary>
             public const String AlarmThreshold = "AlarmThreshold";
 
-            /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用</summary>
+            /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足</summary>
             public const String AlarmErrorRate = "AlarmErrorRate";
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
