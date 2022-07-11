@@ -61,8 +61,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                     //chart.SetY("指标");
                     chart.YAxis = new[] {
                         new { name = "指标", type = "value" },
-                        new { name = "网络", type = "value" },
-                        new { name = "连接", type = "value" }
+                        new { name = "网络", type = "value" }
                     };
                     chart.AddLine(list2, _.CpuRate, e => Math.Round(e.CpuRate * 100), true);
 
@@ -92,17 +91,17 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                     if (list2.Any(e => e.TcpConnections > 0))
                     {
                         var line = chart.Add(list2, _.TcpConnections);
-                        line["yAxisIndex"] = 2;
+                        line["yAxisIndex"] = 1;
                     }
                     if (list2.Any(e => e.TcpTimeWait > 0))
                     {
                         var line = chart.Add(list2, _.TcpTimeWait);
-                        line["yAxisIndex"] = 2;
+                        line["yAxisIndex"] = 1;
                     }
                     if (list2.Any(e => e.TcpCloseWait > 0))
                     {
                         var line = chart.Add(list2, _.TcpCloseWait);
-                        line["yAxisIndex"] = 2;
+                        line["yAxisIndex"] = 1;
                     }
                     //chart.Add(list2, _.Offset);
                     chart.SetTooltip();
