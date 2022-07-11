@@ -63,16 +63,17 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                     };
                     chart.AddLine(list2, _.Total, null, true);
 
-                    var line = chart.Add(list2, _.Errors);
-                    line["yAxisIndex"] = 1;
-                    line["itemStyle"] = new { color = "rgba(255, 0, 0, 0.5)", };
-
                     chart.Add(list2, _.Apis);
                     chart.Add(list2, _.Https);
                     chart.Add(list2, _.Dbs);
                     chart.Add(list2, _.Mqs);
                     chart.Add(list2, _.Redis);
                     chart.Add(list2, _.Others);
+
+                    var line = chart.Add(list2, _.Errors);
+                    line["yAxisIndex"] = 1;
+                    line["itemStyle"] = new { color = "rgba(255, 0, 0, 0.5)", };
+
                     chart.SetTooltip();
                     ViewBag.Charts = new[] { chart };
                 }
