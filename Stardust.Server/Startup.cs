@@ -49,7 +49,7 @@ namespace Stardust.Server
             var appStatService = new AppDayStatService(tracer) { BatchPeriod = set.MonitorBatchPeriod };
             services.AddSingleton<IAppDayStatService>(appStatService);
             services.AddSingleton<ITraceItemStatService, TraceItemStatService>();
-            services.AddSingleton<IAlarmService, AlarmService>();
+            //services.AddSingleton<IAlarmService, AlarmService>();
 
             // 业务服务
             services.AddSingleton<NodeService>();
@@ -74,6 +74,7 @@ namespace Stardust.Server
             services.AddHostedService<NodeOnlineService>();
             services.AddHostedService<ApolloService>();
             services.AddHostedService<ShardTableService>();
+            services.AddHostedService<AlarmService>();
 
             // 启用接口响应压缩
             services.AddResponseCompression();
