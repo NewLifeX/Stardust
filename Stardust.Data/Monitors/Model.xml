@@ -6,7 +6,7 @@
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
       <Column Name="DisplayName" DataType="String" Description="显示名" />
-      <Column Name="Category" DataType="String" Description="类别" />
+      <Column Name="Category" DataType="String" Description="类别。同步自注册中心的应用分组，同时匹配告警分组，该应用未设置告警机器人时，采用告警分组的机器人设置" />
       <Column Name="ItemCount" DataType="Int32" Description="跟踪项。共有多少个埋点" />
       <Column Name="Days" DataType="Int32" Description="天数。共统计了多少天" />
       <Column Name="Total" DataType="Int64" Description="总次数。累计埋点采样次数" />

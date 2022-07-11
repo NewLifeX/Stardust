@@ -53,11 +53,11 @@ namespace Stardust.Data.Monitors
         public String DisplayName { get => _DisplayName; set { if (OnPropertyChanging("DisplayName", value)) { _DisplayName = value; OnPropertyChanged("DisplayName"); } } }
 
         private String _Category;
-        /// <summary>类别</summary>
+        /// <summary>类别。同步自注册中心的应用分组，同时匹配告警分组，该应用未设置告警机器人时，采用告警分组的机器人设置</summary>
         [DisplayName("类别")]
-        [Description("类别")]
+        [Description("类别。同步自注册中心的应用分组，同时匹配告警分组，该应用未设置告警机器人时，采用告警分组的机器人设置")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("Category", "类别", "")]
+        [BindColumn("Category", "类别。同步自注册中心的应用分组，同时匹配告警分组，该应用未设置告警机器人时，采用告警分组的机器人设置", "")]
         public String Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
 
         private Int32 _ItemCount;
@@ -361,7 +361,7 @@ namespace Stardust.Data.Monitors
             /// <summary>显示名</summary>
             public static readonly Field DisplayName = FindByName("DisplayName");
 
-            /// <summary>类别</summary>
+            /// <summary>类别。同步自注册中心的应用分组，同时匹配告警分组，该应用未设置告警机器人时，采用告警分组的机器人设置</summary>
             public static readonly Field Category = FindByName("Category");
 
             /// <summary>跟踪项。共有多少个埋点</summary>
@@ -454,7 +454,7 @@ namespace Stardust.Data.Monitors
             /// <summary>显示名</summary>
             public const String DisplayName = "DisplayName";
 
-            /// <summary>类别</summary>
+            /// <summary>类别。同步自注册中心的应用分组，同时匹配告警分组，该应用未设置告警机器人时，采用告警分组的机器人设置</summary>
             public const String Category = "Category";
 
             /// <summary>跟踪项。共有多少个埋点</summary>

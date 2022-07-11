@@ -211,8 +211,12 @@ namespace Stardust.Server.Services
                             {
                                 _cache.Set("alarm:TraceMinuteStat:" + ti.Id, st.Errors, 5 * 60);
 
+                                // 优先本地跟踪项，其次应用，最后是告警分组
+                                var webhook = ti.AlarmRobot;
+                                if (webhook.IsNullOrEmpty()) webhook = app.AlarmRobot;
+
                                 var msg = GetMarkdown(app, st, true);
-                                RobotHelper.SendAlarm(app.Category, app.AlarmRobot, "埋点告警", msg);
+                                RobotHelper.SendAlarm(app.Category, webhook, "埋点告警", msg);
                             }
                         }
                     }
