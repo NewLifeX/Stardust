@@ -125,6 +125,7 @@ namespace Stardust.Data.Monitors
 
         private Int32 _AlarmThreshold;
         /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值必须同时满足</summary>
+        [Category("告警")]
         [DisplayName("告警阈值")]
         [Description("告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值必须同时满足")]
         [DataObjectField(false, false, false, 0)]
@@ -133,14 +134,25 @@ namespace Stardust.Data.Monitors
 
         private Double _AlarmErrorRate;
         /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足</summary>
+        [Category("告警")]
         [DisplayName("告警错误率")]
         [Description("告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("AlarmErrorRate", "告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足", "")]
         public Double AlarmErrorRate { get => _AlarmErrorRate; set { if (OnPropertyChanging("AlarmErrorRate", value)) { _AlarmErrorRate = value; OnPropertyChanged("AlarmErrorRate"); } } }
 
+        private String _AlarmGroup;
+        /// <summary>告警组。使用告警组中指定的机器人</summary>
+        [Category("告警")]
+        [DisplayName("告警组")]
+        [Description("告警组。使用告警组中指定的机器人")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("AlarmGroup", "告警组。使用告警组中指定的机器人", "")]
+        public String AlarmGroup { get => _AlarmGroup; set { if (OnPropertyChanging("AlarmGroup", value)) { _AlarmGroup = value; OnPropertyChanged("AlarmGroup"); } } }
+
         private String _AlarmRobot;
         /// <summary>告警机器人。钉钉、企业微信等</summary>
+        [Category("告警")]
         [DisplayName("告警机器人")]
         [Description("告警机器人。钉钉、企业微信等")]
         [DataObjectField(false, false, true, 500)]
@@ -236,6 +248,7 @@ namespace Stardust.Data.Monitors
                     case "Cost": return _Cost;
                     case "AlarmThreshold": return _AlarmThreshold;
                     case "AlarmErrorRate": return _AlarmErrorRate;
+                    case "AlarmGroup": return _AlarmGroup;
                     case "AlarmRobot": return _AlarmRobot;
                     case "CreateIP": return _CreateIP;
                     case "CreateTime": return _CreateTime;
@@ -266,6 +279,7 @@ namespace Stardust.Data.Monitors
                     case "Cost": _Cost = value.ToInt(); break;
                     case "AlarmThreshold": _AlarmThreshold = value.ToInt(); break;
                     case "AlarmErrorRate": _AlarmErrorRate = value.ToDouble(); break;
+                    case "AlarmGroup": _AlarmGroup = Convert.ToString(value); break;
                     case "AlarmRobot": _AlarmRobot = Convert.ToString(value); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -328,6 +342,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足</summary>
             public static readonly Field AlarmErrorRate = FindByName("AlarmErrorRate");
+
+            /// <summary>告警组。使用告警组中指定的机器人</summary>
+            public static readonly Field AlarmGroup = FindByName("AlarmGroup");
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public static readonly Field AlarmRobot = FindByName("AlarmRobot");
@@ -403,6 +420,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足</summary>
             public const String AlarmErrorRate = "AlarmErrorRate";
+
+            /// <summary>告警组。使用告警组中指定的机器人</summary>
+            public const String AlarmGroup = "AlarmGroup";
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public const String AlarmRobot = "AlarmRobot";

@@ -211,6 +211,13 @@ public class AlarmService : IHostedService
                 var ti = tis.FirstOrDefault(e => e.Id == st.ItemId);
                 if (ti != null)
                 {
+                    // 优先本地跟踪项，其次应用，最后是告警分组
+                    var webhook = ti.AlarmRobot;
+                    if (webhook.IsNullOrEmpty()) webhook = app.AlarmRobot;
+
+                    var group = ti.AlarmGroup;
+                    if (group.IsNullOrEmpty()) group = app.Category;
+
                     // 必须两个条件同时满足，才能告警。前面的条件确保至少有一个设置了阈值
                     if ((ti.AlarmThreshold <= 0 || st.Errors >= ti.AlarmThreshold) &&
                         (ti.AlarmErrorRate <= 0 || st.ErrorRate >= ti.AlarmErrorRate))
@@ -221,15 +228,11 @@ public class AlarmService : IHostedService
                         {
                             _cache.Set("alarm:TraceMinuteStat:" + ti.Id, st.Errors, 5 * 60);
 
-                            // 优先本地跟踪项，其次应用，最后是告警分组
-                            var webhook = ti.AlarmRobot;
-                            if (webhook.IsNullOrEmpty()) webhook = app.AlarmRobot;
-
                             var msg = GetMarkdown(app, st, true);
-                            RobotHelper.SendAlarm(app.Category, webhook, "埋点告警", msg);
+                            RobotHelper.SendAlarm(group, webhook, "埋点告警", msg);
                         }
                     }
-                    else if (flag && 
+                    else if (flag &&
                         (app.ItemAlarmThreshold <= 0 || st.Errors >= app.ItemAlarmThreshold) &&
                         (app.ItemAlarmErrorRate <= 0 || st.ErrorRate >= app.ItemAlarmErrorRate))
                     {
@@ -239,12 +242,8 @@ public class AlarmService : IHostedService
                         {
                             _cache.Set("alarm:TraceMinuteStat:" + ti.Id, st.Errors, 5 * 60);
 
-                            // 优先本地跟踪项，其次应用，最后是告警分组
-                            var webhook = ti.AlarmRobot;
-                            if (webhook.IsNullOrEmpty()) webhook = app.AlarmRobot;
-
                             var msg = GetMarkdown(app, st, true);
-                            RobotHelper.SendAlarm(app.Category, webhook, "埋点告警", msg);
+                            RobotHelper.SendAlarm(group, webhook, "埋点告警", msg);
                         }
                     }
                 }
