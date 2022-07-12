@@ -211,36 +211,30 @@ public class AlarmService : IHostedService
                 var ti = tis.FirstOrDefault(e => e.Id == st.ItemId);
                 if (ti != null)
                 {
-                    // 优先本地跟踪项，其次应用，最后是告警分组
-                    var webhook = ti.AlarmRobot;
-                    if (webhook.IsNullOrEmpty()) webhook = app.AlarmRobot;
-
-                    var group = ti.AlarmGroup;
-                    if (group.IsNullOrEmpty()) group = app.Category;
-
-                    // 必须两个条件同时满足，才能告警。前面的条件确保至少有一个设置了阈值
-                    if ((ti.AlarmThreshold <= 0 || st.Errors >= ti.AlarmThreshold) &&
-                        (ti.AlarmErrorRate <= 0 || st.ErrorRate >= ti.AlarmErrorRate))
+                    var max = ti.AlarmThreshold;
+                    var rate = ti.AlarmErrorRate;
+                    if (max <= 0 && rate <= 0)
                     {
-                        // 一定时间内不要重复报错，除非错误翻倍
-                        var error2 = _cache.Get<Int32>("alarm:TraceMinuteStat:" + ti.Id);
-                        if (error2 == 0 || st.Errors > error2 * 2)
-                        {
-                            _cache.Set("alarm:TraceMinuteStat:" + ti.Id, st.Errors, 5 * 60);
-
-                            var msg = GetMarkdown(app, st, true);
-                            RobotHelper.SendAlarm(group, webhook, "埋点告警", msg);
-                        }
+                        max = app.ItemAlarmThreshold;
+                        rate = app.ItemAlarmErrorRate;
                     }
-                    else if (flag &&
-                        (app.ItemAlarmThreshold <= 0 || st.Errors >= app.ItemAlarmThreshold) &&
-                        (app.ItemAlarmErrorRate <= 0 || st.ErrorRate >= app.ItemAlarmErrorRate))
+
+                    // 必须两个条件同时满足，才能告警
+                    if (max >= 0 && st.Errors >= max &&
+                        rate >= 0 && st.ErrorRate >= rate)
                     {
                         // 一定时间内不要重复报错，除非错误翻倍
                         var error2 = _cache.Get<Int32>("alarm:TraceMinuteStat:" + ti.Id);
                         if (error2 == 0 || st.Errors > error2 * 2)
                         {
                             _cache.Set("alarm:TraceMinuteStat:" + ti.Id, st.Errors, 5 * 60);
+
+                            // 优先本地跟踪项，其次应用，最后是告警分组
+                            var webhook = ti.AlarmRobot;
+                            if (webhook.IsNullOrEmpty()) webhook = app.AlarmRobot;
+
+                            var group = ti.AlarmGroup;
+                            if (group.IsNullOrEmpty()) group = app.Category;
 
                             var msg = GetMarkdown(app, st, true);
                             RobotHelper.SendAlarm(group, webhook, "埋点告警", msg);
