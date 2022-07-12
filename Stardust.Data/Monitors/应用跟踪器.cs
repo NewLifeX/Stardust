@@ -182,6 +182,24 @@ namespace Stardust.Data.Monitors
         [BindColumn("AlarmErrorRate", "告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值满足其一", "")]
         public Double AlarmErrorRate { get => _AlarmErrorRate; set { if (OnPropertyChanging("AlarmErrorRate", value)) { _AlarmErrorRate = value; OnPropertyChanged("AlarmErrorRate"); } } }
 
+        private Int32 _ItemAlarmThreshold;
+        /// <summary>单项阈值。下级跟踪项错误数达到该值时触发告警，0表示不启用，阈值和率值必须同时满足</summary>
+        [Category("告警")]
+        [DisplayName("单项阈值")]
+        [Description("单项阈值。下级跟踪项错误数达到该值时触发告警，0表示不启用，阈值和率值必须同时满足")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("ItemAlarmThreshold", "单项阈值。下级跟踪项错误数达到该值时触发告警，0表示不启用，阈值和率值必须同时满足", "")]
+        public Int32 ItemAlarmThreshold { get => _ItemAlarmThreshold; set { if (OnPropertyChanging("ItemAlarmThreshold", value)) { _ItemAlarmThreshold = value; OnPropertyChanged("ItemAlarmThreshold"); } } }
+
+        private Double _ItemAlarmErrorRate;
+        /// <summary>单项错误率。下级跟踪项错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足</summary>
+        [Category("告警")]
+        [DisplayName("单项错误率")]
+        [Description("单项错误率。下级跟踪项错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("ItemAlarmErrorRate", "单项错误率。下级跟踪项错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足", "")]
+        public Double ItemAlarmErrorRate { get => _ItemAlarmErrorRate; set { if (OnPropertyChanging("ItemAlarmErrorRate", value)) { _ItemAlarmErrorRate = value; OnPropertyChanged("ItemAlarmErrorRate"); } } }
+
         private String _AlarmRobot;
         /// <summary>告警机器人。钉钉、企业微信等</summary>
         [Category("告警")]
@@ -294,6 +312,8 @@ namespace Stardust.Data.Monitors
                     case "VipClients": return _VipClients;
                     case "AlarmThreshold": return _AlarmThreshold;
                     case "AlarmErrorRate": return _AlarmErrorRate;
+                    case "ItemAlarmThreshold": return _ItemAlarmThreshold;
+                    case "ItemAlarmErrorRate": return _ItemAlarmErrorRate;
                     case "AlarmRobot": return _AlarmRobot;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
@@ -330,6 +350,8 @@ namespace Stardust.Data.Monitors
                     case "VipClients": _VipClients = Convert.ToString(value); break;
                     case "AlarmThreshold": _AlarmThreshold = value.ToInt(); break;
                     case "AlarmErrorRate": _AlarmErrorRate = value.ToDouble(); break;
+                    case "ItemAlarmThreshold": _ItemAlarmThreshold = value.ToInt(); break;
+                    case "ItemAlarmErrorRate": _ItemAlarmErrorRate = value.ToDouble(); break;
                     case "AlarmRobot": _AlarmRobot = Convert.ToString(value); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
@@ -408,6 +430,12 @@ namespace Stardust.Data.Monitors
 
             /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值满足其一</summary>
             public static readonly Field AlarmErrorRate = FindByName("AlarmErrorRate");
+
+            /// <summary>单项阈值。下级跟踪项错误数达到该值时触发告警，0表示不启用，阈值和率值必须同时满足</summary>
+            public static readonly Field ItemAlarmThreshold = FindByName("ItemAlarmThreshold");
+
+            /// <summary>单项错误率。下级跟踪项错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足</summary>
+            public static readonly Field ItemAlarmErrorRate = FindByName("ItemAlarmErrorRate");
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public static readonly Field AlarmRobot = FindByName("AlarmRobot");
@@ -501,6 +529,12 @@ namespace Stardust.Data.Monitors
 
             /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值满足其一</summary>
             public const String AlarmErrorRate = "AlarmErrorRate";
+
+            /// <summary>单项阈值。下级跟踪项错误数达到该值时触发告警，0表示不启用，阈值和率值必须同时满足</summary>
+            public const String ItemAlarmThreshold = "ItemAlarmThreshold";
+
+            /// <summary>单项错误率。下级跟踪项错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足</summary>
+            public const String ItemAlarmErrorRate = "ItemAlarmErrorRate";
 
             /// <summary>告警机器人。钉钉、企业微信等</summary>
             public const String AlarmRobot = "AlarmRobot";

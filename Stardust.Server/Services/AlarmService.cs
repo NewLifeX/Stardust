@@ -149,7 +149,7 @@ public class AlarmService : IHostedService
         {
             if (item.Errors > 0)
             {
-                sb.AppendLine($">**错误：**<font color=\"red\">{item.StatTime:HH:mm:ss} 埋点[{item.Name}]报错[{item.Errors:n0}]次</font>[更多]({traceUrl}&itemId={item.ItemId})");
+                sb.AppendLine($">**错误：**<font color=\"red\">埋点[{item.Name}]报错[{item.Errors:n0}]次</font>[更多]({traceUrl}&itemId={item.ItemId})");
 
                 // 相同接口的错误，不要报多次
                 if (!names.Contains(item.Name))
@@ -193,8 +193,12 @@ public class AlarmService : IHostedService
     {
         if (app == null || !app.Enable) return;
 
+        // 应用是否配置了全局跟踪项告警
+        var flag = app.ItemAlarmThreshold > 0 || app.ItemAlarmErrorRate > 0;
+
         // 监控项单独告警
-        var tis = app.TraceItems.Where(e => e.AlarmThreshold > 0 || e.AlarmErrorRate > 0).ToList();
+        var tis = app.TraceItems;
+        if (!flag) tis = tis.Where(e => e.AlarmThreshold > 0 || e.AlarmErrorRate > 0).ToList();
         if (tis.Count > 0)
         {
             // 最近一段时间的5分钟级数据
@@ -210,6 +214,24 @@ public class AlarmService : IHostedService
                     // 必须两个条件同时满足，才能告警。前面的条件确保至少有一个设置了阈值
                     if ((ti.AlarmThreshold <= 0 || st.Errors >= ti.AlarmThreshold) &&
                         (ti.AlarmErrorRate <= 0 || st.ErrorRate >= ti.AlarmErrorRate))
+                    {
+                        // 一定时间内不要重复报错，除非错误翻倍
+                        var error2 = _cache.Get<Int32>("alarm:TraceMinuteStat:" + ti.Id);
+                        if (error2 == 0 || st.Errors > error2 * 2)
+                        {
+                            _cache.Set("alarm:TraceMinuteStat:" + ti.Id, st.Errors, 5 * 60);
+
+                            // 优先本地跟踪项，其次应用，最后是告警分组
+                            var webhook = ti.AlarmRobot;
+                            if (webhook.IsNullOrEmpty()) webhook = app.AlarmRobot;
+
+                            var msg = GetMarkdown(app, st, true);
+                            RobotHelper.SendAlarm(app.Category, webhook, "埋点告警", msg);
+                        }
+                    }
+                    else if (flag && 
+                        (app.ItemAlarmThreshold <= 0 || st.Errors >= app.ItemAlarmThreshold) &&
+                        (app.ItemAlarmErrorRate <= 0 || st.ErrorRate >= app.ItemAlarmErrorRate))
                     {
                         // 一定时间内不要重复报错，除非错误翻倍
                         var error2 = _cache.Get<Int32>("alarm:TraceMinuteStat:" + ti.Id);
@@ -246,7 +268,7 @@ public class AlarmService : IHostedService
 
         // 找找具体接口错误
         var item = st;
-        sb.AppendLine($">**错误：**<font color=\"red\">{item.StatTime:HH:mm:ss} 埋点[{item.Name}]报错[{item.Errors:n0}]次</font>");
+        sb.AppendLine($">**错误：**<font color=\"red\">埋点[{item.Name}]报错[{item.Errors:n0}]次</font>");
 
         var ds = TraceData.Search(st.AppId, item.ItemId, "minute", item.StatTime, 20);
         if (ds.Count > 0)
