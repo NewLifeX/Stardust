@@ -10,4 +10,4 @@
     <label for="clientId" class="control-label">节点：</label>
     @Html.ForDropDownList("clientId", AppMeter.GetClientIds(page["appId"].ToInt()), page["clientId"], "全部", true)
 </div>*@
-@await Html.PartialAsync("_DateRange", "yyyy-MM-dd HH:mm:ss")
+@await Html.PartialAsync("_DateRange", "yyyy-MM-dd")
