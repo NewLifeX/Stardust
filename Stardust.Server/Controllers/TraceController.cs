@@ -20,6 +20,7 @@ public class TraceController : ControllerBase
 {
     private readonly TokenService _tokenService;
     private readonly AppOnlineService _appOnline;
+    private readonly UplinkService _uplink;
     private readonly Setting _setting;
     private readonly ITracer _tracer;
     private readonly ITraceStatService _stat;
@@ -27,13 +28,14 @@ public class TraceController : ControllerBase
     private readonly ITraceItemStatService _itemStat;
     private static readonly ICache _cache = new MemoryCache();
 
-    public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService, AppOnlineService appOnline, Setting setting, ITracer tracer)
+    public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService, AppOnlineService appOnline,UplinkService uplink, Setting setting, ITracer tracer)
     {
         _stat = stat;
         _appStat = appStat;
         _itemStat = itemStat;
         _tokenService = tokenService;
         _appOnline = appOnline;
+        _uplink = uplink;
         _setting = setting;
         _tracer = tracer;
     }
@@ -284,5 +286,8 @@ public class TraceController : ControllerBase
         _appStat.Add(now.Date);
         if (now.Hour == 0 && now.Minute <= 10) _appStat.Add(now.Date.AddDays(-1));
         _itemStat.Add(app.ID);
+
+        // 发送给上联服务器
+        _uplink.Report(model);
     }
 }

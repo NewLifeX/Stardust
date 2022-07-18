@@ -58,6 +58,7 @@ namespace Stardust.Server
             services.AddSingleton<ConfigService>();
             services.AddSingleton<RegistryService>();
             services.AddSingleton<AppOnlineService>();
+            services.AddSingleton<UplinkService>();
 
             services.AddHttpClient();
             services.AddResponseCompression();
