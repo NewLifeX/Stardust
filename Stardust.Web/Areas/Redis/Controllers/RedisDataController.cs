@@ -57,6 +57,8 @@ namespace Stardust.Web.Areas.Redis.Controllers
                     };
                     chart.SetX(list2, _.CreateTime, e => e.CreateTime.ToString("HH:mm"));
                     chart.SetY("指标");
+                    chart.AddDataZoom();
+
                     chart.AddLine(list2, _.Speed, null, true);
                     chart.Add(list2, _.InputKbps);
                     chart.Add(list2, _.OutputKbps);

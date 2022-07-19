@@ -63,6 +63,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                         new { name = "指标", type = "value" },
                         new { name = "网络", type = "value" }
                     };
+                    chart.AddDataZoom();
                     chart.AddLine(list2, _.CpuRate, e => Math.Round(e.CpuRate * 100), true);
 
                     var series = chart.Add(list2, _.AvailableMemory, "line", e => node.Memory == 0 ? 0 : (100 - (e.AvailableMemory * 100 / node.Memory)));

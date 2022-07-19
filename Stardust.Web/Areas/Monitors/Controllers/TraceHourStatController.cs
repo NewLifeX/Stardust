@@ -60,6 +60,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                         new { name = "调用次数", type = "value" },
                         new { name = "错误数", type = "value" }
                     };
+                    chart.AddDataZoom();
                     chart.AddLine(list2, _.Total, null, true);
 
                     var line = chart.Add(list2, _.Errors);
@@ -81,6 +82,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                         new { name = "耗时（ms）", type = "value" },
                         new { name = "最大耗时（ms）", type = "value" }
                     };
+                    chart.AddDataZoom();
                     chart.AddLine(list2, _.Cost, null, true);
                     chart.Add(list2, _.MinCost);
 

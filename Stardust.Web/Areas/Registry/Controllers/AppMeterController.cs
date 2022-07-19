@@ -82,6 +82,7 @@ namespace Stardust.Web.Areas.Registry.Controllers
                         new { name = "指标", type = "value" },
                         new { name = "百分比（%）", type = "value" }
                     };
+                    chart.AddDataZoom();
                     chart.AddLine(list2, _.Memory, null, true);
 
                     var line = chart.AddLine(list2, _.CpuUsage, null, true);
