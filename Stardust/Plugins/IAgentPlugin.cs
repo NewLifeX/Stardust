@@ -18,6 +18,9 @@ public interface IAgentPlugin : IPlugin
 [Plugin("StarAgent")]
 public abstract class AgentPlugin : DisposeBase, IAgentPlugin
 {
+    /// <summary>服务提供者</summary>
+    public IServiceProvider Provider { get; set; }
+
     /// <summary>初始化插件</summary>
     /// <param name="identity"></param>
     /// <param name="provider"></param>
@@ -26,6 +29,8 @@ public abstract class AgentPlugin : DisposeBase, IAgentPlugin
     public virtual Boolean Init(String identity, IServiceProvider provider)
     {
         if (identity != "StarAgent") return false;
+
+        Provider = provider;
 
         return true;
     }

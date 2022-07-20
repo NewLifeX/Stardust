@@ -428,6 +428,8 @@ namespace StarAgent
             if (serviceType == typeof(ApiServer)) return _server;
             if (serviceType == typeof(ServiceBase)) return this;
             if (serviceType == typeof(IHost)) return Host;
+            
+            if (serviceType == typeof(ITracer)) return _factory.Tracer;
 
             return Provider?.GetService(serviceType);
         }
