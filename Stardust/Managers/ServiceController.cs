@@ -119,7 +119,7 @@ internal class ServiceController : DisposeBase
 
         WriteLog("停止应用 PID={0}/{0} 原因：{2}", p.Id, p.ProcessName, reason);
 
-        using var span = Tracer?.NewSpan("StopService", Info);
+        using var span = Tracer?.NewSpan("StopService", $"{Info.Name} reason={reason}");
         try
         {
             p.CloseMainWindow();
@@ -150,7 +150,8 @@ internal class ServiceController : DisposeBase
             Process = null;
             WriteLog("应用[{0}/{1}]已退出！", p.ProcessName, p.Id);
         }
-        else if (ProcessId > 0)
+
+        if (ProcessId > 0)
         {
             try
             {
@@ -171,6 +172,8 @@ internal class ServiceController : DisposeBase
             {
                 if (ex is not ArgumentException) Log?.Error("{0}", ex);
             }
+
+            ProcessId = 0;
         }
 
         // 准备启动进程
@@ -275,12 +278,6 @@ internal class ServiceController : DisposeBase
 
             _ready = false;
         }
-    }
-
-    enum Status
-    {
-        None = 0,
-        Ready = 1,
     }
     #endregion
 
