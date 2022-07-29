@@ -40,10 +40,11 @@ internal class Worker
         try
         {
             var reply = new Ping().Send(ip, Item.Timeout);
+
+            if (span != null && reply != null) span.Tag = $"{reply.Address} {reply.RoundtripTime}ms";
+
             if (reply.Status != IPStatus.Success)
                 throw new Exception(reply.Status + "");
-
-            if (span != null) span.Tag = $"{ip} {reply.RoundtripTime}ms";
         }
         catch (Exception ex)
         {
