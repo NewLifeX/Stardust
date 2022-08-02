@@ -144,6 +144,7 @@ public class AlarmService : IHostedService
 
         // 找找具体接口错误
         var names = new List<String>();
+        var nodes = new Dictionary<String, Node>();
         var sts = TraceMinuteStat.FindAllByAppIdAndTime(st.AppId, st.StatTime).OrderByDescending(e => e.Errors).ToList();
         foreach (var item in sts)
         {
@@ -157,6 +158,18 @@ public class AlarmService : IHostedService
                     var ds = TraceData.Search(st.AppId, item.ItemId, "minute", item.StatTime, 20);
                     if (ds.Count > 0)
                     {
+                        // 应用节点
+                        foreach (var traceData in ds)
+                        {
+                            if (!nodes.ContainsKey(traceData.ClientId))
+                            {
+                                var online = AppOnline.FindByClient(traceData.ClientId);
+                                var node = online?.Node;
+                                if (node != null) nodes[traceData.ClientId] = node;
+                            }
+                        }
+                        if (nodes.Count > 0) sb.AppendLine($">**节点：**<font color=\"greed\">{nodes.Join(",", e => e.Value.Name)}</font>");
+
                         var sms = SampleData.FindAllByDataIds(ds.Select(e => e.Id).ToArray(), item.StatTime).Where(e => !e.Error.IsNullOrEmpty()).ToList();
                         if (sms.Count > 0)
                         {
@@ -266,6 +279,16 @@ public class AlarmService : IHostedService
         var ds = TraceData.Search(st.AppId, item.ItemId, "minute", item.StatTime, 20);
         if (ds.Count > 0)
         {
+            // 应用节点
+            var nodeNames = new List<String>();
+            foreach (var traceData in ds)
+            {
+                var online = AppOnline.FindByClient(traceData.ClientId);
+                var node = online?.Node;
+                if (node != null && !nodeNames.Contains(node.Name)) nodeNames.Add(node.Name);
+            }
+            if (nodeNames.Count > 0) sb.AppendLine($">**节点：**<font color=\"greed\">{nodeNames.Join()}</font>");
+
             var sms = SampleData.FindAllByDataIds(ds.Select(e => e.Id).ToArray(), item.StatTime).Where(e => !e.Error.IsNullOrEmpty()).ToList();
             if (sms.Count > 0)
             {
