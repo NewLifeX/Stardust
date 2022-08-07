@@ -72,6 +72,7 @@ internal class ServiceController : DisposeBase
 
         var args = service.Arguments?.Trim();
         WriteLog("启动应用：{0} {1} {2}", file, args, workDir);
+        if (service.MaxMemory > 0) WriteLog("内存限制：{0:n0}M", service.MaxMemory);
 
         var si = new ProcessStartInfo
         {
@@ -145,10 +146,25 @@ internal class ServiceController : DisposeBase
         var p = Process;
         if (p != null)
         {
-            if (!p.HasExited) return false;
+            if (!p.HasExited)
+            {
+                // 检查内存限制
+                if (Info.MaxMemory <= 0) return false;
 
-            Process = null;
-            WriteLog("应用[{0}/{1}]已退出！", p.ProcessName, p.Id);
+                var mem = p.WorkingSet64 / 1024 / 1024;
+                if (mem > Info.MaxMemory)
+                {
+                    WriteLog("内存超限！{0}>{1}", mem, Info.MaxMemory);
+
+                    Stop("内存超限");
+                    SetProcess(null);
+                }
+            }
+            else
+            {
+                Process = null;
+                WriteLog("应用[{0}/{1}]已退出！", p.ProcessName, p.Id);
+            }
         }
 
         if (ProcessId > 0)
