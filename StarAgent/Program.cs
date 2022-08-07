@@ -443,10 +443,10 @@ internal class MyService : ServiceBase, IServiceProvider
     {
         if (args == null || args.Length == 0) return false;
 
-        var deploy = new ZipDeploy
-        {
+        var deploy = new ZipDeploy { Log = XTrace.Log };
+        if (!deploy.Parse(args)) return false;
 
-        };
+        deploy.Execute();
 
         return true;
     }
