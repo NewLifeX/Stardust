@@ -17,8 +17,14 @@ public class ZipDeploy
     /// <summary>启动参数</summary>
     public String Arguments { get; set; }
 
+    /// <summary>工作目录</summary>
+    public String WorkingDirectory { get; set; }
+
     /// <summary>影子目录。应用将在其中执行</summary>
     public String Shadow { get; set; }
+
+    /// <summary>进程</summary>
+    public Process Process { get; private set; }
     #endregion
 
     #region 方法
@@ -34,25 +40,36 @@ public class ZipDeploy
         var file = "";
         var name = "";
         var shadow = "";
+        var gs = new String[args.Length];
         for (var i = 0; i < args.Length; i++)
         {
             if (args[i].EndsWithIgnoreCase(".zip"))
             {
                 file = args[i];
-                Arguments = args.Skip(i + 1).Join(" ");
+                //Arguments = args.Skip(i + 1).Join(" ");
+
+                // 准备后续所有参数，后面可能会剔除部分
+                for (var j = i + 1; j < args.Length; j++)
+                {
+                    gs[j] = args[j];
+                }
             }
             else if (args[i].EqualIgnoreCase("-name") && i + 1 < args.Length)
             {
                 name = args[i + 1];
+                gs[i] = gs[i + 1] = null;
             }
             else if (args[i].EqualIgnoreCase("-shadow") && i + 1 < args.Length)
             {
                 shadow = args[i + 1];
+                gs[i] = gs[i + 1] = null;
             }
         }
         if (file.IsNullOrEmpty()) return false;
 
-        var fi = file.AsFile();
+        Arguments = gs.Where(e => e != null).Join(" ");
+
+        var fi = (WorkingDirectory.CombinePath(file)).AsFile();
         if (!fi.Exists) throw new FileNotFoundException("找不到zip文件", fi.FullName);
 
         if (name.IsNullOrEmpty()) name = Path.GetFileNameWithoutExtension(file);
@@ -66,9 +83,9 @@ public class ZipDeploy
     }
 
     /// <summary>执行拉起应用</summary>
-    public void Execute()
+    public Boolean Execute()
     {
-        var fi = FileName?.AsFile();
+        var fi = (WorkingDirectory.CombinePath(FileName))?.AsFile();
         if (fi == null || !fi.Exists) throw new Exception("未指定Zip文件");
 
         var name = Name;
@@ -93,10 +110,10 @@ public class ZipDeploy
         var runfile = FindExeFile(shadow);
 
         // 执行
-        if (runfile.IsNullOrEmpty())
+        if (runfile == null)
         {
             WriteLog("无法找到名为[{0}]的可执行文件", name);
-            return;
+            return false;
         }
 
         // 如果带有 NewLife.Core.dll ，重定向基础目录
@@ -106,12 +123,12 @@ public class ZipDeploy
         WriteLog("执行 {0}", runfile);
 
         ProcessStartInfo si = null;
-        if (rundir.Extension.EqualIgnoreCase(".dll"))
+        if (runfile.Extension.EqualIgnoreCase(".dll"))
         {
             si = new ProcessStartInfo
             {
                 FileName = "dotnet",
-                Arguments = $"{FileName} {Arguments}",
+                Arguments = $"{runfile.FullName} {Arguments}",
                 WorkingDirectory = rundir.FullName,
                 UseShellExecute = false,
             };
@@ -120,7 +137,7 @@ public class ZipDeploy
         {
             si = new ProcessStartInfo
             {
-                FileName = runfile,
+                FileName = runfile.FullName,
                 Arguments = Arguments,
                 WorkingDirectory = rundir.FullName,
                 UseShellExecute = false,
@@ -132,16 +149,24 @@ public class ZipDeploy
 
         var p = Process.Start(si);
         if (p.WaitForExit(3_000))
+        {
             WriteLog("启动失败！ExitCode={0}", p.ExitCode);
-        else
-            WriteLog("启动成功！");
+
+            return false;
+        }
+
+        Process = p;
+
+        WriteLog("启动成功！");
+
+        return true;
     }
 
     /// <summary>解压缩</summary>
     /// <param name="shadow"></param>
     protected virtual void Extract(String shadow)
     {
-        var fi = FileName.AsFile();
+        var fi = (WorkingDirectory.CombinePath(FileName)).AsFile();
         var rundir = fi.Directory;
         WriteLog("解压缩 {0}", FileName);
 
@@ -166,7 +191,7 @@ public class ZipDeploy
     /// <summary>查找执行文件</summary>
     /// <param name="shadow"></param>
     /// <returns></returns>
-    protected virtual String FindExeFile(String shadow)
+    protected virtual FileInfo FindExeFile(String shadow)
     {
         var fis = shadow.AsDirectory().GetFiles();
         var runfile = fis.FirstOrDefault(e => e.Name.EqualIgnoreCase(Name));
@@ -202,7 +227,7 @@ public class ZipDeploy
             runfile = fis.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
         }
 
-        return runfile?.FullName;
+        return runfile;
     }
     #endregion
 

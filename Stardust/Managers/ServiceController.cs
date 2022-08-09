@@ -2,6 +2,7 @@
 using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
+using Stardust.Deployment;
 using Stardust.Models;
 
 namespace Stardust.Managers;
@@ -38,6 +39,7 @@ internal class ServiceController : DisposeBase
 
     private String _workdir;
     private TimerX _timer;
+    private ZipDeploy _deploy;
     #endregion
 
     #region 构造
@@ -74,21 +76,41 @@ internal class ServiceController : DisposeBase
         WriteLog("启动应用：{0} {1} {2}", file, args, workDir);
         if (service.MaxMemory > 0) WriteLog("内存限制：{0:n0}M", service.MaxMemory);
 
-        var si = new ProcessStartInfo
-        {
-            FileName = file,
-            Arguments = args,
-            WorkingDirectory = workDir,
-
-            // false时目前控制台合并到当前控制台，一起退出；
-            // true时目标控制台独立窗口，不会一起退出；
-            UseShellExecute = true,
-        };
-
         using var span = Tracer?.NewSpan("StartService", service);
         try
         {
-            var p = Process.Start(si);
+            Process p;
+            if (file.EqualIgnoreCase("ZipDeploy"))
+            {
+                _deploy = new ZipDeploy
+                {
+                    FileName = file,
+                    WorkingDirectory = workDir,
+
+                    Log = XTrace.Log,
+                };
+
+                if (!args.IsNullOrEmpty() && !_deploy.Parse(args.Split(" "))) return false;
+
+                if (!_deploy.Execute()) return false;
+
+                p = _deploy.Process;
+            }
+            else
+            {
+                var si = new ProcessStartInfo
+                {
+                    FileName = file,
+                    Arguments = args,
+                    WorkingDirectory = workDir,
+
+                    // false时目前控制台合并到当前控制台，一起退出；
+                    // true时目标控制台独立窗口，不会一起退出；
+                    UseShellExecute = true,
+                };
+
+                p = Process.Start(si);
+            }
 
             WriteLog("启动成功 PID={0}/{1}", p.Id, p.ProcessName);
 
