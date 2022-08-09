@@ -189,7 +189,7 @@ internal class ServiceController : DisposeBase
             }
         }
 
-        if (ProcessId > 0)
+        if (p == null && ProcessId > 0)
         {
             try
             {
