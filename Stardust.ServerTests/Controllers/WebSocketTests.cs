@@ -79,7 +79,7 @@ namespace Stardust.Server.Controllers.Tests
             var ms = new[] { "开灯", "关门", "吃饭" };
 
             // 模拟推送指令到队列
-            ThreadPoolX.QueueUserWorkItem(() =>
+            ThreadPool.QueueUserWorkItem(s =>
             {
                 var cache = _server.Services.GetRequiredService<ICache>();
                 var queue = cache.GetQueue<String>($"cmd:{rs.Code}");

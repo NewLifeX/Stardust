@@ -7,7 +7,7 @@
     <Description>星尘，分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2022 NewLife</Copyright>
-    <VersionPrefix>2.2</VersionPrefix>
+    <VersionPrefix>2.3</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -49,6 +49,8 @@
     <Compile Remove="Monitors\MySpan.cs" />
     <Compile Remove="Monitors\MyTraceModel.cs" />
     <Compile Remove="Registry\RegistryClient.cs" />
+    <Compile Remove="RpcClient.cs" />
+    <Compile Remove="RpcServer.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -56,7 +58,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="9.2.2022.801" />
+    <PackageReference Include="NewLife.Core" Version="10.0.2022.810-beta0004" />
+    <PackageReference Include="NewLife.Remoting" Version="2.0.2022.810-beta0529" />
   </ItemGroup>
 
 </Project>

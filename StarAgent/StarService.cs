@@ -61,7 +61,7 @@ namespace StarAgent
 
                 if (Service is MyService svc)
                 {
-                    ThreadPoolX.QueueUserWorkItem(() =>
+                    ThreadPool.QueueUserWorkItem(s =>
                     {
                         svc.StartFactory();
                         svc.StartClient();
@@ -100,7 +100,7 @@ namespace StarAgent
             var name = p.ProcessName;
             var pid = 0;
 
-            ThreadPoolX.QueueUserWorkItem(() =>
+            ThreadPool.QueueUserWorkItem(s =>
             {
                 WriteLog("杀死进程 {0}/{1}，等待 {2}秒", processId, p.ProcessName, delay);
 

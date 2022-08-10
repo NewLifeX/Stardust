@@ -49,7 +49,7 @@ namespace StarAgent
 
                 if (Service is MyService svc)
                 {
-                    ThreadPoolX.QueueUserWorkItem(() =>
+                    ThreadPool.QueueUserWorkItem(s =>
                     {
                         svc.StartClient();
                         svc.StartFactory();
