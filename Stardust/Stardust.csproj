@@ -17,6 +17,8 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -58,8 +60,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="10.0.2022.810-beta0004" />
-    <PackageReference Include="NewLife.Remoting" Version="2.0.2022.810-beta0529" />
+    <PackageReference Include="NewLife.Core" Version="10.0.2022.813-beta1403" />
+    <PackageReference Include="NewLife.Remoting" Version="2.0.2022.813-beta1441" />
   </ItemGroup>
 
 </Project>

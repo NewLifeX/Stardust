@@ -19,6 +19,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <PackAsTool>true</PackAsTool>
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -45,7 +47,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Agent" Version="9.2.2022.701" />
+    <PackageReference Include="NewLife.Agent" Version="9.3.2022.814-beta0223" />
   </ItemGroup>
 
   <ItemGroup>
