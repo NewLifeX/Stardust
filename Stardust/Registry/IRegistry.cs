@@ -99,7 +99,7 @@ namespace Stardust.Registry
                 {
                     // 同时考虑两个地址
                     var name = item.Client;
-                    var addrs = (item.Address + "," + item.Address2).Split(",", StringSplitOptions.RemoveEmptyEntries);
+                    var addrs = (item.Address + "," + item.Address2).Split(',', StringSplitOptions.RemoveEmptyEntries);
                     var set = new HashSet<String>();
                     for (var i = 0; i < addrs.Length; i++)
                     {
