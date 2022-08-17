@@ -20,6 +20,8 @@ namespace Stardust.Data
         #region 对象操作
         static AppMeter()
         {
+            Meta.Factory.Table.DataTable.InsertOnly = true;
+
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
             //var df = Meta.Factory.AdditionalFields;
             //df.Add(nameof(AppId));
