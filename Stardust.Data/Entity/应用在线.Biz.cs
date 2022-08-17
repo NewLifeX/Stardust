@@ -49,6 +49,9 @@ namespace Stardust.Data
             var len = _.IP.Length;
             if (len > 0 && !IP.IsNullOrEmpty() && IP.Length > len) IP = IP[..len];
 
+            len = _.ProcessName.Length;
+            if (len > 0 && !ProcessName.IsNullOrEmpty() && ProcessName.Length > len) ProcessName = ProcessName[..len];
+
             base.Valid(isNew);
         }
         #endregion
