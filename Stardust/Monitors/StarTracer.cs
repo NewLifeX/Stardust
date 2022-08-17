@@ -37,6 +37,9 @@ public class StarTracer : DefaultTracer
     /// <summary>剔除埋点调用自己。默认true</summary>
     public Boolean TrimSelf { get; set; } = true;
 
+    /// <summary>性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息</summary>
+    public Boolean EnableMeter { get; set; } = true;
+
     private readonly String _version;
     private readonly Process _process = Process.GetCurrentProcess();
     private readonly Queue<TraceModel> _fails = new();
@@ -117,10 +120,13 @@ public class StarTracer : DefaultTracer
         Init();
 
         // 构建应用信息
-        if (_appInfo == null)
-            _appInfo = new AppInfo(_process) { Version = _version };
-        else
-            _appInfo.Refresh();
+        if (EnableMeter)
+        {
+            if (_appInfo == null)
+                _appInfo = new AppInfo(_process) { Version = _version };
+            else
+                _appInfo.Refresh();
+        }
 
         // 发送，失败后进入队列
         var model = new TraceModel
@@ -133,8 +139,6 @@ public class StarTracer : DefaultTracer
 
             Builders = builders
         };
-        //XTrace.WriteLine("StarProcess[{0}]: {1}", builders.Length, builders.Where(e => e.Name[0] == '/').Join());
-        //XTrace.WriteLine("Length={0}", model.ToJson().Length);
         try
         {
             // 数据过大时，以压缩格式上传
@@ -142,23 +146,15 @@ public class StarTracer : DefaultTracer
             var rs = body.Length > 1024 ?
                  Client.Invoke<TraceResponse>("Trace/ReportRaw", body.GetBytes()) :
                  Client.Invoke<TraceResponse>("Trace/Report", model);
-            //var res = body.Length > 1024 ?
-            //     Client.Invoke<HttpResponseMessage>("Trace/ReportRaw", body.GetBytes().Compress()) :
-            //     Client.Invoke<HttpResponseMessage>("Trace/Report", model);
-            //res.EnsureSuccessStatusCode();
-            //var str = res.Content.ReadAsStringAsync().Result;
-            //var dic = JsonParser.Decode(str);
-            //var rs = JsonHelper.Convert<TraceResponse>(dic["data"]);
             // 处理响应参数
             if (rs != null)
             {
-                //XTrace.WriteLine("excludes={0} MaxTagLength={1}", rs.Excludes?.Join(), rs.MaxTagLength);
-
                 if (rs.Period > 0) Period = rs.Period;
                 if (rs.MaxSamples > 0) MaxSamples = rs.MaxSamples;
                 if (rs.MaxErrors > 0) MaxErrors = rs.MaxErrors;
                 if (rs.Timeout > 0) Timeout = rs.Timeout;
                 if (rs.MaxTagLength > 0) MaxTagLength = rs.MaxTagLength;
+                if (rs.EnableMeter != null) EnableMeter = rs.EnableMeter.Value;
                 Excludes = rs.Excludes;
 
                 // 保存到配置文件
@@ -173,9 +169,7 @@ public class StarTracer : DefaultTracer
             }
             else
             {
-                //XTrace.WriteLine("rs=null {0}", str);
-                XTrace.WriteLine("rs=null");
-                XTrace.WriteLine(model.ToJson());
+                XTrace.WriteLine("ProcessSpans rs=null");
             }
         }
         catch (ApiException ex)

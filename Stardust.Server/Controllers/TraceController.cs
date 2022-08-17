@@ -28,7 +28,7 @@ public class TraceController : ControllerBase
     private readonly ITraceItemStatService _itemStat;
     private static readonly ICache _cache = new MemoryCache();
 
-    public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService, AppOnlineService appOnline,UplinkService uplink, Setting setting, ITracer tracer)
+    public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService, AppOnlineService appOnline, UplinkService uplink, Setting setting, ITracer tracer)
     {
         _stat = stat;
         _appStat = appStat;
@@ -67,6 +67,7 @@ public class TraceController : ControllerBase
             Timeout = app.Timeout,
             //Excludes = app.Excludes?.Split(",", ";"),
             MaxTagLength = app.MaxTagLength,
+            EnableMeter = app.EnableMeter,
         };
 
         // Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配
@@ -180,7 +181,8 @@ public class TraceController : ControllerBase
         var ip = HttpContext.GetUserHost();
         if (clientId.IsNullOrEmpty()) clientId = ip;
 
-        App.WriteMeter(model, ip);
+        // 收集应用性能信息
+        if (app.EnableMeter) App.WriteMeter(model, ip);
 
         // 更新心跳信息
         var online = _appOnline.UpdateOnline(ap, clientId, ip, token, model.Info);
