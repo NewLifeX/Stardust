@@ -74,10 +74,15 @@ public class AlarmService : IHostedService
         }
 
         // 节点告警
-        var nodes = Node.FindAllWithCache();
-        foreach (var item in nodes)
+        //var nodes = Node.FindAllWithCache();
+        //foreach (var item in nodes)
+        //{
+        //    ProcessNode(item);
+        //}
+        var onlines = NodeOnline.FindAll();
+        foreach (var item in onlines)
         {
-            ProcessNode(item);
+            if (item.Node != null) ProcessNode(item.Node);
         }
 
         // Redis告警
