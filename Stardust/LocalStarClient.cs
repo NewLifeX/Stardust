@@ -56,7 +56,7 @@ public class LocalStarClient
     public AgentInfo GetInfo()
     {
         var task = GetInfoAsync();
-        return task.Wait(500) ? task.Result : null;
+        return task.Wait(1500) ? task.Result : null;
     }
 
     /// <summary>获取信息</summary>
