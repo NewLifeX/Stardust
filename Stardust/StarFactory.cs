@@ -132,6 +132,9 @@ public class StarFactory : DisposeBase
 
         if (!Server.IsNullOrEmpty() && Local.Server.IsNullOrEmpty()) Local.Server = Server;
 
+        var flag = false;
+        var set = StarSetting.Current;
+
         //if (AppId != "StarAgent")
         //{
         // 借助本地StarAgent获取服务器地址
@@ -143,6 +146,12 @@ public class StarFactory : DisposeBase
             {
                 if (Server.IsNullOrEmpty()) Server = server;
                 XTrace.WriteLine("星尘探测：{0}", server);
+
+                if (!Server.IsNullOrEmpty())
+                {
+                    set.Server = server;
+                    flag = true;
+                }
             }
             else
                 XTrace.WriteLine("星尘探测：StarAgent Not Found");
@@ -154,10 +163,11 @@ public class StarFactory : DisposeBase
         //}
 
         // 如果探测不到本地应用，则使用配置
-        var set = StarSetting.Current;
         if (Server.IsNullOrEmpty()) Server = set.Server;
         if (AppId.IsNullOrEmpty()) AppId = set.AppKey;
         if (Secret.IsNullOrEmpty()) Secret = set.Secret;
+
+        if (flag) set.Save();
 
         // 生成ClientId，用于唯一标识当前实例，默认IP@pid
         try
