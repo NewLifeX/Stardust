@@ -39,7 +39,6 @@
     <Compile Include="..\StarAgent\Program.cs" Link="Program.cs" />
     <Compile Include="..\StarAgent\Setting.cs" Link="Setting.cs" />
     <Compile Include="..\StarAgent\StarService.cs" Link="StarService.cs" />
-    <Compile Include="..\StarAgent\StarService2.cs" Link="StarService2.cs" />
   </ItemGroup>
 
   <ItemGroup>

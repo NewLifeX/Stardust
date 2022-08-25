@@ -140,6 +140,7 @@ public class StarFactory : DisposeBase
         // 借助本地StarAgent获取服务器地址
         try
         {
+            //XTrace.WriteLine("正在探测本机星尘代理……");
             var inf = Local.GetInfo();
             var server = inf?.Server;
             if (!server.IsNullOrEmpty())

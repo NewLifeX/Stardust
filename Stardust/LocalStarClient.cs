@@ -17,13 +17,13 @@ namespace Stardust;
 public class LocalStarClient
 {
     #region 属性
-    /// <summary>代理信息</summary>
+    /// <summary>本机代理信息</summary>
     public AgentInfo Info { get; private set; }
 
     /// <summary>本地服务端地址</summary>
-    public String Server { get => _local?.Server; set => _local.Server = value; }
+    public String Server { get; set; }
 
-    private readonly AgentInfo _local;
+    private AgentInfo _local;
     private ApiClient _client;
     #endregion
 
@@ -31,8 +31,8 @@ public class LocalStarClient
     /// <summary>实例化</summary>
     public LocalStarClient()
     {
-        _local = AgentInfo.GetLocal();
-        _local.Server = StarSetting.Current.Server;
+        //_local = AgentInfo.GetLocal();
+        //_local.Server = StarSetting.Current.Server;
     }
     #endregion
 
@@ -49,14 +49,17 @@ public class LocalStarClient
 
         var set = StarSetting.Current;
         if (set.Debug) _client.EncoderLog = Log;
+
+        _local = AgentInfo.GetLocal(false);
+        _local.Server = !Server.IsNullOrEmpty() ? Server : StarSetting.Current.Server;
     }
 
     /// <summary>获取信息</summary>
     /// <returns></returns>
     public AgentInfo GetInfo()
     {
-        var task = GetInfoAsync();
-        return task.Wait(1500) ? task.Result : null;
+        var task = Task.Run(GetInfoAsync);
+        return task.Wait(500) ? task.Result : null;
     }
 
     /// <summary>获取信息</summary>

@@ -188,6 +188,7 @@ internal class MyService : ServiceBase, IServiceProvider
             //var uri = new NetUri(set.LocalServer);
             try
             {
+                // 必须支持Udp，因为需要支持局域网广播搜索功能
                 var svr = new ApiServer(set.LocalPort)
                 {
                     Tracer = _factory?.Tracer,
