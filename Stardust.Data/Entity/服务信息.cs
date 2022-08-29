@@ -67,6 +67,14 @@ namespace Stardust.Data
         [BindColumn("Singleton", "单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于设置权重", "")]
         public Boolean Singleton { get => _Singleton; set { if (OnPropertyChanging("Singleton", value)) { _Singleton = value; OnPropertyChanged("Singleton"); } } }
 
+        private Boolean _UseScope;
+        /// <summary>作用域。使用作用域隔离后，消费者只能使用本作用域内的服务</summary>
+        [DisplayName("作用域")]
+        [Description("作用域。使用作用域隔离后，消费者只能使用本作用域内的服务")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("UseScope", "作用域。使用作用域隔离后，消费者只能使用本作用域内的服务", "")]
+        public Boolean UseScope { get => _UseScope; set { if (OnPropertyChanging("UseScope", value)) { _UseScope = value; OnPropertyChanged("UseScope"); } } }
+
         private String _Address;
         /// <summary>服务地址模版。固定的网关地址，或地址模版如http://{IP}:{Port}，默认不填写，自动识别地址</summary>
         [DisplayName("服务地址模版")]
@@ -205,6 +213,7 @@ namespace Stardust.Data
                     case "Category": return _Category;
                     case "Enable": return _Enable;
                     case "Singleton": return _Singleton;
+                    case "UseScope": return _UseScope;
                     case "Address": return _Address;
                     case "HealthCheck": return _HealthCheck;
                     case "HealthAddress": return _HealthAddress;
@@ -232,6 +241,7 @@ namespace Stardust.Data
                     case "Category": _Category = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Singleton": _Singleton = value.ToBoolean(); break;
+                    case "UseScope": _UseScope = value.ToBoolean(); break;
                     case "Address": _Address = Convert.ToString(value); break;
                     case "HealthCheck": _HealthCheck = value.ToBoolean(); break;
                     case "HealthAddress": _HealthAddress = Convert.ToString(value); break;
@@ -273,6 +283,9 @@ namespace Stardust.Data
 
             /// <summary>单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于设置权重</summary>
             public static readonly Field Singleton = FindByName("Singleton");
+
+            /// <summary>作用域。使用作用域隔离后，消费者只能使用本作用域内的服务</summary>
+            public static readonly Field UseScope = FindByName("UseScope");
 
             /// <summary>服务地址模版。固定的网关地址，或地址模版如http://{IP}:{Port}，默认不填写，自动识别地址</summary>
             public static readonly Field Address = FindByName("Address");
@@ -339,6 +352,9 @@ namespace Stardust.Data
 
             /// <summary>单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于设置权重</summary>
             public const String Singleton = "Singleton";
+
+            /// <summary>作用域。使用作用域隔离后，消费者只能使用本作用域内的服务</summary>
+            public const String UseScope = "UseScope";
 
             /// <summary>服务地址模版。固定的网关地址，或地址模版如http://{IP}:{Port}，默认不填写，自动识别地址</summary>
             public const String Address = "Address";

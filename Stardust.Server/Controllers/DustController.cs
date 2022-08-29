@@ -70,7 +70,8 @@ namespace Stardust.Server.Controllers
             }
 
             // 作用域
-            svc.Scope = AppRule.CheckScope(-1, UserHost, service.ClientId);
+            if (info.UseScope)
+                svc.Scope = AppRule.CheckScope(-1, UserHost, service.ClientId);
 
             // 地址处理。本地任意地址，更换为IP地址
             var ip = service.IP;

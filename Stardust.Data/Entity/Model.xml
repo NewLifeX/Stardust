@@ -141,6 +141,7 @@
       <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Singleton" DataType="Boolean" Description="单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于设置权重" />
+      <Column Name="UseScope" DataType="Boolean" Description="作用域。使用作用域隔离后，消费者只能使用本作用域内的服务" />
       <Column Name="Address" DataType="String" Description="服务地址模版。固定的网关地址，或地址模版如http://{IP}:{Port}，默认不填写，自动识别地址" />
       <Column Name="HealthCheck" DataType="Boolean" Description="健康监测。定时检测服务是否可用" />
       <Column Name="HealthAddress" DataType="String" Description="监测地址。健康监测接口地址，相对地址或绝对地址" />

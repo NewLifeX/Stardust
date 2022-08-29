@@ -75,6 +75,7 @@ namespace Stardust.Registry
             {
                 RoundRobin = true,
 
+                Log = (registry as ILogFeature).Log,
                 Tracer = DefaultTracer.Instance,
             };
 
