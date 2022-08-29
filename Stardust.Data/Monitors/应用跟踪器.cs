@@ -124,6 +124,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("MaxErrors", "异常数。最大异常采样数，采样周期内，最多只记录指定数量的异常事件，默认10", "")]
         public Int32 MaxErrors { get => _MaxErrors; set { if (OnPropertyChanging("MaxErrors", value)) { _MaxErrors = value; OnPropertyChanged("MaxErrors"); } } }
 
+        private Boolean _EnableMeter;
+        /// <summary>性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息</summary>
+        [DisplayName("性能收集")]
+        [Description("性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("EnableMeter", "性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息", "")]
+        public Boolean EnableMeter { get => _EnableMeter; set { if (OnPropertyChanging("EnableMeter", value)) { _EnableMeter = value; OnPropertyChanged("EnableMeter"); } } }
+
         private String _Excludes;
         /// <summary>排除项。要排除的操作名，支持*模糊匹配</summary>
         [DisplayName("排除项")]
@@ -305,6 +313,7 @@ namespace Stardust.Data.Monitors
                     case "Period": return _Period;
                     case "MaxSamples": return _MaxSamples;
                     case "MaxErrors": return _MaxErrors;
+                    case "EnableMeter": return _EnableMeter;
                     case "Excludes": return _Excludes;
                     case "Timeout": return _Timeout;
                     case "TimeoutExcludes": return _TimeoutExcludes;
@@ -343,6 +352,7 @@ namespace Stardust.Data.Monitors
                     case "Period": _Period = value.ToInt(); break;
                     case "MaxSamples": _MaxSamples = value.ToInt(); break;
                     case "MaxErrors": _MaxErrors = value.ToInt(); break;
+                    case "EnableMeter": _EnableMeter = value.ToBoolean(); break;
                     case "Excludes": _Excludes = Convert.ToString(value); break;
                     case "Timeout": _Timeout = value.ToInt(); break;
                     case "TimeoutExcludes": _TimeoutExcludes = Convert.ToString(value); break;
@@ -409,6 +419,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>异常数。最大异常采样数，采样周期内，最多只记录指定数量的异常事件，默认10</summary>
             public static readonly Field MaxErrors = FindByName("MaxErrors");
+
+            /// <summary>性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息</summary>
+            public static readonly Field EnableMeter = FindByName("EnableMeter");
 
             /// <summary>排除项。要排除的操作名，支持*模糊匹配</summary>
             public static readonly Field Excludes = FindByName("Excludes");
@@ -508,6 +521,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>异常数。最大异常采样数，采样周期内，最多只记录指定数量的异常事件，默认10</summary>
             public const String MaxErrors = "MaxErrors";
+
+            /// <summary>性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息</summary>
+            public const String EnableMeter = "EnableMeter";
 
             /// <summary>排除项。要排除的操作名，支持*模糊匹配</summary>
             public const String Excludes = "Excludes";

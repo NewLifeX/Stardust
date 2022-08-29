@@ -105,10 +105,12 @@ namespace Stardust.Server.Services
 
                 // 计算埋点个数
                 st.Names = ns.Where(e => e.AppId == appId).Count();
+
+                st.Save();
             }
 
-            // 保存统计
-            sts.Save(false);
+            //// 保存统计
+            //sts.Save(false);
         }
     }
 }

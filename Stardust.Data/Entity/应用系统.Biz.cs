@@ -162,13 +162,15 @@ namespace Stardust.Data
                 //if (online.CreateIP.IsNullOrEmpty()) online.CreateIP = ip;
                 //online.UpdateInfo(app, model.Info);
 
-                // 优先使用clientId内部的内网本机IP作为跟踪数据客户端实例
+                //// 优先使用clientId内部的内网本机IP作为跟踪数据客户端实例
+                //var clientId = model.ClientId;
+                //if (!clientId.IsNullOrEmpty())
+                //{
+                //    var p = clientId.IndexOf('@');
+                //    if (p > 0) clientId = clientId[..p];
+                //}
+                // 直接使用ClientId来唯一标识应用实例，用于应用性能数据存储
                 var clientId = model.ClientId;
-                if (!clientId.IsNullOrEmpty())
-                {
-                    var p = clientId.IndexOf('@');
-                    if (p > 0) clientId = clientId[..p];
-                }
                 AppMeter.WriteData(app, model.Info, clientId, ip);
             }
         }

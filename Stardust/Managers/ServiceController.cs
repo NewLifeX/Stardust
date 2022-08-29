@@ -59,6 +59,7 @@ internal class ServiceController : DisposeBase
         if (Process != null) return false;
 
         var service = Info;
+        if (service == null) return false;
 
         // 修正路径
         var workDir = service.WorkingDirectory;
@@ -140,7 +141,7 @@ internal class ServiceController : DisposeBase
         var p = Process;
         if (p == null) return;
 
-        WriteLog("停止应用 PID={0}/{0} 原因：{2}", p.Id, p.ProcessName, reason);
+        WriteLog("停止应用 PID={0}/{1} 原因：{2}", p.Id, p.ProcessName, reason);
 
         using var span = Tracer?.NewSpan("StopService", $"{Info.Name} reason={reason}");
         try
@@ -185,7 +186,7 @@ internal class ServiceController : DisposeBase
             else
             {
                 Process = null;
-                WriteLog("应用[{0}/{1}]已退出！", p.ProcessName, p.Id);
+                WriteLog("应用[{0}/{1}]已退出！", p.Id, Name);
             }
         }
 
@@ -196,7 +197,7 @@ internal class ServiceController : DisposeBase
                 p = Process.GetProcessById(ProcessId);
                 if (p != null && !p.HasExited && p.ProcessName == ProcessName)
                 {
-                    WriteLog("应用[{0}/{1}]已启动，直接接管", Name, p.Id);
+                    WriteLog("应用[{0}/{1}]已启动，直接接管", p.Id, Name);
 
                     SetProcess(p);
                     if (Info != null && Info.ReloadOnChange) StartMonitor();

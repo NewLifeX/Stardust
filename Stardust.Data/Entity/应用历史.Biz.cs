@@ -17,6 +17,8 @@ namespace Stardust.Data
         #region 对象操作
         static AppHistory()
         {
+            Meta.Factory.Table.DataTable.InsertOnly = true;
+           
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Modules.Add<UserModule>();
             Meta.Modules.Add<TimeModule>();
