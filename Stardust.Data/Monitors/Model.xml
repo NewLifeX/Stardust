@@ -164,7 +164,7 @@
       <Column Name="Errors" DataType="Int32" Description="错误数" />
       <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
       <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
-      <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数，单位毫秒" />
+      <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
       <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
       <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
       <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
@@ -189,7 +189,7 @@
       <Column Name="Errors" DataType="Int32" Description="错误数" />
       <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
       <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
-      <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数" />
+      <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
       <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
       <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
       <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
@@ -212,7 +212,7 @@
       <Column Name="Errors" DataType="Int32" Description="错误数" />
       <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
       <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
-      <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数" />
+      <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
       <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
       <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
       <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
@@ -234,7 +234,7 @@
       <Column Name="Errors" DataType="Int64" Description="错误数" />
       <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
       <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
-      <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数" />
+      <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
       <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
       <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
       <Column Name="Apis" DataType="Int64" Description="接口数" />
@@ -259,7 +259,7 @@
       <Column Name="Errors" DataType="Int32" Description="错误数" />
       <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
       <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
-      <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数" />
+      <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
       <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
       <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />

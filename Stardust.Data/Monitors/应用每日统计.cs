@@ -84,11 +84,11 @@ namespace Stardust.Data.Monitors
         public Int64 TotalCost { get => _TotalCost; set { if (OnPropertyChanging("TotalCost", value)) { _TotalCost = value; OnPropertyChanged("TotalCost"); } } }
 
         private Int32 _Cost;
-        /// <summary>平均耗时。总耗时除以总次数</summary>
+        /// <summary>平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒</summary>
         [DisplayName("平均耗时")]
-        [Description("平均耗时。总耗时除以总次数")]
+        [Description("平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Cost", "平均耗时。总耗时除以总次数", "")]
+        [BindColumn("Cost", "平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒", "")]
         public Int32 Cost { get => _Cost; set { if (OnPropertyChanging("Cost", value)) { _Cost = value; OnPropertyChanged("Cost"); } } }
 
         private Int32 _MaxCost;
@@ -263,7 +263,7 @@ namespace Stardust.Data.Monitors
             /// <summary>总耗时。单位毫秒</summary>
             public static readonly Field TotalCost = FindByName("TotalCost");
 
-            /// <summary>平均耗时。总耗时除以总次数</summary>
+            /// <summary>平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒</summary>
             public static readonly Field Cost = FindByName("Cost");
 
             /// <summary>最大耗时。单位毫秒</summary>
@@ -326,7 +326,7 @@ namespace Stardust.Data.Monitors
             /// <summary>总耗时。单位毫秒</summary>
             public const String TotalCost = "TotalCost";
 
-            /// <summary>平均耗时。总耗时除以总次数</summary>
+            /// <summary>平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒</summary>
             public const String Cost = "Cost";
 
             /// <summary>最大耗时。单位毫秒</summary>

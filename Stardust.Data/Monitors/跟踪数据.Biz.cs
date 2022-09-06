@@ -48,6 +48,7 @@ namespace Stardust.Data.Monitors
             base.Valid(isNew);
 
             //StatDate = StartTime.ToDateTime().ToLocalTime().Date;
+            if (TotalCost < 0) TotalCost = 0;
             if (!Dirtys[nameof(Cost)])
             {
                 // 为了让平均值逼近TP99，避免毛刺干扰，减去最大值再取平均
@@ -277,6 +278,9 @@ namespace Stardust.Data.Monitors
 
             if (builder.Samples != null) td.Samples = builder.Samples.Count;
             if (builder.ErrorSamples != null) td.ErrorSamples = builder.ErrorSamples.Count;
+
+            // 清空异常耗时数据
+            if (td.TotalCost < 0) td.TotalCost = 0;
 
             return td;
         }
