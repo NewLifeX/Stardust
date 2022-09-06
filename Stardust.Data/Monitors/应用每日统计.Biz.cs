@@ -37,8 +37,17 @@ namespace Stardust.Data.Monitors
         {
             base.Valid(isNew);
 
-            Cost = Total == 0 ? 0 : (Int32)(TotalCost / Total);
+            //Cost = Total == 0 ? 0 : (Int32)(TotalCost / Total);
             ErrorRate = Total == 0 ? 0 : Math.Round((Double)Errors / Total, 4);
+
+            if (!Dirtys[nameof(Cost)])
+            {
+                // 为了让平均值逼近TP99，避免毛刺干扰，减去最大值再取平均
+                if (Total >= 50)
+                    Cost = (Int32)Math.Round((Double)(TotalCost - MaxCost) / (Total - 1));
+                else
+                    Cost = Total == 0 ? 0 : (Int32)Math.Round((Double)TotalCost / Total);
+            }
         }
         #endregion
 

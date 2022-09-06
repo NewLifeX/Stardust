@@ -48,7 +48,14 @@ namespace Stardust.Data.Monitors
             base.Valid(isNew);
 
             //StatDate = StartTime.ToDateTime().ToLocalTime().Date;
-            Cost = Total == 0 ? 0 : (Int32)(TotalCost / Total);
+            if (!Dirtys[nameof(Cost)])
+            {
+                // 为了让平均值逼近TP99，避免毛刺干扰，减去最大值再取平均
+                if (Total >= 50)
+                    Cost = (Int32)Math.Round((Double)(TotalCost - MaxCost) / (Total - 1));
+                else
+                    Cost = Total == 0 ? 0 : (Int32)Math.Round((Double)TotalCost / Total);
+            }
         }
         #endregion
 
