@@ -223,6 +223,25 @@ internal class ServiceController : DisposeBase
             ProcessId = 0;
         }
 
+        // 根据进程名查找
+        if (p == null && !ProcessName.IsNullOrEmpty())
+        {
+            var ps = Process.GetProcessesByName(ProcessName);
+            if (ps.Length > 0)
+            {
+                p = ps[0];
+
+                WriteLog("应用[{0}/{1}]已启动，直接接管", p.Id, Name);
+
+                SetProcess(p);
+                if (Info != null && Info.ReloadOnChange) StartMonitor();
+
+                if (StartTime.Year < 2000) StartTime = DateTime.Now;
+
+                return true;
+            }
+        }
+
         // 准备启动进程
         var rs = Start();
 
