@@ -39,7 +39,7 @@ internal class ServiceController : DisposeBase
 
     private String _workdir;
     private TimerX _timer;
-    private ZipDeploy _deploy;
+    //private ZipDeploy _deploy;
     #endregion
 
     #region 构造
@@ -58,80 +58,88 @@ internal class ServiceController : DisposeBase
     {
         if (Process != null) return false;
 
-        var service = Info;
-        if (service == null) return false;
-
-        // 修正路径
-        var workDir = service.WorkingDirectory;
-        var file = service.FileName?.Trim();
-        if (file.IsNullOrEmpty()) return false;
-
-        if (file.Contains("/") || file.Contains("\\"))
+        // 加锁避免多线程同时启动服务
+        lock (this)
         {
-            file = file.GetFullPath();
-            if (workDir.IsNullOrEmpty()) workDir = Path.GetDirectoryName(file);
-        }
-        _workdir = workDir;
+            if (Process != null) return false;
 
-        var args = service.Arguments?.Trim();
-        WriteLog("启动应用：{0} {1} {2}", file, args, workDir);
-        if (service.MaxMemory > 0) WriteLog("内存限制：{0:n0}M", service.MaxMemory);
+            var service = Info;
+            if (service == null) return false;
 
-        using var span = Tracer?.NewSpan("StartService", service);
-        try
-        {
-            Process p;
-            if (file.EqualIgnoreCase("ZipDeploy"))
+            // 修正路径
+            var workDir = service.WorkingDirectory;
+            var file = service.FileName?.Trim();
+            if (file.IsNullOrEmpty()) return false;
+
+            if (file.Contains("/") || file.Contains("\\"))
             {
-                _deploy = new ZipDeploy
-                {
-                    FileName = file,
-                    WorkingDirectory = workDir,
-
-                    Log = XTrace.Log,
-                };
-
-                if (!args.IsNullOrEmpty() && !_deploy.Parse(args.Split(" "))) return false;
-
-                if (!_deploy.Execute()) return false;
-
-                p = _deploy.Process;
+                file = file.GetFullPath();
+                if (workDir.IsNullOrEmpty()) workDir = Path.GetDirectoryName(file);
             }
-            else
+            _workdir = workDir;
+
+            var args = service.Arguments?.Trim();
+            WriteLog("启动应用：{0} {1} {2}", file, args, workDir);
+            if (service.MaxMemory > 0) WriteLog("内存限制：{0:n0}M", service.MaxMemory);
+
+            using var span = Tracer?.NewSpan("StartService", service);
+            try
             {
-                var si = new ProcessStartInfo
+                Process p;
+                if (file.EqualIgnoreCase("ZipDeploy"))
                 {
-                    FileName = file,
-                    Arguments = args,
-                    WorkingDirectory = workDir,
+                    var deploy = new ZipDeploy
+                    {
+                        FileName = file,
+                        WorkingDirectory = workDir,
 
-                    // false时目前控制台合并到当前控制台，一起退出；
-                    // true时目标控制台独立窗口，不会一起退出；
-                    UseShellExecute = true,
-                };
+                        Log = XTrace.Log,
+                    };
 
-                p = Process.Start(si);
+                    if (!args.IsNullOrEmpty() && !deploy.Parse(args.Split(" "))) return false;
+
+                    if (!deploy.Execute()) return false;
+
+                    p = deploy.Process;
+                }
+                else
+                {
+                    var si = new ProcessStartInfo
+                    {
+                        FileName = file,
+                        Arguments = args,
+                        WorkingDirectory = workDir,
+
+                        // false时目前控制台合并到当前控制台，一起退出；
+                        // true时目标控制台独立窗口，不会一起退出；
+                        UseShellExecute = true,
+                    };
+
+                    p = Process.Start(si);
+                }
+
+                if (p == null) return false;
+
+                WriteLog("启动成功 PID={0}/{1}", p.Id, p.ProcessName);
+
+                // 记录进程信息，避免宿主重启后无法继续管理
+                SetProcess(p);
+
+                StartTime = DateTime.Now;
+
+                // 定时检查文件是否有改变
+                if (service.ReloadOnChange) StartMonitor();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                span?.SetError(ex, null);
+                Log?.Write(LogLevel.Error, "{0}", ex);
             }
 
-            WriteLog("启动成功 PID={0}/{1}", p.Id, p.ProcessName);
-
-            // 记录进程信息，避免宿主重启后无法继续管理
-            SetProcess(p);
-
-            StartTime = DateTime.Now;
-
-            // 定时检查文件是否有改变
-            if (service.ReloadOnChange) StartMonitor();
-
-            return true;
+            return false;
         }
-        catch (Exception ex)
-        {
-            span?.SetError(ex, null);
-            Log?.Write(LogLevel.Error, "{0}", ex);
-        }
-
-        return false;
     }
 
     /// <summary>停止应用</summary>
