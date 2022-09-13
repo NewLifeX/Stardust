@@ -29,15 +29,22 @@ namespace Stardust.Server.Services
             var app = App.FindByName(username);
             if (app == null)
             {
-                app = new App
+                // 查找或创建应用，避免多线程创建冲突
+                app = App.GetOrAdd(username, App.FindByName, k => new App
                 {
                     Name = username,
                     Secret = password,
                     Enable = autoRegister,
-                };
+                });
+                //app = new App
+                //{
+                //    Name = username,
+                //    Secret = password,
+                //    Enable = autoRegister,
+                //};
 
-                // 先保存
-                app.Insert();
+                //// 先保存
+                //app.Insert();
 
                 //if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(username), $"应用[{username}]不存在且禁止自动注册！");
             }
