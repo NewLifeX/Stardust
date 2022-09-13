@@ -10,12 +10,12 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Deployment
 {
-    /// <summary>部署版本</summary>
+    /// <summary>部署版本。应用的多个可发布版本，主要包括应用程序包</summary>
     [Serializable]
     [DataObject]
-    [Description("部署版本")]
+    [Description("部署版本。应用的多个可发布版本，主要包括应用程序包")]
     [BindIndex("IU_AppDeployVersion_AppId_Version", true, "AppId,Version")]
-    [BindTable("AppDeployVersion", Description = "部署版本", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("AppDeployVersion", Description = "部署版本。应用的多个可发布版本，主要包括应用程序包", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppDeployVersion
     {
         #region 属性
@@ -36,11 +36,11 @@ namespace Stardust.Data.Deployment
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
         private String _Version;
-        /// <summary>版本</summary>
+        /// <summary>版本。如2.3.2022.0911，字符串比较大小</summary>
         [DisplayName("版本")]
-        [Description("版本")]
+        [Description("版本。如2.3.2022.0911，字符串比较大小")]
         [DataObjectField(false, false, false, 50)]
-        [BindColumn("Version", "版本", "", Master = true)]
+        [BindColumn("Version", "版本。如2.3.2022.0911，字符串比较大小", "", Master = true)]
         public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
         private Boolean _Enable;
@@ -180,7 +180,7 @@ namespace Stardust.Data.Deployment
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
 
-            /// <summary>版本</summary>
+            /// <summary>版本。如2.3.2022.0911，字符串比较大小</summary>
             public static readonly Field Version = FindByName("Version");
 
             /// <summary>启用</summary>
@@ -222,7 +222,7 @@ namespace Stardust.Data.Deployment
             /// <summary>应用</summary>
             public const String AppId = "AppId";
 
-            /// <summary>版本</summary>
+            /// <summary>版本。如2.3.2022.0911，字符串比较大小</summary>
             public const String Version = "Version";
 
             /// <summary>启用</summary>
