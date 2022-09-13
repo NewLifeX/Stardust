@@ -42,7 +42,7 @@ public class AppController : EntityController<App>
         {
             var df = ListFields.AddListField("Deploy", "Version");
             df.DisplayName = "部署";
-            df.Url = "/Deployment/AppDeploy?appId={Id}";
+            df.Url = "/Deployment/AppDeploy?Id={Id}";
             df.DataVisible = (e, f) => AppDeploy.FindById((e as App).Id) != null;
         }
         //{
