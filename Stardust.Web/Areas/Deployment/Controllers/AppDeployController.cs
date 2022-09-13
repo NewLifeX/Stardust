@@ -5,10 +5,13 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
+using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data;
 using Stardust.Data.Deployment;
+using Stardust.Data.Monitors;
 using XCode;
+using XCode.Membership;
 
 namespace Stardust.Web.Areas.Deployment.Controllers
 {
@@ -134,6 +137,14 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             }
 
             return RedirectToAction("Index");
+        }
+
+        [EntityAuthorize(PermissionFlags.Update)]
+        public ActionResult SyncApp()
+        {
+            var rs = AppDeploy.Sync();
+
+            return JsonRefresh($"成功同步[{rs}]个应用！");
         }
     }
 }

@@ -39,6 +39,7 @@ namespace Stardust.Data.Deployment
             }
 
             //if (!isNew) Nodes = AppDeployNode.FindAllByAppId(Id).Count;
+            if (isNew && !Dirtys[nameof(AutoStart)]) AutoStart = true;
         }
         #endregion
 
@@ -131,6 +132,34 @@ namespace Stardust.Data.Deployment
                 if (list2.Count == 0) list2 = AppDeployVersion.Search(Id, null, true, DateTime.MinValue, DateTime.MinValue, null, null);
                 if (list2.Count > 0) Version = list2[0].Version;
             }
+        }
+
+        /// <summary>
+        /// 从应用表同步数据到发布表
+        /// </summary>
+        /// <returns></returns>
+        public static Int32 Sync()
+        {
+            var count = 0;
+            var apps = App.FindAll();
+            var list = FindAll();
+            foreach (var app in apps)
+            {
+                var ad = list.FirstOrDefault(e => e.Id == app.Id);
+                if (ad != null)
+                    list.Remove(ad);
+                else
+                    ad = new AppDeploy { Id = app.Id, Enable = true };
+
+                ad.Name = app.Name;
+                ad.Category = app.Category;
+
+                if (!app.Enable) ad.Enable = false;
+
+                count += ad.Save();
+            }
+
+            return count;
         }
         #endregion
     }
