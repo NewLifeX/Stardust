@@ -20,12 +20,20 @@ namespace Stardust.Data.Deployment
     {
         #region 属性
         private Int32 _Id;
-        /// <summary>编号。对应StarApp的编号</summary>
+        /// <summary>编号</summary>
         [DisplayName("编号")]
-        [Description("编号。对应StarApp的编号")]
-        [DataObjectField(true, false, false, 0)]
-        [BindColumn("Id", "编号。对应StarApp的编号", "")]
+        [Description("编号")]
+        [DataObjectField(true, true, false, 0)]
+        [BindColumn("Id", "编号", "")]
         public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
+
+        private Int32 _AppId;
+        /// <summary>应用。对应StarApp</summary>
+        [DisplayName("应用")]
+        [Description("应用。对应StarApp")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AppId", "应用。对应StarApp", "")]
+        public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
         private String _Category;
         /// <summary>类别</summary>
@@ -196,6 +204,7 @@ namespace Stardust.Data.Deployment
                 switch (name)
                 {
                     case "Id": return _Id;
+                    case "AppId": return _AppId;
                     case "Category": return _Category;
                     case "Name": return _Name;
                     case "Enable": return _Enable;
@@ -222,6 +231,7 @@ namespace Stardust.Data.Deployment
                 switch (name)
                 {
                     case "Id": _Id = value.ToInt(); break;
+                    case "AppId": _AppId = value.ToInt(); break;
                     case "Category": _Category = Convert.ToString(value); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
@@ -250,8 +260,11 @@ namespace Stardust.Data.Deployment
         /// <summary>取得应用部署字段信息的快捷方式</summary>
         public partial class _
         {
-            /// <summary>编号。对应StarApp的编号</summary>
+            /// <summary>编号</summary>
             public static readonly Field Id = FindByName("Id");
+
+            /// <summary>应用。对应StarApp</summary>
+            public static readonly Field AppId = FindByName("AppId");
 
             /// <summary>类别</summary>
             public static readonly Field Category = FindByName("Category");
@@ -313,8 +326,11 @@ namespace Stardust.Data.Deployment
         /// <summary>取得应用部署字段名称的快捷方式</summary>
         public partial class __
         {
-            /// <summary>编号。对应StarApp的编号</summary>
+            /// <summary>编号</summary>
             public const String Id = "Id";
+
+            /// <summary>应用。对应StarApp</summary>
+            public const String AppId = "AppId";
 
             /// <summary>类别</summary>
             public const String Category = "Category";

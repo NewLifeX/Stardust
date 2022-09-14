@@ -45,6 +45,7 @@ public class DeployController : BaseController
     public ServiceInfo[] GetAll()
     {
         var app = AppDeploy.FindById(_app.Id);
+        return null;
     }
 
     private AppDeploy Valid(String appId, String secret, String clientId, String token)
@@ -96,6 +97,7 @@ public class DeployController : BaseController
     [HttpPost]
     public Int32 SetAll([FromBody] ServiceInfo[] model)
     {
+        return 0;
     }
 
     #region 辅助

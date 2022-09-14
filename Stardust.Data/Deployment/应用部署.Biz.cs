@@ -138,6 +138,7 @@ namespace Stardust.Data.Deployment
         /// <param name="app"></param>
         public void Copy(App app)
         {
+            AppId = app.Id;
             Name = app.Name;
             Category = app.Category;
 
@@ -155,16 +156,13 @@ namespace Stardust.Data.Deployment
             var list = FindAll();
             foreach (var app in apps)
             {
-                var ad = list.FirstOrDefault(e => e.Id == app.Id);
+                var ad = list.FirstOrDefault(e => e.AppId == app.Id);
+                ad ??= list.FirstOrDefault(e => e.Name.EqualIgnoreCase(app.Name));
                 if (ad != null)
                     list.Remove(ad);
                 else
-                    ad = new AppDeploy { Id = app.Id, Enable = true };
+                    ad = new AppDeploy { Name = app.Name, Enable = true };
 
-                //ad.Name = app.Name;
-                //ad.Category = app.Category;
-
-                //if (!app.Enable) ad.Enable = false;
                 ad.Copy(app);
 
                 count += ad.Save();
