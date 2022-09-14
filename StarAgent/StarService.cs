@@ -2,13 +2,13 @@
 using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
+using NewLife.Model;
 using NewLife.Net;
 using NewLife.Remoting;
 using NewLife.Serialization;
 using Stardust;
 using Stardust.Managers;
 using Stardust.Models;
-using IHost = NewLife.Agent.IHost;
 
 namespace StarAgent;
 
@@ -21,14 +21,17 @@ public class StarService : IApi
     /// </summary>
     public IApiSession Session { get; set; }
 
-    /// <summary>服务对象</summary>
-    public ServiceBase Service { get; set; }
+    ///// <summary>服务对象</summary>
+    //public ServiceBase Service { get; set; }
 
-    /// <summary>服务主机</summary>
-    public IHost Host { get; set; }
+    ///// <summary>服务主机</summary>
+    //public IHost Host { get; set; }
 
     /// <summary>应用服务管理</summary>
     public ServiceManager Manager { get; set; }
+
+    /// <summary>服务提供者</summary>
+    public IServiceProvider Provider { get; set; }
 
     ///// <summary>插件管理</summary>
     //public PluginManager PluginManager { get; set; }
@@ -71,7 +74,7 @@ public class StarService : IApi
 
             XTrace.WriteLine("StarAgent使用应用[{0}]送过来的星尘服务端地址：{1}", info.ProcessId, info.Server);
 
-            if (Service is MyService svc)
+            if (Provider?.GetService<ServiceBase>() is MyService svc)
             {
                 ThreadPool.QueueUserWorkItem(s =>
                 {

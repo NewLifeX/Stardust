@@ -89,6 +89,130 @@ internal class MyService : ServiceBase, IServiceProvider
     private PluginManager _PluginManager;
     private String _lastVersion;
 
+    #region 调度核心
+    /// <summary>服务启动</summary>
+    /// <remarks>
+    /// 安装Windows服务后，服务启动会执行一次该方法。
+    /// 控制台菜单按5进入循环调试也会执行该方法。
+    /// </remarks>
+    protected override void StartWork(String reason)
+    {
+        var set = AgentSetting;
+
+        StartFactory();
+
+        // 应用服务管理
+        _Manager = new ServiceManager
+        {
+            Services = set.Services,
+            Delay = set.Delay,
+
+            Tracer = _factory?.Tracer,
+            Log = XTrace.Log,
+        };
+
+        // 插件管理器
+        var pm = _PluginManager = new PluginManager
+        {
+            Identity = "StarAgent",
+            Provider = this,
+
+            Log = XTrace.Log,
+        };
+
+        // 监听端口，用于本地通信
+        if (set.LocalPort > 0)
+        {
+            //var uri = new NetUri(set.LocalServer);
+            try
+            {
+                // 必须支持Udp，因为需要支持局域网广播搜索功能
+                var svr = new ApiServer(set.LocalPort)
+                {
+                    Tracer = _factory?.Tracer,
+                    Log = XTrace.Log
+                };
+                svr.Register(new StarService
+                {
+                    Provider = this,
+                    //Host = Host,
+                    Manager = _Manager,
+                    //PluginManager = _PluginManager,
+                    StarSetting = StarSetting,
+                    AgentSetting = AgentSetting,
+                    Log = XTrace.Log
+                }, null);
+
+                _server = svr;
+                svr.Start();
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+            }
+        }
+
+        // 启动星尘客户端，连接服务端
+        StartClient();
+
+        _Manager.Start();
+
+        // 启动插件
+        WriteLog("启动插件[{0}]", pm.Identity);
+        pm.Load();
+        pm.Init();
+        foreach (var item in pm.Plugins)
+        {
+            if (item is IAgentPlugin plugin) plugin.Start();
+        }
+
+        base.StartWork(reason);
+    }
+
+    /// <summary>服务管理线程</summary>
+    /// <param name="data"></param>
+    protected override void DoCheck(Object data)
+    {
+        // 支持动态更新
+        _Manager.Services = AgentSetting.Services;
+
+        base.DoCheck(data);
+    }
+
+    /// <summary>服务停止</summary>
+    /// <remarks>
+    /// 安装Windows服务后，服务停止会执行该方法。
+    /// 控制台菜单按5进入循环调试，任意键结束时也会执行该方法。
+    /// </remarks>
+    protected override void StopWork(String reason)
+    {
+        base.StopWork(reason);
+
+        _timer.TryDispose();
+        _timer = null;
+
+        _Manager.Stop(reason);
+        //_Manager.TryDispose();
+
+        _Client?.Logout(reason);
+        //_Client.TryDispose();
+        _Client = null;
+
+        _factory = null;
+
+        _server.TryDispose();
+        _server = null;
+
+        // 停止插件
+        WriteLog("停止插件[{0}]", _PluginManager.Identity);
+        foreach (var item in _PluginManager.Plugins)
+        {
+            if (item is IAgentPlugin plugin) plugin.Stop(reason);
+        }
+    }
+    #endregion
+
+    #region 客户端启动
     public void StartClient()
     {
         var server = StarSetting.Server;
@@ -152,127 +276,6 @@ internal class MyService : ServiceBase, IServiceProvider
         _timer = new TimerX(CheckUpgrade, null, 600_000, 600_000) { Async = true };
     }
 
-    /// <summary>服务启动</summary>
-    /// <remarks>
-    /// 安装Windows服务后，服务启动会执行一次该方法。
-    /// 控制台菜单按5进入循环调试也会执行该方法。
-    /// </remarks>
-    protected override void StartWork(String reason)
-    {
-        var set = AgentSetting;
-
-        StartFactory();
-
-        // 应用服务管理
-        _Manager = new ServiceManager
-        {
-            Services = set.Services,
-            Delay = set.Delay,
-
-            Tracer = _factory?.Tracer,
-            Log = XTrace.Log,
-        };
-
-        // 插件管理器
-        _PluginManager = new PluginManager
-        {
-            Identity = "StarAgent",
-            Provider = this,
-
-            Log = XTrace.Log,
-        };
-
-        // 监听端口，用于本地通信
-        if (set.LocalPort > 0)
-        {
-            //var uri = new NetUri(set.LocalServer);
-            try
-            {
-                // 必须支持Udp，因为需要支持局域网广播搜索功能
-                var svr = new ApiServer(set.LocalPort)
-                {
-                    Tracer = _factory?.Tracer,
-                    Log = XTrace.Log
-                };
-                svr.Register(new StarService
-                {
-                    Service = this,
-                    Host = Host,
-                    Manager = _Manager,
-                    //PluginManager = _PluginManager,
-                    StarSetting = StarSetting,
-                    AgentSetting = AgentSetting,
-                    Log = XTrace.Log
-                }, null);
-
-                _server = svr;
-                svr.Start();
-            }
-            catch (Exception ex)
-            {
-                XTrace.WriteException(ex);
-            }
-        }
-
-        // 启动星尘客户端，连接服务端
-        StartClient();
-
-        _Manager.Start();
-
-        // 启动插件
-        WriteLog("启动插件[{0}]", _PluginManager.Identity);
-        _PluginManager.Load();
-        _PluginManager.Init();
-        foreach (var item in _PluginManager.Plugins)
-        {
-            if (item is IAgentPlugin plugin) plugin.Start();
-        }
-
-        base.StartWork(reason);
-    }
-
-    /// <summary>服务管理线程</summary>
-    /// <param name="data"></param>
-    protected override void DoCheck(Object data)
-    {
-        // 支持动态更新
-        _Manager.Services = AgentSetting.Services;
-
-        base.DoCheck(data);
-    }
-
-    /// <summary>服务停止</summary>
-    /// <remarks>
-    /// 安装Windows服务后，服务停止会执行该方法。
-    /// 控制台菜单按5进入循环调试，任意键结束时也会执行该方法。
-    /// </remarks>
-    protected override void StopWork(String reason)
-    {
-        base.StopWork(reason);
-
-        _timer.TryDispose();
-        _timer = null;
-
-        _Manager.Stop(reason);
-        //_Manager.TryDispose();
-
-        _Client?.Logout(reason);
-        //_Client.TryDispose();
-        _Client = null;
-
-        _factory = null;
-
-        _server.TryDispose();
-        _server = null;
-
-        // 停止插件
-        WriteLog("停止插件[{0}]", _PluginManager.Identity);
-        foreach (var item in _PluginManager.Plugins)
-        {
-            if (item is IAgentPlugin plugin) plugin.Stop(reason);
-        }
-    }
-
     private async Task CheckUpgrade(Object data)
     {
         var client = _Client;
@@ -323,7 +326,9 @@ internal class MyService : ServiceBase, IServiceProvider
             }
         }
     }
+    #endregion
 
+    #region 扩展功能
     protected override void ShowMenu()
     {
         base.ShowMenu();
@@ -451,6 +456,7 @@ internal class MyService : ServiceBase, IServiceProvider
 
         return true;
     }
+    #endregion
 
     #region IServiceProvider 成员
     Object IServiceProvider.GetService(Type serviceType)
