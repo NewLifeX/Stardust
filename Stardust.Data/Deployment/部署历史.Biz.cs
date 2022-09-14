@@ -91,7 +91,7 @@ namespace Stardust.Data.Deployment
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<AppDeployHistory> Search(Int32 appId,  String action, String key, PageParameter page)
+        public static IList<AppDeployHistory> Search(Int32 appId, String action, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
@@ -104,6 +104,32 @@ namespace Stardust.Data.Deployment
         #endregion
 
         #region 业务操作
+        /// <summary>创建历史</summary>
+        /// <param name="appId"></param>
+        /// <param name="nodeId"></param>
+        /// <param name="action"></param>
+        /// <param name="success"></param>
+        /// <param name="remark"></param>
+        /// <param name="ip"></param>
+        /// <returns></returns>
+        public static AppDeployHistory Create(Int32 appId, Int32 nodeId, String action, Boolean success, String remark, String ip)
+        {
+            var history = new AppDeployHistory
+            {
+                AppId = appId,
+                NodeId = nodeId,
+
+                Action = action,
+                Success = success,
+                Remark = remark,
+
+                TraceId = DefaultSpan.Current?.TraceId,
+                CreateTime = DateTime.Now,
+                CreateIP = ip,
+            };
+
+            return history;
+        }
         #endregion
     }
 }

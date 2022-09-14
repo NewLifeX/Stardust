@@ -134,6 +134,16 @@ namespace Stardust.Data.Deployment
             }
         }
 
+        /// <summary>复制应用数据</summary>
+        /// <param name="app"></param>
+        public void Copy(App app)
+        {
+            Name = app.Name;
+            Category = app.Category;
+
+            if (!app.Enable) Enable = false;
+        }
+
         /// <summary>
         /// 从应用表同步数据到发布表
         /// </summary>
@@ -151,10 +161,11 @@ namespace Stardust.Data.Deployment
                 else
                     ad = new AppDeploy { Id = app.Id, Enable = true };
 
-                ad.Name = app.Name;
-                ad.Category = app.Category;
+                //ad.Name = app.Name;
+                //ad.Category = app.Category;
 
-                if (!app.Enable) ad.Enable = false;
+                //if (!app.Enable) ad.Enable = false;
+                ad.Copy(app);
 
                 count += ad.Save();
             }

@@ -39,6 +39,7 @@ namespace Stardust.Server.Controllers
             return info;
         }
 
+        [Obsolete]
         [ApiFilter]
         [HttpPost]
         public AppService RegisterService([FromBody] PublishServiceInfo service, String token)
@@ -96,6 +97,7 @@ namespace Stardust.Server.Controllers
             return svc;
         }
 
+        [Obsolete]
         [ApiFilter]
         [HttpPost]
         public AppService UnregisterService([FromBody] PublishServiceInfo service, String token)
@@ -125,6 +127,7 @@ namespace Stardust.Server.Controllers
             return svc;
         }
 
+        [Obsolete]
         [ApiFilter]
         [HttpPost]
         public ServiceModel[] ResolveService([FromBody] ConsumeServiceInfo model, String token)
@@ -189,6 +192,7 @@ namespace Stardust.Server.Controllers
         }
         #endregion
 
+        [Obsolete]
         [ApiFilter]
         public IList<AppService> SearchService(String serviceName, String key)
         {
