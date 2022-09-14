@@ -7,6 +7,7 @@ using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using NewLife.Serialization;
+using Stardust.Data.Deployment;
 using XCode;
 using XCode.Cache;
 using XCode.Membership;
@@ -301,6 +302,43 @@ namespace Stardust.Data.Configs
 
         //    return null;
         //}
+
+        /// <summary>复制应用数据</summary>
+        /// <param name="app"></param>
+        public void Copy(App app)
+        {
+            AppId = app.Id;
+            Name = app.Name;
+            Category = app.Category;
+
+            if (!app.Enable) Enable = false;
+        }
+
+        /// <summary>
+        /// 从应用表同步数据到发布表
+        /// </summary>
+        /// <returns></returns>
+        public static Int32 Sync()
+        {
+            var count = 0;
+            var apps = App.FindAll();
+            var list = FindAll();
+            foreach (var app in apps)
+            {
+                var ad = list.FirstOrDefault(e => e.AppId == app.Id);
+                ad ??= list.FirstOrDefault(e => e.Name.EqualIgnoreCase(app.Name));
+                if (ad != null)
+                    list.Remove(ad);
+                else
+                    ad = new AppConfig { Name = app.Name, Enable = true };
+
+                ad.Copy(app);
+
+                count += ad.Save();
+            }
+
+            return count;
+        }
         #endregion
     }
 }
