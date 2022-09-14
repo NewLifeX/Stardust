@@ -2,6 +2,7 @@
 using NewLife;
 using Stardust.Data;
 using Stardust.Data.Deployment;
+using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Common;
 using Stardust.Server.Services;
@@ -14,14 +15,17 @@ namespace Stardust.Server.Controllers;
 [Route("[controller]/[action]")]
 public class DeployController : BaseController
 {
+    private Node _node;
     private App _app;
+    private readonly NodeService _nodeService;
     private readonly DeployService _deployService;
     private readonly TokenService _tokenService;
     private readonly Setting _setting;
 
-    public DeployController(DeployService deployService, TokenService tokenService, Setting setting)
+    public DeployController(DeployService deployService, NodeService nodeService, TokenService tokenService, Setting setting)
     {
         _deployService = deployService;
+        _nodeService = nodeService;
         _tokenService = tokenService;
         _setting = setting;
     }
@@ -29,23 +33,25 @@ public class DeployController : BaseController
     #region 令牌验证
     protected override Boolean OnAuthorize(String token)
     {
-        var (jwt, app) = _tokenService.DecodeToken(token, _setting.TokenSecret);
-        _app = app;
-        //_clientId = jwt.Id;
+        var (node, ex) = _nodeService.DecodeToken(token, _setting.TokenSecret);
+        _node = node;
+        if (ex != null) throw ex;
 
-        return app != null;
+        return node != null;
     }
 
     protected override void OnWriteError(String action, String message) => WriteHistory(action, false, message);
     #endregion
 
-    /// <summary>获取所有应用服务信息</summary>
+    /// <summary>获取分配到本节点的应用服务信息</summary>
     /// <returns></returns>
-    [HttpPost]
     public ServiceInfo[] GetAll()
     {
-        var app = AppDeploy.FindById(_app.Id);
-        return null;
+        var list = AppDeployNode.FindAllByNodeId(_node.ID);
+
+        var infos = list.Where(e => e.Enable).Select(e => e.ToService()).Where(e => e != null).ToArray();
+
+        return infos;
     }
 
     private AppDeploy Valid(String appId, String secret, String clientId, String token)
@@ -103,7 +109,7 @@ public class DeployController : BaseController
     #region 辅助
     private void WriteHistory(String action, Boolean success, String remark)
     {
-        var hi = AppDeployHistory.Create(_app?.Id ?? 0, 0, action, success, remark, UserHost);
+        var hi = AppDeployHistory.Create(_app?.Id ?? 0, _node?.ID ?? 0, action, success, remark, UserHost);
         hi.SaveAsync();
     }
     #endregion

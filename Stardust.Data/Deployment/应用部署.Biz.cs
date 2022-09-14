@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Web.Script.Serialization;
+using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using XCode;
@@ -44,6 +47,13 @@ namespace Stardust.Data.Deployment
         #endregion
 
         #region 扩展属性
+        /// <summary>应用</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
+
+        /// <summary>应用</summary>
+        [Map(__.AppId, typeof(App), "Id")]
+        public String AppName => App?.Name;
         #endregion
 
         #region 扩展查询
