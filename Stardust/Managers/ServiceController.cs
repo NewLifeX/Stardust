@@ -129,7 +129,7 @@ internal class ServiceController : DisposeBase
                 StartTime = DateTime.Now;
 
                 // 定时检查文件是否有改变
-                if (service.ReloadOnChange) StartMonitor();
+                StartMonitor();
 
                 return true;
             }
@@ -209,7 +209,7 @@ internal class ServiceController : DisposeBase
                     WriteLog("应用[{0}/{1}]已启动，直接接管", p.Id, Name);
 
                     SetProcess(p);
-                    if (Info != null && Info.ReloadOnChange) StartMonitor();
+                    if (Info != null) StartMonitor();
 
                     if (StartTime.Year < 2000) StartTime = DateTime.Now;
 
@@ -235,7 +235,7 @@ internal class ServiceController : DisposeBase
                 WriteLog("应用[{0}/{1}]已启动，直接接管", p.Id, Name);
 
                 SetProcess(p);
-                if (Info != null && Info.ReloadOnChange) StartMonitor();
+                if (Info != null) StartMonitor();
 
                 if (StartTime.Year < 2000) StartTime = DateTime.Now;
 

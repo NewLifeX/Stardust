@@ -244,7 +244,7 @@ public class ServiceManager : DisposeBase
             if (svc == null)
             {
                 svc = item;
-                svc.ReloadOnChange = true;
+                //svc.ReloadOnChange = true;
 
                 svcs.Add(svc);
             }

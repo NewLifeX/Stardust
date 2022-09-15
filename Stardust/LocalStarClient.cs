@@ -370,7 +370,7 @@ public class LocalStarClient
             Arguments = arguments,
             WorkingDirectory = workingDirectory,
             AutoStart = true,
-            ReloadOnChange = true,
+            //ReloadOnChange = true,
         });
     }
 

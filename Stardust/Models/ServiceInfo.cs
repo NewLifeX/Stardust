@@ -31,9 +31,9 @@ public class ServiceInfo
     //[XmlAttribute]
     //public Boolean AutoStop { get; set; }
 
-    /// <summary>检测文件变动。当文件发生改变时，自动重启应用</summary>
-    [XmlAttribute]
-    public Boolean ReloadOnChange { get; set; }
+    ///// <summary>检测文件变动。当文件发生改变时，自动重启应用</summary>
+    //[XmlAttribute]
+    //public Boolean ReloadOnChange { get; set; }
 
     /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
     [XmlAttribute]
