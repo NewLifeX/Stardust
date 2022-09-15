@@ -88,7 +88,7 @@ public class DeployController : BaseController
                 if (app.WorkingDirectory.IsNullOrEmpty()) app.WorkingDirectory = svc.WorkingDirectory;
 
                 app.AutoStart = svc.AutoStart;
-                app.AutoStop = svc.AutoStop;
+                //app.AutoStop = svc.AutoStop;
                 app.MaxMemory = svc.MaxMemory;
 
                 // 先保存，可能有插入，需要取得应用发布Id

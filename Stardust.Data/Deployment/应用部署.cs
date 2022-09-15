@@ -111,15 +111,6 @@ namespace Stardust.Data.Deployment
         [BindColumn("AutoStart", "自动启动。系统重启时，或应用退出后，自动拉起应用", "")]
         public Boolean AutoStart { get => _AutoStart; set { if (OnPropertyChanging("AutoStart", value)) { _AutoStart = value; OnPropertyChanged("AutoStart"); } } }
 
-        private Boolean _AutoStop;
-        /// <summary>自动停止。随着宿主的退出，同时停止该应用进程</summary>
-        [Category("参数")]
-        [DisplayName("自动停止")]
-        [Description("自动停止。随着宿主的退出，同时停止该应用进程")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("AutoStop", "自动停止。随着宿主的退出，同时停止该应用进程", "")]
-        public Boolean AutoStop { get => _AutoStop; set { if (OnPropertyChanging("AutoStop", value)) { _AutoStop = value; OnPropertyChanged("AutoStop"); } } }
-
         private Int32 _MaxMemory;
         /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
         [Category("参数")]
@@ -214,7 +205,6 @@ namespace Stardust.Data.Deployment
                     case "Arguments": return _Arguments;
                     case "WorkingDirectory": return _WorkingDirectory;
                     case "AutoStart": return _AutoStart;
-                    case "AutoStop": return _AutoStop;
                     case "MaxMemory": return _MaxMemory;
                     case "CreateUserId": return _CreateUserId;
                     case "CreateTime": return _CreateTime;
@@ -241,7 +231,6 @@ namespace Stardust.Data.Deployment
                     case "Arguments": _Arguments = Convert.ToString(value); break;
                     case "WorkingDirectory": _WorkingDirectory = Convert.ToString(value); break;
                     case "AutoStart": _AutoStart = value.ToBoolean(); break;
-                    case "AutoStop": _AutoStop = value.ToBoolean(); break;
                     case "MaxMemory": _MaxMemory = value.ToInt(); break;
                     case "CreateUserId": _CreateUserId = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -292,9 +281,6 @@ namespace Stardust.Data.Deployment
 
             /// <summary>自动启动。系统重启时，或应用退出后，自动拉起应用</summary>
             public static readonly Field AutoStart = FindByName("AutoStart");
-
-            /// <summary>自动停止。随着宿主的退出，同时停止该应用进程</summary>
-            public static readonly Field AutoStop = FindByName("AutoStop");
 
             /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
             public static readonly Field MaxMemory = FindByName("MaxMemory");
@@ -358,9 +344,6 @@ namespace Stardust.Data.Deployment
 
             /// <summary>自动启动。系统重启时，或应用退出后，自动拉起应用</summary>
             public const String AutoStart = "AutoStart";
-
-            /// <summary>自动停止。随着宿主的退出，同时停止该应用进程</summary>
-            public const String AutoStop = "AutoStop";
 
             /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
             public const String MaxMemory = "MaxMemory";

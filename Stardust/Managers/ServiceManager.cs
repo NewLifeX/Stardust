@@ -117,17 +117,17 @@ public class ServiceManager : DisposeBase
         _timer?.TryDispose();
         _timer = null;
 
-        // 伴随服务停止一起退出
-        var svcs = _services;
-        for (var i = svcs.Count - 1; i >= 0; i--)
-        {
-            var svc = svcs[i];
-            if (svc.Info != null && svc.Info.AutoStop)
-            {
-                svc.Stop(reason);
-                svcs.RemoveAt(i);
-            }
-        }
+        //// 伴随服务停止一起退出
+        //var svcs = _services;
+        //for (var i = svcs.Count - 1; i >= 0; i--)
+        //{
+        //    var svc = svcs[i];
+        //    if (svc.Info != null && svc.Info.AutoStop)
+        //    {
+        //        svc.Stop(reason);
+        //        svcs.RemoveAt(i);
+        //    }
+        //}
 
         SaveDb();
     }
@@ -254,7 +254,7 @@ public class ServiceManager : DisposeBase
                 svc.Arguments = item.Arguments;
                 svc.WorkingDirectory = item.WorkingDirectory;
                 svc.AutoStart = item.AutoStart;
-                svc.AutoStop = item.AutoStop;
+                //svc.AutoStop = item.AutoStop;
                 svc.MaxMemory = item.MaxMemory;
             }
         }
