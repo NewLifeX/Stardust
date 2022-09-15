@@ -4,6 +4,7 @@ using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Deployment;
 using Stardust.Models;
+using static NewLife.Remoting.ApiHttpClient;
 
 namespace Stardust.Managers;
 
@@ -317,6 +318,10 @@ internal class ServiceController : DisposeBase
                 changed = fi.FullName;
             }
         }
+
+        using var span = !changed.IsNullOrEmpty() || _ready ?
+            Tracer?.NewSpan("ServiceFileChange", changed) :
+            null;
 
         if (!first && !changed.IsNullOrEmpty())
         {

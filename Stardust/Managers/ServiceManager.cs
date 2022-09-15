@@ -1,10 +1,12 @@
-﻿using NewLife;
+﻿using System.Xml.Linq;
+using NewLife;
 using NewLife.IO;
 using NewLife.Log;
 using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust.Models;
 using Stardust.Services;
+using static NewLife.Remoting.ApiHttpClient;
 
 namespace Stardust.Managers;
 
@@ -66,6 +68,8 @@ public class ServiceManager : DisposeBase
 
         Services = list.ToArray();
 
+        _timer?.SetNext(-1);
+
         return count;
     }
 
@@ -73,6 +77,8 @@ public class ServiceManager : DisposeBase
     public void Start()
     {
         if (_timer != null) return;
+
+        using var span = Tracer?.NewSpan("ServiceManager-Start");
 
         WriteLog("启动应用服务管理");
 
@@ -104,6 +110,8 @@ public class ServiceManager : DisposeBase
     /// <param name="reason"></param>
     public void Stop(String reason)
     {
+        using var span = Tracer?.NewSpan("ServiceManager-Stop", reason);
+
         WriteLog("停止应用服务管理：{0}", reason);
 
         _timer?.TryDispose();
@@ -148,6 +156,10 @@ public class ServiceManager : DisposeBase
     /// <returns>本次是否成功启动，原来已启动返回false</returns>
     private Boolean StartService(ServiceInfo service)
     {
+#if DEBUG
+        using var span = Tracer?.NewSpan("ServiceManager-StartService", service);
+#endif
+
         var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
         if (svc != null)
         {
@@ -178,6 +190,10 @@ public class ServiceManager : DisposeBase
     /// <returns></returns>
     private Boolean StopService(ServiceInfo service, String reason)
     {
+#if DEBUG
+        using var span = Tracer?.NewSpan("ServiceManager-StopService", service);
+#endif
+
         var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
         if (svc != null)
         {
@@ -197,10 +213,19 @@ public class ServiceManager : DisposeBase
     /// <param name="services"></param>
     public void SetServices(ServiceInfo[] services)
     {
-        Services = services;
+        var svcs = Services.OrderBy(e => e.Name).ToArray();
+        var svcs2 = services.OrderBy(e => e.Name).ToArray();
+        if (svcs == null || svcs.Length != svcs2.Length || svcs.ToJson() != svcs2.ToJson())
+        {
+            using var span = Tracer?.NewSpan("ServiceManager-SetServices", services);
 
-        _status = 0;
-        _timer.SetNext(-1);
+            WriteLog("应用服务配置变更");
+
+            Services = services;
+
+            _status = 0;
+            _timer.SetNext(-1);
+        }
     }
 
     private void PullService(String appName)
@@ -241,6 +266,9 @@ public class ServiceManager : DisposeBase
     private TimerX _timer;
     private void DoWork(Object state)
     {
+#if DEBUG
+        using var span = Tracer?.NewSpan("ServiceManager-DoWork");
+#endif
         var svcs = Services;
 
         // 应用服务的上报和拉取
@@ -248,8 +276,9 @@ public class ServiceManager : DisposeBase
         {
             if (_status == 0 && svcs.Length > 0)
             {
-                var svcs2 = svcs.Where(e => e.AutoStart).ToArray();
-                if (svcs2.Length > 0) _client.UploadDeploy(svcs2).Wait();
+                //var svcs2 = svcs.Where(e => e.AutoStart).ToArray();
+                //if (svcs2.Length > 0)
+                _client.UploadDeploy(svcs).Wait();
 
                 _status = 1;
             }
@@ -277,7 +306,7 @@ public class ServiceManager : DisposeBase
         {
             var controller = controllers[i];
             var service = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(controller.Name));
-            if (service == null)
+            if (service == null || !service.AutoStart)
             {
                 controller.Stop("配置停止");
                 controllers.RemoveAt(i);
@@ -296,6 +325,8 @@ public class ServiceManager : DisposeBase
     /// <returns></returns>
     public ProcessInfo Install(ServiceInfo service)
     {
+        using var span = Tracer?.NewSpan("ServiceManager-Install", service);
+
         Add(service);
 
         if (!StartService(service)) return null;
@@ -311,6 +342,8 @@ public class ServiceManager : DisposeBase
     /// <returns></returns>
     public Boolean Uninstall(String name, String reason)
     {
+        using var span = Tracer?.NewSpan("ServiceManager-Uninstall", new { name, reason });
+
         var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
         if (svc == null) return false;
 
@@ -337,6 +370,8 @@ public class ServiceManager : DisposeBase
 
     private CommandReplyModel DoControl(CommandModel cmd)
     {
+        using var span = Tracer?.NewSpan("ServiceManager-DoControl", cmd);
+
         var my = cmd.Argument.ToJsonEntity<MyApp>();
 
         WriteLog("{0} Id={1} Name={2}", cmd.Command, my.Id, my.AppName);

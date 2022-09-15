@@ -156,6 +156,7 @@ internal class MyService : ServiceBase, IServiceProvider
         StartClient();
 
         _Manager.Start();
+        Setting.Provider.Changed += OnSettingChange;
 
         // 启动插件
         WriteLog("启动插件[{0}]", pm.Identity);
@@ -173,11 +174,16 @@ internal class MyService : ServiceBase, IServiceProvider
     /// <param name="data"></param>
     protected override void DoCheck(Object data)
     {
+        OnSettingChange(null, null);
+
+        base.DoCheck(data);
+    }
+
+    private void OnSettingChange(Object sender, EventArgs eventArgs)
+    {
         // 支持动态更新
         //_Manager.Services = AgentSetting.Services;
         _Manager.SetServices(AgentSetting.Services);
-
-        base.DoCheck(data);
     }
 
     /// <summary>服务停止</summary>
@@ -192,6 +198,7 @@ internal class MyService : ServiceBase, IServiceProvider
         _timer.TryDispose();
         _timer = null;
 
+        Setting.Provider.Changed -= OnSettingChange;
         _Manager.Stop(reason);
         //_Manager.TryDispose();
 
