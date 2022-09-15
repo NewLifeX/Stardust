@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
+using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
@@ -16,7 +17,6 @@ namespace Stardust.Server.Controllers;
 public class DeployController : BaseController
 {
     private Node _node;
-    private App _app;
     private readonly NodeService _nodeService;
     private readonly DeployService _deployService;
     private readonly TokenService _tokenService;
@@ -40,76 +40,85 @@ public class DeployController : BaseController
         return node != null;
     }
 
-    protected override void OnWriteError(String action, String message) => WriteHistory(action, false, message);
+    protected override void OnWriteError(String action, String message) => WriteHistory(0, action, false, message);
     #endregion
 
     /// <summary>获取分配到本节点的应用服务信息</summary>
+    /// <param name="appName">应用名。未指定时获取所有应用</param>
     /// <returns></returns>
-    public ServiceInfo[] GetAll()
+    public ServiceInfo[] GetAll(String appName)
     {
         var list = AppDeployNode.FindAllByNodeId(_node.ID);
+
+        if (list.Count > 0 && !appName.IsNullOrEmpty())
+        {
+            var app = AppDeploy.FindByName(appName);
+            if (app == null) throw new Exception($"找不到应用[{appName}]");
+            if (!app.Enable) throw new Exception($"应用[{appName}]不可用");
+
+            list = list.Where(e => e.AppId == app.Id).ToList();
+        }
 
         var infos = list.Where(e => e.Enable).Select(e => e.ToService()).Where(e => e != null).ToArray();
 
         return infos;
     }
 
-    private AppDeploy Valid(String appId, String secret, String clientId, String token)
+    /// <summary>上传本节点的所有应用服务信息</summary>
+    /// <param name="services"></param>
+    /// <returns></returns>
+    [HttpPost]
+    public Int32 Upload([FromBody] ServiceInfo[] services)
     {
-        // 优先令牌解码
-        App ap = null;
-        if (!token.IsNullOrEmpty())
+        if (services == null || services.Length == 0) return 0;
+
+        // 本节点所有发布
+        var list = AppDeployNode.FindAllByNodeId(_node.ID);
+
+        var rs = 0;
+        foreach (var svc in services)
         {
-            var (jwt, ap1) = _tokenService.DecodeToken(token, _setting.TokenSecret);
-            if (appId.IsNullOrEmpty()) appId = ap1?.Name;
-            if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
+            var app = AppDeploy.FindByName(svc.Name);
+            app ??= new AppDeploy { Name = svc.Name, Enable = true };
 
-            ap = ap1;
-        }
-
-        if (ap == null) ap = _tokenService.Authorize(appId, secret, _setting.AutoRegister);
-
-        // 新建应用
-        var app = AppDeploy.FindById(ap.Id);
-        if (app == null)
-        {
-            var obj = AppDeploy.Meta.Table;
-            lock (obj)
+            // 仅可用应用
+            if (app.Enable)
             {
-                app = AppDeploy.FindById(ap.Id);
-                if (app == null)
-                {
-                    app = new AppDeploy
-                    {
-                        Id = ap.Id,
-                        Enable = true,
-                    };
-                    app.Copy(ap);
+                if (app.FileName.IsNullOrEmpty()) app.FileName = svc.FileName;
+                if (app.Arguments.IsNullOrEmpty()) app.Arguments = svc.Arguments;
+                if (app.WorkingDirectory.IsNullOrEmpty()) app.WorkingDirectory = svc.WorkingDirectory;
 
-                    app.Insert();
+                app.AutoStart = svc.AutoStart;
+                app.AutoStop = svc.AutoStop;
+                app.MaxMemory = svc.MaxMemory;
+
+                // 先保存，可能有插入，需要取得应用发布Id
+                var rs2 = app.Save();
+
+                var dn = list.FirstOrDefault(e => e.AppId == app.Id);
+                dn ??= new AppDeployNode { AppId = app.Id, NodeId = _node.ID, Enable = true };
+
+                if (dn.Enable)
+                {
+                    dn.Arguments = svc.Arguments;
+                    dn.WorkingDirectory = svc.WorkingDirectory;
+
+                    rs2 += dn.Save();
+
+                    rs++;
                 }
+
+                if (rs2 > 0) WriteHistory(app.Id, nameof(Upload), true, svc.ToJson());
             }
         }
 
-        // 检查应用有效性
-        if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
-
-        return app;
-    }
-
-    /// <summary>上传所有应用服务信息</summary>
-    /// <param name="model"></param>
-    /// <returns></returns>
-    [HttpPost]
-    public Int32 SetAll([FromBody] ServiceInfo[] model)
-    {
-        return 0;
+        return rs;
     }
 
     #region 辅助
-    private void WriteHistory(String action, Boolean success, String remark)
+    private void WriteHistory(Int32 appId, String action, Boolean success, String remark)
     {
-        var hi = AppDeployHistory.Create(_app?.Id ?? 0, _node?.ID ?? 0, action, success, remark, UserHost);
+        var hi = AppDeployHistory.Create(appId, _node?.ID ?? 0, action, success, remark, UserHost);
         hi.SaveAsync();
     }
     #endregion

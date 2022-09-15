@@ -38,6 +38,7 @@ namespace Stardust.Data.Deployment
             var app = App.FindByName(Name);
             if (app != null)
             {
+                if (AppId == 0 && !Dirtys[nameof(AppId)]) AppId = app.Id;
                 if (!app.Category.IsNullOrEmpty()) Category = app.Category;
             }
 

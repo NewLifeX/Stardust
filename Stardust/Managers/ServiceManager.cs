@@ -18,8 +18,10 @@ public class ServiceManager : DisposeBase
     /// <summary>延迟时间。重启进程或服务的延迟时间，默认3000ms</summary>
     public Int32 Delay { get; set; } = 3000;
 
+    /// <summary>正在运行的应用服务信息</summary>
     private readonly List<ServiceController> _services = new();
     private CsvDb<ProcessInfo> _db;
+    private StarClient _client;
     #endregion
 
     #region 构造
@@ -189,11 +191,74 @@ public class ServiceManager : DisposeBase
         return false;
     }
 
+    /// <summary>
+    /// 设置服务集合，常用于读取配置文件后设置
+    /// </summary>
+    /// <param name="services"></param>
+    public void SetServices(ServiceInfo[] services)
+    {
+        Services = services;
+
+        _timer.SetNext(-1);
+    }
+
+    private void PullService(String appName)
+    {
+        var svcs = Services.ToList();
+
+        var rs = _client.GetDeploy(appName).Result;
+
+        // 合并
+        foreach (var item in rs)
+        {
+            var svc = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(item.Name));
+            if (svc == null)
+            {
+                svc = item;
+                svc.ReloadOnChange = true;
+
+                svcs.Add(svc);
+            }
+            else
+            {
+                svc.FileName = item.Name;
+                svc.Arguments = item.Arguments;
+                svc.WorkingDirectory = item.WorkingDirectory;
+                svc.AutoStart = item.AutoStart;
+                svc.AutoStop = item.AutoStop;
+                svc.MaxMemory = item.MaxMemory;
+            }
+        }
+
+        Services = svcs.ToArray();
+    }
+
+    Int32 _status;
     private TimerX _timer;
     private void DoWork(Object state)
     {
+        var svcs = Services;
+
+        // 应用服务的上报和拉取
+        if (_client != null)
+        {
+            if (_status == 0 && svcs.Length > 0)
+            {
+                _client.UploadDeploy(svcs).Wait();
+
+                _status = 1;
+            }
+
+            if (_status == 1)
+            {
+                PullService(null);
+
+                _status = 2;
+            }
+        }
+
         var changed = false;
-        foreach (var item in Services)
+        foreach (var item in svcs)
         {
             if (item != null && item.AutoStart)
             {
@@ -202,15 +267,15 @@ public class ServiceManager : DisposeBase
         }
 
         // 停止不再使用的服务
-        var svcs = _services;
-        for (var i = svcs.Count - 1; i >= 0; i--)
+        var controllers = _services;
+        for (var i = controllers.Count - 1; i >= 0; i--)
         {
-            var svc = svcs[i];
-            var service = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(svc.Name));
+            var controller = controllers[i];
+            var service = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(controller.Name));
             if (service == null)
             {
-                svc.Stop("配置停止");
-                svcs.RemoveAt(i);
+                controller.Stop("配置停止");
+                controllers.RemoveAt(i);
                 changed = true;
             }
         }
@@ -257,6 +322,8 @@ public class ServiceManager : DisposeBase
     /// <param name="client"></param>
     public void Attach(StarClient client)
     {
+        _client = client;
+
         client.RegisterCommand("deploy/publish", DoControl);
         client.RegisterCommand("deploy/start", DoControl);
         client.RegisterCommand("deploy/stop", DoControl);
@@ -274,6 +341,7 @@ public class ServiceManager : DisposeBase
         switch (cmd.Command)
         {
             case "deploy/publish":
+                PullService(my.AppName);
                 break;
             case "deploy/start":
                 if (svc != null) changed |= StartService(svc);

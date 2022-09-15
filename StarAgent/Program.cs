@@ -174,7 +174,8 @@ internal class MyService : ServiceBase, IServiceProvider
     protected override void DoCheck(Object data)
     {
         // 支持动态更新
-        _Manager.Services = AgentSetting.Services;
+        //_Manager.Services = AgentSetting.Services;
+        _Manager.SetServices(AgentSetting.Services);
 
         base.DoCheck(data);
     }
