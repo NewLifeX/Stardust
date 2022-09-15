@@ -244,7 +244,7 @@ public class ServiceManager : DisposeBase
         var svcs = Services;
 
         // 应用服务的上报和拉取
-        if (_client != null)
+        if (_client != null && !_client.Token.IsNullOrEmpty())
         {
             if (_status == 0 && svcs.Length > 0)
             {
