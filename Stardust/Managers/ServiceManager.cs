@@ -199,6 +199,7 @@ public class ServiceManager : DisposeBase
     {
         Services = services;
 
+        _status = 0;
         _timer.SetNext(-1);
     }
 
@@ -206,7 +207,10 @@ public class ServiceManager : DisposeBase
     {
         var svcs = Services.ToList();
 
-        var rs = _client.GetDeploy(appName).Result;
+        var rs = _client.GetDeploy().Result;
+
+        // 过滤应用
+        if (!appName.IsNullOrEmpty()) rs = rs.Where(e => e.Name.EqualIgnoreCase(appName)).ToArray();
 
         // 合并
         foreach (var item in rs)

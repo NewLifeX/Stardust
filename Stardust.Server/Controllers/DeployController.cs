@@ -44,20 +44,19 @@ public class DeployController : BaseController
     #endregion
 
     /// <summary>获取分配到本节点的应用服务信息</summary>
-    /// <param name="appName">应用名。未指定时获取所有应用</param>
     /// <returns></returns>
-    public ServiceInfo[] GetAll(String appName)
+    public ServiceInfo[] GetAll()
     {
         var list = AppDeployNode.FindAllByNodeId(_node.ID);
 
-        if (list.Count > 0 && !appName.IsNullOrEmpty())
-        {
-            var app = AppDeploy.FindByName(appName);
-            if (app == null) throw new Exception($"找不到应用[{appName}]");
-            if (!app.Enable) throw new Exception($"应用[{appName}]不可用");
+        //if (list.Count > 0 && !appName.IsNullOrEmpty())
+        //{
+        //    var app = AppDeploy.FindByName(appName);
+        //    if (app == null) throw new Exception($"找不到应用[{appName}]");
+        //    if (!app.Enable) throw new Exception($"应用[{appName}]不可用");
 
-            list = list.Where(e => e.AppId == app.Id).ToList();
-        }
+        //    list = list.Where(e => e.AppId == app.Id).ToList();
+        //}
 
         var infos = list.Where(e => e.Enable).Select(e => e.ToService()).Where(e => e != null).ToArray();
 

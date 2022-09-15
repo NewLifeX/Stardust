@@ -658,7 +658,7 @@ public class StarClient : ApiHttpClient, ICommandClient
     #region 部署
     /// <summary>获取分配到本节点的应用服务信息</summary>
     /// <returns></returns>
-    public async Task<ServiceInfo[]> GetDeploy(String appName) => await GetAsync<ServiceInfo[]>("Deploy/GetAll", appName);
+    public async Task<ServiceInfo[]> GetDeploy() => await GetAsync<ServiceInfo[]>("Deploy/GetAll");
 
     /// <summary>上传本节点的所有应用服务信息</summary>
     /// <param name="services"></param>
