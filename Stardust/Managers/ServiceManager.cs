@@ -248,7 +248,8 @@ public class ServiceManager : DisposeBase
         {
             if (_status == 0 && svcs.Length > 0)
             {
-                _client.UploadDeploy(svcs).Wait();
+                var svcs2 = svcs.Where(e => e.AutoStart).ToArray();
+                if (svcs2.Length > 0) _client.UploadDeploy(svcs2).Wait();
 
                 _status = 1;
             }
