@@ -1,12 +1,10 @@
-﻿using System.Xml.Linq;
-using NewLife;
+﻿using NewLife;
 using NewLife.IO;
 using NewLife.Log;
 using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust.Models;
 using Stardust.Services;
-using static NewLife.Remoting.ApiHttpClient;
 
 namespace Stardust.Managers;
 
@@ -253,6 +251,7 @@ public class ServiceManager : DisposeBase
                 svc.FileName = item.Name;
                 svc.Arguments = item.Arguments;
                 svc.WorkingDirectory = item.WorkingDirectory;
+                svc.Enable = item.Enable;
                 svc.AutoStart = item.AutoStart;
                 //svc.AutoStop = item.AutoStop;
                 svc.MaxMemory = item.MaxMemory;
@@ -294,7 +293,7 @@ public class ServiceManager : DisposeBase
         var changed = false;
         foreach (var item in svcs)
         {
-            if (item != null && item.AutoStart)
+            if (item != null && item.Enable)
             {
                 changed |= StartService(item);
             }
@@ -306,7 +305,7 @@ public class ServiceManager : DisposeBase
         {
             var controller = controllers[i];
             var service = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(controller.Name));
-            if (service == null || !service.AutoStart)
+            if (service == null || !service.Enable)
             {
                 controller.Stop("配置停止");
                 controllers.RemoveAt(i);

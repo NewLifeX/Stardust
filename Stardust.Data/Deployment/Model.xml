@@ -12,7 +12,6 @@
       <Column Name="FileName" DataType="String" Description="文件。应用启动文件，Zip应用包使用ZipDeploy" Category="参数" />
       <Column Name="Arguments" DataType="String" Description="参数。启动应用的参数" Category="参数" />
       <Column Name="WorkingDirectory" DataType="String" Description="工作目录。应用根目录" Category="参数" />
-      <Column Name="AutoStart" DataType="Boolean" Description="自动启动。系统重启时，或应用退出后，自动拉起应用" Category="参数" />
       <Column Name="MaxMemory" DataType="Int32" Description="最大内存。单位M，超过上限时自动重启应用，默认0不限制" Category="参数" />
       <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />

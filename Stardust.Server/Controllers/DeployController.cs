@@ -87,7 +87,8 @@ public class DeployController : BaseController
                 if (app.Arguments.IsNullOrEmpty()) app.Arguments = svc.Arguments;
                 if (app.WorkingDirectory.IsNullOrEmpty()) app.WorkingDirectory = svc.WorkingDirectory;
 
-                app.AutoStart = svc.AutoStart;
+                app.Enable = svc.Enable;
+                //app.AutoStart = svc.AutoStart;
                 //app.AutoStop = svc.AutoStop;
                 app.MaxMemory = svc.MaxMemory;
 

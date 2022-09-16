@@ -102,15 +102,6 @@ namespace Stardust.Data.Deployment
         [BindColumn("WorkingDirectory", "工作目录。应用根目录", "")]
         public String WorkingDirectory { get => _WorkingDirectory; set { if (OnPropertyChanging("WorkingDirectory", value)) { _WorkingDirectory = value; OnPropertyChanged("WorkingDirectory"); } } }
 
-        private Boolean _AutoStart;
-        /// <summary>自动启动。系统重启时，或应用退出后，自动拉起应用</summary>
-        [Category("参数")]
-        [DisplayName("自动启动")]
-        [Description("自动启动。系统重启时，或应用退出后，自动拉起应用")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("AutoStart", "自动启动。系统重启时，或应用退出后，自动拉起应用", "")]
-        public Boolean AutoStart { get => _AutoStart; set { if (OnPropertyChanging("AutoStart", value)) { _AutoStart = value; OnPropertyChanged("AutoStart"); } } }
-
         private Int32 _MaxMemory;
         /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
         [Category("参数")]
@@ -204,7 +195,6 @@ namespace Stardust.Data.Deployment
                     case "FileName": return _FileName;
                     case "Arguments": return _Arguments;
                     case "WorkingDirectory": return _WorkingDirectory;
-                    case "AutoStart": return _AutoStart;
                     case "MaxMemory": return _MaxMemory;
                     case "CreateUserId": return _CreateUserId;
                     case "CreateTime": return _CreateTime;
@@ -230,7 +220,6 @@ namespace Stardust.Data.Deployment
                     case "FileName": _FileName = Convert.ToString(value); break;
                     case "Arguments": _Arguments = Convert.ToString(value); break;
                     case "WorkingDirectory": _WorkingDirectory = Convert.ToString(value); break;
-                    case "AutoStart": _AutoStart = value.ToBoolean(); break;
                     case "MaxMemory": _MaxMemory = value.ToInt(); break;
                     case "CreateUserId": _CreateUserId = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -278,9 +267,6 @@ namespace Stardust.Data.Deployment
 
             /// <summary>工作目录。应用根目录</summary>
             public static readonly Field WorkingDirectory = FindByName("WorkingDirectory");
-
-            /// <summary>自动启动。系统重启时，或应用退出后，自动拉起应用</summary>
-            public static readonly Field AutoStart = FindByName("AutoStart");
 
             /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
             public static readonly Field MaxMemory = FindByName("MaxMemory");
@@ -341,9 +327,6 @@ namespace Stardust.Data.Deployment
 
             /// <summary>工作目录。应用根目录</summary>
             public const String WorkingDirectory = "WorkingDirectory";
-
-            /// <summary>自动启动。系统重启时，或应用退出后，自动拉起应用</summary>
-            public const String AutoStart = "AutoStart";
 
             /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
             public const String MaxMemory = "MaxMemory";

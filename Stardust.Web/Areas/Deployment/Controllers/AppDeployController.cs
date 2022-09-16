@@ -88,7 +88,7 @@ public class AppDeployController : EntityController<AppDeploy>
             if (type == DataObjectMethodType.Insert)
             {
                 entity.Enable = true;
-                entity.AutoStart = true;
+                //entity.AutoStart = true;
             }
 
             return base.Valid(entity, type, post);

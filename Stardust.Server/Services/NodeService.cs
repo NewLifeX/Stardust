@@ -378,19 +378,7 @@ public class NodeService
             var deploy = item.App;
             if (deploy == null || !deploy.Enable) continue;
 
-            var svc = new ServiceInfo
-            {
-                Name = deploy.Name,
-                FileName = deploy.FileName,
-                Arguments = deploy.Arguments,
-                WorkingDirectory = deploy.WorkingDirectory,
-                AutoStart = deploy.AutoStart,
-                //Singleton = true,
-            };
-            if (!item.Arguments.IsNullOrEmpty()) svc.Arguments = item.Arguments;
-            if (!item.WorkingDirectory.IsNullOrEmpty()) svc.WorkingDirectory = item.WorkingDirectory;
-
-            svcs.Add(svc);
+            svcs.Add(item.ToService());
         }
 
         return svcs.ToArray();

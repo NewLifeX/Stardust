@@ -56,7 +56,7 @@ namespace StarAgent
                     FileName = "ping",
                     Arguments = "newlifex.com",
 
-                    AutoStart = false,
+                    Enable = false,
                     //ReloadOnChange = true,
                 };
                 var si2 = new ServiceInfo
@@ -65,10 +65,16 @@ namespace StarAgent
                     FileName = "ping",
                     Arguments = "feifan.link",
 
-                    AutoStart = false,
+                    Enable = false,
                 };
 
                 Services = new[] { si, si2 };
+            }
+
+            // 版本升级过渡，逐步替代AutoStart
+            foreach (var svc in Services)
+            {
+                svc.Enable = svc.AutoStart;
             }
 
             base.OnLoaded();

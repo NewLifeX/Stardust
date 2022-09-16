@@ -23,6 +23,10 @@ public class ServiceInfo
     [XmlAttribute]
     public String WorkingDirectory { get; set; }
 
+    /// <summary>启用</summary>
+    [XmlAttribute]
+    public Boolean Enable { get; set; }
+
     /// <summary>是否自动启动</summary>
     [XmlAttribute]
     public Boolean AutoStart { get; set; }

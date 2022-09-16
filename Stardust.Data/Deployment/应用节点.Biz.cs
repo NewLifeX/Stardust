@@ -136,7 +136,8 @@ public partial class AppDeployNode : Entity<AppDeployNode>
             Arguments = !Arguments.IsNullOrEmpty() ? Arguments : app.Arguments,
             WorkingDirectory = !WorkingDirectory.IsNullOrEmpty() ? WorkingDirectory : app.WorkingDirectory,
 
-            AutoStart = app.AutoStart,
+            Enable = app.Enable,
+            //AutoStart = app.AutoStart,
             //AutoStop = app.AutoStop,
             MaxMemory = app.MaxMemory,
         };
