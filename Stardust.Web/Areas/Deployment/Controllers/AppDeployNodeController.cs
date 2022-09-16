@@ -60,7 +60,25 @@ namespace Stardust.Web.Areas.Deployment.Controllers
             var dn = AppDeployNode.FindById(id);
             if (dn == null || dn.Node == null || dn.App == null) return Json(500, $"[{id}]不存在");
 
-            await _starFactory.SendNodeCommand(dn.Node.Code, act,new { dn.Id, dn.AppName }.ToJson());
+            switch (act)
+            {
+                case "publish":
+                    act = "deploy/publish";
+                    break;
+                case "start":
+                    act = "deploy/start";
+                    break;
+                case "stop":
+                    act = "deploy/stop";
+                    break;
+                case "restart":
+                    act = "deploy/restart";
+                    break;
+                default:
+                    throw new NotSupportedException($"不支持{act}");
+            }
+
+            await _starFactory.SendNodeCommand(dn.Node.Code, act, new { dn.Id, dn.AppName }.ToJson());
 
             return JsonRefresh($"在节点[{dn.Node}]上对应用[{dn.App}]执行[{act}]操作", 3);
         }

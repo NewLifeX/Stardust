@@ -226,8 +226,17 @@ public class ServiceManager : DisposeBase
         }
     }
 
+    private void UploadService(ServiceInfo[] svcs)
+    {
+        WriteLog("上报应用服务 {0}", svcs.Join(",", e => e.Name));
+
+        _client.UploadDeploy(svcs).Wait();
+    }
+
     private void PullService(String appName)
     {
+        WriteLog("拉取应用服务 {0}", appName);
+
         var svcs = Services.ToList();
 
         var rs = _client.GetDeploy().Result;
@@ -275,9 +284,7 @@ public class ServiceManager : DisposeBase
         {
             if (_status == 0 && svcs.Length > 0)
             {
-                //var svcs2 = svcs.Where(e => e.AutoStart).ToArray();
-                //if (svcs2.Length > 0)
-                _client.UploadDeploy(svcs).Wait();
+                UploadService(svcs);
 
                 _status = 1;
             }
@@ -291,6 +298,7 @@ public class ServiceManager : DisposeBase
         }
 
         var changed = false;
+        svcs = Services;
         foreach (var item in svcs)
         {
             if (item != null && item.Enable)
