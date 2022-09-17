@@ -62,6 +62,7 @@ public class DeployController : BaseController
                 Name = item.AppName,
                 Version = app.Version,
                 Url = ver?.Url,
+                Hash = ver?.Hash,
 
                 Service = item.ToService(),
             };

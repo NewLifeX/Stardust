@@ -36,8 +36,10 @@ public class ZipDeploy
     {
         if (args == null || args.Length == 0) return false;
 
-        // 在参数中找到zip文件
         var file = "";
+        if (file.IsNullOrEmpty() && FileName.EndsWithIgnoreCase(".zip")) file = FileName;
+
+        // 在参数中找到zip文件
         var name = "";
         var shadow = "";
         var gs = new String[args.Length];

@@ -59,6 +59,14 @@ namespace Stardust.Data.Deployment
         [BindColumn("Url", "资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖", "", ItemType = "file")]
         public String Url { get => _Url; set { if (OnPropertyChanging("Url", value)) { _Url = value; OnPropertyChanged("Url"); } } }
 
+        private String _Hash;
+        /// <summary>文件哈希。MD5</summary>
+        [DisplayName("文件哈希")]
+        [Description("文件哈希。MD5")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Hash", "文件哈希。MD5", "")]
+        public String Hash { get => _Hash; set { if (OnPropertyChanging("Hash", value)) { _Hash = value; OnPropertyChanged("Hash"); } } }
+
         private Int32 _CreateUserId;
         /// <summary>创建者</summary>
         [Category("扩展")]
@@ -138,6 +146,7 @@ namespace Stardust.Data.Deployment
                     case "Version": return _Version;
                     case "Enable": return _Enable;
                     case "Url": return _Url;
+                    case "Hash": return _Hash;
                     case "CreateUserId": return _CreateUserId;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -157,6 +166,7 @@ namespace Stardust.Data.Deployment
                     case "Version": _Version = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Url": _Url = Convert.ToString(value); break;
+                    case "Hash": _Hash = Convert.ToString(value); break;
                     case "CreateUserId": _CreateUserId = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -188,6 +198,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
             public static readonly Field Url = FindByName("Url");
+
+            /// <summary>文件哈希。MD5</summary>
+            public static readonly Field Hash = FindByName("Hash");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUserId = FindByName("CreateUserId");
@@ -230,6 +243,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
             public const String Url = "Url";
+
+            /// <summary>文件哈希。MD5</summary>
+            public const String Hash = "Hash";
 
             /// <summary>创建者</summary>
             public const String CreateUserId = "CreateUserId";

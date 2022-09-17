@@ -76,12 +76,12 @@ namespace Stardust.Data.Deployment
         public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
         private String _FileName;
-        /// <summary>文件。应用启动文件，Zip应用包使用ZipDeploy</summary>
+        /// <summary>文件。应用启动文件，可直接使用zip包</summary>
         [Category("参数")]
         [DisplayName("文件")]
-        [Description("文件。应用启动文件，Zip应用包使用ZipDeploy")]
+        [Description("文件。应用启动文件，可直接使用zip包")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("FileName", "文件。应用启动文件，Zip应用包使用ZipDeploy", "")]
+        [BindColumn("FileName", "文件。应用启动文件，可直接使用zip包", "")]
         public String FileName { get => _FileName; set { if (OnPropertyChanging("FileName", value)) { _FileName = value; OnPropertyChanged("FileName"); } } }
 
         private String _Arguments;
@@ -259,7 +259,7 @@ namespace Stardust.Data.Deployment
             /// <summary>版本。应用正在使用的版本号</summary>
             public static readonly Field Version = FindByName("Version");
 
-            /// <summary>文件。应用启动文件，Zip应用包使用ZipDeploy</summary>
+            /// <summary>文件。应用启动文件，可直接使用zip包</summary>
             public static readonly Field FileName = FindByName("FileName");
 
             /// <summary>参数。启动应用的参数</summary>
@@ -319,7 +319,7 @@ namespace Stardust.Data.Deployment
             /// <summary>版本。应用正在使用的版本号</summary>
             public const String Version = "Version";
 
-            /// <summary>文件。应用启动文件，Zip应用包使用ZipDeploy</summary>
+            /// <summary>文件。应用启动文件，可直接使用zip包</summary>
             public const String FileName = "FileName";
 
             /// <summary>参数。启动应用的参数</summary>

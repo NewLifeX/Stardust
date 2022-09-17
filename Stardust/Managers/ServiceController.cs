@@ -87,7 +87,7 @@ internal class ServiceController : DisposeBase
             try
             {
                 Process p;
-                if (file.EqualIgnoreCase("ZipDeploy"))
+                if (file.EqualIgnoreCase("ZipDeploy") || file.EndsWithIgnoreCase(".zip"))
                 {
                     var deploy = new ZipDeploy
                     {
