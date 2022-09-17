@@ -1,6 +1,7 @@
-﻿namespace Stardust.Server.Services
+﻿using Stardust.Data.Deployment;
+
+namespace Stardust.Server.Services;
+
+public class DeployService
 {
-    public class DeployService
-    {
-    }
 }
