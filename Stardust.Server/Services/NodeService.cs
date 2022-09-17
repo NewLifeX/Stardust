@@ -318,71 +318,71 @@ public class NodeService
                 node.WriteHistory("刷新令牌", true, tm.ToJson(), ip);
             }
 
-            // 拉取命令
-            rs.Commands = AcquireCommands(node.ID);
+            //// 拉取命令
+            //rs.Commands = AcquireCommands(node.ID);
 
-            // 下发部署的应用服务
-            rs.Services = GetServices(node.ID);
+            //// 下发部署的应用服务
+            //rs.Services = GetServices(node.ID);
         }
 
         return rs;
     }
 
-    private static IList<NodeCommand> _commands;
-    private static DateTime _nextTime;
+    //private static IList<NodeCommand> _commands;
+    //private static DateTime _nextTime;
 
-    private static CommandModel[] AcquireCommands(Int32 nodeId)
-    {
-        // 缓存最近1000个未执行命令，用于快速过滤，避免大量节点在线时频繁查询命令表
-        if (_nextTime < DateTime.Now)
-        {
-            _commands = NodeCommand.AcquireCommands(-1, 1000);
-            _nextTime = DateTime.Now.AddMinutes(1);
-        }
+    //private static CommandModel[] AcquireCommands(Int32 nodeId)
+    //{
+    //    // 缓存最近1000个未执行命令，用于快速过滤，避免大量节点在线时频繁查询命令表
+    //    if (_nextTime < DateTime.Now)
+    //    {
+    //        _commands = NodeCommand.AcquireCommands(-1, 1000);
+    //        _nextTime = DateTime.Now.AddMinutes(1);
+    //    }
 
-        // 是否有本节点
-        if (!_commands.Any(e => e.NodeID == nodeId)) return null;
+    //    // 是否有本节点
+    //    if (!_commands.Any(e => e.NodeID == nodeId)) return null;
 
-        var cmds = NodeCommand.AcquireCommands(nodeId, 100);
-        if (cmds == null) return null;
+    //    var cmds = NodeCommand.AcquireCommands(nodeId, 100);
+    //    if (cmds == null) return null;
 
-        var rs = new List<CommandModel>();
-        foreach (var item in cmds)
-        {
-            if (item.Times > 10 || item.Expire.Year > 2000 && item.Expire < DateTime.Now)
-                item.Status = CommandStatus.取消;
-            else
-            {
-                if (item.Status == CommandStatus.处理中 && item.UpdateTime.AddMinutes(10) < DateTime.Now) continue;
+    //    var rs = new List<CommandModel>();
+    //    foreach (var item in cmds)
+    //    {
+    //        if (item.Times > 10 || item.Expire.Year > 2000 && item.Expire < DateTime.Now)
+    //            item.Status = CommandStatus.取消;
+    //        else
+    //        {
+    //            if (item.Status == CommandStatus.处理中 && item.UpdateTime.AddMinutes(10) < DateTime.Now) continue;
 
-                item.Times++;
-                item.Status = CommandStatus.处理中;
-                rs.Add(item.ToModel());
-            }
-            item.UpdateTime = DateTime.Now;
-        }
-        cmds.Update(false);
+    //            item.Times++;
+    //            item.Status = CommandStatus.处理中;
+    //            rs.Add(item.ToModel());
+    //        }
+    //        item.UpdateTime = DateTime.Now;
+    //    }
+    //    cmds.Update(false);
 
-        return rs.ToArray();
-    }
+    //    return rs.ToArray();
+    //}
 
-    private ServiceInfo[] GetServices(Int32 nodeId)
-    {
-        var list = AppDeployNode.FindAllByNodeId(nodeId);
-        list = list.Where(e => e.Enable).ToList();
-        if (list.Count == 0) return null;
+    //private ServiceInfo[] GetServices(Int32 nodeId)
+    //{
+    //    var list = AppDeployNode.FindAllByNodeId(nodeId);
+    //    list = list.Where(e => e.Enable).ToList();
+    //    if (list.Count == 0) return null;
 
-        var svcs = new List<ServiceInfo>();
-        foreach (var item in list)
-        {
-            var deploy = item.App;
-            if (deploy == null || !deploy.Enable) continue;
+    //    var svcs = new List<ServiceInfo>();
+    //    foreach (var item in list)
+    //    {
+    //        var deploy = item.App;
+    //        if (deploy == null || !deploy.Enable) continue;
 
-            svcs.Add(item.ToService());
-        }
+    //        svcs.Add(item.ToService());
+    //    }
 
-        return svcs.ToArray();
-    }
+    //    return svcs.ToArray();
+    //}
 
     public PingResponse Ping()
     {

@@ -18,7 +18,7 @@ public class AppDeployController : EntityController<AppDeploy>
     static AppDeployController()
     {
         ListFields.RemoveCreateField();
-        ListFields.RemoveField("WorkingDirectory");
+        ListFields.RemoveField("AppId", "WorkingDirectory");
         AddFormFields.RemoveCreateField();
 
         LogOnChange = true;

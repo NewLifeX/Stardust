@@ -444,22 +444,22 @@ public class StarClient : ApiHttpClient, ICommandClient
                     Token = rs.Token;
                 }
 
-                // 推队列
-                if (rs.Commands != null && rs.Commands.Length > 0)
-                {
-                    foreach (var item in rs.Commands)
-                    {
-                        //CommandQueue.Publish(item.Command, item);
-                        await OnReceiveCommand(item);
-                    }
-                }
+                //// 推队列
+                //if (rs.Commands != null && rs.Commands.Length > 0)
+                //{
+                //    foreach (var item in rs.Commands)
+                //    {
+                //        //CommandQueue.Publish(item.Command, item);
+                //        await OnReceiveCommand(item);
+                //    }
+                //}
 
-                // 应用服务
-                if (rs.Services != null && rs.Services.Length > 0)
-                {
-                    Manager.Add(rs.Services);
-                    Manager.CheckService();
-                }
+                //// 应用服务
+                //if (rs.Services != null && rs.Services.Length > 0)
+                //{
+                //    Manager.Add(rs.Services);
+                //    Manager.CheckService();
+                //}
             }
 
             return rs;
