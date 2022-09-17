@@ -18,6 +18,8 @@ public class DeployService
         //if (!deployNode.Enable || app == null || !app.Enable) throw new Exception("部署节点未启用！");
         if (app == null || !app.Enable) throw new Exception("部署节点未启用！");
 
+        using var span = _starFactory.Tracer?.NewSpan($"Deploy-{action}", deployNode);
+
         var msg = "";
         var success = true;
         try

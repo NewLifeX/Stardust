@@ -508,13 +508,19 @@ public class NodeService
             Times = 1,
             Status = CommandStatus.处理中,
 
+            TraceId = DefaultSpan.Current?.TraceId,
             CreateUser = app.Name,
         };
         if (model.Expire > 0) cmd.Expire = DateTime.Now.AddSeconds(model.Expire);
         cmd.Insert();
 
+        var commandModel = cmd.ToModel();
+        commandModel.TraceId = DefaultSpan.Current + "";
+        //XTrace.WriteLine(DefaultSpan.Current.TraceId);
+        //XTrace.WriteLine(commandModel.TraceId);
+
         var queue = _queue.GetQueue<String>($"nodecmd:{node.Code}");
-        queue.Add(cmd.ToModel().ToJson());
+        queue.Add(commandModel.ToJson());
 
         return cmd.Id;
     }

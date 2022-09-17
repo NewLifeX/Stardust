@@ -1,5 +1,4 @@
-﻿using System.IO;
-using NewLife;
+﻿using NewLife;
 using NewLife.Http;
 using NewLife.IO;
 using NewLife.Log;
@@ -21,7 +20,7 @@ public class ServiceManager : DisposeBase
     public Int32 Delay { get; set; } = 3000;
 
     /// <summary>正在运行的应用服务信息</summary>
-    private readonly List<ServiceController> _services = new();
+    private readonly List<ServiceController> _controllers = new();
     private CsvDb<ProcessInfo> _db;
     private StarClient _client;
     #endregion
@@ -90,7 +89,7 @@ public class ServiceManager : DisposeBase
         // 从数据库加载应用状态
         foreach (var item in db.FindAll())
         {
-            _services.Add(new ServiceController
+            _controllers.Add(new ServiceController
             {
                 Name = item.Name,
                 ProcessId = item.ProcessId,
@@ -103,7 +102,7 @@ public class ServiceManager : DisposeBase
             });
         }
 
-        _timer = new TimerX(DoWork, null, 100, 30_000) { Async = true };
+        _timer = new TimerX(DoWork, null, 1000, 30_000) { Async = true };
     }
 
     /// <summary>停止管理，按需杀掉进程</summary>
@@ -138,7 +137,7 @@ public class ServiceManager : DisposeBase
         var db = _db;
         if (db == null) return;
 
-        var list = _services.Select(e => e.ToModel()).ToList();
+        var list = _controllers.Select(e => e.ToModel()).ToList();
 
         if (list.Count == 0)
             db.Clear();
@@ -162,7 +161,7 @@ public class ServiceManager : DisposeBase
 
         lock (this)
         {
-            var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
+            var svc = _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
             if (svc != null)
             {
                 svc.Info = service;
@@ -179,7 +178,7 @@ public class ServiceManager : DisposeBase
             };
             if (svc.Start())
             {
-                _services.Add(svc);
+                _controllers.Add(svc);
                 return true;
             }
         }
@@ -197,12 +196,12 @@ public class ServiceManager : DisposeBase
         using var span = Tracer?.NewSpan("ServiceManager-StopService", service);
 #endif
 
-        var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
+        var svc = _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
         if (svc != null)
         {
             svc.Stop(reason);
 
-            _services.Remove(svc);
+            _controllers.Remove(svc);
 
             return true;
         }
@@ -249,13 +248,16 @@ public class ServiceManager : DisposeBase
         // 过滤应用
         if (!appName.IsNullOrEmpty()) rs = rs.Where(e => e.Name.EqualIgnoreCase(appName)).ToArray();
 
+        WriteLog("取得应用服务：{0}", rs.Join(",", e => e.Name));
+        WriteLog("可用：{0}", rs.Where(e => e.Service.Enable).Join(",", e => e.Name));
+
         // 合并
         foreach (var item in rs)
         {
             var svc = item.Service;
 
             // 下载文件到工作目录
-            if (!item.Url.IsNullOrEmpty()) Download(item, svc);
+            if (item.Service.Enable && !item.Url.IsNullOrEmpty()) Download(item, svc);
 
             var old = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(item.Name));
             if (old == null)
@@ -353,7 +355,7 @@ public class ServiceManager : DisposeBase
         }
 
         // 停止不再使用的服务
-        var controllers = _services;
+        var controllers = _controllers;
         for (var i = controllers.Count - 1; i >= 0; i--)
         {
             var controller = controllers[i];
@@ -385,7 +387,7 @@ public class ServiceManager : DisposeBase
 
         SaveDb();
 
-        return _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name))?.ToModel();
+        return _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name))?.ToModel();
     }
 
     /// <summary>卸载服务</summary>
@@ -418,6 +420,8 @@ public class ServiceManager : DisposeBase
         client.RegisterCommand("deploy/start", DoControl);
         client.RegisterCommand("deploy/stop", DoControl);
         client.RegisterCommand("deploy/restart", DoControl);
+
+        _timer?.SetNext(-1);
     }
 
     private CommandReplyModel DoControl(CommandModel cmd)
