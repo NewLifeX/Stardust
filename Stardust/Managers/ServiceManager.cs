@@ -1,4 +1,6 @@
-﻿using NewLife;
+﻿using System.IO;
+using NewLife;
+using NewLife.Http;
 using NewLife.IO;
 using NewLife.Log;
 using NewLife.Serialization;
@@ -250,27 +252,67 @@ public class ServiceManager : DisposeBase
         // 合并
         foreach (var item in rs)
         {
-            var svc = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(item.Name));
-            if (svc == null)
+            var svc = item.Service;
+
+            // 下载文件到工作目录
+            if (!item.Url.IsNullOrEmpty()) Download(item, svc);
+
+            var old = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(item.Name));
+            if (old == null)
             {
-                svc = item;
+                old = item.Service;
                 //svc.ReloadOnChange = true;
 
-                svcs.Add(svc);
+                svcs.Add(old);
             }
             else
             {
-                svc.FileName = item.Name;
-                svc.Arguments = item.Arguments;
-                svc.WorkingDirectory = item.WorkingDirectory;
-                svc.Enable = item.Enable;
-                svc.AutoStart = item.AutoStart;
+                old.FileName = item.Name;
+                old.Arguments = svc.Arguments;
+                old.WorkingDirectory = svc.WorkingDirectory;
+                old.Enable = svc.Enable;
+                old.AutoStart = svc.AutoStart;
                 //svc.AutoStop = item.AutoStop;
-                svc.MaxMemory = item.MaxMemory;
+                old.MaxMemory = svc.MaxMemory;
             }
         }
 
         Services = svcs.ToArray();
+    }
+
+    void Download(DeployInfo info, ServiceInfo svc)
+    {
+        var dst = svc.WorkingDirectory.CombinePath(svc.FileName).AsFile();
+        if (!dst.Exists || !info.Hash.IsNullOrEmpty() && !dst.MD5().ToHex().EqualIgnoreCase(info.Hash))
+        {
+            WriteLog("下载版本[{0}]：{1}", info.Version, info.Url);
+
+            // 先下载到临时目录，再整体拷贝，避免进程退出
+            var tmp = Path.GetTempFileName();
+
+            var http = new HttpClient();
+            http.DownloadFileAsync(info.Url, tmp).Wait();
+
+            WriteLog("下载完成，准备覆盖：{0}", dst.FullName);
+
+            // 校验哈希
+            var ti = tmp.AsFile();
+            if (!info.Hash.IsNullOrEmpty() && !ti.MD5().ToHex().EqualIgnoreCase(info.Hash))
+                WriteLog("下载失败，校验错误");
+            else
+            {
+                try
+                {
+                    dst.Delete();
+                }
+                catch
+                {
+                    dst.MoveTo(dst.FullName + ".del");
+                }
+
+                ti.MoveTo(dst.FullName);
+            }
+        }
     }
 
     Int32 _status;

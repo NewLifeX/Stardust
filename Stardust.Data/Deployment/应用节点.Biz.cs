@@ -136,7 +136,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
             Arguments = app.Arguments,
             WorkingDirectory = app.WorkingDirectory,
 
-            Enable = app.Enable,
+            Enable = app.Enable && Enable,
             //AutoStart = app.AutoStart,
             //AutoStop = app.AutoStop,
             MaxMemory = app.MaxMemory,

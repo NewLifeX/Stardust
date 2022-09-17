@@ -45,22 +45,30 @@ public class DeployController : BaseController
 
     /// <summary>获取分配到本节点的应用服务信息</summary>
     /// <returns></returns>
-    public ServiceInfo[] GetAll()
+    public DeployInfo[] GetAll()
     {
         var list = AppDeployNode.FindAllByNodeId(_node.ID);
 
-        //if (list.Count > 0 && !appName.IsNullOrEmpty())
-        //{
-        //    var app = AppDeploy.FindByName(appName);
-        //    if (app == null) throw new Exception($"找不到应用[{appName}]");
-        //    if (!app.Enable) throw new Exception($"应用[{appName}]不可用");
+        var rs = new List<DeployInfo>();
+        foreach (var item in list)
+        {
+            var app = item.App;
+            if (app == null) continue;
 
-        //    list = list.Where(e => e.AppId == app.Id).ToList();
-        //}
+            var ver = AppDeployVersion.FindByAppIdAndVersion(app.Id, app.Version);
 
-        var infos = list.Select(e => e.ToService()).Where(e => e != null).ToArray();
+            var inf = new DeployInfo
+            {
+                Name = item.AppName,
+                Version = app.Version,
+                Url = ver?.Url,
 
-        return infos;
+                Service = item.ToService(),
+            };
+            rs.Add(inf);
+        }
+
+        return rs.ToArray();
     }
 
     /// <summary>上传本节点的所有应用服务信息</summary>
