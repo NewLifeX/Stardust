@@ -34,7 +34,7 @@ namespace Stardust.Extensions
         /// <returns></returns>
         public async Task Invoke(HttpContext ctx)
         {
-            // APM跟踪
+            //!! 以下代码不能封装为独立方法，因为有异步存在，代码被拆分为状态机，导致这里建立的埋点span无法关联页面接口内的下级埋点
             ISpan span = null;
             if (Tracer != null && !ctx.WebSockets.IsWebSocketRequest)
             {
