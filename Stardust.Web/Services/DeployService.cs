@@ -58,7 +58,7 @@ public class DeployService
         }
         finally
         {
-            var hi = AppDeployHistory.Create(deployNode.AppId, deployNode.NodeId, nameof(Publish), success, msg, ip);
+            var hi = AppDeployHistory.Create(deployNode.AppId, deployNode.NodeId, action, success, msg, ip);
             hi.SaveAsync();
         }
     }

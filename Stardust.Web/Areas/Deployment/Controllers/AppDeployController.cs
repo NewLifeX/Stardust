@@ -5,7 +5,6 @@ using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data;
 using Stardust.Data.Deployment;
-using XCode;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Deployment.Controllers;
@@ -20,7 +19,6 @@ public class AppDeployController : EntityController<AppDeploy>
     {
         ListFields.RemoveCreateField();
         ListFields.RemoveField("WorkingDirectory");
-        ListFields.RemoveField("ApolloMetaServer");
         AddFormFields.RemoveCreateField();
 
         LogOnChange = true;
@@ -47,16 +45,20 @@ public class AppDeployController : EntityController<AppDeploy>
             df.Url = "AppDeployVersion/Add?appId={Id}";
         }
 
-        {
-            var df = ListFields.GetField("Name") as ListField;
-            //df.Header = "应用";
-            df.Url = "/Registry/App?q={Name}";
-        }
+        //{
+        //    var df = ListFields.GetField("Name") as ListField;
+        //    //df.Header = "应用";
+        //    df.Url = "/Registry/App?q={Name}";
+        //}
 
+        {
+            var df = ListFields.AddListField("History", "UpdateUserId");
+            df.DisplayName = "部署历史";
+            df.Url = "/Deployment/AppDeployHistory?appId={Id}";
+        }
         {
             var df = ListFields.AddListField("Log", "UpdateUserId");
             df.DisplayName = "修改日志";
-            df.Header = "修改日志";
             df.Url = "/Admin/Log?category=应用部署&linkId={Id}";
         }
     }
@@ -105,34 +107,34 @@ public class AppDeployController : EntityController<AppDeploy>
         return base.Valid(entity, type, post);
     }
 
-    protected override Int32 OnUpdate(AppDeploy entity)
-    {
-        // 如果执行了启用，则通知节点
-        if ((entity as IEntity).Dirtys["Enable"]) Task.Run(() => NotifyChange(entity.Id));
+    //protected override Int32 OnUpdate(AppDeploy entity)
+    //{
+    //    // 如果执行了启用，则通知节点
+    //    if ((entity as IEntity).Dirtys["Enable"]) Task.Run(() => NotifyChange(entity.Id));
 
-        return base.OnUpdate(entity);
-    }
+    //    return base.OnUpdate(entity);
+    //}
 
-    public async Task<ActionResult> NotifyChange(Int32 id)
-    {
-        var deploy = AppDeploy.FindById(id);
-        if (deploy != null)
-        {
-            // 通知该发布集之下所有节点，应用服务数据有变化，需要马上执行心跳
-            var list = AppDeployNode.FindAllByAppId(deploy.Id);
-            foreach (var item in list)
-            {
-                var node = item.Node;
-                if (node != null)
-                {
-                    // 通过接口发送指令给StarServer
-                    await _starFactory.SendNodeCommand(node.Code, "Deploy");
-                }
-            }
-        }
+    //public async Task<ActionResult> NotifyChange(Int32 id)
+    //{
+    //    var deploy = AppDeploy.FindById(id);
+    //    if (deploy != null)
+    //    {
+    //        // 通知该发布集之下所有节点，应用服务数据有变化，需要马上执行心跳
+    //        var list = AppDeployNode.FindAllByAppId(deploy.Id);
+    //        foreach (var item in list)
+    //        {
+    //            var node = item.Node;
+    //            if (node != null)
+    //            {
+    //                // 通过接口发送指令给StarServer
+    //                await _starFactory.SendNodeCommand(node.Code, "deploy/publish");
+    //            }
+    //        }
+    //    }
 
-        return RedirectToAction("Index");
-    }
+    //    return RedirectToAction("Index");
+    //}
 
     [EntityAuthorize(PermissionFlags.Update)]
     public ActionResult SyncApp()
