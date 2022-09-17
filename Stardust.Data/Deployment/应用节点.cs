@@ -68,22 +68,6 @@ namespace Stardust.Data.Deployment
         [BindColumn("Environment", "环境。prod/test/dev/uat等", "")]
         public String Environment { get => _Environment; set { if (OnPropertyChanging("Environment", value)) { _Environment = value; OnPropertyChanged("Environment"); } } }
 
-        private String _Arguments;
-        /// <summary>参数。启动应用的参数，节点专用配置优先于应用配置</summary>
-        [DisplayName("参数")]
-        [Description("参数。启动应用的参数，节点专用配置优先于应用配置")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("Arguments", "参数。启动应用的参数，节点专用配置优先于应用配置", "")]
-        public String Arguments { get => _Arguments; set { if (OnPropertyChanging("Arguments", value)) { _Arguments = value; OnPropertyChanged("Arguments"); } } }
-
-        private String _WorkingDirectory;
-        /// <summary>工作目录。应用根目录，节点专用配置优先于应用配置</summary>
-        [DisplayName("工作目录")]
-        [Description("工作目录。应用根目录，节点专用配置优先于应用配置")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("WorkingDirectory", "工作目录。应用根目录，节点专用配置优先于应用配置", "")]
-        public String WorkingDirectory { get => _WorkingDirectory; set { if (OnPropertyChanging("WorkingDirectory", value)) { _WorkingDirectory = value; OnPropertyChanged("WorkingDirectory"); } } }
-
         private Int32 _CreateUserId;
         /// <summary>创建人</summary>
         [Category("扩展")]
@@ -128,8 +112,6 @@ namespace Stardust.Data.Deployment
                     case "Sort": return _Sort;
                     case "Enable": return _Enable;
                     case "Environment": return _Environment;
-                    case "Arguments": return _Arguments;
-                    case "WorkingDirectory": return _WorkingDirectory;
                     case "CreateUserId": return _CreateUserId;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -146,8 +128,6 @@ namespace Stardust.Data.Deployment
                     case "Sort": _Sort = value.ToInt(); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Environment": _Environment = Convert.ToString(value); break;
-                    case "Arguments": _Arguments = Convert.ToString(value); break;
-                    case "WorkingDirectory": _WorkingDirectory = Convert.ToString(value); break;
                     case "CreateUserId": _CreateUserId = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -178,12 +158,6 @@ namespace Stardust.Data.Deployment
 
             /// <summary>环境。prod/test/dev/uat等</summary>
             public static readonly Field Environment = FindByName("Environment");
-
-            /// <summary>参数。启动应用的参数，节点专用配置优先于应用配置</summary>
-            public static readonly Field Arguments = FindByName("Arguments");
-
-            /// <summary>工作目录。应用根目录，节点专用配置优先于应用配置</summary>
-            public static readonly Field WorkingDirectory = FindByName("WorkingDirectory");
 
             /// <summary>创建人</summary>
             public static readonly Field CreateUserId = FindByName("CreateUserId");
@@ -217,12 +191,6 @@ namespace Stardust.Data.Deployment
 
             /// <summary>环境。prod/test/dev/uat等</summary>
             public const String Environment = "Environment";
-
-            /// <summary>参数。启动应用的参数，节点专用配置优先于应用配置</summary>
-            public const String Arguments = "Arguments";
-
-            /// <summary>工作目录。应用根目录，节点专用配置优先于应用配置</summary>
-            public const String WorkingDirectory = "WorkingDirectory";
 
             /// <summary>创建人</summary>
             public const String CreateUserId = "CreateUserId";

@@ -133,8 +133,8 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         {
             Name = app.Name,
             FileName = app.FileName,
-            Arguments = !Arguments.IsNullOrEmpty() ? Arguments : app.Arguments,
-            WorkingDirectory = !WorkingDirectory.IsNullOrEmpty() ? WorkingDirectory : app.WorkingDirectory,
+            Arguments = app.Arguments,
+            WorkingDirectory = app.WorkingDirectory,
 
             Enable = app.Enable,
             //AutoStart = app.AutoStart,

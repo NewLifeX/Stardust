@@ -58,7 +58,7 @@ public class DeployController : BaseController
         //    list = list.Where(e => e.AppId == app.Id).ToList();
         //}
 
-        var infos = list.Where(e => e.Enable).Select(e => e.ToService()).Where(e => e != null).ToArray();
+        var infos = list.Select(e => e.ToService()).Where(e => e != null).ToArray();
 
         return infos;
     }
@@ -78,7 +78,7 @@ public class DeployController : BaseController
         foreach (var svc in services)
         {
             var app = AppDeploy.FindByName(svc.Name);
-            app ??= new AppDeploy { Name = svc.Name, Enable = true };
+            app ??= new AppDeploy { Name = svc.Name, Enable = svc.Enable };
 
             // 仅可用应用
             if (app.Enable)
@@ -87,7 +87,7 @@ public class DeployController : BaseController
                 if (app.Arguments.IsNullOrEmpty()) app.Arguments = svc.Arguments;
                 if (app.WorkingDirectory.IsNullOrEmpty()) app.WorkingDirectory = svc.WorkingDirectory;
 
-                app.Enable = svc.Enable;
+                //app.Enable = svc.Enable;
                 //app.AutoStart = svc.AutoStart;
                 //app.AutoStop = svc.AutoStop;
                 app.MaxMemory = svc.MaxMemory;
@@ -98,15 +98,15 @@ public class DeployController : BaseController
                 var dn = list.FirstOrDefault(e => e.AppId == app.Id);
                 dn ??= new AppDeployNode { AppId = app.Id, NodeId = _node.ID, Enable = true };
 
-                if (dn.Enable)
-                {
-                    dn.Arguments = svc.Arguments;
-                    dn.WorkingDirectory = svc.WorkingDirectory;
+                //if (dn.Enable)
+                //{
+                //    dn.Arguments = svc.Arguments;
+                //    dn.WorkingDirectory = svc.WorkingDirectory;
 
-                    rs2 += dn.Save();
+                //    rs2 += dn.Save();
 
-                    rs++;
-                }
+                //    rs++;
+                //}
 
                 if (rs2 > 0) WriteHistory(app.Id, nameof(Upload), true, svc.ToJson());
             }
