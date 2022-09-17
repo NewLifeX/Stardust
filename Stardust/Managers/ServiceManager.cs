@@ -158,25 +158,28 @@ public class ServiceManager : DisposeBase
         using var span = Tracer?.NewSpan("ServiceManager-StartService", service);
 #endif
 
-        var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
-        if (svc != null)
+        lock (this)
         {
-            svc.Info = service;
-            return svc.Check();
-        }
+            var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
+            if (svc != null)
+            {
+                svc.Info = service;
+                return svc.Check();
+            }
 
-        svc = new ServiceController
-        {
-            Name = service.Name,
-            Info = service,
+            svc = new ServiceController
+            {
+                Name = service.Name,
+                Info = service,
 
-            Tracer = Tracer,
-            Log = Log,
-        };
-        if (svc.Start())
-        {
-            _services.Add(svc);
-            return true;
+                Tracer = Tracer,
+                Log = Log,
+            };
+            if (svc.Start())
+            {
+                _services.Add(svc);
+                return true;
+            }
         }
 
         return false;
@@ -389,12 +392,21 @@ public class ServiceManager : DisposeBase
         {
             case "deploy/publish":
                 PullService(my.AppName);
+                _timer.SetNext(-1);
                 break;
             case "deploy/start":
-                if (svc != null) changed |= StartService(svc);
+                if (svc != null)
+                {
+                    svc.Enable = true;
+                    changed |= StartService(svc);
+                }
                 break;
             case "deploy/stop":
-                if (svc != null) changed |= StopService(svc, cmd.Command);
+                if (svc != null)
+                {
+                    svc.Enable = false;
+                    changed |= StopService(svc, cmd.Command);
+                }
                 break;
             case "deploy/restart":
                 if (svc != null)

@@ -74,7 +74,7 @@ namespace StarAgent
             // 版本升级过渡，逐步替代AutoStart
             foreach (var svc in Services)
             {
-                svc.Enable = svc.AutoStart;
+                if (svc.AutoStart) svc.Enable = true;
             }
 
             base.OnLoaded();
