@@ -104,21 +104,15 @@ public class DeployController : BaseController
                 // 先保存，可能有插入，需要取得应用发布Id
                 var rs2 = app.Save();
 
-                var dn = list.FirstOrDefault(e => e.AppId == app.Id);
-                dn ??= new AppDeployNode { AppId = app.Id, NodeId = _node.ID, Enable = true };
-
-                //if (dn.Enable)
-                //{
-                //    dn.Arguments = svc.Arguments;
-                //    dn.WorkingDirectory = svc.WorkingDirectory;
-
-                //    rs2 += dn.Save();
-
-                //    rs++;
-                //}
-
                 if (rs2 > 0) WriteHistory(app.Id, nameof(Upload), true, svc.ToJson());
+
+                rs += rs2;
             }
+
+            var dn = list.FirstOrDefault(e => e.AppId == app.Id);
+            dn ??= new AppDeployNode { AppId = app.Id, NodeId = _node.ID, Enable = true };
+
+            if (dn.Enable) dn.Save();
         }
 
         return rs;
