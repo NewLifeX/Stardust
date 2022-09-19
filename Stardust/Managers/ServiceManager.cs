@@ -161,14 +161,14 @@ public class ServiceManager : DisposeBase
 
         lock (this)
         {
-            var svc = _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
-            if (svc != null)
+            var controller = _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
+            if (controller != null)
             {
-                svc.Info = service;
-                return svc.Check();
+                controller.Info = service;
+                return controller.Check();
             }
 
-            svc = new ServiceController
+            controller = new ServiceController
             {
                 Name = service.Name,
                 Info = service,
@@ -176,9 +176,9 @@ public class ServiceManager : DisposeBase
                 Tracer = Tracer,
                 Log = Log,
             };
-            if (svc.Start())
+            if (controller.Start())
             {
-                _controllers.Add(svc);
+                _controllers.Add(controller);
                 return true;
             }
         }
@@ -269,7 +269,7 @@ public class ServiceManager : DisposeBase
             }
             else
             {
-                old.FileName = item.Name;
+                old.FileName = svc.FileName;
                 old.Arguments = svc.Arguments;
                 old.WorkingDirectory = svc.WorkingDirectory;
                 old.Enable = svc.Enable;

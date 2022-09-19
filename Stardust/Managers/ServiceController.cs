@@ -4,7 +4,6 @@ using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Deployment;
 using Stardust.Models;
-using static NewLife.Remoting.ApiHttpClient;
 
 namespace Stardust.Managers;
 
