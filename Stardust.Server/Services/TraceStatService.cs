@@ -252,6 +252,9 @@ namespace Stardust.Server.Services
             var list = TraceHourStat.FindAllByAppIdWithCache(appId, date, date.AddDays(1));
             if (list.Count == 0) return;
 
+            // 昨日统计
+            var sts2 = TraceDayStat.FindAllByAppIdWithCache(appId, date.AddDays(-1));
+
             // 聚合
             // 分组聚合，这里包含了每个接口在该日内的所有分钟统计，需要求和
             foreach (var item in list.GroupBy(e => e.ItemId))
@@ -294,6 +297,10 @@ namespace Stardust.Server.Services
                     st.Type = ti.Kind;
                     st.Name = ti + "";
                 }
+
+                // 计算环比
+                var st2 = sts2.FirstOrDefault(e => e.ItemId == item.Key);
+                if (st2 != null) st.RingRate = st2.Total <= 0 ? 1 : (Double)st.Total / st2.Total;
 
                 //// 强制触发种类计算
                 //st.Valid(false);

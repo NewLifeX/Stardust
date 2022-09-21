@@ -27,7 +27,7 @@ namespace Stardust.Web.Areas.Redis.Controllers
                 var df = ListFields.GetField("TraceId") as ListField;
                 df.DisplayName = "跟踪";
                 df.Url = StarHelper.BuildUrl("{TraceId}");
-                df.DataVisible = (e, f) => e is RedisMessageQueue entity && !entity.TraceId.IsNullOrEmpty();
+                df.DataVisible = e => e is RedisMessageQueue entity && !entity.TraceId.IsNullOrEmpty();
             }
             {
                 var df = ListFields.AddListField("Log", "UpdateTime");

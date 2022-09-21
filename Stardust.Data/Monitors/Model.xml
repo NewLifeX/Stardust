@@ -161,6 +161,7 @@
       <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
       <Column Name="Type" DataType="String" Description="种类。Api/Http/Db/Mq/Redis/Other" />
       <Column Name="Total" DataType="Int32" Description="总次数" />
+      <Column Name="RingRate" DataType="Double" Description="环比。今天与昨天相比" />
       <Column Name="Errors" DataType="Int32" Description="错误数" />
       <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
       <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
@@ -231,6 +232,7 @@
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="Names" DataType="Int32" Description="埋点数" />
       <Column Name="Total" DataType="Int64" Description="总次数" />
+      <Column Name="RingRate" DataType="Double" Description="环比。今天与昨天相比" />
       <Column Name="Errors" DataType="Int64" Description="错误数" />
       <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
       <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
