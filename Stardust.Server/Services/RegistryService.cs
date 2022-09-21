@@ -170,7 +170,9 @@ namespace Stardust.Server.Services
                 {
                     foreach (var elm in addrs)
                     {
-                        if (!ds.Contains(elm)) ds.Add(elm);
+                        var url = elm;
+                        if (url.StartsWithIgnoreCase("http://", "https://")) url = new Uri(url).ToString().TrimEnd('/');
+                        if (!ds.Contains(url)) ds.Add(url);
                     }
                 }
             }
