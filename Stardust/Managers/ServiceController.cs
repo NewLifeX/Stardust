@@ -224,7 +224,7 @@ internal class ServiceController : DisposeBase
         }
 
         // 根据进程名查找
-        if (p == null && !ProcessName.IsNullOrEmpty())
+        if (p == null && !ProcessName.IsNullOrEmpty() && !ProcessName.EqualIgnoreCase("dotnet", "java"))
         {
             var ps = Process.GetProcessesByName(ProcessName);
             if (ps.Length > 0)
