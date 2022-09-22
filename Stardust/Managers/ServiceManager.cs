@@ -215,9 +215,22 @@ public class ServiceManager : DisposeBase
     /// <param name="services"></param>
     public void SetServices(ServiceInfo[] services)
     {
-        var svcs = Services.OrderBy(e => e.Name).ToArray();
-        var svcs2 = services.OrderBy(e => e.Name).ToArray();
-        if (svcs == null || svcs.Length != svcs2.Length || svcs.ToJson() != svcs2.ToJson())
+        var flag = Services == null;
+        if (!flag)
+        {
+            foreach (var item in services)
+            {
+                // 如果新服务在原列表里不存在，或者数值不同，则认为有改变
+                var s = Services.FirstOrDefault(e => e.Name == item.Name);
+                if (s == null || s.ToJson() != item.ToJson())
+                {
+                    flag = true;
+                    break;
+                }
+            }
+        }
+
+        if (flag)
         {
             using var span = Tracer?.NewSpan("ServiceManager-SetServices", services);
 
