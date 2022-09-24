@@ -61,9 +61,10 @@ namespace StarAgent
                 };
                 var si2 = new ServiceInfo
                 {
-                    Name = "test2",
-                    FileName = "ping",
-                    Arguments = "feifan.link",
+                    Name = "StarWeb",
+                    FileName = "StarWeb.zip",
+                    Arguments = "-shadow ../shadow",
+                    WorkingDirectory = "../star/web/",
 
                     AutoStart = false,
                 };
