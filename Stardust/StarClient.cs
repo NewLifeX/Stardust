@@ -444,22 +444,22 @@ public class StarClient : ApiHttpClient, ICommandClient
                     Token = rs.Token;
                 }
 
-                // 推队列
-                if (rs.Commands != null && rs.Commands.Length > 0)
-                {
-                    foreach (var item in rs.Commands)
-                    {
-                        //CommandQueue.Publish(item.Command, item);
-                        await OnReceiveCommand(item);
-                    }
-                }
+                //// 推队列
+                //if (rs.Commands != null && rs.Commands.Length > 0)
+                //{
+                //    foreach (var item in rs.Commands)
+                //    {
+                //        //CommandQueue.Publish(item.Command, item);
+                //        await OnReceiveCommand(item);
+                //    }
+                //}
 
-                // 应用服务
-                if (rs.Services != null && rs.Services.Length > 0)
-                {
-                    Manager.Add(rs.Services);
-                    Manager.CheckService();
-                }
+                //// 应用服务
+                //if (rs.Services != null && rs.Services.Length > 0)
+                //{
+                //    Manager.Add(rs.Services);
+                //    Manager.CheckService();
+                //}
             }
 
             return rs;
@@ -583,21 +583,20 @@ public class StarClient : ApiHttpClient, ICommandClient
                 var model = buf.ToStr(null, 0, data.Count).ToJsonEntity<CommandModel>();
                 if (model != null)
                 {
-                    XTrace.WriteLine("Got Command: {0}", model.ToJson());
-                    if (model.Expire.Year < 2000 || model.Expire > DateTime.Now)
+                    // 埋点，建立调用链
+                    using var span = Tracer?.NewSpan("OnReceiveCommand", model);
+                    span?.Detach(model.TraceId);
+                    try
                     {
-                        await OnReceiveCommand(model);
-                        //switch (model.Command)
-                        //{
-                        //    case "Deploy":
-                        //        // 发布中心通知有应用需要部署，马上执行一次心跳，拉取最新应用信息
-                        //        _ = Task.Run(Ping);
-                        //        break;
-                        //    default:
-                        //        var rs = CommandQueue.Publish(model.Command, model);
-                        //        if (rs != null) await ReportAsync(model.Id, rs);
-                        //        break;
-                        //}
+                        XTrace.WriteLine("Got Command: {0}", model.ToJson());
+                        if (model.Expire.Year < 2000 || model.Expire > DateTime.Now)
+                        {
+                            await OnReceiveCommand(model);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        span?.SetError(ex, null);
                     }
                 }
             }
@@ -622,7 +621,7 @@ public class StarClient : ApiHttpClient, ICommandClient
         Received?.Invoke(this, e);
 
         var rs = await this.ExecuteCommand(model);
-        if (e.Reply == null) e.Reply = rs;
+        e.Reply ??= rs;
 
         if (e.Reply != null) await CommandReply(e.Reply);
     }
@@ -653,5 +652,16 @@ public class StarClient : ApiHttpClient, ICommandClient
     /// <param name="channel"></param>
     /// <returns></returns>
     public async Task<UpgradeInfo> UpgradeAsync(String channel) => await GetAsync<UpgradeInfo>("Node/Upgrade", new { channel });
+    #endregion
+
+    #region 部署
+    /// <summary>获取分配到本节点的应用服务信息</summary>
+    /// <returns></returns>
+    public async Task<DeployInfo[]> GetDeploy() => await GetAsync<DeployInfo[]>("Deploy/GetAll");
+
+    /// <summary>上传本节点的所有应用服务信息</summary>
+    /// <param name="services"></param>
+    /// <returns></returns>
+    public async Task<Int32> UploadDeploy(ServiceInfo[] services) => await PostAsync<Int32>("Deploy/Upload", services);
     #endregion
 }

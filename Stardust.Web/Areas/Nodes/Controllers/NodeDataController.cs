@@ -33,11 +33,11 @@ namespace Stardust.Web.Areas.Nodes.Controllers
 
                 PageSetting.EnableNavbar = false;
 
-                if (start.Year < 2000)
-                {
-                    start = DateTime.Today;
-                    p["dtStart"] = start.ToFullString();
-                }
+                //if (start.Year < 2000)
+                //{
+                //    start = DateTime.Today;
+                //    p["dtStart"] = start.ToFullString();
+                //}
             }
 
             if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.Id.Desc();

@@ -148,7 +148,7 @@ public class StarFactory : DisposeBase
                 if (Server.IsNullOrEmpty()) Server = server;
                 XTrace.WriteLine("星尘探测：{0}", server);
 
-                if (!Server.IsNullOrEmpty())
+                if (set.Server.IsNullOrEmpty())
                 {
                     set.Server = server;
                     flag = true;

@@ -19,7 +19,7 @@ namespace Stardust.Web.Areas.Configs.Controllers
                 var df = ListFields.GetField("TraceId") as ListField;
                 df.DisplayName = "跟踪";
                 df.Url = StarHelper.BuildUrl("{TraceId}");
-                df.DataVisible = (e, f) => e is ConfigHistory entity && !entity.TraceId.IsNullOrEmpty();
+                df.DataVisible = e => e is ConfigHistory entity && !entity.TraceId.IsNullOrEmpty();
             }
         }
 

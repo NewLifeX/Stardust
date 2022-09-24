@@ -36,7 +36,7 @@ public class AppOnlineController : EntityController<AppOnline>
             var df = ListFields.GetField("TraceId") as ListField;
             df.DisplayName = "跟踪";
             df.Url = StarHelper.BuildUrl("{TraceId}");
-            df.DataVisible = (e, f) => e is AppOnline entity && !entity.TraceId.IsNullOrEmpty();
+            df.DataVisible = e => e is AppOnline entity && !entity.TraceId.IsNullOrEmpty();
         }
     }
 

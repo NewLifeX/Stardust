@@ -22,7 +22,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                 var df = ListFields.AddListField("down", null, "Source");
                 df.DisplayName = "下载";
                 df.Url = "/Nodes/NodeVersion/GetVersion/{Version}.zip";
-                df.DataVisible = (e, f) =>
+                df.DataVisible = e =>
                 {
                     var entity = e as NodeVersion;
                     return !entity.Source.IsNullOrEmpty() && !entity.Source.StartsWithIgnoreCase("http://", "https://");

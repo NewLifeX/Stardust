@@ -6,6 +6,7 @@ using NewLife.Cube.Extensions;
 using NewLife.Log;
 using Stardust.Data.Configs;
 using Stardust.Server.Services;
+using Stardust.Web.Services;
 using XCode;
 using XCode.DataAccessLayer;
 
@@ -35,6 +36,7 @@ namespace Stardust.Web
             services.AddSingleton<TokenService>();
             services.AddSingleton<ConfigService>();
             services.AddSingleton<AppOnlineService>();
+            services.AddSingleton<DeployService>();
 
             services.AddResponseCompression();
 

@@ -10,12 +10,12 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Deployment
 {
-    /// <summary>部署版本</summary>
+    /// <summary>部署版本。应用的多个可发布版本，主要包括应用程序包</summary>
     [Serializable]
     [DataObject]
-    [Description("部署版本")]
+    [Description("部署版本。应用的多个可发布版本，主要包括应用程序包")]
     [BindIndex("IU_AppDeployVersion_AppId_Version", true, "AppId,Version")]
-    [BindTable("AppDeployVersion", Description = "部署版本", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("AppDeployVersion", Description = "部署版本。应用的多个可发布版本，主要包括应用程序包", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppDeployVersion
     {
         #region 属性
@@ -36,11 +36,11 @@ namespace Stardust.Data.Deployment
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
         private String _Version;
-        /// <summary>版本</summary>
+        /// <summary>版本。如2.3.2022.0911，字符串比较大小</summary>
         [DisplayName("版本")]
-        [Description("版本")]
+        [Description("版本。如2.3.2022.0911，字符串比较大小")]
         [DataObjectField(false, false, false, 50)]
-        [BindColumn("Version", "版本", "", Master = true)]
+        [BindColumn("Version", "版本。如2.3.2022.0911，字符串比较大小", "", Master = true)]
         public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
         private Boolean _Enable;
@@ -58,6 +58,14 @@ namespace Stardust.Data.Deployment
         [DataObjectField(false, false, true, 50)]
         [BindColumn("Url", "资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖", "", ItemType = "file")]
         public String Url { get => _Url; set { if (OnPropertyChanging("Url", value)) { _Url = value; OnPropertyChanged("Url"); } } }
+
+        private String _Hash;
+        /// <summary>文件哈希。MD5</summary>
+        [DisplayName("文件哈希")]
+        [Description("文件哈希。MD5")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Hash", "文件哈希。MD5", "")]
+        public String Hash { get => _Hash; set { if (OnPropertyChanging("Hash", value)) { _Hash = value; OnPropertyChanged("Hash"); } } }
 
         private Int32 _CreateUserId;
         /// <summary>创建者</summary>
@@ -138,6 +146,7 @@ namespace Stardust.Data.Deployment
                     case "Version": return _Version;
                     case "Enable": return _Enable;
                     case "Url": return _Url;
+                    case "Hash": return _Hash;
                     case "CreateUserId": return _CreateUserId;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -157,6 +166,7 @@ namespace Stardust.Data.Deployment
                     case "Version": _Version = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Url": _Url = Convert.ToString(value); break;
+                    case "Hash": _Hash = Convert.ToString(value); break;
                     case "CreateUserId": _CreateUserId = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -180,7 +190,7 @@ namespace Stardust.Data.Deployment
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
 
-            /// <summary>版本</summary>
+            /// <summary>版本。如2.3.2022.0911，字符串比较大小</summary>
             public static readonly Field Version = FindByName("Version");
 
             /// <summary>启用</summary>
@@ -188,6 +198,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
             public static readonly Field Url = FindByName("Url");
+
+            /// <summary>文件哈希。MD5</summary>
+            public static readonly Field Hash = FindByName("Hash");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUserId = FindByName("CreateUserId");
@@ -222,7 +235,7 @@ namespace Stardust.Data.Deployment
             /// <summary>应用</summary>
             public const String AppId = "AppId";
 
-            /// <summary>版本</summary>
+            /// <summary>版本。如2.3.2022.0911，字符串比较大小</summary>
             public const String Version = "Version";
 
             /// <summary>启用</summary>
@@ -230,6 +243,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
             public const String Url = "Url";
+
+            /// <summary>文件哈希。MD5</summary>
+            public const String Hash = "Hash";
 
             /// <summary>创建者</summary>
             public const String CreateUserId = "CreateUserId";

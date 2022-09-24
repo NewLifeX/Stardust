@@ -68,22 +68,6 @@ namespace Stardust.Data.Deployment
         [BindColumn("Environment", "环境。prod/test/dev/uat等", "")]
         public String Environment { get => _Environment; set { if (OnPropertyChanging("Environment", value)) { _Environment = value; OnPropertyChanged("Environment"); } } }
 
-        private String _Arguments;
-        /// <summary>参数。启动应用的参数，节点专用配置优先于应用配置</summary>
-        [DisplayName("参数")]
-        [Description("参数。启动应用的参数，节点专用配置优先于应用配置")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("Arguments", "参数。启动应用的参数，节点专用配置优先于应用配置", "")]
-        public String Arguments { get => _Arguments; set { if (OnPropertyChanging("Arguments", value)) { _Arguments = value; OnPropertyChanged("Arguments"); } } }
-
-        private String _WorkingDirectory;
-        /// <summary>工作目录。应用根目录，节点专用配置优先于应用配置</summary>
-        [DisplayName("工作目录")]
-        [Description("工作目录。应用根目录，节点专用配置优先于应用配置")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("WorkingDirectory", "工作目录。应用根目录，节点专用配置优先于应用配置", "")]
-        public String WorkingDirectory { get => _WorkingDirectory; set { if (OnPropertyChanging("WorkingDirectory", value)) { _WorkingDirectory = value; OnPropertyChanged("WorkingDirectory"); } } }
-
         private Int32 _CreateUserId;
         /// <summary>创建人</summary>
         [Category("扩展")]
@@ -110,6 +94,42 @@ namespace Stardust.Data.Deployment
         [DataObjectField(false, false, true, 50)]
         [BindColumn("CreateIP", "创建地址", "")]
         public String CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
+
+        private Int32 _UpdateUserId;
+        /// <summary>更新者</summary>
+        [Category("扩展")]
+        [DisplayName("更新者")]
+        [Description("更新者")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("UpdateUserId", "更新者", "")]
+        public Int32 UpdateUserId { get => _UpdateUserId; set { if (OnPropertyChanging("UpdateUserId", value)) { _UpdateUserId = value; OnPropertyChanged("UpdateUserId"); } } }
+
+        private DateTime _UpdateTime;
+        /// <summary>更新时间</summary>
+        [Category("扩展")]
+        [DisplayName("更新时间")]
+        [Description("更新时间")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("UpdateTime", "更新时间", "")]
+        public DateTime UpdateTime { get => _UpdateTime; set { if (OnPropertyChanging("UpdateTime", value)) { _UpdateTime = value; OnPropertyChanged("UpdateTime"); } } }
+
+        private String _UpdateIP;
+        /// <summary>更新地址</summary>
+        [Category("扩展")]
+        [DisplayName("更新地址")]
+        [Description("更新地址")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("UpdateIP", "更新地址", "")]
+        public String UpdateIP { get => _UpdateIP; set { if (OnPropertyChanging("UpdateIP", value)) { _UpdateIP = value; OnPropertyChanged("UpdateIP"); } } }
+
+        private String _Remark;
+        /// <summary>备注</summary>
+        [Category("扩展")]
+        [DisplayName("备注")]
+        [Description("备注")]
+        [DataObjectField(false, false, true, 500)]
+        [BindColumn("Remark", "备注", "")]
+        public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
         #endregion
 
         #region 获取/设置 字段值
@@ -128,11 +148,13 @@ namespace Stardust.Data.Deployment
                     case "Sort": return _Sort;
                     case "Enable": return _Enable;
                     case "Environment": return _Environment;
-                    case "Arguments": return _Arguments;
-                    case "WorkingDirectory": return _WorkingDirectory;
                     case "CreateUserId": return _CreateUserId;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
+                    case "UpdateUserId": return _UpdateUserId;
+                    case "UpdateTime": return _UpdateTime;
+                    case "UpdateIP": return _UpdateIP;
+                    case "Remark": return _Remark;
                     default: return base[name];
                 }
             }
@@ -146,11 +168,13 @@ namespace Stardust.Data.Deployment
                     case "Sort": _Sort = value.ToInt(); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Environment": _Environment = Convert.ToString(value); break;
-                    case "Arguments": _Arguments = Convert.ToString(value); break;
-                    case "WorkingDirectory": _WorkingDirectory = Convert.ToString(value); break;
                     case "CreateUserId": _CreateUserId = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
+                    case "UpdateUserId": _UpdateUserId = value.ToInt(); break;
+                    case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
+                    case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
+                    case "Remark": _Remark = Convert.ToString(value); break;
                     default: base[name] = value; break;
                 }
             }
@@ -179,12 +203,6 @@ namespace Stardust.Data.Deployment
             /// <summary>环境。prod/test/dev/uat等</summary>
             public static readonly Field Environment = FindByName("Environment");
 
-            /// <summary>参数。启动应用的参数，节点专用配置优先于应用配置</summary>
-            public static readonly Field Arguments = FindByName("Arguments");
-
-            /// <summary>工作目录。应用根目录，节点专用配置优先于应用配置</summary>
-            public static readonly Field WorkingDirectory = FindByName("WorkingDirectory");
-
             /// <summary>创建人</summary>
             public static readonly Field CreateUserId = FindByName("CreateUserId");
 
@@ -193,6 +211,18 @@ namespace Stardust.Data.Deployment
 
             /// <summary>创建地址</summary>
             public static readonly Field CreateIP = FindByName("CreateIP");
+
+            /// <summary>更新者</summary>
+            public static readonly Field UpdateUserId = FindByName("UpdateUserId");
+
+            /// <summary>更新时间</summary>
+            public static readonly Field UpdateTime = FindByName("UpdateTime");
+
+            /// <summary>更新地址</summary>
+            public static readonly Field UpdateIP = FindByName("UpdateIP");
+
+            /// <summary>备注</summary>
+            public static readonly Field Remark = FindByName("Remark");
 
             static Field FindByName(String name) => Meta.Table.FindByName(name);
         }
@@ -218,12 +248,6 @@ namespace Stardust.Data.Deployment
             /// <summary>环境。prod/test/dev/uat等</summary>
             public const String Environment = "Environment";
 
-            /// <summary>参数。启动应用的参数，节点专用配置优先于应用配置</summary>
-            public const String Arguments = "Arguments";
-
-            /// <summary>工作目录。应用根目录，节点专用配置优先于应用配置</summary>
-            public const String WorkingDirectory = "WorkingDirectory";
-
             /// <summary>创建人</summary>
             public const String CreateUserId = "CreateUserId";
 
@@ -232,6 +256,18 @@ namespace Stardust.Data.Deployment
 
             /// <summary>创建地址</summary>
             public const String CreateIP = "CreateIP";
+
+            /// <summary>更新者</summary>
+            public const String UpdateUserId = "UpdateUserId";
+
+            /// <summary>更新时间</summary>
+            public const String UpdateTime = "UpdateTime";
+
+            /// <summary>更新地址</summary>
+            public const String UpdateIP = "UpdateIP";
+
+            /// <summary>备注</summary>
+            public const String Remark = "Remark";
         }
         #endregion
     }

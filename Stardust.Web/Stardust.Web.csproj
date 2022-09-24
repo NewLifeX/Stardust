@@ -38,18 +38,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Cube.Core" Version="5.5.2022.816-beta0753" />
-    <PackageReference Include="NewLife.Redis" Version="5.0.2022.813-beta1456" />
+    <PackageReference Include="NewLife.Cube.Core" Version="5.5.2022.920-beta1504" />
+    <PackageReference Include="NewLife.Redis" Version="5.0.2022.901" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Stardust.Data\Stardust.Data.csproj" />
     <ProjectReference Include="..\Stardust.Extensions\Stardust.Extensions.csproj" />
     <ProjectReference Include="..\Stardust\Stardust.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Services\" />
   </ItemGroup>
 
   <ItemGroup>

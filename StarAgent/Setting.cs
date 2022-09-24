@@ -56,8 +56,8 @@ namespace StarAgent
                     FileName = "ping",
                     Arguments = "newlifex.com",
 
-                    AutoStart = false,
-                    ReloadOnChange = true,
+                    Enable = false,
+                    //ReloadOnChange = true,
                 };
                 var si2 = new ServiceInfo
                 {
@@ -66,10 +66,16 @@ namespace StarAgent
                     Arguments = "-shadow ../shadow",
                     WorkingDirectory = "../star/web/",
 
-                    AutoStart = false,
+                    Enable = false,
                 };
 
                 Services = new[] { si, si2 };
+            }
+
+            // 版本升级过渡，逐步替代AutoStart
+            foreach (var svc in Services)
+            {
+                if (svc.AutoStart) svc.Enable = true;
             }
 
             base.OnLoaded();

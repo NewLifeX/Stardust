@@ -36,8 +36,10 @@ public class ZipDeploy
     {
         if (args == null || args.Length == 0) return false;
 
-        // 在参数中找到zip文件
         var file = "";
+        if (file.IsNullOrEmpty() && FileName.EndsWithIgnoreCase(".zip")) file = FileName;
+
+        // 在参数中找到zip文件
         var name = "";
         var shadow = "";
         var gs = new String[args.Length];
@@ -130,7 +132,10 @@ public class ZipDeploy
                 FileName = "dotnet",
                 Arguments = $"{runfile.FullName} {Arguments}",
                 WorkingDirectory = rundir.FullName,
-                UseShellExecute = false,
+
+                // false时目前控制台合并到当前控制台，一起退出；
+                // true时目标控制台独立窗口，不会一起退出；
+                UseShellExecute = true,
             };
         }
         else
@@ -140,7 +145,10 @@ public class ZipDeploy
                 FileName = runfile.FullName,
                 Arguments = Arguments,
                 WorkingDirectory = rundir.FullName,
-                UseShellExecute = false,
+
+                // false时目前控制台合并到当前控制台，一起退出；
+                // true时目标控制台独立窗口，不会一起退出；
+                UseShellExecute = true,
             };
         }
 

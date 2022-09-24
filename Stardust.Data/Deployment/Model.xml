@@ -2,16 +2,17 @@
 <Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2022.xsd" NameSpace="Stardust.Data.Deployment" ConnName="Stardust" BaseClass="Entity" Output="" Version="11.1.2022.0523" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model2022.xsd">
   <Table Name="AppDeploy" Description="应用部署。关联多个版本，关联多个节点服务器">
     <Columns>
-      <Column Name="Id" DataType="Int32" PrimaryKey="True" Description="编号" />
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="AppId" DataType="Int32" Description="应用。对应StarApp" />
       <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="Name" DataType="String" Master="True" Description="名称。应用名" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Nodes" DataType="Int32" Description="节点。该应用部署集所拥有的节点数" />
       <Column Name="Version" DataType="String" Description="版本。应用正在使用的版本号" />
-      <Column Name="FileName" DataType="String" Description="文件。应用启动文件" />
-      <Column Name="Arguments" DataType="String" Description="参数。启动应用的参数" />
-      <Column Name="WorkingDirectory" DataType="String" Description="工作目录。应用根目录" />
-      <Column Name="AutoStart" DataType="Boolean" Description="自动启动。系统重启时，或应用退出后，自动拉起应用" />
+      <Column Name="FileName" DataType="String" Description="文件。应用启动文件，可直接使用zip包" Category="参数" />
+      <Column Name="Arguments" DataType="String" Description="参数。启动应用的参数" Category="参数" />
+      <Column Name="WorkingDirectory" DataType="String" Description="工作目录。应用根目录" Category="参数" />
+      <Column Name="MaxMemory" DataType="Int32" Description="最大内存。单位M，超过上限时自动重启应用，默认0不限制" Category="参数" />
       <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
@@ -32,11 +33,13 @@
       <Column Name="Sort" DataType="Int32" Description="顺序。较大在前" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Environment" DataType="String" Description="环境。prod/test/dev/uat等" />
-      <Column Name="Arguments" DataType="String" Description="参数。启动应用的参数，节点专用配置优先于应用配置" />
-      <Column Name="WorkingDirectory" DataType="String" Description="工作目录。应用根目录，节点专用配置优先于应用配置" />
       <Column Name="CreateUserId" DataType="Int32" Description="创建人" Category="扩展" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+      <Column Name="UpdateUserId" DataType="Int32" Description="更新者" Category="扩展" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+      <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
     </Columns>
     <Indexes>
       <Index Columns="AppId" />
@@ -60,13 +63,14 @@
       <Index Columns="NodeId" />
     </Indexes>
   </Table>
-  <Table Name="AppDeployVersion" Description="部署版本">
+  <Table Name="AppDeployVersion" Description="部署版本。应用的多个可发布版本，主要包括应用程序包">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="Version" DataType="String" Master="True" Nullable="False" Description="版本" />
+      <Column Name="Version" DataType="String" Master="True" Nullable="False" Description="版本。如2.3.2022.0911，字符串比较大小" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Url" DataType="String" ItemType="file" Description="资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖" />
+      <Column Name="Hash" DataType="String" Description="文件哈希。MD5" />
       <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
@@ -83,6 +87,7 @@
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
+      <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
       <Column Name="Action" DataType="String" Nullable="False" Description="操作" />
       <Column Name="Success" DataType="Boolean" Description="成功" />
       <Column Name="Remark" DataType="String" Length="2000" Description="内容" />
@@ -94,6 +99,7 @@
     <Indexes>
       <Index Columns="AppId,Id" />
       <Index Columns="AppId,Action,Id" />
+      <Index Columns="NodeId,Id" />
     </Indexes>
   </Table>
 </Tables>

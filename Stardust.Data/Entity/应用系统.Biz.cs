@@ -188,6 +188,11 @@ namespace Stardust.Data
             history.Client = clientId;
             history.SaveAsync();
         }
+
+        /// <summary>获取 或 创建</summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static App GetOrAdd(String name) => GetOrAdd(name, FindByName, k => new App { Name = name });
         #endregion
     }
 }

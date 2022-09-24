@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
@@ -251,6 +252,9 @@ namespace Stardust.Server.Services
             var list = TraceHourStat.FindAllByAppIdWithCache(appId, date, date.AddDays(1));
             if (list.Count == 0) return;
 
+            // 昨日统计
+            var sts2 = TraceDayStat.FindAllByAppIdWithCache(appId, date.AddDays(-1));
+
             // 聚合
             // 分组聚合，这里包含了每个接口在该日内的所有分钟统计，需要求和
             foreach (var item in list.GroupBy(e => e.ItemId))
@@ -267,6 +271,25 @@ namespace Stardust.Server.Services
                 var vs2 = vs.Where(e => e.MinCost > 0).ToList();
                 if (vs2.Count > 0) st.MinCost = vs2.Min(e => e.MinCost);
 
+                // 计算TP99
+                if (st.Total >= 50)
+                {
+                    var totalCost = st.TotalCost;
+                    var ms = vs.Select(e => e.MaxCost).OrderByDescending(e => e).ToList();
+                    var n = (Int32)Math.Round(st.Total * 0.01);
+                    var i = 0;
+                    for (i = 0; i < n && i < ms.Count; i++)
+                    {
+                        totalCost -= ms[i];
+                    }
+
+                    // 重新计算平均耗时，去掉了头部1%的最大值
+                    if (totalCost > 0)
+                    {
+                        st.Cost = (Int32)Math.Round((Double)totalCost / (st.Total - i));
+                    }
+                }
+
                 // 计算种类
                 var ti = TraceItem.FindById(item.Key);
                 if (ti != null)
@@ -274,6 +297,10 @@ namespace Stardust.Server.Services
                     st.Type = ti.Kind;
                     st.Name = ti + "";
                 }
+
+                // 计算环比
+                var st2 = sts2.FirstOrDefault(e => e.ItemId == item.Key);
+                if (st2 != null) st.RingRate = st2.Total <= 0 ? 1 : (Double)st.Total / st2.Total;
 
                 //// 强制触发种类计算
                 //st.Valid(false);
@@ -308,6 +335,25 @@ namespace Stardust.Server.Services
                 st.MaxCost = vs.Max(e => e.MaxCost);
                 var vs2 = vs.Where(e => e.MinCost > 0).ToList();
                 if (vs2.Count > 0) st.MinCost = vs2.Min(e => e.MinCost);
+
+                // 计算TP99
+                if (st.Total >= 50)
+                {
+                    var totalCost = st.TotalCost;
+                    var ms = vs.Select(e => e.MaxCost).OrderByDescending(e => e).ToList();
+                    var n = (Int32)Math.Round(st.Total * 0.01);
+                    var i = 0;
+                    for (i = 0; i < n && i < ms.Count; i++)
+                    {
+                        totalCost -= ms[i];
+                    }
+
+                    // 重新计算平均耗时，去掉了头部1%的最大值
+                    if (totalCost > 0)
+                    {
+                        st.Cost = (Int32)Math.Round((Double)totalCost / (st.Total - i));
+                    }
+                }
 
                 _hourQueue.Commit(key);
             }
@@ -361,6 +407,28 @@ namespace Stardust.Server.Services
                 //st.MinCost = traces.Min(e => e.MinCost);
                 var vs2 = traces.Where(e => e.MinCost > 0).ToList();
                 if (vs2.Count > 0) st.MinCost = vs2.Min(e => e.MinCost);
+
+                // 计算TP99
+                if (st.Total >= 50)
+                {
+                    //// 计算总耗时，如果某个跟踪项数据较多，则其平均值已被掐头
+                    //var totalCost = traces.Sum(e => e.Total >= 50 ? (e.Total - 1) * e.Cost : e.TotalCost);
+                    var totalCost = st.TotalCost;
+
+                    var ms = traces.Select(e => e.MaxCost).OrderByDescending(e => e).ToList();
+                    var n = (Int32)Math.Round(st.Total * 0.01);
+                    var i = 0;
+                    for (i = 0; i < n && i < ms.Count; i++)
+                    {
+                        totalCost -= ms[i];
+                    }
+
+                    // 重新计算平均耗时，去掉了头部1%的最大值
+                    if (totalCost > 0)
+                    {
+                        st.Cost = (Int32)Math.Round((Double)totalCost / (st.Total - i));
+                    }
+                }
 
                 _appMinuteQueue.Commit(key);
             }

@@ -144,7 +144,8 @@ namespace Stardust.Server.Services
             if (olt != null) svc.NodeId = olt.NodeId;
 
             // 作用域
-            svc.Scope = AppRule.CheckScope(-1, ip, localIp);
+            if (service.UseScope)
+                svc.Scope = AppRule.CheckScope(-1, ip, localIp);
 
             svc.Enable = app.AutoActive;
             svc.PingCount++;
@@ -169,7 +170,9 @@ namespace Stardust.Server.Services
                 {
                     foreach (var elm in addrs)
                     {
-                        if (!ds.Contains(elm)) ds.Add(elm);
+                        var url = elm;
+                        if (url.StartsWithIgnoreCase("http://", "https://")) url = new Uri(url).ToString().TrimEnd('/');
+                        if (!ds.Contains(url)) ds.Add(url);
                     }
                 }
             }

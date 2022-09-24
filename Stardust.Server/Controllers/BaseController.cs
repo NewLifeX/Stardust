@@ -39,10 +39,10 @@ public abstract class BaseController : ControllerBase, IActionFilter
 
         try
         {
-            var rs = !token.IsNullOrEmpty() && OnAuthorize(token);
-            if (!rs && context.ActionDescriptor is ControllerActionDescriptor act && !act.MethodInfo.IsDefined(typeof(AllowAnonymousAttribute)))
+            if (context.ActionDescriptor is ControllerActionDescriptor act && !act.MethodInfo.IsDefined(typeof(AllowAnonymousAttribute)))
             {
-                throw new ApiException(403, "认证失败");
+                var rs = !token.IsNullOrEmpty() && OnAuthorize(token);
+                if (!rs) throw new ApiException(403, "认证失败");
             }
         }
         catch (Exception ex)

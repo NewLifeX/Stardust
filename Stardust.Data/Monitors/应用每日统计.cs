@@ -59,6 +59,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("Total", "总次数", "")]
         public Int64 Total { get => _Total; set { if (OnPropertyChanging("Total", value)) { _Total = value; OnPropertyChanged("Total"); } } }
 
+        private Double _RingRate;
+        /// <summary>环比。今天与昨天相比</summary>
+        [DisplayName("环比")]
+        [Description("环比。今天与昨天相比")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("RingRate", "环比。今天与昨天相比", "")]
+        public Double RingRate { get => _RingRate; set { if (OnPropertyChanging("RingRate", value)) { _RingRate = value; OnPropertyChanged("RingRate"); } } }
+
         private Int64 _Errors;
         /// <summary>错误数</summary>
         [DisplayName("错误数")]
@@ -84,11 +92,11 @@ namespace Stardust.Data.Monitors
         public Int64 TotalCost { get => _TotalCost; set { if (OnPropertyChanging("TotalCost", value)) { _TotalCost = value; OnPropertyChanged("TotalCost"); } } }
 
         private Int32 _Cost;
-        /// <summary>平均耗时。总耗时除以总次数</summary>
+        /// <summary>平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒</summary>
         [DisplayName("平均耗时")]
-        [Description("平均耗时。总耗时除以总次数")]
+        [Description("平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Cost", "平均耗时。总耗时除以总次数", "")]
+        [BindColumn("Cost", "平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒", "")]
         public Int32 Cost { get => _Cost; set { if (OnPropertyChanging("Cost", value)) { _Cost = value; OnPropertyChanged("Cost"); } } }
 
         private Int32 _MaxCost;
@@ -189,6 +197,7 @@ namespace Stardust.Data.Monitors
                     case "AppId": return _AppId;
                     case "Names": return _Names;
                     case "Total": return _Total;
+                    case "RingRate": return _RingRate;
                     case "Errors": return _Errors;
                     case "ErrorRate": return _ErrorRate;
                     case "TotalCost": return _TotalCost;
@@ -215,6 +224,7 @@ namespace Stardust.Data.Monitors
                     case "AppId": _AppId = value.ToInt(); break;
                     case "Names": _Names = value.ToInt(); break;
                     case "Total": _Total = value.ToLong(); break;
+                    case "RingRate": _RingRate = value.ToDouble(); break;
                     case "Errors": _Errors = value.ToLong(); break;
                     case "ErrorRate": _ErrorRate = value.ToDouble(); break;
                     case "TotalCost": _TotalCost = value.ToLong(); break;
@@ -254,6 +264,9 @@ namespace Stardust.Data.Monitors
             /// <summary>总次数</summary>
             public static readonly Field Total = FindByName("Total");
 
+            /// <summary>环比。今天与昨天相比</summary>
+            public static readonly Field RingRate = FindByName("RingRate");
+
             /// <summary>错误数</summary>
             public static readonly Field Errors = FindByName("Errors");
 
@@ -263,7 +276,7 @@ namespace Stardust.Data.Monitors
             /// <summary>总耗时。单位毫秒</summary>
             public static readonly Field TotalCost = FindByName("TotalCost");
 
-            /// <summary>平均耗时。总耗时除以总次数</summary>
+            /// <summary>平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒</summary>
             public static readonly Field Cost = FindByName("Cost");
 
             /// <summary>最大耗时。单位毫秒</summary>
@@ -317,6 +330,9 @@ namespace Stardust.Data.Monitors
             /// <summary>总次数</summary>
             public const String Total = "Total";
 
+            /// <summary>环比。今天与昨天相比</summary>
+            public const String RingRate = "RingRate";
+
             /// <summary>错误数</summary>
             public const String Errors = "Errors";
 
@@ -326,7 +342,7 @@ namespace Stardust.Data.Monitors
             /// <summary>总耗时。单位毫秒</summary>
             public const String TotalCost = "TotalCost";
 
-            /// <summary>平均耗时。总耗时除以总次数</summary>
+            /// <summary>平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒</summary>
             public const String Cost = "Cost";
 
             /// <summary>最大耗时。单位毫秒</summary>

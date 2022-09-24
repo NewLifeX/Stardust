@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Web.Script.Serialization;
+using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using XCode;
@@ -35,14 +38,23 @@ namespace Stardust.Data.Deployment
             var app = App.FindByName(Name);
             if (app != null)
             {
+                if (AppId == 0 && !Dirtys[nameof(AppId)]) AppId = app.Id;
                 if (!app.Category.IsNullOrEmpty()) Category = app.Category;
             }
 
             //if (!isNew) Nodes = AppDeployNode.FindAllByAppId(Id).Count;
+            //if (isNew && !Dirtys[nameof(AutoStart)]) AutoStart = true;
         }
         #endregion
 
         #region 扩展属性
+        /// <summary>应用</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
+
+        /// <summary>应用</summary>
+        [Map(__.AppId, typeof(App), "Id")]
+        public String AppName => App?.Name;
         #endregion
 
         #region 扩展查询
@@ -131,6 +143,43 @@ namespace Stardust.Data.Deployment
                 if (list2.Count == 0) list2 = AppDeployVersion.Search(Id, null, true, DateTime.MinValue, DateTime.MinValue, null, null);
                 if (list2.Count > 0) Version = list2[0].Version;
             }
+        }
+
+        /// <summary>复制应用数据</summary>
+        /// <param name="app"></param>
+        public void Copy(App app)
+        {
+            AppId = app.Id;
+            Name = app.Name;
+            Category = app.Category;
+
+            if (!app.Enable) Enable = false;
+        }
+
+        /// <summary>
+        /// 从应用表同步数据到发布表
+        /// </summary>
+        /// <returns></returns>
+        public static Int32 Sync()
+        {
+            var count = 0;
+            var apps = App.FindAll();
+            var list = FindAll();
+            foreach (var app in apps)
+            {
+                var ad = list.FirstOrDefault(e => e.AppId == app.Id);
+                ad ??= list.FirstOrDefault(e => e.Name.EqualIgnoreCase(app.Name));
+                if (ad != null)
+                    list.Remove(ad);
+                else
+                    ad = new AppDeploy { Name = app.Name, Enable = true };
+
+                ad.Copy(app);
+
+                count += ad.Save();
+            }
+
+            return count;
         }
         #endregion
     }

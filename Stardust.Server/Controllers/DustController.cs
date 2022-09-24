@@ -39,6 +39,7 @@ namespace Stardust.Server.Controllers
             return info;
         }
 
+        [Obsolete]
         [ApiFilter]
         [HttpPost]
         public AppService RegisterService([FromBody] PublishServiceInfo service, String token)
@@ -70,7 +71,8 @@ namespace Stardust.Server.Controllers
             }
 
             // 作用域
-            svc.Scope = AppRule.CheckScope(-1, UserHost, service.ClientId);
+            if (info.UseScope)
+                svc.Scope = AppRule.CheckScope(-1, UserHost, service.ClientId);
 
             // 地址处理。本地任意地址，更换为IP地址
             var ip = service.IP;
@@ -95,6 +97,7 @@ namespace Stardust.Server.Controllers
             return svc;
         }
 
+        [Obsolete]
         [ApiFilter]
         [HttpPost]
         public AppService UnregisterService([FromBody] PublishServiceInfo service, String token)
@@ -124,6 +127,7 @@ namespace Stardust.Server.Controllers
             return svc;
         }
 
+        [Obsolete]
         [ApiFilter]
         [HttpPost]
         public ServiceModel[] ResolveService([FromBody] ConsumeServiceInfo model, String token)
@@ -188,6 +192,7 @@ namespace Stardust.Server.Controllers
         }
         #endregion
 
+        [Obsolete]
         [ApiFilter]
         public IList<AppService> SearchService(String serviceName, String key)
         {

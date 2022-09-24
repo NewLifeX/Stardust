@@ -1,4 +1,5 @@
 ﻿using NewLife;
+using NewLife.Http;
 using NewLife.IO;
 using NewLife.Log;
 using NewLife.Serialization;
@@ -18,8 +19,10 @@ public class ServiceManager : DisposeBase
     /// <summary>延迟时间。重启进程或服务的延迟时间，默认3000ms</summary>
     public Int32 Delay { get; set; } = 3000;
 
-    private readonly List<ServiceController> _services = new();
+    /// <summary>正在运行的应用服务信息</summary>
+    private readonly List<ServiceController> _controllers = new();
     private CsvDb<ProcessInfo> _db;
+    private StarClient _client;
     #endregion
 
     #region 构造
@@ -64,6 +67,8 @@ public class ServiceManager : DisposeBase
 
         Services = list.ToArray();
 
+        _timer?.SetNext(-1);
+
         return count;
     }
 
@@ -71,6 +76,8 @@ public class ServiceManager : DisposeBase
     public void Start()
     {
         if (_timer != null) return;
+
+        using var span = Tracer?.NewSpan("ServiceManager-Start");
 
         WriteLog("启动应用服务管理");
 
@@ -82,7 +89,7 @@ public class ServiceManager : DisposeBase
         // 从数据库加载应用状态
         foreach (var item in db.FindAll())
         {
-            _services.Add(new ServiceController
+            _controllers.Add(new ServiceController
             {
                 Name = item.Name,
                 ProcessId = item.ProcessId,
@@ -95,29 +102,31 @@ public class ServiceManager : DisposeBase
             });
         }
 
-        _timer = new TimerX(DoWork, null, 100, 30_000) { Async = true };
+        _timer = new TimerX(DoWork, null, 1000, 30_000) { Async = true };
     }
 
     /// <summary>停止管理，按需杀掉进程</summary>
     /// <param name="reason"></param>
     public void Stop(String reason)
     {
+        using var span = Tracer?.NewSpan("ServiceManager-Stop", reason);
+
         WriteLog("停止应用服务管理：{0}", reason);
 
         _timer?.TryDispose();
         _timer = null;
 
-        // 伴随服务停止一起退出
-        var svcs = _services;
-        for (var i = svcs.Count - 1; i >= 0; i--)
-        {
-            var svc = svcs[i];
-            if (svc.Info != null && svc.Info.AutoStop)
-            {
-                svc.Stop(reason);
-                svcs.RemoveAt(i);
-            }
-        }
+        //// 伴随服务停止一起退出
+        //var svcs = _services;
+        //for (var i = svcs.Count - 1; i >= 0; i--)
+        //{
+        //    var svc = svcs[i];
+        //    if (svc.Info != null && svc.Info.AutoStop)
+        //    {
+        //        svc.Stop(reason);
+        //        svcs.RemoveAt(i);
+        //    }
+        //}
 
         SaveDb();
     }
@@ -128,7 +137,7 @@ public class ServiceManager : DisposeBase
         var db = _db;
         if (db == null) return;
 
-        var list = _services.Select(e => e.ToModel()).ToList();
+        var list = _controllers.Select(e => e.ToModel()).ToList();
 
         if (list.Count == 0)
             db.Clear();
@@ -146,25 +155,32 @@ public class ServiceManager : DisposeBase
     /// <returns>本次是否成功启动，原来已启动返回false</returns>
     private Boolean StartService(ServiceInfo service)
     {
-        var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
-        if (svc != null)
-        {
-            svc.Info = service;
-            return svc.Check();
-        }
+#if DEBUG
+        using var span = Tracer?.NewSpan("ServiceManager-StartService", service);
+#endif
 
-        svc = new ServiceController
+        lock (this)
         {
-            Name = service.Name,
-            Info = service,
+            var controller = _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
+            if (controller != null)
+            {
+                controller.Info = service;
+                return controller.Check();
+            }
 
-            Tracer = Tracer,
-            Log = Log,
-        };
-        if (svc.Start())
-        {
-            _services.Add(svc);
-            return true;
+            controller = new ServiceController
+            {
+                Name = service.Name,
+                Info = service,
+
+                Tracer = Tracer,
+                Log = Log,
+            };
+            if (controller.Start())
+            {
+                _controllers.Add(controller);
+                return true;
+            }
         }
 
         return false;
@@ -176,12 +192,16 @@ public class ServiceManager : DisposeBase
     /// <returns></returns>
     private Boolean StopService(ServiceInfo service, String reason)
     {
-        var svc = _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
+#if DEBUG
+        using var span = Tracer?.NewSpan("ServiceManager-StopService", service);
+#endif
+
+        var svc = _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
         if (svc != null)
         {
             svc.Stop(reason);
 
-            _services.Remove(svc);
+            _controllers.Remove(svc);
 
             return true;
         }
@@ -189,28 +209,174 @@ public class ServiceManager : DisposeBase
         return false;
     }
 
+    /// <summary>
+    /// 设置服务集合，常用于读取配置文件后设置
+    /// </summary>
+    /// <param name="services"></param>
+    public void SetServices(ServiceInfo[] services)
+    {
+        var flag = Services == null;
+        if (!flag)
+        {
+            foreach (var item in services)
+            {
+                // 如果新服务在原列表里不存在，或者数值不同，则认为有改变
+                var s = Services.FirstOrDefault(e => e.Name == item.Name);
+                if (s == null || s.ToJson() != item.ToJson())
+                {
+                    flag = true;
+                    break;
+                }
+            }
+        }
+
+        if (flag)
+        {
+            using var span = Tracer?.NewSpan("ServiceManager-SetServices", services);
+
+            WriteLog("应用服务配置变更");
+
+            Services = services;
+
+            _status = 0;
+            _timer.SetNext(-1);
+        }
+    }
+
+    private void UploadService(ServiceInfo[] svcs)
+    {
+        WriteLog("上报应用服务 {0}", svcs.Join(",", e => e.Name));
+
+        _client.UploadDeploy(svcs).Wait();
+    }
+
+    private void PullService(String appName)
+    {
+        WriteLog("拉取应用服务 {0}", appName);
+
+        var svcs = Services.ToList();
+
+        var rs = _client.GetDeploy().Result;
+
+        // 过滤应用
+        if (!appName.IsNullOrEmpty()) rs = rs.Where(e => e.Name.EqualIgnoreCase(appName)).ToArray();
+
+        WriteLog("取得应用服务：{0}", rs.Join(",", e => e.Name));
+        WriteLog("可用：{0}", rs.Where(e => e.Service.Enable).Join(",", e => e.Name));
+
+        // 合并
+        foreach (var item in rs)
+        {
+            var svc = item.Service;
+
+            // 下载文件到工作目录
+            if (item.Service.Enable && !item.Url.IsNullOrEmpty()) Download(item, svc);
+
+            var old = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(item.Name));
+            if (old == null)
+            {
+                old = item.Service;
+                //svc.ReloadOnChange = true;
+
+                svcs.Add(old);
+            }
+            else
+            {
+                old.FileName = svc.FileName;
+                old.Arguments = svc.Arguments;
+                old.WorkingDirectory = svc.WorkingDirectory;
+                old.Enable = svc.Enable;
+                old.AutoStart = svc.AutoStart;
+                //svc.AutoStop = item.AutoStop;
+                old.MaxMemory = svc.MaxMemory;
+            }
+        }
+
+        Services = svcs.ToArray();
+    }
+
+    void Download(DeployInfo info, ServiceInfo svc)
+    {
+        var dst = svc.WorkingDirectory.CombinePath(svc.FileName).AsFile();
+        if (!dst.Exists || !info.Hash.IsNullOrEmpty() && !dst.MD5().ToHex().EqualIgnoreCase(info.Hash))
+        {
+            WriteLog("下载版本[{0}]：{1}", info.Version, info.Url);
+
+            // 先下载到临时目录，再整体拷贝，避免进程退出
+            var tmp = Path.GetTempFileName();
+
+            var http = new HttpClient();
+            http.DownloadFileAsync(info.Url, tmp).Wait();
+
+            WriteLog("下载完成，准备覆盖：{0}", dst.FullName);
+
+            // 校验哈希
+            var ti = tmp.AsFile();
+            if (!info.Hash.IsNullOrEmpty() && !ti.MD5().ToHex().EqualIgnoreCase(info.Hash))
+                WriteLog("下载失败，校验错误");
+            else
+            {
+                try
+                {
+                    dst.Delete();
+                }
+                catch
+                {
+                    dst.MoveTo(dst.FullName + ".del");
+                }
+
+                ti.MoveTo(dst.FullName);
+            }
+        }
+    }
+
+    Int32 _status;
     private TimerX _timer;
     private void DoWork(Object state)
     {
-        var changed = false;
-        foreach (var item in Services)
+#if DEBUG
+        using var span = Tracer?.NewSpan("ServiceManager-DoWork");
+#endif
+        var svcs = Services;
+
+        // 应用服务的上报和拉取
+        if (_client != null && !_client.Token.IsNullOrEmpty())
         {
-            if (item != null && item.AutoStart)
+            if (_status == 0 && svcs.Length > 0)
+            {
+                UploadService(svcs);
+
+                _status = 1;
+            }
+
+            if (_status == 1)
+            {
+                PullService(null);
+
+                _status = 2;
+            }
+        }
+
+        var changed = false;
+        svcs = Services;
+        foreach (var item in svcs)
+        {
+            if (item != null && item.Enable)
             {
                 changed |= StartService(item);
             }
         }
 
         // 停止不再使用的服务
-        var svcs = _services;
-        for (var i = svcs.Count - 1; i >= 0; i--)
+        var controllers = _controllers;
+        for (var i = controllers.Count - 1; i >= 0; i--)
         {
-            var svc = svcs[i];
-            var service = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(svc.Name));
-            if (service == null)
+            var controller = controllers[i];
+            var service = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(controller.Name));
+            if (service == null || !service.Enable)
             {
-                svc.Stop("配置停止");
-                svcs.RemoveAt(i);
+                controller.Stop("配置停止");
+                controllers.RemoveAt(i);
                 changed = true;
             }
         }
@@ -226,13 +392,15 @@ public class ServiceManager : DisposeBase
     /// <returns></returns>
     public ProcessInfo Install(ServiceInfo service)
     {
+        using var span = Tracer?.NewSpan("ServiceManager-Install", service);
+
         Add(service);
 
         if (!StartService(service)) return null;
 
         SaveDb();
 
-        return _services.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name))?.ToModel();
+        return _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name))?.ToModel();
     }
 
     /// <summary>卸载服务</summary>
@@ -241,6 +409,8 @@ public class ServiceManager : DisposeBase
     /// <returns></returns>
     public Boolean Uninstall(String name, String reason)
     {
+        using var span = Tracer?.NewSpan("ServiceManager-Uninstall", new { name, reason });
+
         var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
         if (svc == null) return false;
 
@@ -257,14 +427,20 @@ public class ServiceManager : DisposeBase
     /// <param name="client"></param>
     public void Attach(StarClient client)
     {
+        _client = client;
+
         client.RegisterCommand("deploy/publish", DoControl);
         client.RegisterCommand("deploy/start", DoControl);
         client.RegisterCommand("deploy/stop", DoControl);
         client.RegisterCommand("deploy/restart", DoControl);
+
+        _timer?.SetNext(-1);
     }
 
     private CommandReplyModel DoControl(CommandModel cmd)
     {
+        using var span = Tracer?.NewSpan("ServiceManager-DoControl", cmd);
+
         var my = cmd.Argument.ToJsonEntity<MyApp>();
 
         WriteLog("{0} Id={1} Name={2}", cmd.Command, my.Id, my.AppName);
@@ -274,12 +450,22 @@ public class ServiceManager : DisposeBase
         switch (cmd.Command)
         {
             case "deploy/publish":
+                PullService(my.AppName);
+                _timer.SetNext(-1);
                 break;
             case "deploy/start":
-                if (svc != null) changed |= StartService(svc);
+                if (svc != null)
+                {
+                    svc.Enable = true;
+                    changed |= StartService(svc);
+                }
                 break;
             case "deploy/stop":
-                if (svc != null) changed |= StopService(svc, cmd.Command);
+                if (svc != null)
+                {
+                    svc.Enable = false;
+                    changed |= StopService(svc, cmd.Command);
+                }
                 break;
             case "deploy/restart":
                 if (svc != null)

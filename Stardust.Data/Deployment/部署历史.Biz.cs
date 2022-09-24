@@ -6,6 +6,7 @@ using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using NewLife.Log;
+using Stardust.Data.Nodes;
 using XCode;
 using XCode.Membership;
 
@@ -52,6 +53,14 @@ namespace Stardust.Data.Deployment
         /// <summary>应用</summary>
         [Map(__.AppId)]
         public String AppName => App?.Name;
+
+        /// <summary>节点</summary>
+        [XmlIgnore, ScriptIgnore]
+        public Node Node => Extends.Get(nameof(Node), k => Node.FindByID(NodeId));
+
+        /// <summary>节点</summary>
+        [Map(__.NodeId)]
+        public String NodeName => Node?.Name;
         #endregion
 
         #region 扩展查询
@@ -87,11 +96,14 @@ namespace Stardust.Data.Deployment
         #region 高级查询
         /// <summary>高级查询</summary>
         /// <param name="appId">应用</param>
+        /// <param name="nodeId">应用</param>
         /// <param name="action">操作</param>
         /// <param name="key">关键字</param>
+        /// <param name="start">开始时间</param>
+        /// <param name="end">结束时间</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<AppDeployHistory> Search(Int32 appId,  String action, String key, PageParameter page)
+        public static IList<AppDeployHistory> Search(Int32 appId, Int32 nodeId, String action, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
@@ -99,11 +111,39 @@ namespace Stardust.Data.Deployment
             if (!action.IsNullOrEmpty()) exp &= _.Action == action;
             if (!key.IsNullOrEmpty()) exp &= _.Remark.Contains(key) | _.CreateIP.Contains(key);
 
+            exp &= _.Id.Between(start, end, Meta.Factory.Snow);
+
             return FindAll(exp, page);
         }
         #endregion
 
         #region 业务操作
+        /// <summary>创建历史</summary>
+        /// <param name="appId"></param>
+        /// <param name="nodeId"></param>
+        /// <param name="action"></param>
+        /// <param name="success"></param>
+        /// <param name="remark"></param>
+        /// <param name="ip"></param>
+        /// <returns></returns>
+        public static AppDeployHistory Create(Int32 appId, Int32 nodeId, String action, Boolean success, String remark, String ip)
+        {
+            var history = new AppDeployHistory
+            {
+                AppId = appId,
+                NodeId = nodeId,
+
+                Action = action,
+                Success = success,
+                Remark = remark,
+
+                TraceId = DefaultSpan.Current?.TraceId,
+                CreateTime = DateTime.Now,
+                CreateIP = ip,
+            };
+
+            return history;
+        }
         #endregion
     }
 }

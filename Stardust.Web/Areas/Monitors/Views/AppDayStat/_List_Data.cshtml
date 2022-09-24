@@ -31,6 +31,7 @@
             <th class="text-center">当日监控</th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Names"))">埋点数</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Total"))">总次数</a></th>
+            <th class="text-center" title="环比。今天与昨天相比"><a href="@Html.Raw(page.GetSortUrl("RingRate"))">环比</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Errors"))">错误数</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ErrorRate"))">错误率</a></th>
             <th class="text-center" title="平均耗时。总耗时除以总次数"><a href="@Html.Raw(page.GetSortUrl("Cost"))">平均耗时</a></th>
@@ -74,6 +75,7 @@
                 <td class="text-center"><a href="@url1" title="应用各个操作名在该日的监控数据">当日监控</a></td>
                 <td class="text-right">@entity.Names.ToString("n0")</td>
                 <td class="text-right">@entity.Total.ToString("n0")</td>
+                <td class="text-right">@entity.RingRate.ToString("p2")</td>
                 <td class="text-right">@entity.Errors.ToString("n0")</td>
                 <td class="text-right">@entity.ErrorRate.ToString("p2")</td>
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
@@ -107,9 +109,9 @@
                 <td class="text-center">总计</td>
                 <td></td>
                 <td></td>
-                <td></td>
                 <td class="text-right">@entity.Names.ToString("n0")</td>
                 <td class="text-right">@entity.Total.ToString("n0")</td>
+                <td class="text-right">@entity.RingRate.ToString("p2")</td>
                 <td class="text-right">@entity.Errors.ToString("n0")</td>
                 <td class="text-right">@entity.ErrorRate.ToString("p2")</td>
                 <td class="text-right">@entity.Cost.ToString("n0")</td>

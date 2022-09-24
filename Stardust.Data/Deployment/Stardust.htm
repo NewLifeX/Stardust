@@ -55,9 +55,20 @@
             <td>Int32</td>
             <td></td>
             <td></td>
-            <td title="主键">PK</td>
+            <td title="自增">AI</td>
             <td>N</td>
             <td></td>
+        </tr>
+
+        <tr>
+            <td>AppId</td>
+            <td>应用</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>对应StarApp</td>
         </tr>
 
         <tr>
@@ -123,7 +134,7 @@
             <td></td>
             <td></td>
             <td></td>
-            <td>应用启动文件</td>
+            <td>应用启动文件，可直接使用zip包</td>
         </tr>
 
         <tr>
@@ -149,14 +160,14 @@
         </tr>
 
         <tr>
-            <td>AutoStart</td>
-            <td>自动启动</td>
-            <td>Boolean</td>
+            <td>MaxMemory</td>
+            <td>最大内存</td>
+            <td>Int32</td>
             <td></td>
             <td></td>
             <td></td>
             <td>N</td>
-            <td>系统重启时，或应用退出后，自动拉起应用</td>
+            <td>单位M，超过上限时自动重启应用，默认0不限制</td>
         </tr>
 
         <tr>
@@ -320,28 +331,6 @@
         </tr>
 
         <tr>
-            <td>Arguments</td>
-            <td>参数</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>启动应用的参数，节点专用配置优先于应用配置</td>
-        </tr>
-
-        <tr>
-            <td>WorkingDirectory</td>
-            <td>工作目录</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>应用根目录，节点专用配置优先于应用配置</td>
-        </tr>
-
-        <tr>
             <td>CreateUserId</td>
             <td>创建人</td>
             <td>Int32</td>
@@ -368,6 +357,50 @@
             <td>创建地址</td>
             <td>String</td>
             <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>UpdateUserId</td>
+            <td>更新者</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>UpdateTime</td>
+            <td>更新时间</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>UpdateIP</td>
+            <td>更新地址</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>Remark</td>
+            <td>备注</td>
+            <td>String</td>
+            <td>500</td>
             <td></td>
             <td></td>
             <td></td>
@@ -537,7 +570,7 @@
             <td></td>
             <td></td>
             <td>N</td>
-            <td></td>
+            <td>如2.3.2022.0911，字符串比较大小</td>
         </tr>
 
         <tr>
@@ -560,6 +593,17 @@
             <td></td>
             <td></td>
             <td>一般打包为Zip包，StarAgent下载后解压缩覆盖</td>
+        </tr>
+
+        <tr>
+            <td>Hash</td>
+            <td>文件哈希</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>MD5</td>
         </tr>
 
         <tr>
@@ -676,6 +720,17 @@
             <td></td>
             <td>N</td>
             <td></td>
+        </tr>
+
+        <tr>
+            <td>NodeId</td>
+            <td>节点</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>节点服务器</td>
         </tr>
 
         <tr>

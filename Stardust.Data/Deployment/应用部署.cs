@@ -23,9 +23,17 @@ namespace Stardust.Data.Deployment
         /// <summary>编号</summary>
         [DisplayName("编号")]
         [Description("编号")]
-        [DataObjectField(true, false, false, 0)]
+        [DataObjectField(true, true, false, 0)]
         [BindColumn("Id", "编号", "")]
         public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
+
+        private Int32 _AppId;
+        /// <summary>应用。对应StarApp</summary>
+        [DisplayName("应用")]
+        [Description("应用。对应StarApp")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AppId", "应用。对应StarApp", "")]
+        public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
         private String _Category;
         /// <summary>类别</summary>
@@ -68,15 +76,17 @@ namespace Stardust.Data.Deployment
         public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
         private String _FileName;
-        /// <summary>文件。应用启动文件</summary>
+        /// <summary>文件。应用启动文件，可直接使用zip包</summary>
+        [Category("参数")]
         [DisplayName("文件")]
-        [Description("文件。应用启动文件")]
+        [Description("文件。应用启动文件，可直接使用zip包")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("FileName", "文件。应用启动文件", "")]
+        [BindColumn("FileName", "文件。应用启动文件，可直接使用zip包", "")]
         public String FileName { get => _FileName; set { if (OnPropertyChanging("FileName", value)) { _FileName = value; OnPropertyChanged("FileName"); } } }
 
         private String _Arguments;
         /// <summary>参数。启动应用的参数</summary>
+        [Category("参数")]
         [DisplayName("参数")]
         [Description("参数。启动应用的参数")]
         [DataObjectField(false, false, true, 50)]
@@ -85,19 +95,21 @@ namespace Stardust.Data.Deployment
 
         private String _WorkingDirectory;
         /// <summary>工作目录。应用根目录</summary>
+        [Category("参数")]
         [DisplayName("工作目录")]
         [Description("工作目录。应用根目录")]
         [DataObjectField(false, false, true, 50)]
         [BindColumn("WorkingDirectory", "工作目录。应用根目录", "")]
         public String WorkingDirectory { get => _WorkingDirectory; set { if (OnPropertyChanging("WorkingDirectory", value)) { _WorkingDirectory = value; OnPropertyChanged("WorkingDirectory"); } } }
 
-        private Boolean _AutoStart;
-        /// <summary>自动启动。系统重启时，或应用退出后，自动拉起应用</summary>
-        [DisplayName("自动启动")]
-        [Description("自动启动。系统重启时，或应用退出后，自动拉起应用")]
+        private Int32 _MaxMemory;
+        /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
+        [Category("参数")]
+        [DisplayName("最大内存")]
+        [Description("最大内存。单位M，超过上限时自动重启应用，默认0不限制")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("AutoStart", "自动启动。系统重启时，或应用退出后，自动拉起应用", "")]
-        public Boolean AutoStart { get => _AutoStart; set { if (OnPropertyChanging("AutoStart", value)) { _AutoStart = value; OnPropertyChanged("AutoStart"); } } }
+        [BindColumn("MaxMemory", "最大内存。单位M，超过上限时自动重启应用，默认0不限制", "")]
+        public Int32 MaxMemory { get => _MaxMemory; set { if (OnPropertyChanging("MaxMemory", value)) { _MaxMemory = value; OnPropertyChanged("MaxMemory"); } } }
 
         private Int32 _CreateUserId;
         /// <summary>创建者</summary>
@@ -174,6 +186,7 @@ namespace Stardust.Data.Deployment
                 switch (name)
                 {
                     case "Id": return _Id;
+                    case "AppId": return _AppId;
                     case "Category": return _Category;
                     case "Name": return _Name;
                     case "Enable": return _Enable;
@@ -182,7 +195,7 @@ namespace Stardust.Data.Deployment
                     case "FileName": return _FileName;
                     case "Arguments": return _Arguments;
                     case "WorkingDirectory": return _WorkingDirectory;
-                    case "AutoStart": return _AutoStart;
+                    case "MaxMemory": return _MaxMemory;
                     case "CreateUserId": return _CreateUserId;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -198,6 +211,7 @@ namespace Stardust.Data.Deployment
                 switch (name)
                 {
                     case "Id": _Id = value.ToInt(); break;
+                    case "AppId": _AppId = value.ToInt(); break;
                     case "Category": _Category = Convert.ToString(value); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
@@ -206,7 +220,7 @@ namespace Stardust.Data.Deployment
                     case "FileName": _FileName = Convert.ToString(value); break;
                     case "Arguments": _Arguments = Convert.ToString(value); break;
                     case "WorkingDirectory": _WorkingDirectory = Convert.ToString(value); break;
-                    case "AutoStart": _AutoStart = value.ToBoolean(); break;
+                    case "MaxMemory": _MaxMemory = value.ToInt(); break;
                     case "CreateUserId": _CreateUserId = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -227,6 +241,9 @@ namespace Stardust.Data.Deployment
             /// <summary>编号</summary>
             public static readonly Field Id = FindByName("Id");
 
+            /// <summary>应用。对应StarApp</summary>
+            public static readonly Field AppId = FindByName("AppId");
+
             /// <summary>类别</summary>
             public static readonly Field Category = FindByName("Category");
 
@@ -242,7 +259,7 @@ namespace Stardust.Data.Deployment
             /// <summary>版本。应用正在使用的版本号</summary>
             public static readonly Field Version = FindByName("Version");
 
-            /// <summary>文件。应用启动文件</summary>
+            /// <summary>文件。应用启动文件，可直接使用zip包</summary>
             public static readonly Field FileName = FindByName("FileName");
 
             /// <summary>参数。启动应用的参数</summary>
@@ -251,8 +268,8 @@ namespace Stardust.Data.Deployment
             /// <summary>工作目录。应用根目录</summary>
             public static readonly Field WorkingDirectory = FindByName("WorkingDirectory");
 
-            /// <summary>自动启动。系统重启时，或应用退出后，自动拉起应用</summary>
-            public static readonly Field AutoStart = FindByName("AutoStart");
+            /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
+            public static readonly Field MaxMemory = FindByName("MaxMemory");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUserId = FindByName("CreateUserId");
@@ -284,6 +301,9 @@ namespace Stardust.Data.Deployment
             /// <summary>编号</summary>
             public const String Id = "Id";
 
+            /// <summary>应用。对应StarApp</summary>
+            public const String AppId = "AppId";
+
             /// <summary>类别</summary>
             public const String Category = "Category";
 
@@ -299,7 +319,7 @@ namespace Stardust.Data.Deployment
             /// <summary>版本。应用正在使用的版本号</summary>
             public const String Version = "Version";
 
-            /// <summary>文件。应用启动文件</summary>
+            /// <summary>文件。应用启动文件，可直接使用zip包</summary>
             public const String FileName = "FileName";
 
             /// <summary>参数。启动应用的参数</summary>
@@ -308,8 +328,8 @@ namespace Stardust.Data.Deployment
             /// <summary>工作目录。应用根目录</summary>
             public const String WorkingDirectory = "WorkingDirectory";
 
-            /// <summary>自动启动。系统重启时，或应用退出后，自动拉起应用</summary>
-            public const String AutoStart = "AutoStart";
+            /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
+            public const String MaxMemory = "MaxMemory";
 
             /// <summary>创建者</summary>
             public const String CreateUserId = "CreateUserId";

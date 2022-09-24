@@ -20,13 +20,15 @@ public class NodeController : BaseController
 {
     private Node _node;
     private readonly ICache _queue;
+    private readonly ITracer _tracer;
     private readonly NodeService _nodeService;
     private readonly TokenService _tokenService;
     private readonly Setting _setting;
 
-    public NodeController(NodeService nodeService, TokenService tokenService, Setting setting, ICache queue)
+    public NodeController(NodeService nodeService, TokenService tokenService, Setting setting, ICache queue,ITracer tracer)
     {
         _queue = queue;
+        _tracer = tracer;
         _nodeService = nodeService;
         _tokenService = tokenService;
         _setting = setting;

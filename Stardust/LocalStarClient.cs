@@ -369,8 +369,8 @@ public class LocalStarClient
             FileName = fileName,
             Arguments = arguments,
             WorkingDirectory = workingDirectory,
-            AutoStart = true,
-            ReloadOnChange = true,
+            Enable = true,
+            //ReloadOnChange = true,
         });
     }
 

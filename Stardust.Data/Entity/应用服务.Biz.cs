@@ -143,7 +143,7 @@ namespace Stardust.Data
             if (!minVersion.IsNullOrEmpty() && String.Compare(Version, minVersion) < 0) return false;
 
             // 应用服务没有Scope时，谁都可以消费，否则必须匹配
-            if (!Scope.IsNullOrEmpty() && Scope != scope) return false;
+            if (Service != null && Service.UseScope && !Scope.IsNullOrEmpty() && Scope != scope) return false;
 
             if (tags != null && tags.Length > 0)
             {
