@@ -13,7 +13,7 @@ namespace Stardust.Web.Areas.Registry.Controllers
         {
             LogOnChange = true;
 
-            ListFields.RemoveField("Secret", "Address");
+            ListFields.RemoveField("Secret", "HealthAddress");
             ListFields.RemoveCreateField()
                 .RemoveUpdateField()
                 .RemoveRemarkField();
