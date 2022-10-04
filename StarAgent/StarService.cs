@@ -6,6 +6,7 @@ using NewLife.Model;
 using NewLife.Net;
 using NewLife.Remoting;
 using NewLife.Serialization;
+using NewLife.Threading;
 using Stardust;
 using Stardust.Managers;
 using Stardust.Models;
@@ -13,7 +14,7 @@ using Stardust.Models;
 namespace StarAgent;
 
 [Api(null)]
-public class StarService : IApi
+public class StarService : DisposeBase, IApi
 {
     #region 属性
     /// <summary>
@@ -43,16 +44,27 @@ public class StarService : IApi
     public Setting AgentSetting { get; set; }
 
     private AgentInfo _agentInfo;
+    private TimerX _timer;
     #endregion
 
     #region 构造
     public StarService()
     {
         // 获取本地进程名比较慢，平均200ms，有时候超过500ms
-        Task.Run(() =>
-        {
-            _agentInfo = AgentInfo.GetLocal(true);
-        });
+        //Task.Run(() =>
+        //{
+        //    _agentInfo = AgentInfo.GetLocal(true);
+        //});
+        _timer = new TimerX(DoRefreshLocal, null, 0, 5_000) { Async = true };
+    }
+
+    /// <summary>销毁</summary>
+    /// <param name="disposing"></param>
+    protected override void Dispose(Boolean disposing)
+    {
+        base.Dispose(disposing);
+
+        _timer.TryDispose();
     }
     #endregion
 
@@ -90,6 +102,18 @@ public class StarService : IApi
         ai.Code = AgentSetting.Code;
 
         return ai;
+    }
+
+    private void DoRefreshLocal(Object state)
+    {
+        var ai = AgentInfo.GetLocal(true);
+        if (ai != null)
+        {
+            _agentInfo = ai;
+
+            // 如果未取得本机IP，则在较短时间内重新获取
+            _timer.Period = ai.IP.IsNullOrEmpty() ? 5_000 : 60_000;
+        }
     }
 
     private void CheckLocal()
