@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Net;
+using System.Net.NetworkInformation;
 using NewLife;
+using NewLife.Log;
 using NewLife.Reflection;
 
 namespace Stardust.Models;
@@ -37,6 +39,15 @@ public class AgentInfo
     public String[] Services { get; set; }
     #endregion
 
+    #region 构造
+    static AgentInfo()
+    {
+        //NetworkInterface.GetIsNetworkAvailable();
+        NetworkChange.NetworkAddressChanged += NetworkChange_NetworkAddressChanged;
+        NetworkChange.NetworkAvailabilityChanged += NetworkChange_NetworkAvailabilityChanged;
+    }
+    #endregion
+
     #region 辅助
     /// <summary>
     /// 获取本地信息
@@ -70,6 +81,7 @@ public class AgentInfo
         return inf;
     }
 
+    private static String _ips;
     /// <summary>
     /// 获取本地IP地址
     /// </summary>
@@ -78,7 +90,9 @@ public class AgentInfo
     {
         try
         {
-            return NetHelper.GetIPsWithCache()
+            var ips = _ips.IsNullOrEmpty() ? NetHelper.GetIPs().ToArray() : NetHelper.GetIPsWithCache();
+
+            return _ips = ips
                 .Where(ip => ip.IsIPv4() && !IPAddress.IsLoopback(ip) && ip.GetAddressBytes()[0] != 169)
                 .Join();
         }
@@ -86,6 +100,52 @@ public class AgentInfo
         {
             return null;
         }
+    }
+
+    private static void NetworkChange_NetworkAvailabilityChanged(Object sender, NetworkAvailabilityEventArgs e)
+    {
+        _ips = null;
+        //XTrace.WriteLine("{0} -> {1}={2}", nameof(NetworkChange_NetworkAvailabilityChanged), nameof(e.IsAvailable), e.IsAvailable);
+
+        //foreach (var item in NetworkInterface.GetAllNetworkInterfaces())
+        //{
+        //    //if (item.OperationalStatus != OperationalStatus.Up) continue;
+        //    if (item.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
+
+        //    var ipp = item.GetIPProperties();
+        //    if (ipp != null && ipp.UnicastAddresses.Count > 0)
+        //    {
+        //        XTrace.WriteLine("{0} {1}", item.Name, item.OperationalStatus);
+        //    }
+        //}
+    }
+
+    private static void NetworkChange_NetworkAddressChanged(Object sender, EventArgs e)
+    {
+        _ips = null;
+        //XTrace.WriteLine(nameof(NetworkChange_NetworkAddressChanged));
+
+        //foreach (var item in NetworkInterface.GetAllNetworkInterfaces())
+        //{
+        //    if (item.OperationalStatus != OperationalStatus.Up) continue;
+        //    if (item.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
+
+        //    var ipp = item.GetIPProperties();
+        //    if (ipp != null && ipp.UnicastAddresses.Count > 0)
+        //    {
+        //        var gw = ipp.GatewayAddresses.Count;
+        //        foreach (var elm in ipp.UnicastAddresses)
+        //        {
+        //            try
+        //            {
+        //                if (elm.DuplicateAddressDetectionState != DuplicateAddressDetectionState.Preferred) continue;
+        //            }
+        //            catch { }
+
+        //            XTrace.WriteLine("{0} {1}", item.Name, elm.Address);
+        //        }
+        //    }
+        //}
     }
     #endregion
 }

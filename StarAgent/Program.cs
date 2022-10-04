@@ -11,6 +11,7 @@ using NewLife.Threading;
 using Stardust;
 using Stardust.Deployment;
 using Stardust.Managers;
+using Stardust.Models;
 using Stardust.Plugins;
 using Host = NewLife.Agent.Host;
 using IHost = NewLife.Agent.IHost;
@@ -276,6 +277,12 @@ internal class MyService : ServiceBase, IServiceProvider
 
     private async Task TryConnectServer(Object state)
     {
+        if (!NetworkInterface.GetIsNetworkAvailable() || AgentInfo.GetIps().IsNullOrEmpty())
+        {
+            WriteLog("网络不可以，延迟连接服务器");
+            return;
+        }
+
         var client = state as StarClient;
         await client.Login();
         await CheckUpgrade(client);
