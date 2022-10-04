@@ -109,7 +109,7 @@ public class StarService : DisposeBase, IApi
         var ai = AgentInfo.GetLocal(true);
         if (ai != null)
         {
-            XTrace.WriteLine("IP: {0}", ai.IP);
+            //XTrace.WriteLine("IP: {0}", ai.IP);
             _agentInfo = ai;
 
             // 如果未取得本机IP，则在较短时间内重新获取
