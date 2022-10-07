@@ -6,135 +6,146 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using NewLife;
+using NewLife.Configuration;
 using NewLife.Log;
 using NewLife.Reflection;
 using Stardust;
 using Stardust.Extensions;
 
-namespace Microsoft.Extensions.DependencyInjection
+namespace Microsoft.Extensions.DependencyInjection;
+
+/// <summary>星尘工厂扩展</summary>
+public static class StarFactoryExtensions
 {
-    /// <summary>星尘工厂扩展</summary>
-    public static class StarFactoryExtensions
+    /// <summary>添加星尘</summary>
+    /// <param name="services"></param>
+    /// <param name="appId"></param>
+    /// <returns></returns>
+    public static StarFactory AddStardust(this IServiceCollection services, String appId) => AddStardust(services, null, appId, null);
+
+    /// <summary>添加星尘</summary>
+    /// <param name="services"></param>
+    /// <param name="server">服务端地址。为空时先后读取appsettings.json、本地StarAgent、star.config，初始值为空，不连接服务端</param>
+    /// <param name="appId">应用标识。为空时读取star.config，初始值为入口程序集名称</param>
+    /// <param name="secret">应用密钥。为空时读取star.config，初始值为空</param>
+    /// <returns></returns>
+    public static StarFactory AddStardust(this IServiceCollection services, String server = null, String appId = null, String secret = null)
     {
-        /// <summary>添加星尘</summary>
-        /// <param name="services"></param>
-        /// <param name="appId"></param>
-        /// <returns></returns>
-        public static StarFactory AddStardust(this IServiceCollection services, String appId) => AddStardust(services, null, appId, null);
+        var star = new StarFactory(server, appId, secret);
 
-        /// <summary>添加星尘</summary>
-        /// <param name="services"></param>
-        /// <param name="server">服务端地址。为空时先后读取appsettings.json、本地StarAgent、star.config，初始值为空，不连接服务端</param>
-        /// <param name="appId">应用标识。为空时读取star.config，初始值为入口程序集名称</param>
-        /// <param name="secret">应用密钥。为空时读取star.config，初始值为空</param>
-        /// <returns></returns>
-        public static StarFactory AddStardust(this IServiceCollection services, String server = null, String appId = null, String secret = null)
+        // 替换为混合配置提供者，优先本地配置
+        var old = services.LastOrDefault(e => e.ServiceType == typeof(IConfigProvider))?.ImplementationInstance as IConfigProvider;
+        old ??= JsonConfigProvider.LoadAppSettings();
+        star.SetLocalConfig(old);
+
+        services.AddSingleton(star);
+        services.AddSingleton(p => star.Tracer ?? DefaultTracer.Instance ?? (DefaultTracer.Instance ??= new DefaultTracer()));
+        //services.AddSingleton(p => star.Config);
+        services.AddSingleton(p => star.Service);
+
+        // 替换为混合配置提供者，优先本地配置
+        //services.Replace(new ServiceDescriptor(typeof(IConfigProvider), p => star.Config, ServiceLifetime.Singleton));
+        //var old = services.LastOrDefault(e => e.ServiceType == typeof(IConfigProvider))?.ImplementationInstance as IConfigProvider;
+        //old ??= JsonConfigProvider.LoadAppSettings();
+        services.Replace(new ServiceDescriptor(typeof(IConfigProvider), p => star.GetConfig(), ServiceLifetime.Singleton));
+
+        //services.AddHostedService<StarService>();
+        services.TryAddSingleton(XTrace.Log);
+
+        services.AddSingleton(serviceProvider =>
         {
-            var star = new StarFactory(server, appId, secret);
+            var server = serviceProvider.GetRequiredService<IServer>();
+            return server.Features.Get<IServerAddressesFeature>();
+        });
 
-            services.AddSingleton(star);
-            services.AddSingleton(P => star.Tracer ?? DefaultTracer.Instance ?? (DefaultTracer.Instance ??= new DefaultTracer()));
-            services.AddSingleton(P => star.Config);
-            services.AddSingleton(p => star.Service);
+        return star;
+    }
 
-            //services.AddHostedService<StarService>();
-            services.TryAddSingleton(XTrace.Log);
+    /// <summary>使用星尘，注入跟踪中间件。不需要跟魔方一起使用</summary>
+    /// <param name="app"></param>
+    /// <returns></returns>
+    public static IApplicationBuilder UseStardust(this IApplicationBuilder app)
+    {
+        // 如果已引入追踪中间件，则这里不再引入
+        if (!app.Properties.ContainsKey(nameof(TracerMiddleware)))
+        {
+            var provider = app.ApplicationServices;
+            var tracer = provider.GetRequiredService<ITracer>();
 
-            services.AddSingleton(serviceProvider =>
-            {
-                var server = serviceProvider.GetRequiredService<IServer>();
-                return server.Features.Get<IServerAddressesFeature>();
-            });
+            if (TracerMiddleware.Tracer == null) TracerMiddleware.Tracer = tracer;
+            if (TracerMiddleware.Tracer != null) app.UseMiddleware<TracerMiddleware>();
 
-            return star;
+            app.Properties[nameof(TracerMiddleware)] = typeof(TracerMiddleware);
         }
 
-        /// <summary>使用星尘，注入跟踪中间件。不需要跟魔方一起使用</summary>
-        /// <param name="app"></param>
-        /// <returns></returns>
-        public static IApplicationBuilder UseStardust(this IApplicationBuilder app)
+        //app.UseMiddleware<RegistryMiddleware>();
+
+        return app;
+    }
+
+    /// <summary>发布服务到注册中心</summary>
+    /// <param name="app"></param>
+    /// <param name="serviceName">服务名</param>
+    /// <param name="address">服务地址</param>
+    /// <param name="tag">特性标签</param>
+    /// <param name="health">健康监测接口地址</param>
+    /// <returns></returns>
+    public static IApplicationBuilder RegisterService(this IApplicationBuilder app, String serviceName, String address = null, String tag = null, String health = null)
+    {
+        var star = app.ApplicationServices.GetRequiredService<StarFactory>();
+        if (star == null) throw new InvalidOperationException("未注册StarFactory，需要AddStardust注册。");
+
+        if (serviceName.IsNullOrEmpty()) serviceName = AssemblyX.Entry.Name;
+
+        // 启动的时候注册服务
+        var lifetime = app.ApplicationServices.GetRequiredService<IHostApplicationLifetime>();
+        lifetime.ApplicationStarted.Register(() =>
         {
-            // 如果已引入追踪中间件，则这里不再引入
-            if (!app.Properties.ContainsKey(nameof(TracerMiddleware)))
+            DefaultSpan.Current = null;
+            try
             {
-                var provider = app.ApplicationServices;
-                var tracer = provider.GetRequiredService<ITracer>();
-
-                if (TracerMiddleware.Tracer == null) TracerMiddleware.Tracer = tracer;
-                if (TracerMiddleware.Tracer != null) app.UseMiddleware<TracerMiddleware>();
-
-                app.Properties[nameof(TracerMiddleware)] = typeof(TracerMiddleware);
-            }
-
-            //app.UseMiddleware<RegistryMiddleware>();
-
-            return app;
-        }
-
-        /// <summary>发布服务到注册中心</summary>
-        /// <param name="app"></param>
-        /// <param name="serviceName">服务名</param>
-        /// <param name="address">服务地址</param>
-        /// <param name="tag">特性标签</param>
-        /// <param name="health">健康监测接口地址</param>
-        /// <returns></returns>
-        public static IApplicationBuilder RegisterService(this IApplicationBuilder app, String serviceName, String address = null, String tag = null, String health = null)
-        {
-            var star = app.ApplicationServices.GetRequiredService<StarFactory>();
-            if (star == null) throw new InvalidOperationException("未注册StarFactory，需要AddStardust注册。");
-
-            if (serviceName.IsNullOrEmpty()) serviceName = AssemblyX.Entry.Name;
-
-            // 启动的时候注册服务
-            var lifetime = app.ApplicationServices.GetRequiredService<IHostApplicationLifetime>();
-            lifetime.ApplicationStarted.Register(() =>
-            {
-                DefaultSpan.Current = null;
-                try
+                /*
+                 * 服务地址获取逻辑：
+                 * 1，外部传参 address
+                 * 2，配置指定 ServiceAddress
+                 * 3，获取监听地址，若未改变，则使用 AccessAddress
+                 * 4，若监听地址已改变，则使用监听地址
+                 * 5，若监听地址获取失败，则注册回调
+                 */
+                var set = StarSetting.Current;
+                if (address.IsNullOrEmpty()) address = set.ServiceAddress;
+                if (address.IsNullOrEmpty())
                 {
-                    /*
-                     * 服务地址获取逻辑：
-                     * 1，外部传参 address
-                     * 2，配置指定 ServiceAddress
-                     * 3，获取监听地址，若未改变，则使用 AccessAddress
-                     * 4，若监听地址已改变，则使用监听地址
-                     * 5，若监听地址获取失败，则注册回调
-                     */
-                    var set = StarSetting.Current;
-                    if (address.IsNullOrEmpty()) address = set.ServiceAddress;
+                    // 本地监听地址，属于内部地址
+                    var feature = app.ServerFeatures.Get<IServerAddressesFeature>();
+                    address = feature?.Addresses.Join(",");
+
                     if (address.IsNullOrEmpty())
                     {
-                        // 本地监听地址，属于内部地址
-                        var feature = app.ServerFeatures.Get<IServerAddressesFeature>();
-                        address = feature?.Addresses.Join(",");
+                        if (feature == null) throw new Exception("尘埃客户端未能取得本地服务地址。");
 
-                        if (address.IsNullOrEmpty())
-                        {
-                            if (feature == null) throw new Exception("尘埃客户端未能取得本地服务地址。");
+                        star.Service?.Register(serviceName, () => feature?.Addresses.Join(","), tag, health);
 
-                            star.Service?.Register(serviceName, () => feature?.Addresses.Join(","), tag, health);
-
-                            return;
-                        }
+                        return;
                     }
-                    star.Service?.RegisterAsync(serviceName, address, tag, health).Wait();
                 }
-                catch (Exception ex)
-                {
-                    XTrace.WriteException(ex);
-                }
-            });
-
-            // 停止的时候移除服务
-            lifetime.ApplicationStopped.Register(() =>
+                star.Service?.RegisterAsync(serviceName, address, tag, health).Wait();
+            }
+            catch (Exception ex)
             {
-                DefaultSpan.Current = null;
+                XTrace.WriteException(ex);
+            }
+        });
 
-                // 从注册中心释放服务提供者和消费者
-                star.Service.TryDispose();
-            });
+        // 停止的时候移除服务
+        lifetime.ApplicationStopped.Register(() =>
+        {
+            DefaultSpan.Current = null;
 
-            return app;
-        }
+            // 从注册中心释放服务提供者和消费者
+            star.Service.TryDispose();
+        });
+
+        return app;
     }
 }

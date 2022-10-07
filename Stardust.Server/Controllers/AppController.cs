@@ -49,7 +49,6 @@ public class AppController : BaseController
     #endregion
 
     #region 注册&心跳
-    [AllowAnonymous]
     [HttpPost(nameof(Register))]
     public String Register(AppModel inf)
     {

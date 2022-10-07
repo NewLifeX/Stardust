@@ -316,6 +316,24 @@ public class StarFactory : DisposeBase
             return _config;
         }
     }
+
+    private IConfigProvider _configProvider;
+    /// <summary>设置本地配置提供者，该提供者将跟星尘配置结合到一起，形成复合配置提供者</summary>
+    /// <param name="configProvider"></param>
+    public void SetLocalConfig(IConfigProvider configProvider)
+    {
+        if (configProvider == null) return;
+
+        var cfg = Config;
+        if (cfg != null)
+            _configProvider = new CompositeConfigProvider(configProvider, cfg);
+        else
+            _configProvider = configProvider;
+    }
+
+    /// <summary>获取复合配置提供者</summary>
+    /// <returns></returns>
+    public IConfigProvider GetConfig() => _configProvider;
     #endregion
 
     #region 注册中心
