@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
+using NewLife.Cube;
 using NewLife.Security;
 using NewLife.Web;
 using Stardust.Data.Monitors;
@@ -8,7 +9,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Controllers
 {
-    public class TraceController : Controller
+    public class TraceController : ControllerBaseX
     {
         [Route("[controller]")]
         public ActionResult Index(String id, Pager pager)
