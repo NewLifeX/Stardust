@@ -52,6 +52,9 @@ public class DeployController : BaseController
         var rs = new List<DeployInfo>();
         foreach (var item in list)
         {
+            // 不返回未启用的发布集
+            if (!item.Enable) continue;
+
             var app = item.App;
             if (app == null) continue;
 
