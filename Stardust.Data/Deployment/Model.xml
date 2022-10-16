@@ -28,7 +28,7 @@
   <Table Name="AppDeployNode" Description="应用节点。应用和节点服务器的依赖关系">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="AppId" DataType="Int32" Description="应用。原始应用" />
+      <Column Name="AppId" DataType="Int32" Description="应用部署集。对应AppDeploy" />
       <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
       <Column Name="Sort" DataType="Int32" Description="顺序。较大在前" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
@@ -49,7 +49,7 @@
   <Table Name="AppDeployOnline" Description="部署在线。应用已部署的在运行中进程的在线记录">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="AppId" DataType="Int32" Description="应用" />
+      <Column Name="AppId" DataType="Int32" Description="应用部署集。对应AppDeploy" />
       <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
       <Column Name="Environment" DataType="String" Description="环境。prod/test/dev/uat等" />
       <Column Name="IP" DataType="String" Description="IP地址。节点本地IP地址" />
@@ -66,7 +66,7 @@
   <Table Name="AppDeployVersion" Description="部署版本。应用的多个可发布版本，主要包括应用程序包">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="AppId" DataType="Int32" Description="应用" />
+      <Column Name="AppId" DataType="Int32" Description="应用部署集。对应AppDeploy" />
       <Column Name="Version" DataType="String" Master="True" Nullable="False" Description="版本。如2.3.2022.0911，字符串比较大小" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Url" DataType="String" ItemType="file" Description="资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖" />
@@ -86,7 +86,7 @@
   <Table Name="AppDeployHistory" Description="部署历史。记录应用集部署历史" ConnName="StardustData">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
-      <Column Name="AppId" DataType="Int32" Description="应用" />
+      <Column Name="AppId" DataType="Int32" Description="应用部署集。对应AppDeploy" />
       <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
       <Column Name="Action" DataType="String" Nullable="False" Description="操作" />
       <Column Name="Success" DataType="Boolean" Description="成功" />

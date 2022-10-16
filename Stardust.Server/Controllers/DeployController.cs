@@ -56,7 +56,7 @@ public class DeployController : BaseController
             if (!item.Enable) continue;
 
             var app = item.App;
-            if (app == null) continue;
+            if (app == null || !app.Enable) continue;
 
             var ver = AppDeployVersion.FindByAppIdAndVersion(app.Id, app.Version);
 
@@ -70,6 +70,8 @@ public class DeployController : BaseController
                 Service = item.ToService(),
             };
             rs.Add(inf);
+
+            WriteHistory(app.Id, nameof(GetAll), true, inf.ToJson());
         }
 
         return rs.ToArray();
