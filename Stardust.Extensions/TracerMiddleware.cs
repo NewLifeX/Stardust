@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using NewLife;
 using NewLife.Log;
+using NewLife.Remoting;
 using NewLife.Web;
 using HttpContext = Microsoft.AspNetCore.Http.HttpContext;
 
@@ -84,7 +85,14 @@ namespace Stardust.Extensions
             }
             catch (Exception ex)
             {
-                span?.SetError(ex, null);
+                if (span != null)
+                {
+                    // 接口抛出ApiException时，认为是正常业务行为，埋点不算异常
+                    if (ex is ApiException)
+                        span.Tag ??= ex.Message;
+                    else
+                        span.SetError(ex, null);
+                }
 
                 throw;
             }
