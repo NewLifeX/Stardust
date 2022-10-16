@@ -77,6 +77,35 @@ public class ServiceManager : DisposeBase
         return count;
     }
 
+    /// <summary>删除应用服务</summary>
+    /// <param name="serviceName"></param>
+    /// <returns></returns>
+    public Int32 Remove(String serviceName)
+    {
+        if (serviceName.IsNullOrEmpty()) return 0;
+
+        var count = 0;
+        var list = Services.ToList();
+        for (var i = Services.Length - 1; i >= 0; i--)
+        {
+            var item = list[i];
+            if (item.Name.EqualIgnoreCase(serviceName))
+            {
+                list.RemoveAt(i);
+                count++;
+            }
+        }
+
+        if (count > 0)
+        {
+            Services = list.ToArray();
+
+            RaiseServiceChanged();
+        }
+
+        return count;
+    }
+
     /// <summary>开始管理，拉起应用进程</summary>
     public void Start()
     {
@@ -334,15 +363,21 @@ public class ServiceManager : DisposeBase
                 WriteLog("下载失败，校验错误");
             else
             {
-                try
+                // 删除原文件
+                if (dst.Exists)
                 {
-                    dst.Delete();
-                }
-                catch
-                {
-                    dst.MoveTo(dst.FullName + ".del");
+                    try
+                    {
+                        dst.Delete();
+                    }
+                    catch
+                    {
+                        dst.MoveTo(dst.FullName + ".del");
+                    }
                 }
 
+                // 创建目录，下载到临时目录的文件拷贝到这里
+                dst.FullName.EnsureDirectory(true);
                 ti.MoveTo(dst.FullName);
             }
         }
@@ -436,6 +471,8 @@ public class ServiceManager : DisposeBase
 
         SaveDb();
 
+        Remove(svc.Name);
+
         return true;
     }
     #endregion
@@ -476,6 +513,7 @@ public class ServiceManager : DisposeBase
                 {
                     svc.Enable = true;
                     changed |= StartService(svc);
+                    RaiseServiceChanged();
                 }
                 break;
             case "deploy/stop":
@@ -483,6 +521,7 @@ public class ServiceManager : DisposeBase
                 {
                     svc.Enable = false;
                     changed |= StopService(svc, cmd.Command);
+                    RaiseServiceChanged();
                 }
                 break;
             case "deploy/restart":
