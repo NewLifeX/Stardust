@@ -19,6 +19,9 @@ public class ServiceManager : DisposeBase
     /// <summary>延迟时间。重启进程或服务的延迟时间，默认3000ms</summary>
     public Int32 Delay { get; set; } = 3000;
 
+    /// <summary>服务改变事件</summary>
+    public event EventHandler ServiceChanged;
+
     /// <summary>正在运行的应用服务信息</summary>
     private readonly List<ServiceController> _controllers = new();
     private CsvDb<ProcessInfo> _db;
@@ -68,6 +71,8 @@ public class ServiceManager : DisposeBase
         Services = list.ToArray();
 
         _timer?.SetNext(-1);
+
+        RaiseServiceChanged();
 
         return count;
     }
@@ -147,6 +152,8 @@ public class ServiceManager : DisposeBase
 
     /// <summary>检查服务。一般用于改变服务后，让其即时生效</summary>
     public void CheckService() => DoWork(null);
+
+    private void RaiseServiceChanged() => ServiceChanged?.Invoke(this, EventArgs.Empty);
     #endregion
 
     #region 服务控制
@@ -215,6 +222,8 @@ public class ServiceManager : DisposeBase
     /// <param name="services"></param>
     public void SetServices(ServiceInfo[] services)
     {
+        // 一般由外部配置文件改变而驱动，所以本方法不会引发ServiceChanged事件
+
         var flag = Services == null;
         if (!flag)
         {
@@ -275,6 +284,8 @@ public class ServiceManager : DisposeBase
             var old = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(item.Name));
             if (old == null)
             {
+                WriteLog("新增[{0}]：Enable={0}", item.Name, item.Service.Enable);
+
                 old = item.Service;
                 //svc.ReloadOnChange = true;
 
@@ -282,6 +293,11 @@ public class ServiceManager : DisposeBase
             }
             else
             {
+                if (!old.Enable && svc.Enable)
+                    WriteLog("启用[{0}]", item.Name);
+                else if (old.Enable && !svc.Enable)
+                    WriteLog("禁用[{0}]", item.Name);
+
                 old.FileName = svc.FileName;
                 old.Arguments = svc.Arguments;
                 old.WorkingDirectory = svc.WorkingDirectory;
@@ -293,14 +309,16 @@ public class ServiceManager : DisposeBase
         }
 
         Services = svcs.ToArray();
+
+        RaiseServiceChanged();
     }
 
     void Download(DeployInfo info, ServiceInfo svc)
     {
         var dst = svc.WorkingDirectory.CombinePath(svc.FileName).AsFile();
-        if (!dst.Exists || !info.Hash.IsNullOrEmpty() && !dst.MD5().ToHex().EqualIgnoreCase(info.Hash))
+        if (!dst.Exists || (!info.Hash.IsNullOrEmpty() && !dst.MD5().ToHex().EqualIgnoreCase(info.Hash)))
         {
-            WriteLog("下载版本[{0}]：{1}", info.Version, info.Url);
+            WriteLog("下载[{0}]：{1} {2}", svc.Name, info.Version, info.Url);
 
             // 先下载到临时目录，再整体拷贝，避免进程退出
             var tmp = Path.GetTempFileName();

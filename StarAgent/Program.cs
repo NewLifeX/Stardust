@@ -111,6 +111,7 @@ internal class MyService : ServiceBase, IServiceProvider
             Tracer = _factory?.Tracer,
             Log = XTrace.Log,
         };
+        _Manager.ServiceChanged += OnServiceChanged;
 
         // 插件管理器
         var pm = _PluginManager = new PluginManager
@@ -157,7 +158,7 @@ internal class MyService : ServiceBase, IServiceProvider
         StartClient();
 
         _Manager.Start();
-        Setting.Provider.Changed += OnSettingChange;
+        Setting.Provider.Changed += OnSettingChanged;
 
         // 启动插件
         WriteLog("启动插件[{0}]", pm.Identity);
@@ -175,16 +176,24 @@ internal class MyService : ServiceBase, IServiceProvider
     /// <param name="data"></param>
     protected override void DoCheck(Object data)
     {
-        OnSettingChange(null, null);
+        OnSettingChanged(null, null);
 
         base.DoCheck(data);
     }
 
-    private void OnSettingChange(Object sender, EventArgs eventArgs)
+    private void OnSettingChanged(Object sender, EventArgs eventArgs)
     {
         // 支持动态更新
         //_Manager.Services = AgentSetting.Services;
         _Manager.SetServices(AgentSetting.Services);
+    }
+
+    private void OnServiceChanged(Object sender, EventArgs eventArgs)
+    {
+        // 服务改变时，保存到配置文件
+        var set = AgentSetting;
+        set.Services = _Manager.Services;
+        set.Save();
     }
 
     /// <summary>服务停止</summary>
@@ -199,7 +208,7 @@ internal class MyService : ServiceBase, IServiceProvider
         _timer.TryDispose();
         _timer = null;
 
-        Setting.Provider.Changed -= OnSettingChange;
+        Setting.Provider.Changed -= OnSettingChanged;
         _Manager.Stop(reason);
         //_Manager.TryDispose();
 
