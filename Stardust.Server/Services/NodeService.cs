@@ -494,10 +494,10 @@ public class NodeService
         if (node == null) throw new ArgumentOutOfRangeException(nameof(model.Code), "无效节点");
 
         var (_, app) = _tokenService.DecodeToken(token, setting.TokenSecret);
-        if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new InvalidOperationException("无权操作！");
+        if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new ApiException(401, "无权操作！");
 
         if (app.AllowControlNodes != "*" && !node.Code.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
-            throw new InvalidOperationException($"[{app}]无权操作节点[{node}]！");
+            throw new ApiException(403, $"[{app}]无权操作节点[{node}]！");
 
         var cmd = new NodeCommand
         {

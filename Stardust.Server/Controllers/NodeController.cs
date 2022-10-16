@@ -25,7 +25,7 @@ public class NodeController : BaseController
     private readonly TokenService _tokenService;
     private readonly Setting _setting;
 
-    public NodeController(NodeService nodeService, TokenService tokenService, Setting setting, ICache queue,ITracer tracer)
+    public NodeController(NodeService nodeService, TokenService tokenService, Setting setting, ICache queue, ITracer tracer)
     {
         _queue = queue;
         _tracer = tracer;
@@ -260,7 +260,7 @@ public class NodeController : BaseController
     private async Task Handle(WebSocket socket, String token, String ip)
     {
         var (node, error) = _nodeService.DecodeToken(token, _setting.TokenSecret);
-        if (node == null) throw new InvalidOperationException($"未登录！[ip={ip}]");
+        if (node == null) throw new ApiException(401, $"未登录！[ip={ip}]");
 
         _node = node;
         if (error != null) throw error;

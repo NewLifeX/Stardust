@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Data;
 using NewLife.Log;
+using NewLife.Remoting;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
@@ -97,7 +98,7 @@ public class AppController : BaseController
 
     private async Task Handle(WebSocket socket, App app, String clientId)
     {
-        if (app == null) throw new InvalidOperationException("未登录！");
+        if (app == null) throw new ApiException(401, "未登录！");
 
         XTrace.WriteLine("WebSocket连接 {0}", app);
         WriteHistory("WebSocket连接", true, socket.State + "", clientId);
@@ -224,10 +225,10 @@ public class AppController : BaseController
         if (target == null) throw new ArgumentOutOfRangeException(nameof(model.Code), "无效应用");
 
         var app = _app;
-        if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new InvalidOperationException("无权操作！");
+        if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new ApiException(401, "无权操作！");
 
         if (app.AllowControlNodes != "*" && !target.Name.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
-            throw new InvalidOperationException($"[{app}]无权操作应用[{target}]！");
+            throw new ApiException(403, $"[{app}]无权操作应用[{target}]！");
 
         var cmd = _registryService.SendCommand(target, model, app + "");
 
@@ -257,7 +258,7 @@ public class AppController : BaseController
             info = new Service { Name = serviceName, Enable = true };
             info.Insert();
         }
-        if (!info.Enable) throw new InvalidOperationException($"服务[{serviceName}]已停用！");
+        if (!info.Enable) throw new ApiException(403, $"服务[{serviceName}]已停用！");
 
         return info;
     }
