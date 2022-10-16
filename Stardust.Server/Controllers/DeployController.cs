@@ -52,11 +52,11 @@ public class DeployController : BaseController
         var rs = new List<DeployInfo>();
         foreach (var item in list)
         {
-            //// 不返回未启用的发布集
-            //if (!item.Enable) continue;
+            // 不返回未启用的发布集，如果需要在客户端删除，则通过指令下发来实现
+            if (!item.Enable) continue;
 
             var app = item.App;
-            if (app == null /*|| !app.Enable*/) continue;
+            if (app == null || !app.Enable) continue;
 
             var ver = AppDeployVersion.FindByAppIdAndVersion(app.Id, app.Version);
 
@@ -115,11 +115,21 @@ public class DeployController : BaseController
             rs += rs2;
 
             var dn = list.FirstOrDefault(e => e.AppId == app.Id);
-            dn ??= new AppDeployNode { AppId = app.Id, NodeId = _node.ID, Enable = svc.Enable };
+            if (dn == null)
+                dn = new AppDeployNode { AppId = app.Id, NodeId = _node.ID, Enable = svc.Enable };
+            else
+                list.Remove(dn);
 
             if (svc.Enable) dn.Enable = true;
 
             dn.Save();
+        }
+
+        // 没有匹配的应用，本次禁用
+        foreach (var item in list)
+        {
+            item.Enable = false;
+            item.Update();
         }
 
         return rs;
