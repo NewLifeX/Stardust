@@ -67,6 +67,6 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
 
         await _deployService.Control(dn, act, UserHost);
 
-        return JsonRefresh($"在节点[{dn.NodeName}]上对应用[{dn.AppName}]执行[{act}]操作", 3);
+        return JsonRefresh($"在节点[{dn.NodeName}]上对应用[{dn.AppName}]执行[{act}]操作", 1);
     }
 }

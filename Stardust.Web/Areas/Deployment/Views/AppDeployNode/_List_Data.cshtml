@@ -63,7 +63,7 @@
                     <i class="glyphicon glyphicon-refresh" style="color: coral;"></i>
                     <a data-action="action" data-url="@Url.Action("Operate",new { act="restart",id=entity.Id})" onclick="return confirm('危险操作！\n确认执行？')" title="重启应用服务">重启</a>
                     &nbsp;
-                    <i class="glyphicon glyphicon-remove" style="color: coral;"></i>
+                    <i class="glyphicon glyphicon-remove" style="color: red;"></i>
                     <a data-action="action" data-url="@Url.Action("Operate",new { act="uninstall",id=entity.Id})" onclick="return confirm('危险操作！\n确认执行？')" title="卸载应用服务">卸载</a>
                 </td>
                 @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))

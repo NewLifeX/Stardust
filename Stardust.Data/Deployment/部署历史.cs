@@ -30,11 +30,11 @@ namespace Stardust.Data.Deployment
         public Int64 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
         private Int32 _AppId;
-        /// <summary>应用</summary>
-        [DisplayName("应用")]
-        [Description("应用")]
+        /// <summary>应用部署集。对应AppDeploy</summary>
+        [DisplayName("应用部署集")]
+        [Description("应用部署集。对应AppDeploy")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("AppId", "应用", "")]
+        [BindColumn("AppId", "应用部署集。对应AppDeploy", "")]
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
         private Int32 _NodeId;
@@ -156,7 +156,7 @@ namespace Stardust.Data.Deployment
             /// <summary>编号</summary>
             public static readonly Field Id = FindByName("Id");
 
-            /// <summary>应用</summary>
+            /// <summary>应用部署集。对应AppDeploy</summary>
             public static readonly Field AppId = FindByName("AppId");
 
             /// <summary>节点。节点服务器</summary>
@@ -192,7 +192,7 @@ namespace Stardust.Data.Deployment
             /// <summary>编号</summary>
             public const String Id = "Id";
 
-            /// <summary>应用</summary>
+            /// <summary>应用部署集。对应AppDeploy</summary>
             public const String AppId = "AppId";
 
             /// <summary>节点。节点服务器</summary>
