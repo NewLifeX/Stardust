@@ -266,7 +266,7 @@ namespace Stardust.Data.Deployment
         /// <summary>获取文件路径，用于读取附件</summary>
         /// <param name="uploadPath"></param>
         /// <returns></returns>
-        public String GetFilePath(String uploadPath = null)
+        public String GetFilePath(String uploadPath)
         {
             var file = FilePath;
             if (file.IsNullOrEmpty()) return null;

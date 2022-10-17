@@ -70,6 +70,9 @@ public class DeployController : BaseController
             };
             rs.Add(inf);
 
+            // 修正Url
+            if (inf.Url.StartsWithIgnoreCase("/cube/file/")) inf.Url = inf.Url.Replace("/cube/file/", "/cube/file?id=");
+
             WriteHistory(app.Id, nameof(GetAll), true, inf.ToJson());
         }
 

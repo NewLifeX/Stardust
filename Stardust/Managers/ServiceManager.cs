@@ -19,6 +19,9 @@ public class ServiceManager : DisposeBase
     /// <summary>延迟时间。重启进程或服务的延迟时间，默认3000ms</summary>
     public Int32 Delay { get; set; } = 3000;
 
+    ///// <summary>星尘服务地址</summary>
+    //public String Server { get; set; }
+
     /// <summary>服务改变事件</summary>
     public event EventHandler ServiceChanged;
 
@@ -344,16 +347,27 @@ public class ServiceManager : DisposeBase
 
     void Download(DeployInfo info, ServiceInfo svc)
     {
+        var url = info.Url;
+        if (url.IsNullOrEmpty()) return;
+
         var dst = svc.WorkingDirectory.CombinePath(svc.FileName).AsFile();
         if (!dst.Exists || (!info.Hash.IsNullOrEmpty() && !dst.MD5().ToHex().EqualIgnoreCase(info.Hash)))
         {
-            WriteLog("下载[{0}]：{1} {2}", svc.Name, info.Version, info.Url);
+            if (!url.StartsWithIgnoreCase("http://", "https://"))
+            {
+                var svr = _client.Services.FirstOrDefault(e => e.Name == _client.Source) ?? _client.Services.FirstOrDefault();
+                if (svr == null || svr.Address == null) return;
+
+                url = new Uri(svr.Address, url) + "";
+            }
+
+            WriteLog("下载[{0}]：{1} {2}", svc.Name, info.Version, url);
 
             // 先下载到临时目录，再整体拷贝，避免进程退出
             var tmp = Path.GetTempFileName();
 
             var http = new HttpClient();
-            http.DownloadFileAsync(info.Url, tmp).Wait();
+            http.DownloadFileAsync(url, tmp).Wait();
 
             WriteLog("下载完成，准备覆盖：{0}", dst.FullName);
 

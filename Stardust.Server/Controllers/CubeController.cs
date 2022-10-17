@@ -9,6 +9,8 @@ namespace Stardust.Server.Controllers;
 
 /// <summary>魔方前端数据接口</summary>
 [DisplayName("数据接口")]
+[ApiController]
+[Route("{controller}/{action}")]
 public class CubeController : ControllerBase
 {
     #region 附件
@@ -23,18 +25,19 @@ public class CubeController : ControllerBase
         var att = Attachment.FindById(id.ToLong());
         if (att == null) throw new ApiException(404, "找不到附件信息");
 
+        var set = Setting.Current;
+
         // 如果附件不存在，则抓取
-        var filePath = att.GetFilePath();
+        var filePath = att.GetFilePath(set.UploadPath);
         if (filePath.IsNullOrEmpty() || !System.IO.File.Exists(filePath))
         {
             var url = att.Source;
             if (url.IsNullOrEmpty()) throw new ApiException(404, "找不到附件文件");
 
-            var set = Setting.Current;
             var rs = await att.Fetch(url, set.UploadPath);
             if (!rs) throw new ApiException(404, "附件远程抓取失败");
 
-            filePath = att.GetFilePath();
+            filePath = att.GetFilePath(set.UploadPath);
         }
         if (filePath.IsNullOrEmpty() || !System.IO.File.Exists(filePath)) throw new ApiException(404, "附件文件不存在");
 
