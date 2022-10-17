@@ -133,15 +133,15 @@ namespace Stardust.Data.Deployment
         /// <summary>刷新</summary>
         public void Refresh()
         {
-            var list = AppDeployNode.FindAllByAppId(Id);
-            Nodes = list.Count(e => e.Enable);
+            var nodes = AppDeployNode.FindAllByAppId(Id);
+            Nodes = nodes.Count(e => e.Enable);
 
             if (Version.IsNullOrEmpty())
             {
-                var list2 = AppDeployVersion.FindAllByAppId(Id, 100);
-                list2 = list2.Where(e => e.Enable).ToList();
-                if (list2.Count == 0) list2 = AppDeployVersion.Search(Id, null, true, DateTime.MinValue, DateTime.MinValue, null, null);
-                if (list2.Count > 0) Version = list2[0].Version;
+                var vers = AppDeployVersion.FindAllByAppId(Id, 100);
+                vers = vers.Where(e => e.Enable).ToList();
+                if (vers.Count == 0) vers = AppDeployVersion.Search(Id, null, true, DateTime.MinValue, DateTime.MinValue, null, null);
+                if (vers.Count > 0) Version = vers[0].Version;
             }
         }
 

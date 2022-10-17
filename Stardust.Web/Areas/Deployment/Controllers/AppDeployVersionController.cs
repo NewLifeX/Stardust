@@ -1,4 +1,7 @@
-﻿using NewLife.Cube;
+﻿using Microsoft.AspNetCore.Mvc;
+using NewLife;
+using NewLife.Cube;
+using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Deployment;
 using XCode.Membership;
@@ -13,10 +16,21 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
     static AppDeployVersionController()
     {
         ListFields.RemoveCreateField();
+        ListFields.RemoveRemarkField();
 
         AddFormFields.RemoveCreateField();
+        AddFormFields.RemoveField("Hash");
 
         LogOnChange = true;
+
+        {
+            var df = ListFields.AddListField("UseVersion", null, "Enable");
+            df.Header = "使用版本";
+            df.DisplayName = "使用版本";
+            df.Title = "应用部署集使用该版本";
+            df.Url = "/Deployment/AppDeployVersion/UseVersion?Id={Id}";
+            df.DataAction = "action";
+        }
     }
 
     protected override IEnumerable<AppDeployVersion> Search(Pager p)
@@ -37,27 +51,6 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
 
         return AppDeployVersion.Search(appId, null, null, start, end, p["Q"], p);
     }
-
-    //protected override Boolean Valid(AppDeployVersion entity, DataObjectMethodType type, Boolean post)
-    //{
-    //    if (post)
-    //    {
-    //        switch (type)
-    //        {
-    //            case DataObjectMethodType.Update:
-    //                entity.App?.Fix();
-    //                break;
-    //            case DataObjectMethodType.Insert:
-    //                break;
-    //            case DataObjectMethodType.Delete:
-    //                break;
-    //            default:
-    //                break;
-    //        }
-    //    }
-
-    //    return base.Valid(entity, type, post);
-    //}
 
     protected override Int32 OnInsert(AppDeployVersion entity)
     {
@@ -86,9 +79,29 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         if (att != null)
         {
             entity.Hash = att.Hash;
+            entity.Url = $"/cube/file?id={att.Id}{att.Extension}";
+
+            entity.Update();
         }
 
         // 不给上层拿到附件，避免Url字段被覆盖
         return null;
+    }
+
+    [EntityAuthorize(PermissionFlags.Update)]
+    public ActionResult UseVersion(Int32 id)
+    {
+        var ver = AppDeployVersion.FindById(id);
+        if (ver == null) throw new Exception("找不到版本！");
+
+        if (!ver.Enable) throw new Exception("版本未启用！");
+        if (ver.Version.IsNullOrEmpty()) throw new Exception("版本号未设置！");
+        if (ver.Url.IsNullOrEmpty()) throw new Exception("文件不存在！");
+
+        var app = ver.App;
+        app.Version = ver.Version;
+        app.Update();
+
+        return JsonRefresh($"成功！");
     }
 }

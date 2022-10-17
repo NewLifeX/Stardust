@@ -28,21 +28,21 @@ public class AppDeployController : EntityController<AppDeploy>
             df.Header = "节点";
             df.Title = "管理服务器节点";
             df.DisplayName = "{Nodes}";
-            df.Url = "AppDeployNode?appId={Id}";
+            df.Url = "/Deployment/AppDeployNode?appId={Id}";
         }
 
         {
             var df = ListFields.GetField("Version") as ListField;
             df.Header = "版本";
             df.Title = "管理应用版本";
-            df.Url = "AppDeployVersion?appId={Id}";
+            df.Url = "/Deployment/AppDeployVersion?appId={Id}";
         }
         {
             var df = ListFields.AddListField("AddVersion", "FileName");
-            df.Header = "版本";
-            df.DisplayName = "添加版本";
-            df.Title = "添加应用版本";
-            df.Url = "AppDeployVersion/Add?appId={Id}";
+            df.Header = "版本管理";
+            df.DisplayName = "版本管理";
+            df.Title = "管理所有版本文件";
+            df.Url = "/Deployment/AppDeployVersion?appId={Id}";
         }
 
         //{
