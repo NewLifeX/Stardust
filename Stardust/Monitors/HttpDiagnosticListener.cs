@@ -51,30 +51,31 @@ public class HttpDiagnosticListener : TraceDiagnosticListener
                     {
                         if (value.Value.GetValue("Response") is HttpResponseMessage response)
                         {
-                            //todo NewLife.Core升级后使用以下这一行
+                            //!! 这里不能使用响应内容作为Tag信息，因为响应内容还没有解压缩
+                            ////todo NewLife.Core升级后使用以下这一行
                             //span.AppendTag(response);
 
-                            // 正常响应，部分作为Tag信息
-                            if (response.StatusCode == HttpStatusCode.OK)
-                            {
-                                if (span is DefaultSpan ds && ds.TraceFlag > 0 && (span.Tag.IsNullOrEmpty() || span.Tag.Length < 1024))
-                                {
-                                    // 判断类型和长度
-                                    var content = response.Content;
-                                    var mediaType = content.Headers?.ContentType?.MediaType;
-                                    var len = content.Headers?.ContentLength ?? 0;
-                                    if (len >= 0 && len < 1024 && mediaType.EndsWithIgnoreCase("json", "text"))
-                                    {
-                                        var result = content.ReadAsStringAsync().Result;
-                                        span.Tag = (span.Tag + "\r\n\r\n" + result).Cut(1024);
-                                    }
-                                }
-                            }
-                            // 异常响应，记录错误
-                            else if (response.StatusCode > (HttpStatusCode)299)
-                            {
-                                if (span.Error.IsNullOrEmpty()) span.Error = response.ReasonPhrase;
-                            }
+                            //// 正常响应，部分作为Tag信息
+                            //if (response.StatusCode == HttpStatusCode.OK)
+                            //{
+                            //    if (span is DefaultSpan ds && ds.TraceFlag > 0 && (span.Tag.IsNullOrEmpty() || span.Tag.Length < 1024))
+                            //    {
+                            //        // 判断类型和长度
+                            //        var content = response.Content;
+                            //        var mediaType = content.Headers?.ContentType?.MediaType;
+                            //        var len = content.Headers?.ContentLength ?? 0;
+                            //        if (len >= 0 && len < 1024 && mediaType.EndsWithIgnoreCase("json", "text"))
+                            //        {
+                            //            var result = content.ReadAsStringAsync().Result;
+                            //            span.Tag = (span.Tag + "\r\n\r\n" + result).Cut(1024);
+                            //        }
+                            //    }
+                            //}
+                            //// 异常响应，记录错误
+                            //else if (response.StatusCode > (HttpStatusCode)299)
+                            //{
+                            //    if (span.Error.IsNullOrEmpty()) span.Error = response.ReasonPhrase;
+                            //}
                         }
 
                         span.Dispose();

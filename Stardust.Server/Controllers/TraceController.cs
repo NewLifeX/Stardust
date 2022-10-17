@@ -195,101 +195,108 @@ public class TraceController : ControllerBase
 
     private void ProcessData(AppTracer app, TraceModel model, String ip, ISpanBuilder[] builders)
     {
-        // 排除项
-        var excludes = app.Excludes.Split(",", ";") ?? new String[0];
-        var timeoutExcludes = app.TimeoutExcludes.Split(",", ";") ?? new String[0];
-
-        var now = DateTime.Now;
-        var startTime = now.AddDays(-_setting.DataRetention);
-        var endTime = now.AddDays(1);
-        var traces = new List<TraceData>();
-        var samples = new List<SampleData>();
-        foreach (var item in builders)
+        try
         {
-            // 剔除指定项
-            if (item.Name.IsNullOrEmpty()) continue;
-            //if (app.ID == 30 && item.Name[0] == '/') XTrace.WriteLine("TraceProcess: {0}", item.Name);
-            if (excludes != null && excludes.Any(e => e.IsMatch(item.Name)))
+            // 排除项
+            var excludes = app.Excludes.Split(",", ";") ?? new String[0];
+            var timeoutExcludes = app.TimeoutExcludes.Split(",", ";") ?? new String[0];
+
+            var now = DateTime.Now;
+            var startTime = now.AddDays(-_setting.DataRetention);
+            var endTime = now.AddDays(1);
+            var traces = new List<TraceData>();
+            var samples = new List<SampleData>();
+            foreach (var item in builders)
             {
-                _tracer?.NewSpan("trace-Exclude", item.Name);
-                continue;
+                // 剔除指定项
+                if (item.Name.IsNullOrEmpty()) continue;
+                //if (app.ID == 30 && item.Name[0] == '/') XTrace.WriteLine("TraceProcess: {0}", item.Name);
+                if (excludes != null && excludes.Any(e => e.IsMatch(item.Name)))
+                {
+                    _tracer?.NewSpan("trace-Exclude", item.Name);
+                    continue;
+                }
+                //if (item.Name.EndsWithIgnoreCase("/Trace/Report")) continue;
+
+                // 拒收超期数据，拒收未来数据
+                var timestamp = item.StartTime.ToDateTime().ToLocalTime();
+                if (timestamp < startTime || timestamp > endTime)
+                {
+                    _tracer?.NewSpan("trace-ErrorTime", $"{item.Name}-{timestamp.ToFullString()}");
+                    continue;
+                }
+
+                // 拒收超长项
+                if (item.Name.Length > TraceData._.Name.Length)
+                {
+                    _tracer?.NewSpan("trace-LongName", item.Name);
+                    continue;
+                }
+
+                // 检查跟踪项
+                var ti = app.GetOrAddItem(item.Name);
+                if (ti == null || !ti.Enable)
+                {
+                    _tracer?.NewSpan("trace-ErrorItem", item.Name);
+                    continue;
+                }
+
+                var td = TraceData.Create(item);
+                td.AppId = app.ID;
+                td.ItemId = ti.Id;
+                td.ClientId = model.ClientId ?? ip;
+                td.CreateIP = ip;
+                td.CreateTime = now;
+
+                traces.Add(td);
+
+                //samples.AddRange(SampleData.Create(td, item.Samples, true));
+                samples.AddRange(SampleData.Create(td, item.ErrorSamples, false));
+
+                // 超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时
+                var timeout = ti.Timeout;
+                if (timeout == 0) timeout = app.Timeout;
+
+                var isTimeout = timeout > 0 && !timeoutExcludes.Any(e => e.IsMatch(item.Name));
+                if (item.Samples != null && item.Samples.Count > 0)
+                {
+                    // 超时处理为异常，累加到错误数之中
+                    if (isTimeout) td.Errors += item.Samples.Count(e => e.EndTime - e.StartTime > timeout);
+
+                    samples.AddRange(SampleData.Create(td, item.Samples, true));
+                }
+
+                // 如果最小耗时都超过了超时设置，则全部标记为错误
+                if (isTimeout && td.MinCost >= timeout && td.Errors < td.Total) td.Errors = td.Total;
+
+                // 处理克隆。拷贝一份入库，归属新的跟踪项，但名称不变
+                foreach (var elm in app.GetClones(item.Name, model.ClientId))
+                {
+                    var td2 = td.CloneEntity(true);
+                    td2.Id = 0;
+                    td2.ItemId = elm.Id;
+                    td2.LinkId = td.Id;
+
+                    traces.Add(td2);
+                }
             }
-            //if (item.Name.EndsWithIgnoreCase("/Trace/Report")) continue;
 
-            // 拒收超期数据，拒收未来数据
-            var timestamp = item.StartTime.ToDateTime().ToLocalTime();
-            if (timestamp < startTime || timestamp > endTime)
-            {
-                _tracer?.NewSpan("trace-ErrorTime", $"{item.Name}-{timestamp.ToFullString()}");
-                continue;
-            }
+            // 更新XCode后，支持批量插入的自动分表，内部按照实体类所属分表进行分组插入
+            traces.Insert(true);
+            samples.Insert(true);
 
-            // 拒收超长项
-            if (item.Name.Length > TraceData._.Name.Length)
-            {
-                _tracer?.NewSpan("trace-LongName", item.Name);
-                continue;
-            }
+            // 更新统计
+            _stat.Add(traces);
+            _appStat.Add(now.Date);
+            if (now.Hour == 0 && now.Minute <= 10) _appStat.Add(now.Date.AddDays(-1));
+            _itemStat.Add(app.ID);
 
-            // 检查跟踪项
-            var ti = app.GetOrAddItem(item.Name);
-            if (ti == null || !ti.Enable)
-            {
-                _tracer?.NewSpan("trace-ErrorItem", item.Name);
-                continue;
-            }
-
-            var td = TraceData.Create(item);
-            td.AppId = app.ID;
-            td.ItemId = ti.Id;
-            td.ClientId = model.ClientId ?? ip;
-            td.CreateIP = ip;
-            td.CreateTime = now;
-
-            traces.Add(td);
-
-            //samples.AddRange(SampleData.Create(td, item.Samples, true));
-            samples.AddRange(SampleData.Create(td, item.ErrorSamples, false));
-
-            // 超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时
-            var timeout = ti.Timeout;
-            if (timeout == 0) timeout = app.Timeout;
-
-            var isTimeout = timeout > 0 && !timeoutExcludes.Any(e => e.IsMatch(item.Name));
-            if (item.Samples != null && item.Samples.Count > 0)
-            {
-                // 超时处理为异常，累加到错误数之中
-                if (isTimeout) td.Errors += item.Samples.Count(e => e.EndTime - e.StartTime > timeout);
-
-                samples.AddRange(SampleData.Create(td, item.Samples, true));
-            }
-
-            // 如果最小耗时都超过了超时设置，则全部标记为错误
-            if (isTimeout && td.MinCost >= timeout && td.Errors < td.Total) td.Errors = td.Total;
-
-            // 处理克隆。拷贝一份入库，归属新的跟踪项，但名称不变
-            foreach (var elm in app.GetClones(item.Name, model.ClientId))
-            {
-                var td2 = td.CloneEntity(true);
-                td2.Id = 0;
-                td2.ItemId = elm.Id;
-                td2.LinkId = td.Id;
-
-                traces.Add(td2);
-            }
+            // 发送给上联服务器
+            _uplink.Report(model);
         }
-
-        // 更新XCode后，支持批量插入的自动分表，内部按照实体类所属分表进行分组插入
-        traces.Insert(true);
-        samples.Insert(true);
-
-        // 更新统计
-        _stat.Add(traces);
-        _appStat.Add(now.Date);
-        if (now.Hour == 0 && now.Minute <= 10) _appStat.Add(now.Date.AddDays(-1));
-        _itemStat.Add(app.ID);
-
-        // 发送给上联服务器
-        _uplink.Report(model);
+        catch (Exception ex)
+        {
+            XTrace.WriteException(ex);
+        }
     }
 }
