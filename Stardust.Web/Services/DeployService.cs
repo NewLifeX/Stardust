@@ -26,9 +26,9 @@ public class DeployService
         {
             switch (action.ToLower())
             {
-                case "publish":
-                    action = "deploy/publish";
-                    Publish(deployNode);
+                case "install":
+                    action = "deploy/install";
+                    Install(deployNode);
                     break;
                 case "start":
                     action = "deploy/start";
@@ -41,6 +41,10 @@ public class DeployService
                 case "restart":
                     action = "deploy/restart";
                     Restart(deployNode);
+                    break;
+                case "uninstall":
+                    action = "deploy/uninstall";
+                    Uninstall(deployNode);
                     break;
                 default:
                     throw new NotSupportedException($"不支持{action}");
@@ -65,29 +69,33 @@ public class DeployService
         }
     }
 
-    public void Publish(AppDeployNode deployNode)
+    public void Install(AppDeployNode deployNode)
     {
         deployNode.Enable = true;
         deployNode.Update();
-
     }
 
     public void Start(AppDeployNode deployNode)
     {
         deployNode.Enable = true;
         deployNode.Update();
-
     }
 
     public void Stop(AppDeployNode deployNode)
     {
         deployNode.Enable = false;
         deployNode.Update();
-
     }
 
     public void Restart(AppDeployNode deployNode)
     {
+        deployNode.Enable = true;
+        deployNode.Update();
+    }
 
+    public void Uninstall(AppDeployNode deployNode)
+    {
+        deployNode.Enable = false;
+        deployNode.Update();
     }
 }

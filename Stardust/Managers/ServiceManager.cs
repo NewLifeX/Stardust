@@ -485,9 +485,11 @@ public class ServiceManager : DisposeBase
         _client = client;
 
         client.RegisterCommand("deploy/publish", DoControl);
+        client.RegisterCommand("deploy/install", DoControl);
         client.RegisterCommand("deploy/start", DoControl);
         client.RegisterCommand("deploy/stop", DoControl);
         client.RegisterCommand("deploy/restart", DoControl);
+        client.RegisterCommand("deploy/uninstall", DoControl);
 
         _timer?.SetNext(-1);
     }
@@ -503,10 +505,12 @@ public class ServiceManager : DisposeBase
 
         var changed = cmd.Command switch
         {
-            "deploy/publish" => OnPublish(serviceName),
+            "deploy/publish" => OnInstall(serviceName),
+            "deploy/install" => OnInstall(serviceName),
             "deploy/start" => OnStart(serviceName),
             "deploy/stop" => OnStop(serviceName, cmd),
             "deploy/restart" => OnRestart(serviceName, cmd),
+            "deploy/uninstall" => OnUninstall(serviceName, cmd),
             _ => throw new Exception($"不支持命令[{cmd.Command}]"),
         };
 
@@ -523,7 +527,7 @@ public class ServiceManager : DisposeBase
         public String AppName { get; set; }
     }
 
-    Boolean OnPublish(String serviceName)
+    Boolean OnInstall(String serviceName)
     {
         PullService(serviceName);
 
@@ -574,6 +578,22 @@ public class ServiceManager : DisposeBase
         changed |= StartService(svc);
 
         RaiseServiceChanged();
+
+        return changed;
+    }
+
+    Boolean OnUninstall(String serviceName, CommandModel cmd)
+    {
+        var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
+        if (svc == null) throw new Exception($"无法找到服务[{serviceName}]");
+
+        var changed = false;
+        svc.Enable = false;
+        changed |= StopService(svc, cmd.Command);
+
+        Remove(serviceName);
+
+        //RaiseServiceChanged();
 
         return changed;
     }

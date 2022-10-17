@@ -295,7 +295,11 @@ internal class ServiceController : DisposeBase
         var changed = "";
 
         // 检查目标目录所有 *.dll 文件
-        var di = !_workdir.IsNullOrEmpty() ? _workdir.AsDirectory() : Info?.WorkingDirectory?.AsDirectory();
+        var dir = _workdir;
+        if (dir.IsNullOrEmpty()) dir = Info?.WorkingDirectory;
+        if (dir.IsNullOrEmpty()) return;
+
+        var di = dir.AsDirectory();
         if (di == null || !di.Exists) return;
 
         if (first) WriteLog("监视文件改变：{0}", di.FullName);
