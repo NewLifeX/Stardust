@@ -35,12 +35,12 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             {
                 var df = ListFields.AddListField("Meter", "Version");
                 df.DisplayName = "性能";
-                df.Url = "NodeData?nodeId={ID}";
+                df.Url = "/Nodes/NodeData?nodeId={ID}";
             }
             {
                 var df = ListFields.AddListField("History", "Version");
                 df.DisplayName = "历史";
-                df.Url = "NodeHistory?nodeId={ID}";
+                df.Url = "/Nodes/NodeHistory?nodeId={ID}";
             }
             {
                 var df = ListFields.AddListField("Log", "Version");

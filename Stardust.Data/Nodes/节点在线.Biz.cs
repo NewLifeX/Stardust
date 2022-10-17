@@ -73,10 +73,15 @@ namespace Stardust.Data.Nodes
         #endregion
 
         #region 扩展查询
-        /// <summary>根据会话查找</summary>
-        /// <param name="deviceid">会话</param>
+        /// <summary>根据id查找</summary>
+        /// <param name="id">会话</param>
         /// <returns></returns>
-        public static NodeOnline FindByNodeId(Int32 deviceid) => Find(__.NodeID, deviceid);
+        public static NodeOnline FindById(Int32 id) => Find(__.ID, id);
+
+        /// <summary>根据会话查找</summary>
+        /// <param name="nodeId">会话</param>
+        /// <returns></returns>
+        public static NodeOnline FindByNodeId(Int32 nodeId) => Find(__.NodeID, nodeId);
 
         /// <summary>根据会话查找</summary>
         /// <param name="sessionid">会话</param>

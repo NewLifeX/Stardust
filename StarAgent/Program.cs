@@ -13,6 +13,7 @@ using Stardust.Deployment;
 using Stardust.Managers;
 using Stardust.Models;
 using Stardust.Plugins;
+using Stardust.Services;
 using Host = NewLife.Agent.Host;
 using IHost = NewLife.Agent.IHost;
 using Upgrade = Stardust.Web.Upgrade;
@@ -166,7 +167,17 @@ internal class MyService : ServiceBase, IServiceProvider
         pm.Init();
         foreach (var item in pm.Plugins)
         {
-            if (item is IAgentPlugin plugin) plugin.Start();
+            if (item is IAgentPlugin plugin)
+            {
+                try
+                {
+                    plugin.Start();
+                }
+                catch (Exception ex)
+                {
+                    XTrace.WriteException(ex);
+                }
+            }
         }
 
         base.StartWork(reason);
@@ -205,6 +216,23 @@ internal class MyService : ServiceBase, IServiceProvider
     {
         base.StopWork(reason);
 
+        // 停止插件
+        WriteLog("停止插件[{0}]", _PluginManager.Identity);
+        foreach (var item in _PluginManager.Plugins)
+        {
+            if (item is IAgentPlugin plugin)
+            {
+                try
+                {
+                    plugin.Stop(reason);
+                }
+                catch (Exception ex)
+                {
+                    XTrace.WriteException(ex);
+                }
+            }
+        }
+
         _timer.TryDispose();
         _timer = null;
 
@@ -220,13 +248,6 @@ internal class MyService : ServiceBase, IServiceProvider
 
         _server.TryDispose();
         _server = null;
-
-        // 停止插件
-        WriteLog("停止插件[{0}]", _PluginManager.Identity);
-        foreach (var item in _PluginManager.Plugins)
-        {
-            if (item is IAgentPlugin plugin) plugin.Stop(reason);
-        }
     }
     #endregion
 
@@ -294,10 +315,12 @@ internal class MyService : ServiceBase, IServiceProvider
 
         var client = state as StarClient;
         await client.Login();
-        await CheckUpgrade(client);
+        //await CheckUpgrade(client);
 
         _timer.TryDispose();
-        _timer = new TimerX(CheckUpgrade, null, 600_000, 600_000) { Async = true };
+        _timer = new TimerX(CheckUpgrade, null, 5_000, 600_000) { Async = true };
+
+        client.RegisterCommand("node/upgrade", s => _timer.SetNext(-1));
     }
 
     private async Task CheckUpgrade(Object data)

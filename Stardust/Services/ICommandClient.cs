@@ -75,6 +75,20 @@ namespace Stardust.Services
             client.Commands[command] = method;
         }
 
+        /// <summary>
+        /// 注册服务。收到平台下发的服务调用时，执行注册的方法
+        /// </summary>
+        /// <param name="client">命令客户端</param>
+        /// <param name="command"></param>
+        /// <param name="method"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static void RegisterCommand(this ICommandClient client, String command, Action<CommandModel> method)
+        {
+            if (command.IsNullOrEmpty()) command = method.Method.Name;
+
+            client.Commands[command] = method;
+        }
+
         /// <summary>执行命令</summary>
         /// <param name="client">命令客户端</param>
         /// <param name="model"></param>
@@ -128,6 +142,8 @@ namespace Stardust.Services
 
             if (d is Func<String, Task<String>> func3) return await func3(model.Argument);
             if (d is Func<CommandModel, Task<CommandReplyModel>> func4) return await func4(model);
+
+            if (d is Action<CommandModel> func5) func5(model);
 
             return null;
         }
