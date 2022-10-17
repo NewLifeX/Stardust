@@ -497,44 +497,18 @@ public class ServiceManager : DisposeBase
         using var span = Tracer?.NewSpan("ServiceManager-DoControl", cmd);
 
         var my = cmd.Argument.ToJsonEntity<MyApp>();
+        var serviceName = my.AppName;
 
-        WriteLog("{0} Id={1} Name={2}", cmd.Command, my.Id, my.AppName);
+        WriteLog("{0} Id={1} Name={2}", cmd.Command, my.Id, serviceName);
 
-        var changed = false;
-        var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(my.AppName));
-        switch (cmd.Command)
+        var changed = cmd.Command switch
         {
-            case "deploy/publish":
-                PullService(my.AppName);
-                _timer.SetNext(-1);
-                break;
-            case "deploy/start":
-                if (svc != null)
-                {
-                    svc.Enable = true;
-                    changed |= StartService(svc);
-                    RaiseServiceChanged();
-                }
-                break;
-            case "deploy/stop":
-                if (svc != null)
-                {
-                    svc.Enable = false;
-                    changed |= StopService(svc, cmd.Command);
-                    RaiseServiceChanged();
-                }
-                break;
-            case "deploy/restart":
-                if (svc != null)
-                {
-                    changed |= StopService(svc, cmd.Command);
-                    Thread.Sleep(Delay);
-                    changed |= StartService(svc);
-                }
-                break;
-            default:
-                break;
-        }
+            "deploy/publish" => OnPublish(serviceName),
+            "deploy/start" => OnStart(serviceName),
+            "deploy/stop" => OnStop(serviceName, cmd),
+            "deploy/restart" => OnRestart(serviceName, cmd),
+            _ => throw new Exception($"不支持命令[{cmd.Command}]"),
+        };
 
         // 保存状态
         if (changed) SaveDb();
@@ -547,6 +521,61 @@ public class ServiceManager : DisposeBase
         public Int32 Id { get; set; }
 
         public String AppName { get; set; }
+    }
+
+    Boolean OnPublish(String serviceName)
+    {
+        PullService(serviceName);
+
+        // 尽快调度一次，拉起服务
+        _timer.SetNext(-1);
+
+        return true;
+    }
+
+    Boolean OnStart(String serviceName)
+    {
+        var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
+        if (svc == null) throw new Exception($"无法找到服务[{serviceName}]");
+
+        var changed = false;
+        svc.Enable = true;
+        changed |= StartService(svc);
+
+        RaiseServiceChanged();
+
+        return changed;
+    }
+
+    Boolean OnStop(String serviceName, CommandModel cmd)
+    {
+        var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
+        if (svc == null) throw new Exception($"无法找到服务[{serviceName}]");
+
+        var changed = false;
+        svc.Enable = false;
+        changed |= StopService(svc, cmd.Command);
+
+        RaiseServiceChanged();
+
+        return changed;
+    }
+
+    Boolean OnRestart(String serviceName, CommandModel cmd)
+    {
+        var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
+        if (svc == null) throw new Exception($"无法找到服务[{serviceName}]");
+
+        var changed = false;
+        svc.Enable = false;
+        changed |= StopService(svc, cmd.Command);
+        Thread.Sleep(Delay);
+        svc.Enable = true;
+        changed |= StartService(svc);
+
+        RaiseServiceChanged();
+
+        return changed;
     }
     #endregion
 
