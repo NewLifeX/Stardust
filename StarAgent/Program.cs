@@ -338,7 +338,7 @@ internal class MyService : ServiceBase, IServiceProvider
         var ur = await client.Upgrade(channel);
         if (ur != null && ur.Version != _lastVersion)
         {
-            ug.Url = ur.Source;
+            ug.Url = client.BuildUrl(ur.Source);
             await ug.Download();
 
             // 检查文件完整性
@@ -358,7 +358,9 @@ internal class MyService : ServiceBase, IServiceProvider
                     // 以服务方式运行时，重启服务，否则采取拉起进程的方式
                     if (Host is Host host && host.InService)
                     {
-                        rs = Host.Restart("StarAgent");
+                        //rs = Host.Restart("StarAgent");
+                        // 使用外部命令重启服务
+                        rs = ug.Run("StarAgent", "-restart -upgrade");
                     }
                     else
                     {

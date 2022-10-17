@@ -664,4 +664,23 @@ public class StarClient : ApiHttpClient, ICommandClient
     /// <returns></returns>
     public async Task<Int32> UploadDeploy(ServiceInfo[] services) => await PostAsync<Int32>("Deploy/Upload", services);
     #endregion
+
+    #region 辅助
+    /// <summary>
+    /// 把Url相对路径格式化为绝对路径。常用于文件下载
+    /// </summary>
+    /// <param name="url"></param>
+    /// <returns></returns>
+    public String BuildUrl(String url)
+    {
+        if (!url.StartsWithIgnoreCase("http://", "https://"))
+        {
+            var svr = Services.FirstOrDefault(e => e.Name == Source) ?? Services.FirstOrDefault();
+            if (svr != null && svr.Address != null)
+                url = new Uri(svr.Address, url) + "";
+        }
+
+        return url;
+    }
+    #endregion
 }

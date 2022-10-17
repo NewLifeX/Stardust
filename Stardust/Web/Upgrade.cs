@@ -16,7 +16,7 @@ public class Upgrade
     /// <summary>名称</summary>
     public String Name { get; set; }
 
-    /// <summary>更新目录</summary>
+    /// <summary>更新目录。默认./Update</summary>
     public String UpdatePath { get; set; } = "Update";
 
     /// <summary>目标目录</summary>
@@ -39,13 +39,14 @@ public class Upgrade
     #endregion
 
     #region 方法
-    /// <summary>开始更新</summary>
+    /// <summary>开始下载更新</summary>
     public virtual async Task<Boolean> Download()
     {
         var url = Url;
         if (url.IsNullOrEmpty()) return false;
 
         var fileName = Path.GetFileName(url);
+        if (fileName.IsNullOrEmpty()) fileName = "a.zip";
 
         // 即使更新包存在，也要下载
         var file = UpdatePath.CombinePath(fileName).GetBasePath();
@@ -97,7 +98,7 @@ public class Upgrade
         WriteLog("发现更新包 {0}", file);
 
         // 解压更新程序包
-        if (!file.EndsWithIgnoreCase(".zip", ".7z")) return false;
+        if (!file.EndsWithIgnoreCase(".zip")) return false;
 
         var tmp = Path.GetTempPath().CombinePath(Path.GetFileNameWithoutExtension(file));
         WriteLog("解压缩到临时目录 {0}", tmp);
@@ -187,8 +188,8 @@ public class Upgrade
         var p = cmd.IndexOf(' ');
         if (p > 0)
         {
-            args = cmd.Substring(p + 1);
-            cmd = cmd.Substring(0, p);
+            args = cmd[(p + 1)..];
+            cmd = cmd[..p];
         }
 
         RunShell(cmd, args);
@@ -269,11 +270,11 @@ public class Upgrade
     {
         WriteLog("CopyAndReplace {0} => {1}", source, dest);
 
-        var di = source.AsDirectory();
+        var src = source.AsDirectory();
 
         // 来源目录根，用于截断
-        var root = di.FullName.EnsureEnd(Path.DirectorySeparatorChar.ToString());
-        foreach (var item in di.GetAllFiles(null, true))
+        var root = src.FullName.EnsureEnd(Path.DirectorySeparatorChar.ToString());
+        foreach (var item in src.GetAllFiles(null, true))
         {
             var name = item.FullName.TrimStart(root);
             var dst = dest.CombinePath(name).GetBasePath();
@@ -314,8 +315,8 @@ public class Upgrade
         }
 
         // 删除临时目录
-        WriteLog("Delete {0}", di.FullName);
-        di.Delete(true);
+        WriteLog("Delete {0}", src.FullName);
+        src.Delete(true);
     }
     #endregion
 

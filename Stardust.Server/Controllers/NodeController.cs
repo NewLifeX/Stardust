@@ -178,15 +178,16 @@ public class NodeController : BaseController
         var pv = _nodeService.Upgrade(node, channel, UserHost);
         if (pv == null) return null;
 
-        var url = pv.Version;
-        if (!url.StartsWithIgnoreCase("http://", "https://"))
-        {
-            var uri = Request.GetRawUrl().ToString();
-            var p = uri.IndexOf('/', "https://".Length);
-            if (p > 0) uri = uri[..p];
-            //url = $"{uri}/Node/GetFile?id={pv.ID}";
-            url = $"{uri}/Node/GetVersion/{pv.Version}.zip";
-        }
+        //var url = pv.Version;
+        //if (!url.StartsWithIgnoreCase("http://", "https://"))
+        //{
+        //    var uri = Request.GetRawUrl().ToString();
+        //    var p = uri.IndexOf('/', "https://".Length);
+        //    if (p > 0) uri = uri[..p];
+        //    //url = $"{uri}/Node/GetFile?id={pv.ID}";
+        //    url = $"{uri}/Node/GetVersion/{pv.Version}.zip";
+        //}
+        var url = pv.Source;
 
         return new UpgradeInfo
         {
@@ -199,7 +200,8 @@ public class NodeController : BaseController
         };
     }
 
-    [HttpGet(nameof(GetFile))]
+    [Obsolete]
+    [HttpGet("GetFile")]
     public ActionResult GetFile(Int32 id)
     {
         var nv = NodeVersion.FindByID(id);
@@ -210,6 +212,7 @@ public class NodeController : BaseController
         return !fi.Exists ? throw new Exception("文件不存在") : (ActionResult)File(fi.OpenRead(), "application/octet-stream", Path.GetFileName(nv.Source));
     }
 
+    [Obsolete]
     //[Route("Node/GetVersion/{name}")]
     [HttpGet("GetVersion/{name}")]
     public ActionResult GetVersion(String name)

@@ -353,13 +353,7 @@ public class ServiceManager : DisposeBase
         var dst = svc.WorkingDirectory.CombinePath(svc.FileName).AsFile();
         if (!dst.Exists || (!info.Hash.IsNullOrEmpty() && !dst.MD5().ToHex().EqualIgnoreCase(info.Hash)))
         {
-            if (!url.StartsWithIgnoreCase("http://", "https://"))
-            {
-                var svr = _client.Services.FirstOrDefault(e => e.Name == _client.Source) ?? _client.Services.FirstOrDefault();
-                if (svr == null || svr.Address == null) return;
-
-                url = new Uri(svr.Address, url) + "";
-            }
+            url = _client.BuildUrl(url);
 
             WriteLog("下载[{0}]：{1} {2}", svc.Name, info.Version, url);
 

@@ -17,7 +17,7 @@ namespace Stardust.Models
         /// <summary>更新后要执行的命令</summary>
         public String Executor { get; set; }
 
-        /// <summary>是否强制更新，不需要用户同意</summary>
+        /// <summary>是否强制更新，覆盖文件后即刻重启应用，不需要用户同意</summary>
         public Boolean Force { get; set; }
 
         /// <summary>描述</summary>
