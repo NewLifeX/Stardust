@@ -12,7 +12,6 @@ using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Threading;
-using Stardust.Managers;
 using Stardust.Models;
 using Stardust.Services;
 using WebSocket = System.Net.WebSockets.WebSocket;
@@ -44,8 +43,8 @@ public class StarClient : ApiHttpClient, ICommandClient
     /// <summary>请求到服务端并返回的延迟时间。单位ms</summary>
     public Int32 Delay { get; set; }
 
-    /// <summary>本地应用服务管理</summary>
-    public ServiceManager Manager { get; set; }
+    ///// <summary>本地应用服务管理</summary>
+    //public ServiceManager Manager { get; set; }
 
     private ConcurrentDictionary<String, Delegate> _commands = new(StringComparer.OrdinalIgnoreCase);
     /// <summary>命令集合</summary>
@@ -53,9 +52,6 @@ public class StarClient : ApiHttpClient, ICommandClient
 
     /// <summary>收到命令时触发</summary>
     public event EventHandler<CommandEventArgs> Received;
-
-    ///// <summary>命令队列</summary>
-    //public IQueueService<CommandModel, Byte[]> CommandQueue { get; } = new QueueService<CommandModel, Byte[]>();
     #endregion
 
     #region 构造
@@ -498,6 +494,35 @@ public class StarClient : ApiHttpClient, ICommandClient
         _trace = new TraceService();
         //_trace.Attach(CommandQueue);
     }
+    #endregion
+
+    #region 上报
+    /// <summary>批量上报事件</summary>
+    /// <param name="events"></param>
+    /// <returns></returns>
+    public async Task<Int32> PostEvents(params EventModel[] events) => await PostAsync<Int32>("Node/PostEvents", events);
+
+    /// <summary>写事件</summary>
+    /// <param name="type"></param>
+    /// <param name="name"></param>
+    /// <param name="remark"></param>
+    public virtual Boolean WriteEvent(String type, String name, String remark)
+    {
+        var now = DateTime.UtcNow;
+        PostEvents(new EventModel { Time = now.ToLong(), Type = type, Name = name, Remark = remark }).Wait();
+
+        return true;
+    }
+
+    /// <summary>写信息事件</summary>
+    /// <param name="name"></param>
+    /// <param name="remark"></param>
+    public virtual void WriteInfoEvent(String name, String remark) => WriteEvent("info", name, remark);
+
+    /// <summary>写错误事件</summary>
+    /// <param name="name"></param>
+    /// <param name="remark"></param>
+    public virtual void WriteErrorEvent(String name, String remark) => WriteEvent("error", name, remark);
 
     /// <summary>上报命令结果，如截屏、抓日志</summary>
     /// <param name="id"></param>

@@ -110,7 +110,58 @@ public class NodeController : BaseController
     public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.Now, };
     #endregion
 
-    #region 历史
+    #region 升级
+    /// <summary>升级检查</summary>
+    /// <param name="channel">更新通道</param>
+    /// <returns></returns>
+    [HttpGet(nameof(Upgrade))]
+    public UpgradeInfo Upgrade(String channel)
+    {
+        var node = _node;
+        if (node == null) throw new ApiException(402, "节点未登录");
+
+        var pv = _nodeService.Upgrade(node, channel, UserHost);
+        if (pv == null) return null;
+
+        var url = pv.Source;
+
+        // 为了兼容旧版本客户端，这里必须把路径处理为绝对路径
+        if (!url.StartsWithIgnoreCase("http://", "https://"))
+        {
+            var uri = Request.GetRawUrl().ToString();
+            var p = uri.IndexOf('/', "https://".Length);
+            if (p > 0) uri = uri[..p];
+            url = new Uri(new Uri(uri), url) + "";
+        }
+
+        return new UpgradeInfo
+        {
+            Version = pv.Version,
+            Source = url,
+            FileHash = pv.FileHash,
+            Executor = pv.Executor,
+            Force = pv.Force,
+            Description = pv.Description,
+        };
+    }
+    #endregion
+
+    #region 上报
+    /// <summary>批量上报事件</summary>
+    /// <param name="events">事件集合</param>
+    /// <returns></returns>
+    [ApiFilter]
+    [HttpPost(nameof(PostEvents))]
+    public Int32 PostEvents(EventModel[] events)
+    {
+        foreach (var model in events)
+        {
+            WriteHistory(null, model.Name, !model.Type.EqualIgnoreCase("error"), model.Remark);
+        }
+
+        return events.Length;
+    }
+
     /// <summary>上报数据，针对命令</summary>
     /// <param name="id"></param>
     /// <returns></returns>
@@ -163,70 +214,6 @@ public class NodeController : BaseController
     /// <returns></returns>
     [HttpPost(nameof(CommandReply))]
     public Int32 CommandReply(CommandReplyModel model) => _node == null ? throw new ApiException(402, "节点未登录") : _nodeService.CommandReply(model, Token);
-    #endregion
-
-    #region 升级
-    /// <summary>升级检查</summary>
-    /// <param name="channel">更新通道</param>
-    /// <returns></returns>
-    [HttpGet(nameof(Upgrade))]
-    public UpgradeInfo Upgrade(String channel)
-    {
-        var node = _node;
-        if (node == null) throw new ApiException(402, "节点未登录");
-
-        var pv = _nodeService.Upgrade(node, channel, UserHost);
-        if (pv == null) return null;
-
-        var url = pv.Source;
-
-        // 为了兼容旧版本客户端，这里必须把路径处理为绝对路径
-        if (!url.StartsWithIgnoreCase("http://", "https://"))
-        {
-            var uri = Request.GetRawUrl().ToString();
-            var p = uri.IndexOf('/', "https://".Length);
-            if (p > 0) uri = uri[..p];
-            url = new Uri(new Uri(uri), url) + "";
-        }
-
-        return new UpgradeInfo
-        {
-            Version = pv.Version,
-            Source = url,
-            FileHash = pv.FileHash,
-            Executor = pv.Executor,
-            Force = pv.Force,
-            Description = pv.Description,
-        };
-    }
-
-    [Obsolete]
-    [HttpGet("GetFile")]
-    public ActionResult GetFile(Int32 id)
-    {
-        var nv = NodeVersion.FindByID(id);
-        if (nv == null || !nv.Enable) throw new Exception("非法参数");
-
-        var updatePath = "../Uploads";
-        var fi = updatePath.CombinePath(nv.Source).AsFile();
-        return !fi.Exists ? throw new Exception("文件不存在") : (ActionResult)File(fi.OpenRead(), "application/octet-stream", Path.GetFileName(nv.Source));
-    }
-
-    [Obsolete]
-    //[Route("Node/GetVersion/{name}")]
-    [HttpGet("GetVersion/{name}")]
-    public ActionResult GetVersion(String name)
-    {
-        var nv = NodeVersion.FindByVersion(name.TrimEnd(".zip"));
-        if (nv == null || !nv.Enable) return NotFound("非法参数");
-
-        var updatePath = _setting.UploadPath;
-        var fi = updatePath.CombinePath(nv.Source).AsFile();
-        if (!fi.Exists) return NotFound("文件不存在");
-
-        //return File(fi.OpenRead(), "application/octet-stream", Path.GetFileName(nv.Source));
-        return PhysicalFile(fi.FullName, "application/octet-stream", name);
-    }
     #endregion
 
     #region 下行通知

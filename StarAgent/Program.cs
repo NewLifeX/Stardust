@@ -267,7 +267,7 @@ internal class MyService : ServiceBase, IServiceProvider
             ProductCode = "StarAgent",
             Log = XTrace.Log,
 
-            Manager = _Manager,
+            //Manager = _Manager,
         };
 
         // 登录后保存证书
@@ -338,40 +338,52 @@ internal class MyService : ServiceBase, IServiceProvider
         var ur = await client.Upgrade(channel);
         if (ur != null && ur.Version != _lastVersion)
         {
-            ug.Url = client.BuildUrl(ur.Source);
-            await ug.Download();
-
-            // 检查文件完整性
-            if (ur.FileHash.IsNullOrEmpty() || ug.CheckFileHash(ur.FileHash))
+            client.WriteInfoEvent("Upgrade", $"准备从[{_lastVersion}]更新到[{ur.Version}]，开始下载 {ur.Source}");
+            try
             {
-                // 执行更新，解压缩覆盖文件
-                var rs = ug.Update();
-                if (rs && !ur.Executor.IsNullOrEmpty()) ug.Run(ur.Executor);
-                _lastVersion = ur.Version;
+                ug.Url = client.BuildUrl(ur.Source);
+                await ug.Download();
 
-                // 去除多余入口文件
-                ug.Trim("StarAgent");
-
-                // 强制更新时，马上重启
-                if (rs && ur.Force)
+                // 检查文件完整性
+                if (ur.FileHash.IsNullOrEmpty() || ug.CheckFileHash(ur.FileHash))
                 {
-                    // 以服务方式运行时，重启服务，否则采取拉起进程的方式
-                    if (Host is Host host && host.InService)
-                    {
-                        //rs = Host.Restart("StarAgent");
-                        // 使用外部命令重启服务
-                        rs = ug.Run("StarAgent", "-restart -upgrade");
-                    }
-                    else
-                    {
-                        // 重新拉起进程
-                        rs = ug.Run("StarAgent", "-run -upgrade");
+                    client.WriteInfoEvent("Upgrade", "下载完成，准备覆盖文件");
 
-                        if (rs) StopWork("Upgrade");
-                    }
+                    // 执行更新，解压缩覆盖文件
+                    var rs = ug.Update();
+                    if (rs && !ur.Executor.IsNullOrEmpty()) ug.Run(ur.Executor);
+                    _lastVersion = ur.Version;
 
-                    if (rs) ug.KillSelf();
+                    // 去除多余入口文件
+                    ug.Trim("StarAgent");
+
+                    // 强制更新时，马上重启
+                    if (rs && ur.Force)
+                    {
+                        // 以服务方式运行时，重启服务，否则采取拉起进程的方式
+                        if (Host is Host host && host.InService)
+                        {
+                            //rs = Host.Restart("StarAgent");
+                            // 使用外部命令重启服务
+                            rs = ug.Run("StarAgent", "-restart -upgrade");
+                        }
+                        else
+                        {
+                            // 重新拉起进程
+                            rs = ug.Run("StarAgent", "-run -upgrade");
+
+                            if (rs) StopWork("Upgrade");
+                        }
+
+                        client.WriteInfoEvent("Upgrade", "强制更新完成，准备退出当前进程");
+
+                        if (rs) ug.KillSelf();
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                client.WriteErrorEvent("Upgrade", ex.Message);
             }
         }
     }
