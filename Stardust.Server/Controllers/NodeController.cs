@@ -178,16 +178,16 @@ public class NodeController : BaseController
         var pv = _nodeService.Upgrade(node, channel, UserHost);
         if (pv == null) return null;
 
-        //var url = pv.Version;
-        //if (!url.StartsWithIgnoreCase("http://", "https://"))
-        //{
-        //    var uri = Request.GetRawUrl().ToString();
-        //    var p = uri.IndexOf('/', "https://".Length);
-        //    if (p > 0) uri = uri[..p];
-        //    //url = $"{uri}/Node/GetFile?id={pv.ID}";
-        //    url = $"{uri}/Node/GetVersion/{pv.Version}.zip";
-        //}
         var url = pv.Source;
+
+        // 为了兼容旧版本客户端，这里必须把路径处理为绝对路径
+        if (!url.StartsWithIgnoreCase("http://", "https://"))
+        {
+            var uri = Request.GetRawUrl().ToString();
+            var p = uri.IndexOf('/', "https://".Length);
+            if (p > 0) uri = uri[..p];
+            url = new Uri(new Uri(uri), url) + "";
+        }
 
         return new UpgradeInfo
         {
