@@ -470,9 +470,15 @@ public class NodeService
         var list = NodeVersion.GetValids(ch);
 
         // 应用过滤规则，使用最新的一个版本
-        var pv = list.Where(e => e.Match(node)).OrderByDescending(e => e.Version).FirstOrDefault();
+        var pv = list.Where(e => e.Match(node)).OrderByDescending(e => e.ID).FirstOrDefault();
         if (pv == null) return null;
         //if (pv == null) throw new ApiException(509, "没有升级规则");
+
+        // 检查是否已经升级过这个版本
+        if (node.LastVersion == pv.Version) return null;
+
+        node.LastVersion = pv.Version;
+        node.Update();
 
         node.WriteHistory("自动更新", true, $"channel={ch} => [{pv.ID}] {pv.Version} {pv.Executor}", ip);
 

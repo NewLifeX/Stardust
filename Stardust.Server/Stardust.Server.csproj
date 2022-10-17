@@ -26,7 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Redis" Version="5.0.2022.1016-beta0306" />
+    <PackageReference Include="NewLife.Redis" Version="5.0.2022.1017-beta1058" />
   </ItemGroup>
 
   <ItemGroup>

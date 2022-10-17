@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -403,6 +403,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("OnlineTime", "在线时长。单位，秒", "")]
         public Int32 OnlineTime { get => _OnlineTime; set { if (OnPropertyChanging("OnlineTime", value)) { _OnlineTime = value; OnPropertyChanged("OnlineTime"); } } }
 
+        private String _LastVersion;
+        /// <summary>最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本</summary>
+        [DisplayName("最后版本")]
+        [Description("最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("LastVersion", "最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本", "")]
+        public String LastVersion { get => _LastVersion; set { if (OnPropertyChanging("LastVersion", value)) { _LastVersion = value; OnPropertyChanged("LastVersion"); } } }
+
         private Int32 _CreateUserID;
         /// <summary>创建者</summary>
         [Category("扩展")]
@@ -521,6 +529,7 @@ namespace Stardust.Data.Nodes
                     case "LastLogin": return _LastLogin;
                     case "LastLoginIP": return _LastLoginIP;
                     case "OnlineTime": return _OnlineTime;
+                    case "LastVersion": return _LastVersion;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -579,6 +588,7 @@ namespace Stardust.Data.Nodes
                     case "LastLogin": _LastLogin = value.ToDateTime(); break;
                     case "LastLoginIP": _LastLoginIP = Convert.ToString(value); break;
                     case "OnlineTime": _OnlineTime = value.ToInt(); break;
+                    case "LastVersion": _LastVersion = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -727,6 +737,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>在线时长。单位，秒</summary>
             public static readonly Field OnlineTime = FindByName("OnlineTime");
+
+            /// <summary>最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本</summary>
+            public static readonly Field LastVersion = FindByName("LastVersion");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUserID = FindByName("CreateUserID");
@@ -886,6 +899,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>在线时长。单位，秒</summary>
             public const String OnlineTime = "OnlineTime";
+
+            /// <summary>最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本</summary>
+            public const String LastVersion = "LastVersion";
 
             /// <summary>创建者</summary>
             public const String CreateUserID = "CreateUserID";
