@@ -61,7 +61,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
             var nodeId = p["Id"].ToInt(-1);
             if (nodeId > 0)
             {
-                var node = FindByID(nodeId);
+                var node = Node.FindByKey(nodeId);
                 if (node != null) return new[] { node };
             }
 

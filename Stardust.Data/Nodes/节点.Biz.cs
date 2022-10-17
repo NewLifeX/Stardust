@@ -29,7 +29,7 @@ namespace Stardust.Data.Nodes
             Meta.Modules.Add<IPModule>();
 
             var sc = Meta.SingleCache;
-            sc.Expire = 30 * 60;
+            sc.Expire = 60;
             sc.FindSlaveKeyMethod = e => Find(__.Code, e);
             sc.GetSlaveKeyMethod = e => e.Code;
             //sc.SlaveKeyIgnoreCase = false;
