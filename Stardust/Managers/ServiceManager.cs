@@ -403,18 +403,26 @@ public class ServiceManager : DisposeBase
         // 应用服务的上报和拉取
         if (_client != null && !_client.Token.IsNullOrEmpty())
         {
-            if (_status == 0 && svcs.Length > 0)
+            // 上传失败不应该影响本地拉起服务
+            try
             {
-                UploadService(svcs);
+                if (_status == 0 && svcs.Length > 0)
+                {
+                    UploadService(svcs);
 
-                _status = 1;
+                    _status = 1;
+                }
+
+                if (_status == 1)
+                {
+                    PullService(null);
+
+                    _status = 2;
+                }
             }
-
-            if (_status == 1)
+            catch (Exception ex)
             {
-                PullService(null);
-
-                _status = 2;
+                XTrace.WriteException(ex);
             }
         }
 
