@@ -24,6 +24,9 @@ public class Startup
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
+        // 初始化配置文件
+        InitConfig();
+
         var star = new StarFactory(null, "StarServer", null);
         if (star.Server.IsNullOrEmpty()) star.Server = "http://127.0.0.1:6600";
 
@@ -151,12 +154,9 @@ public class Startup
         {
             endpoints.MapControllers();
         });
-
-        // 异步初始化
-        Task.Run(InitAsync);
     }
 
-    private static void InitAsync()
+    private static void InitConfig()
     {
         // 配置
         var set = NewLife.Setting.Current;
@@ -171,13 +171,19 @@ public class Startup
         //    set2.Migration = Migration.ReadOnly;
         //    set2.Save();
         //}
+        var set3 = Stardust.Server.Setting.Current;
+        if (set3.IsNew)
+        {
+            set3.UploadPath = "../Uploads";
+            set3.Save();
+        }
 
         // 初始化数据库
         //var n = App.Meta.Count;
         //AppStat.Meta.Session.Dal.Db.ShowSQL = false;
 
-        var dal = App.Meta.Session.Dal;
-        dal.CheckTables();
+        //var dal = App.Meta.Session.Dal;
+        //dal.CheckTables();
     }
 
     private static void FixAppTableName()

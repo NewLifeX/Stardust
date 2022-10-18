@@ -125,7 +125,7 @@ public class Startup
             set.Save();
         }
         var set2 = NewLife.Cube.Setting.Current;
-        if (set2.IsNew && set2.UploadPath == "Uploads")
+        if (set2.IsNew || set2.UploadPath == "Uploads")
         {
             XTrace.WriteLine("修正上传目录");
             set2.UploadPath = "../Uploads";
