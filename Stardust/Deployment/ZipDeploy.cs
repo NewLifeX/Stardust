@@ -50,21 +50,28 @@ public class ZipDeploy
                 file = args[i];
                 //Arguments = args.Skip(i + 1).Join(" ");
 
-                // 准备后续所有参数，后面可能会剔除部分
-                for (var j = i + 1; j < args.Length; j++)
-                {
-                    gs[j] = args[j];
-                }
+                //// 准备后续所有参数，后面可能会剔除部分
+                //for (var j = i + 1; j < args.Length; j++)
+                //{
+                //    gs[j] = args[j];
+                //}
             }
             else if (args[i].EqualIgnoreCase("-name") && i + 1 < args.Length)
             {
                 name = args[i + 1];
                 gs[i] = gs[i + 1] = null;
+                i++;
             }
             else if (args[i].EqualIgnoreCase("-shadow") && i + 1 < args.Length)
             {
                 shadow = args[i + 1];
                 gs[i] = gs[i + 1] = null;
+                i++;
+            }
+            else
+            {
+                // 其它参数全要，支持 urls=http://*:8000
+                gs[i] = args[i];
             }
         }
         if (file.IsNullOrEmpty()) return false;
