@@ -366,18 +366,29 @@ internal class MyService : ServiceBase, IServiceProvider
                             //rs = Host.Restart("StarAgent");
                             // 使用外部命令重启服务
                             rs = ug.Run("StarAgent", "-restart -upgrade");
+
+                            client.WriteInfoEvent("Upgrade", "强制更新完成，准备重启后台服务");
+
+                            //!! 这里不需要自杀，外部命令重启服务会结束当前进程
                         }
                         else
                         {
                             // 重新拉起进程
                             rs = ug.Run("StarAgent", "-run -upgrade");
 
-                            if (rs) StopWork("Upgrade");
+                            if (rs)
+                            {
+                                StopWork("Upgrade");
+
+                                client.WriteInfoEvent("Upgrade", "强制更新完成，新进程已拉起，准备退出当前进程");
+
+                                ug.KillSelf();
+                            }
+                            else
+                            {
+                                client.WriteInfoEvent("Upgrade", "强制更新完成，但拉起新进程失败");
+                            }
                         }
-
-                        client.WriteInfoEvent("Upgrade", "强制更新完成，准备退出当前进程");
-
-                        if (rs) ug.KillSelf();
                     }
                 }
             }
