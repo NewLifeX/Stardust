@@ -345,7 +345,12 @@ internal class MyService : ServiceBase, IServiceProvider
                 await ug.Download();
 
                 // 检查文件完整性
-                if (ur.FileHash.IsNullOrEmpty() || ug.CheckFileHash(ur.FileHash))
+                var checkHash = ug.CheckFileHash(ur.FileHash);
+                if (!ur.FileHash.IsNullOrEmpty() && !checkHash)
+                {
+                    client.WriteInfoEvent("Upgrade", "下载完成，哈希校验失败");
+                }
+                else
                 {
                     client.WriteInfoEvent("Upgrade", "下载完成，准备覆盖文件");
 
