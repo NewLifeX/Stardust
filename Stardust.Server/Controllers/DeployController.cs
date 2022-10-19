@@ -94,7 +94,7 @@ public class DeployController : BaseController
         foreach (var svc in services)
         {
             var app = AppDeploy.FindByName(svc.Name);
-            app ??= new AppDeploy { Name = svc.Name, Enable = svc.Enable };
+            app ??= new AppDeploy { Name = svc.Name/*, Enable = svc.Enable*/ };
 
             // 仅可用应用
             if (app.Enable)
