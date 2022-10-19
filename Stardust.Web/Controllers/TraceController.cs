@@ -28,6 +28,8 @@ namespace Stardust.Web.Controllers
                 if (appName.IsNullOrEmpty()) ViewBag.Title = $"{appName}调用链";
             }
 
+            PageSetting.EnableNavbar = false;
+
             var model = new TraceViewModel
             {
                 Page = pager,
@@ -189,6 +191,8 @@ namespace Stardust.Web.Controllers
                 var appName = list[0].AppName;
                 if (appName.IsNullOrEmpty()) model.Title = $"{appName}关系图";
             }
+
+            PageSetting.EnableNavbar = false;
 
             return View(model);
         }
