@@ -281,7 +281,7 @@ public class AlarmService : IHostedService
         var item = st;
         sb.AppendLine($">**错误：**<font color=\"red\">埋点[{item.Name}]报错[{item.Errors:n0}]次</font>");
 
-        var ds = TraceData.Search(st.AppId, item.ItemId, "minute", item.StatTime, 20);
+        var ds = TraceData.Search(st.AppId, item.ItemId, "minute", item.StatTime, 100);
         if (ds.Count > 0)
         {
             // 应用节点
@@ -295,7 +295,11 @@ public class AlarmService : IHostedService
                     if (node != null) nodes[traceData.ClientId] = node;
                 }
             }
-            if (nodes.Count > 0) sb.AppendLine($">**节点：**<font color=\"greed\">{nodes.Join(",", e => e.Value.Name)}</font>");
+            if (nodes.Count > 0)
+            {
+                var names = nodes.Select(e => e.Value.Name).Distinct().ToArray();
+                sb.AppendLine($">**节点：**<font color=\"greed\">{names.Join(",")}</font>");
+            }
 
             var sms = SampleData.FindAllByDataIds(ds.Select(e => e.Id).ToArray(), item.StatTime).Where(e => !e.Error.IsNullOrEmpty()).ToList();
             if (sms.Count > 0)
