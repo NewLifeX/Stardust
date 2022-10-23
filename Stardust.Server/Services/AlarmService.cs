@@ -274,7 +274,7 @@ public class AlarmService : IHostedService
         var traceUrl = "";
         if (!url.IsNullOrEmpty())
         {
-            traceUrl = url.EnsureEnd("/") + "Monitors/traceMinuteStat?appId=" + st.AppId + "&minError=1";
+            traceUrl = url.EnsureEnd("/") + $"Monitors/traceData?appId={st.AppId}&kind=minute&time={st.StatTime.ToFullString()}&itemId={st.ItemId}&minError=1";
         }
 
         // 找找具体接口错误
