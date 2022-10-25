@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Text;
+using System.Web;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
@@ -274,7 +275,7 @@ public class AlarmService : IHostedService
         var traceUrl = "";
         if (!url.IsNullOrEmpty())
         {
-            traceUrl = url.EnsureEnd("/") + $"Monitors/traceData?appId={st.AppId}&kind=minute&time={st.StatTime.ToFullString()}&itemId={st.ItemId}&minError=1";
+            traceUrl = url.EnsureEnd("/") + $"Monitors/traceData?appId={st.AppId}&kind=minute&time={HttpUtility.UrlEncode(st.StatTime.ToFullString())}&itemId={st.ItemId}&minError=1";
         }
 
         // 找找具体接口错误
