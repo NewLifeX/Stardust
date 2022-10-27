@@ -333,7 +333,7 @@ public class StarFactory : DisposeBase
 
     /// <summary>获取复合配置提供者</summary>
     /// <returns></returns>
-    public IConfigProvider GetConfig() => _configProvider;
+    public IConfigProvider GetConfig() => _configProvider ?? Config;
     #endregion
 
     #region 注册中心
