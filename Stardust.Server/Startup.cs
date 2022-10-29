@@ -5,7 +5,6 @@ using NewLife;
 using NewLife.Caching;
 using NewLife.Configuration;
 using NewLife.Log;
-using Stardust.Data;
 using Stardust.Monitors;
 using Stardust.Server.Common;
 using Stardust.Server.Services;
@@ -162,7 +161,9 @@ public class Startup
         var set = NewLife.Setting.Current;
         if (set.IsNew)
         {
+            set.LogPath = "../LogServer";
             set.DataPath = "../Data";
+            set.BackupPath = "../Backup";
             set.Save();
         }
         //var set2 = XCode.Setting.Current;

@@ -20,6 +20,9 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        // 初始化配置文件
+        InitConfig();
+
         var star = services.AddStardust("StarWeb");
         using var span = star.Tracer?.NewSpan(nameof(ConfigureServices));
 
@@ -43,9 +46,6 @@ public class Startup
 
         // 后台服务。数据保留，定时删除过期数据
         services.AddHostedService<ApolloService>();
-
-        // 异步初始化
-        Task.Run(InitAsync);
 
         // 启用接口响应压缩
         services.AddResponseCompression();
@@ -115,13 +115,15 @@ public class Startup
         //app.ConsumeService("StarWeb");
     }
 
-    private static void InitAsync()
+    private static void InitConfig()
     {
         // 配置
         var set = NewLife.Setting.Current;
         if (set.IsNew)
         {
+            set.LogPath = "../LogWeb";
             set.DataPath = "../Data";
+            set.BackupPath = "../Backup";
             set.Save();
         }
         var set2 = NewLife.Cube.Setting.Current;
@@ -129,6 +131,7 @@ public class Startup
         {
             XTrace.WriteLine("修正上传目录");
             set2.UploadPath = "../Uploads";
+            set2.AvatarPath = "../Avatars";
             set2.Save();
         }
     }

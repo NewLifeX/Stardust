@@ -1,0 +1,8 @@
+build.bat 通用平台，dotnet IoTServer.dll 启动应用
+build-linux 专用平台，./IoTServer 启动应用
+build-windows 专用平台，IoTServer.exe 启动应用，支持部署到IIS
+
+输出目录：
+..\Bin\iot
+..\Bin\iot-linux
+..\Bin\iot-windows
