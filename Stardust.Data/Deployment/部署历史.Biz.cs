@@ -35,6 +35,10 @@ namespace Stardust.Data.Deployment
             // 如果没有脏数据，则不需要进行任何处理
             if (!HasDirty) return;
 
+            // 截断日志
+            var len = _.Remark.Length;
+            if (len > 0 && !Remark.IsNullOrEmpty() && len > 0 && Remark.Length > len) Remark = Remark[..len];
+
             // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
             if (Action.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Action), "操作不能为空！");
 
