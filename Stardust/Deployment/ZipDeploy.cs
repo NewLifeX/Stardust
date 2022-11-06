@@ -48,13 +48,6 @@ public class ZipDeploy
             if (args[i].EndsWithIgnoreCase(".zip"))
             {
                 file = args[i];
-                //Arguments = args.Skip(i + 1).Join(" ");
-
-                //// 准备后续所有参数，后面可能会剔除部分
-                //for (var j = i + 1; j < args.Length; j++)
-                //{
-                //    gs[j] = args[j];
-                //}
             }
             else if (args[i].EqualIgnoreCase("-name") && i + 1 < args.Length)
             {
@@ -166,6 +159,16 @@ public class ZipDeploy
         if (p.WaitForExit(3_000))
         {
             WriteLog("启动失败！ExitCode={0}", p.ExitCode);
+
+            // 启动失败时，删除影子目录，有可能上一次解压以后，该目录被篡改过。这次删除以后，下一次启动时会再次解压缩
+            try
+            {
+                Directory.Delete(shadow, true);
+            }
+            catch (Exception ex)
+            {
+                Log?.Error(ex.ToString());
+            }
 
             return false;
         }
