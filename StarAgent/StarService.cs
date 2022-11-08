@@ -78,23 +78,23 @@ public class StarService : DisposeBase, IApi
         XTrace.WriteLine("Info<={0}", info.ToJson());
 
         var set = StarSetting;
-        // 使用对方送过来的星尘服务端地址
-        if (set.Server.IsNullOrEmpty() && !info.Server.IsNullOrEmpty())
-        {
-            set.Server = info.Server;
-            set.Save();
+        //// 使用对方送过来的星尘服务端地址
+        //if (set.Server.IsNullOrEmpty() && !info.Server.IsNullOrEmpty())
+        //{
+        //    set.Server = info.Server;
+        //    set.Save();
 
-            XTrace.WriteLine("StarAgent使用应用[{0}]送过来的星尘服务端地址：{1}", info.ProcessId, info.Server);
+        //    XTrace.WriteLine("StarAgent使用应用[{0}]送过来的星尘服务端地址：{1}", info.ProcessId, info.Server);
 
-            if (Provider?.GetService<ServiceBase>() is MyService svc)
-            {
-                ThreadPool.QueueUserWorkItem(s =>
-                {
-                    svc.StartFactory();
-                    svc.StartClient();
-                });
-            }
-        }
+        //    if (Provider?.GetService<ServiceBase>() is MyService svc)
+        //    {
+        //        ThreadPool.QueueUserWorkItem(s =>
+        //        {
+        //            svc.StartFactory();
+        //            svc.StartClient();
+        //        });
+        //    }
+        //}
 
         var ai = _agentInfo ??= AgentInfo.GetLocal(true);
         ai.Server = set.Server;
