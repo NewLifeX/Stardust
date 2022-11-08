@@ -314,8 +314,19 @@ internal class MyService : ServiceBase, IServiceProvider
         }
 
         var client = state as StarClient;
-        await client.Login();
-        //await CheckUpgrade(client);
+
+        try
+        {
+            await client.Login();
+            //await CheckUpgrade(client);
+        }
+        catch (Exception ex)
+        {
+            // 登录报错后，加大定时间隔，输出简单日志
+            _timer.Period = 30_000;
+
+            Log?.Error(ex.Message);
+        }
 
         _timer.TryDispose();
         _timer = new TimerX(CheckUpgrade, null, 5_000, 600_000) { Async = true };
