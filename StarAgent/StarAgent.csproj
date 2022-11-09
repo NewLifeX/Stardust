@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp3.1;net5.0;net6.0;net461</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;net5.0;net6.0;net461;net7.0</TargetFrameworks>
     <AssemblyTitle>星尘代理</AssemblyTitle>
     <Description>星尘，分布式资源调度，部署于每一个节点，连接服务端，支持节点监控、远程发布。</Description>
     <Company>新生命开发团队</Company>
@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Agent" Version="10.0.2022.1003" />
+    <PackageReference Include="NewLife.Agent" Version="10.0.2022.1108-beta0052" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <AssemblyName>StarWeb</AssemblyName>
     <AssemblyTitle>星尘管理平台</AssemblyTitle>
     <Description>星尘，分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
@@ -38,7 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Cube.Core" Version="5.5.2022.1101" />
+    <PackageReference Include="NewLife.Cube.Core" Version="5.5.2022.1108-beta0051" />
     <PackageReference Include="NewLife.Redis" Version="5.0.2022.1101" />
   </ItemGroup>
 
