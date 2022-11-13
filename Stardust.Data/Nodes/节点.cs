@@ -259,21 +259,21 @@ namespace Stardust.Data.Nodes
         public String InstallPath { get => _InstallPath; set { if (OnPropertyChanging("InstallPath", value)) { _InstallPath = value; OnPropertyChanged("InstallPath"); } } }
 
         private String _Runtime;
-        /// <summary>运行时。.Net运行时版本，可知道本地已安装版本</summary>
+        /// <summary>运行时。.Net运行时版本</summary>
         [Category("硬件信息")]
         [DisplayName("运行时")]
-        [Description("运行时。.Net运行时版本，可知道本地已安装版本")]
+        [Description("运行时。.Net运行时版本")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("Runtime", "运行时。.Net运行时版本，可知道本地已安装版本", "")]
+        [BindColumn("Runtime", "运行时。.Net运行时版本", "")]
         public String Runtime { get => _Runtime; set { if (OnPropertyChanging("Runtime", value)) { _Runtime = value; OnPropertyChanged("Runtime"); } } }
 
         private String _Framework;
-        /// <summary>目标框架。编译程序集时的目标版本</summary>
+        /// <summary>框架。本地支持的最高版本框架</summary>
         [Category("硬件信息")]
-        [DisplayName("目标框架")]
-        [Description("目标框架。编译程序集时的目标版本")]
+        [DisplayName("框架")]
+        [Description("框架。本地支持的最高版本框架")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("Framework", "目标框架。编译程序集时的目标版本", "")]
+        [BindColumn("Framework", "框架。本地支持的最高版本框架", "")]
         public String Framework { get => _Framework; set { if (OnPropertyChanging("Framework", value)) { _Framework = value; OnPropertyChanged("Framework"); } } }
 
         private Int32 _ProvinceID;
@@ -687,10 +687,10 @@ namespace Stardust.Data.Nodes
             /// <summary>安装路径</summary>
             public static readonly Field InstallPath = FindByName("InstallPath");
 
-            /// <summary>运行时。.Net运行时版本，可知道本地已安装版本</summary>
+            /// <summary>运行时。.Net运行时版本</summary>
             public static readonly Field Runtime = FindByName("Runtime");
 
-            /// <summary>目标框架。编译程序集时的目标版本</summary>
+            /// <summary>框架。本地支持的最高版本框架</summary>
             public static readonly Field Framework = FindByName("Framework");
 
             /// <summary>省份</summary>
@@ -849,10 +849,10 @@ namespace Stardust.Data.Nodes
             /// <summary>安装路径</summary>
             public const String InstallPath = "InstallPath";
 
-            /// <summary>运行时。.Net运行时版本，可知道本地已安装版本</summary>
+            /// <summary>运行时。.Net运行时版本</summary>
             public const String Runtime = "Runtime";
 
-            /// <summary>目标框架。编译程序集时的目标版本</summary>
+            /// <summary>框架。本地支持的最高版本框架</summary>
             public const String Framework = "Framework";
 
             /// <summary>省份</summary>

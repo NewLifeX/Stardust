@@ -29,8 +29,8 @@
       <Column Name="DiskID" DataType="String" Length="200" Description="磁盘序列号" Category="硬件信息" />
       <Column Name="MACs" DataType="String" Length="200" Description="网卡" Category="硬件信息" />
       <Column Name="InstallPath" DataType="String" Length="200" Description="安装路径" Category="硬件信息" />
-      <Column Name="Runtime" DataType="String" Description="运行时。.Net运行时版本，可知道本地已安装版本" Category="硬件信息" />
-      <Column Name="Framework" DataType="String" Description="目标框架。编译程序集时的目标版本" Category="硬件信息" />
+      <Column Name="Runtime" DataType="String" Description="运行时。.Net运行时版本" Category="硬件信息" />
+      <Column Name="Framework" DataType="String" Description="框架。本地支持的最高版本框架" Category="硬件信息" />
       <Column Name="ProvinceID" DataType="Int32" Description="省份" />
       <Column Name="CityID" DataType="Int32" Description="城市" />
       <Column Name="Address" DataType="String" Length="200" Description="地址。该节点所处位置" />
