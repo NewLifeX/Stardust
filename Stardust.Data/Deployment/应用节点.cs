@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -43,6 +43,14 @@ namespace Stardust.Data.Deployment
         [DataObjectField(false, false, false, 0)]
         [BindColumn("NodeId", "节点。节点服务器", "")]
         public Int32 NodeId { get => _NodeId; set { if (OnPropertyChanging("NodeId", value)) { _NodeId = value; OnPropertyChanged("NodeId"); } } }
+
+        private String _IP;
+        /// <summary>IP地址。节点所在内网IP地址</summary>
+        [DisplayName("IP地址")]
+        [Description("IP地址。节点所在内网IP地址")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("IP", "IP地址。节点所在内网IP地址", "")]
+        public String IP { get => _IP; set { if (OnPropertyChanging("IP", value)) { _IP = value; OnPropertyChanged("IP"); } } }
 
         private Int32 _Sort;
         /// <summary>顺序。较大在前</summary>
@@ -145,6 +153,7 @@ namespace Stardust.Data.Deployment
                     case "Id": return _Id;
                     case "AppId": return _AppId;
                     case "NodeId": return _NodeId;
+                    case "IP": return _IP;
                     case "Sort": return _Sort;
                     case "Enable": return _Enable;
                     case "Environment": return _Environment;
@@ -165,6 +174,7 @@ namespace Stardust.Data.Deployment
                     case "Id": _Id = value.ToInt(); break;
                     case "AppId": _AppId = value.ToInt(); break;
                     case "NodeId": _NodeId = value.ToInt(); break;
+                    case "IP": _IP = Convert.ToString(value); break;
                     case "Sort": _Sort = value.ToInt(); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Environment": _Environment = Convert.ToString(value); break;
@@ -193,6 +203,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>节点。节点服务器</summary>
             public static readonly Field NodeId = FindByName("NodeId");
+
+            /// <summary>IP地址。节点所在内网IP地址</summary>
+            public static readonly Field IP = FindByName("IP");
 
             /// <summary>顺序。较大在前</summary>
             public static readonly Field Sort = FindByName("Sort");
@@ -238,6 +251,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>节点。节点服务器</summary>
             public const String NodeId = "NodeId";
+
+            /// <summary>IP地址。节点所在内网IP地址</summary>
+            public const String IP = "IP";
 
             /// <summary>顺序。较大在前</summary>
             public const String Sort = "Sort";
