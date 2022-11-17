@@ -258,7 +258,7 @@ public class NodeController : BaseController
         //XTrace.WriteLine("WebSocket连接 {0}", node);
         WriteHistory(node, "WebSocket连接", true, socket.State + "");
 
-        var olt = _nodeService.GetOnline(node, ip) ?? _nodeService.CreateOnline(node, token, ip);
+        var olt = _nodeService.GetOrAddOnline(node, token, ip);
         if (olt != null)
         {
             olt.WebSocket = true;

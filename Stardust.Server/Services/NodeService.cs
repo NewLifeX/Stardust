@@ -74,7 +74,7 @@ public class NodeService
         var tokenModel = IssueToken(node.Code, setting);
 
         // 在线记录
-        var olt = GetOnline(node, ip) ?? CreateOnline(node, tokenModel.AccessToken, ip);
+        var olt = GetOrAddOnline(node, tokenModel.AccessToken, ip);
         olt.Save(inf.Node, null, tokenModel.AccessToken, ip);
 
         // 登录历史
@@ -301,7 +301,7 @@ public class NodeService
 
             rs.Period = node.Period;
 
-            var olt = GetOnline(node, ip) ?? CreateOnline(node, token, ip);
+            var olt = GetOrAddOnline(node, token, ip);
             olt.Name = node.Name;
             olt.Category = node.Category;
             olt.Version = node.Version;
@@ -393,12 +393,21 @@ public class NodeService
         };
     }
 
+    public NodeOnline GetOrAddOnline(Node node,String token,String ip)
+    {
+        var localIp = node?.IP;
+        if (localIp.IsNullOrEmpty()) localIp = ip;
+
+        return GetOnline(node, localIp) ?? CreateOnline(node, token, ip);
+    }
+
     /// <summary></summary>
     /// <param name="node"></param>
     /// <returns></returns>
     public NodeOnline GetOnline(Node node, String ip)
     {
-        var sid = $"{node.ID}@{ip}";
+        //var sid = $"{node.ID}@{ip}";
+        var sid = node.Code;
         var olt = _cache.Get<NodeOnline>($"NodeOnline:{sid}");
         if (olt != null)
         {
@@ -414,7 +423,8 @@ public class NodeService
     /// <returns></returns>
     public NodeOnline CreateOnline(Node node, String token, String ip)
     {
-        var sid = $"{node.ID}@{ip}";
+        //var sid = $"{node.ID}@{ip}";
+        var sid = node.Code;
         var olt = NodeOnline.GetOrAdd(sid);
         olt.NodeID = node.ID;
         olt.Name = node.Name;
