@@ -106,12 +106,13 @@ internal class MyService : ServiceBase, IServiceProvider
         // 应用服务管理
         _Manager = new ServiceManager
         {
-            Services = set.Services,
+            //Services = set.Services,
             Delay = set.Delay,
 
             Tracer = _factory?.Tracer,
             Log = XTrace.Log,
         };
+        _Manager.SetServices(set.Services);
         _Manager.ServiceChanged += OnServiceChanged;
 
         // 插件管理器

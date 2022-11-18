@@ -14,7 +14,7 @@ public class ServiceManager : DisposeBase
 {
     #region 属性
     /// <summary>应用服务集合</summary>
-    public ServiceInfo[] Services { get; set; }
+    public ServiceInfo[] Services { get; private set; }
 
     /// <summary>延迟时间。重启进程或服务的延迟时间，默认3000ms</summary>
     public Int32 Delay { get; set; } = 3000;
@@ -258,13 +258,14 @@ public class ServiceManager : DisposeBase
     {
         // 一般由外部配置文件改变而驱动，所以本方法不会引发ServiceChanged事件
 
-        var flag = Services == null;
+        var svcs = Services;
+        var flag = svcs == null || svcs.Length != services.Length;
         if (!flag)
         {
             foreach (var item in services)
             {
                 // 如果新服务在原列表里不存在，或者数值不同，则认为有改变
-                var s = Services.FirstOrDefault(e => e.Name == item.Name);
+                var s = svcs.FirstOrDefault(e => e.Name == item.Name);
                 if (s == null || s.ToJson() != item.ToJson())
                 {
                     flag = true;
@@ -279,10 +280,11 @@ public class ServiceManager : DisposeBase
 
             WriteLog("应用服务配置变更");
 
-            Services = services;
+            // 拷贝，避免应用后无法及时感知变化
+            Services = services.ToArray();
 
             _status = 0;
-            _timer.SetNext(-1);
+            _timer?.SetNext(-1);
         }
     }
 

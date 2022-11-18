@@ -43,4 +43,8 @@ public class ServiceInfo
     [XmlAttribute]
     public Int32 MaxMemory { get; set; }
     #endregion
+
+    /// <summary>已重载。友好显示</summary>
+    /// <returns></returns>
+    public override String ToString() => $"{Name} {FileName}";
 }
