@@ -66,7 +66,7 @@ public class StarTracer : DefaultTracer
             var asm = AssemblyX.Entry ?? executing;
             if (asm != null)
             {
-                if (AppId == null) AppId = asm.Name;
+                AppId ??= asm.Name;
                 AppName = asm.Title;
                 _version = asm.Version;
             }

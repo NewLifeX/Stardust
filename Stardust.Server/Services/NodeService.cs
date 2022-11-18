@@ -6,11 +6,9 @@ using NewLife.Remoting;
 using NewLife.Security;
 using NewLife.Serialization;
 using NewLife.Web;
-using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Models;
-using XCode;
 
 namespace Stardust.Server.Services;
 
@@ -117,7 +115,7 @@ public class NodeService
     /// <param name="node"></param>
     /// <param name="ps"></param>
     /// <returns></returns>
-    private Node CheckNode(Node node, NodeInfo di, String productCode, String ip)
+    private static Node CheckNode(Node node, NodeInfo di, String productCode, String ip)
     {
         // 校验唯一编码，防止客户端拷贝配置
         var uuid = di.UUID;
@@ -189,14 +187,14 @@ public class NodeService
             list = list.Where(e => e.ProductCode.IsNullOrEmpty() || e.ProductCode == inf.ProductCode).OrderBy(e => e.ID).ToList();
 
             // 找到节点
-            if (node == null) node = list.FirstOrDefault();
+            node ??= list.FirstOrDefault();
         }
 
         var name = "";
         if (name.IsNullOrEmpty()) name = di.MachineName;
         if (name.IsNullOrEmpty()) name = di.UserName;
 
-        if (node == null) node = new Node
+        node ??= new Node
         {
             Enable = true,
 
@@ -230,7 +228,7 @@ public class NodeService
     /// <param name="whiteIp"></param>
     /// <param name="ip"></param>
     /// <returns></returns>
-    private Boolean IsMatchWhiteIP(String whiteIp, String ip)
+    private static Boolean IsMatchWhiteIP(String whiteIp, String ip)
     {
         if (ip.IsNullOrEmpty()) return true;
         if (whiteIp.IsNullOrEmpty()) return true;
@@ -244,7 +242,7 @@ public class NodeService
         return false;
     }
 
-    private String BuildCode(NodeInfo di, String productCode, Setting set)
+    private static String BuildCode(NodeInfo di, String productCode, Setting set)
     {
         //var set = Setting.Current;
         //var uid = $"{di.UUID}@{di.MachineGuid}@{di.Macs}";
@@ -611,10 +609,10 @@ public class NodeService
         return !rs || jwt == null ? null : DateTime.Now.AddMinutes(10) > jwt.Expire ? IssueToken(deviceCode, set) : null;
     }
 
-    private void WriteHistory(Node node, String action, Boolean success, String remark, String ip)
-    {
-        var hi = NodeHistory.Create(node, action, success, remark, Environment.MachineName, ip);
-        hi.SaveAsync();
-    }
+    //private void WriteHistory(Node node, String action, Boolean success, String remark, String ip)
+    //{
+    //    var hi = NodeHistory.Create(node, action, success, remark, Environment.MachineName, ip);
+    //    hi.SaveAsync();
+    //}
     #endregion
 }

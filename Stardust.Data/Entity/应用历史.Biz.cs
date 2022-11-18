@@ -108,7 +108,7 @@ namespace Stardust.Data
         /// <returns></returns>
         public static AppHistory Create(App app, String action, Boolean success, String remark, String version, String creator, String ip)
         {
-            if (app == null) app = new App();
+            app ??= new App();
             if (version.IsNullOrEmpty()) version = app.Version;
 
             var history = new AppHistory

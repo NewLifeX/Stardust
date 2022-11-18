@@ -122,11 +122,11 @@ namespace Stardust.Server.Controllers
                 ap = ap1;
             }
 
-            if (ap == null) ap = _tokenService.Authorize(appId, secret, _setting.AutoRegister);
+            ap ??= _tokenService.Authorize(appId, secret, _setting.AutoRegister);
 
             // 新建应用配置
             var app = AppConfig.FindByName(appId);
-            if (app == null) app = AppConfig.Find(AppConfig._.Name == appId);
+            app ??= AppConfig.Find(AppConfig._.Name == appId);
             if (app == null)
             {
                 var obj = AppConfig.Meta.Table;

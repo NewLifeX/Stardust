@@ -142,7 +142,7 @@ namespace Stardust.Data
         {
             // 修复数据
             var app = FindByName(model.AppId);
-            if (app == null) app = new App { Name = model.AppId, DisplayName = model.AppName, Enable = true };
+            app ??= new App { Name = model.AppId, DisplayName = model.AppName, Enable = true };
             if (app.DisplayName.IsNullOrEmpty() || app.DisplayName == app.Name) app.DisplayName = model.AppName;
             app.Save();
 

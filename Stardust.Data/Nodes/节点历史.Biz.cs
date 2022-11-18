@@ -136,7 +136,7 @@ namespace Stardust.Data.Nodes
         /// <returns></returns>
         public static NodeHistory Create(Node node, String action, Boolean success, String remark, String creator, String ip)
         {
-            if (node == null) node = new Node();
+            node ??= new Node();
 
             var history = new NodeHistory
             {

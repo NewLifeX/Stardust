@@ -119,14 +119,14 @@ namespace Stardust.Server.Services
             {
                 lock (this)
                 {
-                    if (_timerFlow == null) _timerFlow = new TimerX(DoFlowStat, null, 5_000, FlowPeriod * 1000) { Async = true };
+                    _timerFlow ??= new TimerX(DoFlowStat, null, 5_000, FlowPeriod * 1000) { Async = true };
                 }
             }
             if (_timerBatch == null && BatchPeriod > 0)
             {
                 lock (this)
                 {
-                    if (_timerBatch == null) _timerBatch = new TimerX(DoBatchStat, null, 5_000, BatchPeriod * 1000) { Async = true };
+                    _timerBatch ??= new TimerX(DoBatchStat, null, 5_000, BatchPeriod * 1000) { Async = true };
                 }
             }
         }

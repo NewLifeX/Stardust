@@ -225,7 +225,7 @@ namespace Stardust.Data.Monitors
             //if (name.IsNullOrEmpty()) return false;
             //if (clientId.IsNullOrEmpty()) return false;
 
-            if (_rules == null) _rules = GetRules();
+            _rules ??= GetRules();
 
             // 没有使用该规则，直接过
             if (_rules.TryGetValue("name", out var vs))
@@ -253,7 +253,7 @@ namespace Stardust.Data.Monitors
             if (name.IsNullOrEmpty()) return false;
             if (Rules.IsNullOrEmpty()) return false;
 
-            if (_rules == null) _rules = GetRules();
+            _rules ??= GetRules();
 
             if (_rules.TryGetValue("name", out var vs))
             {

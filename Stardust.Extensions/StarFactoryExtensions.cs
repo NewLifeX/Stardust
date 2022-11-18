@@ -72,7 +72,7 @@ public static class StarFactoryExtensions
             var provider = app.ApplicationServices;
             var tracer = provider.GetRequiredService<ITracer>();
 
-            if (TracerMiddleware.Tracer == null) TracerMiddleware.Tracer = tracer;
+            TracerMiddleware.Tracer ??= tracer;
             if (TracerMiddleware.Tracer != null) app.UseMiddleware<TracerMiddleware>();
 
             app.Properties[nameof(TracerMiddleware)] = typeof(TracerMiddleware);

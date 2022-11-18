@@ -96,7 +96,7 @@ namespace Stardust.Web.Controllers
                 }
                 if (!appids.Contains(item.AppId)) appids.Add(item.AppId);
 
-                if (name == null) name = item.AppName;
+                name ??= item.AppName;
                 item["node_name"] = name;
 
                 // 分类

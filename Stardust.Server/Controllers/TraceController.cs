@@ -124,11 +124,11 @@ public class TraceController : ControllerBase
         }
 
         //ap = _tokenService.Authorize(appId, null, set.AutoRegister);
-        if (ap == null) ap = App.FindByName(model.AppId);
+        ap ??= App.FindByName(model.AppId);
 
         // 新建应用配置
         var app = AppTracer.FindByName(appId);
-        if (app == null) app = AppTracer.Find(AppTracer._.Name == appId);
+        app ??= AppTracer.Find(AppTracer._.Name == appId);
         if (app == null)
         {
             var obj = AppTracer.Meta.Table;

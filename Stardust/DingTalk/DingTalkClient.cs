@@ -21,10 +21,7 @@ namespace Stardust.DingTalk
         #region 发送消息
         private async Task<Object> PostAsync(Object msg)
         {
-            if (_Client == null)
-            {
-                _Client = Tracer.CreateHttpClient();
-            }
+            _Client ??= Tracer.CreateHttpClient();
 
             return await _Client.PostAsync<Object>(Url, msg);
         }

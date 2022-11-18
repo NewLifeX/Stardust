@@ -155,7 +155,7 @@ namespace Stardust.Data.Monitors
                 .FirstOrDefault(e => e.StatTime == model.Time);
 
             // 查询数据库
-            if (st == null) st = Find(_.StatTime == model.Time & _.AppId == model.AppId);
+            st ??= Find(_.StatTime == model.Time & _.AppId == model.AppId);
 
             if (st != null) _cache.Set(key, st, 60);
 

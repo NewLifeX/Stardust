@@ -66,7 +66,7 @@ namespace Stardust.Web.Controllers
             var ap = _tokenService.Authorize(appId, secret, false);
 
             var app = AppConfig.FindByName(appId);
-            if (app == null) app = AppConfig.Find(AppConfig._.Name == appId);
+            app ??= AppConfig.Find(AppConfig._.Name == appId);
             if (app == null)
             {
                 app = new AppConfig

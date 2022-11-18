@@ -71,7 +71,7 @@ internal class ServiceController : DisposeBase
             var file = service.FileName?.Trim();
             if (file.IsNullOrEmpty()) return false;
 
-            if (file.Contains("/") || file.Contains("\\"))
+            if (file.Contains('/') || file.Contains('\\'))
             {
                 file = file.GetFullPath();
                 if (workDir.IsNullOrEmpty()) workDir = Path.GetDirectoryName(file);
@@ -280,7 +280,7 @@ internal class ServiceController : DisposeBase
     private void StartMonitor()
     {
         // 定时检查文件是否有改变
-        if (_timer == null) _timer = new TimerX(MonitorFileChange, null, 1_000, MonitorPeriod) { Async = true };
+        _timer ??= new TimerX(MonitorFileChange, null, 1_000, MonitorPeriod) { Async = true };
     }
 
     private readonly Dictionary<String, DateTime> _files = new();

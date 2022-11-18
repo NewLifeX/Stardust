@@ -76,7 +76,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry
             var asm = AssemblyX.Entry ?? executing;
             if (asm != null)
             {
-                if (AppId == null) AppId = asm.Name;
+                AppId ??= asm.Name;
                 AppName = asm.Title;
                 _version = asm.Version;
             }
@@ -348,7 +348,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry
         Received?.Invoke(this, e);
 
         var rs = await this.ExecuteCommand(model);
-        if (e.Reply == null) e.Reply = rs;
+        e.Reply ??= rs;
 
         if (e.Reply != null) await CommandReply(e.Reply);
     }

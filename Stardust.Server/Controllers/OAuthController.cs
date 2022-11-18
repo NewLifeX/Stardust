@@ -63,7 +63,7 @@ namespace Stardust.Server.Controllers
                     var app = App.FindByName(jwt?.Subject);
                     if (app == null || !app.Enable)
                     {
-                        if (ex == null) ex = new ApiException(403, $"无效应用[{jwt.Subject}]");
+                        ex ??= new ApiException(403, $"无效应用[{jwt.Subject}]");
                     }
 
                     if (clientId.IsNullOrEmpty()) clientId = jwt.Id;

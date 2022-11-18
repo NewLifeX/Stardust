@@ -342,7 +342,7 @@ public class StarClient : ApiHttpClient, ICommandClient
     /// <summary>获取心跳信息</summary>
     public PingInfo GetHeartInfo()
     {
-        var exs = _excludes.Where(e => e.Contains("*")).ToArray();
+        var exs = _excludes.Where(e => e.Contains('*')).ToArray();
 
         var ps = Process.GetProcesses();
         var pcs = new List<String>();
@@ -565,10 +565,7 @@ public class StarClient : ApiHttpClient, ICommandClient
         {
             lock (this)
             {
-                if (_timer == null)
-                {
-                    _timer = new TimerX(DoPing, null, 1_000, 60_000, "Device") { Async = true };
-                }
+                _timer ??= new TimerX(DoPing, null, 1_000, 60_000, "Device") { Async = true };
             }
         }
     }

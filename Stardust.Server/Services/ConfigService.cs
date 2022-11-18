@@ -79,7 +79,7 @@ namespace Stardust.Server.Services
             {
                 lock (this)
                 {
-                    if (_timer == null) _timer = new TimerX(DoConfigWork, null, 15_000, 60_000) { Async = true };
+                    _timer ??= new TimerX(DoConfigWork, null, 15_000, 60_000) { Async = true };
                 }
             }
         }
@@ -177,16 +177,13 @@ namespace Stardust.Server.Services
             if (!app.EnableWorkerId) return -1;
 
             var cfg = app.Configs.FirstOrDefault(e => e.Key.EqualIgnoreCase(WorkerIdName));
-            if (cfg == null)
-            {
-                cfg = new ConfigData
+            cfg ??= new ConfigData
                 {
                     AppId = app.Id,
                     Key = WorkerIdName,
                     Version = app.Version,
                     Enable = true
                 };
-            }
 
             var id = cfg.Value.ToInt();
             id++;
