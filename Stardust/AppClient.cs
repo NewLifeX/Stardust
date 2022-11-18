@@ -40,6 +40,9 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry
     /// <summary>收到命令时触发</summary>
     public event EventHandler<CommandEventArgs> Received;
 
+    /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认120</summary>
+    public Int32 MaxFails { get; set; } = 120;
+
     private AppInfo _appInfo;
     private readonly String _version;
 
@@ -50,6 +53,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry
     private readonly ConcurrentDictionary<String, ConsumeServiceInfo> _consumeServices = new();
     private readonly ConcurrentDictionary<String, ServiceModel[]> _consumes = new();
     private readonly ConcurrentDictionary<String, IList<Delegate>> _consumeEvents = new();
+    private readonly ConcurrentQueue<AppInfo> _fails = new();
     #endregion
 
     #region 构造
@@ -179,11 +183,27 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry
             else
                 _appInfo.Refresh();
 
-            var rs = await PostAsync<PingResponse>("App/Ping", _appInfo);
-            if (rs != null)
+            PingResponse rs = null;
+            try
             {
-                // 由服务器改变采样频率
-                if (rs.Period > 0) _timer.Period = rs.Period * 1000;
+                rs = await PostAsync<PingResponse>("App/Ping", _appInfo);
+                if (rs != null)
+                {
+                    // 由服务器改变采样频率
+                    if (rs.Period > 0) _timer.Period = rs.Period * 1000;
+                }
+            }
+            catch
+            {
+                if (_fails.Count < MaxFails) _fails.Enqueue(_appInfo.Clone());
+
+                throw;
+            }
+
+            // 上报正常，处理历史，失败则丢弃
+            while (_fails.TryDequeue(out var info))
+            {
+                await PostAsync<PingResponse>("App/Ping", info);
             }
 
             return rs;

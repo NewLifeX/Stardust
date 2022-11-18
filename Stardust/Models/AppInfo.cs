@@ -144,6 +144,35 @@ public class AppInfo
         catch (Win32Exception) { }
     }
 
+    /// <summary>克隆数据</summary>
+    /// <returns></returns>
+    public AppInfo Clone()
+    {
+        var inf = new AppInfo
+        {
+            Id = Id,
+            Name = Name,
+            Version = Version,
+
+            CommandLine = CommandLine,
+            UserName = UserName,
+            MachineName = MachineName,
+            IP = IP,
+            StartTime = StartTime,
+
+            ProcessorTime = ProcessorTime,
+            CpuUsage = CpuUsage,
+            WorkingSet = WorkingSet,
+            Threads = Threads,
+            Handles = Handles,
+            Connections = Connections,
+            GCPause = GCPause,
+            FullGC = FullGC,
+        };
+
+        return inf;
+    }
+
     private static ICache _cache = new MemoryCache();
     /// <summary>获取进程名</summary>
     /// <param name="process"></param>
