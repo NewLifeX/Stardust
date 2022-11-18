@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net.Sockets;
 using System.Reflection;
 using NewLife;
@@ -25,8 +26,8 @@ public class StarTracer : DefaultTracer
     /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
     public String ClientId { get; set; }
 
-    /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认10</summary>
-    public Int32 MaxFails { get; set; } = 10;
+    /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认120</summary>
+    public Int32 MaxFails { get; set; } = 120;
 
     /// <summary>要排除的操作名</summary>
     public String[] Excludes { get; set; }
@@ -42,7 +43,7 @@ public class StarTracer : DefaultTracer
 
     private readonly String _version;
     private readonly Process _process = Process.GetCurrentProcess();
-    private readonly Queue<TraceModel> _fails = new();
+    private readonly ConcurrentQueue<TraceModel> _fails = new();
     private AppInfo _appInfo;
     #endregion
 
@@ -192,14 +193,28 @@ public class StarTracer : DefaultTracer
             //if (ex2 is not HttpRequestException)
             //    Log?.Error(ex + "");
 
-            if (_fails.Count < MaxFails) _fails.Enqueue(model);
+            if (_fails.Count < MaxFails)
+            {
+                // 失败时清空采样数据，避免内存暴涨
+                foreach (var item in model.Builders)
+                {
+                    if (item is DefaultSpanBuilder builder)
+                    {
+                        builder.Samples = null;
+                        builder.ErrorSamples = null;
+                    }
+                }
+                model.Info = model.Info.Clone();
+                _fails.Enqueue(model);
+            }
+
             return;
         }
 
         // 如果发送成功，则继续发送以前失败的数据
-        while (_fails.Count > 0)
+        while (_fails.TryDequeue(out model))
         {
-            model = _fails.Dequeue();
+            //model = _fails.Dequeue();
             try
             {
                 Client.Invoke<Object>("Trace/Report", model);
