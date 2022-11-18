@@ -24,10 +24,10 @@ public class AppDeployController : EntityController<AppDeploy>
         LogOnChange = true;
 
         {
-            var df = ListFields.GetField("Nodes") as ListField;
-            df.Header = "节点";
-            df.Title = "管理服务器节点";
-            df.DisplayName = "{Nodes}";
+            var df = ListFields.AddListField("NodeManage", null, "Nodes") as ListField;
+            //df.Header = "节点";
+            //df.Title = "管理服务器节点";
+            df.DisplayName = "部署节点";
             df.Url = "/Deployment/AppDeployNode?appId={Id}";
         }
 

@@ -55,6 +55,10 @@ namespace Stardust.Data.Deployment
         /// <summary>应用</summary>
         [Map(__.AppId, typeof(App), "Id")]
         public String AppName => App?.Name;
+
+        /// <summary>节点集合</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public IList<AppDeployNode> DeployNodes => Extends.Get(nameof(DeployNodes), k => AppDeployNode.FindAllByAppId(Id));
         #endregion
 
         #region 扩展查询
@@ -89,13 +93,13 @@ namespace Stardust.Data.Deployment
         /// <summary>根据应用查找</summary>
         /// <param name="appId"></param>
         /// <returns></returns>
-        public static AppDeploy FindByAppId(Int32 appId)
+        public static IList<AppDeploy> FindAllByAppId(Int32 appId)
         {
-            if (appId <= 0) return null;
+            if (appId <= 0) return new List<AppDeploy>();
 
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.AppId == appId);
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId);
 
-            return Find(_.AppId == appId);
+            return FindAll(_.AppId == appId);
         }
         #endregion
 

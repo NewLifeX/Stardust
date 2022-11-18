@@ -12,7 +12,8 @@ public class DeployService
         if (online == null || online.AppId == 0 || online.NodeId == 0) return;
 
         // 找应用部署
-        var deploy = AppDeploy.FindById(online.AppId);
+        var list = AppDeploy.FindAllByAppId(online.AppId);
+        var deploy = list.FirstOrDefault();
         if (deploy == null)
         {
             // 根据应用名查找
@@ -30,8 +31,16 @@ public class DeployService
             }
         }
 
-        var nodes = AppDeployNode.FindAllByAppId(deploy.Id);
-        var node = nodes.FirstOrDefault(e => e.NodeId == online.NodeId);
+        // 查找节点。借助缓存
+        var node = deploy.DeployNodes.FirstOrDefault(e => e.NodeId == online.NodeId);
+
+        // 多个部署集，选一个
+        if (node == null && list.Count > 1)
+        {
+            var nodes = AppDeployNode.Search(list.Select(e => e.Id).ToArray(), online.NodeId, null, null);
+            //var node = nodes.FirstOrDefault(e => e.NodeId == online.NodeId);
+            node = nodes.FirstOrDefault();
+        }
 
         // 自动创建部署节点，更新信息
         node ??= new AppDeployNode { AppId = deploy.Id, NodeId = online.NodeId, Enable = false };
