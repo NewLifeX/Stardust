@@ -41,9 +41,9 @@ internal class ServiceController : DisposeBase
     /// <summary>最大失败数。超过该数时，不再尝试启动，默认10</summary>
     public Int32 MaxFails { get; set; } = 10;
 
+    private String _fileName;
     private String _workdir;
     private TimerX _timer;
-    //private ZipDeploy _deploy;
     private Int32 _error;
     #endregion
 
@@ -84,6 +84,7 @@ internal class ServiceController : DisposeBase
                 file = file.GetFullPath();
                 if (workDir.IsNullOrEmpty()) workDir = Path.GetDirectoryName(file);
             }
+            _fileName = file;
             _workdir = workDir;
 
             var args = service.Arguments?.Trim();
@@ -108,6 +109,7 @@ internal class ServiceController : DisposeBase
 
                     if (!deploy.Execute()) return false;
 
+                    _fileName = deploy.FileName;
                     p = deploy.Process;
                 }
                 else
@@ -233,17 +235,7 @@ internal class ServiceController : DisposeBase
             {
                 p = Process.GetProcessById(ProcessId);
                 // 这里的进程名可能是 dotnet/java，照样可以使用
-                if (p != null && !p.HasExited && p.ProcessName == ProcessName)
-                {
-                    WriteLog("应用[{0}/{1}]已启动（按Id查找），直接接管", p.Id, Name);
-
-                    SetProcess(p);
-                    if (Info != null) StartMonitor();
-
-                    if (StartTime.Year < 2000) StartTime = DateTime.Now;
-
-                    return true;
-                }
+                if (p != null && !p.HasExited && p.ProcessName == ProcessName) return TakeOver(p, "按Id查找");
             }
             catch (Exception ex)
             {
@@ -255,21 +247,30 @@ internal class ServiceController : DisposeBase
         }
 
         // 进程不存在，但名称存在
-        if (p == null && !ProcessName.IsNullOrEmpty() && !ProcessName.EqualIgnoreCase("dotnet", "java"))
+        if (p == null && !ProcessName.IsNullOrEmpty())
         {
-            var ps = Process.GetProcessesByName(ProcessName);
-            if (ps.Length > 0)
+            if (ProcessName.EqualIgnoreCase("dotnet", "java"))
             {
-                p = ps[0];
+                var target = _fileName ?? Info?.FileName;
+                if (!target.IsNullOrEmpty()) target = Path.GetFileName(target);
 
-                WriteLog("应用[{0}/{1}]已启动（按Name查找），直接接管", p.Id, Name);
+                // 遍历所有进程，从命令行参数中找到启动文件名一致的进程
+                foreach (var item in Process.GetProcesses())
+                {
+                    if (!item.ProcessName.EqualIgnoreCase(ProcessName)) continue;
 
-                SetProcess(p);
-                if (Info != null) StartMonitor();
-
-                if (StartTime.Year < 2000) StartTime = DateTime.Now;
-
-                return true;
+                    var name = AppInfo.GetProcessName(item);
+                    if (!name.IsNullOrEmpty())
+                    {
+                        name = Path.GetFileName(name);
+                        if (name.EqualIgnoreCase(target)) return TakeOver(item, $"按{ProcessName}查找");
+                    }
+                }
+            }
+            else
+            {
+                var ps = Process.GetProcessesByName(ProcessName);
+                if (ps.Length > 0) return TakeOver(ps[0], "按Name查找");
             }
         }
 
@@ -279,15 +280,16 @@ internal class ServiceController : DisposeBase
         return rs;
     }
 
-    static String GetProcessName(Process process)
+    Boolean TakeOver(Process p, String reason)
     {
-        var name = process.ProcessName;
-        if (name.EqualIgnoreCase("dotnet", "java") ||
-            "*/dotnet".IsMatch(name) ||
-            "*/java".IsMatch(name))
-            return AppInfo.GetProcessName(process);
+        WriteLog("应用[{0}/{1}]已启动（{2}），直接接管", p.Id, Name, reason);
 
-        return name;
+        SetProcess(p);
+        if (Info != null) StartMonitor();
+
+        if (StartTime.Year < 2000) StartTime = DateTime.Now;
+
+        return true;
     }
 
     public void SetProcess(Process process)
