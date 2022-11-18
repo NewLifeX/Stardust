@@ -23,14 +23,16 @@ public class NodeController : BaseController
     private readonly ITracer _tracer;
     private readonly NodeService _nodeService;
     private readonly TokenService _tokenService;
+    private readonly DeployService _deployService;
     private readonly Setting _setting;
 
-    public NodeController(NodeService nodeService, TokenService tokenService, Setting setting, ICache queue, ITracer tracer)
+    public NodeController(NodeService nodeService, TokenService tokenService, DeployService deployService, Setting setting, ICache queue, ITracer tracer)
     {
         _queue = queue;
         _tracer = tracer;
         _nodeService = nodeService;
         _tokenService = tokenService;
+        _deployService = deployService;
         _setting = setting;
     }
 
@@ -156,6 +158,9 @@ public class NodeController : BaseController
     {
         foreach (var model in events)
         {
+            if (model.Name.EqualIgnoreCase("ServiceController"))
+                _deployService.WriteHistory(0, _node?.ID ?? 0, model.Name, !model.Type.EqualIgnoreCase("error"), model.Remark, UserHost);
+
             WriteHistory(null, model.Name, !model.Type.EqualIgnoreCase("error"), model.Remark);
         }
 

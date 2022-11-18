@@ -25,6 +25,9 @@ public class ServiceManager : DisposeBase
     /// <summary>服务改变事件</summary>
     public event EventHandler ServiceChanged;
 
+    ///// <summary>事件客户端</summary>
+    //public IEventProvider EventProvider { get; set; }
+
     /// <summary>正在运行的应用服务信息</summary>
     private readonly List<ServiceController> _controllers = new();
     private CsvDb<ProcessInfo> _db;
@@ -134,6 +137,7 @@ public class ServiceManager : DisposeBase
                 StartTime = item.CreateTime,
                 Delay = Delay,
 
+                EventProvider = _client,
                 Tracer = Tracer,
                 Log = Log,
             });
@@ -203,7 +207,7 @@ public class ServiceManager : DisposeBase
             var controller = _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
             if (controller != null)
             {
-                //controller.Info = service;
+                controller.EventProvider = _client;
                 controller.SetInfo(service);
                 return controller.Check();
             }
@@ -213,6 +217,7 @@ public class ServiceManager : DisposeBase
                 Name = service.Name,
                 //Info = service,
 
+                EventProvider = _client,
                 Tracer = Tracer,
                 Log = Log,
             };

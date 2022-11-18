@@ -4,6 +4,7 @@ using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Deployment;
 using Stardust.Models;
+using Stardust.Services;
 
 namespace Stardust.Managers;
 
@@ -39,6 +40,9 @@ internal class ServiceController : DisposeBase
 
     /// <summary>最大失败数。超过该数时，不再尝试启动，默认20</summary>
     public Int32 MaxFails { get; set; } = 20;
+
+    /// <summary>事件客户端</summary>
+    public IEventProvider EventProvider { get; set; }
 
     private String _fileName;
     private String _workdir;
@@ -426,6 +430,14 @@ internal class ServiceController : DisposeBase
     /// <summary>写日志</summary>
     /// <param name="format"></param>
     /// <param name="args"></param>
-    public void WriteLog(String format, params Object[] args) => Log?.Info($"[{Name}]{format}", args);
+    public void WriteLog(String format, params Object[] args)
+    {
+        Log?.Info($"[{Name}]{format}", args);
+
+        if (format.Contains("错误") || format.Contains("失败"))
+            EventProvider?.WriteErrorEvent("ServiceController", String.Format(format, args));
+        else
+            EventProvider?.WriteInfoEvent("ServiceController", String.Format(format, args));
+    }
     #endregion
 }

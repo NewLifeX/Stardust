@@ -19,7 +19,7 @@ using WebSocket = System.Net.WebSockets.WebSocket;
 namespace Stardust;
 
 /// <summary>星星客户端。每个设备节点有一个客户端连接服务端</summary>
-public class StarClient : ApiHttpClient, ICommandClient
+public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
 {
     #region 属性
     /// <summary>证书</summary>
@@ -518,10 +518,52 @@ public class StarClient : ApiHttpClient, ICommandClient
     #endregion
 
     #region 上报
+    private readonly ConcurrentQueue<EventModel> _events = new();
+    private readonly ConcurrentQueue<EventModel> _failEvents = new();
+    private TimerX _eventTimer;
+    private String _eventTraceId;
+
     /// <summary>批量上报事件</summary>
     /// <param name="events"></param>
     /// <returns></returns>
     public async Task<Int32> PostEvents(params EventModel[] events) => await PostAsync<Int32>("Node/PostEvents", events);
+
+    async Task DoPostEvent(Object state)
+    {
+        DefaultSpan.Current = null;
+        var tid = _eventTraceId;
+        _eventTraceId = null;
+
+        while (!_events.IsEmpty)
+        {
+            var max = 100;
+            var list = new List<EventModel>();
+            while (_events.TryDequeue(out var model) && max-- > 0) list.Add(model);
+
+            using var span = Tracer?.NewSpan("PostEvent", list.Count);
+            span?.Detach(tid);
+            try
+            {
+                await PostEvents(list.ToArray());
+
+                // 成功后读取本地缓存
+                while (_failEvents.TryDequeue(out var ev))
+                {
+                    _events.Enqueue(ev);
+                }
+            }
+            catch (Exception ex)
+            {
+                span?.SetError(ex, null);
+
+                // 失败后进入本地缓存
+                foreach (var item in list)
+                {
+                    _failEvents.Enqueue(item);
+                }
+            }
+        }
+    }
 
     /// <summary>写事件</summary>
     /// <param name="type"></param>
@@ -529,21 +571,27 @@ public class StarClient : ApiHttpClient, ICommandClient
     /// <param name="remark"></param>
     public virtual Boolean WriteEvent(String type, String name, String remark)
     {
+        // 记录追踪标识，上报的时候带上，尽可能让源头和下游串联起来
+        _eventTraceId = DefaultSpan.Current?.ToString();
+
         var now = DateTime.UtcNow;
-        PostEvents(new EventModel { Time = now.ToLong(), Type = type, Name = name, Remark = remark }).Wait();
+        var ev = new EventModel { Time = now.ToLong(), Type = type, Name = name, Remark = remark };
+        _events.Enqueue(ev);
+
+        _eventTimer?.SetNext(1000);
 
         return true;
     }
 
-    /// <summary>写信息事件</summary>
-    /// <param name="name"></param>
-    /// <param name="remark"></param>
-    public virtual void WriteInfoEvent(String name, String remark) => WriteEvent("info", name, remark);
+    ///// <summary>写信息事件</summary>
+    ///// <param name="name"></param>
+    ///// <param name="remark"></param>
+    //public virtual void WriteInfoEvent(String name, String remark) => WriteEvent("info", name, remark);
 
-    /// <summary>写错误事件</summary>
-    /// <param name="name"></param>
-    /// <param name="remark"></param>
-    public virtual void WriteErrorEvent(String name, String remark) => WriteEvent("error", name, remark);
+    ///// <summary>写错误事件</summary>
+    ///// <param name="name"></param>
+    ///// <param name="remark"></param>
+    //public virtual void WriteErrorEvent(String name, String remark) => WriteEvent("error", name, remark);
 
     /// <summary>上报命令结果，如截屏、抓日志</summary>
     /// <param name="id"></param>
@@ -566,6 +614,7 @@ public class StarClient : ApiHttpClient, ICommandClient
             lock (this)
             {
                 _timer ??= new TimerX(DoPing, null, 1_000, 60_000, "Device") { Async = true };
+                _eventTimer = new TimerX(DoPostEvent, null, 3_000, 60_000, "Device") { Async = true };
             }
         }
     }

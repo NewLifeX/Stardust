@@ -138,10 +138,6 @@ public class DeployController : BaseController
     }
 
     #region 辅助
-    private void WriteHistory(Int32 appId, String action, Boolean success, String remark)
-    {
-        var hi = AppDeployHistory.Create(appId, _node?.ID ?? 0, action, success, remark, UserHost);
-        hi.SaveAsync();
-    }
+    private void WriteHistory(Int32 appId, String action, Boolean success, String remark) => _deployService.WriteHistory(appId, _node?.ID ?? 0, action, success, remark, UserHost);
     #endregion
 }

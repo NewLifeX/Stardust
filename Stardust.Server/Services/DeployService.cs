@@ -59,4 +59,10 @@ public class DeployService
         // 定时更新部署信息
         if (deploy.UpdateTime.AddHours(1) < DateTime.Now) deploy.Fix();
     }
+
+    public void WriteHistory(Int32 appId, Int32 nodeId, String action, Boolean success, String remark, String ip)
+    {
+        var hi = AppDeployHistory.Create(appId, nodeId, action, success, remark, ip);
+        hi.SaveAsync();
+    }
 }
