@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
@@ -37,6 +38,17 @@ public partial class AppDeployNode : Entity<AppDeployNode>
 
         if (AppId <= 0) throw new ArgumentNullException(nameof(AppId));
         if (NodeId <= 0) throw new ArgumentNullException(nameof(NodeId));
+
+        var len = _.IP.Length;
+        if (len > 0 && !IP.IsNullOrEmpty() && IP.Length > len)
+        {
+            // 取前三个
+            var ss = IP.Split(',');
+            IP = ss.Take(3).Join(",");
+            if (IP.Length > len) IP = IP[..len];
+        }
+
+        base.Valid(isNew);
     }
     #endregion
 
