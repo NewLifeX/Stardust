@@ -189,7 +189,7 @@ public class ServiceManager : DisposeBase
     #endregion
 
     #region 服务控制
-    /// <summary>启动服务</summary>
+    /// <summary>检查并启动服务</summary>
     /// <param name="service"></param>
     /// <returns>本次是否成功启动，原来已启动返回false</returns>
     private Boolean StartService(ServiceInfo service)
@@ -203,18 +203,20 @@ public class ServiceManager : DisposeBase
             var controller = _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
             if (controller != null)
             {
-                controller.Info = service;
+                //controller.Info = service;
+                controller.SetInfo(service);
                 return controller.Check();
             }
 
             controller = new ServiceController
             {
                 Name = service.Name,
-                Info = service,
+                //Info = service,
 
                 Tracer = Tracer,
                 Log = Log,
             };
+            controller.SetInfo(service);
             if (controller.Start())
             {
                 _controllers.Add(controller);

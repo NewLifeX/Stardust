@@ -24,7 +24,7 @@ internal class ServiceController : DisposeBase
     public String ProcessName { get; set; }
 
     /// <summary>服务信息</summary>
-    public ServiceInfo Info { get; set; }
+    public ServiceInfo Info { get; private set; }
 
     /// <summary>进程</summary>
     public Process Process { get; set; }
@@ -38,9 +38,13 @@ internal class ServiceController : DisposeBase
     /// <summary>开始时间</summary>
     public DateTime StartTime { get; set; }
 
+    /// <summary>最大失败数。超过该数时，不再尝试启动，默认10</summary>
+    public Int32 MaxFails { get; set; } = 10;
+
     private String _workdir;
     private TimerX _timer;
     //private ZipDeploy _deploy;
+    private Int32 _error;
     #endregion
 
     #region 构造
@@ -66,6 +70,9 @@ internal class ServiceController : DisposeBase
 
             var service = Info;
             if (service == null) return false;
+
+            // 连续错误一定数量后，不再尝试启动
+            if (_error++ >= MaxFails) return false;
 
             // 修正路径
             var workDir = service.WorkingDirectory;
@@ -117,6 +124,12 @@ internal class ServiceController : DisposeBase
                     };
 
                     p = Process.Start(si);
+                    if (p.WaitForExit(3_000))
+                    {
+                        WriteLog("启动失败！ExitCode={0}", p.ExitCode);
+
+                        return false;
+                    }
                 }
 
                 if (p == null) return false;
@@ -130,6 +143,8 @@ internal class ServiceController : DisposeBase
 
                 // 定时检查文件是否有改变
                 StartMonitor();
+
+                _error = 0;
 
                 return true;
             }
@@ -169,6 +184,17 @@ internal class ServiceController : DisposeBase
         }
 
         SetProcess(null);
+    }
+
+    /// <summary>设置服务信息</summary>
+    /// <param name="info"></param>
+    public void SetInfo(ServiceInfo info)
+    {
+        if (Info != info)
+        {
+            Info = info;
+            _error = 0;
+        }
     }
 
     /// <summary>检查已存在进程并接管，如果进程已退出则重启</summary>

@@ -90,10 +90,15 @@ public class ZipDeploy
     }
 
     /// <summary>执行拉起应用</summary>
-    public Boolean Execute()
+    public Boolean Execute(Int32 msWait = 3_000)
     {
         var fi = WorkingDirectory.CombinePath(FileName)?.AsFile();
-        if (fi == null || !fi.Exists) throw new Exception("未指定Zip文件");
+        if (fi == null || !fi.Exists)
+        {
+            //throw new Exception("未指定Zip文件");
+            WriteLog("未指定Zip文件 {0}", fi.FullName);
+            return false;
+        }
 
         var name = Name;
         if (name.IsNullOrEmpty()) name = Name = Path.GetFileNameWithoutExtension(FileName);
@@ -161,7 +166,7 @@ public class ZipDeploy
         WriteLog("启动参数: {0}", si.Arguments);
 
         var p = Process.Start(si);
-        if (p.WaitForExit(3_000))
+        if (msWait > 0 && p.WaitForExit(msWait))
         {
             WriteLog("启动失败！ExitCode={0}", p.ExitCode);
 
