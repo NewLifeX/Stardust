@@ -25,7 +25,7 @@ public class DeployService
             else
             {
                 // 新增部署集，禁用状态，信息不完整
-                deploy = new AppDeploy { AppId = online.AppId, Name = online.AppName };
+                deploy = new AppDeploy { AppId = online.AppId, Name = online.AppName, Category = online.App?.Category };
                 deploy.Insert();
             }
         }
@@ -46,5 +46,8 @@ public class DeployService
         node.LastActive = online.UpdateTime;
 
         node.Save();
+
+        // 定时更新部署信息
+        if (deploy.UpdateTime.AddHours(1) < DateTime.Now) deploy.Fix();
     }
 }
