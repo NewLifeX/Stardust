@@ -236,6 +236,9 @@ public class StarFactory : DisposeBase
 
             client.Tracer = _tracer;
             client.Start();
+
+            // 注册StarServer环境变量，子进程共享
+            Environment.SetEnvironmentVariable("StarServer", Server);
         }
 
         return true;
