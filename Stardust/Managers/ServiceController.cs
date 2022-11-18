@@ -252,18 +252,26 @@ internal class ServiceController : DisposeBase
             if (ProcessName.EqualIgnoreCase("dotnet", "java"))
             {
                 var target = _fileName ?? Info?.FileName;
-                if (!target.IsNullOrEmpty()) target = Path.GetFileName(target);
-
-                // 遍历所有进程，从命令行参数中找到启动文件名一致的进程
-                foreach (var item in Process.GetProcesses())
+                if (target.EqualIgnoreCase("dotnet", "java"))
                 {
-                    if (!item.ProcessName.EqualIgnoreCase(ProcessName)) continue;
+                    var ss = Info?.Arguments.Split(' ');
+                    if (ss != null) target = ss.FirstOrDefault(e => e.EndsWithIgnoreCase(".dll", ".jar"));
+                }
+                if (!target.IsNullOrEmpty())
+                {
+                    target = Path.GetFileName(target);
 
-                    var name = AppInfo.GetProcessName(item);
-                    if (!name.IsNullOrEmpty())
+                    // 遍历所有进程，从命令行参数中找到启动文件名一致的进程
+                    foreach (var item in Process.GetProcesses())
                     {
-                        name = Path.GetFileName(name);
-                        if (name.EqualIgnoreCase(target)) return TakeOver(item, $"按{ProcessName}查找");
+                        if (!item.ProcessName.EqualIgnoreCase(ProcessName)) continue;
+
+                        var name = AppInfo.GetProcessName(item);
+                        if (!name.IsNullOrEmpty())
+                        {
+                            name = Path.GetFileName(name);
+                            if (name.EqualIgnoreCase(target)) return TakeOver(item, $"按{ProcessName}查找");
+                        }
                     }
                 }
             }
