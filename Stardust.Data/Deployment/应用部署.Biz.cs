@@ -85,6 +85,18 @@ namespace Stardust.Data.Deployment
 
             return Find(_.Name == name);
         }
+
+        /// <summary>根据应用查找</summary>
+        /// <param name="appId"></param>
+        /// <returns></returns>
+        public static AppDeploy FindByAppId(Int32 appId)
+        {
+            if (appId <= 0) return null;
+
+            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.AppId == appId);
+
+            return Find(_.AppId == appId);
+        }
         #endregion
 
         #region 高级查询

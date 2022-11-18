@@ -76,6 +76,62 @@ namespace Stardust.Data.Deployment
         [BindColumn("Environment", "环境。prod/test/dev/uat等", "")]
         public String Environment { get => _Environment; set { if (OnPropertyChanging("Environment", value)) { _Environment = value; OnPropertyChanged("Environment"); } } }
 
+        private Int32 _ProcessId;
+        /// <summary>进程</summary>
+        [DisplayName("进程")]
+        [Description("进程")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("ProcessId", "进程", "")]
+        public Int32 ProcessId { get => _ProcessId; set { if (OnPropertyChanging("ProcessId", value)) { _ProcessId = value; OnPropertyChanged("ProcessId"); } } }
+
+        private String _ProcessName;
+        /// <summary>进程名称</summary>
+        [DisplayName("进程名称")]
+        [Description("进程名称")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("ProcessName", "进程名称", "")]
+        public String ProcessName { get => _ProcessName; set { if (OnPropertyChanging("ProcessName", value)) { _ProcessName = value; OnPropertyChanged("ProcessName"); } } }
+
+        private String _UserName;
+        /// <summary>用户名。启动该进程的用户名</summary>
+        [DisplayName("用户名")]
+        [Description("用户名。启动该进程的用户名")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("UserName", "用户名。启动该进程的用户名", "")]
+        public String UserName { get => _UserName; set { if (OnPropertyChanging("UserName", value)) { _UserName = value; OnPropertyChanged("UserName"); } } }
+
+        private DateTime _StartTime;
+        /// <summary>进程时间</summary>
+        [DisplayName("进程时间")]
+        [Description("进程时间")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("StartTime", "进程时间", "")]
+        public DateTime StartTime { get => _StartTime; set { if (OnPropertyChanging("StartTime", value)) { _StartTime = value; OnPropertyChanged("StartTime"); } } }
+
+        private String _Version;
+        /// <summary>版本。客户端</summary>
+        [DisplayName("版本")]
+        [Description("版本。客户端")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Version", "版本。客户端", "")]
+        public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
+
+        private DateTime _Compile;
+        /// <summary>编译时间。客户端</summary>
+        [DisplayName("编译时间")]
+        [Description("编译时间。客户端")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("Compile", "编译时间。客户端", "")]
+        public DateTime Compile { get => _Compile; set { if (OnPropertyChanging("Compile", value)) { _Compile = value; OnPropertyChanged("Compile"); } } }
+
+        private DateTime _LastActive;
+        /// <summary>最后活跃。最后一次上报心跳的时间</summary>
+        [DisplayName("最后活跃")]
+        [Description("最后活跃。最后一次上报心跳的时间")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("LastActive", "最后活跃。最后一次上报心跳的时间", "")]
+        public DateTime LastActive { get => _LastActive; set { if (OnPropertyChanging("LastActive", value)) { _LastActive = value; OnPropertyChanged("LastActive"); } } }
+
         private Int32 _CreateUserId;
         /// <summary>创建人</summary>
         [Category("扩展")]
@@ -157,6 +213,13 @@ namespace Stardust.Data.Deployment
                     case "Sort": return _Sort;
                     case "Enable": return _Enable;
                     case "Environment": return _Environment;
+                    case "ProcessId": return _ProcessId;
+                    case "ProcessName": return _ProcessName;
+                    case "UserName": return _UserName;
+                    case "StartTime": return _StartTime;
+                    case "Version": return _Version;
+                    case "Compile": return _Compile;
+                    case "LastActive": return _LastActive;
                     case "CreateUserId": return _CreateUserId;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -178,6 +241,13 @@ namespace Stardust.Data.Deployment
                     case "Sort": _Sort = value.ToInt(); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Environment": _Environment = Convert.ToString(value); break;
+                    case "ProcessId": _ProcessId = value.ToInt(); break;
+                    case "ProcessName": _ProcessName = Convert.ToString(value); break;
+                    case "UserName": _UserName = Convert.ToString(value); break;
+                    case "StartTime": _StartTime = value.ToDateTime(); break;
+                    case "Version": _Version = Convert.ToString(value); break;
+                    case "Compile": _Compile = value.ToDateTime(); break;
+                    case "LastActive": _LastActive = value.ToDateTime(); break;
                     case "CreateUserId": _CreateUserId = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -215,6 +285,27 @@ namespace Stardust.Data.Deployment
 
             /// <summary>环境。prod/test/dev/uat等</summary>
             public static readonly Field Environment = FindByName("Environment");
+
+            /// <summary>进程</summary>
+            public static readonly Field ProcessId = FindByName("ProcessId");
+
+            /// <summary>进程名称</summary>
+            public static readonly Field ProcessName = FindByName("ProcessName");
+
+            /// <summary>用户名。启动该进程的用户名</summary>
+            public static readonly Field UserName = FindByName("UserName");
+
+            /// <summary>进程时间</summary>
+            public static readonly Field StartTime = FindByName("StartTime");
+
+            /// <summary>版本。客户端</summary>
+            public static readonly Field Version = FindByName("Version");
+
+            /// <summary>编译时间。客户端</summary>
+            public static readonly Field Compile = FindByName("Compile");
+
+            /// <summary>最后活跃。最后一次上报心跳的时间</summary>
+            public static readonly Field LastActive = FindByName("LastActive");
 
             /// <summary>创建人</summary>
             public static readonly Field CreateUserId = FindByName("CreateUserId");
@@ -263,6 +354,27 @@ namespace Stardust.Data.Deployment
 
             /// <summary>环境。prod/test/dev/uat等</summary>
             public const String Environment = "Environment";
+
+            /// <summary>进程</summary>
+            public const String ProcessId = "ProcessId";
+
+            /// <summary>进程名称</summary>
+            public const String ProcessName = "ProcessName";
+
+            /// <summary>用户名。启动该进程的用户名</summary>
+            public const String UserName = "UserName";
+
+            /// <summary>进程时间</summary>
+            public const String StartTime = "StartTime";
+
+            /// <summary>版本。客户端</summary>
+            public const String Version = "Version";
+
+            /// <summary>编译时间。客户端</summary>
+            public const String Compile = "Compile";
+
+            /// <summary>最后活跃。最后一次上报心跳的时间</summary>
+            public const String LastActive = "LastActive";
 
             /// <summary>创建人</summary>
             public const String CreateUserId = "CreateUserId";

@@ -34,6 +34,13 @@
       <Column Name="Sort" DataType="Int32" Description="顺序。较大在前" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Environment" DataType="String" Description="环境。prod/test/dev/uat等" />
+      <Column Name="ProcessId" DataType="Int32" Description="进程" />
+      <Column Name="ProcessName" DataType="String" Description="进程名称" />
+      <Column Name="UserName" DataType="String" Description="用户名。启动该进程的用户名" />
+      <Column Name="StartTime" DataType="DateTime" Description="进程时间" />
+      <Column Name="Version" DataType="String" Description="版本。客户端" />
+      <Column Name="Compile" DataType="DateTime" Description="编译时间。客户端" />
+      <Column Name="LastActive" DataType="DateTime" Description="最后活跃。最后一次上报心跳的时间" />
       <Column Name="CreateUserId" DataType="Int32" Description="创建人" Category="扩展" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />

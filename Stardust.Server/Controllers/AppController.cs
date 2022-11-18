@@ -23,14 +23,16 @@ public class AppController : BaseController
     private String _clientId;
     private readonly TokenService _tokenService;
     private readonly RegistryService _registryService;
+    private readonly DeployService _deployService;
     private readonly ITracer _tracer;
     private readonly AppQueueService _queue;
     private readonly Setting _setting;
 
-    public AppController(TokenService tokenService, RegistryService registryService, AppQueueService queue, Setting setting, ITracer tracer)
+    public AppController(TokenService tokenService, RegistryService registryService, DeployService deployService, AppQueueService queue, Setting setting, ITracer tracer)
     {
         _tokenService = tokenService;
         _registryService = registryService;
+        _deployService = deployService;
         _queue = queue;
         _setting = setting;
         _tracer = tracer;
@@ -53,7 +55,9 @@ public class AppController : BaseController
     [HttpPost(nameof(Register))]
     public String Register(AppModel inf)
     {
-        _registryService.Register(_app, inf, UserHost, _clientId, Token);
+        var online = _registryService.Register(_app, inf, UserHost, _clientId, Token);
+
+        _deployService.UpdateDeployNode(online);
 
         return _app?.ToString();
     }
@@ -68,7 +72,9 @@ public class AppController : BaseController
             Period = _app.Period,
         };
 
-        _registryService.Ping(_app, inf, UserHost, _clientId, Token);
+        var online = _registryService.Ping(_app, inf, UserHost, _clientId, Token);
+
+        _deployService.UpdateDeployNode(online);
 
         return rs;
     }
