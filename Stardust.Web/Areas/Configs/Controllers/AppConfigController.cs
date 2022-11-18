@@ -27,14 +27,14 @@ public class AppConfigController : EntityController<AppConfig>
             df.Header = "管理配置";
             df.DisplayName = "管理配置";
             df.Title = "查看该应用所有配置数据";
-            df.Url = "ConfigData?appId={Id}";
+            df.Url = "/Configs/ConfigData?appId={Id}";
         }
 
         {
             var df = ListFields.AddListField("Publish", "PublishTime");
             df.Header = "发布";
             df.DisplayName = "发布";
-            df.Url = "Appconfig/Publish?appId={Id}";
+            df.Url = "/Configs/AppConfig/Publish?appId={Id}";
             df.DataAction = "action";
             df.DataVisible = e => e is AppConfig ac && ac.Version < ac.NextVersion;
         }
@@ -44,7 +44,7 @@ public class AppConfigController : EntityController<AppConfig>
             df.Header = "历史";
             df.DisplayName = "历史";
             df.Title = "查看该应用的配置历史";
-            df.Url = "ConfigHistory?appId={Id}";
+            df.Url = "/Configs/ConfigHistory?appId={Id}";
         }
 
         {

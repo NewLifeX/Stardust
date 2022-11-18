@@ -26,7 +26,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
 
             {
                 var df = ListFields.GetField("Action") as ListField;
-                df.Url = "?nodeId={NodeId}&action={Action}";
+                df.Url = "/Nodes/NodeHistory?nodeId={NodeId}&action={Action}";
             }
         }
 

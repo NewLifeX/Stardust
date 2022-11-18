@@ -19,14 +19,14 @@ public class AlarmGroupController : EntityController<AlarmGroup>
         {
             var df = ListFields.AddListField("test", "CreateUser");
             df.DisplayName = "测试";
-            df.Url = "AlarmGroup/ExecuteNow?id={Id}";
+            df.Url = "/Monitors/AlarmGroup/ExecuteNow?id={Id}";
             df.DataAction = "action";
         }
         {
             var df = ListFields.AddListField("History", "CreateUser");
             df.DisplayName = "告警历史";
             df.Header = "告警历史";
-            df.Url = "AlarmHistory?groupId={Id}";
+            df.Url = "/Monitors/AlarmHistory?groupId={Id}";
         }
         {
             var df = ListFields.AddListField("Log", "CreateUser");

@@ -21,12 +21,12 @@ namespace Stardust.Web.Areas.Registry.Controllers
             {
                 var df = ListFields.GetField("Providers") as ListField;
                 df.DisplayName = "{Providers}";
-                df.Url = "AppService?serviceId={Id}";
+                df.Url = "/Registry/AppService?serviceId={Id}";
             }
             {
                 var df = ListFields.GetField("Consumers") as ListField;
                 df.DisplayName = "{Consumers}";
-                df.Url = "AppConsume?serviceId={Id}";
+                df.Url = "/Registry/AppConsume?serviceId={Id}";
             }
         }
     }

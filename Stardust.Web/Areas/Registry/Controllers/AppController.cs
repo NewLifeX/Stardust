@@ -25,7 +25,7 @@ public class AppController : EntityController<App>
         {
             var df = ListFields.AddListField("Online", "Version");
             df.DisplayName = "实例";
-            df.Url = "AppOnline?appId={Id}";
+            df.Url = "/Registry/AppOnline?appId={Id}";
         }
         {
             var df = ListFields.AddListField("Monitor", "Version");
@@ -53,24 +53,24 @@ public class AppController : EntityController<App>
         {
             var df = ListFields.AddListField("History", "Version");
             df.DisplayName = "历史";
-            df.Url = "AppHistory?appId={Id}";
+            df.Url = "/Registry/AppHistory?appId={Id}";
         }
         {
             var df = ListFields.AddListField("AppService", "Version");
             df.DisplayName = "提供服务";
-            df.Url = "AppService?appId={Id}";
+            df.Url = "/Registry/AppService?appId={Id}";
             df.DataVisible = e => (e as App).Providers.Count > 0;
         }
         {
             var df = ListFields.AddListField("AppConsume", "Version");
             df.DisplayName = "消费服务";
-            df.Url = "AppConsume?appId={Id}";
+            df.Url = "/Registry/AppConsume?appId={Id}";
             df.DataVisible = e => (e as App).Consumers.Count > 0;
         }
         {
             var df = ListFields.AddListField("AppLog", "Version");
             df.DisplayName = "应用日志";
-            df.Url = "AppLog?appId={Id}";
+            df.Url = "/Registry/AppLog?appId={Id}";
         }
         {
             var df = ListFields.AddListField("Log", "CreateUser");

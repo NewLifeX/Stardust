@@ -22,7 +22,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 df.Header = "应用";
                 df.DisplayName = "{AppName}";
                 df.Title = "应用监控图表";
-                df.Url = "appDayStat?appId={AppId}";
+                df.Url = "/Monitors/appDayStat?appId={AppId}";
             }
             //{
             //    var df = ListFields.AddListField("Name", "Success");
@@ -36,7 +36,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 df.Header = "操作名";
                 df.DisplayName = "{Name}";
                 df.Title = "{Tag}";
-                df.Url = "traceDayStat?appId={AppId}&itemId={ItemId}";
+                df.Url = "/Monitors/traceDayStat?appId={AppId}&itemId={ItemId}";
             }
             //ListFields.TraceUrl();
             {

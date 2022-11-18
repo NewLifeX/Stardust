@@ -28,7 +28,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 var df = ListFields.AddListField("Monitor", null, "Name");
                 df.DisplayName = "每日监控";
                 df.Header = "每日监控";
-                df.Url = "TraceDayStat?appId={AppId}&itemId={Id}";
+                df.Url = "/Monitors/TraceDayStat?appId={AppId}&itemId={Id}";
             }
             {
                 var df = ListFields.AddListField("Log", "CreateUser");

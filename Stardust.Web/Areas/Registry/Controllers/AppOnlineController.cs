@@ -25,12 +25,12 @@ public class AppOnlineController : EntityController<AppOnline>
             var df = ListFields.AddListField("Meter", "WebSocket");
             df.Header = "性能";
             df.DisplayName = "性能";
-            df.Url = "AppMeter?appId={AppId}&clientId={Client}";
+            df.Url = "/Registry/AppMeter?appId={AppId}&clientId={Client}";
         }
         {
             var df = ListFields.AddListField("History", "WebSocket");
             df.DisplayName = "历史";
-            df.Url = "AppHistory?appId={AppId}&client={Client}";
+            df.Url = "/Registry/AppHistory?appId={AppId}&client={Client}";
         }
         {
             var df = ListFields.GetField("TraceId") as ListField;

@@ -31,7 +31,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 df.Header = "每日监控";
                 df.DisplayName = "每日监控";
                 df.Title = "该应用每日监控数据";
-                df.Url = "AppDaystat?appId={ID}";
+                df.Url = "/Monitors/AppDaystat?appId={ID}";
             }
 
             {
@@ -39,7 +39,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                 //df.Header = "每日监控";
                 df.DisplayName = "{ItemCount}";
                 //df.Title = "该应用每日监控数据";
-                df.Url = "TraceItem?appId={ID}";
+                df.Url = "/Monitors/TraceItem?appId={ID}";
             }
 
             {

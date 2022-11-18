@@ -32,19 +32,19 @@ namespace Stardust.Web.Areas.Redis.Controllers
                 var df = ListFields.AddListField("Monitor", "UpdateTime");
                 df.DisplayName = "监控";
                 df.Header = "监控";
-                df.Url = "RedisData?redisId={Id}";
+                df.Url = "/Redis/RedisData?redisId={Id}";
             }
             {
                 var df = ListFields.AddListField("Queue", "UpdateTime");
                 df.DisplayName = "队列";
                 df.Header = "队列";
-                df.Url = "RedisMessageQueue?redisId={Id}";
+                df.Url = "/Redis/RedisMessageQueue?redisId={Id}";
             }
             {
                 var df = ListFields.AddListField("Refresh", "UpdateTime");
                 df.DisplayName = "刷新";
                 df.Header = "刷新";
-                df.Url = "RedisNode/Refresh?Id={Id}";
+                df.Url = "/Redis/RedisNode/Refresh?Id={Id}";
                 df.DataAction = "action";
             }
             {
