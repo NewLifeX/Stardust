@@ -430,15 +430,9 @@ public class ServiceManager : DisposeBase
             }
         }
 
+        // 检查应用服务变化，先停止再启动
         var changed = false;
         svcs = Services;
-        foreach (var item in svcs)
-        {
-            if (item != null && item.Enable)
-            {
-                changed |= StartService(item);
-            }
-        }
 
         // 停止不再使用的服务
         var controllers = _controllers;
@@ -451,6 +445,15 @@ public class ServiceManager : DisposeBase
                 controller.Stop("配置停止");
                 controllers.RemoveAt(i);
                 changed = true;
+            }
+        }
+
+        // 检查并启动服务
+        foreach (var item in svcs)
+        {
+            if (item != null && item.Enable)
+            {
+                changed |= StartService(item);
             }
         }
 
