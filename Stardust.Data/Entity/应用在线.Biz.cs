@@ -52,6 +52,9 @@ namespace Stardust.Data
             len = _.ProcessName.Length;
             if (len > 0 && !ProcessName.IsNullOrEmpty() && ProcessName.Length > len) ProcessName = ProcessName[..len];
 
+            len = _.CommandLine.Length;
+            if (len > 0 && !CommandLine.IsNullOrEmpty() && CommandLine.Length > len) CommandLine = CommandLine[..len];
+
             base.Valid(isNew);
         }
         #endregion
@@ -229,6 +232,7 @@ namespace Stardust.Data
                 MachineName = info.MachineName;
                 ProcessId = info.Id;
                 ProcessName = info.Name;
+                CommandLine = info.CommandLine;
                 StartTime = info.StartTime;
             }
         }

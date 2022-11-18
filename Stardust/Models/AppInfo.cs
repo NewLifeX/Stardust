@@ -24,6 +24,9 @@ public class AppInfo
     ///// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
     //public String ClientId { get; set; }
 
+    /// <summary>命令行</summary>
+    public String CommandLine { get; set; }
+
     /// <summary>用户名</summary>
     public String UserName { get; set; }
 
@@ -104,6 +107,7 @@ public class AppInfo
             Threads = _process.Threads.Count;
             Handles = _process.HandleCount;
 
+            CommandLine = Environment.CommandLine;
             UserName = Environment.UserName;
             MachineName = Environment.MachineName;
             IP = AgentInfo.GetIps();
@@ -125,10 +129,7 @@ public class AppInfo
                 // 调用WindowApi获取进程的连接数
                 var tcps = NetHelper.GetAllTcpConnections();
                 if (tcps != null && tcps.Length > 0)
-                {
-                    var pid = Process.GetCurrentProcess().Id;
-                    Connections = tcps.Count(e => e.ProcessId == pid);
-                }
+                    Connections = tcps.Count(e => e.ProcessId == Id);
             }
             catch { }
 

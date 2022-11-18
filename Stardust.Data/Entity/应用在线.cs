@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -110,6 +110,14 @@ namespace Stardust.Data
         [DataObjectField(false, false, true, 50)]
         [BindColumn("ProcessName", "进程名称", "")]
         public String ProcessName { get => _ProcessName; set { if (OnPropertyChanging("ProcessName", value)) { _ProcessName = value; OnPropertyChanged("ProcessName"); } } }
+
+        private String _CommandLine;
+        /// <summary>命令行</summary>
+        [DisplayName("命令行")]
+        [Description("命令行")]
+        [DataObjectField(false, false, true, 200)]
+        [BindColumn("CommandLine", "命令行", "")]
+        public String CommandLine { get => _CommandLine; set { if (OnPropertyChanging("CommandLine", value)) { _CommandLine = value; OnPropertyChanged("CommandLine"); } } }
 
         private String _UserName;
         /// <summary>用户名。启动该进程的用户名</summary>
@@ -251,6 +259,7 @@ namespace Stardust.Data
                     case "WebSocket": return _WebSocket;
                     case "ProcessId": return _ProcessId;
                     case "ProcessName": return _ProcessName;
+                    case "CommandLine": return _CommandLine;
                     case "UserName": return _UserName;
                     case "MachineName": return _MachineName;
                     case "StartTime": return _StartTime;
@@ -283,6 +292,7 @@ namespace Stardust.Data
                     case "WebSocket": _WebSocket = value.ToBoolean(); break;
                     case "ProcessId": _ProcessId = value.ToInt(); break;
                     case "ProcessName": _ProcessName = Convert.ToString(value); break;
+                    case "CommandLine": _CommandLine = Convert.ToString(value); break;
                     case "UserName": _UserName = Convert.ToString(value); break;
                     case "MachineName": _MachineName = Convert.ToString(value); break;
                     case "StartTime": _StartTime = value.ToDateTime(); break;
@@ -339,6 +349,9 @@ namespace Stardust.Data
 
             /// <summary>进程名称</summary>
             public static readonly Field ProcessName = FindByName("ProcessName");
+
+            /// <summary>命令行</summary>
+            public static readonly Field CommandLine = FindByName("CommandLine");
 
             /// <summary>用户名。启动该进程的用户名</summary>
             public static readonly Field UserName = FindByName("UserName");
@@ -420,6 +433,9 @@ namespace Stardust.Data
 
             /// <summary>进程名称</summary>
             public const String ProcessName = "ProcessName";
+
+            /// <summary>命令行</summary>
+            public const String CommandLine = "CommandLine";
 
             /// <summary>用户名。启动该进程的用户名</summary>
             public const String UserName = "UserName";

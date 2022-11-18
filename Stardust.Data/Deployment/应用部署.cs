@@ -89,7 +89,7 @@ namespace Stardust.Data.Deployment
         [Category("参数")]
         [DisplayName("参数")]
         [Description("参数。启动应用的参数")]
-        [DataObjectField(false, false, true, 50)]
+        [DataObjectField(false, false, true, 500)]
         [BindColumn("Arguments", "参数。启动应用的参数", "")]
         public String Arguments { get => _Arguments; set { if (OnPropertyChanging("Arguments", value)) { _Arguments = value; OnPropertyChanged("Arguments"); } } }
 
