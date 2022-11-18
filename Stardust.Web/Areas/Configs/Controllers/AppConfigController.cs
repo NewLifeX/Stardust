@@ -36,7 +36,7 @@ public class AppConfigController : EntityController<AppConfig>
             df.DisplayName = "发布";
             df.Url = "Appconfig/Publish?appId={Id}";
             df.DataAction = "action";
-            df.DataVisible = e => (e is AppConfig ac && ac.Version < ac.NextVersion);
+            df.DataVisible = e => e is AppConfig ac && ac.Version < ac.NextVersion;
         }
 
         {
@@ -61,7 +61,7 @@ public class AppConfigController : EntityController<AppConfig>
             df.DisplayName = "在线实例";
             df.Title = "查看该应用的在线实例应用";
             df.Url = "/registry/AppOnline?appId={AppId}";
-            df.DataVisible = e => (e is AppConfig entity && entity.AppId > 0);
+            df.DataVisible = e => e is AppConfig entity && entity.AppId > 0;
         }
 
         {

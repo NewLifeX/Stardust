@@ -183,7 +183,7 @@ public class ServiceManager : DisposeBase
     }
 
     /// <summary>检查服务。一般用于改变服务后，让其即时生效</summary>
-    public void CheckService() => DoWork(null);
+    //public void CheckService() => DoWork(null);
 
     private void RaiseServiceChanged() => ServiceChanged?.Invoke(this, EventArgs.Empty);
     #endregion
@@ -235,12 +235,12 @@ public class ServiceManager : DisposeBase
         using var span = Tracer?.NewSpan("ServiceManager-StopService", service);
 #endif
 
-        var svc = _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
-        if (svc != null)
+        var controller = _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
+        if (controller != null)
         {
-            svc.Stop(reason);
+            controller.Stop(reason);
 
-            _controllers.Remove(svc);
+            _controllers.Remove(controller);
 
             return true;
         }
@@ -284,20 +284,20 @@ public class ServiceManager : DisposeBase
         }
     }
 
-    private void UploadService(ServiceInfo[] svcs)
+    private async Task UploadService(ServiceInfo[] svcs)
     {
         WriteLog("上报应用服务 {0}", svcs.Join(",", e => e.Name));
 
-        _client.UploadDeploy(svcs).Wait();
+        await _client.UploadDeploy(svcs);
     }
 
-    private void PullService(String appName)
+    private async Task PullService(String appName)
     {
         WriteLog("拉取应用服务 {0}", appName);
 
         var svcs = Services.ToList();
 
-        var rs = _client.GetDeploy().Result;
+        var rs = await _client.GetDeploy();
 
         // 过滤应用
         if (!appName.IsNullOrEmpty()) rs = rs.Where(e => e.Name.EqualIgnoreCase(appName)).ToArray();
@@ -311,7 +311,7 @@ public class ServiceManager : DisposeBase
             var svc = item.Service;
 
             // 下载文件到工作目录
-            if (item.Service.Enable && !item.Url.IsNullOrEmpty()) Download(item, svc);
+            if (item.Service.Enable && !item.Url.IsNullOrEmpty()) await Download(item, svc);
 
             var old = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(item.Name));
             if (old == null)
@@ -345,7 +345,7 @@ public class ServiceManager : DisposeBase
         RaiseServiceChanged();
     }
 
-    void Download(DeployInfo info, ServiceInfo svc)
+    async Task Download(DeployInfo info, ServiceInfo svc)
     {
         var url = info.Url;
         if (url.IsNullOrEmpty()) return;
@@ -361,7 +361,7 @@ public class ServiceManager : DisposeBase
             var tmp = Path.GetTempFileName();
 
             var http = new HttpClient();
-            http.DownloadFileAsync(url, tmp).Wait();
+            await http.DownloadFileAsync(url, tmp);
 
             WriteLog("下载完成，准备覆盖：{0}", dst.FullName);
 
@@ -393,7 +393,7 @@ public class ServiceManager : DisposeBase
 
     Int32 _status;
     private TimerX _timer;
-    private void DoWork(Object state)
+    private async Task DoWork(Object state)
     {
 #if DEBUG
         using var span = Tracer?.NewSpan("ServiceManager-DoWork");
@@ -408,14 +408,14 @@ public class ServiceManager : DisposeBase
             {
                 if (_status == 0 && svcs.Length > 0)
                 {
-                    UploadService(svcs);
+                    await UploadService(svcs);
 
                     _status = 1;
                 }
 
                 if (_status == 1)
                 {
-                    PullService(null);
+                    await PullService(null);
 
                     _status = 2;
                 }

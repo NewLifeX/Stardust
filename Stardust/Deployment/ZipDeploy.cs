@@ -71,8 +71,13 @@ public class ZipDeploy
 
         Arguments = gs.Where(e => e != null).Join(" ");
 
-        var fi = (WorkingDirectory.CombinePath(file)).AsFile();
-        if (!fi.Exists) throw new FileNotFoundException("找不到zip文件", fi.FullName);
+        var fi = WorkingDirectory.CombinePath(file).AsFile();
+        if (!fi.Exists)
+        {
+            //throw new FileNotFoundException("找不到zip文件", fi.FullName);
+            WriteLog("找不到zip文件 {0}", fi.FullName);
+            return false;
+        }
 
         if (name.IsNullOrEmpty()) name = Path.GetFileNameWithoutExtension(file);
         if (shadow.IsNullOrEmpty()) shadow = Path.GetTempPath().CombinePath(name);
@@ -87,7 +92,7 @@ public class ZipDeploy
     /// <summary>执行拉起应用</summary>
     public Boolean Execute()
     {
-        var fi = (WorkingDirectory.CombinePath(FileName))?.AsFile();
+        var fi = WorkingDirectory.CombinePath(FileName)?.AsFile();
         if (fi == null || !fi.Exists) throw new Exception("未指定Zip文件");
 
         var name = Name;
@@ -184,7 +189,7 @@ public class ZipDeploy
     /// <param name="shadow"></param>
     protected virtual void Extract(String shadow)
     {
-        var fi = (WorkingDirectory.CombinePath(FileName)).AsFile();
+        var fi = WorkingDirectory.CombinePath(FileName).AsFile();
         var rundir = fi.Directory;
         WriteLog("解压缩 {0}", FileName);
 

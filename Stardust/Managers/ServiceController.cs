@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
@@ -174,6 +175,7 @@ internal class ServiceController : DisposeBase
     /// <returns>本次是否成功启动（或接管），原来已启动返回false</returns>
     public Boolean Check()
     {
+        // 进程存在，常规判断内存
         var p = Process;
         if (p != null)
         {
@@ -183,29 +185,31 @@ internal class ServiceController : DisposeBase
                 if (Info.MaxMemory <= 0) return false;
 
                 var mem = p.WorkingSet64 / 1024 / 1024;
-                if (mem > Info.MaxMemory)
-                {
-                    WriteLog("内存超限！{0}>{1}", mem, Info.MaxMemory);
+                if (mem <= Info.MaxMemory) return true;
 
-                    Stop("内存超限");
-                    SetProcess(null);
-                }
+                WriteLog("内存超限！{0}>{1}", mem, Info.MaxMemory);
+
+                Stop("内存超限");
             }
             else
             {
-                Process = null;
                 WriteLog("应用[{0}/{1}]已退出！", p.Id, Name);
             }
+
+            p = null;
+            Process = null;
         }
 
+        // 进程不存在，但Id存在
         if (p == null && ProcessId > 0)
         {
             try
             {
                 p = Process.GetProcessById(ProcessId);
+                // 这里的进程名可能是 dotnet/java，照样可以使用
                 if (p != null && !p.HasExited && p.ProcessName == ProcessName)
                 {
-                    WriteLog("应用[{0}/{1}]已启动，直接接管", p.Id, Name);
+                    WriteLog("应用[{0}/{1}]已启动（按Id查找），直接接管", p.Id, Name);
 
                     SetProcess(p);
                     if (Info != null) StartMonitor();
@@ -220,10 +224,11 @@ internal class ServiceController : DisposeBase
                 if (ex is not ArgumentException) Log?.Error("{0}", ex);
             }
 
+            p = null;
             ProcessId = 0;
         }
 
-        // 根据进程名查找
+        // 进程不存在，但名称存在
         if (p == null && !ProcessName.IsNullOrEmpty() && !ProcessName.EqualIgnoreCase("dotnet", "java"))
         {
             var ps = Process.GetProcessesByName(ProcessName);
@@ -231,7 +236,7 @@ internal class ServiceController : DisposeBase
             {
                 p = ps[0];
 
-                WriteLog("应用[{0}/{1}]已启动，直接接管", p.Id, Name);
+                WriteLog("应用[{0}/{1}]已启动（按Name查找），直接接管", p.Id, Name);
 
                 SetProcess(p);
                 if (Info != null) StartMonitor();
@@ -246,6 +251,17 @@ internal class ServiceController : DisposeBase
         var rs = Start();
 
         return rs;
+    }
+
+    static String GetProcessName(Process process)
+    {
+        var name = process.ProcessName;
+        if (name.EqualIgnoreCase("dotnet", "java") ||
+            "*/dotnet".IsMatch(name) ||
+            "*/java".IsMatch(name))
+            return AppInfo.GetProcessName(process);
+
+        return name;
     }
 
     public void SetProcess(Process process)
