@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
@@ -38,8 +37,8 @@ internal class ServiceController : DisposeBase
     /// <summary>开始时间</summary>
     public DateTime StartTime { get; set; }
 
-    /// <summary>最大失败数。超过该数时，不再尝试启动，默认10</summary>
-    public Int32 MaxFails { get; set; } = 10;
+    /// <summary>最大失败数。超过该数时，不再尝试启动，默认20</summary>
+    public Int32 MaxFails { get; set; } = 20;
 
     private String _fileName;
     private String _workdir;
@@ -72,7 +71,12 @@ internal class ServiceController : DisposeBase
             if (service == null) return false;
 
             // 连续错误一定数量后，不再尝试启动
-            if (_error++ >= MaxFails) return false;
+            if (_error++ >= MaxFails)
+            {
+                WriteLog("应用[{0}]累计错误次数{1}达到最大值{2}", Name, _error, MaxFails);
+
+                return false;
+            }
 
             // 修正路径
             var workDir = service.WorkingDirectory;
@@ -146,7 +150,8 @@ internal class ServiceController : DisposeBase
                 // 定时检查文件是否有改变
                 StartMonitor();
 
-                _error = 0;
+                // 此时还不能清零，因为进程可能不稳定，待定时器检测可靠后清零
+                //_error = 0;
 
                 return true;
             }
@@ -209,6 +214,8 @@ internal class ServiceController : DisposeBase
         {
             if (!p.HasExited)
             {
+                _error = 0;
+
                 // 检查内存限制
                 if (Info.MaxMemory <= 0) return false;
 

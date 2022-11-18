@@ -217,11 +217,9 @@ public class ServiceManager : DisposeBase
                 Log = Log,
             };
             controller.SetInfo(service);
-            if (controller.Start())
-            {
-                _controllers.Add(controller);
-                return true;
-            }
+            _controllers.Add(controller);
+
+            if (controller.Start()) return true;
         }
 
         return false;
