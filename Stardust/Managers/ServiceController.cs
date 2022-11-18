@@ -71,12 +71,13 @@ internal class ServiceController : DisposeBase
             if (service == null) return false;
 
             // 连续错误一定数量后，不再尝试启动
-            if (_error++ >= MaxFails)
+            if (_error >= MaxFails)
             {
                 WriteLog("应用[{0}]累计错误次数{1}达到最大值{2}", Name, _error, MaxFails);
 
                 return false;
             }
+            _error++;
 
             // 修正路径
             var workDir = service.WorkingDirectory;
@@ -113,7 +114,8 @@ internal class ServiceController : DisposeBase
 
                     if (!deploy.Execute()) return false;
 
-                    _fileName = deploy.FileName;
+                    _fileName = deploy.ExecuteFile;
+
                     p = deploy.Process;
                 }
                 else

@@ -23,6 +23,9 @@ public class ZipDeploy
     /// <summary>影子目录。应用将在其中执行</summary>
     public String Shadow { get; set; }
 
+    /// <summary>可执行文件路径</summary>
+    public String ExecuteFile { get; set; }
+
     /// <summary>进程</summary>
     public Process Process { get; private set; }
     #endregion
@@ -131,6 +134,7 @@ public class ZipDeploy
         // 如果带有 NewLife.Core.dll ，重定向基础目录
         //Arguments = $"{Arguments} --BasePath={rundir}".Trim();
         Environment.SetEnvironmentVariable("BasePath", rundir.FullName);
+        ExecuteFile = runfile.FullName;
 
         WriteLog("执行 {0}", runfile);
 
