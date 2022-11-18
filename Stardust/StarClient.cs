@@ -46,12 +46,17 @@ public class StarClient : ApiHttpClient, ICommandClient
     ///// <summary>本地应用服务管理</summary>
     //public ServiceManager Manager { get; set; }
 
+    /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认120</summary>
+    public Int32 MaxFails { get; set; } = 120;
+
     private ConcurrentDictionary<String, Delegate> _commands = new(StringComparer.OrdinalIgnoreCase);
     /// <summary>命令集合</summary>
     public IDictionary<String, Delegate> Commands => _commands;
 
     /// <summary>收到命令时触发</summary>
     public event EventHandler<CommandEventArgs> Received;
+
+    private readonly ConcurrentQueue<PingInfo> _fails = new();
     #endregion
 
     #region 构造
@@ -416,46 +421,62 @@ public class StarClient : ApiHttpClient, ICommandClient
         {
             var inf = GetHeartInfo();
 
-            var rs = await PingAsync(inf);
-            if (rs != null)
+            PingResponse rs = null;
+            try
             {
-                // 由服务器改变采样频率
-                if (rs.Period > 0) _timer.Period = rs.Period * 1000;
-
-                var dt = rs.Time.ToDateTime();
-                if (dt.Year > 2000)
+                rs = await PingAsync(inf);
+                if (rs != null)
                 {
-                    // 计算延迟
-                    var ts = DateTime.UtcNow - dt;
-                    var ms = (Int32)Math.Round(ts.TotalMilliseconds);
-                    if (Delay > 0)
-                        Delay = (Delay + ms) / 2;
-                    else
-                        Delay = ms;
+                    // 由服务器改变采样频率
+                    if (rs.Period > 0) _timer.Period = rs.Period * 1000;
+
+                    var dt = rs.Time.ToDateTime();
+                    if (dt.Year > 2000)
+                    {
+                        // 计算延迟
+                        var ts = DateTime.UtcNow - dt;
+                        var ms = (Int32)Math.Round(ts.TotalMilliseconds);
+                        if (Delay > 0)
+                            Delay = (Delay + ms) / 2;
+                        else
+                            Delay = ms;
+                    }
+
+                    // 令牌
+                    if (!rs.Token.IsNullOrEmpty())
+                    {
+                        Token = rs.Token;
+                    }
+
+                    //// 推队列
+                    //if (rs.Commands != null && rs.Commands.Length > 0)
+                    //{
+                    //    foreach (var item in rs.Commands)
+                    //    {
+                    //        //CommandQueue.Publish(item.Command, item);
+                    //        await OnReceiveCommand(item);
+                    //    }
+                    //}
+
+                    //// 应用服务
+                    //if (rs.Services != null && rs.Services.Length > 0)
+                    //{
+                    //    Manager.Add(rs.Services);
+                    //    Manager.CheckService();
+                    //}
                 }
+            }
+            catch
+            {
+                if (_fails.Count < MaxFails) _fails.Enqueue(inf);
 
-                // 令牌
-                if (!rs.Token.IsNullOrEmpty())
-                {
-                    Token = rs.Token;
-                }
+                throw;
+            }
 
-                //// 推队列
-                //if (rs.Commands != null && rs.Commands.Length > 0)
-                //{
-                //    foreach (var item in rs.Commands)
-                //    {
-                //        //CommandQueue.Publish(item.Command, item);
-                //        await OnReceiveCommand(item);
-                //    }
-                //}
-
-                //// 应用服务
-                //if (rs.Services != null && rs.Services.Length > 0)
-                //{
-                //    Manager.Add(rs.Services);
-                //    Manager.CheckService();
-                //}
+            // 上报正常，处理历史，失败则丢弃
+            while (_fails.TryDequeue(out var info))
+            {
+                await PingAsync(info);
             }
 
             return rs;
