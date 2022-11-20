@@ -33,6 +33,11 @@ namespace Stardust.Web.Areas.Nodes.Controllers
                 df.Url = "/Registry/AppOnline?nodeId={ID}";
             }
             {
+                var df = ListFields.AddListField("DeployNodes", "Version");
+                df.DisplayName = "部署实例";
+                df.Url = "/Deployment/AppDeployNode?nodeId={ID}";
+            }
+            {
                 var df = ListFields.AddListField("Meter", "Version");
                 df.DisplayName = "性能";
                 df.Url = "/Nodes/NodeData?nodeId={ID}";
