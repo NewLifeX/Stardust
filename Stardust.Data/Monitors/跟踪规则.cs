@@ -10,13 +10,12 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Monitors
 {
-    /// <summary>告警组。按照项目组设置告警，便于管理多节点和多应用，节点和应用的分类名对应组名</summary>
+    /// <summary>跟踪规则。全局黑白名单，白名单放行，黑名单拦截</summary>
     [Serializable]
     [DataObject]
-    [Description("告警组。按照项目组设置告警，便于管理多节点和多应用，节点和应用的分类名对应组名")]
-    [BindIndex("IU_AlarmGroup_Name", true, "Name")]
-    [BindTable("AlarmGroup", Description = "告警组。按照项目组设置告警，便于管理多节点和多应用，节点和应用的分类名对应组名", ConnName = "Stardust", DbType = DatabaseType.None)]
-    public partial class AlarmGroup
+    [Description("跟踪规则。全局黑白名单，白名单放行，黑名单拦截")]
+    [BindTable("TraceRule", Description = "跟踪规则。全局黑白名单，白名单放行，黑名单拦截", ConnName = "Stardust", DbType = DatabaseType.None)]
+    public partial class TraceRule
     {
         #region 属性
         private Int32 _Id;
@@ -27,13 +26,13 @@ namespace Stardust.Data.Monitors
         [BindColumn("Id", "编号", "")]
         public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
-        private String _Name;
-        /// <summary>名称</summary>
-        [DisplayName("名称")]
-        [Description("名称")]
-        [DataObjectField(false, false, false, 50)]
-        [BindColumn("Name", "名称", "", Master = true)]
-        public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
+        private String _Rule;
+        /// <summary>规则。不区分大小写比较的操作名，支持*模糊匹配。如/cube/*</summary>
+        [DisplayName("规则")]
+        [Description("规则。不区分大小写比较的操作名，支持*模糊匹配。如/cube/*")]
+        [DataObjectField(false, false, true, 200)]
+        [BindColumn("Rule", "规则。不区分大小写比较的操作名，支持*模糊匹配。如/cube/*", "")]
+        public String Rule { get => _Rule; set { if (OnPropertyChanging("Rule", value)) { _Rule = value; OnPropertyChanged("Rule"); } } }
 
         private Boolean _Enable;
         /// <summary>启用</summary>
@@ -43,48 +42,13 @@ namespace Stardust.Data.Monitors
         [BindColumn("Enable", "启用", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
-        private String _WebHook;
-        /// <summary>告警机器人。钉钉、企业微信等</summary>
-        [DisplayName("告警机器人")]
-        [Description("告警机器人。钉钉、企业微信等")]
-        [DataObjectField(false, false, true, 500)]
-        [BindColumn("WebHook", "告警机器人。钉钉、企业微信等", "")]
-        public String WebHook { get => _WebHook; set { if (OnPropertyChanging("WebHook", value)) { _WebHook = value; OnPropertyChanged("WebHook"); } } }
-
-        private String _Content;
-        /// <summary>内容。用于测试机器人的模版内容</summary>
-        [DisplayName("内容")]
-        [Description("内容。用于测试机器人的模版内容")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("Content", "内容。用于测试机器人的模版内容", "")]
-        public String Content { get => _Content; set { if (OnPropertyChanging("Content", value)) { _Content = value; OnPropertyChanged("Content"); } } }
-
-        private String _CreateUser;
-        /// <summary>创建者</summary>
-        [Category("扩展")]
-        [DisplayName("创建者")]
-        [Description("创建者")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("CreateUser", "创建者", "")]
-        public String CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
-
-        private Int32 _CreateUserID;
-        /// <summary>创建者</summary>
-        [Category("扩展")]
-        [DisplayName("创建者")]
-        [Description("创建者")]
+        private Boolean _IsWhite;
+        /// <summary>白名单。否则是黑名单</summary>
+        [DisplayName("白名单")]
+        [Description("白名单。否则是黑名单")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("CreateUserID", "创建者", "")]
-        public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
-
-        private DateTime _CreateTime;
-        /// <summary>创建时间</summary>
-        [Category("扩展")]
-        [DisplayName("创建时间")]
-        [Description("创建时间")]
-        [DataObjectField(false, false, true, 0)]
-        [BindColumn("CreateTime", "创建时间", "")]
-        public DateTime CreateTime { get => _CreateTime; set { if (OnPropertyChanging("CreateTime", value)) { _CreateTime = value; OnPropertyChanged("CreateTime"); } } }
+        [BindColumn("IsWhite", "白名单。否则是黑名单", "")]
+        public Boolean IsWhite { get => _IsWhite; set { if (OnPropertyChanging("IsWhite", value)) { _IsWhite = value; OnPropertyChanged("IsWhite"); } } }
 
         private String _CreateIP;
         /// <summary>创建地址</summary>
@@ -94,6 +58,15 @@ namespace Stardust.Data.Monitors
         [DataObjectField(false, false, true, 50)]
         [BindColumn("CreateIP", "创建地址", "")]
         public String CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
+
+        private DateTime _CreateTime;
+        /// <summary>创建时间</summary>
+        [Category("扩展")]
+        [DisplayName("创建时间")]
+        [Description("创建时间")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("CreateTime", "创建时间", "")]
+        public DateTime CreateTime { get => _CreateTime; set { if (OnPropertyChanging("CreateTime", value)) { _CreateTime = value; OnPropertyChanged("CreateTime"); } } }
 
         private String _UpdateUser;
         /// <summary>更新者</summary>
@@ -130,6 +103,15 @@ namespace Stardust.Data.Monitors
         [DataObjectField(false, false, true, 50)]
         [BindColumn("UpdateIP", "更新地址", "")]
         public String UpdateIP { get => _UpdateIP; set { if (OnPropertyChanging("UpdateIP", value)) { _UpdateIP = value; OnPropertyChanged("UpdateIP"); } } }
+
+        private String _Remark;
+        /// <summary>备注</summary>
+        [Category("扩展")]
+        [DisplayName("备注")]
+        [Description("备注")]
+        [DataObjectField(false, false, true, 500)]
+        [BindColumn("Remark", "备注", "")]
+        public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
         #endregion
 
         #region 获取/设置 字段值
@@ -143,18 +125,16 @@ namespace Stardust.Data.Monitors
                 switch (name)
                 {
                     case "Id": return _Id;
-                    case "Name": return _Name;
+                    case "Rule": return _Rule;
                     case "Enable": return _Enable;
-                    case "WebHook": return _WebHook;
-                    case "Content": return _Content;
-                    case "CreateUser": return _CreateUser;
-                    case "CreateUserID": return _CreateUserID;
-                    case "CreateTime": return _CreateTime;
+                    case "IsWhite": return _IsWhite;
                     case "CreateIP": return _CreateIP;
+                    case "CreateTime": return _CreateTime;
                     case "UpdateUser": return _UpdateUser;
                     case "UpdateUserID": return _UpdateUserID;
                     case "UpdateTime": return _UpdateTime;
                     case "UpdateIP": return _UpdateIP;
+                    case "Remark": return _Remark;
                     default: return base[name];
                 }
             }
@@ -163,18 +143,16 @@ namespace Stardust.Data.Monitors
                 switch (name)
                 {
                     case "Id": _Id = value.ToInt(); break;
-                    case "Name": _Name = Convert.ToString(value); break;
+                    case "Rule": _Rule = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
-                    case "WebHook": _WebHook = Convert.ToString(value); break;
-                    case "Content": _Content = Convert.ToString(value); break;
-                    case "CreateUser": _CreateUser = Convert.ToString(value); break;
-                    case "CreateUserID": _CreateUserID = value.ToInt(); break;
-                    case "CreateTime": _CreateTime = value.ToDateTime(); break;
+                    case "IsWhite": _IsWhite = value.ToBoolean(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
+                    case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
                     case "UpdateUserID": _UpdateUserID = value.ToInt(); break;
                     case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
                     case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
+                    case "Remark": _Remark = Convert.ToString(value); break;
                     default: base[name] = value; break;
                 }
             }
@@ -182,35 +160,26 @@ namespace Stardust.Data.Monitors
         #endregion
 
         #region 字段名
-        /// <summary>取得告警组字段信息的快捷方式</summary>
+        /// <summary>取得跟踪规则字段信息的快捷方式</summary>
         public partial class _
         {
             /// <summary>编号</summary>
             public static readonly Field Id = FindByName("Id");
 
-            /// <summary>名称</summary>
-            public static readonly Field Name = FindByName("Name");
+            /// <summary>规则。不区分大小写比较的操作名，支持*模糊匹配。如/cube/*</summary>
+            public static readonly Field Rule = FindByName("Rule");
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
 
-            /// <summary>告警机器人。钉钉、企业微信等</summary>
-            public static readonly Field WebHook = FindByName("WebHook");
-
-            /// <summary>内容。用于测试机器人的模版内容</summary>
-            public static readonly Field Content = FindByName("Content");
-
-            /// <summary>创建者</summary>
-            public static readonly Field CreateUser = FindByName("CreateUser");
-
-            /// <summary>创建者</summary>
-            public static readonly Field CreateUserID = FindByName("CreateUserID");
-
-            /// <summary>创建时间</summary>
-            public static readonly Field CreateTime = FindByName("CreateTime");
+            /// <summary>白名单。否则是黑名单</summary>
+            public static readonly Field IsWhite = FindByName("IsWhite");
 
             /// <summary>创建地址</summary>
             public static readonly Field CreateIP = FindByName("CreateIP");
+
+            /// <summary>创建时间</summary>
+            public static readonly Field CreateTime = FindByName("CreateTime");
 
             /// <summary>更新者</summary>
             public static readonly Field UpdateUser = FindByName("UpdateUser");
@@ -224,38 +193,32 @@ namespace Stardust.Data.Monitors
             /// <summary>更新地址</summary>
             public static readonly Field UpdateIP = FindByName("UpdateIP");
 
+            /// <summary>备注</summary>
+            public static readonly Field Remark = FindByName("Remark");
+
             static Field FindByName(String name) => Meta.Table.FindByName(name);
         }
 
-        /// <summary>取得告警组字段名称的快捷方式</summary>
+        /// <summary>取得跟踪规则字段名称的快捷方式</summary>
         public partial class __
         {
             /// <summary>编号</summary>
             public const String Id = "Id";
 
-            /// <summary>名称</summary>
-            public const String Name = "Name";
+            /// <summary>规则。不区分大小写比较的操作名，支持*模糊匹配。如/cube/*</summary>
+            public const String Rule = "Rule";
 
             /// <summary>启用</summary>
             public const String Enable = "Enable";
 
-            /// <summary>告警机器人。钉钉、企业微信等</summary>
-            public const String WebHook = "WebHook";
-
-            /// <summary>内容。用于测试机器人的模版内容</summary>
-            public const String Content = "Content";
-
-            /// <summary>创建者</summary>
-            public const String CreateUser = "CreateUser";
-
-            /// <summary>创建者</summary>
-            public const String CreateUserID = "CreateUserID";
-
-            /// <summary>创建时间</summary>
-            public const String CreateTime = "CreateTime";
+            /// <summary>白名单。否则是黑名单</summary>
+            public const String IsWhite = "IsWhite";
 
             /// <summary>创建地址</summary>
             public const String CreateIP = "CreateIP";
+
+            /// <summary>创建时间</summary>
+            public const String CreateTime = "CreateTime";
 
             /// <summary>更新者</summary>
             public const String UpdateUser = "UpdateUser";
@@ -268,6 +231,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>更新地址</summary>
             public const String UpdateIP = "UpdateIP";
+
+            /// <summary>备注</summary>
+            public const String Remark = "Remark";
         }
         #endregion
     }
