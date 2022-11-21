@@ -210,6 +210,15 @@ public class TraceController : ControllerBase
             {
                 // 剔除指定项
                 if (item.Name.IsNullOrEmpty()) continue;
+
+                // 跟踪规则
+                var rule = TraceRule.Match(item.Name);
+                if (rule != null && !rule.IsWhite)
+                {
+                    using var span = _tracer?.NewSpan("trace-BlackList", new { item.Name, rule.Rule });
+                    continue;
+                }
+
                 //if (app.ID == 30 && item.Name[0] == '/') XTrace.WriteLine("TraceProcess: {0}", item.Name);
                 if (excludes != null && excludes.Any(e => e.IsMatch(item.Name)))
                 {
@@ -234,7 +243,7 @@ public class TraceController : ControllerBase
                 }
 
                 // 检查跟踪项
-                var ti = app.GetOrAddItem(item.Name);
+                var ti = app.GetOrAddItem(item.Name, rule?.IsWhite);
                 if (ti == null || !ti.Enable)
                 {
                     using var span = _tracer?.NewSpan("trace-ErrorItem", item.Name);

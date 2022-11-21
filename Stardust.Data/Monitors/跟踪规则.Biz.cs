@@ -139,6 +139,32 @@ namespace Stardust.Data.Monitors
         #endregion
 
         #region 业务操作
+        /// <summary>获取有效规则</summary>
+        /// <returns></returns>
+        public static IList<TraceRule> GetValids() => FindAllWithCache().Where(e => e.Enable && !e.Rule.IsNullOrEmpty()).ToList();
+
+        /// <summary>尝试使用所有规则匹配目标输入</summary>
+        /// <param name="input">目标输入</param>
+        /// <returns></returns>
+        public static TraceRule Match(String input)
+        {
+            if (input.IsNullOrWhiteSpace()) return null;
+
+            input = input.Trim().ToLower();
+
+            var rules = GetValids();
+            foreach (var rule in rules)
+            {
+                if (rule.Rule.EqualIgnoreCase(input) ||
+                    rule.Rule.IsMatch(input) ||
+                    rule.Rule.ToLower().IsMatch(input))
+                {
+                    return rule;
+                }
+            }
+
+            return null;
+        }
         #endregion
     }
 }

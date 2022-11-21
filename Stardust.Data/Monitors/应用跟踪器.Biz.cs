@@ -206,8 +206,9 @@ namespace Stardust.Data.Monitors
         /// 获取或添加跟踪项
         /// </summary>
         /// <param name="name"></param>
+        /// <param name="whiteOnApi"></param>
         /// <returns></returns>
-        public TraceItem GetOrAddItem(String name)
+        public TraceItem GetOrAddItem(String name, Boolean? whiteOnApi = null)
         {
             if (name.IsNullOrEmpty()) return null;
 
@@ -226,15 +227,23 @@ namespace Stardust.Data.Monitors
             if (ti != null) return ti;
 
             var isApi = name.StartsWith('/');
-
-            // 如果只跟踪已存在埋点，则跳过。仅针对API
-            if (Mode == TraceModes.Existing && isApi) return null;
+            if (isApi)
+            {
+                // 黑白名单
+                if (whiteOnApi != null)
+                {
+                    if (!whiteOnApi.Value) return null;
+                }
+                // 如果只跟踪已存在埋点，则跳过。仅针对API
+                else if (Mode == TraceModes.Existing)
+                    return null;
+            }
 
             ti = new TraceItem
             {
                 AppId = ID,
                 Name = name,
-                Enable = Mode == TraceModes.All || !isApi
+                Enable = Mode == TraceModes.All || !isApi || whiteOnApi != null && whiteOnApi.Value,
             };
             ti.Insert();
 
