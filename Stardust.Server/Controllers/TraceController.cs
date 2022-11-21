@@ -219,7 +219,6 @@ public class TraceController : ControllerBase
                     continue;
                 }
 
-                //if (app.ID == 30 && item.Name[0] == '/') XTrace.WriteLine("TraceProcess: {0}", item.Name);
                 if (excludes != null && excludes.Any(e => e.IsMatch(item.Name)))
                 {
                     using var span = _tracer?.NewSpan("trace-Exclude", item.Name);

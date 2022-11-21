@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
@@ -201,6 +203,39 @@ namespace Stardust.Data.Monitors
             return false;
         }
 
+        String[] _whites;
+        Regex[] _regexes;
+        /// <summary>是否匹配白名单</summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public Boolean IsWhite(String input)
+        {
+            if (input.IsNullOrWhiteSpace()) return false;
+
+            var whites = WhiteList;
+            if (whites.IsNullOrEmpty()) return false;
+
+            if (_whites == null)
+            {
+                var ss = whites.Split(",");
+                _whites = ss.Where(e => e[0] != '^').ToArray();
+                _regexes = ss.Where(e => e[0] == '^').Select(e => new Regex(e)).ToArray();
+            }
+
+            foreach (var item in _whites)
+            {
+                if (item.EqualIgnoreCase(input)) return true;
+                if (item.IsMatch(input)) return true;
+            }
+
+            foreach (var reg in _regexes)
+            {
+                if (reg.IsMatch(input)) return true;
+            }
+
+            return false;
+        }
+
         private IList<TraceItem> _full;
         /// <summary>
         /// 获取或添加跟踪项
@@ -236,7 +271,16 @@ namespace Stardust.Data.Monitors
                 }
                 // 如果只跟踪已存在埋点，则跳过。仅针对API
                 else if (Mode == TraceModes.Existing)
-                    return null;
+                {
+                    // 本应用白名单判断
+                    if (!IsWhite(name)) return null;
+
+                    whiteOnApi = true;
+                }
+                else if (Mode == TraceModes.CreateNew)
+                {
+                    if (IsWhite(name)) whiteOnApi = true;
+                }
             }
 
             ti = new TraceItem

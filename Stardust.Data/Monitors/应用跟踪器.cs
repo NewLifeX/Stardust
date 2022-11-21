@@ -132,11 +132,19 @@ namespace Stardust.Data.Monitors
         [BindColumn("EnableMeter", "性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息", "")]
         public Boolean EnableMeter { get => _EnableMeter; set { if (OnPropertyChanging("EnableMeter", value)) { _EnableMeter = value; OnPropertyChanged("EnableMeter"); } } }
 
+        private String _WhiteList;
+        /// <summary>白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持正则表达式如^/Admin/</summary>
+        [DisplayName("白名单")]
+        [Description("白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持正则表达式如^/Admin/")]
+        [DataObjectField(false, false, true, 200)]
+        [BindColumn("WhiteList", "白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持正则表达式如^/Admin/", "")]
+        public String WhiteList { get => _WhiteList; set { if (OnPropertyChanging("WhiteList", value)) { _WhiteList = value; OnPropertyChanged("WhiteList"); } } }
+
         private String _Excludes;
         /// <summary>排除项。要排除的操作名，支持*模糊匹配</summary>
         [DisplayName("排除项")]
         [Description("排除项。要排除的操作名，支持*模糊匹配")]
-        [DataObjectField(false, false, true, 2000)]
+        [DataObjectField(false, false, true, 200)]
         [BindColumn("Excludes", "排除项。要排除的操作名，支持*模糊匹配", "")]
         public String Excludes { get => _Excludes; set { if (OnPropertyChanging("Excludes", value)) { _Excludes = value; OnPropertyChanged("Excludes"); } } }
 
@@ -314,6 +322,7 @@ namespace Stardust.Data.Monitors
                     case "MaxSamples": return _MaxSamples;
                     case "MaxErrors": return _MaxErrors;
                     case "EnableMeter": return _EnableMeter;
+                    case "WhiteList": return _WhiteList;
                     case "Excludes": return _Excludes;
                     case "Timeout": return _Timeout;
                     case "TimeoutExcludes": return _TimeoutExcludes;
@@ -353,6 +362,7 @@ namespace Stardust.Data.Monitors
                     case "MaxSamples": _MaxSamples = value.ToInt(); break;
                     case "MaxErrors": _MaxErrors = value.ToInt(); break;
                     case "EnableMeter": _EnableMeter = value.ToBoolean(); break;
+                    case "WhiteList": _WhiteList = Convert.ToString(value); break;
                     case "Excludes": _Excludes = Convert.ToString(value); break;
                     case "Timeout": _Timeout = value.ToInt(); break;
                     case "TimeoutExcludes": _TimeoutExcludes = Convert.ToString(value); break;
@@ -422,6 +432,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息</summary>
             public static readonly Field EnableMeter = FindByName("EnableMeter");
+
+            /// <summary>白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持正则表达式如^/Admin/</summary>
+            public static readonly Field WhiteList = FindByName("WhiteList");
 
             /// <summary>排除项。要排除的操作名，支持*模糊匹配</summary>
             public static readonly Field Excludes = FindByName("Excludes");
@@ -524,6 +537,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息</summary>
             public const String EnableMeter = "EnableMeter";
+
+            /// <summary>白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持正则表达式如^/Admin/</summary>
+            public const String WhiteList = "WhiteList";
 
             /// <summary>排除项。要排除的操作名，支持*模糊匹配</summary>
             public const String Excludes = "Excludes";
