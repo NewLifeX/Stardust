@@ -11,6 +11,9 @@ public class DeployService
     {
         if (online == null || online.AppId == 0 || online.NodeId == 0) return;
 
+        // 提出StarAgent
+        if (online.AppName == "StarAgent") return;
+
         // 找应用部署
         var list = AppDeploy.FindAllByAppId(online.AppId);
         var deploy = list.FirstOrDefault();
