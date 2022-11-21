@@ -27,11 +27,11 @@ namespace Stardust.Data.Monitors
         public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
         private String _Rule;
-        /// <summary>规则。不区分大小写比较的操作名，支持*模糊匹配。如/cube/*</summary>
+        /// <summary>规则。支持*模糊匹配。如/cube/*</summary>
         [DisplayName("规则")]
-        [Description("规则。不区分大小写比较的操作名，支持*模糊匹配。如/cube/*")]
+        [Description("规则。支持*模糊匹配。如/cube/*")]
         [DataObjectField(false, false, true, 200)]
-        [BindColumn("Rule", "规则。不区分大小写比较的操作名，支持*模糊匹配。如/cube/*", "")]
+        [BindColumn("Rule", "规则。支持*模糊匹配。如/cube/*", "")]
         public String Rule { get => _Rule; set { if (OnPropertyChanging("Rule", value)) { _Rule = value; OnPropertyChanged("Rule"); } } }
 
         private Boolean _Enable;
@@ -49,6 +49,23 @@ namespace Stardust.Data.Monitors
         [DataObjectField(false, false, false, 0)]
         [BindColumn("IsWhite", "白名单。否则是黑名单", "")]
         public Boolean IsWhite { get => _IsWhite; set { if (OnPropertyChanging("IsWhite", value)) { _IsWhite = value; OnPropertyChanged("IsWhite"); } } }
+
+        private Boolean _IsRegex;
+        /// <summary>正则。是否使用正则表达式</summary>
+        [DisplayName("正则")]
+        [Description("正则。是否使用正则表达式")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("IsRegex", "正则。是否使用正则表达式", "")]
+        public Boolean IsRegex { get => _IsRegex; set { if (OnPropertyChanging("IsRegex", value)) { _IsRegex = value; OnPropertyChanged("IsRegex"); } } }
+
+        private Int32 _Priority;
+        /// <summary>优先级。越大越在前面</summary>
+        [Category("扩展")]
+        [DisplayName("优先级")]
+        [Description("优先级。越大越在前面")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Priority", "优先级。越大越在前面", "")]
+        public Int32 Priority { get => _Priority; set { if (OnPropertyChanging("Priority", value)) { _Priority = value; OnPropertyChanged("Priority"); } } }
 
         private String _CreateIP;
         /// <summary>创建地址</summary>
@@ -128,6 +145,8 @@ namespace Stardust.Data.Monitors
                     case "Rule": return _Rule;
                     case "Enable": return _Enable;
                     case "IsWhite": return _IsWhite;
+                    case "IsRegex": return _IsRegex;
+                    case "Priority": return _Priority;
                     case "CreateIP": return _CreateIP;
                     case "CreateTime": return _CreateTime;
                     case "UpdateUser": return _UpdateUser;
@@ -146,6 +165,8 @@ namespace Stardust.Data.Monitors
                     case "Rule": _Rule = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "IsWhite": _IsWhite = value.ToBoolean(); break;
+                    case "IsRegex": _IsRegex = value.ToBoolean(); break;
+                    case "Priority": _Priority = value.ToInt(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
@@ -166,7 +187,7 @@ namespace Stardust.Data.Monitors
             /// <summary>编号</summary>
             public static readonly Field Id = FindByName("Id");
 
-            /// <summary>规则。不区分大小写比较的操作名，支持*模糊匹配。如/cube/*</summary>
+            /// <summary>规则。支持*模糊匹配。如/cube/*</summary>
             public static readonly Field Rule = FindByName("Rule");
 
             /// <summary>启用</summary>
@@ -174,6 +195,12 @@ namespace Stardust.Data.Monitors
 
             /// <summary>白名单。否则是黑名单</summary>
             public static readonly Field IsWhite = FindByName("IsWhite");
+
+            /// <summary>正则。是否使用正则表达式</summary>
+            public static readonly Field IsRegex = FindByName("IsRegex");
+
+            /// <summary>优先级。越大越在前面</summary>
+            public static readonly Field Priority = FindByName("Priority");
 
             /// <summary>创建地址</summary>
             public static readonly Field CreateIP = FindByName("CreateIP");
@@ -205,7 +232,7 @@ namespace Stardust.Data.Monitors
             /// <summary>编号</summary>
             public const String Id = "Id";
 
-            /// <summary>规则。不区分大小写比较的操作名，支持*模糊匹配。如/cube/*</summary>
+            /// <summary>规则。支持*模糊匹配。如/cube/*</summary>
             public const String Rule = "Rule";
 
             /// <summary>启用</summary>
@@ -213,6 +240,12 @@ namespace Stardust.Data.Monitors
 
             /// <summary>白名单。否则是黑名单</summary>
             public const String IsWhite = "IsWhite";
+
+            /// <summary>正则。是否使用正则表达式</summary>
+            public const String IsRegex = "IsRegex";
+
+            /// <summary>优先级。越大越在前面</summary>
+            public const String Priority = "Priority";
 
             /// <summary>创建地址</summary>
             public const String CreateIP = "CreateIP";

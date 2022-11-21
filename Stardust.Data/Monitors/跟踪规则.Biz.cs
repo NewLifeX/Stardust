@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Script.Serialization;
@@ -75,17 +76,19 @@ namespace Stardust.Data.Monitors
 
             var entity = new TraceRule
             {
-                Rule = "/Admin/*",
+                Rule = "^/Admin/[A-Z]\\w+",
                 Enable = true,
                 IsWhite = true,
+                IsRegex = true,
             };
             entity.Insert();
 
             entity = new TraceRule
             {
-                Rule = "/Cube/*",
+                Rule = "^/Cube/[A-Z]\\w+",
                 Enable = true,
                 IsWhite = true,
+                IsRegex = true,
             };
             entity.Insert();
 
@@ -138,7 +141,30 @@ namespace Stardust.Data.Monitors
         #region 业务操作
         /// <summary>获取有效规则</summary>
         /// <returns></returns>
-        public static IList<TraceRule> GetValids() => FindAllWithCache().Where(e => e.Enable && !e.Rule.IsNullOrEmpty()).ToList();
+        public static IList<TraceRule> GetValids() => FindAllWithCache().Where(e => e.Enable && !e.Rule.IsNullOrEmpty()).OrderByDescending(e => e.Priority).ToList();
+
+        Regex _regex;
+        /// <summary>是否匹配输入</summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public Boolean IsMatch(String input)
+        {
+            if (input.IsNullOrWhiteSpace()) return false;
+            if (Rule.IsNullOrEmpty()) return false;
+
+            if (IsRegex)
+            {
+                _regex ??= new Regex(Rule, RegexOptions.Compiled);
+                return _regex.IsMatch(input);
+            }
+            else
+            {
+                if (Rule.EqualIgnoreCase(input)) return true;
+                if (Rule.IsMatch(input)) return true;
+            }
+
+            return false;
+        }
 
         /// <summary>尝试使用所有规则匹配目标输入</summary>
         /// <param name="input">目标输入</param>
@@ -152,12 +178,7 @@ namespace Stardust.Data.Monitors
             var rules = GetValids();
             foreach (var rule in rules)
             {
-                if (rule.Rule.EqualIgnoreCase(input) ||
-                    rule.Rule.IsMatch(input) ||
-                    rule.Rule.ToLower().IsMatch(input))
-                {
-                    return rule;
-                }
+                if (rule.IsMatch(input)) return rule;
             }
 
             return null;
