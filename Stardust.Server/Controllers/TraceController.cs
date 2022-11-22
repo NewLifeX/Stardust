@@ -243,11 +243,12 @@ public class TraceController : ControllerBase
 
                 // 检查跟踪项
                 var ti = app.GetOrAddItem(item.Name, rule?.IsWhite);
-                if (ti == null || !ti.Enable)
+                if (ti == null)
                 {
                     using var span = _tracer?.NewSpan("trace-ErrorItem", item.Name);
                     continue;
                 }
+                if (!ti.Enable) continue;
 
                 var td = TraceData.Create(item);
                 td.AppId = app.ID;
