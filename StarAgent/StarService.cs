@@ -1,8 +1,5 @@
-﻿using System.Diagnostics;
-using NewLife;
-using NewLife.Agent;
+﻿using NewLife;
 using NewLife.Log;
-using NewLife.Model;
 using NewLife.Net;
 using NewLife.Remoting;
 using NewLife.Serialization;
@@ -122,110 +119,110 @@ public class StarService : DisposeBase, IApi
         if (Session is INetSession ns && !ns.Remote.Address.IsLocal()) throw new InvalidOperationException("禁止非本机操作！");
     }
 
-    /// <summary>杀死并启动进程</summary>
-    /// <param name="processId">进程</param>
-    /// <param name="delay">延迟结束的秒数</param>
-    /// <param name="fileName">文件名</param>
-    /// <param name="arguments">参数</param>
-    /// <param name="workingDirectory">工作目录</param>
-    /// <returns></returns>
-    [Api(nameof(KillAndStart))]
-    public Object KillAndStart(Int32 processId, Int32 delay, String fileName, String arguments, String workingDirectory)
-    {
-        CheckLocal();
+    ///// <summary>杀死并启动进程</summary>
+    ///// <param name="processId">进程</param>
+    ///// <param name="delay">延迟结束的秒数</param>
+    ///// <param name="fileName">文件名</param>
+    ///// <param name="arguments">参数</param>
+    ///// <param name="workingDirectory">工作目录</param>
+    ///// <returns></returns>
+    //[Api(nameof(KillAndStart))]
+    //public Object KillAndStart(Int32 processId, Int32 delay, String fileName, String arguments, String workingDirectory)
+    //{
+    //    CheckLocal();
 
-        var p = Process.GetProcessById(processId);
-        if (p == null) throw new InvalidOperationException($"无效进程Id[{processId}]");
+    //    var p = Process.GetProcessById(processId);
+    //    if (p == null) throw new InvalidOperationException($"无效进程Id[{processId}]");
 
-        var name = p.ProcessName;
-        var pid = 0;
+    //    var name = p.ProcessName;
+    //    var pid = 0;
 
-        ThreadPool.QueueUserWorkItem(s =>
-        {
-            WriteLog("杀死进程 {0}/{1}，等待 {2}秒", processId, p.ProcessName, delay);
+    //    ThreadPool.QueueUserWorkItem(s =>
+    //    {
+    //        WriteLog("杀死进程 {0}/{1}，等待 {2}秒", processId, p.ProcessName, delay);
 
-            if (delay > 0) Thread.Sleep(delay * 1000);
+    //        if (delay > 0) Thread.Sleep(delay * 1000);
 
-            try
-            {
-                if (!p.HasExited)
-                {
-                    p.Kill();
-                    p.WaitForExit(5_000);
-                }
-            }
-            catch (Exception ex)
-            {
-                XTrace.WriteException(ex);
-            }
+    //        try
+    //        {
+    //            if (!p.HasExited)
+    //            {
+    //                p.Kill();
+    //                p.WaitForExit(5_000);
+    //            }
+    //        }
+    //        catch (Exception ex)
+    //        {
+    //            XTrace.WriteException(ex);
+    //        }
 
-            // 启动进程
-            if (!fileName.IsNullOrEmpty())
-            {
-                WriteLog("启动进程：{0} {1} {2}", fileName, arguments, workingDirectory);
+    //        // 启动进程
+    //        if (!fileName.IsNullOrEmpty())
+    //        {
+    //            WriteLog("启动进程：{0} {1} {2}", fileName, arguments, workingDirectory);
 
-                var si = new ProcessStartInfo
-                {
-                    FileName = fileName,
-                    Arguments = arguments,
-                    WorkingDirectory = workingDirectory,
+    //            var si = new ProcessStartInfo
+    //            {
+    //                FileName = fileName,
+    //                Arguments = arguments,
+    //                WorkingDirectory = workingDirectory,
 
-                    // false时目前控制台合并到当前控制台，一起退出；
-                    // true时目标控制台独立窗口，不会一起退出；
-                    UseShellExecute = true,
-                };
+    //                // false时目前控制台合并到当前控制台，一起退出；
+    //                // true时目标控制台独立窗口，不会一起退出；
+    //                UseShellExecute = true,
+    //            };
 
-                var p2 = Process.Start(si);
-                pid = p2.Id;
+    //            var p2 = Process.Start(si);
+    //            pid = p2.Id;
 
-                WriteLog("应用[{0}]启动成功 PID={1}", p2.ProcessName, p2.Id);
-            }
-        });
+    //            WriteLog("应用[{0}]启动成功 PID={1}", p2.ProcessName, p2.Id);
+    //        }
+    //    });
 
-        return new { name, pid };
-    }
+    //    return new { name, pid };
+    //}
 
-    /// <summary>安装应用服务（星尘代理守护）</summary>
-    /// <param name="service"></param>
-    /// <returns></returns>
-    [Api(nameof(Install))]
-    public ProcessInfo Install(ServiceInfo service)
-    {
-        XTrace.WriteLine("Install<={0}", service.ToJson());
+    ///// <summary>安装应用服务（星尘代理守护）</summary>
+    ///// <param name="service"></param>
+    ///// <returns></returns>
+    //[Api(nameof(Install))]
+    //public ProcessInfo Install(ServiceInfo service)
+    //{
+    //    XTrace.WriteLine("Install<={0}", service.ToJson());
 
-        CheckLocal();
+    //    CheckLocal();
 
-        var rs = Manager.Install(service);
-        if (rs != null)
-        {
-            var set = Setting.Current;
-            set.Services = Manager.Services;
-            set.Save();
-        }
+    //    var rs = Manager.Install(service);
+    //    if (rs != null)
+    //    {
+    //        var set = Setting.Current;
+    //        set.Services = Manager.Services;
+    //        set.Save();
+    //    }
 
-        return rs;
-    }
+    //    return rs;
+    //}
 
-    /// <summary>卸载应用服务</summary>
-    /// <param name="serviceName"></param>
-    /// <returns></returns>
-    [Api(nameof(Uninstall))]
-    public Boolean Uninstall(String serviceName)
-    {
-        XTrace.WriteLine("Uninstall<={0}", serviceName);
+    ///// <summary>卸载应用服务</summary>
+    ///// <param name="serviceName"></param>
+    ///// <returns></returns>
+    //[Api(nameof(Uninstall))]
+    //public Boolean Uninstall(String serviceName)
+    //{
+    //    XTrace.WriteLine("Uninstall<={0}", serviceName);
 
-        CheckLocal();
+    //    CheckLocal();
 
-        var rs = Manager.Uninstall(serviceName, "ServiceUninstall");
-        if (rs)
-        {
-            var set = Setting.Current;
-            set.Services = Manager.Services;
-            set.Save();
-        }
+    //    var rs = Manager.Uninstall(serviceName, "ServiceUninstall");
+    //    if (rs)
+    //    {
+    //        var set = Setting.Current;
+    //        set.Services = Manager.Services;
+    //        set.Save();
+    //    }
 
-        return rs;
-    }
+    //    return rs;
+    //}
     #endregion
 
     #region 日志

@@ -139,24 +139,24 @@ namespace Test
         {
             XTrace.WriteLine("Test6");
 
-            var client = new LocalStarClient();
-            //client.GetInfo();
+            //var client = new LocalStarClient();
+            ////client.GetInfo();
 
-            try
-            {
-                //await client.GetInfoAsync();
-                var rs = await client.Install("test666", "ping", "qq.com");
-                XTrace.WriteLine("Install={0}", rs.ToJson(true));
+            //try
+            //{
+            //    //await client.GetInfoAsync();
+            //    var rs = await client.Install("test666", "ping", "qq.com");
+            //    XTrace.WriteLine("Install={0}", rs.ToJson(true));
 
-                Thread.Sleep(3000);
+            //    Thread.Sleep(3000);
 
-                var rs2 = await client.Uninstall("test666");
-                XTrace.WriteLine("Uninstall={0}", rs2);
-            }
-            catch (Exception ex)
-            {
-                XTrace.Log.Error("星尘探测失败！{0}", ex.Message);
-            }
+            //    var rs2 = await client.Uninstall("test666");
+            //    XTrace.WriteLine("Uninstall={0}", rs2);
+            //}
+            //catch (Exception ex)
+            //{
+            //    XTrace.Log.Error("星尘探测失败！{0}", ex.Message);
+            //}
         }
 
         static void Test7()
