@@ -247,7 +247,7 @@ public class AppController : BaseController
     [HttpPost(nameof(CommandReply))]
     public Int32 CommandReply(CommandReplyModel model)
     {
-        if (_app == null) throw new NewLife.Remoting.ApiException(402, "节点未登录");
+        if (_app == null) throw new ApiException(401, "节点未登录");
 
         var cmd = _registryService.CommandReply(_app, model);
 

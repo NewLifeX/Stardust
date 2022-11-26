@@ -30,7 +30,7 @@ namespace Stardust.Web.Controllers
         public ConfigInfo GetAll(String appId, String secret, String scope, Int32 version)
         {
             if (appId.IsNullOrEmpty()) throw new ArgumentNullException(nameof(appId));
-            if (ManageProvider.User == null) throw new ApiException(403, "未登录！");
+            if (ManageProvider.User == null) throw new ApiException(401, "未登录！");
 
             // 验证
             var app = Valid(appId, secret, out var online);

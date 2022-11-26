@@ -582,7 +582,7 @@ public class NodeService
     public (Node, Exception) DecodeToken(String token, String tokenSecret)
     {
         if (token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(token));
-        //if (token.IsNullOrEmpty()) throw new ApiException(402, $"节点未登录[ip={UserHost}]");
+        //if (token.IsNullOrEmpty()) throw new ApiException(401, $"节点未登录[ip={UserHost}]");
 
         // 解码令牌
         var ss = tokenSecret.Split(':');

@@ -211,7 +211,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry
         catch (Exception ex)
         {
             var ex2 = ex.GetTrue();
-            if (ex2 is ApiException aex && (aex.Code == 402 || aex.Code == 403))
+            if (ex2 is ApiException aex && (aex.Code == 401 || aex.Code == 403))
             {
                 XTrace.WriteLine("重新登录");
                 return await Register();

@@ -120,7 +120,7 @@ public class NodeController : BaseController
     public UpgradeInfo Upgrade(String channel)
     {
         var node = _node;
-        if (node == null) throw new ApiException(402, "节点未登录");
+        if (node == null) throw new ApiException(401, "节点未登录");
 
         var pv = _nodeService.Upgrade(node, channel, UserHost);
         if (pv == null) return null;
@@ -174,7 +174,7 @@ public class NodeController : BaseController
     public async Task<Object> Report(Int32 id)
     {
         var node = _node;
-        if (node == null) throw new ApiException(402, "节点未登录");
+        if (node == null) throw new ApiException(401, "节点未登录");
 
         var cmd = NodeCommand.FindById(id);
         if (cmd != null && cmd.NodeID == node.ID)
@@ -218,7 +218,7 @@ public class NodeController : BaseController
     /// <param name="model">服务</param>
     /// <returns></returns>
     [HttpPost(nameof(CommandReply))]
-    public Int32 CommandReply(CommandReplyModel model) => _node == null ? throw new ApiException(402, "节点未登录") : _nodeService.CommandReply(model, Token);
+    public Int32 CommandReply(CommandReplyModel model) => _node == null ? throw new ApiException(401, "节点未登录") : _nodeService.CommandReply(model, Token);
     #endregion
 
     #region 下行通知

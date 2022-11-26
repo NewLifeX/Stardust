@@ -111,7 +111,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         catch (Exception ex)
         {
             var ex2 = ex.GetTrue();
-            if (ex2 is ApiException aex && (aex.Code == 402 || aex.Code == 403) && !action.EqualIgnoreCase("Node/Login", "Node/Logout"))
+            if (ex2 is ApiException aex && (aex.Code == 401 || aex.Code == 403) && !action.EqualIgnoreCase("Node/Login", "Node/Logout"))
             {
                 Log?.Debug("{0}", ex);
                 //XTrace.WriteException(ex);
@@ -487,7 +487,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         catch (Exception ex)
         {
             var ex2 = ex.GetTrue();
-            if (ex2 is ApiException aex && (aex.Code == 402 || aex.Code == 403))
+            if (ex2 is ApiException aex && (aex.Code == 401 || aex.Code == 403))
             {
                 XTrace.WriteLine("重新登录");
                 return Login();
