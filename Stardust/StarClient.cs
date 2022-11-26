@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Net.WebSockets;
 using System.Reflection;
+using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using NewLife;
@@ -227,17 +228,19 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             Time = DateTime.UtcNow,
         };
 
+#if NETCOREAPP || NETSTANDARD
         // 目标框架
+        di.Framework = GetNetCore()?.ToString();
+        di.Framework ??= RuntimeInformation.FrameworkDescription?.TrimStart(".NET Framework", ".NET Core", ".NET Native", ".NET").Trim();
+       
+        di.Architecture = RuntimeInformation.ProcessArchitecture + "";
+#else
         var ver = "";
         var tar = asm.Asm.GetCustomAttribute<TargetFrameworkAttribute>();
         if (tar != null) ver = !tar.FrameworkDisplayName.IsNullOrEmpty() ? tar.FrameworkDisplayName : tar.FrameworkName;
 
-#if NETCOREAPP || NETSTANDARD
-        ver = RuntimeInformation.FrameworkDescription;
-#endif
         di.Framework = ver?.TrimStart(".NET Framework", ".NET Core", ".NET Native", ".NET").Trim();
 
-#if NET40_OR_GREATER
         // .NET45以上运行时
         if (Runtime.Windows && Environment.Version >= new Version("4.0.30319.42000"))
         {
@@ -245,7 +248,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             if (reg != null)
             {
                 var str = reg.GetValue("Version") + "";
-                if (!str.IsNullOrEmpty()) di.Runtime = str;
+                if (!str.IsNullOrEmpty()) di.Framework = str;
             }
         }
 
@@ -258,13 +261,57 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             di.Resolution = $"{screen.Bounds.Width}*{screen.Bounds.Height}";
         }
         catch { }
-#else
-        di.Architecture = RuntimeInformation.ProcessArchitecture + "";
 #endif
 
         if (Runtime.Linux) di.MaxOpenFiles = Execute("bash", "-c \"ulimit -n\"")?.Trim().ToInt() ?? 0;
 
         return di;
+    }
+
+    private static Version GetNetCore()
+    {
+        var dir = "";
+        if (Environment.OSVersion.Platform <= PlatformID.WinCE)
+        {
+            dir = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            if (String.IsNullOrEmpty(dir)) return null;
+            dir += "\\dotnet\\shared";
+        }
+        else if (Runtime.Linux)
+            dir = "/usr/share/dotnet/shared";
+
+        if (!Directory.Exists(dir)) return null;
+
+        Version ver = null;
+        foreach (var item in dir.AsDirectory().GetDirectories())
+        {
+            foreach (var elm in item.GetDirectories())
+            {
+                if (Version.TryParse(elm.Name, out var v) && (ver == null || ver < v))
+                    ver = v;
+            }
+        }
+
+        if (ver != null) return ver;
+
+        // 各平台通用处理
+        {
+            var infs = Execute("dotnet", "--list-runtimes")?.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            if (infs != null)
+            {
+                foreach (var line in infs)
+                {
+                    var ss = line.Split(' ');
+                    if (ss.Length >= 2)
+                    {
+                        if (Version.TryParse(ss[1], out var v) && (ver == null || ver < v))
+                            ver = v;
+                    }
+                }
+            }
+        }
+
+        return ver;
     }
 
     private static String Execute(String cmd, String arguments = null)
