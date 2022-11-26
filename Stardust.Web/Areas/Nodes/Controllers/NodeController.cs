@@ -21,7 +21,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers
 
             var list = ListFields;
             list.Clear();
-            var allows = new[] { "ID", "Name", "Code", "Category", "ProductCode", "CityName", "Enable", "Version", "IP", "OS", "MachineName", "Cpu", "Memory", "TotalSize", "Logins", "LastLogin", "OnlineTime", "UpdateTime", "UpdateIP" };
+            var allows = new[] { "ID", "Name", "Code", "Category", "ProductCode", "CityName", "Enable", "Version", "Runtime", "IP", "OS", "MachineName", "Cpu", "Memory", "TotalSize", "Logins", "LastLogin", "OnlineTime", "UpdateTime", "UpdateIP" };
             foreach (var item in allows)
             {
                 list.AddListField(item);

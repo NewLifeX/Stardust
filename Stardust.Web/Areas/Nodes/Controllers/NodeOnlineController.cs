@@ -22,7 +22,7 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
 
         var list = ListFields;
         list.Clear();
-        var allows = new[] { "ID", "Name", "Category", "CityName", "PingCount", "WebSocket", "Version", "IP", "AvailableMemory", "AvailableFreeSpace", "CpuRate", "ProcessCount", "UplinkSpeed", "DownlinkSpeed", "LocalTime", "CreateTime", "CreateIP", "UpdateTime" };
+        var allows = new[] { "ID", "Name", "Category", "CityName", "PingCount", "WebSocket", "Version", "Runtime", "IP", "AvailableMemory", "AvailableFreeSpace", "CpuRate", "ProcessCount", "UplinkSpeed", "DownlinkSpeed", "LocalTime", "CreateTime", "CreateIP", "UpdateTime" };
         foreach (var item in allows)
         {
             list.AddListField(item);
