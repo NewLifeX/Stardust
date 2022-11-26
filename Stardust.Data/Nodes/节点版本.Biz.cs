@@ -154,6 +154,12 @@ namespace Stardust.Data.Nodes
                 if (runtime.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(runtime))) return false;
             }
 
+            if (Rules.TryGetValue("framework", out vs))
+            {
+                var framework = node.Framework;
+                if (framework.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(framework))) return false;
+            }
+
             if (Rules.TryGetValue("os", out vs))
             {
                 var os = node.OS;
@@ -163,7 +169,7 @@ namespace Stardust.Data.Nodes
             if (Rules.TryGetValue("arch", out vs))
             {
                 var arch = node.Architecture;
-                if (arch.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(arch))) return false;
+                if (arch.IsNullOrEmpty() || !vs.Any(e => e.EqualIgnoreCase(arch))) return false;
             }
 
             if (Rules.TryGetValue("province", out vs))
