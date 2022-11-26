@@ -48,7 +48,7 @@
       <Column Name="Logins" DataType="Int32" Description="登录次数" />
       <Column Name="LastLogin" DataType="DateTime" Description="最后登录" />
       <Column Name="LastLoginIP" DataType="String" Description="最后IP。最后的公网IP地址" />
-      <Column Name="OnlineTime" DataType="Int32" Description="在线时长。单位，秒" />
+      <Column Name="OnlineTime" DataType="Int32" ItemType="TimeSpan" Description="在线时长。单位，秒" />
       <Column Name="LastVersion" DataType="String" Description="最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
@@ -96,7 +96,7 @@
       <Column Name="Delay" DataType="Int32" Description="延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms" />
       <Column Name="Offset" DataType="Int32" Description="偏移。客户端UTC时间减服务端UTC时间，单位ms" />
       <Column Name="LocalTime" DataType="DateTime" Description="本地时间" />
-      <Column Name="Uptime" DataType="Int32" Description="开机时间。单位s" />
+      <Column Name="Uptime" DataType="Int32" ItemType="TimeSpan" Description="开机时间。单位s" />
       <Column Name="MACs" DataType="String" Length="200" Description="网卡" />
       <Column Name="Processes" DataType="String" Length="2000" Description="进程列表" />
       <Column Name="Token" DataType="String" Length="200" Description="令牌" />

@@ -243,7 +243,7 @@ namespace Stardust.Data.Nodes
         [DisplayName("开机时间")]
         [Description("开机时间。单位s")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Uptime", "开机时间。单位s", "")]
+        [BindColumn("Uptime", "开机时间。单位s", "", ItemType = "TimeSpan")]
         public Int32 Uptime { get => _Uptime; set { if (OnPropertyChanging("Uptime", value)) { _Uptime = value; OnPropertyChanged("Uptime"); } } }
 
         private String _MACs;

@@ -148,6 +148,12 @@ namespace Stardust.Data.Nodes
                     (name.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(name)))) return false;
             }
 
+            if (Rules.TryGetValue("category", out vs))
+            {
+                var category = node.Category;
+                if (category.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(category))) return false;
+            }
+
             if (Rules.TryGetValue("runtime", out vs))
             {
                 var runtime = node.Runtime;

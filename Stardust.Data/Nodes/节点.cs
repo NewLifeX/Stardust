@@ -427,7 +427,7 @@ namespace Stardust.Data.Nodes
         [DisplayName("在线时长")]
         [Description("在线时长。单位，秒")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("OnlineTime", "在线时长。单位，秒", "")]
+        [BindColumn("OnlineTime", "在线时长。单位，秒", "", ItemType = "TimeSpan")]
         public Int32 OnlineTime { get => _OnlineTime; set { if (OnPropertyChanging("OnlineTime", value)) { _OnlineTime = value; OnPropertyChanged("OnlineTime"); } } }
 
         private String _LastVersion;
