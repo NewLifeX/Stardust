@@ -204,6 +204,15 @@ namespace Stardust.Data.Nodes
         [BindColumn("Resolution", "分辨率。例如1024*768", "")]
         public String Resolution { get => _Resolution; set { if (OnPropertyChanging("Resolution", value)) { _Resolution = value; OnPropertyChanged("Resolution"); } } }
 
+        private String _Product;
+        /// <summary>产品名</summary>
+        [Category("硬件信息")]
+        [DisplayName("产品名")]
+        [Description("产品名")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Product", "产品名", "")]
+        public String Product { get => _Product; set { if (OnPropertyChanging("Product", value)) { _Product = value; OnPropertyChanged("Product"); } } }
+
         private String _Processor;
         /// <summary>处理器</summary>
         [Category("硬件信息")]
@@ -230,6 +239,24 @@ namespace Stardust.Data.Nodes
         [DataObjectField(false, false, true, 50)]
         [BindColumn("MachineGuid", "机器标识", "")]
         public String MachineGuid { get => _MachineGuid; set { if (OnPropertyChanging("MachineGuid", value)) { _MachineGuid = value; OnPropertyChanged("MachineGuid"); } } }
+
+        private String _SerialNumber;
+        /// <summary>序列号。适用于品牌机，跟笔记本标签显示一致</summary>
+        [Category("硬件信息")]
+        [DisplayName("序列号")]
+        [Description("序列号。适用于品牌机，跟笔记本标签显示一致")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("SerialNumber", "序列号。适用于品牌机，跟笔记本标签显示一致", "")]
+        public String SerialNumber { get => _SerialNumber; set { if (OnPropertyChanging("SerialNumber", value)) { _SerialNumber = value; OnPropertyChanged("SerialNumber"); } } }
+
+        private String _Board;
+        /// <summary>主板。序列号或家族信息</summary>
+        [Category("硬件信息")]
+        [DisplayName("主板")]
+        [Description("主板。序列号或家族信息")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Board", "主板。序列号或家族信息", "")]
+        public String Board { get => _Board; set { if (OnPropertyChanging("Board", value)) { _Board = value; OnPropertyChanged("Board"); } } }
 
         private String _DiskID;
         /// <summary>磁盘序列号</summary>
@@ -506,9 +533,12 @@ namespace Stardust.Data.Nodes
                     case "MaxOpenFiles": return _MaxOpenFiles;
                     case "Dpi": return _Dpi;
                     case "Resolution": return _Resolution;
+                    case "Product": return _Product;
                     case "Processor": return _Processor;
                     case "Uuid": return _Uuid;
                     case "MachineGuid": return _MachineGuid;
+                    case "SerialNumber": return _SerialNumber;
+                    case "Board": return _Board;
                     case "DiskID": return _DiskID;
                     case "MACs": return _MACs;
                     case "InstallPath": return _InstallPath;
@@ -565,9 +595,12 @@ namespace Stardust.Data.Nodes
                     case "MaxOpenFiles": _MaxOpenFiles = value.ToInt(); break;
                     case "Dpi": _Dpi = Convert.ToString(value); break;
                     case "Resolution": _Resolution = Convert.ToString(value); break;
+                    case "Product": _Product = Convert.ToString(value); break;
                     case "Processor": _Processor = Convert.ToString(value); break;
                     case "Uuid": _Uuid = Convert.ToString(value); break;
                     case "MachineGuid": _MachineGuid = Convert.ToString(value); break;
+                    case "SerialNumber": _SerialNumber = Convert.ToString(value); break;
+                    case "Board": _Board = Convert.ToString(value); break;
                     case "DiskID": _DiskID = Convert.ToString(value); break;
                     case "MACs": _MACs = Convert.ToString(value); break;
                     case "InstallPath": _InstallPath = Convert.ToString(value); break;
@@ -669,6 +702,9 @@ namespace Stardust.Data.Nodes
             /// <summary>分辨率。例如1024*768</summary>
             public static readonly Field Resolution = FindByName("Resolution");
 
+            /// <summary>产品名</summary>
+            public static readonly Field Product = FindByName("Product");
+
             /// <summary>处理器</summary>
             public static readonly Field Processor = FindByName("Processor");
 
@@ -677,6 +713,12 @@ namespace Stardust.Data.Nodes
 
             /// <summary>机器标识</summary>
             public static readonly Field MachineGuid = FindByName("MachineGuid");
+
+            /// <summary>序列号。适用于品牌机，跟笔记本标签显示一致</summary>
+            public static readonly Field SerialNumber = FindByName("SerialNumber");
+
+            /// <summary>主板。序列号或家族信息</summary>
+            public static readonly Field Board = FindByName("Board");
 
             /// <summary>磁盘序列号</summary>
             public static readonly Field DiskID = FindByName("DiskID");
@@ -831,6 +873,9 @@ namespace Stardust.Data.Nodes
             /// <summary>分辨率。例如1024*768</summary>
             public const String Resolution = "Resolution";
 
+            /// <summary>产品名</summary>
+            public const String Product = "Product";
+
             /// <summary>处理器</summary>
             public const String Processor = "Processor";
 
@@ -839,6 +884,12 @@ namespace Stardust.Data.Nodes
 
             /// <summary>机器标识</summary>
             public const String MachineGuid = "MachineGuid";
+
+            /// <summary>序列号。适用于品牌机，跟笔记本标签显示一致</summary>
+            public const String SerialNumber = "SerialNumber";
+
+            /// <summary>主板。序列号或家族信息</summary>
+            public const String Board = "Board";
 
             /// <summary>磁盘序列号</summary>
             public const String DiskID = "DiskID";

@@ -55,6 +55,9 @@ namespace Stardust.Models
         /// <summary>分辨率。例如1024*768</summary>
         public String Resolution { get; set; }
 
+        /// <summary>产品名称。制造商</summary>
+        public String Product { get; set; }
+
         /// <summary>处理器</summary>
         public String Processor { get; set; }
 
@@ -69,6 +72,12 @@ namespace Stardust.Models
 
         /// <summary>机器标识</summary>
         public String MachineGuid { get; set; }
+
+        /// <summary>计算机序列号。适用于品牌机，跟笔记本标签显示一致</summary>
+        public String SerialNumber { get; set; }
+
+        /// <summary>主板。序列号或家族信息</summary>
+        public String Board { get; set; }
 
         /// <summary>磁盘标识</summary>
         public String DiskID { get; set; }

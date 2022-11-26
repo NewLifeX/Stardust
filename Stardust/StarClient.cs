@@ -208,11 +208,14 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             TotalSize = (UInt64)driveInfo?.TotalSize,
             AvailableFreeSpace = (UInt64)driveInfo?.AvailableFreeSpace,
 
+            Product = mi.Product,
             Processor = mi.Processor,
             //CpuID = mi.CpuID,
             CpuRate = mi.CpuRate,
             UUID = mi.UUID,
             MachineGuid = mi.Guid,
+            SerialNumber = mi.Serial,
+            Board = mi.Board,
             DiskID = mi.DiskID,
 
             Macs = mcs,

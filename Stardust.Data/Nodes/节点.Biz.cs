@@ -386,10 +386,13 @@ namespace Stardust.Data.Nodes
             if (!di.MachineName.IsNullOrEmpty()) node.MachineName = di.MachineName;
             if (!di.UserName.IsNullOrEmpty()) node.UserName = di.UserName;
             if (!di.IP.IsNullOrEmpty()) node.IP = di.IP;
+            if (!di.Product.IsNullOrEmpty()) node.Product = di.Product;
             if (!di.Processor.IsNullOrEmpty()) node.Processor = di.Processor;
             //if (!di.CpuID.IsNullOrEmpty()) node.CpuID = di.CpuID;
             if (!di.UUID.IsNullOrEmpty()) node.Uuid = di.UUID;
             if (!di.MachineGuid.IsNullOrEmpty()) node.MachineGuid = di.MachineGuid;
+            if (!di.SerialNumber.IsNullOrEmpty()) node.SerialNumber = di.SerialNumber;
+            if (!di.Board.IsNullOrEmpty()) node.Board = di.Board;
             if (!di.DiskID.IsNullOrEmpty()) node.DiskID = di.DiskID;
 
             if (di.ProcessorCount > 0) node.Cpu = di.ProcessorCount;

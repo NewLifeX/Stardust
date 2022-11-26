@@ -23,9 +23,12 @@
       <Column Name="MaxOpenFiles" DataType="Int32" Description="最大打开文件。Linux上的ulimit -n" Category="硬件信息" />
       <Column Name="Dpi" DataType="String" Description="像素点。默认96*96" Category="硬件信息" />
       <Column Name="Resolution" DataType="String" Description="分辨率。例如1024*768" Category="硬件信息" />
+      <Column Name="Product" DataType="String" Description="产品名" Category="硬件信息" />
       <Column Name="Processor" DataType="String" Length="200" Description="处理器" Category="硬件信息" />
       <Column Name="Uuid" DataType="String" Description="唯一标识" Category="硬件信息" />
       <Column Name="MachineGuid" DataType="String" Description="机器标识" Category="硬件信息" />
+      <Column Name="SerialNumber" DataType="String" Description="序列号。适用于品牌机，跟笔记本标签显示一致" Category="硬件信息" />
+      <Column Name="Board" DataType="String" Description="主板。序列号或家族信息" Category="硬件信息" />
       <Column Name="DiskID" DataType="String" Length="200" Description="磁盘序列号" Category="硬件信息" />
       <Column Name="MACs" DataType="String" Length="200" Description="网卡" Category="硬件信息" />
       <Column Name="InstallPath" DataType="String" Length="200" Description="安装路径" Category="硬件信息" />

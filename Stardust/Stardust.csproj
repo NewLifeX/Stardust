@@ -60,7 +60,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="10.0.2022.1120-beta1450" />
+    <PackageReference Include="NewLife.Core" Version="10.0.2022.1126-beta0837" />
     <PackageReference Include="NewLife.Remoting" Version="2.0.2022.1109-beta0328" />
   </ItemGroup>
 

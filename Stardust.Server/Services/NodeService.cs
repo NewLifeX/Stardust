@@ -120,26 +120,40 @@ public class NodeService
         // 校验唯一编码，防止客户端拷贝配置
         var uuid = di.UUID;
         var guid = di.MachineGuid;
+        var serial = di.SerialNumber;
+        var board = di.Board;
         var diskid = di.DiskID;
+
+        var flag = true;
         if (!uuid.IsNullOrEmpty() && uuid != node.Uuid)
         {
             node.WriteHistory("登录校验", false, $"唯一标识不符！{uuid}!={node.Uuid}", ip);
-            return null;
+            flag = false;
         }
         if (!guid.IsNullOrEmpty() && guid != node.MachineGuid)
         {
             node.WriteHistory("登录校验", false, $"机器标识不符！{guid}!={node.MachineGuid}", ip);
-            return null;
+            flag = false;
+        }
+        if (!serial.IsNullOrEmpty() && serial != node.SerialNumber)
+        {
+            node.WriteHistory("登录校验", false, $"计算机序列号不符！{serial}!={node.SerialNumber}", ip);
+            flag = false;
+        }
+        if (!board.IsNullOrEmpty() && board != node.Board)
+        {
+            node.WriteHistory("登录校验", false, $"主板不符！{board}!={node.Board}", ip);
+            //flag = false;
         }
         if (!diskid.IsNullOrEmpty() && diskid != node.DiskID)
         {
             node.WriteHistory("登录校验", false, $"磁盘序列号不符！{diskid}!={node.DiskID}", ip);
-            return null;
+            flag = false;
         }
         if (!node.ProductCode.IsNullOrEmpty() && !productCode.IsNullOrEmpty() && !node.ProductCode.EqualIgnoreCase(productCode))
         {
             node.WriteHistory("登录校验", false, $"产品编码不符！{productCode}!={node.ProductCode}", ip);
-            return null;
+            flag = false;
         }
 
         // 机器名
@@ -160,7 +174,7 @@ public class NodeService
             }
         }
 
-        return node;
+        return flag ? node : null;
     }
 
     private Node AutoRegister(Node node, LoginInfo inf, String ip, Setting set)
@@ -391,7 +405,7 @@ public class NodeService
         };
     }
 
-    public NodeOnline GetOrAddOnline(Node node,String token,String ip)
+    public NodeOnline GetOrAddOnline(Node node, String token, String ip)
     {
         var localIp = node?.IP;
         if (localIp.IsNullOrEmpty()) localIp = ip;
