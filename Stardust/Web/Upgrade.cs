@@ -110,8 +110,16 @@ public class Upgrade
         {
             var del = item.FullName + ".del";
             WriteLog("MoveTo {0}", del);
-            if (File.Exists(del)) File.Delete(del);
-            item.MoveTo(del);
+            try
+            {
+                if (File.Exists(del)) File.Delete(del);
+                item.MoveTo(del);
+            }
+            catch
+            {
+                // 删除失败时，移动到临时目录随机文件
+                item.MoveTo(Path.GetTempFileName());
+            }
         }
 
         // 拷贝替换更新
