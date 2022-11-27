@@ -103,43 +103,94 @@ public class Upgrade
         WriteLog("解压缩到临时目录 {0}", tmp);
         file.AsFile().Extract(tmp, true);
 
-        //!!! 此处递归删除，导致也删掉了Update里面的文件
-        // 更新覆盖之前，需要把exe/dll可执行文件移走，否则Linux下覆盖运行中文件会报段错误
-        foreach (var item in dest.AsDirectory().GetAllFiles("*.exe;*.dll", false))
+        // 记录移动文件，更新失败时恢复
+        var dic = new Dictionary<String, String>();
+        try
         {
-            var del = item.FullName + ".del";
-            WriteLog("MoveTo {0}", del);
-            try
+            //!!! 此处递归删除，导致也删掉了Update里面的文件
+            // 更新覆盖之前，需要把exe/dll可执行文件移走，否则Linux下覆盖运行中文件会报段错误
+            foreach (var item in dest.AsDirectory().GetAllFiles("*.exe;*.dll", false))
             {
-                if (File.Exists(del)) File.Delete(del);
-                item.MoveTo(del);
+                var ori = item.FullName;
+                var del = item.FullName + ".del";
+                WriteLog("MoveTo {0}", del);
+                try
+                {
+                    if (File.Exists(del)) File.Delete(del);
+                    item.MoveTo(del);
+
+                    dic[ori] = del;
+                }
+                catch (Exception ex)
+                {
+                    WriteLog(ex.Message);
+
+                    try
+                    {
+                        // 删除失败时，移动到临时目录随机文件
+                        var target = Path.GetTempFileName();
+                        item.MoveTo(target);
+
+                        dic[ori] = target;
+                    }
+                    catch (Exception ex2)
+                    {
+                        WriteLog(ex2.Message);
+                    }
+                }
             }
-            catch (Exception ex)
+
+            // 拷贝替换更新
+            CopyAndReplace(tmp, dest);
+
+            //// 删除备份文件
+            //DeleteBackup(DestinationPath);
+            //!!! 先别急着删除，在Linux上，删除正在使用的文件可能导致进程崩溃
+
+            WriteLog("更新成功！");
+        }
+        catch
+        {
+            WriteLog("更新失败，恢复文件");
+            Restore(dic);
+
+            throw;
+        }
+
+        return true;
+    }
+
+    void Restore(IDictionary<String, String> dic)
+    {
+        foreach (var item in dic)
+        {
+            WriteLog("Restore {0}", item.Value);
+            if (File.Exists(item.Value))
             {
-                WriteLog(ex.Message);
+                if (File.Exists(item.Key))
+                {
+                    WriteLog("Delete {0}", item.Key);
+
+                    try
+                    {
+                        File.Delete(item.Key);
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteLog(ex.Message);
+                    }
+                }
 
                 try
                 {
-                    // 删除失败时，移动到临时目录随机文件
-                    item.MoveTo(Path.GetTempFileName());
+                    File.Move(item.Value, item.Key);
                 }
-                catch (Exception ex2)
+                catch (Exception ex)
                 {
-                    WriteLog(ex2.Message);
+                    WriteLog(ex.Message);
                 }
             }
         }
-
-        // 拷贝替换更新
-        CopyAndReplace(tmp, dest);
-
-        //// 删除备份文件
-        //DeleteBackup(DestinationPath);
-        //!!! 先别急着删除，在Linux上，删除正在使用的文件可能导致进程崩溃
-
-        WriteLog("更新成功！");
-
-        return true;
     }
 
     /// <summary>启动当前应用的新进程。当前进程退出</summary>
