@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Net.WebSockets;
 using System.Reflection;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using NewLife;
@@ -778,7 +777,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         XTrace.WriteLine("检查更新：{0}", channel);
 
         // 清理
-        var ug = new Upgrade { Log = XTrace.Log };
+        var ug = new Stardust.Web.Upgrade { Log = XTrace.Log };
         ug.DeleteBackup(".");
 
         var rs = await UpgradeAsync(channel);

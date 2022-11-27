@@ -411,6 +411,7 @@ internal class MyService : ServiceBase, IServiceProvider
             }
             catch (Exception ex)
             {
+                XTrace.WriteException(ex);
                 client.WriteErrorEvent("Upgrade", ex.ToString());
             }
         }

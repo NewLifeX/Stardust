@@ -180,7 +180,7 @@ public class LocalStarClient
 
             WriteLog("目标：{0}", target);
 
-            var ug = new Upgrade
+            var ug = new Stardust.Web.Upgrade
             {
                 SourceFile = Path.GetFileName(url).GetFullPath(),
                 DestinationPath = target,

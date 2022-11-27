@@ -7,7 +7,6 @@ namespace Stardust.Web;
 
 /// <summary>升级更新</summary>
 /// <remarks>
-/// 优先比较版本Version，再比较时间Time。
 /// 自动更新的难点在于覆盖正在使用的exe/dll文件，通过改名可以解决。
 /// </remarks>
 public class Upgrade
@@ -115,10 +114,19 @@ public class Upgrade
                 if (File.Exists(del)) File.Delete(del);
                 item.MoveTo(del);
             }
-            catch
+            catch (Exception ex)
             {
-                // 删除失败时，移动到临时目录随机文件
-                item.MoveTo(Path.GetTempFileName());
+                WriteLog(ex.Message);
+
+                try
+                {
+                    // 删除失败时，移动到临时目录随机文件
+                    item.MoveTo(Path.GetTempFileName());
+                }
+                catch (Exception ex2)
+                {
+                    WriteLog(ex2.Message);
+                }
             }
         }
 
@@ -267,7 +275,10 @@ public class Upgrade
             {
                 item.Delete();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                WriteLog(ex.Message);
+            }
         }
     }
 
@@ -297,8 +308,10 @@ public class Upgrade
             {
                 item.CopyTo(dst.EnsureDirectory(true), true);
             }
-            catch
+            catch (Exception ex)
             {
+                WriteLog(ex.Message);
+
                 // 如果是exe/dll，则先改名，因为可能无法覆盖
                 if (/*dst.EndsWithIgnoreCase(".exe", ".dll") &&*/ File.Exists(dst))
                 {
