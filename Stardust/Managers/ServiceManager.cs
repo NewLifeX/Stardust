@@ -57,6 +57,8 @@ public class ServiceManager : DisposeBase
         var list = Services.ToList();
         foreach (var item in services)
         {
+            if (item.Name.IsNullOrEmpty()) continue;
+
             var flag = false;
             for (var i = 0; i < list.Count; i++)
             {
@@ -293,6 +295,11 @@ public class ServiceManager : DisposeBase
 
     private async Task UploadService(ServiceInfo[] svcs)
     {
+        if (svcs == null) return;
+
+        svcs = svcs.Where(e => !e.Name.IsNullOrEmpty()).ToArray();
+        if (svcs.Length == 0) return;
+
         WriteLog("上报应用服务 {0}", svcs.Join(",", e => e.Name));
 
         await _client.UploadDeploy(svcs);
@@ -316,6 +323,7 @@ public class ServiceManager : DisposeBase
         foreach (var item in rs)
         {
             var svc = item.Service;
+            if (svc.Name.IsNullOrEmpty()) continue;
 
             // 下载文件到工作目录
             if (item.Service.Enable && !item.Url.IsNullOrEmpty()) await Download(item, svc);

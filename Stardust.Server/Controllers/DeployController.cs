@@ -93,6 +93,8 @@ public class DeployController : BaseController
         var rs = 0;
         foreach (var svc in services)
         {
+            if (svc.Name.IsNullOrEmpty()) continue;
+
             var app = AppDeploy.FindByName(svc.Name);
             app ??= new AppDeploy { Name = svc.Name/*, Enable = svc.Enable*/ };
 
