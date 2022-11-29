@@ -231,7 +231,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         // 目标框架
         di.Framework = GetNetCore()?.ToString();
         di.Framework ??= RuntimeInformation.FrameworkDescription?.TrimStart(".NET Framework", ".NET Core", ".NET Native", ".NET").Trim();
-       
+
         di.Architecture = RuntimeInformation.ProcessArchitecture + "";
 #else
         var ver = "";
@@ -540,7 +540,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             }
 
             //XTrace.WriteLine(inf.ToJson());
-            XTrace.WriteLine("心跳异常 {0}", (String)ex.GetTrue().Message);
+            XTrace.WriteLine("心跳异常 {0}", ex.GetTrue().Message);
 
             throw;
         }
@@ -583,6 +583,15 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         var tid = _eventTraceId;
         _eventTraceId = null;
 
+        // 正常队列为空，异常队列有数据，给它一次机会
+        if (_events.IsEmpty && !_failEvents.IsEmpty)
+        {
+            while (_failEvents.TryDequeue(out var ev))
+            {
+                _events.Enqueue(ev);
+            }
+        }
+
         while (!_events.IsEmpty)
         {
             var max = 100;
@@ -593,7 +602,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             span?.Detach(tid);
             try
             {
-                await PostEvents(list.ToArray());
+                if (list.Count > 0) await PostEvents(list.ToArray());
 
                 // 成功后读取本地缓存
                 while (_failEvents.TryDequeue(out var ev))
