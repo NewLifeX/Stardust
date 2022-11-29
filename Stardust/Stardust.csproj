@@ -59,9 +59,15 @@
   <ItemGroup>
     <Content Include="..\Doc\leaf.png" Link="leaf.png" PackagePath="\" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Readme.MD">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="10.0.2022.1126-beta0837" />
+    <PackageReference Include="NewLife.Core" Version="10.0.2022.1129-beta0048" />
     <PackageReference Include="NewLife.Remoting" Version="2.0.2022.1127-beta0246" />
   </ItemGroup>
 
