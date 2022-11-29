@@ -94,7 +94,8 @@ public class NodeService
         node.WriteHistory("节点下线", true, msg, ip);
         online.Delete();
 
-        var sid = $"{node.ID}@{ip}";
+        //var sid = $"{node.ID}@{ip}";
+        var sid = node.Code;
         _cache.Remove($"NodeOnline:{sid}");
 
         // 计算在线时长
