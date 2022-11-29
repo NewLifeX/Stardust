@@ -13,6 +13,7 @@ using Stardust.Configs;
 using Stardust.Models;
 using Stardust.Monitors;
 using Stardust.Registry;
+using Stardust.Services;
 
 namespace Stardust;
 
@@ -229,6 +230,7 @@ public class StarFactory : DisposeBase
 
             //var set = StarSetting.Current;
             //if (set.Debug) client.Log = XTrace.Log;
+            client.WriteInfoEvent("应用启动", $"pid={Process.GetCurrentProcess().Id}");
 
             _client = client;
 

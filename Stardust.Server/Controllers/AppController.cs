@@ -84,6 +84,22 @@ public class AppController : BaseController
     public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.Now, };
     #endregion
 
+    #region 上报
+    /// <summary>批量上报事件</summary>
+    /// <param name="events">事件集合</param>
+    /// <returns></returns>
+    [HttpPost(nameof(PostEvents))]
+    public Int32 PostEvents(EventModel[] events)
+    {
+        foreach (var model in events)
+        {
+            WriteHistory(model.Name, !model.Type.EqualIgnoreCase("error"), model.Remark, null);
+        }
+
+        return events.Length;
+    }
+    #endregion
+
     #region 下行通知
     /// <summary>下行通知</summary>
     /// <returns></returns>

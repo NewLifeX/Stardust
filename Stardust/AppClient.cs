@@ -15,7 +15,7 @@ using Stardust.Services;
 namespace Stardust;
 
 /// <summary>应用客户端。每个应用有一个客户端连接星尘服务端</summary>
-public class AppClient : ApiHttpClient, ICommandClient, IRegistry
+public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvider
 {
     #region 属性
     /// <summary>应用</summary>
@@ -224,6 +224,82 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry
     }
     #endregion
 
+    #region 上报
+    private readonly ConcurrentQueue<EventModel> _events = new();
+    private readonly ConcurrentQueue<EventModel> _failEvents = new();
+    private TimerX _eventTimer;
+    private String _eventTraceId;
+
+    /// <summary>批量上报事件</summary>
+    /// <param name="events"></param>
+    /// <returns></returns>
+    public async Task<Int32> PostEvents(params EventModel[] events) => await PostAsync<Int32>("App/PostEvents", events);
+
+    async Task DoPostEvent(Object state)
+    {
+        DefaultSpan.Current = null;
+        var tid = _eventTraceId;
+        _eventTraceId = null;
+
+        // 正常队列为空，异常队列有数据，给它一次机会
+        if (_events.IsEmpty && !_failEvents.IsEmpty)
+        {
+            while (_failEvents.TryDequeue(out var ev))
+            {
+                _events.Enqueue(ev);
+            }
+        }
+
+        while (!_events.IsEmpty)
+        {
+            var max = 100;
+            var list = new List<EventModel>();
+            while (_events.TryDequeue(out var model) && max-- > 0) list.Add(model);
+
+            using var span = Tracer?.NewSpan("PostEvent", list.Count);
+            span?.Detach(tid);
+            try
+            {
+                if (list.Count > 0) await PostEvents(list.ToArray());
+
+                // 成功后读取本地缓存
+                while (_failEvents.TryDequeue(out var ev))
+                {
+                    _events.Enqueue(ev);
+                }
+            }
+            catch (Exception ex)
+            {
+                span?.SetError(ex, null);
+
+                // 失败后进入本地缓存
+                foreach (var item in list)
+                {
+                    _failEvents.Enqueue(item);
+                }
+            }
+        }
+    }
+
+    /// <summary>写事件</summary>
+    /// <param name="type"></param>
+    /// <param name="name"></param>
+    /// <param name="remark"></param>
+    public virtual Boolean WriteEvent(String type, String name, String remark)
+    {
+        // 记录追踪标识，上报的时候带上，尽可能让源头和下游串联起来
+        _eventTraceId = DefaultSpan.Current?.ToString();
+
+        var now = DateTime.UtcNow;
+        var ev = new EventModel { Time = now.ToLong(), Type = type, Name = name, Remark = remark };
+        _events.Enqueue(ev);
+
+        _eventTimer?.SetNext(1000);
+
+        return true;
+    }
+    #endregion
+
     #region 长连接
     private TimerX _timer;
     private void StartTimer()
@@ -235,6 +311,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry
                 if (_timer == null)
                 {
                     _timer = new TimerX(DoPing, null, 5_000, 60_000) { Async = true };
+                    _eventTimer = new TimerX(DoPostEvent, null, 3_000, 60_000, "Device") { Async = true };
 
                     Attach(this);
                 }
@@ -246,6 +323,9 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry
     {
         _timer.TryDispose();
         _timer = null;
+
+        _eventTimer.TryDispose();
+        _eventTimer = null;
 
         if (_websocket != null && _websocket.State == WebSocketState.Open) _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default).Wait();
         _source?.Cancel();
