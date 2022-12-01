@@ -377,8 +377,11 @@ internal class MyService : ServiceBase, IServiceProvider
                     // 强制更新时，马上重启
                     if (rs && ur.Force)
                     {
+                        // 带有-s参数就算是服务中运行
+                        var inService = "-s".EqualIgnoreCase(Environment.GetCommandLineArgs());
+
                         // 以服务方式运行时，重启服务，否则采取拉起进程的方式
-                        if (Host is Host host && host.InService)
+                        if (inService || Host is Host host && host.InService)
                         {
                             //rs = Host.Restart("StarAgent");
                             // 使用外部命令重启服务
