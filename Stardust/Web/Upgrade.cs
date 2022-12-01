@@ -62,6 +62,9 @@ public class Upgrade
         sw.Stop();
         WriteLog("下载完成！{2} 大小{0:n0}字节，耗时{1:n0}ms", file.AsFile().Length, sw.ElapsedMilliseconds, file);
 
+        var md5 = file.AsFile().MD5().ToHex();
+        WriteLog("MD5: {0}", md5);
+
         SourceFile = file;
 
         return true;
