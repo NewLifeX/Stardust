@@ -29,7 +29,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>新增StarAgent插件架构，用于自定义扩展星尘代理；</PackageReleaseNotes>
+    <PackageReleaseNotes>发布中心完全成熟稳定</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -67,8 +67,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="10.0.2022.1129-beta0631" />
-    <PackageReference Include="NewLife.Remoting" Version="2.0.2022.1127-beta0246" />
+    <PackageReference Include="NewLife.Core" Version="10.1.2022.1201" />
+    <PackageReference Include="NewLife.Remoting" Version="2.0.2022.1201" />
   </ItemGroup>
 
 </Project>
