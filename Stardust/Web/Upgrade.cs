@@ -308,9 +308,22 @@ public class Upgrade
         if (!file2.IsNullOrEmpty()) fileName = Path.GetDirectoryName(fileName).CombinePath(file2);
         fileName.EnsureDirectory(true);
 
+        // 删除已存在文件，否则新文件比旧文件小时，写入的文件后面有用于数据
+        if (File.Exists(fileName))
+        {
+            try
+            {
+                File.Delete(fileName);
+            }
+            catch { }
+        }
+
         var ms = rs.Content;
         using var fs = new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite);
         await ms.CopyToAsync(fs);
+
+        // 截断文件，如果前面删除失败，这里就可能使用旧文件，需要把多余部分截断
+        fs.SetLength(fs.Position);
 
         return fileName;
     }
