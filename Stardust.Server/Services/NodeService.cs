@@ -424,7 +424,7 @@ public class NodeService
         var olt = _cache.Get<NodeOnline>($"NodeOnline:{sid}");
         if (olt != null)
         {
-            _cache.SetExpire($"NodeOnline:{sid}", TimeSpan.FromSeconds(600));
+            _cache.SetExpire($"NodeOnline:{sid}", TimeSpan.FromSeconds(120));
             return olt;
         }
 
@@ -456,7 +456,7 @@ public class NodeService
 
         olt.Creator = Environment.MachineName;
 
-        _cache.Set($"NodeOnline:{sid}", olt, 600);
+        _cache.Set($"NodeOnline:{sid}", olt, 120);
 
         return olt;
     }
