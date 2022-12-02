@@ -49,7 +49,7 @@
                 }
                 <td class="text-center">@entity.Id</td>
                 <td class="text-center">@entity.AppName</td>
-                <td class="text-center">@entity.NodeName</td>
+                <td class="text-center"><a href="/Nodes/Node?Id=@entity.NodeId">@entity.NodeName</a></td>
                 <td class="text-center">@entity.IP</td>
                 <td class="text-right">@entity.Sort.ToString("n0")</td>
                 <td class="text-center">
