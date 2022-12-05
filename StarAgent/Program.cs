@@ -449,16 +449,39 @@ internal class MyService : ServiceBase, IServiceProvider
 
     public void ShowMachineInfo()
     {
+        //foreach (var di in StarClient.GetDrives())
+        //{
+        //    XTrace.WriteLine($"{di.Name}\tIsReady={di.IsReady} DriveType={di.DriveType} DriveFormat={di.DriveFormat} TotalSize={di.TotalSize} TotalFreeSpace={di.TotalFreeSpace}");
+        //}
+
         XTrace.WriteLine("FullPath:{0}", ".".GetFullPath());
         XTrace.WriteLine("BasePath:{0}", ".".GetBasePath());
         XTrace.WriteLine("TempPath:{0}", Path.GetTempPath());
 
         var mi = MachineInfo.Current ?? MachineInfo.RegisterAsync().Result;
         mi.Refresh();
+        var pis = mi.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
 
-        foreach (var pi in mi.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        foreach (var pi in pis)
         {
             var val = mi.GetValue(pi);
+            if (pi.Name.EndsWithIgnoreCase("Memory"))
+                val = val.ToLong().ToGMK();
+            else if (pi.Name.EndsWithIgnoreCase("Rate", "Battery"))
+                val = val.ToDouble().ToString("p2");
+
+            XTrace.WriteLine("{0}:\t{1}", pi.Name, val);
+        }
+
+        var client = _Client ?? new StarClient();
+        var ni = client.GetNodeInfo();
+        var pis2 = ni.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+        foreach (var pi in pis2)
+        {
+            if (pis.Any(e => e.Name == pi.Name)) continue;
+
+            var val = ni.GetValue(pi);
             if (pi.Name.EndsWithIgnoreCase("Memory"))
                 val = val.ToLong().ToGMK();
             else if (pi.Name.EndsWithIgnoreCase("Rate", "Battery"))

@@ -7,7 +7,6 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using NewLife;
 using NewLife.Log;
-using NewLife.Net;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
@@ -188,6 +187,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         var mcs = NetHelper.GetMacs().Select(e => e.ToHex("-")).Where(e => e != "00-00-00-00-00-00").OrderBy(e => e).Join(",");
         //var driveInfo = new DriveInfo(Path.GetPathRoot(".".GetFullPath()));
         var path = ".".GetFullPath();
+        var drives = GetDrives();
         var driveInfo = DriveInfo.GetDrives().FirstOrDefault(e => path.StartsWithIgnoreCase(e.Name));
         var di = new NodeInfo
         {
@@ -207,6 +207,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             AvailableMemory = mi.AvailableMemory,
             TotalSize = (UInt64)driveInfo?.TotalSize,
             AvailableFreeSpace = (UInt64)driveInfo?.AvailableFreeSpace,
+            DriveInfo = drives.Join(",", e => $"{e.Name}[{e.DriveFormat}]={e.AvailableFreeSpace}/{e.TotalSize}"),
 
             Product = mi.Product,
             Processor = mi.Processor,
@@ -265,6 +266,25 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         if (Runtime.Linux) di.MaxOpenFiles = Execute("bash", "-c \"ulimit -n\"")?.Trim().ToInt() ?? 0;
 
         return di;
+    }
+
+    /// <summary>获取驱动器信息</summary>
+    /// <returns></returns>
+    public static IList<DriveInfo> GetDrives()
+    {
+        var list = new List<DriveInfo>();
+        foreach (var di in DriveInfo.GetDrives())
+        {
+            if (!di.IsReady) continue;
+            if (di.DriveType != DriveType.Fixed && di.DriveType != DriveType.Removable) continue;
+            if (di.Name != "/" && di.DriveFormat.EqualIgnoreCase("overlay", "squashfs")) continue;
+            if (di.Name.Contains("container") && di.Name.EndsWithIgnoreCase("/overlay")) continue;
+            if (di.TotalSize <= 0) continue;
+
+            if (!list.Any(e => e.Name == di.Name)) list.Add(di);
+        }
+
+        return list;
     }
 
     private static Version GetNetCore()

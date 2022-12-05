@@ -177,6 +177,15 @@ namespace Stardust.Data.Nodes
         [BindColumn("TotalSize", "磁盘。应用所在盘，单位M", "")]
         public Int32 TotalSize { get => _TotalSize; set { if (OnPropertyChanging("TotalSize", value)) { _TotalSize = value; OnPropertyChanged("TotalSize"); } } }
 
+        private String _DriveInfo;
+        /// <summary>驱动器信息。各磁盘大小，逗号分隔</summary>
+        [Category("硬件信息")]
+        [DisplayName("驱动器信息")]
+        [Description("驱动器信息。各磁盘大小，逗号分隔")]
+        [DataObjectField(false, false, true, 200)]
+        [BindColumn("DriveInfo", "驱动器信息。各磁盘大小，逗号分隔", "")]
+        public String DriveInfo { get => _DriveInfo; set { if (OnPropertyChanging("DriveInfo", value)) { _DriveInfo = value; OnPropertyChanged("DriveInfo"); } } }
+
         private Int32 _MaxOpenFiles;
         /// <summary>最大打开文件。Linux上的ulimit -n</summary>
         [Category("硬件信息")]
@@ -530,6 +539,7 @@ namespace Stardust.Data.Nodes
                     case "Cpu": return _Cpu;
                     case "Memory": return _Memory;
                     case "TotalSize": return _TotalSize;
+                    case "DriveInfo": return _DriveInfo;
                     case "MaxOpenFiles": return _MaxOpenFiles;
                     case "Dpi": return _Dpi;
                     case "Resolution": return _Resolution;
@@ -592,6 +602,7 @@ namespace Stardust.Data.Nodes
                     case "Cpu": _Cpu = value.ToInt(); break;
                     case "Memory": _Memory = value.ToInt(); break;
                     case "TotalSize": _TotalSize = value.ToInt(); break;
+                    case "DriveInfo": _DriveInfo = Convert.ToString(value); break;
                     case "MaxOpenFiles": _MaxOpenFiles = value.ToInt(); break;
                     case "Dpi": _Dpi = Convert.ToString(value); break;
                     case "Resolution": _Resolution = Convert.ToString(value); break;
@@ -692,6 +703,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>磁盘。应用所在盘，单位M</summary>
             public static readonly Field TotalSize = FindByName("TotalSize");
+
+            /// <summary>驱动器信息。各磁盘大小，逗号分隔</summary>
+            public static readonly Field DriveInfo = FindByName("DriveInfo");
 
             /// <summary>最大打开文件。Linux上的ulimit -n</summary>
             public static readonly Field MaxOpenFiles = FindByName("MaxOpenFiles");
@@ -863,6 +877,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>磁盘。应用所在盘，单位M</summary>
             public const String TotalSize = "TotalSize";
+
+            /// <summary>驱动器信息。各磁盘大小，逗号分隔</summary>
+            public const String DriveInfo = "DriveInfo";
 
             /// <summary>最大打开文件。Linux上的ulimit -n</summary>
             public const String MaxOpenFiles = "MaxOpenFiles";
