@@ -54,14 +54,14 @@ public sealed class ApiFilterAttribute : ActionFilterAttribute
         {
             if (context.Result is ObjectResult obj)
             {
-                //context.Result = new JsonResult(new { code = obj.StatusCode ?? 0, data = obj.Value });
-                var rs = new { code = obj.StatusCode ?? 0, data = obj.Value };
-                context.Result = new ContentResult
-                {
-                    Content = rs.ToJson(false, true, true),
-                    ContentType = "application/json",
-                    StatusCode = 200
-                };
+                context.Result = new JsonResult(new { code = obj.StatusCode ?? 0, data = obj.Value });
+                //var rs = new { code = obj.StatusCode ?? 0, data = obj.Value };
+                //context.Result = new ContentResult
+                //{
+                //    Content = rs.ToJson(false, true, true),
+                //    ContentType = "application/json",
+                //    StatusCode = 200
+                //};
             }
             else if (context.Result is EmptyResult)
             {
