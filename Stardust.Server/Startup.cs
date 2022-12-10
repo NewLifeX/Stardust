@@ -77,6 +77,8 @@ public class Startup
 #endif
             options.JsonSerializerOptions.Converters.Add(new TypeConverter());
             options.JsonSerializerOptions.Converters.Add(new LocalTimeConverter());
+            options.JsonSerializerOptions.Converters.Add(new JsonConverter<ISpanBuilder, DefaultSpanBuilder>());
+            options.JsonSerializerOptions.Converters.Add(new JsonConverter<ISpan, DefaultSpan>());
             // 支持中文编码
             options.JsonSerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
         });
@@ -98,14 +100,7 @@ public class Startup
         // 启用接口响应压缩
         services.AddResponseCompression();
 
-        services.AddControllers()
-            .AddJsonOptions(options =>
-            {
-                options.JsonSerializerOptions.Converters.Add(new DateTimeConverter());
-                options.JsonSerializerOptions.Converters.Add(new JsonConverter<ISpanBuilder, DefaultSpanBuilder>());
-                options.JsonSerializerOptions.Converters.Add(new JsonConverter<ISpan, DefaultSpan>());
-                options.JsonSerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
-            });
+        services.AddControllers();
 
         //services.Configure<KestrelServerOptions>(options =>
         //{
