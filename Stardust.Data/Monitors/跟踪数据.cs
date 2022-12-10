@@ -63,6 +63,14 @@ namespace Stardust.Data.Monitors
         [BindColumn("AppId", "应用", "")]
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
+        private Int32 _NodeId;
+        /// <summary>节点</summary>
+        [DisplayName("节点")]
+        [Description("节点")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("NodeId", "节点", "")]
+        public Int32 NodeId { get => _NodeId; set { if (OnPropertyChanging("NodeId", value)) { _NodeId = value; OnPropertyChanged("NodeId"); } } }
+
         private String _ClientId;
         /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
         [DisplayName("实例")]
@@ -209,6 +217,7 @@ namespace Stardust.Data.Monitors
                     case "StatHour": return _StatHour;
                     case "StatMinute": return _StatMinute;
                     case "AppId": return _AppId;
+                    case "NodeId": return _NodeId;
                     case "ClientId": return _ClientId;
                     case "ItemId": return _ItemId;
                     case "Name": return _Name;
@@ -237,6 +246,7 @@ namespace Stardust.Data.Monitors
                     case "StatHour": _StatHour = value.ToDateTime(); break;
                     case "StatMinute": _StatMinute = value.ToDateTime(); break;
                     case "AppId": _AppId = value.ToInt(); break;
+                    case "NodeId": _NodeId = value.ToInt(); break;
                     case "ClientId": _ClientId = Convert.ToString(value); break;
                     case "ItemId": _ItemId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
@@ -277,6 +287,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>应用</summary>
             public static readonly Field AppId = FindByName("AppId");
+
+            /// <summary>节点</summary>
+            public static readonly Field NodeId = FindByName("NodeId");
 
             /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
             public static readonly Field ClientId = FindByName("ClientId");
@@ -346,6 +359,9 @@ namespace Stardust.Data.Monitors
 
             /// <summary>应用</summary>
             public const String AppId = "AppId";
+
+            /// <summary>节点</summary>
+            public const String NodeId = "NodeId";
 
             /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
             public const String ClientId = "ClientId";

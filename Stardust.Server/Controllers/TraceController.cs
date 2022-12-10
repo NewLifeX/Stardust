@@ -53,10 +53,10 @@ public class TraceController : ControllerBase
         using var span = _tracer?.NewSpan($"traceReport-{model.AppId}", new { ip, model.ClientId, count = model.Builders?.Length, names = model.Builders?.Join(",", e => e.Name) });
 
         // 验证
-        var (app, online) = Valid(model.AppId, model, model.ClientId, token);
+        var (app, online) = Valid(model.AppId, model, model.ClientId, ip, token);
 
         // 插入数据
-        if (builders != null && builders.Length > 0) Task.Run(() => ProcessData(app, model, ip, builders));
+        if (builders != null && builders.Length > 0) Task.Run(() => ProcessData(app, model, online?.NodeId ?? 0, ip, builders));
 
         // 构造响应
         var rs = new TraceResponse
@@ -108,7 +108,7 @@ public class TraceController : ControllerBase
         return Report(model, token);
     }
 
-    private (AppTracer, AppOnline) Valid(String appId, TraceModel model, String clientId, String token)
+    private (AppTracer, AppOnline) Valid(String appId, TraceModel model, String clientId, String ip, String token)
     {
         var set = _setting;
 
@@ -178,7 +178,7 @@ public class TraceController : ControllerBase
             app.Update();
         }
 
-        var ip = HttpContext.GetUserHost();
+        //var ip = HttpContext.GetUserHost();
         if (clientId.IsNullOrEmpty()) clientId = ip;
 
         // 收集应用性能信息
@@ -193,7 +193,7 @@ public class TraceController : ControllerBase
         return (app, online);
     }
 
-    private void ProcessData(AppTracer app, TraceModel model, String ip, ISpanBuilder[] builders)
+    private void ProcessData(AppTracer app, TraceModel model, Int32 nodeId, String ip, ISpanBuilder[] builders)
     {
         try
         {
@@ -253,6 +253,7 @@ public class TraceController : ControllerBase
                 var td = TraceData.Create(item);
                 td.AppId = app.ID;
                 td.ItemId = ti.Id;
+                td.NodeId = nodeId;
                 td.ClientId = model.ClientId ?? ip;
                 td.CreateIP = ip;
                 td.CreateTime = now;
