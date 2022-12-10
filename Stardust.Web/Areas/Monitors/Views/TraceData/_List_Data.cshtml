@@ -57,7 +57,8 @@
             var url3 = $"?appid={entity.AppId}&clientId={HttpUtility.UrlEncode(entity.ClientId)}";
 
             // 带缓存，避免重复查询节点
-            if (!nodes.TryGetValue(entity.ClientId + "", out var node))
+            var node = entity.Node;
+            if (node == null && !nodes.TryGetValue(entity.ClientId + "", out node))
             {
                 var online = AppOnline.FindByClient(entity.ClientId);
                 if (online == null && entity.App != null && entity.App.AppId > 0)

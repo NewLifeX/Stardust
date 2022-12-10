@@ -49,53 +49,53 @@ public class RegistryService
             online.SaveAsync();
         }
 
-        // 根据节点IP规则，自动创建节点
-        if (online.NodeId == 0)
-        {
-            var node = GetOrAddNode(inf, online.IP, ip);
-            if (node != null)
-            {
-                online.NodeId = node.ID;
-                online.SaveAsync();
-            }
-        }
+        //// 根据节点IP规则，自动创建节点
+        //if (online.NodeId == 0)
+        //{
+        //    var node = GetOrAddNode(inf, online.IP, ip);
+        //    if (node != null)
+        //    {
+        //        online.NodeId = node.ID;
+        //        online.SaveAsync();
+        //    }
+        //}
 
         return online;
     }
 
-    public Node GetOrAddNode(AppModel inf, String localIp, String ip)
-    {
-        // 根据节点IP规则，自动创建节点
-        var rule = NodeResolver.Instance.Match(null, localIp);
-        if (rule != null && rule.NewNode)
-        {
-            using var span = _tracer?.NewSpan("AddNodeForApp", rule);
+    //public Node GetOrAddNode(AppModel inf, String localIp, String ip)
+    //{
+    //    // 根据节点IP规则，自动创建节点
+    //    var rule = NodeResolver.Instance.Match(null, localIp);
+    //    if (rule != null && rule.NewNode)
+    //    {
+    //        using var span = _tracer?.NewSpan("AddNodeForApp", rule);
 
-            var nodes = Node.SearchByIP(localIp);
-            if (nodes.Count == 0)
-            {
-                var node = new Node
-                {
-                    Code = Rand.NextString(8),
-                    Name = rule.Name,
-                    ProductCode = inf?.AppName ?? "App",
-                    Category = rule.Category,
-                    IP = localIp,
-                    Version = inf?.Version,
-                    Enable = true,
-                };
-                if (node.Name.IsNullOrEmpty()) node.Name = inf?.AppName;
-                if (node.Name.IsNullOrEmpty()) node.Name = node.Code;
-                node.Insert();
+    //        var nodes = Node.SearchByIP(localIp);
+    //        if (nodes.Count == 0)
+    //        {
+    //            var node = new Node
+    //            {
+    //                Code = Rand.NextString(8),
+    //                Name = rule.Name,
+    //                ProductCode = inf?.AppName ?? "App",
+    //                Category = rule.Category,
+    //                IP = localIp,
+    //                Version = inf?.Version,
+    //                Enable = true,
+    //            };
+    //            if (node.Name.IsNullOrEmpty()) node.Name = inf?.AppName;
+    //            if (node.Name.IsNullOrEmpty()) node.Name = node.Code;
+    //            node.Insert();
 
-                node.WriteHistory("AppAddNode", true, inf.ToJson(), ip);
+    //            node.WriteHistory("AppAddNode", true, inf.ToJson(), ip);
 
-                return node;
-            }
-        }
+    //            return node;
+    //        }
+    //    }
 
-        return null;
-    }
+    //    return null;
+    //}
 
     public (AppService, Boolean changed) RegisterService(App app, Service service, PublishServiceInfo model, String ip)
     {
