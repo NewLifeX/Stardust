@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.ComponentModel;
+using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
-using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Deployment;
 using XCode.Membership;
@@ -50,6 +50,13 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         PageSetting.EnableNavbar = false;
 
         return AppDeployVersion.Search(appId, null, null, start, end, p["Q"], p);
+    }
+
+    protected override Boolean Valid(AppDeployVersion entity, DataObjectMethodType type, Boolean post)
+    {
+        if (!post && type == DataObjectMethodType.Insert) entity.Version = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+
+        return base.Valid(entity, type, post);
     }
 
     protected override Int32 OnInsert(AppDeployVersion entity)
