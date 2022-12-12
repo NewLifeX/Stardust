@@ -27,7 +27,7 @@
             <th class="text-center" title="IP地址"><a href="@Html.Raw(page.GetSortUrl("IP"))">IP</a></th>
             <th class="text-center" title="顺序。较大在前"><a href="@Html.Raw(page.GetSortUrl("Sort"))">顺序</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Enable"))">启用</a></th>
-            <th class="text-center" title="环境。prod/test/dev/uat等"><a href="@Html.Raw(page.GetSortUrl("Environment"))">环境</a></th>
+            <th class="text-center" title="进程"><a href="@Html.Raw(page.GetSortUrl("ProcessId"))">进程</a></th>
             <th class="text-center" title="进程时间"><a href="@Html.Raw(page.GetSortUrl("StartTime"))">进程时间</a></th>
             <th class="text-center" title="版本。客户端"><a href="@Html.Raw(page.GetSortUrl("Version"))">版本</a></th>
             <th class="text-center" title="编译时间。客户端"><a href="@Html.Raw(page.GetSortUrl("Compile"))">编译时间</a></th>
@@ -48,14 +48,14 @@
                     <td class="text-center"><input type="checkbox" name="keys" value="@entity.Id" /></td>
                 }
                 <td class="text-center">@entity.Id</td>
-                <td class="text-center">@entity.AppName</td>
+                <td class="text-center"><a href="/Deployment/AppDeploy?Id=@entity.AppId">@entity.AppName</a></td>
                 <td class="text-center"><a href="/Nodes/Node?Id=@entity.NodeId">@entity.NodeName</a></td>
                 <td class="text-center">@entity.IP</td>
                 <td class="text-right">@entity.Sort.ToString("n0")</td>
                 <td class="text-center">
                     <i class="glyphicon glyphicon-@(entity.Enable ? "ok" : "remove")" style="color: @(entity.Enable ? "green" : "red");"></i>
                 </td>
-                <td>@entity.Environment</td>
+                <td>@entity.ProcessId</td>
                 <td>@entity.StartTime.ToFullString("")</td>
                 <td>@entity.Version</td>
                 <td>@entity.Compile.ToFullString("")</td>
