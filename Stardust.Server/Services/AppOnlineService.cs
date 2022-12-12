@@ -108,7 +108,7 @@ public class AppOnlineService
         // 关联节点
         if (online.NodeId <= 0)
         {
-            var node = GetNodeByIP(online.IP);
+            var node = GetNodeByIP(online.IP, ip);
             node ??= GetOrAddNode(info, online.IP, ip);
             if (node != null)
             {
@@ -131,20 +131,29 @@ public class AppOnlineService
         return online;
     }
 
-    private Node GetNodeByIP(String ip)
+    private Node GetNodeByIP(String localIp, String ip)
     {
-        if (ip.IsNullOrEmpty()) return null;
+        if (localIp.IsNullOrEmpty()) return null;
 
         // 借助缓存，降低IP搜索节点次数
-        if (_cache.TryGetValue<Node>(ip, out var node)) return node;
+        var key = $"{localIp}-{ip}";
+        if (_cache.TryGetValue<Node>(key, out var node)) return node;
 
-        node = Node.SearchByIP(ip).FirstOrDefault();
+        // 根据本地IP找出所有符合节点，再找一个公网IP匹配的
+        var list = Node.SearchByIP(localIp);
+        node = list.FirstOrDefault(e => e.UpdateIP == ip);
+        node ??= list.FirstOrDefault();
 
-        _cache.Add(ip, node, 3600);
+        _cache.Add(key, node, 3600);
 
         return node;
     }
 
+    /// <summary>检查或添加节点。主要服务于仅有跟踪数据的客户端接入</summary>
+    /// <param name="inf"></param>
+    /// <param name="localIp"></param>
+    /// <param name="ip"></param>
+    /// <returns></returns>
     public Node GetOrAddNode(AppInfo inf, String localIp, String ip)
     {
         // 根据节点IP规则，自动创建节点
@@ -154,32 +163,34 @@ public class AppOnlineService
             using var span = _tracer?.NewSpan("AddNodeForApp", rule);
 
             var nodes = Node.SearchByIP(localIp);
-            if (nodes.Count == 0)
+            if (nodes.Count > 0) return nodes[0];
+
+            var node = new Node
             {
-                var node = new Node
-                {
-                    Code = Rand.NextString(8),
-                    Name = inf?.MachineName ?? rule.Name,
-                    ProductCode = inf?.Name ?? "App",
-                    Category = rule.Category,
-                    IP = localIp,
-                    Enable = true,
-                };
-                if (inf != null)
-                {
-                    node.Version = inf.Version;
-                    node.MachineName = inf.MachineName;
-                    node.UserName = inf.UserName;
-                }
-                if (node.Name.IsNullOrEmpty()) node.Name = rule.Category;
-                if (node.Name.IsNullOrEmpty()) node.Name = inf?.Name;
-                if (node.Name.IsNullOrEmpty()) node.Name = node.Code;
-                node.Insert();
+                Code = Rand.NextString(8),
+                Name = inf?.MachineName ?? rule.Name,
+                ProductCode = inf?.Name ?? "App",
+                Category = rule.Category,
+                IP = localIp,
+                Enable = true,
 
-                node.WriteHistory("AppAddNode", true, inf.ToJson(), ip);
-
-                return node;
+                CreateIP = ip,
+                UpdateIP = ip,
+            };
+            if (inf != null)
+            {
+                node.Version = inf.Version;
+                node.MachineName = inf.MachineName;
+                node.UserName = inf.UserName;
             }
+            if (node.Name.IsNullOrEmpty()) node.Name = rule.Category;
+            if (node.Name.IsNullOrEmpty()) node.Name = inf?.Name;
+            if (node.Name.IsNullOrEmpty()) node.Name = node.Code;
+            node.Insert();
+
+            node.WriteHistory("AppAddNode", true, inf.ToJson(), ip);
+
+            return node;
         }
 
         return null;

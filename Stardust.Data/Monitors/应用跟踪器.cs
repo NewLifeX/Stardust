@@ -133,11 +133,11 @@ namespace Stardust.Data.Monitors
         public Boolean EnableMeter { get => _EnableMeter; set { if (OnPropertyChanging("EnableMeter", value)) { _EnableMeter = value; OnPropertyChanged("EnableMeter"); } } }
 
         private String _WhiteList;
-        /// <summary>白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持正则表达式如^/Admin/</summary>
+        /// <summary>白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持^开头的正则表达式如^/Admin/</summary>
         [DisplayName("白名单")]
-        [Description("白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持正则表达式如^/Admin/")]
+        [Description("白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持^开头的正则表达式如^/Admin/")]
         [DataObjectField(false, false, true, 200)]
-        [BindColumn("WhiteList", "白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持正则表达式如^/Admin/", "")]
+        [BindColumn("WhiteList", "白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持^开头的正则表达式如^/Admin/", "")]
         public String WhiteList { get => _WhiteList; set { if (OnPropertyChanging("WhiteList", value)) { _WhiteList = value; OnPropertyChanged("WhiteList"); } } }
 
         private String _Excludes;
@@ -433,7 +433,7 @@ namespace Stardust.Data.Monitors
             /// <summary>性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息</summary>
             public static readonly Field EnableMeter = FindByName("EnableMeter");
 
-            /// <summary>白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持正则表达式如^/Admin/</summary>
+            /// <summary>白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持^开头的正则表达式如^/Admin/</summary>
             public static readonly Field WhiteList = FindByName("WhiteList");
 
             /// <summary>排除项。要排除的操作名，支持*模糊匹配</summary>
@@ -538,7 +538,7 @@ namespace Stardust.Data.Monitors
             /// <summary>性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息</summary>
             public const String EnableMeter = "EnableMeter";
 
-            /// <summary>白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持正则表达式如^/Admin/</summary>
+            /// <summary>白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持^开头的正则表达式如^/Admin/</summary>
             public const String WhiteList = "WhiteList";
 
             /// <summary>排除项。要排除的操作名，支持*模糊匹配</summary>

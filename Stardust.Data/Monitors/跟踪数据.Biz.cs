@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using System.Threading.Tasks;
+using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using NewLife.Log;
+using Stardust.Data.Nodes;
 using XCode;
 using XCode.Membership;
 using XCode.Shards;
@@ -68,6 +69,14 @@ namespace Stardust.Data.Monitors
         /// <summary>应用</summary>
         [Map(nameof(AppId))]
         public String AppName => App + "";
+
+        /// <summary>节点</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public Node Node => Extends.Get(nameof(Node), k => Node.FindByID(NodeId));
+
+        /// <summary>节点</summary>
+        [Map(__.NodeId)]
+        public String NodeName => Node?.Name;
 
         /// <summary>关联项</summary>
         [XmlIgnore, IgnoreDataMember]

@@ -20,6 +20,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Common\DateTimeConverter.cs" />
+    <Compile Remove="Common\JsonConverterForBuilder.cs" />
     <Compile Remove="Common\TokenFilter.cs" />
     <Compile Remove="Common\TokenSession.cs" />
     <Compile Remove="StarService.cs" />

@@ -96,6 +96,7 @@
       <Column Name="StatHour" DataType="DateTime" Description="统计小时" />
       <Column Name="StatMinute" DataType="DateTime" Description="统计分钟" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
+      <Column Name="NodeId" DataType="Int32" Description="节点" />
       <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@proccessid" />
       <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
       <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。原始接口名或埋点名" />
