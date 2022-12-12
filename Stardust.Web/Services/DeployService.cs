@@ -53,7 +53,7 @@ public class DeployService
             var args = new { deployNode.Id, deployNode.AppName }.ToJson();
             msg = args;
 
-            await _starFactory.SendNodeCommand(deployNode.Node.Code, action, args);
+            await _starFactory.SendNodeCommand(deployNode.Node.Code, action, args, 15);
         }
         catch (Exception ex)
         {
