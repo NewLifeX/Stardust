@@ -90,6 +90,13 @@ public static class RegistryExtensions
         return http;
     }
 
+    /// <summary>为指定服务创建客户端，从星尘注册中心获取服务地址。单例，应避免频繁创建客户端</summary>
+    /// <param name="registry">服务注册客户端</param>
+    /// <param name="serviceName">服务名</param>
+    /// <param name="tag"></param>
+    /// <returns></returns>
+    public static IApiClient CreateForService(this IRegistry registry, String serviceName, String tag = null) => Task.Run(() => CreateForServiceAsync(registry, serviceName, tag)).Result;
+
     private static void Bind(ApiHttpClient client, ServiceModel[] ms)
     {
         if (ms != null && ms.Length > 0)
