@@ -101,6 +101,14 @@ namespace Stardust.Data
         [BindColumn("Address", "地址。本地局域网服务地址，如http://127.0.0.1:1234", "")]
         public String Address { get => _Address; set { if (OnPropertyChanging("Address", value)) { _Address = value; OnPropertyChanged("Address"); } } }
 
+        private String _OriginAddress;
+        /// <summary>原始地址。客户端上报地址</summary>
+        [DisplayName("原始地址")]
+        [Description("原始地址。客户端上报地址")]
+        [DataObjectField(false, false, true, 500)]
+        [BindColumn("OriginAddress", "原始地址。客户端上报地址", "")]
+        public String OriginAddress { get => _OriginAddress; set { if (OnPropertyChanging("OriginAddress", value)) { _OriginAddress = value; OnPropertyChanged("OriginAddress"); } } }
+
         private Int32 _Weight;
         /// <summary>权重</summary>
         [DisplayName("权重")]
@@ -205,6 +213,7 @@ namespace Stardust.Data
                     case "PingCount": return _PingCount;
                     case "Version": return _Version;
                     case "Address": return _Address;
+                    case "OriginAddress": return _OriginAddress;
                     case "Weight": return _Weight;
                     case "Scope": return _Scope;
                     case "Tag": return _Tag;
@@ -232,6 +241,7 @@ namespace Stardust.Data
                     case "PingCount": _PingCount = value.ToInt(); break;
                     case "Version": _Version = Convert.ToString(value); break;
                     case "Address": _Address = Convert.ToString(value); break;
+                    case "OriginAddress": _OriginAddress = Convert.ToString(value); break;
                     case "Weight": _Weight = value.ToInt(); break;
                     case "Scope": _Scope = Convert.ToString(value); break;
                     case "Tag": _Tag = Convert.ToString(value); break;
@@ -281,6 +291,9 @@ namespace Stardust.Data
 
             /// <summary>地址。本地局域网服务地址，如http://127.0.0.1:1234</summary>
             public static readonly Field Address = FindByName("Address");
+
+            /// <summary>原始地址。客户端上报地址</summary>
+            public static readonly Field OriginAddress = FindByName("OriginAddress");
 
             /// <summary>权重</summary>
             public static readonly Field Weight = FindByName("Weight");
@@ -347,6 +360,9 @@ namespace Stardust.Data
 
             /// <summary>地址。本地局域网服务地址，如http://127.0.0.1:1234</summary>
             public const String Address = "Address";
+
+            /// <summary>原始地址。客户端上报地址</summary>
+            public const String OriginAddress = "OriginAddress";
 
             /// <summary>权重</summary>
             public const String Weight = "Weight";

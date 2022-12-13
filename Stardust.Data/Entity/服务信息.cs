@@ -59,6 +59,14 @@ namespace Stardust.Data
         [BindColumn("Enable", "启用", "")]
         public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
+        private Boolean _Extranet;
+        /// <summary>外网。外网服务使用提供者公网地址进行注册</summary>
+        [DisplayName("外网")]
+        [Description("外网。外网服务使用提供者公网地址进行注册")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Extranet", "外网。外网服务使用提供者公网地址进行注册", "")]
+        public Boolean Extranet { get => _Extranet; set { if (OnPropertyChanging("Extranet", value)) { _Extranet = value; OnPropertyChanged("Extranet"); } } }
+
         private Boolean _Singleton;
         /// <summary>单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于设置权重</summary>
         [DisplayName("单例")]
@@ -212,6 +220,7 @@ namespace Stardust.Data
                     case "DisplayName": return _DisplayName;
                     case "Category": return _Category;
                     case "Enable": return _Enable;
+                    case "Extranet": return _Extranet;
                     case "Singleton": return _Singleton;
                     case "UseScope": return _UseScope;
                     case "Address": return _Address;
@@ -240,6 +249,7 @@ namespace Stardust.Data
                     case "DisplayName": _DisplayName = Convert.ToString(value); break;
                     case "Category": _Category = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
+                    case "Extranet": _Extranet = value.ToBoolean(); break;
                     case "Singleton": _Singleton = value.ToBoolean(); break;
                     case "UseScope": _UseScope = value.ToBoolean(); break;
                     case "Address": _Address = Convert.ToString(value); break;
@@ -280,6 +290,9 @@ namespace Stardust.Data
 
             /// <summary>启用</summary>
             public static readonly Field Enable = FindByName("Enable");
+
+            /// <summary>外网。外网服务使用提供者公网地址进行注册</summary>
+            public static readonly Field Extranet = FindByName("Extranet");
 
             /// <summary>单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于设置权重</summary>
             public static readonly Field Singleton = FindByName("Singleton");
@@ -349,6 +362,9 @@ namespace Stardust.Data
 
             /// <summary>启用</summary>
             public const String Enable = "Enable";
+
+            /// <summary>外网。外网服务使用提供者公网地址进行注册</summary>
+            public const String Extranet = "Extranet";
 
             /// <summary>单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于设置权重</summary>
             public const String Singleton = "Singleton";

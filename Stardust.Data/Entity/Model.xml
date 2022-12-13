@@ -141,6 +141,7 @@
       <Column Name="DisplayName" DataType="String" Description="显示名" />
       <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="Extranet" DataType="Boolean" Description="外网。外网服务使用提供者公网地址进行注册" />
       <Column Name="Singleton" DataType="Boolean" Description="单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于设置权重" />
       <Column Name="UseScope" DataType="Boolean" Description="作用域。使用作用域隔离后，消费者只能使用本作用域内的服务" />
       <Column Name="Address" DataType="String" Description="服务地址模版。固定的网关地址，或地址模版如http://{IP}:{Port}，默认不填写，自动识别地址" />
@@ -174,6 +175,7 @@
       <Column Name="PingCount" DataType="Int32" Description="心跳" />
       <Column Name="Version" DataType="String" Description="版本" />
       <Column Name="Address" DataType="String" Length="500" Description="地址。本地局域网服务地址，如http://127.0.0.1:1234" />
+      <Column Name="OriginAddress" DataType="String" Length="500" Description="原始地址。客户端上报地址" />
       <Column Name="Weight" DataType="Int32" Description="权重" />
       <Column Name="Scope" DataType="String" Description="作用域。根据配置中心应用规则计算，禁止跨域访问服务" />
       <Column Name="Tag" DataType="String" Description="标签。带有指定特性，逗号分隔" />

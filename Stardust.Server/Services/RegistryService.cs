@@ -152,13 +152,22 @@ public class RegistryService
         svc.PingCount++;
         svc.Tag = model.Tag;
         svc.Version = model.Version;
+        svc.OriginAddress = model.Address;
 
         // 地址处理。本地任意地址，更换为IP地址
-        var serverAddress = model.IP;
-        if (serverAddress.IsNullOrEmpty()) serverAddress = localIp;
-        if (serverAddress.IsNullOrEmpty()) serverAddress = ip;
+        var serverAddress = "";
+        if (service.Extranet)
+        {
+            serverAddress = ip;
+        }
+        else
+        {
+            serverAddress = model.IP;
+            if (serverAddress.IsNullOrEmpty()) serverAddress = localIp;
+            if (serverAddress.IsNullOrEmpty()) serverAddress = ip;
+        }
 
-        var ds = new List<String>();
+        var urls = new List<String>();
         foreach (var item in serverAddress.Split(","))
         {
             var addrs = model.Address
@@ -173,32 +182,32 @@ public class RegistryService
                 {
                     var url = elm;
                     if (url.StartsWithIgnoreCase("http://", "https://")) url = new Uri(url).ToString().TrimEnd('/');
-                    if (!ds.Contains(url)) ds.Add(url);
+                    if (!urls.Contains(url)) urls.Add(url);
                 }
             }
         }
 
         if (service.Address.IsNullOrEmpty())
         {
-            svc.Address = ds.Join(",");
+            svc.Address = urls.Join(",");
         }
         else
         {
             // 地址模版
-            var addr = service.Address.Replace("{IP}", ip);
+            var addr = service.Address.Replace("{LocalIP}", localIp).Replace("{IP}", ip);
             if (addr.Contains("{Port}"))
             {
                 var port = 0;
-                foreach (var item in ds)
+                foreach (var item in urls)
                 {
                     var p = item.IndexOf(":", "http://".Length);
                     if (p >= 0)
                     {
-                        port = item[p..].TrimEnd('/').ToInt();
+                        port = item[(p + 1)..].TrimEnd('/').ToInt();
                         if (port > 0) break;
                     }
                 }
-                addr = addr.Replace("{Port}", port + "");
+                if (port > 0) addr = addr.Replace("{Port}", port + "");
             }
             svc.Address = addr;
         }
