@@ -372,6 +372,8 @@ internal class ServiceController : DisposeBase
 
         if (StartTime.Year < 2000) StartTime = DateTime.Now;
 
+        Running = true;
+
         return true;
     }
 

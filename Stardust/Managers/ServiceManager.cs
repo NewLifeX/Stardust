@@ -457,7 +457,7 @@ public class ServiceManager : DisposeBase
                 controllers.RemoveAt(i);
                 changed = true;
             }
-            else if (service.ToJson() != controller.Info.ToJson())
+            else if (controller.Running && service.ToJson() != controller.Info.ToJson())
             {
                 controller.Stop("配置改变");
                 controllers.RemoveAt(i);
