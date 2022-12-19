@@ -72,6 +72,10 @@ internal class MyService : ServiceBase, IServiceProvider
         AddMenu('t', "服务器信息", ShowMachineInfo);
         AddMenu('w', "测试微服务", UseMicroService);
 
+        // 控制应用服务。有些问题，只能控制当前进程管理的服务，而不能管理后台服务管理的应用
+        AddMenu('z', "启动所有应用服务", () => _Manager?.StartAll());
+        AddMenu('x', "停止所有应用服务", () => _Manager?.StopAll("菜单控制"));
+
         MachineInfo.RegisterAsync();
 
         //// 定时重启

@@ -174,6 +174,44 @@ public class ServiceManager : DisposeBase
         SaveDb();
     }
 
+    /// <summary>
+    /// 启动所有应用
+    /// </summary>
+    public void StartAll()
+    {
+        var svcs = _controllers;
+        for (var i = svcs.Count - 1; i >= 0; i--)
+        {
+            var ctrl = svcs[i];
+            if (!ctrl.Running)
+            {
+                ctrl.Check();
+            }
+        }
+
+        SaveDb();
+    }
+
+    /// <summary>
+    /// 停止所有应用
+    /// </summary>
+    /// <param name="reason"></param>
+    public void StopAll(String reason)
+    {
+        var svcs = _controllers;
+        for (var i = svcs.Count - 1; i >= 0; i--)
+        {
+            var ctrl = svcs[i];
+            if (ctrl.Running)
+            {
+                ctrl.Stop(reason);
+                svcs.RemoveAt(i);
+            }
+        }
+
+        SaveDb();
+    }
+
     /// <summary>保存应用状态到数据库</summary>
     private void SaveDb()
     {
