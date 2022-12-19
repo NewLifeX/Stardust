@@ -27,9 +27,13 @@ public class ServiceInfo
     [XmlAttribute]
     public Boolean Enable { get; set; }
 
-    /// <summary>是否自动启动</summary>
+    /// <summary>服务工作模式。0默认；1仅解压；2解压后运行</summary>
     [XmlAttribute]
-    public Boolean AutoStart { get; set; }
+    public ServiceModes Mode { get; set; }
+
+    ///// <summary>是否自动启动</summary>
+    //[XmlAttribute]
+    //public Boolean AutoStart { get; set; }
 
     ///// <summary>是否自动停止。随着宿主的退出，同时停止该应用进程</summary>
     //[XmlAttribute]

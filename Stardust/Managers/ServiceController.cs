@@ -14,6 +14,11 @@ namespace Stardust.Managers;
 internal class ServiceController : DisposeBase
 {
     #region 属性
+    static Int32 _gid = 0;
+    private Int32 _id = Interlocked.Increment(ref _gid);
+    /// <summary>编号</summary>
+    public Int32 Id => _id;
+
     /// <summary>服务名</summary>
     public String Name { get; set; }
 
@@ -28,6 +33,9 @@ internal class ServiceController : DisposeBase
 
     /// <summary>进程</summary>
     public Process Process { get; set; }
+
+    /// <summary>是否正在工作</summary>
+    public Boolean Running { get; set; }
 
     /// <summary>监视文件改变的周期。默认5000ms</summary>
     public Int32 MonitorPeriod { get; set; } = 5000;
@@ -64,12 +72,12 @@ internal class ServiceController : DisposeBase
     /// <returns>本次是否成功启动，原来已启动返回false</returns>
     public Boolean Start()
     {
-        if (Process != null) return false;
+        if (Running) return false;
 
         // 加锁避免多线程同时启动服务
         lock (this)
         {
-            if (Process != null) return false;
+            if (Running) return false;
 
             var service = Info;
             if (service == null) return false;
@@ -77,7 +85,7 @@ internal class ServiceController : DisposeBase
             // 连续错误一定数量后，不再尝试启动
             if (_error >= MaxFails)
             {
-                WriteLog("应用[{0}]累计错误次数{1}达到最大值{2}", Name, _error, MaxFails);
+                if (_error == MaxFails) WriteLog("应用[{0}]累计错误次数{1}达到最大值{2}", Name, _error, MaxFails);
 
                 return false;
             }
@@ -97,14 +105,34 @@ internal class ServiceController : DisposeBase
             _workdir = workDir;
 
             var args = service.Arguments?.Trim();
-            WriteLog("启动应用：{0} {1} {2}", file, args, workDir);
+            WriteLog("启动应用：{0} {1} workDir={2} Mode={3}", file, args, workDir, service.Mode);
             if (service.MaxMemory > 0) WriteLog("内存限制：{0:n0}M", service.MaxMemory);
 
             using var span = Tracer?.NewSpan("StartService", service);
             try
             {
                 Process p;
-                if (file.EqualIgnoreCase("ZipDeploy") || file.EndsWithIgnoreCase(".zip"))
+                var isZip = file.EqualIgnoreCase("ZipDeploy") || file.EndsWithIgnoreCase(".zip");
+
+                // 工作模式
+                switch (service.Mode)
+                {
+                    case ServiceModes.Default:
+                        break;
+                    case ServiceModes.Extract:
+                        Extract(service, ref file, workDir);
+                        Running = true;
+                        WriteLog("解压完成，外部主机（如IIS）将托管应用");
+                        return true;
+                    case ServiceModes.ExtractAndRun:
+                        Extract(service, ref file, workDir);
+                        isZip = false;
+                        break;
+                    default:
+                        break;
+                }
+
+                if (isZip)
                 {
                     var deploy = new ZipDeploy
                     {
@@ -124,6 +152,7 @@ internal class ServiceController : DisposeBase
                 }
                 else
                 {
+                    WriteLog("拉起进程");
                     var si = new ProcessStartInfo
                     {
                         FileName = file,
@@ -150,6 +179,7 @@ internal class ServiceController : DisposeBase
 
                 // 记录进程信息，避免宿主重启后无法继续管理
                 SetProcess(p);
+                Running = true;
 
                 StartTime = DateTime.Now;
 
@@ -171,10 +201,42 @@ internal class ServiceController : DisposeBase
         }
     }
 
+    public Boolean Extract(ServiceInfo service, ref String file, String workDir)
+    {
+        var isZip = file.EqualIgnoreCase("ZipDeploy") || file.EndsWithIgnoreCase(".zip");
+        if (!isZip) return false;
+
+        var deploy = new ZipDeploy
+        {
+            FileName = file,
+            WorkingDirectory = workDir,
+
+            Log = XTrace.Log,
+        };
+
+        var args = service.Arguments?.Trim();
+        if (!args.IsNullOrEmpty() && !deploy.Parse(args.Split(" "))) return false;
+
+        deploy.Extract(workDir);
+
+        var runfile = deploy.FindExeFile(workDir);
+        if (runfile == null)
+        {
+            WriteLog("无法找到名为[{0}]的可执行文件", deploy.FileName);
+            return false;
+        }
+
+        file = runfile.FullName;
+
+        return true;
+    }
+
     /// <summary>停止应用</summary>
     /// <param name="reason"></param>
     public void Stop(String reason)
     {
+        Running = false;
+
         var p = Process;
         if (p == null) return;
 
@@ -432,7 +494,7 @@ internal class ServiceController : DisposeBase
     /// <param name="args"></param>
     public void WriteLog(String format, params Object[] args)
     {
-        Log?.Info($"[{Name}]{format}", args);
+        Log?.Info($"[{Id}/{Name}]{format}", args);
 
         if (format.Contains("错误") || format.Contains("失败"))
             EventProvider?.WriteErrorEvent("ServiceController", String.Format(format, args));

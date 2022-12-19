@@ -169,6 +169,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
             //AutoStart = app.AutoStart,
             //AutoStop = app.AutoStop,
             MaxMemory = app.MaxMemory,
+            Mode = app.Mode,
         };
 
         return inf;

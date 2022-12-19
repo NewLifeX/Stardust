@@ -349,7 +349,7 @@ public class ServiceManager : DisposeBase
                 old.Arguments = svc.Arguments;
                 old.WorkingDirectory = svc.WorkingDirectory;
                 old.Enable = svc.Enable;
-                old.AutoStart = svc.AutoStart;
+                //old.AutoStart = svc.AutoStart;
                 //svc.AutoStop = item.AutoStop;
                 old.MaxMemory = svc.MaxMemory;
             }
@@ -454,6 +454,12 @@ public class ServiceManager : DisposeBase
             if (service == null || !service.Enable)
             {
                 controller.Stop("配置停止");
+                controllers.RemoveAt(i);
+                changed = true;
+            }
+            else if (service.ToJson() != controller.Info.ToJson())
+            {
+                controller.Stop("配置改变");
                 controllers.RemoveAt(i);
                 changed = true;
             }

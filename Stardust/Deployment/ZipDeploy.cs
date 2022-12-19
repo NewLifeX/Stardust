@@ -196,7 +196,7 @@ public class ZipDeploy
 
     /// <summary>解压缩</summary>
     /// <param name="shadow"></param>
-    protected virtual void Extract(String shadow)
+    public virtual void Extract(String shadow)
     {
         var fi = WorkingDirectory.CombinePath(FileName).AsFile();
         var rundir = fi.Directory;
@@ -205,25 +205,29 @@ public class ZipDeploy
         fi.Extract(shadow, true);
 
         // 复制配置文件和数据文件到运行目录
-        foreach (var item in shadow.AsDirectory().GetFiles())
+        var sdi = shadow.AsDirectory();
+        if (!sdi.FullName.EnsureEnd("\\").EqualIgnoreCase(fi.DirectoryName.EnsureEnd("\\")))
         {
-            if (item.Extension.EndsWithIgnoreCase(".json", ".config", ".xml"))
+            foreach (var item in sdi.GetFiles())
             {
-                item.CopyTo(rundir.FullName.CombinePath(item.Name), true);
+                if (item.Extension.EndsWithIgnoreCase(".json", ".config", ".xml"))
+                {
+                    item.CopyTo(rundir.FullName.CombinePath(item.Name), true);
+                }
             }
+
+            var di = shadow.CombinePath("Config").AsDirectory();
+            if (di.Exists) di.CopyTo(rundir.FullName.CombinePath("Config"));
+
+            di = shadow.CombinePath("Data").AsDirectory();
+            if (di.Exists) di.CopyTo(rundir.FullName.CombinePath("Data"));
         }
-
-        var di = shadow.CombinePath("Config").AsDirectory();
-        if (di.Exists) di.CopyTo(rundir.FullName.CombinePath("Config"));
-
-        di = shadow.CombinePath("Data").AsDirectory();
-        if (di.Exists) di.CopyTo(rundir.FullName.CombinePath("Data"));
     }
 
     /// <summary>查找执行文件</summary>
     /// <param name="shadow"></param>
     /// <returns></returns>
-    protected virtual FileInfo FindExeFile(String shadow)
+    public virtual FileInfo FindExeFile(String shadow)
     {
         var fis = shadow.AsDirectory().GetFiles();
         var runfile = fis.FirstOrDefault(e => e.Name.EqualIgnoreCase(Name));

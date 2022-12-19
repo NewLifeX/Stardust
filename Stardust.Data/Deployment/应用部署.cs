@@ -111,6 +111,15 @@ namespace Stardust.Data.Deployment
         [BindColumn("MaxMemory", "最大内存。单位M，超过上限时自动重启应用，默认0不限制", "")]
         public Int32 MaxMemory { get => _MaxMemory; set { if (OnPropertyChanging("MaxMemory", value)) { _MaxMemory = value; OnPropertyChanged("MaxMemory"); } } }
 
+        private Stardust.Models.ServiceModes _Mode;
+        /// <summary>工作模式。0默认；1仅解压，如IIS；2解压后运行</summary>
+        [Category("参数")]
+        [DisplayName("工作模式")]
+        [Description("工作模式。0默认；1仅解压，如IIS；2解压后运行")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Mode", "工作模式。0默认；1仅解压，如IIS；2解压后运行", "")]
+        public Stardust.Models.ServiceModes Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
+
         private Int32 _CreateUserId;
         /// <summary>创建者</summary>
         [Category("扩展")]
@@ -196,6 +205,7 @@ namespace Stardust.Data.Deployment
                     case "Arguments": return _Arguments;
                     case "WorkingDirectory": return _WorkingDirectory;
                     case "MaxMemory": return _MaxMemory;
+                    case "Mode": return _Mode;
                     case "CreateUserId": return _CreateUserId;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -221,6 +231,7 @@ namespace Stardust.Data.Deployment
                     case "Arguments": _Arguments = Convert.ToString(value); break;
                     case "WorkingDirectory": _WorkingDirectory = Convert.ToString(value); break;
                     case "MaxMemory": _MaxMemory = value.ToInt(); break;
+                    case "Mode": _Mode = (Stardust.Models.ServiceModes)value.ToInt(); break;
                     case "CreateUserId": _CreateUserId = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -270,6 +281,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
             public static readonly Field MaxMemory = FindByName("MaxMemory");
+
+            /// <summary>工作模式。0默认；1仅解压，如IIS；2解压后运行</summary>
+            public static readonly Field Mode = FindByName("Mode");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUserId = FindByName("CreateUserId");
@@ -330,6 +344,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
             public const String MaxMemory = "MaxMemory";
+
+            /// <summary>工作模式。0默认；1仅解压，如IIS；2解压后运行</summary>
+            public const String Mode = "Mode";
 
             /// <summary>创建者</summary>
             public const String CreateUserId = "CreateUserId";

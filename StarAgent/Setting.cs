@@ -72,11 +72,11 @@ namespace StarAgent
                 Services = new[] { si, si2 };
             }
 
-            // 版本升级过渡，逐步替代AutoStart
-            foreach (var svc in Services)
-            {
-                if (svc.AutoStart) svc.Enable = true;
-            }
+            //// 版本升级过渡，逐步替代AutoStart
+            //foreach (var svc in Services)
+            //{
+            //    if (svc.AutoStart) svc.Enable = true;
+            //}
 
             base.OnLoaded();
         }
