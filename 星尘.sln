@@ -30,15 +30,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnitTest", "UnitTest", "{48
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stardust.ServerTests", "Stardust.ServerTests\Stardust.ServerTests.csproj", "{677C6502-2C9C-4907-AD82-670BE77B0AE6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StarAgentTool", "StarAgentTool\StarAgentTool.csproj", "{4DA8CFA1-A2B9-4DD0-86C1-19925BA076B2}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StarGateway", "StarGateway\StarGateway.csproj", "{94CCBB9E-628D-4381-8E2C-DF349EFD204F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stardust.Extensions", "Stardust.Extensions\Stardust.Extensions.csproj", "{28C1DC01-2A89-47B6-8E9D-6351C12722AC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{11AD7F18-1320-41C5-B4A9-F208DBCAA5A9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkDetect", "Plugins\NetworkDetect\NetworkDetect.csproj", "{7178875E-F5DD-4136-A5E6-EEBF151396CB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetworkDetect", "Plugins\NetworkDetect\NetworkDetect.csproj", "{7178875E-F5DD-4136-A5E6-EEBF151396CB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -78,10 +76,6 @@ Global
 		{677C6502-2C9C-4907-AD82-670BE77B0AE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{677C6502-2C9C-4907-AD82-670BE77B0AE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{677C6502-2C9C-4907-AD82-670BE77B0AE6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4DA8CFA1-A2B9-4DD0-86C1-19925BA076B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4DA8CFA1-A2B9-4DD0-86C1-19925BA076B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4DA8CFA1-A2B9-4DD0-86C1-19925BA076B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4DA8CFA1-A2B9-4DD0-86C1-19925BA076B2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{94CCBB9E-628D-4381-8E2C-DF349EFD204F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{94CCBB9E-628D-4381-8E2C-DF349EFD204F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94CCBB9E-628D-4381-8E2C-DF349EFD204F}.Release|Any CPU.ActiveCfg = Release|Any CPU
