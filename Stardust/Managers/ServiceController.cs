@@ -433,7 +433,7 @@ internal class ServiceController : DisposeBase
 
         if (first) WriteLog("监视文件改变：{0}", di.FullName);
 
-        foreach (var fi in di.GetAllFiles("*.dll;*.exe;*.zip"))
+        foreach (var fi in di.GetAllFiles("*.dll;*.exe;*.zip;*.jar"))
         {
             var time = fi.LastWriteTime.Trim();
             if (_files.TryGetValue(fi.FullName, out var dt))
