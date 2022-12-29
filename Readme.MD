@@ -15,7 +15,8 @@
 ![XCode](Doc/星尘分布式.png)  
 
 Stardust  星尘，轻量级分布式服务框架！  
-集群管理、配置中心、性能监控、远程发布、服务治理。服务自动注册和发现，负载均衡，动态伸缩，故障转移。
+集群管理、配置中心、性能监控、远程发布、服务治理。服务自动注册和发现，负载均衡，动态伸缩，故障转移。  
+演示系统：[http://star.newlifex.com](http://star.newlifex.com)
 
 ## 核心功能
 1. [x] 星尘代理。StarAgent部署在每台应用服务器，作为系统服务负责守护本地应用及监控节点性能，支持Windows/Linux/IoT  
@@ -32,7 +33,7 @@ Stardust  星尘，轻量级分布式服务框架！
 星尘监控介绍 [https://newlifex.com/blood/stardust_monitor](https://newlifex.com/blood/stardust_monitor)  
 应用监控
 ![XCode](Doc/应用监控.png)  
-物联网平台远程控制花园水泵的调用链
+物联网平台远程控制花园水泵的调用链 [传送门](http://star.newlifex.com/trace?id=ac15452e1649035594650011be21ec)
 ![XCode](Doc/调用链.png)  
 关系图
 ![XCode](Doc/关系图.png)  
