@@ -83,6 +83,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("FileHash", "文件哈希。MD5散列", "")]
         public String FileHash { get => _FileHash; set { if (OnPropertyChanging("FileHash", value)) { _FileHash = value; OnPropertyChanged("FileHash"); } } }
 
+        private String _Preinstall;
+        /// <summary>预安装命令。更新前要执行的命令，解压缩后，在解压缩目录执行</summary>
+        [DisplayName("预安装命令")]
+        [Description("预安装命令。更新前要执行的命令，解压缩后，在解压缩目录执行")]
+        [DataObjectField(false, false, true, 200)]
+        [BindColumn("Preinstall", "预安装命令。更新前要执行的命令，解压缩后，在解压缩目录执行", "")]
+        public String Preinstall { get => _Preinstall; set { if (OnPropertyChanging("Preinstall", value)) { _Preinstall = value; OnPropertyChanged("Preinstall"); } } }
+
         private String _Executor;
         /// <summary>执行命令。空格前后为文件名和参数</summary>
         [DisplayName("执行命令")]
@@ -173,6 +181,7 @@ namespace Stardust.Data.Nodes
                     case "Strategy": return _Strategy;
                     case "Source": return _Source;
                     case "FileHash": return _FileHash;
+                    case "Preinstall": return _Preinstall;
                     case "Executor": return _Executor;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
@@ -196,6 +205,7 @@ namespace Stardust.Data.Nodes
                     case "Strategy": _Strategy = Convert.ToString(value); break;
                     case "Source": _Source = Convert.ToString(value); break;
                     case "FileHash": _FileHash = Convert.ToString(value); break;
+                    case "Preinstall": _Preinstall = Convert.ToString(value); break;
                     case "Executor": _Executor = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -237,6 +247,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>文件哈希。MD5散列</summary>
             public static readonly Field FileHash = FindByName("FileHash");
+
+            /// <summary>预安装命令。更新前要执行的命令，解压缩后，在解压缩目录执行</summary>
+            public static readonly Field Preinstall = FindByName("Preinstall");
 
             /// <summary>执行命令。空格前后为文件名和参数</summary>
             public static readonly Field Executor = FindByName("Executor");
@@ -291,6 +304,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>文件哈希。MD5散列</summary>
             public const String FileHash = "FileHash";
+
+            /// <summary>预安装命令。更新前要执行的命令，解压缩后，在解压缩目录执行</summary>
+            public const String Preinstall = "Preinstall";
 
             /// <summary>执行命令。空格前后为文件名和参数</summary>
             public const String Executor = "Executor";

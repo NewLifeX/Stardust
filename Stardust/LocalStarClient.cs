@@ -192,6 +192,7 @@ public class LocalStarClient
             var client = new HttpClient();
             client.DownloadFileAsync(url, ug.SourceFile).Wait();
 
+            ug.Extract();
             ug.Update();
 
             File.Delete(ug.SourceFile);

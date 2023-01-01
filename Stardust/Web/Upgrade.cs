@@ -26,6 +26,9 @@ public class Upgrade
 
     /// <summary>更新源文件</summary>
     public String SourceFile { get; set; }
+
+    /// <summary>解压缩的临时目录</summary>
+    public String TempPath { get; set; }
     #endregion
 
     #region 构造
@@ -86,14 +89,10 @@ public class Upgrade
         return md5.EqualIgnoreCase(hash);
     }
 
-    /// <summary>检查并执行更新操作</summary>
-    public virtual Boolean Update()
+    /// <summary>解压缩</summary>
+    /// <returns></returns>
+    public virtual Boolean Extract()
     {
-        var dest = DestinationPath;
-
-        // 删除备份文件
-        DeleteBackup(dest);
-
         var file = SourceFile;
         if (!File.Exists(file)) return false;
 
@@ -102,9 +101,26 @@ public class Upgrade
         // 解压更新程序包
         if (!file.EndsWithIgnoreCase(".zip")) return false;
 
-        var tmp = Path.GetTempPath().CombinePath(Path.GetFileNameWithoutExtension(file));
+        var tmp = TempPath;
+        if (tmp.IsNullOrEmpty()) tmp = TempPath = Path.GetTempPath().CombinePath(Path.GetFileNameWithoutExtension(file));
         WriteLog("解压缩到临时目录 {0}", tmp);
         file.AsFile().Extract(tmp, true);
+
+        return true;
+    }
+
+    /// <summary>执行更新，拷贝文件</summary>
+    public virtual Boolean Update()
+    {
+        var dest = DestinationPath;
+
+        // 删除备份文件
+        DeleteBackup(dest);
+
+        var tmp = TempPath;
+        if (!Directory.Exists(tmp)) return false;
+
+        WriteLog("发现更新源目录 {0}", tmp);
 
         // 记录移动文件，更新失败时恢复
         var dic = new Dictionary<String, String>();

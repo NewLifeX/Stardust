@@ -141,6 +141,7 @@ public class NodeController : BaseController
             Version = pv.Version,
             Source = url,
             FileHash = pv.FileHash,
+            Preinstall = pv.Preinstall,
             Executor = pv.Executor,
             Force = pv.Force,
             Description = pv.Description,

@@ -405,49 +405,64 @@ internal class MyService : ServiceBase, IServiceProvider
                 }
                 else
                 {
-                    client.WriteInfoEvent("Upgrade", "下载完成，准备覆盖文件");
-
-                    // 执行更新，解压缩覆盖文件
-                    var rs = ug.Update();
-                    if (rs && !ur.Executor.IsNullOrEmpty()) ug.Run(ur.Executor);
-                    _lastVersion = ur.Version;
-
-                    // 去除多余入口文件
-                    ug.Trim("StarAgent");
-
-                    // 强制更新时，马上重启
-                    if (rs && ur.Force)
+                    client.WriteInfoEvent("Upgrade", "下载完成，准备解压文件");
+                    if (!ug.Extract())
                     {
-                        // 带有-s参数就算是服务中运行
-                        var inService = "-s".EqualIgnoreCase(Environment.GetCommandLineArgs());
-
-                        // 以服务方式运行时，重启服务，否则采取拉起进程的方式
-                        if (inService || Host is Host host && host.InService)
+                        client.WriteInfoEvent("Upgrade", "解压失败");
+                    }
+                    else
+                    {
+                        if (!ur.Preinstall.IsNullOrEmpty())
                         {
-                            //rs = Host.Restart("StarAgent");
-                            // 使用外部命令重启服务
-                            rs = ug.Run("StarAgent", "-restart -upgrade");
+                            client.WriteInfoEvent("Upgrade", "执行预安装脚本");
 
-                            client.WriteInfoEvent("Upgrade", "强制更新完成，准备重启后台服务");
-
-                            //!! 这里不需要自杀，外部命令重启服务会结束当前进程
+                            ug.Run(ur.Preinstall);
                         }
-                        else
+
+                        client.WriteInfoEvent("Upgrade", "解压完成，准备覆盖文件");
+
+                        // 执行更新，解压缩覆盖文件
+                        var rs = ug.Update();
+                        if (rs && !ur.Executor.IsNullOrEmpty()) ug.Run(ur.Executor);
+                        _lastVersion = ur.Version;
+
+                        // 去除多余入口文件
+                        ug.Trim("StarAgent");
+
+                        // 强制更新时，马上重启
+                        if (rs && ur.Force)
                         {
-                            // 重新拉起进程
-                            rs = ug.Run("StarAgent", "-run -upgrade");
+                            // 带有-s参数就算是服务中运行
+                            var inService = "-s".EqualIgnoreCase(Environment.GetCommandLineArgs());
 
-                            if (rs)
+                            // 以服务方式运行时，重启服务，否则采取拉起进程的方式
+                            if (inService || Host is Host host && host.InService)
                             {
-                                StopWork("Upgrade");
+                                //rs = Host.Restart("StarAgent");
+                                // 使用外部命令重启服务
+                                rs = ug.Run("StarAgent", "-restart -upgrade");
 
-                                client.WriteInfoEvent("Upgrade", "强制更新完成，新进程已拉起，准备退出当前进程");
+                                client.WriteInfoEvent("Upgrade", "强制更新完成，准备重启后台服务");
 
-                                ug.KillSelf();
+                                //!! 这里不需要自杀，外部命令重启服务会结束当前进程
                             }
                             else
                             {
-                                client.WriteInfoEvent("Upgrade", "强制更新完成，但拉起新进程失败");
+                                // 重新拉起进程
+                                rs = ug.Run("StarAgent", "-run -upgrade");
+
+                                if (rs)
+                                {
+                                    StopWork("Upgrade");
+
+                                    client.WriteInfoEvent("Upgrade", "强制更新完成，新进程已拉起，准备退出当前进程");
+
+                                    ug.KillSelf();
+                                }
+                                else
+                                {
+                                    client.WriteInfoEvent("Upgrade", "强制更新完成，但拉起新进程失败");
+                                }
                             }
                         }
                     }
