@@ -6,7 +6,7 @@
     <AssemblyTitle>星尘分布式服务扩展</AssemblyTitle>
     <Description>星尘，分布式服务框架扩展。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
     <Company>新生命开发团队</Company>
-    <Copyright>©2002-2022 NewLife</Copyright>
+    <Copyright>©2002-2023 NewLife</Copyright>
     <VersionPrefix>2.5</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
