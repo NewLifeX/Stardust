@@ -267,7 +267,13 @@ public class ServiceManager : DisposeBase
             controller.SetInfo(service);
             _controllers.Add(controller);
 
-            if (controller.Start()) return true;
+            if (controller.Start())
+            {
+                var svc = controller.Info;
+                if (svc != null && svc.Mode == ServiceModes.RunOnce && !svc.Enable) RaiseServiceChanged();
+
+                return true;
+            }
         }
 
         return false;

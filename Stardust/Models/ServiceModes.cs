@@ -11,4 +11,7 @@ public enum ServiceModes
 
     /// <summary>解压并运行。</summary>
     ExtractAndRun = 2,
+
+    /// <summary>仅运行一次。运行后自动进入禁用状态</summary>
+    RunOnce = 3,
 }

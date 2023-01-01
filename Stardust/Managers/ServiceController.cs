@@ -128,6 +128,9 @@ internal class ServiceController : DisposeBase
                         Extract(service, ref file, workDir);
                         isZip = false;
                         break;
+                    case ServiceModes.RunOnce:
+                        //service.Enable = false;
+                        break;
                     default:
                         break;
                 }
@@ -176,6 +179,14 @@ internal class ServiceController : DisposeBase
                 if (p == null) return false;
 
                 WriteLog("启动成功 PID={0}/{1}", p.Id, p.ProcessName);
+
+                if (service.Mode == ServiceModes.RunOnce)
+                {
+                    service.Enable = false;
+                    Running = false;
+
+                    return true;
+                }
 
                 // 记录进程信息，避免宿主重启后无法继续管理
                 SetProcess(p);
