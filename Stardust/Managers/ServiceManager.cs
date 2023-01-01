@@ -179,17 +179,20 @@ public class ServiceManager : DisposeBase
     /// </summary>
     public void StartAll()
     {
-        var svcs = _controllers;
-        for (var i = svcs.Count - 1; i >= 0; i--)
+        Start();
+
+        var changed = false;
+        var svcs = Services;
+        foreach (var item in svcs)
         {
-            var ctrl = svcs[i];
-            if (!ctrl.Running)
+            if (item != null && item.Enable)
             {
-                ctrl.Check();
+                changed |= StartService(item);
             }
         }
 
-        SaveDb();
+        // 保存状态
+        if (changed) SaveDb();
     }
 
     /// <summary>
