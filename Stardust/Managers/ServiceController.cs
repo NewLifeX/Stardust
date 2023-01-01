@@ -15,7 +15,7 @@ internal class ServiceController : DisposeBase
 {
     #region 属性
     static Int32 _gid = 0;
-    private Int32 _id = Interlocked.Increment(ref _gid);
+    private readonly Int32 _id = Interlocked.Increment(ref _gid);
     /// <summary>编号</summary>
     public Int32 Id => _id;
 
@@ -249,6 +249,7 @@ internal class ServiceController : DisposeBase
         Running = false;
 
         var p = Process;
+        SetProcess(null);
         if (p == null) return;
 
         WriteLog("停止应用 PID={0}/{1} 原因：{2}", p.Id, p.ProcessName, reason);
@@ -268,8 +269,6 @@ internal class ServiceController : DisposeBase
         {
             span?.SetError(ex, null);
         }
-
-        SetProcess(null);
     }
 
     /// <summary>设置服务信息</summary>
@@ -321,7 +320,7 @@ internal class ServiceController : DisposeBase
             {
                 p = Process.GetProcessById(ProcessId);
                 // 这里的进程名可能是 dotnet/java，照样可以使用
-                if (p != null && !p.HasExited && p.ProcessName == ProcessName) return TakeOver(p, "按Id查找");
+                if (p != null && !p.HasExited && p.ProcessName == ProcessName) return TakeOver(p, $"按[Id={ProcessId}]查找");
             }
             catch (Exception ex)
             {
@@ -356,7 +355,7 @@ internal class ServiceController : DisposeBase
                         if (!name.IsNullOrEmpty())
                         {
                             name = Path.GetFileName(name);
-                            if (name.EqualIgnoreCase(target)) return TakeOver(item, $"按{ProcessName}查找");
+                            if (name.EqualIgnoreCase(target)) return TakeOver(item, $"按[{ProcessName} {target}]查找");
                         }
                     }
                 }
@@ -364,7 +363,7 @@ internal class ServiceController : DisposeBase
             else
             {
                 var ps = Process.GetProcessesByName(ProcessName);
-                if (ps.Length > 0) return TakeOver(ps[0], "按Name查找");
+                if (ps.Length > 0) return TakeOver(ps[0], $"按[Name={ProcessName}]查找");
             }
         }
 

@@ -352,7 +352,7 @@ public class ServiceManager : DisposeBase
         await _client.UploadDeploy(svcs);
     }
 
-    private async Task PullService(String appName)
+    private async Task<DeployInfo[]> PullService(String appName)
     {
         WriteLog("拉取应用服务 {0}", appName);
 
@@ -365,6 +365,7 @@ public class ServiceManager : DisposeBase
 
         WriteLog("取得应用服务：{0}", rs.Join(",", e => e.Name));
         WriteLog("可用：{0}", rs.Where(e => e.Service.Enable).Join(",", e => e.Name));
+        WriteLog(rs.ToJson(true));
 
         // 合并
         foreach (var item in rs)
@@ -405,6 +406,8 @@ public class ServiceManager : DisposeBase
         Services = svcs.ToArray();
 
         RaiseServiceChanged();
+
+        return rs;
     }
 
     async Task Download(DeployInfo info, ServiceInfo svc)
@@ -592,9 +595,9 @@ public class ServiceManager : DisposeBase
 
         var changed = cmd.Command switch
         {
-            "deploy/publish" => OnInstall(serviceName),
-            "deploy/install" => OnInstall(serviceName),
-            "deploy/start" => OnStart(serviceName),
+            "deploy/publish" => OnInstall(serviceName, cmd),
+            "deploy/install" => OnInstall(serviceName, cmd),
+            "deploy/start" => OnStart(serviceName, cmd),
             "deploy/stop" => OnStop(serviceName, cmd),
             "deploy/restart" => OnRestart(serviceName, cmd),
             "deploy/uninstall" => OnUninstall(serviceName, cmd),
@@ -614,9 +617,19 @@ public class ServiceManager : DisposeBase
         public String AppName { get; set; }
     }
 
-    Boolean OnInstall(String serviceName)
+    Boolean OnInstall(String serviceName, CommandModel cmd)
     {
-        PullService(serviceName);
+        using var span = Tracer?.NewSpan("ServiceManager-Install", cmd);
+
+        var dis = PullService(serviceName).Result;
+
+        // 马上停止并拉起应用服务，定时器只用于双保险
+        var svc = dis?.FirstOrDefault()?.Service;
+        if (svc != null)
+        {
+            StopService(svc, cmd.Command);
+            StartService(svc);
+        }
 
         // 尽快调度一次，拉起服务
         _timer.SetNext(-1);
@@ -624,8 +637,10 @@ public class ServiceManager : DisposeBase
         return true;
     }
 
-    Boolean OnStart(String serviceName)
+    Boolean OnStart(String serviceName, CommandModel cmd)
     {
+        using var span = Tracer?.NewSpan("ServiceManager-Start", cmd);
+
         var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
         if (svc == null) throw new Exception($"无法找到服务[{serviceName}]");
 
@@ -640,6 +655,8 @@ public class ServiceManager : DisposeBase
 
     Boolean OnStop(String serviceName, CommandModel cmd)
     {
+        using var span = Tracer?.NewSpan("ServiceManager-Stop", cmd);
+
         var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
         if (svc == null) throw new Exception($"无法找到服务[{serviceName}]");
 
@@ -654,6 +671,8 @@ public class ServiceManager : DisposeBase
 
     Boolean OnRestart(String serviceName, CommandModel cmd)
     {
+        using var span = Tracer?.NewSpan("ServiceManager-Restart", cmd);
+
         var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
         if (svc == null) throw new Exception($"无法找到服务[{serviceName}]");
 
@@ -671,6 +690,8 @@ public class ServiceManager : DisposeBase
 
     Boolean OnUninstall(String serviceName, CommandModel cmd)
     {
+        using var span = Tracer?.NewSpan("ServiceManager-Uninstall", cmd);
+
         var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
         if (svc == null) throw new Exception($"无法找到服务[{serviceName}]");
 

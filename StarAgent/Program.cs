@@ -1,4 +1,5 @@
-﻿using System.Net.NetworkInformation;
+﻿using System.Diagnostics;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using NewLife;
 using NewLife.Agent;
@@ -465,17 +466,33 @@ internal class MyService : ServiceBase, IServiceProvider
     {
         WriteLog("修复模式启动StarAgent，以修复正式的StarAgent");
 
+        // 校验当前程序的MD5，避免重复执行
+        var mf = "data/repair.md5".GetBasePath();
+        if (File.Exists(mf))
+        {
+            var old = File.ReadAllText(mf);
+            var md5 = Assembly.GetExecutingAssembly().Location.AsFile().MD5().ToHex();
+            if (old == md5) return;
+
+            File.WriteAllText(mf, md5);
+        }
+
         // 查找正式目录
-        var di = "../agent".AsDirectory();
-        if (!di.Exists) di = "../Agent".AsDirectory();
-        if (!di.Exists) di = "../staragent".AsDirectory();
-        if (!di.Exists) di = "../StarAgent".AsDirectory();
+        var di = "../agent".GetBasePath().AsDirectory();
+        if (!di.Exists) di = "../Agent".GetBasePath().AsDirectory();
+        if (!di.Exists) di = "../staragent".GetBasePath().AsDirectory();
+        if (!di.Exists) di = "../StarAgent".GetBasePath().AsDirectory();
         if (!di.Exists)
         {
+            WriteLog("目标不存在 {0}", di.FullName);
+
+            var cur = "./".GetBasePath().TrimEnd('/', '\\');
+            WriteLog("当前目录 {0}", cur);
+
             // 遍历所有子目录，但跳过当前
-            var cur = "./".GetFullPath().TrimEnd('/', '\\');
-            foreach (var item in "../".AsDirectory().GetDirectories())
+            foreach (var item in "../".GetBasePath().AsDirectory().GetDirectories())
             {
+                WriteLog("检查 {0}", item.FullName);
                 if (item.FullName.StartsWithIgnoreCase(cur)) continue;
 
                 var fi = item.GetFiles("StarAgent.dll").FirstOrDefault();
@@ -490,6 +507,7 @@ internal class MyService : ServiceBase, IServiceProvider
         if (!di.Exists)
         {
             WriteLog("未能找到正式StarAgent所在，修复失败！");
+            Thread.Sleep(1_000);
             return;
         }
 
@@ -498,11 +516,14 @@ internal class MyService : ServiceBase, IServiceProvider
         // 等待一会，拉起修复进程的进程，可能还有别的善后工作
         Thread.Sleep(5_000);
 
+        WriteLog("停止服务……");
         Init();
-        Host.Stop(ServiceName);
+        //Host.Stop(ServiceName);
+        Process.Start("net", $"stop {ServiceName}");
+        Thread.Sleep(1_000);
 
         // 拷贝当前目录所有dll/exe/runtime.json到正式目录
-        foreach (var fi in "./".AsDirectory().GetAllFiles("*.dll;*.exe;*.runtimeconfig.json"))
+        foreach (var fi in "./".GetBasePath().AsDirectory().GetAllFiles("*.dll;*.exe;*.runtimeconfig.json"))
         {
             try
             {
@@ -517,7 +538,10 @@ internal class MyService : ServiceBase, IServiceProvider
             }
         }
 
-        Host.Start(ServiceName);
+        WriteLog("启动服务……");
+        //Host.Start(ServiceName);
+        Process.Start("net", $"start {ServiceName}");
+        Thread.Sleep(1_000);
     }
     #endregion
 

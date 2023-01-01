@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
+using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Deployment;
 using XCode.Membership;
@@ -23,6 +24,10 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
 
         LogOnChange = true;
 
+        {
+            var df = ListFields.GetField("AppName") as ListField;
+            df.Url = "/Deployment/AppDeploy?Id={AppId}";
+        }
         {
             var df = ListFields.AddListField("UseVersion", null, "Enable");
             df.Header = "使用版本";
