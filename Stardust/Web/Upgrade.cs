@@ -242,7 +242,7 @@ public class Upgrade
             RunShell(file, args);
 
         // 如果进程在指定时间退出，说明启动失败
-        return !p.WaitForExit(1000);
+        return !p.WaitForExit(1000) || p.ExitCode == 0;
     }
 
     static Process RunShell(String fileName, String args) => Process.Start(new ProcessStartInfo(fileName, args) { UseShellExecute = true });

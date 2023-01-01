@@ -168,7 +168,7 @@ internal class ServiceController : DisposeBase
                     };
 
                     p = Process.Start(si);
-                    if (p.WaitForExit(3_000))
+                    if (p.WaitForExit(3_000) && p.ExitCode != 0)
                     {
                         WriteLog("启动失败！ExitCode={0}", p.ExitCode);
 
