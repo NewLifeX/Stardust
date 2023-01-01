@@ -124,7 +124,7 @@ public class DeployController : BaseController
             else
                 list.Remove(dn);
 
-            if (svc.Enable) dn.Enable = true;
+            if (svc.Enable && app.Enable) dn.Enable = true;
 
             dn.Save();
         }
