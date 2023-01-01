@@ -49,6 +49,13 @@ internal class Program
         // Zip发布
         if (svc.RunZipDeploy(args)) return;
 
+        // 修复
+        if ("-repair".EqualIgnoreCase(args))
+        {
+            svc.Repair();
+            return;
+        }
+
         svc.Main(args);
     }
 }
@@ -453,8 +460,65 @@ internal class MyService : ServiceBase, IServiceProvider
         }
     }
 
-    public void Repair() { }
+    /// <summary>修复模式启动StarAgent，以修复正式的StarAgent</summary>
+    public void Repair()
+    {
+        WriteLog("修复模式启动StarAgent，以修复正式的StarAgent");
 
+        // 查找正式目录
+        var di = "../agent".AsDirectory();
+        if (!di.Exists) di = "../Agent".AsDirectory();
+        if (!di.Exists) di = "../staragent".AsDirectory();
+        if (!di.Exists) di = "../StarAgent".AsDirectory();
+        if (!di.Exists)
+        {
+            // 遍历所有子目录，但跳过当前
+            var cur = "./".GetFullPath().TrimEnd('/', '\\');
+            foreach (var item in "../".AsDirectory().GetDirectories())
+            {
+                if (item.FullName.StartsWithIgnoreCase(cur)) continue;
+
+                var fi = item.GetFiles("StarAgent.dll").FirstOrDefault();
+                if (fi != null && fi.Exists)
+                {
+                    di = fi.Directory;
+                    break;
+                }
+            }
+        }
+
+        if (!di.Exists)
+        {
+            WriteLog("未能找到正式StarAgent所在，修复失败！");
+            return;
+        }
+
+        WriteLog("正式StarAgent所在目录：{0}", di.FullName);
+
+        // 等待一会，拉起修复进程的进程，可能还有别的善后工作
+        Thread.Sleep(5_000);
+
+        Init();
+        Host.Stop(ServiceName);
+
+        // 拷贝当前目录所有dll/exe/runtime.json到正式目录
+        foreach (var fi in "./".AsDirectory().GetAllFiles("*.dll;*.exe;*.runtimeconfig.json"))
+        {
+            try
+            {
+                WriteLog("复制 {0}", fi.Name);
+
+                var dst = di.FullName.CombinePath(fi.Name);
+                fi.CopyTo(dst, true);
+            }
+            catch (Exception ex)
+            {
+                Log?.Error(ex.Message);
+            }
+        }
+
+        Host.Start(ServiceName);
+    }
     #endregion
 
     #region 扩展功能

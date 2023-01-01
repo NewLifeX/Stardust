@@ -52,7 +52,7 @@ public class StarService : DisposeBase, IApi
         //{
         //    _agentInfo = AgentInfo.GetLocal(true);
         //});
-        _timer = new TimerX(DoRefreshLocal, null, 0, 5_000) { Async = true };
+        _timer = new TimerX(DoRefreshLocal, null, 100, 5_000) { Async = true };
     }
 
     /// <summary>销毁</summary>
@@ -110,7 +110,8 @@ public class StarService : DisposeBase, IApi
             _agentInfo = ai;
 
             // 如果未取得本机IP，则在较短时间内重新获取
-            _timer.Period = ai.IP.IsNullOrEmpty() ? 5_000 : 60_000;
+            if (_timer != null)
+                _timer.Period = ai.IP.IsNullOrEmpty() ? 5_000 : 60_000;
         }
     }
 
