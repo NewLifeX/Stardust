@@ -59,6 +59,9 @@ public partial class Node : Entity<Node>
         len = _.DiskID.Length;
         if (DiskID != null && len > 0 && DiskID.Length > len) DiskID = DiskID.Substring(0, len);
 
+        len = _.SerialNumber.Length;
+        if (SerialNumber != null && len > 0 && SerialNumber.Length > len) SerialNumber = SerialNumber.Substring(0, len);
+
         len = _.OS.Length;
         if (OS != null && len > 0 && OS.Length > len) OS = OS.Substring(0, len);
 
