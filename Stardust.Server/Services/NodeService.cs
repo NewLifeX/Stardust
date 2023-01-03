@@ -328,7 +328,7 @@ public class NodeService
             {
                 rs.Token = tm.AccessToken;
 
-                node.WriteHistory("刷新令牌", true, tm.ToJson(), ip);
+                //node.WriteHistory("刷新令牌", true, tm.ToJson(), ip);
             }
 
             //// 拉取命令
