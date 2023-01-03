@@ -78,7 +78,7 @@ namespace Stardust.Server.Controllers
 
                     var olt = _appOnline.UpdateOnline(app, clientId, ip, tokenModel.AccessToken);
 
-                    app.WriteHistory("RefreshToken", true, model.refresh_token, olt?.Version, ip, clientId);
+                    //app.WriteHistory("RefreshToken", true, model.refresh_token, olt?.Version, ip, clientId);
 
                     return tokenModel;
                 }
