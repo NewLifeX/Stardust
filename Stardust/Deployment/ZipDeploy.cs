@@ -28,6 +28,12 @@ public class ZipDeploy
 
     /// <summary>进程</summary>
     public Process Process { get; private set; }
+
+    /// <summary>是否调试模式。在调试模式下，重定向控制台输出到日志</summary>
+    public Boolean Debug { get; set; }
+
+    /// <summary>最后的错误信息</summary>
+    public String LastError { get; set; }
     #endregion
 
     #region 方法
@@ -119,7 +125,12 @@ public class ZipDeploy
         if (!Path.IsPathRooted(shadow)) shadow = rundir.FullName.CombinePath(shadow).GetFullPath();
         WriteLog("影子目录 {0}", shadow);
 
-        if (!Directory.Exists(shadow)) Extract(shadow);
+        var hasExtracted = false;
+        if (!Directory.Exists(shadow))
+        {
+            Extract(shadow);
+            hasExtracted = true;
+        }
 
         // 查找可执行文件
         var runfile = FindExeFile(shadow);
@@ -149,7 +160,7 @@ public class ZipDeploy
 
                 // false时目前控制台合并到当前控制台，一起退出；
                 // true时目标控制台独立窗口，不会一起退出；
-                UseShellExecute = true,
+                UseShellExecute = false,
             };
         }
         else
@@ -162,8 +173,13 @@ public class ZipDeploy
 
                 // false时目前控制台合并到当前控制台，一起退出；
                 // true时目标控制台独立窗口，不会一起退出；
-                UseShellExecute = true,
+                UseShellExecute = false,
             };
+        }
+
+        if (Debug)
+        {
+            si.RedirectStandardError = true;
         }
 
         WriteLog("启动文件: {0}", si.FileName);
@@ -174,14 +190,28 @@ public class ZipDeploy
         {
             WriteLog("启动失败！ExitCode={0}", p.ExitCode);
 
-            // 启动失败时，删除影子目录，有可能上一次解压以后，该目录被篡改过。这次删除以后，下一次启动时会再次解压缩
-            try
+            if (si.RedirectStandardError)
             {
-                Directory.Delete(shadow, true);
+                //var rs = p.StandardOutput.ReadToEnd();
+                //WriteLog(rs);
+                var rs = p.StandardError.ReadToEnd();
+                LastError = rs;
+                WriteLog(rs);
             }
-            catch (Exception ex)
+
+            // 不是我解压缩的，这里需要删除，这样子会有间隔性保留影子目录的机会
+            if (!hasExtracted)
             {
-                Log?.Error(ex.ToString());
+                // 启动失败时，删除影子目录，有可能上一次解压以后，该目录被篡改过。这次删除以后，下一次启动时会再次解压缩
+                try
+                {
+                    WriteLog("删除影子目录：{0}", shadow);
+                    Directory.Delete(shadow, true);
+                }
+                catch (Exception ex)
+                {
+                    Log?.Error(ex.ToString());
+                }
             }
 
             return false;
