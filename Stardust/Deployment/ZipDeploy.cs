@@ -186,6 +186,7 @@ public class ZipDeploy
         WriteLog("启动参数: {0}", si.Arguments);
 
         var p = Process.Start(si);
+        Process = p;
         if (msWait > 0 && p.WaitForExit(msWait) && p.ExitCode != 0)
         {
             WriteLog("启动失败！ExitCode={0}", p.ExitCode);
@@ -216,8 +217,6 @@ public class ZipDeploy
 
             return false;
         }
-
-        Process = p;
 
         WriteLog("启动成功！");
 

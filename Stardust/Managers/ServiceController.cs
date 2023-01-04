@@ -120,11 +120,12 @@ internal class ServiceController : DisposeBase
                     case ServiceModes.Default:
                         break;
                     case ServiceModes.Extract:
+                        WriteLog("解压后不运行，外部主机（如IIS）将托管应用");
                         Extract(service, ref file, workDir);
                         Running = true;
-                        WriteLog("解压完成，外部主机（如IIS）将托管应用");
                         return true;
                     case ServiceModes.ExtractAndRun:
+                        WriteLog("解压后在工作目录运行");
                         Extract(service, ref file, workDir);
                         isZip = false;
                         break;
@@ -152,6 +153,8 @@ internal class ServiceController : DisposeBase
 
                     if (!deploy.Execute())
                     {
+                        WriteLog("Zip包启动失败！ExitCode={0}", deploy.Process?.ExitCode);
+
                         // 上报最后错误
                         if (!deploy.LastError.IsNullOrEmpty()) EventProvider?.WriteErrorEvent("ServiceController", deploy.LastError);
 
@@ -200,6 +203,7 @@ internal class ServiceController : DisposeBase
 
                 if (service.Mode == ServiceModes.RunOnce)
                 {
+                    WriteLog("单次运行完成，禁用该应用服务");
                     service.Enable = false;
                     Running = false;
 
