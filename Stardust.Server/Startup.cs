@@ -2,6 +2,7 @@
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.FileProviders;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Configuration;
@@ -142,6 +143,23 @@ public class Startup
         {
             app.UseDeveloperExceptionPage();
         }
+
+        var set = NewLife.Setting.Current;
+
+        // 缓存运行时安装文件
+        var sdk = "../dotnet".GetFullPath().EnsureDirectory(false);
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            RequestPath = new PathString("/dotnet"),
+            FileProvider = new CacheFileProvider(sdk, set.PluginServer.CombinePath("dotnet")),
+            ServeUnknownFileTypes = true,
+            DefaultContentType = "application/x-msdownload",
+        });
+        app.UseDirectoryBrowser(new DirectoryBrowserOptions
+        {
+            RequestPath = new PathString("/dotnet"),
+            FileProvider = new PhysicalFileProvider(sdk),
+        });
 
         app.UseCors("star_cors");
 
