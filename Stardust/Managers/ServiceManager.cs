@@ -400,6 +400,7 @@ public class ServiceManager : DisposeBase
                 //old.AutoStart = svc.AutoStart;
                 //svc.AutoStop = item.AutoStop;
                 old.MaxMemory = svc.MaxMemory;
+                old.Mode = svc.Mode;
             }
         }
 
