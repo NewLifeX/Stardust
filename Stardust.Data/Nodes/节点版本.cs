@@ -35,6 +35,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("Version", "版本号", "")]
         public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
+        private String _ProductCode;
+        /// <summary>产品。产品编码，用于区分不同类型节点</summary>
+        [DisplayName("产品")]
+        [Description("产品。产品编码，用于区分不同类型节点")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("ProductCode", "产品。产品编码，用于区分不同类型节点", "")]
+        public String ProductCode { get => _ProductCode; set { if (OnPropertyChanging("ProductCode", value)) { _ProductCode = value; OnPropertyChanged("ProductCode"); } } }
+
         private Boolean _Enable;
         /// <summary>启用。启用/停用</summary>
         [DisplayName("启用")]
@@ -60,11 +68,11 @@ namespace Stardust.Data.Nodes
         public NodeChannels Channel { get => _Channel; set { if (OnPropertyChanging("Channel", value)) { _Channel = value; OnPropertyChanged("Channel"); } } }
 
         private String _Strategy;
-        /// <summary>策略。升级策略，node=abcd;version=1.0,1.1;runtime=5.0.*;framework=5.*;os=*Linux*;arch=Arm;province=31*;city=4509*</summary>
+        /// <summary>策略。升级策略，node=abcd;version=1.0,1.1;runtime=6.*;framework=7.*;os=*Linux*;arch=Arm;province=31*;city=4509*</summary>
         [DisplayName("策略")]
-        [Description("策略。升级策略，node=abcd;version=1.0,1.1;runtime=5.0.*;framework=5.*;os=*Linux*;arch=Arm;province=31*;city=4509*")]
+        [Description("策略。升级策略，node=abcd;version=1.0,1.1;runtime=6.*;framework=7.*;os=*Linux*;arch=Arm;province=31*;city=4509*")]
         [DataObjectField(false, false, true, 500)]
-        [BindColumn("Strategy", "策略。升级策略，node=abcd;version=1.0,1.1;runtime=5.0.*;framework=5.*;os=*Linux*;arch=Arm;province=31*;city=4509*", "")]
+        [BindColumn("Strategy", "策略。升级策略，node=abcd;version=1.0,1.1;runtime=6.*;framework=7.*;os=*Linux*;arch=Arm;province=31*;city=4509*", "")]
         public String Strategy { get => _Strategy; set { if (OnPropertyChanging("Strategy", value)) { _Strategy = value; OnPropertyChanged("Strategy"); } } }
 
         private String _Source;
@@ -175,6 +183,7 @@ namespace Stardust.Data.Nodes
                 {
                     case "ID": return _ID;
                     case "Version": return _Version;
+                    case "ProductCode": return _ProductCode;
                     case "Enable": return _Enable;
                     case "Force": return _Force;
                     case "Channel": return _Channel;
@@ -199,6 +208,7 @@ namespace Stardust.Data.Nodes
                 {
                     case "ID": _ID = value.ToInt(); break;
                     case "Version": _Version = Convert.ToString(value); break;
+                    case "ProductCode": _ProductCode = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Force": _Force = value.ToBoolean(); break;
                     case "Channel": _Channel = (NodeChannels)value.ToInt(); break;
@@ -230,6 +240,9 @@ namespace Stardust.Data.Nodes
             /// <summary>版本号</summary>
             public static readonly Field Version = FindByName("Version");
 
+            /// <summary>产品。产品编码，用于区分不同类型节点</summary>
+            public static readonly Field ProductCode = FindByName("ProductCode");
+
             /// <summary>启用。启用/停用</summary>
             public static readonly Field Enable = FindByName("Enable");
 
@@ -239,7 +252,7 @@ namespace Stardust.Data.Nodes
             /// <summary>升级通道</summary>
             public static readonly Field Channel = FindByName("Channel");
 
-            /// <summary>策略。升级策略，node=abcd;version=1.0,1.1;runtime=5.0.*;framework=5.*;os=*Linux*;arch=Arm;province=31*;city=4509*</summary>
+            /// <summary>策略。升级策略，node=abcd;version=1.0,1.1;runtime=6.*;framework=7.*;os=*Linux*;arch=Arm;province=31*;city=4509*</summary>
             public static readonly Field Strategy = FindByName("Strategy");
 
             /// <summary>升级源</summary>
@@ -287,6 +300,9 @@ namespace Stardust.Data.Nodes
             /// <summary>版本号</summary>
             public const String Version = "Version";
 
+            /// <summary>产品。产品编码，用于区分不同类型节点</summary>
+            public const String ProductCode = "ProductCode";
+
             /// <summary>启用。启用/停用</summary>
             public const String Enable = "Enable";
 
@@ -296,7 +312,7 @@ namespace Stardust.Data.Nodes
             /// <summary>升级通道</summary>
             public const String Channel = "Channel";
 
-            /// <summary>策略。升级策略，node=abcd;version=1.0,1.1;runtime=5.0.*;framework=5.*;os=*Linux*;arch=Arm;province=31*;city=4509*</summary>
+            /// <summary>策略。升级策略，node=abcd;version=1.0,1.1;runtime=6.*;framework=7.*;os=*Linux*;arch=Arm;province=31*;city=4509*</summary>
             public const String Strategy = "Strategy";
 
             /// <summary>升级源</summary>

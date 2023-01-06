@@ -133,6 +133,9 @@ namespace Stardust.Data.Nodes
         /// <returns></returns>
         public Boolean Match(Node node)
         {
+            // 比较产品类型
+            if (!ProductCode.IsNullOrEmpty() && !ProductCode.EqualIgnoreCase(node.ProductCode)) return false;
+
             // 没有使用该规则，直接过
             if (Rules.TryGetValue("version", out var vs))
             {
@@ -189,6 +192,12 @@ namespace Stardust.Data.Nodes
                 var city = node.CityID + "";
                 if (city.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(city))) return false;
             }
+
+            //if (Rules.TryGetValue("product", out vs))
+            //{
+            //    var product = node.ProductCode;
+            //    if (product.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(product))) return false;
+            //}
 
             return true;
         }
