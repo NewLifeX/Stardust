@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using NewLife;
+using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Reflection;
 using NewLife.Remoting;
@@ -56,6 +57,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     public event EventHandler<CommandEventArgs> Received;
 
     private readonly ConcurrentQueue<PingInfo> _fails = new();
+    private readonly ICache _cache = new MemoryCache();
     #endregion
 
     #region 构造
@@ -517,15 +519,14 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
                         Token = rs.Token;
                     }
 
-                    //// 推队列
-                    //if (rs.Commands != null && rs.Commands.Length > 0)
-                    //{
-                    //    foreach (var item in rs.Commands)
-                    //    {
-                    //        //CommandQueue.Publish(item.Command, item);
-                    //        await OnReceiveCommand(item);
-                    //    }
-                    //}
+                    // 推队列
+                    if (rs.Commands != null && rs.Commands.Length > 0)
+                    {
+                        foreach (var model in rs.Commands)
+                        {
+                            await ReceiveCommand(model);
+                        }
+                    }
 
                     //// 应用服务
                     //if (rs.Services != null && rs.Services.Length > 0)
@@ -751,24 +752,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             {
                 var data = await socket.ReceiveAsync(new ArraySegment<Byte>(buf), cancellationToken);
                 var model = buf.ToStr(null, 0, data.Count).ToJsonEntity<CommandModel>();
-                if (model != null)
-                {
-                    // 埋点，建立调用链
-                    using var span = Tracer?.NewSpan("OnReceiveCommand", model);
-                    span?.Detach(model.TraceId);
-                    try
-                    {
-                        XTrace.WriteLine("Got Command: {0}", model.ToJson());
-                        if (model.Expire.Year < 2000 || model.Expire > DateTime.Now)
-                        {
-                            await OnReceiveCommand(model);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        span?.SetError(ex, null);
-                    }
-                }
+                if (model != null) await ReceiveCommand(model);
             }
         }
         catch (WebSocketException) { }
@@ -779,6 +763,35 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         }
 
         if (socket.State == WebSocketState.Open) await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
+    }
+
+    async Task ReceiveCommand(CommandModel model)
+    {
+        if (model == null) return;
+
+        // 去重，避免命令被重复执行
+        if (!_cache.Add($"nodecmd:{model.Id}", model, 3600)) return;
+
+        // 埋点，建立调用链
+        using var span = Tracer?.NewSpan("OnReceiveCommand", model);
+        span?.Detach(model.TraceId);
+        try
+        {
+            XTrace.WriteLine("Got Command: {0}", model.ToJson());
+            if (model.Expire.Year < 2000 || model.Expire > DateTime.Now)
+            {
+                await OnReceiveCommand(model);
+            }
+            else
+            {
+                var reply = new CommandReplyModel { Id = model.Id, Status = CommandStatus.取消 };
+                await CommandReply(reply);
+            }
+        }
+        catch (Exception ex)
+        {
+            span?.SetError(ex, null);
+        }
     }
 
     /// <summary>

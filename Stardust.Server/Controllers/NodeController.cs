@@ -5,6 +5,7 @@ using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Remoting;
+using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data.Nodes;
 using Stardust.Models;
@@ -323,6 +324,20 @@ public class NodeController : BaseController
                 if (msg != null)
                 {
                     WriteHistory(node, "WebSocket发送", true, msg, ip);
+
+                    // 更新命令的处理状态
+                    var mcmd = msg.ToJsonEntity<CommandModel>();
+                    if (mcmd != null)
+                    {
+                        var cmd = NodeCommand.FindById(mcmd.Id);
+                        if (cmd != null)
+                        {
+                            cmd.Times++;
+                            cmd.Status = CommandStatus.处理中;
+                            cmd.UpdateTime = DateTime.Now;
+                            cmd.Update();
+                        }
+                    }
 
                     await socket.SendAsync(msg.GetBytes(), WebSocketMessageType.Text, true, cancellationToken);
                 }

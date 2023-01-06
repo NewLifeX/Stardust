@@ -77,8 +77,8 @@ namespace Stardust.Models
         /// <summary>令牌。现有令牌即将过期时，颁发新的令牌</summary>
         public String Token { get; set; }
 
-        ///// <summary>下发命令</summary>
-        //public CommandModel[] Commands { get; set; }
+        /// <summary>下发命令</summary>
+        public CommandModel[] Commands { get; set; }
 
         ///// <summary>下发应用服务</summary>
         //public ServiceInfo[] Services { get; set; }
