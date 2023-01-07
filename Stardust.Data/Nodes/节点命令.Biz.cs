@@ -102,7 +102,14 @@ namespace Stardust.Data.Nodes
         /// <param name="nodeId"></param>
         /// <param name="count"></param>
         /// <returns></returns>
-        public static IList<NodeCommand> AcquireCommands(Int32 nodeId, Int32 count = 100) => FindAll(_.NodeID == nodeId & _.Status <= CommandStatus.处理中, _.Id.Asc(), null, 0, count);
+        public static IList<NodeCommand> AcquireCommands(Int32 nodeId, Int32 count = 100)
+        {
+            var exp = new WhereExpression();
+            if (nodeId > 0) exp &= _.NodeID == nodeId;
+            exp &= _.Status <= CommandStatus.处理中;
+
+            return FindAll(exp, _.Id.Asc(), null, 0, count);
+        }
 
         /// <summary>添加节点命令</summary>
         /// <param name="node"></param>

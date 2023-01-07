@@ -346,14 +346,16 @@ public class NodeService
         return rs;
     }
 
+    private static Int32 _totalCommands;
     private static IList<NodeCommand> _commands;
     private static DateTime _nextTime;
 
     private static CommandModel[] AcquireCommands(Int32 nodeId)
     {
         // 缓存最近1000个未执行命令，用于快速过滤，避免大量节点在线时频繁查询命令表
-        if (_nextTime < DateTime.Now)
+        if (_nextTime < DateTime.Now || _totalCommands != NodeCommand.Meta.Count)
         {
+            _totalCommands = NodeCommand.Meta.Count;
             _commands = NodeCommand.AcquireCommands(-1, 1000);
             _nextTime = DateTime.Now.AddMinutes(1);
         }
@@ -538,7 +540,6 @@ public class NodeService
             NodeID = node.ID,
             Command = model.Command,
             Argument = model.Argument,
-            //Expire = model.Expire,
             Times = 0,
             Status = CommandStatus.就绪,
 
@@ -550,8 +551,6 @@ public class NodeService
 
         var commandModel = cmd.ToModel();
         commandModel.TraceId = DefaultSpan.Current + "";
-        //XTrace.WriteLine(DefaultSpan.Current.TraceId);
-        //XTrace.WriteLine(commandModel.TraceId);
 
         var queue = _queue.GetQueue<String>($"nodecmd:{node.Code}");
         queue.Add(commandModel.ToJson());
