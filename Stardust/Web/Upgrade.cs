@@ -48,13 +48,13 @@ public class Upgrade
         if (url.IsNullOrEmpty()) return false;
 
         var fileName = Path.GetFileName(url);
-        if (fileName.IsNullOrEmpty()) fileName = "a.zip";
+        if (fileName.IsNullOrEmpty() || fileName.Contains('?')) fileName = "a.zip";
 
         // 即使更新包存在，也要下载
         var file = UpdatePath.CombinePath(fileName).GetBasePath();
         if (File.Exists(file)) File.Delete(file); ;
 
-        WriteLog("准备下载 {0}", url);
+        WriteLog("准备下载 {0} 到 {1}", url, file);
 
         var sw = Stopwatch.StartNew();
 
