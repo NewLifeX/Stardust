@@ -242,6 +242,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         if (tar != null) ver = !tar.FrameworkDisplayName.IsNullOrEmpty() ? tar.FrameworkDisplayName : tar.FrameworkName;
 
         di.Framework = ver?.TrimStart(".NET Framework", ".NET Core", ".NET Native", ".NET").Trim();
+        di.Architecture = IntPtr.Size == 8 ? "X64" : "X86";
 
         // .NET45以上运行时
         if (Runtime.Windows && Environment.Version >= new Version("4.0.30319.42000"))
