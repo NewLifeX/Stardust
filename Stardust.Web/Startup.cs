@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.FileProviders;
 using NewLife;
 using NewLife.Cube;
@@ -49,6 +50,16 @@ public class Startup
 
         // 启用接口响应压缩
         services.AddResponseCompression();
+
+        // 取消上传包大小限制
+        services.Configure<KestrelServerOptions>(options =>
+        {
+            options.Limits.MaxRequestBodySize = Int32.MaxValue;
+        });
+        services.Configure<IISServerOptions>(options =>
+        {
+            options.MaxRequestBodySize = Int32.MaxValue;
+        });
 
         services.AddControllersWithViews();
         services.AddCube();
