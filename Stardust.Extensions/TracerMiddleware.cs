@@ -85,14 +85,16 @@ namespace Stardust.Extensions
             }
             catch (Exception ex)
             {
-                if (span != null)
-                {
-                    // 接口抛出ApiException时，认为是正常业务行为，埋点不算异常
-                    if (ex is ApiException)
-                        span.Tag ??= ex.Message;
-                    else
-                        span.SetError(ex, null);
-                }
+                //if (span != null)
+                //{
+                //    // 接口抛出ApiException时，认为是正常业务行为，埋点不算异常
+                //    if (ex is ApiException)
+                //        span.Tag ??= ex.Message;
+                //    else
+                //        span.SetError(ex, null);
+                //}
+                // 捕获所有未处理异常，即使是ApiException，也应该在接口层包装而不是继续向外抛出异常
+                span?.SetError(ex, null);
 
                 throw;
             }
