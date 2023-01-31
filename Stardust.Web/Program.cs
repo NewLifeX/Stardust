@@ -14,8 +14,15 @@ namespace Stardust.Web
             CreateWebHostBuilder(args).Build().Run();
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(String[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-            .UseStartup<Startup>();
+        public static IHostBuilder CreateWebHostBuilder(String[] args)
+        {
+            var builder = Host.CreateDefaultBuilder(args);
+            builder.ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.UseStartup<Startup>();
+            });
+
+            return builder;
+        }
     }
 }
