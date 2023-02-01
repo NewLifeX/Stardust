@@ -295,6 +295,7 @@ public class ServiceManager : DisposeBase
             controller.Stop(reason);
 
             _controllers.Remove(controller);
+            controller.TryDispose();
 
             return true;
         }

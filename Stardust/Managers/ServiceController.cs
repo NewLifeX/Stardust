@@ -277,6 +277,9 @@ internal class ServiceController : DisposeBase
         WriteLog("停止应用 PID={0}/{1} 原因：{2}", p.Id, p.ProcessName, reason);
 
         using var span = Tracer?.NewSpan("StopService", $"{Info.Name} reason={reason}");
+        _timer.TryDispose();
+        _timer = null;
+
         try
         {
             p.CloseMainWindow();
