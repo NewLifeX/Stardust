@@ -21,6 +21,7 @@ public class ZipDeploy
     public String WorkingDirectory { get; set; }
 
     /// <summary>影子目录。应用将在其中执行</summary>
+    /// <remarks>默认使用上一级的shadow目录，无权时使用临时目录</remarks>
     public String Shadow { get; set; }
 
     /// <summary>可执行文件路径</summary>
@@ -115,7 +116,20 @@ public class ZipDeploy
         var hash = fi.MD5().ToHex()[..8].ToLower();
         var rundir = fi.Directory;
         var shadow = Shadow;
-        if (shadow.IsNullOrEmpty()) shadow = Shadow = Path.GetTempPath().CombinePath(name);
+        if (shadow.IsNullOrEmpty())
+        {
+            // 影子目录默认使用上一级的shadow目录，无权时使用临时目录
+            try
+            {
+                shadow = "../shadow".GetFullPath();
+                shadow.EnsureDirectory(false);
+            }
+            catch
+            {
+                shadow = Path.GetTempPath();
+            }
+            Shadow = shadow.CombinePath(name);
+        }
 
         WriteLog("ZipDeploy {0}", name);
         WriteLog("运行目录 {0}", rundir);
