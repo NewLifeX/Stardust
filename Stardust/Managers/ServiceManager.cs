@@ -280,16 +280,16 @@ public class ServiceManager : DisposeBase
     }
 
     /// <summary>停止服务</summary>
-    /// <param name="service"></param>
+    /// <param name="serviceName"></param>
     /// <param name="reason"></param>
     /// <returns></returns>
-    private Boolean StopService(ServiceInfo service, String reason)
+    private Boolean StopService(String serviceName, String reason)
     {
 #if DEBUG
-        using var span = Tracer?.NewSpan("ServiceManager-StopService", service);
+        using var span = Tracer?.NewSpan("ServiceManager-StopService", serviceName);
 #endif
 
-        var controller = _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(service.Name));
+        var controller = _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
         if (controller != null)
         {
             controller.Stop(reason);
@@ -558,7 +558,7 @@ public class ServiceManager : DisposeBase
         var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
         if (svc == null) return false;
 
-        StopService(svc, reason);
+        StopService(svc.Name, reason);
 
         SaveDb();
 
@@ -628,7 +628,8 @@ public class ServiceManager : DisposeBase
         var svc = dis?.FirstOrDefault()?.Service;
         if (svc != null)
         {
-            StopService(svc, cmd.Command);
+            StopService(svc.Name, cmd.Command);
+            Thread.Sleep(Delay);
             StartService(svc);
         }
 
@@ -663,7 +664,7 @@ public class ServiceManager : DisposeBase
 
         var changed = false;
         svc.Enable = false;
-        changed |= StopService(svc, cmd.Command);
+        changed |= StopService(svc.Name, cmd.Command);
 
         RaiseServiceChanged();
 
@@ -679,7 +680,7 @@ public class ServiceManager : DisposeBase
 
         var changed = false;
         svc.Enable = false;
-        changed |= StopService(svc, cmd.Command);
+        changed |= StopService(svc.Name, cmd.Command);
         Thread.Sleep(Delay);
         svc.Enable = true;
         changed |= StartService(svc);
@@ -698,7 +699,7 @@ public class ServiceManager : DisposeBase
 
         var changed = false;
         svc.Enable = false;
-        changed |= StopService(svc, cmd.Command);
+        changed |= StopService(svc.Name, cmd.Command);
 
         Remove(serviceName);
 

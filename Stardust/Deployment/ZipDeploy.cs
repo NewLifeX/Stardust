@@ -218,7 +218,7 @@ public class ZipDeploy
             return false;
         }
 
-        WriteLog("启动成功！");
+        WriteLog("Zip启动成功！");
 
         return true;
     }

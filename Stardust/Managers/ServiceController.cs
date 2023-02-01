@@ -489,8 +489,8 @@ internal class ServiceController : DisposeBase
 
         if (!first && !changed.IsNullOrEmpty())
         {
-            var msg = $"文件[{changed}]发生改变";
-            XTrace.WriteLine(msg);
+            var msg = $"文件[{changed}]发生改变，停止应用，延迟{Delay}秒后启动";
+            WriteLog(msg);
 
             // 进入就绪状态
             if (!_ready)
