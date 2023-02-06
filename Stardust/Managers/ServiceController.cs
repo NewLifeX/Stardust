@@ -180,7 +180,12 @@ internal class ServiceController : DisposeBase
                     };
 
                     // 如果出现超过一次的重启，则打开调试模式，截取控制台输出到日志
-                    if (_error > 1) si.RedirectStandardError = true;
+                    if (_error > 1)
+                    {
+                        // UseShellExecute 必须 false，以便于后续重定向输出流
+                        si.UseShellExecute = false;
+                        si.RedirectStandardError = true;
+                    }
 
                     p = Process.Start(si);
                     if (p.WaitForExit(3_000) && p.ExitCode != 0)
