@@ -48,6 +48,10 @@ public class ServiceInfo
     public Int32 MaxMemory { get; set; }
     #endregion
 
+    /// <summary>克隆当前对象</summary>
+    /// <returns></returns>
+    public ServiceInfo Clone() => MemberwiseClone() as ServiceInfo;
+
     /// <summary>已重载。友好显示</summary>
     /// <returns></returns>
     public override String ToString() => $"{Name} {FileName}";

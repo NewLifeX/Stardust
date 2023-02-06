@@ -319,7 +319,7 @@ public class ServiceManager : DisposeBase
             {
                 // 如果新服务在原列表里不存在，或者数值不同，则认为有改变
                 var s = svcs.FirstOrDefault(e => e.Name == item.Name);
-                if (s == null || s.ToJson() != item.ToJson())
+                if (s == null || s != item && s.ToJson() != item.ToJson())
                 {
                     flag = true;
                     break;
@@ -333,8 +333,8 @@ public class ServiceManager : DisposeBase
 
             WriteLog("应用服务配置变更");
 
-            // 拷贝，避免应用后无法及时感知变化
-            Services = services.ToArray();
+            // 拷贝，避免应用后无法及时感知变化。具体ServiceInfo也要克隆，否则上面对比service配置信息时永远失败
+            Services = services.Select(e => e.Clone()).ToArray();
 
             _status = 0;
             _timer?.SetNext(-1);

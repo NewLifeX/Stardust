@@ -223,17 +223,19 @@ internal class MyService : ServiceBase, IServiceProvider
         base.StartWork(reason);
     }
 
-    /// <summary>服务管理线程</summary>
-    /// <param name="data"></param>
-    protected override void DoCheck(Object data)
-    {
-        OnSettingChanged(null, null);
+    ///// <summary>服务管理线程</summary>
+    ///// <param name="data"></param>
+    //protected override void DoCheck(Object data)
+    //{
+    //    OnSettingChanged(null, null);
 
-        base.DoCheck(data);
-    }
+    //    base.DoCheck(data);
+    //}
 
     private void OnSettingChanged(Object sender, EventArgs eventArgs)
     {
+        WriteLog("重新加载应用服务");
+
         // 支持动态更新
         //_Manager.Services = AgentSetting.Services;
         _Manager.SetServices(AgentSetting.Services);
