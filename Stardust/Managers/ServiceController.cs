@@ -233,6 +233,7 @@ internal class ServiceController : DisposeBase
             {
                 span?.SetError(ex, null);
                 Log?.Write(LogLevel.Error, "{0}", ex);
+                EventProvider?.WriteErrorEvent("ServiceController", ex.ToString());
             }
 
             return false;
@@ -354,7 +355,11 @@ internal class ServiceController : DisposeBase
             }
             catch (Exception ex)
             {
-                if (ex is not ArgumentException) Log?.Error("{0}", ex);
+                if (ex is not ArgumentException)
+                {
+                    Log?.Error("{0}", ex);
+                    EventProvider?.WriteErrorEvent("ServiceController", ex.ToString());
+                }
             }
 
             p = null;
