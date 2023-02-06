@@ -341,7 +341,9 @@ internal class ServiceController : DisposeBase
             }
 
             p = null;
-            Process = null;
+            SetProcess(null);
+
+            Running = false;
         }
 
         // 进程不存在，但Id存在
