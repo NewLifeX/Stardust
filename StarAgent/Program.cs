@@ -245,7 +245,7 @@ internal class MyService : ServiceBase, IServiceProvider
     {
         // 服务改变时，保存到配置文件
         var set = AgentSetting;
-        set.Services = _Manager.Services;
+        set.Services = _Manager.Services.Select(e => e.Clone()).ToArray();
         set.Save();
     }
 
