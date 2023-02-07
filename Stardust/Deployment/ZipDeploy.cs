@@ -121,7 +121,7 @@ public class ZipDeploy
             // 影子目录默认使用上一级的shadow目录，无权时使用临时目录
             try
             {
-                shadow = "../shadow".GetFullPath();
+                shadow = WorkingDirectory.CombinePath("../shadow").GetFullPath();
                 shadow.EnsureDirectory(false);
             }
             catch
