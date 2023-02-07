@@ -504,7 +504,7 @@ internal class ServiceController : DisposeBase
 
         if (!first && !changed.IsNullOrEmpty())
         {
-            var msg = $"文件[{changed}]发生改变，停止应用，延迟{Delay}秒后启动";
+            var msg = $"文件[{changed}]发生改变，停止应用，延迟{Delay}毫秒后启动";
             WriteLog(msg);
 
             // 进入就绪状态
@@ -515,7 +515,7 @@ internal class ServiceController : DisposeBase
                 _ready = true;
 
                 // 快速再次检查
-                _timer.SetNext(1000);
+                _timer?.SetNext(1000);
             }
 
             // 更新最后就绪时间，该时间之后5秒再启动
