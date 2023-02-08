@@ -517,7 +517,7 @@ public class NodeService
     #endregion
 
     #region 下行指令
-    /// <summary>向节点发送命令</summary>
+    /// <summary>向节点发送命令。通知节点更新、安装和启停应用等</summary>
     /// <param name="model"></param>
     /// <param name="token">应用令牌</param>
     /// <returns></returns>

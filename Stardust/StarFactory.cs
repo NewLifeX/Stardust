@@ -391,7 +391,7 @@ public class StarFactory : DisposeBase
     #endregion
 
     #region 其它
-    /// <summary>发送节点命令</summary>
+    /// <summary>发送节点命令。通知节点更新、安装和启停应用等</summary>
     /// <param name="nodeCode"></param>
     /// <param name="command"></param>
     /// <param name="argument"></param>
@@ -404,7 +404,7 @@ public class StarFactory : DisposeBase
         return await _client.PostAsync<Int32>("Node/SendCommand", new { Code = nodeCode, command, argument, expire });
     }
 
-    /// <summary>发送应用命令</summary>
+    /// <summary>发送应用命令。通知应用刷新配置信息和服务信息等</summary>
     /// <param name="appId"></param>
     /// <param name="command"></param>
     /// <param name="argument"></param>

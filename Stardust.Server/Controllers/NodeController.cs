@@ -224,7 +224,7 @@ public class NodeController : BaseController
     #endregion
 
     #region 下行通知
-    /// <summary>下行通知</summary>
+    /// <summary>下行通知。通知节点更新、安装和启停应用等</summary>
     /// <returns></returns>
     [HttpGet("/node/notify")]
     public async Task Notify()
@@ -360,7 +360,7 @@ public class NodeController : BaseController
         }
     }
 
-    /// <summary>向节点发送命令</summary>
+    /// <summary>向节点发送命令。通知节点更新、安装和启停应用等</summary>
     /// <param name="model"></param>
     /// <param name="token">应用令牌</param>
     /// <returns></returns>

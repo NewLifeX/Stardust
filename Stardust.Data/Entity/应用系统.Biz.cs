@@ -51,6 +51,29 @@ namespace Stardust.Data
         }
 
         /// <summary>
+        /// 初始化数据
+        /// </summary>
+        protected override void InitData()
+        {
+            if (Meta.Count > 0) return;
+
+            var entity = new App
+            {
+                Name = "StarServer",
+                Enable = true,
+            };
+            entity.Insert();
+
+            entity = new App
+            {
+                Name = "StarWeb",
+                Enable = true,
+                AllowControlNodes = "*",
+            };
+            entity.Insert();
+        }
+
+        /// <summary>
         /// 已重载。显示友好名称
         /// </summary>
         /// <returns></returns>

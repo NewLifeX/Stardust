@@ -101,7 +101,7 @@ public class AppController : BaseController
     #endregion
 
     #region 下行通知
-    /// <summary>下行通知</summary>
+    /// <summary>下行通知。通知应用刷新配置信息和服务信息等</summary>
     /// <returns></returns>
     [HttpGet("/app/notify")]
     public async Task Notify()
@@ -233,7 +233,7 @@ public class AppController : BaseController
         }
     }
 
-    /// <summary>向节点发送命令</summary>
+    /// <summary>向节点发送命令。通知应用刷新配置信息和服务信息等</summary>
     /// <param name="model"></param>
     /// <param name="token">应用令牌</param>
     /// <returns></returns>
