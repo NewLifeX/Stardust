@@ -27,14 +27,16 @@ public class AppController : BaseController
     private readonly ITracer _tracer;
     private readonly AppQueueService _queue;
     private readonly Setting _setting;
+    private readonly IHostApplicationLifetime _lifetime;
 
-    public AppController(TokenService tokenService, RegistryService registryService, DeployService deployService, AppQueueService queue, Setting setting, ITracer tracer)
+    public AppController(TokenService tokenService, RegistryService registryService, DeployService deployService, AppQueueService queue, Setting setting, IHostApplicationLifetime lifetime, ITracer tracer)
     {
         _tokenService = tokenService;
         _registryService = registryService;
         _deployService = deployService;
         _queue = queue;
         _setting = setting;
+        _lifetime = lifetime;
         _tracer = tracer;
     }
 
@@ -133,14 +135,15 @@ public class AppController : BaseController
         }
 
         var ip = UserHost;
-        var source = new CancellationTokenSource();
+        //var source = new CancellationTokenSource();
+        var source = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.ApplicationStopping);
         _ = Task.Run(() => ConsumeMessage(socket, app, clientId, ip, source));
         try
         {
             var buf = new Byte[4 * 1024];
             while (socket.State == WebSocketState.Open)
             {
-                var data = await socket.ReceiveAsync(new ArraySegment<Byte>(buf), default);
+                var data = await socket.ReceiveAsync(new ArraySegment<Byte>(buf), source.Token);
                 if (data.MessageType == WebSocketMessageType.Close) break;
                 if (data.MessageType == WebSocketMessageType.Text)
                 {
@@ -154,7 +157,7 @@ public class AppController : BaseController
             XTrace.WriteLine("WebSocket断开 {0}", app);
             WriteHistory("WebSocket断开", true, socket.State + "", clientId);
 
-            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
+            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", source.Token);
         }
         catch (WebSocketException ex)
         {
