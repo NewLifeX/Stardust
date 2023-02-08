@@ -129,7 +129,7 @@ public static class StarFactoryExtensions
                         return;
                     }
                 }
-                star.Service?.RegisterAsync(serviceName, address, tag, health).Wait();
+                star.Service?.RegisterAsync(serviceName, address, tag, health).Wait(5_000);
             }
             catch (Exception ex)
             {

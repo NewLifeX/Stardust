@@ -327,7 +327,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         _eventTimer.TryDispose();
         _eventTimer = null;
 
-        if (_websocket != null && _websocket.State == WebSocketState.Open) _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default).Wait();
+        if (_websocket != null && _websocket.State == WebSocketState.Open) _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default).Wait(1_000);
         _source?.Cancel();
 
         //_websocket.TryDispose();
