@@ -12,4 +12,5 @@
     <label for="category" class="control-label">类别：</label>
     @Html.ForDropDownList("category", AppDeploy.GetCategoryList(), page["category"], "全部", true)
 </div>
+@await Html.PartialAsync("_Enable")
 @await Html.PartialAsync("_DateRange")

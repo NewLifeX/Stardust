@@ -13,12 +13,12 @@ namespace Stardust.Web.Areas.Deployment.Controllers;
 [Menu(90)]
 public class AppDeployController : EntityController<AppDeploy>
 {
-    private readonly StarFactory _starFactory;
+    //private readonly StarFactory _starFactory;
 
     static AppDeployController()
     {
         ListFields.RemoveCreateField();
-        ListFields.RemoveField("AppId", "WorkingDirectory");
+        ListFields.RemoveField("AppId", "WorkingDirectory", "MaxMemory", "Mode", "Remark");
         AddFormFields.RemoveCreateField();
 
         LogOnChange = true;
@@ -58,12 +58,12 @@ public class AppDeployController : EntityController<AppDeploy>
         }
         {
             var df = ListFields.AddListField("Log", "UpdateUserId");
-            df.DisplayName = "修改日志";
+            df.DisplayName = "日志";
             df.Url = "/Admin/Log?category=应用部署&linkId={Id}";
         }
     }
 
-    public AppDeployController(StarFactory starFactory) => _starFactory = starFactory;
+    //public AppDeployController(StarFactory starFactory) => _starFactory = starFactory;
 
     protected override IEnumerable<AppDeploy> Search(Pager p)
     {

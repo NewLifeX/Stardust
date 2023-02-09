@@ -116,15 +116,17 @@ public partial class AppDeployNode : Entity<AppDeployNode>
     /// <summary>高级查询</summary>
     /// <param name="appId">应用。原始应用</param>
     /// <param name="nodeId">节点。节点服务器</param>
+    /// <param name="enable"></param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<AppDeployNode> Search(Int32 appId, Int32 nodeId, String key, PageParameter page)
+    public static IList<AppDeployNode> Search(Int32 appId, Int32 nodeId, Boolean? enable, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (appId >= 0) exp &= _.AppId == appId;
         if (nodeId >= 0) exp &= _.NodeId == nodeId;
+        if (enable != null) exp &= _.Enable == enable;
         if (!key.IsNullOrEmpty()) exp &= _.CreateIP.Contains(key);
 
         return FindAll(exp, page);

@@ -39,11 +39,12 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
 
         var appId = p["appId"].ToInt(-1);
         var nodeId = p["nodeId"].ToInt(-1);
+        var enable = p["enable"]?.ToBoolean();
 
         PageSetting.EnableAdd = appId > 0;
         PageSetting.EnableNavbar = false;
 
-        return AppDeployNode.Search(appId, nodeId, p["Q"], p);
+        return AppDeployNode.Search(appId, nodeId, enable, p["Q"], p);
     }
 
     protected override Boolean Valid(AppDeployNode entity, DataObjectMethodType type, Boolean post)
