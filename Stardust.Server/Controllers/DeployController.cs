@@ -98,16 +98,13 @@ public class DeployController : BaseController
             var app = AppDeploy.FindByName(svc.Name);
             app ??= new AppDeploy { Name = svc.Name/*, Enable = svc.Enable*/ };
 
-            // 仅可用应用
-            if (app.Enable)
+            //// 仅可用应用
+            //if (app.Enable)
             {
                 if (app.FileName.IsNullOrEmpty()) app.FileName = svc.FileName;
                 if (app.Arguments.IsNullOrEmpty()) app.Arguments = svc.Arguments;
                 if (app.WorkingDirectory.IsNullOrEmpty()) app.WorkingDirectory = svc.WorkingDirectory;
 
-                //app.Enable = svc.Enable;
-                //app.AutoStart = svc.AutoStart;
-                //app.AutoStop = svc.AutoStop;
                 app.MaxMemory = svc.MaxMemory;
             }
 

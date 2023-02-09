@@ -91,8 +91,8 @@ namespace Stardust.Data.Deployment
         /// <returns>实体对象</returns>
         public static AppDeployVersion FindByAppIdAndVersion(Int32 appId, String version)
         {
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.AppId == appId && e.Version.EqualIgnoreCase(version));
+            //// 实体缓存
+            //if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.AppId == appId && e.Version.EqualIgnoreCase(version));
 
             return Find(_.AppId == appId & _.Version == version);
         }
