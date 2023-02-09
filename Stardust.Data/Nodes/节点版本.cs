@@ -68,11 +68,11 @@ namespace Stardust.Data.Nodes
         public NodeChannels Channel { get => _Channel; set { if (OnPropertyChanging("Channel", value)) { _Channel = value; OnPropertyChanged("Channel"); } } }
 
         private String _Strategy;
-        /// <summary>策略。升级策略，node=abcd;version=1.0,1.1;runtime=6.*;framework=7.*;os=*Linux*;arch=Arm;province=31*;city=4509*</summary>
+        /// <summary>策略。升级策略，版本特别支持大于等于和小于等于，node=*abcd*;version>=1.0;runtime/framework/os/arch/province/city</summary>
         [DisplayName("策略")]
-        [Description("策略。升级策略，node=abcd;version=1.0,1.1;runtime=6.*;framework=7.*;os=*Linux*;arch=Arm;province=31*;city=4509*")]
+        [Description("策略。升级策略，版本特别支持大于等于和小于等于，node=*abcd*;version>=1.0;runtime/framework/os/arch/province/city")]
         [DataObjectField(false, false, true, 500)]
-        [BindColumn("Strategy", "策略。升级策略，node=abcd;version=1.0,1.1;runtime=6.*;framework=7.*;os=*Linux*;arch=Arm;province=31*;city=4509*", "")]
+        [BindColumn("Strategy", "策略。升级策略，版本特别支持大于等于和小于等于，node=*abcd*;version>=1.0;runtime/framework/os/arch/province/city", "")]
         public String Strategy { get => _Strategy; set { if (OnPropertyChanging("Strategy", value)) { _Strategy = value; OnPropertyChanged("Strategy"); } } }
 
         private String _Source;
@@ -252,7 +252,7 @@ namespace Stardust.Data.Nodes
             /// <summary>升级通道</summary>
             public static readonly Field Channel = FindByName("Channel");
 
-            /// <summary>策略。升级策略，node=abcd;version=1.0,1.1;runtime=6.*;framework=7.*;os=*Linux*;arch=Arm;province=31*;city=4509*</summary>
+            /// <summary>策略。升级策略，版本特别支持大于等于和小于等于，node=*abcd*;version>=1.0;runtime/framework/os/arch/province/city</summary>
             public static readonly Field Strategy = FindByName("Strategy");
 
             /// <summary>升级源</summary>
@@ -312,7 +312,7 @@ namespace Stardust.Data.Nodes
             /// <summary>升级通道</summary>
             public const String Channel = "Channel";
 
-            /// <summary>策略。升级策略，node=abcd;version=1.0,1.1;runtime=6.*;framework=7.*;os=*Linux*;arch=Arm;province=31*;city=4509*</summary>
+            /// <summary>策略。升级策略，版本特别支持大于等于和小于等于，node=*abcd*;version>=1.0;runtime/framework/os/arch/province/city</summary>
             public const String Strategy = "Strategy";
 
             /// <summary>升级源</summary>

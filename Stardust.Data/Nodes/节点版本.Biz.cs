@@ -142,6 +142,22 @@ namespace Stardust.Data.Nodes
                 var ver = node.Version;
                 if (ver.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(ver))) return false;
             }
+            else if (Rules.TryGetValue("version>", out vs))
+            {
+                if (node.Version.IsNullOrEmpty()) return false;
+                if (!System.Version.TryParse(node.Version, out var ver1)) return false;
+                if (!System.Version.TryParse(vs[0], out var ver2)) return false;
+
+                if (ver1 < ver2) return false;
+            }
+            else if (Rules.TryGetValue("version<", out vs))
+            {
+                if (node.Version.IsNullOrEmpty()) return false;
+                if (!System.Version.TryParse(node.Version, out var ver1)) return false;
+                if (!System.Version.TryParse(vs[0], out var ver2)) return false;
+
+                if (ver1 > ver2) return false;
+            }
 
             if (Rules.TryGetValue("node", out vs))
             {

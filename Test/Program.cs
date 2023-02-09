@@ -27,7 +27,7 @@ namespace Test
         {
             XTrace.UseConsole();
 
-            Test6();
+            Test8();
 
             Console.WriteLine("OK!");
             Console.ReadKey();
@@ -200,6 +200,13 @@ namespace Test
 
                 if (!list.Any(e => e.Rule == nr.Rule)) nr.Insert();
             }
+        }
+
+        static void Test8()
+        {
+            var str = "runtime=6.0;version>=1.0";
+            var dic = str.SplitAsDictionary("=", ";");
+            XTrace.WriteLine(dic.ToJson(true));
         }
     }
 }

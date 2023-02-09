@@ -172,7 +172,7 @@
       <Column Name="Enable" DataType="Boolean" Description="启用。启用/停用" />
       <Column Name="Force" DataType="Boolean" Description="强制。强制升级" />
       <Column Name="Channel" DataType="Int32" Description="升级通道" Type="NodeChannels" />
-      <Column Name="Strategy" DataType="String" Length="500" Description="策略。升级策略，node=abcd;version=1.0,1.1;runtime=6.*;framework=7.*;os=*Linux*;arch=Arm;province=31*;city=4509*" />
+      <Column Name="Strategy" DataType="String" Length="500" Description="策略。升级策略，版本特别支持大于等于和小于等于，node=*abcd*;version&gt;=1.0;runtime/framework/os/arch/province/city" />
       <Column Name="Source" DataType="String" ItemType="file" Length="200" Description="升级源" />
       <Column Name="FileHash" DataType="String" Description="文件哈希。MD5散列" />
       <Column Name="Preinstall" DataType="String" Length="200" Description="预安装命令。更新前要执行的命令，解压缩后，在解压缩目录执行" />
