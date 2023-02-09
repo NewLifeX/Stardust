@@ -90,7 +90,21 @@ public class ZipDeploy
         }
 
         if (name.IsNullOrEmpty()) name = Path.GetFileNameWithoutExtension(file);
-        if (shadow.IsNullOrEmpty()) shadow = Path.GetTempPath().CombinePath(name);
+        //if (shadow.IsNullOrEmpty()) shadow = Path.GetTempPath().CombinePath(name);
+        if (shadow.IsNullOrEmpty())
+        {
+            // 影子目录默认使用上一级的shadow目录，无权时使用临时目录
+            try
+            {
+                shadow = WorkingDirectory.CombinePath("../shadow").GetFullPath();
+                shadow.EnsureDirectory(false);
+            }
+            catch
+            {
+                shadow = Path.GetTempPath();
+            }
+            Shadow = shadow.CombinePath(name);
+        }
 
         Name = name;
         FileName = file;
@@ -116,20 +130,7 @@ public class ZipDeploy
         var hash = fi.MD5().ToHex()[..8].ToLower();
         var rundir = fi.Directory;
         var shadow = Shadow;
-        if (shadow.IsNullOrEmpty())
-        {
-            // 影子目录默认使用上一级的shadow目录，无权时使用临时目录
-            try
-            {
-                shadow = WorkingDirectory.CombinePath("../shadow").GetFullPath();
-                shadow.EnsureDirectory(false);
-            }
-            catch
-            {
-                shadow = Path.GetTempPath();
-            }
-            Shadow = shadow.CombinePath(name);
-        }
+        if (shadow.IsNullOrEmpty()) return false;
 
         WriteLog("ZipDeploy {0}", name);
         WriteLog("运行目录 {0}", rundir);
