@@ -580,7 +580,7 @@ internal class MyService : ServiceBase, IServiceProvider
         Console.WriteLine("请输入新的服务端：");
 
         var addr = Console.ReadLine();
-        if (addr.IsNullOrEmpty()) addr = "http://star.newlifex.com:6600";
+        if (addr.IsNullOrEmpty()) addr = "http://127.0.0.1:6600";
 
         set.Server = addr;
         set.Save();
