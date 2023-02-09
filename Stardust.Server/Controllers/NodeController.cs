@@ -246,8 +246,6 @@ public class NodeController : BaseController
                 XTrace.WriteException(ex);
 
                 WriteHistory(_node, "Node/Notify", false, ex?.GetTrue() + "");
-
-                await Response.WriteAsync("closed");
             }
         }
         else
@@ -298,6 +296,8 @@ public class NodeController : BaseController
 
             await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", source.Token);
         }
+        catch (TaskCanceledException) { }
+        catch (OperationCanceledException) { }
         catch (WebSocketException ex)
         {
             XTrace.WriteLine("WebSocket异常 node={0} ip={1}", node, ip);

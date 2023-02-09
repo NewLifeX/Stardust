@@ -159,6 +159,8 @@ public class AppController : BaseController
 
             await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", source.Token);
         }
+        catch (TaskCanceledException) { }
+        catch (OperationCanceledException) { }
         catch (WebSocketException ex)
         {
             XTrace.WriteLine("WebSocket异常 app={0} ip={1}", app, ip);
