@@ -11,7 +11,7 @@
       <Column Name="Version" DataType="String" Description="版本。应用正在使用的版本号" />
       <Column Name="FileName" DataType="String" Description="文件。应用启动文件，可直接使用zip包" Category="参数" />
       <Column Name="Arguments" DataType="String" Length="500" Description="参数。启动应用的参数" Category="参数" />
-      <Column Name="WorkingDirectory" DataType="String" Description="工作目录。应用根目录" Category="参数" />
+      <Column Name="WorkingDirectory" DataType="String" Length="200" Description="工作目录。应用根目录" Category="参数" />
       <Column Name="MaxMemory" DataType="Int32" Description="最大内存。单位M，超过上限时自动重启应用，默认0不限制" Category="参数" />
       <Column Name="Mode" DataType="Int32" Description="工作模式。0默认；1仅解压，如IIS；2解压后运行" Type="Stardust.Models.ServiceModes" Category="参数" />
       <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
