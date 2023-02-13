@@ -10,12 +10,12 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Deployment
 {
-    /// <summary>部署版本。应用的多个可发布版本，主要包括应用程序包</summary>
+    /// <summary>部署版本。应用的多个可发布版本，主要管理应用程序包</summary>
     [Serializable]
     [DataObject]
-    [Description("部署版本。应用的多个可发布版本，主要包括应用程序包")]
+    [Description("部署版本。应用的多个可发布版本，主要管理应用程序包")]
     [BindIndex("IU_AppDeployVersion_AppId_Version", true, "AppId,Version")]
-    [BindTable("AppDeployVersion", Description = "部署版本。应用的多个可发布版本，主要包括应用程序包", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("AppDeployVersion", Description = "部署版本。应用的多个可发布版本，主要管理应用程序包", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppDeployVersion
     {
         #region 属性
@@ -60,11 +60,11 @@ namespace Stardust.Data.Deployment
         public String Url { get => _Url; set { if (OnPropertyChanging("Url", value)) { _Url = value; OnPropertyChanged("Url"); } } }
 
         private String _Hash;
-        /// <summary>文件哈希。MD5</summary>
+        /// <summary>文件哈希。MD5散列，避免下载的文件有缺失</summary>
         [DisplayName("文件哈希")]
-        [Description("文件哈希。MD5")]
+        [Description("文件哈希。MD5散列，避免下载的文件有缺失")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("Hash", "文件哈希。MD5", "")]
+        [BindColumn("Hash", "文件哈希。MD5散列，避免下载的文件有缺失", "")]
         public String Hash { get => _Hash; set { if (OnPropertyChanging("Hash", value)) { _Hash = value; OnPropertyChanged("Hash"); } } }
 
         private Int32 _CreateUserId;
@@ -199,7 +199,7 @@ namespace Stardust.Data.Deployment
             /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
             public static readonly Field Url = FindByName("Url");
 
-            /// <summary>文件哈希。MD5</summary>
+            /// <summary>文件哈希。MD5散列，避免下载的文件有缺失</summary>
             public static readonly Field Hash = FindByName("Hash");
 
             /// <summary>创建者</summary>
@@ -244,7 +244,7 @@ namespace Stardust.Data.Deployment
             /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
             public const String Url = "Url";
 
-            /// <summary>文件哈希。MD5</summary>
+            /// <summary>文件哈希。MD5散列，避免下载的文件有缺失</summary>
             public const String Hash = "Hash";
 
             /// <summary>创建者</summary>

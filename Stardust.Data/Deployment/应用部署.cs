@@ -10,12 +10,12 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Deployment
 {
-    /// <summary>应用部署。关联多个版本，关联多个节点服务器</summary>
+    /// <summary>应用部署。新增版本上传zip应用包，再到部署节点里发布</summary>
     [Serializable]
     [DataObject]
-    [Description("应用部署。关联多个版本，关联多个节点服务器")]
+    [Description("应用部署。新增版本上传zip应用包，再到部署节点里发布")]
     [BindIndex("IU_AppDeploy_Name", true, "Name")]
-    [BindTable("AppDeploy", Description = "应用部署。关联多个版本，关联多个节点服务器", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("AppDeploy", Description = "应用部署。新增版本上传zip应用包，再到部署节点里发布", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppDeploy
     {
         #region 属性
@@ -98,7 +98,7 @@ namespace Stardust.Data.Deployment
         [Category("参数")]
         [DisplayName("工作目录")]
         [Description("工作目录。应用根目录")]
-        [DataObjectField(false, false, true, 50)]
+        [DataObjectField(false, false, true, 200)]
         [BindColumn("WorkingDirectory", "工作目录。应用根目录", "")]
         public String WorkingDirectory { get => _WorkingDirectory; set { if (OnPropertyChanging("WorkingDirectory", value)) { _WorkingDirectory = value; OnPropertyChanged("WorkingDirectory"); } } }
 

@@ -115,7 +115,7 @@ namespace Stardust.Data
         /// <summary>命令行</summary>
         [DisplayName("命令行")]
         [Description("命令行")]
-        [DataObjectField(false, false, true, 200)]
+        [DataObjectField(false, false, true, 500)]
         [BindColumn("CommandLine", "命令行", "")]
         public String CommandLine { get => _CommandLine; set { if (OnPropertyChanging("CommandLine", value)) { _CommandLine = value; OnPropertyChanged("CommandLine"); } } }
 
