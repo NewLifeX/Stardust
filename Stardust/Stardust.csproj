@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;net5.0;net6.0;net7.0;netcoreapp3.1;netstandard2.0;net461</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;net5.0;net6.0;net7.0;netcoreapp3.1;netstandard2.0;net45;net461</TargetFrameworks>
     <AssemblyName>Stardust</AssemblyName>
     <AssemblyTitle>星尘分布式服务核心</AssemblyTitle>
     <Description>星尘，分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2023 NewLife</Copyright>
-    <VersionPrefix>2.6</VersionPrefix>
+    <VersionPrefix>2.7</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -29,7 +29,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>发布中心完全成熟稳定</PackageReleaseNotes>
+    <PackageReleaseNotes>恢复支持.NET4.5</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -67,8 +67,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="10.1.2023.203" />
-    <PackageReference Include="NewLife.Remoting" Version="2.0.2023.203" />
+    <PackageReference Include="NewLife.Core" Version="10.1.2023.214-beta1527" />
+    <PackageReference Include="NewLife.Remoting" Version="2.0.2023.214-beta1534" />
   </ItemGroup>
 
 </Project>
