@@ -327,7 +327,12 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         _eventTimer.TryDispose();
         _eventTimer = null;
 
-        if (_websocket != null && _websocket.State == WebSocketState.Open) _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default).Wait(1_000);
+        try
+        {
+            if (_websocket != null && _websocket.State == WebSocketState.Open)
+                _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
+        }
+        catch { }
         _source?.Cancel();
 
         //_websocket.TryDispose();
@@ -413,7 +418,8 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             //XTrace.WriteException(ex);
         }
 
-        if (socket.State == WebSocketState.Open) await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
+        if (socket.State == WebSocketState.Open)
+            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
     }
     #endregion
 
