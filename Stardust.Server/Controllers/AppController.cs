@@ -95,7 +95,7 @@ public class AppController : BaseController
     {
         foreach (var model in events)
         {
-            WriteHistory(model.Name, !model.Type.EqualIgnoreCase("error"), model.Remark, null);
+            WriteHistory(model.Name, !model.Type.EqualIgnoreCase("error"), model.Time.ToDateTime().ToLocalTime(), model.Remark, null);
         }
 
         return events.Length;
@@ -386,6 +386,16 @@ public class AppController : BaseController
 
         var hi = AppHistory.Create(_app, action, success, remark, olt?.Version, Environment.MachineName, ip ?? UserHost);
         hi.Client = clientId ?? _clientId;
+        hi.SaveAsync();
+    }
+
+    private void WriteHistory(String action, Boolean success, DateTime time, String remark, String clientId, String ip = null)
+    {
+        var olt = AppOnline.FindByClient(clientId);
+
+        var hi = AppHistory.Create(_app, action, success, remark, olt?.Version, Environment.MachineName, ip ?? UserHost);
+        hi.Client = clientId ?? _clientId;
+        if (time.Year > 2000) hi.CreateTime = time;
         hi.SaveAsync();
     }
     #endregion

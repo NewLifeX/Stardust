@@ -1,4 +1,5 @@
-﻿using NewLife;
+﻿using System.Xml.Linq;
+using NewLife;
 using NewLife.Http;
 using NewLife.IO;
 using NewLife.Log;
@@ -721,6 +722,15 @@ public class ServiceManager : DisposeBase
     /// <summary>写日志</summary>
     /// <param name="format"></param>
     /// <param name="args"></param>
-    public void WriteLog(String format, params Object[] args) => Log?.Info(format, args);
+    public void WriteLog(String format, params Object[] args)
+    {
+        Log?.Info(format, args);
+
+        var msg = (args == null || args.Length == 0) ? format : String.Format(format, args);
+        if (format.Contains("错误") || format.Contains("失败"))
+            _client?.WriteErrorEvent(nameof(ServiceManager), msg);
+        else
+            _client?.WriteInfoEvent(nameof(ServiceManager), msg);
+    }
     #endregion
 }

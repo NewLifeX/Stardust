@@ -143,7 +143,7 @@ internal class ServiceController : DisposeBase
                         FileName = file,
                         WorkingDirectory = workDir,
 
-                        Log = XTrace.Log,
+                        Log = new ActionLog(WriteLog),
                     };
 
                     // 如果出现超过一次的重启，则打开调试模式，截取控制台输出到日志
@@ -250,7 +250,7 @@ internal class ServiceController : DisposeBase
             FileName = file,
             WorkingDirectory = workDir,
 
-            Log = XTrace.Log,
+            Log = new ActionLog(WriteLog),
         };
 
         var args = service.Arguments?.Trim();
@@ -545,10 +545,11 @@ internal class ServiceController : DisposeBase
     {
         Log?.Info($"[{Id}/{Name}]{format}", args);
 
+        var msg = (args == null || args.Length == 0) ? format : String.Format(format, args);
         if (format.Contains("错误") || format.Contains("失败"))
-            EventProvider?.WriteErrorEvent("ServiceController", String.Format(format, args));
+            EventProvider?.WriteErrorEvent(nameof(ServiceController), msg);
         else
-            EventProvider?.WriteInfoEvent("ServiceController", String.Format(format, args));
+            EventProvider?.WriteInfoEvent(nameof(ServiceController), msg);
     }
     #endregion
 }

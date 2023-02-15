@@ -165,7 +165,7 @@ public class NodeController : BaseController
             if (model.Name.EqualIgnoreCase("ServiceController"))
                 _deployService.WriteHistory(0, _node?.ID ?? 0, model.Name, !model.Type.EqualIgnoreCase("error"), model.Remark, UserHost);
 
-            WriteHistory(null, model.Name, !model.Type.EqualIgnoreCase("error"), model.Remark);
+            WriteHistory(null, model.Name, !model.Type.EqualIgnoreCase("error"), model.Time.ToDateTime().ToLocalTime(), model.Remark);
         }
 
         return events.Length;
@@ -382,6 +382,13 @@ public class NodeController : BaseController
     private void WriteHistory(Node node, String action, Boolean success, String remark, String ip = null)
     {
         var hi = NodeHistory.Create(node ?? _node, action, success, remark, Environment.MachineName, ip ?? UserHost);
+        hi.SaveAsync();
+    }
+
+    private void WriteHistory(Node node, String action, Boolean success, DateTime time, String remark, String ip = null)
+    {
+        var hi = NodeHistory.Create(node ?? _node, action, success, remark, Environment.MachineName, ip ?? UserHost);
+        if (time.Year > 2000) hi.CreateTime = time;
         hi.SaveAsync();
     }
     #endregion
