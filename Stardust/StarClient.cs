@@ -112,7 +112,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         catch (Exception ex)
         {
             var ex2 = ex.GetTrue();
-            if (ex2 is ApiException aex && (aex.Code == 401 || aex.Code == 403) && !action.EqualIgnoreCase("Node/Login", "Node/Logout"))
+            if (Logined && ex2 is ApiException aex && (aex.Code == 401 || aex.Code == 403) && !action.EqualIgnoreCase("Node/Login", "Node/Logout"))
             {
                 Log?.Debug("{0}", ex);
                 //XTrace.WriteException(ex);
@@ -369,6 +369,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     {
         if (!Logined) return null;
 
+        Logined = false;
         XTrace.WriteLine("注销：{0} {1}", Code, reason);
 
         try
