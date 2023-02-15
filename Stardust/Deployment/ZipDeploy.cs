@@ -127,9 +127,24 @@ public class ZipDeploy
         var name = Name;
         if (name.IsNullOrEmpty()) name = Name = Path.GetFileNameWithoutExtension(FileName);
 
+        var shadow = Shadow;
+        if (shadow.IsNullOrEmpty())
+        {
+            // 影子目录默认使用上一级的shadow目录，无权时使用临时目录
+            try
+            {
+                shadow = WorkingDirectory.CombinePath("../shadow").GetFullPath();
+                shadow.EnsureDirectory(false);
+            }
+            catch
+            {
+                shadow = Path.GetTempPath();
+            }
+            Shadow = shadow.CombinePath(name);
+        }
+
         var hash = fi.MD5().ToHex()[..8].ToLower();
         var rundir = fi.Directory;
-        var shadow = Shadow;
         if (shadow.IsNullOrEmpty()) return false;
 
         WriteLog("ZipDeploy {0}", name);
