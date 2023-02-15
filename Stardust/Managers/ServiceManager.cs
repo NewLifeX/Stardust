@@ -268,6 +268,7 @@ public class ServiceManager : DisposeBase
             controller.SetInfo(service);
             _controllers.Add(controller);
 
+            Fix(service);
             if (controller.Start())
             {
                 var svc = controller.Info;
@@ -376,6 +377,7 @@ public class ServiceManager : DisposeBase
             if (svc.Name.IsNullOrEmpty()) continue;
 
             // 下载文件到工作目录
+            Fix(svc);
             if (item.Service.Enable && !item.Url.IsNullOrEmpty()) await Download(item, svc);
 
             var old = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(item.Name));
@@ -411,6 +413,16 @@ public class ServiceManager : DisposeBase
         RaiseServiceChanged();
 
         return rs;
+    }
+
+    void Fix(ServiceInfo svc)
+    {
+        var name = svc.Name;
+        if (!name.IsNullOrEmpty())
+        {
+            // 如果没有设置工作目录，默认工作目录是上一级的apps子目录，按应用放置
+            if (svc.WorkingDirectory.IsNullOrEmpty()) svc.WorkingDirectory = $"../apps/{name}".GetBasePath();
+        }
     }
 
     async Task Download(DeployInfo info, ServiceInfo svc)

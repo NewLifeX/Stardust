@@ -120,7 +120,7 @@ public class ZipDeploy
         if (fi == null || !fi.Exists)
         {
             //throw new Exception("未指定Zip文件");
-            WriteLog("未指定Zip文件 {0}", fi.FullName);
+            WriteLog("未发现Zip文件 {0}", fi.FullName);
             return false;
         }
 
