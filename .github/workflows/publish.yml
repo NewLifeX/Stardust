@@ -16,15 +16,14 @@ jobs:
       with:
         dotnet-version: 7.0.x
     - name: Get Version
-      id: ver
-      run: echo ::set-output name=VERSION::$(date "+%Y.%m%d")
+      run: echo "VERSION=$(date '+%Y.%m%d')" >> $GITHUB_ENV
     - name: Build
       run: |
-        dotnet build -c Release --version-suffix ${{ steps.ver.outputs.VERSION }}
+        dotnet build -c Release --version-suffix ${{ env.VERSION }}
     - name: Pack
       run: |
-        dotnet pack --no-build --version-suffix ${{ steps.ver.outputs.VERSION }} -o out Stardust/Stardust.csproj
-        dotnet pack --no-build --version-suffix ${{ steps.ver.outputs.VERSION }} -o out Stardust.Extensions/Stardust.Extensions.csproj
+        dotnet pack --no-build --version-suffix ${{ env.VERSION }} -o out Stardust/Stardust.csproj
+        dotnet pack --no-build --version-suffix ${{ env.VERSION }} -o out Stardust.Extensions/Stardust.Extensions.csproj
 
     - name: Publish
       run: |
