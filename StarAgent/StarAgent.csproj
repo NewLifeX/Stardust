@@ -20,6 +20,8 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>
+    <IsPackable>False</IsPackable>
+    <NoWarn>1701;1702;NU5104;NETSDK1138</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

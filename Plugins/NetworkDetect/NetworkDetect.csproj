@@ -16,6 +16,7 @@
     <!--<GenerateDocumentationFile>True</GenerateDocumentationFile>-->
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
+    <IsPackable>False</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>

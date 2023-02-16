@@ -14,20 +14,22 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v2
+    - name: Setup dotNET
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 7.0.x
-    - name: Restore
-      run: |
-        dotnet restore Stardust/Stardust.csproj
-        dotnet restore Stardust.Extensions/Stardust.Extensions.csproj
+    - name: Get Version
+      id: ver
+      run: echo ::set-output name=VERSION::$(date "+%Y.%m%d-beta%H%M")
     - name: Build
       run: |
-        dotnet pack --no-restore --version-suffix $(date "+%Y.%m%d-beta%H%M") -c Release -o out Stardust/Stardust.csproj
-        dotnet pack --no-restore --version-suffix $(date "+%Y.%m%d-beta%H%M") -c Release -o out Stardust.Extensions/Stardust.Extensions.csproj
+        dotnet build -c Release --version-suffix ${{ steps.ver.outputs.VERSION }}
+    - name: Pack
+      run: |
+        dotnet pack --no-build --version-suffix ${{ steps.ver.outputs.VERSION }} -o out Stardust/Stardust.csproj
+        dotnet pack --no-build --version-suffix ${{ steps.ver.outputs.VERSION }} -o out Stardust.Extensions/Stardust.Extensions.csproj
 
     - name: Publish
       run: |
-        # dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://nuget.pkg.github.com/NewLifeX/index.json --api-key ${{ github.token }}
+        dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://nuget.pkg.github.com/NewLifeX/index.json --api-key ${{ github.token }}
         dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.nugetKey }}

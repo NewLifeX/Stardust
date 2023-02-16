@@ -8,6 +8,7 @@
     <OutputPath>..\Bin\Test</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <LangVersion>latest</LangVersion>
+    <IsPackable>False</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>

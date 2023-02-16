@@ -12,12 +12,13 @@
     <FileVersion>$(Version)</FileVersion>
     <AssemblyVersion>$(VersionPrefix).*</AssemblyVersion>
     <Deterministic>false</Deterministic>
-    <OutputPath>..\Bin</OutputPath>
+    <!--<OutputPath>..\Bin</OutputPath>-->
     <DocumentationFile>$(OutputPath)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <DefineConstants>TRACE</DefineConstants>
     <LangVersion>latest</LangVersion>
+    <IsPackable>False</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
