@@ -365,9 +365,12 @@ internal class MyService : ServiceBase, IServiceProvider
         catch (Exception ex)
         {
             // 登录报错后，加大定时间隔，输出简单日志
-            _timer.Period = 30_000;
+            //_timer.Period = 30_000;
+            if (_timer.Period < 30_000) _timer.Period += 5_000;
 
             Log?.Error(ex.Message);
+
+            return;
         }
 
         _timer.TryDispose();

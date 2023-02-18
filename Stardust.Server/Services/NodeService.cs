@@ -233,6 +233,13 @@ public class NodeService
         node.Save();
         //autoReg = true;
 
+        // 第一个注册的StarAgent提高采样频率，便于测试和演示
+        if (node.ID == 1)
+        {
+            node.Period = 5;
+            node.Update();
+        }
+
         node.WriteHistory("动态注册", true, inf.ToJson(false, false, false), ip);
 
         return node;
