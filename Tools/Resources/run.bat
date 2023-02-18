@@ -1,13 +1,11 @@
 
-echo "WindowsÔËÐÐÐÇ³¾"
+echo "Run Stardust on Windows"
 
-start server/StarServer.exe
+clover40.exe net7-aspnet -silent
+
+start agent\StarAgent.exe -run -server http://127.0.0.1:6600
 
 ping 127.0.0.1 -n 5 > nul
 start http://localhost:6600/api
-
-start agent/StarAgent.exe -run
-start web/StarWeb.exe urls=http://*:6680
-
 ping 127.0.0.1 -n 5 > nul
 start http://localhost:6680

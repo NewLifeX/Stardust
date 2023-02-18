@@ -1,9 +1,6 @@
 
-copy Backup/StarAgent.config agent/Config/
+echo "Install Stardust as service on Windows"
 
-cd agent
-StarAgent.exe -stop
-StarAgent.exe -u
-StarAgent.exe -i
-StarAgent.exe -start
-cd ..
+clover40.exe net7-aspnet -silent
+
+agent\StarAgent.exe -install -server http://127.0.0.1:6600

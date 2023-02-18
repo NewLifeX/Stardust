@@ -1,13 +1,10 @@
 
-echo "WindowsÔËÐÐÐÇ³¾"
+#!/bin/bash
 
-start server/StarServer.exe
+echo "Install Stardust on Linux"
 
-ping 127.0.0.1 -n 5 > nul
-start http://localhost:6600/api
+if [ ! -d "/usr/share/dotnet/" ]; then
+	curl https://x.newlifex.com/dotnet/net7-x64.sh | sudo bash
+fi
 
-start agent/StarAgent.exe -run
-start web/StarWeb.exe urls=http://*:6680
-
-ping 127.0.0.1 -n 5 > nul
-start http://localhost:6680
+sudo dotnet agent\StarAgent.dll -install -server http://127.0.0.1:6600
