@@ -68,7 +68,8 @@ namespace Stardust.Data.Nodes
                 Category = "默认",
                 Server = "127.0.0.1:6379",
                 Password = "",
-                Enable = true
+                Enable = false,
+                ScanQueue = true,
             };
             entity.Insert();
 
