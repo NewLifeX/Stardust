@@ -48,25 +48,28 @@ public partial class Node : Entity<Node>
         //if (CpuID != null && len > 0 && CpuID.Length > len) CpuID = CpuID.Substring(0, len);
 
         var len = _.Uuid.Length;
-        if (Uuid != null && len > 0 && Uuid.Length > len) Uuid = Uuid.Substring(0, len);
+        if (Uuid != null && len > 0 && Uuid.Length > len) Uuid = Uuid[..len];
 
         len = _.MachineGuid.Length;
-        if (MachineGuid != null && len > 0 && MachineGuid.Length > len) MachineGuid = MachineGuid.Substring(0, len);
+        if (MachineGuid != null && len > 0 && MachineGuid.Length > len) MachineGuid = MachineGuid[..len];
 
         len = _.MACs.Length;
-        if (MACs != null && len > 0 && MACs.Length > len) MACs = MACs.Substring(0, len);
+        if (MACs != null && len > 0 && MACs.Length > len) MACs = MACs[..len];
 
         len = _.DiskID.Length;
-        if (DiskID != null && len > 0 && DiskID.Length > len) DiskID = DiskID.Substring(0, len);
+        if (DiskID != null && len > 0 && DiskID.Length > len) DiskID = DiskID[..len];
 
         len = _.SerialNumber.Length;
-        if (SerialNumber != null && len > 0 && SerialNumber.Length > len) SerialNumber = SerialNumber.Substring(0, len);
+        if (SerialNumber != null && len > 0 && SerialNumber.Length > len) SerialNumber = SerialNumber[..len];
 
         len = _.OS.Length;
-        if (OS != null && len > 0 && OS.Length > len) OS = OS.Substring(0, len);
+        if (OS != null && len > 0 && OS.Length > len) OS = OS[..len];
 
         len = _.DriveInfo.Length;
-        if (DriveInfo != null && len > 0 && DriveInfo.Length > len) DriveInfo = DriveInfo.Substring(0, len);
+        if (DriveInfo != null && len > 0 && DriveInfo.Length > len) DriveInfo = DriveInfo[..len];
+
+        len = _.Framework.Length;
+        if (Framework != null && len > 0 && Framework.Length > len) Framework = Framework[..len];
 
         // 建议先调用基类方法，基类方法会做一些统一处理
         base.Valid(isNew);

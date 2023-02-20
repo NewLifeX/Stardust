@@ -304,12 +304,12 @@ namespace Stardust.Data.Nodes
         public String Runtime { get => _Runtime; set { if (OnPropertyChanging("Runtime", value)) { _Runtime = value; OnPropertyChanged("Runtime"); } } }
 
         private String _Framework;
-        /// <summary>框架。本地支持的最高版本框架</summary>
+        /// <summary>框架。本地支持的所有版本框架</summary>
         [Category("硬件信息")]
         [DisplayName("框架")]
-        [Description("框架。本地支持的最高版本框架")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("Framework", "框架。本地支持的最高版本框架", "")]
+        [Description("框架。本地支持的所有版本框架")]
+        [DataObjectField(false, false, true, 200)]
+        [BindColumn("Framework", "框架。本地支持的所有版本框架", "")]
         public String Framework { get => _Framework; set { if (OnPropertyChanging("Framework", value)) { _Framework = value; OnPropertyChanged("Framework"); } } }
 
         private Int32 _ProvinceID;
@@ -746,7 +746,7 @@ namespace Stardust.Data.Nodes
             /// <summary>运行时。.Net运行时版本</summary>
             public static readonly Field Runtime = FindByName("Runtime");
 
-            /// <summary>框架。本地支持的最高版本框架</summary>
+            /// <summary>框架。本地支持的所有版本框架</summary>
             public static readonly Field Framework = FindByName("Framework");
 
             /// <summary>省份</summary>
@@ -920,7 +920,7 @@ namespace Stardust.Data.Nodes
             /// <summary>运行时。.Net运行时版本</summary>
             public const String Runtime = "Runtime";
 
-            /// <summary>框架。本地支持的最高版本框架</summary>
+            /// <summary>框架。本地支持的所有版本框架</summary>
             public const String Framework = "Framework";
 
             /// <summary>省份</summary>
