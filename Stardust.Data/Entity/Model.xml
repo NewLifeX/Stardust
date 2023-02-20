@@ -10,6 +10,7 @@
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="AutoActive" DataType="Boolean" Description="自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务" />
       <Column Name="Version" DataType="String" Description="版本。多版本实例使用时，仅记录最新版本" />
+      <Column Name="Compile" DataType="DateTime" Description="编译时间。客户端" />
       <Column Name="Period" DataType="Int32" Description="采样周期。默认60秒" />
       <Column Name="Singleton" DataType="Boolean" Description="单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于管理实例" />
       <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
@@ -40,6 +41,8 @@
       <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
       <Column Name="Client" DataType="String" Description="客户端。IP加进程，不同应用的Client可能相同，但几率很低，暂不考虑" />
       <Column Name="Scope" DataType="String" Description="作用域" />
+      <Column Name="Version" DataType="String" Description="版本。客户端" />
+      <Column Name="Compile" DataType="DateTime" Description="编译时间。客户端" />
       <Column Name="PingCount" DataType="Int32" Description="心跳" />
       <Column Name="WebSocket" DataType="Boolean" Description="长连接。WebSocket长连接" />
       <Column Name="ProcessId" DataType="Int32" Description="进程" />
@@ -48,8 +51,6 @@
       <Column Name="UserName" DataType="String" Description="用户名。启动该进程的用户名" />
       <Column Name="MachineName" DataType="String" Description="机器名" />
       <Column Name="StartTime" DataType="DateTime" Description="进程时间" />
-      <Column Name="Version" DataType="String" Description="版本。客户端" />
-      <Column Name="Compile" DataType="DateTime" Description="编译时间。客户端" />
       <Column Name="IP" DataType="String" Length="200" Description="本地IP。节点本地IP地址" />
       <Column Name="WorkerId" DataType="Int32" Description="雪花标识" />
       <Column Name="Token" DataType="String" Length="500" Description="令牌" />

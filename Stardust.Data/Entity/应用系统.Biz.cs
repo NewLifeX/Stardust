@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using NewLife.Reflection;
 using Stardust.Monitors;
 using XCode;
 using XCode.Cache;
@@ -46,8 +48,13 @@ namespace Stardust.Data
             if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), "名称不能为空！");
 
             if (isNew && !Dirtys[__.AutoActive]) AutoActive = true;
-
             if (Period == 0) Period = 60;
+
+            if (!Version.IsNullOrEmpty() && !Dirtys[nameof(Compile)])
+            {
+                var dt = AssemblyX.GetCompileTime(Version);
+                if (dt.Year > 2000) Compile = dt;
+            }
         }
 
         /// <summary>

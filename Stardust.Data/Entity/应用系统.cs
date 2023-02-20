@@ -83,6 +83,14 @@ namespace Stardust.Data
         [BindColumn("Version", "版本。多版本实例使用时，仅记录最新版本", "")]
         public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
+        private DateTime _Compile;
+        /// <summary>编译时间。客户端</summary>
+        [DisplayName("编译时间")]
+        [Description("编译时间。客户端")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("Compile", "编译时间。客户端", "")]
+        public DateTime Compile { get => _Compile; set { if (OnPropertyChanging("Compile", value)) { _Compile = value; OnPropertyChanged("Compile"); } } }
+
         private Int32 _Period;
         /// <summary>采样周期。默认60秒</summary>
         [DisplayName("采样周期")]
@@ -239,6 +247,7 @@ namespace Stardust.Data
                     case "Enable": return _Enable;
                     case "AutoActive": return _AutoActive;
                     case "Version": return _Version;
+                    case "Compile": return _Compile;
                     case "Period": return _Period;
                     case "Singleton": return _Singleton;
                     case "WebHook": return _WebHook;
@@ -270,6 +279,7 @@ namespace Stardust.Data
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "AutoActive": _AutoActive = value.ToBoolean(); break;
                     case "Version": _Version = Convert.ToString(value); break;
+                    case "Compile": _Compile = value.ToDateTime(); break;
                     case "Period": _Period = value.ToInt(); break;
                     case "Singleton": _Singleton = value.ToBoolean(); break;
                     case "WebHook": _WebHook = Convert.ToString(value); break;
@@ -319,6 +329,9 @@ namespace Stardust.Data
 
             /// <summary>版本。多版本实例使用时，仅记录最新版本</summary>
             public static readonly Field Version = FindByName("Version");
+
+            /// <summary>编译时间。客户端</summary>
+            public static readonly Field Compile = FindByName("Compile");
 
             /// <summary>采样周期。默认60秒</summary>
             public static readonly Field Period = FindByName("Period");
@@ -397,6 +410,9 @@ namespace Stardust.Data
 
             /// <summary>版本。多版本实例使用时，仅记录最新版本</summary>
             public const String Version = "Version";
+
+            /// <summary>编译时间。客户端</summary>
+            public const String Compile = "Compile";
 
             /// <summary>采样周期。默认60秒</summary>
             public const String Period = "Period";

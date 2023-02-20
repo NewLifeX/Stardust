@@ -79,6 +79,22 @@ namespace Stardust.Data
         [BindColumn("Scope", "作用域", "")]
         public String Scope { get => _Scope; set { if (OnPropertyChanging("Scope", value)) { _Scope = value; OnPropertyChanged("Scope"); } } }
 
+        private String _Version;
+        /// <summary>版本。客户端</summary>
+        [DisplayName("版本")]
+        [Description("版本。客户端")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Version", "版本。客户端", "")]
+        public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
+
+        private DateTime _Compile;
+        /// <summary>编译时间。客户端</summary>
+        [DisplayName("编译时间")]
+        [Description("编译时间。客户端")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("Compile", "编译时间。客户端", "")]
+        public DateTime Compile { get => _Compile; set { if (OnPropertyChanging("Compile", value)) { _Compile = value; OnPropertyChanged("Compile"); } } }
+
         private Int32 _PingCount;
         /// <summary>心跳</summary>
         [DisplayName("心跳")]
@@ -142,22 +158,6 @@ namespace Stardust.Data
         [DataObjectField(false, false, true, 0)]
         [BindColumn("StartTime", "进程时间", "")]
         public DateTime StartTime { get => _StartTime; set { if (OnPropertyChanging("StartTime", value)) { _StartTime = value; OnPropertyChanged("StartTime"); } } }
-
-        private String _Version;
-        /// <summary>版本。客户端</summary>
-        [DisplayName("版本")]
-        [Description("版本。客户端")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("Version", "版本。客户端", "")]
-        public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
-
-        private DateTime _Compile;
-        /// <summary>编译时间。客户端</summary>
-        [DisplayName("编译时间")]
-        [Description("编译时间。客户端")]
-        [DataObjectField(false, false, true, 0)]
-        [BindColumn("Compile", "编译时间。客户端", "")]
-        public DateTime Compile { get => _Compile; set { if (OnPropertyChanging("Compile", value)) { _Compile = value; OnPropertyChanged("Compile"); } } }
 
         private String _IP;
         /// <summary>本地IP。节点本地IP地址</summary>
@@ -255,6 +255,8 @@ namespace Stardust.Data
                     case "NodeId": return _NodeId;
                     case "Client": return _Client;
                     case "Scope": return _Scope;
+                    case "Version": return _Version;
+                    case "Compile": return _Compile;
                     case "PingCount": return _PingCount;
                     case "WebSocket": return _WebSocket;
                     case "ProcessId": return _ProcessId;
@@ -263,8 +265,6 @@ namespace Stardust.Data
                     case "UserName": return _UserName;
                     case "MachineName": return _MachineName;
                     case "StartTime": return _StartTime;
-                    case "Version": return _Version;
-                    case "Compile": return _Compile;
                     case "IP": return _IP;
                     case "WorkerId": return _WorkerId;
                     case "Token": return _Token;
@@ -288,6 +288,8 @@ namespace Stardust.Data
                     case "NodeId": _NodeId = value.ToInt(); break;
                     case "Client": _Client = Convert.ToString(value); break;
                     case "Scope": _Scope = Convert.ToString(value); break;
+                    case "Version": _Version = Convert.ToString(value); break;
+                    case "Compile": _Compile = value.ToDateTime(); break;
                     case "PingCount": _PingCount = value.ToInt(); break;
                     case "WebSocket": _WebSocket = value.ToBoolean(); break;
                     case "ProcessId": _ProcessId = value.ToInt(); break;
@@ -296,8 +298,6 @@ namespace Stardust.Data
                     case "UserName": _UserName = Convert.ToString(value); break;
                     case "MachineName": _MachineName = Convert.ToString(value); break;
                     case "StartTime": _StartTime = value.ToDateTime(); break;
-                    case "Version": _Version = Convert.ToString(value); break;
-                    case "Compile": _Compile = value.ToDateTime(); break;
                     case "IP": _IP = Convert.ToString(value); break;
                     case "WorkerId": _WorkerId = value.ToInt(); break;
                     case "Token": _Token = Convert.ToString(value); break;
@@ -338,6 +338,12 @@ namespace Stardust.Data
             /// <summary>作用域</summary>
             public static readonly Field Scope = FindByName("Scope");
 
+            /// <summary>版本。客户端</summary>
+            public static readonly Field Version = FindByName("Version");
+
+            /// <summary>编译时间。客户端</summary>
+            public static readonly Field Compile = FindByName("Compile");
+
             /// <summary>心跳</summary>
             public static readonly Field PingCount = FindByName("PingCount");
 
@@ -361,12 +367,6 @@ namespace Stardust.Data
 
             /// <summary>进程时间</summary>
             public static readonly Field StartTime = FindByName("StartTime");
-
-            /// <summary>版本。客户端</summary>
-            public static readonly Field Version = FindByName("Version");
-
-            /// <summary>编译时间。客户端</summary>
-            public static readonly Field Compile = FindByName("Compile");
 
             /// <summary>本地IP。节点本地IP地址</summary>
             public static readonly Field IP = FindByName("IP");
@@ -422,6 +422,12 @@ namespace Stardust.Data
             /// <summary>作用域</summary>
             public const String Scope = "Scope";
 
+            /// <summary>版本。客户端</summary>
+            public const String Version = "Version";
+
+            /// <summary>编译时间。客户端</summary>
+            public const String Compile = "Compile";
+
             /// <summary>心跳</summary>
             public const String PingCount = "PingCount";
 
@@ -445,12 +451,6 @@ namespace Stardust.Data
 
             /// <summary>进程时间</summary>
             public const String StartTime = "StartTime";
-
-            /// <summary>版本。客户端</summary>
-            public const String Version = "Version";
-
-            /// <summary>编译时间。客户端</summary>
-            public const String Compile = "Compile";
 
             /// <summary>本地IP。节点本地IP地址</summary>
             public const String IP = "IP";

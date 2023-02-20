@@ -13,7 +13,7 @@ public class AppOnlineController : EntityController<AppOnline>
 {
     static AppOnlineController()
     {
-        ListFields.RemoveField("ProcessName", "MachineName", "UserName", "Token", "Compile");
+        ListFields.RemoveField("ProcessName", "MachineName", "UserName", "Token");
 
         {
             var df = ListFields.GetField("NodeName") as ListField;
