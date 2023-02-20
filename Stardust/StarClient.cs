@@ -210,7 +210,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             AvailableMemory = mi.AvailableMemory,
             TotalSize = (UInt64)driveInfo?.TotalSize,
             AvailableFreeSpace = (UInt64)driveInfo?.AvailableFreeSpace,
-            DriveInfo = drives.Join(",", e => $"{e.Name}[{e.DriveFormat}]={e.AvailableFreeSpace}/{e.TotalSize}"),
+            DriveInfo = drives.Join(",", e => $"{e.Name}[{e.DriveFormat}]={e.AvailableFreeSpace.ToGMK()}/{e.TotalSize.ToGMK()}"),
 
             Product = mi.Product,
             Processor = mi.Processor,
@@ -250,17 +250,6 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         di.Framework ??= ver?.TrimStart(".NET Framework", ".NET Core", ".NET Native", ".NET").Trim();
         di.Architecture = IntPtr.Size == 8 ? "X64" : "X86";
 
-        //// .NET45以上运行时
-        //if (Runtime.Windows && Environment.Version >= new Version("4.0.30319.42000"))
-        //{
-        //    var reg = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full");
-        //    if (reg != null)
-        //    {
-        //        var str = reg.GetValue("Version") + "";
-        //        if (!str.IsNullOrEmpty()) di.Framework = str;
-        //    }
-        //}
-
         try
         {
             // 收集屏幕相关信息。Mono+Linux无法获取
@@ -291,152 +280,6 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             if (di.TotalSize <= 0) continue;
 
             if (!list.Any(e => e.Name == di.Name)) list.Add(di);
-        }
-
-        return list;
-    }
-
-    private static IList<String> GetFrameworks()
-    {
-        var list = new List<String>();
-        if (Environment.OSVersion.Platform > PlatformID.WinCE) return list;
-
-#if NET45_OR_GREATER || NET6_0_OR_GREATER
-        // 注册表查找 .NET Framework
-        using var ndpKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\");
-
-        foreach (var versionKeyName in ndpKey.GetSubKeyNames())
-        {
-            // 跳过 .NET Framework 4.5
-            if (versionKeyName == "v4") continue;
-            if (!versionKeyName.StartsWith("v")) continue;
-
-            var versionKey = ndpKey.OpenSubKey(versionKeyName);
-            // 获取 .NET Framework 版本
-            var ver = (String)versionKey.GetValue("Version", "");
-            // 获取SP数字
-            var sp = versionKey.GetValue("SP", "").ToString();
-
-            if (!String.IsNullOrEmpty(ver))
-            {
-                // 获取 installation flag, or an empty string if there is none.
-                var install = versionKey.GetValue("Install", "").ToString();
-                if (String.IsNullOrEmpty(install)) // No install info; it must be in a child subkey.
-                    list.Add(versionKeyName.TrimStart('v'));
-                else if (!String.IsNullOrEmpty(sp) && install == "1")
-                    list.Add(versionKeyName.TrimStart('v'));
-            }
-            else
-            {
-                foreach (var subKeyName in versionKey.GetSubKeyNames())
-                {
-                    var subKey = versionKey.OpenSubKey(subKeyName);
-                    ver = (String)subKey.GetValue("Version", "");
-                    if (!String.IsNullOrEmpty(ver))
-                    {
-                        var name = ver;
-                        while (name.Length > 3 && name.Substring(name.Length - 2) == ".0")
-                            name = name.Substring(0, name.Length - 2);
-                        //if (name[0] != 'v') name = 'v' + name;
-                        sp = subKey.GetValue("SP", "").ToString();
-
-                        var install = subKey.GetValue("Install", "").ToString();
-                        if (String.IsNullOrEmpty(install)) //No install info; it must be later.
-                            list.Add(name);
-                        else if (!String.IsNullOrEmpty(sp) && install == "1")
-                            list.Add(name);
-                        else if (install == "1")
-                            list.Add(name);
-                    }
-                }
-            }
-        }
-
-        const String subkey = @"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\";
-
-        using var ndpKey2 = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(subkey);
-        if (ndpKey2 == null) return list;
-
-        {
-            //First check if there's an specific version indicated
-            var name = "";
-            var value = "";
-            var ver = ndpKey2.GetValue("Version");
-            if (ver != null) name = ver.ToString();
-            var release = ndpKey2.GetValue("Release");
-            if (release != null)
-                value = CheckFor45PlusVersion((Int32)ndpKey2.GetValue("Release"));
-
-            if (String.IsNullOrEmpty(name)) name = value;
-            if (String.IsNullOrEmpty(value)) value = name;
-            if (!String.IsNullOrEmpty(name)) list.Add(value);
-        }
-
-        // Checking the version using >= enables forward compatibility.
-        static String CheckFor45PlusVersion(Int32 releaseKey) => releaseKey switch
-        {
-            >= 533325 => "4.8.1",
-            >= 528040 => "4.8",
-            >= 461808 => "4.7.2",
-            >= 461308 => "4.7.1",
-            >= 460798 => "4.7",
-            >= 394802 => "4.6.2",
-            >= 394254 => "4.6.1",
-            >= 393295 => "4.6",
-            >= 379893 => "4.5.2",
-            >= 378675 => "4.5.1",
-            >= 378389 => "4.5",
-            _ => ""
-        };
-#endif
-
-        return list;
-    }
-
-    private static IList<String> GetNetCore()
-    {
-        var dir = "";
-        if (Environment.OSVersion.Platform <= PlatformID.WinCE)
-        {
-            dir = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-            if (String.IsNullOrEmpty(dir)) return null;
-            dir += "\\dotnet\\shared";
-        }
-        else if (Runtime.Linux)
-            dir = "/usr/share/dotnet/shared";
-
-        var list = new List<String>();
-        var di = new DirectoryInfo(dir);
-        if (di.Exists)
-        {
-            foreach (var item in di.GetDirectories())
-            {
-                foreach (var elm in item.GetDirectories())
-                {
-                    var name = "v" + elm.Name;
-                    if (item.Name.Contains("AspNet"))
-                        name += "-aspnet";
-                    else if (item.Name.Contains("Desktop"))
-                        name += "-desktop";
-                    if (!list.Contains(name))
-                        list.Add(name);
-                }
-            }
-        }
-
-        // 各平台通用处理
-        var infs = Execute("dotnet", "--list-runtimes")?.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-        if (infs != null)
-        {
-            foreach (var line in infs)
-            {
-                var ss = line.Split(' ');
-                if (ss.Length >= 2)
-                {
-                    if (!list.Contains(ss[1]))
-                        list.Add(ss[1]);
-                }
-            }
         }
 
         return list;
