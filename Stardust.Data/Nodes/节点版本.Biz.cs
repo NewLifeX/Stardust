@@ -181,8 +181,20 @@ namespace Stardust.Data.Nodes
 
             if (Rules.TryGetValue("framework", out vs))
             {
-                var framework = node.Framework;
-                if (framework.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(framework))) return false;
+                var frameworks = node.Framework?.Split(",");
+                if (frameworks == null || frameworks.Length == 0) return false;
+
+                // 本节点拥有的所有框架，任意框架匹配任意规则，即可认为匹配
+                var flag = false;
+                foreach (var item in frameworks)
+                {
+                    if (vs.Any(e => e.IsMatch(item)))
+                    {
+                        flag = true;
+                        break;
+                    }
+                }
+                if (!flag) return false;
             }
 
             if (Rules.TryGetValue("os", out vs))
