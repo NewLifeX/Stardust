@@ -252,25 +252,28 @@ namespace Stardust.Web.Controllers
                 var rs = new List<SampleData>();
                 var stack = new Stack<SampleData>();
 
+                // 整理排序，为了配合栈计算，采用反向顺序
+                var list2 = list.OrderByDescending(e => e.StartTime).ThenByDescending(e => e.SpanId).ToList();
+
                 // 找到所有parentId，包括空字符串，首次出现的parentId优先
-                var pids = list.OrderByDescending(e => e.StartTime).Select(e => e.ParentId + "").Distinct().ToArray();
+                var pids = list2.Select(e => e.ParentId + "").Distinct().ToArray();
                 // 找到顶级parentId，它所对应的span不存在，包括空字符串
-                foreach (var item in pids.Where(e => !list.Any(y => y.SpanId == e)))
+                foreach (var item in pids.Where(e => !list2.Any(y => y.SpanId == e)))
                 {
                     // 这些parentId的子级，按照时间降序后入栈，它们作为一级树
-                    foreach (var elm in list.Where(e => e.ParentId + "" == item).OrderByDescending(e => e.StartTime))
+                    foreach (var elm in list2.Where(e => e.ParentId + "" == item))
                     {
                         stack.Push(elm);
                     }
                 }
                 foreach (var item in stack)
                 {
-                    list.Remove(item);
+                    list2.Remove(item);
                 }
 
-                //!!! 判断每个应用的第一次出现，根据父子关系，整体调整应用的时间偏移
-                // 每个应用的时间偏移量
-                var dic = new Dictionary<Int32, Int32>();
+                ////!!! 判断每个应用的第一次出现，根据父子关系，整体调整应用的时间偏移
+                //// 每个应用的时间偏移量
+                //var dic = new Dictionary<Int32, Int32>();
 
                 // 依次弹出parentId，深度搜索
                 var parent = stack.Pop();
@@ -279,28 +282,28 @@ namespace Stardust.Web.Controllers
                 while (true)
                 {
                     // 当前span的下级，按时间降序入栈
-                    var ps = list.Where(e => e.ParentId + "" == pid).OrderByDescending(e => e.StartTime).ToList();
+                    var ps = list2.Where(e => e.ParentId + "" == pid).ToList();
                     foreach (var item in ps)
                     {
                         stack.Push(item);
-                        list.Remove(item);
+                        list2.Remove(item);
 
                         // 深度
                         item.Level = parent.Level + 1;
 
-                        // 如果子级时间小于父级，可能是跨应用时间差，强行调整
-                        if (parent.AppId != item.AppId)
-                        {
-                            if (!dic.TryGetValue(parent.AppId, out var parentTs)) parentTs = 0;
+                        //// 如果子级时间小于父级，可能是跨应用时间差，强行调整
+                        //if (parent.AppId != item.AppId)
+                        //{
+                        //    if (!dic.TryGetValue(parent.AppId, out var parentTs)) parentTs = 0;
 
-                            // 负数合理，正数不合理
-                            var ts = (Int32)(parent.StartTime - item.StartTime);
-                            if (ts > 0)
-                            {
-                                if (!dic.TryGetValue(item.AppId, out var itemTs) || ts > itemTs)
-                                    dic[item.AppId] = itemTs = ts + parentTs;
-                            }
-                        }
+                        //    // 负数合理，正数不合理
+                        //    var ts = (Int32)(parent.StartTime - item.StartTime);
+                        //    if (ts > 0)
+                        //    {
+                        //        if (!dic.TryGetValue(item.AppId, out var itemTs) || ts > itemTs)
+                        //            dic[item.AppId] = itemTs = ts + parentTs;
+                        //    }
+                        //}
                     }
 
                     // 没有数据，跳出
@@ -315,7 +318,7 @@ namespace Stardust.Web.Controllers
                 }
 
                 // 残留的异常数据
-                rs.AddRange(list);
+                rs.AddRange(list2);
 
                 //// 各应用整体后移
                 //foreach (var item in rs)
