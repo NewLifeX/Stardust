@@ -73,12 +73,12 @@ public class AppConfigController : EntityController<AppConfig>
 
         {
             var df = AddFormFields.AddDataField("Quotes");
-            df.DataSource = e => AppConfig.FindAllWithCache().Where(e => e.CanBeQuoted).ToDictionary(e => e.Id, e => e.Name);
+            df.DataSource = x => AppConfig.FindAllWithCache().Where(e => e.CanBeQuoted).ToDictionary(e => e.Id, e => e.Name);
         }
 
         {
             var df = EditFormFields.AddDataField("Quotes");
-            df.DataSource = e => AppConfig.FindAllWithCache().Where(e => e.CanBeQuoted).ToDictionary(e => e.Id, e => e.Name);
+            df.DataSource = x => AppConfig.FindAllWithCache().Where(e => e.CanBeQuoted).ToDictionary(e => e.Id, e => e.Name);
         }
 
         //// 异步同步应用
