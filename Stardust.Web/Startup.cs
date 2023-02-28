@@ -119,11 +119,11 @@ public class Startup
             ServeUnknownFileTypes = true,
             DefaultContentType = "application/x-msdownload",
         });
-        //app.UseDirectoryBrowser(new DirectoryBrowserOptions
-        //{
-        //    RequestPath = new PathString("/files"),
-        //    FileProvider = new PhysicalFileProvider(sdk),
-        //});
+        app.UseDirectoryBrowser(new DirectoryBrowserOptions
+        {
+            RequestPath = new PathString("/files"),
+            FileProvider = new PhysicalFileProvider(sdk),
+        });
 
         app.UseStardust();
         app.UseResponseCompression();
