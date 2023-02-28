@@ -46,10 +46,17 @@ namespace Stardust.Server.Services
                 // 替换
                 var item = value.Substring(p1 + 2, p2 - p1 - 2);
                 // 拆分 ${key@app:scope}
-                var ss = item.Split("@", ":");
+                var ss = item.Split('@');
                 var key2 = ss[0];
                 var app2 = ss.Length > 1 ? ss[1] : "";
-                var scope2 = ss.Length > 2 ? ss[2] : "";
+
+                var scope2 = "";
+                ss = app2.Split(':');
+                if (ss != null && ss.Length > 1)
+                {
+                    app2 = ss[0];
+                    scope2 = ss[1];
+                }
 
                 //item = replace(key, app, scope) + "";
                 {
@@ -178,12 +185,12 @@ namespace Stardust.Server.Services
 
             var cfg = app.Configs.FirstOrDefault(e => e.Key.EqualIgnoreCase(WorkerIdName));
             cfg ??= new ConfigData
-                {
-                    AppId = app.Id,
-                    Key = WorkerIdName,
-                    Version = app.Version,
-                    Enable = true
-                };
+            {
+                AppId = app.Id,
+                Key = WorkerIdName,
+                Version = app.Version,
+                Enable = true
+            };
 
             var id = cfg.Value.ToInt();
             id++;
