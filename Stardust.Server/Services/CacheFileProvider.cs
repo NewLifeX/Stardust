@@ -74,15 +74,22 @@ public class CacheFileProvider : IFileProvider
 
             XTrace.WriteLine("下载：{0}", url);
 
-            fullPath.EnsureDirectory(true);
-            using var fs = new FileStream(fullPath, FileMode.CreateNew);
+            // 先下载到临时目录，避免出现下载半截的情况
+            var tmp = Path.GetTempFileName();
+            using var fs = new FileStream(tmp, FileMode.OpenOrCreate);
 
             using var client = new HttpClient();
-            var rs = client.GetStreamAsync(url).Result;
+            using var rs = client.GetStreamAsync(url).Result;
             rs.CopyTo(fs);
             fs.Flush();
+            fs.SetLength(fs.Position);
+            fs.Dispose();
 
-            XTrace.WriteLine("下载完成：{0}", url);
+            // 移动临时文件到最终目录
+            fullPath.EnsureDirectory(true);
+            File.Move(tmp, fullPath);
+
+            XTrace.WriteLine("下载完成：{0}", fullPath);
         }
 
         var fileInfo = new FileInfo(fullPath);

@@ -147,19 +147,19 @@ public class Startup
         var set = NewLife.Setting.Current;
 
         // 缓存运行时安装文件
-        var sdk = "../dotnet".GetFullPath().EnsureDirectory(false);
+        var sdk = "../FileCache".GetFullPath().EnsureDirectory(false);
         app.UseStaticFiles(new StaticFileOptions
         {
-            RequestPath = new PathString("/dotnet"),
-            FileProvider = new CacheFileProvider(sdk, set.PluginServer.CombinePath("dotnet")),
+            RequestPath = new PathString("/files"),
+            FileProvider = new CacheFileProvider(sdk, set.PluginServer),
             ServeUnknownFileTypes = true,
             DefaultContentType = "application/x-msdownload",
         });
-        app.UseDirectoryBrowser(new DirectoryBrowserOptions
-        {
-            RequestPath = new PathString("/dotnet"),
-            FileProvider = new PhysicalFileProvider(sdk),
-        });
+        //app.UseDirectoryBrowser(new DirectoryBrowserOptions
+        //{
+        //    RequestPath = new PathString("/files"),
+        //    FileProvider = new PhysicalFileProvider(sdk),
+        //});
 
         app.UseCors("star_cors");
 

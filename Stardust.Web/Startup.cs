@@ -108,6 +108,23 @@ public class Startup
 
         Usewwwroot(app, env);
 
+        var set = NewLife.Setting.Current;
+
+        // 缓存运行时安装文件
+        var sdk = "../FileCache".GetFullPath().EnsureDirectory(false);
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            RequestPath = new PathString("/files"),
+            FileProvider = new CacheFileProvider(sdk, set.PluginServer),
+            ServeUnknownFileTypes = true,
+            DefaultContentType = "application/x-msdownload",
+        });
+        //app.UseDirectoryBrowser(new DirectoryBrowserOptions
+        //{
+        //    RequestPath = new PathString("/files"),
+        //    FileProvider = new PhysicalFileProvider(sdk),
+        //});
+
         app.UseStardust();
         app.UseResponseCompression();
         app.UseCube(env);
