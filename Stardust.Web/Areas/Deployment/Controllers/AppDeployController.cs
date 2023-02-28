@@ -24,13 +24,16 @@ public class AppDeployController : EntityController<AppDeploy>
         LogOnChange = true;
 
         {
+            var df = ListFields.GetField("AppName") as ListField;
+            df.Url = "/Registry/App?Id={AppId}";
+        }
+        {
             var df = ListFields.AddListField("NodeManage", null, "Nodes") as ListField;
             //df.Header = "节点";
             //df.Title = "管理服务器节点";
             df.DisplayName = "部署节点";
             df.Url = "/Deployment/AppDeployNode?appId={Id}";
         }
-
         {
             var df = ListFields.GetField("Version") as ListField;
             df.Header = "版本";
