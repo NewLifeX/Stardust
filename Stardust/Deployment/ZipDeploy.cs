@@ -271,6 +271,7 @@ public class ZipDeploy
             {
                 if (item.Extension.EndsWithIgnoreCase(".json", ".config", ".xml"))
                 {
+                    // 注意，appsettings.json 也可能覆盖
                     item.CopyTo(rundir.FullName.CombinePath(item.Name), true);
                 }
             }
@@ -280,6 +281,9 @@ public class ZipDeploy
 
             di = shadow.CombinePath("Data").AsDirectory();
             if (di.Exists) di.CopyTo(rundir.FullName.CombinePath("Data"));
+
+            di = shadow.CombinePath("Plugins").AsDirectory();
+            if (di.Exists) di.CopyTo(rundir.FullName.CombinePath("Plugins"));
         }
     }
 
