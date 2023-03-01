@@ -21,11 +21,9 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
     }
 
     private readonly DeployService _deployService;
-    private readonly StarFactory _starFactory;
-    public AppDeployNodeController(DeployService deployService, StarFactory starFactory)
+    public AppDeployNodeController(DeployService deployService)
     {
         _deployService = deployService;
-        _starFactory = starFactory;
     }
 
     protected override IEnumerable<AppDeployNode> Search(Pager p)
@@ -72,5 +70,25 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
         await _deployService.Control(dn, act, UserHost);
 
         return JsonRefresh($"在节点[{dn.NodeName}]上对应用[{dn.AppName}]执行[{act}]操作", 1);
+    }
+
+    /// <summary>批量执行操作</summary>
+    /// <param name="act"></param>
+    /// <returns></returns>
+    [EntityAuthorize(PermissionFlags.Update)]
+    public async Task<ActionResult> BatchOperate(String act)
+    {
+        var ids = SelectKeys.Select(e => e.ToInt()).Where(e => e > 0).Distinct().ToList();
+        foreach (var id in ids)
+        {
+            var dn = AppDeployNode.FindById(id);
+            if (dn != null && dn.Enable && dn.Node != null && dn.App != null)
+            {
+                await _deployService.Control(dn, act, UserHost);
+            }
+
+        }
+
+        return JsonRefresh($"批量执行[{act}]操作", 1);
     }
 }
