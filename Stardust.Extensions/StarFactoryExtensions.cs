@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -131,6 +132,8 @@ public static class StarFactoryExtensions
                 }
                 star.Service?.RegisterAsync(serviceName, address, tag, health).Wait(5_000);
             }
+            catch (HttpRequestException) { }
+            catch (AggregateException ex) when (ex.InnerException is HttpRequestException) { }
             catch (Exception ex)
             {
                 XTrace.WriteException(ex);
