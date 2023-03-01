@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2022.xsd" NameSpace="Stardust.Data.Deployment" ConnName="Stardust" BaseClass="Entity" Output="" Version="11.3.2022.1013" Document="https://newlifex.com/xcode/model" DisplayName="" CubeOutput="" xmlns="https://newlifex.com/Model2022.xsd">
-  <Table Name="AppDeploy" Description="应用部署。新增版本上传zip应用包，再到部署节点里发布">
+  <Table Name="AppDeploy" Description="应用部署。应用部署配置，单应用可有多个部署集合。新增版本并上传zip应用包，再到部署节点里发布">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用。对应StarApp" />
@@ -26,7 +26,7 @@
       <Index Columns="Name" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="AppDeployNode" Description="应用节点。应用和节点服务器的依赖关系">
+  <Table Name="AppDeployNode" Description="应用节点。应用部署集和节点服务器的依赖关系">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用部署集。对应AppDeploy" />
@@ -35,6 +35,10 @@
       <Column Name="Sort" DataType="Int32" Description="顺序。较大在前" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Environment" DataType="String" Description="环境。prod/test/dev/uat等" />
+      <Column Name="FileName" DataType="String" Description="文件。应用启动文件，可直接使用zip包，支持差异定制，为空时使用应用集配置" Category="参数" />
+      <Column Name="Arguments" DataType="String" Length="500" Description="参数。启动应用的参数，为空时使用应用集配置" Category="参数" />
+      <Column Name="WorkingDirectory" DataType="String" Length="200" Description="工作目录。应用根目录，为空时使用应用集配置" Category="参数" />
+      <Column Name="Mode" DataType="Int32" Description="工作模式。0默认；1仅解压，如IIS；2解压后运行，为空时使用应用集配置" Type="Stardust.Models.ServiceModes" Category="参数" />
       <Column Name="ProcessId" DataType="Int32" Description="进程" />
       <Column Name="ProcessName" DataType="String" Description="进程名称" />
       <Column Name="UserName" DataType="String" Description="用户名。启动该进程的用户名" />
@@ -42,6 +46,7 @@
       <Column Name="Version" DataType="String" Description="版本。客户端" />
       <Column Name="Compile" DataType="DateTime" Description="编译时间。客户端" />
       <Column Name="LastActive" DataType="DateTime" Description="最后活跃。最后一次上报心跳的时间" />
+      <Column Name="LastUpload" DataType="DateTime" Description="最后上传。最后一次上传客户端配置的时间" />
       <Column Name="CreateUserId" DataType="Int32" Description="创建人" Category="扩展" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
@@ -55,7 +60,7 @@
       <Index Columns="NodeId" />
     </Indexes>
   </Table>
-  <Table Name="AppDeployVersion" Description="部署版本。应用的多个可发布版本，主要管理应用程序包">
+  <Table Name="AppDeployVersion" Description="部署版本。应用的多个可发布版本，主要管理应用程序包，支持随时切换使用不同版本">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="AppId" DataType="Int32" Description="应用部署集。对应AppDeploy" />

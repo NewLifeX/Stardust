@@ -10,12 +10,12 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Deployment
 {
-    /// <summary>应用部署。新增版本上传zip应用包，再到部署节点里发布</summary>
+    /// <summary>应用部署。应用部署配置，单应用可有多个部署集合。新增版本并上传zip应用包，再到部署节点里发布</summary>
     [Serializable]
     [DataObject]
-    [Description("应用部署。新增版本上传zip应用包，再到部署节点里发布")]
+    [Description("应用部署。应用部署配置，单应用可有多个部署集合。新增版本并上传zip应用包，再到部署节点里发布")]
     [BindIndex("IU_AppDeploy_Name", true, "Name")]
-    [BindTable("AppDeploy", Description = "应用部署。新增版本上传zip应用包，再到部署节点里发布", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("AppDeploy", Description = "应用部署。应用部署配置，单应用可有多个部署集合。新增版本并上传zip应用包，再到部署节点里发布", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppDeploy
     {
         #region 属性

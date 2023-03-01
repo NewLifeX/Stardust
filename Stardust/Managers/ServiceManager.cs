@@ -1,5 +1,4 @@
-﻿using System.Xml.Linq;
-using NewLife;
+﻿using NewLife;
 using NewLife.Http;
 using NewLife.IO;
 using NewLife.Log;

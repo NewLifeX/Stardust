@@ -155,24 +155,28 @@ public partial class AppDeployNode : Entity<AppDeployNode>
     /// 转应用服务信息
     /// </summary>
     /// <returns></returns>
-    public ServiceInfo ToService()
+    public ServiceInfo ToService(AppDeploy app)
     {
-        var app = App;
+        app ??= App;
         if (app == null) return null;
 
         var inf = new ServiceInfo
         {
             Name = app.Name,
-            FileName = app.FileName,
-            Arguments = app.Arguments,
-            WorkingDirectory = app.WorkingDirectory,
+            FileName = FileName,
+            Arguments = Arguments,
+            WorkingDirectory = WorkingDirectory,
 
             Enable = app.Enable && Enable,
             //AutoStart = app.AutoStart,
             //AutoStop = app.AutoStop,
             MaxMemory = app.MaxMemory,
-            Mode = app.Mode,
+            Mode = Mode,
         };
+        if (inf.FileName.IsNullOrEmpty()) inf.FileName = app.FileName;
+        if (inf.Arguments.IsNullOrEmpty()) inf.Arguments = app.Arguments;
+        if (inf.WorkingDirectory.IsNullOrEmpty()) inf.WorkingDirectory = app.WorkingDirectory;
+        if (inf.Mode == ServiceModes.Default) inf.Mode = app.Mode;
 
         return inf;
     }

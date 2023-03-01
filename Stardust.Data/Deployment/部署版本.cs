@@ -10,12 +10,12 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Deployment
 {
-    /// <summary>部署版本。应用的多个可发布版本，主要管理应用程序包</summary>
+    /// <summary>部署版本。应用的多个可发布版本，主要管理应用程序包，支持随时切换使用不同版本</summary>
     [Serializable]
     [DataObject]
-    [Description("部署版本。应用的多个可发布版本，主要管理应用程序包")]
+    [Description("部署版本。应用的多个可发布版本，主要管理应用程序包，支持随时切换使用不同版本")]
     [BindIndex("IU_AppDeployVersion_AppId_Version", true, "AppId,Version")]
-    [BindTable("AppDeployVersion", Description = "部署版本。应用的多个可发布版本，主要管理应用程序包", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("AppDeployVersion", Description = "部署版本。应用的多个可发布版本，主要管理应用程序包，支持随时切换使用不同版本", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppDeployVersion
     {
         #region 属性

@@ -353,6 +353,50 @@
         </tr>
 
         <tr>
+            <td>FileName</td>
+            <td>文件</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>应用启动文件，可直接使用zip包</td>
+        </tr>
+
+        <tr>
+            <td>Arguments</td>
+            <td>参数</td>
+            <td>String</td>
+            <td>500</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>启动应用的参数</td>
+        </tr>
+
+        <tr>
+            <td>WorkingDirectory</td>
+            <td>工作目录</td>
+            <td>String</td>
+            <td>200</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>应用根目录</td>
+        </tr>
+
+        <tr>
+            <td>Mode</td>
+            <td>工作模式</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>0默认；1仅解压，如IIS；2解压后运行</td>
+        </tr>
+
+        <tr>
             <td>ProcessId</td>
             <td>进程</td>
             <td>Int32</td>
@@ -427,6 +471,17 @@
             <td></td>
             <td></td>
             <td>最后一次上报心跳的时间</td>
+        </tr>
+
+        <tr>
+            <td>LastUpload</td>
+            <td>最后上传</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>最后一次上传客户端配置的时间</td>
         </tr>
 
         <tr>

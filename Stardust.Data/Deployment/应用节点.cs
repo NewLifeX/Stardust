@@ -10,13 +10,13 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Deployment
 {
-    /// <summary>应用节点。应用和节点服务器的依赖关系</summary>
+    /// <summary>应用节点。应用部署集和节点服务器的依赖关系</summary>
     [Serializable]
     [DataObject]
-    [Description("应用节点。应用和节点服务器的依赖关系")]
+    [Description("应用节点。应用部署集和节点服务器的依赖关系")]
     [BindIndex("IX_AppDeployNode_AppId", false, "AppId")]
     [BindIndex("IX_AppDeployNode_NodeId", false, "NodeId")]
-    [BindTable("AppDeployNode", Description = "应用节点。应用和节点服务器的依赖关系", ConnName = "Stardust", DbType = DatabaseType.None)]
+    [BindTable("AppDeployNode", Description = "应用节点。应用部署集和节点服务器的依赖关系", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class AppDeployNode
     {
         #region 属性
@@ -76,6 +76,42 @@ namespace Stardust.Data.Deployment
         [BindColumn("Environment", "环境。prod/test/dev/uat等", "")]
         public String Environment { get => _Environment; set { if (OnPropertyChanging("Environment", value)) { _Environment = value; OnPropertyChanged("Environment"); } } }
 
+        private String _FileName;
+        /// <summary>文件。应用启动文件，可直接使用zip包</summary>
+        [Category("参数")]
+        [DisplayName("文件")]
+        [Description("文件。应用启动文件，可直接使用zip包")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("FileName", "文件。应用启动文件，可直接使用zip包", "")]
+        public String FileName { get => _FileName; set { if (OnPropertyChanging("FileName", value)) { _FileName = value; OnPropertyChanged("FileName"); } } }
+
+        private String _Arguments;
+        /// <summary>参数。启动应用的参数</summary>
+        [Category("参数")]
+        [DisplayName("参数")]
+        [Description("参数。启动应用的参数")]
+        [DataObjectField(false, false, true, 500)]
+        [BindColumn("Arguments", "参数。启动应用的参数", "")]
+        public String Arguments { get => _Arguments; set { if (OnPropertyChanging("Arguments", value)) { _Arguments = value; OnPropertyChanged("Arguments"); } } }
+
+        private String _WorkingDirectory;
+        /// <summary>工作目录。应用根目录</summary>
+        [Category("参数")]
+        [DisplayName("工作目录")]
+        [Description("工作目录。应用根目录")]
+        [DataObjectField(false, false, true, 200)]
+        [BindColumn("WorkingDirectory", "工作目录。应用根目录", "")]
+        public String WorkingDirectory { get => _WorkingDirectory; set { if (OnPropertyChanging("WorkingDirectory", value)) { _WorkingDirectory = value; OnPropertyChanged("WorkingDirectory"); } } }
+
+        private Stardust.Models.ServiceModes _Mode;
+        /// <summary>工作模式。0默认；1仅解压，如IIS；2解压后运行</summary>
+        [Category("参数")]
+        [DisplayName("工作模式")]
+        [Description("工作模式。0默认；1仅解压，如IIS；2解压后运行")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Mode", "工作模式。0默认；1仅解压，如IIS；2解压后运行", "")]
+        public Stardust.Models.ServiceModes Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
+
         private Int32 _ProcessId;
         /// <summary>进程</summary>
         [DisplayName("进程")]
@@ -131,6 +167,14 @@ namespace Stardust.Data.Deployment
         [DataObjectField(false, false, true, 0)]
         [BindColumn("LastActive", "最后活跃。最后一次上报心跳的时间", "")]
         public DateTime LastActive { get => _LastActive; set { if (OnPropertyChanging("LastActive", value)) { _LastActive = value; OnPropertyChanged("LastActive"); } } }
+
+        private DateTime _LastUpload;
+        /// <summary>最后上传。最后一次上传客户端配置的时间</summary>
+        [DisplayName("最后上传")]
+        [Description("最后上传。最后一次上传客户端配置的时间")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("LastUpload", "最后上传。最后一次上传客户端配置的时间", "")]
+        public DateTime LastUpload { get => _LastUpload; set { if (OnPropertyChanging("LastUpload", value)) { _LastUpload = value; OnPropertyChanged("LastUpload"); } } }
 
         private Int32 _CreateUserId;
         /// <summary>创建人</summary>
@@ -213,6 +257,10 @@ namespace Stardust.Data.Deployment
                     case "Sort": return _Sort;
                     case "Enable": return _Enable;
                     case "Environment": return _Environment;
+                    case "FileName": return _FileName;
+                    case "Arguments": return _Arguments;
+                    case "WorkingDirectory": return _WorkingDirectory;
+                    case "Mode": return _Mode;
                     case "ProcessId": return _ProcessId;
                     case "ProcessName": return _ProcessName;
                     case "UserName": return _UserName;
@@ -220,6 +268,7 @@ namespace Stardust.Data.Deployment
                     case "Version": return _Version;
                     case "Compile": return _Compile;
                     case "LastActive": return _LastActive;
+                    case "LastUpload": return _LastUpload;
                     case "CreateUserId": return _CreateUserId;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -241,6 +290,10 @@ namespace Stardust.Data.Deployment
                     case "Sort": _Sort = value.ToInt(); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Environment": _Environment = Convert.ToString(value); break;
+                    case "FileName": _FileName = Convert.ToString(value); break;
+                    case "Arguments": _Arguments = Convert.ToString(value); break;
+                    case "WorkingDirectory": _WorkingDirectory = Convert.ToString(value); break;
+                    case "Mode": _Mode = (Stardust.Models.ServiceModes)value.ToInt(); break;
                     case "ProcessId": _ProcessId = value.ToInt(); break;
                     case "ProcessName": _ProcessName = Convert.ToString(value); break;
                     case "UserName": _UserName = Convert.ToString(value); break;
@@ -248,6 +301,7 @@ namespace Stardust.Data.Deployment
                     case "Version": _Version = Convert.ToString(value); break;
                     case "Compile": _Compile = value.ToDateTime(); break;
                     case "LastActive": _LastActive = value.ToDateTime(); break;
+                    case "LastUpload": _LastUpload = value.ToDateTime(); break;
                     case "CreateUserId": _CreateUserId = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -286,6 +340,18 @@ namespace Stardust.Data.Deployment
             /// <summary>环境。prod/test/dev/uat等</summary>
             public static readonly Field Environment = FindByName("Environment");
 
+            /// <summary>文件。应用启动文件，可直接使用zip包</summary>
+            public static readonly Field FileName = FindByName("FileName");
+
+            /// <summary>参数。启动应用的参数</summary>
+            public static readonly Field Arguments = FindByName("Arguments");
+
+            /// <summary>工作目录。应用根目录</summary>
+            public static readonly Field WorkingDirectory = FindByName("WorkingDirectory");
+
+            /// <summary>工作模式。0默认；1仅解压，如IIS；2解压后运行</summary>
+            public static readonly Field Mode = FindByName("Mode");
+
             /// <summary>进程</summary>
             public static readonly Field ProcessId = FindByName("ProcessId");
 
@@ -306,6 +372,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>最后活跃。最后一次上报心跳的时间</summary>
             public static readonly Field LastActive = FindByName("LastActive");
+
+            /// <summary>最后上传。最后一次上传客户端配置的时间</summary>
+            public static readonly Field LastUpload = FindByName("LastUpload");
 
             /// <summary>创建人</summary>
             public static readonly Field CreateUserId = FindByName("CreateUserId");
@@ -355,6 +424,18 @@ namespace Stardust.Data.Deployment
             /// <summary>环境。prod/test/dev/uat等</summary>
             public const String Environment = "Environment";
 
+            /// <summary>文件。应用启动文件，可直接使用zip包</summary>
+            public const String FileName = "FileName";
+
+            /// <summary>参数。启动应用的参数</summary>
+            public const String Arguments = "Arguments";
+
+            /// <summary>工作目录。应用根目录</summary>
+            public const String WorkingDirectory = "WorkingDirectory";
+
+            /// <summary>工作模式。0默认；1仅解压，如IIS；2解压后运行</summary>
+            public const String Mode = "Mode";
+
             /// <summary>进程</summary>
             public const String ProcessId = "ProcessId";
 
@@ -375,6 +456,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>最后活跃。最后一次上报心跳的时间</summary>
             public const String LastActive = "LastActive";
+
+            /// <summary>最后上传。最后一次上传客户端配置的时间</summary>
+            public const String LastUpload = "LastUpload";
 
             /// <summary>创建人</summary>
             public const String CreateUserId = "CreateUserId";

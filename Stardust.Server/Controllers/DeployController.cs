@@ -57,6 +57,10 @@ public class DeployController : BaseController
             var app = item.App;
             if (app == null || !app.Enable) continue;
 
+            // 消除缓存，解决版本更新后不能及时更新缓存的问题
+            app = AppDeploy.FindByKey(app.Id);
+            if (app == null || !app.Enable) continue;
+
             var ver = AppDeployVersion.FindByAppIdAndVersion(app.Id, app.Version);
 
             var inf = new DeployInfo
@@ -66,7 +70,7 @@ public class DeployController : BaseController
                 Url = ver?.Url,
                 Hash = ver?.Hash,
 
-                Service = item.ToService(),
+                Service = item.ToService(app),
             };
             rs.Add(inf);
 
@@ -104,6 +108,7 @@ public class DeployController : BaseController
                 if (app.FileName.IsNullOrEmpty()) app.FileName = svc.FileName;
                 if (app.Arguments.IsNullOrEmpty()) app.Arguments = svc.Arguments;
                 if (app.WorkingDirectory.IsNullOrEmpty()) app.WorkingDirectory = svc.WorkingDirectory;
+                if (app.Mode <= 0) app.Mode = svc.Mode;
 
                 app.MaxMemory = svc.MaxMemory;
             }
@@ -122,6 +127,7 @@ public class DeployController : BaseController
                 list.Remove(dn);
 
             if (svc.Enable && app.Enable) dn.Enable = true;
+            dn.LastUpload = DateTime.Now;
 
             dn.Save();
         }
@@ -130,6 +136,7 @@ public class DeployController : BaseController
         foreach (var item in list)
         {
             item.Enable = false;
+            item.LastUpload = DateTime.Now;
             item.Update();
         }
 
