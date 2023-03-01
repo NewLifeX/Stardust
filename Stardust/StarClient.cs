@@ -5,7 +5,6 @@ using System.Net.WebSockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using System.Xml.Linq;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
@@ -50,7 +49,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认120</summary>
     public Int32 MaxFails { get; set; } = 120;
 
-    private ConcurrentDictionary<String, Delegate> _commands = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<String, Delegate> _commands = new(StringComparer.OrdinalIgnoreCase);
     /// <summary>命令集合</summary>
     public IDictionary<String, Delegate> Commands => _commands;
 
@@ -242,6 +241,8 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         di.Framework ??= RuntimeInformation.FrameworkDescription?.TrimStart(".NET Framework", ".NET Core", ".NET Native", ".NET").Trim();
 
         di.Architecture = RuntimeInformation.ProcessArchitecture + "";
+
+        if (Runtime.Windows) FixGdi(di);
 #else
         var ver = "";
         var tar = asm.Asm.GetCustomAttribute<TargetFrameworkAttribute>();
@@ -266,6 +267,24 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         return di;
     }
 
+#if NETCOREAPP || NETSTANDARD
+    private void FixGdi(NodeInfo di)
+    {
+        var graphics = IntPtr.Zero;
+        var num = NativeMethods.GdipCreateFromHWND(new HandleRef(null, IntPtr.Zero), out graphics);
+        if (num == 0)
+        {
+            var xx = new Single[1];
+            var numx = NativeMethods.GdipGetDpiX(new HandleRef(this, graphics), xx);
+
+            var yy = new Single[1];
+            var numy = NativeMethods.GdipGetDpiY(new HandleRef(this, graphics), yy);
+
+            if (numx == 0 && numy == 0) di.Dpi = $"{xx[0]}*{yy[0]}";
+        }
+    }
+#endif
+
     /// <summary>获取驱动器信息</summary>
     /// <returns></returns>
     public static IList<DriveInfo> GetDrives()
@@ -274,7 +293,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         foreach (var di in DriveInfo.GetDrives())
         {
             if (!di.IsReady) continue;
-            if (di.DriveType != DriveType.Fixed && di.DriveType != DriveType.Removable) continue;
+            if (di.DriveType is not DriveType.Fixed and not DriveType.Removable) continue;
             if (di.Name != "/" && di.DriveFormat.EqualIgnoreCase("overlay", "squashfs")) continue;
             if (di.Name.Contains("container") && di.Name.EndsWithIgnoreCase("/overlay")) continue;
             if (di.TotalSize <= 0) continue;
@@ -458,10 +477,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
                         // 计算延迟
                         var ts = DateTime.UtcNow - dt;
                         var ms = (Int32)Math.Round(ts.TotalMilliseconds);
-                        if (Delay > 0)
-                            Delay = (Delay + ms) / 2;
-                        else
-                            Delay = ms;
+                        Delay = Delay > 0 ? (Delay + ms) / 2 : ms;
                     }
 
                     // 令牌
@@ -525,17 +541,14 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
 
     private TraceService _trace;
     /// <summary>使用追踪服务</summary>
-    public void UseTrace()
-    {
+    public void UseTrace() =>
         //_trace = new TraceService
         //{
         //    Queue = CommandQueue,
         //    Callback = (id, data) => ReportAsync(id, data).Wait(),
         //};
         //_trace.Init();
-        _trace = new TraceService();
-        //_trace.Attach(CommandQueue);
-    }
+        _trace = new TraceService();//_trace.Attach(CommandQueue);
     #endregion
 
     #region 上报
