@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2022.xsd" NameSpace="Stardust.Data.Configs" ConnName="Stardust" BaseClass="Entity" Output="" Version="11.1.2022.0523" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model2022.xsd">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2022.xsd" NameSpace="Stardust.Data.Configs" ConnName="Stardust" BaseClass="Entity" Output="" Version="11.3.2022.1013" Document="https://newlifex.com/xcode/model" DisplayName="" CubeOutput="" xmlns="https://newlifex.com/Model2022.xsd">
   <Table Name="AppConfig" Description="应用配置。需要管理配置的应用系统列表，每个应用以命令对形式管理配置数据，支持版本发布">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
@@ -15,13 +15,13 @@
       <Column Name="Quotes" DataType="String" Description="依赖应用。所依赖应用的集合" />
       <Column Name="IsGlobal" DataType="Boolean" Description="全局。该应用下的配置数据作为全局数据，请求任意应用配置都返回" />
       <Column Name="Readonly" DataType="Boolean" Description="只读。只读应用，不支持客户端上传配置数据，可用于保护数据避免被错误修改" />
+      <Column Name="EnableWorkerId" DataType="Boolean" Description="雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增" />
       <Column Name="EnableApollo" DataType="Boolean" Description="阿波罗" Category="阿波罗" />
       <Column Name="ApolloMetaServer" DataType="String" Description="阿波罗地址" Category="阿波罗" />
       <Column Name="ApolloAppId" DataType="String" Description="阿波罗账号" Category="阿波罗" />
       <Column Name="ApolloNameSpace" DataType="String" Description="阿波罗命名空间。默认application，也可以填依赖的公共命名空间，但建议为公共命名空间建立应用依赖。" Category="阿波罗" />
-      <Column Name="UsedKeys" DataType="String" Length="2000" Description="已使用。用过的配置项" />
-      <Column Name="MissedKeys" DataType="String" Length="2000" Description="缺失键。没有读取到的配置项" />
-      <Column Name="EnableWorkerId" DataType="Boolean" Description="雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增" />
+      <Column Name="UsedKeys" DataType="String" Length="2000" Description="已使用。用过的配置项" Category="配置项" />
+      <Column Name="MissedKeys" DataType="String" Length="2000" Description="缺失键。没有读取到的配置项" Category="配置项" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />

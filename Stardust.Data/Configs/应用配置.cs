@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -124,6 +124,14 @@ namespace Stardust.Data.Configs
         [BindColumn("Readonly", "只读。只读应用，不支持客户端上传配置数据，可用于保护数据避免被错误修改", "")]
         public Boolean Readonly { get => _Readonly; set { if (OnPropertyChanging("Readonly", value)) { _Readonly = value; OnPropertyChanged("Readonly"); } } }
 
+        private Boolean _EnableWorkerId;
+        /// <summary>雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增</summary>
+        [DisplayName("雪花标识")]
+        [Description("雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("EnableWorkerId", "雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增", "")]
+        public Boolean EnableWorkerId { get => _EnableWorkerId; set { if (OnPropertyChanging("EnableWorkerId", value)) { _EnableWorkerId = value; OnPropertyChanged("EnableWorkerId"); } } }
+
         private Boolean _EnableApollo;
         /// <summary>阿波罗</summary>
         [Category("阿波罗")]
@@ -162,6 +170,7 @@ namespace Stardust.Data.Configs
 
         private String _UsedKeys;
         /// <summary>已使用。用过的配置项</summary>
+        [Category("配置项")]
         [DisplayName("已使用")]
         [Description("已使用。用过的配置项")]
         [DataObjectField(false, false, true, 2000)]
@@ -170,19 +179,12 @@ namespace Stardust.Data.Configs
 
         private String _MissedKeys;
         /// <summary>缺失键。没有读取到的配置项</summary>
+        [Category("配置项")]
         [DisplayName("缺失键")]
         [Description("缺失键。没有读取到的配置项")]
         [DataObjectField(false, false, true, 2000)]
         [BindColumn("MissedKeys", "缺失键。没有读取到的配置项", "")]
         public String MissedKeys { get => _MissedKeys; set { if (OnPropertyChanging("MissedKeys", value)) { _MissedKeys = value; OnPropertyChanged("MissedKeys"); } } }
-
-        private Boolean _EnableWorkerId;
-        /// <summary>雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增</summary>
-        [DisplayName("雪花标识")]
-        [Description("雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("EnableWorkerId", "雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增", "")]
-        public Boolean EnableWorkerId { get => _EnableWorkerId; set { if (OnPropertyChanging("EnableWorkerId", value)) { _EnableWorkerId = value; OnPropertyChanged("EnableWorkerId"); } } }
 
         private Int32 _CreateUserID;
         /// <summary>创建者</summary>
@@ -271,13 +273,13 @@ namespace Stardust.Data.Configs
                     case "Quotes": return _Quotes;
                     case "IsGlobal": return _IsGlobal;
                     case "Readonly": return _Readonly;
+                    case "EnableWorkerId": return _EnableWorkerId;
                     case "EnableApollo": return _EnableApollo;
                     case "ApolloMetaServer": return _ApolloMetaServer;
                     case "ApolloAppId": return _ApolloAppId;
                     case "ApolloNameSpace": return _ApolloNameSpace;
                     case "UsedKeys": return _UsedKeys;
                     case "MissedKeys": return _MissedKeys;
-                    case "EnableWorkerId": return _EnableWorkerId;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -305,13 +307,13 @@ namespace Stardust.Data.Configs
                     case "Quotes": _Quotes = Convert.ToString(value); break;
                     case "IsGlobal": _IsGlobal = value.ToBoolean(); break;
                     case "Readonly": _Readonly = value.ToBoolean(); break;
+                    case "EnableWorkerId": _EnableWorkerId = value.ToBoolean(); break;
                     case "EnableApollo": _EnableApollo = value.ToBoolean(); break;
                     case "ApolloMetaServer": _ApolloMetaServer = Convert.ToString(value); break;
                     case "ApolloAppId": _ApolloAppId = Convert.ToString(value); break;
                     case "ApolloNameSpace": _ApolloNameSpace = Convert.ToString(value); break;
                     case "UsedKeys": _UsedKeys = Convert.ToString(value); break;
                     case "MissedKeys": _MissedKeys = Convert.ToString(value); break;
-                    case "EnableWorkerId": _EnableWorkerId = value.ToBoolean(); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -368,6 +370,9 @@ namespace Stardust.Data.Configs
             /// <summary>只读。只读应用，不支持客户端上传配置数据，可用于保护数据避免被错误修改</summary>
             public static readonly Field Readonly = FindByName("Readonly");
 
+            /// <summary>雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增</summary>
+            public static readonly Field EnableWorkerId = FindByName("EnableWorkerId");
+
             /// <summary>阿波罗</summary>
             public static readonly Field EnableApollo = FindByName("EnableApollo");
 
@@ -385,9 +390,6 @@ namespace Stardust.Data.Configs
 
             /// <summary>缺失键。没有读取到的配置项</summary>
             public static readonly Field MissedKeys = FindByName("MissedKeys");
-
-            /// <summary>雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增</summary>
-            public static readonly Field EnableWorkerId = FindByName("EnableWorkerId");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUserID = FindByName("CreateUserID");
@@ -455,6 +457,9 @@ namespace Stardust.Data.Configs
             /// <summary>只读。只读应用，不支持客户端上传配置数据，可用于保护数据避免被错误修改</summary>
             public const String Readonly = "Readonly";
 
+            /// <summary>雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增</summary>
+            public const String EnableWorkerId = "EnableWorkerId";
+
             /// <summary>阿波罗</summary>
             public const String EnableApollo = "EnableApollo";
 
@@ -472,9 +477,6 @@ namespace Stardust.Data.Configs
 
             /// <summary>缺失键。没有读取到的配置项</summary>
             public const String MissedKeys = "MissedKeys";
-
-            /// <summary>雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增</summary>
-            public const String EnableWorkerId = "EnableWorkerId";
 
             /// <summary>创建者</summary>
             public const String CreateUserID = "CreateUserID";

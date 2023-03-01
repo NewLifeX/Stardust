@@ -9,93 +9,92 @@ using Stardust.Server.Common;
 using Stardust.Server.Services;
 using XCode.Membership;
 
-namespace Stardust.Web.Controllers
+namespace Stardust.Web.Controllers;
+
+/// <summary>配置中心服务。向应用提供配置服务</summary>
+[Route("[controller]/[action]")]
+public class ConfigController : ControllerBase
 {
-    /// <summary>配置中心服务。向应用提供配置服务</summary>
-    [Route("[controller]/[action]")]
-    public class ConfigController : ControllerBase
+    private readonly ConfigService _configService;
+    private readonly TokenService _tokenService;
+    private readonly AppOnlineService _appOnline;
+
+    public ConfigController(ConfigService configService, TokenService tokenService, AppOnlineService appOnline)
     {
-        private readonly ConfigService _configService;
-        private readonly TokenService _tokenService;
-        private readonly AppOnlineService _appOnline;
+        _configService = configService;
+        _tokenService = tokenService;
+        _appOnline = appOnline;
+    }
 
-        public ConfigController(ConfigService configService, TokenService tokenService, AppOnlineService appOnline)
+    [ApiFilter]
+    public ConfigInfo GetAll(String appId, String secret, String scope, Int32 version)
+    {
+        if (appId.IsNullOrEmpty()) throw new ArgumentNullException(nameof(appId));
+        if (ManageProvider.User == null) throw new ApiException(401, "未登录！");
+
+        // 验证
+        var app = Valid(appId, secret, out var online);
+        var ip = HttpContext.GetUserHost();
+
+        // 版本没有变化时，不做计算处理，不返回配置数据
+        if (version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
+
+        // 作用域为空时重写
+        scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip, null) : scope;
+        online.Scope = scope;
+
+        var dic = _configService.GetConfigs(app, scope);
+
+        // 返回WorkerId
+        if (app.EnableWorkerId && dic.ContainsKey(_configService.WorkerIdName))
+            dic[_configService.WorkerIdName] = online.WorkerId + "";
+
+        return new ConfigInfo
         {
-            _configService = configService;
-            _tokenService = tokenService;
-            _appOnline = appOnline;
-        }
+            Version = app.Version,
+            Scope = scope,
+            SourceIP = ip,
+            NextVersion = app.NextVersion,
+            NextPublish = app.PublishTime.ToFullString(""),
+            UpdateTime = app.UpdateTime,
+            Configs = dic,
+        };
+    }
 
-        [ApiFilter]
-        public ConfigInfo GetAll(String appId, String secret, String scope, Int32 version)
+    private AppConfig Valid(String appId, String secret, out AppOnline online)
+    {
+        var ap = _tokenService.Authorize(appId, secret, false);
+
+        var app = AppConfig.FindByName(appId);
+        app ??= AppConfig.Find(AppConfig._.Name == appId);
+        if (app == null)
         {
-            if (appId.IsNullOrEmpty()) throw new ArgumentNullException(nameof(appId));
-            if (ManageProvider.User == null) throw new ApiException(401, "未登录！");
-
-            // 验证
-            var app = Valid(appId, secret, out var online);
-            var ip = HttpContext.GetUserHost();
-
-            // 版本没有变化时，不做计算处理，不返回配置数据
-            if (version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
-
-            // 作用域为空时重写
-            scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip, null) : scope;
-            online.Scope = scope;
-
-            var dic = _configService.GetConfigs(app, scope);
-
-            // 返回WorkerId
-            if (app.EnableWorkerId && dic.ContainsKey(_configService.WorkerIdName))
-                dic[_configService.WorkerIdName] = online.WorkerId + "";
-
-            return new ConfigInfo
+            app = new AppConfig
             {
-                Version = app.Version,
-                Scope = scope,
-                SourceIP = ip,
-                NextVersion = app.NextVersion,
-                NextPublish = app.PublishTime.ToFullString(""),
-                UpdateTime = app.UpdateTime,
-                Configs = dic,
+                Name = ap.Name,
+                AppId = ap.Id,
+                Enable = ap.Enable,
             };
+
+            app.Insert();
         }
 
-        private AppConfig Valid(String appId, String secret, out AppOnline online)
+        if (app.AppId == 0)
         {
-            var ap = _tokenService.Authorize(appId, secret, false);
-
-            var app = AppConfig.FindByName(appId);
-            app ??= AppConfig.Find(AppConfig._.Name == appId);
-            if (app == null)
-            {
-                app = new AppConfig
-                {
-                    Name = ap.Name,
-                    AppId = ap.Id,
-                    Enable = ap.Enable,
-                };
-
-                app.Insert();
-            }
-
-            if (app.AppId == 0)
-            {
-                app.AppId = ap.Id;
-                app.Update();
-            }
-
-            // 更新心跳信息
-            var ip = HttpContext.GetUserHost();
-            online = _appOnline.UpdateOnline(ap, null, ip, appId);
-
-            // 检查应用有效性
-            if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
-
-            // 刷新WorkerId
-            if (app.EnableWorkerId && online.WorkerId <= 0) _configService.RefreshWorkerId(app, online);
-
-            return app;
+            app.AppId = ap.Id;
+            app.Update();
         }
+
+        // 更新心跳信息
+        var ip = HttpContext.GetUserHost();
+        online = _appOnline.UpdateOnline(ap, null, ip, appId);
+
+        // 检查应用有效性
+        if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
+
+        // 刷新WorkerId
+        if (app.EnableWorkerId && online.WorkerId <= 0) _configService.RefreshWorkerId(app, online);
+
+        return app;
     }
 }

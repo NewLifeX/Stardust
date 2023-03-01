@@ -31,7 +31,7 @@ public class AppConfigController : EntityController<AppConfig>
         }
 
         {
-            var df = ListFields.AddListField("Publish", "PublishTime");
+            var df = ListFields.AddListField("Publish", "Version");
             df.Header = "发布";
             df.DisplayName = "发布";
             df.Url = "/Configs/AppConfig/Publish?appId={Id}";
@@ -40,7 +40,7 @@ public class AppConfigController : EntityController<AppConfig>
         }
 
         {
-            var df = ListFields.AddListField("History", "PublishTime");
+            var df = ListFields.AddListField("History", "Version");
             df.Header = "历史";
             df.DisplayName = "历史";
             df.Title = "查看该应用的配置历史";
@@ -48,7 +48,7 @@ public class AppConfigController : EntityController<AppConfig>
         }
 
         {
-            var df = ListFields.AddListField("Preview", "PublishTime");
+            var df = ListFields.AddListField("Preview", "Version");
             df.Header = "预览";
             df.DisplayName = "预览";
             df.Title = "查看该应用的配置数据";
@@ -56,7 +56,7 @@ public class AppConfigController : EntityController<AppConfig>
         }
 
         {
-            var df = ListFields.AddListField("Online", "PublishTime");
+            var df = ListFields.AddListField("Online", "Version");
             df.Header = "在线实例";
             df.DisplayName = "在线实例";
             df.Title = "查看该应用的在线实例应用";
@@ -72,12 +72,12 @@ public class AppConfigController : EntityController<AppConfig>
         }
 
         {
-            var df = AddFormFields.AddDataField("Quotes");
+            var df = AddFormFields.AddDataField("Quotes", "IsGlobal");
             df.DataSource = x => AppConfig.FindAllWithCache().Where(e => e.CanBeQuoted).ToDictionary(e => e.Id, e => e.Name);
         }
 
         {
-            var df = EditFormFields.AddDataField("Quotes");
+            var df = EditFormFields.AddDataField("Quotes", "IsGlobal");
             df.DataSource = x => AppConfig.FindAllWithCache().Where(e => e.CanBeQuoted).ToDictionary(e => e.Id, e => e.Name);
         }
 

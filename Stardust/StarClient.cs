@@ -258,8 +258,6 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             di.Dpi = $"{g.DpiX}*{g.DpiY}";
             var screen = System.Windows.Forms.Screen.PrimaryScreen;
             di.Resolution = $"{screen.Bounds.Width}*{screen.Bounds.Height}";
-            //var str = System.Windows.Forms.SystemInformation.VirtualScreen + "";
-            //XTrace.WriteLine(str);
         }
         catch { }
 #endif
