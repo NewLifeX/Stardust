@@ -1,5 +1,4 @@
-﻿using System.Runtime.ConstrainedExecution;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace Stardust;
 
@@ -78,4 +77,7 @@ internal class NativeMethods
 
         public IntPtr unhook;
     }
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
+    public static extern Int32 GetSystemMetrics(Int32 nIndex);
 }

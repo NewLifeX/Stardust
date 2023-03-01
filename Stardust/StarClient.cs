@@ -258,6 +258,8 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             di.Dpi = $"{g.DpiX}*{g.DpiY}";
             var screen = System.Windows.Forms.Screen.PrimaryScreen;
             di.Resolution = $"{screen.Bounds.Width}*{screen.Bounds.Height}";
+            //var str = System.Windows.Forms.SystemInformation.VirtualScreen + "";
+            //XTrace.WriteLine(str);
         }
         catch { }
 #endif
@@ -270,18 +272,26 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
 #if NETCOREAPP || NETSTANDARD
     private void FixGdi(NodeInfo di)
     {
-        var graphics = IntPtr.Zero;
-        var num = NativeMethods.GdipCreateFromHWND(new HandleRef(null, IntPtr.Zero), out graphics);
-        if (num == 0)
+        try
         {
-            var xx = new Single[1];
-            var numx = NativeMethods.GdipGetDpiX(new HandleRef(this, graphics), xx);
+            var graphics = IntPtr.Zero;
+            var num = NativeMethods.GdipCreateFromHWND(new HandleRef(null, IntPtr.Zero), out graphics);
+            if (num == 0)
+            {
+                var xx = new Single[1];
+                var numx = NativeMethods.GdipGetDpiX(new HandleRef(this, graphics), xx);
 
-            var yy = new Single[1];
-            var numy = NativeMethods.GdipGetDpiY(new HandleRef(this, graphics), yy);
+                var yy = new Single[1];
+                var numy = NativeMethods.GdipGetDpiY(new HandleRef(this, graphics), yy);
 
-            if (numx == 0 && numy == 0) di.Dpi = $"{xx[0]}*{yy[0]}";
+                if (numx == 0 && numy == 0) di.Dpi = $"{xx[0]}*{yy[0]}";
+            }
+
+            var w = NativeMethods.GetSystemMetrics(0);
+            var h = NativeMethods.GetSystemMetrics(1);
+            if (w > 0 && h > 0) di.Resolution = $"{w}*{h}";
         }
+        catch { }
     }
 #endif
 
