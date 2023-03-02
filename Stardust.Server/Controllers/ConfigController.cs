@@ -89,7 +89,16 @@ namespace Stardust.Server.Controllers
             online.SaveAsync(3_000);
 
             // 版本没有变化时，不做计算处理，不返回配置数据
-            if (!change && model.Version > 0 && model.Version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
+            if (!change && model.Version > 0 && model.Version >= app.Version)
+                return new ConfigInfo
+                {
+                    Version = app.Version,
+                    Scope = scope,
+                    SourceIP = ip,
+                    NextVersion = app.NextVersion,
+                    NextPublish = app.PublishTime.ToFullString(""),
+                    UpdateTime = app.UpdateTime
+                };
 
             var dic = _configService.GetConfigs(app, scope);
 
