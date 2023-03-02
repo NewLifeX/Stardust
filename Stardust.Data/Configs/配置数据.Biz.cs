@@ -169,7 +169,7 @@ public partial class ConfigData : Entity<ConfigData>
         // 先选择版本，再剔除被禁用项
         //list = SelectVersion(list, version);
 
-        return list.Where(e => e.Version <= version && e.Enable).ToList();
+        return list.Where(e => e.Version > 0 && e.Version <= version && e.Enable).ToList();
     }
     #endregion
 

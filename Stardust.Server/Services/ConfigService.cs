@@ -135,10 +135,16 @@ namespace Stardust.Server.Services
                 dic[cfg.Key] = Resolve(app, cfg, scope);
             }
 
+            // 去重
+            var ids = new List<Int32> { app.Id };
+
             // 共享应用
             var qs = app.GetQuotes();
             foreach (var item in qs)
             {
+                if (ids.Contains(item.Id)) continue;
+                ids.Add(item.Id);
+
                 var list2 = item.Configs;
                 list2 = ConfigData.SelectScope(list2, scope);
                 foreach (var cfg in list2)
@@ -157,6 +163,9 @@ namespace Stardust.Server.Services
             // 全局应用
             foreach (var item in AppConfig.GetValids().Where(e => e.IsGlobal))
             {
+                if (ids.Contains(item.Id)) continue;
+                ids.Add(item.Id);
+
                 var list2 = item.Configs;
                 list2 = ConfigData.SelectScope(list2, scope);
                 foreach (var cfg in list2)

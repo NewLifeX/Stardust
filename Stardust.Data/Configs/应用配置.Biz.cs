@@ -42,7 +42,7 @@ public partial class AppConfig : Entity<AppConfig>
         if (Version <= 0) Version = 1;
 
         var qs = (Quotes + "").Split(',', StringSplitOptions.RemoveEmptyEntries);
-        Quotes = qs.OrderBy(e => e).Join();
+        Quotes = qs.Distinct().OrderBy(e => e).Join();
     }
 
     /// <summary>初始化数据</summary>
