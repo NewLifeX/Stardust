@@ -108,6 +108,7 @@ public class NodeController : EntityController<Node>
             e.Code,
             e.Name,
             e.Category,
+            e.IP,
         }).ToArray());
     }
 
