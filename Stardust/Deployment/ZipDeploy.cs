@@ -179,36 +179,31 @@ public class ZipDeploy
 
         WriteLog("执行 {0}", runfile);
 
-        ProcessStartInfo si = null;
+        var si = new ProcessStartInfo
+        {
+            FileName = runfile.FullName,
+            Arguments = Arguments,
+            WorkingDirectory = Path.GetDirectoryName(rundir.FullName),
+
+            // false时目前控制台合并到当前控制台，一起退出；
+            // true时目标控制台独立窗口，不会一起退出；
+            UseShellExecute = true,
+        };
         if (runfile.Extension.EqualIgnoreCase(".dll"))
         {
-            si = new ProcessStartInfo
-            {
-                FileName = "dotnet",
-                Arguments = $"{runfile.FullName} {Arguments}",
-                WorkingDirectory = rundir.FullName,
-
-                // false时目前控制台合并到当前控制台，一起退出；
-                // true时目标控制台独立窗口，不会一起退出；
-                UseShellExecute = false,
-            };
+            si.FileName = "dotnet";
+            si.Arguments = $"{runfile.FullName} {Arguments}";
         }
-        else
+        else if (runfile.Extension.EqualIgnoreCase(".jar"))
         {
-            si = new ProcessStartInfo
-            {
-                FileName = runfile.FullName,
-                Arguments = Arguments,
-                WorkingDirectory = rundir.FullName,
-
-                // false时目前控制台合并到当前控制台，一起退出；
-                // true时目标控制台独立窗口，不会一起退出；
-                UseShellExecute = false,
-            };
+            si.FileName = "java";
+            si.Arguments = $"{runfile.FullName} {Arguments}";
         }
 
         if (Debug)
         {
+            // UseShellExecute 必须 false，以便于后续重定向输出流
+            si.UseShellExecute = false;
             si.RedirectStandardError = true;
         }
 
