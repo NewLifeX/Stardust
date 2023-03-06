@@ -4,6 +4,7 @@ using System.ComponentModel;
 using NewLife;
 using NewLife.Data;
 using NewLife.Log;
+using NewLife.Serialization;
 using XCode;
 using XCode.Cache;
 using XCode.Membership;
@@ -148,12 +149,15 @@ namespace Stardust.Data.Nodes
         {
             Version = inf["redis_version"];
             Mode = inf["redis_mode"];
+            Role = inf["role"];
 
             MaxMemory = (Int32)(inf["maxmemory"].ToLong() / 1024 / 1024);
             if (MaxMemory == 0) MaxMemory = (Int32)(inf["total_system_memory"].ToLong() / 1024 / 1024);
 
             MemoryPolicy = inf["maxmemory_policy"];
             MemoryAllocator = inf["mem_allocator"];
+
+            Remark = inf.ToJson().Substring(0, 500);
         }
         #endregion
     }

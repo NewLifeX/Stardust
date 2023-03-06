@@ -75,6 +75,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("Mode", "模式", "")]
         public String Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
 
+        private String _Role;
+        /// <summary>角色</summary>
+        [DisplayName("角色")]
+        [Description("角色")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Role", "角色", "")]
+        public String Role { get => _Role; set { if (OnPropertyChanging("Role", value)) { _Role = value; OnPropertyChanged("Role"); } } }
+
         private Int32 _MaxMemory;
         /// <summary>内存容量。单位MB</summary>
         [DisplayName("内存容量")]
@@ -268,6 +276,7 @@ namespace Stardust.Data.Nodes
                     case "Password": return _Password;
                     case "Version": return _Version;
                     case "Mode": return _Mode;
+                    case "Role": return _Role;
                     case "MaxMemory": return _MaxMemory;
                     case "MemoryPolicy": return _MemoryPolicy;
                     case "MemoryAllocator": return _MemoryAllocator;
@@ -302,6 +311,7 @@ namespace Stardust.Data.Nodes
                     case "Password": _Password = Convert.ToString(value); break;
                     case "Version": _Version = Convert.ToString(value); break;
                     case "Mode": _Mode = Convert.ToString(value); break;
+                    case "Role": _Role = Convert.ToString(value); break;
                     case "MaxMemory": _MaxMemory = value.ToInt(); break;
                     case "MemoryPolicy": _MemoryPolicy = Convert.ToString(value); break;
                     case "MemoryAllocator": _MemoryAllocator = Convert.ToString(value); break;
@@ -352,6 +362,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>模式</summary>
             public static readonly Field Mode = FindByName("Mode");
+
+            /// <summary>角色</summary>
+            public static readonly Field Role = FindByName("Role");
 
             /// <summary>内存容量。单位MB</summary>
             public static readonly Field MaxMemory = FindByName("MaxMemory");
@@ -439,6 +452,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>模式</summary>
             public const String Mode = "Mode";
+
+            /// <summary>角色</summary>
+            public const String Role = "Role";
 
             /// <summary>内存容量。单位MB</summary>
             public const String MaxMemory = "MaxMemory";

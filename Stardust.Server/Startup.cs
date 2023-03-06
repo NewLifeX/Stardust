@@ -147,7 +147,8 @@ public class Startup
         var set = NewLife.Setting.Current;
 
         // 缓存运行时安装文件
-        var sdk = "../FileCache".GetFullPath().EnsureDirectory(false);
+        var sdk = "../FileCache".GetBasePath().EnsureDirectory(false);
+        XTrace.WriteLine("FileCache: {0}", sdk);
         app.UseStaticFiles(new StaticFileOptions
         {
             RequestPath = new PathString("/files"),

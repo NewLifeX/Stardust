@@ -265,6 +265,7 @@
       <Column Name="Password" DataType="String" Description="密码" />
       <Column Name="Version" DataType="String" Description="版本" />
       <Column Name="Mode" DataType="String" Description="模式" />
+      <Column Name="Role" DataType="String" Description="角色" />
       <Column Name="MaxMemory" DataType="Int32" Description="内存容量。单位MB" />
       <Column Name="MemoryPolicy" DataType="String" Description="内存策略。缓存淘汰策略" />
       <Column Name="MemoryAllocator" DataType="String" Description="分配器。内存分配器，低版本有内存泄漏" />
