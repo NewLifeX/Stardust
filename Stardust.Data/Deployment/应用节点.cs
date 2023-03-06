@@ -77,39 +77,39 @@ namespace Stardust.Data.Deployment
         public String Environment { get => _Environment; set { if (OnPropertyChanging("Environment", value)) { _Environment = value; OnPropertyChanged("Environment"); } } }
 
         private String _FileName;
-        /// <summary>文件。应用启动文件，可直接使用zip包</summary>
+        /// <summary>文件。应用启动文件，可直接使用zip包，支持差异定制，为空时使用应用集配置</summary>
         [Category("参数")]
         [DisplayName("文件")]
-        [Description("文件。应用启动文件，可直接使用zip包")]
+        [Description("文件。应用启动文件，可直接使用zip包，支持差异定制，为空时使用应用集配置")]
         [DataObjectField(false, false, true, 50)]
-        [BindColumn("FileName", "文件。应用启动文件，可直接使用zip包", "")]
+        [BindColumn("FileName", "文件。应用启动文件，可直接使用zip包，支持差异定制，为空时使用应用集配置", "")]
         public String FileName { get => _FileName; set { if (OnPropertyChanging("FileName", value)) { _FileName = value; OnPropertyChanged("FileName"); } } }
 
         private String _Arguments;
-        /// <summary>参数。启动应用的参数</summary>
+        /// <summary>参数。启动应用的参数，为空时使用应用集配置</summary>
         [Category("参数")]
         [DisplayName("参数")]
-        [Description("参数。启动应用的参数")]
+        [Description("参数。启动应用的参数，为空时使用应用集配置")]
         [DataObjectField(false, false, true, 500)]
-        [BindColumn("Arguments", "参数。启动应用的参数", "")]
+        [BindColumn("Arguments", "参数。启动应用的参数，为空时使用应用集配置", "")]
         public String Arguments { get => _Arguments; set { if (OnPropertyChanging("Arguments", value)) { _Arguments = value; OnPropertyChanged("Arguments"); } } }
 
         private String _WorkingDirectory;
-        /// <summary>工作目录。应用根目录</summary>
+        /// <summary>工作目录。应用根目录，为空时使用应用集配置</summary>
         [Category("参数")]
         [DisplayName("工作目录")]
-        [Description("工作目录。应用根目录")]
+        [Description("工作目录。应用根目录，为空时使用应用集配置")]
         [DataObjectField(false, false, true, 200)]
-        [BindColumn("WorkingDirectory", "工作目录。应用根目录", "")]
+        [BindColumn("WorkingDirectory", "工作目录。应用根目录，为空时使用应用集配置", "")]
         public String WorkingDirectory { get => _WorkingDirectory; set { if (OnPropertyChanging("WorkingDirectory", value)) { _WorkingDirectory = value; OnPropertyChanged("WorkingDirectory"); } } }
 
         private Stardust.Models.ServiceModes _Mode;
-        /// <summary>工作模式。0默认；1仅解压，如IIS；2解压后运行</summary>
+        /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置</summary>
         [Category("参数")]
         [DisplayName("工作模式")]
-        [Description("工作模式。0默认；1仅解压，如IIS；2解压后运行")]
+        [Description("工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Mode", "工作模式。0默认；1仅解压，如IIS；2解压后运行", "")]
+        [BindColumn("Mode", "工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置", "")]
         public Stardust.Models.ServiceModes Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
 
         private Int32 _ProcessId;
@@ -340,16 +340,16 @@ namespace Stardust.Data.Deployment
             /// <summary>环境。prod/test/dev/uat等</summary>
             public static readonly Field Environment = FindByName("Environment");
 
-            /// <summary>文件。应用启动文件，可直接使用zip包</summary>
+            /// <summary>文件。应用启动文件，可直接使用zip包，支持差异定制，为空时使用应用集配置</summary>
             public static readonly Field FileName = FindByName("FileName");
 
-            /// <summary>参数。启动应用的参数</summary>
+            /// <summary>参数。启动应用的参数，为空时使用应用集配置</summary>
             public static readonly Field Arguments = FindByName("Arguments");
 
-            /// <summary>工作目录。应用根目录</summary>
+            /// <summary>工作目录。应用根目录，为空时使用应用集配置</summary>
             public static readonly Field WorkingDirectory = FindByName("WorkingDirectory");
 
-            /// <summary>工作模式。0默认；1仅解压，如IIS；2解压后运行</summary>
+            /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置</summary>
             public static readonly Field Mode = FindByName("Mode");
 
             /// <summary>进程</summary>
@@ -424,16 +424,16 @@ namespace Stardust.Data.Deployment
             /// <summary>环境。prod/test/dev/uat等</summary>
             public const String Environment = "Environment";
 
-            /// <summary>文件。应用启动文件，可直接使用zip包</summary>
+            /// <summary>文件。应用启动文件，可直接使用zip包，支持差异定制，为空时使用应用集配置</summary>
             public const String FileName = "FileName";
 
-            /// <summary>参数。启动应用的参数</summary>
+            /// <summary>参数。启动应用的参数，为空时使用应用集配置</summary>
             public const String Arguments = "Arguments";
 
-            /// <summary>工作目录。应用根目录</summary>
+            /// <summary>工作目录。应用根目录，为空时使用应用集配置</summary>
             public const String WorkingDirectory = "WorkingDirectory";
 
-            /// <summary>工作模式。0默认；1仅解压，如IIS；2解压后运行</summary>
+            /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置</summary>
             public const String Mode = "Mode";
 
             /// <summary>进程</summary>

@@ -27,7 +27,7 @@ public class ServiceInfo
     [XmlAttribute]
     public Boolean Enable { get; set; }
 
-    /// <summary>服务工作模式。0默认；1仅解压；2解压后运行；3仅运行一次</summary>
+    /// <summary>服务工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</summary>
     [XmlAttribute]
     public ServiceModes Mode { get; set; }
 

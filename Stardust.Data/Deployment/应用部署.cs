@@ -112,12 +112,12 @@ namespace Stardust.Data.Deployment
         public Int32 MaxMemory { get => _MaxMemory; set { if (OnPropertyChanging("MaxMemory", value)) { _MaxMemory = value; OnPropertyChanged("MaxMemory"); } } }
 
         private Stardust.Models.ServiceModes _Mode;
-        /// <summary>工作模式。0默认；1仅解压，如IIS；2解压后运行</summary>
+        /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</summary>
         [Category("参数")]
         [DisplayName("工作模式")]
-        [Description("工作模式。0默认；1仅解压，如IIS；2解压后运行")]
+        [Description("工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Mode", "工作模式。0默认；1仅解压，如IIS；2解压后运行", "")]
+        [BindColumn("Mode", "工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip", "")]
         public Stardust.Models.ServiceModes Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
 
         private Int32 _CreateUserId;
@@ -282,7 +282,7 @@ namespace Stardust.Data.Deployment
             /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
             public static readonly Field MaxMemory = FindByName("MaxMemory");
 
-            /// <summary>工作模式。0默认；1仅解压，如IIS；2解压后运行</summary>
+            /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</summary>
             public static readonly Field Mode = FindByName("Mode");
 
             /// <summary>创建者</summary>
@@ -345,7 +345,7 @@ namespace Stardust.Data.Deployment
             /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
             public const String MaxMemory = "MaxMemory";
 
-            /// <summary>工作模式。0默认；1仅解压，如IIS；2解压后运行</summary>
+            /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</summary>
             public const String Mode = "Mode";
 
             /// <summary>创建者</summary>

@@ -118,6 +118,7 @@ internal class ServiceController : DisposeBase
                 switch (service.Mode)
                 {
                     case ServiceModes.Default:
+                    case ServiceModes.Multiple:
                         break;
                     case ServiceModes.Extract:
                         WriteLog("解压后不运行，外部主机（如IIS）将托管应用");
@@ -369,14 +370,14 @@ internal class ServiceController : DisposeBase
         }
 
         // 进程不存在，但名称存在
-        if (p == null && !ProcessName.IsNullOrEmpty())
+        if (p == null && !ProcessName.IsNullOrEmpty() && Info.Mode != ServiceModes.Multiple)
         {
             if (ProcessName.EqualIgnoreCase("dotnet", "java"))
             {
-                var target = _fileName ?? Info?.FileName;
+                var target = _fileName ?? Info.FileName;
                 if (target.EqualIgnoreCase("dotnet", "java"))
                 {
-                    var ss = Info?.Arguments.Split(' ');
+                    var ss = Info.Arguments.Split(' ');
                     if (ss != null) target = ss.FirstOrDefault(e => e.EndsWithIgnoreCase(".dll", ".jar"));
                 }
                 if (!target.IsNullOrEmpty())
