@@ -288,11 +288,28 @@ public class ZipDeploy
     public virtual FileInfo FindExeFile(String shadow)
     {
         var fis = shadow.AsDirectory().GetFiles();
+
         var runfile = fis.FirstOrDefault(e => e.Name.EqualIgnoreCase(Name));
         if (runfile == null && Runtime.Windows)
         {
+            // 包名的后缀改为exe，即为启动文件
             var name = $"{Name}.exe";
             runfile = fis.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
+
+            // 第一个参数可能就是exe
+            if (runfile == null)
+            {
+                var ss = Arguments?.Split(" ");
+                if (ss != null && ss.Length > 0 && ss[0].EndsWithIgnoreCase(".exe"))
+                {
+                    runfile = fis.FirstOrDefault(e => e.Name.EqualIgnoreCase(ss[0]));
+                    if (runfile != null)
+                    {
+                        // 调整参数
+                        Arguments = ss.Skip(1).Join(" ");
+                    }
+                }
+            }
 
             // 如果当前目录有唯一exe文件，选择它作为启动文件
             if (runfile == null)

@@ -168,7 +168,7 @@ internal class ServiceController : DisposeBase
                 }
                 else
                 {
-                    WriteLog("拉起进程");
+                    WriteLog("拉起进程：{0} {1}", file, args);
                     var si = new ProcessStartInfo
                     {
                         FileName = file,
@@ -186,6 +186,7 @@ internal class ServiceController : DisposeBase
                         // UseShellExecute 必须 false，以便于后续重定向输出流
                         si.UseShellExecute = false;
                         si.RedirectStandardError = true;
+                        si.RedirectStandardOutput = true;
                     }
 
                     p = Process.Start(si);
@@ -195,8 +196,11 @@ internal class ServiceController : DisposeBase
 
                         if (si.RedirectStandardError)
                         {
-                            var rs = p.StandardError.ReadToEnd();
-                            WriteLog(rs);
+                            var rs = p.StandardOutput.ReadToEnd();
+                            if (!rs.IsNullOrEmpty()) WriteLog(rs);
+
+                            rs = p.StandardError.ReadToEnd();
+                            if (!rs.IsNullOrEmpty()) WriteLog(rs);
                         }
 
                         return false;
