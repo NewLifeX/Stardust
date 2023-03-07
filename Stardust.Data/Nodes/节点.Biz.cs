@@ -227,7 +227,10 @@ public partial class Node : Entity<Node>
         if (cityId >= 0) exp &= _.CityID == cityId;
         if (!category.IsNullOrEmpty()) exp &= _.Category == category;
         if (!product.IsNullOrEmpty()) exp &= _.ProductCode == product;
-        if (osKind > 0) exp &= _.OSKind == osKind;
+        if (osKind > 0)
+            exp &= _.OSKind == osKind;
+        else if (osKind == 0)
+            exp &= _.OSKind == 0 | _.OSKind.IsNull();
         if (!version.IsNullOrEmpty()) exp &= _.Version == version;
         if (enable != null) exp &= _.Enable == enable.Value;
 

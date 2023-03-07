@@ -86,10 +86,10 @@ public class NodeController : EntityController<Node>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        var kind = (OSKinds)osKind.ToInt();
-        if (kind == 0)
+        var kind = (OSKinds)osKind.ToInt(-1);
+        if (kind < 0)
         {
-            Enum.TryParse(osKind, out kind);
+            if (!Enum.TryParse(osKind, out kind)) kind = (OSKinds)(-1);
         }
 
         return Node.Search(provinceId, cityId, category, product, kind, version, enable, start, end, p["Q"], p);
