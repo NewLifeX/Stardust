@@ -185,9 +185,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         var mi = MachineInfo.Current ?? _task.Result;
 
         var asm = AssemblyX.Entry ?? AssemblyX.Create(Assembly.GetExecutingAssembly());
-        //var ps = System.IO.Ports.SerialPort.GetPortNames();
         var mcs = NetHelper.GetMacs().Select(e => e.ToHex("-")).Where(e => e != "00-00-00-00-00-00").OrderBy(e => e).Join(",");
-        //var driveInfo = new DriveInfo(Path.GetPathRoot(".".GetFullPath()));
         var path = ".".GetFullPath();
         var drives = GetDrives();
         var driveInfo = DriveInfo.GetDrives().FirstOrDefault(e => path.StartsWithIgnoreCase(e.Name));
@@ -198,7 +196,6 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
 
             OSName = mi.OSName,
             OSVersion = mi.OSVersion,
-            //Architecture = RuntimeInformation.ProcessArchitecture,
 
             MachineName = Environment.MachineName,
             UserName = Environment.UserName,
@@ -213,7 +210,6 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
 
             Product = mi.Product,
             Processor = mi.Processor,
-            //CpuID = mi.CpuID,
             CpuRate = mi.CpuRate,
             UUID = mi.UUID,
             MachineGuid = mi.Guid,
@@ -222,7 +218,6 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             DiskID = mi.DiskID,
 
             Macs = mcs,
-            //COMs = ps.Join(","),
 
             InstallPath = ".".GetFullPath(),
             Runtime = Environment.Version + "",
@@ -241,8 +236,6 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         di.Framework ??= RuntimeInformation.FrameworkDescription?.TrimStart(".NET Framework", ".NET Core", ".NET Native", ".NET").Trim();
 
         di.Architecture = RuntimeInformation.ProcessArchitecture + "";
-
-        if (Runtime.Windows) FixGdi(di);
 #else
         var ver = "";
         var tar = asm.Asm.GetCustomAttribute<TargetFrameworkAttribute>();
@@ -250,7 +243,9 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
 
         di.Framework ??= ver?.TrimStart(".NET Framework", ".NET Core", ".NET Native", ".NET").Trim();
         di.Architecture = IntPtr.Size == 8 ? "X64" : "X86";
+#endif
 
+#if NETFRAMEWORK || WINDOWS
         try
         {
             // 收集屏幕相关信息。Mono+Linux无法获取
@@ -260,6 +255,8 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             di.Resolution = $"{screen.Bounds.Width}*{screen.Bounds.Height}";
         }
         catch { }
+#else
+        if (Runtime.Windows) FixGdi(di);
 #endif
 
         if (Runtime.Linux) di.MaxOpenFiles = Execute("bash", "-c \"ulimit -n\"")?.Trim().ToInt() ?? 0;
@@ -383,9 +380,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     #endregion
 
     #region 心跳
-    private readonly String[] _excludes = new[] { "Idle", "System", "Registry", "smss", "csrss", "lsass", "wininit", "services", "winlogon", "LogonUI", "SearchUI", "fontdrvhost", "dwm", "svchost", "dllhost", "conhost", "taskhostw", "explorer", "ctfmon", "ChsIME", "WmiPrvSE", "WUDFHost", "TabTip*", "igfxCUIServiceN", "igfxEMN", "smartscreen", "sihost", "RuntimeBroker", "StartMenuExperienceHost", "SecurityHealthSystray", "SecurityHealthService", "ShellExperienceHost", "PerfWatson2", "audiodg", "spoolsv",
-        "*ServiceHub*",
-        "systemd*", "cron", "rsyslogd", "sudo", "dbus*", "bash", "login", "networkd*", "kworker*", "ksoftirqd*", "migration*", "auditd", "polkitd", "atd"
+    private readonly String[] _excludes = new[] { "Idle", "System", "Registry", "smss", "csrss", "lsass", "wininit", "services", "winlogon", "LogonUI", "SearchUI", "fontdrvhost", "dwm", "svchost", "dllhost", "conhost", "taskhostw", "explorer", "ctfmon", "ChsIME", "WmiPrvSE", "WUDFHost", "TabTip*", "igfxCUIServiceN", "igfxEMN", "smartscreen", "sihost", "RuntimeBroker", "StartMenuExperienceHost", "SecurityHealthSystray", "SecurityHealthService", "ShellExperienceHost", "PerfWatson2", "audiodg", "spoolsv", "*ServiceHub*", "systemd*", "cron", "rsyslogd", "sudo", "dbus*", "bash", "login", "networkd*", "kworker*", "ksoftirqd*", "migration*", "auditd", "polkitd", "atd"
     };
 
     /// <summary>获取心跳信息</summary>
@@ -433,7 +428,6 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             Uptime = Environment.TickCount / 1000,
 
             Macs = mcs,
-            //COMs = ps.Join(","),
             IP = ip,
 
             Processes = pcs.Join(),
@@ -502,13 +496,6 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
                             await ReceiveCommand(model);
                         }
                     }
-
-                    //// 应用服务
-                    //if (rs.Services != null && rs.Services.Length > 0)
-                    //{
-                    //    Manager.Add(rs.Services);
-                    //    Manager.CheckService();
-                    //}
                 }
             }
             catch
@@ -535,7 +522,6 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
                 return Login();
             }
 
-            //XTrace.WriteLine(inf.ToJson());
             XTrace.WriteLine("心跳异常 {0}", ex.GetTrue().Message);
 
             throw;
@@ -549,14 +535,11 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
 
     private TraceService _trace;
     /// <summary>使用追踪服务</summary>
-    public void UseTrace() =>
-        //_trace = new TraceService
-        //{
-        //    Queue = CommandQueue,
-        //    Callback = (id, data) => ReportAsync(id, data).Wait(),
-        //};
-        //_trace.Init();
-        _trace = new TraceService();//_trace.Attach(CommandQueue);
+    public void UseTrace()
+    {
+        _trace = new TraceService();
+        _trace.Attach(this);
+    }
     #endregion
 
     #region 上报

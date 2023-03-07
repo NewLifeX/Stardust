@@ -79,8 +79,5 @@ namespace Stardust.Models
 
         /// <summary>下发命令</summary>
         public CommandModel[] Commands { get; set; }
-
-        ///// <summary>下发应用服务</summary>
-        //public ServiceInfo[] Services { get; set; }
     }
 }

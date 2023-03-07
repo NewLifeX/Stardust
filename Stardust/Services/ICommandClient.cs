@@ -26,7 +26,7 @@ public static class CommandClientHelper
     /// <param name="command"></param>
     /// <param name="method"></param>
     /// <exception cref="ArgumentNullException"></exception>
-    public static void RegisterCommand(this ICommandClient client, String command, Func<String, String> method)
+    public static void RegisterCommand(this ICommandClient client, String command, Func<String, Object> method)
     {
         if (command.IsNullOrEmpty()) command = method.Method.Name;
 
@@ -40,7 +40,7 @@ public static class CommandClientHelper
     /// <param name="command"></param>
     /// <param name="method"></param>
     /// <exception cref="ArgumentNullException"></exception>
-    public static void RegisterCommand(this ICommandClient client, String command, Func<String, Task<String>> method)
+    public static void RegisterCommand(this ICommandClient client, String command, Func<String, Task<Object>> method)
     {
         if (command.IsNullOrEmpty()) command = method.Method.Name;
 
@@ -137,10 +137,10 @@ public static class CommandClientHelper
 
         if (!client.Commands.TryGetValue(model.Command, out var d)) throw new ApiException(400, $"找不到服务[{model.Command}]");
 
-        if (d is Func<String, String> func) return func(model.Argument);
+        if (d is Func<String, Object> func) return func(model.Argument);
         if (d is Func<CommandModel, CommandReplyModel> func2) return func2(model);
 
-        if (d is Func<String, Task<String>> func3) return await func3(model.Argument);
+        if (d is Func<String, Task<Object>> func3) return await func3(model.Argument);
         if (d is Func<CommandModel, Task<CommandReplyModel>> func4) return await func4(model);
 
         if (d is Action<CommandModel> func5) func5(model);
