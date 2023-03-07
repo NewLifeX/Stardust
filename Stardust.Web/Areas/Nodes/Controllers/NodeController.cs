@@ -4,7 +4,10 @@ using NewLife.Cube;
 using NewLife.Data;
 using NewLife.Web;
 using Stardust.Data.Nodes;
+using Stardust.Models;
+using XCode;
 using XCode.Membership;
+using XCode.Model;
 using static Stardust.Data.Nodes.Node;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
@@ -21,7 +24,7 @@ public class NodeController : EntityController<Node>
 
         var list = ListFields;
         list.Clear();
-        var allows = new[] { "ID", "Name", "Code", "Category", "ProductCode", "CityName", "Enable", "Version", "Runtime", "IP", "OS", "MachineName", "Cpu", "Memory", "TotalSize", "Logins", "LastLogin", "OnlineTime", "UpdateTime", "UpdateIP" };
+        var allows = new[] { "ID", "Name", "Code", "Category", "ProductCode", "CityName", "Enable", "Version", "OSKind", "Runtime", "IP", "OS", "MachineName", "Cpu", "Memory", "TotalSize", "Logins", "LastLogin", "OnlineTime", "UpdateTime", "UpdateIP" };
         foreach (var item in allows)
         {
             list.AddListField(item);
@@ -76,13 +79,20 @@ public class NodeController : EntityController<Node>
 
         var category = p["category"];
         var product = p["product"];
+        var osKind = p["osKind"];
         var version = p["version"];
         var enable = p["enable"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return Node.Search(provinceId, cityId, category, product, version, enable, start, end, p["Q"], p);
+        var kind = (OSKinds)osKind.ToInt();
+        if (kind == 0)
+        {
+            Enum.TryParse(osKind, out kind);
+        }
+
+        return Node.Search(provinceId, cityId, category, product, kind, version, enable, start, end, p["Q"], p);
     }
 
     /// <summary>搜索</summary>
@@ -157,6 +167,28 @@ public class NodeController : EntityController<Node>
                 dt.Save();
             }
         }
+
+        return JsonRefresh("操作成功！");
+    }
+
+    [EntityAuthorize(PermissionFlags.Update)]
+    public ActionResult Fix()
+    {
+        var bf = new BatchFinder<Int32, Node>();
+        bf.Add(SelectKeys.Select(e => e.ToInt()));
+
+        var list = new List<Node>();
+        foreach (var item in SelectKeys)
+        {
+            var node = bf.FindByKey(item.ToInt());
+            if (node != null)
+            {
+                node.OSKind = OSKindHelper.Parse(node.OS, node.OSVersion);
+                //node.Update();
+                list.Add(node);
+            }
+        }
+        list.Update(true);
 
         return JsonRefresh("操作成功！");
     }

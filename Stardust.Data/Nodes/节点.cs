@@ -114,6 +114,15 @@ namespace Stardust.Data.Nodes
         [BindColumn("OSVersion", "系统版本", "")]
         public String OSVersion { get => _OSVersion; set { if (OnPropertyChanging("OSVersion", value)) { _OSVersion = value; OnPropertyChanged("OSVersion"); } } }
 
+        private Stardust.Models.OSKinds _OSKind;
+        /// <summary>系统种类。主流操作系统类型，不考虑子版本</summary>
+        [Category("硬件信息")]
+        [DisplayName("系统种类")]
+        [Description("系统种类。主流操作系统类型，不考虑子版本")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("OSKind", "系统种类。主流操作系统类型，不考虑子版本", "")]
+        public Stardust.Models.OSKinds OSKind { get => _OSKind; set { if (OnPropertyChanging("OSKind", value)) { _OSKind = value; OnPropertyChanged("OSKind"); } } }
+
         private String _Architecture;
         /// <summary>架构。处理器架构，X86/X64/Arm/Arm64</summary>
         [Category("硬件信息")]
@@ -532,6 +541,7 @@ namespace Stardust.Data.Nodes
                     case "CompileTime": return _CompileTime;
                     case "OS": return _OS;
                     case "OSVersion": return _OSVersion;
+                    case "OSKind": return _OSKind;
                     case "Architecture": return _Architecture;
                     case "MachineName": return _MachineName;
                     case "UserName": return _UserName;
@@ -595,6 +605,7 @@ namespace Stardust.Data.Nodes
                     case "CompileTime": _CompileTime = value.ToDateTime(); break;
                     case "OS": _OS = Convert.ToString(value); break;
                     case "OSVersion": _OSVersion = Convert.ToString(value); break;
+                    case "OSKind": _OSKind = (Stardust.Models.OSKinds)value.ToInt(); break;
                     case "Architecture": _Architecture = Convert.ToString(value); break;
                     case "MachineName": _MachineName = Convert.ToString(value); break;
                     case "UserName": _UserName = Convert.ToString(value); break;
@@ -682,6 +693,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>系统版本</summary>
             public static readonly Field OSVersion = FindByName("OSVersion");
+
+            /// <summary>系统种类。主流操作系统类型，不考虑子版本</summary>
+            public static readonly Field OSKind = FindByName("OSKind");
 
             /// <summary>架构。处理器架构，X86/X64/Arm/Arm64</summary>
             public static readonly Field Architecture = FindByName("Architecture");
@@ -856,6 +870,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>系统版本</summary>
             public const String OSVersion = "OSVersion";
+
+            /// <summary>系统种类。主流操作系统类型，不考虑子版本</summary>
+            public const String OSKind = "OSKind";
 
             /// <summary>架构。处理器架构，X86/X64/Arm/Arm64</summary>
             public const String Architecture = "Architecture";

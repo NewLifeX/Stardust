@@ -207,6 +207,7 @@ public partial class Node : Entity<Node>
     /// <param name="cityId">城市</param>
     /// <param name="category">类别</param>
     /// <param name="product">类别</param>
+    /// <param name="osKind">系统种类</param>
     /// <param name="version">版本</param>
     /// <param name="enable"></param>
     /// <param name="start"></param>
@@ -214,7 +215,7 @@ public partial class Node : Entity<Node>
     /// <param name="key"></param>
     /// <param name="page"></param>
     /// <returns></returns>
-    public static IList<Node> Search(Int32 provinceId, Int32 cityId, String category, String product, String version, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Node> Search(Int32 provinceId, Int32 cityId, String category, String product, OSKinds osKind, String version, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
@@ -222,6 +223,7 @@ public partial class Node : Entity<Node>
         if (cityId >= 0) exp &= _.CityID == cityId;
         if (!category.IsNullOrEmpty()) exp &= _.Category == category;
         if (!product.IsNullOrEmpty()) exp &= _.ProductCode == product;
+        if (osKind > 0) exp &= _.OSKind == osKind;
         if (!version.IsNullOrEmpty()) exp &= _.Version == version;
         if (enable != null) exp &= _.Enable == enable.Value;
 
@@ -347,6 +349,17 @@ public partial class Node : Entity<Node>
     /// <summary>获取所有类别名称</summary>
     /// <returns></returns>
     public static IDictionary<String, String> FindAllProduct() => ProductCache.Value.FindAllName();
+
+    /// <summary>系统种类实体缓存，异步，缓存10分钟</summary>
+    static Lazy<FieldCache<Node>> OSKindCache = new(() => new FieldCache<Node>(__.OSKind)
+    {
+        Where = _.UpdateTime > DateTime.Today.AddDays(-30) & Expression.Empty,
+        MaxRows = 50
+    });
+
+    /// <summary>获取所有系统种类名称</summary>
+    /// <returns></returns>
+    public static IDictionary<String, String> FindAllOSKind() => OSKindCache.Value.FindAllName();
     #endregion
 
     #region 业务

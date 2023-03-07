@@ -118,6 +118,15 @@ namespace Stardust.Data.Nodes
         [BindColumn("CompileTime", "编译时间", "")]
         public DateTime CompileTime { get => _CompileTime; set { if (OnPropertyChanging("CompileTime", value)) { _CompileTime = value; OnPropertyChanged("CompileTime"); } } }
 
+        private Stardust.Models.OSKinds _OSKind;
+        /// <summary>系统种类。主流操作系统类型，不考虑子版本</summary>
+        [Category("硬件信息")]
+        [DisplayName("系统种类")]
+        [Description("系统种类。主流操作系统类型，不考虑子版本")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("OSKind", "系统种类。主流操作系统类型，不考虑子版本", "")]
+        public Stardust.Models.OSKinds OSKind { get => _OSKind; set { if (OnPropertyChanging("OSKind", value)) { _OSKind = value; OnPropertyChanged("OSKind"); } } }
+
         private Int32 _Memory;
         /// <summary>内存。单位M</summary>
         [DisplayName("内存")]
@@ -346,6 +355,7 @@ namespace Stardust.Data.Nodes
                     case "WebSocket": return _WebSocket;
                     case "Version": return _Version;
                     case "CompileTime": return _CompileTime;
+                    case "OSKind": return _OSKind;
                     case "Memory": return _Memory;
                     case "AvailableMemory": return _AvailableMemory;
                     case "AvailableFreeSpace": return _AvailableFreeSpace;
@@ -390,6 +400,7 @@ namespace Stardust.Data.Nodes
                     case "WebSocket": _WebSocket = value.ToBoolean(); break;
                     case "Version": _Version = Convert.ToString(value); break;
                     case "CompileTime": _CompileTime = value.ToDateTime(); break;
+                    case "OSKind": _OSKind = (Stardust.Models.OSKinds)value.ToInt(); break;
                     case "Memory": _Memory = value.ToInt(); break;
                     case "AvailableMemory": _AvailableMemory = value.ToInt(); break;
                     case "AvailableFreeSpace": _AvailableFreeSpace = value.ToInt(); break;
@@ -460,6 +471,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>编译时间</summary>
             public static readonly Field CompileTime = FindByName("CompileTime");
+
+            /// <summary>系统种类。主流操作系统类型，不考虑子版本</summary>
+            public static readonly Field OSKind = FindByName("OSKind");
 
             /// <summary>内存。单位M</summary>
             public static readonly Field Memory = FindByName("Memory");
@@ -577,6 +591,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>编译时间</summary>
             public const String CompileTime = "CompileTime";
+
+            /// <summary>系统种类。主流操作系统类型，不考虑子版本</summary>
+            public const String OSKind = "OSKind";
 
             /// <summary>内存。单位M</summary>
             public const String Memory = "Memory";
