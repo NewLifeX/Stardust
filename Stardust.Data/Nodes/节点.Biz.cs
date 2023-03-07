@@ -75,6 +75,10 @@ public partial class Node : Entity<Node>
         base.Valid(isNew);
 
         if (Period == 0) Period = 60;
+
+        // 自动识别版本
+        var kind = OSKindHelper.Parse(OS, OSVersion);
+        if (kind > 0) OSKind = kind;
     }
 
     /// <summary>已重载</summary>
@@ -429,6 +433,8 @@ public partial class Node : Entity<Node>
         if (!di.InstallPath.IsNullOrEmpty()) node.InstallPath = di.InstallPath;
         if (!di.Runtime.IsNullOrEmpty()) node.Runtime = di.Runtime;
         if (!di.Framework.IsNullOrEmpty()) node.Framework = di.Framework;
+
+        if (!node.OS.IsNullOrEmpty()) node.OSKind = OSKindHelper.Parse(node.OS, node.OSVersion);
     }
 
     /// <summary>修正地区</summary>

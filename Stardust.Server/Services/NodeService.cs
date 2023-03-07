@@ -327,6 +327,7 @@ public class NodeService
             olt.Category = node.Category;
             olt.Version = node.Version;
             olt.CompileTime = node.CompileTime;
+            olt.OSKind = node.OSKind;
             olt.Save(null, inf, token, ip);
 
             // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌。
@@ -459,7 +460,7 @@ public class NodeService
         olt.Category = node.Category;
         olt.ProvinceID = node.ProvinceID;
         olt.CityID = node.CityID;
-
+        olt.OSKind = node.OSKind;
         olt.Version = node.Version;
         olt.CompileTime = node.CompileTime;
         olt.Memory = node.Memory;
