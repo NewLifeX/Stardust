@@ -5,7 +5,12 @@
 @{
     var fact = ViewBag.Factory as IEntityFactory;
     var page = ViewBag.Page as Pager;
+
+    var dic = new Dictionary<String, String>();
+    dic["OSKind"] = "OSKind";
 }
-<a href="?areaId=0">全国</a>
-@await Html.PartialAsync("_Area1", "")
+<div class="form-group">
+    <label for="category" class="control-label">类别：</label>
+    @Html.ForDropDownList("category", dic, page["category"], "全部", true)
+</div>
 @await Html.PartialAsync("_DateRange")

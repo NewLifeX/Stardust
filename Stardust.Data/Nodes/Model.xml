@@ -219,25 +219,24 @@
   <Table Name="NodeStat" Description="节点统计。每日统计">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="Category" DataType="String" Description="类别。业务方向分类，例如操作系统占比" />
       <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
-      <Column Name="AreaID" DataType="Int32" Description="地区。省份，0表示全国" />
-      <Column Name="Total" DataType="Int32" Description="总数。截止今天的全部设备数" />
+      <Column Name="Key" DataType="String" Description="统计项。统计项编码" />
+      <Column Name="Total" DataType="Int32" Description="总数。截止今天的全部节点数" />
       <Column Name="Actives" DataType="Int32" Description="活跃数。最后登录位于今天" />
-      <Column Name="T7Actives" DataType="Int32" Description="7天活跃数。最后登录位于7天内" />
-      <Column Name="T30Actives" DataType="Int32" Description="30天活跃数。最后登录位于30天内" />
+      <Column Name="ActivesT7" DataType="Int32" Description="7天活跃数。最后登录位于7天内" />
+      <Column Name="ActivesT30" DataType="Int32" Description="30天活跃数。最后登录位于30天内" />
       <Column Name="News" DataType="Int32" Description="新增数。今天创建" />
-      <Column Name="T7News" DataType="Int32" Description="7天新增数。7天创建" />
-      <Column Name="T30News" DataType="Int32" Description="30天新增数。30天创建" />
-      <Column Name="Registers" DataType="Int32" Description="注册数。今天激活或重新激活" />
-      <Column Name="MaxOnline" DataType="Int32" Description="最高在线。今天最高在线数" />
-      <Column Name="MaxOnlineTime" DataType="DateTime" Description="最高在线时间" />
+      <Column Name="NewsT7" DataType="Int32" Description="7天新增数。7天创建" />
+      <Column Name="NewsT30" DataType="Int32" Description="30天新增数。30天创建" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
       <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
       <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
     </Columns>
     <Indexes>
-      <Index Columns="StatDate,AreaID" Unique="True" />
-      <Index Columns="UpdateTime,AreaID" />
+      <Index Columns="Category,StatDate,Key" Unique="True" />
+      <Index Columns="Category,Key" />
+      <Index Columns="UpdateTime" />
     </Indexes>
   </Table>
   <Table Name="NodeRule" Description="节点规则。根据IP规则，自动识别匹配节点名称">

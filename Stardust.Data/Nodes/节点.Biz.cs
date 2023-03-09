@@ -9,6 +9,7 @@ using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using XCode;
 using XCode.Cache;
+using XCode.Configuration;
 using XCode.Membership;
 
 namespace Stardust.Data.Nodes;
@@ -292,10 +293,9 @@ public partial class Node : Entity<Node>
         return FindAll(exp, page);
     }
 
-    internal static IList<Node> SearchByCreateDate(DateTime date)
+    public static IList<Node> SearchGroup(String selects, FieldItem groupField)
     {
-        // 先用带有索引的UpdateTime过滤一次
-        return FindAll(_.UpdateTime >= date & _.CreateTime.Between(date, date));
+        return FindAll(groupField.GroupBy(), null, selects);
     }
 
     internal static IDictionary<Int32, Int32> SearchGroupByCreateTime(DateTime start, DateTime end)

@@ -97,6 +97,7 @@ public class Startup
         services.AddHostedService<ApolloService>();
         services.AddHostedService<ShardTableService>();
         services.AddHostedService<AlarmService>();
+        services.AddHostedService<NodeStatService>();
 
         // 启用接口响应压缩
         services.AddResponseCompression();

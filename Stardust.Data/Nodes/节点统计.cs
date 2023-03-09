@@ -14,8 +14,9 @@ namespace Stardust.Data.Nodes
     [Serializable]
     [DataObject]
     [Description("节点统计。每日统计")]
-    [BindIndex("IU_NodeStat_StatDate_AreaID", true, "StatDate,AreaID")]
-    [BindIndex("IX_NodeStat_UpdateTime_AreaID", false, "UpdateTime,AreaID")]
+    [BindIndex("IU_NodeStat_Category_StatDate_Key", true, "Category,StatDate,Key")]
+    [BindIndex("IX_NodeStat_Category_Key", false, "Category,Key")]
+    [BindIndex("IX_NodeStat_UpdateTime", false, "UpdateTime")]
     [BindTable("NodeStat", Description = "节点统计。每日统计", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class NodeStat
     {
@@ -28,6 +29,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("ID", "编号", "")]
         public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
+        private String _Category;
+        /// <summary>类别。业务方向分类，例如操作系统占比</summary>
+        [DisplayName("类别")]
+        [Description("类别。业务方向分类，例如操作系统占比")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Category", "类别。业务方向分类，例如操作系统占比", "")]
+        public String Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
+
         private DateTime _StatDate;
         /// <summary>统计日期</summary>
         [DisplayName("统计日期")]
@@ -36,20 +45,20 @@ namespace Stardust.Data.Nodes
         [BindColumn("StatDate", "统计日期", "")]
         public DateTime StatDate { get => _StatDate; set { if (OnPropertyChanging("StatDate", value)) { _StatDate = value; OnPropertyChanged("StatDate"); } } }
 
-        private Int32 _AreaID;
-        /// <summary>地区。省份，0表示全国</summary>
-        [DisplayName("地区")]
-        [Description("地区。省份，0表示全国")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("AreaID", "地区。省份，0表示全国", "")]
-        public Int32 AreaID { get => _AreaID; set { if (OnPropertyChanging("AreaID", value)) { _AreaID = value; OnPropertyChanged("AreaID"); } } }
+        private String _Key;
+        /// <summary>统计项。统计项编码</summary>
+        [DisplayName("统计项")]
+        [Description("统计项。统计项编码")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Key", "统计项。统计项编码", "")]
+        public String Key { get => _Key; set { if (OnPropertyChanging("Key", value)) { _Key = value; OnPropertyChanged("Key"); } } }
 
         private Int32 _Total;
-        /// <summary>总数。截止今天的全部设备数</summary>
+        /// <summary>总数。截止今天的全部节点数</summary>
         [DisplayName("总数")]
-        [Description("总数。截止今天的全部设备数")]
+        [Description("总数。截止今天的全部节点数")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Total", "总数。截止今天的全部设备数", "")]
+        [BindColumn("Total", "总数。截止今天的全部节点数", "")]
         public Int32 Total { get => _Total; set { if (OnPropertyChanging("Total", value)) { _Total = value; OnPropertyChanged("Total"); } } }
 
         private Int32 _Actives;
@@ -60,21 +69,21 @@ namespace Stardust.Data.Nodes
         [BindColumn("Actives", "活跃数。最后登录位于今天", "")]
         public Int32 Actives { get => _Actives; set { if (OnPropertyChanging("Actives", value)) { _Actives = value; OnPropertyChanged("Actives"); } } }
 
-        private Int32 _T7Actives;
+        private Int32 _ActivesT7;
         /// <summary>7天活跃数。最后登录位于7天内</summary>
         [DisplayName("7天活跃数")]
         [Description("7天活跃数。最后登录位于7天内")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("T7Actives", "7天活跃数。最后登录位于7天内", "")]
-        public Int32 T7Actives { get => _T7Actives; set { if (OnPropertyChanging("T7Actives", value)) { _T7Actives = value; OnPropertyChanged("T7Actives"); } } }
+        [BindColumn("ActivesT7", "7天活跃数。最后登录位于7天内", "")]
+        public Int32 ActivesT7 { get => _ActivesT7; set { if (OnPropertyChanging("ActivesT7", value)) { _ActivesT7 = value; OnPropertyChanged("ActivesT7"); } } }
 
-        private Int32 _T30Actives;
+        private Int32 _ActivesT30;
         /// <summary>30天活跃数。最后登录位于30天内</summary>
         [DisplayName("30天活跃数")]
         [Description("30天活跃数。最后登录位于30天内")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("T30Actives", "30天活跃数。最后登录位于30天内", "")]
-        public Int32 T30Actives { get => _T30Actives; set { if (OnPropertyChanging("T30Actives", value)) { _T30Actives = value; OnPropertyChanged("T30Actives"); } } }
+        [BindColumn("ActivesT30", "30天活跃数。最后登录位于30天内", "")]
+        public Int32 ActivesT30 { get => _ActivesT30; set { if (OnPropertyChanging("ActivesT30", value)) { _ActivesT30 = value; OnPropertyChanged("ActivesT30"); } } }
 
         private Int32 _News;
         /// <summary>新增数。今天创建</summary>
@@ -84,45 +93,21 @@ namespace Stardust.Data.Nodes
         [BindColumn("News", "新增数。今天创建", "")]
         public Int32 News { get => _News; set { if (OnPropertyChanging("News", value)) { _News = value; OnPropertyChanged("News"); } } }
 
-        private Int32 _T7News;
+        private Int32 _NewsT7;
         /// <summary>7天新增数。7天创建</summary>
         [DisplayName("7天新增数")]
         [Description("7天新增数。7天创建")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("T7News", "7天新增数。7天创建", "")]
-        public Int32 T7News { get => _T7News; set { if (OnPropertyChanging("T7News", value)) { _T7News = value; OnPropertyChanged("T7News"); } } }
+        [BindColumn("NewsT7", "7天新增数。7天创建", "")]
+        public Int32 NewsT7 { get => _NewsT7; set { if (OnPropertyChanging("NewsT7", value)) { _NewsT7 = value; OnPropertyChanged("NewsT7"); } } }
 
-        private Int32 _T30News;
+        private Int32 _NewsT30;
         /// <summary>30天新增数。30天创建</summary>
         [DisplayName("30天新增数")]
         [Description("30天新增数。30天创建")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("T30News", "30天新增数。30天创建", "")]
-        public Int32 T30News { get => _T30News; set { if (OnPropertyChanging("T30News", value)) { _T30News = value; OnPropertyChanged("T30News"); } } }
-
-        private Int32 _Registers;
-        /// <summary>注册数。今天激活或重新激活</summary>
-        [DisplayName("注册数")]
-        [Description("注册数。今天激活或重新激活")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Registers", "注册数。今天激活或重新激活", "")]
-        public Int32 Registers { get => _Registers; set { if (OnPropertyChanging("Registers", value)) { _Registers = value; OnPropertyChanged("Registers"); } } }
-
-        private Int32 _MaxOnline;
-        /// <summary>最高在线。今天最高在线数</summary>
-        [DisplayName("最高在线")]
-        [Description("最高在线。今天最高在线数")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("MaxOnline", "最高在线。今天最高在线数", "")]
-        public Int32 MaxOnline { get => _MaxOnline; set { if (OnPropertyChanging("MaxOnline", value)) { _MaxOnline = value; OnPropertyChanged("MaxOnline"); } } }
-
-        private DateTime _MaxOnlineTime;
-        /// <summary>最高在线时间</summary>
-        [DisplayName("最高在线时间")]
-        [Description("最高在线时间")]
-        [DataObjectField(false, false, true, 0)]
-        [BindColumn("MaxOnlineTime", "最高在线时间", "")]
-        public DateTime MaxOnlineTime { get => _MaxOnlineTime; set { if (OnPropertyChanging("MaxOnlineTime", value)) { _MaxOnlineTime = value; OnPropertyChanged("MaxOnlineTime"); } } }
+        [BindColumn("NewsT30", "30天新增数。30天创建", "")]
+        public Int32 NewsT30 { get => _NewsT30; set { if (OnPropertyChanging("NewsT30", value)) { _NewsT30 = value; OnPropertyChanged("NewsT30"); } } }
 
         private DateTime _CreateTime;
         /// <summary>创建时间</summary>
@@ -163,18 +148,16 @@ namespace Stardust.Data.Nodes
                 switch (name)
                 {
                     case "ID": return _ID;
+                    case "Category": return _Category;
                     case "StatDate": return _StatDate;
-                    case "AreaID": return _AreaID;
+                    case "Key": return _Key;
                     case "Total": return _Total;
                     case "Actives": return _Actives;
-                    case "T7Actives": return _T7Actives;
-                    case "T30Actives": return _T30Actives;
+                    case "ActivesT7": return _ActivesT7;
+                    case "ActivesT30": return _ActivesT30;
                     case "News": return _News;
-                    case "T7News": return _T7News;
-                    case "T30News": return _T30News;
-                    case "Registers": return _Registers;
-                    case "MaxOnline": return _MaxOnline;
-                    case "MaxOnlineTime": return _MaxOnlineTime;
+                    case "NewsT7": return _NewsT7;
+                    case "NewsT30": return _NewsT30;
                     case "CreateTime": return _CreateTime;
                     case "UpdateTime": return _UpdateTime;
                     case "Remark": return _Remark;
@@ -186,18 +169,16 @@ namespace Stardust.Data.Nodes
                 switch (name)
                 {
                     case "ID": _ID = value.ToInt(); break;
+                    case "Category": _Category = Convert.ToString(value); break;
                     case "StatDate": _StatDate = value.ToDateTime(); break;
-                    case "AreaID": _AreaID = value.ToInt(); break;
+                    case "Key": _Key = Convert.ToString(value); break;
                     case "Total": _Total = value.ToInt(); break;
                     case "Actives": _Actives = value.ToInt(); break;
-                    case "T7Actives": _T7Actives = value.ToInt(); break;
-                    case "T30Actives": _T30Actives = value.ToInt(); break;
+                    case "ActivesT7": _ActivesT7 = value.ToInt(); break;
+                    case "ActivesT30": _ActivesT30 = value.ToInt(); break;
                     case "News": _News = value.ToInt(); break;
-                    case "T7News": _T7News = value.ToInt(); break;
-                    case "T30News": _T30News = value.ToInt(); break;
-                    case "Registers": _Registers = value.ToInt(); break;
-                    case "MaxOnline": _MaxOnline = value.ToInt(); break;
-                    case "MaxOnlineTime": _MaxOnlineTime = value.ToDateTime(); break;
+                    case "NewsT7": _NewsT7 = value.ToInt(); break;
+                    case "NewsT30": _NewsT30 = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
                     case "Remark": _Remark = Convert.ToString(value); break;
@@ -214,41 +195,35 @@ namespace Stardust.Data.Nodes
             /// <summary>编号</summary>
             public static readonly Field ID = FindByName("ID");
 
+            /// <summary>类别。业务方向分类，例如操作系统占比</summary>
+            public static readonly Field Category = FindByName("Category");
+
             /// <summary>统计日期</summary>
             public static readonly Field StatDate = FindByName("StatDate");
 
-            /// <summary>地区。省份，0表示全国</summary>
-            public static readonly Field AreaID = FindByName("AreaID");
+            /// <summary>统计项。统计项编码</summary>
+            public static readonly Field Key = FindByName("Key");
 
-            /// <summary>总数。截止今天的全部设备数</summary>
+            /// <summary>总数。截止今天的全部节点数</summary>
             public static readonly Field Total = FindByName("Total");
 
             /// <summary>活跃数。最后登录位于今天</summary>
             public static readonly Field Actives = FindByName("Actives");
 
             /// <summary>7天活跃数。最后登录位于7天内</summary>
-            public static readonly Field T7Actives = FindByName("T7Actives");
+            public static readonly Field ActivesT7 = FindByName("ActivesT7");
 
             /// <summary>30天活跃数。最后登录位于30天内</summary>
-            public static readonly Field T30Actives = FindByName("T30Actives");
+            public static readonly Field ActivesT30 = FindByName("ActivesT30");
 
             /// <summary>新增数。今天创建</summary>
             public static readonly Field News = FindByName("News");
 
             /// <summary>7天新增数。7天创建</summary>
-            public static readonly Field T7News = FindByName("T7News");
+            public static readonly Field NewsT7 = FindByName("NewsT7");
 
             /// <summary>30天新增数。30天创建</summary>
-            public static readonly Field T30News = FindByName("T30News");
-
-            /// <summary>注册数。今天激活或重新激活</summary>
-            public static readonly Field Registers = FindByName("Registers");
-
-            /// <summary>最高在线。今天最高在线数</summary>
-            public static readonly Field MaxOnline = FindByName("MaxOnline");
-
-            /// <summary>最高在线时间</summary>
-            public static readonly Field MaxOnlineTime = FindByName("MaxOnlineTime");
+            public static readonly Field NewsT30 = FindByName("NewsT30");
 
             /// <summary>创建时间</summary>
             public static readonly Field CreateTime = FindByName("CreateTime");
@@ -268,41 +243,35 @@ namespace Stardust.Data.Nodes
             /// <summary>编号</summary>
             public const String ID = "ID";
 
+            /// <summary>类别。业务方向分类，例如操作系统占比</summary>
+            public const String Category = "Category";
+
             /// <summary>统计日期</summary>
             public const String StatDate = "StatDate";
 
-            /// <summary>地区。省份，0表示全国</summary>
-            public const String AreaID = "AreaID";
+            /// <summary>统计项。统计项编码</summary>
+            public const String Key = "Key";
 
-            /// <summary>总数。截止今天的全部设备数</summary>
+            /// <summary>总数。截止今天的全部节点数</summary>
             public const String Total = "Total";
 
             /// <summary>活跃数。最后登录位于今天</summary>
             public const String Actives = "Actives";
 
             /// <summary>7天活跃数。最后登录位于7天内</summary>
-            public const String T7Actives = "T7Actives";
+            public const String ActivesT7 = "ActivesT7";
 
             /// <summary>30天活跃数。最后登录位于30天内</summary>
-            public const String T30Actives = "T30Actives";
+            public const String ActivesT30 = "ActivesT30";
 
             /// <summary>新增数。今天创建</summary>
             public const String News = "News";
 
             /// <summary>7天新增数。7天创建</summary>
-            public const String T7News = "T7News";
+            public const String NewsT7 = "NewsT7";
 
             /// <summary>30天新增数。30天创建</summary>
-            public const String T30News = "T30News";
-
-            /// <summary>注册数。今天激活或重新激活</summary>
-            public const String Registers = "Registers";
-
-            /// <summary>最高在线。今天最高在线数</summary>
-            public const String MaxOnline = "MaxOnline";
-
-            /// <summary>最高在线时间</summary>
-            public const String MaxOnlineTime = "MaxOnlineTime";
+            public const String NewsT30 = "NewsT30";
 
             /// <summary>创建时间</summary>
             public const String CreateTime = "CreateTime";
