@@ -1,6 +1,7 @@
 ﻿using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
+using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Nodes;
 using XCode.Membership;
@@ -15,6 +16,15 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
     static NodeStatController()
     {
         ListFields.RemoveField("ID", "CreateTime", "UpdateTime", "Remark");
+
+        {
+            var df = ListFields.GetField("Category") as ListField;
+            df.Url = "/Nodes/NodeStat?category={Category}";
+        }
+        {
+            var df = ListFields.GetField("Key") as ListField;
+            df.Url = "/Nodes/NodeStat?category={Category}&key={Key}";
+        }
     }
 
     protected override IEnumerable<NodeStat> Search(Pager p)
@@ -64,15 +74,22 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
         }
         // 选定分类和日期，显示饼图
         else if (!category.IsNullOrEmpty() && key.IsNullOrEmpty()
-            && start.Year > 0 && start.Date == end.Date && list.Count > 0)
+            && start.Year > 2000 && start.Date == end.Date && list.Count > 0)
         {
-            var list2 = list.OrderBy(e => e.StatDate).ToList();
-            var chart = new ECharts { Height = 400, };
-            chart.AddPie(list, _.Total, e => new NameValue(e.StatDate.ToString("yyyy-MM-dd"), e.Total));
-            chart.AddPie(list, _.ActivesT7, e => new NameValue(e.StatDate.ToString("yyyy-MM-dd"), e.Total));
-            chart.AddPie(list, _.NewsT7, e => new NameValue(e.StatDate.ToString("yyyy-MM-dd"), e.Total));
+            //var list2 = list.OrderByDescending(e => e.Total).ToList();
+            var chart = new ECharts { Height = 400 };
+            chart.AddPie(list, _.Total, e => new NameValue(e.Key, e.Total));
 
-            ViewBag.Charts = new[] { chart };
+            //list2 = list.OrderByDescending(e => e.ActivesT7).ToList();
+            var chart2 = new ECharts { Height = 400 };
+            chart2.AddPie(list, _.ActivesT7, e => new NameValue(e.Key, e.ActivesT7));
+
+            //list2 = list.OrderByDescending(e => e.NewsT7).ToList();
+            var chart3 = new ECharts { Height = 400 };
+            chart3.AddPie(list, _.NewsT7, e => new NameValue(e.Key, e.NewsT7));
+
+            ViewBag.Charts = new[] { chart2 };
+            ViewBag.Charts2 = new[] { chart };
         }
 
         return list;
