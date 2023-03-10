@@ -176,6 +176,7 @@
       <Column Name="Channel" DataType="Int32" Description="升级通道" Type="NodeChannels" />
       <Column Name="Strategy" DataType="String" Length="500" Description="策略。升级策略，版本特别支持大于等于和小于等于，node=*abcd*;version&gt;=1.0;runtime/framework/os/arch/province/city" />
       <Column Name="Source" DataType="String" ItemType="file" Length="200" Description="升级源" />
+      <Column Name="Size" DataType="Int64" ItemType="GMK" Description="文件大小" />
       <Column Name="FileHash" DataType="String" Description="文件哈希。MD5散列" />
       <Column Name="Preinstall" DataType="String" Length="200" Description="预安装命令。更新前要执行的命令，解压缩后，在解压缩目录执行" />
       <Column Name="Executor" DataType="String" Length="200" Description="执行命令。空格前后为文件名和参数" />

@@ -59,6 +59,14 @@ namespace Stardust.Data.Deployment
         [BindColumn("Url", "资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖", "", ItemType = "file")]
         public String Url { get => _Url; set { if (OnPropertyChanging("Url", value)) { _Url = value; OnPropertyChanged("Url"); } } }
 
+        private Int64 _Size;
+        /// <summary>文件大小</summary>
+        [DisplayName("文件大小")]
+        [Description("文件大小")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Size", "文件大小", "", ItemType = "GMK")]
+        public Int64 Size { get => _Size; set { if (OnPropertyChanging("Size", value)) { _Size = value; OnPropertyChanged("Size"); } } }
+
         private String _Hash;
         /// <summary>文件哈希。MD5散列，避免下载的文件有缺失</summary>
         [DisplayName("文件哈希")]
@@ -146,6 +154,7 @@ namespace Stardust.Data.Deployment
                     case "Version": return _Version;
                     case "Enable": return _Enable;
                     case "Url": return _Url;
+                    case "Size": return _Size;
                     case "Hash": return _Hash;
                     case "CreateUserId": return _CreateUserId;
                     case "CreateTime": return _CreateTime;
@@ -166,6 +175,7 @@ namespace Stardust.Data.Deployment
                     case "Version": _Version = Convert.ToString(value); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Url": _Url = Convert.ToString(value); break;
+                    case "Size": _Size = value.ToLong(); break;
                     case "Hash": _Hash = Convert.ToString(value); break;
                     case "CreateUserId": _CreateUserId = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -198,6 +208,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
             public static readonly Field Url = FindByName("Url");
+
+            /// <summary>文件大小</summary>
+            public static readonly Field Size = FindByName("Size");
 
             /// <summary>文件哈希。MD5散列，避免下载的文件有缺失</summary>
             public static readonly Field Hash = FindByName("Hash");
@@ -243,6 +256,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
             public const String Url = "Url";
+
+            /// <summary>文件大小</summary>
+            public const String Size = "Size";
 
             /// <summary>文件哈希。MD5散列，避免下载的文件有缺失</summary>
             public const String Hash = "Hash";

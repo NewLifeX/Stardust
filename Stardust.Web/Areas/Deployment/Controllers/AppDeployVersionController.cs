@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
+using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data.Deployment;
 using Stardust.Web.Services;
@@ -41,9 +42,12 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
     }
 
     private readonly DeployService _deployService;
-    public AppDeployVersionController(DeployService deployService)
+    private readonly ITracer _tracer;
+
+    public AppDeployVersionController(DeployService deployService, ITracer tracer)
     {
         _deployService = deployService;
+        _tracer = tracer;
     }
 
     protected override IEnumerable<AppDeployVersion> Search(Pager p)
@@ -109,6 +113,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         if (att != null)
         {
             entity.Hash = att.Hash;
+            entity.Size = att.Size;
             entity.Url = $"/cube/file?id={att.Id}{att.Extension}";
 
             entity.Update();
@@ -133,16 +138,6 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         app.Update();
 
         // 自动发布。应用版本后自动发布到启用节点，加快发布速度
-        //if (app.Enable && app.AutoPublish)
-        //{
-        //    var ts = new List<Task>();
-        //    var appNodes = AppDeployNode.FindAllByAppId(app.AppId);
-        //    foreach (var item in appNodes)
-        //    {
-        //        if (item.Enable) ts.Add(_deployService.Control(item, "install", UserHost));
-        //    }
-        //    Task.WaitAll(ts.ToArray(), 5_000);
-        //}
         Publish(app).Wait();
 
         return JsonRefresh($"成功！");
@@ -155,14 +150,23 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         // 自动发布。应用版本后自动发布到启用节点，加快发布速度
         if (app.Enable && app.AutoPublish)
         {
-            var ts = new List<Task>();
-            var appNodes = AppDeployNode.FindAllByAppId(app.AppId);
-            foreach (var item in appNodes)
+            using var span = _tracer?.NewSpan("AutoPublish", app);
+            try
             {
-                if (item.Enable) ts.Add(_deployService.Control(item, "install", UserHost));
+                var ts = new List<Task>();
+                var appNodes = AppDeployNode.FindAllByAppId(app.AppId);
+                foreach (var item in appNodes)
+                {
+                    if (item.Enable) ts.Add(_deployService.Control(item, "install", UserHost));
+                }
+                //Task.WaitAll(ts.ToArray(), 5_000);
+                await Task.WhenAll(ts);
             }
-            //Task.WaitAll(ts.ToArray(), 5_000);
-            await Task.WhenAll(ts);
+            catch (Exception ex)
+            {
+                span?.SetError(ex, null);
+                throw;
+            }
         }
     }
 }

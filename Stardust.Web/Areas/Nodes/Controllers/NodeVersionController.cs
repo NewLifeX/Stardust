@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
-using Stardust.Data.Deployment;
+using NewLife.Cube.ViewModels;
 using Stardust.Data.Nodes;
 using XCode.Membership;
-using NewLife.Cube.Entity;
 using Attachment = NewLife.Cube.Entity.Attachment;
-using NewLife.Cube.ViewModels;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
@@ -43,6 +41,7 @@ public class NodeVersionController : EntityController<NodeVersion>
         if (att != null)
         {
             entity.FileHash = att.Hash;
+            entity.Size = att.Size;
             entity.Source = $"/cube/file?id={att.Id}{att.Extension}";
 
             entity.Update();

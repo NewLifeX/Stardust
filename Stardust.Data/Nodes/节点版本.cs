@@ -83,6 +83,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("Source", "升级源", "", ItemType = "file")]
         public String Source { get => _Source; set { if (OnPropertyChanging("Source", value)) { _Source = value; OnPropertyChanged("Source"); } } }
 
+        private Int64 _Size;
+        /// <summary>文件大小</summary>
+        [DisplayName("文件大小")]
+        [Description("文件大小")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Size", "文件大小", "", ItemType = "GMK")]
+        public Int64 Size { get => _Size; set { if (OnPropertyChanging("Size", value)) { _Size = value; OnPropertyChanged("Size"); } } }
+
         private String _FileHash;
         /// <summary>文件哈希。MD5散列</summary>
         [DisplayName("文件哈希")]
@@ -189,6 +197,7 @@ namespace Stardust.Data.Nodes
                     case "Channel": return _Channel;
                     case "Strategy": return _Strategy;
                     case "Source": return _Source;
+                    case "Size": return _Size;
                     case "FileHash": return _FileHash;
                     case "Preinstall": return _Preinstall;
                     case "Executor": return _Executor;
@@ -214,6 +223,7 @@ namespace Stardust.Data.Nodes
                     case "Channel": _Channel = (NodeChannels)value.ToInt(); break;
                     case "Strategy": _Strategy = Convert.ToString(value); break;
                     case "Source": _Source = Convert.ToString(value); break;
+                    case "Size": _Size = value.ToLong(); break;
                     case "FileHash": _FileHash = Convert.ToString(value); break;
                     case "Preinstall": _Preinstall = Convert.ToString(value); break;
                     case "Executor": _Executor = Convert.ToString(value); break;
@@ -257,6 +267,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>升级源</summary>
             public static readonly Field Source = FindByName("Source");
+
+            /// <summary>文件大小</summary>
+            public static readonly Field Size = FindByName("Size");
 
             /// <summary>文件哈希。MD5散列</summary>
             public static readonly Field FileHash = FindByName("FileHash");
@@ -317,6 +330,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>升级源</summary>
             public const String Source = "Source";
+
+            /// <summary>文件大小</summary>
+            public const String Size = "Size";
 
             /// <summary>文件哈希。MD5散列</summary>
             public const String FileHash = "FileHash";
