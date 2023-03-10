@@ -84,7 +84,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         entity.App?.Fix();
 
         // 上传完成即发布
-        if ((entity as IEntity).Dirtys[nameof(entity.Url)])
+        if (!entity.Url.IsNullOrEmpty())
             Publish(entity.App).Wait();
 
         return rs;
@@ -92,12 +92,15 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
 
     protected override Int32 OnUpdate(AppDeployVersion entity)
     {
+        entity.TraceId = DefaultSpan.Current?.TraceId;
+
+        var changed = (entity as IEntity).Dirtys[nameof(entity.Url)];
+
         var rs = base.OnUpdate(entity);
         entity.App?.Fix();
 
         // 上传完成即发布
-        if ((entity as IEntity).Dirtys[nameof(entity.Url)])
-            Publish(entity.App).Wait();
+        if (changed) Publish(entity.App).Wait();
 
         return rs;
     }
@@ -156,9 +159,10 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
             try
             {
                 var ts = new List<Task>();
-                var appNodes = AppDeployNode.FindAllByAppId(app.AppId);
+                var appNodes = AppDeployNode.FindAllByAppId(app.Id);
                 foreach (var item in appNodes)
                 {
+                    //span?.AppendTag(item);
                     if (item.Enable) ts.Add(_deployService.Control(item, "install", UserHost));
                 }
                 //Task.WaitAll(ts.ToArray(), 5_000);

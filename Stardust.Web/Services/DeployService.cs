@@ -16,7 +16,7 @@ public class DeployService
         var app = deployNode.App;
         //if (app == null) throw new ArgumentNullException(nameof(deployNode));
         //if (!deployNode.Enable || app == null || !app.Enable) throw new Exception("部署节点未启用！");
-        if (app == null || !app.Enable) throw new Exception($"应用部署集[{app}]未启用！");
+        if (app == null || !app.Enable) throw new Exception($"节点[{deployNode}]上的应用部署集[{app}]未启用！");
 
         using var span = _starFactory.Tracer?.NewSpan($"Deploy-{action}", deployNode);
 
