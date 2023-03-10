@@ -80,12 +80,18 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
 
     protected override Int32 OnInsert(AppDeployVersion entity)
     {
+        var app = entity.App;
         var rs = base.OnInsert(entity);
-        entity.App?.Fix();
+        app?.Fix();
 
         // 上传完成即发布
-        if (!entity.Url.IsNullOrEmpty())
+        if (!entity.Url.IsNullOrEmpty() && app != null && app.Enable && app.AutoPublish)
+        {
+            app.Version = entity.Version;
+            app.Update();
+
             Publish(entity.App).Wait();
+        }
 
         return rs;
     }
@@ -96,11 +102,18 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
 
         var changed = (entity as IEntity).Dirtys[nameof(entity.Url)];
 
+        var app = entity.App;
         var rs = base.OnUpdate(entity);
-        entity.App?.Fix();
+        app?.Fix();
 
         // 上传完成即发布
-        if (changed) Publish(entity.App).Wait();
+        if (changed && app != null && app.Enable && app.AutoPublish)
+        {
+            app.Version = entity.Version;
+            app.Update();
+
+            Publish(entity.App).Wait();
+        }
 
         return rs;
     }
