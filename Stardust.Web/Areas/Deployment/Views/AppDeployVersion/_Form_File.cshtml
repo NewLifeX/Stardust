@@ -10,9 +10,6 @@
 
     var value = entity[field.Name] as String;
 
-    //var atts = HtmlHelper.AnonymousObjectToHtmlAttributes(Model.HtmlAttributes);
-    //if (!atts.ContainsKey("class")) atts.Add("class", "form-control");
-
     var accept = "application/zip,application/x-zip,application/x-zip-compressed";
 }
 @Html.TextBox(field.Name, entity[field.Name], new { @class = "form-control" })
