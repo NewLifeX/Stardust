@@ -6,6 +6,7 @@ using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Deployment;
 using Stardust.Web.Services;
+using XCode;
 using XCode.Membership;
 using Attachment = NewLife.Cube.Entity.Attachment;
 
@@ -75,6 +76,11 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
     {
         var rs = base.OnInsert(entity);
         entity.App?.Fix();
+
+        // 上传完成即发布
+        if ((entity as IEntity).Dirtys[nameof(entity.Url)])
+            Publish(entity.App).Wait();
+
         return rs;
     }
 
@@ -82,6 +88,11 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
     {
         var rs = base.OnUpdate(entity);
         entity.App?.Fix();
+
+        // 上传完成即发布
+        if ((entity as IEntity).Dirtys[nameof(entity.Url)])
+            Publish(entity.App).Wait();
+
         return rs;
     }
 
@@ -122,6 +133,26 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         app.Update();
 
         // 自动发布。应用版本后自动发布到启用节点，加快发布速度
+        //if (app.Enable && app.AutoPublish)
+        //{
+        //    var ts = new List<Task>();
+        //    var appNodes = AppDeployNode.FindAllByAppId(app.AppId);
+        //    foreach (var item in appNodes)
+        //    {
+        //        if (item.Enable) ts.Add(_deployService.Control(item, "install", UserHost));
+        //    }
+        //    Task.WaitAll(ts.ToArray(), 5_000);
+        //}
+        Publish(app).Wait();
+
+        return JsonRefresh($"成功！");
+    }
+
+    async Task Publish(AppDeploy app)
+    {
+        if (app == null) return;
+
+        // 自动发布。应用版本后自动发布到启用节点，加快发布速度
         if (app.Enable && app.AutoPublish)
         {
             var ts = new List<Task>();
@@ -130,9 +161,8 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
             {
                 if (item.Enable) ts.Add(_deployService.Control(item, "install", UserHost));
             }
-            Task.WaitAll(ts.ToArray(), 5_000);
+            //Task.WaitAll(ts.ToArray(), 5_000);
+            await Task.WhenAll(ts);
         }
-
-        return JsonRefresh($"成功！");
     }
 }
