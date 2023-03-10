@@ -1,0 +1,23 @@
+﻿@model ValueTuple<IEntity, DataField>
+@using NewLife;
+@using NewLife.Cube
+@using NewLife.Cube.ViewModels;
+@using XCode;
+@using XCode.Configuration;
+@{
+    var entity = Model.Item1;
+    var field = Model.Item2;
+
+    var value = entity[field.Name] as String;
+
+    //var atts = HtmlHelper.AnonymousObjectToHtmlAttributes(Model.HtmlAttributes);
+    //if (!atts.ContainsKey("class")) atts.Add("class", "form-control");
+
+    var accept = "application/zip,application/x-zip,application/x-zip-compressed";
+}
+@Html.TextBox(field.Name, entity[field.Name], new { @class = "form-control" })
+@Html.TextBox(field.Name+"_attachment", entity[field.Name], new { type = "file", accept })
+@if (!value.IsNullOrEmpty())
+{
+    <a href="@value">下载</a>
+}
