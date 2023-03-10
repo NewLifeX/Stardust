@@ -44,6 +44,10 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
             p.Desc = false;
             p.PageSize = 100;
         }
+        else if (!category.IsNullOrEmpty() && start.Year > 2000)
+        {
+            if (p.PageSize == 20) p.PageSize = 100;
+        }
 
         var list = NodeStat.Search(category, key, start, end, p["Q"], p);
 
@@ -76,13 +80,15 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
         else if (!category.IsNullOrEmpty() && key.IsNullOrEmpty()
             && start.Year > 2000 && start.Date == end.Date && list.Count > 0)
         {
-            //var list2 = list.OrderByDescending(e => e.Total).ToList();
+            // 饼图不要显示空的统计项
+            var list2 = list.Where(e => !e.Key.IsNullOrEmpty() && e.Key != "0").ToList();
+
             var chart = new ECharts { Height = 400 };
-            chart.AddPie(list, _.Total, e => new NameValue(e.Key, e.Total));
+            chart.AddPie(list2, _.Total, e => new NameValue(e.Key, e.Total));
 
             //list2 = list.OrderByDescending(e => e.ActivesT7).ToList();
             var chart2 = new ECharts { Height = 400 };
-            chart2.AddPie(list, _.ActivesT7, e => new NameValue(e.Key, e.ActivesT7));
+            chart2.AddPie(list2, _.ActivesT30, e => new NameValue(e.Key, e.ActivesT30));
 
             //list2 = list.OrderByDescending(e => e.NewsT7).ToList();
             var chart3 = new ECharts { Height = 400 };
