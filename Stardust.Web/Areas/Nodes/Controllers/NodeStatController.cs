@@ -19,7 +19,7 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
 
         {
             var df = ListFields.GetField("Category") as ListField;
-            df.Url = "/Nodes/NodeStat?category={Category}";
+            df.Url = "/Nodes/NodeStat?category={Category}&dtStart={StatDate}&dtEnd={StatDate}";
         }
         {
             var df = ListFields.GetField("Key") as ListField;

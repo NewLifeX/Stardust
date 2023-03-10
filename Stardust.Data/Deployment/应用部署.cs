@@ -120,6 +120,14 @@ namespace Stardust.Data.Deployment
         [BindColumn("Mode", "工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip", "")]
         public Stardust.Models.ServiceModes Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
 
+        private Boolean _AutoPublish;
+        /// <summary>自动发布。应用版本后自动发布到启用节点，加快发布速度</summary>
+        [DisplayName("自动发布")]
+        [Description("自动发布。应用版本后自动发布到启用节点，加快发布速度")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("AutoPublish", "自动发布。应用版本后自动发布到启用节点，加快发布速度", "")]
+        public Boolean AutoPublish { get => _AutoPublish; set { if (OnPropertyChanging("AutoPublish", value)) { _AutoPublish = value; OnPropertyChanged("AutoPublish"); } } }
+
         private Int32 _CreateUserId;
         /// <summary>创建者</summary>
         [Category("扩展")]
@@ -206,6 +214,7 @@ namespace Stardust.Data.Deployment
                     case "WorkingDirectory": return _WorkingDirectory;
                     case "MaxMemory": return _MaxMemory;
                     case "Mode": return _Mode;
+                    case "AutoPublish": return _AutoPublish;
                     case "CreateUserId": return _CreateUserId;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -232,6 +241,7 @@ namespace Stardust.Data.Deployment
                     case "WorkingDirectory": _WorkingDirectory = Convert.ToString(value); break;
                     case "MaxMemory": _MaxMemory = value.ToInt(); break;
                     case "Mode": _Mode = (Stardust.Models.ServiceModes)value.ToInt(); break;
+                    case "AutoPublish": _AutoPublish = value.ToBoolean(); break;
                     case "CreateUserId": _CreateUserId = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -284,6 +294,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</summary>
             public static readonly Field Mode = FindByName("Mode");
+
+            /// <summary>自动发布。应用版本后自动发布到启用节点，加快发布速度</summary>
+            public static readonly Field AutoPublish = FindByName("AutoPublish");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUserId = FindByName("CreateUserId");
@@ -347,6 +360,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</summary>
             public const String Mode = "Mode";
+
+            /// <summary>自动发布。应用版本后自动发布到启用节点，加快发布速度</summary>
+            public const String AutoPublish = "AutoPublish";
 
             /// <summary>创建者</summary>
             public const String CreateUserId = "CreateUserId";

@@ -5,6 +5,7 @@ using NewLife.Cube;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Deployment;
+using Stardust.Web.Services;
 using XCode.Membership;
 using Attachment = NewLife.Cube.Entity.Attachment;
 
@@ -36,6 +37,12 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
             df.Url = "/Deployment/AppDeployVersion/UseVersion?Id={Id}";
             df.DataAction = "action";
         }
+    }
+
+    private readonly DeployService _deployService;
+    public AppDeployVersionController(DeployService deployService)
+    {
+        _deployService = deployService;
     }
 
     protected override IEnumerable<AppDeployVersion> Search(Pager p)
@@ -113,6 +120,18 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         var app = ver.App;
         app.Version = ver.Version;
         app.Update();
+
+        // 自动发布。应用版本后自动发布到启用节点，加快发布速度
+        if (app.Enable && app.AutoPublish)
+        {
+            var ts = new List<Task>();
+            var appNodes = AppDeployNode.FindAllByAppId(app.AppId);
+            foreach (var item in appNodes)
+            {
+                if (item.Enable) ts.Add(_deployService.Control(item, "install", UserHost));
+            }
+            Task.WaitAll(ts.ToArray(), 5_000);
+        }
 
         return JsonRefresh($"成功！");
     }
