@@ -126,7 +126,7 @@ public class Startup
             FileProvider = new PhysicalFileProvider(sdk),
         });
 
-        app.UseStardust();
+        //app.UseStardust();
         app.UseResponseCompression();
         app.UseCube(env);
 
