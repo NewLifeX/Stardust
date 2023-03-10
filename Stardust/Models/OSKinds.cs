@@ -3,6 +3,9 @@
 /// <summary>系统种类。主流操作系统类型，不考虑子版本</summary>
 public enum OSKinds
 {
+    /// <summary>未知</summary>
+    Unknown = 0,
+
     /// <summary>WinXP, 5.1.2600</summary>
     WinXP = 51,
 
