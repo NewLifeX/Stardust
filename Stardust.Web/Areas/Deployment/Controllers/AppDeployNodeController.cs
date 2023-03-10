@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using NewLife.Cube;
+using NewLife.Cube.Extensions;
 using NewLife.Web;
 using Stardust.Data.Deployment;
 using Stardust.Web.Services;
@@ -16,6 +17,7 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
     {
         ListFields.RemoveCreateField();
         AddFormFields.RemoveCreateField();
+        ListFields.TraceUrl();
 
         LogOnChange = true;
     }

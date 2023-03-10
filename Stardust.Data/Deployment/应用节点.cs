@@ -176,6 +176,14 @@ namespace Stardust.Data.Deployment
         [BindColumn("LastUpload", "最后上传。最后一次上传客户端配置的时间", "")]
         public DateTime LastUpload { get => _LastUpload; set { if (OnPropertyChanging("LastUpload", value)) { _LastUpload = value; OnPropertyChanged("LastUpload"); } } }
 
+        private String _TraceId;
+        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        [DisplayName("追踪")]
+        [Description("追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("TraceId", "追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
+        public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
+
         private Int32 _CreateUserId;
         /// <summary>创建人</summary>
         [Category("扩展")]
@@ -269,6 +277,7 @@ namespace Stardust.Data.Deployment
                     case "Compile": return _Compile;
                     case "LastActive": return _LastActive;
                     case "LastUpload": return _LastUpload;
+                    case "TraceId": return _TraceId;
                     case "CreateUserId": return _CreateUserId;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -302,6 +311,7 @@ namespace Stardust.Data.Deployment
                     case "Compile": _Compile = value.ToDateTime(); break;
                     case "LastActive": _LastActive = value.ToDateTime(); break;
                     case "LastUpload": _LastUpload = value.ToDateTime(); break;
+                    case "TraceId": _TraceId = Convert.ToString(value); break;
                     case "CreateUserId": _CreateUserId = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -375,6 +385,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>最后上传。最后一次上传客户端配置的时间</summary>
             public static readonly Field LastUpload = FindByName("LastUpload");
+
+            /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            public static readonly Field TraceId = FindByName("TraceId");
 
             /// <summary>创建人</summary>
             public static readonly Field CreateUserId = FindByName("CreateUserId");
@@ -459,6 +472,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>最后上传。最后一次上传客户端配置的时间</summary>
             public const String LastUpload = "LastUpload";
+
+            /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            public const String TraceId = "TraceId";
 
             /// <summary>创建人</summary>
             public const String CreateUserId = "CreateUserId";

@@ -75,6 +75,14 @@ namespace Stardust.Data.Deployment
         [BindColumn("Hash", "文件哈希。MD5散列，避免下载的文件有缺失", "")]
         public String Hash { get => _Hash; set { if (OnPropertyChanging("Hash", value)) { _Hash = value; OnPropertyChanged("Hash"); } } }
 
+        private String _TraceId;
+        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        [DisplayName("追踪")]
+        [Description("追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("TraceId", "追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
+        public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
+
         private Int32 _CreateUserId;
         /// <summary>创建者</summary>
         [Category("扩展")]
@@ -156,6 +164,7 @@ namespace Stardust.Data.Deployment
                     case "Url": return _Url;
                     case "Size": return _Size;
                     case "Hash": return _Hash;
+                    case "TraceId": return _TraceId;
                     case "CreateUserId": return _CreateUserId;
                     case "CreateTime": return _CreateTime;
                     case "CreateIP": return _CreateIP;
@@ -177,6 +186,7 @@ namespace Stardust.Data.Deployment
                     case "Url": _Url = Convert.ToString(value); break;
                     case "Size": _Size = value.ToLong(); break;
                     case "Hash": _Hash = Convert.ToString(value); break;
+                    case "TraceId": _TraceId = Convert.ToString(value); break;
                     case "CreateUserId": _CreateUserId = value.ToInt(); break;
                     case "CreateTime": _CreateTime = value.ToDateTime(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -214,6 +224,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>文件哈希。MD5散列，避免下载的文件有缺失</summary>
             public static readonly Field Hash = FindByName("Hash");
+
+            /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            public static readonly Field TraceId = FindByName("TraceId");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUserId = FindByName("CreateUserId");
@@ -262,6 +275,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>文件哈希。MD5散列，避免下载的文件有缺失</summary>
             public const String Hash = "Hash";
+
+            /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+            public const String TraceId = "TraceId";
 
             /// <summary>创建者</summary>
             public const String CreateUserId = "CreateUserId";

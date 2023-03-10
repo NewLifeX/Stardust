@@ -27,6 +27,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         Meta.Modules.Add<UserModule>();
         Meta.Modules.Add<TimeModule>();
         Meta.Modules.Add<IPModule>();
+        Meta.Modules.Add<TraceModule>();
     }
 
     /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
