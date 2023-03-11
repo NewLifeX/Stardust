@@ -8,6 +8,9 @@ using NewLife.Log;
 using NewLife.Messaging;
 using NewLife.Remoting;
 using Stardust.Models;
+#if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
+using TaskEx = System.Threading.Tasks.Task;
+#endif
 
 namespace Stardust;
 
@@ -56,7 +59,7 @@ public class LocalStarClient
     /// <returns></returns>
     public AgentInfo GetInfo()
     {
-        var task = Task.Run(GetInfoAsync);
+        var task = TaskEx.Run(GetInfoAsync);
         return task.Wait(500) ? task.Result : null;
     }
 
@@ -333,7 +336,7 @@ public class LocalStarClient
     /// <param name="target">目标目录</param>
     public static Task ProbeAsync(String url = null, String version = null, String target = null)
     {
-        return Task.Run(() =>
+        return TaskEx.Run(() =>
         {
             var client = new LocalStarClient();
             client.ProbeAndInstall(url, version, target);

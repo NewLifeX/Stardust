@@ -15,6 +15,9 @@ using Stardust.Models;
 using Stardust.Monitors;
 using Stardust.Registry;
 using Stardust.Services;
+#if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
+using TaskEx = System.Threading.Tasks.Task;
+#endif
 
 namespace Stardust;
 
@@ -372,7 +375,7 @@ public class StarFactory : DisposeBase
     /// <param name="serviceName"></param>
     /// <param name="tag"></param>
     /// <returns></returns>
-    public IApiClient CreateForService(String serviceName, String tag = null) => Task.Run(() => CreateForServiceAsync(serviceName, tag)).Result;
+    public IApiClient CreateForService(String serviceName, String tag = null) => TaskEx.Run(() => CreateForServiceAsync(serviceName, tag)).Result;
 
     /// <summary>为指定服务创建客户端，从星尘注册中心获取服务地址。单例，应避免频繁创建客户端</summary>
     /// <param name="serviceName"></param>

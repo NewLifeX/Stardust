@@ -2,6 +2,9 @@
 using NewLife.Log;
 using NewLife.Remoting;
 using Stardust.Models;
+#if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
+using TaskEx = System.Threading.Tasks.Task;
+#endif
 
 namespace Stardust.Registry;
 
@@ -95,7 +98,7 @@ public static class RegistryExtensions
     /// <param name="serviceName">服务名</param>
     /// <param name="tag"></param>
     /// <returns></returns>
-    public static IApiClient CreateForService(this IRegistry registry, String serviceName, String tag = null) => Task.Run(() => CreateForServiceAsync(registry, serviceName, tag)).Result;
+    public static IApiClient CreateForService(this IRegistry registry, String serviceName, String tag = null) => TaskEx.Run(() => CreateForServiceAsync(registry, serviceName, tag)).Result;
 
     private static void Bind(ApiHttpClient client, ServiceModel[] ms)
     {
@@ -109,7 +112,7 @@ public static class RegistryExtensions
             {
                 // 同时考虑两个地址
                 var name = item.Client;
-                var addrs = (item.Address + "," + item.Address2).Split(',', StringSplitOptions.RemoveEmptyEntries);
+                var addrs = (item.Address + "," + item.Address2).Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                 var set = new HashSet<String>();
                 for (var i = 0; i < addrs.Length; i++)
                 {

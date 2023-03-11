@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net.NetworkInformation;
-using System.Net.WebSockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
@@ -14,7 +13,11 @@ using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust.Models;
 using Stardust.Services;
+using System.Threading.Tasks;
+#if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
+using System.Net.WebSockets;
 using WebSocket = System.Net.WebSockets.WebSocket;
+#endif
 
 namespace Stardust;
 
@@ -658,15 +661,15 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         _timer.TryDispose();
         _timer = null;
 
+#if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
         if (_websocket != null && _websocket.State == WebSocketState.Open) _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default).Wait(1_000);
         _source?.Cancel();
 
         //_websocket.TryDispose();
         _websocket = null;
+#endif
     }
 
-    private WebSocket _websocket;
-    private CancellationTokenSource _source;
     private async Task DoPing(Object state)
     {
         DefaultSpan.Current = null;
@@ -674,6 +677,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         {
             await Ping();
 
+#if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
             var svc = _currentService;
             if (svc == null || Token == null) return;
 
@@ -690,6 +694,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
                 _source = new CancellationTokenSource();
                 _ = Task.Run(() => DoPull(client, _source.Token));
             }
+#endif
         }
         catch (Exception ex)
         {
@@ -697,6 +702,9 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         }
     }
 
+#if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
+    private WebSocket _websocket;
+    private CancellationTokenSource _source;
     private async Task DoPull(WebSocket socket, CancellationToken cancellationToken)
     {
         DefaultSpan.Current = null;
@@ -719,6 +727,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
 
         if (socket.State == WebSocketState.Open) await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
     }
+#endif
 
     async Task ReceiveCommand(CommandModel model)
     {

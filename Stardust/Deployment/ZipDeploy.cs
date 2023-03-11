@@ -143,7 +143,7 @@ public class ZipDeploy
             Shadow = shadow.CombinePath(name);
         }
 
-        var hash = fi.MD5().ToHex()[..8].ToLower();
+        var hash = fi.MD5().ToHex().Substring(0, 8).ToLower();
         var rundir = fi.Directory;
         if (shadow.IsNullOrEmpty()) return false;
 
@@ -326,7 +326,7 @@ public class ZipDeploy
             var cfg = fis.FirstOrDefault(e => e.Name.EndsWithIgnoreCase(ext));
             if (cfg != null)
             {
-                var name = $"{cfg.Name[..^ext.Length]}.dll";
+                var name = $"{cfg.Name.Substring(0, cfg.Name.Length - ext.Length)}.dll";
                 runfile = fis.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
             }
         }

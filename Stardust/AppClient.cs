@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Net.WebSockets;
 using System.Reflection;
 using NewLife;
 using NewLife.Log;
@@ -11,6 +10,10 @@ using NewLife.Threading;
 using Stardust.Models;
 using Stardust.Registry;
 using Stardust.Services;
+#if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
+using System.Net.WebSockets;
+using TaskEx = System.Threading.Tasks.Task;
+#endif
 
 namespace Stardust;
 
@@ -127,7 +130,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             if (AppId != "StarServer")
             {
                 // 等待注册到平台
-                var task = Task.Run(Register);
+                var task = TaskEx.Run(Register);
                 task.Wait(1_000);
             }
         }
@@ -327,6 +330,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         _eventTimer.TryDispose();
         _eventTimer = null;
 
+#if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
         try
         {
             if (_websocket != null && _websocket.State == WebSocketState.Open)
@@ -337,10 +341,9 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
 
         //_websocket.TryDispose();
         _websocket = null;
+#endif
     }
 
-    private WebSocket _websocket;
-    private CancellationTokenSource _source;
     private async Task DoPing(Object state)
     {
         DefaultSpan.Current = null;
@@ -352,6 +355,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             await RefreshPublish();
             await RefreshConsume();
 
+#if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
             var svc = _currentService;
             if (svc != null && UseWebSocket)
             {
@@ -374,6 +378,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
                     _ = Task.Run(() => DoPull(client, _source.Token));
                 }
             }
+#endif
         }
         catch (Exception ex)
         {
@@ -381,6 +386,9 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         }
     }
 
+#if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
+    private WebSocket _websocket;
+    private CancellationTokenSource _source;
     private async Task DoPull(WebSocket socket, CancellationToken cancellationToken)
     {
         DefaultSpan.Current = null;
@@ -421,6 +429,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         if (socket.State == WebSocketState.Open)
             await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
     }
+#endif
     #endregion
 
     #region 命令调度

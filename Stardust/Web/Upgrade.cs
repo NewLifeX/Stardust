@@ -274,8 +274,8 @@ public class Upgrade
         var p = cmd.IndexOf(' ');
         if (p > 0)
         {
-            args = cmd[(p + 1)..];
-            cmd = cmd[..p];
+            args = cmd.Substring(p + 1);
+            cmd = cmd.Substring(0, p);
         }
 
         RunShell(cmd, args);
