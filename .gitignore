@@ -42,3 +42,7 @@ bld/
 /Stardust.Data/Nodes/Data
 /Stardust.Data/Configs/Data
 /Stardust.Extensions/Properties
+Stardust.Web.Vue/.vscode
+Stardust.Web.Vue/node_modules
+Stardust.Web.Vue/dist
+
