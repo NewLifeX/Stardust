@@ -220,7 +220,7 @@ public partial class Node : Entity<Node>
     /// <param name="key"></param>
     /// <param name="page"></param>
     /// <returns></returns>
-    public static IList<Node> Search(Int32 provinceId, Int32 cityId, String category, String product, OSKinds osKind, String version, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Node> Search(Int32 provinceId, Int32 cityId, String category, String product, OSKinds osKind, String version, String runtime, String framework, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
@@ -233,6 +233,8 @@ public partial class Node : Entity<Node>
         else if (osKind == 0)
             exp &= _.OSKind == 0 | _.OSKind.IsNull();
         if (!version.IsNullOrEmpty()) exp &= _.Version == version;
+        if (!runtime.IsNullOrEmpty()) exp &= _.Runtime.StartsWith(runtime);
+        if (!framework.IsNullOrEmpty()) exp &= _.Framework == framework;
         if (enable != null) exp &= _.Enable == enable.Value;
 
         //exp &= _.CreateTime.Between(start, end);

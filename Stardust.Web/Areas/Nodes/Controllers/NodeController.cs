@@ -81,6 +81,8 @@ public class NodeController : EntityController<Node>
         var product = p["product"];
         var osKind = p["osKind"];
         var version = p["version"];
+        var runtime = p["runtime"];
+        var framework = p["framework"];
         var enable = p["enable"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
@@ -92,7 +94,7 @@ public class NodeController : EntityController<Node>
             if (!Enum.TryParse(osKind, out kind)) kind = (OSKinds)(-1);
         }
 
-        return Node.Search(provinceId, cityId, category, product, kind, version, enable, start, end, p["Q"], p);
+        return Node.Search(provinceId, cityId, category, product, kind, version, runtime, framework, enable, start, end, p["Q"], p);
     }
 
     /// <summary>搜索</summary>

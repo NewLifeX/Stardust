@@ -2,6 +2,7 @@
 using NewLife.Cube;
 using NewLife.Cube.Charts;
 using NewLife.Cube.ViewModels;
+using NewLife.Data;
 using NewLife.Web;
 using Stardust.Data.Nodes;
 using XCode.Membership;
@@ -24,6 +25,60 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
         {
             var df = ListFields.GetField("Key") as ListField;
             df.Url = "/Nodes/NodeStat?category={Category}&key={Key}";
+        }
+        {
+            var df = ListFields.AddListField("nodes", null, "Total");
+            df.DisplayName = "明细";
+            df.AddService(new MyUrl());
+        }
+    }
+
+    //protected override FieldCollection OnGetFields(String kind, NodeStat entity)
+    //{
+    //    var fields = base.OnGetFields(kind, entity);
+
+    //    if (kind == "List")
+    //    {
+    //        var category = Request.Query["category"].FirstOrDefault();
+    //        if (!category.IsNullOrEmpty() && fields.GetField("Total") is ListField df)
+    //        {
+    //            df.DisplayName = "{Total}";
+    //            df.Url = category switch
+    //            {
+    //                "产品" => "/Nodes/Node?product={Key}",
+    //                "版本" => "/Nodes/Node?version={Key}",
+    //                "操作系统" => "/Nodes/Node?osKind={Key}",
+    //                "运行时" => "/Nodes/Node?runtime={Key}",
+    //                "最高框架" => "/Nodes/Node?framework={Key}",
+    //                "城市" => "/Nodes/Node?areaid={Key}",
+    //                _ => null,
+    //            };
+    //        }
+    //    }
+
+    //    return fields;
+    //}
+
+    class MyUrl : IUrlExtend
+    {
+        public String Resolve(DataField field, IExtend data)
+        {
+            if (field is ListField df && data is NodeStat st && !st.Key.IsNullOrEmpty())
+            {
+                //df.DisplayName = "{Total}";
+                return st.Category switch
+                {
+                    "产品" => $"/Nodes/Node?product={st.Key}",
+                    "版本" => $"/Nodes/Node?version={st.Key}",
+                    "操作系统" => $"/Nodes/Node?osKind={st.Key}",
+                    "运行时" => $"/Nodes/Node?runtime={st.Key}",
+                    "最高框架" => $"/Nodes/Node?framework={st.Key}",
+                    "城市" => $"/Nodes/Node?areaid={st.Key}",
+                    _ => df.Url,
+                };
+            }
+
+            return null;
         }
     }
 
