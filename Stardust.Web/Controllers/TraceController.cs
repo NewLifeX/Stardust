@@ -63,7 +63,7 @@ namespace Stardust.Web.Controllers
                 var cat = "App";
                 var name = item.AppName;
                 var ti = item.TraceItem;
-                if (appids.Contains(item.AppId) && ti != null && ti.Kind.EqualIgnoreCase("http", "db", "redis", "mq", "mqtt", "modbus"))
+                if (appids.Contains(item.AppId) && ti != null && ti.Kind.EqualIgnoreCase("http", "db", "redis", "mq", "mqtt", "modbus", "biz", "other"))
                 {
                     cat = ti.Kind;
                     name = ti.DisplayName ?? ti.Name;
