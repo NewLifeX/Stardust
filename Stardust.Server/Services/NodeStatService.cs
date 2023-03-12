@@ -210,15 +210,15 @@ public class NodeStatService : IHostedService
     {
         var category = "城市";
         var list = SearchGroup(selects & _.CityID, _.CityID);
-        var finder = new BatchFinder<Int32, Area>();
-        finder.Add(list.Select(e => e.CityID));
+        var finder = new BatchFinder<Int32, Area>(list.Select(e => e.CityID));
+        //finder.Add(list.Select(e => e.CityID));
         var sts = NodeStat.FindAllByDate(category, date);
         foreach (var node in list)
         {
-            if (node.CityID == 0) continue;
+            //if (node.CityID == 0) continue;
 
             //var key = Area.FindByID(node.CityID)?.Path;
-            var key = finder.FindByKey(node.CityID)?.Path;
+            var key = finder[node.CityID]?.Path;
             var st = sts.FirstOrDefault(e => e.Key == key);
             st ??= NodeStat.GetOrAdd(category, date, key);
 

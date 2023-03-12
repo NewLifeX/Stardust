@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Caching.Models;
+using NewLife.Caching.Queues;
 using NewLife.Log;
 using NewLife.Serialization;
 using NewLife.Threading;
