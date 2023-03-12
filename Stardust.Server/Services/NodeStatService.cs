@@ -11,14 +11,9 @@ namespace Stardust.Server.Services;
 
 public class NodeStatService : IHostedService
 {
-    private readonly Setting _setting;
     private readonly ITracer _tracer;
     private TimerX _timer;
-    public NodeStatService(Setting setting, ITracer tracer)
-    {
-        _setting = setting;
-        _tracer = tracer;
-    }
+    public NodeStatService(ITracer tracer) => _tracer = tracer;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {

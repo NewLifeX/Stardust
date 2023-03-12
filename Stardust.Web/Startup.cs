@@ -47,6 +47,7 @@ public class Startup
 
         // 后台服务。数据保留，定时删除过期数据
         services.AddHostedService<ApolloService>();
+        services.AddHostedService<NodeStatService>();
 
         // 启用接口响应压缩
         services.AddResponseCompression();

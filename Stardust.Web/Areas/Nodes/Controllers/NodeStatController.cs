@@ -49,6 +49,8 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
             if (p.PageSize == 20) p.PageSize = 100;
         }
 
+        p.RetrieveState = true;
+
         var list = NodeStat.Search(category, key, start, end, p["Q"], p);
 
         // 选定分类和统计项，显示曲线图
