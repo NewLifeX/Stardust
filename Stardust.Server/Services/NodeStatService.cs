@@ -88,7 +88,7 @@ public class NodeStatService : IHostedService
     private void OSKindStat(DateTime date, ConcatExpression selects)
     {
         var category = "操作系统";
-        var list = SearchGroup(selects & _.OSKind, _.OSKind);
+        var list = SearchGroup(date.AddYears(-1), selects & _.OSKind, _.OSKind);
         var sts = NodeStat.FindAllByDate(category, date);
         foreach (var node in list)
         {
@@ -111,7 +111,7 @@ public class NodeStatService : IHostedService
     private void ProductStat(DateTime date, ConcatExpression selects)
     {
         var category = "产品";
-        var list = SearchGroup(selects & _.ProductCode, _.ProductCode);
+        var list = SearchGroup(date.AddYears(-1), selects & _.ProductCode, _.ProductCode);
         var sts = NodeStat.FindAllByDate(category, date);
         foreach (var node in list)
         {
@@ -134,7 +134,7 @@ public class NodeStatService : IHostedService
     private void VersionStat(DateTime date, ConcatExpression selects)
     {
         var category = "版本";
-        var list = SearchGroup(selects & _.Version, _.Version);
+        var list = SearchGroup(date.AddYears(-1), selects & _.Version, _.Version);
         var sts = NodeStat.FindAllByDate(category, date);
         foreach (var node in list)
         {
@@ -158,7 +158,7 @@ public class NodeStatService : IHostedService
     {
         // 运行时的戏份版本比较多，需要取前三个字符
         var category = "运行时";
-        var list = SearchGroup(selects & "Substr(Runtime, 1, 3) Rt", "Rt");
+        var list = SearchGroup(date.AddYears(-1), selects & "Substr(Runtime, 1, 3) Rt", "Rt");
         var sts = NodeStat.FindAllByDate(category, date);
         foreach (var node in list)
         {
@@ -181,7 +181,7 @@ public class NodeStatService : IHostedService
     private void FrameworkStat(DateTime date, ConcatExpression selects)
     {
         var category = "最高框架";
-        var list = SearchGroup(selects & _.Framework, _.Framework);
+        var list = SearchGroup(date.AddYears(-1), selects & _.Framework, _.Framework);
         var sts = NodeStat.FindAllByDate(category, date);
         foreach (var node in list)
         {
@@ -204,7 +204,7 @@ public class NodeStatService : IHostedService
     private void CityStat(DateTime date, ConcatExpression selects)
     {
         var category = "城市";
-        var list = SearchGroup(selects & _.CityID, _.CityID);
+        var list = SearchGroup(date.AddYears(-1), selects & _.CityID, _.CityID);
         var finder = new BatchFinder<Int32, Area>(list.Select(e => e.CityID));
         //finder.Add(list.Select(e => e.CityID));
         var sts = NodeStat.FindAllByDate(category, date);

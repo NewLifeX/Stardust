@@ -293,14 +293,20 @@ public partial class Node : Entity<Node>
         return FindAll(exp, page);
     }
 
-    public static IList<Node> SearchGroup(String selects, FieldItem groupField)
+    public static IList<Node> SearchGroup(DateTime start, String selects, FieldItem groupField)
     {
-        return FindAll(groupField.GroupBy(), null, selects);
+        var exp = new WhereExpression();
+        exp &= _.LastLogin >= start;
+
+        return FindAll(exp.GroupBy(groupField), null, selects);
     }
 
-    public static IList<Node> SearchGroup(String selects, String groupField)
+    public static IList<Node> SearchGroup(DateTime start, String selects, String groupField)
     {
-        return FindAll($"Group By {groupField}", null, selects, 0, 0);
+        var exp = new WhereExpression();
+        exp &= _.LastLogin >= start;
+
+        return FindAll(exp + $" Group By {groupField}", null, selects, 0, 0);
     }
 
     internal static IDictionary<Int32, Int32> SearchGroupByCreateTime(DateTime start, DateTime end)
