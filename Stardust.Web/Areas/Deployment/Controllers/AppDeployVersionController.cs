@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Runtime.ConstrainedExecution;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
@@ -75,6 +76,9 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
     {
         if (!post && type == DataObjectMethodType.Insert) entity.Version = DateTime.Now.ToString("yyyyMMdd-HHmmss");
 
+        if (post)
+            entity.TraceId = DefaultSpan.Current?.TraceId;
+
         return base.Valid(entity, type, post);
     }
 
@@ -85,7 +89,9 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         app?.Fix();
 
         // 上传完成即发布
-        if (!entity.Url.IsNullOrEmpty() && app != null && app.Enable && app.AutoPublish)
+        //if (!entity.Url.IsNullOrEmpty() && app != null && app.Enable && app.AutoPublish)
+        // 插入的时候，还没有保存文件
+        if (app != null && app.Enable && app.AutoPublish)
         {
             app.Version = entity.Version;
             app.Update();
@@ -142,7 +148,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
     }
 
     [EntityAuthorize(PermissionFlags.Update)]
-    public ActionResult UseVersion(Int32 id)
+    public async Task<ActionResult> UseVersion(Int32 id)
     {
         var ver = AppDeployVersion.FindById(id);
         if (ver == null) throw new Exception("找不到版本！");
@@ -151,12 +157,15 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         if (ver.Version.IsNullOrEmpty()) throw new Exception("版本号未设置！");
         if (ver.Url.IsNullOrEmpty()) throw new Exception("文件不存在！");
 
+        ver.TraceId = DefaultSpan.Current?.TraceId;
+        ver.Update();
+
         var app = ver.App;
         app.Version = ver.Version;
         app.Update();
 
         // 自动发布。应用版本后自动发布到启用节点，加快发布速度
-        Publish(app).Wait();
+        await Publish(app);
 
         return JsonRefresh($"成功！");
     }
@@ -176,7 +185,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
                 foreach (var item in appNodes)
                 {
                     //span?.AppendTag(item);
-                    if (item.Enable) ts.Add(_deployService.Control(item, "install", UserHost));
+                    if (item.Enable) ts.Add(_deployService.Control(app, item, "install", UserHost));
                 }
                 //Task.WaitAll(ts.ToArray(), 5_000);
                 await Task.WhenAll(ts);

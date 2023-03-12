@@ -9,11 +9,11 @@ public class DeployService
 
     public DeployService(StarFactory starFactory) => _starFactory = starFactory;
 
-    public async Task Control(AppDeployNode deployNode, String action, String ip)
+    public async Task Control(AppDeploy app, AppDeployNode deployNode, String action, String ip)
     {
         if (deployNode == null) throw new ArgumentNullException(nameof(deployNode));
 
-        var app = deployNode.App;
+        app ??= deployNode.App;
         //if (app == null) throw new ArgumentNullException(nameof(deployNode));
         //if (!deployNode.Enable || app == null || !app.Enable) throw new Exception("部署节点未启用！");
         if (app == null || !app.Enable) throw new Exception($"节点[{deployNode}]上的应用部署集[{app}]未启用！");
@@ -57,6 +57,7 @@ public class DeployService
         }
         catch (Exception ex)
         {
+            span?.SetError(ex, null);
             msg = ex.Message;
             success = false;
 
