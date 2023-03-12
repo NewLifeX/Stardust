@@ -181,7 +181,8 @@ namespace Stardust.Data.Nodes
 
             if (Rules.TryGetValue("framework", out vs))
             {
-                var frameworks = node.Framework?.Split(",");
+                var str = !node.Frameworks.IsNullOrEmpty() ? node.Frameworks : node.Framework;
+                var frameworks = str?.Split(",");
                 if (frameworks == null || frameworks.Length == 0) return false;
 
                 // 本节点拥有的所有框架，任意框架匹配任意规则，即可认为匹配

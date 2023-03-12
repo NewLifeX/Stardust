@@ -35,7 +35,8 @@
       <Column Name="MACs" DataType="String" Length="200" Description="网卡" Category="硬件信息" />
       <Column Name="InstallPath" DataType="String" Length="200" Description="安装路径" Category="硬件信息" />
       <Column Name="Runtime" DataType="String" Description="运行时。.Net运行时版本" Category="硬件信息" />
-      <Column Name="Framework" DataType="String" Length="200" Description="框架。本地支持的所有版本框架" Category="硬件信息" />
+      <Column Name="Framework" DataType="String" Description="框架。本地支持的最高版本框架" Category="硬件信息" />
+      <Column Name="Frameworks" DataType="String" Length="200" Description="框架集合。本地支持的所有版本框架，逗号隔开" Category="硬件信息" />
       <Column Name="ProvinceID" DataType="Int32" Description="省份" />
       <Column Name="CityID" DataType="Int32" Description="城市" />
       <Column Name="Address" DataType="String" Length="200" Description="地址。该节点所处位置" />
@@ -66,6 +67,8 @@
       <Index Columns="IP" />
       <Index Columns="Category" />
       <Index Columns="ProductCode" />
+      <Index Columns="Version" />
+      <Index Columns="OSKind" />
       <Index Columns="UpdateTime" />
     </Indexes>
   </Table>

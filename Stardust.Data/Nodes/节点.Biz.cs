@@ -298,6 +298,11 @@ public partial class Node : Entity<Node>
         return FindAll(groupField.GroupBy(), null, selects);
     }
 
+    public static IList<Node> SearchGroup(String selects, String groupField)
+    {
+        return FindAll($"Group By {groupField}", null, selects, 0, 0);
+    }
+
     internal static IDictionary<Int32, Int32> SearchGroupByCreateTime(DateTime start, DateTime end)
     {
         var exp = new WhereExpression();
@@ -435,7 +440,11 @@ public partial class Node : Entity<Node>
         //if (!di.COMs.IsNullOrEmpty()) node.COMs = di.COMs;
         if (!di.InstallPath.IsNullOrEmpty()) node.InstallPath = di.InstallPath;
         if (!di.Runtime.IsNullOrEmpty()) node.Runtime = di.Runtime;
-        if (!di.Framework.IsNullOrEmpty()) node.Framework = di.Framework;
+        if (!di.Framework.IsNullOrEmpty())
+        {
+            node.Framework = di.Framework?.Split(',').LastOrDefault();
+            node.Frameworks = di.Framework;
+        }
 
         if (!node.OS.IsNullOrEmpty()) node.OSKind = OSKindHelper.Parse(node.OS, node.OSVersion);
     }

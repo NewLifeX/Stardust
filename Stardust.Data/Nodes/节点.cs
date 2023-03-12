@@ -19,6 +19,8 @@ namespace Stardust.Data.Nodes
     [BindIndex("IX_Node_IP", false, "IP")]
     [BindIndex("IX_Node_Category", false, "Category")]
     [BindIndex("IX_Node_ProductCode", false, "ProductCode")]
+    [BindIndex("IX_Node_Version", false, "Version")]
+    [BindIndex("IX_Node_OSKind", false, "OSKind")]
     [BindIndex("IX_Node_UpdateTime", false, "UpdateTime")]
     [BindTable("Node", Description = "节点", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class Node
@@ -313,13 +315,22 @@ namespace Stardust.Data.Nodes
         public String Runtime { get => _Runtime; set { if (OnPropertyChanging("Runtime", value)) { _Runtime = value; OnPropertyChanged("Runtime"); } } }
 
         private String _Framework;
-        /// <summary>框架。本地支持的所有版本框架</summary>
+        /// <summary>框架。本地支持的最高版本框架</summary>
         [Category("硬件信息")]
         [DisplayName("框架")]
-        [Description("框架。本地支持的所有版本框架")]
-        [DataObjectField(false, false, true, 200)]
-        [BindColumn("Framework", "框架。本地支持的所有版本框架", "")]
+        [Description("框架。本地支持的最高版本框架")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Framework", "框架。本地支持的最高版本框架", "")]
         public String Framework { get => _Framework; set { if (OnPropertyChanging("Framework", value)) { _Framework = value; OnPropertyChanged("Framework"); } } }
+
+        private String _Frameworks;
+        /// <summary>框架集合。本地支持的所有版本框架，逗号隔开</summary>
+        [Category("硬件信息")]
+        [DisplayName("框架集合")]
+        [Description("框架集合。本地支持的所有版本框架，逗号隔开")]
+        [DataObjectField(false, false, true, 200)]
+        [BindColumn("Frameworks", "框架集合。本地支持的所有版本框架，逗号隔开", "")]
+        public String Frameworks { get => _Frameworks; set { if (OnPropertyChanging("Frameworks", value)) { _Frameworks = value; OnPropertyChanged("Frameworks"); } } }
 
         private Int32 _ProvinceID;
         /// <summary>省份</summary>
@@ -564,6 +575,7 @@ namespace Stardust.Data.Nodes
                     case "InstallPath": return _InstallPath;
                     case "Runtime": return _Runtime;
                     case "Framework": return _Framework;
+                    case "Frameworks": return _Frameworks;
                     case "ProvinceID": return _ProvinceID;
                     case "CityID": return _CityID;
                     case "Address": return _Address;
@@ -628,6 +640,7 @@ namespace Stardust.Data.Nodes
                     case "InstallPath": _InstallPath = Convert.ToString(value); break;
                     case "Runtime": _Runtime = Convert.ToString(value); break;
                     case "Framework": _Framework = Convert.ToString(value); break;
+                    case "Frameworks": _Frameworks = Convert.ToString(value); break;
                     case "ProvinceID": _ProvinceID = value.ToInt(); break;
                     case "CityID": _CityID = value.ToInt(); break;
                     case "Address": _Address = Convert.ToString(value); break;
@@ -760,8 +773,11 @@ namespace Stardust.Data.Nodes
             /// <summary>运行时。.Net运行时版本</summary>
             public static readonly Field Runtime = FindByName("Runtime");
 
-            /// <summary>框架。本地支持的所有版本框架</summary>
+            /// <summary>框架。本地支持的最高版本框架</summary>
             public static readonly Field Framework = FindByName("Framework");
+
+            /// <summary>框架集合。本地支持的所有版本框架，逗号隔开</summary>
+            public static readonly Field Frameworks = FindByName("Frameworks");
 
             /// <summary>省份</summary>
             public static readonly Field ProvinceID = FindByName("ProvinceID");
@@ -937,8 +953,11 @@ namespace Stardust.Data.Nodes
             /// <summary>运行时。.Net运行时版本</summary>
             public const String Runtime = "Runtime";
 
-            /// <summary>框架。本地支持的所有版本框架</summary>
+            /// <summary>框架。本地支持的最高版本框架</summary>
             public const String Framework = "Framework";
+
+            /// <summary>框架集合。本地支持的所有版本框架，逗号隔开</summary>
+            public const String Frameworks = "Frameworks";
 
             /// <summary>省份</summary>
             public const String ProvinceID = "ProvinceID";

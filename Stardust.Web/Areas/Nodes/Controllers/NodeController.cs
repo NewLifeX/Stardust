@@ -184,6 +184,12 @@ public class NodeController : EntityController<Node>
             if (node != null)
             {
                 node.OSKind = OSKindHelper.Parse(node.OS, node.OSVersion);
+                if (node.Frameworks.IsNullOrEmpty() || node.Framework.Contains(','))
+                {
+                    node.Frameworks = node.Framework;
+                    node.Framework = node.Frameworks?.Split(',').LastOrDefault();
+                }
+
                 //node.Update();
                 list.Add(node);
             }
