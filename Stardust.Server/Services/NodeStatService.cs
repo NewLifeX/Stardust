@@ -39,19 +39,6 @@ public class NodeStatService : IHostedService
 
         using var span = _tracer?.NewSpan("NodeStat");
 
-        var date = DateTime.Today;
-        var t1 = date.AddDays(-0);
-        var t7 = date.AddDays(-7);
-        var t30 = date.AddDays(-30);
-
-        var selects = _.ID.Count();
-        selects &= _.LastLogin.SumLarge($"'{t1:yyyy-MM-dd}'", "activeT1");
-        selects &= _.LastLogin.SumLarge($"'{t7:yyyy-MM-dd}'", "activeT7");
-        selects &= _.LastLogin.SumLarge($"'{t30:yyyy-MM-dd}'", "activeT30");
-        selects &= _.CreateTime.SumLarge($"'{t1:yyyy-MM-dd}'", "newT1");
-        selects &= _.CreateTime.SumLarge($"'{t7:yyyy-MM-dd}'", "newT7");
-        selects &= _.CreateTime.SumLarge($"'{t30:yyyy-MM-dd}'", "newT30");
-
         // 减少Sql日志
         var dal = NodeStat.Meta.Session.Dal;
         var oldSql = dal.Session.ShowSQL;
@@ -60,7 +47,25 @@ public class NodeStatService : IHostedService
 #endif
         try
         {
-            OSKindStat(date, selects);
+            // 每天0点，补偿跑T-1
+            var now = DateTime.Now;
+            var start = now.Hour == 0 && now.Minute <= 10 ? now.Date.AddDays(-1) : now.Date;
+            for (var dt = start; dt <= DateTime.Today; dt = dt.AddDays(1))
+            {
+                var t1 = dt.AddDays(-0);
+                var t7 = dt.AddDays(-7);
+                var t30 = dt.AddDays(-30);
+
+                var selects = _.ID.Count();
+                selects &= _.LastLogin.SumLarge($"'{t1:yyyy-MM-dd}'", "activeT1");
+                selects &= _.LastLogin.SumLarge($"'{t7:yyyy-MM-dd}'", "activeT7");
+                selects &= _.LastLogin.SumLarge($"'{t30:yyyy-MM-dd}'", "activeT30");
+                selects &= _.CreateTime.SumLarge($"'{t1:yyyy-MM-dd}'", "newT1");
+                selects &= _.CreateTime.SumLarge($"'{t7:yyyy-MM-dd}'", "newT7");
+                selects &= _.CreateTime.SumLarge($"'{t30:yyyy-MM-dd}'", "newT30");
+
+                OSKindStat(dt, selects);
+            }
         }
         catch (Exception ex)
         {
