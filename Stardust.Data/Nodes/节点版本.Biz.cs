@@ -198,6 +198,22 @@ namespace Stardust.Data.Nodes
                 }
                 if (!flag) return false;
             }
+            else if (Rules.TryGetValue("framework>", out vs))
+            {
+                if (node.Framework.IsNullOrEmpty()) return false;
+                if (!System.Version.TryParse(node.Framework, out var ver1)) return false;
+                if (!System.Version.TryParse(vs[0], out var ver2)) return false;
+
+                if (ver1 < ver2) return false;
+            }
+            else if (Rules.TryGetValue("framework<", out vs))
+            {
+                if (node.Framework.IsNullOrEmpty()) return false;
+                if (!System.Version.TryParse(node.Framework, out var ver1)) return false;
+                if (!System.Version.TryParse(vs[0], out var ver2)) return false;
+
+                if (ver1 > ver2) return false;
+            }
 
             if (Rules.TryGetValue("os", out vs))
             {
