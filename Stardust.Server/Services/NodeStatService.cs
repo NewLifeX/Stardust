@@ -55,6 +55,7 @@ public class NodeStatService : IHostedService
                 RuntimeStat(dt, GetSelects(dt));
                 FrameworkStat(dt, GetSelects(dt));
                 CityStat(dt, GetSelects(dt));
+                ArchStat(dt, GetSelects(dt));
             }
         }
         catch (Exception ex)
@@ -214,6 +215,29 @@ public class NodeStatService : IHostedService
 
             //var key = Area.FindByID(node.CityID)?.Path;
             var key = finder[node.CityID]?.Path;
+            var st = sts.FirstOrDefault(e => e.Key == key);
+            st ??= NodeStat.GetOrAdd(category, date, key);
+
+            st.Total = node.ID;
+            st.Actives = node["activeT1"].ToInt();
+            st.ActivesT7 = node["activeT7"].ToInt();
+            st.ActivesT30 = node["activeT30"].ToInt();
+            st.News = node["newT1"].ToInt();
+            st.NewsT7 = node["newT7"].ToInt();
+            st.NewsT30 = node["newT30"].ToInt();
+
+            st.Update();
+        }
+    }
+
+    private void ArchStat(DateTime date, ConcatExpression selects)
+    {
+        var category = "芯片架构";
+        var list = SearchGroup(date.AddYears(-1), selects & _.Architecture, _.Architecture);
+        var sts = NodeStat.FindAllByDate(category, date);
+        foreach (var node in list)
+        {
+            var key = node.Architecture + "";
             var st = sts.FirstOrDefault(e => e.Key == key);
             st ??= NodeStat.GetOrAdd(category, date, key);
 
