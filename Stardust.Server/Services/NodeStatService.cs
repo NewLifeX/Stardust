@@ -96,7 +96,10 @@ public class NodeStatService : IHostedService
         {
             var key = node.OSKind + "";
             var st = sts.FirstOrDefault(e => e.Key == key);
-            st ??= NodeStat.GetOrAdd(category, date, key);
+            if (st == null)
+                st = NodeStat.GetOrAdd(category, date, key);
+            else
+                sts.Remove(st);
 
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
@@ -108,6 +111,9 @@ public class NodeStatService : IHostedService
 
             st.Update();
         }
+
+        // 删除多余统计项
+        sts.Delete();
     }
 
     private void ProductStat(DateTime date, ConcatExpression selects)
@@ -119,7 +125,10 @@ public class NodeStatService : IHostedService
         {
             var key = node.ProductCode + "";
             var st = sts.FirstOrDefault(e => e.Key == key);
-            st ??= NodeStat.GetOrAdd(category, date, key);
+            if (st == null)
+                st = NodeStat.GetOrAdd(category, date, key);
+            else
+                sts.Remove(st);
 
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
@@ -131,6 +140,9 @@ public class NodeStatService : IHostedService
 
             st.Update();
         }
+
+        // 删除多余统计项
+        sts.Delete();
     }
 
     private void VersionStat(DateTime date, ConcatExpression selects)
@@ -142,7 +154,10 @@ public class NodeStatService : IHostedService
         {
             var key = node.Version + "";
             var st = sts.FirstOrDefault(e => e.Key == key);
-            st ??= NodeStat.GetOrAdd(category, date, key);
+            if (st == null)
+                st = NodeStat.GetOrAdd(category, date, key);
+            else
+                sts.Remove(st);
 
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
@@ -154,6 +169,9 @@ public class NodeStatService : IHostedService
 
             st.Update();
         }
+
+        // 删除多余统计项
+        sts.Delete();
     }
 
     private void RuntimeStat(DateTime date, ConcatExpression selects)
@@ -182,7 +200,10 @@ public class NodeStatService : IHostedService
             var key = item.Key;
             var datas = item.ToList();
             var st = sts.FirstOrDefault(e => e.Key == key);
-            st ??= NodeStat.GetOrAdd(category, date, key);
+            if (st == null)
+                st = NodeStat.GetOrAdd(category, date, key);
+            else
+                sts.Remove(st);
 
             st.Total = datas.Sum(e => e.ID);
             st.Actives = datas.Sum(e => e["activeT1"].ToInt());
@@ -194,6 +215,9 @@ public class NodeStatService : IHostedService
 
             st.Update();
         }
+
+        // 删除多余统计项
+        sts.Delete();
     }
 
     private void FrameworkStat(DateTime date, ConcatExpression selects)
@@ -205,7 +229,10 @@ public class NodeStatService : IHostedService
         {
             var key = node.Framework + "";
             var st = sts.FirstOrDefault(e => e.Key == key);
-            st ??= NodeStat.GetOrAdd(category, date, key);
+            if (st == null)
+                st = NodeStat.GetOrAdd(category, date, key);
+            else
+                sts.Remove(st);
 
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
@@ -217,6 +244,9 @@ public class NodeStatService : IHostedService
 
             st.Update();
         }
+
+        // 删除多余统计项
+        sts.Delete();
     }
 
     private void CityStat(DateTime date, ConcatExpression selects)
@@ -233,7 +263,10 @@ public class NodeStatService : IHostedService
             //var key = Area.FindByID(node.CityID)?.Path;
             var key = finder[node.CityID]?.Path;
             var st = sts.FirstOrDefault(e => e.Key == key);
-            st ??= NodeStat.GetOrAdd(category, date, key);
+            if (st == null)
+                st = NodeStat.GetOrAdd(category, date, key);
+            else
+                sts.Remove(st);
 
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
@@ -245,6 +278,9 @@ public class NodeStatService : IHostedService
 
             st.Update();
         }
+
+        // 删除多余统计项
+        sts.Delete();
     }
 
     private void ArchStat(DateTime date, ConcatExpression selects)
@@ -256,7 +292,10 @@ public class NodeStatService : IHostedService
         {
             var key = node.Architecture + "";
             var st = sts.FirstOrDefault(e => e.Key == key);
-            st ??= NodeStat.GetOrAdd(category, date, key);
+            if (st == null)
+                st = NodeStat.GetOrAdd(category, date, key);
+            else
+                sts.Remove(st);
 
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
@@ -268,5 +307,8 @@ public class NodeStatService : IHostedService
 
             st.Update();
         }
+
+        // 删除多余统计项
+        sts.Delete();
     }
 }
