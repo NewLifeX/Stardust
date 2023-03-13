@@ -74,6 +74,7 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
                     "运行时" => $"/Nodes/Node?runtime={st.Key}",
                     "最高框架" => $"/Nodes/Node?framework={st.Key}",
                     "城市" => $"/Nodes/Node?areaid={st.Key}",
+                    "芯片架构" => $"/Nodes/Node?arch={st.Key}",
                     _ => df.Url,
                 };
             }
