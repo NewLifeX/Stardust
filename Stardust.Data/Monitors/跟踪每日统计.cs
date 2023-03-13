@@ -70,13 +70,13 @@ namespace Stardust.Data.Monitors
         [BindColumn("Type", "种类。Api/Http/Db/Mq/Redis/Other", "")]
         public String Type { get => _Type; set { if (OnPropertyChanging("Type", value)) { _Type = value; OnPropertyChanged("Type"); } } }
 
-        private Int32 _Total;
+        private Int64 _Total;
         /// <summary>总次数</summary>
         [DisplayName("总次数")]
         [Description("总次数")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Total", "总次数", "")]
-        public Int32 Total { get => _Total; set { if (OnPropertyChanging("Total", value)) { _Total = value; OnPropertyChanged("Total"); } } }
+        public Int64 Total { get => _Total; set { if (OnPropertyChanging("Total", value)) { _Total = value; OnPropertyChanged("Total"); } } }
 
         private Double _RingRate;
         /// <summary>环比。今天与昨天相比</summary>
@@ -86,13 +86,13 @@ namespace Stardust.Data.Monitors
         [BindColumn("RingRate", "环比。今天与昨天相比", "")]
         public Double RingRate { get => _RingRate; set { if (OnPropertyChanging("RingRate", value)) { _RingRate = value; OnPropertyChanged("RingRate"); } } }
 
-        private Int32 _Errors;
+        private Int64 _Errors;
         /// <summary>错误数</summary>
         [DisplayName("错误数")]
         [Description("错误数")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Errors", "错误数", "")]
-        public Int32 Errors { get => _Errors; set { if (OnPropertyChanging("Errors", value)) { _Errors = value; OnPropertyChanged("Errors"); } } }
+        public Int64 Errors { get => _Errors; set { if (OnPropertyChanging("Errors", value)) { _Errors = value; OnPropertyChanged("Errors"); } } }
 
         private Double _ErrorRate;
         /// <summary>错误率。错误数除以总次数</summary>
@@ -201,9 +201,9 @@ namespace Stardust.Data.Monitors
                     case "ItemId": _ItemId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Type": _Type = Convert.ToString(value); break;
-                    case "Total": _Total = value.ToInt(); break;
+                    case "Total": _Total = value.ToLong(); break;
                     case "RingRate": _RingRate = value.ToDouble(); break;
-                    case "Errors": _Errors = value.ToInt(); break;
+                    case "Errors": _Errors = value.ToLong(); break;
                     case "ErrorRate": _ErrorRate = value.ToDouble(); break;
                     case "TotalCost": _TotalCost = value.ToLong(); break;
                     case "Cost": _Cost = value.ToInt(); break;

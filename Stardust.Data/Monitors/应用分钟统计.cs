@@ -44,21 +44,21 @@ namespace Stardust.Data.Monitors
         [BindColumn("AppId", "应用", "")]
         public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
-        private Int32 _Total;
+        private Int64 _Total;
         /// <summary>总次数</summary>
         [DisplayName("总次数")]
         [Description("总次数")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Total", "总次数", "")]
-        public Int32 Total { get => _Total; set { if (OnPropertyChanging("Total", value)) { _Total = value; OnPropertyChanged("Total"); } } }
+        public Int64 Total { get => _Total; set { if (OnPropertyChanging("Total", value)) { _Total = value; OnPropertyChanged("Total"); } } }
 
-        private Int32 _Errors;
+        private Int64 _Errors;
         /// <summary>错误数</summary>
         [DisplayName("错误数")]
         [Description("错误数")]
         [DataObjectField(false, false, false, 0)]
         [BindColumn("Errors", "错误数", "")]
-        public Int32 Errors { get => _Errors; set { if (OnPropertyChanging("Errors", value)) { _Errors = value; OnPropertyChanged("Errors"); } } }
+        public Int64 Errors { get => _Errors; set { if (OnPropertyChanging("Errors", value)) { _Errors = value; OnPropertyChanged("Errors"); } } }
 
         private Double _ErrorRate;
         /// <summary>错误率。错误数除以总次数</summary>
@@ -151,8 +151,8 @@ namespace Stardust.Data.Monitors
                     case "ID": _ID = value.ToInt(); break;
                     case "StatTime": _StatTime = value.ToDateTime(); break;
                     case "AppId": _AppId = value.ToInt(); break;
-                    case "Total": _Total = value.ToInt(); break;
-                    case "Errors": _Errors = value.ToInt(); break;
+                    case "Total": _Total = value.ToLong(); break;
+                    case "Errors": _Errors = value.ToLong(); break;
                     case "ErrorRate": _ErrorRate = value.ToDouble(); break;
                     case "TotalCost": _TotalCost = value.ToLong(); break;
                     case "Cost": _Cost = value.ToInt(); break;

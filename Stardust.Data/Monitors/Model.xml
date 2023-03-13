@@ -54,7 +54,7 @@
       <Column Name="Timeout" DataType="Int32" Description="超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时" />
       <Column Name="Days" DataType="Int32" Description="天数。共统计了多少天" />
       <Column Name="Total" DataType="Int64" Description="总次数。累计埋点采样次数" />
-      <Column Name="Errors" DataType="Int32" Description="错误数" />
+      <Column Name="Errors" DataType="Int64" Description="错误数" />
       <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数，单位毫秒" />
       <Column Name="AlarmThreshold" DataType="Int32" Description="告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值必须同时满足" Category="告警" />
       <Column Name="AlarmErrorRate" DataType="Double" Description="告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足" Category="告警" />
@@ -102,8 +102,8 @@
       <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。原始接口名或埋点名" />
       <Column Name="StartTime" DataType="Int64" Description="开始时间。Unix毫秒" />
       <Column Name="EndTime" DataType="Int64" Description="结束时间。Unix毫秒" />
-      <Column Name="Total" DataType="Int32" Description="总次数" />
-      <Column Name="Errors" DataType="Int32" Description="错误数" />
+      <Column Name="Total" DataType="Int64" Description="总次数" />
+      <Column Name="Errors" DataType="Int64" Description="错误数" />
       <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
       <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数" />
       <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
@@ -179,9 +179,9 @@
       <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
       <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
       <Column Name="Type" DataType="String" Description="种类。Api/Http/Db/Mq/Redis/Other" />
-      <Column Name="Total" DataType="Int32" Description="总次数" />
+      <Column Name="Total" DataType="Int64" Description="总次数" />
       <Column Name="RingRate" DataType="Double" Description="环比。今天与昨天相比" />
-      <Column Name="Errors" DataType="Int32" Description="错误数" />
+      <Column Name="Errors" DataType="Int64" Description="错误数" />
       <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
       <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
       <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
@@ -205,8 +205,8 @@
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
       <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
-      <Column Name="Total" DataType="Int32" Description="总次数" />
-      <Column Name="Errors" DataType="Int32" Description="错误数" />
+      <Column Name="Total" DataType="Int64" Description="总次数" />
+      <Column Name="Errors" DataType="Int64" Description="错误数" />
       <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
       <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
       <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
@@ -228,8 +228,8 @@
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
       <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
-      <Column Name="Total" DataType="Int32" Description="总次数" />
-      <Column Name="Errors" DataType="Int32" Description="错误数" />
+      <Column Name="Total" DataType="Int64" Description="总次数" />
+      <Column Name="Errors" DataType="Int64" Description="错误数" />
       <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
       <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
       <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
@@ -276,8 +276,8 @@
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="StatTime" DataType="DateTime" Description="统计分钟" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="Total" DataType="Int32" Description="总次数" />
-      <Column Name="Errors" DataType="Int32" Description="错误数" />
+      <Column Name="Total" DataType="Int64" Description="总次数" />
+      <Column Name="Errors" DataType="Int64" Description="错误数" />
       <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
       <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
       <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
