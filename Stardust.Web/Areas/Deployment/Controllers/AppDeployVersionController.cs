@@ -90,14 +90,19 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
 
         // 上传完成即发布
         //if (!entity.Url.IsNullOrEmpty() && app != null && app.Enable && app.AutoPublish)
-        // 插入的时候，还没有保存文件
-        if (app != null && app.Enable && app.AutoPublish)
-        {
-            app.Version = entity.Version;
-            app.Update();
+        //// 插入的时候，还没有保存文件
+        //if (app != null && app.Enable && app.AutoPublish)
+        //{
+        //    app.Version = entity.Version;
+        //    app.Update();
 
-            Publish(entity.App).Wait();
-        }
+        //    // 文件还没保存，所以需要延迟发布
+        //    Task.Run(async () =>
+        //    {
+        //        await Task.Delay(1000);
+        //        await Publish(entity.App);
+        //    });
+        //}
 
         return rs;
     }
@@ -106,14 +111,14 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
     {
         entity.TraceId = DefaultSpan.Current?.TraceId;
 
-        var changed = (entity as IEntity).Dirtys[nameof(entity.Url)];
+        //var changed = (entity as IEntity).Dirtys[nameof(entity.Url)];
 
         var app = entity.App;
         var rs = base.OnUpdate(entity);
         app?.Fix();
 
-        // 上传完成即发布
-        if (changed && app != null && app.Enable && app.AutoPublish)
+        // 上传完成即发布。即使新增，也是插入后保存文件，然后再来OnUpdate
+        if (entity.Enable && !entity.Url.IsNullOrEmpty() && app != null && app.Enable && app.AutoPublish)
         {
             app.Version = entity.Version;
             app.Update();
