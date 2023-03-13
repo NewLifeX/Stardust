@@ -3,6 +3,7 @@ using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Data.Nodes;
 using XCode;
+using XCode.DataAccessLayer;
 using XCode.Membership;
 using XCode.Model;
 using static Stardust.Data.Nodes.Node;
@@ -159,7 +160,16 @@ public class NodeStatService : IHostedService
     {
         // 运行时的戏份版本比较多，需要取前三个字符
         var category = "运行时";
-        var list = SearchGroup(date.AddYears(-1), selects & "Substr(Runtime, 1, 3) Rt", "Rt");
+        var func = "substr";
+        func = NodeStat.Meta.Session.Dal.DbType switch
+        {
+            DatabaseType.SqlServer => "substring",
+            DatabaseType.Oracle => "substr",
+            DatabaseType.MySql => "substr",
+            DatabaseType.SQLite => "substr",
+            _ => "substr",
+        };
+        var list = SearchGroup(date.AddYears(-1), selects & $"{func}(Runtime, 1, 3) Rt", "Rt");
         var sts = NodeStat.FindAllByDate(category, date);
         foreach (var node in list)
         {
