@@ -5,6 +5,7 @@ using System.Text;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using Stardust.Models;
 using XCode;
 using XCode.Membership;
 
@@ -202,6 +203,29 @@ namespace Stardust.Data.Nodes
             {
                 var os = node.OS;
                 if (os.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(os))) return false;
+            }
+
+            if (Rules.TryGetValue("oskind", out vs))
+            {
+                var os = node.OSKind;
+                //if (os <= 0 || !vs.Any(e => e.ToInt() == (Int32)os || Enum.TryParse<OSKinds>(e, out var v) && v == os)) return false;
+                if (os <= 0) return false;
+
+                var flag = false;
+                foreach (var item in vs)
+                {
+                    if (item.ToInt() == (Int32)os)
+                    {
+                        flag = true;
+                        break;
+                    }
+                    if (Enum.TryParse<OSKinds>(item, true, out var v) && v == os)
+                    {
+                        flag = true;
+                        break;
+                    }
+                }
+                if (!flag) return false;
             }
 
             if (Rules.TryGetValue("arch", out vs))
