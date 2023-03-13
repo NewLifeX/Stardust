@@ -102,8 +102,8 @@
       <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。原始接口名或埋点名" />
       <Column Name="StartTime" DataType="Int64" Description="开始时间。Unix毫秒" />
       <Column Name="EndTime" DataType="Int64" Description="结束时间。Unix毫秒" />
-      <Column Name="Total" DataType="Int64" Description="总次数" />
-      <Column Name="Errors" DataType="Int64" Description="错误数" />
+      <Column Name="Total" DataType="Int32" Description="总次数" />
+      <Column Name="Errors" DataType="Int32" Description="错误数" />
       <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
       <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数" />
       <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
