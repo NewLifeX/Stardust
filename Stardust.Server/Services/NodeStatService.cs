@@ -160,30 +160,37 @@ public class NodeStatService : IHostedService
     {
         // 运行时的戏份版本比较多，需要取前三个字符
         var category = "运行时";
-        var func = "substr";
-        func = NodeStat.Meta.Session.Dal.DbType switch
-        {
-            DatabaseType.SqlServer => "substring",
-            DatabaseType.Oracle => "substr",
-            DatabaseType.MySql => "substr",
-            DatabaseType.SQLite => "substr",
-            _ => "substr",
-        };
-        var list = SearchGroup(date.AddYears(-1), selects & $"{func}(Runtime, 1, 3) Rt", "Rt");
+        //var func = NodeStat.Meta.Session.Dal.DbType switch
+        //{
+        //    DatabaseType.SqlServer => "substring",
+        //    DatabaseType.Oracle => "substr",
+        //    DatabaseType.MySql => "substr",
+        //    DatabaseType.SQLite => "substr",
+        //    _ => "substr",
+        //};
+        //var group = NodeStat.Meta.Session.Dal.DbType switch
+        //{
+        //    DatabaseType.SqlServer => "(Runtime, 1, 3)",
+        //    _ => "Rt",
+        //};
+        //var list = SearchGroup(date.AddYears(-1), selects & $"{func}(Runtime, 1, 3) Rt", group);
+        var list = SearchGroup(date.AddYears(-1), selects & _.Runtime, _.Runtime);
         var sts = NodeStat.FindAllByDate(category, date);
-        foreach (var node in list)
+        // 先安装运行时版本全部取出来，再把截取版本然后二次聚合。避免了复杂的SQL兼容问题
+        foreach (var item in list.GroupBy(e => (e.Runtime.IsNullOrEmpty() || e.Runtime.Length < 3) ? e.Runtime + "" : e.Runtime[..3]))
         {
-            var key = node["Rt"] + "";
+            var key = item.Key;
+            var datas = item.ToList();
             var st = sts.FirstOrDefault(e => e.Key == key);
             st ??= NodeStat.GetOrAdd(category, date, key);
 
-            st.Total = node.ID;
-            st.Actives = node["activeT1"].ToInt();
-            st.ActivesT7 = node["activeT7"].ToInt();
-            st.ActivesT30 = node["activeT30"].ToInt();
-            st.News = node["newT1"].ToInt();
-            st.NewsT7 = node["newT7"].ToInt();
-            st.NewsT30 = node["newT30"].ToInt();
+            st.Total = datas.Sum(e => e.ID);
+            st.Actives = datas.Sum(e => e["activeT1"].ToInt());
+            st.ActivesT7 = datas.Sum(e => e["activeT7"].ToInt());
+            st.ActivesT30 = datas.Sum(e => e["activeT30"].ToInt());
+            st.News = datas.Sum(e => e["newT1"].ToInt());
+            st.NewsT7 = datas.Sum(e => e["newT7"].ToInt());
+            st.NewsT30 = datas.Sum(e => e["newT30"].ToInt());
 
             st.Update();
         }
