@@ -18,11 +18,13 @@ public class NodeService
     private static readonly ICache _cache = new MemoryCache();
     private readonly TokenService _tokenService;
     private readonly ICache _queue;
+    private readonly ITracer _tracer;
 
-    public NodeService(TokenService tokenService, ICache queue)
+    public NodeService(TokenService tokenService, ICache queue, ITracer tracer)
     {
         _tokenService = tokenService;
         _queue = queue;
+        _tracer = tracer;
     }
 
     #region 注册&登录
@@ -481,7 +483,7 @@ public class NodeService
     /// <summary>设备端响应服务调用</summary>
     /// <param name="model">服务</param>
     /// <returns></returns>
-    public Int32 CommandReply(CommandReplyModel model, String token)
+    public Int32 CommandReply(Node node, CommandReplyModel model, String token)
     {
         var cmd = NodeCommand.FindById(model.Id);
         if (cmd == null) return 0;
@@ -489,6 +491,13 @@ public class NodeService
         cmd.Status = model.Status;
         cmd.Result = model.Data;
         cmd.Update();
+
+        // 通知命令发布者，指令已完成
+        var topic = $"nodereply:{cmd.Id}";
+        var q = _queue.GetQueue<CommandReplyModel>(topic);
+        q.Add(model);
+
+        _queue.SetExpire(topic, TimeSpan.FromSeconds(60));
 
         return 1;
     }
@@ -529,7 +538,7 @@ public class NodeService
     /// <param name="model"></param>
     /// <param name="token">应用令牌</param>
     /// <returns></returns>
-    public Int32 SendCommand(CommandInModel model, String token, Setting setting)
+    public async Task<Int32> SendCommand(CommandInModel model, String token, Setting setting)
     {
         if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定节点");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
@@ -562,6 +571,23 @@ public class NodeService
 
         var queue = _queue.GetQueue<String>($"nodecmd:{node.Code}");
         queue.Add(commandModel.ToJson());
+
+        // 挂起等待。借助redis队列，等待响应
+        if (model.Expire > 0)
+        {
+            var q = _queue.GetQueue<CommandReplyModel>($"nodereply:{cmd.Id}");
+            var reply = await q.TakeOneAsync(model.Expire);
+            if (reply != null)
+            {
+                // 埋点
+                using var span = _tracer?.NewSpan($"redismq:ServiceLog", reply);
+
+                if (reply.Status == CommandStatus.错误)
+                    throw new Exception($"命令错误！{reply.Data}");
+                else if (reply.Status == CommandStatus.取消)
+                    throw new Exception($"命令已取消！{reply.Data}");
+            }
+        }
 
         return cmd.Id;
     }

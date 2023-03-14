@@ -222,7 +222,7 @@ public class NodeController : BaseController
     /// <param name="model">服务</param>
     /// <returns></returns>
     [HttpPost(nameof(CommandReply))]
-    public Int32 CommandReply(CommandReplyModel model) => _node == null ? throw new ApiException(401, "节点未登录") : _nodeService.CommandReply(model, Token);
+    public Int32 CommandReply(CommandReplyModel model) => _node == null ? throw new ApiException(401, "节点未登录") : _nodeService.CommandReply(_node, model, Token);
     #endregion
 
     #region 下行通知
@@ -369,12 +369,12 @@ public class NodeController : BaseController
     /// <returns></returns>
     [AllowAnonymous]
     [HttpPost(nameof(SendCommand))]
-    public Int32 SendCommand(CommandInModel model, String token)
+    public async Task<Int32> SendCommand(CommandInModel model, String token)
     {
         if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定节点");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
 
-        return _nodeService.SendCommand(model, token, _setting);
+        return await _nodeService.SendCommand(model, token, _setting);
     }
     #endregion
 

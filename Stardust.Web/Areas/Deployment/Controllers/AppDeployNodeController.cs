@@ -80,16 +80,18 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
     [EntityAuthorize(PermissionFlags.Update)]
     public async Task<ActionResult> BatchOperate(String act)
     {
+        var ts = new List<Task>();
         var ids = SelectKeys.Select(e => e.ToInt()).Where(e => e > 0).Distinct().ToList();
         foreach (var id in ids)
         {
             var dn = AppDeployNode.FindById(id);
             if (dn != null && dn.Enable && dn.Node != null && dn.App != null)
             {
-                await _deployService.Control(dn.App, dn, act, UserHost);
+                ts.Add(_deployService.Control(dn.App, dn, act, UserHost));
             }
-
         }
+
+        await Task.WhenAll(ts);
 
         return JsonRefresh($"批量执行[{act}]操作", 1);
     }
