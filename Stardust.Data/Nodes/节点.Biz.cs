@@ -72,6 +72,9 @@ public partial class Node : Entity<Node>
         len = _.Framework.Length;
         if (Framework != null && len > 0 && Framework.Length > len) Framework = Framework[..len];
 
+        len = _.Frameworks.Length;
+        if (Frameworks != null && len > 0 && Frameworks.Length > len) Frameworks = Frameworks[..len];
+
         // 建议先调用基类方法，基类方法会做一些统一处理
         base.Valid(isNew);
 
