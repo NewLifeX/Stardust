@@ -109,7 +109,7 @@ public class NodeController : EntityController<Node>
         // 默认排序。一个设备可能多次注册节点，导致重复，这里按最后登录时间降序
         if (page.Sort.IsNullOrEmpty())
         {
-            page.Sort = _.LastLogin;
+            page.Sort = _.UpdateTime;
             page.Desc = true;
         }
 

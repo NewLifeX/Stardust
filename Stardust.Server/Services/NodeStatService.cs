@@ -77,9 +77,9 @@ public class NodeStatService : IHostedService
         var t30 = dt.AddDays(-30);
 
         var selects = _.ID.Count();
-        selects &= _.LastLogin.SumLarge($"'{t1:yyyy-MM-dd}'", "activeT1");
-        selects &= _.LastLogin.SumLarge($"'{t7:yyyy-MM-dd}'", "activeT7");
-        selects &= _.LastLogin.SumLarge($"'{t30:yyyy-MM-dd}'", "activeT30");
+        selects &= _.UpdateTime.SumLarge($"'{t1:yyyy-MM-dd}'", "activeT1");
+        selects &= _.UpdateTime.SumLarge($"'{t7:yyyy-MM-dd}'", "activeT7");
+        selects &= _.UpdateTime.SumLarge($"'{t30:yyyy-MM-dd}'", "activeT30");
         selects &= _.CreateTime.SumLarge($"'{t1:yyyy-MM-dd}'", "newT1");
         selects &= _.CreateTime.SumLarge($"'{t7:yyyy-MM-dd}'", "newT7");
         selects &= _.CreateTime.SumLarge($"'{t30:yyyy-MM-dd}'", "newT30");

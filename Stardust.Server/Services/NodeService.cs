@@ -320,6 +320,9 @@ public class NodeService
             node.UpdateIP = ip;
             node.FixArea();
             node.FixNameByRule();
+
+            // 每10分钟更新一次节点信息，确保活跃
+            if (node.UpdateTime.AddMinutes(10) < DateTime.Now) node.UpdateTime = DateTime.Now;
             node.SaveAsync();
 
             rs.Period = node.Period;

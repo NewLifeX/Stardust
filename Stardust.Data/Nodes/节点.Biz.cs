@@ -242,7 +242,8 @@ public partial class Node : Entity<Node>
         if (enable != null) exp &= _.Enable == enable.Value;
 
         //exp &= _.CreateTime.Between(start, end);
-        exp &= _.LastLogin.Between(start, end);
+        //exp &= _.LastLogin.Between(start, end);
+        exp &= _.UpdateTime.Between(start, end);
 
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 
@@ -302,7 +303,7 @@ public partial class Node : Entity<Node>
     public static IList<Node> SearchGroup(DateTime start, String selects, FieldItem groupField)
     {
         var exp = new WhereExpression();
-        exp &= _.LastLogin >= start;
+        exp &= _.UpdateTime >= start;
 
         return FindAll(exp.GroupBy(groupField), null, selects);
     }
@@ -310,7 +311,7 @@ public partial class Node : Entity<Node>
     public static IList<Node> SearchGroup(DateTime start, String selects, String groupField)
     {
         var exp = new WhereExpression();
-        exp &= _.LastLogin >= start;
+        exp &= _.UpdateTime >= start;
 
         return FindAll(exp + $" Group By {groupField}", null, selects, 0, 0);
     }
