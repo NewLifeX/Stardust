@@ -20,10 +20,10 @@ jobs:
         dotnet build -c Release
     - name: Pack
       run: |
-        dotnet pack --no-build -o out Stardust/Stardust.csproj
-        dotnet pack --no-build -o out Stardust.Extensions/Stardust.Extensions.csproj
+        dotnet pack --no-build -o out Stardust\Stardust.csproj
+        dotnet pack --no-build -o out Stardust.Extensions\Stardust.Extensions.csproj
 
     - name: Publish
       run: |
-        dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://nuget.pkg.github.com/NewLifeX/index.json --api-key ${{ github.token }}
-        dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.nugetKey }}
+        dotnet nuget push .\out\*.nupkg --skip-duplicate --source https://nuget.pkg.github.com/NewLifeX/index.json --api-key ${{ github.token }}
+        dotnet nuget push .\out\*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.nugetKey }}
