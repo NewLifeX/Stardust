@@ -94,7 +94,11 @@ internal class ServiceController : DisposeBase
             // 修正路径
             var workDir = service.WorkingDirectory;
             var file = service.FileName?.Trim();
-            if (file.IsNullOrEmpty()) return false;
+            if (file.IsNullOrEmpty())
+            {
+                WriteLog("应用[{0}]文件名为空", Name);
+                return false;
+            }
 
             if (file.Contains('/') || file.Contains('\\'))
             {
@@ -322,6 +326,8 @@ internal class ServiceController : DisposeBase
     /// <returns>本次是否成功启动（或接管），原来已启动返回false</returns>
     public Boolean Check()
     {
+        using var span = Tracer?.NewSpan("CheckService", Info.Name);
+
         // 进程存在，常规判断内存
         var p = Process;
         if (p != null)
@@ -354,6 +360,7 @@ internal class ServiceController : DisposeBase
         // 进程不存在，但Id存在
         if (p == null && ProcessId > 0)
         {
+            span?.AppendTag($"GetProcessById({ProcessId})");
             try
             {
                 p = Process.GetProcessById(ProcessId);
@@ -362,6 +369,8 @@ internal class ServiceController : DisposeBase
             }
             catch (Exception ex)
             {
+                span?.SetError(ex, null);
+
                 if (ex is not ArgumentException)
                 {
                     Log?.Error("{0}", ex);
@@ -386,7 +395,8 @@ internal class ServiceController : DisposeBase
                 }
                 if (!target.IsNullOrEmpty())
                 {
-                    target = Path.GetFileName(target);
+                    //target = Path.GetFileName(target);
+                    span?.AppendTag($"GetProcessesByFile({target})");
 
                     // 遍历所有进程，从命令行参数中找到启动文件名一致的进程
                     foreach (var item in Process.GetProcesses())
@@ -396,7 +406,7 @@ internal class ServiceController : DisposeBase
                         var name = AppInfo.GetProcessName(item);
                         if (!name.IsNullOrEmpty())
                         {
-                            name = Path.GetFileName(name);
+                            //name = Path.GetFileName(name);
                             if (name.EqualIgnoreCase(target)) return TakeOver(item, $"按[{ProcessName} {target}]查找");
                         }
                     }
@@ -404,6 +414,8 @@ internal class ServiceController : DisposeBase
             }
             else
             {
+                span?.AppendTag($"GetProcessesByName({ProcessName})");
+
                 var ps = Process.GetProcessesByName(ProcessName);
                 if (ps.Length > 0) return TakeOver(ps[0], $"按[Name={ProcessName}]查找");
             }
@@ -551,6 +563,8 @@ internal class ServiceController : DisposeBase
         Log?.Info($"[{Id}/{Name}]{format}", args);
 
         var msg = (args == null || args.Length == 0) ? format : String.Format(format, args);
+        DefaultSpan.Current?.AppendTag(msg);
+
         if (format.Contains("错误") || format.Contains("失败"))
             EventProvider?.WriteErrorEvent(nameof(ServiceController), msg);
         else

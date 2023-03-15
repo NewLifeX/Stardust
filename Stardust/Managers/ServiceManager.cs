@@ -238,12 +238,11 @@ public class ServiceManager : DisposeBase
     #region 服务控制
     /// <summary>检查并启动服务</summary>
     /// <param name="service"></param>
+    /// <param name="isCheck">仅检查时，不记录埋点</param>
     /// <returns>本次是否成功启动，原来已启动返回false</returns>
-    private Boolean StartService(ServiceInfo service)
+    private Boolean StartService(ServiceInfo service, Boolean isCheck = false)
     {
-#if DEBUG
-        using var span = Tracer?.NewSpan("ServiceManager-StartService", service);
-#endif
+        using var span = isCheck ? null : Tracer?.NewSpan("ServiceManager-StartService", service);
 
         lock (this)
         {
@@ -286,9 +285,7 @@ public class ServiceManager : DisposeBase
     /// <returns></returns>
     private Boolean StopService(String serviceName, String reason)
     {
-#if DEBUG
         using var span = Tracer?.NewSpan("ServiceManager-StopService", serviceName);
-#endif
 
         var controller = _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
         if (controller != null)
@@ -299,6 +296,10 @@ public class ServiceManager : DisposeBase
             controller.TryDispose();
 
             return true;
+        }
+        else
+        {
+            span?.AppendTag($"无法找到服务[{serviceName}]的控制器");
         }
 
         return false;
@@ -349,6 +350,7 @@ public class ServiceManager : DisposeBase
         svcs = svcs.Where(e => !e.Name.IsNullOrEmpty()).ToArray();
         if (svcs.Length == 0) return;
 
+        using var span = Tracer?.NewSpan(nameof(UploadService), svcs);
         WriteLog("上报应用服务 {0}", svcs.Join(",", e => e.Name));
 
         await _client.UploadDeploy(svcs);
@@ -356,6 +358,7 @@ public class ServiceManager : DisposeBase
 
     private async Task<DeployInfo[]> PullService(String appName)
     {
+        using var span = Tracer?.NewSpan(nameof(PullService), appName);
         WriteLog("拉取应用服务 {0}", appName);
 
         var svcs = Services.ToList();
@@ -368,6 +371,9 @@ public class ServiceManager : DisposeBase
         WriteLog("取得应用服务：{0}", rs.Join(",", e => e.Name));
         WriteLog("可用：{0}", rs.Where(e => e.Service.Enable).Join(",", e => e.Name));
         WriteLog(rs.ToJson(true));
+
+        // 旧版服务
+        span?.AppendTag(svcs);
 
         // 合并
         foreach (var item in rs)
@@ -382,7 +388,7 @@ public class ServiceManager : DisposeBase
             var old = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(item.Name));
             if (old == null)
             {
-                WriteLog("新增[{0}]：Enable={0}", item.Name, item.Service.Enable);
+                WriteLog("新增[{0}]：Enable={1}", item.Name, item.Service.Enable);
 
                 old = item.Service;
                 //svc.ReloadOnChange = true;
@@ -407,6 +413,9 @@ public class ServiceManager : DisposeBase
             }
         }
 
+        // 新版服务
+        span?.AppendTag(svcs);
+
         Services = svcs.ToArray();
 
         RaiseServiceChanged();
@@ -428,6 +437,8 @@ public class ServiceManager : DisposeBase
     {
         var url = info.Url;
         if (url.IsNullOrEmpty()) return;
+
+        using var span = Tracer?.NewSpan("ServiceManager-Download", info.Url);
 
         var dst = svc.WorkingDirectory.CombinePath(svc.FileName).AsFile();
         if (!dst.Exists || (!info.Hash.IsNullOrEmpty() && !dst.MD5().ToHex().EqualIgnoreCase(info.Hash)))
@@ -534,7 +545,7 @@ public class ServiceManager : DisposeBase
         {
             if (item != null && item.Enable)
             {
-                changed |= StartService(item);
+                changed |= StartService(item, true);
             }
         }
 
@@ -639,12 +650,16 @@ public class ServiceManager : DisposeBase
         if (dis == null || dis.Length == 0) throw new Exception($"无法从服务器取得应用信息，安装{serviceName}失败！");
 
         // 马上停止并拉起应用服务，定时器只用于双保险
-        var svc = dis?.FirstOrDefault()?.Service;
+        var svc = dis[0]?.Service;
         if (svc != null)
         {
-            StopService(svc.Name, cmd.Command);
-            Thread.Sleep(Delay);
+            var rs = StopService(svc.Name, cmd.Command);
+            if (rs) Thread.Sleep(Delay);
             StartService(svc);
+        }
+        else
+        {
+            span?.AppendTag($"无法找到{dis[0]}的服务");
         }
 
         // 尽快调度一次，拉起服务
@@ -695,7 +710,7 @@ public class ServiceManager : DisposeBase
         var changed = false;
         svc.Enable = false;
         changed |= StopService(svc.Name, cmd.Command);
-        Thread.Sleep(Delay);
+        if (changed) Thread.Sleep(Delay);
         svc.Enable = true;
         changed |= StartService(svc);
 

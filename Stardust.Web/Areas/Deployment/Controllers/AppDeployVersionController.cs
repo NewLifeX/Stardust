@@ -192,7 +192,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
                     //span?.AppendTag(item);
                     if (item.Enable) ts.Add(_deployService.Control(app, item, "install", UserHost));
                 }
-                //Task.WaitAll(ts.ToArray(), 5_000);
+                span?.AppendTag($"控制{ts.Count}个节点");
                 await Task.WhenAll(ts);
             }
             catch (Exception ex)
