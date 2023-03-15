@@ -177,13 +177,13 @@ public class ZipDeploy
         Environment.SetEnvironmentVariable("BasePath", rundir.FullName);
         ExecuteFile = runfile.FullName;
 
-        WriteLog("执行 {0}", runfile);
+        WriteLog("运行文件 {0}", runfile);
 
         var si = new ProcessStartInfo
         {
             FileName = runfile.FullName,
             Arguments = Arguments,
-            WorkingDirectory = Path.GetDirectoryName(rundir.FullName),
+            WorkingDirectory = rundir.FullName,
 
             // false时目前控制台合并到当前控制台，一起退出；
             // true时目标控制台独立窗口，不会一起退出；
