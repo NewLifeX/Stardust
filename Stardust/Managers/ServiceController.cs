@@ -126,12 +126,17 @@ internal class ServiceController : DisposeBase
                         break;
                     case ServiceModes.Extract:
                         WriteLog("解压后不运行，外部主机（如IIS）将托管应用");
-                        Extract(service, ref file, workDir);
+                        Extract(file, args, workDir);
                         Running = true;
                         return true;
                     case ServiceModes.ExtractAndRun:
                         WriteLog("解压后在工作目录运行");
-                        Extract(service, ref file, workDir);
+                        var deploy = Extract(file, args, workDir);
+                        if (deploy == null || deploy.ExecuteFile.IsNullOrEmpty()) throw new Exception("无法找到启动文件");
+
+                        file = deploy.ExecuteFile;
+                        args = deploy.Arguments;
+                        _fileName = deploy.ExecuteFile;
                         isZip = false;
                         break;
                     case ServiceModes.RunOnce:
@@ -249,10 +254,10 @@ internal class ServiceController : DisposeBase
         }
     }
 
-    public Boolean Extract(ServiceInfo service, ref String file, String workDir)
+    public ZipDeploy Extract(String file, String args, String workDir)
     {
         var isZip = file.EqualIgnoreCase("ZipDeploy") || file.EndsWithIgnoreCase(".zip");
-        if (!isZip) return false;
+        if (!isZip) return null;
 
         var deploy = new ZipDeploy
         {
@@ -262,8 +267,8 @@ internal class ServiceController : DisposeBase
             Log = new ActionLog(WriteLog),
         };
 
-        var args = service.Arguments?.Trim();
-        if (!args.IsNullOrEmpty() && !deploy.Parse(args.Split(" "))) return false;
+        //var args = service.Arguments?.Trim();
+        if (!args.IsNullOrEmpty() && !deploy.Parse(args.Split(" "))) return null;
 
         deploy.Extract(workDir);
 
@@ -271,12 +276,12 @@ internal class ServiceController : DisposeBase
         if (runfile == null)
         {
             WriteLog("无法找到名为[{0}]的可执行文件", deploy.FileName);
-            return false;
+            return null;
         }
 
-        file = runfile.FullName;
+        deploy.ExecuteFile = runfile.FullName;
 
-        return true;
+        return deploy;
     }
 
     /// <summary>停止应用</summary>
