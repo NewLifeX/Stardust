@@ -80,9 +80,9 @@ internal class MyService : ServiceBase, IServiceProvider
         AddMenu('t', "服务器信息", ShowMachineInfo);
         AddMenu('w', "测试微服务", UseMicroService);
 
-        // 控制应用服务。有些问题，只能控制当前进程管理的服务，而不能管理后台服务管理的应用
-        AddMenu('z', "启动所有应用服务", () => _Manager?.StartAll());
-        AddMenu('x', "停止所有应用服务", () => _Manager?.StopAll("菜单控制"));
+        //// 控制应用服务。有些问题，只能控制当前进程管理的服务，而不能管理后台服务管理的应用
+        //AddMenu('z', "启动所有应用服务", () => _Manager?.StartAll());
+        //AddMenu('x', "停止所有应用服务", () => _Manager?.StopAll("菜单控制"));
 
         MachineInfo.RegisterAsync();
 
@@ -93,45 +93,29 @@ internal class MyService : ServiceBase, IServiceProvider
         //    set2.AutoRestart = 24 * 60;
         //    set2.Save();
         //}
-
-        var set = Setting.Current;
-
-        // 应用服务管理
-        var manager = new ServiceManager
-        {
-            //Services = set.Services,
-            Delay = set.Delay,
-
-            Tracer = _factory?.Tracer,
-            Log = XTrace.Log,
-        };
-        manager.SetServices(set.Services);
-        manager.ServiceChanged += OnServiceChanged;
-
-        _Manager = manager;
     }
 
     #region 菜单控制
-    protected override void OnShowMenu(IList<Menu> menus)
-    {
-        var services = _Manager?.Services.Where(e => e.Enable).ToArray();
-        if (services == null || services.Length == 0)
-        {
-            menus = menus.Where(e => e.Key != 'z' && e.Key != 'x').ToList();
-        }
-        else
-        {
-            var ss = services.Join(",", e => e.Name);
+    //protected override void OnShowMenu(IList<Menu> menus)
+    //{
+    //    var services = _Manager?.Services.Where(e => e.Enable).ToArray();
+    //    if (services == null || services.Length == 0)
+    //    {
+    //        menus = menus.Where(e => e.Key != 'z' && e.Key != 'x').ToList();
+    //    }
+    //    else
+    //    {
+    //        var ss = services.Join(",", e => e.Name);
 
-            var m = menus.FirstOrDefault(e => e.Key == 'z');
-            if (m != null) m.Name = $"启动所有应用服务（{ss}）";
+    //        var m = menus.FirstOrDefault(e => e.Key == 'z');
+    //        if (m != null) m.Name = $"启动所有应用服务（{ss}）";
 
-            m = menus.FirstOrDefault(e => e.Key == 'x');
-            if (m != null) m.Name = $"停止所有应用服务（{ss}）";
-        }
+    //        m = menus.FirstOrDefault(e => e.Key == 'x');
+    //        if (m != null) m.Name = $"停止所有应用服务（{ss}）";
+    //    }
 
-        base.OnShowMenu(menus);
-    }
+    //    base.OnShowMenu(menus);
+    //}
     #endregion
 
     private ApiServer _server;
@@ -153,6 +137,19 @@ internal class MyService : ServiceBase, IServiceProvider
         var set = AgentSetting;
 
         StartFactory();
+
+        // 应用服务管理
+        var manager = new ServiceManager
+        {
+            Delay = set.Delay,
+
+            Tracer = _factory?.Tracer,
+            Log = XTrace.Log,
+        };
+        manager.SetServices(set.Services);
+        manager.ServiceChanged += OnServiceChanged;
+
+        _Manager = manager;
 
         // 插件管理器
         var pm = _PluginManager = new PluginManager
