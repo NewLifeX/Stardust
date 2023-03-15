@@ -24,9 +24,9 @@ public class ServiceInfo
     [XmlAttribute]
     public String WorkingDirectory { get; set; }
 
-    /// <summary>资源文件</summary>
-    [XmlIgnore, IgnoreDataMember]
-    public String Source { get; set; }
+    ///// <summary>资源文件</summary>
+    //[XmlIgnore, IgnoreDataMember]
+    //public String Source { get; set; }
 
     /// <summary>启用</summary>
     [XmlAttribute]

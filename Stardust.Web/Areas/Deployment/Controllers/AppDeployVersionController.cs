@@ -117,14 +117,14 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         var rs = base.OnUpdate(entity);
         app?.Fix();
 
-        // 上传完成即发布。即使新增，也是插入后保存文件，然后再来OnUpdate
-        if (entity.Enable && !entity.Url.IsNullOrEmpty() && app != null && app.Enable && app.AutoPublish)
-        {
-            app.Version = entity.Version;
-            app.Update();
+        //// 上传完成即发布。即使新增，也是插入后保存文件，然后再来OnUpdate
+        //if (entity.Enable && !entity.Url.IsNullOrEmpty() && app != null && app.Enable && app.AutoPublish)
+        //{
+        //    app.Version = entity.Version;
+        //    app.Update();
 
-            Publish(entity.App).Wait();
-        }
+        //    Publish(entity.App).Wait();
+        //}
 
         return rs;
     }
@@ -146,6 +146,16 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
             entity.Url = $"/cube/file?id={att.Id}{att.Extension}";
 
             entity.Update();
+
+            // 上传完成即发布。即使新增，也是插入后保存文件，然后再来OnUpdate
+            var app = entity.App;
+            if (entity.Enable && !entity.Url.IsNullOrEmpty() && app != null && app.Enable && app.AutoPublish)
+            {
+                app.Version = entity.Version;
+                app.Update();
+
+                Publish(entity.App).Wait();
+            }
         }
 
         // 不给上层拿到附件，避免Url字段被覆盖

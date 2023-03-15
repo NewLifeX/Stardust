@@ -428,6 +428,8 @@ public class ServiceManager : DisposeBase
         var name = svc.Name;
         if (!name.IsNullOrEmpty())
         {
+            if (svc.FileName.IsNullOrEmpty()) svc.FileName = $"{name}.zip";
+
             // 如果没有设置工作目录，默认工作目录是上一级的apps子目录，按应用放置
             if (svc.WorkingDirectory.IsNullOrEmpty()) svc.WorkingDirectory = $"../apps/{name}".GetBasePath();
         }
