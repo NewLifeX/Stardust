@@ -189,6 +189,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         Version = inf.Version;
         UserName = inf.UserName;
         StartTime = inf.StartTime;
+        Listens = inf.Listens;
     }
     #endregion
 }

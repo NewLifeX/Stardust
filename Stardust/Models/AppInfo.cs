@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using System.Net.NetworkInformation;
 using NewLife;
 using NewLife.Caching;
 
@@ -57,6 +58,9 @@ public class AppInfo
     /// <summary>连接数</summary>
     public Int32 Connections { get; set; }
 
+    /// <summary>网络端口监听信息</summary>
+    public String Listens { get; set; }
+
     /// <summary>GC暂停时间占比，百分之一，最大值10</summary>
     public Double GCPause { get; set; }
 
@@ -108,7 +112,9 @@ public class AppInfo
             Threads = _process.Threads.Count;
             Handles = _process.HandleCount;
 
-            CommandLine = Environment.CommandLine;
+            if (Id == _pid)
+                CommandLine = Environment.CommandLine;
+
             UserName = Environment.UserName;
             MachineName = Environment.MachineName;
             IP = AgentInfo.GetIps();
@@ -118,7 +124,10 @@ public class AppInfo
                 // 调用WindowApi获取进程的连接数
                 var tcps = NetHelper.GetAllTcpConnections();
                 if (tcps != null && tcps.Length > 0)
+                {
                     Connections = tcps.Count(e => e.ProcessId == Id);
+                    Listens = tcps.Where(e => e.ProcessId == Id && e.State == TcpState.Listen).Join(",", e => e.LocalEndPoint);
+                }
             }
             catch { }
 

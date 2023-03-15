@@ -160,6 +160,14 @@ namespace Stardust.Data.Deployment
         [BindColumn("Compile", "编译时间。客户端", "")]
         public DateTime Compile { get => _Compile; set { if (OnPropertyChanging("Compile", value)) { _Compile = value; OnPropertyChanged("Compile"); } } }
 
+        private String _Listens;
+        /// <summary>监听端口。网络端口监听信息</summary>
+        [DisplayName("监听端口")]
+        [Description("监听端口。网络端口监听信息")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("Listens", "监听端口。网络端口监听信息", "")]
+        public String Listens { get => _Listens; set { if (OnPropertyChanging("Listens", value)) { _Listens = value; OnPropertyChanged("Listens"); } } }
+
         private DateTime _LastActive;
         /// <summary>最后活跃。最后一次上报心跳的时间</summary>
         [DisplayName("最后活跃")]
@@ -275,6 +283,7 @@ namespace Stardust.Data.Deployment
                     case "StartTime": return _StartTime;
                     case "Version": return _Version;
                     case "Compile": return _Compile;
+                    case "Listens": return _Listens;
                     case "LastActive": return _LastActive;
                     case "LastUpload": return _LastUpload;
                     case "TraceId": return _TraceId;
@@ -309,6 +318,7 @@ namespace Stardust.Data.Deployment
                     case "StartTime": _StartTime = value.ToDateTime(); break;
                     case "Version": _Version = Convert.ToString(value); break;
                     case "Compile": _Compile = value.ToDateTime(); break;
+                    case "Listens": _Listens = Convert.ToString(value); break;
                     case "LastActive": _LastActive = value.ToDateTime(); break;
                     case "LastUpload": _LastUpload = value.ToDateTime(); break;
                     case "TraceId": _TraceId = Convert.ToString(value); break;
@@ -379,6 +389,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>编译时间。客户端</summary>
             public static readonly Field Compile = FindByName("Compile");
+
+            /// <summary>监听端口。网络端口监听信息</summary>
+            public static readonly Field Listens = FindByName("Listens");
 
             /// <summary>最后活跃。最后一次上报心跳的时间</summary>
             public static readonly Field LastActive = FindByName("LastActive");
@@ -466,6 +479,9 @@ namespace Stardust.Data.Deployment
 
             /// <summary>编译时间。客户端</summary>
             public const String Compile = "Compile";
+
+            /// <summary>监听端口。网络端口监听信息</summary>
+            public const String Listens = "Listens";
 
             /// <summary>最后活跃。最后一次上报心跳的时间</summary>
             public const String LastActive = "LastActive";
