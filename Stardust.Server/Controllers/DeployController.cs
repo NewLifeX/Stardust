@@ -143,6 +143,12 @@ public class DeployController : BaseController
         return rs;
     }
 
+    /// <summary>应用心跳。上报应用信息</summary>
+    /// <param name="inf"></param>
+    /// <returns></returns>
+    [HttpPost]
+    public Int32 Ping([FromBody] AppInfo inf) => _deployService.Ping(_node, inf, UserHost);
+
     #region 辅助
     private void WriteHistory(Int32 appId, String action, Boolean success, String remark) => _deployService.WriteHistory(appId, _node?.ID ?? 0, action, success, remark, UserHost);
     #endregion

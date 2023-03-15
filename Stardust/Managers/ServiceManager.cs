@@ -487,10 +487,8 @@ public class ServiceManager : DisposeBase
     private TimerX _timer;
     private async Task DoWork(Object state)
     {
-#if DEBUG
-        using var span = Tracer?.NewSpan("ServiceManager-DoWork");
-#endif
         var svcs = Services;
+        using var span = Tracer?.NewSpan("ServiceManager-DoWork", svcs.Length);
 
         // 应用服务的上报和拉取
         if (_client != null && !_client.Token.IsNullOrEmpty())

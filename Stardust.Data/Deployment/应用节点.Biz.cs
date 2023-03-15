@@ -181,5 +181,14 @@ public partial class AppDeployNode : Entity<AppDeployNode>
 
         return inf;
     }
+
+    public void Fill(AppInfo inf)
+    {
+        ProcessId = inf.Id;
+        ProcessName = inf.Name;
+        Version = inf.Version;
+        UserName = inf.UserName;
+        StartTime = inf.StartTime;
+    }
     #endregion
 }

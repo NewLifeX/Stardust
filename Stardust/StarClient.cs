@@ -810,6 +810,11 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     /// <param name="services"></param>
     /// <returns></returns>
     public async Task<Int32> UploadDeploy(ServiceInfo[] services) => await PostAsync<Int32>("Deploy/Upload", services);
+
+    /// <summary>应用心跳。上报应用信息</summary>
+    /// <param name="inf"></param>
+    /// <returns></returns>
+    public async Task<Int32> AppPing(AppInfo inf) => await PostAsync<Int32>("Deploy/Ping", inf);
     #endregion
 
     #region 辅助

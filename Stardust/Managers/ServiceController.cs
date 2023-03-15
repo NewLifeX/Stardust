@@ -56,6 +56,7 @@ internal class ServiceController : DisposeBase
     private String _workdir;
     private TimerX _timer;
     private Int32 _error;
+    private AppInfo _appInfo;
     #endregion
 
     #region 构造
@@ -337,29 +338,36 @@ internal class ServiceController : DisposeBase
         var p = Process;
         if (p != null)
         {
-            if (!p.HasExited)
+            try
             {
-                _error = 0;
+                if (!p.HasExited)
+                {
+                    _error = 0;
 
-                // 检查内存限制
-                if (Info.MaxMemory <= 0) return false;
+                    // 检查内存限制
+                    if (Info.MaxMemory <= 0) return false;
 
-                var mem = p.WorkingSet64 / 1024 / 1024;
-                if (mem <= Info.MaxMemory) return true;
+                    var mem = p.WorkingSet64 / 1024 / 1024;
+                    if (mem <= Info.MaxMemory) return true;
 
-                WriteLog("内存超限！{0}>{1}", mem, Info.MaxMemory);
+                    WriteLog("内存超限！{0}>{1}", mem, Info.MaxMemory);
 
-                Stop("内存超限");
+                    Stop("内存超限");
+                }
+                else
+                {
+                    WriteLog("应用[{0}/{1}]已退出！", p.Id, Name);
+                }
+
+                p = null;
+                SetProcess(null);
+
+                Running = false;
             }
-            else
+            catch (Exception ex)
             {
-                WriteLog("应用[{0}/{1}]已退出！", p.Id, Name);
+                span?.SetError(ex, null);
             }
-
-            p = null;
-            SetProcess(null);
-
-            Running = false;
         }
 
         // 进程不存在，但Id存在
@@ -369,8 +377,16 @@ internal class ServiceController : DisposeBase
             try
             {
                 p = Process.GetProcessById(ProcessId);
+
+                var exited = false;
+                try
+                {
+                    exited = p.HasExited;
+                }
+                catch { }
+
                 // 这里的进程名可能是 dotnet/java，照样可以使用
-                if (p != null && !p.HasExited && p.ProcessName == ProcessName) return TakeOver(p, $"按[Id={ProcessId}]查找");
+                if (p != null && !exited && p.ProcessName == ProcessName) return TakeOver(p, $"按[Id={ProcessId}]查找");
             }
             catch (Exception ex)
             {
@@ -429,6 +445,18 @@ internal class ServiceController : DisposeBase
         // 准备启动进程
         var rs = Start();
 
+        // 检测并上报性能
+        p = Process;
+        if (p != null && EventProvider is StarClient client)
+        {
+            if (_appInfo == null)
+                _appInfo = new AppInfo(p) { AppName = Info.Name };
+            else
+                _appInfo.Refresh();
+
+            client.AppPing(_appInfo).Wait();
+        }
+
         return rs;
     }
 
@@ -458,6 +486,7 @@ internal class ServiceController : DisposeBase
         {
             ProcessId = 0;
             ProcessName = null;
+            _appInfo = null;
         }
     }
 

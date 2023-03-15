@@ -1,10 +1,21 @@
-﻿using Stardust.Data;
+﻿using NewLife;
+using System.Xml.Linq;
+using Stardust.Data;
 using Stardust.Data.Deployment;
+using Stardust.Data.Nodes;
+using Stardust.Models;
 
 namespace Stardust.Server.Services;
 
 public class DeployService
 {
+    private readonly RegistryService _registryService;
+
+    public DeployService(RegistryService registryService)
+    {
+        _registryService = registryService;
+    }
+
     /// <summary>更新应用部署的节点信息</summary>
     /// <param name="online"></param>
     public void UpdateDeployNode(AppOnline online)
@@ -29,7 +40,12 @@ public class DeployService
             else
             {
                 // 新增部署集，禁用状态，信息不完整
-                deploy = new AppDeploy { AppId = online.AppId, Name = online.AppName, Category = online.App?.Category };
+                deploy = new AppDeploy
+                {
+                    AppId = online.AppId,
+                    Name = online.AppName,
+                    Category = online.App?.Category
+                };
                 deploy.Insert();
             }
         }
@@ -67,5 +83,41 @@ public class DeployService
     {
         var hi = AppDeployHistory.Create(appId, nodeId, action, success, remark, ip);
         hi.SaveAsync();
+    }
+
+    public Int32 Ping(Node node, AppInfo inf, String ip)
+    {
+        var name = !inf.AppName.IsNullOrEmpty() ? inf.AppName : inf.Name;
+        if (name.IsNullOrEmpty()) return -1;
+
+        // 应用
+        var ap = App.FindByName(name);
+        if (ap == null)
+        {
+            ap = new App { Name = name };
+            ap.Insert();
+        }
+        {
+            var clientId = $"{inf.IP?.Split(',').FirstOrDefault()}@{inf.Id}";
+            _registryService.Ping(ap, inf, ip, clientId, null);
+            AppMeter.WriteData(ap, inf, clientId, ip);
+        }
+
+        // 部署集
+        var app = AppDeploy.FindByName(name);
+        app ??= new AppDeploy { Name = name };
+        app.AppId = ap.Id;
+        if (!ap.Category.IsNullOrEmpty()) app.Category = ap.Category;
+        app.Save();
+
+        // 本节点所有发布
+        var list = AppDeployNode.FindAllByNodeId(node.ID);
+        var dn = list.FirstOrDefault(e => e.AppId == app.Id);
+        dn ??= new AppDeployNode { AppId = app.Id, NodeId = node.ID };
+
+        dn.Fill(inf);
+        dn.LastActive = DateTime.Now;
+
+        return dn.Update();
     }
 }
