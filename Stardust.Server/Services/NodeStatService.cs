@@ -95,6 +95,7 @@ public class NodeStatService : IHostedService
         foreach (var node in list)
         {
             var key = node.OSKind + "";
+            if (key.Length > 50) key = key[..50];
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
                 st = NodeStat.GetOrAdd(category, date, key);
@@ -124,6 +125,7 @@ public class NodeStatService : IHostedService
         foreach (var node in list)
         {
             var key = node.ProductCode + "";
+            if (key.Length > 50) key = key[..50];
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
                 st = NodeStat.GetOrAdd(category, date, key);
@@ -153,6 +155,7 @@ public class NodeStatService : IHostedService
         foreach (var node in list)
         {
             var key = node.Version + "";
+            if (key.Length > 50) key = key[..50];
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
                 st = NodeStat.GetOrAdd(category, date, key);
@@ -198,6 +201,7 @@ public class NodeStatService : IHostedService
         foreach (var item in list.GroupBy(e => (e.Runtime.IsNullOrEmpty() || e.Runtime.Length < 3) ? e.Runtime + "" : e.Runtime[..3]))
         {
             var key = item.Key;
+            if (key.Length > 50) key = key[..50];
             var datas = item.ToList();
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
@@ -228,6 +232,7 @@ public class NodeStatService : IHostedService
         foreach (var node in list)
         {
             var key = node.Framework + "";
+            if (key.Length > 50) key = key[..50];
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
                 st = NodeStat.GetOrAdd(category, date, key);
@@ -262,6 +267,7 @@ public class NodeStatService : IHostedService
 
             //var key = Area.FindByID(node.CityID)?.Path;
             var key = finder[node.CityID]?.Path;
+            if (key.Length > 50) key = key[..50];
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
                 st = NodeStat.GetOrAdd(category, date, key);
@@ -291,6 +297,7 @@ public class NodeStatService : IHostedService
         foreach (var node in list)
         {
             var key = node.Architecture + "";
+            if (key.Length > 50) key = key[..50];
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
                 st = NodeStat.GetOrAdd(category, date, key);

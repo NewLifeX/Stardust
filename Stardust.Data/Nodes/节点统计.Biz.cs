@@ -26,6 +26,9 @@ public partial class NodeStat : Entity<NodeStat>
     /// <param name="isNew">是否插入</param>
     public override void Valid(Boolean isNew)
     {
+        var len = _.Key.Length;
+        if (len > 0 && !Key.IsNullOrEmpty() && Key.Length > len) Key = Key[..len];
+
         // 如果没有脏数据，则不需要进行任何处理
         if (!HasDirty) return;
 
@@ -36,46 +39,6 @@ public partial class NodeStat : Entity<NodeStat>
         // 检查唯一索引
         // CheckExist(isNew, __.StatDate);
     }
-
-    ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
-    //[EditorBrowsable(EditorBrowsableState.Never)]
-    //protected internal override void InitData()
-    //{
-    //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
-    //    if (Meta.Session.Count > 0) return;
-
-    //    if (XTrace.Debug) XTrace.WriteLine("开始初始化NodeStat[节点统计]数据……");
-
-    //    var entity = new NodeStat();
-    //    entity.ID = 0;
-    //    entity.StatDate = DateTime.Now;
-    //    entity.Total = 0;
-    //    entity.Actives = 0;
-    //    entity.News = 0;
-    //    entity.Registers = 0;
-    //    entity.MaxOnline = 0;
-    //    entity.MaxOnlineTime = DateTime.Now;
-    //    entity.CreateTime = DateTime.Now;
-    //    entity.UpdateTime = DateTime.Now;
-    //    entity.Remark = "abc";
-    //    entity.Insert();
-
-    //    if (XTrace.Debug) XTrace.WriteLine("完成初始化NodeStat[节点统计]数据！");
-    //}
-
-    ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
-    ///// <returns></returns>
-    //public override Int32 Insert()
-    //{
-    //    return base.Insert();
-    //}
-
-    ///// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>
-    ///// <returns></returns>
-    //protected override Int32 OnDelete()
-    //{
-    //    return base.OnDelete();
-    //}
     #endregion
 
     #region 扩展属性
