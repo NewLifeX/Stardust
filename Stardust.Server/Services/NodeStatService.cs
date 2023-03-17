@@ -266,7 +266,7 @@ public class NodeStatService : IHostedService
             //if (node.CityID == 0) continue;
 
             //var key = Area.FindByID(node.CityID)?.Path;
-            var key = finder[node.CityID]?.Path;
+            var key = finder[node.CityID]?.Path + "";
             if (key.Length > 50) key = key[..50];
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
