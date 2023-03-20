@@ -154,7 +154,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
                 app.Version = entity.Version;
                 app.Update();
 
-                Publish(entity.App).Wait();
+                _ = Publish(entity.App);
             }
         }
 
