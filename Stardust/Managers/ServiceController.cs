@@ -154,6 +154,7 @@ internal class ServiceController : DisposeBase
                         FileName = file,
                         WorkingDirectory = workDir,
 
+                        Tracer = Tracer,
                         Log = new ActionLog(WriteLog),
                     };
 
@@ -265,6 +266,7 @@ internal class ServiceController : DisposeBase
             FileName = file,
             WorkingDirectory = workDir,
 
+            Tracer = Tracer,
             Log = new ActionLog(WriteLog),
         };
 
@@ -338,6 +340,7 @@ internal class ServiceController : DisposeBase
         var p = Process;
         if (p != null)
         {
+            span?.AppendTag("CheckMaxMemory");
             try
             {
                 if (!p.HasExited)
@@ -360,7 +363,9 @@ internal class ServiceController : DisposeBase
                 }
 
                 p = null;
-                SetProcess(null);
+                Process = null;
+                // 这里不能清空 ProcessId 和 ProcessName，可能因为异常操作导致进程丢了，但是根据名称还能找到。也可能外部启动了进程
+                //SetProcess(null);
 
                 Running = false;
             }

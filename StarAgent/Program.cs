@@ -381,6 +381,7 @@ internal class MyService : ServiceBase, IServiceProvider
     private async Task CheckUpgrade(Object data)
     {
         var client = _Client;
+        using var span = client.Tracer?.NewSpan("CheckUpgrade", new { _lastVersion });
 
         // 运行过程中可能改变配置文件的通道
         var channel = AgentSetting.Channel;
@@ -436,15 +437,16 @@ internal class MyService : ServiceBase, IServiceProvider
                         {
                             // 带有-s参数就算是服务中运行
                             var inService = "-s".EqualIgnoreCase(Environment.GetCommandLineArgs());
+                            var pid = Process.GetCurrentProcess().Id;
 
                             // 以服务方式运行时，重启服务，否则采取拉起进程的方式
                             if (inService || Host is Host host && host.InService)
                             {
+                                client.WriteInfoEvent("Upgrade", "强制更新完成，准备重启后台服务！PID=" + pid);
+
                                 //rs = Host.Restart("StarAgent");
                                 // 使用外部命令重启服务
                                 rs = ug.Run("StarAgent", "-restart -upgrade");
-
-                                client.WriteInfoEvent("Upgrade", "强制更新完成，准备重启后台服务");
 
                                 //!! 这里不需要自杀，外部命令重启服务会结束当前进程
                             }
@@ -457,7 +459,7 @@ internal class MyService : ServiceBase, IServiceProvider
                                 {
                                     StopWork("Upgrade");
 
-                                    client.WriteInfoEvent("Upgrade", "强制更新完成，新进程已拉起，准备退出当前进程");
+                                    client.WriteInfoEvent("Upgrade", "强制更新完成，新进程已拉起，准备退出当前进程！PID=" + pid);
 
                                     ug.KillSelf();
                                 }
@@ -706,7 +708,11 @@ internal class MyService : ServiceBase, IServiceProvider
     {
         if (args == null || args.Length == 0) return false;
 
-        var deploy = new ZipDeploy { Log = XTrace.Log };
+        var deploy = new ZipDeploy
+        {
+            Tracer = _factory?.Tracer,
+            Log = XTrace.Log
+        };
         if (!deploy.Parse(args)) return false;
 
         deploy.Execute();

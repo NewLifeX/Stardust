@@ -443,6 +443,8 @@ public class ServiceManager : DisposeBase
         using var span = Tracer?.NewSpan("ServiceManager-Download", info.Url);
 
         var dst = svc.WorkingDirectory.CombinePath(svc.FileName).AsFile();
+        span?.AppendTag(dst.FullName);
+
         var flag = false;
         if (!dst.Exists)
         {
@@ -457,6 +459,11 @@ public class ServiceManager : DisposeBase
                 WriteLog("文件哈希不匹配：{0}（本地）!={1}（远程）", hash, info.Hash);
                 flag = true;
             }
+        }
+        if (!flag)
+        {
+            var hash = dst.MD5().ToHex();
+            WriteLog("文件已存在：{0} MD5: {1}", dst, hash);
         }
         if (flag)
         {
