@@ -443,7 +443,22 @@ public class ServiceManager : DisposeBase
         using var span = Tracer?.NewSpan("ServiceManager-Download", info.Url);
 
         var dst = svc.WorkingDirectory.CombinePath(svc.FileName).AsFile();
-        if (!dst.Exists || (!info.Hash.IsNullOrEmpty() && !dst.MD5().ToHex().EqualIgnoreCase(info.Hash)))
+        var flag = false;
+        if (!dst.Exists)
+        {
+            WriteLog("文件不存在：{0}", dst);
+            flag = true;
+        }
+        else if (!info.Hash.IsNullOrEmpty())
+        {
+            var hash = dst.MD5().ToHex();
+            if (!hash.EqualIgnoreCase(info.Hash))
+            {
+                WriteLog("文件哈希不匹配：{0}（本地）!={1}（远程）", hash, info.Hash);
+                flag = true;
+            }
+        }
+        if (flag)
         {
             url = _client.BuildUrl(url);
 
@@ -459,8 +474,9 @@ public class ServiceManager : DisposeBase
 
             // 校验哈希
             var ti = tmp.AsFile();
-            if (!info.Hash.IsNullOrEmpty() && !ti.MD5().ToHex().EqualIgnoreCase(info.Hash))
-                WriteLog("下载失败，校验错误");
+            var hash = ti.MD5().ToHex();
+            if (!info.Hash.IsNullOrEmpty() && !hash.EqualIgnoreCase(info.Hash))
+                WriteLog("下载失败，校验错误！{0}（本地）!={1}（远程）", hash, info.Hash);
             else
             {
                 // 删除原文件
@@ -753,6 +769,8 @@ public class ServiceManager : DisposeBase
         Log?.Info(format, args);
 
         var msg = (args == null || args.Length == 0) ? format : String.Format(format, args);
+        DefaultSpan.Current?.AppendTag(msg);
+
         if (format.Contains("错误") || format.Contains("失败"))
             _client?.WriteErrorEvent(nameof(ServiceManager), msg);
         else
