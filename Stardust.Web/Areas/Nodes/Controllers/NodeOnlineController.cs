@@ -22,7 +22,7 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
 
         var list = ListFields;
         list.Clear();
-        var allows = new[] { "ID", "Name", "Category", "CityName", "PingCount", "WebSocket", "Version", "OSKind", "IP", "AvailableMemory", "AvailableFreeSpace", "CpuRate", "ProcessCount", "UplinkSpeed", "DownlinkSpeed", "LocalTime", "CreateTime", "CreateIP", "UpdateTime" };
+        var allows = new[] { "ID", "Name", "Category", "CityName", "PingCount", "WebSocket", "Version", "OSKind", "IP", "AvailableMemory", "MemoryUsed", "AvailableFreeSpace", "SpaceUsed", "CpuRate", "ProcessCount", "UplinkSpeed", "DownlinkSpeed", "LocalTime", "CreateTime", "CreateIP", "UpdateTime" };
         foreach (var item in allows)
         {
             list.AddListField(item);
@@ -69,6 +69,7 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
         var end = p["dtEnd"].ToDateTime();
 
         PageSetting.EnableSelect = true;
+        p.RetrieveState = true;
 
         return NodeOnline.Search(nodeId, provinceId, cityId, category, start, end, p["Q"], p);
     }
