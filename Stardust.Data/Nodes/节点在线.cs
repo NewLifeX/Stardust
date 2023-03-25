@@ -143,6 +143,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("AvailableMemory", "可用内存。单位M", "")]
         public Int32 AvailableMemory { get => _AvailableMemory; set { if (OnPropertyChanging("AvailableMemory", value)) { _AvailableMemory = value; OnPropertyChanged("AvailableMemory"); } } }
 
+        private Int32 _MemoryUsed;
+        /// <summary>已用内存。单位M</summary>
+        [DisplayName("已用内存")]
+        [Description("已用内存。单位M")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("MemoryUsed", "已用内存。单位M", "")]
+        public Int32 MemoryUsed { get => _MemoryUsed; set { if (OnPropertyChanging("MemoryUsed", value)) { _MemoryUsed = value; OnPropertyChanged("MemoryUsed"); } } }
+
         private Int32 _AvailableFreeSpace;
         /// <summary>可用磁盘。应用所在盘，单位M</summary>
         [DisplayName("可用磁盘")]
@@ -150,6 +158,14 @@ namespace Stardust.Data.Nodes
         [DataObjectField(false, false, false, 0)]
         [BindColumn("AvailableFreeSpace", "可用磁盘。应用所在盘，单位M", "")]
         public Int32 AvailableFreeSpace { get => _AvailableFreeSpace; set { if (OnPropertyChanging("AvailableFreeSpace", value)) { _AvailableFreeSpace = value; OnPropertyChanged("AvailableFreeSpace"); } } }
+
+        private Int32 _SpaceUsed;
+        /// <summary>已用磁盘。应用所在盘，单位M</summary>
+        [DisplayName("已用磁盘")]
+        [Description("已用磁盘。应用所在盘，单位M")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("SpaceUsed", "已用磁盘。应用所在盘，单位M", "")]
+        public Int32 SpaceUsed { get => _SpaceUsed; set { if (OnPropertyChanging("SpaceUsed", value)) { _SpaceUsed = value; OnPropertyChanged("SpaceUsed"); } } }
 
         private Double _CpuRate;
         /// <summary>CPU率。占用率</summary>
@@ -358,7 +374,9 @@ namespace Stardust.Data.Nodes
                     case "OSKind": return _OSKind;
                     case "Memory": return _Memory;
                     case "AvailableMemory": return _AvailableMemory;
+                    case "MemoryUsed": return _MemoryUsed;
                     case "AvailableFreeSpace": return _AvailableFreeSpace;
+                    case "SpaceUsed": return _SpaceUsed;
                     case "CpuRate": return _CpuRate;
                     case "Temperature": return _Temperature;
                     case "Battery": return _Battery;
@@ -403,7 +421,9 @@ namespace Stardust.Data.Nodes
                     case "OSKind": _OSKind = (Stardust.Models.OSKinds)value.ToInt(); break;
                     case "Memory": _Memory = value.ToInt(); break;
                     case "AvailableMemory": _AvailableMemory = value.ToInt(); break;
+                    case "MemoryUsed": _MemoryUsed = value.ToInt(); break;
                     case "AvailableFreeSpace": _AvailableFreeSpace = value.ToInt(); break;
+                    case "SpaceUsed": _SpaceUsed = value.ToInt(); break;
                     case "CpuRate": _CpuRate = value.ToDouble(); break;
                     case "Temperature": _Temperature = value.ToDouble(); break;
                     case "Battery": _Battery = value.ToDouble(); break;
@@ -481,8 +501,14 @@ namespace Stardust.Data.Nodes
             /// <summary>可用内存。单位M</summary>
             public static readonly Field AvailableMemory = FindByName("AvailableMemory");
 
+            /// <summary>已用内存。单位M</summary>
+            public static readonly Field MemoryUsed = FindByName("MemoryUsed");
+
             /// <summary>可用磁盘。应用所在盘，单位M</summary>
             public static readonly Field AvailableFreeSpace = FindByName("AvailableFreeSpace");
+
+            /// <summary>已用磁盘。应用所在盘，单位M</summary>
+            public static readonly Field SpaceUsed = FindByName("SpaceUsed");
 
             /// <summary>CPU率。占用率</summary>
             public static readonly Field CpuRate = FindByName("CpuRate");
@@ -601,8 +627,14 @@ namespace Stardust.Data.Nodes
             /// <summary>可用内存。单位M</summary>
             public const String AvailableMemory = "AvailableMemory";
 
+            /// <summary>已用内存。单位M</summary>
+            public const String MemoryUsed = "MemoryUsed";
+
             /// <summary>可用磁盘。应用所在盘，单位M</summary>
             public const String AvailableFreeSpace = "AvailableFreeSpace";
+
+            /// <summary>已用磁盘。应用所在盘，单位M</summary>
+            public const String SpaceUsed = "SpaceUsed";
 
             /// <summary>CPU率。占用率</summary>
             public const String CpuRate = "CpuRate";

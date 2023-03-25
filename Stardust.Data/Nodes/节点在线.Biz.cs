@@ -42,6 +42,9 @@ namespace Stardust.Data.Nodes
             if (len > 0 && MACs != null && MACs.Length > len) MACs = MACs[..len];
             //if (COMs != null && COMs.Length > 200) COMs = COMs.Substring(0, 199);
 
+            if (!Dirtys[nameof(MemoryUsed)] && Node != null) MemoryUsed = Node.Memory - AvailableMemory;
+            if (!Dirtys[nameof(SpaceUsed)] && Node != null) SpaceUsed = Node.TotalSize - AvailableFreeSpace;
+
             base.Valid(isNew);
         }
         #endregion

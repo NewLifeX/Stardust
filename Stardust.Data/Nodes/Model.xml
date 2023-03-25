@@ -89,7 +89,9 @@
       <Column Name="OSKind" DataType="Int32" Description="系统种类。主流操作系统类型，不考虑子版本" Category="硬件信息" Type="Stardust.Models.OSKinds" />
       <Column Name="Memory" DataType="Int32" Description="内存。单位M" />
       <Column Name="AvailableMemory" DataType="Int32" Description="可用内存。单位M" />
+      <Column Name="MemoryUsed" DataType="Int32" Description="已用内存。单位M" />
       <Column Name="AvailableFreeSpace" DataType="Int32" Description="可用磁盘。应用所在盘，单位M" />
+      <Column Name="SpaceUsed" DataType="Int32" Description="已用磁盘。应用所在盘，单位M" />
       <Column Name="CpuRate" DataType="Double" Description="CPU率。占用率" />
       <Column Name="Temperature" DataType="Double" Description="温度" />
       <Column Name="Battery" DataType="Double" Description="电量" />
