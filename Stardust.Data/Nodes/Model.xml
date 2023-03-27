@@ -337,7 +337,7 @@
       <Column Name="Db" DataType="Int32" Description="库" />
       <Column Name="Topic" DataType="String" Description="主题。消息队列主题" />
       <Column Name="Type" DataType="String" Description="类型。消息队列类型" />
-      <Column Name="Groups" DataType="String" Description="消费组。消费组名称" />
+      <Column Name="Groups" DataType="String" Length="200" Description="消费组。消费组名称" />
       <Column Name="Consumers" DataType="Int32" Description="消费者。消费者个数" />
       <Column Name="Total" DataType="Int64" Description="总消费。现有消费者的消费总数" />
       <Column Name="Messages" DataType="Int32" Description="消息数。积压下来，等待消费的消息个数" />
