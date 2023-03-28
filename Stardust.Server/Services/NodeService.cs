@@ -322,7 +322,7 @@ public class NodeService
             node.FixNameByRule();
 
             // 每10分钟更新一次节点信息，确保活跃
-            if (node.UpdateTime.AddMinutes(10) < DateTime.Now) node.UpdateTime = DateTime.Now;
+            if (node.LastActive.AddMinutes(10) < DateTime.Now) node.LastActive = DateTime.Now;
             node.SaveAsync();
 
             rs.Period = node.Period;

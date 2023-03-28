@@ -24,7 +24,7 @@ public class NodeController : EntityController<Node>
 
         var list = ListFields;
         list.Clear();
-        var allows = new[] { "ID", "Name", "Code", "Category", "ProductCode", "CityName", "Enable", "Version", "OSKind", "Runtime", "IP", "OS", "MachineName", "Cpu", "Memory", "TotalSize", "Logins", "LastLogin", "OnlineTime", "UpdateTime", "UpdateIP" };
+        var allows = new[] { "ID", "Name", "Code", "Category", "ProductCode", "CityName", "Enable", "Version", "OSKind", "Runtime", "IP", "OS", "MachineName", "Cpu", "Memory", "TotalSize", "Logins", "LastActive", "OnlineTime", "UpdateTime", "UpdateIP" };
         foreach (var item in allows)
         {
             list.AddListField(item);
@@ -109,7 +109,7 @@ public class NodeController : EntityController<Node>
         // 默认排序。一个设备可能多次注册节点，导致重复，这里按最后登录时间降序
         if (page.Sort.IsNullOrEmpty())
         {
-            page.Sort = _.UpdateTime;
+            page.Sort = _.LastActive;
             page.Desc = true;
         }
 

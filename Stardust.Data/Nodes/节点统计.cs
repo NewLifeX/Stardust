@@ -54,35 +54,35 @@ namespace Stardust.Data.Nodes
         public String Key { get => _Key; set { if (OnPropertyChanging("Key", value)) { _Key = value; OnPropertyChanged("Key"); } } }
 
         private Int32 _Total;
-        /// <summary>总数。截止今天的全部节点数</summary>
+        /// <summary>总数。1年内活跃过的全部节点数</summary>
         [DisplayName("总数")]
-        [Description("总数。截止今天的全部节点数")]
+        [Description("总数。1年内活跃过的全部节点数")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Total", "总数。截止今天的全部节点数", "")]
+        [BindColumn("Total", "总数。1年内活跃过的全部节点数", "")]
         public Int32 Total { get => _Total; set { if (OnPropertyChanging("Total", value)) { _Total = value; OnPropertyChanged("Total"); } } }
 
         private Int32 _Actives;
-        /// <summary>活跃数。最后登录位于今天</summary>
+        /// <summary>活跃数。最后活跃位于今天</summary>
         [DisplayName("活跃数")]
-        [Description("活跃数。最后登录位于今天")]
+        [Description("活跃数。最后活跃位于今天")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Actives", "活跃数。最后登录位于今天", "")]
+        [BindColumn("Actives", "活跃数。最后活跃位于今天", "")]
         public Int32 Actives { get => _Actives; set { if (OnPropertyChanging("Actives", value)) { _Actives = value; OnPropertyChanged("Actives"); } } }
 
         private Int32 _ActivesT7;
-        /// <summary>7天活跃数。最后登录位于7天内</summary>
+        /// <summary>7天活跃数。最后活跃位于7天内</summary>
         [DisplayName("7天活跃数")]
-        [Description("7天活跃数。最后登录位于7天内")]
+        [Description("7天活跃数。最后活跃位于7天内")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("ActivesT7", "7天活跃数。最后登录位于7天内", "")]
+        [BindColumn("ActivesT7", "7天活跃数。最后活跃位于7天内", "")]
         public Int32 ActivesT7 { get => _ActivesT7; set { if (OnPropertyChanging("ActivesT7", value)) { _ActivesT7 = value; OnPropertyChanged("ActivesT7"); } } }
 
         private Int32 _ActivesT30;
-        /// <summary>30天活跃数。最后登录位于30天内</summary>
+        /// <summary>30天活跃数。最后活跃位于30天内</summary>
         [DisplayName("30天活跃数")]
-        [Description("30天活跃数。最后登录位于30天内")]
+        [Description("30天活跃数。最后活跃位于30天内")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("ActivesT30", "30天活跃数。最后登录位于30天内", "")]
+        [BindColumn("ActivesT30", "30天活跃数。最后活跃位于30天内", "")]
         public Int32 ActivesT30 { get => _ActivesT30; set { if (OnPropertyChanging("ActivesT30", value)) { _ActivesT30 = value; OnPropertyChanged("ActivesT30"); } } }
 
         private Int32 _News;
@@ -204,16 +204,16 @@ namespace Stardust.Data.Nodes
             /// <summary>统计项。统计项编码</summary>
             public static readonly Field Key = FindByName("Key");
 
-            /// <summary>总数。截止今天的全部节点数</summary>
+            /// <summary>总数。1年内活跃过的全部节点数</summary>
             public static readonly Field Total = FindByName("Total");
 
-            /// <summary>活跃数。最后登录位于今天</summary>
+            /// <summary>活跃数。最后活跃位于今天</summary>
             public static readonly Field Actives = FindByName("Actives");
 
-            /// <summary>7天活跃数。最后登录位于7天内</summary>
+            /// <summary>7天活跃数。最后活跃位于7天内</summary>
             public static readonly Field ActivesT7 = FindByName("ActivesT7");
 
-            /// <summary>30天活跃数。最后登录位于30天内</summary>
+            /// <summary>30天活跃数。最后活跃位于30天内</summary>
             public static readonly Field ActivesT30 = FindByName("ActivesT30");
 
             /// <summary>新增数。今天创建</summary>
@@ -252,16 +252,16 @@ namespace Stardust.Data.Nodes
             /// <summary>统计项。统计项编码</summary>
             public const String Key = "Key";
 
-            /// <summary>总数。截止今天的全部节点数</summary>
+            /// <summary>总数。1年内活跃过的全部节点数</summary>
             public const String Total = "Total";
 
-            /// <summary>活跃数。最后登录位于今天</summary>
+            /// <summary>活跃数。最后活跃位于今天</summary>
             public const String Actives = "Actives";
 
-            /// <summary>7天活跃数。最后登录位于7天内</summary>
+            /// <summary>7天活跃数。最后活跃位于7天内</summary>
             public const String ActivesT7 = "ActivesT7";
 
-            /// <summary>30天活跃数。最后登录位于30天内</summary>
+            /// <summary>30天活跃数。最后活跃位于30天内</summary>
             public const String ActivesT30 = "ActivesT30";
 
             /// <summary>新增数。今天创建</summary>

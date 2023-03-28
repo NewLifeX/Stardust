@@ -8,8 +8,8 @@ using NewLife.Caching;
 using NewLife.Configuration;
 using NewLife.Log;
 using NewLife.Serialization;
+using Stardust.Data.Nodes;
 using Stardust.Monitors;
-using Stardust.Server.Common;
 using Stardust.Server.Services;
 using XCode;
 using XCode.DataAccessLayer;
@@ -235,5 +235,9 @@ public class Startup
                 XTrace.WriteLine("重命名结果：{0}", rs);
             }
         }
+
+        // 修正 Node.LastActive 数据，默认取 LastLogin
+        if (Node.Meta.Count > 0)
+            Node.Update("LastActive=LastLogin", "LastActive is null");
     }
 }

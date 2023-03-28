@@ -21,6 +21,7 @@ namespace Stardust.Data.Nodes
     [BindIndex("IX_Node_ProductCode", false, "ProductCode")]
     [BindIndex("IX_Node_Version", false, "Version")]
     [BindIndex("IX_Node_OSKind", false, "OSKind")]
+    [BindIndex("IX_Node_LastActive", false, "LastActive")]
     [BindIndex("IX_Node_UpdateTime", false, "UpdateTime")]
     [BindTable("Node", Description = "节点", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class Node
@@ -451,6 +452,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("LastLoginIP", "最后IP。最后的公网IP地址", "")]
         public String LastLoginIP { get => _LastLoginIP; set { if (OnPropertyChanging("LastLoginIP", value)) { _LastLoginIP = value; OnPropertyChanged("LastLoginIP"); } } }
 
+        private DateTime _LastActive;
+        /// <summary>最后活跃。心跳过程中每10分钟更新活跃时间</summary>
+        [DisplayName("最后活跃")]
+        [Description("最后活跃。心跳过程中每10分钟更新活跃时间")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("LastActive", "最后活跃。心跳过程中每10分钟更新活跃时间", "")]
+        public DateTime LastActive { get => _LastActive; set { if (OnPropertyChanging("LastActive", value)) { _LastActive = value; OnPropertyChanged("LastActive"); } } }
+
         private Int32 _OnlineTime;
         /// <summary>在线时长。单位，秒</summary>
         [DisplayName("在线时长")]
@@ -590,6 +599,7 @@ namespace Stardust.Data.Nodes
                     case "Logins": return _Logins;
                     case "LastLogin": return _LastLogin;
                     case "LastLoginIP": return _LastLoginIP;
+                    case "LastActive": return _LastActive;
                     case "OnlineTime": return _OnlineTime;
                     case "LastVersion": return _LastVersion;
                     case "CreateUserID": return _CreateUserID;
@@ -655,6 +665,7 @@ namespace Stardust.Data.Nodes
                     case "Logins": _Logins = value.ToInt(); break;
                     case "LastLogin": _LastLogin = value.ToDateTime(); break;
                     case "LastLoginIP": _LastLoginIP = Convert.ToString(value); break;
+                    case "LastActive": _LastActive = value.ToDateTime(); break;
                     case "OnlineTime": _OnlineTime = value.ToInt(); break;
                     case "LastVersion": _LastVersion = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
@@ -820,6 +831,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>最后IP。最后的公网IP地址</summary>
             public static readonly Field LastLoginIP = FindByName("LastLoginIP");
+
+            /// <summary>最后活跃。心跳过程中每10分钟更新活跃时间</summary>
+            public static readonly Field LastActive = FindByName("LastActive");
 
             /// <summary>在线时长。单位，秒</summary>
             public static readonly Field OnlineTime = FindByName("OnlineTime");
@@ -1000,6 +1014,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>最后IP。最后的公网IP地址</summary>
             public const String LastLoginIP = "LastLoginIP";
+
+            /// <summary>最后活跃。心跳过程中每10分钟更新活跃时间</summary>
+            public const String LastActive = "LastActive";
 
             /// <summary>在线时长。单位，秒</summary>
             public const String OnlineTime = "OnlineTime";

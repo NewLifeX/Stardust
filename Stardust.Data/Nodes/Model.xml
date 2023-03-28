@@ -51,6 +51,7 @@
       <Column Name="Logins" DataType="Int32" Description="登录次数" />
       <Column Name="LastLogin" DataType="DateTime" Description="最后登录" />
       <Column Name="LastLoginIP" DataType="String" Description="最后IP。最后的公网IP地址" />
+      <Column Name="LastActive" DataType="DateTime" Description="最后活跃。心跳过程中每10分钟更新活跃时间" />
       <Column Name="OnlineTime" DataType="Int32" ItemType="TimeSpan" Description="在线时长。单位，秒" />
       <Column Name="LastVersion" DataType="String" Description="最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
@@ -69,6 +70,7 @@
       <Index Columns="ProductCode" />
       <Index Columns="Version" />
       <Index Columns="OSKind" />
+      <Index Columns="LastActive" />
       <Index Columns="UpdateTime" />
     </Indexes>
   </Table>
@@ -228,10 +230,10 @@
       <Column Name="Category" DataType="String" Description="类别。业务方向分类，例如操作系统占比" />
       <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
       <Column Name="Key" DataType="String" Description="统计项。统计项编码" />
-      <Column Name="Total" DataType="Int32" Description="总数。截止今天的全部节点数" />
-      <Column Name="Actives" DataType="Int32" Description="活跃数。最后登录位于今天" />
-      <Column Name="ActivesT7" DataType="Int32" Description="7天活跃数。最后登录位于7天内" />
-      <Column Name="ActivesT30" DataType="Int32" Description="30天活跃数。最后登录位于30天内" />
+      <Column Name="Total" DataType="Int32" Description="总数。1年内活跃过的全部节点数" />
+      <Column Name="Actives" DataType="Int32" Description="活跃数。最后活跃位于今天" />
+      <Column Name="ActivesT7" DataType="Int32" Description="7天活跃数。最后活跃位于7天内" />
+      <Column Name="ActivesT30" DataType="Int32" Description="30天活跃数。最后活跃位于30天内" />
       <Column Name="News" DataType="Int32" Description="新增数。今天创建" />
       <Column Name="NewsT7" DataType="Int32" Description="7天新增数。7天创建" />
       <Column Name="NewsT30" DataType="Int32" Description="30天新增数。30天创建" />
