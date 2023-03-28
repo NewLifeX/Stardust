@@ -111,7 +111,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
         public ActionResult Trace(Int32 id)
         {
             var st = FindByID(id);
-            if (st == null) throw new InvalidDataException("找不到统计数据");
+            if (st == null) return Content("找不到统计数据");
 
             var traceId = st.TraceId;
 
@@ -119,10 +119,10 @@ namespace Stardust.Web.Areas.Monitors.Controllers
             try
             {
                 var ds = TraceData.Search(st.AppId, st.ItemId, "minute", st.StatTime, 20);
-                if (ds.Count == 0) throw new InvalidDataException("找不到追踪数据");
+                if (ds.Count == 0) return Content("找不到追踪数据");
 
                 var list = SampleData.FindAllByDataIds(ds.Select(e => e.LinkId > 0 ? e.LinkId : e.Id).ToArray(), st.StatTime);
-                if (list.Count == 0) throw new InvalidDataException("找不到采样数据");
+                if (list.Count == 0) return Content("找不到采样数据");
 
                 traceId = list[0].TraceId;
                 st.TraceId = traceId;
