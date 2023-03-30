@@ -61,7 +61,7 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
 
     class MyUrl : IUrlExtend
     {
-        public String Resolve(DataField field, IExtend data)
+        public String Resolve(DataField field, IModel data)
         {
             if (field is ListField df && data is NodeStat st && !st.Key.IsNullOrEmpty())
             {
