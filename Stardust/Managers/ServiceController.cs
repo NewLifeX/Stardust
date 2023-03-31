@@ -88,6 +88,7 @@ internal class ServiceController : DisposeBase
             {
                 if (_error == MaxFails) WriteLog("应用[{0}]累计错误次数{1}达到最大值{2}", Name, _error, MaxFails);
 
+                _error++;
                 return false;
             }
             _error++;
