@@ -503,7 +503,22 @@ internal class MyService : ServiceBase, IServiceProvider
         }
 
         // 查找正式目录
-        var di = "../agent".GetBasePath().AsDirectory();
+        DirectoryInfo di = null;
+
+        // 初始化Host
+        Init();
+
+        var cfg = Host?.QueryConfig(ServiceName);
+        if (cfg != null && !cfg.FilePath.IsNullOrEmpty())
+        {
+            var str = cfg.FilePath;
+            var p = str.IndexOf(' ');
+            if (p > 0) str = str.Substring(0, p);
+
+            di = str.AsFile().Directory;
+        }
+
+        if (di == null || !di.Exists) di = "../agent".GetBasePath().AsDirectory();
         if (!di.Exists) di = "../Agent".GetBasePath().AsDirectory();
         if (!di.Exists) di = "../staragent".GetBasePath().AsDirectory();
         if (!di.Exists) di = "../StarAgent".GetBasePath().AsDirectory();
@@ -542,9 +557,9 @@ internal class MyService : ServiceBase, IServiceProvider
         Thread.Sleep(5_000);
 
         WriteLog("停止服务……");
-        Init();
-        //Host.Stop(ServiceName);
-        Process.Start("net", $"stop {ServiceName}");
+        //Init();
+        Host.Stop(ServiceName);
+        //Process.Start("net", $"stop {ServiceName}");
         Thread.Sleep(1_000);
 
         // 拷贝当前目录所有dll/exe/runtime.json到正式目录
@@ -555,6 +570,8 @@ internal class MyService : ServiceBase, IServiceProvider
                 WriteLog("复制 {0}", fi.Name);
 
                 var dst = di.FullName.CombinePath(fi.Name);
+                if (File.Exists(dst)) File.Move(dst, Path.GetTempFileName());
+
                 fi.CopyTo(dst, true);
             }
             catch (Exception ex)
@@ -564,8 +581,8 @@ internal class MyService : ServiceBase, IServiceProvider
         }
 
         WriteLog("启动服务……");
-        //Host.Start(ServiceName);
-        Process.Start("net", $"start {ServiceName}");
+        Host.Start(ServiceName);
+        //Process.Start("net", $"start {ServiceName}");
         Thread.Sleep(1_000);
     }
     #endregion
