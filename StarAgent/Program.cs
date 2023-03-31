@@ -25,7 +25,13 @@ internal class Program
 {
     private static void Main(String[] args)
     {
-        if ("-upgrade".EqualIgnoreCase(args)) Thread.Sleep(5_000);
+        XTrace.UseConsole();
+
+        if ("-upgrade".EqualIgnoreCase(args))
+        {
+            XTrace.WriteLine("更新模式启动，等待{0}秒", 5_000);
+            Thread.Sleep(5_000);
+        }
 
         var set = StarSetting.Current;
         if (set.IsNew)
@@ -512,7 +518,7 @@ internal class MyService : ServiceBase, IServiceProvider
             foreach (var item in "../".GetBasePath().AsDirectory().GetDirectories())
             {
                 WriteLog("检查 {0}", item.FullName);
-                if (item.FullName.StartsWithIgnoreCase(cur)) continue;
+                if (item.FullName.TrimEnd('/', '\\').EqualIgnoreCase(cur)) continue;
 
                 var fi = item.GetFiles("StarAgent.dll").FirstOrDefault();
                 if (fi != null && fi.Exists)
@@ -696,6 +702,8 @@ internal class MyService : ServiceBase, IServiceProvider
                     set.Save();
 
                     XTrace.WriteLine("服务端修改为：{0}", addr);
+
+                    break;
                 }
             }
         }
@@ -707,6 +715,11 @@ internal class MyService : ServiceBase, IServiceProvider
     public Boolean RunZipDeploy(String[] args)
     {
         if (args == null || args.Length == 0) return false;
+
+        var file = args.FirstOrDefault(e => e.EndsWithIgnoreCase(".zip"));
+        if (file.IsNullOrEmpty()) return false;
+
+        XTrace.WriteLine("开始运行Zip发布文件 {0}", file);
 
         var deploy = new ZipDeploy
         {
