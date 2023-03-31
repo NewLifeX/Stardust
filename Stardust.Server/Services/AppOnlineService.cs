@@ -117,8 +117,12 @@ public class AppOnlineService
                 if (node.ProductCode.IsNullOrEmpty() || node.ProductCode == "App")
                 {
                     node.ProductCode = info?.Name;
-                    node.Update();
                 }
+
+                // 更新最后活跃时间
+                if (node.LastActive.AddMinutes(10) < DateTime.Now) node.LastActive = DateTime.Now;
+
+                node.Update();
             }
         }
 
