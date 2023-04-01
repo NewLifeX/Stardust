@@ -53,6 +53,14 @@ namespace Stardust.Data.Nodes
         [BindColumn("Argument", "参数", "")]
         public String Argument { get => _Argument; set { if (OnPropertyChanging("Argument", value)) { _Argument = value; OnPropertyChanged("Argument"); } } }
 
+        private DateTime _StartTime;
+        /// <summary>开始执行时间。用于提前下发指令后延期执行</summary>
+        [DisplayName("开始执行时间")]
+        [Description("开始执行时间。用于提前下发指令后延期执行")]
+        [DataObjectField(false, false, true, 0)]
+        [BindColumn("StartTime", "开始执行时间。用于提前下发指令后延期执行", "")]
+        public DateTime StartTime { get => _StartTime; set { if (OnPropertyChanging("StartTime", value)) { _StartTime = value; OnPropertyChanged("StartTime"); } } }
+
         private DateTime _Expire;
         /// <summary>过期时间。未指定时表示不限制</summary>
         [DisplayName("过期时间")]
@@ -172,6 +180,7 @@ namespace Stardust.Data.Nodes
                     case "NodeID": return _NodeID;
                     case "Command": return _Command;
                     case "Argument": return _Argument;
+                    case "StartTime": return _StartTime;
                     case "Expire": return _Expire;
                     case "Status": return _Status;
                     case "Times": return _Times;
@@ -195,6 +204,7 @@ namespace Stardust.Data.Nodes
                     case "NodeID": _NodeID = value.ToInt(); break;
                     case "Command": _Command = Convert.ToString(value); break;
                     case "Argument": _Argument = Convert.ToString(value); break;
+                    case "StartTime": _StartTime = value.ToDateTime(); break;
                     case "Expire": _Expire = value.ToDateTime(); break;
                     case "Status": _Status = (Stardust.Models.CommandStatus)value.ToInt(); break;
                     case "Times": _Times = value.ToInt(); break;
@@ -228,6 +238,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>参数</summary>
             public static readonly Field Argument = FindByName("Argument");
+
+            /// <summary>开始执行时间。用于提前下发指令后延期执行</summary>
+            public static readonly Field StartTime = FindByName("StartTime");
 
             /// <summary>过期时间。未指定时表示不限制</summary>
             public static readonly Field Expire = FindByName("Expire");
@@ -282,6 +295,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>参数</summary>
             public const String Argument = "Argument";
+
+            /// <summary>开始执行时间。用于提前下发指令后延期执行</summary>
+            public const String StartTime = "StartTime";
 
             /// <summary>过期时间。未指定时表示不限制</summary>
             public const String Expire = "Expire";

@@ -205,6 +205,7 @@
       <Column Name="NodeID" DataType="Int32" Description="节点" />
       <Column Name="Command" DataType="String" Master="True" Description="命令" />
       <Column Name="Argument" DataType="String" Length="500" Description="参数" />
+      <Column Name="StartTime" DataType="DateTime" Description="开始执行时间。用于提前下发指令后延期执行" />
       <Column Name="Expire" DataType="DateTime" Description="过期时间。未指定时表示不限制" />
       <Column Name="Status" DataType="Int32" Description="状态。命令状态" Type="Stardust.Models.CommandStatus" />
       <Column Name="Times" DataType="Int32" Description="次数。一共执行多少次，超过10次后取消" />

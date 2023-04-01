@@ -14,6 +14,9 @@ public class CommandModel
     /// <summary>参数</summary>
     public String Argument { get; set; }
 
+    /// <summary>开始执行时间。用于提前下发指令后延期执行</summary>
+    public DateTime StartTime { get; set; }
+
     /// <summary>过期时间。未指定时表示不限制</summary>
     public DateTime Expire { get; set; }
 
