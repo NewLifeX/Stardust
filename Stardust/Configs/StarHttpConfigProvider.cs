@@ -1,4 +1,5 @@
-﻿using NewLife.Configuration;
+﻿using NewLife;
+using NewLife.Configuration;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Remoting;
@@ -23,13 +24,13 @@ internal class StarHttpConfigProvider : HttpConfigProvider
             if (rs != null && rs.Count > 0)
             {
                 var inf = Info;
-                ConfigInfo = JsonHelper.Convert<ConfigInfo>(inf);
+                var ci = ConfigInfo = JsonHelper.Convert<ConfigInfo>(inf);
 
-                if (ConfigInfo != null && ConfigInfo.Configs != null && ConfigInfo.Configs.Count > 0)
+                if (ci != null && ci.Configs != null && ci.Configs.Count > 0)
                 {
-                    var dic = new Dictionary<String, Object>(inf);
-                    dic.Remove("configs");
-                    XTrace.WriteLine("从配置中心加载：{0}", dic.ToJson());
+                    //var dic = new Dictionary<String, Object>(inf);
+                    //dic.Remove("configs");
+                    XTrace.WriteLine("从配置中心加载：{0}", ci.Configs.Keys.ToArray().Join());
                 }
             }
 
