@@ -79,7 +79,7 @@ namespace Stardust.Data.Nodes
         /// <summary>消费组。消费组名称</summary>
         [DisplayName("消费组")]
         [Description("消费组。消费组名称")]
-        [DataObjectField(false, false, true, 200)]
+        [DataObjectField(false, false, true, 500)]
         [BindColumn("Groups", "消费组。消费组名称", "")]
         public String Groups { get => _Groups; set { if (OnPropertyChanging("Groups", value)) { _Groups = value; OnPropertyChanged("Groups"); } } }
 
