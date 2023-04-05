@@ -6,6 +6,7 @@ using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Log;
 using Stardust.Data.Configs;
+using Stardust.Extensions;
 using Stardust.Server.Services;
 using Stardust.Web.Services;
 using XCode;
@@ -112,20 +113,7 @@ public class Startup
         var set = NewLife.Setting.Current;
 
         // 缓存运行时安装文件
-        var sdk = "../FileCache".GetBasePath().EnsureDirectory(false);
-        XTrace.WriteLine("FileCache: {0}", sdk);
-        app.UseStaticFiles(new StaticFileOptions
-        {
-            RequestPath = new PathString("/files"),
-            FileProvider = new CacheFileProvider(sdk, set.PluginServer),
-            ServeUnknownFileTypes = true,
-            DefaultContentType = "application/x-msdownload",
-        });
-        app.UseDirectoryBrowser(new DirectoryBrowserOptions
-        {
-            RequestPath = new PathString("/files"),
-            FileProvider = new PhysicalFileProvider(sdk),
-        });
+        app.UseFileCache("/files", "../FileCache", set.PluginServer);
 
         //app.UseStardust();
         app.UseResponseCompression();
