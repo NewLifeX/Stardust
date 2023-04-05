@@ -54,11 +54,11 @@ namespace Stardust.Data.Nodes
         public String Argument { get => _Argument; set { if (OnPropertyChanging("Argument", value)) { _Argument = value; OnPropertyChanged("Argument"); } } }
 
         private DateTime _StartTime;
-        /// <summary>开始执行时间。用于提前下发指令后延期执行</summary>
+        /// <summary>开始执行时间。用于提前下发指令后延期执行，暂时不支持取消</summary>
         [DisplayName("开始执行时间")]
-        [Description("开始执行时间。用于提前下发指令后延期执行")]
+        [Description("开始执行时间。用于提前下发指令后延期执行，暂时不支持取消")]
         [DataObjectField(false, false, true, 0)]
-        [BindColumn("StartTime", "开始执行时间。用于提前下发指令后延期执行", "")]
+        [BindColumn("StartTime", "开始执行时间。用于提前下发指令后延期执行，暂时不支持取消", "")]
         public DateTime StartTime { get => _StartTime; set { if (OnPropertyChanging("StartTime", value)) { _StartTime = value; OnPropertyChanged("StartTime"); } } }
 
         private DateTime _Expire;
@@ -239,7 +239,7 @@ namespace Stardust.Data.Nodes
             /// <summary>参数</summary>
             public static readonly Field Argument = FindByName("Argument");
 
-            /// <summary>开始执行时间。用于提前下发指令后延期执行</summary>
+            /// <summary>开始执行时间。用于提前下发指令后延期执行，暂时不支持取消</summary>
             public static readonly Field StartTime = FindByName("StartTime");
 
             /// <summary>过期时间。未指定时表示不限制</summary>
@@ -296,7 +296,7 @@ namespace Stardust.Data.Nodes
             /// <summary>参数</summary>
             public const String Argument = "Argument";
 
-            /// <summary>开始执行时间。用于提前下发指令后延期执行</summary>
+            /// <summary>开始执行时间。用于提前下发指令后延期执行，暂时不支持取消</summary>
             public const String StartTime = "StartTime";
 
             /// <summary>过期时间。未指定时表示不限制</summary>

@@ -139,7 +139,8 @@ namespace Stardust.Data.Nodes
                 Command = Command,
                 Argument = Argument,
                 Expire = Expire,
-                //TraceId = TraceId,
+                StartTime = StartTime,
+                TraceId = TraceId,
             };
         }
         #endregion

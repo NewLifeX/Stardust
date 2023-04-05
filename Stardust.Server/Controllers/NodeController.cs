@@ -7,6 +7,7 @@ using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Web;
+using Stardust.Data;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Common;
@@ -317,32 +318,46 @@ public class NodeController : BaseController
 
     private async Task ConsumeMessage(WebSocket socket, Node node, String ip, CancellationTokenSource source)
     {
+        DefaultSpan.Current = null;
         var cancellationToken = source.Token;
         var queue = _queue.GetQueue<String>($"nodecmd:{node.Code}");
         try
         {
             while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
             {
-                var msg = await queue.TakeOneAsync(30);
-                if (msg != null)
+                ISpan span = null;
+                var mqMsg = await queue.TakeOneAsync(30);
+                if (mqMsg != null)
                 {
-                    WriteHistory(node, "WebSocket发送", true, msg, ip);
+                    // 埋点
+                    span = _tracer?.NewSpan($"mq:NodeCommand", mqMsg);
 
-                    // 更新命令的处理状态
-                    var mcmd = msg.ToJsonEntity<CommandModel>();
-                    if (mcmd != null)
+                    // 解码
+                    var dic = JsonParser.Decode(mqMsg);
+                    var msg = JsonHelper.Convert<CommandModel>(dic);
+                    span.Detach(dic);
+
+                    if (msg == null || msg.Id == 0 || msg.Expire.Year > 2000 && msg.Expire < DateTime.Now)
+                        WriteHistory(node, "WebSocket发送", false, "消息无效或已过期。" + mqMsg, ip);
+                    else
                     {
-                        var cmd = NodeCommand.FindById(mcmd.Id);
-                        if (cmd != null)
-                        {
-                            cmd.Times++;
-                            cmd.Status = CommandStatus.处理中;
-                            cmd.UpdateTime = DateTime.Now;
-                            cmd.Update();
-                        }
-                    }
+                        WriteHistory(node, "WebSocket发送", true, mqMsg, ip);
 
-                    await socket.SendAsync(msg.GetBytes(), WebSocketMessageType.Text, true, cancellationToken);
+                        // 向客户端传递埋点信息，构建完整调用链
+                        msg.TraceId = span + "";
+
+                        var log = NodeCommand.FindById(msg.Id);
+                        if (log != null)
+                        {
+                            if (log.TraceId.IsNullOrEmpty()) log.TraceId = span?.TraceId;
+                            log.Times++;
+                            log.Status = CommandStatus.处理中;
+                            log.UpdateTime = DateTime.Now;
+                            log.Update();
+                        }
+
+                        await socket.SendAsync(mqMsg.GetBytes(), WebSocketMessageType.Text, true, cancellationToken);
+                    }
                 }
                 else
                 {

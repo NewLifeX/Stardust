@@ -200,7 +200,7 @@ public class AppController : BaseController
                     span.Detach(dic);
 
                     if (msg == null || msg.Id == 0 || msg.Expire.Year > 2000 && msg.Expire < DateTime.Now)
-                        WriteHistory("WebSocket发送", false, "消息无效。" + mqMsg, clientId, ip);
+                        WriteHistory("WebSocket发送", false, "消息无效或已过期。" + mqMsg, clientId, ip);
                     else
                     {
                         WriteHistory("WebSocket发送", true, mqMsg, clientId, ip);
@@ -212,7 +212,9 @@ public class AppController : BaseController
                         if (log != null)
                         {
                             if (log.TraceId.IsNullOrEmpty()) log.TraceId = span?.TraceId;
+                            log.Times++;
                             log.Status = CommandStatus.处理中;
+                            log.UpdateTime = DateTime.Now;
                             log.Update();
                         }
 

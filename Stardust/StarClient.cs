@@ -722,10 +722,10 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         catch (Exception ex)
         {
             Log?.Debug("{0}", ex);
-            //XTrace.WriteException(ex);
         }
 
-        if (socket.State == WebSocketState.Open) await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
+        if (socket.State == WebSocketState.Open)
+            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
     }
 #endif
 
@@ -737,14 +737,31 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         if (!_cache.Add($"nodecmd:{model.Id}", model, 3600)) return;
 
         // 埋点，建立调用链
-        using var span = Tracer?.NewSpan("OnReceiveCommand", model);
+        using var span = Tracer?.NewSpan("cmd:" + model.Command, model);
         span?.Detach(model.TraceId);
         try
         {
             XTrace.WriteLine("Got Command: {0}", model.ToJson());
             if (model.Expire.Year < 2000 || model.Expire > DateTime.Now)
             {
-                await OnReceiveCommand(model);
+                // 延迟执行
+                if (model.StartTime > DateTime.Now)
+                {
+                    TimerX.Delay(s =>
+                    {
+                        _ = OnReceiveCommand(model);
+                    }, (Int32)(model.StartTime - DateTime.Now).TotalMilliseconds);
+
+                    var reply = new CommandReplyModel
+                    {
+                        Id = model.Id,
+                        Status = CommandStatus.处理中,
+                        Data = $"已安排计划执行 {model.StartTime.ToFullString()}"
+                    };
+                    await CommandReply(reply);
+                }
+                else
+                    await OnReceiveCommand(model);
             }
             else
             {

@@ -10,6 +10,7 @@ using NewLife.Threading;
 using Stardust.Models;
 using Stardust.Registry;
 using Stardust.Services;
+using NewLife.Caching;
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
 using System.Net.WebSockets;
 using TaskEx = System.Threading.Tasks.Task;
@@ -57,6 +58,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     private readonly ConcurrentDictionary<String, ServiceModel[]> _consumes = new();
     private readonly ConcurrentDictionary<String, IList<Delegate>> _consumeEvents = new();
     private readonly ConcurrentQueue<AppInfo> _fails = new();
+    private readonly ICache _cache = new MemoryCache();
     #endregion
 
     #region 构造
@@ -194,6 +196,15 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
                 {
                     // 由服务器改变采样频率
                     if (rs.Period > 0) _timer.Period = rs.Period * 1000;
+
+                    // 推队列
+                    if (rs.Commands != null && rs.Commands.Length > 0)
+                    {
+                        foreach (var model in rs.Commands)
+                        {
+                            await ReceiveCommand(model);
+                        }
+                    }
                 }
             }
             catch
@@ -399,37 +410,65 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             {
                 var data = await socket.ReceiveAsync(new ArraySegment<Byte>(buf), cancellationToken);
                 var model = buf.ToStr(null, 0, data.Count).ToJsonEntity<CommandModel>();
-                if (model != null)
-                {
-                    // 建立追踪链路
-                    using var span = Tracer?.NewSpan("cmd:" + model.Command, model);
-                    if (span != null && !model.TraceId.IsNullOrEmpty()) span.TraceId = model.TraceId;
-                    try
-                    {
-                        WriteLog("Got Command: {0}", model.ToJson());
-                        if (model.Expire.Year < 2000 || model.Expire > DateTime.Now)
-                        {
-                            await OnReceiveCommand(model);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        span?.SetError(ex, null);
-                    }
-                }
+                if (model != null) await ReceiveCommand(model);
             }
         }
         catch (WebSocketException) { }
         catch (Exception ex)
         {
             Log?.Debug("{0}", ex);
-            //XTrace.WriteException(ex);
         }
 
         if (socket.State == WebSocketState.Open)
             await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
     }
 #endif
+
+    async Task ReceiveCommand(CommandModel model)
+    {
+        if (model == null) return;
+
+        // 去重，避免命令被重复执行
+        if (!_cache.Add($"nodecmd:{model.Id}", model, 3600)) return;
+
+        // 埋点，建立调用链
+        using var span = Tracer?.NewSpan("cmd:" + model.Command, model);
+        span?.Detach(model.TraceId);
+        try
+        {
+            XTrace.WriteLine("Got Command: {0}", model.ToJson());
+            if (model.Expire.Year < 2000 || model.Expire > DateTime.Now)
+            {
+                // 延迟执行
+                if (model.StartTime > DateTime.Now)
+                {
+                    TimerX.Delay(s =>
+                    {
+                        _ = OnReceiveCommand(model);
+                    }, (Int32)(model.StartTime - DateTime.Now).TotalMilliseconds);
+
+                    var reply = new CommandReplyModel
+                    {
+                        Id = model.Id,
+                        Status = CommandStatus.处理中,
+                        Data = $"已安排计划执行 {model.StartTime.ToFullString()}"
+                    };
+                    await CommandReply(reply);
+                }
+                else
+                    await OnReceiveCommand(model);
+            }
+            else
+            {
+                var reply = new CommandReplyModel { Id = model.Id, Status = CommandStatus.取消 };
+                await CommandReply(reply);
+            }
+        }
+        catch (Exception ex)
+        {
+            span?.SetError(ex, null);
+        }
+    }
     #endregion
 
     #region 命令调度

@@ -126,6 +126,7 @@ namespace Stardust.Data
                 Command = Command,
                 Argument = Argument,
                 Expire = Expire,
+                StartTime = StartTime,
                 TraceId = TraceId,
             };
         }
