@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using NewLife.Log;
 
-namespace Stardust.Extensions;
+namespace Stardust.Extensions.Caches;
 
 /// <summary>
 /// 文件缓存扩展
@@ -32,7 +32,7 @@ public static class FileCacheExtensions
         app.UseDirectoryBrowser(new DirectoryBrowserOptions
         {
             RequestPath = new PathString(requestPath),
-            FileProvider = new CacheFileProvider(sdk, uplinkServer),
+            FileProvider = new CacheFileProvider(sdk, uplinkServer) { IndexInfoFile = "index.csv" },
         });
     }
 }

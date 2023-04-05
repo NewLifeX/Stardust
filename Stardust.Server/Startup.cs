@@ -10,6 +10,7 @@ using NewLife.Log;
 using NewLife.Serialization;
 using Stardust.Data.Nodes;
 using Stardust.Extensions;
+using Stardust.Extensions.Caches;
 using Stardust.Monitors;
 using Stardust.Server.Services;
 using XCode;

@@ -7,6 +7,7 @@ using NewLife.Cube.Extensions;
 using NewLife.Log;
 using Stardust.Data.Configs;
 using Stardust.Extensions;
+using Stardust.Extensions.Caches;
 using Stardust.Server.Services;
 using Stardust.Web.Services;
 using XCode;
