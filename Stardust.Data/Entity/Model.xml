@@ -46,7 +46,7 @@
       <Column Name="PingCount" DataType="Int32" Description="心跳" />
       <Column Name="WebSocket" DataType="Boolean" Description="长连接。WebSocket长连接" />
       <Column Name="ProcessId" DataType="Int32" Description="进程" />
-      <Column Name="ProcessName" DataType="String" Description="进程名称" />
+      <Column Name="ProcessName" DataType="String" Length="200" Description="进程名称" />
       <Column Name="CommandLine" DataType="String" Length="500" Description="命令行" />
       <Column Name="UserName" DataType="String" Description="用户名。启动该进程的用户名" />
       <Column Name="MachineName" DataType="String" Description="机器名" />

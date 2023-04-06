@@ -200,7 +200,7 @@ public class AppInfo
             try
             {
                 var lines = File.ReadAllText($"/proc/{process.Id}/cmdline").Trim('\0', ' ').Split('\0');
-                if (lines.Length > 1) return lines[1];
+                if (lines.Length > 1) return Path.GetFileName(lines[1]);
             }
             catch { }
         }

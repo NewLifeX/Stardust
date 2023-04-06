@@ -90,7 +90,7 @@ namespace Stardust.Data.Configs
         /// <summary>进程名称</summary>
         [DisplayName("进程名称")]
         [Description("进程名称")]
-        [DataObjectField(false, false, true, 50)]
+        [DataObjectField(false, false, true, 200)]
         [BindColumn("ProcessName", "进程名称", "")]
         public String ProcessName { get => _ProcessName; set { if (OnPropertyChanging("ProcessName", value)) { _ProcessName = value; OnPropertyChanged("ProcessName"); } } }
 

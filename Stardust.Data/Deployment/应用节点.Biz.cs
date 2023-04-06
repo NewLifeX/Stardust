@@ -40,7 +40,10 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         if (AppId <= 0) throw new ArgumentNullException(nameof(AppId));
         if (NodeId <= 0) throw new ArgumentNullException(nameof(NodeId));
 
-        var len = _.IP.Length;
+        var len = _.ProcessName.Length;
+        if (len > 0 && !ProcessName.IsNullOrEmpty() && ProcessName.Length > len) ProcessName = ProcessName[..len];
+
+        len = _.IP.Length;
         if (len > 0 && !IP.IsNullOrEmpty() && IP.Length > len)
         {
             // 取前三个
