@@ -454,7 +454,12 @@ public partial class Node : Entity<Node>
         if (!di.Macs.IsNullOrEmpty()) node.MACs = di.Macs;
         //if (!di.COMs.IsNullOrEmpty()) node.COMs = di.COMs;
         if (!di.InstallPath.IsNullOrEmpty()) node.InstallPath = di.InstallPath;
-        if (!di.Runtime.IsNullOrEmpty()) node.Runtime = di.Runtime;
+        if (!di.Runtime.IsNullOrEmpty())
+        {
+            node.Runtime = di.Runtime;
+            if (node.Framework.IsNullOrEmpty()) node.Framework = di.Runtime;
+            if (node.Frameworks.IsNullOrEmpty()) node.Frameworks = di.Runtime;
+        }
         if (!di.Framework.IsNullOrEmpty())
         {
             node.Framework = di.Framework?.Split(',').LastOrDefault();
