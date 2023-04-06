@@ -80,7 +80,7 @@ namespace Stardust.Data.Nodes
         [DisplayName("升级源")]
         [Description("升级源")]
         [DataObjectField(false, false, true, 200)]
-        [BindColumn("Source", "升级源", "", ItemType = "file")]
+        [BindColumn("Source", "升级源", "", ItemType = "file-zip")]
         public String Source { get => _Source; set { if (OnPropertyChanging("Source", value)) { _Source = value; OnPropertyChanged("Source"); } } }
 
         private Int64 _Size;
