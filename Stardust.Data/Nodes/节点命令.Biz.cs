@@ -35,6 +35,8 @@ namespace Stardust.Data.Nodes
             // 如果没有脏数据，则不需要进行任何处理
             if (!HasDirty) return;
 
+            this.TrimExtraLong(__.Result);
+
             base.Valid(isNew);
 
             if (TraceId.IsNullOrEmpty()) TraceId = DefaultSpan.Current?.TraceId;
