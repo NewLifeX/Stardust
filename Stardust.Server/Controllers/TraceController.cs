@@ -279,9 +279,6 @@ public class TraceController : ControllerBase
                 // 如果最小耗时都超过了超时设置，则全部标记为错误
                 if (isTimeout && td.MinCost >= timeout && td.Errors < td.Total) td.Errors = td.Total;
 
-                // 如果是异常埋点，全部标记为错误
-                if (td.Name.StartsWithIgnoreCase("ex:")) td.Errors = td.Total;
-
                 // 处理克隆。拷贝一份入库，归属新的跟踪项，但名称不变
                 foreach (var elm in app.GetClones(item.Name, model.ClientId))
                 {
