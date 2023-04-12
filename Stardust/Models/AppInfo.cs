@@ -190,53 +190,49 @@ public class AppInfo
     }
 
     private static ICache _cache = new MemoryCache();
-    /// <summary>获取进程名</summary>
+    /// <summary>获取进程名。dotnet/java进程取文件名</summary>
     /// <param name="process"></param>
     /// <returns></returns>
     public static String GetProcessName(Process process)
     {
+        // 缓存，避免频繁执行
+        var key = process.Id + "";
+        if (_cache.TryGetValue<String>(key, out var value)) return value;
+
+        var name = process.ProcessName;
+
         if (Runtime.Linux)
         {
             try
             {
                 var lines = File.ReadAllText($"/proc/{process.Id}/cmdline").Trim('\0', ' ').Split('\0');
-                if (lines.Length > 1) return Path.GetFileName(lines[1]);
+                if (lines.Length > 1) name = Path.GetFileNameWithoutExtension(lines[1]);
             }
             catch { }
         }
         else if (Runtime.Windows)
         {
-            // 缓存，避免频繁执行
-            var key = process.Id + "";
-            if (_cache.TryGetValue<String>(key, out var value)) return value;
-
             try
             {
                 var dic = ReadWmic("process", "processId=" + process.Id, "commandline");
                 if (dic.TryGetValue("commandline", out var str))
                 {
-                    //XTrace.WriteLine(str);
                     var p = str.IndexOf('\"');
                     if (p >= 0)
                     {
                         var p2 = str.IndexOf('\"', p + 1);
                         if (p2 > 0) str = str.Substring(p2 + 1);
                     }
-                    //XTrace.WriteLine(str);
                     var ss = str.Split(' ');
-                    if (ss.Length >= 2)
-                    {
-                        _cache.Set(key, ss[1], 600);
-                        return ss[1];
-                    }
+                    if (ss.Length >= 2) name = Path.GetFileNameWithoutExtension(ss[1]);
                 }
             }
             catch { }
-
-            _cache.Set(key, process.ProcessName, 600);
         }
 
-        return process.ProcessName;
+        _cache.Set(key, name, 600);
+
+        return name;
     }
 
     /// <summary>通过WMIC命令读取信息</summary>
