@@ -102,21 +102,44 @@ public class StarFactory : DisposeBase
 
         Local = new LocalStarClient();
 
+        // 从命令行读取参数
+        var args = Environment.GetCommandLineArgs();
+        if (args != null && args.Length > 0)
+        {
+            for (var i = 0; i < args.Length; i++)
+            {
+                var key = args[i].TrimStart('-');
+                var p = key.IndexOf('=');
+                if (p > 0)
+                {
+                    var value = key.Substring(p + 1);
+                    key = key.Substring(0, p);
+                    if (Server.IsNullOrEmpty() && key.EqualIgnoreCase("StarServer"))
+                        Server = value;
+                    else if (AppId.IsNullOrEmpty() && key.EqualIgnoreCase("StarAppId"))
+                        AppId = value;
+                    else if (Secret.IsNullOrEmpty() && key.EqualIgnoreCase("StarSecret"))
+                        Secret = value;
+                }
+            }
+        }
+
         // 从环境变量读取星尘地址、应用Id、密钥，方便容器化部署
         if (Server.IsNullOrEmpty()) Server = Environment.GetEnvironmentVariable("StarServer");
-        if (AppId.IsNullOrEmpty()) AppId = Environment.GetEnvironmentVariable("AppId");
-        if (Secret.IsNullOrEmpty()) Secret = Environment.GetEnvironmentVariable("Secret");
+        if (AppId.IsNullOrEmpty()) AppId = Environment.GetEnvironmentVariable("StarAppId");
+        if (Secret.IsNullOrEmpty()) Secret = Environment.GetEnvironmentVariable("StarSecret");
 
         // 不区分大小写识别环境变量
         foreach (DictionaryEntry item in Environment.GetEnvironmentVariables())
         {
             var key = item.Key + "";
+            var value = item.Value + "";
             if (Server.IsNullOrEmpty() && key.EqualIgnoreCase("StarServer"))
-                Server = item.Value + "";
-            else if (AppId.IsNullOrEmpty() && key.EqualIgnoreCase("AppId"))
-                AppId = item.Value + "";
-            else if (Secret.IsNullOrEmpty() && key.EqualIgnoreCase("Secret"))
-                Secret = item.Value + "";
+                Server = value;
+            else if (AppId.IsNullOrEmpty() && key.EqualIgnoreCase("StarAppId"))
+                AppId = value;
+            else if (Secret.IsNullOrEmpty() && key.EqualIgnoreCase("StarSecret"))
+                Secret = value;
         }
 
         // 读取本地appsetting

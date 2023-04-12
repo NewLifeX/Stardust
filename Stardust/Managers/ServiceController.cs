@@ -339,6 +339,9 @@ internal class ServiceController : DisposeBase
     {
         using var span = Tracer?.NewSpan("CheckService", Info.Name);
 
+        // 获取当前进程Id
+        var mypid = Process.GetCurrentProcess().Id;
+
         // 进程存在，常规判断内存
         var p = Process;
         if (p != null)
@@ -379,7 +382,7 @@ internal class ServiceController : DisposeBase
         }
 
         // 进程不存在，但Id存在
-        if (p == null && ProcessId > 0)
+        if (p == null && ProcessId > 0 && ProcessId != mypid)
         {
             span?.AppendTag($"GetProcessById({ProcessId})");
             try
@@ -430,6 +433,7 @@ internal class ServiceController : DisposeBase
                     // 遍历所有进程，从命令行参数中找到启动文件名一致的进程
                     foreach (var item in Process.GetProcesses())
                     {
+                        if (item.Id == mypid) continue;
                         if (!item.ProcessName.EqualIgnoreCase(ProcessName)) continue;
 
                         var name = AppInfo.GetProcessName(item);
@@ -445,7 +449,7 @@ internal class ServiceController : DisposeBase
             {
                 span?.AppendTag($"GetProcessesByName({ProcessName})");
 
-                var ps = Process.GetProcessesByName(ProcessName);
+                var ps = Process.GetProcessesByName(ProcessName).Where(e => e.Id != mypid).ToArray();
                 if (ps.Length > 0) return TakeOver(ps[0], $"按[Name={ProcessName}]查找");
             }
         }

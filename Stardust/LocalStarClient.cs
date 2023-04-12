@@ -59,6 +59,15 @@ public class LocalStarClient
     /// <returns></returns>
     public AgentInfo GetInfo()
     {
+        // 检测进程是否存在，如果进程都不存在，没必要获取信息
+        if (!Process.GetProcessesByName("StarAgent").Any())
+        {
+            var pis = Process.GetProcessesByName("dotnet");
+            if (pis.Length == 0) return null;
+
+            if (!pis.Any(p => AppInfo.GetProcessName(p).EqualIgnoreCase("StarAgent"))) return null;
+        }
+
         var task = TaskEx.Run(GetInfoAsync);
         return task.Wait(500) ? task.Result : null;
     }
