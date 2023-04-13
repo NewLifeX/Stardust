@@ -41,14 +41,14 @@ class Program
         var ioc = ObjectContainer.Current;
         var provider = ioc.BuildServiceProvider();
         var factory = new StarFactory();
-        //for (var i = 0; i < 1000; i++)
-        //{
-        var addr = factory.Config["$Registry:StarWeb"];
-        //var addr = factory.Config.GetSection("$Registry:StarWeb")?.Value;
-        XTrace.WriteLine(addr);
+        for (var i = 0; i < 1000; i++)
+        {
+            var addr = factory.Config["$Registry:StarWeb"];
+            //var addr = factory.Config.GetSection("$Registry:StarWeb")?.Value;
+            XTrace.WriteLine(addr);
 
-        //    Thread.Sleep(1000);
-        //}
+            Thread.Sleep(1000);
+        }
 
         var io = new EasyClient(provider);
         io.SetValue("BaseAction", "/io/");

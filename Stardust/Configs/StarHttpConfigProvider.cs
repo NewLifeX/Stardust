@@ -7,6 +7,7 @@ using NewLife.Serialization;
 using Stardust.Models;
 using Stardust.Registry;
 using Stardust.Services;
+using static System.Net.WebRequestMethods;
 
 namespace Stardust.Configs;
 
@@ -66,6 +67,7 @@ internal class StarHttpConfigProvider : HttpConfigProvider
     }
 
 #if !NET40
+    private readonly HashSet<String> _keys = new();
     /// <summary>获取指定配置。拦截对注册中心的请求</summary>
     /// <param name="key"></param>
     /// <param name="createOnMiss"></param>
@@ -80,6 +82,14 @@ internal class StarHttpConfigProvider : HttpConfigProvider
             if (Client is IRegistry registry)
             {
                 var addrs = registry.ResolveAddressAsync(key).Result;
+
+                // 注册服务有改变时，通知配置系统改变
+                if (!_keys.Contains(key))
+                {
+                    _keys.Add(key);
+                    registry.Bind(key, (k, ms) => NotifyChange());
+                }
+
                 return new ConfigSection { Key = key, Value = addrs.Join() };
             }
         }
