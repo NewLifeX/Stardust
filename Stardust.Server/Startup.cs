@@ -185,12 +185,15 @@ public class Startup
             set.BackupPath = "../Backup";
             set.Save();
         }
-        //var set2 = XCode.Setting.Current;
-        //if (set2.IsNew)
-        //{
-        //    set2.Migration = Migration.ReadOnly;
-        //    set2.Save();
-        //}
+#if !DEBUG
+        var set2 = XCode.Setting.Current;
+        if (set2.IsNew)
+        {
+            set2.ShowSQL = false;
+            //set2.Migration = Migration.ReadOnly;
+            set2.Save();
+        }
+#endif
         var set3 = Stardust.Server.Setting.Current;
         if (set3.IsNew)
         {
