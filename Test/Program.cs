@@ -43,14 +43,15 @@ class Program
         var factory = new StarFactory();
         //for (var i = 0; i < 1000; i++)
         //{
-        //    //var addr = factory.Config["$Registr:StarWeb"];
-        //    var addr = factory.Config.GetSection("$Registry:StarWeb")?.Value;
-        //    XTrace.WriteLine(addr);
+        var addr = factory.Config["$Registry:StarWeb"];
+        //var addr = factory.Config.GetSection("$Registry:StarWeb")?.Value;
+        XTrace.WriteLine(addr);
 
         //    Thread.Sleep(1000);
         //}
 
         var io = new EasyClient(provider);
+        io.SetValue("BaseAction", "/io/");
         //for (var i = 0; i < 1000; i++)
         //{
         var client = io.GetValue("_client") as ApiHttpClient;
@@ -61,6 +62,9 @@ class Program
         await io.Put("aa.txt", "学无先后达者为师！".GetBytes());
         var rs = await io.Get("aa.txt");
         XTrace.WriteLine(rs.Data.ToStr());
+
+        var ss = await io.Search();
+        XTrace.WriteLine(ss.ToJson(true));
 
         var rs2 = await io.Delete("aa.txt");
     }

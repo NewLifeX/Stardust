@@ -37,7 +37,7 @@ namespace Stardust.Server.Services
             {
                 if (!item.Enable || !item.EnableApollo || item.ApolloMetaServer.IsNullOrEmpty()) continue;
 
-                var httpConfig = new HttpConfigProvider
+                var httpConfig = new ApolloConfigProvider
                 {
                     Server = item.ApolloMetaServer,
                     AppId = item.ApolloAppId

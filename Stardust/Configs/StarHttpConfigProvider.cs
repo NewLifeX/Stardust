@@ -65,10 +65,12 @@ internal class StarHttpConfigProvider : HttpConfigProvider
         return null;
     }
 
+#if !NET40
     /// <summary>获取指定配置。拦截对注册中心的请求</summary>
     /// <param name="key"></param>
+    /// <param name="createOnMiss"></param>
     /// <returns></returns>
-    public override IConfigSection GetSection(String key)
+    protected override IConfigSection Find(String key, Boolean createOnMiss)
     {
         if (key.StartsWithIgnoreCase(REGISTRY))
         {
@@ -82,8 +84,9 @@ internal class StarHttpConfigProvider : HttpConfigProvider
             }
         }
 
-        return base.GetSection(key);
+        return base.Find(key, createOnMiss);
     }
+#endif
 
     public void Attach(ICommandClient client) => client.RegisterCommand("config/publish", DoPublish);
 
