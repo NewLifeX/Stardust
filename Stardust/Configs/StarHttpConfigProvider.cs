@@ -5,6 +5,7 @@ using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Serialization;
 using Stardust.Models;
+using Stardust.Registry;
 using Stardust.Services;
 
 namespace Stardust.Configs;
@@ -13,6 +14,7 @@ internal class StarHttpConfigProvider : HttpConfigProvider
 {
     public ConfigInfo ConfigInfo { get; set; }
 
+    const String REGISTRY = "$Registry:";
     private Boolean _useWorkerId;
 
     protected override IDictionary<String, Object> GetAll()
@@ -61,6 +63,26 @@ internal class StarHttpConfigProvider : HttpConfigProvider
         }
 
         return null;
+    }
+
+    /// <summary>获取指定配置。拦截对注册中心的请求</summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public override IConfigSection GetSection(String key)
+    {
+        if (key.StartsWithIgnoreCase(REGISTRY))
+        {
+            key = key.Substring(REGISTRY.Length);
+
+            // 从注册中心获取服务
+            if (Client is IRegistry registry)
+            {
+                var addrs = registry.ResolveAddressAsync(key).Result;
+                return new ConfigSection { Key = key, Value = addrs.Join() };
+            }
+        }
+
+        return base.GetSection(key);
     }
 
     public void Attach(ICommandClient client) => client.RegisterCommand("config/publish", DoPublish);
