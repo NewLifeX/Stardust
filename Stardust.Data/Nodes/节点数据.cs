@@ -80,7 +80,7 @@ namespace Stardust.Data.Nodes
         [DisplayName("电量")]
         [Description("电量")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Battery", "电量", "")]
+        [BindColumn("Battery", "电量", "", ItemType = "percent")]
         public Double Battery { get => _Battery; set { if (OnPropertyChanging("Battery", value)) { _Battery = value; OnPropertyChanged("Battery"); } } }
 
         private Int64 _UplinkSpeed;
