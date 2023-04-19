@@ -305,6 +305,7 @@ public partial class Node : Entity<Node>
     {
         var exp = new WhereExpression();
         exp &= _.LastActive >= start;
+        exp &= _.Enable == true;
 
         return FindAll(exp.GroupBy(groupField), null, selects);
     }
@@ -313,6 +314,7 @@ public partial class Node : Entity<Node>
     {
         var exp = new WhereExpression();
         exp &= _.LastActive >= start;
+        exp &= _.Enable == true;
 
         return FindAll(exp + $" Group By {groupField}", null, selects, 0, 0);
     }
