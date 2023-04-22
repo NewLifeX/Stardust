@@ -33,8 +33,6 @@
     <Compile Remove="Configs\配置在线.cs" />
     <Compile Remove="Deployment\部署在线.Biz.cs" />
     <Compile Remove="Deployment\部署在线.cs" />
-    <Compile Remove="Entity\应用日志.Biz.cs" />
-    <Compile Remove="Entity\应用日志.cs" />
   </ItemGroup>
 
   <ItemGroup>

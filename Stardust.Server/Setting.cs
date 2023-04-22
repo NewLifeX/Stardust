@@ -2,6 +2,7 @@
 using NewLife;
 using NewLife.Configuration;
 using NewLife.Security;
+using XCode.Configuration;
 
 namespace Stardust.Server;
 
@@ -9,6 +10,10 @@ namespace Stardust.Server;
 [Config("StarServer")]
 public class StarServerSetting : Config<StarServerSetting>
 {
+    #region 静态
+    static StarServerSetting() => Provider = new DbConfigProvider { UserId = 0, Category = "StarServer" };
+    #endregion
+
     #region 属性
     /// <summary>调试开关。默认true</summary>
     [Description("调试开关。默认true")]

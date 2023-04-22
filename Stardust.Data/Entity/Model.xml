@@ -218,4 +218,22 @@
       <Index Columns="UpdateTime" />
     </Indexes>
   </Table>
+  <Table Name="AppClientLog" Description="应用日志" ConnName="StardustData">
+    <Columns>
+      <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+      <Column Name="AppId" DataType="Int32" Master="True" Description="应用" />
+      <Column Name="ClientId" DataType="String" Master="True" Description="客户端" />
+      <Column Name="Time" DataType="String" Description="时间" />
+      <Column Name="ThreadId" DataType="String" Description="线程" />
+      <Column Name="Kind" DataType="String" Description="类型" />
+      <Column Name="Name" DataType="String" Description="名称" />
+      <Column Name="Message" DataType="String" Length="-1" Description="内容" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+    </Columns>
+    <Indexes>
+      <Index Columns="AppId,ClientId,ThreadId,Id" />
+      <Index Columns="AppId,Id" />
+    </Indexes>
+  </Table>
 </Tables>
