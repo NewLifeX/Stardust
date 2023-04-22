@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2022.xsd" NameSpace="Stardust.Data.Deployment" ConnName="Stardust" BaseClass="Entity" Output="" Version="11.3.2022.1013" Document="https://newlifex.com/xcode/model" DisplayName="" CubeOutput="" xmlns="https://newlifex.com/Model2022.xsd">
+<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2022.xsd" NameSpace="Stardust.Data.Deployment" ConnName="Stardust" BaseClass="Entity" Output="" Version="11.3.2022.1013" Document="https://newlifex.com/xcode/model" DisplayName="" CubeOutput="../../Stardust.Web/Areas/Deployment" xmlns="https://newlifex.com/Model2022.xsd">
   <Table Name="AppDeploy" Description="应用部署。应用部署配置，单应用可有多个部署集合。新增版本并上传zip应用包，再到部署节点里发布">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />

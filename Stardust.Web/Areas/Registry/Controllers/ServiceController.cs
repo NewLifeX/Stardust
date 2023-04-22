@@ -1,17 +1,20 @@
 ﻿using NewLife.Cube;
 using NewLife.Cube.ViewModels;
+using NewLife.Web;
 using Stardust.Data;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Registry.Controllers
 {
+    /// <summary>服务信息。服务提供者发布的服务</summary>
+    [Menu(40, true, Icon = "fa-table")]
     [RegistryArea]
-    [Menu(80)]
-    public class ServiceInfoController : EntityController<Service>
+    public class ServiceController : EntityController<Service>
     {
-        static ServiceInfoController()
+        static ServiceController()
         {
             LogOnChange = true;
+            ListFields.RemoveCreateField();
 
             ListFields.RemoveField("Secret", "HealthAddress");
             ListFields.RemoveCreateField()
@@ -28,6 +31,19 @@ namespace Stardust.Web.Areas.Registry.Controllers
                 df.DisplayName = "{Consumers}";
                 df.Url = "/Registry/AppConsume?serviceId={Id}";
             }
+        }
+
+        /// <summary>高级搜索。列表页查询、导出Excel、导出Json、分享页等使用</summary>
+        /// <param name="p">分页器。包含分页排序参数，以及Http请求参数</param>
+        /// <returns></returns>
+        protected override IEnumerable<Service> Search(Pager p)
+        {
+            //var deviceId = p["deviceId"].ToInt(-1);
+
+            var start = p["dtStart"].ToDateTime();
+            var end = p["dtEnd"].ToDateTime();
+
+            return Service.Search(start, end, p["Q"], p);
         }
     }
 }
