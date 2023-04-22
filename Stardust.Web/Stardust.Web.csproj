@@ -24,6 +24,7 @@
     <Compile Remove="Areas\Configs\Controllers\AppQuoteController.cs" />
     <Compile Remove="Areas\Configs\Controllers\ConfigOnlineController.cs" />
     <Compile Remove="Areas\Deployment\Controllers\AppDeployOnlineController.cs" />
+    <Compile Remove="Areas\Deployment\Controllers\AttachmentController.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,6 +38,7 @@
     <Compile Include="..\Stardust.Server\Services\TokenService.cs" Link="Services\TokenService.cs" />
     <Compile Include="..\Stardust.Server\Services\TraceItemStatService.cs" Link="Services\TraceItemStatService.cs" />
     <Compile Include="..\Stardust.Server\Services\TraceStatService.cs" Link="Services\TraceStatService.cs" />
+    <Compile Include="..\Stardust.Server\Setting.cs" Link="Setting.cs" />
   </ItemGroup>
 
   <ItemGroup>

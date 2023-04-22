@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2022.xsd" NameSpace="Stardust.Data.Platform" ConnName="Stardust" BaseClass="Entity" Output="" Version="11.3.2022.1013" Document="https://newlifex.com/xcode/model" DisplayName="平台管理" CubeOutput="../../Stardust.Web/Areas/Platform" xmlns="https://newlifex.com/Model2022.xsd">
+  <Table Name="GalaxyProject" Description="星系项目。一个星系包含多个星星节点，以及多个尘埃应用，完成产品线的项目管理">
+    <Columns>
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="Name" DataType="String" Master="True" Description="名称" />
+      <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="Nodes" DataType="Int32" Description="节点数" />
+      <Column Name="Apps" DataType="Int32" Description="应用数" />
+      <Column Name="IsGlobal" DataType="Boolean" Description="全局。该项目的节点可以允许其它项目下应用选用" />
+      <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+      <Column Name="UpdateUserId" DataType="Int32" Description="更新者" Category="扩展" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+      <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+    </Columns>
+    <Indexes>
+      <Index Columns="Name" Unique="True" />
+    </Indexes>
+  </Table>
+</Tables>
