@@ -26,10 +26,10 @@ public class AppController : BaseController
     private readonly DeployService _deployService;
     private readonly ITracer _tracer;
     private readonly AppQueueService _queue;
-    private readonly Setting _setting;
+    private readonly StarServerSetting _setting;
     private readonly IHostApplicationLifetime _lifetime;
 
-    public AppController(TokenService tokenService, RegistryService registryService, DeployService deployService, AppQueueService queue, Setting setting, IHostApplicationLifetime lifetime, ITracer tracer)
+    public AppController(TokenService tokenService, RegistryService registryService, DeployService deployService, AppQueueService queue, StarServerSetting setting, IHostApplicationLifetime lifetime, ITracer tracer)
     {
         _tokenService = tokenService;
         _registryService = registryService;

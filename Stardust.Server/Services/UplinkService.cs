@@ -17,7 +17,7 @@ public class UplinkService
         var addr = Server;
         if (addr.IsNullOrEmpty())
         {
-            var set = Setting.Current;
+            var set = StarServerSetting.Current;
             addr = set.UplinkServer;
         }
 

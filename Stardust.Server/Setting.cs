@@ -7,7 +7,7 @@ namespace Stardust.Server;
 
 /// <summary>配置</summary>
 [Config("StarServer")]
-public class Setting : Config<Setting>
+public class StarServerSetting : Config<StarServerSetting>
 {
     #region 属性
     /// <summary>调试开关。默认true</summary>

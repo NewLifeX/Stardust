@@ -26,10 +26,10 @@ public class AlarmService : IHostedService
     private TimerX _timer;
     //private readonly ConcurrentBag<Int32> _bag = new();
     private readonly ICache _cache = new MemoryCache();
-    private readonly Setting _setting;
+    private readonly StarServerSetting _setting;
     private readonly ITracer _tracer;
 
-    public AlarmService(Setting setting, ITracer tracer)
+    public AlarmService(StarServerSetting setting, ITracer tracer)
     {
         _setting = setting;
         _tracer = tracer;

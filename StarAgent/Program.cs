@@ -46,7 +46,7 @@ internal class Program
         var svc = new MyService
         {
             StarSetting = set,
-            AgentSetting = Setting.Current,
+            AgentSetting = StarAgentSetting.Current,
             Log = XTrace.Log,
         };
 
@@ -72,7 +72,7 @@ internal class MyService : ServiceBase, IServiceProvider
 {
     public StarSetting StarSetting { get; set; }
 
-    public Setting AgentSetting { get; set; }
+    public StarAgentSetting AgentSetting { get; set; }
 
     /// <summary>宿主服务提供者</summary>
     public IServiceProvider Provider { get; set; }
@@ -202,7 +202,7 @@ internal class MyService : ServiceBase, IServiceProvider
         StartClient();
 
         _Manager.Start();
-        Setting.Provider.Changed += OnSettingChanged;
+        StarAgentSetting.Provider.Changed += OnSettingChanged;
 
         // 启动插件
         WriteLog("启动插件[{0}]", pm.Identity);
@@ -281,7 +281,7 @@ internal class MyService : ServiceBase, IServiceProvider
         _timer.TryDispose();
         _timer = null;
 
-        Setting.Provider.Changed -= OnSettingChanged;
+        StarAgentSetting.Provider.Changed -= OnSettingChanged;
         _Manager.Stop(reason);
         //_Manager.TryDispose();
 

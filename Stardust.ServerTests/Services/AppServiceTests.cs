@@ -44,7 +44,7 @@ namespace Stardust.Server.Services.Tests
         {
             var app = new App { Name = "test" };
 
-            var set = Setting.Current;
+            var set = StarServerSetting.Current;
             var service = new TokenService(null);
 
             var model = service.IssueToken(app.Name, set.TokenSecret, set.TokenExpire);
@@ -66,7 +66,7 @@ namespace Stardust.Server.Services.Tests
                 app.Insert();
             }
 
-            var set = Setting.Current;
+            var set = StarServerSetting.Current;
             var service = new TokenService(null);
 
             var model = service.IssueToken(app.Name, set.TokenSecret, set.TokenExpire);

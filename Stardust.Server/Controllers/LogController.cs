@@ -10,9 +10,9 @@ namespace Stardust.Server.Controllers
     [Route("[controller]")]
     public class LogController : ControllerBase
     {
-        private readonly Setting _setting;
+        private readonly StarServerSetting _setting;
 
-        public LogController(Setting setting) => _setting = setting;
+        public LogController(StarServerSetting setting) => _setting = setting;
 
         [HttpGet]
         public Object Get() => "LogController";

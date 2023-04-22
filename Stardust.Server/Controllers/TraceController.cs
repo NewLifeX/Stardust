@@ -21,14 +21,14 @@ public class TraceController : ControllerBase
     private readonly TokenService _tokenService;
     private readonly AppOnlineService _appOnline;
     private readonly UplinkService _uplink;
-    private readonly Setting _setting;
+    private readonly StarServerSetting _setting;
     private readonly ITracer _tracer;
     private readonly ITraceStatService _stat;
     private readonly IAppDayStatService _appStat;
     private readonly ITraceItemStatService _itemStat;
     private static readonly ICache _cache = new MemoryCache();
 
-    public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService, AppOnlineService appOnline, UplinkService uplink, Setting setting, ITracer tracer)
+    public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService, AppOnlineService appOnline, UplinkService uplink, StarServerSetting setting, ITracer tracer)
     {
         _stat = stat;
         _appStat = appStat;

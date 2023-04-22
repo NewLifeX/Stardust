@@ -6,7 +6,7 @@ namespace StarGateway
 {
     /// <summary>配置</summary>
     [Config("StarGateway")]
-    public class Setting : Config<Setting>
+    public class StarGatewaySetting : Config<StarGatewaySetting>
     {
         #region 属性
         /// <summary>调试开关。默认true</summary>

@@ -14,10 +14,10 @@ namespace Stardust.Server.Services;
 
 public class DataRetentionService : IHostedService
 {
-    private readonly Setting _setting;
+    private readonly StarServerSetting _setting;
     private readonly ITracer _tracer;
     private TimerX _timer;
-    public DataRetentionService(Setting setting, ITracer tracer)
+    public DataRetentionService(StarServerSetting setting, ITracer tracer)
     {
         _setting = setting;
         _tracer = tracer;

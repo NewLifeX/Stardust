@@ -9,10 +9,10 @@ namespace Stardust.Server.Services;
 /// <summary>分表管理</summary>
 public class ShardTableService : IHostedService
 {
-    private readonly Setting _setting;
+    private readonly StarServerSetting _setting;
     private readonly ITracer _tracer;
     private TimerX _timer;
-    public ShardTableService(Setting setting, ITracer tracer)
+    public ShardTableService(StarServerSetting setting, ITracer tracer)
     {
         _setting = setting;
         _tracer = tracer;

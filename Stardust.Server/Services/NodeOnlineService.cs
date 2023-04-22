@@ -11,12 +11,12 @@ public class NodeOnlineService : IHostedService
 {
     #region 属性
     private TimerX _timer;
-    private readonly Setting _setting;
+    private readonly StarServerSetting _setting;
     private readonly ITracer _tracer;
     #endregion
 
     #region 构造
-    public NodeOnlineService(Setting setting, ITracer tracer)
+    public NodeOnlineService(StarServerSetting setting, ITracer tracer)
     {
         _setting = setting;
         _tracer = tracer;

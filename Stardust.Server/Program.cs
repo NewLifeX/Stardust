@@ -19,7 +19,7 @@ namespace Stardust.Server
             var builder = Host.CreateDefaultBuilder(args);
             builder.ConfigureWebHostDefaults(webBuilder =>
             {
-                var set = Setting.Current;
+                var set = StarServerSetting.Current;
                 if (set.Port > 0) webBuilder.UseUrls($"http://*:{set.Port}");
                 webBuilder.UseStartup<Startup>();
             });

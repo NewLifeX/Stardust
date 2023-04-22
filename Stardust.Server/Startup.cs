@@ -47,7 +47,7 @@ public class Startup
         var cache = Cache.Default;
         services.AddSingleton(cache);
 
-        var set = Setting.Current;
+        var set = StarServerSetting.Current;
         services.AddSingleton(set);
 
         // 统计服务
@@ -194,7 +194,7 @@ public class Startup
             set2.Save();
         }
 #endif
-        var set3 = Stardust.Server.Setting.Current;
+        var set3 = Stardust.Server.StarServerSetting.Current;
         if (set3.IsNew)
         {
             set3.UploadPath = "../Uploads";

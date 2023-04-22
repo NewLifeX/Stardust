@@ -27,9 +27,9 @@ public class NodeController : BaseController
     private readonly NodeService _nodeService;
     private readonly TokenService _tokenService;
     private readonly DeployService _deployService;
-    private readonly Setting _setting;
+    private readonly StarServerSetting _setting;
 
-    public NodeController(NodeService nodeService, TokenService tokenService, DeployService deployService, Setting setting, ICache queue, IHostApplicationLifetime lifetime, ITracer tracer)
+    public NodeController(NodeService nodeService, TokenService tokenService, DeployService deployService, StarServerSetting setting, ICache queue, IHostApplicationLifetime lifetime, ITracer tracer)
     {
         _queue = queue;
         _lifetime = lifetime;

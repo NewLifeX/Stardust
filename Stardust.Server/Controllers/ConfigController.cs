@@ -17,9 +17,9 @@ namespace Stardust.Server.Controllers
         private readonly ConfigService _configService;
         private readonly TokenService _tokenService;
         private readonly AppOnlineService _appOnline;
-        private readonly Setting _setting;
+        private readonly StarServerSetting _setting;
 
-        public ConfigController(ConfigService configService, TokenService tokenService, AppOnlineService appOnline, Setting setting)
+        public ConfigController(ConfigService configService, TokenService tokenService, AppOnlineService appOnline, StarServerSetting setting)
         {
             _configService = configService;
             _tokenService = tokenService;

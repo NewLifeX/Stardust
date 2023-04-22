@@ -15,9 +15,9 @@ namespace Stardust.Server.Controllers
     {
         private readonly TokenService _tokenService;
         private readonly AppOnlineService _appOnline;
-        private readonly Setting _setting;
+        private readonly StarServerSetting _setting;
 
-        public OAuthController(TokenService tokenService, AppOnlineService appOnline, Setting setting)
+        public OAuthController(TokenService tokenService, AppOnlineService appOnline, StarServerSetting setting)
         {
             _tokenService = tokenService;
             _appOnline = appOnline;

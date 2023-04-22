@@ -19,9 +19,9 @@ public class DeployController : BaseController
     private readonly NodeService _nodeService;
     private readonly DeployService _deployService;
     private readonly TokenService _tokenService;
-    private readonly Setting _setting;
+    private readonly StarServerSetting _setting;
 
-    public DeployController(DeployService deployService, NodeService nodeService, TokenService tokenService, Setting setting)
+    public DeployController(DeployService deployService, NodeService nodeService, TokenService tokenService, StarServerSetting setting)
     {
         _deployService = deployService;
         _nodeService = nodeService;

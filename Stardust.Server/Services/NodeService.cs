@@ -39,7 +39,7 @@ public class NodeService
         return !secret.IsNullOrEmpty() && !secret.IsNullOrEmpty() && (node.Secret == secret || node.Secret.MD5() == secret);
     }
 
-    public Node Register(LoginInfo inf, String ip, Setting setting)
+    public Node Register(LoginInfo inf, String ip, StarServerSetting setting)
     {
         var code = inf.Code;
         var secret = inf.Secret;
@@ -63,7 +63,7 @@ public class NodeService
         return node;
     }
 
-    public TokenModel Login(Node node, LoginInfo inf, String ip, Setting setting)
+    public TokenModel Login(Node node, LoginInfo inf, String ip, StarServerSetting setting)
     {
         if (!inf.ProductCode.IsNullOrEmpty()) node.ProductCode = inf.ProductCode;
 
@@ -181,7 +181,7 @@ public class NodeService
         return flag ? node : null;
     }
 
-    private Node AutoRegister(Node node, LoginInfo inf, String ip, Setting set)
+    private Node AutoRegister(Node node, LoginInfo inf, String ip, StarServerSetting set)
     {
         if (!set.AutoRegister) throw new ApiException(12, "禁止自动注册");
 
@@ -267,7 +267,7 @@ public class NodeService
         return false;
     }
 
-    private static String BuildCode(NodeInfo di, String productCode, Setting set)
+    private static String BuildCode(NodeInfo di, String productCode, StarServerSetting set)
     {
         //var set = Setting.Current;
         //var uid = $"{di.UUID}@{di.MachineGuid}@{di.Macs}";
@@ -306,7 +306,7 @@ public class NodeService
     #endregion
 
     #region 心跳
-    public PingResponse Ping(Node node, PingInfo inf, String token, String ip, Setting set)
+    public PingResponse Ping(Node node, PingInfo inf, String token, String ip, StarServerSetting set)
     {
         var rs = new PingResponse
         {
@@ -541,7 +541,7 @@ public class NodeService
     /// <param name="model"></param>
     /// <param name="token">应用令牌</param>
     /// <returns></returns>
-    public async Task<Int32> SendCommand(CommandInModel model, String token, Setting setting)
+    public async Task<Int32> SendCommand(CommandInModel model, String token, StarServerSetting setting)
     {
         if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定节点");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
@@ -597,7 +597,7 @@ public class NodeService
     #endregion
 
     #region 辅助
-    public TokenModel IssueToken(String name, Setting set)
+    public TokenModel IssueToken(String name, StarServerSetting set)
     {
         // 颁发令牌
         var ss = set.TokenSecret.Split(':');
@@ -649,7 +649,7 @@ public class NodeService
         return (node, ex);
     }
 
-    public TokenModel ValidAndIssueToken(String deviceCode, String token, Setting set)
+    public TokenModel ValidAndIssueToken(String deviceCode, String token, StarServerSetting set)
     {
         if (token.IsNullOrEmpty()) return null;
         //var set = Setting.Current;
