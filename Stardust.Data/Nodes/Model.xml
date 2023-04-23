@@ -231,6 +231,7 @@
       <Column Name="Category" DataType="String" Description="类别。业务方向分类，例如操作系统占比" />
       <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
       <Column Name="Key" DataType="String" Description="统计项。统计项编码" />
+      <Column Name="LinkItem" DataType="String" Description="关联项" />
       <Column Name="Total" DataType="Int32" Description="总数。1年内活跃过的全部节点数" />
       <Column Name="Actives" DataType="Int32" Description="活跃数。最后活跃位于今天" />
       <Column Name="ActivesT7" DataType="Int32" Description="7天活跃数。最后活跃位于7天内" />
@@ -245,7 +246,6 @@
     <Indexes>
       <Index Columns="Category,StatDate,Key" Unique="True" />
       <Index Columns="Category,Key" />
-      <Index Columns="UpdateTime" />
     </Indexes>
   </Table>
   <Table Name="NodeRule" Description="节点规则。根据IP规则，自动识别匹配节点名称">

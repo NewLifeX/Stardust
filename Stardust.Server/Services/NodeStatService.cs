@@ -1,4 +1,5 @@
-﻿using NewLife;
+﻿using System.Xml.Linq;
+using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Data.Nodes;
@@ -102,6 +103,7 @@ public class NodeStatService : IHostedService
             else
                 sts.Remove(st);
 
+            st.LinkItem = (Int32)node.OSKind + "";
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
             st.ActivesT7 = node["activeT7"].ToInt();
@@ -132,6 +134,7 @@ public class NodeStatService : IHostedService
             else
                 sts.Remove(st);
 
+            st.LinkItem = node.ProductCode + "";
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
             st.ActivesT7 = node["activeT7"].ToInt();
@@ -162,6 +165,7 @@ public class NodeStatService : IHostedService
             else
                 sts.Remove(st);
 
+            st.LinkItem = node.Version + "";
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
             st.ActivesT7 = node["activeT7"].ToInt();
@@ -209,6 +213,7 @@ public class NodeStatService : IHostedService
             else
                 sts.Remove(st);
 
+            st.LinkItem = key + "";
             st.Total = datas.Sum(e => e.ID);
             st.Actives = datas.Sum(e => e["activeT1"].ToInt());
             st.ActivesT7 = datas.Sum(e => e["activeT7"].ToInt());
@@ -239,6 +244,7 @@ public class NodeStatService : IHostedService
             else
                 sts.Remove(st);
 
+            st.LinkItem = node.Framework + "";
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
             st.ActivesT7 = node["activeT7"].ToInt();
@@ -274,6 +280,7 @@ public class NodeStatService : IHostedService
             else
                 sts.Remove(st);
 
+            st.LinkItem = node.CityID + "";
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
             st.ActivesT7 = node["activeT7"].ToInt();
@@ -304,6 +311,7 @@ public class NodeStatService : IHostedService
             else
                 sts.Remove(st);
 
+            st.LinkItem = node.Architecture + "";
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
             st.ActivesT7 = node["activeT7"].ToInt();

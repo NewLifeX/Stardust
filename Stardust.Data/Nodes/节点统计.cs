@@ -16,7 +16,6 @@ namespace Stardust.Data.Nodes
     [Description("节点统计。每日统计")]
     [BindIndex("IU_NodeStat_Category_StatDate_Key", true, "Category,StatDate,Key")]
     [BindIndex("IX_NodeStat_Category_Key", false, "Category,Key")]
-    [BindIndex("IX_NodeStat_UpdateTime", false, "UpdateTime")]
     [BindTable("NodeStat", Description = "节点统计。每日统计", ConnName = "Stardust", DbType = DatabaseType.None)]
     public partial class NodeStat
     {
@@ -52,6 +51,14 @@ namespace Stardust.Data.Nodes
         [DataObjectField(false, false, true, 50)]
         [BindColumn("Key", "统计项。统计项编码", "")]
         public String Key { get => _Key; set { if (OnPropertyChanging("Key", value)) { _Key = value; OnPropertyChanged("Key"); } } }
+
+        private String _LinkItem;
+        /// <summary>关联项</summary>
+        [DisplayName("关联项")]
+        [Description("关联项")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("LinkItem", "关联项", "")]
+        public String LinkItem { get => _LinkItem; set { if (OnPropertyChanging("LinkItem", value)) { _LinkItem = value; OnPropertyChanged("LinkItem"); } } }
 
         private Int32 _Total;
         /// <summary>总数。1年内活跃过的全部节点数</summary>
@@ -151,6 +158,7 @@ namespace Stardust.Data.Nodes
                     case "Category": return _Category;
                     case "StatDate": return _StatDate;
                     case "Key": return _Key;
+                    case "LinkItem": return _LinkItem;
                     case "Total": return _Total;
                     case "Actives": return _Actives;
                     case "ActivesT7": return _ActivesT7;
@@ -172,6 +180,7 @@ namespace Stardust.Data.Nodes
                     case "Category": _Category = Convert.ToString(value); break;
                     case "StatDate": _StatDate = value.ToDateTime(); break;
                     case "Key": _Key = Convert.ToString(value); break;
+                    case "LinkItem": _LinkItem = Convert.ToString(value); break;
                     case "Total": _Total = value.ToInt(); break;
                     case "Actives": _Actives = value.ToInt(); break;
                     case "ActivesT7": _ActivesT7 = value.ToInt(); break;
@@ -203,6 +212,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>统计项。统计项编码</summary>
             public static readonly Field Key = FindByName("Key");
+
+            /// <summary>关联项</summary>
+            public static readonly Field LinkItem = FindByName("LinkItem");
 
             /// <summary>总数。1年内活跃过的全部节点数</summary>
             public static readonly Field Total = FindByName("Total");
@@ -251,6 +263,9 @@ namespace Stardust.Data.Nodes
 
             /// <summary>统计项。统计项编码</summary>
             public const String Key = "Key";
+
+            /// <summary>关联项</summary>
+            public const String LinkItem = "LinkItem";
 
             /// <summary>总数。1年内活跃过的全部节点数</summary>
             public const String Total = "Total";
