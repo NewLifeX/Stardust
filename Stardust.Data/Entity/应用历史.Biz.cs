@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
@@ -68,6 +68,30 @@ namespace Stardust.Data
 
             //return Find(_.ID == id);
         }
+
+    /// <summary>根据应用、客户端查找</summary>
+    /// <param name="appId">应用</param>
+    /// <param name="client">客户端</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppHistory> FindAllByAppIdAndClient(Int32 appId, String client)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.Client.EqualIgnoreCase(client));
+
+        return FindAll(_.AppId == appId & _.Client == client);
+    }
+
+    /// <summary>根据应用、操作查找</summary>
+    /// <param name="appId">应用</param>
+    /// <param name="action">操作</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppHistory> FindAllByAppIdAndAction(Int32 appId, String action)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.Action.EqualIgnoreCase(action));
+
+        return FindAll(_.AppId == appId & _.Action == action);
+    }
         #endregion
 
         #region 高级查询

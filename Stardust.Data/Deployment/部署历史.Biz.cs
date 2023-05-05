@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
@@ -95,6 +95,18 @@ namespace Stardust.Data.Deployment
 
             return FindAll(_.AppId == appId & _.Id == id);
         }
+
+    /// <summary>根据节点、编号查找</summary>
+    /// <param name="nodeId">节点</param>
+    /// <param name="id">编号</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppDeployHistory> FindAllByNodeIdAndId(Int32 nodeId, Int64 id)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.NodeId == nodeId && e.Id == id);
+
+        return FindAll(_.NodeId == nodeId & _.Id == id);
+    }
         #endregion
 
         #region 高级查询

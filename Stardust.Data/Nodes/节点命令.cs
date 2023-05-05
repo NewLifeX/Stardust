@@ -4,337 +4,339 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
+using NewLife;
+using NewLife.Data;
 using XCode;
+using XCode.Cache;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
 
-namespace Stardust.Data.Nodes
+namespace Stardust.Data.Nodes;
+
+/// <summary>节点命令</summary>
+[Serializable]
+[DataObject]
+[Description("节点命令")]
+[BindIndex("IX_NodeCommand_NodeID_Status", false, "NodeID,Status")]
+[BindIndex("IX_NodeCommand_NodeID_Command", false, "NodeID,Command")]
+[BindIndex("IX_NodeCommand_UpdateTime_NodeID_Command", false, "UpdateTime,NodeID,Command")]
+[BindTable("NodeCommand", Description = "节点命令", ConnName = "StardustData", DbType = DatabaseType.None)]
+public partial class NodeCommand
 {
-    /// <summary>节点命令</summary>
-    [Serializable]
-    [DataObject]
-    [Description("节点命令")]
-    [BindIndex("IX_NodeCommand_NodeID_Status", false, "NodeID,Status")]
-    [BindIndex("IX_NodeCommand_NodeID_Command", false, "NodeID,Command")]
-    [BindIndex("IX_NodeCommand_UpdateTime_NodeID_Command", false, "UpdateTime,NodeID,Command")]
-    [BindTable("NodeCommand", Description = "节点命令", ConnName = "StardustData", DbType = DatabaseType.None)]
-    public partial class NodeCommand
+    #region 属性
+    private Int32 _Id;
+    /// <summary>编号</summary>
+    [DisplayName("编号")]
+    [Description("编号")]
+    [DataObjectField(true, true, false, 0)]
+    [BindColumn("Id", "编号", "")]
+    public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
+
+    private Int32 _NodeID;
+    /// <summary>节点</summary>
+    [DisplayName("节点")]
+    [Description("节点")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("NodeID", "节点", "")]
+    public Int32 NodeID { get => _NodeID; set { if (OnPropertyChanging("NodeID", value)) { _NodeID = value; OnPropertyChanged("NodeID"); } } }
+
+    private String _Command;
+    /// <summary>命令</summary>
+    [DisplayName("命令")]
+    [Description("命令")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("Command", "命令", "", Master = true)]
+    public String Command { get => _Command; set { if (OnPropertyChanging("Command", value)) { _Command = value; OnPropertyChanged("Command"); } } }
+
+    private String _Argument;
+    /// <summary>参数</summary>
+    [DisplayName("参数")]
+    [Description("参数")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("Argument", "参数", "")]
+    public String Argument { get => _Argument; set { if (OnPropertyChanging("Argument", value)) { _Argument = value; OnPropertyChanged("Argument"); } } }
+
+    private DateTime _StartTime;
+    /// <summary>开始执行时间。用于提前下发指令后延期执行，暂时不支持取消</summary>
+    [DisplayName("开始执行时间")]
+    [Description("开始执行时间。用于提前下发指令后延期执行，暂时不支持取消")]
+    [DataObjectField(false, false, true, 0)]
+    [BindColumn("StartTime", "开始执行时间。用于提前下发指令后延期执行，暂时不支持取消", "")]
+    public DateTime StartTime { get => _StartTime; set { if (OnPropertyChanging("StartTime", value)) { _StartTime = value; OnPropertyChanged("StartTime"); } } }
+
+    private DateTime _Expire;
+    /// <summary>过期时间。未指定时表示不限制</summary>
+    [DisplayName("过期时间")]
+    [Description("过期时间。未指定时表示不限制")]
+    [DataObjectField(false, false, true, 0)]
+    [BindColumn("Expire", "过期时间。未指定时表示不限制", "")]
+    public DateTime Expire { get => _Expire; set { if (OnPropertyChanging("Expire", value)) { _Expire = value; OnPropertyChanged("Expire"); } } }
+
+    private Stardust.Models.CommandStatus _Status;
+    /// <summary>状态。命令状态</summary>
+    [DisplayName("状态")]
+    [Description("状态。命令状态")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Status", "状态。命令状态", "")]
+    public Stardust.Models.CommandStatus Status { get => _Status; set { if (OnPropertyChanging("Status", value)) { _Status = value; OnPropertyChanged("Status"); } } }
+
+    private Int32 _Times;
+    /// <summary>次数。一共执行多少次，超过10次后取消</summary>
+    [DisplayName("次数")]
+    [Description("次数。一共执行多少次，超过10次后取消")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Times", "次数。一共执行多少次，超过10次后取消", "")]
+    public Int32 Times { get => _Times; set { if (OnPropertyChanging("Times", value)) { _Times = value; OnPropertyChanged("Times"); } } }
+
+    private String _Result;
+    /// <summary>结果</summary>
+    [DisplayName("结果")]
+    [Description("结果")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("Result", "结果", "")]
+    public String Result { get => _Result; set { if (OnPropertyChanging("Result", value)) { _Result = value; OnPropertyChanged("Result"); } } }
+
+    private String _TraceId;
+    /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+    [Category("扩展")]
+    [DisplayName("追踪")]
+    [Description("追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("TraceId", "追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
+    public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
+
+    private String _CreateUser;
+    /// <summary>创建者</summary>
+    [Category("扩展")]
+    [DisplayName("创建者")]
+    [Description("创建者")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("CreateUser", "创建者", "")]
+    public String CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
+
+    private Int32 _CreateUserID;
+    /// <summary>创建者</summary>
+    [Category("扩展")]
+    [DisplayName("创建者")]
+    [Description("创建者")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("CreateUserID", "创建者", "")]
+    public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
+
+    private DateTime _CreateTime;
+    /// <summary>创建时间</summary>
+    [Category("扩展")]
+    [DisplayName("创建时间")]
+    [Description("创建时间")]
+    [DataObjectField(false, false, true, 0)]
+    [BindColumn("CreateTime", "创建时间", "")]
+    public DateTime CreateTime { get => _CreateTime; set { if (OnPropertyChanging("CreateTime", value)) { _CreateTime = value; OnPropertyChanged("CreateTime"); } } }
+
+    private String _CreateIP;
+    /// <summary>创建地址</summary>
+    [Category("扩展")]
+    [DisplayName("创建地址")]
+    [Description("创建地址")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("CreateIP", "创建地址", "")]
+    public String CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
+
+    private Int32 _UpdateUserID;
+    /// <summary>更新者</summary>
+    [Category("扩展")]
+    [DisplayName("更新者")]
+    [Description("更新者")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("UpdateUserID", "更新者", "")]
+    public Int32 UpdateUserID { get => _UpdateUserID; set { if (OnPropertyChanging("UpdateUserID", value)) { _UpdateUserID = value; OnPropertyChanged("UpdateUserID"); } } }
+
+    private DateTime _UpdateTime;
+    /// <summary>更新时间</summary>
+    [Category("扩展")]
+    [DisplayName("更新时间")]
+    [Description("更新时间")]
+    [DataObjectField(false, false, true, 0)]
+    [BindColumn("UpdateTime", "更新时间", "")]
+    public DateTime UpdateTime { get => _UpdateTime; set { if (OnPropertyChanging("UpdateTime", value)) { _UpdateTime = value; OnPropertyChanged("UpdateTime"); } } }
+
+    private String _UpdateIP;
+    /// <summary>更新地址</summary>
+    [Category("扩展")]
+    [DisplayName("更新地址")]
+    [Description("更新地址")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("UpdateIP", "更新地址", "")]
+    public String UpdateIP { get => _UpdateIP; set { if (OnPropertyChanging("UpdateIP", value)) { _UpdateIP = value; OnPropertyChanged("UpdateIP"); } } }
+    #endregion
+
+    #region 获取/设置 字段值
+    /// <summary>获取/设置 字段值</summary>
+    /// <param name="name">字段名</param>
+    /// <returns></returns>
+    public override Object this[String name]
     {
-        #region 属性
-        private Int32 _Id;
-        /// <summary>编号</summary>
-        [DisplayName("编号")]
-        [Description("编号")]
-        [DataObjectField(true, true, false, 0)]
-        [BindColumn("Id", "编号", "")]
-        public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
-
-        private Int32 _NodeID;
-        /// <summary>节点</summary>
-        [DisplayName("节点")]
-        [Description("节点")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("NodeID", "节点", "")]
-        public Int32 NodeID { get => _NodeID; set { if (OnPropertyChanging("NodeID", value)) { _NodeID = value; OnPropertyChanged("NodeID"); } } }
-
-        private String _Command;
-        /// <summary>命令</summary>
-        [DisplayName("命令")]
-        [Description("命令")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("Command", "命令", "", Master = true)]
-        public String Command { get => _Command; set { if (OnPropertyChanging("Command", value)) { _Command = value; OnPropertyChanged("Command"); } } }
-
-        private String _Argument;
-        /// <summary>参数</summary>
-        [DisplayName("参数")]
-        [Description("参数")]
-        [DataObjectField(false, false, true, 500)]
-        [BindColumn("Argument", "参数", "")]
-        public String Argument { get => _Argument; set { if (OnPropertyChanging("Argument", value)) { _Argument = value; OnPropertyChanged("Argument"); } } }
-
-        private DateTime _StartTime;
-        /// <summary>开始执行时间。用于提前下发指令后延期执行，暂时不支持取消</summary>
-        [DisplayName("开始执行时间")]
-        [Description("开始执行时间。用于提前下发指令后延期执行，暂时不支持取消")]
-        [DataObjectField(false, false, true, 0)]
-        [BindColumn("StartTime", "开始执行时间。用于提前下发指令后延期执行，暂时不支持取消", "")]
-        public DateTime StartTime { get => _StartTime; set { if (OnPropertyChanging("StartTime", value)) { _StartTime = value; OnPropertyChanged("StartTime"); } } }
-
-        private DateTime _Expire;
-        /// <summary>过期时间。未指定时表示不限制</summary>
-        [DisplayName("过期时间")]
-        [Description("过期时间。未指定时表示不限制")]
-        [DataObjectField(false, false, true, 0)]
-        [BindColumn("Expire", "过期时间。未指定时表示不限制", "")]
-        public DateTime Expire { get => _Expire; set { if (OnPropertyChanging("Expire", value)) { _Expire = value; OnPropertyChanged("Expire"); } } }
-
-        private Stardust.Models.CommandStatus _Status;
-        /// <summary>状态。命令状态</summary>
-        [DisplayName("状态")]
-        [Description("状态。命令状态")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Status", "状态。命令状态", "")]
-        public Stardust.Models.CommandStatus Status { get => _Status; set { if (OnPropertyChanging("Status", value)) { _Status = value; OnPropertyChanged("Status"); } } }
-
-        private Int32 _Times;
-        /// <summary>次数。一共执行多少次，超过10次后取消</summary>
-        [DisplayName("次数")]
-        [Description("次数。一共执行多少次，超过10次后取消")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("Times", "次数。一共执行多少次，超过10次后取消", "")]
-        public Int32 Times { get => _Times; set { if (OnPropertyChanging("Times", value)) { _Times = value; OnPropertyChanged("Times"); } } }
-
-        private String _Result;
-        /// <summary>结果</summary>
-        [DisplayName("结果")]
-        [Description("结果")]
-        [DataObjectField(false, false, true, 500)]
-        [BindColumn("Result", "结果", "")]
-        public String Result { get => _Result; set { if (OnPropertyChanging("Result", value)) { _Result = value; OnPropertyChanged("Result"); } } }
-
-        private String _TraceId;
-        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
-        [Category("扩展")]
-        [DisplayName("追踪")]
-        [Description("追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("TraceId", "追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
-        public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
-
-        private String _CreateUser;
-        /// <summary>创建者</summary>
-        [Category("扩展")]
-        [DisplayName("创建者")]
-        [Description("创建者")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("CreateUser", "创建者", "")]
-        public String CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
-
-        private Int32 _CreateUserID;
-        /// <summary>创建者</summary>
-        [Category("扩展")]
-        [DisplayName("创建者")]
-        [Description("创建者")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("CreateUserID", "创建者", "")]
-        public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
-
-        private DateTime _CreateTime;
-        /// <summary>创建时间</summary>
-        [Category("扩展")]
-        [DisplayName("创建时间")]
-        [Description("创建时间")]
-        [DataObjectField(false, false, true, 0)]
-        [BindColumn("CreateTime", "创建时间", "")]
-        public DateTime CreateTime { get => _CreateTime; set { if (OnPropertyChanging("CreateTime", value)) { _CreateTime = value; OnPropertyChanged("CreateTime"); } } }
-
-        private String _CreateIP;
-        /// <summary>创建地址</summary>
-        [Category("扩展")]
-        [DisplayName("创建地址")]
-        [Description("创建地址")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("CreateIP", "创建地址", "")]
-        public String CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
-
-        private Int32 _UpdateUserID;
-        /// <summary>更新者</summary>
-        [Category("扩展")]
-        [DisplayName("更新者")]
-        [Description("更新者")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("UpdateUserID", "更新者", "")]
-        public Int32 UpdateUserID { get => _UpdateUserID; set { if (OnPropertyChanging("UpdateUserID", value)) { _UpdateUserID = value; OnPropertyChanged("UpdateUserID"); } } }
-
-        private DateTime _UpdateTime;
-        /// <summary>更新时间</summary>
-        [Category("扩展")]
-        [DisplayName("更新时间")]
-        [Description("更新时间")]
-        [DataObjectField(false, false, true, 0)]
-        [BindColumn("UpdateTime", "更新时间", "")]
-        public DateTime UpdateTime { get => _UpdateTime; set { if (OnPropertyChanging("UpdateTime", value)) { _UpdateTime = value; OnPropertyChanged("UpdateTime"); } } }
-
-        private String _UpdateIP;
-        /// <summary>更新地址</summary>
-        [Category("扩展")]
-        [DisplayName("更新地址")]
-        [Description("更新地址")]
-        [DataObjectField(false, false, true, 50)]
-        [BindColumn("UpdateIP", "更新地址", "")]
-        public String UpdateIP { get => _UpdateIP; set { if (OnPropertyChanging("UpdateIP", value)) { _UpdateIP = value; OnPropertyChanged("UpdateIP"); } } }
-        #endregion
-
-        #region 获取/设置 字段值
-        /// <summary>获取/设置 字段值</summary>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        public override Object this[String name]
+        get => name switch
         {
-            get
+            "Id" => _Id,
+            "NodeID" => _NodeID,
+            "Command" => _Command,
+            "Argument" => _Argument,
+            "StartTime" => _StartTime,
+            "Expire" => _Expire,
+            "Status" => _Status,
+            "Times" => _Times,
+            "Result" => _Result,
+            "TraceId" => _TraceId,
+            "CreateUser" => _CreateUser,
+            "CreateUserID" => _CreateUserID,
+            "CreateTime" => _CreateTime,
+            "CreateIP" => _CreateIP,
+            "UpdateUserID" => _UpdateUserID,
+            "UpdateTime" => _UpdateTime,
+            "UpdateIP" => _UpdateIP,
+            _ => base[name]
+        };
+        set
+        {
+            switch (name)
             {
-                switch (name)
-                {
-                    case "Id": return _Id;
-                    case "NodeID": return _NodeID;
-                    case "Command": return _Command;
-                    case "Argument": return _Argument;
-                    case "StartTime": return _StartTime;
-                    case "Expire": return _Expire;
-                    case "Status": return _Status;
-                    case "Times": return _Times;
-                    case "Result": return _Result;
-                    case "TraceId": return _TraceId;
-                    case "CreateUser": return _CreateUser;
-                    case "CreateUserID": return _CreateUserID;
-                    case "CreateTime": return _CreateTime;
-                    case "CreateIP": return _CreateIP;
-                    case "UpdateUserID": return _UpdateUserID;
-                    case "UpdateTime": return _UpdateTime;
-                    case "UpdateIP": return _UpdateIP;
-                    default: return base[name];
-                }
-            }
-            set
-            {
-                switch (name)
-                {
-                    case "Id": _Id = value.ToInt(); break;
-                    case "NodeID": _NodeID = value.ToInt(); break;
-                    case "Command": _Command = Convert.ToString(value); break;
-                    case "Argument": _Argument = Convert.ToString(value); break;
-                    case "StartTime": _StartTime = value.ToDateTime(); break;
-                    case "Expire": _Expire = value.ToDateTime(); break;
-                    case "Status": _Status = (Stardust.Models.CommandStatus)value.ToInt(); break;
-                    case "Times": _Times = value.ToInt(); break;
-                    case "Result": _Result = Convert.ToString(value); break;
-                    case "TraceId": _TraceId = Convert.ToString(value); break;
-                    case "CreateUser": _CreateUser = Convert.ToString(value); break;
-                    case "CreateUserID": _CreateUserID = value.ToInt(); break;
-                    case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                    case "CreateIP": _CreateIP = Convert.ToString(value); break;
-                    case "UpdateUserID": _UpdateUserID = value.ToInt(); break;
-                    case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
-                    case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
-                    default: base[name] = value; break;
-                }
+                case "Id": _Id = value.ToInt(); break;
+                case "NodeID": _NodeID = value.ToInt(); break;
+                case "Command": _Command = Convert.ToString(value); break;
+                case "Argument": _Argument = Convert.ToString(value); break;
+                case "StartTime": _StartTime = value.ToDateTime(); break;
+                case "Expire": _Expire = value.ToDateTime(); break;
+                case "Status": _Status = (Stardust.Models.CommandStatus)value.ToInt(); break;
+                case "Times": _Times = value.ToInt(); break;
+                case "Result": _Result = Convert.ToString(value); break;
+                case "TraceId": _TraceId = Convert.ToString(value); break;
+                case "CreateUser": _CreateUser = Convert.ToString(value); break;
+                case "CreateUserID": _CreateUserID = value.ToInt(); break;
+                case "CreateTime": _CreateTime = value.ToDateTime(); break;
+                case "CreateIP": _CreateIP = Convert.ToString(value); break;
+                case "UpdateUserID": _UpdateUserID = value.ToInt(); break;
+                case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
+                case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
+                default: base[name] = value; break;
             }
         }
-        #endregion
-
-        #region 字段名
-        /// <summary>取得节点命令字段信息的快捷方式</summary>
-        public partial class _
-        {
-            /// <summary>编号</summary>
-            public static readonly Field Id = FindByName("Id");
-
-            /// <summary>节点</summary>
-            public static readonly Field NodeID = FindByName("NodeID");
-
-            /// <summary>命令</summary>
-            public static readonly Field Command = FindByName("Command");
-
-            /// <summary>参数</summary>
-            public static readonly Field Argument = FindByName("Argument");
-
-            /// <summary>开始执行时间。用于提前下发指令后延期执行，暂时不支持取消</summary>
-            public static readonly Field StartTime = FindByName("StartTime");
-
-            /// <summary>过期时间。未指定时表示不限制</summary>
-            public static readonly Field Expire = FindByName("Expire");
-
-            /// <summary>状态。命令状态</summary>
-            public static readonly Field Status = FindByName("Status");
-
-            /// <summary>次数。一共执行多少次，超过10次后取消</summary>
-            public static readonly Field Times = FindByName("Times");
-
-            /// <summary>结果</summary>
-            public static readonly Field Result = FindByName("Result");
-
-            /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
-            public static readonly Field TraceId = FindByName("TraceId");
-
-            /// <summary>创建者</summary>
-            public static readonly Field CreateUser = FindByName("CreateUser");
-
-            /// <summary>创建者</summary>
-            public static readonly Field CreateUserID = FindByName("CreateUserID");
-
-            /// <summary>创建时间</summary>
-            public static readonly Field CreateTime = FindByName("CreateTime");
-
-            /// <summary>创建地址</summary>
-            public static readonly Field CreateIP = FindByName("CreateIP");
-
-            /// <summary>更新者</summary>
-            public static readonly Field UpdateUserID = FindByName("UpdateUserID");
-
-            /// <summary>更新时间</summary>
-            public static readonly Field UpdateTime = FindByName("UpdateTime");
-
-            /// <summary>更新地址</summary>
-            public static readonly Field UpdateIP = FindByName("UpdateIP");
-
-            static Field FindByName(String name) => Meta.Table.FindByName(name);
-        }
-
-        /// <summary>取得节点命令字段名称的快捷方式</summary>
-        public partial class __
-        {
-            /// <summary>编号</summary>
-            public const String Id = "Id";
-
-            /// <summary>节点</summary>
-            public const String NodeID = "NodeID";
-
-            /// <summary>命令</summary>
-            public const String Command = "Command";
-
-            /// <summary>参数</summary>
-            public const String Argument = "Argument";
-
-            /// <summary>开始执行时间。用于提前下发指令后延期执行，暂时不支持取消</summary>
-            public const String StartTime = "StartTime";
-
-            /// <summary>过期时间。未指定时表示不限制</summary>
-            public const String Expire = "Expire";
-
-            /// <summary>状态。命令状态</summary>
-            public const String Status = "Status";
-
-            /// <summary>次数。一共执行多少次，超过10次后取消</summary>
-            public const String Times = "Times";
-
-            /// <summary>结果</summary>
-            public const String Result = "Result";
-
-            /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
-            public const String TraceId = "TraceId";
-
-            /// <summary>创建者</summary>
-            public const String CreateUser = "CreateUser";
-
-            /// <summary>创建者</summary>
-            public const String CreateUserID = "CreateUserID";
-
-            /// <summary>创建时间</summary>
-            public const String CreateTime = "CreateTime";
-
-            /// <summary>创建地址</summary>
-            public const String CreateIP = "CreateIP";
-
-            /// <summary>更新者</summary>
-            public const String UpdateUserID = "UpdateUserID";
-
-            /// <summary>更新时间</summary>
-            public const String UpdateTime = "UpdateTime";
-
-            /// <summary>更新地址</summary>
-            public const String UpdateIP = "UpdateIP";
-        }
-        #endregion
     }
+    #endregion
+
+    #region 关联映射
+    #endregion
+
+    #region 字段名
+    /// <summary>取得节点命令字段信息的快捷方式</summary>
+    public partial class _
+    {
+        /// <summary>编号</summary>
+        public static readonly Field Id = FindByName("Id");
+
+        /// <summary>节点</summary>
+        public static readonly Field NodeID = FindByName("NodeID");
+
+        /// <summary>命令</summary>
+        public static readonly Field Command = FindByName("Command");
+
+        /// <summary>参数</summary>
+        public static readonly Field Argument = FindByName("Argument");
+
+        /// <summary>开始执行时间。用于提前下发指令后延期执行，暂时不支持取消</summary>
+        public static readonly Field StartTime = FindByName("StartTime");
+
+        /// <summary>过期时间。未指定时表示不限制</summary>
+        public static readonly Field Expire = FindByName("Expire");
+
+        /// <summary>状态。命令状态</summary>
+        public static readonly Field Status = FindByName("Status");
+
+        /// <summary>次数。一共执行多少次，超过10次后取消</summary>
+        public static readonly Field Times = FindByName("Times");
+
+        /// <summary>结果</summary>
+        public static readonly Field Result = FindByName("Result");
+
+        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        public static readonly Field TraceId = FindByName("TraceId");
+
+        /// <summary>创建者</summary>
+        public static readonly Field CreateUser = FindByName("CreateUser");
+
+        /// <summary>创建者</summary>
+        public static readonly Field CreateUserID = FindByName("CreateUserID");
+
+        /// <summary>创建时间</summary>
+        public static readonly Field CreateTime = FindByName("CreateTime");
+
+        /// <summary>创建地址</summary>
+        public static readonly Field CreateIP = FindByName("CreateIP");
+
+        /// <summary>更新者</summary>
+        public static readonly Field UpdateUserID = FindByName("UpdateUserID");
+
+        /// <summary>更新时间</summary>
+        public static readonly Field UpdateTime = FindByName("UpdateTime");
+
+        /// <summary>更新地址</summary>
+        public static readonly Field UpdateIP = FindByName("UpdateIP");
+
+        static Field FindByName(String name) => Meta.Table.FindByName(name);
+    }
+
+    /// <summary>取得节点命令字段名称的快捷方式</summary>
+    public partial class __
+    {
+        /// <summary>编号</summary>
+        public const String Id = "Id";
+
+        /// <summary>节点</summary>
+        public const String NodeID = "NodeID";
+
+        /// <summary>命令</summary>
+        public const String Command = "Command";
+
+        /// <summary>参数</summary>
+        public const String Argument = "Argument";
+
+        /// <summary>开始执行时间。用于提前下发指令后延期执行，暂时不支持取消</summary>
+        public const String StartTime = "StartTime";
+
+        /// <summary>过期时间。未指定时表示不限制</summary>
+        public const String Expire = "Expire";
+
+        /// <summary>状态。命令状态</summary>
+        public const String Status = "Status";
+
+        /// <summary>次数。一共执行多少次，超过10次后取消</summary>
+        public const String Times = "Times";
+
+        /// <summary>结果</summary>
+        public const String Result = "Result";
+
+        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        public const String TraceId = "TraceId";
+
+        /// <summary>创建者</summary>
+        public const String CreateUser = "CreateUser";
+
+        /// <summary>创建者</summary>
+        public const String CreateUserID = "CreateUserID";
+
+        /// <summary>创建时间</summary>
+        public const String CreateTime = "CreateTime";
+
+        /// <summary>创建地址</summary>
+        public const String CreateIP = "CreateIP";
+
+        /// <summary>更新者</summary>
+        public const String UpdateUserID = "UpdateUserID";
+
+        /// <summary>更新时间</summary>
+        public const String UpdateTime = "UpdateTime";
+
+        /// <summary>更新地址</summary>
+        public const String UpdateIP = "UpdateIP";
+    }
+    #endregion
 }

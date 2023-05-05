@@ -1,5 +1,43 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2022.xsd" NameSpace="Stardust.Data.Platform" ConnName="Stardust" BaseClass="Entity" Output="" Version="11.3.2022.1013" Document="https://newlifex.com/xcode/model" DisplayName="平台管理" CubeOutput="../../Stardust.Web/Areas/Platform" xmlns="https://newlifex.com/Model2022.xsd">
+<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2023.xsd" xmlns="https://newlifex.com/Model2023.xsd">
+  <Option>
+    <!--输出目录-->
+    <Output />
+    <!--是否使用中文文件名。默认false-->
+    <ChineseFileName>False</ChineseFileName>
+    <!--基类。可能包含基类和接口，其中{name}替换为Table.Name-->
+    <BaseClass>Entity</BaseClass>
+    <!--命名空间-->
+    <Namespace>Stardust.Data.Platform</Namespace>
+    <!--是否分部类-->
+    <Partial>False</Partial>
+    <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
+    <ClassNameTemplate />
+    <!--显示名模板。其中{displayName}替换为Table.DisplayName-->
+    <DisplayNameTemplate />
+    <!--用于生成拷贝函数的模型类。例如{name}或I{name}-->
+    <ModelNameForCopy />
+    <!--带有索引器。实现IModel接口-->
+    <HasIModel>False</HasIModel>
+    <!--模型类模版-->
+    <ModelClass />
+    <!--模型接口模版-->
+    <ModelInterface />
+    <!--数据库连接名-->
+    <ConnName>Stardust</ConnName>
+    <!--用户实体转为模型类的模型类。例如{name}或{name}DTO-->
+    <ModelNameForToModel />
+    <!--命名格式。Default/Upper/Lower/Underline-->
+    <NameFormat>Default</NameFormat>
+    <!--生成器版本-->
+    <Version>11.8.2023.0505</Version>
+    <!--帮助文档-->
+    <Document>https://newlifex.com/xcode/model</Document>
+    <!--魔方区域显示名-->
+    <DisplayName>平台管理</DisplayName>
+    <!--魔方控制器输出目录-->
+    <CubeOutput>../../Stardust.Web/Areas/Platform</CubeOutput>
+  </Option>
   <Table Name="GalaxyProject" Description="星系项目。一个星系包含多个星星节点，以及多个尘埃应用，完成产品线的项目管理">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
@@ -20,4 +58,4 @@
       <Index Columns="Name" Unique="True" />
     </Indexes>
   </Table>
-</Tables>
+</EntityModel>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -101,6 +101,31 @@ namespace Stardust.Data.Nodes
         /// <param name="nodeId"></param>
         /// <returns></returns>
         public static IList<NodeOnline> FindAllByNodeId(Int32 nodeId) => FindAll(_.NodeID == nodeId);
+
+    /// <summary>根据令牌查找</summary>
+    /// <param name="token">令牌</param>
+    /// <returns>实体列表</returns>
+    public static IList<NodeOnline> FindAllByToken(String token)
+    {
+        if (token.IsNullOrEmpty()) return new List<NodeOnline>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Token.EqualIgnoreCase(token));
+
+        return FindAll(_.Token == token);
+    }
+
+    /// <summary>根据省份、城市查找</summary>
+    /// <param name="provinceId">省份</param>
+    /// <param name="cityId">城市</param>
+    /// <returns>实体列表</returns>
+    public static IList<NodeOnline> FindAllByProvinceIDAndCityID(Int32 provinceId, Int32 cityId)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ProvinceID == provinceId && e.CityID == cityId);
+
+        return FindAll(_.ProvinceID == provinceId & _.CityID == cityId);
+    }
         #endregion
 
         #region 高级查询

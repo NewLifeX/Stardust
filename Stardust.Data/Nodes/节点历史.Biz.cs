@@ -1,4 +1,4 @@
-﻿using NewLife;
+using NewLife;
 using NewLife.Data;
 using NewLife.Log;
 using System;
@@ -80,6 +80,18 @@ namespace Stardust.Data.Nodes
 
             return Find(_.Id == id);
         }
+
+    /// <summary>根据节点、操作查找</summary>
+    /// <param name="nodeId">节点</param>
+    /// <param name="action">操作</param>
+    /// <returns>实体列表</returns>
+    public static IList<NodeHistory> FindAllByNodeIDAndAction(Int32 nodeId, String action)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.NodeID == nodeId && e.Action.EqualIgnoreCase(action));
+
+        return FindAll(_.NodeID == nodeId & _.Action == action);
+    }
         #endregion
 
         #region 高级查询

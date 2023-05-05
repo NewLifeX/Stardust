@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -120,6 +120,19 @@ namespace Stardust.Data.Monitors
 
             return FindAll(_.DataId.In(dataIds));
         }
+
+    /// <summary>根据追踪查找</summary>
+    /// <param name="traceId">追踪</param>
+    /// <returns>实体列表</returns>
+    public static IList<SampleData> FindAllByTraceId(String traceId)
+    {
+        if (traceId.IsNullOrEmpty()) return new List<SampleData>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TraceId.EqualIgnoreCase(traceId));
+
+        return FindAll(_.TraceId == traceId);
+    }
         #endregion
 
         #region 高级查询
