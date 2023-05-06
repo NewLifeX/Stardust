@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
@@ -305,6 +306,23 @@ internal class ServiceController : DisposeBase
         using var span = Tracer?.NewSpan("StopService", $"{Info.Name} reason={reason}");
         _timer.TryDispose();
         _timer = null;
+
+#if NETCOREAPP||NETSTANDARD
+        // 优雅关闭Linux进程
+        try
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                Process.Start("kill", $"-4 {p.Id}");
+
+                for (var i = 0; i < 10 && !p.HasExited; i++)
+                {
+                    Thread.Sleep(300);
+                }
+            }
+        }
+        catch { }
+#endif
 
         try
         {
