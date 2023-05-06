@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -151,6 +151,31 @@ namespace Stardust.Data
 
             return FindAll(_.AppId == appId & _.IP == localIp);
         }
+
+    /// <summary>根据应用、本地IP查找</summary>
+    /// <param name="appId">应用</param>
+    /// <param name="ip">本地IP</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppOnline> FindAllByAppIdAndIP(Int32 appId, String ip)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.IP.EqualIgnoreCase(ip));
+
+        return FindAll(_.AppId == appId & _.IP == ip);
+    }
+
+    /// <summary>根据令牌查找</summary>
+    /// <param name="token">令牌</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppOnline> FindAllByToken(String token)
+    {
+        if (token.IsNullOrEmpty()) return new List<AppOnline>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Token.EqualIgnoreCase(token));
+
+        return FindAll(_.Token == token);
+    }
         #endregion
 
         #region 高级查询

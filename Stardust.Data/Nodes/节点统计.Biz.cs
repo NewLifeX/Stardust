@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NewLife;
 using NewLife.Data;
@@ -86,6 +86,18 @@ public partial class NodeStat : Entity<NodeStat>
 
         date = date.Date;
         return Find(_.Category == category & _.StatDate == date & _.Key == key);
+    }
+
+    /// <summary>根据类别、统计项查找</summary>
+    /// <param name="category">类别</param>
+    /// <param name="key">统计项</param>
+    /// <returns>实体列表</returns>
+    public static IList<NodeStat> FindAllByCategoryAndKey(String category, String key)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Category.EqualIgnoreCase(category) && e.Key.EqualIgnoreCase(key));
+
+        return FindAll(_.Category == category & _.Key == key);
     }
     #endregion
 

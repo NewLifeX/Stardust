@@ -1,4 +1,4 @@
-﻿using NewLife;
+using NewLife;
 using NewLife.Data;
 using Stardust.Models;
 using System;
@@ -189,6 +189,58 @@ public partial class Node : Entity<Node>
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => ip == e.IP);
 
         return FindAll(_.IP == ip);
+    }
+
+    /// <summary>根据分类查找</summary>
+    /// <param name="category">分类</param>
+    /// <returns>实体列表</returns>
+    public static IList<Node> FindAllByCategory(String category)
+    {
+        if (category.IsNullOrEmpty()) return new List<Node>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Category.EqualIgnoreCase(category));
+
+        return FindAll(_.Category == category);
+    }
+
+    /// <summary>根据产品查找</summary>
+    /// <param name="productCode">产品</param>
+    /// <returns>实体列表</returns>
+    public static IList<Node> FindAllByProductCode(String productCode)
+    {
+        if (productCode.IsNullOrEmpty()) return new List<Node>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ProductCode.EqualIgnoreCase(productCode));
+
+        return FindAll(_.ProductCode == productCode);
+    }
+
+    /// <summary>根据版本查找</summary>
+    /// <param name="version">版本</param>
+    /// <returns>实体列表</returns>
+    public static IList<Node> FindAllByVersion(String version)
+    {
+        if (version.IsNullOrEmpty()) return new List<Node>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Version.EqualIgnoreCase(version));
+
+        return FindAll(_.Version == version);
+    }
+
+    /// <summary>根据系统种类查找</summary>
+    /// <param name="oSKind">系统种类</param>
+    /// <returns>实体列表</returns>
+    public static IList<Node> FindAllByOSKind(Stardust.Models.OSKinds oSKind)
+    {
+        if (oSKind <= 0) return new List<Node>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.OSKind == oSKind);
+
+        return FindAll(_.OSKind == oSKind);
     }
     #endregion
 
