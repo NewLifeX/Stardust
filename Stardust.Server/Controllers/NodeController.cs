@@ -389,7 +389,9 @@ public class NodeController : BaseController
         if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定节点");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
 
-        return await _nodeService.SendCommand(model, token, _setting);
+        var cmd = await _nodeService.SendCommand(model, token, _setting);
+
+        return cmd.Id;
     }
     #endregion
 

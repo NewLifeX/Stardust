@@ -93,14 +93,17 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
     [EntityAuthorize((PermissionFlags)16)]
     public async Task<ActionResult> CheckUpgrade()
     {
+        var ts = new List<Task>();
         foreach (var item in SelectKeys)
         {
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
             {
-                await _starFactory.SendNodeCommand(online.Node.Code, "node/upgrade");
+                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, "node/upgrade", null, 600, 5));
             }
         }
+
+        await Task.WhenAll(ts);
 
         return JsonRefresh("操作成功！");
     }

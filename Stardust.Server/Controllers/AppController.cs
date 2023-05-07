@@ -245,7 +245,7 @@ public class AppController : BaseController
     /// <param name="token">应用令牌</param>
     /// <returns></returns>
     [HttpPost(nameof(SendCommand))]
-    public Int32 SendCommand(CommandInModel model)
+    public async Task<Int32> SendCommand(CommandInModel model)
     {
         if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定应用");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
@@ -259,7 +259,7 @@ public class AppController : BaseController
         if (app.AllowControlNodes != "*" && !target.Name.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
             throw new ApiException(403, $"[{app}]无权操作应用[{target}]！");
 
-        var cmd = _registryService.SendCommand(target, model, app + "");
+        var cmd = await _registryService.SendCommand(target, model, app + "");
 
         return cmd.Id;
     }
@@ -293,7 +293,7 @@ public class AppController : BaseController
     }
 
     [HttpPost(nameof(RegisterService))]
-    public ServiceModel RegisterService([FromBody] PublishServiceInfo model)
+    public async Task<ServiceModel> RegisterService([FromBody] PublishServiceInfo model)
     {
         var app = _app;
         var info = GetService(model.ServiceName);
@@ -303,14 +303,14 @@ public class AppController : BaseController
         // 发布消息通知消费者
         if (changed)
         {
-            _registryService.NotifyConsumers(info, "registry/register", app + "");
+            await _registryService.NotifyConsumers(info, "registry/register", app + "");
         }
 
         return svc?.ToModel();
     }
 
     [HttpPost(nameof(UnregisterService))]
-    public ServiceModel UnregisterService([FromBody] PublishServiceInfo model)
+    public async Task<ServiceModel> UnregisterService([FromBody] PublishServiceInfo model)
     {
         var app = _app;
         var info = GetService(model.ServiceName);
@@ -320,7 +320,7 @@ public class AppController : BaseController
         // 发布消息通知消费者
         if (changed)
         {
-            _registryService.NotifyConsumers(info, "registry/unregister", app + "");
+            await _registryService.NotifyConsumers(info, "registry/unregister", app + "");
         }
 
         return svc?.ToModel();

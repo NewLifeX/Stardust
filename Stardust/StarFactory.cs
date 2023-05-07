@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Diagnostics;
 using System.Reflection;
+using System.Threading;
 using NewLife;
 using NewLife.Common;
 using NewLife.Configuration;
@@ -428,12 +429,20 @@ public class StarFactory : DisposeBase
     /// <param name="command"></param>
     /// <param name="argument"></param>
     /// <param name="expire"></param>
+    /// <param name="timeout"></param>
     /// <returns></returns>
-    public async Task<Int32> SendNodeCommand(String nodeCode, String command, String argument = null, Int32 expire = 3600)
+    public async Task<Int32> SendNodeCommand(String nodeCode, String command, String argument = null, Int32 expire = 3600, Int32 timeout = 5)
     {
         if (!Valid()) return -1;
 
-        return await _client.PostAsync<Int32>("Node/SendCommand", new { Code = nodeCode, command, argument, expire });
+        return await _client.PostAsync<Int32>("Node/SendCommand", new CommandInModel
+        {
+            Code = nodeCode,
+            Command = command,
+            Argument = argument,
+            Expire = expire,
+            Timeout = timeout
+        });
     }
 
     /// <summary>发送应用命令。通知应用刷新配置信息和服务信息等</summary>
@@ -441,12 +450,20 @@ public class StarFactory : DisposeBase
     /// <param name="command"></param>
     /// <param name="argument"></param>
     /// <param name="expire"></param>
+    /// <param name="timeout"></param>
     /// <returns></returns>
-    public async Task<Int32> SendAppCommand(String appId, String command, String argument = null, Int32 expire = 3600)
+    public async Task<Int32> SendAppCommand(String appId, String command, String argument = null, Int32 expire = 3600, Int32 timeout = 5)
     {
         if (!Valid()) return -1;
 
-        return await _client.PostAsync<Int32>("App/SendCommand", new { Code = appId, command, argument, expire });
+        return await _client.PostAsync<Int32>("App/SendCommand", new CommandInModel
+        {
+            Code = appId,
+            Command = command,
+            Argument = argument,
+            Expire = expire,
+            Timeout = timeout
+        });
     }
     #endregion
 

@@ -541,7 +541,7 @@ public class NodeService
     /// <param name="model"></param>
     /// <param name="token">应用令牌</param>
     /// <returns></returns>
-    public async Task<Int32> SendCommand(CommandInModel model, String token, StarServerSetting setting)
+    public async Task<NodeCommand> SendCommand(CommandInModel model, String token, StarServerSetting setting)
     {
         if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定节点");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
@@ -576,14 +576,14 @@ public class NodeService
         queue.Add(commandModel.ToJson());
 
         // 挂起等待。借助redis队列，等待响应
-        if (model.Expire > 0)
+        if (model.Timeout > 0)
         {
             var q = _queue.GetQueue<CommandReplyModel>($"nodereply:{cmd.Id}");
-            var reply = await q.TakeOneAsync(model.Expire);
+            var reply = await q.TakeOneAsync(model.Timeout);
             if (reply != null)
             {
                 // 埋点
-                using var span = _tracer?.NewSpan($"redismq:ServiceLog", reply);
+                using var span = _tracer?.NewSpan($"mq:NodeCommandReply", reply);
 
                 if (reply.Status == CommandStatus.错误)
                     throw new Exception($"命令错误！{reply.Data}");
@@ -592,7 +592,7 @@ public class NodeService
             }
         }
 
-        return cmd.Id;
+        return cmd;
     }
     #endregion
 
