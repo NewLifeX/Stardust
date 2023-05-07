@@ -126,7 +126,7 @@
       <Column Name="WebSocket" DataType="Boolean" Description="长连接。WebSocket长连接" />
       <Column Name="Version" DataType="String" Description="版本" />
       <Column Name="CompileTime" DataType="DateTime" Description="编译时间" />
-      <Column Name="OSKind" DataType="Int32" Description="系统种类。主流操作系统类型，不考虑子版本" Category="硬件信息" Type="Stardust.Models.OSKinds" />
+      <Column Name="OSKind" DataType="Int32" Description="系统种类。主流操作系统类型，不考虑子版本" Type="Stardust.Models.OSKinds" />
       <Column Name="Memory" DataType="Int32" Description="内存。单位M" />
       <Column Name="AvailableMemory" DataType="Int32" Description="可用内存。单位M" />
       <Column Name="MemoryUsed" DataType="Int32" Description="已用内存。单位M" />

@@ -123,7 +123,6 @@ public partial class NodeOnline
 
     private Stardust.Models.OSKinds _OSKind;
     /// <summary>系统种类。主流操作系统类型，不考虑子版本</summary>
-    [Category("硬件信息")]
     [DisplayName("系统种类")]
     [Description("系统种类。主流操作系统类型，不考虑子版本")]
     [DataObjectField(false, false, false, 0)]
