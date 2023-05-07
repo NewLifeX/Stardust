@@ -307,13 +307,13 @@ internal class ServiceController : DisposeBase
         _timer.TryDispose();
         _timer = null;
 
-#if NETCOREAPP||NETSTANDARD
-        // 优雅关闭Linux进程
+#if NETCOREAPP || NETSTANDARD
+        // 优雅关闭进程
         try
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                Process.Start("kill", $"-4 {p.Id}");
+                Process.Start("kill", p.Id.ToString());
 
                 for (var i = 0; i < 10 && !p.HasExited; i++)
                 {
@@ -326,16 +326,31 @@ internal class ServiceController : DisposeBase
 
         try
         {
-            p.CloseMainWindow();
+            if (p.CloseMainWindow())
+            {
+                WriteLog("已发送关闭窗口消息，等待目标进程退出");
+
+                for (var i = 0; i < 10 && !p.HasExited; i++)
+                {
+                    Thread.Sleep(300);
+                }
+            }
         }
         catch { }
 
         try
         {
-            if (!p.HasExited) p.Kill();
+            if (!p.HasExited)
+            {
+                WriteLog("强行结束进程 PID={0}/{1}", p.Id, p.ProcessName);
+                p.Kill();
+            }
+
+            if (p.HasExited) WriteLog("进程[PID={0}]已退出！ExitCode={1}", p.Id, p.ExitCode);
         }
         catch (Exception ex)
         {
+            WriteLog("进程[PID={0}]退出失败！{1}", p.Id, ex.Message);
             span?.SetError(ex, null);
         }
     }
