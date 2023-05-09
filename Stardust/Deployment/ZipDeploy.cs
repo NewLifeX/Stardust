@@ -233,8 +233,8 @@ public class ZipDeploy
         // 指定用户时，以特定用户启动进程
         if (!UserName.IsNullOrEmpty() && Runtime.Linux)
         {
-            si.Arguments = $"-u {UserName} {si.FileName} {si.Arguments}";
-            si.FileName = "sudo";
+            si.Arguments = $"-l {UserName} '{si.FileName} {si.Arguments}'";
+            si.FileName = "runuser";
         }
 
         if (Debug)

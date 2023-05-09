@@ -200,8 +200,8 @@ internal class ServiceController : DisposeBase
                         //si.UserName = service.User;
                         //si.UseShellExecute = false;
 
-                        si.FileName = "sudo";
-                        si.Arguments = $"-u {service.UserName} {file} {args}";
+                        si.FileName = "runuser";
+                        si.Arguments = $"-l {service.UserName} '{file} {args}'";
                     }
 
                     // 如果出现超过一次的重启，则打开调试模式，截取控制台输出到日志
