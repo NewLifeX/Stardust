@@ -108,6 +108,7 @@ public class DeployController : BaseController
                 if (app.FileName.IsNullOrEmpty()) app.FileName = svc.FileName;
                 if (app.Arguments.IsNullOrEmpty()) app.Arguments = svc.Arguments;
                 if (app.WorkingDirectory.IsNullOrEmpty()) app.WorkingDirectory = svc.WorkingDirectory;
+                if (app.UserName.IsNullOrEmpty()) app.UserName = svc.UserName;
                 if (app.Mode <= 0) app.Mode = svc.Mode;
 
                 app.MaxMemory = svc.MaxMemory;

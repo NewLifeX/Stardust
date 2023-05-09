@@ -24,7 +24,7 @@ public class ServiceInfo
 
     /// <summary>用户。以该用户执行应用</summary>
     [XmlAttribute]
-    public String User { get; set; }
+    public String UserName { get; set; }
 
     /// <summary>启用</summary>
     [XmlAttribute]

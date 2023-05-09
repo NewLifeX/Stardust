@@ -30,7 +30,7 @@ public class ZipDeploy
     public String ExecuteFile { get; set; }
 
     /// <summary>用户。以该用户执行应用</summary>
-    public String User { get; set; }
+    public String UserName { get; set; }
 
     /// <summary>进程</summary>
     public Process Process { get; private set; }
@@ -231,9 +231,9 @@ public class ZipDeploy
         }
 
         // 指定用户时，以特定用户启动进程
-        if (!User.IsNullOrEmpty() && Runtime.Linux)
+        if (!UserName.IsNullOrEmpty() && Runtime.Linux)
         {
-            si.Arguments = $"-u {User} {si.FileName} {si.Arguments}";
+            si.Arguments = $"-u {UserName} {si.FileName} {si.Arguments}";
             si.FileName = "sudo";
         }
 

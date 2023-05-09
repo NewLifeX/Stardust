@@ -155,7 +155,7 @@ internal class ServiceController : DisposeBase
                     {
                         FileName = file,
                         WorkingDirectory = workDir,
-                        User = service.User,
+                        UserName = service.UserName,
 
                         Tracer = Tracer,
                         Log = new ActionLog(WriteLog),
@@ -195,13 +195,13 @@ internal class ServiceController : DisposeBase
                     };
 
                     // 指定用户时，以特定用户启动进程
-                    if (!service.User.IsNullOrEmpty() && Runtime.Linux)
+                    if (!service.UserName.IsNullOrEmpty() && Runtime.Linux)
                     {
                         //si.UserName = service.User;
                         //si.UseShellExecute = false;
 
                         si.FileName = "sudo";
-                        si.Arguments = $"-u {service.User} {file} {args}";
+                        si.Arguments = $"-u {service.UserName} {file} {args}";
                     }
 
                     // 如果出现超过一次的重启，则打开调试模式，截取控制台输出到日志

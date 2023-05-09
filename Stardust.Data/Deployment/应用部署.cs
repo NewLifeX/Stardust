@@ -105,6 +105,15 @@ public partial class AppDeploy
     [BindColumn("WorkingDirectory", "工作目录。应用根目录", "")]
     public String WorkingDirectory { get => _WorkingDirectory; set { if (OnPropertyChanging("WorkingDirectory", value)) { _WorkingDirectory = value; OnPropertyChanged("WorkingDirectory"); } } }
 
+    private String _UserName;
+    /// <summary>用户名。以该用户执行应用</summary>
+    [Category("参数")]
+    [DisplayName("用户名")]
+    [Description("用户名。以该用户执行应用")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("UserName", "用户名。以该用户执行应用", "")]
+    public String UserName { get => _UserName; set { if (OnPropertyChanging("UserName", value)) { _UserName = value; OnPropertyChanged("UserName"); } } }
+
     private Int32 _MaxMemory;
     /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
     [Category("参数")]
@@ -213,6 +222,7 @@ public partial class AppDeploy
             "FileName" => _FileName,
             "Arguments" => _Arguments,
             "WorkingDirectory" => _WorkingDirectory,
+            "UserName" => _UserName,
             "MaxMemory" => _MaxMemory,
             "Mode" => _Mode,
             "AutoPublish" => _AutoPublish,
@@ -239,6 +249,7 @@ public partial class AppDeploy
                 case "FileName": _FileName = Convert.ToString(value); break;
                 case "Arguments": _Arguments = Convert.ToString(value); break;
                 case "WorkingDirectory": _WorkingDirectory = Convert.ToString(value); break;
+                case "UserName": _UserName = Convert.ToString(value); break;
                 case "MaxMemory": _MaxMemory = value.ToInt(); break;
                 case "Mode": _Mode = (Stardust.Models.ServiceModes)value.ToInt(); break;
                 case "AutoPublish": _AutoPublish = value.ToBoolean(); break;
@@ -291,6 +302,9 @@ public partial class AppDeploy
 
         /// <summary>工作目录。应用根目录</summary>
         public static readonly Field WorkingDirectory = FindByName("WorkingDirectory");
+
+        /// <summary>用户名。以该用户执行应用</summary>
+        public static readonly Field UserName = FindByName("UserName");
 
         /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
         public static readonly Field MaxMemory = FindByName("MaxMemory");
@@ -357,6 +371,9 @@ public partial class AppDeploy
 
         /// <summary>工作目录。应用根目录</summary>
         public const String WorkingDirectory = "WorkingDirectory";
+
+        /// <summary>用户名。以该用户执行应用</summary>
+        public const String UserName = "UserName";
 
         /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
         public const String MaxMemory = "MaxMemory";

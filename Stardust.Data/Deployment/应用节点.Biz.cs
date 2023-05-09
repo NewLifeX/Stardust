@@ -180,6 +180,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         if (inf.FileName.IsNullOrEmpty()) inf.FileName = app.FileName;
         if (inf.Arguments.IsNullOrEmpty()) inf.Arguments = app.Arguments;
         if (inf.WorkingDirectory.IsNullOrEmpty()) inf.WorkingDirectory = app.WorkingDirectory;
+        if (inf.UserName.IsNullOrEmpty()) inf.UserName = app.UserName;
         if (inf.Mode <= ServiceModes.Default) inf.Mode = app.Mode;
 
         return inf;

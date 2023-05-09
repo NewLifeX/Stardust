@@ -405,6 +405,7 @@ public class ServiceManager : DisposeBase
                 old.FileName = svc.FileName;
                 old.Arguments = svc.Arguments;
                 old.WorkingDirectory = svc.WorkingDirectory;
+                old.UserName = svc.UserName;
                 old.Enable = svc.Enable;
                 //old.AutoStart = svc.AutoStart;
                 //svc.AutoStop = item.AutoStop;
