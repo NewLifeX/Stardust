@@ -22,9 +22,9 @@ public class ServiceInfo
     [XmlAttribute]
     public String WorkingDirectory { get; set; }
 
-    ///// <summary>资源文件</summary>
-    //[XmlIgnore, IgnoreDataMember]
-    //public String Source { get; set; }
+    /// <summary>用户。以该用户执行应用</summary>
+    [XmlAttribute]
+    public String User { get; set; }
 
     /// <summary>启用</summary>
     [XmlAttribute]

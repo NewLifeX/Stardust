@@ -155,6 +155,7 @@ internal class ServiceController : DisposeBase
                     {
                         FileName = file,
                         WorkingDirectory = workDir,
+                        User = service.User,
 
                         Tracer = Tracer,
                         Log = new ActionLog(WriteLog),
@@ -192,6 +193,16 @@ internal class ServiceController : DisposeBase
                         // true时目标控制台独立窗口，不会一起退出；
                         UseShellExecute = true,
                     };
+
+                    // 指定用户时，以特定用户启动进程
+                    if (!service.User.IsNullOrEmpty() && Runtime.Linux)
+                    {
+                        //si.UserName = service.User;
+                        //si.UseShellExecute = false;
+
+                        si.FileName = "sudo";
+                        si.Arguments = $"-u {service.User} {file} {args}";
+                    }
 
                     // 如果出现超过一次的重启，则打开调试模式，截取控制台输出到日志
                     if (_error > 1)
@@ -321,11 +332,10 @@ internal class ServiceController : DisposeBase
         }
         catch { }
 
-#if NETCOREAPP || NETSTANDARD
         // 优雅关闭进程
         try
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            if (Runtime.Linux)
             {
                 if (!p.HasExited) Process.Start("kill", p.Id.ToString());
 
@@ -334,7 +344,7 @@ internal class ServiceController : DisposeBase
                     Thread.Sleep(200);
                 }
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            else if (Runtime.Windows)
             {
                 if (!p.HasExited) Process.Start("taskkill", $"-pid {p.Id}");
 
@@ -345,7 +355,6 @@ internal class ServiceController : DisposeBase
             }
         }
         catch { }
-#endif
 
         try
         {

@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Xml.Serialization;
 using NewLife;
 using NewLife.Log;
 
@@ -26,6 +28,9 @@ public class ZipDeploy
 
     /// <summary>可执行文件路径</summary>
     public String ExecuteFile { get; set; }
+
+    /// <summary>用户。以该用户执行应用</summary>
+    public String User { get; set; }
 
     /// <summary>进程</summary>
     public Process Process { get; private set; }
@@ -223,6 +228,13 @@ public class ZipDeploy
         {
             si.FileName = "java";
             si.Arguments = $"{runfile.FullName} {Arguments}";
+        }
+
+        // 指定用户时，以特定用户启动进程
+        if (!User.IsNullOrEmpty() && Runtime.Linux)
+        {
+            si.Arguments = $"-u {User} {si.FileName} {si.Arguments}";
+            si.FileName = "sudo";
         }
 
         if (Debug)
