@@ -102,6 +102,16 @@ namespace Stardust.Data.Monitors
 
             return FindAll(exp, page);
         }
+
+        public static IList<SampleData2> Search(String[] traceIds, String key, PageParameter page)
+        {
+            var exp = new WhereExpression();
+
+            if (traceIds != null && traceIds.Length > 0) exp &= _.TraceId.In(traceIds);
+            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.SpanId.Contains(key) | _.ParentId.Contains(key) | _.Tag.Contains(key) | _.Error.Contains(key) | _.CreateIP.Contains(key);
+
+            return FindAll(exp, page);
+        }
         #endregion
 
         #region 业务操作

@@ -206,13 +206,15 @@ public class TraceController : ControllerBaseX
         }
         //if (p.Sort.IsNullOrEmpty()) p.OrderBy = SampleData._.Id.Desc();
 
+        var traceIds = traceId.Split(',').Distinct().ToArray();
+
         var start = DateTime.Today.AddDays(-30);
         var end = DateTime.Today;
-        var list = SampleData.Search(-1, traceId, null, start, end, p);
+        var list = SampleData.Search(-1, traceIds, null, start, end, p);
         if (list.Count == 0)
         {
             // 如果是查看调用链，去备份表查一下
-            var list2 = SampleData2.Search(traceId, null, p);
+            var list2 = SampleData2.Search(traceIds, null, p);
             if (list2.Count > 0)
             {
                 foreach (var item in list2)
@@ -233,16 +235,18 @@ public class TraceController : ControllerBaseX
             if (first.Year > 2000 && first.Hour == 0 && first.Minute == 0 && first.Second <= 5)
             {
                 var date = first.Date.AddDays(-1);
-                var list2 = SampleData.Search(-1, traceId, null, date, date, p);
+                var list2 = SampleData.Search(-1, traceIds, null, date, date, p);
                 if (list2.Count > 0) (list as List<SampleData>).AddRange(list2);
             }
 
             if (list.Count < p.PageSize)
             {
                 var user = ManageProvider.User;
-
-                // 备份调用链，用于将来查询
-                SampleData2.Backup(traceId, list, user?.ID ?? 0, user + "");
+                foreach (var item in traceIds)
+                {
+                    // 备份调用链，用于将来查询
+                    SampleData2.Backup(item, list, user?.ID ?? 0, user + "");
+                }
             }
         }
 
