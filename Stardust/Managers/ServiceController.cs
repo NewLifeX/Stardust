@@ -44,6 +44,9 @@ internal class ServiceController : DisposeBase
     /// <summary>延迟时间。重启进程或服务的延迟时间，默认3000ms</summary>
     public Int32 Delay { get; set; } = 3000;
 
+    /// <summary>启动应用时的等待时间。如果该时间内进程退出，则认为启动失败</summary>
+    public Int32 StartWait { get; set; } = 3000;
+
     /// <summary>开始时间</summary>
     public DateTime StartTime { get; set; }
 
@@ -70,7 +73,7 @@ internal class ServiceController : DisposeBase
     #endregion
 
     #region 方法
-    /// <summary>检查并启动应用</summary>
+    /// <summary>检查并启动应用，等待一会确认进程已启动</summary>
     /// <returns>本次是否成功启动，原来已启动返回false</returns>
     public Boolean Start()
     {
@@ -166,7 +169,7 @@ internal class ServiceController : DisposeBase
 
                     if (!args.IsNullOrEmpty() && !deploy.Parse(args.Split(" "))) return false;
 
-                    if (!deploy.Execute())
+                    if (!deploy.Execute(StartWait))
                     {
                         WriteLog("Zip包启动失败！ExitCode={0}", deploy.Process?.ExitCode);
 
@@ -214,7 +217,7 @@ internal class ServiceController : DisposeBase
                     }
 
                     p = Process.Start(si);
-                    if (p.WaitForExit(3_000) && p.ExitCode != 0)
+                    if (StartWait > 0 && p.WaitForExit(StartWait) && p.ExitCode != 0)
                     {
                         WriteLog("启动失败！ExitCode={0}", p.ExitCode);
 
@@ -302,7 +305,7 @@ internal class ServiceController : DisposeBase
         return deploy;
     }
 
-    /// <summary>停止应用</summary>
+    /// <summary>停止应用，等待一会确认进程已退出</summary>
     /// <param name="reason"></param>
     public void Stop(String reason)
     {
@@ -333,28 +336,32 @@ internal class ServiceController : DisposeBase
         catch { }
 
         // 优雅关闭进程
-        try
+        if (!p.HasExited)
         {
-            if (Runtime.Linux)
+            try
             {
-                if (!p.HasExited) Process.Start("kill", p.Id.ToString());
-
-                for (var i = 0; i < 50 && !p.HasExited; i++)
+                WriteLog("优雅退出进程：PID={0}/{1}，最大等待{2}毫秒", p.Id, p.ProcessName, 50 * 200);
+                if (Runtime.Linux)
                 {
-                    Thread.Sleep(200);
+                    Process.Start("kill", p.Id.ToString());
+
+                    for (var i = 0; i < 50 && !p.HasExited; i++)
+                    {
+                        Thread.Sleep(200);
+                    }
+                }
+                else if (Runtime.Windows)
+                {
+                    Process.Start("taskkill", $"-pid {p.Id}");
+
+                    for (var i = 0; i < 50 && !p.HasExited; i++)
+                    {
+                        Thread.Sleep(200);
+                    }
                 }
             }
-            else if (Runtime.Windows)
-            {
-                if (!p.HasExited) Process.Start("taskkill", $"-pid {p.Id}");
-
-                for (var i = 0; i < 50 && !p.HasExited; i++)
-                {
-                    Thread.Sleep(200);
-                }
-            }
+            catch { }
         }
-        catch { }
 
         try
         {
