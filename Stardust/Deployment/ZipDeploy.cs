@@ -231,10 +231,17 @@ public class ZipDeploy
         }
 
         // 指定用户时，以特定用户启动进程
-        if (!UserName.IsNullOrEmpty() && Runtime.Linux)
+        if (!UserName.IsNullOrEmpty())
         {
-            si.Arguments = $"-l {UserName} '{si.FileName} {si.Arguments}'";
-            si.FileName = "runuser";
+            si.UserName = UserName;
+            //si.UseShellExecute = false;
+
+            // 在Linux系统中，改变目录所属用户
+            if (Runtime.Linux)
+            {
+                Process.Start("chown", $"-R {UserName} {si.WorkingDirectory}");
+                Process.Start("chown", $"-R {UserName} {shadow}");
+            }
         }
 
         if (Debug)
@@ -244,8 +251,11 @@ public class ZipDeploy
             si.RedirectStandardError = true;
         }
 
+        WriteLog("工作目录: {0}", si.WorkingDirectory);
         WriteLog("启动文件: {0}", si.FileName);
         WriteLog("启动参数: {0}", si.Arguments);
+        if (!si.UserName.IsNullOrEmpty())
+            WriteLog("启动用户：{0}", si.UserName);
 
         var p = Process.Start(si);
         Process = p;

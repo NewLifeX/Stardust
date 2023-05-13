@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
 using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
@@ -185,7 +184,7 @@ internal class ServiceController : DisposeBase
                 }
                 else
                 {
-                    WriteLog("拉起进程：{0} {1}", file, args);
+                    //WriteLog("拉起进程：{0} {1}", file, args);
                     var si = new ProcessStartInfo
                     {
                         FileName = file,
@@ -198,13 +197,16 @@ internal class ServiceController : DisposeBase
                     };
 
                     // 指定用户时，以特定用户启动进程
-                    if (!service.UserName.IsNullOrEmpty() && Runtime.Linux)
+                    if (!service.UserName.IsNullOrEmpty())
                     {
-                        //si.UserName = service.User;
+                        si.UserName = service.UserName;
                         //si.UseShellExecute = false;
 
-                        si.FileName = "runuser";
-                        si.Arguments = $"-l {service.UserName} '{file} {args}'";
+                        // 在Linux系统中，改变目录所属用户
+                        if (Runtime.Linux)
+                        {
+                            Process.Start("chown", $"-R {service.UserName} {si.WorkingDirectory}");
+                        }
                     }
 
                     // 如果出现超过一次的重启，则打开调试模式，截取控制台输出到日志
@@ -215,6 +217,12 @@ internal class ServiceController : DisposeBase
                         si.RedirectStandardError = true;
                         si.RedirectStandardOutput = true;
                     }
+
+                    WriteLog("工作目录: {0}", si.WorkingDirectory);
+                    WriteLog("启动文件: {0}", si.FileName);
+                    WriteLog("启动参数: {0}", si.Arguments);
+                    if (!si.UserName.IsNullOrEmpty())
+                        WriteLog("启动用户：{0}", si.UserName);
 
                     p = Process.Start(si);
                     if (StartWait > 0 && p.WaitForExit(StartWait) && p.ExitCode != 0)
