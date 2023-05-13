@@ -51,6 +51,11 @@ public class NodeController : EntityController<Node>
             df.Url = "/Nodes/NodeHistory?nodeId={ID}";
         }
         {
+            var df = ListFields.AddListField("Commands", "Version");
+            df.DisplayName = "命令";
+            df.Url = "/Nodes/NodeCommand?nodeId={ID}";
+        }
+        {
             var df = ListFields.AddListField("Log", "Version");
             df.DisplayName = "日志";
             df.Url = "/Admin/Log?category=节点&linkId={ID}";

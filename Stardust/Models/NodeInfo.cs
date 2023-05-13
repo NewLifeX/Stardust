@@ -97,7 +97,7 @@ namespace Stardust.Models
         /// <summary>运行时。运行应用的当前运行时版本</summary>
         public String Runtime { get; set; }
 
-        /// <summary>框架。本地支持的最高版本框架</summary>
+        /// <summary>框架。本地支持的所有版本框架</summary>
         public String Framework { get; set; }
 
         /// <summary>本地UTC时间</summary>

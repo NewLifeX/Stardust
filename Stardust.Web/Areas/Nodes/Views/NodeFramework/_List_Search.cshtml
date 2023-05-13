@@ -1,0 +1,27 @@
+﻿@using NewLife;
+@using NewLife.Web;
+@using NewLife.Cube;
+@using XCode;
+@using Stardust.Data.Nodes;
+@{
+    var fact = ViewBag.Factory as IEntityFactory;
+    var page = ViewBag.Page as Pager;
+}
+<div class="form-group">
+    <label for="category" class="control-label">类别：</label>
+    @Html.ForDropDownList("category", Node.FindAllCategory(), page["category"], "全部", true)
+</div>
+<div class="form-group">
+    <label for="product" class="control-label">产品：</label>
+    @Html.ForDropDownList("product", Node.FindAllProduct(), page["product"], "全部", true)
+</div>
+<div class="form-group">
+    <label for="version" class="control-label">版本：</label>
+    @Html.ForDropDownList("version", Node.FindAllVersion(), page["version"], "全部", true)
+</div>
+<div class="form-group">
+    <label for="osKind" class="control-label">系统：</label>
+    @Html.ForDropDownList("osKind", Node.FindAllOSKind(), page["osKind"], "全部", true)
+</div>
+@*@await Html.PartialAsync("_Area2", "")*@
+@await Html.PartialAsync("_DateRange")

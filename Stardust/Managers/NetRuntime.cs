@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 using System.Net.Http;
 #endif
 
-namespace Stardust;
+namespace Stardust.Managers;
 
 /// <summary>dotNet运行时</summary>
 public class NetRuntime
@@ -521,36 +521,27 @@ public class NetRuntime
         var dic = new SortedDictionary<String, VerInfo>();
         var di = new DirectoryInfo(dir);
         if (di.Exists)
-        {
             foreach (var item in di.GetDirectories())
-            {
                 foreach (var elm in item.GetDirectories())
                 {
                     var name = "v" + elm.Name;
                     if (exact)
-                    {
                         if (item.Name.Contains("AspNet"))
                             name += "-aspnet";
                         else if (item.Name.Contains("Desktop"))
                             name += "-desktop";
-                    }
                     else if (name.Contains('-'))
                         continue;
                     if (!dic.ContainsKey(name))
                         dic.Add(name, new VerInfo { Name = name, Version = item.Name + " " + elm.Name });
                 }
-            }
-        }
 
         foreach (var item in dic)
-        {
             list.Add(item.Value);
-        }
 
         // 通用处理
         var infs = Execute("dotnet", "--list-runtimes")?.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
         if (infs != null)
-        {
             foreach (var line in infs)
             {
                 var ss = line.Split(' ');
@@ -559,12 +550,10 @@ public class NetRuntime
                     var name = "v" + ss[1];
                     var ver = $"{ss[0]} {ss[1]}";
                     if (exact)
-                    {
                         if (ver.Contains("AspNet"))
                             name += "-aspnet";
                         else if (ver.Contains("Desktop"))
                             name += "-desktop";
-                    }
                     else if (name.Contains('-'))
                         continue;
 
@@ -578,7 +567,6 @@ public class NetRuntime
                     if (vi.Version.Length < ver.Length) vi.Version = ver;
                 }
             }
-        }
 
         return list;
     }

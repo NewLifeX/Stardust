@@ -1,0 +1,16 @@
+﻿@using NewLife.Common;
+@using System.Collections.Generic;
+@{
+    var set = ViewBag.PageSetting as PageSetting;
+    var page = ViewBag.Page as Pager;
+}
+@if (set.EnableSelect)
+{
+    <div class="form-group">
+        <label for="ver" class="control-label">版本：</label>
+        @Html.TextBox("ver", page["ver"])
+    </div>
+    <button type="button" class="btn btn-purple btn-sm" data-action="action" data-url="@Url.Action("InstallFramework")" data-fields="keys,ver">
+        安装框架
+    </button>
+}

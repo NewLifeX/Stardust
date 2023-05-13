@@ -56,4 +56,11 @@
     <EmbeddedResource Include="wwwroot\**\*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="Areas\Nodes\Views\NodeFramework\_List_Toolbar_Batch.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

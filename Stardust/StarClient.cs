@@ -11,9 +11,9 @@ using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Threading;
+using Stardust.Managers;
 using Stardust.Models;
 using Stardust.Services;
-using System.Threading.Tasks;
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
 using System.Net.WebSockets;
 using WebSocket = System.Net.WebSockets.WebSocket;
@@ -59,6 +59,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     /// <summary>收到命令时触发</summary>
     public event EventHandler<CommandEventArgs> Received;
 
+    private FrameworkManager _frameworkManager = new();
     private readonly ConcurrentQueue<PingInfo> _fails = new();
     private readonly ICache _cache = new MemoryCache();
     #endregion
@@ -160,6 +161,8 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
 
         StartTimer();
 
+        _frameworkManager.Attach(this);
+
         return rs;
     }
 
@@ -229,11 +232,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         };
 
         // 目标框架
-        var vers = new List<NetRuntime.VerInfo>();
-        vers.AddRange(NetRuntime.Get1To45VersionFromRegistry());
-        vers.AddRange(NetRuntime.Get45PlusFromRegistry());
-        vers.AddRange(NetRuntime.GetNetCore(false));
-        di.Framework = vers.Join(",", e => e.Name.TrimStart('v'));
+        di.Framework = _frameworkManager.GetAllVersions().Join(",", e => e.TrimStart('v'));
 
 #if NETCOREAPP || NETSTANDARD
         di.Framework ??= RuntimeInformation.FrameworkDescription?.TrimStart(".NET Framework", ".NET Core", ".NET Native", ".NET").Trim();
