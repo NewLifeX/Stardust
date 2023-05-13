@@ -12,7 +12,7 @@ public class FrameworkManager
     /// <returns></returns>
     public String[] GetAllVersions()
     {
-        var vers = new List<NetRuntime.VerInfo>();
+        var vers = new List<VerInfo>();
         vers.AddRange(NetRuntime.Get1To45VersionFromRegistry());
         vers.AddRange(NetRuntime.Get45PlusFromRegistry());
         vers.AddRange(NetRuntime.GetNetCore(false));
@@ -34,7 +34,10 @@ public class FrameworkManager
         var model = argument.ToJsonEntity<FrameworkModel>();
         if (model == null || model.Version.IsNullOrEmpty()) throw new Exception("未指定版本！");
 
-        var nr = new NetRuntime();
+        var nr = new NetRuntime
+        {
+            Silent = true
+        };
         if (model.BaseUrl.IsNullOrEmpty()) nr.BaseUrl = model.BaseUrl;
 
         // 获取已安装版本集合
@@ -45,7 +48,7 @@ public class FrameworkManager
         else if (ver.StartsWithIgnoreCase("4."))
         {
         }
-        else if (ver.StartsWithIgnoreCase("5.", "6.", "7.", "8."))
+        else if (ver.StartsWithIgnoreCase("6."))
         {
         }
 

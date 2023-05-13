@@ -61,7 +61,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="res\md5.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="..\Doc\leaf.png" Link="leaf.png" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="res\md5.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Readme.MD">
