@@ -129,9 +129,8 @@ public class NetRuntime
     {
         var vers = new List<VerInfo>();
         vers.AddRange(Get1To45VersionFromRegistry());
-        vers.AddRange(Get45PlusFromRegistry());
 
-        var ver = GetLast(vers, null);
+        var ver = GetLast(vers, "4.0");
 
         // 目标版本
         var target = new Version("4.0");
@@ -168,9 +167,8 @@ public class NetRuntime
     {
         var vers = new List<VerInfo>();
         vers.AddRange(Get1To45VersionFromRegistry());
-        vers.AddRange(Get45PlusFromRegistry());
 
-        var ver = GetLast(vers, null);
+        var ver = GetLast(vers, "4.5");
 
         // 目标版本
         var target = new Version("4.5");

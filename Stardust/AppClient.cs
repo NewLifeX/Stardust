@@ -195,7 +195,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
                 if (rs != null)
                 {
                     // 由服务器改变采样频率
-                    if (rs.Period > 0) _timer.Period = rs.Period * 1000;
+                    if (rs.Period > 0 && _timer != null) _timer.Period = rs.Period * 1000;
 
                     // 推队列
                     if (rs.Commands != null && rs.Commands.Length > 0)

@@ -38,19 +38,60 @@ public class FrameworkManager
         {
             Silent = true
         };
-        if (model.BaseUrl.IsNullOrEmpty()) nr.BaseUrl = model.BaseUrl;
+        if (!model.BaseUrl.IsNullOrEmpty()) nr.BaseUrl = model.BaseUrl;
 
         // 获取已安装版本集合
         var ver = model.Version.Trim('v', 'V');
-        if (ver.StartsWithIgnoreCase("2.", "3.5", "4.0", "4.5"))
+        if (ver.StartsWithIgnoreCase("4.0"))
         {
+            nr.InstallNet40();
+        }
+        else if (ver.StartsWithIgnoreCase("4.5"))
+        {
+            nr.InstallNet45();
         }
         else if (ver.StartsWithIgnoreCase("4."))
         {
+            nr.InstallNet48();
         }
         else if (ver.StartsWithIgnoreCase("6."))
         {
+            var kind = "";
+            var p = ver.IndexOf('-');
+            if (p > 0)
+            {
+                kind = ver.Substring(p + 1);
+                ver = ver.Substring(0, p);
+            }
+
+            nr.InstallNet6(ver, kind);
         }
+        else if (ver.StartsWithIgnoreCase("7."))
+        {
+            var kind = "";
+            var p = ver.IndexOf('-');
+            if (p > 0)
+            {
+                kind = ver.Substring(p + 1);
+                ver = ver.Substring(0, p);
+            }
+
+            nr.InstallNet7(ver, kind);
+        }
+        else if (ver.StartsWithIgnoreCase("8."))
+        {
+            var kind = "";
+            var p = ver.IndexOf('-');
+            if (p > 0)
+            {
+                kind = ver.Substring(p + 1);
+                ver = ver.Substring(0, p);
+            }
+
+            nr.InstallNet7(ver, kind);
+        }
+        else
+            throw new Exception($"不支持的.NET版本[{ver}]");
 
         return "安装成功";
     }

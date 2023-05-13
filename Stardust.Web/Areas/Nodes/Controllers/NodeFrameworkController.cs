@@ -56,6 +56,7 @@ public class NodeFrameworkController : EntityController<Node>
     [EntityAuthorize((PermissionFlags)16)]
     public async Task<ActionResult> InstallFramework(String ver)
     {
+        if (GetRequest("keys") == null) throw new ArgumentNullException(nameof(SelectKeys));
         if (ver.IsNullOrEmpty()) throw new ArgumentNullException(nameof(ver));
 
         var bf = new BatchFinder<Int32, Node>();
