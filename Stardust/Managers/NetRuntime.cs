@@ -2,6 +2,9 @@
 using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
+using NewLife;
+using System.Runtime.InteropServices;
+using NewLife.Log;
 
 #if NET6_0_OR_GREATER
 using System.Net.Http;
@@ -34,7 +37,7 @@ public class NetRuntime
     /// <returns></returns>
     public Boolean Install(String fileName, String baseUrl = null, String arg = null)
     {
-        Console.WriteLine("下载 {0}", fileName);
+        XTrace.WriteLine("下载 {0}", fileName);
 
         var fullFile = fileName;
         if (!String.IsNullOrEmpty(CachePath)) fullFile = Path.Combine(CachePath, fileName);
@@ -57,7 +60,7 @@ public class NetRuntime
                 baseUrl = BaseUrl + baseUrl;
 
             var url = $"{baseUrl}/{fileName}";
-            Console.WriteLine("正在下载：{0}", url);
+            XTrace.WriteLine("正在下载：{0}", url);
 
             var dir = Path.GetDirectoryName(fullFile);
             if (!String.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
@@ -72,29 +75,53 @@ public class NetRuntime
             var http = new WebClient();
             http.DownloadFile(url, fullFile);
 #endif
-            Console.WriteLine("MD5: {0}", GetMD5(fullFile));
+            XTrace.WriteLine("MD5: {0}", GetMD5(fullFile));
         }
 
         if (String.IsNullOrEmpty(arg)) arg = "/passive /promptrestart";
         if (!Silent) arg = null;
 
-        Console.WriteLine("正在安装：{0} {1}", fullFile, arg);
+        XTrace.WriteLine("正在安装：{0} {1}", fullFile, arg);
+
+        if (Runtime.Linux)
+            return InstallOnLinux(fullFile, arg);
+        else
+            return InstallOnWindows(fullFile, arg);
+    }
+
+    Boolean InstallOnWindows(String fullFile, String arg)
+    {
         var p = Process.Start(fullFile, arg);
         if (p.WaitForExit(600_000))
         {
             if (p.ExitCode == 0)
-                Console.WriteLine("安装完成！");
+                XTrace.WriteLine("安装完成！");
             else
-                Console.WriteLine("安装失败！ExitCode={0}", p.ExitCode);
+                XTrace.WriteLine("安装失败！ExitCode={0}", p.ExitCode);
             Environment.ExitCode = p.ExitCode;
             return p.ExitCode == 0;
         }
         else
         {
-            Console.WriteLine("安装超时！");
+            XTrace.WriteLine("安装超时！");
             Environment.ExitCode = 400;
             return false;
         }
+    }
+
+    Boolean InstallOnLinux(String fullFile, String arg)
+    {
+        // 建立目录
+        var target = "/usr/share/dotnet";
+        target.EnsureDirectory(false);
+
+        // 解压缩
+        Process.Start(new ProcessStartInfo("tar", $"-xzf {fullFile} -C {target}") { UseShellExecute = true });
+
+        // 建立链接
+        Process.Start(new ProcessStartInfo("ln", $"{fullFile}/dotnet /usr/bin/dotnet -s") { UseShellExecute = true });
+
+        return true;
     }
 
     static Version GetLast(IList<VerInfo> vers, String prefix = null, String suffix = null)
@@ -102,7 +129,7 @@ public class NetRuntime
         var ver = new Version();
         if (vers.Count > 0)
         {
-            //Console.WriteLine("已安装版本：");
+            //XTrace.WriteLine("已安装版本：");
             foreach (var item in vers)
             {
                 if ((String.IsNullOrEmpty(prefix) || item.Name.StartsWith(prefix)) &&
@@ -116,9 +143,9 @@ public class NetRuntime
                     if (v > ver) ver = v;
                 }
 
-                //Console.WriteLine(item.Name);
+                //XTrace.WriteLine(item.Name);
             }
-            //Console.WriteLine("");
+            //XTrace.WriteLine("");
         }
 
         return ver;
@@ -130,13 +157,13 @@ public class NetRuntime
         var vers = new List<VerInfo>();
         vers.AddRange(Get1To45VersionFromRegistry());
 
-        var ver = GetLast(vers, "4.0");
+        var ver = GetLast(vers, "v4.0");
 
         // 目标版本
         var target = new Version("4.0");
         if (ver >= target)
         {
-            Console.WriteLine("已安装最新版 v{0}", ver);
+            XTrace.WriteLine("已安装最新版 v{0}", ver);
             return;
         }
 
@@ -168,13 +195,13 @@ public class NetRuntime
         var vers = new List<VerInfo>();
         vers.AddRange(Get1To45VersionFromRegistry());
 
-        var ver = GetLast(vers, "4.5");
+        var ver = GetLast(vers, "v4.5");
 
         // 目标版本
         var target = new Version("4.5");
         if (ver >= target)
         {
-            Console.WriteLine("已安装最新版 v{0}", ver);
+            XTrace.WriteLine("已安装最新版 v{0}", ver);
             return;
         }
 
@@ -196,7 +223,7 @@ public class NetRuntime
         var target = osVer.Major >= 10 ? new Version("4.8.1") : new Version("4.8");
         if (ver >= target)
         {
-            Console.WriteLine("已安装最新版 v{0}", ver);
+            XTrace.WriteLine("已安装最新版 v{0}", ver);
             return;
         }
 
@@ -234,7 +261,7 @@ public class NetRuntime
     }
 
     /// <summary>安装.NET6.0</summary>
-    /// <param name="target">目标版本。包括子版本，如{target}</param>
+    /// <param name="target">目标版本。包括子版本，如6.0.15</param>
     /// <param name="kind">安装类型。如aspnet/desktop/host</param>
     public void InstallNet6(String target, String kind = null)
     {
@@ -248,7 +275,7 @@ public class NetRuntime
         var targetVer = new Version(target);
         if (ver >= targetVer)
         {
-            Console.WriteLine("已安装最新版 v{0}", ver);
+            XTrace.WriteLine("已安装最新版 v{0}", ver);
             return;
         }
 
@@ -316,7 +343,7 @@ public class NetRuntime
     }
 
     /// <summary>安装.NET7.0</summary>
-    /// <param name="target">目标版本。包括子版本，如{target}</param>
+    /// <param name="target">目标版本。包括子版本，如6.0.15</param>
     /// <param name="kind">安装类型。如aspnet/desktop/host</param>
     public void InstallNet7(String target, String kind = null)
     {
@@ -330,7 +357,7 @@ public class NetRuntime
         var targetVer = new Version(target);
         if (ver >= targetVer)
         {
-            Console.WriteLine("已安装最新版 v{0}", ver);
+            XTrace.WriteLine("已安装最新版 v{0}", ver);
             return;
         }
 
@@ -395,6 +422,40 @@ public class NetRuntime
                     break;
             }
         }
+    }
+
+    /// <summary>在Linux上安装.NET运行时</summary>
+    /// <param name="target">目标版本。包括子版本，如6.0.15</param>
+    /// <param name="kind">安装类型。如aspnet</param>
+    public void InstallNetOnLinux(String target, String kind = null)
+    {
+        var vers = GetNetCore();
+
+        var suffix = "";
+        if (!String.IsNullOrEmpty(kind)) suffix = "-" + kind;
+        var ver = GetLast(vers, "v" + target.Substring(0, 3), suffix);
+
+        // 目标版本
+        var targetVer = new Version(target);
+        if (ver >= targetVer)
+        {
+            XTrace.WriteLine("已安装最新版 v{0}", ver);
+            return;
+        }
+
+#if NETSTANDARD ||NETCOREAPP
+        var arch = RuntimeInformation.ProcessArchitecture.ToString().ToLower();
+
+        switch (kind)
+        {
+            case "aspnet":
+                Install($"aspnetcore-runtime-{target}-linux-{arch}.tar.gz");
+                break;
+            default:
+                Install($"dotnet-runtime-{target}-linux-{arch}.tar.gz");
+                break;
+        }
+#endif
     }
 
     /// <summary>获取所有已安装版本</summary>
@@ -682,7 +743,7 @@ public class NetRuntime
     /// <returns></returns>
     public static Boolean InstallCert()
     {
-        Console.WriteLine("准备安装微软根证书");
+        XTrace.WriteLine("准备安装微软根证书");
 
         // 释放文件
         var asm = Assembly.GetExecutingAssembly();
@@ -712,7 +773,7 @@ public class NetRuntime
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            XTrace.WriteLine(ex.Message);
             return false;
         }
         finally

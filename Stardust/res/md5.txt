@@ -18,6 +18,9 @@ aspnetcore-runtime-6.0.16-linux-x64.tar.gz      23BE703745FD0707963253B597163E54
 aspnetcore-runtime-6.0.16-win-x64.exe   15F3714753FCAD7D96E339B6319E6200
 aspnetcore-runtime-6.0.16-win-x86.exe   4D692C539C999B900F54086DE1B79933
 dotnet-hosting-6.0.16-win.exe   092937DE953355728289CFE5781FF89A
+dotnet-runtime-6.0.16-linux-arm.tar.gz  0367DDB421BFAE36EC9A49CCEACD75B4
+dotnet-runtime-6.0.16-linux-arm64.tar.gz        56264336DA30707A5C31DF7870004091
+dotnet-runtime-6.0.16-linux-x64.tar.gz  5A56A4FCE4E21F5740725887F770E489
 dotnet-runtime-6.0.16-win-arm64.exe     C02E4AB8EB650D3E7469E34EF845C1A2
 dotnet-runtime-6.0.16-win-x64.exe       1C3C2C99F3E0954B2D0F0EB5F068E829
 dotnet-runtime-6.0.16-win-x86.exe       2ED3E4D933BAAA4E55044A53D5E05BC2
@@ -31,6 +34,9 @@ aspnetcore-runtime-7.0.5-linux-x64.tar.gz       C0C88D73A653634D23B9AF402F90B720
 aspnetcore-runtime-7.0.5-win-x64.exe    AB40AA8D730D3DB5DDFBACF887BF0AA1
 aspnetcore-runtime-7.0.5-win-x86.exe    0B3652F3BE7AAF8CD9AF0DED84612DCA
 dotnet-hosting-7.0.5-win.exe    F8A5D2839074B54A9C70CE02C9DEA73B
+dotnet-runtime-7.0.5-linux-arm.tar.gz   D62FAFB7282AE78EA8D056157F8A21EC
+dotnet-runtime-7.0.5-linux-arm64.tar.gz 7FA051483506F139084F210E61D527CD
+dotnet-runtime-7.0.5-linux-x64.tar.gz   B0CE7E1339076E5DC3DE806E39AFE3E4
 dotnet-runtime-7.0.5-win-x64.exe        B9EDA20500D8D18A48FC2479FFF64F1A
 dotnet-runtime-7.0.5-win-x86.exe        D77552C6C7573C4EB451C1FBAC531320
 windowsdesktop-runtime-7.0.5-win-x64.exe        C24781FC67A4702B7BBDAC87082437AC

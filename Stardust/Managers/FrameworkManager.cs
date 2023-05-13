@@ -42,7 +42,19 @@ public class FrameworkManager
 
         // 获取已安装版本集合
         var ver = model.Version.Trim('v', 'V');
-        if (ver.StartsWithIgnoreCase("4.0"))
+        if (Runtime.Linux)
+        {
+            var kind = "";
+            var p = ver.IndexOf('-');
+            if (p > 0)
+            {
+                kind = ver.Substring(p + 1);
+                ver = ver.Substring(0, p);
+            }
+
+            nr.InstallNetOnLinux(ver, kind);
+        }
+        else if (ver.StartsWithIgnoreCase("4.0"))
         {
             nr.InstallNet40();
         }
