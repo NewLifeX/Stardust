@@ -327,6 +327,24 @@ internal class MyService : ServiceBase, IServiceProvider
             }
         };
 
+        // 服务迁移
+        client.OnMigration += (s, e) =>
+        {
+            var setStar = StarSetting;
+            var svr = e.NewServer;
+            if (!svr.IsNullOrEmpty() && !svr.EqualIgnoreCase(setStar.Server))
+            {
+                setStar.Server = svr;
+                setStar.Save();
+
+                e.Cancel = false;
+            }
+            else
+            {
+                e.Cancel = true;
+            }
+        };
+
         // APM埋点。独立应用名
         client.Tracer = _factory?.Tracer;
 

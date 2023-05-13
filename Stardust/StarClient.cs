@@ -40,6 +40,9 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     /// <summary>登录完成后触发</summary>
     public event EventHandler OnLogined;
 
+    /// <summary>服务迁移</summary>
+    public event EventHandler<MigrationEventArgs> OnMigration;
+
     /// <summary>最后一次登录成功后的消息</summary>
     public LoginResponse Info { get; private set; }
 
@@ -499,6 +502,29 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
                         foreach (var model in rs.Commands)
                         {
                             await ReceiveCommand(model);
+                        }
+                    }
+
+                    // 迁移到新服务器
+                    if (!rs.NewServer.IsNullOrEmpty())
+                    {
+                        var arg = new MigrationEventArgs { NewServer = rs.NewServer };
+
+                        OnMigration?.Invoke(this, arg);
+                        if (!arg.Cancel)
+                        {
+                            await Logout("切换新服务器");
+
+                            // 清空原有链接，添加新链接
+                            Services.Clear();
+
+                            var ss = rs.NewServer.Split(",");
+                            for (var i = 0; i < ss.Length; i++)
+                            {
+                                Add("service" + (i + 1), new Uri(ss[i]));
+                            }
+
+                            await Login();
                         }
                     }
                 }
