@@ -121,6 +121,8 @@ public class NetRuntime
         // 建立链接
         Process.Start(new ProcessStartInfo("ln", $"{fullFile}/dotnet /usr/bin/dotnet -s") { UseShellExecute = true });
 
+        XTrace.WriteLine("安装完成！");
+
         return true;
     }
 
