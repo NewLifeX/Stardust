@@ -33,6 +33,9 @@ namespace Stardust.Models
         ///// <summary>串口</summary>
         //public String COMs { get; set; }
 
+        /// <summary>框架。本地支持的所有版本框架</summary>
+        public String Framework { get; set; }
+
         /// <summary>本地IP地址。随着网卡变动，可能改变</summary>
         public String IP { get; set; }
 

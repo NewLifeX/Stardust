@@ -631,6 +631,7 @@ public class NetRuntime
         }
 
         // 通用处理
+        if (list.Count == 0)
         {
             var infs = Execute("dotnet", "--list-runtimes")?.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
             if (infs != null)

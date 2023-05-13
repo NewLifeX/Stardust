@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;

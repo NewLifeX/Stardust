@@ -443,6 +443,9 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         // 现在借助 Stopwatch 来解决
         if (Stopwatch.IsHighResolution) ext.Uptime = (Int32)(Stopwatch.GetTimestamp() / Stopwatch.Frequency);
 
+        // 目标框架
+        ext.Framework = _frameworkManager.GetAllVersions().Join(",", e => e.TrimStart('v'));
+
         // 获取Tcp连接信息，某些Linux平台不支持
         try
         {

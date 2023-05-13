@@ -321,6 +321,13 @@ public class NodeService
             node.FixArea();
             node.FixNameByRule();
 
+            // 在心跳中更新客户端所有的框架。因此客户端长期不重启，而中途可能安装了新版NET运行时
+            if (!inf.Framework.IsNullOrEmpty())
+            {
+                node.Framework = inf.Framework?.Split(',').LastOrDefault();
+                node.Frameworks = inf.Framework;
+            }
+
             // 每10分钟更新一次节点信息，确保活跃
             if (node.LastActive.AddMinutes(10) < DateTime.Now) node.LastActive = DateTime.Now;
             node.SaveAsync();
