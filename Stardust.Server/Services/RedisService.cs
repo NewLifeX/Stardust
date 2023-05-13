@@ -170,7 +170,7 @@ namespace Stardust.Server.Services
                 {
                     foreach (var item in rds.Keys)
                     {
-                        var type = rds.Execute(item, r => r.Execute<String>("TYPE", item), false);
+                        var type = rds.Execute(item, (r, k) => r.Execute<String>("TYPE", k), false);
                         if (type.EqualIgnoreCase("stream"))
                         {
                             SaveQueue(node, i, queues, item, type);
