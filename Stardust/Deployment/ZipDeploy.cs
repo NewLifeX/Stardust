@@ -32,6 +32,9 @@ public class ZipDeploy
     /// <summary>用户。以该用户执行应用</summary>
     public String UserName { get; set; }
 
+    /// <summary>覆盖文件。需要拷贝覆盖已存在的文件，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
+    public String Overwrite { get; set; }
+
     /// <summary>进程</summary>
     public Process Process { get; private set; }
 
@@ -307,6 +310,8 @@ public class ZipDeploy
 
         fi.Extract(shadow, true);
 
+        var ovs = Overwrite?.Split(';');
+
         // 复制配置文件和数据文件到运行目录
         var sdi = shadow.AsDirectory();
         if (!sdi.FullName.EnsureEnd("\\").EqualIgnoreCase(rundir.EnsureEnd("\\")))
@@ -315,10 +320,17 @@ public class ZipDeploy
             {
                 if (item.Extension.EndsWithIgnoreCase(".json", ".config", ".xml"))
                 {
-                    span?.AppendTag(item.Name);
+                    if (ovs == null || ovs.Any(e => e.IsMatch(item.Name)))
+                    {
+                        span?.AppendTag(item.Name);
 
-                    // 注意，appsettings.json 也可能覆盖
-                    item.CopyTo(rundir.CombinePath(item.Name), true);
+                        // 注意，appsettings.json 也可能覆盖
+                        item.CopyTo(rundir.CombinePath(item.Name), true);
+                    }
+                    else
+                    {
+                        item.CopyTo(rundir.CombinePath(item.Name), false);
+                    }
                 }
             }
 

@@ -31,6 +31,9 @@ internal class ServiceController : DisposeBase
     /// <summary>服务信息</summary>
     public ServiceInfo Info { get; private set; }
 
+    /// <summary>部署信息</summary>
+    public DeployInfo DeployInfo { get; set; }
+
     /// <summary>进程</summary>
     public Process Process { get; set; }
 
@@ -158,6 +161,7 @@ internal class ServiceController : DisposeBase
                         FileName = file,
                         WorkingDirectory = workDir,
                         UserName = service.UserName,
+                        Overwrite = DeployInfo?.Overwrite,
 
                         Tracer = Tracer,
                         Log = new ActionLog(WriteLog),
@@ -289,6 +293,7 @@ internal class ServiceController : DisposeBase
         {
             FileName = file,
             WorkingDirectory = workDir,
+            Overwrite = DeployInfo?.Overwrite,
 
             Tracer = Tracer,
             Log = new ActionLog(WriteLog),

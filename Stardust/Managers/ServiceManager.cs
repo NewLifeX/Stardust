@@ -187,7 +187,7 @@ public class ServiceManager : DisposeBase
         {
             if (item != null && item.Enable)
             {
-                changed |= StartService(item);
+                changed |= StartService(item, null);
             }
         }
 
@@ -238,11 +238,13 @@ public class ServiceManager : DisposeBase
     #region 服务控制
     /// <summary>检查并启动服务</summary>
     /// <param name="service"></param>
+    /// <param name="deploy"></param>
     /// <param name="isCheck">仅检查时，不记录埋点</param>
     /// <returns>本次是否成功启动，原来已启动返回false</returns>
-    private Boolean StartService(ServiceInfo service, Boolean isCheck = false)
+    private Boolean StartService(ServiceInfo service, DeployInfo deploy, Boolean isCheck = false)
     {
         using var span = isCheck ? null : Tracer?.NewSpan("ServiceManager-StartService", service);
+        span?.AppendTag(deploy);
 
         lock (this)
         {
@@ -251,6 +253,9 @@ public class ServiceManager : DisposeBase
             {
                 controller.EventProvider = _client;
                 controller.SetInfo(service);
+
+                if (deploy != null) controller.DeployInfo = deploy;
+
                 return controller.Check();
             }
 
@@ -258,6 +263,7 @@ public class ServiceManager : DisposeBase
             {
                 Name = service.Name,
                 //Info = service,
+                DeployInfo = deploy,
 
                 EventProvider = _client,
                 Tracer = Tracer,
@@ -515,6 +521,7 @@ public class ServiceManager : DisposeBase
         using var span = Tracer?.NewSpan("ServiceManager-DoWork", svcs.Length);
 
         // 应用服务的上报和拉取
+        DeployInfo[] deploys = null;
         if (_client != null && !_client.Token.IsNullOrEmpty())
         {
             // 上传失败不应该影响本地拉起服务
@@ -529,7 +536,7 @@ public class ServiceManager : DisposeBase
 
                 if (_status == 1)
                 {
-                    await PullService(null);
+                    deploys = await PullService(null);
 
                     _status = 2;
                 }
@@ -569,7 +576,7 @@ public class ServiceManager : DisposeBase
         {
             if (item != null && item.Enable)
             {
-                changed |= StartService(item, true);
+                changed |= StartService(item, deploys.FirstOrDefault(e => e.Name == item.Name), true);
             }
         }
 
@@ -588,7 +595,7 @@ public class ServiceManager : DisposeBase
 
         Add(service);
 
-        if (!StartService(service)) return null;
+        if (!StartService(service, null)) return null;
 
         SaveDb();
 
@@ -679,7 +686,7 @@ public class ServiceManager : DisposeBase
         {
             var rs = StopService(svc.Name, cmd.Command);
             //if (rs) Thread.Sleep(Delay);
-            StartService(svc);
+            StartService(svc, dis[0]);
         }
         else
         {
@@ -701,7 +708,7 @@ public class ServiceManager : DisposeBase
 
         var changed = false;
         svc.Enable = true;
-        changed |= StartService(svc);
+        changed |= StartService(svc, null);
 
         RaiseServiceChanged();
 
@@ -736,7 +743,7 @@ public class ServiceManager : DisposeBase
         changed |= StopService(svc.Name, cmd.Command);
         //if (changed) Thread.Sleep(Delay);
         svc.Enable = true;
-        changed |= StartService(svc);
+        changed |= StartService(svc, null);
 
         RaiseServiceChanged();
 
