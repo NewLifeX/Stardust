@@ -64,6 +64,7 @@ public partial class ConfigHistory
 
     private String _TraceId;
     /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+    [Category("扩展")]
     [DisplayName("追踪")]
     [Description("追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
     [DataObjectField(false, false, true, 50)]
