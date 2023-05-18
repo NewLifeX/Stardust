@@ -146,7 +146,7 @@ public static class StarFactoryExtensions
         });
 
         // 停止的时候移除服务
-        lifetime.ApplicationStopped.Register(() =>
+        NewLife.Model.Host.RegisterExit(() =>
         {
             DefaultSpan.Current = null;
 
