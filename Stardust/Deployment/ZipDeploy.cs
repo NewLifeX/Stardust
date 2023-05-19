@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
 using NewLife;
@@ -316,11 +317,14 @@ public class ZipDeploy
         var sdi = shadow.AsDirectory();
         if (!sdi.FullName.EnsureEnd("\\").EqualIgnoreCase(rundir.EnsureEnd("\\")))
         {
+            // 覆盖文件
             foreach (var item in sdi.GetFiles())
             {
+                // 拷贝配置类文件
                 if (item.Extension.EndsWithIgnoreCase(".json", ".config", ".xml"))
                 {
-                    if (ovs == null || ovs.Any(e => e.IsMatch(item.Name)))
+                    // 当前文件在覆盖列表内时，强制覆盖
+                    if (ovs != null && ovs.Any(e => e.IsMatch(item.Name)))
                     {
                         span?.AppendTag(item.Name);
 
@@ -334,14 +338,18 @@ public class ZipDeploy
                 }
             }
 
-            var di = shadow.CombinePath("Config").AsDirectory();
-            if (di.Exists) di.CopyTo(rundir.CombinePath("Config"));
-
-            di = shadow.CombinePath("Data").AsDirectory();
-            if (di.Exists) di.CopyTo(rundir.CombinePath("Data"));
-
-            di = shadow.CombinePath("Plugins").AsDirectory();
-            if (di.Exists) di.CopyTo(rundir.CombinePath("Plugins"));
+            // 覆盖目录
+            foreach (var item in sdi.GetDirectories())
+            {
+                var di = shadow.CombinePath(item.Name).AsDirectory();
+                var dest = rundir.CombinePath(item.Name).AsDirectory();
+                // 强制覆盖
+                if (ovs != null && ovs.Contains(item.Name))
+                    di.CopyTo(dest.FullName);
+                // 特殊目录且目标不存在时，覆盖
+                else if (item.Name.EqualIgnoreCase("Data", "Config", "Plugins", "wwwroot") && !dest.Exists)
+                    di.CopyTo(dest.FullName);
+            }
         }
     }
 
