@@ -231,6 +231,7 @@ public class StarFactory : DisposeBase
         ioc.AddSingleton(p => Tracer);
         ioc.AddSingleton(p => Config);
         ioc.AddSingleton(p => Service);
+        ioc.AddSingleton<CacheService>();
     }
 
     private Boolean Valid()

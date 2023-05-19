@@ -103,6 +103,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     #endregion
 
     #region 方法
+#if NET40
     /// <summary>远程调用拦截，支持重新登录</summary>
     /// <typeparam name="TResult"></typeparam>
     /// <param name="method"></param>
@@ -132,6 +133,38 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             throw;
         }
     }
+#else
+    /// <summary>远程调用拦截，支持重新登录</summary>
+    /// <typeparam name="TResult"></typeparam>
+    /// <param name="method"></param>
+    /// <param name="action"></param>
+    /// <param name="args"></param>
+    /// <param name="onRequest"></param>
+    /// <param name="cancellationToken">取消通知</param>
+    /// <returns></returns>
+    public override async Task<TResult> InvokeAsync<TResult>(HttpMethod method, String action, Object args = null, Action<HttpRequestMessage> onRequest = null, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await base.InvokeAsync<TResult>(method, action, args, onRequest, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            var ex2 = ex.GetTrue();
+            if (Logined && ex2 is ApiException aex && (aex.Code == 401 || aex.Code == 403) && !action.EqualIgnoreCase("Node/Login", "Node/Logout"))
+            {
+                Log?.Debug("{0}", ex);
+                //XTrace.WriteException(ex);
+                WriteLog("重新登录！");
+                await Login();
+
+                return await base.InvokeAsync<TResult>(method, action, args, onRequest, cancellationToken);
+            }
+
+            throw;
+        }
+    }
+#endif
     #endregion
 
     #region 登录

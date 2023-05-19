@@ -576,7 +576,7 @@ public class ServiceManager : DisposeBase
         {
             if (item != null && item.Enable)
             {
-                changed |= StartService(item, deploys.FirstOrDefault(e => e.Name == item.Name), true);
+                changed |= StartService(item, deploys?.FirstOrDefault(e => e.Name == item.Name), true);
             }
         }
 

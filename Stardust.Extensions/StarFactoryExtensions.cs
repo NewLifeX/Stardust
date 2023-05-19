@@ -12,6 +12,8 @@ using NewLife.Log;
 using NewLife.Reflection;
 using Stardust;
 using Stardust.Extensions;
+using Stardust.Extensions.Caches;
+using Stardust.Services;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -49,6 +51,9 @@ public static class StarFactoryExtensions
         //var old = services.LastOrDefault(e => e.ServiceType == typeof(IConfigProvider))?.ImplementationInstance as IConfigProvider;
         //old ??= JsonConfigProvider.LoadAppSettings();
         services.Replace(new ServiceDescriptor(typeof(IConfigProvider), p => star.GetConfig(), ServiceLifetime.Singleton));
+
+        // 分布式缓存
+        services.Replace(new ServiceDescriptor(typeof(CacheService), p => new RedisCacheService(p), ServiceLifetime.Singleton));
 
         //services.AddHostedService<StarService>();
         services.TryAddSingleton(XTrace.Log);
@@ -141,7 +146,7 @@ public static class StarFactoryExtensions
         });
 
         // 停止的时候移除服务
-        lifetime.ApplicationStopped.Register(() =>
+        NewLife.Model.Host.RegisterExit(() =>
         {
             DefaultSpan.Current = null;
 
