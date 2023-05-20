@@ -343,12 +343,12 @@ public class ZipDeploy
             {
                 var di = shadow.CombinePath(item.Name).AsDirectory();
                 var dest = rundir.CombinePath(item.Name).AsDirectory();
-                // 强制覆盖
+                // 强制覆盖(包含子孙目录，否则会出现目标文件夹中子孙文件夹内容遗漏拷贝)
                 if (ovs != null && ovs.Contains(item.Name))
-                    di.CopyTo(dest.FullName);
+                    di.CopyTo(dest.FullName, allSub: true);
                 // 特殊目录且目标不存在时，覆盖
                 else if (item.Name.EqualIgnoreCase("Data", "Config", "Plugins", "wwwroot") && !dest.Exists)
-                    di.CopyTo(dest.FullName);
+                    di.CopyTo(dest.FullName, allSub: true);
             }
         }
     }
