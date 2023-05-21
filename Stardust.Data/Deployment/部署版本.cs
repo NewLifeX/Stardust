@@ -66,7 +66,7 @@ public partial class AppDeployVersion
     /// <summary>覆盖文件。需要拷贝覆盖已存在的文件，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
     [DisplayName("覆盖文件")]
     [Description("覆盖文件。需要拷贝覆盖已存在的文件，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝")]
-    [DataObjectField(false, false, true, 50)]
+    [DataObjectField(false, false, true, 100)]
     [BindColumn("Overwrite", "覆盖文件。需要拷贝覆盖已存在的文件，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝", "")]
     public String Overwrite { get => _Overwrite; set { if (OnPropertyChanging("Overwrite", value)) { _Overwrite = value; OnPropertyChanged("Overwrite"); } } }
 

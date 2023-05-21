@@ -23,8 +23,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Config\**" />
     <Compile Remove="RedisNodes\Config\**" />
+    <EmbeddedResource Remove="Config\**" />
     <EmbeddedResource Remove="RedisNodes\Config\**" />
+    <None Remove="Config\**" />
     <None Remove="RedisNodes\Config\**" />
   </ItemGroup>
 
