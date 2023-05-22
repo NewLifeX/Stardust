@@ -323,17 +323,18 @@ public class ZipDeploy
                 // 拷贝配置类文件
                 if (item.Extension.EndsWithIgnoreCase(".json", ".config", ".xml"))
                 {
+                    var dst = rundir.CombinePath(item.Name);
                     // 当前文件在覆盖列表内时，强制覆盖
                     if (ovs != null && ovs.Any(e => e.IsMatch(item.Name)))
                     {
                         span?.AppendTag(item.Name);
 
                         // 注意，appsettings.json 也可能覆盖
-                        item.CopyTo(rundir.CombinePath(item.Name), true);
+                        item.CopyTo(dst, true);
                     }
-                    else
+                    else if (!File.Exists(dst))
                     {
-                        item.CopyTo(rundir.CombinePath(item.Name), false);
+                        item.CopyTo(dst, false);
                     }
                 }
             }
