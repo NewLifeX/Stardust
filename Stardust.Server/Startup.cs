@@ -2,14 +2,12 @@
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.FileProviders;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Configuration;
 using NewLife.Log;
 using NewLife.Serialization;
 using Stardust.Data.Nodes;
-using Stardust.Extensions;
 using Stardust.Extensions.Caches;
 using Stardust.Monitors;
 using Stardust.Server.Services;
@@ -141,6 +139,9 @@ public class Startup
         }
         EntityFactory.InitConnection("Stardust");
         EntityFactory.InitConnection("StardustData");
+
+        if (!DAL.ConnStrs.ContainsKey("Cube"))
+            DAL.AddConnStr("Cube", "MapTo=Membership", null, "sqlite");
 
         if (env.IsDevelopment())
         {
