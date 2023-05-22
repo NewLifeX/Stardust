@@ -38,15 +38,27 @@ internal class StarHttpConfigProvider : HttpConfigProvider
             }
 
             // 接收配置中心颁发的WorkerId
-            if (rs != null && rs.TryGetValue("NewLife.WorkerId", out var wid))
+            if (rs != null)
             {
-                if (Snowflake.GlobalWorkerId <= 0) _useWorkerId = true;
-
-                var id = wid.ToInt();
-                if (id > 0 && _useWorkerId)
+                if (rs.TryGetValue("NewLife.WorkerId", out var wid))
                 {
-                    XTrace.WriteLine("配置中心为当前应用实例分配全局WorkerId={0}，保障雪花Id的唯一性", id);
-                    Snowflake.GlobalWorkerId = id;
+                    if (Snowflake.GlobalWorkerId <= 0) _useWorkerId = true;
+
+                    var id = wid.ToInt();
+                    if (id > 0 && _useWorkerId)
+                    {
+                        XTrace.WriteLine("配置中心为当前应用实例分配全局WorkerId={0}，保障雪花Id的唯一性", id);
+                        Snowflake.GlobalWorkerId = id;
+                    }
+                }
+                if (rs.TryGetValue("PluginServer", out var obj) && obj is String svr)
+                {
+                    var set = NewLife.Setting.Current;
+                    if (!svr.IsNullOrEmpty() && !svr.EqualIgnoreCase(set.PluginServer))
+                    {
+                        set.PluginServer = svr;
+                        set.Save();
+                    }
                 }
             }
 
