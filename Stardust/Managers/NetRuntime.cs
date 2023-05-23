@@ -29,6 +29,18 @@ public class NetRuntime
     public IDictionary<String, String> Hashs { get; set; }
     #endregion
 
+    #region 构造
+    /// <summary>实例化</summary>
+    public NetRuntime()
+    {
+        var set = NewLife.Setting.Current;
+        if (!set.PluginServer.IsNullOrEmpty())
+        {
+            BaseUrl = set.PluginServer.TrimEnd('/') + "/dotnet";
+        }
+    }
+    #endregion
+
     #region 核心方法
     /// <summary>安装</summary>
     /// <param name="fileName"></param>
@@ -55,9 +67,9 @@ public class NetRuntime
         if (fi == null || !fi.Exists)
         {
             if (String.IsNullOrEmpty(baseUrl))
-                baseUrl = BaseUrl;
+                baseUrl = BaseUrl?.TrimEnd('/');
             else
-                baseUrl = BaseUrl + baseUrl;
+                baseUrl = BaseUrl?.TrimEnd('/') + baseUrl.EnsureStart("/").TrimEnd('/');
 
             var url = $"{baseUrl}/{fileName}";
             XTrace.WriteLine("正在下载：{0}", url);

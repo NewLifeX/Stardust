@@ -62,7 +62,14 @@ public class NodeFrameworkController : EntityController<Node>
         var bf = new BatchFinder<Int32, Node>();
         bf.Add(SelectKeys.Select(e => e.ToInt()));
 
-        var model = new FrameworkModel { Version = ver };
+        var baseUrl = "";
+        var set = NewLife.Setting.Current;
+        if (!set.PluginServer.IsNullOrEmpty() && !set.PluginServer.ToLower().Contains("x.newlifex.com"))
+        {
+            baseUrl = set.PluginServer;
+        }
+
+        var model = new FrameworkModel { Version = ver, BaseUrl = baseUrl };
         var args = model.ToJson();
 
         var ts = new List<Task<Int32>>();
