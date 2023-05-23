@@ -66,7 +66,8 @@ public class NodeFrameworkController : EntityController<Node>
         var set = NewLife.Setting.Current;
         if (!set.PluginServer.IsNullOrEmpty() && !set.PluginServer.ToLower().Contains("x.newlifex.com"))
         {
-            baseUrl = set.PluginServer;
+            baseUrl = set.PluginServer.TrimEnd('/');
+            if (!baseUrl.EndsWithIgnoreCase("/dotnet")) baseUrl += "/dotnet";
         }
 
         var model = new FrameworkModel { Version = ver, BaseUrl = baseUrl };
