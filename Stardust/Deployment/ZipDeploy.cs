@@ -243,8 +243,10 @@ public class ZipDeploy
             // 在Linux系统中，改变目录所属用户
             if (Runtime.Linux)
             {
-                Process.Start("chown", $"-R {UserName} {si.WorkingDirectory}");
-                Process.Start("chown", $"-R {UserName} {shadow}");
+                var user = UserName;
+                if (!user.Contains(':')) user = $"{user}:{user}";
+                Process.Start("chown", $"-R {user} {si.WorkingDirectory}");
+                Process.Start("chown", $"-R {user} {shadow}");
             }
         }
 

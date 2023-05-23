@@ -209,7 +209,9 @@ internal class ServiceController : DisposeBase
                         // 在Linux系统中，改变目录所属用户
                         if (Runtime.Linux)
                         {
-                            Process.Start("chown", $"-R {service.UserName} {si.WorkingDirectory}");
+                            var user = service.UserName;
+                            if (!user.Contains(':')) user = $"{user}:{user}";
+                            Process.Start("chown", $"-R {user} {si.WorkingDirectory}");
                         }
                     }
 
