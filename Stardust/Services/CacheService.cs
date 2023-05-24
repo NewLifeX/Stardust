@@ -36,5 +36,11 @@ public class CacheService
     /// <param name="topic">主题</param>
     /// <returns></returns>
     public virtual IProducerConsumer<T> GetInnerQueue<T>(String topic) => InnerCache?.GetQueue<T>(topic);
+
+    /// <summary>申请分布式锁</summary>
+    /// <param name="lockKey"></param>
+    /// <param name="msTimeout"></param>
+    /// <returns></returns>
+    public virtual IDisposable AcquireLock(String lockKey, Int32 msTimeout) => Cache?.AcquireLock(lockKey, msTimeout);
     #endregion
 }

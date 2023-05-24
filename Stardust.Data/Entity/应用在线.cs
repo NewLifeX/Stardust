@@ -106,6 +106,14 @@ public partial class AppOnline
     [BindColumn("PingCount", "心跳", "")]
     public Int32 PingCount { get => _PingCount; set { if (OnPropertyChanging("PingCount", value)) { _PingCount = value; OnPropertyChanged("PingCount"); } } }
 
+    private Int32 _WorkerId;
+    /// <summary>雪花标识。应用内唯一标识该节点</summary>
+    [DisplayName("雪花标识")]
+    [Description("雪花标识。应用内唯一标识该节点")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("WorkerId", "雪花标识。应用内唯一标识该节点", "")]
+    public Int32 WorkerId { get => _WorkerId; set { if (OnPropertyChanging("WorkerId", value)) { _WorkerId = value; OnPropertyChanged("WorkerId"); } } }
+
     private Boolean _WebSocket;
     /// <summary>长连接。WebSocket长连接</summary>
     [DisplayName("长连接")]
@@ -169,14 +177,6 @@ public partial class AppOnline
     [DataObjectField(false, false, true, 200)]
     [BindColumn("IP", "本地IP。节点本地IP地址", "")]
     public String IP { get => _IP; set { if (OnPropertyChanging("IP", value)) { _IP = value; OnPropertyChanged("IP"); } } }
-
-    private Int32 _WorkerId;
-    /// <summary>雪花标识</summary>
-    [DisplayName("雪花标识")]
-    [Description("雪花标识")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("WorkerId", "雪花标识", "")]
-    public Int32 WorkerId { get => _WorkerId; set { if (OnPropertyChanging("WorkerId", value)) { _WorkerId = value; OnPropertyChanged("WorkerId"); } } }
 
     private String _Token;
     /// <summary>令牌</summary>
@@ -259,6 +259,7 @@ public partial class AppOnline
             "Version" => _Version,
             "Compile" => _Compile,
             "PingCount" => _PingCount,
+            "WorkerId" => _WorkerId,
             "WebSocket" => _WebSocket,
             "ProcessId" => _ProcessId,
             "ProcessName" => _ProcessName,
@@ -267,7 +268,6 @@ public partial class AppOnline
             "MachineName" => _MachineName,
             "StartTime" => _StartTime,
             "IP" => _IP,
-            "WorkerId" => _WorkerId,
             "Token" => _Token,
             "TraceId" => _TraceId,
             "Creator" => _Creator,
@@ -291,6 +291,7 @@ public partial class AppOnline
                 case "Version": _Version = Convert.ToString(value); break;
                 case "Compile": _Compile = value.ToDateTime(); break;
                 case "PingCount": _PingCount = value.ToInt(); break;
+                case "WorkerId": _WorkerId = value.ToInt(); break;
                 case "WebSocket": _WebSocket = value.ToBoolean(); break;
                 case "ProcessId": _ProcessId = value.ToInt(); break;
                 case "ProcessName": _ProcessName = Convert.ToString(value); break;
@@ -299,7 +300,6 @@ public partial class AppOnline
                 case "MachineName": _MachineName = Convert.ToString(value); break;
                 case "StartTime": _StartTime = value.ToDateTime(); break;
                 case "IP": _IP = Convert.ToString(value); break;
-                case "WorkerId": _WorkerId = value.ToInt(); break;
                 case "Token": _Token = Convert.ToString(value); break;
                 case "TraceId": _TraceId = Convert.ToString(value); break;
                 case "Creator": _Creator = Convert.ToString(value); break;
@@ -350,6 +350,9 @@ public partial class AppOnline
         /// <summary>心跳</summary>
         public static readonly Field PingCount = FindByName("PingCount");
 
+        /// <summary>雪花标识。应用内唯一标识该节点</summary>
+        public static readonly Field WorkerId = FindByName("WorkerId");
+
         /// <summary>长连接。WebSocket长连接</summary>
         public static readonly Field WebSocket = FindByName("WebSocket");
 
@@ -373,9 +376,6 @@ public partial class AppOnline
 
         /// <summary>本地IP。节点本地IP地址</summary>
         public static readonly Field IP = FindByName("IP");
-
-        /// <summary>雪花标识</summary>
-        public static readonly Field WorkerId = FindByName("WorkerId");
 
         /// <summary>令牌</summary>
         public static readonly Field Token = FindByName("Token");
@@ -434,6 +434,9 @@ public partial class AppOnline
         /// <summary>心跳</summary>
         public const String PingCount = "PingCount";
 
+        /// <summary>雪花标识。应用内唯一标识该节点</summary>
+        public const String WorkerId = "WorkerId";
+
         /// <summary>长连接。WebSocket长连接</summary>
         public const String WebSocket = "WebSocket";
 
@@ -457,9 +460,6 @@ public partial class AppOnline
 
         /// <summary>本地IP。节点本地IP地址</summary>
         public const String IP = "IP";
-
-        /// <summary>雪花标识</summary>
-        public const String WorkerId = "WorkerId";
 
         /// <summary>令牌</summary>
         public const String Token = "Token";
