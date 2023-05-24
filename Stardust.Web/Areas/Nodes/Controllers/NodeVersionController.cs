@@ -16,10 +16,12 @@ public class NodeVersionController : EntityController<NodeVersion>
     {
         LogOnChange = true;
 
+        ListFields.RemoveField("Source", "Size", "FileHash", "Preinstall", "Executor");
+
         {
-            var df = ListFields.GetField("Source") as ListField;
+            //var df = ListFields.GetField("Source") as ListField;
             //df.DisplayName = "下载";
-            df.Url = "{Source}";
+            //df.Url = "{Source}";
             //df.DataVisible = e =>
             //{
             //    var entity = e as NodeVersion;
@@ -29,8 +31,8 @@ public class NodeVersionController : EntityController<NodeVersion>
 
         {
             var df = ListFields.AddListField("Log", "CreateUserID");
-            df.DisplayName = "修改日志";
-            df.Header = "修改日志";
+            df.DisplayName = "审计日志";
+            df.Header = "审计日志";
             df.Url = "/Admin/Log?category=节点版本&linkId={ID}";
         }
     }
