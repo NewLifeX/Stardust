@@ -200,7 +200,7 @@ internal class ServiceController : DisposeBase
 
                         // false时目前控制台合并到当前控制台，一起退出；
                         // true时目标控制台独立窗口，不会一起退出；
-                        UseShellExecute = true,
+                        UseShellExecute = false,
                     };
 
                     // 指定用户时，以特定用户启动进程
@@ -226,6 +226,12 @@ internal class ServiceController : DisposeBase
                         si.RedirectStandardError = true;
                         si.RedirectStandardOutput = true;
                     }
+
+                    // 在环境变量中设置BasePath
+                    if (si.UseShellExecute)
+                        Environment.SetEnvironmentVariable("BasePath", si.WorkingDirectory);
+                    else
+                        si.EnvironmentVariables.Add("BasePath", si.WorkingDirectory);
 
                     WriteLog("工作目录: {0}", si.WorkingDirectory);
                     WriteLog("启动文件: {0}", si.FileName);

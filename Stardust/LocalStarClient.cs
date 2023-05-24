@@ -267,7 +267,7 @@ public class LocalStarClient
             var si = new ProcessStartInfo(fileName, "-run")
             {
                 WorkingDirectory = Path.GetDirectoryName(fileName),
-                UseShellExecute = true
+                //UseShellExecute = true
             };
             var p = Process.Start(si);
 
@@ -300,7 +300,7 @@ public class LocalStarClient
             var si = new ProcessStartInfo(fileName, "-run")
             {
                 WorkingDirectory = Path.GetDirectoryName(fileName),
-                UseShellExecute = true
+                //UseShellExecute = true
             };
             var p = Process.Start(si);
 
@@ -329,7 +329,7 @@ public class LocalStarClient
             var si = new ProcessStartInfo("dotnet", $"{fileName} -run")
             {
                 WorkingDirectory = Path.GetDirectoryName(fileName),
-                UseShellExecute = true
+                //UseShellExecute = true
             };
             var p = Process.Start(si);
 

@@ -208,7 +208,7 @@ public class ZipDeploy
 
         // 如果带有 NewLife.Core.dll ，重定向基础目录
         //Arguments = $"{Arguments} --BasePath={rundir}".Trim();
-        Environment.SetEnvironmentVariable("BasePath", rundir.FullName);
+        //Environment.SetEnvironmentVariable("BasePath", rundir.FullName);
         ExecuteFile = runfile.FullName;
 
         WriteLog("运行文件 {0}", runfile);
@@ -221,7 +221,7 @@ public class ZipDeploy
 
             // false时目前控制台合并到当前控制台，一起退出；
             // true时目标控制台独立窗口，不会一起退出；
-            UseShellExecute = true,
+            UseShellExecute = false,
         };
         if (runfile.Extension.EqualIgnoreCase(".dll"))
         {
@@ -256,6 +256,12 @@ public class ZipDeploy
             si.UseShellExecute = false;
             si.RedirectStandardError = true;
         }
+
+        // 在环境变量中设置BasePath
+        if (si.UseShellExecute)
+            Environment.SetEnvironmentVariable("BasePath", si.WorkingDirectory);
+        else
+            si.EnvironmentVariables.Add("BasePath", si.WorkingDirectory);
 
         WriteLog("工作目录: {0}", si.WorkingDirectory);
         WriteLog("启动文件: {0}", si.FileName);
