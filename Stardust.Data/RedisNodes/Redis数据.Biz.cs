@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -161,6 +161,19 @@ namespace Stardust.Data.Nodes
 
             return FindAll(_.RedisId == redisId, _.Id.Desc(), null, 0, 1).FirstOrDefault();
         }
+
+    /// <summary>根据Redis节点查找</summary>
+    /// <param name="redisId">Redis节点</param>
+    /// <returns>实体列表</returns>
+    public static IList<RedisData> FindAllByRedisId(Int32 redisId)
+    {
+        if (redisId <= 0) return new List<RedisData>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.RedisId == redisId);
+
+        return FindAll(_.RedisId == redisId);
+    }
         #endregion
 
         #region 高级查询

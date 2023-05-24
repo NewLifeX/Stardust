@@ -99,6 +99,19 @@ public partial class NodeStat : Entity<NodeStat>
 
         return FindAll(_.Category == category & _.Key == key);
     }
+
+    /// <summary>根据类别、统计日期、统计项查找</summary>
+    /// <param name="category">类别</param>
+    /// <param name="statDate">统计日期</param>
+    /// <param name="key">统计项</param>
+    /// <returns>实体对象</returns>
+    public static NodeStat FindByCategoryAndStatDateAndKey(String category, DateTime statDate, String key)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Category.EqualIgnoreCase(category) && e.StatDate == statDate && e.Key.EqualIgnoreCase(key));
+
+        return Find(_.Category == category & _.StatDate == statDate & _.Key == key);
+    }
     #endregion
 
     #region 高级查询

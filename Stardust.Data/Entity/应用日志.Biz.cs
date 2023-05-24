@@ -92,6 +92,19 @@ namespace Stardust.Data
 
         return FindAll(_.AppId == appId & _.Id == id);
     }
+
+    /// <summary>根据应用查找</summary>
+    /// <param name="appId">应用</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppClientLog> FindAllByAppId(Int32 appId)
+    {
+        if (appId <= 0) return new List<AppClientLog>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId);
+
+        return FindAll(_.AppId == appId);
+    }
         #endregion
 
         #region 高级查询

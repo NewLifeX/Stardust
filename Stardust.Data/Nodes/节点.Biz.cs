@@ -242,6 +242,31 @@ public partial class Node : Entity<Node>
 
         return FindAll(_.OSKind == oSKind);
     }
+
+    /// <summary>根据唯一标识、机器标识、网卡查找</summary>
+    /// <param name="uuid">唯一标识</param>
+    /// <param name="machineGuid">机器标识</param>
+    /// <param name="mACs">网卡</param>
+    /// <returns>实体列表</returns>
+    public static IList<Node> FindAllByUuidAndMachineGuidAndMACs(String uuid, String machineGuid, String mACs)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Uuid.EqualIgnoreCase(uuid) && e.MachineGuid.EqualIgnoreCase(machineGuid) && e.MACs.EqualIgnoreCase(mACs));
+
+        return FindAll(_.Uuid == uuid & _.MachineGuid == machineGuid & _.MACs == mACs);
+    }
+
+    /// <summary>根据最后活跃查找</summary>
+    /// <param name="lastActive">最后活跃</param>
+    /// <returns>实体列表</returns>
+    public static IList<Node> FindAllByLastActive(DateTime lastActive)
+    {
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.LastActive == lastActive);
+
+        return FindAll(_.LastActive == lastActive);
+    }
     #endregion
 
     #region 高级查询

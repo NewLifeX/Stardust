@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Script.Serialization;
@@ -170,6 +170,31 @@ public partial class ConfigData : Entity<ConfigData>
         //list = SelectVersion(list, version);
 
         return list.Where(e => e.Version > 0 && e.Version <= version && e.Enable).ToList();
+    }
+
+    /// <summary>根据应用、名称查找</summary>
+    /// <param name="appId">应用</param>
+    /// <param name="key">名称</param>
+    /// <returns>实体列表</returns>
+    public static IList<ConfigData> FindAllByAppIdAndKey(Int32 appId, String key)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.Key.EqualIgnoreCase(key));
+
+        return FindAll(_.AppId == appId & _.Key == key);
+    }
+
+    /// <summary>根据应用、名称、作用域查找</summary>
+    /// <param name="appId">应用</param>
+    /// <param name="key">名称</param>
+    /// <param name="scope">作用域</param>
+    /// <returns>实体对象</returns>
+    public static ConfigData FindByAppIdAndKeyAndScope(Int32 appId, String key, String scope)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.AppId == appId && e.Key.EqualIgnoreCase(key) && e.Scope.EqualIgnoreCase(scope));
+
+        return Find(_.AppId == appId & _.Key == key & _.Scope == scope);
     }
     #endregion
 

@@ -107,6 +107,44 @@ namespace Stardust.Data.Deployment
 
         return FindAll(_.NodeId == nodeId & _.Id == id);
     }
+
+    /// <summary>根据应用部署集查找</summary>
+    /// <param name="appId">应用部署集</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppDeployHistory> FindAllByAppId(Int32 appId)
+    {
+        if (appId <= 0) return new List<AppDeployHistory>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId);
+
+        return FindAll(_.AppId == appId);
+    }
+
+    /// <summary>根据应用部署集、操作查找</summary>
+    /// <param name="appId">应用部署集</param>
+    /// <param name="action">操作</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppDeployHistory> FindAllByAppIdAndAction(Int32 appId, String action)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.Action.EqualIgnoreCase(action));
+
+        return FindAll(_.AppId == appId & _.Action == action);
+    }
+
+    /// <summary>根据节点查找</summary>
+    /// <param name="nodeId">节点</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppDeployHistory> FindAllByNodeId(Int32 nodeId)
+    {
+        if (nodeId <= 0) return new List<AppDeployHistory>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.NodeId == nodeId);
+
+        return FindAll(_.NodeId == nodeId);
+    }
         #endregion
 
         #region 高级查询

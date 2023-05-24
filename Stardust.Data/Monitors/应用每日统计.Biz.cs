@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
@@ -89,6 +89,18 @@ namespace Stardust.Data.Monitors
 
             return FindAll(_.AppId == appId);
         }
+
+    /// <summary>根据统计日期、应用查找</summary>
+    /// <param name="statDate">统计日期</param>
+    /// <param name="appId">应用</param>
+    /// <returns>实体对象</returns>
+    public static AppDayStat FindByStatDateAndAppId(DateTime statDate, Int32 appId)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.StatDate == statDate && e.AppId == appId);
+
+        return Find(_.StatDate == statDate & _.AppId == appId);
+    }
         #endregion
 
         #region 高级查询

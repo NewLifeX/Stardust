@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NewLife;
 using NewLife.Data;
@@ -76,6 +76,19 @@ namespace Stardust.Data.Monitors
 
             return FindAll(_.GroupId == groupId & _.Id == id);
         }
+
+    /// <summary>根据告警组查找</summary>
+    /// <param name="groupId">告警组</param>
+    /// <returns>实体列表</returns>
+    public static IList<AlarmHistory> FindAllByGroupId(Int32 groupId)
+    {
+        if (groupId <= 0) return new List<AlarmHistory>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.GroupId == groupId);
+
+        return FindAll(_.GroupId == groupId);
+    }
         #endregion
 
         #region 高级查询

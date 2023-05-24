@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -137,6 +137,57 @@ namespace Stardust.Data.Monitors
 
             return list;
         }
+
+    /// <summary>根据统计日期、应用、种类查找</summary>
+    /// <param name="statDate">统计日期</param>
+    /// <param name="appId">应用</param>
+    /// <param name="type">种类</param>
+    /// <returns>实体列表</returns>
+    public static IList<TraceDayStat> FindAllByStatDateAndAppIdAndType(DateTime statDate, Int32 appId, String type)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.StatDate == statDate && e.AppId == appId && e.Type.EqualIgnoreCase(type));
+
+        return FindAll(_.StatDate == statDate & _.AppId == appId & _.Type == type);
+    }
+
+    /// <summary>根据统计日期、应用、跟踪项查找</summary>
+    /// <param name="statDate">统计日期</param>
+    /// <param name="appId">应用</param>
+    /// <param name="itemId">跟踪项</param>
+    /// <returns>实体列表</returns>
+    public static IList<TraceDayStat> FindAllByStatDateAndAppIdAndItemId(DateTime statDate, Int32 appId, Int32 itemId)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.StatDate == statDate && e.AppId == appId && e.ItemId == itemId);
+
+        return FindAll(_.StatDate == statDate & _.AppId == appId & _.ItemId == itemId);
+    }
+
+    /// <summary>根据应用、跟踪项查找</summary>
+    /// <param name="appId">应用</param>
+    /// <param name="itemId">跟踪项</param>
+    /// <returns>实体列表</returns>
+    public static IList<TraceDayStat> FindAllByAppIdAndItemId(Int32 appId, Int32 itemId)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.ItemId == itemId);
+
+        return FindAll(_.AppId == appId & _.ItemId == itemId);
+    }
+
+    /// <summary>根据应用、种类、统计日期查找</summary>
+    /// <param name="appId">应用</param>
+    /// <param name="type">种类</param>
+    /// <param name="statDate">统计日期</param>
+    /// <returns>实体列表</returns>
+    public static IList<TraceDayStat> FindAllByAppIdAndTypeAndStatDate(Int32 appId, String type, DateTime statDate)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.Type.EqualIgnoreCase(type) && e.StatDate == statDate);
+
+        return FindAll(_.AppId == appId & _.Type == type & _.StatDate == statDate);
+    }
         #endregion
 
         #region 高级查询
