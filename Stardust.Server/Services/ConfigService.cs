@@ -195,24 +195,24 @@ public class ConfigService
         using var span = _tracer?.NewSpan(nameof(RefreshWorkerId), new { app.Id, app.Name });
 
         // 分布式锁，避免抢占
-        var key = WorkerIdName;
+        var key = $"{WorkerIdName}:{app.Id}";
         using var dlock = _cacheService.AcquireLock($"lock:{key}", 3_000);
         var cache = _cacheService.Cache;
 
-        // 打开事务保护，确保生成唯一标识
-        using var tran = ConfigData.Meta.CreateTrans();
+        //// 打开事务保护，确保生成唯一标识
+        //using var tran = ConfigData.Meta.CreateTrans();
 
         var id = 0;
         var olt = AppOnline.FindById(online.Id);
         if (olt.WorkerId <= 0)
         {
             // 找到该Key，不考虑Scope，做跨域全局配置
-            var list = ConfigData.FindAllByAppIdAndKey(app.Id, key);
+            var list = ConfigData.FindAllByAppIdAndKey(app.Id, WorkerIdName);
             var cfg = list.FirstOrDefault();
             cfg ??= new ConfigData
             {
                 AppId = app.Id,
-                Key = key,
+                Key = WorkerIdName,
                 Version = app.Version,
                 Enable = true
             };
@@ -231,8 +231,8 @@ public class ConfigService
             olt.Update();
         }
 
-        // 提交事务
-        tran.Commit();
+        //// 提交事务
+        //tran.Commit();
 
         return id;
     }

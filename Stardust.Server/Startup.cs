@@ -29,18 +29,19 @@ public class Startup
         // 初始化配置文件
         InitConfig();
 
-        var star = new StarFactory(null, "StarServer", null);
+        //var star = new StarFactory(null, "StarServer", null);
+        var star = services.AddStardust("StarServer");
         if (star.Server.IsNullOrEmpty()) star.Server = "http://127.0.0.1:6600";
 
         // 埋点跟踪
         var tracer = star.Tracer;
-        services.AddSingleton(tracer);
+        //services.AddSingleton(tracer);
         using var span = tracer?.NewSpan(nameof(ConfigureServices));
         if (tracer is StarTracer st) st.TrimSelf = false;
 
-        // 配置
-        var config = new JsonConfigProvider { FileName = "appsettings.json" };
-        services.AddSingleton<IConfigProvider>(config);
+        //// 配置
+        //var config = new JsonConfigProvider { FileName = "appsettings.json" };
+        //services.AddSingleton<IConfigProvider>(config);
 
         var cache = Cache.Default;
         services.AddSingleton(cache);
