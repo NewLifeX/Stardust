@@ -338,6 +338,7 @@ public partial class Node
 
     private Int32 _ProvinceID;
     /// <summary>省份</summary>
+    [Category("参数设置")]
     [DisplayName("省份")]
     [Description("省份")]
     [DataObjectField(false, false, false, 0)]
@@ -346,6 +347,7 @@ public partial class Node
 
     private Int32 _CityID;
     /// <summary>城市</summary>
+    [Category("参数设置")]
     [DisplayName("城市")]
     [Description("城市")]
     [DataObjectField(false, false, false, 0)]
@@ -354,6 +356,7 @@ public partial class Node
 
     private String _Address;
     /// <summary>地址。该节点所处位置</summary>
+    [Category("参数设置")]
     [DisplayName("地址")]
     [Description("地址。该节点所处位置")]
     [DataObjectField(false, false, true, 200)]
@@ -362,11 +365,30 @@ public partial class Node
 
     private Int32 _Period;
     /// <summary>采样周期。默认60秒</summary>
+    [Category("参数设置")]
     [DisplayName("采样周期")]
     [Description("采样周期。默认60秒")]
     [DataObjectField(false, false, false, 0)]
     [BindColumn("Period", "采样周期。默认60秒", "")]
     public Int32 Period { get => _Period; set { if (OnPropertyChanging("Period", value)) { _Period = value; OnPropertyChanged("Period"); } } }
+
+    private String _NewServer;
+    /// <summary>新服务器。该节点自动迁移到新的服务器地址</summary>
+    [Category("参数设置")]
+    [DisplayName("新服务器")]
+    [Description("新服务器。该节点自动迁移到新的服务器地址")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("NewServer", "新服务器。该节点自动迁移到新的服务器地址", "")]
+    public String NewServer { get => _NewServer; set { if (OnPropertyChanging("NewServer", value)) { _NewServer = value; OnPropertyChanged("NewServer"); } } }
+
+    private String _LastVersion;
+    /// <summary>最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本</summary>
+    [Category("参数设置")]
+    [DisplayName("最后版本")]
+    [Description("最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("LastVersion", "最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本", "")]
+    public String LastVersion { get => _LastVersion; set { if (OnPropertyChanging("LastVersion", value)) { _LastVersion = value; OnPropertyChanged("LastVersion"); } } }
 
     private String _WebHook;
     /// <summary>告警机器人。钉钉、企业微信等</summary>
@@ -433,6 +455,7 @@ public partial class Node
 
     private Int32 _Logins;
     /// <summary>登录次数</summary>
+    [Category("登录信息")]
     [DisplayName("登录次数")]
     [Description("登录次数")]
     [DataObjectField(false, false, false, 0)]
@@ -441,6 +464,7 @@ public partial class Node
 
     private DateTime _LastLogin;
     /// <summary>最后登录</summary>
+    [Category("登录信息")]
     [DisplayName("最后登录")]
     [Description("最后登录")]
     [DataObjectField(false, false, true, 0)]
@@ -449,6 +473,7 @@ public partial class Node
 
     private String _LastLoginIP;
     /// <summary>最后IP。最后的公网IP地址</summary>
+    [Category("登录信息")]
     [DisplayName("最后IP")]
     [Description("最后IP。最后的公网IP地址")]
     [DataObjectField(false, false, true, 50)]
@@ -457,6 +482,7 @@ public partial class Node
 
     private DateTime _LastActive;
     /// <summary>最后活跃。心跳过程中每10分钟更新活跃时间</summary>
+    [Category("登录信息")]
     [DisplayName("最后活跃")]
     [Description("最后活跃。心跳过程中每10分钟更新活跃时间")]
     [DataObjectField(false, false, true, 0)]
@@ -465,19 +491,12 @@ public partial class Node
 
     private Int32 _OnlineTime;
     /// <summary>在线时长。单位，秒</summary>
+    [Category("登录信息")]
     [DisplayName("在线时长")]
     [Description("在线时长。单位，秒")]
     [DataObjectField(false, false, false, 0)]
     [BindColumn("OnlineTime", "在线时长。单位，秒", "", ItemType = "TimeSpan")]
     public Int32 OnlineTime { get => _OnlineTime; set { if (OnPropertyChanging("OnlineTime", value)) { _OnlineTime = value; OnPropertyChanged("OnlineTime"); } } }
-
-    private String _LastVersion;
-    /// <summary>最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本</summary>
-    [DisplayName("最后版本")]
-    [Description("最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("LastVersion", "最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本", "")]
-    public String LastVersion { get => _LastVersion; set { if (OnPropertyChanging("LastVersion", value)) { _LastVersion = value; OnPropertyChanged("LastVersion"); } } }
 
     private Int32 _CreateUserID;
     /// <summary>创建者</summary>
@@ -590,6 +609,8 @@ public partial class Node
             "CityID" => _CityID,
             "Address" => _Address,
             "Period" => _Period,
+            "NewServer" => _NewServer,
+            "LastVersion" => _LastVersion,
             "WebHook" => _WebHook,
             "AlarmCpuRate" => _AlarmCpuRate,
             "AlarmMemoryRate" => _AlarmMemoryRate,
@@ -602,7 +623,6 @@ public partial class Node
             "LastLoginIP" => _LastLoginIP,
             "LastActive" => _LastActive,
             "OnlineTime" => _OnlineTime,
-            "LastVersion" => _LastVersion,
             "CreateUserID" => _CreateUserID,
             "CreateTime" => _CreateTime,
             "CreateIP" => _CreateIP,
@@ -655,6 +675,8 @@ public partial class Node
                 case "CityID": _CityID = value.ToInt(); break;
                 case "Address": _Address = Convert.ToString(value); break;
                 case "Period": _Period = value.ToInt(); break;
+                case "NewServer": _NewServer = Convert.ToString(value); break;
+                case "LastVersion": _LastVersion = Convert.ToString(value); break;
                 case "WebHook": _WebHook = Convert.ToString(value); break;
                 case "AlarmCpuRate": _AlarmCpuRate = value.ToInt(); break;
                 case "AlarmMemoryRate": _AlarmMemoryRate = value.ToInt(); break;
@@ -667,7 +689,6 @@ public partial class Node
                 case "LastLoginIP": _LastLoginIP = Convert.ToString(value); break;
                 case "LastActive": _LastActive = value.ToDateTime(); break;
                 case "OnlineTime": _OnlineTime = value.ToInt(); break;
-                case "LastVersion": _LastVersion = Convert.ToString(value); break;
                 case "CreateUserID": _CreateUserID = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -805,6 +826,12 @@ public partial class Node
         /// <summary>采样周期。默认60秒</summary>
         public static readonly Field Period = FindByName("Period");
 
+        /// <summary>新服务器。该节点自动迁移到新的服务器地址</summary>
+        public static readonly Field NewServer = FindByName("NewServer");
+
+        /// <summary>最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本</summary>
+        public static readonly Field LastVersion = FindByName("LastVersion");
+
         /// <summary>告警机器人。钉钉、企业微信等</summary>
         public static readonly Field WebHook = FindByName("WebHook");
 
@@ -840,9 +867,6 @@ public partial class Node
 
         /// <summary>在线时长。单位，秒</summary>
         public static readonly Field OnlineTime = FindByName("OnlineTime");
-
-        /// <summary>最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本</summary>
-        public static readonly Field LastVersion = FindByName("LastVersion");
 
         /// <summary>创建者</summary>
         public static readonly Field CreateUserID = FindByName("CreateUserID");
@@ -988,6 +1012,12 @@ public partial class Node
         /// <summary>采样周期。默认60秒</summary>
         public const String Period = "Period";
 
+        /// <summary>新服务器。该节点自动迁移到新的服务器地址</summary>
+        public const String NewServer = "NewServer";
+
+        /// <summary>最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本</summary>
+        public const String LastVersion = "LastVersion";
+
         /// <summary>告警机器人。钉钉、企业微信等</summary>
         public const String WebHook = "WebHook";
 
@@ -1023,9 +1053,6 @@ public partial class Node
 
         /// <summary>在线时长。单位，秒</summary>
         public const String OnlineTime = "OnlineTime";
-
-        /// <summary>最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本</summary>
-        public const String LastVersion = "LastVersion";
 
         /// <summary>创建者</summary>
         public const String CreateUserID = "CreateUserID";

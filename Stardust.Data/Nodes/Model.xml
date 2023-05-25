@@ -77,10 +77,12 @@
       <Column Name="Runtime" DataType="String" Description="运行时。.Net运行时版本" Category="硬件信息" />
       <Column Name="Framework" DataType="String" Description="框架。本地支持的最高版本框架" Category="硬件信息" />
       <Column Name="Frameworks" DataType="String" Length="200" Description="框架集合。本地支持的所有版本框架，逗号隔开" Category="硬件信息" />
-      <Column Name="ProvinceID" DataType="Int32" Description="省份" />
-      <Column Name="CityID" DataType="Int32" Description="城市" />
-      <Column Name="Address" DataType="String" Length="200" Description="地址。该节点所处位置" />
-      <Column Name="Period" DataType="Int32" Description="采样周期。默认60秒" />
+      <Column Name="ProvinceID" DataType="Int32" Description="省份" Category="参数设置" />
+      <Column Name="CityID" DataType="Int32" Description="城市" Category="参数设置" />
+      <Column Name="Address" DataType="String" Length="200" Description="地址。该节点所处位置" Category="参数设置" />
+      <Column Name="Period" DataType="Int32" Description="采样周期。默认60秒" Category="参数设置" />
+      <Column Name="NewServer" DataType="String" Description="新服务器。该节点自动迁移到新的服务器地址" Category="参数设置" />
+      <Column Name="LastVersion" DataType="String" Description="最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本" Category="参数设置" />
       <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" Category="告警" />
       <Column Name="AlarmCpuRate" DataType="Int32" Description="CPU告警。CPU告警的百分比阈值，CPU使用率达到该值时告警，百分之一" Category="告警" />
       <Column Name="AlarmMemoryRate" DataType="Int32" Description="内存告警。内存告警的百分比阈值，内存使用率达到该值时告警，百分之一" Category="告警" />
@@ -88,12 +90,11 @@
       <Column Name="AlarmTcp" DataType="Int32" Description="连接数告警。TCP连接数达到该值时告警，包括连接数、主动关闭和被动关闭" Category="告警" />
       <Column Name="AlarmProcesses" DataType="String" Description="进程告警。要守护的进程不存在时告警，多进程逗号隔开，支持*模糊匹配" Category="告警" />
       <Column Name="AlarmOnOffline" DataType="Boolean" Description="下线告警。节点下线时，发送告警" Category="告警" />
-      <Column Name="Logins" DataType="Int32" Description="登录次数" />
-      <Column Name="LastLogin" DataType="DateTime" Description="最后登录" />
-      <Column Name="LastLoginIP" DataType="String" Description="最后IP。最后的公网IP地址" />
-      <Column Name="LastActive" DataType="DateTime" Description="最后活跃。心跳过程中每10分钟更新活跃时间" />
-      <Column Name="OnlineTime" DataType="Int32" ItemType="TimeSpan" Description="在线时长。单位，秒" />
-      <Column Name="LastVersion" DataType="String" Description="最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本" />
+      <Column Name="Logins" DataType="Int32" Description="登录次数" Category="登录信息" />
+      <Column Name="LastLogin" DataType="DateTime" Description="最后登录" Category="登录信息" />
+      <Column Name="LastLoginIP" DataType="String" Description="最后IP。最后的公网IP地址" Category="登录信息" />
+      <Column Name="LastActive" DataType="DateTime" Description="最后活跃。心跳过程中每10分钟更新活跃时间" Category="登录信息" />
+      <Column Name="OnlineTime" DataType="Int32" ItemType="TimeSpan" Description="在线时长。单位，秒" Category="登录信息" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
