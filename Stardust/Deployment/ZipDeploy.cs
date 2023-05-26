@@ -247,6 +247,7 @@ public class ZipDeploy
                 if (!user.Contains(':')) user = $"{user}:{user}";
                 Process.Start("chown", $"-R {user} {si.WorkingDirectory}");
                 Process.Start("chown", $"-R {user} {shadow}");
+                Process.Start("chown", $"{user} {si.WorkingDirectory.CombinePath("../").GetBasePath()}");
             }
         }
 
