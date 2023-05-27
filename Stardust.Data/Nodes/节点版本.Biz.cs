@@ -110,6 +110,30 @@ namespace Stardust.Data.Nodes
         #endregion
 
         #region 高级查询
+
+        /// <summary>
+        /// 高级查询
+        /// </summary>
+        /// <param name="start">开始时间</param>
+        /// <param name="end">结束时间</param>
+        /// <param name="enable">启用</param>
+        /// <param name="key">关键词</param>
+        /// <param name="p">分页</param>
+        /// <returns></returns>
+        public static IList<NodeVersion> Search(DateTime start, DateTime end, bool enable, string key, PageParameter p)
+        {
+            IList<NodeVersion> list = new List<NodeVersion>();
+            var exp = new WhereExpression();
+            exp &= SearchWhereByKeys(key);
+            if (start > DateTime.MinValue || end > DateTime.MinValue)
+            {
+                exp &= _.UpdateTime.Between(start, end);
+            }
+            exp &= _.Enable == enable;
+            list = FindAll(exp, p);
+            return list;
+        }
+
         #endregion
 
         #region 业务操作

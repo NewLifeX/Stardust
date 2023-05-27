@@ -2,7 +2,9 @@
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
+using NewLife.Web;
 using Stardust.Data.Nodes;
+using XCode;
 using XCode.Membership;
 using Attachment = NewLife.Cube.Entity.Attachment;
 
@@ -35,6 +37,16 @@ public class NodeVersionController : EntityController<NodeVersion>
             df.Header = "审计日志";
             df.Url = "/Admin/Log?category=节点版本&linkId={ID}";
         }
+    }
+
+    protected override IEnumerable<NodeVersion> Search(Pager p)
+    {
+        var enable = p["enable"].ToBoolean(true);
+        var start = p["dtStart"].ToDateTime();
+        var end = p["dtEnd"].ToDateTime();
+        var key = p["q"];
+
+        return NodeVersion.Search(start, end, enable, key, p);
     }
 
     protected override async Task<Attachment> SaveFile(NodeVersion entity, IFormFile file, String uploadPath, String fileName)
