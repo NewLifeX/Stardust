@@ -249,6 +249,10 @@ public class StarTracer : DefaultTracer
         var observer = new DiagnosticListenerObserver { Tracer = this };
         observer.Subscribe(new HttpDiagnosticListener());
 #endif
+#if !NET40 && !NET45
+        new DnsEventListener { Tracer = this };
+        new SocketEventListener { Tracer = this };
+#endif
 
         // 反射处理XCode追踪
         {
