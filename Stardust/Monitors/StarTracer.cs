@@ -249,6 +249,7 @@ public class StarTracer : DefaultTracer
         var observer = new DiagnosticListenerObserver { Tracer = this };
         observer.Subscribe(new HttpDiagnosticListener());
         observer.Subscribe(new EfCoreDiagnosticListener());
+        observer.Subscribe(new SqlClientDiagnosticListener());
 #endif
 #if !NET40 && !NET45
         new DnsEventListener { Tracer = this };

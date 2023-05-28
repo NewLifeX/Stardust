@@ -8,11 +8,11 @@ using NewLife.Reflection;
 
 namespace Stardust.Monitors;
 
-/// <summary>EfCore诊断监听器</summary>
-public class EfCoreDiagnosticListener : TraceDiagnosticListener
+/// <summary>SqlClient诊断监听器</summary>
+public class SqlClientDiagnosticListener : TraceDiagnosticListener
 {
     /// <summary>实例化</summary>
-    public EfCoreDiagnosticListener() => Name = "Microsoft.EntityFrameworkCore";
+    public SqlClientDiagnosticListener() => Name = "SqlClientDiagnosticListener";
 
     /// <summary>下一步</summary>
     /// <param name="value"></param>
@@ -20,12 +20,15 @@ public class EfCoreDiagnosticListener : TraceDiagnosticListener
     {
         if (Tracer == null) return;
 
+        // 前缀可能是 Microsoft.Data.SqlClient. 或 System.Data.SqlClient.
+        var name = value.Key.Split(".").LastOrDefault();
+
         var span = DefaultSpan.Current;
         var spanName = (span as DefaultSpan)?.Builder?.Name;
 
         switch (value.Key)
         {
-            case "Microsoft.EntityFrameworkCore.Database.Command.CommandExecuting":
+            case "WriteCommandBefore":
                 {
                     if (value.Value.GetValue("Command") is DbCommand command)
                     {
@@ -61,7 +64,7 @@ public class EfCoreDiagnosticListener : TraceDiagnosticListener
 
                     break;
                 }
-            case "Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted":
+            case "WriteCommandAfter":
                 {
                     if (spanName.StartsWith("db:"))
                     {
@@ -71,7 +74,7 @@ public class EfCoreDiagnosticListener : TraceDiagnosticListener
                     break;
                 }
 
-            case "Microsoft.EntityFrameworkCore.Database.Command.CommandError":
+            case "WriteCommandError":
                 {
                     if (spanName.StartsWith("db:"))
                     {

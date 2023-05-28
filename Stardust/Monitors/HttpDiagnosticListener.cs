@@ -18,7 +18,7 @@ public class HttpDiagnosticListener : TraceDiagnosticListener
     {
         if (Tracer == null) return;
 #if DEBUG
-        XTrace.WriteLine("OnNext {0}", value.Key);
+        //XTrace.WriteLine("OnNext {0}", value.Key);
 #endif
 
         switch (value.Key)
@@ -43,6 +43,7 @@ public class HttpDiagnosticListener : TraceDiagnosticListener
                         {
                             span.SetError(ex, null);
                         }
+                        span.Dispose();
                     }
                     break;
                 }
