@@ -20,12 +20,15 @@ public class EfCoreDiagnosticListener : TraceDiagnosticListener
     {
         if (Tracer == null) return;
 
+        // 前缀可能是 Microsoft.EntityFrameworkCore.Database.Command.
+        var name = value.Key.Split(".").LastOrDefault();
+
         var span = DefaultSpan.Current;
         var spanName = (span as DefaultSpan)?.Builder?.Name;
 
-        switch (value.Key)
+        switch (name)
         {
-            case "Microsoft.EntityFrameworkCore.Database.Command.CommandExecuting":
+            case "CommandExecuting":
                 {
                     if (value.Value.GetValue("Command") is DbCommand command)
                     {
@@ -61,7 +64,7 @@ public class EfCoreDiagnosticListener : TraceDiagnosticListener
 
                     break;
                 }
-            case "Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted":
+            case "CommandExecuted":
                 {
                     if (spanName.StartsWith("db:"))
                     {
@@ -71,7 +74,7 @@ public class EfCoreDiagnosticListener : TraceDiagnosticListener
                     break;
                 }
 
-            case "Microsoft.EntityFrameworkCore.Database.Command.CommandError":
+            case "CommandError":
                 {
                     if (spanName.StartsWith("db:"))
                     {

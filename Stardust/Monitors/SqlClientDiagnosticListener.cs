@@ -26,64 +26,59 @@ public class SqlClientDiagnosticListener : TraceDiagnosticListener
         var span = DefaultSpan.Current;
         var spanName = (span as DefaultSpan)?.Builder?.Name;
 
-        switch (value.Key)
+        switch (name)
         {
             case "WriteCommandBefore":
+                if (value.Value.GetValue("Command") is DbCommand command)
                 {
-                    if (value.Value.GetValue("Command") is DbCommand command)
+                    var sql = command.CommandText;
+
+                    // 从sql解析表名，作为跟踪名一部分。正则避免from前后换行的情况
+                    var action = "";
+                    if (sql.StartsWithIgnoreCase("Insert ", "Update ", "Delete ", "Upsert "))
                     {
-                        var sql = command.CommandText;
-
-                        // 从sql解析表名，作为跟踪名一部分。正则避免from前后换行的情况
-                        var action = "";
-                        if (sql.StartsWithIgnoreCase("Insert ", "Update ", "Delete ", "Upsert "))
-                        {
-                            // 使用 Insert/Update/Delete 作为埋点操作名
-                            var p = sql.IndexOf(' ');
-                            if (p > 0) action = sql[..p];
-                        }
-                        else if (sql.StartsWithIgnoreCase("Select Count"))
-                        {
-                            action = "SelectCount";
-                        }
-                        else if (sql.StartsWithIgnoreCase("Select "))
-                        {
-                            // 查询数据时，Group作为独立埋点操作名
-                            if (sql.ToLower().Contains("group by"))
-                                action = "Group";
-                        }
-
-                        var dbName = command.Connection?.Database;
-                        var traceName = $"db:{dbName}:{action}";
-
-                        var tables = GetTables(sql, true);
-                        if (tables.Length > 0) traceName += ":" + tables.Join("-");
-
-                        Tracer.NewSpan(traceName, sql);
+                        // 使用 Insert/Update/Delete 作为埋点操作名
+                        var p = sql.IndexOf(' ');
+                        if (p > 0) action = sql[..p];
+                    }
+                    else if (sql.StartsWithIgnoreCase("Select Count"))
+                    {
+                        action = "SelectCount";
+                    }
+                    else if (sql.StartsWithIgnoreCase("Select "))
+                    {
+                        // 查询数据时，Group作为独立埋点操作名
+                        if (sql.ToLower().Contains("group by"))
+                            action = "Group";
                     }
 
-                    break;
+                    var dbName = command.Connection?.Database;
+                    var traceName = $"db:{dbName}:{action}";
+
+                    var tables = GetTables(sql, true);
+                    if (tables.Length > 0) traceName += ":" + tables.Join("-");
+
+                    Tracer.NewSpan(traceName, sql);
                 }
+
+                break;
+
             case "WriteCommandAfter":
+                if (spanName.StartsWith("db:"))
                 {
-                    if (spanName.StartsWith("db:"))
-                    {
-                        span.Dispose();
-                    }
-
-                    break;
+                    span.Dispose();
                 }
+
+                break;
 
             case "WriteCommandError":
+                if (spanName.StartsWith("db:"))
                 {
-                    if (spanName.StartsWith("db:"))
-                    {
-                        if (value.Value.GetValue("Exception") is Exception ex) span.SetError(ex, null);
+                    if (value.Value.GetValue("Exception") is Exception ex) span.SetError(ex, null);
 
-                        span.Dispose();
-                    }
-                    break;
+                    span.Dispose();
                 }
+                break;
         }
     }
 

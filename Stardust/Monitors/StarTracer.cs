@@ -250,6 +250,7 @@ public class StarTracer : DefaultTracer
         observer.Subscribe(new HttpDiagnosticListener());
         observer.Subscribe(new EfCoreDiagnosticListener());
         observer.Subscribe(new SqlClientDiagnosticListener());
+        observer.Subscribe(new MongoDbDiagnosticListener());
 #endif
 #if !NET40 && !NET45
         new DnsEventListener { Tracer = this };
