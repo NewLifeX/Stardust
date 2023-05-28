@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using NewLife;
 using System.Runtime.InteropServices;
 using NewLife.Log;
+using System.Runtime.Versioning;
 
 #if NET6_0_OR_GREATER
 using System.Net.Http;
@@ -166,6 +167,9 @@ public class NetRuntime
     }
 
     /// <summary>安装.NET4.0</summary>
+#if NET5_0_OR_GREATER
+    [SupportedOSPlatform("windows")]
+#endif
     public void InstallNet40()
     {
         var vers = new List<VerInfo>();
@@ -204,6 +208,9 @@ public class NetRuntime
     }
 
     /// <summary>安装.NET4.5</summary>
+#if NET5_0_OR_GREATER
+    [SupportedOSPlatform("windows")]
+#endif
     public void InstallNet45()
     {
         var vers = new List<VerInfo>();
@@ -224,6 +231,9 @@ public class NetRuntime
     }
 
     /// <summary>安装.NET4.8</summary>
+#if NET5_0_OR_GREATER
+    [SupportedOSPlatform("windows")]
+#endif
     public void InstallNet48()
     {
         var vers = new List<VerInfo>();
@@ -477,8 +487,16 @@ public class NetRuntime
     public IList<VerInfo> GetVers()
     {
         var vers = new List<VerInfo>();
+#if NET5_0_OR_GREATER
+        if (OperatingSystem.IsWindows())
+        {
+            vers.AddRange(Get1To45VersionFromRegistry());
+            vers.AddRange(Get45PlusFromRegistry());
+        }
+#else
         vers.AddRange(Get1To45VersionFromRegistry());
         vers.AddRange(Get45PlusFromRegistry());
+#endif
         vers.AddRange(GetNetCore());
 
         return vers;
@@ -486,6 +504,9 @@ public class NetRuntime
 
     /// <summary>获取Net45以下版本</summary>
     /// <returns></returns>
+#if NET5_0_OR_GREATER
+    [SupportedOSPlatform("windows")]
+#endif
     public static IList<VerInfo> Get1To45VersionFromRegistry()
     {
         var list = new List<VerInfo>();
@@ -548,6 +569,9 @@ public class NetRuntime
 
     /// <summary>获取Net45版本</summary>
     /// <returns></returns>
+#if NET5_0_OR_GREATER
+    [SupportedOSPlatform("windows")]
+#endif
     public static IList<VerInfo> Get45PlusFromRegistry()
     {
         var list = new List<VerInfo>();

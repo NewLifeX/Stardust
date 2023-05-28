@@ -13,8 +13,16 @@ public class FrameworkManager
     public String[] GetAllVersions()
     {
         var vers = new List<VerInfo>();
+#if NET5_0_OR_GREATER
+        if (OperatingSystem.IsWindows())
+        {
+            vers.AddRange(NetRuntime.Get1To45VersionFromRegistry());
+            vers.AddRange(NetRuntime.Get45PlusFromRegistry());
+        }
+#else
         vers.AddRange(NetRuntime.Get1To45VersionFromRegistry());
         vers.AddRange(NetRuntime.Get45PlusFromRegistry());
+#endif
         vers.AddRange(NetRuntime.GetNetCore(false));
 
         //return vers.Join(",", e => e.Name.TrimStart('v'));
@@ -54,6 +62,23 @@ public class FrameworkManager
 
             nr.InstallNetOnLinux(ver, kind);
         }
+#if NET5_0_OR_GREATER
+        else if (OperatingSystem.IsWindows())
+        {
+            if (ver.StartsWithIgnoreCase("4.0"))
+            {
+                nr.InstallNet40();
+            }
+            else if (ver.StartsWithIgnoreCase("4.5"))
+            {
+                nr.InstallNet45();
+            }
+            else if (ver.StartsWithIgnoreCase("4."))
+            {
+                nr.InstallNet48();
+            }
+        }
+#else
         else if (ver.StartsWithIgnoreCase("4.0"))
         {
             nr.InstallNet40();
@@ -66,6 +91,7 @@ public class FrameworkManager
         {
             nr.InstallNet48();
         }
+#endif
         else if (ver.StartsWithIgnoreCase("6."))
         {
             var kind = "";
