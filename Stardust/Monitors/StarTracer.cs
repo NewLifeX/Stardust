@@ -248,6 +248,7 @@ public class StarTracer : DefaultTracer
         // 订阅Http事件
         var observer = new DiagnosticListenerObserver { Tracer = this };
         observer.Subscribe(new HttpDiagnosticListener());
+        observer.Subscribe(new EfCoreDiagnosticListener());
 #endif
 #if !NET40 && !NET45
         new DnsEventListener { Tracer = this };

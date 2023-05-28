@@ -16,6 +16,11 @@ public class HttpDiagnosticListener : TraceDiagnosticListener
     /// <param name="value"></param>
     public override void OnNext(KeyValuePair<String, Object> value)
     {
+        if (Tracer == null) return;
+#if DEBUG
+        XTrace.WriteLine("OnNext {0}", value.Key);
+#endif
+
         switch (value.Key)
         {
             case "System.Net.Http.HttpRequestOut.Start":

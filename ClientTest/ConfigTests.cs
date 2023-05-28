@@ -1,64 +1,58 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NewLife.Caching;
+﻿using NewLife.Caching;
 using NewLife.Configuration;
 using NewLife.Model;
 using Stardust;
 using Xunit;
 
-namespace ClientTest
+namespace ClientTest;
+
+public class ConfigTests
 {
-    public class ConfigTests
+    [Fact]
+    public void Http_Test()
     {
-        [Fact]
-        public void Http_Test()
         {
+            var prv = new HttpConfigProvider
             {
-                var prv = new HttpConfigProvider
-                {
-                    Server = "http://127.0.0.1:6600",
-                    AppId = "StarWeb"
-                };
+                Server = "http://127.0.0.1:6600",
+                AppId = "StarWeb"
+            };
 
-                var title = prv["Title"];
-                Assert.Equal("NewLife开发团队", title);
+            var title = prv["Title"];
+            Assert.Equal("NewLife开发团队", title);
 
-                var shop = prv["conn_shop"];
-                Assert.Equal("server=10.0.0.1;user=maindb;pass=Pass@word", shop);
-            }
-            {
-                var prv = new HttpConfigProvider
-                {
-                    Server = "http://127.0.0.1:6600",
-                    AppId = "StarWeb",
-                    Scope = "dev",
-                };
-
-                var title = prv["Title"];
-                Assert.Equal("NewLife开发团队", title);
-
-                var shop = prv["conn_shop"];
-                Assert.Equal("server=192.168.0.1;user=dev;pass=dev1234", shop);
-            }
+            var shop = prv["conn_shop"];
+            Assert.Equal("server=10.0.0.1;user=maindb;pass=Pass@word", shop);
         }
-
-        [Fact]
-        public void Redis_ConfigTest()
         {
-            var star = new StarFactory("http://star.newlifex.com:6600", "Test", null);
+            var prv = new HttpConfigProvider
+            {
+                Server = "http://127.0.0.1:6600",
+                AppId = "StarWeb",
+                Scope = "dev",
+            };
 
-            var services = ObjectContainer.Current;
-            services.AddSingleton(star.Config);
+            var title = prv["Title"];
+            Assert.Equal("NewLife开发团队", title);
 
-            services.AddSingleton(p => new Redis(p, "redis6"));
-
-            var provider = services.BuildServiceProvider();
-
-            var rds = provider.GetService<Redis>();
-            Assert.Equal(6, rds.Db);
+            var shop = prv["conn_shop"];
+            Assert.Equal("server=192.168.0.1;user=dev;pass=dev1234", shop);
         }
+    }
+
+    [Fact]
+    public void Redis_ConfigTest()
+    {
+        var star = new StarFactory("http://star.newlifex.com:6600", "Test", null);
+
+        var services = ObjectContainer.Current;
+        services.AddSingleton(star.Config);
+
+        services.AddSingleton(p => new Redis(p, "redis6"));
+
+        var provider = services.BuildServiceProvider();
+
+        var rds = provider.GetService<Redis>();
+        Assert.Equal(6, rds.Db);
     }
 }

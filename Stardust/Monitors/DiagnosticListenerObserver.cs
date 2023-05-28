@@ -30,8 +30,6 @@ public class DiagnosticListenerObserver : IObserver<DiagnosticListener>
     /// <param name="errorName">错误名</param>
     public void Subscribe(String listenerName, String startName, String endName, String errorName)
     {
-        Init();
-
         _listeners.Add(listenerName, new TraceDiagnosticListener
         {
             Name = listenerName,
@@ -40,16 +38,18 @@ public class DiagnosticListenerObserver : IObserver<DiagnosticListener>
             ErrorName = errorName,
             Tracer = Tracer,
         });
+
+        Init();
     }
 
     /// <summary>订阅新的监听器</summary>
     /// <param name="listener"></param>
     public void Subscribe(TraceDiagnosticListener listener)
     {
-        Init();
-
         listener.Tracer = Tracer;
         _listeners.Add(listener.Name, listener);
+
+        Init();
     }
 
     void IObserver<DiagnosticListener>.OnCompleted() => throw new NotImplementedException();

@@ -6,35 +6,11 @@ using NewLife.Log;
 
 namespace Stardust.Monitors;
 
-/// <summary>Socket事件监听器</summary>
-public class SocketEventListener : EventListener
+/// <summary>Socket事件监听器。用于监听HttpClient下层连接</summary>
+public class SocketEventListener : EventListenerBase
 {
-    /// <summary>追踪器</summary>
-    public ITracer Tracer { get; set; }
-
-    /// <summary>创建事件源。此时决定要不要跟踪</summary>
-    /// <param name="eventSource"></param>
-    protected override void OnEventSourceCreated(EventSource eventSource)
-    {
-        if (eventSource.Name == "System.Net.Sockets")
-        {
-            var log = XTrace.Log;
-
-            var level = log.Level switch
-            {
-                LogLevel.All => EventLevel.LogAlways,
-                LogLevel.Debug => EventLevel.Verbose,
-                LogLevel.Info => EventLevel.Informational,
-                LogLevel.Warn => EventLevel.Warning,
-                LogLevel.Error => EventLevel.Error,
-                LogLevel.Fatal => EventLevel.Critical,
-                LogLevel.Off => throw new NotImplementedException(),
-                _ => EventLevel.Informational,
-            };
-
-            EnableEvents(eventSource, level);
-        }
-    }
+    /// <summary>实例化</summary>
+    public SocketEventListener() : base("System.Net.Sockets") { }
 
     /// <summary>写入事件。监听器拦截，并写入日志</summary>
     /// <param name="eventData"></param>
@@ -96,18 +72,6 @@ public class SocketEventListener : EventListener
                 span.Dispose();
             }
         }
-    }
-
-    static void Append(ISpan span, EventWrittenEventArgs eventData)
-    {
-        if (span == null) return;
-
-        var dic = new Dictionary<String, Object>();
-        for (var i = 0; i < eventData.PayloadNames.Count && i < eventData.Payload.Count; i++)
-        {
-            dic[eventData.PayloadNames[i] + ""] = eventData.Payload[i];
-        }
-        if (dic.Count > 0) span?.AppendTag(dic);
     }
 }
 #endif
