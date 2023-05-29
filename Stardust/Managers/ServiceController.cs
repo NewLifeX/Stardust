@@ -526,8 +526,9 @@ internal class ServiceController : DisposeBase
                         {
                             span?.AppendTag($"id={item.Id} name={name}");
 
-                            //name = Path.GetFileName(name);
-                            if (name.EqualIgnoreCase(target)) return TakeOver(item, $"按[{ProcessName} {target}]查找");
+                            // target有可能是文件全路径，此时需要比对无后缀文件名
+                            if (name.EqualIgnoreCase(target, Path.GetFileNameWithoutExtension(target)))
+                                return TakeOver(item, $"按[{ProcessName} {target}]查找");
                         }
                     }
                 }
