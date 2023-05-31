@@ -52,20 +52,20 @@
       <Column Name="Category" DataType="String" Description="分类" />
       <Column Name="Version" DataType="String" Description="版本" />
       <Column Name="CompileTime" DataType="DateTime" Description="编译时间" />
-      <Column Name="OS" DataType="String" Length="100" Description="操作系统" Category="硬件信息" />
-      <Column Name="OSVersion" DataType="String" Description="系统版本" Category="硬件信息" />
-      <Column Name="OSKind" DataType="Int32" Description="系统种类。主流操作系统类型，不考虑子版本" Category="硬件信息" Type="Stardust.Models.OSKinds" />
-      <Column Name="Architecture" DataType="String" Description="架构。处理器架构，X86/X64/Arm/Arm64" Category="硬件信息" />
-      <Column Name="MachineName" DataType="String" Description="机器名称" Category="硬件信息" />
-      <Column Name="UserName" DataType="String" Description="用户名称" Category="硬件信息" />
-      <Column Name="IP" DataType="String" Length="200" Description="本地IP" Category="硬件信息" />
+      <Column Name="OS" DataType="String" Length="100" Description="操作系统" Category="系统信息" />
+      <Column Name="OSVersion" DataType="String" Description="系统版本" Category="系统信息" />
+      <Column Name="OSKind" DataType="Int32" Description="系统种类。主流操作系统类型，不考虑子版本" Category="系统信息" Type="Stardust.Models.OSKinds" />
+      <Column Name="Architecture" DataType="String" Description="架构。处理器架构，X86/X64/Arm/Arm64" Category="系统信息" />
+      <Column Name="MachineName" DataType="String" Description="机器名称" Category="系统信息" />
+      <Column Name="UserName" DataType="String" Description="用户名称" Category="系统信息" />
+      <Column Name="IP" DataType="String" Length="200" Description="本地IP" Category="系统信息" />
       <Column Name="Cpu" DataType="Int32" Description="CPU。处理器核心数" Category="硬件信息" />
       <Column Name="Memory" DataType="Int32" Description="内存。单位M" Category="硬件信息" />
       <Column Name="TotalSize" DataType="Int32" Description="磁盘。应用所在盘，单位M" Category="硬件信息" />
       <Column Name="DriveInfo" DataType="String" Length="200" Description="驱动器信息。各磁盘大小，逗号分隔" Category="硬件信息" />
-      <Column Name="MaxOpenFiles" DataType="Int32" Description="最大打开文件。Linux上的ulimit -n" Category="硬件信息" />
-      <Column Name="Dpi" DataType="String" Description="像素点。默认96*96" Category="硬件信息" />
-      <Column Name="Resolution" DataType="String" Description="分辨率。例如1024*768" Category="硬件信息" />
+      <Column Name="MaxOpenFiles" DataType="Int32" Description="最大打开文件。Linux上的ulimit -n" Category="系统信息" />
+      <Column Name="Dpi" DataType="String" Description="像素点。默认96*96" Category="系统信息" />
+      <Column Name="Resolution" DataType="String" Description="分辨率。例如1024*768" Category="系统信息" />
       <Column Name="Product" DataType="String" Description="产品名" Category="硬件信息" />
       <Column Name="Processor" DataType="String" Length="200" Description="处理器" Category="硬件信息" />
       <Column Name="Uuid" DataType="String" Description="唯一标识" Category="硬件信息" />
@@ -74,10 +74,10 @@
       <Column Name="Board" DataType="String" Description="主板。序列号或家族信息" Category="硬件信息" />
       <Column Name="DiskID" DataType="String" Length="200" Description="磁盘序列号" Category="硬件信息" />
       <Column Name="MACs" DataType="String" Length="200" Description="网卡" Category="硬件信息" />
-      <Column Name="InstallPath" DataType="String" Length="200" Description="安装路径" Category="硬件信息" />
-      <Column Name="Runtime" DataType="String" Description="运行时。.Net运行时版本" Category="硬件信息" />
-      <Column Name="Framework" DataType="String" Description="框架。本地支持的最高版本框架" Category="硬件信息" />
-      <Column Name="Frameworks" DataType="String" Length="200" Description="框架集合。本地支持的所有版本框架，逗号隔开" Category="硬件信息" />
+      <Column Name="InstallPath" DataType="String" Length="200" Description="安装路径" />
+      <Column Name="Runtime" DataType="String" Description="运行时。.Net运行时版本" Category="系统信息" />
+      <Column Name="Framework" DataType="String" Description="框架。本地支持的最高版本框架" Category="系统信息" />
+      <Column Name="Frameworks" DataType="String" Length="200" Description="框架集合。本地支持的所有版本框架，逗号隔开" Category="系统信息" />
       <Column Name="ProvinceID" DataType="Int32" Description="省份" Category="参数设置" />
       <Column Name="CityID" DataType="Int32" Description="城市" Category="参数设置" />
       <Column Name="Address" DataType="String" Length="200" Description="地址。该节点所处位置" Category="参数设置" />

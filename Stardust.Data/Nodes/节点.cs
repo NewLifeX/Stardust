@@ -113,7 +113,7 @@ public partial class Node
 
     private String _OS;
     /// <summary>操作系统</summary>
-    [Category("硬件信息")]
+    [Category("系统信息")]
     [DisplayName("操作系统")]
     [Description("操作系统")]
     [DataObjectField(false, false, true, 100)]
@@ -122,7 +122,7 @@ public partial class Node
 
     private String _OSVersion;
     /// <summary>系统版本</summary>
-    [Category("硬件信息")]
+    [Category("系统信息")]
     [DisplayName("系统版本")]
     [Description("系统版本")]
     [DataObjectField(false, false, true, 50)]
@@ -131,7 +131,7 @@ public partial class Node
 
     private Stardust.Models.OSKinds _OSKind;
     /// <summary>系统种类。主流操作系统类型，不考虑子版本</summary>
-    [Category("硬件信息")]
+    [Category("系统信息")]
     [DisplayName("系统种类")]
     [Description("系统种类。主流操作系统类型，不考虑子版本")]
     [DataObjectField(false, false, false, 0)]
@@ -140,7 +140,7 @@ public partial class Node
 
     private String _Architecture;
     /// <summary>架构。处理器架构，X86/X64/Arm/Arm64</summary>
-    [Category("硬件信息")]
+    [Category("系统信息")]
     [DisplayName("架构")]
     [Description("架构。处理器架构，X86/X64/Arm/Arm64")]
     [DataObjectField(false, false, true, 50)]
@@ -149,7 +149,7 @@ public partial class Node
 
     private String _MachineName;
     /// <summary>机器名称</summary>
-    [Category("硬件信息")]
+    [Category("系统信息")]
     [DisplayName("机器名称")]
     [Description("机器名称")]
     [DataObjectField(false, false, true, 50)]
@@ -158,7 +158,7 @@ public partial class Node
 
     private String _UserName;
     /// <summary>用户名称</summary>
-    [Category("硬件信息")]
+    [Category("系统信息")]
     [DisplayName("用户名称")]
     [Description("用户名称")]
     [DataObjectField(false, false, true, 50)]
@@ -167,7 +167,7 @@ public partial class Node
 
     private String _IP;
     /// <summary>本地IP</summary>
-    [Category("硬件信息")]
+    [Category("系统信息")]
     [DisplayName("本地IP")]
     [Description("本地IP")]
     [DataObjectField(false, false, true, 200)]
@@ -212,7 +212,7 @@ public partial class Node
 
     private Int32 _MaxOpenFiles;
     /// <summary>最大打开文件。Linux上的ulimit -n</summary>
-    [Category("硬件信息")]
+    [Category("系统信息")]
     [DisplayName("最大打开文件")]
     [Description("最大打开文件。Linux上的ulimit -n")]
     [DataObjectField(false, false, false, 0)]
@@ -221,7 +221,7 @@ public partial class Node
 
     private String _Dpi;
     /// <summary>像素点。默认96*96</summary>
-    [Category("硬件信息")]
+    [Category("系统信息")]
     [DisplayName("像素点")]
     [Description("像素点。默认96*96")]
     [DataObjectField(false, false, true, 50)]
@@ -230,7 +230,7 @@ public partial class Node
 
     private String _Resolution;
     /// <summary>分辨率。例如1024*768</summary>
-    [Category("硬件信息")]
+    [Category("系统信息")]
     [DisplayName("分辨率")]
     [Description("分辨率。例如1024*768")]
     [DataObjectField(false, false, true, 50)]
@@ -311,7 +311,6 @@ public partial class Node
 
     private String _InstallPath;
     /// <summary>安装路径</summary>
-    [Category("硬件信息")]
     [DisplayName("安装路径")]
     [Description("安装路径")]
     [DataObjectField(false, false, true, 200)]
@@ -320,7 +319,7 @@ public partial class Node
 
     private String _Runtime;
     /// <summary>运行时。.Net运行时版本</summary>
-    [Category("硬件信息")]
+    [Category("系统信息")]
     [DisplayName("运行时")]
     [Description("运行时。.Net运行时版本")]
     [DataObjectField(false, false, true, 50)]
@@ -329,7 +328,7 @@ public partial class Node
 
     private String _Framework;
     /// <summary>框架。本地支持的最高版本框架</summary>
-    [Category("硬件信息")]
+    [Category("系统信息")]
     [DisplayName("框架")]
     [Description("框架。本地支持的最高版本框架")]
     [DataObjectField(false, false, true, 50)]
@@ -338,7 +337,7 @@ public partial class Node
 
     private String _Frameworks;
     /// <summary>框架集合。本地支持的所有版本框架，逗号隔开</summary>
-    [Category("硬件信息")]
+    [Category("系统信息")]
     [DisplayName("框架集合")]
     [Description("框架集合。本地支持的所有版本框架，逗号隔开")]
     [DataObjectField(false, false, true, 200)]
