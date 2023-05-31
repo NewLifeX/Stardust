@@ -6,6 +6,7 @@ using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data;
 using Stardust.Data.Deployment;
+using Stardust.Data.Monitors;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Deployment.Controllers;
@@ -89,6 +90,12 @@ public class AppDeployController : EntityController<AppDeploy>
         if (id > 0)
         {
             var entity = AppDeploy.FindById(id);
+            if (entity != null) return new List<AppDeploy> { entity };
+        }
+        var appId = p["appId"].ToInt(-1);
+        if (appId > 0)
+        {
+            var entity = AppDeploy.FindByAppId(appId);
             if (entity != null) return new List<AppDeploy> { entity };
         }
 

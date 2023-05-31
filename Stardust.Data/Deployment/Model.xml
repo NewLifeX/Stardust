@@ -68,6 +68,7 @@
     <Indexes>
       <Index Columns="Name" Unique="True" />
       <Index Columns="ProjectId" />
+      <Index Columns="AppId" />
     </Indexes>
   </Table>
   <Table Name="AppDeployNode" Description="应用节点。应用部署集和节点服务器的依赖关系">
