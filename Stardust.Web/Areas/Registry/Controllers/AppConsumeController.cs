@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife.Cube;
+using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data;
 using XCode.Membership;
@@ -23,6 +24,19 @@ public class AppConsumeController : EntityController<AppConsume>
         }
 
         PageSetting.EnableAdd = false;
+    }
+
+    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
+    {
+        var fields = base.OnGetFields(kind, model);
+
+        if (kind == ViewKinds.List)
+        {
+            var appId = GetRequest("appId").ToInt(-1);
+            if (appId > 0) fields.RemoveField("AppName");
+        }
+
+        return fields;
     }
 
     protected override IEnumerable<AppConsume> Search(Pager p)

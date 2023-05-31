@@ -34,6 +34,19 @@ public class AppCommandController : EntityController<AppCommand>
         }
     }
 
+    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
+    {
+        var fields = base.OnGetFields(kind, model);
+
+        if (kind == ViewKinds.List)
+        {
+            var appId = GetRequest("appId").ToInt(-1);
+            if (appId > 0) fields.RemoveField("AppName");
+        }
+
+        return fields;
+    }
+
     protected override IEnumerable<AppCommand> Search(Pager p)
     {
         var appId = p["appId"].ToInt(-1);

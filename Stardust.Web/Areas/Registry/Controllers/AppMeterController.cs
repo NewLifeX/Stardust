@@ -2,6 +2,7 @@
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
+using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data;
 using XCode;
@@ -26,6 +27,19 @@ public class AppMeterController : EntityController<AppMeter>
             PageSetting.NavView = "_App_Nav";
             PageSetting.EnableNavbar = false;
         }
+    }
+
+    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
+    {
+        var fields = base.OnGetFields(kind, model);
+
+        if (kind == ViewKinds.List)
+        {
+            var appId = GetRequest("appId").ToInt(-1);
+            if (appId > 0) fields.RemoveField("AppName");
+        }
+
+        return fields;
     }
 
     protected override IEnumerable<AppMeter> Search(Pager p)

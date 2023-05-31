@@ -14,7 +14,7 @@ public class AppOnlineController : EntityController<AppOnline>
 {
     static AppOnlineController()
     {
-        ListFields.RemoveField("ProcessName", "MachineName", "UserName", "Token");
+        ListFields.RemoveField("ProjectId", "ProcessName", "MachineName", "UserName", "Token");
 
         {
             var df = ListFields.GetField("NodeName") as ListField;
@@ -68,6 +68,9 @@ public class AppOnlineController : EntityController<AppOnline>
         {
             var nodeId = GetRequest("nodeId").ToInt(-1);
             if (nodeId > 0) fields.RemoveField("NodeName");
+
+            var appId = GetRequest("appId").ToInt(-1);
+            if (appId > 0) fields.RemoveField("AppName");
         }
 
         return fields;

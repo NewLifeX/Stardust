@@ -20,7 +20,7 @@ public class AppController : EntityController<App>
     {
         LogOnChange = true;
 
-        ListFields.RemoveField("Secret", "WebHook", "AllowControlNodes", "Remark");
+        ListFields.RemoveField("ProjectId", "Secret", "WebHook", "AllowControlNodes", "Remark");
         ListFields.RemoveCreateField();
         ListFields.RemoveUpdateField();
 

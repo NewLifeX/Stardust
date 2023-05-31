@@ -47,6 +47,19 @@ public class AppHistoryController : ReadOnlyEntityController<AppHistory>
         }
     }
 
+    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
+    {
+        var fields = base.OnGetFields(kind, model);
+
+        if (kind == ViewKinds.List)
+        {
+            var appId = GetRequest("appId").ToInt(-1);
+            if (appId > 0) fields.RemoveField("AppName");
+        }
+
+        return fields;
+    }
+
     protected override IEnumerable<AppHistory> Search(Pager p)
     {
         //PageSetting.EnableAdd = false;
