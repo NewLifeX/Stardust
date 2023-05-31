@@ -18,6 +18,7 @@ namespace Stardust.Data.Deployment;
 [DataObject]
 [Description("应用部署。应用部署配置，单应用可有多个部署集合。新增版本并上传zip应用包，再到部署节点里发布")]
 [BindIndex("IU_AppDeploy_Name", true, "Name")]
+[BindIndex("IX_AppDeploy_ProjectId", false, "ProjectId")]
 [BindTable("AppDeploy", Description = "应用部署。应用部署配置，单应用可有多个部署集合。新增版本并上传zip应用包，再到部署节点里发布", ConnName = "Stardust", DbType = DatabaseType.None)]
 public partial class AppDeploy
 {
@@ -29,6 +30,14 @@ public partial class AppDeploy
     [DataObjectField(true, true, false, 0)]
     [BindColumn("Id", "编号", "")]
     public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
+
+    private Int32 _ProjectId;
+    /// <summary>项目。资源归属的团队</summary>
+    [DisplayName("项目")]
+    [Description("项目。资源归属的团队")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("ProjectId", "项目。资源归属的团队", "")]
+    public Int32 ProjectId { get => _ProjectId; set { if (OnPropertyChanging("ProjectId", value)) { _ProjectId = value; OnPropertyChanged("ProjectId"); } } }
 
     private Int32 _AppId;
     /// <summary>应用。对应StarApp</summary>
@@ -213,6 +222,7 @@ public partial class AppDeploy
         get => name switch
         {
             "Id" => _Id,
+            "ProjectId" => _ProjectId,
             "AppId" => _AppId,
             "Category" => _Category,
             "Name" => _Name,
@@ -240,6 +250,7 @@ public partial class AppDeploy
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
+                case "ProjectId": _ProjectId = value.ToInt(); break;
                 case "AppId": _AppId = value.ToInt(); break;
                 case "Category": _Category = Convert.ToString(value); break;
                 case "Name": _Name = Convert.ToString(value); break;
@@ -267,6 +278,14 @@ public partial class AppDeploy
     #endregion
 
     #region 关联映射
+    /// <summary>项目</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Stardust.Data.Platform.GalaxyProject Project => Extends.Get(nameof(Project), k => Stardust.Data.Platform.GalaxyProject.FindById(ProjectId));
+
+    /// <summary>项目</summary>
+    [Map(nameof(ProjectId), typeof(Stardust.Data.Platform.GalaxyProject), "Id")]
+    public String ProjectName => Project?.Name;
+
     #endregion
 
     #region 字段名
@@ -275,6 +294,9 @@ public partial class AppDeploy
     {
         /// <summary>编号</summary>
         public static readonly Field Id = FindByName("Id");
+
+        /// <summary>项目。资源归属的团队</summary>
+        public static readonly Field ProjectId = FindByName("ProjectId");
 
         /// <summary>应用。对应StarApp</summary>
         public static readonly Field AppId = FindByName("AppId");
@@ -344,6 +366,9 @@ public partial class AppDeploy
     {
         /// <summary>编号</summary>
         public const String Id = "Id";
+
+        /// <summary>项目。资源归属的团队</summary>
+        public const String ProjectId = "ProjectId";
 
         /// <summary>应用。对应StarApp</summary>
         public const String AppId = "AppId";

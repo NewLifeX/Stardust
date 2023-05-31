@@ -32,7 +32,7 @@
     <!--命名格式。Default/Upper/Lower/Underline-->
     <NameFormat>Default</NameFormat>
     <!--生成器版本-->
-    <Version>11.8.2023.0524</Version>
+    <Version>11.8.2023.0531</Version>
     <!--帮助文档-->
     <Document>https://newlifex.com/xcode/model</Document>
     <!--魔方区域显示名-->
@@ -43,6 +43,7 @@
   <Table Name="Node" Description="节点">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
       <Column Name="Code" DataType="String" Description="编码。NodeKey" />
       <Column Name="Secret" DataType="String" Description="密钥。NodeSecret" />
@@ -106,6 +107,7 @@
     <Indexes>
       <Index Columns="Code" Unique="True" />
       <Index Columns="Uuid,MachineGuid,MACs" />
+      <Index Columns="ProjectId" />
       <Index Columns="IP" />
       <Index Columns="Category" />
       <Index Columns="ProductCode" />
@@ -118,6 +120,7 @@
   <Table Name="NodeOnline" Description="节点在线" ConnName="StardustData">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
       <Column Name="SessionID" DataType="String" Description="会话" />
       <Column Name="NodeID" DataType="Int32" Description="节点" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
@@ -160,6 +163,7 @@
     </Columns>
     <Indexes>
       <Index Columns="SessionID" Unique="True" />
+      <Index Columns="ProjectId" />
       <Index Columns="Token" />
       <Index Columns="UpdateTime" />
       <Index Columns="ProvinceID,CityID" />

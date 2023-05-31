@@ -32,7 +32,7 @@
     <!--命名格式。Default/Upper/Lower/Underline-->
     <NameFormat>Default</NameFormat>
     <!--生成器版本-->
-    <Version>11.8.2023.0524</Version>
+    <Version>11.8.2023.0531</Version>
     <!--帮助文档-->
     <Document>https://newlifex.com/xcode/model</Document>
     <!--魔方区域显示名-->
@@ -43,6 +43,7 @@
   <Table Name="AppTracer" Description="应用跟踪器。负责追踪的应用管理和参数设置">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
       <Column Name="DisplayName" DataType="String" Description="显示名" />
@@ -78,6 +79,7 @@
     </Columns>
     <Indexes>
       <Index Columns="Name" Unique="True" />
+      <Index Columns="ProjectId" />
       <Index Columns="AppId" />
     </Indexes>
   </Table>
@@ -334,6 +336,7 @@
   <Table Name="AlarmGroup" Description="告警组。按照项目组设置告警，便于管理多节点和多应用，节点和应用的分类名对应组名">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
@@ -349,6 +352,7 @@
     </Columns>
     <Indexes>
       <Index Columns="Name" Unique="True" />
+      <Index Columns="ProjectId" />
     </Indexes>
   </Table>
   <Table Name="AlarmHistory" Description="告警历史。记录告警内容" ConnName="StardustData">

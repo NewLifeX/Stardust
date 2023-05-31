@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -129,6 +129,19 @@ namespace Stardust.Data
 
             return Find(_.Name == name);
         }
+
+    /// <summary>根据项目查找</summary>
+    /// <param name="projectId">项目</param>
+    /// <returns>实体列表</returns>
+    public static IList<App> FindAllByProjectId(Int32 projectId)
+    {
+        if (projectId <= 0) return new List<App>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ProjectId == projectId);
+
+        return FindAll(_.ProjectId == projectId);
+    }
         #endregion
 
         #region 高级查询

@@ -32,7 +32,7 @@
     <!--命名格式。Default/Upper/Lower/Underline-->
     <NameFormat>Default</NameFormat>
     <!--生成器版本-->
-    <Version>11.8.2023.0524</Version>
+    <Version>11.8.2023.0531</Version>
     <!--帮助文档-->
     <Document>https://newlifex.com/xcode/model</Document>
     <!--魔方区域显示名-->
@@ -43,6 +43,7 @@
   <Table Name="AppDeploy" Description="应用部署。应用部署配置，单应用可有多个部署集合。新增版本并上传zip应用包，再到部署节点里发布">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
       <Column Name="AppId" DataType="Int32" Description="应用。对应StarApp" />
       <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="Name" DataType="String" Master="True" Description="名称。应用名" />
@@ -66,6 +67,7 @@
     </Columns>
     <Indexes>
       <Index Columns="Name" Unique="True" />
+      <Index Columns="ProjectId" />
     </Indexes>
   </Table>
   <Table Name="AppDeployNode" Description="应用节点。应用部署集和节点服务器的依赖关系">

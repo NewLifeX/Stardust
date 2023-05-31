@@ -18,6 +18,7 @@ namespace Stardust.Data.Monitors;
 [DataObject]
 [Description("应用跟踪器。负责追踪的应用管理和参数设置")]
 [BindIndex("IU_AppTracer_Name", true, "Name")]
+[BindIndex("IX_AppTracer_ProjectId", false, "ProjectId")]
 [BindIndex("IX_AppTracer_AppId", false, "AppId")]
 [BindTable("AppTracer", Description = "应用跟踪器。负责追踪的应用管理和参数设置", ConnName = "Stardust", DbType = DatabaseType.None)]
 public partial class AppTracer
@@ -30,6 +31,14 @@ public partial class AppTracer
     [DataObjectField(true, true, false, 0)]
     [BindColumn("ID", "编号", "")]
     public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+
+    private Int32 _ProjectId;
+    /// <summary>项目。资源归属的团队</summary>
+    [DisplayName("项目")]
+    [Description("项目。资源归属的团队")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("ProjectId", "项目。资源归属的团队", "")]
+    public Int32 ProjectId { get => _ProjectId; set { if (OnPropertyChanging("ProjectId", value)) { _ProjectId = value; OnPropertyChanged("ProjectId"); } } }
 
     private Int32 _AppId;
     /// <summary>应用</summary>
@@ -310,6 +319,7 @@ public partial class AppTracer
         get => name switch
         {
             "ID" => _ID,
+            "ProjectId" => _ProjectId,
             "AppId" => _AppId,
             "Name" => _Name,
             "DisplayName" => _DisplayName,
@@ -349,6 +359,7 @@ public partial class AppTracer
             switch (name)
             {
                 case "ID": _ID = value.ToInt(); break;
+                case "ProjectId": _ProjectId = value.ToInt(); break;
                 case "AppId": _AppId = value.ToInt(); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "DisplayName": _DisplayName = Convert.ToString(value); break;
@@ -388,6 +399,14 @@ public partial class AppTracer
     #endregion
 
     #region 关联映射
+    /// <summary>项目</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Stardust.Data.Platform.GalaxyProject Project => Extends.Get(nameof(Project), k => Stardust.Data.Platform.GalaxyProject.FindById(ProjectId));
+
+    /// <summary>项目</summary>
+    [Map(nameof(ProjectId), typeof(Stardust.Data.Platform.GalaxyProject), "Id")]
+    public String ProjectName => Project?.Name;
+
     #endregion
 
     #region 字段名
@@ -396,6 +415,9 @@ public partial class AppTracer
     {
         /// <summary>编号</summary>
         public static readonly Field ID = FindByName("ID");
+
+        /// <summary>项目。资源归属的团队</summary>
+        public static readonly Field ProjectId = FindByName("ProjectId");
 
         /// <summary>应用</summary>
         public static readonly Field AppId = FindByName("AppId");
@@ -501,6 +523,9 @@ public partial class AppTracer
     {
         /// <summary>编号</summary>
         public const String ID = "ID";
+
+        /// <summary>项目。资源归属的团队</summary>
+        public const String ProjectId = "ProjectId";
 
         /// <summary>应用</summary>
         public const String AppId = "AppId";

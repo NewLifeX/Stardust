@@ -32,7 +32,7 @@
     <!--命名格式。Default/Upper/Lower/Underline-->
     <NameFormat>Default</NameFormat>
     <!--生成器版本-->
-    <Version>11.8.2023.0524</Version>
+    <Version>11.8.2023.0531</Version>
     <!--帮助文档-->
     <Document>https://newlifex.com/xcode/model</Document>
     <!--魔方区域显示名-->
@@ -43,6 +43,7 @@
   <Table Name="App" TableName="StarApp" Description="应用系统。服务提供者和消费者">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
       <Column Name="DisplayName" DataType="String" Description="显示名" />
       <Column Name="Secret" DataType="String" Description="密钥" />
@@ -70,11 +71,13 @@
     </Columns>
     <Indexes>
       <Index Columns="Name" Unique="True" />
+      <Index Columns="ProjectId" />
     </Indexes>
   </Table>
   <Table Name="AppOnline" Description="应用在线。一个应用有多个部署，每个在线会话对应一个服务地址" ConnName="StardustData">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
       <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="Name" DataType="String" Master="True" Description="名称。机器名称" />
@@ -103,6 +106,7 @@
     </Columns>
     <Indexes>
       <Index Columns="Client" Unique="True" />
+      <Index Columns="ProjectId" />
       <Index Columns="AppId,IP" />
       <Index Columns="Token" />
       <Index Columns="IP" />
@@ -179,6 +183,7 @@
   <Table Name="Service" Description="服务信息。服务提供者发布的服务">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称。服务名，提供一个地址，包含多个接口" />
       <Column Name="DisplayName" DataType="String" Description="显示名" />
       <Column Name="Category" DataType="String" Description="类别" />
@@ -203,6 +208,7 @@
     </Columns>
     <Indexes>
       <Index Columns="Name" Unique="True" />
+      <Index Columns="ProjectId" />
     </Indexes>
   </Table>
   <Table Name="AppService" Description="应用服务。应用提供的服务">

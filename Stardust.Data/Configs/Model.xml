@@ -32,7 +32,7 @@
     <!--命名格式。Default/Upper/Lower/Underline-->
     <NameFormat>Default</NameFormat>
     <!--生成器版本-->
-    <Version>11.8.2023.0524</Version>
+    <Version>11.8.2023.0531</Version>
     <!--帮助文档-->
     <Document>https://newlifex.com/xcode/model</Document>
     <!--魔方区域显示名-->
@@ -43,6 +43,7 @@
   <Table Name="AppConfig" Description="应用配置。需要管理配置的应用系统列表，每个应用以命令对形式管理配置数据，支持版本发布">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
       <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="AppId" DataType="Int32" Description="应用" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
@@ -72,6 +73,7 @@
     </Columns>
     <Indexes>
       <Index Columns="Name" Unique="True" />
+      <Index Columns="ProjectId" />
       <Index Columns="AppId" />
     </Indexes>
   </Table>
@@ -143,35 +145,6 @@
     </Columns>
     <Indexes>
       <Index Columns="CreateTime" />
-    </Indexes>
-  </Table>
-  <Table Name="ConfigOnline" Description="配置在线。一个应用有多个部署，每个在线会话对应一个服务地址">
-    <Columns>
-      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="Category" DataType="String" Description="类别" />
-      <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="Name" DataType="String" Master="True" Description="名称。机器名称" />
-      <Column Name="Client" DataType="String" Description="客户端。IP加进程" />
-      <Column Name="Scope" DataType="String" Description="作用域" />
-      <Column Name="PingCount" DataType="Int32" Description="心跳" />
-      <Column Name="ProcessId" DataType="Int32" Description="进程" />
-      <Column Name="ProcessName" DataType="String" Length="200" Description="进程名称" />
-      <Column Name="UserName" DataType="String" Description="用户名。启动该进程的用户名" />
-      <Column Name="StartTime" DataType="DateTime" Description="进程时间" />
-      <Column Name="Version" DataType="String" Description="版本。客户端" />
-      <Column Name="Compile" DataType="DateTime" Description="编译时间。客户端" />
-      <Column Name="WorkerId" DataType="Int32" Description="雪花标识" />
-      <Column Name="Token" DataType="String" Length="200" Description="令牌" />
-      <Column Name="Creator" DataType="String" Description="创建者。服务端节点" Category="扩展" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
-      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="Client" Unique="True" />
-      <Index Columns="AppId" />
-      <Index Columns="UpdateTime" />
-      <Index Columns="Token" />
     </Indexes>
   </Table>
 </EntityModel>

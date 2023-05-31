@@ -18,6 +18,7 @@ namespace Stardust.Data.Monitors;
 [DataObject]
 [Description("告警组。按照项目组设置告警，便于管理多节点和多应用，节点和应用的分类名对应组名")]
 [BindIndex("IU_AlarmGroup_Name", true, "Name")]
+[BindIndex("IX_AlarmGroup_ProjectId", false, "ProjectId")]
 [BindTable("AlarmGroup", Description = "告警组。按照项目组设置告警，便于管理多节点和多应用，节点和应用的分类名对应组名", ConnName = "Stardust", DbType = DatabaseType.None)]
 public partial class AlarmGroup
 {
@@ -29,6 +30,14 @@ public partial class AlarmGroup
     [DataObjectField(true, true, false, 0)]
     [BindColumn("Id", "编号", "")]
     public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
+
+    private Int32 _ProjectId;
+    /// <summary>项目。资源归属的团队</summary>
+    [DisplayName("项目")]
+    [Description("项目。资源归属的团队")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("ProjectId", "项目。资源归属的团队", "")]
+    public Int32 ProjectId { get => _ProjectId; set { if (OnPropertyChanging("ProjectId", value)) { _ProjectId = value; OnPropertyChanged("ProjectId"); } } }
 
     private String _Name;
     /// <summary>名称</summary>
@@ -144,6 +153,7 @@ public partial class AlarmGroup
         get => name switch
         {
             "Id" => _Id,
+            "ProjectId" => _ProjectId,
             "Name" => _Name,
             "Enable" => _Enable,
             "WebHook" => _WebHook,
@@ -163,6 +173,7 @@ public partial class AlarmGroup
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
+                case "ProjectId": _ProjectId = value.ToInt(); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "WebHook": _WebHook = Convert.ToString(value); break;
@@ -182,6 +193,14 @@ public partial class AlarmGroup
     #endregion
 
     #region 关联映射
+    /// <summary>项目</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Stardust.Data.Platform.GalaxyProject Project => Extends.Get(nameof(Project), k => Stardust.Data.Platform.GalaxyProject.FindById(ProjectId));
+
+    /// <summary>项目</summary>
+    [Map(nameof(ProjectId), typeof(Stardust.Data.Platform.GalaxyProject), "Id")]
+    public String ProjectName => Project?.Name;
+
     #endregion
 
     #region 字段名
@@ -190,6 +209,9 @@ public partial class AlarmGroup
     {
         /// <summary>编号</summary>
         public static readonly Field Id = FindByName("Id");
+
+        /// <summary>项目。资源归属的团队</summary>
+        public static readonly Field ProjectId = FindByName("ProjectId");
 
         /// <summary>名称</summary>
         public static readonly Field Name = FindByName("Name");
@@ -235,6 +257,9 @@ public partial class AlarmGroup
     {
         /// <summary>编号</summary>
         public const String Id = "Id";
+
+        /// <summary>项目。资源归属的团队</summary>
+        public const String ProjectId = "ProjectId";
 
         /// <summary>名称</summary>
         public const String Name = "Name";

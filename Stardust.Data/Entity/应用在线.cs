@@ -18,6 +18,7 @@ namespace Stardust.Data;
 [DataObject]
 [Description("应用在线。一个应用有多个部署，每个在线会话对应一个服务地址")]
 [BindIndex("IU_AppOnline_Client", true, "Client")]
+[BindIndex("IX_AppOnline_ProjectId", false, "ProjectId")]
 [BindIndex("IX_AppOnline_AppId_IP", false, "AppId,IP")]
 [BindIndex("IX_AppOnline_Token", false, "Token")]
 [BindIndex("IX_AppOnline_IP", false, "IP")]
@@ -33,6 +34,14 @@ public partial class AppOnline
     [DataObjectField(true, true, false, 0)]
     [BindColumn("Id", "编号", "")]
     public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
+
+    private Int32 _ProjectId;
+    /// <summary>项目。资源归属的团队</summary>
+    [DisplayName("项目")]
+    [Description("项目。资源归属的团队")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("ProjectId", "项目。资源归属的团队", "")]
+    public Int32 ProjectId { get => _ProjectId; set { if (OnPropertyChanging("ProjectId", value)) { _ProjectId = value; OnPropertyChanged("ProjectId"); } } }
 
     private String _Category;
     /// <summary>类别</summary>
@@ -250,6 +259,7 @@ public partial class AppOnline
         get => name switch
         {
             "Id" => _Id,
+            "ProjectId" => _ProjectId,
             "Category" => _Category,
             "AppId" => _AppId,
             "Name" => _Name,
@@ -282,6 +292,7 @@ public partial class AppOnline
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
+                case "ProjectId": _ProjectId = value.ToInt(); break;
                 case "Category": _Category = Convert.ToString(value); break;
                 case "AppId": _AppId = value.ToInt(); break;
                 case "Name": _Name = Convert.ToString(value); break;
@@ -314,6 +325,14 @@ public partial class AppOnline
     #endregion
 
     #region 关联映射
+    /// <summary>项目</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Stardust.Data.Platform.GalaxyProject Project => Extends.Get(nameof(Project), k => Stardust.Data.Platform.GalaxyProject.FindById(ProjectId));
+
+    /// <summary>项目</summary>
+    [Map(nameof(ProjectId), typeof(Stardust.Data.Platform.GalaxyProject), "Id")]
+    public String ProjectName => Project?.Name;
+
     #endregion
 
     #region 字段名
@@ -322,6 +341,9 @@ public partial class AppOnline
     {
         /// <summary>编号</summary>
         public static readonly Field Id = FindByName("Id");
+
+        /// <summary>项目。资源归属的团队</summary>
+        public static readonly Field ProjectId = FindByName("ProjectId");
 
         /// <summary>类别</summary>
         public static readonly Field Category = FindByName("Category");
@@ -406,6 +428,9 @@ public partial class AppOnline
     {
         /// <summary>编号</summary>
         public const String Id = "Id";
+
+        /// <summary>项目。资源归属的团队</summary>
+        public const String ProjectId = "ProjectId";
 
         /// <summary>类别</summary>
         public const String Category = "Category";

@@ -13,13 +13,14 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Platform;
 
-/// <summary>星系项目。一个星系包含多个星星节点，以及多个尘埃应用，完成产品线的项目管理</summary>
+/// <summary>项目用户关系。项目与用户之间的多对多关系</summary>
 [Serializable]
 [DataObject]
-[Description("星系项目。一个星系包含多个星星节点，以及多个尘埃应用，完成产品线的项目管理")]
-[BindIndex("IU_GalaxyProject_Name", true, "Name")]
-[BindTable("GalaxyProject", Description = "星系项目。一个星系包含多个星星节点，以及多个尘埃应用，完成产品线的项目管理", ConnName = "Stardust", DbType = DatabaseType.None)]
-public partial class GalaxyProject
+[Description("项目用户关系。项目与用户之间的多对多关系")]
+[BindIndex("IU_ProjectUser_ProjectId_UserId", true, "ProjectId,UserId")]
+[BindIndex("IX_ProjectUser_UserId", false, "UserId")]
+[BindTable("ProjectUser", Description = "项目用户关系。项目与用户之间的多对多关系", ConnName = "Stardust", DbType = DatabaseType.None)]
+public partial class ProjectUser
 {
     #region 属性
     private Int32 _Id;
@@ -30,13 +31,21 @@ public partial class GalaxyProject
     [BindColumn("Id", "编号", "")]
     public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
-    private String _Name;
-    /// <summary>名称</summary>
-    [DisplayName("名称")]
-    [Description("名称")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("Name", "名称", "", Master = true)]
-    public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
+    private Int32 _ProjectId;
+    /// <summary>项目</summary>
+    [DisplayName("项目")]
+    [Description("项目")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("ProjectId", "项目", "")]
+    public Int32 ProjectId { get => _ProjectId; set { if (OnPropertyChanging("ProjectId", value)) { _ProjectId = value; OnPropertyChanged("ProjectId"); } } }
+
+    private Int32 _UserId;
+    /// <summary>用户</summary>
+    [DisplayName("用户")]
+    [Description("用户")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("UserId", "用户", "")]
+    public Int32 UserId { get => _UserId; set { if (OnPropertyChanging("UserId", value)) { _UserId = value; OnPropertyChanged("UserId"); } } }
 
     private Boolean _Enable;
     /// <summary>启用</summary>
@@ -45,38 +54,6 @@ public partial class GalaxyProject
     [DataObjectField(false, false, false, 0)]
     [BindColumn("Enable", "启用", "")]
     public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
-
-    private Int32 _ManagerId;
-    /// <summary>管理者</summary>
-    [DisplayName("管理者")]
-    [Description("管理者")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("ManagerId", "管理者", "")]
-    public Int32 ManagerId { get => _ManagerId; set { if (OnPropertyChanging("ManagerId", value)) { _ManagerId = value; OnPropertyChanged("ManagerId"); } } }
-
-    private Int32 _Nodes;
-    /// <summary>节点数</summary>
-    [DisplayName("节点数")]
-    [Description("节点数")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("Nodes", "节点数", "")]
-    public Int32 Nodes { get => _Nodes; set { if (OnPropertyChanging("Nodes", value)) { _Nodes = value; OnPropertyChanged("Nodes"); } } }
-
-    private Int32 _Apps;
-    /// <summary>应用数</summary>
-    [DisplayName("应用数")]
-    [Description("应用数")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("Apps", "应用数", "")]
-    public Int32 Apps { get => _Apps; set { if (OnPropertyChanging("Apps", value)) { _Apps = value; OnPropertyChanged("Apps"); } } }
-
-    private Boolean _IsGlobal;
-    /// <summary>全局。该项目的节点可以允许其它项目下应用选用</summary>
-    [DisplayName("全局")]
-    [Description("全局。该项目的节点可以允许其它项目下应用选用")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("IsGlobal", "全局。该项目的节点可以允许其它项目下应用选用", "")]
-    public Boolean IsGlobal { get => _IsGlobal; set { if (OnPropertyChanging("IsGlobal", value)) { _IsGlobal = value; OnPropertyChanged("IsGlobal"); } } }
 
     private Int32 _CreateUserId;
     /// <summary>创建者</summary>
@@ -133,12 +110,12 @@ public partial class GalaxyProject
     public String UpdateIP { get => _UpdateIP; set { if (OnPropertyChanging("UpdateIP", value)) { _UpdateIP = value; OnPropertyChanged("UpdateIP"); } } }
 
     private String _Remark;
-    /// <summary>备注</summary>
+    /// <summary>描述</summary>
     [Category("扩展")]
-    [DisplayName("备注")]
-    [Description("备注")]
+    [DisplayName("描述")]
+    [Description("描述")]
     [DataObjectField(false, false, true, 500)]
-    [BindColumn("Remark", "备注", "")]
+    [BindColumn("Remark", "描述", "")]
     public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
     #endregion
 
@@ -151,12 +128,9 @@ public partial class GalaxyProject
         get => name switch
         {
             "Id" => _Id,
-            "Name" => _Name,
+            "ProjectId" => _ProjectId,
+            "UserId" => _UserId,
             "Enable" => _Enable,
-            "ManagerId" => _ManagerId,
-            "Nodes" => _Nodes,
-            "Apps" => _Apps,
-            "IsGlobal" => _IsGlobal,
             "CreateUserId" => _CreateUserId,
             "CreateTime" => _CreateTime,
             "CreateIP" => _CreateIP,
@@ -171,12 +145,9 @@ public partial class GalaxyProject
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
-                case "Name": _Name = Convert.ToString(value); break;
+                case "ProjectId": _ProjectId = value.ToInt(); break;
+                case "UserId": _UserId = value.ToInt(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
-                case "ManagerId": _ManagerId = value.ToInt(); break;
-                case "Nodes": _Nodes = value.ToInt(); break;
-                case "Apps": _Apps = value.ToInt(); break;
-                case "IsGlobal": _IsGlobal = value.ToBoolean(); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -191,40 +162,39 @@ public partial class GalaxyProject
     #endregion
 
     #region 关联映射
-    /// <summary>管理者</summary>
+    /// <summary>项目</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public XCode.Membership.User Manager => Extends.Get(nameof(Manager), k => XCode.Membership.User.FindByID(ManagerId));
+    public GalaxyProject Project => Extends.Get(nameof(Project), k => GalaxyProject.FindById(ProjectId));
 
-    /// <summary>管理者</summary>
-    [Map(nameof(ManagerId), typeof(XCode.Membership.User), "ID")]
-    public String ManagerName => Manager?.ToString();
+    /// <summary>项目</summary>
+    [Map(nameof(ProjectId), typeof(GalaxyProject), "Id")]
+    public String ProjectName => Project?.ToString();
+
+    /// <summary>用户</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public XCode.Membership.User User => Extends.Get(nameof(User), k => XCode.Membership.User.FindByID(UserId));
+
+    /// <summary>用户</summary>
+    [Map(nameof(UserId), typeof(XCode.Membership.User), "ID")]
+    public String UserName => User?.ToString();
 
     #endregion
 
     #region 字段名
-    /// <summary>取得星系项目字段信息的快捷方式</summary>
+    /// <summary>取得项目用户关系字段信息的快捷方式</summary>
     public partial class _
     {
         /// <summary>编号</summary>
         public static readonly Field Id = FindByName("Id");
 
-        /// <summary>名称</summary>
-        public static readonly Field Name = FindByName("Name");
+        /// <summary>项目</summary>
+        public static readonly Field ProjectId = FindByName("ProjectId");
+
+        /// <summary>用户</summary>
+        public static readonly Field UserId = FindByName("UserId");
 
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
-
-        /// <summary>管理者</summary>
-        public static readonly Field ManagerId = FindByName("ManagerId");
-
-        /// <summary>节点数</summary>
-        public static readonly Field Nodes = FindByName("Nodes");
-
-        /// <summary>应用数</summary>
-        public static readonly Field Apps = FindByName("Apps");
-
-        /// <summary>全局。该项目的节点可以允许其它项目下应用选用</summary>
-        public static readonly Field IsGlobal = FindByName("IsGlobal");
 
         /// <summary>创建者</summary>
         public static readonly Field CreateUserId = FindByName("CreateUserId");
@@ -244,35 +214,26 @@ public partial class GalaxyProject
         /// <summary>更新地址</summary>
         public static readonly Field UpdateIP = FindByName("UpdateIP");
 
-        /// <summary>备注</summary>
+        /// <summary>描述</summary>
         public static readonly Field Remark = FindByName("Remark");
 
         static Field FindByName(String name) => Meta.Table.FindByName(name);
     }
 
-    /// <summary>取得星系项目字段名称的快捷方式</summary>
+    /// <summary>取得项目用户关系字段名称的快捷方式</summary>
     public partial class __
     {
         /// <summary>编号</summary>
         public const String Id = "Id";
 
-        /// <summary>名称</summary>
-        public const String Name = "Name";
+        /// <summary>项目</summary>
+        public const String ProjectId = "ProjectId";
+
+        /// <summary>用户</summary>
+        public const String UserId = "UserId";
 
         /// <summary>启用</summary>
         public const String Enable = "Enable";
-
-        /// <summary>管理者</summary>
-        public const String ManagerId = "ManagerId";
-
-        /// <summary>节点数</summary>
-        public const String Nodes = "Nodes";
-
-        /// <summary>应用数</summary>
-        public const String Apps = "Apps";
-
-        /// <summary>全局。该项目的节点可以允许其它项目下应用选用</summary>
-        public const String IsGlobal = "IsGlobal";
 
         /// <summary>创建者</summary>
         public const String CreateUserId = "CreateUserId";
@@ -292,7 +253,7 @@ public partial class GalaxyProject
         /// <summary>更新地址</summary>
         public const String UpdateIP = "UpdateIP";
 
-        /// <summary>备注</summary>
+        /// <summary>描述</summary>
         public const String Remark = "Remark";
     }
     #endregion

@@ -19,6 +19,7 @@ namespace Stardust.Data.Nodes;
 [Description("节点")]
 [BindIndex("IU_Node_Code", true, "Code")]
 [BindIndex("IX_Node_Uuid_MachineGuid_MACs", false, "Uuid,MachineGuid,MACs")]
+[BindIndex("IX_Node_ProjectId", false, "ProjectId")]
 [BindIndex("IX_Node_IP", false, "IP")]
 [BindIndex("IX_Node_Category", false, "Category")]
 [BindIndex("IX_Node_ProductCode", false, "ProductCode")]
@@ -37,6 +38,14 @@ public partial class Node
     [DataObjectField(true, true, false, 0)]
     [BindColumn("ID", "编号", "")]
     public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+
+    private Int32 _ProjectId;
+    /// <summary>项目。资源归属的团队</summary>
+    [DisplayName("项目")]
+    [Description("项目。资源归属的团队")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("ProjectId", "项目。资源归属的团队", "")]
+    public Int32 ProjectId { get => _ProjectId; set { if (OnPropertyChanging("ProjectId", value)) { _ProjectId = value; OnPropertyChanged("ProjectId"); } } }
 
     private String _Name;
     /// <summary>名称</summary>
@@ -571,6 +580,7 @@ public partial class Node
         get => name switch
         {
             "ID" => _ID,
+            "ProjectId" => _ProjectId,
             "Name" => _Name,
             "Code" => _Code,
             "Secret" => _Secret,
@@ -637,6 +647,7 @@ public partial class Node
             switch (name)
             {
                 case "ID": _ID = value.ToInt(); break;
+                case "ProjectId": _ProjectId = value.ToInt(); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "Code": _Code = Convert.ToString(value); break;
                 case "Secret": _Secret = Convert.ToString(value); break;
@@ -703,6 +714,14 @@ public partial class Node
     #endregion
 
     #region 关联映射
+    /// <summary>项目</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Stardust.Data.Platform.GalaxyProject Project => Extends.Get(nameof(Project), k => Stardust.Data.Platform.GalaxyProject.FindById(ProjectId));
+
+    /// <summary>项目</summary>
+    [Map(nameof(ProjectId), typeof(Stardust.Data.Platform.GalaxyProject), "Id")]
+    public String ProjectName => Project?.Name;
+
     #endregion
 
     #region 字段名
@@ -711,6 +730,9 @@ public partial class Node
     {
         /// <summary>编号</summary>
         public static readonly Field ID = FindByName("ID");
+
+        /// <summary>项目。资源归属的团队</summary>
+        public static readonly Field ProjectId = FindByName("ProjectId");
 
         /// <summary>名称</summary>
         public static readonly Field Name = FindByName("Name");
@@ -897,6 +919,9 @@ public partial class Node
     {
         /// <summary>编号</summary>
         public const String ID = "ID";
+
+        /// <summary>项目。资源归属的团队</summary>
+        public const String ProjectId = "ProjectId";
 
         /// <summary>名称</summary>
         public const String Name = "Name";

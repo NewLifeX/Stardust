@@ -32,7 +32,7 @@
     <!--命名格式。Default/Upper/Lower/Underline-->
     <NameFormat>Default</NameFormat>
     <!--生成器版本-->
-    <Version>11.8.2023.0524</Version>
+    <Version>11.8.2023.0531</Version>
     <!--帮助文档-->
     <Document>https://newlifex.com/xcode/model</Document>
     <!--魔方区域显示名-->
@@ -45,6 +45,7 @@
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="ManagerId" DataType="Int32" Map="XCode.Membership.User@ID@$@ManagerName" Description="管理者" />
       <Column Name="Nodes" DataType="Int32" Description="节点数" />
       <Column Name="Apps" DataType="Int32" Description="应用数" />
       <Column Name="IsGlobal" DataType="Boolean" Description="全局。该项目的节点可以允许其它项目下应用选用" />
@@ -58,6 +59,25 @@
     </Columns>
     <Indexes>
       <Index Columns="Name" Unique="True" />
+    </Indexes>
+  </Table>
+  <Table Name="ProjectUser" Description="项目用户关系。项目与用户之间的多对多关系">
+    <Columns>
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="ProjectId" DataType="Int32" Map="GalaxyProject@Id@$" Description="项目" />
+      <Column Name="UserId" DataType="Int32" Map="XCode.Membership.User@ID@$@UserName" Description="用户" />
+      <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="CreateUserId" DataType="Int32" Description="创建者" Model="False" Category="扩展" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Model="False" Category="扩展" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" Model="False" Category="扩展" />
+      <Column Name="UpdateUserId" DataType="Int32" Description="更新者" Model="False" Category="扩展" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Model="False" Category="扩展" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" Model="False" Category="扩展" />
+      <Column Name="Remark" DataType="String" Length="500" Description="描述" Category="扩展" />
+    </Columns>
+    <Indexes>
+      <Index Columns="ProjectId,UserId" Unique="True" />
+      <Index Columns="UserId" />
     </Indexes>
   </Table>
 </EntityModel>
