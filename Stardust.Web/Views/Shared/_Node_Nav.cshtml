@@ -1,0 +1,30 @@
+﻿@using Stardust.Data.Nodes;
+@{
+    var obj = Model as Object;
+    var path = Context.Request.Path + "";
+    var nodeId = Context.Request.Query["nodeId"].ToInt(0);
+    if (nodeId == 0 && path.StartsWithIgnoreCase("/Nodes/Node/Detail"))
+    {
+        nodeId = Context.Request.Query["Id"].ToInt(0);
+    }
+}
+@if (nodeId > 0)
+{
+    var node = Node.FindByID(nodeId);
+    <div class="navbar-collapse collapse text-center">
+        <ul class="nav nav-pills" style="margin-bottom: 10px; display: inline-block;float: none;">
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Nodes/Node/Detail")?"active":"")">
+                <a href="/Nodes/Node/Detail?Id=@nodeId">@(node?.ToString() ?? "信息")</a>
+            </li>
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Nodes/NodeHistory")?"active":"")">
+                <a href="/Nodes/NodeHistory?nodeId=@nodeId">历史</a>
+            </li>
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Nodes/NodeCommand")?"active":"")">
+                <a href="/Nodes/NodeCommand?nodeId=@nodeId">命令</a>
+            </li>
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Nodes/NodeData")?"active":"")">
+                <a href="/Nodes/NodeData?nodeId=@nodeId">性能</a>
+            </li>
+        </ul>
+    </div>
+}

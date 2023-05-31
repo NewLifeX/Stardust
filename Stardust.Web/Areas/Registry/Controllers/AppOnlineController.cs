@@ -1,4 +1,5 @@
-﻿using NewLife;
+﻿using Microsoft.AspNetCore.Mvc.Filters;
+using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
@@ -37,6 +38,18 @@ public class AppOnlineController : EntityController<AppOnline>
             df.DisplayName = "跟踪";
             df.Url = StarHelper.BuildUrl("{TraceId}");
             df.DataVisible = e => e is AppOnline entity && !entity.TraceId.IsNullOrEmpty();
+        }
+    }
+
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        var appId = GetRequest("appId").ToInt(-1);
+        if (appId > 0)
+        {
+            PageSetting.NavView = "_App_Nav";
+            PageSetting.EnableNavbar = false;
         }
     }
 

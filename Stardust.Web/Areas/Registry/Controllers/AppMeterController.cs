@@ -1,4 +1,5 @@
-﻿using NewLife;
+﻿using Microsoft.AspNetCore.Mvc.Filters;
+using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
 using NewLife.Web;
@@ -14,6 +15,18 @@ namespace Stardust.Web.Areas.Registry.Controllers;
 public class AppMeterController : EntityController<AppMeter>
 {
     static AppMeterController() => ListFields.RemoveField("Id");
+
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        var appId = GetRequest("appId").ToInt(-1);
+        if (appId > 0)
+        {
+            PageSetting.NavView = "_App_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+    }
 
     protected override IEnumerable<AppMeter> Search(Pager p)
     {

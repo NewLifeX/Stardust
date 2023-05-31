@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife.Cube;
+using NewLife.Cube.ViewModels;
 using NewLife.Data;
 using NewLife.Web;
 using Stardust.Data;
@@ -22,6 +24,11 @@ public class AppController : EntityController<App>
         ListFields.RemoveCreateField();
         ListFields.RemoveUpdateField();
 
+        {
+            var df = ListFields.GetField("Name") as ListField;
+            df.Url = "/Registry/App/Detail?id={Id}";
+            df.Target = "_blank";
+        }
         {
             var df = ListFields.AddListField("Online", "Version");
             df.DisplayName = "实例";
@@ -76,6 +83,18 @@ public class AppController : EntityController<App>
             var df = ListFields.AddListField("Log", "CreateUser");
             df.DisplayName = "修改日志";
             df.Url = "/Admin/Log?category=应用系统&linkId={Id}";
+        }
+    }
+
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        var appId = GetRequest("Id").ToInt(-1);
+        if (appId > 0)
+        {
+            PageSetting.NavView = "_App_Nav";
+            PageSetting.EnableNavbar = false;
         }
     }
 

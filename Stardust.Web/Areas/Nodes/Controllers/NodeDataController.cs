@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
@@ -9,110 +7,121 @@ using Stardust.Data.Nodes;
 using XCode;
 using static Stardust.Data.Nodes.NodeData;
 
-namespace Stardust.Web.Areas.Nodes.Controllers
+namespace Stardust.Web.Areas.Nodes.Controllers;
+
+[Menu(60)]
+[NodesArea]
+public class NodeDataController : ReadOnlyEntityController<NodeData>
 {
-    [Menu(60)]
-    [NodesArea]
-    public class NodeDataController : ReadOnlyEntityController<NodeData>
+    static NodeDataController() => ListFields.RemoveField("Id");
+
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
     {
-        static NodeDataController() => ListFields.RemoveField("Id");
+        base.OnActionExecuting(filterContext);
 
-        protected override IEnumerable<NodeData> Search(Pager p)
+        var nodeId = GetRequest("nodeId").ToInt(-1);
+        if (nodeId > 0)
         {
-            PageSetting.EnableAdd = false;
+            PageSetting.NavView = "_Node_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+    }
 
-            var nodeId = p["nodeId"].ToInt(-1);
+    protected override IEnumerable<NodeData> Search(Pager p)
+    {
+        PageSetting.EnableAdd = false;
 
-            var start = p["dtStart"].ToDateTime();
-            var end = p["dtEnd"].ToDateTime();
+        var nodeId = p["nodeId"].ToInt(-1);
 
-            if (nodeId > 0)
+        var start = p["dtStart"].ToDateTime();
+        var end = p["dtEnd"].ToDateTime();
+
+        if (nodeId > 0)
+        {
+            // 最近10小时
+            if (p.PageSize == 20 && nodeId > 0) p.PageSize = 24 * 60;
+
+            PageSetting.EnableNavbar = false;
+
+            //if (start.Year < 2000)
+            //{
+            //    start = DateTime.Today;
+            //    p["dtStart"] = start.ToFullString();
+            //}
+        }
+
+        if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.Id.Desc();
+
+        var list = NodeData.Search(nodeId, start, end, p["Q"], p);
+
+        if (list.Count > 0)
+        {
+            // 绘制日期曲线图
+            var node = Node.FindByID(nodeId);
+            if (nodeId >= 0 && node != null)
             {
-                // 最近10小时
-                if (p.PageSize == 20 && nodeId > 0) p.PageSize = 24 * 60;
+                var list2 = list.OrderBy(e => e.Id).ToList();
 
-                PageSetting.EnableNavbar = false;
-
-                //if (start.Year < 2000)
-                //{
-                //    start = DateTime.Today;
-                //    p["dtStart"] = start.ToFullString();
-                //}
-            }
-
-            if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.Id.Desc();
-
-            var list = NodeData.Search(nodeId, start, end, p["Q"], p);
-
-            if (list.Count > 0)
-            {
-                // 绘制日期曲线图
-                var node = Node.FindByID(nodeId);
-                if (nodeId >= 0 && node != null)
+                var chart = new ECharts
                 {
-                    var list2 = list.OrderBy(e => e.Id).ToList();
+                    Title = new ChartTitle { Text = node.Name },
+                    Height = 400,
+                };
+                chart.SetX(list2, _.LocalTime);
+                //chart.SetY("指标");
+                chart.YAxis = new[] {
+                    new { name = "指标", type = "value" },
+                    new { name = "网络", type = "value" }
+                };
+                chart.AddDataZoom();
+                chart.AddLine(list2, _.CpuRate, e => Math.Round(e.CpuRate * 100), true);
 
-                    var chart = new ECharts
-                    {
-                        Title = new ChartTitle { Text = node.Name },
-                        Height = 400,
-                    };
-                    chart.SetX(list2, _.LocalTime);
-                    //chart.SetY("指标");
-                    chart.YAxis = new[] {
-                        new { name = "指标", type = "value" },
-                        new { name = "网络", type = "value" }
-                    };
-                    chart.AddDataZoom();
-                    chart.AddLine(list2, _.CpuRate, e => Math.Round(e.CpuRate * 100), true);
+                var series = chart.Add(list2, _.AvailableMemory, "line", e => node.Memory == 0 ? 0 : (100 - (e.AvailableMemory * 100 / node.Memory)));
+                series.Name = "已用内存";
+                series = chart.Add(list2, _.AvailableFreeSpace, "line", e => node.TotalSize == 0 ? 0 : (100 - (e.AvailableFreeSpace * 100 / node.TotalSize)));
+                series.Name = "已用磁盘";
 
-                    var series = chart.Add(list2, _.AvailableMemory, "line", e => node.Memory == 0 ? 0 : (100 - (e.AvailableMemory * 100 / node.Memory)));
-                    series.Name = "已用内存";
-                    series = chart.Add(list2, _.AvailableFreeSpace, "line", e => node.TotalSize == 0 ? 0 : (100 - (e.AvailableFreeSpace * 100 / node.TotalSize)));
-                    series.Name = "已用磁盘";
+                if (list2.Any(e => e.Temperature > 0))
+                    chart.AddLine(list2, _.Temperature, e => Math.Round(e.Temperature, 2), true);
+                if (list2.Any(e => e.Battery > 0))
+                    chart.AddLine(list2, _.Battery, e => Math.Round(e.Battery * 100), true);
 
-                    if (list2.Any(e => e.Temperature > 0))
-                        chart.AddLine(list2, _.Temperature, e => Math.Round(e.Temperature, 2), true);
-                    if (list2.Any(e => e.Battery > 0))
-                        chart.AddLine(list2, _.Battery, e => Math.Round(e.Battery * 100), true);
-
-                    if (list2.Any(e => e.UplinkSpeed > 0))
-                    {
-                        var line = chart.Add(list2, _.UplinkSpeed, "line", e => e.UplinkSpeed / 1000);
-                        line.Name = "网络上行";
-                        line["yAxisIndex"] = 1;
-                    }
-                    if (list2.Any(e => e.DownlinkSpeed > 0))
-                    {
-                        var line = chart.Add(list2, _.DownlinkSpeed, "line", e => e.DownlinkSpeed / 1000);
-                        line.Name = "网络下行";
-                        line["yAxisIndex"] = 1;
-                    }
-
-                    if (list2.Any(e => e.TcpConnections > 0))
-                    {
-                        var line = chart.Add(list2, _.TcpConnections);
-                        line["yAxisIndex"] = 1;
-                    }
-                    if (list2.Any(e => e.TcpTimeWait > 0))
-                    {
-                        var line = chart.Add(list2, _.TcpTimeWait);
-                        line["yAxisIndex"] = 1;
-                    }
-                    if (list2.Any(e => e.TcpCloseWait > 0))
-                    {
-                        var line = chart.Add(list2, _.TcpCloseWait);
-                        line["yAxisIndex"] = 1;
-                    }
-                    //chart.Add(list2, _.Offset);
-                    chart.SetTooltip();
-                    ViewBag.Charts = new[] { chart };
+                if (list2.Any(e => e.UplinkSpeed > 0))
+                {
+                    var line = chart.Add(list2, _.UplinkSpeed, "line", e => e.UplinkSpeed / 1000);
+                    line.Name = "网络上行";
+                    line["yAxisIndex"] = 1;
+                }
+                if (list2.Any(e => e.DownlinkSpeed > 0))
+                {
+                    var line = chart.Add(list2, _.DownlinkSpeed, "line", e => e.DownlinkSpeed / 1000);
+                    line.Name = "网络下行";
+                    line["yAxisIndex"] = 1;
                 }
 
-                if (list.Count > 1000) list = list.Take(1000).ToList();
+                if (list2.Any(e => e.TcpConnections > 0))
+                {
+                    var line = chart.Add(list2, _.TcpConnections);
+                    line["yAxisIndex"] = 1;
+                }
+                if (list2.Any(e => e.TcpTimeWait > 0))
+                {
+                    var line = chart.Add(list2, _.TcpTimeWait);
+                    line["yAxisIndex"] = 1;
+                }
+                if (list2.Any(e => e.TcpCloseWait > 0))
+                {
+                    var line = chart.Add(list2, _.TcpCloseWait);
+                    line["yAxisIndex"] = 1;
+                }
+                //chart.Add(list2, _.Offset);
+                chart.SetTooltip();
+                ViewBag.Charts = new[] { chart };
             }
 
-            return list;
+            if (list.Count > 1000) list = list.Take(1000).ToList();
         }
+
+        return list;
     }
 }

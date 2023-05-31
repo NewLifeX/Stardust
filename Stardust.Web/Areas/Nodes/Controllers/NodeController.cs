@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Cube;
+using NewLife.Cube.ViewModels;
 using NewLife.Data;
 using NewLife.Web;
 using Stardust.Data.Nodes;
@@ -30,6 +32,11 @@ public class NodeController : EntityController<Node>
             list.AddListField(item);
         }
 
+        {
+            var df = ListFields.GetField("Name") as ListField;
+            df.Url = "/Nodes/Node/Detail?id={ID}";
+            df.Target = "_blank";
+        }
         {
             var df = ListFields.AddListField("App", "Version");
             df.DisplayName = "应用实例";
@@ -67,6 +74,18 @@ public class NodeController : EntityController<Node>
         LogOnChange = true;
 
         _starFactory = starFactory;
+    }
+
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        var nodeId = GetRequest("Id").ToInt(-1);
+        if (nodeId > 0)
+        {
+            PageSetting.NavView = "_Node_Nav";
+            PageSetting.EnableNavbar = false;
+        }
     }
 
     protected override IEnumerable<Node> Search(Pager p)
