@@ -6,7 +6,6 @@ using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data;
 using Stardust.Data.Deployment;
-using Stardust.Data.Monitors;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Deployment.Controllers;
@@ -20,7 +19,7 @@ public class AppDeployController : EntityController<AppDeploy>
     static AppDeployController()
     {
         ListFields.RemoveCreateField();
-        ListFields.RemoveField("AppId", "WorkingDirectory", "MaxMemory", "Mode", "Remark");
+        ListFields.RemoveField("AppId", "WorkingDirectory", "User", "MaxMemory", "Mode", "Remark");
         AddFormFields.RemoveCreateField();
 
         LogOnChange = true;
@@ -28,11 +27,15 @@ public class AppDeployController : EntityController<AppDeploy>
         {
             var df = ListFields.GetField("AppName") as ListField;
             df.Url = "/Registry/App?Id={AppId}";
+            df.Target = "_blank";
+        }
+        {
+            var df = ListFields.GetField("Name") as ListField;
+            df.Url = "/Deployment/AppDeploy?Id={Id}";
+            df.Target = "_blank";
         }
         {
             var df = ListFields.AddListField("NodeManage", null, "Nodes") as ListField;
-            //df.Header = "节点";
-            //df.Title = "管理服务器节点";
             df.DisplayName = "部署节点";
             df.Url = "/Deployment/AppDeployNode?appId={Id}";
         }
@@ -49,13 +52,6 @@ public class AppDeployController : EntityController<AppDeploy>
             df.Title = "管理所有版本文件";
             df.Url = "/Deployment/AppDeployVersion?appId={Id}";
         }
-
-        //{
-        //    var df = ListFields.GetField("Name") as ListField;
-        //    //df.Header = "应用";
-        //    df.Url = "/Registry/App?q={Name}";
-        //}
-
         {
             var df = ListFields.AddListField("History", "UpdateUserId");
             df.DisplayName = "部署历史";
@@ -63,8 +59,9 @@ public class AppDeployController : EntityController<AppDeploy>
         }
         {
             var df = ListFields.AddListField("Log", "UpdateUserId");
-            df.DisplayName = "日志";
+            df.DisplayName = "审计日志";
             df.Url = "/Admin/Log?category=应用部署&linkId={Id}";
+            df.Target = "_frame";
         }
     }
 

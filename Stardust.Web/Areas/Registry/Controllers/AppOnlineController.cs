@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
-using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
@@ -33,12 +32,13 @@ public class AppOnlineController : EntityController<AppOnline>
             df.DisplayName = "历史";
             df.Url = "/Registry/AppHistory?appId={AppId}&client={Client}";
         }
-        {
-            var df = ListFields.GetField("TraceId") as ListField;
-            df.DisplayName = "跟踪";
-            df.Url = StarHelper.BuildUrl("{TraceId}");
-            df.DataVisible = e => e is AppOnline entity && !entity.TraceId.IsNullOrEmpty();
-        }
+        //{
+        //    var df = ListFields.GetField("TraceId") as ListField;
+        //    df.DisplayName = "跟踪";
+        //    df.Url = StarHelper.BuildUrl("{TraceId}");
+        //    df.DataVisible = e => e is AppOnline entity && !entity.TraceId.IsNullOrEmpty();
+        //}
+        ListFields.TraceUrl();
     }
 
     public override void OnActionExecuting(ActionExecutingContext filterContext)

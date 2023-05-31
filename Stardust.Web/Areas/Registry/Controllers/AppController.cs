@@ -81,8 +81,9 @@ public class AppController : EntityController<App>
         }
         {
             var df = ListFields.AddListField("Log", "CreateUser");
-            df.DisplayName = "修改日志";
+            df.DisplayName = "审计日志";
             df.Url = "/Admin/Log?category=应用系统&linkId={Id}";
+            df.Target = "_frame";
         }
     }
 

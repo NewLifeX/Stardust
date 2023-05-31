@@ -18,12 +18,7 @@ public class NodeHistoryController : ReadOnlyEntityController<NodeHistory>
         ListFields.RemoveField("ID", "ProvinceName", "Version", "CompileTime");
         ListFields.AddListField("Remark", null, "Success");
 
-        {
-            var df = ListFields.GetField("TraceId") as ListField;
-            df.DisplayName = "跟踪";
-            df.Url = StarHelper.BuildUrl("{TraceId}");
-            df.DataVisible = e => e is NodeHistory entity && !entity.TraceId.IsNullOrEmpty();
-        }
+        ListFields.TraceUrl();
 
         {
             var df = ListFields.GetField("Action") as ListField;

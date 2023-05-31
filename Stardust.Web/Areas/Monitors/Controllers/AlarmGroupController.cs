@@ -30,9 +30,10 @@ public class AlarmGroupController : EntityController<AlarmGroup>
         }
         {
             var df = ListFields.AddListField("Log", "CreateUser");
-            df.DisplayName = "修改日志";
-            df.Header = "修改日志";
+            df.DisplayName = "审计日志";
+            df.Header = "审计日志";
             df.Url = "/Admin/Log?category=告警组&linkId={Id}";
+            df.Target = "_frame";
         }
     }
 

@@ -29,6 +29,7 @@ public class AppConfigController : EntityController<AppConfig>
             df.DisplayName = "管理配置";
             df.Title = "查看该应用所有配置数据";
             df.Url = "/Configs/ConfigData?appId={Id}";
+            df.Target = "_frame";
         }
 
         {
@@ -46,6 +47,7 @@ public class AppConfigController : EntityController<AppConfig>
             df.DisplayName = "历史";
             df.Title = "查看该应用的配置历史";
             df.Url = "/Configs/ConfigHistory?appId={Id}";
+            df.Target = "_frame";
         }
 
         {
@@ -54,22 +56,24 @@ public class AppConfigController : EntityController<AppConfig>
             df.DisplayName = "预览";
             df.Title = "查看该应用的配置数据";
             df.Url = "/config/getall?appId={Name}&secret={appSecret}";
+            df.Target = "_blank";
         }
 
-        {
-            var df = ListFields.AddListField("Online", "Version");
-            df.Header = "在线实例";
-            df.DisplayName = "在线实例";
-            df.Title = "查看该应用的在线实例应用";
-            df.Url = "/registry/AppOnline?appId={AppId}";
-            df.DataVisible = e => e is AppConfig entity && entity.AppId > 0;
-        }
+        //{
+        //    var df = ListFields.AddListField("Online", "Version");
+        //    df.Header = "在线实例";
+        //    df.DisplayName = "在线实例";
+        //    df.Title = "查看该应用的在线实例应用";
+        //    df.Url = "/registry/AppOnline?appId={AppId}";
+        //    df.DataVisible = e => e is AppConfig entity && entity.AppId > 0;
+        //}
 
         {
             var df = ListFields.AddListField("Log", "UpdateUserID");
-            df.DisplayName = "修改日志";
-            df.Header = "修改日志";
+            df.DisplayName = "审计日志";
+            df.Header = "审计日志";
             df.Url = "/Admin/Log?category=应用配置&linkId={Id}";
+            df.Target = "_frame";
         }
 
         {
@@ -81,11 +85,6 @@ public class AppConfigController : EntityController<AppConfig>
             var df = EditFormFields.AddDataField("Quotes", "IsGlobal");
             df.DataSource = x => AppConfig.FindAllWithCache().Where(e => e.CanBeQuoted).ToDictionary(e => e.Id, e => e.Name);
         }
-
-        //// 异步同步应用
-        //{
-        //    Task.Run(() => AppConfig.Sync());
-        //}
     }
 
     private readonly StarFactory _starFactory;

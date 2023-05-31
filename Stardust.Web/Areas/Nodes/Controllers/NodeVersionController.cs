@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
-using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Nodes;
-using XCode;
 using XCode.Membership;
 using Attachment = NewLife.Cube.Entity.Attachment;
 
@@ -36,6 +34,7 @@ public class NodeVersionController : EntityController<NodeVersion>
             df.DisplayName = "审计日志";
             df.Header = "审计日志";
             df.Url = "/Admin/Log?category=节点版本&linkId={ID}";
+            df.Target = "_frame";
         }
     }
 

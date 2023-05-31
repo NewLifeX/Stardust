@@ -14,12 +14,13 @@ public class NodeCommandController : EntityController<NodeCommand>
 {
     static NodeCommandController()
     {
-        {
-            var df = ListFields.GetField("TraceId") as ListField;
-            df.DisplayName = "跟踪";
-            df.Url = StarHelper.BuildUrl("{TraceId}");
-            df.DataVisible = e => e is NodeCommand entity && !entity.TraceId.IsNullOrEmpty();
-        }
+        //{
+        //    var df = ListFields.GetField("TraceId") as ListField;
+        //    df.DisplayName = "跟踪";
+        //    df.Url = StarHelper.BuildUrl("{TraceId}");
+        //    df.DataVisible = e => e is NodeCommand entity && !entity.TraceId.IsNullOrEmpty();
+        //}
+        ListFields.TraceUrl();
     }
 
     public override void OnActionExecuting(ActionExecutingContext filterContext)

@@ -31,27 +31,18 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
         {
             var df = ListFields.GetField("Name") as ListField;
             df.DisplayName = "{Name}";
-            df.Url = "/Nodes/Node?Id={NodeID}";
+            df.Url = "/Nodes/Node/Detail?Id={NodeID}";
+            df.Target = "_blank";
         }
         //{
-        //    var df = ListFields.AddListField("History", "Version");
-        //    df.DisplayName = "历史";
-        //    df.Url = "NodeHistory?nodeId={NodeID}";
+        //    var df = ListFields.AddListField("Meter", "Version");
+        //    df.DisplayName = "性能";
+        //    df.Url = "/Nodes/NodeData?nodeId={NodeID}";
         //}
-        {
-            var df = ListFields.AddListField("Meter", "Version");
-            df.DisplayName = "性能";
-            df.Url = "/Nodes/NodeData?nodeId={NodeID}";
-        }
-        {
-            var df = ListFields.AddListField("App", "Version");
-            df.DisplayName = "应用实例";
-            df.Url = "/Registry/AppOnline?nodeId={NodeID}";
-        }
         //{
-        //    var df = ListFields.AddListField("Log", "Version");
-        //    df.DisplayName = "日志";
-        //    df.Url = "/Admin/Log?category=节点&linkId={NodeID}";
+        //    var df = ListFields.AddListField("App", "Version");
+        //    df.DisplayName = "应用实例";
+        //    df.Url = "/Registry/AppOnline?nodeId={NodeID}";
         //}
     }
 

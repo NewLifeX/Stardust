@@ -30,6 +30,7 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
             var df = ListFields.AddListField("nodes", null, "Total");
             df.DisplayName = "明细";
             df.AddService(new MyUrl());
+            df.Target = "_frame";
         }
     }
 

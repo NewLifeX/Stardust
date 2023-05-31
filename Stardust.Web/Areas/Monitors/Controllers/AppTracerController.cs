@@ -61,9 +61,10 @@ public class AppTracerController : EntityController<AppTracer>
 
         {
             var df = ListFields.AddListField("Log", "UpdateUser");
-            df.DisplayName = "修改日志";
-            df.Header = "修改日志";
+            df.DisplayName = "审计日志";
+            df.Header = "审计日志";
             df.Url = "/Admin/Log?category=应用跟踪器&linkId={ID}";
+            df.Target = "_frame";
         }
     }
 

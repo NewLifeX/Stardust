@@ -17,12 +17,13 @@ public class AppHistoryController : ReadOnlyEntityController<AppHistory>
     {
         ListFields.RemoveField("Id", "Version");
 
-        {
-            var df = ListFields.GetField("TraceId") as ListField;
-            df.DisplayName = "跟踪";
-            df.Url = StarHelper.BuildUrl("{TraceId}");
-            df.DataVisible = e => e is AppHistory entity && !entity.TraceId.IsNullOrEmpty();
-        }
+        //{
+        //    var df = ListFields.GetField("TraceId") as ListField;
+        //    df.DisplayName = "跟踪";
+        //    df.Url = StarHelper.BuildUrl("{TraceId}");
+        //    df.DataVisible = e => e is AppHistory entity && !entity.TraceId.IsNullOrEmpty();
+        //}
+        ListFields.TraceUrl();
 
         {
             var df = ListFields.GetField("Client") as ListField;

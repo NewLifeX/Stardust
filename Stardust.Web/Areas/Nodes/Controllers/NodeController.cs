@@ -37,35 +37,36 @@ public class NodeController : EntityController<Node>
             df.Url = "/Nodes/Node/Detail?id={ID}";
             df.Target = "_blank";
         }
+        //{
+        //    var df = ListFields.AddListField("App", "Version");
+        //    df.DisplayName = "应用实例";
+        //    df.Url = "/Registry/AppOnline?nodeId={ID}";
+        //}
+        //{
+        //    var df = ListFields.AddListField("DeployNodes", "Version");
+        //    df.DisplayName = "部署实例";
+        //    df.Url = "/Deployment/AppDeployNode?nodeId={ID}";
+        //}
+        //{
+        //    var df = ListFields.AddListField("Meter", "Version");
+        //    df.DisplayName = "性能";
+        //    df.Url = "/Nodes/NodeData?nodeId={ID}";
+        //}
+        //{
+        //    var df = ListFields.AddListField("History", "Version");
+        //    df.DisplayName = "历史";
+        //    df.Url = "/Nodes/NodeHistory?nodeId={ID}";
+        //}
+        //{
+        //    var df = ListFields.AddListField("Commands", "Version");
+        //    df.DisplayName = "命令";
+        //    df.Url = "/Nodes/NodeCommand?nodeId={ID}";
+        //}
         {
-            var df = ListFields.AddListField("App", "Version");
-            df.DisplayName = "应用实例";
-            df.Url = "/Registry/AppOnline?nodeId={ID}";
-        }
-        {
-            var df = ListFields.AddListField("DeployNodes", "Version");
-            df.DisplayName = "部署实例";
-            df.Url = "/Deployment/AppDeployNode?nodeId={ID}";
-        }
-        {
-            var df = ListFields.AddListField("Meter", "Version");
-            df.DisplayName = "性能";
-            df.Url = "/Nodes/NodeData?nodeId={ID}";
-        }
-        {
-            var df = ListFields.AddListField("History", "Version");
-            df.DisplayName = "历史";
-            df.Url = "/Nodes/NodeHistory?nodeId={ID}";
-        }
-        {
-            var df = ListFields.AddListField("Commands", "Version");
-            df.DisplayName = "命令";
-            df.Url = "/Nodes/NodeCommand?nodeId={ID}";
-        }
-        {
-            var df = ListFields.AddListField("Log", "Version");
+            var df = ListFields.AddListField("Log", "UpdateTime");
             df.DisplayName = "日志";
             df.Url = "/Admin/Log?category=节点&linkId={ID}";
+            df.Target = "_frame";
         }
     }
 
