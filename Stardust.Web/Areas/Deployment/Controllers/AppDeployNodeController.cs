@@ -1,9 +1,12 @@
 ﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
+using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Deployment;
+using Stardust.Data.Nodes;
 using Stardust.Web.Services;
 using XCode.Membership;
 
@@ -26,6 +29,41 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
     public AppDeployNodeController(DeployService deployService)
     {
         _deployService = deployService;
+    }
+
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        var appId = GetRequest("appId").ToInt(-1);
+        if (appId > 0)
+        {
+            PageSetting.NavView = "_App_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+
+        var nodeId = GetRequest("nodeId").ToInt(-1);
+        if (nodeId > 0)
+        {
+            PageSetting.NavView = "_Node_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+    }
+
+    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
+    {
+        var fields = base.OnGetFields(kind, model);
+
+        if (kind == ViewKinds.List)
+        {
+            var appId = GetRequest("appId").ToInt(-1);
+            if (appId > 0) fields.RemoveField("AppName");
+
+            var nodeId = GetRequest("nodeId").ToInt(-1);
+            if (nodeId > 0) fields.RemoveField("NodeName");
+        }
+
+        return fields;
     }
 
     protected override IEnumerable<AppDeployNode> Search(Pager p)

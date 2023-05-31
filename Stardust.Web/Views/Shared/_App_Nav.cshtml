@@ -3,7 +3,7 @@
     var path = Context.Request.Path + "";
 
     var appId = Context.Request.Query["appId"].ToInt(0);
-    if (appId == 0 && path.StartsWithIgnoreCase("/Registry/App/Detail"))
+    if (appId == 0 && path.StartsWithIgnoreCase("/Registry/App/Detail", "/Registry/App/Edit"))
     {
         appId = Context.Request.Query["Id"].ToInt(0);
     }
@@ -13,8 +13,8 @@
     var app = App.FindById(appId);
     <div class="navbar-collapse collapse" style="text-align:center">
         <ul class="nav nav-pills" style="margin-bottom: 10px; display: inline-block;float: none;">
-            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/App/Detail")?"active":"")">
-                <a href="/Registry/App/Detail?Id=@appId">@(app?.ToString() ?? "信息")</a>
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/App/Detail","/Registry/App/Edit")?"active":"")">
+                <a href="/Registry/App/Edit?Id=@appId">@(app?.ToString() ?? "信息")</a>
             </li>
             <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/AppOnline")?"active":"")">
                 <a href="/Registry/AppOnline?appId=@appId">在线</a>
@@ -29,10 +29,22 @@
                 <a href="/Registry/AppMeter?appId=@appId">性能</a>
             </li>
             <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/AppService")?"active":"")">
-                <a href="/Registry/AppService?appId=@appId">服务提供</a>
+                <a href="/Registry/AppService?appId=@appId">注册中心</a>
             </li>
             <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/AppConsume")?"active":"")">
                 <a href="/Registry/AppConsume?appId=@appId">服务消费</a>
+            </li>
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Configs/AppConfig")?"active":"")">
+                <a href="/Configs/AppConfig?appId=@appId">配置中心</a>
+            </li>
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Deployment/AppDeploy")?"active":"")">
+                <a href="/Deployment/AppDeploy?appId=@appId">发布中心</a>
+            </li>
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Monitors/AppDayStat")?"active":"")">
+                <a href="/Monitors/AppDayStat?appId=@appId">监控中心</a>
+            </li>
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Monitors/AppTracer")?"active":"")">
+                <a href="/Monitors/AppTracer?appId=@appId">监控设置</a>
             </li>
         </ul>
     </div>

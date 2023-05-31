@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife.Cube;
 using NewLife.Log;
 using NewLife.Remoting;
@@ -94,6 +95,20 @@ public class AppConfigController : EntityController<AppConfig>
     {
         _starFactory = starFactory;
         _tracer = tracer;
+    }
+
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        var appId = GetRequest("appId").ToInt(-1);
+        if (appId > 0)
+        {
+            PageSetting.NavView = "_App_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+
+        PageSetting.EnableAdd = false;
     }
 
     protected override IEnumerable<AppConfig> Search(Pager p)

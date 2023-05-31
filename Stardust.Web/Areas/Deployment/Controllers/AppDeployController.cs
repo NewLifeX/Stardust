@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
@@ -67,6 +68,20 @@ public class AppDeployController : EntityController<AppDeploy>
     }
 
     //public AppDeployController(StarFactory starFactory) => _starFactory = starFactory;
+
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        var appId = GetRequest("appId").ToInt(-1);
+        if (appId > 0)
+        {
+            PageSetting.NavView = "_App_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+
+        PageSetting.EnableAdd = false;
+    }
 
     protected override IEnumerable<AppDeploy> Search(Pager p)
     {

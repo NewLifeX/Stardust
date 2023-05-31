@@ -57,6 +57,19 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
 
     public NodeOnlineController(StarFactory starFactory) => _starFactory = starFactory;
 
+    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
+    {
+        var fields = base.OnGetFields(kind, model);
+
+        if (kind == ViewKinds.List)
+        {
+            var nodeId = GetRequest("nodeId").ToInt(-1);
+            if (nodeId > 0) fields.RemoveField("NodeName");
+        }
+
+        return fields;
+    }
+
     protected override IEnumerable<NodeOnline> Search(Pager p)
     {
         var nodeId = p["nodeId"].ToInt(-1);

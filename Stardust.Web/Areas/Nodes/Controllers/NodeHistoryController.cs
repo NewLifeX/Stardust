@@ -27,7 +27,7 @@ public class NodeHistoryController : ReadOnlyEntityController<NodeHistory>
 
         {
             var df = ListFields.GetField("Action") as ListField;
-            df.Url = "/Nodes/NodeHistory?nodeId={NodeId}&action={Action}";
+            df.Url = "/Nodes/NodeHistory?nodeId={NodeID}&action={Action}";
         }
     }
 
@@ -41,6 +41,19 @@ public class NodeHistoryController : ReadOnlyEntityController<NodeHistory>
             PageSetting.NavView = "_Node_Nav";
             PageSetting.EnableNavbar = false;
         }
+    }
+
+    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
+    {
+        var fields = base.OnGetFields(kind, model);
+
+        if (kind == ViewKinds.List)
+        {
+            var nodeId = GetRequest("nodeId").ToInt(-1);
+            if (nodeId > 0) fields.RemoveField("NodeName");
+        }
+
+        return fields;
     }
 
     protected override IEnumerable<NodeHistory> Search(Pager p)
