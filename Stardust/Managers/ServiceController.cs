@@ -228,10 +228,10 @@ internal class ServiceController : DisposeBase
                         si.RedirectStandardOutput = true;
                     }
 
-                    // 在环境变量中设置BasePath
-                    if (si.UseShellExecute)
-                        Environment.SetEnvironmentVariable("BasePath", si.WorkingDirectory);
-                    else
+                    // 在环境变量中设置BasePath，不用担心影响当前进程，因为PathHelper仅读取一次
+                    Environment.SetEnvironmentVariable("BasePath", si.WorkingDirectory);
+                    // 在进程的环境变量中设置BasePath
+                    if (!si.UseShellExecute)
                         si.EnvironmentVariables.Add("BasePath", si.WorkingDirectory);
 
                     WriteLog("工作目录: {0}", si.WorkingDirectory);
