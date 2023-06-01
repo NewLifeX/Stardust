@@ -13,7 +13,7 @@ public class TraceService
         client.RegisterCommand("抓日志", DoGetLog);
     }
 
-    private Object DoCapture(String command)
+    private String DoCapture(String command)
     {
 #if NET40_OR_GREATER || WINDOWS
         // 获取dpi，需要 app.manifest 打开感知dpi
@@ -43,7 +43,7 @@ public class TraceService
 #endif
     }
 
-    private Object DoGetLog(String arg)
+    private String DoGetLog(String arg)
     {
         var logPath = XTrace.LogPath.CombinePath($"{DateTime.Now:yyyy_MM_dd}.log").GetBasePath();
 

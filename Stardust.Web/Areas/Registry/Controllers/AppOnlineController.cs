@@ -20,6 +20,7 @@ public class AppOnlineController : EntityController<AppOnline>
             df.Header = "节点";
             df.DisplayName = "{NodeName}";
             df.Url = "/Nodes/Node?Id={NodeId}";
+            df.Target = "_blank";
         }
         {
             var df = ListFields.AddListField("Meter", "WebSocket");
