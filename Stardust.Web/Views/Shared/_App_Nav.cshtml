@@ -33,7 +33,7 @@
         var entity = AppConfig.FindById(appId);
         if (entity != null && entity.AppId > 0) appId = entity.AppId;
     }
-    if (path.StartsWithIgnoreCase("/Deployment/AppDeployNode"))
+    if (path.EqualIgnoreCase("/Deployment/AppDeployVersion", "/Deployment/AppDeployNode"))
     {
         var entity = AppDeploy.FindById(appId);
         if (entity != null && entity.AppId > 0) appId = entity.AppId;

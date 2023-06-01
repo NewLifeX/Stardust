@@ -77,6 +77,7 @@ public class AppTracerController : EntityController<AppTracer>
         base.OnActionExecuting(filterContext);
 
         var appId = GetRequest("appId").ToInt(-1);
+        if (appId <= 0) appId = GetRequest("Id").ToInt(-1);
         if (appId > 0)
         {
             PageSetting.NavView = "_App_Nav";
