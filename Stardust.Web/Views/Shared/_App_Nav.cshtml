@@ -10,6 +10,24 @@
     {
         appId = Context.Request.Query["Id"].ToInt(0);
     }
+    if (appId == 0 && path.EqualIgnoreCase("/Configs/AppConfig", "/Configs/AppConfig/Detail", "/Configs/AppConfig/Edit"))
+    {
+        var id = Context.Request.Query["Id"].ToInt(0);
+        var entity = AppConfig.FindById(id);
+        if (entity != null && entity.AppId > 0) appId = entity.AppId;
+    }
+    if (appId == 0 && path.EqualIgnoreCase("/Deployment/AppDeploy", "/Deployment/AppDeploy/Detail", "/Deployment/AppDeploy/Edit"))
+    {
+        var id = Context.Request.Query["Id"].ToInt(0);
+        var entity = AppDeploy.FindById(id);
+        if (entity != null && entity.AppId > 0) appId = entity.AppId;
+    }
+    if (appId == 0 && path.EqualIgnoreCase("/Monitors/AppTracer", "/Monitors/AppTracer/Detail", "/Monitors/AppTracer/Edit"))
+    {
+        var id = Context.Request.Query["Id"].ToInt(0);
+        var entity = AppTracer.FindByID(id);
+        if (entity != null && entity.AppId > 0) appId = entity.AppId;
+    }
     if (path.StartsWithIgnoreCase("/Configs/ConfigData"))
     {
         var entity = AppConfig.FindById(appId);

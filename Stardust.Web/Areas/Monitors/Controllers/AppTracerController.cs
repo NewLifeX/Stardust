@@ -33,6 +33,7 @@ public class AppTracerController : EntityController<AppTracer>
             df.DisplayName = "每日监控";
             df.Title = "该应用每日监控数据";
             df.Url = "/Monitors/AppDaystat?appId={ID}";
+            df.Target = "_frame";
         }
 
         {
@@ -41,23 +42,24 @@ public class AppTracerController : EntityController<AppTracer>
             df.DisplayName = "{ItemCount}";
             //df.Title = "该应用每日监控数据";
             df.Url = "/Monitors/TraceItem?appId={ID}";
+            df.Target = "_frame";
         }
 
-        {
-            var df = ListFields.AddListField("Online", "UpdateUser");
-            df.Header = "在线实例";
-            df.DisplayName = "在线实例";
-            df.Title = "查看该应用的在线实例应用";
-            df.Url = "/registry/AppOnline?appId={AppId}";
-            df.DataVisible = e => e is AppTracer entity && entity.AppId > 0;
-        }
+        //{
+        //    var df = ListFields.AddListField("Online", "UpdateUser");
+        //    df.Header = "在线实例";
+        //    df.DisplayName = "在线实例";
+        //    df.Title = "查看该应用的在线实例应用";
+        //    df.Url = "/registry/AppOnline?appId={AppId}";
+        //    df.DataVisible = e => e is AppTracer entity && entity.AppId > 0;
+        //}
 
-        {
-            var df = ListFields.AddListField("Meter", "UpdateUser");
-            df.DisplayName = "性能";
-            df.Header = "性能";
-            df.Url = "/Registry/AppMeter?appId={ID}";
-        }
+        //{
+        //    var df = ListFields.AddListField("Meter", "UpdateUser");
+        //    df.DisplayName = "性能";
+        //    df.Header = "性能";
+        //    df.Url = "/Registry/AppMeter?appId={ID}";
+        //}
 
         {
             var df = ListFields.AddListField("Log", "UpdateUser");
