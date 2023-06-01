@@ -1,4 +1,7 @@
 ﻿@using Stardust.Data;
+@using Stardust.Data.Configs;
+@using Stardust.Data.Deployment;
+@using Stardust.Data.Monitors;
 @{
     var path = Context.Request.Path + "";
 
@@ -7,10 +10,29 @@
     {
         appId = Context.Request.Query["Id"].ToInt(0);
     }
+    if (path.StartsWithIgnoreCase("/Configs/ConfigData"))
+    {
+        var entity = AppConfig.FindById(appId);
+        if (entity != null && entity.AppId > 0) appId = entity.AppId;
+    }
+    if (path.StartsWithIgnoreCase("/Deployment/AppDeployNode"))
+    {
+        var entity = AppDeploy.FindById(appId);
+        if (entity != null && entity.AppId > 0) appId = entity.AppId;
+    }
+    if (path.StartsWithIgnoreCase("/Monitors/AppDayStat"))
+    {
+        var entity = AppTracer.FindByID(appId);
+        if (entity != null && entity.AppId > 0) appId = entity.AppId;
+    }
 }
 @if (appId > 0)
 {
     var app = App.FindById(appId);
+    var config = AppConfig.FindAllByAppId(appId).FirstOrDefault();
+    var deploy = AppDeploy.FindAllByAppId(appId).FirstOrDefault();
+    var monitor = AppTracer.FindAllByAppId(appId).FirstOrDefault();
+
     <div class="navbar-collapse collapse" style="text-align:center">
         <ul class="nav nav-pills" style="margin-bottom: 10px; display: inline-block;float: none;">
             <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/App/Detail","/Registry/App/Edit")?"active":"")">
@@ -37,15 +59,33 @@
             <li role="presentation" class="@(path.StartsWithIgnoreCase("/Configs/AppConfig")?"active":"")">
                 <a href="/Configs/AppConfig?appId=@appId">配置中心</a>
             </li>
-            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Deployment/AppDeploy")?"active":"")">
+            @if (config != null)
+            {
+                <li role="presentation" class="@(path.StartsWithIgnoreCase("/Configs/ConfigData")?"active":"")">
+                    <a href="/Configs/ConfigData?appId=@config.Id">配置管理</a>
+                </li>
+            }
+            <li role="presentation" class="@(path.EqualIgnoreCase("/Deployment/AppDeploy")?"active":"")">
                 <a href="/Deployment/AppDeploy?appId=@appId">发布中心</a>
             </li>
-            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Monitors/AppDayStat")?"active":"")">
-                <a href="/Monitors/AppDayStat?appId=@appId">监控中心</a>
-            </li>
+            @if (deploy != null)
+            {
+                <li role="presentation" class="@(path.StartsWithIgnoreCase("/Deployment/AppDeployVersion")?"active":"")">
+                    <a href="/Deployment/AppDeployVersion?appId=@deploy.Id">版本上传</a>
+                </li>
+                <li role="presentation" class="@(path.StartsWithIgnoreCase("/Deployment/AppDeployNode")?"active":"")">
+                    <a href="/Deployment/AppDeployNode?appId=@deploy.Id&enable=1">发布节点</a>
+                </li>
+            }
             <li role="presentation" class="@(path.StartsWithIgnoreCase("/Monitors/AppTracer")?"active":"")">
-                <a href="/Monitors/AppTracer?appId=@appId">监控设置</a>
+                <a href="/Monitors/AppTracer?appId=@appId">监控中心</a>
             </li>
+            @if (monitor != null)
+            {
+                <li role="presentation" class="@(path.StartsWithIgnoreCase("/Monitors/AppDayStat")?"active":"")">
+                    <a href="/Monitors/AppDayStat?appId=@monitor.ID">监控大屏</a>
+                </li>
+            }
         </ul>
     </div>
 }

@@ -24,7 +24,7 @@ public class AppTracerController : EntityController<AppTracer>
     {
         LogOnChange = true;
 
-        ListFields.RemoveField("ProjectId", "AppId", "TimeoutExcludes", "VipClients", "Nodes", "AlarmRobot");
+        ListFields.RemoveField("ProjectName", "AppId", "TimeoutExcludes", "VipClients", "Nodes", "AlarmRobot");
         ListFields.RemoveCreateField();
 
         {

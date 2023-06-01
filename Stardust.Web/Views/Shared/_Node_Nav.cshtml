@@ -1,9 +1,10 @@
-﻿@using Stardust.Data.Nodes;
+﻿@using Stardust.Data.Deployment;
+@using Stardust.Data.Nodes;
 @{
     var obj = Model as Object;
     var path = Context.Request.Path + "";
     var nodeId = Context.Request.Query["nodeId"].ToInt(0);
-    if (nodeId == 0 && path.StartsWithIgnoreCase("/Nodes/Node/Detail", "/Nodes/Node/Edit"))
+    if (nodeId == 0 && path.EqualIgnoreCase("/Nodes/Node", "/Nodes/Node/Detail", "/Nodes/Node/Edit"))
     {
         nodeId = Context.Request.Query["Id"].ToInt(0);
     }

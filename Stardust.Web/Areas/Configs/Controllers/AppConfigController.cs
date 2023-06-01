@@ -21,7 +21,7 @@ public class AppConfigController : EntityController<AppConfig>
         LogOnChange = true;
 
         ListFields.RemoveCreateField();
-        ListFields.RemoveField("AppId", "AppName", "PublishTime", "Quotes", "QuoteNames", "EnableApollo", "ApolloMetaServer", "ApolloAppId", "ApolloNameSpace", "Remark");
+        ListFields.RemoveField("AppId", "AppName", "ProjectName", "PublishTime", "Quotes", "QuoteNames", "EnableApollo", "ApolloMetaServer", "ApolloAppId", "ApolloNameSpace", "Remark");
 
         {
             var df = ListFields.AddListField("ConfigData", "Enable");

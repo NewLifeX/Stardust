@@ -171,9 +171,13 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         }
         catch (Exception ex)
         {
-            Log?.Debug("注册异常[{0}] {1}", Source, ex.GetTrue().Message);
+            if (ex is HttpRequestException)
+                Log?.Info("注册异常[{0}] {1}", Source, ex.GetTrue().Message);
+            else
+                Log?.Info(ex.ToString());
 
-            throw;
+            //throw;
+            return null;
         }
     }
 
@@ -360,7 +364,12 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         DefaultSpan.Current = null;
         try
         {
-            if (_appName == null) await Register();
+            if (_appName == null)
+            {
+                var rs = await Register();
+                if (rs == null) return;
+            }
+
             await Ping();
 
             await RefreshPublish();

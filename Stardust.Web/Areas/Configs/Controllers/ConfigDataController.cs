@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
 using NewLife.Remoting;
@@ -30,6 +31,20 @@ public class ConfigDataController : EntityController<ConfigData>
             var df = EditFormFields.GetField("Value");
             df.Readonly = true;
         }
+    }
+
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        var appId = GetRequest("appId").ToInt(-1);
+        if (appId > 0)
+        {
+            PageSetting.NavView = "_App_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+
+        PageSetting.EnableAdd = false;
     }
 
     protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
