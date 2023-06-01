@@ -84,7 +84,7 @@ public class OnlineService : IHostedService
         var page = new PageParameter { PageSize = 1000 };
         while (true)
         {
-            var list = AppService.Search(-1, -1, true, null, page);
+            var list = AppService.Search(-1, -1, null, true, null, page);
             if (list.Count == 0) break;
 
             foreach (var svc in list)

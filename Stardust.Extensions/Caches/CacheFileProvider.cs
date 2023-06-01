@@ -2,8 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Security.Policy;
-using Microsoft.AspNetCore.Mvc.Razor.Infrastructure;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.FileProviders.Physical;
 using Microsoft.Extensions.Primitives;
@@ -31,13 +29,17 @@ class CacheFileProvider : IFileProvider
     public String Root { get; }
 
     /// <summary>服务端地址。本地文件不存在时，将从这里下载</summary>
-    public String Server { get; set; }
+    public String[] Servers { get; set; }
+
+    /// <summary>获取服务器地址的委托。方便实时更新</summary>
+    public Func<String[]> GetServers { get; set; }
 
     /// <summary>索引信息文件。列出扩展显示的文件内容</summary>
     public String IndexInfoFile { get; set; }
-    #endregion
 
-    //public CacheFileProvider(String root) : this(root, ExclusionFilters.Sensitive) { }
+    /// <summary>APM追踪</summary>
+    public ITracer Tracer { get; set; }
+    #endregion
 
     /// <summary>
     /// 实例化
@@ -54,7 +56,7 @@ class CacheFileProvider : IFileProvider
         Root = Path.GetFullPath(root).EnsureEnd(Path.DirectorySeparatorChar + "");
         if (!Directory.Exists(Root)) throw new DirectoryNotFoundException(Root);
 
-        Server = server.TrimEnd('/');
+        Servers = server?.Split(",");
         _filters = filters;
     }
 
@@ -90,33 +92,53 @@ class CacheFileProvider : IFileProvider
         var fullPath = GetFullPath(subpath);
         if (fullPath == null) return new NotFoundFileInfo(subpath);
 
+        using var span = Tracer?.NewSpan(nameof(GetFileInfo), subpath);
+
         // 本地不存在时，从服务器下载
         var fi = fullPath.AsFile();
         //if ((!fi.Exists || fi.LastWriteTime.AddDays(1) < DateTime.Now) && Path.GetFileName(fullPath).Contains('.'))
         if (!fi.Exists && Path.GetFileName(fullPath).Contains('.'))
         {
-            var url = subpath.Replace("\\", "/");
-            url = Server.Contains("{0}") ? Server.Replace("{0}", url) : Server + url.EnsureStart("/");
+            var svrs = GetServers?.Invoke() ?? Servers;
+            if (svrs == null || svrs.Length == 0) return new NotFoundFileInfo(subpath);
 
-            XTrace.WriteLine("下载：{0}", url);
+            foreach (var item in svrs)
+            {
+                try
+                {
+                    var url = subpath.Replace("\\", "/");
+                    url = item.Contains("{0}") ? item.Replace("{0}", url) : item.EnsureEnd("/") + url.EnsureStart("/");
 
-            // 先下载到临时目录，避免出现下载半截的情况
-            var tmp = Path.GetTempFileName();
-            using var fs = new FileStream(tmp, FileMode.OpenOrCreate);
+                    span?.AppendTag(url);
+                    XTrace.WriteLine("下载文件：{0}", url);
 
-            using var client = new HttpClient();
-            using var rs = client.GetStreamAsync(url).Result;
-            rs.CopyTo(fs);
-            fs.Flush();
-            fs.SetLength(fs.Position);
-            fs.Dispose();
+                    // 先下载到临时目录，避免出现下载半截的情况
+                    var tmp = Path.GetTempFileName();
+                    using var fs = new FileStream(tmp, FileMode.OpenOrCreate);
 
-            // 移动临时文件到最终目录
-            fullPath.EnsureDirectory(true);
-            File.Move(tmp, fullPath);
+                    using var client = new HttpClient();
+                    using var rs = client.GetStreamAsync(url).Result;
+                    rs.CopyTo(fs);
+                    fs.Flush();
+                    fs.SetLength(fs.Position);
+                    fs.Dispose();
 
-            XTrace.WriteLine("下载完成：{0}", fullPath);
+                    // 移动临时文件到最终目录
+                    fullPath.EnsureDirectory(true);
+                    File.Move(tmp, fullPath);
+
+                    XTrace.WriteLine("下载文件完成：{0}", fullPath);
+
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    span?.SetError(ex, null);
+                    XTrace.WriteLine(ex.Message);
+                }
+            }
         }
+        if (!fi.Exists) return new NotFoundFileInfo(subpath);
 
         var fileInfo = new FileInfo(fullPath);
         return IsExcluded(fileInfo, _filters) ? new NotFoundFileInfo(subpath) : new PhysicalFileInfo(fileInfo);
@@ -154,37 +176,49 @@ class CacheFileProvider : IFileProvider
             subpath = subpath.TrimStart(_pathSeparators);
             if (Path.IsPathRooted(subpath)) return NotFoundDirectoryContents.Singleton;
 
+            using var span = Tracer?.NewSpan(nameof(GetDirectoryContents), subpath);
+
             var fullPath = GetFullPath(subpath);
 
             // 下载信息文件
-            if (!IndexInfoFile.IsNullOrEmpty() && !Server.IsNullOrEmpty())
+            var svrs = GetServers?.Invoke() ?? Servers;
+            if (!IndexInfoFile.IsNullOrEmpty() && svrs != null && svrs.Length > 0)
             {
                 var fi = fullPath.CombinePath(IndexInfoFile).GetBasePath().AsFile();
                 if (!fi.Exists || fi.LastWriteTime.AddDays(1) < DateTime.Now)
                 {
-                    try
+                    foreach (var item in svrs)
                     {
-                        var url = subpath.Replace("\\", "/");
-                        url = Server.Contains("{0}") ? Server.Replace("{0}", url) : Server + url.EnsureStart("/");
-
-                        using var client = new HttpClient();
-                        var html = client.GetString(url);
-
-                        var links = Link.Parse(html, url);
-                        var list = links.Select(e => new FileInfoModel
+                        try
                         {
-                            Name = e.FullName,
-                            LastModified = e.Time.Year > 2000 ? e.Time : DateTime.Now,
-                            Exists = true,
-                            IsDirectory = false,
-                        }).ToList();
+                            var url = subpath.Replace("\\", "/");
+                            url = item.Contains("{0}") ? item.Replace("{0}", url) : item.EnsureEnd("/") + url.EnsureStart("/");
 
-                        var csv = new CsvDb<FileInfoModel> { FileName = fi.FullName };
-                        csv.Write(list, false);
-                    }
-                    catch (Exception ex)
-                    {
-                        XTrace.Log?.Debug("下载目录信息出错：{0}", ex.Message);
+                            span?.AppendTag(url);
+                            XTrace.WriteLine("下载目录：{0}", url);
+
+                            using var client = new HttpClient();
+                            var html = client.GetString(url);
+
+                            var links = Link.Parse(html, url);
+                            var list = links.Select(e => new FileInfoModel
+                            {
+                                Name = e.FullName,
+                                LastModified = e.Time.Year > 2000 ? e.Time : DateTime.Now,
+                                Exists = true,
+                                IsDirectory = false,
+                            }).ToList();
+
+                            var csv = new CsvDb<FileInfoModel> { FileName = fi.FullName };
+                            csv.Write(list, false);
+
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+                            span?.SetError(ex, null);
+                            XTrace.WriteLine("下载目录出错：{0}", ex.Message);
+                        }
                     }
                 }
             }

@@ -200,6 +200,6 @@ public class DustController : ControllerBase
         var svc = Service.FindByName(serviceName);
         if (svc == null) return null;
 
-        return AppService.Search(-1, svc.Id, true, key, new PageParameter { PageSize = 100 });
+        return AppService.Search(-1, svc.Id, null, true, key, new PageParameter { PageSize = 100 });
     }
 }

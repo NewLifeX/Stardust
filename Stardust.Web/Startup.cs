@@ -111,10 +111,8 @@ public class Startup
 
         Usewwwroot(app, env);
 
-        var set = NewLife.Setting.Current;
-
         // 缓存运行时安装文件
-        app.UseFileCache("/files", "../FileCache", set.PluginServer);
+        app.UseFileCache("/files", "../FileCache");
 
         //app.UseStardust();
         app.UseResponseCompression();
