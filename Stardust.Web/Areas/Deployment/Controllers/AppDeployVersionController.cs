@@ -242,7 +242,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
                 foreach (var item in appNodes)
                 {
                     //span?.AppendTag(item);
-                    if (item.Enable) ts.Add(_deployService.Control(app, item, "install", UserHost));
+                    if (item.Enable) ts.Add(_deployService.Control(app, item, "install", UserHost, 0));
                 }
                 span?.AppendTag($"控制{ts.Count}个节点");
                 await Task.WhenAll(ts);

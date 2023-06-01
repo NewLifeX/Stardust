@@ -9,7 +9,7 @@ public class DeployService
 
     public DeployService(StarFactory starFactory) => _starFactory = starFactory;
 
-    public async Task Control(AppDeploy app, AppDeployNode deployNode, String action, String ip)
+    public async Task Control(AppDeploy app, AppDeployNode deployNode, String action, String ip, Int32 timeout = 15)
     {
         if (deployNode == null) throw new ArgumentNullException(nameof(deployNode));
 
@@ -17,6 +17,8 @@ public class DeployService
         //if (app == null) throw new ArgumentNullException(nameof(deployNode));
         //if (!deployNode.Enable || app == null || !app.Enable) throw new Exception("部署节点未启用！");
         if (app == null || !app.Enable) throw new Exception($"节点[{deployNode}]上的应用部署集[{app}]未启用！");
+
+        await Task.Yield();
 
         using var span = _starFactory.Tracer?.NewSpan($"Deploy-{action}", deployNode);
 
@@ -53,7 +55,7 @@ public class DeployService
             var args = new { deployNode.Id, deployNode.AppName }.ToJson();
             msg = args;
 
-            await _starFactory.SendNodeCommand(deployNode.Node.Code, action, args, 60, 15);
+            await _starFactory.SendNodeCommand(deployNode.Node.Code, action, args, 60, timeout);
         }
         catch (Exception ex)
         {
