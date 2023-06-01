@@ -105,7 +105,21 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         if (!post && type == DataObjectMethodType.Insert) entity.Version = DateTime.Now.ToString("yyyyMMdd-HHmmss");
 
         if (post)
+        {
+            // 根据包名去查应用发布集，如果是不小心上传了其它包，则给出提醒
+            foreach (var file in Request.Form.Files)
+            {
+                var name = Path.GetFileNameWithoutExtension(file.FileName);
+                if (!name.IsNullOrEmpty())
+                {
+                    var deploy = AppDeploy.FindByName(name);
+                    if (deploy != null && deploy.Id != entity.AppId)
+                        throw new InvalidOperationException($"文件名[{name}]对应另一个应用[{deploy}]，请确保是否上传错误！");
+                }
+            }
+
             entity.TraceId = DefaultSpan.Current?.TraceId;
+        }
 
         return base.Valid(entity, type, post);
     }
