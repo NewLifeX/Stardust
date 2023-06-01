@@ -15,7 +15,15 @@ namespace Stardust.Web.Areas.Registry.Controllers;
 [Menu(0, false)]
 public class AppMeterController : EntityController<AppMeter>
 {
-    static AppMeterController() => ListFields.RemoveField("Id");
+    static AppMeterController()
+    {
+        ListFields.RemoveField("Id");
+
+        {
+            var df = ListFields.GetField("ClientId") as ListField;
+            df.Url = "/Registry/AppMeter?appId={AppId}&clientId={ClientId}";
+        }
+    }
 
     public override void OnActionExecuting(ActionExecutingContext filterContext)
     {

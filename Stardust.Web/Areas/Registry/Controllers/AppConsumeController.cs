@@ -11,6 +11,27 @@ namespace Stardust.Web.Areas.Registry.Controllers;
 [Menu(0, false)]
 public class AppConsumeController : EntityController<AppConsume>
 {
+    static AppConsumeController()
+    {
+        ListFields.RemoveField("ServiceId");
+
+        {
+            var df = ListFields.GetField("ServiceName") as ListField;
+            df.DisplayName = "{ServiceName}";
+            df.Url = "/Registry/Service?name={ServiceName}";
+        }
+        {
+            var df = ListFields.GetField("NodeName") as ListField;
+            df.Header = "节点";
+            df.DisplayName = "{NodeName}";
+            df.Url = "/Nodes/Node?Id={NodeId}";
+            df.Target = "_blank";
+        }
+        {
+            var df = ListFields.GetField("Client") as ListField;
+            df.Url = "/Registry/AppConsume?appId={AppId}&client={Client}";
+        }
+    }
 
     public override void OnActionExecuting(ActionExecutingContext filterContext)
     {
@@ -45,9 +66,10 @@ public class AppConsumeController : EntityController<AppConsume>
         //PageSetting.EnableNavbar = false;
 
         var appId = p["appId"].ToInt(-1);
+        var client = p["client"];
         var serviceId = p["serviceId"].ToInt(-1);
         var enable = p["enable"]?.ToBoolean();
 
-        return AppConsume.Search(appId, serviceId, enable, p["Q"], p);
+        return AppConsume.Search(appId, serviceId, client, enable, p["Q"], p);
     }
 }

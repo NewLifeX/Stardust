@@ -6,7 +6,7 @@
     var path = Context.Request.Path + "";
 
     var appId = Context.Request.Query["appId"].ToInt(0);
-    if (appId == 0 && path.StartsWithIgnoreCase("/Registry/App/Detail", "/Registry/App/Edit"))
+    if (appId == 0 && path.EqualIgnoreCase("/Registry/App", "/Registry/App/Detail", "/Registry/App/Edit"))
     {
         appId = Context.Request.Query["Id"].ToInt(0);
     }
@@ -39,7 +39,7 @@
                 <a href="/Registry/App/Edit?Id=@appId">@(app?.ToString() ?? "信息")</a>
             </li>
             <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/AppOnline")?"active":"")">
-                <a href="/Registry/AppOnline?appId=@appId">在线</a>
+                <a href="/Registry/AppOnline?appId=@appId">实例</a>
             </li>
             <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/AppHistory")?"active":"")">
                 <a href="/Registry/AppHistory?appId=@appId">历史</a>

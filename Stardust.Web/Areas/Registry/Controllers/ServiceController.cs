@@ -39,10 +39,11 @@ public class ServiceController : EntityController<Service>
     protected override IEnumerable<Service> Search(Pager p)
     {
         //var deviceId = p["deviceId"].ToInt(-1);
+        var name = p["name"];
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return Service.Search(start, end, p["Q"], p);
+        return Service.Search(name, start, end, p["Q"], p);
     }
 }

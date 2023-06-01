@@ -29,51 +29,51 @@ public class AppController : EntityController<App>
             df.Url = "/Registry/App/Detail?id={Id}";
             df.Target = "_blank";
         }
-        {
-            var df = ListFields.AddListField("Online", "Version");
-            df.DisplayName = "实例";
-            df.Url = "/Registry/AppOnline?appId={Id}";
-        }
-        {
-            var df = ListFields.AddListField("Monitor", "Version");
-            df.DisplayName = "监控";
-            df.Url = "/Monitors/AppTracer?appId={Id}";
-            df.DataVisible = e => AppTracer.FindByAppId((e as App).Id) != null;
-        }
-        {
-            var df = ListFields.AddListField("Config", "Version");
-            df.DisplayName = "配置";
-            df.Url = "/Configs/AppConfig?appId={Id}";
-            df.DataVisible = e => AppConfig.FindByAppId((e as App).Id) != null;
-        }
-        {
-            var df = ListFields.AddListField("Deploy", "Version");
-            df.DisplayName = "部署";
-            df.Url = "/Deployment/AppDeploy?Id={Id}";
-            df.DataVisible = e => AppDeploy.FindById((e as App).Id) != null;
-        }
+        //{
+        //    var df = ListFields.AddListField("Online", "Version");
+        //    df.DisplayName = "实例";
+        //    df.Url = "/Registry/AppOnline?appId={Id}";
+        //}
+        //{
+        //    var df = ListFields.AddListField("Monitor", "Version");
+        //    df.DisplayName = "监控";
+        //    df.Url = "/Monitors/AppTracer?appId={Id}";
+        //    df.DataVisible = e => AppTracer.FindByAppId((e as App).Id) != null;
+        //}
+        //{
+        //    var df = ListFields.AddListField("Config", "Version");
+        //    df.DisplayName = "配置";
+        //    df.Url = "/Configs/AppConfig?appId={Id}";
+        //    df.DataVisible = e => AppConfig.FindByAppId((e as App).Id) != null;
+        //}
+        //{
+        //    var df = ListFields.AddListField("Deploy", "Version");
+        //    df.DisplayName = "部署";
+        //    df.Url = "/Deployment/AppDeploy?Id={Id}";
+        //    df.DataVisible = e => AppDeploy.FindById((e as App).Id) != null;
+        //}
         //{
         //    var df = ListFields.AddListField("Meter", "Version");
         //    df.DisplayName = "性能";
         //    df.Url = "AppMeter?appId={Id}";
         //}
-        {
-            var df = ListFields.AddListField("History", "Version");
-            df.DisplayName = "历史";
-            df.Url = "/Registry/AppHistory?appId={Id}";
-        }
-        {
-            var df = ListFields.AddListField("AppService", "Version");
-            df.DisplayName = "提供服务";
-            df.Url = "/Registry/AppService?appId={Id}";
-            df.DataVisible = e => (e as App).Providers.Count > 0;
-        }
-        {
-            var df = ListFields.AddListField("AppConsume", "Version");
-            df.DisplayName = "消费服务";
-            df.Url = "/Registry/AppConsume?appId={Id}";
-            df.DataVisible = e => (e as App).Consumers.Count > 0;
-        }
+        //{
+        //    var df = ListFields.AddListField("History", "Version");
+        //    df.DisplayName = "历史";
+        //    df.Url = "/Registry/AppHistory?appId={Id}";
+        //}
+        //{
+        //    var df = ListFields.AddListField("AppService", "Version");
+        //    df.DisplayName = "提供服务";
+        //    df.Url = "/Registry/AppService?appId={Id}";
+        //    df.DataVisible = e => (e as App).Providers.Count > 0;
+        //}
+        //{
+        //    var df = ListFields.AddListField("AppConsume", "Version");
+        //    df.DisplayName = "消费服务";
+        //    df.Url = "/Registry/AppConsume?appId={Id}";
+        //    df.DataVisible = e => (e as App).Consumers.Count > 0;
+        //}
         {
             var df = ListFields.AddListField("AppLog", "Version");
             df.DisplayName = "应用日志";

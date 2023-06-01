@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -110,18 +110,18 @@ namespace Stardust.Data
             return FindAll(_.ServiceId == serviceId);
         }
 
-    /// <summary>根据服务查找</summary>
-    /// <param name="serviceId">服务</param>
-    /// <returns>实体列表</returns>
-    public static IList<AppService> FindAllByServiceId(Int32 serviceId)
-    {
-        if (serviceId <= 0) return new List<AppService>();
+        /// <summary>根据服务查找</summary>
+        /// <param name="serviceId">服务</param>
+        /// <returns>实体列表</returns>
+        public static IList<AppService> FindAllByServiceId(Int32 serviceId)
+        {
+            if (serviceId <= 0) return new List<AppService>();
 
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ServiceId == serviceId);
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ServiceId == serviceId);
 
-        return FindAll(_.ServiceId == serviceId);
-    }
+            return FindAll(_.ServiceId == serviceId);
+        }
         #endregion
 
         #region 高级查询
@@ -132,12 +132,13 @@ namespace Stardust.Data
         /// <param name="key"></param>
         /// <param name="page"></param>
         /// <returns></returns>
-        public static IList<AppService> Search(Int32 appId, Int32 serviceId, Boolean? enable, String key, PageParameter page)
+        public static IList<AppService> Search(Int32 appId, Int32 serviceId, String client, Boolean? enable, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (appId >= 0) exp &= _.AppId == appId;
             if (serviceId > 0) exp &= _.ServiceId == serviceId;
+            if (!client.IsNullOrEmpty()) exp &= _.Client == client;
             if (enable != null) exp &= _.Enable == enable;
             if (!key.IsNullOrEmpty()) exp &= _.ServiceName.Contains(key) | _.Client.Contains(key) | _.Address.Contains(key) | _.Tag.Contains(key);
 

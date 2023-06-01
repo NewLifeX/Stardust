@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
-using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
@@ -14,12 +13,10 @@ public class AppCommandController : EntityController<AppCommand>
 {
     static AppCommandController()
     {
-        //{
-        //    var df = ListFields.GetField("TraceId") as ListField;
-        //    df.DisplayName = "跟踪";
-        //    df.Url = StarHelper.BuildUrl("{TraceId}");
-        //    df.DataVisible = e => e is AppCommand entity && !entity.TraceId.IsNullOrEmpty();
-        //}
+        {
+            var df = ListFields.GetField("Command") as ListField;
+            df.Url = "/Registry/AppCommand?appId={AppId}&command={Command}";
+        }
         ListFields.TraceUrl();
     }
 
