@@ -62,36 +62,33 @@ public class FrameworkManager
 
             nr.InstallNetOnLinux(ver, kind);
         }
-#if NET5_0_OR_GREATER
-        else if (OperatingSystem.IsWindows())
-        {
-            if (ver.StartsWithIgnoreCase("4.0"))
-            {
-                nr.InstallNet40();
-            }
-            else if (ver.StartsWithIgnoreCase("4.5"))
-            {
-                nr.InstallNet45();
-            }
-            else if (ver.StartsWithIgnoreCase("4."))
-            {
-                nr.InstallNet48();
-            }
-        }
-#else
         else if (ver.StartsWithIgnoreCase("4.0"))
         {
+#if NET5_0_OR_GREATER
+            if (OperatingSystem.IsWindows())
+                nr.InstallNet40();
+#else
             nr.InstallNet40();
+#endif
         }
         else if (ver.StartsWithIgnoreCase("4.5"))
         {
+#if NET5_0_OR_GREATER
+            if (OperatingSystem.IsWindows())
+                nr.InstallNet45();
+#else
             nr.InstallNet45();
+#endif
         }
         else if (ver.StartsWithIgnoreCase("4."))
         {
+#if NET5_0_OR_GREATER
+            if (OperatingSystem.IsWindows())
+                nr.InstallNet48();
+#else
             nr.InstallNet48();
-        }
 #endif
+        }
         else if (ver.StartsWithIgnoreCase("6."))
         {
             var kind = "";
