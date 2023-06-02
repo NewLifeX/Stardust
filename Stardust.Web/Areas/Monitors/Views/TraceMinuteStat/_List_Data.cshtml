@@ -47,9 +47,9 @@
     <tbody>
         @foreach (var entity in Model)
         {
-            var url1 = $"appDayStat?appId={entity.AppId}";
-            var url2 = $"traceData?appId={entity.AppId}&kind=minute&time={entity.StatTime:yyyy-MM-dd HH:mm:ss}&itemId={entity.ItemId}";
-            var url3 = $"?appId={entity.AppId}&itemId={entity.ItemId}";
+            var url1 = $"/Monitors/appDayStat?appId={entity.AppId}";
+            var url2 = $"/Monitors/traceData?appId={entity.AppId}&kind=minute&time={entity.StatTime:yyyy-MM-dd HH:mm:ss}&itemId={entity.ItemId}";
+            var url3 = $"/Monitors/traceMinuteStat?appId={entity.AppId}&itemId={entity.ItemId}";
             var url4 = url2 + "&minError=1";
             var bgcolor = "";
             if (entity.ErrorRate >= 0.01)
@@ -83,7 +83,7 @@
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>
                 <td class="text-right">@entity.MinCost.ToString("n0")</td>
-                <td><a href="TraceMinuteStat/Trace?id=@entity.ID" title="跨多系统查看调用链">追踪</a></td>
+                <td><a href="/Monitors/TraceMinuteStat/Trace?id=@entity.ID" title="跨多系统查看调用链">追踪</a></td>
                 <td class="text-center">@entity.CreateTime.ToFullString("")</td>
                 <td class="text-center">@entity.UpdateTime.ToFullString("")</td>
                 @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
