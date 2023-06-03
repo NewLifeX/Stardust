@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using NewLife;
 using NewLife.Data;
@@ -40,22 +40,15 @@ namespace Stardust.Data
 
             // 建议先调用基类方法，基类方法会做一些统一处理
             base.Valid(isNew);
+        }
 
-            // 在新插入数据或者修改了指定字段时进行修正
-            // 处理当前已登录用户信息，可以由UserModule过滤器代劳
-            /*var user = ManageProvider.User;
-            if (user != null)
-            {
-                if (isNew && !Dirtys[nameof(CreateUserID)]) CreateUserID = user.ID;
-                if (!Dirtys[nameof(UpdateUserID)]) UpdateUserID = user.ID;
-            }*/
-            //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
-            //if (!Dirtys[nameof(UpdateTime)]) UpdateTime = DateTime.Now;
-            //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
-            //if (!Dirtys[nameof(UpdateIP)]) UpdateIP = ManageProvider.UserHost;
+        protected override Service CreateInstance(Boolean forEdit = false)
+        {
+            // 默认单例
+            var entity = base.CreateInstance(forEdit);
+            if (forEdit) entity.Singleton = true;
 
-            // 检查唯一索引
-            // CheckExist(isNew, nameof(Name));
+            return entity;
         }
         #endregion
 
@@ -93,18 +86,18 @@ namespace Stardust.Data
             return Find(_.Name == name);
         }
 
-    /// <summary>根据项目查找</summary>
-    /// <param name="projectId">项目</param>
-    /// <returns>实体列表</returns>
-    public static IList<Service> FindAllByProjectId(Int32 projectId)
-    {
-        if (projectId <= 0) return new List<Service>();
+        /// <summary>根据项目查找</summary>
+        /// <param name="projectId">项目</param>
+        /// <returns>实体列表</returns>
+        public static IList<Service> FindAllByProjectId(Int32 projectId)
+        {
+            if (projectId <= 0) return new List<Service>();
 
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ProjectId == projectId);
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ProjectId == projectId);
 
-        return FindAll(_.ProjectId == projectId);
-    }
+            return FindAll(_.ProjectId == projectId);
+        }
         #endregion
 
         #region 高级查询

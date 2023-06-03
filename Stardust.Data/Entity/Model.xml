@@ -32,7 +32,7 @@
     <!--命名格式。Default/Upper/Lower/Underline-->
     <NameFormat>Default</NameFormat>
     <!--生成器版本-->
-    <Version>11.8.2023.0531</Version>
+    <Version>11.8.2023.0602</Version>
     <!--帮助文档-->
     <Document>https://newlifex.com/xcode/model</Document>
     <!--魔方区域显示名-->
@@ -194,9 +194,8 @@
       <Column Name="Address" DataType="String" Description="服务地址模版。固定的网关地址，或地址模版如http://{IP}:{Port}，默认不填写，自动识别地址" />
       <Column Name="HealthCheck" DataType="Boolean" Description="健康监测。定时检测服务是否可用" />
       <Column Name="HealthAddress" DataType="String" Description="监测地址。健康监测接口地址，相对地址或绝对地址" />
-      <Column Name="Providers" DataType="Int32" Description="提供者" />
-      <Column Name="Consumers" DataType="Int32" Description="消费者" />
-      <Column Name="Remark" DataType="String" Length="500" Description="内容" Category="扩展" />
+      <Column Name="Providers" DataType="Int32" Description="提供者。数量" />
+      <Column Name="Consumers" DataType="Int32" Description="消费者。数量" />
       <Column Name="CreateUser" DataType="String" Description="创建者" Category="扩展" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
@@ -205,6 +204,7 @@
       <Column Name="UpdateUserID" DataType="Int32" Description="更新者" Category="扩展" />
       <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
       <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+      <Column Name="Remark" DataType="String" Length="500" Description="内容" Category="扩展" />
     </Columns>
     <Indexes>
       <Index Columns="Name" Unique="True" />
@@ -214,17 +214,17 @@
   <Table Name="AppService" Description="应用服务。应用提供的服务">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="AppId" DataType="Int32" Description="应用" />
+      <Column Name="AppId" DataType="Int32" Description="应用。提供服务的应用程序" />
       <Column Name="ServiceId" DataType="Int32" Description="服务" />
       <Column Name="ServiceName" DataType="String" Description="服务名" />
-      <Column Name="Client" DataType="String" Description="客户端。IP加端口" />
+      <Column Name="Client" DataType="String" Description="客户端。由该应用实例提供服务，IP加端口" />
       <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
-      <Column Name="PingCount" DataType="Int32" Description="心跳" />
-      <Column Name="Version" DataType="String" Description="版本" />
-      <Column Name="Address" DataType="String" Length="500" Description="地址。本地局域网服务地址，如http://127.0.0.1:1234" />
-      <Column Name="OriginAddress" DataType="String" Length="500" Description="原始地址。客户端上报地址" />
-      <Column Name="Weight" DataType="Int32" Description="权重" />
+      <Column Name="PingCount" DataType="Int32" Description="心跳。应用程序定期向注册中心更新服务状态" />
+      <Column Name="Version" DataType="String" Description="版本。应用程序版本号" />
+      <Column Name="Address" DataType="String" Length="500" Description="地址。经地址模版处理后对外服务的地址，默认是本地局域网服务地址，如http://127.0.0.1:1234" />
+      <Column Name="OriginAddress" DataType="String" Length="500" Description="原始地址。客户端上报地址，需要经服务端处理后才能对外提供服务" />
+      <Column Name="Weight" DataType="Int32" Description="权重。多实例提供服务时，通过权重系数调节客户端调用各实例服务的比例" />
       <Column Name="Scope" DataType="String" Description="作用域。根据配置中心应用规则计算，禁止跨域访问服务" />
       <Column Name="Tag" DataType="String" Description="标签。带有指定特性，逗号分隔" />
       <Column Name="CheckTimes" DataType="Int32" Description="监测次数。健康监测次数" />
@@ -244,13 +244,13 @@
   <Table Name="AppConsume" Description="应用消费。应用消费的服务">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="AppId" DataType="Int32" Description="应用" />
+      <Column Name="AppId" DataType="Int32" Description="应用。提供服务的应用程序" />
       <Column Name="ServiceId" DataType="Int32" Description="服务" />
       <Column Name="ServiceName" DataType="String" Description="服务名" />
-      <Column Name="Client" DataType="String" Description="客户端。IP加进程" />
+      <Column Name="Client" DataType="String" Description="客户端。由该应用实例提供服务，IP加端口" />
       <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
-      <Column Name="PingCount" DataType="Int32" Description="心跳" />
+      <Column Name="PingCount" DataType="Int32" Description="心跳。应用程序定期向注册中心更新服务状态" />
       <Column Name="MinVersion" DataType="String" Description="最低版本。要求返回大于等于该版本的服务提供者" />
       <Column Name="Scope" DataType="String" Description="作用域。根据配置中心应用规则计算，禁止跨域访问服务" />
       <Column Name="Tag" DataType="String" Description="标签。带有指定特性，逗号分隔" />

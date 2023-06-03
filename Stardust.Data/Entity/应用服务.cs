@@ -33,11 +33,11 @@ public partial class AppService
     public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
     private Int32 _AppId;
-    /// <summary>应用</summary>
+    /// <summary>应用。提供服务的应用程序</summary>
     [DisplayName("应用")]
-    [Description("应用")]
+    [Description("应用。提供服务的应用程序")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("AppId", "应用", "")]
+    [BindColumn("AppId", "应用。提供服务的应用程序", "")]
     public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
     private Int32 _ServiceId;
@@ -57,11 +57,11 @@ public partial class AppService
     public String ServiceName { get => _ServiceName; set { if (OnPropertyChanging("ServiceName", value)) { _ServiceName = value; OnPropertyChanged("ServiceName"); } } }
 
     private String _Client;
-    /// <summary>客户端。IP加端口</summary>
+    /// <summary>客户端。由该应用实例提供服务，IP加端口</summary>
     [DisplayName("客户端")]
-    [Description("客户端。IP加端口")]
+    [Description("客户端。由该应用实例提供服务，IP加端口")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Client", "客户端。IP加端口", "")]
+    [BindColumn("Client", "客户端。由该应用实例提供服务，IP加端口", "")]
     public String Client { get => _Client; set { if (OnPropertyChanging("Client", value)) { _Client = value; OnPropertyChanged("Client"); } } }
 
     private Int32 _NodeId;
@@ -81,43 +81,43 @@ public partial class AppService
     public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
     private Int32 _PingCount;
-    /// <summary>心跳</summary>
+    /// <summary>心跳。应用程序定期向注册中心更新服务状态</summary>
     [DisplayName("心跳")]
-    [Description("心跳")]
+    [Description("心跳。应用程序定期向注册中心更新服务状态")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("PingCount", "心跳", "")]
+    [BindColumn("PingCount", "心跳。应用程序定期向注册中心更新服务状态", "")]
     public Int32 PingCount { get => _PingCount; set { if (OnPropertyChanging("PingCount", value)) { _PingCount = value; OnPropertyChanged("PingCount"); } } }
 
     private String _Version;
-    /// <summary>版本</summary>
+    /// <summary>版本。应用程序版本号</summary>
     [DisplayName("版本")]
-    [Description("版本")]
+    [Description("版本。应用程序版本号")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Version", "版本", "")]
+    [BindColumn("Version", "版本。应用程序版本号", "")]
     public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
     private String _Address;
-    /// <summary>地址。本地局域网服务地址，如http://127.0.0.1:1234</summary>
+    /// <summary>地址。经地址模版处理后对外服务的地址，默认是本地局域网服务地址，如http://127.0.0.1:1234</summary>
     [DisplayName("地址")]
-    [Description("地址。本地局域网服务地址，如http://127.0.0.1:1234")]
+    [Description("地址。经地址模版处理后对外服务的地址，默认是本地局域网服务地址，如http://127.0.0.1:1234")]
     [DataObjectField(false, false, true, 500)]
-    [BindColumn("Address", "地址。本地局域网服务地址，如http://127.0.0.1:1234", "")]
+    [BindColumn("Address", "地址。经地址模版处理后对外服务的地址，默认是本地局域网服务地址，如http://127.0.0.1:1234", "")]
     public String Address { get => _Address; set { if (OnPropertyChanging("Address", value)) { _Address = value; OnPropertyChanged("Address"); } } }
 
     private String _OriginAddress;
-    /// <summary>原始地址。客户端上报地址</summary>
+    /// <summary>原始地址。客户端上报地址，需要经服务端处理后才能对外提供服务</summary>
     [DisplayName("原始地址")]
-    [Description("原始地址。客户端上报地址")]
+    [Description("原始地址。客户端上报地址，需要经服务端处理后才能对外提供服务")]
     [DataObjectField(false, false, true, 500)]
-    [BindColumn("OriginAddress", "原始地址。客户端上报地址", "")]
+    [BindColumn("OriginAddress", "原始地址。客户端上报地址，需要经服务端处理后才能对外提供服务", "")]
     public String OriginAddress { get => _OriginAddress; set { if (OnPropertyChanging("OriginAddress", value)) { _OriginAddress = value; OnPropertyChanged("OriginAddress"); } } }
 
     private Int32 _Weight;
-    /// <summary>权重</summary>
+    /// <summary>权重。多实例提供服务时，通过权重系数调节客户端调用各实例服务的比例</summary>
     [DisplayName("权重")]
-    [Description("权重")]
+    [Description("权重。多实例提供服务时，通过权重系数调节客户端调用各实例服务的比例")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("Weight", "权重", "")]
+    [BindColumn("Weight", "权重。多实例提供服务时，通过权重系数调节客户端调用各实例服务的比例", "")]
     public Int32 Weight { get => _Weight; set { if (OnPropertyChanging("Weight", value)) { _Weight = value; OnPropertyChanged("Weight"); } } }
 
     private String _Scope;
@@ -268,7 +268,7 @@ public partial class AppService
         /// <summary>编号</summary>
         public static readonly Field Id = FindByName("Id");
 
-        /// <summary>应用</summary>
+        /// <summary>应用。提供服务的应用程序</summary>
         public static readonly Field AppId = FindByName("AppId");
 
         /// <summary>服务</summary>
@@ -277,7 +277,7 @@ public partial class AppService
         /// <summary>服务名</summary>
         public static readonly Field ServiceName = FindByName("ServiceName");
 
-        /// <summary>客户端。IP加端口</summary>
+        /// <summary>客户端。由该应用实例提供服务，IP加端口</summary>
         public static readonly Field Client = FindByName("Client");
 
         /// <summary>节点。节点服务器</summary>
@@ -286,19 +286,19 @@ public partial class AppService
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
 
-        /// <summary>心跳</summary>
+        /// <summary>心跳。应用程序定期向注册中心更新服务状态</summary>
         public static readonly Field PingCount = FindByName("PingCount");
 
-        /// <summary>版本</summary>
+        /// <summary>版本。应用程序版本号</summary>
         public static readonly Field Version = FindByName("Version");
 
-        /// <summary>地址。本地局域网服务地址，如http://127.0.0.1:1234</summary>
+        /// <summary>地址。经地址模版处理后对外服务的地址，默认是本地局域网服务地址，如http://127.0.0.1:1234</summary>
         public static readonly Field Address = FindByName("Address");
 
-        /// <summary>原始地址。客户端上报地址</summary>
+        /// <summary>原始地址。客户端上报地址，需要经服务端处理后才能对外提供服务</summary>
         public static readonly Field OriginAddress = FindByName("OriginAddress");
 
-        /// <summary>权重</summary>
+        /// <summary>权重。多实例提供服务时，通过权重系数调节客户端调用各实例服务的比例</summary>
         public static readonly Field Weight = FindByName("Weight");
 
         /// <summary>作用域。根据配置中心应用规则计算，禁止跨域访问服务</summary>
@@ -337,7 +337,7 @@ public partial class AppService
         /// <summary>编号</summary>
         public const String Id = "Id";
 
-        /// <summary>应用</summary>
+        /// <summary>应用。提供服务的应用程序</summary>
         public const String AppId = "AppId";
 
         /// <summary>服务</summary>
@@ -346,7 +346,7 @@ public partial class AppService
         /// <summary>服务名</summary>
         public const String ServiceName = "ServiceName";
 
-        /// <summary>客户端。IP加端口</summary>
+        /// <summary>客户端。由该应用实例提供服务，IP加端口</summary>
         public const String Client = "Client";
 
         /// <summary>节点。节点服务器</summary>
@@ -355,19 +355,19 @@ public partial class AppService
         /// <summary>启用</summary>
         public const String Enable = "Enable";
 
-        /// <summary>心跳</summary>
+        /// <summary>心跳。应用程序定期向注册中心更新服务状态</summary>
         public const String PingCount = "PingCount";
 
-        /// <summary>版本</summary>
+        /// <summary>版本。应用程序版本号</summary>
         public const String Version = "Version";
 
-        /// <summary>地址。本地局域网服务地址，如http://127.0.0.1:1234</summary>
+        /// <summary>地址。经地址模版处理后对外服务的地址，默认是本地局域网服务地址，如http://127.0.0.1:1234</summary>
         public const String Address = "Address";
 
-        /// <summary>原始地址。客户端上报地址</summary>
+        /// <summary>原始地址。客户端上报地址，需要经服务端处理后才能对外提供服务</summary>
         public const String OriginAddress = "OriginAddress";
 
-        /// <summary>权重</summary>
+        /// <summary>权重。多实例提供服务时，通过权重系数调节客户端调用各实例服务的比例</summary>
         public const String Weight = "Weight";
 
         /// <summary>作用域。根据配置中心应用规则计算，禁止跨域访问服务</summary>

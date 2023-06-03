@@ -113,7 +113,7 @@ public class RegistryService
         // 所有服务
         var services = AppService.FindAllByService(service.Id);
         var changed = false;
-        var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == clientId);
+        var svc = services.FirstOrDefault(e => e.AppId == app.Id && (e.Client == clientId || !localIp.IsNullOrEmpty() && e.Client.StartsWith($"{localIp}@")));
         if (svc == null)
         {
             svc = new AppService

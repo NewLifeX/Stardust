@@ -33,11 +33,11 @@ public partial class AppConsume
     public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
     private Int32 _AppId;
-    /// <summary>应用</summary>
+    /// <summary>应用。提供服务的应用程序</summary>
     [DisplayName("应用")]
-    [Description("应用")]
+    [Description("应用。提供服务的应用程序")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("AppId", "应用", "")]
+    [BindColumn("AppId", "应用。提供服务的应用程序", "")]
     public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
     private Int32 _ServiceId;
@@ -57,11 +57,11 @@ public partial class AppConsume
     public String ServiceName { get => _ServiceName; set { if (OnPropertyChanging("ServiceName", value)) { _ServiceName = value; OnPropertyChanged("ServiceName"); } } }
 
     private String _Client;
-    /// <summary>客户端。IP加进程</summary>
+    /// <summary>客户端。由该应用实例提供服务，IP加端口</summary>
     [DisplayName("客户端")]
-    [Description("客户端。IP加进程")]
+    [Description("客户端。由该应用实例提供服务，IP加端口")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Client", "客户端。IP加进程", "")]
+    [BindColumn("Client", "客户端。由该应用实例提供服务，IP加端口", "")]
     public String Client { get => _Client; set { if (OnPropertyChanging("Client", value)) { _Client = value; OnPropertyChanged("Client"); } } }
 
     private Int32 _NodeId;
@@ -81,11 +81,11 @@ public partial class AppConsume
     public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
     private Int32 _PingCount;
-    /// <summary>心跳</summary>
+    /// <summary>心跳。应用程序定期向注册中心更新服务状态</summary>
     [DisplayName("心跳")]
-    [Description("心跳")]
+    [Description("心跳。应用程序定期向注册中心更新服务状态")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("PingCount", "心跳", "")]
+    [BindColumn("PingCount", "心跳。应用程序定期向注册中心更新服务状态", "")]
     public Int32 PingCount { get => _PingCount; set { if (OnPropertyChanging("PingCount", value)) { _PingCount = value; OnPropertyChanged("PingCount"); } } }
 
     private String _MinVersion;
@@ -198,7 +198,7 @@ public partial class AppConsume
         /// <summary>编号</summary>
         public static readonly Field Id = FindByName("Id");
 
-        /// <summary>应用</summary>
+        /// <summary>应用。提供服务的应用程序</summary>
         public static readonly Field AppId = FindByName("AppId");
 
         /// <summary>服务</summary>
@@ -207,7 +207,7 @@ public partial class AppConsume
         /// <summary>服务名</summary>
         public static readonly Field ServiceName = FindByName("ServiceName");
 
-        /// <summary>客户端。IP加进程</summary>
+        /// <summary>客户端。由该应用实例提供服务，IP加端口</summary>
         public static readonly Field Client = FindByName("Client");
 
         /// <summary>节点。节点服务器</summary>
@@ -216,7 +216,7 @@ public partial class AppConsume
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
 
-        /// <summary>心跳</summary>
+        /// <summary>心跳。应用程序定期向注册中心更新服务状态</summary>
         public static readonly Field PingCount = FindByName("PingCount");
 
         /// <summary>最低版本。要求返回大于等于该版本的服务提供者</summary>
@@ -246,7 +246,7 @@ public partial class AppConsume
         /// <summary>编号</summary>
         public const String Id = "Id";
 
-        /// <summary>应用</summary>
+        /// <summary>应用。提供服务的应用程序</summary>
         public const String AppId = "AppId";
 
         /// <summary>服务</summary>
@@ -255,7 +255,7 @@ public partial class AppConsume
         /// <summary>服务名</summary>
         public const String ServiceName = "ServiceName";
 
-        /// <summary>客户端。IP加进程</summary>
+        /// <summary>客户端。由该应用实例提供服务，IP加端口</summary>
         public const String Client = "Client";
 
         /// <summary>节点。节点服务器</summary>
@@ -264,7 +264,7 @@ public partial class AppConsume
         /// <summary>启用</summary>
         public const String Enable = "Enable";
 
-        /// <summary>心跳</summary>
+        /// <summary>心跳。应用程序定期向注册中心更新服务状态</summary>
         public const String PingCount = "PingCount";
 
         /// <summary>最低版本。要求返回大于等于该版本的服务提供者</summary>

@@ -320,11 +320,12 @@ public class Upgrade
         var rs = await client.SendAsync(request);
         rs.EnsureSuccessStatusCode();
 
+        // 从Http响应头中获取文件名
         var file2 = rs.Content.Headers?.ContentDisposition?.FileName;
         if (!file2.IsNullOrEmpty()) fileName = Path.GetDirectoryName(fileName).CombinePath(file2);
         fileName.EnsureDirectory(true);
 
-        // 删除已存在文件，否则新文件比旧文件小时，写入的文件后面有用于数据
+        // 删除已存在文件，否则新文件比旧文件小时，写入的文件后面有冗余数据，导致解压缩失败
         if (File.Exists(fileName))
         {
             try

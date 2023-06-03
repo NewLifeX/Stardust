@@ -120,29 +120,20 @@ public partial class Service
     public String HealthAddress { get => _HealthAddress; set { if (OnPropertyChanging("HealthAddress", value)) { _HealthAddress = value; OnPropertyChanged("HealthAddress"); } } }
 
     private Int32 _Providers;
-    /// <summary>提供者</summary>
+    /// <summary>提供者。数量</summary>
     [DisplayName("提供者")]
-    [Description("提供者")]
+    [Description("提供者。数量")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("Providers", "提供者", "")]
+    [BindColumn("Providers", "提供者。数量", "")]
     public Int32 Providers { get => _Providers; set { if (OnPropertyChanging("Providers", value)) { _Providers = value; OnPropertyChanged("Providers"); } } }
 
     private Int32 _Consumers;
-    /// <summary>消费者</summary>
+    /// <summary>消费者。数量</summary>
     [DisplayName("消费者")]
-    [Description("消费者")]
+    [Description("消费者。数量")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("Consumers", "消费者", "")]
+    [BindColumn("Consumers", "消费者。数量", "")]
     public Int32 Consumers { get => _Consumers; set { if (OnPropertyChanging("Consumers", value)) { _Consumers = value; OnPropertyChanged("Consumers"); } } }
-
-    private String _Remark;
-    /// <summary>内容</summary>
-    [Category("扩展")]
-    [DisplayName("内容")]
-    [Description("内容")]
-    [DataObjectField(false, false, true, 500)]
-    [BindColumn("Remark", "内容", "")]
-    public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
 
     private String _CreateUser;
     /// <summary>创建者</summary>
@@ -215,6 +206,15 @@ public partial class Service
     [DataObjectField(false, false, true, 50)]
     [BindColumn("UpdateIP", "更新地址", "")]
     public String UpdateIP { get => _UpdateIP; set { if (OnPropertyChanging("UpdateIP", value)) { _UpdateIP = value; OnPropertyChanged("UpdateIP"); } } }
+
+    private String _Remark;
+    /// <summary>内容</summary>
+    [Category("扩展")]
+    [DisplayName("内容")]
+    [Description("内容")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("Remark", "内容", "")]
+    public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
     #endregion
 
     #region 获取/设置 字段值
@@ -239,7 +239,6 @@ public partial class Service
             "HealthAddress" => _HealthAddress,
             "Providers" => _Providers,
             "Consumers" => _Consumers,
-            "Remark" => _Remark,
             "CreateUser" => _CreateUser,
             "CreateUserID" => _CreateUserID,
             "CreateTime" => _CreateTime,
@@ -248,6 +247,7 @@ public partial class Service
             "UpdateUserID" => _UpdateUserID,
             "UpdateTime" => _UpdateTime,
             "UpdateIP" => _UpdateIP,
+            "Remark" => _Remark,
             _ => base[name]
         };
         set
@@ -268,7 +268,6 @@ public partial class Service
                 case "HealthAddress": _HealthAddress = Convert.ToString(value); break;
                 case "Providers": _Providers = value.ToInt(); break;
                 case "Consumers": _Consumers = value.ToInt(); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
                 case "CreateUser": _CreateUser = Convert.ToString(value); break;
                 case "CreateUserID": _CreateUserID = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -277,6 +276,7 @@ public partial class Service
                 case "UpdateUserID": _UpdateUserID = value.ToInt(); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
                 case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
+                case "Remark": _Remark = Convert.ToString(value); break;
                 default: base[name] = value; break;
             }
         }
@@ -334,14 +334,11 @@ public partial class Service
         /// <summary>监测地址。健康监测接口地址，相对地址或绝对地址</summary>
         public static readonly Field HealthAddress = FindByName("HealthAddress");
 
-        /// <summary>提供者</summary>
+        /// <summary>提供者。数量</summary>
         public static readonly Field Providers = FindByName("Providers");
 
-        /// <summary>消费者</summary>
+        /// <summary>消费者。数量</summary>
         public static readonly Field Consumers = FindByName("Consumers");
-
-        /// <summary>内容</summary>
-        public static readonly Field Remark = FindByName("Remark");
 
         /// <summary>创建者</summary>
         public static readonly Field CreateUser = FindByName("CreateUser");
@@ -366,6 +363,9 @@ public partial class Service
 
         /// <summary>更新地址</summary>
         public static readonly Field UpdateIP = FindByName("UpdateIP");
+
+        /// <summary>内容</summary>
+        public static readonly Field Remark = FindByName("Remark");
 
         static Field FindByName(String name) => Meta.Table.FindByName(name);
     }
@@ -409,14 +409,11 @@ public partial class Service
         /// <summary>监测地址。健康监测接口地址，相对地址或绝对地址</summary>
         public const String HealthAddress = "HealthAddress";
 
-        /// <summary>提供者</summary>
+        /// <summary>提供者。数量</summary>
         public const String Providers = "Providers";
 
-        /// <summary>消费者</summary>
+        /// <summary>消费者。数量</summary>
         public const String Consumers = "Consumers";
-
-        /// <summary>内容</summary>
-        public const String Remark = "Remark";
 
         /// <summary>创建者</summary>
         public const String CreateUser = "CreateUser";
@@ -441,6 +438,9 @@ public partial class Service
 
         /// <summary>更新地址</summary>
         public const String UpdateIP = "UpdateIP";
+
+        /// <summary>内容</summary>
+        public const String Remark = "Remark";
     }
     #endregion
 }
