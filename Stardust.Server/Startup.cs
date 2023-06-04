@@ -4,7 +4,7 @@ using System.Text.Unicode;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Caching;
-using NewLife.Configuration;
+using NewLife.Caching.Services;
 using NewLife.Log;
 using NewLife.Serialization;
 using Stardust.Data.Nodes;
@@ -39,12 +39,8 @@ public class Startup
         using var span = tracer?.NewSpan(nameof(ConfigureServices));
         if (tracer is StarTracer st) st.TrimSelf = false;
 
-        //// 配置
-        //var config = new JsonConfigProvider { FileName = "appsettings.json" };
-        //services.AddSingleton<IConfigProvider>(config);
-
-        var cache = Cache.Default;
-        services.AddSingleton(cache);
+        // 分布式服务，使用配置中心RedisCache配置
+        services.AddSingleton<ICacheProvider, RedisCacheProvider>();
 
         var set = StarServerSetting.Current;
         services.AddSingleton(set);
@@ -158,9 +154,7 @@ public class Startup
         {
             KeepAliveInterval = TimeSpan.FromSeconds(60),
         });
-        //app.UseMiddleware<NodeSocketMiddleware>();
 
-        //app.UseMiddleware<TracerMiddleware>();
         app.UseStardust();
 
         app.UseResponseCompression();
@@ -190,7 +184,7 @@ public class Startup
             set.Save();
         }
 #if !DEBUG
-        var set2 = XCode.Setting.Current;
+        var set2 = XCodeSetting.Current;
         if (set2.IsNew)
         {
             set2.ShowSQL = false;
@@ -198,7 +192,7 @@ public class Startup
             set2.Save();
         }
 #endif
-        var set3 = Stardust.Server.StarServerSetting.Current;
+        var set3 = StarServerSetting.Current;
         if (set3.IsNew)
         {
             set3.UploadPath = "../Uploads";

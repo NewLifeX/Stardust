@@ -3,6 +3,7 @@
 namespace Stardust.Services;
 
 /// <summary>分布式缓存架构服务。提供基础缓存及队列服务</summary>
+[Obsolete]
 public class CacheService
 {
     #region 属性

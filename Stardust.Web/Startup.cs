@@ -2,11 +2,12 @@
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.FileProviders;
 using NewLife;
+using NewLife.Caching.Services;
+using NewLife.Caching;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Log;
 using Stardust.Data.Configs;
-using Stardust.Extensions;
 using Stardust.Extensions.Caches;
 using Stardust.Server.Services;
 using Stardust.Web.Services;
@@ -32,6 +33,9 @@ public class Startup
         // 启用配置中心，务必在数据库操作和生成雪花Id之前
         //_ = star.Config;
         var config = star.GetConfig();
+
+        // 分布式服务，使用配置中心RedisCache配置
+        services.AddSingleton<ICacheProvider, RedisCacheProvider>();
 
         // 统计
         services.AddSingleton<IAppDayStatService, AppDayStatService>();
@@ -72,9 +76,6 @@ public class Startup
     {
         var tracer = app.ApplicationServices.GetRequiredService<ITracer>();
         using var span = tracer?.NewSpan(nameof(Configure));
-
-        //var config = app.ApplicationServices.GetService<IConfigProvider>();
-        //var svr = config["StarServer"];
 
         // 调整应用表名
         FixAppTableName();
@@ -143,7 +144,7 @@ public class Startup
             set.BackupPath = "../Backup";
             set.Save();
         }
-        var set2 = NewLife.Cube.Setting.Current;
+        var set2 = CubeSetting.Current;
         if (set2.IsNew || set2.UploadPath == "Uploads")
         {
             XTrace.WriteLine("修正上传目录");

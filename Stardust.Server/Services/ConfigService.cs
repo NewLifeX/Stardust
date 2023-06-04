@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using NewLife;
+using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Data;
@@ -11,11 +12,11 @@ namespace Stardust.Server.Services;
 public class ConfigService
 {
     private TimerX _timer;
-    private readonly CacheService _cacheService;
+    private readonly ICacheProvider _cacheService;
     private readonly ITracer _tracer;
     public String WorkerIdName { get; set; } = "NewLife.WorkerId";
 
-    public ConfigService(CacheService cacheService, ITracer tracer)
+    public ConfigService(ICacheProvider cacheService, ITracer tracer)
     {
         _cacheService = cacheService;
         _tracer = tracer;

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
 using NewLife;
+using NewLife.Caching;
 using NewLife.Common;
 using NewLife.Configuration;
 using NewLife.Http;
@@ -231,7 +232,9 @@ public class StarFactory : DisposeBase
         ioc.AddSingleton(p => Tracer);
         ioc.AddSingleton(p => Config);
         ioc.AddSingleton(p => Service);
-        ioc.AddSingleton<CacheService>();
+#if !NET40
+        ioc.TryAddSingleton(typeof(ICacheProvider), typeof(CacheProvider));
+#endif
     }
 
     private Boolean Valid()

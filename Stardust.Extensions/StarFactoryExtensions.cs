@@ -7,13 +7,12 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using NewLife;
+using NewLife.Caching;
 using NewLife.Configuration;
 using NewLife.Log;
 using NewLife.Reflection;
 using Stardust;
 using Stardust.Extensions;
-using Stardust.Extensions.Caches;
-using Stardust.Services;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -53,7 +52,8 @@ public static class StarFactoryExtensions
         services.Replace(new ServiceDescriptor(typeof(IConfigProvider), p => star.GetConfig(), ServiceLifetime.Singleton));
 
         // 分布式缓存
-        services.Replace(new ServiceDescriptor(typeof(CacheService), p => new RedisCacheService(p), ServiceLifetime.Singleton));
+        //services.Replace(new ServiceDescriptor(typeof(CacheService), p => new RedisCacheService(p), ServiceLifetime.Singleton));
+        services.TryAddSingleton<ICacheProvider, CacheProvider>();
 
         //services.AddHostedService<StarService>();
         services.TryAddSingleton(XTrace.Log);
