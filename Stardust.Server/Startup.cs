@@ -124,8 +124,12 @@ public class Startup
                 target = "MonitorLog";
             else if (conns.ContainsKey("NodeLog"))
                 target = "NodeLog";
-            else if (conns.ContainsKey("Stardust"))
+
+            // SQLite默认分为两个库
+            if (target.IsNullOrEmpty() && conns.ContainsKey("Stardust") && DAL.Create("Stardust").DbType != DatabaseType.SQLite)
+            {
                 target = "Stardust";
+            }
 
             if (!target.IsNullOrEmpty())
             {

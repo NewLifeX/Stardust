@@ -89,8 +89,8 @@ public class Startup
                 target = "MonitorLog";
             else if (conns.ContainsKey("NodeLog"))
                 target = "NodeLog";
-            else if (conns.ContainsKey("Stardust"))
-                target = "Stardust";
+            //else if (conns.ContainsKey("Stardust"))
+            //    target = "Stardust";
 
             if (!target.IsNullOrEmpty())
             {
