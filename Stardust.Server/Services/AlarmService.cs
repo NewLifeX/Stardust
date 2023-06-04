@@ -24,14 +24,14 @@ public class AlarmService : IHostedService
     public Int32 Period { get; set; } = 30;
 
     private TimerX _timer;
-    //private readonly ConcurrentBag<Int32> _bag = new();
-    private readonly ICache _cache = new MemoryCache();
+    private readonly ICache _cache;
     private readonly StarServerSetting _setting;
     private readonly ITracer _tracer;
 
-    public AlarmService(StarServerSetting setting, ITracer tracer)
+    public AlarmService(StarServerSetting setting, ICacheProvider cacheProvider, ITracer tracer)
     {
         _setting = setting;
+        _cache = cacheProvider.Cache;
         _tracer = tracer;
 
         Period = setting.AlarmPeriod;

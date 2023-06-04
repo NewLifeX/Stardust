@@ -26,7 +26,6 @@ public class TraceController : ControllerBase
     private readonly ITraceStatService _stat;
     private readonly IAppDayStatService _appStat;
     private readonly ITraceItemStatService _itemStat;
-    private static readonly ICache _cache = new MemoryCache();
 
     public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService, AppOnlineService appOnline, UplinkService uplink, StarServerSetting setting, ITracer tracer)
     {

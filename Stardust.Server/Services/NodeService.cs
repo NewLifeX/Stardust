@@ -8,22 +8,20 @@ using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data.Nodes;
 using Stardust.Models;
-using Stardust.Server.Models;
 using XCode;
 
 namespace Stardust.Server.Services;
 
 public class NodeService
 {
-    private static readonly ICache _cache = new MemoryCache();
     private readonly TokenService _tokenService;
-    private readonly ICache _queue;
+    private readonly ICacheProvider _cacheProvider;
     private readonly ITracer _tracer;
 
-    public NodeService(TokenService tokenService, ICache queue, ITracer tracer)
+    public NodeService(TokenService tokenService, ICacheProvider cacheProvider, ITracer tracer)
     {
         _tokenService = tokenService;
-        _queue = queue;
+        _cacheProvider = cacheProvider;
         _tracer = tracer;
     }
 
@@ -99,7 +97,7 @@ public class NodeService
 
         //var sid = $"{node.ID}@{ip}";
         var sid = node.Code;
-        _cache.Remove($"NodeOnline:{sid}");
+        _cacheProvider.InnerCache.Remove($"NodeOnline:{sid}");
 
         // 计算在线时长
         if (online.CreateTime.Year > 2000)
@@ -407,24 +405,6 @@ public class NodeService
         return rs.ToArray();
     }
 
-    //private ServiceInfo[] GetServices(Int32 nodeId)
-    //{
-    //    var list = AppDeployNode.FindAllByNodeId(nodeId);
-    //    list = list.Where(e => e.Enable).ToList();
-    //    if (list.Count == 0) return null;
-
-    //    var svcs = new List<ServiceInfo>();
-    //    foreach (var item in list)
-    //    {
-    //        var deploy = item.App;
-    //        if (deploy == null || !deploy.Enable) continue;
-
-    //        svcs.Add(item.ToService());
-    //    }
-
-    //    return svcs.ToArray();
-    //}
-
     public PingResponse Ping()
     {
         return new PingResponse
@@ -449,10 +429,10 @@ public class NodeService
     {
         //var sid = $"{node.ID}@{ip}";
         var sid = node.Code;
-        var olt = _cache.Get<NodeOnline>($"NodeOnline:{sid}");
+        var olt = _cacheProvider.InnerCache.Get<NodeOnline>($"NodeOnline:{sid}");
         if (olt != null)
         {
-            _cache.SetExpire($"NodeOnline:{sid}", TimeSpan.FromSeconds(120));
+            _cacheProvider.InnerCache.SetExpire($"NodeOnline:{sid}", TimeSpan.FromSeconds(120));
             return olt;
         }
 
@@ -484,7 +464,7 @@ public class NodeService
 
         olt.Creator = Environment.MachineName;
 
-        _cache.Set($"NodeOnline:{sid}", olt, 120);
+        _cacheProvider.InnerCache.Set($"NodeOnline:{sid}", olt, 120);
 
         return olt;
     }
@@ -505,10 +485,10 @@ public class NodeService
 
         // 通知命令发布者，指令已完成
         var topic = $"nodereply:{cmd.Id}";
-        var q = _queue.GetQueue<CommandReplyModel>(topic);
+        var q = _cacheProvider.GetQueue<CommandReplyModel>(topic);
         q.Add(model);
 
-        _queue.SetExpire(topic, TimeSpan.FromSeconds(60));
+        _cacheProvider.Cache.SetExpire(topic, TimeSpan.FromSeconds(60));
 
         return 1;
     }
@@ -580,13 +560,13 @@ public class NodeService
         var commandModel = cmd.ToModel();
         commandModel.TraceId = DefaultSpan.Current + "";
 
-        var queue = _queue.GetQueue<String>($"nodecmd:{node.Code}");
+        var queue = _cacheProvider.GetQueue<String>($"nodecmd:{node.Code}");
         queue.Add(commandModel.ToJson());
 
         // 挂起等待。借助redis队列，等待响应
         if (model.Timeout > 0)
         {
-            var q = _queue.GetQueue<CommandReplyModel>($"nodereply:{cmd.Id}");
+            var q = _cacheProvider.GetQueue<CommandReplyModel>($"nodereply:{cmd.Id}");
             var reply = await q.TakeOneAsync(model.Timeout);
             if (reply != null)
             {

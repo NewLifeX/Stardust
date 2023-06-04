@@ -3,16 +3,17 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Caching;
+using NewLife.Http;
 using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Web;
-using Stardust.Data;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Common;
-using Stardust.Server.Models;
 using Stardust.Server.Services;
+using WebSocket = System.Net.WebSockets.WebSocket;
+using WebSocketMessageType = System.Net.WebSockets.WebSocketMessageType;
 
 namespace Stardust.Server.Controllers;
 
@@ -21,7 +22,7 @@ namespace Stardust.Server.Controllers;
 public class NodeController : BaseController
 {
     private Node _node;
-    private readonly ICache _queue;
+    private readonly ICacheProvider _cacheProvider;
     private readonly IHostApplicationLifetime _lifetime;
     private readonly ITracer _tracer;
     private readonly NodeService _nodeService;
@@ -29,9 +30,9 @@ public class NodeController : BaseController
     private readonly DeployService _deployService;
     private readonly StarServerSetting _setting;
 
-    public NodeController(NodeService nodeService, TokenService tokenService, DeployService deployService, StarServerSetting setting, ICache queue, IHostApplicationLifetime lifetime, ITracer tracer)
+    public NodeController(NodeService nodeService, TokenService tokenService, DeployService deployService, StarServerSetting setting, ICacheProvider cacheProvider, IHostApplicationLifetime lifetime, ITracer tracer)
     {
-        _queue = queue;
+        _cacheProvider = cacheProvider;
         _lifetime = lifetime;
         _tracer = tracer;
         _nodeService = nodeService;
@@ -273,46 +274,16 @@ public class NodeController : BaseController
             olt.SaveAsync();
         }
 
-        //var source = new CancellationTokenSource();
         var source = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.ApplicationStopping);
         _ = Task.Run(() => ConsumeMessage(socket, node, ip, source));
-        try
-        {
-            var buf = new Byte[4 * 1024];
-            while (socket.State == WebSocketState.Open)
-            {
-                var data = await socket.ReceiveAsync(new ArraySegment<Byte>(buf), source.Token);
-                if (data.MessageType == WebSocketMessageType.Close) break;
-                if (data.MessageType == WebSocketMessageType.Text)
-                {
-                    var str = buf.ToStr(null, 0, data.Count);
-                    XTrace.WriteLine("WebSocket接收 {0} {1}", node, str);
-                    WriteHistory(node, "WebSocket接收", true, str);
-                }
-            }
 
-            source.Cancel();
-            //XTrace.WriteLine("WebSocket断开 {0}", node);
-            WriteHistory(node, "WebSocket断开", true, socket.State + "");
+        await socket.WaitForClose(null, source);
 
-            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", source.Token);
-        }
-        catch (TaskCanceledException) { }
-        catch (OperationCanceledException) { }
-        catch (WebSocketException ex)
+        WriteHistory(node, "WebSocket断开", true, socket.State + "");
+        if (olt != null)
         {
-            XTrace.WriteLine("WebSocket异常 node={0} ip={1}", node, ip);
-            XTrace.WriteLine(ex.Message);
-        }
-        finally
-        {
-            source.Cancel();
-
-            if (olt != null)
-            {
-                olt.WebSocket = false;
-                olt.SaveAsync();
-            }
+            olt.WebSocket = false;
+            olt.Update();
         }
     }
 
@@ -320,7 +291,7 @@ public class NodeController : BaseController
     {
         DefaultSpan.Current = null;
         var cancellationToken = source.Token;
-        var queue = _queue.GetQueue<String>($"nodecmd:{node.Code}");
+        var queue = _cacheProvider.GetQueue<String>($"nodecmd:{node.Code}");
         try
         {
             while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
@@ -358,6 +329,8 @@ public class NodeController : BaseController
 
                         await socket.SendAsync(mqMsg.GetBytes(), WebSocketMessageType.Text, true, cancellationToken);
                     }
+
+                    span?.Dispose();
                 }
                 else
                 {

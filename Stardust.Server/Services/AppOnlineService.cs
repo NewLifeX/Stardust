@@ -12,9 +12,13 @@ namespace Stardust.Server.Services;
 public class AppOnlineService
 {
     private readonly ITracer _tracer;
-    ICache _cache = new MemoryCache();
+    private readonly ICache _cache;
 
-    public AppOnlineService(ITracer tracer) => _tracer = tracer;
+    public AppOnlineService(ICacheProvider cacheProvider, ITracer tracer)
+    {
+        _cache = cacheProvider.InnerCache;
+        _tracer = tracer;
+    }
 
     public (AppOnline, Boolean isNew) GetOnline(App app, String clientId, String token, String localIp, String ip)
     {

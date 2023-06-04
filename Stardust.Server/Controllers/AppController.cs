@@ -3,14 +3,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Data;
+using NewLife.Http;
 using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
 using Stardust.Models;
-using Stardust.Server.Models;
 using Stardust.Server.Services;
+using WebSocket = System.Net.WebSockets.WebSocket;
+using WebSocketMessageType = System.Net.WebSockets.WebSocketMessageType;
 
 namespace Stardust.Server.Controllers;
 
@@ -138,43 +140,14 @@ public class AppController : BaseController
         //var source = new CancellationTokenSource();
         var source = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.ApplicationStopping);
         _ = Task.Run(() => ConsumeMessage(socket, app, clientId, ip, source));
-        try
-        {
-            var buf = new Byte[4 * 1024];
-            while (socket.State == WebSocketState.Open)
-            {
-                var data = await socket.ReceiveAsync(new ArraySegment<Byte>(buf), source.Token);
-                if (data.MessageType == WebSocketMessageType.Close) break;
-                if (data.MessageType == WebSocketMessageType.Text)
-                {
-                    var str = buf.ToStr(null, 0, data.Count);
-                    XTrace.WriteLine("WebSocket接收 {0} {1}", app, str);
-                    WriteHistory("WebSocket接收", true, str, clientId);
-                }
-            }
 
-            source.Cancel();
-            XTrace.WriteLine("WebSocket断开 {0}", app);
-            WriteHistory("WebSocket断开", true, socket.State + "", clientId);
+        await socket.WaitForClose(null, source);
 
-            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", source.Token);
-        }
-        catch (TaskCanceledException) { }
-        catch (OperationCanceledException) { }
-        catch (WebSocketException ex)
+        WriteHistory("WebSocket断开", true, socket.State + "", clientId);
+        if (olt != null)
         {
-            XTrace.WriteLine("WebSocket异常 app={0} ip={1}", app, ip);
-            XTrace.WriteLine(ex.Message);
-        }
-        finally
-        {
-            source.Cancel();
-
-            if (olt != null)
-            {
-                olt.WebSocket = false;
-                olt.SaveAsync();
-            }
+            olt.WebSocket = false;
+            olt.SaveAsync();
         }
     }
 
@@ -220,6 +193,8 @@ public class AppController : BaseController
 
                         await socket.SendAsync(mqMsg.GetBytes(), WebSocketMessageType.Text, true, cancellationToken);
                     }
+
+                    span?.Dispose();
                 }
                 else
                 {
