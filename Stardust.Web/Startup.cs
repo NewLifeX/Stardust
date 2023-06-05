@@ -119,6 +119,10 @@ public class Startup
         app.UseResponseCompression();
         app.UseCube(env);
 
+        // 注册退出事件
+        if (app is IHost host)
+            NewLife.Model.Host.RegisterExit(() => host.StopAsync().Wait());
+
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllerRoute(
