@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Diagnostics;
 using System.Reflection;
-using System.Threading;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Common;
@@ -64,7 +63,6 @@ public class StarFactory : DisposeBase
 
     private AppClient _client;
     private TokenHttpFilter _tokenFilter;
-    //private AppClient _appClient;
     #endregion
 
     #region 构造
@@ -95,7 +93,6 @@ public class StarFactory : DisposeBase
 
         _tracer.TryDispose();
         _config.TryDispose();
-        //_appClient.TryDispose();
     }
 
     private void Init()
