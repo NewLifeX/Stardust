@@ -29,6 +29,8 @@ public class RobotHelper
     /// <param name="message">告警消息</param>
     public static AlarmHistory SendAlarm(String groupName, String webhook, String title, String message)
     {
+        using var span = DefaultTracer.Instance?.NewSpan("alarm:SendAlarm", new { groupName, webhook, title });
+
         XTrace.WriteLine(message);
 
         var group = AlarmGroup.FindByName(groupName);
@@ -55,7 +57,7 @@ public class RobotHelper
 
                 var weixin = new WeiXinClient { Url = webhook };
 
-                using var span = DefaultTracer.Instance?.NewSpan("SendWeixin", message);
+                using var span2 = DefaultTracer.Instance?.NewSpan("SendWeixin", message);
                 weixin.SendMarkDown(message);
             }
             else if (webhook.Contains("dingtalk"))
@@ -66,12 +68,14 @@ public class RobotHelper
                 message = dingTalk.FormatMarkdown(message);
                 hi.Content = message;
 
-                using var span = DefaultTracer.Instance?.NewSpan("SendDingTalk", message);
+                using var span2 = DefaultTracer.Instance?.NewSpan("SendDingTalk", message);
                 dingTalk.SendMarkDown(title, message, null);
             }
         }
         catch (Exception ex)
         {
+            span?.SetError(ex, null);
+
             hi.Success = false;
             hi.Error = ex.ToString();
         }

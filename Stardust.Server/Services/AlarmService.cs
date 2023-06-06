@@ -106,11 +106,12 @@ public class AlarmService : IHostedService
         var appId = app.ID;
         if (!RobotHelper.CanAlarm(app.Category, app.AlarmRobot)) return;
 
-        using var span = _tracer?.NewSpan($"Alarm:{nameof(AppTracer)}");
+        using var span = _tracer?.NewSpan($"alarm:{nameof(AppTracer)}");
 
         // 最近一段时间的5分钟级数据
         var time = DateTime.Now;
         var minute = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
+        span?.AppendTag(new { time, minute });
 
         var st = AppMinuteStat.FindByAppIdAndTime(appId, minute);
         if (st != null)
@@ -119,6 +120,8 @@ public class AlarmService : IHostedService
             if (app.AlarmThreshold > 0 && st.Errors >= app.AlarmThreshold ||
                 app.AlarmErrorRate > 0 && st.ErrorRate >= app.AlarmErrorRate)
             {
+                span?.AppendTag(new { st.Errors, st.ErrorRate });
+
                 // 一定时间内不要重复报错，除非错误翻倍
                 var error2 = _cache.Get<Int32>("alarm:AppTracer:" + appId);
                 if (error2 == 0 || st.Errors > error2 * 2)
@@ -224,6 +227,8 @@ public class AlarmService : IHostedService
             var time = DateTime.Now;
             var minute = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
 
+            using var span = _tracer?.NewSpan($"alarm:{nameof(TraceItem)}", new { appId = app.ID, time, minute });
+
             var list = TraceMinuteStat.Search(app.ID, minute, tis.Select(e => e.Id).ToArray());
             foreach (var st in list)
             {
@@ -242,6 +247,8 @@ public class AlarmService : IHostedService
                     if (max >= 0 && st.Errors >= max &&
                         rate >= 0 && st.ErrorRate >= rate)
                     {
+                        span?.AppendTag(new { st.Errors, st.ErrorRate, rate });
+
                         // 一定时间内不要重复报错，除非错误翻倍
                         var error2 = _cache.Get<Int32>("alarm:TraceMinuteStat:" + ti.Id);
                         if (error2 == 0 || st.Errors > error2 * 2)
@@ -341,6 +348,8 @@ public class AlarmService : IHostedService
         var time = DateTime.Now;
         var hour = time.Date.AddHours(time.Hour);
 
+        using var span = _tracer?.NewSpan($"alarm:RingRate", new { time, hour });
+
         var list = TraceHourStat.Search(app.ID, -1, null, hour, hour.AddHours(1), null, null);
         foreach (var st in list)
         {
@@ -360,7 +369,7 @@ public class AlarmService : IHostedService
                 if (max >= 0 && rate >= max ||
                     min >= 0 && rate <= min)
                 {
-                    DefaultSpan.Current?.AppendTag($"seconds={seconds} yesterday={yesterday:n0} rate={rate}");
+                    span?.AppendTag(new { seconds, yesterday, rate });
 
                     // 一定时间内不要重复报错，除非错误翻倍
                     var error2 = _cache.Get<Int32>("alarm:TraceHourStat:" + ti.Id);
@@ -386,8 +395,8 @@ public class AlarmService : IHostedService
     private String GetMarkdown(AppTracer app, TraceHourStat st, Int32 yesterday, Double rate, Boolean includeTitle)
     {
         var sb = new StringBuilder();
-        if (includeTitle) sb.AppendLine($"### [{app}]埋点{(st.RingRate > 1 ? "高调用" : "调用量下滑")}告警");
-        sb.AppendLine($">**埋点：**<font color=\"red\">{st.Name}</font>");
+        if (includeTitle) sb.AppendLine($"### [{app}]埋点{(st.RingRate >= 1 ? "高调用" : "调用量下滑")}告警");
+        sb.AppendLine($">**埋点：**<font color=\"blue\">{st.Name}</font>");
         sb.AppendLine($">**今日：**<font color=\"red\">{st.Total}</font>");
         sb.AppendLine($">**昨日：**<font color=\"red\">{yesterday}</font>");
         sb.AppendLine($">**环比：**<font color=\"red\">{rate:p2}</font>");
@@ -419,7 +428,7 @@ public class AlarmService : IHostedService
 
         if (node.AlarmCpuRate <= 0 && node.AlarmMemoryRate <= 0 && node.AlarmDiskRate <= 0 && node.AlarmProcesses.IsNullOrEmpty()) return;
 
-        using var span = _tracer?.NewSpan($"Alarm:{nameof(Node)}");
+        using var span = _tracer?.NewSpan($"alarm:{nameof(Node)}");
 
         // 最新数据
         var data = NodeData.FindLast(node.ID);
@@ -599,7 +608,7 @@ public class AlarmService : IHostedService
         var data = RedisData.FindLast(node.Id);
         if (data == null) return;
 
-        using var span = _tracer?.NewSpan($"Alarm:{nameof(RedisNode)}");
+        using var span = _tracer?.NewSpan($"alarm:{nameof(RedisNode)}");
 
         var actions = new List<Action<StringBuilder>>();
 
@@ -724,7 +733,7 @@ public class AlarmService : IHostedService
     #region Redis队列告警
     private void ProcessRedisQueue(RedisNode node)
     {
-        using var span = _tracer?.NewSpan($"Alarm:{nameof(RedisMessageQueue)}");
+        using var span = _tracer?.NewSpan($"alarm:{nameof(RedisMessageQueue)}");
 
         // 所有队列
         var list = RedisMessageQueue.FindAllByRedisId(node.Id);
