@@ -100,6 +100,8 @@
       <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数，单位毫秒" />
       <Column Name="AlarmThreshold" DataType="Int32" Description="告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值必须同时满足" Category="告警" />
       <Column Name="AlarmErrorRate" DataType="Double" Description="告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足" Category="告警" />
+      <Column Name="MaxRingRate" DataType="Double" Description="最大环比。环比昨日超过该率时触发告警，一般大于1，如1.2表示超20%，0表示不启用" Category="告警" />
+      <Column Name="MinRingRate" DataType="Double" Description="最小环比。环比昨日小于该率时触发告警，一般小于1，如0.7表示低30%，0表示不启用" Category="告警" />
       <Column Name="AlarmGroup" DataType="String" Description="告警组。使用告警组中指定的机器人" Category="告警" />
       <Column Name="AlarmRobot" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" Category="告警" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />

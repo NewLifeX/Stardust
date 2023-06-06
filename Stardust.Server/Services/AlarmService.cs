@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Text;
+﻿using System.Text;
 using System.Web;
 using NewLife;
 using NewLife.Caching;
@@ -72,6 +71,7 @@ public class AlarmService : IHostedService
         {
             ProcessAppTracer(item);
             ProcessTraceItem(item);
+            ProcessRingRate(item);
         }
 
         // 节点告警
@@ -315,6 +315,88 @@ public class AlarmService : IHostedService
                     sb.AppendLine($">内容：{msg}");
                 }
             }
+        }
+
+        var str = sb.ToString();
+        if (str.Length > 1600) str = str[..1600];
+
+        // 构造网址
+        if (!traceUrl.IsNullOrEmpty())
+        {
+            str += Environment.NewLine + $"[更多信息]({traceUrl})";
+        }
+
+        return str;
+    }
+
+    private void ProcessRingRate(AppTracer app)
+    {
+        if (app == null || !app.Enable) return;
+
+        // 监控项单独告警
+        var tis = app.TraceItems.Where(e => e.MaxRingRate > 0 || e.MinRingRate > 0).ToList();
+        if (tis.Count <= 0) return;
+
+        // 最近一段时间的小时级数据
+        var time = DateTime.Now;
+        var hour = time.Date.AddHours(time.Hour);
+
+        var list = TraceHourStat.Search(app.ID, -1, null, hour, hour.AddHours(1), null, null);
+        foreach (var st in list)
+        {
+            var ti = tis.FirstOrDefault(e => e.Id == st.ItemId);
+            if (ti != null && st.RingRate > 0 && time.Minute < 2)
+            {
+                var max = ti.MaxRingRate;
+                var min = ti.MinRingRate;
+
+                // 根据当前小时已过去时间，折算得到新的环比率
+                var seconds = time.Minute * 60 + time.Second;
+                // 昨日等比例
+                var yesterday = st.Total / st.RingRate;
+                var rate = st.Total / (yesterday * seconds / 3600);
+
+                // 满足任意一个条件，都要告警
+                if (max >= 0 && rate >= max ||
+                    min >= 0 && rate <= min)
+                {
+                    DefaultSpan.Current?.AppendTag($"seconds={seconds} yesterday={yesterday:n0} rate={rate}");
+
+                    // 一定时间内不要重复报错，除非错误翻倍
+                    var error2 = _cache.Get<Int32>("alarm:TraceHourStat:" + ti.Id);
+                    if (error2 == 0 || st.Errors > error2 * 2)
+                    {
+                        _cache.Set("alarm:TraceHourStat:" + ti.Id, st.Errors, 5 * 60);
+
+                        // 优先本地跟踪项，其次应用，最后是告警分组
+                        var webhook = ti.AlarmRobot;
+                        if (webhook.IsNullOrEmpty()) webhook = app.AlarmRobot;
+
+                        var group = ti.AlarmGroup;
+                        if (group.IsNullOrEmpty()) group = app.Category;
+
+                        var msg = GetMarkdown(app, st, (Int32)yesterday, rate, true);
+                        RobotHelper.SendAlarm(group, webhook, "埋点告警", msg);
+                    }
+                }
+            }
+        }
+    }
+
+    private String GetMarkdown(AppTracer app, TraceHourStat st, Int32 yesterday, Double rate, Boolean includeTitle)
+    {
+        var sb = new StringBuilder();
+        if (includeTitle) sb.AppendLine($"### [{app}]埋点{(st.RingRate > 1 ? "高调用" : "调用量下滑")}告警");
+        sb.AppendLine($">**埋点：**<font color=\"red\">{st.Name}</font>");
+        sb.AppendLine($">**今日：**<font color=\"red\">{st.Total}</font>");
+        sb.AppendLine($">**昨日：**<font color=\"red\">{yesterday}</font>");
+        sb.AppendLine($">**环比：**<font color=\"red\">{rate:p2}</font>");
+
+        var url = _setting.WebUrl;
+        var traceUrl = "";
+        if (!url.IsNullOrEmpty())
+        {
+            traceUrl = url.EnsureEnd("/") + $"Monitors/traceHourStat?appId={st.AppId}&itemId={st.ItemId}";
         }
 
         var str = sb.ToString();

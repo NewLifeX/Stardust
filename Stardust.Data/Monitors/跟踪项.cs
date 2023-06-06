@@ -144,6 +144,24 @@ public partial class TraceItem
     [BindColumn("AlarmErrorRate", "告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足", "")]
     public Double AlarmErrorRate { get => _AlarmErrorRate; set { if (OnPropertyChanging("AlarmErrorRate", value)) { _AlarmErrorRate = value; OnPropertyChanged("AlarmErrorRate"); } } }
 
+    private Double _MaxRingRate;
+    /// <summary>最大环比。环比昨日超过该率时触发告警，一般大于1，如1.2表示超20%，0表示不启用</summary>
+    [Category("告警")]
+    [DisplayName("最大环比")]
+    [Description("最大环比。环比昨日超过该率时触发告警，一般大于1，如1.2表示超20%，0表示不启用")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("MaxRingRate", "最大环比。环比昨日超过该率时触发告警，一般大于1，如1.2表示超20%，0表示不启用", "")]
+    public Double MaxRingRate { get => _MaxRingRate; set { if (OnPropertyChanging("MaxRingRate", value)) { _MaxRingRate = value; OnPropertyChanged("MaxRingRate"); } } }
+
+    private Double _MinRingRate;
+    /// <summary>最小环比。环比昨日小于该率时触发告警，一般小于1，如0.7表示低30%，0表示不启用</summary>
+    [Category("告警")]
+    [DisplayName("最小环比")]
+    [Description("最小环比。环比昨日小于该率时触发告警，一般小于1，如0.7表示低30%，0表示不启用")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("MinRingRate", "最小环比。环比昨日小于该率时触发告警，一般小于1，如0.7表示低30%，0表示不启用", "")]
+    public Double MinRingRate { get => _MinRingRate; set { if (OnPropertyChanging("MinRingRate", value)) { _MinRingRate = value; OnPropertyChanged("MinRingRate"); } } }
+
     private String _AlarmGroup;
     /// <summary>告警组。使用告警组中指定的机器人</summary>
     [Category("告警")]
@@ -249,6 +267,8 @@ public partial class TraceItem
             "Cost" => _Cost,
             "AlarmThreshold" => _AlarmThreshold,
             "AlarmErrorRate" => _AlarmErrorRate,
+            "MaxRingRate" => _MaxRingRate,
+            "MinRingRate" => _MinRingRate,
             "AlarmGroup" => _AlarmGroup,
             "AlarmRobot" => _AlarmRobot,
             "CreateIP" => _CreateIP,
@@ -279,6 +299,8 @@ public partial class TraceItem
                 case "Cost": _Cost = value.ToInt(); break;
                 case "AlarmThreshold": _AlarmThreshold = value.ToInt(); break;
                 case "AlarmErrorRate": _AlarmErrorRate = value.ToDouble(); break;
+                case "MaxRingRate": _MaxRingRate = value.ToDouble(); break;
+                case "MinRingRate": _MinRingRate = value.ToDouble(); break;
                 case "AlarmGroup": _AlarmGroup = Convert.ToString(value); break;
                 case "AlarmRobot": _AlarmRobot = Convert.ToString(value); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -345,6 +367,12 @@ public partial class TraceItem
 
         /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足</summary>
         public static readonly Field AlarmErrorRate = FindByName("AlarmErrorRate");
+
+        /// <summary>最大环比。环比昨日超过该率时触发告警，一般大于1，如1.2表示超20%，0表示不启用</summary>
+        public static readonly Field MaxRingRate = FindByName("MaxRingRate");
+
+        /// <summary>最小环比。环比昨日小于该率时触发告警，一般小于1，如0.7表示低30%，0表示不启用</summary>
+        public static readonly Field MinRingRate = FindByName("MinRingRate");
 
         /// <summary>告警组。使用告警组中指定的机器人</summary>
         public static readonly Field AlarmGroup = FindByName("AlarmGroup");
@@ -423,6 +451,12 @@ public partial class TraceItem
 
         /// <summary>告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足</summary>
         public const String AlarmErrorRate = "AlarmErrorRate";
+
+        /// <summary>最大环比。环比昨日超过该率时触发告警，一般大于1，如1.2表示超20%，0表示不启用</summary>
+        public const String MaxRingRate = "MaxRingRate";
+
+        /// <summary>最小环比。环比昨日小于该率时触发告警，一般小于1，如0.7表示低30%，0表示不启用</summary>
+        public const String MinRingRate = "MinRingRate";
 
         /// <summary>告警组。使用告警组中指定的机器人</summary>
         public const String AlarmGroup = "AlarmGroup";
