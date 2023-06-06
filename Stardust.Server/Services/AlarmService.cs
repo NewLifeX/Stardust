@@ -354,7 +354,7 @@ public class AlarmService : IHostedService
         foreach (var st in list)
         {
             var ti = tis.FirstOrDefault(e => e.Id == st.ItemId);
-            if (ti != null && st.RingRate > 0 && time.Minute < 2)
+            if (ti != null && st.RingRate > 0 && time.Minute < 6)
             {
                 var max = ti.MaxRingRate;
                 var min = ti.MinRingRate;
