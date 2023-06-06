@@ -32,7 +32,7 @@
     <!--命名格式。Default/Upper/Lower/Underline-->
     <NameFormat>Default</NameFormat>
     <!--生成器版本-->
-    <Version>11.8.2023.0602</Version>
+    <Version>11.8.2023.0607</Version>
     <!--帮助文档-->
     <Document>https://newlifex.com/xcode/model</Document>
     <!--魔方区域显示名-->
