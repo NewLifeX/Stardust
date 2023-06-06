@@ -71,6 +71,14 @@ public partial class TraceHourStat
     [BindColumn("Total", "总次数", "")]
     public Int64 Total { get => _Total; set { if (OnPropertyChanging("Total", value)) { _Total = value; OnPropertyChanged("Total"); } } }
 
+    private Double _RingRate;
+    /// <summary>环比。今天与昨天同期相比</summary>
+    [DisplayName("环比")]
+    [Description("环比。今天与昨天同期相比")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("RingRate", "环比。今天与昨天同期相比", "")]
+    public Double RingRate { get => _RingRate; set { if (OnPropertyChanging("RingRate", value)) { _RingRate = value; OnPropertyChanged("RingRate"); } } }
+
     private Int64 _Errors;
     /// <summary>错误数</summary>
     [DisplayName("错误数")]
@@ -161,6 +169,7 @@ public partial class TraceHourStat
             "ItemId" => _ItemId,
             "Name" => _Name,
             "Total" => _Total,
+            "RingRate" => _RingRate,
             "Errors" => _Errors,
             "ErrorRate" => _ErrorRate,
             "TotalCost" => _TotalCost,
@@ -182,6 +191,7 @@ public partial class TraceHourStat
                 case "ItemId": _ItemId = value.ToInt(); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "Total": _Total = value.ToLong(); break;
+                case "RingRate": _RingRate = value.ToDouble(); break;
                 case "Errors": _Errors = value.ToLong(); break;
                 case "ErrorRate": _ErrorRate = value.ToDouble(); break;
                 case "TotalCost": _TotalCost = value.ToLong(); break;
@@ -221,6 +231,9 @@ public partial class TraceHourStat
 
         /// <summary>总次数</summary>
         public static readonly Field Total = FindByName("Total");
+
+        /// <summary>环比。今天与昨天同期相比</summary>
+        public static readonly Field RingRate = FindByName("RingRate");
 
         /// <summary>错误数</summary>
         public static readonly Field Errors = FindByName("Errors");
@@ -272,6 +285,9 @@ public partial class TraceHourStat
 
         /// <summary>总次数</summary>
         public const String Total = "Total";
+
+        /// <summary>环比。今天与昨天同期相比</summary>
+        public const String RingRate = "RingRate";
 
         /// <summary>错误数</summary>
         public const String Errors = "Errors";

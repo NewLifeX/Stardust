@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Diagnostics;
 using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
@@ -321,6 +320,9 @@ namespace Stardust.Server.Services
             list = list.Where(e => e.StatTime >= time & e.StatTime < time.AddHours(1)).ToList();
             if (list.Count == 0) return;
 
+            // 昨日统计
+            var sts2 = TraceHourStat.FindAllByAppIdWithCache(appId, time, time.AddHours(1));
+
             // 分组聚合，这里包含了每个接口在该小时内的所有分钟统计，需要求和
             foreach (var item in list.GroupBy(e => e.ItemId))
             {
@@ -354,6 +356,10 @@ namespace Stardust.Server.Services
                         st.Cost = (Int32)Math.Round((Double)totalCost / (st.Total - i));
                     }
                 }
+
+                // 计算环比
+                var st2 = sts2.FirstOrDefault(e => e.ItemId == item.Key);
+                if (st2 != null) st.RingRate = st2.Total <= 0 ? 1 : (Double)st.Total / st2.Total;
 
                 _hourQueue.Commit(key);
             }
