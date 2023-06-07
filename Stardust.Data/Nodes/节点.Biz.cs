@@ -1,4 +1,4 @@
-using NewLife;
+﻿using NewLife;
 using NewLife.Data;
 using Stardust.Models;
 using System;
@@ -554,8 +554,20 @@ public partial class Node : Entity<Node>
         }
         if (!di.Framework.IsNullOrEmpty())
         {
-            node.Framework = di.Framework?.Split(',').LastOrDefault();
+            //node.Framework = di.Framework?.Split(',').LastOrDefault();
             node.Frameworks = di.Framework;
+            // 选取最大的版本，而不是最后一个，例如6.0.3字符串大于6.0.13
+            Version max = null;
+            var fs = di.Framework.Split(',');
+            if (fs != null)
+            {
+                foreach (var f in fs)
+                {
+                    if (System.Version.TryParse(f, out var v) && (max == null || max < v))
+                        max = v;
+                }
+                node.Framework = max?.ToString();
+            }
         }
 
         if (!node.OS.IsNullOrEmpty()) node.OSKind = OSKindHelper.Parse(node.OS, node.OSVersion);
