@@ -375,9 +375,9 @@ public class AlarmService : IHostedService
 
                     // 一定时间内不要重复报错，除非错误翻倍
                     var error2 = _cache.Get<Int32>("alarm:RingRate:" + ti.Id);
-                    if (error2 == 0 || st.Errors > error2 * 2)
+                    if (error2 == 0 || rate > error2 * 2)
                     {
-                        _cache.Set("alarm:RingRate:" + ti.Id, st.Errors, 5 * 60);
+                        _cache.Set("alarm:RingRate:" + ti.Id, rate, 5 * 60);
 
                         // 优先本地跟踪项，其次应用，最后是告警分组
                         var webhook = ti.AlarmRobot;
@@ -397,7 +397,7 @@ public class AlarmService : IHostedService
     private String GetMarkdown(AppTracer app, TraceHourStat st, Int32 yesterday, Double rate, Boolean includeTitle)
     {
         var sb = new StringBuilder();
-        if (includeTitle) sb.AppendLine($"### [{app}]埋点{(st.RingRate >= 1 ? "高调用" : "调用量下滑")}告警");
+        if (includeTitle) sb.AppendLine($"### [{app}]埋点{(rate >= 1 ? "高调用" : "调用量下滑")}告警");
         sb.AppendLine($">**埋点：**<font color=\"blue\">{st.Name}</font>");
         sb.AppendLine($">**今日：**<font color=\"red\">{st.Total}</font>");
         sb.AppendLine($">**昨日：**<font color=\"red\">{yesterday}</font>");
