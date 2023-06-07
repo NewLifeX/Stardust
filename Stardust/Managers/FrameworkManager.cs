@@ -1,4 +1,5 @@
 ﻿using NewLife;
+using NewLife.Log;
 using NewLife.Serialization;
 using Stardust.Models;
 using Stardust.Services;
@@ -8,6 +9,8 @@ namespace Stardust.Managers;
 /// <summary>框架管理器</summary>
 public class FrameworkManager
 {
+    private IEventProvider _eventProvider;
+
     /// <summary>获取所有框架版本</summary>
     /// <returns></returns>
     public String[] GetAllVersions()
@@ -33,6 +36,8 @@ public class FrameworkManager
     /// <param name="client"></param>
     public void Attach(ICommandClient client)
     {
+        _eventProvider = client as IEventProvider;
+
         client.RegisterCommand("framework/install", DoInstall);
         client.RegisterCommand("framework/uninstall", DoUninstall);
     }
@@ -44,7 +49,9 @@ public class FrameworkManager
 
         var nr = new NetRuntime
         {
-            Silent = true
+            Silent = true,
+            EventProvider = _eventProvider,
+            Log = XTrace.Log,
         };
         if (!model.BaseUrl.IsNullOrEmpty()) nr.BaseUrl = model.BaseUrl;
 

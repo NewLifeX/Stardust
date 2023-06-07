@@ -1,11 +1,12 @@
 ﻿using System.Diagnostics;
 using System.Net;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using NewLife;
-using System.Runtime.InteropServices;
 using NewLife.Log;
-using System.Runtime.Versioning;
+using Stardust.Services;
 
 #if NET6_0_OR_GREATER
 using System.Net.Http;
@@ -28,6 +29,9 @@ public class NetRuntime
 
     /// <summary>文件哈希。用于校验下载文件的完整性</summary>
     public IDictionary<String, String> Hashs { get; set; }
+
+    /// <summary>事件客户端</summary>
+    public IEventProvider EventProvider { get; set; }
     #endregion
 
     #region 构造
@@ -50,7 +54,7 @@ public class NetRuntime
     /// <returns></returns>
     public Boolean Install(String fileName, String baseUrl = null, String arg = null)
     {
-        XTrace.WriteLine("下载 {0}", fileName);
+        WriteLog("下载 {0}", fileName);
 
         var fullFile = fileName;
         if (!String.IsNullOrEmpty(CachePath)) fullFile = Path.Combine(CachePath, fileName);
@@ -73,28 +77,31 @@ public class NetRuntime
                 baseUrl = BaseUrl?.TrimEnd('/') + baseUrl.EnsureStart("/").TrimEnd('/');
 
             var url = $"{baseUrl}/{fileName}";
-            XTrace.WriteLine("正在下载：{0}", url);
+            WriteLog("正在下载：{0}", url);
 
             var dir = Path.GetDirectoryName(fullFile);
             if (!String.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
 #if NET6_0_OR_GREATER
-            var http = new HttpClient();
+            using var http = new HttpClient();
             var hs = http.GetStreamAsync(url).Result;
 
             using var fs = new FileStream(fullFile, FileMode.CreateNew, FileAccess.Write);
             hs.CopyTo(fs);
 #else
-            var http = new WebClient();
+            using var http = new WebClient();
             http.DownloadFile(url, fullFile);
 #endif
-            XTrace.WriteLine("MD5: {0}", GetMD5(fullFile));
+            WriteLog("MD5: {0}", GetMD5(fullFile));
+
+            // 在windows系统上，下载完成以后，等待一会再安装，避免文件被占用（可能是安全扫描），提高安装成功率
+            if (Runtime.Windows) Thread.Sleep(15_000);
         }
 
         if (String.IsNullOrEmpty(arg)) arg = "/passive /promptrestart";
         if (!Silent) arg = null;
 
-        XTrace.WriteLine("正在安装：{0} {1}", fullFile, arg);
+        WriteLog("正在安装：{0} {1}", fullFile, arg);
 
         if (Runtime.Linux)
             return InstallOnLinux(fullFile, arg);
@@ -108,15 +115,15 @@ public class NetRuntime
         if (p.WaitForExit(600_000))
         {
             if (p.ExitCode == 0)
-                XTrace.WriteLine("安装完成！");
+                WriteLog("安装完成！");
             else
-                XTrace.WriteLine("安装失败！ExitCode={0}", p.ExitCode);
+                WriteLog("安装失败！ExitCode={0}", p.ExitCode);
             Environment.ExitCode = p.ExitCode;
             return p.ExitCode == 0;
         }
         else
         {
-            XTrace.WriteLine("安装超时！");
+            WriteLog("安装超时！");
             Environment.ExitCode = 400;
             return false;
         }
@@ -134,7 +141,7 @@ public class NetRuntime
         // 建立链接
         Process.Start(new ProcessStartInfo("ln", $"{fullFile}/dotnet /usr/bin/dotnet -s") { UseShellExecute = true });
 
-        XTrace.WriteLine("安装完成！");
+        WriteLog("安装完成！");
 
         return true;
     }
@@ -144,7 +151,7 @@ public class NetRuntime
         var ver = new Version();
         if (vers.Count > 0)
         {
-            //XTrace.WriteLine("已安装版本：");
+            //WriteLog("已安装版本：");
             foreach (var item in vers)
             {
                 if ((String.IsNullOrEmpty(prefix) || item.Name.StartsWith(prefix)) &&
@@ -158,9 +165,9 @@ public class NetRuntime
                     if (v > ver) ver = v;
                 }
 
-                //XTrace.WriteLine(item.Name);
+                //WriteLog(item.Name);
             }
-            //XTrace.WriteLine("");
+            //WriteLog("");
         }
 
         return ver;
@@ -181,7 +188,7 @@ public class NetRuntime
         var target = new Version("4.0");
         if (ver >= target)
         {
-            XTrace.WriteLine("已安装最新版 v{0}", ver);
+            WriteLog("已安装最新版 v{0}", ver);
             return;
         }
 
@@ -222,7 +229,7 @@ public class NetRuntime
         var target = new Version("4.5");
         if (ver >= target)
         {
-            XTrace.WriteLine("已安装最新版 v{0}", ver);
+            WriteLog("已安装最新版 v{0}", ver);
             return;
         }
 
@@ -247,7 +254,7 @@ public class NetRuntime
         var target = osVer.Major >= 10 ? new Version("4.8.1") : new Version("4.8");
         if (ver >= target)
         {
-            XTrace.WriteLine("已安装最新版 v{0}", ver);
+            WriteLog("已安装最新版 v{0}", ver);
             return;
         }
 
@@ -299,7 +306,7 @@ public class NetRuntime
         var targetVer = new Version(target);
         if (ver >= targetVer)
         {
-            XTrace.WriteLine("已安装最新版 v{0}", ver);
+            WriteLog("已安装最新版 v{0}", ver);
             return;
         }
 
@@ -381,7 +388,7 @@ public class NetRuntime
         var targetVer = new Version(target);
         if (ver >= targetVer)
         {
-            XTrace.WriteLine("已安装最新版 v{0}", ver);
+            WriteLog("已安装最新版 v{0}", ver);
             return;
         }
 
@@ -463,7 +470,7 @@ public class NetRuntime
         var targetVer = new Version(target);
         if (ver >= targetVer)
         {
-            XTrace.WriteLine("已安装最新版 v{0}", ver);
+            WriteLog("已安装最新版 v{0}", ver);
             return;
         }
 
@@ -780,9 +787,9 @@ public class NetRuntime
 
     /// <summary>安装微软根证书</summary>
     /// <returns></returns>
-    public static Boolean InstallCert()
+    public Boolean InstallCert()
     {
-        XTrace.WriteLine("准备安装微软根证书");
+        WriteLog("准备安装微软根证书");
 
         // 释放文件
         var asm = Assembly.GetExecutingAssembly();
@@ -812,7 +819,7 @@ public class NetRuntime
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine(ex.Message);
+            WriteLog(ex.Message);
             return false;
         }
         finally
@@ -820,6 +827,30 @@ public class NetRuntime
             if (File.Exists(cert)) File.Delete(cert);
             if (File.Exists(exe)) File.Delete(exe);
         }
+    }
+    #endregion
+
+    #region 日志
+    ///// <summary>性能追踪</summary>
+    //public ITracer Tracer { get; set; }
+
+    /// <summary>日志</summary>
+    public ILog Log { get; set; }
+
+    /// <summary>写日志</summary>
+    /// <param name="format"></param>
+    /// <param name="args"></param>
+    public void WriteLog(String format, params Object[] args)
+    {
+        Log?.Info($"[NetRuntime]{format}", args);
+
+        var msg = (args == null || args.Length == 0) ? format : String.Format(format, args);
+        DefaultSpan.Current?.AppendTag(msg);
+
+        if (format.Contains("错误") || format.Contains("失败"))
+            EventProvider?.WriteErrorEvent(nameof(ServiceController), msg);
+        else
+            EventProvider?.WriteInfoEvent(nameof(ServiceController), msg);
     }
     #endregion
 }
