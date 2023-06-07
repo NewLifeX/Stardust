@@ -30,8 +30,8 @@
             }
             <th class="text-center" title="操作名。接口名或埋点名"><a href="@Html.Raw(page.GetSortUrl("Name"))">操作名</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Total"))">总次数</a></th>
-            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Errors"))">错误数</a></th>
             <th class="text-center" title="环比。今天与昨天同期相比"><a href="@Html.Raw(page.GetSortUrl("RingRate"))">环比</a></th>
+            <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Errors"))">错误数</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ErrorRate"))">错误率</a></th>
             <th class="text-center" title="平均耗时。总耗时除以总次数"><a href="@Html.Raw(page.GetSortUrl("Cost"))">平均耗时</a></th>
             <th class="text-center" title="最大耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MaxCost"))">最大耗时</a></th>
