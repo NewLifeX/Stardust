@@ -347,6 +347,7 @@ public class AlarmService : IHostedService
         // 最近一段时间的小时级数据
         var time = DateTime.Now;
         var hour = time.Date.AddHours(time.Hour);
+        if (time.Minute < 5) return;
 
         using var span = _tracer?.NewSpan($"alarm:RingRate", new { time, hour });
 
@@ -354,7 +355,7 @@ public class AlarmService : IHostedService
         foreach (var st in list)
         {
             var ti = tis.FirstOrDefault(e => e.Id == st.ItemId);
-            if (ti != null && st.RingRate > 0 && time.Minute < 6)
+            if (ti != null && st.RingRate > 0)
             {
                 var max = ti.MaxRingRate;
                 var min = ti.MinRingRate;
@@ -362,7 +363,8 @@ public class AlarmService : IHostedService
                 // 根据当前小时已过去时间，折算得到新的环比率
                 var seconds = time.Minute * 60 + time.Second;
                 // 昨日等比例
-                var yesterday = st.Total / st.RingRate;
+                var st2 = TraceHourStat.FindAllByStatTimeAndAppIdAndItemId(st.StatTime.AddDays(-1), st.AppId, st.ItemId).FirstOrDefault();
+                var yesterday = st2 != null ? st2.Total : (st.Total / st.RingRate);
                 var rate = st.Total / (yesterday * seconds / 3600);
 
                 // 满足任意一个条件，都要告警
@@ -372,10 +374,10 @@ public class AlarmService : IHostedService
                     span?.AppendTag(new { seconds, yesterday, rate });
 
                     // 一定时间内不要重复报错，除非错误翻倍
-                    var error2 = _cache.Get<Int32>("alarm:TraceHourStat:" + ti.Id);
+                    var error2 = _cache.Get<Int32>("alarm:RingRate:" + ti.Id);
                     if (error2 == 0 || st.Errors > error2 * 2)
                     {
-                        _cache.Set("alarm:TraceHourStat:" + ti.Id, st.Errors, 5 * 60);
+                        _cache.Set("alarm:RingRate:" + ti.Id, st.Errors, 5 * 60);
 
                         // 优先本地跟踪项，其次应用，最后是告警分组
                         var webhook = ti.AlarmRobot;
@@ -399,7 +401,8 @@ public class AlarmService : IHostedService
         sb.AppendLine($">**埋点：**<font color=\"blue\">{st.Name}</font>");
         sb.AppendLine($">**今日：**<font color=\"red\">{st.Total}</font>");
         sb.AppendLine($">**昨日：**<font color=\"red\">{yesterday}</font>");
-        sb.AppendLine($">**环比：**<font color=\"red\">{rate:p2}</font>");
+        sb.AppendLine($">**环比：**<font color=\"red\">{st.RingRate:p2}</font>");
+        sb.AppendLine($">**折算环比：**<font color=\"red\">{rate:p2}</font>");
 
         var url = _setting.WebUrl;
         var traceUrl = "";

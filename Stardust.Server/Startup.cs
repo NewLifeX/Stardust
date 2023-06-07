@@ -7,9 +7,11 @@ using NewLife.Caching;
 using NewLife.Caching.Services;
 using NewLife.Log;
 using NewLife.Serialization;
+using Stardust.Data;
 using Stardust.Data.Nodes;
 using Stardust.Extensions.Caches;
 using Stardust.Monitors;
+using Stardust.Registry;
 using Stardust.Server.Services;
 using XCode;
 using XCode.DataAccessLayer;
@@ -174,6 +176,9 @@ public class Startup
         {
             endpoints.MapControllers();
         });
+
+        // 取得StarWeb地址
+        Task.Run(() => ResolveWebUrl(app.ApplicationServices));
     }
 
     private static void InitConfig()
@@ -233,5 +238,22 @@ public class Startup
         // 修正 Node.LastActive 数据，默认取 LastLogin
         if (Node.Meta.Count > 0)
             Node.Update("LastActive=LastLogin", "LastActive is null");
+    }
+
+    private static async Task ResolveWebUrl(IServiceProvider serviceProvider)
+    {
+        await Task.Delay(3_000);
+
+        var registry = serviceProvider.GetRequiredService<IRegistry>();
+        if (registry == null) return;
+
+        var addrs = await registry.ResolveAddressAsync("StarWeb");
+        var str = addrs.Join(";");
+        var set = StarServerSetting.Current;
+        if (set.WebUrl != str)
+        {
+            set.WebUrl = str;
+            set.Save();
+        }
     }
 }
