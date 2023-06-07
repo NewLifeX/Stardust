@@ -360,34 +360,37 @@ public class AlarmService : IHostedService
                 var max = ti.MaxRingRate;
                 var min = ti.MinRingRate;
 
-                // 根据当前小时已过去时间，折算得到新的环比率
-                var seconds = time.Minute * 60 + time.Second;
-                // 昨日等比例
+                // 昨日基数必须大于一定值，避免分母过小导致误报
                 var st2 = TraceHourStat.FindAllByStatTimeAndAppIdAndItemId(st.StatTime.AddDays(-1), st.AppId, st.ItemId).FirstOrDefault();
                 var yesterday = st2 != null ? st2.Total : (st.Total / st.RingRate);
-                var rate = st.Total / (yesterday * seconds / 3600);
-
-                // 满足任意一个条件，都要告警
-                if (max >= 0 && rate >= max ||
-                    min >= 0 && rate <= min)
+                if (yesterday > 10)
                 {
-                    span?.AppendTag(new { seconds, yesterday, rate });
+                    // 根据当前小时已过去时间，折算得到新的环比率
+                    var seconds = time.Minute * 60 + time.Second;
+                    var rate = st.Total / (yesterday * seconds / 3600);
 
-                    // 一定时间内不要重复报错，除非错误翻倍
-                    var error2 = _cache.Get<Int32>("alarm:RingRate:" + ti.Id);
-                    if (error2 == 0 || st.Errors > error2 * 2)
+                    // 满足任意一个条件，都要告警
+                    if (max >= 0 && rate >= max ||
+                        min >= 0 && rate <= min)
                     {
-                        _cache.Set("alarm:RingRate:" + ti.Id, st.Errors, 5 * 60);
+                        span?.AppendTag(new { seconds, yesterday, rate });
 
-                        // 优先本地跟踪项，其次应用，最后是告警分组
-                        var webhook = ti.AlarmRobot;
-                        if (webhook.IsNullOrEmpty()) webhook = app.AlarmRobot;
+                        // 一定时间内不要重复报错，除非错误翻倍
+                        var error2 = _cache.Get<Int32>("alarm:RingRate:" + ti.Id);
+                        if (error2 == 0 || st.Errors > error2 * 2)
+                        {
+                            _cache.Set("alarm:RingRate:" + ti.Id, st.Errors, 5 * 60);
 
-                        var group = ti.AlarmGroup;
-                        if (group.IsNullOrEmpty()) group = app.Category;
+                            // 优先本地跟踪项，其次应用，最后是告警分组
+                            var webhook = ti.AlarmRobot;
+                            if (webhook.IsNullOrEmpty()) webhook = app.AlarmRobot;
 
-                        var msg = GetMarkdown(app, st, (Int32)yesterday, rate, true);
-                        RobotHelper.SendAlarm(group, webhook, "埋点告警", msg);
+                            var group = ti.AlarmGroup;
+                            if (group.IsNullOrEmpty()) group = app.Category;
+
+                            var msg = GetMarkdown(app, st, (Int32)yesterday, rate, true);
+                            RobotHelper.SendAlarm(group, webhook, "埋点告警", msg);
+                        }
                     }
                 }
             }
@@ -397,8 +400,9 @@ public class AlarmService : IHostedService
     private String GetMarkdown(AppTracer app, TraceHourStat st, Int32 yesterday, Double rate, Boolean includeTitle)
     {
         var sb = new StringBuilder();
-        if (includeTitle) sb.AppendLine($"### [{app}]埋点{(st.RingRate >= 1 ? "高调用" : "调用量下滑")}告警");
+        if (includeTitle) sb.AppendLine($"### [{app}]环比{(st.RingRate >= 1 ? "高调用" : "调用量下滑")}告警");
         sb.AppendLine($">**埋点：**<font color=\"blue\">{st.Name}</font>");
+        sb.AppendLine($">**时间：**<font color=\"blue\">{st.StatTime:yyyy-MM-dd HH:mm:ss}</font>");
         sb.AppendLine($">**今日：**<font color=\"red\">{st.Total}</font>");
         sb.AppendLine($">**昨日：**<font color=\"red\">{yesterday}</font>");
         sb.AppendLine($">**环比：**<font color=\"red\">{st.RingRate:p2}</font>");
