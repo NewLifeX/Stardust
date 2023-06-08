@@ -139,6 +139,7 @@ public class AlarmService : IHostedService
     {
         var sb = new StringBuilder();
         if (includeTitle) sb.AppendLine($"### [{app}]应用告警");
+        sb.AppendLine($">**时间：**<font color=\"blue\">{st.StatTime:yyyy-MM-dd HH:mm:ss}</font>");
         sb.AppendLine($">**总数：**<font color=\"red\">{st.Errors}</font>");
         sb.AppendLine($">**错误率：**<font color=\"red\">{st.ErrorRate:p2}</font>");
 
@@ -275,6 +276,7 @@ public class AlarmService : IHostedService
     {
         var sb = new StringBuilder();
         if (includeTitle) sb.AppendLine($"### [{app}]埋点告警");
+        sb.AppendLine($">**时间：**<font color=\"blue\">{st.StatTime:yyyy-MM-dd HH:mm:ss}</font>");
         sb.AppendLine($">**总数：**<font color=\"red\">{st.Errors}</font>");
         sb.AppendLine($">**错误率：**<font color=\"red\">{st.ErrorRate:p2}</font>");
 
@@ -375,11 +377,11 @@ public class AlarmService : IHostedService
                     {
                         span?.AppendTag(new { seconds, yesterday, rate });
 
-                    // 一定时间内不要重复报错，除非错误翻倍
-                    var error2 = _cache.Get<Int32>("alarm:RingRate:" + ti.Id);
-                    if (error2 == 0 || rate > error2 * 2)
-                    {
-                        _cache.Set("alarm:RingRate:" + ti.Id, rate, 5 * 60);
+                        // 一定时间内不要重复报错，除非错误翻倍
+                        var error2 = _cache.Get<Int32>("alarm:RingRate:" + ti.Id);
+                        if (error2 == 0 || rate > error2 * 2 || rate < error2 / 2)
+                        {
+                            _cache.Set("alarm:RingRate:" + ti.Id, rate, 60 * 60);
 
                             // 优先本地跟踪项，其次应用，最后是告警分组
                             var webhook = ti.AlarmRobot;
@@ -549,6 +551,7 @@ public class AlarmService : IHostedService
     {
         var sb = new StringBuilder();
         if (!title.IsNullOrEmpty()) sb.AppendLine($"### {title}");
+        sb.AppendLine($">**时间：**<font color=\"blue\">{data.CreateTime:yyyy-MM-dd HH:mm:ss}</font>");
         sb.AppendLine($">**节点：**<font color=\"gray\">{node} / {node.IP}</font>");
         sb.AppendLine($">**分类：**<font color=\"gray\">{node.Category}</font>");
         sb.AppendLine($">**系统：**<font color=\"gray\">{node.OS}</font>");
@@ -700,6 +703,7 @@ public class AlarmService : IHostedService
     {
         var sb = new StringBuilder();
         if (!title.IsNullOrEmpty()) sb.AppendLine($"### [{node}]{title}");
+        sb.AppendLine($">**时间：**<font color=\"blue\">{data.CreateTime:yyyy-MM-dd HH:mm:ss}</font>");
         sb.AppendLine($">**分类：**<font color=\"gray\">{node.Category}</font>");
         sb.AppendLine($">**版本：**<font color=\"gray\">{node.Version}</font>");
         sb.AppendLine($">**已用内存：**<font color=\"gray\">{data.UsedMemory:n0}</font>");
@@ -769,6 +773,7 @@ public class AlarmService : IHostedService
     {
         var sb = new StringBuilder();
         if (includeTitle) sb.AppendLine($"### [{queue.Name}/{node}]消息队列告警");
+        sb.AppendLine($">**时间：**<font color=\"blue\">{queue.UpdateTime:yyyy-MM-dd HH:mm:ss}</font>");
         sb.AppendLine($">**主题：**<font color=\"gray\">{queue.Topic}</font>");
         sb.AppendLine($">**积压：**<font color=\"red\">{queue.Messages:n0} > {queue.MaxMessages:n0}</font>");
         sb.AppendLine($">**消费者：**<font color=\"green\">{queue.Consumers}</font>");
