@@ -2,6 +2,7 @@
 using NewLife.Configuration;
 using NewLife.Data;
 using NewLife.Log;
+using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
 using Stardust.Models;
@@ -53,9 +54,11 @@ internal class StarHttpConfigProvider : HttpConfigProvider
                 }
                 if (rs.TryGetValue("PluginServer", out var obj) && obj is String svr)
                 {
+                    var asm = AssemblyX.Entry;
                     var set = NewLife.Setting.Current;
-                    if (!svr.IsNullOrEmpty() && !svr.EqualIgnoreCase(set.PluginServer))
+                    if (!svr.IsNullOrEmpty() && !svr.EqualIgnoreCase(set.PluginServer) && !asm.Name.EqualIgnoreCase("StarWeb", "StarServer"))
                     {
+                        XTrace.WriteLine("插件服务器PluginServer变更为 {0}", svr);
                         set.PluginServer = svr;
                         set.Save();
                     }
