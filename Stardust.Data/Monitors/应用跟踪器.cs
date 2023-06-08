@@ -168,14 +168,6 @@ public partial class AppTracer
     [BindColumn("Timeout", "超时时间。超过该时间时强制采样，默认5000毫秒", "")]
     public Int32 Timeout { get => _Timeout; set { if (OnPropertyChanging("Timeout", value)) { _Timeout = value; OnPropertyChanged("Timeout"); } } }
 
-    private String _TimeoutExcludes;
-    /// <summary>超时排除项。不判断超时的操作名，支持*模糊匹配</summary>
-    [DisplayName("超时排除项")]
-    [Description("超时排除项。不判断超时的操作名，支持*模糊匹配")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("TimeoutExcludes", "超时排除项。不判断超时的操作名，支持*模糊匹配", "")]
-    public String TimeoutExcludes { get => _TimeoutExcludes; set { if (OnPropertyChanging("TimeoutExcludes", value)) { _TimeoutExcludes = value; OnPropertyChanged("TimeoutExcludes"); } } }
-
     private Int32 _MaxTagLength;
     /// <summary>最长标签。超过该长度时将截断，默认1024字符</summary>
     [DisplayName("最长标签")]
@@ -336,7 +328,6 @@ public partial class AppTracer
             "WhiteList" => _WhiteList,
             "Excludes" => _Excludes,
             "Timeout" => _Timeout,
-            "TimeoutExcludes" => _TimeoutExcludes,
             "MaxTagLength" => _MaxTagLength,
             "VipClients" => _VipClients,
             "AlarmThreshold" => _AlarmThreshold,
@@ -376,7 +367,6 @@ public partial class AppTracer
                 case "WhiteList": _WhiteList = Convert.ToString(value); break;
                 case "Excludes": _Excludes = Convert.ToString(value); break;
                 case "Timeout": _Timeout = value.ToInt(); break;
-                case "TimeoutExcludes": _TimeoutExcludes = Convert.ToString(value); break;
                 case "MaxTagLength": _MaxTagLength = value.ToInt(); break;
                 case "VipClients": _VipClients = Convert.ToString(value); break;
                 case "AlarmThreshold": _AlarmThreshold = value.ToInt(); break;
@@ -466,9 +456,6 @@ public partial class AppTracer
 
         /// <summary>超时时间。超过该时间时强制采样，默认5000毫秒</summary>
         public static readonly Field Timeout = FindByName("Timeout");
-
-        /// <summary>超时排除项。不判断超时的操作名，支持*模糊匹配</summary>
-        public static readonly Field TimeoutExcludes = FindByName("TimeoutExcludes");
 
         /// <summary>最长标签。超过该长度时将截断，默认1024字符</summary>
         public static readonly Field MaxTagLength = FindByName("MaxTagLength");
@@ -574,9 +561,6 @@ public partial class AppTracer
 
         /// <summary>超时时间。超过该时间时强制采样，默认5000毫秒</summary>
         public const String Timeout = "Timeout";
-
-        /// <summary>超时排除项。不判断超时的操作名，支持*模糊匹配</summary>
-        public const String TimeoutExcludes = "TimeoutExcludes";
 
         /// <summary>最长标签。超过该长度时将截断，默认1024字符</summary>
         public const String MaxTagLength = "MaxTagLength";

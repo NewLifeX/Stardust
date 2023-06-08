@@ -198,7 +198,7 @@ public class TraceController : ControllerBase
         {
             // 排除项
             var excludes = app.Excludes.Split(",", ";") ?? new String[0];
-            var timeoutExcludes = app.TimeoutExcludes.Split(",", ";") ?? new String[0];
+            //var timeoutExcludes = app.TimeoutExcludes.Split(",", ";") ?? new String[0];
 
             var now = DateTime.Now;
             var startTime = now.AddDays(-_setting.DataRetention);
@@ -264,9 +264,9 @@ public class TraceController : ControllerBase
 
                 // 超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时
                 var timeout = ti.Timeout;
-                if (timeout == 0) timeout = app.Timeout;
+                //if (timeout == 0) timeout = app.Timeout;
 
-                var isTimeout = timeout > 0 && !timeoutExcludes.Any(e => e.IsMatch(item.Name));
+                var isTimeout = timeout > 0;
                 if (item.Samples != null && item.Samples.Count > 0)
                 {
                     // 超时处理为异常，累加到错误数之中

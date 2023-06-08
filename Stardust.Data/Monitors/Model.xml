@@ -60,7 +60,6 @@
       <Column Name="WhiteList" DataType="String" Length="200" Description="白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持^开头的正则表达式如^/Admin/" />
       <Column Name="Excludes" DataType="String" Length="200" Description="排除项。要排除的操作名，支持*模糊匹配" />
       <Column Name="Timeout" DataType="Int32" Description="超时时间。超过该时间时强制采样，默认5000毫秒" />
-      <Column Name="TimeoutExcludes" DataType="String" Description="超时排除项。不判断超时的操作名，支持*模糊匹配" />
       <Column Name="MaxTagLength" DataType="Int32" Description="最长标签。超过该长度时将截断，默认1024字符" />
       <Column Name="VipClients" DataType="String" Description="Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配" />
       <Column Name="AlarmThreshold" DataType="Int32" Description="告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值满足其一" Category="告警" />
@@ -93,7 +92,7 @@
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Rules" DataType="String" Length="200" Description="规则。支持多个埋点操作按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开，多组规则分号隔开。如name=*/check*,*/ping*;clientId=10.10.*" />
       <Column Name="Cloned" DataType="Boolean" Description="克隆。根据规则匹配，把跟踪数据克隆一份，形成另一个维度的统计数据" />
-      <Column Name="Timeout" DataType="Int32" Description="超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时" />
+      <Column Name="Timeout" DataType="Int32" Description="超时时间。超过该时间时标记为异常，默认0表示不判断超时" />
       <Column Name="Days" DataType="Int32" Description="天数。共统计了多少天" />
       <Column Name="Total" DataType="Int64" Description="总次数。累计埋点采样次数" />
       <Column Name="Errors" DataType="Int64" Description="错误数" />

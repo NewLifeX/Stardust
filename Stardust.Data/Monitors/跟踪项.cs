@@ -87,11 +87,11 @@ public partial class TraceItem
     public Boolean Cloned { get => _Cloned; set { if (OnPropertyChanging("Cloned", value)) { _Cloned = value; OnPropertyChanged("Cloned"); } } }
 
     private Int32 _Timeout;
-    /// <summary>超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时</summary>
+    /// <summary>超时时间。超过该时间时标记为异常，默认0表示不判断超时</summary>
     [DisplayName("超时时间")]
-    [Description("超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时")]
+    [Description("超时时间。超过该时间时标记为异常，默认0表示不判断超时")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("Timeout", "超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时", "")]
+    [BindColumn("Timeout", "超时时间。超过该时间时标记为异常，默认0表示不判断超时", "")]
     public Int32 Timeout { get => _Timeout; set { if (OnPropertyChanging("Timeout", value)) { _Timeout = value; OnPropertyChanged("Timeout"); } } }
 
     private Int32 _Days;
@@ -347,7 +347,7 @@ public partial class TraceItem
         /// <summary>克隆。根据规则匹配，把跟踪数据克隆一份，形成另一个维度的统计数据</summary>
         public static readonly Field Cloned = FindByName("Cloned");
 
-        /// <summary>超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时</summary>
+        /// <summary>超时时间。超过该时间时标记为异常，默认0表示不判断超时</summary>
         public static readonly Field Timeout = FindByName("Timeout");
 
         /// <summary>天数。共统计了多少天</summary>
@@ -431,7 +431,7 @@ public partial class TraceItem
         /// <summary>克隆。根据规则匹配，把跟踪数据克隆一份，形成另一个维度的统计数据</summary>
         public const String Cloned = "Cloned";
 
-        /// <summary>超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时</summary>
+        /// <summary>超时时间。超过该时间时标记为异常，默认0表示不判断超时</summary>
         public const String Timeout = "Timeout";
 
         /// <summary>天数。共统计了多少天</summary>
