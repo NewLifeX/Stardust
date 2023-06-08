@@ -351,7 +351,7 @@ public class AlarmService : IHostedService
         var hour = time.Date.AddHours(time.Hour);
         if (time.Minute < 5) return;
 
-        using var span = _tracer?.NewSpan($"alarm:RingRate", new { time, hour });
+        using var span = _tracer?.NewSpan($"alarm:RingRate", new { app.ID, app.Name, app.DisplayName, time, hour });
 
         var list = TraceHourStat.Search(app.ID, -1, null, hour, hour.AddHours(1), null, null);
         foreach (var st in list)
@@ -378,7 +378,7 @@ public class AlarmService : IHostedService
                         span?.AppendTag(new { seconds, yesterday, rate });
 
                         // 一定时间内不要重复报错，除非错误翻倍
-                        var error2 = _cache.Get<Int32>("alarm:RingRate:" + ti.Id);
+                        var error2 = _cache.Get<Double>("alarm:RingRate:" + ti.Id);
                         if (error2 == 0 || rate > error2 * 2 || rate < error2 / 2)
                         {
                             _cache.Set("alarm:RingRate:" + ti.Id, rate, 60 * 60);
@@ -450,7 +450,7 @@ public class AlarmService : IHostedService
             if (rate >= node.AlarmCpuRate)
             {
                 // 一定时间内不要重复报错，除非错误翻倍
-                var error2 = _cache.Get<Int32>("alarm:CpuRate:" + node.ID);
+                var error2 = _cache.Get<Double>("alarm:CpuRate:" + node.ID);
                 if (error2 == 0 || rate > error2 * 2)
                 {
                     _cache.Set("alarm:CpuRate:" + node.ID, rate, 5 * 60);
@@ -467,7 +467,7 @@ public class AlarmService : IHostedService
             if (rate >= node.AlarmMemoryRate)
             {
                 // 一定时间内不要重复报错，除非错误翻倍
-                var error2 = _cache.Get<Int32>("alarm:MemoryRate:" + node.ID);
+                var error2 = _cache.Get<Double>("alarm:MemoryRate:" + node.ID);
                 if (error2 == 0 || rate > error2 * 2)
                 {
                     _cache.Set("alarm:MemoryRate:" + node.ID, rate, 5 * 60);
@@ -484,7 +484,7 @@ public class AlarmService : IHostedService
             if (rate >= node.AlarmDiskRate)
             {
                 // 一定时间内不要重复报错，除非错误翻倍
-                var error2 = _cache.Get<Int32>("alarm:DiskRate:" + node.ID);
+                var error2 = _cache.Get<Double>("alarm:DiskRate:" + node.ID);
                 if (error2 == 0 || rate > error2 * 2)
                 {
                     _cache.Set("alarm:DiskRate:" + node.ID, rate, 5 * 60);
@@ -623,11 +623,11 @@ public class AlarmService : IHostedService
         var actions = new List<Action<StringBuilder>>();
 
         // 内存告警
-        var rate = data.UsedMemory * 100 / node.MaxMemory;
+        var rate = data.UsedMemory * 100d / node.MaxMemory;
         if (rate >= node.AlarmMemoryRate)
         {
             // 一定时间内不要重复报错，除非错误翻倍
-            var error2 = _cache.Get<Int32>("alarm:RedisMemory:" + node.Id);
+            var error2 = _cache.Get<Double>("alarm:RedisMemory:" + node.Id);
             if (error2 == 0 || rate > error2 * 2)
             {
                 _cache.Set("alarm:RedisMemory:" + node.Id, rate, 5 * 60);
@@ -669,7 +669,7 @@ public class AlarmService : IHostedService
         if (node.AlarmInputKbps > 0 && input >= node.AlarmInputKbps)
         {
             // 一定时间内不要重复报错，除非错误翻倍
-            var error2 = _cache.Get<Int32>("alarm:RedisInputKbps:" + node.Id);
+            var error2 = _cache.Get<Double>("alarm:RedisInputKbps:" + node.Id);
             if (error2 == 0 || input > error2 * 2)
             {
                 _cache.Set("alarm:RedisInputKbps:" + node.Id, input, 5 * 60);
@@ -683,7 +683,7 @@ public class AlarmService : IHostedService
         if (node.AlarmOutputKbps > 0 && output >= node.AlarmOutputKbps)
         {
             // 一定时间内不要重复报错，除非错误翻倍
-            var error2 = _cache.Get<Int32>("alarm:RedisOutputKbps:" + node.Id);
+            var error2 = _cache.Get<Double>("alarm:RedisOutputKbps:" + node.Id);
             if (error2 == 0 || output > error2 * 2)
             {
                 _cache.Set("alarm:RedisOutputKbps:" + node.Id, output, 5 * 60);
