@@ -154,6 +154,7 @@ public class Startup
             XTrace.WriteLine("修正上传目录");
             set2.UploadPath = "../Uploads";
             set2.AvatarPath = "../Avatars";
+            set2.Skin = "layui";
             set2.Save();
         }
     }
