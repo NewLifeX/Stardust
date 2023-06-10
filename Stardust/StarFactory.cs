@@ -226,11 +226,23 @@ public class StarFactory : DisposeBase
 
         var ioc = ObjectContainer.Current;
         ioc.AddSingleton(this);
-        ioc.AddSingleton(p => Tracer);
-        ioc.AddSingleton(p => Config);
+        ioc.AddSingleton(p => Tracer ?? DefaultTracer.Instance ?? (DefaultTracer.Instance ??= new DefaultTracer()));
+        //ioc.AddSingleton(p => Config);
         ioc.AddSingleton(p => Service);
+
+        // 替换为混合配置提供者，优先本地配置
+        ioc.AddSingleton(p => GetConfig());
+
 #if !NET40
+        ioc.TryAddSingleton(XTrace.Log);
         ioc.TryAddSingleton(typeof(ICacheProvider), typeof(CacheProvider));
+#else
+        ioc.TryAdd(new ServiceDescriptor
+        {
+            ServiceType = typeof(ILog),
+            Instance = XTrace.Log,
+            Lifetime = ObjectLifetime.Singleton
+        });
 #endif
     }
 
