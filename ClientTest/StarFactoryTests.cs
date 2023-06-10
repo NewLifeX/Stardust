@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using NewLife;
 using NewLife.Configuration;
 using NewLife.Http;
@@ -16,106 +12,105 @@ using Stardust.Monitors;
 using Stardust.Registry;
 using Xunit;
 
-namespace ClientTest
+namespace ClientTest;
+
+public class StarFactoryTests
 {
-    public class StarFactoryTests
+    [Fact]
+    public void Normal()
     {
-        [Fact]
-        public void Normal()
-        {
-            var set = StarSetting.Current;
-            var secret = Rand.NextString(8, true);
-            set.Secret = secret;
+        var set = StarSetting.Current;
+        var secret = Rand.NextString(8, true);
+        set.Secret = secret;
 
-            using var star = new StarFactory(null, "StarWeb", null);
+        using var star = new StarFactory(null, "StarWeb", null);
 
-            Assert.NotNull(star.Local);
-            Assert.Equal("http://star.newlifex.com:6600", star.Server);
-            Assert.Equal("StarWeb", star.AppId);
-            Assert.Equal(secret, star.Secret);
+        Assert.NotNull(star.Local);
+        Assert.Equal("http://127.0.0.1:6600", star.Server);
+        Assert.Equal("StarWeb", star.AppId);
+        Assert.Equal(secret, star.Secret);
 
-            var inf = star.Local.Info;
-            Assert.NotNull(inf);
+        var inf = star.Local.Info;
+        Assert.NotNull(inf);
 
-            var tracer = star.Tracer as StarTracer;
-            Assert.NotNull(tracer);
-            Assert.NotEmpty(tracer.ClientId);
+        var tracer = star.Tracer as StarTracer;
+        Assert.NotNull(tracer);
+        Assert.NotEmpty(tracer.ClientId);
 
-            var config = star.Config as HttpConfigProvider;
-            Assert.NotNull(config);
-            Assert.Equal("NewLife开发团队", config["Title"]);
+        var config = star.Config as HttpConfigProvider;
+        Assert.NotNull(config);
+        Assert.Equal("NewLife开发团队", config["Title"]);
 
-            var dust = star.Service as AppClient;
-            Assert.NotNull(dust);
+        var dust = star.Service as AppClient;
+        Assert.NotNull(dust);
 
-            var filter = star.GetValue("_tokenFilter") as TokenHttpFilter;
-            Assert.NotNull(filter);
-            Assert.Equal(star.AppId, filter.UserName);
-            Assert.Equal(star.Secret, filter.Password);
-            Assert.Equal(filter, (tracer.Client as ApiHttpClient).Filter);
-            Assert.Equal(filter, (config.Client as ApiHttpClient).Filter);
-            Assert.Equal(filter, (dust as ApiHttpClient).Filter);
-        }
+        var filter = star.GetValue("_tokenFilter") as TokenHttpFilter;
+        Assert.NotNull(filter);
+        Assert.Equal(star.AppId, filter.UserName);
+        Assert.Equal(star.Secret, filter.Password);
+        Assert.Equal(filter, (tracer.Client as ApiHttpClient).Filter);
+        Assert.Equal(filter, (config.Client as ApiHttpClient).Filter);
+        Assert.Equal(filter, (dust as ApiHttpClient).Filter);
+    }
 
-        [Fact]
-        public async void CreateForService()
-        {
-            using var star = new StarFactory("http://127.0.0.1:6600", "test", "xxx");
-            await star.Service.RegisterAsync("testService", "http://localhost:1234", "tA,tagB,ttC");
+    [Fact]
+    public async void CreateForService()
+    {
+        using var star = new StarFactory("http://127.0.0.1:6600", "test", "xxx");
+        await star.Service.RegisterAsync("testService", "http://localhost:1234", "tA,tagB,ttC");
 
-            var client = star.CreateForService("testService", "tagB") as ApiHttpClient;
-            Assert.NotNull(client);
-            Assert.True(client.RoundRobin);
-            Assert.Equal("http://localhost:1234/", client.Services.Join(",", e => e.Address));
-        }
+        var client = star.CreateForService("testService", "tagB") as ApiHttpClient;
+        Assert.NotNull(client);
+        Assert.True(client.RoundRobin);
+        Assert.Equal("http://localhost:1234/", client.Services.Join(",", e => e.Address));
+    }
 
-        [Fact]
-        public async void CreateForService2()
-        {
-            using var star = new StarFactory("http://127.0.0.1:6600", "test", "xxx");
+    [Fact]
+    public async void CreateForService2()
+    {
+        using var star = new StarFactory("http://127.0.0.1:6600", "test", "xxx");
 
-            var client = star.CreateForService("StarWeb", "tagB") as ApiHttpClient;
-            Assert.NotNull(client);
-            Assert.True(client.RoundRobin);
-            Assert.Equal(0, client.Services.Count);
+        var client = star.CreateForService("StarWeb", "tagB") as ApiHttpClient;
+        Assert.NotNull(client);
+        Assert.True(client.RoundRobin);
+        Assert.Equal(0, client.Services.Count);
 
-            var client2 = star.CreateForService("StarWeb", "Development") as ApiHttpClient;
-            Assert.NotNull(client2);
-            Assert.True(client2.RoundRobin);
-            Assert.Equal("https://localhost:5001/,http://localhost:5000/", client2.Services.Join(",", e => e.Address));
-        }
+        var client2 = star.CreateForService("StarWeb", "Development") as ApiHttpClient;
+        Assert.NotNull(client2);
+        Assert.True(client2.RoundRobin);
+        Assert.Equal("https://localhost:5001/,http://localhost:5000/", client2.Services.Join(",", e => e.Address));
+    }
 
-        [Fact]
-        public void IocTest()
-        {
-            using var star = new StarFactory("http://127.0.0.1:6600", "test", null);
+    [Fact]
+    public void IocTest()
+    {
+        using var star = new StarFactory("http://127.0.0.1:6600", "test", null);
 
-            var provider = ObjectContainer.Provider;
+        var provider = ObjectContainer.Provider;
 
-            var factory = provider.GetRequiredService<StarFactory>();
-            Assert.NotNull(factory);
-            Assert.Equal(star, factory);
+        var factory = provider.GetRequiredService<StarFactory>();
+        Assert.NotNull(factory);
+        Assert.Equal(star, factory);
 
-            var tracer = provider.GetRequiredService<ITracer>();
-            Assert.NotNull(tracer);
-            Assert.Equal(star.Tracer, tracer);
+        var tracer = provider.GetRequiredService<ITracer>();
+        Assert.NotNull(tracer);
+        Assert.Equal(star.Tracer, tracer);
 
-            var config = provider.GetRequiredService<IConfigProvider>();
-            Assert.NotNull(config);
-            Assert.Equal(star.Config, config);
+        var config = provider.GetRequiredService<IConfigProvider>();
+        Assert.NotNull(config);
+        Assert.Equal(star.Config, config);
 
-            var service = provider.GetRequiredService<IRegistry>();
-            Assert.NotNull(service);
-            Assert.Equal(star.Service, service);
-        }
+        var service = provider.GetRequiredService<IRegistry>();
+        Assert.NotNull(service);
+        Assert.Equal(star.Service, service);
+    }
 
-        [Fact]
-        public async void SendNodeCommand()
-        {
-            using var star = new StarFactory("http://127.0.0.1:6600", "test", "xxx");
+    [Fact]
+    public async void SendNodeCommand()
+    {
+        using var star = new StarFactory("http://127.0.0.1:6600", "test", "xxx");
 
-            var rs = await star.SendNodeCommand("7F0F011A", "hello", "stone", 33);
-            Assert.True(rs > 0);
-        }
+        var rs = await star.SendNodeCommand("7F0F011A", "hello", "stone", 33);
+        Assert.True(rs > 0);
     }
 }

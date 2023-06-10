@@ -1,11 +1,13 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using NewLife;
 using NewLife.Http;
 using NewLife.Log;
 using NewLife.Messaging;
+using NewLife.Net;
 using NewLife.Remoting;
 using Stardust.Models;
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
@@ -23,6 +25,9 @@ public class LocalStarClient
 
     /// <summary>本地服务端地址</summary>
     public String Server { get; set; }
+
+    /// <summary>本地星尘代理服务地址</summary>
+    public static Int32 Port { get; set; } = 5500;
 
     private AgentInfo _local;
     private ApiClient _client;
@@ -42,7 +47,7 @@ public class LocalStarClient
     {
         if (_client != null) return;
 
-        _client = new ApiClient("udp://127.0.0.1:5500")
+        _client = new ApiClient($"udp://127.0.0.1:{Port}")
         {
             Timeout = 3_000,
             Log = Log,
@@ -59,14 +64,28 @@ public class LocalStarClient
     /// <returns></returns>
     public AgentInfo GetInfo()
     {
-        // 检测进程是否存在，如果进程都不存在，没必要获取信息
-        if (!Process.GetProcessesByName("StarAgent").Any())
-        {
-            var pis = Process.GetProcessesByName("dotnet");
-            if (pis.Length == 0) return null;
+        //!!! 通过进程名判断是否存在，可能会误判，因为获取其它dotnet进程命令行需要管理员权限
+        //// 检测进程是否存在，如果进程都不存在，没必要获取信息
+        //if (!Process.GetProcessesByName("StarAgent").Any())
+        //{
+        //    var pis = Process.GetProcessesByName("dotnet");
+        //    if (pis.Length == 0) return null;
 
-            if (!pis.Any(p => AppInfo.GetProcessName(p).EqualIgnoreCase("StarAgent"))) return null;
+        //    if (!pis.Any(p => AppInfo.GetProcessName(p).EqualIgnoreCase("StarAgent"))) return null;
+        //}
+
+        // 判断目标端口是否已使用，作为是否探测星尘代理的依据，加速应用启动
+        //if (!IPAddress.Any.CheckPort(NetType.Udp, 5500) &&
+        //    !IPAddress.Loopback.CheckPort(NetType.Udp, 5500) &&
+        //    !IPAddress.IPv6Loopback.CheckPort(NetType.Udp, 5500)) return null;
+        try
+        {
+            // 某些情况下检查端口占用会抛出异常，原因未知
+            var gp = IPGlobalProperties.GetIPGlobalProperties();
+            var eps = gp.GetActiveUdpListeners();
+            if (!eps.Any(ep => ep.Port == Port)) return null;
         }
+        catch { }
 
         var task = TaskEx.Run(GetInfoAsync);
         return task.Wait(500) ? task.Result : null;
@@ -418,9 +437,9 @@ public class LocalStarClient
 
         var buf = encoder.CreateRequest("Info", null).ToPacket().ToArray();
 
-        // 广播消息
+        // 在局域网中广播消息
         var udp = new UdpClient();
-        udp.Send(buf, buf.Length, new IPEndPoint(IPAddress.Broadcast, 5500));
+        udp.Send(buf, buf.Length, new IPEndPoint(IPAddress.Broadcast, Port));
 
         var end = DateTime.Now.AddSeconds(timeout);
         while (DateTime.Now < end)

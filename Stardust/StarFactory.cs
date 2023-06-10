@@ -165,6 +165,7 @@ public class StarFactory : DisposeBase
         if (AppId != "StarAgent")
         {
             // 借助本地StarAgent获取服务器地址
+            var sw = Stopwatch.StartNew();
             try
             {
                 //XTrace.WriteLine("正在探测本机星尘代理……");
@@ -173,7 +174,7 @@ public class StarFactory : DisposeBase
                 if (!server.IsNullOrEmpty())
                 {
                     if (Server.IsNullOrEmpty()) Server = server;
-                    XTrace.WriteLine("星尘探测：{0}", server);
+                    XTrace.WriteLine("星尘探测：{0} Cost={1}ms", server, sw.ElapsedMilliseconds);
 
                     if (set.Server.IsNullOrEmpty())
                     {
@@ -182,11 +183,11 @@ public class StarFactory : DisposeBase
                     }
                 }
                 else
-                    XTrace.WriteLine("星尘探测：StarAgent Not Found");
+                    XTrace.WriteLine("星尘探测：StarAgent Not Found, Cost={0}ms", sw.ElapsedMilliseconds);
             }
             catch (Exception ex)
             {
-                XTrace.Log.Error("星尘探测失败！{0}", ex.Message);
+                XTrace.Log.Error("星尘探测失败！{0} Cost={1}ms", ex.Message, sw.ElapsedMilliseconds);
             }
         }
 

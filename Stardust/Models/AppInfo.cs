@@ -214,17 +214,12 @@ public class AppInfo
         {
             try
             {
-                var dic = ReadWmic("process", "processId=" + process.Id, "commandline");
-                if (dic.TryGetValue("commandline", out var str))
+                var dic = MachineInfo.ReadWmic("process where processId=" + process.Id, "commandline");
+                if (dic.TryGetValue("commandline", out var str) && !str.IsNullOrEmpty())
                 {
-                    var p = str.IndexOf('\"');
-                    if (p >= 0)
-                    {
-                        var p2 = str.IndexOf('\"', p + 1);
-                        if (p2 > 0) str = str.Substring(p2 + 1);
-                    }
-                    var ss = str.Split(' ');
-                    if (ss.Length >= 2) name = Path.GetFileNameWithoutExtension(ss[1]);
+                    var ss = str.Split(' ').Select(e => e.Trim('\"')).ToArray();
+                    str = ss.FirstOrDefault(e => e.EndsWithIgnoreCase(".dll"));
+                    if (!str.IsNullOrEmpty()) name = Path.GetFileNameWithoutExtension(str);
                 }
             }
             catch { }
@@ -233,68 +228,6 @@ public class AppInfo
         _cache.Set(key, name, 600);
 
         return name;
-    }
-
-    /// <summary>通过WMIC命令读取信息</summary>
-    /// <param name="type"></param>
-    /// <param name="where"></param>
-    /// <param name="keys"></param>
-    /// <returns></returns>
-    public static IDictionary<String, String> ReadWmic(String type, String where, params String[] keys)
-    {
-        var dic = new Dictionary<String, String>(StringComparer.OrdinalIgnoreCase);
-
-        var args = $"{type} where {where} get {keys.Join(",")} /format:list";
-        var str = Execute("wmic", args)?.Trim();
-        if (str.IsNullOrEmpty()) return dic;
-
-        var ss = str.Split(Environment.NewLine);
-        foreach (var item in ss)
-        {
-            var ks = item.Split("=");
-            if (ks != null && ks.Length >= 2)
-            {
-                var k = ks[0].Trim();
-                var v = ks[1].Trim();
-                if (dic.TryGetValue(k, out var val))
-                    dic[k] = val + "," + v;
-                else
-                    dic[k] = v;
-            }
-        }
-
-        // 排序，避免多个磁盘序列号时，顺序变动
-        foreach (var item in dic)
-        {
-            if (item.Value.Contains(','))
-                dic[item.Key] = item.Value.Split(',').OrderBy(e => e).Join();
-        }
-
-        return dic;
-    }
-
-    private static String Execute(String cmd, String arguments = null)
-    {
-        try
-        {
-            var psi = new ProcessStartInfo(cmd, arguments)
-            {
-                // UseShellExecute 必须 false，以便于后续重定向输出流
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Hidden,
-                RedirectStandardOutput = true,
-            };
-            var process = Process.Start(psi);
-            if (!process.WaitForExit(3_000))
-            {
-                process.Kill();
-                return null;
-            }
-
-            return process.StandardOutput.ReadToEnd();
-        }
-        catch { return null; }
     }
     #endregion
 }
