@@ -643,7 +643,8 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             ClientId = ClientId,
         };
 
-        if (_consumeServices.TryAdd(serviceName, service))
+        // 已缓存数据的Tag可能不一致，需要重新消费
+        if (!_consumeServices.TryGetValue(serviceName, out var svc) || svc.Tag + "" != tag + "")
         {
             WriteLog("消费服务 {0}", service.ToJson());
 
@@ -653,19 +654,25 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             try
             {
                 var models = await ResolveAsync(service);
-                _consumes[serviceName] = models;
+                if (models != null && models.Length > 0)
+                {
+                    _consumes[serviceName] = models;
 
-                SaveConsumeServices(_consumes);
+                    SaveConsumeServices(_consumes);
+                }
+
+                // 缓存消费服务，避免频繁消费
+                _consumeServices[serviceName] = service;
+
+                return models;
             }
             catch (Exception ex)
             {
                 WriteLog("消费服务[{0}]报错：{1}", serviceName, ex.Message);
             }
         }
-        else
-        {
-            _consumeServices[serviceName] = service;
-        }
+
+        _consumeServices[serviceName] = service;
 
         if (_consumes.TryGetValue(serviceName, out var models2)) return models2;
 
