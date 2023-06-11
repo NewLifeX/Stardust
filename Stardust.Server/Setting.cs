@@ -82,6 +82,10 @@ public class StarServerSetting : Config<StarServerSetting>
     /// <summary>上级服务器。同步向上级汇报数据</summary>
     [Description("上级服务器。同步向上级汇报数据")]
     public String UplinkServer { get; set; }
+
+    /// <summary>新服务器。节点自动迁移到新的服务器地址</summary>
+    [Description("新服务器。节点自动迁移到新的服务器地址")]
+    public String NewServer { get; set; }
     #endregion
 
     #region 方法
