@@ -14,6 +14,7 @@ using NewLife.Threading;
 using Stardust.Managers;
 using Stardust.Models;
 using Stardust.Services;
+using System;
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
 using System.Net.WebSockets;
 using WebSocket = System.Net.WebSockets.WebSocket;
@@ -491,6 +492,10 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
                         Delay = Delay > 0 ? (Delay + ms) / 2 : ms;
                     }
 
+                    // 时间偏移，用于修正本地时间
+                    dt = rs.ServerTime.ToDateTime();
+                    if (dt.Year > 2000) _span = dt.AddMilliseconds(Delay / 2) - DateTime.UtcNow;
+
                     // 令牌
                     if (!rs.Token.IsNullOrEmpty())
                     {
@@ -564,6 +569,11 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     /// <param name="inf"></param>
     /// <returns></returns>
     private async Task<PingResponse> PingAsync(PingInfo inf) => await PostAsync<PingResponse>("Node/Ping", inf);
+
+    private TimeSpan _span;
+    /// <summary>获取相对于服务器的当前时间，避免两端时间差</summary>
+    /// <returns></returns>
+    public DateTime GetNow() => DateTime.Now.Add(_span);
 
     private TraceService _trace;
     /// <summary>使用追踪服务</summary>
@@ -640,7 +650,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         // 记录追踪标识，上报的时候带上，尽可能让源头和下游串联起来
         _eventTraceId = DefaultSpan.Current?.ToString();
 
-        var now = DateTime.UtcNow;
+        var now = GetNow().ToUniversalTime();
         var ev = new EventModel { Time = now.ToLong(), Type = type, Name = name, Remark = remark };
         _events.Enqueue(ev);
 
@@ -770,16 +780,18 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         span?.Detach(model.TraceId);
         try
         {
+            var now = GetNow();
             XTrace.WriteLine("Got Command: {0}", model.ToJson());
-            if (model.Expire.Year < 2000 || model.Expire > DateTime.Now)
+            if (model.Expire.Year < 2000 || model.Expire > now)
             {
                 // 延迟执行
-                if (model.StartTime > DateTime.Now)
+                var ts = model.StartTime - now;
+                if (ts.TotalMilliseconds > 0)
                 {
                     TimerX.Delay(s =>
                     {
                         _ = OnReceiveCommand(model);
-                    }, (Int32)(model.StartTime - DateTime.Now).TotalMilliseconds);
+                    }, (Int32)ts.TotalMilliseconds);
 
                     var reply = new CommandReplyModel
                     {

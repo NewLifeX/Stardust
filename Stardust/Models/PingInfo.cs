@@ -66,11 +66,11 @@ public class PingInfo
 /// <summary>心跳响应</summary>
 public class PingResponse
 {
-    /// <summary>本地时间。ms毫秒</summary>
+    /// <summary>本地时间。非UTC时间，Unix毫秒</summary>
     public Int64 Time { get; set; }
 
-    /// <summary>服务器时间</summary>
-    public DateTime ServerTime { get; set; }
+    /// <summary>服务器时间。UTC时间，Unix毫秒</summary>
+    public Int64 ServerTime { get; set; }
 
     /// <summary>采样周期。单位秒</summary>
     public Int32 Period { get; set; }

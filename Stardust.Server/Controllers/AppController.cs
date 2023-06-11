@@ -72,7 +72,7 @@ public class AppController : BaseController
         var rs = new PingResponse
         {
             //Time = inf.Time,
-            ServerTime = DateTime.UtcNow,
+            ServerTime = DateTime.UtcNow.ToLong(),
             Period = _app.Period,
         };
 
@@ -85,7 +85,7 @@ public class AppController : BaseController
 
     [AllowAnonymous]
     [HttpGet(nameof(Ping))]
-    public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.Now, };
+    public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.UtcNow.ToLong(), };
     #endregion
 
     #region 上报

@@ -309,7 +309,7 @@ public class NodeService
         var rs = new PingResponse
         {
             Time = inf.Time,
-            ServerTime = DateTime.UtcNow,
+            ServerTime = DateTime.UtcNow.ToLong(),
         };
 
         if (node != null)
@@ -422,7 +422,7 @@ public class NodeService
         return new PingResponse
         {
             Time = 0,
-            ServerTime = DateTime.Now,
+            ServerTime = DateTime.UtcNow.ToLong(),
         };
     }
 

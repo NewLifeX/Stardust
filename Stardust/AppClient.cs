@@ -11,6 +11,7 @@ using Stardust.Models;
 using Stardust.Registry;
 using Stardust.Services;
 using NewLife.Caching;
+using System;
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
 using System.Net.WebSockets;
 using TaskEx = System.Threading.Tasks.Task;
@@ -201,6 +202,20 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
                     // 由服务器改变采样频率
                     if (rs.Period > 0 && _timer != null) _timer.Period = rs.Period * 1000;
 
+                    var delay = 0;
+                    var dt = rs.Time.ToDateTime();
+                    if (dt.Year > 2000)
+                    {
+                        // 计算延迟
+                        var ts = DateTime.UtcNow - dt;
+                        var ms = (Int32)Math.Round(ts.TotalMilliseconds);
+                        delay = delay > 0 ? (delay + ms) / 2 : ms;
+                    }
+
+                    // 时间偏移，用于修正本地时间
+                    dt = rs.ServerTime.ToDateTime();
+                    if (dt.Year > 2000) _span = dt.AddMilliseconds(delay / 2) - DateTime.UtcNow;
+
                     // 推队列
                     if (rs.Commands != null && rs.Commands.Length > 0)
                     {
@@ -240,6 +255,11 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             throw;
         }
     }
+
+    private TimeSpan _span;
+    /// <summary>获取相对于服务器的当前时间，避免两端时间差</summary>
+    /// <returns></returns>
+    public DateTime GetNow() => DateTime.Now.Add(_span);
     #endregion
 
     #region 上报
@@ -308,7 +328,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         // 记录追踪标识，上报的时候带上，尽可能让源头和下游串联起来
         _eventTraceId = DefaultSpan.Current?.ToString();
 
-        var now = DateTime.UtcNow;
+        var now = GetNow().ToUniversalTime();
         var ev = new EventModel { Time = now.ToLong(), Type = type, Name = name, Remark = remark };
         _events.Enqueue(ev);
 
@@ -445,16 +465,18 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         span?.Detach(model.TraceId);
         try
         {
+            var now = GetNow();
             XTrace.WriteLine("Got Command: {0}", model.ToJson());
-            if (model.Expire.Year < 2000 || model.Expire > DateTime.Now)
+            if (model.Expire.Year < 2000 || model.Expire > now)
             {
                 // 延迟执行
-                if (model.StartTime > DateTime.Now)
+                var ts = model.StartTime - now;
+                if (ts.TotalMilliseconds > 0)
                 {
                     TimerX.Delay(s =>
                     {
                         _ = OnReceiveCommand(model);
-                    }, (Int32)(model.StartTime - DateTime.Now).TotalMilliseconds);
+                    }, (Int32)ts.TotalMilliseconds);
 
                     var reply = new CommandReplyModel
                     {

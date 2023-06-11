@@ -114,7 +114,7 @@ public class NodeController : BaseController
 
     [AllowAnonymous]
     [HttpGet(nameof(Ping))]
-    public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.Now, };
+    public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.UtcNow.ToLong(), };
     #endregion
 
     #region 升级
