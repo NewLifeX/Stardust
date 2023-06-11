@@ -780,6 +780,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         span?.Detach(model.TraceId);
         try
         {
+            //todo 有效期判断可能有隐患，现在只是假设服务器和客户端在同一个时区，如果不同，可能会出现问题
             var now = GetNow();
             XTrace.WriteLine("Got Command: {0}", model.ToJson());
             if (model.Expire.Year < 2000 || model.Expire > now)
