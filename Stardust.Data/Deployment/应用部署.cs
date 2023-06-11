@@ -150,6 +150,14 @@ public partial class AppDeploy
     [BindColumn("AutoPublish", "自动发布。应用版本后自动发布到启用节点，加快发布速度", "")]
     public Boolean AutoPublish { get => _AutoPublish; set { if (OnPropertyChanging("AutoPublish", value)) { _AutoPublish = value; OnPropertyChanged("AutoPublish"); } } }
 
+    private String _PackageName;
+    /// <summary>包名。用于判断上传包名是否正确，避免错误上传其它应用包，支持*模糊匹配</summary>
+    [DisplayName("包名")]
+    [Description("包名。用于判断上传包名是否正确，避免错误上传其它应用包，支持*模糊匹配")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("PackageName", "包名。用于判断上传包名是否正确，避免错误上传其它应用包，支持*模糊匹配", "")]
+    public String PackageName { get => _PackageName; set { if (OnPropertyChanging("PackageName", value)) { _PackageName = value; OnPropertyChanged("PackageName"); } } }
+
     private Int32 _CreateUserId;
     /// <summary>创建者</summary>
     [Category("扩展")]
@@ -237,6 +245,7 @@ public partial class AppDeploy
             "MaxMemory" => _MaxMemory,
             "Mode" => _Mode,
             "AutoPublish" => _AutoPublish,
+            "PackageName" => _PackageName,
             "CreateUserId" => _CreateUserId,
             "CreateTime" => _CreateTime,
             "CreateIP" => _CreateIP,
@@ -265,6 +274,7 @@ public partial class AppDeploy
                 case "MaxMemory": _MaxMemory = value.ToInt(); break;
                 case "Mode": _Mode = (Stardust.Models.ServiceModes)value.ToInt(); break;
                 case "AutoPublish": _AutoPublish = value.ToBoolean(); break;
+                case "PackageName": _PackageName = Convert.ToString(value); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -338,6 +348,9 @@ public partial class AppDeploy
         /// <summary>自动发布。应用版本后自动发布到启用节点，加快发布速度</summary>
         public static readonly Field AutoPublish = FindByName("AutoPublish");
 
+        /// <summary>包名。用于判断上传包名是否正确，避免错误上传其它应用包，支持*模糊匹配</summary>
+        public static readonly Field PackageName = FindByName("PackageName");
+
         /// <summary>创建者</summary>
         public static readonly Field CreateUserId = FindByName("CreateUserId");
 
@@ -409,6 +422,9 @@ public partial class AppDeploy
 
         /// <summary>自动发布。应用版本后自动发布到启用节点，加快发布速度</summary>
         public const String AutoPublish = "AutoPublish";
+
+        /// <summary>包名。用于判断上传包名是否正确，避免错误上传其它应用包，支持*模糊匹配</summary>
+        public const String PackageName = "PackageName";
 
         /// <summary>创建者</summary>
         public const String CreateUserId = "CreateUserId";
