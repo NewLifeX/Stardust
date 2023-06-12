@@ -127,7 +127,7 @@ public class NodeController : EntityController<Node>
     /// <param name="category"></param>
     /// <param name="key"></param>
     /// <returns></returns>
-    public ActionResult NodeSearch(String category, String key = null)
+    public ActionResult NodeSearch(String category, String product, String key = null)
     {
         var page = new PageParameter { PageSize = 20 };
 
@@ -138,7 +138,7 @@ public class NodeController : EntityController<Node>
             page.Desc = true;
         }
 
-        var list = SearchByCategory(category, true, key, page);
+        var list = SearchByCategory(category, product, true, key, page);
 
         return Json(0, null, list.Select(e => new
         {

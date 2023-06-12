@@ -374,19 +374,21 @@ public partial class Node : Entity<Node>
 
     /// <summary>根据类别搜索</summary>
     /// <param name="category"></param>
+    /// <param name="product"></param>
     /// <param name="enable"></param>
     /// <param name="key"></param>
     /// <param name="page"></param>
     /// <returns></returns>
-    public static IList<Node> SearchByCategory(String category, Boolean? enable, String key, PageParameter page)
+    public static IList<Node> SearchByCategory(String category, String product, Boolean? enable, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (!category.IsNullOrEmpty()) exp &= _.Category == category | _.Category.IsNullOrEmpty();
+        if (!product.IsNullOrEmpty()) exp &= _.ProductCode == product;
 
         if (enable != null) exp &= _.Enable == enable.Value;
 
-        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+        if (!key.IsNullOrEmpty()) exp &= _.Code.Contains(key) | _.Name.Contains(key) | _.Category.Contains(key) | _.MachineName.Contains(key) | _.UserName.Contains(key);
 
         return FindAll(exp, page);
     }
