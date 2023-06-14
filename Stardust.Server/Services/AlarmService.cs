@@ -245,8 +245,8 @@ public class AlarmService : IHostedService
                     }
 
                     // 必须两个条件同时满足，才能告警
-                    if (max >= 0 && st.Errors >= max &&
-                        rate >= 0 && st.ErrorRate >= rate)
+                    if (max > 0 && st.Errors >= max &&
+                        rate > 0 && st.ErrorRate >= rate)
                     {
                         span?.AppendTag(new { st.Errors, st.ErrorRate, rate });
 
@@ -372,8 +372,8 @@ public class AlarmService : IHostedService
                     var rate = st.Total / (yesterday * seconds / 3600);
 
                     // 满足任意一个条件，都要告警
-                    if (max >= 0 && rate >= max ||
-                        min >= 0 && rate <= min)
+                    if (max > 0 && rate >= max ||
+                        min > 0 && rate <= min)
                     {
                         span?.AppendTag(new { seconds, yesterday, rate });
 
