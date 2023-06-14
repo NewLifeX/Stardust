@@ -187,6 +187,14 @@ public partial class AppOnline
     [BindColumn("IP", "本地IP。节点本地IP地址", "")]
     public String IP { get => _IP; set { if (OnPropertyChanging("IP", value)) { _IP = value; OnPropertyChanged("IP"); } } }
 
+    private String _Listens;
+    /// <summary>监听端口。网络端口监听信息</summary>
+    [DisplayName("监听端口")]
+    [Description("监听端口。网络端口监听信息")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("Listens", "监听端口。网络端口监听信息", "")]
+    public String Listens { get => _Listens; set { if (OnPropertyChanging("Listens", value)) { _Listens = value; OnPropertyChanged("Listens"); } } }
+
     private String _Token;
     /// <summary>令牌</summary>
     [DisplayName("令牌")]
@@ -278,6 +286,7 @@ public partial class AppOnline
             "MachineName" => _MachineName,
             "StartTime" => _StartTime,
             "IP" => _IP,
+            "Listens" => _Listens,
             "Token" => _Token,
             "TraceId" => _TraceId,
             "Creator" => _Creator,
@@ -311,6 +320,7 @@ public partial class AppOnline
                 case "MachineName": _MachineName = Convert.ToString(value); break;
                 case "StartTime": _StartTime = value.ToDateTime(); break;
                 case "IP": _IP = Convert.ToString(value); break;
+                case "Listens": _Listens = Convert.ToString(value); break;
                 case "Token": _Token = Convert.ToString(value); break;
                 case "TraceId": _TraceId = Convert.ToString(value); break;
                 case "Creator": _Creator = Convert.ToString(value); break;
@@ -399,6 +409,9 @@ public partial class AppOnline
         /// <summary>本地IP。节点本地IP地址</summary>
         public static readonly Field IP = FindByName("IP");
 
+        /// <summary>监听端口。网络端口监听信息</summary>
+        public static readonly Field Listens = FindByName("Listens");
+
         /// <summary>令牌</summary>
         public static readonly Field Token = FindByName("Token");
 
@@ -485,6 +498,9 @@ public partial class AppOnline
 
         /// <summary>本地IP。节点本地IP地址</summary>
         public const String IP = "IP";
+
+        /// <summary>监听端口。网络端口监听信息</summary>
+        public const String Listens = "Listens";
 
         /// <summary>令牌</summary>
         public const String Token = "Token";

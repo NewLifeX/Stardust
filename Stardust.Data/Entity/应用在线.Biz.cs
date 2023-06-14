@@ -271,6 +271,7 @@ public partial class AppOnline : Entity<AppOnline>
             ProcessId = info.Id;
             ProcessName = info.Name;
             CommandLine = info.CommandLine;
+            Listens = info.Listens;
             StartTime = info.StartTime;
         }
     }
