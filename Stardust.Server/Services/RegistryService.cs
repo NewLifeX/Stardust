@@ -339,6 +339,9 @@ public class RegistryService
             online.SaveAsync();
         }
 
+        // 保存性能数据
+        AppMeter.WriteData(app, inf, "Ping", clientId, ip);
+
         return online;
     }
 

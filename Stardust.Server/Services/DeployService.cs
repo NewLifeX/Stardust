@@ -100,7 +100,7 @@ public class DeployService
         {
             var clientId = $"{inf.IP?.Split(',').FirstOrDefault()}@{inf.Id}";
             _registryService.Ping(ap, inf, ip, clientId, null);
-            AppMeter.WriteData(ap, inf, clientId, ip);
+            AppMeter.WriteData(ap, inf, "Deploy", clientId, ip);
         }
 
         // 部署集

@@ -46,6 +46,14 @@ public partial class AppMeter
     [BindColumn("ClientId", "实例。应用可能多实例部署，ip@proccessid", "")]
     public String ClientId { get => _ClientId; set { if (OnPropertyChanging("ClientId", value)) { _ClientId = value; OnPropertyChanged("ClientId"); } } }
 
+    private String _Source;
+    /// <summary>来源。数据来源，应用心跳、监控数据上报携带、远程发布后由StarAgent上报</summary>
+    [DisplayName("来源")]
+    [Description("来源。数据来源，应用心跳、监控数据上报携带、远程发布后由StarAgent上报")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("Source", "来源。数据来源，应用心跳、监控数据上报携带、远程发布后由StarAgent上报", "")]
+    public String Source { get => _Source; set { if (OnPropertyChanging("Source", value)) { _Source = value; OnPropertyChanged("Source"); } } }
+
     private Int32 _Memory;
     /// <summary>内存。单位M</summary>
     [DisplayName("内存")]
@@ -157,6 +165,7 @@ public partial class AppMeter
             "Id" => _Id,
             "AppId" => _AppId,
             "ClientId" => _ClientId,
+            "Source" => _Source,
             "Memory" => _Memory,
             "ProcessorTime" => _ProcessorTime,
             "CpuUsage" => _CpuUsage,
@@ -178,6 +187,7 @@ public partial class AppMeter
                 case "Id": _Id = value.ToLong(); break;
                 case "AppId": _AppId = value.ToInt(); break;
                 case "ClientId": _ClientId = Convert.ToString(value); break;
+                case "Source": _Source = Convert.ToString(value); break;
                 case "Memory": _Memory = value.ToInt(); break;
                 case "ProcessorTime": _ProcessorTime = value.ToInt(); break;
                 case "CpuUsage": _CpuUsage = value.ToDouble(); break;
@@ -211,6 +221,9 @@ public partial class AppMeter
 
         /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
         public static readonly Field ClientId = FindByName("ClientId");
+
+        /// <summary>来源。数据来源，应用心跳、监控数据上报携带、远程发布后由StarAgent上报</summary>
+        public static readonly Field Source = FindByName("Source");
 
         /// <summary>内存。单位M</summary>
         public static readonly Field Memory = FindByName("Memory");
@@ -262,6 +275,9 @@ public partial class AppMeter
 
         /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
         public const String ClientId = "ClientId";
+
+        /// <summary>来源。数据来源，应用心跳、监控数据上报携带、远程发布后由StarAgent上报</summary>
+        public const String Source = "Source";
 
         /// <summary>内存。单位M</summary>
         public const String Memory = "Memory";
