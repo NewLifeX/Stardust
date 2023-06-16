@@ -330,12 +330,16 @@ public class ZipDeploy
                     if (ovs != null && ovs.Any(e => e.IsMatch(item.Name)))
                     {
                         span?.AppendTag(item.Name);
+                        WriteLog("复制文件 {0}", item.Name);
 
                         // 注意，appsettings.json 也可能覆盖
                         item.CopyTo(dst, true);
                     }
                     else if (!File.Exists(dst))
                     {
+                        span?.AppendTag(item.Name);
+                        WriteLog("复制文件 {0}", item.Name);
+
                         item.CopyTo(dst, false);
                     }
                 }
@@ -348,10 +352,20 @@ public class ZipDeploy
                 var dest = rundir.CombinePath(item.Name).AsDirectory();
                 // 强制覆盖(包含子孙目录，否则会出现目标文件夹中子孙文件夹内容遗漏拷贝)
                 if (ovs != null && ovs.Contains(item.Name))
+                {
+                    span?.AppendTag(item.Name);
+                    WriteLog("复制目录 {0}", item.Name);
+
                     di.CopyTo(dest.FullName, allSub: true);
+                }
                 // 特殊目录且目标不存在时，覆盖
                 else if (item.Name.EqualIgnoreCase("Data", "Config", "Plugins", "wwwroot") && !dest.Exists)
+                {
+                    span?.AppendTag(item.Name);
+                    WriteLog("复制目录 {0}", item.Name);
+
                     di.CopyTo(dest.FullName, allSub: true);
+                }
             }
         }
     }
