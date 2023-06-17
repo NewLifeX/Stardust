@@ -30,7 +30,7 @@ public class RegistryService
 
         if (app.DisplayName.IsNullOrEmpty()) app.DisplayName = inf.AppName;
         app.UpdateIP = ip;
-        app.SaveAsync();
+        app.Update();
 
         app.WriteHistory("Register", true, inf.ToJson(), inf.Version, ip, clientId);
 
@@ -46,8 +46,8 @@ public class RegistryService
             if (node != null) online.NodeId = node.ID;
 
             if (!inf.Version.IsNullOrEmpty()) online.Version = inf.Version;
-            online.SaveAsync();
         }
+        online.Update();
 
         //// 根据节点IP规则，自动创建节点
         //if (online.NodeId == 0)
