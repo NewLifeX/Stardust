@@ -96,6 +96,27 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
         return base.Valid(entity, type, post);
     }
 
+    protected override Int32 OnInsert(AppDeployNode entity)
+    {
+        var rs = base.OnInsert(entity);
+        entity.App?.Fix();
+        return rs;
+    }
+
+    protected override Int32 OnUpdate(AppDeployNode entity)
+    {
+        var rs = base.OnUpdate(entity);
+        entity.App?.Fix();
+        return rs;
+    }
+
+    protected override Int32 OnDelete(AppDeployNode entity)
+    {
+        var rs = OnDelete(entity);
+        entity.App?.Fix();
+        return rs;
+    }
+
     /// <summary>执行操作</summary>
     /// <param name="act"></param>
     /// <param name="id"></param>

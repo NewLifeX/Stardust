@@ -93,8 +93,8 @@ public class AppDeployController : EntityController<AppDeploy>
         var appId = p["appId"].ToInt(-1);
         if (appId > 0)
         {
-            var entity = AppDeploy.FindByAppId(appId);
-            if (entity != null) return new List<AppDeploy> { entity };
+            var list = AppDeploy.FindAllByAppId(appId);
+            if (list.Count > 0) return list;
         }
 
         var category = p["category"];

@@ -79,18 +79,18 @@ namespace Stardust.Data.Deployment
             //return Find(_.Id == id);
         }
 
-        /// <summary>根据编号查找</summary>
-        /// <param name="appId">编号</param>
-        /// <returns>实体对象</returns>
-        public static AppDeploy FindByAppId(Int32 appId)
-        {
-            if (appId < 0) return null;
+        ///// <summary>根据编号查找</summary>
+        ///// <param name="appId">编号</param>
+        ///// <returns>实体对象</returns>
+        //public static AppDeploy FindByAppId(Int32 appId)
+        //{
+        //    if (appId < 0) return null;
 
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.AppId == appId);
+        //    // 实体缓存
+        //    if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.AppId == appId);
 
-            return Find(_.AppId == appId);
-        }
+        //    return Find(_.AppId == appId);
+        //}
 
         /// <summary>根据名称查找</summary>
         /// <param name="name"></param>
