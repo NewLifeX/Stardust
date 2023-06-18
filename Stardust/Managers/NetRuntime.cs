@@ -82,20 +82,23 @@ public class NetRuntime
             var dir = Path.GetDirectoryName(fullFile);
             if (!String.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
+            // 独立区域，下载完成后释放连接和文件句柄
+            {
 #if NET6_0_OR_GREATER
-            using var http = new HttpClient();
-            var hs = http.GetStreamAsync(url).Result;
+                using var http = new HttpClient();
+                var hs = http.GetStreamAsync(url).Result;
 
-            using var fs = new FileStream(fullFile, FileMode.CreateNew, FileAccess.Write);
-            hs.CopyTo(fs);
+                using var fs = new FileStream(fullFile, FileMode.CreateNew, FileAccess.Write);
+                hs.CopyTo(fs);
 #else
-            using var http = new WebClient();
-            http.DownloadFile(url, fullFile);
+                using var http = new WebClient();
+                http.DownloadFile(url, fullFile);
 #endif
+            }
             WriteLog("MD5: {0}", GetMD5(fullFile));
 
-            // 在windows系统上，下载完成以后，等待一会再安装，避免文件被占用（可能是安全扫描），提高安装成功率
-            if (Runtime.Windows) Thread.Sleep(15_000);
+            //// 在windows系统上，下载完成以后，等待一会再安装，避免文件被占用（可能是安全扫描），提高安装成功率
+            //if (Runtime.Windows) Thread.Sleep(15_000);
         }
 
         if (String.IsNullOrEmpty(arg)) arg = "/passive /promptrestart";
