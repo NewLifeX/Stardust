@@ -25,17 +25,20 @@ public class DeployService
         // 提出StarAgent
         if (online.AppName == "StarAgent") return;
 
-        // 找应用部署
+        // 找应用部署。此时只有应用标识和节点标识，可能对应多个部署集
         var list = AppDeploy.FindAllByAppId(online.AppId);
-        var deploy = list.FirstOrDefault();
-        if (deploy == null)
+        if (list.Count == 0)
         {
             // 根据应用名查找
-            deploy = AppDeploy.FindByName(online.AppName);
+            var deploy = AppDeploy.FindByName(online.AppName);
             if (deploy != null)
             {
                 // 部署名绑定到别的应用，退出
                 if (deploy.AppId != 0 && deploy.AppId != online.AppId) return;
+
+                // 当顶当前应用
+                deploy.AppId = online.AppId;
+                deploy.Update();
             }
             else
             {
@@ -48,35 +51,38 @@ public class DeployService
                 };
                 deploy.Insert();
             }
+            list.Add(deploy);
         }
 
-        // 查找节点。借助缓存
-        var node = deploy.DeployNodes.FirstOrDefault(e => e.NodeId == online.NodeId);
-
-        // 多个部署集，选一个
-        if (node == null && list.Count > 1)
-        {
-            var nodes = AppDeployNode.Search(list.Select(e => e.Id).ToArray(), online.NodeId, null, null);
-            //var node = nodes.FirstOrDefault(e => e.NodeId == online.NodeId);
-            node = nodes.FirstOrDefault();
-        }
+        // 查找节点。借助缓存找到启用的那一个部署节点，去更新它的信息。如果有多个无法识别，则都更新一遍
+        //var nodes = AppDeployNode.Search(list.Select(e => e.Id).ToArray(), online.NodeId, null, null);
+        var nodes = list.SelectMany(e => e.DeployNodes).Where(e => e.NodeId == online.NodeId).ToList();
+        var node = nodes.FirstOrDefault(e => e.Enable);
 
         // 自动创建部署节点，更新信息
-        node ??= new AppDeployNode { AppId = deploy.Id, NodeId = online.NodeId, Enable = false };
-
-        node.IP = online.IP;
-        node.ProcessId = online.ProcessId;
-        node.ProcessName = online.ProcessName;
-        node.UserName = online.UserName;
-        node.StartTime = online.StartTime;
-        node.Version = online.Version;
-        node.Compile = online.Compile;
-        node.LastActive = online.UpdateTime;
-
-        node.Save();
-
-        // 定时更新部署信息
-        if (deploy.UpdateTime.AddHours(1) < DateTime.Now) deploy.Fix();
+        if (node != null)
+        {
+            node.Fill(online);
+            node.Update();
+        }
+        else
+        {
+            // 由于无法确定发布集，所以创建所有发布集的节点。此时不能启用，否则下一次应用启动时，将会拉取到该部署信息，而此时部署信息还不完整
+            foreach (var deploy in list)
+            {
+                node = nodes.FirstOrDefault(e => e.AppId == deploy.Id);
+                node ??= new AppDeployNode { AppId = deploy.Id, NodeId = online.NodeId, Enable = false };
+                node.Fill(online);
+                node.Save();
+            }
+        }
+        {
+            // 定时更新部署信息
+            foreach (var deploy in list)
+            {
+                if (deploy.UpdateTime.AddHours(1) < DateTime.Now) deploy.Fix();
+            }
+        }
     }
 
     public void WriteHistory(Int32 appId, Int32 nodeId, String action, Boolean success, String remark, String ip)

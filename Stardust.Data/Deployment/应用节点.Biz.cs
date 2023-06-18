@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
@@ -194,6 +195,18 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         UserName = inf.UserName;
         StartTime = inf.StartTime;
         Listens = inf.Listens;
+    }
+
+    public void Fill(AppOnline online)
+    {
+        IP = online.IP;
+        ProcessId = online.ProcessId;
+        ProcessName = online.ProcessName;
+        UserName = online.UserName;
+        StartTime = online.StartTime;
+        Version = online.Version;
+        Compile = online.Compile;
+        LastActive = online.UpdateTime;
     }
     #endregion
 }
