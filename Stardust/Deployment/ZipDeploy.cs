@@ -180,7 +180,7 @@ public class ZipDeploy
             // 删除其它版本
             try
             {
-                foreach (var di in shadow.AsDirectory().Parent.GetDirectories($"{Name}-"))
+                foreach (var di in shadow.AsDirectory().Parent.GetDirectories($"{Name}-*"))
                 {
                     span?.AppendTag($"删除旧版 {di.FullName}");
 
