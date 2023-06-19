@@ -244,9 +244,9 @@ public class ZipDeploy
             {
                 var user = UserName;
                 if (!user.Contains(':')) user = $"{user}:{user}";
-                Process.Start("chown", $"-R {user} {si.WorkingDirectory}");
+                //Process.Start("chown", $"-R {user} {si.WorkingDirectory}");
                 Process.Start("chown", $"-R {user} {shadow}");
-                Process.Start("chown", $"{user} {si.WorkingDirectory.CombinePath("../").GetBasePath()}");
+                Process.Start("chown", $"-R {user} {si.WorkingDirectory.CombinePath("../").GetBasePath()}");
             }
         }
 
@@ -305,7 +305,7 @@ public class ZipDeploy
     /// <param name="shadow"></param>
     public virtual void Extract(String shadow)
     {
-        using var span = Tracer?.NewSpan("ZipDeploy-Extract", new { shadow });
+        using var span = Tracer?.NewSpan("ZipDeploy-Extract", new { shadow, WorkingDirectory, Overwrite });
 
         var fi = WorkingDirectory.CombinePath(FileName).AsFile();
         var rundir = fi.DirectoryName;
@@ -317,6 +317,7 @@ public class ZipDeploy
 
         // 复制配置文件和数据文件到运行目录
         var sdi = shadow.AsDirectory();
+        span?.AppendTag($"sdi={sdi.FullName} rundir={rundir}");
         if (!sdi.FullName.EnsureEnd("\\").EqualIgnoreCase(rundir.EnsureEnd("\\")))
         {
             // 覆盖文件
@@ -325,11 +326,12 @@ public class ZipDeploy
                 // 拷贝配置类文件
                 if (item.Extension.EndsWithIgnoreCase(".json", ".config", ".xml"))
                 {
+                    //span?.AppendTag(item.Name);
+
                     var dst = rundir.CombinePath(item.Name);
                     // 当前文件在覆盖列表内时，强制覆盖
                     if (ovs != null && ovs.Any(e => e.IsMatch(item.Name)))
                     {
-                        span?.AppendTag(item.Name);
                         WriteLog("复制文件 {0}", item.Name);
 
                         // 注意，appsettings.json 也可能覆盖
@@ -337,7 +339,6 @@ public class ZipDeploy
                     }
                     else if (!File.Exists(dst))
                     {
-                        span?.AppendTag(item.Name);
                         WriteLog("复制文件 {0}", item.Name);
 
                         item.CopyTo(dst, false);
@@ -348,12 +349,13 @@ public class ZipDeploy
             // 覆盖目录
             foreach (var item in sdi.GetDirectories())
             {
+                //span?.AppendTag(item.Name);
+
                 var di = shadow.CombinePath(item.Name).AsDirectory();
                 var dest = rundir.CombinePath(item.Name).AsDirectory();
                 // 强制覆盖(包含子孙目录，否则会出现目标文件夹中子孙文件夹内容遗漏拷贝)
                 if (ovs != null && ovs.Contains(item.Name))
                 {
-                    span?.AppendTag(item.Name);
                     WriteLog("复制目录 {0}", item.Name);
 
                     di.CopyTo(dest.FullName, allSub: true);
@@ -361,7 +363,6 @@ public class ZipDeploy
                 // 特殊目录且目标不存在时，覆盖
                 else if (item.Name.EqualIgnoreCase("Data", "Config", "Plugins", "wwwroot") && !dest.Exists)
                 {
-                    span?.AppendTag(item.Name);
                     WriteLog("复制目录 {0}", item.Name);
 
                     di.CopyTo(dest.FullName, allSub: true);
