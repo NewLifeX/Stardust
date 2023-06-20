@@ -13,6 +13,8 @@ using Stardust.Server.Services;
 using Stardust.Web.Services;
 using XCode;
 using XCode.DataAccessLayer;
+using Stardust.Data.Deployment;
+using Stardust.Data;
 
 namespace Stardust.Web;
 
@@ -78,7 +80,7 @@ public class Startup
         using var span = tracer?.NewSpan(nameof(Configure));
 
         // 调整应用表名
-        FixAppTableName();
+        FixTable();
 
         // 初始化数据库连接
         var conns = DAL.ConnStrs;
@@ -159,7 +161,7 @@ public class Startup
         }
     }
 
-    private static void FixAppTableName()
+    private static void FixTable()
     {
         var dal = DAL.Create("Stardust");
         var tables = dal.Tables;
@@ -177,6 +179,10 @@ public class Startup
                 XTrace.WriteLine("重命名结果：{0}", rs);
             }
         }
+
+        // 强行设置反向工程，修改字段长度
+        var ts = new[] { AppDeployNode.Meta.Table.DataTable, AppOnline.Meta.Table.DataTable };
+        dal.Db.CreateMetaData().SetTables(Migration.Full, ts);
     }
 
     private static void TrimOldAppConfig() => AppConfig.TrimAll();

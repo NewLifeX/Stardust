@@ -53,6 +53,9 @@ public partial class AppDeployNode : Entity<AppDeployNode>
             if (IP.Length > len) IP = IP[..len];
         }
 
+        len = _.Listens.Length;
+        if (len > 0 && !Listens.IsNullOrEmpty() && Listens.Length > len) Listens = Listens[..len];
+
         base.Valid(isNew);
     }
     #endregion

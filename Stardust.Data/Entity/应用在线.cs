@@ -191,7 +191,7 @@ public partial class AppOnline
     /// <summary>监听端口。网络端口监听信息</summary>
     [DisplayName("监听端口")]
     [Description("监听端口。网络端口监听信息")]
-    [DataObjectField(false, false, true, 50)]
+    [DataObjectField(false, false, true, 200)]
     [BindColumn("Listens", "监听端口。网络端口监听信息", "")]
     public String Listens { get => _Listens; set { if (OnPropertyChanging("Listens", value)) { _Listens = value; OnPropertyChanged("Listens"); } } }
 

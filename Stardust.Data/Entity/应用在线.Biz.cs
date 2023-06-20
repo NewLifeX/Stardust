@@ -55,6 +55,9 @@ public partial class AppOnline : Entity<AppOnline>
         len = _.CommandLine.Length;
         if (len > 0 && !CommandLine.IsNullOrEmpty() && CommandLine.Length > len) CommandLine = CommandLine[..len];
 
+        len = _.Listens.Length;
+        if (len > 0 && !Listens.IsNullOrEmpty() && Listens.Length > len) Listens = Listens[..len];
+
         base.Valid(isNew);
     }
     #endregion
