@@ -8,10 +8,6 @@ using NewLife;
 using NewLife.Log;
 using Stardust.Services;
 
-#if NET6_0_OR_GREATER
-using System.Net.Http;
-#endif
-
 namespace Stardust.Managers;
 
 /// <summary>dotNet运行时</summary>
@@ -106,10 +102,10 @@ public class NetRuntime
 
         WriteLog("正在安装：{0} {1}", fullFile, arg);
 
-        if (Runtime.Linux)
-            return InstallOnLinux(fullFile, arg);
-        else
+        if (IsWindows)
             return InstallOnWindows(fullFile, arg);
+        else
+            return InstallOnLinux(fullFile, arg);
     }
 
     Boolean InstallOnWindows(String fullFile, String arg)
@@ -137,6 +133,7 @@ public class NetRuntime
         // 建立目录
         var target = "/usr/share/dotnet";
         target.EnsureDirectory(false);
+        //if (!Directory.Exists(target)) Directory.CreateDirectory(target);
 
         // 解压缩
         Process.Start(new ProcessStartInfo("tar", $"-xzf {fullFile} -C {target}") { UseShellExecute = true });
@@ -520,7 +517,7 @@ public class NetRuntime
     public static IList<VerInfo> Get1To45VersionFromRegistry()
     {
         var list = new List<VerInfo>();
-        if (Environment.OSVersion.Platform > PlatformID.WinCE) return list;
+        if (!IsWindows) return list;
 
 #if NET45_OR_GREATER || NET6_0_OR_GREATER
         // 注册表查找 .NET Framework
@@ -585,7 +582,7 @@ public class NetRuntime
     public static IList<VerInfo> Get45PlusFromRegistry()
     {
         var list = new List<VerInfo>();
-        if (Environment.OSVersion.Platform > PlatformID.WinCE) return list;
+        if (!IsWindows) return list;
 
 #if NET45_OR_GREATER || NET6_0_OR_GREATER
         const String subkey = @"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\";
@@ -635,13 +632,13 @@ public class NetRuntime
         var list = new List<VerInfo>();
 
         var dir = "";
-        if (Environment.OSVersion.Platform <= PlatformID.WinCE)
+        if (IsWindows)
         {
             dir = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
             if (String.IsNullOrEmpty(dir)) return null;
             dir += "\\dotnet\\shared";
         }
-        else if (Environment.OSVersion.Platform == PlatformID.Unix)
+        else
             dir = "/usr/share/dotnet/shared";
 
         var dic = new SortedDictionary<String, VerInfo>();
@@ -750,6 +747,9 @@ public class NetRuntime
     #endregion
 
     #region 辅助
+    /// <summary>是否Windows</summary>
+    public static Boolean IsWindows => Environment.OSVersion.Platform <= PlatformID.WinCE;
+
     /// <summary>获取文件MD5</summary>
     /// <param name="fileName"></param>
     /// <returns></returns>
