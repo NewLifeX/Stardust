@@ -70,7 +70,7 @@ public class NetRuntime
             if (String.IsNullOrEmpty(baseUrl))
                 baseUrl = BaseUrl?.TrimEnd('/');
             else
-                baseUrl = BaseUrl?.TrimEnd('/') + baseUrl.EnsureStart("/").TrimEnd('/');
+                baseUrl = BaseUrl?.TrimEnd('/') + '/' + baseUrl.TrimStart('/').TrimEnd('/');
 
             var url = $"{baseUrl}/{fileName}";
             WriteLog("正在下载：{0}", url);
@@ -81,7 +81,7 @@ public class NetRuntime
             // 独立区域，下载完成后释放连接和文件句柄
             {
 #if NET6_0_OR_GREATER
-                using var http = new HttpClient();
+                using var http = new System.Net.Http.HttpClient();
                 var hs = http.GetStreamAsync(url).Result;
 
                 using var fs = new FileStream(fullFile, FileMode.CreateNew, FileAccess.Write);
@@ -132,8 +132,8 @@ public class NetRuntime
     {
         // 建立目录
         var target = "/usr/share/dotnet";
-        target.EnsureDirectory(false);
-        //if (!Directory.Exists(target)) Directory.CreateDirectory(target);
+        //target.EnsureDirectory(false);
+        if (!Directory.Exists(target)) Directory.CreateDirectory(target);
 
         // 解压缩
         Process.Start(new ProcessStartInfo("tar", $"-xzf {fullFile} -C {target}") { UseShellExecute = true });
@@ -657,7 +657,7 @@ public class NetRuntime
                         else if (item.Name.Contains("Desktop"))
                             name += "-desktop";
                     }
-                    else if (name.Contains('-'))
+                    else if (name.Contains("-"))
                         continue;
 
                     if (!dic.ContainsKey(name))
@@ -693,7 +693,7 @@ public class NetRuntime
                             else if (ver.Contains("Desktop"))
                                 name += "-desktop";
                         }
-                        else if (name.Contains('-'))
+                        else if (name.Contains("-"))
                             continue;
 
                         VerInfo vi = null;
