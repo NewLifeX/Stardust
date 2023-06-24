@@ -214,13 +214,13 @@ public class TraceController : ControllerBase
                 var rule = TraceRule.Match(item.Name);
                 if (rule != null && !rule.IsWhite)
                 {
-                    using var span = _tracer?.NewSpan("trace-BlackList", new { item.Name, rule.Rule });
+                    using var span = _tracer?.NewSpan("trace:BlackList", new { item.Name, rule.Rule });
                     continue;
                 }
 
                 if (excludes != null && excludes.Any(e => e.IsMatch(item.Name)))
                 {
-                    using var span = _tracer?.NewSpan("trace-Exclude", item.Name);
+                    using var span = _tracer?.NewSpan("trace:Exclude", item.Name);
                     continue;
                 }
                 //if (item.Name.EndsWithIgnoreCase("/Trace/Report")) continue;
@@ -229,14 +229,14 @@ public class TraceController : ControllerBase
                 var timestamp = item.StartTime.ToDateTime().ToLocalTime();
                 if (timestamp < startTime || timestamp > endTime)
                 {
-                    using var span = _tracer?.NewSpan("trace-ErrorTime", $"{item.Name}-{timestamp.ToFullString()}");
+                    using var span = _tracer?.NewSpan("trace:ErrorTime", $"{item.Name}-{timestamp.ToFullString()}");
                     continue;
                 }
 
                 // 拒收超长项
                 if (item.Name.Length > TraceData._.Name.Length)
                 {
-                    using var span = _tracer?.NewSpan("trace-LongName", item.Name);
+                    using var span = _tracer?.NewSpan("trace:LongName", item.Name);
                     continue;
                 }
 
@@ -244,7 +244,7 @@ public class TraceController : ControllerBase
                 var ti = app.GetOrAddItem(item.Name, rule?.IsWhite);
                 if (ti == null)
                 {
-                    using var span = _tracer?.NewSpan("trace-ErrorItem", item.Name);
+                    using var span = _tracer?.NewSpan("trace:ErrorItem", item.Name);
                     continue;
                 }
                 if (!ti.Enable) continue;
