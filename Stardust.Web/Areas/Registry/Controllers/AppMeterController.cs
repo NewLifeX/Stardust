@@ -92,6 +92,13 @@ public class AppMeterController : EntityController<AppMeter>
 
         var list = AppMeter.Search(appId, clientId, start, end, p["Q"], p);
 
+        // 如果没有clientId，则可能列表数据里面只有一个，选择它，便于展示图表
+        if (list.Count > 0 && clientId.IsNullOrEmpty())
+        {
+            var cs = list.Where(e => !e.ClientId.IsNullOrEmpty()).Select(e => e.ClientId).Distinct().ToList();
+            if (cs.Count == 1) clientId = cs[0];
+        }
+
         if (list.Count > 0 && !clientId.IsNullOrEmpty())
         {
             // 绘制日期曲线图
