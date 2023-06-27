@@ -71,6 +71,9 @@ public class TracerMiddleware
             }
         }
 
+        // 自动记录用户访问主机地址
+        SaveUserAddress(ctx);
+
         try
         {
             await _next.Invoke(ctx);
@@ -130,5 +133,41 @@ public class TracerMiddleware
             p = "/" + ss.Take(2).Join("/");
 
         return p;
+    }
+
+    /// <summary>自动记录用户访问主机地址</summary>
+    /// <param name="ctx"></param>
+    public static void SaveUserAddress(HttpContext ctx)
+    {
+        var uri = ctx.Request.GetRawUrl();
+        if (uri == null) return;
+
+        var baseAddress = $"{uri.Scheme}://{uri.Authority}";
+
+        var set = StarSetting.Current;
+        if (set.UserAddress.IsNullOrEmpty())
+        {
+            set.UserAddress = baseAddress;
+            set.Save();
+        }
+        else if (uri.Host.StartsWithIgnoreCase("127.", "localhost:"))
+        {
+            var ss = set.UserAddress.Split(",");
+            if (!ss.Contains(baseAddress))
+            {
+                set.UserAddress = set.UserAddress + "," + baseAddress;
+                set.Save();
+            }
+        }
+        else
+        {
+            var ss = set.UserAddress.Split(",").Where(e => !e.Contains("://127.") && !e.Contains("://localhost:")).ToList();
+            if (!ss.Contains(baseAddress))
+            {
+                ss.Add(baseAddress);
+                set.UserAddress = ss.Join(",");
+                set.Save();
+            }
+        }
     }
 }
