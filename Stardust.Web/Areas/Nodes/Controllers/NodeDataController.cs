@@ -60,7 +60,7 @@ public class NodeDataController : ReadOnlyEntityController<NodeData>
             var node = Node.FindByID(nodeId);
             if (nodeId >= 0 && node != null)
             {
-                var list2 = list.OrderBy(e => e.Id).ToList();
+                var list2 = list.OrderBy(e => e.LocalTime).ToList();
 
                 var chart = new ECharts
                 {
