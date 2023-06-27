@@ -31,6 +31,9 @@ class CacheFileProvider : IFileProvider
     /// <summary>服务端地址。本地文件不存在时，将从这里下载</summary>
     public String[] Servers { get; set; }
 
+    /// <summary>目标服务器地址。下载文件带有sh脚本时，把其中的源服务器地址替换为目标服务器地址</summary>
+    public String TargetServer { get; set; }
+
     /// <summary>获取服务器地址的委托。方便实时更新</summary>
     public Func<String[]> GetServers { get; set; }
 
@@ -96,45 +99,61 @@ class CacheFileProvider : IFileProvider
 
         // 本地不存在时，从服务器下载
         var fi = fullPath.AsFile();
-        //if ((!fi.Exists || fi.LastWriteTime.AddDays(1) < DateTime.Now) && Path.GetFileName(fullPath).Contains('.'))
-        if (!fi.Exists && Path.GetFileName(fullPath).Contains('.'))
+        if ((!fi.Exists || fi.LastWriteTime.AddMonths(1) < DateTime.Now) && Path.GetFileName(fullPath).Contains('.'))
+        //if (!fi.Exists && Path.GetFileName(fullPath).Contains('.'))
         {
             var svrs = GetServers?.Invoke() ?? Servers;
-            if (svrs == null || svrs.Length == 0) return new NotFoundFileInfo(subpath);
-
-            foreach (var item in svrs)
+            if (svrs != null && svrs.Length != 0)
             {
-                try
+                foreach (var item in svrs)
                 {
-                    var url = subpath.Replace("\\", "/");
-                    url = item.Contains("{0}") ? item.Replace("{0}", url) : item.EnsureEnd("/") + url.EnsureStart("/");
+                    try
+                    {
+                        var url = subpath.Replace("\\", "/");
+                        url = item.Contains("{0}") ? item.Replace("{0}", url) : item.EnsureEnd("/") + url.EnsureStart("/");
 
-                    span?.AppendTag(url);
-                    XTrace.WriteLine("下载文件：{0}", url);
+                        span?.AppendTag(url);
+                        XTrace.WriteLine("下载文件：{0}", url);
 
-                    // 先下载到临时目录，避免出现下载半截的情况
-                    var tmp = Path.GetTempFileName();
-                    using var fs = new FileStream(tmp, FileMode.OpenOrCreate);
+                        // 先下载到临时目录，避免出现下载半截的情况
+                        var tmp = Path.GetTempFileName();
+                        {
+                            using var fs = new FileStream(tmp, FileMode.OpenOrCreate);
+                            using var client = new HttpClient();
+                            using var rs = client.GetStreamAsync(url).Result;
+                            rs.CopyTo(fs);
+                            fs.Flush();
+                            fs.SetLength(fs.Position);
+                        }
 
-                    using var client = new HttpClient();
-                    using var rs = client.GetStreamAsync(url).Result;
-                    rs.CopyTo(fs);
-                    fs.Flush();
-                    fs.SetLength(fs.Position);
-                    fs.Dispose();
+                        // 移动临时文件到最终目录
+                        fullPath.EnsureDirectory(true);
+                        File.Move(tmp, fullPath);
 
-                    // 移动临时文件到最终目录
-                    fullPath.EnsureDirectory(true);
-                    File.Move(tmp, fullPath);
+                        // 修改脚本文件中的Url
+                        var target = TargetServer;
+                        if (target.IsNullOrEmpty())
+                        {
+                            target = StarSetting.Current.UserAddress?.Split(",").FirstOrDefault();
+                            if (!target.IsNullOrEmpty()) target = target.EnsureEnd("/files/");
+                        }
+                        if (!target.IsNullOrEmpty() && fullPath.EndsWithIgnoreCase(".sh", ".bat"))
+                        {
+                            var txt = File.ReadAllText(fullPath);
+                            var txt2 = txt.Replace(item.EnsureEnd("/"), target.EnsureEnd("/"));
+                            if (txt != txt2) File.WriteAllText(fullPath, txt2);
+                        }
 
-                    XTrace.WriteLine("下载文件完成：{0}", fullPath);
+                        XTrace.WriteLine("下载文件完成：{0}", fullPath);
+                        fi = fullPath.AsFile();
 
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    span?.SetError(ex, null);
-                    XTrace.WriteLine(ex.Message);
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        span?.SetError(ex, null);
+                        XTrace.WriteLine(ex.Message);
+                    }
                 }
             }
         }
