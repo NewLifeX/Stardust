@@ -81,7 +81,6 @@ internal class StarHttpConfigProvider : HttpConfigProvider
         return null;
     }
 
-#if !NET40
     private readonly HashSet<String> _keys = new();
     /// <summary>获取指定配置。拦截对注册中心的请求</summary>
     /// <param name="key"></param>
@@ -111,7 +110,6 @@ internal class StarHttpConfigProvider : HttpConfigProvider
 
         return base.Find(key, createOnMiss);
     }
-#endif
 
     public void Attach(ICommandClient client) => client.RegisterCommand("config/publish", DoPublish);
 

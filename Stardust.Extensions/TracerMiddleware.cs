@@ -72,7 +72,7 @@ public class TracerMiddleware
         }
 
         // 自动记录用户访问主机地址
-        SaveUserAddress(ctx);
+        SaveServiceAddress(ctx);
 
         try
         {
@@ -137,35 +137,35 @@ public class TracerMiddleware
 
     /// <summary>自动记录用户访问主机地址</summary>
     /// <param name="ctx"></param>
-    public static void SaveUserAddress(HttpContext ctx)
+    public static void SaveServiceAddress(HttpContext ctx)
     {
         var uri = ctx.Request.GetRawUrl();
         if (uri == null) return;
 
         var baseAddress = $"{uri.Scheme}://{uri.Authority}";
 
-        var set = StarSetting.Current;
-        if (set.UserAddress.IsNullOrEmpty())
+        var set = NewLife.Setting.Current;
+        if (set.ServiceAddress.IsNullOrEmpty())
         {
-            set.UserAddress = baseAddress;
+            set.ServiceAddress = baseAddress;
             set.Save();
         }
         else if (uri.Host.StartsWithIgnoreCase("127.", "localhost:"))
         {
-            var ss = set.UserAddress.Split(",");
+            var ss = set.ServiceAddress.Split(",");
             if (!ss.Contains(baseAddress))
             {
-                set.UserAddress = set.UserAddress + "," + baseAddress;
+                set.ServiceAddress = set.ServiceAddress + "," + baseAddress;
                 set.Save();
             }
         }
         else
         {
-            var ss = set.UserAddress.Split(",").Where(e => !e.Contains("://127.") && !e.Contains("://localhost:")).ToList();
+            var ss = set.ServiceAddress.Split(",").Where(e => !e.Contains("://127.") && !e.Contains("://localhost:")).ToList();
             if (!ss.Contains(baseAddress))
             {
                 ss.Add(baseAddress);
-                set.UserAddress = ss.Join(",");
+                set.ServiceAddress = ss.Join(",");
                 set.Save();
             }
         }

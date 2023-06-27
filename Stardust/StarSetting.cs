@@ -24,13 +24,13 @@ public class StarSetting : Config<StarSetting>
     [Description("应用密钥")]
     public String Secret { get; set; }
 
-    /// <summary>服务地址。人工设定，用于提交注册中心，默认为空，自动识别外部访问地址</summary>
-    [Description("服务地址。人工设定，用于提交注册中心，默认为空，自动识别外部访问地址")]
-    public String ServiceAddress { get; set; }
+    ///// <summary>服务地址。人工设定，用于提交注册中心，默认为空，自动识别外部访问地址</summary>
+    //[Description("服务地址。人工设定，用于提交注册中心，默认为空，自动识别外部访问地址")]
+    //public String ServiceAddress { get; set; }
 
-    /// <summary>用户访问地址。自动记录用户访问的主机地址（反向代理之外），用于内部构造其它Url，多地址逗号隔开</summary>
-    [Description("用户访问地址。自动记录用户访问的主机地址（反向代理之外），用于内部构造其它Url，多地址逗号隔开")]
-    public String UserAddress { get; set; }
+    ///// <summary>用户访问地址。自动记录用户访问的主机地址（反向代理之外），用于内部构造其它Url，多地址逗号隔开</summary>
+    //[Description("用户访问地址。自动记录用户访问的主机地址（反向代理之外），用于内部构造其它Url，多地址逗号隔开")]
+    //public String UserAddress { get; set; }
 
     /// <summary>跟踪采样周期。默认60s</summary>
     [Description("跟踪采样周期。默认60s")]

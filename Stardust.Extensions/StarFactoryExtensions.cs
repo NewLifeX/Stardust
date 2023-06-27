@@ -118,8 +118,8 @@ public static class StarFactoryExtensions
                  * 4，若监听地址已改变，则使用监听地址
                  * 5，若监听地址获取失败，则注册回调
                  */
-                var set = StarSetting.Current;
-                if (address.IsNullOrEmpty()) address = set.ServiceAddress;
+                //var set = NewLife.Setting.Current;
+                //if (address.IsNullOrEmpty()) address = set.ServiceAddress;
                 if (address.IsNullOrEmpty())
                 {
                     // 本地监听地址，属于内部地址
