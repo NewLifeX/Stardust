@@ -54,7 +54,7 @@ public class NodeFrameworkController : EntityController<Node>
 
     [DisplayName("安装")]
     [EntityAuthorize((PermissionFlags)16)]
-    public async Task<ActionResult> InstallFramework(String ver)
+    public async Task<ActionResult> InstallFramework(String ver, String baseUrl)
     {
         if (GetRequest("keys") == null) throw new ArgumentNullException(nameof(SelectKeys));
         if (ver.IsNullOrEmpty()) throw new ArgumentNullException(nameof(ver));
@@ -62,11 +62,12 @@ public class NodeFrameworkController : EntityController<Node>
         var bf = new BatchFinder<Int32, Node>();
         bf.Add(SelectKeys.Select(e => e.ToInt()));
 
-        var baseUrl = "";
+        //var baseUrl = "";
         var set = NewLife.Setting.Current;
-        if (!set.PluginServer.IsNullOrEmpty() && !set.PluginServer.ToLower().Contains("x.newlifex.com"))
+        var server = set.PluginServer;
+        if (baseUrl.IsNullOrEmpty() && !server.IsNullOrEmpty() && !server.ToLower().Contains("x.newlifex.com"))
         {
-            baseUrl = set.PluginServer.TrimEnd('/');
+            baseUrl = server.TrimEnd('/');
             if (!baseUrl.EndsWithIgnoreCase("/dotnet")) baseUrl += "/dotnet";
         }
 
