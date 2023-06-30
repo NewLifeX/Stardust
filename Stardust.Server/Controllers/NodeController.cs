@@ -164,10 +164,11 @@ public class NodeController : BaseController
     {
         foreach (var model in events)
         {
+            var success = !model.Type.EqualIgnoreCase("error");
             if (model.Name.EqualIgnoreCase("ServiceController"))
-                _deployService.WriteHistory(0, _node?.ID ?? 0, model.Name, !model.Type.EqualIgnoreCase("error"), model.Remark, UserHost);
+                _deployService.WriteHistory(0, _node?.ID ?? 0, model.Name, success, model.Remark, UserHost);
 
-            WriteHistory(null, model.Name, !model.Type.EqualIgnoreCase("error"), model.Time.ToDateTime().ToLocalTime(), model.Remark);
+            WriteHistory(null, model.Name, success, model.Time.ToDateTime().ToLocalTime(), model.Remark);
         }
 
         return events.Length;
