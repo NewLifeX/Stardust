@@ -42,7 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Cube.Core" Version="5.5.2023.625-beta1355" />
+    <PackageReference Include="NewLife.Cube.Core" Version="5.5.2023.701-beta0242" />
     <PackageReference Include="NewLife.Redis" Version="5.4.2023.624-beta0342" />
   </ItemGroup>
 

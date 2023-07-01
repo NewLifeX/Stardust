@@ -1,6 +1,7 @@
 ﻿#if !NET40 && !NET45
 using System;
 using System.Diagnostics.Tracing;
+using NewLife;
 using NewLife.Log;
 
 namespace Stardust.Monitors;
@@ -24,7 +25,8 @@ public class DnsEventListener : EventListenerBase
             if (eventData.Payload.Count > 0)
             {
                 var host = eventData.Payload[0] + "";
-                var span = Tracer?.NewSpan($"dns:{host}");
+                var ip = NetHelper.MyIP();
+                var span = Tracer?.NewSpan($"dns:{host}:from:{ip}");
                 Append(span, eventData);
             }
         }
