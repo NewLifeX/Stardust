@@ -150,6 +150,22 @@ public partial class AppDeployHistory
     #endregion
 
     #region 关联映射
+    /// <summary>应用部署集</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public AppDeploy App => Extends.Get(nameof(App), k => AppDeploy.FindById(AppId));
+
+    /// <summary>应用部署集</summary>
+    [Map(nameof(AppId), typeof(AppDeploy), "Id")]
+    public String AppName => App?.ToString();
+
+    /// <summary>节点</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Stardust.Data.Nodes.Node Node => Extends.Get(nameof(Node), k => Stardust.Data.Nodes.Node.FindByID(NodeId));
+
+    /// <summary>节点</summary>
+    [Map(nameof(NodeId), typeof(Stardust.Data.Nodes.Node), "ID")]
+    public String NodeName => Node?.Name;
+
     #endregion
 
     #region 字段名

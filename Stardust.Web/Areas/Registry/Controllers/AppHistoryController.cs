@@ -16,6 +16,7 @@ public class AppHistoryController : ReadOnlyEntityController<AppHistory>
     static AppHistoryController()
     {
         ListFields.RemoveField("Id", "Version");
+        ListFields.AddListField("Remark", null, "TraceId");
 
         //{
         //    var df = ListFields.GetField("TraceId") as ListField;
@@ -25,6 +26,12 @@ public class AppHistoryController : ReadOnlyEntityController<AppHistory>
         //}
         ListFields.TraceUrl();
 
+        {
+            var df = ListFields.GetField("AppName") as ListField;
+            df.Url = "/Registry/App?Id={AppId}";
+            df.Title = "应用: {AppName}";
+            df.Target = "_frame";
+        }
         {
             var df = ListFields.GetField("Client") as ListField;
             df.Url = "/Registry/AppHistory?appId={AppId}&client={Client}";

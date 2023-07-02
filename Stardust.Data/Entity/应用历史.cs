@@ -81,14 +81,6 @@ public partial class AppHistory
     [BindColumn("TraceId", "追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
     public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
 
-    private String _Remark;
-    /// <summary>内容</summary>
-    [DisplayName("内容")]
-    [Description("内容")]
-    [DataObjectField(false, false, true, 500)]
-    [BindColumn("Remark", "内容", "")]
-    public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
-
     private String _Creator;
     /// <summary>创建者。服务端节点</summary>
     [Category("扩展")]
@@ -115,6 +107,14 @@ public partial class AppHistory
     [DataObjectField(false, false, true, 50)]
     [BindColumn("CreateIP", "创建地址", "")]
     public String CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
+
+    private String _Remark;
+    /// <summary>内容</summary>
+    [DisplayName("内容")]
+    [Description("内容")]
+    [DataObjectField(false, false, true, 2000)]
+    [BindColumn("Remark", "内容", "")]
+    public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
     #endregion
 
     #region 获取/设置 字段值
@@ -132,10 +132,10 @@ public partial class AppHistory
             "Action" => _Action,
             "Success" => _Success,
             "TraceId" => _TraceId,
-            "Remark" => _Remark,
             "Creator" => _Creator,
             "CreateTime" => _CreateTime,
             "CreateIP" => _CreateIP,
+            "Remark" => _Remark,
             _ => base[name]
         };
         set
@@ -149,10 +149,10 @@ public partial class AppHistory
                 case "Action": _Action = Convert.ToString(value); break;
                 case "Success": _Success = value.ToBoolean(); break;
                 case "TraceId": _TraceId = Convert.ToString(value); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
                 case "Creator": _Creator = Convert.ToString(value); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
+                case "Remark": _Remark = Convert.ToString(value); break;
                 default: base[name] = value; break;
             }
         }
@@ -187,9 +187,6 @@ public partial class AppHistory
         /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
         public static readonly Field TraceId = FindByName("TraceId");
 
-        /// <summary>内容</summary>
-        public static readonly Field Remark = FindByName("Remark");
-
         /// <summary>创建者。服务端节点</summary>
         public static readonly Field Creator = FindByName("Creator");
 
@@ -198,6 +195,9 @@ public partial class AppHistory
 
         /// <summary>创建地址</summary>
         public static readonly Field CreateIP = FindByName("CreateIP");
+
+        /// <summary>内容</summary>
+        public static readonly Field Remark = FindByName("Remark");
 
         static Field FindByName(String name) => Meta.Table.FindByName(name);
     }
@@ -226,9 +226,6 @@ public partial class AppHistory
         /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
         public const String TraceId = "TraceId";
 
-        /// <summary>内容</summary>
-        public const String Remark = "Remark";
-
         /// <summary>创建者。服务端节点</summary>
         public const String Creator = "Creator";
 
@@ -237,6 +234,9 @@ public partial class AppHistory
 
         /// <summary>创建地址</summary>
         public const String CreateIP = "CreateIP";
+
+        /// <summary>内容</summary>
+        public const String Remark = "Remark";
     }
     #endregion
 }

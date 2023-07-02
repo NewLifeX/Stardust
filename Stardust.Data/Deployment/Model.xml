@@ -134,8 +134,8 @@
   <Table Name="AppDeployHistory" Description="部署历史。记录应用集部署历史" ConnName="StardustData">
     <Columns>
       <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
-      <Column Name="AppId" DataType="Int32" Description="应用部署集。对应AppDeploy" />
-      <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
+      <Column Name="AppId" DataType="Int32" Map="AppDeploy@Id@$" Description="应用部署集。对应AppDeploy" />
+      <Column Name="NodeId" DataType="Int32" Map="Stardust.Data.Nodes.Node@ID@Name" Description="节点。节点服务器" />
       <Column Name="Action" DataType="String" Nullable="False" Description="操作" />
       <Column Name="Success" DataType="Boolean" Description="成功" />
       <Column Name="Remark" DataType="String" Length="2000" Description="内容" />

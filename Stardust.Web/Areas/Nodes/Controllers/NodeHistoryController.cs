@@ -16,10 +16,16 @@ public class NodeHistoryController : ReadOnlyEntityController<NodeHistory>
     static NodeHistoryController()
     {
         ListFields.RemoveField("ID", "ProvinceName", "Version", "CompileTime");
-        ListFields.AddListField("Remark", null, "Success");
+        ListFields.AddListField("Remark", null, "TraceId");
 
         ListFields.TraceUrl();
 
+        {
+            var df = ListFields.GetField("NodeName") as ListField;
+            df.Url = "/Nodes/Node?Id={NodeID}";
+            df.Title = "节点: {NodeName}";
+            df.Target = "_frame";
+        }
         {
             var df = ListFields.GetField("Action") as ListField;
             df.Url = "/Nodes/NodeHistory?nodeId={NodeID}&action={Action}";

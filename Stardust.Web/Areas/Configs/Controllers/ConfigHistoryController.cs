@@ -13,7 +13,7 @@ public class ConfigHistoryController : ReadOnlyEntityController<ConfigHistory>
     static ConfigHistoryController()
     {
         // 日志列表需要显示详细信息
-        ListFields.AddDataField("Remark", null, "Action");
+        ListFields.AddDataField("Remark", null, "TraceId");
 
         //{
         //    var df = ListFields.GetField("TraceId") as ListField;
