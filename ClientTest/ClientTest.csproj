@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.2" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.3" />
     <PackageReference Include="NewLife.Redis" Version="5.4.2023.624-beta0342" />
     <PackageReference Include="NewLife.UnitTest" Version="1.0.2023.311-beta1027" />
     <PackageReference Include="xunit" Version="2.4.2" />
