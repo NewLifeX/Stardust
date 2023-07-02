@@ -1,4 +1,4 @@
-using NewLife;
+﻿using NewLife;
 using NewLife.Data;
 using NewLife.Log;
 using System;
@@ -175,10 +175,15 @@ namespace Stardust.Data.Nodes
             return history;
         }
 
-        static Lazy<FieldCache<NodeHistory>> NameCache = new Lazy<FieldCache<NodeHistory>>(() => new FieldCache<NodeHistory>(__.Action));
+        static Lazy<FieldCache<NodeHistory>> NameCache = new(() => new FieldCache<NodeHistory>(__.Action));
         /// <summary>获取所有分类名称</summary>
         /// <returns></returns>
         public static IDictionary<String, String> FindAllAction() => NameCache.Value.FindAllName();
+
+        /// <summary>删除指定日期之前的数据</summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public static Int32 DeleteBefore(DateTime date) => Delete(_.Id < Meta.Factory.Snow.GetId(date));
         #endregion
     }
 }

@@ -67,13 +67,17 @@ public class StarServerSetting : Config<StarServerSetting>
     [Description("控制台地址。用于监控告警地址")]
     public String WebUrl { get; set; } = "";
 
-    /// <summary>数据保留时间。默认3天</summary>
-    [Description("数据保留时间。默认3天")]
+    /// <summary>数据保留时间。采样明细及分钟级统计数据，默认3天</summary>
+    [Description("数据保留时间。采样明细及分钟级统计数据，默认3天")]
     public Int32 DataRetention { get; set; } = 3;
 
-    /// <summary>大颗粒数据保留时间。默认30天</summary>
-    [Description("大颗粒数据保留时间。默认30天")]
+    /// <summary>中等颗粒数据保留时间。性能数据及小时级统计数据，默认30天</summary>
+    [Description("中等颗粒数据保留时间。性能数据及小时级统计数据，默认30天")]
     public Int32 DataRetention2 { get; set; } = 30;
+
+    /// <summary>大颗粒数据保留时间。历史数据及每日统计数据，默认300天</summary>
+    [Description("大颗粒数据保留时间。历史数据及每日统计数据，默认300天")]
+    public Int32 DataRetention3 { get; set; } = 300;
 
     /// <summary>上传目录。存放升级包，需要跟StarWeb配置为同一个目录，默认../Uploads</summary>
     [Description("上传目录。存放升级包，需要跟StarWeb配置为同一个目录，默认../Uploads")]

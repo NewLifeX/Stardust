@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
@@ -198,6 +198,11 @@ namespace Stardust.Data.Deployment
 
             return history;
         }
+     
+        /// <summary>删除指定日期之前的数据</summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public static Int32 DeleteBefore(DateTime date) => Delete(_.Id < Meta.Factory.Snow.GetId(date));
         #endregion
     }
 }
