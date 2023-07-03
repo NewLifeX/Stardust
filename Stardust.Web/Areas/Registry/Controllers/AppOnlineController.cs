@@ -67,6 +67,13 @@ public class AppOnlineController : EntityController<AppOnline>
             PageSetting.NavView = "_Node_Nav";
             PageSetting.EnableNavbar = false;
         }
+
+        var projectId = GetRequest("projectId").ToInt(-1);
+        if (projectId > 0)
+        {
+            PageSetting.NavView = "_Project_Nav";
+            PageSetting.EnableNavbar = false;
+        }
     }
 
     protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
@@ -89,11 +96,12 @@ public class AppOnlineController : EntityController<AppOnline>
     {
         var appId = p["appId"].ToInt(-1);
         var nodeId = p["nodeId"].ToInt(-1);
+        var projectId = p["projectId"].ToInt(-1);
         var category = p["category"];
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return AppOnline.Search(appId, nodeId, category, start, end, p["Q"], p);
+        return AppOnline.Search(projectId, appId, nodeId, category, start, end, p["Q"], p);
     }
 }

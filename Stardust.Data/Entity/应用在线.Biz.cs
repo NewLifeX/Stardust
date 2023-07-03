@@ -204,10 +204,11 @@ public partial class AppOnline : Entity<AppOnline>
     /// <param name="key"></param>
     /// <param name="page"></param>
     /// <returns></returns>
-    public static IList<AppOnline> Search(Int32 appId, Int32 nodeId, String category, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<AppOnline> Search(Int32 projectId, Int32 appId, Int32 nodeId, String category, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
+        if (projectId >= 0) exp &= _.ProjectId == projectId;
         if (appId >= 0) exp &= _.AppId == appId;
         if (nodeId >= 0) exp &= _.NodeId == nodeId;
         if (!category.IsNullOrEmpty()) exp &= _.Category == category;
@@ -250,6 +251,7 @@ public partial class AppOnline : Entity<AppOnline>
     {
         if (app != null)
         {
+            ProjectId = app.ProjectId;
             AppId = app.Id;
             Name = app.ToString();
             Category = app.Category;

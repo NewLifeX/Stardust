@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
@@ -48,6 +49,18 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
 
     public NodeOnlineController(StarFactory starFactory) => _starFactory = starFactory;
 
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        var projectId = GetRequest("projectId").ToInt(-1);
+        if (projectId > 0)
+        {
+            PageSetting.NavView = "_Project_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+    }
+
     protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
     {
         var fields = base.OnGetFields(kind, model);
@@ -68,6 +81,7 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
         var provinceId = rids.Length > 0 ? rids[0] : -1;
         var cityId = rids.Length > 1 ? rids[1] : -1;
 
+        var projectId = p["projectId"].ToInt(-1);
         var category = p["category"];
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
@@ -75,7 +89,7 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
         PageSetting.EnableSelect = true;
         p.RetrieveState = true;
 
-        return NodeOnline.Search(nodeId, provinceId, cityId, category, start, end, p["Q"], p);
+        return NodeOnline.Search(projectId, nodeId, provinceId, cityId, category, start, end, p["Q"], p);
     }
 
     public async Task<ActionResult> Trace(Int32 id)

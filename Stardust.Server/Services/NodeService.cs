@@ -347,6 +347,7 @@ public class NodeService
 
             var olt = GetOrAddOnline(node, token, ip);
             olt.Name = node.Name;
+            olt.ProjectId = node.ProjectId;
             olt.Category = node.Category;
             olt.Version = node.Version;
             olt.CompileTime = node.CompileTime;
@@ -459,6 +460,7 @@ public class NodeService
         //var sid = $"{node.ID}@{ip}";
         var sid = node.Code;
         var olt = NodeOnline.GetOrAdd(sid);
+        olt.ProjectId = node.ProjectId;
         olt.NodeID = node.ID;
         olt.Name = node.Name;
         olt.IP = node.IP;

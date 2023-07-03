@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -153,10 +153,11 @@ namespace Stardust.Data.Nodes
         /// <param name="key">关键字</param>
         /// <param name="page">分页排序参数，同时返回满足条件的总记录数</param>
         /// <returns>实体集</returns>
-        public static IList<NodeOnline> Search(Int32 nodeId, Int32 provinceId, Int32 cityId, String category, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<NodeOnline> Search(Int32 projectId, Int32 nodeId, Int32 provinceId, Int32 cityId, String category, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
+            if (projectId >= 0) exp &= _.ProjectId == projectId;
             if (nodeId >= 0) exp &= _.NodeID == nodeId;
             if (provinceId >= 0) exp &= _.ProvinceID == provinceId;
             if (cityId >= 0) exp &= _.CityID == cityId;
