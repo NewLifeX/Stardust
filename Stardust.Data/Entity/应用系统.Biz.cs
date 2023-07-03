@@ -7,6 +7,7 @@ using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using NewLife.Reflection;
+using Stardust.Data.Nodes;
 using Stardust.Monitors;
 using XCode;
 using XCode.Cache;
@@ -183,6 +184,14 @@ public partial class App : Entity<App>
     /// <summary>获取所有类别名称</summary>
     /// <returns></returns>
     public static IDictionary<String, String> FindAllCategory() => CategoryCache.Value.FindAllName().OrderByDescending(e => e.Key).ToDictionary(e => e.Key, e => e.Value);
+
+    public static IList<App> SearchGroupByProject()
+    {
+        var selects = _.Id.Count("total") & _.ProjectId;
+        var exp = new WhereExpression();
+
+        return FindAll(exp.GroupBy(_.ProjectId), null, selects);
+    }
     #endregion
 
     #region 业务操作

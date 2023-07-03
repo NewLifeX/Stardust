@@ -434,6 +434,14 @@ public partial class Node : Entity<Node>
         var list = FindAll(exp.GroupBy(_.ProvinceID), null, _.ID.Count() & _.ProvinceID, 0, 0);
         return list.ToDictionary(e => e.ProvinceID, e => e.ID);
     }
+
+    public static IList<Node> SearchGroupByProject()
+    {
+        var selects = _.ID.Count("total") & _.ProjectId;
+        var exp = new WhereExpression();
+
+        return FindAll(exp.GroupBy(_.ProjectId), null, selects);
+    }
     #endregion
 
     #region 扩展操作
