@@ -127,7 +127,7 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
         var dn = AppDeployNode.FindById(id);
         if (dn == null || dn.Node == null || dn.App == null) return Json(500, $"[{id}]不存在");
 
-        await _deployService.Control(dn.App, dn, act, UserHost, 3);
+        await _deployService.Control(dn.App, dn, act, UserHost, 0);
 
         return JsonRefresh($"在节点[{dn.NodeName}]上对应用[{dn.AppName}]执行[{act}]操作", 1);
     }
@@ -145,7 +145,7 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
             var dn = AppDeployNode.FindById(id);
             if (dn != null && dn.Enable && dn.Node != null && dn.App != null)
             {
-                ts.Add(_deployService.Control(dn.App, dn, act, UserHost, 3));
+                ts.Add(_deployService.Control(dn.App, dn, act, UserHost, 0));
             }
         }
 
