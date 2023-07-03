@@ -87,6 +87,13 @@ public class NodeController : EntityController<Node>
             PageSetting.NavView = "_Node_Nav";
             PageSetting.EnableNavbar = false;
         }
+
+        var projectId = GetRequest("projectId").ToInt(-1);
+        if (projectId > 0)
+        {
+            PageSetting.NavView = "_Project_Nav";
+            PageSetting.EnableNavbar = false;
+        }
     }
 
     protected override IEnumerable<Node> Search(Pager p)
@@ -102,6 +109,7 @@ public class NodeController : EntityController<Node>
         var provinceId = rids.Length > 0 ? rids[0] : -1;
         var cityId = rids.Length > 1 ? rids[1] : -1;
 
+        var projectId = p["projectId"].ToInt(-1);
         var category = p["category"];
         var product = p["product"];
         var osKind = p["osKind"];
@@ -120,7 +128,7 @@ public class NodeController : EntityController<Node>
             if (!Enum.TryParse(osKind, out kind)) kind = (OSKinds)(-1);
         }
 
-        return Node.Search(provinceId, cityId, category, product, kind, version, runtime, framework, arch, enable, start, end, p["Q"], p);
+        return Node.Search(projectId, provinceId, cityId, category, product, kind, version, runtime, framework, arch, enable, start, end, p["Q"], p);
     }
 
     /// <summary>搜索</summary>

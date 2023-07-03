@@ -313,10 +313,11 @@ public partial class Node : Entity<Node>
     /// <param name="key"></param>
     /// <param name="page"></param>
     /// <returns></returns>
-    public static IList<Node> Search(Int32 provinceId, Int32 cityId, String category, String product, OSKinds osKind, String version, String runtime, String framework, String arch, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Node> Search(Int32 projectId, Int32 provinceId, Int32 cityId, String category, String product, OSKinds osKind, String version, String runtime, String framework, String arch, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
+        if (projectId >= 0) exp &= _.ProjectId == projectId;
         if (provinceId >= 0) exp &= _.ProvinceID == provinceId;
         if (cityId >= 0) exp &= _.CityID == cityId;
         if (!category.IsNullOrEmpty()) exp &= _.Category == category;

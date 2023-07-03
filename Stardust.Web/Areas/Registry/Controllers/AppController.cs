@@ -97,6 +97,12 @@ public class AppController : EntityController<App>
             PageSetting.NavView = "_App_Nav";
             PageSetting.EnableNavbar = false;
         }
+        var projectId = GetRequest("projectId").ToInt(-1);
+        if (projectId > 0)
+        {
+            PageSetting.NavView = "_Project_Nav";
+            PageSetting.EnableNavbar = false;
+        }
     }
 
     protected override IEnumerable<App> Search(Pager p)
@@ -108,27 +114,28 @@ public class AppController : EntityController<App>
             if (node != null) return new[] { node };
         }
 
+        var projectId = p["projectId"].ToInt(-1);
         var category = p["category"];
         var enable = p["enable"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return App.Search(category, enable, start, end, p["Q"], p);
+        return App.Search(projectId, category, enable, start, end, p["Q"], p);
     }
 
     /// <summary>搜索</summary>
     /// <param name="category"></param>
     /// <param name="key"></param>
     /// <returns></returns>
-    public ActionResult AppSearch(String category, String key = null)
+    public ActionResult AppSearch(Int32 projectId, String category, String key = null)
     {
         var page = new PageParameter { PageSize = 20 };
 
         //// 默认排序
         //if (page.Sort.IsNullOrEmpty()) page.Sort = _.Name;
 
-        var list = App.Search(category, true, DateTime.MinValue, DateTime.MinValue, key, page);
+        var list = App.Search(projectId, category, true, DateTime.MinValue, DateTime.MinValue, key, page);
 
         return Json(0, null, list.Select(e => new
         {

@@ -1,0 +1,37 @@
+﻿@using Stardust.Data.Deployment;
+@using Stardust.Data.Nodes;
+@{
+    var obj = Model as Object;
+    var path = Context.Request.Path + "";
+    var projectId = Context.Request.Query["projectId"].ToInt(0);
+    if (projectId == 0 && path.StartsWithIgnoreCase("/Platform/GalaxyProject"))
+    {
+        projectId = Context.Request.Query["Id"].ToInt(0);
+    }
+}
+@if (projectId > 0)
+{
+    var prj = Node.FindByID(projectId);
+    <div class="navbar-collapse collapse text-center">
+        <ul class="nav nav-pills" style="margin-bottom: 10px; display: inline-block;float: none;">
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Platform/GalaxyProject")?"active":"")">
+                <a href="/Platform/GalaxyProject/Edit?Id=@projectId">@(prj?.ToString() ?? "信息")</a>
+            </li>
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Nodes/Node")?"active":"")">
+                <a href="/Nodes/Node?projectId=@projectId">节点</a>
+            </li>
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/App")?"active":"")">
+                <a href="/Registry/App?projectId=@projectId">应用</a>
+            </li>
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Monitors/AppTracer")?"active":"")">
+                <a href="/Monitors/AppTracer?projectId=@projectId">监控</a>
+            </li>
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Configs/AppConfig")?"active":"")">
+                <a href="/Configs/AppConfig?projectId=@projectId">配置</a>
+            </li>
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Deployment/AppDeploy")?"active":"")">
+                <a href="/Deployment/AppDeploy?projectId=@projectId">发布</a>
+            </li>
+        </ul>
+    </div>
+}

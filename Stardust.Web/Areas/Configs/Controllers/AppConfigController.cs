@@ -107,6 +107,12 @@ public class AppConfigController : EntityController<AppConfig>
             PageSetting.NavView = "_App_Nav";
             PageSetting.EnableNavbar = false;
         }
+        var projectId = GetRequest("projectId").ToInt(-1);
+        if (projectId > 0)
+        {
+            PageSetting.NavView = "_Project_Nav";
+            PageSetting.EnableNavbar = false;
+        }
 
         PageSetting.EnableAdd = false;
     }
@@ -126,13 +132,14 @@ public class AppConfigController : EntityController<AppConfig>
             if (entity != null) return new List<AppConfig> { entity };
         }
 
+        var projectId = p["projectId"].ToInt(-1);
         var category = p["category"];
         var enable = p["enable"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return AppConfig.Search(category, enable, start, end, p["Q"], p);
+        return AppConfig.Search(projectId, category, enable, start, end, p["Q"], p);
     }
 
     protected override Boolean Valid(AppConfig entity, DataObjectMethodType type, Boolean post)

@@ -162,10 +162,11 @@ public partial class App : Entity<App>
     /// <param name="key"></param>
     /// <param name="page"></param>
     /// <returns></returns>
-    public static IList<App> Search(String category, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<App> Search(Int32 projectId, String category, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
+        if (projectId >= 0) exp &= _.ProjectId == projectId;
         if (!category.IsNullOrEmpty()) exp &= _.Category == category;
         if (enable != null) exp &= _.Enable == enable;
         exp &= _.UpdateTime.Between(start, end);

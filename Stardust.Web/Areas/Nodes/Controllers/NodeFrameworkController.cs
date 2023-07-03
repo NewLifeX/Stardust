@@ -49,7 +49,7 @@ public class NodeFrameworkController : EntityController<Node>
             if (!Enum.TryParse(osKind, out kind)) kind = (OSKinds)(-1);
         }
 
-        return Node.Search(provinceId, cityId, category, product, kind, version, runtime, framework, arch, enable, start, end, p["Q"], p);
+        return Node.Search(0, provinceId, cityId, category, product, kind, version, runtime, framework, arch, enable, start, end, p["Q"], p);
     }
 
     [DisplayName("安装")]

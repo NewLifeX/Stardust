@@ -1,53 +1,54 @@
-﻿using Stardust.Data.Platform;
-using NewLife;
+﻿using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife.Cube;
-using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
+using Stardust.Data.Platform;
 using XCode.Membership;
 
-namespace Stardust.Web.Areas.Platform.Controllers
+namespace Stardust.Web.Areas.Platform.Controllers;
+
+/// <summary>星系项目。一个星系包含多个星星节点，以及多个尘埃应用，完成产品线的项目管理</summary>
+[Menu(10, true, Icon = "fa-table")]
+[PlatformArea]
+public class GalaxyProjectController : EntityController<GalaxyProject>
 {
-    /// <summary>星系项目。一个星系包含多个星星节点，以及多个尘埃应用，完成产品线的项目管理</summary>
-    [Menu(10, true, Icon = "fa-table")]
-    [PlatformArea]
-    public class GalaxyProjectController : EntityController<GalaxyProject>
+    static GalaxyProjectController()
     {
-        static GalaxyProjectController()
+        //LogOnChange = true;
+
+        //ListFields.RemoveField("Id", "Creator");
+        ListFields.RemoveCreateField();
+        ListFields.RemoveRemarkField();
+
         {
-            //LogOnChange = true;
-
-            //ListFields.RemoveField("Id", "Creator");
-            ListFields.RemoveCreateField();
-
-            //{
-            //    var df = ListFields.GetField("Code") as ListField;
-            //    df.Url = "?code={Code}";
-            //}
-            //{
-            //    var df = ListFields.AddListField("devices", null, "Onlines");
-            //    df.DisplayName = "查看设备";
-            //    df.Url = "Device?groupId={Id}";
-            //    df.DataVisible = e => (e as GalaxyProject).Devices > 0;
-            //}
-            //{
-            //    var df = ListFields.GetField("Kind") as ListField;
-            //    df.GetValue = e => ((Int32)(e as GalaxyProject).Kind).ToString("X4");
-            //}
-            //ListFields.TraceUrl("TraceId");
+            var df = ListFields.GetField("Name") as ListField;
+            df.Url = "/Platform/GalaxyProject/Edit?id={Id}";
+            df.Target = "_blank";
         }
+    }
 
-        /// <summary>高级搜索。列表页查询、导出Excel、导出Json、分享页等使用</summary>
-        /// <param name="p">分页器。包含分页排序参数，以及Http请求参数</param>
-        /// <returns></returns>
-        protected override IEnumerable<GalaxyProject> Search(Pager p)
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        var projectId = GetRequest("Id").ToInt(-1);
+        if (projectId > 0)
         {
-            //var deviceId = p["deviceId"].ToInt(-1);
-
-            var start = p["dtStart"].ToDateTime();
-            var end = p["dtEnd"].ToDateTime();
-
-            return GalaxyProject.Search(start, end, p["Q"], p);
+            PageSetting.NavView = "_Project_Nav";
+            PageSetting.EnableNavbar = false;
         }
+    }
+
+    /// <summary>高级搜索。列表页查询、导出Excel、导出Json、分享页等使用</summary>
+    /// <param name="p">分页器。包含分页排序参数，以及Http请求参数</param>
+    /// <returns></returns>
+    protected override IEnumerable<GalaxyProject> Search(Pager p)
+    {
+        //var deviceId = p["deviceId"].ToInt(-1);
+
+        var start = p["dtStart"].ToDateTime();
+        var end = p["dtEnd"].ToDateTime();
+
+        return GalaxyProject.Search(start, end, p["Q"], p);
     }
 }

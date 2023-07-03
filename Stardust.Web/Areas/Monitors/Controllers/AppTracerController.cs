@@ -83,6 +83,12 @@ public class AppTracerController : EntityController<AppTracer>
             PageSetting.NavView = "_App_Nav";
             PageSetting.EnableNavbar = false;
         }
+        var projectId = GetRequest("projectId").ToInt(-1);
+        if (projectId > 0)
+        {
+            PageSetting.NavView = "_Project_Nav";
+            PageSetting.EnableNavbar = false;
+        }
 
         PageSetting.EnableAdd = false;
     }
@@ -102,6 +108,7 @@ public class AppTracerController : EntityController<AppTracer>
             if (entity != null) return new List<AppTracer> { entity };
         }
 
+        var projectId = p["projectId"].ToInt(-1);
         var category = p["category"];
         var enable = p["enable"]?.ToBoolean();
 
@@ -110,7 +117,7 @@ public class AppTracerController : EntityController<AppTracer>
 
         p.RetrieveState = true;
 
-        return AppTracer.Search(category, enable, start, end, p["Q"], p);
+        return AppTracer.Search(projectId, category, enable, start, end, p["Q"], p);
     }
 
     protected override Int32 OnDelete(AppTracer entity)
