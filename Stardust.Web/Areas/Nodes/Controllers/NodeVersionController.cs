@@ -40,7 +40,7 @@ public class NodeVersionController : EntityController<NodeVersion>
 
     protected override IEnumerable<NodeVersion> Search(Pager p)
     {
-        var enable = p["enable"].ToBoolean(true);
+        var enable = p["enable"]?.ToBoolean();
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
         var key = p["q"];
