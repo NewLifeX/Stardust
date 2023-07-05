@@ -178,6 +178,15 @@ public partial class NodeOnline
     [BindColumn("SpaceUsed", "已用磁盘。应用所在盘，单位M", "")]
     public Int32 SpaceUsed { get => _SpaceUsed; set { if (OnPropertyChanging("SpaceUsed", value)) { _SpaceUsed = value; OnPropertyChanged("SpaceUsed"); } } }
 
+    private String _DriveInfo;
+    /// <summary>驱动器信息。各分区大小，逗号分隔</summary>
+    [Category("硬件信息")]
+    [DisplayName("驱动器信息")]
+    [Description("驱动器信息。各分区大小，逗号分隔")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("DriveInfo", "驱动器信息。各分区大小，逗号分隔", "")]
+    public String DriveInfo { get => _DriveInfo; set { if (OnPropertyChanging("DriveInfo", value)) { _DriveInfo = value; OnPropertyChanged("DriveInfo"); } } }
+
     private Double _CpuRate;
     /// <summary>CPU率。占用率</summary>
     [DisplayName("CPU率")]
@@ -387,6 +396,7 @@ public partial class NodeOnline
             "MemoryUsed" => _MemoryUsed,
             "AvailableFreeSpace" => _AvailableFreeSpace,
             "SpaceUsed" => _SpaceUsed,
+            "DriveInfo" => _DriveInfo,
             "CpuRate" => _CpuRate,
             "Temperature" => _Temperature,
             "Battery" => _Battery,
@@ -434,6 +444,7 @@ public partial class NodeOnline
                 case "MemoryUsed": _MemoryUsed = value.ToInt(); break;
                 case "AvailableFreeSpace": _AvailableFreeSpace = value.ToInt(); break;
                 case "SpaceUsed": _SpaceUsed = value.ToInt(); break;
+                case "DriveInfo": _DriveInfo = Convert.ToString(value); break;
                 case "CpuRate": _CpuRate = value.ToDouble(); break;
                 case "Temperature": _Temperature = value.ToDouble(); break;
                 case "Battery": _Battery = value.ToDouble(); break;
@@ -533,6 +544,9 @@ public partial class NodeOnline
 
         /// <summary>已用磁盘。应用所在盘，单位M</summary>
         public static readonly Field SpaceUsed = FindByName("SpaceUsed");
+
+        /// <summary>驱动器信息。各分区大小，逗号分隔</summary>
+        public static readonly Field DriveInfo = FindByName("DriveInfo");
 
         /// <summary>CPU率。占用率</summary>
         public static readonly Field CpuRate = FindByName("CpuRate");
@@ -662,6 +676,9 @@ public partial class NodeOnline
 
         /// <summary>已用磁盘。应用所在盘，单位M</summary>
         public const String SpaceUsed = "SpaceUsed";
+
+        /// <summary>驱动器信息。各分区大小，逗号分隔</summary>
+        public const String DriveInfo = "DriveInfo";
 
         /// <summary>CPU率。占用率</summary>
         public const String CpuRate = "CpuRate";

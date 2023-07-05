@@ -549,8 +549,15 @@ public partial class Node : Entity<Node>
 
         if (di.ProcessorCount > 0) node.Cpu = di.ProcessorCount;
         if (di.Memory > 0) node.Memory = (Int32)Math.Round(di.Memory / 1024d / 1024);
-        if (di.TotalSize > 0) node.TotalSize = (Int32)Math.Round(di.TotalSize / 1024d / 1024);
-        if (!di.DriveInfo.IsNullOrEmpty()) node.DriveInfo = di.DriveInfo;
+        if (di.TotalSize > 0) node.TotalSize = (Int32)(di.TotalSize / 1024 / 1024);
+        if (di.DriveSize > 0) node.DriveSize = (Int32)(di.DriveSize / 1024 / 1024);
+        if (!di.DriveInfo.IsNullOrEmpty())
+        {
+            node.DriveInfo = di.DriveInfo;
+            // 兼容旧版客户端
+            if (node.DriveSize == 0)
+                node.DriveSize = (Int32)di.DriveInfo.Split(",").Sum(e => e.Substring("/", "G").ToDouble() * 1024);
+        }
         if (di.MaxOpenFiles > 0) node.MaxOpenFiles = di.MaxOpenFiles;
         if (!di.Dpi.IsNullOrEmpty()) node.Dpi = di.Dpi;
         if (!di.Resolution.IsNullOrEmpty()) node.Resolution = di.Resolution;

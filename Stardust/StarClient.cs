@@ -217,6 +217,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             AvailableMemory = mi.AvailableMemory,
             TotalSize = (UInt64)driveInfo?.TotalSize,
             AvailableFreeSpace = (UInt64)driveInfo?.AvailableFreeSpace,
+            DriveSize = (UInt64)drives.Sum(e => e.TotalSize),
             DriveInfo = drives.Join(",", e => $"{e.Name}[{e.DriveFormat}]={e.AvailableFreeSpace.ToGMK()}/{e.TotalSize.ToGMK()}"),
 
             Product = mi.Product,
@@ -420,12 +421,14 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
 
         var mcs = NetHelper.GetMacs().Select(e => e.ToHex("-")).OrderBy(e => e).Join(",");
         var path = ".".GetFullPath();
+        var drives = GetDrives();
         var driveInfo = DriveInfo.GetDrives().FirstOrDefault(e => path.StartsWithIgnoreCase(e.Name));
         var ip = AgentInfo.GetIps();
         var ext = new PingInfo
         {
             AvailableMemory = mi.AvailableMemory,
             AvailableFreeSpace = (UInt64)driveInfo?.AvailableFreeSpace,
+            DriveInfo = drives.Join(",", e => $"{e.Name}[{e.DriveFormat}]={e.AvailableFreeSpace.ToGMK()}/{e.TotalSize.ToGMK()}"),
             CpuRate = mi.CpuRate,
             Temperature = mi.Temperature,
             Battery = mi.Battery,

@@ -46,7 +46,10 @@ namespace Stardust.Models
         /// <summary>磁盘可用空间。应用所在盘</summary>
         public UInt64 AvailableFreeSpace { get; set; }
 
-        /// <summary>驱动器信息。各磁盘大小，逗号分隔</summary>
+        /// <summary>驱动器大小。所有分区总大小，单位M</summary>
+        public UInt64 DriveSize { get; set; }
+
+        /// <summary>驱动器信息。各分区大小，逗号分隔</summary>
         public String DriveInfo { get; set; }
 
         /// <summary>最大打开文件。Linux上的ulimit -n</summary>

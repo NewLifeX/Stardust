@@ -201,13 +201,22 @@ public partial class Node
     [BindColumn("TotalSize", "磁盘。应用所在盘，单位M", "")]
     public Int32 TotalSize { get => _TotalSize; set { if (OnPropertyChanging("TotalSize", value)) { _TotalSize = value; OnPropertyChanged("TotalSize"); } } }
 
+    private Int32 _DriveSize;
+    /// <summary>驱动器大小。所有分区总大小，单位M</summary>
+    [Category("硬件信息")]
+    [DisplayName("驱动器大小")]
+    [Description("驱动器大小。所有分区总大小，单位M")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("DriveSize", "驱动器大小。所有分区总大小，单位M", "")]
+    public Int32 DriveSize { get => _DriveSize; set { if (OnPropertyChanging("DriveSize", value)) { _DriveSize = value; OnPropertyChanged("DriveSize"); } } }
+
     private String _DriveInfo;
-    /// <summary>驱动器信息。各磁盘大小，逗号分隔</summary>
+    /// <summary>驱动器信息。各分区大小，逗号分隔</summary>
     [Category("硬件信息")]
     [DisplayName("驱动器信息")]
-    [Description("驱动器信息。各磁盘大小，逗号分隔")]
-    [DataObjectField(false, false, true, 200)]
-    [BindColumn("DriveInfo", "驱动器信息。各磁盘大小，逗号分隔", "")]
+    [Description("驱动器信息。各分区大小，逗号分隔")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("DriveInfo", "驱动器信息。各分区大小，逗号分隔", "")]
     public String DriveInfo { get => _DriveInfo; set { if (OnPropertyChanging("DriveInfo", value)) { _DriveInfo = value; OnPropertyChanged("DriveInfo"); } } }
 
     private Int32 _MaxOpenFiles;
@@ -598,6 +607,7 @@ public partial class Node
             "Cpu" => _Cpu,
             "Memory" => _Memory,
             "TotalSize" => _TotalSize,
+            "DriveSize" => _DriveSize,
             "DriveInfo" => _DriveInfo,
             "MaxOpenFiles" => _MaxOpenFiles,
             "Dpi" => _Dpi,
@@ -665,6 +675,7 @@ public partial class Node
                 case "Cpu": _Cpu = value.ToInt(); break;
                 case "Memory": _Memory = value.ToInt(); break;
                 case "TotalSize": _TotalSize = value.ToInt(); break;
+                case "DriveSize": _DriveSize = value.ToInt(); break;
                 case "DriveInfo": _DriveInfo = Convert.ToString(value); break;
                 case "MaxOpenFiles": _MaxOpenFiles = value.ToInt(); break;
                 case "Dpi": _Dpi = Convert.ToString(value); break;
@@ -787,7 +798,10 @@ public partial class Node
         /// <summary>磁盘。应用所在盘，单位M</summary>
         public static readonly Field TotalSize = FindByName("TotalSize");
 
-        /// <summary>驱动器信息。各磁盘大小，逗号分隔</summary>
+        /// <summary>驱动器大小。所有分区总大小，单位M</summary>
+        public static readonly Field DriveSize = FindByName("DriveSize");
+
+        /// <summary>驱动器信息。各分区大小，逗号分隔</summary>
         public static readonly Field DriveInfo = FindByName("DriveInfo");
 
         /// <summary>最大打开文件。Linux上的ulimit -n</summary>
@@ -976,7 +990,10 @@ public partial class Node
         /// <summary>磁盘。应用所在盘，单位M</summary>
         public const String TotalSize = "TotalSize";
 
-        /// <summary>驱动器信息。各磁盘大小，逗号分隔</summary>
+        /// <summary>驱动器大小。所有分区总大小，单位M</summary>
+        public const String DriveSize = "DriveSize";
+
+        /// <summary>驱动器信息。各分区大小，逗号分隔</summary>
         public const String DriveInfo = "DriveInfo";
 
         /// <summary>最大打开文件。Linux上的ulimit -n</summary>

@@ -234,57 +234,59 @@ namespace Stardust.Data.Nodes
         }
 
         /// <summary>填充节点信息</summary>
-        /// <param name="di"></param>
-        public void Fill(NodeInfo di)
+        /// <param name="inf"></param>
+        public void Fill(NodeInfo inf)
         {
             var online = this;
 
-            online.LocalTime = di.Time.ToLocalTime();
-            online.MACs = di.Macs;
+            online.LocalTime = inf.Time.ToLocalTime();
+            online.MACs = inf.Macs;
             //online.COMs = di.COMs;
-            online.IP = di.IP;
+            online.IP = inf.IP;
 
-            if (di.AvailableMemory > 0) online.AvailableMemory = (Int32)(di.AvailableMemory / 1024 / 1024);
-            if (di.AvailableFreeSpace > 0) online.AvailableFreeSpace = (Int32)(di.AvailableFreeSpace / 1024 / 1024);
+            if (inf.AvailableMemory > 0) online.AvailableMemory = (Int32)(inf.AvailableMemory / 1024 / 1024);
+            if (inf.AvailableFreeSpace > 0) online.AvailableFreeSpace = (Int32)(inf.AvailableFreeSpace / 1024 / 1024);
+            if (!online.DriveInfo.IsNullOrEmpty()) online.DriveInfo = online.DriveInfo;
         }
 
         /// <summary>填充在线节点信息</summary>
         /// <param name="inf"></param>
         private void Fill(PingInfo inf)
         {
-            var olt = this;
+            var online = this;
 
-            if (inf.AvailableMemory > 0) olt.AvailableMemory = (Int32)(inf.AvailableMemory / 1024 / 1024);
-            if (inf.AvailableFreeSpace > 0) olt.AvailableFreeSpace = (Int32)(inf.AvailableFreeSpace / 1024 / 1024);
-            if (inf.CpuRate > 0) olt.CpuRate = inf.CpuRate;
-            if (inf.Temperature > 0) olt.Temperature = inf.Temperature;
-            if (inf.Battery > 0) olt.Battery = inf.Battery;
-            if (inf.UplinkSpeed > 0) olt.UplinkSpeed = (Int64)inf.UplinkSpeed;
-            if (inf.DownlinkSpeed > 0) olt.DownlinkSpeed = (Int64)inf.DownlinkSpeed;
-            if (inf.ProcessCount > 0) olt.ProcessCount = inf.ProcessCount;
-            if (inf.TcpConnections > 0) olt.TcpConnections = inf.TcpConnections;
-            if (inf.TcpTimeWait > 0) olt.TcpTimeWait = inf.TcpTimeWait;
-            if (inf.TcpCloseWait > 0) olt.TcpCloseWait = inf.TcpCloseWait;
-            if (inf.Uptime > 0) olt.Uptime = inf.Uptime;
-            if (inf.Delay > 0) olt.Delay = inf.Delay;
+            if (inf.AvailableMemory > 0) online.AvailableMemory = (Int32)(inf.AvailableMemory / 1024 / 1024);
+            if (inf.AvailableFreeSpace > 0) online.AvailableFreeSpace = (Int32)(inf.AvailableFreeSpace / 1024 / 1024);
+            if (!inf.DriveInfo.IsNullOrEmpty()) online.DriveInfo = inf.DriveInfo;
+            if (inf.CpuRate > 0) online.CpuRate = inf.CpuRate;
+            if (inf.Temperature > 0) online.Temperature = inf.Temperature;
+            if (inf.Battery > 0) online.Battery = inf.Battery;
+            if (inf.UplinkSpeed > 0) online.UplinkSpeed = (Int64)inf.UplinkSpeed;
+            if (inf.DownlinkSpeed > 0) online.DownlinkSpeed = (Int64)inf.DownlinkSpeed;
+            if (inf.ProcessCount > 0) online.ProcessCount = inf.ProcessCount;
+            if (inf.TcpConnections > 0) online.TcpConnections = inf.TcpConnections;
+            if (inf.TcpTimeWait > 0) online.TcpTimeWait = inf.TcpTimeWait;
+            if (inf.TcpCloseWait > 0) online.TcpCloseWait = inf.TcpCloseWait;
+            if (inf.Uptime > 0) online.Uptime = inf.Uptime;
+            if (inf.Delay > 0) online.Delay = inf.Delay;
 
             var dt = inf.Time.ToDateTime().ToLocalTime();
             if (dt.Year > 2000)
             {
-                olt.LocalTime = dt;
+                online.LocalTime = dt;
                 //olt.Offset = (Int32)Math.Round((dt - DateTime.Now).TotalSeconds);
-                olt.Offset = (Int32)(inf.Time - DateTime.UtcNow.ToLong());
+                online.Offset = (Int32)(inf.Time - DateTime.UtcNow.ToLong());
             }
 
-            if (!inf.Processes.IsNullOrEmpty()) olt.Processes = inf.Processes;
-            if (!inf.Macs.IsNullOrEmpty()) olt.MACs = inf.Macs;
+            if (!inf.Processes.IsNullOrEmpty()) online.Processes = inf.Processes;
+            if (!inf.Macs.IsNullOrEmpty()) online.MACs = inf.Macs;
             //if (!inf.COMs.IsNullOrEmpty()) olt.COMs = inf.COMs;
-            if (!inf.IP.IsNullOrEmpty()) olt.IP = inf.IP;
+            if (!inf.IP.IsNullOrEmpty()) online.IP = inf.IP;
 
             //olt.Data = inf.ToJson();
             var dic = inf.ToDictionary();
             dic.Remove("Processes");
-            olt.Data = dic.ToJson();
+            online.Data = dic.ToJson();
         }
 
         private void CreateData(PingInfo inf, String ip)
