@@ -118,14 +118,6 @@ public partial class AppMeter
     [BindColumn("FullGC", "完全GC。周期时间内发生二代GC的次数", "")]
     public Int32 FullGC { get => _FullGC; set { if (OnPropertyChanging("FullGC", value)) { _FullGC = value; OnPropertyChanged("FullGC"); } } }
 
-    private String _Data;
-    /// <summary>数据</summary>
-    [DisplayName("数据")]
-    [Description("数据")]
-    [DataObjectField(false, false, true, -1)]
-    [BindColumn("Data", "数据", "")]
-    public String Data { get => _Data; set { if (OnPropertyChanging("Data", value)) { _Data = value; OnPropertyChanged("Data"); } } }
-
     private String _Creator;
     /// <summary>创建者。服务端节点</summary>
     [Category("扩展")]
@@ -174,7 +166,6 @@ public partial class AppMeter
             "Connections" => _Connections,
             "GCPause" => _GCPause,
             "FullGC" => _FullGC,
-            "Data" => _Data,
             "Creator" => _Creator,
             "CreateTime" => _CreateTime,
             "CreateIP" => _CreateIP,
@@ -196,7 +187,6 @@ public partial class AppMeter
                 case "Connections": _Connections = value.ToInt(); break;
                 case "GCPause": _GCPause = value.ToDouble(); break;
                 case "FullGC": _FullGC = value.ToInt(); break;
-                case "Data": _Data = Convert.ToString(value); break;
                 case "Creator": _Creator = Convert.ToString(value); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -249,9 +239,6 @@ public partial class AppMeter
         /// <summary>完全GC。周期时间内发生二代GC的次数</summary>
         public static readonly Field FullGC = FindByName("FullGC");
 
-        /// <summary>数据</summary>
-        public static readonly Field Data = FindByName("Data");
-
         /// <summary>创建者。服务端节点</summary>
         public static readonly Field Creator = FindByName("Creator");
 
@@ -302,9 +289,6 @@ public partial class AppMeter
 
         /// <summary>完全GC。周期时间内发生二代GC的次数</summary>
         public const String FullGC = "FullGC";
-
-        /// <summary>数据</summary>
-        public const String Data = "Data";
 
         /// <summary>创建者。服务端节点</summary>
         public const String Creator = "Creator";

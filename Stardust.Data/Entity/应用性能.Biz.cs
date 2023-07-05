@@ -115,7 +115,7 @@ public partial class AppMeter : Entity<AppMeter>
         if (appId >= 0) exp &= _.AppId == appId;
         if (!clientId.IsNullOrEmpty() && clientId != "null") exp &= _.ClientId == clientId;
         exp &= _.Id.Between(start, end, Meta.Factory.Snow);
-        if (!key.IsNullOrEmpty()) exp &= _.ClientId.Contains(key) | _.Data.Contains(key) | _.Creator.Contains(key) | _.CreateIP.Contains(key);
+        if (!key.IsNullOrEmpty()) exp &= _.ClientId.Contains(key) | _.Creator.Contains(key) | _.CreateIP.Contains(key);
 
         return FindAll(exp, page);
     }
@@ -179,7 +179,7 @@ public partial class AppMeter : Entity<AppMeter>
             GCPause = Math.Round(info.GCPause, 4),
             FullGC = info.FullGC,
 
-            Data = info.ToJson(),
+            //Data = info.ToJson(),
             Creator = Environment.MachineName,
             CreateIP = ip,
         };

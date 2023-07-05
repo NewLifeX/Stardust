@@ -15,6 +15,7 @@ using XCode;
 using XCode.DataAccessLayer;
 using Stardust.Data.Deployment;
 using Stardust.Data;
+using Stardust.Data.Nodes;
 
 namespace Stardust.Web;
 
@@ -182,7 +183,12 @@ public class Startup
         }
 
         // 强行设置反向工程，修改字段长度
-        var ts = new[] { AppDeployNode.Meta.Table.DataTable, AppOnline.Meta.Table.DataTable };
+        var ts = new[] {
+            AppDeployNode.Meta.Table.DataTable,
+            AppOnline.Meta.Table.DataTable,
+            AppMeter.Meta.Table.DataTable,
+            Node.Meta.Table.DataTable,
+        };
         dal.Db.CreateMetaData().SetTables(Migration.Full, ts);
     }
 

@@ -173,7 +173,6 @@
       <Column Name="Connections" DataType="Int32" Description="连接数" />
       <Column Name="GCPause" DataType="Double" Description="GC暂停。时间占比，百分之一" />
       <Column Name="FullGC" DataType="Int32" Description="完全GC。周期时间内发生二代GC的次数" />
-      <Column Name="Data" DataType="String" Length="-1" Description="数据" />
       <Column Name="Creator" DataType="String" Description="创建者。服务端节点" Category="扩展" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
