@@ -99,7 +99,7 @@ public class StarFactory : DisposeBase
     {
         XTrace.WriteLine("正在初始化星尘……");
 
-        Local = new LocalStarClient();
+        Local = new LocalStarClient { Log = Log };
 
         // 从命令行读取参数
         var args = Environment.GetCommandLineArgs();

@@ -12,6 +12,7 @@ using NewLife.IO;
 using NewLife.Log;
 using NewLife.Messaging;
 using NewLife.Model;
+using NewLife.Net;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
@@ -30,7 +31,7 @@ class Program
     {
         XTrace.UseConsole();
 
-        Test1();
+        Test3();
 
         Console.WriteLine("OK!");
         Console.ReadKey();
@@ -114,14 +115,20 @@ class Program
 
     static void Test3()
     {
+        //var buf = "01005F0004496E666F560000007B2250726F636573734964223A323238342C22".ToHex();
+        //var udp = new UdpClient();
+        //udp.Send(buf, "127.0.0.1", 5500);
+        //var rs = udp.ReceiveString();
+
         //foreach (Environment.SpecialFolder item in Enum.GetValues(typeof(Environment.SpecialFolder)))
         //{
         //    var v = Environment.GetFolderPath(item);
         //    Console.WriteLine("{0}:\t{1}", item, v);
         //}
 
-        var client = new LocalStarClient();
-        client.ProbeAndInstall(null, "1.6");
+        var client = new LocalStarClient { Log = XTrace.Log };
+        //client.ProbeAndInstall(null, "1.6");
+        var info = client.GetInfo();
 
         //var p = Process.GetCurrentProcess();
         //var name = p.MainModule.FileName;
