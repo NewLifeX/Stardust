@@ -602,9 +602,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
 
         var service = CreatePublishService(serviceName);
         service.Address = address;
-#if !NET40
         service.ExternalAddress = NewLife.Setting.Current.ServiceAddress;
-#endif
         service.Tag = tag;
         service.Health = health;
 
@@ -626,9 +624,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
 
         var service = CreatePublishService(serviceName);
         service.AddressCallback = addressCallback;
-#if !NET40
         service.ExternalAddress = NewLife.Setting.Current.ServiceAddress;
-#endif
         service.Tag = tag;
         service.Health = health;
 
@@ -805,7 +801,6 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     #endregion
 
     #region 辅助
-#if !NET40
     /// <summary>
     /// 设置服务地址
     /// </summary>
@@ -834,7 +829,6 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         set.ServiceAddress = serverAddress;
         set.Save();
     }
-#endif
 
     /// <summary>
     /// 是否本地地址

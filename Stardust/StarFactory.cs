@@ -234,17 +234,8 @@ public class StarFactory : DisposeBase
         // 替换为混合配置提供者，优先本地配置
         ioc.AddSingleton(p => GetConfig());
 
-#if !NET40
         ioc.TryAddSingleton(XTrace.Log);
         ioc.TryAddSingleton(typeof(ICacheProvider), typeof(CacheProvider));
-#else
-        ioc.TryAdd(new ServiceDescriptor
-        {
-            ServiceType = typeof(ILog),
-            Instance = XTrace.Log,
-            Lifetime = ObjectLifetime.Singleton
-        });
-#endif
     }
 
     private Boolean Valid()

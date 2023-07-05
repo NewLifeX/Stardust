@@ -40,17 +40,8 @@ public static class StarHelper
 
             // 分布式缓存
             //services.TryAddSingleton<ICacheProvider, CacheProvider>();
-#if !NET40
             services.TryAddSingleton(XTrace.Log);
             services.TryAddSingleton(typeof(ICacheProvider), typeof(CacheProvider));
-#else
-            services.TryAdd(new ServiceDescriptor
-            {
-                ServiceType = typeof(ILog),
-                Instance = XTrace.Log,
-                Lifetime = ObjectLifetime.Singleton
-            });
-#endif
         }
 
         return star;
