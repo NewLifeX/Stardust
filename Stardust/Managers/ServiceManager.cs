@@ -296,9 +296,10 @@ public class ServiceManager : DisposeBase
         var controller = _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
         if (controller != null)
         {
-            controller.Stop(reason);
-
+            // 先删除再停止，避免并发
             _controllers.Remove(controller);
+
+            controller.Stop(reason);
             controller.TryDispose();
 
             return true;
@@ -514,9 +515,13 @@ public class ServiceManager : DisposeBase
     }
 
     Int32 _status;
+    Boolean _busy;
     private TimerX _timer;
     private async Task DoWork(Object state)
     {
+        // 如果其它任务正在使用管理器，则跳过这一次检查
+        if (_busy) return;
+
         var svcs = Services;
         using var span = Tracer?.NewSpan("ServiceManager-DoWork", svcs.Length);
 
@@ -565,9 +570,13 @@ public class ServiceManager : DisposeBase
             }
             else if (controller.Running && service.ToJson() != controller.Info.ToJson())
             {
-                controller.Stop("配置改变");
-                controllers.RemoveAt(i);
-                changed = true;
+                // 启动成功的短时间内，不认可配置改变，因为可能就是这一次发布的配置变化
+                if (controller.StartTime.Year > 2000 && controller.StartTime.AddSeconds(5) < DateTime.Now)
+                {
+                    controller.Stop("配置改变");
+                    controllers.RemoveAt(i);
+                    changed = true;
+                }
             }
         }
 
@@ -583,6 +592,21 @@ public class ServiceManager : DisposeBase
         // 保存状态
         if (changed) SaveDb();
     }
+
+    private IDisposable CreateBusy()
+    {
+        _busy = true;
+
+        return new MyBusy(this);
+    }
+
+    class MyBusy : IDisposable
+    {
+        private ServiceManager _mgr;
+        public MyBusy(ServiceManager mgr) => _mgr = mgr;
+
+        public void Dispose() => _mgr._busy = false;
+    }
     #endregion
 
     #region 安装卸载
@@ -592,6 +616,9 @@ public class ServiceManager : DisposeBase
     public ProcessInfo Install(ServiceInfo service)
     {
         using var span = Tracer?.NewSpan("ServiceManager-Install", service);
+
+        // 设置繁忙，避免同步进行健康检查
+        using var busy = CreateBusy();
 
         Add(service);
 
@@ -613,6 +640,9 @@ public class ServiceManager : DisposeBase
         var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
         if (svc == null) return false;
 
+        // 设置繁忙，避免同步进行健康检查
+        using var busy = CreateBusy();
+
         StopService(svc.Name, reason);
 
         SaveDb();
@@ -629,6 +659,9 @@ public class ServiceManager : DisposeBase
     public void Attach(StarClient client)
     {
         _client = client;
+
+        // 设置繁忙，避免同步进行健康检查
+        using var busy = CreateBusy();
 
         client.RegisterCommand("deploy/publish", DoControl);
         client.RegisterCommand("deploy/install", DoControl);
