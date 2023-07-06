@@ -131,6 +131,16 @@ public class ShardTableService : IHostedService
 
                 //dal.SetTables(ts.ToArray());
                 dal.Db.CreateMetaData().SetTables(Migration.On, ts.ToArray());
+
+                // 首次建表时，设置为压缩表
+                if (dal.DbType == DatabaseType.MySql)
+                {
+                    foreach (var dt in ts)
+                    {
+                        if (!dt.TableName.EqualIgnoreCase(tnames))
+                            dal.Execute($"Alter Table {dt.TableName} ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=4");
+                    }
+                }
             }
         }
         catch (Exception ex)
