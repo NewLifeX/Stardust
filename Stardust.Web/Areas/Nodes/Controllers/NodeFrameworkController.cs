@@ -31,6 +31,7 @@ public class NodeFrameworkController : EntityController<Node>
         var provinceId = rids.Length > 0 ? rids[0] : -1;
         var cityId = rids.Length > 1 ? rids[1] : -1;
 
+        var projectId = p["projectId"].ToInt(-1);
         var category = p["category"];
         var product = p["product"];
         var osKind = p["osKind"];
@@ -49,7 +50,7 @@ public class NodeFrameworkController : EntityController<Node>
             if (!Enum.TryParse(osKind, out kind)) kind = (OSKinds)(-1);
         }
 
-        return Node.Search(0, provinceId, cityId, category, product, kind, version, runtime, framework, arch, enable, start, end, p["Q"], p);
+        return Node.Search(projectId, provinceId, cityId, category, product, kind, version, runtime, framework, arch, enable, start, end, p["Q"], p);
     }
 
     [DisplayName("安装")]
