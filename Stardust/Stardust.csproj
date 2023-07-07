@@ -80,11 +80,11 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'!='net40'">
-    <PackageReference Include="NewLife.Core" Version="10.4.2023.705-beta1024" />
-    <PackageReference Include="NewLife.Remoting" Version="2.1.2023.705-beta1042" />
+    <PackageReference Include="NewLife.Core" Version="10.4.2023.707" />
+    <PackageReference Include="NewLife.Remoting" Version="2.2.2023.707" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net40'">
-    <PackageReference Include="NewLife.Core" Version="10.4.2023.703-net40" />
+    <PackageReference Include="NewLife.Core" Version="10.4.2023.707-net40" />
   </ItemGroup>
 
 </Project>
