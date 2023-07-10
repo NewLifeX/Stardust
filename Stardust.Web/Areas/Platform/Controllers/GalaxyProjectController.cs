@@ -25,6 +25,20 @@ public class GalaxyProjectController : EntityController<GalaxyProject>
             df.Url = "/Platform/GalaxyProject/Edit?id={Id}";
             df.Target = "_blank";
         }
+        {
+            var df = ListFields.GetField("Nodes") as ListField;
+            df.DisplayName = "{Nodes}";
+            df.Url = "/Nodes/Node?projectId={Id}";
+            df.Target = "_blank";
+            df.Title = "{Name}（节点）";
+        }
+        {
+            var df = ListFields.GetField("Apps") as ListField;
+            df.DisplayName = "{Apps}";
+            df.Url = "/Registry/App?projectId={Id}";
+            df.Target = "_blank";
+            df.Title = "{Name}（应用）";
+        }
     }
 
     public override void OnActionExecuting(ActionExecutingContext filterContext)
