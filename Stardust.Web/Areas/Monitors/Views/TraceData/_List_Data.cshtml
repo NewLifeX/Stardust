@@ -76,9 +76,9 @@
                 {
                     <td class="text-center"><input type="checkbox" name="keys" value="@entity.Id" /></td>
                 }
-                <td class="text-center"><a href="?appId=@entity.AppId">@entity.AppName</a></td>
-                <td><a href="@url3" title="该实例的相关埋点数据">@entity.ClientId</a></td>
-                <td><a href="/Nodes/Node?Id=@node?.ID" title="应用系统所在节点">@nodeName</a></td>
+                <td class="text-center"><a href="?appId=@entity.AppId" target="_frame">@entity.AppName</a></td>
+                <td><a href="@url3" title="@(entity.AppName)埋点数据。该实例的相关埋点数据">@entity.ClientId</a></td>
+                <td><a href="/Nodes/Node?Id=@node?.ID" title="@(nodeName)。应用系统所在节点" target="_blank">@nodeName</a></td>
                 <td style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url1" title="该应用操作在最近一段时间内的监控图表">@entity.Name</a></td>
                 <td><a href="/Monitors/TraceData/Trace?id=@entity.Id" title="跨多系统查看调用链">追踪</a></td>
                 <td class="text-right"><a href="@url2" title="本次追踪的少量采样数据样本，作为参考，并没有收集所有埋点采样数据">@entity.Total.ToString("n0")</a></td>

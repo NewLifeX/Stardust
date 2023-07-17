@@ -31,7 +31,7 @@ public class AppTracerController : EntityController<AppTracer>
             var df = ListFields.AddListField("DayMonitor", null, "Category");
             df.Header = "每日监控";
             df.DisplayName = "每日监控";
-            df.Title = "该应用每日监控数据";
+            df.Title = "{AppName}监控。该应用每日监控数据";
             df.Url = "/Monitors/AppDaystat?appId={ID}";
             df.Target = "_frame";
         }
@@ -40,7 +40,7 @@ public class AppTracerController : EntityController<AppTracer>
             var df = ListFields.GetField("ItemCount") as ListField;
             //df.Header = "每日监控";
             df.DisplayName = "{ItemCount}";
-            //df.Title = "该应用每日监控数据";
+            df.Title = "{AppName}监控项。应用下的所有监控项（埋点）";
             df.Url = "/Monitors/TraceItem?appId={ID}";
             df.Target = "_frame";
         }
