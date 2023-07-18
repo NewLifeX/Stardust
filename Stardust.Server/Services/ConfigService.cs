@@ -5,7 +5,6 @@ using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Data;
 using Stardust.Data.Configs;
-using Stardust.Services;
 
 namespace Stardust.Server.Services;
 
@@ -203,9 +202,15 @@ public class ConfigService
         //// 打开事务保护，确保生成唯一标识
         //using var tran = ConfigData.Meta.CreateTrans();
 
+        // 获取该应用所有在线实例，确保WorkerId唯一
+        var force = false;
+        var ins = AppOnline.FindAllByApp(app.Id);
+        if (ins.Any(e => e.Id != online.Id && e.WorkerId == online.WorkerId)) force = true;
+
+        // 重新获取在线对象，可能位于对象缓存
         var id = 0;
         var olt = AppOnline.FindById(online.Id);
-        if (olt.WorkerId <= 0)
+        if (force || olt.WorkerId <= 0)
         {
             // 找到该Key，不考虑Scope，做跨域全局配置
             var list = ConfigData.FindAllByAppIdAndKey(app.Id, WorkerIdName);
