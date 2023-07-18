@@ -204,7 +204,7 @@ public class ConfigService
 
         // 获取该应用所有在线实例，确保WorkerId唯一
         var force = false;
-        var ins = AppOnline.FindAllByApp(app.Id);
+        var ins = AppOnline.FindAllByApp(app.AppId);
         if (ins.Any(e => e.Id != online.Id && e.WorkerId == online.WorkerId)) force = true;
 
         // 重新获取在线对象，可能位于对象缓存
