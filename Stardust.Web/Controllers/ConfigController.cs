@@ -93,7 +93,7 @@ public class ConfigController : ControllerBase
         if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
 
         // 刷新WorkerId
-        if (app.EnableWorkerId && online.WorkerId <= 0) _configService.RefreshWorkerId(app, online);
+        if (app.EnableWorkerId) _configService.RefreshWorkerId(app, online);
 
         return app;
     }
