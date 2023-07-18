@@ -95,6 +95,7 @@ public static class OSKindHelper
         if (osName.Contains("Linux")) return OSKinds.Linux;
         if (osName.Contains("Buildroot")) return OSKinds.Linux;
         if (osName.Contains("OpenWrt")) return OSKinds.Linux;
+        if (osName.Contains("Armbian")) return OSKinds.Debian;
 
         if (osName.StartsWithIgnoreCase("Orange Pi"))
         {
