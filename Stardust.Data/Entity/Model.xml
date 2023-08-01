@@ -169,6 +169,8 @@
       <Column Name="ProcessorTime" DataType="Int32" Description="处理器。处理器时间，单位ms" />
       <Column Name="CpuUsage" DataType="Double" ItemType="percent" Description="CPU负载。处理器时间除以物理时间的占比" />
       <Column Name="Threads" DataType="Int32" Description="线程数" />
+      <Column Name="WorkerThreads" DataType="Int32" Description="工作线程。线程池可用工作线程数，主要是Task使用" />
+      <Column Name="IOThreads" DataType="Int32" Description="IO线程。线程池可用IO线程数，主要是网络接收所用" />
       <Column Name="Handles" DataType="Int32" Description="句柄数" />
       <Column Name="Connections" DataType="Int32" Description="连接数" />
       <Column Name="GCPause" DataType="Double" Description="GC暂停。时间占比，百分之一" />

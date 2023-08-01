@@ -86,6 +86,22 @@ public partial class AppMeter
     [BindColumn("Threads", "线程数", "")]
     public Int32 Threads { get => _Threads; set { if (OnPropertyChanging("Threads", value)) { _Threads = value; OnPropertyChanged("Threads"); } } }
 
+    private Int32 _WorkerThreads;
+    /// <summary>工作线程。线程池可用工作线程数，主要是Task使用</summary>
+    [DisplayName("工作线程")]
+    [Description("工作线程。线程池可用工作线程数，主要是Task使用")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("WorkerThreads", "工作线程。线程池可用工作线程数，主要是Task使用", "")]
+    public Int32 WorkerThreads { get => _WorkerThreads; set { if (OnPropertyChanging("WorkerThreads", value)) { _WorkerThreads = value; OnPropertyChanged("WorkerThreads"); } } }
+
+    private Int32 _IOThreads;
+    /// <summary>IO线程。线程池可用IO线程数，主要是网络接收所用</summary>
+    [DisplayName("IO线程")]
+    [Description("IO线程。线程池可用IO线程数，主要是网络接收所用")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("IOThreads", "IO线程。线程池可用IO线程数，主要是网络接收所用", "")]
+    public Int32 IOThreads { get => _IOThreads; set { if (OnPropertyChanging("IOThreads", value)) { _IOThreads = value; OnPropertyChanged("IOThreads"); } } }
+
     private Int32 _Handles;
     /// <summary>句柄数</summary>
     [DisplayName("句柄数")]
@@ -162,6 +178,8 @@ public partial class AppMeter
             "ProcessorTime" => _ProcessorTime,
             "CpuUsage" => _CpuUsage,
             "Threads" => _Threads,
+            "WorkerThreads" => _WorkerThreads,
+            "IOThreads" => _IOThreads,
             "Handles" => _Handles,
             "Connections" => _Connections,
             "GCPause" => _GCPause,
@@ -183,6 +201,8 @@ public partial class AppMeter
                 case "ProcessorTime": _ProcessorTime = value.ToInt(); break;
                 case "CpuUsage": _CpuUsage = value.ToDouble(); break;
                 case "Threads": _Threads = value.ToInt(); break;
+                case "WorkerThreads": _WorkerThreads = value.ToInt(); break;
+                case "IOThreads": _IOThreads = value.ToInt(); break;
                 case "Handles": _Handles = value.ToInt(); break;
                 case "Connections": _Connections = value.ToInt(); break;
                 case "GCPause": _GCPause = value.ToDouble(); break;
@@ -226,6 +246,12 @@ public partial class AppMeter
 
         /// <summary>线程数</summary>
         public static readonly Field Threads = FindByName("Threads");
+
+        /// <summary>工作线程。线程池可用工作线程数，主要是Task使用</summary>
+        public static readonly Field WorkerThreads = FindByName("WorkerThreads");
+
+        /// <summary>IO线程。线程池可用IO线程数，主要是网络接收所用</summary>
+        public static readonly Field IOThreads = FindByName("IOThreads");
 
         /// <summary>句柄数</summary>
         public static readonly Field Handles = FindByName("Handles");
@@ -277,6 +303,12 @@ public partial class AppMeter
 
         /// <summary>线程数</summary>
         public const String Threads = "Threads";
+
+        /// <summary>工作线程。线程池可用工作线程数，主要是Task使用</summary>
+        public const String WorkerThreads = "WorkerThreads";
+
+        /// <summary>IO线程。线程池可用IO线程数，主要是网络接收所用</summary>
+        public const String IOThreads = "IOThreads";
 
         /// <summary>句柄数</summary>
         public const String Handles = "Handles";

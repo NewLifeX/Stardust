@@ -52,6 +52,12 @@ public class AppInfo
     /// <summary>线程数</summary>
     public Int32 Threads { get; set; }
 
+    /// <summary>线程池可用工作线程数</summary>
+    public Int32 WorkerThreads { get; set; }
+
+    /// <summary>线程池可用IO线程数</summary>
+    public Int32 IOThreads { get; set; }
+
     /// <summary>句柄数</summary>
     public Int32 Handles { get; set; }
 
@@ -111,6 +117,10 @@ public class AppInfo
             WorkingSet = _process.WorkingSet64;
             Threads = _process.Threads.Count;
             Handles = _process.HandleCount;
+
+            ThreadPool.GetAvailableThreads(out var worker, out var io);
+            WorkerThreads = worker;
+            IOThreads = io;
 
             if (Id == _pid)
                 CommandLine = Environment.CommandLine;

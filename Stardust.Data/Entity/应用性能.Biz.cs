@@ -174,6 +174,8 @@ public partial class AppMeter : Entity<AppMeter>
             ProcessorTime = info.ProcessorTime,
             CpuUsage = Math.Round(info.CpuUsage, 4),
             Threads = info.Threads,
+            WorkerThreads = info.WorkerThreads,
+            IOThreads = info.IOThreads,
             Handles = info.Handles,
             Connections = info.Connections,
             GCPause = Math.Round(info.GCPause, 4),
