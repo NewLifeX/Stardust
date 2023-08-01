@@ -29,7 +29,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>增强星尘发布，支持Linux下指定用户运行应用；支持推送升级.NET运行时；支持服务器迁移；增加分布式缓存架构CacheService</PackageReleaseNotes>
+    <PackageReleaseNotes>增加分布式缓存架构ICacheProvider</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -45,8 +45,14 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)'=='net5.0-windows' or '$(TargetFramework)'=='net6.0-windows' or '$(TargetFramework)'=='net7.0-windows'">
-    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" IsImplicitlyDefined="true" />
+  <ItemGroup Condition="'$(TargetFramework)'=='net5.0-windows'">
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" IsImplicitlyDefined="true" TargetingPackVersion="5.0.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'=='net6.0-windows'">
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" IsImplicitlyDefined="true" TargetingPackVersion="6.0.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'=='net7.0-windows'">
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" IsImplicitlyDefined="true" TargetingPackVersion="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -80,11 +86,11 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'!='net40'">
-    <PackageReference Include="NewLife.Core" Version="10.4.2023.707" />
+    <PackageReference Include="NewLife.Core" Version="10.5.2023.801" />
     <PackageReference Include="NewLife.Remoting" Version="2.2.2023.707" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net40'">
-    <PackageReference Include="NewLife.Core" Version="10.4.2023.707-net40" />
+    <PackageReference Include="NewLife.Core" Version="10.5.2023.801-net40" />
   </ItemGroup>
 
 </Project>
