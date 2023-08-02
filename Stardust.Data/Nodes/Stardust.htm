@@ -1538,7 +1538,7 @@
             <td></td>
             <td></td>
             <td>N</td>
-            <td>主动关闭后TimeWait的Tcp网络连接数，下一步Closed</td>
+            <td>主动关闭后TimeWait的Tcp网络连接数，等待2MSL，确保四次挥手的最后一个ACK能够发出，下一步Closed</td>
         </tr>
 
         <tr>
@@ -1549,7 +1549,7 @@
             <td></td>
             <td></td>
             <td>N</td>
-            <td>被动关闭后CloseWait的Tcp网络连接数，下一步TimeWait</td>
+            <td>作为客户端，收到服务器FIN后进入CloseWait的Tcp网络连接数，还没发送自己的FIN，主要原因是我方太忙</td>
         </tr>
 
         <tr>

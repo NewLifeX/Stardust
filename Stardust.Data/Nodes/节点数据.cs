@@ -119,19 +119,19 @@ public partial class NodeData
     public Int32 TcpConnections { get => _TcpConnections; set { if (OnPropertyChanging("TcpConnections", value)) { _TcpConnections = value; OnPropertyChanged("TcpConnections"); } } }
 
     private Int32 _TcpTimeWait;
-    /// <summary>主动关闭。主动关闭后TimeWait的Tcp网络连接数，下一步Closed</summary>
+    /// <summary>主动关闭。主动关闭后TimeWait的Tcp网络连接数，等待2MSL，确保四次挥手的最后一个ACK能够发出，下一步Closed</summary>
     [DisplayName("主动关闭")]
-    [Description("主动关闭。主动关闭后TimeWait的Tcp网络连接数，下一步Closed")]
+    [Description("主动关闭。主动关闭后TimeWait的Tcp网络连接数，等待2MSL，确保四次挥手的最后一个ACK能够发出，下一步Closed")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("TcpTimeWait", "主动关闭。主动关闭后TimeWait的Tcp网络连接数，下一步Closed", "")]
+    [BindColumn("TcpTimeWait", "主动关闭。主动关闭后TimeWait的Tcp网络连接数，等待2MSL，确保四次挥手的最后一个ACK能够发出，下一步Closed", "")]
     public Int32 TcpTimeWait { get => _TcpTimeWait; set { if (OnPropertyChanging("TcpTimeWait", value)) { _TcpTimeWait = value; OnPropertyChanged("TcpTimeWait"); } } }
 
     private Int32 _TcpCloseWait;
-    /// <summary>被动关闭。被动关闭后CloseWait的Tcp网络连接数，下一步TimeWait</summary>
+    /// <summary>被动关闭。作为客户端，收到服务器FIN后进入CloseWait的Tcp网络连接数，还没发送自己的FIN，主要原因是我方太忙</summary>
     [DisplayName("被动关闭")]
-    [Description("被动关闭。被动关闭后CloseWait的Tcp网络连接数，下一步TimeWait")]
+    [Description("被动关闭。作为客户端，收到服务器FIN后进入CloseWait的Tcp网络连接数，还没发送自己的FIN，主要原因是我方太忙")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("TcpCloseWait", "被动关闭。被动关闭后CloseWait的Tcp网络连接数，下一步TimeWait", "")]
+    [BindColumn("TcpCloseWait", "被动关闭。作为客户端，收到服务器FIN后进入CloseWait的Tcp网络连接数，还没发送自己的FIN，主要原因是我方太忙", "")]
     public Int32 TcpCloseWait { get => _TcpCloseWait; set { if (OnPropertyChanging("TcpCloseWait", value)) { _TcpCloseWait = value; OnPropertyChanged("TcpCloseWait"); } } }
 
     private Int32 _Delay;
@@ -299,10 +299,10 @@ public partial class NodeData
         /// <summary>连接数。传输数据Established的Tcp网络连接数</summary>
         public static readonly Field TcpConnections = FindByName("TcpConnections");
 
-        /// <summary>主动关闭。主动关闭后TimeWait的Tcp网络连接数，下一步Closed</summary>
+        /// <summary>主动关闭。主动关闭后TimeWait的Tcp网络连接数，等待2MSL，确保四次挥手的最后一个ACK能够发出，下一步Closed</summary>
         public static readonly Field TcpTimeWait = FindByName("TcpTimeWait");
 
-        /// <summary>被动关闭。被动关闭后CloseWait的Tcp网络连接数，下一步TimeWait</summary>
+        /// <summary>被动关闭。作为客户端，收到服务器FIN后进入CloseWait的Tcp网络连接数，还没发送自己的FIN，主要原因是我方太忙</summary>
         public static readonly Field TcpCloseWait = FindByName("TcpCloseWait");
 
         /// <summary>延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms</summary>
@@ -368,10 +368,10 @@ public partial class NodeData
         /// <summary>连接数。传输数据Established的Tcp网络连接数</summary>
         public const String TcpConnections = "TcpConnections";
 
-        /// <summary>主动关闭。主动关闭后TimeWait的Tcp网络连接数，下一步Closed</summary>
+        /// <summary>主动关闭。主动关闭后TimeWait的Tcp网络连接数，等待2MSL，确保四次挥手的最后一个ACK能够发出，下一步Closed</summary>
         public const String TcpTimeWait = "TcpTimeWait";
 
-        /// <summary>被动关闭。被动关闭后CloseWait的Tcp网络连接数，下一步TimeWait</summary>
+        /// <summary>被动关闭。作为客户端，收到服务器FIN后进入CloseWait的Tcp网络连接数，还没发送自己的FIN，主要原因是我方太忙</summary>
         public const String TcpCloseWait = "TcpCloseWait";
 
         /// <summary>延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms</summary>
