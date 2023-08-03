@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Xml.Linq;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
@@ -96,8 +97,9 @@ public class NodeService
         online.Delete();
 
         //var sid = $"{node.ID}@{ip}";
-        var sid = node.Code;
-        _cacheProvider.InnerCache.Remove($"NodeOnline:{sid}");
+        //var sid = node.Code;
+        //_cacheProvider.InnerCache.Remove($"NodeOnline:{sid}");
+        RemoveOnline(node);
 
         // 计算在线时长
         if (online.CreateTime.Year > 2000)
@@ -435,7 +437,7 @@ public class NodeService
         return GetOnline(node, localIp) ?? CreateOnline(node, token, ip);
     }
 
-    /// <summary></summary>
+    /// <summary>获取在线</summary>
     /// <param name="node"></param>
     /// <returns></returns>
     public NodeOnline GetOnline(Node node, String ip)
@@ -445,11 +447,14 @@ public class NodeService
         var olt = _cacheProvider.InnerCache.Get<NodeOnline>($"NodeOnline:{sid}");
         if (olt != null)
         {
-            _cacheProvider.InnerCache.SetExpire($"NodeOnline:{sid}", TimeSpan.FromSeconds(120));
+            //_cacheProvider.InnerCache.SetExpire($"NodeOnline:{sid}", TimeSpan.FromSeconds(120));
             return olt;
         }
 
-        return NodeOnline.FindBySessionID(sid);
+        olt = NodeOnline.FindBySessionID(sid);
+        if (olt != null) UpdateOnline(node, olt);
+
+        return olt;
     }
 
     /// <summary>检查在线</summary>
@@ -478,9 +483,27 @@ public class NodeService
 
         olt.Creator = Environment.MachineName;
 
-        _cacheProvider.InnerCache.Set($"NodeOnline:{sid}", olt, 120);
+        //_cacheProvider.InnerCache.Set($"NodeOnline:{sid}", olt, 120);
+        UpdateOnline(node, olt);
 
         return olt;
+    }
+
+    /// <summary>更新在线状态</summary>
+    /// <param name="node"></param>
+    /// <param name="online"></param>
+    public void UpdateOnline(Node node, NodeOnline online)
+    {
+        var sid = node.Code;
+        _cacheProvider.InnerCache.Set($"NodeOnline:{sid}", online, 120);
+    }
+
+    /// <summary>删除在线状态</summary>
+    /// <param name="node"></param>
+    public void RemoveOnline(Node node)
+    {
+        var sid = node.Code;
+        _cacheProvider.InnerCache.Remove($"NodeOnline:{sid}");
     }
     #endregion
 
