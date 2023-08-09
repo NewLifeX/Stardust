@@ -12,7 +12,7 @@
         <label for="baseUrl" class="control-label">基地址：</label>
         @Html.TextBox("baseUrl", page["baseUrl"])
     </div>
-    <button type="button" class="btn btn-purple btn-sm" data-action="action" data-url="@Url.Action("InstallFramework")" data-fields="keys,ver">
+    <button type="button" class="btn btn-purple btn-sm" data-action="action" data-url="@Url.Action("InstallFramework")" data-fields="keys,ver,baseUrl">
         安装框架
     </button>
 }
