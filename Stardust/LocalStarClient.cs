@@ -83,12 +83,12 @@ public class LocalStarClient
             // 某些情况下检查端口占用会抛出异常，原因未知
             var gp = IPGlobalProperties.GetIPGlobalProperties();
             var eps = gp.GetActiveUdpListeners();
-            if (!eps.Any(ep => ep.Port == Port)) return null;
+            if (eps.Length > 0 && !eps.Any(ep => ep.Port == Port)) return null;
         }
         catch { }
 
         var task = TaskEx.Run(GetInfoAsync);
-        return task.Wait(500) ? task.Result : null;
+        return task.Wait(1000) ? task.Result : null;
     }
 
     /// <summary>获取信息</summary>
