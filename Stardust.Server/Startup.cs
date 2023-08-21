@@ -152,7 +152,9 @@ public class Startup
         }
 
         // 缓存运行时安装文件
-        app.UseFileCache("/files", "../FileCache");
+        var set = StarServerSetting.Current;
+        if (!set.FileCache.IsNullOrEmpty())
+            app.UseFileCache("/files", set.FileCache);
 
         app.UseCors("star_cors");
 

@@ -83,6 +83,10 @@ public class StarServerSetting : Config<StarServerSetting>
     [Description("上传目录。存放升级包，需要跟StarWeb配置为同一个目录，默认../Uploads")]
     public String UploadPath { get; set; } = "../Uploads";
 
+    /// <summary>文件缓存目录。存放数据库驱动等缓存文件，为空时不启用，默认../FileCache</summary>
+    [Description("文件缓存目录。存放数据库驱动等缓存文件，为空时不启用，默认../FileCache")]
+    public String FileCache { get; set; } = "../FileCache";
+
     /// <summary>上级服务器。同步向上级汇报数据</summary>
     [Description("上级服务器。同步向上级汇报数据")]
     public String UplinkServer { get; set; }

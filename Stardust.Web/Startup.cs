@@ -16,6 +16,7 @@ using XCode.DataAccessLayer;
 using Stardust.Data.Deployment;
 using Stardust.Data;
 using Stardust.Data.Nodes;
+using Stardust.Server;
 
 namespace Stardust.Web;
 
@@ -117,7 +118,9 @@ public class Startup
         Usewwwroot(app, env);
 
         // 缓存运行时安装文件
-        app.UseFileCache("/files", "../FileCache");
+        var set = StarServerSetting.Current;
+        if (!set.FileCache.IsNullOrEmpty())
+            app.UseFileCache("/files", set.FileCache);
 
         //app.UseStardust();
         app.UseResponseCompression();
