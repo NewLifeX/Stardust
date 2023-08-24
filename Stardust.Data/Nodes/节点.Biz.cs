@@ -539,6 +539,7 @@ public partial class Node : Entity<Node>
         if (!di.UserName.IsNullOrEmpty()) node.UserName = di.UserName;
         if (!di.IP.IsNullOrEmpty()) node.IP = di.IP;
         if (!di.Product.IsNullOrEmpty()) node.Product = di.Product;
+        if (!di.Vendor.IsNullOrEmpty()) node.Vendor = di.Vendor;
         if (!di.Processor.IsNullOrEmpty()) node.Processor = di.Processor;
         //if (!di.CpuID.IsNullOrEmpty()) node.CpuID = di.CpuID;
         if (!di.UUID.IsNullOrEmpty()) node.Uuid = di.UUID;

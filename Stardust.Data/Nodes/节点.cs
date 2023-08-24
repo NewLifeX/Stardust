@@ -255,6 +255,15 @@ public partial class Node
     [BindColumn("Product", "产品名", "")]
     public String Product { get => _Product; set { if (OnPropertyChanging("Product", value)) { _Product = value; OnPropertyChanged("Product"); } } }
 
+    private String _Vendor;
+    /// <summary>制造商</summary>
+    [Category("硬件信息")]
+    [DisplayName("制造商")]
+    [Description("制造商")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("Vendor", "制造商", "")]
+    public String Vendor { get => _Vendor; set { if (OnPropertyChanging("Vendor", value)) { _Vendor = value; OnPropertyChanged("Vendor"); } } }
+
     private String _Processor;
     /// <summary>处理器</summary>
     [Category("硬件信息")]
@@ -613,6 +622,7 @@ public partial class Node
             "Dpi" => _Dpi,
             "Resolution" => _Resolution,
             "Product" => _Product,
+            "Vendor" => _Vendor,
             "Processor" => _Processor,
             "Uuid" => _Uuid,
             "MachineGuid" => _MachineGuid,
@@ -681,6 +691,7 @@ public partial class Node
                 case "Dpi": _Dpi = Convert.ToString(value); break;
                 case "Resolution": _Resolution = Convert.ToString(value); break;
                 case "Product": _Product = Convert.ToString(value); break;
+                case "Vendor": _Vendor = Convert.ToString(value); break;
                 case "Processor": _Processor = Convert.ToString(value); break;
                 case "Uuid": _Uuid = Convert.ToString(value); break;
                 case "MachineGuid": _MachineGuid = Convert.ToString(value); break;
@@ -815,6 +826,9 @@ public partial class Node
 
         /// <summary>产品名</summary>
         public static readonly Field Product = FindByName("Product");
+
+        /// <summary>制造商</summary>
+        public static readonly Field Vendor = FindByName("Vendor");
 
         /// <summary>处理器</summary>
         public static readonly Field Processor = FindByName("Processor");
@@ -1007,6 +1021,9 @@ public partial class Node
 
         /// <summary>产品名</summary>
         public const String Product = "Product";
+
+        /// <summary>制造商</summary>
+        public const String Vendor = "Vendor";
 
         /// <summary>处理器</summary>
         public const String Processor = "Processor";

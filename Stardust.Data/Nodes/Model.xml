@@ -68,6 +68,7 @@
       <Column Name="Dpi" DataType="String" Description="像素点。默认96*96" Category="系统信息" />
       <Column Name="Resolution" DataType="String" Description="分辨率。例如1024*768" Category="系统信息" />
       <Column Name="Product" DataType="String" Description="产品名" Category="硬件信息" />
+      <Column Name="Vendor" DataType="String" Description="制造商" Category="硬件信息" />
       <Column Name="Processor" DataType="String" Length="200" Description="处理器" Category="硬件信息" />
       <Column Name="Uuid" DataType="String" Description="唯一标识" Category="硬件信息" />
       <Column Name="MachineGuid" DataType="String" Description="机器标识" Category="硬件信息" />

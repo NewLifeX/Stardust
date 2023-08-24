@@ -61,8 +61,11 @@ namespace Stardust.Models
         /// <summary>分辨率。例如1024*768</summary>
         public String Resolution { get; set; }
 
-        /// <summary>产品名称。制造商</summary>
+        /// <summary>产品名称</summary>
         public String Product { get; set; }
+
+        /// <summary>制造商</summary>
+        public String Vendor { get; set; }
 
         /// <summary>处理器</summary>
         public String Processor { get; set; }

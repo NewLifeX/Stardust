@@ -221,6 +221,9 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             DriveInfo = drives.Join(",", e => $"{e.Name}[{e.DriveFormat}]={e.AvailableFreeSpace.ToGMK()}/{e.TotalSize.ToGMK()}"),
 
             Product = mi.Product,
+#if !NET40
+            Vendor = mi.Vendor,
+#endif
             Processor = mi.Processor,
             CpuRate = mi.CpuRate,
             UUID = mi.UUID,
