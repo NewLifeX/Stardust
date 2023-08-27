@@ -451,8 +451,8 @@ internal class MyService : ServiceBase, IServiceProvider
     /// <summary>重启操作系统</summary>
     private String Reboot(String argument)
     {
-        var dic = JsonParser.Decode(argument);
-        var timeout = dic["timeout"].ToInt();
+        var dic = argument.IsNullOrEmpty() ? null : JsonParser.Decode(argument);
+        var timeout = dic?["timeout"].ToInt();
 
         // 异步执行，让方法调用返回结果给服务端
         Task.Factory.StartNew(() =>

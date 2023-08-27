@@ -545,7 +545,7 @@ public class NodeService
         var list = NodeVersion.GetValids(ch);
 
         // 应用过滤规则，使用最新的一个版本
-        var pv = list.Where(e => e.Match(node)).OrderByDescending(e => e.ID).FirstOrDefault();
+        var pv = list.OrderByDescending(e => e.ID).FirstOrDefault(e => e.Match(node));
         if (pv == null) return null;
         //if (pv == null) throw new ApiException(509, "没有升级规则");
 

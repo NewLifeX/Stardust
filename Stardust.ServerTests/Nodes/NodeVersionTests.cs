@@ -21,6 +21,15 @@ public class NodeVersionTests
 
         rs = nv.Match(new Node { Code = "xxx-stoneyyy" });
         Assert.False(rs);
+
+        nv = new NodeVersion
+        {
+            Strategy = "node=6234BE2A;version<=2.9.2023.0827",
+        };
+        nv.Invoke("OnLoad");
+
+        rs = nv.Match(new Node { Code = "6234BE2A", Name = "aml", Version = "2.9.2023.0825" });
+        Assert.True(rs);
     }
 
     [Fact]
