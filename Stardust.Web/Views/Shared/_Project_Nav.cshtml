@@ -15,7 +15,7 @@
     <div class="navbar-collapse collapse text-center">
         <ul class="nav nav-pills" style="margin-bottom: 10px; display: inline-block;float: none;">
             <li role="presentation" class="@(path.StartsWithIgnoreCase("/Platform/GalaxyProject")?"active":"")">
-                <a href="/Platform/GalaxyProject/Edit?Id=@projectId">@(prj?.ToString() ?? "信息")</a>
+                <a href="/Platform/GalaxyProject/Edit?Id=@projectId">项目：@(prj?.ToString() ?? "信息")</a>
             </li>
             <li role="presentation" class="@(path.EqualIgnoreCase("/Nodes/Node")?"active":"")">
                 <a href="/Nodes/Node?projectId=@projectId">节点</a>

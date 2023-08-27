@@ -54,7 +54,7 @@
     <div class="navbar-collapse collapse" style="text-align:center">
         <ul class="nav nav-pills" style="margin-bottom: 10px; display: inline-block;float: none;">
             <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/App/Detail","/Registry/App/Edit")?"active":"")">
-                <a href="/Registry/App/Edit?Id=@appId">@(app?.ToString() ?? "信息")</a>
+                <a href="/Registry/App/Edit?Id=@appId">应用：@(app?.ToString() ?? "信息")</a>
             </li>
             <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/AppOnline")?"active":"")">
                 <a href="/Registry/AppOnline?appId=@appId">实例</a>

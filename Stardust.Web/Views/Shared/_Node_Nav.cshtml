@@ -15,7 +15,7 @@
     <div class="navbar-collapse collapse text-center">
         <ul class="nav nav-pills" style="margin-bottom: 10px; display: inline-block;float: none;">
             <li role="presentation" class="@(path.StartsWithIgnoreCase("/Nodes/Node/Detail","/Nodes/Node/Edit")?"active":"")">
-                <a href="/Nodes/Node/Edit?Id=@nodeId">@(node?.ToString() ?? "信息")</a>
+                <a href="/Nodes/Node/Edit?Id=@nodeId">节点：@(node?.Name ?? node?.ToString() ?? "信息")</a>
             </li>
             <li role="presentation" class="@(path.StartsWithIgnoreCase("/Nodes/NodeHistory")?"active":"")">
                 <a href="/Nodes/NodeHistory?nodeId=@nodeId">历史</a>
