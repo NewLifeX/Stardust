@@ -101,6 +101,22 @@ public class AppDeployController : EntityController<AppDeploy>
         {
             var list = AppDeploy.FindAllByAppId(appId);
             if (list.Count > 0) return list;
+
+            // 自动新建发布集
+            var app = App.FindById(appId);
+            if (app != null)
+            {
+                var entity = new AppDeploy
+                {
+                    AppId = appId,
+                    Name = app.Name,
+                    ProjectId = app.ProjectId,
+                    Category = app.Category
+                };
+                entity.Insert();
+
+                return new[] { entity };
+            }
         }
 
         var projectId = p["projectId"].ToInt(-1);
