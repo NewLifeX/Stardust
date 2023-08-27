@@ -842,8 +842,9 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     #region 更新
     /// <summary>获取更新信息</summary>
     /// <param name="channel"></param>
+    /// <param name="lastVersion">最后一次升级的本地版本</param>
     /// <returns></returns>
-    public async Task<UpgradeInfo> Upgrade(String channel)
+    public async Task<UpgradeInfo> Upgrade(String channel, String lastVersion)
     {
         XTrace.WriteLine("检查更新：{0}", channel);
 
@@ -851,7 +852,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         var ug = new Stardust.Web.Upgrade { Log = XTrace.Log };
         ug.DeleteBackup(".");
 
-        var rs = await UpgradeAsync(channel);
+        var rs = await UpgradeAsync(channel, lastVersion);
         if (rs != null)
         {
             XTrace.WriteLine("发现更新：{0}", rs.ToJson(true));
@@ -862,8 +863,9 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
 
     /// <summary>更新</summary>
     /// <param name="channel"></param>
+    /// <param name="lastVersion">最后一次升级的本地版本</param>
     /// <returns></returns>
-    public async Task<UpgradeInfo> UpgradeAsync(String channel) => await GetAsync<UpgradeInfo>("Node/Upgrade", new { channel });
+    public async Task<UpgradeInfo> UpgradeAsync(String channel, String lastVersion) => await GetAsync<UpgradeInfo>("Node/Upgrade", new { channel, lastVersion });
     #endregion
 
     #region 部署

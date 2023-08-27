@@ -500,7 +500,7 @@ internal class MyService : ServiceBase, IServiceProvider
         ug.Trim("StarAgent");
 
         // 检查更新
-        var ur = await client.Upgrade(channel);
+        var ur = await client.Upgrade(channel, _lastVersion);
         if (ur != null && ur.Version != _lastVersion)
         {
             client.WriteInfoEvent("Upgrade", $"准备从[{_lastVersion}]更新到[{ur.Version}]，开始下载 {ur.Source}");
