@@ -65,7 +65,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
             PageSetting.EnableNavbar = false;
         }
 
-        PageSetting.EnableAdd = false;
+        //PageSetting.EnableAdd = false;
     }
 
     protected override FieldCollection OnGetFields(ViewKinds kind, Object model)

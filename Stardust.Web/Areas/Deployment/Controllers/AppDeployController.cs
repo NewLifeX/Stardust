@@ -85,7 +85,7 @@ public class AppDeployController : EntityController<AppDeploy>
             PageSetting.EnableNavbar = false;
         }
 
-        PageSetting.EnableAdd = false;
+        //PageSetting.EnableAdd = false;
     }
 
     protected override IEnumerable<AppDeploy> Search(Pager p)

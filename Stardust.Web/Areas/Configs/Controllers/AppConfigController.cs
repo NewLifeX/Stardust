@@ -114,7 +114,7 @@ public class AppConfigController : EntityController<AppConfig>
             PageSetting.EnableNavbar = false;
         }
 
-        PageSetting.EnableAdd = false;
+        //PageSetting.EnableAdd = false;
     }
 
     protected override IEnumerable<AppConfig> Search(Pager p)

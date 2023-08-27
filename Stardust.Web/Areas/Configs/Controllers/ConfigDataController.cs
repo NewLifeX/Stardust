@@ -44,7 +44,7 @@ public class ConfigDataController : EntityController<ConfigData>
             PageSetting.EnableNavbar = false;
         }
 
-        PageSetting.EnableAdd = false;
+        //PageSetting.EnableAdd = false;
     }
 
     protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
@@ -76,10 +76,10 @@ public class ConfigDataController : EntityController<ConfigData>
 
         var list = ConfigData.Search(appId, name, scope, start, end, p["Q"], p);
 
-        PageSetting.EnableAdd = false;
+        PageSetting.EnableAdd = appId > 0;
         if (appId > 0)
         {
-            PageSetting.EnableAdd = true;
+            //PageSetting.EnableAdd = true;
 
             // 控制发布按钮
             var app = AppConfig.FindById(appId);
