@@ -32,6 +32,11 @@ internal class Program
             XTrace.WriteLine("更新模式启动，等待{0}秒", 5_000);
             Thread.Sleep(5_000);
         }
+        else if ("-delay".EqualIgnoreCase(args))
+        {
+            XTrace.WriteLine("延迟启动，等待{0}秒", 5_000);
+            Thread.Sleep(5_000);
+        }
 
         var set = StarSetting.Current;
         if (set.IsNew)
@@ -398,6 +403,86 @@ internal class MyService : ServiceBase, IServiceProvider
         _timer = new TimerX(CheckUpgrade, null, 5_000, 600_000) { Async = true };
 
         client.RegisterCommand("node/upgrade", s => _timer.SetNext(-1));
+        client.RegisterCommand("node/restart", Restart);
+        client.RegisterCommand("node/reboot", Reboot);
+    }
+
+    /// <summary>重启应用服务</summary>
+    private String Restart(String argument)
+    {
+        // 异步执行，让方法调用返回结果给服务端
+        Task.Factory.StartNew(() =>
+        {
+            Thread.Sleep(1000);
+
+            var ug = new Upgrade { Log = XTrace.Log };
+
+            // 带有-s参数就算是服务中运行
+            var inService = "-s".EqualIgnoreCase(Environment.GetCommandLineArgs());
+
+            // 以服务方式运行时，重启服务，否则采取拉起进程的方式
+            if (inService || Host is Host host && host.InService)
+            {
+                // 使用外部命令重启服务
+                var rs = ug.Run("StarAgent", "-restart -delay");
+
+                //!! 这里不需要自杀，外部命令重启服务会结束当前进程
+                return rs + "";
+            }
+            else
+            {
+                // 重新拉起进程
+                var rs = ug.Run("StarAgent", "-run -delay");
+
+                if (rs)
+                {
+                    StopWork("Upgrade");
+
+                    ug.KillSelf();
+                }
+
+                return rs + "";
+            }
+        });
+
+        return "success";
+    }
+
+    /// <summary>重启操作系统</summary>
+    private String Reboot(String argument)
+    {
+        var dic = JsonParser.Decode(argument);
+        var timeout = dic["timeout"].ToInt();
+
+        // 异步执行，让方法调用返回结果给服务端
+        Task.Factory.StartNew(() =>
+        {
+            Thread.Sleep(1000);
+
+            if (Runtime.Windows)
+            {
+                if (timeout > 0)
+                    "shutdown".ShellExecute($"-r -t {timeout}");
+                else
+                    "shutdown".ShellExecute($"-r");
+
+                Thread.Sleep(5000);
+                "shutdown".ShellExecute($"-r -f");
+            }
+            else if (Runtime.Linux)
+            {
+                // 多种方式重启Linux，先使用温和的方式
+                "systemctl".ShellExecute("reboot");
+
+                Thread.Sleep(5000);
+                "shutdown".ShellExecute("-r now");
+
+                Thread.Sleep(5000);
+                "reboot".ShellExecute();
+            }
+        });
+
+        return "success";
     }
     #endregion
 

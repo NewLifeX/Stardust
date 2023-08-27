@@ -125,4 +125,42 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
 
         return JsonRefresh("操作成功！");
     }
+
+    [DisplayName("重启服务")]
+    [EntityAuthorize((PermissionFlags)32)]
+    public async Task<ActionResult> Restart()
+    {
+        var ts = new List<Task>();
+        foreach (var item in SelectKeys)
+        {
+            var online = NodeOnline.FindById(item.ToInt());
+            if (online?.Node != null)
+            {
+                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, "node/restart", null, 600, 5));
+            }
+        }
+
+        await Task.WhenAll(ts);
+
+        return JsonRefresh("操作成功！");
+    }
+
+    [DisplayName("重启系统")]
+    [EntityAuthorize((PermissionFlags)64)]
+    public async Task<ActionResult> Reboot()
+    {
+        var ts = new List<Task>();
+        foreach (var item in SelectKeys)
+        {
+            var online = NodeOnline.FindById(item.ToInt());
+            if (online?.Node != null)
+            {
+                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, "node/reboot", null, 600, 5));
+            }
+        }
+
+        await Task.WhenAll(ts);
+
+        return JsonRefresh("操作成功！");
+    }
 }
