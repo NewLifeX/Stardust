@@ -33,6 +33,10 @@ public class StarAgentSetting : Config<StarAgentSetting>
     [Description("更新通道。默认Release")]
     public String Channel { get; set; } = "Release";
 
+    /// <summary>Windows自启动。自启动需要用户登录桌面，默认false使用系统服务</summary>
+    [Description("Windows自启动。自启动需要用户登录桌面，默认false使用系统服务")]
+    public Boolean UseAutorun { get; set; }
+
     /// <summary>延迟时间。重启进程或服务的延迟时间，默认3000ms</summary>
     [Description("延迟时间。重启进程或服务的延迟时间，默认3000ms")]
     public Int32 Delay { get; set; } = 3000;

@@ -48,10 +48,13 @@ internal class Program
             set.Save();
         }
 
+        var set2 = StarAgentSetting.Current;
         var svc = new MyService
         {
             StarSetting = set,
-            AgentSetting = StarAgentSetting.Current,
+            AgentSetting = set2,
+            UseAutorun = set2.UseAutorun,
+
             Log = XTrace.Log,
         };
 
