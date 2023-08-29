@@ -30,7 +30,7 @@ public class RegistryService
 
         if (app.DisplayName.IsNullOrEmpty()) app.DisplayName = inf.AppName;
         app.UpdateIP = ip;
-        app.SaveAsync();
+        app.Update();
 
         app.WriteHistory("Register", true, inf.ToJson(), inf.Version, ip, clientId);
 
@@ -46,8 +46,8 @@ public class RegistryService
             if (node != null) online.NodeId = node.ID;
 
             if (!inf.Version.IsNullOrEmpty()) online.Version = inf.Version;
-            online.SaveAsync();
         }
+        online.Update();
 
         //// 根据节点IP规则，自动创建节点
         //if (online.NodeId == 0)
@@ -113,7 +113,7 @@ public class RegistryService
         // 所有服务
         var services = AppService.FindAllByService(service.Id);
         var changed = false;
-        var svc = services.FirstOrDefault(e => e.AppId == app.Id && e.Client == clientId);
+        var svc = services.FirstOrDefault(e => e.AppId == app.Id && (e.Client == clientId || !localIp.IsNullOrEmpty() && e.Client.StartsWith($"{localIp}@")));
         if (svc == null)
         {
             svc = new AppService
@@ -189,7 +189,10 @@ public class RegistryService
 
         if (service.Address.IsNullOrEmpty())
         {
-            svc.Address = urls.Join(",");
+            if (!model.ExternalAddress.IsNullOrEmpty())
+                svc.Address = model.ExternalAddress;
+            else
+                svc.Address = urls.Join(",");
         }
         else
         {
@@ -339,6 +342,9 @@ public class RegistryService
             online.SaveAsync();
         }
 
+        // 保存性能数据
+        AppMeter.WriteData(app, inf, "Ping", clientId, ip);
+
         return online;
     }
 
@@ -347,7 +353,7 @@ public class RegistryService
     /// <param name="model"></param>
     /// <param name="user">创建者</param>
     /// <returns></returns>
-    public AppCommand SendCommand(App app, CommandInModel model, String user)
+    public async Task<AppCommand> SendCommand(App app, CommandInModel model, String user)
     {
         //if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定应用");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
@@ -372,17 +378,34 @@ public class RegistryService
             _queue.Publish(app.Name, item.Client, cmdModel);
         }
 
+        // 挂起等待。借助redis队列，等待响应
+        if (model.Timeout > 0)
+        {
+            var q = _queue.GetReplyQueue(cmd.Id);
+            var reply = await q.TakeOneAsync(model.Timeout);
+            if (reply != null)
+            {
+                // 埋点
+                using var span = _tracer?.NewSpan($"mq:AppCommandReply", reply);
+
+                if (reply.Status == CommandStatus.错误)
+                    throw new Exception($"命令错误！{reply.Data}");
+                else if (reply.Status == CommandStatus.取消)
+                    throw new Exception($"命令已取消！{reply.Data}");
+            }
+        }
+
         return cmd;
     }
 
-    public AppCommand SendCommand(App app, String command, String argument, String user = null)
+    public async Task<AppCommand> SendCommand(App app, String command, String argument, String user = null)
     {
         var model = new CommandInModel
         {
             Command = command,
             Argument = argument,
         };
-        return SendCommand(app, model, user);
+        return await SendCommand(app, model, user);
     }
 
     public AppCommand CommandReply(App app, CommandReplyModel model)
@@ -407,7 +430,7 @@ public class RegistryService
     /// <param name="service"></param>
     /// <param name="command"></param>
     /// <param name="user"></param>
-    public void NotifyConsumers(Service service, String command, String user = null)
+    public async Task NotifyConsumers(Service service, String command, String user = null)
     {
         var list = AppConsume.FindAllByService(service.Id);
         if (list.Count == 0) return;
@@ -416,10 +439,13 @@ public class RegistryService
 
         using var span = _tracer?.NewSpan(nameof(NotifyConsumers), $"{command} appIds={appIds.Join()} user={user}");
 
+        var ts = new List<Task>();
         foreach (var item in appIds)
         {
             var app = App.FindById(item);
-            if (app != null) SendCommand(app, command, null, user);
+            if (app != null) ts.Add(SendCommand(app, command, null, user));
         }
+
+        await Task.WhenAll(ts);
     }
 }

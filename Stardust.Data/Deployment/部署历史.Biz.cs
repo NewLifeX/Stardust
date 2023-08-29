@@ -50,21 +50,21 @@ namespace Stardust.Data.Deployment
         #endregion
 
         #region 扩展属性
-        /// <summary>应用</summary>
-        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-        public AppDeploy App => Extends.Get(nameof(App), k => AppDeploy.FindById(AppId));
+        ///// <summary>应用</summary>
+        //[XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        //public AppDeploy App => Extends.Get(nameof(App), k => AppDeploy.FindById(AppId));
 
-        /// <summary>应用</summary>
-        [Map(__.AppId)]
-        public String AppName => App?.Name;
+        ///// <summary>应用</summary>
+        //[Map(__.AppId)]
+        //public String AppName => App?.Name;
 
-        /// <summary>节点</summary>
-        [XmlIgnore, ScriptIgnore]
-        public Node Node => Extends.Get(nameof(Node), k => Node.FindByID(NodeId));
+        ///// <summary>节点</summary>
+        //[XmlIgnore, ScriptIgnore]
+        //public Node Node => Extends.Get(nameof(Node), k => Node.FindByID(NodeId));
 
-        /// <summary>节点</summary>
-        [Map(__.NodeId)]
-        public String NodeName => Node?.Name;
+        ///// <summary>节点</summary>
+        //[Map(__.NodeId)]
+        //public String NodeName => Node?.Name;
         #endregion
 
         #region 扩展查询
@@ -95,6 +95,56 @@ namespace Stardust.Data.Deployment
 
             return FindAll(_.AppId == appId & _.Id == id);
         }
+
+    /// <summary>根据节点、编号查找</summary>
+    /// <param name="nodeId">节点</param>
+    /// <param name="id">编号</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppDeployHistory> FindAllByNodeIdAndId(Int32 nodeId, Int64 id)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.NodeId == nodeId && e.Id == id);
+
+        return FindAll(_.NodeId == nodeId & _.Id == id);
+    }
+
+    /// <summary>根据应用部署集查找</summary>
+    /// <param name="appId">应用部署集</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppDeployHistory> FindAllByAppId(Int32 appId)
+    {
+        if (appId <= 0) return new List<AppDeployHistory>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId);
+
+        return FindAll(_.AppId == appId);
+    }
+
+    /// <summary>根据应用部署集、操作查找</summary>
+    /// <param name="appId">应用部署集</param>
+    /// <param name="action">操作</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppDeployHistory> FindAllByAppIdAndAction(Int32 appId, String action)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.Action.EqualIgnoreCase(action));
+
+        return FindAll(_.AppId == appId & _.Action == action);
+    }
+
+    /// <summary>根据节点查找</summary>
+    /// <param name="nodeId">节点</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppDeployHistory> FindAllByNodeId(Int32 nodeId)
+    {
+        if (nodeId <= 0) return new List<AppDeployHistory>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.NodeId == nodeId);
+
+        return FindAll(_.NodeId == nodeId);
+    }
         #endregion
 
         #region 高级查询
@@ -148,6 +198,11 @@ namespace Stardust.Data.Deployment
 
             return history;
         }
+     
+        /// <summary>删除指定日期之前的数据</summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public static Int32 DeleteBefore(DateTime date) => Delete(_.Id < Meta.Factory.Snow.GetId(date));
         #endregion
     }
 }

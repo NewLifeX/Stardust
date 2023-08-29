@@ -18,9 +18,9 @@ public class DustController : ControllerBase
     public String UserHost => HttpContext.GetUserHost();
 
     private readonly TokenService _tokenService;
-    private readonly Setting _setting;
+    private readonly StarServerSetting _setting;
 
-    public DustController(TokenService tokenService, Setting setting)
+    public DustController(TokenService tokenService, StarServerSetting setting)
     {
         _tokenService = tokenService;
         _setting = setting;
@@ -200,6 +200,6 @@ public class DustController : ControllerBase
         var svc = Service.FindByName(serviceName);
         if (svc == null) return null;
 
-        return AppService.Search(-1, svc.Id, true, key, new PageParameter { PageSize = 100 });
+        return AppService.Search(-1, svc.Id, null, true, key, new PageParameter { PageSize = 100 });
     }
 }

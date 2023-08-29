@@ -11,13 +11,15 @@ public class NodeOnlineService : IHostedService
 {
     #region 属性
     private TimerX _timer;
-    private readonly Setting _setting;
+    private readonly NodeService _nodeService;
+    private readonly StarServerSetting _setting;
     private readonly ITracer _tracer;
     #endregion
 
     #region 构造
-    public NodeOnlineService(Setting setting, ITracer tracer)
+    public NodeOnlineService(NodeService nodeService, StarServerSetting setting, ITracer tracer)
     {
+        _nodeService = nodeService;
         _setting = setting;
         _tracer = tracer;
     }
@@ -64,6 +66,8 @@ public class NodeOnlineService : IHostedService
                             node.OnlineTime += (Int32)(olt.UpdateTime - olt.CreateTime).TotalSeconds;
                             node.SaveAsync();
                         }
+
+                        _nodeService.RemoveOnline(node);
 
                         CheckOffline(node, "超时下线");
                     }

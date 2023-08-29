@@ -9,10 +9,10 @@ namespace Stardust.Server.Services;
 /// <summary>分表管理</summary>
 public class ShardTableService : IHostedService
 {
-    private readonly Setting _setting;
+    private readonly StarServerSetting _setting;
     private readonly ITracer _tracer;
     private TimerX _timer;
-    public ShardTableService(Setting setting, ITracer tracer)
+    public ShardTableService(StarServerSetting setting, ITracer tracer)
     {
         _setting = setting;
         _tracer = tracer;
@@ -49,9 +49,12 @@ public class ShardTableService : IHostedService
         {
             // 取所有表，清空缓存
             var dal = TraceData.Meta.Session.Dal;
+            var dal2 = AppTracer.Meta.Session.Dal;
+
             dal.Tables = null;
             var tables = dal.Tables;
             var tnames = tables.Select(e => e.TableName).ToArray();
+            var tnames2 = dal2.TableNames.ToArray();
 
             for (var dt = today.AddYears(-1); dt < endday; dt = dt.AddDays(1))
             {
@@ -67,6 +70,15 @@ public class ShardTableService : IHostedService
                         XTrace.WriteException(ex);
                     }
                 }
+                // 数据迁移后，原库数据表需要清理
+                if (name.EqualIgnoreCase(tnames2))
+                {
+                    try
+                    {
+                        dal2.Execute($"Drop Table {name}");
+                    }
+                    catch { }
+                }
 
                 name = $"TraceData_{dt:yyyyMMdd}";
                 if (name.EqualIgnoreCase(tnames))
@@ -79,6 +91,14 @@ public class ShardTableService : IHostedService
                     {
                         XTrace.WriteException(ex);
                     }
+                }
+                if (name.EqualIgnoreCase(tnames2))
+                {
+                    try
+                    {
+                        dal2.Execute($"Drop Table {name}");
+                    }
+                    catch { }
                 }
             }
 
@@ -111,6 +131,16 @@ public class ShardTableService : IHostedService
 
                 //dal.SetTables(ts.ToArray());
                 dal.Db.CreateMetaData().SetTables(Migration.On, ts.ToArray());
+
+                // 首次建表时，设置为压缩表
+                if (dal.DbType == DatabaseType.MySql)
+                {
+                    foreach (var dt in ts)
+                    {
+                        if (!dt.TableName.EqualIgnoreCase(tnames))
+                            dal.Execute($"Alter Table {dt.TableName} ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=4");
+                    }
+                }
             }
         }
         catch (Exception ex)

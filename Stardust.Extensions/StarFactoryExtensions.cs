@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using NewLife;
+using NewLife.Caching;
 using NewLife.Configuration;
 using NewLife.Log;
 using NewLife.Reflection;
@@ -49,6 +50,10 @@ public static class StarFactoryExtensions
         //var old = services.LastOrDefault(e => e.ServiceType == typeof(IConfigProvider))?.ImplementationInstance as IConfigProvider;
         //old ??= JsonConfigProvider.LoadAppSettings();
         services.Replace(new ServiceDescriptor(typeof(IConfigProvider), p => star.GetConfig(), ServiceLifetime.Singleton));
+
+        // 分布式缓存
+        //services.Replace(new ServiceDescriptor(typeof(CacheService), p => new RedisCacheService(p), ServiceLifetime.Singleton));
+        services.TryAddSingleton<ICacheProvider, CacheProvider>();
 
         //services.AddHostedService<StarService>();
         services.TryAddSingleton(XTrace.Log);
@@ -113,8 +118,8 @@ public static class StarFactoryExtensions
                  * 4，若监听地址已改变，则使用监听地址
                  * 5，若监听地址获取失败，则注册回调
                  */
-                var set = StarSetting.Current;
-                if (address.IsNullOrEmpty()) address = set.ServiceAddress;
+                //var set = NewLife.Setting.Current;
+                //if (address.IsNullOrEmpty()) address = set.ServiceAddress;
                 if (address.IsNullOrEmpty())
                 {
                     // 本地监听地址，属于内部地址
@@ -141,7 +146,7 @@ public static class StarFactoryExtensions
         });
 
         // 停止的时候移除服务
-        lifetime.ApplicationStopped.Register(() =>
+        NewLife.Model.Host.RegisterExit(() =>
         {
             DefaultSpan.Current = null;
 

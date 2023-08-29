@@ -3,14 +3,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Data;
+using NewLife.Http;
 using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
 using Stardust.Models;
-using Stardust.Server.Models;
 using Stardust.Server.Services;
+using WebSocket = System.Net.WebSockets.WebSocket;
+using WebSocketMessageType = System.Net.WebSockets.WebSocketMessageType;
 
 namespace Stardust.Server.Controllers;
 
@@ -26,10 +28,10 @@ public class AppController : BaseController
     private readonly DeployService _deployService;
     private readonly ITracer _tracer;
     private readonly AppQueueService _queue;
-    private readonly Setting _setting;
+    private readonly StarServerSetting _setting;
     private readonly IHostApplicationLifetime _lifetime;
 
-    public AppController(TokenService tokenService, RegistryService registryService, DeployService deployService, AppQueueService queue, Setting setting, IHostApplicationLifetime lifetime, ITracer tracer)
+    public AppController(TokenService tokenService, RegistryService registryService, DeployService deployService, AppQueueService queue, StarServerSetting setting, IHostApplicationLifetime lifetime, ITracer tracer)
     {
         _tokenService = tokenService;
         _registryService = registryService;
@@ -70,7 +72,7 @@ public class AppController : BaseController
         var rs = new PingResponse
         {
             //Time = inf.Time,
-            ServerTime = DateTime.UtcNow,
+            ServerTime = DateTime.UtcNow.ToLong(),
             Period = _app.Period,
         };
 
@@ -83,7 +85,7 @@ public class AppController : BaseController
 
     [AllowAnonymous]
     [HttpGet(nameof(Ping))]
-    public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.Now, };
+    public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.UtcNow.ToLong(), };
     #endregion
 
     #region 上报
@@ -138,43 +140,14 @@ public class AppController : BaseController
         //var source = new CancellationTokenSource();
         var source = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.ApplicationStopping);
         _ = Task.Run(() => ConsumeMessage(socket, app, clientId, ip, source));
-        try
-        {
-            var buf = new Byte[4 * 1024];
-            while (socket.State == WebSocketState.Open)
-            {
-                var data = await socket.ReceiveAsync(new ArraySegment<Byte>(buf), source.Token);
-                if (data.MessageType == WebSocketMessageType.Close) break;
-                if (data.MessageType == WebSocketMessageType.Text)
-                {
-                    var str = buf.ToStr(null, 0, data.Count);
-                    XTrace.WriteLine("WebSocket接收 {0} {1}", app, str);
-                    WriteHistory("WebSocket接收", true, str, clientId);
-                }
-            }
 
-            source.Cancel();
-            XTrace.WriteLine("WebSocket断开 {0}", app);
-            WriteHistory("WebSocket断开", true, socket.State + "", clientId);
+        await socket.WaitForClose(null, source);
 
-            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", source.Token);
-        }
-        catch (TaskCanceledException) { }
-        catch (OperationCanceledException) { }
-        catch (WebSocketException ex)
+        WriteHistory("WebSocket断开", true, socket.State + "", clientId);
+        if (olt != null)
         {
-            XTrace.WriteLine("WebSocket异常 app={0} ip={1}", app, ip);
-            XTrace.WriteLine(ex.Message);
-        }
-        finally
-        {
-            source.Cancel();
-
-            if (olt != null)
-            {
-                olt.WebSocket = false;
-                olt.SaveAsync();
-            }
+            olt.WebSocket = false;
+            olt.SaveAsync();
         }
     }
 
@@ -200,7 +173,7 @@ public class AppController : BaseController
                     span.Detach(dic);
 
                     if (msg == null || msg.Id == 0 || msg.Expire.Year > 2000 && msg.Expire < DateTime.Now)
-                        WriteHistory("WebSocket发送", false, "消息无效。" + mqMsg, clientId, ip);
+                        WriteHistory("WebSocket发送", false, "消息无效或已过期。" + mqMsg, clientId, ip);
                     else
                     {
                         WriteHistory("WebSocket发送", true, mqMsg, clientId, ip);
@@ -212,12 +185,16 @@ public class AppController : BaseController
                         if (log != null)
                         {
                             if (log.TraceId.IsNullOrEmpty()) log.TraceId = span?.TraceId;
+                            log.Times++;
                             log.Status = CommandStatus.处理中;
+                            log.UpdateTime = DateTime.Now;
                             log.Update();
                         }
 
                         await socket.SendAsync(mqMsg.GetBytes(), WebSocketMessageType.Text, true, cancellationToken);
                     }
+
+                    span?.Dispose();
                 }
                 else
                 {
@@ -243,7 +220,7 @@ public class AppController : BaseController
     /// <param name="token">应用令牌</param>
     /// <returns></returns>
     [HttpPost(nameof(SendCommand))]
-    public Int32 SendCommand(CommandInModel model)
+    public async Task<Int32> SendCommand(CommandInModel model)
     {
         if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定应用");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
@@ -257,7 +234,7 @@ public class AppController : BaseController
         if (app.AllowControlNodes != "*" && !target.Name.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
             throw new ApiException(403, $"[{app}]无权操作应用[{target}]！");
 
-        var cmd = _registryService.SendCommand(target, model, app + "");
+        var cmd = await _registryService.SendCommand(target, model, app + "");
 
         return cmd.Id;
     }
@@ -291,7 +268,7 @@ public class AppController : BaseController
     }
 
     [HttpPost(nameof(RegisterService))]
-    public ServiceModel RegisterService([FromBody] PublishServiceInfo model)
+    public async Task<ServiceModel> RegisterService([FromBody] PublishServiceInfo model)
     {
         var app = _app;
         var info = GetService(model.ServiceName);
@@ -301,14 +278,14 @@ public class AppController : BaseController
         // 发布消息通知消费者
         if (changed)
         {
-            _registryService.NotifyConsumers(info, "registry/register", app + "");
+            await _registryService.NotifyConsumers(info, "registry/register", app + "");
         }
 
         return svc?.ToModel();
     }
 
     [HttpPost(nameof(UnregisterService))]
-    public ServiceModel UnregisterService([FromBody] PublishServiceInfo model)
+    public async Task<ServiceModel> UnregisterService([FromBody] PublishServiceInfo model)
     {
         var app = _app;
         var info = GetService(model.ServiceName);
@@ -318,7 +295,7 @@ public class AppController : BaseController
         // 发布消息通知消费者
         if (changed)
         {
-            _registryService.NotifyConsumers(info, "registry/unregister", app + "");
+            await _registryService.NotifyConsumers(info, "registry/unregister", app + "");
         }
 
         return svc?.ToModel();
@@ -375,7 +352,7 @@ public class AppController : BaseController
         var svc = Service.FindByName(serviceName);
         if (svc == null) return null;
 
-        return AppService.Search(-1, svc.Id, true, key, new PageParameter { PageSize = 100 });
+        return AppService.Search(-1, svc.Id, null, true, key, new PageParameter { PageSize = 100 });
     }
     #endregion
 

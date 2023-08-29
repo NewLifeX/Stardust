@@ -13,12 +13,12 @@ public class OnlineService : IHostedService
     private TimerX _timer;
     private TimerX _timer2;
     private readonly RegistryService _registryService;
-    private readonly Setting _setting;
+    private readonly StarServerSetting _setting;
     private readonly ITracer _tracer;
     #endregion
 
     #region 构造
-    public OnlineService(RegistryService registryService, Setting setting, ITracer tracer)
+    public OnlineService(RegistryService registryService, StarServerSetting setting, ITracer tracer)
     {
         _registryService = registryService;
         _setting = setting;
@@ -84,7 +84,7 @@ public class OnlineService : IHostedService
         var page = new PageParameter { PageSize = 1000 };
         while (true)
         {
-            var list = AppService.Search(-1, -1, true, null, page);
+            var list = AppService.Search(-1, -1, null, true, null, page);
             if (list.Count == 0) break;
 
             foreach (var svc in list)

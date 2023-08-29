@@ -1,5 +1,6 @@
 ﻿using NewLife.Cube;
 using NewLife.Cube.Extensions;
+using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Deployment;
 using XCode.Membership;
@@ -12,8 +13,15 @@ public class AppDeployHistoryController : ReadOnlyEntityController<AppDeployHist
 {
     static AppDeployHistoryController()
     {
-        ListFields.AddDataField("Remark", null, "Success");
+        ListFields.RemoveField("Id");
+        ListFields.AddDataField("Remark", null, "TraceId");
         ListFields.TraceUrl();
+
+        {
+            var df = ListFields.GetField("NodeName") as ListField;
+            df.Url = "/Nodes/Node?Id={NodeID}";
+            df.Target = "frame";
+        }
     }
 
     protected override IEnumerable<AppDeployHistory> Search(Pager p)

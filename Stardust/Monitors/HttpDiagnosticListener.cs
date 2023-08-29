@@ -1,6 +1,4 @@
 ﻿#if NET5_0_OR_GREATER
-using System.Net;
-using NewLife;
 using NewLife.Log;
 using NewLife.Reflection;
 
@@ -9,7 +7,7 @@ namespace Stardust.Monitors;
 /// <summary>Http诊断监听器</summary>
 public class HttpDiagnosticListener : TraceDiagnosticListener
 {
-    private static HttpRequestOptionsKey<ISpan> _spanKey = new("Span");
+    private static HttpRequestOptionsKey<ISpan> _spanKey = new("Star-Http-Span");
 
     /// <summary>实例化</summary>
     public HttpDiagnosticListener() => Name = "HttpHandlerDiagnosticListener";
@@ -18,6 +16,11 @@ public class HttpDiagnosticListener : TraceDiagnosticListener
     /// <param name="value"></param>
     public override void OnNext(KeyValuePair<String, Object> value)
     {
+        if (Tracer == null) return;
+#if DEBUG
+        //XTrace.WriteLine("OnNext {0}", value.Key);
+#endif
+
         switch (value.Key)
         {
             case "System.Net.Http.HttpRequestOut.Start":
@@ -40,6 +43,7 @@ public class HttpDiagnosticListener : TraceDiagnosticListener
                         {
                             span.SetError(ex, null);
                         }
+                        span.Dispose();
                     }
                     break;
                 }

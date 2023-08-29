@@ -16,6 +16,7 @@
             <th class="text-center">应用</th>
             <th class="text-center" title="操作名。接口名或埋点名">操作名</th>
             <th style="width:80%">时间轴</th>
+            <th class="text-center">操作</th>
         </tr>
     </thead>
     <tbody>
@@ -87,6 +88,9 @@
                         <div style="float:left;width:4%">@ms.ToString("n0")ms</div>
                         <div style="background-color: @color;float:left;width:@w.ToString("p")">&nbsp;</div>
                     }
+                </td>
+                <td class="text-center">
+                    <a href="/monitors/sampledata/detail/@entity.Id">查看</a>
                 </td>
             </tr>
         }

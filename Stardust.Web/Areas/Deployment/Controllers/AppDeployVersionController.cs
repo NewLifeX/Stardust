@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.ConstrainedExecution;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
@@ -53,6 +54,33 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         _tracer = tracer;
     }
 
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        var appId = GetRequest("appId").ToInt(-1);
+        if (appId > 0)
+        {
+            PageSetting.NavView = "_App_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+
+        PageSetting.EnableAdd = false;
+    }
+
+    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
+    {
+        var fields = base.OnGetFields(kind, model);
+
+        if (kind == ViewKinds.List)
+        {
+            var appId = GetRequest("appId").ToInt(-1);
+            if (appId > 0) fields.RemoveField("AppName");
+        }
+
+        return fields;
+    }
+
     protected override IEnumerable<AppDeployVersion> Search(Pager p)
     {
         var id = p["id"].ToInt(-1);
@@ -77,7 +105,25 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         if (!post && type == DataObjectMethodType.Insert) entity.Version = DateTime.Now.ToString("yyyyMMdd-HHmmss");
 
         if (post)
+        {
+            // 根据包名去查应用发布集，如果是不小心上传了其它包，则给出提醒
+            foreach (var file in Request.Form.Files)
+            {
+                var deploy = entity.App;
+                var name = Path.GetFileName(file.FileName);
+                if (!name.IsNullOrEmpty() && deploy != null)
+                {
+                    if (!deploy.PackageName.IsNullOrEmpty() && !deploy.PackageName.IsMatch(name))
+                        throw new InvalidOperationException($"文件名[{name}]与应用包名[{deploy.PackageName}]不匹配！");
+
+                    //var deploy = AppDeploy.FindByName(name);
+                    //if (deploy != null && deploy.Id != entity.AppId)
+                    //    throw new InvalidOperationException($"文件名[{name}]对应另一个应用[{deploy}]，请确保是否上传错误！");
+                }
+            }
+
             entity.TraceId = DefaultSpan.Current?.TraceId;
+        }
 
         return base.Valid(entity, type, post);
     }
@@ -117,14 +163,14 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         var rs = base.OnUpdate(entity);
         app?.Fix();
 
-        // 上传完成即发布。即使新增，也是插入后保存文件，然后再来OnUpdate
-        if (entity.Enable && !entity.Url.IsNullOrEmpty() && app != null && app.Enable && app.AutoPublish)
-        {
-            app.Version = entity.Version;
-            app.Update();
+        //// 上传完成即发布。即使新增，也是插入后保存文件，然后再来OnUpdate
+        //if (entity.Enable && !entity.Url.IsNullOrEmpty() && app != null && app.Enable && app.AutoPublish)
+        //{
+        //    app.Version = entity.Version;
+        //    app.Update();
 
-            Publish(entity.App).Wait();
-        }
+        //    Publish(entity.App).Wait();
+        //}
 
         return rs;
     }
@@ -146,6 +192,16 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
             entity.Url = $"/cube/file?id={att.Id}{att.Extension}";
 
             entity.Update();
+
+            // 上传完成即发布。即使新增，也是插入后保存文件，然后再来OnUpdate
+            var app = entity.App;
+            if (entity.Enable && !entity.Url.IsNullOrEmpty() && app != null && app.Enable && app.AutoPublish)
+            {
+                app.Version = entity.Version;
+                app.Update();
+
+                _ = Publish(entity.App);
+            }
         }
 
         // 不给上层拿到附件，避免Url字段被覆盖
@@ -190,9 +246,9 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
                 foreach (var item in appNodes)
                 {
                     //span?.AppendTag(item);
-                    if (item.Enable) ts.Add(_deployService.Control(app, item, "install", UserHost));
+                    if (item.Enable) ts.Add(_deployService.Control(app, item, "install", UserHost, 0));
                 }
-                //Task.WaitAll(ts.ToArray(), 5_000);
+                span?.AppendTag($"控制{ts.Count}个节点");
                 await Task.WhenAll(ts);
             }
             catch (Exception ex)

@@ -2,14 +2,16 @@
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.FileProviders;
 using NewLife;
 using NewLife.Caching;
-using NewLife.Configuration;
+using NewLife.Caching.Services;
 using NewLife.Log;
 using NewLife.Serialization;
+using Stardust.Data;
+using Stardust.Data.Nodes;
+using Stardust.Extensions.Caches;
 using Stardust.Monitors;
-using Stardust.Server.Common;
+using Stardust.Registry;
 using Stardust.Server.Services;
 using XCode;
 using XCode.DataAccessLayer;
@@ -29,23 +31,20 @@ public class Startup
         // 初始化配置文件
         InitConfig();
 
-        var star = new StarFactory(null, "StarServer", null);
+        //var star = new StarFactory(null, "StarServer", null);
+        var star = services.AddStardust("StarServer");
         if (star.Server.IsNullOrEmpty()) star.Server = "http://127.0.0.1:6600";
 
         // 埋点跟踪
         var tracer = star.Tracer;
-        services.AddSingleton(tracer);
+        //services.AddSingleton(tracer);
         using var span = tracer?.NewSpan(nameof(ConfigureServices));
         if (tracer is StarTracer st) st.TrimSelf = false;
 
-        // 配置
-        var config = new JsonConfigProvider { FileName = "appsettings.json" };
-        services.AddSingleton<IConfigProvider>(config);
+        // 分布式服务，使用配置中心RedisCache配置
+        services.AddSingleton<ICacheProvider, RedisCacheProvider>();
 
-        var cache = Cache.Default;
-        services.AddSingleton(cache);
-
-        var set = Setting.Current;
+        var set = StarServerSetting.Current;
         services.AddSingleton(set);
 
         // 统计服务
@@ -127,8 +126,12 @@ public class Startup
                 target = "MonitorLog";
             else if (conns.ContainsKey("NodeLog"))
                 target = "NodeLog";
-            else if (conns.ContainsKey("Stardust"))
+
+            // SQLite默认分为两个库
+            if (target.IsNullOrEmpty() && conns.ContainsKey("Stardust") && DAL.Create("Stardust").DbType != DatabaseType.SQLite)
+            {
                 target = "Stardust";
+            }
 
             if (!target.IsNullOrEmpty())
             {
@@ -140,28 +143,18 @@ public class Startup
         EntityFactory.InitConnection("Stardust");
         EntityFactory.InitConnection("StardustData");
 
+        if (!DAL.ConnStrs.ContainsKey("Cube"))
+            DAL.AddConnStr("Cube", "MapTo=Membership", null, "sqlite");
+
         if (env.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
         }
 
-        var set = NewLife.Setting.Current;
-
         // 缓存运行时安装文件
-        var sdk = "../FileCache".GetBasePath().EnsureDirectory(false);
-        XTrace.WriteLine("FileCache: {0}", sdk);
-        app.UseStaticFiles(new StaticFileOptions
-        {
-            RequestPath = new PathString("/files"),
-            FileProvider = new CacheFileProvider(sdk, set.PluginServer),
-            ServeUnknownFileTypes = true,
-            DefaultContentType = "application/x-msdownload",
-        });
-        app.UseDirectoryBrowser(new DirectoryBrowserOptions
-        {
-            RequestPath = new PathString("/files"),
-            FileProvider = new PhysicalFileProvider(sdk),
-        });
+        var set = StarServerSetting.Current;
+        if (!set.FileCache.IsNullOrEmpty())
+            app.UseFileCache("/files", set.FileCache);
 
         app.UseCors("star_cors");
 
@@ -169,9 +162,7 @@ public class Startup
         {
             KeepAliveInterval = TimeSpan.FromSeconds(60),
         });
-        //app.UseMiddleware<NodeSocketMiddleware>();
 
-        //app.UseMiddleware<TracerMiddleware>();
         app.UseStardust();
 
         app.UseResponseCompression();
@@ -179,10 +170,17 @@ public class Startup
 
         app.UseAuthorization();
 
+        // 注册退出事件
+        if (app is IHost host)
+            NewLife.Model.Host.RegisterExit(() => host.StopAsync().Wait());
+
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
         });
+
+        // 取得StarWeb地址
+        Task.Run(() => ResolveWebUrl(app.ApplicationServices));
     }
 
     private static void InitConfig()
@@ -196,13 +194,16 @@ public class Startup
             set.BackupPath = "../Backup";
             set.Save();
         }
-        //var set2 = XCode.Setting.Current;
-        //if (set2.IsNew)
-        //{
-        //    set2.Migration = Migration.ReadOnly;
-        //    set2.Save();
-        //}
-        var set3 = Stardust.Server.Setting.Current;
+#if !DEBUG
+        var set2 = XCodeSetting.Current;
+        if (set2.IsNew)
+        {
+            set2.ShowSQL = false;
+            //set2.Migration = Migration.ReadOnly;
+            set2.Save();
+        }
+#endif
+        var set3 = StarServerSetting.Current;
         if (set3.IsNew)
         {
             set3.UploadPath = "../Uploads";
@@ -234,6 +235,27 @@ public class Startup
                 var rs = dal.Execute($"Alter Table App Rename To StarApp");
                 XTrace.WriteLine("重命名结果：{0}", rs);
             }
+        }
+
+        // 修正 Node.LastActive 数据，默认取 LastLogin
+        if (Node.Meta.Count > 0)
+            Node.Update("LastActive=LastLogin", "LastActive is null");
+    }
+
+    private static async Task ResolveWebUrl(IServiceProvider serviceProvider)
+    {
+        await Task.Delay(3_000);
+
+        var registry = serviceProvider.GetRequiredService<IRegistry>();
+        if (registry == null) return;
+
+        var addrs = await registry.ResolveAddressAsync("StarWeb");
+        var str = addrs.Join(";");
+        var set = StarServerSetting.Current;
+        if (set.WebUrl != str)
+        {
+            set.WebUrl = str;
+            set.Save();
         }
     }
 }

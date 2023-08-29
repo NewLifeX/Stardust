@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife.Cube;
 using NewLife.Log;
 using NewLife.Remoting;
@@ -20,7 +21,7 @@ public class AppConfigController : EntityController<AppConfig>
         LogOnChange = true;
 
         ListFields.RemoveCreateField();
-        ListFields.RemoveField("AppId", "AppName", "PublishTime", "Quotes", "QuoteNames", "EnableApollo", "ApolloMetaServer", "ApolloAppId", "ApolloNameSpace", "Remark");
+        ListFields.RemoveField("AppId", "AppName", "ProjectName", "PublishTime", "Quotes", "QuoteNames", "EnableApollo", "ApolloMetaServer", "ApolloAppId", "ApolloNameSpace", "Remark");
 
         {
             var df = ListFields.AddListField("ConfigData", "Enable");
@@ -28,6 +29,7 @@ public class AppConfigController : EntityController<AppConfig>
             df.DisplayName = "管理配置";
             df.Title = "查看该应用所有配置数据";
             df.Url = "/Configs/ConfigData?appId={Id}";
+            df.Target = "_frame";
         }
 
         {
@@ -45,6 +47,7 @@ public class AppConfigController : EntityController<AppConfig>
             df.DisplayName = "历史";
             df.Title = "查看该应用的配置历史";
             df.Url = "/Configs/ConfigHistory?appId={Id}";
+            df.Target = "_frame";
         }
 
         {
@@ -53,22 +56,24 @@ public class AppConfigController : EntityController<AppConfig>
             df.DisplayName = "预览";
             df.Title = "查看该应用的配置数据";
             df.Url = "/config/getall?appId={Name}&secret={appSecret}";
+            df.Target = "_blank";
         }
 
-        {
-            var df = ListFields.AddListField("Online", "Version");
-            df.Header = "在线实例";
-            df.DisplayName = "在线实例";
-            df.Title = "查看该应用的在线实例应用";
-            df.Url = "/registry/AppOnline?appId={AppId}";
-            df.DataVisible = e => e is AppConfig entity && entity.AppId > 0;
-        }
+        //{
+        //    var df = ListFields.AddListField("Online", "Version");
+        //    df.Header = "在线实例";
+        //    df.DisplayName = "在线实例";
+        //    df.Title = "查看该应用的在线实例应用";
+        //    df.Url = "/registry/AppOnline?appId={AppId}";
+        //    df.DataVisible = e => e is AppConfig entity && entity.AppId > 0;
+        //}
 
         {
             var df = ListFields.AddListField("Log", "UpdateUserID");
-            df.DisplayName = "修改日志";
-            df.Header = "修改日志";
+            df.DisplayName = "审计日志";
+            df.Header = "审计日志";
             df.Url = "/Admin/Log?category=应用配置&linkId={Id}";
+            df.Target = "_frame";
         }
 
         {
@@ -80,11 +85,6 @@ public class AppConfigController : EntityController<AppConfig>
             var df = EditFormFields.AddDataField("Quotes", "IsGlobal");
             df.DataSource = x => AppConfig.FindAllWithCache().Where(e => e.CanBeQuoted).ToDictionary(e => e.Id, e => e.Name);
         }
-
-        //// 异步同步应用
-        //{
-        //    Task.Run(() => AppConfig.Sync());
-        //}
     }
 
     private readonly StarFactory _starFactory;
@@ -94,6 +94,27 @@ public class AppConfigController : EntityController<AppConfig>
     {
         _starFactory = starFactory;
         _tracer = tracer;
+    }
+
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        var appId = GetRequest("appId").ToInt(-1);
+        if (appId <= 0) appId = GetRequest("Id").ToInt(-1);
+        if (appId > 0)
+        {
+            PageSetting.NavView = "_App_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+        var projectId = GetRequest("projectId").ToInt(-1);
+        if (projectId > 0)
+        {
+            PageSetting.NavView = "_Project_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+
+        PageSetting.EnableAdd = false;
     }
 
     protected override IEnumerable<AppConfig> Search(Pager p)
@@ -111,13 +132,14 @@ public class AppConfigController : EntityController<AppConfig>
             if (entity != null) return new List<AppConfig> { entity };
         }
 
+        var projectId = p["projectId"].ToInt(-1);
         var category = p["category"];
         var enable = p["enable"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return AppConfig.Search(category, enable, start, end, p["Q"], p);
+        return AppConfig.Search(projectId, category, enable, start, end, p["Q"], p);
     }
 
     protected override Boolean Valid(AppConfig entity, DataObjectMethodType type, Boolean post)

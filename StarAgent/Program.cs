@@ -25,7 +25,13 @@ internal class Program
 {
     private static void Main(String[] args)
     {
-        if ("-upgrade".EqualIgnoreCase(args)) Thread.Sleep(5_000);
+        XTrace.UseConsole();
+
+        if ("-upgrade".EqualIgnoreCase(args))
+        {
+            XTrace.WriteLine("更新模式启动，等待{0}秒", 5_000);
+            Thread.Sleep(5_000);
+        }
 
         var set = StarSetting.Current;
         if (set.IsNew)
@@ -40,7 +46,7 @@ internal class Program
         var svc = new MyService
         {
             StarSetting = set,
-            AgentSetting = Setting.Current,
+            AgentSetting = StarAgentSetting.Current,
             Log = XTrace.Log,
         };
 
@@ -66,7 +72,7 @@ internal class MyService : ServiceBase, IServiceProvider
 {
     public StarSetting StarSetting { get; set; }
 
-    public Setting AgentSetting { get; set; }
+    public StarAgentSetting AgentSetting { get; set; }
 
     /// <summary>宿主服务提供者</summary>
     public IServiceProvider Provider { get; set; }
@@ -80,9 +86,9 @@ internal class MyService : ServiceBase, IServiceProvider
         AddMenu('t', "服务器信息", ShowMachineInfo);
         AddMenu('w', "测试微服务", UseMicroService);
 
-        // 控制应用服务。有些问题，只能控制当前进程管理的服务，而不能管理后台服务管理的应用
-        AddMenu('z', "启动所有应用服务", () => _Manager?.StartAll());
-        AddMenu('x', "停止所有应用服务", () => _Manager?.StopAll("菜单控制"));
+        //// 控制应用服务。有些问题，只能控制当前进程管理的服务，而不能管理后台服务管理的应用
+        //AddMenu('z', "启动所有应用服务", () => _Manager?.StartAll());
+        //AddMenu('x', "停止所有应用服务", () => _Manager?.StopAll("菜单控制"));
 
         MachineInfo.RegisterAsync();
 
@@ -93,45 +99,29 @@ internal class MyService : ServiceBase, IServiceProvider
         //    set2.AutoRestart = 24 * 60;
         //    set2.Save();
         //}
-
-        var set = Setting.Current;
-
-        // 应用服务管理
-        var manager = new ServiceManager
-        {
-            //Services = set.Services,
-            Delay = set.Delay,
-
-            Tracer = _factory?.Tracer,
-            Log = XTrace.Log,
-        };
-        manager.SetServices(set.Services);
-        manager.ServiceChanged += OnServiceChanged;
-
-        _Manager = manager;
     }
 
     #region 菜单控制
-    protected override void OnShowMenu(IList<Menu> menus)
-    {
-        var services = _Manager?.Services.Where(e => e.Enable).ToArray();
-        if (services == null || services.Length == 0)
-        {
-            menus = menus.Where(e => e.Key != 'z' && e.Key != 'x').ToList();
-        }
-        else
-        {
-            var ss = services.Join(",", e => e.Name);
+    //protected override void OnShowMenu(IList<Menu> menus)
+    //{
+    //    var services = _Manager?.Services.Where(e => e.Enable).ToArray();
+    //    if (services == null || services.Length == 0)
+    //    {
+    //        menus = menus.Where(e => e.Key != 'z' && e.Key != 'x').ToList();
+    //    }
+    //    else
+    //    {
+    //        var ss = services.Join(",", e => e.Name);
 
-            var m = menus.FirstOrDefault(e => e.Key == 'z');
-            if (m != null) m.Name = $"启动所有应用服务（{ss}）";
+    //        var m = menus.FirstOrDefault(e => e.Key == 'z');
+    //        if (m != null) m.Name = $"启动所有应用服务（{ss}）";
 
-            m = menus.FirstOrDefault(e => e.Key == 'x');
-            if (m != null) m.Name = $"停止所有应用服务（{ss}）";
-        }
+    //        m = menus.FirstOrDefault(e => e.Key == 'x');
+    //        if (m != null) m.Name = $"停止所有应用服务（{ss}）";
+    //    }
 
-        base.OnShowMenu(menus);
-    }
+    //    base.OnShowMenu(menus);
+    //}
     #endregion
 
     private ApiServer _server;
@@ -153,6 +143,19 @@ internal class MyService : ServiceBase, IServiceProvider
         var set = AgentSetting;
 
         StartFactory();
+
+        // 应用服务管理
+        var manager = new ServiceManager
+        {
+            Delay = set.Delay,
+
+            Tracer = _factory?.Tracer,
+            Log = XTrace.Log,
+        };
+        manager.SetServices(set.Services);
+        manager.ServiceChanged += OnServiceChanged;
+
+        _Manager = manager;
 
         // 插件管理器
         var pm = _PluginManager = new PluginManager
@@ -199,7 +202,7 @@ internal class MyService : ServiceBase, IServiceProvider
         StartClient();
 
         _Manager.Start();
-        Setting.Provider.Changed += OnSettingChanged;
+        StarAgentSetting.Provider.Changed += OnSettingChanged;
 
         // 启动插件
         WriteLog("启动插件[{0}]", pm.Identity);
@@ -278,7 +281,7 @@ internal class MyService : ServiceBase, IServiceProvider
         _timer.TryDispose();
         _timer = null;
 
-        Setting.Provider.Changed -= OnSettingChanged;
+        StarAgentSetting.Provider.Changed -= OnSettingChanged;
         _Manager.Stop(reason);
         //_Manager.TryDispose();
 
@@ -321,6 +324,24 @@ internal class MyService : ServiceBase, IServiceProvider
                 set.Code = inf.Code;
                 set.Secret = inf.Secret;
                 set.Save();
+            }
+        };
+
+        // 服务迁移
+        client.OnMigration += (s, e) =>
+        {
+            var setStar = StarSetting;
+            var svr = e.NewServer;
+            if (!svr.IsNullOrEmpty() && !svr.EqualIgnoreCase(setStar.Server))
+            {
+                setStar.Server = svr;
+                setStar.Save();
+
+                e.Cancel = false;
+            }
+            else
+            {
+                e.Cancel = true;
             }
         };
 
@@ -384,6 +405,7 @@ internal class MyService : ServiceBase, IServiceProvider
     private async Task CheckUpgrade(Object data)
     {
         var client = _Client;
+        using var span = client.Tracer?.NewSpan("CheckUpgrade", new { _lastVersion });
 
         // 运行过程中可能改变配置文件的通道
         var channel = AgentSetting.Channel;
@@ -439,15 +461,16 @@ internal class MyService : ServiceBase, IServiceProvider
                         {
                             // 带有-s参数就算是服务中运行
                             var inService = "-s".EqualIgnoreCase(Environment.GetCommandLineArgs());
+                            var pid = Process.GetCurrentProcess().Id;
 
                             // 以服务方式运行时，重启服务，否则采取拉起进程的方式
                             if (inService || Host is Host host && host.InService)
                             {
+                                client.WriteInfoEvent("Upgrade", "强制更新完成，准备重启后台服务！PID=" + pid);
+
                                 //rs = Host.Restart("StarAgent");
                                 // 使用外部命令重启服务
                                 rs = ug.Run("StarAgent", "-restart -upgrade");
-
-                                client.WriteInfoEvent("Upgrade", "强制更新完成，准备重启后台服务");
 
                                 //!! 这里不需要自杀，外部命令重启服务会结束当前进程
                             }
@@ -460,7 +483,7 @@ internal class MyService : ServiceBase, IServiceProvider
                                 {
                                     StopWork("Upgrade");
 
-                                    client.WriteInfoEvent("Upgrade", "强制更新完成，新进程已拉起，准备退出当前进程");
+                                    client.WriteInfoEvent("Upgrade", "强制更新完成，新进程已拉起，准备退出当前进程！PID=" + pid);
 
                                     ug.KillSelf();
                                 }
@@ -498,7 +521,22 @@ internal class MyService : ServiceBase, IServiceProvider
         }
 
         // 查找正式目录
-        var di = "../agent".GetBasePath().AsDirectory();
+        DirectoryInfo di = null;
+
+        // 初始化Host
+        Init();
+
+        var cfg = Host?.QueryConfig(ServiceName);
+        if (cfg != null && !cfg.FilePath.IsNullOrEmpty())
+        {
+            var str = cfg.FilePath;
+            var p = str.IndexOf(' ');
+            if (p > 0) str = str.Substring(0, p);
+
+            di = str.AsFile().Directory;
+        }
+
+        if (di == null || !di.Exists) di = "../agent".GetBasePath().AsDirectory();
         if (!di.Exists) di = "../Agent".GetBasePath().AsDirectory();
         if (!di.Exists) di = "../staragent".GetBasePath().AsDirectory();
         if (!di.Exists) di = "../StarAgent".GetBasePath().AsDirectory();
@@ -513,7 +551,7 @@ internal class MyService : ServiceBase, IServiceProvider
             foreach (var item in "../".GetBasePath().AsDirectory().GetDirectories())
             {
                 WriteLog("检查 {0}", item.FullName);
-                if (item.FullName.StartsWithIgnoreCase(cur)) continue;
+                if (item.FullName.TrimEnd('/', '\\').EqualIgnoreCase(cur)) continue;
 
                 var fi = item.GetFiles("StarAgent.dll").FirstOrDefault();
                 if (fi != null && fi.Exists)
@@ -537,9 +575,9 @@ internal class MyService : ServiceBase, IServiceProvider
         Thread.Sleep(5_000);
 
         WriteLog("停止服务……");
-        Init();
-        //Host.Stop(ServiceName);
-        Process.Start("net", $"stop {ServiceName}");
+        //Init();
+        Host.Stop(ServiceName);
+        //Process.Start("net", $"stop {ServiceName}");
         Thread.Sleep(1_000);
 
         // 拷贝当前目录所有dll/exe/runtime.json到正式目录
@@ -550,6 +588,8 @@ internal class MyService : ServiceBase, IServiceProvider
                 WriteLog("复制 {0}", fi.Name);
 
                 var dst = di.FullName.CombinePath(fi.Name);
+                if (File.Exists(dst)) File.Move(dst, Path.GetTempFileName());
+
                 fi.CopyTo(dst, true);
             }
             catch (Exception ex)
@@ -559,8 +599,8 @@ internal class MyService : ServiceBase, IServiceProvider
         }
 
         WriteLog("启动服务……");
-        //Host.Start(ServiceName);
-        Process.Start("net", $"start {ServiceName}");
+        Host.Start(ServiceName);
+        //Process.Start("net", $"start {ServiceName}");
         Thread.Sleep(1_000);
     }
     #endregion
@@ -697,6 +737,8 @@ internal class MyService : ServiceBase, IServiceProvider
                     set.Save();
 
                     XTrace.WriteLine("服务端修改为：{0}", addr);
+
+                    break;
                 }
             }
         }
@@ -709,7 +751,16 @@ internal class MyService : ServiceBase, IServiceProvider
     {
         if (args == null || args.Length == 0) return false;
 
-        var deploy = new ZipDeploy { Log = XTrace.Log };
+        var file = args.FirstOrDefault(e => e.EndsWithIgnoreCase(".zip"));
+        if (file.IsNullOrEmpty()) return false;
+
+        XTrace.WriteLine("开始运行Zip发布文件 {0}", file);
+
+        var deploy = new ZipDeploy
+        {
+            Tracer = _factory?.Tracer,
+            Log = XTrace.Log
+        };
         if (!deploy.Parse(args)) return false;
 
         deploy.Execute();

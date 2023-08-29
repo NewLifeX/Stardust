@@ -248,6 +248,13 @@ public class StarTracer : DefaultTracer
         // 订阅Http事件
         var observer = new DiagnosticListenerObserver { Tracer = this };
         observer.Subscribe(new HttpDiagnosticListener());
+        observer.Subscribe(new EfCoreDiagnosticListener());
+        observer.Subscribe(new SqlClientDiagnosticListener());
+        observer.Subscribe(new MongoDbDiagnosticListener());
+#endif
+#if !NET40 && !NET45
+        new DnsEventListener { Tracer = this };
+        new SocketEventListener { Tracer = this };
 #endif
 
         // 反射处理XCode追踪

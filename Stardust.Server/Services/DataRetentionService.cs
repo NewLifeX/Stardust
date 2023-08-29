@@ -1,12 +1,9 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
-using NewLife;
+﻿using NewLife;
 using NewLife.Log;
 using NewLife.Security;
 using NewLife.Threading;
 using Stardust.Data;
+using Stardust.Data.Deployment;
 using Stardust.Data.Monitors;
 using Stardust.Data.Nodes;
 
@@ -14,10 +11,10 @@ namespace Stardust.Server.Services;
 
 public class DataRetentionService : IHostedService
 {
-    private readonly Setting _setting;
+    private readonly StarServerSetting _setting;
     private readonly ITracer _tracer;
     private TimerX _timer;
-    public DataRetentionService(Setting setting, ITracer tracer)
+    public DataRetentionService(StarServerSetting setting, ITracer tracer)
     {
         _setting = setting;
         _tracer = tracer;
@@ -48,9 +45,9 @@ public class DataRetentionService : IHostedService
         // 保留数据的起点
         var time = DateTime.Now.AddDays(-set.DataRetention);
         var time2 = DateTime.Now.AddDays(-set.DataRetention2);
-        //var time3 = DateTime.Now.AddDays(-set.DataRetention2 * 10);
+        var time3 = DateTime.Now.AddDays(-set.DataRetention3);
 
-        using var span = _tracer?.NewSpan("DataRetention", $"{time} {time2}");
+        using var span = _tracer?.NewSpan("DataRetention", new { time, time2, time3 });
         try
         {
             // 删除节点数据
@@ -77,8 +74,20 @@ public class DataRetentionService : IHostedService
             rs = TraceHourStat.DeleteBefore(time2);
             XTrace.WriteLine("删除[{0}]之前的TraceHourStat共：{1:n0}", time2.ToFullString(), rs);
 
-            //rs = TraceDayStat.DeleteBefore(time3);
-            //XTrace.WriteLine("删除[{0}]之前的TraceDayStat共：{1:n0}", time3.ToFullString(), rs);
+            rs = TraceDayStat.DeleteBefore(time3);
+            XTrace.WriteLine("删除[{0}]之前的TraceDayStat共：{1:n0}", time3.ToFullString(), rs);
+
+            rs = NodeHistory.DeleteBefore(time3);
+            XTrace.WriteLine("删除[{0}]之前的NodeHistory共：{1:n0}", time3.ToFullString(), rs);
+
+            rs = AppHistory.DeleteBefore(time3);
+            XTrace.WriteLine("删除[{0}]之前的AppHistory共：{1:n0}", time3.ToFullString(), rs);
+
+            rs = AppDeployHistory.DeleteBefore(time3);
+            XTrace.WriteLine("删除[{0}]之前的AppDeployHistory共：{1:n0}", time3.ToFullString(), rs);
+
+            rs = AlarmHistory.DeleteBefore(time3);
+            XTrace.WriteLine("删除[{0}]之前的AlarmHistory共：{1:n0}", time3.ToFullString(), rs);
 
             //// 删除监控明细数据
             //rs = TraceData.DeleteBefore(time);

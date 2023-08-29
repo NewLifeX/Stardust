@@ -95,7 +95,7 @@ public class TokenService
         return (jwt, ex);
     }
 
-    /// <summary>解码令牌</summary>
+    /// <summary>解码令牌，得到App应用</summary>
     /// <param name="token"></param>
     /// <param name="tokenSecret"></param>
     /// <returns></returns>
@@ -110,7 +110,7 @@ public class TokenService
             Algorithm = ss[0],
             Secret = ss[1],
         };
-        if (!jwt.TryDecode(token, out var message)) throw new ApiException(403, $"非法访问 {message}");
+        if (!jwt.TryDecode(token, out var message)) throw new ApiException(403, $"非法访问[{jwt.Subject}]，{message}");
 
         // 验证应用
         var app = App.FindByName(jwt.Subject);

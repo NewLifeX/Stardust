@@ -33,7 +33,9 @@ namespace Stardust.Data.Nodes
         {
             // 如果没有脏数据，则不需要进行任何处理
             if (!HasDirty) return;
-
+             
+            var len = _.Groups.Length;
+            if (Groups != null && len > 0 && Groups.Length > len) Groups = Groups[..len];
             // 建议先调用基类方法，基类方法会做一些统一处理
             base.Valid(isNew);
 

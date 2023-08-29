@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2023.xsd" xmlns="https://newlifex.com/Model2023.xsd">
+  <Option>
+    <!--输出目录-->
+    <Output>.\</Output>
+    <!--是否使用中文文件名。默认false-->
+    <ChineseFileName>False</ChineseFileName>
+    <!--基类。可能包含基类和接口，其中{name}替换为Table.Name-->
+    <BaseClass>Entity</BaseClass>
+    <!--命名空间-->
+    <Namespace>Stardust.Data.Platform</Namespace>
+    <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
+    <ClassNameTemplate />
+    <!--显示名模板。其中{displayName}替换为Table.DisplayName-->
+    <DisplayNameTemplate />
+    <!--用于生成拷贝函数的模型类。例如{name}或I{name}-->
+    <ModelNameForCopy />
+    <!--带有索引器。实现IModel接口-->
+    <HasIModel>False</HasIModel>
+    <!--模型类模版-->
+    <ModelClass />
+    <!--模型接口模版-->
+    <ModelInterface />
+    <!--数据库连接名-->
+    <ConnName>Stardust</ConnName>
+    <!--模型类输出目录。默认当前目录的Models子目录-->
+    <ModelsOutput>.\Models\</ModelsOutput>
+    <!--模型接口输出目录。默认当前目录的Interfaces子目录-->
+    <InterfacesOutput>.\Interfaces\</InterfacesOutput>
+    <!--用户实体转为模型类的模型类。例如{name}或{name}DTO-->
+    <ModelNameForToModel />
+    <!--命名格式。Default/Upper/Lower/Underline-->
+    <NameFormat>Default</NameFormat>
+    <!--生成器版本-->
+    <Version>11.8.2023.0607</Version>
+    <!--帮助文档-->
+    <Document>https://newlifex.com/xcode/model</Document>
+    <!--魔方区域显示名-->
+    <DisplayName>平台管理</DisplayName>
+    <!--魔方控制器输出目录-->
+    <CubeOutput>../../Stardust.Web/Areas/Platform</CubeOutput>
+  </Option>
+  <Table Name="GalaxyProject" Description="星系项目。一个星系包含多个星星节点，以及多个尘埃应用，完成产品线的项目管理">
+    <Columns>
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="Name" DataType="String" Master="True" Description="名称" />
+      <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="ManagerId" DataType="Int32" Map="XCode.Membership.User@ID@$@ManagerName" Description="管理者" />
+      <Column Name="Nodes" DataType="Int32" Description="节点数" />
+      <Column Name="Apps" DataType="Int32" Description="应用数" />
+      <Column Name="IsGlobal" DataType="Boolean" Description="全局。该项目的节点可以允许其它项目下应用选用" />
+      <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+      <Column Name="UpdateUserId" DataType="Int32" Description="更新者" Category="扩展" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+      <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+    </Columns>
+    <Indexes>
+      <Index Columns="Name" Unique="True" />
+    </Indexes>
+  </Table>
+  <Table Name="ProjectUser" Description="项目用户关系。项目与用户之间的多对多关系">
+    <Columns>
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="ProjectId" DataType="Int32" Map="GalaxyProject@Id@$" Description="项目" />
+      <Column Name="UserId" DataType="Int32" Map="XCode.Membership.User@ID@$@UserName" Description="用户" />
+      <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="CreateUserId" DataType="Int32" Description="创建者" Model="False" Category="扩展" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Model="False" Category="扩展" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" Model="False" Category="扩展" />
+      <Column Name="UpdateUserId" DataType="Int32" Description="更新者" Model="False" Category="扩展" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Model="False" Category="扩展" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" Model="False" Category="扩展" />
+      <Column Name="Remark" DataType="String" Length="500" Description="描述" Category="扩展" />
+    </Columns>
+    <Indexes>
+      <Index Columns="ProjectId,UserId" Unique="True" />
+      <Index Columns="UserId" />
+    </Indexes>
+  </Table>
+</EntityModel>

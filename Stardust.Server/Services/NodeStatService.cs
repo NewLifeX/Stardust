@@ -1,4 +1,5 @@
-﻿using NewLife;
+﻿using System.Xml.Linq;
+using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Data.Nodes;
@@ -57,6 +58,7 @@ public class NodeStatService : IHostedService
                 FrameworkStat(dt, GetSelects(dt));
                 CityStat(dt, GetSelects(dt));
                 ArchStat(dt, GetSelects(dt));
+                VendorStat(dt, GetSelects(dt));
             }
         }
         catch (Exception ex)
@@ -77,9 +79,9 @@ public class NodeStatService : IHostedService
         var t30 = dt.AddDays(-30);
 
         var selects = _.ID.Count();
-        selects &= _.UpdateTime.SumLarge($"'{t1:yyyy-MM-dd}'", "activeT1");
-        selects &= _.UpdateTime.SumLarge($"'{t7:yyyy-MM-dd}'", "activeT7");
-        selects &= _.UpdateTime.SumLarge($"'{t30:yyyy-MM-dd}'", "activeT30");
+        selects &= _.LastActive.SumLarge($"'{t1:yyyy-MM-dd}'", "activeT1");
+        selects &= _.LastActive.SumLarge($"'{t7:yyyy-MM-dd}'", "activeT7");
+        selects &= _.LastActive.SumLarge($"'{t30:yyyy-MM-dd}'", "activeT30");
         selects &= _.CreateTime.SumLarge($"'{t1:yyyy-MM-dd}'", "newT1");
         selects &= _.CreateTime.SumLarge($"'{t7:yyyy-MM-dd}'", "newT7");
         selects &= _.CreateTime.SumLarge($"'{t30:yyyy-MM-dd}'", "newT30");
@@ -95,12 +97,14 @@ public class NodeStatService : IHostedService
         foreach (var node in list)
         {
             var key = node.OSKind + "";
+            if (key.Length > 50) key = key[..50];
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
                 st = NodeStat.GetOrAdd(category, date, key);
             else
                 sts.Remove(st);
 
+            st.LinkItem = (Int32)node.OSKind + "";
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
             st.ActivesT7 = node["activeT7"].ToInt();
@@ -124,12 +128,14 @@ public class NodeStatService : IHostedService
         foreach (var node in list)
         {
             var key = node.ProductCode + "";
+            if (key.Length > 50) key = key[..50];
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
                 st = NodeStat.GetOrAdd(category, date, key);
             else
                 sts.Remove(st);
 
+            st.LinkItem = node.ProductCode + "";
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
             st.ActivesT7 = node["activeT7"].ToInt();
@@ -153,12 +159,14 @@ public class NodeStatService : IHostedService
         foreach (var node in list)
         {
             var key = node.Version + "";
+            if (key.Length > 50) key = key[..50];
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
                 st = NodeStat.GetOrAdd(category, date, key);
             else
                 sts.Remove(st);
 
+            st.LinkItem = node.Version + "";
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
             st.ActivesT7 = node["activeT7"].ToInt();
@@ -198,6 +206,7 @@ public class NodeStatService : IHostedService
         foreach (var item in list.GroupBy(e => (e.Runtime.IsNullOrEmpty() || e.Runtime.Length < 3) ? e.Runtime + "" : e.Runtime[..3]))
         {
             var key = item.Key;
+            if (key.Length > 50) key = key[..50];
             var datas = item.ToList();
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
@@ -205,6 +214,7 @@ public class NodeStatService : IHostedService
             else
                 sts.Remove(st);
 
+            st.LinkItem = key + "";
             st.Total = datas.Sum(e => e.ID);
             st.Actives = datas.Sum(e => e["activeT1"].ToInt());
             st.ActivesT7 = datas.Sum(e => e["activeT7"].ToInt());
@@ -228,12 +238,14 @@ public class NodeStatService : IHostedService
         foreach (var node in list)
         {
             var key = node.Framework + "";
+            if (key.Length > 50) key = key[..50];
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
                 st = NodeStat.GetOrAdd(category, date, key);
             else
                 sts.Remove(st);
 
+            st.LinkItem = node.Framework + "";
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
             st.ActivesT7 = node["activeT7"].ToInt();
@@ -261,13 +273,15 @@ public class NodeStatService : IHostedService
             //if (node.CityID == 0) continue;
 
             //var key = Area.FindByID(node.CityID)?.Path;
-            var key = finder[node.CityID]?.Path;
+            var key = finder[node.CityID]?.Path + "";
+            if (key.Length > 50) key = key[..50];
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
                 st = NodeStat.GetOrAdd(category, date, key);
             else
                 sts.Remove(st);
 
+            st.LinkItem = node.CityID + "";
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
             st.ActivesT7 = node["activeT7"].ToInt();
@@ -291,12 +305,45 @@ public class NodeStatService : IHostedService
         foreach (var node in list)
         {
             var key = node.Architecture + "";
+            if (key.Length > 50) key = key[..50];
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
                 st = NodeStat.GetOrAdd(category, date, key);
             else
                 sts.Remove(st);
 
+            st.LinkItem = node.Architecture + "";
+            st.Total = node.ID;
+            st.Actives = node["activeT1"].ToInt();
+            st.ActivesT7 = node["activeT7"].ToInt();
+            st.ActivesT30 = node["activeT30"].ToInt();
+            st.News = node["newT1"].ToInt();
+            st.NewsT7 = node["newT7"].ToInt();
+            st.NewsT30 = node["newT30"].ToInt();
+
+            st.Update();
+        }
+
+        // 删除多余统计项
+        sts.Delete();
+    }
+
+    private void VendorStat(DateTime date, ConcatExpression selects)
+    {
+        var category = "制造商";
+        var list = SearchGroup(date.AddYears(-1), selects & _.Vendor, _.Vendor);
+        var sts = NodeStat.FindAllByDate(category, date);
+        foreach (var node in list)
+        {
+            var key = node.Vendor + "";
+            if (key.Length > 50) key = key[..50];
+            var st = sts.FirstOrDefault(e => e.Key == key);
+            if (st == null)
+                st = NodeStat.GetOrAdd(category, date, key);
+            else
+                sts.Remove(st);
+
+            st.LinkItem = node.Vendor + "";
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
             st.ActivesT7 = node["activeT7"].ToInt();

@@ -21,14 +21,13 @@ public class TraceController : ControllerBase
     private readonly TokenService _tokenService;
     private readonly AppOnlineService _appOnline;
     private readonly UplinkService _uplink;
-    private readonly Setting _setting;
+    private readonly StarServerSetting _setting;
     private readonly ITracer _tracer;
     private readonly ITraceStatService _stat;
     private readonly IAppDayStatService _appStat;
     private readonly ITraceItemStatService _itemStat;
-    private static readonly ICache _cache = new MemoryCache();
 
-    public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService, AppOnlineService appOnline, UplinkService uplink, Setting setting, ITracer tracer)
+    public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService, AppOnlineService appOnline, UplinkService uplink, StarServerSetting setting, ITracer tracer)
     {
         _stat = stat;
         _appStat = appStat;
@@ -199,7 +198,7 @@ public class TraceController : ControllerBase
         {
             // 排除项
             var excludes = app.Excludes.Split(",", ";") ?? new String[0];
-            var timeoutExcludes = app.TimeoutExcludes.Split(",", ";") ?? new String[0];
+            //var timeoutExcludes = app.TimeoutExcludes.Split(",", ";") ?? new String[0];
 
             var now = DateTime.Now;
             var startTime = now.AddDays(-_setting.DataRetention);
@@ -215,13 +214,13 @@ public class TraceController : ControllerBase
                 var rule = TraceRule.Match(item.Name);
                 if (rule != null && !rule.IsWhite)
                 {
-                    using var span = _tracer?.NewSpan("trace-BlackList", new { item.Name, rule.Rule });
+                    using var span = _tracer?.NewSpan("trace:BlackList", new { item.Name, rule.Rule });
                     continue;
                 }
 
                 if (excludes != null && excludes.Any(e => e.IsMatch(item.Name)))
                 {
-                    using var span = _tracer?.NewSpan("trace-Exclude", item.Name);
+                    using var span = _tracer?.NewSpan("trace:Exclude", item.Name);
                     continue;
                 }
                 //if (item.Name.EndsWithIgnoreCase("/Trace/Report")) continue;
@@ -230,14 +229,14 @@ public class TraceController : ControllerBase
                 var timestamp = item.StartTime.ToDateTime().ToLocalTime();
                 if (timestamp < startTime || timestamp > endTime)
                 {
-                    using var span = _tracer?.NewSpan("trace-ErrorTime", $"{item.Name}-{timestamp.ToFullString()}");
+                    using var span = _tracer?.NewSpan("trace:ErrorTime", $"{item.Name}-{timestamp.ToFullString()}");
                     continue;
                 }
 
                 // 拒收超长项
                 if (item.Name.Length > TraceData._.Name.Length)
                 {
-                    using var span = _tracer?.NewSpan("trace-LongName", item.Name);
+                    using var span = _tracer?.NewSpan("trace:LongName", item.Name);
                     continue;
                 }
 
@@ -245,7 +244,7 @@ public class TraceController : ControllerBase
                 var ti = app.GetOrAddItem(item.Name, rule?.IsWhite);
                 if (ti == null)
                 {
-                    using var span = _tracer?.NewSpan("trace-ErrorItem", item.Name);
+                    using var span = _tracer?.NewSpan("trace:ErrorItem", item.Name);
                     continue;
                 }
                 if (!ti.Enable) continue;
@@ -265,9 +264,9 @@ public class TraceController : ControllerBase
 
                 // 超时时间。超过该时间时标记为异常，默认0表示使用应用设置，-1表示不判断超时
                 var timeout = ti.Timeout;
-                if (timeout == 0) timeout = app.Timeout;
+                //if (timeout == 0) timeout = app.Timeout;
 
-                var isTimeout = timeout > 0 && !timeoutExcludes.Any(e => e.IsMatch(item.Name));
+                var isTimeout = timeout > 0;
                 if (item.Samples != null && item.Samples.Count > 0)
                 {
                     // 超时处理为异常，累加到错误数之中

@@ -57,6 +57,12 @@ public static class OSKindHelper
 
         // 根据版本识别
         var str = osVersion.Length < 3 ? osVersion : osVersion.Substring(0, 3);
+        if (osName.Contains("Server"))
+        {
+            if (str.StartsWith("5.")) return OSKinds.Win2003;
+            if (str.StartsWith("6.")) return OSKinds.Win2008;
+        }
+
         return str switch
         {
             "10." => OSKinds.Win10,
@@ -94,6 +100,16 @@ public static class OSKindHelper
 
         if (osName.Contains("Linux")) return OSKinds.Linux;
         if (osName.Contains("Buildroot")) return OSKinds.Linux;
+        if (osName.Contains("OpenWrt")) return OSKinds.Linux;
+        if (osName.Contains("Armbian")) return OSKinds.Debian;
+
+        if (osName.StartsWithIgnoreCase("Orange Pi"))
+        {
+            if (osName.EndsWithIgnoreCase("Jammy")) return OSKinds.Ubuntu;
+            if (osName.EndsWithIgnoreCase("Bullseye")) return OSKinds.Debian;
+
+            return OSKinds.Linux;
+        }
 
         return 0;
     }

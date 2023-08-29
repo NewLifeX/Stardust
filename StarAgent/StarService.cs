@@ -38,7 +38,7 @@ public class StarService : DisposeBase, IApi
     public StarSetting StarSetting { get; set; }
 
     /// <summary>星尘代理设置</summary>
-    public Setting AgentSetting { get; set; }
+    public StarAgentSetting AgentSetting { get; set; }
 
     private AgentInfo _agentInfo;
     private TimerX _timer;

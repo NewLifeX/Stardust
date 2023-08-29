@@ -187,7 +187,7 @@ public class ServiceManager : DisposeBase
         {
             if (item != null && item.Enable)
             {
-                changed |= StartService(item);
+                changed |= StartService(item, null);
             }
         }
 
@@ -238,12 +238,13 @@ public class ServiceManager : DisposeBase
     #region 服务控制
     /// <summary>检查并启动服务</summary>
     /// <param name="service"></param>
+    /// <param name="deploy"></param>
+    /// <param name="isCheck">仅检查时，不记录埋点</param>
     /// <returns>本次是否成功启动，原来已启动返回false</returns>
-    private Boolean StartService(ServiceInfo service)
+    private Boolean StartService(ServiceInfo service, DeployInfo deploy, Boolean isCheck = false)
     {
-#if DEBUG
-        using var span = Tracer?.NewSpan("ServiceManager-StartService", service);
-#endif
+        using var span = isCheck ? null : Tracer?.NewSpan("ServiceManager-StartService", service);
+        span?.AppendTag(deploy);
 
         lock (this)
         {
@@ -252,6 +253,9 @@ public class ServiceManager : DisposeBase
             {
                 controller.EventProvider = _client;
                 controller.SetInfo(service);
+
+                if (deploy != null) controller.DeployInfo = deploy;
+
                 return controller.Check();
             }
 
@@ -259,6 +263,7 @@ public class ServiceManager : DisposeBase
             {
                 Name = service.Name,
                 //Info = service,
+                DeployInfo = deploy,
 
                 EventProvider = _client,
                 Tracer = Tracer,
@@ -286,19 +291,22 @@ public class ServiceManager : DisposeBase
     /// <returns></returns>
     private Boolean StopService(String serviceName, String reason)
     {
-#if DEBUG
         using var span = Tracer?.NewSpan("ServiceManager-StopService", serviceName);
-#endif
 
         var controller = _controllers.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
         if (controller != null)
         {
-            controller.Stop(reason);
-
+            // 先删除再停止，避免并发
             _controllers.Remove(controller);
+
+            controller.Stop(reason);
             controller.TryDispose();
 
             return true;
+        }
+        else
+        {
+            span?.AppendTag($"无法找到服务[{serviceName}]的控制器");
         }
 
         return false;
@@ -349,6 +357,7 @@ public class ServiceManager : DisposeBase
         svcs = svcs.Where(e => !e.Name.IsNullOrEmpty()).ToArray();
         if (svcs.Length == 0) return;
 
+        using var span = Tracer?.NewSpan(nameof(UploadService), svcs);
         WriteLog("上报应用服务 {0}", svcs.Join(",", e => e.Name));
 
         await _client.UploadDeploy(svcs);
@@ -356,6 +365,7 @@ public class ServiceManager : DisposeBase
 
     private async Task<DeployInfo[]> PullService(String appName)
     {
+        using var span = Tracer?.NewSpan(nameof(PullService), appName);
         WriteLog("拉取应用服务 {0}", appName);
 
         var svcs = Services.ToList();
@@ -368,6 +378,9 @@ public class ServiceManager : DisposeBase
         WriteLog("取得应用服务：{0}", rs.Join(",", e => e.Name));
         WriteLog("可用：{0}", rs.Where(e => e.Service.Enable).Join(",", e => e.Name));
         WriteLog(rs.ToJson(true));
+
+        // 旧版服务
+        span?.AppendTag(svcs);
 
         // 合并
         foreach (var item in rs)
@@ -382,7 +395,7 @@ public class ServiceManager : DisposeBase
             var old = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(item.Name));
             if (old == null)
             {
-                WriteLog("新增[{0}]：Enable={0}", item.Name, item.Service.Enable);
+                WriteLog("新增[{0}]：Enable={1}", item.Name, item.Service.Enable);
 
                 old = item.Service;
                 //svc.ReloadOnChange = true;
@@ -399,6 +412,7 @@ public class ServiceManager : DisposeBase
                 old.FileName = svc.FileName;
                 old.Arguments = svc.Arguments;
                 old.WorkingDirectory = svc.WorkingDirectory;
+                old.UserName = svc.UserName;
                 old.Enable = svc.Enable;
                 //old.AutoStart = svc.AutoStart;
                 //svc.AutoStop = item.AutoStop;
@@ -406,6 +420,9 @@ public class ServiceManager : DisposeBase
                 old.Mode = svc.Mode;
             }
         }
+
+        // 新版服务
+        span?.AppendTag(svcs);
 
         Services = svcs.ToArray();
 
@@ -419,8 +436,10 @@ public class ServiceManager : DisposeBase
         var name = svc.Name;
         if (!name.IsNullOrEmpty())
         {
+            if (svc.FileName.IsNullOrEmpty()) svc.FileName = $"{name}.zip";
+
             // 如果没有设置工作目录，默认工作目录是上一级的apps子目录，按应用放置
-            if (svc.WorkingDirectory.IsNullOrEmpty()) svc.WorkingDirectory = $"../apps/{name}".GetBasePath();
+            if (svc.WorkingDirectory.IsNullOrEmpty()) svc.WorkingDirectory = $"../apps/{name}";
         }
     }
 
@@ -429,8 +448,32 @@ public class ServiceManager : DisposeBase
         var url = info.Url;
         if (url.IsNullOrEmpty()) return;
 
+        using var span = Tracer?.NewSpan("ServiceManager-Download", info.Url);
+
         var dst = svc.WorkingDirectory.CombinePath(svc.FileName).AsFile();
-        if (!dst.Exists || (!info.Hash.IsNullOrEmpty() && !dst.MD5().ToHex().EqualIgnoreCase(info.Hash)))
+        span?.AppendTag(dst.FullName);
+
+        var flag = false;
+        if (!dst.Exists)
+        {
+            WriteLog("文件不存在：{0}", dst);
+            flag = true;
+        }
+        else if (!info.Hash.IsNullOrEmpty())
+        {
+            var hash = dst.MD5().ToHex();
+            if (!hash.EqualIgnoreCase(info.Hash))
+            {
+                WriteLog("文件哈希不匹配：{0}（本地）!={1}（远程）", hash, info.Hash);
+                flag = true;
+            }
+        }
+        if (!flag)
+        {
+            var hash = dst.MD5().ToHex();
+            WriteLog("文件已存在：{0} MD5: {1}", dst, hash);
+        }
+        if (flag)
         {
             url = _client.BuildUrl(url);
 
@@ -446,8 +489,9 @@ public class ServiceManager : DisposeBase
 
             // 校验哈希
             var ti = tmp.AsFile();
-            if (!info.Hash.IsNullOrEmpty() && !ti.MD5().ToHex().EqualIgnoreCase(info.Hash))
-                WriteLog("下载失败，校验错误");
+            var hash = ti.MD5().ToHex();
+            if (!info.Hash.IsNullOrEmpty() && !hash.EqualIgnoreCase(info.Hash))
+                WriteLog("下载失败，校验错误！{0}（本地）!={1}（远程）", hash, info.Hash);
             else
             {
                 // 删除原文件
@@ -471,15 +515,18 @@ public class ServiceManager : DisposeBase
     }
 
     Int32 _status;
+    Boolean _busy;
     private TimerX _timer;
     private async Task DoWork(Object state)
     {
-#if DEBUG
-        using var span = Tracer?.NewSpan("ServiceManager-DoWork");
-#endif
+        // 如果其它任务正在使用管理器，则跳过这一次检查
+        if (_busy) return;
+
         var svcs = Services;
+        using var span = Tracer?.NewSpan("ServiceManager-DoWork", svcs.Length);
 
         // 应用服务的上报和拉取
+        DeployInfo[] deploys = null;
         if (_client != null && !_client.Token.IsNullOrEmpty())
         {
             // 上传失败不应该影响本地拉起服务
@@ -494,7 +541,7 @@ public class ServiceManager : DisposeBase
 
                 if (_status == 1)
                 {
-                    await PullService(null);
+                    deploys = await PullService(null);
 
                     _status = 2;
                 }
@@ -523,9 +570,13 @@ public class ServiceManager : DisposeBase
             }
             else if (controller.Running && service.ToJson() != controller.Info.ToJson())
             {
-                controller.Stop("配置改变");
-                controllers.RemoveAt(i);
-                changed = true;
+                // 启动成功的短时间内，不认可配置改变，因为可能就是这一次发布的配置变化
+                if (controller.StartTime.Year > 2000 && controller.StartTime.AddSeconds(5) < DateTime.Now)
+                {
+                    controller.Stop("配置改变");
+                    controllers.RemoveAt(i);
+                    changed = true;
+                }
             }
         }
 
@@ -534,12 +585,27 @@ public class ServiceManager : DisposeBase
         {
             if (item != null && item.Enable)
             {
-                changed |= StartService(item);
+                changed |= StartService(item, deploys?.FirstOrDefault(e => e.Name == item.Name), true);
             }
         }
 
         // 保存状态
         if (changed) SaveDb();
+    }
+
+    private IDisposable CreateBusy()
+    {
+        _busy = true;
+
+        return new MyBusy(this);
+    }
+
+    class MyBusy : IDisposable
+    {
+        private ServiceManager _mgr;
+        public MyBusy(ServiceManager mgr) => _mgr = mgr;
+
+        public void Dispose() => _mgr._busy = false;
     }
     #endregion
 
@@ -551,9 +617,12 @@ public class ServiceManager : DisposeBase
     {
         using var span = Tracer?.NewSpan("ServiceManager-Install", service);
 
+        // 设置繁忙，避免同步进行健康检查
+        using var busy = CreateBusy();
+
         Add(service);
 
-        if (!StartService(service)) return null;
+        if (!StartService(service, null)) return null;
 
         SaveDb();
 
@@ -571,6 +640,9 @@ public class ServiceManager : DisposeBase
         var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
         if (svc == null) return false;
 
+        // 设置繁忙，避免同步进行健康检查
+        using var busy = CreateBusy();
+
         StopService(svc.Name, reason);
 
         SaveDb();
@@ -587,6 +659,9 @@ public class ServiceManager : DisposeBase
     public void Attach(StarClient client)
     {
         _client = client;
+
+        // 设置繁忙，避免同步进行健康检查
+        using var busy = CreateBusy();
 
         client.RegisterCommand("deploy/publish", DoControl);
         client.RegisterCommand("deploy/install", DoControl);
@@ -639,12 +714,16 @@ public class ServiceManager : DisposeBase
         if (dis == null || dis.Length == 0) throw new Exception($"无法从服务器取得应用信息，安装{serviceName}失败！");
 
         // 马上停止并拉起应用服务，定时器只用于双保险
-        var svc = dis?.FirstOrDefault()?.Service;
+        var svc = dis[0]?.Service;
         if (svc != null)
         {
-            StopService(svc.Name, cmd.Command);
-            Thread.Sleep(Delay);
-            StartService(svc);
+            var rs = StopService(svc.Name, cmd.Command);
+            //if (rs) Thread.Sleep(Delay);
+            StartService(svc, dis[0]);
+        }
+        else
+        {
+            span?.AppendTag($"无法找到{dis[0]}的服务");
         }
 
         // 尽快调度一次，拉起服务
@@ -662,7 +741,7 @@ public class ServiceManager : DisposeBase
 
         var changed = false;
         svc.Enable = true;
-        changed |= StartService(svc);
+        changed |= StartService(svc, null);
 
         RaiseServiceChanged();
 
@@ -695,9 +774,9 @@ public class ServiceManager : DisposeBase
         var changed = false;
         svc.Enable = false;
         changed |= StopService(svc.Name, cmd.Command);
-        Thread.Sleep(Delay);
+        //if (changed) Thread.Sleep(Delay);
         svc.Enable = true;
-        changed |= StartService(svc);
+        changed |= StartService(svc, null);
 
         RaiseServiceChanged();
 
@@ -738,6 +817,8 @@ public class ServiceManager : DisposeBase
         Log?.Info(format, args);
 
         var msg = (args == null || args.Length == 0) ? format : String.Format(format, args);
+        DefaultSpan.Current?.AppendTag(msg);
+
         if (format.Contains("错误") || format.Contains("失败"))
             _client?.WriteErrorEvent(nameof(ServiceManager), msg);
         else

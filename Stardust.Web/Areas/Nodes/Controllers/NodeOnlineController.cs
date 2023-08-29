@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
@@ -22,7 +23,7 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
 
         var list = ListFields;
         list.Clear();
-        var allows = new[] { "ID", "Name", "Category", "CityName", "PingCount", "WebSocket", "Version", "OSKind", "IP", "AvailableMemory", "AvailableFreeSpace", "CpuRate", "ProcessCount", "UplinkSpeed", "DownlinkSpeed", "LocalTime", "CreateTime", "CreateIP", "UpdateTime" };
+        var allows = new[] { "ID", "Name", "Category", "CityName", "PingCount", "WebSocket", "Version", "OSKind", "IP", "AvailableMemory", "MemoryUsed", "AvailableFreeSpace", "SpaceUsed", "CpuRate", "ProcessCount", "UplinkSpeed", "DownlinkSpeed", "LocalTime", "CreateTime", "CreateIP", "UpdateTime" };
         foreach (var item in allows)
         {
             list.AddListField(item);
@@ -31,31 +32,47 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
         {
             var df = ListFields.GetField("Name") as ListField;
             df.DisplayName = "{Name}";
-            df.Url = "/Nodes/Node?Id={NodeID}";
+            df.Url = "/Nodes/Node/Detail?Id={NodeID}";
+            df.Target = "_blank";
         }
         //{
-        //    var df = ListFields.AddListField("History", "Version");
-        //    df.DisplayName = "历史";
-        //    df.Url = "NodeHistory?nodeId={NodeID}";
+        //    var df = ListFields.AddListField("Meter", "Version");
+        //    df.DisplayName = "性能";
+        //    df.Url = "/Nodes/NodeData?nodeId={NodeID}";
         //}
-        {
-            var df = ListFields.AddListField("Meter", "Version");
-            df.DisplayName = "性能";
-            df.Url = "/Nodes/NodeData?nodeId={NodeID}";
-        }
-        {
-            var df = ListFields.AddListField("App", "Version");
-            df.DisplayName = "应用实例";
-            df.Url = "/Registry/AppOnline?nodeId={NodeID}";
-        }
         //{
-        //    var df = ListFields.AddListField("Log", "Version");
-        //    df.DisplayName = "日志";
-        //    df.Url = "/Admin/Log?category=节点&linkId={NodeID}";
+        //    var df = ListFields.AddListField("App", "Version");
+        //    df.DisplayName = "应用实例";
+        //    df.Url = "/Registry/AppOnline?nodeId={NodeID}";
         //}
     }
 
     public NodeOnlineController(StarFactory starFactory) => _starFactory = starFactory;
+
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        var projectId = GetRequest("projectId").ToInt(-1);
+        if (projectId > 0)
+        {
+            PageSetting.NavView = "_Project_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+    }
+
+    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
+    {
+        var fields = base.OnGetFields(kind, model);
+
+        if (kind == ViewKinds.List)
+        {
+            var nodeId = GetRequest("nodeId").ToInt(-1);
+            if (nodeId > 0) fields.RemoveField("NodeName");
+        }
+
+        return fields;
+    }
 
     protected override IEnumerable<NodeOnline> Search(Pager p)
     {
@@ -64,13 +81,15 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
         var provinceId = rids.Length > 0 ? rids[0] : -1;
         var cityId = rids.Length > 1 ? rids[1] : -1;
 
+        var projectId = p["projectId"].ToInt(-1);
         var category = p["category"];
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
         PageSetting.EnableSelect = true;
+        p.RetrieveState = true;
 
-        return NodeOnline.Search(nodeId, provinceId, cityId, category, start, end, p["Q"], p);
+        return NodeOnline.Search(projectId, nodeId, provinceId, cityId, category, start, end, p["Q"], p);
     }
 
     public async Task<ActionResult> Trace(Int32 id)
@@ -92,14 +111,17 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
     [EntityAuthorize((PermissionFlags)16)]
     public async Task<ActionResult> CheckUpgrade()
     {
+        var ts = new List<Task>();
         foreach (var item in SelectKeys)
         {
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
             {
-                await _starFactory.SendNodeCommand(online.Node.Code, "node/upgrade");
+                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, "node/upgrade", null, 600, 5));
             }
         }
+
+        await Task.WhenAll(ts);
 
         return JsonRefresh("操作成功！");
     }

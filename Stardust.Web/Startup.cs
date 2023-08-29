@@ -2,14 +2,21 @@
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.FileProviders;
 using NewLife;
+using NewLife.Caching.Services;
+using NewLife.Caching;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Log;
 using Stardust.Data.Configs;
+using Stardust.Extensions.Caches;
 using Stardust.Server.Services;
 using Stardust.Web.Services;
 using XCode;
 using XCode.DataAccessLayer;
+using Stardust.Data.Deployment;
+using Stardust.Data;
+using Stardust.Data.Nodes;
+using Stardust.Server;
 
 namespace Stardust.Web;
 
@@ -31,6 +38,9 @@ public class Startup
         //_ = star.Config;
         var config = star.GetConfig();
 
+        // 分布式服务，使用配置中心RedisCache配置
+        services.AddSingleton<ICacheProvider, RedisCacheProvider>();
+
         // 统计
         services.AddSingleton<IAppDayStatService, AppDayStatService>();
         services.AddSingleton<ITraceItemStatService, TraceItemStatService>();
@@ -48,6 +58,7 @@ public class Startup
         // 后台服务。数据保留，定时删除过期数据
         services.AddHostedService<ApolloService>();
         services.AddHostedService<NodeStatService>();
+        services.AddHostedService<FixDataHostedService>();
 
         // 启用接口响应压缩
         services.AddResponseCompression();
@@ -71,11 +82,8 @@ public class Startup
         var tracer = app.ApplicationServices.GetRequiredService<ITracer>();
         using var span = tracer?.NewSpan(nameof(Configure));
 
-        //var config = app.ApplicationServices.GetService<IConfigProvider>();
-        //var svr = config["StarServer"];
-
         // 调整应用表名
-        FixAppTableName();
+        FixTable();
 
         // 初始化数据库连接
         var conns = DAL.ConnStrs;
@@ -86,8 +94,8 @@ public class Startup
                 target = "MonitorLog";
             else if (conns.ContainsKey("NodeLog"))
                 target = "NodeLog";
-            else if (conns.ContainsKey("Stardust"))
-                target = "Stardust";
+            //else if (conns.ContainsKey("Stardust"))
+            //    target = "Stardust";
 
             if (!target.IsNullOrEmpty())
             {
@@ -109,27 +117,18 @@ public class Startup
 
         Usewwwroot(app, env);
 
-        var set = NewLife.Setting.Current;
-
         // 缓存运行时安装文件
-        var sdk = "../FileCache".GetBasePath().EnsureDirectory(false);
-        XTrace.WriteLine("FileCache: {0}", sdk);
-        app.UseStaticFiles(new StaticFileOptions
-        {
-            RequestPath = new PathString("/files"),
-            FileProvider = new CacheFileProvider(sdk, set.PluginServer),
-            ServeUnknownFileTypes = true,
-            DefaultContentType = "application/x-msdownload",
-        });
-        app.UseDirectoryBrowser(new DirectoryBrowserOptions
-        {
-            RequestPath = new PathString("/files"),
-            FileProvider = new PhysicalFileProvider(sdk),
-        });
+        var set = StarServerSetting.Current;
+        if (!set.FileCache.IsNullOrEmpty())
+            app.UseFileCache("/files", set.FileCache);
 
         //app.UseStardust();
         app.UseResponseCompression();
         app.UseCube(env);
+
+        // 注册退出事件
+        if (app is IHost host)
+            NewLife.Model.Host.RegisterExit(() => host.StopAsync().Wait());
 
         app.UseEndpoints(endpoints =>
         {
@@ -156,17 +155,18 @@ public class Startup
             set.BackupPath = "../Backup";
             set.Save();
         }
-        var set2 = NewLife.Cube.Setting.Current;
+        var set2 = CubeSetting.Current;
         if (set2.IsNew || set2.UploadPath == "Uploads")
         {
             XTrace.WriteLine("修正上传目录");
             set2.UploadPath = "../Uploads";
             set2.AvatarPath = "../Avatars";
+            set2.Skin = "layui";
             set2.Save();
         }
     }
 
-    private static void FixAppTableName()
+    private static void FixTable()
     {
         var dal = DAL.Create("Stardust");
         var tables = dal.Tables;
@@ -184,6 +184,15 @@ public class Startup
                 XTrace.WriteLine("重命名结果：{0}", rs);
             }
         }
+
+        // 强行设置反向工程，修改字段长度
+        var ts = new[] {
+            AppDeployNode.Meta.Table.DataTable,
+            AppOnline.Meta.Table.DataTable,
+            AppMeter.Meta.Table.DataTable,
+            Node.Meta.Table.DataTable,
+        };
+        dal.Db.CreateMetaData().SetTables(Migration.Full, ts);
     }
 
     private static void TrimOldAppConfig() => AppConfig.TrimAll();

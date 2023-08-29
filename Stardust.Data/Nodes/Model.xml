@@ -1,8 +1,49 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2022.xsd" NameSpace="Stardust.Data.Nodes" ConnName="Stardust" Output="" BaseClass="Entity" Version="11.3.2022.1013" Document="https://newlifex.com/xcode/model" DisplayName="" CubeOutput="" xmlns="https://newlifex.com/Model2022.xsd">
+<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2023.xsd" xmlns="https://newlifex.com/Model2023.xsd">
+  <Option>
+    <!--输出目录-->
+    <Output>.\</Output>
+    <!--是否使用中文文件名。默认false-->
+    <ChineseFileName>False</ChineseFileName>
+    <!--基类。可能包含基类和接口，其中{name}替换为Table.Name-->
+    <BaseClass>Entity</BaseClass>
+    <!--命名空间-->
+    <Namespace>Stardust.Data.Nodes</Namespace>
+    <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
+    <ClassNameTemplate />
+    <!--显示名模板。其中{displayName}替换为Table.DisplayName-->
+    <DisplayNameTemplate />
+    <!--用于生成拷贝函数的模型类。例如{name}或I{name}-->
+    <ModelNameForCopy />
+    <!--带有索引器。实现IModel接口-->
+    <HasIModel>False</HasIModel>
+    <!--模型类模版-->
+    <ModelClass />
+    <!--模型接口模版-->
+    <ModelInterface />
+    <!--数据库连接名-->
+    <ConnName>Stardust</ConnName>
+    <!--模型类输出目录。默认当前目录的Models子目录-->
+    <ModelsOutput>.\Models\</ModelsOutput>
+    <!--模型接口输出目录。默认当前目录的Interfaces子目录-->
+    <InterfacesOutput>.\Interfaces\</InterfacesOutput>
+    <!--用户实体转为模型类的模型类。例如{name}或{name}DTO-->
+    <ModelNameForToModel />
+    <!--命名格式。Default/Upper/Lower/Underline-->
+    <NameFormat>Default</NameFormat>
+    <!--生成器版本-->
+    <Version>11.8.2023.0607</Version>
+    <!--帮助文档-->
+    <Document>https://newlifex.com/xcode/model</Document>
+    <!--魔方区域显示名-->
+    <DisplayName />
+    <!--魔方控制器输出目录-->
+    <CubeOutput>../../Stardust.Web/Areas/Nodes</CubeOutput>
+  </Option>
   <Table Name="Node" Description="节点">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
       <Column Name="Code" DataType="String" Description="编码。NodeKey" />
       <Column Name="Secret" DataType="String" Description="密钥。NodeSecret" />
@@ -11,21 +52,23 @@
       <Column Name="Category" DataType="String" Description="分类" />
       <Column Name="Version" DataType="String" Description="版本" />
       <Column Name="CompileTime" DataType="DateTime" Description="编译时间" />
-      <Column Name="OS" DataType="String" Length="100" Description="操作系统" Category="硬件信息" />
-      <Column Name="OSVersion" DataType="String" Description="系统版本" Category="硬件信息" />
-      <Column Name="OSKind" DataType="Int32" Description="系统种类。主流操作系统类型，不考虑子版本" Category="硬件信息" Type="Stardust.Models.OSKinds" />
-      <Column Name="Architecture" DataType="String" Description="架构。处理器架构，X86/X64/Arm/Arm64" Category="硬件信息" />
-      <Column Name="MachineName" DataType="String" Description="机器名称" Category="硬件信息" />
-      <Column Name="UserName" DataType="String" Description="用户名称" Category="硬件信息" />
-      <Column Name="IP" DataType="String" Length="200" Description="本地IP" Category="硬件信息" />
+      <Column Name="OS" DataType="String" Length="100" Description="操作系统" Category="系统信息" />
+      <Column Name="OSVersion" DataType="String" Description="系统版本" Category="系统信息" />
+      <Column Name="OSKind" DataType="Int32" Description="系统种类。主流操作系统类型，不考虑子版本" Category="系统信息" Type="Stardust.Models.OSKinds" />
+      <Column Name="Architecture" DataType="String" Description="架构。处理器架构，X86/X64/Arm/Arm64" Category="系统信息" />
+      <Column Name="MachineName" DataType="String" Description="机器名称" Category="系统信息" />
+      <Column Name="UserName" DataType="String" Description="用户名称" Category="系统信息" />
+      <Column Name="IP" DataType="String" Length="200" Description="本地IP" Category="系统信息" />
       <Column Name="Cpu" DataType="Int32" Description="CPU。处理器核心数" Category="硬件信息" />
       <Column Name="Memory" DataType="Int32" Description="内存。单位M" Category="硬件信息" />
       <Column Name="TotalSize" DataType="Int32" Description="磁盘。应用所在盘，单位M" Category="硬件信息" />
-      <Column Name="DriveInfo" DataType="String" Length="200" Description="驱动器信息。各磁盘大小，逗号分隔" Category="硬件信息" />
-      <Column Name="MaxOpenFiles" DataType="Int32" Description="最大打开文件。Linux上的ulimit -n" Category="硬件信息" />
-      <Column Name="Dpi" DataType="String" Description="像素点。默认96*96" Category="硬件信息" />
-      <Column Name="Resolution" DataType="String" Description="分辨率。例如1024*768" Category="硬件信息" />
+      <Column Name="DriveSize" DataType="Int32" Description="驱动器大小。所有分区总大小，单位M" Category="硬件信息" />
+      <Column Name="DriveInfo" DataType="String" Length="500" Description="驱动器信息。各分区大小，逗号分隔" Category="硬件信息" />
+      <Column Name="MaxOpenFiles" DataType="Int32" Description="最大打开文件。Linux上的ulimit -n" Category="系统信息" />
+      <Column Name="Dpi" DataType="String" Description="像素点。默认96*96" Category="系统信息" />
+      <Column Name="Resolution" DataType="String" Description="分辨率。例如1024*768" Category="系统信息" />
       <Column Name="Product" DataType="String" Description="产品名" Category="硬件信息" />
+      <Column Name="Vendor" DataType="String" Description="制造商" Category="硬件信息" />
       <Column Name="Processor" DataType="String" Length="200" Description="处理器" Category="硬件信息" />
       <Column Name="Uuid" DataType="String" Description="唯一标识" Category="硬件信息" />
       <Column Name="MachineGuid" DataType="String" Description="机器标识" Category="硬件信息" />
@@ -33,14 +76,16 @@
       <Column Name="Board" DataType="String" Description="主板。序列号或家族信息" Category="硬件信息" />
       <Column Name="DiskID" DataType="String" Length="200" Description="磁盘序列号" Category="硬件信息" />
       <Column Name="MACs" DataType="String" Length="200" Description="网卡" Category="硬件信息" />
-      <Column Name="InstallPath" DataType="String" Length="200" Description="安装路径" Category="硬件信息" />
-      <Column Name="Runtime" DataType="String" Description="运行时。.Net运行时版本" Category="硬件信息" />
-      <Column Name="Framework" DataType="String" Description="框架。本地支持的最高版本框架" Category="硬件信息" />
-      <Column Name="Frameworks" DataType="String" Length="200" Description="框架集合。本地支持的所有版本框架，逗号隔开" Category="硬件信息" />
-      <Column Name="ProvinceID" DataType="Int32" Description="省份" />
-      <Column Name="CityID" DataType="Int32" Description="城市" />
-      <Column Name="Address" DataType="String" Length="200" Description="地址。该节点所处位置" />
-      <Column Name="Period" DataType="Int32" Description="采样周期。默认60秒" />
+      <Column Name="InstallPath" DataType="String" Length="200" Description="安装路径" />
+      <Column Name="Runtime" DataType="String" Description="运行时。.Net运行时版本" Category="系统信息" />
+      <Column Name="Framework" DataType="String" Description="框架。本地支持的最高版本框架" Category="系统信息" />
+      <Column Name="Frameworks" DataType="String" Length="200" Description="框架集合。本地支持的所有版本框架，逗号隔开" Category="系统信息" />
+      <Column Name="ProvinceID" DataType="Int32" Description="省份" Category="参数设置" />
+      <Column Name="CityID" DataType="Int32" Description="城市" Category="参数设置" />
+      <Column Name="Address" DataType="String" Length="200" Description="地址。该节点所处位置" Category="参数设置" />
+      <Column Name="Period" DataType="Int32" Description="采样周期。默认60秒" Category="参数设置" />
+      <Column Name="NewServer" DataType="String" Description="新服务器。该节点自动迁移到新的服务器地址" Category="参数设置" />
+      <Column Name="LastVersion" DataType="String" Description="最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本" Category="参数设置" />
       <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" Category="告警" />
       <Column Name="AlarmCpuRate" DataType="Int32" Description="CPU告警。CPU告警的百分比阈值，CPU使用率达到该值时告警，百分之一" Category="告警" />
       <Column Name="AlarmMemoryRate" DataType="Int32" Description="内存告警。内存告警的百分比阈值，内存使用率达到该值时告警，百分之一" Category="告警" />
@@ -48,11 +93,11 @@
       <Column Name="AlarmTcp" DataType="Int32" Description="连接数告警。TCP连接数达到该值时告警，包括连接数、主动关闭和被动关闭" Category="告警" />
       <Column Name="AlarmProcesses" DataType="String" Description="进程告警。要守护的进程不存在时告警，多进程逗号隔开，支持*模糊匹配" Category="告警" />
       <Column Name="AlarmOnOffline" DataType="Boolean" Description="下线告警。节点下线时，发送告警" Category="告警" />
-      <Column Name="Logins" DataType="Int32" Description="登录次数" />
-      <Column Name="LastLogin" DataType="DateTime" Description="最后登录" />
-      <Column Name="LastLoginIP" DataType="String" Description="最后IP。最后的公网IP地址" />
-      <Column Name="OnlineTime" DataType="Int32" ItemType="TimeSpan" Description="在线时长。单位，秒" />
-      <Column Name="LastVersion" DataType="String" Description="最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本" />
+      <Column Name="Logins" DataType="Int32" Description="登录次数" Category="登录信息" />
+      <Column Name="LastLogin" DataType="DateTime" Description="最后登录" Category="登录信息" />
+      <Column Name="LastLoginIP" DataType="String" Description="最后IP。最后的公网IP地址" Category="登录信息" />
+      <Column Name="LastActive" DataType="DateTime" Description="最后活跃。心跳过程中每10分钟更新活跃时间" Category="登录信息" />
+      <Column Name="OnlineTime" DataType="Int32" ItemType="TimeSpan" Description="在线时长。单位，秒" Category="登录信息" />
       <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
@@ -64,17 +109,20 @@
     <Indexes>
       <Index Columns="Code" Unique="True" />
       <Index Columns="Uuid,MachineGuid,MACs" />
+      <Index Columns="ProjectId" />
       <Index Columns="IP" />
       <Index Columns="Category" />
       <Index Columns="ProductCode" />
       <Index Columns="Version" />
       <Index Columns="OSKind" />
+      <Index Columns="LastActive" />
       <Index Columns="UpdateTime" />
     </Indexes>
   </Table>
   <Table Name="NodeOnline" Description="节点在线" ConnName="StardustData">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
       <Column Name="SessionID" DataType="String" Description="会话" />
       <Column Name="NodeID" DataType="Int32" Description="节点" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
@@ -86,13 +134,16 @@
       <Column Name="WebSocket" DataType="Boolean" Description="长连接。WebSocket长连接" />
       <Column Name="Version" DataType="String" Description="版本" />
       <Column Name="CompileTime" DataType="DateTime" Description="编译时间" />
-      <Column Name="OSKind" DataType="Int32" Description="系统种类。主流操作系统类型，不考虑子版本" Category="硬件信息" Type="Stardust.Models.OSKinds" />
+      <Column Name="OSKind" DataType="Int32" Description="系统种类。主流操作系统类型，不考虑子版本" Type="Stardust.Models.OSKinds" />
       <Column Name="Memory" DataType="Int32" Description="内存。单位M" />
       <Column Name="AvailableMemory" DataType="Int32" Description="可用内存。单位M" />
+      <Column Name="MemoryUsed" DataType="Int32" Description="已用内存。单位M" />
       <Column Name="AvailableFreeSpace" DataType="Int32" Description="可用磁盘。应用所在盘，单位M" />
+      <Column Name="SpaceUsed" DataType="Int32" Description="已用磁盘。应用所在盘，单位M" />
+      <Column Name="DriveInfo" DataType="String" Length="500" Description="驱动器信息。各分区大小，逗号分隔" Category="硬件信息" />
       <Column Name="CpuRate" DataType="Double" Description="CPU率。占用率" />
       <Column Name="Temperature" DataType="Double" Description="温度" />
-      <Column Name="Battery" DataType="Double" Description="电量" />
+      <Column Name="Battery" DataType="Double" ItemType="percent" Description="电量" />
       <Column Name="UplinkSpeed" DataType="Int64" Description="上行速度。网络发送速度，字节每秒" />
       <Column Name="DownlinkSpeed" DataType="Int64" Description="下行速度。网络接收速度，字节每秒" />
       <Column Name="ProcessCount" DataType="Int32" Description="进程数" />
@@ -115,6 +166,7 @@
     </Columns>
     <Indexes>
       <Index Columns="SessionID" Unique="True" />
+      <Index Columns="ProjectId" />
       <Index Columns="Token" />
       <Index Columns="UpdateTime" />
       <Index Columns="ProvinceID,CityID" />
@@ -150,13 +202,13 @@
       <Column Name="AvailableFreeSpace" DataType="Int32" Description="可用磁盘。应用所在盘，单位M" />
       <Column Name="CpuRate" DataType="Double" ItemType="percent" Description="CPU率。占用率" />
       <Column Name="Temperature" DataType="Double" Description="温度" />
-      <Column Name="Battery" DataType="Double" Description="电量" />
+      <Column Name="Battery" DataType="Double" ItemType="percent" Description="电量" />
       <Column Name="UplinkSpeed" DataType="Int64" Description="上行速度。网络发送速度，字节每秒" />
       <Column Name="DownlinkSpeed" DataType="Int64" Description="下行速度。网络接收速度，字节每秒" />
       <Column Name="ProcessCount" DataType="Int32" Description="进程数" />
       <Column Name="TcpConnections" DataType="Int32" Description="连接数。传输数据Established的Tcp网络连接数" />
-      <Column Name="TcpTimeWait" DataType="Int32" Description="主动关闭。主动关闭后TimeWait的Tcp网络连接数，下一步Closed" />
-      <Column Name="TcpCloseWait" DataType="Int32" Description="被动关闭。被动关闭后CloseWait的Tcp网络连接数，下一步TimeWait" />
+      <Column Name="TcpTimeWait" DataType="Int32" Description="主动关闭。主动关闭后TimeWait的Tcp网络连接数，等待2MSL，确保四次挥手的最后一个ACK能够发出，下一步Closed" />
+      <Column Name="TcpCloseWait" DataType="Int32" Description="被动关闭。作为客户端，收到服务器FIN后进入CloseWait的Tcp网络连接数，还没发送自己的FIN，主要原因是我方太忙" />
       <Column Name="Delay" DataType="Int32" Description="延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms" />
       <Column Name="Offset" DataType="Int32" Description="偏移。客户端UTC时间减服务端UTC时间，单位ms" />
       <Column Name="LocalTime" DataType="DateTime" Description="本地时间" />
@@ -178,7 +230,7 @@
       <Column Name="Force" DataType="Boolean" Description="强制。强制升级" />
       <Column Name="Channel" DataType="Int32" Description="升级通道" Type="NodeChannels" />
       <Column Name="Strategy" DataType="String" Length="500" Description="策略。升级策略，版本特别支持大于等于和小于等于，node=*abcd*;version&gt;=1.0;runtime/framework/os/oskind/arch/province/city" />
-      <Column Name="Source" DataType="String" ItemType="file" Length="200" Description="升级源" />
+      <Column Name="Source" DataType="String" ItemType="file-zip" Length="200" Description="升级源" />
       <Column Name="Size" DataType="Int64" ItemType="GMK" Description="文件大小" />
       <Column Name="FileHash" DataType="String" Description="文件哈希。MD5散列" />
       <Column Name="Preinstall" DataType="String" Length="200" Description="预安装命令。更新前要执行的命令，解压缩后，在解压缩目录执行" />
@@ -201,6 +253,7 @@
       <Column Name="NodeID" DataType="Int32" Description="节点" />
       <Column Name="Command" DataType="String" Master="True" Description="命令" />
       <Column Name="Argument" DataType="String" Length="500" Description="参数" />
+      <Column Name="StartTime" DataType="DateTime" Description="开始执行时间。用于提前下发指令后延期执行，暂时不支持取消" />
       <Column Name="Expire" DataType="DateTime" Description="过期时间。未指定时表示不限制" />
       <Column Name="Status" DataType="Int32" Description="状态。命令状态" Type="Stardust.Models.CommandStatus" />
       <Column Name="Times" DataType="Int32" Description="次数。一共执行多少次，超过10次后取消" />
@@ -226,10 +279,11 @@
       <Column Name="Category" DataType="String" Description="类别。业务方向分类，例如操作系统占比" />
       <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
       <Column Name="Key" DataType="String" Description="统计项。统计项编码" />
-      <Column Name="Total" DataType="Int32" Description="总数。截止今天的全部节点数" />
-      <Column Name="Actives" DataType="Int32" Description="活跃数。最后登录位于今天" />
-      <Column Name="ActivesT7" DataType="Int32" Description="7天活跃数。最后登录位于7天内" />
-      <Column Name="ActivesT30" DataType="Int32" Description="30天活跃数。最后登录位于30天内" />
+      <Column Name="LinkItem" DataType="String" Description="关联项" />
+      <Column Name="Total" DataType="Int32" Description="总数。1年内活跃过的全部节点数" />
+      <Column Name="Actives" DataType="Int32" Description="活跃数。最后活跃位于今天" />
+      <Column Name="ActivesT7" DataType="Int32" Description="7天活跃数。最后活跃位于7天内" />
+      <Column Name="ActivesT30" DataType="Int32" Description="30天活跃数。最后活跃位于30天内" />
       <Column Name="News" DataType="Int32" Description="新增数。今天创建" />
       <Column Name="NewsT7" DataType="Int32" Description="7天新增数。7天创建" />
       <Column Name="NewsT30" DataType="Int32" Description="30天新增数。30天创建" />
@@ -240,7 +294,6 @@
     <Indexes>
       <Index Columns="Category,StatDate,Key" Unique="True" />
       <Index Columns="Category,Key" />
-      <Index Columns="UpdateTime" />
     </Indexes>
   </Table>
   <Table Name="NodeRule" Description="节点规则。根据IP规则，自动识别匹配节点名称">
@@ -261,103 +314,4 @@
       <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
     </Columns>
   </Table>
-  <Table Name="RedisNode" Description="Redis节点。Redis管理">
-    <Columns>
-      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="Name" DataType="String" Master="True" Description="名称" />
-      <Column Name="Category" DataType="String" Description="分类" />
-      <Column Name="Server" DataType="String" Description="地址。含端口" />
-      <Column Name="Password" DataType="String" Description="密码" />
-      <Column Name="Version" DataType="String" Description="版本" />
-      <Column Name="Mode" DataType="String" Description="模式" />
-      <Column Name="Role" DataType="String" Description="角色" />
-      <Column Name="MaxMemory" DataType="Int32" Description="内存容量。单位MB" />
-      <Column Name="MemoryPolicy" DataType="String" Description="内存策略。缓存淘汰策略" />
-      <Column Name="MemoryAllocator" DataType="String" Description="分配器。内存分配器，低版本有内存泄漏" />
-      <Column Name="Enable" DataType="Boolean" Description="启用。停用的节点不再执行监控" />
-      <Column Name="ScanQueue" DataType="Boolean" Description="队列。自动扫描发现消息队列，默认true" />
-      <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" Category="告警" />
-      <Column Name="AlarmMemoryRate" DataType="Int32" Description="内存告警。内存告警的百分比阈值，百分之一" Category="告警" />
-      <Column Name="AlarmConnections" DataType="Int32" Description="连接告警。连接数告警阈值" Category="告警" />
-      <Column Name="AlarmSpeed" DataType="Int32" Description="速度告警。速度告警阈值" Category="告警" />
-      <Column Name="AlarmInputKbps" DataType="Int32" Description="入流量告警。入流量告警阈值" Category="告警" />
-      <Column Name="AlarmOutputKbps" DataType="Int32" Description="出流量告警。出流量告警阈值" Category="告警" />
-      <Column Name="CreateUser" DataType="String" Description="创建人" Category="扩展" />
-      <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
-      <Column Name="UpdateUser" DataType="String" Description="更新人" Category="扩展" />
-      <Column Name="UpdateUserID" DataType="Int32" Description="更新者" Category="扩展" />
-      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
-      <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
-      <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="Server" Unique="True" />
-    </Indexes>
-  </Table>
-  <Table Name="RedisData" Description="Redis数据。Redis监控" ConnName="StardustData">
-    <Columns>
-      <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
-      <Column Name="RedisId" DataType="Int32" Description="Redis节点" />
-      <Column Name="Name" DataType="String" Master="True" Description="名称" />
-      <Column Name="Speed" DataType="Int32" Description="速度。每秒操作数，instantaneous_ops_per_sec" />
-      <Column Name="InputKbps" DataType="Double" Description="入流量。单位kbps" />
-      <Column Name="OutputKbps" DataType="Double" Description="出流量。单位kbps" />
-      <Column Name="Uptime" DataType="Int32" Description="启动时间。单位秒" />
-      <Column Name="ConnectedClients" DataType="Int32" Description="连接数" />
-      <Column Name="UsedMemory" DataType="Int32" Description="已用内存。单位MB" />
-      <Column Name="FragmentationRatio" DataType="Double" Description="碎片率。单位MB" />
-      <Column Name="Keys" DataType="Int64" Description="Keys数" />
-      <Column Name="ExpiredKeys" DataType="Int64" Description="过期Keys" />
-      <Column Name="EvictedKeys" DataType="Int64" Description="驱逐Keys。由于 maxmemory 限制，而被回收内存的 key 的总数" />
-      <Column Name="KeySpaceHits" DataType="Int64" Description="命中数。只读请求命中缓存" />
-      <Column Name="KeySpaceMisses" DataType="Int64" Description="Miss数。只读请求未命中缓存" />
-      <Column Name="Commands" DataType="Int64" Description="命令数" />
-      <Column Name="Reads" DataType="Int64" Description="读取数" />
-      <Column Name="Writes" DataType="Int64" Description="写入数" />
-      <Column Name="AvgTtl" DataType="Int64" Description="平均过期。平均过期时间，单位毫秒" />
-      <Column Name="TopCommand" DataType="String" Length="200" Description="最忙命令" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-      <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
-      <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="RedisId,Id" />
-    </Indexes>
-  </Table>
-  <Table Name="RedisMessageQueue" Description="Redis消息队列。Redis消息队列状态监控">
-    <Columns>
-      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="RedisId" DataType="Int32" Description="Redis节点" />
-      <Column Name="Name" DataType="String" Master="True" Description="名称" />
-      <Column Name="Category" DataType="String" Description="分类" />
-      <Column Name="Db" DataType="Int32" Description="库" />
-      <Column Name="Topic" DataType="String" Description="主题。消息队列主题" />
-      <Column Name="Type" DataType="String" Description="类型。消息队列类型" />
-      <Column Name="Groups" DataType="String" Description="消费组。消费组名称" />
-      <Column Name="Consumers" DataType="Int32" Description="消费者。消费者个数" />
-      <Column Name="Total" DataType="Int64" Description="总消费。现有消费者的消费总数" />
-      <Column Name="Messages" DataType="Int32" Description="消息数。积压下来，等待消费的消息个数" />
-      <Column Name="MaxMessages" DataType="Int32" Description="最大积压。达到该值时告警，0表示不启用" />
-      <Column Name="Enable" DataType="Boolean" Description="启用。停用的节点不再执行监控" />
-      <Column Name="ConsumerInfo" DataType="String" Length="-1" Description="消费者信息" />
-      <Column Name="FirstConsumer" DataType="DateTime" Description="最早消费" />
-      <Column Name="LastActive" DataType="DateTime" Description="最后活跃" />
-      <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
-      <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
-      <Column Name="CreateUser" DataType="String" Description="创建人" Category="扩展" />
-      <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
-      <Column Name="UpdateUser" DataType="String" Description="更新人" Category="扩展" />
-      <Column Name="UpdateUserID" DataType="Int32" Description="更新者" Category="扩展" />
-      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
-      <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
-      <Column Name="Remark" DataType="String" Length="-1" Description="备注" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="RedisId" />
-    </Indexes>
-  </Table>
-</Tables>
+</EntityModel>

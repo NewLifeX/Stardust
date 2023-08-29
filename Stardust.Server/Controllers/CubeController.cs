@@ -25,7 +25,7 @@ public class CubeController : ControllerBase
         var att = Attachment.FindById(id.ToLong());
         if (att == null) throw new ApiException(404, "找不到附件信息");
 
-        var set = Setting.Current;
+        var set = StarServerSetting.Current;
 
         // 如果附件不存在，则抓取
         var filePath = att.GetFilePath(set.UploadPath);

@@ -128,6 +128,32 @@ public partial class AppConfig : Entity<AppConfig>
 
         return Find(_.Name == name);
     }
+
+    /// <summary>根据应用查找</summary>
+    /// <param name="appId">应用</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppConfig> FindAllByAppId(Int32 appId)
+    {
+        if (appId <= 0) return new List<AppConfig>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId);
+
+        return FindAll(_.AppId == appId);
+    }
+
+    /// <summary>根据项目查找</summary>
+    /// <param name="projectId">项目</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppConfig> FindAllByProjectId(Int32 projectId)
+    {
+        if (projectId <= 0) return new List<AppConfig>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ProjectId == projectId);
+
+        return FindAll(_.ProjectId == projectId);
+    }
     #endregion
 
     #region 高级查询
@@ -139,10 +165,11 @@ public partial class AppConfig : Entity<AppConfig>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<AppConfig> Search(String category, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<AppConfig> Search(Int32 projectId, String category, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
+        if (projectId >= 0) exp &= _.ProjectId == projectId;
         if (!category.IsNullOrEmpty()) exp &= _.Category == category;
         if (enable != null) exp &= _.Enable == enable;
         exp &= _.UpdateTime.Between(start, end);

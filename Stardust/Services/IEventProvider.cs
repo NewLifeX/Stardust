@@ -1,4 +1,6 @@
-﻿namespace Stardust.Services;
+﻿using Stardust.Models;
+
+namespace Stardust.Services;
 
 /// <summary>事件客户端</summary>
 public interface IEventProvider
@@ -8,6 +10,11 @@ public interface IEventProvider
     /// <param name="name"></param>
     /// <param name="remark"></param>
     Boolean WriteEvent(String type, String name, String remark);
+
+    ///// <summary>应用心跳。上报应用信息</summary>
+    ///// <param name="inf"></param>
+    ///// <returns></returns>
+    //Int32 AppPing(AppInfo inf);
 }
 
 /// <summary>事件客户端助手</summary>

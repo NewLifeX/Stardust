@@ -5,6 +5,9 @@ using NewLife.Threading;
 using Stardust.Deployment;
 using Stardust.Models;
 using Stardust.Services;
+#if !NET40
+using TaskEx = System.Threading.Tasks.Task;
+#endif
 
 namespace Stardust.Managers;
 
@@ -31,6 +34,9 @@ internal class ServiceController : DisposeBase
     /// <summary>服务信息</summary>
     public ServiceInfo Info { get; private set; }
 
+    /// <summary>部署信息</summary>
+    public DeployInfo DeployInfo { get; set; }
+
     /// <summary>进程</summary>
     public Process Process { get; set; }
 
@@ -42,6 +48,9 @@ internal class ServiceController : DisposeBase
 
     /// <summary>延迟时间。重启进程或服务的延迟时间，默认3000ms</summary>
     public Int32 Delay { get; set; } = 3000;
+
+    /// <summary>启动应用时的等待时间。如果该时间内进程退出，则认为启动失败</summary>
+    public Int32 StartWait { get; set; } = 3000;
 
     /// <summary>开始时间</summary>
     public DateTime StartTime { get; set; }
@@ -56,6 +65,7 @@ internal class ServiceController : DisposeBase
     private String _workdir;
     private TimerX _timer;
     private Int32 _error;
+    private AppInfo _appInfo;
     #endregion
 
     #region 构造
@@ -68,7 +78,7 @@ internal class ServiceController : DisposeBase
     #endregion
 
     #region 方法
-    /// <summary>检查并启动应用</summary>
+    /// <summary>检查并启动应用，等待一会确认进程已启动</summary>
     /// <returns>本次是否成功启动，原来已启动返回false</returns>
     public Boolean Start()
     {
@@ -87,6 +97,7 @@ internal class ServiceController : DisposeBase
             {
                 if (_error == MaxFails) WriteLog("应用[{0}]累计错误次数{1}达到最大值{2}", Name, _error, MaxFails);
 
+                _error++;
                 return false;
             }
             _error++;
@@ -94,14 +105,19 @@ internal class ServiceController : DisposeBase
             // 修正路径
             var workDir = service.WorkingDirectory;
             var file = service.FileName?.Trim();
-            if (file.IsNullOrEmpty()) return false;
+            if (file.IsNullOrEmpty())
+            {
+                WriteLog("应用[{0}]文件名为空", Name);
+                return false;
+            }
 
             if (file.Contains('/') || file.Contains('\\'))
             {
                 file = file.GetFullPath();
                 if (workDir.IsNullOrEmpty()) workDir = Path.GetDirectoryName(file);
             }
-            _fileName = file;
+            workDir = workDir.GetFullPath();
+            _fileName = null;
             _workdir = workDir;
 
             var args = service.Arguments?.Trim();
@@ -114,6 +130,9 @@ internal class ServiceController : DisposeBase
                 Process p;
                 var isZip = file.EqualIgnoreCase("ZipDeploy") || file.EndsWithIgnoreCase(".zip");
 
+                // 在环境变量中设置BasePath，不用担心影响当前进程，因为PathHelper仅读取一次
+                Environment.SetEnvironmentVariable("BasePath", workDir);
+
                 // 工作模式
                 switch (service.Mode)
                 {
@@ -122,12 +141,17 @@ internal class ServiceController : DisposeBase
                         break;
                     case ServiceModes.Extract:
                         WriteLog("解压后不运行，外部主机（如IIS）将托管应用");
-                        Extract(service, ref file, workDir);
+                        Extract(file, args, workDir, false);
                         Running = true;
                         return true;
                     case ServiceModes.ExtractAndRun:
                         WriteLog("解压后在工作目录运行");
-                        Extract(service, ref file, workDir);
+                        var deploy = Extract(file, args, workDir, true);
+                        if (deploy == null || deploy.ExecuteFile.IsNullOrEmpty()) throw new Exception("无法找到启动文件");
+
+                        file = deploy.ExecuteFile;
+                        args = deploy.Arguments;
+                        _fileName = deploy.ExecuteFile;
                         isZip = false;
                         break;
                     case ServiceModes.RunOnce:
@@ -143,7 +167,10 @@ internal class ServiceController : DisposeBase
                     {
                         FileName = file,
                         WorkingDirectory = workDir,
+                        UserName = service.UserName,
+                        Overwrite = DeployInfo?.Overwrite,
 
+                        Tracer = Tracer,
                         Log = new ActionLog(WriteLog),
                     };
 
@@ -152,7 +179,7 @@ internal class ServiceController : DisposeBase
 
                     if (!args.IsNullOrEmpty() && !deploy.Parse(args.Split(" "))) return false;
 
-                    if (!deploy.Execute())
+                    if (!deploy.Execute(StartWait))
                     {
                         WriteLog("Zip包启动失败！ExitCode={0}", deploy.Process?.ExitCode);
 
@@ -168,7 +195,7 @@ internal class ServiceController : DisposeBase
                 }
                 else
                 {
-                    WriteLog("拉起进程：{0} {1}", file, args);
+                    //WriteLog("拉起进程：{0} {1}", file, args);
                     var si = new ProcessStartInfo
                     {
                         FileName = file,
@@ -177,8 +204,24 @@ internal class ServiceController : DisposeBase
 
                         // false时目前控制台合并到当前控制台，一起退出；
                         // true时目标控制台独立窗口，不会一起退出；
-                        UseShellExecute = true,
+                        UseShellExecute = false,
                     };
+
+                    // 指定用户时，以特定用户启动进程
+                    if (!service.UserName.IsNullOrEmpty())
+                    {
+                        si.UserName = service.UserName;
+                        //si.UseShellExecute = false;
+
+                        // 在Linux系统中，改变目录所属用户
+                        if (Runtime.Linux)
+                        {
+                            var user = service.UserName;
+                            if (!user.Contains(':')) user = $"{user}:{user}";
+                            //Process.Start("chown", $"-R {user} {si.WorkingDirectory}");
+                            Process.Start("chown", $"-R {user} {si.WorkingDirectory.CombinePath("../").GetBasePath()}");
+                        }
+                    }
 
                     // 如果出现超过一次的重启，则打开调试模式，截取控制台输出到日志
                     if (_error > 1)
@@ -189,8 +232,18 @@ internal class ServiceController : DisposeBase
                         si.RedirectStandardOutput = true;
                     }
 
+                    //// 在进程的环境变量中设置BasePath
+                    //if (!si.UseShellExecute)
+                    //    si.EnvironmentVariables["BasePath"] = si.WorkingDirectory;
+
+                    WriteLog("工作目录: {0}", si.WorkingDirectory);
+                    WriteLog("启动文件: {0}", si.FileName);
+                    WriteLog("启动参数: {0}", si.Arguments);
+                    if (!si.UserName.IsNullOrEmpty())
+                        WriteLog("启动用户：{0}", si.UserName);
+
                     p = Process.Start(si);
-                    if (p.WaitForExit(3_000) && p.ExitCode != 0)
+                    if (StartWait > 0 && p.WaitForExit(StartWait) && p.ExitCode != 0)
                     {
                         WriteLog("启动失败！ExitCode={0}", p.ExitCode);
 
@@ -205,6 +258,8 @@ internal class ServiceController : DisposeBase
 
                         return false;
                     }
+
+                    _fileName ??= file;
                 }
 
                 if (p == null) return false;
@@ -245,37 +300,41 @@ internal class ServiceController : DisposeBase
         }
     }
 
-    public Boolean Extract(ServiceInfo service, ref String file, String workDir)
+    public ZipDeploy Extract(String file, String args, String workDir, Boolean needRun)
     {
         var isZip = file.EqualIgnoreCase("ZipDeploy") || file.EndsWithIgnoreCase(".zip");
-        if (!isZip) return false;
+        if (!isZip) return null;
 
         var deploy = new ZipDeploy
         {
             FileName = file,
             WorkingDirectory = workDir,
+            Overwrite = DeployInfo?.Overwrite,
 
+            Tracer = Tracer,
             Log = new ActionLog(WriteLog),
         };
 
-        var args = service.Arguments?.Trim();
-        if (!args.IsNullOrEmpty() && !deploy.Parse(args.Split(" "))) return false;
+        //var args = service.Arguments?.Trim();
+        if (!args.IsNullOrEmpty() && !deploy.Parse(args.Split(" "))) return null;
 
         deploy.Extract(workDir);
+
+        if (!needRun) return deploy;
 
         var runfile = deploy.FindExeFile(workDir);
         if (runfile == null)
         {
             WriteLog("无法找到名为[{0}]的可执行文件", deploy.FileName);
-            return false;
+            return null;
         }
 
-        file = runfile.FullName;
+        deploy.ExecuteFile = runfile.FullName;
 
-        return true;
+        return deploy;
     }
 
-    /// <summary>停止应用</summary>
+    /// <summary>停止应用，等待一会确认进程已退出</summary>
     /// <param name="reason"></param>
     public void Stop(String reason)
     {
@@ -293,16 +352,59 @@ internal class ServiceController : DisposeBase
 
         try
         {
-            p.CloseMainWindow();
+            if (!p.HasExited && p.CloseMainWindow())
+            {
+                WriteLog("已发送关闭窗口消息，等待目标进程退出");
+
+                for (var i = 0; i < 50 && !p.HasExited; i++)
+                {
+                    Thread.Sleep(200);
+                }
+            }
         }
         catch { }
 
+        // 优雅关闭进程
+        if (!p.HasExited)
+        {
+            try
+            {
+                WriteLog("优雅退出进程：PID={0}/{1}，最大等待{2}毫秒", p.Id, p.ProcessName, 50 * 200);
+                if (Runtime.Linux)
+                {
+                    Process.Start("kill", p.Id.ToString());
+
+                    for (var i = 0; i < 50 && !p.HasExited; i++)
+                    {
+                        Thread.Sleep(200);
+                    }
+                }
+                else if (Runtime.Windows)
+                {
+                    Process.Start("taskkill", $"-pid {p.Id}");
+
+                    for (var i = 0; i < 50 && !p.HasExited; i++)
+                    {
+                        Thread.Sleep(200);
+                    }
+                }
+            }
+            catch { }
+        }
+
         try
         {
-            if (!p.HasExited) p.Kill();
+            if (!p.HasExited)
+            {
+                WriteLog("强行结束进程 PID={0}/{1}", p.Id, p.ProcessName);
+                p.Kill();
+            }
+
+            if (p.HasExited) WriteLog("进程[PID={0}]已退出！ExitCode={1}", p.Id, p.ExitCode);
         }
         catch (Exception ex)
         {
+            WriteLog("进程[PID={0}]退出失败！{1}", p.Id, ex.Message);
             span?.SetError(ex, null);
         }
     }
@@ -322,46 +424,72 @@ internal class ServiceController : DisposeBase
     /// <returns>本次是否成功启动（或接管），原来已启动返回false</returns>
     public Boolean Check()
     {
+        using var span = Tracer?.NewSpan("CheckService", Info.Name);
+
+        // 获取当前进程Id
+        var mypid = Process.GetCurrentProcess().Id;
+
         // 进程存在，常规判断内存
         var p = Process;
         if (p != null)
         {
-            if (!p.HasExited)
-            {
-                _error = 0;
-
-                // 检查内存限制
-                if (Info.MaxMemory <= 0) return false;
-
-                var mem = p.WorkingSet64 / 1024 / 1024;
-                if (mem <= Info.MaxMemory) return true;
-
-                WriteLog("内存超限！{0}>{1}", mem, Info.MaxMemory);
-
-                Stop("内存超限");
-            }
-            else
-            {
-                WriteLog("应用[{0}/{1}]已退出！", p.Id, Name);
-            }
-
-            p = null;
-            SetProcess(null);
-
-            Running = false;
-        }
-
-        // 进程不存在，但Id存在
-        if (p == null && ProcessId > 0)
-        {
+            span?.AppendTag("CheckMaxMemory");
             try
             {
-                p = Process.GetProcessById(ProcessId);
-                // 这里的进程名可能是 dotnet/java，照样可以使用
-                if (p != null && !p.HasExited && p.ProcessName == ProcessName) return TakeOver(p, $"按[Id={ProcessId}]查找");
+                if (!p.HasExited)
+                {
+                    _error = 0;
+
+                    // 检查内存限制
+                    if (Info.MaxMemory <= 0) return false;
+
+                    var mem = p.WorkingSet64 / 1024 / 1024;
+                    if (mem <= Info.MaxMemory) return true;
+
+                    WriteLog("内存超限！{0}>{1}", mem, Info.MaxMemory);
+
+                    Stop("内存超限");
+                }
+                else
+                {
+                    WriteLog("应用[{0}/{1}]已退出！", p.Id, Name);
+                }
+
+                p = null;
+                Process = null;
+                // 这里不能清空 ProcessId 和 ProcessName，可能因为异常操作导致进程丢了，但是根据名称还能找到。也可能外部启动了进程
+                //SetProcess(null);
+
+                Running = false;
             }
             catch (Exception ex)
             {
+                span?.SetError(ex, null);
+            }
+        }
+
+        // 进程不存在，但Id存在
+        if (p == null && ProcessId > 0 && ProcessId != mypid)
+        {
+            span?.AppendTag($"GetProcessById({ProcessId})");
+            try
+            {
+                p = Process.GetProcessById(ProcessId);
+
+                var exited = false;
+                try
+                {
+                    exited = p.HasExited;
+                }
+                catch { }
+
+                // 这里的进程名可能是 dotnet/java，照样可以使用
+                if (p != null && !exited && p.ProcessName == ProcessName) return TakeOver(p, $"按[Id={ProcessId}]查找");
+            }
+            catch (Exception ex)
+            {
+                span?.SetError(ex, null);
+
                 if (ex is not ArgumentException)
                 {
                     Log?.Error("{0}", ex);
@@ -386,25 +514,32 @@ internal class ServiceController : DisposeBase
                 }
                 if (!target.IsNullOrEmpty())
                 {
-                    target = Path.GetFileName(target);
+                    //target = Path.GetFileName(target);
+                    span?.AppendTag($"GetProcessesByFile({target}) ProcessName={ProcessName}");
 
                     // 遍历所有进程，从命令行参数中找到启动文件名一致的进程
                     foreach (var item in Process.GetProcesses())
                     {
+                        if (item.Id == mypid) continue;
                         if (!item.ProcessName.EqualIgnoreCase(ProcessName)) continue;
 
                         var name = AppInfo.GetProcessName(item);
                         if (!name.IsNullOrEmpty())
                         {
-                            name = Path.GetFileName(name);
-                            if (name.EqualIgnoreCase(target)) return TakeOver(item, $"按[{ProcessName} {target}]查找");
+                            span?.AppendTag($"id={item.Id} name={name}");
+
+                            // target有可能是文件全路径，此时需要比对无后缀文件名
+                            if (name.EqualIgnoreCase(target, Path.GetFileNameWithoutExtension(target)))
+                                return TakeOver(item, $"按[{ProcessName} {target}]查找");
                         }
                     }
                 }
             }
             else
             {
-                var ps = Process.GetProcessesByName(ProcessName);
+                span?.AppendTag($"GetProcessesByName({ProcessName})");
+
+                var ps = Process.GetProcessesByName(ProcessName).Where(e => e.Id != mypid).ToArray();
                 if (ps.Length > 0) return TakeOver(ps[0], $"按[Name={ProcessName}]查找");
             }
         }
@@ -412,11 +547,25 @@ internal class ServiceController : DisposeBase
         // 准备启动进程
         var rs = Start();
 
+        // 检测并上报性能
+        p = Process;
+        if (p != null && EventProvider is StarClient client)
+        {
+            if (_appInfo == null)
+                _appInfo = new AppInfo(p) { AppName = Info.Name };
+            else
+                _appInfo.Refresh();
+
+            TaskEx.Run(() => client.AppPing(_appInfo));
+        }
+
         return rs;
     }
 
     Boolean TakeOver(Process p, String reason)
     {
+        using var span = Tracer?.NewSpan(nameof(TakeOver), new { p.Id, p.ProcessName, reason });
+
         WriteLog("应用[{0}/{1}]已启动（{2}），直接接管", p.Id, Name, reason);
 
         SetProcess(p);
@@ -441,6 +590,7 @@ internal class ServiceController : DisposeBase
         {
             ProcessId = 0;
             ProcessName = null;
+            _appInfo = null;
         }
     }
 
@@ -551,6 +701,8 @@ internal class ServiceController : DisposeBase
         Log?.Info($"[{Id}/{Name}]{format}", args);
 
         var msg = (args == null || args.Length == 0) ? format : String.Format(format, args);
+        DefaultSpan.Current?.AppendTag(msg);
+
         if (format.Contains("错误") || format.Contains("失败"))
             EventProvider?.WriteErrorEvent(nameof(ServiceController), msg);
         else

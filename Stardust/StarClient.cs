@@ -11,9 +11,10 @@ using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Threading;
+using Stardust.Managers;
 using Stardust.Models;
 using Stardust.Services;
-using System.Threading.Tasks;
+using System;
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
 using System.Net.WebSockets;
 using WebSocket = System.Net.WebSockets.WebSocket;
@@ -40,6 +41,9 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     /// <summary>登录完成后触发</summary>
     public event EventHandler OnLogined;
 
+    /// <summary>服务迁移</summary>
+    public event EventHandler<MigrationEventArgs> OnMigration;
+
     /// <summary>最后一次登录成功后的消息</summary>
     public LoginResponse Info { get; private set; }
 
@@ -59,6 +63,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     /// <summary>收到命令时触发</summary>
     public event EventHandler<CommandEventArgs> Received;
 
+    private FrameworkManager _frameworkManager = new();
     private readonly ConcurrentQueue<PingInfo> _fails = new();
     private readonly ICache _cache = new MemoryCache();
     #endregion
@@ -105,12 +110,13 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     /// <param name="action"></param>
     /// <param name="args"></param>
     /// <param name="onRequest"></param>
+    /// <param name="cancellationToken">取消通知</param>
     /// <returns></returns>
-    public override async Task<TResult> InvokeAsync<TResult>(HttpMethod method, String action, Object args = null, Action<HttpRequestMessage> onRequest = null)
+    public override async Task<TResult> InvokeAsync<TResult>(HttpMethod method, String action, Object args = null, Action<HttpRequestMessage> onRequest = null, CancellationToken cancellationToken = default)
     {
         try
         {
-            return await base.InvokeAsync<TResult>(method, action, args, onRequest);
+            return await base.InvokeAsync<TResult>(method, action, args, onRequest, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -122,7 +128,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
                 WriteLog("重新登录！");
                 await Login();
 
-                return await base.InvokeAsync<TResult>(method, action, args, onRequest);
+                return await base.InvokeAsync<TResult>(method, action, args, onRequest, cancellationToken);
             }
 
             throw;
@@ -159,6 +165,8 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         OnLogined?.Invoke(this, EventArgs.Empty);
 
         StartTimer();
+
+        _frameworkManager.Attach(this);
 
         return rs;
     }
@@ -209,9 +217,13 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             AvailableMemory = mi.AvailableMemory,
             TotalSize = (UInt64)driveInfo?.TotalSize,
             AvailableFreeSpace = (UInt64)driveInfo?.AvailableFreeSpace,
+            DriveSize = (UInt64)drives.Sum(e => e.TotalSize),
             DriveInfo = drives.Join(",", e => $"{e.Name}[{e.DriveFormat}]={e.AvailableFreeSpace.ToGMK()}/{e.TotalSize.ToGMK()}"),
 
             Product = mi.Product,
+#if !NET40
+            Vendor = mi.Vendor,
+#endif
             Processor = mi.Processor,
             CpuRate = mi.CpuRate,
             UUID = mi.UUID,
@@ -229,11 +241,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         };
 
         // 目标框架
-        var vers = new List<NetRuntime.VerInfo>();
-        vers.AddRange(NetRuntime.Get1To45VersionFromRegistry());
-        vers.AddRange(NetRuntime.Get45PlusFromRegistry());
-        vers.AddRange(NetRuntime.GetNetCore(false));
-        di.Framework = vers.Join(",", e => e.Name.TrimStart('v'));
+        di.Framework = _frameworkManager.GetAllVersions().Join(",", e => e.TrimStart('v'));
 
 #if NETCOREAPP || NETSTANDARD
         di.Framework ??= RuntimeInformation.FrameworkDescription?.TrimStart(".NET Framework", ".NET Core", ".NET Native", ".NET").Trim();
@@ -416,12 +424,14 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
 
         var mcs = NetHelper.GetMacs().Select(e => e.ToHex("-")).OrderBy(e => e).Join(",");
         var path = ".".GetFullPath();
+        var drives = GetDrives();
         var driveInfo = DriveInfo.GetDrives().FirstOrDefault(e => path.StartsWithIgnoreCase(e.Name));
         var ip = AgentInfo.GetIps();
         var ext = new PingInfo
         {
             AvailableMemory = mi.AvailableMemory,
             AvailableFreeSpace = (UInt64)driveInfo?.AvailableFreeSpace,
+            DriveInfo = drives.Join(",", e => $"{e.Name}[{e.DriveFormat}]={e.AvailableFreeSpace.ToGMK()}/{e.TotalSize.ToGMK()}"),
             CpuRate = mi.CpuRate,
             Temperature = mi.Temperature,
             Battery = mi.Battery,
@@ -443,6 +453,9 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         // 后来在 netcore3.0 增加了Environment.TickCount64
         // 现在借助 Stopwatch 来解决
         if (Stopwatch.IsHighResolution) ext.Uptime = (Int32)(Stopwatch.GetTimestamp() / Stopwatch.Frequency);
+
+        // 目标框架
+        ext.Framework = _frameworkManager.GetAllVersions().Join(",", e => e.TrimStart('v'));
 
         // 获取Tcp连接信息，某些Linux平台不支持
         try
@@ -485,6 +498,10 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
                         Delay = Delay > 0 ? (Delay + ms) / 2 : ms;
                     }
 
+                    // 时间偏移，用于修正本地时间
+                    dt = rs.ServerTime.ToDateTime();
+                    if (dt.Year > 2000) _span = dt.AddMilliseconds(Delay / 2) - DateTime.UtcNow;
+
                     // 令牌
                     if (!rs.Token.IsNullOrEmpty())
                     {
@@ -497,6 +514,29 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
                         foreach (var model in rs.Commands)
                         {
                             await ReceiveCommand(model);
+                        }
+                    }
+
+                    // 迁移到新服务器
+                    if (!rs.NewServer.IsNullOrEmpty())
+                    {
+                        var arg = new MigrationEventArgs { NewServer = rs.NewServer };
+
+                        OnMigration?.Invoke(this, arg);
+                        if (!arg.Cancel)
+                        {
+                            await Logout("切换新服务器");
+
+                            // 清空原有链接，添加新链接
+                            Services.Clear();
+
+                            var ss = rs.NewServer.Split(",");
+                            for (var i = 0; i < ss.Length; i++)
+                            {
+                                Add("service" + (i + 1), new Uri(ss[i]));
+                            }
+
+                            await Login();
                         }
                     }
                 }
@@ -535,6 +575,11 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     /// <param name="inf"></param>
     /// <returns></returns>
     private async Task<PingResponse> PingAsync(PingInfo inf) => await PostAsync<PingResponse>("Node/Ping", inf);
+
+    private TimeSpan _span;
+    /// <summary>获取相对于服务器的当前时间，避免两端时间差</summary>
+    /// <returns></returns>
+    public DateTime GetNow() => DateTime.Now.Add(_span);
 
     private TraceService _trace;
     /// <summary>使用追踪服务</summary>
@@ -611,7 +656,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         // 记录追踪标识，上报的时候带上，尽可能让源头和下游串联起来
         _eventTraceId = DefaultSpan.Current?.ToString();
 
-        var now = DateTime.UtcNow;
+        var now = GetNow().ToUniversalTime();
         var ev = new EventModel { Time = now.ToLong(), Type = type, Name = name, Remark = remark };
         _events.Enqueue(ev);
 
@@ -722,10 +767,10 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         catch (Exception ex)
         {
             Log?.Debug("{0}", ex);
-            //XTrace.WriteException(ex);
         }
 
-        if (socket.State == WebSocketState.Open) await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
+        if (socket.State == WebSocketState.Open)
+            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
     }
 #endif
 
@@ -737,14 +782,34 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         if (!_cache.Add($"nodecmd:{model.Id}", model, 3600)) return;
 
         // 埋点，建立调用链
-        using var span = Tracer?.NewSpan("OnReceiveCommand", model);
+        using var span = Tracer?.NewSpan("cmd:" + model.Command, model);
         span?.Detach(model.TraceId);
         try
         {
+            //todo 有效期判断可能有隐患，现在只是假设服务器和客户端在同一个时区，如果不同，可能会出现问题
+            var now = GetNow();
             XTrace.WriteLine("Got Command: {0}", model.ToJson());
-            if (model.Expire.Year < 2000 || model.Expire > DateTime.Now)
+            if (model.Expire.Year < 2000 || model.Expire > now)
             {
-                await OnReceiveCommand(model);
+                // 延迟执行
+                var ts = model.StartTime - now;
+                if (ts.TotalMilliseconds > 0)
+                {
+                    TimerX.Delay(s =>
+                    {
+                        _ = OnReceiveCommand(model);
+                    }, (Int32)ts.TotalMilliseconds);
+
+                    var reply = new CommandReplyModel
+                    {
+                        Id = model.Id,
+                        Status = CommandStatus.处理中,
+                        Data = $"已安排计划执行 {model.StartTime.ToFullString()}"
+                    };
+                    await CommandReply(reply);
+                }
+                else
+                    await OnReceiveCommand(model);
             }
             else
             {
@@ -810,6 +875,11 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     /// <param name="services"></param>
     /// <returns></returns>
     public async Task<Int32> UploadDeploy(ServiceInfo[] services) => await PostAsync<Int32>("Deploy/Upload", services);
+
+    /// <summary>应用心跳。上报应用信息</summary>
+    /// <param name="inf"></param>
+    /// <returns></returns>
+    public async Task<Int32> AppPing(AppInfo inf) => await PostAsync<Int32>("Deploy/Ping", inf);
     #endregion
 
     #region 辅助

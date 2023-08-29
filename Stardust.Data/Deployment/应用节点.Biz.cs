@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
@@ -40,7 +41,10 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         if (AppId <= 0) throw new ArgumentNullException(nameof(AppId));
         if (NodeId <= 0) throw new ArgumentNullException(nameof(NodeId));
 
-        var len = _.IP.Length;
+        var len = _.ProcessName.Length;
+        if (len > 0 && !ProcessName.IsNullOrEmpty() && ProcessName.Length > len) ProcessName = ProcessName[..len];
+
+        len = _.IP.Length;
         if (len > 0 && !IP.IsNullOrEmpty() && IP.Length > len)
         {
             // 取前三个
@@ -48,6 +52,9 @@ public partial class AppDeployNode : Entity<AppDeployNode>
             IP = ss.Take(3).Join(",");
             if (IP.Length > len) IP = IP[..len];
         }
+
+        len = _.Listens.Length;
+        if (len > 0 && !Listens.IsNullOrEmpty() && Listens.Length > len) Listens = Listens[..len];
 
         base.Valid(isNew);
     }
@@ -177,9 +184,32 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         if (inf.FileName.IsNullOrEmpty()) inf.FileName = app.FileName;
         if (inf.Arguments.IsNullOrEmpty()) inf.Arguments = app.Arguments;
         if (inf.WorkingDirectory.IsNullOrEmpty()) inf.WorkingDirectory = app.WorkingDirectory;
+        if (inf.UserName.IsNullOrEmpty()) inf.UserName = app.UserName;
         if (inf.Mode <= ServiceModes.Default) inf.Mode = app.Mode;
 
         return inf;
+    }
+
+    public void Fill(AppInfo inf)
+    {
+        ProcessId = inf.Id;
+        ProcessName = inf.Name;
+        Version = inf.Version;
+        UserName = inf.UserName;
+        StartTime = inf.StartTime;
+        Listens = inf.Listens;
+    }
+
+    public void Fill(AppOnline online)
+    {
+        IP = online.IP;
+        ProcessId = online.ProcessId;
+        ProcessName = online.ProcessName;
+        UserName = online.UserName;
+        StartTime = online.StartTime;
+        Version = online.Version;
+        Compile = online.Compile;
+        LastActive = online.UpdateTime;
     }
     #endregion
 }

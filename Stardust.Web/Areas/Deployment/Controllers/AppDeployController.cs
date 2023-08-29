@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
@@ -18,7 +19,7 @@ public class AppDeployController : EntityController<AppDeploy>
     static AppDeployController()
     {
         ListFields.RemoveCreateField();
-        ListFields.RemoveField("AppId", "WorkingDirectory", "MaxMemory", "Mode", "Remark");
+        ListFields.RemoveField("AppId", "ProjectName", "WorkingDirectory", "User", "MaxMemory", "Mode", "Remark");
         AddFormFields.RemoveCreateField();
 
         LogOnChange = true;
@@ -26,11 +27,15 @@ public class AppDeployController : EntityController<AppDeploy>
         {
             var df = ListFields.GetField("AppName") as ListField;
             df.Url = "/Registry/App?Id={AppId}";
+            df.Target = "_blank";
+        }
+        {
+            var df = ListFields.GetField("Name") as ListField;
+            df.Url = "/Deployment/AppDeploy?Id={Id}";
+            df.Target = "_blank";
         }
         {
             var df = ListFields.AddListField("NodeManage", null, "Nodes") as ListField;
-            //df.Header = "节点";
-            //df.Title = "管理服务器节点";
             df.DisplayName = "部署节点";
             df.Url = "/Deployment/AppDeployNode?appId={Id}";
         }
@@ -47,13 +52,6 @@ public class AppDeployController : EntityController<AppDeploy>
             df.Title = "管理所有版本文件";
             df.Url = "/Deployment/AppDeployVersion?appId={Id}";
         }
-
-        //{
-        //    var df = ListFields.GetField("Name") as ListField;
-        //    //df.Header = "应用";
-        //    df.Url = "/Registry/App?q={Name}";
-        //}
-
         {
             var df = ListFields.AddListField("History", "UpdateUserId");
             df.DisplayName = "部署历史";
@@ -61,12 +59,34 @@ public class AppDeployController : EntityController<AppDeploy>
         }
         {
             var df = ListFields.AddListField("Log", "UpdateUserId");
-            df.DisplayName = "日志";
+            df.DisplayName = "审计日志";
             df.Url = "/Admin/Log?category=应用部署&linkId={Id}";
+            df.Target = "_frame";
         }
     }
 
     //public AppDeployController(StarFactory starFactory) => _starFactory = starFactory;
+
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        var appId = GetRequest("appId").ToInt(-1);
+        if (appId <= 0) appId = GetRequest("Id").ToInt(-1);
+        if (appId > 0)
+        {
+            PageSetting.NavView = "_App_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+        var projectId = GetRequest("projectId").ToInt(-1);
+        if (projectId > 0)
+        {
+            PageSetting.NavView = "_Project_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+
+        PageSetting.EnableAdd = false;
+    }
 
     protected override IEnumerable<AppDeploy> Search(Pager p)
     {
@@ -76,14 +96,21 @@ public class AppDeployController : EntityController<AppDeploy>
             var entity = AppDeploy.FindById(id);
             if (entity != null) return new List<AppDeploy> { entity };
         }
+        var appId = p["appId"].ToInt(-1);
+        if (appId > 0)
+        {
+            var list = AppDeploy.FindAllByAppId(appId);
+            if (list.Count > 0) return list;
+        }
 
+        var projectId = p["projectId"].ToInt(-1);
         var category = p["category"];
         var enable = p["enable"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return AppDeploy.Search(category, enable, start, end, p["Q"], p);
+        return AppDeploy.Search(projectId, category, enable, start, end, p["Q"], p);
     }
 
     protected override Boolean Valid(AppDeploy entity, DataObjectMethodType type, Boolean post)

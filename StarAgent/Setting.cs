@@ -6,7 +6,7 @@ namespace StarAgent;
 
 /// <summary>配置</summary>
 [Config("StarAgent")]
-public class Setting : Config<Setting>
+public class StarAgentSetting : Config<StarAgentSetting>
 {
     #region 属性
     /// <summary>调试开关。默认true</summary>

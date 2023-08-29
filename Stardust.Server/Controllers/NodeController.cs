@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Caching;
+using NewLife.Http;
 using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Serialization;
@@ -10,8 +11,9 @@ using NewLife.Web;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Common;
-using Stardust.Server.Models;
 using Stardust.Server.Services;
+using WebSocket = System.Net.WebSockets.WebSocket;
+using WebSocketMessageType = System.Net.WebSockets.WebSocketMessageType;
 
 namespace Stardust.Server.Controllers;
 
@@ -20,17 +22,17 @@ namespace Stardust.Server.Controllers;
 public class NodeController : BaseController
 {
     private Node _node;
-    private readonly ICache _queue;
+    private readonly ICacheProvider _cacheProvider;
     private readonly IHostApplicationLifetime _lifetime;
     private readonly ITracer _tracer;
     private readonly NodeService _nodeService;
     private readonly TokenService _tokenService;
     private readonly DeployService _deployService;
-    private readonly Setting _setting;
+    private readonly StarServerSetting _setting;
 
-    public NodeController(NodeService nodeService, TokenService tokenService, DeployService deployService, Setting setting, ICache queue, IHostApplicationLifetime lifetime, ITracer tracer)
+    public NodeController(NodeService nodeService, TokenService tokenService, DeployService deployService, StarServerSetting setting, ICacheProvider cacheProvider, IHostApplicationLifetime lifetime, ITracer tracer)
     {
-        _queue = queue;
+        _cacheProvider = cacheProvider;
         _lifetime = lifetime;
         _tracer = tracer;
         _nodeService = nodeService;
@@ -112,7 +114,7 @@ public class NodeController : BaseController
 
     [AllowAnonymous]
     [HttpGet(nameof(Ping))]
-    public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.Now, };
+    public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.UtcNow.ToLong(), };
     #endregion
 
     #region 升级
@@ -162,10 +164,11 @@ public class NodeController : BaseController
     {
         foreach (var model in events)
         {
+            var success = !model.Type.EqualIgnoreCase("error");
             if (model.Name.EqualIgnoreCase("ServiceController"))
-                _deployService.WriteHistory(0, _node?.ID ?? 0, model.Name, !model.Type.EqualIgnoreCase("error"), model.Remark, UserHost);
+                _deployService.WriteHistory(0, _node?.ID ?? 0, model.Name, success, model.Remark, UserHost);
 
-            WriteHistory(null, model.Name, !model.Type.EqualIgnoreCase("error"), model.Time.ToDateTime().ToLocalTime(), model.Remark);
+            WriteHistory(null, model.Name, success, model.Time.ToDateTime().ToLocalTime(), model.Remark);
         }
 
         return events.Length;
@@ -272,77 +275,63 @@ public class NodeController : BaseController
             olt.SaveAsync();
         }
 
-        //var source = new CancellationTokenSource();
         var source = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.ApplicationStopping);
         _ = Task.Run(() => ConsumeMessage(socket, node, ip, source));
-        try
-        {
-            var buf = new Byte[4 * 1024];
-            while (socket.State == WebSocketState.Open)
-            {
-                var data = await socket.ReceiveAsync(new ArraySegment<Byte>(buf), source.Token);
-                if (data.MessageType == WebSocketMessageType.Close) break;
-                if (data.MessageType == WebSocketMessageType.Text)
-                {
-                    var str = buf.ToStr(null, 0, data.Count);
-                    XTrace.WriteLine("WebSocket接收 {0} {1}", node, str);
-                    WriteHistory(node, "WebSocket接收", true, str);
-                }
-            }
 
-            source.Cancel();
-            //XTrace.WriteLine("WebSocket断开 {0}", node);
-            WriteHistory(node, "WebSocket断开", true, socket.State + "");
+        await socket.WaitForClose(null, source);
 
-            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", source.Token);
-        }
-        catch (TaskCanceledException) { }
-        catch (OperationCanceledException) { }
-        catch (WebSocketException ex)
+        WriteHistory(node, "WebSocket断开", true, socket.State + "");
+        if (olt != null)
         {
-            XTrace.WriteLine("WebSocket异常 node={0} ip={1}", node, ip);
-            XTrace.WriteLine(ex.Message);
-        }
-        finally
-        {
-            source.Cancel();
-
-            if (olt != null)
-            {
-                olt.WebSocket = false;
-                olt.SaveAsync();
-            }
+            olt.WebSocket = false;
+            olt.Update();
         }
     }
 
     private async Task ConsumeMessage(WebSocket socket, Node node, String ip, CancellationTokenSource source)
     {
+        DefaultSpan.Current = null;
         var cancellationToken = source.Token;
-        var queue = _queue.GetQueue<String>($"nodecmd:{node.Code}");
+        var queue = _cacheProvider.GetQueue<String>($"nodecmd:{node.Code}");
         try
         {
             while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
             {
-                var msg = await queue.TakeOneAsync(30);
-                if (msg != null)
+                ISpan span = null;
+                var mqMsg = await queue.TakeOneAsync(30);
+                if (mqMsg != null)
                 {
-                    WriteHistory(node, "WebSocket发送", true, msg, ip);
+                    // 埋点
+                    span = _tracer?.NewSpan($"mq:NodeCommand", mqMsg);
 
-                    // 更新命令的处理状态
-                    var mcmd = msg.ToJsonEntity<CommandModel>();
-                    if (mcmd != null)
+                    // 解码
+                    var dic = JsonParser.Decode(mqMsg);
+                    var msg = JsonHelper.Convert<CommandModel>(dic);
+                    span.Detach(dic);
+
+                    if (msg == null || msg.Id == 0 || msg.Expire.Year > 2000 && msg.Expire < DateTime.Now)
+                        WriteHistory(node, "WebSocket发送", false, "消息无效或已过期。" + mqMsg, ip);
+                    else
                     {
-                        var cmd = NodeCommand.FindById(mcmd.Id);
-                        if (cmd != null)
+                        WriteHistory(node, "WebSocket发送", true, mqMsg, ip);
+
+                        // 向客户端传递埋点信息，构建完整调用链
+                        msg.TraceId = span + "";
+
+                        var log = NodeCommand.FindById(msg.Id);
+                        if (log != null)
                         {
-                            cmd.Times++;
-                            cmd.Status = CommandStatus.处理中;
-                            cmd.UpdateTime = DateTime.Now;
-                            cmd.Update();
+                            if (log.TraceId.IsNullOrEmpty()) log.TraceId = span?.TraceId;
+                            log.Times++;
+                            log.Status = CommandStatus.处理中;
+                            log.UpdateTime = DateTime.Now;
+                            log.Update();
                         }
+
+                        await socket.SendAsync(mqMsg.GetBytes(), WebSocketMessageType.Text, true, cancellationToken);
                     }
 
-                    await socket.SendAsync(msg.GetBytes(), WebSocketMessageType.Text, true, cancellationToken);
+                    span?.Dispose();
                 }
                 else
                 {
@@ -374,7 +363,9 @@ public class NodeController : BaseController
         if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定节点");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
 
-        return await _nodeService.SendCommand(model, token, _setting);
+        var cmd = await _nodeService.SendCommand(model, token, _setting);
+
+        return cmd.Id;
     }
     #endregion
 

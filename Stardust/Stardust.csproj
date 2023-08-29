@@ -7,7 +7,7 @@
     <Description>星尘，分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2023 NewLife</Copyright>
-    <VersionPrefix>2.8</VersionPrefix>
+    <VersionPrefix>2.9</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -29,7 +29,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>恢复支持.NET4.5</PackageReleaseNotes>
+    <PackageReleaseNotes>增加分布式缓存架构ICacheProvider</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -45,13 +45,20 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)'=='net5.0-windows' or '$(TargetFramework)'=='net6.0-windows' or '$(TargetFramework)'=='net7.0-windows'">
-    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" IsImplicitlyDefined="true" />
+  <ItemGroup Condition="'$(TargetFramework)'=='net5.0-windows'">
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" IsImplicitlyDefined="true" TargetingPackVersion="5.0.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'=='net6.0-windows'">
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" IsImplicitlyDefined="true" TargetingPackVersion="6.0.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'=='net7.0-windows'">
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" IsImplicitlyDefined="true" TargetingPackVersion="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Remove="Models\TokenModel.cs" />
     <Compile Remove="Monitors\AspNetCoreDiagnosticListener.cs" />
+    <Compile Remove="Monitors\GrpcDiagnosticListener.cs" />
     <Compile Remove="Monitors\MyBuilder.cs" />
     <Compile Remove="Monitors\MySpan.cs" />
     <Compile Remove="Monitors\MyTraceModel.cs" />
@@ -61,7 +68,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="res\md5.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="..\Doc\leaf.png" Link="leaf.png" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="res\md5.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Readme.MD">
@@ -71,11 +86,11 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'!='net40'">
-    <PackageReference Include="NewLife.Core" Version="10.2.2023.311-beta1023" />
-    <PackageReference Include="NewLife.Remoting" Version="2.1.2023.301" />
+    <PackageReference Include="NewLife.Core" Version="10.5.2023.824-beta1618" />
+    <PackageReference Include="NewLife.Remoting" Version="2.2.2023.814" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net40'">
-    <PackageReference Include="NewLife.Core" Version="10.2.2023.309-net40" />
+    <PackageReference Include="NewLife.Core" Version="10.5.2023.801-net40" />
   </ItemGroup>
 
 </Project>

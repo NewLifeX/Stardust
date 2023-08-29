@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -34,6 +34,8 @@ namespace Stardust.Data.Nodes
         {
             // 如果没有脏数据，则不需要进行任何处理
             if (!HasDirty) return;
+
+            this.TrimExtraLong(__.Result);
 
             base.Valid(isNew);
 
@@ -71,6 +73,30 @@ namespace Stardust.Data.Nodes
 
             //return Find(_.ID == id);
         }
+
+    /// <summary>根据节点、状态查找</summary>
+    /// <param name="nodeId">节点</param>
+    /// <param name="status">状态</param>
+    /// <returns>实体列表</returns>
+    public static IList<NodeCommand> FindAllByNodeIDAndStatus(Int32 nodeId, Stardust.Models.CommandStatus status)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.NodeID == nodeId && e.Status == status);
+
+        return FindAll(_.NodeID == nodeId & _.Status == status);
+    }
+
+    /// <summary>根据节点、命令查找</summary>
+    /// <param name="nodeId">节点</param>
+    /// <param name="command">命令</param>
+    /// <returns>实体列表</returns>
+    public static IList<NodeCommand> FindAllByNodeIDAndCommand(Int32 nodeId, String command)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.NodeID == nodeId && e.Command.EqualIgnoreCase(command));
+
+        return FindAll(_.NodeID == nodeId & _.Command == command);
+    }
         #endregion
 
         #region 高级查询
@@ -139,7 +165,8 @@ namespace Stardust.Data.Nodes
                 Command = Command,
                 Argument = Argument,
                 Expire = Expire,
-                //TraceId = TraceId,
+                StartTime = StartTime,
+                TraceId = TraceId,
             };
         }
         #endregion

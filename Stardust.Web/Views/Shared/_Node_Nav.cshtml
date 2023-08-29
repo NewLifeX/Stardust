@@ -1,0 +1,37 @@
+﻿@using Stardust.Data.Deployment;
+@using Stardust.Data.Nodes;
+@{
+    var obj = Model as Object;
+    var path = Context.Request.Path + "";
+    var nodeId = Context.Request.Query["nodeId"].ToInt(0);
+    if (nodeId == 0 && path.EqualIgnoreCase("/Nodes/Node", "/Nodes/Node/Detail", "/Nodes/Node/Edit"))
+    {
+        nodeId = Context.Request.Query["Id"].ToInt(0);
+    }
+}
+@if (nodeId > 0)
+{
+    var node = Node.FindByID(nodeId);
+    <div class="navbar-collapse collapse text-center">
+        <ul class="nav nav-pills" style="margin-bottom: 10px; display: inline-block;float: none;">
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Nodes/Node/Detail","/Nodes/Node/Edit")?"active":"")">
+                <a href="/Nodes/Node/Edit?Id=@nodeId">@(node?.ToString() ?? "信息")</a>
+            </li>
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Nodes/NodeHistory")?"active":"")">
+                <a href="/Nodes/NodeHistory?nodeId=@nodeId">历史</a>
+            </li>
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Nodes/NodeCommand")?"active":"")">
+                <a href="/Nodes/NodeCommand?nodeId=@nodeId">命令</a>
+            </li>
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Nodes/NodeData")?"active":"")">
+                <a href="/Nodes/NodeData?nodeId=@nodeId">性能</a>
+            </li>
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/AppOnline")?"active":"")">
+                <a href="/Registry/AppOnline?nodeId=@nodeId">应用在线</a>
+            </li>
+            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Deployment/AppDeployNode")?"active":"")">
+                <a href="/Deployment/AppDeployNode?nodeId=@nodeId&enable=1">应用发布</a>
+            </li>
+        </ul>
+    </div>
+}

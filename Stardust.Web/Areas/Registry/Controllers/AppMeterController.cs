@@ -1,6 +1,8 @@
-﻿using NewLife;
+﻿using Microsoft.AspNetCore.Mvc.Filters;
+using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
+using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data;
 using XCode;
@@ -13,7 +15,40 @@ namespace Stardust.Web.Areas.Registry.Controllers;
 [Menu(0, false)]
 public class AppMeterController : EntityController<AppMeter>
 {
-    static AppMeterController() => ListFields.RemoveField("Id");
+    static AppMeterController()
+    {
+        ListFields.RemoveField("Id");
+
+        {
+            var df = ListFields.GetField("ClientId") as ListField;
+            df.Url = "/Registry/AppMeter?appId={AppId}&clientId={ClientId}";
+        }
+    }
+
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        var appId = GetRequest("appId").ToInt(-1);
+        if (appId > 0)
+        {
+            PageSetting.NavView = "_App_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+    }
+
+    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
+    {
+        var fields = base.OnGetFields(kind, model);
+
+        if (kind == ViewKinds.List)
+        {
+            var appId = GetRequest("appId").ToInt(-1);
+            if (appId > 0) fields.RemoveField("AppName");
+        }
+
+        return fields;
+    }
 
     protected override IEnumerable<AppMeter> Search(Pager p)
     {
@@ -56,6 +91,13 @@ public class AppMeterController : EntityController<AppMeter>
         if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.Id.Desc();
 
         var list = AppMeter.Search(appId, clientId, start, end, p["Q"], p);
+
+        // 如果没有clientId，则可能列表数据里面只有一个，选择它，便于展示图表
+        if (list.Count > 0 && clientId.IsNullOrEmpty())
+        {
+            var cs = list.Where(e => !e.ClientId.IsNullOrEmpty()).Select(e => e.ClientId).Distinct().ToList();
+            if (cs.Count == 1) clientId = cs[0];
+        }
 
         if (list.Count > 0 && !clientId.IsNullOrEmpty())
         {

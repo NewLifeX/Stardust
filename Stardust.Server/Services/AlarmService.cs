@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Text;
+﻿using System.Text;
 using System.Web;
 using NewLife;
 using NewLife.Caching;
@@ -24,14 +23,14 @@ public class AlarmService : IHostedService
     public Int32 Period { get; set; } = 30;
 
     private TimerX _timer;
-    //private readonly ConcurrentBag<Int32> _bag = new();
-    private readonly ICache _cache = new MemoryCache();
-    private readonly Setting _setting;
+    private readonly ICache _cache;
+    private readonly StarServerSetting _setting;
     private readonly ITracer _tracer;
 
-    public AlarmService(Setting setting, ITracer tracer)
+    public AlarmService(StarServerSetting setting, ICacheProvider cacheProvider, ITracer tracer)
     {
         _setting = setting;
+        _cache = cacheProvider.Cache;
         _tracer = tracer;
 
         Period = setting.AlarmPeriod;
@@ -72,6 +71,7 @@ public class AlarmService : IHostedService
         {
             ProcessAppTracer(item);
             ProcessTraceItem(item);
+            ProcessRingRate(item);
         }
 
         // 节点告警
@@ -106,11 +106,12 @@ public class AlarmService : IHostedService
         var appId = app.ID;
         if (!RobotHelper.CanAlarm(app.Category, app.AlarmRobot)) return;
 
-        using var span = _tracer?.NewSpan($"Alarm:{nameof(AppTracer)}");
+        using var span = _tracer?.NewSpan($"alarm:{nameof(AppTracer)}");
 
         // 最近一段时间的5分钟级数据
         var time = DateTime.Now;
         var minute = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
+        span?.AppendTag(new { time, minute });
 
         var st = AppMinuteStat.FindByAppIdAndTime(appId, minute);
         if (st != null)
@@ -119,6 +120,8 @@ public class AlarmService : IHostedService
             if (app.AlarmThreshold > 0 && st.Errors >= app.AlarmThreshold ||
                 app.AlarmErrorRate > 0 && st.ErrorRate >= app.AlarmErrorRate)
             {
+                span?.AppendTag(new { st.Errors, st.ErrorRate });
+
                 // 一定时间内不要重复报错，除非错误翻倍
                 var error2 = _cache.Get<Int32>("alarm:AppTracer:" + appId);
                 if (error2 == 0 || st.Errors > error2 * 2)
@@ -136,6 +139,7 @@ public class AlarmService : IHostedService
     {
         var sb = new StringBuilder();
         if (includeTitle) sb.AppendLine($"### [{app}]应用告警");
+        sb.AppendLine($">**时间：**<font color=\"blue\">{st.StatTime:yyyy-MM-dd HH:mm:ss}</font>");
         sb.AppendLine($">**总数：**<font color=\"red\">{st.Errors}</font>");
         sb.AppendLine($">**错误率：**<font color=\"red\">{st.ErrorRate:p2}</font>");
 
@@ -224,6 +228,8 @@ public class AlarmService : IHostedService
             var time = DateTime.Now;
             var minute = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
 
+            using var span = _tracer?.NewSpan($"alarm:{nameof(TraceItem)}", new { appId = app.ID, time, minute });
+
             var list = TraceMinuteStat.Search(app.ID, minute, tis.Select(e => e.Id).ToArray());
             foreach (var st in list)
             {
@@ -239,9 +245,11 @@ public class AlarmService : IHostedService
                     }
 
                     // 必须两个条件同时满足，才能告警
-                    if (max >= 0 && st.Errors >= max &&
-                        rate >= 0 && st.ErrorRate >= rate)
+                    if (max > 0 && st.Errors >= max &&
+                        rate > 0 && st.ErrorRate >= rate)
                     {
+                        span?.AppendTag(new { st.Errors, st.ErrorRate, rate });
+
                         // 一定时间内不要重复报错，除非错误翻倍
                         var error2 = _cache.Get<Int32>("alarm:TraceMinuteStat:" + ti.Id);
                         if (error2 == 0 || st.Errors > error2 * 2)
@@ -268,6 +276,7 @@ public class AlarmService : IHostedService
     {
         var sb = new StringBuilder();
         if (includeTitle) sb.AppendLine($"### [{app}]埋点告警");
+        sb.AppendLine($">**时间：**<font color=\"blue\">{st.StatTime:yyyy-MM-dd HH:mm:ss}</font>");
         sb.AppendLine($">**总数：**<font color=\"red\">{st.Errors}</font>");
         sb.AppendLine($">**错误率：**<font color=\"red\">{st.ErrorRate:p2}</font>");
 
@@ -328,6 +337,97 @@ public class AlarmService : IHostedService
 
         return str;
     }
+
+    private void ProcessRingRate(AppTracer app)
+    {
+        if (app == null || !app.Enable) return;
+
+        // 监控项单独告警
+        var tis = app.TraceItems.Where(e => e.MaxRingRate > 0 || e.MinRingRate > 0).ToList();
+        if (tis.Count <= 0) return;
+
+        // 最近一段时间的小时级数据
+        var time = DateTime.Now;
+        var hour = time.Date.AddHours(time.Hour);
+        if (time.Minute < 5) return;
+
+        using var span = _tracer?.NewSpan($"alarm:RingRate", new { app.ID, app.Name, app.DisplayName, time, hour });
+
+        var list = TraceHourStat.Search(app.ID, -1, null, hour, hour.AddHours(1), null, null);
+        foreach (var st in list)
+        {
+            var ti = tis.FirstOrDefault(e => e.Id == st.ItemId);
+            if (ti != null && st.RingRate > 0)
+            {
+                var max = ti.MaxRingRate;
+                var min = ti.MinRingRate;
+
+                // 昨日基数必须大于一定值，避免分母过小导致误报
+                var st2 = TraceHourStat.FindAllByStatTimeAndAppIdAndItemId(st.StatTime.AddDays(-1), st.AppId, st.ItemId).FirstOrDefault();
+                var yesterday = st2 != null ? st2.Total : (st.Total / st.RingRate);
+                if (yesterday > 10)
+                {
+                    // 根据当前小时已过去时间，折算得到新的环比率
+                    var seconds = time.Minute * 60 + time.Second;
+                    var rate = st.Total / (yesterday * seconds / 3600);
+
+                    // 满足任意一个条件，都要告警
+                    if (max > 0 && rate >= max ||
+                        min > 0 && rate <= min)
+                    {
+                        span?.AppendTag(new { seconds, yesterday, rate });
+
+                        // 一定时间内不要重复报错，除非错误翻倍
+                        var error2 = _cache.Get<Double>("alarm:RingRate:" + ti.Id);
+                        if (error2 == 0 || rate > error2 * 2 || rate < error2 / 2)
+                        {
+                            _cache.Set("alarm:RingRate:" + ti.Id, rate, 60 * 60);
+
+                            // 优先本地跟踪项，其次应用，最后是告警分组
+                            var webhook = ti.AlarmRobot;
+                            if (webhook.IsNullOrEmpty()) webhook = app.AlarmRobot;
+
+                            var group = ti.AlarmGroup;
+                            if (group.IsNullOrEmpty()) group = app.Category;
+
+                            var msg = GetMarkdown(app, st, (Int32)yesterday, rate, true);
+                            RobotHelper.SendAlarm(group, webhook, "埋点告警", msg);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private String GetMarkdown(AppTracer app, TraceHourStat st, Int32 yesterday, Double rate, Boolean includeTitle)
+    {
+        var sb = new StringBuilder();
+        if (includeTitle) sb.AppendLine($"### [{app}]环比{(rate >= 1 ? "高调用" : "调用量下滑")}告警");
+        sb.AppendLine($">**埋点：**<font color=\"blue\">{st.Name}</font>");
+        sb.AppendLine($">**时间：**<font color=\"blue\">{st.StatTime:yyyy-MM-dd HH:mm:ss}</font>");
+        sb.AppendLine($">**今日：**<font color=\"red\">{st.Total}</font>");
+        sb.AppendLine($">**昨日：**<font color=\"red\">{yesterday}</font>");
+        sb.AppendLine($">**环比：**<font color=\"red\">{st.RingRate:p2}</font>");
+        sb.AppendLine($">**折算环比：**<font color=\"red\">{rate:p2}</font>");
+
+        var url = _setting.WebUrl;
+        var traceUrl = "";
+        if (!url.IsNullOrEmpty())
+        {
+            traceUrl = url.EnsureEnd("/") + $"Monitors/traceHourStat?appId={st.AppId}&itemId={st.ItemId}";
+        }
+
+        var str = sb.ToString();
+        if (str.Length > 1600) str = str[..1600];
+
+        // 构造网址
+        if (!traceUrl.IsNullOrEmpty())
+        {
+            str += Environment.NewLine + $"[更多信息]({traceUrl})";
+        }
+
+        return str;
+    }
     #endregion
 
     #region 节点告警
@@ -337,7 +437,7 @@ public class AlarmService : IHostedService
 
         if (node.AlarmCpuRate <= 0 && node.AlarmMemoryRate <= 0 && node.AlarmDiskRate <= 0 && node.AlarmProcesses.IsNullOrEmpty()) return;
 
-        using var span = _tracer?.NewSpan($"Alarm:{nameof(Node)}");
+        using var span = _tracer?.NewSpan($"alarm:{nameof(Node)}");
 
         // 最新数据
         var data = NodeData.FindLast(node.ID);
@@ -350,7 +450,7 @@ public class AlarmService : IHostedService
             if (rate >= node.AlarmCpuRate)
             {
                 // 一定时间内不要重复报错，除非错误翻倍
-                var error2 = _cache.Get<Int32>("alarm:CpuRate:" + node.ID);
+                var error2 = _cache.Get<Double>("alarm:CpuRate:" + node.ID);
                 if (error2 == 0 || rate > error2 * 2)
                 {
                     _cache.Set("alarm:CpuRate:" + node.ID, rate, 5 * 60);
@@ -367,7 +467,7 @@ public class AlarmService : IHostedService
             if (rate >= node.AlarmMemoryRate)
             {
                 // 一定时间内不要重复报错，除非错误翻倍
-                var error2 = _cache.Get<Int32>("alarm:MemoryRate:" + node.ID);
+                var error2 = _cache.Get<Double>("alarm:MemoryRate:" + node.ID);
                 if (error2 == 0 || rate > error2 * 2)
                 {
                     _cache.Set("alarm:MemoryRate:" + node.ID, rate, 5 * 60);
@@ -384,7 +484,7 @@ public class AlarmService : IHostedService
             if (rate >= node.AlarmDiskRate)
             {
                 // 一定时间内不要重复报错，除非错误翻倍
-                var error2 = _cache.Get<Int32>("alarm:DiskRate:" + node.ID);
+                var error2 = _cache.Get<Double>("alarm:DiskRate:" + node.ID);
                 if (error2 == 0 || rate > error2 * 2)
                 {
                     _cache.Set("alarm:DiskRate:" + node.ID, rate, 5 * 60);
@@ -451,6 +551,7 @@ public class AlarmService : IHostedService
     {
         var sb = new StringBuilder();
         if (!title.IsNullOrEmpty()) sb.AppendLine($"### {title}");
+        sb.AppendLine($">**时间：**<font color=\"blue\">{data.CreateTime:yyyy-MM-dd HH:mm:ss}</font>");
         sb.AppendLine($">**节点：**<font color=\"gray\">{node} / {node.IP}</font>");
         sb.AppendLine($">**分类：**<font color=\"gray\">{node.Category}</font>");
         sb.AppendLine($">**系统：**<font color=\"gray\">{node.OS}</font>");
@@ -517,16 +618,16 @@ public class AlarmService : IHostedService
         var data = RedisData.FindLast(node.Id);
         if (data == null) return;
 
-        using var span = _tracer?.NewSpan($"Alarm:{nameof(RedisNode)}");
+        using var span = _tracer?.NewSpan($"alarm:{nameof(RedisNode)}");
 
         var actions = new List<Action<StringBuilder>>();
 
         // 内存告警
-        var rate = data.UsedMemory * 100 / node.MaxMemory;
+        var rate = data.UsedMemory * 100d / node.MaxMemory;
         if (rate >= node.AlarmMemoryRate)
         {
             // 一定时间内不要重复报错，除非错误翻倍
-            var error2 = _cache.Get<Int32>("alarm:RedisMemory:" + node.Id);
+            var error2 = _cache.Get<Double>("alarm:RedisMemory:" + node.Id);
             if (error2 == 0 || rate > error2 * 2)
             {
                 _cache.Set("alarm:RedisMemory:" + node.Id, rate, 5 * 60);
@@ -568,7 +669,7 @@ public class AlarmService : IHostedService
         if (node.AlarmInputKbps > 0 && input >= node.AlarmInputKbps)
         {
             // 一定时间内不要重复报错，除非错误翻倍
-            var error2 = _cache.Get<Int32>("alarm:RedisInputKbps:" + node.Id);
+            var error2 = _cache.Get<Double>("alarm:RedisInputKbps:" + node.Id);
             if (error2 == 0 || input > error2 * 2)
             {
                 _cache.Set("alarm:RedisInputKbps:" + node.Id, input, 5 * 60);
@@ -582,7 +683,7 @@ public class AlarmService : IHostedService
         if (node.AlarmOutputKbps > 0 && output >= node.AlarmOutputKbps)
         {
             // 一定时间内不要重复报错，除非错误翻倍
-            var error2 = _cache.Get<Int32>("alarm:RedisOutputKbps:" + node.Id);
+            var error2 = _cache.Get<Double>("alarm:RedisOutputKbps:" + node.Id);
             if (error2 == 0 || output > error2 * 2)
             {
                 _cache.Set("alarm:RedisOutputKbps:" + node.Id, output, 5 * 60);
@@ -602,6 +703,7 @@ public class AlarmService : IHostedService
     {
         var sb = new StringBuilder();
         if (!title.IsNullOrEmpty()) sb.AppendLine($"### [{node}]{title}");
+        sb.AppendLine($">**时间：**<font color=\"blue\">{data.CreateTime:yyyy-MM-dd HH:mm:ss}</font>");
         sb.AppendLine($">**分类：**<font color=\"gray\">{node.Category}</font>");
         sb.AppendLine($">**版本：**<font color=\"gray\">{node.Version}</font>");
         sb.AppendLine($">**已用内存：**<font color=\"gray\">{data.UsedMemory:n0}</font>");
@@ -642,7 +744,7 @@ public class AlarmService : IHostedService
     #region Redis队列告警
     private void ProcessRedisQueue(RedisNode node)
     {
-        using var span = _tracer?.NewSpan($"Alarm:{nameof(RedisMessageQueue)}");
+        using var span = _tracer?.NewSpan($"alarm:{nameof(RedisMessageQueue)}");
 
         // 所有队列
         var list = RedisMessageQueue.FindAllByRedisId(node.Id);
@@ -671,6 +773,7 @@ public class AlarmService : IHostedService
     {
         var sb = new StringBuilder();
         if (includeTitle) sb.AppendLine($"### [{queue.Name}/{node}]消息队列告警");
+        sb.AppendLine($">**时间：**<font color=\"blue\">{queue.UpdateTime:yyyy-MM-dd HH:mm:ss}</font>");
         sb.AppendLine($">**主题：**<font color=\"gray\">{queue.Topic}</font>");
         sb.AppendLine($">**积压：**<font color=\"red\">{queue.Messages:n0} > {queue.MaxMessages:n0}</font>");
         sb.AppendLine($">**消费者：**<font color=\"green\">{queue.Consumers}</font>");

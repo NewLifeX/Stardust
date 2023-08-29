@@ -50,8 +50,8 @@
         @foreach (var entity in Model)
         {
             //var url1 = $"appDayStat?appId={entity.AppId}";
-            var url2 = $"traceData?appId={entity.AppId}&date={entity.StatDate:yyyy-MM-dd}&itemId={entity.ItemId}";
-            var url3 = $"?appId={entity.AppId}&itemId={entity.ItemId}";
+            var url2 = $"/Monitors/traceData?appId={entity.AppId}&date={entity.StatDate:yyyy-MM-dd}&itemId={entity.ItemId}";
+            var url3 = $"/Monitors/traceDayStat?appId={entity.AppId}&itemId={entity.ItemId}";
             var url4 = url2 + "&minError=1";
             var color = "";
             if (entity.Type == "db")
@@ -82,7 +82,7 @@
                 {
                     <td>@entity.AppName</td>
                 }
-                <td><a href="?appId=@entity.AppId&type=@entity.Type&date=@entity.StatDate.ToString("yyyy-MM-dd")">@entity.Type</a></td>
+                <td><a href="/Monitors/traceDayStat?appId=@entity.AppId&type=@entity.Type&date=@entity.StatDate.ToString("yyyy-MM-dd")">@entity.Type</a></td>
                 <td style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><a href="@url3" title="该应用操作在最近一段时间内的监控图表" style="color: @color">@entity.Name</a></td>
                 <td class="text-right"><a href="@url2" title="该应用操作在该日的所有监控追踪数据">@entity.Total.ToString("n0")</a></td>
                 <td class="text-right">@entity.RingRate.ToString("p2")</td>
@@ -100,7 +100,7 @@
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>
                 <td class="text-right">@entity.MinCost.ToString("n0")</td>
-                <td><a href="TraceDayStat/Trace?id=@entity.ID" title="跨多系统查看调用链">追踪</a></td>
+                <td><a href="/Monitors/TraceDayStat/Trace?id=@entity.ID" title="跨多系统查看调用链">追踪</a></td>
                 <td class="text-center">@entity.CreateTime.ToFullString("")</td>
                 <td class="text-center">@entity.UpdateTime.ToFullString("")</td>
                 @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))

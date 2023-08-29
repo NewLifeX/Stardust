@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using System.Net.NetworkInformation;
 using NewLife;
 using NewLife.Caching;
 
@@ -18,8 +19,8 @@ public class AppInfo
     /// <summary>版本</summary>
     public String Version { get; set; }
 
-    ///// <summary>应用名</summary>
-    //public String AppName { get; set; }
+    /// <summary>应用名</summary>
+    public String AppName { get; set; }
 
     ///// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
     //public String ClientId { get; set; }
@@ -37,7 +38,7 @@ public class AppInfo
     public String IP { get; set; }
 
     /// <summary>开始时间</summary>
-    public DateTime StartTime { get; set; }
+    public DateTime StartTime { get; set; } = DateTime.Now;
 
     /// <summary>处理器时间。单位ms</summary>
     public Int32 ProcessorTime { get; set; }
@@ -51,11 +52,20 @@ public class AppInfo
     /// <summary>线程数</summary>
     public Int32 Threads { get; set; }
 
+    /// <summary>线程池可用工作线程数</summary>
+    public Int32 WorkerThreads { get; set; }
+
+    /// <summary>线程池可用IO线程数</summary>
+    public Int32 IOThreads { get; set; }
+
     /// <summary>句柄数</summary>
     public Int32 Handles { get; set; }
 
     /// <summary>连接数</summary>
     public Int32 Connections { get; set; }
+
+    /// <summary>网络端口监听信息</summary>
+    public String Listens { get; set; }
 
     /// <summary>GC暂停时间占比，百分之一，最大值10</summary>
     public Double GCPause { get; set; }
@@ -63,6 +73,7 @@ public class AppInfo
     /// <summary>采样周期内发生的二代GC次数</summary>
     public Int32 FullGC { get; set; }
 
+    static private Int32 _pid = Process.GetCurrentProcess().Id;
     private readonly Process _process;
     #endregion
 
@@ -107,11 +118,45 @@ public class AppInfo
             Threads = _process.Threads.Count;
             Handles = _process.HandleCount;
 
-            CommandLine = Environment.CommandLine;
+            ThreadPool.GetAvailableThreads(out var worker, out var io);
+            WorkerThreads = worker;
+            IOThreads = io;
+
+            if (Id == _pid)
+                CommandLine = Environment.CommandLine;
+
             UserName = Environment.UserName;
             MachineName = Environment.MachineName;
             IP = AgentInfo.GetIps();
-            StartTime = _process.StartTime;
+
+            try
+            {
+                // 调用WindowApi获取进程的连接数
+#if NET40
+                var tcps = NetHelper.GetAllTcpConnections();
+#else
+                var tcps = NetHelper.GetAllTcpConnections(-1);
+#endif
+                if (tcps != null && tcps.Length > 0)
+                {
+                    Connections = tcps.Count(e => e.ProcessId == Id);
+                    Listens = tcps.Where(e => e.ProcessId == Id && e.State == TcpState.Listen).Join(",", e => e.LocalEndPoint);
+                }
+            }
+            catch { }
+
+            // 本进程才能采集GC数据
+            if (Id == _pid)
+            {
+#if NET5_0_OR_GREATER
+                var memory = GC.GetGCMemoryInfo();
+                GCPause = memory.PauseTimePercentage;
+#endif
+                var gc2 = GC.CollectionCount(2);
+                FullGC = gc2 - _lastGC2;
+                _lastGC2 = gc2;
+            }
+
             ProcessorTime = (Int32)_process.TotalProcessorTime.TotalMilliseconds;
 
             if (_stopwatch == null)
@@ -124,22 +169,7 @@ public class AppInfo
             }
             _last = ProcessorTime;
 
-            try
-            {
-                // 调用WindowApi获取进程的连接数
-                var tcps = NetHelper.GetAllTcpConnections();
-                if (tcps != null && tcps.Length > 0)
-                    Connections = tcps.Count(e => e.ProcessId == Id);
-            }
-            catch { }
-
-#if NET5_0_OR_GREATER
-            var memory = GC.GetGCMemoryInfo();
-            GCPause = memory.PauseTimePercentage;
-#endif
-            var gc2 = GC.CollectionCount(2);
-            FullGC = gc2 - _lastGC2;
-            _lastGC2 = gc2;
+            StartTime = _process.StartTime;
         }
         catch (Win32Exception) { }
     }
@@ -174,115 +204,44 @@ public class AppInfo
     }
 
     private static ICache _cache = new MemoryCache();
-    /// <summary>获取进程名</summary>
+    /// <summary>获取进程名。dotnet/java进程取文件名</summary>
     /// <param name="process"></param>
     /// <returns></returns>
     public static String GetProcessName(Process process)
     {
+        // 缓存，避免频繁执行
+        var key = process.Id + "";
+        if (_cache.TryGetValue<String>(key, out var value)) return value;
+
+        var name = process.ProcessName;
+
         if (Runtime.Linux)
         {
             try
             {
                 var lines = File.ReadAllText($"/proc/{process.Id}/cmdline").Trim('\0', ' ').Split('\0');
-                if (lines.Length > 1) return lines[1];
+                if (lines.Length > 1) name = Path.GetFileNameWithoutExtension(lines[1]);
             }
             catch { }
         }
         else if (Runtime.Windows)
         {
-            // 缓存，避免频繁执行
-            var key = process.Id + "";
-            if (_cache.TryGetValue<String>(key, out var value)) return value;
-
             try
             {
-                var dic = ReadWmic("process", "processId=" + process.Id, "commandline");
-                if (dic.TryGetValue("commandline", out var str))
+                var dic = MachineInfo.ReadWmic("process where processId=" + process.Id, "commandline");
+                if (dic.TryGetValue("commandline", out var str) && !str.IsNullOrEmpty())
                 {
-                    //XTrace.WriteLine(str);
-                    var p = str.IndexOf('\"');
-                    if (p >= 0)
-                    {
-                        var p2 = str.IndexOf('\"', p + 1);
-                        if (p2 > 0) str = str.Substring(p2 + 1);
-                    }
-                    //XTrace.WriteLine(str);
-                    var ss = str.Split(' ');
-                    if (ss.Length >= 2)
-                    {
-                        _cache.Set(key, ss[1], 600);
-                        return ss[1];
-                    }
+                    var ss = str.Split(' ').Select(e => e.Trim('\"')).ToArray();
+                    str = ss.FirstOrDefault(e => e.EndsWithIgnoreCase(".dll"));
+                    if (!str.IsNullOrEmpty()) name = Path.GetFileNameWithoutExtension(str);
                 }
             }
             catch { }
-
-            _cache.Set(key, process.ProcessName, 600);
         }
 
-        return process.ProcessName;
+        _cache.Set(key, name, 600);
+
+        return name;
     }
-
-    /// <summary>通过WMIC命令读取信息</summary>
-    /// <param name="type"></param>
-    /// <param name="where"></param>
-    /// <param name="keys"></param>
-    /// <returns></returns>
-    public static IDictionary<String, String> ReadWmic(String type, String where, params String[] keys)
-    {
-        var dic = new Dictionary<String, String>(StringComparer.OrdinalIgnoreCase);
-
-        var args = $"{type} where {where} get {keys.Join(",")} /format:list";
-        var str = Execute("wmic", args)?.Trim();
-        if (str.IsNullOrEmpty()) return dic;
-
-        var ss = str.Split(Environment.NewLine);
-        foreach (var item in ss)
-        {
-            var ks = item.Split("=");
-            if (ks != null && ks.Length >= 2)
-            {
-                var k = ks[0].Trim();
-                var v = ks[1].Trim();
-                if (dic.TryGetValue(k, out var val))
-                    dic[k] = val + "," + v;
-                else
-                    dic[k] = v;
-            }
-        }
-
-        // 排序，避免多个磁盘序列号时，顺序变动
-        foreach (var item in dic)
-        {
-            if (item.Value.Contains(','))
-                dic[item.Key] = item.Value.Split(',').OrderBy(e => e).Join();
-        }
-
-        return dic;
-    }
-
-    private static String Execute(String cmd, String arguments = null)
-    {
-        try
-        {
-            var psi = new ProcessStartInfo(cmd, arguments)
-            {
-                // UseShellExecute 必须 false，以便于后续重定向输出流
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Hidden,
-                RedirectStandardOutput = true,
-            };
-            var process = Process.Start(psi);
-            if (!process.WaitForExit(3_000))
-            {
-                process.Kill();
-                return null;
-            }
-
-            return process.StandardOutput.ReadToEnd();
-        }
-        catch { return null; }
-    }
-    #endregion
+#endregion
 }

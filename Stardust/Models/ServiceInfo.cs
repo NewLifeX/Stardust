@@ -1,5 +1,4 @@
-﻿using System;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 
 namespace Stardust.Models;
 
@@ -11,17 +10,21 @@ public class ServiceInfo
     [XmlAttribute]
     public String Name { get; set; }
 
-    /// <summary>文件</summary>
+    /// <summary>文件名。启动进程时使用，如果是zip文件则内部经过处理</summary>
     [XmlAttribute]
     public String FileName { get; set; }
 
-    /// <summary>参数</summary>
+    /// <summary>参数。启动进程时使用</summary>
     [XmlAttribute]
     public String Arguments { get; set; }
 
-    /// <summary>工作目录</summary>
+    /// <summary>工作目录。启动进程时使用</summary>
     [XmlAttribute]
     public String WorkingDirectory { get; set; }
+
+    /// <summary>用户。以该用户执行应用</summary>
+    [XmlAttribute]
+    public String UserName { get; set; }
 
     /// <summary>启用</summary>
     [XmlAttribute]

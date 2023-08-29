@@ -61,6 +61,17 @@
         </tr>
 
         <tr>
+            <td>ProjectId</td>
+            <td>项目</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>资源归属的团队</td>
+        </tr>
+
+        <tr>
             <td>Name</td>
             <td>名称</td>
             <td>String</td>
@@ -353,6 +364,17 @@
         </tr>
 
         <tr>
+            <td>ProjectId</td>
+            <td>项目</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>资源归属的团队</td>
+        </tr>
+
+        <tr>
             <td>Category</td>
             <td>类别</td>
             <td>String</td>
@@ -452,6 +474,17 @@
         </tr>
 
         <tr>
+            <td>WorkerId</td>
+            <td>雪花标识</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>应用内唯一标识该节点</td>
+        </tr>
+
+        <tr>
             <td>WebSocket</td>
             <td>长连接</td>
             <td>Boolean</td>
@@ -477,7 +510,7 @@
             <td>ProcessName</td>
             <td>进程名称</td>
             <td>String</td>
-            <td>50</td>
+            <td>200</td>
             <td></td>
             <td></td>
             <td></td>
@@ -540,14 +573,14 @@
         </tr>
 
         <tr>
-            <td>WorkerId</td>
-            <td>雪花标识</td>
-            <td>Int32</td>
+            <td>Listens</td>
+            <td>监听端口</td>
+            <td>String</td>
+            <td>200</td>
             <td></td>
             <td></td>
             <td></td>
-            <td>N</td>
-            <td></td>
+            <td>网络端口监听信息</td>
         </tr>
 
         <tr>
@@ -722,17 +755,6 @@
         </tr>
 
         <tr>
-            <td>Remark</td>
-            <td>内容</td>
-            <td>String</td>
-            <td>500</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
             <td>Creator</td>
             <td>创建者</td>
             <td>String</td>
@@ -759,6 +781,17 @@
             <td>创建地址</td>
             <td>String</td>
             <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>Remark</td>
+            <td>内容</td>
+            <td>String</td>
+            <td>2000</td>
             <td></td>
             <td></td>
             <td></td>
@@ -824,6 +857,17 @@
             <td></td>
             <td></td>
             <td></td>
+        </tr>
+
+        <tr>
+            <td>StartTime</td>
+            <td>开始执行时间</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>用于提前下发指令后延期执行，暂时不支持取消</td>
         </tr>
 
         <tr>
@@ -1009,6 +1053,17 @@
         </tr>
 
         <tr>
+            <td>Source</td>
+            <td>来源</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>数据来源，应用心跳、监控数据上报携带、远程发布后由StarAgent上报</td>
+        </tr>
+
+        <tr>
             <td>Memory</td>
             <td>内存</td>
             <td>Int32</td>
@@ -1053,6 +1108,28 @@
         </tr>
 
         <tr>
+            <td>WorkerThreads</td>
+            <td>工作线程</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>线程池可用工作线程数，主要是Task使用</td>
+        </tr>
+
+        <tr>
+            <td>IOThreads</td>
+            <td>IO线程</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>线程池可用IO线程数，主要是网络接收所用</td>
+        </tr>
+
+        <tr>
             <td>Handles</td>
             <td>句柄数</td>
             <td>Int32</td>
@@ -1094,17 +1171,6 @@
             <td></td>
             <td>N</td>
             <td>周期时间内发生二代GC的次数</td>
-        </tr>
-
-        <tr>
-            <td>Data</td>
-            <td>数据</td>
-            <td>String</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
         </tr>
 
         <tr>
@@ -1166,6 +1232,17 @@
             <td title="自增">AI</td>
             <td>N</td>
             <td></td>
+        </tr>
+
+        <tr>
+            <td>ProjectId</td>
+            <td>项目</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>资源归属的团队</td>
         </tr>
 
         <tr>
@@ -1286,7 +1363,7 @@
             <td></td>
             <td></td>
             <td>N</td>
-            <td></td>
+            <td>数量</td>
         </tr>
 
         <tr>
@@ -1297,18 +1374,7 @@
             <td></td>
             <td></td>
             <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Remark</td>
-            <td>内容</td>
-            <td>String</td>
-            <td>500</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
+            <td>数量</td>
         </tr>
 
         <tr>
@@ -1398,6 +1464,17 @@
             <td></td>
             <td></td>
         </tr>
+
+        <tr>
+            <td>Remark</td>
+            <td>内容</td>
+            <td>String</td>
+            <td>500</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
     </tbody>
 </table>
 <br></br>
@@ -1435,7 +1512,7 @@
             <td></td>
             <td></td>
             <td>N</td>
-            <td></td>
+            <td>提供服务的应用程序</td>
         </tr>
 
         <tr>
@@ -1468,7 +1545,7 @@
             <td></td>
             <td></td>
             <td></td>
-            <td>IP加端口</td>
+            <td>由该应用实例提供服务，IP加端口</td>
         </tr>
 
         <tr>
@@ -1501,7 +1578,7 @@
             <td></td>
             <td></td>
             <td>N</td>
-            <td></td>
+            <td>应用程序定期向注册中心更新服务状态</td>
         </tr>
 
         <tr>
@@ -1512,7 +1589,7 @@
             <td></td>
             <td></td>
             <td></td>
-            <td></td>
+            <td>应用程序版本号</td>
         </tr>
 
         <tr>
@@ -1523,7 +1600,7 @@
             <td></td>
             <td></td>
             <td></td>
-            <td>本地局域网服务地址，如http://127.0.0.1:1234</td>
+            <td>经地址模版处理后对外服务的地址，默认是本地局域网服务地址，如http://127.0.0.1:1234</td>
         </tr>
 
         <tr>
@@ -1534,7 +1611,7 @@
             <td></td>
             <td></td>
             <td></td>
-            <td>客户端上报地址</td>
+            <td>客户端上报地址，需要经服务端处理后才能对外提供服务</td>
         </tr>
 
         <tr>
@@ -1545,7 +1622,7 @@
             <td></td>
             <td></td>
             <td>N</td>
-            <td></td>
+            <td>多实例提供服务时，通过权重系数调节客户端调用各实例服务的比例</td>
         </tr>
 
         <tr>
@@ -1683,7 +1760,7 @@
             <td></td>
             <td></td>
             <td>N</td>
-            <td></td>
+            <td>提供服务的应用程序</td>
         </tr>
 
         <tr>
@@ -1716,7 +1793,7 @@
             <td></td>
             <td></td>
             <td></td>
-            <td>IP加进程</td>
+            <td>由该应用实例提供服务，IP加端口</td>
         </tr>
 
         <tr>
@@ -1749,7 +1826,7 @@
             <td></td>
             <td></td>
             <td>N</td>
-            <td></td>
+            <td>应用程序定期向注册中心更新服务状态</td>
         </tr>
 
         <tr>

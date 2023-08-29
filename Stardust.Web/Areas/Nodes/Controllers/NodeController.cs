@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Cube;
+using NewLife.Cube.ViewModels;
 using NewLife.Data;
 using NewLife.Web;
 using Stardust.Data.Nodes;
@@ -24,36 +26,47 @@ public class NodeController : EntityController<Node>
 
         var list = ListFields;
         list.Clear();
-        var allows = new[] { "ID", "Name", "Code", "Category", "ProductCode", "CityName", "Enable", "Version", "OSKind", "Runtime", "IP", "OS", "MachineName", "Cpu", "Memory", "TotalSize", "Logins", "LastLogin", "OnlineTime", "UpdateTime", "UpdateIP" };
+        var allows = new[] { "ID", "Name", "Code", "Category", "ProductCode", "CityName", "Enable", "Version", "OSKind", "Runtime", "Framework", "IP", "OS", "MachineName", "Cpu", "Memory", "TotalSize", "Logins", "LastActive", "OnlineTime", "UpdateTime", "UpdateIP" };
         foreach (var item in allows)
         {
             list.AddListField(item);
         }
 
         {
-            var df = ListFields.AddListField("App", "Version");
-            df.DisplayName = "应用实例";
-            df.Url = "/Registry/AppOnline?nodeId={ID}";
+            var df = ListFields.GetField("Name") as ListField;
+            df.Url = "/Nodes/Node/Detail?id={ID}";
+            df.Target = "_blank";
         }
+        //{
+        //    var df = ListFields.AddListField("App", "Version");
+        //    df.DisplayName = "应用实例";
+        //    df.Url = "/Registry/AppOnline?nodeId={ID}";
+        //}
+        //{
+        //    var df = ListFields.AddListField("DeployNodes", "Version");
+        //    df.DisplayName = "部署实例";
+        //    df.Url = "/Deployment/AppDeployNode?nodeId={ID}";
+        //}
+        //{
+        //    var df = ListFields.AddListField("Meter", "Version");
+        //    df.DisplayName = "性能";
+        //    df.Url = "/Nodes/NodeData?nodeId={ID}";
+        //}
+        //{
+        //    var df = ListFields.AddListField("History", "Version");
+        //    df.DisplayName = "历史";
+        //    df.Url = "/Nodes/NodeHistory?nodeId={ID}";
+        //}
+        //{
+        //    var df = ListFields.AddListField("Commands", "Version");
+        //    df.DisplayName = "命令";
+        //    df.Url = "/Nodes/NodeCommand?nodeId={ID}";
+        //}
         {
-            var df = ListFields.AddListField("DeployNodes", "Version");
-            df.DisplayName = "部署实例";
-            df.Url = "/Deployment/AppDeployNode?nodeId={ID}";
-        }
-        {
-            var df = ListFields.AddListField("Meter", "Version");
-            df.DisplayName = "性能";
-            df.Url = "/Nodes/NodeData?nodeId={ID}";
-        }
-        {
-            var df = ListFields.AddListField("History", "Version");
-            df.DisplayName = "历史";
-            df.Url = "/Nodes/NodeHistory?nodeId={ID}";
-        }
-        {
-            var df = ListFields.AddListField("Log", "Version");
+            var df = ListFields.AddListField("Log", "UpdateTime");
             df.DisplayName = "日志";
             df.Url = "/Admin/Log?category=节点&linkId={ID}";
+            df.Target = "_frame";
         }
     }
 
@@ -62,6 +75,25 @@ public class NodeController : EntityController<Node>
         LogOnChange = true;
 
         _starFactory = starFactory;
+    }
+
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        var nodeId = GetRequest("Id").ToInt(-1);
+        if (nodeId > 0)
+        {
+            PageSetting.NavView = "_Node_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+
+        var projectId = GetRequest("projectId").ToInt(-1);
+        if (projectId > 0)
+        {
+            PageSetting.NavView = "_Project_Nav";
+            PageSetting.EnableNavbar = false;
+        }
     }
 
     protected override IEnumerable<Node> Search(Pager p)
@@ -77,6 +109,7 @@ public class NodeController : EntityController<Node>
         var provinceId = rids.Length > 0 ? rids[0] : -1;
         var cityId = rids.Length > 1 ? rids[1] : -1;
 
+        var projectId = p["projectId"].ToInt(-1);
         var category = p["category"];
         var product = p["product"];
         var osKind = p["osKind"];
@@ -95,25 +128,25 @@ public class NodeController : EntityController<Node>
             if (!Enum.TryParse(osKind, out kind)) kind = (OSKinds)(-1);
         }
 
-        return Node.Search(provinceId, cityId, category, product, kind, version, runtime, framework, arch, enable, start, end, p["Q"], p);
+        return Node.Search(projectId, provinceId, cityId, category, product, kind, version, runtime, framework, arch, enable, start, end, p["Q"], p);
     }
 
     /// <summary>搜索</summary>
     /// <param name="category"></param>
     /// <param name="key"></param>
     /// <returns></returns>
-    public ActionResult NodeSearch(String category, String key = null)
+    public ActionResult NodeSearch(String category, String product, String key = null)
     {
         var page = new PageParameter { PageSize = 20 };
 
         // 默认排序。一个设备可能多次注册节点，导致重复，这里按最后登录时间降序
         if (page.Sort.IsNullOrEmpty())
         {
-            page.Sort = _.UpdateTime;
+            page.Sort = _.LastActive;
             page.Desc = true;
         }
 
-        var list = SearchByCategory(category, true, key, page);
+        var list = SearchByCategory(category, product, true, key, page);
 
         return Json(0, null, list.Select(e => new
         {

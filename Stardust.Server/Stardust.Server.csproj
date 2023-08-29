@@ -7,7 +7,7 @@
     <Description>星尘，分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2023 NewLife</Copyright>
-    <VersionPrefix>2.4</VersionPrefix>
+    <VersionPrefix>2.9</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -26,11 +26,13 @@
     <Compile Remove="Common\JsonConverterForBuilder.cs" />
     <Compile Remove="Common\TokenFilter.cs" />
     <Compile Remove="Common\TokenSession.cs" />
+    <Compile Remove="Models\CommandInModel.cs" />
+    <Compile Remove="Services\CacheFileProvider.cs" />
     <Compile Remove="StarService.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Redis" Version="5.2.2023.311-beta1023" />
+    <PackageReference Include="NewLife.Redis" Version="5.5.2023.803" />
   </ItemGroup>
 
   <ItemGroup>

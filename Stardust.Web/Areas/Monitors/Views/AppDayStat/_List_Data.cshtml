@@ -54,7 +54,7 @@
     <tbody>
         @foreach (var entity in Model)
         {
-            var url1 = $"traceDayStat?appId={entity.AppId}&date={entity.StatDate:yyyy-MM-dd}";
+            var url1 = $"/Monitors/traceDayStat?appId={entity.AppId}&date={entity.StatDate:yyyy-MM-dd}";
             //var url2 = $"traceData?appId={entity.AppId}&date={entity.StatDate:yyyy-MM-dd}";
             var bgcolor = "";
             if (entity.ErrorRate >= 0.01)
@@ -72,7 +72,7 @@
                 {
                     <td>@entity.AppName</td>
                 }
-                <td class="text-center"><a href="@url1" title="应用各个操作名在该日的监控数据">当日监控</a></td>
+                <td class="text-center"><a href="@url1" title="@(entity.AppName)监控。应用各个操作名在该日的监控数据" target="_frame">当日监控</a></td>
                 <td class="text-right">@entity.Names.ToString("n0")</td>
                 <td class="text-right">@entity.Total.ToString("n0")</td>
                 <td class="text-right">@entity.RingRate.ToString("p2")</td>

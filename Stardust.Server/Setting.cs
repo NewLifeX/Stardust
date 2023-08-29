@@ -2,13 +2,18 @@
 using NewLife;
 using NewLife.Configuration;
 using NewLife.Security;
+using XCode.Configuration;
 
 namespace Stardust.Server;
 
 /// <summary>配置</summary>
 [Config("StarServer")]
-public class Setting : Config<Setting>
+public class StarServerSetting : Config<StarServerSetting>
 {
+    #region 静态
+    static StarServerSetting() => Provider = new DbConfigProvider { UserId = 0, Category = "StarServer" };
+    #endregion
+
     #region 属性
     /// <summary>调试开关。默认true</summary>
     [Description("调试开关。默认true")]
@@ -62,21 +67,33 @@ public class Setting : Config<Setting>
     [Description("控制台地址。用于监控告警地址")]
     public String WebUrl { get; set; } = "";
 
-    /// <summary>数据保留时间。默认3天</summary>
-    [Description("数据保留时间。默认3天")]
+    /// <summary>数据保留时间。采样明细及分钟级统计数据，默认3天</summary>
+    [Description("数据保留时间。采样明细及分钟级统计数据，默认3天")]
     public Int32 DataRetention { get; set; } = 3;
 
-    /// <summary>大颗粒数据保留时间。默认30天</summary>
-    [Description("大颗粒数据保留时间。默认30天")]
+    /// <summary>中等颗粒数据保留时间。性能数据及小时级统计数据，默认30天</summary>
+    [Description("中等颗粒数据保留时间。性能数据及小时级统计数据，默认30天")]
     public Int32 DataRetention2 { get; set; } = 30;
+
+    /// <summary>大颗粒数据保留时间。历史数据及每日统计数据，默认300天</summary>
+    [Description("大颗粒数据保留时间。历史数据及每日统计数据，默认300天")]
+    public Int32 DataRetention3 { get; set; } = 300;
 
     /// <summary>上传目录。存放升级包，需要跟StarWeb配置为同一个目录，默认../Uploads</summary>
     [Description("上传目录。存放升级包，需要跟StarWeb配置为同一个目录，默认../Uploads")]
     public String UploadPath { get; set; } = "../Uploads";
 
+    /// <summary>文件缓存目录。存放数据库驱动等缓存文件，为空时不启用，默认../FileCache</summary>
+    [Description("文件缓存目录。存放数据库驱动等缓存文件，为空时不启用，默认../FileCache")]
+    public String FileCache { get; set; } = "../FileCache";
+
     /// <summary>上级服务器。同步向上级汇报数据</summary>
     [Description("上级服务器。同步向上级汇报数据")]
     public String UplinkServer { get; set; }
+
+    /// <summary>新服务器。节点自动迁移到新的服务器地址</summary>
+    [Description("新服务器。节点自动迁移到新的服务器地址")]
+    public String NewServer { get; set; }
     #endregion
 
     #region 方法

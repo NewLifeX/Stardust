@@ -30,6 +30,7 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
             var df = ListFields.AddListField("nodes", null, "Total");
             df.DisplayName = "明细";
             df.AddService(new MyUrl());
+            df.Target = "_frame";
         }
     }
 
@@ -61,20 +62,20 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
 
     class MyUrl : IUrlExtend
     {
-        public String Resolve(DataField field, IExtend data)
+        public String Resolve(DataField field, IModel data)
         {
-            if (field is ListField df && data is NodeStat st && !st.Key.IsNullOrEmpty())
+            if (field is ListField df && data is NodeStat st && !st.LinkItem.IsNullOrEmpty())
             {
                 //df.DisplayName = "{Total}";
                 return st.Category switch
                 {
-                    "产品" => $"/Nodes/Node?product={st.Key}",
-                    "版本" => $"/Nodes/Node?version={st.Key}",
-                    "操作系统" => $"/Nodes/Node?osKind={st.Key}",
-                    "运行时" => $"/Nodes/Node?runtime={st.Key}",
-                    "最高框架" => $"/Nodes/Node?framework={st.Key}",
-                    "城市" => $"/Nodes/Node?areaid={st.Key}",
-                    "芯片架构" => $"/Nodes/Node?arch={st.Key}",
+                    "产品" => $"/Nodes/Node?product={st.LinkItem}",
+                    "版本" => $"/Nodes/Node?version={st.LinkItem}",
+                    "操作系统" => $"/Nodes/Node?osKind={st.LinkItem}",
+                    "运行时" => $"/Nodes/Node?runtime={st.LinkItem}",
+                    "最高框架" => $"/Nodes/Node?framework={st.LinkItem}",
+                    "城市" => $"/Nodes/Node?areaid={st.LinkItem}",
+                    "芯片架构" => $"/Nodes/Node?arch={st.LinkItem}",
                     _ => df.Url,
                 };
             }

@@ -190,6 +190,96 @@ public partial class Node : Entity<Node>
 
         return FindAll(_.IP == ip);
     }
+
+    /// <summary>根据分类查找</summary>
+    /// <param name="category">分类</param>
+    /// <returns>实体列表</returns>
+    public static IList<Node> FindAllByCategory(String category)
+    {
+        if (category.IsNullOrEmpty()) return new List<Node>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Category.EqualIgnoreCase(category));
+
+        return FindAll(_.Category == category);
+    }
+
+    /// <summary>根据产品查找</summary>
+    /// <param name="productCode">产品</param>
+    /// <returns>实体列表</returns>
+    public static IList<Node> FindAllByProductCode(String productCode)
+    {
+        if (productCode.IsNullOrEmpty()) return new List<Node>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ProductCode.EqualIgnoreCase(productCode));
+
+        return FindAll(_.ProductCode == productCode);
+    }
+
+    /// <summary>根据版本查找</summary>
+    /// <param name="version">版本</param>
+    /// <returns>实体列表</returns>
+    public static IList<Node> FindAllByVersion(String version)
+    {
+        if (version.IsNullOrEmpty()) return new List<Node>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Version.EqualIgnoreCase(version));
+
+        return FindAll(_.Version == version);
+    }
+
+    /// <summary>根据系统种类查找</summary>
+    /// <param name="oSKind">系统种类</param>
+    /// <returns>实体列表</returns>
+    public static IList<Node> FindAllByOSKind(Stardust.Models.OSKinds oSKind)
+    {
+        if (oSKind <= 0) return new List<Node>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.OSKind == oSKind);
+
+        return FindAll(_.OSKind == oSKind);
+    }
+
+    /// <summary>根据唯一标识、机器标识、网卡查找</summary>
+    /// <param name="uuid">唯一标识</param>
+    /// <param name="machineGuid">机器标识</param>
+    /// <param name="mACs">网卡</param>
+    /// <returns>实体列表</returns>
+    public static IList<Node> FindAllByUuidAndMachineGuidAndMACs(String uuid, String machineGuid, String mACs)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Uuid.EqualIgnoreCase(uuid) && e.MachineGuid.EqualIgnoreCase(machineGuid) && e.MACs.EqualIgnoreCase(mACs));
+
+        return FindAll(_.Uuid == uuid & _.MachineGuid == machineGuid & _.MACs == mACs);
+    }
+
+    /// <summary>根据最后活跃查找</summary>
+    /// <param name="lastActive">最后活跃</param>
+    /// <returns>实体列表</returns>
+    public static IList<Node> FindAllByLastActive(DateTime lastActive)
+    {
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.LastActive == lastActive);
+
+        return FindAll(_.LastActive == lastActive);
+    }
+
+    /// <summary>根据项目查找</summary>
+    /// <param name="projectId">项目</param>
+    /// <returns>实体列表</returns>
+    public static IList<Node> FindAllByProjectId(Int32 projectId)
+    {
+        if (projectId <= 0) return new List<Node>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ProjectId == projectId);
+
+        return FindAll(_.ProjectId == projectId);
+    }
     #endregion
 
     #region 高级查询
@@ -223,10 +313,11 @@ public partial class Node : Entity<Node>
     /// <param name="key"></param>
     /// <param name="page"></param>
     /// <returns></returns>
-    public static IList<Node> Search(Int32 provinceId, Int32 cityId, String category, String product, OSKinds osKind, String version, String runtime, String framework, String arch, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Node> Search(Int32 projectId, Int32 provinceId, Int32 cityId, String category, String product, OSKinds osKind, String version, String runtime, String framework, String arch, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
+        if (projectId >= 0) exp &= _.ProjectId == projectId;
         if (provinceId >= 0) exp &= _.ProvinceID == provinceId;
         if (cityId >= 0) exp &= _.CityID == cityId;
         if (!category.IsNullOrEmpty()) exp &= _.Category == category;
@@ -243,7 +334,8 @@ public partial class Node : Entity<Node>
 
         //exp &= _.CreateTime.Between(start, end);
         //exp &= _.LastLogin.Between(start, end);
-        exp &= _.UpdateTime.Between(start, end);
+        //exp &= _.UpdateTime.Between(start, end);
+        exp &= _.LastActive.Between(start, end);
 
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 
@@ -283,19 +375,21 @@ public partial class Node : Entity<Node>
 
     /// <summary>根据类别搜索</summary>
     /// <param name="category"></param>
+    /// <param name="product"></param>
     /// <param name="enable"></param>
     /// <param name="key"></param>
     /// <param name="page"></param>
     /// <returns></returns>
-    public static IList<Node> SearchByCategory(String category, Boolean? enable, String key, PageParameter page)
+    public static IList<Node> SearchByCategory(String category, String product, Boolean? enable, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (!category.IsNullOrEmpty()) exp &= _.Category == category | _.Category.IsNullOrEmpty();
+        if (!product.IsNullOrEmpty()) exp &= _.ProductCode == product;
 
         if (enable != null) exp &= _.Enable == enable.Value;
 
-        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+        if (!key.IsNullOrEmpty()) exp &= _.Code.Contains(key) | _.Name.Contains(key) | _.Category.Contains(key) | _.MachineName.Contains(key) | _.UserName.Contains(key);
 
         return FindAll(exp, page);
     }
@@ -303,7 +397,8 @@ public partial class Node : Entity<Node>
     public static IList<Node> SearchGroup(DateTime start, String selects, FieldItem groupField)
     {
         var exp = new WhereExpression();
-        exp &= _.UpdateTime >= start;
+        exp &= _.LastActive >= start;
+        exp &= _.Enable == true;
 
         return FindAll(exp.GroupBy(groupField), null, selects);
     }
@@ -311,7 +406,8 @@ public partial class Node : Entity<Node>
     public static IList<Node> SearchGroup(DateTime start, String selects, String groupField)
     {
         var exp = new WhereExpression();
-        exp &= _.UpdateTime >= start;
+        exp &= _.LastActive >= start;
+        exp &= _.Enable == true;
 
         return FindAll(exp + $" Group By {groupField}", null, selects, 0, 0);
     }
@@ -338,6 +434,14 @@ public partial class Node : Entity<Node>
         exp &= _.CreateTime < date.AddDays(1);
         var list = FindAll(exp.GroupBy(_.ProvinceID), null, _.ID.Count() & _.ProvinceID, 0, 0);
         return list.ToDictionary(e => e.ProvinceID, e => e.ID);
+    }
+
+    public static IList<Node> SearchGroupByProject()
+    {
+        var selects = _.ID.Count("total") & _.ProjectId;
+        var exp = new WhereExpression();
+
+        return FindAll(exp.GroupBy(_.ProjectId), null, selects);
     }
     #endregion
 
@@ -409,6 +513,7 @@ public partial class Node : Entity<Node>
         node.Logins++;
         node.LastLogin = DateTime.Now;
         node.LastLoginIP = ip;
+        node.LastActive = DateTime.Now;
 
         if (node.CreateIP.IsNullOrEmpty()) node.CreateIP = ip;
         node.UpdateIP = ip;
@@ -434,6 +539,7 @@ public partial class Node : Entity<Node>
         if (!di.UserName.IsNullOrEmpty()) node.UserName = di.UserName;
         if (!di.IP.IsNullOrEmpty()) node.IP = di.IP;
         if (!di.Product.IsNullOrEmpty()) node.Product = di.Product;
+        if (!di.Vendor.IsNullOrEmpty()) node.Vendor = di.Vendor;
         if (!di.Processor.IsNullOrEmpty()) node.Processor = di.Processor;
         //if (!di.CpuID.IsNullOrEmpty()) node.CpuID = di.CpuID;
         if (!di.UUID.IsNullOrEmpty()) node.Uuid = di.UUID;
@@ -443,20 +549,44 @@ public partial class Node : Entity<Node>
         if (!di.DiskID.IsNullOrEmpty()) node.DiskID = di.DiskID;
 
         if (di.ProcessorCount > 0) node.Cpu = di.ProcessorCount;
-        if (di.Memory > 0) node.Memory = (Int32)(di.Memory / 1024 / 1024);
-        if (di.TotalSize > 0) node.TotalSize = (Int32)(di.TotalSize / 1024 / 1024);
-        if (!di.DriveInfo.IsNullOrEmpty()) node.DriveInfo = di.DriveInfo;
+        if (di.Memory > 0) node.Memory = (Int32)Math.Round(di.Memory / 1024d / 1024);
+        if (di.TotalSize > 0) node.TotalSize = (Int32)Math.Round(di.TotalSize / 1024d / 1024);
+        if (di.DriveSize > 0) node.DriveSize = (Int32)Math.Round(di.DriveSize / 1024d / 1024);
+        if (!di.DriveInfo.IsNullOrEmpty())
+        {
+            node.DriveInfo = di.DriveInfo;
+            // 兼容旧版客户端
+            if (node.DriveSize == 0)
+                node.DriveSize = (Int32)Math.Round(di.DriveInfo.Split(",").Sum(e => e.Substring("/", "G").ToDouble() * 1024));
+        }
         if (di.MaxOpenFiles > 0) node.MaxOpenFiles = di.MaxOpenFiles;
         if (!di.Dpi.IsNullOrEmpty()) node.Dpi = di.Dpi;
         if (!di.Resolution.IsNullOrEmpty()) node.Resolution = di.Resolution;
         if (!di.Macs.IsNullOrEmpty()) node.MACs = di.Macs;
         //if (!di.COMs.IsNullOrEmpty()) node.COMs = di.COMs;
         if (!di.InstallPath.IsNullOrEmpty()) node.InstallPath = di.InstallPath;
-        if (!di.Runtime.IsNullOrEmpty()) node.Runtime = di.Runtime;
+        if (!di.Runtime.IsNullOrEmpty())
+        {
+            node.Runtime = di.Runtime;
+            if (node.Framework.IsNullOrEmpty()) node.Framework = di.Runtime;
+            if (node.Frameworks.IsNullOrEmpty()) node.Frameworks = di.Runtime;
+        }
         if (!di.Framework.IsNullOrEmpty())
         {
-            node.Framework = di.Framework?.Split(',').LastOrDefault();
+            //node.Framework = di.Framework?.Split(',').LastOrDefault();
             node.Frameworks = di.Framework;
+            // 选取最大的版本，而不是最后一个，例如6.0.3字符串大于6.0.13
+            Version max = null;
+            var fs = di.Framework.Split(',');
+            if (fs != null)
+            {
+                foreach (var f in fs)
+                {
+                    if (System.Version.TryParse(f, out var v) && (max == null || max < v))
+                        max = v;
+                }
+                node.Framework = max?.ToString();
+            }
         }
 
         if (!node.OS.IsNullOrEmpty()) node.OSKind = OSKindHelper.Parse(node.OS, node.OSVersion);

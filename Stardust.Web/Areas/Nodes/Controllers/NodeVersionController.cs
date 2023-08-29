@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
-using NewLife.Cube.ViewModels;
+using NewLife.Web;
 using Stardust.Data.Nodes;
 using XCode.Membership;
 using Attachment = NewLife.Cube.Entity.Attachment;
@@ -16,10 +16,12 @@ public class NodeVersionController : EntityController<NodeVersion>
     {
         LogOnChange = true;
 
+        ListFields.RemoveField("Source", "Size", "FileHash", "Preinstall", "Executor");
+
         {
-            var df = ListFields.GetField("Source") as ListField;
+            //var df = ListFields.GetField("Source") as ListField;
             //df.DisplayName = "下载";
-            df.Url = "{Source}";
+            //df.Url = "{Source}";
             //df.DataVisible = e =>
             //{
             //    var entity = e as NodeVersion;
@@ -29,10 +31,21 @@ public class NodeVersionController : EntityController<NodeVersion>
 
         {
             var df = ListFields.AddListField("Log", "CreateUserID");
-            df.DisplayName = "修改日志";
-            df.Header = "修改日志";
+            df.DisplayName = "审计日志";
+            df.Header = "审计日志";
             df.Url = "/Admin/Log?category=节点版本&linkId={ID}";
+            df.Target = "_frame";
         }
+    }
+
+    protected override IEnumerable<NodeVersion> Search(Pager p)
+    {
+        var enable = p["enable"]?.ToBoolean();
+        var start = p["dtStart"].ToDateTime();
+        var end = p["dtEnd"].ToDateTime();
+        var key = p["q"];
+
+        return NodeVersion.Search(start, end, enable, key, p);
     }
 
     protected override async Task<Attachment> SaveFile(NodeVersion entity, IFormFile file, String uploadPath, String fileName)
@@ -74,7 +87,7 @@ public class NodeVersionController : EntityController<NodeVersion>
         var nv = NodeVersion.FindByVersion(name.TrimEnd(".zip"));
         if (nv == null) return NotFound("非法参数");
 
-        var set = NewLife.Cube.Setting.Current;
+        var set = CubeSetting.Current;
         var updatePath = set.UploadPath;
         var fi = updatePath.CombinePath(nv.Source).AsFile();
         if (!fi.Exists) return NotFound("文件不存在");

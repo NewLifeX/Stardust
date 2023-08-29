@@ -6,6 +6,7 @@ using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using Stardust.Data.Configs;
 using XCode;
 using XCode.Cache;
 using XCode.Membership;
@@ -78,6 +79,19 @@ namespace Stardust.Data.Deployment
             //return Find(_.Id == id);
         }
 
+        ///// <summary>根据编号查找</summary>
+        ///// <param name="appId">编号</param>
+        ///// <returns>实体对象</returns>
+        //public static AppDeploy FindByAppId(Int32 appId)
+        //{
+        //    if (appId < 0) return null;
+
+        //    // 实体缓存
+        //    if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.AppId == appId);
+
+        //    return Find(_.AppId == appId);
+        //}
+
         /// <summary>根据名称查找</summary>
         /// <param name="name"></param>
         /// <returns></returns>
@@ -101,6 +115,19 @@ namespace Stardust.Data.Deployment
 
             return FindAll(_.AppId == appId);
         }
+
+    /// <summary>根据项目查找</summary>
+    /// <param name="projectId">项目</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppDeploy> FindAllByProjectId(Int32 projectId)
+    {
+        if (projectId <= 0) return new List<AppDeploy>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ProjectId == projectId);
+
+        return FindAll(_.ProjectId == projectId);
+    }
         #endregion
 
         #region 高级查询
@@ -112,10 +139,11 @@ namespace Stardust.Data.Deployment
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<AppDeploy> Search(String category, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<AppDeploy> Search(Int32 projectId, String category, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
+            if (projectId >= 0) exp &= _.ProjectId == projectId;
             if (!category.IsNullOrEmpty()) exp &= _.Category == category;
             if (enable != null) exp &= _.Enable == enable;
             exp &= _.UpdateTime.Between(start, end);

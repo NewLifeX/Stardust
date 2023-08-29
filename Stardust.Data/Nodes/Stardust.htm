@@ -61,6 +61,17 @@
         </tr>
 
         <tr>
+            <td>ProjectId</td>
+            <td>项目</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>资源归属的团队</td>
+        </tr>
+
+        <tr>
             <td>Name</td>
             <td>名称</td>
             <td>String</td>
@@ -259,14 +270,25 @@
         </tr>
 
         <tr>
+            <td>DriveSize</td>
+            <td>驱动器大小</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>所有分区总大小，单位M</td>
+        </tr>
+
+        <tr>
             <td>DriveInfo</td>
             <td>驱动器信息</td>
             <td>String</td>
-            <td>200</td>
+            <td>500</td>
             <td></td>
             <td></td>
             <td></td>
-            <td>各磁盘大小，逗号分隔</td>
+            <td>各分区大小，逗号分隔</td>
         </tr>
 
         <tr>
@@ -305,6 +327,17 @@
         <tr>
             <td>Product</td>
             <td>产品名</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td>Vendor</td>
+            <td>制造商</td>
             <td>String</td>
             <td>50</td>
             <td></td>
@@ -479,6 +512,28 @@
         </tr>
 
         <tr>
+            <td>NewServer</td>
+            <td>新服务器</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>该节点自动迁移到新的服务器地址</td>
+        </tr>
+
+        <tr>
+            <td>LastVersion</td>
+            <td>最后版本</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>最后一次升级所使用的版本号，避免重复升级同一个版本</td>
+        </tr>
+
+        <tr>
             <td>WebHook</td>
             <td>告警机器人</td>
             <td>String</td>
@@ -589,6 +644,17 @@
         </tr>
 
         <tr>
+            <td>LastActive</td>
+            <td>最后活跃</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>心跳过程中每10分钟更新活跃时间</td>
+        </tr>
+
+        <tr>
             <td>OnlineTime</td>
             <td>在线时长</td>
             <td>Int32</td>
@@ -597,17 +663,6 @@
             <td></td>
             <td>N</td>
             <td>单位，秒</td>
-        </tr>
-
-        <tr>
-            <td>LastVersion</td>
-            <td>最后版本</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>最后一次升级所使用的版本号，避免重复升级同一个版本</td>
         </tr>
 
         <tr>
@@ -713,6 +768,17 @@
             <td title="自增">AI</td>
             <td>N</td>
             <td></td>
+        </tr>
+
+        <tr>
+            <td>ProjectId</td>
+            <td>项目</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>资源归属的团队</td>
         </tr>
 
         <tr>
@@ -870,6 +936,17 @@
         </tr>
 
         <tr>
+            <td>MemoryUsed</td>
+            <td>已用内存</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>单位M</td>
+        </tr>
+
+        <tr>
             <td>AvailableFreeSpace</td>
             <td>可用磁盘</td>
             <td>Int32</td>
@@ -878,6 +955,28 @@
             <td></td>
             <td>N</td>
             <td>应用所在盘，单位M</td>
+        </tr>
+
+        <tr>
+            <td>SpaceUsed</td>
+            <td>已用磁盘</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>应用所在盘，单位M</td>
+        </tr>
+
+        <tr>
+            <td>DriveInfo</td>
+            <td>驱动器信息</td>
+            <td>String</td>
+            <td>500</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>各分区大小，逗号分隔</td>
         </tr>
 
         <tr>
@@ -1450,7 +1549,7 @@
             <td></td>
             <td></td>
             <td>N</td>
-            <td>主动关闭后TimeWait的Tcp网络连接数，下一步Closed</td>
+            <td>主动关闭后TimeWait的Tcp网络连接数，等待2MSL，确保四次挥手的最后一个ACK能够发出，下一步Closed</td>
         </tr>
 
         <tr>
@@ -1461,7 +1560,7 @@
             <td></td>
             <td></td>
             <td>N</td>
-            <td>被动关闭后CloseWait的Tcp网络连接数，下一步TimeWait</td>
+            <td>作为客户端，收到服务器FIN后进入CloseWait的Tcp网络连接数，还没发送自己的FIN，主要原因是我方太忙</td>
         </tr>
 
         <tr>
@@ -1829,6 +1928,17 @@
         </tr>
 
         <tr>
+            <td>StartTime</td>
+            <td>开始执行时间</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>用于提前下发指令后延期执行，暂时不支持取消</td>
+        </tr>
+
+        <tr>
             <td>Expire</td>
             <td>过期时间</td>
             <td>DateTime</td>
@@ -2022,6 +2132,17 @@
         </tr>
 
         <tr>
+            <td>LinkItem</td>
+            <td>关联项</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
             <td>Total</td>
             <td>总数</td>
             <td>Int32</td>
@@ -2029,7 +2150,7 @@
             <td></td>
             <td></td>
             <td>N</td>
-            <td>截止今天的全部节点数</td>
+            <td>1年内活跃过的全部节点数</td>
         </tr>
 
         <tr>
@@ -2040,7 +2161,7 @@
             <td></td>
             <td></td>
             <td>N</td>
-            <td>最后登录位于今天</td>
+            <td>最后活跃位于今天</td>
         </tr>
 
         <tr>
@@ -2051,7 +2172,7 @@
             <td></td>
             <td></td>
             <td>N</td>
-            <td>最后登录位于7天内</td>
+            <td>最后活跃位于7天内</td>
         </tr>
 
         <tr>
@@ -2062,7 +2183,7 @@
             <td></td>
             <td></td>
             <td>N</td>
-            <td>最后登录位于30天内</td>
+            <td>最后活跃位于30天内</td>
         </tr>
 
         <tr>
@@ -2296,915 +2417,6 @@
             <td>备注</td>
             <td>String</td>
             <td>500</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-    </tbody>
-</table>
-<br></br>
-<h3>Redis节点（RedisNode）</h3>
-<table>
-    <thead>
-        <tr>
-            <th>名称</th>
-            <th>显示名</th>
-            <th>类型</th>
-            <th>长度</th>
-            <th>精度</th>
-            <th>主键</th>
-            <th>允许空</th>
-            <th>备注</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Id</td>
-            <td>编号</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td title="自增">AI</td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Name</td>
-            <td>名称</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Category</td>
-            <td>分类</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Server</td>
-            <td>地址</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td title="唯一索引">UQ</td>
-            <td></td>
-            <td>含端口</td>
-        </tr>
-
-        <tr>
-            <td>Password</td>
-            <td>密码</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Version</td>
-            <td>版本</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Mode</td>
-            <td>模式</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Role</td>
-            <td>角色</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>MaxMemory</td>
-            <td>内存容量</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>单位MB</td>
-        </tr>
-
-        <tr>
-            <td>MemoryPolicy</td>
-            <td>内存策略</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>缓存淘汰策略</td>
-        </tr>
-
-        <tr>
-            <td>MemoryAllocator</td>
-            <td>分配器</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>内存分配器，低版本有内存泄漏</td>
-        </tr>
-
-        <tr>
-            <td>Enable</td>
-            <td>启用</td>
-            <td>Boolean</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>停用的节点不再执行监控</td>
-        </tr>
-
-        <tr>
-            <td>ScanQueue</td>
-            <td>队列</td>
-            <td>Boolean</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>自动扫描发现消息队列，默认true</td>
-        </tr>
-
-        <tr>
-            <td>WebHook</td>
-            <td>告警机器人</td>
-            <td>String</td>
-            <td>500</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>钉钉、企业微信等</td>
-        </tr>
-
-        <tr>
-            <td>AlarmMemoryRate</td>
-            <td>内存告警</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>内存告警的百分比阈值，百分之一</td>
-        </tr>
-
-        <tr>
-            <td>AlarmConnections</td>
-            <td>连接告警</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>连接数告警阈值</td>
-        </tr>
-
-        <tr>
-            <td>AlarmSpeed</td>
-            <td>速度告警</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>速度告警阈值</td>
-        </tr>
-
-        <tr>
-            <td>AlarmInputKbps</td>
-            <td>入流量告警</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>入流量告警阈值</td>
-        </tr>
-
-        <tr>
-            <td>AlarmOutputKbps</td>
-            <td>出流量告警</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>出流量告警阈值</td>
-        </tr>
-
-        <tr>
-            <td>CreateUser</td>
-            <td>创建人</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>CreateUserID</td>
-            <td>创建者</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>CreateTime</td>
-            <td>创建时间</td>
-            <td>DateTime</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>CreateIP</td>
-            <td>创建地址</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>UpdateUser</td>
-            <td>更新人</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>UpdateUserID</td>
-            <td>更新者</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>UpdateTime</td>
-            <td>更新时间</td>
-            <td>DateTime</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>UpdateIP</td>
-            <td>更新地址</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Remark</td>
-            <td>备注</td>
-            <td>String</td>
-            <td>500</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-    </tbody>
-</table>
-<br></br>
-<h3>Redis数据（RedisData）</h3>
-<table>
-    <thead>
-        <tr>
-            <th>名称</th>
-            <th>显示名</th>
-            <th>类型</th>
-            <th>长度</th>
-            <th>精度</th>
-            <th>主键</th>
-            <th>允许空</th>
-            <th>备注</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Id</td>
-            <td>编号</td>
-            <td>Int64</td>
-            <td></td>
-            <td></td>
-            <td title="主键">PK</td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>RedisId</td>
-            <td>Redis节点</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Name</td>
-            <td>名称</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Speed</td>
-            <td>速度</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>每秒操作数，instantaneous_ops_per_sec</td>
-        </tr>
-
-        <tr>
-            <td>InputKbps</td>
-            <td>入流量</td>
-            <td>Double</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>单位kbps</td>
-        </tr>
-
-        <tr>
-            <td>OutputKbps</td>
-            <td>出流量</td>
-            <td>Double</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>单位kbps</td>
-        </tr>
-
-        <tr>
-            <td>Uptime</td>
-            <td>启动时间</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>单位秒</td>
-        </tr>
-
-        <tr>
-            <td>ConnectedClients</td>
-            <td>连接数</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>UsedMemory</td>
-            <td>已用内存</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>单位MB</td>
-        </tr>
-
-        <tr>
-            <td>FragmentationRatio</td>
-            <td>碎片率</td>
-            <td>Double</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>单位MB</td>
-        </tr>
-
-        <tr>
-            <td>Keys</td>
-            <td>Keys数</td>
-            <td>Int64</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>ExpiredKeys</td>
-            <td>过期Keys</td>
-            <td>Int64</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>EvictedKeys</td>
-            <td>驱逐Keys</td>
-            <td>Int64</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>由于 maxmemory 限制，而被回收内存的 key 的总数</td>
-        </tr>
-
-        <tr>
-            <td>KeySpaceHits</td>
-            <td>命中数</td>
-            <td>Int64</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>只读请求命中缓存</td>
-        </tr>
-
-        <tr>
-            <td>KeySpaceMisses</td>
-            <td>Miss数</td>
-            <td>Int64</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>只读请求未命中缓存</td>
-        </tr>
-
-        <tr>
-            <td>Commands</td>
-            <td>命令数</td>
-            <td>Int64</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Reads</td>
-            <td>读取数</td>
-            <td>Int64</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Writes</td>
-            <td>写入数</td>
-            <td>Int64</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>AvgTtl</td>
-            <td>平均过期</td>
-            <td>Int64</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>平均过期时间，单位毫秒</td>
-        </tr>
-
-        <tr>
-            <td>TopCommand</td>
-            <td>最忙命令</td>
-            <td>String</td>
-            <td>200</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>CreateTime</td>
-            <td>创建时间</td>
-            <td>DateTime</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>TraceId</td>
-            <td>追踪</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</td>
-        </tr>
-
-        <tr>
-            <td>Remark</td>
-            <td>备注</td>
-            <td>String</td>
-            <td>500</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-    </tbody>
-</table>
-<br></br>
-<h3>Redis消息队列（RedisMessageQueue）</h3>
-<table>
-    <thead>
-        <tr>
-            <th>名称</th>
-            <th>显示名</th>
-            <th>类型</th>
-            <th>长度</th>
-            <th>精度</th>
-            <th>主键</th>
-            <th>允许空</th>
-            <th>备注</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Id</td>
-            <td>编号</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td title="自增">AI</td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>RedisId</td>
-            <td>Redis节点</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Name</td>
-            <td>名称</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Category</td>
-            <td>分类</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Db</td>
-            <td>库</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Topic</td>
-            <td>主题</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>消息队列主题</td>
-        </tr>
-
-        <tr>
-            <td>Type</td>
-            <td>类型</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>消息队列类型</td>
-        </tr>
-
-        <tr>
-            <td>Groups</td>
-            <td>消费组</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>消费组名称</td>
-        </tr>
-
-        <tr>
-            <td>Consumers</td>
-            <td>消费者</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>消费者个数</td>
-        </tr>
-
-        <tr>
-            <td>Total</td>
-            <td>总消费</td>
-            <td>Int64</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>现有消费者的消费总数</td>
-        </tr>
-
-        <tr>
-            <td>Messages</td>
-            <td>消息数</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>积压下来，等待消费的消息个数</td>
-        </tr>
-
-        <tr>
-            <td>MaxMessages</td>
-            <td>最大积压</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>达到该值时告警，0表示不启用</td>
-        </tr>
-
-        <tr>
-            <td>Enable</td>
-            <td>启用</td>
-            <td>Boolean</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>停用的节点不再执行监控</td>
-        </tr>
-
-        <tr>
-            <td>ConsumerInfo</td>
-            <td>消费者信息</td>
-            <td>String</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>FirstConsumer</td>
-            <td>最早消费</td>
-            <td>DateTime</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>LastActive</td>
-            <td>最后活跃</td>
-            <td>DateTime</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>WebHook</td>
-            <td>告警机器人</td>
-            <td>String</td>
-            <td>500</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>钉钉、企业微信等</td>
-        </tr>
-
-        <tr>
-            <td>TraceId</td>
-            <td>追踪</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</td>
-        </tr>
-
-        <tr>
-            <td>CreateUser</td>
-            <td>创建人</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>CreateUserID</td>
-            <td>创建者</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>CreateTime</td>
-            <td>创建时间</td>
-            <td>DateTime</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>CreateIP</td>
-            <td>创建地址</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>UpdateUser</td>
-            <td>更新人</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>UpdateUserID</td>
-            <td>更新者</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>UpdateTime</td>
-            <td>更新时间</td>
-            <td>DateTime</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>UpdateIP</td>
-            <td>更新地址</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Remark</td>
-            <td>备注</td>
-            <td>String</td>
-            <td></td>
             <td></td>
             <td></td>
             <td></td>

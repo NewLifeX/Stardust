@@ -3,13 +3,13 @@ using System.ComponentModel;
 using NewLife;
 using NewLife.Cube;
 
-namespace Stardust.Web.Areas.Registry
-{
-    [DisplayName("注册中心")]
-    public class RegistryArea : AreaBase
-    {
-        public RegistryArea() : base(nameof(RegistryArea).TrimEnd("Area")) { }
+namespace Stardust.Web.Areas.Registry;
 
-        static RegistryArea() => RegisterArea<RegistryArea>();
-    }
+[DisplayName("注册中心")]
+[Menu(777, true)]
+public class RegistryArea : AreaBase
+{
+    public RegistryArea() : base(nameof(RegistryArea).TrimEnd("Area")) { }
+
+    static RegistryArea() => RegisterArea<RegistryArea>();
 }

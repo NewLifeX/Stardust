@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
+using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data.Deployment;
 using Stardust.Web.Services;
@@ -26,6 +28,41 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
     public AppDeployNodeController(DeployService deployService)
     {
         _deployService = deployService;
+    }
+
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        var appId = GetRequest("appId").ToInt(-1);
+        if (appId > 0)
+        {
+            PageSetting.NavView = "_App_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+
+        var nodeId = GetRequest("nodeId").ToInt(-1);
+        if (nodeId > 0)
+        {
+            PageSetting.NavView = "_Node_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+    }
+
+    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
+    {
+        var fields = base.OnGetFields(kind, model);
+
+        if (kind == ViewKinds.List)
+        {
+            var appId = GetRequest("appId").ToInt(-1);
+            if (appId > 0) fields.RemoveField("AppName");
+
+            var nodeId = GetRequest("nodeId").ToInt(-1);
+            if (nodeId > 0) fields.RemoveField("NodeName");
+        }
+
+        return fields;
     }
 
     protected override IEnumerable<AppDeployNode> Search(Pager p)
@@ -59,6 +96,27 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
         return base.Valid(entity, type, post);
     }
 
+    protected override Int32 OnInsert(AppDeployNode entity)
+    {
+        var rs = base.OnInsert(entity);
+        entity.App?.Fix();
+        return rs;
+    }
+
+    protected override Int32 OnUpdate(AppDeployNode entity)
+    {
+        var rs = base.OnUpdate(entity);
+        entity.App?.Fix();
+        return rs;
+    }
+
+    protected override Int32 OnDelete(AppDeployNode entity)
+    {
+        var rs = OnDelete(entity);
+        entity.App?.Fix();
+        return rs;
+    }
+
     /// <summary>执行操作</summary>
     /// <param name="act"></param>
     /// <param name="id"></param>
@@ -69,7 +127,7 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
         var dn = AppDeployNode.FindById(id);
         if (dn == null || dn.Node == null || dn.App == null) return Json(500, $"[{id}]不存在");
 
-        await _deployService.Control(dn.App, dn, act, UserHost);
+        await _deployService.Control(dn.App, dn, act, UserHost, 0);
 
         return JsonRefresh($"在节点[{dn.NodeName}]上对应用[{dn.AppName}]执行[{act}]操作", 1);
     }
@@ -87,7 +145,7 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
             var dn = AppDeployNode.FindById(id);
             if (dn != null && dn.Enable && dn.Node != null && dn.App != null)
             {
-                ts.Add(_deployService.Control(dn.App, dn, act, UserHost));
+                ts.Add(_deployService.Control(dn.App, dn, act, UserHost, 0));
             }
         }
 

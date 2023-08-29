@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
@@ -103,6 +103,19 @@ namespace Stardust.Data.Configs
 
             return FindAll(_.AppId == appId);
         }
+
+    /// <summary>根据令牌查找</summary>
+    /// <param name="token">令牌</param>
+    /// <returns>实体列表</returns>
+    public static IList<ConfigOnline> FindAllByToken(String token)
+    {
+        if (token.IsNullOrEmpty()) return new List<ConfigOnline>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Token.EqualIgnoreCase(token));
+
+        return FindAll(_.Token == token);
+    }
         #endregion
 
         #region 高级查询

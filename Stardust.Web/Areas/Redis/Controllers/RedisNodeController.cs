@@ -12,123 +12,123 @@ using Stardust.Data.Nodes;
 using Stardust.Server.Services;
 using XCode.Membership;
 
-namespace Stardust.Web.Areas.Redis.Controllers
+namespace Stardust.Web.Areas.Redis.Controllers;
+
+[Menu(50)]
+[RedisArea]
+public class RedisNodeController : EntityController<RedisNode>
 {
-    [Menu(50)]
-    [RedisArea]
-    public class RedisNodeController : EntityController<RedisNode>
+    private readonly IRedisService _redisService;
+
+    static RedisNodeController()
     {
-        private readonly IRedisService _redisService;
+        LogOnChange = true;
 
-        static RedisNodeController()
+        ListFields.RemoveField("WebHook", "AlarmMemoryRate", "AlarmConnections", "AlarmSpeed", "AlarmInputKbps", "AlarmOutputKbps");
+        ListFields.RemoveCreateField();
+        ListFields.RemoveField("UpdateUser", "UpdateUserID", "UpdateIP", "Remark");
+
         {
-            LogOnChange = true;
+            var df = ListFields.AddListField("Monitor", "UpdateTime");
+            df.DisplayName = "监控";
+            df.Header = "监控";
+            df.Url = "/Redis/RedisData?redisId={Id}";
+        }
+        {
+            var df = ListFields.AddListField("Queue", "UpdateTime");
+            df.DisplayName = "队列";
+            df.Header = "队列";
+            df.Url = "/Redis/RedisMessageQueue?redisId={Id}";
+        }
+        {
+            var df = ListFields.AddListField("Refresh", "UpdateTime");
+            df.DisplayName = "刷新";
+            df.Header = "刷新";
+            df.Url = "/Redis/RedisNode/Refresh?Id={Id}";
+            df.DataAction = "action";
+        }
+        {
+            var df = ListFields.AddListField("Log", "UpdateTime");
+            df.DisplayName = "审计日志";
+            df.Header = "审计日志";
+            df.Url = $"/Admin/Log?category={HttpUtility.UrlEncode("Redis节点")}&linkId={{Id}}";
+            df.Target = "_frame";
+        }
+    }
 
-            ListFields.RemoveField("WebHook", "AlarmMemoryRate", "AlarmConnections", "AlarmSpeed", "AlarmInputKbps", "AlarmOutputKbps");
-            ListFields.RemoveCreateField();
-            ListFields.RemoveField("UpdateUser", "UpdateUserID", "UpdateIP", "Remark");
+    public RedisNodeController(IRedisService redisService) => _redisService = redisService;
 
-            {
-                var df = ListFields.AddListField("Monitor", "UpdateTime");
-                df.DisplayName = "监控";
-                df.Header = "监控";
-                df.Url = "/Redis/RedisData?redisId={Id}";
-            }
-            {
-                var df = ListFields.AddListField("Queue", "UpdateTime");
-                df.DisplayName = "队列";
-                df.Header = "队列";
-                df.Url = "/Redis/RedisMessageQueue?redisId={Id}";
-            }
-            {
-                var df = ListFields.AddListField("Refresh", "UpdateTime");
-                df.DisplayName = "刷新";
-                df.Header = "刷新";
-                df.Url = "/Redis/RedisNode/Refresh?Id={Id}";
-                df.DataAction = "action";
-            }
-            {
-                var df = ListFields.AddListField("Log", "UpdateTime");
-                df.DisplayName = "修改日志";
-                df.Header = "修改日志";
-                df.Url = $"/Admin/Log?category={HttpUtility.UrlEncode("Redis节点")}&linkId={{Id}}";
-            }
+    protected override IEnumerable<RedisNode> Search(Pager p)
+    {
+        var nodeId = p["Id"].ToInt(-1);
+        if (nodeId > 0)
+        {
+            var node = RedisNode.FindById(nodeId);
+            if (node != null) return new[] { node };
         }
 
-        public RedisNodeController(IRedisService redisService) => _redisService = redisService;
+        var category = p["category"];
+        var server = p["server"];
+        var enable = p["enable"]?.ToBoolean();
 
-        protected override IEnumerable<RedisNode> Search(Pager p)
+        var start = p["dtStart"].ToDateTime();
+        var end = p["dtEnd"].ToDateTime();
+
+        return RedisNode.Search(server, category, enable, start, end, p["Q"], p);
+    }
+
+    /// <summary>搜索</summary>
+    /// <param name="provinceId"></param>
+    /// <param name="cityId"></param>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public ActionResult NodeSearch(String category, String key = null)
+    {
+        var page = new PageParameter { PageSize = 20 };
+
+        // 默认排序
+        if (page.Sort.IsNullOrEmpty()) page.Sort = RedisNode._.Name;
+
+        var list = RedisNode.Search(null, category, true, DateTime.MinValue, DateTime.MinValue, key, page);
+
+        return Json(0, null, list.Select(e => new
         {
-            var nodeId = p["Id"].ToInt(-1);
-            if (nodeId > 0)
-            {
-                var node = RedisNode.FindById(nodeId);
-                if (node != null) return new[] { node };
-            }
+            e.Id,
+            e.Name,
+            e.Server,
+            e.Category,
+        }).ToArray());
+    }
 
-            var category = p["category"];
-            var server = p["server"];
-            var enable = p["enable"]?.ToBoolean();
-
-            var start = p["dtStart"].ToDateTime();
-            var end = p["dtEnd"].ToDateTime();
-
-            return RedisNode.Search(server, category, enable, start, end, p["Q"], p);
-        }
-
-        /// <summary>搜索</summary>
-        /// <param name="provinceId"></param>
-        /// <param name="cityId"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public ActionResult NodeSearch(String category, String key = null)
+    [EntityAuthorize(PermissionFlags.Update)]
+    public ActionResult Refresh(Int32 id)
+    {
+        var node = RedisNode.FindById(id);
+        if (node != null)
         {
-            var page = new PageParameter { PageSize = 20 };
+            XTrace.WriteLine("刷新 {0}/{1} {2}", node.Name, node.Id, node.Server);
 
-            // 默认排序
-            if (page.Sort.IsNullOrEmpty()) page.Sort = RedisNode._.Name;
-
-            var list = RedisNode.Search(null, category, true, DateTime.MinValue, DateTime.MinValue, key, page);
-
-            return Json(0, null, list.Select(e => new
+            try
             {
-                e.Id,
-                e.Name,
-                e.Server,
-                e.Category,
-            }).ToArray());
-        }
+                _redisService.TraceNode(node);
 
-        [EntityAuthorize(PermissionFlags.Update)]
-        public ActionResult Refresh(Int32 id)
-        {
-            var node = RedisNode.FindById(id);
-            if (node != null)
-            {
-                XTrace.WriteLine("刷新 {0}/{1} {2}", node.Name, node.Id, node.Server);
-
-                try
+                var queues = RedisMessageQueue.FindAllByRedisId(node.Id);
+                foreach (var item in queues.Where(e => e.Enable))
                 {
-                    _redisService.TraceNode(node);
-
-                    var queues = RedisMessageQueue.FindAllByRedisId(node.Id);
-                    foreach (var item in queues.Where(e => e.Enable))
-                    {
-                        _redisService.TraceQueue(item);
-                        item.SaveAsync();
-                    }
-
-                    LogProvider.Provider.WriteLog("RedisNode", "Refresh", true, $"刷新Redis节点[{node}]成功");
+                    _redisService.TraceQueue(item);
+                    item.SaveAsync();
                 }
-                catch (Exception ex)
-                {
-                    LogProvider.Provider.WriteLog("RedisNode", "Refresh", false, ex?.GetMessage());
 
-                    throw;
-                }
+                LogProvider.Provider.WriteLog("RedisNode", "Refresh", true, $"刷新Redis节点[{node}]成功");
             }
+            catch (Exception ex)
+            {
+                LogProvider.Provider.WriteLog("RedisNode", "Refresh", false, ex?.GetMessage());
 
-            return JsonRefresh($"刷新[{node}]成功！");
+                throw;
+            }
         }
+
+        return JsonRefresh($"刷新[{node}]成功！");
     }
 }

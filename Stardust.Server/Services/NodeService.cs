@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Xml.Linq;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
@@ -8,22 +9,20 @@ using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data.Nodes;
 using Stardust.Models;
-using Stardust.Server.Models;
 using XCode;
 
 namespace Stardust.Server.Services;
 
 public class NodeService
 {
-    private static readonly ICache _cache = new MemoryCache();
     private readonly TokenService _tokenService;
-    private readonly ICache _queue;
+    private readonly ICacheProvider _cacheProvider;
     private readonly ITracer _tracer;
 
-    public NodeService(TokenService tokenService, ICache queue, ITracer tracer)
+    public NodeService(TokenService tokenService, ICacheProvider cacheProvider, ITracer tracer)
     {
         _tokenService = tokenService;
-        _queue = queue;
+        _cacheProvider = cacheProvider;
         _tracer = tracer;
     }
 
@@ -39,7 +38,7 @@ public class NodeService
         return !secret.IsNullOrEmpty() && !secret.IsNullOrEmpty() && (node.Secret == secret || node.Secret.MD5() == secret);
     }
 
-    public Node Register(LoginInfo inf, String ip, Setting setting)
+    public Node Register(LoginInfo inf, String ip, StarServerSetting setting)
     {
         var code = inf.Code;
         var secret = inf.Secret;
@@ -63,7 +62,7 @@ public class NodeService
         return node;
     }
 
-    public TokenModel Login(Node node, LoginInfo inf, String ip, Setting setting)
+    public TokenModel Login(Node node, LoginInfo inf, String ip, StarServerSetting setting)
     {
         if (!inf.ProductCode.IsNullOrEmpty()) node.ProductCode = inf.ProductCode;
 
@@ -98,8 +97,9 @@ public class NodeService
         online.Delete();
 
         //var sid = $"{node.ID}@{ip}";
-        var sid = node.Code;
-        _cache.Remove($"NodeOnline:{sid}");
+        //var sid = node.Code;
+        //_cacheProvider.InnerCache.Remove($"NodeOnline:{sid}");
+        RemoveOnline(node);
 
         // 计算在线时长
         if (online.CreateTime.Year > 2000)
@@ -181,7 +181,7 @@ public class NodeService
         return flag ? node : null;
     }
 
-    private Node AutoRegister(Node node, LoginInfo inf, String ip, Setting set)
+    private Node AutoRegister(Node node, LoginInfo inf, String ip, StarServerSetting set)
     {
         if (!set.AutoRegister) throw new ApiException(12, "禁止自动注册");
 
@@ -267,7 +267,7 @@ public class NodeService
         return false;
     }
 
-    private static String BuildCode(NodeInfo di, String productCode, Setting set)
+    private static String BuildCode(NodeInfo di, String productCode, StarServerSetting set)
     {
         //var set = Setting.Current;
         //var uid = $"{di.UUID}@{di.MachineGuid}@{di.Macs}";
@@ -306,12 +306,12 @@ public class NodeService
     #endregion
 
     #region 心跳
-    public PingResponse Ping(Node node, PingInfo inf, String token, String ip, Setting set)
+    public PingResponse Ping(Node node, PingInfo inf, String token, String ip, StarServerSetting set)
     {
         var rs = new PingResponse
         {
             Time = inf.Time,
-            ServerTime = DateTime.UtcNow,
+            ServerTime = DateTime.UtcNow.ToLong(),
         };
 
         if (node != null)
@@ -321,14 +321,35 @@ public class NodeService
             node.FixArea();
             node.FixNameByRule();
 
+            // 在心跳中更新客户端所有的框架。因此客户端长期不重启，而中途可能安装了新版NET运行时
+            if (!inf.Framework.IsNullOrEmpty())
+            {
+                //node.Framework = inf.Framework?.Split(',').LastOrDefault();
+                node.Frameworks = inf.Framework;
+                // 选取最大的版本，而不是最后一个，例如6.0.3字符串大于6.0.13
+                Version max = null;
+                var fs = inf.Framework.Split(',');
+                if (fs != null)
+                {
+                    foreach (var f in fs)
+                    {
+                        if (System.Version.TryParse(f, out var v) && (max == null || max < v))
+                            max = v;
+                    }
+                    node.Framework = max?.ToString();
+                }
+            }
+
             // 每10分钟更新一次节点信息，确保活跃
-            if (node.UpdateTime.AddMinutes(10) < DateTime.Now) node.UpdateTime = DateTime.Now;
+            if (node.LastActive.AddMinutes(10) < DateTime.Now) node.LastActive = DateTime.Now;
             node.SaveAsync();
 
             rs.Period = node.Period;
+            rs.NewServer = !node.NewServer.IsNullOrEmpty() ? node.NewServer : set.NewServer;
 
             var olt = GetOrAddOnline(node, token, ip);
             olt.Name = node.Name;
+            olt.ProjectId = node.ProjectId;
             olt.Category = node.Category;
             olt.Version = node.Version;
             olt.CompileTime = node.CompileTime;
@@ -399,30 +420,12 @@ public class NodeService
         return rs.ToArray();
     }
 
-    //private ServiceInfo[] GetServices(Int32 nodeId)
-    //{
-    //    var list = AppDeployNode.FindAllByNodeId(nodeId);
-    //    list = list.Where(e => e.Enable).ToList();
-    //    if (list.Count == 0) return null;
-
-    //    var svcs = new List<ServiceInfo>();
-    //    foreach (var item in list)
-    //    {
-    //        var deploy = item.App;
-    //        if (deploy == null || !deploy.Enable) continue;
-
-    //        svcs.Add(item.ToService());
-    //    }
-
-    //    return svcs.ToArray();
-    //}
-
     public PingResponse Ping()
     {
         return new PingResponse
         {
             Time = 0,
-            ServerTime = DateTime.Now,
+            ServerTime = DateTime.UtcNow.ToLong(),
         };
     }
 
@@ -434,21 +437,24 @@ public class NodeService
         return GetOnline(node, localIp) ?? CreateOnline(node, token, ip);
     }
 
-    /// <summary></summary>
+    /// <summary>获取在线</summary>
     /// <param name="node"></param>
     /// <returns></returns>
     public NodeOnline GetOnline(Node node, String ip)
     {
         //var sid = $"{node.ID}@{ip}";
         var sid = node.Code;
-        var olt = _cache.Get<NodeOnline>($"NodeOnline:{sid}");
+        var olt = _cacheProvider.InnerCache.Get<NodeOnline>($"NodeOnline:{sid}");
         if (olt != null)
         {
-            _cache.SetExpire($"NodeOnline:{sid}", TimeSpan.FromSeconds(120));
+            //_cacheProvider.InnerCache.SetExpire($"NodeOnline:{sid}", TimeSpan.FromSeconds(120));
             return olt;
         }
 
-        return NodeOnline.FindBySessionID(sid);
+        olt = NodeOnline.FindBySessionID(sid);
+        if (olt != null) UpdateOnline(node, olt);
+
+        return olt;
     }
 
     /// <summary>检查在线</summary>
@@ -459,6 +465,7 @@ public class NodeService
         //var sid = $"{node.ID}@{ip}";
         var sid = node.Code;
         var olt = NodeOnline.GetOrAdd(sid);
+        olt.ProjectId = node.ProjectId;
         olt.NodeID = node.ID;
         olt.Name = node.Name;
         olt.IP = node.IP;
@@ -476,9 +483,27 @@ public class NodeService
 
         olt.Creator = Environment.MachineName;
 
-        _cache.Set($"NodeOnline:{sid}", olt, 120);
+        //_cacheProvider.InnerCache.Set($"NodeOnline:{sid}", olt, 120);
+        UpdateOnline(node, olt);
 
         return olt;
+    }
+
+    /// <summary>更新在线状态</summary>
+    /// <param name="node"></param>
+    /// <param name="online"></param>
+    public void UpdateOnline(Node node, NodeOnline online)
+    {
+        var sid = node.Code;
+        _cacheProvider.InnerCache.Set($"NodeOnline:{sid}", online, 120);
+    }
+
+    /// <summary>删除在线状态</summary>
+    /// <param name="node"></param>
+    public void RemoveOnline(Node node)
+    {
+        var sid = node.Code;
+        _cacheProvider.InnerCache.Remove($"NodeOnline:{sid}");
     }
     #endregion
 
@@ -497,10 +522,10 @@ public class NodeService
 
         // 通知命令发布者，指令已完成
         var topic = $"nodereply:{cmd.Id}";
-        var q = _queue.GetQueue<CommandReplyModel>(topic);
+        var q = _cacheProvider.GetQueue<CommandReplyModel>(topic);
         q.Add(model);
 
-        _queue.SetExpire(topic, TimeSpan.FromSeconds(60));
+        _cacheProvider.Cache.SetExpire(topic, TimeSpan.FromSeconds(60));
 
         return 1;
     }
@@ -541,7 +566,7 @@ public class NodeService
     /// <param name="model"></param>
     /// <param name="token">应用令牌</param>
     /// <returns></returns>
-    public async Task<Int32> SendCommand(CommandInModel model, String token, Setting setting)
+    public async Task<NodeCommand> SendCommand(CommandInModel model, String token, StarServerSetting setting)
     {
         if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定节点");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
@@ -572,18 +597,18 @@ public class NodeService
         var commandModel = cmd.ToModel();
         commandModel.TraceId = DefaultSpan.Current + "";
 
-        var queue = _queue.GetQueue<String>($"nodecmd:{node.Code}");
+        var queue = _cacheProvider.GetQueue<String>($"nodecmd:{node.Code}");
         queue.Add(commandModel.ToJson());
 
         // 挂起等待。借助redis队列，等待响应
-        if (model.Expire > 0)
+        if (model.Timeout > 0)
         {
-            var q = _queue.GetQueue<CommandReplyModel>($"nodereply:{cmd.Id}");
-            var reply = await q.TakeOneAsync(model.Expire);
+            var q = _cacheProvider.GetQueue<CommandReplyModel>($"nodereply:{cmd.Id}");
+            var reply = await q.TakeOneAsync(model.Timeout);
             if (reply != null)
             {
                 // 埋点
-                using var span = _tracer?.NewSpan($"redismq:ServiceLog", reply);
+                using var span = _tracer?.NewSpan($"mq:NodeCommandReply", reply);
 
                 if (reply.Status == CommandStatus.错误)
                     throw new Exception($"命令错误！{reply.Data}");
@@ -592,12 +617,12 @@ public class NodeService
             }
         }
 
-        return cmd.Id;
+        return cmd;
     }
     #endregion
 
     #region 辅助
-    public TokenModel IssueToken(String name, Setting set)
+    public TokenModel IssueToken(String name, StarServerSetting set)
     {
         // 颁发令牌
         var ss = set.TokenSecret.Split(':');
@@ -649,7 +674,7 @@ public class NodeService
         return (node, ex);
     }
 
-    public TokenModel ValidAndIssueToken(String deviceCode, String token, Setting set)
+    public TokenModel ValidAndIssueToken(String deviceCode, String token, StarServerSetting set)
     {
         if (token.IsNullOrEmpty()) return null;
         //var set = Setting.Current;

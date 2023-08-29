@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Reflection;
 using NewLife;
+using NewLife.Caching;
 using NewLife.Common;
 using NewLife.Configuration;
 using NewLife.Http;
@@ -62,7 +63,6 @@ public class StarFactory : DisposeBase
 
     private AppClient _client;
     private TokenHttpFilter _tokenFilter;
-    //private AppClient _appClient;
     #endregion
 
     #region 构造
@@ -93,30 +93,52 @@ public class StarFactory : DisposeBase
 
         _tracer.TryDispose();
         _config.TryDispose();
-        //_appClient.TryDispose();
     }
 
     private void Init()
     {
         XTrace.WriteLine("正在初始化星尘……");
 
-        Local = new LocalStarClient();
+        Local = new LocalStarClient { Log = Log };
+
+        // 从命令行读取参数
+        var args = Environment.GetCommandLineArgs();
+        if (args != null && args.Length > 0)
+        {
+            for (var i = 0; i < args.Length; i++)
+            {
+                var key = args[i].TrimStart('-');
+                var p = key.IndexOf('=');
+                if (p > 0)
+                {
+                    var value = key.Substring(p + 1);
+                    key = key.Substring(0, p);
+                    if (Server.IsNullOrEmpty() && key.EqualIgnoreCase("StarServer"))
+                        Server = value;
+                    else if (AppId.IsNullOrEmpty() && key.EqualIgnoreCase("StarAppId"))
+                        AppId = value;
+                    else if (Secret.IsNullOrEmpty() && key.EqualIgnoreCase("StarSecret"))
+                        Secret = value;
+                }
+            }
+        }
 
         // 从环境变量读取星尘地址、应用Id、密钥，方便容器化部署
         if (Server.IsNullOrEmpty()) Server = Environment.GetEnvironmentVariable("StarServer");
-        if (AppId.IsNullOrEmpty()) AppId = Environment.GetEnvironmentVariable("AppId");
-        if (Secret.IsNullOrEmpty()) Secret = Environment.GetEnvironmentVariable("Secret");
+        if (AppId.IsNullOrEmpty()) AppId = Environment.GetEnvironmentVariable("StarAppId");
+        if (Secret.IsNullOrEmpty()) Secret = Environment.GetEnvironmentVariable("StarSecret");
 
         // 不区分大小写识别环境变量
         foreach (DictionaryEntry item in Environment.GetEnvironmentVariables())
         {
             var key = item.Key + "";
+            var value = item.Value + "";
             if (Server.IsNullOrEmpty() && key.EqualIgnoreCase("StarServer"))
-                Server = item.Value + "";
-            else if (AppId.IsNullOrEmpty() && key.EqualIgnoreCase("AppId"))
-                AppId = item.Value + "";
-            else if (Secret.IsNullOrEmpty() && key.EqualIgnoreCase("Secret"))
-                Secret = item.Value + "";
+                Server = value;
+            else if (AppId.IsNullOrEmpty() && key.EqualIgnoreCase("StarAppId"))
+                AppId = value;
+            else if (Secret.IsNullOrEmpty() && key.EqualIgnoreCase("StarSecret"))
+                Secret = value;
         }
 
         // 读取本地appsetting
@@ -143,6 +165,7 @@ public class StarFactory : DisposeBase
         if (AppId != "StarAgent")
         {
             // 借助本地StarAgent获取服务器地址
+            var sw = Stopwatch.StartNew();
             try
             {
                 //XTrace.WriteLine("正在探测本机星尘代理……");
@@ -151,7 +174,7 @@ public class StarFactory : DisposeBase
                 if (!server.IsNullOrEmpty())
                 {
                     if (Server.IsNullOrEmpty()) Server = server;
-                    XTrace.WriteLine("星尘探测：{0}", server);
+                    XTrace.WriteLine("星尘探测：{0} Cost={1}ms", server, sw.ElapsedMilliseconds);
 
                     if (set.Server.IsNullOrEmpty())
                     {
@@ -160,11 +183,11 @@ public class StarFactory : DisposeBase
                     }
                 }
                 else
-                    XTrace.WriteLine("星尘探测：StarAgent Not Found");
+                    XTrace.WriteLine("星尘探测：StarAgent Not Found, Cost={0}ms", sw.ElapsedMilliseconds);
             }
             catch (Exception ex)
             {
-                XTrace.Log.Error("星尘探测失败！{0}", ex.Message);
+                XTrace.Log.Error("星尘探测失败！{0} Cost={1}ms", ex.Message, sw.ElapsedMilliseconds);
             }
         }
 
@@ -204,9 +227,15 @@ public class StarFactory : DisposeBase
 
         var ioc = ObjectContainer.Current;
         ioc.AddSingleton(this);
-        ioc.AddSingleton(p => Tracer);
-        ioc.AddSingleton(p => Config);
+        ioc.AddSingleton(p => Tracer ?? DefaultTracer.Instance ?? (DefaultTracer.Instance ??= new DefaultTracer()));
+        //ioc.AddSingleton(p => Config);
         ioc.AddSingleton(p => Service);
+
+        // 替换为混合配置提供者，优先本地配置
+        ioc.AddSingleton(p => GetConfig());
+
+        ioc.TryAddSingleton(XTrace.Log);
+        ioc.TryAddSingleton(typeof(ICacheProvider), typeof(CacheProvider));
     }
 
     private Boolean Valid()
@@ -405,12 +434,20 @@ public class StarFactory : DisposeBase
     /// <param name="command"></param>
     /// <param name="argument"></param>
     /// <param name="expire"></param>
+    /// <param name="timeout"></param>
     /// <returns></returns>
-    public async Task<Int32> SendNodeCommand(String nodeCode, String command, String argument = null, Int32 expire = 3600)
+    public async Task<Int32> SendNodeCommand(String nodeCode, String command, String argument = null, Int32 expire = 3600, Int32 timeout = 5)
     {
         if (!Valid()) return -1;
 
-        return await _client.PostAsync<Int32>("Node/SendCommand", new { Code = nodeCode, command, argument, expire });
+        return await _client.PostAsync<Int32>("Node/SendCommand", new CommandInModel
+        {
+            Code = nodeCode,
+            Command = command,
+            Argument = argument,
+            Expire = expire,
+            Timeout = timeout
+        });
     }
 
     /// <summary>发送应用命令。通知应用刷新配置信息和服务信息等</summary>
@@ -418,12 +455,20 @@ public class StarFactory : DisposeBase
     /// <param name="command"></param>
     /// <param name="argument"></param>
     /// <param name="expire"></param>
+    /// <param name="timeout"></param>
     /// <returns></returns>
-    public async Task<Int32> SendAppCommand(String appId, String command, String argument = null, Int32 expire = 3600)
+    public async Task<Int32> SendAppCommand(String appId, String command, String argument = null, Int32 expire = 3600, Int32 timeout = 5)
     {
         if (!Valid()) return -1;
 
-        return await _client.PostAsync<Int32>("App/SendCommand", new { Code = appId, command, argument, expire });
+        return await _client.PostAsync<Int32>("App/SendCommand", new CommandInModel
+        {
+            Code = appId,
+            Command = command,
+            Argument = argument,
+            Expire = expire,
+            Timeout = timeout
+        });
     }
     #endregion
 

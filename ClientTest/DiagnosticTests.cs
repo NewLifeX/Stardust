@@ -3,62 +3,68 @@ using NewLife.Log;
 using Stardust.Monitors;
 using Xunit;
 
-namespace ClientTest
+namespace ClientTest;
+
+[TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
+public class DiagnosticTests
 {
-    public class DiagnosticTests
+    [Fact]
+    public async void TestHttp()
     {
-        [Fact]
-        public async void TestHttp()
-        {
-            //var tracer = NewLife.Log.DefaultTracer.Instance;
-            var tracer = new DefaultTracer();
+        XTrace.WriteLine(nameof(TestHttp));
 
-            var observer = new DiagnosticListenerObserver { Tracer = tracer };
-            observer.Subscribe(new HttpDiagnosticListener());
+        //var tracer = NewLife.Log.DefaultTracer.Instance;
+        var tracer = new DefaultTracer { Period = 11 };
 
-            var http = new HttpClient();
-            await http.GetStringAsync("http://newlifex.com?id=1234");
+        var observer = new DiagnosticListenerObserver { Tracer = tracer };
+        observer.Subscribe(new HttpDiagnosticListener());
 
-            var builders = tracer.TakeAll();
-            Assert.Single(builders);
-            Assert.Single(builders[0].Samples);
-            Assert.Null(builders[0].ErrorSamples);
-        }
+        var http = new HttpClient();
+        await http.GetStringAsync("http://newlifex.com?id=1234");
 
-        [Fact]
-        public async void TestHttp2()
-        {
-            //var tracer = NewLife.Log.DefaultTracer.Instance;
-            var tracer = new DefaultTracer();
+        var builders = tracer.TakeAll();
+        Assert.True(builders.Length > 0);
+        Assert.Single(builders[0].Samples);
+        Assert.Null(builders[0].ErrorSamples);
+    }
 
-            var observer = new DiagnosticListenerObserver { Tracer = tracer };
-            observer.Subscribe("HttpHandlerDiagnosticListener", "System.Net.Http.HttpRequestOut.Start", "System.Net.Http.HttpRequestOut.Stop", "System.Net.Http.Exception");
+    [Fact]
+    public async void TestHttp2()
+    {
+        XTrace.WriteLine(nameof(TestHttp2));
 
-            var http = new HttpClient();
-            await http.GetStringAsync("http://newlifex.com?id=1234");
+        //var tracer = NewLife.Log.DefaultTracer.Instance;
+        var tracer = new DefaultTracer { Period = 22 };
 
-            var builders = tracer.TakeAll();
-            Assert.Single(builders);
-            Assert.Single(builders[0].Samples);
-            Assert.Null(builders[0].ErrorSamples);
-        }
+        var observer = new DiagnosticListenerObserver { Tracer = tracer };
+        observer.Subscribe("HttpHandlerDiagnosticListener", "System.Net.Http.HttpRequestOut.Start", "System.Net.Http.HttpRequestOut.Stop", "System.Net.Http.Exception");
 
-        [Fact]
-        public async void TestHttp3()
-        {
-            //var tracer = NewLife.Log.DefaultTracer.Instance;
-            var tracer = new DefaultTracer();
+        var http = new HttpClient();
+        await http.GetStringAsync("http://newlifex.com?id=1234");
 
-            var observer = new DiagnosticListenerObserver { Tracer = tracer };
-            observer.Subscribe("HttpHandlerDiagnosticListener", null, null, null);
+        var builders = tracer.TakeAll();
+        Assert.Single(builders);
+        Assert.Single(builders[0].Samples);
+        Assert.Null(builders[0].ErrorSamples);
+    }
 
-            var http = new HttpClient();
-            await http.GetStringAsync("http://newlifex.com?id=1234");
+    [Fact]
+    public async void TestHttp3()
+    {
+        XTrace.WriteLine(nameof(TestHttp3));
 
-            var builders = tracer.TakeAll();
-            Assert.Single(builders);
-            Assert.Single(builders[0].Samples);
-            Assert.Null(builders[0].ErrorSamples);
-        }
+        //var tracer = NewLife.Log.DefaultTracer.Instance;
+        var tracer = new DefaultTracer { Period = 33 };
+
+        var observer = new DiagnosticListenerObserver { Tracer = tracer };
+        observer.Subscribe("HttpHandlerDiagnosticListener", null, null, null);
+
+        var http = new HttpClient();
+        await http.GetStringAsync("http://newlifex.com?id=1234");
+
+        var builders = tracer.TakeAll();
+        Assert.Single(builders);
+        Assert.Single(builders[0].Samples);
+        Assert.Null(builders[0].ErrorSamples);
     }
 }

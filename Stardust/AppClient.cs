@@ -10,6 +10,8 @@ using NewLife.Threading;
 using Stardust.Models;
 using Stardust.Registry;
 using Stardust.Services;
+using NewLife.Caching;
+using System;
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
 using System.Net.WebSockets;
 using TaskEx = System.Threading.Tasks.Task;
@@ -57,6 +59,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     private readonly ConcurrentDictionary<String, ServiceModel[]> _consumes = new();
     private readonly ConcurrentDictionary<String, IList<Delegate>> _consumeEvents = new();
     private readonly ConcurrentQueue<AppInfo> _fails = new();
+    private readonly ICache _cache = new MemoryCache();
     #endregion
 
     #region 构造
@@ -169,9 +172,13 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         }
         catch (Exception ex)
         {
-            Log?.Debug("注册异常[{0}] {1}", Source, ex.GetTrue().Message);
+            if (ex is HttpRequestException)
+                Log?.Info("注册异常[{0}] {1}", Source, ex.GetTrue().Message);
+            else
+                Log?.Info(ex.ToString());
 
-            throw;
+            //throw;
+            return null;
         }
     }
 
@@ -193,7 +200,30 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
                 if (rs != null)
                 {
                     // 由服务器改变采样频率
-                    if (rs.Period > 0) _timer.Period = rs.Period * 1000;
+                    if (rs.Period > 0 && _timer != null) _timer.Period = rs.Period * 1000;
+
+                    var delay = 0;
+                    var dt = rs.Time.ToDateTime();
+                    if (dt.Year > 2000)
+                    {
+                        // 计算延迟
+                        var ts = DateTime.UtcNow - dt;
+                        var ms = (Int32)Math.Round(ts.TotalMilliseconds);
+                        delay = delay > 0 ? (delay + ms) / 2 : ms;
+                    }
+
+                    // 时间偏移，用于修正本地时间
+                    dt = rs.ServerTime.ToDateTime();
+                    if (dt.Year > 2000) _span = dt.AddMilliseconds(delay / 2) - DateTime.UtcNow;
+
+                    // 推队列
+                    if (rs.Commands != null && rs.Commands.Length > 0)
+                    {
+                        foreach (var model in rs.Commands)
+                        {
+                            await ReceiveCommand(model);
+                        }
+                    }
                 }
             }
             catch
@@ -225,6 +255,11 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             throw;
         }
     }
+
+    private TimeSpan _span;
+    /// <summary>获取相对于服务器的当前时间，避免两端时间差</summary>
+    /// <returns></returns>
+    public DateTime GetNow() => DateTime.Now.Add(_span);
     #endregion
 
     #region 上报
@@ -293,7 +328,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         // 记录追踪标识，上报的时候带上，尽可能让源头和下游串联起来
         _eventTraceId = DefaultSpan.Current?.ToString();
 
-        var now = DateTime.UtcNow;
+        var now = GetNow().ToUniversalTime();
         var ev = new EventModel { Time = now.ToLong(), Type = type, Name = name, Remark = remark };
         _events.Enqueue(ev);
 
@@ -349,7 +384,12 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         DefaultSpan.Current = null;
         try
         {
-            if (_appName == null) await Register();
+            if (_appName == null)
+            {
+                var rs = await Register();
+                if (rs == null) return;
+            }
+
             await Ping();
 
             await RefreshPublish();
@@ -399,37 +439,68 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             {
                 var data = await socket.ReceiveAsync(new ArraySegment<Byte>(buf), cancellationToken);
                 var model = buf.ToStr(null, 0, data.Count).ToJsonEntity<CommandModel>();
-                if (model != null)
-                {
-                    // 建立追踪链路
-                    using var span = Tracer?.NewSpan("cmd:" + model.Command, model);
-                    if (span != null && !model.TraceId.IsNullOrEmpty()) span.TraceId = model.TraceId;
-                    try
-                    {
-                        WriteLog("Got Command: {0}", model.ToJson());
-                        if (model.Expire.Year < 2000 || model.Expire > DateTime.Now)
-                        {
-                            await OnReceiveCommand(model);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        span?.SetError(ex, null);
-                    }
-                }
+                if (model != null) await ReceiveCommand(model);
             }
         }
         catch (WebSocketException) { }
         catch (Exception ex)
         {
             Log?.Debug("{0}", ex);
-            //XTrace.WriteException(ex);
         }
 
         if (socket.State == WebSocketState.Open)
             await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
     }
 #endif
+
+    async Task ReceiveCommand(CommandModel model)
+    {
+        if (model == null) return;
+
+        // 去重，避免命令被重复执行
+        if (!_cache.Add($"nodecmd:{model.Id}", model, 3600)) return;
+
+        // 埋点，建立调用链
+        using var span = Tracer?.NewSpan("cmd:" + model.Command, model);
+        span?.Detach(model.TraceId);
+        try
+        {
+            //todo 有效期判断可能有隐患，现在只是假设服务器和客户端在同一个时区，如果不同，可能会出现问题
+            var now = GetNow();
+            XTrace.WriteLine("Got Command: {0}", model.ToJson());
+            if (model.Expire.Year < 2000 || model.Expire > now)
+            {
+                // 延迟执行
+                var ts = model.StartTime - now;
+                if (ts.TotalMilliseconds > 0)
+                {
+                    TimerX.Delay(s =>
+                    {
+                        _ = OnReceiveCommand(model);
+                    }, (Int32)ts.TotalMilliseconds);
+
+                    var reply = new CommandReplyModel
+                    {
+                        Id = model.Id,
+                        Status = CommandStatus.处理中,
+                        Data = $"已安排计划执行 {model.StartTime.ToFullString()}"
+                    };
+                    await CommandReply(reply);
+                }
+                else
+                    await OnReceiveCommand(model);
+            }
+            else
+            {
+                var reply = new CommandReplyModel { Id = model.Id, Status = CommandStatus.取消 };
+                await CommandReply(reply);
+            }
+        }
+        catch (Exception ex)
+        {
+            span?.SetError(ex, null);
+        }
+    }
     #endregion
 
     #region 命令调度
@@ -531,6 +602,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
 
         var service = CreatePublishService(serviceName);
         service.Address = address;
+        service.ExternalAddress = NewLife.Setting.Current.ServiceAddress;
         service.Tag = tag;
         service.Health = health;
 
@@ -552,6 +624,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
 
         var service = CreatePublishService(serviceName);
         service.AddressCallback = addressCallback;
+        service.ExternalAddress = NewLife.Setting.Current.ServiceAddress;
         service.Tag = tag;
         service.Health = health;
 
@@ -595,7 +668,8 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             ClientId = ClientId,
         };
 
-        if (_consumeServices.TryAdd(serviceName, service))
+        // 已缓存数据的Tag可能不一致，需要重新消费
+        if (!_consumeServices.TryGetValue(serviceName, out var svc) || svc.Tag + "" != tag + "")
         {
             WriteLog("消费服务 {0}", service.ToJson());
 
@@ -605,19 +679,25 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             try
             {
                 var models = await ResolveAsync(service);
-                _consumes[serviceName] = models;
+                if (models != null && models.Length > 0)
+                {
+                    _consumes[serviceName] = models;
 
-                SaveConsumeServices(_consumes);
+                    SaveConsumeServices(_consumes);
+                }
+
+                // 缓存消费服务，避免频繁消费
+                _consumeServices[serviceName] = service;
+
+                return models;
             }
             catch (Exception ex)
             {
                 WriteLog("消费服务[{0}]报错：{1}", serviceName, ex.Message);
             }
         }
-        else
-        {
-            _consumeServices[serviceName] = service;
-        }
+
+        _consumeServices[serviceName] = service;
 
         if (_consumes.TryGetValue(serviceName, out var models2)) return models2;
 
@@ -729,7 +809,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     {
         if (serverAddress == null) return;
 
-        var set = StarSetting.Current;
+        var set = NewLife.Setting.Current;
         if (serverAddress == set.ServiceAddress) return;
 
         WriteLog("设置服务地址为：{0}", serverAddress);

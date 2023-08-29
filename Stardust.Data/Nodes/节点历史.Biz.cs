@@ -80,6 +80,18 @@ namespace Stardust.Data.Nodes
 
             return Find(_.Id == id);
         }
+
+    /// <summary>根据节点、操作查找</summary>
+    /// <param name="nodeId">节点</param>
+    /// <param name="action">操作</param>
+    /// <returns>实体列表</returns>
+    public static IList<NodeHistory> FindAllByNodeIDAndAction(Int32 nodeId, String action)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.NodeID == nodeId && e.Action.EqualIgnoreCase(action));
+
+        return FindAll(_.NodeID == nodeId & _.Action == action);
+    }
         #endregion
 
         #region 高级查询
@@ -163,10 +175,15 @@ namespace Stardust.Data.Nodes
             return history;
         }
 
-        static Lazy<FieldCache<NodeHistory>> NameCache = new Lazy<FieldCache<NodeHistory>>(() => new FieldCache<NodeHistory>(__.Action));
+        static Lazy<FieldCache<NodeHistory>> NameCache = new(() => new FieldCache<NodeHistory>(__.Action));
         /// <summary>获取所有分类名称</summary>
         /// <returns></returns>
         public static IDictionary<String, String> FindAllAction() => NameCache.Value.FindAllName();
+
+        /// <summary>删除指定日期之前的数据</summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public static Int32 DeleteBefore(DateTime date) => Delete(_.Id < Meta.Factory.Snow.GetId(date));
         #endregion
     }
 }

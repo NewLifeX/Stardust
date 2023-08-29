@@ -7,7 +7,7 @@
     <Description>星尘，分布式资源调度，部署于每一个节点，连接服务端，支持节点监控、远程发布。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2023 NewLife</Copyright>
-    <VersionPrefix>2.6</VersionPrefix>
+    <VersionPrefix>2.9</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -33,7 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Agent" Version="10.3.2023.301" />
+    <PackageReference Include="NewLife.Agent" Version="10.5.2023.812-beta0824" />
   </ItemGroup>
 
   <ItemGroup>

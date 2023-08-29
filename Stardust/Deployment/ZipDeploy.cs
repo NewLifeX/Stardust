@@ -1,4 +1,7 @@
 ﻿using System.Diagnostics;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Xml.Serialization;
 using NewLife;
 using NewLife.Log;
 
@@ -27,6 +30,12 @@ public class ZipDeploy
     /// <summary>可执行文件路径</summary>
     public String ExecuteFile { get; set; }
 
+    /// <summary>用户。以该用户执行应用</summary>
+    public String UserName { get; set; }
+
+    /// <summary>覆盖文件。需要拷贝覆盖已存在的文件，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
+    public String Overwrite { get; set; }
+
     /// <summary>进程</summary>
     public Process Process { get; private set; }
 
@@ -35,6 +44,9 @@ public class ZipDeploy
 
     /// <summary>最后的错误信息</summary>
     public String LastError { get; set; }
+
+    /// <summary>链路追踪</summary>
+    public ITracer Tracer { get; set; }
     #endregion
 
     #region 方法
@@ -45,6 +57,8 @@ public class ZipDeploy
     public Boolean Parse(String[] args)
     {
         if (args == null || args.Length == 0) return false;
+
+        using var span = Tracer?.NewSpan("ZipDeploy-Parse", args);
 
         var file = "";
         if (file.IsNullOrEmpty() && FileName.EndsWithIgnoreCase(".zip")) file = FileName;
@@ -116,6 +130,8 @@ public class ZipDeploy
     /// <summary>执行拉起应用</summary>
     public Boolean Execute(Int32 msWait = 3_000)
     {
+        using var span = Tracer?.NewSpan("ZipDeploy-Execute", new { WorkingDirectory, FileName });
+
         var fi = WorkingDirectory.CombinePath(FileName)?.AsFile();
         if (fi == null || !fi.Exists)
         {
@@ -123,6 +139,8 @@ public class ZipDeploy
             WriteLog("未发现Zip文件 {0}", fi.FullName);
             return false;
         }
+
+        span?.AppendTag(fi.FullName);
 
         var name = Name;
         if (name.IsNullOrEmpty()) name = Name = Path.GetFileNameWithoutExtension(FileName);
@@ -143,21 +161,37 @@ public class ZipDeploy
             Shadow = shadow.CombinePath(name);
         }
 
+        if (shadow.IsNullOrEmpty()) return false;
+
         var hash = fi.MD5().ToHex().Substring(0, 8).ToLower();
         var rundir = fi.Directory;
-        if (shadow.IsNullOrEmpty()) return false;
 
         WriteLog("ZipDeploy {0}", name);
         WriteLog("运行目录 {0}", rundir);
 
         // 影子目录，用于解压缩应用
-        shadow = shadow.CombinePath(hash);
+        shadow = shadow.CombinePath($"{Name}-{hash}");
         if (!Path.IsPathRooted(shadow)) shadow = rundir.FullName.CombinePath(shadow).GetFullPath();
         WriteLog("影子目录 {0}", shadow);
 
         var hasExtracted = false;
         if (!Directory.Exists(shadow))
         {
+            // 删除其它版本
+            try
+            {
+                foreach (var di in shadow.AsDirectory().Parent.GetDirectories($"{Name}-*"))
+                {
+                    span?.AppendTag($"删除旧版 {di.FullName}");
+
+                    di.Delete(true);
+                }
+            }
+            catch (Exception ex)
+            {
+                span?.SetError(ex, null);
+            }
+
             Extract(shadow);
             hasExtracted = true;
         }
@@ -172,22 +206,21 @@ public class ZipDeploy
             return false;
         }
 
-        // 如果带有 NewLife.Core.dll ，重定向基础目录
-        //Arguments = $"{Arguments} --BasePath={rundir}".Trim();
+        // 在环境变量中设置BasePath，不用担心影响当前进程，因为PathHelper仅读取一次
         Environment.SetEnvironmentVariable("BasePath", rundir.FullName);
         ExecuteFile = runfile.FullName;
 
-        WriteLog("执行 {0}", runfile);
+        WriteLog("运行文件 {0}", runfile);
 
         var si = new ProcessStartInfo
         {
             FileName = runfile.FullName,
             Arguments = Arguments,
-            WorkingDirectory = Path.GetDirectoryName(rundir.FullName),
+            WorkingDirectory = rundir.FullName,
 
             // false时目前控制台合并到当前控制台，一起退出；
             // true时目标控制台独立窗口，不会一起退出；
-            UseShellExecute = true,
+            UseShellExecute = false,
         };
         if (runfile.Extension.EqualIgnoreCase(".dll"))
         {
@@ -200,6 +233,23 @@ public class ZipDeploy
             si.Arguments = $"{runfile.FullName} {Arguments}";
         }
 
+        // 指定用户时，以特定用户启动进程
+        if (!UserName.IsNullOrEmpty())
+        {
+            si.UserName = UserName;
+            //si.UseShellExecute = false;
+
+            // 在Linux系统中，改变目录所属用户
+            if (Runtime.Linux)
+            {
+                var user = UserName;
+                if (!user.Contains(':')) user = $"{user}:{user}";
+                //Process.Start("chown", $"-R {user} {si.WorkingDirectory}");
+                Process.Start("chown", $"-R {user} {shadow}");
+                Process.Start("chown", $"-R {user} {si.WorkingDirectory.CombinePath("../").GetBasePath()}");
+            }
+        }
+
         if (Debug)
         {
             // UseShellExecute 必须 false，以便于后续重定向输出流
@@ -207,14 +257,17 @@ public class ZipDeploy
             si.RedirectStandardError = true;
         }
 
+        WriteLog("工作目录: {0}", si.WorkingDirectory);
         WriteLog("启动文件: {0}", si.FileName);
         WriteLog("启动参数: {0}", si.Arguments);
+        if (!si.UserName.IsNullOrEmpty())
+            WriteLog("启动用户：{0}", si.UserName);
 
         var p = Process.Start(si);
         Process = p;
         if (msWait > 0 && p.WaitForExit(msWait) && p.ExitCode != 0)
         {
-            WriteLog("启动失败！ExitCode={0}", p.ExitCode);
+            WriteLog("启动失败！PID={0} ExitCode={1}", p.Id, p.ExitCode);
 
             if (si.RedirectStandardError)
             {
@@ -243,7 +296,7 @@ public class ZipDeploy
             return false;
         }
 
-        WriteLog("Zip启动成功！");
+        WriteLog("Zip启动成功！PID={0}", p.Id);
 
         return true;
     }
@@ -252,33 +305,69 @@ public class ZipDeploy
     /// <param name="shadow"></param>
     public virtual void Extract(String shadow)
     {
+        using var span = Tracer?.NewSpan("ZipDeploy-Extract", new { shadow, WorkingDirectory, Overwrite });
+
         var fi = WorkingDirectory.CombinePath(FileName).AsFile();
-        var rundir = fi.Directory;
+        var rundir = fi.DirectoryName;
         WriteLog("解压缩 {0}", FileName);
 
         fi.Extract(shadow, true);
 
+        var ovs = Overwrite?.Split(';');
+
         // 复制配置文件和数据文件到运行目录
         var sdi = shadow.AsDirectory();
-        if (!sdi.FullName.EnsureEnd("\\").EqualIgnoreCase(fi.DirectoryName.EnsureEnd("\\")))
+        span?.AppendTag($"sdi={sdi.FullName} rundir={rundir}");
+        if (!sdi.FullName.EnsureEnd("\\").EqualIgnoreCase(rundir.EnsureEnd("\\")))
         {
+            // 覆盖文件
             foreach (var item in sdi.GetFiles())
             {
+                // 拷贝配置类文件
                 if (item.Extension.EndsWithIgnoreCase(".json", ".config", ".xml"))
                 {
-                    // 注意，appsettings.json 也可能覆盖
-                    item.CopyTo(rundir.FullName.CombinePath(item.Name), true);
+                    //span?.AppendTag(item.Name);
+
+                    var dst = rundir.CombinePath(item.Name);
+                    // 当前文件在覆盖列表内时，强制覆盖
+                    if (ovs != null && ovs.Any(e => e.IsMatch(item.Name)))
+                    {
+                        WriteLog("复制文件 {0}", item.Name);
+
+                        // 注意，appsettings.json 也可能覆盖
+                        item.CopyTo(dst, true);
+                    }
+                    else if (!File.Exists(dst))
+                    {
+                        WriteLog("复制文件 {0}", item.Name);
+
+                        item.CopyTo(dst, false);
+                    }
                 }
             }
 
-            var di = shadow.CombinePath("Config").AsDirectory();
-            if (di.Exists) di.CopyTo(rundir.FullName.CombinePath("Config"));
+            // 覆盖目录
+            foreach (var item in sdi.GetDirectories())
+            {
+                //span?.AppendTag(item.Name);
 
-            di = shadow.CombinePath("Data").AsDirectory();
-            if (di.Exists) di.CopyTo(rundir.FullName.CombinePath("Data"));
+                var di = shadow.CombinePath(item.Name).AsDirectory();
+                var dest = rundir.CombinePath(item.Name).AsDirectory();
+                // 强制覆盖(包含子孙目录，否则会出现目标文件夹中子孙文件夹内容遗漏拷贝)
+                if (ovs != null && ovs.Contains(item.Name))
+                {
+                    WriteLog("复制目录 {0}", item.Name);
 
-            di = shadow.CombinePath("Plugins").AsDirectory();
-            if (di.Exists) di.CopyTo(rundir.FullName.CombinePath("Plugins"));
+                    di.CopyTo(dest.FullName, allSub: true);
+                }
+                // 特殊目录且目标不存在时，覆盖
+                else if (item.Name.EqualIgnoreCase("Data", "Config", "Plugins", "wwwroot") && !dest.Exists)
+                {
+                    WriteLog("复制目录 {0}", item.Name);
+
+                    di.CopyTo(dest.FullName, allSub: true);
+                }
+            }
         }
     }
 
@@ -287,6 +376,8 @@ public class ZipDeploy
     /// <returns></returns>
     public virtual FileInfo FindExeFile(String shadow)
     {
+        using var span = Tracer?.NewSpan("ZipDeploy-FindExeFile", new { shadow });
+
         var fis = shadow.AsDirectory().GetFiles();
 
         var runfile = fis.FirstOrDefault(e => e.Name.EqualIgnoreCase(Name));
@@ -337,6 +428,8 @@ public class ZipDeploy
             var name = $"{Name}.dll";
             runfile = fis.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
         }
+
+        if (runfile != null) span?.AppendTag(runfile.FullName);
 
         return runfile;
     }

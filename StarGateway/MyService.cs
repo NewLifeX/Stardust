@@ -12,7 +12,7 @@ namespace StarGateway
         private HttpReverseProxy _proxy2;
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            var set = Setting.Current;
+            var set = StarGatewaySetting.Current;
 
             var server = new HttpReverseProxy
             {

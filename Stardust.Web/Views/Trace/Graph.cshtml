@@ -19,7 +19,7 @@
         title += " - " + NewLife.Common.SysConfig.Current.DisplayName;
     }
 
-    var set = NewLife.Cube.Setting.Current;
+    var set = NewLife.Cube.CubeSetting.Current;
 
     var res = set.ResourceUrl;
     if (String.IsNullOrEmpty(res)) res = "/Content";

@@ -61,6 +61,17 @@
         </tr>
 
         <tr>
+            <td>ProjectId</td>
+            <td>项目</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>资源归属的团队</td>
+        </tr>
+
+        <tr>
             <td>AppId</td>
             <td>应用</td>
             <td>Int32</td>
@@ -160,6 +171,17 @@
         </tr>
 
         <tr>
+            <td>UserName</td>
+            <td>用户名</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>以该用户执行应用</td>
+        </tr>
+
+        <tr>
             <td>MaxMemory</td>
             <td>最大内存</td>
             <td>Int32</td>
@@ -190,6 +212,17 @@
             <td></td>
             <td>N</td>
             <td>应用版本后自动发布到启用节点，加快发布速度</td>
+        </tr>
+
+        <tr>
+            <td>PackageName</td>
+            <td>包名</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>用于判断上传包名是否正确，避免错误上传其它应用包，支持*模糊匹配</td>
         </tr>
 
         <tr>
@@ -422,7 +455,7 @@
             <td>ProcessName</td>
             <td>进程名称</td>
             <td>String</td>
-            <td>50</td>
+            <td>200</td>
             <td></td>
             <td></td>
             <td></td>
@@ -471,6 +504,17 @@
             <td></td>
             <td></td>
             <td>客户端</td>
+        </tr>
+
+        <tr>
+            <td>Listens</td>
+            <td>监听端口</td>
+            <td>String</td>
+            <td>200</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>网络端口监听信息</td>
         </tr>
 
         <tr>
@@ -653,6 +697,17 @@
             <td></td>
             <td></td>
             <td>一般打包为Zip包，StarAgent下载后解压缩覆盖</td>
+        </tr>
+
+        <tr>
+            <td>Overwrite</td>
+            <td>覆盖文件</td>
+            <td>String</td>
+            <td>100</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>需要拷贝覆盖已存在的文件，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</td>
         </tr>
 
         <tr>
@@ -990,7 +1045,7 @@
             <td>ContentType</td>
             <td>内容类型</td>
             <td>String</td>
-            <td>50</td>
+            <td>200</td>
             <td></td>
             <td></td>
             <td></td>
@@ -1061,6 +1116,17 @@
             <td></td>
             <td></td>
             <td>用于远程抓取的附件来源地址，本地文件不存在时自动依次抓取</td>
+        </tr>
+
+        <tr>
+            <td>TraceId</td>
+            <td>追踪</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>链路追踪，用于APM性能追踪定位，还原该事件的调用链</td>
         </tr>
 
         <tr>

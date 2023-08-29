@@ -156,7 +156,9 @@ public partial class TraceRule : Entity<TraceRule>
     {
         if (input.IsNullOrWhiteSpace()) return null;
 
-        input = input.Trim().ToLower();
+        // 后面有正则判断，不能转换大小写
+        //input = input.Trim().ToLower();
+        input = input.Trim();
 
         var rules = GetValids();
         foreach (var rule in rules)

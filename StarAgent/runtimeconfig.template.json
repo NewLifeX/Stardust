@@ -1,0 +1,7 @@
+{
+  "runtimeOptions": {
+    "configProperties": {
+      "System.GC.HeapHardLimit": 10485760
+    }
+  }
+}
