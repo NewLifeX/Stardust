@@ -1,5 +1,7 @@
 ﻿using NewLife;
+using NewLife.Agent;
 using NewLife.Log;
+using NewLife.Model;
 using NewLife.Net;
 using NewLife.Remoting;
 using NewLife.Serialization;
@@ -71,27 +73,9 @@ public class StarService : DisposeBase, IApi
     [Api(nameof(Info))]
     public AgentInfo Info(AgentInfo info)
     {
-        //using var span = Manager?.Tracer?.NewSpan("ApiInfo");
         XTrace.WriteLine("Info<={0}", info.ToJson());
 
         var set = StarSetting;
-        //// 使用对方送过来的星尘服务端地址
-        //if (set.Server.IsNullOrEmpty() && !info.Server.IsNullOrEmpty())
-        //{
-        //    set.Server = info.Server;
-        //    set.Save();
-
-        //    XTrace.WriteLine("StarAgent使用应用[{0}]送过来的星尘服务端地址：{1}", info.ProcessId, info.Server);
-
-        //    if (Provider?.GetService<ServiceBase>() is MyService svc)
-        //    {
-        //        ThreadPool.QueueUserWorkItem(s =>
-        //        {
-        //            svc.StartFactory();
-        //            svc.StartClient();
-        //        });
-        //    }
-        //}
 
         var ai = _agentInfo ??= AgentInfo.GetLocal(true);
         ai.Server = set.Server;
@@ -99,6 +83,34 @@ public class StarService : DisposeBase, IApi
         ai.Code = AgentSetting.Code;
 
         return ai;
+    }
+
+    /// <summary>设置星尘服务端地址</summary>
+    /// <returns></returns>
+    [Api(nameof(SetServer))]
+    public String SetServer(String server)
+    {
+        var set = StarSetting;
+        if (set.Server.IsNullOrEmpty() && !server.IsNullOrEmpty())
+        {
+            set.Server = server;
+            set.Save();
+
+            XTrace.WriteLine("StarAgent使用[{0}]送过来的星尘服务端地址：{1}", Session, server);
+
+            if (Provider?.GetService<ServiceBase>() is MyService svc)
+            {
+                ThreadPool.QueueUserWorkItem(s =>
+                {
+                    Thread.Sleep(1000);
+
+                    svc.StartFactory();
+                    svc.StartClient();
+                });
+            }
+        }
+
+        return set.Server;
     }
 
     private void DoRefreshLocal(Object state)
