@@ -447,19 +447,27 @@ public class LocalStarClient
             var rs = new DefaultMessage();
             IPEndPoint ep = null;
             buf = udp.Receive(ref ep);
+#if NET40
             if (buf != null && rs.Read(buf) && encoder.Decode(rs, out var action, out _, out var data))
             {
-                //ms = rs.Payload.GetStream();
-                //var reader=new BinaryReader(ms);
-                //var name=reader.ReadString();
-                //var code = reader.ReadInt32();
-                //var data=reader
-
                 var js = encoder.DecodeResult(action, data, rs);
                 var info = (AgentInfo)encoder.Convert(js, typeof(AgentInfo));
 
                 yield return info;
             }
+#else
+            if (buf != null && rs.Read(buf))
+            {
+                var msg = encoder.Decode(rs);
+                if (msg != null)
+                {
+                    var js = encoder.DecodeResult(msg.Action, msg.Data, rs);
+                    var info = (AgentInfo)encoder.Convert(js, typeof(AgentInfo));
+
+                    yield return info;
+                }
+            }
+#endif
         }
     }
     #endregion
