@@ -447,15 +447,6 @@ public class LocalStarClient
             var rs = new DefaultMessage();
             IPEndPoint ep = null;
             buf = udp.Receive(ref ep);
-#if NET40
-            if (buf != null && rs.Read(buf) && encoder.Decode(rs, out var action, out _, out var data))
-            {
-                var js = encoder.DecodeResult(action, data, rs);
-                var info = (AgentInfo)encoder.Convert(js, typeof(AgentInfo));
-
-                yield return info;
-            }
-#else
             if (buf != null && rs.Read(buf))
             {
                 var msg = encoder.Decode(rs);
@@ -467,7 +458,6 @@ public class LocalStarClient
                     yield return info;
                 }
             }
-#endif
         }
     }
     #endregion
