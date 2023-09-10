@@ -15,7 +15,6 @@ using Stardust.Managers;
 using Stardust.Models;
 using Stardust.Plugins;
 using Stardust.Services;
-using Host = NewLife.Agent.Host;
 using IHost = NewLife.Agent.IHost;
 using Upgrade = Stardust.Web.Upgrade;
 
@@ -424,7 +423,7 @@ internal class MyService : ServiceBase, IServiceProvider
             var inService = "-s".EqualIgnoreCase(Environment.GetCommandLineArgs());
 
             // 以服务方式运行时，重启服务，否则采取拉起进程的方式
-            if (inService || Host is Host host && host.InService)
+            if (inService || Host is DefaultHost host && host.InService)
             {
                 // 使用外部命令重启服务
                 var rs = ug.Run("StarAgent", "-restart -delay");
@@ -552,7 +551,7 @@ internal class MyService : ServiceBase, IServiceProvider
                             var pid = Process.GetCurrentProcess().Id;
 
                             // 以服务方式运行时，重启服务，否则采取拉起进程的方式
-                            if (inService || Host is Host host && host.InService)
+                            if (inService || Host is DefaultHost host && host.InService)
                             {
                                 client.WriteInfoEvent("Upgrade", "强制更新完成，准备重启后台服务！PID=" + pid);
 

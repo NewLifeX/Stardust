@@ -1,30 +1,30 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2023.xsd" xmlns="https://newlifex.com/Model2023.xsd">
+<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202309.xsd" xmlns="https://newlifex.com/Model202309.xsd">
   <Option>
-    <!--输出目录-->
-    <Output>.\</Output>
-    <!--是否使用中文文件名。默认false-->
-    <ChineseFileName>False</ChineseFileName>
-    <!--基类。可能包含基类和接口，其中{name}替换为Table.Name-->
-    <BaseClass>Entity</BaseClass>
-    <!--命名空间-->
-    <Namespace>Stardust.Data.Configs</Namespace>
     <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
     <ClassNameTemplate />
     <!--显示名模板。其中{displayName}替换为Table.DisplayName-->
     <DisplayNameTemplate />
-    <!--用于生成拷贝函数的模型类。例如{name}或I{name}-->
+    <!--基类。可能包含基类和接口，其中{name}替换为Table.Name-->
+    <BaseClass>Entity</BaseClass>
+    <!--命名空间-->
+    <Namespace>Stardust.Data.Configs</Namespace>
+    <!--输出目录-->
+    <Output>.\</Output>
+    <!--是否使用中文文件名。默认false-->
+    <ChineseFileName>False</ChineseFileName>
+    <!--用于生成Copy函数的参数类型。例如{name}或I{name}-->
     <ModelNameForCopy />
     <!--带有索引器。实现IModel接口-->
     <HasIModel>False</HasIModel>
-    <!--模型类模版-->
-    <ModelClass />
-    <!--模型接口模版-->
-    <ModelInterface />
     <!--数据库连接名-->
     <ConnName>Stardust</ConnName>
+    <!--模型类模版。设置后生成模型类，用于接口数据传输，例如{name}Model-->
+    <ModelClass />
     <!--模型类输出目录。默认当前目录的Models子目录-->
     <ModelsOutput>.\Models\</ModelsOutput>
+    <!--模型接口模版。设置后生成模型接口，用于约束模型类和实体类，例如I{name}-->
+    <ModelInterface />
     <!--模型接口输出目录。默认当前目录的Interfaces子目录-->
     <InterfacesOutput>.\Interfaces\</InterfacesOutput>
     <!--用户实体转为模型类的模型类。例如{name}或{name}DTO-->
@@ -32,7 +32,7 @@
     <!--命名格式。Default/Upper/Lower/Underline-->
     <NameFormat>Default</NameFormat>
     <!--生成器版本-->
-    <Version>11.8.2023.0607</Version>
+    <Version>11.9.2023.0910</Version>
     <!--帮助文档-->
     <Document>https://newlifex.com/xcode/model</Document>
     <!--魔方区域显示名-->
@@ -40,111 +40,113 @@
     <!--魔方控制器输出目录-->
     <CubeOutput>../../Stardust.Web/Areas/Configs</CubeOutput>
   </Option>
-  <Table Name="AppConfig" Description="应用配置。需要管理配置的应用系统列表，每个应用以命令对形式管理配置数据，支持版本发布">
-    <Columns>
-      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
-      <Column Name="Category" DataType="String" Description="类别" />
-      <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="Name" DataType="String" Master="True" Description="名称" />
-      <Column Name="DisplayName" DataType="String" Description="显示名" />
-      <Column Name="Enable" DataType="Boolean" Description="启用" />
-      <Column Name="Version" DataType="Int32" Description="版本。应用正在使用的版本号，返回小于等于该版本的配置" />
-      <Column Name="NextVersion" DataType="Int32" Description="下一版本。下一个将要发布的版本，发布后两者相同" />
-      <Column Name="PublishTime" DataType="DateTime" Description="定时发布。在指定时间自动发布新版本" />
-      <Column Name="CanBeQuoted" DataType="Boolean" Description="可被依赖。打开后，才能被其它应用依赖" />
-      <Column Name="Quotes" DataType="String" Description="依赖应用。所依赖应用的集合" />
-      <Column Name="IsGlobal" DataType="Boolean" Description="全局。该应用下的配置数据作为全局数据，请求任意应用配置都返回" />
-      <Column Name="Readonly" DataType="Boolean" Description="只读。只读应用，不支持客户端上传配置数据，可用于保护数据避免被错误修改" />
-      <Column Name="EnableWorkerId" DataType="Boolean" Description="雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增" />
-      <Column Name="EnableApollo" DataType="Boolean" Description="阿波罗" Category="阿波罗" />
-      <Column Name="ApolloMetaServer" DataType="String" Description="阿波罗地址" Category="阿波罗" />
-      <Column Name="ApolloAppId" DataType="String" Description="阿波罗账号" Category="阿波罗" />
-      <Column Name="ApolloNameSpace" DataType="String" Description="阿波罗命名空间。默认application，也可以填依赖的公共命名空间，但建议为公共命名空间建立应用依赖。" Category="阿波罗" />
-      <Column Name="UsedKeys" DataType="String" Length="2000" Description="已使用。用过的配置项" Category="配置项" />
-      <Column Name="MissedKeys" DataType="String" Length="2000" Description="缺失键。没有读取到的配置项" Category="配置项" />
-      <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
-      <Column Name="UpdateUserID" DataType="Int32" Description="更新者" Category="扩展" />
-      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
-      <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
-      <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="Name" Unique="True" />
-      <Index Columns="ProjectId" />
-      <Index Columns="AppId" />
-    </Indexes>
-  </Table>
-  <Table Name="AppRule" Description="应用规则。针对应用设置的规则，比如根据IP段设置作用域，可用于划分生产环境和开发测试环境">
-    <Columns>
-      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="Rule" DataType="String" Length="500" Description="规则。分号分段，逗号间隔多项匹配值，比如IP=10.*,172.*;LocalIP=192.*" />
-      <Column Name="Result" DataType="String" Description="结果。比如Scope=dev" />
-      <Column Name="Priority" DataType="Int32" Description="优先级。数字越大优先级越高" />
-      <Column Name="Enable" DataType="Boolean" Description="启用" />
-      <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
-      <Column Name="UpdateUserID" DataType="Int32" Description="更新者" Category="扩展" />
-      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
-      <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
-      <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
-    </Columns>
-  </Table>
-  <Table Name="AppQuote" Description="应用依赖。应用可以引用依赖另一个应用">
-    <Columns>
-      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="AppId" DataType="Int32" Description="应用。原始应用，该应用依赖别人" />
-      <Column Name="TargetAppId" DataType="Int32" Description="目标应用。被原始应用依赖的应用" />
-      <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="AppId" />
-      <Index Columns="TargetAppId" />
-    </Indexes>
-  </Table>
-  <Table Name="ConfigData" Description="配置数据。配置名值对，发布后才能生效，支持多作用域划分生产和开发测试环境">
-    <Columns>
-      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="Key" DataType="String" Master="True" Nullable="False" Description="名称。下划线开头表示仅用于内嵌，不能返回给客户端；多级名称用冒号分隔" />
-      <Column Name="Scope" DataType="String" Description="作用域" />
-      <Column Name="Value" DataType="String" Length="2000" Description="数值。正在使用的值，支持内嵌 ${key@app:scope}" />
-      <Column Name="Version" DataType="Int32" Description="版本。当前版本号，每次修改都是应用版本加一" />
-      <Column Name="Enable" DataType="Boolean" Description="启用" />
-      <Column Name="NewValue" DataType="String" Length="2000" Description="期望值。已被修改，尚未发布的值，支持内嵌 ${key@app:scope}" />
-      <Column Name="NewVersion" DataType="Int32" Description="新版本。下一个将要发布的版本，发布后两者相同" />
-      <Column Name="NewStatus" DataType="String" Description="新状态。启用/禁用/删除" />
-      <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
-      <Column Name="UpdateUserID" DataType="Int32" Description="更新者" Category="扩展" />
-      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
-      <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
-      <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="AppId,Key,Scope" Unique="True" />
-    </Indexes>
-  </Table>
-  <Table Name="ConfigHistory" Description="配置历史。记录配置变更历史" ConnName="StardustData">
-    <Columns>
-      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="Action" DataType="String" Nullable="False" Description="操作" />
-      <Column Name="Success" DataType="Boolean" Description="成功" />
-      <Column Name="Remark" DataType="String" Length="2000" Description="内容" />
-      <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
-      <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="CreateTime" />
-    </Indexes>
-  </Table>
+  <Tables>
+    <Table Name="AppConfig" Description="应用配置。需要管理配置的应用系统列表，每个应用以命令对形式管理配置数据，支持版本发布">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
+        <Column Name="Category" DataType="String" Description="类别" />
+        <Column Name="AppId" DataType="Int32" Description="应用" />
+        <Column Name="Name" DataType="String" Master="True" Description="名称" />
+        <Column Name="DisplayName" DataType="String" Description="显示名" />
+        <Column Name="Enable" DataType="Boolean" Description="启用" />
+        <Column Name="Version" DataType="Int32" Description="版本。应用正在使用的版本号，返回小于等于该版本的配置" />
+        <Column Name="NextVersion" DataType="Int32" Description="下一版本。下一个将要发布的版本，发布后两者相同" />
+        <Column Name="PublishTime" DataType="DateTime" Description="定时发布。在指定时间自动发布新版本" />
+        <Column Name="CanBeQuoted" DataType="Boolean" Description="可被依赖。打开后，才能被其它应用依赖" />
+        <Column Name="Quotes" DataType="String" Description="依赖应用。所依赖应用的集合" />
+        <Column Name="IsGlobal" DataType="Boolean" Description="全局。该应用下的配置数据作为全局数据，请求任意应用配置都返回" />
+        <Column Name="Readonly" DataType="Boolean" Description="只读。只读应用，不支持客户端上传配置数据，可用于保护数据避免被错误修改" />
+        <Column Name="EnableWorkerId" DataType="Boolean" Description="雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增" />
+        <Column Name="EnableApollo" DataType="Boolean" Description="阿波罗" Category="阿波罗" />
+        <Column Name="ApolloMetaServer" DataType="String" Description="阿波罗地址" Category="阿波罗" />
+        <Column Name="ApolloAppId" DataType="String" Description="阿波罗账号" Category="阿波罗" />
+        <Column Name="ApolloNameSpace" DataType="String" Description="阿波罗命名空间。默认application，也可以填依赖的公共命名空间，但建议为公共命名空间建立应用依赖。" Category="阿波罗" />
+        <Column Name="UsedKeys" DataType="String" Length="2000" Description="已使用。用过的配置项" Category="配置项" />
+        <Column Name="MissedKeys" DataType="String" Length="2000" Description="缺失键。没有读取到的配置项" Category="配置项" />
+        <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="UpdateUserID" DataType="Int32" Description="更新者" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="Name" Unique="True" />
+        <Index Columns="ProjectId" />
+        <Index Columns="AppId" />
+      </Indexes>
+    </Table>
+    <Table Name="AppRule" Description="应用规则。针对应用设置的规则，比如根据IP段设置作用域，可用于划分生产环境和开发测试环境">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="Rule" DataType="String" Length="500" Description="规则。分号分段，逗号间隔多项匹配值，比如IP=10.*,172.*;LocalIP=192.*" />
+        <Column Name="Result" DataType="String" Description="结果。比如Scope=dev" />
+        <Column Name="Priority" DataType="Int32" Description="优先级。数字越大优先级越高" />
+        <Column Name="Enable" DataType="Boolean" Description="启用" />
+        <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="UpdateUserID" DataType="Int32" Description="更新者" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+      </Columns>
+    </Table>
+    <Table Name="AppQuote" Description="应用依赖。应用可以引用依赖另一个应用">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="AppId" DataType="Int32" Description="应用。原始应用，该应用依赖别人" />
+        <Column Name="TargetAppId" DataType="Int32" Description="目标应用。被原始应用依赖的应用" />
+        <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="AppId" />
+        <Index Columns="TargetAppId" />
+      </Indexes>
+    </Table>
+    <Table Name="ConfigData" Description="配置数据。配置名值对，发布后才能生效，支持多作用域划分生产和开发测试环境">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="AppId" DataType="Int32" Description="应用" />
+        <Column Name="Key" DataType="String" Master="True" Nullable="False" Description="名称。下划线开头表示仅用于内嵌，不能返回给客户端；多级名称用冒号分隔" />
+        <Column Name="Scope" DataType="String" Description="作用域" />
+        <Column Name="Value" DataType="String" Length="2000" Description="数值。正在使用的值，支持内嵌 ${key@app:scope}" />
+        <Column Name="Version" DataType="Int32" Description="版本。当前版本号，每次修改都是应用版本加一" />
+        <Column Name="Enable" DataType="Boolean" Description="启用" />
+        <Column Name="NewValue" DataType="String" Length="2000" Description="期望值。已被修改，尚未发布的值，支持内嵌 ${key@app:scope}" />
+        <Column Name="NewVersion" DataType="Int32" Description="新版本。下一个将要发布的版本，发布后两者相同" />
+        <Column Name="NewStatus" DataType="String" Description="新状态。启用/禁用/删除" />
+        <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="UpdateUserID" DataType="Int32" Description="更新者" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="AppId,Key,Scope" Unique="True" />
+      </Indexes>
+    </Table>
+    <Table Name="ConfigHistory" Description="配置历史。记录配置变更历史" ConnName="StardustData">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="AppId" DataType="Int32" Description="应用" />
+        <Column Name="Action" DataType="String" Nullable="False" Description="操作" />
+        <Column Name="Success" DataType="Boolean" Description="成功" />
+        <Column Name="Remark" DataType="String" Length="2000" Description="内容" />
+        <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
+        <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="CreateTime" />
+      </Indexes>
+    </Table>
+  </Tables>
 </EntityModel>

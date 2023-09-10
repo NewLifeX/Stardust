@@ -1,30 +1,30 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2023.xsd" xmlns="https://newlifex.com/Model2023.xsd">
+<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202309.xsd" xmlns="https://newlifex.com/Model202309.xsd">
   <Option>
-    <!--输出目录-->
-    <Output>.\</Output>
-    <!--是否使用中文文件名。默认false-->
-    <ChineseFileName>False</ChineseFileName>
-    <!--基类。可能包含基类和接口，其中{name}替换为Table.Name-->
-    <BaseClass>Entity</BaseClass>
-    <!--命名空间-->
-    <Namespace>Stardust.Data.Monitors</Namespace>
     <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
     <ClassNameTemplate />
     <!--显示名模板。其中{displayName}替换为Table.DisplayName-->
     <DisplayNameTemplate />
-    <!--用于生成拷贝函数的模型类。例如{name}或I{name}-->
+    <!--基类。可能包含基类和接口，其中{name}替换为Table.Name-->
+    <BaseClass>Entity</BaseClass>
+    <!--命名空间-->
+    <Namespace>Stardust.Data.Monitors</Namespace>
+    <!--输出目录-->
+    <Output>.\</Output>
+    <!--是否使用中文文件名。默认false-->
+    <ChineseFileName>False</ChineseFileName>
+    <!--用于生成Copy函数的参数类型。例如{name}或I{name}-->
     <ModelNameForCopy />
     <!--带有索引器。实现IModel接口-->
     <HasIModel>False</HasIModel>
-    <!--模型类模版-->
-    <ModelClass />
-    <!--模型接口模版-->
-    <ModelInterface />
     <!--数据库连接名-->
     <ConnName>Stardust</ConnName>
+    <!--模型类模版。设置后生成模型类，用于接口数据传输，例如{name}Model-->
+    <ModelClass />
     <!--模型类输出目录。默认当前目录的Models子目录-->
     <ModelsOutput>.\Models\</ModelsOutput>
+    <!--模型接口模版。设置后生成模型接口，用于约束模型类和实体类，例如I{name}-->
+    <ModelInterface />
     <!--模型接口输出目录。默认当前目录的Interfaces子目录-->
     <InterfacesOutput>.\Interfaces\</InterfacesOutput>
     <!--用户实体转为模型类的模型类。例如{name}或{name}DTO-->
@@ -32,7 +32,7 @@
     <!--命名格式。Default/Upper/Lower/Underline-->
     <NameFormat>Default</NameFormat>
     <!--生成器版本-->
-    <Version>11.8.2023.0607</Version>
+    <Version>11.9.2023.0910</Version>
     <!--帮助文档-->
     <Document>https://newlifex.com/xcode/model</Document>
     <!--魔方区域显示名-->
@@ -40,338 +40,340 @@
     <!--魔方控制器输出目录-->
     <CubeOutput>../../Stardust.Web/Areas/Monitors/</CubeOutput>
   </Option>
-  <Table Name="AppTracer" Description="应用跟踪器。负责追踪的应用管理和参数设置">
-    <Columns>
-      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
-      <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
-      <Column Name="DisplayName" DataType="String" Description="显示名" />
-      <Column Name="Category" DataType="String" Description="类别。同步自注册中心的应用分组，同时匹配告警分组，该应用未设置告警机器人时，采用告警分组的机器人设置" />
-      <Column Name="ItemCount" DataType="Int32" Description="跟踪项。共有多少个埋点" />
-      <Column Name="Days" DataType="Int32" Description="天数。共统计了多少天" />
-      <Column Name="Total" DataType="Int64" Description="总次数。累计埋点采样次数" />
-      <Column Name="Enable" DataType="Boolean" Description="启用" />
-      <Column Name="Mode" DataType="Int32" Description="跟踪模式。仅针对api类型，过滤被扫描的数据" Type="TraceModes" />
-      <Column Name="Period" DataType="Int32" Description="采样周期。单位秒" />
-      <Column Name="MaxSamples" DataType="Int32" Description="正常数。最大正常采样数，采样周期内，最多只记录指定数量的正常事件，用于绘制依赖关系" />
-      <Column Name="MaxErrors" DataType="Int32" Description="异常数。最大异常采样数，采样周期内，最多只记录指定数量的异常事件，默认10" />
-      <Column Name="EnableMeter" DataType="Boolean" Description="性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息" />
-      <Column Name="WhiteList" DataType="String" Length="200" Description="白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持^开头的正则表达式如^/Admin/" />
-      <Column Name="Excludes" DataType="String" Length="200" Description="排除项。要排除的操作名，支持*模糊匹配" />
-      <Column Name="Timeout" DataType="Int32" Description="超时时间。超过该时间时强制采样，默认5000毫秒" />
-      <Column Name="MaxTagLength" DataType="Int32" Description="最长标签。超过该长度时将截断，默认1024字符" />
-      <Column Name="VipClients" DataType="String" Description="Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配" />
-      <Column Name="AlarmThreshold" DataType="Int32" Description="告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值满足其一" Category="告警" />
-      <Column Name="AlarmErrorRate" DataType="Double" Description="告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值满足其一" Category="告警" />
-      <Column Name="ItemAlarmThreshold" DataType="Int32" Description="单项阈值。下级跟踪项错误数达到该值时触发告警，0表示不启用，阈值和率值必须同时满足" Category="告警" />
-      <Column Name="ItemAlarmErrorRate" DataType="Double" Description="单项错误率。下级跟踪项错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足" Category="告警" />
-      <Column Name="AlarmRobot" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" Category="告警" />
-      <Column Name="CreateUser" DataType="String" Description="创建者" Category="扩展" />
-      <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
-      <Column Name="UpdateUser" DataType="String" Description="更新者" Category="扩展" />
-      <Column Name="UpdateUserID" DataType="Int32" Description="更新人" Category="扩展" />
-      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
-      <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="Name" Unique="True" />
-      <Index Columns="ProjectId" />
-      <Index Columns="AppId" />
-    </Indexes>
-  </Table>
-  <Table Name="TraceItem" Description="跟踪项。应用下的多个埋点">
-    <Columns>
-      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="Kind" DataType="String" Description="种类" />
-      <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
-      <Column Name="DisplayName" DataType="String" Description="显示名" />
-      <Column Name="Enable" DataType="Boolean" Description="启用" />
-      <Column Name="Rules" DataType="String" Length="200" Description="规则。支持多个埋点操作按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开，多组规则分号隔开。如name=*/check*,*/ping*;clientId=10.10.*" />
-      <Column Name="Cloned" DataType="Boolean" Description="克隆。根据规则匹配，把跟踪数据克隆一份，形成另一个维度的统计数据" />
-      <Column Name="Timeout" DataType="Int32" Description="超时时间。超过该时间时标记为异常，默认0表示不判断超时" />
-      <Column Name="Days" DataType="Int32" Description="天数。共统计了多少天" />
-      <Column Name="Total" DataType="Int64" Description="总次数。累计埋点采样次数" />
-      <Column Name="Errors" DataType="Int64" Description="错误数" />
-      <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数，单位毫秒" />
-      <Column Name="AlarmThreshold" DataType="Int32" Description="告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值必须同时满足" Category="告警" />
-      <Column Name="AlarmErrorRate" DataType="Double" Description="告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足" Category="告警" />
-      <Column Name="MaxRingRate" DataType="Double" Description="最大环比。环比昨日超过该率时触发告警，一般大于1，如1.2表示超20%，0表示不启用" Category="告警" />
-      <Column Name="MinRingRate" DataType="Double" Description="最小环比。环比昨日小于该率时触发告警，一般小于1，如0.7表示低30%，0表示不启用" Category="告警" />
-      <Column Name="AlarmGroup" DataType="String" Description="告警组。使用告警组中指定的机器人" Category="告警" />
-      <Column Name="AlarmRobot" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" Category="告警" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-      <Column Name="UpdateUser" DataType="String" Description="更新者" Category="扩展" />
-      <Column Name="UpdateUserID" DataType="Int32" Description="更新人" Category="扩展" />
-      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
-      <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
-      <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="AppId,Name" Unique="True" />
-    </Indexes>
-  </Table>
-  <Table Name="TraceRule" Description="跟踪规则。全局黑白名单，白名单放行，黑名单拦截">
-    <Columns>
-      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="Rule" DataType="String" Length="200" Description="规则。支持*模糊匹配。如/cube/*" />
-      <Column Name="Enable" DataType="Boolean" Description="启用" />
-      <Column Name="IsWhite" DataType="Boolean" Description="白名单。否则是黑名单" />
-      <Column Name="IsRegex" DataType="Boolean" Description="正则。是否使用正则表达式" />
-      <Column Name="Priority" DataType="Int32" Description="优先级。越大越在前面" Category="扩展" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-      <Column Name="UpdateUser" DataType="String" Description="更新者" Category="扩展" />
-      <Column Name="UpdateUserID" DataType="Int32" Description="更新人" Category="扩展" />
-      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
-      <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
-      <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
-    </Columns>
-  </Table>
-  <Table Name="TraceData" Description="跟踪数据。应用定时上报采样得到的埋点追踪原始数据，应用端已完成初步统计，后端将再次向上汇总" ConnName="StardustData">
-    <Columns>
-      <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
-      <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
-      <Column Name="StatHour" DataType="DateTime" Description="统计小时" />
-      <Column Name="StatMinute" DataType="DateTime" Description="统计分钟" />
-      <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="NodeId" DataType="Int32" Description="节点" />
-      <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@proccessid" />
-      <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
-      <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。原始接口名或埋点名" />
-      <Column Name="StartTime" DataType="Int64" Description="开始时间。Unix毫秒" />
-      <Column Name="EndTime" DataType="Int64" Description="结束时间。Unix毫秒" />
-      <Column Name="Total" DataType="Int32" Description="总次数" />
-      <Column Name="Errors" DataType="Int32" Description="错误数" />
-      <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
-      <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数" />
-      <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
-      <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
-      <Column Name="Samples" DataType="Int32" Description="正常采样" />
-      <Column Name="ErrorSamples" DataType="Int32" Description="异常采样" />
-      <Column Name="LinkId" DataType="Int64" Description="关联项。当前跟踪数据为克隆数据时，采用数据落在关联项所指定的跟踪数据之下" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="StatDate,AppId,ItemId,StartTime" />
-      <Index Columns="StatHour,AppId,ItemId" />
-      <Index Columns="StatMinute,AppId,ItemId" />
-      <Index Columns="AppId,StatMinute" />
-      <Index Columns="AppId,ClientId" />
-    </Indexes>
-  </Table>
-  <Table Name="SampleData" Description="采样数据。具体调用或异常详情，每次追踪统计携带少量样板，用于链路分析以及异常追踪" ConnName="StardustData">
-    <Columns>
-      <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
-      <Column Name="DataId" DataType="Int64" Description="数据" />
-      <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
-      <Column Name="Success" DataType="Boolean" Description="正常" />
-      <Column Name="StartTime" DataType="Int64" Description="开始时间。Unix毫秒" />
-      <Column Name="EndTime" DataType="Int64" Description="结束时间。Unix毫秒" />
-      <Column Name="Cost" DataType="Int32" Description="耗时。毫秒" />
-      <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@proccessid" />
-      <Column Name="TraceId" DataType="String" Description="追踪。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
-      <Column Name="SpanId" DataType="String" Description="唯一标识。随线程上下文、Http、Rpc传递，作为内部片段的父级" />
-      <Column Name="ParentId" DataType="String" Description="父级标识" />
-      <Column Name="Tag" DataType="String" Length="2000" Description="数据标签。记录一些附加数据" />
-      <Column Name="Error" DataType="String" Length="2000" Description="错误信息" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="DataId" />
-      <Index Columns="TraceId" />
-    </Indexes>
-  </Table>
-  <Table Name="SampleData2" Description="采样数据2。采样备份，用于链路分析以及异常追踪" ConnName="StardustData">
-    <Columns>
-      <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
-      <Column Name="DataId" DataType="Int64" Description="数据" />
-      <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
-      <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
-      <Column Name="Success" DataType="Boolean" Description="正常" />
-      <Column Name="StartTime" DataType="Int64" Description="开始时间。Unix毫秒" />
-      <Column Name="EndTime" DataType="Int64" Description="结束时间。Unix毫秒" />
-      <Column Name="Cost" DataType="Int32" Description="耗时。毫秒" />
-      <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@proccessid" />
-      <Column Name="TraceId" DataType="String" Description="追踪。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
-      <Column Name="SpanId" DataType="String" Description="唯一标识。随线程上下文、Http、Rpc传递，作为内部片段的父级" />
-      <Column Name="ParentId" DataType="String" Description="父级标识" />
-      <Column Name="Tag" DataType="String" Length="2000" Description="数据标签。记录一些附加数据" />
-      <Column Name="Error" DataType="String" Length="2000" Description="错误信息" />
-      <Column Name="CreateUser" DataType="String" Description="创建者" Category="扩展" />
-      <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="TraceId" />
-    </Indexes>
-  </Table>
-  <Table Name="TraceDayStat" Description="跟踪每日统计。每应用每接口每日统计，用于分析接口健康状况">
-    <Columns>
-      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
-      <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
-      <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
-      <Column Name="Type" DataType="String" Description="种类。Api/Http/Db/Mq/Redis/Other" />
-      <Column Name="Total" DataType="Int64" Description="总次数" />
-      <Column Name="RingRate" DataType="Double" Description="环比。今天与昨天相比" />
-      <Column Name="Errors" DataType="Int64" Description="错误数" />
-      <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
-      <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
-      <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
-      <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
-      <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
-      <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="StatDate,AppId,Type" />
-      <Index Columns="StatDate,AppId,ItemId" />
-      <Index Columns="AppId,ItemId,Id" />
-      <Index Columns="AppId,Type,StatDate" />
-    </Indexes>
-  </Table>
-  <Table Name="TraceHourStat" Description="跟踪小时统计。每应用每接口每小时统计，用于分析接口健康状况" ConnName="StardustData">
-    <Columns>
-      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="StatTime" DataType="DateTime" Description="统计小时" />
-      <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
-      <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
-      <Column Name="Total" DataType="Int64" Description="总次数" />
-      <Column Name="RingRate" DataType="Double" Description="环比。今天与昨天同期相比" />
-      <Column Name="Errors" DataType="Int64" Description="错误数" />
-      <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
-      <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
-      <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
-      <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
-      <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
-      <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="StatTime,AppId,ItemId" />
-      <Index Columns="AppId,ItemId,Id" />
-    </Indexes>
-  </Table>
-  <Table Name="TraceMinuteStat" Description="跟踪分钟统计。每应用每接口每5分钟统计，用于分析接口健康状况" ConnName="StardustData">
-    <Columns>
-      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="StatTime" DataType="DateTime" Description="统计分钟" />
-      <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
-      <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
-      <Column Name="Total" DataType="Int64" Description="总次数" />
-      <Column Name="Errors" DataType="Int64" Description="错误数" />
-      <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
-      <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
-      <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
-      <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
-      <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
-      <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="StatTime,AppId,ItemId" />
-      <Index Columns="AppId,ItemId,Id" />
-    </Indexes>
-  </Table>
-  <Table Name="AppDayStat" Description="应用每日统计。每应用每日统计，用于分析应用健康状况">
-    <Columns>
-      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
-      <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="Names" DataType="Int32" Description="埋点数" />
-      <Column Name="Total" DataType="Int64" Description="总次数" />
-      <Column Name="RingRate" DataType="Double" Description="环比。今天与昨天相比" />
-      <Column Name="Errors" DataType="Int64" Description="错误数" />
-      <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
-      <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
-      <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
-      <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
-      <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
-      <Column Name="Apis" DataType="Int64" Description="接口数" />
-      <Column Name="Https" DataType="Int64" Description="Http请求" />
-      <Column Name="Dbs" DataType="Int64" Description="数据库" />
-      <Column Name="Mqs" DataType="Int64" Description="消息队列" />
-      <Column Name="Redis" DataType="Int64" Description="Redis" />
-      <Column Name="Others" DataType="Int64" Description="其它" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="StatDate,AppId" Unique="True" />
-    </Indexes>
-  </Table>
-  <Table Name="AppMinuteStat" Description="应用分钟统计。每应用每5分钟统计，用于分析应用健康状况" ConnName="StardustData">
-    <Columns>
-      <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="StatTime" DataType="DateTime" Description="统计分钟" />
-      <Column Name="AppId" DataType="Int32" Description="应用" />
-      <Column Name="Total" DataType="Int64" Description="总次数" />
-      <Column Name="Errors" DataType="Int64" Description="错误数" />
-      <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
-      <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
-      <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
-      <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
-      <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="StatTime,AppId" Unique="True" />
-      <Index Columns="AppId,Id" />
-    </Indexes>
-  </Table>
-  <Table Name="AlarmGroup" Description="告警组。按照项目组设置告警，便于管理多节点和多应用，节点和应用的分类名对应组名">
-    <Columns>
-      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
-      <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
-      <Column Name="Enable" DataType="Boolean" Description="启用" />
-      <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
-      <Column Name="Content" DataType="String" Description="内容。用于测试机器人的模版内容" />
-      <Column Name="CreateUser" DataType="String" Description="创建者" Category="扩展" />
-      <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-      <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
-      <Column Name="UpdateUser" DataType="String" Description="更新者" Category="扩展" />
-      <Column Name="UpdateUserID" DataType="Int32" Description="更新人" Category="扩展" />
-      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
-      <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="Name" Unique="True" />
-      <Index Columns="ProjectId" />
-    </Indexes>
-  </Table>
-  <Table Name="AlarmHistory" Description="告警历史。记录告警内容" ConnName="StardustData">
-    <Columns>
-      <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
-      <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
-      <Column Name="GroupId" DataType="Int32" Description="告警组" />
-      <Column Name="Category" DataType="String" Description="类别。钉钉、企业微信" />
-      <Column Name="Action" DataType="String" Description="操作" />
-      <Column Name="Success" DataType="Boolean" Description="成功" />
-      <Column Name="Content" DataType="String" Length="2000" Description="内容" />
-      <Column Name="Error" DataType="String" Length="500" Description="错误" />
-      <Column Name="Creator" DataType="String" Description="创建者。服务端节点" Category="扩展" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-    </Columns>
-    <Indexes>
-      <Index Columns="GroupId,Id" />
-    </Indexes>
-  </Table>
+  <Tables>
+    <Table Name="AppTracer" Description="应用跟踪器。负责追踪的应用管理和参数设置">
+      <Columns>
+        <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
+        <Column Name="AppId" DataType="Int32" Description="应用" />
+        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
+        <Column Name="DisplayName" DataType="String" Description="显示名" />
+        <Column Name="Category" DataType="String" Description="类别。同步自注册中心的应用分组，同时匹配告警分组，该应用未设置告警机器人时，采用告警分组的机器人设置" />
+        <Column Name="ItemCount" DataType="Int32" Description="跟踪项。共有多少个埋点" />
+        <Column Name="Days" DataType="Int32" Description="天数。共统计了多少天" />
+        <Column Name="Total" DataType="Int64" Description="总次数。累计埋点采样次数" />
+        <Column Name="Enable" DataType="Boolean" Description="启用" />
+        <Column Name="Mode" DataType="Int32" Description="跟踪模式。仅针对api类型，过滤被扫描的数据" Type="TraceModes" />
+        <Column Name="Period" DataType="Int32" Description="采样周期。单位秒" />
+        <Column Name="MaxSamples" DataType="Int32" Description="正常数。最大正常采样数，采样周期内，最多只记录指定数量的正常事件，用于绘制依赖关系" />
+        <Column Name="MaxErrors" DataType="Int32" Description="异常数。最大异常采样数，采样周期内，最多只记录指定数量的异常事件，默认10" />
+        <Column Name="EnableMeter" DataType="Boolean" Description="性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息" />
+        <Column Name="WhiteList" DataType="String" Length="200" Description="白名单。要过滤Api操作名时的白名单，支持*模糊匹配如/Cube/*，支持^开头的正则表达式如^/Admin/" />
+        <Column Name="Excludes" DataType="String" Length="200" Description="排除项。要排除的操作名，支持*模糊匹配" />
+        <Column Name="Timeout" DataType="Int32" Description="超时时间。超过该时间时强制采样，默认5000毫秒" />
+        <Column Name="MaxTagLength" DataType="Int32" Description="最长标签。超过该长度时将截断，默认1024字符" />
+        <Column Name="VipClients" DataType="String" Description="Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配" />
+        <Column Name="AlarmThreshold" DataType="Int32" Description="告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值满足其一" Category="告警" />
+        <Column Name="AlarmErrorRate" DataType="Double" Description="告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值满足其一" Category="告警" />
+        <Column Name="ItemAlarmThreshold" DataType="Int32" Description="单项阈值。下级跟踪项错误数达到该值时触发告警，0表示不启用，阈值和率值必须同时满足" Category="告警" />
+        <Column Name="ItemAlarmErrorRate" DataType="Double" Description="单项错误率。下级跟踪项错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足" Category="告警" />
+        <Column Name="AlarmRobot" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" Category="告警" />
+        <Column Name="CreateUser" DataType="String" Description="创建者" Category="扩展" />
+        <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="UpdateUser" DataType="String" Description="更新者" Category="扩展" />
+        <Column Name="UpdateUserID" DataType="Int32" Description="更新人" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="Name" Unique="True" />
+        <Index Columns="ProjectId" />
+        <Index Columns="AppId" />
+      </Indexes>
+    </Table>
+    <Table Name="TraceItem" Description="跟踪项。应用下的多个埋点">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="AppId" DataType="Int32" Description="应用" />
+        <Column Name="Kind" DataType="String" Description="种类" />
+        <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
+        <Column Name="DisplayName" DataType="String" Description="显示名" />
+        <Column Name="Enable" DataType="Boolean" Description="启用" />
+        <Column Name="Rules" DataType="String" Length="200" Description="规则。支持多个埋点操作按照规则聚合成为一个跟踪项，用于处理多变的操作名，支持*模糊匹配，多个规则逗号隔开，多组规则分号隔开。如name=*/check*,*/ping*;clientId=10.10.*" />
+        <Column Name="Cloned" DataType="Boolean" Description="克隆。根据规则匹配，把跟踪数据克隆一份，形成另一个维度的统计数据" />
+        <Column Name="Timeout" DataType="Int32" Description="超时时间。超过该时间时标记为异常，默认0表示不判断超时" />
+        <Column Name="Days" DataType="Int32" Description="天数。共统计了多少天" />
+        <Column Name="Total" DataType="Int64" Description="总次数。累计埋点采样次数" />
+        <Column Name="Errors" DataType="Int64" Description="错误数" />
+        <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数，单位毫秒" />
+        <Column Name="AlarmThreshold" DataType="Int32" Description="告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值必须同时满足" Category="告警" />
+        <Column Name="AlarmErrorRate" DataType="Double" Description="告警错误率。错误率达到该值时触发告警，0表示不启用，阈值和率值必须同时满足" Category="告警" />
+        <Column Name="MaxRingRate" DataType="Double" Description="最大环比。环比昨日超过该率时触发告警，一般大于1，如1.2表示超20%，0表示不启用" Category="告警" />
+        <Column Name="MinRingRate" DataType="Double" Description="最小环比。环比昨日小于该率时触发告警，一般小于1，如0.7表示低30%，0表示不启用" Category="告警" />
+        <Column Name="AlarmGroup" DataType="String" Description="告警组。使用告警组中指定的机器人" Category="告警" />
+        <Column Name="AlarmRobot" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" Category="告警" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="UpdateUser" DataType="String" Description="更新者" Category="扩展" />
+        <Column Name="UpdateUserID" DataType="Int32" Description="更新人" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="AppId,Name" Unique="True" />
+      </Indexes>
+    </Table>
+    <Table Name="TraceRule" Description="跟踪规则。全局黑白名单，白名单放行，黑名单拦截">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="Rule" DataType="String" Length="200" Description="规则。支持*模糊匹配。如/cube/*" />
+        <Column Name="Enable" DataType="Boolean" Description="启用" />
+        <Column Name="IsWhite" DataType="Boolean" Description="白名单。否则是黑名单" />
+        <Column Name="IsRegex" DataType="Boolean" Description="正则。是否使用正则表达式" />
+        <Column Name="Priority" DataType="Int32" Description="优先级。越大越在前面" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="UpdateUser" DataType="String" Description="更新者" Category="扩展" />
+        <Column Name="UpdateUserID" DataType="Int32" Description="更新人" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+      </Columns>
+    </Table>
+    <Table Name="TraceData" Description="跟踪数据。应用定时上报采样得到的埋点追踪原始数据，应用端已完成初步统计，后端将再次向上汇总" ConnName="StardustData">
+      <Columns>
+        <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+        <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
+        <Column Name="StatHour" DataType="DateTime" Description="统计小时" />
+        <Column Name="StatMinute" DataType="DateTime" Description="统计分钟" />
+        <Column Name="AppId" DataType="Int32" Description="应用" />
+        <Column Name="NodeId" DataType="Int32" Description="节点" />
+        <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@proccessid" />
+        <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
+        <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。原始接口名或埋点名" />
+        <Column Name="StartTime" DataType="Int64" Description="开始时间。Unix毫秒" />
+        <Column Name="EndTime" DataType="Int64" Description="结束时间。Unix毫秒" />
+        <Column Name="Total" DataType="Int32" Description="总次数" />
+        <Column Name="Errors" DataType="Int32" Description="错误数" />
+        <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
+        <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数" />
+        <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
+        <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
+        <Column Name="Samples" DataType="Int32" Description="正常采样" />
+        <Column Name="ErrorSamples" DataType="Int32" Description="异常采样" />
+        <Column Name="LinkId" DataType="Int64" Description="关联项。当前跟踪数据为克隆数据时，采用数据落在关联项所指定的跟踪数据之下" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="StatDate,AppId,ItemId,StartTime" />
+        <Index Columns="StatHour,AppId,ItemId" />
+        <Index Columns="StatMinute,AppId,ItemId" />
+        <Index Columns="AppId,StatMinute" />
+        <Index Columns="AppId,ClientId" />
+      </Indexes>
+    </Table>
+    <Table Name="SampleData" Description="采样数据。具体调用或异常详情，每次追踪统计携带少量样板，用于链路分析以及异常追踪" ConnName="StardustData">
+      <Columns>
+        <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+        <Column Name="DataId" DataType="Int64" Description="数据" />
+        <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
+        <Column Name="Success" DataType="Boolean" Description="正常" />
+        <Column Name="StartTime" DataType="Int64" Description="开始时间。Unix毫秒" />
+        <Column Name="EndTime" DataType="Int64" Description="结束时间。Unix毫秒" />
+        <Column Name="Cost" DataType="Int32" Description="耗时。毫秒" />
+        <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@proccessid" />
+        <Column Name="TraceId" DataType="String" Description="追踪。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
+        <Column Name="SpanId" DataType="String" Description="唯一标识。随线程上下文、Http、Rpc传递，作为内部片段的父级" />
+        <Column Name="ParentId" DataType="String" Description="父级标识" />
+        <Column Name="Tag" DataType="String" Length="2000" Description="数据标签。记录一些附加数据" />
+        <Column Name="Error" DataType="String" Length="2000" Description="错误信息" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="DataId" />
+        <Index Columns="TraceId" />
+      </Indexes>
+    </Table>
+    <Table Name="SampleData2" Description="采样数据2。采样备份，用于链路分析以及异常追踪" ConnName="StardustData">
+      <Columns>
+        <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+        <Column Name="DataId" DataType="Int64" Description="数据" />
+        <Column Name="AppId" DataType="Int32" Description="应用" />
+        <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
+        <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
+        <Column Name="Success" DataType="Boolean" Description="正常" />
+        <Column Name="StartTime" DataType="Int64" Description="开始时间。Unix毫秒" />
+        <Column Name="EndTime" DataType="Int64" Description="结束时间。Unix毫秒" />
+        <Column Name="Cost" DataType="Int32" Description="耗时。毫秒" />
+        <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@proccessid" />
+        <Column Name="TraceId" DataType="String" Description="追踪。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
+        <Column Name="SpanId" DataType="String" Description="唯一标识。随线程上下文、Http、Rpc传递，作为内部片段的父级" />
+        <Column Name="ParentId" DataType="String" Description="父级标识" />
+        <Column Name="Tag" DataType="String" Length="2000" Description="数据标签。记录一些附加数据" />
+        <Column Name="Error" DataType="String" Length="2000" Description="错误信息" />
+        <Column Name="CreateUser" DataType="String" Description="创建者" Category="扩展" />
+        <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="TraceId" />
+      </Indexes>
+    </Table>
+    <Table Name="TraceDayStat" Description="跟踪每日统计。每应用每接口每日统计，用于分析接口健康状况">
+      <Columns>
+        <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
+        <Column Name="AppId" DataType="Int32" Description="应用" />
+        <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
+        <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
+        <Column Name="Type" DataType="String" Description="种类。Api/Http/Db/Mq/Redis/Other" />
+        <Column Name="Total" DataType="Int64" Description="总次数" />
+        <Column Name="RingRate" DataType="Double" Description="环比。今天与昨天相比" />
+        <Column Name="Errors" DataType="Int64" Description="错误数" />
+        <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
+        <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
+        <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
+        <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
+        <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
+        <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="StatDate,AppId,Type" />
+        <Index Columns="StatDate,AppId,ItemId" />
+        <Index Columns="AppId,ItemId,Id" />
+        <Index Columns="AppId,Type,StatDate" />
+      </Indexes>
+    </Table>
+    <Table Name="TraceHourStat" Description="跟踪小时统计。每应用每接口每小时统计，用于分析接口健康状况" ConnName="StardustData">
+      <Columns>
+        <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="StatTime" DataType="DateTime" Description="统计小时" />
+        <Column Name="AppId" DataType="Int32" Description="应用" />
+        <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
+        <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
+        <Column Name="Total" DataType="Int64" Description="总次数" />
+        <Column Name="RingRate" DataType="Double" Description="环比。今天与昨天同期相比" />
+        <Column Name="Errors" DataType="Int64" Description="错误数" />
+        <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
+        <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
+        <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
+        <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
+        <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
+        <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="StatTime,AppId,ItemId" />
+        <Index Columns="AppId,ItemId,Id" />
+      </Indexes>
+    </Table>
+    <Table Name="TraceMinuteStat" Description="跟踪分钟统计。每应用每接口每5分钟统计，用于分析接口健康状况" ConnName="StardustData">
+      <Columns>
+        <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="StatTime" DataType="DateTime" Description="统计分钟" />
+        <Column Name="AppId" DataType="Int32" Description="应用" />
+        <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
+        <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
+        <Column Name="Total" DataType="Int64" Description="总次数" />
+        <Column Name="Errors" DataType="Int64" Description="错误数" />
+        <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
+        <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
+        <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
+        <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
+        <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
+        <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="StatTime,AppId,ItemId" />
+        <Index Columns="AppId,ItemId,Id" />
+      </Indexes>
+    </Table>
+    <Table Name="AppDayStat" Description="应用每日统计。每应用每日统计，用于分析应用健康状况">
+      <Columns>
+        <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
+        <Column Name="AppId" DataType="Int32" Description="应用" />
+        <Column Name="Names" DataType="Int32" Description="埋点数" />
+        <Column Name="Total" DataType="Int64" Description="总次数" />
+        <Column Name="RingRate" DataType="Double" Description="环比。今天与昨天相比" />
+        <Column Name="Errors" DataType="Int64" Description="错误数" />
+        <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
+        <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
+        <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
+        <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
+        <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
+        <Column Name="Apis" DataType="Int64" Description="接口数" />
+        <Column Name="Https" DataType="Int64" Description="Http请求" />
+        <Column Name="Dbs" DataType="Int64" Description="数据库" />
+        <Column Name="Mqs" DataType="Int64" Description="消息队列" />
+        <Column Name="Redis" DataType="Int64" Description="Redis" />
+        <Column Name="Others" DataType="Int64" Description="其它" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="StatDate,AppId" Unique="True" />
+      </Indexes>
+    </Table>
+    <Table Name="AppMinuteStat" Description="应用分钟统计。每应用每5分钟统计，用于分析应用健康状况" ConnName="StardustData">
+      <Columns>
+        <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="StatTime" DataType="DateTime" Description="统计分钟" />
+        <Column Name="AppId" DataType="Int32" Description="应用" />
+        <Column Name="Total" DataType="Int64" Description="总次数" />
+        <Column Name="Errors" DataType="Int64" Description="错误数" />
+        <Column Name="ErrorRate" DataType="Double" Description="错误率。错误数除以总次数" />
+        <Column Name="TotalCost" DataType="Int64" Description="总耗时。单位毫秒" />
+        <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
+        <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
+        <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="StatTime,AppId" Unique="True" />
+        <Index Columns="AppId,Id" />
+      </Indexes>
+    </Table>
+    <Table Name="AlarmGroup" Description="告警组。按照项目组设置告警，便于管理多节点和多应用，节点和应用的分类名对应组名">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
+        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
+        <Column Name="Enable" DataType="Boolean" Description="启用" />
+        <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
+        <Column Name="Content" DataType="String" Description="内容。用于测试机器人的模版内容" />
+        <Column Name="CreateUser" DataType="String" Description="创建者" Category="扩展" />
+        <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="UpdateUser" DataType="String" Description="更新者" Category="扩展" />
+        <Column Name="UpdateUserID" DataType="Int32" Description="更新人" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="Name" Unique="True" />
+        <Index Columns="ProjectId" />
+      </Indexes>
+    </Table>
+    <Table Name="AlarmHistory" Description="告警历史。记录告警内容" ConnName="StardustData">
+      <Columns>
+        <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
+        <Column Name="GroupId" DataType="Int32" Description="告警组" />
+        <Column Name="Category" DataType="String" Description="类别。钉钉、企业微信" />
+        <Column Name="Action" DataType="String" Description="操作" />
+        <Column Name="Success" DataType="Boolean" Description="成功" />
+        <Column Name="Content" DataType="String" Length="2000" Description="内容" />
+        <Column Name="Error" DataType="String" Length="500" Description="错误" />
+        <Column Name="Creator" DataType="String" Description="创建者。服务端节点" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="GroupId,Id" />
+      </Indexes>
+    </Table>
+  </Tables>
 </EntityModel>
