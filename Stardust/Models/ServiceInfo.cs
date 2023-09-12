@@ -10,7 +10,7 @@ public class ServiceInfo
     [XmlAttribute]
     public String Name { get; set; }
 
-    /// <summary>文件名。启动进程时使用，如果是zip文件则内部经过处理</summary>
+    /// <summary>文件名。启动进程时使用，如果是zip文件则经过内部处理</summary>
     [XmlAttribute]
     public String FileName { get; set; }
 
@@ -49,6 +49,10 @@ public class ServiceInfo
     /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
     [XmlAttribute]
     public Int32 MaxMemory { get; set; }
+
+    /// <summary>压缩包文件</summary>
+    [XmlIgnore]
+    public String ZipFile { get; set; }
     #endregion
 
     /// <summary>克隆当前对象</summary>

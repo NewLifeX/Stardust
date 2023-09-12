@@ -124,11 +124,12 @@ internal class ServiceController : DisposeBase
             WriteLog("启动应用：{0} {1} workDir={2} Mode={3} Times={4}", file, args, workDir, service.Mode, _error);
             if (service.MaxMemory > 0) WriteLog("内存限制：{0:n0}M", service.MaxMemory);
 
+            var src = service.ZipFile ?? file;
             using var span = Tracer?.NewSpan("StartService", service);
             try
             {
                 Process p;
-                var isZip = file.EqualIgnoreCase("ZipDeploy") || file.EndsWithIgnoreCase(".zip");
+                var isZip = src.EndsWithIgnoreCase(".zip");
 
                 // 在环境变量中设置BasePath，不用担心影响当前进程，因为PathHelper仅读取一次
                 Environment.SetEnvironmentVariable("BasePath", workDir);
@@ -141,17 +142,24 @@ internal class ServiceController : DisposeBase
                         break;
                     case ServiceModes.Extract:
                         WriteLog("解压后不运行，外部主机（如IIS）将托管应用");
-                        Extract(file, args, workDir, false);
+                        Extract(src, args, workDir, false);
                         Running = true;
                         return true;
                     case ServiceModes.ExtractAndRun:
                         WriteLog("解压后在工作目录运行");
-                        var deploy = Extract(file, args, workDir, true);
-                        if (deploy == null || deploy.ExecuteFile.IsNullOrEmpty()) throw new Exception("无法找到启动文件");
+                        var deploy = Extract(src, args, workDir, false);
+                        if (deploy == null) throw new Exception("解压缩失败");
 
-                        file = deploy.ExecuteFile;
+                        //file ??= deploy.ExecuteFile;
+                        if (file.IsNullOrEmpty())
+                        {
+                            var runfile = deploy.FindExeFile(workDir);
+                            file = runfile.FullName;
+                        }
+                        if (file.IsNullOrEmpty()) throw new Exception("无法找到启动文件");
+
                         args = deploy.Arguments;
-                        _fileName = deploy.ExecuteFile;
+                        //_fileName = deploy.ExecuteFile;
                         isZip = false;
                         break;
                     case ServiceModes.RunOnce:
@@ -162,105 +170,9 @@ internal class ServiceController : DisposeBase
                 }
 
                 if (isZip)
-                {
-                    var deploy = new ZipDeploy
-                    {
-                        FileName = file,
-                        WorkingDirectory = workDir,
-                        UserName = service.UserName,
-                        Overwrite = DeployInfo?.Overwrite,
-
-                        Tracer = Tracer,
-                        Log = new ActionLog(WriteLog),
-                    };
-
-                    // 如果出现超过一次的重启，则打开调试模式，截取控制台输出到日志
-                    if (_error > 1) deploy.Debug = true;
-
-                    if (!args.IsNullOrEmpty() && !deploy.Parse(args.Split(" "))) return false;
-
-                    if (!deploy.Execute(StartWait))
-                    {
-                        WriteLog("Zip包启动失败！ExitCode={0}", deploy.Process?.ExitCode);
-
-                        // 上报最后错误
-                        if (!deploy.LastError.IsNullOrEmpty()) EventProvider?.WriteErrorEvent("ServiceController", deploy.LastError);
-
-                        return false;
-                    }
-
-                    _fileName = deploy.ExecuteFile;
-
-                    p = deploy.Process;
-                }
+                    p = RunZip(file, args, workDir, service);
                 else
-                {
-                    //WriteLog("拉起进程：{0} {1}", file, args);
-                    var si = new ProcessStartInfo
-                    {
-                        FileName = file,
-                        Arguments = args,
-                        WorkingDirectory = workDir,
-
-                        // false时目前控制台合并到当前控制台，一起退出；
-                        // true时目标控制台独立窗口，不会一起退出；
-                        UseShellExecute = false,
-                    };
-
-                    // 指定用户时，以特定用户启动进程
-                    if (!service.UserName.IsNullOrEmpty())
-                    {
-                        si.UserName = service.UserName;
-                        //si.UseShellExecute = false;
-
-                        // 在Linux系统中，改变目录所属用户
-                        if (Runtime.Linux)
-                        {
-                            var user = service.UserName;
-                            if (!user.Contains(':')) user = $"{user}:{user}";
-                            //Process.Start("chown", $"-R {user} {si.WorkingDirectory}");
-                            Process.Start("chown", $"-R {user} {si.WorkingDirectory.CombinePath("../").GetBasePath()}");
-                        }
-                    }
-
-                    // 如果出现超过一次的重启，则打开调试模式，截取控制台输出到日志
-                    if (_error > 1)
-                    {
-                        // UseShellExecute 必须 false，以便于后续重定向输出流
-                        si.UseShellExecute = false;
-                        si.RedirectStandardError = true;
-                        si.RedirectStandardOutput = true;
-                    }
-
-                    //// 在进程的环境变量中设置BasePath
-                    //if (!si.UseShellExecute)
-                    //    si.EnvironmentVariables["BasePath"] = si.WorkingDirectory;
-
-                    WriteLog("工作目录: {0}", si.WorkingDirectory);
-                    WriteLog("启动文件: {0}", si.FileName);
-                    WriteLog("启动参数: {0}", si.Arguments);
-                    if (!si.UserName.IsNullOrEmpty())
-                        WriteLog("启动用户：{0}", si.UserName);
-
-                    p = Process.Start(si);
-                    if (StartWait > 0 && p.WaitForExit(StartWait) && p.ExitCode != 0)
-                    {
-                        WriteLog("启动失败！ExitCode={0}", p.ExitCode);
-
-                        if (si.RedirectStandardError)
-                        {
-                            var rs = p.StandardOutput.ReadToEnd();
-                            if (!rs.IsNullOrEmpty()) WriteLog(rs);
-
-                            rs = p.StandardError.ReadToEnd();
-                            if (!rs.IsNullOrEmpty()) WriteLog(rs);
-                        }
-
-                        return false;
-                    }
-
-                    _fileName ??= file;
-                }
+                    p = RunExe(file, args, workDir, service);
 
                 if (p == null) return false;
 
@@ -332,6 +244,110 @@ internal class ServiceController : DisposeBase
         deploy.ExecuteFile = runfile.FullName;
 
         return deploy;
+    }
+
+    private Process RunZip(String file, String args, String workDir, ServiceInfo service)
+    {
+        var deploy = new ZipDeploy
+        {
+            FileName = file,
+            WorkingDirectory = workDir,
+            UserName = service.UserName,
+            Overwrite = DeployInfo?.Overwrite,
+
+            Tracer = Tracer,
+            Log = new ActionLog(WriteLog),
+        };
+
+        // 如果出现超过一次的重启，则打开调试模式，截取控制台输出到日志
+        if (_error > 1) deploy.Debug = true;
+
+        if (!args.IsNullOrEmpty() && !deploy.Parse(args.Split(" "))) return null;
+
+        if (!deploy.Execute(StartWait))
+        {
+            WriteLog("Zip包启动失败！ExitCode={0}", deploy.Process?.ExitCode);
+
+            // 上报最后错误
+            if (!deploy.LastError.IsNullOrEmpty()) EventProvider?.WriteErrorEvent("ServiceController", deploy.LastError);
+
+            return null;
+        }
+
+        _fileName = deploy.ExecuteFile;
+
+        return deploy.Process;
+    }
+
+    private Process RunExe(String file, String args, String workDir, ServiceInfo service)
+    {
+        //WriteLog("拉起进程：{0} {1}", file, args);
+        var si = new ProcessStartInfo
+        {
+            FileName = workDir.CombinePath(file).GetFullPath(),
+            Arguments = args,
+            WorkingDirectory = workDir,
+
+            // false时目前控制台合并到当前控制台，一起退出；
+            // true时目标控制台独立窗口，不会一起退出；
+            UseShellExecute = false,
+        };
+
+        // 指定用户时，以特定用户启动进程
+        if (!service.UserName.IsNullOrEmpty())
+        {
+            si.UserName = service.UserName;
+            //si.UseShellExecute = false;
+
+            // 在Linux系统中，改变目录所属用户
+            if (Runtime.Linux)
+            {
+                var user = service.UserName;
+                if (!user.Contains(':')) user = $"{user}:{user}";
+                //Process.Start("chown", $"-R {user} {si.WorkingDirectory}");
+                Process.Start("chown", $"-R {user} {si.WorkingDirectory.CombinePath("../").GetBasePath()}");
+            }
+        }
+
+        // 如果出现超过一次的重启，则打开调试模式，截取控制台输出到日志
+        if (_error > 1)
+        {
+            // UseShellExecute 必须 false，以便于后续重定向输出流
+            si.UseShellExecute = false;
+            si.RedirectStandardError = true;
+            si.RedirectStandardOutput = true;
+        }
+
+        //// 在进程的环境变量中设置BasePath
+        //if (!si.UseShellExecute)
+        //    si.EnvironmentVariables["BasePath"] = si.WorkingDirectory;
+
+        WriteLog("工作目录: {0}", si.WorkingDirectory);
+        WriteLog("启动文件: {0}", si.FileName);
+        WriteLog("启动参数: {0}", si.Arguments);
+        if (!si.UserName.IsNullOrEmpty())
+            WriteLog("启动用户：{0}", si.UserName);
+
+        var p = Process.Start(si);
+        if (StartWait > 0 && p.WaitForExit(StartWait) && p.ExitCode != 0)
+        {
+            WriteLog("启动失败！ExitCode={0}", p.ExitCode);
+
+            if (si.RedirectStandardError)
+            {
+                var rs = p.StandardOutput.ReadToEnd();
+                if (!rs.IsNullOrEmpty()) WriteLog(rs);
+
+                rs = p.StandardError.ReadToEnd();
+                if (!rs.IsNullOrEmpty()) WriteLog(rs);
+            }
+
+            return null;
+        }
+
+        _fileName ??= file;
+
+        return p;
     }
 
     /// <summary>停止应用，等待一会确认进程已退出</summary>

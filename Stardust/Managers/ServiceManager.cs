@@ -377,7 +377,7 @@ public class ServiceManager : DisposeBase
 
         WriteLog("取得应用服务：{0}", rs.Join(",", e => e.Name));
         WriteLog("可用：{0}", rs.Where(e => e.Service.Enable).Join(",", e => e.Name));
-        WriteLog(rs.ToJson(true));
+        if (rs.Length > 0) WriteLog(rs.ToJson(true));
 
         // 旧版服务
         span?.AppendTag(svcs);
@@ -418,6 +418,7 @@ public class ServiceManager : DisposeBase
                 //svc.AutoStop = item.AutoStop;
                 old.MaxMemory = svc.MaxMemory;
                 old.Mode = svc.Mode;
+                old.ZipFile = svc.ZipFile;
             }
         }
 
@@ -450,7 +451,11 @@ public class ServiceManager : DisposeBase
 
         using var span = Tracer?.NewSpan("ServiceManager-Download", info.Url);
 
-        var dst = svc.WorkingDirectory.CombinePath(svc.FileName).AsFile();
+        // 下载的文件名必须是压缩包
+        var zipName = svc.FileName;
+        if (!zipName.EndsWithIgnoreCase(".zip")) zipName = $"{svc.Name}.zip";
+
+        var dst = svc.WorkingDirectory.CombinePath(zipName).AsFile();
         span?.AppendTag(dst.FullName);
 
         var flag = false;
@@ -472,6 +477,8 @@ public class ServiceManager : DisposeBase
         {
             var hash = dst.MD5().ToHex();
             WriteLog("文件已存在：{0} MD5: {1}", dst, hash);
+
+            svc.ZipFile = dst.FullName;
         }
         if (flag)
         {
@@ -510,6 +517,8 @@ public class ServiceManager : DisposeBase
                 // 创建目录，下载到临时目录的文件拷贝到这里
                 dst.FullName.EnsureDirectory(true);
                 ti.MoveTo(dst.FullName);
+
+                svc.ZipFile = dst.FullName;
             }
         }
     }
