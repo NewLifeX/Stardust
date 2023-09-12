@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202309.xsd" xmlns="https://newlifex.com/Model202309.xsd">
+<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202309.xsd" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model202309.xsd">
   <Option>
     <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
     <ClassNameTemplate />
@@ -31,10 +31,6 @@
     <ModelNameForToModel />
     <!--命名格式。Default/Upper/Lower/Underline-->
     <NameFormat>Default</NameFormat>
-    <!--生成器版本-->
-    <Version>11.9.2023.0910</Version>
-    <!--帮助文档-->
-    <Document>https://newlifex.com/xcode/model</Document>
     <!--魔方区域显示名-->
     <DisplayName />
     <!--魔方控制器输出目录-->
@@ -116,7 +112,7 @@
         <Column Name="Version" DataType="String" Master="True" Nullable="False" Description="版本。如2.3.2022.0911，字符串比较大小" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="Url" DataType="String" ItemType="file" Description="资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖" />
-        <Column Name="Overwrite" DataType="String" Length="100" Description="覆盖文件。需要拷贝覆盖已存在的文件，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝" />
+        <Column Name="Overwrite" DataType="String" Length="100" Description="覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝" />
         <Column Name="Size" DataType="Int64" ItemType="GMK" Description="文件大小" />
         <Column Name="Hash" DataType="String" Description="文件哈希。MD5散列，避免下载的文件有缺失" />
         <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />

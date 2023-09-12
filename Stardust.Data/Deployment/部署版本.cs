@@ -63,11 +63,11 @@ public partial class AppDeployVersion
     public String Url { get => _Url; set { if (OnPropertyChanging("Url", value)) { _Url = value; OnPropertyChanged("Url"); } } }
 
     private String _Overwrite;
-    /// <summary>覆盖文件。需要拷贝覆盖已存在的文件，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
+    /// <summary>覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
     [DisplayName("覆盖文件")]
-    [Description("覆盖文件。需要拷贝覆盖已存在的文件，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝")]
+    [Description("覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝")]
     [DataObjectField(false, false, true, 100)]
-    [BindColumn("Overwrite", "覆盖文件。需要拷贝覆盖已存在的文件，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝", "")]
+    [BindColumn("Overwrite", "覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝", "")]
     public String Overwrite { get => _Overwrite; set { if (OnPropertyChanging("Overwrite", value)) { _Overwrite = value; OnPropertyChanged("Overwrite"); } } }
 
     private Int64 _Size;
@@ -233,7 +233,7 @@ public partial class AppDeployVersion
         /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
         public static readonly Field Url = FindByName("Url");
 
-        /// <summary>覆盖文件。需要拷贝覆盖已存在的文件，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
+        /// <summary>覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
         public static readonly Field Overwrite = FindByName("Overwrite");
 
         /// <summary>文件大小</summary>
@@ -287,7 +287,7 @@ public partial class AppDeployVersion
         /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
         public const String Url = "Url";
 
-        /// <summary>覆盖文件。需要拷贝覆盖已存在的文件，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
+        /// <summary>覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
         public const String Overwrite = "Overwrite";
 
         /// <summary>文件大小</summary>

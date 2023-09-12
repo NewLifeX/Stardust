@@ -33,7 +33,7 @@ public class ZipDeploy
     /// <summary>用户。以该用户执行应用</summary>
     public String UserName { get; set; }
 
-    /// <summary>覆盖文件。需要拷贝覆盖已存在的文件，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
+    /// <summary>覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
     public String Overwrite { get; set; }
 
     /// <summary>进程</summary>
