@@ -24,6 +24,13 @@
     <NoWarn>1701;1702;NU5104;NETSDK1138;CS7035</NoWarn>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
+    <PublishAot>true</PublishAot>
+    <OptimizationPreference>Size</OptimizationPreference>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <StackTraceSupport>false</StackTraceSupport>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="StarService2.cs" />
   </ItemGroup>
@@ -33,7 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Agent" Version="10.5.2023.910-beta0910" />
+    <PackageReference Include="NewLife.Agent" Version="10.5.2023.912-beta1050" />
   </ItemGroup>
 
   <ItemGroup>
