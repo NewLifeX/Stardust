@@ -282,9 +282,16 @@ internal class ServiceController : DisposeBase
     private Process RunExe(String file, String args, String workDir, ServiceInfo service)
     {
         //WriteLog("拉起进程：{0} {1}", file, args);
+
+        var fileName = workDir.CombinePath(file).GetFullPath();
+        if (!fileName.AsFile().Exists)
+        {
+            fileName = file;
+        }
+
         var si = new ProcessStartInfo
         {
-            FileName = workDir.CombinePath(file).GetFullPath(),
+            FileName = fileName,
             Arguments = args,
             WorkingDirectory = workDir,
 
