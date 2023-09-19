@@ -15,6 +15,7 @@ using Stardust.Managers;
 using Stardust.Models;
 using Stardust.Services;
 using System;
+using System.Net.Http;
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
 using System.Net.WebSockets;
 using WebSocket = System.Net.WebSockets.WebSocket;
@@ -274,7 +275,9 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     }
 
 #if NETCOREAPP || NETSTANDARD
-    private void FixGdi(NodeInfo di)
+    /// <summary>更新分辨率信息</summary>
+    /// <param name="di"></param>
+    public static void FixGdi(NodeInfo di)
     {
         try
         {
@@ -283,10 +286,10 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             if (num == 0)
             {
                 var xx = new Single[1];
-                var numx = NativeMethods.GdipGetDpiX(new HandleRef(this, graphics), xx);
+                var numx = NativeMethods.GdipGetDpiX(new HandleRef(di, graphics), xx);
 
                 var yy = new Single[1];
-                var numy = NativeMethods.GdipGetDpiY(new HandleRef(this, graphics), yy);
+                var numy = NativeMethods.GdipGetDpiY(new HandleRef(di, graphics), yy);
 
                 if (numx == 0 && numy == 0) di.Dpi = $"{xx[0]}*{yy[0]}";
             }
@@ -501,10 +504,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
                     if (dt.Year > 2000) _span = dt.AddMilliseconds(Delay / 2) - DateTime.UtcNow;
 
                     // 令牌
-                    if (!rs.Token.IsNullOrEmpty())
-                    {
-                        Token = rs.Token;
-                    }
+                    if (!rs.Token.IsNullOrEmpty()) Token = rs.Token;
 
                     // 推队列
                     if (rs.Commands != null && rs.Commands.Length > 0)
