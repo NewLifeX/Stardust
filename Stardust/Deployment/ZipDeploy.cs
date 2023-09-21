@@ -148,6 +148,8 @@ public class ZipDeploy
         var shadow = Shadow;
         if (shadow.IsNullOrEmpty())
         {
+            span?.AppendTag("CreateShadow");
+
             // 影子目录默认使用上一级的shadow目录，无权时使用临时目录
             try
             {
@@ -177,6 +179,8 @@ public class ZipDeploy
         var hasExtracted = false;
         if (!Directory.Exists(shadow))
         {
+            span?.AppendTag("ExtractShadow");
+
             // 删除其它版本
             try
             {
@@ -203,6 +207,8 @@ public class ZipDeploy
         if (runfile == null)
         {
             WriteLog("无法找到名为[{0}]的可执行文件", name);
+            DeleteShadow(shadow);
+
             return false;
         }
 
@@ -279,19 +285,7 @@ public class ZipDeploy
             }
 
             // 不是我解压缩的，这里需要删除，这样子会有间隔性保留影子目录的机会
-            if (!hasExtracted)
-            {
-                // 启动失败时，删除影子目录，有可能上一次解压以后，该目录被篡改过。这次删除以后，下一次启动时会再次解压缩
-                try
-                {
-                    WriteLog("删除影子目录：{0}", shadow);
-                    Directory.Delete(shadow, true);
-                }
-                catch (Exception ex)
-                {
-                    Log?.Error(ex.ToString());
-                }
-            }
+            if (!hasExtracted) DeleteShadow(shadow);
 
             return false;
         }
@@ -299,6 +293,20 @@ public class ZipDeploy
         WriteLog("Zip启动成功！PID={0}", p.Id);
 
         return true;
+    }
+
+    void DeleteShadow(String shadow)
+    {
+        // 启动失败时，删除影子目录，有可能上一次解压以后，该目录被篡改过。这次删除以后，下一次启动时会再次解压缩
+        try
+        {
+            WriteLog("删除影子目录：{0}", shadow);
+            Directory.Delete(shadow, true);
+        }
+        catch (Exception ex)
+        {
+            Log?.Error(ex.ToString());
+        }
     }
 
     /// <summary>解压缩</summary>
