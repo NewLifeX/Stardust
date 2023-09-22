@@ -59,6 +59,7 @@ public class NodeStatService : IHostedService
                 CityStat(dt, GetSelects(dt));
                 ArchStat(dt, GetSelects(dt));
                 VendorStat(dt, GetSelects(dt));
+                ProjectStat(dt, GetSelects(dt));
             }
         }
         catch (Exception ex)
@@ -344,6 +345,37 @@ public class NodeStatService : IHostedService
                 sts.Remove(st);
 
             st.LinkItem = node.Vendor + "";
+            st.Total = node.ID;
+            st.Actives = node["activeT1"].ToInt();
+            st.ActivesT7 = node["activeT7"].ToInt();
+            st.ActivesT30 = node["activeT30"].ToInt();
+            st.News = node["newT1"].ToInt();
+            st.NewsT7 = node["newT7"].ToInt();
+            st.NewsT30 = node["newT30"].ToInt();
+
+            st.Update();
+        }
+
+        // 删除多余统计项
+        sts.Delete();
+    }
+
+    private void ProjectStat(DateTime date, ConcatExpression selects)
+    {
+        var category = "项目";
+        var list = SearchGroup(date.AddYears(-1), selects & _.ProjectId, _.ProjectId);
+        var sts = NodeStat.FindAllByDate(category, date);
+        foreach (var node in list)
+        {
+            var key = node.ProjectId + "";
+            if (key.Length > 50) key = key[..50];
+            var st = sts.FirstOrDefault(e => e.Key == key);
+            if (st == null)
+                st = NodeStat.GetOrAdd(category, date, key);
+            else
+                sts.Remove(st);
+
+            st.LinkItem = node.ProjectName;
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
             st.ActivesT7 = node["activeT7"].ToInt();

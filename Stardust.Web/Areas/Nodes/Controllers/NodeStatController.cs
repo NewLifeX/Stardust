@@ -91,6 +91,17 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
+        // 默认分类
+        if (category.IsNullOrEmpty()) p["category"] = category = "操作系统";
+
+        // 带有分类没有key也没有日期时，显示今天
+        if (!category.IsNullOrEmpty() && key.IsNullOrEmpty() && start.Year < 2000)
+        {
+            start = end = DateTime.Today;
+            p["dtStart"] = start.ToString("yyyy-MM-dd");
+            p["dtEnd"] = end.ToString("yyyy-MM-dd");
+        }
+
         // 默认排序
         if (!category.IsNullOrEmpty() && !key.IsNullOrEmpty() && start.Year < 2000 && p.Sort.IsNullOrEmpty())
         {
@@ -140,18 +151,18 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
             && start.Year > 2000 && start.Date == end.Date && list.Count > 0)
         {
             // 饼图不要显示空的统计项
-            var list2 = list.Where(e => !e.Key.IsNullOrEmpty() && e.Key != "0").ToList();
+            var list2 = list.Where(e => !e.LinkItem.IsNullOrEmpty()).ToList();
 
             var chart = new ECharts { Height = 400 };
-            chart.AddPie(list2, _.Total, e => new NameValue(e.Key, e.Total));
+            chart.AddPie(list2, _.Total, e => new NameValue(e.LinkItem, e.Total));
 
             //list2 = list.OrderByDescending(e => e.ActivesT7).ToList();
             var chart2 = new ECharts { Height = 400 };
-            chart2.AddPie(list2, _.ActivesT30, e => new NameValue(e.Key, e.ActivesT30));
+            chart2.AddPie(list2, _.ActivesT30, e => new NameValue(e.LinkItem, e.ActivesT30));
 
             //list2 = list.OrderByDescending(e => e.NewsT7).ToList();
             var chart3 = new ECharts { Height = 400 };
-            chart3.AddPie(list, _.NewsT7, e => new NameValue(e.Key, e.NewsT7));
+            chart3.AddPie(list, _.NewsT7, e => new NameValue(e.LinkItem, e.NewsT7));
 
             ViewBag.Charts = new[] { chart2 };
             ViewBag.Charts2 = new[] { chart };
