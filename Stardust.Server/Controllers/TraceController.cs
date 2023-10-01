@@ -241,7 +241,13 @@ public class TraceController : ControllerBase
                 }
 
                 // 检查跟踪项
-                var ti = app.GetOrAddItem(item.Name, rule?.IsWhite);
+                TraceItem ti = null;
+                try
+                {
+                    // 捕获异常，避免因为跟踪项错误导致整体跟踪失败
+                    ti = app.GetOrAddItem(item.Name, rule?.IsWhite);
+                }
+                catch { }
                 if (ti == null)
                 {
                     using var span = _tracer?.NewSpan("trace:ErrorItem", item.Name);
