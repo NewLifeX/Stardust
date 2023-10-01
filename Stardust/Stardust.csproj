@@ -14,6 +14,7 @@
     <AssemblyVersion>$(VersionPrefix).$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</AssemblyVersion>
     <OutputPath>..\Bin</OutputPath>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <SignAssembly>True</SignAssembly>
@@ -86,11 +87,11 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'!='net40'">
-    <PackageReference Include="NewLife.Core" Version="10.6.2023.930-beta0258" />
-    <PackageReference Include="NewLife.Remoting" Version="2.3.2023.907" />
+    <PackageReference Include="NewLife.Core" Version="10.6.2023.1001" />
+    <PackageReference Include="NewLife.Remoting" Version="2.4.2023.1001" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net40'">
-    <PackageReference Include="NewLife.Core" Version="10.5.2023.904-net40" />
+    <PackageReference Include="NewLife.Core" Version="10.6.2023.1001-net40" />
   </ItemGroup>
 
 </Project>

@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Redis" Version="5.5.2023.928-beta0019" />
+    <PackageReference Include="NewLife.Redis" Version="5.5.2023.1001" />
   </ItemGroup>
 
   <ItemGroup>
