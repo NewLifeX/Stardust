@@ -14,28 +14,28 @@ public class AppInfo
     public Int32 Id { get; set; }
 
     /// <summary>进程名称</summary>
-    public String Name { get; set; }
+    public String? Name { get; set; }
 
     /// <summary>版本</summary>
-    public String Version { get; set; }
+    public String? Version { get; set; }
 
     /// <summary>应用名</summary>
-    public String AppName { get; set; }
+    public String? AppName { get; set; }
 
     ///// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
     //public String ClientId { get; set; }
 
     /// <summary>命令行</summary>
-    public String CommandLine { get; set; }
+    public String? CommandLine { get; set; }
 
     /// <summary>用户名</summary>
-    public String UserName { get; set; }
+    public String? UserName { get; set; }
 
     /// <summary>机器名</summary>
-    public String MachineName { get; set; }
+    public String? MachineName { get; set; }
 
     /// <summary>本地IP地址。随着网卡变动，可能改变</summary>
-    public String IP { get; set; }
+    public String? IP { get; set; }
 
     /// <summary>开始时间</summary>
     public DateTime StartTime { get; set; } = DateTime.Now;
@@ -65,7 +65,7 @@ public class AppInfo
     public Int32 Connections { get; set; }
 
     /// <summary>网络端口监听信息</summary>
-    public String Listens { get; set; }
+    public String? Listens { get; set; }
 
     /// <summary>GC暂停时间占比，百分之一，最大值10</summary>
     public Double GCPause { get; set; }
@@ -74,7 +74,7 @@ public class AppInfo
     public Int32 FullGC { get; set; }
 
     static private Int32 _pid = Process.GetCurrentProcess().Id;
-    private readonly Process _process;
+    private readonly Process? _process;
     #endregion
 
     #region 构造
@@ -103,7 +103,7 @@ public class AppInfo
     #endregion
 
     #region 方法
-    private Stopwatch _stopwatch;
+    private Stopwatch? _stopwatch;
     private Int64 _last;
     private Int32 _lastGC2;
 
@@ -112,11 +112,14 @@ public class AppInfo
     {
         try
         {
-            _process.Refresh();
+            if (_process != null)
+            {
+                _process.Refresh();
 
-            WorkingSet = _process.WorkingSet64;
-            Threads = _process.Threads.Count;
-            Handles = _process.HandleCount;
+                WorkingSet = _process.WorkingSet64;
+                Threads = _process.Threads.Count;
+                Handles = _process.HandleCount;
+            }
 
             ThreadPool.GetAvailableThreads(out var worker, out var io);
             WorkerThreads = worker;
@@ -153,7 +156,8 @@ public class AppInfo
                 _lastGC2 = gc2;
             }
 
-            ProcessorTime = (Int32)_process.TotalProcessorTime.TotalMilliseconds;
+            if (_process != null)
+                ProcessorTime = (Int32)_process.TotalProcessorTime.TotalMilliseconds;
 
             if (_stopwatch == null)
                 _stopwatch = Stopwatch.StartNew();
@@ -165,7 +169,8 @@ public class AppInfo
             }
             _last = ProcessorTime;
 
-            StartTime = _process.StartTime;
+            if (_process != null)
+                StartTime = _process.StartTime;
         }
         catch (Win32Exception) { }
     }
@@ -207,7 +212,7 @@ public class AppInfo
     {
         // 缓存，避免频繁执行
         var key = process.Id + "";
-        if (_cache.TryGetValue<String>(key, out var value)) return value;
+        if (_cache.TryGetValue<String>(key, out var value)) return value + "";
 
         var name = process.ProcessName;
 
@@ -239,5 +244,5 @@ public class AppInfo
 
         return name;
     }
-#endregion
+    #endregion
 }

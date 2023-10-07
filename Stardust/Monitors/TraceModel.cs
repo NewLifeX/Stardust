@@ -7,22 +7,22 @@ namespace Stardust.Monitors;
 public class TraceModel
 {
     /// <summary>应用标识</summary>
-    public String AppId { get; set; }
+    public String? AppId { get; set; }
 
     /// <summary>应用名</summary>
-    public String AppName { get; set; }
+    public String? AppName { get; set; }
 
     /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
-    public String ClientId { get; set; }
+    public String? ClientId { get; set; }
 
     /// <summary>版本</summary>
-    public String Version { get; set; }
+    public String? Version { get; set; }
 
     /// <summary>应用信息</summary>
-    public AppInfo Info { get; set; }
+    public AppInfo? Info { get; set; }
 
     /// <summary>追踪数据</summary>
-    public ISpanBuilder[] Builders { get; set; }
+    public ISpanBuilder[]? Builders { get; set; }
 }
 
 /// <summary>追踪响应模型</summary>
@@ -47,5 +47,5 @@ public class TraceResponse
     public Boolean? EnableMeter { get; set; }
 
     /// <summary>要排除的操作名</summary>
-    public String[] Excludes { get; set; }
+    public String[]? Excludes { get; set; }
 }

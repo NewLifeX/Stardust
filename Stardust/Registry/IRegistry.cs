@@ -22,7 +22,7 @@ public interface IRegistry
     /// <param name="tag">特性标签</param>
     /// <param name="health">健康监测接口地址</param>
     /// <returns></returns>
-    PublishServiceInfo Register(String serviceName, Func<String> addressCallback, String tag = null, String health = null);
+    PublishServiceInfo Register(String serviceName, Func<String> addressCallback, String? tag = null, String? health = null);
 
     /// <summary>发布服务（直达）</summary>
     /// <remarks>
@@ -34,7 +34,7 @@ public interface IRegistry
     /// <param name="tag">特性标签</param>
     /// <param name="health">健康监测接口地址</param>
     /// <returns></returns>
-    Task<PublishServiceInfo> RegisterAsync(String serviceName, String address, String tag = null, String health = null);
+    Task<PublishServiceInfo> RegisterAsync(String serviceName, String address, String? tag = null, String? health = null);
 
     /// <summary>发布服务（底层）。定时反复执行，让服务端更新注册信息</summary>
     /// <param name="service">应用服务</param>
@@ -51,7 +51,7 @@ public interface IRegistry
     /// <param name="minVersion">最小版本</param>
     /// <param name="tag">特性标签。只要包含该特性的服务提供者</param>
     /// <returns></returns>
-    Task<ServiceModel[]> ResolveAsync(String serviceName, String minVersion = null, String tag = null);
+    Task<ServiceModel[]> ResolveAsync(String serviceName, String? minVersion = null, String? tag = null);
 
     /// <summary>取消服务</summary>
     /// <param name="serviceName">服务名</param>
@@ -74,15 +74,16 @@ public static class RegistryExtensions
     /// <param name="serviceName">服务名</param>
     /// <param name="tag"></param>
     /// <returns></returns>
-    public static async Task<IApiClient> CreateForServiceAsync(this IRegistry registry, String serviceName, String tag = null)
+    public static async Task<IApiClient> CreateForServiceAsync(this IRegistry registry, String serviceName, String? tag = null)
     {
         var http = new ApiHttpClient
         {
             RoundRobin = true,
 
-            Log = (registry as ILogFeature).Log,
+            //Log = (registry as ILogFeature).Log,
             Tracer = DefaultTracer.Instance,
         };
+        if (registry is ILogFeature logFeature) http.Log = logFeature.Log;
 
         var models = await registry.ResolveAsync(serviceName, null, tag);
 
@@ -98,7 +99,7 @@ public static class RegistryExtensions
     /// <param name="serviceName">服务名</param>
     /// <param name="tag"></param>
     /// <returns></returns>
-    public static IApiClient CreateForService(this IRegistry registry, String serviceName, String tag = null) => TaskEx.Run(() => CreateForServiceAsync(registry, serviceName, tag)).Result;
+    public static IApiClient CreateForService(this IRegistry registry, String serviceName, String? tag = null) => TaskEx.Run(() => CreateForServiceAsync(registry, serviceName, tag)).Result;
 
     private static void Bind(ApiHttpClient client, ServiceModel[] ms)
     {
@@ -147,9 +148,9 @@ public static class RegistryExtensions
             // 删掉旧的
             for (var i = services.Count - 1; i >= 0; i--)
             {
-                if (!names.Contains(services[i].Name))
+                var svc = services[i];
+                if (!svc.Name.IsNullOrEmpty() && !names.Contains(svc.Name))
                 {
-                    var svc = services[i];
                     XTrace.WriteLine("服务[{0}]删除地址：name={1} address={2} weight={3}", serviceName, svc.Name, svc.Address, svc.Weight);
 
                     services.RemoveAt(i);
@@ -164,10 +165,10 @@ public static class RegistryExtensions
     /// <param name="minVersion">最小版本</param>
     /// <param name="tag">特性标签。只要包含该特性的服务提供者</param>
     /// <returns></returns>
-    public static async Task<String[]> ResolveAddressAsync(this IRegistry registry, String serviceName, String minVersion = null, String tag = null)
+    public static async Task<String[]> ResolveAddressAsync(this IRegistry registry, String serviceName, String? minVersion = null, String? tag = null)
     {
         var ms = await registry.ResolveAsync(serviceName, minVersion, tag);
-        if (ms == null) return null;
+        if (ms == null) return new String[0];
 
         var addrs = new List<String>();
         foreach (var item in ms)

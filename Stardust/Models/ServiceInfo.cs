@@ -8,23 +8,23 @@ public class ServiceInfo
     #region 属性
     /// <summary>名称。全局唯一，默认应用名，根据场景可以加dev等后缀</summary>
     [XmlAttribute]
-    public String Name { get; set; }
+    public String Name { get; set; } = null!;
 
     /// <summary>文件名。启动进程时使用，如果是zip文件则经过内部处理</summary>
     [XmlAttribute]
-    public String FileName { get; set; }
+    public String FileName { get; set; } = null!;
 
     /// <summary>参数。启动进程时使用</summary>
     [XmlAttribute]
-    public String Arguments { get; set; }
+    public String? Arguments { get; set; }
 
     /// <summary>工作目录。启动进程时使用</summary>
     [XmlAttribute]
-    public String WorkingDirectory { get; set; }
+    public String? WorkingDirectory { get; set; }
 
     /// <summary>用户。以该用户执行应用</summary>
     [XmlAttribute]
-    public String UserName { get; set; }
+    public String? UserName { get; set; }
 
     /// <summary>启用</summary>
     [XmlAttribute]
@@ -52,12 +52,12 @@ public class ServiceInfo
 
     /// <summary>压缩包文件</summary>
     [XmlIgnore]
-    public String ZipFile { get; set; }
+    public String? ZipFile { get; set; }
     #endregion
 
     /// <summary>克隆当前对象</summary>
     /// <returns></returns>
-    public ServiceInfo Clone() => MemberwiseClone() as ServiceInfo;
+    public ServiceInfo Clone() => (MemberwiseClone() as ServiceInfo)!;
 
     /// <summary>已重载。友好显示</summary>
     /// <returns></returns>

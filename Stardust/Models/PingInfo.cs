@@ -11,7 +11,7 @@ public class PingInfo
     public UInt64 AvailableFreeSpace { get; set; }
 
     /// <summary>驱动器信息。各分区大小，逗号分隔</summary>
-    public String DriveInfo { get; set; }
+    public String? DriveInfo { get; set; }
 
     /// <summary>主频</summary>
     public Single CpuRate { get; set; }
@@ -29,19 +29,19 @@ public class PingInfo
     public UInt64 DownlinkSpeed { get; set; }
 
     /// <summary>MAC地址</summary>
-    public String Macs { get; set; }
+    public String? Macs { get; set; }
 
     ///// <summary>串口</summary>
     //public String COMs { get; set; }
 
     /// <summary>框架。本地支持的所有版本框架</summary>
-    public String Framework { get; set; }
+    public String? Framework { get; set; }
 
     /// <summary>本地IP地址。随着网卡变动，可能改变</summary>
-    public String IP { get; set; }
+    public String? IP { get; set; }
 
     /// <summary>进程列表</summary>
-    public String Processes { get; set; }
+    public String? Processes { get; set; }
 
     /// <summary>进程个数</summary>
     public Int32 ProcessCount { get; set; }
@@ -79,11 +79,11 @@ public class PingResponse
     public Int32 Period { get; set; }
 
     /// <summary>令牌。现有令牌即将过期时，颁发新的令牌</summary>
-    public String Token { get; set; }
+    public String? Token { get; set; }
 
     /// <summary>新服务器地址。用于服务器迁移</summary>
-    public String NewServer { get; set; }
+    public String? NewServer { get; set; }
 
     /// <summary>下发命令</summary>
-    public CommandModel[] Commands { get; set; }
+    public CommandModel[]? Commands { get; set; }
 }
