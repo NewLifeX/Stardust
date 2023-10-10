@@ -1,14 +1,13 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using NewLife;
 using NewLife.Http;
 using NewLife.Log;
 using NewLife.Messaging;
-using NewLife.Net;
 using NewLife.Remoting;
 using Stardust.Models;
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
@@ -22,16 +21,16 @@ public class LocalStarClient
 {
     #region 属性
     /// <summary>本机代理信息</summary>
-    public AgentInfo Info { get; private set; }
+    public AgentInfo? Info { get; private set; }
 
     /// <summary>本地服务端地址</summary>
-    public String Server { get; set; }
+    public String? Server { get; set; }
 
     /// <summary>本地星尘代理服务地址</summary>
     public static Int32 Port { get; set; } = 5500;
 
-    private AgentInfo _local;
-    private ApiClient _client;
+    private AgentInfo? _local;
+    private ApiClient? _client;
     #endregion
 
     #region 构造
@@ -44,6 +43,9 @@ public class LocalStarClient
     #endregion
 
     #region 方法
+#if !NET40
+    [MemberNotNull(nameof(_client))]
+#endif
     private void Init()
     {
         if (_client != null) return;
@@ -63,7 +65,7 @@ public class LocalStarClient
 
     /// <summary>获取信息</summary>
     /// <returns></returns>
-    public AgentInfo GetInfo()
+    public AgentInfo? GetInfo()
     {
         //!!! 通过进程名判断是否存在，可能会误判，因为获取其它dotnet进程命令行需要管理员权限
         //// 检测进程是否存在，如果进程都不存在，没必要获取信息
@@ -94,7 +96,7 @@ public class LocalStarClient
 
     /// <summary>获取信息</summary>
     /// <returns></returns>
-    public async Task<AgentInfo> GetInfoAsync()
+    public async Task<AgentInfo?> GetInfoAsync()
     {
         Init();
 
@@ -363,7 +365,7 @@ public class LocalStarClient
     /// <param name="url">zip包下载源</param>
     /// <param name="version">版本号</param>
     /// <param name="target">目标目录</param>
-    public static Task ProbeAsync(String url = null, String version = null, String target = null)
+    public static Task ProbeAsync(String? url = null, String? version = null, String? target = null)
     {
         return TaskEx.Run(() =>
         {
@@ -470,6 +472,6 @@ public class LocalStarClient
     /// <summary>写日志</summary>
     /// <param name="format"></param>
     /// <param name="args"></param>
-    public void WriteLog(String format, params Object[] args) => Log?.Info(format, args);
+    public void WriteLog(String format, params Object?[] args) => Log?.Info(format, args);
     #endregion
 }

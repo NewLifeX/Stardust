@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using NewLife;
 using NewLife.Caching;
@@ -32,37 +33,37 @@ public class StarFactory : DisposeBase
 {
     #region 属性
     /// <summary>服务器地址</summary>
-    public String Server { get; set; }
+    public String? Server { get; set; }
 
     /// <summary>应用</summary>
-    public String AppId { get; set; }
+    public String? AppId { get; set; }
 
     /// <summary>应用名</summary>
-    public String AppName { get; set; }
+    public String? AppName { get; set; }
 
     /// <summary>应用密钥</summary>
-    public String Secret { get; set; }
+    public String? Secret { get; set; }
 
     /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
-    public String ClientId { get; set; }
+    public String? ClientId { get; set; }
 
     ///// <summary>服务名</summary>
     //public String ServiceName { get; set; }
 
     /// <summary>客户端</summary>
-    public IApiClient Client => _client;
+    public IApiClient? Client => _client;
 
     /// <summary>应用客户端</summary>
-    public AppClient App => _client;
+    public AppClient? App => _client;
 
     /// <summary>配置信息。从配置中心返回的信息头</summary>
-    public ConfigInfo ConfigInfo => (_config as StarHttpConfigProvider)?.ConfigInfo;
+    public ConfigInfo? ConfigInfo => (_config as StarHttpConfigProvider)?.ConfigInfo;
 
     /// <summary>本地星尘代理</summary>
     public LocalStarClient Local { get; private set; }
 
-    private AppClient _client;
-    private TokenHttpFilter _tokenFilter;
+    private AppClient? _client;
+    private TokenHttpFilter? _tokenFilter;
     #endregion
 
     #region 构造
@@ -184,6 +185,17 @@ public class StarFactory : DisposeBase
                 }
                 else
                     XTrace.WriteLine("星尘探测：StarAgent Not Found, Cost={0}ms", sw.ElapsedMilliseconds);
+
+                if (inf != null & !inf.PluginServer.IsNullOrEmpty())
+                {
+                    var core = NewLife.Setting.Current;
+                    if (!inf.PluginServer.EqualIgnoreCase(core.PluginServer))
+                    {
+                        XTrace.WriteLine("插件服务器PluginServer变更为 {0}", inf.PluginServer);
+                        core.PluginServer = inf.PluginServer;
+                        core.Save();
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -238,6 +250,9 @@ public class StarFactory : DisposeBase
         ioc.TryAddSingleton(typeof(ICacheProvider), typeof(CacheProvider));
     }
 
+#if !NET40
+    [MemberNotNullWhen(true, nameof(_client))]
+#endif
     private Boolean Valid()
     {
         //if (Server.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Server));
@@ -288,7 +303,7 @@ public class StarFactory : DisposeBase
     #region 监控中心
     private StarTracer _tracer;
     /// <summary>监控中心</summary>
-    public ITracer Tracer
+    public ITracer? Tracer
     {
         get
         {
@@ -305,7 +320,9 @@ public class StarFactory : DisposeBase
 
     private void InitTracer()
     {
-        XTrace.WriteLine("初始化星尘监控中心，采样并定期上报应用性能埋点数据，包括Api接口、Http请求、数据库操作、Redis操作等。可用于监控系统健康状态，分析分布式系统的性能瓶颈。");
+        if (Server.IsNullOrEmpty()) return;
+
+        XTrace.WriteLine("星尘监控中心：采样并定期上报应用性能埋点数据，包括Api接口、Http请求、数据库操作、Redis操作等。可用于监控系统健康状态，分析分布式系统的性能瓶颈。");
 
         var tracer = new StarTracer(Server)
         {
@@ -329,7 +346,7 @@ public class StarFactory : DisposeBase
     /// <remarks>
     /// 文档 https://newlifex.com/blood/stardust_configcenter
     /// </remarks>
-    public IConfigProvider Config
+    public IConfigProvider? Config
     {
         get
         {
@@ -337,7 +354,7 @@ public class StarFactory : DisposeBase
             {
                 if (!Valid()) return null;
 
-                XTrace.WriteLine("初始化星尘配置中心，提供集中配置管理能力，自动从配置中心加载配置数据，包括XCode数据库连接。配置中心同时支持分配应用实例的唯一WorkerId，确保Snowflake算法能够生成绝对唯一的雪花Id");
+                XTrace.WriteLine("星尘配置中心：提供集中配置管理能力，自动从配置中心加载配置数据，包括XCode数据库连接。配置中心同时支持分配应用实例的唯一WorkerId，确保Snowflake算法能够生成绝对唯一的雪花Id");
 
                 var config = new StarHttpConfigProvider
                 {
@@ -376,13 +393,13 @@ public class StarFactory : DisposeBase
 
     /// <summary>获取复合配置提供者</summary>
     /// <returns></returns>
-    public IConfigProvider GetConfig() => _configProvider ?? Config;
+    public IConfigProvider? GetConfig() => _configProvider ?? Config;
     #endregion
 
     #region 注册中心
     private Boolean _initService;
     /// <summary>注册中心，服务注册与发现</summary>
-    public IRegistry Service
+    public IRegistry? Service
     {
         get
         {
@@ -393,7 +410,7 @@ public class StarFactory : DisposeBase
                 _initService = true;
                 //_appClient = _client as AppClient;
 
-                XTrace.WriteLine("初始化星尘注册中心，提供服务注册与发布能力");
+                XTrace.WriteLine("星尘注册中心：提供服务注册与发布能力");
             }
 
             return _client;
@@ -404,13 +421,13 @@ public class StarFactory : DisposeBase
     /// <param name="serviceName"></param>
     /// <param name="tag"></param>
     /// <returns></returns>
-    public IApiClient CreateForService(String serviceName, String tag = null) => TaskEx.Run(() => CreateForServiceAsync(serviceName, tag)).Result;
+    public IApiClient CreateForService(String serviceName, String? tag = null) => TaskEx.Run(() => CreateForServiceAsync(serviceName, tag)).Result;
 
     /// <summary>为指定服务创建客户端，从星尘注册中心获取服务地址。单例，应避免频繁创建客户端</summary>
     /// <param name="serviceName"></param>
     /// <param name="tag"></param>
     /// <returns></returns>
-    public Task<IApiClient> CreateForServiceAsync(String serviceName, String tag = null) => Service.CreateForServiceAsync(serviceName, tag);
+    public Task<IApiClient> CreateForServiceAsync(String serviceName, String? tag = null) => Service.CreateForServiceAsync(serviceName, tag);
 
     /// <summary>发布服务</summary>
     /// <param name="serviceName">服务名</param>
@@ -418,14 +435,14 @@ public class StarFactory : DisposeBase
     /// <param name="tag">特性标签</param>
     /// <param name="health">健康监测接口地址</param>
     /// <returns></returns>
-    public Task<PublishServiceInfo> RegisterAsync(String serviceName, String address, String tag = null, String health = null) => Service.RegisterAsync(serviceName, address, tag, health);
+    public Task<PublishServiceInfo> RegisterAsync(String serviceName, String address, String? tag = null, String? health = null) => Service.RegisterAsync(serviceName, address, tag, health);
 
     /// <summary>消费得到服务地址信息</summary>
     /// <param name="serviceName">服务名</param>
     /// <param name="minVersion">最小版本</param>
     /// <param name="tag">特性标签。只要包含该特性的服务提供者</param>
     /// <returns></returns>
-    public Task<String[]> ResolveAddressAsync(String serviceName, String minVersion = null, String tag = null) => Service.ResolveAddressAsync(serviceName, minVersion, tag);
+    public Task<String[]> ResolveAddressAsync(String serviceName, String? minVersion = null, String? tag = null) => Service.ResolveAddressAsync(serviceName, minVersion, tag);
     #endregion
 
     #region 其它
@@ -436,7 +453,7 @@ public class StarFactory : DisposeBase
     /// <param name="expire"></param>
     /// <param name="timeout"></param>
     /// <returns></returns>
-    public async Task<Int32> SendNodeCommand(String nodeCode, String command, String argument = null, Int32 expire = 3600, Int32 timeout = 5)
+    public async Task<Int32> SendNodeCommand(String nodeCode, String command, String? argument = null, Int32 expire = 3600, Int32 timeout = 5)
     {
         if (!Valid()) return -1;
 
@@ -457,7 +474,7 @@ public class StarFactory : DisposeBase
     /// <param name="expire"></param>
     /// <param name="timeout"></param>
     /// <returns></returns>
-    public async Task<Int32> SendAppCommand(String appId, String command, String argument = null, Int32 expire = 3600, Int32 timeout = 5)
+    public async Task<Int32> SendAppCommand(String appId, String command, String? argument = null, Int32 expire = 3600, Int32 timeout = 5)
     {
         if (!Valid()) return -1;
 

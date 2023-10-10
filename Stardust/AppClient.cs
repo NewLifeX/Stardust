@@ -28,13 +28,13 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     public String AppId { get; set; }
 
     /// <summary>应用名</summary>
-    public String AppName { get; set; }
+    public String? AppName { get; set; }
 
     /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
-    public String ClientId { get; set; }
+    public String? ClientId { get; set; }
 
     /// <summary>节点编码</summary>
-    public String NodeCode { get; set; }
+    public String? NodeCode { get; set; }
 
     /// <summary>WebSocket长连接。建立长连接后，可以实时感知配置更新和注册服务更新，默认false</summary>
     public Boolean UseWebSocket { get; set; }
@@ -49,8 +49,8 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认120</summary>
     public Int32 MaxFails { get; set; } = 120;
 
-    private AppInfo _appInfo;
-    private readonly String _version;
+    private AppInfo? _appInfo;
+    private readonly String? _version;
 
     /// <summary>已发布服务，记录下来，定时注册刷新</summary>
     private readonly ConcurrentDictionary<String, PublishServiceInfo> _publishServices = new();
@@ -146,10 +146,10 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         StartTimer();
     }
 
-    private String _appName;
+    private String? _appName;
     /// <summary>注册</summary>
     /// <returns></returns>
-    public async Task<Object> Register()
+    public async Task<Object?> Register()
     {
         try
         {
@@ -174,7 +174,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         catch (Exception ex)
         {
             if (ex is HttpRequestException)
-                Log?.Info("注册异常[{0}] {1}", Source, ex.GetTrue().Message);
+                Log?.Info("注册异常[{0}] {1}", Source, ex.GetTrue()?.Message);
             else
                 Log?.Info(ex.ToString());
 
@@ -340,7 +340,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     #endregion
 
     #region 长连接
-    private TimerX _timer;
+    private TimerX? _timer;
     private void StartTimer()
     {
         if (_timer == null)
@@ -428,8 +428,8 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     }
 
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
-    private WebSocket _websocket;
-    private CancellationTokenSource _source;
+    private WebSocket? _websocket;
+    private CancellationTokenSource? _source;
     private async Task DoPull(WebSocket socket, CancellationToken cancellationToken)
     {
         DefaultSpan.Current = null;
@@ -523,7 +523,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     /// <summary>上报服务调用结果</summary>
     /// <param name="model"></param>
     /// <returns></returns>
-    public virtual async Task<Object> CommandReply(CommandReplyModel model) => await PostAsync<Object>("App/CommandReply", model);
+    public virtual async Task<Object?> CommandReply(CommandReplyModel model) => await PostAsync<Object>("App/CommandReply", model);
     #endregion
 
     #region 发布、消费
@@ -597,7 +597,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     /// <param name="tag">特性标签</param>
     /// <param name="health">健康监测接口地址</param>
     /// <returns></returns>
-    public async Task<PublishServiceInfo> RegisterAsync(String serviceName, String address, String tag = null, String health = null)
+    public async Task<PublishServiceInfo> RegisterAsync(String serviceName, String address, String? tag = null, String? health = null)
     {
         if (address == null) throw new ArgumentNullException(nameof(address));
 
@@ -619,7 +619,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     /// <param name="tag">特性标签</param>
     /// <param name="health">健康监测接口地址</param>
     /// <returns></returns>
-    public PublishServiceInfo Register(String serviceName, Func<String> addressCallback, String tag = null, String health = null)
+    public PublishServiceInfo Register(String serviceName, Func<String> addressCallback, String? tag = null, String? health = null)
     {
         if (addressCallback == null) throw new ArgumentNullException(nameof(addressCallback));
 

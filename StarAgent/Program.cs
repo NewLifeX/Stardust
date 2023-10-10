@@ -371,7 +371,14 @@ internal class MyService : ServiceBase, IServiceProvider
         if (_factory == null)
         {
             var server = StarSetting.Server;
-            if (!server.IsNullOrEmpty()) _factory = new StarFactory(server, "StarAgent", null);
+            if (!server.IsNullOrEmpty())
+            {
+                _factory = new StarFactory(server, "StarAgent", null);
+
+                // 激活配置中心，获取PluginServer
+                var config = _factory.GetConfig();
+                if (config != null) ThreadPoolX.QueueUserWorkItem(() => config.LoadAll());
+            }
         }
     }
 

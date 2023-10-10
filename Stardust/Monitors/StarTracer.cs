@@ -19,22 +19,22 @@ public class StarTracer : DefaultTracer
 {
     #region 属性
     /// <summary>应用标识</summary>
-    public String AppId { get; set; }
+    public String? AppId { get; set; }
 
     /// <summary>应用名</summary>
-    public String AppName { get; set; }
+    public String? AppName { get; set; }
 
     /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
-    public String ClientId { get; set; }
+    public String? ClientId { get; set; }
 
     /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认120</summary>
     public Int32 MaxFails { get; set; } = 120;
 
     /// <summary>要排除的操作名</summary>
-    public String[] Excludes { get; set; }
+    public String[]? Excludes { get; set; }
 
     /// <summary>Api客户端</summary>
-    public IApiClient Client { get; set; }
+    public IApiClient? Client { get; set; }
 
     /// <summary>剔除埋点调用自己。默认true</summary>
     public Boolean TrimSelf { get; set; } = true;
@@ -285,7 +285,7 @@ public class StarTracer : DefaultTracer
     /// <summary>全局注册星尘性能追踪器</summary>
     /// <param name="server">星尘监控中心地址，为空时自动从本地探测</param>
     /// <returns></returns>
-    public static StarTracer Register(String server = null)
+    public static StarTracer? Register(String? server = null)
     {
         if (server.IsNullOrEmpty())
         {

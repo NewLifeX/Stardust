@@ -82,6 +82,13 @@ public class StarService : DisposeBase, IApi
         ai.Services = Manager?.Services.Select(e => e.Name).ToArray();
         ai.Code = AgentSetting.Code;
 
+        // 返回插件服务器地址
+        var core = NewLife.Setting.Current;
+        if (!core.PluginServer.IsNullOrEmpty() && !core.PluginServer.Contains("x.newlifex.com"))
+        {
+            ai.PluginServer = core.PluginServer;
+        }
+
         return ai;
     }
 

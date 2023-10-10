@@ -8,26 +8,25 @@ using NewLife.Serialization;
 using Stardust.Models;
 using Stardust.Registry;
 using Stardust.Services;
-using static System.Net.WebRequestMethods;
 
 namespace Stardust.Configs;
 
 internal class StarHttpConfigProvider : HttpConfigProvider
 {
-    public ConfigInfo ConfigInfo { get; set; }
+    public ConfigInfo? ConfigInfo { get; set; }
 
     const String REGISTRY = "$Registry:";
     private Boolean _useWorkerId;
 
-    protected override IDictionary<String, Object> GetAll()
+    protected override IDictionary<String, Object?>? GetAll()
     {
         try
         {
             var rs = base.GetAll();
+            var inf = Info;
 
-            if (rs != null && rs.Count > 0)
+            if (rs != null && rs.Count > 0 && inf != null)
             {
-                var inf = Info;
                 var ci = ConfigInfo = JsonHelper.Convert<ConfigInfo>(inf);
 
                 if (ci != null && ci.Configs != null && ci.Configs.Count > 0)
@@ -56,7 +55,9 @@ internal class StarHttpConfigProvider : HttpConfigProvider
                 {
                     var asm = AssemblyX.Entry;
                     var set = NewLife.Setting.Current;
-                    if (!svr.IsNullOrEmpty() && !svr.EqualIgnoreCase(set.PluginServer) && !asm.Name.EqualIgnoreCase("StarWeb", "StarServer"))
+                    if (!svr.IsNullOrEmpty() &&
+                        !svr.EqualIgnoreCase(set.PluginServer) &&
+                        (asm == null || !asm.Name.EqualIgnoreCase("StarWeb", "StarServer")))
                     {
                         XTrace.WriteLine("插件服务器PluginServer变更为 {0}", svr);
                         set.PluginServer = svr;
@@ -86,7 +87,7 @@ internal class StarHttpConfigProvider : HttpConfigProvider
     /// <param name="key"></param>
     /// <param name="createOnMiss"></param>
     /// <returns></returns>
-    protected override IConfigSection Find(String key, Boolean createOnMiss)
+    protected override IConfigSection? Find(String key, Boolean createOnMiss)
     {
         if (key.StartsWithIgnoreCase(REGISTRY))
         {
