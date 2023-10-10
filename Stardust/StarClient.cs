@@ -14,8 +14,6 @@ using NewLife.Threading;
 using Stardust.Managers;
 using Stardust.Models;
 using Stardust.Services;
-using System;
-using System.Net.Http;
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
 using System.Net.WebSockets;
 using WebSocket = System.Net.WebSockets.WebSocket;
@@ -572,7 +570,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     /// <summary>心跳</summary>
     /// <param name="inf"></param>
     /// <returns></returns>
-    private async Task<PingResponse> PingAsync(PingInfo inf) => await PostAsync<PingResponse>("Node/Ping", inf);
+    private async Task<PingResponse?> PingAsync(PingInfo inf) => await PostAsync<PingResponse>("Node/Ping", inf);
 
     private TimeSpan _span;
     /// <summary>获取相对于服务器的当前时间，避免两端时间差</summary>
@@ -677,12 +675,12 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     /// <param name="id"></param>
     /// <param name="data"></param>
     /// <returns></returns>
-    private async Task<Object> ReportAsync(Int32 id, Byte[] data) => await PostAsync<Object>("Node/Report?Id=" + id, data);
+    private async Task<Object?> ReportAsync(Int32 id, Byte[] data) => await PostAsync<Object>("Node/Report?Id=" + id, data);
 
     /// <summary>上报服务调用结果</summary>
     /// <param name="model"></param>
     /// <returns></returns>
-    public virtual async Task<Object> CommandReply(CommandReplyModel model) => await PostAsync<Object>("Node/CommandReply", model);
+    public virtual async Task<Object?> CommandReply(CommandReplyModel model) => await PostAsync<Object>("Node/CommandReply", model);
     #endregion
 
     #region 长连接
