@@ -189,7 +189,11 @@ public class AppOnlineService
             if (inf != null)
             {
                 node.Version = inf.Version;
-                node.MachineName = inf.MachineName;
+                if (!inf.MachineName.IsNullOrEmpty())
+                {
+                    if (node.Name.IsNullOrEmpty() || node.Name == node.MachineName) node.Name = inf.MachineName;
+                    node.MachineName = inf.MachineName;
+                }
                 node.UserName = inf.UserName;
             }
             if (node.Name.IsNullOrEmpty()) node.Name = rule.Category;

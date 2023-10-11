@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Xml.Linq;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Log;

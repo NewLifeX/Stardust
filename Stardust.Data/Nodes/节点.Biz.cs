@@ -535,7 +535,11 @@ public partial class Node : Entity<Node>
         if (!di.Version.IsNullOrEmpty()) node.Version = di.Version;
         if (di.Compile.Year > 2000) node.CompileTime = di.Compile;
 
-        if (!di.MachineName.IsNullOrEmpty()) node.MachineName = di.MachineName;
+        if (!di.MachineName.IsNullOrEmpty())
+        {
+            if (node.Name.IsNullOrEmpty() || node.Name == node.MachineName) node.Name = di.MachineName;
+            node.MachineName = di.MachineName;
+        }
         if (!di.UserName.IsNullOrEmpty()) node.UserName = di.UserName;
         if (!di.IP.IsNullOrEmpty()) node.IP = di.IP;
         if (!di.Product.IsNullOrEmpty()) node.Product = di.Product;
