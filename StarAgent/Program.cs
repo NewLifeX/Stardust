@@ -873,7 +873,7 @@ internal class MyService : ServiceBase, IServiceProvider
         if (serviceType == typeof(ServiceBase)) return this;
         if (serviceType == typeof(IHost)) return Host;
 
-        if (serviceType == typeof(ITracer)) return _factory.Tracer;
+        if (serviceType == typeof(ITracer)) return _factory?.Tracer;
 
         return Provider?.GetService(serviceType);
     }
