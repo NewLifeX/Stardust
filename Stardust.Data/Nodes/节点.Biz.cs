@@ -288,12 +288,14 @@ public partial class Node : Entity<Node>
     /// <param name="guid"></param>
     /// <param name="macs"></param>
     /// <returns></returns>
-    public static IList<Node> Search(String uuid, String guid, String macs)
+    public static IList<Node> SearchAny(String uuid, String guid, String macs, String serial, String diskid)
     {
         var exp = new WhereExpression();
-        if (!uuid.IsNullOrEmpty()) exp &= _.Uuid == uuid;
-        if (!guid.IsNullOrEmpty()) exp &= _.MachineGuid == guid;
-        if (!macs.IsNullOrEmpty()) exp &= _.MACs == macs;
+        if (!uuid.IsNullOrEmpty()) exp |= _.Uuid == uuid;
+        if (!guid.IsNullOrEmpty()) exp |= _.MachineGuid == guid;
+        if (!macs.IsNullOrEmpty()) exp |= _.MACs == macs;
+        if (!serial.IsNullOrEmpty()) exp |= _.SerialNumber == serial;
+        if (!diskid.IsNullOrEmpty()) exp |= _.DiskID == diskid;
 
         if (exp.IsEmpty) return new List<Node>();
 

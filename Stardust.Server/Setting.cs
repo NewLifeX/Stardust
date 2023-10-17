@@ -47,6 +47,10 @@ public class StarServerSetting : Config<StarServerSetting>
     [Description("节点编码公式。选择NodeInfo哪些硬件信息来计算节点编码，支持Crc/Crc16/MD5/MD5_16，默认Crc({ProductCode}@{UUID}@{DiskID}@{Macs})")]
     public String NodeCodeFormula { get; set; } = "Crc({ProductCode}@{UUID}@{DiskID}@{Macs})";
 
+    /// <summary>节点编码辨识度。UUID+Guid+SerialNumber+DiskId+MAC，只要其中几个相同，就认为是同一个节点，默认2</summary>
+    [Description("节点编码辨识度。UUID+Guid+SerialNumber+DiskId+MAC，只要其中几个相同，就认为是同一个节点，默认2")]
+    public Int32 NodeCodeLevel { get; set; } = 2;
+
     /// <summary>监控流统计。默认5秒</summary>
     [Description("监控流统计。默认5秒")]
     public Int32 MonitorFlowPeriod { get; set; } = 5;

@@ -198,13 +198,31 @@ public class NodeService
         if (node == null)
         {
             // 该硬件的所有节点信息
-            var list = Node.Search(di.UUID, di.MachineGuid, di.Macs);
+            var list = Node.SearchAny(di.UUID, di.MachineGuid, di.Macs, di.SerialNumber, di.DiskID);
 
             // 当前节点信息，取较老者
             list = list.Where(e => e.ProductCode.IsNullOrEmpty() || e.ProductCode == inf.ProductCode).OrderBy(e => e.ID).ToList();
 
             // 找到节点
-            node ??= list.FirstOrDefault();
+            //node ??= list.FirstOrDefault();
+            // 节点编码辨识度。UUID+Guid+SerialNumber+DiskId+MAC，只要其中几个相同，就认为是同一个节点，默认2
+            var level = set.NodeCodeLevel;
+            if (level <= 0) level = 2;
+            foreach (var item in list)
+            {
+                var n = 0;
+                if (item.Uuid == di.UUID) n++;
+                if (item.MachineGuid == di.MachineGuid) n++;
+                if (item.MACs == di.Macs) n++;
+                if (item.SerialNumber == di.SerialNumber) n++;
+                if (item.DiskID == di.DiskID) n++;
+
+                if (n >= level)
+                {
+                    node = item;
+                    break;
+                }
+            }
         }
 
         var name = "";
