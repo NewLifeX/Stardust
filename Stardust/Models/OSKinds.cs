@@ -6,6 +6,9 @@ public enum OSKinds
     /// <summary>未知</summary>
     Unknown = 0,
 
+    /// <summary>SmartOS by NewLife</summary>
+    SmartOS = 40,
+
     /// <summary>WinXP, 5.1.2600</summary>
     WinXP = 51,
 

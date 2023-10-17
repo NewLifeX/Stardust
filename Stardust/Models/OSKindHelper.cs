@@ -13,6 +13,8 @@ public static class OSKindHelper
     {
         if (osName.IsNullOrEmpty()) return 0;
 
+        if (osName.StartsWithIgnoreCase("SmartA2", "SmartA4")) return OSKinds.SmartOS;
+
         var kind = ParseWindows(osName, osVersion);
         if (kind > 0) return kind;
 
