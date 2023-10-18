@@ -16,7 +16,7 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
 {
     static NodeStatController()
     {
-        ListFields.RemoveField("ID", "CreateTime", "UpdateTime", "Remark");
+        ListFields.RemoveField("ID", "LinkItem", "CreateTime", "UpdateTime", "Remark");
 
         {
             var df = ListFields.GetField("Category") as ListField;
@@ -151,18 +151,18 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
             && start.Year > 2000 && start.Date == end.Date && list.Count > 0)
         {
             // 饼图不要显示空的统计项
-            var list2 = list.Where(e => !e.LinkItem.IsNullOrEmpty()).ToList();
+            var list2 = list.Where(e => !e.Key.IsNullOrEmpty() && e.Key != "0").ToList();
 
             var chart = new ECharts { Height = 400 };
-            chart.AddPie(list2, _.Total, e => new NameValue(e.LinkItem, e.Total));
+            chart.AddPie(list2, _.Total, e => new NameValue(e.Key, e.Total));
 
             //list2 = list.OrderByDescending(e => e.ActivesT7).ToList();
             var chart2 = new ECharts { Height = 400 };
-            chart2.AddPie(list2, _.ActivesT30, e => new NameValue(e.LinkItem, e.ActivesT30));
+            chart2.AddPie(list2, _.ActivesT30, e => new NameValue(e.Key, e.ActivesT30));
 
             //list2 = list.OrderByDescending(e => e.NewsT7).ToList();
             var chart3 = new ECharts { Height = 400 };
-            chart3.AddPie(list, _.NewsT7, e => new NameValue(e.LinkItem, e.NewsT7));
+            chart3.AddPie(list, _.NewsT7, e => new NameValue(e.Key, e.NewsT7));
 
             ViewBag.Charts = new[] { chart2 };
             ViewBag.Charts2 = new[] { chart };
