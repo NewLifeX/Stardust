@@ -90,7 +90,20 @@ public class AppTracerController : EntityController<AppTracer>
             PageSetting.EnableNavbar = false;
         }
 
-        PageSetting.EnableAdd = false;
+        //PageSetting.EnableAdd = false;
+    }
+
+    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
+    {
+        var fields = base.OnGetFields(kind, model);
+
+        if (kind == ViewKinds.List)
+        {
+            var appId = GetRequest("appId").ToInt(-1);
+            if (appId > 0) fields.RemoveField("AppName", "Category");
+        }
+
+        return fields;
     }
 
     protected override IEnumerable<AppTracer> Search(Pager p)

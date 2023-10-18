@@ -88,6 +88,19 @@ public class AppDeployController : EntityController<AppDeploy>
         //PageSetting.EnableAdd = false;
     }
 
+    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
+    {
+        var fields = base.OnGetFields(kind, model);
+
+        if (kind == ViewKinds.List)
+        {
+            var appId = GetRequest("appId").ToInt(-1);
+            if (appId > 0) fields.RemoveField("AppName", "Category");
+        }
+
+        return fields;
+    }
+
     protected override IEnumerable<AppDeploy> Search(Pager p)
     {
         var id = p["id"].ToInt(-1);

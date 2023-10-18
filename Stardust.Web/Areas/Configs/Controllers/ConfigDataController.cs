@@ -16,7 +16,7 @@ public class ConfigDataController : EntityController<ConfigData>
     {
         ListFields.AddDataField("Value", null, "Scope");
         ListFields.AddDataField("NewValue", null, "NewStatus");
-        //ListFields.RemoveField("Remark");
+        ListFields.RemoveField("Remark");
         ListFields.RemoveField("CreateIP", "UpdateIP");
 
         AddFormFields.RemoveCreateField();

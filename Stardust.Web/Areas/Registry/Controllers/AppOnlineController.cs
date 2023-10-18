@@ -86,7 +86,7 @@ public class AppOnlineController : EntityController<AppOnline>
             if (nodeId > 0) fields.RemoveField("NodeName");
 
             var appId = GetRequest("appId").ToInt(-1);
-            if (appId > 0) fields.RemoveField("AppName");
+            if (appId > 0) fields.RemoveField("AppName", "Category", "Name");
         }
 
         return fields;

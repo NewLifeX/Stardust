@@ -5,10 +5,12 @@
 @{
     var path = Context.Request.Path + "";
 
+    var flag = false;
     var appId = Context.Request.Query["appId"].ToInt(0);
     if (appId == 0 && path.EqualIgnoreCase("/Registry/App", "/Registry/App/Detail", "/Registry/App/Edit"))
     {
         appId = Context.Request.Query["Id"].ToInt(0);
+        flag = true;
     }
     if (appId == 0 && path.EqualIgnoreCase("/Configs/AppConfig", "/Configs/AppConfig/Detail", "/Configs/AppConfig/Edit"))
     {
@@ -43,66 +45,87 @@
         var entity = AppTracer.FindByID(appId);
         if (entity != null && entity.AppId > 0) appId = entity.AppId;
     }
+
+    var start = Context.Request.Query["dtStart"].ToDateTime();
+    var end = Context.Request.Query["dtEnd"].ToDateTime();
+    if (end.Year < 2000) end = Context.Request.Query["dtEnd2"].ToDateTime().AddSeconds(1);
+
+    var dic = new Dictionary<String, Object>();
+    dic["实例"] = "/Registry/AppOnline?appId=" + appId;
+    dic["历史"] = "/Registry/AppHistory?appId=" + appId;
+    dic["命令"] = "/Registry/AppCommand?appId=" + appId;
+    dic["性能"] = "/Registry/AppMeter?appId=" + appId;
+    dic["注册中心"] = "/Registry/AppService?appId=" + appId;
+    dic["服务消费"] = "/Registry/AppConsume?appId=" + appId;
+
+    var configs = AppConfig.FindAllByAppId(appId);
+    dic["配置中心"] = "/Configs/AppConfig?appId=" + appId;
+    if (configs.Count == 1)
+    {
+        dic["配置管理"] = "/Configs/ConfigData?appId=" + configs[0].Id;
+    }
+
+    var deploys = AppDeploy.FindAllByAppId(appId);
+    dic["发布中心"] = "/Deployment/AppDeploy?appId=" + appId;
+    if (deploys.Count == 1)
+    {
+        dic["版本上传"] = "/Deployment/AppDeployVersion?appId=" + deploys[0].Id;
+        dic["发布节点"] = "/Deployment/AppDeployNode?appId=" + deploys[0].Id;
+    }
+
+    var monitors = AppTracer.FindAllByAppId(appId);
+    dic["监控中心"] = "/Monitors/AppTracer?appId=" + appId;
+    if (monitors.Count == 1)
+    {
+        dic["监控大屏"] = "/Monitors/AppDayStat?appId=" + monitors[0].ID;
+    }
+
+    // var dic2 = new Dictionary<String, Object>();
+    // dic2["报警事件"] = "/Safety/AlarmEvent?appId=" + appId;
+    // dic2["ADAS"] = "/Safety/ADASAlarm?appId=" + appId;
+    // dic2["DSM"] = "/Safety/DSMAlarm?appId=" + appId;
+    // dic2["BSD"] = "/Safety/BSDAlarm?appId=" + appId;
+    // dic["报警"] = dic2;
 }
 @if (appId > 0)
 {
     var app = App.FindById(appId);
-    var config = AppConfig.FindAllByAppId(appId).FirstOrDefault();
-    var deploy = AppDeploy.FindAllByAppId(appId).FirstOrDefault();
-    var monitor = AppTracer.FindAllByAppId(appId).FirstOrDefault();
 
-    <div class="navbar-collapse collapse" style="text-align:center">
+    <div class="navbar-collapse collapse text-center">
         <ul class="nav nav-pills" style="margin-bottom: 10px; display: inline-block;float: none;">
-            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/App/Detail","/Registry/App/Edit")?"active":"")">
+            <li role="presentation" class="@(flag?"active":"")">
                 <a href="/Registry/App/Edit?Id=@appId">应用：@(app?.ToString() ?? "信息")</a>
             </li>
-            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/AppOnline")?"active":"")">
-                <a href="/Registry/AppOnline?appId=@appId">实例</a>
-            </li>
-            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/AppHistory")?"active":"")">
-                <a href="/Registry/AppHistory?appId=@appId">历史</a>
-            </li>
-            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/AppCommand")?"active":"")">
-                <a href="/Registry/AppCommand?appId=@appId">命令</a>
-            </li>
-            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/AppMeter")?"active":"")">
-                <a href="/Registry/AppMeter?appId=@appId">性能</a>
-            </li>
-            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/AppService")?"active":"")">
-                <a href="/Registry/AppService?appId=@appId">注册中心</a>
-            </li>
-            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/AppConsume")?"active":"")">
-                <a href="/Registry/AppConsume?appId=@appId">服务消费</a>
-            </li>
-            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Configs/AppConfig")?"active":"")">
-                <a href="/Configs/AppConfig?appId=@appId">配置中心</a>
-            </li>
-            @if (config != null)
+            @foreach (var item in dic)
             {
-                <li role="presentation" class="@(path.StartsWithIgnoreCase("/Configs/ConfigData")?"active":"")">
-                    <a href="/Configs/ConfigData?appId=@config.Id">配置管理</a>
-                </li>
-            }
-            <li role="presentation" class="@(path.EqualIgnoreCase("/Deployment/AppDeploy")?"active":"")">
-                <a href="/Deployment/AppDeploy?appId=@appId">发布中心</a>
-            </li>
-            @if (deploy != null)
-            {
-                <li role="presentation" class="@(path.StartsWithIgnoreCase("/Deployment/AppDeployVersion")?"active":"")">
-                    <a href="/Deployment/AppDeployVersion?appId=@deploy.Id">版本上传</a>
-                </li>
-                <li role="presentation" class="@(path.StartsWithIgnoreCase("/Deployment/AppDeployNode")?"active":"")">
-                    <a href="/Deployment/AppDeployNode?appId=@deploy.Id&enable=1">发布节点</a>
-                </li>
-            }
-            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Monitors/AppTracer")?"active":"")">
-                <a href="/Monitors/AppTracer?appId=@appId">监控中心</a>
-            </li>
-            @if (monitor != null)
-            {
-                <li role="presentation" class="@(path.StartsWithIgnoreCase("/Monitors/AppDayStat")?"active":"")">
-                    <a href="/Monitors/AppDayStat?appId=@monitor.ID">监控大屏</a>
-                </li>
+                if (item.Value is IDictionary<String, Object> childs)
+                {
+                    <li role="presentation" class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">@item.Key <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            @foreach (var elm in childs)
+                            {
+                                var url = elm.Value + "";
+                                var v = url.Substring(null, "?");
+                                if (start.Year > 2000) url += "&dtStart=" + start.ToFullString();
+                                if (end.Year > 2000) url += "&dtEnd=" + end.ToFullString();
+                                <li role="presentation" class="@(path.EqualIgnoreCase(v)?"active":"")">
+                                    <a href="@url">@elm.Key</a>
+                                </li>
+                            }
+                        </ul>
+                    </li>
+                }
+                else
+                {
+                    var url = item.Value + "";
+                    var v = url.Substring(null, "?");
+                    if (start.Year > 2000) url += "&dtStart=" + start.ToFullString();
+                    if (end.Year > 2000) url += "&dtEnd=" + end.ToFullString();
+                    <li role="presentation" class="@(path.EqualIgnoreCase(v)?"active":"")">
+                        <a href="@url">@item.Key</a>
+                    </li>
+                }
             }
         </ul>
     </div>

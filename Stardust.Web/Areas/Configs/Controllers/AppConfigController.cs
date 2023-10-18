@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife.Cube;
+using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Web;
@@ -115,6 +116,19 @@ public class AppConfigController : EntityController<AppConfig>
         }
 
         //PageSetting.EnableAdd = false;
+    }
+
+    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
+    {
+        var fields = base.OnGetFields(kind, model);
+
+        if (kind == ViewKinds.List)
+        {
+            var appId = GetRequest("appId").ToInt(-1);
+            if (appId > 0) fields.RemoveField("AppName", "Category");
+        }
+
+        return fields;
     }
 
     protected override IEnumerable<AppConfig> Search(Pager p)
