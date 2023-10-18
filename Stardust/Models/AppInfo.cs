@@ -73,6 +73,9 @@ public class AppInfo
     /// <summary>采样周期内发生的二代GC次数</summary>
     public Int32 FullGC { get; set; }
 
+    /// <summary>本地UTC时间。ms毫秒</summary>
+    public Int64 Time { get; set; }
+
     static private Int32 _pid = Process.GetCurrentProcess().Id;
     private readonly Process? _process;
     #endregion
@@ -112,6 +115,8 @@ public class AppInfo
     {
         try
         {
+            Time = DateTime.UtcNow.ToLong();
+
             if (_process != null)
             {
                 _process.Refresh();
@@ -179,27 +184,28 @@ public class AppInfo
     /// <returns></returns>
     public AppInfo Clone()
     {
-        var inf = new AppInfo
-        {
-            Id = Id,
-            Name = Name,
-            Version = Version,
+        //var inf = new AppInfo
+        //{
+        //    Id = Id,
+        //    Name = Name,
+        //    Version = Version,
 
-            CommandLine = CommandLine,
-            UserName = UserName,
-            MachineName = MachineName,
-            IP = IP,
-            StartTime = StartTime,
+        //    CommandLine = CommandLine,
+        //    UserName = UserName,
+        //    MachineName = MachineName,
+        //    IP = IP,
+        //    StartTime = StartTime,
 
-            ProcessorTime = ProcessorTime,
-            CpuUsage = CpuUsage,
-            WorkingSet = WorkingSet,
-            Threads = Threads,
-            Handles = Handles,
-            Connections = Connections,
-            GCPause = GCPause,
-            FullGC = FullGC,
-        };
+        //    ProcessorTime = ProcessorTime,
+        //    CpuUsage = CpuUsage,
+        //    WorkingSet = WorkingSet,
+        //    Threads = Threads,
+        //    Handles = Handles,
+        //    Connections = Connections,
+        //    GCPause = GCPause,
+        //    FullGC = FullGC,
+        //};
+        var inf = base.MemberwiseClone() as AppInfo;
 
         return inf;
     }

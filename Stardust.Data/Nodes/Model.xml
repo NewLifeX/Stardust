@@ -17,6 +17,8 @@
     <ModelNameForCopy />
     <!--带有索引器。实现IModel接口-->
     <HasIModel>False</HasIModel>
+    <!--可为null上下文。生成String?等-->
+    <Nullable>False</Nullable>
     <!--数据库连接名-->
     <ConnName>Stardust</ConnName>
     <!--模型类模版。设置后生成模型类，用于接口数据传输，例如{name}Model-->

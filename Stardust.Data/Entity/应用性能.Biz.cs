@@ -163,6 +163,8 @@ public partial class AppMeter : Entity<AppMeter>
     /// <param name="ip"></param>
     public static void WriteData(App app, AppInfo info, String source, String clientId, String ip)
     {
+        var dt = info.Time.ToDateTime().ToLocalTime();
+
         // 插入节点数据
         var data = new AppMeter
         {
@@ -180,11 +182,17 @@ public partial class AppMeter : Entity<AppMeter>
             Connections = info.Connections,
             GCPause = Math.Round(info.GCPause, 4),
             FullGC = info.FullGC,
+            Time = dt,
 
             //Data = info.ToJson(),
             Creator = Environment.MachineName,
             CreateIP = ip,
         };
+
+        if (dt.Year > 2000)
+        {
+            data.Id = AppMeter.Meta.Factory.Snow.NewId(dt, app.Id);
+        }
 
         data.SaveAsync();
     }
