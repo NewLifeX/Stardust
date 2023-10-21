@@ -1,7 +1,4 @@
 ﻿using System.Diagnostics;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Xml.Serialization;
 using NewLife;
 using NewLife.Log;
 
@@ -12,41 +9,41 @@ public class ZipDeploy
 {
     #region 属性
     /// <summary>应用名称</summary>
-    public String Name { get; set; }
+    public String Name { get; set; } = null!;
 
     /// <summary>文件名</summary>
-    public String FileName { get; set; }
+    public String? FileName { get; set; }
 
     /// <summary>启动参数</summary>
-    public String Arguments { get; set; }
+    public String? Arguments { get; set; }
 
     /// <summary>工作目录</summary>
-    public String WorkingDirectory { get; set; }
+    public String? WorkingDirectory { get; set; }
 
     /// <summary>影子目录。应用将在其中执行</summary>
     /// <remarks>默认使用上一级的shadow目录，无权时使用临时目录</remarks>
-    public String Shadow { get; set; }
+    public String? Shadow { get; set; }
 
     /// <summary>可执行文件路径</summary>
-    public String ExecuteFile { get; set; }
+    public String? ExecuteFile { get; set; }
 
     /// <summary>用户。以该用户执行应用</summary>
-    public String UserName { get; set; }
+    public String? UserName { get; set; }
 
     /// <summary>覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
-    public String Overwrite { get; set; }
+    public String? Overwrite { get; set; }
 
     /// <summary>进程</summary>
-    public Process Process { get; private set; }
+    public Process? Process { get; private set; }
 
     /// <summary>是否调试模式。在调试模式下，重定向控制台输出到日志</summary>
     public Boolean Debug { get; set; }
 
     /// <summary>最后的错误信息</summary>
-    public String LastError { get; set; }
+    public String? LastError { get; set; }
 
     /// <summary>链路追踪</summary>
-    public ITracer Tracer { get; set; }
+    public ITracer? Tracer { get; set; }
     #endregion
 
     #region 方法
@@ -66,7 +63,7 @@ public class ZipDeploy
         // 在参数中找到zip文件
         var name = "";
         var shadow = "";
-        var gs = new String[args.Length];
+        var gs = new String?[args.Length];
         for (var i = 0; i < args.Length; i++)
         {
             if (args[i].EndsWithIgnoreCase(".zip"))
@@ -237,6 +234,11 @@ public class ZipDeploy
         {
             si.FileName = "java";
             si.Arguments = $"{runfile.FullName} {Arguments}";
+        }
+        else if (Runtime.Linux)
+        {
+            // Linux下，需要给予可执行权限
+            Process.Start("chmod", $"+x {runfile.FullName}");
         }
 
         // 指定用户时，以特定用户启动进程

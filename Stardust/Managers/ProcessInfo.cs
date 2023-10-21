@@ -4,13 +4,13 @@
 public class ProcessInfo
 {
     /// <summary>名称</summary>
-    public String Name { get; set; }
+    public String Name { get; set; } = null!;
 
     /// <summary>进程Id</summary>
     public Int32 ProcessId { get; set; }
 
     /// <summary>进程名</summary>
-    public String ProcessName { get; set; }
+    public String? ProcessName { get; set; }
 
     /// <summary>创建时间</summary>
     public DateTime CreateTime { get; set; }

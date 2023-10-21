@@ -14,22 +14,22 @@ public class Upgrade
 {
     #region 属性
     /// <summary>名称</summary>
-    public String Name { get; set; }
+    public String Name { get; set; } = null!;
 
     /// <summary>更新目录。默认./Update</summary>
-    public String UpdatePath { get; set; } = "Update";
+    public String? UpdatePath { get; set; } = "Update";
 
     /// <summary>目标目录</summary>
-    public String DestinationPath { get; set; } = ".";
+    public String? DestinationPath { get; set; } = ".";
 
     /// <summary>源文件下载地址</summary>
-    public String Url { get; set; }
+    public String? Url { get; set; }
 
     /// <summary>更新源文件</summary>
-    public String SourceFile { get; set; }
+    public String? SourceFile { get; set; }
 
     /// <summary>解压缩的临时目录</summary>
-    public String TempPath { get; set; }
+    public String? TempPath { get; set; }
     #endregion
 
     #region 构造
@@ -303,7 +303,7 @@ public class Upgrade
     #endregion
 
     #region 辅助
-    private HttpClient _Client;
+    private HttpClient? _Client;
     private HttpClient CreateClient()
     {
         if (_Client != null) return _Client;
