@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Caching.Services;
+using NewLife.IP;
 using NewLife.Log;
+using NewLife.Net;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Nodes;
@@ -54,6 +56,8 @@ public class Startup
         services.AddSingleton<IAppDayStatService>(appStatService);
         services.AddSingleton<ITraceItemStatService, TraceItemStatService>();
         //services.AddSingleton<IAlarmService, AlarmService>();
+
+        IpResolver.Register();
 
         // 业务服务
         services.AddSingleton<NodeService>();
