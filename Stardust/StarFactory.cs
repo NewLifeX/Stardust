@@ -271,6 +271,7 @@ public class StarFactory : DisposeBase
 
             var client = new AppClient(Server)
             {
+                Factory = this,
                 AppId = AppId,
                 AppName = AppName,
                 ClientId = ClientId,

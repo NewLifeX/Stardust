@@ -92,6 +92,11 @@ public class StarService : DisposeBase, IApi
         return ai;
     }
 
+    public PingResponse Ping(AppInfo appInfo)
+    {
+        return null;
+    }
+
     /// <summary>设置星尘服务端地址</summary>
     /// <returns></returns>
     [Api(nameof(SetServer))]

@@ -113,6 +113,15 @@ public class LocalStarClient
             throw;
         }
     }
+
+    /// <summary>向StarAgent发送心跳</summary>
+    /// <returns></returns>
+    public async Task<PingResponse?> PingAsync(AppInfo? appInfo)
+    {
+        Init();
+
+        return await _client.InvokeAsync<PingResponse>("Ping", appInfo);
+    }
     #endregion
 
     #region 进程控制
@@ -161,7 +170,11 @@ public class LocalStarClient
             var set = NewLife.Setting.Current;
             url = set.PluginServer.EnsureEnd("/");
             url += "star/";
-            if (Environment.Version.Major >= 6)
+            if (Environment.Version.Major >= 8)
+                url += "staragent80.zip";
+            else if (Environment.Version.Major >= 7)
+                url += "staragent70.zip";
+            else if (Environment.Version.Major >= 6)
                 url += "staragent60.zip";
             else if (Environment.Version.Major >= 5)
                 url += "staragent50.zip";
