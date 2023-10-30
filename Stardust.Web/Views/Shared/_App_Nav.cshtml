@@ -70,7 +70,7 @@
     if (deploys.Count == 1)
     {
         dic["版本上传"] = "/Deployment/AppDeployVersion?appId=" + deploys[0].Id;
-        dic["发布节点"] = "/Deployment/AppDeployNode?appId=" + deploys[0].Id;
+        dic["发布节点"] = "/Deployment/AppDeployNode?&enable=1&appId=" + deploys[0].Id;
     }
 
     var monitors = AppTracer.FindAllByAppId(appId);
