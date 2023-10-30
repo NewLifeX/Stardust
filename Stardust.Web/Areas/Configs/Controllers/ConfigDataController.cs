@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
+using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Web;
 using Stardust.Data.Configs;
@@ -31,6 +32,15 @@ public class ConfigDataController : EntityController<ConfigData>
             var df = EditFormFields.GetField("Value");
             df.Readonly = true;
         }
+    }
+
+    private readonly StarFactory _starFactory;
+    private readonly ITracer _tracer;
+
+    public ConfigDataController(StarFactory starFactory, ITracer tracer)
+    {
+        _starFactory = starFactory;
+        _tracer = tracer;
     }
 
     public override void OnActionExecuting(ActionExecutingContext filterContext)
@@ -147,8 +157,9 @@ public class ConfigDataController : EntityController<ConfigData>
         return base.OnUpdate(entity);
     }
 
-    public ActionResult Publish(Int32 appId)
+    public async Task<ActionResult> Publish(Int32 appId)
     {
+        using var span = _tracer?.NewSpan(nameof(Publish), appId + "");
         try
         {
             var app = AppConfig.FindById(appId);
@@ -157,10 +168,14 @@ public class ConfigDataController : EntityController<ConfigData>
             if (app.Version >= app.NextVersion) throw new ApiException(701, "已经是最新版本！");
             app.Publish();
 
+            await _starFactory.SendAppCommand(app.Name, "config/publish", "");
+
             return JsonRefresh("发布成功！", 3);
         }
         catch (Exception ex)
         {
+            span?.SetError(ex, null);
+
             return Json(0, ex.Message, ex);
         }
     }
