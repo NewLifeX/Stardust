@@ -1,4 +1,5 @@
 ﻿using NewLife.Caching;
+using NewLife.Log;
 using NewLife.Serialization;
 using Stardust.Models;
 
@@ -56,11 +57,11 @@ public class AppQueueService
     /// 发送消息到服务响应队列
     /// </summary>
     /// <param name="model"></param>
-    public void Publish(CommandReplyModel model)
+    public void Reply(CommandReplyModel model)
     {
         var topic = $"appreply:{model.Id}";
-        var q = _cacheProvider.GetQueue<String>(topic);
-        q.Add(model.ToJson());
+        var q = _cacheProvider.GetQueue<CommandReplyModel>(topic);
+        q.Add(model);
 
         // 设置过期时间，过期自动清理
         _cacheProvider.Cache.SetExpire(topic, TimeSpan.FromMinutes(30));

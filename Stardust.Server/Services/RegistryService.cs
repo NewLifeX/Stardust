@@ -421,7 +421,7 @@ public class RegistryService
         cmd.Update();
 
         // 推入服务响应队列，让服务调用方得到响应
-        _queue.Publish(model);
+        _queue.Reply(model);
 
         return cmd;
     }
