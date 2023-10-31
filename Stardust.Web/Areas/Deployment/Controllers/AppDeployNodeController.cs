@@ -112,7 +112,7 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
 
     protected override Int32 OnDelete(AppDeployNode entity)
     {
-        var rs = OnDelete(entity);
+        var rs = base.OnDelete(entity);
         entity.App?.Fix();
         return rs;
     }
