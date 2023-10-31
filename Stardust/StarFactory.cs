@@ -186,7 +186,7 @@ public class StarFactory : DisposeBase
                 else
                     XTrace.WriteLine("星尘探测：StarAgent Not Found, Cost={0}ms", sw.ElapsedMilliseconds);
 
-                if (inf != null & !inf.PluginServer.IsNullOrEmpty())
+                if (inf != null && !inf.PluginServer.IsNullOrEmpty())
                 {
                     var core = NewLife.Setting.Current;
                     if (!inf.PluginServer.EqualIgnoreCase(core.PluginServer))

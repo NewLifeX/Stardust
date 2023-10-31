@@ -321,7 +321,7 @@ public class TraceStatService : ITraceStatService
 
         // 统计数据。分钟级统计可能因埋点名称污染，导致产生大量数据，这里过滤要最大1000行
         var list = TraceMinuteStat.FindAllByAppIdWithCache(appId, time, time.AddHours(1), 24 * 60 / 5 * 1000);
-        list = list.Where(e => e.StatTime >= time & e.StatTime < time.AddHours(1)).ToList();
+        list = list.Where(e => e.StatTime >= time && e.StatTime < time.AddHours(1)).ToList();
         if (list.Count == 0) return;
 
         span?.AppendTag($"TraceMinuteStat.Count={list.Count}");

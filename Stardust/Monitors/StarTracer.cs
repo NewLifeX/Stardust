@@ -227,7 +227,7 @@ public class StarTracer : DefaultTracer
             catch (Exception ex)
             {
                 Log?.Info("二次上报失败，放弃该批次采样数据，{0}", model.Builders.FirstOrDefault()?.StartTime.ToDateTime());
-                //if (Log != null & Log.Level <= LogLevel.Debug) Log?.Error(ex + "");
+                //if (Log != null && Log.Level <= LogLevel.Debug) Log?.Error(ex + "");
                 Log?.Debug("{0}", ex);
 
                 // 星尘收集器上报，二次失败后放弃该批次数据，因其很可能是错误数据
