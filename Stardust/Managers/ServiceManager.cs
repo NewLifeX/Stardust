@@ -1,5 +1,4 @@
-﻿using System.Net.Http;
-using NewLife;
+﻿using NewLife;
 using NewLife.Http;
 using NewLife.IO;
 using NewLife.Log;
@@ -79,7 +78,8 @@ public class ServiceManager : DisposeBase
 
         Services = list.ToArray();
 
-        _timer?.SetNext(-1);
+        //_timer?.SetNext(-1);
+        CheckNow();
 
         RaiseServiceChanged();
 
@@ -347,7 +347,8 @@ public class ServiceManager : DisposeBase
             Services = services.Select(e => e.Clone()).ToArray();
 
             _status = 0;
-            _timer?.SetNext(-1);
+            //_timer?.SetNext(-1);
+            CheckNow();
         }
     }
 
@@ -603,6 +604,9 @@ public class ServiceManager : DisposeBase
         if (changed) SaveDb();
     }
 
+    /// <summary>马上检查应用服务</summary>
+    public void CheckNow() => _timer?.SetNext(-1);
+
     private IDisposable CreateBusy()
     {
         _busy = true;
@@ -680,7 +684,8 @@ public class ServiceManager : DisposeBase
         client.RegisterCommand("deploy/restart", DoControl);
         client.RegisterCommand("deploy/uninstall", DoControl);
 
-        _timer?.SetNext(-1);
+        //_timer?.SetNext(-1);
+        CheckNow();
     }
 
     private CommandReplyModel DoControl(CommandModel cmd)
@@ -737,7 +742,8 @@ public class ServiceManager : DisposeBase
         }
 
         // 尽快调度一次，拉起服务
-        _timer?.SetNext(-1);
+        //_timer?.SetNext(-1);
+        CheckNow();
 
         return true;
     }

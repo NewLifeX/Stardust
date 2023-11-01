@@ -488,6 +488,21 @@ public class StarFactory : DisposeBase
             Timeout = timeout
         });
     }
+
+    /// <summary>设置看门狗超时时间</summary>
+    /// <param name="timeout">超时时间，单位秒。0表示关闭看门狗</param>
+    /// <returns></returns>
+    public Boolean SetWatchdog(Int32 timeout)
+    {
+        if (!Valid()) return false;
+
+        var client = _client;
+        if (client == null) return false;
+
+        client.WatchdogTimeout = timeout;
+
+        return true;
+    }
     #endregion
 
     #region 日志

@@ -1,4 +1,6 @@
-﻿using NewLife.Caching;
+﻿using System.Diagnostics;
+using NewLife;
+using NewLife.Caching;
 using NewLife.Configuration;
 using NewLife.Log;
 using NewLife.Model;
@@ -20,7 +22,7 @@ public static class StarHelper
     /// <param name="appId">应用标识。为空时读取star.config，初始值为入口程序集名称</param>
     /// <param name="secret">应用密钥。为空时读取star.config，初始值为空</param>
     /// <returns></returns>
-    public static StarFactory AddStardust(this IObjectContainer services, String server = null, String appId = null, String secret = null)
+    public static StarFactory AddStardust(this IObjectContainer services, String? server = null, String? appId = null, String? secret = null)
     {
         var star = new StarFactory(server, appId, secret);
 
@@ -47,4 +49,38 @@ public static class StarHelper
         return star;
     }
 
+    /// <summary>安全退出进程</summary>
+    /// <param name="process"></param>
+    /// <returns></returns>
+    public static Process SafetyKill(this Process process)
+    {
+        if (process == null || process.HasExited) return process;
+
+        try
+        {
+            if (Runtime.Linux)
+            {
+                Process.Start("kill", process.Id.ToString());
+
+                for (var i = 0; i < 50 && !process.HasExited; i++)
+                {
+                    Thread.Sleep(200);
+                }
+            }
+            else if (Runtime.Windows)
+            {
+                Process.Start("taskkill", $"-pid {process.Id}");
+
+                for (var i = 0; i < 50 && !process.HasExited; i++)
+                {
+                    Thread.Sleep(200);
+                }
+            }
+        }
+        catch { }
+
+        if (!process.HasExited) process.Kill();
+
+        return process;
+    }
 }

@@ -1,4 +1,6 @@
-﻿using NewLife;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
+using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
 using NewLife.Model;
@@ -92,9 +94,15 @@ public class StarService : DisposeBase, IApi
         return ai;
     }
 
-    public PingResponse Ping(AppInfo appInfo)
+    public PingResponse Ping(LocalPingInfo info)
     {
-        return null;
+        if (info != null && info.ProcessId > 0)
+        {
+            // 喂狗
+            if (info.WatchdogTimeout > 0) FeedDog(info.ProcessId, info.WatchdogTimeout);
+        }
+
+        return new PingResponse { ServerTime = DateTime.UtcNow.ToLong() };
     }
 
     /// <summary>设置星尘服务端地址</summary>
@@ -248,6 +256,60 @@ public class StarService : DisposeBase, IApi
 
     //    return rs;
     //}
+    #endregion
+
+    #region 看门狗
+    static ConcurrentDictionary<Int32, DateTime> _dogs = new();
+    static TimerX _dogTimer;
+    static void FeedDog(Int32 pid, Int32 timeout)
+    {
+        if (pid <= 0 || timeout <= 0) return;
+
+        // 更新过期时间，超过该时间未收到心跳，将会重启本应用进程
+        _dogs[pid] = DateTime.Now.AddSeconds(timeout);
+
+        _dogTimer ??= new TimerX(CheckDog, null, 1000, 15000) { Async = true };
+    }
+
+    static void CheckDog(Object state)
+    {
+        var ks = new List<Int32>();
+        var ds = new List<Int32>();
+        foreach (var item in _dogs)
+        {
+            if (item.Value < DateTime.Now)
+                ks.Add(item.Key);
+            else
+            {
+                var p = Process.GetProcessById(item.Key);
+                if (p == null || p.HasExited)
+                    ds.Add(item.Key);
+            }
+        }
+
+        // 重启超时的进程
+        foreach (var item in ks)
+        {
+            var p = Process.GetProcessById(item);
+            if (p == null || p.HasExited)
+                _dogs.Remove(item);
+            else
+            {
+                XTrace.WriteLine("进程[{0}/{1}]超过一定时间没有心跳，可能已经假死，准备重启。", p.ProcessName, p.Id);
+
+                p.SafetyKill();
+
+                //todo 启动应用。暂时不需要，因为StarAgent会自动启动
+                if (state is ServiceManager manager) manager.CheckNow();
+            }
+        }
+
+        // 删除不存在的进程
+        foreach (var item in ds)
+        {
+            _dogs.Remove(item);
+        }
+    }
     #endregion
 
     #region 日志

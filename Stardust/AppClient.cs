@@ -37,6 +37,13 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     /// <summary>WebSocket长连接。建立长连接后，可以实时感知配置更新和注册服务更新，默认false</summary>
     public Boolean UseWebSocket { get; set; }
 
+    /// <summary>看门狗超时时间。默认0秒</summary>
+    /// <remarks>
+    /// 设置看门狗超时时间，超过该时间未收到心跳，将会重启本应用进程。
+    /// 0秒表示不启用看门狗。
+    /// </remarks>
+    public Int32 WatchdogTimeout { get; set; }
+
     /// <summary>星尘工厂</summary>
     public StarFactory Factory { get; set; }
 
@@ -261,12 +268,16 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     /// <summary>向本地StarAgent发送心跳</summary>
     /// <param name="appInfo"></param>
     /// <returns></returns>
-    public async Task<Object?> PingLocal(AppInfo? appInfo)
+    public async Task<Object?> PingLocal()
     {
+        if (WatchdogTimeout <= 0) return null;
+
         var local = Factory?.Local;
         if (local == null || local.Info == null) return null;
 
-        return await local.PingAsync(appInfo);
+        if (_appInfo == null) return null;
+
+        return await local.PingAsync(_appInfo, WatchdogTimeout);
     }
 
     private TimeSpan _span;
@@ -404,16 +415,8 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             }
 
             // 向服务端发送心跳后，再向本地发送心跳
-            try
-            {
-                await Ping();
-                await PingLocal(null);
-            }
-            catch
-            {
-                await PingLocal(_appInfo);
-                throw;
-            }
+            await Ping();
+            await PingLocal();
 
             await RefreshPublish();
             await RefreshConsume();

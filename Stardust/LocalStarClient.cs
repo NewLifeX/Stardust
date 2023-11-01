@@ -116,11 +116,21 @@ public class LocalStarClient
 
     /// <summary>向StarAgent发送心跳</summary>
     /// <returns></returns>
-    public async Task<PingResponse?> PingAsync(AppInfo? appInfo)
+    public async Task<PingResponse?> PingAsync(AppInfo appInfo, Int32 watchdogTimeout)
     {
         Init();
 
-        return await _client.InvokeAsync<PingResponse>("Ping", appInfo);
+        var info = new LocalPingInfo
+        {
+            ProcessId = appInfo.Id,
+            ProcessName = appInfo.Name,
+            Version = appInfo.Version,
+            AppName = appInfo.AppName,
+
+            WatchdogTimeout = watchdogTimeout,
+        };
+
+        return await _client.InvokeAsync<PingResponse>("Ping", info);
     }
     #endregion
 
