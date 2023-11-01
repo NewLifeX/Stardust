@@ -160,7 +160,7 @@ public class StarTracer : DefaultTracer
                 Excludes = rs.Excludes;
 
                 // 保存到配置文件
-                if (rs.Period > 0 || rs.MaxSamples > 0 | rs.MaxErrors > 0)
+                if (rs.Period > 0 || rs.MaxSamples > 0 || rs.MaxErrors > 0)
                 {
                     var set = StarSetting.Current;
                     set.TracerPeriod = Period;
