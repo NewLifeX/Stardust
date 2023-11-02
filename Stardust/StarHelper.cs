@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel;
+using System.Diagnostics;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Configuration;
@@ -54,7 +55,7 @@ public static class StarHelper
     /// <returns></returns>
     public static Process SafetyKill(this Process process)
     {
-        if (process == null || process.HasExited) return process;
+        if (process == null || process.GetProcessHasExited()) return process;
 
         try
         {
@@ -62,7 +63,7 @@ public static class StarHelper
             {
                 Process.Start("kill", process.Id.ToString());
 
-                for (var i = 0; i < 50 && !process.HasExited; i++)
+                for (var i = 0; i < 50 && !process.GetProcessHasExited(); i++)
                 {
                     Thread.Sleep(200);
                 }
@@ -71,7 +72,7 @@ public static class StarHelper
             {
                 Process.Start("taskkill", $"-pid {process.Id}");
 
-                for (var i = 0; i < 50 && !process.HasExited; i++)
+                for (var i = 0; i < 50 && !process.GetProcessHasExited(); i++)
                 {
                     Thread.Sleep(200);
                 }
@@ -79,8 +80,25 @@ public static class StarHelper
         }
         catch { }
 
-        if (!process.HasExited) process.Kill();
+        if (!process.GetProcessHasExited()) process.Kill();
 
         return process;
+    }
+
+    /// <summary>获取进程是否终止</summary>
+    public static Boolean GetProcessHasExited(this Process process)
+    {
+        try
+        {
+            return process.HasExited;
+        }
+        catch (Win32Exception)
+        {
+            return true;
+        }
+        //catch
+        //{
+        //    return false;
+        //}
     }
 }

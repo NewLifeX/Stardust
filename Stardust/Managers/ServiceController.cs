@@ -1,9 +1,11 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel;
+using System.Diagnostics;
 using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Deployment;
 using Stardust.Models;
+using Stardust.Registry;
 using Stardust.Services;
 #if !NET40
 using TaskEx = System.Threading.Tasks.Task;
@@ -387,11 +389,11 @@ internal class ServiceController : DisposeBase
 
         try
         {
-            if (!p.HasExited && p.CloseMainWindow())
+            if (!p.GetProcessHasExited() && p.CloseMainWindow())
             {
                 WriteLog("已发送关闭窗口消息，等待目标进程退出");
 
-                for (var i = 0; i < 50 && !p.HasExited; i++)
+                for (var i = 0; i < 50 && !p.GetProcessHasExited(); i++)
                 {
                     Thread.Sleep(200);
                 }
@@ -400,7 +402,7 @@ internal class ServiceController : DisposeBase
         catch { }
 
         // 优雅关闭进程
-        if (!p.HasExited)
+        if (!p.GetProcessHasExited())
         {
             try
             {
@@ -409,7 +411,7 @@ internal class ServiceController : DisposeBase
                 {
                     Process.Start("kill", p.Id.ToString());
 
-                    for (var i = 0; i < 50 && !p.HasExited; i++)
+                    for (var i = 0; i < 50 && !p.GetProcessHasExited(); i++)
                     {
                         Thread.Sleep(200);
                     }
@@ -418,7 +420,7 @@ internal class ServiceController : DisposeBase
                 {
                     Process.Start("taskkill", $"-pid {p.Id}");
 
-                    for (var i = 0; i < 50 && !p.HasExited; i++)
+                    for (var i = 0; i < 50 && !p.GetProcessHasExited(); i++)
                     {
                         Thread.Sleep(200);
                     }
@@ -429,13 +431,13 @@ internal class ServiceController : DisposeBase
 
         try
         {
-            if (!p.HasExited)
+            if (!p.GetProcessHasExited())
             {
                 WriteLog("强行结束进程 PID={0}/{1}", p.Id, p.ProcessName);
                 p.Kill();
             }
 
-            if (p.HasExited) WriteLog("进程[PID={0}]已退出！ExitCode={1}", p.Id, p.ExitCode);
+            if (p.GetProcessHasExited()) WriteLog("进程[PID={0}]已退出！ExitCode={1}", p.Id, p.ExitCode);
         }
         catch (Exception ex)
         {
@@ -472,7 +474,7 @@ internal class ServiceController : DisposeBase
             span?.AppendTag("CheckMaxMemory");
             try
             {
-                if (!p.HasExited)
+                if (!p.GetProcessHasExited())
                 {
                     _error = 0;
 
@@ -515,7 +517,7 @@ internal class ServiceController : DisposeBase
                 var exited = false;
                 try
                 {
-                    exited = p.HasExited;
+                    exited = p.GetProcessHasExited();
                 }
                 catch { }
 
@@ -556,7 +558,7 @@ internal class ServiceController : DisposeBase
                     // 遍历所有进程，从命令行参数中找到启动文件名一致的进程
                     foreach (var item in Process.GetProcesses())
                     {
-                        if (item.Id == mypid || item.HasExited) continue;
+                        if (item.Id == mypid || item.GetProcessHasExited()) continue;
                         if (!item.ProcessName.EqualIgnoreCase(ProcessName)) continue;
 
                         var name = AppInfo.GetProcessName(item);
@@ -575,7 +577,7 @@ internal class ServiceController : DisposeBase
             {
                 span?.AppendTag($"GetProcessesByName({ProcessName})");
 
-                var ps = Process.GetProcessesByName(ProcessName).Where(e => e.Id != mypid && !e.HasExited).ToArray();
+                var ps = Process.GetProcessesByName(ProcessName).Where(e => e.Id != mypid && !e.GetProcessHasExited()).ToArray();
                 if (ps.Length > 0) return TakeOver(ps[0], $"按[Name={ProcessName}]查找");
             }
         }
