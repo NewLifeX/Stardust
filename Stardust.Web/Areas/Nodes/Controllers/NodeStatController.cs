@@ -100,6 +100,10 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
             start = end = DateTime.Today;
             p["dtStart"] = start.ToString("yyyy-MM-dd");
             p["dtEnd"] = end.ToString("yyyy-MM-dd");
+
+            p.Sort = __.ActivesT30;
+            p.Desc = true;
+            p.PageSize = 100;
         }
 
         // 默认排序
