@@ -20,6 +20,7 @@ using Renci.SshNet;
 using Stardust;
 using Stardust.Data;
 using Stardust.Data.Nodes;
+using Stardust.Models;
 using Stardust.Monitors;
 
 namespace Test;
@@ -129,6 +130,18 @@ class Program
         var client = new LocalStarClient { Log = XTrace.Log };
         //client.ProbeAndInstall(null, "1.6");
         var info = client.GetInfo();
+
+        var appInfo = new AppInfo(Process.GetCurrentProcess());
+
+        for (var i = 0; i < 5; i++)
+        {
+            _ = client.PingAsync(appInfo, 5);
+
+            Thread.Sleep(2000);
+        }
+
+        Console.WriteLine("等待");
+        Console.ReadLine();
 
         //var p = Process.GetCurrentProcess();
         //var name = p.MainModule.FileName;

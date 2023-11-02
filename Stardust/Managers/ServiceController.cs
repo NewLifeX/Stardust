@@ -556,7 +556,7 @@ internal class ServiceController : DisposeBase
                     // 遍历所有进程，从命令行参数中找到启动文件名一致的进程
                     foreach (var item in Process.GetProcesses())
                     {
-                        if (item.Id == mypid) continue;
+                        if (item.Id == mypid || item.HasExited) continue;
                         if (!item.ProcessName.EqualIgnoreCase(ProcessName)) continue;
 
                         var name = AppInfo.GetProcessName(item);
@@ -575,7 +575,7 @@ internal class ServiceController : DisposeBase
             {
                 span?.AppendTag($"GetProcessesByName({ProcessName})");
 
-                var ps = Process.GetProcessesByName(ProcessName).Where(e => e.Id != mypid).ToArray();
+                var ps = Process.GetProcessesByName(ProcessName).Where(e => e.Id != mypid && !e.HasExited).ToArray();
                 if (ps.Length > 0) return TakeOver(ps[0], $"按[Name={ProcessName}]查找");
             }
         }
@@ -587,7 +587,7 @@ internal class ServiceController : DisposeBase
         p = Process;
         if (p != null && EventProvider is StarClient client)
         {
-            if (_appInfo == null)
+            if (_appInfo == null || _appInfo.Id != p.Id)
                 _appInfo = new AppInfo(p) { AppName = inf.Name };
             else
                 _appInfo.Refresh();

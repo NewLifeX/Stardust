@@ -1,5 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Security.Cryptography;
+using System.Threading;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
@@ -94,6 +96,10 @@ public class StarService : DisposeBase, IApi
         return ai;
     }
 
+    /// <summary>本地心跳</summary>
+    /// <param name="info"></param>
+    /// <returns></returns>
+    [Api(nameof(Ping))]
     public PingResponse Ping(LocalPingInfo info)
     {
         if (info != null && info.ProcessId > 0)
@@ -261,14 +267,16 @@ public class StarService : DisposeBase, IApi
     #region 看门狗
     static ConcurrentDictionary<Int32, DateTime> _dogs = new();
     static TimerX _dogTimer;
-    static void FeedDog(Int32 pid, Int32 timeout)
+    void FeedDog(Int32 pid, Int32 timeout)
     {
         if (pid <= 0 || timeout <= 0) return;
+
+        using var span = DefaultTracer.Instance?.NewSpan(nameof(FeedDog), new { pid, timeout });
 
         // 更新过期时间，超过该时间未收到心跳，将会重启本应用进程
         _dogs[pid] = DateTime.Now.AddSeconds(timeout);
 
-        _dogTimer ??= new TimerX(CheckDog, null, 1000, 15000) { Async = true };
+        _dogTimer ??= new TimerX(CheckDog, Manager, 1000, 15000) { Async = true };
     }
 
     static void CheckDog(Object state)
@@ -287,20 +295,33 @@ public class StarService : DisposeBase, IApi
             }
         }
 
+        if (ks.Count == 0 && ds.Count == 0) return;
+
+        using var span = DefaultTracer.Instance?.NewSpan(nameof(CheckDog));
+
         // 重启超时的进程
         foreach (var item in ks)
         {
-            var p = Process.GetProcessById(item);
-            if (p == null || p.HasExited)
-                _dogs.Remove(item);
-            else
+            try
             {
-                XTrace.WriteLine("进程[{0}/{1}]超过一定时间没有心跳，可能已经假死，准备重启。", p.ProcessName, p.Id);
+                var p = Process.GetProcessById(item);
+                if (p == null || p.HasExited)
+                    _dogs.Remove(item);
+                else
+                {
+                    XTrace.WriteLine("进程[{0}/{1}]超过一定时间没有心跳，可能已经假死，准备重启。", p.ProcessName, p.Id);
 
-                p.SafetyKill();
+                    span?.AppendTag($"SafetyKill {p.ProcessName}/{p.Id}");
+                    p.SafetyKill();
 
-                //todo 启动应用。暂时不需要，因为StarAgent会自动启动
-                if (state is ServiceManager manager) manager.CheckNow();
+                    //todo 启动应用。暂时不需要，因为StarAgent会自动启动
+                    if (state is ServiceManager manager) manager.CheckNow();
+                }
+            }
+            catch (Exception ex)
+            {
+                _dogs.Remove(item);
+                XTrace.WriteException(ex);
             }
         }
 
@@ -313,6 +334,9 @@ public class StarService : DisposeBase, IApi
     #endregion
 
     #region 日志
+    /// <summary>链路追踪</summary>
+    public ITracer Tracer { get; set; }
+
     /// <summary>日志</summary>
     public ILog Log { get; set; }
 
