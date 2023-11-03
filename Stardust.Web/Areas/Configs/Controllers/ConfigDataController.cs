@@ -30,7 +30,7 @@ public class ConfigDataController : EntityController<ConfigData>
 
         {
             var df = EditFormFields.GetField("Value");
-            df.Readonly = true;
+            df.ReadOnly = true;
         }
     }
 
