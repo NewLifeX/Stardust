@@ -61,6 +61,8 @@ public partial class NodeVersion : Entity<NodeVersion>
 
         // 默认通道
         if (Channel < NodeChannels.Release || Channel > NodeChannels.Develop) Channel = NodeChannels.Release;
+
+        base.Valid(isNew);
     }
 
     /// <summary>加载后，释放规则</summary>

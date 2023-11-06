@@ -45,6 +45,8 @@ namespace Stardust.Data.Deployment
 
             //if (!isNew) Nodes = AppDeployNode.FindAllByAppId(Id).Count;
             //if (isNew && !Dirtys[nameof(AutoStart)]) AutoStart = true;
+
+            base.Valid(isNew);
         }
         #endregion
 

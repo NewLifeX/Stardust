@@ -55,6 +55,8 @@ public partial class App : Entity<App>
             var dt = AssemblyX.GetCompileTime(Version);
             if (dt.Year > 2000) Compile = dt;
         }
+
+        base.Valid(isNew);
     }
 
     protected override App CreateInstance(Boolean forEdit = false)

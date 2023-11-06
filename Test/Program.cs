@@ -15,6 +15,7 @@ using NewLife.Model;
 using NewLife.Net;
 using NewLife.Reflection;
 using NewLife.Remoting;
+using NewLife.Security;
 using NewLife.Serialization;
 using Renci.SshNet;
 using Stardust;
@@ -32,7 +33,7 @@ class Program
     {
         XTrace.UseConsole();
 
-        Test3();
+        Test6();
 
         Console.WriteLine("OK!");
         Console.ReadKey();
@@ -184,28 +185,12 @@ class Program
         }
     }
 
-    static async void Test6()
+    static void Test6()
     {
-        XTrace.WriteLine("Test6");
+        NodeStat.Meta.Session.InitData();
 
-        //var client = new LocalStarClient();
-        ////client.GetInfo();
-
-        //try
-        //{
-        //    //await client.GetInfoAsync();
-        //    var rs = await client.Install("test666", "ping", "qq.com");
-        //    XTrace.WriteLine("Install={0}", rs.ToJson(true));
-
-        //    Thread.Sleep(3000);
-
-        //    var rs2 = await client.Uninstall("test666");
-        //    XTrace.WriteLine("Uninstall={0}", rs2);
-        //}
-        //catch (Exception ex)
-        //{
-        //    XTrace.Log.Error("星尘探测失败！{0}", ex.Message);
-        //}
+        var st = new NodeStat { Category = "test", Key = Rand.NextString(8), Total = 100, };
+        st.Insert();
     }
 
     static void Test7()
