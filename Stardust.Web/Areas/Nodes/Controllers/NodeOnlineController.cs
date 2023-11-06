@@ -53,6 +53,13 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
     {
         base.OnActionExecuting(filterContext);
 
+        var nodeId = GetRequest("nodeId").ToInt(-1);
+        if (nodeId > 0)
+        {
+            PageSetting.NavView = "_Node_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+
         var projectId = GetRequest("projectId").ToInt(-1);
         if (projectId > 0)
         {
