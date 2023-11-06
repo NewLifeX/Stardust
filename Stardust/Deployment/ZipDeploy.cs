@@ -179,18 +179,19 @@ public class ZipDeploy
             span?.AppendTag("ExtractShadow");
 
             // 删除其它版本
-            try
+            foreach (var di in shadow.AsDirectory().Parent.GetDirectories($"{Name}-*"))
             {
-                foreach (var di in shadow.AsDirectory().Parent.GetDirectories($"{Name}-*"))
-                {
-                    span?.AppendTag($"删除旧版 {di.FullName}");
+                span?.AppendTag($"删除旧版 {di.FullName}");
 
+                try
+                {
                     di.Delete(true);
                 }
-            }
-            catch (Exception ex)
-            {
-                span?.SetError(ex, null);
+                catch (Exception ex)
+                {
+                    //span?.SetError(ex, null);
+                    span?.AppendTag(ex.Message);
+                }
             }
 
             Extract(shadow);
