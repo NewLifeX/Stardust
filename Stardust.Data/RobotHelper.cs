@@ -2,6 +2,7 @@
 using NewLife;
 using NewLife.Log;
 using Stardust.Data.Monitors;
+using Stardust.Data.Platform;
 using Stardust.DingTalk;
 using Stardust.WeiXin;
 
@@ -20,6 +21,26 @@ public class RobotHelper
 
         var group = AlarmGroup.FindByName(groupName);
         return group != null && group.Enable && !group.WebHook.IsNullOrEmpty();
+    }
+
+    /// <summary>获取告警机器人链接</summary>
+    /// <param name="groupName"></param>
+    /// <param name="webhook"></param>
+    /// <returns></returns>
+    public static String GetAlarm(GalaxyProject project, String groupName, String webhook)
+    {
+        if (!webhook.IsNullOrEmpty()) return webhook;
+
+        var group = AlarmGroup.FindByName(groupName);
+        if (group != null && group.Enable && !group.WebHook.IsNullOrEmpty()) return group.WebHook;
+
+        if (project != null)
+        {
+            group = AlarmGroup.FindByName(project.Name);
+            if (group != null && group.Enable && !group.WebHook.IsNullOrEmpty()) return group.WebHook;
+        }
+
+        return null;
     }
 
     /// <summary>发送告警</summary>

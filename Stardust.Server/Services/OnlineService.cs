@@ -3,6 +3,7 @@ using NewLife.Data;
 using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Data;
+using Stardust.Data.Nodes;
 
 namespace Stardust.Server.Services;
 
@@ -105,8 +106,11 @@ public class OnlineService : IHostedService
     public static void CheckOffline(App app, String reason)
     {
         // 下线告警
-        if (app.AlarmOnOffline && RobotHelper.CanAlarm(app.Category, app.WebHook))
+        if (app.AlarmOnOffline)
         {
+            var webhook = RobotHelper.GetAlarm(app.Project, app.Category, app.WebHook);
+            if (webhook.IsNullOrEmpty()) return;
+
             // 查找该节点还有没有其它实例在线
             var olts = AppOnline.FindAllByApp(app.Id);
             if (olts.Count == 0)

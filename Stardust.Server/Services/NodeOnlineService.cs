@@ -79,8 +79,11 @@ public class NodeOnlineService : IHostedService
     public static void CheckOffline(Node node, String reason)
     {
         // 下线告警
-        if (node.AlarmOnOffline && RobotHelper.CanAlarm(node.Category, node.WebHook))
+        if (node.AlarmOnOffline)
         {
+            var webhook = RobotHelper.GetAlarm(node.Project, node.Category, node.WebHook);
+            if (webhook.IsNullOrEmpty()) return;
+
             // 查找该节点还有没有其它实例在线
             var olts = NodeOnline.FindAllByNodeId(node.ID);
             if (olts.Count == 0)

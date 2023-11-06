@@ -104,7 +104,8 @@ public class AlarmService : IHostedService
         if (app.AlarmThreshold <= 0 && app.AlarmErrorRate <= 0) return;
 
         var appId = app.ID;
-        if (!RobotHelper.CanAlarm(app.Category, app.AlarmRobot)) return;
+        var webhook = RobotHelper.GetAlarm(app.Project, app.Category, app.AlarmRobot);
+        if (webhook.IsNullOrEmpty()) return;
 
         using var span = _tracer?.NewSpan($"alarm:{nameof(AppTracer)}");
 
@@ -129,7 +130,7 @@ public class AlarmService : IHostedService
                     _cache.Set("alarm:AppTracer:" + appId, st.Errors, 5 * 60);
 
                     var msg = GetMarkdown(app, st, true);
-                    RobotHelper.SendAlarm(app.Category, app.AlarmRobot, "应用告警", msg);
+                    RobotHelper.SendAlarm(app.Category ?? app.ProjectName, webhook, "应用告警", msg);
                 }
             }
         }
@@ -433,7 +434,10 @@ public class AlarmService : IHostedService
     #region 节点告警
     private void ProcessNode(Node node)
     {
-        if (node == null || !node.Enable || !RobotHelper.CanAlarm(node.Category, node.WebHook)) return;
+        if (node == null || !node.Enable) return;
+
+        var webhook = RobotHelper.GetAlarm(node.Project, node.Category, node.WebHook);
+        if (webhook.IsNullOrEmpty()) return;
 
         if (node.AlarmCpuRate <= 0 && node.AlarmMemoryRate <= 0 && node.AlarmDiskRate <= 0 && node.AlarmProcesses.IsNullOrEmpty()) return;
 
@@ -611,8 +615,11 @@ public class AlarmService : IHostedService
 
     private void ProcessRedisData(RedisNode node)
     {
-        if (!RobotHelper.CanAlarm(node.Category, node.WebHook)) return;
+        //if (!RobotHelper.CanAlarm(node.Category, node.WebHook)) return;
         if (node.AlarmMemoryRate <= 0 || node.AlarmConnections == 0) return;
+
+        var webhook = RobotHelper.GetAlarm(node.Project, node.Category, node.WebHook);
+        if (webhook.IsNullOrEmpty()) return;
 
         // 最新数据
         var data = RedisData.FindLast(node.Id);
@@ -754,8 +761,11 @@ public class AlarmService : IHostedService
             var webhook = !queue.WebHook.IsNullOrEmpty() ? queue.WebHook : node.WebHook;
 
             // 判断告警
-            if (queue.Enable && queue.MaxMessages > 0 && queue.Messages >= queue.MaxMessages && RobotHelper.CanAlarm(groupName, webhook))
+            if (queue.Enable && queue.MaxMessages > 0 && queue.Messages >= queue.MaxMessages)
             {
+                webhook = RobotHelper.GetAlarm(node.Project, groupName, webhook);
+                if (webhook.IsNullOrEmpty()) continue;
+
                 // 一定时间内不要重复报错，除非错误翻倍
                 var error2 = _cache.Get<Int32>("alarm:RedisMessageQueue:" + queue.Id);
                 if (error2 == 0 || queue.Messages > error2 * 2)
