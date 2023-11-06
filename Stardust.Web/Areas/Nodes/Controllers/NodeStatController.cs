@@ -76,6 +76,7 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
                     "最高框架" => $"/Nodes/Node?framework={st.LinkItem}",
                     "城市" => $"/Nodes/Node?areaid={st.LinkItem}",
                     "芯片架构" => $"/Nodes/Node?arch={st.LinkItem}",
+                    "项目" => $"/Nodes/Node?projectId={st.LinkItem}",
                     _ => df.Url,
                 };
             }

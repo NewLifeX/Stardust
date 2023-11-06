@@ -367,7 +367,7 @@ public class NodeStatService : IHostedService
         var sts = NodeStat.FindAllByDate(category, date);
         foreach (var node in list)
         {
-            var key = node.ProjectId + "";
+            var key = node.ProjectName + "";
             if (key.Length > 50) key = key[..50];
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
@@ -375,7 +375,7 @@ public class NodeStatService : IHostedService
             else
                 sts.Remove(st);
 
-            st.LinkItem = node.ProjectName;
+            st.LinkItem = node.ProjectId + "";
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
             st.ActivesT7 = node["activeT7"].ToInt();
