@@ -17,6 +17,8 @@ using Stardust.Data.Deployment;
 using Stardust.Data;
 using Stardust.Data.Nodes;
 using Stardust.Server;
+using Stardust.Data.Platform;
+using Stardust.Data.Monitors;
 
 namespace Stardust.Web;
 
@@ -108,6 +110,7 @@ public class Startup
         EntityFactory.InitConnection("StardustData");
 
         TrimOldAppConfig();
+        InitProject();
 
         // 使用Cube前添加自己的管道
         if (env.IsDevelopment())
@@ -164,6 +167,11 @@ public class Startup
             set2.Skin = "layui";
             set2.Save();
         }
+        if (set2.StartPage.EqualIgnoreCase("/Admin/User/Info"))
+        {
+            set2.StartPage = "/Platform/GalaxyProject";
+            set2.Save();
+        }
     }
 
     private static void FixTable()
@@ -196,6 +204,77 @@ public class Startup
     }
 
     private static void TrimOldAppConfig() => AppConfig.TrimAll();
+
+    private static void InitProject()
+    {
+        // 初始一个默认项目
+        var projects = GalaxyProject.FindAll();
+        if (projects.Count == 0)
+        {
+            var prj = new GalaxyProject { Name = "基础平台", Enable = true };
+            prj.Insert();
+
+            projects.Add(prj);
+        }
+
+        // 根据分类新建项目
+        var apps = App.FindAll();
+        foreach (var item in apps)
+        {
+            if (item.ProjectId != 0) continue;
+
+            var category = item.Category;
+            if (category.IsNullOrEmpty())
+            {
+                if (item.Name.EqualIgnoreCase("StarServer", "StarWeb", "StarAgent", "AntServer", "AntWeb", "AntAgent"))
+                    category = "基础平台";
+            }
+
+            if (!category.IsNullOrEmpty())
+            {
+                var prj = projects.FirstOrDefault(e => e.Name.EqualIgnoreCase(category));
+                if (prj != null)
+                {
+                    prj = new GalaxyProject { Name = category, Enable = true };
+                    prj.Insert();
+
+                    projects.Add(prj);
+                }
+
+                item.ProjectId = prj.Id;
+                item.Update();
+            }
+        }
+
+        // 根据分类新建项目
+        var tracers = AppTracer.FindAll();
+        foreach (var item in tracers)
+        {
+            if (item.ProjectId != 0) continue;
+
+            var category = item.Category;
+            if (category.IsNullOrEmpty())
+            {
+                if (item.Name.EqualIgnoreCase("StarServer", "StarWeb", "StarAgent", "AntServer", "AntWeb", "AntAgent"))
+                    category = "基础平台";
+            }
+
+            if (!category.IsNullOrEmpty())
+            {
+                var prj = projects.FirstOrDefault(e => e.Name.EqualIgnoreCase(category));
+                if (prj != null)
+                {
+                    prj = new GalaxyProject { Name = category, Enable = true };
+                    prj.Insert();
+
+                    projects.Add(prj);
+                }
+
+                item.ProjectId = prj.Id;
+                item.Update();
+            }
+        }
+    }
 
     private static IApplicationBuilder Usewwwroot(IApplicationBuilder app, IWebHostEnvironment env)
     {

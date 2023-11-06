@@ -1,5 +1,6 @@
 ﻿@using Stardust.Data.Deployment;
 @using Stardust.Data.Nodes;
+@using Stardust.Data.Platform;
 @{
     var obj = Model as Object;
     var path = Context.Request.Path + "";
@@ -8,10 +9,22 @@
     {
         projectId = Context.Request.Query["Id"].ToInt(0);
     }
+
+    var prj = GalaxyProject.FindById(projectId) ?? new GalaxyProject();
+
+    var dic = new Dictionary<String, Object>();
+    dic[prj.Name] = "/Platform/GalaxyProject/Edit?Id=" + projectId;
+    dic["节点"] = "/Nodes/Node?projectId=" + projectId;
+    dic["节点在线"] = "/Nodes/NodeOnline?projectId=" + projectId;
+    dic["Redis节点"] = "/Redis/RedisNode?projectId=" + projectId;
+    dic["应用"] = "/Registry/App?projectId=" + projectId;
+    dic["应用在线"] = "/Registry/AppOnline?projectId=" + projectId;
+    dic["监控"] = "/Monitors/AppTracer?projectId=" + projectId;
+    dic["配置"] = "/Configs/AppConfig?projectId=" + projectId;
+    dic["发布"] = "/Deployment/AppDeploy?projectId=" + projectId;
 }
 @if (projectId > 0)
 {
-    var prj = Node.FindByID(projectId);
     <div class="navbar-collapse collapse text-center">
         <ul class="nav nav-pills" style="margin-bottom: 10px; display: inline-block;float: none;">
             <li role="presentation" class="@(path.StartsWithIgnoreCase("/Platform/GalaxyProject")?"active":"")">
