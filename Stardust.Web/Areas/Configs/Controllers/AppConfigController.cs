@@ -22,8 +22,13 @@ public class AppConfigController : EntityController<AppConfig>
         LogOnChange = true;
 
         ListFields.RemoveCreateField();
-        ListFields.RemoveField("AppId", "AppName", "ProjectName", "PublishTime", "Quotes", "QuoteNames", "EnableApollo", "ApolloMetaServer", "ApolloAppId", "ApolloNameSpace", "Remark");
+        ListFields.RemoveField("AppId", "AppName", "PublishTime", "Quotes", "QuoteNames", "EnableApollo", "ApolloMetaServer", "ApolloAppId", "ApolloNameSpace", "Remark");
 
+        {
+            var df = ListFields.GetField("ProjectName") as ListField;
+            df.Url = "/Platform/GalaxyProject?projectId={ProjectId}";
+            df.Target = "_frame";
+        }
         {
             var df = ListFields.AddListField("ConfigData", "Enable");
             df.Header = "管理配置";

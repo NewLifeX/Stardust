@@ -5,9 +5,6 @@ using NewLife.Cube.ViewModels;
 using NewLife.Data;
 using NewLife.Web;
 using Stardust.Data;
-using Stardust.Data.Configs;
-using Stardust.Data.Deployment;
-using Stardust.Data.Monitors;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Registry.Controllers;
@@ -24,6 +21,11 @@ public class AppController : EntityController<App>
         ListFields.RemoveCreateField();
         ListFields.RemoveUpdateField();
 
+        {
+            var df = ListFields.GetField("ProjectName") as ListField;
+            df.Url = "/Platform/GalaxyProject?projectId={ProjectId}";
+            df.Target = "_frame";
+        }
         {
             var df = ListFields.GetField("Name") as ListField;
             df.Url = "/Registry/App/Detail?id={Id}";

@@ -19,11 +19,16 @@ public class AppDeployController : EntityController<AppDeploy>
     static AppDeployController()
     {
         ListFields.RemoveCreateField();
-        ListFields.RemoveField("AppId", "ProjectName", "WorkingDirectory", "User", "MaxMemory", "Mode", "Remark");
+        ListFields.RemoveField("AppId", "WorkingDirectory", "User", "MaxMemory", "Mode", "Remark");
         AddFormFields.RemoveCreateField();
 
         LogOnChange = true;
 
+        {
+            var df = ListFields.GetField("ProjectName") as ListField;
+            df.Url = "/Platform/GalaxyProject?projectId={ProjectId}";
+            df.Target = "_frame";
+        }
         {
             var df = ListFields.GetField("AppName") as ListField;
             df.Url = "/Registry/App?Id={AppId}";

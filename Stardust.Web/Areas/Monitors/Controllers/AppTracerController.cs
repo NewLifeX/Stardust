@@ -24,9 +24,14 @@ public class AppTracerController : EntityController<AppTracer>
     {
         LogOnChange = true;
 
-        ListFields.RemoveField("ProjectName", "AppId", "TimeoutExcludes", "VipClients", "Nodes", "AlarmRobot");
+        ListFields.RemoveField("AppId", "TimeoutExcludes", "VipClients", "Nodes", "AlarmRobot");
         ListFields.RemoveCreateField();
 
+        {
+            var df = ListFields.GetField("ProjectName") as ListField;
+            df.Url = "/Platform/GalaxyProject?projectId={ProjectId}";
+            df.Target = "_frame";
+        }
         {
             var df = ListFields.AddListField("DayMonitor", null, "Category");
             df.Header = "每日监控";

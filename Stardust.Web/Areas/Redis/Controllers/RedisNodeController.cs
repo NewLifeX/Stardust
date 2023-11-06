@@ -5,6 +5,7 @@ using System.Web;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
+using NewLife.Cube.ViewModels;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Web;
@@ -28,6 +29,11 @@ public class RedisNodeController : EntityController<RedisNode>
         ListFields.RemoveCreateField();
         ListFields.RemoveField("UpdateUser", "UpdateUserID", "UpdateIP", "Remark");
 
+        {
+            var df = ListFields.GetField("ProjectName") as ListField;
+            df.Url = "/Platform/GalaxyProject?projectId={ProjectId}";
+            df.Target = "_frame";
+        }
         {
             var df = ListFields.AddListField("Monitor", "UpdateTime");
             df.DisplayName = "监控";

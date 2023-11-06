@@ -26,7 +26,7 @@ public class NodeController : EntityController<Node>
 
         var list = ListFields;
         list.Clear();
-        var allows = new[] { "ID", "Name", "Code", "Category", "ProductCode", "CityName", "Enable", "Version", "OSKind", "Runtime", "Framework", "IP", "OS", "MachineName", "Cpu", "Memory", "TotalSize", "Logins", "LastActive", "OnlineTime", "UpdateTime", "UpdateIP" };
+        var allows = new[] { "ID", "ProjectName", "Name", "Code", "Category", "ProductCode", "CityName", "Enable", "Version", "OSKind", "Runtime", "Framework", "IP", "OS", "MachineName", "Cpu", "Memory", "TotalSize", "Logins", "LastActive", "OnlineTime", "UpdateTime", "UpdateIP" };
         foreach (var item in allows)
         {
             list.AddListField(item);
@@ -36,6 +36,11 @@ public class NodeController : EntityController<Node>
             var df = ListFields.GetField("Name") as ListField;
             df.Url = "/Nodes/Node/Detail?id={ID}";
             df.Target = "_blank";
+        }
+        {
+            var df = ListFields.GetField("ProjectName") as ListField;
+            df.Url = "/Platform/GalaxyProject?projectId={ProjectId}";
+            df.Target = "_frame";
         }
         //{
         //    var df = ListFields.AddListField("App", "Version");

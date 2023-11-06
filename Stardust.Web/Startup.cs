@@ -19,6 +19,7 @@ using Stardust.Data.Nodes;
 using Stardust.Server;
 using Stardust.Data.Platform;
 using Stardust.Data.Monitors;
+using NewLife.Threading;
 
 namespace Stardust.Web;
 
@@ -110,7 +111,8 @@ public class Startup
         EntityFactory.InitConnection("StardustData");
 
         TrimOldAppConfig();
-        InitProject();
+        //InitProject();
+        ThreadPoolX.QueueUserWorkItem(InitProject);
 
         // 使用Cube前添加自己的管道
         if (env.IsDevelopment())
@@ -209,71 +211,103 @@ public class Startup
     {
         // 初始一个默认项目
         var projects = GalaxyProject.FindAll();
-        if (projects.Count == 0)
+        var def = projects.FirstOrDefault(e => e.Name == "默认");
+        if (def == null)
         {
-            var prj = new GalaxyProject { Name = "基础平台", Enable = true };
-            prj.Insert();
+            def = new GalaxyProject { Name = "默认", Enable = true };
+            def.Insert();
 
-            projects.Add(prj);
+            projects.Add(def);
         }
 
         // 根据分类新建项目
-        var apps = App.FindAll();
-        foreach (var item in apps)
+        foreach (var item in App.FindAll(null, null, null, 0, 10000))
         {
             if (item.ProjectId != 0) continue;
 
-            var category = item.Category;
-            if (category.IsNullOrEmpty())
-            {
-                if (item.Name.EqualIgnoreCase("StarServer", "StarWeb", "StarAgent", "AntServer", "AntWeb", "AntAgent"))
-                    category = "基础平台";
-            }
-
-            if (!category.IsNullOrEmpty())
-            {
-                var prj = projects.FirstOrDefault(e => e.Name.EqualIgnoreCase(category));
-                if (prj != null)
-                {
-                    prj = new GalaxyProject { Name = category, Enable = true };
-                    prj.Insert();
-
-                    projects.Add(prj);
-                }
-
-                item.ProjectId = prj.Id;
-                item.Update();
-            }
+            FixProject(item, projects, def);
         }
 
-        // 根据分类新建项目
-        var tracers = AppTracer.FindAll();
-        foreach (var item in tracers)
+        foreach (var item in AppTracer.FindAll(null, null, null, 0, 10000))
         {
             if (item.ProjectId != 0) continue;
 
-            var category = item.Category;
-            if (category.IsNullOrEmpty())
-            {
-                if (item.Name.EqualIgnoreCase("StarServer", "StarWeb", "StarAgent", "AntServer", "AntWeb", "AntAgent"))
-                    category = "基础平台";
-            }
-
-            if (!category.IsNullOrEmpty())
-            {
-                var prj = projects.FirstOrDefault(e => e.Name.EqualIgnoreCase(category));
-                if (prj != null)
-                {
-                    prj = new GalaxyProject { Name = category, Enable = true };
-                    prj.Insert();
-
-                    projects.Add(prj);
-                }
-
-                item.ProjectId = prj.Id;
-                item.Update();
-            }
+            FixProject(item, projects, def);
         }
+
+        foreach (var item in AppConfig.FindAll(null, null, null, 0, 10000))
+        {
+            if (item.ProjectId != 0) continue;
+
+            FixProject(item, projects, def);
+        }
+
+        foreach (var item in AppDeploy.FindAll(null, null, null, 0, 10000))
+        {
+            if (item.ProjectId != 0) continue;
+
+            FixProject(item, projects, def);
+        }
+
+        var deployNodes = AppDeployNode.FindAll(null, null, null, 0, 10000);
+        foreach (var item in Node.FindAll(null, null, null, 0, 10000))
+        {
+            if (item.ProjectId != 0) continue;
+
+            // 根据发布节点找一下应用
+            var deployNode = deployNodes.FirstOrDefault(e => e.NodeId == item.ID && e.Enable);
+            deployNode ??= deployNodes.FirstOrDefault(e => e.NodeId == item.ID);
+            if (deployNode != null)
+            {
+                var app = deployNode.App;
+                if (app != null)
+                {
+                    item.ProjectId = app.ProjectId;
+                    item.Update();
+                }
+            }
+
+            FixProject(item, projects, def);
+        }
+
+        foreach (var item in RedisNode.FindAll(null, null, null, 0, 10000))
+        {
+            if (item.ProjectId != 0) continue;
+
+            FixProject(item, projects, def);
+        }
+    }
+
+    static void FixProject(IEntity entity, IList<GalaxyProject> projects, GalaxyProject def)
+    {
+        var category = entity["Category"] as String;
+        if (category.IsNullOrEmpty())
+        {
+            if (entity["Name"] is String name && name.EqualIgnoreCase("StarServer", "StarWeb", "StarAgent", "AntServer", "AntWeb", "AntAgent"))
+                category = "基础平台";
+        }
+
+        if (!category.IsNullOrEmpty())
+        {
+            var prj = projects.FirstOrDefault(e => e.Name.EqualIgnoreCase(category));
+            if (prj == null)
+            {
+                prj = new GalaxyProject { Name = category, Enable = true };
+                prj.Insert();
+
+                projects.Add(prj);
+            }
+
+            //entity.ProjectId = prj.Id;
+            entity.SetItem("ProjectId", prj.Id);
+        }
+        else if (def != null)
+        {
+            //entity.ProjectId = def.Id;
+            entity.SetItem("ProjectId", def.Id);
+        }
+
+        entity.Update();
     }
 
     private static IApplicationBuilder Usewwwroot(IApplicationBuilder app, IWebHostEnvironment env)
