@@ -139,8 +139,8 @@ public class AppInfo
 
             try
             {
-                // 调用WindowApi获取进程的连接数
-                var tcps = NetHelper.GetAllTcpConnections(-1);
+                // 获取进程的连接数
+                var tcps = NetHelper.GetAllTcpConnections(Id);
                 if (tcps != null && tcps.Length > 0)
                 {
                     Connections = tcps.Count(e => e.ProcessId == Id);

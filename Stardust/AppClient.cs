@@ -406,6 +406,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     private async Task DoPing(Object state)
     {
         DefaultSpan.Current = null;
+        using var span = Tracer?.NewSpan("AppPing");
         try
         {
             if (_appName == null)
@@ -428,6 +429,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
                 // 使用过滤器内部token，因为它有过期刷新机制
                 var token = Token;
                 if (Filter is NewLife.Http.TokenHttpFilter thf) token = thf.Token?.AccessToken;
+
                 if (token.IsNullOrEmpty()) return;
 
                 if (_websocket == null || _websocket.State != WebSocketState.Open)
@@ -436,6 +438,8 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
                     var uri = new Uri(new Uri(url), "/app/notify");
                     var client = new ClientWebSocket();
                     client.Options.SetRequestHeader("Authorization", "Bearer " + token);
+
+                    span?.AppendTag($"WebSocket.Connect {uri}");
                     await client.ConnectAsync(uri, default);
 
                     _websocket = client;
@@ -448,6 +452,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         }
         catch (Exception ex)
         {
+            span?.SetError(ex, null);
             Log?.Debug("{0}", ex);
         }
     }

@@ -207,6 +207,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         ProcessName = online.ProcessName;
         UserName = online.UserName;
         StartTime = online.StartTime;
+        Listens = online.Listens;
         Version = online.Version;
         Compile = online.Compile;
         LastActive = online.UpdateTime;
