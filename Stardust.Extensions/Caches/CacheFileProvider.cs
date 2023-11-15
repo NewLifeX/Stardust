@@ -110,7 +110,7 @@ class CacheFileProvider : IFileProvider
                     try
                     {
                         var url = subpath.Replace("\\", "/");
-                        url = item.Contains("{0}") ? item.Replace("{0}", url) : item.EnsureEnd("/") + url.EnsureStart("/");
+                        url = item.Contains("{0}") ? item.Replace("{0}", url) : item.TrimEnd("/") + url.EnsureStart("/");
 
                         span?.AppendTag(url);
                         XTrace.WriteLine("下载文件：{0}", url);
@@ -211,7 +211,7 @@ class CacheFileProvider : IFileProvider
                         try
                         {
                             var url = subpath.Replace("\\", "/");
-                            url = item.Contains("{0}") ? item.Replace("{0}", url) : item.EnsureEnd("/") + url.EnsureStart("/");
+                            url = item.Contains("{0}") ? item.Replace("{0}", url) : item.TrimEnd("/") + url.EnsureStart("/");
 
                             span?.AppendTag(url);
                             XTrace.WriteLine("下载目录：{0}", url);

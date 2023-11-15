@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <AssemblyVersion>1.0.*</AssemblyVersion>
     <Deterministic>false</Deterministic>
     <OutputPath>..\Bin\Test</OutputPath>
@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="10.6.2023.1101" />
+    <PackageReference Include="NewLife.Core" Version="10.6.2023.1115" />
     <PackageReference Include="SSH.NET" Version="2023.0.0" />
   </ItemGroup>
 
