@@ -600,9 +600,11 @@ public class NetRuntime
         {
             // 检查lib64目录下是否有比6.0.26版本更高的libstdc++库，如果有，则不需要更新
             Version? max = null;
-            foreach (var item in Directory.GetFiles("/usr/lib64", "libstdc++.so.*"))
+            foreach (var item in Directory.GetFiles("/usr/lib64"))
             {
-                if (Version.TryParse(item.TrimStart("libstdc++.so."), out var v) && (max == null || max < v)) max = v;
+                if (item.StartsWith("libstdc++.so.") &&
+                    Version.TryParse(item.TrimStart("libstdc++.so."), out var v) && (max == null || max < v))
+                    max = v;
             }
             if (max == null || max < verLib)
             {
