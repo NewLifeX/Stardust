@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using NewLife;
+using NewLife.Http;
 using NewLife.Log;
 using Stardust.Services;
 
@@ -43,12 +44,11 @@ public class NetRuntime
     #endregion
 
     #region 核心方法
-    /// <summary>安装</summary>
+    /// <summary>下载文件</summary>
     /// <param name="fileName"></param>
     /// <param name="baseUrl"></param>
-    /// <param name="arg"></param>
     /// <returns></returns>
-    public Boolean Install(String fileName, String baseUrl = null, String arg = null)
+    public String Download(String fileName, String? baseUrl = null)
     {
         WriteLog("下载 {0}", fileName);
 
@@ -56,7 +56,7 @@ public class NetRuntime
         if (!String.IsNullOrEmpty(CachePath)) fullFile = Path.Combine(CachePath, fileName);
 
         var hash = "";
-        if (Hashs != null && !Hashs.TryGetValue(fileName, out hash)) hash = null;
+        if (Hashs == null || !Hashs.TryGetValue(fileName, out hash)) hash = null;
 
         // 检查已存在文件的MD5哈希，不正确则重新下载
         var fi = new FileInfo(fullFile);
@@ -96,6 +96,19 @@ public class NetRuntime
             //// 在windows系统上，下载完成以后，等待一会再安装，避免文件被占用（可能是安全扫描），提高安装成功率
             //if (Runtime.Windows) Thread.Sleep(15_000);
         }
+
+        return fullFile;
+    }
+
+    /// <summary>安装</summary>
+    /// <param name="fileName"></param>
+    /// <param name="baseUrl"></param>
+    /// <param name="arg"></param>
+    /// <returns></returns>
+    public Boolean Install(String fileName, String baseUrl = null, String arg = null)
+    {
+        var fullFile = Download(fileName, baseUrl);
+        if (fullFile.IsNullOrEmpty()) return false;
 
         if (String.IsNullOrEmpty(arg)) arg = "/passive /promptrestart";
         if (!Silent) arg = null;
@@ -455,6 +468,88 @@ public class NetRuntime
         }
     }
 
+    /// <summary>安装.NET8.0</summary>
+    /// <param name="target">目标版本。包括子版本，如6.0.15</param>
+    /// <param name="kind">安装类型。如aspnet/desktop/host</param>
+    public void InstallNet8(String target, String kind = null)
+    {
+        var vers = GetNetCore();
+
+        var suffix = "";
+        if (!String.IsNullOrEmpty(kind)) suffix = "-" + kind;
+        var ver = GetLast(vers, "v8.0", suffix);
+
+        // 目标版本
+        var targetVer = new Version(target);
+        if (ver >= targetVer)
+        {
+            WriteLog("已安装最新版 v{0}", ver);
+            return;
+        }
+
+#if NET20
+        var is64 = IntPtr.Size == 8;
+#else
+        var is64 = Environment.Is64BitOperatingSystem;
+#endif
+
+        // win7需要vc2019运行时
+        var osVer = Environment.OSVersion.Version;
+        var isWin7 = osVer.Major == 6 && osVer.Minor == 1;
+        if (isWin7 && ver.Major < 6)
+        {
+            if (is64)
+            {
+                Install("Windows6.1-KB3063858-x64.msu", "/win7", "/quiet /norestart");
+                Install("VC_redist.x64.exe", "/vc2019", "/passive");
+            }
+            else
+            {
+                Install("Windows6.1-KB3063858-x86.msu", "/win7", "/quiet /norestart");
+                Install("VC_redist.x86.exe", "/vc2019", "/passive");
+            }
+        }
+
+        if (is64)
+        {
+            switch (kind)
+            {
+                case "aspnet":
+                    Install($"dotnet-runtime-{target}-win-x64.exe");
+                    Install($"aspnetcore-runtime-{target}-win-x64.exe");
+                    break;
+                case "desktop":
+                    Install($"windowsdesktop-runtime-{target}-win-x64.exe");
+                    break;
+                case "host":
+                    Install($"dotnet-hosting-{target}-win.exe");
+                    break;
+                default:
+                    Install($"dotnet-runtime-{target}-win-x64.exe");
+                    break;
+            }
+        }
+        else
+        {
+            switch (kind)
+            {
+                case "aspnet":
+                    Install($"dotnet-runtime-{target}-win-x86.exe");
+                    Install($"aspnetcore-runtime-{target}-win-x86.exe");
+                    break;
+                case "desktop":
+                    Install($"windowsdesktop-runtime-{target}-win-x86.exe");
+                    break;
+                case "host":
+                    Install($"dotnet-hosting-{target}-win.exe");
+                    break;
+                default:
+                    Install($"dotnet-runtime-{target}-win-x86.exe");
+                    break;
+            }
+        }
+    }
+
     /// <summary>在Linux上安装.NET运行时</summary>
     /// <param name="target">目标版本。包括子版本，如6.0.15</param>
     /// <param name="kind">安装类型。如aspnet</param>
@@ -477,6 +572,9 @@ public class NetRuntime
 #if NETSTANDARD ||NETCOREAPP
         var arch = RuntimeInformation.ProcessArchitecture.ToString().ToLower();
 
+        // 在x64架构的centos系统中，需要检查更新libstdc++库
+        if (arch == "x64") UpgradeLibStdCxx();
+
         switch (kind)
         {
             case "aspnet":
@@ -487,6 +585,41 @@ public class NetRuntime
                 break;
         }
 #endif
+    }
+
+    /// <summary>更新Linux中的libstdc++库</summary>
+    public void UpgradeLibStdCxx()
+    {
+        var mi = MachineInfo.GetCurrent();
+        if (mi.OSName.IsNullOrEmpty() || !mi.OSName.Contains("CentOS") && !mi.OSName.ToLower().Contains("centos")) return;
+
+        var verLib = new Version("6.0.26");
+        var libstd = "/usr/lib64/libstdc++.so.6";
+        var libstd2 = $"/usr/lib64/libstdc++.so.{verLib}";
+        if (File.Exists(libstd) && !File.Exists(libstd2))
+        {
+            // 检查lib64目录下是否有比6.0.26版本更高的libstdc++库，如果有，则不需要更新
+            Version? max = null;
+            foreach (var item in Directory.GetFiles("/usr/lib64"))
+            {
+                if (item.StartsWith("libstdc++.so.") &&
+                    Version.TryParse(item.TrimStart("libstdc++.so."), out var v) && (max == null || max < v))
+                    max = v;
+            }
+            if (max == null || max < verLib)
+            {
+                WriteLog("更新libstdc++，原版本{0}，更新到{1}", max, verLib);
+
+                var file = Download($"libstdcpp.{verLib}.so", null);
+                if (!file.IsNullOrEmpty() && File.Exists(file))
+                {
+                    File.Copy(file, libstd2);
+                    Process.Start("chmod", "+x " + libstd2);
+                    File.Delete(libstd);
+                    Process.Start("ln", $"-s {libstd2} {libstd}");
+                }
+            }
+        }
     }
 
     /// <summary>获取所有已安装版本</summary>
@@ -843,7 +976,7 @@ public class NetRuntime
     /// <summary>写日志</summary>
     /// <param name="format"></param>
     /// <param name="args"></param>
-    public void WriteLog(String format, params Object[] args)
+    public void WriteLog(String format, params Object?[] args)
     {
         Log?.Info($"[NetRuntime]{format}", args);
 

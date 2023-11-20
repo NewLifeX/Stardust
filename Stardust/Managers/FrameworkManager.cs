@@ -130,7 +130,7 @@ public class FrameworkManager
                 ver = ver.Substring(0, p);
             }
 
-            nr.InstallNet7(ver, kind);
+            nr.InstallNet8(ver, kind);
         }
         else
             throw new Exception($"不支持的.NET版本[{ver}]");
