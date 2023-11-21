@@ -5,7 +5,6 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using NewLife;
-using NewLife.Http;
 using NewLife.Log;
 using Stardust.Services;
 
@@ -22,13 +21,13 @@ public class NetRuntime
     public Boolean Silent { get; set; }
 
     /// <summary>缓存目录</summary>
-    public String CachePath { get; set; }
+    public String? CachePath { get; set; }
 
     /// <summary>文件哈希。用于校验下载文件的完整性</summary>
-    public IDictionary<String, String> Hashs { get; set; }
+    public IDictionary<String, String>? Hashs { get; set; }
 
     /// <summary>事件客户端</summary>
-    public IEventProvider EventProvider { get; set; }
+    public IEventProvider? EventProvider { get; set; }
     #endregion
 
     #region 构造
@@ -38,7 +37,7 @@ public class NetRuntime
         var set = NewLife.Setting.Current;
         if (!set.PluginServer.IsNullOrEmpty())
         {
-            BaseUrl = set.PluginServer.TrimEnd('/') + "/dotnet";
+            BaseUrl = set.PluginServer.Split(',').First().TrimEnd('/') + "/dotnet";
         }
     }
     #endregion
@@ -105,10 +104,10 @@ public class NetRuntime
     /// <param name="baseUrl"></param>
     /// <param name="arg"></param>
     /// <returns></returns>
-    public Boolean Install(String fileName, String baseUrl = null, String arg = null)
+    public Boolean Install(String fileName, String? baseUrl = null, String? arg = null)
     {
         var fullFile = Download(fileName, baseUrl);
-        if (fullFile.IsNullOrEmpty()) return false;
+        if (String.IsNullOrEmpty(fullFile)) return false;
 
         if (String.IsNullOrEmpty(arg)) arg = "/passive /promptrestart";
         if (!Silent) arg = null;
@@ -121,9 +120,9 @@ public class NetRuntime
             return InstallOnLinux(fullFile, arg);
     }
 
-    Boolean InstallOnWindows(String fullFile, String arg)
+    Boolean InstallOnWindows(String fullFile, String? arg)
     {
-        var p = Process.Start(fullFile, arg);
+        var p = Process.Start(fullFile, arg + "");
         if (p.WaitForExit(600_000))
         {
             if (p.ExitCode == 0)
@@ -141,7 +140,7 @@ public class NetRuntime
         }
     }
 
-    Boolean InstallOnLinux(String fullFile, String arg)
+    Boolean InstallOnLinux(String fullFile, String? arg)
     {
         // 建立目录
         var target = "/usr/share/dotnet";
@@ -159,7 +158,7 @@ public class NetRuntime
         return true;
     }
 
-    static Version GetLast(IList<VerInfo> vers, String prefix = null, String suffix = null)
+    static Version GetLast(IList<VerInfo> vers, String? prefix = null, String? suffix = null)
     {
         var ver = new Version();
         if (vers.Count > 0)
@@ -219,7 +218,7 @@ public class NetRuntime
             using var reg = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"\Software\Microsoft\Windows\CurrentVersion\WinTrust\Trust Providers\Software Publishing", true);
             if (reg != null)
             {
-                var v = (Int32)reg.GetValue("State");
+                var v = (Int32)(reg.GetValue("State") ?? 0);
                 if (v != 0x23c00) reg.SetValue("State", 0x23c00);
             }
 #endif
@@ -307,7 +306,7 @@ public class NetRuntime
     /// <summary>安装.NET6.0</summary>
     /// <param name="target">目标版本。包括子版本，如6.0.15</param>
     /// <param name="kind">安装类型。如aspnet/desktop/host</param>
-    public void InstallNet6(String target, String kind = null)
+    public void InstallNet6(String target, String? kind = null)
     {
         var vers = GetNetCore();
 
@@ -389,7 +388,7 @@ public class NetRuntime
     /// <summary>安装.NET7.0</summary>
     /// <param name="target">目标版本。包括子版本，如6.0.15</param>
     /// <param name="kind">安装类型。如aspnet/desktop/host</param>
-    public void InstallNet7(String target, String kind = null)
+    public void InstallNet7(String target, String? kind = null)
     {
         var vers = GetNetCore();
 
@@ -471,7 +470,7 @@ public class NetRuntime
     /// <summary>安装.NET8.0</summary>
     /// <param name="target">目标版本。包括子版本，如6.0.15</param>
     /// <param name="kind">安装类型。如aspnet/desktop/host</param>
-    public void InstallNet8(String target, String kind = null)
+    public void InstallNet8(String target, String? kind = null)
     {
         var vers = GetNetCore();
 
@@ -553,7 +552,7 @@ public class NetRuntime
     /// <summary>在Linux上安装.NET运行时</summary>
     /// <param name="target">目标版本。包括子版本，如6.0.15</param>
     /// <param name="kind">安装类型。如aspnet</param>
-    public void InstallNetOnLinux(String target, String kind = null)
+    public void InstallNetOnLinux(String target, String? kind = null)
     {
         var vers = GetNetCore();
 
@@ -591,16 +590,24 @@ public class NetRuntime
     public void UpgradeLibStdCxx()
     {
         var mi = MachineInfo.GetCurrent();
-        if (mi.OSName.IsNullOrEmpty() || !mi.OSName.Contains("CentOS") && !mi.OSName.ToLower().Contains("centos")) return;
+        var osName = (mi.OSName ?? "").ToLower();
+        if (osName.IsNullOrEmpty() || !osName.Contains("centos") && !osName.Contains("linx")) return;
 
         var verLib = new Version("6.0.26");
-        var libstd = "/usr/lib64/libstdc++.so.6";
-        var libstd2 = $"/usr/lib64/libstdc++.so.{verLib}";
-        if (File.Exists(libstd) && !File.Exists(libstd2))
+        var dir = "/usr/lib64";
+        var libstd = $"{dir}/libstdc++.so.6";
+        if (!File.Exists(libstd))
+        {
+            dir = "/usr/lib/x86_64-linux-gnu";
+            libstd = $"{dir}/libstdc++.so.6";
+        }
+
+        var libsrc = $"{dir}/libstdc++.so.{verLib}";
+        if (File.Exists(libstd) && !File.Exists(libsrc))
         {
             // 检查lib64目录下是否有比6.0.26版本更高的libstdc++库，如果有，则不需要更新
             Version? max = null;
-            foreach (var item in Directory.GetFiles("/usr/lib64"))
+            foreach (var item in Directory.GetFiles(dir))
             {
                 if (item.StartsWith("libstdc++.so.") &&
                     Version.TryParse(item.TrimStart("libstdc++.so."), out var v) && (max == null || max < v))
@@ -613,10 +620,10 @@ public class NetRuntime
                 var file = Download($"libstdcpp.{verLib}.so", null);
                 if (!file.IsNullOrEmpty() && File.Exists(file))
                 {
-                    File.Copy(file, libstd2);
-                    Process.Start("chmod", "+x " + libstd2);
+                    File.Copy(file, libsrc);
+                    Process.Start("chmod", "+x " + libsrc);
                     File.Delete(libstd);
-                    Process.Start("ln", $"-s {libstd2} {libstd}");
+                    Process.Start("ln", $"-s {libsrc} {libstd}");
                 }
             }
         }
@@ -655,6 +662,7 @@ public class NetRuntime
 #if NET45_OR_GREATER || NET6_0_OR_GREATER
         // 注册表查找 .NET Framework
         using var ndpKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\");
+        if (ndpKey == null) return list;
 
         foreach (var versionKeyName in ndpKey.GetSubKeyNames())
         {
@@ -664,26 +672,26 @@ public class NetRuntime
 
             var versionKey = ndpKey.OpenSubKey(versionKeyName);
             // 获取 .NET Framework 版本
-            var ver = (String)versionKey.GetValue("Version", "");
+            var ver = versionKey?.GetValue("Version", "") as String;
             // 获取SP数字
-            var sp = versionKey.GetValue("SP", "").ToString();
+            var sp = versionKey?.GetValue("SP", "").ToString();
 
             if (!String.IsNullOrEmpty(ver))
             {
                 // 获取 installation flag, or an empty string if there is none.
-                var install = versionKey.GetValue("Install", "").ToString();
+                var install = versionKey?.GetValue("Install", "").ToString();
                 if (String.IsNullOrEmpty(install)) // No install info; it must be in a child subkey.
                     list.Add(new VerInfo { Name = versionKeyName, Version = ver, Sp = sp });
                 else if (!String.IsNullOrEmpty(sp) && install == "1")
                     list.Add(new VerInfo { Name = versionKeyName, Version = ver, Sp = sp });
             }
-            else
+            else if (versionKey != null)
             {
                 foreach (var subKeyName in versionKey.GetSubKeyNames())
                 {
                     var subKey = versionKey.OpenSubKey(subKeyName);
-                    ver = (String)subKey.GetValue("Version", "");
-                    if (!String.IsNullOrEmpty(ver))
+                    ver = subKey?.GetValue("Version", "") as String;
+                    if (subKey != null && !String.IsNullOrEmpty(ver))
                     {
                         var name = ver;
                         while (name.Length > 3 && name.Substring(name.Length - 2) == ".0")
@@ -731,7 +739,7 @@ public class NetRuntime
         if (ver != null) name = ver.ToString();
         var release = ndpKey.GetValue("Release");
         if (release != null)
-            value = CheckFor45PlusVersion((Int32)ndpKey.GetValue("Release"));
+            value = CheckFor45PlusVersion((Int32)(ndpKey.GetValue("Release") ?? 0));
 
         if (String.IsNullOrEmpty(name)) name = value;
         if (String.IsNullOrEmpty(value)) value = name;
@@ -768,7 +776,7 @@ public class NetRuntime
         if (IsWindows)
         {
             dir = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-            if (String.IsNullOrEmpty(dir)) return null;
+            if (String.IsNullOrEmpty(dir)) return list;
             dir += "\\dotnet\\shared";
         }
         else
@@ -829,7 +837,7 @@ public class NetRuntime
                         else if (name.Contains("-"))
                             continue;
 
-                        VerInfo vi = null;
+                        VerInfo? vi = null;
                         foreach (var item in list)
                         {
                             if (item.Name == name)
@@ -853,11 +861,11 @@ public class NetRuntime
         return list;
     }
 
-    private static String Execute(String cmd, String arguments = null)
+    private static String? Execute(String cmd, String? arguments = null)
     {
         try
         {
-            var psi = new ProcessStartInfo(cmd, arguments)
+            var psi = new ProcessStartInfo(cmd, arguments ?? "")
             {
                 // UseShellExecute 必须 false，以便于后续重定向输出流
                 UseShellExecute = false,
@@ -867,6 +875,8 @@ public class NetRuntime
                 //RedirectStandardError = true,
             };
             var process = Process.Start(psi);
+            if (process == null) return null;
+
             if (!process.WaitForExit(3_000))
             {
                 process.Kill();
@@ -905,6 +915,8 @@ public class NetRuntime
         var ms = asm.GetManifestResourceStream(typeof(NetRuntime).Namespace + ".res.md5.txt");
 
         var dic = new Dictionary<String, String>(StringComparer.OrdinalIgnoreCase);
+        if (ms == null) return dic;
+
         using var reader = new StreamReader(ms);
         while (!reader.EndOfStream)
         {
@@ -971,7 +983,7 @@ public class NetRuntime
     //public ITracer Tracer { get; set; }
 
     /// <summary>日志</summary>
-    public ILog Log { get; set; }
+    public ILog Log { get; set; } = Logger.Null;
 
     /// <summary>写日志</summary>
     /// <param name="format"></param>
