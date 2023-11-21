@@ -589,9 +589,24 @@ public class NetRuntime
     /// <summary>更新Linux中的libstdc++库</summary>
     public void UpgradeLibStdCxx()
     {
-        var mi = MachineInfo.GetCurrent();
-        var osName = (mi.OSName ?? "").ToLower();
-        if (osName.IsNullOrEmpty() || !osName.Contains("centos") && !osName.Contains("linx")) return;
+#if NET40_OR_GREATER || NETCOREAPP
+        //var mi = MachineInfo.GetCurrent();
+        //var osName = (mi.OSName ?? "").ToLower();
+        var osName = Environment.OSVersion.Platform.ToString().ToLower();
+        var osr = "/etc/os-release";
+        if (File.Exists(osr))
+        {
+            var lines = File.ReadAllLines(osr);
+            foreach (var item in lines)
+            {
+                if (item.StartsWith("ID="))
+                {
+                    osName = item.Substring("ID=".Length).Trim('"').ToLower();
+                    break;
+                }
+            }
+        }
+        if (String.IsNullOrEmpty(osName) || !osName.Contains("centos") && !osName.Contains("linx")) return;
 
         var verLib = new Version("6.0.26");
         var dir = "/usr/lib64";
@@ -609,16 +624,19 @@ public class NetRuntime
             Version? max = null;
             foreach (var item in Directory.GetFiles(dir))
             {
-                if (item.StartsWith("libstdc++.so.") &&
-                    Version.TryParse(item.TrimStart("libstdc++.so."), out var v) && (max == null || max < v))
-                    max = v;
+                if (item.StartsWith("libstdc++.so."))
+                {
+                    var name = item.Substring("libstdc++.so.".Length);
+                    if (Version.TryParse(name, out var v) && (max == null || max < v))
+                        max = v;
+                }
             }
             if (max == null || max < verLib)
             {
                 WriteLog("更新libstdc++，原版本{0}，更新到{1}", max, verLib);
 
                 var file = Download($"libstdcpp.{verLib}.so", null);
-                if (!file.IsNullOrEmpty() && File.Exists(file))
+                if (!String.IsNullOrEmpty(file) && File.Exists(file))
                 {
                     File.Copy(file, libsrc);
                     Process.Start("chmod", "+x " + libsrc);
@@ -627,6 +645,7 @@ public class NetRuntime
                 }
             }
         }
+#endif
     }
 
     /// <summary>获取所有已安装版本</summary>
