@@ -112,7 +112,7 @@ public class AppMeterController : EntityController<AppMeter>
                     Title = new ChartTitle { Text = app.Name + "#" + clientId },
                     Height = 400,
                 };
-                chart.SetX(list2, _.Time, e => (e.Time.Year > 2000 ? e.Time : e.CreateTime).ToString("HH:mm"));
+                chart.SetX(list2, _.Time, e => (e.Time.Year > 2000 ? e.Time : e.CreateTime).ToFullString());
                 //chart.SetY("指标");
                 chart.YAxis = new[] {
                     new { name = "指标", type = "value" },
