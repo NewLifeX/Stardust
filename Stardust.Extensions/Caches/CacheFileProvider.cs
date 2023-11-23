@@ -2,12 +2,12 @@
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
+using System.Web;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.FileProviders.Physical;
 using Microsoft.Extensions.Primitives;
 using NewLife;
-using NewLife.Http;
 using NewLife.IO;
 using NewLife.Log;
 using NewLife.Web;
@@ -103,68 +103,77 @@ class CacheFileProvider : IFileProvider
 
         // 本地不存在时，从服务器下载
         var fi = fullPath.AsFile();
-        if ((!fi.Exists || fi.LastWriteTime.AddMonths(1) < DateTime.Now) && Path.GetFileName(fullPath).Contains('.'))
-        //if (!fi.Exists && Path.GetFileName(fullPath).Contains('.'))
+        if (Path.GetFileName(fullPath).Contains('.'))
         {
-            var svrs = GetServers?.Invoke() ?? Servers;
-            if (svrs != null && svrs.Length != 0)
-            {
-                foreach (var item in svrs)
-                {
-                    try
-                    {
-                        var url = subpath.Replace("\\", "/");
-                        url = item.Contains("{0}") ? item.Replace("{0}", url) : item.TrimEnd("/") + url.EnsureStart("/");
-
-                        span?.AppendTag(url);
-                        XTrace.WriteLine("下载文件：{0}", url);
-
-                        // 先下载到临时目录，避免出现下载半截的情况
-                        var tmp = Path.GetTempFileName();
-                        {
-                            using var fs = new FileStream(tmp, FileMode.OpenOrCreate);
-                            using var client = new HttpClient { Timeout = Timeout };
-                            using var rs = client.GetStreamAsync(url).Result;
-                            rs.CopyTo(fs);
-                            fs.Flush();
-                            fs.SetLength(fs.Position);
-                        }
-
-                        // 移动临时文件到最终目录
-                        fullPath.EnsureDirectory(true);
-                        File.Move(tmp, fullPath);
-
-                        // 修改脚本文件中的Url
-                        var target = TargetServer;
-                        if (target.IsNullOrEmpty())
-                        {
-                            target = NewLife.Setting.Current.ServiceAddress?.Split(",").FirstOrDefault();
-                            if (!target.IsNullOrEmpty()) target = target.EnsureEnd("/files/");
-                        }
-                        if (!target.IsNullOrEmpty() && fullPath.EndsWithIgnoreCase(".sh", ".bat"))
-                        {
-                            var txt = File.ReadAllText(fullPath);
-                            var txt2 = txt.Replace(item.EnsureEnd("/"), target.EnsureEnd("/"));
-                            if (txt != txt2) File.WriteAllText(fullPath, txt2);
-                        }
-
-                        XTrace.WriteLine("下载文件完成：{0}", fullPath);
-                        fi = fullPath.AsFile();
-
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        span?.SetError(ex, null);
-                        XTrace.WriteLine(ex.Message);
-                    }
-                }
-            }
+            if (!fi.Exists)
+                fi = DownloadFile(subpath, fullPath).Result?.AsFile();
+            else if (fi.LastWriteTime.AddMonths(1) < DateTime.Now)
+                _ = Task.Run(() => DownloadFile(subpath, fullPath));
         }
         if (!fi.Exists) return new NotFoundFileInfo(subpath);
 
         var fileInfo = new FileInfo(fullPath);
         return IsExcluded(fileInfo, _filters) ? new NotFoundFileInfo(subpath) : new PhysicalFileInfo(fileInfo);
+    }
+
+    async Task<String> DownloadFile(String subpath, String fullPath)
+    {
+        var span = DefaultSpan.Current;
+        var svrs = GetServers?.Invoke() ?? Servers;
+        if (svrs != null && svrs.Length != 0)
+        {
+            foreach (var item in svrs)
+            {
+                try
+                {
+                    var url = subpath.Replace("\\", "/");
+                    url = item.Contains("{0}") ? item.Replace("{0}", url) : item.TrimEnd("/") + url.EnsureStart("/");
+
+                    span?.AppendTag(url);
+                    XTrace.WriteLine("下载文件：{0}", url);
+
+                    // 先下载到临时目录，避免出现下载半截的情况
+                    var tmp = Path.GetTempFileName();
+                    {
+                        using var fs = new FileStream(tmp, FileMode.OpenOrCreate);
+                        using var client = new HttpClient { Timeout = Timeout };
+                        using var rs = await client.GetStreamAsync(url);
+                        rs.CopyTo(fs);
+                        fs.Flush();
+                        fs.SetLength(fs.Position);
+                    }
+
+                    // 移动临时文件到最终目录
+                    fullPath.EnsureDirectory(true);
+                    File.Move(tmp, fullPath);
+
+                    // 修改脚本文件中的Url
+                    var target = TargetServer;
+                    if (target.IsNullOrEmpty())
+                    {
+                        target = NewLife.Setting.Current.ServiceAddress?.Split(",").FirstOrDefault();
+                        if (!target.IsNullOrEmpty()) target = target.EnsureEnd("/files/");
+                    }
+                    if (!target.IsNullOrEmpty() && fullPath.EndsWithIgnoreCase(".sh", ".bat"))
+                    {
+                        var txt = File.ReadAllText(fullPath);
+                        var txt2 = txt.Replace(item.EnsureEnd("/"), target.EnsureEnd("/"));
+                        if (txt != txt2) File.WriteAllText(fullPath, txt2);
+                    }
+
+                    XTrace.WriteLine("下载文件完成：{0}", fullPath);
+                    //fi = fullPath.AsFile();
+                    return fullPath;
+                }
+                catch (Exception ex)
+                {
+                    span?.SetError(ex, null);
+                    XTrace.WriteLine(ex.Message);
+                }
+            }
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -208,42 +217,10 @@ class CacheFileProvider : IFileProvider
             if (!IndexInfoFile.IsNullOrEmpty() && svrs != null && svrs.Length > 0)
             {
                 var fi = fullPath.CombinePath(IndexInfoFile).GetBasePath().AsFile();
-                if (!fi.Exists || fi.LastWriteTime.AddDays(1) < DateTime.Now)
-                {
-                    foreach (var item in svrs)
-                    {
-                        try
-                        {
-                            var url = subpath.Replace("\\", "/");
-                            url = item.Contains("{0}") ? item.Replace("{0}", url) : item.TrimEnd("/") + url.EnsureStart("/");
-
-                            span?.AppendTag(url);
-                            XTrace.WriteLine("下载目录：{0}", url);
-
-                            using var client = new HttpClient { Timeout = Timeout };
-                            var html = client.GetString(url);
-
-                            var links = Link.Parse(html, url);
-                            var list = links.Select(e => new FileInfoModel
-                            {
-                                Name = e.FullName,
-                                LastModified = e.Time.Year > 2000 ? e.Time : DateTime.Now,
-                                Exists = true,
-                                IsDirectory = false,
-                            }).ToList();
-
-                            var csv = new CsvDb<FileInfoModel> { FileName = fi.FullName };
-                            csv.Write(list, false);
-
-                            break;
-                        }
-                        catch (Exception ex)
-                        {
-                            span?.SetError(ex, null);
-                            XTrace.WriteLine("下载目录出错：{0}", ex.Message);
-                        }
-                    }
-                }
+                if (!fi.Exists)
+                    fi = DownloadDirectory(subpath, fi.FullName, svrs).Result?.AsFile();
+                else if (fi.LastWriteTime.AddDays(1) < DateTime.Now)
+                    _ = Task.Run(() => DownloadDirectory(subpath, fi.FullName, svrs));
             }
 
             return fullPath == null || !Directory.Exists(fullPath)
@@ -254,6 +231,47 @@ class CacheFileProvider : IFileProvider
         catch (IOException) { }
 
         return NotFoundDirectoryContents.Singleton;
+    }
+
+    async Task<String> DownloadDirectory(String subpath, String fullPath, String[] svrs)
+    {
+        var span = DefaultSpan.Current;
+        foreach (var item in svrs)
+        {
+            try
+            {
+                var url = subpath.Replace("\\", "/");
+                url = item.Contains("{0}") ? item.Replace("{0}", url) : item.TrimEnd("/") + url.EnsureStart("/");
+
+                span?.AppendTag(url);
+                XTrace.WriteLine("下载目录：{0}", url);
+
+                using var client = new HttpClient { Timeout = Timeout };
+                var html = await client.GetStringAsync(url);
+
+                var links = Link.Parse(html, url);
+                var list = links.Select(e => new FileInfoModel
+                {
+                    Name = HttpUtility.UrlDecode(e.FullName + ""),
+                    LastModified = e.Time.Year > 2000 ? e.Time : DateTime.Now,
+                    Exists = true,
+                    IsDirectory = false,
+                }).ToList();
+
+                var csv = new CsvDb<FileInfoModel> { FileName = fullPath };
+                csv.Write(list, false);
+
+                XTrace.WriteLine("下载目录完成：{0}", fullPath);
+                return fullPath;
+            }
+            catch (Exception ex)
+            {
+                span?.SetError(ex, null);
+                XTrace.WriteLine("下载目录出错：{0}", ex.Message);
+            }
+        }
+
+        return null;
     }
 
     /// <summary>
