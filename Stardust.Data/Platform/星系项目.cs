@@ -78,6 +78,22 @@ public partial class GalaxyProject
     [BindColumn("IsGlobal", "全局。该项目的节点可以允许其它项目下应用选用", "")]
     public Boolean IsGlobal { get => _IsGlobal; set { if (OnPropertyChanging("IsGlobal", value)) { _IsGlobal = value; OnPropertyChanged("IsGlobal"); } } }
 
+    private String _WhiteIPs;
+    /// <summary>IP白名单。符合条件的来源IP才允许访问，支持*通配符，多个逗号隔开</summary>
+    [DisplayName("IP白名单")]
+    [Description("IP白名单。符合条件的来源IP才允许访问，支持*通配符，多个逗号隔开")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("WhiteIPs", "IP白名单。符合条件的来源IP才允许访问，支持*通配符，多个逗号隔开", "")]
+    public String WhiteIPs { get => _WhiteIPs; set { if (OnPropertyChanging("WhiteIPs", value)) { _WhiteIPs = value; OnPropertyChanged("WhiteIPs"); } } }
+
+    private String _BlackIPs;
+    /// <summary>IP黑名单。符合条件的来源IP禁止访问，支持*通配符，多个逗号隔开</summary>
+    [DisplayName("IP黑名单")]
+    [Description("IP黑名单。符合条件的来源IP禁止访问，支持*通配符，多个逗号隔开")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("BlackIPs", "IP黑名单。符合条件的来源IP禁止访问，支持*通配符，多个逗号隔开", "")]
+    public String BlackIPs { get => _BlackIPs; set { if (OnPropertyChanging("BlackIPs", value)) { _BlackIPs = value; OnPropertyChanged("BlackIPs"); } } }
+
     private Int32 _CreateUserId;
     /// <summary>创建者</summary>
     [Category("扩展")]
@@ -157,6 +173,8 @@ public partial class GalaxyProject
             "Nodes" => _Nodes,
             "Apps" => _Apps,
             "IsGlobal" => _IsGlobal,
+            "WhiteIPs" => _WhiteIPs,
+            "BlackIPs" => _BlackIPs,
             "CreateUserId" => _CreateUserId,
             "CreateTime" => _CreateTime,
             "CreateIP" => _CreateIP,
@@ -177,6 +195,8 @@ public partial class GalaxyProject
                 case "Nodes": _Nodes = value.ToInt(); break;
                 case "Apps": _Apps = value.ToInt(); break;
                 case "IsGlobal": _IsGlobal = value.ToBoolean(); break;
+                case "WhiteIPs": _WhiteIPs = Convert.ToString(value); break;
+                case "BlackIPs": _BlackIPs = Convert.ToString(value); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -226,6 +246,12 @@ public partial class GalaxyProject
         /// <summary>全局。该项目的节点可以允许其它项目下应用选用</summary>
         public static readonly Field IsGlobal = FindByName("IsGlobal");
 
+        /// <summary>IP白名单。符合条件的来源IP才允许访问，支持*通配符，多个逗号隔开</summary>
+        public static readonly Field WhiteIPs = FindByName("WhiteIPs");
+
+        /// <summary>IP黑名单。符合条件的来源IP禁止访问，支持*通配符，多个逗号隔开</summary>
+        public static readonly Field BlackIPs = FindByName("BlackIPs");
+
         /// <summary>创建者</summary>
         public static readonly Field CreateUserId = FindByName("CreateUserId");
 
@@ -273,6 +299,12 @@ public partial class GalaxyProject
 
         /// <summary>全局。该项目的节点可以允许其它项目下应用选用</summary>
         public const String IsGlobal = "IsGlobal";
+
+        /// <summary>IP白名单。符合条件的来源IP才允许访问，支持*通配符，多个逗号隔开</summary>
+        public const String WhiteIPs = "WhiteIPs";
+
+        /// <summary>IP黑名单。符合条件的来源IP禁止访问，支持*通配符，多个逗号隔开</summary>
+        public const String BlackIPs = "BlackIPs";
 
         /// <summary>创建者</summary>
         public const String CreateUserId = "CreateUserId";

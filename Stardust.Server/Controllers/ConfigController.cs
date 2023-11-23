@@ -131,7 +131,8 @@ public class ConfigController : ControllerBase
             ap = ap1;
         }
 
-        ap ??= _tokenService.Authorize(appId, secret, _setting.AutoRegister);
+        var ip = HttpContext.GetUserHost();
+        ap ??= _tokenService.Authorize(appId, secret, _setting.AutoRegister, ip);
 
         // 新建应用配置
         var app = AppConfig.FindByName(appId);
@@ -171,7 +172,7 @@ public class ConfigController : ControllerBase
             app.Update();
         }
 
-        var ip = HttpContext.GetUserHost();
+        //var ip = HttpContext.GetUserHost();
         if (clientId.IsNullOrEmpty()) clientId = ip;
 
         // 更新心跳信息

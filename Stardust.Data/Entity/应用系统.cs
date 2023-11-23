@@ -119,6 +119,22 @@ public partial class App
     [BindColumn("Singleton", "单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于管理实例", "")]
     public Boolean Singleton { get => _Singleton; set { if (OnPropertyChanging("Singleton", value)) { _Singleton = value; OnPropertyChanged("Singleton"); } } }
 
+    private String _WhiteIPs;
+    /// <summary>IP白名单。符合条件的来源IP才允许访问，支持*通配符，多个逗号隔开</summary>
+    [DisplayName("IP白名单")]
+    [Description("IP白名单。符合条件的来源IP才允许访问，支持*通配符，多个逗号隔开")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("WhiteIPs", "IP白名单。符合条件的来源IP才允许访问，支持*通配符，多个逗号隔开", "")]
+    public String WhiteIPs { get => _WhiteIPs; set { if (OnPropertyChanging("WhiteIPs", value)) { _WhiteIPs = value; OnPropertyChanged("WhiteIPs"); } } }
+
+    private String _BlackIPs;
+    /// <summary>IP黑名单。符合条件的来源IP禁止访问，支持*通配符，多个逗号隔开</summary>
+    [DisplayName("IP黑名单")]
+    [Description("IP黑名单。符合条件的来源IP禁止访问，支持*通配符，多个逗号隔开")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("BlackIPs", "IP黑名单。符合条件的来源IP禁止访问，支持*通配符，多个逗号隔开", "")]
+    public String BlackIPs { get => _BlackIPs; set { if (OnPropertyChanging("BlackIPs", value)) { _BlackIPs = value; OnPropertyChanged("BlackIPs"); } } }
+
     private String _WebHook;
     /// <summary>告警机器人。钉钉、企业微信等</summary>
     [DisplayName("告警机器人")]
@@ -261,6 +277,8 @@ public partial class App
             "Compile" => _Compile,
             "Period" => _Period,
             "Singleton" => _Singleton,
+            "WhiteIPs" => _WhiteIPs,
+            "BlackIPs" => _BlackIPs,
             "WebHook" => _WebHook,
             "AlarmOnOffline" => _AlarmOnOffline,
             "LastLogin" => _LastLogin,
@@ -293,6 +311,8 @@ public partial class App
                 case "Compile": _Compile = value.ToDateTime(); break;
                 case "Period": _Period = value.ToInt(); break;
                 case "Singleton": _Singleton = value.ToBoolean(); break;
+                case "WhiteIPs": _WhiteIPs = Convert.ToString(value); break;
+                case "BlackIPs": _BlackIPs = Convert.ToString(value); break;
                 case "WebHook": _WebHook = Convert.ToString(value); break;
                 case "AlarmOnOffline": _AlarmOnOffline = value.ToBoolean(); break;
                 case "LastLogin": _LastLogin = value.ToDateTime(); break;
@@ -363,6 +383,12 @@ public partial class App
 
         /// <summary>单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于管理实例</summary>
         public static readonly Field Singleton = FindByName("Singleton");
+
+        /// <summary>IP白名单。符合条件的来源IP才允许访问，支持*通配符，多个逗号隔开</summary>
+        public static readonly Field WhiteIPs = FindByName("WhiteIPs");
+
+        /// <summary>IP黑名单。符合条件的来源IP禁止访问，支持*通配符，多个逗号隔开</summary>
+        public static readonly Field BlackIPs = FindByName("BlackIPs");
 
         /// <summary>告警机器人。钉钉、企业微信等</summary>
         public static readonly Field WebHook = FindByName("WebHook");
@@ -447,6 +473,12 @@ public partial class App
 
         /// <summary>单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于管理实例</summary>
         public const String Singleton = "Singleton";
+
+        /// <summary>IP白名单。符合条件的来源IP才允许访问，支持*通配符，多个逗号隔开</summary>
+        public const String WhiteIPs = "WhiteIPs";
+
+        /// <summary>IP黑名单。符合条件的来源IP禁止访问，支持*通配符，多个逗号隔开</summary>
+        public const String BlackIPs = "BlackIPs";
 
         /// <summary>告警机器人。钉钉、企业微信等</summary>
         public const String WebHook = "WebHook";

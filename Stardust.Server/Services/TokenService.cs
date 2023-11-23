@@ -20,7 +20,7 @@ public class TokenService
     /// <param name="password"></param>
     /// <param name="autoRegister"></param>
     /// <returns></returns>
-    public App Authorize(String username, String password, Boolean autoRegister)
+    public App Authorize(String username, String password, Boolean autoRegister, String ip = null)
     {
         if (username.IsNullOrEmpty()) throw new ArgumentNullException(nameof(username));
         //if (password.IsNullOrEmpty()) throw new ArgumentNullException(nameof(password));
@@ -34,6 +34,12 @@ public class TokenService
             Secret = password,
             Enable = autoRegister,
         });
+
+        // 检查黑白名单
+        if (!app.MatchIp(ip))
+            throw new ApiException(403, $"应用[{username}]禁止{ip}访问！");
+        if (app.Project != null && !app.Project.MatchIp(ip))
+            throw new ApiException(403, $"项目[{app.Project}]禁止{ip}访问！");
 
         // 检查应用有效性
         if (!app.Enable) throw new ApiException(403, $"应用[{username}]已禁用！");

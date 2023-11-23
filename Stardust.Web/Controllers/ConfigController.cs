@@ -63,7 +63,8 @@ public class ConfigController : ControllerBase
 
     private AppConfig Valid(String appId, String secret, out AppOnline online)
     {
-        var ap = _tokenService.Authorize(appId, secret, false);
+        var ip = HttpContext.GetUserHost();
+        var ap = _tokenService.Authorize(appId, secret, false, ip);
 
         var app = AppConfig.FindByName(appId);
         app ??= AppConfig.Find(AppConfig._.Name == appId);
@@ -86,7 +87,7 @@ public class ConfigController : ControllerBase
         }
 
         // 更新心跳信息
-        var ip = HttpContext.GetUserHost();
+        //var ip = HttpContext.GetUserHost();
         online = _appOnline.UpdateOnline(ap, null, ip, appId);
 
         // 检查应用有效性

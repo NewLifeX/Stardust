@@ -53,6 +53,8 @@
         <Column Name="Compile" DataType="DateTime" Description="编译时间。客户端" />
         <Column Name="Period" DataType="Int32" Description="采样周期。默认60秒" />
         <Column Name="Singleton" DataType="Boolean" Description="单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于管理实例" />
+        <Column Name="WhiteIPs" DataType="String" Description="IP白名单。符合条件的来源IP才允许访问，支持*通配符，多个逗号隔开" />
+        <Column Name="BlackIPs" DataType="String" Description="IP黑名单。符合条件的来源IP禁止访问，支持*通配符，多个逗号隔开" />
         <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
         <Column Name="AlarmOnOffline" DataType="Boolean" Description="下线告警。节点下线时，发送告警" />
         <Column Name="LastLogin" DataType="DateTime" Description="最后登录" />

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using NewLife;
 using NewLife.Data;
 using XCode;
@@ -162,5 +163,28 @@ public partial class GalaxyProject : Entity<GalaxyProject>
     #endregion
 
     #region 业务操作
+
+    /// <summary>检查IP白名单黑名单</summary>
+    /// <param name="ip"></param>
+    /// <returns></returns>
+    public Boolean MatchIp(String ip)
+    {
+        if (ip.IsNullOrEmpty()) return false;
+        if (WhiteIPs.IsNullOrEmpty() && BlackIPs.IsNullOrEmpty()) return true;
+
+        // 黑名单优先，黑名单里面有的，直接拒绝
+        var bs = (BlackIPs + "").Split(",");
+        if (bs.Length > 0 && bs.Any(e => e.IsMatch(ip))) return false;
+
+        // 白名单里面有的，直接通过
+        var ws = (WhiteIPs + "").Split(",");
+        if (ws.Length > 0)
+        {
+            return ws.Any(e => e.IsMatch(ip));
+        }
+
+        // 未设置白名单，黑名单里面没有的，直接通过
+        return true;
+    }
     #endregion
 }
