@@ -1,9 +1,13 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
+using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.StaticFiles;
 using NewLife;
 using NewLife.Log;
+using NewLife.Web;
 
 namespace Stardust.Extensions.Caches;
 
@@ -16,9 +20,10 @@ public static class FileCacheExtensions
     /// <param name="app"></param>
     /// <param name="requestPath">请求虚拟路径。如/files</param>
     /// <param name="localPath">本地缓存目录</param>
+    /// <param name="getWhiteIP"></param>
     /// <param name="uplinkServer">上级地址，用于下载本地不存在的文件</param>
     /// <returns></returns>
-    public static void UseFileCache(this IApplicationBuilder app, String requestPath, String localPath, String uplinkServer = null)
+    public static void UseFileCache(this IApplicationBuilder app, String requestPath, String localPath, Func<String> getWhiteIP = null, String uplinkServer = null)
     {
         var cacheRoot = localPath.GetBasePath().EnsureDirectory(false);
         XTrace.WriteLine("FileCache: {0}", cacheRoot);
@@ -39,17 +44,51 @@ public static class FileCacheExtensions
             XTrace.WriteLine("UplinkServer: {0}", uplinkServer);
         }
 
+        // IP白名单拦截，必须在使用静态文件前面
+        if (getWhiteIP != null)
+            app.UseMiddleware<IpFilterMiddleware>(requestPath, getWhiteIP());
+
         app.UseStaticFiles(new StaticFileOptions
         {
             RequestPath = new PathString(requestPath),
             FileProvider = provider,
             ServeUnknownFileTypes = true,
             DefaultContentType = "application/x-msdownload",
+            OnPrepareResponse = ctx => OnPrepareResponse(ctx, getWhiteIP),
         });
         app.UseDirectoryBrowser(new DirectoryBrowserOptions
         {
             RequestPath = new PathString(requestPath),
             FileProvider = provider,
         });
+    }
+
+    static void OnPrepareResponse(StaticFileResponseContext ctx, Func<String> getWhiteIP)
+    {
+        var ip = ctx.Context.GetUserHost();
+        if (ip.IsNullOrEmpty() || !ValidIP(ip, getWhiteIP))
+        {
+            ctx.Context.Response.StatusCode = (Int32)HttpStatusCode.Forbidden;
+            ctx.Context.Response.ContentLength = 0;
+            ctx.Context.Response.Body = Stream.Null;
+        }
+    }
+
+    static Boolean ValidIP(String ip, Func<String> getWhiteIP)
+    {
+        if (ip.IsNullOrEmpty()) return false;
+
+        var whites = getWhiteIP?.Invoke();
+        if (whites.IsNullOrEmpty()) return true;
+
+        // 白名单里面有的，直接通过
+        var ws = (whites + "").Split(",", ";");
+        if (ws.Length > 0)
+        {
+            return ws.Any(e => e.IsMatch(ip));
+        }
+
+        // 未设置白名单，黑名单里面没有的，直接通过
+        return true;
     }
 }

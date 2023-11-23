@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.FileProviders.Physical;
 using Microsoft.Extensions.Primitives;
@@ -39,6 +40,9 @@ class CacheFileProvider : IFileProvider
 
     /// <summary>索引信息文件。列出扩展显示的文件内容</summary>
     public String IndexInfoFile { get; set; }
+
+    /// <summary>超时时间</summary>
+    public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(5);
 
     /// <summary>APM追踪</summary>
     public ITracer Tracer { get; set; }
@@ -119,7 +123,7 @@ class CacheFileProvider : IFileProvider
                         var tmp = Path.GetTempFileName();
                         {
                             using var fs = new FileStream(tmp, FileMode.OpenOrCreate);
-                            using var client = new HttpClient();
+                            using var client = new HttpClient { Timeout = Timeout };
                             using var rs = client.GetStreamAsync(url).Result;
                             rs.CopyTo(fs);
                             fs.Flush();
@@ -216,7 +220,7 @@ class CacheFileProvider : IFileProvider
                             span?.AppendTag(url);
                             XTrace.WriteLine("下载目录：{0}", url);
 
-                            using var client = new HttpClient();
+                            using var client = new HttpClient { Timeout = Timeout };
                             var html = client.GetString(url);
 
                             var links = Link.Parse(html, url);

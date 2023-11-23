@@ -91,6 +91,10 @@ public class StarServerSetting : Config<StarServerSetting>
     [Description("文件缓存目录。存放数据库驱动等缓存文件，为空时不启用，默认../FileCache")]
     public String FileCache { get; set; } = "../FileCache";
 
+    /// <summary>文件缓存白名单。若指定，仅允许符合条件的IP来源访问文件缓存，多个逗号隔开，支持*模糊匹配</summary>
+    [Description("文件缓存白名单。若指定，仅允许符合条件的IP来源访问文件缓存，多个逗号隔开，支持*模糊匹配")]
+    public String FileCacheWhiteIP { get; set; } = "";
+
     /// <summary>上级服务器。同步向上级汇报数据</summary>
     [Description("上级服务器。同步向上级汇报数据")]
     public String UplinkServer { get; set; }
