@@ -55,7 +55,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                     {
                         Height = 400,
                     };
-                    chart.SetX(list2, _.StatDate, e => e.StatDate.ToString("MM-dd"));
+                    chart.SetX(list2, _.StatDate);
                     //chart.SetY("调用次数");
                     chart.YAxis = new[] {
                         new { name = "调用次数", type = "value" },
@@ -78,7 +78,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers
                     {
                         Height = 400,
                     };
-                    chart.SetX(list2, _.StatDate, e => e.StatDate.ToString("MM-dd"));
+                    chart.SetX(list2, _.StatDate);
                     //chart.SetY("耗时");
                     chart.YAxis = new[] {
                         new { name = "耗时（ms）", type = "value" },

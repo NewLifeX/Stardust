@@ -52,7 +52,7 @@ public class RedisDataController : ReadOnlyEntityController<RedisData>
                     Title = new ChartTitle { Text = node.Name },
                     Height = 400,
                 };
-                chart.SetX(list2, _.CreateTime, e => e.CreateTime.ToString("HH:mm"));
+                chart.SetX(list2, _.CreateTime);
                 chart.SetY("指标");
                 chart.AddDataZoom();
 
