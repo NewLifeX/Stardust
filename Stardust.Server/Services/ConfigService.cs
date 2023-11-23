@@ -235,6 +235,9 @@ public class ConfigService
 
             olt.WorkerId = id;
             olt.Update();
+
+            // 外部对象也要更新，可能是来自缓存的另一个实例。最终取该实例的数据返回给客户端应用
+            online.WorkerId = id;
         }
 
         //// 提交事务
