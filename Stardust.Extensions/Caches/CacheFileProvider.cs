@@ -145,7 +145,7 @@ class CacheFileProvider : IFileProvider
 
                     // 移动临时文件到最终目录
                     fullPath.EnsureDirectory(true);
-                    File.Move(tmp, fullPath);
+                    File.Move(tmp, fullPath, true);
 
                     // 修改脚本文件中的Url
                     var target = TargetServer;
