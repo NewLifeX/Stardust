@@ -173,11 +173,11 @@ public partial class GalaxyProject : Entity<GalaxyProject>
         if (WhiteIPs.IsNullOrEmpty() && BlackIPs.IsNullOrEmpty()) return true;
 
         // 黑名单优先，黑名单里面有的，直接拒绝
-        var bs = (BlackIPs + "").Split(",");
+        var bs = (BlackIPs + "").Split(",", ";");
         if (bs.Length > 0 && bs.Any(e => e.IsMatch(ip))) return false;
 
         // 白名单里面有的，直接通过
-        var ws = (WhiteIPs + "").Split(",");
+        var ws = (WhiteIPs + "").Split(",", ";");
         if (ws.Length > 0)
         {
             return ws.Any(e => e.IsMatch(ip));

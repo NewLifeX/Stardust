@@ -49,6 +49,7 @@ public class TracerMiddleware
                 span.Detach(req.Headers);
                 if (span is DefaultSpan ds && ds.TraceFlag > 0)
                 {
+                    var flag = false;
                     if (req.ContentLength != null &&
                         req.ContentLength < 1024 * 8 &&
                         req.ContentType != null &&
@@ -58,19 +59,22 @@ public class TracerMiddleware
 
                         var buf = new Byte[1024];
                         var count = await req.Body.ReadAsync(buf, 0, buf.Length);
-                        span.Tag = Environment.NewLine + buf.ToStr(null, 0, count);
+                        span.AppendTag("\r\n<=\r\n" + buf.ToStr(null, 0, count));
                         req.Body.Position = 0;
-                    }
-                    else
-                    {
-                        span.AppendTag($"ContentLength: {req.ContentLength}");
-                        span.AppendTag($"ContentType: {req.ContentType}");
+                        flag = true;
                     }
 
                     if (span.Tag.Length < 500)
                     {
+                        if (!flag) span.AppendTag("\r\n<=");
                         var vs = req.Headers.Where(e => !e.Key.EqualIgnoreCase(ExcludeHeaders)).ToDictionary(e => e.Key, e => e.Value + "");
-                        span.Tag += Environment.NewLine + vs.Join(Environment.NewLine, e => $"{e.Key}:{e.Value}");
+                        span.AppendTag("\r\n" + vs.Join(Environment.NewLine, e => $"{e.Key}:{e.Value}"));
+                    }
+                    else if (!flag)
+                    {
+                        span.AppendTag("\r\n<=\r\n");
+                        span.AppendTag($"ContentLength: {req.ContentLength}\r\n");
+                        span.AppendTag($"ContentType: {req.ContentType}");
                     }
                 }
             }
@@ -87,7 +91,41 @@ public class TracerMiddleware
             if (span != null)
             {
                 var code = ctx.Response.StatusCode;
-                if (code == 400 || code > 404) span.SetError(new HttpRequestException($"Http Error {code} {(HttpStatusCode)code}"), null);
+                if (code == 400 || code > 404)
+                    span.SetError(new HttpRequestException($"Http Error {code} {(HttpStatusCode)code}"), null);
+                else if (code == 200)
+                {
+                    if (span is DefaultSpan ds && ds.TraceFlag > 0 && span.Tag.Length < 500)
+                    {
+                        var flag = false;
+                        var res = ctx.Response;
+                        if (res.ContentLength != null &&
+                            res.ContentLength < 1024 * 8 &&
+                            res.ContentType != null &&
+                            res.ContentType.StartsWithIgnoreCase(TagTypes))
+                        {
+                            var buf = new Byte[1024];
+                            var p = res.Body.Position;
+                            var count = await res.Body.ReadAsync(buf, 0, buf.Length);
+                            span.AppendTag("\r\n=>\r\n" + buf.ToStr(null, 0, count));
+                            res.Body.Position = p;
+                            flag = true;
+                        }
+
+                        if (span.Tag.Length < 500)
+                        {
+                            if (!flag) span.AppendTag("\r\n=>");
+                            var vs = res.Headers.Where(e => !e.Key.EqualIgnoreCase(ExcludeHeaders)).ToDictionary(e => e.Key, e => e.Value + "");
+                            span.AppendTag("\r\n" + vs.Join(Environment.NewLine, e => $"{e.Key}:{e.Value}"));
+                        }
+                        else if (!flag)
+                        {
+                            span.AppendTag("\r\n=>\r\n");
+                            span.AppendTag($"ContentLength: {res.ContentLength}\r\n");
+                            span.AppendTag($"ContentType: {res.ContentType}");
+                        }
+                    }
+                }
             }
         }
         catch (Exception ex)
