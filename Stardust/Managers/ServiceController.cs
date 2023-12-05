@@ -462,7 +462,7 @@ internal class ServiceController : DisposeBase
     public Boolean Check()
     {
         var inf = Info ?? new ServiceInfo();
-        using var span = Tracer?.NewSpan("CheckService", inf.Name);
+        using var span = Tracer?.NewSpan("CheckService", inf);
 
         // 获取当前进程Id
         var mypid = Process.GetCurrentProcess().Id;
@@ -482,7 +482,8 @@ internal class ServiceController : DisposeBase
                     if (inf.MaxMemory <= 0) return false;
 
                     var mem = p.WorkingSet64 / 1024 / 1024;
-                    if (mem <= inf.MaxMemory) return true;
+                    span?.AppendTag($"MaxMemory={inf.MaxMemory}M WorkingSet64={mem}M");
+                    if (mem <= inf.MaxMemory) return false;
 
                     WriteLog("内存超限！{0}>{1}", mem, inf.MaxMemory);
 

@@ -242,10 +242,10 @@ public class ServiceManager : DisposeBase
     /// <param name="deploy"></param>
     /// <param name="isCheck">仅检查时，不记录埋点</param>
     /// <returns>本次是否成功启动，原来已启动返回false</returns>
-    private Boolean StartService(ServiceInfo service, DeployInfo deploy, Boolean isCheck = false)
+    private Boolean StartService(ServiceInfo service, DeployInfo? deploy, Boolean isCheck = false)
     {
         using var span = isCheck ? null : Tracer?.NewSpan("ServiceManager-StartService", service);
-        span?.AppendTag(deploy);
+        if (deploy != null) span?.AppendTag(deploy);
 
         lock (this)
         {
@@ -365,7 +365,7 @@ public class ServiceManager : DisposeBase
         await _client.UploadDeploy(svcs);
     }
 
-    private async Task<DeployInfo[]> PullService(String appName)
+    private async Task<DeployInfo[]> PullService(String? appName)
     {
         using var span = Tracer?.NewSpan(nameof(PullService), appName);
         WriteLog("拉取应用服务 {0}", appName);
@@ -537,7 +537,7 @@ public class ServiceManager : DisposeBase
         using var span = Tracer?.NewSpan("ServiceManager-DoWork", svcs.Length);
 
         // 应用服务的上报和拉取
-        DeployInfo[] deploys = null;
+        DeployInfo[]? deploys = null;
         if (_client != null && !_client.Token.IsNullOrEmpty())
         {
             // 上传失败不应该影响本地拉起服务
@@ -828,7 +828,7 @@ public class ServiceManager : DisposeBase
     /// <summary>写日志</summary>
     /// <param name="format"></param>
     /// <param name="args"></param>
-    public void WriteLog(String format, params Object[] args)
+    public void WriteLog(String format, params Object?[] args)
     {
         Log?.Info(format, args);
 
