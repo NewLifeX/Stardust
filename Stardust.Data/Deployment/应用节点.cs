@@ -13,13 +13,13 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Deployment;
 
-/// <summary>应用节点。应用部署集和节点服务器的依赖关系</summary>
+/// <summary>应用节点。应用部署集和节点服务器的依赖关系，一个应用可有多个部署集如arm和x64，在目标节点上发布该部署集对应的应用zip包</summary>
 [Serializable]
 [DataObject]
-[Description("应用节点。应用部署集和节点服务器的依赖关系")]
+[Description("应用节点。应用部署集和节点服务器的依赖关系，一个应用可有多个部署集如arm和x64，在目标节点上发布该部署集对应的应用zip包")]
 [BindIndex("IX_AppDeployNode_AppId", false, "AppId")]
 [BindIndex("IX_AppDeployNode_NodeId", false, "NodeId")]
-[BindTable("AppDeployNode", Description = "应用节点。应用部署集和节点服务器的依赖关系", ConnName = "Stardust", DbType = DatabaseType.None)]
+[BindTable("AppDeployNode", Description = "应用节点。应用部署集和节点服务器的依赖关系，一个应用可有多个部署集如arm和x64，在目标节点上发布该部署集对应的应用zip包", ConnName = "Stardust", DbType = DatabaseType.None)]
 public partial class AppDeployNode
 {
     #region 属性
@@ -73,6 +73,7 @@ public partial class AppDeployNode
 
     private String _Environment;
     /// <summary>环境。prod/test/dev/uat等</summary>
+    [Category("发布参数")]
     [DisplayName("环境")]
     [Description("环境。prod/test/dev/uat等")]
     [DataObjectField(false, false, true, 50)]
@@ -81,7 +82,7 @@ public partial class AppDeployNode
 
     private String _FileName;
     /// <summary>文件。应用启动文件，可直接使用zip包，支持差异定制，为空时使用应用集配置</summary>
-    [Category("参数")]
+    [Category("发布参数")]
     [DisplayName("文件")]
     [Description("文件。应用启动文件，可直接使用zip包，支持差异定制，为空时使用应用集配置")]
     [DataObjectField(false, false, true, 50)]
@@ -90,7 +91,7 @@ public partial class AppDeployNode
 
     private String _Arguments;
     /// <summary>参数。启动应用的参数，为空时使用应用集配置</summary>
-    [Category("参数")]
+    [Category("发布参数")]
     [DisplayName("参数")]
     [Description("参数。启动应用的参数，为空时使用应用集配置")]
     [DataObjectField(false, false, true, 500)]
@@ -99,7 +100,7 @@ public partial class AppDeployNode
 
     private String _WorkingDirectory;
     /// <summary>工作目录。应用根目录，为空时使用应用集配置</summary>
-    [Category("参数")]
+    [Category("发布参数")]
     [DisplayName("工作目录")]
     [Description("工作目录。应用根目录，为空时使用应用集配置")]
     [DataObjectField(false, false, true, 200)]
@@ -108,7 +109,7 @@ public partial class AppDeployNode
 
     private Stardust.Models.ServiceModes _Mode;
     /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置</summary>
-    [Category("参数")]
+    [Category("发布参数")]
     [DisplayName("工作模式")]
     [Description("工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置")]
     [DataObjectField(false, false, false, 0)]
@@ -117,6 +118,7 @@ public partial class AppDeployNode
 
     private Int32 _ProcessId;
     /// <summary>进程</summary>
+    [Category("状态")]
     [DisplayName("进程")]
     [Description("进程")]
     [DataObjectField(false, false, false, 0)]
@@ -125,6 +127,7 @@ public partial class AppDeployNode
 
     private String _ProcessName;
     /// <summary>进程名称</summary>
+    [Category("状态")]
     [DisplayName("进程名称")]
     [Description("进程名称")]
     [DataObjectField(false, false, true, 200)]
@@ -133,6 +136,7 @@ public partial class AppDeployNode
 
     private String _UserName;
     /// <summary>用户名。启动该进程的用户名</summary>
+    [Category("状态")]
     [DisplayName("用户名")]
     [Description("用户名。启动该进程的用户名")]
     [DataObjectField(false, false, true, 50)]
@@ -141,6 +145,7 @@ public partial class AppDeployNode
 
     private DateTime _StartTime;
     /// <summary>进程时间</summary>
+    [Category("状态")]
     [DisplayName("进程时间")]
     [Description("进程时间")]
     [DataObjectField(false, false, true, 0)]
@@ -149,6 +154,7 @@ public partial class AppDeployNode
 
     private String _Version;
     /// <summary>版本。客户端</summary>
+    [Category("状态")]
     [DisplayName("版本")]
     [Description("版本。客户端")]
     [DataObjectField(false, false, true, 50)]
@@ -157,6 +163,7 @@ public partial class AppDeployNode
 
     private DateTime _Compile;
     /// <summary>编译时间。客户端</summary>
+    [Category("状态")]
     [DisplayName("编译时间")]
     [Description("编译时间。客户端")]
     [DataObjectField(false, false, true, 0)]
@@ -165,6 +172,7 @@ public partial class AppDeployNode
 
     private String _Listens;
     /// <summary>监听端口。网络端口监听信息</summary>
+    [Category("状态")]
     [DisplayName("监听端口")]
     [Description("监听端口。网络端口监听信息")]
     [DataObjectField(false, false, true, 200)]
@@ -173,6 +181,7 @@ public partial class AppDeployNode
 
     private DateTime _LastActive;
     /// <summary>最后活跃。最后一次上报心跳的时间</summary>
+    [Category("状态")]
     [DisplayName("最后活跃")]
     [Description("最后活跃。最后一次上报心跳的时间")]
     [DataObjectField(false, false, true, 0)]
@@ -181,6 +190,7 @@ public partial class AppDeployNode
 
     private DateTime _LastUpload;
     /// <summary>最后上传。最后一次上传客户端配置的时间</summary>
+    [Category("状态")]
     [DisplayName("最后上传")]
     [Description("最后上传。最后一次上传客户端配置的时间")]
     [DataObjectField(false, false, true, 0)]
