@@ -655,10 +655,17 @@ public class NetRuntime
     /// <returns></returns>
     public Boolean IsAlpine()
     {
-        var di = "/lib".AsDirectory();
-        if (!di.Exists) return false;
+        var file = "/proc/version";
+        if (File.Exists(file))
+        {
+            var txt = File.ReadAllText(file);
+            if (txt.Contains("-musl-") || txt.Contains("Alpine")) return true;
+        }
 
-        var fis = di.GetFiles("*-musl-*");
+        var dir = "/lib";
+        if (!Directory.Exists(dir)) return false;
+
+        var fis = Directory.GetFiles(dir, "*-musl-*");
         if (fis.Length > 0) return true;
 
         return false;
