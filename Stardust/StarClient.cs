@@ -249,7 +249,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         {
             // 识别Alpine
             var nr = new NetRuntime();
-            if (nr.IsAlpine()) di.OSName = $"{di.OSName}(Apline)";
+            if (nr.IsAlpine() && !di.OSName.StartsWithIgnoreCase("Alpine")) di.OSName = $"{di.OSName}(Alpine)";
         }
 #else
         var ver = "";
