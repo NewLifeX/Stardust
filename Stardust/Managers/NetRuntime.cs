@@ -574,6 +574,9 @@ public class NetRuntime
         // 在x64架构的centos系统中，需要检查更新libstdc++库
         if (arch == "x64") UpgradeLibStdCxx();
 
+        // Alpine基于uClibc和Busybox，对应dotnet运行时带有musl
+        if (IsAlpine()) arch = "musl-" + arch;
+
         switch (kind)
         {
             case "aspnet":
@@ -646,6 +649,19 @@ public class NetRuntime
             }
         }
 #endif
+    }
+
+    /// <summary>Alpine基于uClibc和Busybox，对应dotnet运行时带有musl</summary>
+    /// <returns></returns>
+    public Boolean IsAlpine()
+    {
+        var di = "/lib".AsDirectory();
+        if (!di.Exists) return false;
+
+        var fis = di.GetFiles("*-musl-*");
+        if (fis.Length > 0) return true;
+
+        return false;
     }
 
     /// <summary>获取所有已安装版本</summary>
