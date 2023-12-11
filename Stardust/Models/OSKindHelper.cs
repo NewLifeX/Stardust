@@ -13,7 +13,7 @@ public static class OSKindHelper
     {
         if (osName.IsNullOrEmpty()) return 0;
 
-        if (osName.StartsWithIgnoreCase("SmartA2", "SmartA4")) return OSKinds.SmartOS;
+        if (osName.StartsWithIgnoreCase("SmartOS", "SmartA2", "SmartA4")) return OSKinds.SmartOS;
 
         var kind = ParseWindows(osName, osVersion);
         if (kind > 0) return kind;
@@ -87,6 +87,7 @@ public static class OSKindHelper
         //if (!osName.Contains("Linux")) return 0;
 
         // 优先识别新系统
+        if (osName.StartsWithIgnoreCase("Alpine") || osName.EndsWithIgnoreCase("(Alpine)")) return OSKinds.Alpine;
         if (osName.StartsWithIgnoreCase("Ubuntu")) return OSKinds.Ubuntu;
         if (osName.StartsWithIgnoreCase("Debian")) return OSKinds.Debian;
         if (osName.StartsWithIgnoreCase("Deepin")) return OSKinds.Deepin;
@@ -99,6 +100,7 @@ public static class OSKindHelper
         if (osName.StartsWithIgnoreCase("UOS", "UnionTech OS")) return OSKinds.UOS;
         if (osName.StartsWithIgnoreCase("Kylin")) return OSKinds.Kylin;
         if (osName.StartsWithIgnoreCase("OpenKylin")) return OSKinds.OpenKylin;
+        if (osName.StartsWithIgnoreCase("Linx")) return OSKinds.Linx;
 
         if (osName.Contains("Linux")) return OSKinds.Linux;
         if (osName.Contains("Buildroot")) return OSKinds.Linux;

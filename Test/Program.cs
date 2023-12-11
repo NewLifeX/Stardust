@@ -1,28 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
 using NewLife;
 using NewLife.IO;
 using NewLife.Log;
 using NewLife.Messaging;
 using NewLife.Model;
-using NewLife.Net;
 using NewLife.Reflection;
 using NewLife.Remoting;
-using NewLife.Security;
 using NewLife.Serialization;
 using Renci.SshNet;
 using Stardust;
-using Stardust.Data;
-using Stardust.Data.Nodes;
+using Stardust.Managers;
 using Stardust.Models;
-using Stardust.Monitors;
 
 namespace Test;
 
@@ -187,53 +181,9 @@ class Program
 
     static void Test6()
     {
-        NodeStat.Meta.Session.InitData();
-
-        var st = new NodeStat { Category = "test", Key = Rand.NextString(8), Total = 100, };
-        st.Insert();
-    }
-
-    static void Test7()
-    {
-        var splits = new[] { "中心", "场地", "（", "转运", "10", "分拨", "76" };
-
-        var dic = new SortedDictionary<Int32, NodeRule>();
-        using var reader = new ExcelReader("IP划分.xlsx");
-        foreach (var row in reader.ReadRows())
-        {
-            if (row == null || row.Length < 4) continue;
-            //XTrace.WriteLine(row.Join());
-
-            var name = (row[0] + "").Replace("\r", null).Replace("\n", null).Trim();
-            var ip = (row[3] + "").Replace("\r", null).Replace("\n", null).Trim();
-            if (name.IsNullOrEmpty() || ip.IsNullOrEmpty()) continue;
-
-            foreach (var item in splits)
-            {
-                var p = name.IndexOf(item);
-                if (p > 0) name = name[..p];
-            }
-
-            XTrace.WriteLine("{0}\t{1}", name, ip);
-
-            var ss = ip.Split('.');
-            if (ss.Length < 4) continue;
-
-            var key = ss[0].ToInt() * 1000 + ss[1].ToInt();
-            var rule = $"{ss[0]}.{ss[1]}.*";
-            if (!dic.ContainsKey(key)) dic[key] = new NodeRule { Rule = rule, Category = name, Enable = true, NewNode = true };
-        }
-
-        var list = NodeRule.FindAll();
-        foreach (var item in dic)
-        {
-            //XTrace.WriteLine("{0}\t{1}", item.Key, item.Value);
-
-            var nr = item.Value;
-            XTrace.WriteLine("{0}\t{1}", nr.Rule, nr.Category);
-
-            if (!list.Any(e => e.Rule == nr.Rule)) nr.Insert();
-        }
+        var nr = new NetRuntime();
+        var rs = nr.IsAlpine();
+        XTrace.WriteLine("IsAlpine: {0}", rs);
     }
 
     static void Test8()

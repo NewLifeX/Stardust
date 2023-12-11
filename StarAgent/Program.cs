@@ -183,7 +183,8 @@ internal class MyService : ServiceBase, IServiceProvider
                 var svr = new ApiServer(set.LocalPort)
                 {
                     Tracer = _factory?.Tracer,
-                    Log = XTrace.Log
+                    Log = XTrace.Log,
+                    EncoderLog = XTrace.Log,
                 };
                 svr.Register(new StarService
                 {

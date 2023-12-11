@@ -25,12 +25,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="10.6.2023.1201" />
+    <RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NewLife.Core" Version="10.6.2023.1209-beta1625" />
     <PackageReference Include="SSH.NET" Version="2023.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Stardust.Data\Stardust.Data.csproj" />
     <ProjectReference Include="..\Stardust\Stardust.csproj" />
   </ItemGroup>
 

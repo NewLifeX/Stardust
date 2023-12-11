@@ -51,6 +51,9 @@ public enum OSKinds
     /// <summary>Win11, 10.0.22000</summary>
     Win11 = 11,
 
+    /// <summary>Alpine</summary>
+    Alpine = 90,
+
     /// <summary>Linux</summary>
     Linux = 100,
 
@@ -83,6 +86,9 @@ public enum OSKinds
 
     /// <summary>优麒麟</summary>
     OpenKylin = 141,
+
+    /// <summary>凝思</summary>
+    Linx = 150,
 
     /// <summary>MacOS</summary>
     MacOSX = 200,
