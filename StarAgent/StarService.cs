@@ -289,8 +289,8 @@ public class StarService : DisposeBase, IApi
                 ks.Add(item.Key);
             else
             {
-                var p = Process.GetProcessById(item.Key);
-                if (p == null || p.HasExited)
+                var p = GetProcessById(item.Key);
+                if (p == null || p.GetHasExited())
                     ds.Add(item.Key);
             }
         }
@@ -304,8 +304,8 @@ public class StarService : DisposeBase, IApi
         {
             try
             {
-                var p = Process.GetProcessById(item);
-                if (p == null || p.HasExited)
+                var p = GetProcessById(item);
+                if (p == null || p.GetHasExited())
                     _dogs.Remove(item);
                 else
                 {
@@ -330,6 +330,17 @@ public class StarService : DisposeBase, IApi
         {
             _dogs.Remove(item);
         }
+    }
+
+    static Process GetProcessById(Int32 processId)
+    {
+        try
+        {
+            return Process.GetProcessById(processId);
+        }
+        catch { }
+
+        return null;
     }
     #endregion
 

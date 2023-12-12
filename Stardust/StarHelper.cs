@@ -55,7 +55,7 @@ public static class StarHelper
     /// <returns></returns>
     public static Process SafetyKill(this Process process)
     {
-        if (process == null || process.GetProcessHasExited()) return process;
+        if (process == null || process.GetHasExited()) return process;
 
         try
         {
@@ -63,7 +63,7 @@ public static class StarHelper
             {
                 Process.Start("kill", process.Id.ToString());
 
-                for (var i = 0; i < 50 && !process.GetProcessHasExited(); i++)
+                for (var i = 0; i < 50 && !process.GetHasExited(); i++)
                 {
                     Thread.Sleep(200);
                 }
@@ -72,7 +72,7 @@ public static class StarHelper
             {
                 Process.Start("taskkill", $"-pid {process.Id}");
 
-                for (var i = 0; i < 50 && !process.GetProcessHasExited(); i++)
+                for (var i = 0; i < 50 && !process.GetHasExited(); i++)
                 {
                     Thread.Sleep(200);
                 }
@@ -80,13 +80,13 @@ public static class StarHelper
         }
         catch { }
 
-        if (!process.GetProcessHasExited()) process.Kill();
+        if (!process.GetHasExited()) process.Kill();
 
         return process;
     }
 
     /// <summary>获取进程是否终止</summary>
-    public static Boolean GetProcessHasExited(this Process process)
+    public static Boolean GetHasExited(this Process process)
     {
         try
         {
