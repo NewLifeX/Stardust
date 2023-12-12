@@ -13,12 +13,12 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Deployment;
 
-/// <summary>部署版本。应用的多个可发布版本，主要管理应用程序包，支持随时切换使用不同版本</summary>
+/// <summary>部署版本。应用的多个可发布版本，主要管理应用程序包，支持随时切换使用不同版本，来自上传或自动编译</summary>
 [Serializable]
 [DataObject]
-[Description("部署版本。应用的多个可发布版本，主要管理应用程序包，支持随时切换使用不同版本")]
+[Description("部署版本。应用的多个可发布版本，主要管理应用程序包，支持随时切换使用不同版本，来自上传或自动编译")]
 [BindIndex("IU_AppDeployVersion_AppId_Version", true, "AppId,Version")]
-[BindTable("AppDeployVersion", Description = "部署版本。应用的多个可发布版本，主要管理应用程序包，支持随时切换使用不同版本", ConnName = "Stardust", DbType = DatabaseType.None)]
+[BindTable("AppDeployVersion", Description = "部署版本。应用的多个可发布版本，主要管理应用程序包，支持随时切换使用不同版本，来自上传或自动编译", ConnName = "Stardust", DbType = DatabaseType.None)]
 public partial class AppDeployVersion
 {
     #region 属性
@@ -85,6 +85,41 @@ public partial class AppDeployVersion
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Hash", "文件哈希。MD5散列，避免下载的文件有缺失", "")]
     public String Hash { get => _Hash; set { if (OnPropertyChanging("Hash", value)) { _Hash = value; OnPropertyChanged("Hash"); } } }
+
+    private String _Progress;
+    /// <summary>进度。发布进度</summary>
+    [DisplayName("进度")]
+    [Description("进度。发布进度")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("Progress", "进度。发布进度", "")]
+    public String Progress { get => _Progress; set { if (OnPropertyChanging("Progress", value)) { _Progress = value; OnPropertyChanged("Progress"); } } }
+
+    private String _CommitId;
+    /// <summary>提交标识</summary>
+    [Category("编译参数")]
+    [DisplayName("提交标识")]
+    [Description("提交标识")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("CommitId", "提交标识", "")]
+    public String CommitId { get => _CommitId; set { if (OnPropertyChanging("CommitId", value)) { _CommitId = value; OnPropertyChanged("CommitId"); } } }
+
+    private String _CommitLog;
+    /// <summary>提交记录</summary>
+    [Category("编译参数")]
+    [DisplayName("提交记录")]
+    [Description("提交记录")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("CommitLog", "提交记录", "")]
+    public String CommitLog { get => _CommitLog; set { if (OnPropertyChanging("CommitLog", value)) { _CommitLog = value; OnPropertyChanged("CommitLog"); } } }
+
+    private DateTime _CommitTime;
+    /// <summary>提交时间</summary>
+    [Category("编译参数")]
+    [DisplayName("提交时间")]
+    [Description("提交时间")]
+    [DataObjectField(false, false, true, 0)]
+    [BindColumn("CommitTime", "提交时间", "")]
+    public DateTime CommitTime { get => _CommitTime; set { if (OnPropertyChanging("CommitTime", value)) { _CommitTime = value; OnPropertyChanged("CommitTime"); } } }
 
     private String _TraceId;
     /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
@@ -175,6 +210,10 @@ public partial class AppDeployVersion
             "Overwrite" => _Overwrite,
             "Size" => _Size,
             "Hash" => _Hash,
+            "Progress" => _Progress,
+            "CommitId" => _CommitId,
+            "CommitLog" => _CommitLog,
+            "CommitTime" => _CommitTime,
             "TraceId" => _TraceId,
             "CreateUserId" => _CreateUserId,
             "CreateTime" => _CreateTime,
@@ -197,6 +236,10 @@ public partial class AppDeployVersion
                 case "Overwrite": _Overwrite = Convert.ToString(value); break;
                 case "Size": _Size = value.ToLong(); break;
                 case "Hash": _Hash = Convert.ToString(value); break;
+                case "Progress": _Progress = Convert.ToString(value); break;
+                case "CommitId": _CommitId = Convert.ToString(value); break;
+                case "CommitLog": _CommitLog = Convert.ToString(value); break;
+                case "CommitTime": _CommitTime = value.ToDateTime(); break;
                 case "TraceId": _TraceId = Convert.ToString(value); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -241,6 +284,18 @@ public partial class AppDeployVersion
 
         /// <summary>文件哈希。MD5散列，避免下载的文件有缺失</summary>
         public static readonly Field Hash = FindByName("Hash");
+
+        /// <summary>进度。发布进度</summary>
+        public static readonly Field Progress = FindByName("Progress");
+
+        /// <summary>提交标识</summary>
+        public static readonly Field CommitId = FindByName("CommitId");
+
+        /// <summary>提交记录</summary>
+        public static readonly Field CommitLog = FindByName("CommitLog");
+
+        /// <summary>提交时间</summary>
+        public static readonly Field CommitTime = FindByName("CommitTime");
 
         /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
         public static readonly Field TraceId = FindByName("TraceId");
@@ -295,6 +350,18 @@ public partial class AppDeployVersion
 
         /// <summary>文件哈希。MD5散列，避免下载的文件有缺失</summary>
         public const String Hash = "Hash";
+
+        /// <summary>进度。发布进度</summary>
+        public const String Progress = "Progress";
+
+        /// <summary>提交标识</summary>
+        public const String CommitId = "CommitId";
+
+        /// <summary>提交记录</summary>
+        public const String CommitLog = "CommitLog";
+
+        /// <summary>提交时间</summary>
+        public const String CommitTime = "CommitTime";
 
         /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
         public const String TraceId = "TraceId";

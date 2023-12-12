@@ -13,14 +13,14 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Deployment;
 
-/// <summary>应用部署。应用部署配置，单应用可有多个部署集合。新增版本并上传zip应用包，再到部署节点里发布</summary>
+/// <summary>应用部署。应用部署配置，单应用可有多个部署集合，例如分别是arm和x64。发布时新增版本，拉取代码编译并上传zip应用包，再到部署节点里发布</summary>
 [Serializable]
 [DataObject]
-[Description("应用部署。应用部署配置，单应用可有多个部署集合。新增版本并上传zip应用包，再到部署节点里发布")]
+[Description("应用部署。应用部署配置，单应用可有多个部署集合，例如分别是arm和x64。发布时新增版本，拉取代码编译并上传zip应用包，再到部署节点里发布")]
 [BindIndex("IU_AppDeploy_Name", true, "Name")]
 [BindIndex("IX_AppDeploy_ProjectId", false, "ProjectId")]
 [BindIndex("IX_AppDeploy_AppId", false, "AppId")]
-[BindTable("AppDeploy", Description = "应用部署。应用部署配置，单应用可有多个部署集合。新增版本并上传zip应用包，再到部署节点里发布", ConnName = "Stardust", DbType = DatabaseType.None)]
+[BindTable("AppDeploy", Description = "应用部署。应用部署配置，单应用可有多个部署集合，例如分别是arm和x64。发布时新增版本，拉取代码编译并上传zip应用包，再到部署节点里发布", ConnName = "Stardust", DbType = DatabaseType.None)]
 public partial class AppDeploy
 {
     #region 属性
@@ -88,60 +88,6 @@ public partial class AppDeploy
     [BindColumn("Version", "版本。应用正在使用的版本号", "")]
     public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
-    private String _FileName;
-    /// <summary>文件。应用启动文件，可直接使用zip包</summary>
-    [Category("参数")]
-    [DisplayName("文件")]
-    [Description("文件。应用启动文件，可直接使用zip包")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("FileName", "文件。应用启动文件，可直接使用zip包", "")]
-    public String FileName { get => _FileName; set { if (OnPropertyChanging("FileName", value)) { _FileName = value; OnPropertyChanged("FileName"); } } }
-
-    private String _Arguments;
-    /// <summary>参数。启动应用的参数</summary>
-    [Category("参数")]
-    [DisplayName("参数")]
-    [Description("参数。启动应用的参数")]
-    [DataObjectField(false, false, true, 500)]
-    [BindColumn("Arguments", "参数。启动应用的参数", "")]
-    public String Arguments { get => _Arguments; set { if (OnPropertyChanging("Arguments", value)) { _Arguments = value; OnPropertyChanged("Arguments"); } } }
-
-    private String _WorkingDirectory;
-    /// <summary>工作目录。应用根目录</summary>
-    [Category("参数")]
-    [DisplayName("工作目录")]
-    [Description("工作目录。应用根目录")]
-    [DataObjectField(false, false, true, 200)]
-    [BindColumn("WorkingDirectory", "工作目录。应用根目录", "")]
-    public String WorkingDirectory { get => _WorkingDirectory; set { if (OnPropertyChanging("WorkingDirectory", value)) { _WorkingDirectory = value; OnPropertyChanged("WorkingDirectory"); } } }
-
-    private String _UserName;
-    /// <summary>用户名。以该用户执行应用</summary>
-    [Category("参数")]
-    [DisplayName("用户名")]
-    [Description("用户名。以该用户执行应用")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("UserName", "用户名。以该用户执行应用", "")]
-    public String UserName { get => _UserName; set { if (OnPropertyChanging("UserName", value)) { _UserName = value; OnPropertyChanged("UserName"); } } }
-
-    private Int32 _MaxMemory;
-    /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
-    [Category("参数")]
-    [DisplayName("最大内存")]
-    [Description("最大内存。单位M，超过上限时自动重启应用，默认0不限制")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("MaxMemory", "最大内存。单位M，超过上限时自动重启应用，默认0不限制", "")]
-    public Int32 MaxMemory { get => _MaxMemory; set { if (OnPropertyChanging("MaxMemory", value)) { _MaxMemory = value; OnPropertyChanged("MaxMemory"); } } }
-
-    private Stardust.Models.ServiceModes _Mode;
-    /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</summary>
-    [Category("参数")]
-    [DisplayName("工作模式")]
-    [Description("工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("Mode", "工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip", "")]
-    public Stardust.Models.ServiceModes Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
-
     private Boolean _AutoPublish;
     /// <summary>自动发布。应用版本后自动发布到启用节点，加快发布速度</summary>
     [DisplayName("自动发布")]
@@ -157,6 +103,105 @@ public partial class AppDeploy
     [DataObjectField(false, false, true, 50)]
     [BindColumn("PackageName", "包名。用于判断上传包名是否正确，避免错误上传其它应用包，支持*模糊匹配", "")]
     public String PackageName { get => _PackageName; set { if (OnPropertyChanging("PackageName", value)) { _PackageName = value; OnPropertyChanged("PackageName"); } } }
+
+    private String _Repository;
+    /// <summary>代码库。下载代码的位置</summary>
+    [Category("编译参数")]
+    [DisplayName("代码库")]
+    [Description("代码库。下载代码的位置")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("Repository", "代码库。下载代码的位置", "", ItemType = "url")]
+    public String Repository { get => _Repository; set { if (OnPropertyChanging("Repository", value)) { _Repository = value; OnPropertyChanged("Repository"); } } }
+
+    private String _Branch;
+    /// <summary>分支。默认master</summary>
+    [Category("编译参数")]
+    [DisplayName("分支")]
+    [Description("分支。默认master")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("Branch", "分支。默认master", "", DefaultValue = "master")]
+    public String Branch { get => _Branch; set { if (OnPropertyChanging("Branch", value)) { _Branch = value; OnPropertyChanged("Branch"); } } }
+
+    private String _ProjectPath;
+    /// <summary>项目路径。需要编译的项目路径</summary>
+    [Category("编译参数")]
+    [DisplayName("项目路径")]
+    [Description("项目路径。需要编译的项目路径")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("ProjectPath", "项目路径。需要编译的项目路径", "")]
+    public String ProjectPath { get => _ProjectPath; set { if (OnPropertyChanging("ProjectPath", value)) { _ProjectPath = value; OnPropertyChanged("ProjectPath"); } } }
+
+    private Stardust.Models.ProjectKinds _ProjectKind;
+    /// <summary>项目类型。默认dotnet</summary>
+    [Category("编译参数")]
+    [DisplayName("项目类型")]
+    [Description("项目类型。默认dotnet")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("ProjectKind", "项目类型。默认dotnet", "", DefaultValue = "1")]
+    public Stardust.Models.ProjectKinds ProjectKind { get => _ProjectKind; set { if (OnPropertyChanging("ProjectKind", value)) { _ProjectKind = value; OnPropertyChanged("ProjectKind"); } } }
+
+    private String _PackageFilters;
+    /// <summary>打包过滤器。需要打包哪些文件，支持通配符，多项分号隔开</summary>
+    [Category("编译参数")]
+    [DisplayName("打包过滤器")]
+    [Description("打包过滤器。需要打包哪些文件，支持通配符，多项分号隔开")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("PackageFilters", "打包过滤器。需要打包哪些文件，支持通配符，多项分号隔开", "")]
+    public String PackageFilters { get => _PackageFilters; set { if (OnPropertyChanging("PackageFilters", value)) { _PackageFilters = value; OnPropertyChanged("PackageFilters"); } } }
+
+    private String _FileName;
+    /// <summary>文件。应用启动文件，可直接使用zip包</summary>
+    [Category("发布参数")]
+    [DisplayName("文件")]
+    [Description("文件。应用启动文件，可直接使用zip包")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("FileName", "文件。应用启动文件，可直接使用zip包", "")]
+    public String FileName { get => _FileName; set { if (OnPropertyChanging("FileName", value)) { _FileName = value; OnPropertyChanged("FileName"); } } }
+
+    private String _Arguments;
+    /// <summary>参数。启动应用的参数</summary>
+    [Category("发布参数")]
+    [DisplayName("参数")]
+    [Description("参数。启动应用的参数")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("Arguments", "参数。启动应用的参数", "")]
+    public String Arguments { get => _Arguments; set { if (OnPropertyChanging("Arguments", value)) { _Arguments = value; OnPropertyChanged("Arguments"); } } }
+
+    private String _WorkingDirectory;
+    /// <summary>工作目录。应用根目录</summary>
+    [Category("发布参数")]
+    [DisplayName("工作目录")]
+    [Description("工作目录。应用根目录")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("WorkingDirectory", "工作目录。应用根目录", "")]
+    public String WorkingDirectory { get => _WorkingDirectory; set { if (OnPropertyChanging("WorkingDirectory", value)) { _WorkingDirectory = value; OnPropertyChanged("WorkingDirectory"); } } }
+
+    private String _UserName;
+    /// <summary>用户名。以该用户执行应用</summary>
+    [Category("发布参数")]
+    [DisplayName("用户名")]
+    [Description("用户名。以该用户执行应用")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("UserName", "用户名。以该用户执行应用", "")]
+    public String UserName { get => _UserName; set { if (OnPropertyChanging("UserName", value)) { _UserName = value; OnPropertyChanged("UserName"); } } }
+
+    private Int32 _MaxMemory;
+    /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
+    [Category("发布参数")]
+    [DisplayName("最大内存")]
+    [Description("最大内存。单位M，超过上限时自动重启应用，默认0不限制")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("MaxMemory", "最大内存。单位M，超过上限时自动重启应用，默认0不限制", "")]
+    public Int32 MaxMemory { get => _MaxMemory; set { if (OnPropertyChanging("MaxMemory", value)) { _MaxMemory = value; OnPropertyChanged("MaxMemory"); } } }
+
+    private Stardust.Models.ServiceModes _Mode;
+    /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</summary>
+    [Category("发布参数")]
+    [DisplayName("工作模式")]
+    [Description("工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Mode", "工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip", "")]
+    public Stardust.Models.ServiceModes Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
 
     private Int32 _CreateUserId;
     /// <summary>创建者</summary>
@@ -238,14 +283,19 @@ public partial class AppDeploy
             "Enable" => _Enable,
             "Nodes" => _Nodes,
             "Version" => _Version,
+            "AutoPublish" => _AutoPublish,
+            "PackageName" => _PackageName,
+            "Repository" => _Repository,
+            "Branch" => _Branch,
+            "ProjectPath" => _ProjectPath,
+            "ProjectKind" => _ProjectKind,
+            "PackageFilters" => _PackageFilters,
             "FileName" => _FileName,
             "Arguments" => _Arguments,
             "WorkingDirectory" => _WorkingDirectory,
             "UserName" => _UserName,
             "MaxMemory" => _MaxMemory,
             "Mode" => _Mode,
-            "AutoPublish" => _AutoPublish,
-            "PackageName" => _PackageName,
             "CreateUserId" => _CreateUserId,
             "CreateTime" => _CreateTime,
             "CreateIP" => _CreateIP,
@@ -267,14 +317,19 @@ public partial class AppDeploy
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "Nodes": _Nodes = value.ToInt(); break;
                 case "Version": _Version = Convert.ToString(value); break;
+                case "AutoPublish": _AutoPublish = value.ToBoolean(); break;
+                case "PackageName": _PackageName = Convert.ToString(value); break;
+                case "Repository": _Repository = Convert.ToString(value); break;
+                case "Branch": _Branch = Convert.ToString(value); break;
+                case "ProjectPath": _ProjectPath = Convert.ToString(value); break;
+                case "ProjectKind": _ProjectKind = (Stardust.Models.ProjectKinds)value.ToInt(); break;
+                case "PackageFilters": _PackageFilters = Convert.ToString(value); break;
                 case "FileName": _FileName = Convert.ToString(value); break;
                 case "Arguments": _Arguments = Convert.ToString(value); break;
                 case "WorkingDirectory": _WorkingDirectory = Convert.ToString(value); break;
                 case "UserName": _UserName = Convert.ToString(value); break;
                 case "MaxMemory": _MaxMemory = value.ToInt(); break;
                 case "Mode": _Mode = (Stardust.Models.ServiceModes)value.ToInt(); break;
-                case "AutoPublish": _AutoPublish = value.ToBoolean(); break;
-                case "PackageName": _PackageName = Convert.ToString(value); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -327,6 +382,27 @@ public partial class AppDeploy
         /// <summary>版本。应用正在使用的版本号</summary>
         public static readonly Field Version = FindByName("Version");
 
+        /// <summary>自动发布。应用版本后自动发布到启用节点，加快发布速度</summary>
+        public static readonly Field AutoPublish = FindByName("AutoPublish");
+
+        /// <summary>包名。用于判断上传包名是否正确，避免错误上传其它应用包，支持*模糊匹配</summary>
+        public static readonly Field PackageName = FindByName("PackageName");
+
+        /// <summary>代码库。下载代码的位置</summary>
+        public static readonly Field Repository = FindByName("Repository");
+
+        /// <summary>分支。默认master</summary>
+        public static readonly Field Branch = FindByName("Branch");
+
+        /// <summary>项目路径。需要编译的项目路径</summary>
+        public static readonly Field ProjectPath = FindByName("ProjectPath");
+
+        /// <summary>项目类型。默认dotnet</summary>
+        public static readonly Field ProjectKind = FindByName("ProjectKind");
+
+        /// <summary>打包过滤器。需要打包哪些文件，支持通配符，多项分号隔开</summary>
+        public static readonly Field PackageFilters = FindByName("PackageFilters");
+
         /// <summary>文件。应用启动文件，可直接使用zip包</summary>
         public static readonly Field FileName = FindByName("FileName");
 
@@ -344,12 +420,6 @@ public partial class AppDeploy
 
         /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</summary>
         public static readonly Field Mode = FindByName("Mode");
-
-        /// <summary>自动发布。应用版本后自动发布到启用节点，加快发布速度</summary>
-        public static readonly Field AutoPublish = FindByName("AutoPublish");
-
-        /// <summary>包名。用于判断上传包名是否正确，避免错误上传其它应用包，支持*模糊匹配</summary>
-        public static readonly Field PackageName = FindByName("PackageName");
 
         /// <summary>创建者</summary>
         public static readonly Field CreateUserId = FindByName("CreateUserId");
@@ -402,6 +472,27 @@ public partial class AppDeploy
         /// <summary>版本。应用正在使用的版本号</summary>
         public const String Version = "Version";
 
+        /// <summary>自动发布。应用版本后自动发布到启用节点，加快发布速度</summary>
+        public const String AutoPublish = "AutoPublish";
+
+        /// <summary>包名。用于判断上传包名是否正确，避免错误上传其它应用包，支持*模糊匹配</summary>
+        public const String PackageName = "PackageName";
+
+        /// <summary>代码库。下载代码的位置</summary>
+        public const String Repository = "Repository";
+
+        /// <summary>分支。默认master</summary>
+        public const String Branch = "Branch";
+
+        /// <summary>项目路径。需要编译的项目路径</summary>
+        public const String ProjectPath = "ProjectPath";
+
+        /// <summary>项目类型。默认dotnet</summary>
+        public const String ProjectKind = "ProjectKind";
+
+        /// <summary>打包过滤器。需要打包哪些文件，支持通配符，多项分号隔开</summary>
+        public const String PackageFilters = "PackageFilters";
+
         /// <summary>文件。应用启动文件，可直接使用zip包</summary>
         public const String FileName = "FileName";
 
@@ -419,12 +510,6 @@ public partial class AppDeploy
 
         /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</summary>
         public const String Mode = "Mode";
-
-        /// <summary>自动发布。应用版本后自动发布到启用节点，加快发布速度</summary>
-        public const String AutoPublish = "AutoPublish";
-
-        /// <summary>包名。用于判断上传包名是否正确，避免错误上传其它应用包，支持*模糊匹配</summary>
-        public const String PackageName = "PackageName";
 
         /// <summary>创建者</summary>
         public const String CreateUserId = "CreateUserId";

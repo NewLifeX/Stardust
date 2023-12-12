@@ -13,14 +13,14 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Deployment;
 
-/// <summary>附件。用于记录各系统模块使用的文件，可以是Local/NAS/OSS等</summary>
+/// <summary>附件。用于记录各系统模块使用的文件，可以是Local/NAS/OSS等，对应魔方附件表</summary>
 [Serializable]
 [DataObject]
-[Description("附件。用于记录各系统模块使用的文件，可以是Local/NAS/OSS等")]
+[Description("附件。用于记录各系统模块使用的文件，可以是Local/NAS/OSS等，对应魔方附件表")]
 [BindIndex("IX_Attachment_Category_Key", false, "Category,Key")]
 [BindIndex("IX_Attachment_FilePath", false, "FilePath")]
 [BindIndex("IX_Attachment_Extension", false, "Extension")]
-[BindTable("Attachment", Description = "附件。用于记录各系统模块使用的文件，可以是Local/NAS/OSS等", ConnName = "Cube", DbType = DatabaseType.None)]
+[BindTable("Attachment", Description = "附件。用于记录各系统模块使用的文件，可以是Local/NAS/OSS等，对应魔方附件表", ConnName = "Cube", DbType = DatabaseType.None)]
 public partial class Attachment
 {
     #region 属性

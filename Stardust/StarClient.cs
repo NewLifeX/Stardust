@@ -214,8 +214,8 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             ProcessorCount = Environment.ProcessorCount,
             Memory = mi.Memory,
             AvailableMemory = mi.AvailableMemory,
-            TotalSize = (UInt64)driveInfo?.TotalSize,
-            AvailableFreeSpace = (UInt64)driveInfo?.AvailableFreeSpace,
+            TotalSize = (UInt64)(driveInfo?.TotalSize ?? 0),
+            AvailableFreeSpace = (UInt64)(driveInfo?.AvailableFreeSpace ?? 0),
             DriveSize = (UInt64)drives.Sum(e => e.TotalSize),
             DriveInfo = drives.Join(",", e => $"{e.Name}[{e.DriveFormat}]={e.AvailableFreeSpace.ToGMK()}/{e.TotalSize.ToGMK()}"),
 
@@ -244,6 +244,13 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         di.Framework ??= RuntimeInformation.FrameworkDescription?.TrimStart(".NET Framework", ".NET Core", ".NET Native", ".NET").Trim();
 
         di.Architecture = RuntimeInformation.ProcessArchitecture + "";
+
+        if (Runtime.Linux)
+        {
+            // 识别Alpine
+            var nr = new NetRuntime();
+            if (nr.IsAlpine() && !di.OSName.StartsWithIgnoreCase("Alpine")) di.OSName = $"{di.OSName}(Alpine)";
+        }
 #else
         var ver = "";
         var tar = asm.Asm.GetCustomAttribute<TargetFrameworkAttribute>();

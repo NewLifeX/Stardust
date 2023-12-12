@@ -1,7 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Security.Cryptography;
-using System.Threading;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
@@ -77,7 +75,7 @@ public class StarService : DisposeBase, IApi
     [Api(nameof(Info))]
     public AgentInfo Info(AgentInfo info)
     {
-        XTrace.WriteLine("Info<={0}", info.ToJson());
+        //XTrace.WriteLine("Info<={0}", info.ToJson());
 
         var set = StarSetting;
 

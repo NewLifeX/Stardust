@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
-using NewLife.Security;
 using NewLife.Web;
 using Stardust.Data.Monitors;
 using Stardust.Web.Models;
@@ -202,7 +201,7 @@ public class TraceController : ControllerBaseX
         // 指定追踪标识后，分页500
         if (!traceId.IsNullOrEmpty())
         {
-            if (p.PageSize == 20) p.PageSize = 1000;
+            if (p.PageSize == 20) p.PageSize = 10_000;
         }
         //if (p.Sort.IsNullOrEmpty()) p.OrderBy = SampleData._.Id.Desc();
 
