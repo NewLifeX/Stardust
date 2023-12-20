@@ -45,6 +45,9 @@ public enum OSKinds
     /// <summary>Win2019</summary>
     Win2019 = 69,
 
+    /// <summary>Win2022</summary>
+    Win2022 = 72,
+
     /// <summary>Win10, 10.0.10240</summary>
     Win10 = 10,
 
