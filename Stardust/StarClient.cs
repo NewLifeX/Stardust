@@ -375,11 +375,9 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         try
         {
             var rs = await LogoutAsync(reason);
-            if (rs != null)
-            {
-                // 更新令牌
-                Token = rs.Token;
-            }
+
+            // 更新令牌
+            Token = rs?.Token;
 
             StopTimer();
 
@@ -721,6 +719,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     private async Task DoPing(Object state)
     {
         DefaultSpan.Current = null;
+        using var span = Tracer?.NewSpan("NodePing");
         try
         {
             await Ping();
@@ -733,8 +732,13 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             {
                 var url = svc.Address.ToString().Replace("http://", "ws://").Replace("https://", "wss://");
                 var uri = new Uri(new Uri(url), "/node/notify");
+
+                using var span2 = Tracer?.NewSpan("WebSocketConnect", uri + "");
+
                 var client = new ClientWebSocket();
                 client.Options.SetRequestHeader("Authorization", "Bearer " + Token);
+
+                span?.AppendTag($"WebSocket.Connect {uri}");
                 await client.ConnectAsync(uri, default);
 
                 _websocket = client;
@@ -746,6 +750,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         }
         catch (Exception ex)
         {
+            span?.SetError(ex, null);
             Log?.Debug("{0}", ex);
         }
     }
@@ -771,6 +776,8 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         {
             Log?.Debug("{0}", ex);
         }
+
+        using var span = Tracer?.NewSpan("NodePull", socket.State + "");
 
         if (socket.State == WebSocketState.Open)
             await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);

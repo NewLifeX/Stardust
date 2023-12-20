@@ -435,6 +435,9 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
                 {
                     var url = svc.Address.ToString().Replace("http://", "ws://").Replace("https://", "wss://");
                     var uri = new Uri(new Uri(url), "/app/notify");
+
+                    using var span2 = Tracer?.NewSpan("WebSocketConnect", uri + "");
+
                     var client = new ClientWebSocket();
                     client.Options.SetRequestHeader("Authorization", "Bearer " + token);
 
@@ -477,6 +480,8 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         {
             Log?.Debug("{0}", ex);
         }
+
+        using var span = Tracer?.NewSpan("AppPull", socket.State + "");
 
         if (socket.State == WebSocketState.Open)
             await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
