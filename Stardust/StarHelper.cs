@@ -36,10 +36,10 @@ public static class StarHelper
             services.AddSingleton(star);
             services.AddSingleton(p => star.Tracer ?? DefaultTracer.Instance ?? (DefaultTracer.Instance ??= new DefaultTracer()));
             //services.AddSingleton(p => star.Config);
-            services.AddSingleton(p => star.Service);
+            services.AddSingleton(p => star.Service!);
 
             // 替换为混合配置提供者，优先本地配置
-            services.AddSingleton(p => star.GetConfig());
+            services.AddSingleton(p => star.GetConfig()!);
 
             // 分布式缓存
             //services.TryAddSingleton<ICacheProvider, CacheProvider>();
@@ -53,7 +53,7 @@ public static class StarHelper
     /// <summary>安全退出进程</summary>
     /// <param name="process"></param>
     /// <returns></returns>
-    public static Process SafetyKill(this Process process)
+    public static Process? SafetyKill(this Process process)
     {
         if (process == null || process.GetHasExited()) return process;
 

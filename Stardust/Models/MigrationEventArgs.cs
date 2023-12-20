@@ -6,5 +6,5 @@ namespace Stardust.Models;
 public class MigrationEventArgs : CancelEventArgs
 {
     /// <summary>新服务器</summary>
-    public String NewServer { get; set; }
+    public String? NewServer { get; set; }
 }

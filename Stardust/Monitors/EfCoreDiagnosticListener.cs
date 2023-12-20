@@ -66,7 +66,7 @@ public class EfCoreDiagnosticListener : TraceDiagnosticListener
                 }
             case "CommandExecuted":
                 {
-                    if (spanName.StartsWith("db:"))
+                    if (span != null && !spanName.IsNullOrEmpty() && spanName.StartsWith("db:"))
                     {
                         span.Dispose();
                     }
@@ -76,7 +76,7 @@ public class EfCoreDiagnosticListener : TraceDiagnosticListener
 
             case "CommandError":
                 {
-                    if (spanName.StartsWith("db:"))
+                    if (span != null && !spanName.IsNullOrEmpty() && spanName.StartsWith("db:"))
                     {
                         if (value.Value.GetValue("Exception") is Exception ex) span.SetError(ex, null);
 

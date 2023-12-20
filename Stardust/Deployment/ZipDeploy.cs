@@ -127,13 +127,15 @@ public class ZipDeploy
     /// <summary>执行拉起应用</summary>
     public Boolean Execute(Int32 msWait = 3_000)
     {
+        if (FileName.IsNullOrEmpty()) throw new ArgumentNullException(nameof(FileName));
+
         using var span = Tracer?.NewSpan("ZipDeploy-Execute", new { WorkingDirectory, FileName });
 
         var fi = WorkingDirectory.CombinePath(FileName)?.AsFile();
         if (fi == null || !fi.Exists)
         {
             //throw new Exception("未指定Zip文件");
-            WriteLog("未发现Zip文件 {0}", fi.FullName);
+            WriteLog("未发现Zip文件 {0}", fi?.FullName ?? FileName);
             return false;
         }
 
@@ -164,6 +166,7 @@ public class ZipDeploy
 
         var hash = fi.MD5().ToHex().Substring(0, 8).ToLower();
         var rundir = fi.Directory;
+        if (rundir == null) return false;
 
         WriteLog("ZipDeploy {0}", name);
         WriteLog("运行目录 {0}", rundir);
@@ -174,23 +177,27 @@ public class ZipDeploy
         WriteLog("影子目录 {0}", shadow);
 
         var hasExtracted = false;
-        if (!Directory.Exists(shadow))
+        var sdi = shadow.AsDirectory();
+        if (!sdi.Exists)
         {
             span?.AppendTag("ExtractShadow");
 
             // 删除其它版本
-            foreach (var di in shadow.AsDirectory().Parent.GetDirectories($"{Name}-*"))
+            if (sdi.Parent != null)
             {
-                span?.AppendTag($"删除旧版 {di.FullName}");
+                foreach (var di in sdi.Parent.GetDirectories($"{Name}-*"))
+                {
+                    span?.AppendTag($"删除旧版 {di.FullName}");
 
-                try
-                {
-                    di.Delete(true);
-                }
-                catch (Exception ex)
-                {
-                    //span?.SetError(ex, null);
-                    span?.AppendTag(ex.Message);
+                    try
+                    {
+                        di.Delete(true);
+                    }
+                    catch (Exception ex)
+                    {
+                        //span?.SetError(ex, null);
+                        span?.AppendTag(ex.Message);
+                    }
                 }
             }
 
@@ -219,7 +226,7 @@ public class ZipDeploy
         var si = new ProcessStartInfo
         {
             FileName = runfile.FullName,
-            Arguments = Arguments,
+            Arguments = Arguments ?? "",
             WorkingDirectory = rundir.FullName,
 
             // false时目前控制台合并到当前控制台，一起退出；
@@ -252,7 +259,7 @@ public class ZipDeploy
             if (Runtime.Linux)
             {
                 var user = UserName;
-                if (!user.Contains(':')) user = $"{user}:{user}";
+                if (!user.IsNullOrEmpty() && !user.Contains(':')) user = $"{user}:{user}";
                 //Process.Start("chown", $"-R {user} {si.WorkingDirectory}");
                 Process.Start("chown", $"-R {user} {shadow}");
                 Process.Start("chown", $"-R {user} {si.WorkingDirectory.CombinePath("../").GetBasePath()}");
@@ -273,6 +280,8 @@ public class ZipDeploy
             WriteLog("启动用户：{0}", si.UserName);
 
         var p = Process.Start(si);
+        if (p == null) return false;
+
         Process = p;
         if (msWait > 0 && p.WaitForExit(msWait) && p.ExitCode != 0)
         {
@@ -316,6 +325,8 @@ public class ZipDeploy
     /// <param name="shadow"></param>
     public virtual void Extract(String shadow)
     {
+        if (FileName.IsNullOrEmpty()) throw new ArgumentNullException(nameof(FileName));
+
         using var span = Tracer?.NewSpan("ZipDeploy-Extract", new { shadow, WorkingDirectory, Overwrite });
 
         var fi = WorkingDirectory.CombinePath(FileName).AsFile();
@@ -385,7 +396,7 @@ public class ZipDeploy
     /// <summary>查找执行文件</summary>
     /// <param name="shadow"></param>
     /// <returns></returns>
-    public virtual FileInfo FindExeFile(String shadow)
+    public virtual FileInfo? FindExeFile(String shadow)
     {
         using var span = Tracer?.NewSpan("ZipDeploy-FindExeFile", new { shadow });
 
@@ -448,11 +459,11 @@ public class ZipDeploy
 
     #region 日志
     /// <summary>日志</summary>
-    public ILog Log { get; set; }
+    public ILog Log { get; set; } = Logger.Null;
 
     /// <summary>写日志</summary>
     /// <param name="format"></param>
     /// <param name="args"></param>
-    public void WriteLog(String format, params Object[] args) => Log?.Info(format, args);
+    public void WriteLog(String format, params Object?[] args) => Log?.Info(format, args);
     #endregion
 }

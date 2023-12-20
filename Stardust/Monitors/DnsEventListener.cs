@@ -22,12 +22,12 @@ public class DnsEventListener : EventListenerBase
         if (eventData.EventName == "ResolutionStart")
         //if (eventData.Opcode == EventOpcode.Start)
         {
-            if (eventData.Payload.Count > 0)
+            if (eventData.Payload != null && eventData.Payload.Count > 0)
             {
                 var host = eventData.Payload[0] + "";
                 var ip = NetHelper.MyIP();
                 var span = Tracer?.NewSpan($"dns:{host}:from:{ip}");
-                Append(span, eventData);
+                if (span != null) Append(span, eventData);
             }
         }
         else if (eventData.EventName == "ResolutionStop")

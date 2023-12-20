@@ -10,9 +10,9 @@ namespace Stardust.Monitors;
 public class DiagnosticListenerObserver : IObserver<DiagnosticListener>
 {
     /// <summary>追踪器</summary>
-    public ITracer Tracer { get; set; }
+    public ITracer? Tracer { get; set; }
 
-    private readonly Dictionary<String, TraceDiagnosticListener> _listeners = new();
+    private readonly Dictionary<String, TraceDiagnosticListener> _listeners = [];
 
     private Int32 _inited;
     private void Init()
@@ -62,7 +62,7 @@ public class DiagnosticListenerObserver : IObserver<DiagnosticListener>
         XTrace.WriteLine("DiagnosticListener: {0}", value.Name);
 #endif
 
-        if (_listeners.TryGetValue(value.Name, out var listener)) value.Subscribe(listener);
+        if (_listeners.TryGetValue(value.Name, out var listener) && listener != null) value.Subscribe(listener);
     }
 }
 
@@ -71,19 +71,19 @@ public class TraceDiagnosticListener : IObserver<KeyValuePair<String, Object>>
 {
     #region 属性
     /// <summary>名称</summary>
-    public String Name { get; set; }
+    public String Name { get; set; } = null!;
 
     /// <summary>开始名称</summary>
-    public String StartName { get; set; }
+    public String? StartName { get; set; }
 
     /// <summary>结束名称</summary>
-    public String EndName { get; set; }
+    public String? EndName { get; set; }
 
     /// <summary>异常名称</summary>
-    public String ErrorName { get; set; }
+    public String? ErrorName { get; set; }
 
     /// <summary>追踪器</summary>
-    public ITracer Tracer { get; set; }
+    public ITracer? Tracer { get; set; }
     #endregion
 
     /// <summary>完成时</summary>
@@ -109,7 +109,7 @@ public class TraceDiagnosticListener : IObserver<KeyValuePair<String, Object>>
 
             if (start == value.Key)
             {
-                Tracer.NewSpan(activity.OperationName);
+                Tracer?.NewSpan(activity.OperationName);
             }
             else if (end == value.Key)
             {

@@ -14,7 +14,7 @@ public class ServiceManager : DisposeBase
 {
     #region 属性
     /// <summary>应用服务集合</summary>
-    public ServiceInfo[] Services { get; private set; }
+    public ServiceInfo[]? Services { get; private set; }
 
     /// <summary>延迟时间。重启进程或服务的延迟时间，默认3000ms</summary>
     public Int32 Delay { get; set; } = 3000;
@@ -23,15 +23,15 @@ public class ServiceManager : DisposeBase
     //public String Server { get; set; }
 
     /// <summary>服务改变事件</summary>
-    public event EventHandler ServiceChanged;
+    public event EventHandler? ServiceChanged;
 
     ///// <summary>事件客户端</summary>
     //public IEventProvider EventProvider { get; set; }
 
     /// <summary>正在运行的应用服务信息</summary>
-    private readonly List<ServiceController> _controllers = new();
-    private CsvDb<ProcessInfo> _db;
-    private StarClient _client;
+    private readonly List<ServiceController> _controllers = [];
+    private CsvDb<ProcessInfo>? _db;
+    private StarClient? _client;
     #endregion
 
     #region 构造
@@ -54,7 +54,7 @@ public class ServiceManager : DisposeBase
     public Int32 Add(params ServiceInfo[] services)
     {
         var count = 0;
-        var list = Services.ToList();
+        var list = Services?.ToList() ?? [];
         foreach (var item in services)
         {
             if (item.Name.IsNullOrEmpty()) continue;
@@ -94,8 +94,8 @@ public class ServiceManager : DisposeBase
         if (serviceName.IsNullOrEmpty()) return 0;
 
         var count = 0;
-        var list = Services.ToList();
-        for (var i = Services.Length - 1; i >= 0; i--)
+        var list = Services?.ToList() ?? [];
+        for (var i = list.Count - 1; i >= 0; i--)
         {
             var item = list[i];
             if (item.Name.EqualIgnoreCase(serviceName))
@@ -125,7 +125,7 @@ public class ServiceManager : DisposeBase
         WriteLog("启动应用服务管理");
 
         var data = Setting.Current.DataPath;
-        var db = new CsvDb<ProcessInfo>((x, y) => x.Name == y.Name) { FileName = data.CombinePath("Service.csv") };
+        var db = new CsvDb<ProcessInfo>((x, y) => x?.Name == y?.Name) { FileName = data.CombinePath("Service.csv") };
         db.Remove(e => e.UpdateTime.AddDays(1) < DateTime.Now);
         _db = db;
 
@@ -182,8 +182,10 @@ public class ServiceManager : DisposeBase
     {
         Start();
 
-        var changed = false;
         var svcs = Services;
+        if (svcs == null) return;
+
+        var changed = false;
         foreach (var item in svcs)
         {
             if (item != null && item.Enable)
@@ -328,7 +330,7 @@ public class ServiceManager : DisposeBase
             foreach (var item in services)
             {
                 // 如果新服务在原列表里不存在，或者数值不同，则认为有改变
-                var s = svcs.FirstOrDefault(e => e.Name == item.Name);
+                var s = svcs?.FirstOrDefault(e => e.Name == item.Name);
                 if (s == null || s != item && s.ToJson() != item.ToJson())
                 {
                     flag = true;
@@ -355,6 +357,7 @@ public class ServiceManager : DisposeBase
     private async Task UploadService(ServiceInfo[] svcs)
     {
         if (svcs == null) return;
+        if (_client == null) return;
 
         svcs = svcs.Where(e => !e.Name.IsNullOrEmpty()).ToArray();
         if (svcs.Length == 0) return;
@@ -365,20 +368,24 @@ public class ServiceManager : DisposeBase
         await _client.UploadDeploy(svcs);
     }
 
-    private async Task<DeployInfo[]> PullService(String? appName)
+    private async Task<DeployInfo[]?> PullService(String? appName)
     {
+        if (Services == null) return null;
+        if (_client == null) return null;
+
         using var span = Tracer?.NewSpan(nameof(PullService), appName);
         WriteLog("拉取应用服务 {0}", appName);
 
         var svcs = Services.ToList();
 
         var rs = await _client.GetDeploy();
+        if (rs == null) return null;
 
         // 过滤应用
         if (!appName.IsNullOrEmpty()) rs = rs.Where(e => e.Name.EqualIgnoreCase(appName)).ToArray();
 
         WriteLog("取得应用服务：{0}", rs.Join(",", e => e.Name));
-        WriteLog("可用：{0}", rs.Where(e => e.Service.Enable).Join(",", e => e.Name));
+        WriteLog("可用：{0}", rs.Where(e => e.Service != null && e.Service.Enable).Join(",", e => e.Name));
         if (rs.Length > 0) WriteLog(rs.ToJson(true));
 
         // 旧版服务
@@ -388,18 +395,18 @@ public class ServiceManager : DisposeBase
         foreach (var item in rs)
         {
             var svc = item.Service;
-            if (svc.Name.IsNullOrEmpty()) continue;
+            if (svc == null || svc.Name.IsNullOrEmpty()) continue;
 
             // 下载文件到工作目录
             Fix(svc);
-            if (item.Service.Enable && !item.Url.IsNullOrEmpty()) await Download(item, svc);
+            if (svc.Enable && !item.Url.IsNullOrEmpty()) await Download(item, svc);
 
             var old = svcs.FirstOrDefault(e => e.Name.EqualIgnoreCase(item.Name));
             if (old == null)
             {
-                WriteLog("新增[{0}]：Enable={1}", item.Name, item.Service.Enable);
+                WriteLog("新增[{0}]：Enable={1}", item.Name, svc.Enable);
 
-                old = item.Service;
+                old = svc;
                 //svc.ReloadOnChange = true;
 
                 svcs.Add(old);
@@ -484,7 +491,7 @@ public class ServiceManager : DisposeBase
         }
         if (flag)
         {
-            url = _client.BuildUrl(url);
+            if (_client != null) url = _client.BuildUrl(url);
 
             WriteLog("下载[{0}]：{1} {2}", svc.Name, info.Version, url);
 
@@ -527,13 +534,15 @@ public class ServiceManager : DisposeBase
 
     Int32 _status;
     Boolean _busy;
-    private TimerX _timer;
+    private TimerX? _timer;
     private async Task DoWork(Object state)
     {
         // 如果其它任务正在使用管理器，则跳过这一次检查
         if (_busy) return;
 
         var svcs = Services;
+        if (svcs == null) return;
+
         using var span = Tracer?.NewSpan("ServiceManager-DoWork", svcs.Length);
 
         // 应用服务的上报和拉取
@@ -565,7 +574,7 @@ public class ServiceManager : DisposeBase
 
         // 检查应用服务变化，先停止再启动
         var changed = false;
-        svcs = Services;
+        svcs = Services ?? [];
 
         // 停止不再使用的服务
         var controllers = _controllers;
@@ -579,7 +588,7 @@ public class ServiceManager : DisposeBase
                 controllers.RemoveAt(i);
                 changed = true;
             }
-            else if (controller.Running && service.ToJson() != controller.Info.ToJson())
+            else if (controller.Running && controller.Info != null && service.ToJson() != controller.Info.ToJson())
             {
                 // 启动成功的短时间内，不认可配置改变，因为可能就是这一次发布的配置变化
                 if (controller.StartTime.Year > 2000 && controller.StartTime.AddSeconds(5) < DateTime.Now)
@@ -627,7 +636,7 @@ public class ServiceManager : DisposeBase
     /// <summary>安装服务，添加后启动</summary>
     /// <param name="service"></param>
     /// <returns></returns>
-    public ProcessInfo Install(ServiceInfo service)
+    public ProcessInfo? Install(ServiceInfo service)
     {
         using var span = Tracer?.NewSpan("ServiceManager-Install", service);
 
@@ -651,7 +660,7 @@ public class ServiceManager : DisposeBase
     {
         using var span = Tracer?.NewSpan("ServiceManager-Uninstall", new { name, reason });
 
-        var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
+        var svc = Services?.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
         if (svc == null) return false;
 
         // 设置繁忙，避免同步进行健康检查
@@ -692,8 +701,10 @@ public class ServiceManager : DisposeBase
     {
         using var span = Tracer?.NewSpan("ServiceManager-DoControl", cmd);
 
-        var my = cmd.Argument.ToJsonEntity<MyApp>();
-        var serviceName = my.AppName;
+        var my = cmd.Argument?.ToJsonEntity<MyApp>();
+        var serviceName = my?.AppName;
+        if (my == null || serviceName.IsNullOrEmpty())
+            return new CommandReplyModel { Status = CommandStatus.错误, Data = "参数错误" };
 
         WriteLog("{0} Id={1} Name={2}", cmd.Command, my.Id, serviceName);
 
@@ -718,7 +729,7 @@ public class ServiceManager : DisposeBase
     {
         public Int32 Id { get; set; }
 
-        public String AppName { get; set; }
+        public String? AppName { get; set; }
     }
 
     Boolean OnInstall(String serviceName, CommandModel cmd)
@@ -752,8 +763,8 @@ public class ServiceManager : DisposeBase
     {
         using var span = Tracer?.NewSpan("ServiceManager-Start", cmd);
 
-        var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
-        if (svc == null) throw new Exception($"无法找到服务[{serviceName}]");
+        var svc = (Services?.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName)))
+            ?? throw new Exception($"无法找到服务[{serviceName}]");
 
         var changed = false;
         svc.Enable = true;
@@ -768,8 +779,8 @@ public class ServiceManager : DisposeBase
     {
         using var span = Tracer?.NewSpan("ServiceManager-Stop", cmd);
 
-        var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
-        if (svc == null) throw new Exception($"无法找到服务[{serviceName}]");
+        var svc = (Services?.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName)))
+            ?? throw new Exception($"无法找到服务[{serviceName}]");
 
         var changed = false;
         svc.Enable = false;
@@ -784,8 +795,8 @@ public class ServiceManager : DisposeBase
     {
         using var span = Tracer?.NewSpan("ServiceManager-Restart", cmd);
 
-        var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
-        if (svc == null) throw new Exception($"无法找到服务[{serviceName}]");
+        var svc = (Services?.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName)))
+            ?? throw new Exception($"无法找到服务[{serviceName}]");
 
         var changed = false;
         svc.Enable = false;
@@ -803,8 +814,8 @@ public class ServiceManager : DisposeBase
     {
         using var span = Tracer?.NewSpan("ServiceManager-Uninstall", cmd);
 
-        var svc = Services.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
-        if (svc == null) throw new Exception($"无法找到服务[{serviceName}]");
+        var svc = (Services?.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName)))
+            ?? throw new Exception($"无法找到服务[{serviceName}]");
 
         var changed = false;
         svc.Enable = false;
@@ -820,10 +831,10 @@ public class ServiceManager : DisposeBase
 
     #region 日志
     /// <summary>性能追踪</summary>
-    public ITracer Tracer { get; set; }
+    public ITracer? Tracer { get; set; }
 
     /// <summary>日志</summary>
-    public ILog Log { get; set; }
+    public ILog Log { get; set; } = Logger.Null;
 
     /// <summary>写日志</summary>
     /// <param name="format"></param>

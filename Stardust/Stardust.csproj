@@ -72,6 +72,7 @@
     <Compile Remove="Registry\RegistryClient.cs" />
     <Compile Remove="RpcClient.cs" />
     <Compile Remove="RpcServer.cs" />
+    <Compile Remove="Services\CacheService.cs" />
   </ItemGroup>
 
   <ItemGroup>

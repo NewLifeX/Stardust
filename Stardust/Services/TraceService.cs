@@ -13,7 +13,7 @@ public class TraceService
         client.RegisterCommand("抓日志", DoGetLog);
     }
 
-    private String DoCapture(String command)
+    private String? DoCapture(String? command)
     {
 #if NET40_OR_GREATER || WINDOWS
         // 获取dpi，需要 app.manifest 打开感知dpi
@@ -21,6 +21,8 @@ public class TraceService
         //var factor = sys.DpiX / 96;
 
         var screen = System.Windows.Forms.Screen.PrimaryScreen;
+        if (screen == null) return null;
+
         var w = screen.Bounds.Width;
         var h = screen.Bounds.Height;
         //var w = (Int32)(screen.Bounds.Width * factor);
@@ -43,7 +45,7 @@ public class TraceService
 #endif
     }
 
-    private String DoGetLog(String arg)
+    private String? DoGetLog(String? arg)
     {
         var logPath = XTrace.LogPath.CombinePath($"{DateTime.Now:yyyy_MM_dd}.log").GetBasePath();
 

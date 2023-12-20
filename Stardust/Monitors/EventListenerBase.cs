@@ -11,7 +11,7 @@ public abstract class EventListenerBase : EventListener
     public String Name { get; set; }
 
     /// <summary>追踪器</summary>
-    public ITracer Tracer { get; set; }
+    public ITracer? Tracer { get; set; }
 
     /// <summary>实例化</summary>
     /// <param name="name"></param>
@@ -54,8 +54,9 @@ public abstract class EventListenerBase : EventListener
     protected static void Append(ISpan span, EventWrittenEventArgs eventData)
     {
         if (span == null) return;
+        if (eventData.PayloadNames == null || eventData.Payload == null) return;
 
-        var dic = new Dictionary<String, Object>();
+        var dic = new Dictionary<String, Object?>();
         for (var i = 0; i < eventData.PayloadNames.Count && i < eventData.Payload.Count; i++)
         {
             dic[eventData.PayloadNames[i] + ""] = eventData.Payload[i];

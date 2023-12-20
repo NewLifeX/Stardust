@@ -26,7 +26,7 @@ public static class CommandClientHelper
     /// <param name="command"></param>
     /// <param name="method"></param>
     /// <exception cref="ArgumentNullException"></exception>
-    public static void RegisterCommand(this ICommandClient client, String command, Func<String, String> method)
+    public static void RegisterCommand(this ICommandClient client, String command, Func<String?, String?> method)
     {
         if (command.IsNullOrEmpty()) command = method.Method.Name;
 
@@ -40,7 +40,7 @@ public static class CommandClientHelper
     /// <param name="command"></param>
     /// <param name="method"></param>
     /// <exception cref="ArgumentNullException"></exception>
-    public static void RegisterCommand(this ICommandClient client, String command, Func<String, Task<String>> method)
+    public static void RegisterCommand(this ICommandClient client, String command, Func<String?, Task<String?>> method)
     {
         if (command.IsNullOrEmpty()) command = method.Method.Name;
 
@@ -131,20 +131,20 @@ public static class CommandClientHelper
     /// <summary>分发执行服务</summary>
     /// <param name="client">命令客户端</param>
     /// <param name="model"></param>
-    private static async Task<Object> OnCommand(ICommandClient client, CommandModel model)
+    private static async Task<Object?> OnCommand(ICommandClient client, CommandModel model)
     {
         //WriteLog("OnCommand {0}", model.ToJson());
 
         if (!client.Commands.TryGetValue(model.Command, out var d)) throw new ApiException(400, $"找不到服务[{model.Command}]");
 
-        if (d is Func<String, Task<String>> func1) return await func1(model.Argument);
+        if (d is Func<String?, Task<String?>> func1) return await func1(model.Argument);
         //if (d is Func<String, Task<Object>> func2) return await func2(model.Argument);
         if (d is Func<CommandModel, Task<CommandReplyModel>> func3) return await func3(model);
 
         if (d is Action<CommandModel> func21) func21(model);
 
         if (d is Func<CommandModel, CommandReplyModel> func31) return func31(model);
-        if (d is Func<String, String> func32) return func32(model.Argument);
+        if (d is Func<String?, String?> func32) return func32(model.Argument);
         //if (d is Func<String, Object> func33) return func33(model.Argument);
 
         return null;

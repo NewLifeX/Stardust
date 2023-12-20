@@ -23,7 +23,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
 {
     #region 属性
     /// <summary>应用</summary>
-    public String AppId { get; set; }
+    public String AppId { get; set; } = null!;
 
     /// <summary>应用名</summary>
     public String? AppName { get; set; }
@@ -45,14 +45,14 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     public Int32 WatchdogTimeout { get; set; }
 
     /// <summary>星尘工厂</summary>
-    public StarFactory Factory { get; set; }
+    public StarFactory? Factory { get; set; }
 
     private ConcurrentDictionary<String, Delegate> _commands = new(StringComparer.OrdinalIgnoreCase);
     /// <summary>命令集合</summary>
     public IDictionary<String, Delegate> Commands => _commands;
 
     /// <summary>收到命令时触发</summary>
-    public event EventHandler<CommandEventArgs> Received;
+    public event EventHandler<CommandEventArgs>? Received;
 
     /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认120</summary>
     public Int32 MaxFails { get; set; } = 120;
@@ -266,7 +266,6 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     }
 
     /// <summary>向本地StarAgent发送心跳</summary>
-    /// <param name="appInfo"></param>
     /// <returns></returns>
     public async Task<Object?> PingLocal()
     {
@@ -289,8 +288,8 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     #region 上报
     private readonly ConcurrentQueue<EventModel> _events = new();
     private readonly ConcurrentQueue<EventModel> _failEvents = new();
-    private TimerX _eventTimer;
-    private String _eventTraceId;
+    private TimerX? _eventTimer;
+    private String? _eventTraceId;
 
     /// <summary>批量上报事件</summary>
     /// <param name="events"></param>
@@ -319,7 +318,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             while (_events.TryDequeue(out var model) && max-- > 0) list.Add(model);
 
             using var span = Tracer?.NewSpan("PostEvent", list.Count);
-            span?.Detach(tid);
+            if (!tid.IsNullOrEmpty()) span?.Detach(tid);
             try
             {
                 if (list.Count > 0) await PostEvents(list.ToArray());
@@ -347,7 +346,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     /// <param name="type"></param>
     /// <param name="name"></param>
     /// <param name="remark"></param>
-    public virtual Boolean WriteEvent(String type, String name, String remark)
+    public virtual Boolean WriteEvent(String type, String name, String? remark)
     {
         // 记录追踪标识，上报的时候带上，尽可能让源头和下游串联起来
         _eventTraceId = DefaultSpan.Current?.ToString();
@@ -493,7 +492,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
 
         // 埋点，建立调用链
         using var span = Tracer?.NewSpan("cmd:" + model.Command, model);
-        span?.Detach(model.TraceId);
+        if (!model.TraceId.IsNullOrEmpty()) span?.Detach(model.TraceId);
         try
         {
             //todo 有效期判断可能有隐患，现在只是假设服务器和客户端在同一个时区，如果不同，可能会出现问题
@@ -560,7 +559,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     /// <summary>发布服务（底层）。定时反复执行，让服务端更新注册信息</summary>
     /// <param name="service">应用服务</param>
     /// <returns></returns>
-    public async Task<ServiceModel> RegisterAsync(PublishServiceInfo service)
+    public async Task<ServiceModel?> RegisterAsync(PublishServiceInfo service)
     {
         AddService(service);
 
@@ -573,7 +572,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     /// <summary>取消服务（底层）</summary>
     /// <param name="service">应用服务</param>
     /// <returns></returns>
-    public async Task<ServiceModel> UnregisterAsync(PublishServiceInfo service)
+    public async Task<ServiceModel?> UnregisterAsync(PublishServiceInfo service)
     {
         _publishServices.TryRemove(service.ServiceName, out _);
 
@@ -638,7 +637,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         service.Health = health;
 
         var rs = await RegisterAsync(service);
-        WriteLog("注册完成 {0}", rs.ToJson());
+        WriteLog("注册完成 {0}", rs?.ToJson());
 
         return service;
     }
@@ -667,7 +666,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     /// <summary>取消服务</summary>
     /// <param name="serviceName">服务名</param>
     /// <returns></returns>
-    public PublishServiceInfo Unregister(String serviceName)
+    public PublishServiceInfo? Unregister(String serviceName)
     {
         if (!_publishServices.TryGetValue(serviceName, out var service)) return null;
         if (service == null) return null;
@@ -681,14 +680,14 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     /// <summary>消费服务（底层）</summary>
     /// <param name="service">应用服务</param>
     /// <returns></returns>
-    public async Task<ServiceModel[]> ResolveAsync(ConsumeServiceInfo service) => await PostAsync<ServiceModel[]>("App/ResolveService", service);
+    public async Task<ServiceModel[]?> ResolveAsync(ConsumeServiceInfo service) => await PostAsync<ServiceModel[]>("App/ResolveService", service);
 
     /// <summary>消费得到服务地址信息</summary>
     /// <param name="serviceName">服务名</param>
     /// <param name="minVersion">最小版本</param>
     /// <param name="tag">特性标签。只要包含该特性的服务提供者</param>
     /// <returns></returns>
-    public async Task<ServiceModel[]> ResolveAsync(String serviceName, String? minVersion = null, String? tag = null)
+    public async Task<ServiceModel[]?> ResolveAsync(String serviceName, String? minVersion = null, String? tag = null)
     {
         var service = new ConsumeServiceInfo
         {
@@ -787,7 +786,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         }
     }
 
-    IDictionary<String, ServiceModel[]> LoadConsumeServicese()
+    IDictionary<String, ServiceModel[]>? LoadConsumeServicese()
     {
         var file = NewLife.Setting.Current.DataPath.CombinePath("star_services.json").GetBasePath();
         if (!File.Exists(file)) return null;
@@ -823,7 +822,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         client.RegisterCommand("registry/unregister", DoRefresh);
     }
 
-    private async Task<String> DoRefresh(String argument)
+    private async Task<String?> DoRefresh(String? argument)
     {
         await RefreshConsume();
 
@@ -855,7 +854,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             }
         }
 
-        if (count > 0) _timer.SetNext(-1);
+        if (count > 0 && _timer != null) _timer.SetNext(-1);
 
         set.ServiceAddress = serverAddress;
         set.Save();
@@ -866,7 +865,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     /// </summary>
     /// <param name="address"></param>
     /// <returns></returns>
-    public static Boolean IsLocal(String address)
+    public static Boolean IsLocal(String? address)
     {
         if (address.IsNullOrEmpty()) return false;
 

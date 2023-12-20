@@ -42,10 +42,10 @@ public class StarTracer : DefaultTracer
     /// <summary>性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息</summary>
     public Boolean EnableMeter { get; set; } = true;
 
-    private readonly String _version;
+    private readonly String? _version;
     private readonly Process _process = Process.GetCurrentProcess();
     private readonly ConcurrentQueue<TraceModel> _fails = new();
-    private AppInfo _appInfo;
+    private AppInfo? _appInfo;
     #endregion
 
     #region 构造
@@ -121,6 +121,9 @@ public class StarTracer : DefaultTracer
         // 初始化
         Init();
 
+        var client = Client;
+        if (client == null) return;
+
         // 构建应用信息
         if (EnableMeter)
         {
@@ -146,8 +149,8 @@ public class StarTracer : DefaultTracer
             // 数据过大时，以压缩格式上传
             var body = model.ToJson();
             var rs = body.Length > 1024 ?
-                 Client.Invoke<TraceResponse>("Trace/ReportRaw", body.GetBytes()) :
-                 Client.Invoke<TraceResponse>("Trace/Report", model);
+                 client.Invoke<TraceResponse>("Trace/ReportRaw", body.GetBytes()) :
+                 client.Invoke<TraceResponse>("Trace/Report", model);
             // 处理响应参数
             if (rs != null)
             {
@@ -205,7 +208,7 @@ public class StarTracer : DefaultTracer
                         builder.ErrorSamples = null;
                     }
                 }
-                model.Info = model.Info.Clone();
+                model.Info = model.Info?.Clone();
                 _fails.Enqueue(model);
             }
 
@@ -218,7 +221,7 @@ public class StarTracer : DefaultTracer
             //model = _fails.Dequeue();
             try
             {
-                Client.Invoke<Object>("Trace/Report", model);
+                client.Invoke<Object>("Trace/Report", model);
             }
             catch (ApiException ex)
             {
@@ -226,7 +229,7 @@ public class StarTracer : DefaultTracer
             }
             catch (Exception ex)
             {
-                Log?.Info("二次上报失败，放弃该批次采样数据，{0}", model.Builders.FirstOrDefault()?.StartTime.ToDateTime());
+                Log?.Info("二次上报失败，放弃该批次采样数据，{0}", model.Builders?.FirstOrDefault()?.StartTime.ToDateTime());
                 //if (Log != null && Log.Level <= LogLevel.Debug) Log?.Error(ex + "");
                 Log?.Debug("{0}", ex);
 

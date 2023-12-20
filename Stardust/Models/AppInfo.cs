@@ -205,7 +205,7 @@ public class AppInfo
         //    GCPause = GCPause,
         //    FullGC = FullGC,
         //};
-        var inf = base.MemberwiseClone() as AppInfo;
+        var inf = (base.MemberwiseClone() as AppInfo)!;
 
         return inf;
     }

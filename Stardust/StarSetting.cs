@@ -18,11 +18,11 @@ public class StarSetting : Config<StarSetting>
 
     /// <summary>应用标识</summary>
     [Description("应用标识")]
-    public String AppKey { get; set; }
+    public String? AppKey { get; set; }
 
     /// <summary>应用密钥</summary>
     [Description("应用密钥")]
-    public String Secret { get; set; }
+    public String? Secret { get; set; }
 
     ///// <summary>服务地址。人工设定，用于提交注册中心，默认为空，自动识别外部访问地址</summary>
     //[Description("服务地址。人工设定，用于提交注册中心，默认为空，自动识别外部访问地址")]

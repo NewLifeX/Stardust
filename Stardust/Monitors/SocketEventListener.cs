@@ -21,7 +21,7 @@ public class SocketEventListener : EventListenerBase
 #endif
         if (eventData.EventName == "ConnectStart")
         {
-            if (eventData.Payload.Count > 0)
+            if (eventData.Payload != null && eventData.Payload.Count > 0)
             {
                 var host = eventData.Payload[0] + "";
 
@@ -52,7 +52,7 @@ public class SocketEventListener : EventListenerBase
                     catch { }
                 }
                 var span = Tracer?.NewSpan($"socket:{host}");
-                Append(span, eventData);
+                if (span != null) Append(span, eventData);
             }
         }
         else if (eventData.EventName == "ConnectStop")

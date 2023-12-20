@@ -7,7 +7,7 @@ namespace Stardust.Monitors;
 /// <summary>Http诊断监听器</summary>
 public class HttpDiagnosticListener : TraceDiagnosticListener
 {
-    private static HttpRequestOptionsKey<ISpan> _spanKey = new("Star-Http-Span");
+    private static HttpRequestOptionsKey<ISpan?> _spanKey = new("Star-Http-Span");
 
     /// <summary>实例化</summary>
     public HttpDiagnosticListener() => Name = "HttpHandlerDiagnosticListener";
@@ -37,7 +37,7 @@ public class HttpDiagnosticListener : TraceDiagnosticListener
             case "System.Net.Http.Exception":
                 {
                     if (value.Value.GetValue("Request") is HttpRequestMessage request &&
-                        request.Options.TryGetValue(_spanKey, out var span))
+                        request.Options.TryGetValue(_spanKey, out var span) && span != null)
                     {
                         if (value.Value.GetValue("Exception") is Exception ex)
                         {
@@ -51,7 +51,7 @@ public class HttpDiagnosticListener : TraceDiagnosticListener
             case "System.Net.Http.HttpRequestOut.Stop":
                 {
                     if (value.Value.GetValue("Request") is HttpRequestMessage request &&
-                        request.Options.TryGetValue(_spanKey, out var span))
+                        request.Options.TryGetValue(_spanKey, out var span) && span != null)
                     {
                         if (value.Value.GetValue("Response") is HttpResponseMessage response)
                         {

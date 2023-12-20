@@ -1,4 +1,5 @@
 ﻿#if NET5_0_OR_GREATER
+using NewLife;
 using NewLife.Log;
 using NewLife.Reflection;
 
@@ -38,7 +39,7 @@ public class MongoDbDiagnosticListener : TraceDiagnosticListener
                 break;
 
             case "CommandEnd":
-                if (spanName.StartsWith("mongo:"))
+                if (span != null && !spanName.IsNullOrEmpty() && spanName.StartsWith("mongo:"))
                 {
                     span.Dispose();
                 }
@@ -46,7 +47,7 @@ public class MongoDbDiagnosticListener : TraceDiagnosticListener
                 break;
 
             case "CommandFail":
-                if (spanName.StartsWith("mongo:"))
+                if (span != null && !spanName.IsNullOrEmpty() && spanName.StartsWith("mongo:"))
                 {
                     if (value.Value.GetValue("Exception") is Exception ex) span.SetError(ex, null);
 

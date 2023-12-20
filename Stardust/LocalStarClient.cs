@@ -43,9 +43,7 @@ public class LocalStarClient
     #endregion
 
     #region 方法
-#if !NET40
     [MemberNotNull(nameof(_client))]
-#endif
     private void Init()
     {
         if (_client != null) return;
@@ -316,7 +314,7 @@ public class LocalStarClient
         {
             var si = new ProcessStartInfo(fileName, "-run")
             {
-                WorkingDirectory = Path.GetDirectoryName(fileName),
+                WorkingDirectory = Path.GetDirectoryName(fileName) ?? "",
                 //UseShellExecute = true
             };
             var p = Process.Start(si);
@@ -349,7 +347,7 @@ public class LocalStarClient
         {
             var si = new ProcessStartInfo(fileName, "-run")
             {
-                WorkingDirectory = Path.GetDirectoryName(fileName),
+                WorkingDirectory = Path.GetDirectoryName(fileName) ?? "",
                 //UseShellExecute = true
             };
             var p = Process.Start(si);
@@ -378,7 +376,7 @@ public class LocalStarClient
         {
             var si = new ProcessStartInfo("dotnet", $"{fileName} -run")
             {
-                WorkingDirectory = Path.GetDirectoryName(fileName),
+                WorkingDirectory = Path.GetDirectoryName(fileName) ?? "",
                 //UseShellExecute = true
             };
             var p = Process.Start(si);
@@ -451,7 +449,7 @@ public class LocalStarClient
     /// <param name="local">本地信息，用于告知对方我是谁</param>
     /// <param name="timeout"></param>
     /// <returns></returns>
-    public static IEnumerable<AgentInfo> Scan(AgentInfo? local = null, Int32 timeout = 15_000)
+    public static IEnumerable<AgentInfo?> Scan(AgentInfo? local = null, Int32 timeout = 15_000)
     {
         var encoder = new JsonEncoder { Log = XTrace.Log };
         // 构造请求消息
@@ -488,7 +486,7 @@ public class LocalStarClient
                     var js = encoder.DecodeResult(msg.Action, msg.Data, rs);
                     var info = (AgentInfo)encoder.Convert(js, typeof(AgentInfo));
 #else
-                    var info = (AgentInfo)encoder.DecodeResult(msg.Action, msg.Data, rs, typeof(AgentInfo));
+                    var info = (AgentInfo?)encoder.DecodeResult(msg.Action, msg.Data, rs, typeof(AgentInfo));
 #endif
 
                     yield return info;

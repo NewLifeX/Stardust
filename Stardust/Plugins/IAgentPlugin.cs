@@ -19,14 +19,14 @@ public interface IAgentPlugin : IPlugin
 public abstract class AgentPlugin : DisposeBase, IAgentPlugin
 {
     /// <summary>服务提供者</summary>
-    public IServiceProvider Provider { get; set; }
+    public IServiceProvider? Provider { get; set; }
 
     /// <summary>初始化插件</summary>
     /// <param name="identity"></param>
     /// <param name="provider"></param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public virtual Boolean Init(String identity, IServiceProvider provider)
+    public virtual Boolean Init(String? identity, IServiceProvider provider)
     {
         if (identity != "StarAgent") return false;
 

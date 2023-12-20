@@ -60,7 +60,7 @@ public class StarFactory : DisposeBase
     public ConfigInfo? ConfigInfo => (_config as StarHttpConfigProvider)?.ConfigInfo;
 
     /// <summary>本地星尘代理</summary>
-    public LocalStarClient Local { get; private set; }
+    public LocalStarClient? Local { get; private set; }
 
     private AppClient? _client;
     private TokenHttpFilter? _tokenFilter;
@@ -77,7 +77,7 @@ public class StarFactory : DisposeBase
     /// <param name="appId">应用标识。为空时读取star.config，初始值为入口程序集名称</param>
     /// <param name="secret">应用密钥。为空时读取star.config，初始值为空</param>
     /// <returns></returns>
-    public StarFactory(String server, String appId, String secret)
+    public StarFactory(String? server, String? appId, String? secret)
     {
         Server = server;
         AppId = appId;
@@ -241,10 +241,10 @@ public class StarFactory : DisposeBase
         ioc.AddSingleton(this);
         ioc.AddSingleton(p => Tracer ?? DefaultTracer.Instance ?? (DefaultTracer.Instance ??= new DefaultTracer()));
         //ioc.AddSingleton(p => Config);
-        ioc.AddSingleton(p => Service);
+        ioc.AddSingleton(p => Service!);
 
         // 替换为混合配置提供者，优先本地配置
-        ioc.AddSingleton(p => GetConfig());
+        ioc.AddSingleton(p => GetConfig()!);
 
         ioc.TryAddSingleton(XTrace.Log);
         ioc.TryAddSingleton(typeof(ICacheProvider), typeof(CacheProvider));
@@ -302,7 +302,7 @@ public class StarFactory : DisposeBase
     #endregion
 
     #region 监控中心
-    private StarTracer _tracer;
+    private StarTracer? _tracer;
     /// <summary>监控中心</summary>
     public ITracer? Tracer
     {
@@ -342,7 +342,7 @@ public class StarFactory : DisposeBase
     #endregion
 
     #region 配置中心
-    private HttpConfigProvider _config;
+    private HttpConfigProvider? _config;
     /// <summary>配置中心。务必在数据库操作和生成雪花Id之前使用激活</summary>
     /// <remarks>
     /// 文档 https://newlifex.com/blood/stardust_configcenter
@@ -359,8 +359,8 @@ public class StarFactory : DisposeBase
 
                 var config = new StarHttpConfigProvider
                 {
-                    Server = Server,
-                    AppId = AppId,
+                    Server = Server!,
+                    AppId = AppId!,
                     //Secret = Secret,
                     ClientId = ClientId,
                     Client = _client,
@@ -378,7 +378,7 @@ public class StarFactory : DisposeBase
         }
     }
 
-    private IConfigProvider _configProvider;
+    private IConfigProvider? _configProvider;
     /// <summary>设置本地配置提供者，该提供者将跟星尘配置结合到一起，形成复合配置提供者</summary>
     /// <param name="configProvider"></param>
     public void SetLocalConfig(IConfigProvider configProvider)
@@ -428,7 +428,7 @@ public class StarFactory : DisposeBase
     /// <param name="serviceName"></param>
     /// <param name="tag"></param>
     /// <returns></returns>
-    public Task<IApiClient> CreateForServiceAsync(String serviceName, String? tag = null) => Service.CreateForServiceAsync(serviceName, tag);
+    public Task<IApiClient> CreateForServiceAsync(String serviceName, String? tag = null) => Service!.CreateForServiceAsync(serviceName, tag);
 
     /// <summary>发布服务</summary>
     /// <param name="serviceName">服务名</param>
@@ -436,14 +436,14 @@ public class StarFactory : DisposeBase
     /// <param name="tag">特性标签</param>
     /// <param name="health">健康监测接口地址</param>
     /// <returns></returns>
-    public Task<PublishServiceInfo> RegisterAsync(String serviceName, String address, String? tag = null, String? health = null) => Service.RegisterAsync(serviceName, address, tag, health);
+    public Task<PublishServiceInfo> RegisterAsync(String serviceName, String address, String? tag = null, String? health = null) => Service!.RegisterAsync(serviceName, address, tag, health);
 
     /// <summary>消费得到服务地址信息</summary>
     /// <param name="serviceName">服务名</param>
     /// <param name="minVersion">最小版本</param>
     /// <param name="tag">特性标签。只要包含该特性的服务提供者</param>
     /// <returns></returns>
-    public Task<String[]> ResolveAddressAsync(String serviceName, String? minVersion = null, String? tag = null) => Service.ResolveAddressAsync(serviceName, minVersion, tag);
+    public Task<String[]> ResolveAddressAsync(String serviceName, String? minVersion = null, String? tag = null) => Service!.ResolveAddressAsync(serviceName, minVersion, tag);
     #endregion
 
     #region 其它

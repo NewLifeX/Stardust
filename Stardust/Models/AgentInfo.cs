@@ -59,8 +59,8 @@ public class AgentInfo
     {
         var p = Process.GetCurrentProcess();
         var asmx = AssemblyX.Entry;
-        var fileName = p.MainModule.FileName;
-        var args = Environment.CommandLine.TrimStart(Path.ChangeExtension(fileName, ".dll")).Trim();
+        var fileName = p.MainModule?.FileName;
+        var args = fileName.IsNullOrEmpty() ? null : Environment.CommandLine.TrimStart(Path.ChangeExtension(fileName, ".dll")).Trim();
         //var ip = GetIps();
 
         var inf = new AgentInfo
@@ -83,12 +83,12 @@ public class AgentInfo
         return inf;
     }
 
-    private static String _ips;
+    private static String? _ips;
     /// <summary>
     /// 获取本地IP地址
     /// </summary>
     /// <returns></returns>
-    public static String GetIps()
+    public static String? GetIps()
     {
         try
         {
@@ -104,7 +104,7 @@ public class AgentInfo
         }
     }
 
-    private static void NetworkChange_NetworkAvailabilityChanged(Object sender, NetworkAvailabilityEventArgs e)
+    private static void NetworkChange_NetworkAvailabilityChanged(Object? sender, NetworkAvailabilityEventArgs e)
     {
         _ips = null;
         //XTrace.WriteLine("{0} -> {1}={2}", nameof(NetworkChange_NetworkAvailabilityChanged), nameof(e.IsAvailable), e.IsAvailable);
@@ -122,7 +122,7 @@ public class AgentInfo
         //}
     }
 
-    private static void NetworkChange_NetworkAddressChanged(Object sender, EventArgs e)
+    private static void NetworkChange_NetworkAddressChanged(Object? sender, EventArgs e)
     {
         _ips = null;
         //XTrace.WriteLine(nameof(NetworkChange_NetworkAddressChanged));

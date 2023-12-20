@@ -162,7 +162,7 @@ internal class ServiceController : DisposeBase
                         if (file.IsNullOrEmpty())
                         {
                             var runfile = deploy.FindExeFile(workDir);
-                            file = runfile.FullName;
+                            file = runfile?.FullName;
                         }
                         if (file.IsNullOrEmpty()) throw new Exception("无法找到启动文件");
 
@@ -300,7 +300,7 @@ internal class ServiceController : DisposeBase
         var si = new ProcessStartInfo
         {
             FileName = fileName,
-            Arguments = args,
+            Arguments = args ?? "",
             WorkingDirectory = workDir,
 
             // false时目前控制台合并到当前控制台，一起退出；
@@ -648,7 +648,7 @@ internal class ServiceController : DisposeBase
         _timer ??= new TimerX(MonitorFileChange, null, 1_000, MonitorPeriod) { Async = true };
     }
 
-    private readonly Dictionary<String, DateTime> _files = new();
+    private readonly Dictionary<String, DateTime> _files = [];
 
     /// <summary>是否已准备。发生文件变化时，进入就绪状态，持续5秒没有改变后执行重启</summary>
     private Boolean _ready;

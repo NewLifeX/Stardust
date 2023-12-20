@@ -37,7 +37,7 @@ public class Upgrade
     public Upgrade()
     {
         var asm = Assembly.GetEntryAssembly();
-        Name = asm.GetName().Name;
+        Name = asm?.GetName().Name ?? nameof(Upgrade);
     }
     #endregion
 
@@ -83,8 +83,8 @@ public class Upgrade
     {
         if (hash.IsNullOrEmpty()) return false;
 
-        var fi = SourceFile.AsFile();
-        if (!fi.Exists) return false;
+        var fi = SourceFile?.AsFile();
+        if (fi == null || !fi.Exists) return false;
 
         var md5 = fi.MD5().ToHex();
         return md5.EqualIgnoreCase(hash);
@@ -95,7 +95,7 @@ public class Upgrade
     public virtual Boolean Extract()
     {
         var file = SourceFile;
-        if (!File.Exists(file)) return false;
+        if (file.IsNullOrEmpty() || !File.Exists(file)) return false;
 
         WriteLog("发现更新包 {0}", file);
 
@@ -114,12 +114,13 @@ public class Upgrade
     public virtual Boolean Update()
     {
         var dest = DestinationPath;
+        if (dest.IsNullOrEmpty()) return false;
 
         // 删除备份文件
         DeleteBackup(dest);
 
         var tmp = TempPath;
-        if (!Directory.Exists(tmp)) return false;
+        if (tmp.IsNullOrEmpty() || !Directory.Exists(tmp)) return false;
 
         WriteLog("发现更新源目录 {0}", tmp);
 
@@ -243,10 +244,10 @@ public class Upgrade
             RunShell(file, args);
 
         // 如果进程在指定时间退出，说明启动失败
-        return !p.WaitForExit(1000) || p.ExitCode == 0;
+        return p != null && (!p.WaitForExit(1000) || p.ExitCode == 0);
     }
 
-    static Process RunShell(String fileName, String args) => Process.Start(new ProcessStartInfo(fileName, args) { UseShellExecute = true });
+    static Process? RunShell(String fileName, String args) => Process.Start(new ProcessStartInfo(fileName, args) { UseShellExecute = true });
 
     /// <summary>
     /// 自杀
@@ -433,6 +434,6 @@ public class Upgrade
     /// <summary>输出日志</summary>
     /// <param name="format"></param>
     /// <param name="args"></param>
-    public void WriteLog(String format, params Object[] args) => Log?.Info($"[{Name}]{format}", args);
+    public void WriteLog(String format, params Object?[] args) => Log?.Info($"[{Name}]{format}", args);
     #endregion
 }

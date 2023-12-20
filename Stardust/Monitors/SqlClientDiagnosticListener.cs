@@ -64,7 +64,7 @@ public class SqlClientDiagnosticListener : TraceDiagnosticListener
                 break;
 
             case "WriteCommandAfter":
-                if (spanName.StartsWith("db:"))
+                if (span != null && !spanName.IsNullOrEmpty() && spanName.StartsWith("db:"))
                 {
                     span.Dispose();
                 }
@@ -72,7 +72,7 @@ public class SqlClientDiagnosticListener : TraceDiagnosticListener
                 break;
 
             case "WriteCommandError":
-                if (spanName.StartsWith("db:"))
+                if (span != null && !spanName.IsNullOrEmpty() && spanName.StartsWith("db:"))
                 {
                     if (value.Value.GetValue("Exception") is Exception ex) span.SetError(ex, null);
 

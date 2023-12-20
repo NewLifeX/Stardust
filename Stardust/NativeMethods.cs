@@ -23,7 +23,7 @@ internal class NativeMethods
         }
     }
 
-    private static void OnProcessExit(Object sender, EventArgs e)
+    private static void OnProcessExit(Object? sender, EventArgs e)
     {
         if (initToken != IntPtr.Zero)
         {

@@ -82,7 +82,7 @@ internal class StarHttpConfigProvider : HttpConfigProvider
         return null;
     }
 
-    private readonly HashSet<String> _keys = new();
+    private readonly HashSet<String> _keys = [];
     /// <summary>获取指定配置。拦截对注册中心的请求</summary>
     /// <param name="key"></param>
     /// <param name="createOnMiss"></param>
