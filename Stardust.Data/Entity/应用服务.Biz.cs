@@ -31,8 +31,10 @@ namespace Stardust.Data
         /// <param name="isNew"></param>
         public override void Valid(Boolean isNew)
         {
-            var len = _.CheckResult.Length;
-            if (len > 0 && !CheckResult.IsNullOrEmpty() && CheckResult.Length > len) CheckResult = CheckResult[..len];
+            //var len = _.CheckResult.Length;
+            //if (len > 0 && !CheckResult.IsNullOrEmpty() && CheckResult.Length > len) CheckResult = CheckResult[..len];
+
+            this.TrimExtraLong(_.Address, _.CheckResult);
 
             base.Valid(isNew);
         }

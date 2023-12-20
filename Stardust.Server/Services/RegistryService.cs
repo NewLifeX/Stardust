@@ -192,7 +192,7 @@ public class RegistryService
             if (!model.ExternalAddress.IsNullOrEmpty())
                 svc.Address = model.ExternalAddress;
             else
-                svc.Address = urls.Join(",");
+                svc.Address = urls.Take(10).Join(",");
         }
         else
         {
