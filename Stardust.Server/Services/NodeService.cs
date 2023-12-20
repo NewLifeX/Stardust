@@ -211,11 +211,11 @@ public class NodeService
             foreach (var item in list)
             {
                 var n = 0;
-                if (item.Uuid == di.UUID) n++;
-                if (item.MachineGuid == di.MachineGuid) n++;
-                if (item.MACs == di.Macs) n++;
-                if (item.SerialNumber == di.SerialNumber) n++;
-                if (item.DiskID == di.DiskID) n++;
+                if (!di.UUID.IsNullOrEmpty() && item.Uuid == di.UUID) n++;
+                if (!di.MachineGuid.IsNullOrEmpty() && item.MachineGuid == di.MachineGuid) n++;
+                if (!di.Macs.IsNullOrEmpty() && item.MACs == di.Macs) n++;
+                if (!di.SerialNumber.IsNullOrEmpty() && item.SerialNumber == di.SerialNumber) n++;
+                if (!di.DiskID.IsNullOrEmpty() && item.DiskID == di.DiskID) n++;
 
                 if (n >= level)
                 {
