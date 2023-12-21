@@ -81,7 +81,7 @@ public class NodeFrameworkController : EntityController<Node>
             var node = bf.FindByKey(item.ToInt());
             if (node != null && !node.Code.IsNullOrEmpty())
             {
-                ts.Add(_starFactory.SendNodeCommand(node.Code, "framework/install", args, 30 * 24 * 3600, 5));
+                ts.Add(_starFactory.SendNodeCommand(node.Code, "framework/install", args, 30 * 24 * 3600, 0));
 
             }
         }

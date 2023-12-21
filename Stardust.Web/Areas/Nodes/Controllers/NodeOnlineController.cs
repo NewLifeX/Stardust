@@ -124,7 +124,7 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
             {
-                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, "node/upgrade", null, 600, 5));
+                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, "node/upgrade", null, 600, 0));
             }
         }
 
@@ -143,7 +143,7 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
             {
-                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, "node/restart", null, 600, 5));
+                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, "node/restart", null, 600, 0));
             }
         }
 
@@ -162,7 +162,7 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
             {
-                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, "node/reboot", null, 600, 5));
+                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, "node/reboot", null, 600, 0));
             }
         }
 
