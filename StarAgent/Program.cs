@@ -387,7 +387,7 @@ internal class MyService : ServiceBase, IServiceProvider
     {
         if (!NetworkInterface.GetIsNetworkAvailable() || AgentInfo.GetIps().IsNullOrEmpty())
         {
-            WriteLog("网络不可以，延迟连接服务器");
+            WriteLog("网络不可达，延迟连接服务器");
             return;
         }
 

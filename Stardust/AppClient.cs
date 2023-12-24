@@ -428,6 +428,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
                 // 使用过滤器内部token，因为它有过期刷新机制
                 var token = Token;
                 if (Filter is NewLife.Http.TokenHttpFilter thf) token = thf.Token?.AccessToken;
+                span?.AppendTag($"svc={svc.Address} Token=[{Token?.Length}]");
 
                 if (token.IsNullOrEmpty()) return;
 
@@ -448,6 +449,12 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
 
                     _source = new CancellationTokenSource();
                     _ = Task.Run(() => DoPull(client, _source.Token));
+                }
+                else
+                {
+                    // 在websocket链路上定时发送心跳，避免长连接被断开
+                    var str = "Ping";
+                    await _websocket.SendAsync(new ArraySegment<Byte>(str.GetBytes()), WebSocketMessageType.Text, true, default);
                 }
             }
 #endif
@@ -471,8 +478,15 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
             {
                 var data = await socket.ReceiveAsync(new ArraySegment<Byte>(buf), cancellationToken);
-                var model = buf.ToStr(null, 0, data.Count).ToJsonEntity<CommandModel>();
-                if (model != null) await ReceiveCommand(model);
+                var txt = buf.ToStr(null, 0, data.Count);
+                if (txt.StartsWithIgnoreCase("Pong"))
+                {
+                }
+                else
+                {
+                    var model = txt.ToJsonEntity<CommandModel>();
+                    if (model != null) await ReceiveCommand(model);
+                }
             }
         }
         catch (WebSocketException) { }

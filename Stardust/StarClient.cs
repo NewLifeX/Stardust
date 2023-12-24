@@ -120,6 +120,12 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     public override async Task<TResult> InvokeAsync<TResult>(HttpMethod method, String action, Object? args = null, Action<HttpRequestMessage>? onRequest = null, CancellationToken cancellationToken = default)
 #endif
     {
+        var needLogin = !Logined && !action.EqualIgnoreCase("Node/Login", "Node/Logout");
+        if (needLogin)
+        {
+            await Login();
+        }
+
         try
         {
             return await base.InvokeAsync<TResult>(method, action, args, onRequest, cancellationToken);
@@ -726,6 +732,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
 
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
             var svc = _currentService;
+            span?.AppendTag($"svc={svc?.Address} Token=[{Token?.Length}]");
             if (svc == null || Token == null) return;
 
             if (_websocket == null || _websocket.State != WebSocketState.Open)
@@ -745,6 +752,12 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
 
                 _source = new CancellationTokenSource();
                 _ = Task.Run(() => DoPull(client, _source.Token));
+            }
+            else
+            {
+                // 在websocket链路上定时发送心跳，避免长连接被断开
+                var str = "Ping";
+                await _websocket.SendAsync(new ArraySegment<Byte>(str.GetBytes()), WebSocketMessageType.Text, true, default);
             }
 #endif
         }
@@ -767,8 +780,15 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
             {
                 var data = await socket.ReceiveAsync(new ArraySegment<Byte>(buf), cancellationToken);
-                var model = buf.ToStr(null, 0, data.Count).ToJsonEntity<CommandModel>();
-                if (model != null) await ReceiveCommand(model);
+                var txt = buf.ToStr(null, 0, data.Count);
+                if (txt.StartsWithIgnoreCase("Pong"))
+                {
+                }
+                else
+                {
+                    var model = txt.ToJsonEntity<CommandModel>();
+                    if (model != null) await ReceiveCommand(model);
+                }
             }
         }
         catch (WebSocketException) { }

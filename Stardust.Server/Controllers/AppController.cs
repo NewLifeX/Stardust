@@ -141,7 +141,10 @@ public class AppController : BaseController
         var source = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.ApplicationStopping);
         _ = Task.Run(() => ConsumeMessage(socket, app, clientId, ip, source));
 
-        await socket.WaitForClose(null, source);
+        await socket.WaitForClose(txt =>
+        {
+            if (txt == "Ping") socket.SendAsync("Pong".GetBytes(), WebSocketMessageType.Text, true, source.Token);
+        }, source);
 
         WriteHistory("WebSocket断开", true, socket.State + "", clientId);
         if (olt != null)
