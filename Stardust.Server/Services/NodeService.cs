@@ -362,7 +362,7 @@ public class NodeService
             node.SaveAsync();
 
             rs.Period = node.Period;
-            rs.NewServer = !node.NewServer.IsNullOrEmpty() ? node.NewServer : set.NewServer;
+            rs.NewServer = !node.NewServer.IsNullOrEmpty() ? node.NewServer : node.Project?.NewServer;
 
             var olt = GetOrAddOnline(node, token, ip);
             olt.Name = node.Name;

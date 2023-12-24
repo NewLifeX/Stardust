@@ -94,6 +94,15 @@ public partial class GalaxyProject
     [BindColumn("BlackIPs", "IP黑名单。符合条件的来源IP禁止访问，支持*通配符，多个逗号隔开", "")]
     public String BlackIPs { get => _BlackIPs; set { if (OnPropertyChanging("BlackIPs", value)) { _BlackIPs = value; OnPropertyChanged("BlackIPs"); } } }
 
+    private String _NewServer;
+    /// <summary>新服务器。该项目下的节点自动迁移到新的服务器地址</summary>
+    [Category("参数设置")]
+    [DisplayName("新服务器")]
+    [Description("新服务器。该项目下的节点自动迁移到新的服务器地址")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("NewServer", "新服务器。该项目下的节点自动迁移到新的服务器地址", "")]
+    public String NewServer { get => _NewServer; set { if (OnPropertyChanging("NewServer", value)) { _NewServer = value; OnPropertyChanged("NewServer"); } } }
+
     private Int32 _CreateUserId;
     /// <summary>创建者</summary>
     [Category("扩展")]
@@ -175,6 +184,7 @@ public partial class GalaxyProject
             "IsGlobal" => _IsGlobal,
             "WhiteIPs" => _WhiteIPs,
             "BlackIPs" => _BlackIPs,
+            "NewServer" => _NewServer,
             "CreateUserId" => _CreateUserId,
             "CreateTime" => _CreateTime,
             "CreateIP" => _CreateIP,
@@ -197,6 +207,7 @@ public partial class GalaxyProject
                 case "IsGlobal": _IsGlobal = value.ToBoolean(); break;
                 case "WhiteIPs": _WhiteIPs = Convert.ToString(value); break;
                 case "BlackIPs": _BlackIPs = Convert.ToString(value); break;
+                case "NewServer": _NewServer = Convert.ToString(value); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -252,6 +263,9 @@ public partial class GalaxyProject
         /// <summary>IP黑名单。符合条件的来源IP禁止访问，支持*通配符，多个逗号隔开</summary>
         public static readonly Field BlackIPs = FindByName("BlackIPs");
 
+        /// <summary>新服务器。该项目下的节点自动迁移到新的服务器地址</summary>
+        public static readonly Field NewServer = FindByName("NewServer");
+
         /// <summary>创建者</summary>
         public static readonly Field CreateUserId = FindByName("CreateUserId");
 
@@ -305,6 +319,9 @@ public partial class GalaxyProject
 
         /// <summary>IP黑名单。符合条件的来源IP禁止访问，支持*通配符，多个逗号隔开</summary>
         public const String BlackIPs = "BlackIPs";
+
+        /// <summary>新服务器。该项目下的节点自动迁移到新的服务器地址</summary>
+        public const String NewServer = "NewServer";
 
         /// <summary>创建者</summary>
         public const String CreateUserId = "CreateUserId";
