@@ -78,6 +78,14 @@ public partial class GalaxyProject
     [BindColumn("Apps", "应用数", "")]
     public Int32 Apps { get => _Apps; set { if (OnPropertyChanging("Apps", value)) { _Apps = value; OnPropertyChanged("Apps"); } } }
 
+    private Int32 _Sort;
+    /// <summary>排序</summary>
+    [DisplayName("排序")]
+    [Description("排序")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Sort", "排序", "")]
+    public Int32 Sort { get => _Sort; set { if (OnPropertyChanging("Sort", value)) { _Sort = value; OnPropertyChanged("Sort"); } } }
+
     private Boolean _IsGlobal;
     /// <summary>全局。该项目的节点可以允许其它项目下应用选用</summary>
     [DisplayName("全局")]
@@ -190,6 +198,7 @@ public partial class GalaxyProject
             "ManagerId" => _ManagerId,
             "Nodes" => _Nodes,
             "Apps" => _Apps,
+            "Sort" => _Sort,
             "IsGlobal" => _IsGlobal,
             "WhiteIPs" => _WhiteIPs,
             "BlackIPs" => _BlackIPs,
@@ -214,6 +223,7 @@ public partial class GalaxyProject
                 case "ManagerId": _ManagerId = value.ToInt(); break;
                 case "Nodes": _Nodes = value.ToInt(); break;
                 case "Apps": _Apps = value.ToInt(); break;
+                case "Sort": _Sort = value.ToInt(); break;
                 case "IsGlobal": _IsGlobal = value.ToBoolean(); break;
                 case "WhiteIPs": _WhiteIPs = Convert.ToString(value); break;
                 case "BlackIPs": _BlackIPs = Convert.ToString(value); break;
@@ -275,6 +285,9 @@ public partial class GalaxyProject
         /// <summary>应用数</summary>
         public static readonly Field Apps = FindByName("Apps");
 
+        /// <summary>排序</summary>
+        public static readonly Field Sort = FindByName("Sort");
+
         /// <summary>全局。该项目的节点可以允许其它项目下应用选用</summary>
         public static readonly Field IsGlobal = FindByName("IsGlobal");
 
@@ -334,6 +347,9 @@ public partial class GalaxyProject
 
         /// <summary>应用数</summary>
         public const String Apps = "Apps";
+
+        /// <summary>排序</summary>
+        public const String Sort = "Sort";
 
         /// <summary>全局。该项目的节点可以允许其它项目下应用选用</summary>
         public const String IsGlobal = "IsGlobal";

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
+using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
@@ -62,6 +63,12 @@ public class GalaxyProjectController : EntityController<GalaxyProject>
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
+
+        if (p.Sort.IsNullOrEmpty())
+        {
+            p.Sort = "Sort,Id";
+            p.Desc = true;
+        }
 
         return GalaxyProject.Search(start, end, p["Q"], p);
     }

@@ -48,6 +48,7 @@
         <Column Name="ManagerId" DataType="Int32" Map="XCode.Membership.User@ID@$@ManagerName" Description="管理者" />
         <Column Name="Nodes" DataType="Int32" Description="节点数" />
         <Column Name="Apps" DataType="Int32" Description="应用数" />
+        <Column Name="Sort" DataType="Int32" Description="排序" />
         <Column Name="IsGlobal" DataType="Boolean" Description="全局。该项目的节点可以允许其它项目下应用选用" />
         <Column Name="WhiteIPs" DataType="String" Description="IP白名单。符合条件的来源IP才允许访问，支持*通配符，多个逗号隔开" />
         <Column Name="BlackIPs" DataType="String" Description="IP黑名单。符合条件的来源IP禁止访问，支持*通配符，多个逗号隔开" />
