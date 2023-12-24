@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="10.6.2023.1209-beta1625" />
+    <PackageReference Include="NewLife.Core" Version="10.6.2023.1220-beta1319" />
     <PackageReference Include="SSH.NET" Version="2023.0.0" />
   </ItemGroup>
 
