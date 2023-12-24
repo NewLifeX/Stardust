@@ -323,6 +323,15 @@ public partial class NodeOnline
     [BindColumn("Data", "数据", "")]
     public String Data { get => _Data; set { if (OnPropertyChanging("Data", value)) { _Data = value; OnPropertyChanged("Data"); } } }
 
+    private String _TraceId;
+    /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+    [Category("扩展")]
+    [DisplayName("追踪")]
+    [Description("追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("TraceId", "追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
+    public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
+
     private String _Creator;
     /// <summary>创建者。服务端节点</summary>
     [Category("扩展")]
@@ -414,6 +423,7 @@ public partial class NodeOnline
             "Processes" => _Processes,
             "Token" => _Token,
             "Data" => _Data,
+            "TraceId" => _TraceId,
             "Creator" => _Creator,
             "CreateTime" => _CreateTime,
             "CreateIP" => _CreateIP,
@@ -462,6 +472,7 @@ public partial class NodeOnline
                 case "Processes": _Processes = Convert.ToString(value); break;
                 case "Token": _Token = Convert.ToString(value); break;
                 case "Data": _Data = Convert.ToString(value); break;
+                case "TraceId": _TraceId = Convert.ToString(value); break;
                 case "Creator": _Creator = Convert.ToString(value); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -599,6 +610,9 @@ public partial class NodeOnline
         /// <summary>数据</summary>
         public static readonly Field Data = FindByName("Data");
 
+        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        public static readonly Field TraceId = FindByName("TraceId");
+
         /// <summary>创建者。服务端节点</summary>
         public static readonly Field Creator = FindByName("Creator");
 
@@ -730,6 +744,9 @@ public partial class NodeOnline
 
         /// <summary>数据</summary>
         public const String Data = "Data";
+
+        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        public const String TraceId = "TraceId";
 
         /// <summary>创建者。服务端节点</summary>
         public const String Creator = "Creator";
