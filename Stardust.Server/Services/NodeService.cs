@@ -188,9 +188,12 @@ public class NodeService
         //var ip = UserHost;
         if (!IsMatchWhiteIP(set.WhiteIP, ip)) throw new ApiException(13, "非法来源，禁止注册");
 
+        using var span = _tracer?.NewSpan(nameof(AutoRegister), new { inf.ProductCode, inf.Node });
+
         var di = inf.Node;
         var code = BuildCode(di, inf.ProductCode, set);
         if (code.IsNullOrEmpty()) code = Rand.NextString(8);
+        span?.AppendTag($"code={code}");
 
         // 如果节点编码有改变，则倾向于新建节点
         if (node == null || node.Code != code) node = Node.FindByCode(code);
@@ -220,6 +223,12 @@ public class NodeService
                 if (n >= level)
                 {
                     node = item;
+
+                    var msg = $"检测到节点[{inf.Code}/{di.Macs}]与旧节点[{item.Code}]高度相似，选择使用旧节点";
+                    XTrace.WriteLine(msg);
+                    span?.AppendTag(msg);
+                    node.WriteHistory("匹配已有节点", true, msg, ip);
+
                     break;
                 }
             }
@@ -284,8 +293,10 @@ public class NodeService
         return false;
     }
 
-    private static String BuildCode(NodeInfo di, String productCode, StarServerSetting set)
+    private String BuildCode(NodeInfo di, String productCode, StarServerSetting set)
     {
+        using var span = _tracer?.NewSpan(nameof(BuildCode), new { set.NodeCodeFormula });
+
         //var set = Setting.Current;
         //var uid = $"{di.UUID}@{di.MachineGuid}@{di.Macs}";
         var ss = (set.NodeCodeFormula + "").Split('(', ')');
@@ -297,6 +308,8 @@ public class NodeService
             {
                 uid = uid.Replace($"{{{pi.Name}}}", pi.GetValue(di) + "");
             }
+            span?.AppendTag($"uid={uid}");
+
             if (uid.Contains('{') || uid.Contains('}')) XTrace.WriteLine("节点编码公式有误，存在未解析变量，uid={0}", uid);
             if (!uid.IsNullOrEmpty())
             {
@@ -314,7 +327,10 @@ public class NodeService
                     default:
                         break;
                 }
-                return buf.ToHex();
+                var code = buf.ToHex();
+                span?.AppendTag($"code={code}");
+
+                return code;
             }
         }
 
