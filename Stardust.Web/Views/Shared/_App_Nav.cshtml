@@ -50,7 +50,10 @@
     var end = Context.Request.Query["dtEnd"].ToDateTime();
     if (end.Year < 2000) end = Context.Request.Query["dtEnd2"].ToDateTime().AddSeconds(1);
 
+    var app = App.FindById(appId);
+
     var dic = new Dictionary<String, Object>();
+    dic[app.Name + ""] = "/Registry/App/Edit?Id=" + appId;
     dic["实例"] = "/Registry/AppOnline?appId=" + appId;
     dic["历史"] = "/Registry/AppHistory?appId=" + appId;
     dic["命令"] = "/Registry/AppCommand?appId=" + appId;
@@ -89,13 +92,8 @@
 }
 @if (appId > 0)
 {
-    var app = App.FindById(appId);
-
     <div class="navbar-collapse collapse text-center">
         <ul class="nav nav-pills" style="margin-bottom: 10px; display: inline-block;float: none;">
-            <li role="presentation" class="@(flag?"active":"")">
-                <a href="/Registry/App/Edit?Id=@appId">应用：@(app?.ToString() ?? "信息")</a>
-            </li>
             @foreach (var item in dic)
             {
                 if (item.Value is IDictionary<String, Object> childs)

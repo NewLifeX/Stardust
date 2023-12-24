@@ -13,7 +13,7 @@
     var prj = GalaxyProject.FindById(projectId) ?? new GalaxyProject();
 
     var dic = new Dictionary<String, Object>();
-    dic[prj.Name] = "/Platform/GalaxyProject/Edit?Id=" + projectId;
+    dic[prj.Name + ""] = "/Platform/GalaxyProject/Edit?Id=" + projectId;
     dic["节点"] = "/Nodes/Node?projectId=" + projectId;
     dic["节点在线"] = "/Nodes/NodeOnline?projectId=" + projectId;
     dic["Redis节点"] = "/Redis/RedisNode?projectId=" + projectId;

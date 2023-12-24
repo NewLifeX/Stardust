@@ -102,6 +102,7 @@ public static class OSKindHelper
         if (osName.StartsWithIgnoreCase("Kylin")) return OSKinds.Kylin;
         if (osName.StartsWithIgnoreCase("OpenKylin")) return OSKinds.OpenKylin;
         if (osName.StartsWithIgnoreCase("Linx")) return OSKinds.Linx;
+        if (osName.StartsWithIgnoreCase("openEuler")) return OSKinds.OpenEuler;
 
         if (osName.Contains("Linux")) return OSKinds.Linux;
         if (osName.Contains("Buildroot")) return OSKinds.Linux;

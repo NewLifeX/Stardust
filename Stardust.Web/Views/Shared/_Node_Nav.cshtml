@@ -16,7 +16,7 @@
     var node = Node.FindByID(nodeId) ?? new Node();
 
     var dic = new Dictionary<String, Object>();
-    dic[node.Name] = "/Nodes/Node/Edit?Id=" + nodeId;
+    dic[node.Name + ""] = "/Nodes/Node/Edit?Id=" + nodeId;
     dic["在线"] = "/Nodes/NodeOnline?nodeId=" + nodeId;
     dic["历史"] = "/Nodes/NodeHistory?nodeId=" + nodeId;
     dic["命令"] = "/Nodes/NodeCommand?nodeId=" + nodeId;
