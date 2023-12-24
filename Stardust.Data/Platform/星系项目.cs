@@ -46,6 +46,14 @@ public partial class GalaxyProject
     [BindColumn("Enable", "启用", "")]
     public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
+    private Int32 _TenantId;
+    /// <summary>租户。该项目所属租户，实现隔离</summary>
+    [DisplayName("租户")]
+    [Description("租户。该项目所属租户，实现隔离")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("TenantId", "租户。该项目所属租户，实现隔离", "")]
+    public Int32 TenantId { get => _TenantId; set { if (OnPropertyChanging("TenantId", value)) { _TenantId = value; OnPropertyChanged("TenantId"); } } }
+
     private Int32 _ManagerId;
     /// <summary>管理者</summary>
     [DisplayName("管理者")]
@@ -178,6 +186,7 @@ public partial class GalaxyProject
             "Id" => _Id,
             "Name" => _Name,
             "Enable" => _Enable,
+            "TenantId" => _TenantId,
             "ManagerId" => _ManagerId,
             "Nodes" => _Nodes,
             "Apps" => _Apps,
@@ -201,6 +210,7 @@ public partial class GalaxyProject
                 case "Id": _Id = value.ToInt(); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
+                case "TenantId": _TenantId = value.ToInt(); break;
                 case "ManagerId": _ManagerId = value.ToInt(); break;
                 case "Nodes": _Nodes = value.ToInt(); break;
                 case "Apps": _Apps = value.ToInt(); break;
@@ -222,6 +232,14 @@ public partial class GalaxyProject
     #endregion
 
     #region 关联映射
+    /// <summary>租户</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public XCode.Membership.Tenant Tenant => Extends.Get(nameof(Tenant), k => XCode.Membership.Tenant.FindById(TenantId));
+
+    /// <summary>租户</summary>
+    [Map(nameof(TenantId), typeof(XCode.Membership.Tenant), "Id")]
+    public String TenantName => Tenant?.ToString();
+
     /// <summary>管理者</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public XCode.Membership.User Manager => Extends.Get(nameof(Manager), k => XCode.Membership.User.FindByID(ManagerId));
@@ -244,6 +262,9 @@ public partial class GalaxyProject
 
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
+
+        /// <summary>租户。该项目所属租户，实现隔离</summary>
+        public static readonly Field TenantId = FindByName("TenantId");
 
         /// <summary>管理者</summary>
         public static readonly Field ManagerId = FindByName("ManagerId");
@@ -301,6 +322,9 @@ public partial class GalaxyProject
 
         /// <summary>启用</summary>
         public const String Enable = "Enable";
+
+        /// <summary>租户。该项目所属租户，实现隔离</summary>
+        public const String TenantId = "TenantId";
 
         /// <summary>管理者</summary>
         public const String ManagerId = "ManagerId";

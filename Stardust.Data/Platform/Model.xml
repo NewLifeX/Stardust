@@ -44,6 +44,7 @@
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="Name" DataType="String" Master="True" Description="名称" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
+        <Column Name="TenantId" DataType="Int32" Map="XCode.Membership.Tenant@Id@$@TenantName" Description="租户。该项目所属租户，实现隔离" />
         <Column Name="ManagerId" DataType="Int32" Map="XCode.Membership.User@ID@$@ManagerName" Description="管理者" />
         <Column Name="Nodes" DataType="Int32" Description="节点数" />
         <Column Name="Apps" DataType="Int32" Description="应用数" />
