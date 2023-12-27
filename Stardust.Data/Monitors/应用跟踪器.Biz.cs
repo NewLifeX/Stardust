@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
+using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
@@ -84,6 +85,14 @@ public partial class AppTracer : Entity<AppTracer>
     #endregion
 
     #region 扩展属性
+    /// <summary>应用</summary>
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
+
+    /// <summary>应用</summary>
+    [Map(__.AppId, typeof(App), "Id")]
+    public String AppName => App?.Name;
+
     /// <summary>
     /// 有效跟踪项集合
     /// </summary>

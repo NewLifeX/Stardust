@@ -6,6 +6,7 @@
     var path = Context.Request.Path + "";
 
     var flag = false;
+    var name = "";
     var appId = Context.Request.Query["appId"].ToInt(0);
     if (appId == 0 && path.EqualIgnoreCase("/Registry/App", "/Registry/App/Detail", "/Registry/App/Edit"))
     {
@@ -22,28 +23,28 @@
     {
         var id = Context.Request.Query["Id"].ToInt(0);
         var entity = AppDeploy.FindById(id);
-        if (entity != null && entity.AppId > 0) appId = entity.AppId;
+        if (entity != null && entity.AppId > 0) { appId = entity.AppId; name = entity.AppName ?? entity.Name; }
     }
     if (appId == 0 && path.EqualIgnoreCase("/Monitors/AppTracer", "/Monitors/AppTracer/Detail", "/Monitors/AppTracer/Edit"))
     {
         var id = Context.Request.Query["Id"].ToInt(0);
         var entity = AppTracer.FindByID(id);
-        if (entity != null && entity.AppId > 0) appId = entity.AppId;
+        if (entity != null && entity.AppId > 0) { appId = entity.AppId; name = entity.AppName ?? entity.Name; }
     }
     if (path.StartsWithIgnoreCase("/Configs/ConfigData"))
     {
         var entity = AppConfig.FindById(appId);
-        if (entity != null && entity.AppId > 0) appId = entity.AppId;
+        if (entity != null && entity.AppId > 0) { appId = entity.AppId; name = entity.AppName ?? entity.Name; }
     }
     if (path.StartsWithIgnoreCase("/Deployment/AppDeployVersion", "/Deployment/AppDeployNode"))
     {
         var entity = AppDeploy.FindById(appId);
-        if (entity != null && entity.AppId > 0) appId = entity.AppId;
+        if (entity != null && entity.AppId > 0) { appId = entity.AppId; name = entity.AppName ?? entity.Name; }
     }
     if (path.StartsWithIgnoreCase("/Monitors/AppDayStat"))
     {
         var entity = AppTracer.FindByID(appId);
-        if (entity != null && entity.AppId > 0) appId = entity.AppId;
+        if (entity != null && entity.AppId > 0) { appId = entity.AppId; name = entity.AppName ?? entity.Name; }
     }
 
     var start = Context.Request.Query["dtStart"].ToDateTime();
@@ -53,7 +54,7 @@
     var app = App.FindById(appId);
 
     var dic = new Dictionary<String, Object>();
-    dic[app.Name + ""] = "/Registry/App/Edit?Id=" + appId;
+    dic[app?.Name + ""] = "/Registry/App/Edit?Id=" + appId;
     dic["实例"] = "/Registry/AppOnline?appId=" + appId;
     dic["历史"] = "/Registry/AppHistory?appId=" + appId;
     dic["命令"] = "/Registry/AppCommand?appId=" + appId;

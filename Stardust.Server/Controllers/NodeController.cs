@@ -283,7 +283,7 @@ public class NodeController : BaseController
             if (txt == "Ping") socket.SendAsync("Pong".GetBytes(), WebSocketMessageType.Text, true, source.Token);
         }, source);
 
-        WriteHistory(node, "WebSocket断开", true, socket.State + "");
+        WriteHistory(node, "WebSocket断开", true, $"State{socket.State} CloseStatus={socket.CloseStatus}");
         if (olt != null)
         {
             olt.WebSocket = false;
@@ -347,7 +347,7 @@ public class NodeController : BaseController
         {
             XTrace.WriteLine("WebSocket异常 node={0} ip={1}", node, ip);
             XTrace.WriteException(ex);
-            WriteHistory(node, "WebSocket断开", false, ex.ToString(), ip);
+            WriteHistory(node, "WebSocket断开", false, $"State{socket.State} CloseStatus={socket.CloseStatus} {ex}", ip);
         }
         finally
         {
