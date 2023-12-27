@@ -374,7 +374,7 @@ public class ServiceManager : DisposeBase
         if (_client == null) return null;
 
         using var span = Tracer?.NewSpan(nameof(PullService), appName);
-        WriteLog("拉取应用服务 {0}", appName);
+        WriteLog("拉取应用服务：{0}", appName ?? "（所有）");
 
         var svcs = Services.ToList();
 
@@ -552,9 +552,11 @@ public class ServiceManager : DisposeBase
             // 上传失败不应该影响本地拉起服务
             try
             {
-                if (_status == 0 && svcs.Length > 0)
+                //if (_status == 0 && svcs.Length > 0)
+                if (_status == 0)
                 {
-                    await UploadService(svcs);
+                    var svcs2 = svcs.Where(e => e.Enable || !e.Name.EqualIgnoreCase("test", "test2")).ToArray();
+                    if (svcs2.Length > 0) await UploadService(svcs2);
 
                     _status = 1;
                 }

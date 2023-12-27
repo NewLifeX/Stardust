@@ -113,6 +113,7 @@ public class Startup
         TrimOldAppConfig();
         //InitProject();
         ThreadPoolX.QueueUserWorkItem(InitProject);
+        ThreadPoolX.QueueUserWorkItem(FixAppDeployNode);
 
         // 使用Cube前添加自己的管道
         if (env.IsDevelopment())
@@ -308,6 +309,24 @@ public class Startup
         }
 
         entity.Update();
+    }
+
+    private static void FixAppDeployNode()
+    {
+        // 从应用发布节点表中找到删除所有无效的test/test2
+        var app = AppDeploy.FindByName("Test");
+        if (app != null)
+        {
+            var list = AppDeployNode.FindAllByAppId(app.Id);
+            list.Where(e => !e.Enable).Delete();
+        }
+
+        app = AppDeploy.FindByName("Test2");
+        if (app != null)
+        {
+            var list = AppDeployNode.FindAllByAppId(app.Id);
+            list.Where(e => !e.Enable).Delete();
+        }
     }
 
     private static IApplicationBuilder Usewwwroot(IApplicationBuilder app, IWebHostEnvironment env)
