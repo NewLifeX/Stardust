@@ -313,7 +313,17 @@ public class NodeController : BaseController
                     span.Detach(dic);
 
                     if (msg == null || msg.Id == 0 || msg.Expire.Year > 2000 && msg.Expire < DateTime.Now)
+                    {
                         WriteHistory(node, "WebSocket发送", false, "消息无效或已过期。" + mqMsg, ip);
+
+                        var log = NodeCommand.FindById(msg.Id);
+                        if (log != null)
+                        {
+                            if (log.TraceId.IsNullOrEmpty()) log.TraceId = span?.TraceId;
+                            log.Status = CommandStatus.取消;
+                            log.Update();
+                        }
+                    }
                     else
                     {
                         WriteHistory(node, "WebSocket发送", true, mqMsg, ip);

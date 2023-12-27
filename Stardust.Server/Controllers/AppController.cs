@@ -9,6 +9,7 @@ using NewLife.Remoting;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
+using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Services;
 using WebSocket = System.Net.WebSockets.WebSocket;
@@ -176,7 +177,17 @@ public class AppController : BaseController
                     span.Detach(dic);
 
                     if (msg == null || msg.Id == 0 || msg.Expire.Year > 2000 && msg.Expire < DateTime.Now)
+                    {
                         WriteHistory("WebSocket发送", false, "消息无效或已过期。" + mqMsg, clientId, ip);
+
+                        var log = AppCommand.FindById(msg.Id);
+                        if (log != null)
+                        {
+                            if (log.TraceId.IsNullOrEmpty()) log.TraceId = span?.TraceId;
+                            log.Status = CommandStatus.取消;
+                            log.Update();
+                        }
+                    }
                     else
                     {
                         WriteHistory("WebSocket发送", true, mqMsg, clientId, ip);
