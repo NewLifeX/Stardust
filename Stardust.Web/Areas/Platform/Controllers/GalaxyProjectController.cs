@@ -66,9 +66,10 @@ public class GalaxyProjectController : EntityController<GalaxyProject>
 
         if (p.Sort.IsNullOrEmpty())
         {
-            p.Sort = "Sort,Id";
+            p.Sort = "Sort";
             p.Desc = true;
         }
+        //if (p.OrderBy.IsNullOrEmpty()) p.OrderBy = "sort desc,Id desc";
 
         return GalaxyProject.Search(start, end, p["Q"], p);
     }
