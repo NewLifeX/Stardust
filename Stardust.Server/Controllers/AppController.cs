@@ -146,7 +146,7 @@ public class AppController : BaseController
             if (txt == "Ping") socket.SendAsync("Pong".GetBytes(), WebSocketMessageType.Text, true, source.Token);
         }, source);
 
-        WriteHistory("WebSocket断开", true, $"State{socket.State} CloseStatus={socket.CloseStatus}", clientId);
+        WriteHistory("WebSocket断开", true, $"State={socket.State} CloseStatus={socket.CloseStatus}", clientId);
         if (olt != null)
         {
             olt.WebSocket = false;
@@ -210,7 +210,7 @@ public class AppController : BaseController
         {
             XTrace.WriteLine("WebSocket异常 app={0} ip={1}", app, ip);
             XTrace.WriteException(ex);
-            WriteHistory("WebSocket断开", false, $"State{socket.State} CloseStatus={socket.CloseStatus} {ex}", clientId, ip);
+            WriteHistory("WebSocket断开", false, $"State={socket.State} CloseStatus={socket.CloseStatus} {ex}", clientId, ip);
         }
         finally
         {
