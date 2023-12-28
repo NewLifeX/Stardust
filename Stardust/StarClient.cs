@@ -713,9 +713,13 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         _timer = null;
 
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
-        if (_websocket != null && _websocket.State == WebSocketState.Open)
-            _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default).Wait(1_000);
         _source?.Cancel();
+        try
+        {
+            if (_websocket != null && _websocket.State == WebSocketState.Open)
+                _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
+        }
+        catch { }
 
         //_websocket.TryDispose();
         _websocket = null;
@@ -732,8 +736,29 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
 
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
             var svc = _currentService;
-            span?.AppendTag($"svc={svc?.Address} Token=[{Token?.Length}]");
-            if (svc == null || Token == null) return;
+            if (svc == null) return;
+
+            // 使用过滤器内部token，因为它有过期刷新机制
+            var token = Token;
+            if (Filter is NewLife.Http.TokenHttpFilter thf) token = thf.Token?.AccessToken;
+            span?.AppendTag($"svc={svc.Address} Token=[{token?.Length}]");
+
+            if (token.IsNullOrEmpty()) return;
+
+            if (_websocket != null && _websocket.State == WebSocketState.Open)
+            {
+                try
+                {
+                    // 在websocket链路上定时发送心跳，避免长连接被断开
+                    var str = "Ping";
+                    await _websocket.SendAsync(new ArraySegment<Byte>(str.GetBytes()), WebSocketMessageType.Text, true, default);
+                }
+                catch (Exception ex)
+                {
+                    span?.SetError(ex, null);
+                    WriteLog("{0}", ex);
+                }
+            }
 
             if (_websocket == null || _websocket.State != WebSocketState.Open)
             {
@@ -743,7 +768,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
                 using var span2 = Tracer?.NewSpan("WebSocketConnect", uri + "");
 
                 var client = new ClientWebSocket();
-                client.Options.SetRequestHeader("Authorization", "Bearer " + Token);
+                client.Options.SetRequestHeader("Authorization", "Bearer " + token);
 
                 span?.AppendTag($"WebSocket.Connect {uri}");
                 await client.ConnectAsync(uri, default);
@@ -752,12 +777,6 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
 
                 _source = new CancellationTokenSource();
                 _ = Task.Run(() => DoPull(client, _source.Token));
-            }
-            else
-            {
-                // 在websocket链路上定时发送心跳，避免长连接被断开
-                var str = "Ping";
-                await _websocket.SendAsync(new ArraySegment<Byte>(str.GetBytes()), WebSocketMessageType.Text, true, default);
             }
 #endif
         }

@@ -389,13 +389,13 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         _eventTimer = null;
 
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
+        _source?.Cancel();
         try
         {
             if (_websocket != null && _websocket.State == WebSocketState.Open)
                 _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
         }
         catch { }
-        _source?.Cancel();
 
         //_websocket.TryDispose();
         _websocket = null;
@@ -423,39 +423,47 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
 
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
             var svc = _currentService;
-            if (svc != null && UseWebSocket)
+            if (svc == null || !UseWebSocket) return;
+
+            // 使用过滤器内部token，因为它有过期刷新机制
+            var token = Token;
+            if (Filter is NewLife.Http.TokenHttpFilter thf) token = thf.Token?.AccessToken;
+            span?.AppendTag($"svc={svc.Address} Token=[{token?.Length}]");
+
+            if (token.IsNullOrEmpty()) return;
+
+            if (_websocket != null && _websocket.State == WebSocketState.Open)
             {
-                // 使用过滤器内部token，因为它有过期刷新机制
-                var token = Token;
-                if (Filter is NewLife.Http.TokenHttpFilter thf) token = thf.Token?.AccessToken;
-                span?.AppendTag($"svc={svc.Address} Token=[{Token?.Length}]");
-
-                if (token.IsNullOrEmpty()) return;
-
-                if (_websocket == null || _websocket.State != WebSocketState.Open)
-                {
-                    var url = svc.Address.ToString().Replace("http://", "ws://").Replace("https://", "wss://");
-                    var uri = new Uri(new Uri(url), "/app/notify");
-
-                    using var span2 = Tracer?.NewSpan("WebSocketConnect", uri + "");
-
-                    var client = new ClientWebSocket();
-                    client.Options.SetRequestHeader("Authorization", "Bearer " + token);
-
-                    span?.AppendTag($"WebSocket.Connect {uri}");
-                    await client.ConnectAsync(uri, default);
-
-                    _websocket = client;
-
-                    _source = new CancellationTokenSource();
-                    _ = Task.Run(() => DoPull(client, _source.Token));
-                }
-                else
+                try
                 {
                     // 在websocket链路上定时发送心跳，避免长连接被断开
                     var str = "Ping";
                     await _websocket.SendAsync(new ArraySegment<Byte>(str.GetBytes()), WebSocketMessageType.Text, true, default);
                 }
+                catch (Exception ex)
+                {
+                    span?.SetError(ex, null);
+                    WriteLog("{0}", ex);
+                }
+            }
+
+            if (_websocket == null || _websocket.State != WebSocketState.Open)
+            {
+                var url = svc.Address.ToString().Replace("http://", "ws://").Replace("https://", "wss://");
+                var uri = new Uri(new Uri(url), "/app/notify");
+
+                using var span2 = Tracer?.NewSpan("WebSocketConnect", uri + "");
+
+                var client = new ClientWebSocket();
+                client.Options.SetRequestHeader("Authorization", "Bearer " + token);
+
+                span?.AppendTag($"WebSocket.Connect {uri}");
+                await client.ConnectAsync(uri, default);
+
+                _websocket = client;
+
+                _source = new CancellationTokenSource();
+                _ = Task.Run(() => DoPull(client, _source.Token));
             }
 #endif
         }
