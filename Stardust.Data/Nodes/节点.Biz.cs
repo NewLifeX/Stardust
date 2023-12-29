@@ -80,9 +80,12 @@ public partial class Node : Entity<Node>
 
         if (Period == 0) Period = 60;
 
-        // 自动识别版本
-        var kind = OSKindHelper.Parse(OS, OSVersion);
-        if (kind > 0) OSKind = kind;
+        if (!Dirtys[__.OSKind])
+        {
+            // 自动识别版本
+            var kind = OSKindHelper.Parse(OS, OSVersion);
+            if (kind > 0) OSKind = kind;
+        }
     }
 
     /// <summary>已重载</summary>

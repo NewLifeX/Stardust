@@ -5,6 +5,7 @@ using System.Text;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using NewLife.Log;
 using Stardust.Models;
 using XCode;
 using XCode.Membership;
@@ -156,39 +157,42 @@ public partial class NodeVersion : Entity<NodeVersion>
     /// <returns></returns>
     public Boolean Match(Node node)
     {
-        return Match(node, node.Product);
+        var rs = MatchResult(node);
+        if (rs == null) return true;
+
+        DefaultSpan.Current?.AppendTag($"[{ID}][{Version}] {rs}");
+
+        return false;
     }
 
     /// <summary>应用策略是否匹配指定节点</summary>
     /// <param name="node"></param>
-    /// <param name="productCode">目标产品编码。可以是StarAgent/CrazyCoder/dotNet等</param>
     /// <returns></returns>
-    public Boolean Match(Node node, String productCode)
+    public String MatchResult(Node node)
     {
-        // 比较产品类型
-        if (!ProductCode.IsNullOrEmpty() && !ProductCode.EqualIgnoreCase(productCode)) return false;
-
         // 没有使用该规则，直接过
         if (Rules.TryGetValue("version", out var vs))
         {
             var ver = node.Version;
-            if (ver.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(ver))) return false;
+            if (ver.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(ver))) return $"[{ver}] not Match {vs.Join(",")}";
         }
         else if (Rules.TryGetValue("version>", out vs))
         {
-            if (node.Version.IsNullOrEmpty()) return false;
-            if (!System.Version.TryParse(node.Version, out var ver1)) return false;
-            if (!System.Version.TryParse(vs[0], out var ver2)) return false;
+            var ver = node.Version;
+            if (node.Version.IsNullOrEmpty()) return "Version is null";
+            if (!System.Version.TryParse(ver, out var ver1)) return $"Version=[{ver}] is invalid";
+            if (!System.Version.TryParse(vs[0], out var ver2)) return $"vs[0]=[{vs[0]}] is invalid";
 
-            if (ver1 < ver2) return false;
+            if (ver1 < ver2) return $"Version=[{ver1}] < {ver2}";
         }
         else if (Rules.TryGetValue("version<", out vs))
         {
-            if (node.Version.IsNullOrEmpty()) return false;
-            if (!System.Version.TryParse(node.Version, out var ver1)) return false;
-            if (!System.Version.TryParse(vs[0], out var ver2)) return false;
+            var ver = node.Version;
+            if (node.Version.IsNullOrEmpty()) return "Version is null";
+            if (!System.Version.TryParse(ver, out var ver1)) return $"Version=[{ver}] is invalid";
+            if (!System.Version.TryParse(vs[0], out var ver2)) return $"vs[0]=[{vs[0]}] is invalid";
 
-            if (ver1 > ver2) return false;
+            if (ver1 > ver2) return $"Version=[{ver1}] > {ver2}";
         }
 
         if (Rules.TryGetValue("node", out vs))
@@ -196,26 +200,26 @@ public partial class NodeVersion : Entity<NodeVersion>
             var code = node.Code;
             var name = node.Name;
             if ((code.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(code))) &&
-                (name.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(name)))) return false;
+                (name.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(name)))) return $"[{code}/{name}] not Match {vs.Join(",")}";
         }
 
         if (Rules.TryGetValue("category", out vs))
         {
             var category = node.Category;
-            if (category.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(category))) return false;
+            if (category.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(category))) return $"[{category}] not Match {vs.Join(",")}";
         }
 
         if (Rules.TryGetValue("runtime", out vs))
         {
             var runtime = node.Runtime;
-            if (runtime.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(runtime))) return false;
+            if (runtime.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(runtime))) return $"[{runtime}] not Match {vs.Join(",")}";
         }
 
         if (Rules.TryGetValue("framework", out vs))
         {
             var str = !node.Frameworks.IsNullOrEmpty() ? node.Frameworks : node.Framework;
             var frameworks = str?.Split(",");
-            if (frameworks == null || frameworks.Length == 0) return false;
+            if (frameworks == null || frameworks.Length == 0) return "Frameworks is null";
 
             // 本节点拥有的所有框架，任意框架匹配任意规则，即可认为匹配
             var flag = false;
@@ -227,35 +231,37 @@ public partial class NodeVersion : Entity<NodeVersion>
                     break;
                 }
             }
-            if (!flag) return false;
+            if (!flag) return $"[{str}] not Match {vs.Join(",")}";
         }
         else if (Rules.TryGetValue("framework>", out vs))
         {
-            if (node.Framework.IsNullOrEmpty()) return false;
-            if (!System.Version.TryParse(node.Framework, out var ver1)) return false;
-            if (!System.Version.TryParse(vs[0], out var ver2)) return false;
+            var str = node.Framework;
+            if (str.IsNullOrEmpty()) return "Version is null";
+            if (!System.Version.TryParse(str, out var ver1)) return $"Framework=[{str}] is invalid";
+            if (!System.Version.TryParse(vs[0], out var ver2)) return $"vs[0]=[{vs[0]}] is invalid";
 
-            if (ver1 < ver2) return false;
+            if (ver1 < ver2) return $"Framework=[{ver1}] < {ver2}";
         }
         else if (Rules.TryGetValue("framework<", out vs))
         {
-            if (node.Framework.IsNullOrEmpty()) return false;
-            if (!System.Version.TryParse(node.Framework, out var ver1)) return false;
-            if (!System.Version.TryParse(vs[0], out var ver2)) return false;
+            var str = node.Framework;
+            if (str.IsNullOrEmpty()) return "Version is null";
+            if (!System.Version.TryParse(str, out var ver1)) return $"Framework=[{str}] is invalid";
+            if (!System.Version.TryParse(vs[0], out var ver2)) return $"vs[0]=[{vs[0]}] is invalid";
 
-            if (ver1 > ver2) return false;
+            if (ver1 > ver2) return $"Framework=[{ver1}] > {ver2}";
         }
 
         if (Rules.TryGetValue("os", out vs))
         {
             var os = node.OS;
-            if (os.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(os))) return false;
+            if (os.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(os))) return $"[{os}] not Match {vs.Join(",")}";
         }
 
         if (Rules.TryGetValue("oskind", out vs))
         {
             var os = node.OSKind;
-            if (os <= 0) return false;
+            if (os <= 0) return "OSKind is null";
 
             var flag = false;
             foreach (var item in vs)
@@ -271,25 +277,25 @@ public partial class NodeVersion : Entity<NodeVersion>
                     break;
                 }
             }
-            if (!flag) return false;
+            if (!flag) return $"[{os}] not Match {vs.Join(",")}";
         }
 
         if (Rules.TryGetValue("arch", out vs))
         {
             var arch = node.Architecture;
-            if (arch.IsNullOrEmpty() || !vs.Any(e => e.EqualIgnoreCase(arch))) return false;
+            if (arch.IsNullOrEmpty() || !vs.Any(e => e.EqualIgnoreCase(arch))) return $"[{arch}] not Match {vs.Join(",")}";
         }
 
         if (Rules.TryGetValue("province", out vs))
         {
             var province = node.ProvinceID + "";
-            if (province.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(province))) return false;
+            if (province.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(province))) return $"[{province}] not Match {vs.Join(",")}";
         }
 
         if (Rules.TryGetValue("city", out vs))
         {
             var city = node.CityID + "";
-            if (city.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(city))) return false;
+            if (city.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(city))) return $"[{city}] not Match {vs.Join(",")}";
         }
 
         //if (Rules.TryGetValue("product", out vs))
@@ -298,7 +304,7 @@ public partial class NodeVersion : Entity<NodeVersion>
         //    if (product.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(product))) return false;
         //}
 
-        return true;
+        return null;
     }
     #endregion
 }

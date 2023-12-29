@@ -576,6 +576,10 @@ public class NodeService
 
         // 找到所有产品版本
         var list = NodeVersion.GetValids(ch);
+        list = list.Where(e => e.ProductCode.IsNullOrEmpty() || e.ProductCode.EqualIgnoreCase(node.ProductCode)).ToList();
+        if (list.Count == 0) return null;
+
+        using var span = _tracer?.NewSpan(nameof(Upgrade), new { node.Name, node.Code, node.Runtime, node.Framework, node.Frameworks, ip, vers = list.Count });
 
         // 应用过滤规则，使用最新的一个版本
         var pv = list.OrderByDescending(e => e.ID).FirstOrDefault(e => e.Version != node.LastVersion && e.Match(node));
@@ -585,10 +589,10 @@ public class NodeService
         // 检查是否已经升级过这个版本
         if (node.LastVersion == pv.Version) return null;
 
+        node.WriteHistory("自动更新", true, $"channel={ch} version={node.Version} last={node.LastVersion} => [{pv.ID}] {pv.Version} {pv.Executor}", ip);
+
         node.LastVersion = pv.Version;
         node.Update();
-
-        node.WriteHistory("自动更新", true, $"channel={ch} version={node.Version} last={node.LastVersion} => [{pv.ID}] {pv.Version} {pv.Executor}", ip);
 
         return pv;
     }
@@ -600,33 +604,56 @@ public class NodeService
     public NodeVersion CheckDotNet(Node node, Uri baseUri, String ip)
     {
         // 找到所有产品版本
-        var list = NodeVersion.GetValids(NodeChannels.Release).Where(e => e.ProductCode.EqualIgnoreCase("dotNet")).ToList();
+        var list = NodeVersion.GetValids(0).Where(e => e.ProductCode.EqualIgnoreCase("dotNet")).ToList();
+        if (list.Count == 0) return null;
 
-        // 应用过滤规则，使用最新的一个版本
-        var pv = list.OrderByDescending(e => e.ID).FirstOrDefault(e => e.Version != node.LastVersion && e.Match(node, "dotNet"));
-        if (pv == null) return null;
+        using var span = _tracer?.NewSpan(nameof(CheckDotNet), new { node.Name, node.Code, node.Runtime, node.Framework, node.Frameworks, ip, vers = list.Count });
 
-        // 准备安装框架所需要的参数
-        var fmodel = new FrameworkModel { Version = pv.Version, BaseUrl = pv.Source };
-        // 如果没有指定源，则使用默认源
-        if (fmodel.BaseUrl.IsNullOrEmpty()) fmodel.BaseUrl = new Uri(baseUri, "/files/").ToString();
+        // 应用过滤规则
+        list = list.OrderByDescending(e => e.ID).Where(e => e.Match(node)).ToList();
+        //var list2 = new List<NodeVersion>();
+        //foreach (var pv in list)
+        //{
+        //    var rs = pv.MatchResult(node);
+        //    if (rs == null)
+        //        list2.Add(pv);
+        //    else
+        //        span?.AppendTag($"[{pv.Version}] {rs}");
+        //}
+        //list = list2;
+        if (list.Count == 0) return null;
 
-        // 检查是否已经升级过这个版本
-        var key = $"nodeNet:{node.Code}-{fmodel.Version}";
-        if (_cacheProvider.Cache.Get<String>(key) == pv.Version) return null;
-        _cacheProvider.Cache.Set(key, pv.Version, 3600);
-
-        var model = new CommandInModel
+        // 每个版本都要检查，如果已经推送，则推送下一个
+        foreach (var pv in list)
         {
-            Code = node.Code,
-            Command = "framework/install",
-            Argument = fmodel.ToJson()
-        };
-        _ = SendCommand(node, model, "");
+            span?.AppendTag($"[{pv.ID}]{pv.Version}");
 
-        node.WriteHistory("推送dotNet", true, $"version={node.Framework} => [{pv.ID}] {pv.Version} {fmodel.BaseUrl}", ip);
+            // 准备安装框架所需要的参数
+            var fmodel = new FrameworkModel { Version = pv.Version, BaseUrl = pv.Source };
+            // 如果没有指定源，则使用默认源
+            if (fmodel.BaseUrl.IsNullOrEmpty()) fmodel.BaseUrl = new Uri(baseUri, "/files/dotnet/").ToString();
+            span?.AppendTag($" source={fmodel.BaseUrl}");
 
-        return pv;
+            // 检查是否已经升级过这个版本
+            var key = $"nodeNet:{node.Code}-{fmodel.Version}";
+            if (_cacheProvider.Cache.Get<String>(key) == pv.Version) return null;
+            _cacheProvider.Cache.Set(key, pv.Version, 600);
+
+            var model = new CommandInModel
+            {
+                Code = node.Code,
+                Command = "framework/install",
+                Argument = fmodel.ToJson(),
+                Expire = 60,
+            };
+            _ = SendCommand(node, model, $"NodeVersion:{pv.Version}");
+
+            node.WriteHistory("推送dotNet", true, $"version={node.Framework} => [{pv.ID}] {pv.Version} {fmodel.BaseUrl}", ip);
+
+            return pv;
+        }
+
+        return null;
     }
     #endregion
 

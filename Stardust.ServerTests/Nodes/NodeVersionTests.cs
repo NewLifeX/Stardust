@@ -30,6 +30,32 @@ public class NodeVersionTests
 
         rs = nv.Match(new Node { Code = "6234BE2A", Name = "aml", Version = "2.9.2023.0825" });
         Assert.True(rs);
+
+        nv = new NodeVersion
+        {
+            Strategy = "node=*a2*;framework=6.*,7.*;oskind=ubuntu;version>=2.9.2023.1115",
+        };
+        nv.Invoke("OnLoad");
+
+        rs = nv.Match(new Node { Code = "6234BE2A", OSKind = OSKinds.Ubuntu, Framework = "6.0", Name = "a2", Version = "2.9.2023.1115" });
+        Assert.True(rs);
+        rs = nv.Match(new Node { Code = "6234BE2A", OSKind = OSKinds.Ubuntu, Framework = "6.0", Name = "浇花a2", Version = "2.9.2023.1116" });
+        Assert.True(rs);
+        rs = nv.Match(new Node { Code = "6234BE2A", OSKind = OSKinds.Ubuntu, Framework = "7.0", Name = "a2-4g", Version = "2.9.2023.1115" });
+        Assert.True(rs);
+        rs = nv.Match(new Node { Code = "6234BE2A", OSKind = OSKinds.Ubuntu, Frameworks = "6.0.21,7.0.10", Name = "a2-4g", Version = "2.9.2023.1114" });
+        Assert.False(rs);
+
+        nv = new NodeVersion
+        {
+            Strategy = "node=*a2*;framework<=7.0;oskind=ubuntu;version>=2.9.2023.1115",
+        };
+        nv.Invoke("OnLoad");
+
+        rs = nv.Match(new Node { Code = "6234BE2A", OSKind = OSKinds.Ubuntu, Framework = "7.0", Name = "a2", Version = "2.9.2023.1115" });
+        Assert.True(rs);
+        rs = nv.Match(new Node { Code = "6234BE2A", OSKind = OSKinds.Ubuntu, Framework = "8.0", Name = "a2", Version = "2.9.2023.1115" });
+        Assert.False(rs);
     }
 
     [Fact]

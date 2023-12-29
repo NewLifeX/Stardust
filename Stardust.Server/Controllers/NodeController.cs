@@ -126,6 +126,7 @@ public class NodeController : BaseController
     {
         var node = _node ?? throw new ApiException(401, "节点未登录");
 
+        // 基础路径
         var uri = Request.GetRawUrl().ToString();
         var p = uri.IndexOf('/', "https://".Length);
         if (p > 0) uri = uri[..p];

@@ -412,7 +412,7 @@ internal class MyService : ServiceBase, IServiceProvider
         _timer.TryDispose();
         _timer = new TimerX(CheckUpgrade, null, 5_000, 600_000) { Async = true };
 
-        client.RegisterCommand("node/upgrade", s => _timer.SetNext(-1));
+        client.RegisterCommand("node/upgrade", s => _ = CheckUpgrade(s));
         client.RegisterCommand("node/restart", Restart);
         client.RegisterCommand("node/reboot", Reboot);
     }
