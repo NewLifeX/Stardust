@@ -592,6 +592,42 @@ public class NodeService
 
         return pv;
     }
+
+    /// <summary>检查节点是否符合规则，并推送dotNet运行时安装指令</summary>
+    /// <param name="node"></param>
+    /// <param name="ip"></param>
+    /// <returns></returns>
+    public NodeVersion CheckDotNet(Node node, Uri baseUri, String ip)
+    {
+        // 找到所有产品版本
+        var list = NodeVersion.GetValids(NodeChannels.Release).Where(e => e.ProductCode.EqualIgnoreCase("dotNet")).ToList();
+
+        // 应用过滤规则，使用最新的一个版本
+        var pv = list.OrderByDescending(e => e.ID).FirstOrDefault(e => e.Version != node.LastVersion && e.Match(node, "dotNet"));
+        if (pv == null) return null;
+
+        // 准备安装框架所需要的参数
+        var fmodel = new FrameworkModel { Version = pv.Version, BaseUrl = pv.Source };
+        // 如果没有指定源，则使用默认源
+        if (fmodel.BaseUrl.IsNullOrEmpty()) fmodel.BaseUrl = new Uri(baseUri, "/files/").ToString();
+
+        // 检查是否已经升级过这个版本
+        var key = $"nodeNet:{node.Code}-{fmodel.Version}";
+        if (_cacheProvider.Cache.Get<String>(key) == pv.Version) return null;
+        _cacheProvider.Cache.Set(key, pv.Version, 3600);
+
+        var model = new CommandInModel
+        {
+            Code = node.Code,
+            Command = "framework/install",
+            Argument = fmodel.ToJson()
+        };
+        _ = SendCommand(node, model, "");
+
+        node.WriteHistory("推送dotNet", true, $"version={node.Framework} => [{pv.ID}] {pv.Version} {fmodel.BaseUrl}", ip);
+
+        return pv;
+    }
     #endregion
 
     #region 下行指令
@@ -613,6 +649,17 @@ public class NodeService
         if (app.AllowControlNodes != "*" && !node.Code.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
             throw new ApiException(403, $"[{app}]无权操作节点[{node}]！");
 
+        return await SendCommand(node, model, app.Name);
+    }
+
+    /// <summary>向节点发送命令。（内部用）</summary>
+    /// <param name="node"></param>
+    /// <param name="model"></param>
+    /// <param name="createUser"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    public async Task<NodeCommand> SendCommand(Node node, CommandInModel model, String createUser = null)
+    {
         var cmd = new NodeCommand
         {
             NodeID = node.ID,
@@ -622,7 +669,7 @@ public class NodeService
             Status = CommandStatus.就绪,
 
             TraceId = DefaultSpan.Current?.TraceId,
-            CreateUser = app.Name,
+            CreateUser = createUser,
         };
         if (model.Expire > 0) cmd.Expire = DateTime.Now.AddSeconds(model.Expire);
         cmd.Insert();

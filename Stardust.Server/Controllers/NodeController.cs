@@ -124,20 +124,25 @@ public class NodeController : BaseController
     [HttpGet(nameof(Upgrade))]
     public UpgradeInfo Upgrade(String channel)
     {
-        var node = _node;
-        if (node == null) throw new ApiException(401, "节点未登录");
+        var node = _node ?? throw new ApiException(401, "节点未登录");
+
+        var uri = Request.GetRawUrl().ToString();
+        var p = uri.IndexOf('/', "https://".Length);
+        if (p > 0) uri = uri[..p];
 
         var pv = _nodeService.Upgrade(node, channel, UserHost);
-        if (pv == null) return null;
+        if (pv == null)
+        {
+            _nodeService.CheckDotNet(node, new Uri(uri), UserHost);
+
+            return null;
+        }
 
         var url = pv.Source;
 
         // 为了兼容旧版本客户端，这里必须把路径处理为绝对路径
         if (!url.StartsWithIgnoreCase("http://", "https://"))
         {
-            var uri = Request.GetRawUrl().ToString();
-            var p = uri.IndexOf('/', "https://".Length);
-            if (p > 0) uri = uri[..p];
             url = new Uri(new Uri(uri), url) + "";
         }
 

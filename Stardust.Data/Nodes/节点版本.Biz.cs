@@ -156,8 +156,17 @@ public partial class NodeVersion : Entity<NodeVersion>
     /// <returns></returns>
     public Boolean Match(Node node)
     {
+        return Match(node, node.Product);
+    }
+
+    /// <summary>应用策略是否匹配指定节点</summary>
+    /// <param name="node"></param>
+    /// <param name="productCode">目标产品编码。可以是StarAgent/CrazyCoder/dotNet等</param>
+    /// <returns></returns>
+    public Boolean Match(Node node, String productCode)
+    {
         // 比较产品类型
-        if (!ProductCode.IsNullOrEmpty() && !ProductCode.EqualIgnoreCase(node.ProductCode)) return false;
+        if (!ProductCode.IsNullOrEmpty() && !ProductCode.EqualIgnoreCase(productCode)) return false;
 
         // 没有使用该规则，直接过
         if (Rules.TryGetValue("version", out var vs))
@@ -246,7 +255,6 @@ public partial class NodeVersion : Entity<NodeVersion>
         if (Rules.TryGetValue("oskind", out vs))
         {
             var os = node.OSKind;
-            //if (os <= 0 || !vs.Any(e => e.ToInt() == (Int32)os || Enum.TryParse<OSKinds>(e, out var v) && v == os)) return false;
             if (os <= 0) return false;
 
             var flag = false;

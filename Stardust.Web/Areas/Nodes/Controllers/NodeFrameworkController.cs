@@ -66,7 +66,7 @@ public class NodeFrameworkController : EntityController<Node>
         //var baseUrl = "";
         var set = NewLife.Setting.Current;
         var server = set.PluginServer;
-        if (baseUrl.IsNullOrEmpty() && !server.IsNullOrEmpty() && !server.ToLower().Contains("x.newlifex.com"))
+        if (baseUrl.IsNullOrEmpty() && !server.IsNullOrEmpty() && !server.Contains("x.newlifex.com", StringComparison.CurrentCultureIgnoreCase))
         {
             baseUrl = server.TrimEnd('/');
             if (!baseUrl.EndsWithIgnoreCase("/dotnet")) baseUrl += "/dotnet";

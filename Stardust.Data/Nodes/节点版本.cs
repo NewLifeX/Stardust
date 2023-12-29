@@ -13,12 +13,12 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Nodes;
 
-/// <summary>节点版本。发布更新</summary>
+/// <summary>节点版本。控制不同类型节点的版本更新，如StarAgent/CrazyCoder等。特殊支持dotNet用于推送安装.Net运行时</summary>
 [Serializable]
 [DataObject]
-[Description("节点版本。发布更新")]
+[Description("节点版本。控制不同类型节点的版本更新，如StarAgent/CrazyCoder等。特殊支持dotNet用于推送安装.Net运行时")]
 [BindIndex("IU_NodeVersion_Version", true, "Version")]
-[BindTable("NodeVersion", Description = "节点版本。发布更新", ConnName = "Stardust", DbType = DatabaseType.None)]
+[BindTable("NodeVersion", Description = "节点版本。控制不同类型节点的版本更新，如StarAgent/CrazyCoder等。特殊支持dotNet用于推送安装.Net运行时", ConnName = "Stardust", DbType = DatabaseType.None)]
 public partial class NodeVersion
 {
     #region 属性

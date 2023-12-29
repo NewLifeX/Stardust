@@ -17,6 +17,7 @@ public class NodeVersionController : EntityController<NodeVersion>
         LogOnChange = true;
 
         ListFields.RemoveField("Source", "Size", "FileHash", "Preinstall", "Executor");
+        ListFields.RemoveCreateField().RemoveRemarkField();
 
         {
             //var df = ListFields.GetField("Source") as ListField;

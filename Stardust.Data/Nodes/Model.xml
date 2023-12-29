@@ -221,7 +221,7 @@
         <Index Columns="NodeID" />
       </Indexes>
     </Table>
-    <Table Name="NodeVersion" Description="节点版本。发布更新">
+    <Table Name="NodeVersion" Description="节点版本。控制不同类型节点的版本更新，如StarAgent/CrazyCoder等。特殊支持dotNet用于推送安装.Net运行时">
       <Columns>
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="Version" DataType="String" Description="版本号" />

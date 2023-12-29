@@ -49,7 +49,7 @@ public class EfCoreDiagnosticListener : TraceDiagnosticListener
                         else if (sql.StartsWithIgnoreCase("Select "))
                         {
                             // 查询数据时，Group作为独立埋点操作名
-                            if (sql.ToLower().Contains("group by"))
+                            if (sql.Contains("group by", StringComparison.CurrentCultureIgnoreCase))
                                 action = "Group";
                         }
 
