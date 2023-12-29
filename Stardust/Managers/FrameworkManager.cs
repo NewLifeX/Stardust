@@ -157,6 +157,13 @@ public class FrameworkManager
     void CheckPing()
     {
         if (_eventProvider is StarClient client)
-            TaskEx.Run(() => client.Ping());
+        {
+            TaskEx.Run(async () =>
+            {
+                await client.Ping();
+                await TaskEx.Delay(1000);
+                await client.Upgrade("", "");
+            });
+        }
     }
 }
