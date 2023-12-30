@@ -88,7 +88,7 @@ public class DeployService
     public void WriteHistory(Int32 appId, Int32 nodeId, String action, Boolean success, String remark, String ip)
     {
         var hi = AppDeployHistory.Create(appId, nodeId, action, success, remark, ip);
-        hi.SaveAsync();
+        hi.Insert();
     }
 
     public Int32 Ping(Node node, AppInfo inf, String ip)

@@ -321,7 +321,8 @@ public partial class NodeOnline : Entity<NodeOnline>
             Creator = Environment.MachineName,
         };
 
-        data.SaveAsync();
+        //data.SaveAsync();
+        data.Insert();
     }
     #endregion
 }

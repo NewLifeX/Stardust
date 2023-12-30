@@ -249,7 +249,8 @@ public partial class App : Entity<App>
     {
         var history = AppHistory.Create(this, action, success, remark, version ?? Version, Environment.MachineName, ip);
         history.Client = clientId;
-        history.SaveAsync();
+        //history.SaveAsync();
+        history.Insert();
     }
 
     /// <summary>获取 或 创建</summary>

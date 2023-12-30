@@ -256,7 +256,7 @@ public class TraceController : ControllerBaseX
             if (ti != null)
             {
                 ti.TraceId = traceIds.Take(5).Join(",");
-                ti.SaveAsync();
+                ti.Update();
             }
         }
 

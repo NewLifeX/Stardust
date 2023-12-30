@@ -278,7 +278,7 @@ public class NodeController : BaseController
         if (olt != null)
         {
             olt.WebSocket = true;
-            olt.SaveAsync();
+            olt.Update();
         }
 
         var source = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.ApplicationStopping);
@@ -392,14 +392,14 @@ public class NodeController : BaseController
     private void WriteHistory(Node node, String action, Boolean success, String remark, String ip = null)
     {
         var hi = NodeHistory.Create(node ?? _node, action, success, remark, Environment.MachineName, ip ?? UserHost);
-        hi.SaveAsync();
+        hi.Insert();
     }
 
     private void WriteHistory(Node node, String action, Boolean success, DateTime time, String remark, String ip = null)
     {
         var hi = NodeHistory.Create(node ?? _node, action, success, remark, Environment.MachineName, ip ?? UserHost);
         if (time.Year > 2000) hi.CreateTime = time;
-        hi.SaveAsync();
+        hi.Insert();
     }
     #endregion
 }

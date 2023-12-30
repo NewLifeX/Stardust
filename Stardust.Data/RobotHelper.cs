@@ -101,7 +101,8 @@ public class RobotHelper
             hi.Error = ex.ToString();
         }
 
-        hi.SaveAsync();
+        //hi.SaveAsync();
+        hi.Insert();
 
         return hi;
     }

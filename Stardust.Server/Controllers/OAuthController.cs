@@ -44,7 +44,7 @@ public class OAuthController : ControllerBase
                 // 更新应用信息
                 app.LastLogin = DateTime.Now;
                 app.LastIP = ip;
-                app.SaveAsync();
+                app.Update();
 
                 var tokenModel = _tokenService.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
 

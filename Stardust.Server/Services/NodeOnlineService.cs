@@ -64,7 +64,7 @@ public class NodeOnlineService : IHostedService
                         if (olt.CreateTime.Year > 2000 && olt.UpdateTime.Year > 2000)
                         {
                             node.OnlineTime += (Int32)(olt.UpdateTime - olt.CreateTime).TotalSeconds;
-                            node.SaveAsync();
+                            node.Update();
                         }
 
                         _nodeService.RemoveOnline(node);

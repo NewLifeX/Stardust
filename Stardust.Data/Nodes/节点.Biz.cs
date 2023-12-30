@@ -640,7 +640,8 @@ public partial class Node : Entity<Node>
     public NodeHistory WriteHistory(String action, Boolean success, String remark, String ip)
     {
         var hi = NodeHistory.Create(this, action, success, remark, Environment.MachineName, ip);
-        hi.SaveAsync();
+        //hi.SaveAsync();
+        hi.Insert();
 
         return hi;
     }

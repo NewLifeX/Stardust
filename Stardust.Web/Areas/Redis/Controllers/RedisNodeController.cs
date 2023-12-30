@@ -122,7 +122,7 @@ public class RedisNodeController : EntityController<RedisNode>
                 foreach (var item in queues.Where(e => e.Enable))
                 {
                     _redisService.TraceQueue(item);
-                    item.SaveAsync();
+                    item.Update();
                 }
 
                 LogProvider.Provider.WriteLog("RedisNode", "Refresh", true, $"刷新Redis节点[{node}]成功");

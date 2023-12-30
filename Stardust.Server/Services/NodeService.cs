@@ -104,7 +104,7 @@ public class NodeService
         if (online.CreateTime.Year > 2000)
         {
             node.OnlineTime += (Int32)(DateTime.Now - online.CreateTime).TotalSeconds;
-            node.SaveAsync();
+            node.Update();
         }
 
         NodeOnlineService.CheckOffline(node, "注销");
@@ -375,7 +375,8 @@ public class NodeService
 
             // 每10分钟更新一次节点信息，确保活跃
             if (node.LastActive.AddMinutes(10) < DateTime.Now) node.LastActive = DateTime.Now;
-            node.SaveAsync();
+            //node.SaveAsync();
+            node.Update();
 
             rs.Period = node.Period;
             rs.NewServer = !node.NewServer.IsNullOrEmpty() ? node.NewServer : node.Project?.NewServer;

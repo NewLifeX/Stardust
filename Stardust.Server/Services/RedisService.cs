@@ -120,7 +120,7 @@ public class RedisService : IHostedService, IRedisService
         //var inf = rds.GetInfo(true);
         var inf = rds.GetInfo(false);
         node.Fill(inf);
-        node.SaveAsync();
+        node.Update();
 
         var data = new RedisData
         {
@@ -201,7 +201,7 @@ public class RedisService : IHostedService, IRedisService
         if (mq.Category.IsNullOrEmpty()) mq.Category = node.Category;
         if (mq.Type.IsNullOrEmpty()) mq.Type = type;
 
-        mq.SaveAsync();
+        mq.Save();
     }
 
     private void DoTraceQueue(Object state)
@@ -238,7 +238,7 @@ public class RedisService : IHostedService, IRedisService
                     _cache.Remove(key);
                 }
 
-                item.SaveAsync();
+                item.Update();
             }
         }
     }

@@ -326,7 +326,7 @@ public class RegistryService
 
         var hi = AppHistory.Create(app, action, success, remark, version, Environment.MachineName, ip);
         hi.Client = clientId;
-        hi.SaveAsync();
+        hi.Update();
     }
 
     public AppOnline Ping(App app, AppInfo inf, String ip, String clientId, String token)

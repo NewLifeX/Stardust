@@ -134,7 +134,7 @@ public class AppController : BaseController
         if (olt != null)
         {
             olt.WebSocket = true;
-            olt.SaveAsync();
+            olt.Update();
         }
 
         var ip = UserHost;
@@ -151,7 +151,7 @@ public class AppController : BaseController
         if (olt != null)
         {
             olt.WebSocket = false;
-            olt.SaveAsync();
+            olt.Update();
         }
     }
 
@@ -377,7 +377,7 @@ public class AppController : BaseController
 
         var hi = AppHistory.Create(_app, action, success, remark, olt?.Version, Environment.MachineName, ip ?? UserHost);
         hi.Client = clientId ?? _clientId;
-        hi.SaveAsync();
+        hi.Insert();
     }
 
     private void WriteHistory(String action, Boolean success, DateTime time, String remark, String clientId, String ip = null)
@@ -387,7 +387,7 @@ public class AppController : BaseController
         var hi = AppHistory.Create(_app, action, success, remark, olt?.Version, Environment.MachineName, ip ?? UserHost);
         hi.Client = clientId ?? _clientId;
         if (time.Year > 2000) hi.CreateTime = time;
-        hi.SaveAsync();
+        hi.Insert();
     }
     #endregion
 }
