@@ -162,7 +162,10 @@ public class FrameworkManager
             {
                 await client.Ping();
                 await TaskEx.Delay(1000);
-                await client.Upgrade("", "");
+
+                //!! 要执行整个升级动作，而不仅仅是拉取新版本
+                //await client.Upgrade("", "");
+                await client.SendCommand("node/upgrade", "");
             });
         }
     }

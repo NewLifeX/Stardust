@@ -884,8 +884,14 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         var rs = await this.ExecuteCommand(model);
         e.Reply ??= rs;
 
-        if (e.Reply != null) await CommandReply(e.Reply);
+        if (e.Reply != null && e.Reply.Id > 0) await CommandReply(e.Reply);
     }
+
+    /// <summary>向命令引擎发送命令，触发指定已注册动作</summary>
+    /// <param name="command"></param>
+    /// <param name="argument"></param>
+    /// <returns></returns>
+    public async Task SendCommand(String command, String argument) => await OnReceiveCommand(new CommandModel { Command = command, Argument = argument });
     #endregion
 
     #region 更新
