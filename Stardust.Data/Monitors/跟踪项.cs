@@ -180,6 +180,15 @@ public partial class TraceItem
     [BindColumn("AlarmRobot", "告警机器人。钉钉、企业微信等", "")]
     public String AlarmRobot { get => _AlarmRobot; set { if (OnPropertyChanging("AlarmRobot", value)) { _AlarmRobot = value; OnPropertyChanged("AlarmRobot"); } } }
 
+    private String _TraceId;
+    /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+    [Category("扩展")]
+    [DisplayName("追踪")]
+    [Description("追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("TraceId", "追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
+    public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
+
     private String _CreateIP;
     /// <summary>创建地址</summary>
     [Category("扩展")]
@@ -271,6 +280,7 @@ public partial class TraceItem
             "MinRingRate" => _MinRingRate,
             "AlarmGroup" => _AlarmGroup,
             "AlarmRobot" => _AlarmRobot,
+            "TraceId" => _TraceId,
             "CreateIP" => _CreateIP,
             "CreateTime" => _CreateTime,
             "UpdateUser" => _UpdateUser,
@@ -303,6 +313,7 @@ public partial class TraceItem
                 case "MinRingRate": _MinRingRate = value.ToDouble(); break;
                 case "AlarmGroup": _AlarmGroup = Convert.ToString(value); break;
                 case "AlarmRobot": _AlarmRobot = Convert.ToString(value); break;
+                case "TraceId": _TraceId = Convert.ToString(value); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
@@ -379,6 +390,9 @@ public partial class TraceItem
 
         /// <summary>告警机器人。钉钉、企业微信等</summary>
         public static readonly Field AlarmRobot = FindByName("AlarmRobot");
+
+        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        public static readonly Field TraceId = FindByName("TraceId");
 
         /// <summary>创建地址</summary>
         public static readonly Field CreateIP = FindByName("CreateIP");
@@ -463,6 +477,9 @@ public partial class TraceItem
 
         /// <summary>告警机器人。钉钉、企业微信等</summary>
         public const String AlarmRobot = "AlarmRobot";
+
+        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        public const String TraceId = "TraceId";
 
         /// <summary>创建地址</summary>
         public const String CreateIP = "CreateIP";

@@ -249,6 +249,17 @@ public class TraceController : ControllerBaseX
             }
         }
 
+        // 记录最后一次访问，避免TraceId过多导致字段溢出
+        if (list.Count > 0)
+        {
+            var ti = list[0].TraceItem;
+            if (ti != null)
+            {
+                ti.TraceId = traceIds.Take(5).Join(",");
+                ti.SaveAsync();
+            }
+        }
+
         // 如果有traceId，则按照要求排序，深度搜索算法
         if (list.Count > 0)
         {
