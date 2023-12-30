@@ -174,7 +174,8 @@ public partial class NodeVersion : Entity<NodeVersion>
         if (Rules.TryGetValue("version", out var vs))
         {
             var ver = node.Version;
-            if (ver.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(ver))) return $"[{ver}] not Match {vs.Join(",")}";
+            if (ver.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(ver, StringComparison.OrdinalIgnoreCase)))
+                return $"[{ver}] not Match {vs.Join(",")}";
         }
         else if (Rules.TryGetValue("version>", out vs))
         {
@@ -199,14 +200,17 @@ public partial class NodeVersion : Entity<NodeVersion>
         {
             var code = node.Code;
             var name = node.Name;
-            if ((code.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(code))) &&
-                (name.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(name)))) return $"[{code}/{name}] not Match {vs.Join(",")}";
+            if (code.IsNullOrEmpty() && name.IsNullOrEmpty()) return "Node is null";
+            if ((code.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(code, StringComparison.OrdinalIgnoreCase))) &&
+                (name.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(name, StringComparison.OrdinalIgnoreCase))))
+                return $"[{code}/{name}] not Match {vs.Join(",")}";
         }
 
         if (Rules.TryGetValue("category", out vs))
         {
             var category = node.Category;
-            if (category.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(category))) return $"[{category}] not Match {vs.Join(",")}";
+            if (category.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(category, StringComparison.OrdinalIgnoreCase)))
+                return $"[{category}] not Match {vs.Join(",")}";
         }
 
         if (Rules.TryGetValue("runtime", out vs))
@@ -255,7 +259,8 @@ public partial class NodeVersion : Entity<NodeVersion>
         if (Rules.TryGetValue("os", out vs))
         {
             var os = node.OS;
-            if (os.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(os))) return $"[{os}] not Match {vs.Join(",")}";
+            if (os.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(os, StringComparison.OrdinalIgnoreCase)))
+                return $"[{os}] not Match {vs.Join(",")}";
         }
 
         if (Rules.TryGetValue("oskind", out vs))
@@ -283,19 +288,28 @@ public partial class NodeVersion : Entity<NodeVersion>
         if (Rules.TryGetValue("arch", out vs))
         {
             var arch = node.Architecture;
-            if (arch.IsNullOrEmpty() || !vs.Any(e => e.EqualIgnoreCase(arch))) return $"[{arch}] not Match {vs.Join(",")}";
+            if (arch.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(arch, StringComparison.OrdinalIgnoreCase)))
+                return $"[{arch}] not Match {vs.Join(",")}";
         }
 
         if (Rules.TryGetValue("province", out vs))
         {
-            var province = node.ProvinceID + "";
-            if (province.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(province))) return $"[{province}] not Match {vs.Join(",")}";
+            var code = node.ProvinceID + "";
+            var name = node.ProvinceName;
+            if (code.IsNullOrEmpty() && name.IsNullOrEmpty()) return "Province is null";
+            if ((code.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(code, StringComparison.OrdinalIgnoreCase))) &&
+                (name.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(name, StringComparison.OrdinalIgnoreCase))))
+                return $"[{code}/{name}] not Match {vs.Join(",")}";
         }
 
         if (Rules.TryGetValue("city", out vs))
         {
-            var city = node.CityID + "";
-            if (city.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(city))) return $"[{city}] not Match {vs.Join(",")}";
+            var code = node.CityID + "";
+            var name = node.CityName;
+            if (code.IsNullOrEmpty() && name.IsNullOrEmpty()) return "City is null";
+            if ((code.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(code, StringComparison.OrdinalIgnoreCase))) &&
+                (name.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(name, StringComparison.OrdinalIgnoreCase))))
+                return $"[{code}/{name}] not Match {vs.Join(",")}";
         }
 
         //if (Rules.TryGetValue("product", out vs))

@@ -113,7 +113,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
                 var name = Path.GetFileName(file.FileName);
                 if (!name.IsNullOrEmpty() && deploy != null)
                 {
-                    if (!deploy.PackageName.IsNullOrEmpty() && !deploy.PackageName.IsMatch(name))
+                    if (!deploy.PackageName.IsNullOrEmpty() && !deploy.PackageName.IsMatch(name, StringComparison.OrdinalIgnoreCase))
                         throw new InvalidOperationException($"文件名[{name}]与应用包名[{deploy.PackageName}]不匹配！");
 
                     //var deploy = AppDeploy.FindByName(name);

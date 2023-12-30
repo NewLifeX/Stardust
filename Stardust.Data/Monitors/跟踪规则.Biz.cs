@@ -143,7 +143,7 @@ public partial class TraceRule : Entity<TraceRule>
         else
         {
             if (Rule.EqualIgnoreCase(input)) return true;
-            if (Rule.IsMatch(input)) return true;
+            if (Rule.IsMatch(input, StringComparison.OrdinalIgnoreCase)) return true;
         }
 
         return false;

@@ -114,7 +114,7 @@ public class StarTracer : DefaultTracer
         if (builders == null) return;
 
         // 剔除项
-        if (Excludes != null) builders = builders.Where(e => !Excludes.Any(y => y.IsMatch(e.Name))).ToArray();
+        if (Excludes != null) builders = builders.Where(e => !Excludes.Any(y => y.IsMatch(e.Name, StringComparison.OrdinalIgnoreCase))).ToArray();
         if (TrimSelf) builders = builders.Where(e => !e.Name.EndsWithIgnoreCase("/Trace/Report", "/Trace/ReportRaw")).ToArray();
         if (builders.Length == 0) return;
 

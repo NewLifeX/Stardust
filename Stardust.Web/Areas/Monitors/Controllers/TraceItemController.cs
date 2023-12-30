@@ -112,7 +112,7 @@ public class TraceItemController : EntityController<TraceItem>
                         name = name[(p + 3)..];
                         if (!name.IsNullOrEmpty())
                         {
-                            var rule = rules.FirstOrDefault(e => e.Rule.IsMatch(name));
+                            var rule = rules.FirstOrDefault(e => e.Rule.IsMatch(name, StringComparison.OrdinalIgnoreCase));
                             if (rule != null)
                             {
                                 XTrace.WriteLine("修正显示 {0}/{1}", ti.Name, ti.Id);

@@ -218,7 +218,7 @@ public class TraceController : ControllerBase
                     continue;
                 }
 
-                if (excludes != null && excludes.Any(e => e.IsMatch(item.Name)))
+                if (excludes != null && excludes.Any(e => e.IsMatch(item.Name, StringComparison.OrdinalIgnoreCase)))
                 {
                     using var span = _tracer?.NewSpan("trace:Exclude", item.Name);
                     continue;

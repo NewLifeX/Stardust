@@ -352,7 +352,7 @@ public class ZipDeploy
 
                     var dst = rundir.CombinePath(item.Name);
                     // 当前文件在覆盖列表内时，强制覆盖
-                    if (ovs != null && ovs.Any(e => e.IsMatch(item.Name)))
+                    if (ovs != null && ovs.Any(e => e.IsMatch(item.Name, StringComparison.OrdinalIgnoreCase)))
                     {
                         WriteLog("复制文件 {0}", item.Name);
 

@@ -117,10 +117,10 @@
     <Table Name="TraceRule" Description="跟踪规则。全局黑白名单，白名单放行，黑名单拦截">
       <Columns>
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="Rule" DataType="String" Length="200" Description="规则。支持*模糊匹配。如/cube/*" />
+        <Column Name="Rule" DataType="String" Length="200" Description="规则。支持*模糊匹配（不区分大小写），如/cube/*。支持正则（区分大小写）" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="IsWhite" DataType="Boolean" Description="白名单。否则是黑名单" />
-        <Column Name="IsRegex" DataType="Boolean" Description="正则。是否使用正则表达式" />
+        <Column Name="IsRegex" DataType="Boolean" Description="正则。是否使用正则表达式，此时区分大小写" />
         <Column Name="Priority" DataType="Int32" Description="优先级。越大越在前面" Category="扩展" />
         <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
         <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />

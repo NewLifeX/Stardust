@@ -391,7 +391,7 @@ public class TraceStatService : ITraceStatService
         if (list.Count == 0) return;
 
         // 剔除指定项
-        list = list.Where(e => !e.Name.IsNullOrEmpty() && !excludes.Any(y => y.IsMatch(e.Name))).ToList();
+        list = list.Where(e => !e.Name.IsNullOrEmpty() && !excludes.Any(y => y.IsMatch(e.Name, StringComparison.OrdinalIgnoreCase))).ToList();
 
         // 聚合
         foreach (var item in list)

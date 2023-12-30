@@ -30,11 +30,11 @@ public partial class TraceRule
     public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
     private String _Rule;
-    /// <summary>规则。支持*模糊匹配。如/cube/*</summary>
+    /// <summary>规则。支持*模糊匹配（不区分大小写），如/cube/*。支持正则（区分大小写）</summary>
     [DisplayName("规则")]
-    [Description("规则。支持*模糊匹配。如/cube/*")]
+    [Description("规则。支持*模糊匹配（不区分大小写），如/cube/*。支持正则（区分大小写）")]
     [DataObjectField(false, false, true, 200)]
-    [BindColumn("Rule", "规则。支持*模糊匹配。如/cube/*", "")]
+    [BindColumn("Rule", "规则。支持*模糊匹配（不区分大小写），如/cube/*。支持正则（区分大小写）", "")]
     public String Rule { get => _Rule; set { if (OnPropertyChanging("Rule", value)) { _Rule = value; OnPropertyChanged("Rule"); } } }
 
     private Boolean _Enable;
@@ -54,11 +54,11 @@ public partial class TraceRule
     public Boolean IsWhite { get => _IsWhite; set { if (OnPropertyChanging("IsWhite", value)) { _IsWhite = value; OnPropertyChanged("IsWhite"); } } }
 
     private Boolean _IsRegex;
-    /// <summary>正则。是否使用正则表达式</summary>
+    /// <summary>正则。是否使用正则表达式，此时区分大小写</summary>
     [DisplayName("正则")]
-    [Description("正则。是否使用正则表达式")]
+    [Description("正则。是否使用正则表达式，此时区分大小写")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("IsRegex", "正则。是否使用正则表达式", "")]
+    [BindColumn("IsRegex", "正则。是否使用正则表达式，此时区分大小写", "")]
     public Boolean IsRegex { get => _IsRegex; set { if (OnPropertyChanging("IsRegex", value)) { _IsRegex = value; OnPropertyChanged("IsRegex"); } } }
 
     private Int32 _Priority;
@@ -190,7 +190,7 @@ public partial class TraceRule
         /// <summary>编号</summary>
         public static readonly Field Id = FindByName("Id");
 
-        /// <summary>规则。支持*模糊匹配。如/cube/*</summary>
+        /// <summary>规则。支持*模糊匹配（不区分大小写），如/cube/*。支持正则（区分大小写）</summary>
         public static readonly Field Rule = FindByName("Rule");
 
         /// <summary>启用</summary>
@@ -199,7 +199,7 @@ public partial class TraceRule
         /// <summary>白名单。否则是黑名单</summary>
         public static readonly Field IsWhite = FindByName("IsWhite");
 
-        /// <summary>正则。是否使用正则表达式</summary>
+        /// <summary>正则。是否使用正则表达式，此时区分大小写</summary>
         public static readonly Field IsRegex = FindByName("IsRegex");
 
         /// <summary>优先级。越大越在前面</summary>
@@ -235,7 +235,7 @@ public partial class TraceRule
         /// <summary>编号</summary>
         public const String Id = "Id";
 
-        /// <summary>规则。支持*模糊匹配。如/cube/*</summary>
+        /// <summary>规则。支持*模糊匹配（不区分大小写），如/cube/*。支持正则（区分大小写）</summary>
         public const String Rule = "Rule";
 
         /// <summary>启用</summary>
@@ -244,7 +244,7 @@ public partial class TraceRule
         /// <summary>白名单。否则是黑名单</summary>
         public const String IsWhite = "IsWhite";
 
-        /// <summary>正则。是否使用正则表达式</summary>
+        /// <summary>正则。是否使用正则表达式，此时区分大小写</summary>
         public const String IsRegex = "IsRegex";
 
         /// <summary>优先级。越大越在前面</summary>
