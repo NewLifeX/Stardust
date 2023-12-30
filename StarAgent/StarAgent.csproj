@@ -25,12 +25,12 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
-    <ServerGarbageCollection>true</ServerGarbageCollection>
-    <GarbageCollectionAdapatationMode>1</GarbageCollectionAdapatationMode>
-    <PublishAot>true</PublishAot>
-    <OptimizationPreference>Size</OptimizationPreference>
-    <InvariantGlobalization>true</InvariantGlobalization>
-    <StackTraceSupport>false</StackTraceSupport>
+    <!--<ServerGarbageCollection>true</ServerGarbageCollection>-->
+    <!--<GarbageCollectionAdapatationMode>1</GarbageCollectionAdapatationMode>-->
+    <!--<PublishAot>true</PublishAot>-->
+    <!--<OptimizationPreference>Size</OptimizationPreference>-->
+    <!--<InvariantGlobalization>true</InvariantGlobalization>-->
+    <!--<StackTraceSupport>false</StackTraceSupport>-->
   </PropertyGroup>
 
   <ItemGroup>
