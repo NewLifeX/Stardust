@@ -130,39 +130,39 @@ public class NodeService
         var flag = true;
         if (!uuid.IsNullOrEmpty() && uuid != node.Uuid)
         {
-            node.WriteHistory("登录校验", false, $"唯一标识不符！{uuid}!={node.Uuid}", ip);
+            node.WriteHistory("登录校验", false, $"唯一标识不符！（新!=旧）{uuid}!={node.Uuid}", ip);
             flag = false;
         }
         if (!guid.IsNullOrEmpty() && guid != node.MachineGuid)
         {
-            node.WriteHistory("登录校验", false, $"机器标识不符！{guid}!={node.MachineGuid}", ip);
+            node.WriteHistory("登录校验", false, $"机器标识不符！（新!=旧）{guid}!={node.MachineGuid}", ip);
             flag = false;
         }
         if (!serial.IsNullOrEmpty() && serial != node.SerialNumber)
         {
-            node.WriteHistory("登录校验", false, $"计算机序列号不符！{serial}!={node.SerialNumber}", ip);
+            node.WriteHistory("登录校验", false, $"计算机序列号不符！（新!=旧）{serial}!={node.SerialNumber}", ip);
             flag = false;
         }
         if (!board.IsNullOrEmpty() && board != node.Board)
         {
-            node.WriteHistory("登录校验", false, $"主板不符！{board}!={node.Board}", ip);
+            node.WriteHistory("登录校验", false, $"主板不符！（新!=旧）{board}!={node.Board}", ip);
             //flag = false;
         }
         if (!diskid.IsNullOrEmpty() && diskid != node.DiskID)
         {
-            node.WriteHistory("登录校验", false, $"磁盘序列号不符！{diskid}!={node.DiskID}", ip);
+            node.WriteHistory("登录校验", false, $"磁盘序列号不符！（新!=旧）{diskid}!={node.DiskID}", ip);
             flag = false;
         }
         if (!node.ProductCode.IsNullOrEmpty() && !productCode.IsNullOrEmpty() && !node.ProductCode.EqualIgnoreCase(productCode))
         {
-            node.WriteHistory("登录校验", false, $"产品编码不符！{productCode}!={node.ProductCode}", ip);
+            node.WriteHistory("登录校验", false, $"产品编码不符！（新!=旧）{productCode}!={node.ProductCode}", ip);
             flag = false;
         }
 
         // 机器名
         if (di.MachineName != node.MachineName)
         {
-            node.WriteHistory("登录校验", false, $"机器名不符！{di.MachineName}!={node.MachineName}", ip);
+            node.WriteHistory("登录校验", false, $"机器名不符！（新!=旧）{di.MachineName}!={node.MachineName}", ip);
         }
 
         // 网卡地址
@@ -173,7 +173,7 @@ public class NodeService
             // 任意网卡匹配则通过
             if (!nodems.Any(e => dims.Contains(e)))
             {
-                node.WriteHistory("登录校验", false, $"网卡地址不符！{di.Macs}!={node.MACs}", ip);
+                node.WriteHistory("登录校验", false, $"网卡地址不符！（新!=旧）{di.Macs}!={node.MACs}", ip);
             }
         }
 
