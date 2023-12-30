@@ -114,7 +114,7 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
             p["dtStart"] = start.ToString("yyyy-MM-dd");
 
             p.Sort = __.StatDate;
-            p.Desc = false;
+            p.Desc = true;
             p.PageSize = 100;
         }
         else if (!category.IsNullOrEmpty() && start.Year > 2000)
