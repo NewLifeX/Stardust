@@ -6,7 +6,7 @@
     <AssemblyTitle>星尘分布式服务核心</AssemblyTitle>
     <Description>星尘，分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
     <Company>新生命开发团队</Company>
-    <Copyright>©2002-2023 NewLife</Copyright>
+    <Copyright>©2002-2024 NewLife</Copyright>
     <VersionPrefix>2.9</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
@@ -30,7 +30,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>支持.NET8.0</PackageReleaseNotes>
+    <PackageReleaseNotes>支持新操作系统Alpine/Linx/openEuler/OpenWRT；增加WebSocket心跳；支持节点版本配置策略推送dotNet运行时</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -94,11 +94,11 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'!='net40'">
-    <PackageReference Include="NewLife.Core" Version="10.6.2023.1220-beta1319" />
-    <PackageReference Include="NewLife.Remoting" Version="2.7.2023.1209-beta1634" />
+    <PackageReference Include="NewLife.Core" Version="10.6.2024.0101" />
+    <PackageReference Include="NewLife.Remoting" Version="2.7.2024.0101" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net40'">
-    <PackageReference Include="NewLife.Core" Version="10.6.2023.1201-net40" />
+    <PackageReference Include="NewLife.Core" Version="10.6.2024.0101-net40" />
   </ItemGroup>
 
 </Project>

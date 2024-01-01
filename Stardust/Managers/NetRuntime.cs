@@ -716,12 +716,12 @@ public class NetRuntime
             // 获取 .NET Framework 版本
             var ver = versionKey?.GetValue("Version", "") as String;
             // 获取SP数字
-            var sp = versionKey?.GetValue("SP", "").ToString();
+            var sp = versionKey?.GetValue("SP", "")?.ToString();
 
             if (!String.IsNullOrEmpty(ver))
             {
                 // 获取 installation flag, or an empty string if there is none.
-                var install = versionKey?.GetValue("Install", "").ToString();
+                var install = versionKey?.GetValue("Install", "")?.ToString();
                 if (String.IsNullOrEmpty(install)) // No install info; it must be in a child subkey.
                     list.Add(new VerInfo { Name = versionKeyName, Version = ver, Sp = sp });
                 else if (!String.IsNullOrEmpty(sp) && install == "1")
@@ -739,9 +739,9 @@ public class NetRuntime
                         while (name.Length > 3 && name.Substring(name.Length - 2) == ".0")
                             name = name.Substring(0, name.Length - 2);
                         if (name[0] != 'v') name = 'v' + name;
-                        sp = subKey.GetValue("SP", "").ToString();
+                        sp = subKey.GetValue("SP", "")?.ToString();
 
-                        var install = subKey.GetValue("Install", "").ToString();
+                        var install = subKey.GetValue("Install", "")?.ToString();
                         if (String.IsNullOrEmpty(install)) //No install info; it must be later.
                             list.Add(new VerInfo { Name = name, Version = ver, Sp = sp });
                         else if (!String.IsNullOrEmpty(sp) && install == "1")

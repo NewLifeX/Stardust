@@ -68,7 +68,7 @@ public class DustController : ControllerBase
 
             var history = AppHistory.Create(app, "RegisterService", true, $"注册服务[{service.ServiceName}] {service.ClientId}", null, Environment.MachineName, UserHost);
             history.Client = service.ClientId;
-            history.SaveAsync();
+            history.Insert();
         }
 
         // 作用域
@@ -119,7 +119,7 @@ public class DustController : ControllerBase
 
             var history = AppHistory.Create(app, "UnregisterService", true, $"服务[{service.ServiceName}]下线 {svc.Client}", null, Environment.MachineName, UserHost);
             history.Client = svc.Client;
-            history.SaveAsync();
+            history.Insert();
         }
 
         info.Providers = services.Count;
@@ -156,7 +156,7 @@ public class DustController : ControllerBase
 
             var history = AppHistory.Create(app, "ResolveService", true, $"消费服务[{model.ServiceName}] {model.ToJson()}", null, Environment.MachineName, UserHost);
             history.Client = svc.Client;
-            history.SaveAsync();
+            history.Insert();
         }
 
         // 作用域
