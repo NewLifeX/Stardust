@@ -95,12 +95,13 @@ public class TracerMiddleware
                     span.SetError(new HttpRequestException($"Http Error {code} {(HttpStatusCode)code}"), null);
                 else if (code == 200)
                 {
-                    if (span is DefaultSpan ds && ds.TraceFlag > 0 && span.Tag.Length < 500)
+                    if (span is DefaultSpan ds && ds.TraceFlag > 0 && (span.Tag == null || span.Tag.Length < 500))
                     {
                         var flag = false;
                         var res = ctx.Response;
                         if (res.ContentLength != null &&
                             res.ContentLength < 1024 * 8 &&
+                            res.Body.CanSeek &&
                             res.ContentType != null &&
                             res.ContentType.StartsWithIgnoreCase(TagTypes))
                         {
@@ -112,7 +113,7 @@ public class TracerMiddleware
                             flag = true;
                         }
 
-                        if (span.Tag.Length < 500)
+                        if (span.Tag == null || span.Tag.Length < 500)
                         {
                             if (!flag) span.AppendTag("\r\n=>");
                             var vs = res.Headers.Where(e => !e.Key.EqualIgnoreCase(ExcludeHeaders)).ToDictionary(e => e.Key, e => e.Value + "");
