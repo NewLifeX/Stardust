@@ -8,7 +8,6 @@ using NewLife.Data;
 using NewLife.Log;
 using Stardust.Models;
 using XCode;
-using XCode.Membership;
 
 namespace Stardust.Data.Nodes;
 
@@ -73,6 +72,86 @@ public partial class NodeVersion : Entity<NodeVersion>
 
         var dic = Strategy.SplitAsDictionary("=", ";");
         Rules = dic.ToDictionary(e => e.Key, e => e.Value.Split(","), StringComparer.OrdinalIgnoreCase);
+    }
+
+    protected override void InitData()
+    {
+        if (Meta.Count > 0) return;
+
+        var entity = new NodeVersion
+        {
+            Version = "agent60-0101",
+            ProductCode = "StarAgent",
+            Enable = false,
+            Force = true,
+            Channel = NodeChannels.Release,
+            Strategy = "framework=6.*;version<=2.9.2024.0101",
+            Description = "星尘代理StarAgent升级策略（dotNet6.0）",
+        };
+        entity.Insert();
+
+        entity = new NodeVersion
+        {
+            Version = "agent80-0101",
+            ProductCode = "StarAgent",
+            Enable = false,
+            Force = true,
+            Channel = NodeChannels.Release,
+            Strategy = "framework=8.*;version<=2.9.2024.0101",
+            Description = "星尘代理StarAgent升级策略（dotNet8.0），同时支持net6/net7的StarAgent在安装net8后升级",
+        };
+        entity.Insert();
+
+        entity = new NodeVersion
+        {
+            Version = "CrazyCoder-0101",
+            ProductCode = "CrazyCoder",
+            Enable = false,
+            Force = true,
+            Channel = NodeChannels.Release,
+            Strategy = "framework=8.*;version<=2.9.2024.0101",
+            Description = "码神工具升级策略",
+        };
+        entity.Insert();
+
+        entity = new NodeVersion
+        {
+            Version = "v8.0.1-aspnet",
+            ProductCode = "dotnet",
+            Enable = false,
+            Force = true,
+            Channel = NodeChannels.Release,
+            Strategy = "framework<=7.1;oskind=centos,ubuntu,smartos;version>=2.9.2024.0101",
+            Source = "/files/dotnet/",
+            Description = "NET8运行时升级策略，在CentOS/Ubuntu/SmartOS等系统上，自动安装net8",
+        };
+        entity.Insert();
+
+        entity = new NodeVersion
+        {
+            Version = "v8.0.1-host",
+            ProductCode = "dotnet",
+            Enable = false,
+            Force = true,
+            Channel = NodeChannels.Release,
+            Strategy = "framework<=7.1;oskind=win20*;version>=2.9.2024.0101",
+            Source = "/files/dotnet/",
+            Description = "NET8运行时升级策略，在Windows服务器系统上，自动安装net8",
+        };
+        entity.Insert();
+
+        entity = new NodeVersion
+        {
+            Version = "v8.0.1-desktop",
+            ProductCode = "dotnet",
+            Enable = false,
+            Force = true,
+            Channel = NodeChannels.Release,
+            Strategy = "framework<=7.1;oskind=win1*;version>=2.9.2024.0101",
+            Source = "/files/dotnet/",
+            Description = "NET8运行时升级策略，在win10/win11系统上，自动安装net8",
+        };
+        entity.Insert();
     }
     #endregion
 
