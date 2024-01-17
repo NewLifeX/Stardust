@@ -9,7 +9,7 @@ using XCode.Membership;
 namespace Stardust.Web.Areas.Platform.Controllers;
 
 /// <summary>星系项目。一个星系包含多个星星节点，以及多个尘埃应用，完成产品线的项目管理</summary>
-[Menu(10, true, Icon = "fa-table")]
+[Menu(100, true, Icon = "fa-table")]
 [PlatformArea]
 public class GalaxyProjectController : EntityController<GalaxyProject>
 {

@@ -8,7 +8,7 @@ using Attachment = NewLife.Cube.Entity.Attachment;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
-[Menu(89)]
+[Menu(40)]
 [NodesArea]
 public class NodeVersionController : EntityController<NodeVersion>
 {

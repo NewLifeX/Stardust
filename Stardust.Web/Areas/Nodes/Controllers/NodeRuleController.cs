@@ -4,6 +4,7 @@ using Stardust.Data.Nodes;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
+[Menu(10)]
 [NodesArea]
 public class NodeRuleController : EntityController<NodeRule>
 {

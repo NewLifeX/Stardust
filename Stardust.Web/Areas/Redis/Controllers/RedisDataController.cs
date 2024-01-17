@@ -8,7 +8,7 @@ using static Stardust.Data.Nodes.RedisData;
 
 namespace Stardust.Web.Areas.Redis.Controllers;
 
-[Menu(40)]
+[Menu(40, false)]
 [RedisArea]
 public class RedisDataController : ReadOnlyEntityController<RedisData>
 {

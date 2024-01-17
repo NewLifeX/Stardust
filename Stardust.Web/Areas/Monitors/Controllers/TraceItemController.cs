@@ -4,14 +4,13 @@ using NewLife;
 using NewLife.Cube;
 using NewLife.Log;
 using NewLife.Web;
-using Stardust.Data;
 using Stardust.Data.Monitors;
 using Stardust.Data.Nodes;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
 
-[Menu(85)]
+[Menu(65)]
 [MonitorsArea]
 public class TraceItemController : EntityController<TraceItem>
 {

@@ -6,7 +6,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Redis.Controllers;
 
-[Menu(30)]
+[Menu(30, false)]
 [RedisArea]
 public class RedisMessageQueueController : EntityController<RedisMessageQueue>
 {

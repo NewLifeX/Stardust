@@ -14,7 +14,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers;
 
 [DisplayName("节点框架")]
 [Description("管理各个节点的.NET框架，安装新版框架，卸载旧版框架")]
-[Menu(10)]
+[Menu(70)]
 [NodesArea]
 public class NodeFrameworkController : EntityController<Node>
 {

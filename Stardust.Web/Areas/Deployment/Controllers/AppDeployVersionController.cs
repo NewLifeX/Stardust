@@ -16,7 +16,7 @@ using Attachment = NewLife.Cube.Entity.Attachment;
 
 namespace Stardust.Web.Areas.Deployment.Controllers;
 
-[Menu(80)]
+[Menu(80, false)]
 [DeploymentArea]
 public class AppDeployVersionController : EntityController<AppDeployVersion>
 {

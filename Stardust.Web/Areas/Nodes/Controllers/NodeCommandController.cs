@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
-using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
@@ -8,7 +7,7 @@ using Stardust.Data.Nodes;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
-[Menu(58)]
+[Menu(58, false)]
 [NodesArea]
 public class NodeCommandController : EntityController<NodeCommand>
 {

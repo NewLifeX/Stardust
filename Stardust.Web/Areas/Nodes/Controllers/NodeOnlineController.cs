@@ -11,7 +11,7 @@ using Node = Stardust.Data.Nodes.Node;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
-[Menu(70)]
+[Menu(80)]
 [NodesArea]
 public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
 {

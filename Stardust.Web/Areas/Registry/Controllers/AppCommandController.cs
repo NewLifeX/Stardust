@@ -7,7 +7,7 @@ using Stardust.Data;
 
 namespace Stardust.Web.Areas.Registry.Controllers;
 
-[Menu(58)]
+[Menu(58, false)]
 [RegistryArea]
 public class AppCommandController : EntityController<AppCommand>
 {

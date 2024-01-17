@@ -11,7 +11,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Deployment.Controllers;
 
-[Menu(88)]
+[Menu(88, false)]
 [DeploymentArea]
 public class AppDeployNodeController : EntityController<AppDeployNode>
 {

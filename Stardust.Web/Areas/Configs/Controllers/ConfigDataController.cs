@@ -10,6 +10,7 @@ using XCode;
 
 namespace Stardust.Web.Areas.Configs.Controllers;
 
+[Menu(0, false)]
 [ConfigsArea]
 public class ConfigDataController : EntityController<ConfigData>
 {

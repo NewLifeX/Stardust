@@ -7,6 +7,7 @@ using Stardust.Data.Configs;
 
 namespace Stardust.Web.Areas.Configs.Controllers;
 
+[Menu(0, false)]
 [ConfigsArea]
 public class ConfigHistoryController : ReadOnlyEntityController<ConfigHistory>
 {

@@ -10,7 +10,7 @@ using static Stardust.Data.Nodes.NodeStat;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
-[Menu(55)]
+[Menu(60)]
 [NodesArea]
 public class NodeStatController : ReadOnlyEntityController<NodeStat>
 {

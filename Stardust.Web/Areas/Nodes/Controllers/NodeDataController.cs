@@ -9,7 +9,7 @@ using static Stardust.Data.Nodes.NodeData;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
-[Menu(60)]
+[Menu(60, false)]
 [NodesArea]
 public class NodeDataController : ReadOnlyEntityController<NodeData>
 {

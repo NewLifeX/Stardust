@@ -3,6 +3,7 @@ using Stardust.Data.Configs;
 
 namespace Stardust.Web.Areas.Configs.Controllers;
 
+[Menu(30)]
 [ConfigsArea]
 public class AppRuleController : EntityController<AppRule>
 {

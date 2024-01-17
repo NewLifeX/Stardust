@@ -7,7 +7,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Deployment.Controllers;
 
-[Menu(70)]
+[Menu(70, false)]
 [DeploymentArea]
 public class AppDeployHistoryController : ReadOnlyEntityController<AppDeployHistory>
 {
