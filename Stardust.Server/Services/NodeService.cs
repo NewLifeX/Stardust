@@ -26,11 +26,11 @@ public class NodeService
     }
 
     #region 注册&登录
-    public Boolean Auth(Node node, String secret, LoginInfo inf, String ip)
+    public Boolean Auth(Node node, String secret, LoginInfo inf, String ip, StarServerSetting setting)
     {
         if (node == null) return false;
 
-        node = CheckNode(node, inf.Node, inf.ProductCode, ip);
+        node = CheckNode(node, inf.Node, inf.ProductCode, ip, setting.NodeCodeLevel);
         if (node == null) return false;
 
         if (node.Secret.IsNullOrEmpty()) return true;
@@ -55,6 +55,8 @@ public class NodeService
             if (node == null || node.Secret.IsNullOrEmpty() || secret.IsNullOrEmpty())
                 node = AutoRegister(node, inf, ip, setting);
             else if (node.Secret.MD5() != secret)
+                node = AutoRegister(node, inf, ip, setting);
+            else if (setting.NodeCodeLevel > 0)
                 node = AutoRegister(node, inf, ip, setting);
         }
 
@@ -112,13 +114,14 @@ public class NodeService
         return online;
     }
 
-    /// <summary>
-    /// 校验节点密钥
-    /// </summary>
+    /// <summary>校验节点信息，如果大量不一致则认为是新节点</summary>
     /// <param name="node"></param>
-    /// <param name="ps"></param>
+    /// <param name="di"></param>
+    /// <param name="productCode"></param>
+    /// <param name="ip"></param>
+    /// <param name="minLevel"></param>
     /// <returns></returns>
-    private static Node CheckNode(Node node, NodeInfo di, String productCode, String ip)
+    private static Node CheckNode(Node node, NodeInfo di, String productCode, String ip, Int32 minLevel)
     {
         // 校验唯一编码，防止客户端拷贝配置
         var uuid = di.UUID;
@@ -127,21 +130,21 @@ public class NodeService
         var board = di.Board;
         var diskid = di.DiskID;
 
-        var flag = true;
+        var level = 5;
         if (!uuid.IsNullOrEmpty() && uuid != node.Uuid)
         {
             node.WriteHistory("登录校验", false, $"唯一标识不符！（新!=旧）{uuid}!={node.Uuid}", ip);
-            flag = false;
+            level--;
         }
         if (!guid.IsNullOrEmpty() && guid != node.MachineGuid)
         {
             node.WriteHistory("登录校验", false, $"机器标识不符！（新!=旧）{guid}!={node.MachineGuid}", ip);
-            flag = false;
+            level--;
         }
         if (!serial.IsNullOrEmpty() && serial != node.SerialNumber)
         {
             node.WriteHistory("登录校验", false, $"计算机序列号不符！（新!=旧）{serial}!={node.SerialNumber}", ip);
-            flag = false;
+            level--;
         }
         if (!board.IsNullOrEmpty() && board != node.Board)
         {
@@ -151,12 +154,12 @@ public class NodeService
         if (!diskid.IsNullOrEmpty() && diskid != node.DiskID)
         {
             node.WriteHistory("登录校验", false, $"磁盘序列号不符！（新!=旧）{diskid}!={node.DiskID}", ip);
-            flag = false;
+            level--;
         }
         if (!node.ProductCode.IsNullOrEmpty() && !productCode.IsNullOrEmpty() && !node.ProductCode.EqualIgnoreCase(productCode))
         {
             node.WriteHistory("登录校验", false, $"产品编码不符！（新!=旧）{productCode}!={node.ProductCode}", ip);
-            flag = false;
+            //level--;
         }
 
         // 机器名
@@ -174,10 +177,13 @@ public class NodeService
             if (!nodems.Any(e => dims.Contains(e)))
             {
                 node.WriteHistory("登录校验", false, $"网卡地址不符！（新!=旧）{di.Macs}!={node.MACs}", ip);
+                level--;
             }
         }
 
-        return flag ? node : null;
+        if (level < minLevel) return null;
+
+        return node;
     }
 
     private Node AutoRegister(Node node, LoginInfo inf, String ip, StarServerSetting set)
@@ -200,37 +206,13 @@ public class NodeService
 
         if (node == null)
         {
-            // 该硬件的所有节点信息
-            var list = Node.SearchAny(di.UUID, di.MachineGuid, di.Macs, di.SerialNumber, di.DiskID);
-
-            // 当前节点信息，取较老者
-            list = list.Where(e => e.ProductCode.IsNullOrEmpty() || e.ProductCode == inf.ProductCode).OrderBy(e => e.ID).ToList();
-
-            // 找到节点
-            //node ??= list.FirstOrDefault();
-            // 节点编码辨识度。UUID+Guid+SerialNumber+DiskId+MAC，只要其中几个相同，就认为是同一个节点，默认2
-            var level = set.NodeCodeLevel;
-            if (level <= 0) level = 2;
-            foreach (var item in list)
+            node = QueryByInfo(inf.ProductCode, di, set.NodeCodeLevel).FirstOrDefault();
+            if (node != null)
             {
-                var n = 0;
-                if (!di.UUID.IsNullOrEmpty() && item.Uuid == di.UUID) n++;
-                if (!di.MachineGuid.IsNullOrEmpty() && item.MachineGuid == di.MachineGuid) n++;
-                if (!di.Macs.IsNullOrEmpty() && item.MACs == di.Macs) n++;
-                if (!di.SerialNumber.IsNullOrEmpty() && item.SerialNumber == di.SerialNumber) n++;
-                if (!di.DiskID.IsNullOrEmpty() && item.DiskID == di.DiskID) n++;
-
-                if (n >= level)
-                {
-                    node = item;
-
-                    var msg = $"检测到节点[{inf.Code}/{di.Macs}]与旧节点[{item.Code}]高度相似，选择使用旧节点";
-                    XTrace.WriteLine(msg);
-                    span?.AppendTag(msg);
-                    node.WriteHistory("匹配已有节点", true, msg, ip);
-
-                    break;
-                }
+                var msg = $"检测到节点[{inf.Code}/{di.Macs}]与旧节点[{node.Code}]高度相似，选择使用旧节点";
+                XTrace.WriteLine(msg);
+                span?.AppendTag(msg);
+                node.WriteHistory("匹配已有节点", true, msg, ip);
             }
         }
 
@@ -271,6 +253,37 @@ public class NodeService
         node.WriteHistory("动态注册", true, inf.ToJson(false, false, false), ip);
 
         return node;
+    }
+
+    public static IList<Node> QueryByInfo(String productCode, NodeInfo di, Int32 level)
+    {
+        // 该硬件的所有节点信息
+        var list = Node.SearchAny(di.UUID, di.MachineGuid, di.Macs, di.SerialNumber, di.DiskID);
+
+        // 当前节点信息，取较老者
+        list = list.Where(e => e.ProductCode.IsNullOrEmpty() || e.ProductCode == productCode).OrderBy(e => e.ID).ToList();
+
+        // 找到节点
+        //node ??= list.FirstOrDefault();
+        // 节点编码辨识度。UUID+Guid+SerialNumber+DiskId+MAC，只要其中几个相同，就认为是同一个节点，默认2
+        //var level = set.NodeCodeLevel;
+        if (level <= 0) level = 2;
+
+        // 按匹配度排序，匹配度越高，越靠前。注意不同节点的匹配度可能相同。
+        var rs = new MySortedList<Int32, Node>();
+        foreach (var item in list)
+        {
+            var n = 0;
+            if (!di.UUID.IsNullOrEmpty() && item.Uuid == di.UUID) n++;
+            if (!di.MachineGuid.IsNullOrEmpty() && item.MachineGuid == di.MachineGuid) n++;
+            if (!di.Macs.IsNullOrEmpty() && item.MACs == di.Macs) n++;
+            if (!di.SerialNumber.IsNullOrEmpty() && item.SerialNumber == di.SerialNumber) n++;
+            if (!di.DiskID.IsNullOrEmpty() && item.DiskID == di.DiskID) n++;
+
+            if (n >= level) rs.Add(10 - n, item);
+        }
+
+        return rs.Values;
     }
 
     /// <summary>
@@ -804,4 +817,38 @@ public class NodeService
     //    hi.SaveAsync();
     //}
     #endregion
+}
+
+public class MySortedList<TKey, TValue>
+{
+    public List<TKey> Keys { get; private set; } = [];
+
+    public List<TValue> Values { get; private set; } = [];
+
+    public void Add(TKey key, TValue value)
+    {
+        // 二分法搜索
+        var idx = Keys.BinarySearch(key);
+        if (idx >= 0)
+        {
+            // 找到已有元素，在其后面插入
+            Keys.Insert(idx + 1, key);
+            Values.Insert(idx + 1, value);
+        }
+        else
+        {
+            // 补码得到索引。判断是否在最后
+            idx = ~idx;
+            if (idx >= Keys.Count)
+            {
+                Keys.Add(key);
+                Values.Add(value);
+            }
+            else
+            {
+                Keys.Insert(idx, key);
+                Values.Insert(idx, value);
+            }
+        }
+    }
 }
