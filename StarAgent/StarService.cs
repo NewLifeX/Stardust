@@ -6,7 +6,6 @@ using NewLife.Log;
 using NewLife.Model;
 using NewLife.Net;
 using NewLife.Remoting;
-using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust;
 using Stardust.Managers;

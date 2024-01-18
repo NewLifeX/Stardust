@@ -8,13 +8,18 @@ using TaskEx = System.Threading.Tasks.Task;
 
 namespace Stardust.Registry;
 
+/// <summary>服务改变的委托</summary>
+/// <param name="serviceName">服务名</param>
+/// <param name="services">服务提供者集合</param>
+public delegate void ServiceChangedCallback(String serviceName, ServiceModel[] services);
+
 /// <summary>注册客户端</summary>
 public interface IRegistry
 {
     /// <summary>绑定消费服务名到指定事件，服务改变时通知外部</summary>
     /// <param name="serviceName"></param>
     /// <param name="callback"></param>
-    void Bind(String serviceName, Action<String, ServiceModel[]> callback);
+    void Bind(String serviceName, ServiceChangedCallback callback);
 
     /// <summary>发布服务（延迟），直到回调函数返回地址信息才做真正发布</summary>
     /// <param name="serviceName">服务名</param>
@@ -84,12 +89,13 @@ public static class RegistryExtensions
             Tracer = DefaultTracer.Instance,
         };
         if (registry is ILogFeature logFeature) http.Log = logFeature.Log;
+        if (registry is ITracerFeature tracerFeature) http.Tracer = tracerFeature.Tracer;
 
         var models = await registry.ResolveAsync(serviceName, null, tag);
 
-        if (models != null) Bind(http, models);
+        if (models != null) BindServices(http, models);
 
-        registry.Bind(serviceName, (k, ms) => Bind(http, ms));
+        registry.Bind(serviceName, (k, ms) => BindServices(http, ms));
 
         return http;
     }
@@ -101,7 +107,10 @@ public static class RegistryExtensions
     /// <returns></returns>
     public static IApiClient CreateForService(this IRegistry registry, String serviceName, String? tag = null) => TaskEx.Run(() => CreateForServiceAsync(registry, serviceName, tag)).Result;
 
-    private static void Bind(ApiHttpClient client, ServiceModel[] ms)
+    /// <summary>绑定客户端到服务集合，更新服务地址</summary>
+    /// <param name="client"></param>
+    /// <param name="ms"></param>
+    public static void BindServices(this ApiHttpClient client, ServiceModel[] ms)
     {
         if (ms == null || ms.Length == 0) return;
 
@@ -118,6 +127,7 @@ public static class RegistryExtensions
             for (var i = 0; i < addrs.Length; i++)
             {
                 var addr = addrs[i];
+                if (!addr.StartsWithIgnoreCase("http://", "https://")) continue;
                 if (set.Contains(addr)) continue;
                 set.Add(addr);
 
