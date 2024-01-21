@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -58,7 +58,7 @@ public partial class AppDeployVersion
     /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
     [DisplayName("资源地址")]
     [Description("资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖")]
-    [DataObjectField(false, false, true, -1)]
+    [DataObjectField(false, false, true, 500)]
     [BindColumn("Url", "资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖", "", ItemType = "file")]
     public String Url { get => _Url; set { if (OnPropertyChanging("Url", value)) { _Url = value; OnPropertyChanged("Url"); } } }
 

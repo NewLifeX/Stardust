@@ -10,7 +10,7 @@ using XCode.Membership;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
 
-[Menu(65)]
+[Menu(65, false)]
 [MonitorsArea]
 public class TraceItemController : EntityController<TraceItem>
 {
