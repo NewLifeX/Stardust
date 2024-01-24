@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using NewLife;
-using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Security;
 using NewLife.Web;
@@ -11,10 +10,6 @@ namespace Stardust.Server.Services;
 /// <summary>应用服务</summary>
 public class TokenService
 {
-    private readonly ITracer _tracer;
-
-    public TokenService(ITracer tracer) => _tracer = tracer;
-
     /// <summary>验证应用密码，不存在时新增</summary>
     /// <param name="username"></param>
     /// <param name="password"></param>
@@ -79,6 +74,28 @@ public class TokenService
         };
     }
 
+    /// <summary>验证并续发新令牌，过期前10分钟才能续发</summary>
+    /// <param name="name"></param>
+    /// <param name="token"></param>
+    /// <param name="secret"></param>
+    /// <param name="expire"></param>
+    /// <returns></returns>
+    public TokenModel ValidAndIssueToken(String name, String token, String secret, Int32 expire)
+    {
+        if (token.IsNullOrEmpty()) return null;
+
+        // 令牌有效期检查，10分钟内过期者，重新颁发令牌
+        var ss = secret.Split(':');
+        var jwt = new JwtBuilder
+        {
+            Algorithm = ss[0],
+            Secret = ss[1],
+        };
+        if (!jwt.TryDecode(token, out _)) return null;
+
+        return DateTime.Now.AddMinutes(10) > jwt.Expire ? IssueToken(name, secret, expire) : null;
+    }
+
     /// <summary>解码令牌</summary>
     /// <param name="token"></param>
     /// <param name="tokenSecret"></param>
@@ -96,7 +113,7 @@ public class TokenService
         };
 
         Exception ex = null;
-        if (!jwt.TryDecode(token, out var message)) ex = new ApiException(403, $"非法访问 {message}");
+        if (!jwt.TryDecode(token, out var message)) ex = new ApiException(403, $"[{jwt.Subject}]非法访问 {message}");
 
         return (jwt, ex);
     }

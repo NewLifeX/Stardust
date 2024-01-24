@@ -72,7 +72,7 @@ public class NodeService
         node.Login(inf.Node, ip);
 
         // 设置令牌
-        var tokenModel = IssueToken(node.Code, setting);
+        var tokenModel = _tokenService.IssueToken(node.Code, setting.TokenSecret, setting.TokenExpire);
 
         // 在线记录
         var olt = GetOrAddOnline(node, tokenModel.AccessToken, ip);
@@ -405,7 +405,7 @@ public class NodeService
 
             // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌。
             //todo 这里将来由客户端提交刷新令牌，才能颁发新的访问令牌。
-            var tm = ValidAndIssueToken(node.Code, token, set);
+            var tm = _tokenService.ValidAndIssueToken(node.Code, token, set.TokenSecret, set.TokenExpire);
             if (tm != null)
             {
                 rs.Token = tm.AccessToken;
@@ -743,34 +743,9 @@ public class NodeService
     #endregion
 
     #region 辅助
-    public TokenModel IssueToken(String name, StarServerSetting set)
-    {
-        // 颁发令牌
-        var ss = set.TokenSecret.Split(':');
-        var jwt = new JwtBuilder
-        {
-            Issuer = Assembly.GetEntryAssembly().GetName().Name,
-            Subject = name,
-            Id = Rand.NextString(8),
-            Expire = DateTime.Now.AddSeconds(set.TokenExpire),
-
-            Algorithm = ss[0],
-            Secret = ss[1],
-        };
-
-        return new TokenModel
-        {
-            AccessToken = jwt.Encode(null),
-            TokenType = jwt.Type ?? "JWT",
-            ExpireIn = set.TokenExpire,
-            RefreshToken = jwt.Encode(null),
-        };
-    }
-
     public (Node, Exception) DecodeToken(String token, String tokenSecret)
     {
         if (token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(token));
-        //if (token.IsNullOrEmpty()) throw new ApiException(401, $"节点未登录[ip={UserHost}]");
 
         // 解码令牌
         var ss = tokenSecret.Split(':');
@@ -794,28 +769,6 @@ public class NodeService
 
         return (node, ex);
     }
-
-    public TokenModel ValidAndIssueToken(String deviceCode, String token, StarServerSetting set)
-    {
-        if (token.IsNullOrEmpty()) return null;
-        //var set = Setting.Current;
-
-        // 令牌有效期检查，10分钟内过期者，重新颁发令牌
-        var ss = set.TokenSecret.Split(':');
-        var jwt = new JwtBuilder
-        {
-            Algorithm = ss[0],
-            Secret = ss[1],
-        };
-        var rs = jwt.TryDecode(token, out var message);
-        return !rs || jwt == null ? null : DateTime.Now.AddMinutes(10) > jwt.Expire ? IssueToken(deviceCode, set) : null;
-    }
-
-    //private void WriteHistory(Node node, String action, Boolean success, String remark, String ip)
-    //{
-    //    var hi = NodeHistory.Create(node, action, success, remark, Environment.MachineName, ip);
-    //    hi.SaveAsync();
-    //}
     #endregion
 }
 
