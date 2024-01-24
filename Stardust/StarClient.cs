@@ -250,6 +250,13 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             Time = DateTime.UtcNow,
         };
 
+        // 获取最新机器名
+        if (Runtime.Linux)
+        {
+            var file = @"/etc/hostname";
+            if (File.Exists(file)) di.MachineName = File.ReadAllText(file).Trim();
+        }
+
         // 目标框架
         di.Framework = _frameworkManager.GetAllVersions().Join(",", e => e.TrimStart('v'));
 

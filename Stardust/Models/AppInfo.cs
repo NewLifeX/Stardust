@@ -137,6 +137,13 @@ public class AppInfo
             MachineName = Environment.MachineName;
             IP = AgentInfo.GetIps();
 
+            // 获取最新机器名
+            if (Runtime.Linux)
+            {
+                var file = @"/etc/hostname";
+                if (File.Exists(file)) MachineName = File.ReadAllText(file).Trim();
+            }
+
             try
             {
                 // 获取进程的连接数

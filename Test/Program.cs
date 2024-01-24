@@ -181,9 +181,16 @@ class Program
 
     static void Test6()
     {
-        var nr = new NetRuntime();
-        var rs = nr.IsAlpine();
-        XTrace.WriteLine("IsAlpine: {0}", rs);
+        //var nr = new NetRuntime();
+        //var rs = nr.IsAlpine();
+        //XTrace.WriteLine("IsAlpine: {0}", rs);
+
+        var client = new StarClient();
+        for (int i = 0; i < 100; i++)
+        {
+            XTrace.WriteLine("Name:{0}, MachinecName:{1}", client.GetNodeInfo().MachineName, Environment.MachineName);
+            Thread.Sleep(1000);
+        }
     }
 
     static void Test8()
