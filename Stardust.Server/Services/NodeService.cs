@@ -9,6 +9,7 @@ using NewLife.Web;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using XCode;
+using XCode.Configuration;
 
 namespace Stardust.Server.Services;
 
@@ -130,6 +131,13 @@ public class NodeService
         var board = di.Board;
         var diskid = di.DiskID;
 
+        // 自动截断，避免超长导致对比时不一致
+        uuid = TrimLength(uuid, Node._.Uuid);
+        guid = TrimLength(guid, Node._.MachineGuid);
+        serial = TrimLength(serial, Node._.SerialNumber);
+        board = TrimLength(board, Node._.Board);
+        diskid = TrimLength(diskid, Node._.DiskID);
+
         var level = 5;
         if (!uuid.IsNullOrEmpty() && uuid != node.Uuid)
         {
@@ -184,6 +192,14 @@ public class NodeService
         if (level < minLevel) return null;
 
         return node;
+    }
+
+    private static String TrimLength(String value, FieldItem field)
+    {
+        if (value.IsNullOrEmpty()) return value;
+        if (field.Length <= 0 || value.Length < field.Length) return value;
+
+        return value[..field.Length];
     }
 
     private Node AutoRegister(Node node, LoginInfo inf, String ip, StarServerSetting set)

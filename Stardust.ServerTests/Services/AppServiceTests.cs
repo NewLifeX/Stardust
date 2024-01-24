@@ -13,7 +13,7 @@ public class AppServiceTests
         var app = App.FindByName("test");
         if (app != null) app.Delete();
 
-        var service = new TokenService(null);
+        var service = new TokenService();
 
         // 没有自动注册
         var ex = Assert.Throws<ApiException>(() => service.Authorize("test", "xxx", false));
@@ -46,7 +46,7 @@ public class AppServiceTests
         var app = new App { Name = "test" };
 
         var set = StarServerSetting.Current;
-        var service = new TokenService(null);
+        var service = new TokenService();
 
         var model = service.IssueToken(app.Name, set.TokenSecret, set.TokenExpire);
         Assert.NotNull(model);
@@ -68,7 +68,7 @@ public class AppServiceTests
         }
 
         var set = StarServerSetting.Current;
-        var service = new TokenService(null);
+        var service = new TokenService();
 
         var model = service.IssueToken(app.Name, set.TokenSecret, set.TokenExpire);
         Assert.NotNull(model);
