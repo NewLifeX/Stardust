@@ -1,8 +1,0 @@
-{
-  "configProperties": {
-    "System.GC.HeapCount": 1,
-    "System.GC.HeapHardLimit": 10485760,
-    "System.GC.ConserveMemory": 9,
-    "System.GC.RetainVM": true
-  }
-}
