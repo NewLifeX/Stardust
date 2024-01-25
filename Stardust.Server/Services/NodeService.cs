@@ -659,7 +659,7 @@ public class NodeService
             span?.AppendTag($"[{pv.ID}]{pv.Version}");
 
             // 准备安装框架所需要的参数
-            var fmodel = new FrameworkModel { Version = pv.Version, BaseUrl = pv.Source };
+            var fmodel = new FrameworkModel { Version = pv.Version, BaseUrl = pv.Source, Force = pv.Force };
             // 如果没有指定源，则使用默认源
             if (fmodel.BaseUrl.IsNullOrEmpty()) fmodel.BaseUrl = new Uri(baseUri, "/files/dotnet/").ToString();
             span?.AppendTag($" source={fmodel.BaseUrl}");

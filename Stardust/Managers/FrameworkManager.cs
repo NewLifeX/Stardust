@@ -53,6 +53,7 @@ public class FrameworkManager
         var nr = new NetRuntime
         {
             Silent = true,
+            Force = model.Force,
             EventProvider = _eventProvider,
             Log = XTrace.Log,
         };

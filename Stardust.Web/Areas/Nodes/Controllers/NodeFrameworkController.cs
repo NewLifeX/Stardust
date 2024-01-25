@@ -72,7 +72,7 @@ public class NodeFrameworkController : EntityController<Node>
             if (!baseUrl.EndsWithIgnoreCase("/dotnet")) baseUrl += "/dotnet";
         }
 
-        var model = new FrameworkModel { Version = ver, BaseUrl = baseUrl };
+        var model = new FrameworkModel { Version = ver, BaseUrl = baseUrl, Force = true };
         var args = model.ToJson();
 
         var ts = new List<Task<Int32>>();
