@@ -151,6 +151,7 @@ public class NetRuntime
         if (!Directory.Exists(target)) Directory.CreateDirectory(target);
 
         // 解压缩
+        WriteLog($"解压缩[{fullFile}]到[{target}]");
         Process.Start(new ProcessStartInfo("tar", $"-xzf {fullFile} -C {target}") { UseShellExecute = true });
 
         // 建立链接
@@ -158,7 +159,10 @@ public class NetRuntime
         if (Force && File.Exists(link)) File.Delete(link);
 
         if (!File.Exists(link))
-            Process.Start(new ProcessStartInfo("ln", $"{fullFile}/dotnet {link} -s") { UseShellExecute = true });
+        {
+            WriteLog($"创建[{target}/dotnet]的软连接到[{link}]");
+            Process.Start(new ProcessStartInfo("ln", $"{target}/dotnet {link} -s") { UseShellExecute = true });
+        }
 
         WriteLog("安装完成！");
 
