@@ -5,6 +5,7 @@ using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
+using Stardust.Data;
 using Stardust.Data.Nodes;
 using XCode.Membership;
 using Node = Stardust.Data.Nodes.Node;
@@ -169,5 +170,27 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
         await Task.WhenAll(ts);
 
         return JsonRefresh("操作成功！");
+    }
+
+    [DisplayName("执行命令")]
+    [EntityAuthorize((PermissionFlags)16)]
+    public async Task<ActionResult> Execute(String command, String argument)
+    {
+        if (GetRequest("keys") == null) throw new ArgumentNullException(nameof(SelectKeys));
+        if (command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(command));
+
+        var ts = new List<Task<Int32>>();
+        foreach (var item in SelectKeys)
+        {
+            var online = NodeOnline.FindById(item.ToInt());
+            if (online != null && online.Node != null)
+            {
+                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, command, argument, 30, 0));
+            }
+        }
+
+        var rs = await Task.WhenAll(ts);
+
+        return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
     }
 }

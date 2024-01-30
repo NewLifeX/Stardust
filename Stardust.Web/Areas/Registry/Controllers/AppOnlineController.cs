@@ -1,9 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc.Filters;
+﻿using System.ComponentModel;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data;
+using XCode.Membership;
 
 namespace Stardust.Web.Areas.Registry.Controllers;
 
@@ -11,6 +15,8 @@ namespace Stardust.Web.Areas.Registry.Controllers;
 [Menu(95)]
 public class AppOnlineController : EntityController<AppOnline>
 {
+    private readonly StarFactory _starFactory;
+
     static AppOnlineController()
     {
         ListFields.RemoveField("ProjectName", "ProcessName", "MachineName", "UserName", "Token");
@@ -47,6 +53,8 @@ public class AppOnlineController : EntityController<AppOnline>
         //}
         ListFields.TraceUrl();
     }
+
+    public AppOnlineController(StarFactory starFactory) => _starFactory = starFactory;
 
     public override void OnActionExecuting(ActionExecutingContext filterContext)
     {
@@ -103,5 +111,27 @@ public class AppOnlineController : EntityController<AppOnline>
         var end = p["dtEnd"].ToDateTime();
 
         return AppOnline.Search(projectId, appId, nodeId, category, start, end, p["Q"], p);
+    }
+
+    [DisplayName("执行命令")]
+    [EntityAuthorize((PermissionFlags)16)]
+    public async Task<ActionResult> Execute(String command, String argument)
+    {
+        if (GetRequest("keys") == null) throw new ArgumentNullException(nameof(SelectKeys));
+        if (command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(command));
+
+        var ts = new List<Task<Int32>>();
+        foreach (var item in SelectKeys)
+        {
+            var online = AppOnline.FindById(item.ToInt());
+            if (online != null && online.App != null)
+            {
+                ts.Add(_starFactory.SendAppCommand(online.App.Name, command, argument, 30, 0));
+            }
+        }
+
+        var rs = await Task.WhenAll(ts);
+
+        return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
     }
 }

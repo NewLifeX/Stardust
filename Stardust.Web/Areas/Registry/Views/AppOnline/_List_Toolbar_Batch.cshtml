@@ -6,15 +6,6 @@
 }
 @if (set.EnableSelect)
 {
-    <button type="button" class="btn btn-success btn-sm" data-action="action" data-url="@Url.Action("CheckUpgrade")" data-fields="keys" disabled>
-        检查更新
-    </button>
-    <button type="button" class="btn btn-success btn-sm" data-action="action" data-url="@Url.Action("Restart")" data-fields="keys" disabled>
-        重启服务
-    </button>
-    <button type="button" class="btn btn-success btn-sm" data-action="action" data-url="@Url.Action("Reboot")" data-fields="keys" disabled>
-        重启系统
-    </button>
     <div class="form-group">
         <label for="command" class="control-label">命令：</label>
         @Html.TextBox("command", page["command"])
