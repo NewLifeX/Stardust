@@ -149,6 +149,8 @@ public class StarFactory : DisposeBase
             json.LoadAll();
 
             Server = json["StarServer"];
+            AppId = json["StarAppId"];
+            Secret = json["StarSecret"];
         }
         if (Server.IsNullOrEmpty() && File.Exists("appsettings.json".GetFullPath()))
         {
@@ -156,6 +158,8 @@ public class StarFactory : DisposeBase
             json.LoadAll();
 
             Server = json["StarServer"];
+            AppId = json["StarAppId"];
+            Secret = json["StarSecret"];
         }
 
         if (!Server.IsNullOrEmpty() && Local.Server.IsNullOrEmpty()) Local.Server = Server;
