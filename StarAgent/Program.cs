@@ -1,10 +1,13 @@
 ﻿using System.Diagnostics;
+using System.Net;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Reflection;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
 using NewLife.Model;
+using NewLife.Net;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
@@ -174,37 +177,7 @@ internal class MyService : ServiceBase, IServiceProvider
         };
 
         // 监听端口，用于本地通信
-        if (set.LocalPort > 0)
-        {
-            //var uri = new NetUri(set.LocalServer);
-            try
-            {
-                // 必须支持Udp，因为需要支持局域网广播搜索功能
-                var svr = new ApiServer(set.LocalPort)
-                {
-                    Tracer = _factory?.Tracer,
-                    Log = XTrace.Log,
-                    EncoderLog = XTrace.Log,
-                };
-                svr.Register(new StarService
-                {
-                    Provider = this,
-                    //Host = Host,
-                    Manager = _Manager,
-                    //PluginManager = _PluginManager,
-                    StarSetting = StarSetting,
-                    AgentSetting = AgentSetting,
-                    Log = XTrace.Log
-                }, null);
-
-                _server = svr;
-                svr.Start();
-            }
-            catch (Exception ex)
-            {
-                XTrace.WriteException(ex);
-            }
-        }
+        if (set.LocalPort > 0) StartLocalServer(set.LocalPort);
 
         // 启动星尘客户端，连接服务端
         StartClient();
@@ -383,6 +356,48 @@ internal class MyService : ServiceBase, IServiceProvider
         }
     }
 
+    public void StartLocalServer(Int32 port)
+    {
+        try
+        {
+            // 必须支持Udp，因为需要支持局域网广播搜索功能
+            var svr = new ApiServer(port)
+            {
+#if !NET40
+                ReuseAddress = true,
+#endif
+                Tracer = _factory?.Tracer,
+                Log = XTrace.Log,
+                EncoderLog = XTrace.Log,
+            };
+            svr.Register(new StarService
+            {
+                Provider = this,
+                //Host = Host,
+                Manager = _Manager,
+                //PluginManager = _PluginManager,
+                StarSetting = StarSetting,
+                AgentSetting = AgentSetting,
+                Log = XTrace.Log
+            }, null);
+
+            //svr.EnsureCreate();
+            //if (svr.Server is NetServer ns)
+            //{
+            //    // 升级核心库以后不需要反射
+            //    //ns.ReuseAddress = true;
+            //    ns.SetValue("ReuseAddress", true);
+            //}
+
+            _server = svr;
+            svr.Start();
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteException(ex);
+        }
+    }
+
     private async Task TryConnectServer(Object state)
     {
         if (!NetworkInterface.GetIsNetworkAvailable() || AgentInfo.GetIps().IsNullOrEmpty())
@@ -402,7 +417,7 @@ internal class MyService : ServiceBase, IServiceProvider
         {
             // 登录报错后，加大定时间隔，输出简单日志
             //_timer.Period = 30_000;
-            if (_timer.Period < 30_000) _timer.Period += 5_000;
+            if (_timer != null && _timer.Period < 30_000) _timer.Period += 5_000;
 
             Log?.Error(ex.Message);
 
