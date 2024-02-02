@@ -254,9 +254,7 @@ public class StarFactory : DisposeBase
         ioc.TryAddSingleton(typeof(ICacheProvider), typeof(CacheProvider));
     }
 
-#if !NET40
     [MemberNotNullWhen(true, nameof(_client))]
-#endif
     private Boolean Valid()
     {
         //if (Server.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Server));

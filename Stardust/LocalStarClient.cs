@@ -482,12 +482,7 @@ public class LocalStarClient
                 var msg = encoder.Decode(rs);
                 if (msg != null)
                 {
-#if NET40
-                    var js = encoder.DecodeResult(msg.Action, msg.Data, rs);
-                    var info = (AgentInfo)encoder.Convert(js, typeof(AgentInfo));
-#else
                     var info = (AgentInfo?)encoder.DecodeResult(msg.Action, msg.Data, rs, typeof(AgentInfo));
-#endif
 
                     yield return info;
                 }

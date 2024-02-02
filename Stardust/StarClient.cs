@@ -113,12 +113,8 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     /// <param name="onRequest"></param>
     /// <param name="cancellationToken">取消通知</param>
     /// <returns></returns>
-#if NET40
-    public override async Task<TResult> InvokeAsync<TResult>(HttpMethod method, String action, Object? args = null, Action<HttpRequestMessage>? onRequest = null, CancellationToken cancellationToken = default)
-#else
     [return: MaybeNull]
     public override async Task<TResult> InvokeAsync<TResult>(HttpMethod method, String action, Object? args = null, Action<HttpRequestMessage>? onRequest = null, CancellationToken cancellationToken = default)
-#endif
     {
         var needLogin = !Logined && !action.EqualIgnoreCase("Node/Login", "Node/Logout");
         if (needLogin)

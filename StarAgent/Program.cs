@@ -1,13 +1,10 @@
 ﻿using System.Diagnostics;
-using System.Net;
 using System.Net.NetworkInformation;
-using System.Net.Sockets;
 using System.Reflection;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
 using NewLife.Model;
-using NewLife.Net;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
@@ -363,9 +360,7 @@ internal class MyService : ServiceBase, IServiceProvider
             // 必须支持Udp，因为需要支持局域网广播搜索功能
             var svr = new ApiServer(port)
             {
-#if !NET40
                 ReuseAddress = true,
-#endif
                 Tracer = _factory?.Tracer,
                 Log = XTrace.Log,
                 EncoderLog = XTrace.Log,
@@ -380,14 +375,6 @@ internal class MyService : ServiceBase, IServiceProvider
                 AgentSetting = AgentSetting,
                 Log = XTrace.Log
             }, null);
-
-            //svr.EnsureCreate();
-            //if (svr.Server is NetServer ns)
-            //{
-            //    // 升级核心库以后不需要反射
-            //    //ns.ReuseAddress = true;
-            //    ns.SetValue("ReuseAddress", true);
-            //}
 
             _server = svr;
             svr.Start();
