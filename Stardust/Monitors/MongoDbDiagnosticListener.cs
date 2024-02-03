@@ -13,7 +13,7 @@ public class MongoDbDiagnosticListener : TraceDiagnosticListener
 
     /// <summary>下一步</summary>
     /// <param name="value"></param>
-    public override void OnNext(KeyValuePair<String, Object> value)
+    public override void OnNext(KeyValuePair<String, Object?> value)
     {
         if (Tracer == null) return;
 
@@ -26,7 +26,7 @@ public class MongoDbDiagnosticListener : TraceDiagnosticListener
         switch (name)
         {
             case "CommandStart":
-                if (value.Value.GetValue("CommandName") is String commandName)
+                if (value.Value != null && value.Value.GetValue("CommandName") is String commandName)
                 {
                     var dbName = value.Value.GetValue("DatabaseNamespace")?.GetValue("DatabaseName")?.ToString();
                     var traceName = $"mongo:{dbName}:{commandName}";
@@ -49,7 +49,7 @@ public class MongoDbDiagnosticListener : TraceDiagnosticListener
             case "CommandFail":
                 if (span != null && !spanName.IsNullOrEmpty() && spanName.StartsWith("mongo:"))
                 {
-                    if (value.Value.GetValue("Exception") is Exception ex) span.SetError(ex, null);
+                    if (value.Value != null && value.Value.GetValue("Exception") is Exception ex) span.SetError(ex, null);
 
                     span.Dispose();
                 }

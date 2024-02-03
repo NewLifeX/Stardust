@@ -13,7 +13,7 @@ namespace Stardust.Extensions.Caches;
 
 class CacheDirectoryContents : IDirectoryContents, IEnumerable<IFileInfo>, IEnumerable
 {
-    private IEnumerable<IFileInfo> _entries;
+    private IEnumerable<IFileInfo>? _entries;
 
     private readonly String _directory;
 
@@ -22,7 +22,7 @@ class CacheDirectoryContents : IDirectoryContents, IEnumerable<IFileInfo>, IEnum
     public Boolean Exists => Directory.Exists(_directory);
 
     /// <summary>索引信息文件。列出扩展显示的文件内容</summary>
-    public String IndexInfoFile { get; set; }
+    public String? IndexInfoFile { get; set; }
 
     public CacheDirectoryContents(String directory)
         : this(directory, ExclusionFilters.Sensitive)
@@ -47,6 +47,7 @@ class CacheDirectoryContents : IDirectoryContents, IEnumerable<IFileInfo>, IEnum
         return _entries.GetEnumerator();
     }
 
+    [MemberNotNull(nameof(_entries))]
     private void EnsureInitialized()
     {
         try
@@ -67,7 +68,7 @@ class CacheDirectoryContents : IDirectoryContents, IEnumerable<IFileInfo>, IEnum
                 var fi = _directory.CombinePath(IndexInfoFile).GetBasePath().AsFile();
                 if (fi.Exists)
                 {
-                    var csv = new CsvDb<FileInfoModel>((x, y) => x.Name.EqualIgnoreCase(y.Name))
+                    var csv = new CsvDb<FileInfoModel>((x, y) => x != null && y != null && x.Name.EqualIgnoreCase(y.Name))
                     {
                         FileName = fi.FullName
                     };

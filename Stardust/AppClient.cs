@@ -681,7 +681,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     /// <param name="tag">特性标签</param>
     /// <param name="health">健康监测接口地址</param>
     /// <returns></returns>
-    public PublishServiceInfo Register(String serviceName, Func<String> addressCallback, String? tag = null, String? health = null)
+    public PublishServiceInfo Register(String serviceName, Func<String?> addressCallback, String? tag = null, String? health = null)
     {
         if (addressCallback == null) throw new ArgumentNullException(nameof(addressCallback));
 

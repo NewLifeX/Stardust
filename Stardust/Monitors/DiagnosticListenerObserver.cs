@@ -67,7 +67,7 @@ public class DiagnosticListenerObserver : IObserver<DiagnosticListener>
 }
 
 /// <summary>追踪诊断监听器</summary>
-public class TraceDiagnosticListener : IObserver<KeyValuePair<String, Object>>
+public class TraceDiagnosticListener : IObserver<KeyValuePair<String, Object?>>
 {
     #region 属性
     /// <summary>名称</summary>
@@ -95,7 +95,7 @@ public class TraceDiagnosticListener : IObserver<KeyValuePair<String, Object>>
 
     /// <summary>下一步</summary>
     /// <param name="value"></param>
-    public virtual void OnNext(KeyValuePair<String, Object> value)
+    public virtual void OnNext(KeyValuePair<String, Object?> value)
     {
         if (value.Key.IsNullOrEmpty()) return;
 
@@ -119,7 +119,7 @@ public class TraceDiagnosticListener : IObserver<KeyValuePair<String, Object>>
             else if (error == value.Key || value.Key.EndsWith(".Exception"))
             {
                 var span = DefaultSpan.Current;
-                if (span != null && value.Value.GetValue("Exception") is Exception ex)
+                if (span != null && value.Value != null && value.Value.GetValue("Exception") is Exception ex)
                 {
                     span.SetError(ex, null);
                 }

@@ -27,7 +27,7 @@ public interface IRegistry
     /// <param name="tag">特性标签</param>
     /// <param name="health">健康监测接口地址</param>
     /// <returns></returns>
-    PublishServiceInfo Register(String serviceName, Func<String> addressCallback, String? tag = null, String? health = null);
+    PublishServiceInfo Register(String serviceName, Func<String?> addressCallback, String? tag = null, String? health = null);
 
     /// <summary>发布服务（直达）</summary>
     /// <remarks>

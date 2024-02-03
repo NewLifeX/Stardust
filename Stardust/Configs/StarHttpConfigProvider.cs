@@ -114,7 +114,7 @@ internal class StarHttpConfigProvider : HttpConfigProvider
 
     public void Attach(ICommandClient client) => client.RegisterCommand("config/publish", DoPublish);
 
-    private String DoPublish(String argument)
+    private String? DoPublish(String? argument)
     {
         // 临时采用反射办法。后面直接调用DoRefresh
         //var timer = this.GetValue("_timer") as TimerX;

@@ -31,7 +31,7 @@ public static class StarFactoryExtensions
     /// <param name="appId">应用标识。为空时读取star.config，初始值为入口程序集名称</param>
     /// <param name="secret">应用密钥。为空时读取star.config，初始值为空</param>
     /// <returns></returns>
-    public static StarFactory AddStardust(this IServiceCollection services, String server = null, String appId = null, String secret = null)
+    public static StarFactory AddStardust(this IServiceCollection services, String? server = null, String? appId = null, String? secret = null)
     {
         var star = new StarFactory(server, appId, secret);
 
@@ -43,13 +43,13 @@ public static class StarFactoryExtensions
         services.AddSingleton(star);
         services.AddSingleton(p => star.Tracer ?? DefaultTracer.Instance ?? (DefaultTracer.Instance ??= new DefaultTracer()));
         //services.AddSingleton(p => star.Config);
-        services.AddSingleton(p => star.Service);
+        services.AddSingleton(p => star.Service!);
 
         // 替换为混合配置提供者，优先本地配置
         //services.Replace(new ServiceDescriptor(typeof(IConfigProvider), p => star.Config, ServiceLifetime.Singleton));
         //var old = services.LastOrDefault(e => e.ServiceType == typeof(IConfigProvider))?.ImplementationInstance as IConfigProvider;
         //old ??= JsonConfigProvider.LoadAppSettings();
-        services.Replace(new ServiceDescriptor(typeof(IConfigProvider), p => star.GetConfig(), ServiceLifetime.Singleton));
+        services.Replace(new ServiceDescriptor(typeof(IConfigProvider), p => star.GetConfig()!, ServiceLifetime.Singleton));
 
         // 分布式缓存
         //services.Replace(new ServiceDescriptor(typeof(CacheService), p => new RedisCacheService(p), ServiceLifetime.Singleton));
@@ -61,7 +61,7 @@ public static class StarFactoryExtensions
         services.AddSingleton(serviceProvider =>
         {
             var server = serviceProvider.GetRequiredService<IServer>();
-            return server.Features.Get<IServerAddressesFeature>();
+            return server.Features.Get<IServerAddressesFeature>()!;
         });
 
         return star;
@@ -96,12 +96,12 @@ public static class StarFactoryExtensions
     /// <param name="tag">特性标签</param>
     /// <param name="health">健康监测接口地址</param>
     /// <returns></returns>
-    public static IApplicationBuilder RegisterService(this IApplicationBuilder app, String serviceName, String address = null, String tag = null, String health = null)
+    public static IApplicationBuilder RegisterService(this IApplicationBuilder app, String serviceName, String? address = null, String? tag = null, String? health = null)
     {
         var star = app.ApplicationServices.GetRequiredService<StarFactory>();
         if (star == null) throw new InvalidOperationException("未注册StarFactory，需要AddStardust注册。");
 
-        if (serviceName.IsNullOrEmpty()) serviceName = AssemblyX.Entry.Name;
+        if (serviceName.IsNullOrEmpty()) serviceName = AssemblyX.Entry?.Name!;
 
         // 启动的时候注册服务
         var lifetime = app.ApplicationServices.GetRequiredService<IHostApplicationLifetime>();

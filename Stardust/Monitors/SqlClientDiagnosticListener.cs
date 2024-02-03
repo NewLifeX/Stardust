@@ -16,7 +16,7 @@ public class SqlClientDiagnosticListener : TraceDiagnosticListener
 
     /// <summary>下一步</summary>
     /// <param name="value"></param>
-    public override void OnNext(KeyValuePair<String, Object> value)
+    public override void OnNext(KeyValuePair<String, Object?> value)
     {
         if (Tracer == null) return;
 
@@ -29,7 +29,7 @@ public class SqlClientDiagnosticListener : TraceDiagnosticListener
         switch (name)
         {
             case "WriteCommandBefore":
-                if (value.Value.GetValue("Command") is DbCommand command)
+                if (value.Value != null && value.Value.GetValue("Command") is DbCommand command)
                 {
                     var sql = command.CommandText;
 
@@ -74,7 +74,7 @@ public class SqlClientDiagnosticListener : TraceDiagnosticListener
             case "WriteCommandError":
                 if (span != null && !spanName.IsNullOrEmpty() && spanName.StartsWith("db:"))
                 {
-                    if (value.Value.GetValue("Exception") is Exception ex) span.SetError(ex, null);
+                    if (value.Value != null && value.Value.GetValue("Exception") is Exception ex) span.SetError(ex, null);
 
                     span.Dispose();
                 }

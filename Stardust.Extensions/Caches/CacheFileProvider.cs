@@ -27,25 +27,25 @@ class CacheFileProvider : IFileProvider
     private readonly ExclusionFilters _filters;
 
     /// <summary>根目录</summary>
-    public String Root { get; }
+    public String? Root { get; }
 
     /// <summary>服务端地址。本地文件不存在时，将从这里下载</summary>
-    public String[] Servers { get; set; }
+    public String[]? Servers { get; set; }
 
     /// <summary>目标服务器地址。下载文件带有sh脚本时，把其中的源服务器地址替换为目标服务器地址</summary>
-    public String TargetServer { get; set; }
+    public String? TargetServer { get; set; }
 
     /// <summary>获取服务器地址的委托。方便实时更新</summary>
-    public Func<String[]> GetServers { get; set; }
+    public Func<String[]>? GetServers { get; set; }
 
     /// <summary>索引信息文件。列出扩展显示的文件内容</summary>
-    public String IndexInfoFile { get; set; }
+    public String? IndexInfoFile { get; set; }
 
     /// <summary>超时时间</summary>
     public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(5);
 
     /// <summary>APM追踪</summary>
-    public ITracer Tracer { get; set; }
+    public ITracer? Tracer { get; set; }
     #endregion
 
     /// <summary>
@@ -56,7 +56,7 @@ class CacheFileProvider : IFileProvider
     /// <param name="filters"></param>
     /// <exception cref="ArgumentException"></exception>
     /// <exception cref="DirectoryNotFoundException"></exception>
-    public CacheFileProvider(String root, String server, ExclusionFilters filters = ExclusionFilters.Sensitive)
+    public CacheFileProvider(String root, String? server, ExclusionFilters filters = ExclusionFilters.Sensitive)
     {
         if (!Path.IsPathRooted(root)) throw new ArgumentException("The path must be absolute.", nameof(root));
 
@@ -67,8 +67,9 @@ class CacheFileProvider : IFileProvider
         _filters = filters;
     }
 
-    private String GetFullPath(String path)
+    private String? GetFullPath(String path)
     {
+        if (Root.IsNullOrEmpty()) return null;
         if (PathNavigatesAboveRoot(path)) return null;
 
         String fullPath;
@@ -110,13 +111,13 @@ class CacheFileProvider : IFileProvider
             else if (fi.LastWriteTime.AddMonths(1) < DateTime.Now)
                 _ = Task.Run(() => DownloadFile(subpath, fullPath));
         }
-        if (!fi.Exists) return new NotFoundFileInfo(subpath);
+        if (fi == null || !fi.Exists) return new NotFoundFileInfo(subpath);
 
         var fileInfo = new FileInfo(fullPath);
         return IsExcluded(fileInfo, _filters) ? new NotFoundFileInfo(subpath) : new PhysicalFileInfo(fileInfo);
     }
 
-    async Task<String> DownloadFile(String subpath, String fullPath)
+    async Task<String?> DownloadFile(String subpath, String fullPath)
     {
         var span = DefaultSpan.Current;
         var svrs = GetServers?.Invoke() ?? Servers;
@@ -233,7 +234,7 @@ class CacheFileProvider : IFileProvider
         return NotFoundDirectoryContents.Singleton;
     }
 
-    async Task<String> DownloadDirectory(String subpath, String fullPath, String[] svrs)
+    async Task<String?> DownloadDirectory(String subpath, String fullPath, String[] svrs)
     {
         var span = DefaultSpan.Current;
         foreach (var item in svrs)

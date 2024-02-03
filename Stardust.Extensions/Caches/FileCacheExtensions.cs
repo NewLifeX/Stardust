@@ -23,7 +23,7 @@ public static class FileCacheExtensions
     /// <param name="getWhiteIP"></param>
     /// <param name="uplinkServer">上级地址，用于下载本地不存在的文件</param>
     /// <returns></returns>
-    public static void UseFileCache(this IApplicationBuilder app, String requestPath, String localPath, Func<String> getWhiteIP = null, String uplinkServer = null)
+    public static void UseFileCache(this IApplicationBuilder app, String requestPath, String localPath, Func<String>? getWhiteIP = null, String? uplinkServer = null)
     {
         var cacheRoot = localPath.GetBasePath().EnsureDirectory(false);
         XTrace.WriteLine("FileCache: {0}", cacheRoot);
@@ -37,7 +37,7 @@ public static class FileCacheExtensions
         if (uplinkServer.IsNullOrEmpty())
         {
             var set = NewLife.Setting.Current;
-            provider.GetServers = () => set.PluginServer?.Split(",");
+            provider.GetServers = () => set.PluginServer?.Split(",") ?? new String[0];
         }
         else
         {
@@ -63,7 +63,7 @@ public static class FileCacheExtensions
         });
     }
 
-    static void OnPrepareResponse(StaticFileResponseContext ctx, Func<String> getWhiteIP)
+    static void OnPrepareResponse(StaticFileResponseContext ctx, Func<String>? getWhiteIP)
     {
         var ip = ctx.Context.GetUserHost();
         if (ip.IsNullOrEmpty() || !ValidIP(ip, getWhiteIP))
@@ -74,7 +74,7 @@ public static class FileCacheExtensions
         }
     }
 
-    static Boolean ValidIP(String ip, Func<String> getWhiteIP)
+    static Boolean ValidIP(String ip, Func<String>? getWhiteIP)
     {
         if (ip.IsNullOrEmpty()) return false;
 

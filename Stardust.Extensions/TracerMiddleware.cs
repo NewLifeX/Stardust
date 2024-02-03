@@ -18,7 +18,7 @@ public class TracerMiddleware
     private readonly RequestDelegate _next;
 
     /// <summary>跟踪器</summary>
-    public static ITracer Tracer { get; set; }
+    public static ITracer? Tracer { get; set; }
 
     /// <summary>支持作为标签数据的内容类型</summary>
     public static String[] TagTypes { get; set; } = new[] {
@@ -35,7 +35,7 @@ public class TracerMiddleware
     public async Task Invoke(HttpContext ctx)
     {
         //!! 以下代码不能封装为独立方法，因为有异步存在，代码被拆分为状态机，导致这里建立的埋点span无法关联页面接口内的下级埋点
-        ISpan span = null;
+        ISpan? span = null;
         if (Tracer != null && !ctx.WebSockets.IsWebSocketRequest)
         {
             var action = GetAction(ctx);
@@ -162,7 +162,7 @@ public class TracerMiddleware
     };
     private static readonly String[] CubeActions = new[] { "index", "detail", "add", "edit", "delete", "deleteSelect", "deleteAll", "ExportCsv", "Info", "SetEnable", "EnableSelect", "DisableSelect", "DeleteSelect" };
 
-    private static String GetAction(HttpContext ctx)
+    private static String? GetAction(HttpContext ctx)
     {
         var p = ctx.Request.Path + "";
         if (p.EndsWithIgnoreCase(ExcludeSuffixes)) return null;

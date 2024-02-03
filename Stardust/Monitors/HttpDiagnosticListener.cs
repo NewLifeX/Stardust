@@ -14,7 +14,7 @@ public class HttpDiagnosticListener : TraceDiagnosticListener
 
     /// <summary>下一步</summary>
     /// <param name="value"></param>
-    public override void OnNext(KeyValuePair<String, Object> value)
+    public override void OnNext(KeyValuePair<String, Object?> value)
     {
         if (Tracer == null) return;
 #if DEBUG
@@ -25,7 +25,7 @@ public class HttpDiagnosticListener : TraceDiagnosticListener
         {
             case "System.Net.Http.HttpRequestOut.Start":
                 {
-                    if (value.Value.GetValue("Request") is HttpRequestMessage request &&
+                    if (value.Value != null && value.Value.GetValue("Request") is HttpRequestMessage request &&
                         !request.Headers.Contains("traceparent"))
                     {
                         var span = Tracer.NewSpan(request);
@@ -36,7 +36,7 @@ public class HttpDiagnosticListener : TraceDiagnosticListener
                 }
             case "System.Net.Http.Exception":
                 {
-                    if (value.Value.GetValue("Request") is HttpRequestMessage request &&
+                    if (value.Value != null && value.Value.GetValue("Request") is HttpRequestMessage request &&
                         request.Options.TryGetValue(_spanKey, out var span) && span != null)
                     {
                         if (value.Value.GetValue("Exception") is Exception ex)
@@ -50,7 +50,7 @@ public class HttpDiagnosticListener : TraceDiagnosticListener
 
             case "System.Net.Http.HttpRequestOut.Stop":
                 {
-                    if (value.Value.GetValue("Request") is HttpRequestMessage request &&
+                    if (value.Value != null && value.Value.GetValue("Request") is HttpRequestMessage request &&
                         request.Options.TryGetValue(_spanKey, out var span) && span != null)
                     {
                         if (value.Value.GetValue("Response") is HttpResponseMessage response)

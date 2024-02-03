@@ -6,7 +6,7 @@ namespace Stardust.Extensions.Caches;
 
 class FileInfoModel : IFileInfo
 {
-    public String Name { get; set; }
+    public String Name { get; set; } = null!;
 
     public Boolean Exists { get; set; }
 
@@ -16,7 +16,7 @@ class FileInfoModel : IFileInfo
 
     public Int64 Length { get; set; }
 
-    public String PhysicalPath { get; set; }
+    public String? PhysicalPath { get; set; }
 
     public Stream CreateReadStream() => throw new NotImplementedException();
 }

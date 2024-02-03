@@ -27,5 +27,5 @@ public class PublishServiceInfo
     /// <summary>标签。带有指定特性，逗号分隔</summary>
     public String? Tag { get; set; }
 
-    internal Func<String>? AddressCallback;
+    internal Func<String?>? AddressCallback;
 }
