@@ -56,11 +56,11 @@ public partial class AppDeployNode
     public String IP { get => _IP; set { if (OnPropertyChanging("IP", value)) { _IP = value; OnPropertyChanged("IP"); } } }
 
     private Int32 _Sort;
-    /// <summary>顺序。较大在前</summary>
+    /// <summary>顺序。较小在前，同时表示延迟发布秒数</summary>
     [DisplayName("顺序")]
-    [Description("顺序。较大在前")]
+    [Description("顺序。较小在前，同时表示延迟发布秒数")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("Sort", "顺序。较大在前", "")]
+    [BindColumn("Sort", "顺序。较小在前，同时表示延迟发布秒数", "")]
     public Int32 Sort { get => _Sort; set { if (OnPropertyChanging("Sort", value)) { _Sort = value; OnPropertyChanged("Sort"); } } }
 
     private Boolean _Enable;
@@ -365,7 +365,7 @@ public partial class AppDeployNode
         /// <summary>IP地址。节点所在内网IP地址</summary>
         public static readonly Field IP = FindByName("IP");
 
-        /// <summary>顺序。较大在前</summary>
+        /// <summary>顺序。较小在前，同时表示延迟发布秒数</summary>
         public static readonly Field Sort = FindByName("Sort");
 
         /// <summary>启用</summary>
@@ -455,7 +455,7 @@ public partial class AppDeployNode
         /// <summary>IP地址。节点所在内网IP地址</summary>
         public const String IP = "IP";
 
-        /// <summary>顺序。较大在前</summary>
+        /// <summary>顺序。较小在前，同时表示延迟发布秒数</summary>
         public const String Sort = "Sort";
 
         /// <summary>启用</summary>

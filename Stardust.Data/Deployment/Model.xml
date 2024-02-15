@@ -82,7 +82,7 @@
         <Column Name="AppId" DataType="Int32" Description="应用部署集。对应AppDeploy" />
         <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
         <Column Name="IP" DataType="String" Description="IP地址。节点所在内网IP地址" />
-        <Column Name="Sort" DataType="Int32" Description="顺序。较大在前" />
+        <Column Name="Sort" DataType="Int32" Description="顺序。较小在前，同时表示延迟发布秒数" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="Environment" DataType="String" Description="环境。prod/test/dev/uat等" Category="发布参数" />
         <Column Name="FileName" DataType="String" Description="文件。应用启动文件，可直接使用zip包，支持差异定制，为空时使用应用集配置" Category="发布参数" />
