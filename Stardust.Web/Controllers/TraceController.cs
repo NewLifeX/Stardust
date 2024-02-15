@@ -142,8 +142,8 @@ public class TraceController : ControllerBaseX
         }
 
         // 处理图标大小
-        var maxCost = nodes.Max(e => e.Value);
-        var minCost = nodes.Min(e => e.Value);
+        var maxCost = nodes.Count == 0 ? 0 : nodes.Max(e => e.Value);
+        var minCost = nodes.Count == 0 ? 0 : nodes.Min(e => e.Value);
         var len = maxCost - minCost;
         if (len <= 0) len = 1;
         foreach (var node in nodes)
