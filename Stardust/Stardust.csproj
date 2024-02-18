@@ -39,6 +39,9 @@
     <PackageReadmeFile>Readme.MD</PackageReadmeFile>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(TargetFramework)'=='net6.0-windows'">
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
   <ItemGroup>
     <Using Include="System.Net.Http" />
   </ItemGroup>
