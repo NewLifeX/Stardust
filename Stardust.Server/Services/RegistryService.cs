@@ -436,14 +436,15 @@ public class RegistryService
         if (list.Count == 0) return;
 
         var appIds = list.Select(e => e.AppId).Distinct().ToArray();
+        var arguments = new { service.Name, service.Address }.ToJson();
 
-        using var span = _tracer?.NewSpan(nameof(NotifyConsumers), $"{command} appIds={appIds.Join()} user={user}");
+        using var span = _tracer?.NewSpan(nameof(NotifyConsumers), $"{command} appIds={appIds.Join()} user={user} arguments={arguments}");
 
         var ts = new List<Task>();
         foreach (var item in appIds)
         {
             var app = App.FindById(item);
-            if (app != null) ts.Add(SendCommand(app, command, null, user));
+            if (app != null) ts.Add(SendCommand(app, command, arguments, user));
         }
 
         await Task.WhenAll(ts);
