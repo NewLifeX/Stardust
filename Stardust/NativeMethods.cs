@@ -80,4 +80,7 @@ internal class NativeMethods
 
     [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
     public static extern Int32 GetSystemMetrics(Int32 nIndex);
+
+    [DllImport("psapi.dll", SetLastError = true)]
+    internal static extern Boolean EmptyWorkingSet(IntPtr hProcess);
 }

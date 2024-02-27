@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using NewLife;
 using NewLife.Log;
@@ -469,43 +470,7 @@ internal class ServiceController : DisposeBase
 
         // 进程存在，常规判断内存
         var p = Process;
-        if (p != null)
-        {
-            span?.AppendTag("CheckMaxMemory");
-            try
-            {
-                if (!p.GetHasExited())
-                {
-                    _error = 0;
-
-                    // 检查内存限制
-                    if (inf.MaxMemory <= 0) return false;
-
-                    var mem = p.WorkingSet64 / 1024 / 1024;
-                    span?.AppendTag($"MaxMemory={inf.MaxMemory}M WorkingSet64={mem}M");
-                    if (mem <= inf.MaxMemory) return false;
-
-                    WriteLog("内存超限！{0}>{1}", mem, inf.MaxMemory);
-
-                    Stop("内存超限");
-                }
-                else
-                {
-                    WriteLog("应用[{0}/{1}]已退出！", p.Id, Name);
-                }
-
-                p = null;
-                Process = null;
-                // 这里不能清空 ProcessId 和 ProcessName，可能因为异常操作导致进程丢了，但是根据名称还能找到。也可能外部启动了进程
-                //SetProcess(null);
-
-                Running = false;
-            }
-            catch (Exception ex)
-            {
-                span?.SetError(ex, null);
-            }
-        }
+        if (p != null) p = CheckMaxMemory(p, inf);
 
         // 进程不存在，但Id存在
         if (p == null && ProcessId > 0 && ProcessId != mypid)
@@ -594,6 +559,60 @@ internal class ServiceController : DisposeBase
         }
 
         return rs;
+    }
+
+    private DateTime _nextCollect;
+    private Process? CheckMaxMemory(Process? p, ServiceInfo inf)
+    {
+        var span = DefaultSpan.Current;
+        span?.AppendTag("CheckMaxMemory");
+        try
+        {
+            if (p != null && !p.GetHasExited())
+            {
+                _error = 0;
+
+                // 检查内存限制
+                if (inf.MaxMemory <= 0) return p;
+
+                // 定期清理内存
+                if (Runtime.Windows && _nextCollect < DateTime.Now)
+                {
+                    _nextCollect = DateTime.Now.AddSeconds(600);
+
+                    try
+                    {
+                        NativeMethods.EmptyWorkingSet(p.Handle);
+                    }
+                    catch { }
+                }
+
+                var mem = p.WorkingSet64 / 1024 / 1024;
+                span?.AppendTag($"MaxMemory={inf.MaxMemory}M WorkingSet64={mem}M");
+                if (mem <= inf.MaxMemory) return p;
+
+                WriteLog("内存超限！{0}>{1}", mem, inf.MaxMemory);
+
+                Stop("内存超限");
+            }
+            else
+            {
+                WriteLog("应用[{0}/{1}]已退出！", p.Id, Name);
+            }
+
+            p = null;
+            Process = null;
+            // 这里不能清空 ProcessId 和 ProcessName，可能因为异常操作导致进程丢了，但是根据名称还能找到。也可能外部启动了进程
+            //SetProcess(null);
+
+            Running = false;
+        }
+        catch (Exception ex)
+        {
+            span?.SetError(ex, null);
+        }
+
+        return p;
     }
 
     Boolean TakeOver(Process p, String reason)
