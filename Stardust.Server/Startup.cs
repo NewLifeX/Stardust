@@ -73,7 +73,7 @@ public class Startup
         services.AddResponseCompression();
 
         // 配置Json
-        services.Configure<JsonOptions>(options =>
+        services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
         {
 #if NET7_0_OR_GREATER
             // 支持模型类中的DataMember特性
