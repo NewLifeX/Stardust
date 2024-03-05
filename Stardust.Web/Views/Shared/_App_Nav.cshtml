@@ -4,46 +4,35 @@
 @using Stardust.Data.Monitors;
 @{
     var path = Context.Request.Path + "";
+    var path2 = "/" + path?.Split("/").Take(3).Join("/");
 
     var flag = false;
     var name = "";
     var appId = Context.Request.Query["appId"].ToInt(0);
-    if (appId == 0 && path.EqualIgnoreCase("/Registry/App", "/Registry/App/Detail", "/Registry/App/Edit"))
+    var configId = Context.Request.Query["configId"].ToInt(0);
+    var deployId = Context.Request.Query["deployId"].ToInt(0);
+    var monitorId = Context.Request.Query["monitorId"].ToInt(0);
+    if (appId == 0 && path2.EqualIgnoreCase("/Registry/App"))
     {
         appId = Context.Request.Query["Id"].ToInt(0);
         flag = true;
     }
-    if (appId == 0 && path.EqualIgnoreCase("/Configs/AppConfig", "/Configs/AppConfig/Detail", "/Configs/AppConfig/Edit"))
+    if (appId == 0 && path2.EqualIgnoreCase("/Configs/AppConfig", "/Configs/ConfigData", "/Configs/ConfigHistory"))
     {
         var id = Context.Request.Query["Id"].ToInt(0);
-        var entity = AppConfig.FindById(id);
+        var entity = AppConfig.FindById(configId) ?? AppConfig.FindById(id);
         if (entity != null && entity.AppId > 0) appId = entity.AppId;
     }
-    if (appId == 0 && path.EqualIgnoreCase("/Deployment/AppDeploy", "/Deployment/AppDeploy/Detail", "/Deployment/AppDeploy/Edit"))
+    if (appId == 0 && path2.EqualIgnoreCase("/Deployment/AppDeploy", "/Deployment/AppDeployVersion", "/Deployment/AppDeployNode", "/Deployment/AppDeployHistory"))
     {
         var id = Context.Request.Query["Id"].ToInt(0);
-        var entity = AppDeploy.FindById(id);
+        var entity = AppDeploy.FindById(deployId) ?? AppDeploy.FindById(id);
         if (entity != null && entity.AppId > 0) { appId = entity.AppId; name = entity.AppName ?? entity.Name; }
     }
-    if (appId == 0 && path.EqualIgnoreCase("/Monitors/AppTracer", "/Monitors/AppTracer/Detail", "/Monitors/AppTracer/Edit"))
+    if (appId == 0 && path2.EqualIgnoreCase("/Monitors/AppTracer", "/Monitors/AppDayStat"))
     {
         var id = Context.Request.Query["Id"].ToInt(0);
-        var entity = AppTracer.FindByID(id);
-        if (entity != null && entity.AppId > 0) { appId = entity.AppId; name = entity.AppName ?? entity.Name; }
-    }
-    if (path.StartsWithIgnoreCase("/Configs/ConfigData"))
-    {
-        var entity = AppConfig.FindById(appId);
-        if (entity != null && entity.AppId > 0) { appId = entity.AppId; name = entity.AppName ?? entity.Name; }
-    }
-    if (path.StartsWithIgnoreCase("/Deployment/AppDeployVersion", "/Deployment/AppDeployNode"))
-    {
-        var entity = AppDeploy.FindById(appId);
-        if (entity != null && entity.AppId > 0) { appId = entity.AppId; name = entity.AppName ?? entity.Name; }
-    }
-    if (path.StartsWithIgnoreCase("/Monitors/AppDayStat"))
-    {
-        var entity = AppTracer.FindByID(appId);
+        var entity = AppTracer.FindByID(monitorId) ?? AppTracer.FindByID(id);
         if (entity != null && entity.AppId > 0) { appId = entity.AppId; name = entity.AppName ?? entity.Name; }
     }
 
@@ -62,34 +51,44 @@
     dic["注册中心"] = "/Registry/AppService?appId=" + appId;
     dic["服务消费"] = "/Registry/AppConsume?appId=" + appId;
 
-    var configs = AppConfig.FindAllByAppId(appId);
-    dic["配置中心"] = "/Configs/AppConfig?appId=" + appId;
-    if (configs.Count == 1)
+    dic["配置中心"] = "/Configs/AppConfig?appId=" + appId + "&configId=" + configId;
+    var config = AppConfig.FindById(configId);
+    if (config != null)
     {
-        dic["配置管理"] = "/Configs/ConfigData?appId=" + configs[0].Id;
+        dic["配置管理"] = "/Configs/ConfigData?appId=" + appId + "&configId=" + config.Id;
+    }
+    else
+    {
+        var configs = AppConfig.FindAllByAppId(appId);
+        if (configs.Count == 1)
+        {
+            dic["配置管理"] = "/Configs/ConfigData?appId=" + appId + "&configId=" + configs[0].Id;
+        }
     }
 
-    var deploys = AppDeploy.FindAllByAppId(appId);
-    dic["发布中心"] = "/Deployment/AppDeploy?appId=" + appId;
-    if (deploys.Count == 1)
+    dic["发布中心"] = "/Deployment/AppDeploy?appId=" + appId + "&deployId=" + deployId;
+    var deploy = AppDeploy.FindById(deployId);
+    if (deploy != null)
     {
-        dic["版本上传"] = "/Deployment/AppDeployVersion?appId=" + deploys[0].Id;
-        dic["发布节点"] = "/Deployment/AppDeployNode?&enable=1&appId=" + deploys[0].Id;
+        dic["版本上传"] = "/Deployment/AppDeployVersion?appId=" + appId + "&deployId=" + deploy.Id;
+        dic["发布节点"] = "/Deployment/AppDeployNode?&enable=1&appId=" + appId + "&deployId=" + deploy.Id;
+    }
+    else
+    {
+        var deploys = AppDeploy.FindAllByAppId(appId);
+        if (deploys.Count == 1)
+        {
+            dic["版本上传"] = "/Deployment/AppDeployVersion?appId=" + appId + "&deployId=" + deploys[0].Id;
+            dic["发布节点"] = "/Deployment/AppDeployNode?&enable=1&appId=" + appId + "&deployId=" + deploys[0].Id;
+        }
     }
 
     var monitors = AppTracer.FindAllByAppId(appId);
-    dic["监控中心"] = "/Monitors/AppTracer?appId=" + appId;
+    dic["监控中心"] = "/Monitors/AppTracer?appId=" + appId + "&monitorId=" + monitorId;
     if (monitors.Count == 1)
     {
         dic["监控大屏"] = "/Monitors/AppDayStat?appId=" + monitors[0].ID;
     }
-
-    // var dic2 = new Dictionary<String, Object>();
-    // dic2["报警事件"] = "/Safety/AlarmEvent?appId=" + appId;
-    // dic2["ADAS"] = "/Safety/ADASAlarm?appId=" + appId;
-    // dic2["DSM"] = "/Safety/DSMAlarm?appId=" + appId;
-    // dic2["BSD"] = "/Safety/BSDAlarm?appId=" + appId;
-    // dic["报警"] = dic2;
 }
 @if (appId > 0)
 {

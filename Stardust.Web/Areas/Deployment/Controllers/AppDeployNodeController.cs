@@ -34,8 +34,8 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
     {
         base.OnActionExecuting(filterContext);
 
-        var appId = GetRequest("appId").ToInt(-1);
-        if (appId > 0)
+        var deployId = GetRequest("deployId").ToInt(-1);
+        if (deployId > 0)
         {
             PageSetting.NavView = "_App_Nav";
             PageSetting.EnableNavbar = false;
@@ -55,8 +55,8 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
 
         if (kind == ViewKinds.List)
         {
-            var appId = GetRequest("appId").ToInt(-1);
-            if (appId > 0) fields.RemoveField("AppName");
+            var deployId = GetRequest("deployId").ToInt(-1);
+            if (deployId > 0) fields.RemoveField("AppName");
 
             var nodeId = GetRequest("nodeId").ToInt(-1);
             if (nodeId > 0) fields.RemoveField("NodeName");
@@ -74,7 +74,8 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
             if (entity != null) return new List<AppDeployNode> { entity };
         }
 
-        var appId = p["appId"].ToInt(-1);
+        var appId = p["deployId"].ToInt(-1);
+        if (appId <= 0) appId = p["appId"].ToInt(-1);
         var nodeId = p["nodeId"].ToInt(-1);
         var enable = p["enable"]?.ToBoolean();
 

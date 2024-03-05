@@ -58,14 +58,12 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
     {
         base.OnActionExecuting(filterContext);
 
-        var appId = GetRequest("appId").ToInt(-1);
-        if (appId > 0)
+        var deployId = GetRequest("deployId").ToInt(-1);
+        if (deployId > 0)
         {
             PageSetting.NavView = "_App_Nav";
             PageSetting.EnableNavbar = false;
         }
-
-        //PageSetting.EnableAdd = false;
     }
 
     protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
@@ -74,8 +72,8 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
 
         if (kind == ViewKinds.List)
         {
-            var appId = GetRequest("appId").ToInt(-1);
-            if (appId > 0) fields.RemoveField("AppName");
+            var deployId = GetRequest("deployId").ToInt(-1);
+            if (deployId > 0) fields.RemoveField("AppName");
         }
 
         return fields;
@@ -90,7 +88,8 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
             if (entity != null) return new List<AppDeployVersion> { entity };
         }
 
-        var appId = p["appId"].ToInt(-1);
+        var appId = p["deployId"].ToInt(-1);
+        if (appId <= 0) appId = p["appId"].ToInt(-1);
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 

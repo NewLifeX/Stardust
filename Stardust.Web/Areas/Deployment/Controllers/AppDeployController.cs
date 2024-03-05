@@ -26,7 +26,7 @@ public class AppDeployController : EntityController<AppDeploy>
 
         {
             var df = ListFields.GetField("ProjectName") as ListField;
-            df.Url = "/Platform/GalaxyProject?projectId={ProjectId}";
+            df.Url = "/Platform/GalaxyProject?Id={ProjectId}";
             df.Target = "_frame";
         }
         {
@@ -42,25 +42,25 @@ public class AppDeployController : EntityController<AppDeploy>
         {
             var df = ListFields.AddListField("NodeManage", null, "Nodes") as ListField;
             df.DisplayName = "部署节点";
-            df.Url = "/Deployment/AppDeployNode?appId={Id}";
+            df.Url = "/Deployment/AppDeployNode?deployId={Id}";
         }
         {
             var df = ListFields.GetField("Version") as ListField;
             df.Header = "版本";
             df.Title = "管理应用版本";
-            df.Url = "/Deployment/AppDeployVersion?appId={Id}";
+            df.Url = "/Deployment/AppDeployVersion?deployId={Id}";
         }
         {
             var df = ListFields.AddListField("AddVersion", "FileName");
             df.Header = "版本管理";
             df.DisplayName = "版本管理";
             df.Title = "管理所有版本文件";
-            df.Url = "/Deployment/AppDeployVersion?appId={Id}";
+            df.Url = "/Deployment/AppDeployVersion?deployId={Id}";
         }
         {
             var df = ListFields.AddListField("History", "UpdateUserId");
             df.DisplayName = "部署历史";
-            df.Url = "/Deployment/AppDeployHistory?appId={Id}";
+            df.Url = "/Deployment/AppDeployHistory?deployId={Id}";
         }
         {
             var df = ListFields.AddListField("Log", "UpdateUserId");

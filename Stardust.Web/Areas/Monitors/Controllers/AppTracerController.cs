@@ -29,7 +29,7 @@ public class AppTracerController : EntityController<AppTracer>
 
         {
             var df = ListFields.GetField("ProjectName") as ListField;
-            df.Url = "/Platform/GalaxyProject?projectId={ProjectId}";
+            df.Url = "/Platform/GalaxyProject?Id={ProjectId}";
             df.Target = "_frame";
         }
         {

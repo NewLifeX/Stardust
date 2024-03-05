@@ -48,18 +48,18 @@
         <Column Name="Secret" DataType="String" Description="密钥" />
         <Column Name="Category" DataType="String" Description="类别" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
-        <Column Name="AutoActive" DataType="Boolean" Description="自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务" />
-        <Column Name="Version" DataType="String" Description="版本。多版本实例使用时，仅记录最新版本" />
-        <Column Name="Compile" DataType="DateTime" Description="编译时间。客户端" />
-        <Column Name="Period" DataType="Int32" Description="采样周期。默认60秒" />
+        <Column Name="AutoActive" DataType="Boolean" Description="自动激活。自动激活启用该应用在注册中心提供的服务，供其它消费者使用" />
+        <Column Name="Version" DataType="String" Description="版本。多版本实例使用时，仅记录最大版本" />
+        <Column Name="Compile" DataType="DateTime" Description="编译时间。最大版本应用的编译时间" />
+        <Column Name="Period" DataType="Int32" Description="采样周期。应用定期采样并上报性能数据，默认60秒" />
         <Column Name="Singleton" DataType="Boolean" Description="单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于管理实例" />
-        <Column Name="WhiteIPs" DataType="String" Description="IP白名单。符合条件的来源IP才允许访问，支持*通配符，多个逗号隔开" />
-        <Column Name="BlackIPs" DataType="String" Description="IP黑名单。符合条件的来源IP禁止访问，支持*通配符，多个逗号隔开" />
-        <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" />
-        <Column Name="AlarmOnOffline" DataType="Boolean" Description="下线告警。节点下线时，发送告警" />
+        <Column Name="WhiteIPs" DataType="String" Description="IP白名单。符合条件的来源IP才允许访问，支持*通配符，多个逗号隔开" Category="安全告警" />
+        <Column Name="BlackIPs" DataType="String" Description="IP黑名单。符合条件的来源IP禁止访问，支持*通配符，多个逗号隔开" Category="安全告警" />
+        <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" Category="安全告警" />
+        <Column Name="AlarmOnOffline" DataType="Boolean" Description="下线告警。节点下线时，发送告警" Category="安全告警" />
         <Column Name="LastLogin" DataType="DateTime" Description="最后登录" />
         <Column Name="LastIP" DataType="String" Description="最后IP" />
-        <Column Name="AllowControlNodes" DataType="String" Description="节点控制。安全性设计，允许该应用发指令控制的目标节点编码或目标应用名称，多节点逗号分隔，*表示全部节点" />
+        <Column Name="AllowControlNodes" DataType="String" Description="节点控制。安全性设计，允许该应用发指令控制的目标节点编码或目标应用名称，多节点逗号分隔，*表示全部节点" Category="安全告警" />
         <Column Name="Remark" DataType="String" Length="500" Description="内容" Category="扩展" />
         <Column Name="CreateUser" DataType="String" Description="创建者" Category="扩展" />
         <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />

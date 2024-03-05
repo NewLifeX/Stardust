@@ -1,4 +1,5 @@
-﻿using NewLife.Cube;
+﻿using Microsoft.AspNetCore.Mvc.Filters;
+using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
@@ -20,8 +21,33 @@ public class AppDeployHistoryController : ReadOnlyEntityController<AppDeployHist
         {
             var df = ListFields.GetField("NodeName") as ListField;
             df.Url = "/Nodes/Node?Id={NodeID}";
-            df.Target = "frame";
+            df.Target = "_frame";
         }
+    }
+
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        var deployId = GetRequest("deployId").ToInt(-1);
+        if (deployId > 0)
+        {
+            PageSetting.NavView = "_App_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+    }
+
+    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
+    {
+        var fields = base.OnGetFields(kind, model);
+
+        if (kind == ViewKinds.List)
+        {
+            var deployId = GetRequest("deployId").ToInt(-1);
+            if (deployId > 0) fields.RemoveField("AppName");
+        }
+
+        return fields;
     }
 
     protected override IEnumerable<AppDeployHistory> Search(Pager p)
@@ -33,7 +59,8 @@ public class AppDeployHistoryController : ReadOnlyEntityController<AppDeployHist
             if (entity != null) return new List<AppDeployHistory> { entity };
         }
 
-        var appId = p["appId"].ToInt(-1);
+        var appId = p["deployId"].ToInt(-1);
+        if (appId <= 0) appId = p["appId"].ToInt(-1);
         var nodeId = p["nodeId"].ToInt(-1);
 
         var start = p["dtStart"].ToDateTime();

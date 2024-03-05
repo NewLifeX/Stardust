@@ -80,35 +80,35 @@ public partial class App
     public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
     private Boolean _AutoActive;
-    /// <summary>自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务</summary>
+    /// <summary>自动激活。自动激活启用该应用在注册中心提供的服务，供其它消费者使用</summary>
     [DisplayName("自动激活")]
-    [Description("自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务")]
+    [Description("自动激活。自动激活启用该应用在注册中心提供的服务，供其它消费者使用")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("AutoActive", "自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务", "")]
+    [BindColumn("AutoActive", "自动激活。自动激活启用该应用在注册中心提供的服务，供其它消费者使用", "")]
     public Boolean AutoActive { get => _AutoActive; set { if (OnPropertyChanging("AutoActive", value)) { _AutoActive = value; OnPropertyChanged("AutoActive"); } } }
 
     private String _Version;
-    /// <summary>版本。多版本实例使用时，仅记录最新版本</summary>
+    /// <summary>版本。多版本实例使用时，仅记录最大版本</summary>
     [DisplayName("版本")]
-    [Description("版本。多版本实例使用时，仅记录最新版本")]
+    [Description("版本。多版本实例使用时，仅记录最大版本")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Version", "版本。多版本实例使用时，仅记录最新版本", "")]
+    [BindColumn("Version", "版本。多版本实例使用时，仅记录最大版本", "")]
     public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
     private DateTime _Compile;
-    /// <summary>编译时间。客户端</summary>
+    /// <summary>编译时间。最大版本应用的编译时间</summary>
     [DisplayName("编译时间")]
-    [Description("编译时间。客户端")]
+    [Description("编译时间。最大版本应用的编译时间")]
     [DataObjectField(false, false, true, 0)]
-    [BindColumn("Compile", "编译时间。客户端", "")]
+    [BindColumn("Compile", "编译时间。最大版本应用的编译时间", "")]
     public DateTime Compile { get => _Compile; set { if (OnPropertyChanging("Compile", value)) { _Compile = value; OnPropertyChanged("Compile"); } } }
 
     private Int32 _Period;
-    /// <summary>采样周期。默认60秒</summary>
+    /// <summary>采样周期。应用定期采样并上报性能数据，默认60秒</summary>
     [DisplayName("采样周期")]
-    [Description("采样周期。默认60秒")]
+    [Description("采样周期。应用定期采样并上报性能数据，默认60秒")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("Period", "采样周期。默认60秒", "")]
+    [BindColumn("Period", "采样周期。应用定期采样并上报性能数据，默认60秒", "")]
     public Int32 Period { get => _Period; set { if (OnPropertyChanging("Period", value)) { _Period = value; OnPropertyChanged("Period"); } } }
 
     private Boolean _Singleton;
@@ -121,6 +121,7 @@ public partial class App
 
     private String _WhiteIPs;
     /// <summary>IP白名单。符合条件的来源IP才允许访问，支持*通配符，多个逗号隔开</summary>
+    [Category("安全告警")]
     [DisplayName("IP白名单")]
     [Description("IP白名单。符合条件的来源IP才允许访问，支持*通配符，多个逗号隔开")]
     [DataObjectField(false, false, true, 50)]
@@ -129,6 +130,7 @@ public partial class App
 
     private String _BlackIPs;
     /// <summary>IP黑名单。符合条件的来源IP禁止访问，支持*通配符，多个逗号隔开</summary>
+    [Category("安全告警")]
     [DisplayName("IP黑名单")]
     [Description("IP黑名单。符合条件的来源IP禁止访问，支持*通配符，多个逗号隔开")]
     [DataObjectField(false, false, true, 50)]
@@ -137,6 +139,7 @@ public partial class App
 
     private String _WebHook;
     /// <summary>告警机器人。钉钉、企业微信等</summary>
+    [Category("安全告警")]
     [DisplayName("告警机器人")]
     [Description("告警机器人。钉钉、企业微信等")]
     [DataObjectField(false, false, true, 500)]
@@ -145,6 +148,7 @@ public partial class App
 
     private Boolean _AlarmOnOffline;
     /// <summary>下线告警。节点下线时，发送告警</summary>
+    [Category("安全告警")]
     [DisplayName("下线告警")]
     [Description("下线告警。节点下线时，发送告警")]
     [DataObjectField(false, false, false, 0)]
@@ -169,6 +173,7 @@ public partial class App
 
     private String _AllowControlNodes;
     /// <summary>节点控制。安全性设计，允许该应用发指令控制的目标节点编码或目标应用名称，多节点逗号分隔，*表示全部节点</summary>
+    [Category("安全告警")]
     [DisplayName("节点控制")]
     [Description("节点控制。安全性设计，允许该应用发指令控制的目标节点编码或目标应用名称，多节点逗号分隔，*表示全部节点")]
     [DataObjectField(false, false, true, 50)]
@@ -369,16 +374,16 @@ public partial class App
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
 
-        /// <summary>自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务</summary>
+        /// <summary>自动激活。自动激活启用该应用在注册中心提供的服务，供其它消费者使用</summary>
         public static readonly Field AutoActive = FindByName("AutoActive");
 
-        /// <summary>版本。多版本实例使用时，仅记录最新版本</summary>
+        /// <summary>版本。多版本实例使用时，仅记录最大版本</summary>
         public static readonly Field Version = FindByName("Version");
 
-        /// <summary>编译时间。客户端</summary>
+        /// <summary>编译时间。最大版本应用的编译时间</summary>
         public static readonly Field Compile = FindByName("Compile");
 
-        /// <summary>采样周期。默认60秒</summary>
+        /// <summary>采样周期。应用定期采样并上报性能数据，默认60秒</summary>
         public static readonly Field Period = FindByName("Period");
 
         /// <summary>单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于管理实例</summary>
@@ -459,16 +464,16 @@ public partial class App
         /// <summary>启用</summary>
         public const String Enable = "Enable";
 
-        /// <summary>自动激活。新登录应用是否自动激活，只有激活的应用，才提供服务</summary>
+        /// <summary>自动激活。自动激活启用该应用在注册中心提供的服务，供其它消费者使用</summary>
         public const String AutoActive = "AutoActive";
 
-        /// <summary>版本。多版本实例使用时，仅记录最新版本</summary>
+        /// <summary>版本。多版本实例使用时，仅记录最大版本</summary>
         public const String Version = "Version";
 
-        /// <summary>编译时间。客户端</summary>
+        /// <summary>编译时间。最大版本应用的编译时间</summary>
         public const String Compile = "Compile";
 
-        /// <summary>采样周期。默认60秒</summary>
+        /// <summary>采样周期。应用定期采样并上报性能数据，默认60秒</summary>
         public const String Period = "Period";
 
         /// <summary>单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于管理实例</summary>

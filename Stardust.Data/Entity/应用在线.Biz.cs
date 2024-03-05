@@ -263,7 +263,7 @@ public partial class AppOnline : Entity<AppOnline>
                 else if (new Version(info.Version) > new Version(app.Version))
                     app.Version = info.Version;
 
-                if (Version.IsNullOrEmpty()) Version = app.Version;
+                if (Version.IsNullOrEmpty()) Version = info.Version;
             }
         }
 
