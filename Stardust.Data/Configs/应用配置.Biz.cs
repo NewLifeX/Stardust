@@ -191,21 +191,49 @@ public partial class AppConfig : Entity<AppConfig>
     /// <returns></returns>
     public static IList<AppConfig> GetValids() => FindAllWithCache().Where(e => e.Enable).ToList();
 
-    /// <summary>获取所有引用的应用</summary>
+    /// <summary>获取所有引用的应用（父级）</summary>
     /// <returns></returns>
     public IList<AppConfig> GetQuotes()
     {
-        //var ids = Quotes.SplitAsInt();
-        //return GetValids().Where(e => ids.Contains(e.Id)).ToList();
-
+        // 遍历当前应用的Quotes引用，找到它们对应的应用
         var vs = GetValids();
         var list = new List<AppConfig>();
         foreach (var item in (Quotes + "").Split(',').Distinct())
         {
             // 同时找编号和名称
             var id = item.ToInt();
-            var ac = vs.FirstOrDefault(e => e.Id == id || e.Name.EqualIgnoreCase(item));
-            if (ac != null) list.Add(ac);
+            var app = vs.FirstOrDefault(e => e.Id == id || e.Name.EqualIgnoreCase(item));
+            if (app != null)
+            {
+                list.Add(app);
+
+                // 递归找到所有引用的应用
+                var qs = app.GetQuotes();
+                list.AddRange(qs);
+            }
+        }
+
+        return list;
+    }
+
+    /// <summary>获取所有依赖当前应用的应用（子级）</summary>
+    /// <returns></returns>
+    public IList<AppConfig> GetChilds()
+    {
+        // 遍历所有应用，找到其Quotes引用中包含当前应用的
+        var vs = GetValids();
+        var list = new List<AppConfig>();
+        foreach (var app in vs)
+        {
+            var qs = (app.Quotes + "").Split(',').Distinct().ToArray();
+            if (Name.EqualIgnoreCase(qs))
+            {
+                list.Add(app);
+
+                // 递归找到所有依赖当前应用的应用
+                var cs = app.GetChilds();
+                list.AddRange(cs);
+            }
         }
 
         return list;

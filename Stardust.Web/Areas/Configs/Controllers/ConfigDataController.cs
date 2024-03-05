@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
 using NewLife.Log;
-using NewLife.Remoting;
 using NewLife.Web;
 using Stardust.Data.Configs;
+using Stardust.Server.Services;
 using XCode;
 
 namespace Stardust.Web.Areas.Configs.Controllers;
@@ -35,11 +35,13 @@ public class ConfigDataController : EntityController<ConfigData>
         }
     }
 
+    private readonly ConfigService _configService;
     private readonly StarFactory _starFactory;
     private readonly ITracer _tracer;
 
-    public ConfigDataController(StarFactory starFactory, ITracer tracer)
+    public ConfigDataController(ConfigService configService, StarFactory starFactory, ITracer tracer)
     {
+        _configService = configService;
         _starFactory = starFactory;
         _tracer = tracer;
     }
@@ -48,8 +50,8 @@ public class ConfigDataController : EntityController<ConfigData>
     {
         base.OnActionExecuting(filterContext);
 
-        var appId = GetRequest("appId").ToInt(-1);
-        if (appId > 0)
+        var configId = GetRequest("configId").ToInt(-1);
+        if (configId > 0)
         {
             PageSetting.NavView = "_App_Nav";
             PageSetting.EnableNavbar = false;
@@ -64,8 +66,8 @@ public class ConfigDataController : EntityController<ConfigData>
 
         if (kind == ViewKinds.List)
         {
-            var appId = GetRequest("appId").ToInt(-1);
-            if (appId > 0) fields.RemoveField("AppName");
+            var configId = GetRequest("configId").ToInt(-1);
+            if (configId > 0) fields.RemoveField("AppName");
         }
 
         return fields;
@@ -73,7 +75,7 @@ public class ConfigDataController : EntityController<ConfigData>
 
     protected override IEnumerable<ConfigData> Search(Pager p)
     {
-        var appId = p["appId"].ToInt(-1);
+        var appId = p["configId"].ToInt(-1);
         var name = p["key"];
         var scope = p["scope"];
 
@@ -158,26 +160,10 @@ public class ConfigDataController : EntityController<ConfigData>
         return base.OnUpdate(entity);
     }
 
-    public async Task<ActionResult> Publish(Int32 appId)
+    public async Task<ActionResult> Publish(Int32 configId)
     {
-        using var span = _tracer?.NewSpan(nameof(Publish), appId + "");
-        try
-        {
-            var app = AppConfig.FindById(appId);
-            if (app == null) throw new ArgumentNullException(nameof(appId));
+        var rs = await _configService.Publish(configId);
 
-            if (app.Version >= app.NextVersion) throw new ApiException(701, "已经是最新版本！");
-            app.Publish();
-
-            await _starFactory.SendAppCommand(app.Name, "config/publish", "");
-
-            return JsonRefresh("发布成功！", 3);
-        }
-        catch (Exception ex)
-        {
-            span?.SetError(ex, null);
-
-            return Json(0, ex.Message, ex);
-        }
+        return JsonRefresh($"发布成功！共通知{rs}个应用", 3);
     }
 }

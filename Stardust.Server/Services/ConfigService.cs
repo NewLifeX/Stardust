@@ -2,6 +2,7 @@
 using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
+using NewLife.Remoting;
 using NewLife.Threading;
 using Stardust.Data;
 using Stardust.Data.Configs;
@@ -11,12 +12,14 @@ namespace Stardust.Server.Services;
 public class ConfigService
 {
     private TimerX _timer;
+    private readonly StarFactory _starFactory;
     private readonly ICacheProvider _cacheService;
     private readonly ITracer _tracer;
     public String WorkerIdName { get; set; } = "NewLife.WorkerId";
 
-    public ConfigService(ICacheProvider cacheService, ITracer tracer)
+    public ConfigService(StarFactory starFactory, ICacheProvider cacheService, ITracer tracer)
     {
+        _starFactory = starFactory;
         _cacheService = cacheService;
         _tracer = tracer;
 
@@ -306,5 +309,40 @@ public class ConfigService
         tran.Commit();
 
         return configs.Count;
+    }
+
+    public async Task<Int32> Publish(Int32 appId)
+    {
+        using var span = _tracer?.NewSpan(nameof(Publish), appId + "");
+        try
+        {
+            var app = AppConfig.FindById(appId) ?? throw new ArgumentNullException(nameof(appId));
+
+            if (app.Version >= app.NextVersion) throw new ApiException(701, "已经是最新版本！");
+            app.Publish();
+
+            await _starFactory.SendAppCommand(app.Name, "config/publish", "");
+            var rs = 1;
+
+            // 通知下游依赖应用
+            if (app.CanBeQuoted)
+            {
+                foreach (var item in app.GetChilds())
+                {
+                    if (item.Enable)
+                    {
+                        _ = _starFactory.SendAppCommand(item.Name, "config/publish", "");
+                        rs++;
+                    }
+                }
+            }
+
+            return rs;
+        }
+        catch (Exception ex)
+        {
+            span?.SetError(ex, null);
+            throw;
+        }
     }
 }

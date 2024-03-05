@@ -4,10 +4,10 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
 using NewLife.Log;
-using NewLife.Remoting;
 using NewLife.Web;
 using Stardust.Data;
 using Stardust.Data.Configs;
+using Stardust.Server.Services;
 using XCode;
 using XCode.Membership;
 
@@ -26,7 +26,7 @@ public class AppConfigController : EntityController<AppConfig>
 
         {
             var df = ListFields.GetField("ProjectName") as ListField;
-            df.Url = "/Platform/GalaxyProject?projectId={ProjectId}";
+            df.Url = "/Platform/GalaxyProject?Id={ProjectId}";
             df.Target = "_frame";
         }
         {
@@ -34,7 +34,7 @@ public class AppConfigController : EntityController<AppConfig>
             df.Header = "管理配置";
             df.DisplayName = "管理配置";
             df.Title = "查看该应用所有配置数据";
-            df.Url = "/Configs/ConfigData?appId={Id}";
+            df.Url = "/Configs/ConfigData?configId={Id}";
             df.Target = "_frame";
         }
 
@@ -42,7 +42,7 @@ public class AppConfigController : EntityController<AppConfig>
             var df = ListFields.AddListField("Publish", "Version");
             df.Header = "发布";
             df.DisplayName = "发布";
-            df.Url = "/Configs/AppConfig/Publish?appId={Id}";
+            df.Url = "/Configs/AppConfig/Publish?configId={Id}";
             df.DataAction = "action";
             df.DataVisible = e => e is AppConfig ac && ac.Version < ac.NextVersion;
         }
@@ -52,7 +52,7 @@ public class AppConfigController : EntityController<AppConfig>
             df.Header = "历史";
             df.DisplayName = "历史";
             df.Title = "查看该应用的配置历史";
-            df.Url = "/Configs/ConfigHistory?appId={Id}";
+            df.Url = "/Configs/ConfigHistory?configId={Id}";
             df.Target = "_frame";
         }
 
@@ -93,11 +93,13 @@ public class AppConfigController : EntityController<AppConfig>
         }
     }
 
+    private readonly ConfigService _configService;
     private readonly StarFactory _starFactory;
     private readonly ITracer _tracer;
 
-    public AppConfigController(StarFactory starFactory, ITracer tracer)
+    public AppConfigController(ConfigService configService, StarFactory starFactory, ITracer tracer)
     {
+        _configService = configService;
         _starFactory = starFactory;
         _tracer = tracer;
     }
@@ -106,9 +108,10 @@ public class AppConfigController : EntityController<AppConfig>
     {
         base.OnActionExecuting(filterContext);
 
-        var appId = GetRequest("appId").ToInt(-1);
-        if (appId <= 0) appId = GetRequest("Id").ToInt(-1);
-        if (appId > 0)
+        var id = GetRequest("configId").ToInt(-1);
+        if (id <= 0) id = GetRequest("appId").ToInt(-1);
+        if (id <= 0) id = GetRequest("Id").ToInt(-1);
+        if (id > 0)
         {
             PageSetting.NavView = "_App_Nav";
             PageSetting.EnableNavbar = false;
@@ -129,8 +132,8 @@ public class AppConfigController : EntityController<AppConfig>
 
         if (kind == ViewKinds.List)
         {
-            var appId = GetRequest("appId").ToInt(-1);
-            if (appId > 0) fields.RemoveField("AppName", "Category");
+            var id = GetRequest("configId").ToInt(-1);
+            if (id > 0) fields.RemoveField("AppName", "Category");
         }
 
         return fields;
@@ -139,6 +142,7 @@ public class AppConfigController : EntityController<AppConfig>
     protected override IEnumerable<AppConfig> Search(Pager p)
     {
         var id = p["id"].ToInt(-1);
+        if (id <= 0) id = p["configId"].ToInt(-1);
         if (id > 0)
         {
             var entity = AppConfig.FindById(id);
@@ -182,27 +186,11 @@ public class AppConfigController : EntityController<AppConfig>
         return base.Valid(entity, type, post);
     }
 
-    public async Task<ActionResult> Publish(Int32 appId)
+    public async Task<ActionResult> Publish(Int32 configId)
     {
-        using var span = _tracer?.NewSpan(nameof(Publish), appId + "");
-        try
-        {
-            var app = AppConfig.FindById(appId);
-            if (app == null) throw new ArgumentNullException(nameof(appId));
+        var rs = await _configService.Publish(configId);
 
-            if (app.Version >= app.NextVersion) throw new ApiException(701, "已经是最新版本！");
-            app.Publish();
-
-            await _starFactory.SendAppCommand(app.Name, "config/publish", "");
-
-            return JsonRefresh("发布成功！", 3);
-        }
-        catch (Exception ex)
-        {
-            span?.SetError(ex, null);
-
-            return Json(0, ex.Message, ex);
-        }
+        return JsonRefresh($"发布成功！共通知{rs}个应用", 3);
     }
 
     [EntityAuthorize(PermissionFlags.Update)]

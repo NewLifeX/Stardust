@@ -1,4 +1,5 @@
-﻿using NewLife;
+﻿using Microsoft.AspNetCore.Mvc.Filters;
+using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
@@ -25,9 +26,34 @@ public class ConfigHistoryController : ReadOnlyEntityController<ConfigHistory>
         ListFields.TraceUrl();
     }
 
+    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    {
+        base.OnActionExecuting(filterContext);
+
+        var configId = GetRequest("configId").ToInt(-1);
+        if (configId > 0)
+        {
+            PageSetting.NavView = "_App_Nav";
+            PageSetting.EnableNavbar = false;
+        }
+    }
+
+    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
+    {
+        var fields = base.OnGetFields(kind, model);
+
+        if (kind == ViewKinds.List)
+        {
+            var configId = GetRequest("configId").ToInt(-1);
+            if (configId > 0) fields.RemoveField("AppName");
+        }
+
+        return fields;
+    }
+
     protected override IEnumerable<ConfigHistory> Search(Pager p)
     {
-        var appId = p["appId"].ToInt(-1);
+        var appId = p["configId"].ToInt(-1);
         var action = p["action"];
         var success = p["success"]?.ToBoolean();
 
