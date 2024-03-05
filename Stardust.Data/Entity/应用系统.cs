@@ -168,11 +168,11 @@ public partial class App
     public String LastIP { get => _LastIP; set { if (OnPropertyChanging("LastIP", value)) { _LastIP = value; OnPropertyChanged("LastIP"); } } }
 
     private String _AllowControlNodes;
-    /// <summary>节点控制。允许该应用发指令控制的节点，*表示全部节点</summary>
+    /// <summary>节点控制。安全性设计，允许该应用发指令控制的目标节点编码或目标应用名称，多节点逗号分隔，*表示全部节点</summary>
     [DisplayName("节点控制")]
-    [Description("节点控制。允许该应用发指令控制的节点，*表示全部节点")]
+    [Description("节点控制。安全性设计，允许该应用发指令控制的目标节点编码或目标应用名称，多节点逗号分隔，*表示全部节点")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("AllowControlNodes", "节点控制。允许该应用发指令控制的节点，*表示全部节点", "")]
+    [BindColumn("AllowControlNodes", "节点控制。安全性设计，允许该应用发指令控制的目标节点编码或目标应用名称，多节点逗号分隔，*表示全部节点", "")]
     public String AllowControlNodes { get => _AllowControlNodes; set { if (OnPropertyChanging("AllowControlNodes", value)) { _AllowControlNodes = value; OnPropertyChanged("AllowControlNodes"); } } }
 
     private String _Remark;
@@ -402,7 +402,7 @@ public partial class App
         /// <summary>最后IP</summary>
         public static readonly Field LastIP = FindByName("LastIP");
 
-        /// <summary>节点控制。允许该应用发指令控制的节点，*表示全部节点</summary>
+        /// <summary>节点控制。安全性设计，允许该应用发指令控制的目标节点编码或目标应用名称，多节点逗号分隔，*表示全部节点</summary>
         public static readonly Field AllowControlNodes = FindByName("AllowControlNodes");
 
         /// <summary>内容</summary>
@@ -492,7 +492,7 @@ public partial class App
         /// <summary>最后IP</summary>
         public const String LastIP = "LastIP";
 
-        /// <summary>节点控制。允许该应用发指令控制的节点，*表示全部节点</summary>
+        /// <summary>节点控制。安全性设计，允许该应用发指令控制的目标节点编码或目标应用名称，多节点逗号分隔，*表示全部节点</summary>
         public const String AllowControlNodes = "AllowControlNodes";
 
         /// <summary>内容</summary>

@@ -704,7 +704,7 @@ public class NodeService
         if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new ApiException(401, "无权操作！");
 
         if (app.AllowControlNodes != "*" && !node.Code.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
-            throw new ApiException(403, $"[{app}]无权操作节点[{node}]！");
+            throw new ApiException(403, $"[{app}]无权操作节点[{node}]！\n安全设计需要，默认禁止所有应用向任意节点发送控制指令。\n可在注册中心应用系统中修改[{app}]的可控节点，添加[{node.Code}]，或者设置为*所有节点。");
 
         return await SendCommand(node, model, app.Name);
     }

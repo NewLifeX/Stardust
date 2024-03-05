@@ -9,7 +9,6 @@ using NewLife.Remoting;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
-using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Services;
 using WebSocket = System.Net.WebSockets.WebSocket;
@@ -246,7 +245,7 @@ public class AppController : BaseController
         if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new ApiException(401, "无权操作！");
 
         if (app.AllowControlNodes != "*" && !target.Name.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
-            throw new ApiException(403, $"[{app}]无权操作应用[{target}]！");
+            throw new ApiException(403, $"[{app}]无权操作应用[{target}]！\n安全设计需要，默认禁止所有应用向其它应用发送控制指令。\n可在注册中心应用系统中修改[{app}]的可控节点，添加[{target.Name}]，或者设置为*所有应用。");
 
         var cmd = await _registryService.SendCommand(target, model, app + "");
 
