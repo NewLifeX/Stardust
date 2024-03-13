@@ -200,7 +200,7 @@ public class NetRuntime
 #if NET5_0_OR_GREATER
     [SupportedOSPlatform("windows")]
 #endif
-    public void InstallNet40()
+    public Boolean InstallNet40()
     {
         var vers = new List<VerInfo>();
         vers.AddRange(Get1To45VersionFromRegistry());
@@ -212,7 +212,7 @@ public class NetRuntime
         if (!Force && ver >= target)
         {
             WriteLog("已安装最新版 v{0}", ver);
-            return;
+            return false;
         }
 
         var rs = Install("dotNetFx40_Full_x86_x64.exe", null);
@@ -234,14 +234,17 @@ public class NetRuntime
             }
 #endif
 
+            rs = Install("dotNetFx40_Full_x86_x64.exe", null);
         }
+
+        return rs;
     }
 
     /// <summary>安装.NET4.5</summary>
 #if NET5_0_OR_GREATER
     [SupportedOSPlatform("windows")]
 #endif
-    public void InstallNet45()
+    public Boolean InstallNet45()
     {
         var vers = new List<VerInfo>();
         vers.AddRange(Get1To45VersionFromRegistry());
@@ -253,18 +256,20 @@ public class NetRuntime
         if (!Force && ver >= target)
         {
             WriteLog("已安装最新版 v{0}", ver);
-            return;
+            return false;
         }
 
-        Install("NDP452-KB2901907-x86-x64-AllOS-ENU.exe");
+        var rs = Install("NDP452-KB2901907-x86-x64-AllOS-ENU.exe");
         Install("NDP452-KB2901907-x86-x64-AllOS-CHS.exe");
+
+        return rs;
     }
 
     /// <summary>安装.NET4.8</summary>
 #if NET5_0_OR_GREATER
     [SupportedOSPlatform("windows")]
 #endif
-    public void InstallNet48()
+    public Boolean InstallNet48()
     {
         var vers = new List<VerInfo>();
         vers.AddRange(Get1To45VersionFromRegistry());
@@ -278,7 +283,7 @@ public class NetRuntime
         if (!Force && ver >= target)
         {
             WriteLog("已安装最新版 v{0}", ver);
-            return;
+            return false;
         }
 
 #if NET20
@@ -302,22 +307,25 @@ public class NetRuntime
         }
 
         // win10/win11 中安装 .NET4.8.1
+        var rs = false;
         if (osVer.Major >= 10)
         {
-            Install("ndp481-x86-x64-allos-enu.exe", null, "/passive /promptrestart /showfinalerror");
+            rs = Install("ndp481-x86-x64-allos-enu.exe", null, "/passive /promptrestart /showfinalerror");
             Install("ndp481-x86-x64-allos-chs.exe", null, "/passive /promptrestart /showfinalerror");
         }
         else
         {
-            Install("ndp48-x86-x64-allos-enu.exe", null, "/passive /promptrestart /showfinalerror");
+            rs = Install("ndp48-x86-x64-allos-enu.exe", null, "/passive /promptrestart /showfinalerror");
             Install("ndp48-x86-x64-allos-chs.exe", null, "/passive /promptrestart /showfinalerror");
         }
+
+        return rs;
     }
 
     /// <summary>安装.NET6.0</summary>
     /// <param name="target">目标版本。包括子版本，如6.0.15</param>
     /// <param name="kind">安装类型。如aspnet/desktop/host</param>
-    public void InstallNet6(String target, String? kind = null)
+    public Boolean InstallNet6(String target, String? kind = null)
     {
         var vers = GetNetCore();
 
@@ -330,7 +338,7 @@ public class NetRuntime
         if (!Force && ver >= targetVer)
         {
             WriteLog("已安装最新版 v{0}", ver);
-            return;
+            return false;
         }
 
 #if NET20
@@ -356,22 +364,23 @@ public class NetRuntime
             }
         }
 
+        var rs = false;
         if (is64)
         {
             switch (kind)
             {
                 case "aspnet":
-                    Install($"dotnet-runtime-{target}-win-x64.exe");
-                    Install($"aspnetcore-runtime-{target}-win-x64.exe");
+                    rs = Install($"dotnet-runtime-{target}-win-x64.exe");
+                    rs = Install($"aspnetcore-runtime-{target}-win-x64.exe");
                     break;
                 case "desktop":
-                    Install($"windowsdesktop-runtime-{target}-win-x64.exe");
+                    rs = Install($"windowsdesktop-runtime-{target}-win-x64.exe");
                     break;
                 case "host":
-                    Install($"dotnet-hosting-{target}-win.exe");
+                    rs = Install($"dotnet-hosting-{target}-win.exe");
                     break;
                 default:
-                    Install($"dotnet-runtime-{target}-win-x64.exe");
+                    rs = Install($"dotnet-runtime-{target}-win-x64.exe");
                     break;
             }
         }
@@ -380,26 +389,28 @@ public class NetRuntime
             switch (kind)
             {
                 case "aspnet":
-                    Install($"dotnet-runtime-{target}-win-x86.exe");
-                    Install($"aspnetcore-runtime-{target}-win-x86.exe");
+                    rs = Install($"dotnet-runtime-{target}-win-x86.exe");
+                    rs = Install($"aspnetcore-runtime-{target}-win-x86.exe");
                     break;
                 case "desktop":
-                    Install($"windowsdesktop-runtime-{target}-win-x86.exe");
+                    rs = Install($"windowsdesktop-runtime-{target}-win-x86.exe");
                     break;
                 case "host":
-                    Install($"dotnet-hosting-{target}-win.exe");
+                    rs = Install($"dotnet-hosting-{target}-win.exe");
                     break;
                 default:
-                    Install($"dotnet-runtime-{target}-win-x86.exe");
+                    rs = Install($"dotnet-runtime-{target}-win-x86.exe");
                     break;
             }
         }
+
+        return rs;
     }
 
     /// <summary>安装.NET7.0</summary>
     /// <param name="target">目标版本。包括子版本，如6.0.15</param>
     /// <param name="kind">安装类型。如aspnet/desktop/host</param>
-    public void InstallNet7(String target, String? kind = null)
+    public Boolean InstallNet7(String target, String? kind = null)
     {
         var vers = GetNetCore();
 
@@ -412,7 +423,7 @@ public class NetRuntime
         if (!Force && ver >= targetVer)
         {
             WriteLog("已安装最新版 v{0}", ver);
-            return;
+            return false;
         }
 
 #if NET20
@@ -438,22 +449,23 @@ public class NetRuntime
             }
         }
 
+        var rs = false;
         if (is64)
         {
             switch (kind)
             {
                 case "aspnet":
-                    Install($"dotnet-runtime-{target}-win-x64.exe");
-                    Install($"aspnetcore-runtime-{target}-win-x64.exe");
+                    rs = Install($"dotnet-runtime-{target}-win-x64.exe");
+                    rs = Install($"aspnetcore-runtime-{target}-win-x64.exe");
                     break;
                 case "desktop":
-                    Install($"windowsdesktop-runtime-{target}-win-x64.exe");
+                    rs = Install($"windowsdesktop-runtime-{target}-win-x64.exe");
                     break;
                 case "host":
-                    Install($"dotnet-hosting-{target}-win.exe");
+                    rs = Install($"dotnet-hosting-{target}-win.exe");
                     break;
                 default:
-                    Install($"dotnet-runtime-{target}-win-x64.exe");
+                    rs = Install($"dotnet-runtime-{target}-win-x64.exe");
                     break;
             }
         }
@@ -462,26 +474,28 @@ public class NetRuntime
             switch (kind)
             {
                 case "aspnet":
-                    Install($"dotnet-runtime-{target}-win-x86.exe");
-                    Install($"aspnetcore-runtime-{target}-win-x86.exe");
+                    rs = Install($"dotnet-runtime-{target}-win-x86.exe");
+                    rs = Install($"aspnetcore-runtime-{target}-win-x86.exe");
                     break;
                 case "desktop":
-                    Install($"windowsdesktop-runtime-{target}-win-x86.exe");
+                    rs = Install($"windowsdesktop-runtime-{target}-win-x86.exe");
                     break;
                 case "host":
-                    Install($"dotnet-hosting-{target}-win.exe");
+                    rs = Install($"dotnet-hosting-{target}-win.exe");
                     break;
                 default:
-                    Install($"dotnet-runtime-{target}-win-x86.exe");
+                    rs = Install($"dotnet-runtime-{target}-win-x86.exe");
                     break;
             }
         }
+
+        return rs;
     }
 
     /// <summary>安装.NET8.0</summary>
     /// <param name="target">目标版本。包括子版本，如6.0.15</param>
     /// <param name="kind">安装类型。如aspnet/desktop/host</param>
-    public void InstallNet8(String target, String? kind = null)
+    public Boolean InstallNet8(String target, String? kind = null)
     {
         var vers = GetNetCore();
 
@@ -494,7 +508,7 @@ public class NetRuntime
         if (!Force && ver >= targetVer)
         {
             WriteLog("已安装最新版 v{0}", ver);
-            return;
+            return false;
         }
 
 #if NET20
@@ -520,22 +534,23 @@ public class NetRuntime
             }
         }
 
+        var rs = false;
         if (is64)
         {
             switch (kind)
             {
                 case "aspnet":
-                    Install($"dotnet-runtime-{target}-win-x64.exe");
-                    Install($"aspnetcore-runtime-{target}-win-x64.exe");
+                    rs = Install($"dotnet-runtime-{target}-win-x64.exe");
+                    rs = Install($"aspnetcore-runtime-{target}-win-x64.exe");
                     break;
                 case "desktop":
-                    Install($"windowsdesktop-runtime-{target}-win-x64.exe");
+                    rs = Install($"windowsdesktop-runtime-{target}-win-x64.exe");
                     break;
                 case "host":
-                    Install($"dotnet-hosting-{target}-win.exe");
+                    rs = Install($"dotnet-hosting-{target}-win.exe");
                     break;
                 default:
-                    Install($"dotnet-runtime-{target}-win-x64.exe");
+                    rs = Install($"dotnet-runtime-{target}-win-x64.exe");
                     break;
             }
         }
@@ -544,20 +559,22 @@ public class NetRuntime
             switch (kind)
             {
                 case "aspnet":
-                    Install($"dotnet-runtime-{target}-win-x86.exe");
-                    Install($"aspnetcore-runtime-{target}-win-x86.exe");
+                    rs = Install($"dotnet-runtime-{target}-win-x86.exe");
+                    rs = Install($"aspnetcore-runtime-{target}-win-x86.exe");
                     break;
                 case "desktop":
-                    Install($"windowsdesktop-runtime-{target}-win-x86.exe");
+                    rs = Install($"windowsdesktop-runtime-{target}-win-x86.exe");
                     break;
                 case "host":
-                    Install($"dotnet-hosting-{target}-win.exe");
+                    rs = Install($"dotnet-hosting-{target}-win.exe");
                     break;
                 default:
-                    Install($"dotnet-runtime-{target}-win-x86.exe");
+                    rs = Install($"dotnet-runtime-{target}-win-x86.exe");
                     break;
             }
         }
+
+        return rs;
     }
 
     /// <summary>在Linux上安装.NET运行时</summary>
