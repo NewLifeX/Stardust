@@ -58,7 +58,7 @@ public class WeiXinClient
     {
         if (content.IsNullOrEmpty()) return;
 
-        // 超长阶段
+        // 超长截断
         if (content.Length > 2048) content = content.Substring(0, 2048);
 
         WriteLog(content);

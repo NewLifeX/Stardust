@@ -256,7 +256,7 @@ public class Startup
         var addrs = await registry.ResolveAddressAsync("StarWeb");
         var str = addrs.Join(";");
         var set = StarServerSetting.Current;
-        if (set.WebUrl != str)
+        if (set.WebUrl != str && !str.IsNullOrEmpty())
         {
             set.WebUrl = str;
             set.Save();

@@ -226,7 +226,7 @@ public class DingTalkClient
     {
         if (text.IsNullOrEmpty()) return;
 
-        // 超长阶段
+        // 超长截断
         if (text.Length > 2048) text = text.Substring(0, 2048);
 
         //WriteLog(text);
