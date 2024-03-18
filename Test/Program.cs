@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using Microsoft.Win32;
 using NewLife;
 using NewLife.IO;
 using NewLife.Log;
@@ -27,7 +28,7 @@ class Program
     {
         XTrace.UseConsole();
 
-        Test6();
+        Test7();
 
         Console.WriteLine("OK!");
         Console.ReadKey();
@@ -191,6 +192,56 @@ class Program
             XTrace.WriteLine("Name:{0}, MachinecName:{1}", client.GetNodeInfo().MachineName, Environment.MachineName);
             Thread.Sleep(1000);
         }
+    }
+
+    static void Test7()
+    {
+        XTrace.WriteLine("SystemEvents");
+
+        SystemEvents.PowerModeChanged += (s, e) =>
+        {
+            XTrace.WriteLine("PowerModeChanged: {0}", e.Mode);
+        };
+        SystemEvents.SessionSwitch += (s, e) =>
+        {
+            XTrace.WriteLine("SessionSwitch: {0}", e.Reason);
+        };
+        SystemEvents.SessionEnding += (s, e) =>
+        {
+            XTrace.WriteLine("SessionEnding: {0}", e.Reason);
+        };
+        SystemEvents.SessionEnded += (s, e) =>
+        {
+            XTrace.WriteLine("SessionEnded: {0}", e.Reason);
+        };
+        SystemEvents.UserPreferenceChanging += (s, e) =>
+        {
+            XTrace.WriteLine("UserPreferenceChanging: {0}", e.Category);
+        };
+        SystemEvents.UserPreferenceChanged += (s, e) =>
+        {
+            XTrace.WriteLine("UserPreferenceChanged: {0}", e.Category);
+        };
+        SystemEvents.DisplaySettingsChanged += (s, e) =>
+        {
+            XTrace.WriteLine("DisplaySettingsChanged: {0}", e);
+        };
+        SystemEvents.InstalledFontsChanged += (s, e) =>
+        {
+            XTrace.WriteLine("InstalledFontsChanged: {0}", e);
+        };
+        SystemEvents.TimeChanged += (s, e) =>
+        {
+            XTrace.WriteLine("TimeChanged: {0}", e);
+        };
+        SystemEvents.TimerElapsed += (s, e) =>
+        {
+            XTrace.WriteLine("TimerElapsed: {0}", e);
+        };
+        SystemEvents.LowMemory += (s, e) =>
+        {
+            XTrace.WriteLine("LowMemory: {0}", e);
+        };
     }
 
     static void Test8()

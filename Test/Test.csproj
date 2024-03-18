@@ -29,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Win32.SystemEvents" Version="8.0.0" />
     <PackageReference Include="NewLife.Core" Version="10.8.2024.303" />
     <PackageReference Include="SSH.NET" Version="2024.0.0" />
   </ItemGroup>
