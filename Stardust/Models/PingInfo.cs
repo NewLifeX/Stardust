@@ -13,7 +13,7 @@ public class PingInfo
     /// <summary>驱动器信息。各分区大小，逗号分隔</summary>
     public String? DriveInfo { get; set; }
 
-    /// <summary>主频</summary>
+    /// <summary>CPU占用率</summary>
     public Single CpuRate { get; set; }
 
     /// <summary>温度</summary>
