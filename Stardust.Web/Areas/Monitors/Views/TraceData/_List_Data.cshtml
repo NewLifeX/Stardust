@@ -35,6 +35,7 @@
             <th class="text-center" title="平均耗时。总耗时除以总次数"><a href="@Html.Raw(page.GetSortUrl("Cost"))">平均</a></th>
             <th class="text-center" title="最大耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MaxCost"))">最大</a></th>
             <th class="text-center" title="最小耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MinCost"))">最小</a></th>
+            <th class="text-center" title="总数值。用户自定义标量"><a href="@Html.Raw(page.GetSortUrl("TotalValue"))">数值</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Samples"))">正常</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("ErrorSamples"))">异常</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Start"))">开始时间</a></th>
@@ -86,6 +87,7 @@
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>
                 <td class="text-right">@entity.MinCost.ToString("n0")</td>
+                <td class="text-right">@entity.TotalValue.ToString("n0")</td>
                 <td class="text-right"><a href="@url2&success=1" title="本次追踪的正常调用采样数据">@entity.Samples.ToString("n0")</a></td>
                 <td class="text-right"><a href="@url2&success=0" title="本次追踪的异常调用采样数据，包含错误信息">@entity.ErrorSamples.ToString("n0")</a></td>
                 @*<td><a href="TraceData/Exclude?id=@entity.Id" title="把该操作名加入排除名单，不再收集其信息">屏蔽</a></td>*@
@@ -118,6 +120,7 @@
                 <td class="text-right">@entity.Cost.ToString("n0")</td>
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>
                 <td class="text-right">@entity.MinCost.ToString("n0")</td>
+                <td class="text-right">@entity.TotalValue.ToString("n0")</td>
                 <td class="text-right">@entity.Samples.ToString("n0")</td>
                 <td class="text-right">@entity.ErrorSamples.ToString("n0")</td>
                 @*<td></td>*@
