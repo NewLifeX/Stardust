@@ -151,6 +151,7 @@
         <Column Name="Cost" DataType="Int32" Description="平均耗时。总耗时除以总次数" />
         <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
         <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
+        <Column Name="TotalValue" DataType="Int64" Description="总数值。用户自定义标量" />
         <Column Name="Samples" DataType="Int32" Description="正常采样" />
         <Column Name="ErrorSamples" DataType="Int32" Description="异常采样" />
         <Column Name="LinkId" DataType="Int64" Description="关联项。当前跟踪数据为克隆数据时，采用数据落在关联项所指定的跟踪数据之下" />
@@ -174,6 +175,7 @@
         <Column Name="StartTime" DataType="Int64" Description="开始时间。Unix毫秒" />
         <Column Name="EndTime" DataType="Int64" Description="结束时间。Unix毫秒" />
         <Column Name="Cost" DataType="Int32" Description="耗时。毫秒" />
+        <Column Name="Value" DataType="Int64" Description="数值。用户自定义标量" />
         <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@proccessid" />
         <Column Name="TraceId" DataType="String" Description="追踪。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
         <Column Name="SpanId" DataType="String" Description="唯一标识。随线程上下文、Http、Rpc传递，作为内部片段的父级" />
@@ -199,6 +201,7 @@
         <Column Name="StartTime" DataType="Int64" Description="开始时间。Unix毫秒" />
         <Column Name="EndTime" DataType="Int64" Description="结束时间。Unix毫秒" />
         <Column Name="Cost" DataType="Int32" Description="耗时。毫秒" />
+        <Column Name="Value" DataType="Int64" Description="数值。用户自定义标量" />
         <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@proccessid" />
         <Column Name="TraceId" DataType="String" Description="追踪。可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" />
         <Column Name="SpanId" DataType="String" Description="唯一标识。随线程上下文、Http、Rpc传递，作为内部片段的父级" />
@@ -230,6 +233,7 @@
         <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
         <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
         <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
+        <Column Name="TotalValue" DataType="Int64" Description="总数值。用户自定义标量" />
         <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
         <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
         <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
@@ -256,6 +260,7 @@
         <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
         <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
         <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
+        <Column Name="TotalValue" DataType="Int64" Description="总数值。用户自定义标量" />
         <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
         <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
         <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
@@ -279,6 +284,7 @@
         <Column Name="Cost" DataType="Int32" Description="平均耗时。逼近TP99，总耗时去掉最大值后除以总次数，单位毫秒" />
         <Column Name="MaxCost" DataType="Int32" Description="最大耗时。单位毫秒" />
         <Column Name="MinCost" DataType="Int32" Description="最小耗时。单位毫秒" />
+        <Column Name="TotalValue" DataType="Int64" Description="总数值。用户自定义标量" />
         <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
         <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
         <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />

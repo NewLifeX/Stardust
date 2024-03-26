@@ -200,6 +200,7 @@ public partial class SampleData : Entity<SampleData>
 
                 StartTime = item.StartTime,
                 EndTime = item.EndTime,
+                Value = item.Value,
 
                 Tag = item.Tag,
                 Error = item.Error,

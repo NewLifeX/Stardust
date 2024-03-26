@@ -158,6 +158,7 @@ public class TraceStatService : ITraceStatService
                 st.TotalCost += td.TotalCost;
                 if (st.MaxCost < td.MaxCost) st.MaxCost = td.MaxCost;
                 if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
+                st.TotalValue += td.TotalValue;
 
                 _dayQueue.Commit(key);
             }
@@ -171,6 +172,7 @@ public class TraceStatService : ITraceStatService
                 st.TotalCost += td.TotalCost;
                 if (st.MaxCost < td.MaxCost) st.MaxCost = td.MaxCost;
                 if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
+                st.TotalValue += td.TotalValue;
 
                 _hourQueue.Commit(key);
             }
@@ -184,6 +186,7 @@ public class TraceStatService : ITraceStatService
                 st.TotalCost += td.TotalCost;
                 if (st.MaxCost < td.MaxCost) st.MaxCost = td.MaxCost;
                 if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
+                st.TotalValue += td.TotalValue;
 
                 _minuteQueue.Commit(key);
             }
@@ -403,6 +406,7 @@ public class TraceStatService : ITraceStatService
             st.TotalCost = item.TotalCost;
             st.MaxCost = item.MaxCost;
             st.MinCost = item.MinCost;
+            st.TotalValue = item.TotalValue;
 
             _minuteQueue.Commit(key);
         }

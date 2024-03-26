@@ -79,6 +79,14 @@ public partial class SampleData
     [BindColumn("Cost", "耗时。毫秒", "")]
     public Int32 Cost { get => _Cost; set { if (OnPropertyChanging("Cost", value)) { _Cost = value; OnPropertyChanged("Cost"); } } }
 
+    private Int64 _Value;
+    /// <summary>数值。用户自定义标量</summary>
+    [DisplayName("数值")]
+    [Description("数值。用户自定义标量")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Value", "数值。用户自定义标量", "")]
+    public Int64 Value { get => _Value; set { if (OnPropertyChanging("Value", value)) { _Value = value; OnPropertyChanged("Value"); } } }
+
     private String _ClientId;
     /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
     [DisplayName("实例")]
@@ -161,6 +169,7 @@ public partial class SampleData
             "StartTime" => _StartTime,
             "EndTime" => _EndTime,
             "Cost" => _Cost,
+            "Value" => _Value,
             "ClientId" => _ClientId,
             "TraceId" => _TraceId,
             "SpanId" => _SpanId,
@@ -182,6 +191,7 @@ public partial class SampleData
                 case "StartTime": _StartTime = value.ToLong(); break;
                 case "EndTime": _EndTime = value.ToLong(); break;
                 case "Cost": _Cost = value.ToInt(); break;
+                case "Value": _Value = value.ToLong(); break;
                 case "ClientId": _ClientId = Convert.ToString(value); break;
                 case "TraceId": _TraceId = Convert.ToString(value); break;
                 case "SpanId": _SpanId = Convert.ToString(value); break;
@@ -223,6 +233,9 @@ public partial class SampleData
 
         /// <summary>耗时。毫秒</summary>
         public static readonly Field Cost = FindByName("Cost");
+
+        /// <summary>数值。用户自定义标量</summary>
+        public static readonly Field Value = FindByName("Value");
 
         /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
         public static readonly Field ClientId = FindByName("ClientId");
@@ -274,6 +287,9 @@ public partial class SampleData
 
         /// <summary>耗时。毫秒</summary>
         public const String Cost = "Cost";
+
+        /// <summary>数值。用户自定义标量</summary>
+        public const String Value = "Value";
 
         /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
         public const String ClientId = "ClientId";

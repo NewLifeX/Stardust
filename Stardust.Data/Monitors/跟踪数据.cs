@@ -162,6 +162,14 @@ public partial class TraceData
     [BindColumn("MinCost", "最小耗时。单位毫秒", "")]
     public Int32 MinCost { get => _MinCost; set { if (OnPropertyChanging("MinCost", value)) { _MinCost = value; OnPropertyChanged("MinCost"); } } }
 
+    private Int64 _TotalValue;
+    /// <summary>总数值。用户自定义标量</summary>
+    [DisplayName("总数值")]
+    [Description("总数值。用户自定义标量")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("TotalValue", "总数值。用户自定义标量", "")]
+    public Int64 TotalValue { get => _TotalValue; set { if (OnPropertyChanging("TotalValue", value)) { _TotalValue = value; OnPropertyChanged("TotalValue"); } } }
+
     private Int32 _Samples;
     /// <summary>正常采样</summary>
     [DisplayName("正常采样")]
@@ -230,6 +238,7 @@ public partial class TraceData
             "Cost" => _Cost,
             "MaxCost" => _MaxCost,
             "MinCost" => _MinCost,
+            "TotalValue" => _TotalValue,
             "Samples" => _Samples,
             "ErrorSamples" => _ErrorSamples,
             "LinkId" => _LinkId,
@@ -258,6 +267,7 @@ public partial class TraceData
                 case "Cost": _Cost = value.ToInt(); break;
                 case "MaxCost": _MaxCost = value.ToInt(); break;
                 case "MinCost": _MinCost = value.ToInt(); break;
+                case "TotalValue": _TotalValue = value.ToLong(); break;
                 case "Samples": _Samples = value.ToInt(); break;
                 case "ErrorSamples": _ErrorSamples = value.ToInt(); break;
                 case "LinkId": _LinkId = value.ToLong(); break;
@@ -326,6 +336,9 @@ public partial class TraceData
 
         /// <summary>最小耗时。单位毫秒</summary>
         public static readonly Field MinCost = FindByName("MinCost");
+
+        /// <summary>总数值。用户自定义标量</summary>
+        public static readonly Field TotalValue = FindByName("TotalValue");
 
         /// <summary>正常采样</summary>
         public static readonly Field Samples = FindByName("Samples");
@@ -398,6 +411,9 @@ public partial class TraceData
 
         /// <summary>最小耗时。单位毫秒</summary>
         public const String MinCost = "MinCost";
+
+        /// <summary>总数值。用户自定义标量</summary>
+        public const String TotalValue = "TotalValue";
 
         /// <summary>正常采样</summary>
         public const String Samples = "Samples";

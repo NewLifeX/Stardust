@@ -119,6 +119,14 @@ public partial class TraceMinuteStat
     [BindColumn("MinCost", "最小耗时。单位毫秒", "")]
     public Int32 MinCost { get => _MinCost; set { if (OnPropertyChanging("MinCost", value)) { _MinCost = value; OnPropertyChanged("MinCost"); } } }
 
+    private Int64 _TotalValue;
+    /// <summary>总数值。用户自定义标量</summary>
+    [DisplayName("总数值")]
+    [Description("总数值。用户自定义标量")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("TotalValue", "总数值。用户自定义标量", "")]
+    public Int64 TotalValue { get => _TotalValue; set { if (OnPropertyChanging("TotalValue", value)) { _TotalValue = value; OnPropertyChanged("TotalValue"); } } }
+
     private String _TraceId;
     /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
     [Category("扩展")]
@@ -167,6 +175,7 @@ public partial class TraceMinuteStat
             "Cost" => _Cost,
             "MaxCost" => _MaxCost,
             "MinCost" => _MinCost,
+            "TotalValue" => _TotalValue,
             "TraceId" => _TraceId,
             "CreateTime" => _CreateTime,
             "UpdateTime" => _UpdateTime,
@@ -188,6 +197,7 @@ public partial class TraceMinuteStat
                 case "Cost": _Cost = value.ToInt(); break;
                 case "MaxCost": _MaxCost = value.ToInt(); break;
                 case "MinCost": _MinCost = value.ToInt(); break;
+                case "TotalValue": _TotalValue = value.ToLong(); break;
                 case "TraceId": _TraceId = Convert.ToString(value); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
@@ -240,6 +250,9 @@ public partial class TraceMinuteStat
         /// <summary>最小耗时。单位毫秒</summary>
         public static readonly Field MinCost = FindByName("MinCost");
 
+        /// <summary>总数值。用户自定义标量</summary>
+        public static readonly Field TotalValue = FindByName("TotalValue");
+
         /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
         public static readonly Field TraceId = FindByName("TraceId");
 
@@ -290,6 +303,9 @@ public partial class TraceMinuteStat
 
         /// <summary>最小耗时。单位毫秒</summary>
         public const String MinCost = "MinCost";
+
+        /// <summary>总数值。用户自定义标量</summary>
+        public const String TotalValue = "TotalValue";
 
         /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
         public const String TraceId = "TraceId";
