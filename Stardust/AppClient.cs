@@ -11,6 +11,8 @@ using Stardust.Models;
 using Stardust.Registry;
 using Stardust.Services;
 using NewLife.Caching;
+using System.Net.NetworkInformation;
+
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
 using System.Net.WebSockets;
 using TaskEx = System.Threading.Tasks.Task;
@@ -197,15 +199,23 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     {
         try
         {
-            if (_appInfo == null)
-                _appInfo = new AppInfo(Process.GetCurrentProcess()) { Version = _version };
+            var inf = _appInfo;
+            if (inf == null)
+                inf = _appInfo = new AppInfo(Process.GetCurrentProcess()) { Version = _version };
             else
-                _appInfo.Refresh();
+                inf.Refresh();
+
+            // 如果网络不可用，直接保存到队列
+            if (!NetworkInterface.GetIsNetworkAvailable())
+            {
+                if (_fails.Count < MaxFails) _fails.Enqueue(inf.Clone());
+                return null;
+            }
 
             PingResponse? rs = null;
             try
             {
-                rs = await PostAsync<PingResponse>("App/Ping", _appInfo);
+                rs = await PostAsync<PingResponse>("App/Ping", inf);
                 if (rs != null)
                 {
                     // 由服务器改变采样频率
@@ -237,7 +247,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             }
             catch
             {
-                if (_fails.Count < MaxFails) _fails.Enqueue(_appInfo.Clone());
+                if (_fails.Count < MaxFails) _fails.Enqueue(inf.Clone());
 
                 throw;
             }
@@ -410,6 +420,8 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         {
             if (_appName == null)
             {
+                if (!NetworkInterface.GetIsNetworkAvailable()) return;
+
                 var rs = await Register();
                 if (rs == null) return;
             }
@@ -417,6 +429,8 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             // 向服务端发送心跳后，再向本地发送心跳
             await Ping();
             await PingLocal();
+
+            if (!NetworkInterface.GetIsNetworkAvailable()) return;
 
             await RefreshPublish();
             await RefreshConsume();

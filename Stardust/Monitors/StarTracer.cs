@@ -1,9 +1,11 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net.Http;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reflection;
 using NewLife;
+using NewLife.Data;
 using NewLife.Http;
 using NewLife.Log;
 using NewLife.Reflection;
@@ -144,6 +146,14 @@ public class StarTracer : DefaultTracer
 
             Builders = builders
         };
+
+        // 如果网络不可用，直接保存到队列
+        if (!NetworkInterface.GetIsNetworkAvailable())
+        {
+            SaveFails(model);
+            return;
+        }
+
         try
         {
             // 数据过大时，以压缩格式上传
@@ -197,26 +207,39 @@ public class StarTracer : DefaultTracer
             //if (ex2 is not HttpRequestException)
             //    Log?.Error(ex + "");
 
-            if (_fails.Count < MaxFails)
-            {
-                // 失败时清空采样数据，避免内存暴涨
-                foreach (var item in model.Builders)
-                {
-                    if (item is DefaultSpanBuilder builder)
-                    {
-                        builder.Samples = null;
-                        builder.ErrorSamples = null;
-                    }
-                }
-                model.Info = model.Info?.Clone();
-                _fails.Enqueue(model);
-            }
+            SaveFails(model);
 
             return;
         }
 
         // 如果发送成功，则继续发送以前失败的数据
-        while (_fails.TryDequeue(out model))
+        ProcessFails();
+    }
+
+    void SaveFails(TraceModel model)
+    {
+        if (model.Builders != null && _fails.Count < MaxFails)
+        {
+            // 失败时清空采样数据，避免内存暴涨
+            foreach (var item in model.Builders)
+            {
+                if (item is DefaultSpanBuilder builder)
+                {
+                    builder.Samples = null;
+                    builder.ErrorSamples = null;
+                }
+            }
+            model.Info = model.Info?.Clone();
+            _fails.Enqueue(model);
+        }
+    }
+
+    void ProcessFails()
+    {
+        var client = Client;
+        if (client == null) return;
+
+        while (_fails.TryDequeue(out var model))
         {
             //model = _fails.Dequeue();
             try

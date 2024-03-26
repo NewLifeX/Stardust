@@ -15,6 +15,8 @@ using NewLife.Threading;
 using Stardust.Managers;
 using Stardust.Models;
 using Stardust.Services;
+using NewLife.Data;
+
 
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
 using System.Net.WebSockets;
@@ -502,6 +504,13 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         {
             var inf = GetHeartInfo();
 
+            // 如果网络不可用，直接保存到队列
+            if (!NetworkInterface.GetIsNetworkAvailable())
+            {
+                if (_fails.Count < MaxFails) _fails.Enqueue(inf);
+                return null;
+            }
+
             PingResponse? rs = null;
             try
             {
@@ -736,6 +745,8 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         try
         {
             await Ping();
+
+            if (!NetworkInterface.GetIsNetworkAvailable()) return;
 
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
             var svc = _currentService;
