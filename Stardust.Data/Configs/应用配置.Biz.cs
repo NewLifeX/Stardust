@@ -165,11 +165,12 @@ public partial class AppConfig : Entity<AppConfig>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<AppConfig> Search(Int32 projectId, String category, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<AppConfig> Search(Int32 projectId, Int32 appId, String category, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (projectId >= 0) exp &= _.ProjectId == projectId;
+        if (appId >= 0) exp &= _.AppId == appId;
         if (!category.IsNullOrEmpty()) exp &= _.Category == category;
         if (enable != null) exp &= _.Enable == enable;
         exp &= _.UpdateTime.Between(start, end);

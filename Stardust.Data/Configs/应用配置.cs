@@ -49,11 +49,11 @@ public partial class AppConfig
     public String Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
 
     private Int32 _AppId;
-    /// <summary>应用</summary>
+    /// <summary>应用。对应StarApp</summary>
     [DisplayName("应用")]
-    [Description("应用")]
+    [Description("应用。对应StarApp")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("AppId", "应用", "")]
+    [BindColumn("AppId", "应用。对应StarApp", "")]
     public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
     private String _Name;
@@ -362,7 +362,7 @@ public partial class AppConfig
         /// <summary>类别</summary>
         public static readonly Field Category = FindByName("Category");
 
-        /// <summary>应用</summary>
+        /// <summary>应用。对应StarApp</summary>
         public static readonly Field AppId = FindByName("AppId");
 
         /// <summary>名称</summary>
@@ -452,7 +452,7 @@ public partial class AppConfig
         /// <summary>类别</summary>
         public const String Category = "Category";
 
-        /// <summary>应用</summary>
+        /// <summary>应用。对应StarApp</summary>
         public const String AppId = "AppId";
 
         /// <summary>名称</summary>

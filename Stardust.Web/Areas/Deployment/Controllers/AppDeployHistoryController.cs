@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
+using NewLife.Configuration;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
@@ -33,8 +34,9 @@ public class AppDeployHistoryController : ReadOnlyEntityController<AppDeployHist
     {
         base.OnActionExecuting(filterContext);
 
+        var appId = GetRequest("appId").ToInt(-1);
         var deployId = GetRequest("deployId").ToInt(-1);
-        if (deployId > 0)
+        if (deployId > 0 || appId > 0)
         {
             PageSetting.NavView = "_App_Nav";
             PageSetting.EnableNavbar = false;

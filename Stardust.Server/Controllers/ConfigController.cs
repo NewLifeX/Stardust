@@ -121,70 +121,70 @@ public class ConfigController : ControllerBase
     private (AppConfig, AppOnline) Valid(String appId, String secret, String clientId, String token)
     {
         // 优先令牌解码
-        App ap = null;
+        App app = null;
         if (!token.IsNullOrEmpty())
         {
             var (jwt, ap1) = _tokenService.DecodeToken(token, _setting.TokenSecret);
             if (appId.IsNullOrEmpty()) appId = ap1?.Name;
             if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
 
-            ap = ap1;
+            app = ap1;
         }
 
         var ip = HttpContext.GetUserHost();
-        ap ??= _tokenService.Authorize(appId, secret, _setting.AutoRegister, ip);
+        app ??= _tokenService.Authorize(appId, secret, _setting.AutoRegister, ip);
 
         // 新建应用配置
-        var app = AppConfig.FindByName(appId);
-        app ??= AppConfig.Find(AppConfig._.Name == appId);
-        if (app == null)
+        var config = AppConfig.FindByName(appId);
+        config ??= AppConfig.Find(AppConfig._.Name == appId);
+        if (config == null)
         {
             var obj = AppConfig.Meta.Table;
             lock (obj)
             {
-                app = AppConfig.FindByName(appId);
-                if (app == null)
+                config = AppConfig.FindByName(appId);
+                if (config == null)
                 {
-                    app = new AppConfig
+                    config = new AppConfig
                     {
-                        Name = ap.Name,
-                        AppId = ap.Id,
-                        Enable = ap.Enable,
+                        Name = app.Name,
+                        AppId = app.Id,
+                        Enable = app.Enable,
                     };
 
-                    app.Insert();
+                    config.Insert();
                 }
             }
         }
 
-        if (ap != null)
+        if (app != null)
         {
             // 双向同步应用分类
-            if (!ap.Category.IsNullOrEmpty())
-                app.Category = ap.Category;
-            else if (!app.Category.IsNullOrEmpty())
+            if (!app.Category.IsNullOrEmpty())
+                config.Category = app.Category;
+            else if (!config.Category.IsNullOrEmpty())
             {
-                ap.Category = app.Category;
-                ap.Update();
+                app.Category = config.Category;
+                app.Update();
             }
 
-            if (app.AppId == 0) app.AppId = ap.Id;
-            app.Update();
+            if (config.AppId == 0) config.AppId = app.Id;
+            config.Update();
         }
 
         //var ip = HttpContext.GetUserHost();
         if (clientId.IsNullOrEmpty()) clientId = ip;
 
         // 更新心跳信息
-        var online = _appOnline.UpdateOnline(ap, clientId, ip, token);
+        var online = _appOnline.UpdateOnline(app, clientId, ip, token);
 
         // 检查应用有效性
-        if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
+        if (!config.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
 
         // 刷新WorkerId
-        if (app.EnableWorkerId) _configService.RefreshWorkerId(app, online);
+        if (config.EnableWorkerId) _configService.RefreshWorkerId(config, online);
 
-        return (app, online);
+        return (config, online);
     }
 
     [ApiFilter]

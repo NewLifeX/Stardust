@@ -1,12 +1,14 @@
 ﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using NewLife.Configuration;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data;
 using Stardust.Data.Configs;
+using Stardust.Data.Deployment;
 using Stardust.Server.Services;
 using XCode;
 using XCode.Membership;
@@ -108,8 +110,7 @@ public class AppConfigController : EntityController<AppConfig>
     {
         base.OnActionExecuting(filterContext);
 
-        var id = GetRequest("configId").ToInt(-1);
-        if (id <= 0) id = GetRequest("appId").ToInt(-1);
+        var id = GetRequest("appId").ToInt(-1);
         if (id <= 0) id = GetRequest("Id").ToInt(-1);
         if (id > 0)
         {
@@ -132,8 +133,11 @@ public class AppConfigController : EntityController<AppConfig>
 
         if (kind == ViewKinds.List)
         {
-            var id = GetRequest("configId").ToInt(-1);
-            if (id > 0) fields.RemoveField("AppName", "Category");
+            var appId = GetRequest("appId").ToInt(-1);
+            if (appId > 0) fields.RemoveField("ProjectName", "AppName", "Category");
+
+            //var configId = GetRequest("configId").ToInt(-1);
+            //if (configId > 0) fields.RemoveField("ConfigName");
         }
 
         return fields;
@@ -141,18 +145,33 @@ public class AppConfigController : EntityController<AppConfig>
 
     protected override IEnumerable<AppConfig> Search(Pager p)
     {
-        var id = p["id"].ToInt(-1);
-        if (id <= 0) id = p["configId"].ToInt(-1);
+        var id = p["configId"].ToInt(-1);
+        if (id <= 0) id = p["id"].ToInt(-1);
         if (id > 0)
         {
-            var entity = AppConfig.FindById(id);
-            if (entity != null) return new List<AppConfig> { entity };
+            var entity = AppConfig.FindByKey(id);
+            if (entity != null) return [entity];
         }
         var appId = p["appId"].ToInt(-1);
         if (appId > 0)
         {
-            var entity = AppConfig.FindByAppId(appId);
-            if (entity != null) return new List<AppConfig> { entity };
+            var list = AppConfig.FindAllByAppId(appId);
+            if (list.Count == 0)
+            {
+                // 自动新建发布集
+                var app = App.FindById(appId);
+                if (app != null)
+                {
+                    var entity = new AppConfig
+                    {
+                        AppId = appId,
+                        Name = app.Name,
+                        ProjectId = app.ProjectId,
+                        Category = app.Category
+                    };
+                    entity.Insert();
+                }
+            }
         }
 
         var projectId = p["projectId"].ToInt(-1);
@@ -162,7 +181,7 @@ public class AppConfigController : EntityController<AppConfig>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return AppConfig.Search(projectId, category, enable, start, end, p["Q"], p);
+        return AppConfig.Search(projectId, appId, category, enable, start, end, p["Q"], p);
     }
 
     protected override Boolean Valid(AppConfig entity, DataObjectMethodType type, Boolean post)

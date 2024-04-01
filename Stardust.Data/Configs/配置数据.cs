@@ -17,7 +17,7 @@ namespace Stardust.Data.Configs;
 [Serializable]
 [DataObject]
 [Description("配置数据。配置名值对，发布后才能生效，支持多作用域划分生产和开发测试环境")]
-[BindIndex("IU_ConfigData_AppId_Key_Scope", true, "AppId,Key,Scope")]
+[BindIndex("IU_ConfigData_ConfigId_Key_Scope", true, "ConfigId,Key,Scope")]
 [BindTable("ConfigData", Description = "配置数据。配置名值对，发布后才能生效，支持多作用域划分生产和开发测试环境", ConnName = "Stardust", DbType = DatabaseType.None)]
 public partial class ConfigData
 {
@@ -30,13 +30,13 @@ public partial class ConfigData
     [BindColumn("Id", "编号", "")]
     public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
-    private Int32 _AppId;
+    private Int32 _ConfigId;
     /// <summary>应用</summary>
     [DisplayName("应用")]
     [Description("应用")]
     [DataObjectField(false, false, false, 0)]
     [BindColumn("AppId", "应用", "")]
-    public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
+    public Int32 ConfigId { get => _ConfigId; set { if (OnPropertyChanging("ConfigId", value)) { _ConfigId = value; OnPropertyChanged("ConfigId"); } } }
 
     private String _Key;
     /// <summary>名称。下划线开头表示仅用于内嵌，不能返回给客户端；多级名称用冒号分隔</summary>
@@ -175,7 +175,7 @@ public partial class ConfigData
         get => name switch
         {
             "Id" => _Id,
-            "AppId" => _AppId,
+            "ConfigId" => _ConfigId,
             "Key" => _Key,
             "Scope" => _Scope,
             "Value" => _Value,
@@ -198,7 +198,7 @@ public partial class ConfigData
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
-                case "AppId": _AppId = value.ToInt(); break;
+                case "ConfigId": _ConfigId = value.ToInt(); break;
                 case "Key": _Key = Convert.ToString(value); break;
                 case "Scope": _Scope = Convert.ToString(value); break;
                 case "Value": _Value = Convert.ToString(value); break;
@@ -221,6 +221,14 @@ public partial class ConfigData
     #endregion
 
     #region 关联映射
+    /// <summary>应用</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public AppConfig Config => Extends.Get(nameof(Config), k => AppConfig.FindById(ConfigId));
+
+    /// <summary>应用</summary>
+    [Map(nameof(ConfigId), typeof(AppConfig), "Id")]
+    public String ConfigName => Config?.ToString();
+
     #endregion
 
     #region 字段名
@@ -231,7 +239,7 @@ public partial class ConfigData
         public static readonly Field Id = FindByName("Id");
 
         /// <summary>应用</summary>
-        public static readonly Field AppId = FindByName("AppId");
+        public static readonly Field ConfigId = FindByName("ConfigId");
 
         /// <summary>名称。下划线开头表示仅用于内嵌，不能返回给客户端；多级名称用冒号分隔</summary>
         public static readonly Field Key = FindByName("Key");
@@ -288,7 +296,7 @@ public partial class ConfigData
         public const String Id = "Id";
 
         /// <summary>应用</summary>
-        public const String AppId = "AppId";
+        public const String ConfigId = "ConfigId";
 
         /// <summary>名称。下划线开头表示仅用于内嵌，不能返回给客户端；多级名称用冒号分隔</summary>
         public const String Key = "Key";

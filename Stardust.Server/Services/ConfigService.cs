@@ -119,13 +119,13 @@ public class ConfigService
         }
     }
 
-    public IDictionary<String, String> GetConfigs(AppConfig app, String scope)
+    public IDictionary<String, String> GetConfigs(AppConfig config, String scope)
     {
-        using var span = _tracer?.NewSpan(nameof(GetConfigs), $"{app} {scope}");
+        using var span = _tracer?.NewSpan(nameof(GetConfigs), $"{config} {scope}");
 
         var dic = new Dictionary<String, String>(StringComparer.OrdinalIgnoreCase);
 
-        var list = app.Configs;
+        var list = config.Configs;
         list = ConfigData.SelectScope(list, scope);
 
         // 本应用
@@ -135,14 +135,14 @@ public class ConfigService
             if (cfg.Key.IsNullOrEmpty() || cfg.Key[0] == '_') continue;
 
             // 为该key选择最合适的值，解析内嵌
-            dic[cfg.Key] = Resolve(app, cfg, scope);
+            dic[cfg.Key] = Resolve(config, cfg, scope);
         }
 
         // 去重
-        var ids = new List<Int32> { app.Id };
+        var ids = new List<Int32> { config.Id };
 
         // 共享应用
-        var qs = app.GetQuotes();
+        var qs = config.GetQuotes();
         foreach (var item in qs)
         {
             if (ids.Contains(item.Id)) continue;
@@ -188,17 +188,17 @@ public class ConfigService
     }
 
     /// <summary>刷新WorkerId，作为雪花Id唯一标识</summary>
-    /// <param name="app"></param>
+    /// <param name="config"></param>
     /// <param name="online"></param>
     /// <returns></returns>
-    public Int32 RefreshWorkerId(AppConfig app, AppOnline online)
+    public Int32 RefreshWorkerId(AppConfig config, AppOnline online)
     {
-        if (!app.EnableWorkerId) return -1;
+        if (!config.EnableWorkerId) return -1;
 
-        using var span = _tracer?.NewSpan(nameof(RefreshWorkerId), new { app.Id, app.Name });
+        using var span = _tracer?.NewSpan(nameof(RefreshWorkerId), new { config.Id, config.Name });
 
         // 分布式锁，避免抢占
-        var key = $"{WorkerIdName}:{app.Id}";
+        var key = $"{WorkerIdName}:{config.Id}";
         using var dlock = _cacheService.AcquireLock($"lock:{key}", 3_000);
         var cache = _cacheService.Cache;
 
@@ -207,7 +207,7 @@ public class ConfigService
 
         // 获取该应用所有在线实例，确保WorkerId唯一
         var force = false;
-        var ins = AppOnline.FindAllByApp(app.AppId);
+        var ins = AppOnline.FindAllByApp(config.AppId);
         if (ins.Any(e => e.Id != online.Id && e.WorkerId == online.WorkerId)) force = true;
 
         // 重新获取在线对象，可能位于对象缓存
@@ -216,13 +216,13 @@ public class ConfigService
         if (force || olt.WorkerId <= 0)
         {
             // 找到该Key，不考虑Scope，做跨域全局配置
-            var list = ConfigData.FindAllByAppIdAndKey(app.Id, WorkerIdName);
+            var list = ConfigData.FindAllByConfigIdAndKey(config.Id, WorkerIdName);
             var cfg = list.FirstOrDefault();
             cfg ??= new ConfigData
             {
-                AppId = app.Id,
+                ConfigId = config.Id,
                 Key = WorkerIdName,
-                Version = app.Version,
+                Version = config.Version,
                 Enable = true
             };
 
@@ -249,14 +249,14 @@ public class ConfigService
         return id;
     }
 
-    public Int32 SetConfigs(AppConfig app, IDictionary<String, Object> configs)
+    public Int32 SetConfigs(AppConfig config, IDictionary<String, Object> configs)
     {
-        var ver = app.AcquireNewVersion();
+        var ver = config.AcquireNewVersion();
 
         // 开启事务，整体完成
         using var tran = ConfigData.Meta.CreateTrans();
 
-        var list = ConfigData.FindAllByApp(app.Id);
+        var list = ConfigData.FindAllByApp(config.Id);
 
         // 逐行插入数据，不能覆盖已存在数据
         foreach (var item in configs)
@@ -266,7 +266,7 @@ public class ConfigService
             {
                 data = new ConfigData
                 {
-                    AppId = app.Id,
+                    ConfigId = config.Id,
                     Key = item.Key,
                     //Value = item.Value + "",
                     Version = ver,

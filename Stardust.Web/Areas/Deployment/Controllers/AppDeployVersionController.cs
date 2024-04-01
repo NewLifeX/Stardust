@@ -56,8 +56,9 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
     {
         base.OnActionExecuting(filterContext);
 
+        var appId = GetRequest("appId").ToInt(-1);
         var deployId = GetRequest("deployId").ToInt(-1);
-        if (deployId > 0)
+        if (deployId > 0 || appId > 0)
         {
             PageSetting.NavView = "_App_Nav";
             PageSetting.EnableNavbar = false;

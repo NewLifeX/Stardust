@@ -30,13 +30,13 @@ public partial class ConfigHistory
     [BindColumn("Id", "编号", "")]
     public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
-    private Int32 _AppId;
+    private Int32 _ConfigId;
     /// <summary>应用</summary>
     [DisplayName("应用")]
     [Description("应用")]
     [DataObjectField(false, false, false, 0)]
     [BindColumn("AppId", "应用", "")]
-    public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
+    public Int32 ConfigId { get => _ConfigId; set { if (OnPropertyChanging("ConfigId", value)) { _ConfigId = value; OnPropertyChanged("ConfigId"); } } }
 
     private String _Action;
     /// <summary>操作</summary>
@@ -108,7 +108,7 @@ public partial class ConfigHistory
         get => name switch
         {
             "Id" => _Id,
-            "AppId" => _AppId,
+            "ConfigId" => _ConfigId,
             "Action" => _Action,
             "Success" => _Success,
             "Remark" => _Remark,
@@ -123,7 +123,7 @@ public partial class ConfigHistory
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
-                case "AppId": _AppId = value.ToInt(); break;
+                case "ConfigId": _ConfigId = value.ToInt(); break;
                 case "Action": _Action = Convert.ToString(value); break;
                 case "Success": _Success = value.ToBoolean(); break;
                 case "Remark": _Remark = Convert.ToString(value); break;
@@ -138,6 +138,14 @@ public partial class ConfigHistory
     #endregion
 
     #region 关联映射
+    /// <summary>应用</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public AppConfig Config => Extends.Get(nameof(Config), k => AppConfig.FindById(ConfigId));
+
+    /// <summary>应用</summary>
+    [Map(nameof(ConfigId), typeof(AppConfig), "Id")]
+    public String ConfigName => Config?.ToString();
+
     #endregion
 
     #region 字段名
@@ -148,7 +156,7 @@ public partial class ConfigHistory
         public static readonly Field Id = FindByName("Id");
 
         /// <summary>应用</summary>
-        public static readonly Field AppId = FindByName("AppId");
+        public static readonly Field ConfigId = FindByName("ConfigId");
 
         /// <summary>操作</summary>
         public static readonly Field Action = FindByName("Action");
@@ -181,7 +189,7 @@ public partial class ConfigHistory
         public const String Id = "Id";
 
         /// <summary>应用</summary>
-        public const String AppId = "AppId";
+        public const String ConfigId = "ConfigId";
 
         /// <summary>操作</summary>
         public const String Action = "Action";

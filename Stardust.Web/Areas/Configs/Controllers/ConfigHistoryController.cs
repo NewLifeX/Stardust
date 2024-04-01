@@ -30,8 +30,9 @@ public class ConfigHistoryController : ReadOnlyEntityController<ConfigHistory>
     {
         base.OnActionExecuting(filterContext);
 
+        var appId = GetRequest("appId").ToInt(-1);
         var configId = GetRequest("configId").ToInt(-1);
-        if (configId > 0)
+        if (configId > 0 || appId > 0)
         {
             PageSetting.NavView = "_App_Nav";
             PageSetting.EnableNavbar = false;
@@ -45,7 +46,7 @@ public class ConfigHistoryController : ReadOnlyEntityController<ConfigHistory>
         if (kind == ViewKinds.List)
         {
             var configId = GetRequest("configId").ToInt(-1);
-            if (configId > 0) fields.RemoveField("AppName");
+            if (configId > 0) fields.RemoveField("ConfigName");
         }
 
         return fields;
@@ -53,13 +54,13 @@ public class ConfigHistoryController : ReadOnlyEntityController<ConfigHistory>
 
     protected override IEnumerable<ConfigHistory> Search(Pager p)
     {
-        var appId = p["configId"].ToInt(-1);
+        var configId = p["configId"].ToInt(-1);
         var action = p["action"];
         var success = p["success"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return ConfigHistory.Search(appId, action, success, start, end, p["Q"], p);
+        return ConfigHistory.Search(configId, action, success, start, end, p["Q"], p);
     }
 }

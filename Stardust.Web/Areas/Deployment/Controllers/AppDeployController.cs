@@ -102,8 +102,8 @@ public class AppDeployController : EntityController<AppDeploy>
             var appId = GetRequest("appId").ToInt(-1);
             if (appId > 0) fields.RemoveField("ProjectName", "AppName", "Category");
 
-            var deployId = GetRequest("deployId").ToInt(-1);
-            if (deployId > 0) fields.RemoveField("DeployName");
+            //var deployId = GetRequest("deployId").ToInt(-1);
+            //if (deployId > 0) fields.RemoveField("DeployName");
         }
 
         return fields;
@@ -136,8 +136,6 @@ public class AppDeployController : EntityController<AppDeploy>
                         Category = app.Category
                     };
                     entity.Insert();
-
-                    return new[] { entity };
                 }
             }
         }
@@ -173,6 +171,7 @@ public class AppDeployController : EntityController<AppDeploy>
         }
 
         entity.Refresh();
+
         return base.Valid(entity, type, post);
     }
 

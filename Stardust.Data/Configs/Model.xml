@@ -44,7 +44,7 @@
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
         <Column Name="Category" DataType="String" Description="类别" />
-        <Column Name="AppId" DataType="Int32" Description="应用" />
+        <Column Name="AppId" DataType="Int32" Description="应用。对应StarApp" />
         <Column Name="Name" DataType="String" Master="True" Description="名称" />
         <Column Name="DisplayName" DataType="String" Description="显示名" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
@@ -109,7 +109,7 @@
     <Table Name="ConfigData" Description="配置数据。配置名值对，发布后才能生效，支持多作用域划分生产和开发测试环境">
       <Columns>
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="AppId" DataType="Int32" Description="应用" />
+        <Column Name="ConfigId" ColumnName="AppId" DataType="Int32" Map="AppConfig@Id@$" Description="应用" />
         <Column Name="Key" DataType="String" Master="True" Nullable="False" Description="名称。下划线开头表示仅用于内嵌，不能返回给客户端；多级名称用冒号分隔" />
         <Column Name="Scope" DataType="String" Description="作用域" />
         <Column Name="Value" DataType="String" Length="2000" Description="数值。正在使用的值，支持内嵌 ${key@app:scope}" />
@@ -127,13 +127,13 @@
         <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
       </Columns>
       <Indexes>
-        <Index Columns="AppId,Key,Scope" Unique="True" />
+        <Index Columns="ConfigId,Key,Scope" Unique="True" />
       </Indexes>
     </Table>
     <Table Name="ConfigHistory" Description="配置历史。记录配置变更历史" ConnName="StardustData">
       <Columns>
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="AppId" DataType="Int32" Description="应用" />
+        <Column Name="ConfigId" ColumnName="AppId" DataType="Int32" Map="AppConfig@Id@$" Description="应用" />
         <Column Name="Action" DataType="String" Nullable="False" Description="操作" />
         <Column Name="Success" DataType="Boolean" Description="成功" />
         <Column Name="Remark" DataType="String" Length="2000" Description="内容" />

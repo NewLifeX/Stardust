@@ -55,7 +55,7 @@ public class ApolloService : IHostedService
                         var cfg = ds.FirstOrDefault(e => e.Key.EqualIgnoreCase(elm));
                         if (cfg == null)
                         {
-                            cfg = new ConfigData { AppId = item.Id, Key = elm, Enable = true, };
+                            cfg = new ConfigData { ConfigId = item.Id, Key = elm, Enable = true, };
                             ds.Add(cfg);
                         }
 

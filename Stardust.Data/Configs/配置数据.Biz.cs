@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Script.Serialization;
@@ -19,7 +19,7 @@ public partial class ConfigData : Entity<ConfigData>
     {
         // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
         //var df = Meta.Factory.AdditionalFields;
-        //df.Add(nameof(AppId));
+        //df.Add(nameof(ConfigId));
 
         // 过滤器 UserModule、TimeModule、IPModule
         Meta.Modules.Add<UserModule>();
@@ -50,7 +50,7 @@ public partial class ConfigData : Entity<ConfigData>
         if (!HasDirty) return;
 
         // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
-        if (AppId <= 0) throw new ArgumentNullException(nameof(AppId), "应用不能为空！");
+        if (ConfigId <= 0) throw new ArgumentNullException(nameof(ConfigId), "应用不能为空！");
         if (Key.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Key), "名称不能为空！");
         //if (Scope.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Scope), "作用域不能为空！");
 
@@ -71,7 +71,7 @@ public partial class ConfigData : Entity<ConfigData>
 
         var entity = new ConfigData
         {
-            AppId = 1,
+            ConfigId = 1,
             Key = "PluginServer",
             Value = NewLife.Setting.Current.PluginServer,
 
@@ -89,7 +89,7 @@ public partial class ConfigData : Entity<ConfigData>
     {
         var rs = base.OnInsert();
 
-        ConfigHistory.Add(AppId, "Insert", true, this.ToJson());
+        ConfigHistory.Add(ConfigId, "Insert", true, this.ToJson());
 
         return rs;
     }
@@ -98,7 +98,7 @@ public partial class ConfigData : Entity<ConfigData>
     /// <returns></returns>
     protected override Int32 OnUpdate()
     {
-        if (HasDirty) ConfigHistory.Add(AppId, "Update", true, Dirtys.ToDictionary(e => e, e => this[e]).ToJson());
+        if (HasDirty) ConfigHistory.Add(ConfigId, "Update", true, Dirtys.ToDictionary(e => e, e => this[e]).ToJson());
 
         return base.OnUpdate();
     }
@@ -107,7 +107,7 @@ public partial class ConfigData : Entity<ConfigData>
     /// <returns></returns>
     protected override Int32 OnDelete()
     {
-        ConfigHistory.Add(AppId, "Delete", true, this.ToJson());
+        ConfigHistory.Add(ConfigId, "Delete", true, this.ToJson());
 
         return base.OnDelete();
     }
@@ -118,13 +118,6 @@ public partial class ConfigData : Entity<ConfigData>
     #endregion
 
     #region 扩展属性
-    /// <summary>应用系统</summary>
-    [XmlIgnore, ScriptIgnore]
-    public AppConfig App => Extends.Get(nameof(App), k => AppConfig.FindById(AppId));
-
-    /// <summary>应用名称</summary>
-    [Map(__.AppId, typeof(AppConfig), "Id")]
-    public String AppName => App + "";
     #endregion
 
     #region 扩展查询
@@ -147,24 +140,24 @@ public partial class ConfigData : Entity<ConfigData>
     /// <summary>
     /// 根据应用查询所属配置，
     /// </summary>
-    /// <param name="appid">=0查询全局</param>
+    /// <param name="configId">=0查询全局</param>
     /// <returns></returns>
-    public static IList<ConfigData> FindAllByApp(Int32 appid)
+    public static IList<ConfigData> FindAllByApp(Int32 configId)
     {
-        if (appid <= 0) return new List<ConfigData>();
+        if (configId <= 0) return new List<ConfigData>();
 
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appid);
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ConfigId == configId);
 
-        return FindAll(_.AppId == appid);
+        return FindAll(_.ConfigId == configId);
     }
 
     /// <summary>查找应用正在使用的配置，不包括未发布的新增和修改</summary>
-    /// <param name="appid"></param>
+    /// <param name="configId"></param>
     /// <param name="version"></param>
     /// <returns></returns>
-    public static IList<ConfigData> FindAllLastRelease(Int32 appid, Int32 version)
+    public static IList<ConfigData> FindAllLastRelease(Int32 configId, Int32 version)
     {
-        var list = FindAllByApp(appid);
+        var list = FindAllByApp(configId);
 
         // 先选择版本，再剔除被禁用项
         //list = SelectVersion(list, version);
@@ -176,12 +169,12 @@ public partial class ConfigData : Entity<ConfigData>
     /// <param name="appId">应用</param>
     /// <param name="key">名称</param>
     /// <returns>实体列表</returns>
-    public static IList<ConfigData> FindAllByAppIdAndKey(Int32 appId, String key)
+    public static IList<ConfigData> FindAllByConfigIdAndKey(Int32 appId, String key)
     {
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId && e.Key.EqualIgnoreCase(key));
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ConfigId == appId && e.Key.EqualIgnoreCase(key));
 
-        return FindAll(_.AppId == appId & _.Key == key);
+        return FindAll(_.ConfigId == appId & _.Key == key);
     }
 
     /// <summary>根据应用、名称、作用域查找</summary>
@@ -189,18 +182,18 @@ public partial class ConfigData : Entity<ConfigData>
     /// <param name="key">名称</param>
     /// <param name="scope">作用域</param>
     /// <returns>实体对象</returns>
-    public static ConfigData FindByAppIdAndKeyAndScope(Int32 appId, String key, String scope)
+    public static ConfigData FindByConfigIdAndKeyAndScope(Int32 appId, String key, String scope)
     {
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.AppId == appId && e.Key.EqualIgnoreCase(key) && e.Scope.EqualIgnoreCase(scope));
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ConfigId == appId && e.Key.EqualIgnoreCase(key) && e.Scope.EqualIgnoreCase(scope));
 
-        return Find(_.AppId == appId & _.Key == key & _.Scope == scope);
+        return Find(_.ConfigId == appId & _.Key == key & _.Scope == scope);
     }
     #endregion
 
     #region 高级查询
     /// <summary>高级查询</summary>
-    /// <param name="appId">应用</param>
+    /// <param name="configId">应用</param>
     /// <param name="name">名称</param>
     /// <param name="scope">作用域</param>
     /// <param name="start">更新时间开始</param>
@@ -208,11 +201,11 @@ public partial class ConfigData : Entity<ConfigData>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<ConfigData> Search(Int32 appId, String name, String scope, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<ConfigData> Search(Int32 configId, String name, String scope, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
-        if (appId >= 0) exp &= _.AppId == appId;
+        if (configId >= 0) exp &= _.ConfigId == configId;
         if (!name.IsNullOrEmpty()) exp &= _.Key == name;
         if (!scope.IsNullOrEmpty()) exp &= _.Scope == scope;
         exp &= _.UpdateTime.Between(start, end);
@@ -296,7 +289,7 @@ public partial class ConfigData : Entity<ConfigData>
         foreach (var item in list)
         {
             // 要么相同作用域，要么选择默认空域
-            var key = $"{item.AppId}-{item.Key}";
+            var key = $"{item.ConfigId}-{item.Key}";
             if (item.Scope.EqualIgnoreCase(scope))
                 dic[key] = item;
             else if (item.Scope.IsNullOrEmpty() && !dic.ContainsKey(key))

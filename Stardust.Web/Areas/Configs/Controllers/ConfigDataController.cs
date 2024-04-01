@@ -50,8 +50,9 @@ public class ConfigDataController : EntityController<ConfigData>
     {
         base.OnActionExecuting(filterContext);
 
+        var appId = GetRequest("appId").ToInt(-1);
         var configId = GetRequest("configId").ToInt(-1);
-        if (configId > 0)
+        if (configId > 0 || appId > 0)
         {
             PageSetting.NavView = "_App_Nav";
             PageSetting.EnableNavbar = false;
@@ -67,7 +68,7 @@ public class ConfigDataController : EntityController<ConfigData>
         if (kind == ViewKinds.List)
         {
             var configId = GetRequest("configId").ToInt(-1);
-            if (configId > 0) fields.RemoveField("AppName");
+            if (configId > 0) fields.RemoveField("ConfigName");
         }
 
         return fields;
@@ -75,7 +76,7 @@ public class ConfigDataController : EntityController<ConfigData>
 
     protected override IEnumerable<ConfigData> Search(Pager p)
     {
-        var appId = p["configId"].ToInt(-1);
+        var configId = p["configId"].ToInt(-1);
         var name = p["key"];
         var scope = p["scope"];
 
@@ -85,17 +86,17 @@ public class ConfigDataController : EntityController<ConfigData>
         PageSetting.EnableSelect = false;
 
         // 如果选择了应用，特殊处理版本
-        if (appId > 0 && p.PageSize == 20) p.PageSize = 500;
+        if (configId > 0 && p.PageSize == 20) p.PageSize = 500;
 
-        var list = ConfigData.Search(appId, name, scope, start, end, p["Q"], p);
+        var list = ConfigData.Search(configId, name, scope, start, end, p["Q"], p);
 
-        PageSetting.EnableAdd = appId > 0;
-        if (appId > 0)
+        PageSetting.EnableAdd = configId > 0;
+        if (configId > 0)
         {
             //PageSetting.EnableAdd = true;
 
             // 控制发布按钮
-            var app = AppConfig.FindById(appId);
+            var app = AppConfig.FindById(configId);
             PageSetting.EnableSelect = list.Any(e => e.NewVersion > app.Version);
         }
 
@@ -104,10 +105,10 @@ public class ConfigDataController : EntityController<ConfigData>
 
     public override async Task<ActionResult> Add(ConfigData entity)
     {
-        entity.NewVersion = entity.App.AcquireNewVersion();
+        entity.NewVersion = entity.Config.AcquireNewVersion();
         await base.Add(entity);
 
-        return RedirectToAction("Index", new { appId = entity.AppId });
+        return RedirectToAction("Index", new { appId = entity.ConfigId });
     }
 
     //public override ActionResult Edit(ConfigData entity)
@@ -130,7 +131,7 @@ public class ConfigDataController : EntityController<ConfigData>
                 if (e.Dirtys[nameof(entity.Value)]) throw new ArgumentException("禁止修改正在使用的数值！", nameof(entity.Value));
             }
 
-            var ver = entity.App.AcquireNewVersion();
+            var ver = entity.Config.AcquireNewVersion();
             entity.NewVersion = ver;
         }
         if (e.Dirtys[nameof(entity.Enable)])
@@ -153,7 +154,7 @@ public class ConfigDataController : EntityController<ConfigData>
         if (entity.Version == 0) return base.OnDelete(entity);
 
         // 删除操作，直接修改为即将被删除
-        var ver = entity.App.AcquireNewVersion();
+        var ver = entity.Config.AcquireNewVersion();
         entity.Version = ver;
         entity.NewStatus = ConfigData.DELETED;
 
