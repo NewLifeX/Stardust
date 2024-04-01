@@ -38,7 +38,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         // 如果没有脏数据，则不需要进行任何处理
         if (!HasDirty) return;
 
-        if (AppId <= 0) throw new ArgumentNullException(nameof(AppId));
+        if (DeployId <= 0) throw new ArgumentNullException(nameof(DeployId));
         if (NodeId <= 0) throw new ArgumentNullException(nameof(NodeId));
 
         var len = _.ProcessName.Length;
@@ -61,14 +61,6 @@ public partial class AppDeployNode : Entity<AppDeployNode>
     #endregion
 
     #region 扩展属性
-    /// <summary>应用</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-    public AppDeploy App => Extends.Get(nameof(App), k => AppDeploy.FindById(AppId));
-
-    /// <summary>应用</summary>
-    [Map(__.AppId)]
-    public String AppName => App?.Name;
-
     /// <summary>节点</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
     public Node Node => Extends.Get(nameof(Node), k => Node.FindByID(NodeId));
@@ -103,9 +95,9 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         if (appId <= 0) return new List<AppDeployNode>();
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId);
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.DeployId == appId);
 
-        return FindAll(_.AppId == appId);
+        return FindAll(_.DeployId == appId);
     }
 
     /// <summary>根据节点查找</summary>
@@ -117,6 +109,19 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         //if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.NodeId == nodeId);
 
         return FindAll(_.NodeId == nodeId);
+    }
+
+    /// <summary>根据应用部署集查找</summary>
+    /// <param name="deployId">应用部署集</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppDeployNode> FindAllByDeployId(Int32 deployId)
+    {
+        if (deployId <= 0) return new List<AppDeployNode>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.DeployId == deployId);
+
+        return FindAll(_.DeployId == deployId);
     }
     #endregion
 
@@ -132,7 +137,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
     {
         var exp = new WhereExpression();
 
-        if (appId >= 0) exp &= _.AppId == appId;
+        if (appId >= 0) exp &= _.DeployId == appId;
         if (nodeId >= 0) exp &= _.NodeId == nodeId;
         if (enable != null) exp &= _.Enable == enable;
         if (!key.IsNullOrEmpty()) exp &= _.CreateIP.Contains(key);
@@ -150,7 +155,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
     {
         var exp = new WhereExpression();
 
-        if (appIds != null && appIds.Length > 0) exp &= _.AppId.In(appIds);
+        if (appIds != null && appIds.Length > 0) exp &= _.DeployId.In(appIds);
         if (nodeId >= 0) exp &= _.NodeId == nodeId;
         if (!key.IsNullOrEmpty()) exp &= _.CreateIP.Contains(key);
 
@@ -165,7 +170,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
     /// <returns></returns>
     public ServiceInfo ToService(AppDeploy app)
     {
-        app ??= App;
+        app ??= Deploy;
         if (app == null) return null;
 
         var inf = new ServiceInfo

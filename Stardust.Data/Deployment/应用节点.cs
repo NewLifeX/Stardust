@@ -17,7 +17,7 @@ namespace Stardust.Data.Deployment;
 [Serializable]
 [DataObject]
 [Description("应用节点。应用部署集和节点服务器的依赖关系，一个应用可有多个部署集如arm和x64，在目标节点上发布该部署集对应的应用zip包")]
-[BindIndex("IX_AppDeployNode_AppId", false, "AppId")]
+[BindIndex("IX_AppDeployNode_DeployId", false, "DeployId")]
 [BindIndex("IX_AppDeployNode_NodeId", false, "NodeId")]
 [BindTable("AppDeployNode", Description = "应用节点。应用部署集和节点服务器的依赖关系，一个应用可有多个部署集如arm和x64，在目标节点上发布该部署集对应的应用zip包", ConnName = "Stardust", DbType = DatabaseType.None)]
 public partial class AppDeployNode
@@ -31,13 +31,13 @@ public partial class AppDeployNode
     [BindColumn("Id", "编号", "")]
     public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
-    private Int32 _AppId;
+    private Int32 _DeployId;
     /// <summary>应用部署集。对应AppDeploy</summary>
     [DisplayName("应用部署集")]
     [Description("应用部署集。对应AppDeploy")]
     [DataObjectField(false, false, false, 0)]
     [BindColumn("AppId", "应用部署集。对应AppDeploy", "")]
-    public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
+    public Int32 DeployId { get => _DeployId; set { if (OnPropertyChanging("DeployId", value)) { _DeployId = value; OnPropertyChanged("DeployId"); } } }
 
     private Int32 _NodeId;
     /// <summary>节点。节点服务器</summary>
@@ -279,7 +279,7 @@ public partial class AppDeployNode
         get => name switch
         {
             "Id" => _Id,
-            "AppId" => _AppId,
+            "DeployId" => _DeployId,
             "NodeId" => _NodeId,
             "IP" => _IP,
             "Sort" => _Sort,
@@ -313,7 +313,7 @@ public partial class AppDeployNode
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
-                case "AppId": _AppId = value.ToInt(); break;
+                case "DeployId": _DeployId = value.ToInt(); break;
                 case "NodeId": _NodeId = value.ToInt(); break;
                 case "IP": _IP = Convert.ToString(value); break;
                 case "Sort": _Sort = value.ToInt(); break;
@@ -347,6 +347,14 @@ public partial class AppDeployNode
     #endregion
 
     #region 关联映射
+    /// <summary>应用部署集</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public AppDeploy Deploy => Extends.Get(nameof(Deploy), k => AppDeploy.FindById(DeployId));
+
+    /// <summary>应用部署集</summary>
+    [Map(nameof(DeployId), typeof(AppDeploy), "Id")]
+    public String DeployName => Deploy?.ToString();
+
     #endregion
 
     #region 字段名
@@ -357,7 +365,7 @@ public partial class AppDeployNode
         public static readonly Field Id = FindByName("Id");
 
         /// <summary>应用部署集。对应AppDeploy</summary>
-        public static readonly Field AppId = FindByName("AppId");
+        public static readonly Field DeployId = FindByName("DeployId");
 
         /// <summary>节点。节点服务器</summary>
         public static readonly Field NodeId = FindByName("NodeId");
@@ -447,7 +455,7 @@ public partial class AppDeployNode
         public const String Id = "Id";
 
         /// <summary>应用部署集。对应AppDeploy</summary>
-        public const String AppId = "AppId";
+        public const String DeployId = "DeployId";
 
         /// <summary>节点。节点服务器</summary>
         public const String NodeId = "NodeId";

@@ -6,7 +6,6 @@
     var path = Context.Request.Path + "";
     var path2 = "/" + path?.Split("/").Take(3).Join("/");
 
-    var flag = false;
     var name = "";
     var appId = Context.Request.Query["appId"].ToInt(0);
     var configId = Context.Request.Query["configId"].ToInt(0);
@@ -15,24 +14,23 @@
     if (appId == 0 && path2.EqualIgnoreCase("/Registry/App"))
     {
         appId = Context.Request.Query["Id"].ToInt(0);
-        flag = true;
     }
     if (appId == 0 && path2.EqualIgnoreCase("/Configs/AppConfig", "/Configs/ConfigData", "/Configs/ConfigHistory"))
     {
-        var id = Context.Request.Query["Id"].ToInt(0);
-        var entity = AppConfig.FindById(configId) ?? AppConfig.FindById(id);
+        // var id = Context.Request.Query["Id"].ToInt(0);
+        var entity = AppConfig.FindById(configId);// ?? AppConfig.FindById(id);
         if (entity != null && entity.AppId > 0) appId = entity.AppId;
     }
     if (appId == 0 && path2.EqualIgnoreCase("/Deployment/AppDeploy", "/Deployment/AppDeployVersion", "/Deployment/AppDeployNode", "/Deployment/AppDeployHistory"))
     {
-        var id = Context.Request.Query["Id"].ToInt(0);
-        var entity = AppDeploy.FindById(deployId) ?? AppDeploy.FindById(id);
+        // var id = Context.Request.Query["Id"].ToInt(0);
+        var entity = AppDeploy.FindById(deployId);// ?? AppDeploy.FindById(id);
         if (entity != null && entity.AppId > 0) { appId = entity.AppId; name = entity.AppName ?? entity.Name; }
     }
     if (appId == 0 && path2.EqualIgnoreCase("/Monitors/AppTracer", "/Monitors/AppDayStat"))
     {
-        var id = Context.Request.Query["Id"].ToInt(0);
-        var entity = AppTracer.FindByID(monitorId) ?? AppTracer.FindByID(id);
+        // var id = Context.Request.Query["Id"].ToInt(0);
+        var entity = AppTracer.FindByID(monitorId);// ?? AppTracer.FindByID(id);
         if (entity != null && entity.AppId > 0) { appId = entity.AppId; name = entity.AppName ?? entity.Name; }
     }
 
@@ -66,21 +64,18 @@
         }
     }
 
-    dic["发布中心"] = "/Deployment/AppDeploy?appId=" + appId + "&deployId=" + deployId;
     var deploy = AppDeploy.FindById(deployId);
-    if (deploy != null)
-    {
-        dic["版本上传"] = "/Deployment/AppDeployVersion?appId=" + appId + "&deployId=" + deploy.Id;
-        dic["发布节点"] = "/Deployment/AppDeployNode?&enable=1&appId=" + appId + "&deployId=" + deploy.Id;
-    }
-    else
+    if (deploy == null)
     {
         var deploys = AppDeploy.FindAllByAppId(appId);
-        if (deploys.Count == 1)
-        {
-            dic["版本上传"] = "/Deployment/AppDeployVersion?appId=" + appId + "&deployId=" + deploys[0].Id;
-            dic["发布节点"] = "/Deployment/AppDeployNode?&enable=1&appId=" + appId + "&deployId=" + deploys[0].Id;
-        }
+        if (deploys.Count == 1) deploy = deploys[0];
+    }
+
+    dic["发布中心"] = "/Deployment/AppDeploy?appId=" + appId + "&deployId=" + deploy?.Id;
+    if (deploy != null)
+    {
+        dic["文件版本"] = "/Deployment/AppDeployVersion?appId=" + appId + "&deployId=" + deploy.Id;
+        dic["节点发布"] = "/Deployment/AppDeployNode?enable=1&appId=" + appId + "&deployId=" + deploy.Id;
     }
 
     var monitors = AppTracer.FindAllByAppId(appId);

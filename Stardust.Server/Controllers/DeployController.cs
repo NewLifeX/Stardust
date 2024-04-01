@@ -54,14 +54,14 @@ public class DeployController : BaseController
             // 不返回未启用的发布集，如果需要在客户端删除，则通过指令下发来实现
             if (!item.Enable) continue;
 
-            var app = item.App;
+            var app = item.Deploy;
             if (app == null || !app.Enable) continue;
 
             // 消除缓存，解决版本更新后不能及时更新缓存的问题
             app = AppDeploy.FindByKey(app.Id);
             if (app == null || !app.Enable) continue;
 
-            var ver = AppDeployVersion.FindByAppIdAndVersion(app.Id, app.Version);
+            var ver = AppDeployVersion.FindByDeployIdAndVersion(app.Id, app.Version);
 
             var inf = new DeployInfo
             {
@@ -122,9 +122,9 @@ public class DeployController : BaseController
 
             rs += rs2;
 
-            var dn = list.FirstOrDefault(e => e.AppId == app.Id);
+            var dn = list.FirstOrDefault(e => e.DeployId == app.Id);
             if (dn == null)
-                dn = new AppDeployNode { AppId = app.Id, NodeId = _node.ID, Enable = svc.Enable };
+                dn = new AppDeployNode { DeployId = app.Id, NodeId = _node.ID, Enable = svc.Enable };
             else
                 list.Remove(dn);
 

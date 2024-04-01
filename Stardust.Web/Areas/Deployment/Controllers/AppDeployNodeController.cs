@@ -22,6 +22,11 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
         ListFields.TraceUrl();
 
         LogOnChange = true;
+
+        {
+            var df = ListFields.GetField("DeployName") as ListField;
+            df.Url = "/Deployment/AppDeploy?deployId={DeployId}";
+        }
     }
 
     private readonly DeployService _deployService;
@@ -56,7 +61,7 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
         if (kind == ViewKinds.List)
         {
             var deployId = GetRequest("deployId").ToInt(-1);
-            if (deployId > 0) fields.RemoveField("AppName");
+            if (deployId > 0) fields.RemoveField("DeployName");
 
             var nodeId = GetRequest("nodeId").ToInt(-1);
             if (nodeId > 0) fields.RemoveField("NodeName");
@@ -92,7 +97,7 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
         var node = entity.Node;
         if (node != null) entity.IP = node.IP;
 
-        entity.App?.Fix();
+        entity.Deploy?.Fix();
 
         return base.Valid(entity, type, post);
     }
@@ -100,21 +105,21 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
     protected override Int32 OnInsert(AppDeployNode entity)
     {
         var rs = base.OnInsert(entity);
-        entity.App?.Fix();
+        entity.Deploy?.Fix();
         return rs;
     }
 
     protected override Int32 OnUpdate(AppDeployNode entity)
     {
         var rs = base.OnUpdate(entity);
-        entity.App?.Fix();
+        entity.Deploy?.Fix();
         return rs;
     }
 
     protected override Int32 OnDelete(AppDeployNode entity)
     {
         var rs = base.OnDelete(entity);
-        entity.App?.Fix();
+        entity.Deploy?.Fix();
         return rs;
     }
 
@@ -126,11 +131,11 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
     public async Task<ActionResult> Operate(String act, Int32 id)
     {
         var dn = AppDeployNode.FindById(id);
-        if (dn == null || dn.Node == null || dn.App == null) return Json(500, $"[{id}]不存在");
+        if (dn == null || dn.Node == null || dn.Deploy == null) return Json(500, $"[{id}]不存在");
 
-        await _deployService.Control(dn.App, dn, act, UserHost, 0);
+        await _deployService.Control(dn.Deploy, dn, act, UserHost, 0);
 
-        return JsonRefresh($"在节点[{dn.NodeName}]上对应用[{dn.AppName}]执行[{act}]操作", 1);
+        return JsonRefresh($"在节点[{dn.NodeName}]上对应用[{dn.DeployName}]执行[{act}]操作", 1);
     }
 
     /// <summary>批量执行操作</summary>
@@ -144,9 +149,9 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
         foreach (var id in ids)
         {
             var dn = AppDeployNode.FindById(id);
-            if (dn != null && dn.Enable && dn.Node != null && dn.App != null)
+            if (dn != null && dn.Enable && dn.Node != null && dn.Deploy != null)
             {
-                ts.Add(_deployService.Control(dn.App, dn, act, UserHost, 0));
+                ts.Add(_deployService.Control(dn.Deploy, dn, act, UserHost, 0));
             }
         }
 

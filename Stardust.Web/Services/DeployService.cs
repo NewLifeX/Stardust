@@ -13,7 +13,7 @@ public class DeployService
     {
         if (deployNode == null) throw new ArgumentNullException(nameof(deployNode));
 
-        app ??= deployNode.App;
+        app ??= deployNode.Deploy;
         //if (app == null) throw new ArgumentNullException(nameof(deployNode));
         //if (!deployNode.Enable || app == null || !app.Enable) throw new Exception("部署节点未启用！");
         if (app == null || !app.Enable) throw new Exception($"节点[{deployNode}]上的应用部署集[{app}]未启用！");
@@ -52,7 +52,7 @@ public class DeployService
                     throw new NotSupportedException($"不支持{action}");
             }
 
-            var args = new { deployNode.Id, deployNode.AppName }.ToJson();
+            var args = new { deployNode.Id, deployNode.DeployName }.ToJson();
             msg = args;
 
             await _starFactory.SendNodeCommand(deployNode.Node.Code, action, args, 60, timeout);
@@ -67,7 +67,7 @@ public class DeployService
         }
         finally
         {
-            var hi = AppDeployHistory.Create(deployNode.AppId, deployNode.NodeId, action, success, msg, ip);
+            var hi = AppDeployHistory.Create(deployNode.DeployId, deployNode.NodeId, action, success, msg, ip);
             hi.SaveAsync();
         }
     }

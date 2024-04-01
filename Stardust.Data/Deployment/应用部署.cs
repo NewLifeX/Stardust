@@ -19,7 +19,6 @@ namespace Stardust.Data.Deployment;
 [Description("应用部署。应用部署配置，单应用可有多个部署集合，例如分别是arm和x64。发布时新增版本，拉取代码编译并上传zip应用包，再到部署节点里发布")]
 [BindIndex("IU_AppDeploy_Name", true, "Name")]
 [BindIndex("IX_AppDeploy_ProjectId", false, "ProjectId")]
-[BindIndex("IX_AppDeploy_AppId", false, "AppId")]
 [BindTable("AppDeploy", Description = "应用部署。应用部署配置，单应用可有多个部署集合，例如分别是arm和x64。发布时新增版本，拉取代码编译并上传zip应用包，再到部署节点里发布", ConnName = "Stardust", DbType = DatabaseType.None)]
 public partial class AppDeploy
 {

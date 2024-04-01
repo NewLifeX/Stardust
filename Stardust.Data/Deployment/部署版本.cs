@@ -17,7 +17,7 @@ namespace Stardust.Data.Deployment;
 [Serializable]
 [DataObject]
 [Description("部署版本。应用的多个可发布版本，主要管理应用程序包，支持随时切换使用不同版本，来自上传或自动编译")]
-[BindIndex("IU_AppDeployVersion_AppId_Version", true, "AppId,Version")]
+[BindIndex("IU_AppDeployVersion_DeployId_Version", true, "DeployId,Version")]
 [BindTable("AppDeployVersion", Description = "部署版本。应用的多个可发布版本，主要管理应用程序包，支持随时切换使用不同版本，来自上传或自动编译", ConnName = "Stardust", DbType = DatabaseType.None)]
 public partial class AppDeployVersion
 {
@@ -30,13 +30,13 @@ public partial class AppDeployVersion
     [BindColumn("Id", "编号", "")]
     public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
-    private Int32 _AppId;
+    private Int32 _DeployId;
     /// <summary>应用部署集。对应AppDeploy</summary>
     [DisplayName("应用部署集")]
     [Description("应用部署集。对应AppDeploy")]
     [DataObjectField(false, false, false, 0)]
     [BindColumn("AppId", "应用部署集。对应AppDeploy", "")]
-    public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
+    public Int32 DeployId { get => _DeployId; set { if (OnPropertyChanging("DeployId", value)) { _DeployId = value; OnPropertyChanged("DeployId"); } } }
 
     private String _Version;
     /// <summary>版本。如2.3.2022.0911，字符串比较大小</summary>
@@ -203,7 +203,7 @@ public partial class AppDeployVersion
         get => name switch
         {
             "Id" => _Id,
-            "AppId" => _AppId,
+            "DeployId" => _DeployId,
             "Version" => _Version,
             "Enable" => _Enable,
             "Url" => _Url,
@@ -229,7 +229,7 @@ public partial class AppDeployVersion
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
-                case "AppId": _AppId = value.ToInt(); break;
+                case "DeployId": _DeployId = value.ToInt(); break;
                 case "Version": _Version = Convert.ToString(value); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "Url": _Url = Convert.ToString(value); break;
@@ -255,6 +255,14 @@ public partial class AppDeployVersion
     #endregion
 
     #region 关联映射
+    /// <summary>应用部署集</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public AppDeploy Deploy => Extends.Get(nameof(Deploy), k => AppDeploy.FindById(DeployId));
+
+    /// <summary>应用部署集</summary>
+    [Map(nameof(DeployId), typeof(AppDeploy), "Id")]
+    public String DeployName => Deploy?.ToString();
+
     #endregion
 
     #region 字段名
@@ -265,7 +273,7 @@ public partial class AppDeployVersion
         public static readonly Field Id = FindByName("Id");
 
         /// <summary>应用部署集。对应AppDeploy</summary>
-        public static readonly Field AppId = FindByName("AppId");
+        public static readonly Field DeployId = FindByName("DeployId");
 
         /// <summary>版本。如2.3.2022.0911，字符串比较大小</summary>
         public static readonly Field Version = FindByName("Version");
@@ -331,7 +339,7 @@ public partial class AppDeployVersion
         public const String Id = "Id";
 
         /// <summary>应用部署集。对应AppDeploy</summary>
-        public const String AppId = "AppId";
+        public const String DeployId = "DeployId";
 
         /// <summary>版本。如2.3.2022.0911，字符串比较大小</summary>
         public const String Version = "Version";

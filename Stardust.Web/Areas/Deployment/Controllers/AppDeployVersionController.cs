@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using System.Runtime.ConstrainedExecution;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
@@ -10,7 +9,6 @@ using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data.Deployment;
 using Stardust.Web.Services;
-using XCode;
 using XCode.Membership;
 using Attachment = NewLife.Cube.Entity.Attachment;
 
@@ -32,8 +30,8 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         LogOnChange = true;
 
         {
-            var df = ListFields.GetField("AppName") as ListField;
-            df.Url = "/Deployment/AppDeploy?Id={AppId}";
+            var df = ListFields.GetField("DeployName") as ListField;
+            df.Url = "/Deployment/AppDeploy?deployId={DeployId}";
         }
         {
             var df = ListFields.AddListField("UseVersion", null, "Enable");
@@ -73,7 +71,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         if (kind == ViewKinds.List)
         {
             var deployId = GetRequest("deployId").ToInt(-1);
-            if (deployId > 0) fields.RemoveField("AppName");
+            if (deployId > 0) fields.RemoveField("DeployName");
         }
 
         return fields;
@@ -84,19 +82,18 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         var id = p["id"].ToInt(-1);
         if (id > 0)
         {
-            var entity = AppDeployVersion.FindById(id);
-            if (entity != null) return new List<AppDeployVersion> { entity };
+            var entity = AppDeployVersion.FindByKey(id);
+            if (entity != null) return [entity];
         }
 
-        var appId = p["deployId"].ToInt(-1);
-        if (appId <= 0) appId = p["appId"].ToInt(-1);
+        var deployId = p["deployId"].ToInt(-1);
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        PageSetting.EnableAdd = appId > 0;
+        PageSetting.EnableAdd = deployId > 0;
         PageSetting.EnableNavbar = false;
 
-        return AppDeployVersion.Search(appId, null, null, start, end, p["Q"], p);
+        return AppDeployVersion.Search(deployId, null, null, start, end, p["Q"], p);
     }
 
     protected override Boolean Valid(AppDeployVersion entity, DataObjectMethodType type, Boolean post)
@@ -108,7 +105,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
             // 根据包名去查应用发布集，如果是不小心上传了其它包，则给出提醒
             foreach (var file in Request.Form.Files)
             {
-                var deploy = entity.App;
+                var deploy = entity.Deploy;
                 var name = Path.GetFileName(file.FileName);
                 if (!name.IsNullOrEmpty() && deploy != null)
                 {
@@ -129,7 +126,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
 
     protected override Int32 OnInsert(AppDeployVersion entity)
     {
-        var app = entity.App;
+        var app = entity.Deploy;
         var rs = base.OnInsert(entity);
         app?.Fix();
 
@@ -158,7 +155,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
 
         //var changed = (entity as IEntity).Dirtys[nameof(entity.Url)];
 
-        var app = entity.App;
+        var app = entity.Deploy;
         var rs = base.OnUpdate(entity);
         app?.Fix();
 
@@ -177,7 +174,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
     protected override Int32 OnDelete(AppDeployVersion entity)
     {
         var rs = base.OnDelete(entity);
-        entity.App?.Fix();
+        entity.Deploy?.Fix();
         return rs;
     }
 
@@ -193,13 +190,13 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
             entity.Update();
 
             // 上传完成即发布。即使新增，也是插入后保存文件，然后再来OnUpdate
-            var app = entity.App;
+            var app = entity.Deploy;
             if (entity.Enable && !entity.Url.IsNullOrEmpty() && app != null && app.Enable && app.AutoPublish)
             {
                 app.Version = entity.Version;
                 app.Update();
 
-                _ = Publish(entity.App);
+                _ = Publish(entity.Deploy);
             }
         }
 
@@ -220,7 +217,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         ver.TraceId = DefaultSpan.Current?.TraceId;
         ver.Update();
 
-        var app = ver.App;
+        var app = ver.Deploy;
         app.Version = ver.Version;
         app.Update();
 

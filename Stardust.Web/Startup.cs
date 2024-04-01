@@ -260,7 +260,7 @@ public class Startup
             deployNode ??= deployNodes.FirstOrDefault(e => e.NodeId == item.ID);
             if (deployNode != null)
             {
-                var app = deployNode.App;
+                var app = deployNode.Deploy;
                 if (app != null)
                 {
                     item.ProjectId = app.ProjectId;

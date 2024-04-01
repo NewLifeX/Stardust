@@ -17,8 +17,8 @@ namespace Stardust.Data.Deployment;
 [Serializable]
 [DataObject]
 [Description("部署历史。记录应用集部署历史")]
-[BindIndex("IX_AppDeployHistory_AppId_Id", false, "AppId,Id")]
-[BindIndex("IX_AppDeployHistory_AppId_Action_Id", false, "AppId,Action,Id")]
+[BindIndex("IX_AppDeployHistory_DeployId_Id", false, "DeployId,Id")]
+[BindIndex("IX_AppDeployHistory_DeployId_Action_Id", false, "DeployId,Action,Id")]
 [BindIndex("IX_AppDeployHistory_NodeId_Id", false, "NodeId,Id")]
 [BindTable("AppDeployHistory", Description = "部署历史。记录应用集部署历史", ConnName = "StardustData", DbType = DatabaseType.None)]
 public partial class AppDeployHistory
@@ -32,13 +32,13 @@ public partial class AppDeployHistory
     [BindColumn("Id", "编号", "")]
     public Int64 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
-    private Int32 _AppId;
+    private Int32 _DeployId;
     /// <summary>应用部署集。对应AppDeploy</summary>
     [DisplayName("应用部署集")]
     [Description("应用部署集。对应AppDeploy")]
     [DataObjectField(false, false, false, 0)]
     [BindColumn("AppId", "应用部署集。对应AppDeploy", "")]
-    public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
+    public Int32 DeployId { get => _DeployId; set { if (OnPropertyChanging("DeployId", value)) { _DeployId = value; OnPropertyChanged("DeployId"); } } }
 
     private Int32 _NodeId;
     /// <summary>节点。节点服务器</summary>
@@ -118,7 +118,7 @@ public partial class AppDeployHistory
         get => name switch
         {
             "Id" => _Id,
-            "AppId" => _AppId,
+            "DeployId" => _DeployId,
             "NodeId" => _NodeId,
             "Action" => _Action,
             "Success" => _Success,
@@ -134,7 +134,7 @@ public partial class AppDeployHistory
             switch (name)
             {
                 case "Id": _Id = value.ToLong(); break;
-                case "AppId": _AppId = value.ToInt(); break;
+                case "DeployId": _DeployId = value.ToInt(); break;
                 case "NodeId": _NodeId = value.ToInt(); break;
                 case "Action": _Action = Convert.ToString(value); break;
                 case "Success": _Success = value.ToBoolean(); break;
@@ -152,11 +152,11 @@ public partial class AppDeployHistory
     #region 关联映射
     /// <summary>应用部署集</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public AppDeploy App => Extends.Get(nameof(App), k => AppDeploy.FindById(AppId));
+    public AppDeploy Deploy => Extends.Get(nameof(Deploy), k => AppDeploy.FindById(DeployId));
 
     /// <summary>应用部署集</summary>
-    [Map(nameof(AppId), typeof(AppDeploy), "Id")]
-    public String AppName => App?.ToString();
+    [Map(nameof(DeployId), typeof(AppDeploy), "Id")]
+    public String DeployName => Deploy?.ToString();
 
     /// <summary>节点</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
@@ -176,7 +176,7 @@ public partial class AppDeployHistory
         public static readonly Field Id = FindByName("Id");
 
         /// <summary>应用部署集。对应AppDeploy</summary>
-        public static readonly Field AppId = FindByName("AppId");
+        public static readonly Field DeployId = FindByName("DeployId");
 
         /// <summary>节点。节点服务器</summary>
         public static readonly Field NodeId = FindByName("NodeId");
@@ -212,7 +212,7 @@ public partial class AppDeployHistory
         public const String Id = "Id";
 
         /// <summary>应用部署集。对应AppDeploy</summary>
-        public const String AppId = "AppId";
+        public const String DeployId = "DeployId";
 
         /// <summary>节点。节点服务器</summary>
         public const String NodeId = "NodeId";

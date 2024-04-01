@@ -36,7 +36,7 @@ public class AppDeployController : EntityController<AppDeploy>
         }
         {
             var df = ListFields.GetField("Name") as ListField;
-            df.Url = "/Deployment/AppDeploy?Id={Id}";
+            df.Url = "/Deployment/AppDeploy?appId={AppId}&deployId={Id}";
             df.Target = "_blank";
         }
         {
@@ -100,7 +100,10 @@ public class AppDeployController : EntityController<AppDeploy>
         if (kind == ViewKinds.List)
         {
             var appId = GetRequest("appId").ToInt(-1);
-            if (appId > 0) fields.RemoveField("AppName", "Category");
+            if (appId > 0) fields.RemoveField("ProjectName", "AppName", "Category");
+
+            var deployId = GetRequest("deployId").ToInt(-1);
+            if (deployId > 0) fields.RemoveField("DeployName");
         }
 
         return fields;
@@ -108,32 +111,34 @@ public class AppDeployController : EntityController<AppDeploy>
 
     protected override IEnumerable<AppDeploy> Search(Pager p)
     {
-        var id = p["id"].ToInt(-1);
+        var id = p["deployId"].ToInt(-1);
+        if (id <= 0) id = p["id"].ToInt(-1);
         if (id > 0)
         {
-            var entity = AppDeploy.FindById(id);
-            if (entity != null) return new List<AppDeploy> { entity };
+            var entity = AppDeploy.FindByKey(id);
+            if (entity != null) return [entity];
         }
         var appId = p["appId"].ToInt(-1);
         if (appId > 0)
         {
             var list = AppDeploy.FindAllByAppId(appId);
-            if (list.Count > 0) return list;
-
-            // 自动新建发布集
-            var app = App.FindById(appId);
-            if (app != null)
+            if (list.Count == 0)
             {
-                var entity = new AppDeploy
+                // 自动新建发布集
+                var app = App.FindById(appId);
+                if (app != null)
                 {
-                    AppId = appId,
-                    Name = app.Name,
-                    ProjectId = app.ProjectId,
-                    Category = app.Category
-                };
-                entity.Insert();
+                    var entity = new AppDeploy
+                    {
+                        AppId = appId,
+                        Name = app.Name,
+                        ProjectId = app.ProjectId,
+                        Category = app.Category
+                    };
+                    entity.Insert();
 
-                return new[] { entity };
+                    return new[] { entity };
+                }
             }
         }
 
@@ -144,7 +149,7 @@ public class AppDeployController : EntityController<AppDeploy>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return AppDeploy.Search(projectId, category, enable, start, end, p["Q"], p);
+        return AppDeploy.Search(projectId, appId, category, enable, start, end, p["Q"], p);
     }
 
     protected override Boolean Valid(AppDeploy entity, DataObjectMethodType type, Boolean post)

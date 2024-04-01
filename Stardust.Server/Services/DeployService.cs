@@ -70,8 +70,8 @@ public class DeployService
             // 由于无法确定发布集，所以创建所有发布集的节点。此时不能启用，否则下一次应用启动时，将会拉取到该部署信息，而此时部署信息还不完整
             foreach (var deploy in list)
             {
-                node = nodes.FirstOrDefault(e => e.AppId == deploy.Id);
-                node ??= new AppDeployNode { AppId = deploy.Id, NodeId = online.NodeId, Enable = false };
+                node = nodes.FirstOrDefault(e => e.DeployId == deploy.Id);
+                node ??= new AppDeployNode { DeployId = deploy.Id, NodeId = online.NodeId, Enable = false };
                 node.Fill(online);
                 node.Save();
             }
@@ -118,8 +118,8 @@ public class DeployService
 
         // 本节点所有发布
         var list = AppDeployNode.FindAllByNodeId(node.ID);
-        var dn = list.FirstOrDefault(e => e.AppId == app.Id);
-        dn ??= new AppDeployNode { AppId = app.Id, NodeId = node.ID };
+        var dn = list.FirstOrDefault(e => e.DeployId == app.Id);
+        dn ??= new AppDeployNode { DeployId = app.Id, NodeId = node.ID };
 
         dn.Fill(inf);
         dn.LastActive = DateTime.Now;

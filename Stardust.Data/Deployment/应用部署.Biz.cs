@@ -118,18 +118,18 @@ namespace Stardust.Data.Deployment
             return FindAll(_.AppId == appId);
         }
 
-    /// <summary>根据项目查找</summary>
-    /// <param name="projectId">项目</param>
-    /// <returns>实体列表</returns>
-    public static IList<AppDeploy> FindAllByProjectId(Int32 projectId)
-    {
-        if (projectId <= 0) return new List<AppDeploy>();
+        /// <summary>根据项目查找</summary>
+        /// <param name="projectId">项目</param>
+        /// <returns>实体列表</returns>
+        public static IList<AppDeploy> FindAllByProjectId(Int32 projectId)
+        {
+            if (projectId <= 0) return new List<AppDeploy>();
 
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ProjectId == projectId);
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ProjectId == projectId);
 
-        return FindAll(_.ProjectId == projectId);
-    }
+            return FindAll(_.ProjectId == projectId);
+        }
         #endregion
 
         #region 高级查询
@@ -141,11 +141,12 @@ namespace Stardust.Data.Deployment
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>
-        public static IList<AppDeploy> Search(Int32 projectId, String category, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+        public static IList<AppDeploy> Search(Int32 projectId, Int32 appId, String category, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
 
             if (projectId >= 0) exp &= _.ProjectId == projectId;
+            if (appId >= 0) exp &= _.AppId == appId;
             if (!category.IsNullOrEmpty()) exp &= _.Category == category;
             if (enable != null) exp &= _.Enable == enable;
             exp &= _.UpdateTime.Between(start, end);
@@ -184,7 +185,7 @@ namespace Stardust.Data.Deployment
 
             if (Version.IsNullOrEmpty())
             {
-                var vers = AppDeployVersion.FindAllByAppId(Id, 100);
+                var vers = AppDeployVersion.FindAllByDeployId(Id, 100);
                 vers = vers.Where(e => e.Enable).ToList();
                 if (vers.Count == 0) vers = AppDeployVersion.Search(Id, null, true, DateTime.MinValue, DateTime.MinValue, null, null);
                 if (vers.Count > 0) Version = vers[0].Version;

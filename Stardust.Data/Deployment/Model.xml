@@ -73,13 +73,12 @@
       <Indexes>
         <Index Columns="Name" Unique="True" />
         <Index Columns="ProjectId" />
-        <Index Columns="AppId" />
       </Indexes>
     </Table>
     <Table Name="AppDeployNode" Description="应用节点。应用部署集和节点服务器的依赖关系，一个应用可有多个部署集如arm和x64，在目标节点上发布该部署集对应的应用zip包">
       <Columns>
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="AppId" DataType="Int32" Description="应用部署集。对应AppDeploy" />
+        <Column Name="DeployId" ColumnName="AppId" DataType="Int32" Map="AppDeploy@Id@$" Description="应用部署集。对应AppDeploy" />
         <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
         <Column Name="IP" DataType="String" Description="IP地址。节点所在内网IP地址" />
         <Column Name="Sort" DataType="Int32" Description="顺序。较小在前，同时表示延迟发布秒数" />
@@ -108,14 +107,14 @@
         <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
       </Columns>
       <Indexes>
-        <Index Columns="AppId" />
+        <Index Columns="DeployId" />
         <Index Columns="NodeId" />
       </Indexes>
     </Table>
     <Table Name="AppDeployVersion" Description="部署版本。应用的多个可发布版本，主要管理应用程序包，支持随时切换使用不同版本，来自上传或自动编译">
       <Columns>
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="AppId" DataType="Int32" Description="应用部署集。对应AppDeploy" />
+        <Column Name="DeployId" ColumnName="AppId" DataType="Int32" Map="AppDeploy@Id@$" Description="应用部署集。对应AppDeploy" />
         <Column Name="Version" DataType="String" Master="True" Nullable="False" Description="版本。如2.3.2022.0911，字符串比较大小" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="Url" DataType="String" ItemType="file" Length="500" Description="资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖" />
@@ -136,13 +135,13 @@
         <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
       </Columns>
       <Indexes>
-        <Index Columns="AppId,Version" Unique="True" />
+        <Index Columns="DeployId,Version" Unique="True" />
       </Indexes>
     </Table>
     <Table Name="AppDeployHistory" Description="部署历史。记录应用集部署历史" ConnName="StardustData">
       <Columns>
         <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
-        <Column Name="AppId" DataType="Int32" Map="AppDeploy@Id@$" Description="应用部署集。对应AppDeploy" />
+        <Column Name="DeployId" ColumnName="AppId" DataType="Int32" Map="AppDeploy@Id@$" Description="应用部署集。对应AppDeploy" />
         <Column Name="NodeId" DataType="Int32" Map="Stardust.Data.Nodes.Node@ID@Name" Description="节点。节点服务器" />
         <Column Name="Action" DataType="String" Nullable="False" Description="操作" />
         <Column Name="Success" DataType="Boolean" Description="成功" />
@@ -153,8 +152,8 @@
         <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
       </Columns>
       <Indexes>
-        <Index Columns="AppId,Id" />
-        <Index Columns="AppId,Action,Id" />
+        <Index Columns="DeployId,Id" />
+        <Index Columns="DeployId,Action,Id" />
         <Index Columns="NodeId,Id" />
       </Indexes>
     </Table>

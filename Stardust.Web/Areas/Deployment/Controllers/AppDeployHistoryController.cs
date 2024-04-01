@@ -19,6 +19,10 @@ public class AppDeployHistoryController : ReadOnlyEntityController<AppDeployHist
         ListFields.TraceUrl();
 
         {
+            var df = ListFields.GetField("DeployName") as ListField;
+            df.Url = "/Deployment/AppDeploy?deployId={DeployId}";
+        }
+        {
             var df = ListFields.GetField("NodeName") as ListField;
             df.Url = "/Nodes/Node?Id={NodeID}";
             df.Target = "_frame";
@@ -44,7 +48,7 @@ public class AppDeployHistoryController : ReadOnlyEntityController<AppDeployHist
         if (kind == ViewKinds.List)
         {
             var deployId = GetRequest("deployId").ToInt(-1);
-            if (deployId > 0) fields.RemoveField("AppName");
+            if (deployId > 0) fields.RemoveField("DeployName");
         }
 
         return fields;
