@@ -41,7 +41,8 @@ public class AppDayStatController : ReadOnlyEntityController<AppDayStat>
 
     protected override IEnumerable<AppDayStat> Search(Pager p)
     {
-        var appId = p["appId"].ToInt(-1);
+        var appId = p["monitorId"].ToInt(-1);
+        if (appId <= 0) appId = p["appId"].ToInt(-1);
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();

@@ -158,7 +158,6 @@ public class AppConfigController : EntityController<AppConfig>
             var list = AppConfig.FindAllByAppId(appId);
             if (list.Count == 0)
             {
-                // 自动新建发布集
                 var app = App.FindById(appId);
                 if (app != null)
                 {

@@ -7,6 +7,7 @@ using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data;
+using Stardust.Data.Deployment;
 using Stardust.Data.Monitors;
 using Stardust.Server.Services;
 using XCode;
@@ -82,8 +83,8 @@ public class AppTracerController : EntityController<AppTracer>
         base.OnActionExecuting(filterContext);
 
         var appId = GetRequest("appId").ToInt(-1);
-        if (appId <= 0) appId = GetRequest("Id").ToInt(-1);
-        if (appId > 0)
+        var monitorId = GetRequest("monitorId").ToInt(-1);
+        if (appId > 0 || monitorId > 0)
         {
             PageSetting.NavView = "_App_Nav";
             PageSetting.EnableNavbar = false;
@@ -113,17 +114,32 @@ public class AppTracerController : EntityController<AppTracer>
 
     protected override IEnumerable<AppTracer> Search(Pager p)
     {
-        var id = p["Id"].ToInt(-1);
+        var id = p["monitorId"].ToInt(-1);
+        if (id <= 0) id = p["id"].ToInt(-1);
         if (id > 0)
         {
-            var app = AppTracer.FindByID(id);
-            if (app != null) return new[] { app };
+            var app = AppTracer.FindByKey(id);
+            if (app != null) return [app];
         }
         var appId = p["appId"].ToInt(-1);
         if (appId > 0)
         {
-            var entity = AppTracer.FindByAppId(appId);
-            if (entity != null) return new List<AppTracer> { entity };
+            var list = AppTracer.FindAllByAppId(appId);
+            if (list.Count == 0)
+            {
+                var app = App.FindById(appId);
+                if (app != null)
+                {
+                    var entity = new AppTracer
+                    {
+                        AppId = appId,
+                        Name = app.Name,
+                        ProjectId = app.ProjectId,
+                        Category = app.Category
+                    };
+                    entity.Insert();
+                }
+            }
         }
 
         var projectId = p["projectId"].ToInt(-1);
@@ -135,7 +151,7 @@ public class AppTracerController : EntityController<AppTracer>
 
         p.RetrieveState = true;
 
-        return AppTracer.Search(projectId, category, enable, start, end, p["Q"], p);
+        return AppTracer.Search(projectId, appId, category, enable, start, end, p["Q"], p);
     }
 
     protected override Int32 OnDelete(AppTracer entity)

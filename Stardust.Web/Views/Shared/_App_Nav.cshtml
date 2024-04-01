@@ -74,11 +74,16 @@
         dic["节点发布"] = $"/Deployment/AppDeployNode?enable=1&appId={appId}&deployId={deploy.Id}";
     }
 
-    var monitors = AppTracer.FindAllByAppId(appId);
-    dic["监控中心"] = "/Monitors/AppTracer?appId=" + appId + "&monitorId=" + monitorId;
-    if (monitors.Count == 1)
+    var monitor = AppTracer.FindByID(monitorId);
+    if (monitor == null)
     {
-        dic["监控大屏"] = "/Monitors/AppDayStat?appId=" + monitors[0].ID;
+        var monitors = AppTracer.FindAllByAppId(appId);
+        if (monitors.Count == 1) monitor = monitors[0];
+    }
+    dic["监控中心"] = $"/Monitors/AppTracer?appId={appId}&monitorId={monitor?.ID}";
+    if (monitor != null)
+    {
+        dic["监控大屏"] = $"/Monitors/AppDayStat?appId={appId}&monitorId={monitor.ID}";
     }
 }
 @if (appId > 0)
