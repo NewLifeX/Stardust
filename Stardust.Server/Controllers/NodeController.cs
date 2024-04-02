@@ -307,7 +307,7 @@ public class NodeController : BaseController
             while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
             {
                 ISpan span = null;
-                var mqMsg = await queue.TakeOneAsync(30);
+                var mqMsg = await queue.TakeOneAsync(15, cancellationToken);
                 if (mqMsg != null)
                 {
                     // 埋点
