@@ -52,7 +52,8 @@ public class DeployService
                     throw new NotSupportedException($"不支持{action}");
             }
 
-            var args = new { deployNode.Id, deployNode.DeployName }.ToJson();
+            // 发布安装命令时，为了兼容旧版本，继续传递AppName参数
+            var args = new { deployNode.Id, deployNode.DeployName, AppName = deployNode.DeployName }.ToJson();
             msg = args;
 
             await _starFactory.SendNodeCommand(deployNode.Node.Code, action, args, 60, timeout);

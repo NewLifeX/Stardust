@@ -704,7 +704,7 @@ public class ServiceManager : DisposeBase
         using var span = Tracer?.NewSpan("ServiceManager-DoControl", cmd);
 
         var my = cmd.Argument?.ToJsonEntity<MyApp>();
-        var serviceName = my?.AppName;
+        var serviceName = my?.DeployName ?? my?.AppName;
         if (my == null || serviceName.IsNullOrEmpty())
             return new CommandReplyModel { Status = CommandStatus.错误, Data = "参数错误" };
 
@@ -730,6 +730,8 @@ public class ServiceManager : DisposeBase
     private class MyApp
     {
         public Int32 Id { get; set; }
+
+        public String? DeployName { get; set; }
 
         public String? AppName { get; set; }
     }
