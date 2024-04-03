@@ -1,12 +1,9 @@
-﻿using System;
-using System.ComponentModel;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Deployment;
 using Stardust.Models;
-using Stardust.Registry;
 using Stardust.Services;
 #if !NET40
 using TaskEx = System.Threading.Tasks.Task;
@@ -239,7 +236,11 @@ internal class ServiceController : DisposeBase
         //var args = service.Arguments?.Trim();
         if (!args.IsNullOrEmpty() && !deploy.Parse(args.Split(" "))) return null;
 
-        deploy.Extract(workDir);
+        //deploy.Extract(workDir);
+        // 要解压缩到影子目录，否则可能会把appsettings.json等配置文件覆盖。用完后删除
+        var shadow = deploy.CreateShadow(deploy.Name);
+        deploy.Extract(shadow);
+        Directory.Delete(shadow, true);
 
         if (!needRun) return deploy;
 

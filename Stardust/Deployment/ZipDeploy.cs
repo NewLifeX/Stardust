@@ -101,27 +101,37 @@ public class ZipDeploy
         }
 
         if (name.IsNullOrEmpty()) name = Path.GetFileNameWithoutExtension(file);
-        //if (shadow.IsNullOrEmpty()) shadow = Path.GetTempPath().CombinePath(name);
-        if (shadow.IsNullOrEmpty())
-        {
-            // 影子目录默认使用上一级的shadow目录，无权时使用临时目录
-            try
-            {
-                shadow = WorkingDirectory.CombinePath("../shadow").GetFullPath();
-                shadow.EnsureDirectory(false);
-            }
-            catch
-            {
-                shadow = Path.GetTempPath();
-            }
-            Shadow = shadow.CombinePath(name);
-        }
+        if (shadow.IsNullOrEmpty()) shadow = CreateShadow(null);
 
         Name = name;
         FileName = file;
         Shadow = shadow;
 
         return true;
+    }
+
+    /// <summary>创建默认影子目录</summary>
+    /// <param name="name">应用目录名，若未指定则仅返回顶级目录。应用名一般是{app}-{hash}</param>
+    /// <returns></returns>
+    public String CreateShadow(String? name)
+    {
+        var span = DefaultSpan.Current;
+        span?.AppendTag("CreateShadow");
+
+        var shadow = "";
+
+        // 影子目录默认使用上一级的shadow目录，无权时使用临时目录
+        try
+        {
+            shadow = WorkingDirectory.CombinePath("../shadow").GetFullPath();
+            shadow.EnsureDirectory(false);
+        }
+        catch
+        {
+            shadow = Path.GetTempPath();
+        }
+
+        return name.IsNullOrEmpty() ? shadow : shadow.CombinePath(name);
     }
 
     /// <summary>执行拉起应用</summary>
@@ -145,23 +155,7 @@ public class ZipDeploy
         if (name.IsNullOrEmpty()) name = Name = Path.GetFileNameWithoutExtension(FileName);
 
         var shadow = Shadow;
-        if (shadow.IsNullOrEmpty())
-        {
-            span?.AppendTag("CreateShadow");
-
-            // 影子目录默认使用上一级的shadow目录，无权时使用临时目录
-            try
-            {
-                shadow = WorkingDirectory.CombinePath("../shadow").GetFullPath();
-                shadow.EnsureDirectory(false);
-            }
-            catch
-            {
-                shadow = Path.GetTempPath();
-            }
-            Shadow = shadow.CombinePath(name);
-        }
-
+        if (shadow.IsNullOrEmpty()) shadow = CreateShadow(null);
         if (shadow.IsNullOrEmpty()) return false;
 
         var hash = fi.MD5().ToHex().Substring(0, 8).ToLower();
@@ -321,7 +315,7 @@ public class ZipDeploy
         }
     }
 
-    /// <summary>解压缩</summary>
+    /// <summary>解压缩到影子目录，并拷贝文件到工作目录</summary>
     /// <param name="shadow"></param>
     public virtual void Extract(String shadow)
     {
