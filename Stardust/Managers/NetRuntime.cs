@@ -1066,9 +1066,9 @@ public class NetRuntime
         DefaultSpan.Current?.AppendTag(msg);
 
         if (format.Contains("错误") || format.Contains("失败"))
-            EventProvider?.WriteErrorEvent(nameof(ServiceController), msg);
+            EventProvider?.WriteErrorEvent(nameof(NetRuntime), msg);
         else
-            EventProvider?.WriteInfoEvent(nameof(ServiceController), msg);
+            EventProvider?.WriteInfoEvent(nameof(NetRuntime), msg);
     }
     #endregion
 }

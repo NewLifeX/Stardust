@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
-using NewLife.Configuration;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
@@ -25,7 +24,7 @@ public class AppDeployHistoryController : ReadOnlyEntityController<AppDeployHist
         }
         {
             var df = ListFields.GetField("NodeName") as ListField;
-            df.Url = "/Nodes/Node?Id={NodeID}";
+            df.Url = "/Nodes/Node?Id={NodeId}";
             df.Target = "_frame";
         }
     }

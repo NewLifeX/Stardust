@@ -8,6 +8,7 @@ using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Web;
+using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Common;
@@ -172,7 +173,17 @@ public class NodeController : BaseController
         {
             var success = !model.Type.EqualIgnoreCase("error");
             if (model.Name.EqualIgnoreCase("ServiceController"))
-                _deployService.WriteHistory(0, _node?.ID ?? 0, model.Name, success, model.Remark, UserHost);
+            {
+                var appId = 0;
+                var p = model.Type.LastIndexOf('-');
+                if (p > 0)
+                {
+                    success = !model.Type[(p + 1)..].EqualIgnoreCase("error");
+                    appId = AppDeploy.FindByName(model.Type[..p])?.Id ?? 0;
+                }
+
+                _deployService.WriteHistory(appId, _node?.ID ?? 0, model.Name, success, model.Remark, UserHost);
+            }
 
             WriteHistory(null, model.Name, success, model.Time.ToDateTime().ToLocalTime(), model.Remark);
         }

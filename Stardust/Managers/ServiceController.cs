@@ -211,7 +211,7 @@ internal class ServiceController : DisposeBase
             {
                 span?.SetError(ex, null);
                 Log?.Write(LogLevel.Error, "{0}", ex);
-                EventProvider?.WriteErrorEvent("ServiceController", ex.ToString());
+                WriteEvent("error", ex.ToString());
             }
 
             return false;
@@ -288,7 +288,7 @@ internal class ServiceController : DisposeBase
             WriteLog("Zip包启动失败！ExitCode={0}", deploy.Process?.ExitCode);
 
             // 上报最后错误
-            if (!deploy.LastError.IsNullOrEmpty()) EventProvider?.WriteErrorEvent("ServiceController", deploy.LastError);
+            if (!deploy.LastError.IsNullOrEmpty()) WriteEvent("error", deploy.LastError);
 
             return null;
         }
@@ -502,7 +502,7 @@ internal class ServiceController : DisposeBase
                 if (ex is not ArgumentException)
                 {
                     Log?.Error("{0}", ex);
-                    EventProvider?.WriteErrorEvent("ServiceController", ex.ToString());
+                    WriteEvent("error", ex.ToString());
                 }
             }
 
@@ -767,9 +767,20 @@ internal class ServiceController : DisposeBase
         DefaultSpan.Current?.AppendTag(msg);
 
         if (format.Contains("错误") || format.Contains("失败"))
-            EventProvider?.WriteErrorEvent(nameof(ServiceController), msg);
+            WriteEvent("error", msg);
         else
-            EventProvider?.WriteInfoEvent(nameof(ServiceController), msg);
+            WriteEvent("info", msg);
+    }
+
+    /// <summary>写事件到服务端</summary>
+    /// <param name="type"></param>
+    /// <param name="msg"></param>
+    public void WriteEvent(String type, String msg)
+    {
+        if (type.IsNullOrEmpty()) type = "info";
+        if (Info != null) type = $"{Info.Name}-{type}";
+
+        EventProvider?.WriteEvent(type, nameof(ServiceController), msg);
     }
     #endregion
 }
