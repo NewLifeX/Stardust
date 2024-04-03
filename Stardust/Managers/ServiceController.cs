@@ -225,6 +225,7 @@ internal class ServiceController : DisposeBase
 
         var deploy = new ZipDeploy
         {
+            Name = Name,
             FileName = file,
             WorkingDirectory = workDir,
             Overwrite = DeployInfo?.Overwrite,
@@ -238,9 +239,17 @@ internal class ServiceController : DisposeBase
 
         //deploy.Extract(workDir);
         // 要解压缩到影子目录，否则可能会把appsettings.json等配置文件覆盖。用完后删除
-        var shadow = deploy.CreateShadow(deploy.Name);
+        var shadow = deploy.CreateShadow($"{deploy.Name}-{DateTime.Now:yyyyMMddHHmmss}");
         deploy.Extract(shadow);
-        Directory.Delete(shadow, true);
+        try
+        {
+            WriteLog("删除临时影子目录：{0}", shadow);
+            Directory.Delete(shadow, true);
+        }
+        catch (Exception ex)
+        {
+            WriteLog(ex.Message);
+        }
 
         if (!needRun) return deploy;
 

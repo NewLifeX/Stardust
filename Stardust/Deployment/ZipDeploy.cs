@@ -325,7 +325,7 @@ public class ZipDeploy
 
         var fi = WorkingDirectory.CombinePath(FileName).AsFile();
         var rundir = fi.DirectoryName;
-        WriteLog("解压缩 {0}", FileName);
+        WriteLog("解压缩 {0} 到 {1}", FileName, shadow);
 
         fi.Extract(shadow, true);
 
@@ -336,6 +336,8 @@ public class ZipDeploy
         span?.AppendTag($"sdi={sdi.FullName} rundir={rundir}");
         if (!sdi.FullName.EnsureEnd("\\").EqualIgnoreCase(rundir.EnsureEnd("\\")))
         {
+            WriteLog("拷贝文件到运行目录：{0}", rundir);
+
             // 覆盖文件
             foreach (var item in sdi.GetFiles())
             {
@@ -348,7 +350,7 @@ public class ZipDeploy
                     // 当前文件在覆盖列表内时，强制覆盖
                     if (ovs != null && ovs.Any(e => e.IsMatch(item.Name, StringComparison.OrdinalIgnoreCase)))
                     {
-                        WriteLog("复制文件 {0}", item.Name);
+                        WriteLog("覆盖文件 {0}", item.Name);
 
                         // 注意，appsettings.json 也可能覆盖
                         item.CopyTo(dst, true);
@@ -372,7 +374,7 @@ public class ZipDeploy
                 // 强制覆盖(包含子孙目录，否则会出现目标文件夹中子孙文件夹内容遗漏拷贝)
                 if (ovs != null && ovs.Contains(item.Name))
                 {
-                    WriteLog("复制目录 {0}", item.Name);
+                    WriteLog("覆盖目录 {0}", item.Name);
 
                     di.CopyTo(dest.FullName, allSub: true);
                 }
