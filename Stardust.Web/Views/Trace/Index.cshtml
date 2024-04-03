@@ -49,7 +49,7 @@
             @foreach (var entity in list)
             {
                 var ti = entity.TraceItem ?? new TraceItem();
-                var url1 = $"/Monitors/appDayStat?appId={entity.AppId}";
+                var url1 = $"/Monitors/appDayStat?monitorId={entity.AppId}";
                 var url2 = $"/Monitors/traceDayStat?appid={entity.AppId}&itemId={entity.ItemId}";
                 var color2 = "";
                 if (ti.Kind.EqualIgnoreCase("db"))

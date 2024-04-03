@@ -21,7 +21,7 @@ public class SampleDataController : ReadOnlyEntityController<SampleData>
             df.Header = "应用";
             df.DisplayName = "{AppName}";
             df.Title = "应用监控图表";
-            df.Url = "/Monitors/appDayStat?appId={AppId}";
+            df.Url = "/Monitors/appDayStat?monitorId={AppId}";
         }
         //{
         //    var df = ListFields.AddListField("Name", "Success");

@@ -38,7 +38,7 @@ public class AppTracerController : EntityController<AppTracer>
             df.Header = "每日监控";
             df.DisplayName = "每日监控";
             df.Title = "{AppName}监控。该应用每日监控数据";
-            df.Url = "/Monitors/AppDaystat?appId={ID}";
+            df.Url = "/Monitors/AppDaystat?monitorId={ID}";
             df.Target = "_frame";
         }
 

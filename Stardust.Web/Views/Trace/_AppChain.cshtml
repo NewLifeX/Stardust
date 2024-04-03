@@ -52,7 +52,7 @@
             var w = (Double)ms / length;
             if (w > 0.01) w -= 0.01;
             var color = "lightgreen";
-            var url1 = $"/Monitors/appDayStat?appId={entity.AppId}";
+            var url1 = $"/Monitors/appDayStat?monitorId={entity.AppId}";
             <tr>
                 <td class="text-center"><a href="@url1" title="应用最近的监控图表">@entity.AppName</a></td>
                 <td title="@msg">

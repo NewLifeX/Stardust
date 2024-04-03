@@ -48,7 +48,7 @@
     <tbody>
         @foreach (var entity in Model)
         {
-            var url1 = $"/Monitors/appDayStat?appId={entity.AppId}";
+            var url1 = $"/Monitors/appDayStat?monitorId={entity.AppId}";
             var url2 = $"/Monitors/traceData?appId={entity.AppId}&kind=minute&time={entity.StatTime:yyyy-MM-dd HH:mm:ss}&itemId={entity.ItemId}";
             var url3 = $"/Monitors/traceMinuteStat?appId={entity.AppId}&itemId={entity.ItemId}";
             var url4 = url2 + "&minError=1";

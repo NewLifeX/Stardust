@@ -41,7 +41,7 @@
     <tbody>
         @foreach (var entity in Model)
         {
-            var url1 = $"/Monitors/appDayStat?appId={entity.AppId}";
+            var url1 = $"/Monitors/appDayStat?monitorId={entity.AppId}";
             var url2 = $"/Monitors/traceData?appId={entity.AppId}&kind=minute&time={entity.StatTime:yyyy-MM-dd HH:mm:ss}";
             var url3 = $"/Monitors/appMinuteStat?appId={entity.AppId}";
             var bgcolor = "";
