@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Security.Cryptography;
 using NewLife;
 using NewLife.Log;
 
@@ -195,7 +196,7 @@ public class ZipDeploy
                 }
             }
 
-            Extract(shadow);
+            Extract(shadow, CopyModes.None, CopyModes.SkipExists, CopyModes.Overwrite);
             hasExtracted = true;
         }
 
@@ -315,9 +316,51 @@ public class ZipDeploy
         }
     }
 
+    Boolean IsExe(String ext) => ext.EndsWithIgnoreCase(".exe", ".dll", ".pdb", ".jar", ".go", ".py");
+    Boolean IsConfig(String ext) => ext.EndsWithIgnoreCase(".json", ".config", ".xml", ".yml");
+
+    private void DeleteFiles(String dir, Func<String, Boolean> func)
+    {
+        foreach (var item in dir.AsDirectory().GetFiles())
+        {
+            if (func(item.Extension))
+            {
+                try
+                {
+                    item.Delete();
+                }
+                catch (Exception ex)
+                {
+                    WriteLog(ex.Message);
+                }
+            }
+        }
+    }
+
+    private void CopyFiles(FileInfo item, String dst, CopyModes mode, String[]? ovs)
+    {
+        // 当前文件在覆盖列表内时，强制覆盖
+        if (ovs != null && ovs.Any(e => e.IsMatch(item.Name, StringComparison.OrdinalIgnoreCase)))
+        {
+            WriteLog("覆盖文件 {0}", item.Name);
+
+            // 注意，appsettings.json 也可能覆盖
+            item.CopyTo(dst, true);
+        }
+        else if (mode >= CopyModes.Overwrite || mode == CopyModes.SkipExists && !File.Exists(dst))
+        {
+            //WriteLog("复制文件 {0}", item.Name);
+
+            item.CopyTo(dst, true);
+        }
+    }
+
     /// <summary>解压缩到影子目录，并拷贝文件到工作目录</summary>
-    /// <param name="shadow"></param>
-    public virtual void Extract(String shadow)
+    /// <param name="shadow">影子目录</param>
+    /// <param name="exefile">可执行文件拷贝模式</param>
+    /// <param name="configfile">配置文件拷贝模式</param>
+    /// <param name="otherfile">其它文件拷贝模式</param>
+    public virtual void Extract(String shadow, CopyModes exefile, CopyModes configfile, CopyModes otherfile)
     {
         if (FileName.IsNullOrEmpty()) throw new ArgumentNullException(nameof(FileName));
 
@@ -336,39 +379,40 @@ public class ZipDeploy
         span?.AppendTag($"sdi={sdi.FullName} rundir={rundir}");
         if (!sdi.FullName.EnsureEnd("\\").EqualIgnoreCase(rundir.EnsureEnd("\\")))
         {
+            if (exefile == CopyModes.ClearBeforeCopy)
+            {
+                WriteLog("清空运行目录可执行文件：{0}", rundir);
+                DeleteFiles(rundir, IsExe);
+            }
+            if (configfile == CopyModes.ClearBeforeCopy)
+            {
+                WriteLog("清空运行目录配置文件：{0}", rundir);
+                DeleteFiles(rundir, IsConfig);
+            }
+            if (otherfile == CopyModes.ClearBeforeCopy)
+            {
+                WriteLog("清空运行目录其它文件：{0}", rundir);
+                DeleteFiles(rundir, e => !IsExe(e) && !IsConfig(e));
+            }
+
             WriteLog("拷贝文件到运行目录：{0}", rundir);
 
             // 覆盖文件
             foreach (var item in sdi.GetFiles())
             {
-                // 拷贝配置类文件
-                if (item.Extension.EndsWithIgnoreCase(".json", ".config", ".xml"))
-                {
-                    //span?.AppendTag(item.Name);
+                var dst = rundir.CombinePath(item.Name);
 
-                    var dst = rundir.CombinePath(item.Name);
-                    // 当前文件在覆盖列表内时，强制覆盖
-                    if (ovs != null && ovs.Any(e => e.IsMatch(item.Name, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        WriteLog("覆盖文件 {0}", item.Name);
-
-                        // 注意，appsettings.json 也可能覆盖
-                        item.CopyTo(dst, true);
-                    }
-                    else if (!File.Exists(dst))
-                    {
-                        WriteLog("复制文件 {0}", item.Name);
-
-                        item.CopyTo(dst, false);
-                    }
-                }
+                if (IsExe(item.Extension))
+                    CopyFiles(item, dst, exefile, ovs);
+                else if (IsConfig(item.Extension))
+                    CopyFiles(item, dst, configfile, ovs);
+                else
+                    CopyFiles(item, dst, otherfile, ovs);
             }
 
             // 覆盖目录
             foreach (var item in sdi.GetDirectories())
             {
-                //span?.AppendTag(item.Name);
-
                 var di = shadow.CombinePath(item.Name).AsDirectory();
                 var dest = rundir.CombinePath(item.Name).AsDirectory();
                 // 强制覆盖(包含子孙目录，否则会出现目标文件夹中子孙文件夹内容遗漏拷贝)
@@ -378,8 +422,9 @@ public class ZipDeploy
 
                     di.CopyTo(dest.FullName, allSub: true);
                 }
-                // 特殊目录且目标不存在时，覆盖
-                else if (item.Name.EqualIgnoreCase("Data", "Config", "Plugins", "wwwroot") && !dest.Exists)
+                //// 特殊目录且目标不存在时，覆盖
+                //else if (item.Name.EqualIgnoreCase("Data", "Config", "Plugins", "wwwroot") && !dest.Exists)
+                else if (otherfile >= CopyModes.Overwrite || otherfile == CopyModes.SkipExists && !dest.Exists)
                 {
                     WriteLog("复制目录 {0}", item.Name);
 

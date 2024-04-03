@@ -7,7 +7,7 @@
     var fact = ViewBag.Factory as IEntityFactory;
     var page = ViewBag.Page as Pager;
 }
-@await Html.PartialAsync("_SelectApp", new SelectAppModel { Id = "appId", AppId = page["appId"].ToInt() })
+@* @await Html.PartialAsync("_SelectApp", new SelectAppModel { Id = "appId", AppId = page["appId"].ToInt() }) *@
 <div class="form-group">
     <label for="category" class="control-label">类别：</label>
     @Html.ForDropDownList("category", AppDeploy.GetCategoryList(), page["category"], "全部", true)

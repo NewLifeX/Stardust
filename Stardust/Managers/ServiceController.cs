@@ -240,7 +240,7 @@ internal class ServiceController : DisposeBase
         //deploy.Extract(workDir);
         // 要解压缩到影子目录，否则可能会把appsettings.json等配置文件覆盖。用完后删除
         var shadow = deploy.CreateShadow($"{deploy.Name}-{DateTime.Now:yyyyMMddHHmmss}");
-        deploy.Extract(shadow);
+        deploy.Extract(shadow, CopyModes.ClearBeforeCopy, CopyModes.SkipExists, CopyModes.Overwrite);
         try
         {
             WriteLog("删除临时影子目录：{0}", shadow);
