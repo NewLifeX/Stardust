@@ -30,7 +30,8 @@ public class AppDayStatController : ReadOnlyEntityController<AppDayStat>
         base.OnActionExecuting(filterContext);
 
         var appId = GetRequest("appId").ToInt(-1);
-        if (appId > 0)
+        var monitorId = GetRequest("monitorId").ToInt(-1);
+        if (appId > 0 || monitorId > 0)
         {
             PageSetting.NavView = "_App_Nav";
             PageSetting.EnableNavbar = false;
