@@ -501,6 +501,8 @@ internal class MyService : ServiceBase, IServiceProvider
     #region 自动更新
     private async Task CheckUpgrade(Object data)
     {
+        if (!NetworkInterface.GetIsNetworkAvailable()) return;
+
         var client = _Client;
         using var span = client.Tracer?.NewSpan("CheckUpgrade", new { _lastVersion });
 

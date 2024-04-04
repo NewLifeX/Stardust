@@ -308,6 +308,8 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
 
     async Task DoPostEvent(Object state)
     {
+        if (!NetworkInterface.GetIsNetworkAvailable()) return;
+
         DefaultSpan.Current = null;
         var tid = _eventTraceId;
         _eventTraceId = null;
