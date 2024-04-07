@@ -27,7 +27,7 @@
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Id"))">编号</a></th>
             @if (appId == 0)
             {
-                <th class="text-center" title="应用。原始应用"><a href="@Html.Raw(page.GetSortUrl("AppId"))">应用</a></th>
+                <th class="text-center" title="应用。原始应用"><a href="@Html.Raw(page.GetSortUrl("DeployId"))">应用</a></th>
             }
             @if (nodeId == 0)
             {
