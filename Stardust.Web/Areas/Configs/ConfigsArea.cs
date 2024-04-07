@@ -1,15 +1,14 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using NewLife;
 using NewLife.Cube;
 
-namespace Stardust.Web.Areas.Configs
-{
-    [DisplayName("配置中心")]
-    public class ConfigsArea : AreaBase
-    {
-        public ConfigsArea() : base(nameof(ConfigsArea).TrimEnd("Area")) { }
+namespace Stardust.Web.Areas.Configs;
 
-        static ConfigsArea() => RegisterArea<ConfigsArea>();
-    }
+[DisplayName("配置中心")]
+[Menu(666, true, LastUpdate = "20240407")]
+public class ConfigsArea : AreaBase
+{
+    public ConfigsArea() : base(nameof(ConfigsArea).TrimEnd("Area")) { }
+
+    static ConfigsArea() => RegisterArea<ConfigsArea>();
 }
