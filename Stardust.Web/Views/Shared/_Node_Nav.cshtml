@@ -22,7 +22,7 @@
     dic["命令"] = "/Nodes/NodeCommand?nodeId=" + nodeId;
     dic["性能"] = "/Nodes/NodeData?nodeId=" + nodeId;
 
-    if (node.Product == "StarAgent")
+    if (node.ProductCode == "StarAgent")
     {
         dic["应用在线"] = "/Registry/AppOnline?nodeId=" + nodeId;
         dic["应用发布"] = "/Deployment/AppDeployNode?enable=1&nodeId=" + nodeId;
