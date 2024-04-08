@@ -228,5 +228,7 @@ public partial class AppDeploy : Entity<AppDeploy>
 
         return count;
     }
+
+    public static AppDeploy GetOrAdd(String name) => GetOrAdd(name, k => Find(_.Name == k), k => new AppDeploy { Name = k });
     #endregion
 }

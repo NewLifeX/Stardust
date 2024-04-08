@@ -43,13 +43,18 @@ public class DeployService
             else
             {
                 // 新增部署集，禁用状态，信息不完整
-                deploy = new AppDeploy
-                {
-                    AppId = online.AppId,
-                    Name = online.AppName,
-                    Category = online.App?.Category
-                };
-                deploy.Insert();
+                //deploy = new AppDeploy
+                //{
+                //    AppId = online.AppId,
+                //    Name = online.AppName,
+                //    Category = online.App?.Category
+                //};
+                //deploy.Insert();
+
+                deploy = AppDeploy.GetOrAdd(online.Name);
+                deploy.AppId = online.AppId;
+                deploy.Category = online.App?.Category;
+                deploy.Save();
             }
             list.Add(deploy);
         }
