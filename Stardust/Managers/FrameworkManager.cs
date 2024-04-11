@@ -149,9 +149,73 @@ public class FrameworkManager
         var model = argument?.ToJsonEntity<FrameworkModel>();
         if (model == null || model.Version.IsNullOrEmpty()) throw new Exception("未指定版本！");
 
+        //目前仅支持NetCore
+        var ver = model.Version.Trim('v', 'V');
+        var deleted = false;
+        var versions = NetRuntime.GetNetCore(false);
+
+        foreach (var version in versions)
+        {
+            //删除指定
+            var currentVer = version.Name.TrimStart('v', 'V');
+            if (ver != currentVer) { continue; }
+
+            if (Runtime.Linux)
+            {
+                var runtimes = new string[] { "Microsoft.NETCore.App", "Microsoft.AspNetCore.App" };
+                var rootDir = "/usr/share/dotnet/shared";
+                foreach (var runtime in runtimes)
+                {
+                    var dir = rootDir.CombinePath(runtime, currentVer);
+                    if (Directory.Exists(dir))
+                    {
+                        //有可能被占用
+                        try
+                        {
+                            Directory.Delete(dir, true);
+                            deleted = true;
+                            XTrace.Log.Info($"{runtime} {currentVer} 已删除");
+                        }
+                        catch (Exception ex)
+                        {
+                            XTrace.Log.Info($"卸载时出现异常 {ex.Message}");
+                        }
+                    }
+                }
+            }
+            else if (Runtime.Windows)
+            {
+                var runtimes = new string[] { "Microsoft.NETCore.App", "Microsoft.AspNetCore.App", "Microsoft.WindowsDesktop.App" };
+                var rootDir = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).CombinePath("dotnet", "shared");
+                foreach (var runtime in runtimes)
+                {
+                    var dir = rootDir.CombinePath(runtime, currentVer);
+                    if (Directory.Exists(dir))
+                    {
+                        try
+                        {
+                            Directory.Delete(dir, true);
+                            deleted = true;
+                            XTrace.Log.Info($"{runtime} {currentVer} 已删除");
+                        }
+                        catch (Exception ex)
+                        {
+                            XTrace.Log.Info($"卸载时出现异常 {ex.Message}");
+                        }                        
+                    }
+                }
+            }
+            else
+            {
+                XTrace.Log.Info("暂不支持当前OS卸载");
+                throw new Exception("暂不支持当前OS卸载");
+            }
+        }
+
+        XTrace.Log.Info("{0} 卸载成功", model.Version);
         CheckPing();
 
-        return "卸载成功";
+        return deleted ? "卸载成功" : "卸载失败";
     }
 
     /// <summary>星尘安装卸载框架后，马上执行一次心跳，使得其尽快上报框架版本</summary>
