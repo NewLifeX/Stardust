@@ -233,7 +233,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             Product = mi.Product,
             Vendor = mi.Vendor,
             Processor = mi.Processor,
-            CpuRate = mi.CpuRate,
+            //CpuRate = mi.CpuRate,
             UUID = mi.UUID,
             MachineGuid = mi.Guid,
             SerialNumber = mi.Serial,

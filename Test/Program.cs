@@ -5,7 +5,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using Microsoft.Win32;
 using NewLife;
 using NewLife.IO;
 using NewLife.Log;
@@ -16,8 +15,8 @@ using NewLife.Remoting;
 using NewLife.Serialization;
 using Renci.SshNet;
 using Stardust;
-using Stardust.Managers;
 using Stardust.Models;
+using Stardust.Windows;
 
 namespace Test;
 
@@ -196,52 +195,17 @@ class Program
 
     static void Test7()
     {
-        XTrace.WriteLine("SystemEvents");
+        XTrace.WriteLine("所有可用热点：");
+        foreach (var item in NativeWifi.GetAvailableNetworkSsids())
+        {
+            XTrace.WriteLine("{0}:\t{2} ({3} + {4})", item.dot11Ssid, item.dot11BssType, item.wlanSignalQuality, item.dot11DefaultAuthAlgorithm, item.dot11DefaultCipherAlgorithm);
+        }
 
-        SystemEvents.PowerModeChanged += (s, e) =>
+        XTrace.WriteLine("正在连接的热点：");
+        foreach (var item in NativeWifi.GetConnectedNetworkSsids())
         {
-            XTrace.WriteLine("PowerModeChanged: {0}", e.Mode);
-        };
-        SystemEvents.SessionSwitch += (s, e) =>
-        {
-            XTrace.WriteLine("SessionSwitch: {0}", e.Reason);
-        };
-        SystemEvents.SessionEnding += (s, e) =>
-        {
-            XTrace.WriteLine("SessionEnding: {0}", e.Reason);
-        };
-        SystemEvents.SessionEnded += (s, e) =>
-        {
-            XTrace.WriteLine("SessionEnded: {0}", e.Reason);
-        };
-        SystemEvents.UserPreferenceChanging += (s, e) =>
-        {
-            XTrace.WriteLine("UserPreferenceChanging: {0}", e.Category);
-        };
-        SystemEvents.UserPreferenceChanged += (s, e) =>
-        {
-            XTrace.WriteLine("UserPreferenceChanged: {0}", e.Category);
-        };
-        SystemEvents.DisplaySettingsChanged += (s, e) =>
-        {
-            XTrace.WriteLine("DisplaySettingsChanged: {0}", e);
-        };
-        SystemEvents.InstalledFontsChanged += (s, e) =>
-        {
-            XTrace.WriteLine("InstalledFontsChanged: {0}", e);
-        };
-        SystemEvents.TimeChanged += (s, e) =>
-        {
-            XTrace.WriteLine("TimeChanged: {0}", e);
-        };
-        SystemEvents.TimerElapsed += (s, e) =>
-        {
-            XTrace.WriteLine("TimerElapsed: {0}", e);
-        };
-        SystemEvents.LowMemory += (s, e) =>
-        {
-            XTrace.WriteLine("LowMemory: {0}", e);
-        };
+            XTrace.WriteLine("{0}:\t{2}", item.dot11Ssid, item.dot11BssType, item.wlanSignalQuality);
+        }
     }
 
     static void Test8()

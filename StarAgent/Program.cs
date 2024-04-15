@@ -743,7 +743,7 @@ internal class MyService : ServiceBase, IServiceProvider
 
         var mi = MachineInfo.Current ?? MachineInfo.RegisterAsync().Result;
         mi.Refresh();
-        var pis = mi.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
+        var pis = mi.GetType().GetProperties(true);
 
         foreach (var pi in pis)
         {
