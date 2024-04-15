@@ -263,6 +263,7 @@ public partial class NodeOnline : Entity<NodeOnline>
         if (inf.CpuRate > 0) online.CpuRate = inf.CpuRate;
         if (inf.Temperature > 0) online.Temperature = inf.Temperature;
         if (inf.Battery > 0) online.Battery = inf.Battery;
+        if (inf.Signal > 0) online.Signal = inf.Signal;
         if (inf.UplinkSpeed > 0) online.UplinkSpeed = (Int64)inf.UplinkSpeed;
         if (inf.DownlinkSpeed > 0) online.DownlinkSpeed = (Int64)inf.DownlinkSpeed;
         if (inf.ProcessCount > 0) online.ProcessCount = inf.ProcessCount;
@@ -307,6 +308,7 @@ public partial class NodeOnline : Entity<NodeOnline>
             CpuRate = inf.CpuRate,
             Temperature = inf.Temperature,
             Battery = inf.Battery,
+            Signal = inf.Signal,
             UplinkSpeed = (Int64)inf.UplinkSpeed,
             DownlinkSpeed = (Int64)inf.DownlinkSpeed,
             ProcessCount = inf.ProcessCount,

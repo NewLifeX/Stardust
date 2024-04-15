@@ -14,13 +14,16 @@ public class PingInfo
     public String? DriveInfo { get; set; }
 
     /// <summary>CPU占用率</summary>
-    public Single CpuRate { get; set; }
+    public Double CpuRate { get; set; }
 
     /// <summary>温度</summary>
     public Double Temperature { get; set; }
 
     /// <summary>电量</summary>
     public Double Battery { get; set; }
+
+    /// <summary>信号强度。WiFi/4G</summary>
+    public Int32 Signal { get; set; }
 
     /// <summary>上行速度。网络发送速度，字节每秒</summary>
     public UInt64 UplinkSpeed { get; set; }

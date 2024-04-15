@@ -211,6 +211,14 @@ public partial class NodeOnline
     [BindColumn("Battery", "电量", "", ItemType = "percent")]
     public Double Battery { get => _Battery; set { if (OnPropertyChanging("Battery", value)) { _Battery = value; OnPropertyChanged("Battery"); } } }
 
+    private Int32 _Signal;
+    /// <summary>信号。信号强度，WiFi/4G</summary>
+    [DisplayName("信号")]
+    [Description("信号。信号强度，WiFi/4G")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Signal", "信号。信号强度，WiFi/4G", "")]
+    public Int32 Signal { get => _Signal; set { if (OnPropertyChanging("Signal", value)) { _Signal = value; OnPropertyChanged("Signal"); } } }
+
     private Int64 _UplinkSpeed;
     /// <summary>上行速度。网络发送速度，字节每秒</summary>
     [DisplayName("上行速度")]
@@ -409,6 +417,7 @@ public partial class NodeOnline
             "CpuRate" => _CpuRate,
             "Temperature" => _Temperature,
             "Battery" => _Battery,
+            "Signal" => _Signal,
             "UplinkSpeed" => _UplinkSpeed,
             "DownlinkSpeed" => _DownlinkSpeed,
             "ProcessCount" => _ProcessCount,
@@ -458,6 +467,7 @@ public partial class NodeOnline
                 case "CpuRate": _CpuRate = value.ToDouble(); break;
                 case "Temperature": _Temperature = value.ToDouble(); break;
                 case "Battery": _Battery = value.ToDouble(); break;
+                case "Signal": _Signal = value.ToInt(); break;
                 case "UplinkSpeed": _UplinkSpeed = value.ToLong(); break;
                 case "DownlinkSpeed": _DownlinkSpeed = value.ToLong(); break;
                 case "ProcessCount": _ProcessCount = value.ToInt(); break;
@@ -567,6 +577,9 @@ public partial class NodeOnline
 
         /// <summary>电量</summary>
         public static readonly Field Battery = FindByName("Battery");
+
+        /// <summary>信号。信号强度，WiFi/4G</summary>
+        public static readonly Field Signal = FindByName("Signal");
 
         /// <summary>上行速度。网络发送速度，字节每秒</summary>
         public static readonly Field UplinkSpeed = FindByName("UplinkSpeed");
@@ -702,6 +715,9 @@ public partial class NodeOnline
 
         /// <summary>电量</summary>
         public const String Battery = "Battery";
+
+        /// <summary>信号。信号强度，WiFi/4G</summary>
+        public const String Signal = "Signal";
 
         /// <summary>上行速度。网络发送速度，字节每秒</summary>
         public const String UplinkSpeed = "UplinkSpeed";

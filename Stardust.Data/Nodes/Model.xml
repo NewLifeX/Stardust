@@ -143,6 +143,7 @@
         <Column Name="CpuRate" DataType="Double" Description="CPU率。占用率" />
         <Column Name="Temperature" DataType="Double" Description="温度" />
         <Column Name="Battery" DataType="Double" ItemType="percent" Description="电量" />
+        <Column Name="Signal" DataType="Int32" Description="信号。信号强度，WiFi/4G" />
         <Column Name="UplinkSpeed" DataType="Int64" Description="上行速度。网络发送速度，字节每秒" />
         <Column Name="DownlinkSpeed" DataType="Int64" Description="下行速度。网络接收速度，字节每秒" />
         <Column Name="ProcessCount" DataType="Int32" Description="进程数" />
@@ -203,6 +204,7 @@
         <Column Name="CpuRate" DataType="Double" ItemType="percent" Description="CPU率。占用率" />
         <Column Name="Temperature" DataType="Double" Description="温度" />
         <Column Name="Battery" DataType="Double" ItemType="percent" Description="电量" />
+        <Column Name="Signal" DataType="Int32" Description="信号。信号强度，WiFi/4G" />
         <Column Name="UplinkSpeed" DataType="Int64" Description="上行速度。网络发送速度，字节每秒" />
         <Column Name="DownlinkSpeed" DataType="Int64" Description="下行速度。网络接收速度，字节每秒" />
         <Column Name="ProcessCount" DataType="Int32" Description="进程数" />

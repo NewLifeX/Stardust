@@ -3,6 +3,7 @@ using System.Net.NetworkInformation;
 using System.Reflection;
 using NewLife;
 using NewLife.Agent;
+using NewLife.Data;
 using NewLife.Log;
 using NewLife.Model;
 using NewLife.Reflection;
@@ -59,6 +60,11 @@ internal class Program
 
         // 处理 -server 参数，建议在-start启动时添加
         svc.SetServer(args);
+
+#if !NET40
+        // 注册增强版机器信息提供者
+        MachineInfo.Provider = new MachineInfoProvider();
+#endif
 
         // Zip发布
         if (svc.RunZipDeploy(args)) return;
@@ -745,6 +751,7 @@ internal class MyService : ServiceBase, IServiceProvider
         mi.Refresh();
         var pis = mi.GetType().GetProperties(true);
 
+        // 机器信息
         foreach (var pi in pis)
         {
             var val = mi.GetValue(pi);
@@ -754,6 +761,13 @@ internal class MyService : ServiceBase, IServiceProvider
                 val = val.ToDouble().ToString("p2");
 
             XTrace.WriteLine("{0}:\t{1}", pi.Name, val);
+        }
+
+        // 机器扩展
+        var ext = mi as IExtend;
+        foreach (var item in ext.Items)
+        {
+            XTrace.WriteLine("{0}:\t{1}", item.Key, item.Value);
         }
 
         var client = _Client ?? new StarClient();

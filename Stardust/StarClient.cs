@@ -451,12 +451,12 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         var drives = GetDrives();
         var driveInfo = DriveInfo.GetDrives().FirstOrDefault(e => path.StartsWithIgnoreCase(e.Name));
         var ip = AgentInfo.GetIps();
-        var ext = new PingInfo
+        var info = new PingInfo
         {
             AvailableMemory = mi.AvailableMemory,
             AvailableFreeSpace = (UInt64)(driveInfo?.AvailableFreeSpace ?? 0),
             DriveInfo = drives.Join(",", e => $"{e.Name}[{e.DriveFormat}]={e.AvailableFreeSpace.ToGMK()}/{e.TotalSize.ToGMK()}"),
-            CpuRate = (Single)Math.Round(mi.CpuRate, 3),
+            CpuRate = Math.Round(mi.CpuRate, 3),
             Temperature = Math.Round(mi.Temperature, 1),
             Battery = Math.Round(mi.Battery, 3),
             UplinkSpeed = mi.UplinkSpeed,
@@ -476,10 +476,10 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         // 开始时间 Environment.TickCount 很容易溢出，导致开机24天后变成负数。
         // 后来在 netcore3.0 增加了Environment.TickCount64
         // 现在借助 Stopwatch 来解决
-        if (Stopwatch.IsHighResolution) ext.Uptime = (Int32)(Stopwatch.GetTimestamp() / Stopwatch.Frequency);
+        if (Stopwatch.IsHighResolution) info.Uptime = (Int32)(Stopwatch.GetTimestamp() / Stopwatch.Frequency);
 
         // 目标框架
-        ext.Framework = _frameworkManager.GetAllVersions().Join(",", e => e.TrimStart('v'));
+        info.Framework = _frameworkManager.GetAllVersions().Join(",", e => e.TrimStart('v'));
 
         // 获取Tcp连接信息，某些Linux平台不支持
         try
@@ -487,13 +487,18 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             var properties = IPGlobalProperties.GetIPGlobalProperties();
             var connections = properties.GetActiveTcpConnections();
 
-            ext.TcpConnections = connections.Count(e => e.State == TcpState.Established);
-            ext.TcpTimeWait = connections.Count(e => e.State == TcpState.TimeWait);
-            ext.TcpCloseWait = connections.Count(e => e.State == TcpState.CloseWait);
+            info.TcpConnections = connections.Count(e => e.State == TcpState.Established);
+            info.TcpTimeWait = connections.Count(e => e.State == TcpState.TimeWait);
+            info.TcpCloseWait = connections.Count(e => e.State == TcpState.CloseWait);
         }
         catch { }
 
-        return ext;
+#if !NET40
+        // 读取无线信号强度
+        if (mi["Signal"] is Int32 signal) info.Signal = signal;
+#endif
+
+        return info;
     }
 
     /// <summary>心跳</summary>
