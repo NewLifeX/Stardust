@@ -621,6 +621,7 @@ public class NodeService
 
         node.WriteHistory("自动更新", true, $"channel={ch} version={node.Version} last={node.LastVersion} => [{pv.ID}] {pv.Version} {pv.Executor}", ip);
 
+        node.Channel = ch;
         node.LastVersion = pv.Version;
         node.Update();
 

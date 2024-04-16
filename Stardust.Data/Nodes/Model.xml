@@ -85,6 +85,7 @@
         <Column Name="Period" DataType="Int32" Description="采样周期。默认60秒" Category="参数设置" />
         <Column Name="NewServer" DataType="String" Description="新服务器。该节点自动迁移到新的服务器地址" Category="参数设置" />
         <Column Name="LastVersion" DataType="String" Description="最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本" Category="参数设置" />
+        <Column Name="Channel" DataType="Int32" Description="通道。升级通道，默认Release通道，使用Beta通道可以得到较新版本" Category="参数设置" Type="NodeChannels" />
         <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" Category="告警" />
         <Column Name="AlarmCpuRate" DataType="Int32" Description="CPU告警。CPU告警的百分比阈值，CPU使用率达到该值时告警，百分之一" Category="告警" />
         <Column Name="AlarmMemoryRate" DataType="Int32" Description="内存告警。内存告警的百分比阈值，内存使用率达到该值时告警，百分之一" Category="告警" />

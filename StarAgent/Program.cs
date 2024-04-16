@@ -423,6 +423,7 @@ internal class MyService : ServiceBase, IServiceProvider
         client.RegisterCommand("node/upgrade", s => _ = CheckUpgrade(s));
         client.RegisterCommand("node/restart", Restart);
         client.RegisterCommand("node/reboot", Reboot);
+        client.RegisterCommand("node/setchannel", SetChannel);
     }
 
     /// <summary>重启应用服务</summary>
@@ -501,6 +502,20 @@ internal class MyService : ServiceBase, IServiceProvider
         });
 
         return "success";
+    }
+
+    /// <summary>设置通道</summary>
+    /// <param name="argument"></param>
+    /// <returns></returns>
+    private String SetChannel(String argument)
+    {
+        if (argument.IsNullOrEmpty()) return "参数为空";
+
+        var set = AgentSetting;
+        set.Channel = argument;
+        set.Save();
+
+        return "success " + argument;
     }
     #endregion
 

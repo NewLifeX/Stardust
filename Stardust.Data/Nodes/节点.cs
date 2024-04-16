@@ -416,6 +416,15 @@ public partial class Node
     [BindColumn("LastVersion", "最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本", "")]
     public String LastVersion { get => _LastVersion; set { if (OnPropertyChanging("LastVersion", value)) { _LastVersion = value; OnPropertyChanged("LastVersion"); } } }
 
+    private NodeChannels _Channel;
+    /// <summary>通道。升级通道，默认Release通道，使用Beta通道可以得到较新版本</summary>
+    [Category("参数设置")]
+    [DisplayName("通道")]
+    [Description("通道。升级通道，默认Release通道，使用Beta通道可以得到较新版本")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Channel", "通道。升级通道，默认Release通道，使用Beta通道可以得到较新版本", "")]
+    public NodeChannels Channel { get => _Channel; set { if (OnPropertyChanging("Channel", value)) { _Channel = value; OnPropertyChanged("Channel"); } } }
+
     private String _WebHook;
     /// <summary>告警机器人。钉钉、企业微信等</summary>
     [Category("告警")]
@@ -640,6 +649,7 @@ public partial class Node
             "Period" => _Period,
             "NewServer" => _NewServer,
             "LastVersion" => _LastVersion,
+            "Channel" => _Channel,
             "WebHook" => _WebHook,
             "AlarmCpuRate" => _AlarmCpuRate,
             "AlarmMemoryRate" => _AlarmMemoryRate,
@@ -709,6 +719,7 @@ public partial class Node
                 case "Period": _Period = value.ToInt(); break;
                 case "NewServer": _NewServer = Convert.ToString(value); break;
                 case "LastVersion": _LastVersion = Convert.ToString(value); break;
+                case "Channel": _Channel = (NodeChannels)value.ToInt(); break;
                 case "WebHook": _WebHook = Convert.ToString(value); break;
                 case "AlarmCpuRate": _AlarmCpuRate = value.ToInt(); break;
                 case "AlarmMemoryRate": _AlarmMemoryRate = value.ToInt(); break;
@@ -880,6 +891,9 @@ public partial class Node
 
         /// <summary>最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本</summary>
         public static readonly Field LastVersion = FindByName("LastVersion");
+
+        /// <summary>通道。升级通道，默认Release通道，使用Beta通道可以得到较新版本</summary>
+        public static readonly Field Channel = FindByName("Channel");
 
         /// <summary>告警机器人。钉钉、企业微信等</summary>
         public static readonly Field WebHook = FindByName("WebHook");
@@ -1075,6 +1089,9 @@ public partial class Node
 
         /// <summary>最后版本。最后一次升级所使用的版本号，避免重复升级同一个版本</summary>
         public const String LastVersion = "LastVersion";
+
+        /// <summary>通道。升级通道，默认Release通道，使用Beta通道可以得到较新版本</summary>
+        public const String Channel = "Channel";
 
         /// <summary>告警机器人。钉钉、企业微信等</summary>
         public const String WebHook = "WebHook";
