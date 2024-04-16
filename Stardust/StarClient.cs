@@ -493,10 +493,11 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         }
         catch { }
 
-#if !NET40
-        // 读取无线信号强度
-        if (mi["Signal"] is Int32 signal) info.Signal = signal;
-#endif
+        if (mi is IExtend ext)
+        {
+            // 读取无线信号强度
+            if (ext.Items.TryGetValue("Signal", out var value)) info.Signal = value.ToInt();
+        }
 
         return info;
     }
