@@ -807,7 +807,7 @@ internal class MyService : ServiceBase, IServiceProvider
         foreach (var item in NetworkInterface.GetAllNetworkInterfaces())
         {
             //if (item.OperationalStatus != OperationalStatus.Up) continue;
-            if (item.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
+            if (item.NetworkInterfaceType is NetworkInterfaceType.Loopback or NetworkInterfaceType.Unknown or NetworkInterfaceType.Tunnel) continue;
 
             XTrace.WriteLine("{0} {1} {2}", item.NetworkInterfaceType, item.OperationalStatus, item.Name);
             XTrace.WriteLine("\tDescription:\t{0}", item.Description);

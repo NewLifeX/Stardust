@@ -1,4 +1,5 @@
 ﻿#if !NET40
+using System.Diagnostics;
 using System.Net.NetworkInformation;
 using NewLife;
 using NewLife.Log;
@@ -40,6 +41,7 @@ public class MachineInfoProvider : IMachineInfo
         }
         else if (Runtime.Linux)
         {
+            var signal = 0;
             var file = "/proc/net/wireless";
             if (File.Exists(file))
             {
@@ -54,11 +56,66 @@ public class MachineInfoProvider : IMachineInfo
                         // wlan0: 0000   70.  -38.  -256        0      0      0    739      0        0
 
                         // Quality=70/70  Signal level=-38 dBm  Noise level=-256 dBm
-                        info["Signal"] = (ss[3]?.TrimEnd('.')).ToInt();
+                        info["Signal"] = signal = (ss[3]?.TrimEnd('.')).ToInt();
                     }
                 }
             }
+
+            if (signal == 0)
+            {
+                var rs = Execute("iw", "dev wlan0 link", 1_000);
+                if (!rs.IsNullOrEmpty())
+                {
+                    /*
+                     * Connected to 24:4b:fe:6d:5c:f8 (on wlan0)
+                     * SSID: FeiFan
+                     * freq: 2462
+                     * RX: 36978860 bytes (198669 packets)
+                     * TX: 12425460 bytes (48657 packets)
+                     * signal: -31 dBm
+                     * tx bitrate: 78.0 MBit/s VHT-MCS 8 VHT-NSS 1
+                     * 
+                     */
+                    var dic = rs.SplitAsDictionary(":", "\n");
+                    if (dic.TryGetValue("SSID", out var value))
+                        info["SSID"] = value;
+
+                    if (dic.TryGetValue("signal", out value))
+                        info["Signal"] = signal = value.TrimEnd("dBm").Trim().ToInt();
+                }
+            }
         }
+    }
+
+    private static String? Execute(String cmd, String? arguments = null, Int32 msWait = 5_000)
+    {
+        try
+        {
+#if DEBUG
+            if (XTrace.Log.Level <= LogLevel.Debug) XTrace.WriteLine("Execute({0} {1})", cmd, arguments);
+#endif
+
+            var psi = new ProcessStartInfo(cmd, arguments ?? String.Empty)
+            {
+                // UseShellExecute 必须 false，以便于后续重定向输出流
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                RedirectStandardOutput = true,
+                //RedirectStandardError = true,
+            };
+            var process = Process.Start(psi);
+            if (process == null) return null;
+
+            if (!process.WaitForExit(msWait))
+            {
+                process.Kill();
+                return null;
+            }
+
+            return process.StandardOutput.ReadToEnd();
+        }
+        catch { return null; }
     }
 }
 #endif
