@@ -9,6 +9,7 @@
 
     var dic = AppTracer.FindAllWithCache().ToDictionary(e => e.ID, e => e + "");
     var appId = page["appId"].ToInt(-1);
+    if(appId<=0)appId=page["monitorId"].ToInt(-1);
 }
 @if (appId > 0)
 {
@@ -18,7 +19,7 @@
     </div>
     <div class="form-group">
         @Html.ActionLink("每分钟", null, "appMinuteStat", new { appId })
-        @Html.ActionLink("每天", null, "appDayStat", new { appId })
+        @Html.ActionLink("每天", null, "appDayStat", new { monitorId=appId })
     </div>
 }
 <div class="form-group">
