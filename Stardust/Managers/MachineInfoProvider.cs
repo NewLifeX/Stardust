@@ -1,6 +1,8 @@
 ﻿#if !NET40
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.NetworkInformation;
+using System.Reflection;
 using NewLife;
 using NewLife.Log;
 using Stardust.Windows;
@@ -10,10 +12,78 @@ namespace Stardust.Managers;
 /// <summary>机器信息提供者，增强机器信息获取能力</summary>
 public class MachineInfoProvider : IMachineInfo
 {
+    static readonly Dictionary<String, String> _allwinner_archs = new()
+    {
+        ["sun8i"] = "Cortex-A7",
+        ["sun9i"] = "Cortex-A15",
+        ["sun50i"] = "Cortex-A53",
+        ["sun55i"] = "Cortex-A55",
+        ["sun60i"] = "Cortex-A76",
+    };
+    static readonly Dictionary<String, String> _allwinner_socs = new()
+    {
+        ["sun8i"] = "H3",
+        ["sun50i-h616"] = "H616",
+        ["sun50iw9"] = "H616",
+        ["sun50iw10"] = "A133"
+    };
+
+    /// <summary>初始化时执行一次</summary>
+    /// <param name="info"></param>
     public void Init(MachineInfo info)
     {
+        // 识别全志sunxi平台
+        // https://linux-sunxi.org/Allwinner_SoC_Family
+        if (TryRead("/sys/class/sunxi_info/sys_info", out var value))
+        {
+            var dic2 = value.SplitAsDictionary(":", Environment.NewLine, true);
+            if (dic2.TryGetValue("sunxi_platform", out var txt) && !txt.IsNullOrEmpty())
+            {
+                MatchAllwinner(info, txt);
+            }
+            if ((info.UUID.IsNullOrEmpty() || info.UUID.StartsWith("0-")) && dic2.TryGetValue("sunxi_chipid", out txt) && !txt.IsNullOrEmpty())
+                info.UUID = txt;
+            if (info.Serial.IsNullOrEmpty() && dic2.TryGetValue("sunxi_serial", out txt) && !txt.IsNullOrEmpty())
+                info.Serial = txt;
+        }
+
+        // Armdebian跑在全志平台上。如：Allwinner sun8i Family
+        if (!info.Processor.IsNullOrEmpty() && info.Processor.Contains("sun"))
+        {
+            var txt = info.Processor.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault(e => e.StartsWithIgnoreCase("sun"));
+            MatchAllwinner(info, txt);
+        }
     }
 
+    private static void MatchAllwinner(MachineInfo info, String txt)
+    {
+        if (txt.IsNullOrEmpty()) return;
+
+        var p = txt.IndexOf('p');
+        if (p > 0) txt = txt[..p];
+
+        // SoC处理器
+        if (_allwinner_socs.TryGetValue(txt, out var soc))
+            info.Processor = soc;
+        else
+            info.Processor = txt;
+
+        // 内核架构
+        if (info.Product.IsNullOrEmpty())
+        {
+            p = txt.IndexOf('i');
+            if (p > 0) txt = txt[..(p + 1)];
+
+            if (_allwinner_archs.TryGetValue(txt, out var arch))
+                info.Product = arch;
+        }
+
+        // 制造商
+        if (info.Vendor.IsNullOrEmpty()) info.Vendor = "Allwinner";
+    }
+
+    /// <summary>刷新时执行</summary>
+    /// <param name="info"></param>
     public void Refresh(MachineInfo info)
     {
         if (Runtime.Windows)
@@ -85,6 +155,22 @@ public class MachineInfoProvider : IMachineInfo
                 }
             }
         }
+    }
+
+    private static Boolean TryRead(String fileName, [NotNullWhen(true)] out String? value)
+    {
+        value = null;
+
+        if (!File.Exists(fileName)) return false;
+
+        try
+        {
+            value = File.ReadAllText(fileName)?.Trim();
+            if (value.IsNullOrEmpty()) return false;
+        }
+        catch { return false; }
+
+        return true;
     }
 
     private static String? Execute(String cmd, String? arguments = null, Int32 msWait = 5_000)
