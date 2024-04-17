@@ -32,22 +32,34 @@ public class MachineInfoProvider : IMachineInfo
     /// <param name="info"></param>
     public void Init(MachineInfo info)
     {
+        // 识别单板机信息
+        {
+            var dic = ReadRelease();
+            if (dic != null && dic.Count > 0)
+            {
+                if (dic.TryGetValue("BOARD_NAME", out var str) && !str.IsNullOrEmpty())
+                    info.Product = str;
+                if (dic.TryGetValue("BOARD", out str) && !str.IsNullOrEmpty())
+                    info.Board = str;
+            }
+        }
+
         // 识别全志sunxi平台
         // https://linux-sunxi.org/Allwinner_SoC_Family
         if (TryRead("/sys/class/sunxi_info/sys_info", out var value))
         {
-            var dic2 = value.SplitAsDictionary(":", Environment.NewLine, true);
-            if (dic2.TryGetValue("sunxi_platform", out var txt) && !txt.IsNullOrEmpty())
+            var dic = value.SplitAsDictionary(":", Environment.NewLine, true);
+            if (dic.TryGetValue("sunxi_platform", out var txt) && !txt.IsNullOrEmpty())
             {
                 MatchAllwinner(info, txt);
             }
-            if ((info.UUID.IsNullOrEmpty() || info.UUID.StartsWith("0-")) && dic2.TryGetValue("sunxi_chipid", out txt) && !txt.IsNullOrEmpty())
+            if (dic.TryGetValue("sunxi_chipid", out txt) && !txt.IsNullOrEmpty())
                 info.UUID = txt;
-            if (info.Serial.IsNullOrEmpty() && dic2.TryGetValue("sunxi_serial", out txt) && !txt.IsNullOrEmpty())
+            if (dic.TryGetValue("sunxi_serial", out txt) && !txt.IsNullOrEmpty())
                 info.Serial = txt;
         }
 
-        // Armdebian跑在全志平台上。如：Allwinner sun8i Family
+        // Armbian跑在全志平台上。如：Allwinner sun8i Family
         if (!info.Processor.IsNullOrEmpty() && info.Processor.Contains("sun"))
         {
             var txt = info.Processor.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault(e => e.StartsWithIgnoreCase("sun"));
@@ -80,6 +92,39 @@ public class MachineInfoProvider : IMachineInfo
 
         // 制造商
         if (info.Vendor.IsNullOrEmpty()) info.Vendor = "Allwinner";
+    }
+
+    private static IDictionary<String, String>? ReadRelease()
+    {
+        var di = "/etc/".AsDirectory();
+        if (!di.Exists) return null;
+
+        var fis = di.GetFiles("*-release");
+        foreach (var fi in fis)
+        {
+            //if (!fi.Name.EqualIgnoreCase("orangepi-release", "armbian-release", "redhat-release", "debian-release", "os-release", "system-release"))
+            //{
+            //    var dic = File.ReadAllText(fi.FullName).SplitAsDictionary("=", "\n", true);
+            //    //if (dic.TryGetValue("BOARD_NAME", out var str)) return str;
+            //    //if (dic.TryGetValue("BOARD", out str)) return str;
+            //    return dic;
+            //}
+
+            var txt = File.ReadAllText(fi.FullName);
+            if (!txt.IsNullOrEmpty() && (txt.Contains("BOARD_NAME=") || txt.Contains("BOARD=")))
+            {
+                return txt.SplitAsDictionary("=", "\n", true);
+            }
+        }
+
+        //// 支持未知的release文件
+        //if (fis.Length > 0)
+        //{
+        //    var dic = File.ReadAllText(fis[0].FullName).SplitAsDictionary("=", "\n", true);
+        //    return dic;
+        //}
+
+        return null;
     }
 
     /// <summary>刷新时执行</summary>
