@@ -99,6 +99,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
 
     protected override Boolean Valid(AppDeployVersion entity, DataObjectMethodType type, Boolean post)
     {
+        if (type == DataObjectMethodType.Delete || type == DataObjectMethodType.Update) return base.Valid(entity, type, post); 
         if (!post && type == DataObjectMethodType.Insert) entity.Version = DateTime.Now.ToString("yyyyMMdd-HHmmss");
 
         if (post)
@@ -174,6 +175,25 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
 
     protected override Int32 OnDelete(AppDeployVersion entity)
     {
+        //删除Attachment记录和文件，同文件有可能被多次上传，Hash查询不一定唯一
+        //根据当前表Url(/cube/file?id=7185535436880961536.zip)取 Id@Attachment 唯一
+        if (!entity.Url.IsNullOrEmpty())
+        {
+            var id = Path.GetFileNameWithoutExtension(entity.Url.Replace("/cube/file?id=", string.Empty));
+            var att = Attachment.FindById(id.ToLong());
+            if (att != null)
+            {
+                var attPath = att.GetFilePath();
+                //防意外丢失
+                if (System.IO.File.Exists(attPath))
+                {
+                    System.IO.File.Delete(attPath);
+                }
+                //删除记录
+                att.DeleteAsync();
+            }
+        }              
+
         var rs = base.OnDelete(entity);
         entity.Deploy?.Fix();
         return rs;
