@@ -60,6 +60,9 @@ public class NodeFrameworkController : EntityController<Node>
         if (GetRequest("keys") == null) throw new ArgumentNullException(nameof(SelectKeys));
         if (ver.IsNullOrEmpty()) throw new ArgumentNullException(nameof(ver));
 
+        ver = ver?.Trim();
+        baseUrl = baseUrl?.Trim();
+
         var bf = new BatchFinder<Int32, Node>();
         bf.Add(SelectKeys.Select(e => e.ToInt()));
 
@@ -82,6 +85,37 @@ public class NodeFrameworkController : EntityController<Node>
             if (node != null && !node.Code.IsNullOrEmpty())
             {
                 ts.Add(_starFactory.SendNodeCommand(node.Code, "framework/install", args, 30 * 24 * 3600, 0));
+
+            }
+        }
+
+        var rs = await Task.WhenAll(ts);
+
+        return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
+    }
+
+    [DisplayName("卸载")]
+    [EntityAuthorize((PermissionFlags)16)]
+    public async Task<ActionResult> UninstallFramework(String ver)
+    {
+        if (GetRequest("keys") == null) throw new ArgumentNullException(nameof(SelectKeys));
+        if (ver.IsNullOrEmpty()) throw new ArgumentNullException(nameof(ver));
+
+        ver = ver.Trim();
+ 
+        var bf = new BatchFinder<Int32, Node>();
+        bf.Add(SelectKeys.Select(e => e.ToInt()));
+
+        var model = new FrameworkModel { Version = ver, BaseUrl = null, Force = true };
+        var args = model.ToJson();
+
+        var ts = new List<Task<Int32>>();
+        foreach (var item in SelectKeys)
+        {
+            var node = bf.FindByKey(item.ToInt());
+            if (node != null && !node.Code.IsNullOrEmpty())
+            {
+                ts.Add(_starFactory.SendNodeCommand(node.Code, "framework/uninstall", args, 30 * 24 * 3600, 0));
 
             }
         }
