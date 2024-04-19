@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
+using NewLife.Log;
 using NewLife.Web;
+using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
 using XCode.Membership;
 using Attachment = NewLife.Cube.Entity.Attachment;
@@ -47,6 +49,30 @@ public class NodeVersionController : EntityController<NodeVersion>
         var key = p["q"];
 
         return NodeVersion.Search(start, end, enable, key, p);
+    }
+
+    protected override Int32 OnDelete(NodeVersion entity)
+    {
+        if (!entity.Source.IsNullOrEmpty()) 
+        {
+            //取 Id@Attachment 唯一
+            var id = Path.GetFileNameWithoutExtension(entity.Source.Replace("/cube/file?id=", string.Empty));
+            var att = Attachment.FindById(id.ToLong());
+            if (att != null)
+            {
+                var attPath = att.GetFilePath();
+                if (System.IO.File.Exists(attPath))
+                {
+                    XTrace.Log.Error($"success delete {attPath}");
+                    System.IO.File.Delete(attPath);
+                }
+                //删除记录
+                att.DeleteAsync();
+            }
+        }        
+
+        var rs = base.OnDelete(entity);
+        return rs;
     }
 
     protected override async Task<Attachment> SaveFile(NodeVersion entity, IFormFile file, String uploadPath, String fileName)
