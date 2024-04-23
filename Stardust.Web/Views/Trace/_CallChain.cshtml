@@ -16,6 +16,7 @@
             <th class="text-center">应用</th>
             <th class="text-center" title="操作名。接口名或埋点名">操作名</th>
             <th style="width:80%">时间轴</th>
+            <th class="text-center" title="数值。用户自定义标量">数值</th>
             <th class="text-center">操作</th>
         </tr>
     </thead>
@@ -89,6 +90,7 @@
                         <div style="background-color: @color;float:left;width:@w.ToString("p")">&nbsp;</div>
                     }
                 </td>
+                <td class="text-right">@entity.Value.ToString("n0")</td>
                 <td class="text-center">
                     <a href="/monitors/sampledata/detail/@entity.Id">查看</a>
                 </td>
