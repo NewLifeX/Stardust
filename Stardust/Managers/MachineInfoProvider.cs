@@ -41,6 +41,8 @@ public class MachineInfoProvider : IMachineInfo
                     info.Product = str;
                 if (dic.TryGetValue("BOARD", out str) && !str.IsNullOrEmpty())
                     info.Board = str;
+                if (dic.TryGetValue("VENDOR", out str) && !str.IsNullOrEmpty())
+                    info.Vendor = str;
             }
         }
 
