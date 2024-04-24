@@ -9,6 +9,7 @@ using NewLife.Remoting;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
+using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Services;
 using WebSocket = System.Net.WebSockets.WebSocket;
@@ -143,7 +144,17 @@ public class AppController : BaseController
 
         await socket.WaitForClose(txt =>
         {
-            if (txt == "Ping") socket.SendAsync("Pong".GetBytes(), WebSocketMessageType.Text, true, source.Token);
+            if (txt == "Ping")
+            {
+                socket.SendAsync("Pong".GetBytes(), WebSocketMessageType.Text, true, source.Token);
+
+                var olt = AppOnline.FindByClient(clientId);
+                if (olt != null)
+                {
+                    olt.WebSocket = true;
+                    olt.Update();
+                }
+            }
         }, source);
 
         WriteHistory("WebSocket断开", true, $"State={socket.State} CloseStatus={socket.CloseStatus}", clientId);

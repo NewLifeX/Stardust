@@ -297,7 +297,17 @@ public class NodeController : BaseController
 
         await socket.WaitForClose(txt =>
         {
-            if (txt == "Ping") socket.SendAsync("Pong".GetBytes(), WebSocketMessageType.Text, true, source.Token);
+            if (txt == "Ping")
+            {
+                socket.SendAsync("Pong".GetBytes(), WebSocketMessageType.Text, true, source.Token);
+
+                var olt = _nodeService.GetOrAddOnline(node, token, ip);
+                if (olt != null)
+                {
+                    olt.WebSocket = true;
+                    olt.Update();
+                }
+            }
         }, source);
 
         WriteHistory(node, "WebSocket断开", true, $"State={socket.State} CloseStatus={socket.CloseStatus}");
