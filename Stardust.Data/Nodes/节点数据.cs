@@ -99,7 +99,7 @@ public partial class NodeData
     [DisplayName("上行速度")]
     [Description("上行速度。网络发送速度，字节每秒")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("UplinkSpeed", "上行速度。网络发送速度，字节每秒", "")]
+    [BindColumn("UplinkSpeed", "上行速度。网络发送速度，字节每秒", "", ItemType = "GMK")]
     public Int64 UplinkSpeed { get => _UplinkSpeed; set { if (OnPropertyChanging("UplinkSpeed", value)) { _UplinkSpeed = value; OnPropertyChanged("UplinkSpeed"); } } }
 
     private Int64 _DownlinkSpeed;
@@ -107,7 +107,7 @@ public partial class NodeData
     [DisplayName("下行速度")]
     [Description("下行速度。网络接收速度，字节每秒")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("DownlinkSpeed", "下行速度。网络接收速度，字节每秒", "")]
+    [BindColumn("DownlinkSpeed", "下行速度。网络接收速度，字节每秒", "", ItemType = "GMK")]
     public Int64 DownlinkSpeed { get => _DownlinkSpeed; set { if (OnPropertyChanging("DownlinkSpeed", value)) { _DownlinkSpeed = value; OnPropertyChanged("DownlinkSpeed"); } } }
 
     private Int32 _ProcessCount;
@@ -171,7 +171,7 @@ public partial class NodeData
     [DisplayName("开机时间")]
     [Description("开机时间。单位s")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("Uptime", "开机时间。单位s", "")]
+    [BindColumn("Uptime", "开机时间。单位s", "", ItemType = "TimeSpan")]
     public Int32 Uptime { get => _Uptime; set { if (OnPropertyChanging("Uptime", value)) { _Uptime = value; OnPropertyChanged("Uptime"); } } }
 
     private String _Creator;

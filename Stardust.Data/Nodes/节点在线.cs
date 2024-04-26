@@ -192,7 +192,7 @@ public partial class NodeOnline
     [DisplayName("CPU率")]
     [Description("CPU率。占用率")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("CpuRate", "CPU率。占用率", "")]
+    [BindColumn("CpuRate", "CPU率。占用率", "", ItemType = "percent")]
     public Double CpuRate { get => _CpuRate; set { if (OnPropertyChanging("CpuRate", value)) { _CpuRate = value; OnPropertyChanged("CpuRate"); } } }
 
     private Double _Temperature;
@@ -224,7 +224,7 @@ public partial class NodeOnline
     [DisplayName("上行速度")]
     [Description("上行速度。网络发送速度，字节每秒")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("UplinkSpeed", "上行速度。网络发送速度，字节每秒", "")]
+    [BindColumn("UplinkSpeed", "上行速度。网络发送速度，字节每秒", "", ItemType = "GMK")]
     public Int64 UplinkSpeed { get => _UplinkSpeed; set { if (OnPropertyChanging("UplinkSpeed", value)) { _UplinkSpeed = value; OnPropertyChanged("UplinkSpeed"); } } }
 
     private Int64 _DownlinkSpeed;
@@ -232,7 +232,7 @@ public partial class NodeOnline
     [DisplayName("下行速度")]
     [Description("下行速度。网络接收速度，字节每秒")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("DownlinkSpeed", "下行速度。网络接收速度，字节每秒", "")]
+    [BindColumn("DownlinkSpeed", "下行速度。网络接收速度，字节每秒", "", ItemType = "GMK")]
     public Int64 DownlinkSpeed { get => _DownlinkSpeed; set { if (OnPropertyChanging("DownlinkSpeed", value)) { _DownlinkSpeed = value; OnPropertyChanged("DownlinkSpeed"); } } }
 
     private Int32 _ProcessCount;

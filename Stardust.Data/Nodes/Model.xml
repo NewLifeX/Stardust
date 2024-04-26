@@ -141,12 +141,12 @@
         <Column Name="AvailableFreeSpace" DataType="Int32" Description="可用磁盘。应用所在盘，单位M" />
         <Column Name="SpaceUsed" DataType="Int32" Description="已用磁盘。应用所在盘，单位M" />
         <Column Name="DriveInfo" DataType="String" Length="500" Description="驱动器信息。各分区大小，逗号分隔" Category="硬件信息" />
-        <Column Name="CpuRate" DataType="Double" Description="CPU率。占用率" />
+        <Column Name="CpuRate" DataType="Double" ItemType="percent" Description="CPU率。占用率" />
         <Column Name="Temperature" DataType="Double" Description="温度" />
         <Column Name="Battery" DataType="Double" ItemType="percent" Description="电量" />
         <Column Name="Signal" DataType="Int32" Description="信号。信号强度，WiFi/4G" />
-        <Column Name="UplinkSpeed" DataType="Int64" Description="上行速度。网络发送速度，字节每秒" />
-        <Column Name="DownlinkSpeed" DataType="Int64" Description="下行速度。网络接收速度，字节每秒" />
+        <Column Name="UplinkSpeed" DataType="Int64" ItemType="GMK" Description="上行速度。网络发送速度，字节每秒" />
+        <Column Name="DownlinkSpeed" DataType="Int64" ItemType="GMK" Description="下行速度。网络接收速度，字节每秒" />
         <Column Name="ProcessCount" DataType="Int32" Description="进程数" />
         <Column Name="TcpConnections" DataType="Int32" Description="连接数。传输数据Established的Tcp网络连接数" />
         <Column Name="TcpTimeWait" DataType="Int32" Description="主动关闭。主动关闭后TimeWait的Tcp网络连接数，下一步Closed" />
@@ -206,8 +206,8 @@
         <Column Name="Temperature" DataType="Double" Description="温度" />
         <Column Name="Battery" DataType="Double" ItemType="percent" Description="电量" />
         <Column Name="Signal" DataType="Int32" Description="信号。信号强度，WiFi/4G" />
-        <Column Name="UplinkSpeed" DataType="Int64" Description="上行速度。网络发送速度，字节每秒" />
-        <Column Name="DownlinkSpeed" DataType="Int64" Description="下行速度。网络接收速度，字节每秒" />
+        <Column Name="UplinkSpeed" DataType="Int64" ItemType="GMK" Description="上行速度。网络发送速度，字节每秒" />
+        <Column Name="DownlinkSpeed" DataType="Int64" ItemType="GMK" Description="下行速度。网络接收速度，字节每秒" />
         <Column Name="ProcessCount" DataType="Int32" Description="进程数" />
         <Column Name="TcpConnections" DataType="Int32" Description="连接数。传输数据Established的Tcp网络连接数" />
         <Column Name="TcpTimeWait" DataType="Int32" Description="主动关闭。主动关闭后TimeWait的Tcp网络连接数，等待2MSL，确保四次挥手的最后一个ACK能够发出，下一步Closed" />
@@ -215,7 +215,7 @@
         <Column Name="Delay" DataType="Int32" Description="延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms" />
         <Column Name="Offset" DataType="Int32" Description="偏移。客户端UTC时间减服务端UTC时间，单位ms" />
         <Column Name="LocalTime" DataType="DateTime" Description="本地时间" />
-        <Column Name="Uptime" DataType="Int32" Description="开机时间。单位s" />
+        <Column Name="Uptime" DataType="Int32" ItemType="TimeSpan" Description="开机时间。单位s" />
         <Column Name="Creator" DataType="String" Description="创建者。服务端节点" Category="扩展" />
         <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
         <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
