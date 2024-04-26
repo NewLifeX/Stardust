@@ -56,8 +56,8 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     /// <summary>收到命令时触发</summary>
     public event EventHandler<CommandEventArgs>? Received;
 
-    /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认120</summary>
-    public Int32 MaxFails { get; set; } = 120;
+    /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认10 * 24 * 60</summary>
+    public Int32 MaxFails { get; set; } = 10 * 24 * 60;
 
     private AppInfo? _appInfo;
     private readonly String? _version;

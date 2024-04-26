@@ -56,8 +56,8 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     ///// <summary>本地应用服务管理</summary>
     //public ServiceManager Manager { get; set; }
 
-    /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认120</summary>
-    public Int32 MaxFails { get; set; } = 120;
+    /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认10 * 24 * 60</summary>
+    public Int32 MaxFails { get; set; } = 10 * 24 * 60;
 
     private readonly ConcurrentDictionary<String, Delegate> _commands = new(StringComparer.OrdinalIgnoreCase);
     /// <summary>命令集合</summary>
