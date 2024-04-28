@@ -67,6 +67,16 @@ public class MachineInfoProvider : IMachineInfo
             var txt = info.Processor.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault(e => e.StartsWithIgnoreCase("sun"));
             MatchAllwinner(info, txt);
         }
+
+        // 识别处理器，Buildroot系统
+        if (info.Processor.IsNullOrEmpty() || info.Board.IsNullOrEmpty())
+        {
+            if (TryRead("/sys/firmware/devicetree/base/model", out value))
+            {
+                if (info.Processor.IsNullOrEmpty()) info.Processor = value;
+                if (info.Board.IsNullOrEmpty()) info.Board = value;
+            }
+        }
     }
 
     private static void MatchAllwinner(MachineInfo info, String txt)

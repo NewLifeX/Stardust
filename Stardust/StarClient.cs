@@ -763,10 +763,11 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             // 使用过滤器内部token，因为它有过期刷新机制
             var token = Token;
             if (Filter is NewLife.Http.TokenHttpFilter thf) token = thf.Token?.AccessToken;
-            span?.AppendTag($"svc={svc.Address} Token=[{token?.Length}]");
+            span?.AppendTag($"svc={svc.Address} Token=[{token?.Length}] websocket={_websocket?.State}");
 
             if (token.IsNullOrEmpty()) return;
 
+            // 定时ws心跳
             if (_websocket != null && _websocket.State == WebSocketState.Open)
             {
                 try
