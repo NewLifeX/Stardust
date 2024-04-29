@@ -52,13 +52,16 @@ public class NodeStatService : IHostedService
             for (var dt = start; dt <= DateTime.Today; dt = dt.AddDays(1))
             {
                 OSKindStat(dt, GetSelects(dt));
-                ProductStat(dt, GetSelects(dt));
+                ProductCodeStat(dt, GetSelects(dt));
                 VersionStat(dt, GetSelects(dt));
                 RuntimeStat(dt, GetSelects(dt));
                 FrameworkStat(dt, GetSelects(dt));
                 CityStat(dt, GetSelects(dt));
                 ArchStat(dt, GetSelects(dt));
                 VendorStat(dt, GetSelects(dt));
+                ProductStat(dt, GetSelects(dt));
+                BoardStat(dt, GetSelects(dt));
+                ProcessorStat(dt, GetSelects(dt));
                 ProjectStat(dt, GetSelects(dt));
             }
         }
@@ -121,9 +124,9 @@ public class NodeStatService : IHostedService
         sts.Delete();
     }
 
-    private void ProductStat(DateTime date, ConcatExpression selects)
+    private void ProductCodeStat(DateTime date, ConcatExpression selects)
     {
-        var category = "产品";
+        var category = "产品种类";
         var list = SearchGroup(date.AddYears(-1), selects & _.ProductCode, _.ProductCode);
         var sts = NodeStat.FindAllByDate(category, date);
         foreach (var node in list)
@@ -345,6 +348,99 @@ public class NodeStatService : IHostedService
                 sts.Remove(st);
 
             st.LinkItem = node.Vendor + "";
+            st.Total = node.ID;
+            st.Actives = node["activeT1"].ToInt();
+            st.ActivesT7 = node["activeT7"].ToInt();
+            st.ActivesT30 = node["activeT30"].ToInt();
+            st.News = node["newT1"].ToInt();
+            st.NewsT7 = node["newT7"].ToInt();
+            st.NewsT30 = node["newT30"].ToInt();
+
+            st.Update();
+        }
+
+        // 删除多余统计项
+        sts.Delete();
+    }
+
+    private void ProductStat(DateTime date, ConcatExpression selects)
+    {
+        var category = "产品";
+        var list = SearchGroup(date.AddYears(-1), selects & _.Product, _.Product);
+        var sts = NodeStat.FindAllByDate(category, date);
+        foreach (var node in list)
+        {
+            var key = node.Product + "";
+            if (key.Length > 50) key = key[..50];
+            var st = sts.FirstOrDefault(e => e.Key == key);
+            if (st == null)
+                st = NodeStat.GetOrAdd(category, date, key);
+            else
+                sts.Remove(st);
+
+            st.LinkItem = node.Product + "";
+            st.Total = node.ID;
+            st.Actives = node["activeT1"].ToInt();
+            st.ActivesT7 = node["activeT7"].ToInt();
+            st.ActivesT30 = node["activeT30"].ToInt();
+            st.News = node["newT1"].ToInt();
+            st.NewsT7 = node["newT7"].ToInt();
+            st.NewsT30 = node["newT30"].ToInt();
+
+            st.Update();
+        }
+
+        // 删除多余统计项
+        sts.Delete();
+    }
+
+    private void BoardStat(DateTime date, ConcatExpression selects)
+    {
+        var category = "型号";
+        var list = SearchGroup(date.AddYears(-1), selects & _.Board, _.Board);
+        var sts = NodeStat.FindAllByDate(category, date);
+        foreach (var node in list)
+        {
+            var key = node.Board + "";
+            if (key.Length > 50) key = key[..50];
+            var st = sts.FirstOrDefault(e => e.Key == key);
+            if (st == null)
+                st = NodeStat.GetOrAdd(category, date, key);
+            else
+                sts.Remove(st);
+
+            st.LinkItem = node.Board + "";
+            st.Total = node.ID;
+            st.Actives = node["activeT1"].ToInt();
+            st.ActivesT7 = node["activeT7"].ToInt();
+            st.ActivesT30 = node["activeT30"].ToInt();
+            st.News = node["newT1"].ToInt();
+            st.NewsT7 = node["newT7"].ToInt();
+            st.NewsT30 = node["newT30"].ToInt();
+
+            st.Update();
+        }
+
+        // 删除多余统计项
+        sts.Delete();
+    }
+
+    private void ProcessorStat(DateTime date, ConcatExpression selects)
+    {
+        var category = "处理器";
+        var list = SearchGroup(date.AddYears(-1), selects & _.Processor, _.Processor);
+        var sts = NodeStat.FindAllByDate(category, date);
+        foreach (var node in list)
+        {
+            var key = node.Processor + "";
+            if (key.Length > 50) key = key[..50];
+            var st = sts.FirstOrDefault(e => e.Key == key);
+            if (st == null)
+                st = NodeStat.GetOrAdd(category, date, key);
+            else
+                sts.Remove(st);
+
+            st.LinkItem = node.Processor + "";
             st.Total = node.ID;
             st.Actives = node["activeT1"].ToInt();
             st.ActivesT7 = node["activeT7"].ToInt();
