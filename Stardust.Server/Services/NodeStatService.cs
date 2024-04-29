@@ -337,9 +337,18 @@ public class NodeStatService : IHostedService
         var category = "制造商";
         var list = SearchGroup(date.AddYears(-1), selects & _.Vendor, _.Vendor);
         var sts = NodeStat.FindAllByDate(category, date);
-        foreach (var node in list)
+
+        // 太少数据的分类合并
+        var count = 0;
+        foreach (var node in list.OrderByDescending(e => e.ID))
         {
-            var key = node.Vendor + "";
+            if (node.Vendor.IsNullOrEmpty() || node.ID < 3 || count++ >= 200)
+                node.Vendor = "Other";
+        }
+
+        foreach (var item in list.GroupBy(e => e.Vendor))
+        {
+            var key = item.Key + "";
             if (key.Length > 50) key = key[..50];
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
@@ -347,14 +356,16 @@ public class NodeStatService : IHostedService
             else
                 sts.Remove(st);
 
-            st.LinkItem = node.Vendor + "";
-            st.Total = node.ID;
-            st.Actives = node["activeT1"].ToInt();
-            st.ActivesT7 = node["activeT7"].ToInt();
-            st.ActivesT30 = node["activeT30"].ToInt();
-            st.News = node["newT1"].ToInt();
-            st.NewsT7 = node["newT7"].ToInt();
-            st.NewsT30 = node["newT30"].ToInt();
+            st.LinkItem = key;
+
+            var nodes = item.ToList();
+            st.Total = nodes.Sum(e => e.ID);
+            st.Actives = nodes.Sum(e => e["activeT1"].ToInt());
+            st.ActivesT7 = nodes.Sum(e => e["activeT7"].ToInt());
+            st.ActivesT30 = nodes.Sum(e => e["activeT30"].ToInt());
+            st.News = nodes.Sum(e => e["newT1"].ToInt());
+            st.NewsT7 = nodes.Sum(e => e["newT7"].ToInt());
+            st.NewsT30 = nodes.Sum(e => e["newT30"].ToInt());
 
             st.Update();
         }
@@ -368,9 +379,18 @@ public class NodeStatService : IHostedService
         var category = "产品";
         var list = SearchGroup(date.AddYears(-1), selects & _.Product, _.Product);
         var sts = NodeStat.FindAllByDate(category, date);
-        foreach (var node in list)
+
+        // 太少数据的分类合并
+        var count = 0;
+        foreach (var node in list.OrderByDescending(e => e.ID))
         {
-            var key = node.Product + "";
+            if (node.Product.IsNullOrEmpty() || node.ID < 3 || count++ >= 200)
+                node.Product = "Other";
+        }
+
+        foreach (var item in list.GroupBy(e => e.Product))
+        {
+            var key = item.Key + "";
             if (key.Length > 50) key = key[..50];
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
@@ -378,14 +398,16 @@ public class NodeStatService : IHostedService
             else
                 sts.Remove(st);
 
-            st.LinkItem = node.Product + "";
-            st.Total = node.ID;
-            st.Actives = node["activeT1"].ToInt();
-            st.ActivesT7 = node["activeT7"].ToInt();
-            st.ActivesT30 = node["activeT30"].ToInt();
-            st.News = node["newT1"].ToInt();
-            st.NewsT7 = node["newT7"].ToInt();
-            st.NewsT30 = node["newT30"].ToInt();
+            st.LinkItem = key;
+
+            var nodes = item.ToList();
+            st.Total = nodes.Sum(e => e.ID);
+            st.Actives = nodes.Sum(e => e["activeT1"].ToInt());
+            st.ActivesT7 = nodes.Sum(e => e["activeT7"].ToInt());
+            st.ActivesT30 = nodes.Sum(e => e["activeT30"].ToInt());
+            st.News = nodes.Sum(e => e["newT1"].ToInt());
+            st.NewsT7 = nodes.Sum(e => e["newT7"].ToInt());
+            st.NewsT30 = nodes.Sum(e => e["newT30"].ToInt());
 
             st.Update();
         }
@@ -399,9 +421,18 @@ public class NodeStatService : IHostedService
         var category = "型号";
         var list = SearchGroup(date.AddYears(-1), selects & _.Board, _.Board);
         var sts = NodeStat.FindAllByDate(category, date);
-        foreach (var node in list)
+
+        // 太少数据的分类合并
+        var count = 0;
+        foreach (var node in list.OrderByDescending(e => e.ID))
         {
-            var key = node.Board + "";
+            if (node.Board.IsNullOrEmpty() || node.ID < 3 || count++ >= 200)
+                node.Board = "Other";
+        }
+
+        foreach (var item in list.GroupBy(e => e.Board))
+        {
+            var key = item.Key + "";
             if (key.Length > 50) key = key[..50];
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
@@ -409,14 +440,16 @@ public class NodeStatService : IHostedService
             else
                 sts.Remove(st);
 
-            st.LinkItem = node.Board + "";
-            st.Total = node.ID;
-            st.Actives = node["activeT1"].ToInt();
-            st.ActivesT7 = node["activeT7"].ToInt();
-            st.ActivesT30 = node["activeT30"].ToInt();
-            st.News = node["newT1"].ToInt();
-            st.NewsT7 = node["newT7"].ToInt();
-            st.NewsT30 = node["newT30"].ToInt();
+            st.LinkItem = key;
+
+            var nodes = item.ToList();
+            st.Total = nodes.Sum(e => e.ID);
+            st.Actives = nodes.Sum(e => e["activeT1"].ToInt());
+            st.ActivesT7 = nodes.Sum(e => e["activeT7"].ToInt());
+            st.ActivesT30 = nodes.Sum(e => e["activeT30"].ToInt());
+            st.News = nodes.Sum(e => e["newT1"].ToInt());
+            st.NewsT7 = nodes.Sum(e => e["newT7"].ToInt());
+            st.NewsT30 = nodes.Sum(e => e["newT30"].ToInt());
 
             st.Update();
         }
@@ -432,26 +465,48 @@ public class NodeStatService : IHostedService
         var sts = NodeStat.FindAllByDate(category, date);
 
         // 处理器做二次合并，因为处理器太多，需要截取中间一部分
-        foreach (var node in list)
+        var count = 0;
+        foreach (var node in list.OrderByDescending(e => e.ID))
         {
+#if !DEBUG
+            if (node.Processor.IsNullOrEmpty() || node.ID < 3 || count++ >= 200)
+            {
+                node.Processor = "Other";
+                continue;
+            }
+#endif
+
             var name = (node.Processor + "").Trim();
             var p = name.IndexOf('@');
             if (p > 0) name = name[..p].Trim().TrimEnd("CPU").Trim();
 
+            // 双处理器
+            p = name.IndexOf(',');
+            if (p > 0) name = name[..p].Trim().Trim();
+
             p = name.IndexOf("with");
+            if (p > 0) name = name[..p].Trim();
+
+            p = name.IndexOf("w/");
             if (p > 0) name = name[..p].Trim();
 
             p = name.IndexOf("Core(TM)");
             if (p > 0) name = name.Substring(p + "Core(TM)".Length).Trim();
 
+            p = name.IndexOf("CoreT");
+            if (p > 0) name = name.Substring(p + "CoreT".Length).Trim();
+
             p = name.IndexOf("Platinum");
             if (p > 0) name = name[p..].Trim();
 
-            name = name
-                .TrimStart("AMD", "Ryzen", "EPYC", "Intel(R)", "Xeon(R)", "Pentium(R)", "CPU")
-                .TrimEnd("Processor", "-Core")
-                .Trim();
-            node.Processor = name;
+            var name2 = name
+                  .TrimStart("AMD ", "Ryzen ", "EPYC", "Genuine ", "Intel(R) ", "Xeon(R) ", "Pentium(R) ", "Celeron(R) ", "CPU")
+                  .TrimEnd(" Processor", "-Core", " v2", " v3", " v4", " 0", " (Device Tree)")
+                  .Trim();
+            if (name2.Contains("Ryzen"))
+                XTrace.WriteLine("{0} -> {1}", name, name2);
+
+            node.Processor = name2;
         }
 
         foreach (var item in list.GroupBy(e => e.Processor))
