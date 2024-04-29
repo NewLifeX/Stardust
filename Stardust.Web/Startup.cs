@@ -55,6 +55,7 @@ public class Startup
         services.AddSingleton<ConfigService>();
         services.AddSingleton<AppOnlineService>();
         services.AddSingleton<DeployService>();
+        services.AddSingleton<NewLife.Cube.Services.TokenService>();
 
         services.AddResponseCompression();
 

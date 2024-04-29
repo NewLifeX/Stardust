@@ -430,24 +430,51 @@ public class NodeStatService : IHostedService
         var category = "处理器";
         var list = SearchGroup(date.AddYears(-1), selects & _.Processor, _.Processor);
         var sts = NodeStat.FindAllByDate(category, date);
+
+        // 处理器做二次合并，因为处理器太多，需要截取中间一部分
         foreach (var node in list)
         {
-            var key = node.Processor + "";
+            var name = (node.Processor + "").Trim();
+            var p = name.IndexOf('@');
+            if (p > 0) name = name[..p].Trim().TrimEnd("CPU").Trim();
+
+            p = name.IndexOf("with");
+            if (p > 0) name = name[..p].Trim();
+
+            p = name.IndexOf("Core(TM)");
+            if (p > 0) name = name.Substring(p + "Core(TM)".Length).Trim();
+
+            p = name.IndexOf("Platinum");
+            if (p > 0) name = name[p..].Trim();
+
+            name = name
+                .TrimStart("AMD", "Ryzen", "EPYC", "Intel(R)", "Xeon(R)", "Pentium(R)", "CPU")
+                .TrimEnd("Processor", "-Core")
+                .Trim();
+            node.Processor = name;
+        }
+
+        foreach (var item in list.GroupBy(e => e.Processor))
+        {
+            var key = item.Key + "";
             if (key.Length > 50) key = key[..50];
+
             var st = sts.FirstOrDefault(e => e.Key == key);
             if (st == null)
                 st = NodeStat.GetOrAdd(category, date, key);
             else
                 sts.Remove(st);
 
-            st.LinkItem = node.Processor + "";
-            st.Total = node.ID;
-            st.Actives = node["activeT1"].ToInt();
-            st.ActivesT7 = node["activeT7"].ToInt();
-            st.ActivesT30 = node["activeT30"].ToInt();
-            st.News = node["newT1"].ToInt();
-            st.NewsT7 = node["newT7"].ToInt();
-            st.NewsT30 = node["newT30"].ToInt();
+            st.LinkItem = key;
+
+            var nodes = item.ToList();
+            st.Total = nodes.Sum(e => e.ID);
+            st.Actives = nodes.Sum(e => e["activeT1"].ToInt());
+            st.ActivesT7 = nodes.Sum(e => e["activeT7"].ToInt());
+            st.ActivesT30 = nodes.Sum(e => e["activeT30"].ToInt());
+            st.News = nodes.Sum(e => e["newT1"].ToInt());
+            st.NewsT7 = nodes.Sum(e => e["newT7"].ToInt());
+            st.NewsT30 = nodes.Sum(e => e["newT30"].ToInt());
 
             st.Update();
         }
