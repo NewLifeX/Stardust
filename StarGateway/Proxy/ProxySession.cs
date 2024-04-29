@@ -57,7 +57,7 @@ namespace StarGateway.Proxy
             if (RemoteServerUri.Type == 0) RemoteServerUri.Type = Session.Local.Type;
 
             // 如果是Tcp，收到空数据时不要断开。为了稳定可靠，默认设置
-            if (Session is TcpSession tcp) tcp.DisconnectWhenEmptyData = false;
+            //if (Session is TcpSession tcp) tcp.DisconnectWhenEmptyData = false;
 
             if (Host.ConnectRemoteOnStart) ConnectRemote(new ReceivedEventArgs());
 
@@ -138,7 +138,7 @@ namespace StarGateway.Proxy
         {
             var client = RemoteServerUri.CreateRemote();
             // 如果是Tcp，收到空数据时不要断开。为了稳定可靠，默认设置
-            if (client is TcpSession tcp) tcp.DisconnectWhenEmptyData = false;
+            //if (client is TcpSession tcp) tcp.DisconnectWhenEmptyData = false;
 
             return client;
         }

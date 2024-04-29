@@ -32,17 +32,56 @@ public class MachineInfoProvider : IMachineInfo
     /// <param name="info"></param>
     public void Init(MachineInfo info)
     {
+        // 本地保存，然后统一赋值
+        var mi = new MachineInfo();
+
+        // 从设备树获取信息
+        var devTree = "/proc/device-tree/";
+        if (!Directory.Exists(devTree)) devTree = "/sys/firmware/devicetree/base/";
+        if (Directory.Exists(devTree))
+        {
+            if (TryRead(devTree + "model", out var str))
+            {
+                if (mi.Product.IsNullOrEmpty()) mi.Product = str;
+            }
+            if (TryRead(devTree + "compatible", out str))
+            {
+                var ss = str.Split(',');
+                if (ss.Length >= 3)
+                {
+                    if (mi.Vendor.IsNullOrEmpty()) mi.Vendor = ss[0];
+                    if (mi.Board.IsNullOrEmpty()) mi.Board = ss[1];
+                    if (mi.Processor.IsNullOrEmpty()) mi.Processor = ss[2];
+                }
+            }
+            if (TryRead(devTree + "serial-number", out str))
+            {
+                if (mi.UUID.IsNullOrEmpty()) mi.UUID = str;
+            }
+        }
+
         // 识别单板机信息
         {
             var dic = ReadRelease();
             if (dic != null && dic.Count > 0)
             {
-                if (dic.TryGetValue("BOARD_NAME", out var str) && !str.IsNullOrEmpty())
-                    info.Product = str;
-                if (dic.TryGetValue("BOARD", out str) && !str.IsNullOrEmpty())
-                    info.Board = str;
-                if (dic.TryGetValue("VENDOR", out str) && !str.IsNullOrEmpty())
-                    info.Vendor = str;
+                var vendor = "";
+                if (dic.TryGetValue("VENDOR", out var str) && !str.IsNullOrEmpty())
+                {
+                    // Armbian太多，设备树优先，这里的权重不高
+                    vendor = str;
+                    if (vendor.EqualIgnoreCase("Armbian")) vendor = null;
+
+                    if (mi.Vendor.IsNullOrEmpty() || !vendor.IsNullOrEmpty())
+                        mi.Vendor = str;
+                }
+
+                if (dic.TryGetValue("BOARD_NAME", out str) && !str.IsNullOrEmpty() &&
+                    (mi.Product.IsNullOrEmpty() || !vendor.IsNullOrEmpty()))
+                    mi.Product = str;
+                if (dic.TryGetValue("BOARD", out str) && !str.IsNullOrEmpty() &&
+                    (mi.Board.IsNullOrEmpty() || !vendor.IsNullOrEmpty()))
+                    mi.Board = str;
             }
         }
 
@@ -53,33 +92,31 @@ public class MachineInfoProvider : IMachineInfo
             var dic = value.SplitAsDictionary(":", Environment.NewLine, true);
             if (dic.TryGetValue("sunxi_platform", out var txt) && !txt.IsNullOrEmpty())
             {
-                MatchAllwinner(info, txt);
+                MatchAllwinner(mi, txt);
             }
             if (dic.TryGetValue("sunxi_chipid", out txt) && !txt.IsNullOrEmpty())
-                info.UUID = txt;
+                mi.UUID = txt;
             if (dic.TryGetValue("sunxi_serial", out txt) && !txt.IsNullOrEmpty())
-                info.Serial = txt;
+                mi.Serial = txt;
         }
 
         // Armbian跑在全志平台上。如：Allwinner sun8i Family
-        if (!info.Processor.IsNullOrEmpty() && info.Processor.Contains("sun"))
+        if (!mi.Processor.IsNullOrEmpty() && mi.Processor.Contains("sun"))
         {
-            var txt = info.Processor.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault(e => e.StartsWithIgnoreCase("sun"));
-            MatchAllwinner(info, txt);
+            var txt = mi.Processor.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault(e => e.StartsWithIgnoreCase("sun"));
+            MatchAllwinner(mi, txt);
         }
 
-        // 识别处理器，Buildroot系统
-        if (info.Processor.IsNullOrEmpty() || info.Board.IsNullOrEmpty())
-        {
-            if (TryRead("/sys/firmware/devicetree/base/model", out value))
-            {
-                if (info.Processor.IsNullOrEmpty()) info.Processor = value;
-                if (info.Board.IsNullOrEmpty()) info.Board = value;
-            }
-        }
+        // 统一赋值
+        if (!mi.UUID.IsNullOrEmpty()) info.UUID = mi.UUID;
+        if (!mi.Serial.IsNullOrEmpty()) info.Serial = mi.Serial;
+        if (!mi.Product.IsNullOrEmpty()) info.Product = mi.Product;
+        if (!mi.Board.IsNullOrEmpty()) info.Board = mi.Board;
+        if (!mi.Vendor.IsNullOrEmpty()) info.Vendor = mi.Vendor;
+        if (!mi.Processor.IsNullOrEmpty()) info.Processor = mi.Processor;
     }
 
-    private static void MatchAllwinner(MachineInfo info, String txt)
+    private static void MatchAllwinner(MachineInfo info, String? txt)
     {
         if (txt.IsNullOrEmpty()) return;
 
