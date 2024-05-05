@@ -290,7 +290,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         if (Runtime.Windows) FixGdi(di);
 #endif
 
-        if (Runtime.Linux) di.MaxOpenFiles = Execute("bash", "-c \"ulimit -n\"")?.Trim().ToInt() ?? 0;
+        if (Runtime.Linux) FixOnLinux(di);
 
         return di;
     }
@@ -322,6 +322,22 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         catch { }
     }
 #endif
+
+    private static void FixOnLinux(NodeInfo di)
+    {
+        di.MaxOpenFiles = Execute("bash", "-c \"ulimit -n\"")?.Trim().ToInt() ?? 0;
+
+        var xrandr = Execute("xrandr", "-q");
+        if (!xrandr.IsNullOrEmpty())
+        {
+            var current = xrandr.Substring("current", ",").Trim();
+            if (!current.IsNullOrEmpty())
+            {
+                var ss = current.SplitAsInt("x");
+                if (ss.Length >= 2) di.Resolution = $"{ss[0]}*{ss[1]}";
+            }
+        }
+    }
 
     /// <summary>获取驱动器信息</summary>
     /// <returns></returns>
