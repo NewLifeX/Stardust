@@ -76,8 +76,6 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     public StarClient()
     {
         Log = XTrace.Log;
-
-        _task = MachineInfo.RegisterAsync();
     }
 
     /// <summary>实例化</summary>
@@ -198,12 +196,11 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
         return ext;
     }
 
-    private readonly Task<MachineInfo> _task;
     /// <summary>获取设备信息</summary>
     /// <returns></returns>
     public NodeInfo GetNodeInfo()
     {
-        var mi = MachineInfo.Current ?? _task.Result;
+        var mi = MachineInfo.GetCurrent();
 
         var asm = AssemblyX.Entry ?? AssemblyX.Create(Assembly.GetExecutingAssembly());
         var mcs = NetHelper.GetMacs().Select(e => e.ToHex("-")).Where(e => e != "00-00-00-00-00-00").OrderBy(e => e).Join(",");
@@ -443,7 +440,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             catch { }
         }
 
-        var mi = MachineInfo.Current ?? _task.Result;
+        var mi = MachineInfo.GetCurrent();
         mi.Refresh();
 
         var mcs = NetHelper.GetMacs().Select(e => e.ToHex("-")).OrderBy(e => e).Join(",");

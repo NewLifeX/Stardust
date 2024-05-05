@@ -99,7 +99,7 @@ public static class OSKindHelper
         if (osName.StartsWithIgnoreCase("Alibaba")) return OSKinds.AlibabaLinux;
 
         if (osName.StartsWithIgnoreCase("UOS", "UnionTech OS")) return OSKinds.UOS;
-        if (osName.StartsWithIgnoreCase("Kylin")) return OSKinds.Kylin;
+        if (osName.StartsWithIgnoreCase("Kylin", "NeoKylin")) return OSKinds.Kylin;
         if (osName.StartsWithIgnoreCase("OpenKylin")) return OSKinds.OpenKylin;
         if (osName.StartsWithIgnoreCase("Linx")) return OSKinds.Linx;
         if (osName.StartsWithIgnoreCase("openEuler")) return OSKinds.OpenEuler;
