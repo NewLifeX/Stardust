@@ -53,6 +53,11 @@ public class MachineInfoProvider : IMachineInfo
                     if (mi.Board.IsNullOrEmpty()) mi.Board = ss[1];
                     if (mi.Processor.IsNullOrEmpty()) mi.Processor = ss[2];
                 }
+                else if (ss.Length >= 2)
+                {
+                    if (mi.Vendor.IsNullOrEmpty()) mi.Vendor = ss[0];
+                    if (mi.Processor.IsNullOrEmpty()) mi.Processor = ss[1];
+                }
             }
             if (TryRead(devTree + "serial-number", out str))
             {
@@ -65,8 +70,23 @@ public class MachineInfoProvider : IMachineInfo
             var dic = ReadRelease();
             if (dic != null && dic.Count > 0)
             {
+                // 计算权重，如果足够高则优先release文件
+                var weight = 0;
+                if (dic.TryGetValue("Vendor", out var str) && !str.IsNullOrEmpty()) weight++;
+                if (dic.TryGetValue("Product", out str) && !str.IsNullOrEmpty()) weight++;
+                if (dic.TryGetValue("Board", out str) && !str.IsNullOrEmpty()) weight++;
+                if (dic.TryGetValue("Serial", out str) && !str.IsNullOrEmpty()) weight++;
+
+                // 权重很高，覆盖设备树的数据
+                if (weight >= 3)
+                {
+                    if (!info.Vendor.IsNullOrEmpty()) mi.Vendor = info.Vendor;
+                    if (!info.Product.IsNullOrEmpty()) mi.Product = info.Product;
+                    if (!info.Board.IsNullOrEmpty()) mi.Board = info.Board;
+                }
+
                 var vendor = "";
-                if (dic.TryGetValue("VENDOR", out var str) && !str.IsNullOrEmpty())
+                if (dic.TryGetValue("VENDOR", out str) && !str.IsNullOrEmpty())
                 {
                     // Armbian太多，设备树优先，这里的权重不高
                     vendor = str;
@@ -151,27 +171,12 @@ public class MachineInfoProvider : IMachineInfo
         var fis = di.GetFiles("*-release");
         foreach (var fi in fis)
         {
-            //if (!fi.Name.EqualIgnoreCase("orangepi-release", "armbian-release", "redhat-release", "debian-release", "os-release", "system-release"))
-            //{
-            //    var dic = File.ReadAllText(fi.FullName).SplitAsDictionary("=", "\n", true);
-            //    //if (dic.TryGetValue("BOARD_NAME", out var str)) return str;
-            //    //if (dic.TryGetValue("BOARD", out str)) return str;
-            //    return dic;
-            //}
-
             var txt = File.ReadAllText(fi.FullName);
-            if (!txt.IsNullOrEmpty() && (txt.Contains("BOARD_NAME=") || txt.Contains("BOARD=")))
+            if (!txt.IsNullOrEmpty() && (txt.Contains("BOARD_NAME=") || txt.Contains("BOARD=") || txt.Contains("VENDOR=") || txt.Contains("Serial=")))
             {
                 return txt.SplitAsDictionary("=", "\n", true);
             }
         }
-
-        //// 支持未知的release文件
-        //if (fis.Length > 0)
-        //{
-        //    var dic = File.ReadAllText(fis[0].FullName).SplitAsDictionary("=", "\n", true);
-        //    return dic;
-        //}
 
         return null;
     }
