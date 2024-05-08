@@ -157,11 +157,8 @@ internal class ServiceController : DisposeBase
                         if (deploy == null) throw new Exception("解压缩失败");
 
                         //file ??= deploy.ExecuteFile;
-                        if (file.IsNullOrEmpty())
-                        {
-                            var runfile = deploy.FindExeFile(workDir);
-                            file = runfile?.FullName;
-                        }
+                        var runfile = deploy.FindExeFile(workDir);
+                        file = runfile?.FullName;
                         if (file.IsNullOrEmpty()) throw new Exception("无法找到启动文件");
 
                         args = deploy.Arguments;
