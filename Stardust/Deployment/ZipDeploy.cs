@@ -319,15 +319,27 @@ public class ZipDeploy
     Boolean IsExe(String ext) => ext.EndsWithIgnoreCase(".exe", ".dll", ".pdb", ".jar", ".go", ".py");
     Boolean IsConfig(String ext) => ext.EndsWithIgnoreCase(".json", ".config", ".xml", ".yml");
 
-    private void DeleteFiles(String dir, Func<String, Boolean> func)
+    private void DeleteFiles(String dir, Func<String, Boolean> func, String? fileName = null)
     {
         foreach (var item in dir.AsDirectory().GetFiles())
         {
             if (func(item.Extension))
-            {
+            {                
                 try
                 {
-                    item.Delete();
+                    //同目录运行多个可执行文件时，仅删除指定的，fileName有可能不含后缀
+                    if (!String.IsNullOrEmpty(fileName) 
+                        //&& item.Name.EndsWithIgnoreCase(".exe")
+                        && !Path.GetFileNameWithoutExtension(item.Name).EqualIgnoreCase(
+                           Path.GetFileNameWithoutExtension(fileName)))
+                    {
+                        WriteLog("跳过同目录可执行文件：{0}", item.FullName);
+                        continue;
+                    }
+                    else
+                    {
+                        item.Delete();
+                    }                    
                 }
                 catch (Exception ex)
                 {
@@ -382,7 +394,7 @@ public class ZipDeploy
             if (exefile == CopyModes.ClearBeforeCopy)
             {
                 WriteLog("清空运行目录可执行文件：{0}", rundir);
-                DeleteFiles(rundir, IsExe);
+                DeleteFiles(rundir, IsExe, FileName);
             }
             if (configfile == CopyModes.ClearBeforeCopy)
             {
