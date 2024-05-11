@@ -27,6 +27,22 @@ public class NetDetect : AgentPlugin
         }
     }
 
+    /// <summary>停止工作</summary>
+    /// <param name="reason"></param>
+    public override void Stop(String reason)
+    {
+        _timer.TryDispose();
+
+        NetworkDetectSetting.Provider.Changed -= Provider_Changed;
+    }
+
+    protected override void Dispose(Boolean disposing)
+    {
+        base.Dispose(disposing);
+
+        Stop(disposing ? "Dispose" : "GC");
+    }
+
     private void Provider_Changed(Object sender, EventArgs e)
     {
         // 配置改变，重新加载
@@ -44,22 +60,6 @@ public class NetDetect : AgentPlugin
         _timer?.SetNext(-1);
     }
 
-    /// <summary>停止工作</summary>
-    /// <param name="reason"></param>
-    public override void Stop(String reason)
-    {
-        _timer.TryDispose();
-
-        NetworkDetectSetting.Provider.Changed -= Provider_Changed;
-    }
-
-    protected override void Dispose(Boolean disposing)
-    {
-        base.Dispose(disposing);
-
-        Stop(disposing ? "Dispose" : "GC");
-    }
-
     private void CheckWorker(Object state)
     {
         //var flag = NetworkInterface.GetIsNetworkAvailable();
@@ -71,7 +71,7 @@ public class NetDetect : AgentPlugin
             var set = NetworkDetectSetting.Current;
             if (set.Services != null && set.Services.Length > 0)
             {
-                ws = new List<Worker>();
+                ws = [];
                 foreach (var item in set.Services)
                 {
                     if (item.Enable)

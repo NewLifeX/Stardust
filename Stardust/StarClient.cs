@@ -56,6 +56,9 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
     ///// <summary>本地应用服务管理</summary>
     //public ServiceManager Manager { get; set; }
 
+    /// <summary>插件列表</summary>
+    public String[] Plugins { get; set; }
+
     /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认10 * 24 * 60</summary>
     public Int32 MaxFails { get; set; } = 10 * 24 * 60;
 
@@ -243,6 +246,7 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             Runtime = Environment.Version + "",
 
             Time = DateTime.UtcNow,
+            Plugins = Plugins,
         };
 
         // 获取最新机器名

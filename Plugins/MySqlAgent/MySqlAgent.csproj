@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
-    <AssemblyTitle>网络监测</AssemblyTitle>
-    <Description>检测网络，如果长期不可用，则重启系统，主要应用于嵌入式工控机</Description>
+    <AssemblyTitle>MySql助手</AssemblyTitle>
+    <Description>监控MySql性能，上报星尘平台</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2024 NewLife</Copyright>
     <VersionPrefix>1.0</VersionPrefix>
@@ -18,6 +18,10 @@
     <LangVersion>latest</LangVersion>
     <IsPackable>False</IsPackable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NewLife.XCode" Version="11.12.2024.507" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Stardust\Stardust.csproj" />

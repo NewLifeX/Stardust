@@ -90,6 +90,8 @@ internal class MyService : ServiceBase, IServiceProvider
     /// <summary>宿主服务提供者</summary>
     public IServiceProvider Provider { get; set; }
 
+    private IObjectContainer _container;
+
     public MyService()
     {
         ServiceName = "StarAgent";
@@ -112,6 +114,9 @@ internal class MyService : ServiceBase, IServiceProvider
         //    set2.AutoRestart = 24 * 60;
         //    set2.Save();
         //}
+
+        _container = ObjectContainer.Current;
+        Provider = ObjectContainer.Provider;
     }
 
     #region 菜单控制
@@ -169,6 +174,7 @@ internal class MyService : ServiceBase, IServiceProvider
         manager.ServiceChanged += OnServiceChanged;
 
         _Manager = manager;
+        _container.AddSingleton(manager);
 
         // 插件管理器
         var pm = _PluginManager = new PluginManager
@@ -178,6 +184,7 @@ internal class MyService : ServiceBase, IServiceProvider
 
             Log = XTrace.Log,
         };
+        _container.AddSingleton(pm);
 
         // 监听端口，用于本地通信
         if (set.LocalPort > 0) StartLocalServer(set.LocalPort);
@@ -206,6 +213,8 @@ internal class MyService : ServiceBase, IServiceProvider
                 }
             }
         }
+
+        if (_Client != null) _Client.Plugins = pm.Plugins.Select(e => e.GetType().Name.TrimEnd("Plugin")).ToArray();
 
         base.StartWork(reason);
     }
@@ -338,6 +347,9 @@ internal class MyService : ServiceBase, IServiceProvider
         client.UseTrace();
 
         _Client = client;
+        _container.AddSingleton(client);
+        _container.AddSingleton<ICommandClient>(client);
+        _container.AddSingleton<IEventProvider>(client);
 
         // 可能需要多次尝试
         _timer = new TimerX(TryConnectServer, client, 0, 5_000) { Async = true };
@@ -351,6 +363,7 @@ internal class MyService : ServiceBase, IServiceProvider
             if (!server.IsNullOrEmpty())
             {
                 _factory = new StarFactory(server, "StarAgent", null);
+                _container.AddSingleton(_factory);
 
                 // 激活配置中心，获取PluginServer
                 var config = _factory.GetConfig();
@@ -383,6 +396,8 @@ internal class MyService : ServiceBase, IServiceProvider
             }, null);
 
             _server = svr;
+            _container.AddSingleton(svr);
+
             svr.Start();
         }
         catch (Exception ex)

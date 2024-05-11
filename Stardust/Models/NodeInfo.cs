@@ -108,5 +108,8 @@ public class NodeInfo
     /// 跨系统传递UTC时间是严谨的，但是UTC时间序列化比较头疼，目前能够做到自己序列化后，自己能够解析出来，暂时用着，将来向netcore的system.text.json序列化迁移
     /// </remarks>
     public DateTime Time { get; set; }
+
+    /// <summary>插件列表</summary>
+    public String[]? Plugins { get; set; }
     #endregion
 }
