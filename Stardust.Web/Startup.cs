@@ -57,7 +57,7 @@ public class Startup
         services.AddSingleton<DeployService>();
         services.AddSingleton<NewLife.Cube.Services.TokenService>();
 
-        services.AddResponseCompression();
+        //services.AddResponseCompression();
 
         // 后台服务。数据保留，定时删除过期数据
         services.AddHostedService<ApolloService>();
@@ -130,7 +130,8 @@ public class Startup
             app.UseFileCache("/files", set.FileCache, () => StarServerSetting.Current.FileCacheWhiteIP);
 
         //app.UseStardust();
-        app.UseResponseCompression();
+        if (Environment.GetEnvironmentVariable("__ASPNETCORE_BROWSER_TOOLS") is null)
+            app.UseResponseCompression();
         app.UseCube(env);
 
         // 注册退出事件

@@ -70,7 +70,7 @@ public class Startup
         services.AddSingleton<DeployService>();
 
         services.AddHttpClient();
-        services.AddResponseCompression();
+        //services.AddResponseCompression();
 
         // 配置Json
         services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
@@ -169,7 +169,8 @@ public class Startup
 
         app.UseStardust();
 
-        app.UseResponseCompression();
+        if (Environment.GetEnvironmentVariable("__ASPNETCORE_BROWSER_TOOLS") is null)
+            app.UseResponseCompression();
         app.UseRouting();
 
         app.UseAuthorization();
