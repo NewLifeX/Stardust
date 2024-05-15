@@ -380,6 +380,7 @@ public class NodeController : BaseController
             }
         }
         catch (TaskCanceledException) { }
+        catch (OperationCanceledException) { }
         catch (Exception ex)
         {
             XTrace.WriteLine("WebSocket异常 node={0} ip={1}", node, ip);

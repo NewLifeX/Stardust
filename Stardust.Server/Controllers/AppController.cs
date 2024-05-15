@@ -227,6 +227,7 @@ public class AppController : BaseController
             }
         }
         catch (TaskCanceledException) { }
+        catch (OperationCanceledException) { }
         catch (Exception ex)
         {
             XTrace.WriteLine("WebSocket异常 app={0} ip={1}", app, ip);
