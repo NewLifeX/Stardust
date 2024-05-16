@@ -7,6 +7,7 @@ XTrace.UseConsole();
 XTrace.WriteLine("TestB启动，PID={0}", Process.GetCurrentProcess().Id);
 XTrace.WriteLine("测试参数：{0}", args.Join(" "));
 
+XTrace.WriteLine("GetFullPath：\t{0}", Path.GetFullPath("."));
 XTrace.WriteLine("CurrentDirectory：\t{0}", Environment.CurrentDirectory);
 XTrace.WriteLine("BaseDirectory：\t{0}", AppDomain.CurrentDomain.BaseDirectory);
 XTrace.WriteLine("BasePath：\t{0}", PathHelper.BasePath);
@@ -22,4 +23,6 @@ foreach (var item in dic)
 }
 
 Console.WriteLine("TestB OK!");
-Console.ReadKey();
+//Console.ReadKey();
+Thread.Sleep(15_000);
+XTrace.WriteLine("Auto Exist!");

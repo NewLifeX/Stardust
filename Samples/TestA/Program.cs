@@ -8,7 +8,8 @@ XTrace.WriteLine("TestA启动，PID={0}", Process.GetCurrentProcess().Id);
 XTrace.WriteLine("测试参数：{0}", args.Join(" "));
 
 var target = "TestB";
-if (args.Contains("-c")) target = "TestC";
+if (args.Contains("-c"))
+    target = "TestC";
 
 var old = Process.GetProcesses().FirstOrDefault(e => e.ProcessName == target);
 if (old != null)
@@ -19,17 +20,20 @@ if (old != null)
 
 var si = new ProcessStartInfo
 {
-    FileName = Runtime.Windows ? $"../{target}/{target}.exe" : $"../{target}/{target}",
+    FileName = (Runtime.Windows ? $"../{target}/{target}.exe" : $"../{target}/{target}").GetFullPath(),
     Arguments = "-name NewLife",
     //WorkingDirectory = "",
     //UseShellExecute = false,
 };
 
+// 必须在si.Environment之前设置，否则丢失。可能si.Environment复制了一份
+if (args.Contains("-b")) Environment.SetEnvironmentVariable("BasePath", $"../{target}".GetFullPath());
 if (args.Contains("-s")) si.UseShellExecute = true;
-if (args.Contains("-w")) si.WorkingDirectory = ".";
+if (args.Contains("-w")) si.WorkingDirectory = Path.GetDirectoryName(si.FileName)?.GetFullPath();
 if (args.Contains("-e")) si.Environment["star"] = "dust";
 
-Environment.SetEnvironmentVariable("BasePath", si.WorkingDirectory.GetFullPath());
+XTrace.WriteLine("UseShellExecute:\t{0}", si.UseShellExecute);
+XTrace.WriteLine("WorkingDirectory:\t{0}", si.WorkingDirectory);
 
 var p = Process.Start(si);
 if (p == null || p.WaitForExit(3_000) && p.ExitCode != 0)
