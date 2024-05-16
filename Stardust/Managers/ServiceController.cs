@@ -305,6 +305,17 @@ internal class ServiceController : DisposeBase
             fileName = file;
         }
 
+        if (file.EndsWithIgnoreCase(".dll"))
+        {
+            args = $"{fileName} {args}";
+            fileName = "dotnet";
+        }
+        else if (file.EndsWithIgnoreCase(".jar"))
+        {
+            args = $"{fileName} {args}";
+            fileName = "java";
+        }
+
         var si = new ProcessStartInfo
         {
             FileName = fileName,
@@ -451,14 +462,14 @@ internal class ServiceController : DisposeBase
                 if (Runtime.Linux)
                 {
                     //-9 SIGKILL 强制终止信号
-                    Process.Start("kill",$"-9 {p.Id}");
+                    Process.Start("kill", $"-9 {p.Id}");
                 }
                 else if (Runtime.Windows)
                 {
                     // /f 指定强制终止进程，有子进程时只能强制
                     // /t 终止指定的进程和由它启用的子进程 
                     Process.Start("taskkill", $"/t /f /pid {p.Id}");
-                }               
+                }
 #endif
             }
 
@@ -492,8 +503,18 @@ internal class ServiceController : DisposeBase
         // 获取当前进程Id
         var mypid = Process.GetCurrentProcess().Id;
 
-        // 进程存在，常规判断内存
+        // 判断进程存在
         var p = Process;
+        if (p != null && p.GetHasExited())
+        {
+            WriteLog("应用[{0}/{1}]已退出！", p.Id, Name);
+
+            p = null;
+            Process = null;
+            Running = false;
+        }
+
+        // 进程存在，常规判断内存
         if (p != null) p = CheckMaxMemory(p, inf);
 
         // 进程不存在，但Id存在
@@ -586,50 +607,44 @@ internal class ServiceController : DisposeBase
     }
 
     private DateTime _nextCollect;
-    private Process? CheckMaxMemory(Process? p, ServiceInfo inf)
+    private Process? CheckMaxMemory(Process p, ServiceInfo inf)
     {
         var span = DefaultSpan.Current;
         span?.AppendTag("CheckMaxMemory");
         try
         {
-            if (p != null && !p.GetHasExited())
+            _error = 0;
+
+            // 检查内存限制
+            if (inf.MaxMemory <= 0) return p;
+
+            // 定期清理内存
+            if (Runtime.Windows && _nextCollect < DateTime.Now)
             {
-                _error = 0;
+                _nextCollect = DateTime.Now.AddSeconds(600);
 
-                // 检查内存限制
-                if (inf.MaxMemory <= 0) return p;
-
-                // 定期清理内存
-                if (Runtime.Windows && _nextCollect < DateTime.Now)
+                try
                 {
-                    _nextCollect = DateTime.Now.AddSeconds(600);
-
-                    try
-                    {
-                        NativeMethods.EmptyWorkingSet(p.Handle);
-                    }
-                    catch { }
+                    NativeMethods.EmptyWorkingSet(p.Handle);
                 }
-
-                var mem = p.WorkingSet64 / 1024 / 1024;
-                span?.AppendTag($"MaxMemory={inf.MaxMemory}M WorkingSet64={mem}M");
-                if (mem <= inf.MaxMemory) return p;
-
-                WriteLog("内存超限！{0}>{1}", mem, inf.MaxMemory);
-
-                Stop("内存超限");
-            }
-            else
-            {
-                WriteLog("应用[{0}/{1}]已退出！", p.Id, Name);
+                catch { }
             }
 
-            p = null;
+            var mem = p.WorkingSet64 / 1024 / 1024;
+            span?.AppendTag($"MaxMemory={inf.MaxMemory}M WorkingSet64={mem}M");
+            if (mem <= inf.MaxMemory) return p;
+
+            WriteLog("内存超限！{0}>{1}", mem, inf.MaxMemory);
+
+            Stop("内存超限");
+
             Process = null;
             // 这里不能清空 ProcessId 和 ProcessName，可能因为异常操作导致进程丢了，但是根据名称还能找到。也可能外部启动了进程
             //SetProcess(null);
 
             Running = false;
+
+            return null;
         }
         catch (Exception ex)
         {
