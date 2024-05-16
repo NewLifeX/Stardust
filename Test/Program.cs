@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -27,7 +28,7 @@ class Program
     {
         XTrace.UseConsole();
 
-        Test7();
+        Test8();
 
         Console.WriteLine("OK!");
         Console.ReadKey();
@@ -210,8 +211,20 @@ class Program
 
     static void Test8()
     {
-        var str = "runtime=6.0;version>=1.0";
-        var dic = str.SplitAsDictionary("=", ";");
-        XTrace.WriteLine(dic.ToJson(true));
+        //var str = "runtime=6.0;version>=1.0";
+        //var dic = str.SplitAsDictionary("=", ";");
+        //XTrace.WriteLine(dic.ToJson(true));
+
+        XTrace.WriteLine("CurrentDirectory：\t{0}", Environment.CurrentDirectory);
+        XTrace.WriteLine("BaseDirectory：\t{0}", AppDomain.CurrentDomain.BaseDirectory);
+
+        var workDir = ".".GetFullPath();
+        Environment.SetEnvironmentVariable("BasePath", workDir);
+
+        var dic = Runtime.GetEnvironmentVariables().OrderBy(e => e.Key).ToDictionary(e => e.Key, e => e.Value);
+        foreach (var item in dic)
+        {
+            XTrace.WriteLine("{0}:\t{1}", item.Key, item.Value);
+        }
     }
 }
