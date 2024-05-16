@@ -12,11 +12,13 @@ A应用通过Process类启动B应用，研究不同参数设置下的测试结�
 
 星尘代理：/root/agent
 
-A目录：/root/testA
+A目录：/root/TestA
 
-B目录：/root/testB
+B目录：/root/TestB
 
 跟随退出：随着A应用退出，B应用跟随退出
+
+测试逻辑：A应用设置不同参数，启动B应用，然后A先退出，观察B是否跟随退出。
 
 
 
@@ -33,7 +35,8 @@ XTrace.WriteLine("TestA启动，PID={0}", Process.GetCurrentProcess().Id);
 XTrace.WriteLine("测试参数：{0}", args.Join(" "));
 
 var target = "TestB";
-if (args.Contains("-c")) target = "TestC";
+if (args.Contains("-c"))
+    target = "TestC";
 
 var old = Process.GetProcesses().FirstOrDefault(e => e.ProcessName == target);
 if (old != null)
@@ -44,17 +47,20 @@ if (old != null)
 
 var si = new ProcessStartInfo
 {
-    FileName = Runtime.Windows ? $"../{target}/{target}.exe" : $"../{target}/{target}",
+    FileName = (Runtime.Windows ? $"../{target}/{target}.exe" : $"../{target}/{target}").GetFullPath(),
     Arguments = "-name NewLife",
     //WorkingDirectory = "",
     //UseShellExecute = false,
 };
 
+// 必须在si.Environment之前设置，否则丢失。可能si.Environment复制了一份
+if (args.Contains("-b")) Environment.SetEnvironmentVariable("BasePath", $"../{target}".GetFullPath());
 if (args.Contains("-s")) si.UseShellExecute = true;
-if (args.Contains("-w")) si.WorkingDirectory = ".";
+if (args.Contains("-w")) si.WorkingDirectory = Path.GetDirectoryName(si.FileName)?.GetFullPath();
 if (args.Contains("-e")) si.Environment["star"] = "dust";
 
-Environment.SetEnvironmentVariable("BasePath", si.WorkingDirectory.GetFullPath());
+XTrace.WriteLine("UseShellExecute:\t{0}", si.UseShellExecute);
+XTrace.WriteLine("WorkingDirectory:\t{0}", si.WorkingDirectory);
 
 var p = Process.Start(si);
 if (p == null || p.WaitForExit(3_000) && p.ExitCode != 0)
@@ -81,6 +87,10 @@ Thread.Sleep(5_000);
 
 要求B应用必须引入NewLife.Core，它能收到环境变量BasePath并自动调整当前目录。
 
+win10执行命令的目录：D:\X\Stardust\Bin\Samples
+
+centos执行命令的目录：/root
+
 | 系统/参数          | Shell | WorkingDirectory | Environment     | 合并输出 | 跟随退出 | 结果CurrentDirectory |
 | ------------------ | :---: | ---------------- | --------------- | :------: | :------: | -------------------- |
 | win10              | false |                  |                 |    Y     |    N     | \Samples             |
@@ -88,11 +98,29 @@ Thread.Sleep(5_000);
 | TestA.exe -w       | false | \Samples\TestB   |                 |    Y     |    N     | \Samples\TestB       |
 | TestA.exe -w -b -e | false | \Samples\TestB   | BasePath=xxx    |    Y     |    N     | \Samples\TestB       |
 | TestA.exe -s       | true  |                  |                 |    N     |    N     | \Samples             |
-| TestA.exe -s -b -e | true  |                  | 要求shell=false |          |          | 报错                 |
+| TestA.exe -s -b -e | true  |                  | 要求shell=false |          |          | ==报错==             |
 | TestA.exe -s -w    | true  | \Samples\TestB   |                 |    N     |    N     | \Samples\TestB       |
 | TestA.exe -s -w -b | true  | \Samples\TestB   | BasePath=xxx    |    N     |    N     | \Samples\TestB       |
+| CentOS7.9          | false |                  |                 |    Y     |    N     | /root                |
+| TestA -b -e        | false |                  | star=dust       |    Y     |    N     | /root                |
+| TestA -w           | false | /root/TestB      |                 |    Y     |    N     | /root/TestB          |
+| TestA -w -b -e     | false | /root/TestB      | BasePath=xxx    |    Y     |    N     | /root/TestB          |
+| TestA -s           | true  |                  |                 |    Y     |    N     | /root                |
+| TestA -s -b -e     | true  |                  | BasePath=xxx    |    Y     |    N     | /root                |
+| TestA -s -w        | true  | /root/TestB      |                 |    Y     |    N     | /root/TestB          |
+| TestA -s -w -b -e  | true  | /root/TestB      | BasePath=xxx    |    Y     |    N     | /root/TestB          |
 
+测试结论：
 
+1. 目标B应用的当前目录，取决于WorkingDirectory，如果未设置则取A应用的当前目录（非A工作目录）
+
+2. windows上UseShellExecute=true时，目标B应用输出不会合并到A窗口，而是独立窗口
+
+3. 所有测试用例，B都不会跟随A退出。（该结论跟星尘代理现状不一致，后者会跟随退出）
+
+4. 进程的Environment环境变量，在windows下要求UseShellExecute=false，Linux下则无此要求
+
+   
 
 #### Net8应用测试
 

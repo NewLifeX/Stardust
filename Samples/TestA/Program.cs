@@ -8,8 +8,7 @@ XTrace.WriteLine("TestA启动，PID={0}", Process.GetCurrentProcess().Id);
 XTrace.WriteLine("测试参数：{0}", args.Join(" "));
 
 var target = "TestB";
-if (args.Contains("-c"))
-    target = "TestC";
+if (args.Contains("-c")) target = "TestC";
 
 var old = Process.GetProcesses().FirstOrDefault(e => e.ProcessName == target);
 if (old != null)
