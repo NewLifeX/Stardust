@@ -241,7 +241,7 @@ public class ZipDeploy
         else if (Runtime.Linux)
         {
             // Linux下，需要给予可执行权限
-            Process.Start("chmod", $"+x {runfile.FullName}");
+            Process.Start("chmod", $"+x {runfile.FullName}").WaitForExit(5_000);
         }
 
         // 指定用户时，以特定用户启动进程
@@ -256,8 +256,8 @@ public class ZipDeploy
                 var user = UserName;
                 if (!user.IsNullOrEmpty() && !user.Contains(':')) user = $"{user}:{user}";
                 //Process.Start("chown", $"-R {user} {si.WorkingDirectory}");
-                Process.Start("chown", $"-R {user} {shadow}");
-                Process.Start("chown", $"-R {user} {si.WorkingDirectory.CombinePath("../").GetBasePath()}");
+                Process.Start("chown", $"-R {user} {shadow}").WaitForExit(5_000);
+                Process.Start("chown", $"-R {user} {si.WorkingDirectory.CombinePath("../").GetBasePath()}").WaitForExit(5_000);
             }
         }
 
@@ -316,7 +316,7 @@ public class ZipDeploy
         }
     }
 
-    Boolean IsExe(String ext) => ext.EndsWithIgnoreCase(".exe", ".dll", ".pdb", ".jar", ".go", ".py");
+    Boolean IsExe(String ext) => ext.EndsWithIgnoreCase(".exe", ".dll", ".pdb", ".jar", ".go", ".py") || Runtime.Linux && ext.IsNullOrEmpty();
     Boolean IsConfig(String ext) => ext.EndsWithIgnoreCase(".json", ".config", ".xml", ".yml");
 
     private void DeleteFiles(String dir, Func<String, Boolean> func, String? fileName = null)
@@ -324,11 +324,11 @@ public class ZipDeploy
         foreach (var item in dir.AsDirectory().GetFiles())
         {
             if (func(item.Extension))
-            {                
+            {
                 try
                 {
                     //同目录运行多个可执行文件时，仅删除指定的，fileName有可能不含后缀
-                    if (!String.IsNullOrEmpty(fileName) 
+                    if (!String.IsNullOrEmpty(fileName)
                         //&& item.Name.EndsWithIgnoreCase(".exe")
                         && !Path.GetFileNameWithoutExtension(item.Name).EqualIgnoreCase(
                            Path.GetFileNameWithoutExtension(fileName)))
@@ -339,7 +339,7 @@ public class ZipDeploy
                     else
                     {
                         item.Delete();
-                    }                    
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -379,7 +379,7 @@ public class ZipDeploy
         using var span = Tracer?.NewSpan("ZipDeploy-Extract", new { shadow, WorkingDirectory, Overwrite });
 
         var fi = WorkingDirectory.CombinePath(FileName).AsFile();
-        var rundir = fi.DirectoryName;
+        var rundir = fi.DirectoryName!;
         WriteLog("解压缩 {0} 到 {1}", FileName, shadow);
 
         fi.Extract(shadow, true);
@@ -447,13 +447,13 @@ public class ZipDeploy
     }
 
     /// <summary>查找执行文件</summary>
-    /// <param name="shadow"></param>
+    /// <param name="path"></param>
     /// <returns></returns>
-    public virtual FileInfo? FindExeFile(String shadow)
+    public virtual FileInfo? FindExeFile(String path)
     {
-        using var span = Tracer?.NewSpan("ZipDeploy-FindExeFile", new { shadow });
+        using var span = Tracer?.NewSpan("ZipDeploy-FindExeFile", new { path });
 
-        var fis = shadow.AsDirectory().GetFiles();
+        var fis = path.AsDirectory().GetFiles();
 
         var runfile = fis.FirstOrDefault(e => e.Name.EqualIgnoreCase(Name));
         if (runfile == null && Runtime.Windows)

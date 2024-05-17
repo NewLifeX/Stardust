@@ -50,10 +50,12 @@ public static class StarHelper
         return star;
     }
 
-    /// <summary>安全退出进程</summary>
+    /// <summary>安全退出进程，目标进程还有机会执行退出代码</summary>
     /// <param name="process"></param>
+    /// <param name="times"></param>
+    /// <param name="sleep"></param>
     /// <returns></returns>
-    public static Process? SafetyKill(this Process process)
+    public static Process? SafetyKill(this Process process, Int32 times = 50, Int32 sleep = 200)
     {
         if (process == null || process.GetHasExited()) return process;
 
@@ -61,26 +63,57 @@ public static class StarHelper
         {
             if (Runtime.Linux)
             {
-                Process.Start("kill", process.Id.ToString());
+                Process.Start("kill", process.Id.ToString()).WaitForExit(5_000);
 
-                for (var i = 0; i < 50 && !process.GetHasExited(); i++)
+                for (var i = 0; i < times && !process.GetHasExited(); i++)
                 {
-                    Thread.Sleep(200);
+                    Thread.Sleep(sleep);
                 }
             }
             else if (Runtime.Windows)
             {
-                Process.Start("taskkill", $"-pid {process.Id}");
+                Process.Start("taskkill", $"-pid {process.Id}").WaitForExit(5_000);
 
-                for (var i = 0; i < 50 && !process.GetHasExited(); i++)
+                for (var i = 0; i < times && !process.GetHasExited(); i++)
                 {
-                    Thread.Sleep(200);
+                    Thread.Sleep(sleep);
                 }
             }
         }
         catch { }
 
         if (!process.GetHasExited()) process.Kill();
+
+        return process;
+    }
+
+    /// <summary>强制结束进程树，包含子进程</summary>
+    /// <param name="process"></param>
+    /// <returns></returns>
+    public static Process? ForceKill(this Process process)
+    {
+        if (process == null || process.GetHasExited()) return process;
+
+        // 终止指定的进程及启动的子进程,如nginx等
+        // 在Core 3.0, Core 3.1, 5, 6, 7, 8, 9 中支持此重载
+        // https://learn.microsoft.com/zh-cn/dotnet/api/system.diagnostics.process.kill?view=net-8.0#system-diagnostics-process-kill(system-boolean)
+#if NETCOREAPP
+        process.Kill(true);
+#else
+        if (Runtime.Linux)
+        {
+            //-9 SIGKILL 强制终止信号
+            Process.Start("kill", $"-9 {process.Id}").WaitForExit(5_000);
+        }
+        else if (Runtime.Windows)
+        {
+            // /f 指定强制终止进程，有子进程时只能强制
+            // /t 终止指定的进程和由它启用的子进程 
+            Process.Start("taskkill", $"/t /f /pid {process.Id}").WaitForExit(5_000);
+        }
+
+        if (!process.GetHasExited()) process.Kill();
+#endif
 
         return process;
     }

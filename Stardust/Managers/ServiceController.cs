@@ -266,6 +266,7 @@ internal class ServiceController : DisposeBase
     {
         var deploy = new ZipDeploy
         {
+            Name = Name,
             FileName = file,
             WorkingDirectory = workDir,
             UserName = service.UserName,
@@ -330,7 +331,7 @@ internal class ServiceController : DisposeBase
         if (Runtime.Linux)
         {
             // Linux下，需要给予可执行权限
-            Process.Start("chmod", $"+x {fileName}");
+            Process.Start("chmod", $"+x {fileName}").WaitForExit(5_000);
         }
 
         // 指定用户时，以特定用户启动进程
@@ -345,7 +346,7 @@ internal class ServiceController : DisposeBase
                 var user = service.UserName;
                 if (!user.Contains(':')) user = $"{user}:{user}";
                 //Process.Start("chown", $"-R {user} {si.WorkingDirectory}");
-                Process.Start("chown", $"-R {user} {si.WorkingDirectory.CombinePath("../").GetBasePath()}");
+                Process.Start("chown", $"-R {user} {si.WorkingDirectory.CombinePath("../").GetBasePath()}").WaitForExit(5_000);
             }
         }
 
@@ -423,29 +424,8 @@ internal class ServiceController : DisposeBase
         // 优雅关闭进程
         if (!p.GetHasExited())
         {
-            try
-            {
-                WriteLog("优雅退出进程：PID={0}/{1}，最大等待{2}毫秒", p.Id, p.ProcessName, 50 * 200);
-                if (Runtime.Linux)
-                {
-                    Process.Start("kill", p.Id.ToString());
-
-                    for (var i = 0; i < 50 && !p.GetHasExited(); i++)
-                    {
-                        Thread.Sleep(200);
-                    }
-                }
-                else if (Runtime.Windows)
-                {
-                    Process.Start("taskkill", $"-pid {p.Id}");
-
-                    for (var i = 0; i < 50 && !p.GetHasExited(); i++)
-                    {
-                        Thread.Sleep(200);
-                    }
-                }
-            }
-            catch { }
+            WriteLog("优雅退出进程：PID={0}/{1}，最大等待{2}毫秒", p.Id, p.ProcessName, 50 * 200);
+            p.SafetyKill(50, 200);
         }
 
         try
@@ -453,24 +433,7 @@ internal class ServiceController : DisposeBase
             if (!p.GetHasExited())
             {
                 WriteLog("强行结束进程 PID={0}/{1}", p.Id, p.ProcessName);
-                // 终止指定的进程及启动的子进程,如nginx等
-                // 在Core 3.0, Core 3.1, 5, 6, 7, 8, 9 中支持此重载
-                // https://learn.microsoft.com/zh-cn/dotnet/api/system.diagnostics.process.kill?view=net-8.0#system-diagnostics-process-kill(system-boolean)
-#if NETCOREAPP3_0 || NETCOREAPP3_1 || NET5_0 || NET6_0 || NET7_0 || NET8_0 || NET9_0
-                p.Kill(true);
-#else
-                if (Runtime.Linux)
-                {
-                    //-9 SIGKILL 强制终止信号
-                    Process.Start("kill", $"-9 {p.Id}");
-                }
-                else if (Runtime.Windows)
-                {
-                    // /f 指定强制终止进程，有子进程时只能强制
-                    // /t 终止指定的进程和由它启用的子进程 
-                    Process.Start("taskkill", $"/t /f /pid {p.Id}");
-                }
-#endif
+                p.ForceKill();
             }
 
             if (p.GetHasExited()) WriteLog("进程[PID={0}]已退出！ExitCode={1}", p.Id, p.ExitCode);

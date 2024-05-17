@@ -305,8 +305,8 @@ public class LocalStarClient
 
         if (inService)
         {
-            Process.Start(fileName, "-stop");
-            Process.Start(fileName, "-start");
+            Process.Start(fileName, "-stop").WaitForExit(5_000);
+            Process.Start(fileName, "-start").WaitForExit(5_000);
 
             WriteLog("启动服务成功");
         }
@@ -334,12 +334,12 @@ public class LocalStarClient
         WriteLog("RunAgentOnLinux fileName={0}, inService={1}", fileName, inService);
 
         // 在Linux中设置执行权限
-        Process.Start("chmod", $"+x {fileName}");
+        Process.Start("chmod", $"+x {fileName}").WaitForExit(5_000);
 
         if (inService)
         {
-            Process.Start(fileName, "-stop");
-            Process.Start(fileName, "-start");
+            Process.Start(fileName, "-stop").WaitForExit(5_000);
+            Process.Start(fileName, "-start").WaitForExit(5_000);
 
             WriteLog("启动服务成功");
         }
@@ -367,8 +367,8 @@ public class LocalStarClient
 
         if (inService)
         {
-            Process.Start("dotnet", $"{fileName} -stop");
-            Process.Start("dotnet", $"{fileName} -start");
+            Process.Start("dotnet", $"{fileName} -stop").WaitForExit(5_000);
+            Process.Start("dotnet", $"{fileName} -start").WaitForExit(5_000);
 
             WriteLog("启动服务成功");
         }

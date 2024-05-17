@@ -220,10 +220,10 @@ public class NetRuntime
         {
             // 解决“一般信任关系失败”问题
 
-            Process.Start("regsvr32", "/s Softpub.dll");
-            Process.Start("regsvr32", "/s Wintrust.dll");
-            Process.Start("regsvr32", "/s Initpki.dll");
-            Process.Start("regsvr32", "/s Mssip32.dll");
+            Process.Start("regsvr32", "/s Softpub.dll").WaitForExit(5_000);
+            Process.Start("regsvr32", "/s Wintrust.dll").WaitForExit(5_000);
+            Process.Start("regsvr32", "/s Initpki.dll").WaitForExit(5_000);
+            Process.Start("regsvr32", "/s Mssip32.dll").WaitForExit(5_000);
 
 #if NET45_OR_GREATER || NET6_0_OR_GREATER
             using var reg = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"\Software\Microsoft\Windows\CurrentVersion\WinTrust\Trust Providers\Software Publishing", true);
@@ -670,9 +670,9 @@ public class NetRuntime
                 if (!String.IsNullOrEmpty(file) && File.Exists(file))
                 {
                     File.Copy(file, libsrc);
-                    Process.Start("chmod", "+x " + libsrc);
+                    Process.Start("chmod", "+x " + libsrc).WaitForExit(5_000);
                     File.Delete(libstd);
-                    Process.Start("ln", $"-s {libsrc} {libstd}");
+                    Process.Start("ln", $"-s {libsrc} {libstd}").WaitForExit(5_000);
                 }
             }
         }
