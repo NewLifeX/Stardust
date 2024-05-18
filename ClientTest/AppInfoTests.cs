@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using NewLife.Log;
 using NewLife.Serialization;
+using Stardust;
 using Stardust.Models;
 using Xunit;
 
@@ -24,7 +25,7 @@ public class AppInfoTests
     {
         var p = Process.GetCurrentProcess();
 
-        var name = AppInfo.GetProcessName(p);
+        var name = StarHelper.GetProcessName(p);
         Assert.Equal("testhost", name);
     }
 

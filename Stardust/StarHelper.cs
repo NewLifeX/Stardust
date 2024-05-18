@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using System.Xml.Linq;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Configuration;
@@ -59,6 +60,8 @@ public static class StarHelper
     {
         if (process == null || process.GetHasExited()) return process;
 
+        XTrace.WriteLine("安全，温柔一刀！PID={0}/{1}", process.Id, process.ProcessName);
+
         try
         {
             if (Runtime.Linux)
@@ -93,6 +96,8 @@ public static class StarHelper
     public static Process? ForceKill(this Process process)
     {
         if (process == null || process.GetHasExited()) return process;
+
+        XTrace.WriteLine("强杀，大力出奇迹！PID={0}/{1}", process.Id, process.ProcessName);
 
         // 终止指定的进程及启动的子进程,如nginx等
         // 在Core 3.0, Core 3.1, 5, 6, 7, 8, 9 中支持此重载
@@ -133,5 +138,83 @@ public static class StarHelper
         //{
         //    return false;
         //}
+    }
+
+    private static ICache _cache = new MemoryCache();
+    /// <summary>获取进程名。dotnet/java进程取文件名</summary>
+    /// <param name="process"></param>
+    /// <returns></returns>
+    public static String GetProcessName(Process process)
+    {
+        // 缓存，避免频繁执行
+        var key = process.Id + "";
+        if (_cache.TryGetValue<String>(key, out var value)) return value + "";
+
+        var name = process.ProcessName;
+
+        if (Runtime.Linux)
+        {
+            try
+            {
+                var lines = File.ReadAllText($"/proc/{process.Id}/cmdline").Trim('\0', ' ').Split('\0');
+                if (lines.Length > 1) name = Path.GetFileNameWithoutExtension(lines[1]);
+            }
+            catch { }
+        }
+        else if (Runtime.Windows)
+        {
+            try
+            {
+                var dic = MachineInfo.ReadWmic("process where processId=" + process.Id, "commandline");
+                if (dic.TryGetValue("commandline", out var str) && !str.IsNullOrEmpty())
+                {
+                    var ss = str.Split(' ').Select(e => e.Trim('\"')).ToArray();
+                    str = ss.FirstOrDefault(e => e.EndsWithIgnoreCase(".dll"));
+                    if (!str.IsNullOrEmpty()) name = Path.GetFileNameWithoutExtension(str);
+                }
+            }
+            catch { }
+        }
+
+        _cache.Set(key, name, 600);
+
+        return name;
+    }
+
+    /// <summary>获取二级进程名。默认一级，如果是dotnet/java则取二级</summary>
+    /// <param name="process"></param>
+    /// <returns></returns>
+    public static String GetProcessName2(this Process process)
+    {
+        var pname = process.ProcessName;
+        if (
+           pname == "dotnet" || "*/dotnet".IsMatch(pname) ||
+           pname == "java" || "*/java".IsMatch(pname))
+        {
+            return GetProcessName(process);
+        }
+
+        return pname;
+    }
+
+    /// <summary>根据名称获取进程。支持dotnet/java</summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public static IEnumerable<Process> GetProcessByName(String name)
+    {
+        // 跳过自己
+        var sid = Process.GetCurrentProcess().Id;
+        foreach (var p in Process.GetProcesses())
+        {
+            if (p.Id == sid) continue;
+
+            var pname = p.ProcessName;
+            if (pname == name)
+                yield return p;
+            else
+            {
+                if (GetProcessName2(p) == name) yield return p;
+            }
+        }
     }
 }

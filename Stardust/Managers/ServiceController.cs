@@ -530,7 +530,7 @@ internal class ServiceController : DisposeBase
                         if (item.Id == mypid || item.GetHasExited()) continue;
                         if (!item.ProcessName.EqualIgnoreCase(ProcessName)) continue;
 
-                        var name = AppInfo.GetProcessName(item);
+                        var name = StarHelper.GetProcessName(item);
                         if (!name.IsNullOrEmpty())
                         {
                             span?.AppendTag($"id={item.Id} name={name}");

@@ -449,11 +449,8 @@ public class StarClient : ApiHttpClient, ICommandClient, IEventProvider
             {
                 if (Runtime.Linux && item.SessionId == 0) continue;
 
-                var name = item.ProcessName;
+                var name = item.GetProcessName2();
                 if (name.EqualIgnoreCase(_excludes) || exs.Any(e => e.IsMatch(name))) continue;
-
-                // 特殊处理dotnet
-                if (name == "dotnet" || "*/dotnet".IsMatch(name)) name = AppInfo.GetProcessName(item);
 
                 if (!pcs.Contains(name)) pcs.Add(name);
             }

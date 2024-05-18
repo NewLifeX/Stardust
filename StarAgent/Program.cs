@@ -119,7 +119,28 @@ internal class MyService : ServiceBase, IServiceProvider
         Provider = ObjectContainer.Provider;
     }
 
-    #region 菜单控制
+    #region 服务控制
+    protected override void Init()
+    {
+        base.Init();
+
+        // 自定义Systemd工作模式
+        if (Host is Systemd sd)
+        {
+            var set = sd.Setting;
+
+            // 无限重试启动
+            set.StartLimitInterval = 0;
+
+            // 只杀主进程StarAgent，避免误杀应用进程
+            set.KillMode = "process";
+            set.KillSignal = "SIGINT";
+
+            // 禁止被OOM杀死
+            set.OOMScoreAdjust = -1000;
+        }
+    }
+
     //protected override void OnShowMenu(IList<Menu> menus)
     //{
     //    var services = _Manager?.Services.Where(e => e.Enable).ToArray();
@@ -139,6 +160,29 @@ internal class MyService : ServiceBase, IServiceProvider
     //    }
 
     //    base.OnShowMenu(menus);
+    //}
+
+    //protected override void ProcessCommand(String cmd, String[] args)
+    //{
+    //    // 如果是重启，则请求目标温柔退出
+    //    if (cmd.EqualIgnoreCase("-restart"))
+    //    {
+    //        var p = StarHelper.GetProcessByName("StarAgent").FirstOrDefault();
+    //        //p?.SafetyKill(0, 0);
+    //        if (p != null)
+    //        {
+    //            p.SafetyKill();
+
+    //            if (p.GetHasExited())
+    //            {
+    //                Host.Start(ServiceName);
+
+    //                return;
+    //            }
+    //        }
+    //    }
+
+    //    base.ProcessCommand(cmd, args);
     //}
     #endregion
 
