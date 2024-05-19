@@ -128,6 +128,7 @@ internal class MyService : ServiceBase, IServiceProvider
         if (Host is Systemd sd)
         {
             var set = sd.Setting;
+            set.ServiceName = ServiceName;
 
             // 无限重试启动
             set.StartLimitInterval = 0;
@@ -138,6 +139,42 @@ internal class MyService : ServiceBase, IServiceProvider
 
             // 禁止被OOM杀死
             set.OOMScoreAdjust = -1000;
+
+            // 检查并修正旧版KillMode
+            FixKillMode(set);
+        }
+    }
+
+    private void FixKillMode(SystemdSetting set)
+    {
+        var servicePath = typeof(Systemd).GetValue("_path") as String;
+        if (!servicePath.IsNullOrEmpty())
+        {
+            var file = servicePath.CombinePath($"{set.ServiceName}.service");
+            if (File.Exists(file) && !File.ReadAllText(file).Contains("KillMode"))
+            {
+                WriteLog("旧版servic文件，修正KillMode");
+
+                var exe = Process.GetCurrentProcess().MainModule.FileName;
+
+                // 兼容dotnet
+                var args = Environment.GetCommandLineArgs();
+                if (args.Length >= 1)
+                {
+                    var fileName = Path.GetFileName(exe);
+                    if (exe.Contains(' ')) exe = $"\"{exe}\"";
+
+                    var dll = args[0].GetFullPath();
+                    if (dll.Contains(' ')) dll = $"\"{dll}\"";
+
+                    if (fileName.EqualIgnoreCase("dotnet", "dotnet.exe"))
+                        exe += " " + dll;
+                    else if (fileName.EqualIgnoreCase("mono", "mono.exe", "mono-sgen"))
+                        exe = dll;
+                }
+
+                Host.Install(ServiceName, DisplayName, exe, "-s", Description);
+            }
         }
     }
 
