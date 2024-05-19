@@ -81,6 +81,9 @@ public enum OSKinds
     /// <summary>Alibaba Cloud Linux</summary>
     AlibabaLinux = 122,
 
+    /// <summary>龙蜥</summary>
+    Anolis = 123,
+
     /// <summary>统信UOS</summary>
     UOS = 130,
 

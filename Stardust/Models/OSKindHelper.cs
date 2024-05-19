@@ -97,6 +97,7 @@ public static class OSKindHelper
         if (osName.StartsWithIgnoreCase("Red Hat")) return OSKinds.RedHat;
         if (osName.StartsWithIgnoreCase("CentOS")) return OSKinds.CentOS;
         if (osName.StartsWithIgnoreCase("Alibaba")) return OSKinds.AlibabaLinux;
+        if (osName.StartsWithIgnoreCase("Anolis")) return OSKinds.Anolis;
 
         if (osName.StartsWithIgnoreCase("UOS", "UnionTech OS")) return OSKinds.UOS;
         if (osName.StartsWithIgnoreCase("Kylin", "NeoKylin")) return OSKinds.Kylin;
@@ -116,6 +117,8 @@ public static class OSKindHelper
 
             return OSKinds.Linux;
         }
+
+        if (Runtime.Linux) return OSKinds.Linux;
 
         return 0;
     }
