@@ -97,9 +97,9 @@ internal class MyService : ServiceBase, IServiceProvider
         ServiceName = "StarAgent";
 
         // 注册菜单，在控制台菜单中按 t 可以执行Test函数，主要用于临时处理数据
-        AddMenu('s', "使用星尘", UseStarServer);
-        AddMenu('t', "服务器信息", ShowMachineInfo);
-        AddMenu('w', "测试微服务", UseMicroService);
+        //AddMenu('s', "使用星尘", UseStarServer);
+        //AddMenu('t', "服务器信息", ShowMachineInfo);
+        //AddMenu('w', "测试微服务", UseMicroService);
 
         //// 控制应用服务。有些问题，只能控制当前进程管理的服务，而不能管理后台服务管理的应用
         //AddMenu('z', "启动所有应用服务", () => _Manager?.StartAll());
@@ -147,7 +147,7 @@ internal class MyService : ServiceBase, IServiceProvider
 
     private void FixKillMode(SystemdSetting set)
     {
-        var servicePath = typeof(Systemd).GetValue("_path") as String;
+        var servicePath = typeof(Systemd).GetValue("ServicePath") as String;
         if (!servicePath.IsNullOrEmpty())
         {
             var file = servicePath.CombinePath($"{set.ServiceName}.service");
@@ -237,7 +237,7 @@ internal class MyService : ServiceBase, IServiceProvider
     /// 安装Windows服务后，服务启动会执行一次该方法。
     /// 控制台菜单按5进入循环调试也会执行该方法。
     /// </remarks>
-    protected override void StartWork(String reason)
+    public override void StartWork(String reason)
     {
         var set = AgentSetting;
 
@@ -331,7 +331,7 @@ internal class MyService : ServiceBase, IServiceProvider
     /// 安装Windows服务后，服务停止会执行该方法。
     /// 控制台菜单按5进入循环调试，任意键结束时也会执行该方法。
     /// </remarks>
-    protected override void StopWork(String reason)
+    public override void StopWork(String reason)
     {
         base.StopWork(reason);
 
