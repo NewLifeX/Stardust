@@ -85,6 +85,12 @@ public class ZipDeploy
             }
             else
             {
+                // 参数中如有路径根据工作目录进行补全
+                if (args[i].Contains('/') || args[i].Contains('\\'))
+                {
+                    args[i] = PathHelper.CombinePath(WorkingDirectory, args[i]).GetFullPath();
+                    WriteLog("参数路径补全 {0}", args[i]);
+                }
                 // 其它参数全要，支持 urls=http://*:8000
                 gs[i] = args[i];
             }
@@ -333,7 +339,7 @@ public class ZipDeploy
                         && !Path.GetFileNameWithoutExtension(item.Name).EqualIgnoreCase(
                            Path.GetFileNameWithoutExtension(fileName)))
                     {
-                        WriteLog("跳过同目录可执行文件：{0}", item.FullName);
+                        //WriteLog("跳过同目录可执行文件：{0}", item.FullName);
                         continue;
                     }
                     else
