@@ -1,8 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using NewLife.Log;
+using Stardust.Data.Nodes;
+using Stardust.Models;
 using XCode;
 
 namespace Stardust.Data.Deployment;
@@ -34,6 +39,18 @@ public partial class AppDeployVersion : Entity<AppDeployVersion>
         // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
         if (Version.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Version), "版本不能为空！");
 
+        // 重新聚合规则
+        if (!Dirtys[__.Strategy] && Rules != null)
+        {
+            var sb = new StringBuilder();
+            foreach (var item in Rules)
+            {
+                if (sb.Length > 0) sb.Append(";");
+                sb.AppendFormat("{0}={1}", item.Key, item.Value.Join(","));
+            }
+            Strategy = sb.ToString();
+        }
+
         // 建议先调用基类方法，基类方法会做一些统一处理
         base.Valid(isNew);
 
@@ -53,9 +70,21 @@ public partial class AppDeployVersion : Entity<AppDeployVersion>
         // 检查唯一索引
         // CheckExist(isNew, nameof(DeployId), nameof(Version));
     }
+
+    /// <summary>加载后，释放规则</summary>
+    protected override void OnLoad()
+    {
+        base.OnLoad();
+
+        var dic = Strategy.SplitAsDictionary("=", ";");
+        Rules = dic.ToDictionary(e => e.Key, e => e.Value.Split(","), StringComparer.OrdinalIgnoreCase);
+    }
     #endregion
 
     #region 扩展属性
+    /// <summary>规则集合</summary>
+    [XmlIgnore]
+    public IDictionary<String, String[]> Rules { get; set; }
     #endregion
 
     #region 扩展查询
@@ -96,7 +125,7 @@ public partial class AppDeployVersion : Entity<AppDeployVersion>
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.DeployId == deployId).OrderByDescending(e => e.Id).Take(count).ToList();
 
-        return FindAll(_.DeployId == deployId, _.Id.Desc(), null, 0, count);
+        return FindAll(_.DeployId == deployId & _.Enable == true, _.Id.Desc(), null, 0, count);
     }
     #endregion
 
@@ -125,5 +154,173 @@ public partial class AppDeployVersion : Entity<AppDeployVersion>
     #endregion
 
     #region 业务操作
+    /// <summary>应用策略是否匹配指定节点</summary>
+    /// <param name="node"></param>
+    /// <returns></returns>
+    public Boolean Match(Node node)
+    {
+        var rs = MatchResult(node);
+        if (rs == null) return true;
+
+        DefaultSpan.Current?.AppendTag($"[{Id}][{Version}] {rs}");
+
+        return false;
+    }
+
+    /// <summary>应用策略是否匹配指定节点</summary>
+    /// <param name="node"></param>
+    /// <returns></returns>
+    public String MatchResult(Node node)
+    {
+        // 没有使用该规则，直接过
+        if (Rules.TryGetValue("version", out var vs))
+        {
+            var ver = node.Version;
+            if (ver.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(ver, StringComparison.OrdinalIgnoreCase)))
+                return $"[{ver}] not Match {vs.Join(",")}";
+        }
+        else if (Rules.TryGetValue("version>", out vs))
+        {
+            var ver = node.Version;
+            if (node.Version.IsNullOrEmpty()) return "Version is null";
+            if (!System.Version.TryParse(ver, out var ver1)) return $"Version=[{ver}] is invalid";
+            if (!System.Version.TryParse(vs[0], out var ver2)) return $"vs[0]=[{vs[0]}] is invalid";
+
+            if (ver1 < ver2) return $"Version=[{ver1}] < {ver2}";
+        }
+        else if (Rules.TryGetValue("version<", out vs))
+        {
+            var ver = node.Version;
+            if (node.Version.IsNullOrEmpty()) return "Version is null";
+            if (!System.Version.TryParse(ver, out var ver1)) return $"Version=[{ver}] is invalid";
+            if (!System.Version.TryParse(vs[0], out var ver2)) return $"vs[0]=[{vs[0]}] is invalid";
+
+            if (ver1 > ver2) return $"Version=[{ver1}] > {ver2}";
+        }
+
+        if (Rules.TryGetValue("node", out vs))
+        {
+            var code = node.Code;
+            var name = node.Name;
+            if (code.IsNullOrEmpty() && name.IsNullOrEmpty()) return "Node is null";
+            if ((code.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(code, StringComparison.OrdinalIgnoreCase))) &&
+                (name.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(name, StringComparison.OrdinalIgnoreCase))))
+                return $"[{code}/{name}] not Match {vs.Join(",")}";
+        }
+
+        if (Rules.TryGetValue("category", out vs))
+        {
+            var category = node.Category;
+            if (category.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(category, StringComparison.OrdinalIgnoreCase)))
+                return $"[{category}] not Match {vs.Join(",")}";
+        }
+
+        if (Rules.TryGetValue("runtime", out vs))
+        {
+            var runtime = node.Runtime;
+            if (runtime.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(runtime))) return $"[{runtime}] not Match {vs.Join(",")}";
+        }
+
+        if (Rules.TryGetValue("framework", out vs))
+        {
+            var str = !node.Frameworks.IsNullOrEmpty() ? node.Frameworks : node.Framework;
+            var frameworks = str?.Split(",");
+            if (frameworks == null || frameworks.Length == 0) return "Frameworks is null";
+
+            // 本节点拥有的所有框架，任意框架匹配任意规则，即可认为匹配
+            var flag = false;
+            foreach (var item in frameworks)
+            {
+                if (vs.Any(e => e.IsMatch(item)))
+                {
+                    flag = true;
+                    break;
+                }
+            }
+            if (!flag) return $"[{str}] not Match {vs.Join(",")}";
+        }
+        else if (Rules.TryGetValue("framework>", out vs))
+        {
+            var str = node.Framework;
+            if (str.IsNullOrEmpty()) return "Version is null";
+            if (!System.Version.TryParse(str, out var ver1)) return $"Framework=[{str}] is invalid";
+            if (!System.Version.TryParse(vs[0], out var ver2)) return $"vs[0]=[{vs[0]}] is invalid";
+
+            if (ver1 < ver2) return $"Framework=[{ver1}] < {ver2}";
+        }
+        else if (Rules.TryGetValue("framework<", out vs))
+        {
+            var str = node.Framework;
+            if (str.IsNullOrEmpty()) return "Version is null";
+            if (!System.Version.TryParse(str, out var ver1)) return $"Framework=[{str}] is invalid";
+            if (!System.Version.TryParse(vs[0], out var ver2)) return $"vs[0]=[{vs[0]}] is invalid";
+
+            if (ver1 > ver2) return $"Framework=[{ver1}] > {ver2}";
+        }
+
+        if (Rules.TryGetValue("os", out vs))
+        {
+            var os = node.OS;
+            if (os.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(os, StringComparison.OrdinalIgnoreCase)))
+                return $"[{os}] not Match {vs.Join(",")}";
+        }
+
+        if (Rules.TryGetValue("oskind", out vs))
+        {
+            var os = node.OSKind;
+            if (os <= 0) return "OSKind is null";
+
+            var flag = false;
+            foreach (var item in vs)
+            {
+                if (item.ToInt() == (Int32)os)
+                {
+                    flag = true;
+                    break;
+                }
+                if (Enum.TryParse<OSKinds>(item, true, out var v) && v == os)
+                {
+                    flag = true;
+                    break;
+                }
+            }
+            if (!flag) return $"[{os}] not Match {vs.Join(",")}";
+        }
+
+        if (Rules.TryGetValue("arch", out vs))
+        {
+            var arch = node.Architecture;
+            if (arch.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(arch, StringComparison.OrdinalIgnoreCase)))
+                return $"[{arch}] not Match {vs.Join(",")}";
+        }
+
+        if (Rules.TryGetValue("province", out vs))
+        {
+            var code = node.ProvinceID + "";
+            var name = node.ProvinceName;
+            if (code.IsNullOrEmpty() && name.IsNullOrEmpty()) return "Province is null";
+            if ((code.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(code, StringComparison.OrdinalIgnoreCase))) &&
+                (name.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(name, StringComparison.OrdinalIgnoreCase))))
+                return $"[{code}/{name}] not Match {vs.Join(",")}";
+        }
+
+        if (Rules.TryGetValue("city", out vs))
+        {
+            var code = node.CityID + "";
+            var name = node.CityName;
+            if (code.IsNullOrEmpty() && name.IsNullOrEmpty()) return "City is null";
+            if ((code.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(code, StringComparison.OrdinalIgnoreCase))) &&
+                (name.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(name, StringComparison.OrdinalIgnoreCase))))
+                return $"[{code}/{name}] not Match {vs.Join(",")}";
+        }
+
+        //if (Rules.TryGetValue("product", out vs))
+        //{
+        //    var product = node.ProductCode;
+        //    if (product.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(product))) return false;
+        //}
+
+        return null;
+    }
     #endregion
 }

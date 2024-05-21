@@ -54,6 +54,14 @@ public partial class AppDeployVersion
     [BindColumn("Enable", "启用", "")]
     public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
+    private String _Strategy;
+    /// <summary>策略。升级策略，版本特别支持大于等于和小于等于，node=*abcd*;version>=1.0;runtime/framework/os/oskind/arch/province/city</summary>
+    [DisplayName("策略")]
+    [Description("策略。升级策略，版本特别支持大于等于和小于等于，node=*abcd*;version>=1.0;runtime/framework/os/oskind/arch/province/city")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("Strategy", "策略。升级策略，版本特别支持大于等于和小于等于，node=*abcd*;version>=1.0;runtime/framework/os/oskind/arch/province/city", "varchar(500)")]
+    public String Strategy { get => _Strategy; set { if (OnPropertyChanging("Strategy", value)) { _Strategy = value; OnPropertyChanged("Strategy"); } } }
+
     private String _Url;
     /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
     [DisplayName("资源地址")]
@@ -206,6 +214,7 @@ public partial class AppDeployVersion
             "DeployId" => _DeployId,
             "Version" => _Version,
             "Enable" => _Enable,
+            "Strategy" => _Strategy,
             "Url" => _Url,
             "Overwrite" => _Overwrite,
             "Size" => _Size,
@@ -232,6 +241,7 @@ public partial class AppDeployVersion
                 case "DeployId": _DeployId = value.ToInt(); break;
                 case "Version": _Version = Convert.ToString(value); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
+                case "Strategy": _Strategy = Convert.ToString(value); break;
                 case "Url": _Url = Convert.ToString(value); break;
                 case "Overwrite": _Overwrite = Convert.ToString(value); break;
                 case "Size": _Size = value.ToLong(); break;
@@ -281,6 +291,8 @@ public partial class AppDeployVersion
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
 
+        /// <summary>策略。升级策略，版本特别支持大于等于和小于等于，node=*abcd*;version>=1.0;runtime/framework/os/oskind/arch/province/city</summary>
+        public static readonly Field Strategy = FindByName("Strategy");
         /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
         public static readonly Field Url = FindByName("Url");
 
@@ -346,6 +358,9 @@ public partial class AppDeployVersion
 
         /// <summary>启用</summary>
         public const String Enable = "Enable";
+
+        /// <summary>策略。升级策略，版本特别支持大于等于和小于等于，node=*abcd*;version>=1.0;runtime/framework/os/oskind/arch/province/city</summary>
+        public const String Strategy = "Strategy";
 
         /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
         public const String Url = "Url";
