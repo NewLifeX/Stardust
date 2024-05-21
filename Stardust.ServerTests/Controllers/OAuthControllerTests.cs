@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore;
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using NewLife.Remoting;
@@ -20,7 +21,7 @@ namespace Stardust.Server.Controllers.Tests
         }
 
         [Fact]
-        public async void Token_password()
+        public async Task Token_password()
         {
             var model = new TokenInModel
             {
@@ -39,7 +40,7 @@ namespace Stardust.Server.Controllers.Tests
         }
 
         [Fact]
-        public async void Token_refresh_token()
+        public async Task Token_refresh_token()
         {
             var client = _server.CreateClient();
 

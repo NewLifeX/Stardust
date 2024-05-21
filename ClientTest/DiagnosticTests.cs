@@ -1,4 +1,5 @@
 ﻿using System.Net.Http;
+using System.Threading.Tasks;
 using NewLife.Log;
 using Stardust.Monitors;
 using Xunit;
@@ -9,7 +10,7 @@ namespace ClientTest;
 public class DiagnosticTests
 {
     [Fact]
-    public async void TestHttp()
+    public async Task TestHttp()
     {
         XTrace.WriteLine(nameof(TestHttp));
 
@@ -29,7 +30,7 @@ public class DiagnosticTests
     }
 
     [Fact]
-    public async void TestHttp2()
+    public async Task TestHttp2()
     {
         XTrace.WriteLine(nameof(TestHttp2));
 
@@ -49,7 +50,7 @@ public class DiagnosticTests
     }
 
     [Fact]
-    public async void TestHttp3()
+    public async Task TestHttp3()
     {
         XTrace.WriteLine(nameof(TestHttp3));
 

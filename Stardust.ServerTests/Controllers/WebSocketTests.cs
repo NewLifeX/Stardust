@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.TestHost;
 using NewLife;
 using NewLife.Caching;
@@ -73,7 +74,7 @@ namespace Stardust.Server.Controllers.Tests
             XTrace.WriteLine(rs.ToJson());
 
             var client = _server.CreateWebSocketClient();
-            client.ConfigureRequest = q => { q.Headers.Add("Authorization", "Bearer " + rs.Token); };
+            client.ConfigureRequest = q => { q.Headers.Append("Authorization", "Bearer " + rs.Token); };
             using var socket = await client.ConnectAsync(new Uri("http://localhost:6600/node/notify"), default);
 
             var ms = new[] { "开灯", "关门", "吃饭" };

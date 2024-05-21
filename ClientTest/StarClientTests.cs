@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using NewLife;
 using NewLife.Security;
 using Stardust;
@@ -43,7 +44,7 @@ namespace ClientTest
         [InlineData("abcd", "1234")]
         [InlineData(null, "1234")]
         [InlineData("abcd", null)]
-        public async void LoginTest(String code, String secret)
+        public async Task LoginTest(String code, String secret)
         {
             var client = new StarClient(Server)
             {
@@ -58,7 +59,7 @@ namespace ClientTest
         }
 
         [Fact]
-        public async void LogoutTest()
+        public async Task LogoutTest()
         {
             var client = new StarClient(Server);
 

@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Threading.Tasks;
 using NewLife;
 using NewLife.Configuration;
 using NewLife.Http;
@@ -54,7 +55,7 @@ public class StarFactoryTests
     }
 
     [Fact]
-    public async void CreateForService()
+    public async Task CreateForService()
     {
         using var star = new StarFactory("http://127.0.0.1:6600", "test", "xxx");
         await star.Service.RegisterAsync("testService", "http://localhost:1234", "tA,tagB,ttC");
@@ -109,7 +110,7 @@ public class StarFactoryTests
     }
 
     [Fact]
-    public async void SendNodeCommand()
+    public async Task SendNodeCommand()
     {
         using var star = new StarFactory("http://127.0.0.1:6600", "StarWeb", "xxx");
 

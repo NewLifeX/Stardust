@@ -9,7 +9,7 @@ namespace Stardust.Windows;
 public class NativeWifi
 {
     #region Win32
-
+#pragma warning disable CS1591
     [DllImport("Wlanapi.dll")]
     public static extern UInt32 WlanOpenHandle(
         UInt32 dwClientVersion,
@@ -336,7 +336,7 @@ public class NativeWifi
     const UInt32 WLAN_AVAILABLE_NETWORK_INCLUDE_ALL_MANUAL_HIDDEN_PROFILES = 0x00000002;
 
     const UInt32 ERROR_SUCCESS = 0;
-
+#pragma warning restore CS1591
     #endregion
 
     /// <summary>
