@@ -45,6 +45,15 @@ namespace Stardust.Server.Common
 
             if (!str.IsNullOrEmpty()) uri = new Uri(uri, str);
 
+            var uriInfo = new UriInfo(uri.ToString());            
+            //经反代时需要处理非80或443默认端口
+            var port = headers("X-Forwarded-Port").ToInt();
+            if (port > 0 && port !=80 && port != 443) 
+            {
+                uriInfo.Port = port;
+                uri = new Uri(uriInfo.ToString()); 
+            }
+            
             return uri;
         }
 
