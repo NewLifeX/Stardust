@@ -3,7 +3,6 @@ using System.Net.NetworkInformation;
 using System.Reflection;
 using NewLife;
 using NewLife.Agent;
-using NewLife.Data;
 using NewLife.Log;
 using NewLife.Model;
 using NewLife.Reflection;
@@ -95,11 +94,6 @@ internal class MyService : ServiceBase, IServiceProvider
     public MyService()
     {
         ServiceName = "StarAgent";
-
-        // 注册菜单，在控制台菜单中按 t 可以执行Test函数，主要用于临时处理数据
-        //AddMenu('s', "使用星尘", UseStarServer);
-        //AddMenu('t', "服务器信息", ShowMachineInfo);
-        //AddMenu('w', "测试微服务", UseMicroService);
 
         //// 控制应用服务。有些问题，只能控制当前进程管理的服务，而不能管理后台服务管理的应用
         //AddMenu('z', "启动所有应用服务", () => _Manager?.StartAll());
@@ -225,8 +219,8 @@ internal class MyService : ServiceBase, IServiceProvider
 
     private ApiServer _server;
     private TimerX _timer;
-    private StarClient _Client;
-    private StarFactory _factory;
+    internal StarClient _Client;
+    internal StarFactory _factory;
     private ServiceManager _Manager;
     private PluginManager _PluginManager;
     private String _lastVersion;
@@ -831,119 +825,8 @@ internal class MyService : ServiceBase, IServiceProvider
         Console.WriteLine();
     }
 
-    public void UseStarServer()
-    {
-        var set = StarSetting;
-        if (!set.Server.IsNullOrEmpty()) Console.WriteLine("服务端：{0}", set.Server);
 
-        Console.WriteLine("请输入新的服务端：");
 
-        var addr = Console.ReadLine();
-        if (addr.IsNullOrEmpty()) addr = "http://127.0.0.1:6600";
-
-        set.Server = addr;
-        set.Save();
-
-        WriteLog("服务端修改为：{0}", addr);
-    }
-
-    public void ShowMachineInfo()
-    {
-        //foreach (var di in StarClient.GetDrives())
-        //{
-        //    XTrace.WriteLine($"{di.Name}\tIsReady={di.IsReady} DriveType={di.DriveType} DriveFormat={di.DriveFormat} TotalSize={di.TotalSize} TotalFreeSpace={di.TotalFreeSpace}");
-        //}
-
-        XTrace.WriteLine("FullPath:{0}", ".".GetFullPath());
-        XTrace.WriteLine("BasePath:{0}", ".".GetBasePath());
-        XTrace.WriteLine("TempPath:{0}", Path.GetTempPath());
-
-        var mi = MachineInfo.Current ?? MachineInfo.RegisterAsync().Result;
-        mi.Refresh();
-        var pis = mi.GetType().GetProperties(true);
-
-        // 机器信息
-        foreach (var pi in pis)
-        {
-            var val = mi.GetValue(pi);
-            if (pi.Name.EndsWithIgnoreCase("Memory"))
-                val = val.ToLong().ToGMK();
-            else if (pi.Name.EndsWithIgnoreCase("Rate", "Battery"))
-                val = val.ToDouble().ToString("p2");
-
-            XTrace.WriteLine("{0}:\t{1}", pi.Name, val);
-        }
-
-        // 机器扩展
-        var ext = mi as IExtend;
-        foreach (var item in ext.Items)
-        {
-            XTrace.WriteLine("{0}:\t{1}", item.Key, item.Value);
-        }
-
-        var client = _Client ?? new StarClient();
-        var ni = client.GetNodeInfo();
-        var pis2 = ni.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-        foreach (var pi in pis2)
-        {
-            if (pis.Any(e => e.Name == pi.Name)) continue;
-
-            var val = ni.GetValue(pi);
-            if (pi.Name.EndsWithIgnoreCase("Memory"))
-                val = val.ToLong().ToGMK();
-            else if (pi.Name.EndsWithIgnoreCase("Rate", "Battery"))
-                val = val.ToDouble().ToString("p2");
-
-            XTrace.WriteLine("{0}:\t{1}", pi.Name, val);
-        }
-
-        // 网络信息
-        XTrace.WriteLine("NetworkAvailable:{0}", NetworkInterface.GetIsNetworkAvailable());
-        foreach (var item in NetworkInterface.GetAllNetworkInterfaces())
-        {
-            //if (item.OperationalStatus != OperationalStatus.Up) continue;
-            if (item.NetworkInterfaceType is NetworkInterfaceType.Loopback or NetworkInterfaceType.Unknown or NetworkInterfaceType.Tunnel) continue;
-
-            XTrace.WriteLine("{0} {1} {2}", item.NetworkInterfaceType, item.OperationalStatus, item.Name);
-            XTrace.WriteLine("\tDescription:\t{0}", item.Description);
-            XTrace.WriteLine("\tMac:\t{0}", item.GetPhysicalAddress().GetAddressBytes().ToHex("-"));
-            var ipp = item.GetIPProperties();
-            if (ipp != null && ipp.UnicastAddresses.Any(e => e.Address.IsIPv4()))
-            {
-                XTrace.WriteLine("\tIP:\t{0}", ipp.UnicastAddresses.Where(e => e.Address.IsIPv4()).Join(",", e => e.Address));
-                if (ipp.GatewayAddresses.Any(e => e.Address.IsIPv4()))
-                    XTrace.WriteLine("\tGateway:{0}", ipp.GatewayAddresses.Where(e => e.Address.IsIPv4()).Join(",", e => e.Address));
-                if (ipp.DnsAddresses.Any(e => e.IsIPv4()))
-                    XTrace.WriteLine("\tDns:\t{0}", ipp.DnsAddresses.Where(e => e.IsIPv4()).Join());
-            }
-        }
-    }
-
-    private String _lastService;
-    public void UseMicroService()
-    {
-        if (_lastService.IsNullOrEmpty())
-            Console.WriteLine("请输入要测试的微服务名称：");
-        else
-            Console.WriteLine("请输入要测试的微服务名称（{0}）：", _lastService);
-
-        var serviceName = Console.ReadLine();
-        if (serviceName.IsNullOrEmpty()) serviceName = _lastService;
-        if (serviceName.IsNullOrEmpty()) return;
-
-        _lastService = serviceName;
-
-        StartFactory();
-
-        var models = _factory.Service.ResolveAsync(serviceName).Result;
-        //if (models == null) models = _factory.Dust.ResolveAsync(new ConsumeServiceInfo { ServiceName = serviceName }).Result;
-
-        Console.WriteLine(models.ToJson(true));
-    }
-
-    /// <summary>设置服务器地址</summary>
-    /// <param name="args"></param>
     public void SetServer(String[] args)
     {
         var set = StarSetting;
