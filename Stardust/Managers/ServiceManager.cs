@@ -384,6 +384,12 @@ public class ServiceManager : DisposeBase
         // 过滤应用
         if (!appName.IsNullOrEmpty()) rs = rs.Where(e => e.Name.EqualIgnoreCase(appName)).ToArray();
 
+        if (!rs.Any())  
+        {
+            WriteLog("无法从服务器取得可用的应用信息，请检查部署版本策略");
+            return null;
+        }
+
         WriteLog("取得应用服务：{0}", rs.Join(",", e => e.Name));
         WriteLog("可用：{0}", rs.Where(e => e.Service != null && e.Service.Enable).Join(",", e => e.Name));
         if (rs.Length > 0) WriteLog(rs.ToJson(true));
