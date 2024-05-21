@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using NewLife;
+using NewLife.Web;
 using System;
 
 namespace Stardust.Server.Common
