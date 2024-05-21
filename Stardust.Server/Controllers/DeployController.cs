@@ -46,39 +46,54 @@ public class DeployController : BaseController
     /// <returns></returns>
     public DeployInfo[] GetAll()
     {
-        var list = AppDeployNode.FindAllByNodeId(_node.ID);
-
+        //指定节点上所有应用
+        var appsInNode = AppDeployNode.FindAllByNodeId(_node.ID);
         var rs = new List<DeployInfo>();
-        foreach (var item in list)
+
+        foreach (var app in appsInNode)
         {
-            // 不返回未启用的发布集，如果需要在客户端删除，则通过指令下发来实现
-            if (!item.Enable) continue;
+            // 不返回未启用的发布集
+            if (!app.Enable) continue;
 
-            var app = item.Deploy;
-            if (app == null || !app.Enable) continue;
+            var appDeploy = app.Deploy;
+            if (appDeploy == null || !appDeploy.Enable) continue;
 
-            // 消除缓存，解决版本更新后不能及时更新缓存的问题
-            app = AppDeploy.FindByKey(app.Id);
-            if (app == null || !app.Enable) continue;
+            //取所有, Id.Desc
+            var versions = AppDeployVersion.FindAllByDeployId(appDeploy.Id);
+            if (!versions.Any()) continue;
+            
+            versions = versions.Where(ver => ver.Enable == true) //未启用的直接过滤
+                .GroupBy(ver => new { ver.DeployName, ver.Strategy }) //以 DeployName & Strategy 分组 Group by DeployName and Strategy combination
+                .SelectMany(group => group.OrderBy(ver => versions.IndexOf(ver)).Take(1)) //保留组内索引最小的一个，也就是最新的Select the first element of each group
+                .ToList();
 
-            var ver = AppDeployVersion.FindByDeployIdAndVersion(app.Id, app.Version);
-
-            var inf = new DeployInfo
+            foreach (var ver in versions)
             {
-                Name = app.Name,
-                Version = app.Version,
-                Url = ver?.Url,
-                Hash = ver?.Hash,
-                Overwrite = ver?.Overwrite,
+                //应用策略
+                if (!ver.Match(_node))
+                {
+                    WriteHistory(appDeploy.Id, nameof(GetAll), false, ver.MatchResult(_node));
+                    continue;
+                }
 
-                Service = item.ToService(app),
-            };
-            rs.Add(inf);
+                var inf = new DeployInfo
+                {
+                    Name = appDeploy.Name,
+                    Version = ver.Version,
+                    Url = ver?.Url,
+                    Hash = ver?.Hash,
+                    Overwrite = ver?.Overwrite,
 
-            // 修正Url
-            if (inf.Url.StartsWithIgnoreCase("/cube/file/")) inf.Url = inf.Url.Replace("/cube/file/", "/cube/file?id=");
+                    Service = app.ToService(appDeploy),
+                };
 
-            WriteHistory(app.Id, nameof(GetAll), true, inf.ToJson());
+                rs.Add(inf);
+
+                // 修正Url
+                if (inf.Url.StartsWithIgnoreCase("/cube/file/")) inf.Url = inf.Url.Replace("/cube/file/", "/cube/file?id=");
+
+                WriteHistory(appDeploy.Id, nameof(GetAll), true, inf.ToJson());
+            }
         }
 
         return rs.ToArray();
