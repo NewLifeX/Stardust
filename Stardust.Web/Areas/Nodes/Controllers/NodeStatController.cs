@@ -77,7 +77,7 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
                     "城市" => $"/Nodes/Node?areaid={st.LinkItem}",
                     "芯片架构" => $"/Nodes/Node?arch={st.LinkItem}",
                     "项目" => $"/Nodes/Node?projectId={st.LinkItem}",
-                    _ => df.Url,
+                    _ => $"/Nodes/Node?q={st.LinkItem}",
                 };
             }
 

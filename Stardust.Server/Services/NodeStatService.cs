@@ -499,12 +499,17 @@ public class NodeStatService : IHostedService
             p = name.IndexOf("Platinum");
             if (p > 0) name = name[p..].Trim();
 
+            // AMD Ryzen 7 2700 Eight-Core Processor
+            p = name.IndexOf("-Core");
+            if (p > 0) p = name.LastIndexOf(' ', p);
+            if (p > 0) name = name[..p].Trim();
+
             var name2 = name
-                  .TrimStart("AMD ", "Ryzen ", "EPYC", "Genuine ", "Intel(R) ", "Xeon(R) ", "Pentium(R) ", "Celeron(R) ", "CPU")
-                  .TrimEnd(" Processor", "-Core", " v2", " v3", " v4", " 0", " (Device Tree)")
+                  .TrimStart("AMD ", /*"Ryzen ",*/ /*"EPYC",*/ "Genuine ", "Intel(R) ", "Xeon(R) ", "Pentium(R) ", "Celeron(R) ", "CPU")
+                  .TrimEnd(" Processor", /*"-Core",*/ " v2", " v3", " v4", " 0", " (Device Tree)")
                   .Trim();
-            if (name2.Contains("Ryzen"))
-                XTrace.WriteLine("{0} -> {1}", name, name2);
+            //if (name2.Contains("Ryzen"))
+            //    XTrace.WriteLine("{0} -> {1}", name, name2);
 
             node.Processor = name2;
         }
