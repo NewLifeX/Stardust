@@ -96,8 +96,11 @@ public enum OSKinds
     /// <summary>凝思</summary>
     Linx = 150,
 
-    /// <summary>欧拉</summary>
+    /// <summary>开源欧拉</summary>
     OpenEuler = 160,
+
+    /// <summary>欧拉</summary>
+    EulerOS = 161,
 
     /// <summary>MacOS</summary>
     MacOSX = 200,
