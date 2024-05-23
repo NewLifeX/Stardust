@@ -61,7 +61,9 @@ public class DeployController : BaseController
             app = AppDeploy.FindByKey(app.Id);
             if (app == null || !app.Enable) continue;
 
-            var ver = AppDeployVersion.FindByDeployIdAndVersion(app.Id, app.Version);
+            //var ver = AppDeployVersion.FindByDeployIdAndVersion(app.Id, app.Version);
+            var ver = _deployService.GetDeployVersion(app, _node);
+            if(ver == null) continue;
 
             var inf = new DeployInfo
             {

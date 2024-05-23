@@ -18,7 +18,7 @@ public enum RuntimeIdentifier
     WinArm64 = 14,
 
     /// <summary>任意Linux系统</summary>
-    Linux = 2,
+    Linux = 20,
     ///// <summary>Linux系统（32位）</summary>
     //LinuxX86 = 21,
     /// <summary>Linux系统（64位）</summary>
@@ -44,7 +44,7 @@ public enum RuntimeIdentifier
     LinuxMuslArm64 = 34,
 
     /// <summary>任意OSX系统</summary>
-    Osx = 4,
+    Osx = 40,
     ///// <summary>OSX系统（32位）</summary>
     //OsxX86 = 41,
     /// <summary>OSX系统（64位）</summary>

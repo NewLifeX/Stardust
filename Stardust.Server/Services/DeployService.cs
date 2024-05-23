@@ -1,5 +1,4 @@
 ﻿using NewLife;
-using System.Xml.Linq;
 using Stardust.Data;
 using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
@@ -14,6 +13,23 @@ public class DeployService
     public DeployService(RegistryService registryService)
     {
         _registryService = registryService;
+    }
+
+    public AppDeployVersion GetDeployVersion(AppDeploy app, Node node)
+    {
+        if (app.MultiVersion)
+        {
+            // 查找最新的一批版本，挑选符合目标节点的最新版本
+            var vers = AppDeployVersion.FindAllByDeployId(app.Id, 100);
+            vers = vers.Where(e => e.Enable).OrderByDescending(e => e.Id).ToList();
+
+            // 目标节点所支持的运行时标识符。一般有两个，如 win-x64/win
+            var rids = OSKindHelper.GetRID(node.OSKind, node.Architecture?.ToLower() + "");
+
+            return vers.FirstOrDefault(e => rids.Contains(e.Runtime));
+        }
+
+        return AppDeployVersion.FindByDeployIdAndVersion(app.Id, app.Version);
     }
 
     /// <summary>更新应用部署的节点信息</summary>

@@ -87,6 +87,14 @@ public partial class AppDeploy
     [BindColumn("Version", "版本。应用正在使用的版本号", "")]
     public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
+    private Boolean _MultiVersion;
+    /// <summary>多版本。支持多运行时版本，此时只认可部署版本中符合运行时要求的最新可用版本</summary>
+    [DisplayName("多版本")]
+    [Description("多版本。支持多运行时版本，此时只认可部署版本中符合运行时要求的最新可用版本")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("MultiVersion", "多版本。支持多运行时版本，此时只认可部署版本中符合运行时要求的最新可用版本", "")]
+    public Boolean MultiVersion { get => _MultiVersion; set { if (OnPropertyChanging("MultiVersion", value)) { _MultiVersion = value; OnPropertyChanged("MultiVersion"); } } }
+
     private Boolean _AutoPublish;
     /// <summary>自动发布。应用版本后自动发布到启用节点，加快发布速度</summary>
     [DisplayName("自动发布")]
@@ -282,6 +290,7 @@ public partial class AppDeploy
             "Enable" => _Enable,
             "Nodes" => _Nodes,
             "Version" => _Version,
+            "MultiVersion" => _MultiVersion,
             "AutoPublish" => _AutoPublish,
             "PackageName" => _PackageName,
             "Repository" => _Repository,
@@ -316,6 +325,7 @@ public partial class AppDeploy
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "Nodes": _Nodes = value.ToInt(); break;
                 case "Version": _Version = Convert.ToString(value); break;
+                case "MultiVersion": _MultiVersion = value.ToBoolean(); break;
                 case "AutoPublish": _AutoPublish = value.ToBoolean(); break;
                 case "PackageName": _PackageName = Convert.ToString(value); break;
                 case "Repository": _Repository = Convert.ToString(value); break;
@@ -380,6 +390,9 @@ public partial class AppDeploy
 
         /// <summary>版本。应用正在使用的版本号</summary>
         public static readonly Field Version = FindByName("Version");
+
+        /// <summary>多版本。支持多运行时版本，此时只认可部署版本中符合运行时要求的最新可用版本</summary>
+        public static readonly Field MultiVersion = FindByName("MultiVersion");
 
         /// <summary>自动发布。应用版本后自动发布到启用节点，加快发布速度</summary>
         public static readonly Field AutoPublish = FindByName("AutoPublish");
@@ -470,6 +483,9 @@ public partial class AppDeploy
 
         /// <summary>版本。应用正在使用的版本号</summary>
         public const String Version = "Version";
+
+        /// <summary>多版本。支持多运行时版本，此时只认可部署版本中符合运行时要求的最新可用版本</summary>
+        public const String MultiVersion = "MultiVersion";
 
         /// <summary>自动发布。应用版本后自动发布到启用节点，加快发布速度</summary>
         public const String AutoPublish = "AutoPublish";

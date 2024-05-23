@@ -123,4 +123,68 @@ public static class OSKindHelper
 
         return 0;
     }
+
+    /// <summary>获取指定类型操作系统在指定架构上的运行时标识。如win-x64/linux-musl-arm64</summary>
+    /// <param name="kind">系统类型</param>
+    /// <param name="arch">芯片架构。小写</param>
+    /// <returns></returns>
+    public static RuntimeIdentifier[] GetRID(OSKinds kind, String arch)
+    {
+        var rid = RuntimeIdentifier.Any;
+        if (kind >= OSKinds.MacOSX)
+        {
+            rid = arch switch
+            {
+                "x64" => RuntimeIdentifier.OsxX64,
+                "arm64" => RuntimeIdentifier.OsxArm64,
+                _ => RuntimeIdentifier.Osx,
+            };
+        }
+        else if (kind >= OSKinds.Linux || kind == OSKinds.SmartOS)
+        {
+            rid = arch switch
+            {
+                "x64" => RuntimeIdentifier.LinuxX64,
+                "arm" => RuntimeIdentifier.LinuxArm,
+                "arm64" => RuntimeIdentifier.LinuxArm64,
+                "mips64" => RuntimeIdentifier.LinuxMips64,
+                "loongarch64" => RuntimeIdentifier.LinuxLA64,
+                "riscv64" => RuntimeIdentifier.LinuxRiscV64,
+                _ => RuntimeIdentifier.Linux,
+            };
+        }
+        else if (kind >= OSKinds.Alpine)
+        {
+            rid = arch switch
+            {
+                "x64" => RuntimeIdentifier.LinuxMuslX64,
+                "arm" => RuntimeIdentifier.LinuxMuslArm,
+                "arm64" => RuntimeIdentifier.LinuxMuslArm64,
+                _ => RuntimeIdentifier.LinuxMusl,
+            };
+        }
+        else if (kind >= OSKinds.Win10)
+        {
+            rid = arch switch
+            {
+                "x86" => RuntimeIdentifier.WinX86,
+                "x64" => RuntimeIdentifier.WinX64,
+                "arm" => RuntimeIdentifier.WinArm,
+                "arm64" => RuntimeIdentifier.WinArm64,
+                _ => RuntimeIdentifier.Win,
+            };
+        }
+
+        if (rid == RuntimeIdentifier.Any) return [rid];
+
+        var ids = new List<RuntimeIdentifier>
+        {
+            rid
+        };
+
+        var rid2 = (RuntimeIdentifier)((Int32)rid / 10);
+        if (rid2 != rid) ids.Add(rid2);
+
+        return ids.ToArray();
+    }
 }
