@@ -86,6 +86,14 @@ public partial class AppDeployVersion
     [BindColumn("Hash", "文件哈希。MD5散列，避免下载的文件有缺失", "")]
     public String Hash { get => _Hash; set { if (OnPropertyChanging("Hash", value)) { _Hash = value; OnPropertyChanged("Hash"); } } }
 
+    private Stardust.Models.RuntimeIdentifier _Runtime;
+    /// <summary>运行时。RID是运行时标识符，用于标识应用程序运行所在的目标平台。如win-x64/linux-arm</summary>
+    [DisplayName("运行时")]
+    [Description("运行时。RID是运行时标识符，用于标识应用程序运行所在的目标平台。如win-x64/linux-arm")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Runtime", "运行时。RID是运行时标识符，用于标识应用程序运行所在的目标平台。如win-x64/linux-arm", "")]
+    public Stardust.Models.RuntimeIdentifier Runtime { get => _Runtime; set { if (OnPropertyChanging("Runtime", value)) { _Runtime = value; OnPropertyChanged("Runtime"); } } }
+
     private String _Progress;
     /// <summary>进度。发布进度</summary>
     [DisplayName("进度")]
@@ -210,6 +218,7 @@ public partial class AppDeployVersion
             "Overwrite" => _Overwrite,
             "Size" => _Size,
             "Hash" => _Hash,
+            "Runtime" => _Runtime,
             "Progress" => _Progress,
             "CommitId" => _CommitId,
             "CommitLog" => _CommitLog,
@@ -236,6 +245,7 @@ public partial class AppDeployVersion
                 case "Overwrite": _Overwrite = Convert.ToString(value); break;
                 case "Size": _Size = value.ToLong(); break;
                 case "Hash": _Hash = Convert.ToString(value); break;
+                case "Runtime": _Runtime = (Stardust.Models.RuntimeIdentifier)value.ToInt(); break;
                 case "Progress": _Progress = Convert.ToString(value); break;
                 case "CommitId": _CommitId = Convert.ToString(value); break;
                 case "CommitLog": _CommitLog = Convert.ToString(value); break;
@@ -292,6 +302,9 @@ public partial class AppDeployVersion
 
         /// <summary>文件哈希。MD5散列，避免下载的文件有缺失</summary>
         public static readonly Field Hash = FindByName("Hash");
+
+        /// <summary>运行时。RID是运行时标识符，用于标识应用程序运行所在的目标平台。如win-x64/linux-arm</summary>
+        public static readonly Field Runtime = FindByName("Runtime");
 
         /// <summary>进度。发布进度</summary>
         public static readonly Field Progress = FindByName("Progress");
@@ -358,6 +371,9 @@ public partial class AppDeployVersion
 
         /// <summary>文件哈希。MD5散列，避免下载的文件有缺失</summary>
         public const String Hash = "Hash";
+
+        /// <summary>运行时。RID是运行时标识符，用于标识应用程序运行所在的目标平台。如win-x64/linux-arm</summary>
+        public const String Runtime = "Runtime";
 
         /// <summary>进度。发布进度</summary>
         public const String Progress = "Progress";
