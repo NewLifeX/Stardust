@@ -49,7 +49,7 @@ public static class OSKindHelper
         if (osName.StartsWithIgnoreCase("Windows 8.1")) return OSKinds.Win81;
         if (osName.StartsWithIgnoreCase("Windows 8")) return OSKinds.Win8;
 
-        if (osName.StartsWithIgnoreCase("Windows 7")) return osVersion.StartsWith("6.1.7601") ? OSKinds.Win71 : OSKinds.Win7;
+        if (osName.StartsWithIgnoreCase("Windows 7")) return osVersion.Contains("7601") ? OSKinds.Win71 : OSKinds.Win7;
 
         if (osName.StartsWithIgnoreCase("Windows Vista")) return OSKinds.WinVista;
 
@@ -64,6 +64,8 @@ public static class OSKindHelper
         {
             if (str.StartsWith("5.")) return OSKinds.Win2003;
             if (str.StartsWith("6.")) return OSKinds.Win2008;
+
+            return OSKinds.WinServer;
         }
 
         return str switch
@@ -89,34 +91,49 @@ public static class OSKindHelper
 
         // 优先识别新系统
         if (osName.StartsWithIgnoreCase("Alpine") || osName.EndsWithIgnoreCase("(Alpine)")) return OSKinds.Alpine;
+        if (osName.StartsWithIgnoreCase("Arch")) return OSKinds.ArchLinux;
+
         if (osName.StartsWithIgnoreCase("Ubuntu")) return OSKinds.Ubuntu;
         if (osName.StartsWithIgnoreCase("Debian")) return OSKinds.Debian;
-        if (osName.StartsWithIgnoreCase("Deepin")) return OSKinds.Deepin;
+        if (osName.Contains("Armbian")) return OSKinds.Armbian;
         if (osName.StartsWithIgnoreCase("Raspbian")) return OSKinds.Raspbian;
 
         if (osName.StartsWithIgnoreCase("Red Hat")) return OSKinds.RedHat;
         if (osName.StartsWithIgnoreCase("CentOS")) return OSKinds.CentOS;
-        if (osName.StartsWithIgnoreCase("Alibaba")) return OSKinds.AlibabaLinux;
-        if (osName.StartsWithIgnoreCase("Anolis")) return OSKinds.Anolis;
+        if (osName.StartsWithIgnoreCase("Fedora")) return OSKinds.Fedora;
 
+        if (osName.StartsWithIgnoreCase("Deepin")) return OSKinds.Deepin;
         if (osName.StartsWithIgnoreCase("UOS", "UnionTech OS")) return OSKinds.UOS;
-        if (osName.StartsWithIgnoreCase("Kylin", "NeoKylin")) return OSKinds.Kylin;
+        if (osName.StartsWithIgnoreCase("Kylin")) return OSKinds.Kylin;
         if (osName.StartsWithIgnoreCase("OpenKylin")) return OSKinds.OpenKylin;
+        if (osName.StartsWithIgnoreCase("Loongnix")) return OSKinds.Loongnix;
+        if (osName.StartsWithIgnoreCase("Red Flag")) return OSKinds.RedFlag;
+        if (osName.StartsWithIgnoreCase("StartOS")) return OSKinds.StartOS;
+
+        if (osName.StartsWithIgnoreCase("Alibaba")) return OSKinds.AlibabaLinux;
+        if (osName.StartsWithIgnoreCase("NeoKylin")) return OSKinds.NeoKylin;
+        if (osName.StartsWithIgnoreCase("Anolis")) return OSKinds.Anolis;
         if (osName.StartsWithIgnoreCase("Linx")) return OSKinds.Linx;
         if (osName.StartsWithIgnoreCase("openEuler")) return OSKinds.OpenEuler;
         if (osName.Contains("EulerOS")) return OSKinds.EulerOS;
+        if (osName.StartsWithIgnoreCase("KylinSec")) return OSKinds.KylinSec;
+        if (osName.StartsWithIgnoreCase("PuhuaOS")) return OSKinds.PuhuaOS;
+        if (osName.StartsWithIgnoreCase("FangdeOS")) return OSKinds.FangdeOS;
+        if (osName.StartsWithIgnoreCase("NewStartOS")) return OSKinds.NewStartOS;
 
+        if (osName.StartsWithIgnoreCase("LoongOS")) return OSKinds.LoongOS;
+
+        if (osName.Contains("OpenWrt")) return OSKinds.OpenWrt;
+        if (osName.Contains("Buildroot")) return OSKinds.Buildroot;
+        if (osName.Contains("Arch")) return OSKinds.ArchLinux;
         if (osName.Contains("Linux")) return OSKinds.Linux;
-        if (osName.Contains("Buildroot")) return OSKinds.Linux;
-        if (osName.Contains("OpenWrt")) return OSKinds.Linux;
-        if (osName.Contains("Armbian")) return OSKinds.Debian;
 
         if (osName.StartsWithIgnoreCase("Orange Pi"))
         {
-            if (osName.EndsWithIgnoreCase("Jammy")) return OSKinds.Ubuntu;
-            if (osName.EndsWithIgnoreCase("Bullseye")) return OSKinds.Debian;
+            //if (osName.EndsWithIgnoreCase("Jammy")) return OSKinds.Ubuntu;
+            //if (osName.EndsWithIgnoreCase("Bullseye")) return OSKinds.Debian;
 
-            return OSKinds.Linux;
+            return OSKinds.Armbian;
         }
 
         if (Runtime.Linux) return OSKinds.Linux;
