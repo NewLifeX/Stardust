@@ -97,6 +97,18 @@ public enum OSKinds
 
     /// <summary>Fedora</summary>
     Fedora = 122,
+
+    /// <summary>AlmaLinux OS是一个开源、社区驱动的Linux操作系统，它填补了因CentOS稳定版本停止维护而留下的空白</summary>
+    Alma = 123,
+
+    /// <summary>SUSE Linux</summary>
+    SUSE = 124,
+
+    /// <summary>openSUSE。由Novell发起的开源项目，旨在推进Linux的广泛使用，提供了自由简单的方法来获得世界上最好用的Linux发行版之一</summary>
+    OpenSUSE = 125,
+
+    /// <summary>Rocky Linux。一个开源、社区拥有和管理、免费的企业Linux发行版，提供强大的生产级平台</summary>
+    Rocky = 126,
     #endregion
 
     #region 国产DEB系

@@ -101,6 +101,11 @@ public static class OSKindHelper
         if (osName.StartsWithIgnoreCase("Red Hat")) return OSKinds.RedHat;
         if (osName.StartsWithIgnoreCase("CentOS")) return OSKinds.CentOS;
         if (osName.StartsWithIgnoreCase("Fedora")) return OSKinds.Fedora;
+        if (osName.StartsWithIgnoreCase("AlmaLinux")) return OSKinds.Alma;
+        if (osName.StartsWithIgnoreCase("SUSE")) return OSKinds.SUSE;
+        if (osName.StartsWithIgnoreCase("openSUSE")) return OSKinds.OpenSUSE;
+        if (osName.Contains("SUSE")) return OSKinds.SUSE;
+        if (osName.StartsWithIgnoreCase("Rocky")) return OSKinds.Rocky;
 
         if (osName.StartsWithIgnoreCase("Deepin")) return OSKinds.Deepin;
         if (osName.StartsWithIgnoreCase("UOS", "UnionTech OS")) return OSKinds.UOS;
