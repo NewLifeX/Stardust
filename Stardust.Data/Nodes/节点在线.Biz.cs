@@ -37,12 +37,7 @@ public partial class NodeOnline : Entity<NodeOnline>
     public override void Valid(Boolean isNew)
     {
         // 截取部分进程字段，避免过长无法保存
-        var len = _.Processes.Length;
-        if (len > 0 && Processes != null && Processes.Length > len) Processes = Processes[..len];
-
-        len = _.MACs.Length;
-        if (len > 0 && MACs != null && MACs.Length > len) MACs = MACs[..len];
-        //if (COMs != null && COMs.Length > 200) COMs = COMs.Substring(0, 199);
+        this.TrimExtraLong(__.Processes, __.MACs, __.DriveInfo);
 
         if (!Dirtys[nameof(MemoryUsed)] && Node != null) MemoryUsed = Node.Memory - AvailableMemory;
         if (!Dirtys[nameof(SpaceUsed)] && Node != null) SpaceUsed = Node.TotalSize - AvailableFreeSpace;
