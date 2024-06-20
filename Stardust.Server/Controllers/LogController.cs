@@ -38,7 +38,7 @@ public class LogController : ControllerBase
                 app = new App
                 {
                     Name = appId,
-                    Enable = _setting.AutoRegister,
+                    Enable = _setting.AppAutoRegister,
                 };
                 app.Insert();
             }

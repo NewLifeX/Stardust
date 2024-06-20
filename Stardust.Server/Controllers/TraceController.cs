@@ -151,7 +151,7 @@ public class TraceController : ControllerBase
                     }
                     else
                     {
-                        app.Enable = set.AutoRegister;
+                        app.Enable = set.AppAutoRegister;
                     }
 
                     app.Insert();

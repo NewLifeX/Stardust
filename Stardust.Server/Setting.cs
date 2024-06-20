@@ -35,9 +35,13 @@ public class StarServerSetting : Config<StarServerSetting>
     [Description("会话超时。默认600秒")]
     public Int32 SessionTimeout { get; set; } = 600;
 
-    /// <summary>自动注册。允许客户端自动注册，默认true</summary>
-    [Description("自动注册。允许客户端自动注册，默认true")]
+    /// <summary>自动注册。允许节点客户端自动注册，默认true</summary>
+    [Description("自动注册。允许节点客户端自动注册，默认true")]
     public Boolean AutoRegister { get; set; } = true;
+
+    /// <summary>应用自动注册。允许应用客户端自动注册，默认true</summary>
+    [Description("应用自动注册。允许应用客户端自动注册，默认true")]
+    public Boolean AppAutoRegister { get; set; } = true;
 
     /// <summary>准入白名单。若指定，仅允许符合IP条件的节点进行注册，多个逗号隔开，支持*模糊匹配</summary>
     [Description("准入白名单。若指定，仅允许符合IP条件的节点进行注册，多个逗号隔开，支持*模糊匹配")]

@@ -39,7 +39,7 @@ public class OAuthController : ControllerBase
             // 密码模式
             if (model.grant_type == "password")
             {
-                var app = _tokenService.Authorize(model.UserName, model.Password, set.AutoRegister, ip);
+                var app = _tokenService.Authorize(model.UserName, model.Password, set.AppAutoRegister, ip);
 
                 // 更新应用信息
                 app.LastLogin = DateTime.Now;

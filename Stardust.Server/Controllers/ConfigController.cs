@@ -132,7 +132,7 @@ public class ConfigController : ControllerBase
         }
 
         var ip = HttpContext.GetUserHost();
-        app ??= _tokenService.Authorize(appId, secret, _setting.AutoRegister, ip);
+        app ??= _tokenService.Authorize(appId, secret, _setting.AppAutoRegister, ip);
 
         // 新建应用配置
         var config = AppConfig.FindByName(appId);
