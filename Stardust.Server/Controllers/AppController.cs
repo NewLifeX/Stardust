@@ -6,6 +6,7 @@ using NewLife.Data;
 using NewLife.Http;
 using NewLife.Log;
 using NewLife.Remoting;
+using NewLife.Remoting.Models;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
@@ -190,7 +191,7 @@ public class AppController : BaseController
                     {
                         WriteHistory("WebSocket发送", false, "消息无效或已过期。" + mqMsg, clientId, ip);
 
-                        var log = AppCommand.FindById(msg.Id);
+                        var log = AppCommand.FindById((Int32)msg.Id);
                         if (log != null)
                         {
                             if (log.TraceId.IsNullOrEmpty()) log.TraceId = span?.TraceId;
@@ -205,7 +206,7 @@ public class AppController : BaseController
                         // 向客户端传递埋点信息，构建完整调用链
                         msg.TraceId = span + "";
 
-                        var log = AppCommand.FindById(msg.Id);
+                        var log = AppCommand.FindById((Int32)msg.Id);
                         if (log != null)
                         {
                             if (log.TraceId.IsNullOrEmpty()) log.TraceId = span?.TraceId;

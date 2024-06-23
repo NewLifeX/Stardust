@@ -1,8 +1,8 @@
-﻿using System.Reflection;
-using NewLife;
+﻿using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Remoting;
+using NewLife.Remoting.Models;
 using NewLife.Security;
 using NewLife.Serialization;
 using NewLife.Web;
@@ -576,7 +576,7 @@ public class NodeService
     /// <returns></returns>
     public Int32 CommandReply(Node node, CommandReplyModel model, String token)
     {
-        var cmd = NodeCommand.FindById(model.Id);
+        var cmd = NodeCommand.FindById((Int32)model.Id);
         if (cmd == null) return 0;
 
         cmd.Status = model.Status;

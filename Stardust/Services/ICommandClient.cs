@@ -1,8 +1,8 @@
 ﻿using NewLife;
 using NewLife.Log;
 using NewLife.Remoting;
+using NewLife.Remoting.Models;
 using NewLife.Serialization;
-using Stardust.Models;
 
 namespace Stardust.Services;
 

@@ -9,6 +9,7 @@ using NewLife.Http;
 using NewLife.Log;
 using NewLife.Messaging;
 using NewLife.Remoting;
+using NewLife.Remoting.Models;
 using Stardust.Models;
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
 using TaskEx = System.Threading.Tasks.Task;

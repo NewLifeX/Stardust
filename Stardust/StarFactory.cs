@@ -11,6 +11,7 @@ using NewLife.Log;
 using NewLife.Model;
 using NewLife.Reflection;
 using NewLife.Remoting;
+using NewLife.Remoting.Models;
 using NewLife.Security;
 using Stardust.Configs;
 using Stardust.Models;

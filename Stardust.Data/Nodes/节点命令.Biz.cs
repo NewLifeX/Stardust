@@ -6,6 +6,7 @@ using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using NewLife.Log;
+using NewLife.Remoting.Models;
 using Stardust.Models;
 using XCode;
 
@@ -77,7 +78,7 @@ public partial class NodeCommand : Entity<NodeCommand>
 /// <param name="nodeId">节点</param>
 /// <param name="status">状态</param>
 /// <returns>实体列表</returns>
-public static IList<NodeCommand> FindAllByNodeIDAndStatus(Int32 nodeId, Stardust.Models.CommandStatus status)
+public static IList<NodeCommand> FindAllByNodeIDAndStatus(Int32 nodeId, CommandStatus status)
 {
     // 实体缓存
     if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.NodeID == nodeId && e.Status == status);

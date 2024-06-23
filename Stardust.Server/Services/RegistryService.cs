@@ -1,6 +1,7 @@
 ﻿using NewLife;
 using NewLife.Log;
 using NewLife.Remoting;
+using NewLife.Remoting.Models;
 using NewLife.Security;
 using NewLife.Serialization;
 using Stardust.Data;
@@ -410,7 +411,7 @@ public class RegistryService
 
     public AppCommand CommandReply(App app, CommandReplyModel model)
     {
-        var cmd = AppCommand.FindById(model.Id);
+        var cmd = AppCommand.FindById((Int32)model.Id);
         if (cmd == null) return null;
 
         // 防止越权

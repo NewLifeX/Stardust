@@ -12,6 +12,7 @@ using Stardust.Registry;
 using Stardust.Services;
 using NewLife.Caching;
 using System.Net.NetworkInformation;
+using NewLife.Remoting.Models;
 
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
 using System.Net.WebSockets;

@@ -7,7 +7,7 @@
     <Description>星尘，分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2024 NewLife</Copyright>
-    <VersionPrefix>2.9</VersionPrefix>
+    <VersionPrefix>3.0</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -66,7 +66,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Models\CommandEventArgs.cs" />
+    <Compile Remove="Models\CommandInModel.cs" />
+    <Compile Remove="Models\CommandModel.cs" />
+    <Compile Remove="Models\CommandReplyModel.cs" />
+    <Compile Remove="Models\CommandStatus.cs" />
+    <Compile Remove="Models\EventModel.cs" />
     <Compile Remove="Models\TokenModel.cs" />
+    <Compile Remove="Models\UpgradeInfo.cs" />
     <Compile Remove="Monitors\AspNetCoreDiagnosticListener.cs" />
     <Compile Remove="Monitors\GrpcDiagnosticListener.cs" />
     <Compile Remove="Monitors\MyBuilder.cs" />
@@ -96,12 +103,14 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="NewLife.Remoting" Version="3.0.2024.623-beta0607" />
+  </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'!='net40'">
     <PackageReference Include="NewLife.Core" Version="10.10.2024.0601" />
-    <PackageReference Include="NewLife.Remoting" Version="3.0.2024.0620-beta1407" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net40'">
-    <PackageReference Include="NewLife.Core" Version="10.10.2024.0501-net40" />
+    <PackageReference Include="NewLife.Core" Version="10.10.2024.0623-net40" />
   </ItemGroup>
 
 </Project>

@@ -5,9 +5,8 @@ using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using NewLife.Log;
-using Stardust.Models;
+using NewLife.Remoting.Models;
 using XCode;
-using XCode.Membership;
 
 namespace Stardust.Data;
 

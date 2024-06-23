@@ -11,6 +11,7 @@ using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Model;
 using NewLife.Remoting;
+using NewLife.Remoting.Models;
 using NewLife.Security;
 using NewLife.Serialization;
 using NewLife.Threading;

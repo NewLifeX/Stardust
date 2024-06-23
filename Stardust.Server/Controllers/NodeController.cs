@@ -6,6 +6,7 @@ using NewLife.Caching;
 using NewLife.Http;
 using NewLife.Log;
 using NewLife.Remoting;
+using NewLife.Remoting.Models;
 using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data.Deployment;
@@ -343,7 +344,7 @@ public class NodeController : BaseController
                     {
                         WriteHistory(node, "WebSocket发送", false, "消息无效或已过期。" + mqMsg, ip);
 
-                        var log = NodeCommand.FindById(msg.Id);
+                        var log = NodeCommand.FindById((Int32)msg.Id);
                         if (log != null)
                         {
                             if (log.TraceId.IsNullOrEmpty()) log.TraceId = span?.TraceId;
@@ -358,7 +359,7 @@ public class NodeController : BaseController
                         // 向客户端传递埋点信息，构建完整调用链
                         msg.TraceId = span + "";
 
-                        var log = NodeCommand.FindById(msg.Id);
+                        var log = NodeCommand.FindById((Int32)msg.Id);
                         if (log != null)
                         {
                             if (log.TraceId.IsNullOrEmpty()) log.TraceId = span?.TraceId;
