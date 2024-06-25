@@ -83,6 +83,8 @@
     <Compile Remove="RpcClient.cs" />
     <Compile Remove="RpcServer.cs" />
     <Compile Remove="Services\CacheService.cs" />
+    <Compile Remove="Services\ICommandClient.cs" />
+    <Compile Remove="Services\IEventProvider.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -104,10 +106,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Remoting" Version="3.0.2024.623-beta0607" />
+    <PackageReference Include="NewLife.Remoting" Version="3.0.2024.625-beta1714" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'!='net40'">
-    <PackageReference Include="NewLife.Core" Version="10.10.2024.0601" />
+    <PackageReference Include="NewLife.Core" Version="10.10.2024.0625-beta1559" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net40'">
     <PackageReference Include="NewLife.Core" Version="10.10.2024.0623-net40" />

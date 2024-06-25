@@ -6,7 +6,7 @@ using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using NewLife;
 using NewLife.Log;
-using Stardust.Services;
+using NewLife.Remoting.Clients;
 
 namespace Stardust.Managers;
 

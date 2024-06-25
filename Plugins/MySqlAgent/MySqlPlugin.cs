@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel;
 using NewLife.Log;
 using NewLife.Model;
+using NewLife.Remoting.Clients;
 using NewLife.Threading;
 using Stardust.Plugins;
-using Stardust.Services;
 
 namespace MySqlAgent;
 

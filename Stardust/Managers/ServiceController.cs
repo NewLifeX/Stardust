@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using NewLife;
 using NewLife.Log;
+using NewLife.Remoting.Clients;
 using NewLife.Threading;
 using Stardust.Deployment;
 using Stardust.Models;

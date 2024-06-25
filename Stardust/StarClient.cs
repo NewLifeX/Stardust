@@ -17,6 +17,8 @@ using Stardust.Models;
 using Stardust.Services;
 using NewLife.Data;
 using NewLife.Remoting.Models;
+using NewLife.Remoting.Clients;
+
 
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
 using System.Net.WebSockets;

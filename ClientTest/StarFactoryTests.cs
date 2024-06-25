@@ -45,13 +45,13 @@ public class StarFactoryTests
         var dust = star.Service as AppClient;
         Assert.NotNull(dust);
 
-        var filter = star.GetValue("_tokenFilter") as TokenHttpFilter;
-        Assert.NotNull(filter);
-        Assert.Equal(star.AppId, filter.UserName);
-        Assert.Equal(star.Secret, filter.Password);
-        Assert.Equal(filter, (tracer.Client as ApiHttpClient).Filter);
-        Assert.Equal(filter, (config.Client as ApiHttpClient).Filter);
-        Assert.Equal(filter, (dust as ApiHttpClient).Filter);
+        //var filter = star.GetValue("_tokenFilter") as TokenHttpFilter;
+        //Assert.NotNull(filter);
+        //Assert.Equal(star.AppId, filter.UserName);
+        //Assert.Equal(star.Secret, filter.Password);
+        //Assert.Equal(filter, (tracer.Client as ApiHttpClient).Filter);
+        //Assert.Equal(filter, (config.Client as ApiHttpClient).Filter);
+        //Assert.Equal(filter, (dust as ApiHttpClient).Filter);
     }
 
     [Fact]

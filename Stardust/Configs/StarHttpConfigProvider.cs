@@ -4,6 +4,7 @@ using NewLife.Data;
 using NewLife.Log;
 using NewLife.Reflection;
 using NewLife.Remoting;
+using NewLife.Remoting.Clients;
 using NewLife.Serialization;
 using Stardust.Models;
 using Stardust.Registry;

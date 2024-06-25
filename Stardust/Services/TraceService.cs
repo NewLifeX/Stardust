@@ -1,5 +1,6 @@
 ﻿using NewLife.Log;
 using NewLife;
+using NewLife.Remoting.Clients;
 
 namespace Stardust.Services;
 

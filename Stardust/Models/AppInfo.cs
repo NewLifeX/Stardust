@@ -2,11 +2,12 @@
 using System.Diagnostics;
 using System.Net.NetworkInformation;
 using NewLife;
+using NewLife.Remoting.Models;
 
 namespace Stardust.Models;
 
 /// <summary>进程信息</summary>
-public class AppInfo
+public class AppInfo : IPingRequest
 {
     #region 属性
     /// <summary>进程标识</summary>

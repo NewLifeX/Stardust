@@ -4,15 +4,19 @@ using System.Reflection;
 using NewLife;
 using NewLife.Log;
 using NewLife.Reflection;
-using NewLife.Remoting;
 using NewLife.Serialization;
-using NewLife.Threading;
 using Stardust.Models;
 using Stardust.Registry;
-using Stardust.Services;
 using NewLife.Caching;
 using System.Net.NetworkInformation;
 using NewLife.Remoting.Models;
+using NewLife.Remoting.Clients;
+using NewLife.Security;
+using NewLife.Remoting;
+using NewLife.Http;
+
+
+
 
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
 using System.Net.WebSockets;
@@ -22,7 +26,7 @@ using TaskEx = System.Threading.Tasks.Task;
 namespace Stardust;
 
 /// <summary>应用客户端。每个应用有一个客户端连接星尘服务端</summary>
-public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvider
+public class AppClient : ClientBase, IRegistry
 {
     #region 属性
     /// <summary>应用</summary>
@@ -37,9 +41,6 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     /// <summary>节点编码</summary>
     public String? NodeCode { get; set; }
 
-    /// <summary>WebSocket长连接。建立长连接后，可以实时感知配置更新和注册服务更新，默认false</summary>
-    public Boolean UseWebSocket { get; set; }
-
     /// <summary>看门狗超时时间。默认0秒</summary>
     /// <remarks>
     /// 设置看门狗超时时间，超过该时间未收到心跳，将会重启本应用进程。
@@ -49,16 +50,6 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
 
     /// <summary>星尘工厂</summary>
     public StarFactory? Factory { get; set; }
-
-    private ConcurrentDictionary<String, Delegate> _commands = new(StringComparer.OrdinalIgnoreCase);
-    /// <summary>命令集合</summary>
-    public IDictionary<String, Delegate> Commands => _commands;
-
-    /// <summary>收到命令时触发</summary>
-    public event EventHandler<CommandEventArgs>? Received;
-
-    /// <summary>最大失败数。超过该数时，新的数据将被抛弃，默认10 * 24 * 60</summary>
-    public Int32 MaxFails { get; set; } = 10 * 24 * 60;
 
     private AppInfo? _appInfo;
     private readonly String? _version;
@@ -78,6 +69,10 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     /// <summary>实例化</summary>
     public AppClient()
     {
+        Features = Features.Login | Features.Ping | Features.Notify;
+        SetActions("App/");
+        Actions[Features.Login] = "App/Register";
+
         // 加载已保存数据
         var dic = LoadConsumeServicese();
         if (dic != null && dic.Count > 0)
@@ -108,25 +103,13 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
 
     /// <summary>实例化</summary>
     /// <param name="urls"></param>
-    public AppClient(String urls) : this()
-    {
-        if (!urls.IsNullOrEmpty())
-        {
-            var ss = urls.Split(',', ';');
-            for (var i = 0; i < ss.Length; i++)
-            {
-                Add("service" + (i + 1), new Uri(ss[i]));
-            }
-        }
-    }
+    public AppClient(String urls) : this() => Server = urls;
 
     /// <summary>销毁</summary>
     /// <param name="disposing"></param>
     protected override void Dispose(Boolean disposing)
     {
         base.Dispose(disposing);
-
-        StopTimer();
 
         foreach (var item in _publishServices)
         {
@@ -145,7 +128,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             if (AppId != "StarServer")
             {
                 // 等待注册到平台
-                var task = TaskEx.Run(Register);
+                var task = TaskEx.Run(Login);
                 task.Wait(1_000);
             }
         }
@@ -157,123 +140,50 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         StartTimer();
     }
 
-    private String? _appName;
-    /// <summary>注册</summary>
+    /// <summary>创建Http客户端</summary>
+    /// <param name="urls"></param>
     /// <returns></returns>
-    public async Task<Object?> Register()
+    protected override ApiHttpClient CreateHttp(String urls)
     {
-        try
+        var client = base.CreateHttp(urls);
+        client.Filter = new TokenHttpFilter
         {
-            var inf = new AppModel
-            {
-                AppId = AppId,
-                AppName = AppName,
-                ClientId = ClientId,
-                Version = _version,
-                NodeCode = NodeCode,
-                IP = AgentInfo.GetIps()
-            };
+            UserName = AppId,
+            Password = Secret,
+            ClientId = ClientId,
+        };
 
-            var rs = await PostAsync<String>("App/Register", inf);
-            WriteLog("接入星尘服务端：{0}", rs);
-            _appName = rs + "";
-
-            //if (Filter is NewLife.Http.TokenHttpFilter thf) Token = thf.Token?.AccessToken;
-
-            return rs;
-        }
-        catch (Exception ex)
-        {
-            if (ex is HttpRequestException)
-                Log?.Info("注册异常[{0}] {1}", Source, ex.GetTrue()?.Message);
-            else
-                Log?.Info(ex.ToString());
-
-            //throw;
-            return null;
-        }
+        return client;
     }
 
-    /// <summary>心跳</summary>
+    /// <summary>构建登录请求</summary>
     /// <returns></returns>
-    public async Task<Object?> Ping()
+    public override ILoginRequest BuildLoginRequest()
     {
-        try
+        var inf = new AppModel
         {
-            var inf = _appInfo;
-            if (inf == null)
-                inf = _appInfo = new AppInfo(Process.GetCurrentProcess()) { Version = _version };
-            else
-                inf.Refresh();
+            AppId = AppId,
+            AppName = AppName,
+            ClientId = ClientId,
+            Version = _version,
+            NodeCode = NodeCode,
+            IP = AgentInfo.GetIps()
+        };
 
-            // 如果网络不可用，直接保存到队列
-            if (!NetworkInterface.GetIsNetworkAvailable())
-            {
-                if (_fails.Count < MaxFails) _fails.Enqueue(inf.Clone());
-                return null;
-            }
+        return inf;
+    }
 
-            PingResponse? rs = null;
-            try
-            {
-                rs = await PostAsync<PingResponse>("App/Ping", inf);
-                if (rs != null)
-                {
-                    // 由服务器改变采样频率
-                    if (rs.Period > 0 && _timer != null) _timer.Period = rs.Period * 1000;
+    /// <summary>构建心跳请求</summary>
+    /// <returns></returns>
+    public override IPingRequest BuildPingRequest()
+    {
+        var inf = _appInfo;
+        if (inf == null)
+            inf = _appInfo = new AppInfo(Process.GetCurrentProcess()) { Version = _version };
+        else
+            inf.Refresh();
 
-                    var delay = 0;
-                    var dt = rs.Time.ToDateTime();
-                    if (dt.Year > 2000)
-                    {
-                        // 计算延迟
-                        var ts = DateTime.UtcNow - dt;
-                        var ms = (Int32)Math.Round(ts.TotalMilliseconds);
-                        delay = delay > 0 ? (delay + ms) / 2 : ms;
-                    }
-
-                    // 时间偏移，用于修正本地时间
-                    dt = rs.ServerTime.ToDateTime();
-                    if (dt.Year > 2000) _span = dt.AddMilliseconds(delay / 2) - DateTime.UtcNow;
-
-                    // 推队列
-                    if (rs.Commands != null && rs.Commands.Length > 0)
-                    {
-                        foreach (var model in rs.Commands)
-                        {
-                            await ReceiveCommand(model);
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                if (_fails.Count < MaxFails) _fails.Enqueue(inf.Clone());
-
-                throw;
-            }
-
-            // 上报正常，处理历史，失败则丢弃
-            while (_fails.TryDequeue(out var info))
-            {
-                await PostAsync<PingResponse>("App/Ping", info);
-            }
-
-            return rs;
-        }
-        catch (Exception ex)
-        {
-            var ex2 = ex.GetTrue();
-            if (ex2 is ApiException aex && (aex.Code == 401 || aex.Code == 403))
-            {
-                XTrace.WriteLine("重新登录");
-                return await Register();
-            }
-
-            Log?.Debug("心跳异常 {0}", ex.GetTrue().Message);
-
-            throw;
-        }
+        return inf;
     }
 
     /// <summary>向本地StarAgent发送心跳</summary>
@@ -289,201 +199,34 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
 
         return await local.PingAsync(_appInfo, WatchdogTimeout);
     }
-
-    private TimeSpan _span;
-    /// <summary>获取相对于服务器的当前时间，避免两端时间差</summary>
-    /// <returns></returns>
-    public DateTime GetNow() => DateTime.Now.Add(_span);
     #endregion
 
-    #region 上报
-    private readonly ConcurrentQueue<EventModel> _events = new();
-    private readonly ConcurrentQueue<EventModel> _failEvents = new();
-    private TimerX? _eventTimer;
-    private String? _eventTraceId;
-
-    /// <summary>批量上报事件</summary>
-    /// <param name="events"></param>
+    #region 心跳
+    /// <summary>心跳</summary>
+    /// <param name="state"></param>
     /// <returns></returns>
-    public async Task<Int32> PostEvents(params EventModel[] events) => await PostAsync<Int32>("App/PostEvents", events);
-
-    async Task DoPostEvent(Object state)
-    {
-        if (!NetworkInterface.GetIsNetworkAvailable()) return;
-
-        DefaultSpan.Current = null;
-        var tid = _eventTraceId;
-        _eventTraceId = null;
-
-        // 正常队列为空，异常队列有数据，给它一次机会
-        if (_events.IsEmpty && !_failEvents.IsEmpty)
-        {
-            while (_failEvents.TryDequeue(out var ev))
-            {
-                _events.Enqueue(ev);
-            }
-        }
-
-        while (!_events.IsEmpty)
-        {
-            var max = 100;
-            var list = new List<EventModel>();
-            while (_events.TryDequeue(out var model) && max-- > 0) list.Add(model);
-
-            using var span = Tracer?.NewSpan("PostEvent", list.Count);
-            if (!tid.IsNullOrEmpty()) span?.Detach(tid);
-            try
-            {
-                if (list.Count > 0) await PostEvents(list.ToArray());
-
-                // 成功后读取本地缓存
-                while (_failEvents.TryDequeue(out var ev))
-                {
-                    _events.Enqueue(ev);
-                }
-            }
-            catch (Exception ex)
-            {
-                span?.SetError(ex, null);
-
-                // 失败后进入本地缓存
-                foreach (var item in list)
-                {
-                    _failEvents.Enqueue(item);
-                }
-            }
-        }
-    }
-
-    /// <summary>写事件</summary>
-    /// <param name="type"></param>
-    /// <param name="name"></param>
-    /// <param name="remark"></param>
-    public virtual Boolean WriteEvent(String type, String name, String? remark)
-    {
-        // 记录追踪标识，上报的时候带上，尽可能让源头和下游串联起来
-        _eventTraceId = DefaultSpan.Current?.ToString();
-
-        var now = GetNow().ToUniversalTime();
-        var ev = new EventModel { Time = now.ToLong(), Type = type, Name = name, Remark = remark };
-        _events.Enqueue(ev);
-
-        _eventTimer?.SetNext(1000);
-
-        return true;
-    }
-    #endregion
-
-    #region 长连接
-    private TimerX? _timer;
-    private void StartTimer()
-    {
-        if (_timer == null)
-        {
-            lock (this)
-            {
-                if (_timer == null)
-                {
-                    _timer = new TimerX(DoPing, null, 5_000, 60_000) { Async = true };
-                    _eventTimer = new TimerX(DoPostEvent, null, 3_000, 60_000, "Device") { Async = true };
-
-                    Attach(this);
-                }
-            }
-        }
-    }
-
-    private void StopTimer()
-    {
-        _timer.TryDispose();
-        _timer = null;
-
-        _eventTimer.TryDispose();
-        _eventTimer = null;
-
-#if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
-        _source?.Cancel();
-        try
-        {
-            if (_websocket != null && _websocket.State == WebSocketState.Open)
-                _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
-        }
-        catch { }
-
-        //_websocket.TryDispose();
-        _websocket = null;
-#endif
-    }
-
-    private async Task DoPing(Object state)
+    protected override async Task OnPing(Object state)
     {
         DefaultSpan.Current = null;
         using var span = Tracer?.NewSpan("AppPing");
         try
         {
-            if (_appName == null)
+            if (!Logined)
             {
                 if (!NetworkInterface.GetIsNetworkAvailable()) return;
 
-                var rs = await Register();
+                var rs = await Login();
                 if (rs == null) return;
             }
 
             // 向服务端发送心跳后，再向本地发送心跳
-            await Ping();
+            await base.OnPing(state);
             await PingLocal();
 
             if (!NetworkInterface.GetIsNetworkAvailable()) return;
 
             await RefreshPublish();
             await RefreshConsume();
-
-#if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
-            var svc = _currentService;
-            if (svc == null || !UseWebSocket) return;
-
-            // 使用过滤器内部token，因为它有过期刷新机制
-            var token = Token;
-            if (Filter is NewLife.Http.TokenHttpFilter thf) token = thf.Token?.AccessToken;
-            span?.AppendTag($"svc={svc.Address} Token=[{token?.Length}] websocket={_websocket?.State}");
-
-            if (token.IsNullOrEmpty()) return;
-
-            // 定时ws心跳
-            if (_websocket != null && _websocket.State == WebSocketState.Open)
-            {
-                try
-                {
-                    // 在websocket链路上定时发送心跳，避免长连接被断开
-                    var str = "Ping";
-                    await _websocket.SendAsync(new ArraySegment<Byte>(str.GetBytes()), WebSocketMessageType.Text, true, default);
-                }
-                catch (Exception ex)
-                {
-                    span?.SetError(ex, null);
-                    WriteLog("{0}", ex);
-                }
-            }
-
-            if (_websocket == null || _websocket.State != WebSocketState.Open)
-            {
-                var url = svc.Address.ToString().Replace("http://", "ws://").Replace("https://", "wss://");
-                var uri = new Uri(new Uri(url), "/app/notify");
-
-                using var span2 = Tracer?.NewSpan("WebSocketConnect", uri + "");
-
-                var client = new ClientWebSocket();
-                client.Options.SetRequestHeader("Authorization", "Bearer " + token);
-
-                span?.AppendTag($"WebSocket.Connect {uri}");
-                await client.ConnectAsync(uri, default);
-
-                _websocket = client;
-
-                _source = new CancellationTokenSource();
-                _ = Task.Run(() => DoPull(client, _source.Token));
-            }
-#endif
         }
         catch (Exception ex)
         {
@@ -491,119 +234,6 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             Log?.Debug("{0}", ex);
         }
     }
-
-#if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
-    private WebSocket? _websocket;
-    private CancellationTokenSource? _source;
-    private async Task DoPull(WebSocket socket, CancellationToken cancellationToken)
-    {
-        DefaultSpan.Current = null;
-        try
-        {
-            var buf = new Byte[4 * 1024];
-            while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
-            {
-                var data = await socket.ReceiveAsync(new ArraySegment<Byte>(buf), cancellationToken);
-                var txt = buf.ToStr(null, 0, data.Count);
-                if (txt.StartsWithIgnoreCase("Pong"))
-                {
-                }
-                else
-                {
-                    var model = txt.ToJsonEntity<CommandModel>();
-                    if (model != null) await ReceiveCommand(model);
-                }
-            }
-        }
-        catch (WebSocketException) { }
-        catch (Exception ex)
-        {
-            Log?.Debug("{0}", ex);
-        }
-
-        using var span = Tracer?.NewSpan("AppPull", socket.State + "");
-
-        if (socket.State == WebSocketState.Open)
-            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "finish", default);
-    }
-#endif
-
-    async Task ReceiveCommand(CommandModel model)
-    {
-        if (model == null) return;
-
-        // 去重，避免命令被重复执行
-        if (!_cache.Add($"nodecmd:{model.Id}", model, 3600)) return;
-
-        // 埋点，建立调用链
-        using var span = Tracer?.NewSpan("cmd:" + model.Command, model);
-        if (!model.TraceId.IsNullOrEmpty()) span?.Detach(model.TraceId);
-        try
-        {
-            //todo 有效期判断可能有隐患，现在只是假设服务器和客户端在同一个时区，如果不同，可能会出现问题
-            var now = GetNow();
-            XTrace.WriteLine("Got Command: {0}", model.ToJson());
-            if (model.Expire.Year < 2000 || model.Expire > now)
-            {
-                // 延迟执行
-                var ts = model.StartTime - now;
-                if (ts.TotalMilliseconds > 0)
-                {
-                    TimerX.Delay(s =>
-                    {
-                        _ = OnReceiveCommand(model);
-                    }, (Int32)ts.TotalMilliseconds);
-
-                    var reply = new CommandReplyModel
-                    {
-                        Id = model.Id,
-                        Status = CommandStatus.处理中,
-                        Data = $"已安排计划执行 {model.StartTime.ToFullString()}"
-                    };
-                    await CommandReply(reply);
-                }
-                else
-                    await OnReceiveCommand(model);
-            }
-            else
-            {
-                var reply = new CommandReplyModel { Id = model.Id, Status = CommandStatus.取消 };
-                await CommandReply(reply);
-            }
-        }
-        catch (Exception ex)
-        {
-            span?.SetError(ex, null);
-        }
-    }
-    #endregion
-
-    #region 命令调度
-    /// <summary>
-    /// 触发收到命令的动作
-    /// </summary>
-    /// <param name="model"></param>
-    protected virtual async Task OnReceiveCommand(CommandModel model)
-    {
-        var e = new CommandEventArgs { Model = model };
-        Received?.Invoke(this, e);
-
-        var rs = await this.ExecuteCommand(model);
-        e.Reply ??= rs;
-
-        if (e.Reply != null && e.Reply.Id > 0) await CommandReply(e.Reply);
-    }
-
-    /// <summary>向命令引擎发送命令，触发指定已注册动作</summary>
-    /// <param name="command"></param>
-    /// <param name="argument"></param>
-    /// <returns></returns>
-    public async Task SendCommand(String command, String argument) => await OnReceiveCommand(new CommandModel { Command = command, Argument = argument });
-
-    /// <summary>上报服务调用结果</summary>
-    /// <param name="model"></param>
-    /// <returns></returns>
-    public virtual async Task<Object?> CommandReply(CommandReplyModel model) => await PostAsync<Object>("App/CommandReply", model);
     #endregion
 
     #region 发布、消费
@@ -617,7 +247,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
         // 如果没有设置地址，则不要调用接口
         if (service.Address.IsNullOrEmpty()) return null;
 
-        return await PostAsync<ServiceModel>("App/RegisterService", service);
+        return await InvokeAsync<ServiceModel>("App/RegisterService", service);
     }
 
     /// <summary>取消服务（底层）</summary>
@@ -627,7 +257,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     {
         _publishServices.TryRemove(service.ServiceName, out _);
 
-        return await PostAsync<ServiceModel>("App/UnregisterService", service);
+        return await InvokeAsync<ServiceModel>("App/UnregisterService", service);
     }
 
     private void AddService(PublishServiceInfo service)
@@ -731,7 +361,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
     /// <summary>消费服务（底层）</summary>
     /// <param name="service">应用服务</param>
     /// <returns></returns>
-    public async Task<ServiceModel[]?> ResolveAsync(ConsumeServiceInfo service) => await PostAsync<ServiceModel[]>("App/ResolveService", service);
+    public async Task<ServiceModel[]?> ResolveAsync(ConsumeServiceInfo service) => await InvokeAsync<ServiceModel[]>("App/ResolveService", service);
 
     /// <summary>消费得到服务地址信息</summary>
     /// <param name="serviceName">服务名</param>
@@ -905,7 +535,7 @@ public class AppClient : ApiHttpClient, ICommandClient, IRegistry, IEventProvide
             }
         }
 
-        if (count > 0 && _timer != null) _timer.SetNext(-1);
+        //if (count > 0 && _timer != null) _timer.SetNext(-1);
 
         set.ServiceAddress = serverAddress;
         set.Save();

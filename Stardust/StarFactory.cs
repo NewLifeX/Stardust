@@ -11,13 +11,13 @@ using NewLife.Log;
 using NewLife.Model;
 using NewLife.Reflection;
 using NewLife.Remoting;
+using NewLife.Remoting.Clients;
 using NewLife.Remoting.Models;
 using NewLife.Security;
 using Stardust.Configs;
 using Stardust.Models;
 using Stardust.Monitors;
 using Stardust.Registry;
-using Stardust.Services;
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
 using TaskEx = System.Threading.Tasks.Task;
 #endif
@@ -52,7 +52,7 @@ public class StarFactory : DisposeBase
     //public String ServiceName { get; set; }
 
     /// <summary>客户端</summary>
-    public IApiClient? Client => _client;
+    public IApiClient? Client => _client?.Client;
 
     /// <summary>应用客户端</summary>
     public AppClient? App => _client;
@@ -64,7 +64,7 @@ public class StarFactory : DisposeBase
     public LocalStarClient? Local { get; private set; }
 
     private AppClient? _client;
-    private TokenHttpFilter? _tokenFilter;
+    //private TokenHttpFilter? _tokenFilter;
     #endregion
 
     #region 构造
@@ -265,12 +265,12 @@ public class StarFactory : DisposeBase
 
         if (_client == null)
         {
-            if (!AppId.IsNullOrEmpty()) _tokenFilter = new TokenHttpFilter
-            {
-                UserName = AppId,
-                Password = Secret,
-                ClientId = ClientId,
-            };
+            //if (!AppId.IsNullOrEmpty()) _tokenFilter = new TokenHttpFilter
+            //{
+            //    UserName = AppId,
+            //    Password = Secret,
+            //    ClientId = ClientId,
+            //};
 
             var client = new AppClient(Server)
             {
@@ -279,8 +279,8 @@ public class StarFactory : DisposeBase
                 AppName = AppName,
                 ClientId = ClientId,
                 NodeCode = Local?.Info?.Code,
-                Filter = _tokenFilter,
-                UseWebSocket = true,
+                //Filter = _tokenFilter,
+                //UseWebSocket = true,
 
                 Log = Log,
             };
@@ -334,7 +334,7 @@ public class StarFactory : DisposeBase
             AppName = AppName,
             //Secret = Secret,
             ClientId = ClientId,
-            Client = _client,
+            Client = _client.Client,
 
             Log = Log
         };
@@ -366,7 +366,7 @@ public class StarFactory : DisposeBase
                     AppId = AppId!,
                     //Secret = Secret,
                     ClientId = ClientId,
-                    Client = _client,
+                    Client = _client.Client,
                 };
                 //if (!ClientId.IsNullOrEmpty()) config.ClientId = ClientId;
                 config.Attach(_client);
@@ -461,7 +461,7 @@ public class StarFactory : DisposeBase
     {
         if (!Valid()) return -1;
 
-        return await _client.PostAsync<Int32>("Node/SendCommand", new CommandInModel
+        return await _client.InvokeAsync<Int32>("Node/SendCommand", new CommandInModel
         {
             Code = nodeCode,
             Command = command,
@@ -482,7 +482,7 @@ public class StarFactory : DisposeBase
     {
         if (!Valid()) return -1;
 
-        return await _client.PostAsync<Int32>("App/SendCommand", new CommandInModel
+        return await _client.InvokeAsync<Int32>("App/SendCommand", new CommandInModel
         {
             Code = appId,
             Command = command,
