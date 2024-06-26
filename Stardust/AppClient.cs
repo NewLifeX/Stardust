@@ -69,9 +69,8 @@ public class AppClient : ClientBase, IRegistry
     /// <summary>实例化</summary>
     public AppClient()
     {
-        Features = Features.Login | Features.Ping | Features.Notify;
+        Features = Features.Ping | Features.Notify;
         SetActions("App/");
-        Actions[Features.Login] = "App/Register";
 
         // 加载已保存数据
         var dic = LoadConsumeServicese();
@@ -125,10 +124,12 @@ public class AppClient : ClientBase, IRegistry
     {
         try
         {
+            Code = AppId;
+
             if (AppId != "StarServer")
             {
                 // 等待注册到平台
-                var task = TaskEx.Run(Login);
+                var task = TaskEx.Run(Register);
                 task.Wait(1_000);
             }
         }
@@ -138,6 +139,7 @@ public class AppClient : ClientBase, IRegistry
         }
 
         StartTimer();
+        Attach(this);
     }
 
     /// <summary>创建Http客户端</summary>
@@ -156,21 +158,40 @@ public class AppClient : ClientBase, IRegistry
         return client;
     }
 
-    /// <summary>构建登录请求</summary>
+    /// <summary>注册</summary>
     /// <returns></returns>
-    public override ILoginRequest BuildLoginRequest()
+    public async Task<Object?> Register()
     {
-        var inf = new AppModel
+        try
         {
-            AppId = AppId,
-            AppName = AppName,
-            ClientId = ClientId,
-            Version = _version,
-            NodeCode = NodeCode,
-            IP = AgentInfo.GetIps()
-        };
+            var inf = new AppModel
+            {
+                AppId = AppId,
+                AppName = AppName,
+                ClientId = ClientId,
+                Version = _version,
+                NodeCode = NodeCode,
+                IP = AgentInfo.GetIps()
+            };
 
-        return inf;
+            var rs = await InvokeAsync<String>("App/Register", inf);
+            WriteLog("接入星尘服务端：{0}", rs);
+
+            Logined = true;
+            //if (Filter is NewLife.Http.TokenHttpFilter thf) Token = thf.Token?.AccessToken;
+
+            return rs;
+        }
+        catch (Exception ex)
+        {
+            if (ex is HttpRequestException)
+                Log?.Info("注册异常[{0}] {1}", (Client as ApiHttpClient)?.Source, ex.GetTrue()?.Message);
+            else
+                Log?.Info(ex.ToString());
+
+            //throw;
+            return null;
+        }
     }
 
     /// <summary>构建心跳请求</summary>
@@ -215,7 +236,7 @@ public class AppClient : ClientBase, IRegistry
             {
                 if (!NetworkInterface.GetIsNetworkAvailable()) return;
 
-                var rs = await Login();
+                var rs = await Register();
                 if (rs == null) return;
             }
 

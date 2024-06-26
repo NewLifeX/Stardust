@@ -334,7 +334,7 @@ public class StarFactory : DisposeBase
             AppName = AppName,
             //Secret = Secret,
             ClientId = ClientId,
-            Client = _client.Client,
+            Client = _client,
 
             Log = Log
         };
@@ -366,7 +366,7 @@ public class StarFactory : DisposeBase
                     AppId = AppId!,
                     //Secret = Secret,
                     ClientId = ClientId,
-                    Client = _client.Client,
+                    Client = _client,
                 };
                 //if (!ClientId.IsNullOrEmpty()) config.ClientId = ClientId;
                 config.Attach(_client);

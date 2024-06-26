@@ -3,7 +3,7 @@
 namespace Stardust.Models;
 
 /// <summary>应用模型</summary>
-public class AppModel : ILoginRequest
+public class AppModel
 {
     /// <summary>应用标识</summary>
     public String AppId { get; set; } = null!;
@@ -22,7 +22,4 @@ public class AppModel : ILoginRequest
 
     /// <summary>节点编码</summary>
     public String? NodeCode { get; set; }
-
-    String? ILoginRequest.Code { get => AppId; set => AppId = value!; }
-    String? ILoginRequest.Secret { get; set; }
 }

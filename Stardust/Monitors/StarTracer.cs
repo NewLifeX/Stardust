@@ -1,11 +1,9 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reflection;
 using NewLife;
-using NewLife.Data;
 using NewLife.Http;
 using NewLife.Log;
 using NewLife.Reflection;
