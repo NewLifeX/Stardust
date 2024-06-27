@@ -9,6 +9,7 @@ using NewLife.Http;
 using NewLife.Log;
 using NewLife.Messaging;
 using NewLife.Remoting;
+using NewLife.Remoting.Clients;
 using NewLife.Remoting.Models;
 using Stardust.Models;
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
@@ -240,7 +241,7 @@ public class LocalStarClient
 
             WriteLog("目标：{0}", target);
 
-            var ug = new Stardust.Web.Upgrade
+            var ug = new Upgrade
             {
                 SourceFile = Path.GetFileName(url).GetFullPath(),
                 DestinationPath = target,
@@ -253,6 +254,10 @@ public class LocalStarClient
             var client = new HttpClient();
             client.DownloadFileAsync(url, ug.SourceFile).Wait();
 
+            //var file = ug.SourceFile;
+            //var tmp = Path.GetTempPath().CombinePath(Path.GetFileNameWithoutExtension(file));
+            //file.AsFile().Extract(tmp, true);
+            //todo 把tmp赋值给ug.TempPath
             ug.Extract();
             ug.Update();
 

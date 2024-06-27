@@ -8,6 +8,7 @@ using NewLife.Model;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Remoting.Clients;
+using NewLife.Remoting.Models;
 using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust;
@@ -15,9 +16,7 @@ using Stardust.Deployment;
 using Stardust.Managers;
 using Stardust.Models;
 using Stardust.Plugins;
-using Stardust.Services;
 using IHost = NewLife.Agent.IHost;
-using Upgrade = Stardust.Web.Upgrade;
 
 namespace StarAgent;
 
@@ -387,7 +386,7 @@ internal class MyService : ServiceBase, IServiceProvider
         // 登录后保存证书
         client.OnLogined += (s, e) =>
         {
-            var inf = client.Info;
+            var inf = e.Response;
             if (inf != null && !inf.Code.IsNullOrEmpty())
             {
                 set.Code = inf.Code;
@@ -419,8 +418,8 @@ internal class MyService : ServiceBase, IServiceProvider
 
         _Manager.Attach(client);
 
-        // 使用跟踪
-        client.UseTrace();
+        //// 使用跟踪
+        //client.UseTrace();
 
         _Client = client;
         _container.AddSingleton(client);
@@ -626,7 +625,7 @@ internal class MyService : ServiceBase, IServiceProvider
         ug.Trim("StarAgent");
 
         // 检查更新
-        var ur = await client.Upgrade(channel, _lastVersion);
+        var ur = await client.Upgrade(channel);
         if (ur != null && ur.Version != _lastVersion)
         {
             client.WriteInfoEvent("Upgrade", $"准备从[{_lastVersion}]更新到[{ur.Version}]，开始下载 {ur.Source}");
@@ -650,11 +649,11 @@ internal class MyService : ServiceBase, IServiceProvider
                     }
                     else
                     {
-                        if (!ur.Preinstall.IsNullOrEmpty())
+                        if (ur is UpgradeInfo ur2 && !ur2.Preinstall.IsNullOrEmpty())
                         {
                             client.WriteInfoEvent("Upgrade", "执行预安装脚本");
 
-                            ug.Run(ur.Preinstall);
+                            ug.Run(ur2.Preinstall);
                         }
 
                         client.WriteInfoEvent("Upgrade", "解压完成，准备覆盖文件");

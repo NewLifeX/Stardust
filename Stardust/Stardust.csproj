@@ -42,6 +42,12 @@
   <PropertyGroup Condition="'$(TargetFramework)'=='net6.0-windows' or '$(TargetFramework)'=='net7.0-windows' or '$(TargetFramework)'=='net8.0-windows'">
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Web\**" />
+    <EmbeddedResource Remove="Web\**" />
+    <None Remove="Web\**" />
+  </ItemGroup>
   <ItemGroup>
     <Using Include="System.Net.Http" />
   </ItemGroup>
@@ -106,7 +112,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Remoting" Version="3.0.2024.626-beta1337" />
+    <PackageReference Include="NewLife.Remoting" Version="3.0.2024.627-beta1636" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'!='net40'">
     <PackageReference Include="NewLife.Core" Version="10.10.2024.0625-beta1559" />

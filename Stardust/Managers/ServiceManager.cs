@@ -549,7 +549,7 @@ public class ServiceManager : DisposeBase
 
         // 应用服务的上报和拉取
         DeployInfo[]? deploys = null;
-        if (_client != null && !_client.Token.IsNullOrEmpty())
+        if (_client != null && _client.Logined)
         {
             // 上传失败不应该影响本地拉起服务
             try
