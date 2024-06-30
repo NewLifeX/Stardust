@@ -502,64 +502,63 @@ public partial class Node : Entity<Node>
     }
 
     /// <summary>填充</summary>
-    /// <param name="di"></param>
-    public void Fill(NodeInfo di)
+    /// <param name="info"></param>
+    public void Fill(NodeInfo info)
     {
         var node = this;
 
-        if (!di.OSName.IsNullOrEmpty()) node.OS = di.OSName;
-        if (!di.OSVersion.IsNullOrEmpty()) node.OSVersion = di.OSVersion;
-        if (!di.Architecture.IsNullOrEmpty()) node.Architecture = di.Architecture;
-        if (!di.Version.IsNullOrEmpty()) node.Version = di.Version;
-        if (di.Compile.Year > 2000) node.CompileTime = di.Compile;
+        if (!info.OSName.IsNullOrEmpty()) node.OS = info.OSName;
+        if (!info.OSVersion.IsNullOrEmpty()) node.OSVersion = info.OSVersion;
+        if (!info.Architecture.IsNullOrEmpty()) node.Architecture = info.Architecture;
+        if (!info.Version.IsNullOrEmpty()) node.Version = info.Version;
+        if (info.Compile.Year > 2000) node.CompileTime = info.Compile;
 
-        if (!di.MachineName.IsNullOrEmpty())
+        if (!info.MachineName.IsNullOrEmpty())
         {
-            if (node.Name.IsNullOrEmpty() || node.Name == node.MachineName) node.Name = di.MachineName;
-            node.MachineName = di.MachineName;
+            if (node.Name.IsNullOrEmpty() || node.Name == node.MachineName) node.Name = info.MachineName;
+            node.MachineName = info.MachineName;
         }
-        if (!di.UserName.IsNullOrEmpty()) node.UserName = di.UserName;
-        if (!di.IP.IsNullOrEmpty()) node.IP = di.IP;
-        if (!di.Product.IsNullOrEmpty()) node.Product = di.Product;
-        if (!di.Vendor.IsNullOrEmpty()) node.Vendor = di.Vendor;
-        if (!di.Processor.IsNullOrEmpty()) node.Processor = di.Processor;
-        //if (!di.CpuID.IsNullOrEmpty()) node.CpuID = di.CpuID;
-        if (!di.UUID.IsNullOrEmpty()) node.Uuid = di.UUID;
-        if (!di.MachineGuid.IsNullOrEmpty()) node.MachineGuid = di.MachineGuid;
-        if (!di.SerialNumber.IsNullOrEmpty()) node.SerialNumber = di.SerialNumber;
-        if (!di.Board.IsNullOrEmpty()) node.Board = di.Board;
-        if (!di.DiskID.IsNullOrEmpty()) node.DiskID = di.DiskID;
+        if (!info.UserName.IsNullOrEmpty()) node.UserName = info.UserName;
+        if (!info.IP.IsNullOrEmpty()) node.IP = info.IP;
+        if (!info.Product.IsNullOrEmpty()) node.Product = info.Product;
+        if (!info.Vendor.IsNullOrEmpty()) node.Vendor = info.Vendor;
+        if (!info.Processor.IsNullOrEmpty()) node.Processor = info.Processor;
+        if (!info.UUID.IsNullOrEmpty()) node.Uuid = info.UUID;
+        if (!info.MachineGuid.IsNullOrEmpty()) node.MachineGuid = info.MachineGuid;
+        if (!info.SerialNumber.IsNullOrEmpty()) node.SerialNumber = info.SerialNumber;
+        if (!info.Board.IsNullOrEmpty()) node.Board = info.Board;
+        if (!info.DiskID.IsNullOrEmpty()) node.DiskID = info.DiskID;
 
-        if (di.ProcessorCount > 0) node.Cpu = di.ProcessorCount;
-        if (di.Memory > 0) node.Memory = (Int32)Math.Round(di.Memory / 1024d / 1024);
-        if (di.TotalSize > 0) node.TotalSize = (Int32)Math.Round(di.TotalSize / 1024d / 1024);
-        if (di.DriveSize > 0) node.DriveSize = (Int32)Math.Round(di.DriveSize / 1024d / 1024);
-        if (!di.DriveInfo.IsNullOrEmpty())
+        if (info.ProcessorCount > 0) node.Cpu = info.ProcessorCount;
+        if (info.Memory > 0) node.Memory = (Int32)Math.Round(info.Memory / 1024d / 1024);
+        if (info.TotalSize > 0) node.TotalSize = (Int32)Math.Round(info.TotalSize / 1024d / 1024);
+        if (info.DriveSize > 0) node.DriveSize = (Int32)Math.Round(info.DriveSize / 1024d / 1024);
+        if (!info.DriveInfo.IsNullOrEmpty())
         {
-            node.DriveInfo = di.DriveInfo;
+            node.DriveInfo = info.DriveInfo;
             // 兼容旧版客户端
             if (node.DriveSize == 0)
-                node.DriveSize = (Int32)Math.Round(di.DriveInfo.Split(",").Sum(e => e.Substring("/", "G").ToDouble() * 1024));
+                node.DriveSize = (Int32)Math.Round(info.DriveInfo.Split(",").Sum(e => e.Substring("/", "G").ToDouble() * 1024));
         }
-        if (di.MaxOpenFiles > 0) node.MaxOpenFiles = di.MaxOpenFiles;
-        if (!di.Dpi.IsNullOrEmpty()) node.Dpi = di.Dpi;
-        if (!di.Resolution.IsNullOrEmpty()) node.Resolution = di.Resolution;
-        if (!di.Macs.IsNullOrEmpty()) node.MACs = di.Macs;
+        if (info.MaxOpenFiles > 0) node.MaxOpenFiles = info.MaxOpenFiles;
+        if (!info.Dpi.IsNullOrEmpty()) node.Dpi = info.Dpi;
+        if (!info.Resolution.IsNullOrEmpty()) node.Resolution = info.Resolution;
+        if (!info.Macs.IsNullOrEmpty()) node.MACs = info.Macs;
         //if (!di.COMs.IsNullOrEmpty()) node.COMs = di.COMs;
-        if (!di.InstallPath.IsNullOrEmpty()) node.InstallPath = di.InstallPath;
-        if (!di.Runtime.IsNullOrEmpty())
+        if (!info.InstallPath.IsNullOrEmpty()) node.InstallPath = info.InstallPath;
+        if (!info.Runtime.IsNullOrEmpty())
         {
-            node.Runtime = di.Runtime;
-            if (node.Framework.IsNullOrEmpty()) node.Framework = di.Runtime;
-            if (node.Frameworks.IsNullOrEmpty()) node.Frameworks = di.Runtime;
+            node.Runtime = info.Runtime;
+            if (node.Framework.IsNullOrEmpty()) node.Framework = info.Runtime;
+            if (node.Frameworks.IsNullOrEmpty()) node.Frameworks = info.Runtime;
         }
-        if (!di.Framework.IsNullOrEmpty())
+        if (!info.Framework.IsNullOrEmpty())
         {
             //node.Framework = di.Framework?.Split(',').LastOrDefault();
-            node.Frameworks = di.Framework;
+            node.Frameworks = info.Framework;
             // 选取最大的版本，而不是最后一个，例如6.0.3字符串大于6.0.13
             Version max = null;
-            var fs = di.Framework.Split(',');
+            var fs = info.Framework.Split(',');
             if (fs != null)
             {
                 foreach (var f in fs)
