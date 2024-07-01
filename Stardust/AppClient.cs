@@ -13,6 +13,8 @@ using NewLife.Remoting.Models;
 using NewLife.Remoting.Clients;
 using NewLife.Remoting;
 using NewLife.Http;
+using NewLife.Security;
+
 
 #if !NET40
 using TaskEx = System.Threading.Tasks.Task;
@@ -67,6 +69,8 @@ public class AppClient : ClientBase, IRegistry
         Features = Features.Ping | Features.Notify | Features.CommandReply;
         SetActions("App/");
         Actions[Features.CommandReply] = "App/CommandReply";
+
+        PasswordProvider = new PasswordProvider();
 
         // 加载已保存数据
         var dic = LoadConsumeServicese();

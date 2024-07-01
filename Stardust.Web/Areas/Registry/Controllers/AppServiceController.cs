@@ -13,7 +13,7 @@ public class AppServiceController : EntityController<AppService>
 {
     static AppServiceController()
     {
-        ListFields.RemoveField("ServiceId");
+        ListFields.RemoveField("ServiceId", "OriginAddress");
 
         {
             var df = ListFields.GetField("ServiceName") as ListField;

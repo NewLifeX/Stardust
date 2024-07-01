@@ -20,6 +20,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
 {
     static AppDeployVersionController()
     {
+        ListFields.RemoveField("Hash", "CommitId", "CommitLog");
         ListFields.RemoveCreateField();
         ListFields.RemoveRemarkField();
 
@@ -99,7 +100,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
 
     protected override Boolean Valid(AppDeployVersion entity, DataObjectMethodType type, Boolean post)
     {
-        if (type == DataObjectMethodType.Delete || type == DataObjectMethodType.Update) return base.Valid(entity, type, post); 
+        if (type == DataObjectMethodType.Delete || type == DataObjectMethodType.Update) return base.Valid(entity, type, post);
         if (!post && type == DataObjectMethodType.Insert) entity.Version = DateTime.Now.ToString("yyyyMMdd-HHmmss");
 
         if (post)
@@ -192,7 +193,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
                 //删除记录
                 att.DeleteAsync();
             }
-        }              
+        }
 
         var rs = base.OnDelete(entity);
         entity.Deploy?.Fix();
