@@ -7,7 +7,7 @@ using NewLife.Remoting.Models;
 namespace Stardust.Models;
 
 /// <summary>进程信息</summary>
-public class AppInfo : IPingRequest
+public class AppInfo : IPingRequest, ICloneable
 {
     #region 属性
     /// <summary>进程标识</summary>
@@ -188,32 +188,8 @@ public class AppInfo : IPingRequest
 
     /// <summary>克隆数据</summary>
     /// <returns></returns>
-    public AppInfo Clone()
-    {
-        //var inf = new AppInfo
-        //{
-        //    Id = Id,
-        //    Name = Name,
-        //    Version = Version,
+    public AppInfo Clone() => (base.MemberwiseClone() as AppInfo)!;
 
-        //    CommandLine = CommandLine,
-        //    UserName = UserName,
-        //    MachineName = MachineName,
-        //    IP = IP,
-        //    StartTime = StartTime,
-
-        //    ProcessorTime = ProcessorTime,
-        //    CpuUsage = CpuUsage,
-        //    WorkingSet = WorkingSet,
-        //    Threads = Threads,
-        //    Handles = Handles,
-        //    Connections = Connections,
-        //    GCPause = GCPause,
-        //    FullGC = FullGC,
-        //};
-        var inf = (base.MemberwiseClone() as AppInfo)!;
-
-        return inf;
-    }
+    Object ICloneable.Clone() => Clone();
     #endregion
 }

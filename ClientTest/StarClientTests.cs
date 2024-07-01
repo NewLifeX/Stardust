@@ -72,7 +72,7 @@ public class StarClientTests
     public void GetHeartInfoTest()
     {
         var client = new StarClient();
-        var inf = client.GetHeartInfo();
+        var inf = client.BuildPingRequest() as PingInfo;
         Assert.NotNull(inf);
         Assert.NotEmpty(inf.Macs);
     }

@@ -104,50 +104,8 @@ public class AgentInfo
         }
     }
 
-    private static void NetworkChange_NetworkAvailabilityChanged(Object? sender, NetworkAvailabilityEventArgs e)
-    {
-        _ips = null;
-        //XTrace.WriteLine("{0} -> {1}={2}", nameof(NetworkChange_NetworkAvailabilityChanged), nameof(e.IsAvailable), e.IsAvailable);
+    private static void NetworkChange_NetworkAvailabilityChanged(Object? sender, NetworkAvailabilityEventArgs e) => _ips = null;
 
-        //foreach (var item in NetworkInterface.GetAllNetworkInterfaces())
-        //{
-        //    //if (item.OperationalStatus != OperationalStatus.Up) continue;
-        //    if (item.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
-
-        //    var ipp = item.GetIPProperties();
-        //    if (ipp != null && ipp.UnicastAddresses.Count > 0)
-        //    {
-        //        XTrace.WriteLine("{0} {1}", item.Name, item.OperationalStatus);
-        //    }
-        //}
-    }
-
-    private static void NetworkChange_NetworkAddressChanged(Object? sender, EventArgs e)
-    {
-        _ips = null;
-        //XTrace.WriteLine(nameof(NetworkChange_NetworkAddressChanged));
-
-        //foreach (var item in NetworkInterface.GetAllNetworkInterfaces())
-        //{
-        //    if (item.OperationalStatus != OperationalStatus.Up) continue;
-        //    if (item.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
-
-        //    var ipp = item.GetIPProperties();
-        //    if (ipp != null && ipp.UnicastAddresses.Count > 0)
-        //    {
-        //        var gw = ipp.GatewayAddresses.Count;
-        //        foreach (var elm in ipp.UnicastAddresses)
-        //        {
-        //            try
-        //            {
-        //                if (elm.DuplicateAddressDetectionState != DuplicateAddressDetectionState.Preferred) continue;
-        //            }
-        //            catch { }
-
-        //            XTrace.WriteLine("{0} {1}", item.Name, elm.Address);
-        //        }
-        //    }
-        //}
-    }
+    private static void NetworkChange_NetworkAddressChanged(Object? sender, EventArgs e) => _ips = null;
     #endregion
 }

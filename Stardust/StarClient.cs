@@ -5,16 +5,15 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using NewLife;
 using NewLife.Caching;
+using NewLife.Data;
 using NewLife.Log;
+using NewLife.Model;
 using NewLife.Reflection;
-using NewLife.Remoting;
+using NewLife.Remoting.Clients;
+using NewLife.Remoting.Models;
+using NewLife.Security;
 using Stardust.Managers;
 using Stardust.Models;
-using NewLife.Data;
-using NewLife.Remoting.Models;
-using NewLife.Remoting.Clients;
-using NewLife.Model;
-using NewLife.Security;
 
 namespace Stardust;
 
@@ -66,32 +65,22 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
             container.AddTransient<IPingRequest, PingInfo>();
         }
 
+        _frameworkManager.Attach(this);
+
         base.OnInit();
     }
     #endregion
 
     #region 登录
-    /// <summary>登录</summary>
-    /// <returns></returns>
-    public override async Task<ILoginResponse?> Login()
-    {
-        var rs = await base.Login();
-
-        if (Logined) _frameworkManager.Attach(this);
-
-        return rs;
-    }
-
     /// <summary>创建登录请求</summary>
     /// <returns></returns>
     public override ILoginRequest BuildLoginRequest()
     {
-        var request = base.BuildLoginRequest();
-        if (request is LoginInfo info)
-        {
-            info.ProductCode = ProductCode;
-            info.Node = GetNodeInfo();
-        }
+        var request = new LoginInfo();
+        FillLoginRequest(request);
+
+        request.ProductCode = ProductCode;
+        request.Node = GetNodeInfo();
 
         return request;
     }
@@ -292,9 +281,13 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
     #region 心跳
     private readonly String[] _excludes = ["Idle", "System", "Registry", "smss", "csrss", "lsass", "wininit", "services", "winlogon", "LogonUI", "SearchUI", "fontdrvhost", "dwm", "svchost", "dllhost", "conhost", "taskhostw", "explorer", "ctfmon", "ChsIME", "WmiPrvSE", "WUDFHost", "TabTip*", "igfxCUIServiceN", "igfxEMN", "smartscreen", "sihost", "RuntimeBroker", "StartMenuExperienceHost", "SecurityHealthSystray", "SecurityHealthService", "ShellExperienceHost", "PerfWatson2", "audiodg", "spoolsv", "*ServiceHub*", "systemd*", "cron", "rsyslogd", "sudo", "dbus*", "bash", "login", "networkd*", "kworker*", "ksoftirqd*", "migration*", "auditd", "polkitd", "atd"];
 
-    /// <summary>获取心跳信息</summary>
-    public PingInfo GetHeartInfo()
+    /// <summary>构建心跳请求</summary>
+    /// <returns></returns>
+    public override IPingRequest BuildPingRequest()
     {
+        var request = new PingInfo();
+        FillPingRequest(request);
+
         var exs = _excludes.Where(e => e.Contains('*')).ToArray();
 
         var ps = Process.GetProcesses();
@@ -317,40 +310,16 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
         var mi = MachineInfo.GetCurrent();
         mi.Refresh();
 
-        var mcs = NetHelper.GetMacs().Select(e => e.ToHex("-")).OrderBy(e => e).Join(",");
-        var path = ".".GetFullPath();
         var drives = GetDrives();
-        var driveInfo = DriveInfo.GetDrives().FirstOrDefault(e => path.StartsWithIgnoreCase(e.Name));
-        var ip = AgentInfo.GetIps();
-        var info = new PingInfo
-        {
-            AvailableMemory = mi.AvailableMemory,
-            AvailableFreeSpace = (UInt64)(driveInfo?.AvailableFreeSpace ?? 0),
-            DriveInfo = drives.Join(",", e => $"{e.Name}[{e.DriveFormat}]={e.AvailableFreeSpace.ToGMK()}/{e.TotalSize.ToGMK()}"),
-            CpuRate = Math.Round(mi.CpuRate, 3),
-            Temperature = Math.Round(mi.Temperature, 1),
-            Battery = Math.Round(mi.Battery, 3),
-            UplinkSpeed = mi.UplinkSpeed,
-            DownlinkSpeed = mi.DownlinkSpeed,
-            ProcessCount = ps.Length,
-            Uptime = Environment.TickCount / 1000,
 
-            Macs = mcs,
-            IP = ip,
-
-            Processes = pcs.Join(),
-
-            Time = DateTime.UtcNow.ToLong(),
-            Delay = Delay,
-        };
-        //ext.Uptime = Environment.TickCount64 / 1000;
-        // 开始时间 Environment.TickCount 很容易溢出，导致开机24天后变成负数。
-        // 后来在 netcore3.0 增加了Environment.TickCount64
-        // 现在借助 Stopwatch 来解决
-        if (Stopwatch.IsHighResolution) info.Uptime = (Int32)(Stopwatch.GetTimestamp() / Stopwatch.Frequency);
+        request.IP = AgentInfo.GetIps();
+        request.DriveInfo = drives.Join(",", e => $"{e.Name}[{e.DriveFormat}]={e.AvailableFreeSpace.ToGMK()}/{e.TotalSize.ToGMK()}");
+        request.Macs = (String?)NetHelper.GetMacs().Select(e => e.ToHex("-")).OrderBy(e => e).Join(",");
+        request.ProcessCount = ps.Length;
+        request.Processes = pcs.Join();
 
         // 目标框架
-        info.Framework = _frameworkManager.GetAllVersions().Join(",", e => e.TrimStart('v'));
+        request.Framework = _frameworkManager.GetAllVersions().Join(",", e => e.TrimStart('v'));
 
         // 获取Tcp连接信息，某些Linux平台不支持
         try
@@ -358,26 +327,26 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
             var properties = IPGlobalProperties.GetIPGlobalProperties();
             var connections = properties.GetActiveTcpConnections();
 
-            info.TcpConnections = connections.Count(e => e.State == TcpState.Established);
-            info.TcpTimeWait = connections.Count(e => e.State == TcpState.TimeWait);
-            info.TcpCloseWait = connections.Count(e => e.State == TcpState.CloseWait);
+            request.TcpConnections = connections.Count(e => e.State == TcpState.Established);
+            request.TcpTimeWait = connections.Count(e => e.State == TcpState.TimeWait);
+            request.TcpCloseWait = connections.Count(e => e.State == TcpState.CloseWait);
         }
         catch { }
 
         if (mi is IExtend ext)
         {
             // 读取无线信号强度
-            if (ext.Items.TryGetValue("Signal", out var value)) info.Signal = value.ToInt();
+            if (ext.Items.TryGetValue("Signal", out var value)) request.Signal = value.ToInt();
         }
 
-        return info;
+        return request;
     }
 
     /// <summary>心跳</summary>
     /// <returns></returns>
-    public override async Task<IPingResponse?> Ping()
+    public override async Task<IPingResponse?> Ping(CancellationToken cancellationToken = default)
     {
-        var rs = await base.Ping();
+        var rs = await base.Ping(cancellationToken);
         if (rs != null)
         {
             // 迁移到新服务器
@@ -388,13 +357,13 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
                 OnMigration?.Invoke(this, arg);
                 if (!arg.Cancel)
                 {
-                    await Logout("切换新服务器");
+                    await Logout("切换新服务器", cancellationToken);
 
                     // 清空原有链接，添加新链接
                     Server = prs.NewServer;
                     Client = null;
 
-                    await Login();
+                    await Login(cancellationToken);
                 }
             }
         }
@@ -417,24 +386,5 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
     /// <param name="inf"></param>
     /// <returns></returns>
     public async Task<Int32> AppPing(AppInfo inf) => await InvokeAsync<Int32>("Deploy/Ping", inf);
-    #endregion
-
-    #region 辅助
-    /// <summary>
-    /// 把Url相对路径格式化为绝对路径。常用于文件下载
-    /// </summary>
-    /// <param name="url"></param>
-    /// <returns></returns>
-    public String BuildUrl(String url)
-    {
-        if (Client is ApiHttpClient client && !url.StartsWithIgnoreCase("http://", "https://"))
-        {
-            var svr = client.Services.FirstOrDefault(e => e.Name == client.Source) ?? client.Services.FirstOrDefault();
-            if (svr != null && svr.Address != null)
-                url = new Uri(svr.Address, url) + "";
-        }
-
-        return url;
-    }
     #endregion
 }

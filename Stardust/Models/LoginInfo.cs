@@ -18,8 +18,8 @@ public class LoginInfo : ILoginRequest
     /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
     public String? ClientId { get; set; }
 
-    /// <summary>版本</summary>
-    public String? Version { get; set; }
+    ///// <summary>版本</summary>
+    //public String? Version { get; set; }
 
     /// <summary>节点信息</summary>
     public NodeInfo? Node { get; set; }

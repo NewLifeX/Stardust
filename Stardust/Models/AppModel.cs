@@ -1,6 +1,4 @@
-﻿using NewLife.Remoting.Models;
-
-namespace Stardust.Models;
+﻿namespace Stardust.Models;
 
 /// <summary>应用模型</summary>
 public class AppModel

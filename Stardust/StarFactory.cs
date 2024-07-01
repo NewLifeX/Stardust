@@ -26,9 +26,13 @@ namespace Stardust;
 
 /// <summary>星尘工厂</summary>
 /// <remarks>
-/// 星尘代理 https://newlifex.com/blood/staragent_install
+/// 文档 https://newlifex.com/blood/stardust
+/// 星尘代理 https://newlifex.com/blood/staragent
+/// 节点管理 https://newlifex.com/blood/stardust_node
+/// 注册中心 https://newlifex.com/blood/stardust_registry
 /// 监控中心 https://newlifex.com/blood/stardust_monitor
 /// 配置中心 https://newlifex.com/blood/stardust_configcenter
+/// 发布中心 https://newlifex.com/blood/stardust_deploy
 /// </remarks>
 public class StarFactory : DisposeBase
 {

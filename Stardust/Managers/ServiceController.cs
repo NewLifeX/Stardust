@@ -5,7 +5,6 @@ using NewLife.Remoting.Clients;
 using NewLife.Threading;
 using Stardust.Deployment;
 using Stardust.Models;
-using Stardust.Services;
 #if !NET40
 using TaskEx = System.Threading.Tasks.Task;
 #endif

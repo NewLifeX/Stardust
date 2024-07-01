@@ -162,7 +162,7 @@ public class FrameworkManager
 
             if (Runtime.Linux)
             {
-                var runtimes = new string[] { "Microsoft.NETCore.App", "Microsoft.AspNetCore.App" };
+                var runtimes = new String[] { "Microsoft.NETCore.App", "Microsoft.AspNetCore.App" };
                 var rootDir = "/usr/share/dotnet/shared";
                 foreach (var runtime in runtimes)
                 {
@@ -185,7 +185,7 @@ public class FrameworkManager
             }
             else if (Runtime.Windows)
             {
-                var runtimes = new string[] { "Microsoft.NETCore.App", "Microsoft.AspNetCore.App", "Microsoft.WindowsDesktop.App" };
+                var runtimes = new String[] { "Microsoft.NETCore.App", "Microsoft.AspNetCore.App", "Microsoft.WindowsDesktop.App" };
                 var rootDir = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).CombinePath("dotnet", "shared");
                 foreach (var runtime in runtimes)
                 {

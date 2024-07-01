@@ -9,8 +9,8 @@ public class PingInfo : PingRequest
     ///// <summary>可用内存大小</summary>
     //public UInt64 AvailableMemory { get; set; }
 
-    /// <summary>磁盘可用空间。应用所在盘</summary>
-    public UInt64 AvailableFreeSpace { get; set; }
+    ///// <summary>磁盘可用空间。应用所在盘</summary>
+    //public UInt64 AvailableFreeSpace { get; set; }
 
     /// <summary>驱动器信息。各分区大小，逗号分隔</summary>
     public String? DriveInfo { get; set; }
@@ -24,8 +24,8 @@ public class PingInfo : PingRequest
     ///// <summary>电量</summary>
     //public Double Battery { get; set; }
 
-    /// <summary>信号强度。WiFi/4G</summary>
-    public Int32 Signal { get; set; }
+    ///// <summary>信号强度。WiFi/4G</summary>
+    //public Int32 Signal { get; set; }
 
     ///// <summary>上行速度。网络发送速度，字节每秒</summary>
     //public UInt64 UplinkSpeed { get; set; }
