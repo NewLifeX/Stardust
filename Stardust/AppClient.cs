@@ -64,8 +64,9 @@ public class AppClient : ClientBase, IRegistry
     /// <summary>实例化</summary>
     public AppClient()
     {
-        Features = Features.Ping | Features.Notify;
+        Features = Features.Ping | Features.Notify | Features.CommandReply;
         SetActions("App/");
+        Actions[Features.CommandReply] = "App/CommandReply";
 
         // 加载已保存数据
         var dic = LoadConsumeServicese();

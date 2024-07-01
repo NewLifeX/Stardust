@@ -56,7 +56,7 @@ public class NodeController : BaseController
     protected override void OnWriteError(String action, String message) => WriteHistory(_node, action, false, message, UserHost);
     #endregion
 
-    #region 登录
+    #region 登录注销
     [AllowAnonymous]
     [HttpPost(nameof(Login))]
     public LoginResponse Login(LoginInfo inf)
@@ -110,7 +110,7 @@ public class NodeController : BaseController
     }
     #endregion
 
-    #region 心跳
+    #region 心跳保活
     [HttpPost(nameof(Ping))]
     public PingResponse Ping(PingInfo inf) => _nodeService.Ping(_node, inf, Token, UserHost, _setting);
 
@@ -119,7 +119,7 @@ public class NodeController : BaseController
     public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.UtcNow.ToLong(), };
     #endregion
 
-    #region 升级
+    #region 升级更新
     /// <summary>升级检查</summary>
     /// <param name="channel">更新通道</param>
     /// <returns></returns>
@@ -162,7 +162,7 @@ public class NodeController : BaseController
     }
     #endregion
 
-    #region 上报
+    #region 事件上报
     /// <summary>批量上报事件</summary>
     /// <param name="events">事件集合</param>
     /// <returns></returns>

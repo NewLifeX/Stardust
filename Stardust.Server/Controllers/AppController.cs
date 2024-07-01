@@ -89,7 +89,7 @@ public class AppController : BaseController
     public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.UtcNow.ToLong(), };
     #endregion
 
-    #region 上报
+    #region 事件上报
     /// <summary>批量上报事件</summary>
     /// <param name="events">事件集合</param>
     /// <returns></returns>
