@@ -59,7 +59,7 @@ internal class StarHttpConfigProvider : HttpConfigProvider
                         !svr.EqualIgnoreCase(set.PluginServer) &&
                         (asm == null || !asm.Name.EqualIgnoreCase("StarWeb", "StarServer")))
                     {
-                        XTrace.WriteLine("插件服务器PluginServer变更为 {0}", svr);
+                        XTrace.WriteLine("据配置中心发布，插件服务器PluginServer变更为 {0}", svr);
                         set.PluginServer = svr;
                         set.Save();
                     }

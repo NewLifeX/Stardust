@@ -195,12 +195,12 @@ public class StarFactory : DisposeBase
                 else
                     XTrace.WriteLine("星尘探测：StarAgent Not Found, Cost={0}ms", sw.ElapsedMilliseconds);
 
-                if (inf != null && !inf.PluginServer.IsNullOrEmpty())
+                if (inf != null && !inf.PluginServer.IsNullOrEmpty() && !AppId.EqualIgnoreCase("StarWeb", "StarServer"))
                 {
                     var core = NewLife.Setting.Current;
                     if (!inf.PluginServer.EqualIgnoreCase(core.PluginServer))
                     {
-                        XTrace.WriteLine("插件服务器PluginServer变更为 {0}", inf.PluginServer);
+                        XTrace.WriteLine("据星尘代理公布，插件服务器PluginServer变更为 {0}", inf.PluginServer);
                         core.PluginServer = inf.PluginServer;
                         core.Save();
                     }
