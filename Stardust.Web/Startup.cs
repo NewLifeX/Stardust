@@ -124,6 +124,8 @@ public class Startup
 
         Usewwwroot(app, env);
 
+        app.UseStardust();
+
         // 缓存运行时安装文件
         var set = StarServerSetting.Current;
         if (!set.FileCache.IsNullOrEmpty())

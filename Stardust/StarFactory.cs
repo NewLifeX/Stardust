@@ -375,6 +375,11 @@ public class StarFactory : DisposeBase
                 //if (!ClientId.IsNullOrEmpty()) config.ClientId = ClientId;
                 config.Attach(_client);
 
+                // 为了兼容旧版本，优先给它ApiHttpClient
+                var ver = typeof(HttpConfigProvider).Assembly.GetName().Version;
+                if (ver <= new Version(10, 10, 2024, 0701) && _client.Client is ApiHttpClient client)
+                    config.Client = client;
+
                 //!! 不需要默认加载，直到首次使用配置数据时才加载。因为有可能应用并不使用配置中心，仅仅是获取这个对象。避免网络不通时的报错日志
                 //config.LoadAll();
 
