@@ -677,6 +677,8 @@ internal class ServiceController : DisposeBase
 
     private void MonitorFileChange(Object? state)
     {
+        if (Info?.ReloadOnChange == false) return;
+
         var first = _files.Count == 0;
         var changed = "";
 

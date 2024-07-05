@@ -210,6 +210,22 @@ public partial class AppDeploy
     [BindColumn("Mode", "工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip", "")]
     public Stardust.Models.ServiceModes Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
 
+    private Boolean _AutoStop;
+    /// <summary>是否自动停止。随着宿主的退出，同时停止该应用进程</summary>
+    [DisplayName("是否自动停止")]
+    [Description("是否自动停止。随着宿主的退出，同时停止该应用进程")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("AutoStop", "是否自动停止。随着宿主的退出，同时停止该应用进程", "")]
+    public Boolean AutoStop { get => _AutoStop; set { if (OnPropertyChanging("AutoStop", value)) { _AutoStop = value; OnPropertyChanged("AutoStop"); } } }
+
+    private Boolean _ReloadOnChange;
+    /// <summary>检测文件变动。当文件发生改变时，自动重启应用</summary>
+    [DisplayName("检测文件变动")]
+    [Description("检测文件变动。当文件发生改变时，自动重启应用")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("ReloadOnChange", "检测文件变动。当文件发生改变时，自动重启应用", "")]
+    public Boolean ReloadOnChange { get => _ReloadOnChange; set { if (OnPropertyChanging("ReloadOnChange", value)) { _ReloadOnChange = value; OnPropertyChanged("ReloadOnChange"); } } }
+
     private Int32 _CreateUserId;
     /// <summary>创建者</summary>
     [Category("扩展")]
@@ -304,6 +320,8 @@ public partial class AppDeploy
             "UserName" => _UserName,
             "MaxMemory" => _MaxMemory,
             "Mode" => _Mode,
+            "AutoStop" => _AutoStop,
+            "ReloadOnChange" => _ReloadOnChange,
             "CreateUserId" => _CreateUserId,
             "CreateTime" => _CreateTime,
             "CreateIP" => _CreateIP,
@@ -339,6 +357,8 @@ public partial class AppDeploy
                 case "UserName": _UserName = Convert.ToString(value); break;
                 case "MaxMemory": _MaxMemory = value.ToInt(); break;
                 case "Mode": _Mode = (Stardust.Models.ServiceModes)value.ToInt(); break;
+                case "AutoStop": _AutoStop = value.ToBoolean(); break;
+                case "ReloadOnChange": _ReloadOnChange = value.ToBoolean(); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -433,6 +453,12 @@ public partial class AppDeploy
         /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</summary>
         public static readonly Field Mode = FindByName("Mode");
 
+        /// <summary>是否自动停止。随着宿主的退出，同时停止该应用进程</summary>
+        public static readonly Field AutoStop = FindByName("AutoStop");
+
+        /// <summary>检测文件变动。当文件发生改变时，自动重启应用</summary>
+        public static readonly Field ReloadOnChange = FindByName("ReloadOnChange");
+
         /// <summary>创建者</summary>
         public static readonly Field CreateUserId = FindByName("CreateUserId");
 
@@ -525,6 +551,12 @@ public partial class AppDeploy
 
         /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</summary>
         public const String Mode = "Mode";
+
+        /// <summary>是否自动停止。随着宿主的退出，同时停止该应用进程</summary>
+        public const String AutoStop = "AutoStop";
+
+        /// <summary>检测文件变动。当文件发生改变时，自动重启应用</summary>
+        public const String ReloadOnChange = "ReloadOnChange";
 
         /// <summary>创建者</summary>
         public const String CreateUserId = "CreateUserId";
