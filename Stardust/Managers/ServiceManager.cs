@@ -161,7 +161,7 @@ public class ServiceManager : DisposeBase
         _timer?.TryDispose();
         _timer = null;
 
-        //// 伴随服务停止一起退出
+        // 伴随服务停止一起退出
         //var svcs = _services;
         //for (var i = svcs.Count - 1; i >= 0; i--)
         //{
@@ -172,6 +172,17 @@ public class ServiceManager : DisposeBase
         //        svcs.RemoveAt(i);
         //    }
         //}
+
+        var svcs = _controllers;
+        for (var i = svcs.Count - 1; i >= 0; i--)
+        {
+            var ctrl = svcs[i];
+            if (ctrl.Info != null && ctrl.Info.AutoStop)
+            {
+                ctrl.Stop(reason);
+                svcs.RemoveAt(i);
+            }
+        }
 
         SaveDb();
     }

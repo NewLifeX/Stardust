@@ -38,13 +38,13 @@ public class ServiceInfo
     //[XmlAttribute]
     //public Boolean AutoStart { get; set; }
 
-    ///// <summary>是否自动停止。随着宿主的退出，同时停止该应用进程</summary>
-    //[XmlAttribute]
-    //public Boolean AutoStop { get; set; }
+    /// <summary>是否自动停止。随着宿主的退出，同时停止该应用进程</summary>
+    [XmlAttribute]
+    public Boolean AutoStop { get; set; }
 
-    ///// <summary>检测文件变动。当文件发生改变时，自动重启应用</summary>
-    //[XmlAttribute]
-    //public Boolean ReloadOnChange { get; set; }
+    /// <summary>检测文件变动。当文件发生改变时，自动重启应用</summary>
+    [XmlAttribute]
+    public Boolean ReloadOnChange { get; set; }
 
     /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
     [XmlAttribute]
