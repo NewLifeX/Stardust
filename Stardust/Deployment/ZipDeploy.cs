@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Xml.Serialization;
 using NewLife;
 using NewLife.Log;
 
@@ -29,6 +30,9 @@ public class ZipDeploy
 
     /// <summary>用户。以该用户执行应用</summary>
     public String? UserName { get; set; }
+
+    /// <summary>环境变量。启动应用前设置的环境变量</summary>
+    public String? Environments { get; set; }
 
     /// <summary>覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
     public String? Overwrite { get; set; }
@@ -212,7 +216,7 @@ public class ZipDeploy
         }
 
         // 在环境变量中设置BasePath，不用担心影响当前进程，因为PathHelper仅读取一次
-        Environment.SetEnvironmentVariable("BasePath", rundir.FullName);
+        //Environment.SetEnvironmentVariable("BasePath", rundir.FullName);
         ExecuteFile = runfile.FullName;
 
         WriteLog("运行文件 {0}", runfile);
@@ -227,6 +231,8 @@ public class ZipDeploy
             // true时目标控制台独立窗口，不会一起退出；
             UseShellExecute = false,
         };
+        si.EnvironmentVariables["BasePath"] = rundir.FullName;
+
         if (runfile.Extension.EqualIgnoreCase(".dll"))
         {
             si.FileName = "dotnet";
@@ -241,6 +247,16 @@ public class ZipDeploy
         {
             // Linux下，需要给予可执行权限
             Process.Start("chmod", $"+x {runfile.FullName}").WaitForExit(5_000);
+        }
+
+        // 环境变量。不能用于ShellExecute
+        if (Environments.IsNullOrEmpty() && !si.UseShellExecute)
+        {
+            foreach (var item in Environments.SplitAsDictionary("=", ";"))
+            {
+                if (!item.Key.IsNullOrEmpty())
+                    si.EnvironmentVariables[item.Key] = item.Value;
+            }
         }
 
         // 指定用户时，以特定用户启动进程
