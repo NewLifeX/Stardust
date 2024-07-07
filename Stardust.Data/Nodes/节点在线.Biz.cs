@@ -83,16 +83,16 @@ public partial class NodeOnline : Entity<NodeOnline>
     /// <returns></returns>
     public static NodeOnline FindByNodeId(Int32 nodeId) => Find(__.NodeID, nodeId);
 
-    /// <summary>根据会话查找</summary>
-    /// <param name="sessionid">会话</param>
-    /// <param name="cache">是否走缓存</param>
-    /// <returns></returns>
-    public static NodeOnline FindBySessionID(String sessionid, Boolean cache = true)
-    {
-        if (!cache) return Find(_.SessionID == sessionid);
+    ///// <summary>根据会话查找</summary>
+    ///// <param name="sessionid">会话</param>
+    ///// <param name="cache">是否走缓存</param>
+    ///// <returns></returns>
+    //public static NodeOnline FindBySessionID(String sessionid, Boolean cache = true)
+    //{
+    //    if (!cache) return Find(_.SessionID == sessionid);
 
-        return Meta.SingleCache.GetItemWithSlaveKey(sessionid) as NodeOnline;
-    }
+    //    return Meta.SingleCache.GetItemWithSlaveKey(sessionid) as NodeOnline;
+    //}
 
     /// <summary>根据节点查找所有在线记录</summary>
     /// <param name="nodeId"></param>

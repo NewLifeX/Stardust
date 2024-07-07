@@ -155,7 +155,7 @@ public partial class AppCommand
     [DisplayName("更新时间")]
     [Description("更新时间")]
     [DataObjectField(false, false, true, 0)]
-    [BindColumn("UpdateTime", "更新时间", "")]
+    [BindColumn("UpdateTime", "更新时间", "", DataScale = "time")]
     public DateTime UpdateTime { get => _UpdateTime; set { if (OnPropertyChanging("UpdateTime", value)) { _UpdateTime = value; OnPropertyChanged("UpdateTime"); } } }
 
     private String _UpdateIP;
@@ -223,6 +223,22 @@ public partial class AppCommand
     #endregion
 
     #region 关联映射
+    #endregion
+
+    #region 扩展查询
+    #endregion
+
+    #region 数据清理
+    /// <summary>清理指定时间段内的数据</summary>
+    /// <param name="start">开始时间。未指定时清理小于指定时间的所有数据</param>
+    /// <param name="end">结束时间</param>
+    /// <returns>清理行数</returns>
+    public static Int32 DeleteWith(DateTime start, DateTime end)
+    {
+        if (start == end) return Delete(_.UpdateTime == start);
+
+        return Delete(_.UpdateTime.Between(start, end));
+    }
     #endregion
 
     #region 字段名

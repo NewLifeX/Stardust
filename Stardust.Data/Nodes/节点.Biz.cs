@@ -470,10 +470,10 @@ public partial class Node : Entity<Node>
     #endregion
 
     #region 业务
-    /// <summary>根据编码查询或添加</summary>
-    /// <param name="code"></param>
-    /// <returns></returns>
-    public static Node GetOrAdd(String code) => GetOrAdd(code, FindByCode, k => new Node { Code = k, Enable = true });
+    ///// <summary>根据编码查询或添加</summary>
+    ///// <param name="code"></param>
+    ///// <returns></returns>
+    //public static Node GetOrAdd(String code) => GetOrAdd(code, FindByCode, k => new Node { Code = k, Enable = true });
 
     /// <summary>登录并保存信息</summary>
     /// <param name="di"></param>

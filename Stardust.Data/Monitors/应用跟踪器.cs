@@ -399,6 +399,9 @@ public partial class AppTracer
 
     #endregion
 
+    #region 扩展查询
+    #endregion
+
     #region 字段名
     /// <summary>取得应用跟踪器字段信息的快捷方式</summary>
     public partial class _

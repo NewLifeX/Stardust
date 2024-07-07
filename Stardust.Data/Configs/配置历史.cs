@@ -86,7 +86,7 @@ public partial class ConfigHistory
     [DisplayName("创建时间")]
     [Description("创建时间")]
     [DataObjectField(false, false, true, 0)]
-    [BindColumn("CreateTime", "创建时间", "")]
+    [BindColumn("CreateTime", "创建时间", "", DataScale = "time")]
     public DateTime CreateTime { get => _CreateTime; set { if (OnPropertyChanging("CreateTime", value)) { _CreateTime = value; OnPropertyChanged("CreateTime"); } } }
 
     private String _CreateIP;
@@ -146,6 +146,22 @@ public partial class ConfigHistory
     [Map(nameof(ConfigId), typeof(AppConfig), "Id")]
     public String ConfigName => Config?.ToString();
 
+    #endregion
+
+    #region 扩展查询
+    #endregion
+
+    #region 数据清理
+    /// <summary>清理指定时间段内的数据</summary>
+    /// <param name="start">开始时间。未指定时清理小于指定时间的所有数据</param>
+    /// <param name="end">结束时间</param>
+    /// <returns>清理行数</returns>
+    public static Int32 DeleteWith(DateTime start, DateTime end)
+    {
+        if (start == end) return Delete(_.CreateTime == start);
+
+        return Delete(_.CreateTime.Between(start, end));
+    }
     #endregion
 
     #region 字段名

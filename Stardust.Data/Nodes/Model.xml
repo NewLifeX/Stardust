@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202309.xsd" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model202309.xsd">
+<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202407.xsd" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model202407.xsd">
   <Option>
     <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
     <ClassNameTemplate />
@@ -119,7 +119,7 @@
         <Index Columns="UpdateTime" />
       </Indexes>
     </Table>
-    <Table Name="NodeOnline" Description="节点在线" ConnName="StardustData">
+    <Table Name="NodeOnline" Description="节点在线" ConnName="StardustData" UsingCache="False">
       <Columns>
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
@@ -176,7 +176,7 @@
     </Table>
     <Table Name="NodeHistory" Description="节点历史" ConnName="StardustData">
       <Columns>
-        <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+        <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="time" Description="编号" />
         <Column Name="NodeID" DataType="Int32" Description="节点" />
         <Column Name="Name" DataType="String" Master="True" Description="名称" />
         <Column Name="ProvinceID" DataType="Int32" Description="省份" />
@@ -197,7 +197,7 @@
     </Table>
     <Table Name="NodeData" Description="节点数据。保存设备上来的一些数据，如心跳状态" ConnName="StardustData">
       <Columns>
-        <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+        <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="time" Description="编号" />
         <Column Name="NodeID" DataType="Int32" Description="节点" />
         <Column Name="Name" DataType="String" Master="True" Description="名称" />
         <Column Name="AvailableMemory" DataType="Int32" Description="可用内存。单位M" />
@@ -250,7 +250,7 @@
         <Index Columns="Version" Unique="True" />
       </Indexes>
     </Table>
-    <Table Name="NodeCommand" Description="节点命令" ConnName="StardustData">
+    <Table Name="NodeCommand" Description="节点命令" ConnName="StardustData" UsingCache="False">
       <Columns>
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="NodeID" DataType="Int32" Description="节点" />
@@ -267,7 +267,7 @@
         <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
         <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
         <Column Name="UpdateUserID" DataType="Int32" Description="更新者" Category="扩展" />
-        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" DataScale="time" Description="更新时间" Category="扩展" />
         <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
       </Columns>
       <Indexes>
@@ -280,7 +280,7 @@
       <Columns>
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="Category" DataType="String" Description="类别。业务方向分类，例如操作系统占比" />
-        <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
+        <Column Name="StatDate" DataType="DateTime" DataScale="time:yyyy-MM-dd" Description="统计日期" />
         <Column Name="Key" DataType="String" Description="统计项。统计项编码" />
         <Column Name="LinkItem" DataType="String" Description="关联项" />
         <Column Name="Total" DataType="Int32" Description="总数。1年内活跃过的全部节点数" />

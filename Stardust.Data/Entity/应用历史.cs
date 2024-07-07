@@ -29,7 +29,7 @@ public partial class AppHistory
     [DisplayName("编号")]
     [Description("编号")]
     [DataObjectField(true, false, false, 0)]
-    [BindColumn("Id", "编号", "")]
+    [BindColumn("Id", "编号", "", DataScale = "time")]
     public Int64 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
     private Int32 _AppId;
@@ -160,6 +160,29 @@ public partial class AppHistory
     #endregion
 
     #region 关联映射
+    #endregion
+
+    #region 扩展查询
+    /// <summary>根据应用查找</summary>
+    /// <param name="appId">应用</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppHistory> FindAllByAppId(Int32 appId)
+    {
+        if (appId < 0) return [];
+
+        return FindAll(_.AppId == appId);
+    }
+    #endregion
+
+    #region 数据清理
+    /// <summary>清理指定时间段内的数据</summary>
+    /// <param name="start">开始时间。未指定时清理小于指定时间的所有数据</param>
+    /// <param name="end">结束时间</param>
+    /// <returns>清理行数</returns>
+    public static Int32 DeleteWith(DateTime start, DateTime end)
+    {
+        return Delete(_.Id.Between(start, end, Meta.Factory.Snow));
+    }
     #endregion
 
     #region 字段名

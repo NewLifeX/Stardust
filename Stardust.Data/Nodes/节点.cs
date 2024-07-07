@@ -756,6 +756,21 @@ public partial class Node
 
     #endregion
 
+    #region 扩展查询
+    /// <summary>根据编码查找</summary>
+    /// <param name="code">编码</param>
+    /// <returns>实体对象</returns>
+    public static Node FindByCode(String code)
+    {
+        if (code.IsNullOrEmpty()) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Code.EqualIgnoreCase(code));
+
+        return Find(_.Code == code);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得节点字段信息的快捷方式</summary>
     public partial class _

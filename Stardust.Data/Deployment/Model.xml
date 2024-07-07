@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202309.xsd" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model202309.xsd">
+<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202407.xsd" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model202407.xsd">
   <Option>
     <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
     <ClassNameTemplate />
@@ -144,7 +144,7 @@
     </Table>
     <Table Name="AppDeployHistory" Description="部署历史。记录应用集部署历史" ConnName="StardustData">
       <Columns>
-        <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+        <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="time" Description="编号" />
         <Column Name="DeployId" ColumnName="AppId" DataType="Int32" Map="AppDeploy@Id@$" Description="应用部署集。对应AppDeploy" />
         <Column Name="NodeId" DataType="Int32" Map="Stardust.Data.Nodes.Node@ID@Name" Description="节点。节点服务器" />
         <Column Name="Action" DataType="String" Nullable="False" Description="操作" />
@@ -163,7 +163,7 @@
     </Table>
     <Table Name="Attachment" Description="附件。用于记录各系统模块使用的文件，可以是Local/NAS/OSS等，对应魔方附件表" ConnName="Cube">
       <Columns>
-        <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+        <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="time" Description="编号" />
         <Column Name="Category" DataType="String" Description="业务分类" />
         <Column Name="Key" DataType="String" Description="业务主键" />
         <Column Name="Title" DataType="String" Length="200" Description="标题。业务内容作为附件标题，便于查看管理" />

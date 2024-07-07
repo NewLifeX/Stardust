@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202309.xsd" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model202309.xsd">
+<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202407.xsd" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model202407.xsd">
   <Option>
     <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
     <ClassNameTemplate />
@@ -134,7 +134,7 @@
     </Table>
     <Table Name="TraceData" Description="跟踪数据。应用定时上报采样得到的埋点追踪原始数据，应用端已完成初步统计，后端将再次向上汇总" ConnName="StardustData">
       <Columns>
-        <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+        <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="timeShard:yyyyMMdd" Description="编号" />
         <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
         <Column Name="StatHour" DataType="DateTime" Description="统计小时" />
         <Column Name="StatMinute" DataType="DateTime" Description="统计分钟" />
@@ -168,7 +168,7 @@
     </Table>
     <Table Name="SampleData" Description="采样数据。具体调用或异常详情，每次追踪统计携带少量样板，用于链路分析以及异常追踪" ConnName="StardustData">
       <Columns>
-        <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+        <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="timeShard:yyyyMMdd" Description="编号" />
         <Column Name="DataId" DataType="Int64" Description="数据" />
         <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
         <Column Name="Success" DataType="Boolean" Description="正常" />
@@ -192,7 +192,7 @@
     </Table>
     <Table Name="SampleData2" Description="采样数据2。采样备份，用于链路分析以及异常追踪" ConnName="StardustData">
       <Columns>
-        <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+        <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="time" Description="编号" />
         <Column Name="DataId" DataType="Int64" Description="数据" />
         <Column Name="AppId" DataType="Int32" Description="应用" />
         <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
@@ -220,7 +220,7 @@
     <Table Name="TraceDayStat" Description="跟踪每日统计。每应用每接口每日统计，用于分析接口健康状况">
       <Columns>
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
+        <Column Name="StatDate" DataType="DateTime" DataScale="time:yyyy-MM-dd" Description="统计日期" />
         <Column Name="AppId" DataType="Int32" Description="应用" />
         <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
         <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
@@ -248,7 +248,7 @@
     <Table Name="TraceHourStat" Description="跟踪小时统计。每应用每接口每小时统计，用于分析接口健康状况" ConnName="StardustData">
       <Columns>
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="StatTime" DataType="DateTime" Description="统计小时" />
+        <Column Name="StatTime" DataType="DateTime" DataScale="time:yyyy-MM-dd HH" Description="统计小时" />
         <Column Name="AppId" DataType="Int32" Description="应用" />
         <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
         <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
@@ -273,7 +273,7 @@
     <Table Name="TraceMinuteStat" Description="跟踪分钟统计。每应用每接口每5分钟统计，用于分析接口健康状况" ConnName="StardustData">
       <Columns>
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="StatTime" DataType="DateTime" Description="统计分钟" />
+        <Column Name="StatTime" DataType="DateTime" DataScale="time:yyyy-MM-dd HH:mm" Description="统计分钟" />
         <Column Name="AppId" DataType="Int32" Description="应用" />
         <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
         <Column Name="Name" DataType="String" Master="True" Length="200" Description="操作名。接口名或埋点名" />
@@ -297,7 +297,7 @@
     <Table Name="AppDayStat" Description="应用每日统计。每应用每日统计，用于分析应用健康状况">
       <Columns>
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
+        <Column Name="StatDate" DataType="DateTime" DataScale="time:yyyy-MM-dd" Description="统计日期" />
         <Column Name="AppId" DataType="Int32" Description="应用" />
         <Column Name="Names" DataType="Int32" Description="埋点数" />
         <Column Name="Total" DataType="Int64" Description="总次数" />
@@ -324,7 +324,7 @@
     <Table Name="AppMinuteStat" Description="应用分钟统计。每应用每5分钟统计，用于分析应用健康状况" ConnName="StardustData">
       <Columns>
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="StatTime" DataType="DateTime" Description="统计分钟" />
+        <Column Name="StatTime" DataType="DateTime" DataScale="time:yyyy-MM-dd HH:mm" Description="统计分钟" />
         <Column Name="AppId" DataType="Int32" Description="应用" />
         <Column Name="Total" DataType="Int64" Description="总次数" />
         <Column Name="Errors" DataType="Int64" Description="错误数" />
@@ -365,7 +365,7 @@
     </Table>
     <Table Name="AlarmHistory" Description="告警历史。记录告警内容" ConnName="StardustData">
       <Columns>
-        <Column Name="Id" DataType="Int64" PrimaryKey="True" Description="编号" />
+        <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="time" Description="编号" />
         <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
         <Column Name="GroupId" DataType="Int32" Description="告警组" />
         <Column Name="Category" DataType="String" Description="类别。钉钉、企业微信" />

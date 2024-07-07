@@ -505,6 +505,28 @@ public partial class NodeOnline
 
     #endregion
 
+    #region 扩展查询
+    /// <summary>根据编号查找</summary>
+    /// <param name="id">编号</param>
+    /// <returns>实体对象</returns>
+    public static NodeOnline FindByID(Int32 id)
+    {
+        if (id < 0) return null;
+
+        return Find(_.ID == id);
+    }
+
+    /// <summary>根据会话查找</summary>
+    /// <param name="sessionId">会话</param>
+    /// <returns>实体对象</returns>
+    public static NodeOnline FindBySessionID(String sessionId)
+    {
+        if (sessionId.IsNullOrEmpty()) return null;
+
+        return Find(_.SessionID == sessionId);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得节点在线字段信息的快捷方式</summary>
     public partial class _

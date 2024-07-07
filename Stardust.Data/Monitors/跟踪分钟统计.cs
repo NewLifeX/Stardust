@@ -36,7 +36,7 @@ public partial class TraceMinuteStat
     [DisplayName("统计分钟")]
     [Description("统计分钟")]
     [DataObjectField(false, false, true, 0)]
-    [BindColumn("StatTime", "统计分钟", "")]
+    [BindColumn("StatTime", "统计分钟", "", DataScale = "time:yyyy-MM-dd HH:mm")]
     public DateTime StatTime { get => _StatTime; set { if (OnPropertyChanging("StatTime", value)) { _StatTime = value; OnPropertyChanged("StatTime"); } } }
 
     private Int32 _AppId;
@@ -208,6 +208,22 @@ public partial class TraceMinuteStat
     #endregion
 
     #region 关联映射
+    #endregion
+
+    #region 扩展查询
+    #endregion
+
+    #region 数据清理
+    /// <summary>清理指定时间段内的数据</summary>
+    /// <param name="start">开始时间。未指定时清理小于指定时间的所有数据</param>
+    /// <param name="end">结束时间</param>
+    /// <returns>清理行数</returns>
+    public static Int32 DeleteWith(DateTime start, DateTime end)
+    {
+        if (start == end) return Delete(_.StatTime == start);
+
+        return Delete(_.StatTime.Between(start, end));
+    }
     #endregion
 
     #region 字段名
