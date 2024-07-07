@@ -328,6 +328,16 @@ internal class ServiceController : DisposeBase
             UseShellExecute = false,
         };
 
+        // 环境变量。不能用于ShellExecute
+        if (service.Environments.IsNullOrEmpty() && !si.UseShellExecute)
+        {
+            foreach (var item in service.Environments.SplitAsDictionary("=", ";"))
+            {
+                if (!item.Key.IsNullOrEmpty())
+                    si.EnvironmentVariables[item.Key] = item.Value;
+            }
+        }
+
         if (Runtime.Linux)
         {
             // Linux下，需要给予可执行权限

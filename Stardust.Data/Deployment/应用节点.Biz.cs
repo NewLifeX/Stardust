@@ -182,12 +182,14 @@ public partial class AppDeployNode : Entity<AppDeployNode>
 
             Enable = app.Enable && Enable,
             //AutoStart = app.AutoStart,
-            //AutoStop = app.AutoStop,
+            AutoStop = app.AutoStop,
+            ReloadOnChange = app.ReloadOnChange,
             MaxMemory = app.MaxMemory,
             Mode = Mode,
         };
         if (inf.FileName.IsNullOrEmpty()) inf.FileName = app.FileName;
         if (inf.Arguments.IsNullOrEmpty()) inf.Arguments = app.Arguments;
+        if (inf.Environments.IsNullOrEmpty()) inf.Environments = app.Environments;
         if (inf.WorkingDirectory.IsNullOrEmpty()) inf.WorkingDirectory = app.WorkingDirectory;
         if (inf.UserName.IsNullOrEmpty()) inf.UserName = app.UserName;
         if (inf.Mode <= ServiceModes.Default) inf.Mode = app.Mode;

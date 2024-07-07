@@ -192,6 +192,15 @@ public partial class AppDeploy
     [BindColumn("UserName", "用户名。以该用户执行应用", "")]
     public String UserName { get => _UserName; set { if (OnPropertyChanging("UserName", value)) { _UserName = value; OnPropertyChanged("UserName"); } } }
 
+    private String _Environments;
+    /// <summary>环境变量。启动应用前设置的环境变量</summary>
+    [Category("发布参数")]
+    [DisplayName("环境变量")]
+    [Description("环境变量。启动应用前设置的环境变量")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("Environments", "环境变量。启动应用前设置的环境变量", "")]
+    public String Environments { get => _Environments; set { if (OnPropertyChanging("Environments", value)) { _Environments = value; OnPropertyChanged("Environments"); } } }
+
     private Int32 _MaxMemory;
     /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
     [Category("发布参数")]
@@ -211,19 +220,21 @@ public partial class AppDeploy
     public Stardust.Models.ServiceModes Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
 
     private Boolean _AutoStop;
-    /// <summary>是否自动停止。随着宿主的退出，同时停止该应用进程</summary>
-    [DisplayName("是否自动停止")]
-    [Description("是否自动停止。随着宿主的退出，同时停止该应用进程")]
+    /// <summary>自动停止。随着宿主的退出，同时停止该应用进程</summary>
+    [Category("发布参数")]
+    [DisplayName("自动停止")]
+    [Description("自动停止。随着宿主的退出，同时停止该应用进程")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("AutoStop", "是否自动停止。随着宿主的退出，同时停止该应用进程", "")]
+    [BindColumn("AutoStop", "自动停止。随着宿主的退出，同时停止该应用进程", "")]
     public Boolean AutoStop { get => _AutoStop; set { if (OnPropertyChanging("AutoStop", value)) { _AutoStop = value; OnPropertyChanged("AutoStop"); } } }
 
     private Boolean _ReloadOnChange;
-    /// <summary>检测文件变动。当文件发生改变时，自动重启应用</summary>
-    [DisplayName("检测文件变动")]
-    [Description("检测文件变动。当文件发生改变时，自动重启应用")]
+    /// <summary>检测变动。当文件发生改变时，自动重启应用</summary>
+    [Category("发布参数")]
+    [DisplayName("检测变动")]
+    [Description("检测变动。当文件发生改变时，自动重启应用")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("ReloadOnChange", "检测文件变动。当文件发生改变时，自动重启应用", "")]
+    [BindColumn("ReloadOnChange", "检测变动。当文件发生改变时，自动重启应用", "")]
     public Boolean ReloadOnChange { get => _ReloadOnChange; set { if (OnPropertyChanging("ReloadOnChange", value)) { _ReloadOnChange = value; OnPropertyChanged("ReloadOnChange"); } } }
 
     private Int32 _CreateUserId;
@@ -318,6 +329,7 @@ public partial class AppDeploy
             "Arguments" => _Arguments,
             "WorkingDirectory" => _WorkingDirectory,
             "UserName" => _UserName,
+            "Environments" => _Environments,
             "MaxMemory" => _MaxMemory,
             "Mode" => _Mode,
             "AutoStop" => _AutoStop,
@@ -355,6 +367,7 @@ public partial class AppDeploy
                 case "Arguments": _Arguments = Convert.ToString(value); break;
                 case "WorkingDirectory": _WorkingDirectory = Convert.ToString(value); break;
                 case "UserName": _UserName = Convert.ToString(value); break;
+                case "Environments": _Environments = Convert.ToString(value); break;
                 case "MaxMemory": _MaxMemory = value.ToInt(); break;
                 case "Mode": _Mode = (Stardust.Models.ServiceModes)value.ToInt(); break;
                 case "AutoStop": _AutoStop = value.ToBoolean(); break;
@@ -450,16 +463,19 @@ public partial class AppDeploy
         /// <summary>用户名。以该用户执行应用</summary>
         public static readonly Field UserName = FindByName("UserName");
 
+        /// <summary>环境变量。启动应用前设置的环境变量</summary>
+        public static readonly Field Environments = FindByName("Environments");
+
         /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
         public static readonly Field MaxMemory = FindByName("MaxMemory");
 
         /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</summary>
         public static readonly Field Mode = FindByName("Mode");
 
-        /// <summary>是否自动停止。随着宿主的退出，同时停止该应用进程</summary>
+        /// <summary>自动停止。随着宿主的退出，同时停止该应用进程</summary>
         public static readonly Field AutoStop = FindByName("AutoStop");
 
-        /// <summary>检测文件变动。当文件发生改变时，自动重启应用</summary>
+        /// <summary>检测变动。当文件发生改变时，自动重启应用</summary>
         public static readonly Field ReloadOnChange = FindByName("ReloadOnChange");
 
         /// <summary>创建者</summary>
@@ -549,16 +565,19 @@ public partial class AppDeploy
         /// <summary>用户名。以该用户执行应用</summary>
         public const String UserName = "UserName";
 
+        /// <summary>环境变量。启动应用前设置的环境变量</summary>
+        public const String Environments = "Environments";
+
         /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
         public const String MaxMemory = "MaxMemory";
 
         /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</summary>
         public const String Mode = "Mode";
 
-        /// <summary>是否自动停止。随着宿主的退出，同时停止该应用进程</summary>
+        /// <summary>自动停止。随着宿主的退出，同时停止该应用进程</summary>
         public const String AutoStop = "AutoStop";
 
-        /// <summary>检测文件变动。当文件发生改变时，自动重启应用</summary>
+        /// <summary>检测变动。当文件发生改变时，自动重启应用</summary>
         public const String ReloadOnChange = "ReloadOnChange";
 
         /// <summary>创建者</summary>

@@ -162,17 +162,6 @@ public class ServiceManager : DisposeBase
         _timer = null;
 
         // 伴随服务停止一起退出
-        //var svcs = _services;
-        //for (var i = svcs.Count - 1; i >= 0; i--)
-        //{
-        //    var svc = svcs[i];
-        //    if (svc.Info != null && svc.Info.AutoStop)
-        //    {
-        //        svc.Stop(reason);
-        //        svcs.RemoveAt(i);
-        //    }
-        //}
-
         var svcs = _controllers;
         for (var i = svcs.Count - 1; i >= 0; i--)
         {
@@ -434,9 +423,10 @@ public class ServiceManager : DisposeBase
                 old.Arguments = svc.Arguments;
                 old.WorkingDirectory = svc.WorkingDirectory;
                 old.UserName = svc.UserName;
+                old.Environments = svc.Environments;
                 old.Enable = svc.Enable;
-                //old.AutoStart = svc.AutoStart;
-                //svc.AutoStop = item.AutoStop;
+                old.AutoStop = svc.AutoStop;
+                old.ReloadOnChange = svc.ReloadOnChange;
                 old.MaxMemory = svc.MaxMemory;
                 old.Mode = svc.Mode;
                 old.ZipFile = svc.ZipFile;
