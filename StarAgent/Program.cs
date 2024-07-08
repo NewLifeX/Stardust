@@ -246,6 +246,8 @@ internal class MyService : ServiceBase, IServiceProvider
             Log = XTrace.Log,
         };
         manager.SetServices(set.Services);
+        manager.ServiceStarting += OnServiceStarting;
+        manager.ServiceStoped += OnServiceStoped;
         manager.ServiceChanged += OnServiceChanged;
 
         _Manager = manager;
@@ -311,6 +313,18 @@ internal class MyService : ServiceBase, IServiceProvider
         //_Manager.Services = AgentSetting.Services;
         _Manager.SetServices(AgentSetting.Services);
     }
+
+    private void OnServiceStoped(Object sender, ServiceEventArgs e)
+    {
+        var ctrl = e.Controller;
+        if (Runtime.Windows && ctrl?.Info?.UserName == "$")
+        {
+            // 插入桌面服务处理器
+            ctrl.Handlers.Insert(0, new DesktopServiceHandler());
+        }
+    }
+
+    private void OnServiceStarting(Object sender, ServiceEventArgs e) { }
 
     private void OnServiceChanged(Object sender, EventArgs eventArgs)
     {
