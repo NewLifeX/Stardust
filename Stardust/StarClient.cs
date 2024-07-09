@@ -38,9 +38,8 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
     /// <summary>实例化</summary>
     public StarClient()
     {
-        Features = Features.Login | Features.Logout | Features.Ping | Features.Notify | Features.Upgrade | Features.CommandReply | Features.PostEvent;
+        Features = Features.Login | Features.Logout | Features.Ping | Features.Upgrade | Features.Notify | Features.CommandReply | Features.PostEvent;
         SetActions("Node/");
-        Actions[Features.CommandReply] = "Node/CommandReply";
 
         Log = XTrace.Log;
     }

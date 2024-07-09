@@ -373,14 +373,18 @@ internal class MyService : ServiceBase, IServiceProvider
         WriteLog("初始化服务端地址：{0}", server);
 
         var set = AgentSetting;
-        var client = new StarClient(server)
+        var client = new MyStarClient
         {
+            Server = server,
             Code = set.Code,
             Secret = set.Secret,
             ProductCode = "StarAgent",
+
             Log = XTrace.Log,
 
             //Manager = _Manager,
+            //Host = Host,
+            Service = this,
         };
 
         // 登录后保存证书
@@ -420,6 +424,10 @@ internal class MyService : ServiceBase, IServiceProvider
 
         //// 使用跟踪
         //client.UseTrace();
+
+        client.RegisterCommand("node/restart", Restart);
+        client.RegisterCommand("node/reboot", Reboot);
+        client.RegisterCommand("node/setchannel", SetChannel);
 
         _Client = client;
         _container.AddSingleton(client);
@@ -508,12 +516,6 @@ internal class MyService : ServiceBase, IServiceProvider
         }
 
         _timer.TryDispose();
-        _timer = new TimerX(CheckUpgrade, null, 5_000, 600_000) { Async = true };
-
-        client.RegisterCommand("node/upgrade", s => _ = CheckUpgrade(s));
-        client.RegisterCommand("node/restart", Restart);
-        client.RegisterCommand("node/reboot", Reboot);
-        client.RegisterCommand("node/setchannel", SetChannel);
     }
 
     /// <summary>重启应用服务</summary>
@@ -610,110 +612,6 @@ internal class MyService : ServiceBase, IServiceProvider
     #endregion
 
     #region 自动更新
-    private async Task CheckUpgrade(Object data)
-    {
-        if (!NetworkInterface.GetIsNetworkAvailable()) return;
-
-        var client = _Client;
-        using var span = client.Tracer?.NewSpan("CheckUpgrade", new { _lastVersion });
-
-        // 运行过程中可能改变配置文件的通道
-        var channel = AgentSetting.Channel;
-        var ug = new Upgrade { Log = XTrace.Log };
-
-        // 去除多余入口文件
-        ug.Trim("StarAgent");
-
-        // 检查更新
-        var ur = await client.Upgrade(channel);
-        if (ur != null && ur.Version != _lastVersion)
-        {
-            client.WriteInfoEvent("Upgrade", $"准备从[{_lastVersion}]更新到[{ur.Version}]，开始下载 {ur.Source}");
-            try
-            {
-                ug.Url = client.BuildUrl(ur.Source);
-                await ug.Download();
-
-                // 检查文件完整性
-                var checkHash = ug.CheckFileHash(ur.FileHash);
-                if (!ur.FileHash.IsNullOrEmpty() && !checkHash)
-                {
-                    client.WriteInfoEvent("Upgrade", "下载完成，哈希校验失败");
-                }
-                else
-                {
-                    client.WriteInfoEvent("Upgrade", "下载完成，准备解压文件");
-                    if (!ug.Extract())
-                    {
-                        client.WriteInfoEvent("Upgrade", "解压失败");
-                    }
-                    else
-                    {
-                        if (ur is UpgradeInfo ur2 && !ur2.Preinstall.IsNullOrEmpty())
-                        {
-                            client.WriteInfoEvent("Upgrade", "执行预安装脚本");
-
-                            ug.Run(ur2.Preinstall);
-                        }
-
-                        client.WriteInfoEvent("Upgrade", "解压完成，准备覆盖文件");
-
-                        // 执行更新，解压缩覆盖文件
-                        var rs = ug.Update();
-                        if (rs && !ur.Executor.IsNullOrEmpty()) ug.Run(ur.Executor);
-                        _lastVersion = ur.Version;
-
-                        // 去除多余入口文件
-                        ug.Trim("StarAgent");
-
-                        // 强制更新时，马上重启
-                        if (rs && ur.Force)
-                        {
-                            // 带有-s参数就算是服务中运行
-                            var inService = "-s".EqualIgnoreCase(Environment.GetCommandLineArgs());
-                            var pid = Process.GetCurrentProcess().Id;
-
-                            // 以服务方式运行时，重启服务，否则采取拉起进程的方式
-                            if (inService || Host is DefaultHost host && host.InService)
-                            {
-                                client.WriteInfoEvent("Upgrade", "强制更新完成，准备重启后台服务！PID=" + pid);
-
-                                //rs = Host.Restart("StarAgent");
-                                // 使用外部命令重启服务
-                                rs = ug.Run("StarAgent", "-restart -upgrade");
-
-                                //!! 这里不需要自杀，外部命令重启服务会结束当前进程
-                            }
-                            else
-                            {
-                                // 重新拉起进程
-                                rs = ug.Run("StarAgent", "-run -upgrade");
-
-                                if (rs)
-                                {
-                                    StopWork("Upgrade");
-
-                                    client.WriteInfoEvent("Upgrade", "强制更新完成，新进程已拉起，准备退出当前进程！PID=" + pid);
-
-                                    ug.KillSelf();
-                                }
-                                else
-                                {
-                                    client.WriteInfoEvent("Upgrade", "强制更新完成，但拉起新进程失败");
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                XTrace.WriteException(ex);
-                client.WriteErrorEvent("Upgrade", ex.ToString());
-            }
-        }
-    }
-
     /// <summary>修复模式启动StarAgent，以修复正式的StarAgent</summary>
     public void Repair()
     {
@@ -824,8 +722,6 @@ internal class MyService : ServiceBase, IServiceProvider
         if (!set.Server.IsNullOrEmpty()) Console.WriteLine("服务端：{0}", set.Server);
         Console.WriteLine();
     }
-
-
 
     public void SetServer(String[] args)
     {
