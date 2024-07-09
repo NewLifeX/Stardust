@@ -7,6 +7,7 @@ using NewLife.Http;
 using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Remoting.Models;
+using NewLife.Security;
 using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data.Deployment;
@@ -283,8 +284,8 @@ public class NodeController : BaseController
         _node = node;
         if (error != null) throw error;
 
-        //XTrace.WriteLine("WebSocket连接 {0}", node);
-        WriteHistory(node, "WebSocket连接", true, socket.State + "");
+        var sid = Rand.Next();
+        WriteHistory(node, "WebSocket连接", true, $"State={socket.State} sid={sid}");
 
         var olt = _nodeService.GetOrAddOnline(node, token, ip);
         if (olt != null)
@@ -311,7 +312,7 @@ public class NodeController : BaseController
             }
         }, source);
 
-        WriteHistory(node, "WebSocket断开", true, $"State={socket.State} CloseStatus={socket.CloseStatus}");
+        WriteHistory(node, "WebSocket断开", true, $"State={socket.State} CloseStatus={socket.CloseStatus} sid={sid}");
         if (olt != null)
         {
             olt.WebSocket = false;
