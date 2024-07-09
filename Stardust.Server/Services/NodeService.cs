@@ -16,12 +16,14 @@ namespace Stardust.Server.Services;
 public class NodeService
 {
     private readonly TokenService _tokenService;
+    private readonly IPasswordProvider _passwordProvider;
     private readonly ICacheProvider _cacheProvider;
     private readonly ITracer _tracer;
 
-    public NodeService(TokenService tokenService, ICacheProvider cacheProvider, ITracer tracer)
+    public NodeService(TokenService tokenService, IPasswordProvider passwordProvider, ICacheProvider cacheProvider, ITracer tracer)
     {
         _tokenService = tokenService;
+        _passwordProvider = passwordProvider;
         _cacheProvider = cacheProvider;
         _tracer = tracer;
     }
@@ -35,7 +37,8 @@ public class NodeService
         if (node == null) return false;
 
         if (node.Secret.IsNullOrEmpty()) return true;
-        return !secret.IsNullOrEmpty() && !secret.IsNullOrEmpty() && (node.Secret == secret || node.Secret.MD5() == secret);
+        //return !secret.IsNullOrEmpty() && !secret.IsNullOrEmpty() && (node.Secret == secret || node.Secret.MD5() == secret);
+        return _passwordProvider.Verify(node.Secret, secret);
     }
 
     public Node Register(LoginInfo inf, String ip, StarServerSetting setting)

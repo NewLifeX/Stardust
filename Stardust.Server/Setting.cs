@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using NewLife;
 using NewLife.Configuration;
+using NewLife.Remoting.Extensions.Models;
 using NewLife.Security;
 using XCode.Configuration;
 
@@ -8,7 +9,7 @@ namespace Stardust.Server;
 
 /// <summary>配置</summary>
 [Config("StarServer")]
-public class StarServerSetting : Config<StarServerSetting>
+public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
 {
     #region 静态
     static StarServerSetting() => Provider = new DbConfigProvider { UserId = 0, Category = "StarServer" };

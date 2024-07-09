@@ -1,15 +1,15 @@
 ﻿using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Caching.Services;
 using NewLife.IP;
 using NewLife.Log;
-using NewLife.Net;
+using NewLife.Remoting.Extensions;
+using NewLife.Security;
 using NewLife.Serialization;
-using Stardust.Data;
 using Stardust.Data.Nodes;
 using Stardust.Extensions.Caches;
 using Stardust.Monitors;
@@ -101,6 +101,12 @@ public class Startup
         services.AddHostedService<ShardTableService>();
         services.AddHostedService<AlarmService>();
         services.AddHostedService<NodeStatService>();
+
+        // 注入Remoting服务
+        services.AddRemoting(set);
+
+        //// 注册密码提供者，用于通信过程中保护密钥，避免明文传输
+        //services.TryAddSingleton<IPasswordProvider>(new SaltPasswordProvider { Algorithm = "md5", SaltTime = 60 });
 
         // 启用接口响应压缩
         services.AddResponseCompression();
