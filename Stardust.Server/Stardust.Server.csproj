@@ -30,11 +30,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Common\DateTimeConverter.cs" />
-    <Compile Remove="Common\JsonConverter.cs" />
-    <Compile Remove="Common\JsonConverterForBuilder.cs" />
-    <Compile Remove="Common\TokenFilter.cs" />
-    <Compile Remove="Common\TokenSession.cs" />
+    <Compile Remove="Common\**" />
+    <Content Remove="Common\**" />
+    <EmbeddedResource Remove="Common\**" />
+    <None Remove="Common\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Controllers\DustController.cs" />
     <Compile Remove="Models\CommandInModel.cs" />
     <Compile Remove="Services\CacheFileProvider.cs" />
     <Compile Remove="StarService.cs" />
@@ -42,7 +45,8 @@
 
   <ItemGroup>
     <PackageReference Include="NewLife.IP" Version="2.1.2024.407" />
-    <PackageReference Include="NewLife.Redis" Version="5.7.2024.701" />
+    <PackageReference Include="NewLife.Redis" Version="5.7.2024.709" />
+    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.0.2024.710-beta1226" />
   </ItemGroup>
 
   <ItemGroup>

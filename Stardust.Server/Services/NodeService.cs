@@ -1,4 +1,5 @@
-﻿using NewLife;
+﻿using System.Xml.Linq;
+using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Remoting;
@@ -16,12 +17,14 @@ namespace Stardust.Server.Services;
 public class NodeService
 {
     private readonly TokenService _tokenService;
+    private readonly IPasswordProvider _passwordProvider;
     private readonly ICacheProvider _cacheProvider;
     private readonly ITracer _tracer;
 
-    public NodeService(TokenService tokenService, ICacheProvider cacheProvider, ITracer tracer)
+    public NodeService(TokenService tokenService, IPasswordProvider passwordProvider, ICacheProvider cacheProvider, ITracer tracer)
     {
         _tokenService = tokenService;
+        _passwordProvider = passwordProvider;
         _cacheProvider = cacheProvider;
         _tracer = tracer;
     }
@@ -32,10 +35,21 @@ public class NodeService
         if (node == null) return false;
 
         node = CheckNode(node, inf.Node, inf.ProductCode, ip, setting.NodeCodeLevel);
-        if (node == null) return false;
+        if (node == null)
+        {
+            WriteHistory(node, "节点鉴权", false, "硬件信息变动过大", ip);
+            return false;
+        }
 
         if (node.Secret.IsNullOrEmpty()) return true;
-        return !secret.IsNullOrEmpty() && !secret.IsNullOrEmpty() && (node.Secret == secret || node.Secret.MD5() == secret);
+        //return !secret.IsNullOrEmpty() && !secret.IsNullOrEmpty() && (node.Secret == secret || node.Secret.MD5() == secret);
+        if (!_passwordProvider.Verify(node.Secret, secret))
+        {
+            WriteHistory(node, "节点鉴权", false, "密钥校验失败", ip);
+            return false;
+        }
+
+        return true;
     }
 
     public Node Register(LoginInfo inf, String ip, StarServerSetting setting)
@@ -52,13 +66,14 @@ public class NodeService
         }
         else
         {
-            // 登录密码未设置或者未提交，则执行动态注册
-            if (node == null || node.Secret.IsNullOrEmpty() || secret.IsNullOrEmpty())
-                node = AutoRegister(node, inf, ip, setting);
-            else if (node.Secret.MD5() != secret)
-                node = AutoRegister(node, inf, ip, setting);
-            else if (setting.NodeCodeLevel > 0)
-                node = AutoRegister(node, inf, ip, setting);
+            //// 登录密码未设置或者未提交，则执行动态注册
+            //if (node == null || node.Secret.IsNullOrEmpty() || secret.IsNullOrEmpty())
+            //    node = AutoRegister(node, inf, ip, setting);
+            //else if (node.Secret.MD5() != secret)
+            //    node = AutoRegister(node, inf, ip, setting);
+            //else if (setting.NodeCodeLevel > 0)
+            //    node = AutoRegister(node, inf, ip, setting);
+            node = AutoRegister(node, inf, ip, setting);
         }
 
         return node;
@@ -782,6 +797,12 @@ public class NodeService
         }
 
         return (node, ex);
+    }
+
+    private void WriteHistory(Node node, String action, Boolean success, String remark, String ip = null)
+    {
+        var hi = NodeHistory.Create(node, action, success, remark, Environment.MachineName, ip);
+        hi.Insert();
     }
     #endregion
 }

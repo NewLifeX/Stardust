@@ -7,6 +7,7 @@ using NewLife.Http;
 using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Remoting.Models;
+using NewLife.Security;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
@@ -127,8 +128,8 @@ public class AppController : BaseController
     {
         if (app == null) throw new ApiException(401, "未登录！");
 
-        XTrace.WriteLine("WebSocket连接 {0}", app);
-        WriteHistory("WebSocket连接", true, socket.State + "", clientId);
+        var sid = Rand.Next();
+        WriteHistory("WebSocket连接", true, $"State={socket.State} sid={sid}", clientId);
 
         var olt = AppOnline.FindByClient(clientId);
         if (olt != null)
@@ -157,7 +158,7 @@ public class AppController : BaseController
             }
         }, source);
 
-        WriteHistory("WebSocket断开", true, $"State={socket.State} CloseStatus={socket.CloseStatus}", clientId);
+        WriteHistory("WebSocket断开", true, $"State={socket.State} CloseStatus={socket.CloseStatus} sid={sid}", clientId);
         if (olt != null)
         {
             olt.WebSocket = false;

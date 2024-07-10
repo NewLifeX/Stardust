@@ -6,13 +6,14 @@ using NewLife.Caching;
 using NewLife.Http;
 using NewLife.Log;
 using NewLife.Remoting;
+using NewLife.Remoting.Extensions;
 using NewLife.Remoting.Models;
+using NewLife.Security;
 using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
 using Stardust.Models;
-using Stardust.Server.Common;
 using Stardust.Server.Services;
 using WebSocket = System.Net.WebSockets.WebSocket;
 using WebSocketMessageType = System.Net.WebSockets.WebSocketMessageType;
@@ -70,8 +71,12 @@ public class NodeController : BaseController
         if (node != null && !node.Enable) throw new ApiException(99, "禁止登录");
 
         // 设备不存在或者验证失败，执行注册流程
-        if (node == null || !_nodeService.Auth(node, inf.Secret, inf, ip, _setting))
-            node = _nodeService.Register(inf, ip, _setting);
+        if (node != null && !_nodeService.Auth(node, inf.Secret, inf, ip, _setting))
+        {
+            node = null;
+        }
+
+        node ??= _nodeService.Register(inf, ip, _setting);
 
         if (node == null) throw new ApiException(12, "节点鉴权失败");
 
@@ -283,8 +288,8 @@ public class NodeController : BaseController
         _node = node;
         if (error != null) throw error;
 
-        //XTrace.WriteLine("WebSocket连接 {0}", node);
-        WriteHistory(node, "WebSocket连接", true, socket.State + "");
+        var sid = Rand.Next();
+        WriteHistory(node, "WebSocket连接", true, $"State={socket.State} sid={sid}");
 
         var olt = _nodeService.GetOrAddOnline(node, token, ip);
         if (olt != null)
@@ -311,7 +316,7 @@ public class NodeController : BaseController
             }
         }, source);
 
-        WriteHistory(node, "WebSocket断开", true, $"State={socket.State} CloseStatus={socket.CloseStatus}");
+        WriteHistory(node, "WebSocket断开", true, $"State={socket.State} CloseStatus={socket.CloseStatus} sid={sid}");
         if (olt != null)
         {
             olt.WebSocket = false;
