@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Net.NetworkInformation;
 using System.Reflection;
 using NewLife;
 using NewLife.Agent;
@@ -8,12 +7,10 @@ using NewLife.Model;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Remoting.Clients;
-using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust;
 using Stardust.Deployment;
 using Stardust.Managers;
-using Stardust.Models;
 using Stardust.Plugins;
 using IHost = NewLife.Agent.IHost;
 
@@ -384,6 +381,7 @@ internal class MyService : ServiceBase, IServiceProvider
             //Manager = _Manager,
             //Host = Host,
             Service = this,
+            AgentSetting = AgentSetting,
         };
 
         // 登录后保存证书
@@ -424,17 +422,13 @@ internal class MyService : ServiceBase, IServiceProvider
         //// 使用跟踪
         //client.UseTrace();
 
-        client.RegisterCommand("node/restart", Restart);
-        client.RegisterCommand("node/reboot", Reboot);
-        client.RegisterCommand("node/setchannel", SetChannel);
-
         _Client = client;
         _container.AddSingleton(client);
         _container.AddSingleton<ICommandClient>(client);
         _container.AddSingleton<IEventProvider>(client);
 
         // 可能需要多次尝试
-        _timer = new TimerX(TryConnectServer, client, 0, 5_000) { Async = true };
+        client.Open();
     }
 
     public void StartFactory()
@@ -486,127 +480,6 @@ internal class MyService : ServiceBase, IServiceProvider
         {
             XTrace.WriteException(ex);
         }
-    }
-
-    private async Task TryConnectServer(Object state)
-    {
-        if (!NetworkInterface.GetIsNetworkAvailable() || AgentInfo.GetIps().IsNullOrEmpty())
-        {
-            WriteLog("网络不可达，延迟连接服务器");
-            return;
-        }
-
-        var client = state as StarClient;
-
-        try
-        {
-            await client.Login();
-            //await CheckUpgrade(client);
-        }
-        catch (Exception ex)
-        {
-            // 登录报错后，加大定时间隔，输出简单日志
-            //_timer.Period = 30_000;
-            if (_timer != null && _timer.Period < 30_000) _timer.Period += 5_000;
-
-            Log?.Error(ex.Message);
-
-            return;
-        }
-
-        _timer.TryDispose();
-    }
-
-    /// <summary>重启应用服务</summary>
-    private String Restart(String argument)
-    {
-        // 异步执行，让方法调用返回结果给服务端
-        Task.Factory.StartNew(() =>
-        {
-            Thread.Sleep(1000);
-
-            var ug = new Upgrade { Log = XTrace.Log };
-
-            // 带有-s参数就算是服务中运行
-            var inService = "-s".EqualIgnoreCase(Environment.GetCommandLineArgs());
-
-            // 以服务方式运行时，重启服务，否则采取拉起进程的方式
-            if (inService || Host is DefaultHost host && host.InService)
-            {
-                // 使用外部命令重启服务
-                var rs = ug.Run("StarAgent", "-restart -delay");
-
-                //!! 这里不需要自杀，外部命令重启服务会结束当前进程
-                return rs + "";
-            }
-            else
-            {
-                // 重新拉起进程
-                var rs = ug.Run("StarAgent", "-run -delay");
-
-                if (rs)
-                {
-                    StopWork("Upgrade");
-
-                    ug.KillSelf();
-                }
-
-                return rs + "";
-            }
-        });
-
-        return "success";
-    }
-
-    /// <summary>重启操作系统</summary>
-    private String Reboot(String argument)
-    {
-        var dic = argument.IsNullOrEmpty() ? null : JsonParser.Decode(argument);
-        var timeout = dic?["timeout"].ToInt();
-
-        // 异步执行，让方法调用返回结果给服务端
-        Task.Factory.StartNew(() =>
-        {
-            Thread.Sleep(1000);
-
-            if (Runtime.Windows)
-            {
-                if (timeout > 0)
-                    "shutdown".ShellExecute($"-r -t {timeout}");
-                else
-                    "shutdown".ShellExecute($"-r");
-
-                Thread.Sleep(5000);
-                "shutdown".ShellExecute($"-r -f");
-            }
-            else if (Runtime.Linux)
-            {
-                // 多种方式重启Linux，先使用温和的方式
-                "systemctl".ShellExecute("reboot");
-
-                Thread.Sleep(5000);
-                "shutdown".ShellExecute("-r now");
-
-                Thread.Sleep(5000);
-                "reboot".ShellExecute();
-            }
-        });
-
-        return "success";
-    }
-
-    /// <summary>设置通道</summary>
-    /// <param name="argument"></param>
-    /// <returns></returns>
-    private String SetChannel(String argument)
-    {
-        if (argument.IsNullOrEmpty()) return "参数为空";
-
-        var set = AgentSetting;
-        set.Channel = argument;
-        set.Save();
-
-        return "success " + argument;
     }
     #endregion
 
