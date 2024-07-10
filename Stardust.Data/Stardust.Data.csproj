@@ -41,7 +41,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.XCode" Version="11.13.2024.707-beta1104" />
+    <PackageReference Include="NewLife.XCode" Version="11.14.2024.710-beta0410" />
   </ItemGroup>
 
   <ItemGroup>

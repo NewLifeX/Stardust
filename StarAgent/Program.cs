@@ -8,7 +8,6 @@ using NewLife.Model;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Remoting.Clients;
-using NewLife.Remoting.Models;
 using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust;
