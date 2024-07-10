@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using NewLife;
 using NewLife.Reflection;
-using Stardust.Server.Common;
+using NewLife.Remoting.Extensions;
 
 namespace Stardust.Server.Controllers;
 

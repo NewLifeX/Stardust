@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Collections;
+using NewLife.Remoting.Extensions;
 using Stardust.Data;
-using Stardust.Server.Common;
 
 namespace Stardust.Server.Controllers;
 
