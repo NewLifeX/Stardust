@@ -371,6 +371,7 @@ internal class MyService : ServiceBase, IServiceProvider
         var set = AgentSetting;
         var client = new MyStarClient
         {
+            Name = "Node",
             Server = server,
             Code = set.Code,
             Secret = set.Secret,
