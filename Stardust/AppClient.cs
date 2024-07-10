@@ -68,7 +68,6 @@ public class AppClient : ClientBase, IRegistry
     {
         Features = Features.Ping | Features.Notify | Features.CommandReply;
         SetActions("App/");
-        Actions[Features.CommandReply] = "App/CommandReply";
 
         PasswordProvider = new PasswordProvider();
 

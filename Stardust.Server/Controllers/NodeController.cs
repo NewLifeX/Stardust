@@ -71,8 +71,12 @@ public class NodeController : BaseController
         if (node != null && !node.Enable) throw new ApiException(99, "禁止登录");
 
         // 设备不存在或者验证失败，执行注册流程
-        if (node == null || !_nodeService.Auth(node, inf.Secret, inf, ip, _setting))
-            node = _nodeService.Register(inf, ip, _setting);
+        if (node != null && !_nodeService.Auth(node, inf.Secret, inf, ip, _setting))
+        {
+            node = null;
+        }
+
+        node ??= _nodeService.Register(inf, ip, _setting);
 
         if (node == null) throw new ApiException(12, "节点鉴权失败");
 
