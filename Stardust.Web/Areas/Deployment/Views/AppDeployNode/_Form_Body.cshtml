@@ -13,6 +13,8 @@
     var fields = ViewBag.Fields as FieldCollection;
     var isNew = (entity as IEntity).IsNullKey;
 
+    var projectId = entity.Deploy?.ProjectId ?? 0;
+
     var set = CubeSetting.Current;
     var cls = set.FormGroupClass;
     if (cls.IsNullOrEmpty()) { cls = "form-group col-xs-12 col-sm-6 col-lg-4"; }
@@ -26,7 +28,7 @@
             <div class="@cls">
                 <label class="control-label col-xs-3 col-sm-3">节点</label>
                 <div class="input-group col-xs-9 col-sm-9">
-                    @await Html.PartialAsync("_SelectNode", new SelectNodeModel { Id = "nodeId", NodeId = entity.NodeId, Product="StarAgent" })
+                    @await Html.PartialAsync("_SelectNode", new SelectNodeModel { Id = "nodeId", NodeId = entity.NodeId, ProjectId = projectId, Product = "StarAgent" })
                 </div>
             </div>
         }

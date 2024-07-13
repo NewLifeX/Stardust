@@ -1,5 +1,6 @@
 ﻿using NewLife;
 using NewLife.Data;
+using Stardust.Data.Platform;
 using Stardust.Models;
 using System;
 using System.Collections.Generic;
@@ -361,6 +362,32 @@ public partial class Node : Entity<Node>
     public static IList<Node> SearchByCategory(String category, String product, Boolean? enable, String key, PageParameter page)
     {
         var exp = new WhereExpression();
+
+        if (!category.IsNullOrEmpty()) exp &= _.Category == category | _.Category.IsNullOrEmpty();
+        if (!product.IsNullOrEmpty()) exp &= _.ProductCode == product;
+
+        if (enable != null) exp &= _.Enable == enable.Value;
+
+        if (!key.IsNullOrEmpty()) exp &= _.Code.Contains(key) | _.Name.Contains(key) | _.Category.Contains(key) | _.MachineName.Contains(key) | _.UserName.Contains(key);
+
+        return FindAll(exp, page);
+    }
+
+    public static IList<Node> Search(Int32 projectId, Boolean? global, String category, String product, Boolean? enable, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (global != null)
+        {
+            // 找到全局项目，然后再找到所有节点。如果项目不存在，则也不会有节点
+            var prjs = GalaxyProject.FindAllWithCache().Where(e => e.IsGlobal == global.Value).Select(e => e.Id).ToList();
+            if (projectId > 0 && !prjs.Contains(projectId)) prjs.Add(projectId);
+            if (prjs.Count == 0) return [];
+
+            exp &= _.ProjectId.In(prjs);
+        }
+        else if (projectId >= 0)
+            exp &= _.ProjectId == projectId;
 
         if (!category.IsNullOrEmpty()) exp &= _.Category == category | _.Category.IsNullOrEmpty();
         if (!product.IsNullOrEmpty()) exp &= _.ProductCode == product;

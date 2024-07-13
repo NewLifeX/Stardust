@@ -31,9 +31,9 @@
 <script type="text/javascript">
     $(function () {
         $("#@(id)_select").bsSuggest({
-            url: "/Nodes/Node/NodeSearch?category=@Model.Category&product=@Model.Product&key=",
-            getDataMethod:"url",
-            effectiveFieldsAlias: { id: "编号", code: "代码", name: "名称", ip: "地址" },
+            url: "/Nodes/Node/NodeSearch?projectId=@Model.ProjectId&category=@Model.Category&product=@Model.Product&key=",
+            getDataMethod: "url",
+            effectiveFieldsAlias: { id: "编号", code: "代码", name: "名称", projectName: "项目", category: "分类", ip: "地址" },
             ignorecase: true,
             showHeader: true,
             delayUntilKeyup: true, //获取数据的方式为 firstByUrl 时，延迟到有输入/获取到焦点时才请求数据

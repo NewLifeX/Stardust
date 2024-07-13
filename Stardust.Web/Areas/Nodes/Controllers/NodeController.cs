@@ -140,7 +140,7 @@ public class NodeController : EntityController<Node>
     /// <param name="category"></param>
     /// <param name="key"></param>
     /// <returns></returns>
-    public ActionResult NodeSearch(String category, String product, String key = null)
+    public ActionResult NodeSearch(Int32 projectId, String category, String product, String key = null)
     {
         var page = new PageParameter { PageSize = 20 };
 
@@ -151,16 +151,26 @@ public class NodeController : EntityController<Node>
             page.Desc = true;
         }
 
-        var list = SearchByCategory(category, product, true, key, page);
+        // 优先本项目节点，再全局节点
+        var list = Node.Search(projectId, true, category, product, true, key, page);
+        list = list.OrderByDescending(e => e.ProjectId == projectId).ThenByDescending(e => e.LastActive).ToList();
 
         return Json(0, null, list.Select(e => new
         {
             e.ID,
             e.Code,
             e.Name,
+            e.ProjectName,
             e.Category,
             e.IP,
         }).ToArray());
+    }
+
+    protected override String OnJsonSerialize(Object data)
+    {
+        var rs = base.OnJsonSerialize(data);
+
+        return rs;
     }
 
     public async Task<ActionResult> Trace(Int32 id)
