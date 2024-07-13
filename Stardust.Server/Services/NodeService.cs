@@ -425,6 +425,7 @@ public class NodeService
             var olt = GetOrAddOnline(node, token, ip);
             olt.Name = node.Name;
             olt.ProjectId = node.ProjectId;
+            olt.ProductCode = node.ProductCode;
             olt.Category = node.Category;
             olt.Version = node.Version;
             olt.CompileTime = node.CompileTime;
@@ -543,6 +544,7 @@ public class NodeService
         olt.ProjectId = node.ProjectId;
         olt.NodeID = node.ID;
         olt.Name = node.Name;
+        olt.ProductCode = node.ProductCode;
         olt.IP = node.IP;
         olt.Category = node.Category;
         olt.ProvinceID = node.ProvinceID;
