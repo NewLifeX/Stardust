@@ -66,6 +66,14 @@ public partial class NodeOnline
     [BindColumn("Name", "名称", "", Master = true)]
     public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
+    private String _ProductCode;
+    /// <summary>产品。产品编码，用于区分不同类型节点</summary>
+    [DisplayName("产品")]
+    [Description("产品。产品编码，用于区分不同类型节点")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("ProductCode", "产品。产品编码，用于区分不同类型节点", "")]
+    public String ProductCode { get => _ProductCode; set { if (OnPropertyChanging("ProductCode", value)) { _ProductCode = value; OnPropertyChanged("ProductCode"); } } }
+
     private String _IP;
     /// <summary>本地IP</summary>
     [DisplayName("本地IP")]
@@ -399,6 +407,7 @@ public partial class NodeOnline
             "SessionID" => _SessionID,
             "NodeID" => _NodeID,
             "Name" => _Name,
+            "ProductCode" => _ProductCode,
             "IP" => _IP,
             "Category" => _Category,
             "ProvinceID" => _ProvinceID,
@@ -449,6 +458,7 @@ public partial class NodeOnline
                 case "SessionID": _SessionID = Convert.ToString(value); break;
                 case "NodeID": _NodeID = value.ToInt(); break;
                 case "Name": _Name = Convert.ToString(value); break;
+                case "ProductCode": _ProductCode = Convert.ToString(value); break;
                 case "IP": _IP = Convert.ToString(value); break;
                 case "Category": _Category = Convert.ToString(value); break;
                 case "ProvinceID": _ProvinceID = value.ToInt(); break;
@@ -545,6 +555,9 @@ public partial class NodeOnline
 
         /// <summary>名称</summary>
         public static readonly Field Name = FindByName("Name");
+
+        /// <summary>产品。产品编码，用于区分不同类型节点</summary>
+        public static readonly Field ProductCode = FindByName("ProductCode");
 
         /// <summary>本地IP</summary>
         public static readonly Field IP = FindByName("IP");
@@ -683,6 +696,9 @@ public partial class NodeOnline
 
         /// <summary>名称</summary>
         public const String Name = "Name";
+
+        /// <summary>产品。产品编码，用于区分不同类型节点</summary>
+        public const String ProductCode = "ProductCode";
 
         /// <summary>本地IP</summary>
         public const String IP = "IP";

@@ -126,6 +126,7 @@
         <Column Name="SessionID" DataType="String" Description="会话" />
         <Column Name="NodeID" DataType="Int32" Description="节点" />
         <Column Name="Name" DataType="String" Master="True" Description="名称" />
+        <Column Name="ProductCode" DataType="String" Description="产品。产品编码，用于区分不同类型节点" />
         <Column Name="IP" DataType="String" Length="200" Description="本地IP" />
         <Column Name="Category" DataType="String" Description="分类" />
         <Column Name="ProvinceID" DataType="Int32" Description="省份" />
