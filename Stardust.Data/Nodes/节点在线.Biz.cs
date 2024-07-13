@@ -69,7 +69,7 @@ public partial class NodeOnline : Entity<NodeOnline>
 
     /// <summary>城市名</summary>
     [Map(__.CityID)]
-    public String CityName => City?.Path;
+    public String CityName => City?.Path ?? Province?.Path;
     #endregion
 
     #region 扩展查询

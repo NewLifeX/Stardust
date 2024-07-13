@@ -81,7 +81,7 @@ public partial class Node : Entity<Node>
 
     /// <summary>城市名</summary>
     [Map(__.CityID)]
-    public String CityName => City?.Path;
+    public String CityName => City?.Path ?? Province?.Path;
 
     /// <summary>最后地址。IP=>Address</summary>
     [DisplayName("最后地址")]
