@@ -259,6 +259,7 @@
         <Column Name="MinVersion" DataType="String" Description="最低版本。要求返回大于等于该版本的服务提供者" />
         <Column Name="Scope" DataType="String" Description="作用域。根据配置中心应用规则计算，禁止跨域访问服务" />
         <Column Name="Tag" DataType="String" Description="标签。带有指定特性，逗号分隔" />
+        <Column Name="Address" DataType="String" Length="500" Description="地址。最终消费得到的地址" />
         <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
         <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
         <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />

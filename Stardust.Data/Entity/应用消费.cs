@@ -112,6 +112,14 @@ public partial class AppConsume
     [BindColumn("Tag", "标签。带有指定特性，逗号分隔", "")]
     public String Tag { get => _Tag; set { if (OnPropertyChanging("Tag", value)) { _Tag = value; OnPropertyChanged("Tag"); } } }
 
+    private String _Address;
+    /// <summary>地址。最终消费得到的地址</summary>
+    [DisplayName("地址")]
+    [Description("地址。最终消费得到的地址")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("Address", "地址。最终消费得到的地址", "")]
+    public String Address { get => _Address; set { if (OnPropertyChanging("Address", value)) { _Address = value; OnPropertyChanged("Address"); } } }
+
     private DateTime _CreateTime;
     /// <summary>创建时间</summary>
     [Category("扩展")]
@@ -159,6 +167,7 @@ public partial class AppConsume
             "MinVersion" => _MinVersion,
             "Scope" => _Scope,
             "Tag" => _Tag,
+            "Address" => _Address,
             "CreateTime" => _CreateTime,
             "CreateIP" => _CreateIP,
             "UpdateTime" => _UpdateTime,
@@ -179,6 +188,7 @@ public partial class AppConsume
                 case "MinVersion": _MinVersion = Convert.ToString(value); break;
                 case "Scope": _Scope = Convert.ToString(value); break;
                 case "Tag": _Tag = Convert.ToString(value); break;
+                case "Address": _Address = Convert.ToString(value); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
@@ -231,6 +241,9 @@ public partial class AppConsume
         /// <summary>标签。带有指定特性，逗号分隔</summary>
         public static readonly Field Tag = FindByName("Tag");
 
+        /// <summary>地址。最终消费得到的地址</summary>
+        public static readonly Field Address = FindByName("Address");
+
         /// <summary>创建时间</summary>
         public static readonly Field CreateTime = FindByName("CreateTime");
 
@@ -278,6 +291,9 @@ public partial class AppConsume
 
         /// <summary>标签。带有指定特性，逗号分隔</summary>
         public const String Tag = "Tag";
+
+        /// <summary>地址。最终消费得到的地址</summary>
+        public const String Address = "Address";
 
         /// <summary>创建时间</summary>
         public const String CreateTime = "CreateTime";
