@@ -367,13 +367,14 @@ public class AppController : BaseController
         svc.Save();
 
         info.Consumers = consumes.Count;
+        info.Save();
 
         var models = _registryService.ResolveService(info, model, svc.Scope);
 
         // 记录应用消费服务得到的地址
-        info.Address = models?.Select(e => new { e.Address, e.Address2, e.Weight }).ToJson();
+        svc.Address = models?.Select(e => new { e.Address }).ToArray().ToJson();
 
-        info.Save();
+        svc.Save();
 
         return models;
     }
