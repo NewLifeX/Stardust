@@ -101,7 +101,11 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
     protected override Boolean Valid(AppDeployVersion entity, DataObjectMethodType type, Boolean post)
     {
         if (type == DataObjectMethodType.Delete || type == DataObjectMethodType.Update) return base.Valid(entity, type, post);
-        if (!post && type == DataObjectMethodType.Insert) entity.Version = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+        if (!post && type == DataObjectMethodType.Insert)
+        {
+            entity.Enable = true;
+            entity.Version = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+        }
 
         if (post)
         {
