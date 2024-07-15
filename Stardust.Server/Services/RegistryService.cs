@@ -157,7 +157,7 @@ public class RegistryService
 
         // 地址处理。本地任意地址，更换为IP地址
         var serverAddress = "";
-        if (service.Extranet)
+        if (service.Extranet && ip != "127.0.0.1" && ip != "::1")
         {
             serverAddress = ip;
         }
