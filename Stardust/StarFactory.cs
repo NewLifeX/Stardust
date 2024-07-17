@@ -281,6 +281,7 @@ public class StarFactory : DisposeBase
                 Factory = this,
                 AppId = AppId,
                 AppName = AppName,
+                Secret = Secret,
                 ClientId = ClientId,
                 NodeCode = Local?.Info?.Code,
                 //Filter = _tokenFilter,
