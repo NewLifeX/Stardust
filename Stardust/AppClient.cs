@@ -58,8 +58,6 @@ public class AppClient : ClientBase, IRegistry
     private readonly ConcurrentDictionary<String, ConsumeServiceInfo> _consumeServices = new();
     private readonly ConcurrentDictionary<String, ServiceModel[]> _consumes = new();
     private readonly ConcurrentDictionary<String, IList<Delegate>> _consumeEvents = new();
-    private readonly ConcurrentQueue<AppInfo> _fails = new();
-    private readonly ICache _cache = new MemoryCache();
     #endregion
 
     #region 构造
@@ -439,7 +437,7 @@ public class AppClient : ClientBase, IRegistry
     /// <param name="callback">回调方法</param>
     public void Bind(String serviceName, ServiceChangedCallback callback)
     {
-        var list = _consumeEvents.GetOrAdd(serviceName, k => new List<Delegate>());
+        var list = _consumeEvents.GetOrAdd(serviceName, k => []);
         list.Add(callback);
 
         StartTimer();
