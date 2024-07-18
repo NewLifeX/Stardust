@@ -165,6 +165,16 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
         di.Architecture = IntPtr.Size == 8 ? "X64" : "X86";
 #endif
 
+        if (Runtime.Windows) FillOnWindows(di);
+        if (Runtime.Linux) FillOnLinux(di);
+
+        return di;
+    }
+
+    /// <summary>填充Windows专属信息</summary>
+    /// <param name="di"></param>
+    public static void FillOnWindows(NodeInfo di)
+    {
 #if NETFRAMEWORK || WINDOWS
         try
         {
@@ -177,19 +187,6 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
         }
         catch { }
 #else
-        if (Runtime.Windows) FixGdi(di);
-#endif
-
-        if (Runtime.Linux) FixOnLinux(di);
-
-        return di;
-    }
-
-#if NETCOREAPP || NETSTANDARD
-    /// <summary>更新分辨率信息</summary>
-    /// <param name="di"></param>
-    public static void FixGdi(NodeInfo di)
-    {
         try
         {
             var graphics = IntPtr.Zero;
@@ -210,10 +207,12 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
             if (w > 0 && h > 0) di.Resolution = $"{w}*{h}";
         }
         catch { }
-    }
 #endif
+    }
 
-    private static void FixOnLinux(NodeInfo di)
+    /// <summary>填充Linux专属信息</summary>
+    /// <param name="di"></param>
+    public static void FillOnLinux(NodeInfo di)
     {
         di.MaxOpenFiles = Execute("bash", "-c \"ulimit -n\"")?.Trim().ToInt() ?? 0;
 

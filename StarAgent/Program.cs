@@ -11,6 +11,7 @@ using NewLife.Threading;
 using Stardust;
 using Stardust.Deployment;
 using Stardust.Managers;
+using Stardust.Models;
 using Stardust.Plugins;
 using IHost = NewLife.Agent.IHost;
 
@@ -43,7 +44,10 @@ internal class Program
             set.Save();
         }
 
+        // 用户模式存储配置，方便服务模式读取。因为服务模式无法读取用户和分辨率等信息
         var set2 = StarAgentSetting.Current;
+        if (!"-s".EqualIgnoreCase(args)) ThreadPoolX.QueueUserWorkItem(() => LoadUser(set2));
+
         var svc = new MyService
         {
             StarSetting = set,
@@ -73,6 +77,22 @@ internal class Program
 
         svc.Main(args);
     }
+
+    /// <summary>用户模式存储配置，方便服务模式读取。因为服务模式无法读取用户和分辨率等信息</summary>
+    /// <param name="set"></param>
+    private static void LoadUser(StarAgentSetting set)
+    {
+        set.UserName = Environment.UserName;
+
+        var info = new NodeInfo();
+        if (Runtime.Windows) StarClient.FillOnWindows(info);
+        if (Runtime.Linux) StarClient.FillOnLinux(info);
+
+        set.Dpi = info.Dpi;
+        set.Resolution = info.Resolution;
+
+        set.Save();
+    }
 }
 
 /// <summary>服务类。名字可以自定义</summary>
@@ -96,14 +116,6 @@ internal class MyService : ServiceBase, IServiceProvider
         //AddMenu('x', "停止所有应用服务", () => _Manager?.StopAll("菜单控制"));
 
         MachineInfo.RegisterAsync();
-
-        //// 定时重启
-        //var set2 = NewLife.Agent.Setting.Current;
-        //if (set2.AutoRestart == 0)
-        //{
-        //    set2.AutoRestart = 24 * 60;
-        //    set2.Save();
-        //}
 
         _container = ObjectContainer.Current;
         Provider = ObjectContainer.Provider;
@@ -143,7 +155,7 @@ internal class MyService : ServiceBase, IServiceProvider
             var file = servicePath.CombinePath($"{set.ServiceName}.service");
             if (File.Exists(file) && !File.ReadAllText(file).Contains("KillMode"))
             {
-                WriteLog("旧版servic文件，修正KillMode");
+                WriteLog("旧版service文件，修正KillMode");
 
                 var exe = Process.GetCurrentProcess().MainModule.FileName;
 
@@ -167,50 +179,6 @@ internal class MyService : ServiceBase, IServiceProvider
             }
         }
     }
-
-    //protected override void OnShowMenu(IList<Menu> menus)
-    //{
-    //    var services = _Manager?.Services.Where(e => e.Enable).ToArray();
-    //    if (services == null || services.Length == 0)
-    //    {
-    //        menus = menus.Where(e => e.Key != 'z' && e.Key != 'x').ToList();
-    //    }
-    //    else
-    //    {
-    //        var ss = services.Join(",", e => e.Name);
-
-    //        var m = menus.FirstOrDefault(e => e.Key == 'z');
-    //        if (m != null) m.Name = $"启动所有应用服务（{ss}）";
-
-    //        m = menus.FirstOrDefault(e => e.Key == 'x');
-    //        if (m != null) m.Name = $"停止所有应用服务（{ss}）";
-    //    }
-
-    //    base.OnShowMenu(menus);
-    //}
-
-    //protected override void ProcessCommand(String cmd, String[] args)
-    //{
-    //    // 如果是重启，则请求目标温柔退出
-    //    if (cmd.EqualIgnoreCase("-restart"))
-    //    {
-    //        var p = StarHelper.GetProcessByName("StarAgent").FirstOrDefault();
-    //        //p?.SafetyKill(0, 0);
-    //        if (p != null)
-    //        {
-    //            p.SafetyKill();
-
-    //            if (p.GetHasExited())
-    //            {
-    //                Host.Start(ServiceName);
-
-    //                return;
-    //            }
-    //        }
-    //    }
-
-    //    base.ProcessCommand(cmd, args);
-    //}
     #endregion
 
     private ApiServer _server;
@@ -289,15 +257,6 @@ internal class MyService : ServiceBase, IServiceProvider
 
         base.StartWork(reason);
     }
-
-    ///// <summary>服务管理线程</summary>
-    ///// <param name="data"></param>
-    //protected override void DoCheck(Object data)
-    //{
-    //    OnSettingChanged(null, null);
-
-    //    base.DoCheck(data);
-    //}
 
     private void OnSettingChanged(Object sender, EventArgs eventArgs)
     {

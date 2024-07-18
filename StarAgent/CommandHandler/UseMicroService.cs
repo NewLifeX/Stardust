@@ -3,39 +3,38 @@ using NewLife.Agent;
 using NewLife;
 using NewLife.Serialization;
 
-namespace StarAgent.CommandHandler
+namespace StarAgent.CommandHandler;
+
+public class UseMicroService : BaseCommandHandler
 {
-    public class UseMicroService : BaseCommandHandler
+    public UseMicroService(ServiceBase service) : base(service)
     {
-        public UseMicroService(ServiceBase service) : base(service)
-        {
-            Cmd = "-UseMicroService";
-            Description = "测试微服务";
-            ShortcutKey = 'w';
-        }
+        Cmd = "-UseMicroService";
+        Description = "测试微服务";
+        ShortcutKey = 'w';
+    }
 
-        private String _lastService;
+    private String _lastService;
 
-        public override void Process(String[] args)
-        {
-            var service = (MyService)Service;
-            if (_lastService.IsNullOrEmpty())
-                Console.WriteLine("请输入要测试的微服务名称：");
-            else
-                Console.WriteLine("请输入要测试的微服务名称（{0}）：", _lastService);
+    public override void Process(String[] args)
+    {
+        var service = (MyService)Service;
+        if (_lastService.IsNullOrEmpty())
+            Console.WriteLine("请输入要测试的微服务名称：");
+        else
+            Console.WriteLine("请输入要测试的微服务名称（{0}）：", _lastService);
 
-            var serviceName = Console.ReadLine();
-            if (serviceName.IsNullOrEmpty()) serviceName = _lastService;
-            if (serviceName.IsNullOrEmpty()) return;
+        var serviceName = Console.ReadLine();
+        if (serviceName.IsNullOrEmpty()) serviceName = _lastService;
+        if (serviceName.IsNullOrEmpty()) return;
 
-            _lastService = serviceName;
+        _lastService = serviceName;
 
-            service.StartFactory();
+        service.StartFactory();
 
-            var models = service._factory.Service.ResolveAsync(serviceName).Result;
-            //if (models == null) models = _factory.Dust.ResolveAsync(new ConsumeServiceInfo { ServiceName = serviceName }).Result;
+        var models = service._factory.Service.ResolveAsync(serviceName).Result;
+        //if (models == null) models = _factory.Dust.ResolveAsync(new ConsumeServiceInfo { ServiceName = serviceName }).Result;
 
-            Console.WriteLine(models.ToJson(true));
-        }
+        Console.WriteLine(models.ToJson(true));
     }
 }

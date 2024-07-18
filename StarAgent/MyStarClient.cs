@@ -6,6 +6,7 @@ using NewLife.Remoting.Clients;
 using NewLife.Remoting.Models;
 using NewLife.Serialization;
 using Stardust;
+using Stardust.Models;
 
 namespace StarAgent;
 
@@ -18,6 +19,19 @@ internal class MyStarClient : StarClient
 
     public StarAgentSetting AgentSetting { get; set; }
 
+    private Boolean InService
+    {
+        get
+        {
+            var inService = "-s".EqualIgnoreCase(Environment.GetCommandLineArgs());
+            if (inService) return true;
+
+            // 以服务方式运行时，重启服务，否则采取拉起进程的方式
+            if (Service != null && Service.Host is DefaultHost host && host.InService) return true;
+
+            return false;
+        }
+    }
     #endregion
 
     #region 登录
@@ -28,6 +42,20 @@ internal class MyStarClient : StarClient
         this.RegisterCommand("node/setchannel", SetChannel);
 
         base.Open();
+    }
+
+    public override ILoginRequest BuildLoginRequest()
+    {
+        var request = base.BuildLoginRequest();
+        var info = (request as LoginInfo)?.Node;
+        if (info != null && InService)
+        {
+            var set = AgentSetting;
+            if (!set.Dpi.IsNullOrEmpty()) info.Dpi = set.Dpi;
+            if (!set.Resolution.IsNullOrEmpty()) info.Resolution = set.Resolution;
+        }
+
+        return request;
     }
     #endregion
 
@@ -50,7 +78,6 @@ internal class MyStarClient : StarClient
         {
             this.WriteInfoEvent("Upgrade", "强制更新完成，准备重启后台服务！PID=" + pid);
 
-            //rs = Host.Restart("StarAgent");
             // 使用外部命令重启服务
             var rs = upgrade.Run("StarAgent", "-restart -upgrade");
 
@@ -85,7 +112,7 @@ internal class MyStarClient : StarClient
         {
             Thread.Sleep(1000);
 
-            var ug = new Upgrade { Log = XTrace.Log };
+            var upgrade = new Upgrade { Log = XTrace.Log };
 
             // 带有-s参数就算是服务中运行
             var inService = "-s".EqualIgnoreCase(Environment.GetCommandLineArgs());
@@ -94,7 +121,7 @@ internal class MyStarClient : StarClient
             if (inService || Service.Host is DefaultHost host && host.InService)
             {
                 // 使用外部命令重启服务
-                var rs = ug.Run("StarAgent", "-restart -delay");
+                var rs = upgrade.Run("StarAgent", "-restart -delay");
 
                 //!! 这里不需要自杀，外部命令重启服务会结束当前进程
                 return rs + "";
@@ -102,13 +129,12 @@ internal class MyStarClient : StarClient
             else
             {
                 // 重新拉起进程
-                var rs = ug.Run("StarAgent", "-run -delay");
-
+                var rs = upgrade.Run("StarAgent", "-run -delay");
                 if (rs)
                 {
                     Service.StopWork("Upgrade");
 
-                    ug.KillSelf();
+                    upgrade.KillSelf();
                 }
 
                 return rs + "";

@@ -229,12 +229,12 @@ public partial class Node
     public Int32 MaxOpenFiles { get => _MaxOpenFiles; set { if (OnPropertyChanging("MaxOpenFiles", value)) { _MaxOpenFiles = value; OnPropertyChanged("MaxOpenFiles"); } } }
 
     private String _Dpi;
-    /// <summary>像素点。默认96*96</summary>
+    /// <summary>像素点。例如96*96</summary>
     [Category("系统信息")]
     [DisplayName("像素点")]
-    [Description("像素点。默认96*96")]
+    [Description("像素点。例如96*96")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Dpi", "像素点。默认96*96", "")]
+    [BindColumn("Dpi", "像素点。例如96*96", "")]
     public String Dpi { get => _Dpi; set { if (OnPropertyChanging("Dpi", value)) { _Dpi = value; OnPropertyChanged("Dpi"); } } }
 
     private String _Resolution;
@@ -844,7 +844,7 @@ public partial class Node
         /// <summary>最大打开文件。Linux上的ulimit -n</summary>
         public static readonly Field MaxOpenFiles = FindByName("MaxOpenFiles");
 
-        /// <summary>像素点。默认96*96</summary>
+        /// <summary>像素点。例如96*96</summary>
         public static readonly Field Dpi = FindByName("Dpi");
 
         /// <summary>分辨率。例如1024*768</summary>
@@ -1042,7 +1042,7 @@ public partial class Node
         /// <summary>最大打开文件。Linux上的ulimit -n</summary>
         public const String MaxOpenFiles = "MaxOpenFiles";
 
-        /// <summary>像素点。默认96*96</summary>
+        /// <summary>像素点。例如96*96</summary>
         public const String Dpi = "Dpi";
 
         /// <summary>分辨率。例如1024*768</summary>

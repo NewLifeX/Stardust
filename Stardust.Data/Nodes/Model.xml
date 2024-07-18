@@ -64,7 +64,7 @@
         <Column Name="DriveSize" DataType="Int32" Description="驱动器大小。所有分区总大小，单位M" Category="硬件信息" />
         <Column Name="DriveInfo" DataType="String" Length="500" Description="驱动器信息。各分区大小，逗号分隔" Category="硬件信息" />
         <Column Name="MaxOpenFiles" DataType="Int32" Description="最大打开文件。Linux上的ulimit -n" Category="系统信息" />
-        <Column Name="Dpi" DataType="String" Description="像素点。默认96*96" Category="系统信息" />
+        <Column Name="Dpi" DataType="String" Description="像素点。例如96*96" Category="系统信息" />
         <Column Name="Resolution" DataType="String" Description="分辨率。例如1024*768" Category="系统信息" />
         <Column Name="Product" DataType="String" Description="产品名" Category="硬件信息" />
         <Column Name="Vendor" DataType="String" Description="制造商" Category="硬件信息" />
