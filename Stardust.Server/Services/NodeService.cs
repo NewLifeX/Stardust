@@ -8,6 +8,7 @@ using NewLife.Security;
 using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data.Nodes;
+using Stardust.Data.Platform;
 using Stardust.Models;
 using XCode;
 using XCode.Configuration;
@@ -82,6 +83,14 @@ public class NodeService
     public TokenModel Login(Node node, LoginInfo inf, String ip, StarServerSetting setting)
     {
         if (!inf.ProductCode.IsNullOrEmpty()) node.ProductCode = inf.ProductCode;
+
+        // 设置默认项目
+        if (node.ProjectId == 0 || node.ProjectName == "默认")
+        {
+            var project = GalaxyProject.FindByName(inf.Project);
+            if (project != null)
+                node.ProjectId = project.Id;
+        }
 
         node.UpdateIP = ip;
         node.FixNameByRule();

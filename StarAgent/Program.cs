@@ -21,6 +21,10 @@ internal class Program
 {
     private static void Main(String[] args)
     {
+#if !NET40
+        // 用不到的配置不要输出
+        Runtime.CreateConfigOnMissing = false;
+#endif
         XTrace.UseConsole();
 
         if ("-upgrade".EqualIgnoreCase(args))
@@ -558,20 +562,28 @@ internal class MyService : ServiceBase, IServiceProvider
     public void SetServer(String[] args)
     {
         var set = StarSetting;
+        var set2 = AgentSetting;
 
         // 处理 -server 参数，建议在-start启动时添加
         if (args != null && args.Length > 0)
         {
-            for (var i = 0; i < args.Length; i++)
+            for (var i = 0; i < args.Length - 1; i++)
             {
-                if (args[i].EqualIgnoreCase("-server") && i + 1 < args.Length)
+                if (args[i].EqualIgnoreCase("-server"))
                 {
-                    var addr = args[i + 1];
-
-                    set.Server = addr;
+                    set.Server = args[i + 1];
                     set.Save();
 
-                    XTrace.WriteLine("服务端修改为：{0}", addr);
+                    XTrace.WriteLine("服务端修改为：{0}", set.Server);
+
+                    break;
+                }
+                else if (args[i].EqualIgnoreCase("-project"))
+                {
+                    set2.Project = args[i + 1];
+                    set2.Save();
+
+                    XTrace.WriteLine("项目修改为：{0}", set2.Project);
 
                     break;
                 }

@@ -19,6 +19,9 @@ internal class MyStarClient : StarClient
 
     public StarAgentSetting AgentSetting { get; set; }
 
+    ///// <summary>项目名。新节点默认所需要加入的项目</summary>
+    //public String Project { get; set; }
+
     private Boolean InService
     {
         get
@@ -46,13 +49,18 @@ internal class MyStarClient : StarClient
 
     public override ILoginRequest BuildLoginRequest()
     {
+        var set = AgentSetting;
         var request = base.BuildLoginRequest();
-        var info = (request as LoginInfo)?.Node;
-        if (info != null && InService)
+        if (request is LoginInfo req)
         {
-            var set = AgentSetting;
-            if (!set.Dpi.IsNullOrEmpty()) info.Dpi = set.Dpi;
-            if (!set.Resolution.IsNullOrEmpty()) info.Resolution = set.Resolution;
+            req.Project = set.Project;
+
+            var info = req.Node;
+            if (info != null && InService)
+            {
+                if (!set.Dpi.IsNullOrEmpty()) info.Dpi = set.Dpi;
+                if (!set.Resolution.IsNullOrEmpty()) info.Resolution = set.Resolution;
+            }
         }
 
         return request;

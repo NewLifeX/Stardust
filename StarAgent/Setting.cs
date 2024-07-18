@@ -21,6 +21,10 @@ public class StarAgentSetting : Config<StarAgentSetting>
     [Description("密钥")]
     public String Secret { get; set; }
 
+    /// <summary>项目名。新节点默认所需要加入的项目</summary>
+    [Description("项目名。新节点默认所需要加入的项目")]
+    public String Project { get; set; }
+
     ///// <summary>本地服务。默认udp://127.0.0.1:5500</summary>
     //[Description("本地服务。默认udp://127.0.0.1:5500")]
     //public String LocalServer { get; set; } = "udp://127.0.0.1:5500";
