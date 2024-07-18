@@ -1,4 +1,4 @@
-﻿using NewLife;
+using NewLife;
 using NewLife.Model;
 using NewLife.Remoting.Clients;
 using NewLife.Serialization;
@@ -9,16 +9,16 @@ namespace DeployAgent;
 
 public class DeployWorker : IHostedService
 {
-    private readonly AppClient _appClient;
+    private readonly StarFactory _factory;
 
-    public DeployWorker(AppClient appClient)
+    public DeployWorker(StarFactory factory)
     {
-        _appClient = appClient;
+        _factory = factory;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _appClient.RegisterCommand("deploy/compile", OnCompile);
+        _factory.App.RegisterCommand("deploy/compile", OnCompile);
 
         return Task.CompletedTask;
     }
