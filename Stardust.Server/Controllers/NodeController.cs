@@ -203,8 +203,7 @@ public class NodeController : BaseController
     [HttpPost(nameof(Report))]
     public async Task<Object> Report(Int32 id)
     {
-        var node = _node;
-        if (node == null) throw new ApiException(401, "节点未登录");
+        var node = _node ?? throw new ApiException(401, "节点未登录");
 
         var cmd = NodeCommand.FindById(id);
         if (cmd != null && cmd.NodeID == node.ID)
@@ -283,9 +282,7 @@ public class NodeController : BaseController
     private async Task Handle(WebSocket socket, String token, String ip)
     {
         var (node, error) = _nodeService.DecodeToken(token, _setting.TokenSecret);
-        if (node == null) throw new ApiException(401, $"未登录！[ip={ip}]");
-
-        _node = node;
+        _node = node ?? throw new ApiException(401, $"未登录！[ip={ip}]");
         if (error != null) throw error;
 
         var sid = Rand.Next();

@@ -14,10 +14,13 @@ using NewLife.Remoting;
 using NewLife.Remoting.Clients;
 using NewLife.Remoting.Models;
 using NewLife.Security;
+using NewLife.Threading;
 using Stardust.Configs;
 using Stardust.Models;
 using Stardust.Monitors;
 using Stardust.Registry;
+using Stardust.Services;
+
 #if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
 using TaskEx = System.Threading.Tasks.Task;
 #endif
@@ -289,6 +292,11 @@ public class StarFactory : DisposeBase
 
                 Log = Log,
             };
+
+#if !NET40
+            // 设置全局定时调度器的时间提供者，借助服务器时间差，以获得更准确的时间。避免本地时间偏差导致定时任务执行时间不准确
+            TimerScheduler.GlobalTimeProvider = new StarTimeProvider { Client = client };
+#endif
 
             //var set = StarSetting.Current;
             //if (set.Debug) client.Log = XTrace.Log;

@@ -191,8 +191,8 @@ public class NodeService
         // 网卡地址
         if (di.Macs != node.MACs)
         {
-            var dims = di.Macs?.Split(",") ?? new String[0];
-            var nodems = node.MACs?.Split(",") ?? new String[0];
+            var dims = di.Macs?.Split(",") ?? [];
+            var nodems = node.MACs?.Split(",") ?? [];
             // 任意网卡匹配则通过
             if (!nodems.Any(e => dims.Contains(e)))
             {

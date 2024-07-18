@@ -113,7 +113,7 @@ public class AppController : EntityController<App>
         if (id > 0)
         {
             var node = App.FindById(id);
-            if (node != null) return new[] { node };
+            if (node != null) return [node];
         }
 
         var projectId = p["projectId"].ToInt(-1);
