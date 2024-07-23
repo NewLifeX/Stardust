@@ -85,7 +85,7 @@ public static class StarHelper
         }
         catch { }
 
-        if (!process.GetHasExited()) process.Kill();
+        //if (!process.GetHasExited()) process.Kill();
 
         return process;
     }
