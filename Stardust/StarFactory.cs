@@ -264,6 +264,7 @@ public class StarFactory : DisposeBase
 
         if (_client == null)
         {
+            var set = StarSetting.Current;
             var client = new AppClient(Server)
             {
                 Factory = this,
@@ -272,6 +273,7 @@ public class StarFactory : DisposeBase
                 Secret = Secret,
                 ClientId = ClientId,
                 NodeCode = Local?.Info?.Code,
+                Setting = set,
 
                 Log = Log,
             };

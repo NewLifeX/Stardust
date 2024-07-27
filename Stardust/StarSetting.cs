@@ -1,11 +1,12 @@
 ﻿using System.ComponentModel;
 using NewLife.Configuration;
+using NewLife.Remoting.Clients;
 
 namespace Stardust;
 
 /// <summary>星尘客户端配置</summary>
 [Config("Star")]
-public class StarSetting : Config<StarSetting>
+public class StarSetting : Config<StarSetting>, IClientSetting
 {
     #region 属性
     /// <summary>调试开关。默认false</summary>
@@ -43,5 +44,7 @@ public class StarSetting : Config<StarSetting>
     /// <summary>最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10</summary>
     [Description("最大异常采样数。采样周期内，最多只记录指定数量的异常事件，默认10")]
     public Int32 MaxErrors { get; set; } = 10;
+
+    String IClientSetting.Code { get => AppKey!; set => AppKey = value; }
     #endregion
 }
