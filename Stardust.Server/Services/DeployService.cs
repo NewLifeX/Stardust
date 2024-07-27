@@ -38,7 +38,7 @@ public class DeployService
     {
         if (online == null || online.AppId == 0 || online.NodeId == 0) return;
 
-        // 提出StarAgent
+        // 剔除StarAgent
         if (online.AppName == "StarAgent") return;
 
         // 找应用部署。此时只有应用标识和节点标识，可能对应多个部署集
@@ -67,7 +67,7 @@ public class DeployService
                 //};
                 //deploy.Insert();
 
-                deploy = AppDeploy.GetOrAdd(online.Name);
+                deploy = AppDeploy.GetOrAdd(online.AppName);
                 deploy.AppId = online.AppId;
                 deploy.Category = online.App?.Category;
                 deploy.Save();
