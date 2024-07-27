@@ -58,6 +58,30 @@ public class AppController : BaseController
     #endregion
 
     #region 注册&心跳
+    [HttpPost(nameof(Login))]
+    public String Login(AppModel model)
+    {
+        var ip = UserHost;
+        var app = _tokenService.Authorize(model.Code, model.Secret, true, ip);
+
+        // 更新应用信息
+        app.LastLogin = DateTime.Now;
+        app.LastIP = ip;
+        //app.Update();
+
+        var clientId = model.ClientId;
+        var set = _setting;
+        var tokenModel = _tokenService.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
+
+        app.WriteHistory(nameof(Login), true, model.Code, model.Version, ip, clientId);
+
+        var online = _registryService.Register(_app, model, ip, _clientId, Token);
+
+        _deployService.UpdateDeployNode(online);
+
+        return _app?.ToString();
+    }
+
     [HttpPost(nameof(Register))]
     public String Register(AppModel inf)
     {

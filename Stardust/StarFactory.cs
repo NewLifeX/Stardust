@@ -6,7 +6,6 @@ using NewLife;
 using NewLife.Caching;
 using NewLife.Common;
 using NewLife.Configuration;
-using NewLife.Http;
 using NewLife.Log;
 using NewLife.Model;
 using NewLife.Reflection;
@@ -55,9 +54,6 @@ public class StarFactory : DisposeBase
     /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
     public String? ClientId { get; set; }
 
-    ///// <summary>服务名</summary>
-    //public String ServiceName { get; set; }
-
     /// <summary>客户端</summary>
     public IApiClient? Client => _client?.Client;
 
@@ -71,7 +67,6 @@ public class StarFactory : DisposeBase
     public LocalStarClient? Local { get; private set; }
 
     private AppClient? _client;
-    //private TokenHttpFilter? _tokenFilter;
     #endregion
 
     #region 构造
@@ -265,20 +260,10 @@ public class StarFactory : DisposeBase
     [MemberNotNullWhen(true, nameof(_client))]
     private Boolean Valid()
     {
-        //if (Server.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Server));
-        //if (AppId.IsNullOrEmpty()) throw new ArgumentNullException(nameof(AppId));
-
         if (Server.IsNullOrEmpty() || AppId.IsNullOrEmpty()) return false;
 
         if (_client == null)
         {
-            //if (!AppId.IsNullOrEmpty()) _tokenFilter = new TokenHttpFilter
-            //{
-            //    UserName = AppId,
-            //    Password = Secret,
-            //    ClientId = ClientId,
-            //};
-
             var client = new AppClient(Server)
             {
                 Factory = this,
@@ -287,8 +272,6 @@ public class StarFactory : DisposeBase
                 Secret = Secret,
                 ClientId = ClientId,
                 NodeCode = Local?.Info?.Code,
-                //Filter = _tokenFilter,
-                //UseWebSocket = true,
 
                 Log = Log,
             };
@@ -298,8 +281,6 @@ public class StarFactory : DisposeBase
             TimerScheduler.GlobalTimeProvider = new StarTimeProvider { Client = client };
 #endif
 
-            //var set = StarSetting.Current;
-            //if (set.Debug) client.Log = XTrace.Log;
             client.WriteInfoEvent("应用启动", $"pid={Process.GetCurrentProcess().Id}");
 
             _client = client;
@@ -307,7 +288,7 @@ public class StarFactory : DisposeBase
             InitTracer();
 
             client.Tracer = _tracer;
-            client.Start();
+            client.Open();
 
             // 注册StarServer环境变量，子进程共享
             Environment.SetEnvironmentVariable("StarServer", Server);
@@ -345,7 +326,6 @@ public class StarFactory : DisposeBase
         {
             AppId = AppId,
             AppName = AppName,
-            //Secret = Secret,
             ClientId = ClientId,
             Client = _client,
 
@@ -381,7 +361,6 @@ public class StarFactory : DisposeBase
                     ClientId = ClientId,
                     Client = _client,
                 };
-                //if (!ClientId.IsNullOrEmpty()) config.ClientId = ClientId;
                 config.Attach(_client);
 
                 // 为了兼容旧版本，优先给它ApiHttpClient

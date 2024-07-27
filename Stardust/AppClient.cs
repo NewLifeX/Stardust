@@ -1,24 +1,17 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using NewLife;
 using NewLife.Log;
+using NewLife.Model;
 using NewLife.Reflection;
+using NewLife.Remoting.Clients;
+using NewLife.Remoting.Models;
+using NewLife.Security;
 using NewLife.Serialization;
 using Stardust.Models;
 using Stardust.Registry;
-using NewLife.Caching;
-using System.Net.NetworkInformation;
-using NewLife.Remoting.Models;
-using NewLife.Remoting.Clients;
-using NewLife.Remoting;
-using NewLife.Http;
-using NewLife.Security;
-
-
-#if !NET40
-using TaskEx = System.Threading.Tasks.Task;
-#endif
 
 namespace Stardust;
 
@@ -27,7 +20,7 @@ public class AppClient : ClientBase, IRegistry
 {
     #region 属性
     /// <summary>应用</summary>
-    public String AppId { get; set; } = null!;
+    public String AppId { get => Code!; set => Code = value; }
 
     /// <summary>应用名</summary>
     public String? AppName { get; set; }
@@ -64,10 +57,8 @@ public class AppClient : ClientBase, IRegistry
     /// <summary>实例化</summary>
     public AppClient()
     {
-        Features = Features.Ping | Features.Notify | Features.CommandReply;
+        Features = Features.Login | Features.Ping | Features.Notify | Features.CommandReply;
         SetActions("App/");
-
-        PasswordProvider = new PasswordProvider();
 
         // 加载已保存数据
         var dic = LoadConsumeServicese();
@@ -116,78 +107,40 @@ public class AppClient : ClientBase, IRegistry
     #endregion
 
     #region 方法
-    /// <summary>开始客户端</summary>
-    public void Start()
+    /// <summary>初始化</summary>
+    protected override void OnInit()
     {
-        try
-        {
-            Code = AppId;
+        var provider = ServiceProvider ??= ObjectContainer.Provider;
 
-            if (AppId != "StarServer")
-            {
-                // 等待注册到平台
-                var task = TaskEx.Run(Register);
-                task.Wait(1_000);
-            }
-        }
-        catch (Exception ex)
+        PasswordProvider = new SaltPasswordProvider { Algorithm = "md5", SaltTime = 60 };
+
+        // 找到容器，注册默认的模型实现，供后续InvokeAsync时自动创建正确的模型对象
+        var container = ModelExtension.GetService<IObjectContainer>(provider) ?? ObjectContainer.Current;
+        if (container != null)
         {
-            Log?.Error("注册失败：{0}", ex.GetTrue().Message);
+            container.AddTransient<ILoginRequest, LoginInfo>();
+            container.AddTransient<IPingRequest, PingInfo>();
         }
 
-        StartTimer();
         Attach(this);
+
+        base.OnInit();
     }
+    #endregion
 
-    /// <summary>创建Http客户端</summary>
-    /// <param name="urls"></param>
+    #region 登录
+    /// <summary>构造登录请求</summary>
     /// <returns></returns>
-    protected override ApiHttpClient CreateHttp(String urls)
+    public override ILoginRequest BuildLoginRequest()
     {
-        var client = base.CreateHttp(urls);
-        client.Filter = new TokenHttpFilter
-        {
-            UserName = AppId,
-            Password = Secret,
-            ClientId = ClientId,
-        };
+        var request = new AppModel();
+        FillLoginRequest(request);
 
-        return client;
-    }
+        request.AppName = AppName;
+        request.ClientId = ClientId;
+        request.NodeCode = NodeCode;
 
-    /// <summary>注册</summary>
-    /// <returns></returns>
-    public async Task<Object?> Register()
-    {
-        try
-        {
-            var inf = new AppModel
-            {
-                AppId = AppId,
-                AppName = AppName,
-                ClientId = ClientId,
-                Version = _version,
-                NodeCode = NodeCode,
-                IP = AgentInfo.GetIps()
-            };
-
-            var rs = await InvokeAsync<String>("App/Register", inf);
-            WriteLog("接入星尘服务端：{0}", rs);
-
-            Logined = true;
-
-            return rs;
-        }
-        catch (Exception ex)
-        {
-            if (ex is HttpRequestException)
-                Log?.Info("注册异常[{0}] {1}", (Client as ApiHttpClient)?.Source, ex.GetTrue()?.Message);
-            else
-                Log?.Info(ex.ToString());
-
-            //throw;
-            return null;
-        }
+        return request;
     }
     #endregion
 
@@ -228,14 +181,6 @@ public class AppClient : ClientBase, IRegistry
         using var span = Tracer?.NewSpan("AppPing");
         try
         {
-            if (!Logined)
-            {
-                if (!NetworkInterface.GetIsNetworkAvailable()) return;
-
-                var rs = await Register();
-                if (rs == null) return;
-            }
-
             // 向服务端发送心跳后，再向本地发送心跳
             await base.OnPing(state);
             await PingLocal();
@@ -253,7 +198,7 @@ public class AppClient : ClientBase, IRegistry
     }
     #endregion
 
-    #region 发布、消费
+    #region 发布&消费
     /// <summary>发布服务（底层）。定时反复执行，让服务端更新注册信息</summary>
     /// <param name="service">应用服务</param>
     /// <returns></returns>
