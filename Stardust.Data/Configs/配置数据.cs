@@ -232,6 +232,18 @@ public partial class ConfigData
     #endregion
 
     #region 扩展查询
+    /// <summary>根据应用查找</summary>
+    /// <param name="configId">应用</param>
+    /// <returns>实体列表</returns>
+    public static IList<ConfigData> FindAllByConfigId(Int32 configId)
+    {
+        if (configId < 0) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ConfigId == configId);
+
+        return FindAll(_.ConfigId == configId);
+    }
     #endregion
 
     #region 字段名

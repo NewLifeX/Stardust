@@ -60,11 +60,11 @@ public partial class AppOnline
     public Int32 AppId { get => _AppId; set { if (OnPropertyChanging("AppId", value)) { _AppId = value; OnPropertyChanged("AppId"); } } }
 
     private String _Name;
-    /// <summary>名称。机器名称</summary>
+    /// <summary>名称。应用名称</summary>
     [DisplayName("名称")]
-    [Description("名称。机器名称")]
+    [Description("名称。应用名称")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Name", "名称。机器名称", "", Master = true)]
+    [BindColumn("Name", "名称。应用名称", "", Master = true)]
     public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
     private Int32 _NodeId;
@@ -376,7 +376,7 @@ public partial class AppOnline
         /// <summary>应用</summary>
         public static readonly Field AppId = FindByName("AppId");
 
-        /// <summary>名称。机器名称</summary>
+        /// <summary>名称。应用名称</summary>
         public static readonly Field Name = FindByName("Name");
 
         /// <summary>节点。节点服务器</summary>
@@ -466,7 +466,7 @@ public partial class AppOnline
         /// <summary>应用</summary>
         public const String AppId = "AppId";
 
-        /// <summary>名称。机器名称</summary>
+        /// <summary>名称。应用名称</summary>
         public const String Name = "Name";
 
         /// <summary>节点。节点服务器</summary>

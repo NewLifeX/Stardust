@@ -331,6 +331,18 @@ public partial class TraceItem
     #endregion
 
     #region 扩展查询
+    /// <summary>根据应用查找</summary>
+    /// <param name="appId">应用</param>
+    /// <returns>实体列表</returns>
+    public static IList<TraceItem> FindAllByAppId(Int32 appId)
+    {
+        if (appId < 0) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId);
+
+        return FindAll(_.AppId == appId);
+    }
     #endregion
 
     #region 字段名

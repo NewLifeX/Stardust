@@ -276,6 +276,18 @@ public partial class AppDeployVersion
     #endregion
 
     #region 扩展查询
+    /// <summary>根据应用部署集查找</summary>
+    /// <param name="deployId">应用部署集</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppDeployVersion> FindAllByDeployId(Int32 deployId)
+    {
+        if (deployId < 0) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.DeployId == deployId);
+
+        return FindAll(_.DeployId == deployId);
+    }
     #endregion
 
     #region 字段名

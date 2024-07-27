@@ -81,7 +81,7 @@
         <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
         <Column Name="Category" DataType="String" Description="类别" />
         <Column Name="AppId" DataType="Int32" Description="应用" />
-        <Column Name="Name" DataType="String" Master="True" Description="名称。机器名称" />
+        <Column Name="Name" DataType="String" Master="True" Description="名称。应用名称" />
         <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
         <Column Name="Client" DataType="String" Description="客户端。IP加进程，不同应用的Client可能相同，但几率很低，暂不考虑" />
         <Column Name="Scope" DataType="String" Description="作用域" />
