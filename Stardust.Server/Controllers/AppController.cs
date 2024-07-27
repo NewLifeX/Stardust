@@ -1,4 +1,5 @@
 ﻿using System.Net.WebSockets;
+using System.Xml.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
@@ -11,6 +12,7 @@ using NewLife.Security;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
+using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Services;
 using WebSocket = System.Net.WebSockets.WebSocket;
@@ -57,29 +59,49 @@ public class AppController : BaseController
     protected override void OnWriteError(String action, String message) => WriteHistory(action, false, message, _clientId, UserHost);
     #endregion
 
-    #region 注册&心跳
+    #region 登录&心跳
+    [AllowAnonymous]
     [HttpPost(nameof(Login))]
-    public String Login(AppModel model)
+    public LoginResponse Login(AppModel model)
     {
+        var set = _setting;
         var ip = UserHost;
-        var app = _tokenService.Authorize(model.Code, model.Secret, true, ip);
+        var app = App.FindByName(model.AppId);
+        var oldSecret = app?.Secret;
+        _app = app;
 
-        // 更新应用信息
-        app.LastLogin = DateTime.Now;
-        app.LastIP = ip;
-        //app.Update();
+        // 设备不存在或者验证失败，执行注册流程
+        if (app != null && !_registryService.Auth(app, model.Secret, ip, model.ClientId))
+        {
+            app = null;
+        }
 
         var clientId = model.ClientId;
-        var set = _setting;
-        var tokenModel = _tokenService.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
+        app ??= _registryService.Register(model.AppId, model.Secret, set.AppAutoRegister, ip, clientId);
+        _app = app ?? throw new ApiException(12, "应用鉴权失败");
 
-        app.WriteHistory(nameof(Login), true, model.Code, model.Version, ip, clientId);
+        _registryService.Login(app, model, ip, _setting);
+
+        var tokenModel = _tokenService.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
 
         var online = _registryService.Register(_app, model, ip, _clientId, Token);
 
         _deployService.UpdateDeployNode(online);
 
-        return _app?.ToString();
+        var rs = new LoginResponse
+        {
+            Name = app.DisplayName,
+            Token = tokenModel.AccessToken,
+        };
+
+        // 动态注册，下发节点证书
+        if (app.Name != model.AppId || app.Secret != oldSecret)
+        {
+            rs.Code = app.Name;
+            rs.Secret = app.Secret;
+        }
+
+        return rs;
     }
 
     [HttpPost(nameof(Register))]

@@ -31,6 +31,9 @@ public class AppClient : ClientBase, IRegistry
     /// <summary>节点编码</summary>
     public String? NodeCode { get; set; }
 
+    /// <summary>项目名。新应用默认所需要加入的项目</summary>
+    public String? Project { get; set; }
+
     /// <summary>看门狗超时时间。默认0秒</summary>
     /// <remarks>
     /// 设置看门狗超时时间，超过该时间未收到心跳，将会重启本应用进程。
@@ -139,6 +142,7 @@ public class AppClient : ClientBase, IRegistry
         request.AppName = AppName;
         request.ClientId = ClientId;
         request.NodeCode = NodeCode;
+        request.Project = Project;
 
         return request;
     }

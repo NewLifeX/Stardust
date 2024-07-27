@@ -7,11 +7,9 @@ using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using NewLife.Reflection;
-using Stardust.Data.Nodes;
 using Stardust.Monitors;
 using XCode;
 using XCode.Cache;
-using XCode.Membership;
 
 namespace Stardust.Data;
 
@@ -245,7 +243,7 @@ public partial class App : Entity<App>
     /// <param name="version"></param>
     /// <param name="ip"></param>
     /// <param name="clientId"></param>
-    public void WriteHistory(String action, Boolean success, String remark, String version, String ip, String clientId)
+    public void WriteHistory(String action, Boolean success, String remark, String version = null, String ip = null, String clientId = null)
     {
         var history = AppHistory.Create(this, action, success, remark, version ?? Version, Environment.MachineName, ip);
         history.Client = clientId;

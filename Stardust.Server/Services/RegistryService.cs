@@ -1,11 +1,15 @@
 ﻿using NewLife;
 using NewLife.Log;
 using NewLife.Remoting;
+using NewLife.Remoting.Extensions.Services;
 using NewLife.Remoting.Models;
+using NewLife.Security;
 using NewLife.Serialization;
+using NewLife.Web;
 using Stardust.Data;
 using Stardust.Data.Configs;
 using Stardust.Data.Nodes;
+using Stardust.Data.Platform;
 using Stardust.Models;
 
 namespace Stardust.Server.Services;
@@ -14,15 +18,101 @@ public class RegistryService
 {
     private readonly AppQueueService _queue;
     private readonly AppOnlineService _appOnline;
+    private readonly IPasswordProvider _passwordProvider;
     private readonly ITracer _tracer;
 
-    public RegistryService(AppQueueService queue, AppOnlineService appOnline, ITracer tracer)
+    public RegistryService(AppQueueService queue, AppOnlineService appOnline, IPasswordProvider passwordProvider, ITracer tracer)
     {
         _queue = queue;
         _appOnline = appOnline;
+        _passwordProvider = passwordProvider;
         _tracer = tracer;
     }
 
+    /// <summary>应用鉴权</summary>
+    /// <param name="app"></param>
+    /// <param name="secret"></param>
+    /// <param name="ip"></param>
+    /// <param name="clientId"></param>
+    /// <returns></returns>
+    /// <exception cref="ApiException"></exception>
+    public Boolean Auth(App app, String secret, String ip, String clientId)
+    {
+        if (app == null) return false;
+
+        // 检查黑白名单
+        if (!app.MatchIp(ip))
+            throw new ApiException(403, $"应用[{app.Name}]禁止{ip}访问！");
+        if (app.Project != null && !app.Project.MatchIp(ip))
+            throw new ApiException(403, $"项目[{app.Project}]禁止{ip}访问！");
+
+        // 检查应用有效性
+        if (!app.Enable) throw new ApiException(403, $"应用[{app.Name}]已禁用！");
+
+        // 未设置密钥，直接通过
+        if (app.Secret.IsNullOrEmpty()) return true;
+        if (!_passwordProvider.Verify(app.Secret, secret))
+        {
+            app.WriteHistory("应用鉴权", false, "密钥校验失败", null, ip, clientId);
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>应用注册</summary>
+    /// <param name="name"></param>
+    /// <param name="secret"></param>
+    /// <param name="autoRegister"></param>
+    /// <param name="ip"></param>
+    /// <returns></returns>
+    public App Register(String name, String secret, Boolean autoRegister, String ip, String clientId)
+    {
+        // 查找应用
+        var app = App.FindByName(name);
+        // 查找或创建应用，避免多线程创建冲突
+        app ??= App.GetOrAdd(name, App.FindByName, k => new App
+        {
+            Name = name,
+            Secret = Rand.NextString(16),
+            Enable = autoRegister,
+        });
+
+        app.WriteHistory("应用注册", true, $"[{app.Name}]注册成功", null, ip, clientId);
+
+        return app;
+    }
+
+    public App Login(App app, AppModel model, String ip, StarServerSetting setting)
+    {
+        // 设置默认项目
+        if (app.ProjectId == 0 || app.ProjectName == "默认")
+        {
+            var project = GalaxyProject.FindByName(model.Project);
+            if (project != null)
+                app.ProjectId = project.Id;
+        }
+
+        if (app.DisplayName.IsNullOrEmpty()) app.DisplayName = model.AppName;
+
+        app.LastLogin = DateTime.Now;
+        app.LastIP = ip;
+        app.UpdateIP = ip;
+        app.Update();
+
+        // 登录历史
+        app.WriteHistory("应用鉴权", true, $"[{app.DisplayName}/{app.Name}]鉴权成功 " + model.ToJson(false, false, false), model.Version, ip, model.ClientId);
+
+        return app;
+    }
+
+    /// <summary>激活应用。更新在线信息和关联节点</summary>
+    /// <param name="app"></param>
+    /// <param name="inf"></param>
+    /// <param name="ip"></param>
+    /// <param name="clientId"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
     public AppOnline Register(App app, AppModel inf, String ip, String clientId, String token)
     {
         if (app == null) return null;
