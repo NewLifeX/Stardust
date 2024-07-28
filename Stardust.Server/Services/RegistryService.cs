@@ -113,7 +113,7 @@ public class RegistryService
     /// <param name="clientId"></param>
     /// <param name="token"></param>
     /// <returns></returns>
-    public AppOnline Register(App app, AppModel inf, String ip, String clientId, String token)
+    public AppOnline SetOnline(App app, AppModel inf, String ip, String clientId, String token)
     {
         if (app == null) return null;
 

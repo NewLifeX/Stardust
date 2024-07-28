@@ -1,5 +1,4 @@
 ﻿using System.Net.WebSockets;
-using System.Xml.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
@@ -12,7 +11,6 @@ using NewLife.Security;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
-using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Services;
 using WebSocket = System.Net.WebSockets.WebSocket;
@@ -84,7 +82,7 @@ public class AppController : BaseController
 
         var tokenModel = _tokenService.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
 
-        var online = _registryService.Register(_app, model, ip, _clientId, Token);
+        var online = _registryService.SetOnline(_app, model, ip, clientId, Token);
 
         _deployService.UpdateDeployNode(online);
 
@@ -107,7 +105,7 @@ public class AppController : BaseController
     [HttpPost(nameof(Register))]
     public String Register(AppModel inf)
     {
-        var online = _registryService.Register(_app, inf, UserHost, _clientId, Token);
+        var online = _registryService.SetOnline(_app, inf, UserHost, inf.ClientId, Token);
 
         _deployService.UpdateDeployNode(online);
 
