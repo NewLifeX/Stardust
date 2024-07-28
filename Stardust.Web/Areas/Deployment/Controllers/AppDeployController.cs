@@ -19,7 +19,7 @@ public class AppDeployController : EntityController<AppDeploy>
     static AppDeployController()
     {
         ListFields.RemoveCreateField();
-        ListFields.RemoveField("AppId", "Repository", "Branch", "ProjectPath", "PackageFilters", "WorkingDirectory", "UserName", "MaxMemory", "Mode", "Remark");
+        ListFields.RemoveField("AppId", "MultiVersion", "Repository", "Branch", "ProjectPath", "PackageFilters", "WorkingDirectory", "UserName", "Environments", "MaxMemory", "Mode", "Remark");
         AddFormFields.RemoveCreateField();
 
         LogOnChange = true;

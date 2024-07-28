@@ -70,6 +70,14 @@ public partial class AppDeployVersion
     [BindColumn("Overwrite", "覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝", "")]
     public String Overwrite { get => _Overwrite; set { if (OnPropertyChanging("Overwrite", value)) { _Overwrite = value; OnPropertyChanged("Overwrite"); } } }
 
+    private Stardust.Models.DeployModes _Mode;
+    /// <summary>发布模式。1部分包，仅覆盖；2标准包，清空可执行文件再覆盖；3完整包，清空所有文件</summary>
+    [DisplayName("发布模式")]
+    [Description("发布模式。1部分包，仅覆盖；2标准包，清空可执行文件再覆盖；3完整包，清空所有文件")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Mode", "发布模式。1部分包，仅覆盖；2标准包，清空可执行文件再覆盖；3完整包，清空所有文件", "")]
+    public Stardust.Models.DeployModes Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
+
     private Int64 _Size;
     /// <summary>文件大小</summary>
     [DisplayName("文件大小")]
@@ -216,6 +224,7 @@ public partial class AppDeployVersion
             "Enable" => _Enable,
             "Url" => _Url,
             "Overwrite" => _Overwrite,
+            "Mode" => _Mode,
             "Size" => _Size,
             "Hash" => _Hash,
             "Runtime" => _Runtime,
@@ -243,6 +252,7 @@ public partial class AppDeployVersion
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "Url": _Url = Convert.ToString(value); break;
                 case "Overwrite": _Overwrite = Convert.ToString(value); break;
+                case "Mode": _Mode = (Stardust.Models.DeployModes)value.ToInt(); break;
                 case "Size": _Size = value.ToLong(); break;
                 case "Hash": _Hash = Convert.ToString(value); break;
                 case "Runtime": _Runtime = (Stardust.Models.RuntimeIdentifier)value.ToInt(); break;
@@ -312,6 +322,9 @@ public partial class AppDeployVersion
         /// <summary>覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
         public static readonly Field Overwrite = FindByName("Overwrite");
 
+        /// <summary>发布模式。1部分包，仅覆盖；2标准包，清空可执行文件再覆盖；3完整包，清空所有文件</summary>
+        public static readonly Field Mode = FindByName("Mode");
+
         /// <summary>文件大小</summary>
         public static readonly Field Size = FindByName("Size");
 
@@ -380,6 +393,9 @@ public partial class AppDeployVersion
 
         /// <summary>覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
         public const String Overwrite = "Overwrite";
+
+        /// <summary>发布模式。1部分包，仅覆盖；2标准包，清空可执行文件再覆盖；3完整包，清空所有文件</summary>
+        public const String Mode = "Mode";
 
         /// <summary>文件大小</summary>
         public const String Size = "Size";

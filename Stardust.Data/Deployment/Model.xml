@@ -123,6 +123,7 @@
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="Url" DataType="String" ItemType="file" Length="500" Description="资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖" />
         <Column Name="Overwrite" DataType="String" Length="100" Description="覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝" />
+        <Column Name="Mode" DataType="Int32" Description="发布模式。1部分包，仅覆盖；2标准包，清空可执行文件再覆盖；3完整包，清空所有文件" Type="Stardust.Models.DeployModes" />
         <Column Name="Size" DataType="Int64" ItemType="GMK" Description="文件大小" />
         <Column Name="Hash" DataType="String" Description="文件哈希。MD5散列，避免下载的文件有缺失" />
         <Column Name="Runtime" DataType="Int32" Description="运行时。RID是运行时标识符，用于标识应用程序运行所在的目标平台。如win-x64/linux-arm" Type="Stardust.Models.RuntimeIdentifier" />

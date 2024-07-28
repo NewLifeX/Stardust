@@ -2,6 +2,7 @@
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Log;
+using Stardust.Models;
 
 namespace Stardust.Deployment;
 
@@ -36,6 +37,9 @@ public class ZipDeploy
 
     /// <summary>覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
     public String? Overwrite { get; set; }
+
+    /// <summary>发布模式。1部分包，仅覆盖；2标准包，清空可执行文件再覆盖；3完整包，清空所有文件</summary>
+    public DeployModes Mode { get; set; }
 
     /// <summary>进程</summary>
     public Process? Process { get; private set; }
@@ -391,19 +395,42 @@ public class ZipDeploy
     {
         if (FileName.IsNullOrEmpty()) throw new ArgumentNullException(nameof(FileName));
 
-        using var span = Tracer?.NewSpan("ZipDeploy-Extract", new { shadow, WorkingDirectory, Overwrite });
+        using var span = Tracer?.NewSpan("ZipDeploy-Extract", new { shadow, WorkingDirectory, Overwrite, Mode });
 
         var fi = WorkingDirectory.CombinePath(FileName).AsFile();
         var rundir = fi.DirectoryName!;
         WriteLog("解压缩 {0} 到 {1}", FileName, shadow);
+
+        var sdi = shadow.AsDirectory();
+        span?.AppendTag($"sdi={sdi.FullName} rundir={rundir}");
+
+        // 前置清理
+        switch (Mode)
+        {
+            case DeployModes.Partial:
+                break;
+            case DeployModes.Standard:
+                WriteLog("清空影子目录中的可执行文件");
+                foreach (var item in sdi.GetFiles())
+                {
+                    if (IsExe(item.Extension))
+                        item.Delete();
+                }
+                break;
+            case DeployModes.Full:
+                WriteLog("清空影子目录中的所有文件");
+                sdi.Delete(true);
+                shadow.EnsureDirectory(false);
+                break;
+            default:
+                break;
+        }
 
         fi.Extract(shadow, true);
 
         var ovs = Overwrite?.Split(';');
 
         // 复制配置文件和数据文件到运行目录
-        var sdi = shadow.AsDirectory();
-        span?.AppendTag($"sdi={sdi.FullName} rundir={rundir}");
         if (!sdi.FullName.EnsureEnd("\\").EqualIgnoreCase(rundir.EnsureEnd("\\")))
         {
             if (exefile == CopyModes.ClearBeforeCopy)

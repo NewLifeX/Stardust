@@ -72,6 +72,7 @@ public class DeployController : BaseController
                 Url = ver?.Url,
                 Hash = ver?.Hash,
                 Overwrite = ver?.Overwrite,
+                Mode = ver.Mode,
 
                 Service = item.ToService(app),
             };

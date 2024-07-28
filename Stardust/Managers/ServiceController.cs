@@ -225,11 +225,17 @@ internal class ServiceController : DisposeBase
             Name = Name,
             FileName = file,
             WorkingDirectory = workDir,
-            Overwrite = DeployInfo?.Overwrite,
 
             Tracer = Tracer,
             Log = new ActionLog(WriteLog),
         };
+
+        var di = DeployInfo;
+        if (di != null)
+        {
+            deploy.Overwrite = di.Overwrite;
+            deploy.Mode = di.Mode;
+        }
 
         //var args = service.Arguments?.Trim();
         if (!args.IsNullOrEmpty() && !deploy.Parse(args.Split(" "))) return null;
@@ -271,11 +277,17 @@ internal class ServiceController : DisposeBase
             WorkingDirectory = workDir,
             UserName = service.UserName,
             Environments = service.Environments,
-            Overwrite = DeployInfo?.Overwrite,
 
             Tracer = Tracer,
             Log = new ActionLog(WriteLog),
         };
+
+        var di = DeployInfo;
+        if (di != null)
+        {
+            deploy.Overwrite = di.Overwrite;
+            deploy.Mode = di.Mode;
+        }
 
         // 如果出现超过一次的重启，则打开调试模式，截取控制台输出到日志
         if (_error > 1) deploy.Debug = true;
