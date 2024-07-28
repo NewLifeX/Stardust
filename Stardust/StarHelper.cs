@@ -51,6 +51,7 @@ public static class StarHelper
         return star;
     }
 
+#if NET40
     /// <summary>安全退出进程，目标进程还有机会执行退出代码</summary>
     /// <param name="process"></param>
     /// <param name="times"></param>
@@ -139,6 +140,7 @@ public static class StarHelper
         //    return false;
         //}
     }
+#endif
 
     private static ICache _cache = new MemoryCache();
     /// <summary>获取进程名。dotnet/java进程取文件名</summary>
