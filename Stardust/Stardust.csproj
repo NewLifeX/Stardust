@@ -30,7 +30,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>支持新操作系统Alpine/Linx/openEuler/OpenWRT；增加WebSocket心跳；支持节点版本配置策略推送dotNet运行时</PackageReleaseNotes>
+    <PackageReleaseNotes>支持全新的Remoting通信模型</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -115,10 +115,10 @@
     <PackageReference Include="NewLife.Remoting" Version="3.0.2024.729-beta0815" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'!='net40'">
-    <PackageReference Include="NewLife.Core" Version="10.10.2024.0723-beta1414" />
+    <PackageReference Include="NewLife.Core" Version="10.10.2024.0801" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net40'">
-    <PackageReference Include="NewLife.Core" Version="10.10.2024.0701-net40" />
+    <PackageReference Include="NewLife.Core" Version="10.10.2024.0801-net40" />
   </ItemGroup>
 
 </Project>
