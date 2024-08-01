@@ -1,4 +1,5 @@
-﻿using NewLife;
+﻿using System.Linq;
+using NewLife;
 
 namespace Stardust.Models;
 
@@ -21,8 +22,8 @@ public static class OSKindHelper
         kind = ParseLinux(osName, osVersion);
         if (kind > 0) return kind;
 
-        if (osName.Contains("Mac")) return OSKinds.MacOSX;
-        if (osName.Contains("Android")) return OSKinds.Android;
+        if (osName.IndexOf("Android", StringComparison.OrdinalIgnoreCase) >= 0) return OSKinds.Android;
+        if (osName.IndexOf("Mac", StringComparison.InvariantCultureIgnoreCase) >= 0) return OSKinds.MacOSX;
 
         return 0;
     }
