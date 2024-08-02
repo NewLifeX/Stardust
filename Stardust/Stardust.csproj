@@ -115,7 +115,7 @@
     <PackageReference Include="NewLife.Remoting" Version="3.0.2024.801" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'!='net40'">
-    <PackageReference Include="NewLife.Core" Version="10.10.2024.0801" />
+    <PackageReference Include="NewLife.Core" Version="10.10.2024.0802-beta1036" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net40'">
     <PackageReference Include="NewLife.Core" Version="10.10.2024.0801-net40" />

@@ -411,15 +411,18 @@ public class ZipDeploy
                 break;
             case DeployModes.Standard:
                 WriteLog("清空影子目录中的可执行文件");
-                foreach (var item in sdi.GetFiles())
+                if (sdi.Exists)
                 {
-                    if (IsExe(item.Extension))
-                        item.Delete();
+                    foreach (var item in sdi.GetFiles())
+                    {
+                        if (IsExe(item.Extension))
+                            item.Delete();
+                    }
                 }
                 break;
             case DeployModes.Full:
                 WriteLog("清空影子目录中的所有文件");
-                sdi.Delete(true);
+                if (sdi.Exists) sdi.Delete(true);
                 shadow.EnsureDirectory(false);
                 break;
             default:
