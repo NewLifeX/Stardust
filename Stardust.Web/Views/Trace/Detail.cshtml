@@ -29,7 +29,7 @@
                 <th class="text-center" title="开始时间。Unix毫秒"><a href="@Html.Raw(page.GetSortUrl("StartTime"))">开始时间</a></th>
                 <th class="text-center" title="耗时。毫秒"><a href="@Html.Raw(page.GetSortUrl("Cost"))">耗时</a></th>
                 <th class="text-center" title="数值。用户自定义标量"><a href="@Html.Raw(page.GetSortUrl("Value"))">数值</a></th>
-                <th class="text-center" title="数据标签">标签</th>
+                <th class="text-center" title="数据标签或异常信息">内容</th>
                 <th class="text-center">操作</th>
             </tr>
         </thead>
@@ -52,12 +52,10 @@
                 {
                     color2 = "palevioletred";
                 }
-                var tabs = new String('　', entity.Level);
                 var msg = !entity.Tag.IsNullOrEmpty() ? entity.Tag : entity.Error;
                 <tr>
                     <td class="text-center"><a href="@url1">@entity.AppName</a></td>
-                    <td style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;">
-                        @Html.Raw(tabs)
+                    <td title="@entity.Name" style="max-width:240px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;">
                         <a href="@url2" style="color: @color2">@entity.Name</a>
                     </td>
                     <td class="text-center">

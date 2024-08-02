@@ -24,6 +24,7 @@ public class TraceDataController : ReadOnlyEntityController<TraceData>
         var clientId = p["clientId"];
         var name = p["name"];
         var minError = p["minError"].ToInt(-1);
+        var searchTag = p["searchTag"]?.Split(",").FirstOrDefault()?.ToBoolean() ?? false;
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
@@ -33,6 +34,10 @@ public class TraceDataController : ReadOnlyEntityController<TraceData>
         if (start.Year < 2000 && end.Year < 2000) start = end = date;
         var time = p["time"].ToDateTime();
         if (start.Year < 2000 && end.Year < 2000) start = end = time;
+
+        //todo 待更新NewLife.Core修复雪花算法后，后面两行可以注释
+        if (start.Year > 2000) start = new DateTime(start.Year, start.Month, start.Day, start.Hour, start.Minute, start.Second, DateTimeKind.Local);
+        if (end.Year > 2000) end = new DateTime(end.Year, end.Month, end.Day, end.Hour, end.Minute, end.Second, DateTimeKind.Local);
 
         if (start.Year < 2000 && end.Year < 2000)
         {
@@ -46,7 +51,7 @@ public class TraceDataController : ReadOnlyEntityController<TraceData>
         if (appId > 0 && p.PageSize == 20) p.PageSize = 100;
         if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.Id.Desc();
 
-        var list = TraceData.Search(appId, itemId, clientId, name, kind, minError, start, end, p["Q"], p);
+        var list = TraceData.Search(appId, itemId, clientId, name, kind, minError, searchTag, start, end, p["Q"], p);
 
         if (list.Count > 0 && appId > 0 && itemId > 0)
         {

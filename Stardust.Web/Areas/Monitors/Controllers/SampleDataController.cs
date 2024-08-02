@@ -49,6 +49,7 @@ public class SampleDataController : ReadOnlyEntityController<SampleData>
     {
         var dataId = p["dataId"].ToLong(-1);
         var traceId = p["traceId"];
+        var itemId = p["itemId"].ToInt(-1);
         var success = p["success"]?.ToBoolean();
 
         // 指定追踪标识后，分页500
@@ -60,7 +61,7 @@ public class SampleDataController : ReadOnlyEntityController<SampleData>
 
         var start = DateTime.Today.AddDays(-30);
         var end = DateTime.Today;
-        return SampleData.Search(dataId, traceId, success, start, end, p);
+        return SampleData.Search(dataId, traceId, itemId, success, start, end, p["Q"], p);
     }
 
     protected override SampleData Find(Object key)

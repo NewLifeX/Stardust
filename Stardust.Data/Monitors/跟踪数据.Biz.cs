@@ -183,7 +183,7 @@ public partial class TraceData : Entity<TraceData>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<TraceData> Search(Int32 appId, Int32 itemId, String clientId, String name, String kind, Int32 minError, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<TraceData> Search(Int32 appId, Int32 itemId, String clientId, String name, String kind, Int32 minError, Boolean searchTag, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
@@ -191,8 +191,24 @@ public partial class TraceData : Entity<TraceData>
         if (itemId > 0) exp &= _.ItemId == itemId;
         if (!clientId.IsNullOrEmpty()) exp &= _.ClientId == clientId;
         if (!name.IsNullOrEmpty()) exp &= _.Name == name;
-        if (!key.IsNullOrEmpty()) exp &= _.ClientId == key | _.Name == key;
         if (minError > 0) exp &= _.Errors >= minError;
+
+        if (!key.IsNullOrEmpty())
+        {
+            if (searchTag && start.Year > 2000)
+            {
+                var end2 = kind switch
+                {
+                    "day" => start.AddDays(1),
+                    "hour" => start.AddHours(1),
+                    "minute" => start.AddMinutes(5),
+                    _ => start.AddDays(1),
+                };
+                exp &= _.Id.In(SampleData.SearchSql(itemId, clientId, start, end2, key));
+            }
+            else
+                exp &= _.ClientId == key | _.Name == key;
+        }
 
         if (appId > 0 && start.Year > 2000)
         {
