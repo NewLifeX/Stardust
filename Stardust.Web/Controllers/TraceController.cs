@@ -19,6 +19,8 @@ public class TraceController : ControllerBaseX
         var ss = id.Split('-');
         if (ss.Length == 4) id = ss[1];
 
+        var layout = pager["layout"];
+
         var list = Search(id, pager);
 
         if (list.Count > 0)
@@ -35,7 +37,10 @@ public class TraceController : ControllerBaseX
             Data = list
         };
 
-        return View("Index", model);
+        if (layout.EqualIgnoreCase("detail"))
+            return View("Detail", model);
+        else
+            return View("Index", model);
     }
 
     [Route("[action]")]

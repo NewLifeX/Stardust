@@ -1,0 +1,77 @@
+﻿@model TraceViewModel
+@using Stardust.Data.Monitors
+@using NewLife;
+@using NewLife.Web;
+@using XCode;
+@using XCode.Configuration;
+@using XCode.Membership;
+@using NewLife.Cube;
+@using System.Web;
+@using Stardust.Web.Models;
+@{
+    //Layout = NewLife.Cube.Setting.Current.Layout;
+
+    var page = Model.Page;
+    var list = Model.Data;
+    var traceId = page["id"];
+}
+<div class="table-responsive">
+    @if (!traceId.IsNullOrEmpty())
+    {
+        await Html.RenderPartialAsync("_Nav", traceId);
+    }
+    <table class="table table-bordered table-hover table-striped table-condensed">
+        <thead>
+            <tr>
+                <th class="text-center">应用</th>
+                <th class="text-center" title="操作名。接口名或埋点名"><a href="@Html.Raw(page.GetSortUrl("Name"))">操作名</a></th>
+                <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Success"))">正常</a></th>
+                <th class="text-center" title="开始时间。Unix毫秒"><a href="@Html.Raw(page.GetSortUrl("StartTime"))">开始时间</a></th>
+                <th class="text-center" title="耗时。毫秒"><a href="@Html.Raw(page.GetSortUrl("Cost"))">耗时</a></th>
+                <th class="text-center" title="数值。用户自定义标量"><a href="@Html.Raw(page.GetSortUrl("Value"))">数值</a></th>
+                <th class="text-center" title="数据标签">标签</th>
+                <th class="text-center">操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var entity in list)
+            {
+                var ti = entity.TraceItem ?? new TraceItem();
+                var url1 = $"/Monitors/appDayStat?monitorId={entity.AppId}";
+                var url2 = $"/Monitors/traceDayStat?appid={entity.AppId}&itemId={entity.ItemId}";
+                var color2 = "";
+                if (ti.Kind.EqualIgnoreCase("db"))
+                {
+                    color2 = "orange";
+                }
+                else if (ti.Kind.EqualIgnoreCase("mq", "redismq", "mqtt", "mns", "emq"))
+                {
+                    color2 = "mediumpurple";
+                }
+                else if (ti.Kind.EqualIgnoreCase("redis"))
+                {
+                    color2 = "palevioletred";
+                }
+                var tabs = new String('　', entity.Level);
+                var msg = !entity.Tag.IsNullOrEmpty() ? entity.Tag : entity.Error;
+                <tr>
+                    <td class="text-center"><a href="@url1">@entity.AppName</a></td>
+                    <td style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;">
+                        @Html.Raw(tabs)
+                        <a href="@url2" style="color: @color2">@entity.Name</a>
+                    </td>
+                    <td class="text-center">
+                        <i class="glyphicon glyphicon-@(entity.Success ? "ok" : "remove")" style="color: @(entity.Success ? "green" : "red");"></i>
+                    </td>
+                    <td class="text-center" title="@entity.StartTime">@entity.Start.ToString("HH:mm:ss.fff")</td>
+                    <td class="text-right">@entity.Cost.ToString("n0")</td>
+                    <td class="text-right">@entity.Value.ToString("n0")</td>
+                    <td style="white-space: pre-wrap;word-wrap:break-word;word-break:break-all;">@Html.Raw(msg)</td>
+                    <td class="text-center">
+                        <a href="/monitors/sampledata/detail/@entity.Id">查看</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
