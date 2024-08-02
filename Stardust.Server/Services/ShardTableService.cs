@@ -55,7 +55,7 @@ public class ShardTableService : IHostedService
             var tables = dal.Tables;
             var tnames = tables.Select(e => e.TableName).ToArray();
 
-            for (var dt = today.AddYears(-1); dt < endday; dt = dt.AddDays(1))
+            for (var dt = today.AddYears(-10); dt < endday; dt = dt.AddDays(1))
             {
                 var name = $"SampleData_{dt:yyyyMMdd}";
                 if (name.EqualIgnoreCase(tnames))
@@ -87,7 +87,7 @@ public class ShardTableService : IHostedService
             // 数据迁移后，原库数据表需要清理。需要重新获取表名列表，因为Stardust/StardustData可能指向同一个数据库
             dal2.Tables = null;
             var tnames2 = dal2.Tables.Select(e => e.TableName).ToArray();
-            for (var dt = today.AddYears(-1); dt < endday; dt = dt.AddDays(1))
+            for (var dt = today.AddYears(-10); dt < endday; dt = dt.AddDays(1))
             {
                 var name = $"SampleData_{dt:yyyyMMdd}";
                 if (name.EqualIgnoreCase(tnames2))
