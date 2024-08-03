@@ -31,9 +31,10 @@ public class TracerMiddleware
     {
         //!! 以下代码不能封装为独立方法，因为有异步存在，代码被拆分为状态机，导致这里建立的埋点span无法关联页面接口内的下级埋点
         ISpan? span = null;
+        var action = "";
         if (Tracer != null && !ctx.WebSockets.IsWebSocketRequest)
         {
-            var action = GetAction(ctx);
+            action = GetAction(ctx);
             if (!action.IsNullOrEmpty())
             {
                 // 请求主体作为强制采样的数据标签，便于分析链路
@@ -51,13 +52,20 @@ public class TracerMiddleware
                         req.ContentType != null &&
                         req.ContentType.StartsWithIgnoreCase(TagTypes))
                     {
-                        req.EnableBuffering();
+                        try
+                        {
+                            req.EnableBuffering();
 
-                        var buf = new Byte[1024];
-                        var count = await req.Body.ReadAsync(buf, 0, buf.Length);
-                        span.AppendTag("\r\n<=\r\n" + buf.ToStr(null, 0, count));
-                        req.Body.Position = 0;
-                        flag = true;
+                            var buf = new Byte[1024];
+                            var count = await req.Body.ReadAsync(buf, 0, buf.Length);
+                            span.AppendTag("\r\n<=\r\n" + buf.ToStr(null, 0, count));
+                            req.Body.Position = 0;
+                            flag = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            XTrace.Log.Error("[{0}]读取请求主体失败：{1}", action, ex.Message);
+                        }
                     }
 
                     if (span.Tag.Length < 500)
@@ -102,12 +110,19 @@ public class TracerMiddleware
                             res.ContentType != null &&
                             res.ContentType.StartsWithIgnoreCase(TagTypes))
                         {
-                            var buf = new Byte[1024];
-                            var p = res.Body.Position;
-                            var count = await res.Body.ReadAsync(buf, 0, buf.Length);
-                            span.AppendTag("\r\n=>\r\n" + buf.ToStr(null, 0, count));
-                            res.Body.Position = p;
-                            flag = true;
+                            try
+                            {
+                                var buf = new Byte[1024];
+                                var p = res.Body.Position;
+                                var count = await res.Body.ReadAsync(buf, 0, buf.Length);
+                                span.AppendTag("\r\n=>\r\n" + buf.ToStr(null, 0, count));
+                                res.Body.Position = p;
+                                flag = true;
+                            }
+                            catch (Exception ex)
+                            {
+                                XTrace.Log.Error("[{0}]读取响应主体失败：{1}", action, ex.Message);
+                            }
                         }
 
                         if (span.Tag == null || span.Tag.Length < 500)
