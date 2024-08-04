@@ -180,11 +180,11 @@ public class NodeService
             node.WriteHistory("登录校验", false, $"主板不符！（新!=旧）{board}!={node.Board}", ip);
             //flag = false;
         }
-        if (!diskid.IsNullOrEmpty() && diskid != node.DiskID)
-        {
-            node.WriteHistory("登录校验", false, $"磁盘序列号不符！（新!=旧）{diskid}!={node.DiskID}", ip);
-            level--;
-        }
+        //if (!diskid.IsNullOrEmpty() && diskid != node.DiskID)
+        //{
+        //    node.WriteHistory("登录校验", false, $"磁盘序列号不符！（新!=旧）{diskid}!={node.DiskID}", ip);
+        //    level--;
+        //}
         if (!node.ProductCode.IsNullOrEmpty() && !productCode.IsNullOrEmpty() && !node.ProductCode.EqualIgnoreCase(productCode))
         {
             node.WriteHistory("登录校验", false, $"产品编码不符！（新!=旧）{productCode}!={node.ProductCode}", ip);
@@ -202,10 +202,23 @@ public class NodeService
         {
             var dims = di.Macs?.Split(",") ?? [];
             var nodems = node.MACs?.Split(",") ?? [];
-            // 任意网卡匹配则通过
+            // 任意匹配则通过
             if (!nodems.Any(e => dims.Contains(e)))
             {
                 node.WriteHistory("登录校验", false, $"网卡地址不符！（新!=旧）{di.Macs}!={node.MACs}", ip);
+                level--;
+            }
+        }
+
+        // 磁盘。可能有TF卡和U盘
+        if (diskid != node.DiskID)
+        {
+            var dims = diskid?.Split(",") ?? [];
+            var nodems = node.DiskID?.Split(",") ?? [];
+            // 任意匹配则通过
+            if (!nodems.Any(e => dims.Contains(e)))
+            {
+                node.WriteHistory("登录校验", false, $"磁盘序列号不符！（新!=旧）{diskid}!={node.DiskID}", ip);
                 level--;
             }
         }
