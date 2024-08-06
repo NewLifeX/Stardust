@@ -92,6 +92,25 @@ public class ZipDeploy
             }
             else
             {
+                // 参数中有路径的补全
+                if (args[i].Contains('/') || args[i].Contains('\\'))
+                {
+                    //不是绝对路径再补
+                    if (!Path.IsPathRooted(args[i]))
+                    {
+                        //工作目录不为空时
+                        if (!WorkingDirectory.IsNullOrEmpty())
+                        {
+                            args[i] = WorkingDirectory.CombinePath(args[i]).GetFullPath();
+                        }
+                        else
+                        {
+                            args[i] = args[i].GetFullPath();
+                        }                        
+                    }
+                    WriteLog("参数路径补全 {0}", args[i]);
+                }
+                
                 // 其它参数全要，支持 urls=http://*:8000
                 gs[i] = args[i];
             }
