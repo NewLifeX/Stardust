@@ -63,9 +63,9 @@ public class DingTalkClient
     public String FormatMarkdown(String text)
     {
         // 换行
-        text = text.Replace(Environment.NewLine, "\n\n");
+        text = text.Replace(Environment.NewLine, "  \n  ");
         // 经测试 手机不支持<br/> 后期支持了再删除 这要在放在处理完换行以后
-        text = text.Replace("<br/>", "\n");
+        text = text.Replace("<br/>", "  \n  ");
 
         // 经测试 手机不支持<font color="red"> 只支持HEX值   
         text = text.Replace("<font color=\"info\">", "<font color=\"#B3B3B3\">");
