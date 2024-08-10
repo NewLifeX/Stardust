@@ -444,21 +444,25 @@ public class NodeService
             rs.Period = node.Period;
             rs.NewServer = !node.NewServer.IsNullOrEmpty() ? node.NewServer : node.Project?.NewServer;
 
-            var olt = GetOrAddOnline(node, token, ip);
-            olt.Name = node.Name;
-            olt.ProjectId = node.ProjectId;
-            olt.ProductCode = node.ProductCode;
-            olt.Category = node.Category;
-            olt.Version = node.Version;
-            olt.CompileTime = node.CompileTime;
-            olt.OSKind = node.OSKind;
-            olt.Save(null, inf, token, ip);
+            var online = GetOrAddOnline(node, token, ip);
+            online.Name = node.Name;
+            online.ProjectId = node.ProjectId;
+            online.ProductCode = node.ProductCode;
+            online.Category = node.Category;
+            online.Version = node.Version;
+            online.CompileTime = node.CompileTime;
+            online.OSKind = node.OSKind;
+            online.ProvinceID = node.ProvinceID;
+            online.CityID = node.CityID;
+            online.Save(null, inf, token, ip);
 
-            // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌。
+            // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌，以获取业务的连续性。
             //todo 这里将来由客户端提交刷新令牌，才能颁发新的访问令牌。
             var tm = _tokenService.ValidAndIssueToken(node.Code, token, set.TokenSecret, set.TokenExpire);
             if (tm != null)
             {
+                using var span = _tracer?.NewSpan("RefreshToken", new { node.Code, node.Name });
+
                 rs.Token = tm.AccessToken;
 
                 //node.WriteHistory("刷新令牌", true, tm.ToJson(), ip);
@@ -482,7 +486,7 @@ public class NodeService
     private static IList<NodeCommand> _commands;
     private static DateTime _nextTime;
 
-    private static CommandModel[] AcquireCommands(Int32 nodeId)
+    private CommandModel[] AcquireCommands(Int32 nodeId)
     {
         // 缓存最近1000个未执行命令，用于快速过滤，避免大量节点在线时频繁查询命令表
         if (_nextTime < DateTime.Now || _totalCommands != NodeCommand.Meta.Count)
@@ -494,6 +498,8 @@ public class NodeService
 
         // 是否有本节点
         if (!_commands.Any(e => e.NodeID == nodeId)) return null;
+
+        using var span = _tracer?.NewSpan(nameof(AcquireCommands), new { nodeId });
 
         var cmds = NodeCommand.AcquireCommands(nodeId, 100);
         if (cmds.Count == 0) return null;
