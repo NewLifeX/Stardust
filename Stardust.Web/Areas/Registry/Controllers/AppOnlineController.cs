@@ -7,6 +7,7 @@ using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data;
+using Stardust.Data.Nodes;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Registry.Controllers;
@@ -127,6 +128,25 @@ public class AppOnlineController : EntityController<AppOnline>
             if (online != null && online.App != null)
             {
                 ts.Add(_starFactory.SendAppCommand(online.App.Name, command, argument, 30, 0));
+            }
+        }
+
+        var rs = await Task.WhenAll(ts);
+
+        return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
+    }
+
+    [DisplayName("释放内存")]
+    [EntityAuthorize((PermissionFlags)32)]
+    public async Task<ActionResult> FreeMemory()
+    {
+        var ts = new List<Task<Int32>>();
+        foreach (var item in SelectKeys)
+        {
+            var online = AppOnline.FindById(item.ToInt());
+            if (online != null && online.App != null)
+            {
+                ts.Add(_starFactory.SendAppCommand(online.App.Name, "app/freeMemory", null, 30, 0));
             }
         }
 

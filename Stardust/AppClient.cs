@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Reflection;
+using System.Runtime;
 using NewLife;
 using NewLife.Log;
 using NewLife.Model;
@@ -467,6 +468,7 @@ public class AppClient : ClientBase, IRegistry
     {
         client.RegisterCommand("registry/register", DoRefresh);
         client.RegisterCommand("registry/unregister", DoRefresh);
+        client.RegisterCommand("app/freeMemory", OnFreeMemory);
     }
 
     private async Task<String?> DoRefresh(String? argument)
@@ -522,6 +524,48 @@ public class AppClient : ClientBase, IRegistry
         if (address.Contains("://[::]")) return true;
 
         return false;
+    }
+
+    private String? OnFreeMemory(String? args)
+    {
+        var gc = GC.GetTotalMemory(false) / 1024 / 1024;
+        var p = Process.GetCurrentProcess();
+        var ws = p.WorkingSet64 / 1024 / 1024;
+        var prv = p.PrivateMemorySize64 / 1024 / 1024;
+        WriteLog("收到下行指令，开始释放内存。GC={0}M，WorkingSet={1}M，PrivateMemory={2}M", gc, ws, prv);
+
+        FreeMemory();
+
+        p.Refresh();
+        gc = GC.GetTotalMemory(false) / 1024 / 1024;
+        ws = p.WorkingSet64 / 1024 / 1024;
+        prv = p.PrivateMemorySize64 / 1024 / 1024;
+        WriteLog("释放内存完成。GC={0}M，WorkingSet={1}M，PrivateMemory={2}M", gc, ws, prv);
+
+        return "OK";
+    }
+
+    /// <summary>释放内存。GC回收后再释放虚拟内存</summary>
+    public static void FreeMemory()
+    {
+        var max = GC.MaxGeneration;
+        var mode = GCCollectionMode.Forced;
+        //#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
+        mode = GCCollectionMode.Aggressive;
+#endif
+#if NET451_OR_GREATER || NETSTANDARD || NETCOREAPP
+        GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+#endif
+        GC.Collect(max, mode);
+        GC.WaitForPendingFinalizers();
+        GC.Collect(max, mode);
+
+        if (Runtime.Windows)
+        {
+            var p = Process.GetCurrentProcess();
+            NativeMethods.EmptyWorkingSet(p.Handle);
+        }
     }
     #endregion
 }

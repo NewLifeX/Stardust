@@ -119,7 +119,7 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
     [EntityAuthorize((PermissionFlags)16)]
     public async Task<ActionResult> CheckUpgrade()
     {
-        var ts = new List<Task>();
+        var ts = new List<Task<Int32>>();
         foreach (var item in SelectKeys)
         {
             var online = NodeOnline.FindById(item.ToInt());
@@ -129,16 +129,16 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
             }
         }
 
-        await Task.WhenAll(ts);
+        var rs = await Task.WhenAll(ts);
 
-        return JsonRefresh("操作成功！");
+        return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
     }
 
     [DisplayName("重启服务")]
     [EntityAuthorize((PermissionFlags)32)]
     public async Task<ActionResult> Restart()
     {
-        var ts = new List<Task>();
+        var ts = new List<Task<Int32>>();
         foreach (var item in SelectKeys)
         {
             var online = NodeOnline.FindById(item.ToInt());
@@ -148,16 +148,16 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
             }
         }
 
-        await Task.WhenAll(ts);
+        var rs = await Task.WhenAll(ts);
 
-        return JsonRefresh("操作成功！");
+        return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
     }
 
     [DisplayName("重启系统")]
     [EntityAuthorize((PermissionFlags)64)]
     public async Task<ActionResult> Reboot()
     {
-        var ts = new List<Task>();
+        var ts = new List<Task<Int32>>();
         foreach (var item in SelectKeys)
         {
             var online = NodeOnline.FindById(item.ToInt());
@@ -167,9 +167,9 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
             }
         }
 
-        await Task.WhenAll(ts);
+        var rs = await Task.WhenAll(ts);
 
-        return JsonRefresh("操作成功！");
+        return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
     }
 
     [DisplayName("执行命令")]
