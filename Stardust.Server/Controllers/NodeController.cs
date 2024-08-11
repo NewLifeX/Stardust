@@ -1,4 +1,5 @@
-﻿using System.Net.WebSockets;
+﻿using System.Net;
+using System.Net.WebSockets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
@@ -117,7 +118,45 @@ public class NodeController : BaseController
 
     #region 心跳保活
     [HttpPost(nameof(Ping))]
-    public PingResponse Ping(PingInfo inf) => _nodeService.Ping(_node, inf, Token, UserHost, _setting);
+    public PingResponse Ping(PingInfo inf)
+    {
+        var node = _node;
+        var rs = new PingResponse
+        {
+            Time = inf.Time,
+            ServerTime = DateTime.UtcNow.ToLong(),
+        };
+
+        var online = _nodeService.Ping(node, inf, Token, UserHost);
+
+        if (node != null)
+        {
+            rs.Period = node.Period;
+            rs.NewServer = !node.NewServer.IsNullOrEmpty() ? node.NewServer : node.Project?.NewServer;
+
+            // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌，以获取业务的连续性。
+            //todo 这里将来由客户端提交刷新令牌，才能颁发新的访问令牌。
+            var set = _setting;
+            var tm = _tokenService.ValidAndIssueToken(node.Code, Token, set.TokenSecret, set.TokenExpire);
+            if (tm != null)
+            {
+                using var span = _tracer?.NewSpan("RefreshNodeToken", new { node.Code, node.Name });
+
+                rs.Token = tm.AccessToken;
+
+                //node.WriteHistory("刷新令牌", true, tm.ToJson(), ip);
+            }
+
+            if (!node.Version.IsNullOrEmpty() && Version.TryParse(node.Version, out var ver))
+            {
+                // 拉取命令
+                if (ver.Build >= 2023 && ver.Revision >= 107)
+                    rs.Commands = _nodeService.AcquireNodeCommands(node.ID);
+            }
+        }
+
+        return rs;
+    }
 
     [AllowAnonymous]
     [HttpGet(nameof(Ping))]
@@ -286,7 +325,9 @@ public class NodeController : BaseController
         if (error != null) throw error;
 
         var sid = Rand.Next();
-        WriteHistory(node, "WebSocket连接", true, $"State={socket.State} sid={sid}");
+        var connection = HttpContext.Connection;
+        var remote = new IPEndPoint(connection.RemoteIpAddress, connection.RemotePort);
+        WriteHistory(node, "WebSocket连接", true, $"State={socket.State} sid={sid} Remote={remote}");
 
         var olt = _nodeService.GetOrAddOnline(node, token, ip);
         if (olt != null)
@@ -313,7 +354,7 @@ public class NodeController : BaseController
             }
         }, source);
 
-        WriteHistory(node, "WebSocket断开", true, $"State={socket.State} CloseStatus={socket.CloseStatus} sid={sid}");
+        WriteHistory(node, "WebSocket断开", true, $"State={socket.State} CloseStatus={socket.CloseStatus} sid={sid} Remote={remote}");
         if (olt != null)
         {
             olt.WebSocket = false;

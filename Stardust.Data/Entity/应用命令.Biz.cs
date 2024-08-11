@@ -6,6 +6,7 @@ using NewLife;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Remoting.Models;
+using Stardust.Data.Nodes;
 using XCode;
 
 namespace Stardust.Data;
@@ -117,6 +118,19 @@ public partial class AppCommand : Entity<AppCommand>
     #endregion
 
     #region 业务操作
+    /// <summary>获取有效命令</summary>
+    /// <param name="appId"></param>
+    /// <param name="count"></param>
+    /// <returns></returns>
+    public static IList<AppCommand> AcquireCommands(Int32 appId, Int32 count = 100)
+    {
+        var exp = new WhereExpression();
+        if (appId > 0) exp &= _.AppId == appId;
+        exp &= _.Status <= CommandStatus.处理中;
+
+        return FindAll(exp, _.Id.Asc(), null, 0, count);
+    }
+
     /// <summary>转为模型</summary>
     /// <returns></returns>
     public CommandModel ToModel()

@@ -402,91 +402,62 @@ public class NodeService
     #endregion
 
     #region 心跳
-    public PingResponse Ping(Node node, PingInfo inf, String token, String ip, StarServerSetting set)
+    public NodeOnline Ping(Node node, PingInfo inf, String token, String ip)
     {
-        var rs = new PingResponse
-        {
-            Time = inf.Time,
-            ServerTime = DateTime.UtcNow.ToLong(),
-        };
+        if (node == null) return null;
 
-        if (node != null)
-        {
-            if (!inf.IP.IsNullOrEmpty()) node.IP = inf.IP;
-            node.UpdateIP = ip;
-            node.FixArea();
-            node.FixNameByRule();
+        if (!inf.IP.IsNullOrEmpty()) node.IP = inf.IP;
+        node.UpdateIP = ip;
+        node.FixArea();
+        node.FixNameByRule();
 
-            // 在心跳中更新客户端所有的框架。因此客户端长期不重启，而中途可能安装了新版NET运行时
-            if (!inf.Framework.IsNullOrEmpty())
+        // 在心跳中更新客户端所有的框架。因此客户端长期不重启，而中途可能安装了新版NET运行时
+        if (!inf.Framework.IsNullOrEmpty())
+        {
+            //node.Framework = inf.Framework?.Split(',').LastOrDefault();
+            node.Frameworks = inf.Framework;
+            // 选取最大的版本，而不是最后一个，例如6.0.3字符串大于6.0.13
+            Version max = null;
+            var fs = inf.Framework.Split(',');
+            if (fs != null)
             {
-                //node.Framework = inf.Framework?.Split(',').LastOrDefault();
-                node.Frameworks = inf.Framework;
-                // 选取最大的版本，而不是最后一个，例如6.0.3字符串大于6.0.13
-                Version max = null;
-                var fs = inf.Framework.Split(',');
-                if (fs != null)
+                foreach (var f in fs)
                 {
-                    foreach (var f in fs)
-                    {
-                        if (System.Version.TryParse(f, out var v) && (max == null || max < v))
-                            max = v;
-                    }
-                    node.Framework = max?.ToString();
+                    if (System.Version.TryParse(f, out var v) && (max == null || max < v))
+                        max = v;
                 }
+                node.Framework = max?.ToString();
             }
-
-            // 每10分钟更新一次节点信息，确保活跃
-            if (node.LastActive.AddMinutes(10) < DateTime.Now) node.LastActive = DateTime.Now;
-            //node.SaveAsync();
-            node.Update();
-
-            rs.Period = node.Period;
-            rs.NewServer = !node.NewServer.IsNullOrEmpty() ? node.NewServer : node.Project?.NewServer;
-
-            var online = GetOrAddOnline(node, token, ip);
-            online.Name = node.Name;
-            online.ProjectId = node.ProjectId;
-            online.ProductCode = node.ProductCode;
-            online.Category = node.Category;
-            online.Version = node.Version;
-            online.CompileTime = node.CompileTime;
-            online.OSKind = node.OSKind;
-            online.ProvinceID = node.ProvinceID;
-            online.CityID = node.CityID;
-            online.Save(null, inf, token, ip);
-
-            // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌，以获取业务的连续性。
-            //todo 这里将来由客户端提交刷新令牌，才能颁发新的访问令牌。
-            var tm = _tokenService.ValidAndIssueToken(node.Code, token, set.TokenSecret, set.TokenExpire);
-            if (tm != null)
-            {
-                using var span = _tracer?.NewSpan("RefreshToken", new { node.Code, node.Name });
-
-                rs.Token = tm.AccessToken;
-
-                //node.WriteHistory("刷新令牌", true, tm.ToJson(), ip);
-            }
-
-            if (!node.Version.IsNullOrEmpty() && Version.TryParse(node.Version, out var ver))
-            {
-                // 拉取命令
-                if (ver.Build >= 2003 && ver.Revision >= 107)
-                    rs.Commands = AcquireCommands(node.ID);
-            }
-
-            //// 下发部署的应用服务
-            //rs.Services = GetServices(node.ID);
         }
 
-        return rs;
+        // 每10分钟更新一次节点信息，确保活跃
+        if (node.LastActive.AddMinutes(10) < DateTime.Now) node.LastActive = DateTime.Now;
+        //node.SaveAsync();
+        node.Update();
+
+        var online = GetOrAddOnline(node, token, ip);
+        online.Name = node.Name;
+        online.ProjectId = node.ProjectId;
+        online.ProductCode = node.ProductCode;
+        online.Category = node.Category;
+        online.Version = node.Version;
+        online.CompileTime = node.CompileTime;
+        online.OSKind = node.OSKind;
+        online.ProvinceID = node.ProvinceID;
+        online.CityID = node.CityID;
+        online.Save(null, inf, token, ip);
+
+        //// 下发部署的应用服务
+        //rs.Services = GetServices(node.ID);
+
+        return online;
     }
 
     private static Int32 _totalCommands;
     private static IList<NodeCommand> _commands;
     private static DateTime _nextTime;
 
-    private CommandModel[] AcquireCommands(Int32 nodeId)
+    public CommandModel[] AcquireNodeCommands(Int32 nodeId)
     {
         // 缓存最近1000个未执行命令，用于快速过滤，避免大量节点在线时频繁查询命令表
         if (_nextTime < DateTime.Now || _totalCommands != NodeCommand.Meta.Count)
@@ -499,7 +470,7 @@ public class NodeService
         // 是否有本节点
         if (!_commands.Any(e => e.NodeID == nodeId)) return null;
 
-        using var span = _tracer?.NewSpan(nameof(AcquireCommands), new { nodeId });
+        using var span = _tracer?.NewSpan(nameof(AcquireNodeCommands), new { nodeId });
 
         var cmds = NodeCommand.AcquireCommands(nodeId, 100);
         if (cmds.Count == 0) return null;
@@ -522,15 +493,6 @@ public class NodeService
         cmds.Update(false);
 
         return rs.ToArray();
-    }
-
-    public PingResponse Ping()
-    {
-        return new PingResponse
-        {
-            Time = 0,
-            ServerTime = DateTime.UtcNow.ToLong(),
-        };
     }
 
     public NodeOnline GetOrAddOnline(Node node, String token, String ip)

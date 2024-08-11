@@ -1,4 +1,6 @@
-﻿using System.Net.WebSockets;
+﻿using System.Net;
+using System.Net.WebSockets;
+using System.Xml.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
@@ -11,6 +13,7 @@ using NewLife.Security;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
+using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Services;
 using WebSocket = System.Net.WebSockets.WebSocket;
@@ -115,16 +118,40 @@ public class AppController : BaseController
     [HttpPost(nameof(Ping))]
     public PingResponse Ping(AppInfo inf)
     {
+        var app = _app;
         var rs = new PingResponse
         {
-            //Time = inf.Time,
+            Time = inf.Time,
             ServerTime = DateTime.UtcNow.ToLong(),
-            Period = _app.Period,
         };
 
-        var online = _registryService.Ping(_app, inf, UserHost, _clientId, Token);
-
+        var online = _registryService.Ping(app, inf, UserHost, _clientId, Token);
         _deployService.UpdateDeployNode(online);
+
+        if (app != null)
+        {
+            rs.Period = app.Period;
+
+            // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌，以获取业务的连续性。
+            //todo 这里将来由客户端提交刷新令牌，才能颁发新的访问令牌。
+            var set = _setting;
+            var tm = _tokenService.ValidAndIssueToken(app.Name, Token, set.TokenSecret, set.TokenExpire);
+            if (tm != null)
+            {
+                using var span = _tracer?.NewSpan("RefreshAppToken", new { app.Name, app.DisplayName });
+
+                rs.Token = tm.AccessToken;
+
+                //app.WriteHistory("刷新令牌", true, tm.ToJson(), ip);
+            }
+
+            if (!app.Version.IsNullOrEmpty() && Version.TryParse(app.Version, out var ver))
+            {
+                // 拉取命令
+                if (ver.Build >= 2024 && ver.Revision >= 801)
+                    rs.Commands = _registryService.AcquireAppCommands(app.Id);
+            }
+        }
 
         return rs;
     }
@@ -173,7 +200,9 @@ public class AppController : BaseController
         if (app == null) throw new ApiException(401, "未登录！");
 
         var sid = Rand.Next();
-        WriteHistory("WebSocket连接", true, $"State={socket.State} sid={sid}", clientId);
+        var connection = HttpContext.Connection;
+        var remote = new IPEndPoint(connection.RemoteIpAddress, connection.RemotePort);
+        WriteHistory("WebSocket连接", true, $"State={socket.State} sid={sid} Remote={remote}", clientId);
 
         var olt = AppOnline.FindByClient(clientId);
         if (olt != null)
@@ -202,7 +231,7 @@ public class AppController : BaseController
             }
         }, source);
 
-        WriteHistory("WebSocket断开", true, $"State={socket.State} CloseStatus={socket.CloseStatus} sid={sid}", clientId);
+        WriteHistory("WebSocket断开", true, $"State={socket.State} CloseStatus={socket.CloseStatus} sid={sid} Remote={remote}", clientId);
         if (olt != null)
         {
             olt.WebSocket = false;

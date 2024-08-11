@@ -11,6 +11,7 @@ using Stardust.Data.Configs;
 using Stardust.Data.Nodes;
 using Stardust.Data.Platform;
 using Stardust.Models;
+using XCode;
 
 namespace Stardust.Server.Services;
 
@@ -390,6 +391,48 @@ public class RegistryService
         AppMeter.WriteData(app, inf, "Ping", clientId, ip);
 
         return online;
+    }
+
+    private static Int32 _totalCommands;
+    private static IList<AppCommand> _commands;
+    private static DateTime _nextTime;
+
+    public CommandModel[] AcquireAppCommands(Int32 appId)
+    {
+        // 缓存最近1000个未执行命令，用于快速过滤，避免大量节点在线时频繁查询命令表
+        if (_nextTime < DateTime.Now || _totalCommands != AppCommand.Meta.Count)
+        {
+            _totalCommands = AppCommand.Meta.Count;
+            _commands = AppCommand.AcquireCommands(-1, 1000);
+            _nextTime = DateTime.Now.AddMinutes(1);
+        }
+
+        // 是否有本节点
+        if (!_commands.Any(e => e.AppId == appId)) return null;
+
+        using var span = _tracer?.NewSpan(nameof(AcquireAppCommands), new { appId });
+
+        var cmds = AppCommand.AcquireCommands(appId, 100);
+        if (cmds.Count == 0) return null;
+
+        var rs = new List<CommandModel>();
+        foreach (var item in cmds)
+        {
+            if (item.Times > 10 || item.Expire.Year > 2000 && item.Expire < DateTime.Now)
+                item.Status = CommandStatus.取消;
+            else
+            {
+                if (item.Status == CommandStatus.处理中 && item.UpdateTime.AddMinutes(10) < DateTime.Now) continue;
+
+                item.Times++;
+                item.Status = CommandStatus.处理中;
+                rs.Add(item.ToModel());
+            }
+            item.UpdateTime = DateTime.Now;
+        }
+        cmds.Update(false);
+
+        return rs.ToArray();
     }
 
     /// <summary>向应用发送命令</summary>
