@@ -80,7 +80,7 @@ public class TokenService
     /// <param name="secret"></param>
     /// <param name="expire"></param>
     /// <returns></returns>
-    public TokenModel ValidAndIssueToken(String name, String token, String secret, Int32 expire)
+    public TokenModel ValidAndIssueToken(String name, String token, String secret, Int32 expire, String clientId)
     {
         if (token.IsNullOrEmpty()) return null;
 
@@ -93,7 +93,7 @@ public class TokenService
         };
         if (!jwt.TryDecode(token, out _)) return null;
 
-        return DateTime.Now.AddMinutes(10) > jwt.Expire ? IssueToken(name, secret, expire) : null;
+        return DateTime.Now.AddMinutes(10) > jwt.Expire ? IssueToken(name, secret, expire, clientId) : null;
     }
 
     /// <summary>解码令牌</summary>

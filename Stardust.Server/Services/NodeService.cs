@@ -97,7 +97,7 @@ public class NodeService
         node.Login(inf.Node, ip);
 
         // 设置令牌
-        var tokenModel = _tokenService.IssueToken(node.Code, setting.TokenSecret, setting.TokenExpire);
+        var tokenModel = _tokenService.IssueToken(node.Code, setting.TokenSecret, setting.TokenExpire, inf.ClientId);
 
         // 在线记录
         var olt = GetOrAddOnline(node, tokenModel.AccessToken, ip);
@@ -764,7 +764,7 @@ public class NodeService
     #endregion
 
     #region 辅助
-    public (Node, Exception) DecodeToken(String token, String tokenSecret)
+    public (JwtBuilder, Node, Exception) DecodeToken(String token, String tokenSecret)
     {
         if (token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(token));
 
@@ -788,7 +788,7 @@ public class NodeService
                 ex = new ApiException(403, $"[{jwt.Subject}]非法访问 {message}");
         }
 
-        return (node, ex);
+        return (jwt, node, ex);
     }
 
     private void WriteHistory(Node node, String action, Boolean success, String remark, String ip = null)

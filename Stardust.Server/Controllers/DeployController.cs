@@ -16,6 +16,7 @@ namespace Stardust.Server.Controllers;
 public class DeployController : BaseController
 {
     private Node _node;
+    private String _clientId;
     private readonly NodeService _nodeService;
     private readonly DeployService _deployService;
     private readonly TokenService _tokenService;
@@ -32,8 +33,9 @@ public class DeployController : BaseController
     #region 令牌验证
     protected override Boolean OnAuthorize(String token)
     {
-        var (node, ex) = _nodeService.DecodeToken(token, _setting.TokenSecret);
+        var (jwt, node, ex) = _nodeService.DecodeToken(token, _setting.TokenSecret);
         _node = node;
+        _clientId = jwt.Id;
         if (ex != null) throw ex;
 
         return node != null;

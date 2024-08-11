@@ -26,6 +26,7 @@ namespace Stardust.Server.Controllers;
 public class NodeController : BaseController
 {
     private Node _node;
+    private String _clientId;
     private readonly ICacheProvider _cacheProvider;
     private readonly IHostApplicationLifetime _lifetime;
     private readonly ITracer _tracer;
@@ -48,8 +49,9 @@ public class NodeController : BaseController
     #region 令牌验证
     protected override Boolean OnAuthorize(String token)
     {
-        var (node, ex) = _nodeService.DecodeToken(token, _setting.TokenSecret);
+        var (jwt, node, ex) = _nodeService.DecodeToken(token, _setting.TokenSecret);
         _node = node;
+        _clientId = jwt.Id;
         if (ex != null) throw ex;
 
         return node != null;
@@ -137,7 +139,7 @@ public class NodeController : BaseController
             // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌，以获取业务的连续性。
             //todo 这里将来由客户端提交刷新令牌，才能颁发新的访问令牌。
             var set = _setting;
-            var tm = _tokenService.ValidAndIssueToken(node.Code, Token, set.TokenSecret, set.TokenExpire);
+            var tm = _tokenService.ValidAndIssueToken(node.Code, Token, set.TokenSecret, set.TokenExpire, _clientId);
             if (tm != null)
             {
                 using var span = _tracer?.NewSpan("RefreshNodeToken", new { node.Code, node.Name });
@@ -320,7 +322,7 @@ public class NodeController : BaseController
 
     private async Task Handle(WebSocket socket, String token, String ip)
     {
-        var (node, error) = _nodeService.DecodeToken(token, _setting.TokenSecret);
+        var (_, node, error) = _nodeService.DecodeToken(token, _setting.TokenSecret);
         _node = node ?? throw new ApiException(401, $"未登录！[ip={ip}]");
         if (error != null) throw error;
 

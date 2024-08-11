@@ -135,7 +135,7 @@ public class AppController : BaseController
             // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌，以获取业务的连续性。
             //todo 这里将来由客户端提交刷新令牌，才能颁发新的访问令牌。
             var set = _setting;
-            var tm = _tokenService.ValidAndIssueToken(app.Name, Token, set.TokenSecret, set.TokenExpire);
+            var tm = _tokenService.ValidAndIssueToken(app.Name, Token, set.TokenSecret, set.TokenExpire, _clientId);
             if (tm != null)
             {
                 using var span = _tracer?.NewSpan("RefreshAppToken", new { app.Name, app.DisplayName });
