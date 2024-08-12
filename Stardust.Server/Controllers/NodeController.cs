@@ -328,7 +328,9 @@ public class NodeController : BaseController
 
         var sid = Rand.Next();
         var connection = HttpContext.Connection;
-        var remote = new IPEndPoint(connection.RemoteIpAddress, connection.RemotePort);
+        var address = connection.RemoteIpAddress ?? IPAddress.Loopback;
+        if (address.IsIPv4MappedToIPv6) address = address.MapToIPv4();
+        var remote = new IPEndPoint(address, connection.RemotePort);
         WriteHistory(node, "WebSocket连接", true, $"State={socket.State} sid={sid} Remote={remote}");
 
         var olt = _nodeService.GetOrAddOnline(node, token, ip);
