@@ -8,6 +8,7 @@ using NewLife.Http;
 using NewLife.Log;
 using NewLife.Reflection;
 using NewLife.Remoting;
+using NewLife.Remoting.Clients;
 using NewLife.Serialization;
 using Stardust.Models;
 
@@ -102,7 +103,7 @@ public class StarTracer : DefaultTracer
         // 自动从本地星尘代理获取地址
         if (Client == null) throw new ArgumentNullException(nameof(Client));
 
-        var server = Client is ApiHttpClient http ? http.Services.Join(",", e => e.Address) : (Client + "");
+        var server = Client is ClientBase cbase ? cbase.Server : (Client + "");
         WriteLog("星尘监控中心 Server={0} AppId={1} ClientId={2}", server, AppId, ClientId);
 
         _inited = true;
