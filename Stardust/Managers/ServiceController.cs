@@ -326,7 +326,7 @@ internal class ServiceController : DisposeBase
         }
         else if (file.EndsWithIgnoreCase(".jar"))
         {
-            args = $"{fileName} {args}";
+            args = $" -jar {fileName} {args}";
             fileName = "java";
         }
 
