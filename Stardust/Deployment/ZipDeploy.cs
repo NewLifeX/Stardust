@@ -92,24 +92,29 @@ public class ZipDeploy
             }
             else
             {
-                // 参数中有路径的补全
-                if (args[i].Contains('/') || args[i].Contains('\\'))
-                {
-                    //不是绝对路径再补
-                    if (!Path.IsPathRooted(args[i]))
-                    {
-                        //工作目录不为空时
-                        if (!WorkingDirectory.IsNullOrEmpty())
-                        {
-                            args[i] = WorkingDirectory.CombinePath(args[i]).GetFullPath();
-                        }
-                        else
-                        {
-                            args[i] = args[i].GetFullPath();
-                        }                        
-                    }
-                    WriteLog("参数路径补全 {0}", args[i]);
-                }
+                // 以下代码发生致命错误。https://star.newlifex.com/trace?id=ac1007eb172486341696902a0e55a2
+                // 参数 urls=http://*:8090 被错误处理为 /root/oqe/web/urls=http:/*:8090
+                // 系统 Ubuntu 22.04
+                // 注：命令行中的参数非常灵活，可能是各种字符串，在不确定它是路径之前，贸然补全路径可能会引发更多问题
+
+                //// 参数中有路径的补全
+                //if (args[i].Contains('/') || args[i].Contains('\\'))
+                //{
+                //    //不是绝对路径再补
+                //    if (!Path.IsPathRooted(args[i]))
+                //    {
+                //        //工作目录不为空时
+                //        if (!WorkingDirectory.IsNullOrEmpty())
+                //        {
+                //            args[i] = WorkingDirectory.CombinePath(args[i]).GetFullPath();
+                //        }
+                //        else
+                //        {
+                //            args[i] = args[i].GetFullPath();
+                //        }                        
+                //    }
+                //    WriteLog("参数路径补全 {0}", args[i]);
+                //}
                 
                 // 其它参数全要，支持 urls=http://*:8000
                 gs[i] = args[i];
