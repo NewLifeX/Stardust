@@ -41,8 +41,9 @@ internal class BinlogClear
                 var fi = new FileInfo(item);
                 if (fi.Extension.TrimStart('.').ToInt() > 0 && fi.LastWriteTime < exp)
                 {
-                    Event?.WriteInfoEvent("Binlog", $"删除二进制日志 {fi.Name}");
-                    XTrace.WriteLine("删除二进制日志 {0}", fi.Name);
+                    var msg = $"删除二进制日志：{fi.Name}，大小：{fi.Length.ToGMK()}";
+                    Event?.WriteInfoEvent("Binlog", msg);
+                    XTrace.WriteLine(msg);
                     try
                     {
                         fi.Delete();
