@@ -259,6 +259,9 @@ internal class MyService : ServiceBase, IServiceProvider
 
         if (_Client != null) _Client.Plugins = pm.Plugins.Select(e => e.GetType().Name.TrimEnd("Plugin")).ToArray();
 
+        // 辅助任务清理数据
+        ThreadPoolX.QueueUserWorkItem(Fix);
+
         base.StartWork(reason);
     }
 
@@ -629,6 +632,55 @@ internal class MyService : ServiceBase, IServiceProvider
         if (serviceType == typeof(ITracer)) return _factory?.Tracer;
 
         return Provider?.GetService(serviceType);
+    }
+    #endregion
+
+    #region 辅助
+
+    /// <summary>清理历史版本文件</summary>
+    private void Fix()
+    {
+        foreach (var fi in "./".AsDirectory().GetFiles("*", SearchOption.TopDirectoryOnly))
+        {
+            var flag = false;
+            if (fi.Name.EndsWithIgnoreCase(".deps.json", ".runtimeconfig.json") && !fi.Name.StartsWithIgnoreCase("StarAgent"))
+                flag = true;
+            else if (fi.Name.EndsWithIgnoreCase(".tar.gz") && fi.LastAccessTime.AddMonths(1) < DateTime.Now)
+                flag = true;
+            else if (fi.Name.EndsWithIgnoreCase(".exe") && !Runtime.Windows && !Runtime.Mono)
+                flag = true;
+
+            if (flag)
+            {
+                try
+                {
+                    _Client?.WriteInfoEvent("删除", fi.FullName);
+                    XTrace.WriteLine("删除：{0}", fi.FullName);
+                    fi.Delete();
+                }
+                catch (Exception ex)
+                {
+                    _Client?.WriteErrorEvent("删除", ex.Message);
+                    XTrace.Log.Error(ex.Message);
+                }
+            }
+        }
+
+        var di = "./runtimes".AsDirectory();
+        if (di.Exists)
+        {
+            try
+            {
+                _Client?.WriteInfoEvent("删除", di.FullName);
+                XTrace.WriteLine("删除：{0}", di.FullName);
+                di.Delete(true);
+            }
+            catch (Exception ex)
+            {
+                _Client?.WriteErrorEvent("删除", ex.Message);
+                XTrace.Log.Error(ex.Message);
+            }
+        }
     }
     #endregion
 }
