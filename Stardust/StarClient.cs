@@ -298,7 +298,7 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
             {
                 if (Runtime.Linux && item.SessionId == 0) continue;
 
-                var name = item.GetProcessName2();
+                var name = item.GetProcessName();
                 if (name.EqualIgnoreCase(_excludes) || exs.Any(e => e.IsMatch(name))) continue;
 
                 if (!pcs.Contains(name)) pcs.Add(name);

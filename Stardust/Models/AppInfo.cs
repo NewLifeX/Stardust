@@ -91,7 +91,7 @@ public class AppInfo : IPingRequest, ICloneable
         try
         {
             Id = process.Id;
-            Name = process.GetProcessName2();
+            Name = process.GetProcessName();
             //StartTime = process.StartTime;
             //ProcessorTime = (Int64)process.TotalProcessorTime.TotalMilliseconds;
 
