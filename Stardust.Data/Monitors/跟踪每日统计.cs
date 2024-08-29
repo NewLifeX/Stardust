@@ -238,6 +238,8 @@ public partial class TraceDayStat
     /// <returns>实体列表</returns>
     public static IList<TraceDayStat> FindAllByStatDate(DateTime statDate)
     {
+        if (statDate.Year < 1000) return [];
+
         return FindAll(_.StatDate == statDate);
     }
     #endregion

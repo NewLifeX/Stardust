@@ -170,6 +170,15 @@ public partial class AppMinuteStat
     #endregion
 
     #region 扩展查询
+    /// <summary>根据统计分钟查找</summary>
+    /// <param name="statTime">统计分钟</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppMinuteStat> FindAllByStatTime(DateTime statTime)
+    {
+        if (statTime.Year < 1000) return [];
+
+        return FindAll(_.StatTime == statTime);
+    }
     #endregion
 
     #region 数据清理

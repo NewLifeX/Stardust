@@ -158,7 +158,7 @@
         <Column Name="Uptime" DataType="Int32" ItemType="TimeSpan" Description="开机时间。单位s" />
         <Column Name="MACs" DataType="String" Length="200" Description="网卡" />
         <Column Name="Processes" DataType="String" Length="2000" Description="进程列表" />
-        <Column Name="Token" DataType="String" Length="200" Description="令牌" />
+        <Column Name="Token" DataType="String" Length="500" Description="令牌" />
         <Column Name="Data" DataType="String" Length="-1" Description="数据" />
         <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
         <Column Name="Creator" DataType="String" Description="创建者。服务端节点" Category="扩展" />

@@ -210,6 +210,28 @@ public partial class NodeStat
 
         return FindAll(_.Category == category);
     }
+
+    /// <summary>根据类别、统计日期查找</summary>
+    /// <param name="category">类别</param>
+    /// <param name="statDate">统计日期</param>
+    /// <returns>实体列表</returns>
+    public static IList<NodeStat> FindAllByCategoryAndStatDate(String category, DateTime statDate)
+    {
+        if (category.IsNullOrEmpty()) return [];
+        if (statDate.Year < 1000) return [];
+
+        return FindAll(_.Category == category & _.StatDate == statDate);
+    }
+
+    /// <summary>根据统计日期查找</summary>
+    /// <param name="statDate">统计日期</param>
+    /// <returns>实体列表</returns>
+    public static IList<NodeStat> FindAllByStatDate(DateTime statDate)
+    {
+        if (statDate.Year < 1000) return [];
+
+        return FindAll(_.StatDate == statDate);
+    }
     #endregion
 
     #region 数据清理

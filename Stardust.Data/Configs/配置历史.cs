@@ -149,6 +149,15 @@ public partial class ConfigHistory
     #endregion
 
     #region 扩展查询
+    /// <summary>根据创建时间查找</summary>
+    /// <param name="createTime">创建时间</param>
+    /// <returns>实体列表</returns>
+    public static IList<ConfigHistory> FindAllByCreateTime(DateTime createTime)
+    {
+        if (createTime.Year < 1000) return [];
+
+        return FindAll(_.CreateTime == createTime);
+    }
     #endregion
 
     #region 数据清理

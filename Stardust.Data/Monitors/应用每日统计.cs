@@ -249,6 +249,15 @@ public partial class AppDayStat
     #endregion
 
     #region 扩展查询
+    /// <summary>根据统计日期查找</summary>
+    /// <param name="statDate">统计日期</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppDayStat> FindAllByStatDate(DateTime statDate)
+    {
+        if (statDate.Year < 1000) return [];
+
+        return FindAll(_.StatDate == statDate);
+    }
     #endregion
 
     #region 数据清理

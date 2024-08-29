@@ -227,6 +227,20 @@ public partial class NodeCommand
     #endregion
 
     #region 扩展查询
+    /// <summary>根据更新时间、节点、命令查找</summary>
+    /// <param name="updateTime">更新时间</param>
+    /// <param name="nodeId">节点</param>
+    /// <param name="command">命令</param>
+    /// <returns>实体列表</returns>
+    public static IList<NodeCommand> FindAllByUpdateTimeAndNodeIDAndCommand(DateTime updateTime, Int32 nodeId, String command)
+    {
+        if (updateTime.Year < 1000) return [];
+        if (nodeId < 0) return [];
+        if (command.IsNullOrEmpty()) return [];
+
+        return FindAll(_.UpdateTime == updateTime & _.NodeID == nodeId & _.Command == command);
+    }
+
     /// <summary>根据节点查找</summary>
     /// <param name="nodeId">节点</param>
     /// <returns>实体列表</returns>
@@ -235,6 +249,16 @@ public partial class NodeCommand
         if (nodeId < 0) return [];
 
         return FindAll(_.NodeID == nodeId);
+    }
+
+    /// <summary>根据更新时间查找</summary>
+    /// <param name="updateTime">更新时间</param>
+    /// <returns>实体列表</returns>
+    public static IList<NodeCommand> FindAllByUpdateTime(DateTime updateTime)
+    {
+        if (updateTime.Year < 1000) return [];
+
+        return FindAll(_.UpdateTime == updateTime);
     }
     #endregion
 

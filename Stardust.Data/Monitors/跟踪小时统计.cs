@@ -221,6 +221,15 @@ public partial class TraceHourStat
     #endregion
 
     #region 扩展查询
+    /// <summary>根据统计小时查找</summary>
+    /// <param name="statTime">统计小时</param>
+    /// <returns>实体列表</returns>
+    public static IList<TraceHourStat> FindAllByStatTime(DateTime statTime)
+    {
+        if (statTime.Year < 1000) return [];
+
+        return FindAll(_.StatTime == statTime);
+    }
     #endregion
 
     #region 数据清理

@@ -226,6 +226,29 @@ public partial class AppCommand
     #endregion
 
     #region 扩展查询
+    /// <summary>根据更新时间、应用、命令查找</summary>
+    /// <param name="updateTime">更新时间</param>
+    /// <param name="appId">应用</param>
+    /// <param name="command">命令</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppCommand> FindAllByUpdateTimeAndAppIdAndCommand(DateTime updateTime, Int32 appId, String command)
+    {
+        if (updateTime.Year < 1000) return [];
+        if (appId < 0) return [];
+        if (command.IsNullOrEmpty()) return [];
+
+        return FindAll(_.UpdateTime == updateTime & _.AppId == appId & _.Command == command);
+    }
+
+    /// <summary>根据更新时间查找</summary>
+    /// <param name="updateTime">更新时间</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppCommand> FindAllByUpdateTime(DateTime updateTime)
+    {
+        if (updateTime.Year < 1000) return [];
+
+        return FindAll(_.UpdateTime == updateTime);
+    }
     #endregion
 
     #region 数据清理
