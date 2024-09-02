@@ -7,6 +7,7 @@ using NewLife.Remoting.Models;
 using NewLife.Security;
 using NewLife.Serialization;
 using NewLife.Web;
+using Stardust.Data;
 using Stardust.Data.Nodes;
 using Stardust.Data.Platform;
 using Stardust.Models;
@@ -43,8 +44,9 @@ public class NodeService
         }
 
         if (node.Secret.IsNullOrEmpty()) return true;
+        if (node.Secret == secret) return true;
         //return !secret.IsNullOrEmpty() && !secret.IsNullOrEmpty() && (node.Secret == secret || node.Secret.MD5() == secret);
-        if (!_passwordProvider.Verify(node.Secret, secret))
+        if (secret.IsNullOrEmpty() || !_passwordProvider.Verify(node.Secret, secret))
         {
             WriteHistory(node, "节点鉴权", false, "密钥校验失败", ip);
             return false;

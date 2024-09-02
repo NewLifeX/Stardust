@@ -52,7 +52,8 @@ public class RegistryService
 
         // 未设置密钥，直接通过
         if (app.Secret.IsNullOrEmpty()) return true;
-        if (!_passwordProvider.Verify(app.Secret, secret))
+        if (app.Secret == secret) return true;
+        if (secret.IsNullOrEmpty() || !_passwordProvider.Verify(app.Secret, secret))
         {
             app.WriteHistory("应用鉴权", false, "密钥校验失败", null, ip, clientId);
             return false;
