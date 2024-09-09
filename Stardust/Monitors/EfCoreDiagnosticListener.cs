@@ -35,22 +35,15 @@ public class EfCoreDiagnosticListener : TraceDiagnosticListener
                         var sql = command.CommandText;
 
                         // 从sql解析表名，作为跟踪名一部分。正则避免from前后换行的情况
-                        var action = "";
-                        if (sql.StartsWithIgnoreCase("Insert ", "Update ", "Delete ", "Upsert "))
+                        var action = GetAction(sql);
+                        if (action.IsNullOrEmpty())
                         {
-                            // 使用 Insert/Update/Delete 作为埋点操作名
-                            var p = sql.IndexOf(' ');
-                            if (p > 0) action = sql[..p];
-                        }
-                        else if (sql.StartsWithIgnoreCase("Select Count"))
-                        {
-                            action = "SelectCount";
-                        }
-                        else if (sql.StartsWithIgnoreCase("Select "))
-                        {
-                            // 查询数据时，Group作为独立埋点操作名
-                            if (sql.Contains("group by", StringComparison.CurrentCultureIgnoreCase))
-                                action = "Group";
+                            // 有时候sql可能是多条，分割后找到第一个有意义的
+                            foreach (var item in sql.Split(";", StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                action = GetAction(item);
+                                if (!action.IsNullOrEmpty()) break;
+                            }
                         }
 
                         var dbName = command.Connection?.Database;
@@ -87,6 +80,31 @@ public class EfCoreDiagnosticListener : TraceDiagnosticListener
         }
     }
 
+    private String GetAction(String sql)
+    {
+        var action = "";
+        if (sql.StartsWithIgnoreCase("Insert ", "Update ", "Delete ", "Upsert ", "Replace ", "Create ", "Alter ", "Drop ", "Truncate "))
+        {
+            // 使用 Insert/Update/Delete 作为埋点操作名
+            var p = sql.IndexOf(' ');
+            if (p > 0) action = sql[..p];
+        }
+        else if (sql.StartsWithIgnoreCase("Select Count"))
+        {
+            action = "SelectCount";
+        }
+        else if (sql.StartsWithIgnoreCase("Select "))
+        {
+            // 查询数据时，Group作为独立埋点操作名
+            if (sql.Contains("group by", StringComparison.CurrentCultureIgnoreCase))
+                action = "Group";
+            else
+                action = "Select";
+        }
+
+        return action;
+    }
+
     private static readonly Regex reg_table = new("(?:\\s+from|insert\\s+into|update|\\s+join|drop\\s+table|truncate\\s+table)\\s+[`'\"\\[]?([\\w]+)[`'\"\\[]?", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     /// <summary>从Sql语句中截取表名</summary>
     /// <param name="sql">Sql语句</param>
@@ -100,12 +118,20 @@ public class EfCoreDiagnosticListener : TraceDiagnosticListener
         {
             //list.Add(item.Groups[1].Value);
             var tableName = item.Groups[1].Value;
-            if (trimShard && tableName.Contains("_"))
+            if (trimShard)
             {
-                var p = tableName.LastIndexOf('_');
-                if (p > 0 && tableName.Substring(p + 1).ToInt() > 0)
+                // 从尾部开始找到第一个数字，然后再找到下划线
+                var p = -1;
+                for (var i = tableName.Length - 1; i >= 0; i--)
                 {
-                    tableName = tableName.Substring(0, p);
+                    if (!Char.IsDigit(tableName[i])) break;
+                    p = i;
+                }
+                if (p > 0 && tableName[p - 1] == '_') p--;
+                // 数字长度至少是2，否则不是分表
+                if (p > 0 && p + 2 <= tableName.Length)
+                {
+                    tableName = tableName[..p];
                 }
             }
             if (!list.Contains(tableName)) list.Add(tableName);
