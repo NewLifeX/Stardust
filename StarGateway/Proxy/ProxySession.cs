@@ -195,7 +195,7 @@ namespace StarGateway.Proxy
         #region 发送
         /// <summary>发送数据</summary>
         /// <param name="pk">缓冲区</param>
-        public virtual Int32 SendRemote(Packet pk)
+        public virtual Int32 SendRemote(IPacket pk)
         {
             try
             {

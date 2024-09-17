@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using NewLife;
+using NewLife.Data;
 using NewLife.IO;
 using NewLife.Log;
 using NewLife.Messaging;
@@ -57,7 +58,7 @@ class Program
 
         //    Thread.Sleep(1000);
         //}
-        await io.Put("aa.txt", "学无先后达者为师！".GetBytes());
+        await io.Put("aa.txt", (ArrayPacket)"学无先后达者为师！".GetBytes());
         var rs = await io.Get("aa.txt");
         XTrace.WriteLine(rs.Data.ToStr());
 
@@ -157,7 +158,7 @@ class Program
         writer.Write(0);
 
         var msg = new DefaultMessage();
-        msg.Payload = ms.ToArray();
+        msg.Payload = (ArrayPacket)ms.ToArray();
         var buf = msg.ToPacket().ToArray();
         XTrace.WriteLine(buf.ToHex());
 

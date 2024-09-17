@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using NewLife;
+using NewLife.Data;
 using NewLife.Http;
 using NewLife.Log;
 using NewLife.Messaging;
@@ -470,8 +471,10 @@ public class LocalStarClient
         //};
         //var buf = msg.ToPacket().ToArray();
 
-        var buf = encoder.CreateRequest("Info", null).ToPacket()?.ToArray();
-        if (buf == null) yield break;
+        var pk = encoder.CreateRequest("Info", null).ToPacket();
+        if (pk == null) yield break;
+
+        var buf = pk.ToArray();
 
         // 在局域网中广播消息
         var udp = new UdpClient();
@@ -483,7 +486,7 @@ public class LocalStarClient
             var rs = new DefaultMessage();
             IPEndPoint? ep = null;
             buf = udp.Receive(ref ep);
-            if (buf != null && rs.Read(buf))
+            if (buf != null && rs.Read((ArrayPacket)buf))
             {
                 var msg = encoder.Decode(rs);
                 if (msg != null && msg.Data != null)

@@ -1,8 +1,6 @@
-﻿using System;
-using System.IO;
-using NewLife;
+﻿using NewLife;
+using NewLife.Http;
 using NewLife.Net;
-using StarGateway.Http;
 
 namespace StarGateway.Proxy
 {
@@ -72,19 +70,19 @@ namespace StarGateway.Proxy
 
             // 请求头
             var request = new HttpRequest();
-            if (request.Read(e.Packet))
+            if (request.Parse(e.Packet))
             {
                 e.Message = request;
 
-                // 解码请求头，准备修改细节
-                request.DecodeHeaders();
+                //// 解码请求头，准备修改细节
+                //request.DecodeHeaders();
 
-                if (OnRequest(request, e))
-                {
-                    // 重新生成Http请求头
-                    request.EncodeHeaders();
-                    e.Packet = request.ToPacket();
-                }
+                //if (OnRequest(request, e))
+                //{
+                //    // 重新生成Http请求头
+                //    request.EncodeHeaders();
+                //    e.Packet = request.ToPacket();
+                //}
 
                 //var uri = new NetUri(NetType.Http, RawHost, Session.Local.Port);
                 WriteDebugLog(LocalUri + "");
@@ -98,12 +96,12 @@ namespace StarGateway.Proxy
             // 修改Host
             var host = request.Headers["Host"];
 
-            LocalUri = new Uri($"http://{host}:{Session.Local.Port}{request.Uri}");
+            LocalUri = new Uri($"http://{host}:{Session.Local.Port}{request.RequestUri}");
 
             host = GetHost(host);
             if (host.IsNullOrEmpty()) return false;
 
-            RemoteUri = new Uri($"http://{host}:{RemoteServerUri.Port}{request.Uri}");
+            RemoteUri = new Uri($"http://{host}:{RemoteServerUri.Port}{request.RequestUri}");
 
             request.Headers["Host"] = host;
 

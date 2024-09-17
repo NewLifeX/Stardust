@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net40;net45;net461;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0;net6.0-windows;net7.0;net7.0-windows;net8.0;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net45;net461;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0;net6.0-windows;net7.0;net7.0-windows;net8.0;net8.0-windows</TargetFrameworks>
     <AssemblyName>Stardust</AssemblyName>
     <AssemblyTitle>星尘分布式服务核心</AssemblyTitle>
     <Description>星尘，分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2024 NewLife</Copyright>
-    <VersionPrefix>3.0</VersionPrefix>
+    <VersionPrefix>3.1</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -112,13 +112,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Remoting" Version="3.0.2024.902" />
+    <PackageReference Include="NewLife.Remoting" Version="3.1.2024.914-beta0002" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'!='net40'">
-    <PackageReference Include="NewLife.Core" Version="10.10.2024.902" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='net40'">
-    <PackageReference Include="NewLife.Core" Version="10.10.2024.0801-net40" />
+  <ItemGroup>
+    <PackageReference Include="NewLife.Core" Version="11.0.2024.916-beta1549" />
   </ItemGroup>
 
 </Project>
