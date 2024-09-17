@@ -20,7 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.XCode" Version="11.15.2024.902" />
+    <PackageReference Include="NewLife.XCode" Version="11.16.2024.917-beta0218" />
   </ItemGroup>
 
   <ItemGroup>
