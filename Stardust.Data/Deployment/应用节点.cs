@@ -31,6 +31,14 @@ public partial class AppDeployNode
     [BindColumn("Id", "编号", "")]
     public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
+    private String _DeployName;
+    /// <summary>发布名。默认为空，使用部署集上名字。可用于单节点多发布场景</summary>
+    [DisplayName("发布名")]
+    [Description("发布名。默认为空，使用部署集上名字。可用于单节点多发布场景")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("DeployName", "发布名。默认为空，使用部署集上名字。可用于单节点多发布场景", "")]
+    public String DeployName { get => _DeployName; set { if (OnPropertyChanging("DeployName", value)) { _DeployName = value; OnPropertyChanged("DeployName"); } } }
+
     private Int32 _DeployId;
     /// <summary>应用部署集。对应AppDeploy</summary>
     [DisplayName("应用部署集")]
@@ -55,14 +63,6 @@ public partial class AppDeployNode
     [BindColumn("IP", "IP地址。节点所在内网IP地址", "")]
     public String IP { get => _IP; set { if (OnPropertyChanging("IP", value)) { _IP = value; OnPropertyChanged("IP"); } } }
 
-    private Int32 _Sort;
-    /// <summary>顺序。较小在前，同时表示延迟发布秒数</summary>
-    [DisplayName("顺序")]
-    [Description("顺序。较小在前，同时表示延迟发布秒数")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("Sort", "顺序。较小在前，同时表示延迟发布秒数", "")]
-    public Int32 Sort { get => _Sort; set { if (OnPropertyChanging("Sort", value)) { _Sort = value; OnPropertyChanged("Sort"); } } }
-
     private Boolean _Enable;
     /// <summary>启用</summary>
     [DisplayName("启用")]
@@ -70,15 +70,6 @@ public partial class AppDeployNode
     [DataObjectField(false, false, false, 0)]
     [BindColumn("Enable", "启用", "")]
     public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
-
-    private String _Environment;
-    /// <summary>环境。prod/test/dev/uat等</summary>
-    [Category("发布参数")]
-    [DisplayName("环境")]
-    [Description("环境。prod/test/dev/uat等")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("Environment", "环境。prod/test/dev/uat等", "")]
-    public String Environment { get => _Environment; set { if (OnPropertyChanging("Environment", value)) { _Environment = value; OnPropertyChanged("Environment"); } } }
 
     private String _FileName;
     /// <summary>文件。应用启动文件，可直接使用zip包，支持差异定制，为空时使用应用集配置</summary>
@@ -107,6 +98,15 @@ public partial class AppDeployNode
     [BindColumn("WorkingDirectory", "工作目录。应用根目录，为空时使用应用集配置", "")]
     public String WorkingDirectory { get => _WorkingDirectory; set { if (OnPropertyChanging("WorkingDirectory", value)) { _WorkingDirectory = value; OnPropertyChanged("WorkingDirectory"); } } }
 
+    private String _Environments;
+    /// <summary>环境变量。启动应用前设置的环境变量</summary>
+    [Category("发布参数")]
+    [DisplayName("环境变量")]
+    [Description("环境变量。启动应用前设置的环境变量")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("Environments", "环境变量。启动应用前设置的环境变量", "")]
+    public String Environments { get => _Environments; set { if (OnPropertyChanging("Environments", value)) { _Environments = value; OnPropertyChanged("Environments"); } } }
+
     private Stardust.Models.ServiceModes _Mode;
     /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置</summary>
     [Category("发布参数")]
@@ -115,6 +115,15 @@ public partial class AppDeployNode
     [DataObjectField(false, false, false, 0)]
     [BindColumn("Mode", "工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置", "")]
     public Stardust.Models.ServiceModes Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
+
+    private Int32 _Delay;
+    /// <summary>延迟。批量发布时，需要延迟执行的时间，用于滚动发布，单位秒</summary>
+    [Category("发布参数")]
+    [DisplayName("延迟")]
+    [Description("延迟。批量发布时，需要延迟执行的时间，用于滚动发布，单位秒")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Delay", "延迟。批量发布时，需要延迟执行的时间，用于滚动发布，单位秒", "")]
+    public Int32 Delay { get => _Delay; set { if (OnPropertyChanging("Delay", value)) { _Delay = value; OnPropertyChanged("Delay"); } } }
 
     private Int32 _ProcessId;
     /// <summary>进程</summary>
@@ -125,15 +134,6 @@ public partial class AppDeployNode
     [BindColumn("ProcessId", "进程", "")]
     public Int32 ProcessId { get => _ProcessId; set { if (OnPropertyChanging("ProcessId", value)) { _ProcessId = value; OnPropertyChanged("ProcessId"); } } }
 
-    private String _ProcessName;
-    /// <summary>进程名称</summary>
-    [Category("状态")]
-    [DisplayName("进程名称")]
-    [Description("进程名称")]
-    [DataObjectField(false, false, true, 200)]
-    [BindColumn("ProcessName", "进程名称", "")]
-    public String ProcessName { get => _ProcessName; set { if (OnPropertyChanging("ProcessName", value)) { _ProcessName = value; OnPropertyChanged("ProcessName"); } } }
-
     private String _UserName;
     /// <summary>用户名。启动该进程的用户名</summary>
     [Category("状态")]
@@ -142,6 +142,15 @@ public partial class AppDeployNode
     [DataObjectField(false, false, true, 50)]
     [BindColumn("UserName", "用户名。启动该进程的用户名", "")]
     public String UserName { get => _UserName; set { if (OnPropertyChanging("UserName", value)) { _UserName = value; OnPropertyChanged("UserName"); } } }
+
+    private String _ProcessName;
+    /// <summary>进程名称</summary>
+    [Category("状态")]
+    [DisplayName("进程名称")]
+    [Description("进程名称")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("ProcessName", "进程名称", "")]
+    public String ProcessName { get => _ProcessName; set { if (OnPropertyChanging("ProcessName", value)) { _ProcessName = value; OnPropertyChanged("ProcessName"); } } }
 
     private DateTime _StartTime;
     /// <summary>进程时间</summary>
@@ -279,19 +288,20 @@ public partial class AppDeployNode
         get => name switch
         {
             "Id" => _Id,
+            "DeployName" => _DeployName,
             "DeployId" => _DeployId,
             "NodeId" => _NodeId,
             "IP" => _IP,
-            "Sort" => _Sort,
             "Enable" => _Enable,
-            "Environment" => _Environment,
             "FileName" => _FileName,
             "Arguments" => _Arguments,
             "WorkingDirectory" => _WorkingDirectory,
+            "Environments" => _Environments,
             "Mode" => _Mode,
+            "Delay" => _Delay,
             "ProcessId" => _ProcessId,
-            "ProcessName" => _ProcessName,
             "UserName" => _UserName,
+            "ProcessName" => _ProcessName,
             "StartTime" => _StartTime,
             "Version" => _Version,
             "Compile" => _Compile,
@@ -313,19 +323,20 @@ public partial class AppDeployNode
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
+                case "DeployName": _DeployName = Convert.ToString(value); break;
                 case "DeployId": _DeployId = value.ToInt(); break;
                 case "NodeId": _NodeId = value.ToInt(); break;
                 case "IP": _IP = Convert.ToString(value); break;
-                case "Sort": _Sort = value.ToInt(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
-                case "Environment": _Environment = Convert.ToString(value); break;
                 case "FileName": _FileName = Convert.ToString(value); break;
                 case "Arguments": _Arguments = Convert.ToString(value); break;
                 case "WorkingDirectory": _WorkingDirectory = Convert.ToString(value); break;
+                case "Environments": _Environments = Convert.ToString(value); break;
                 case "Mode": _Mode = (Stardust.Models.ServiceModes)value.ToInt(); break;
+                case "Delay": _Delay = value.ToInt(); break;
                 case "ProcessId": _ProcessId = value.ToInt(); break;
-                case "ProcessName": _ProcessName = Convert.ToString(value); break;
                 case "UserName": _UserName = Convert.ToString(value); break;
+                case "ProcessName": _ProcessName = Convert.ToString(value); break;
                 case "StartTime": _StartTime = value.ToDateTime(); break;
                 case "Version": _Version = Convert.ToString(value); break;
                 case "Compile": _Compile = value.ToDateTime(); break;
@@ -351,10 +362,6 @@ public partial class AppDeployNode
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public AppDeploy Deploy => Extends.Get(nameof(Deploy), k => AppDeploy.FindById(DeployId));
 
-    /// <summary>应用部署集</summary>
-    [Map(nameof(DeployId), typeof(AppDeploy), "Id")]
-    public String DeployName => Deploy?.ToString();
-
     #endregion
 
     #region 扩展查询
@@ -367,6 +374,9 @@ public partial class AppDeployNode
         /// <summary>编号</summary>
         public static readonly Field Id = FindByName("Id");
 
+        /// <summary>发布名。默认为空，使用部署集上名字。可用于单节点多发布场景</summary>
+        public static readonly Field DeployName = FindByName("DeployName");
+
         /// <summary>应用部署集。对应AppDeploy</summary>
         public static readonly Field DeployId = FindByName("DeployId");
 
@@ -376,14 +386,8 @@ public partial class AppDeployNode
         /// <summary>IP地址。节点所在内网IP地址</summary>
         public static readonly Field IP = FindByName("IP");
 
-        /// <summary>顺序。较小在前，同时表示延迟发布秒数</summary>
-        public static readonly Field Sort = FindByName("Sort");
-
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
-
-        /// <summary>环境。prod/test/dev/uat等</summary>
-        public static readonly Field Environment = FindByName("Environment");
 
         /// <summary>文件。应用启动文件，可直接使用zip包，支持差异定制，为空时使用应用集配置</summary>
         public static readonly Field FileName = FindByName("FileName");
@@ -394,17 +398,23 @@ public partial class AppDeployNode
         /// <summary>工作目录。应用根目录，为空时使用应用集配置</summary>
         public static readonly Field WorkingDirectory = FindByName("WorkingDirectory");
 
+        /// <summary>环境变量。启动应用前设置的环境变量</summary>
+        public static readonly Field Environments = FindByName("Environments");
+
         /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置</summary>
         public static readonly Field Mode = FindByName("Mode");
+
+        /// <summary>延迟。批量发布时，需要延迟执行的时间，用于滚动发布，单位秒</summary>
+        public static readonly Field Delay = FindByName("Delay");
 
         /// <summary>进程</summary>
         public static readonly Field ProcessId = FindByName("ProcessId");
 
-        /// <summary>进程名称</summary>
-        public static readonly Field ProcessName = FindByName("ProcessName");
-
         /// <summary>用户名。启动该进程的用户名</summary>
         public static readonly Field UserName = FindByName("UserName");
+
+        /// <summary>进程名称</summary>
+        public static readonly Field ProcessName = FindByName("ProcessName");
 
         /// <summary>进程时间</summary>
         public static readonly Field StartTime = FindByName("StartTime");
@@ -457,6 +467,9 @@ public partial class AppDeployNode
         /// <summary>编号</summary>
         public const String Id = "Id";
 
+        /// <summary>发布名。默认为空，使用部署集上名字。可用于单节点多发布场景</summary>
+        public const String DeployName = "DeployName";
+
         /// <summary>应用部署集。对应AppDeploy</summary>
         public const String DeployId = "DeployId";
 
@@ -466,14 +479,8 @@ public partial class AppDeployNode
         /// <summary>IP地址。节点所在内网IP地址</summary>
         public const String IP = "IP";
 
-        /// <summary>顺序。较小在前，同时表示延迟发布秒数</summary>
-        public const String Sort = "Sort";
-
         /// <summary>启用</summary>
         public const String Enable = "Enable";
-
-        /// <summary>环境。prod/test/dev/uat等</summary>
-        public const String Environment = "Environment";
 
         /// <summary>文件。应用启动文件，可直接使用zip包，支持差异定制，为空时使用应用集配置</summary>
         public const String FileName = "FileName";
@@ -484,17 +491,23 @@ public partial class AppDeployNode
         /// <summary>工作目录。应用根目录，为空时使用应用集配置</summary>
         public const String WorkingDirectory = "WorkingDirectory";
 
+        /// <summary>环境变量。启动应用前设置的环境变量</summary>
+        public const String Environments = "Environments";
+
         /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置</summary>
         public const String Mode = "Mode";
+
+        /// <summary>延迟。批量发布时，需要延迟执行的时间，用于滚动发布，单位秒</summary>
+        public const String Delay = "Delay";
 
         /// <summary>进程</summary>
         public const String ProcessId = "ProcessId";
 
-        /// <summary>进程名称</summary>
-        public const String ProcessName = "ProcessName";
-
         /// <summary>用户名。启动该进程的用户名</summary>
         public const String UserName = "UserName";
+
+        /// <summary>进程名称</summary>
+        public const String ProcessName = "ProcessName";
 
         /// <summary>进程时间</summary>
         public const String StartTime = "StartTime";
