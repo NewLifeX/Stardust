@@ -34,7 +34,7 @@
                 <th class="text-center" title="节点。节点服务器"><a href="@Html.Raw(page.GetSortUrl("NodeId"))">节点</a></th>
             }
             <th class="text-center" title="IP地址"><a href="@Html.Raw(page.GetSortUrl("IP"))">IP</a></th>
-            <th class="text-center" title="顺序。较大在前"><a href="@Html.Raw(page.GetSortUrl("Sort"))">顺序</a></th>
+            <th class="text-center" title="延迟。发布下去后，延迟执行时间，单位秒"><a href="@Html.Raw(page.GetSortUrl("Delay"))">顺序</a></th>
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Enable"))">启用</a></th>
             <th class="text-center" title="进程"><a href="@Html.Raw(page.GetSortUrl("ProcessId"))">进程</a></th>
             <th class="text-center" title="进程时间"><a href="@Html.Raw(page.GetSortUrl("StartTime"))">进程时间</a></th>
@@ -66,7 +66,7 @@
                     <td class="text-center"><a href="/Nodes/Node?Id=@entity.NodeId" target="_blank">@entity.NodeName</a></td>
                 }
                 <td class="text-center">@entity.IP</td>
-                <td class="text-right">@entity.Sort.ToString("n0")</td>
+                <td class="text-right">@entity.Delay</td>
                 <td class="text-center">
                     <i class="glyphicon glyphicon-@(entity.Enable ? "ok" : "remove")" style="color: @(entity.Enable ? "green" : "red");"></i>
                 </td>

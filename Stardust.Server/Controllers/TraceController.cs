@@ -196,7 +196,7 @@ public class TraceController : ControllerBase
         try
         {
             // 排除项
-            var excludes = app.Excludes.Split(",", ";") ?? new String[0];
+            var excludes = app.Excludes.Split(",", ";") ?? [];
             //var timeoutExcludes = app.TimeoutExcludes.Split(",", ";") ?? new String[0];
 
             var now = DateTime.Now;
@@ -213,13 +213,13 @@ public class TraceController : ControllerBase
                 var rule = TraceRule.Match(item.Name);
                 if (rule != null && !rule.IsWhite)
                 {
-                    using var span = _tracer?.NewSpan("trace:BlackList", new { item.Name, rule.Rule });
+                    using var span = _tracer?.NewSpan("trace:BlackList", new { item.Name, rule.Rule, ip });
                     continue;
                 }
 
                 if (excludes != null && excludes.Any(e => e.IsMatch(item.Name, StringComparison.OrdinalIgnoreCase)))
                 {
-                    using var span = _tracer?.NewSpan("trace:Exclude", item.Name);
+                    using var span = _tracer?.NewSpan("trace:Exclude", new { item.Name, ip });
                     continue;
                 }
                 //if (item.Name.EndsWithIgnoreCase("/Trace/Report")) continue;
@@ -228,14 +228,14 @@ public class TraceController : ControllerBase
                 var timestamp = item.StartTime.ToDateTime().ToLocalTime();
                 if (timestamp < startTime || timestamp > endTime)
                 {
-                    using var span = _tracer?.NewSpan("trace:ErrorTime", $"{item.Name}-{timestamp.ToFullString()}");
+                    using var span = _tracer?.NewSpan("trace:ErrorTime", new { item.Name, timestamp, ip });
                     continue;
                 }
 
                 // 拒收超长项
                 if (item.Name.Length > TraceData._.Name.Length)
                 {
-                    using var span = _tracer?.NewSpan("trace:LongName", item.Name);
+                    using var span = _tracer?.NewSpan("trace:LongName", new { item.Name, ip });
                     continue;
                 }
 
