@@ -453,10 +453,11 @@ public class StarFactory : DisposeBase
     /// <param name="nodeCode"></param>
     /// <param name="command"></param>
     /// <param name="argument"></param>
+    /// <param name="startTime"></param>
     /// <param name="expire"></param>
     /// <param name="timeout"></param>
     /// <returns></returns>
-    public async Task<Int32> SendNodeCommand(String nodeCode, String command, String? argument = null, Int32 expire = 3600, Int32 timeout = 5)
+    public async Task<Int32> SendNodeCommand(String nodeCode, String command, String? argument = null, Int32 startTime = 0, Int32 expire = 3600, Int32 timeout = 5)
     {
         if (!Valid()) return -1;
 
@@ -465,6 +466,7 @@ public class StarFactory : DisposeBase
             Code = nodeCode,
             Command = command,
             Argument = argument,
+            StartTime = startTime,
             Expire = expire,
             Timeout = timeout
         });
@@ -474,10 +476,11 @@ public class StarFactory : DisposeBase
     /// <param name="appId"></param>
     /// <param name="command"></param>
     /// <param name="argument"></param>
+    /// <param name="startTime"></param>
     /// <param name="expire"></param>
     /// <param name="timeout"></param>
     /// <returns></returns>
-    public async Task<Int32> SendAppCommand(String appId, String command, String? argument = null, Int32 expire = 3600, Int32 timeout = 5)
+    public async Task<Int32> SendAppCommand(String appId, String command, String? argument = null, Int32 startTime = 0, Int32 expire = 3600, Int32 timeout = 5)
     {
         if (!Valid()) return -1;
 
@@ -486,6 +489,7 @@ public class StarFactory : DisposeBase
             Code = appId,
             Command = command,
             Argument = argument,
+            StartTime = startTime,
             Expire = expire,
             Timeout = timeout
         });

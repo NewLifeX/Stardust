@@ -735,6 +735,7 @@ public class NodeService
             TraceId = DefaultSpan.Current?.TraceId,
             CreateUser = createUser,
         };
+        if (model.StartTime > 0) cmd.StartTime = DateTime.Now.AddSeconds(model.StartTime);
         if (model.Expire > 0) cmd.Expire = DateTime.Now.AddSeconds(model.Expire);
         cmd.Insert();
 

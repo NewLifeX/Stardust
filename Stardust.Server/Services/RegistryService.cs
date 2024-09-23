@@ -456,6 +456,7 @@ public class RegistryService
 
             CreateUser = user,
         };
+        if (model.StartTime > 0) cmd.StartTime = DateTime.Now.AddSeconds(model.StartTime);
         if (model.Expire > 0) cmd.Expire = DateTime.Now.AddSeconds(model.Expire);
         cmd.Insert();
 

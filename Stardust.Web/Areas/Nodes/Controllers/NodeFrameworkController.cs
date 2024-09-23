@@ -84,7 +84,7 @@ public class NodeFrameworkController : EntityController<Node>
             var node = bf.FindByKey(item.ToInt());
             if (node != null && !node.Code.IsNullOrEmpty())
             {
-                ts.Add(_starFactory.SendNodeCommand(node.Code, "framework/install", args, 30 * 24 * 3600, 0));
+                ts.Add(_starFactory.SendNodeCommand(node.Code, "framework/install", args, 0, 30 * 24 * 3600, 0));
 
             }
         }
@@ -102,7 +102,7 @@ public class NodeFrameworkController : EntityController<Node>
         if (ver.IsNullOrEmpty()) throw new ArgumentNullException(nameof(ver));
 
         ver = ver.Trim();
- 
+
         var bf = new BatchFinder<Int32, Node>();
         bf.Add(SelectKeys.Select(e => e.ToInt()));
 
@@ -115,7 +115,7 @@ public class NodeFrameworkController : EntityController<Node>
             var node = bf.FindByKey(item.ToInt());
             if (node != null && !node.Code.IsNullOrEmpty())
             {
-                ts.Add(_starFactory.SendNodeCommand(node.Code, "framework/uninstall", args, 30 * 24 * 3600, 0));
+                ts.Add(_starFactory.SendNodeCommand(node.Code, "framework/uninstall", args, 0, 30 * 24 * 3600, 0));
 
             }
         }
