@@ -27,6 +27,18 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
             var df = ListFields.GetField("DeployName") as ListField;
             df.Url = "/Deployment/AppDeploy?deployId={DeployId}";
         }
+        {
+            var df = AddFormFields.GetField("NodeName") as FormField;
+            df.GroupView = "_Form_SelectNode";
+        }
+        {
+            var df = EditFormFields.GetField("NodeName") as FormField;
+            df.GroupView = "_Form_SelectNode";
+        }
+        {
+            var df = DetailFields.GetField("NodeName") as FormField;
+            df.GroupView = "_Form_SelectNode";
+        }
     }
 
     private readonly DeployService _deployService;
