@@ -105,7 +105,13 @@ public class DeployController : BaseController
         {
             if (svc.Name.IsNullOrEmpty()) continue;
 
-            var app = AppDeploy.FindByName(svc.Name);
+            AppDeploy app = null;
+
+            // 发布节点可能有自定义名字
+            var dn = list.FirstOrDefault(e => e.DeployName.EqualIgnoreCase(svc.Name));
+            app = dn?.Deploy;
+
+            app ??= AppDeploy.FindByName(svc.Name);
             app ??= new AppDeploy { Name = svc.Name/*, Enable = svc.Enable*/ };
 
             //// 仅可用应用
@@ -128,7 +134,7 @@ public class DeployController : BaseController
 
             rs += rs2;
 
-            var dn = list.FirstOrDefault(e => e.DeployId == app.Id);
+            dn ??= list.FirstOrDefault(e => e.DeployId == app.Id);
             if (dn == null)
                 dn = new AppDeployNode { DeployId = app.Id, NodeId = _node.ID, Enable = svc.Enable };
             else
