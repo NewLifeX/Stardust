@@ -28,16 +28,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Http\HttpRequest.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Stardust.Data\Stardust.Data.csproj" />
     <ProjectReference Include="..\Stardust\Stardust.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Http\" />
   </ItemGroup>
 
 </Project>

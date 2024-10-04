@@ -33,7 +33,7 @@ public class StarClientTests
         Assert.NotNull(inf.Node);
 
         Assert.Equal(client.Code, inf.Code);
-        Assert.Equal(client.Secret.MD5(), inf.Secret);
+        Assert.Equal(client.Secret, inf.Secret);
 
         var node = client.GetNodeInfo();
         var mi = MachineInfo.Current;

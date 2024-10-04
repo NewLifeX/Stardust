@@ -1,11 +1,7 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using NewLife;
+﻿using System.Threading.Tasks;
 using NewLife.Configuration;
-using NewLife.Http;
 using NewLife.Log;
 using NewLife.Model;
-using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Security;
 using Stardust;
@@ -114,7 +110,7 @@ public class StarFactoryTests
     {
         using var star = new StarFactory("http://127.0.0.1:6600", "StarWeb", "xxx");
 
-        var rs = await star.SendNodeCommand("7F0F011A", "hello", "stone", 33);
+        var rs = await star.SendNodeCommand("81AFCC68", "hello", "stone", 33);
         Assert.True(rs > 0);
     }
 }

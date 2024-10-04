@@ -10,57 +10,56 @@ using NewLife.Data;
 using NewLife.Remoting;
 using Xunit;
 
-namespace Stardust.Server.Controllers.Tests
+namespace Stardust.Server.Controllers.Tests;
+
+public class ApiTests
 {
-    public class ApiTests
+    private readonly TestServer _server;
+
+    public ApiTests()
     {
-        private readonly TestServer _server;
+        _server = new TestServer(WebHost.CreateDefaultBuilder()
+            .UseStartup<Startup>());
+    }
 
-        public ApiTests()
-        {
-            _server = new TestServer(WebHost.CreateDefaultBuilder()
-                .UseStartup<Startup>());
-        }
+    [Theory(DisplayName = "基础测试")]
+    [InlineData("abcdef")]
+    [InlineData(null)]
+    public async Task BasicTest(String state)
+    {
+        var client = _server.CreateClient();
 
-        [Theory(DisplayName = "基础测试")]
-        [InlineData("abcdef")]
-        [InlineData(null)]
-        public async Task BasicTest(String state)
-        {
-            var client = _server.CreateClient();
+        var response = await client.GetAsync<HttpResponseMessage>("api", new { state });
+        response.EnsureSuccessStatusCode();
+        Assert.Equal("application/json", response.Content.Headers.ContentType + "");
 
-            var response = await client.GetAsync<HttpResponseMessage>("api", new { state });
-            response.EnsureSuccessStatusCode();
-            Assert.Equal("application/json", response.Content.Headers.ContentType + "");
+        var rs = await client.GetAsync<IDictionary<String, Object>>("api", new { state });
+        Assert.Null(rs["state"]);
+    }
 
-            var rs = await client.GetAsync<IDictionary<String, Object>>("api", new { state });
+    [Theory(DisplayName = "信息测试")]
+    [InlineData("abcdef")]
+    [InlineData(null)]
+    public async Task InfoTest(String state)
+    {
+        var client = _server.CreateClient();
+
+        var rs = await client.GetAsync<IDictionary<String, Object>>("api/info", new { state });
+        if (state.IsNullOrEmpty())
             Assert.Null(rs["state"]);
-        }
+        else
+            Assert.NotNull(rs["state"]);
+        Assert.Equal(state + "", rs["state"] + "");
+    }
 
-        [Theory(DisplayName = "信息测试")]
-        [InlineData("abcdef")]
-        [InlineData(null)]
-        public async Task InfoTest(String state)
-        {
-            var client = _server.CreateClient();
+    [Theory(DisplayName = "信息测试2")]
+    [InlineData("abcdef")]
+    [InlineData(null)]
+    public async Task Info2Test(String state)
+    {
+        var client = _server.CreateClient();
 
-            var rs = await client.GetAsync<IDictionary<String, Object>>("api/info", new { state });
-            if (state.IsNullOrEmpty())
-                Assert.Null(rs["state"]);
-            else
-                Assert.NotNull(rs["state"]);
-            Assert.Equal(state + "", rs["state"] + "");
-        }
-
-        [Theory(DisplayName = "信息测试2")]
-        [InlineData("abcdef")]
-        [InlineData(null)]
-        public async Task Info2Test(String state)
-        {
-            var client = _server.CreateClient();
-
-            var rs = await client.PostAsync<Packet>("api/info2", state.ToHex());
-            Assert.NotNull(rs);
-        }
+        var rs = await client.PostAsync<IPacket>("api/info2", state.ToHex());
+        Assert.NotNull(rs);
     }
 }
