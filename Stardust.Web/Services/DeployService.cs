@@ -1,4 +1,5 @@
-﻿using NewLife.Serialization;
+﻿using NewLife;
+using NewLife.Serialization;
 using Stardust.Data.Deployment;
 
 namespace Stardust.Web.Services;
@@ -53,7 +54,10 @@ public class DeployService
             }
 
             // 发布安装命令时，为了兼容旧版本，继续传递AppName参数
-            var args = new { deployNode.Id, deployNode.DeployName, AppName = deployNode.DeployName }.ToJson();
+            var deployName = deployNode.DeployName;
+            if (deployName.IsNullOrEmpty()) deployName = app?.Name;
+
+            var args = new { deployNode.Id, DeployName = deployName, AppName = deployName }.ToJson();
             msg = args;
 
             await _starFactory.SendNodeCommand(deployNode.Node.Code, action, args, deployNode.Delay, 60, timeout);

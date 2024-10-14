@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
@@ -146,9 +147,11 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
         var dn = AppDeployNode.FindById(id);
         if (dn == null || dn.Node == null || dn.Deploy == null) return Json(500, $"[{id}]不存在");
 
+        var deployName = dn.DeployName;
+        if (deployName.IsNullOrEmpty()) deployName = dn.Deploy?.Name;
         await _deployService.Control(dn.Deploy, dn, act, UserHost, 0);
 
-        return JsonRefresh($"在节点[{dn.NodeName}]上对应用[{dn.DeployName}]执行[{act}]操作", 1);
+        return JsonRefresh($"在节点[{dn.NodeName}]上对应用[{deployName}]执行[{act}]操作", 1);
     }
 
     /// <summary>批量执行操作</summary>
