@@ -83,6 +83,7 @@ public class StarService : DisposeBase, IApi
         ai.Server = set.Server;
         ai.Services = Manager?.Services.Where(e => e.Enable || !e.Name.EqualIgnoreCase("test", "test2")).Select(e => e.Name).ToArray();
         ai.Code = AgentSetting.Code;
+        ai.IP = AgentInfo.GetIps();
 
         // 返回插件服务器地址
         var core = NewLife.Setting.Current;
