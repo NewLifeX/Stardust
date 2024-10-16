@@ -81,7 +81,7 @@ public class StarService : DisposeBase, IApi
 
         var ai = _agentInfo ??= AgentInfo.GetLocal(true);
         ai.Server = set.Server;
-        ai.Services = Manager?.Services.Select(e => e.Name).ToArray();
+        ai.Services = Manager?.Services.Where(e => e.Enable || !e.Name.EqualIgnoreCase("test", "test2")).Select(e => e.Name).ToArray();
         ai.Code = AgentSetting.Code;
 
         // 返回插件服务器地址
