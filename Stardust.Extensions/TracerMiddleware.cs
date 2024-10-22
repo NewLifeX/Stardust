@@ -49,24 +49,27 @@ public class TracerMiddleware
                 {
                     var flag = false;
                     if (req.ContentLength != null &&
-                        req.ContentLength < 1024 * 8 &&
+                        req.ContentLength < 1024 &&
                         req.ContentType != null &&
                         req.ContentType.StartsWithIgnoreCase(TagTypes))
                     {
+                        var buf = Pool.Shared.Rent(1024);
                         try
                         {
                             req.EnableBuffering();
 
-                            var buf = Pool.Shared.Rent(1024);
                             var count = await req.Body.ReadAsync(buf, 0, buf.Length);
                             span.AppendTag("\r\n<=\r\n" + buf.ToStr(null, 0, count));
                             req.Body.Position = 0;
-                            Pool.Shared.Return(buf);
                             flag = true;
                         }
                         catch (Exception ex)
                         {
                             XTrace.Log.Error("[{0}]读取请求主体失败：{1}", action, ex.Message);
+                        }
+                        finally
+                        {
+                            Pool.Shared.Return(buf);
                         }
                     }
 
@@ -107,24 +110,27 @@ public class TracerMiddleware
                     {
                         var flag = false;
                         if (res.ContentLength != null &&
-                            res.ContentLength < 1024 * 8 &&
+                            res.ContentLength < 1024 &&
                             res.Body.CanSeek &&
                             res.ContentType != null &&
                             res.ContentType.StartsWithIgnoreCase(TagTypes))
                         {
+                            var buf = Pool.Shared.Rent(1024);
                             try
                             {
-                                var buf = Pool.Shared.Rent(1024);
                                 var p = res.Body.Position;
                                 var count = await res.Body.ReadAsync(buf, 0, buf.Length);
                                 span.AppendTag("\r\n=>\r\n" + buf.ToStr(null, 0, count));
                                 res.Body.Position = p;
-                                Pool.Shared.Return(buf);
                                 flag = true;
                             }
                             catch (Exception ex)
                             {
                                 XTrace.Log.Error("[{0}]读取响应主体失败：{1}", action, ex.Message);
+                            }
+                            finally
+                            {
+                                Pool.Shared.Return(buf);
                             }
                         }
 
