@@ -1,4 +1,5 @@
-﻿using NewLife;
+﻿using System.Net.Http;
+using NewLife;
 using NewLife.Http;
 using NewLife.IO;
 using NewLife.Log;

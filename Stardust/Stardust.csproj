@@ -72,6 +72,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Managers\ServiceController.cs" />
+    <Compile Remove="Managers\ServiceManager.cs" />
     <Compile Remove="Models\CommandEventArgs.cs" />
     <Compile Remove="Models\CommandInModel.cs" />
     <Compile Remove="Models\CommandModel.cs" />

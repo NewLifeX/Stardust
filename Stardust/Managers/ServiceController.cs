@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using NewLife;
+using NewLife.Agent.Windows;
 using NewLife.Log;
 using NewLife.Remoting.Clients;
 using NewLife.Threading;
@@ -393,7 +394,19 @@ internal class ServiceController : DisposeBase
         if (!si.UserName.IsNullOrEmpty())
             WriteLog("启动用户：{0}", si.UserName);
 
-        var p = Process.Start(si);
+        Process? p = null;
+
+        // Windows桌面用户运行
+        if (Runtime.Windows && service.UserName == "$")
+        {
+            var desktop = new Desktop { Log = Log };
+            var pid = desktop.StartProcess(si.FileName, si.Arguments, si.WorkingDirectory);
+            p = Process.GetProcessById((Int32)pid);
+        }
+        else
+        {
+            p = Process.Start(si);
+        }
         if (StartWait > 0 && p != null && p.WaitForExit(StartWait) && p.ExitCode != 0)
         {
             WriteLog("启动失败！ExitCode={0}", p.ExitCode);
@@ -605,20 +618,24 @@ internal class ServiceController : DisposeBase
             // 检查内存限制
             if (inf.MaxMemory <= 0) return p;
 
+            var mem = p.WorkingSet64 / 1024 / 1024;
+            span?.AppendTag($"MaxMemory={inf.MaxMemory}M WorkingSet64={mem}M");
+
             // 定期清理内存
-            if (Runtime.Windows && _nextCollect < DateTime.Now)
+            if (Runtime.Windows && _nextCollect < DateTime.Now && mem > inf.MaxMemory)
             {
                 _nextCollect = DateTime.Now.AddSeconds(600);
 
                 try
                 {
-                    NativeMethods.EmptyWorkingSet(p.Handle);
+                    Runtime.FreeMemory(p.Id);
+                    //NativeMethods.EmptyWorkingSet(p.Handle);
                 }
                 catch { }
-            }
 
-            var mem = p.WorkingSet64 / 1024 / 1024;
-            span?.AppendTag($"MaxMemory={inf.MaxMemory}M WorkingSet64={mem}M");
+                p.Refresh();
+                mem = p.WorkingSet64 / 1024 / 1024;
+            }
             if (mem <= inf.MaxMemory) return p;
 
             WriteLog("内存超限！{0}>{1}", mem, inf.MaxMemory);

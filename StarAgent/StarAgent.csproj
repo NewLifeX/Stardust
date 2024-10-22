@@ -36,6 +36,11 @@
   <ItemGroup>
     <Compile Remove="StarService2.cs" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Stardust\Managers\ServiceController.cs" Link="Managers\ServiceController.cs" />
+    <Compile Include="..\Stardust\Managers\ServiceManager.cs" Link="Managers\ServiceManager.cs" />
+  </ItemGroup>
   
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />
@@ -47,6 +52,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Stardust\Stardust.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Managers\" />
   </ItemGroup>
 
 </Project>
