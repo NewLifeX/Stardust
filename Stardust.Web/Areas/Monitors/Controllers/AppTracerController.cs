@@ -280,7 +280,8 @@ public class AppTracerController : EntityController<AppTracer>
                     }
                 }
 
-                app.ItemCount = app.TraceItems.Count;
+                //app.ItemCount = app.TraceItems.Count;
+                app.ItemCount = TraceItem.FindCountByApp(app.ID);
                 app.Update();
             }
         }

@@ -54,7 +54,8 @@ public class TraceController : ControllerBase
         var (app, online) = Valid(model.AppId, model, model.ClientId, ip, token);
 
         // 插入数据
-        if (builders != null && builders.Length > 0) Task.Run(() => ProcessData(app, model, online?.NodeId ?? 0, ip, builders));
+        //if (builders != null && builders.Length > 0) Task.Run(() => ProcessData(app, model, online?.NodeId ?? 0, ip, builders));
+        if (builders != null && builders.Length > 0) ProcessData(app, model, online?.NodeId ?? 0, ip, builders);
 
         // 构造响应
         var rs = new TraceResponse

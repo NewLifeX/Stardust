@@ -96,6 +96,13 @@ public partial class TraceItem : Entity<TraceItem>
         return FindAll(_.AppId == appId);
     }
 
+    public static Int32 FindCountByApp(Int32 appId)
+    {
+        if (appId <= 0) return 0;
+
+        return (Int32)FindCount(_.AppId == appId);
+    }
+
     /// <summary>根据应用、操作名查找</summary>
     /// <param name="appId">应用</param>
     /// <param name="name">操作名</param>

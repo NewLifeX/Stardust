@@ -75,7 +75,7 @@ public partial class AppTracer : Entity<AppTracer>
         }
         else
         {
-            ItemCount = TraceItems.Count;
+            ItemCount = TraceItem.FindCountByApp(ID);
         }
     }
 
@@ -97,7 +97,7 @@ public partial class AppTracer : Entity<AppTracer>
     /// 有效跟踪项集合
     /// </summary>
     [XmlIgnore, IgnoreDataMember]
-    public IList<TraceItem> TraceItems => Extends.Get(nameof(TraceItems), k => TraceItem.GetValids(ID, DateTime.Today.AddDays(-30)));
+    public IList<TraceItem> TraceItems => Extends.Get(nameof(TraceItems), k => TraceItem.GetValids(ID, DateTime.Today.AddDays(-3)));
     #endregion
 
     #region 扩展查询
@@ -369,7 +369,8 @@ public partial class AppTracer : Entity<AppTracer>
         Days = list.Select(e => e.StatDate.ToFullString()).Distinct().Count();
         Total = list.Sum(e => (Int64)e.Total);
 
-        ItemCount = TraceItems.Count;
+        //ItemCount = TraceItems.Count;
+        ItemCount = TraceItem.FindCountByApp(ID);
     }
     #endregion
 }
