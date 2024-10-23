@@ -406,7 +406,7 @@ internal class MyService : ServiceBase, IServiceProvider
             if (!server.IsNullOrEmpty())
             {
                 _factory = new StarFactory(server, "StarAgent", null);
-                _container.AddSingleton(_factory);
+                _factory.Register(_container);
 
                 // 激活配置中心，获取PluginServer
                 var config = _factory.GetConfig();

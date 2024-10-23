@@ -19,13 +19,13 @@ namespace Microsoft.Extensions.DependencyInjection;
 /// <summary>星尘工厂扩展</summary>
 public static class StarFactoryExtensions
 {
-    /// <summary>添加星尘</summary>
+    /// <summary>添加星尘，提供监控、配置和服务注册发现能力。先后从参数配置和本机StarAgent读取星尘平台地址</summary>
     /// <param name="services"></param>
     /// <param name="appId"></param>
     /// <returns></returns>
     public static StarFactory AddStardust(this IServiceCollection services, String appId) => AddStardust(services, null, appId, null);
 
-    /// <summary>添加星尘</summary>
+    /// <summary>添加星尘，提供监控、配置和服务注册发现能力。先后从参数配置和本机StarAgent读取星尘平台地址</summary>
     /// <param name="services"></param>
     /// <param name="server">服务端地址。为空时先后读取appsettings.json、本地StarAgent、star.config，初始值为空，不连接服务端</param>
     /// <param name="appId">应用标识。为空时读取star.config，初始值为入口程序集名称</param>

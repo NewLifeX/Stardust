@@ -43,7 +43,7 @@ public class ConfigTests
     [Fact]
     public void Redis_ConfigTest()
     {
-        var star = new StarFactory("http://star.newlifex.com:6600", "Test", null);
+        using var star = new StarFactory("http://star.newlifex.com:6600", "Test", null);
 
         var services = ObjectContainer.Current;
         services.AddSingleton(star.Config);
