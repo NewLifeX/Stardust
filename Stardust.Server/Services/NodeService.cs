@@ -373,7 +373,19 @@ public class NodeService
             }
             span?.AppendTag($"uid={uid}");
 
-            if (uid.Contains('{') || uid.Contains('}')) XTrace.WriteLine("节点编码公式有误，存在未解析变量，uid={0}", uid);
+            var p1 = uid.IndexOf('{');
+            if (p1 > 0)
+            {
+                var p2 = uid.IndexOf('}', p1 + 1);
+                if (p2 > 0)
+                {
+                    // 有些标识符刚好带有大括号，导致误判以为是未解析变量
+                    var len = p2 - p1 - 1;
+                    if (len >= 2 && len < 10)
+                        XTrace.WriteLine("节点编码公式有误，存在未解析变量，uid={0}", uid);
+                }
+            }
+            //if (uid.Contains('{') || uid.Contains('}')) XTrace.WriteLine("节点编码公式有误，存在未解析变量，uid={0}", uid);
             if (!uid.IsNullOrEmpty())
             {
                 XTrace.WriteLine("生成节点编码 uid={0} alg={1}", uid, ss[0]);
