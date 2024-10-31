@@ -49,7 +49,10 @@ public static class StarFactoryExtensions
         //services.Replace(new ServiceDescriptor(typeof(IConfigProvider), p => star.Config, ServiceLifetime.Singleton));
         //var old = services.LastOrDefault(e => e.ServiceType == typeof(IConfigProvider))?.ImplementationInstance as IConfigProvider;
         //old ??= JsonConfigProvider.LoadAppSettings();
-        services.Replace(new ServiceDescriptor(typeof(IConfigProvider), p => star.GetConfig()!, ServiceLifetime.Singleton));
+        if (services.Any(e => e.ServiceType == typeof(IConfigProvider)))
+            services.Replace(new ServiceDescriptor(typeof(IConfigProvider), p => star.GetConfig()!, ServiceLifetime.Singleton));
+        else
+            services.TryAddSingleton(p => star.GetConfig()!);
 
         // 分布式缓存
         //services.Replace(new ServiceDescriptor(typeof(CacheService), p => new RedisCacheService(p), ServiceLifetime.Singleton));

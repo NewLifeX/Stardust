@@ -26,10 +26,7 @@ public static class StarHelper
         var old = JsonConfigProvider.LoadAppSettings();
         star.SetLocalConfig(old);
 
-        if (services != ObjectContainer.Current && services is ObjectContainer container)
-        {
-            star.Register(services);
-        }
+        star.Register(services);
 
         return star;
     }
