@@ -30,7 +30,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>支持全新的Remoting通信模型</PackageReleaseNotes>
+    <PackageReleaseNotes>远程发布支持拉起桌面应用</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -114,10 +114,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Remoting" Version="3.1.2024.1013-beta1545" />
+    <PackageReference Include="NewLife.Remoting" Version="3.1.2024.1101" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="11.0.2024.1013-beta0746" />
+    <PackageReference Include="NewLife.Core" Version="11.0.2024.1101" />
   </ItemGroup>
 
 </Project>
