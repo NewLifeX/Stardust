@@ -87,8 +87,26 @@ public class StarAgentSetting : Config<StarAgentSetting>
 
                 Enable = false,
             };
+            var si3 = new ServiceInfo
+            {
+                Name = "StarServer",
+                FileName = "StarServer.zip",
+                Arguments = "StarServer.dll",
+                WorkingDirectory = "../star/server",
 
-            Services = new[] { si, si2 };
+                Enable = false,
+            };
+            var si4 = new ServiceInfo
+            {
+                Name = "StarWeb",
+                FileName = "StarWeb.zip",
+                Arguments = "urls=http://*:6680",
+                WorkingDirectory = "../star/web",
+
+                Enable = false,
+            };
+
+            Services = [si, si2, si3, si4];
         }
 
         base.OnLoaded();
