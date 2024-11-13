@@ -136,6 +136,18 @@ public class FrameworkManager
 
             nr.InstallNet8(ver, kind);
         }
+        else if (ver.StartsWithIgnoreCase("9."))
+        {
+            var kind = "";
+            var p = ver.IndexOf('-');
+            if (p > 0)
+            {
+                kind = ver.Substring(p + 1);
+                ver = ver.Substring(0, p);
+            }
+
+            nr.InstallNet9(ver, kind);
+        }
         else
             throw new Exception($"不支持的.NET版本[{ver}]");
 
