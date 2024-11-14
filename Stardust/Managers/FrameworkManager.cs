@@ -100,56 +100,25 @@ public class FrameworkManager
             nr.InstallNet48();
 #endif
         }
-        else if (ver.StartsWithIgnoreCase("6."))
-        {
-            var kind = "";
-            var p = ver.IndexOf('-');
-            if (p > 0)
-            {
-                kind = ver.Substring(p + 1);
-                ver = ver.Substring(0, p);
-            }
-
-            nr.InstallNet6(ver, kind);
-        }
-        else if (ver.StartsWithIgnoreCase("7."))
-        {
-            var kind = "";
-            var p = ver.IndexOf('-');
-            if (p > 0)
-            {
-                kind = ver.Substring(p + 1);
-                ver = ver.Substring(0, p);
-            }
-
-            nr.InstallNet7(ver, kind);
-        }
-        else if (ver.StartsWithIgnoreCase("8."))
-        {
-            var kind = "";
-            var p = ver.IndexOf('-');
-            if (p > 0)
-            {
-                kind = ver.Substring(p + 1);
-                ver = ver.Substring(0, p);
-            }
-
-            nr.InstallNet8(ver, kind);
-        }
-        else if (ver.StartsWithIgnoreCase("9."))
-        {
-            var kind = "";
-            var p = ver.IndexOf('-');
-            if (p > 0)
-            {
-                kind = ver.Substring(p + 1);
-                ver = ver.Substring(0, p);
-            }
-
-            nr.InstallNet9(ver, kind);
-        }
         else
-            throw new Exception($"不支持的.NET版本[{ver}]");
+        {
+            // 支持标准dotNet版本安装
+            var pv = ver.IndexOf('.');
+            if (pv > 0 && ver.Substring(0, pv).ToInt() >= 5)
+            {
+                var kind = "";
+                var p = ver.IndexOf('-');
+                if (p > 0)
+                {
+                    kind = ver.Substring(p + 1);
+                    ver = ver.Substring(0, p);
+                }
+
+                nr.InstallNet("v" + ver.Substring(0, pv), ver, kind);
+            }
+            else
+                throw new Exception($"不支持的.NET版本[{ver}]");
+        }
 
         CheckPing();
 
