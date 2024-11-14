@@ -50,6 +50,8 @@ public class FrameworkManager
         var model = argument?.ToJsonEntity<FrameworkModel>();
         if (model == null || model.Version.IsNullOrEmpty()) throw new Exception("未指定版本！");
 
+        WriteLog($"安装 {model.Version}");
+
         var nr = new NetRuntime
         {
             Silent = true,
@@ -130,73 +132,80 @@ public class FrameworkManager
         var model = argument?.ToJsonEntity<FrameworkModel>();
         if (model == null || model.Version.IsNullOrEmpty()) throw new Exception("未指定版本！");
 
+        var ver = model.Version;
+        WriteLog($"卸载 {ver}");
+
         //目前仅支持NetCore
-        var ver = model.Version.Trim('v', 'V');
-        var deleted = false;
-        var versions = NetRuntime.GetNetCore(false);
-
-        foreach (var version in versions)
+        var rs = false;
+        if (ver.Contains('*'))
         {
-            //删除指定
-            var currentVer = version.Name.TrimStart('v', 'V');
-            if (ver != currentVer) { continue; }
+            var versions = NetRuntime.GetNetCore(false);
+            foreach (var item in versions)
+            {
+                if (ver.IsMatch(item.Name))
+                    rs |= Uninstall(item.Name);
+            }
+        }
+        else
+        {
+            rs |= Uninstall(ver);
+        }
 
-            if (Runtime.Linux)
+        CheckPing();
+
+        return rs ? "卸载成功" : "卸载失败";
+    }
+
+    Boolean Uninstall(String verion)
+    {
+        WriteLog($"卸载 {verion}");
+
+        var ver = verion.Trim('v', 'V');
+        var p = ver.IndexOf('-');
+        if (p > 0) ver = ver.Substring(0, p);
+
+        var rs = false;
+        var rootDir = "";
+        if (Runtime.Linux)
+        {
+            rootDir = "/usr/share/dotnet/";
+        }
+        else if (Runtime.Windows)
+        {
+            rootDir = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).CombinePath("dotnet");
+        }
+        else
+        {
+            WriteLog("暂不支持当前OS卸载");
+            throw new Exception("暂不支持当前OS卸载");
+        }
+
+        var paths = new String[] { "host/fxr", "shared/Microsoft.NETCore.App", "shared/Microsoft.AspNetCore.App", "shared/Microsoft.WindowsDesktop.App" };
+        foreach (var item in paths)
+        {
+            var dir = rootDir.CombinePath(item, ver);
+            if (Directory.Exists(dir))
             {
-                var rootDir = "/usr/share/dotnet/";
-                var paths = new String[] { "host/fxr", "shared/Microsoft.NETCore.App", "shared/Microsoft.AspNetCore.App" };
-                foreach (var item in paths)
+                //有可能被占用
+                try
                 {
-                    var dir = rootDir.CombinePath(item, currentVer);
-                    if (Directory.Exists(dir))
-                    {
-                        //有可能被占用
-                        try
-                        {
-                            Directory.Delete(dir, true);
-                            deleted = true;
-                            WriteLog($"{item} {currentVer} 已删除");
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteLog($"卸载时出现异常 {ex.Message}");
-                        }
-                    }
+                    Directory.Delete(dir, true);
+                    rs = true;
+                    WriteLog($"删除 {item}/{ver}");
                 }
-            }
-            else if (Runtime.Windows)
-            {
-                var runtimes = new String[] { "Microsoft.NETCore.App", "Microsoft.AspNetCore.App", "Microsoft.WindowsDesktop.App" };
-                var rootDir = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).CombinePath("dotnet", "shared");
-                foreach (var runtime in runtimes)
+                catch (Exception ex)
                 {
-                    var dir = rootDir.CombinePath(runtime, currentVer);
-                    if (Directory.Exists(dir))
-                    {
-                        try
-                        {
-                            Directory.Delete(dir, true);
-                            deleted = true;
-                            WriteLog($"{runtime} {currentVer} 已删除");
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteLog($"卸载时出现异常 {ex.Message}");
-                        }
-                    }
+                    WriteLog($"卸载时出现异常 {ex.Message}");
                 }
-            }
-            else
-            {
-                WriteLog("暂不支持当前OS卸载");
-                throw new Exception("暂不支持当前OS卸载");
             }
         }
 
-        WriteLog("{0} 卸载成功", model.Version);
-        CheckPing();
+        if (rs)
+            WriteLog("{0} 卸载成功", verion);
+        else
+            WriteLog("{0} 卸载失败", verion);
 
-        return deleted ? "卸载成功" : "卸载失败";
+        return rs;
     }
 
     /// <summary>星尘安装卸载框架后，马上执行一次心跳，使得其尽快上报框架版本</summary>
@@ -218,7 +227,7 @@ public class FrameworkManager
 
     #region 日志
     /// <summary>日志</summary>
-    public ILog Log { get; set; } = Logger.Null;
+    public ILog Log { get; set; } = XTrace.Log;
 
     /// <summary>写日志</summary>
     /// <param name="format"></param>
