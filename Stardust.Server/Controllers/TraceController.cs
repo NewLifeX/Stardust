@@ -229,7 +229,7 @@ public class TraceController : ControllerBase
                 var timestamp = item.StartTime.ToDateTime().ToLocalTime();
                 if (timestamp < startTime || timestamp > endTime)
                 {
-                    using var span = _tracer?.NewSpan("trace:ErrorTime", new { item.Name, timestamp, ip });
+                    using var span = _tracer?.NewSpan("trace:ErrorTime", new { item.Name, timestamp, ip, item });
                     continue;
                 }
 
