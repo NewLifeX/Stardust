@@ -90,6 +90,14 @@ internal class MyStarClient : StarClient
             var rs = upgrade.Run("StarAgent", "-restart -upgrade");
 
             //!! 这里不需要自杀，外部命令重启服务会结束当前进程
+            if (rs)
+            {
+                this.WriteInfoEvent("Upgrade", "强制更新完成，新进程已拉起，等待当前服务被重启！");
+            }
+            else
+            {
+                this.WriteInfoEvent("Upgrade", "强制更新完成，但拉起新进程失败");
+            }
         }
         else
         {

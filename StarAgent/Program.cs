@@ -27,15 +27,16 @@ internal class Program
 #endif
         XTrace.UseConsole();
 
+        var msWait = 3_000;
         if ("-upgrade".EqualIgnoreCase(args))
         {
-            XTrace.WriteLine("更新模式启动，等待{0}秒", 5_000);
-            Thread.Sleep(5_000);
+            XTrace.WriteLine("更新模式启动，等待{0}秒", msWait);
+            Thread.Sleep(msWait);
         }
         else if ("-delay".EqualIgnoreCase(args))
         {
-            XTrace.WriteLine("延迟启动，等待{0}秒", 5_000);
-            Thread.Sleep(5_000);
+            XTrace.WriteLine("延迟启动，等待{0}秒", msWait);
+            Thread.Sleep(msWait);
         }
 
         var set = StarSetting.Current;
