@@ -86,8 +86,15 @@ internal class MyStarClient : StarClient
         {
             this.WriteInfoEvent("Upgrade", "强制更新完成，准备重启后台服务！PID=" + pid);
 
-            // 使用外部命令重启服务
-            var rs = upgrade.Run("StarAgent", "-restart -upgrade");
+            // 使用外部命令重启服务。执行重启，如果失败，延迟后再次尝试
+            var rs = upgrade.Run("StarAgent", "-restart -upgrade", 3_000);
+            if (!rs)
+            {
+                var delay = 3_000;
+                this.WriteInfoEvent("Upgrade", $"拉起新进程失败，延迟{delay}ms后重试");
+                Thread.Sleep(delay);
+                rs = upgrade.Run("StarAgent", "-restart -upgrade", 1_000);
+            }
 
             //!! 这里不需要自杀，外部命令重启服务会结束当前进程
             if (rs)
@@ -101,8 +108,18 @@ internal class MyStarClient : StarClient
         }
         else
         {
-            // 重新拉起进程
+            this.WriteInfoEvent("Upgrade", "强制更新完成，准备拉起新进程！PID=" + pid);
+
+            // 重新拉起进程，重启服务，否则采取拉起进程的方式
             var rs = upgrade.Run("StarAgent", "-run -upgrade");
+            if (!rs)
+            {
+                var delay = 3_000;
+                this.WriteInfoEvent("Upgrade", $"拉起新进程失败，延迟{delay}ms后重试");
+                Thread.Sleep(delay);
+                rs = upgrade.Run("StarAgent", "-run -upgrade", 1_000);
+            }
+
             if (rs)
             {
                 Service.StopWork("Upgrade");

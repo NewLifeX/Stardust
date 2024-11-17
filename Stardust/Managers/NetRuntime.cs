@@ -156,6 +156,7 @@ public class NetRuntime
 
         // 建立链接
         var link = "/usr/bin/dotnet";
+        if (File.Exists(link)) File.Delete(link);
         if (Force && File.Exists(link)) File.Delete(link);
 
         if (!File.Exists(link))
