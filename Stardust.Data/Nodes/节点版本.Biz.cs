@@ -297,6 +297,24 @@ public partial class NodeVersion : Entity<NodeVersion>
             var runtime = node.Runtime;
             if (runtime.IsNullOrEmpty() || !vs.Any(e => e.IsMatch(runtime))) return $"[{runtime}] not Match {vs.Join(",")}";
         }
+        else if (Rules.TryGetValue("runtime>", out vs))
+        {
+            var str = node.Runtime;
+            if (str.IsNullOrEmpty()) return "Version is null";
+            if (!System.Version.TryParse(str, out var ver1)) return $"Runtime=[{str}] is invalid";
+            if (!System.Version.TryParse(vs[0], out var ver2)) return $"vs[0]=[{vs[0]}] is invalid";
+
+            if (ver1 < ver2) return $"Runtime=[{ver1}] < {ver2}";
+        }
+        else if (Rules.TryGetValue("runtime<", out vs))
+        {
+            var str = node.Runtime;
+            if (str.IsNullOrEmpty()) return "Version is null";
+            if (!System.Version.TryParse(str, out var ver1)) return $"Runtime=[{str}] is invalid";
+            if (!System.Version.TryParse(vs[0], out var ver2)) return $"vs[0]=[{vs[0]}] is invalid";
+
+            if (ver1 > ver2) return $"Runtime=[{ver1}] > {ver2}";
+        }
 
         if (Rules.TryGetValue("framework", out vs))
         {
