@@ -1,5 +1,7 @@
-﻿using NewLife;
+﻿using System.Xml.Linq;
+using NewLife;
 using NewLife.Caching;
+using NewLife.IP;
 using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Remoting.Models;
@@ -321,16 +323,37 @@ public class NodeService
 
         // 按匹配度排序，匹配度越高，越靠前。注意不同节点的匹配度可能相同。
         var rs = new MySortedList<Int32, Node>();
-        foreach (var item in list)
+        foreach (var node in list)
         {
             var n = 0;
-            if (!di.UUID.IsNullOrEmpty() && item.Uuid == di.UUID) n++;
-            if (!di.MachineGuid.IsNullOrEmpty() && item.MachineGuid == di.MachineGuid) n++;
-            if (!di.Macs.IsNullOrEmpty() && item.MACs == di.Macs) n++;
-            if (!di.SerialNumber.IsNullOrEmpty() && item.SerialNumber == di.SerialNumber) n++;
-            if (!di.DiskID.IsNullOrEmpty() && item.DiskID == di.DiskID) n++;
+            if (!di.UUID.IsNullOrEmpty() && node.Uuid == di.UUID) n++;
+            if (!di.MachineGuid.IsNullOrEmpty() && node.MachineGuid == di.MachineGuid) n++;
+            //if (!di.Macs.IsNullOrEmpty() && node.MACs == di.Macs) n++;
+            if (!di.SerialNumber.IsNullOrEmpty() && node.SerialNumber == di.SerialNumber) n++;
+            //if (!di.DiskID.IsNullOrEmpty() && node.DiskID == di.DiskID) n++;
 
-            if (n >= level) rs.Add(10 - n, item);
+            // 网卡地址
+            if (di.Macs == node.MACs)
+                n++;
+            else
+            {
+                var dims = di.Macs?.Split(",") ?? [];
+                var nodems = node.MACs?.Split(",") ?? [];
+                if (dims != null && nodems != null) n += dims.Count(e => nodems.Contains(e));
+            }
+
+            // 磁盘。可能有TF卡和U盘
+            var diskid = di.DiskID;
+            if (diskid == node.DiskID)
+                n++;
+            else
+            {
+                var dims = diskid?.Split(",") ?? [];
+                var nodems = node.DiskID?.Split(",") ?? [];
+                if (dims != null && nodems != null) n += dims.Count(e => nodems.Contains(e));
+            }
+
+            if (n >= level) rs.Add(10 - n, node);
         }
 
         return rs.Values;
