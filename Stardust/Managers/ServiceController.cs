@@ -399,9 +399,18 @@ internal class ServiceController : DisposeBase
         // Windows桌面用户运行
         if (Runtime.Windows && service.UserName == "$")
         {
-            var desktop = new Desktop { Log = Log };
-            var pid = desktop.StartProcess(si.FileName, si.Arguments, si.WorkingDirectory);
-            p = Process.GetProcessById((Int32)pid);
+            // 交互模式直接运行
+            if (Environment.UserInteractive)
+            {
+                p = Process.Start(si);
+            }
+            else
+            {
+                // 桌面用户运行
+                var desktop = new Desktop { Log = Log };
+                var pid = desktop.StartProcess(si.FileName, si.Arguments, si.WorkingDirectory);
+                p = Process.GetProcessById((Int32)pid);
+            }
         }
         else
         {
