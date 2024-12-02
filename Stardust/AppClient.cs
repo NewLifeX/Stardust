@@ -174,7 +174,7 @@ public class AppClient : ClientBase, IRegistry
 
         if (_appInfo == null) return null;
 
-        return await local.PingAsync(_appInfo, WatchdogTimeout);
+        return await local.PingAsync(_appInfo, WatchdogTimeout).ConfigureAwait(false);
     }
 
     /// <summary>心跳</summary>
@@ -187,13 +187,13 @@ public class AppClient : ClientBase, IRegistry
         try
         {
             // 向服务端发送心跳后，再向本地发送心跳
-            await base.OnPing(state);
-            await PingLocal();
+            await base.OnPing(state).ConfigureAwait(false);
+            await PingLocal().ConfigureAwait(false);
 
             if (!NetworkInterface.GetIsNetworkAvailable()) return;
 
-            await RefreshPublish();
-            await RefreshConsume();
+            await RefreshPublish().ConfigureAwait(false);
+            await RefreshConsume().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -214,17 +214,17 @@ public class AppClient : ClientBase, IRegistry
         // 如果没有设置地址，则不要调用接口
         if (service.Address.IsNullOrEmpty()) return null;
 
-        return await InvokeAsync<ServiceModel>("App/RegisterService", service);
+        return await InvokeAsync<ServiceModel>("App/RegisterService", service).ConfigureAwait(false);
     }
 
     /// <summary>取消服务（底层）</summary>
     /// <param name="service">应用服务</param>
     /// <returns></returns>
-    public async Task<ServiceModel?> UnregisterAsync(PublishServiceInfo service)
+    public Task<ServiceModel?> UnregisterAsync(PublishServiceInfo service)
     {
         _publishServices.TryRemove(service.ServiceName, out _);
 
-        return await InvokeAsync<ServiceModel>("App/UnregisterService", service);
+        return InvokeAsync<ServiceModel>("App/UnregisterService", service);
     }
 
     private void AddService(PublishServiceInfo service)
@@ -284,7 +284,7 @@ public class AppClient : ClientBase, IRegistry
         service.Tag = tag;
         service.Health = health;
 
-        var rs = await RegisterAsync(service);
+        var rs = await RegisterAsync(service).ConfigureAwait(false);
         WriteLog("注册完成 {0}", rs?.ToJson());
 
         return service;
@@ -328,7 +328,7 @@ public class AppClient : ClientBase, IRegistry
     /// <summary>消费服务（底层）</summary>
     /// <param name="service">应用服务</param>
     /// <returns></returns>
-    public async Task<ServiceModel[]?> ResolveAsync(ConsumeServiceInfo service) => await InvokeAsync<ServiceModel[]>("App/ResolveService", service);
+    public Task<ServiceModel[]?> ResolveAsync(ConsumeServiceInfo service) => InvokeAsync<ServiceModel[]>("App/ResolveService", service);
 
     /// <summary>消费得到服务地址信息</summary>
     /// <param name="serviceName">服务名</param>
@@ -356,7 +356,7 @@ public class AppClient : ClientBase, IRegistry
             // 消费即使报错，也要往下走，借助缓存
             try
             {
-                var models = await ResolveAsync(service);
+                var models = await ResolveAsync(service).ConfigureAwait(false);
                 if (models != null && models.Length > 0)
                 {
                     _consumes[serviceName] = models;
@@ -405,7 +405,7 @@ public class AppClient : ClientBase, IRegistry
                 if (!address.IsNullOrEmpty()) svc.Address = address;
             }
 
-            if (!svc.Address.IsNullOrEmpty()) await RegisterAsync(svc);
+            if (!svc.Address.IsNullOrEmpty()) await RegisterAsync(svc).ConfigureAwait(false);
         }
     }
 
@@ -415,7 +415,7 @@ public class AppClient : ClientBase, IRegistry
         foreach (var item in _consumeServices)
         {
             var svc = item.Value;
-            var ms = await ResolveAsync(svc);
+            var ms = await ResolveAsync(svc).ConfigureAwait(false);
             if (ms != null && ms.Length > 0)
             {
                 _consumes[svc.ServiceName] = ms;
@@ -473,7 +473,7 @@ public class AppClient : ClientBase, IRegistry
 
     private async Task<String?> DoRefresh(String? argument)
     {
-        await RefreshConsume();
+        await RefreshConsume().ConfigureAwait(false);
 
         return "刷新服务成功";
     }

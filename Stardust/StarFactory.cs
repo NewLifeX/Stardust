@@ -462,11 +462,11 @@ public class StarFactory : DisposeBase
     /// <param name="expire"></param>
     /// <param name="timeout"></param>
     /// <returns></returns>
-    public async Task<Int32> SendNodeCommand(String nodeCode, String command, String? argument = null, Int32 startTime = 0, Int32 expire = 3600, Int32 timeout = 5)
+    public Task<Int32> SendNodeCommand(String nodeCode, String command, String? argument = null, Int32 startTime = 0, Int32 expire = 3600, Int32 timeout = 5)
     {
-        if (!Valid()) return -1;
+        if (!Valid()) return Task.FromResult(-1);
 
-        return await _client.InvokeAsync<Int32>("Node/SendCommand", new CommandInModel
+        return _client.InvokeAsync<Int32>("Node/SendCommand", new CommandInModel
         {
             Code = nodeCode,
             Command = command,
@@ -485,11 +485,11 @@ public class StarFactory : DisposeBase
     /// <param name="expire"></param>
     /// <param name="timeout"></param>
     /// <returns></returns>
-    public async Task<Int32> SendAppCommand(String appId, String command, String? argument = null, Int32 startTime = 0, Int32 expire = 3600, Int32 timeout = 5)
+    public Task<Int32> SendAppCommand(String appId, String command, String? argument = null, Int32 startTime = 0, Int32 expire = 3600, Int32 timeout = 5)
     {
-        if (!Valid()) return -1;
+        if (!Valid()) return Task.FromResult(-1);
 
-        return await _client.InvokeAsync<Int32>("App/SendCommand", new CommandInModel
+        return _client.InvokeAsync<Int32>("App/SendCommand", new CommandInModel
         {
             Code = appId,
             Command = command,

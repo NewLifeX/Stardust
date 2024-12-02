@@ -345,7 +345,7 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
     /// <returns></returns>
     public override async Task<IPingResponse?> Ping(CancellationToken cancellationToken = default)
     {
-        var rs = await base.Ping(cancellationToken);
+        var rs = await base.Ping(cancellationToken).ConfigureAwait(false);
         if (rs != null)
         {
             // 迁移到新服务器
@@ -356,13 +356,13 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
                 OnMigration?.Invoke(this, arg);
                 if (!arg.Cancel)
                 {
-                    await Logout("切换新服务器", cancellationToken);
+                    await Logout("切换新服务器", cancellationToken).ConfigureAwait(false);
 
                     // 清空原有链接，添加新链接
                     Server = prs.NewServer;
                     Client = null;
 
-                    await Login(cancellationToken);
+                    await Login(cancellationToken).ConfigureAwait(false);
                 }
             }
         }
@@ -374,16 +374,16 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
     #region 部署
     /// <summary>获取分配到本节点的应用服务信息</summary>
     /// <returns></returns>
-    public async Task<DeployInfo[]?> GetDeploy() => await InvokeAsync<DeployInfo[]>("Deploy/GetAll");
+    public Task<DeployInfo[]?> GetDeploy() => InvokeAsync<DeployInfo[]>("Deploy/GetAll");
 
     /// <summary>上传本节点的所有应用服务信息</summary>
     /// <param name="services"></param>
     /// <returns></returns>
-    public async Task<Int32> UploadDeploy(ServiceInfo[] services) => await InvokeAsync<Int32>("Deploy/Upload", services);
+    public Task<Int32> UploadDeploy(ServiceInfo[] services) => InvokeAsync<Int32>("Deploy/Upload", services);
 
     /// <summary>应用心跳。上报应用信息</summary>
     /// <param name="inf"></param>
     /// <returns></returns>
-    public async Task<Int32> AppPing(AppInfo inf) => await InvokeAsync<Int32>("Deploy/Ping", inf);
+    public Task<Int32> AppPing(AppInfo inf) => InvokeAsync<Int32>("Deploy/Ping", inf);
     #endregion
 }

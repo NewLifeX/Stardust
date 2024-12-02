@@ -103,7 +103,7 @@ public class LocalStarClient
 
         try
         {
-            return Info = await _client.InvokeAsync<AgentInfo>("Info", _local);
+            return Info = await _client.InvokeAsync<AgentInfo>("Info", _local).ConfigureAwait(false);
         }
         catch (TimeoutException)
         {
@@ -117,7 +117,7 @@ public class LocalStarClient
 
     /// <summary>向StarAgent发送心跳</summary>
     /// <returns></returns>
-    public async Task<PingResponse?> PingAsync(AppInfo appInfo, Int32 watchdogTimeout)
+    public Task<PingResponse?> PingAsync(AppInfo appInfo, Int32 watchdogTimeout)
     {
         Init();
 
@@ -131,7 +131,7 @@ public class LocalStarClient
             WatchdogTimeout = watchdogTimeout,
         };
 
-        return await _client.InvokeAsync<PingResponse>("Ping", info);
+        return _client.InvokeAsync<PingResponse>("Ping", info);
     }
     #endregion
 

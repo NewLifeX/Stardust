@@ -46,7 +46,7 @@ public class IpFilterMiddleware
             }
         }
 
-        await _next.Invoke(ctx);
+        await _next.Invoke(ctx).ConfigureAwait(false);
     }
 
     Boolean ValidIP(String ip)

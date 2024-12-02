@@ -91,7 +91,7 @@ public static class RegistryExtensions
         if (registry is ILogFeature logFeature) http.Log = logFeature.Log;
         if (registry is ITracerFeature tracerFeature) http.Tracer = tracerFeature.Tracer;
 
-        var models = await registry.ResolveAsync(serviceName, null, tag);
+        var models = await registry.ResolveAsync(serviceName, null, tag).ConfigureAwait(false);
 
         if (models != null) BindServices(http, models);
 
@@ -176,15 +176,15 @@ public static class RegistryExtensions
     /// <returns></returns>
     public static async Task<String[]> ResolveAddressAsync(this IRegistry registry, String serviceName, String? minVersion = null, String? tag = null)
     {
-        var ms = await registry.ResolveAsync(serviceName, minVersion, tag);
-        if (ms == null) return new String[0];
+        var ms = await registry.ResolveAsync(serviceName, minVersion, tag).ConfigureAwait(false);
+        if (ms == null) return [];
 
         var addrs = new List<String>();
         foreach (var item in ms)
         {
             if (!item.Address.IsNullOrEmpty())
             {
-                var ss = item.Address.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                var ss = item.Address.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries);
                 foreach (var elm in ss)
                 {
                     if (!elm.IsNullOrEmpty() && !addrs.Contains(elm)) addrs.Add(elm);

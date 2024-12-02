@@ -58,7 +58,7 @@ public class TracerMiddleware
                         {
                             req.EnableBuffering();
 
-                            var count = await req.Body.ReadAsync(buf, 0, buf.Length);
+                            var count = await req.Body.ReadAsync(buf, 0, buf.Length).ConfigureAwait(false);
                             span.AppendTag("\r\n<=\r\n" + buf.ToStr(null, 0, count));
                             req.Body.Position = 0;
                             flag = true;
@@ -91,7 +91,7 @@ public class TracerMiddleware
 
         try
         {
-            await _next.Invoke(ctx);
+            await _next.Invoke(ctx).ConfigureAwait(false);
 
             // 自动记录用户访问主机地址
             SaveServiceAddress(ctx);
@@ -119,7 +119,7 @@ public class TracerMiddleware
                             try
                             {
                                 var p = res.Body.Position;
-                                var count = await res.Body.ReadAsync(buf, 0, buf.Length);
+                                var count = await res.Body.ReadAsync(buf, 0, buf.Length).ConfigureAwait(false);
                                 span.AppendTag("\r\n=>\r\n" + buf.ToStr(null, 0, count));
                                 res.Body.Position = p;
                                 flag = true;

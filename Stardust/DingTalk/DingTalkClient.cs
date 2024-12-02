@@ -19,11 +19,11 @@ public class DingTalkClient
     #endregion
 
     #region 发送消息
-    private async Task<Object?> PostAsync(Object msg)
+    private Task<Object?> PostAsync(Object msg)
     {
         _Client ??= Tracer.CreateHttpClient();
 
-        return await _Client.PostAsync<Object>(Url, msg);
+        return _Client.PostAsync<Object>(Url, msg);
     }
 
     /// <summary>发送文本消息</summary>

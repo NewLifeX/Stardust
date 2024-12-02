@@ -107,7 +107,7 @@ class CacheFileProvider : IFileProvider
         if (Path.GetFileName(fullPath).Contains('.'))
         {
             if (!fi.Exists)
-                fi = DownloadFile(subpath, fullPath).Result?.AsFile();
+                fi = DownloadFile(subpath, fullPath).ConfigureAwait(false).GetAwaiter().GetResult()?.AsFile();
             else if (fi.LastWriteTime.AddMonths(1) < DateTime.Now)
                 _ = Task.Run(() => DownloadFile(subpath, fullPath));
         }
@@ -138,7 +138,7 @@ class CacheFileProvider : IFileProvider
                     {
                         using var fs = new FileStream(tmp, FileMode.OpenOrCreate);
                         using var client = new HttpClient { Timeout = Timeout };
-                        using var rs = await client.GetStreamAsync(url);
+                        using var rs = await client.GetStreamAsync(url).ConfigureAwait(false);
                         rs.CopyTo(fs);
                         fs.Flush();
                         fs.SetLength(fs.Position);
@@ -248,7 +248,7 @@ class CacheFileProvider : IFileProvider
                 XTrace.WriteLine("下载目录：{0}", url);
 
                 using var client = new HttpClient { Timeout = Timeout };
-                var html = await client.GetStringAsync(url);
+                var html = await client.GetStringAsync(url).ConfigureAwait(false);
 
                 var links = Link.Parse(html, url);
                 var list = links.Select(e => new FileInfoModel

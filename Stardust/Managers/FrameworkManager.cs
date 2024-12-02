@@ -215,12 +215,12 @@ public class FrameworkManager
         {
             TaskEx.Run(async () =>
             {
-                await client.Ping();
-                await TaskEx.Delay(1000);
+                await client.Ping().ConfigureAwait(false);
+                await TaskEx.Delay(1000).ConfigureAwait(false);
 
                 //!! 要执行整个升级动作，而不仅仅是拉取新版本
                 //await client.Upgrade("", "");
-                await client.SendCommand("node/upgrade", "");
+                await client.SendCommand("node/upgrade", "").ConfigureAwait(false);
             });
         }
     }
