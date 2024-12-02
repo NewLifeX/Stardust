@@ -96,6 +96,8 @@ public class AgentInfo
 
             return _ips = ips
                 .Where(ip => ip.IsIPv4() && !IPAddress.IsLoopback(ip) && ip.GetAddressBytes()[0] != 169)
+                .Select(e => e + "")
+                .Distinct()
                 .Join();
         }
         catch
