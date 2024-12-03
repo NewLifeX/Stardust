@@ -2,6 +2,7 @@
 using System.Reflection;
 using NewLife;
 using NewLife.Agent;
+using NewLife.Agent.Models;
 using NewLife.Log;
 using NewLife.Model;
 using NewLife.Reflection;
@@ -14,6 +15,7 @@ using Stardust.Managers;
 using Stardust.Models;
 using Stardust.Plugins;
 using IHost = NewLife.Agent.IHost;
+using ServiceModel = NewLife.Agent.Models.ServiceModel;
 
 namespace StarAgent;
 
@@ -180,7 +182,16 @@ internal class MyService : ServiceBase, IServiceProvider
                         exe = dll;
                 }
 
-                Host.Install(ServiceName, DisplayName, exe, "-s", Description);
+                var service = new ServiceModel
+                {
+                    ServiceName = ServiceName,
+                    DisplayName = DisplayName,
+                    Description = Description,
+                    FileName = exe,
+                    Arguments = "-s",
+                };
+
+                Host.Install(service);
             }
         }
     }
