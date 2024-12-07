@@ -70,8 +70,8 @@
     dic["发布中心"] = $"/Deployment/AppDeploy?appId={appId}&deployId={deploy?.Id}";
     if (deploy != null)
     {
-        dic["文件版本"] = $"/Deployment/AppDeployVersion?appId={appId}&deployId={deploy.Id}";
-        dic["节点发布"] = $"/Deployment/AppDeployNode?enable=1&appId={appId}&deployId={deploy.Id}";
+        dic["上传新版本"] = $"/Deployment/AppDeployVersion?appId={appId}&deployId={deploy.Id}";
+        dic["部署节点"] = $"/Deployment/AppDeployNode?enable=1&appId={appId}&deployId={deploy.Id}";
     }
 
     var monitor = AppTracer.FindByID(monitorId);

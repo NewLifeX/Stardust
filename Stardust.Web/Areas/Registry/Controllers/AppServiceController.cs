@@ -19,6 +19,7 @@ public class AppServiceController : EntityController<AppService>
             var df = ListFields.GetField("ServiceName") as ListField;
             df.DisplayName = "{ServiceName}";
             df.Url = "/Registry/Service?name={ServiceName}";
+            df.Target = "_blank";
         }
         {
             var df = ListFields.GetField("NodeName") as ListField;

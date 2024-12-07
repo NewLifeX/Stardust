@@ -8,22 +8,37 @@
     var page = ViewBag.Page as Pager;
 
     var dic = AppTracer.FindAllWithCache().ToDictionary(e => e.ID, e => e + "");
+
+    // 优先使用monitorId
     var appId = page["appId"].ToInt(-1);
-    if(appId<=0)appId=page["monitorId"].ToInt(-1);
+    var monitorId = page["monitorId"].ToInt(-1);
+    // if (appId <= 0) appId = monitorId;
+    // if (monitorId > 0) page["appId"] = (appId = monitorId) + "";
+
+    // 星尘监控，子系统内部跳转到当前页，只有appId；外部跳转到当前页，有appId和monitorId
+    var app = AppTracer.FindByID(appId);
+    if (appId > 0 && monitorId <= 0)
+    {
+        monitorId = appId;
+        if (app != null) appId = app.AppId;
+    }
+    else if (appId > 0 && monitorId > 0)
+    {
+        app = AppTracer.FindByID(monitorId);
+    }
 }
 @if (appId > 0)
 {
-    var app = AppTracer.FindByID(appId);
     <div class="form-group" style="width:160px;">
-        <a href="appTracer?Id=@appId" class="btn btn-success btn-sm">@app</a>
+        <a href="appTracer?appId=@appId&monitorId=@monitorId" class="btn btn-success btn-sm">@app</a>
     </div>
     <div class="form-group">
-        @Html.ActionLink("每分钟", null, "appMinuteStat", new { appId })
-        @Html.ActionLink("每天", null, "appDayStat", new { monitorId=appId })
+        @Html.ActionLink("每分钟", null, "appMinuteStat", new { appId = monitorId })
+        @Html.ActionLink("每天", null, "appDayStat", new { appId, monitorId })
     </div>
 }
 <div class="form-group">
-    <label for="appId" class="control-label">应用：</label>
-    @Html.ForDropDownList("appId", dic, page["appId"], "全部", true)
+    <label for="monitorId" class="control-label">应用：</label>
+    @Html.ForDropDownList("monitorId", dic, page["monitorId"], "全部", true)
 </div>
 @await Html.PartialAsync("_DateRange")
