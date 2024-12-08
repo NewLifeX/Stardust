@@ -56,18 +56,28 @@ public class TraceMinuteStatController : ReadOnlyEntityController<TraceMinuteSta
                     Height = 400,
                 };
                 chart.SetX(list2, _.StatTime);
-                //chart.SetY("调用次数");
-                chart.YAxis = new[] {
-                    new { name = "调用次数", type = "value" },
-                    new { name = "错误数", type = "value" }
-                };
                 chart.AddDataZoom();
                 chart.AddLine(list2, _.Total, null, true);
 
-                var line = chart.Add(list2, _.Errors);
-                line["yAxisIndex"] = 1;
-                line["itemStyle"] = new { color = "rgba(255, 0, 0, 0.5)", };
+                var idx = 1;
+                var ys = new List<String> { "调用次数" };
+                if (list2.Any(e => e.Errors > 0))
+                {
+                    ys.Add("错误数");
+                    var line = chart.Add(list2, _.Errors);
+                    line.YAxisIndex = idx++;
+                    line["itemStyle"] = new { color = "rgba(255, 0, 0, 0.5)", };
+                }
 
+                if (list2.Any(e => e.TotalValue > 0))
+                {
+                    ys.Add("数值");
+                    var line = chart.Add(list2, _.TotalValue);
+                    line.YAxisIndex = idx++;
+                }
+
+                chart.SetY(ys.ToArray(), "value");
+                if (ys.Count == 1) chart.Grid.Right = -3;
                 chart.SetTooltip();
                 ViewBag.Charts = new[] { chart };
             }
@@ -78,17 +88,17 @@ public class TraceMinuteStatController : ReadOnlyEntityController<TraceMinuteSta
                     Height = 400,
                 };
                 chart.SetX(list2, _.StatTime);
-                //chart.SetY("耗时");
-                chart.YAxis = new[] {
-                    new { name = "耗时（ms）", type = "value" },
-                    new { name = "最大耗时（ms）", type = "value" }
-                };
+                chart.SetY(["耗时（ms）", "最大耗时（ms）"], "value", ["{value}ms", "{value}ms"]);
+                //chart.YAxis = new[] {
+                //    new { name = "耗时（ms）", type = "value" },
+                //    new { name = "最大耗时（ms）", type = "value" }
+                //};
                 chart.AddDataZoom();
                 chart.AddLine(list2, _.Cost, null, true);
                 chart.Add(list2, _.MinCost);
 
                 var line = chart.Add(list2, _.MaxCost);
-                line["yAxisIndex"] = 1;
+                line.YAxisIndex = 1;
 
                 chart.SetTooltip();
                 ViewBag.Charts2 = new[] { chart };

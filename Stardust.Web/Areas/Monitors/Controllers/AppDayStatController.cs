@@ -73,12 +73,10 @@ public class AppDayStatController : ReadOnlyEntityController<AppDayStat>
                     Height = 400,
                 };
                 chart.SetX(list2, _.StatDate);
-                //chart.SetY("调用次数");
-                chart.YAxis = new[] {
-                    new { name = "调用次数", type = "value" },
-                    new { name = "错误数", type = "value" }
-                };
+                chart.SetY(["调用次数", "错误数"], "value");
                 chart.AddDataZoom();
+                chart.Grid.Left = -5;
+                chart.Grid.Right = -5;
                 chart.AddLine(list2, _.Total, null, true);
 
                 chart.Add(list2, _.Apis);
@@ -89,7 +87,7 @@ public class AppDayStatController : ReadOnlyEntityController<AppDayStat>
                 chart.Add(list2, _.Others);
 
                 var line = chart.Add(list2, _.Errors);
-                line["yAxisIndex"] = 1;
+                line.YAxisIndex = 1;
                 line["itemStyle"] = new { color = "rgba(255, 0, 0, 0.5)", };
 
                 chart.SetTooltip();

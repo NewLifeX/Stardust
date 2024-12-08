@@ -11,6 +11,13 @@
     var appId = page["appId"].ToInt(-1);
     var itemId = page["itemId"].ToInt(-1);
 }
+@if (itemId > 0)
+{
+    var ti = TraceItem.FindById(itemId);
+    <div class="form-group">
+        <a href="traceItem?Id=@itemId" class="btn btn-warning btn-sm">@ti</a>
+    </div>
+}
 @if (appId > 0)
 {
     var app = AppTracer.FindByID(appId);

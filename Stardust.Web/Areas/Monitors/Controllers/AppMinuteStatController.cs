@@ -69,15 +69,11 @@ public class AppMinuteStatController : ReadOnlyEntityController<AppMinuteStat>
                     Height = 400,
                 };
                 chart.SetX(list2, _.StatTime);
-                //chart.SetY("调用次数");
-                chart.YAxis = new[] {
-                    new { name = "调用次数", type = "value" },
-                    new { name = "错误数", type = "value" }
-                };
+                chart.SetY(["调用次数", "错误数"], "value");
                 chart.AddLine(list2, _.Total, null, true);
 
                 var line = chart.Add(list2, _.Errors);
-                line["yAxisIndex"] = 1;
+                line.YAxisIndex = 1;
                 line["itemStyle"] = new { color = "rgba(255, 0, 0, 0.5)", };
 
                 chart.SetTooltip();
@@ -99,7 +95,7 @@ public class AppMinuteStatController : ReadOnlyEntityController<AppMinuteStat>
                 chart.Add(list2, _.MinCost);
 
                 var line = chart.Add(list2, _.MaxCost);
-                line["yAxisIndex"] = 1;
+                line.YAxisIndex = 1;
 
                 chart.SetTooltip();
                 ViewBag.Charts2 = new[] { chart };
@@ -144,6 +140,7 @@ public class AppMinuteStatController : ReadOnlyEntityController<AppMinuteStat>
                 Type = "bar",
                 ["stack"] = "总量",
                 ["label"] = new { show = true, position = "left" },
+                ["itemStyle"] = new { color = "rgba(255, 0, 0, 0.5)", },
                 Data = list2.Select(e => -e.Errors).ToArray(),
             });
             chart.Add(new Series
