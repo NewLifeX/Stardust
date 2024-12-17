@@ -63,11 +63,11 @@ public partial class AppMeter
     public Int32 Memory { get => _Memory; set { if (OnPropertyChanging("Memory", value)) { _Memory = value; OnPropertyChanged("Memory"); } } }
 
     private Int32 _ProcessorTime;
-    /// <summary>处理器。处理器时间，单位ms</summary>
+    /// <summary>处理器。处理器时间，单位s</summary>
     [DisplayName("处理器")]
-    [Description("处理器。处理器时间，单位ms")]
+    [Description("处理器。处理器时间，单位s")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("ProcessorTime", "处理器。处理器时间，单位ms", "")]
+    [BindColumn("ProcessorTime", "处理器。处理器时间，单位s", "", ItemType = "TimeSpan")]
     public Int32 ProcessorTime { get => _ProcessorTime; set { if (OnPropertyChanging("ProcessorTime", value)) { _ProcessorTime = value; OnPropertyChanged("ProcessorTime"); } } }
 
     private Double _CpuUsage;
@@ -101,6 +101,30 @@ public partial class AppMeter
     [DataObjectField(false, false, false, 0)]
     [BindColumn("IOThreads", "IO线程。线程池可用IO线程数，主要是网络接收所用", "")]
     public Int32 IOThreads { get => _IOThreads; set { if (OnPropertyChanging("IOThreads", value)) { _IOThreads = value; OnPropertyChanged("IOThreads"); } } }
+
+    private Int32 _AvailableThreads;
+    /// <summary>活跃线程。线程池活跃线程数，辅助分析线程饥渴问题</summary>
+    [DisplayName("活跃线程")]
+    [Description("活跃线程。线程池活跃线程数，辅助分析线程饥渴问题")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("AvailableThreads", "活跃线程。线程池活跃线程数，辅助分析线程饥渴问题", "")]
+    public Int32 AvailableThreads { get => _AvailableThreads; set { if (OnPropertyChanging("AvailableThreads", value)) { _AvailableThreads = value; OnPropertyChanged("AvailableThreads"); } } }
+
+    private Int64 _PendingItems;
+    /// <summary>挂起任务。线程池挂起任务数，辅助分析线程饥渴问题</summary>
+    [DisplayName("挂起任务")]
+    [Description("挂起任务。线程池挂起任务数，辅助分析线程饥渴问题")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("PendingItems", "挂起任务。线程池挂起任务数，辅助分析线程饥渴问题", "")]
+    public Int64 PendingItems { get => _PendingItems; set { if (OnPropertyChanging("PendingItems", value)) { _PendingItems = value; OnPropertyChanged("PendingItems"); } } }
+
+    private Int64 _CompletedItems;
+    /// <summary>完成任务。线程池已完成任务数，辅助分析线程饥渴问题</summary>
+    [DisplayName("完成任务")]
+    [Description("完成任务。线程池已完成任务数，辅助分析线程饥渴问题")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("CompletedItems", "完成任务。线程池已完成任务数，辅助分析线程饥渴问题", "")]
+    public Int64 CompletedItems { get => _CompletedItems; set { if (OnPropertyChanging("CompletedItems", value)) { _CompletedItems = value; OnPropertyChanged("CompletedItems"); } } }
 
     private Int32 _Handles;
     /// <summary>句柄数</summary>
@@ -188,6 +212,9 @@ public partial class AppMeter
             "Threads" => _Threads,
             "WorkerThreads" => _WorkerThreads,
             "IOThreads" => _IOThreads,
+            "AvailableThreads" => _AvailableThreads,
+            "PendingItems" => _PendingItems,
+            "CompletedItems" => _CompletedItems,
             "Handles" => _Handles,
             "Connections" => _Connections,
             "GCCount" => _GCCount,
@@ -212,6 +239,9 @@ public partial class AppMeter
                 case "Threads": _Threads = value.ToInt(); break;
                 case "WorkerThreads": _WorkerThreads = value.ToInt(); break;
                 case "IOThreads": _IOThreads = value.ToInt(); break;
+                case "AvailableThreads": _AvailableThreads = value.ToInt(); break;
+                case "PendingItems": _PendingItems = value.ToLong(); break;
+                case "CompletedItems": _CompletedItems = value.ToLong(); break;
                 case "Handles": _Handles = value.ToInt(); break;
                 case "Connections": _Connections = value.ToInt(); break;
                 case "GCCount": _GCCount = value.ToInt(); break;
@@ -262,7 +292,7 @@ public partial class AppMeter
         /// <summary>内存。单位M</summary>
         public static readonly Field Memory = FindByName("Memory");
 
-        /// <summary>处理器。处理器时间，单位ms</summary>
+        /// <summary>处理器。处理器时间，单位s</summary>
         public static readonly Field ProcessorTime = FindByName("ProcessorTime");
 
         /// <summary>CPU负载。处理器时间除以物理时间的占比</summary>
@@ -276,6 +306,15 @@ public partial class AppMeter
 
         /// <summary>IO线程。线程池可用IO线程数，主要是网络接收所用</summary>
         public static readonly Field IOThreads = FindByName("IOThreads");
+
+        /// <summary>活跃线程。线程池活跃线程数，辅助分析线程饥渴问题</summary>
+        public static readonly Field AvailableThreads = FindByName("AvailableThreads");
+
+        /// <summary>挂起任务。线程池挂起任务数，辅助分析线程饥渴问题</summary>
+        public static readonly Field PendingItems = FindByName("PendingItems");
+
+        /// <summary>完成任务。线程池已完成任务数，辅助分析线程饥渴问题</summary>
+        public static readonly Field CompletedItems = FindByName("CompletedItems");
 
         /// <summary>句柄数</summary>
         public static readonly Field Handles = FindByName("Handles");
@@ -322,7 +361,7 @@ public partial class AppMeter
         /// <summary>内存。单位M</summary>
         public const String Memory = "Memory";
 
-        /// <summary>处理器。处理器时间，单位ms</summary>
+        /// <summary>处理器。处理器时间，单位s</summary>
         public const String ProcessorTime = "ProcessorTime";
 
         /// <summary>CPU负载。处理器时间除以物理时间的占比</summary>
@@ -336,6 +375,15 @@ public partial class AppMeter
 
         /// <summary>IO线程。线程池可用IO线程数，主要是网络接收所用</summary>
         public const String IOThreads = "IOThreads";
+
+        /// <summary>活跃线程。线程池活跃线程数，辅助分析线程饥渴问题</summary>
+        public const String AvailableThreads = "AvailableThreads";
+
+        /// <summary>挂起任务。线程池挂起任务数，辅助分析线程饥渴问题</summary>
+        public const String PendingItems = "PendingItems";
+
+        /// <summary>完成任务。线程池已完成任务数，辅助分析线程饥渴问题</summary>
+        public const String CompletedItems = "CompletedItems";
 
         /// <summary>句柄数</summary>
         public const String Handles = "Handles";

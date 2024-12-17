@@ -125,6 +125,9 @@ public class AppMeterController : EntityController<AppMeter>
                 line.YAxisIndex = 1;
 
                 chart.Add(list2, _.Threads);
+                chart.Add(list2, _.AvailableThreads);
+                chart.Add(list2, _.PendingItems);
+                chart.Add(list2, _.CompletedItems);
                 chart.Add(list2, _.Handles);
                 chart.Add(list2, _.Connections);
                 chart.Add(list2, _.HeapSize);
