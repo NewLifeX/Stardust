@@ -122,16 +122,14 @@ public class AppMeterController : EntityController<AppMeter>
                 chart.AddLine(list2, _.Memory, null, true);
 
                 var line = chart.AddLine(list2, _.CpuUsage, null, true);
-                line["yAxisIndex"] = 1;
+                line.YAxisIndex = 1;
 
                 chart.Add(list2, _.Threads);
                 chart.Add(list2, _.Handles);
                 chart.Add(list2, _.Connections);
+                chart.Add(list2, _.HeapSize);
+                chart.Add(list2, _.GCCount);
 
-                line = chart.Add(list2, _.GCPause);
-                line["yAxisIndex"] = 1;
-
-                chart.Add(list2, _.FullGC);
                 chart.SetTooltip();
                 ViewBag.Charts = new[] { chart };
             }

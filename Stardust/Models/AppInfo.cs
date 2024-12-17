@@ -70,11 +70,8 @@ public class AppInfo : IPingRequest, ICloneable
     /// <summary>网络端口监听信息</summary>
     public String? Listens { get; set; }
 
-    /// <summary>GC暂停时间占比，百分之一，最大值10</summary>
-    public Double GCPause { get; set; }
-
-    /// <summary>采样周期内发生的二代GC次数</summary>
-    public Int32 FullGC { get; set; }
+    /// <summary>采样周期内发生的GC次数</summary>
+    public Int32 GCCount { get; set; }
 
     /// <summary>本地UTC时间。ms毫秒</summary>
     public Int64 Time { get; set; }
@@ -110,7 +107,7 @@ public class AppInfo : IPingRequest, ICloneable
     #region 方法
     private Stopwatch? _stopwatch;
     private Int64 _last;
-    private Int32 _lastGC2;
+    private Int32 _lastGC;
 
     /// <summary>刷新进程相关信息</summary>
     public void Refresh()
@@ -161,14 +158,13 @@ public class AppInfo : IPingRequest, ICloneable
             // 本进程才能采集GC数据
             if (Id == _pid)
             {
-#if NET5_0_OR_GREATER
+#if NETCOREAPP
                 var memory = GC.GetGCMemoryInfo();
-                GCPause = memory.PauseTimePercentage;
                 HeapSize = memory.HeapSizeBytes;
 #endif
-                var gc2 = GC.CollectionCount(2);
-                FullGC = gc2 - _lastGC2;
-                _lastGC2 = gc2;
+                var gc = GC.CollectionCount(0) + GC.CollectionCount(1) + GC.CollectionCount(2);
+                GCCount = gc - _lastGC;
+                _lastGC = gc;
             }
 
             if (_process != null)

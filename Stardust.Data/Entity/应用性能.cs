@@ -118,29 +118,21 @@ public partial class AppMeter
     [BindColumn("Connections", "连接数", "")]
     public Int32 Connections { get => _Connections; set { if (OnPropertyChanging("Connections", value)) { _Connections = value; OnPropertyChanged("Connections"); } } }
 
+    private Int32 _GCCount;
+    /// <summary>GC次数。周期时间内发生GC的次数</summary>
+    [DisplayName("GC次数")]
+    [Description("GC次数。周期时间内发生GC的次数")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("GCCount", "GC次数。周期时间内发生GC的次数", "")]
+    public Int32 GCCount { get => _GCCount; set { if (OnPropertyChanging("GCCount", value)) { _GCCount = value; OnPropertyChanged("GCCount"); } } }
+
     private Int32 _HeapSize;
-    /// <summary>内存。单位M</summary>
-    [DisplayName("内存")]
-    [Description("内存。单位M")]
+    /// <summary>堆内存。单位M</summary>
+    [DisplayName("堆内存")]
+    [Description("堆内存。单位M")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("HeapSize", "内存。单位M", "")]
+    [BindColumn("HeapSize", "堆内存。单位M", "")]
     public Int32 HeapSize { get => _HeapSize; set { if (OnPropertyChanging("HeapSize", value)) { _HeapSize = value; OnPropertyChanged("HeapSize"); } } }
-
-    private Double _GCPause;
-    /// <summary>GC暂停。时间占比，百分之一</summary>
-    [DisplayName("GC暂停")]
-    [Description("GC暂停。时间占比，百分之一")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("GCPause", "GC暂停。时间占比，百分之一", "")]
-    public Double GCPause { get => _GCPause; set { if (OnPropertyChanging("GCPause", value)) { _GCPause = value; OnPropertyChanged("GCPause"); } } }
-
-    private Int32 _FullGC;
-    /// <summary>完全GC。周期时间内发生二代GC的次数</summary>
-    [DisplayName("完全GC")]
-    [Description("完全GC。周期时间内发生二代GC的次数")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("FullGC", "完全GC。周期时间内发生二代GC的次数", "")]
-    public Int32 FullGC { get => _FullGC; set { if (OnPropertyChanging("FullGC", value)) { _FullGC = value; OnPropertyChanged("FullGC"); } } }
 
     private DateTime _Time;
     /// <summary>采集时间</summary>
@@ -198,9 +190,8 @@ public partial class AppMeter
             "IOThreads" => _IOThreads,
             "Handles" => _Handles,
             "Connections" => _Connections,
+            "GCCount" => _GCCount,
             "HeapSize" => _HeapSize,
-            "GCPause" => _GCPause,
-            "FullGC" => _FullGC,
             "Time" => _Time,
             "Creator" => _Creator,
             "CreateTime" => _CreateTime,
@@ -223,9 +214,8 @@ public partial class AppMeter
                 case "IOThreads": _IOThreads = value.ToInt(); break;
                 case "Handles": _Handles = value.ToInt(); break;
                 case "Connections": _Connections = value.ToInt(); break;
+                case "GCCount": _GCCount = value.ToInt(); break;
                 case "HeapSize": _HeapSize = value.ToInt(); break;
-                case "GCPause": _GCPause = value.ToDouble(); break;
-                case "FullGC": _FullGC = value.ToInt(); break;
                 case "Time": _Time = value.ToDateTime(); break;
                 case "Creator": _Creator = Convert.ToString(value); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -293,14 +283,11 @@ public partial class AppMeter
         /// <summary>连接数</summary>
         public static readonly Field Connections = FindByName("Connections");
 
-        /// <summary>内存。单位M</summary>
+        /// <summary>GC次数。周期时间内发生GC的次数</summary>
+        public static readonly Field GCCount = FindByName("GCCount");
+
+        /// <summary>堆内存。单位M</summary>
         public static readonly Field HeapSize = FindByName("HeapSize");
-
-        /// <summary>GC暂停。时间占比，百分之一</summary>
-        public static readonly Field GCPause = FindByName("GCPause");
-
-        /// <summary>完全GC。周期时间内发生二代GC的次数</summary>
-        public static readonly Field FullGC = FindByName("FullGC");
 
         /// <summary>采集时间</summary>
         public static readonly Field Time = FindByName("Time");
@@ -356,14 +343,11 @@ public partial class AppMeter
         /// <summary>连接数</summary>
         public const String Connections = "Connections";
 
-        /// <summary>内存。单位M</summary>
+        /// <summary>GC次数。周期时间内发生GC的次数</summary>
+        public const String GCCount = "GCCount";
+
+        /// <summary>堆内存。单位M</summary>
         public const String HeapSize = "HeapSize";
-
-        /// <summary>GC暂停。时间占比，百分之一</summary>
-        public const String GCPause = "GCPause";
-
-        /// <summary>完全GC。周期时间内发生二代GC的次数</summary>
-        public const String FullGC = "FullGC";
 
         /// <summary>采集时间</summary>
         public const String Time = "Time";

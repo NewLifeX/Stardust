@@ -183,8 +183,7 @@ public partial class AppMeter : Entity<AppMeter>
             Handles = info.Handles,
             Connections = info.Connections,
             HeapSize = (Int32)(info.HeapSize / 1024 / 1024),
-            GCPause = Math.Round(info.GCPause, 4),
-            FullGC = info.FullGC,
+            GCCount = info.GCCount,
             Time = dt,
 
             //Data = info.ToJson(),
