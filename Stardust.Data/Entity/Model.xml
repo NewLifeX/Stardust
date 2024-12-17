@@ -167,6 +167,7 @@
         <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@proccessid" />
         <Column Name="Source" DataType="String" Description="来源。数据来源，应用心跳、监控数据上报携带、远程发布后由StarAgent上报" />
         <Column Name="Memory" DataType="Int32" Description="内存。单位M" />
+        <Column Name="HeapSize" DataType="Int32" Description="堆内存。单位M" />
         <Column Name="ProcessorTime" DataType="Int32" Description="处理器。处理器时间，单位ms" />
         <Column Name="CpuUsage" DataType="Double" ItemType="percent" Description="CPU负载。处理器时间除以物理时间的占比" />
         <Column Name="Threads" DataType="Int32" Description="线程数" />

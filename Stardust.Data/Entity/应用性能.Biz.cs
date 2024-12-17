@@ -182,6 +182,7 @@ public partial class AppMeter : Entity<AppMeter>
             IOThreads = info.IOThreads,
             Handles = info.Handles,
             Connections = info.Connections,
+            HeapSize = (Int32)(info.HeapSize / 1024 / 1024),
             GCPause = Math.Round(info.GCPause, 4),
             FullGC = info.FullGC,
             Time = dt,

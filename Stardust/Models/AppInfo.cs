@@ -49,6 +49,9 @@ public class AppInfo : IPingRequest, ICloneable
     /// <summary>物理内存</summary>
     public Int64 WorkingSet { get; set; }
 
+    /// <summary>堆大小</summary>
+    public Int64 HeapSize { get; set; }
+
     /// <summary>线程数</summary>
     public Int32 Threads { get; set; }
 
@@ -161,6 +164,7 @@ public class AppInfo : IPingRequest, ICloneable
 #if NET5_0_OR_GREATER
                 var memory = GC.GetGCMemoryInfo();
                 GCPause = memory.PauseTimePercentage;
+                HeapSize = memory.HeapSizeBytes;
 #endif
                 var gc2 = GC.CollectionCount(2);
                 FullGC = gc2 - _lastGC2;

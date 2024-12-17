@@ -118,6 +118,14 @@ public partial class AppMeter
     [BindColumn("Connections", "连接数", "")]
     public Int32 Connections { get => _Connections; set { if (OnPropertyChanging("Connections", value)) { _Connections = value; OnPropertyChanged("Connections"); } } }
 
+    private Int32 _HeapSize;
+    /// <summary>内存。单位M</summary>
+    [DisplayName("内存")]
+    [Description("内存。单位M")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("HeapSize", "内存。单位M", "")]
+    public Int32 HeapSize { get => _HeapSize; set { if (OnPropertyChanging("HeapSize", value)) { _HeapSize = value; OnPropertyChanged("HeapSize"); } } }
+
     private Double _GCPause;
     /// <summary>GC暂停。时间占比，百分之一</summary>
     [DisplayName("GC暂停")]
@@ -190,6 +198,7 @@ public partial class AppMeter
             "IOThreads" => _IOThreads,
             "Handles" => _Handles,
             "Connections" => _Connections,
+            "HeapSize" => _HeapSize,
             "GCPause" => _GCPause,
             "FullGC" => _FullGC,
             "Time" => _Time,
@@ -214,6 +223,7 @@ public partial class AppMeter
                 case "IOThreads": _IOThreads = value.ToInt(); break;
                 case "Handles": _Handles = value.ToInt(); break;
                 case "Connections": _Connections = value.ToInt(); break;
+                case "HeapSize": _HeapSize = value.ToInt(); break;
                 case "GCPause": _GCPause = value.ToDouble(); break;
                 case "FullGC": _FullGC = value.ToInt(); break;
                 case "Time": _Time = value.ToDateTime(); break;
@@ -283,6 +293,9 @@ public partial class AppMeter
         /// <summary>连接数</summary>
         public static readonly Field Connections = FindByName("Connections");
 
+        /// <summary>内存。单位M</summary>
+        public static readonly Field HeapSize = FindByName("HeapSize");
+
         /// <summary>GC暂停。时间占比，百分之一</summary>
         public static readonly Field GCPause = FindByName("GCPause");
 
@@ -342,6 +355,9 @@ public partial class AppMeter
 
         /// <summary>连接数</summary>
         public const String Connections = "Connections";
+
+        /// <summary>内存。单位M</summary>
+        public const String HeapSize = "HeapSize";
 
         /// <summary>GC暂停。时间占比，百分之一</summary>
         public const String GCPause = "GCPause";
