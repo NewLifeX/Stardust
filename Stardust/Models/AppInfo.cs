@@ -41,13 +41,16 @@ public class AppInfo : IPingRequest, ICloneable
     public DateTime StartTime { get; set; } = DateTime.Now;
 
     /// <summary>处理器时间。单位ms</summary>
-    public Int32 ProcessorTime { get; set; }
+    public Int64 ProcessorTime { get; set; }
 
     /// <summary>CPU负载。处理器时间除以物理时间的占比</summary>
     public Double CpuUsage { get; set; }
 
     /// <summary>物理内存</summary>
     public Int64 WorkingSet { get; set; }
+
+    /// <summary>堆大小</summary>
+    public Int64 HeapSize { get; set; }
 
     /// <summary>线程数</summary>
     public Int32 Threads { get; set; }
@@ -58,6 +61,15 @@ public class AppInfo : IPingRequest, ICloneable
     /// <summary>线程池可用IO线程数</summary>
     public Int32 IOThreads { get; set; }
 
+    /// <summary>线程池活跃线程数</summary>
+    public Int32 AvailableThreads { get; set; }
+
+    /// <summary>线程池挂起任务数</summary>
+    public Int64 PendingItems { get; set; }
+
+    /// <summary>线程池已完成任务数</summary>
+    public Int64 CompletedItems { get; set; }
+
     /// <summary>句柄数</summary>
     public Int32 Handles { get; set; }
 
@@ -67,11 +79,8 @@ public class AppInfo : IPingRequest, ICloneable
     /// <summary>网络端口监听信息</summary>
     public String? Listens { get; set; }
 
-    /// <summary>GC暂停时间占比，百分之一，最大值10</summary>
-    public Double GCPause { get; set; }
-
-    /// <summary>采样周期内发生的二代GC次数</summary>
-    public Int32 FullGC { get; set; }
+    /// <summary>采样周期内发生的GC次数</summary>
+    public Int32 GCCount { get; set; }
 
     /// <summary>本地UTC时间。ms毫秒</summary>
     public Int64 Time { get; set; }
@@ -107,7 +116,8 @@ public class AppInfo : IPingRequest, ICloneable
     #region 方法
     private Stopwatch? _stopwatch;
     private Int64 _last;
-    private Int32 _lastGC2;
+    private Int32 _lastGC;
+    private Int64 _lastCompleted;
 
     /// <summary>刷新进程相关信息</summary>
     public void Refresh()
@@ -128,6 +138,15 @@ public class AppInfo : IPingRequest, ICloneable
             ThreadPool.GetAvailableThreads(out var worker, out var io);
             WorkerThreads = worker;
             IOThreads = io;
+
+#if NETCOREAPP
+            // 增加采集线程池性能指标，活跃线程、挂起任务、已完成任务，主要用于辅助分析线程饥渴问题
+            AvailableThreads = ThreadPool.ThreadCount;
+            PendingItems = ThreadPool.PendingWorkItemCount;
+            var items = ThreadPool.CompletedWorkItemCount;
+            CompletedItems = items - _lastCompleted;
+            _lastCompleted = items;
+#endif
 
             if (Id == _pid)
                 CommandLine = Environment.CommandLine;
@@ -158,17 +177,17 @@ public class AppInfo : IPingRequest, ICloneable
             // 本进程才能采集GC数据
             if (Id == _pid)
             {
-#if NET5_0_OR_GREATER
+#if NETCOREAPP
                 var memory = GC.GetGCMemoryInfo();
-                GCPause = memory.PauseTimePercentage;
+                HeapSize = memory.HeapSizeBytes;
 #endif
-                var gc2 = GC.CollectionCount(2);
-                FullGC = gc2 - _lastGC2;
-                _lastGC2 = gc2;
+                var gc = GC.CollectionCount(0) + GC.CollectionCount(1) + GC.CollectionCount(2);
+                GCCount = gc - _lastGC;
+                _lastGC = gc;
             }
 
             if (_process != null)
-                ProcessorTime = (Int32)_process.TotalProcessorTime.TotalMilliseconds;
+                ProcessorTime = (Int64)_process.TotalProcessorTime.TotalMilliseconds;
 
             if (_stopwatch == null)
                 _stopwatch = Stopwatch.StartNew();

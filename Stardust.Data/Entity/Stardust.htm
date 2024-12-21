@@ -1104,7 +1104,7 @@
             <td></td>
             <td></td>
             <td>N</td>
-            <td>处理器时间，单位ms</td>
+            <td>处理器时间，单位s</td>
         </tr>
 
         <tr>
@@ -1152,6 +1152,39 @@
         </tr>
 
         <tr>
+            <td>AvailableThreads</td>
+            <td>活跃线程</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>线程池活跃线程数，辅助分析线程饥渴问题</td>
+        </tr>
+
+        <tr>
+            <td>PendingItems</td>
+            <td>挂起任务</td>
+            <td>Int64</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>线程池挂起任务数，辅助分析线程饥渴问题</td>
+        </tr>
+
+        <tr>
+            <td>CompletedItems</td>
+            <td>完成任务</td>
+            <td>Int64</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>线程池已完成任务数，辅助分析线程饥渴问题</td>
+        </tr>
+
+        <tr>
             <td>Handles</td>
             <td>句柄数</td>
             <td>Int32</td>
@@ -1174,25 +1207,25 @@
         </tr>
 
         <tr>
-            <td>GCPause</td>
-            <td>GC暂停</td>
-            <td>Double</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>时间占比，百分之一</td>
-        </tr>
-
-        <tr>
-            <td>FullGC</td>
-            <td>完全GC</td>
+            <td>GCCount</td>
+            <td>GC次数</td>
             <td>Int32</td>
             <td></td>
             <td></td>
             <td></td>
             <td>N</td>
-            <td>周期时间内发生二代GC的次数</td>
+            <td>周期时间内发生GC的次数</td>
+        </tr>
+
+        <tr>
+            <td>HeapSize</td>
+            <td>堆内存</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>单位M</td>
         </tr>
 
         <tr>

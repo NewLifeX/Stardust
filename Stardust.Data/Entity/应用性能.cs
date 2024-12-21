@@ -63,11 +63,11 @@ public partial class AppMeter
     public Int32 Memory { get => _Memory; set { if (OnPropertyChanging("Memory", value)) { _Memory = value; OnPropertyChanged("Memory"); } } }
 
     private Int32 _ProcessorTime;
-    /// <summary>处理器。处理器时间，单位ms</summary>
+    /// <summary>处理器。处理器时间，单位s</summary>
     [DisplayName("处理器")]
-    [Description("处理器。处理器时间，单位ms")]
+    [Description("处理器。处理器时间，单位s")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("ProcessorTime", "处理器。处理器时间，单位ms", "")]
+    [BindColumn("ProcessorTime", "处理器。处理器时间，单位s", "", ItemType = "TimeSpan")]
     public Int32 ProcessorTime { get => _ProcessorTime; set { if (OnPropertyChanging("ProcessorTime", value)) { _ProcessorTime = value; OnPropertyChanged("ProcessorTime"); } } }
 
     private Double _CpuUsage;
@@ -102,6 +102,30 @@ public partial class AppMeter
     [BindColumn("IOThreads", "IO线程。线程池可用IO线程数，主要是网络接收所用", "")]
     public Int32 IOThreads { get => _IOThreads; set { if (OnPropertyChanging("IOThreads", value)) { _IOThreads = value; OnPropertyChanged("IOThreads"); } } }
 
+    private Int32 _AvailableThreads;
+    /// <summary>活跃线程。线程池活跃线程数，辅助分析线程饥渴问题</summary>
+    [DisplayName("活跃线程")]
+    [Description("活跃线程。线程池活跃线程数，辅助分析线程饥渴问题")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("AvailableThreads", "活跃线程。线程池活跃线程数，辅助分析线程饥渴问题", "")]
+    public Int32 AvailableThreads { get => _AvailableThreads; set { if (OnPropertyChanging("AvailableThreads", value)) { _AvailableThreads = value; OnPropertyChanged("AvailableThreads"); } } }
+
+    private Int64 _PendingItems;
+    /// <summary>挂起任务。线程池挂起任务数，辅助分析线程饥渴问题</summary>
+    [DisplayName("挂起任务")]
+    [Description("挂起任务。线程池挂起任务数，辅助分析线程饥渴问题")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("PendingItems", "挂起任务。线程池挂起任务数，辅助分析线程饥渴问题", "")]
+    public Int64 PendingItems { get => _PendingItems; set { if (OnPropertyChanging("PendingItems", value)) { _PendingItems = value; OnPropertyChanged("PendingItems"); } } }
+
+    private Int64 _CompletedItems;
+    /// <summary>完成任务。线程池已完成任务数，辅助分析线程饥渴问题</summary>
+    [DisplayName("完成任务")]
+    [Description("完成任务。线程池已完成任务数，辅助分析线程饥渴问题")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("CompletedItems", "完成任务。线程池已完成任务数，辅助分析线程饥渴问题", "")]
+    public Int64 CompletedItems { get => _CompletedItems; set { if (OnPropertyChanging("CompletedItems", value)) { _CompletedItems = value; OnPropertyChanged("CompletedItems"); } } }
+
     private Int32 _Handles;
     /// <summary>句柄数</summary>
     [DisplayName("句柄数")]
@@ -118,21 +142,21 @@ public partial class AppMeter
     [BindColumn("Connections", "连接数", "")]
     public Int32 Connections { get => _Connections; set { if (OnPropertyChanging("Connections", value)) { _Connections = value; OnPropertyChanged("Connections"); } } }
 
-    private Double _GCPause;
-    /// <summary>GC暂停。时间占比，百分之一</summary>
-    [DisplayName("GC暂停")]
-    [Description("GC暂停。时间占比，百分之一")]
+    private Int32 _GCCount;
+    /// <summary>GC次数。周期时间内发生GC的次数</summary>
+    [DisplayName("GC次数")]
+    [Description("GC次数。周期时间内发生GC的次数")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("GCPause", "GC暂停。时间占比，百分之一", "")]
-    public Double GCPause { get => _GCPause; set { if (OnPropertyChanging("GCPause", value)) { _GCPause = value; OnPropertyChanged("GCPause"); } } }
+    [BindColumn("GCCount", "GC次数。周期时间内发生GC的次数", "")]
+    public Int32 GCCount { get => _GCCount; set { if (OnPropertyChanging("GCCount", value)) { _GCCount = value; OnPropertyChanged("GCCount"); } } }
 
-    private Int32 _FullGC;
-    /// <summary>完全GC。周期时间内发生二代GC的次数</summary>
-    [DisplayName("完全GC")]
-    [Description("完全GC。周期时间内发生二代GC的次数")]
+    private Int32 _HeapSize;
+    /// <summary>堆内存。单位M</summary>
+    [DisplayName("堆内存")]
+    [Description("堆内存。单位M")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("FullGC", "完全GC。周期时间内发生二代GC的次数", "")]
-    public Int32 FullGC { get => _FullGC; set { if (OnPropertyChanging("FullGC", value)) { _FullGC = value; OnPropertyChanged("FullGC"); } } }
+    [BindColumn("HeapSize", "堆内存。单位M", "")]
+    public Int32 HeapSize { get => _HeapSize; set { if (OnPropertyChanging("HeapSize", value)) { _HeapSize = value; OnPropertyChanged("HeapSize"); } } }
 
     private DateTime _Time;
     /// <summary>采集时间</summary>
@@ -188,10 +212,13 @@ public partial class AppMeter
             "Threads" => _Threads,
             "WorkerThreads" => _WorkerThreads,
             "IOThreads" => _IOThreads,
+            "AvailableThreads" => _AvailableThreads,
+            "PendingItems" => _PendingItems,
+            "CompletedItems" => _CompletedItems,
             "Handles" => _Handles,
             "Connections" => _Connections,
-            "GCPause" => _GCPause,
-            "FullGC" => _FullGC,
+            "GCCount" => _GCCount,
+            "HeapSize" => _HeapSize,
             "Time" => _Time,
             "Creator" => _Creator,
             "CreateTime" => _CreateTime,
@@ -212,10 +239,13 @@ public partial class AppMeter
                 case "Threads": _Threads = value.ToInt(); break;
                 case "WorkerThreads": _WorkerThreads = value.ToInt(); break;
                 case "IOThreads": _IOThreads = value.ToInt(); break;
+                case "AvailableThreads": _AvailableThreads = value.ToInt(); break;
+                case "PendingItems": _PendingItems = value.ToLong(); break;
+                case "CompletedItems": _CompletedItems = value.ToLong(); break;
                 case "Handles": _Handles = value.ToInt(); break;
                 case "Connections": _Connections = value.ToInt(); break;
-                case "GCPause": _GCPause = value.ToDouble(); break;
-                case "FullGC": _FullGC = value.ToInt(); break;
+                case "GCCount": _GCCount = value.ToInt(); break;
+                case "HeapSize": _HeapSize = value.ToInt(); break;
                 case "Time": _Time = value.ToDateTime(); break;
                 case "Creator": _Creator = Convert.ToString(value); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -262,7 +292,7 @@ public partial class AppMeter
         /// <summary>内存。单位M</summary>
         public static readonly Field Memory = FindByName("Memory");
 
-        /// <summary>处理器。处理器时间，单位ms</summary>
+        /// <summary>处理器。处理器时间，单位s</summary>
         public static readonly Field ProcessorTime = FindByName("ProcessorTime");
 
         /// <summary>CPU负载。处理器时间除以物理时间的占比</summary>
@@ -277,17 +307,26 @@ public partial class AppMeter
         /// <summary>IO线程。线程池可用IO线程数，主要是网络接收所用</summary>
         public static readonly Field IOThreads = FindByName("IOThreads");
 
+        /// <summary>活跃线程。线程池活跃线程数，辅助分析线程饥渴问题</summary>
+        public static readonly Field AvailableThreads = FindByName("AvailableThreads");
+
+        /// <summary>挂起任务。线程池挂起任务数，辅助分析线程饥渴问题</summary>
+        public static readonly Field PendingItems = FindByName("PendingItems");
+
+        /// <summary>完成任务。线程池已完成任务数，辅助分析线程饥渴问题</summary>
+        public static readonly Field CompletedItems = FindByName("CompletedItems");
+
         /// <summary>句柄数</summary>
         public static readonly Field Handles = FindByName("Handles");
 
         /// <summary>连接数</summary>
         public static readonly Field Connections = FindByName("Connections");
 
-        /// <summary>GC暂停。时间占比，百分之一</summary>
-        public static readonly Field GCPause = FindByName("GCPause");
+        /// <summary>GC次数。周期时间内发生GC的次数</summary>
+        public static readonly Field GCCount = FindByName("GCCount");
 
-        /// <summary>完全GC。周期时间内发生二代GC的次数</summary>
-        public static readonly Field FullGC = FindByName("FullGC");
+        /// <summary>堆内存。单位M</summary>
+        public static readonly Field HeapSize = FindByName("HeapSize");
 
         /// <summary>采集时间</summary>
         public static readonly Field Time = FindByName("Time");
@@ -322,7 +361,7 @@ public partial class AppMeter
         /// <summary>内存。单位M</summary>
         public const String Memory = "Memory";
 
-        /// <summary>处理器。处理器时间，单位ms</summary>
+        /// <summary>处理器。处理器时间，单位s</summary>
         public const String ProcessorTime = "ProcessorTime";
 
         /// <summary>CPU负载。处理器时间除以物理时间的占比</summary>
@@ -337,17 +376,26 @@ public partial class AppMeter
         /// <summary>IO线程。线程池可用IO线程数，主要是网络接收所用</summary>
         public const String IOThreads = "IOThreads";
 
+        /// <summary>活跃线程。线程池活跃线程数，辅助分析线程饥渴问题</summary>
+        public const String AvailableThreads = "AvailableThreads";
+
+        /// <summary>挂起任务。线程池挂起任务数，辅助分析线程饥渴问题</summary>
+        public const String PendingItems = "PendingItems";
+
+        /// <summary>完成任务。线程池已完成任务数，辅助分析线程饥渴问题</summary>
+        public const String CompletedItems = "CompletedItems";
+
         /// <summary>句柄数</summary>
         public const String Handles = "Handles";
 
         /// <summary>连接数</summary>
         public const String Connections = "Connections";
 
-        /// <summary>GC暂停。时间占比，百分之一</summary>
-        public const String GCPause = "GCPause";
+        /// <summary>GC次数。周期时间内发生GC的次数</summary>
+        public const String GCCount = "GCCount";
 
-        /// <summary>完全GC。周期时间内发生二代GC的次数</summary>
-        public const String FullGC = "FullGC";
+        /// <summary>堆内存。单位M</summary>
+        public const String HeapSize = "HeapSize";
 
         /// <summary>采集时间</summary>
         public const String Time = "Time";

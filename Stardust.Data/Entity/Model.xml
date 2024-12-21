@@ -167,15 +167,18 @@
         <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@proccessid" />
         <Column Name="Source" DataType="String" Description="来源。数据来源，应用心跳、监控数据上报携带、远程发布后由StarAgent上报" />
         <Column Name="Memory" DataType="Int32" Description="内存。单位M" />
-        <Column Name="ProcessorTime" DataType="Int32" Description="处理器。处理器时间，单位ms" />
+        <Column Name="ProcessorTime" DataType="Int32" ItemType="TimeSpan" Description="处理器。处理器时间，单位s" />
         <Column Name="CpuUsage" DataType="Double" ItemType="percent" Description="CPU负载。处理器时间除以物理时间的占比" />
         <Column Name="Threads" DataType="Int32" Description="线程数" />
         <Column Name="WorkerThreads" DataType="Int32" Description="工作线程。线程池可用工作线程数，主要是Task使用" />
         <Column Name="IOThreads" DataType="Int32" Description="IO线程。线程池可用IO线程数，主要是网络接收所用" />
+        <Column Name="AvailableThreads" DataType="Int32" Description="活跃线程。线程池活跃线程数，辅助分析线程饥渴问题" />
+        <Column Name="PendingItems" DataType="Int64" Description="挂起任务。线程池挂起任务数，辅助分析线程饥渴问题" />
+        <Column Name="CompletedItems" DataType="Int64" Description="完成任务。线程池已完成任务数，辅助分析线程饥渴问题" />
         <Column Name="Handles" DataType="Int32" Description="句柄数" />
         <Column Name="Connections" DataType="Int32" Description="连接数" />
-        <Column Name="GCPause" DataType="Double" Description="GC暂停。时间占比，百分之一" />
-        <Column Name="FullGC" DataType="Int32" Description="完全GC。周期时间内发生二代GC的次数" />
+        <Column Name="GCCount" DataType="Int32" Description="GC次数。周期时间内发生GC的次数" />
+        <Column Name="HeapSize" DataType="Int32" Description="堆内存。单位M" />
         <Column Name="Time" DataType="DateTime" Description="采集时间" />
         <Column Name="Creator" DataType="String" Description="创建者。服务端节点" Category="扩展" />
         <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
