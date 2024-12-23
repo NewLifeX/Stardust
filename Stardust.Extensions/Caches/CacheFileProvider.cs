@@ -236,6 +236,7 @@ class CacheFileProvider : IFileProvider
 
     async Task<String?> DownloadDirectory(String subpath, String fullPath, String[] svrs)
     {
+        subpath = subpath.TrimEnd('/');
         var span = DefaultSpan.Current;
         foreach (var item in svrs)
         {
@@ -256,7 +257,7 @@ class CacheFileProvider : IFileProvider
                     Name = HttpUtility.UrlDecode(e.FullName + ""),
                     LastModified = e.Time.Year > 2000 ? e.Time : DateTime.Now,
                     Exists = true,
-                    IsDirectory = false,
+                    IsDirectory = e.Hash.IsNullOrEmpty(),
                 }).ToList();
 
                 var csv = new CsvDb<FileInfoModel> { FileName = fullPath };
