@@ -125,8 +125,8 @@ public class StarTracer : DefaultTracer
         var client = Client;
         if (client == null) return;
 
-        // 构建应用信息
-        if (EnableMeter)
+        // 构建应用信息。如果应用心跳已存在，则监控上报时不需要携带应用性能信息
+        if (EnableMeter && Client is not ClientBase)
         {
             if (_appInfo == null)
                 _appInfo = new AppInfo(_process) { Version = _version };
