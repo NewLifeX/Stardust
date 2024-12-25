@@ -62,6 +62,9 @@ internal class ServiceController : DisposeBase
     /// <summary>事件客户端</summary>
     public IEventProvider? EventProvider { get; set; }
 
+    /// <summary>是否引用了星尘SDK的APP。这类APP自带性能上报，无需Deploy上报</summary>
+    public Boolean IsStarApp { get; set; }
+
     private String? _fileName;
     private String? _workdir;
     private TimerX? _timer;
@@ -148,24 +151,29 @@ internal class ServiceController : DisposeBase
                     case ServiceModes.Multiple:
                         break;
                     case ServiceModes.Extract:
-                        WriteLog("解压后不运行，外部主机（如IIS）将托管应用");
-                        Extract(src, args, workDir, false);
-                        Running = true;
-                        return true;
+                        {
+                            WriteLog("解压后不运行，外部主机（如IIS）将托管应用");
+                            var deploy = Extract(src, args, workDir, false);
+                            CheckStarApp(deploy.Shadow, workDir);
+                            Running = true;
+                            return true;
+                        }
                     case ServiceModes.ExtractAndRun:
-                        WriteLog("解压后在工作目录运行");
-                        var deploy = Extract(src, args, workDir, false);
-                        if (deploy == null) throw new Exception("解压缩失败");
+                        {
+                            WriteLog("解压后在工作目录运行");
+                            var deploy = Extract(src, args, workDir, false);
+                            if (deploy == null) throw new Exception("解压缩失败");
 
-                        //file ??= deploy.ExecuteFile;
-                        var runfile = deploy.FindExeFile(workDir);
-                        file = runfile?.FullName;
-                        if (file.IsNullOrEmpty()) throw new Exception("无法找到启动文件");
+                            //file ??= deploy.ExecuteFile;
+                            var runfile = deploy.FindExeFile(workDir);
+                            file = runfile?.FullName;
+                            if (file.IsNullOrEmpty()) throw new Exception("无法找到启动文件");
 
-                        args = deploy.Arguments;
-                        //_fileName = deploy.ExecuteFile;
-                        isZip = false;
-                        break;
+                            args = deploy.Arguments;
+                            //_fileName = deploy.ExecuteFile;
+                            isZip = false;
+                            break;
+                        }
                     case ServiceModes.RunOnce:
                         //service.Enable = false;
                         break;
@@ -181,6 +189,7 @@ internal class ServiceController : DisposeBase
                 if (p == null) return false;
 
                 WriteLog("启动成功 PID={0}/{1}", p.Id, p.ProcessName);
+                CheckStarApp(Path.GetDirectoryName(_fileName), workDir);
 
                 if (service.Mode == ServiceModes.RunOnce)
                 {
@@ -244,6 +253,7 @@ internal class ServiceController : DisposeBase
         //deploy.Extract(workDir);
         // 要解压缩到影子目录，否则可能会把appsettings.json等配置文件覆盖。用完后删除
         var shadow = deploy.CreateShadow($"{deploy.Name}-{DateTime.Now:yyyyMMddHHmmss}");
+        deploy.Shadow = shadow;
         deploy.Extract(shadow, CopyModes.ClearBeforeCopy, CopyModes.SkipExists, CopyModes.Overwrite);
         try
         {
@@ -437,6 +447,22 @@ internal class ServiceController : DisposeBase
         return p;
     }
 
+    private void CheckStarApp(String exeDir, String workDir)
+    {
+        // 是否引用了星尘SDK的APP。这类APP自带性能上报，无需Deploy上报
+        IsStarApp = false;
+        var starFile = exeDir.CombinePath("Stardust.dll").GetFullPath();
+        if (File.Exists(starFile))
+        {
+            IsStarApp = true;
+        }
+        else
+        {
+            starFile = workDir.CombinePath("Stardust.dll").GetFullPath();
+            if (File.Exists(starFile)) IsStarApp = true;
+        }
+    }
+
     /// <summary>停止应用，等待一会确认进程已退出</summary>
     /// <param name="reason"></param>
     public void Stop(String reason)
@@ -602,7 +628,7 @@ internal class ServiceController : DisposeBase
 
         // 检测并上报性能
         p = Process;
-        if (p != null && EventProvider is StarClient client)
+        if (p != null && EventProvider is StarClient client && !IsStarApp)
         {
             if (_appInfo == null || _appInfo.Id != p.Id)
                 _appInfo = new AppInfo(p) { AppName = inf.Name };
