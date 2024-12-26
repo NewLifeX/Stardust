@@ -67,7 +67,7 @@ public class LogController : ControllerBase
                             sb.AppendLine(lines[j]);
                             i++;
                         }
-                        msg = sb.Put(true);
+                        msg = sb.Return(true);
 
                         AppClientLog.Create(app.Id, clientId, ss, msg, ip);
                         sb.Clear();

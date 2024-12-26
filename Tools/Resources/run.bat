@@ -1,7 +1,7 @@
 
 echo "Run Stardust on Windows"
 
-clover40.exe net9-aspnet -silent
+clover40.exe net8-host -silent
 
 start agent\StarAgent.exe -run -server http://127.0.0.1:6600
 

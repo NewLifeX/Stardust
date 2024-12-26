@@ -19,7 +19,7 @@ move %base%\StarWeb.zip %out%\StarWeb.zip
 
 set out=%base%\agent
 rmdir /s/q %out%
-dotnet publish ..\StarAgent\StarAgent.csproj --nologo -c Release -f net9.0 -o %out%
+dotnet publish ..\StarAgent\StarAgent.csproj --nologo -c Release -f net8.0 -o %out%
 del /f/s/q %out%\*.pdb %out%\*.xml %out%\*.deps.json
 
 mkdir %out%\Config
@@ -30,7 +30,6 @@ xcopy Resources\*.sh %base%\ /y/s
 copy clover40.exe %base%\clover40.exe /y
 
 mkdir %base%\Plugins
-xcopy Resources\Plugins\*.dll %base%\Plugins\ /y/s
 
 del %base%\..\star.zip /f
 clover80.exe zip %base%\..\star.zip %base%\
