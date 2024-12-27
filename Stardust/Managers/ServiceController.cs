@@ -412,6 +412,7 @@ internal class ServiceController : DisposeBase
             // 交互模式直接运行
             if (Environment.UserInteractive)
             {
+                si.UserName = null;
                 p = Process.Start(si);
             }
             else
