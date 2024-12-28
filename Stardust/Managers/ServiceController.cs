@@ -407,7 +407,7 @@ internal class ServiceController : DisposeBase
         Process? p = null;
 
         // Windows桌面用户运行
-        if (Runtime.Windows && service.UserName == "$")
+        if (Runtime.Windows && (service.UserName == "$" || service.UserName == "$$"))
         {
             // 交互模式直接运行
             if (Environment.UserInteractive)
@@ -419,7 +419,7 @@ internal class ServiceController : DisposeBase
             {
                 // 桌面用户运行
                 var desktop = new Desktop { Log = Log };
-                var pid = desktop.StartProcess(si.FileName, si.Arguments, si.WorkingDirectory);
+                var pid = desktop.StartProcess(si.FileName, si.Arguments, si.WorkingDirectory, service.UserName == "$$", true);
                 p = Process.GetProcessById((Int32)pid);
             }
         }
