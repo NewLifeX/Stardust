@@ -350,7 +350,9 @@ public class NodeService
             {
                 var dims = diskid?.Split(",") ?? [];
                 var nodems = node.DiskID?.Split(",") ?? [];
-                if (dims != null && nodems != null) n += dims.Count(e => nodems.Contains(e));
+                //if (dims != null && nodems != null) n += dims.Count(e => nodems.Contains(e));
+                // 在虚拟机云服务器中，磁盘序列化可能大范围一致，因此只计算一个匹配
+                if (dims != null && nodems != null && dims.Any(e => nodems.Contains(e))) n++;
             }
 
             if (n >= level) rs.Add(10 - n, node);
