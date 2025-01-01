@@ -254,6 +254,8 @@ public class StarFactory : DisposeBase
         container.AddSingleton(this);
         container.AddSingleton(p => Tracer ?? DefaultTracer.Instance ?? (DefaultTracer.Instance ??= new DefaultTracer()));
         container.AddSingleton(p => Service!);
+        container.AddSingleton(p => (p.GetService<IRegistry>() as IEventProvider)!);
+        container.AddSingleton(p => (p.GetService<IRegistry>() as ICommandClient)!);
 
         // 替换为混合配置提供者，优先本地配置
         container.AddSingleton(p => GetConfig()!);
