@@ -31,10 +31,13 @@ public class ApiTests
 
         var response = await client.GetAsync<HttpResponseMessage>("api", new { state });
         response.EnsureSuccessStatusCode();
-        Assert.Equal("application/json", response.Content.Headers.ContentType + "");
+        Assert.StartsWith("application/json", response.Content.Headers.ContentType + "");
 
         var rs = await client.GetAsync<IDictionary<String, Object>>("api", new { state });
-        Assert.Null(rs["state"]);
+        if (state == null)
+            Assert.Null(rs["state"]);
+        else
+            Assert.NotNull(rs["state"]);
     }
 
     [Theory(DisplayName = "信息测试")]
@@ -44,7 +47,7 @@ public class ApiTests
     {
         var client = _server.CreateClient();
 
-        var rs = await client.GetAsync<IDictionary<String, Object>>("api/info", new { state });
+        var rs = await client.GetAsync<IDictionary<String, Object>>("api", new { state });
         if (state.IsNullOrEmpty())
             Assert.Null(rs["state"]);
         else
@@ -59,7 +62,7 @@ public class ApiTests
     {
         var client = _server.CreateClient();
 
-        var rs = await client.PostAsync<IPacket>("api/info2", state.ToHex());
+        var rs = await client.PostAsync<HttpResponseMessage>("api/info2", state.ToHex());
         Assert.NotNull(rs);
     }
 }

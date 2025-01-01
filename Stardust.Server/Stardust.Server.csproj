@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -6,7 +6,7 @@
     <AssemblyTitle>星尘服务平台</AssemblyTitle>
     <Description>星尘，分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
     <Company>新生命开发团队</Company>
-    <Copyright>©2002-2024 NewLife</Copyright>
+    <Copyright>©2002-2025 NewLife</Copyright>
     <VersionPrefix>3.0</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
@@ -45,8 +45,8 @@
 
   <ItemGroup>
     <PackageReference Include="NewLife.IP" Version="2.2.2024.1208-beta0035" />
-    <PackageReference Include="NewLife.Redis" Version="6.0.2024.1225-beta1617" />
-    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.2.2024.1225-beta1616" />
+    <PackageReference Include="NewLife.Redis" Version="6.0.2025.101" />
+    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.2.2025.101" />
   </ItemGroup>
 
   <ItemGroup>

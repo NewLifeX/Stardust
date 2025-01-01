@@ -171,8 +171,8 @@ public partial class GalaxyProject : Entity<GalaxyProject>, ITenantSource
     /// <returns></returns>
     public Boolean MatchIp(String ip)
     {
-        if (ip.IsNullOrEmpty()) return false;
         if (WhiteIPs.IsNullOrEmpty() && BlackIPs.IsNullOrEmpty()) return true;
+        if (ip.IsNullOrEmpty()) return false;
 
         // 黑名单优先，黑名单里面有的，直接拒绝
         var bs = (BlackIPs + "").Split(",", ";");

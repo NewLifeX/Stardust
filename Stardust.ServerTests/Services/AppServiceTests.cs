@@ -37,7 +37,7 @@ public class AppServiceTests
         Assert.Equal(app.Id, rs.Id);
 
         // 错误验证
-        Assert.Throws<InvalidOperationException>(() => service.Authorize("test", "yyy", true));
+        Assert.Throws<ApiException>(() => service.Authorize("test", "yyy", true));
     }
 
     [Fact]

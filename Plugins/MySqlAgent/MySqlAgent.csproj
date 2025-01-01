@@ -5,7 +5,7 @@
     <AssemblyTitle>MySql助手</AssemblyTitle>
     <Description>监控MySql性能，上报星尘平台</Description>
     <Company>新生命开发团队</Company>
-    <Copyright>©2002-2024 NewLife</Copyright>
+    <Copyright>©2002-2025 NewLife</Copyright>
     <VersionPrefix>1.0</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
@@ -20,7 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.XCode" Version="11.17.2024.1230-beta0602" />
+    <PackageReference Include="NewLife.XCode" Version="11.17.2025.101" />
   </ItemGroup>
 
   <ItemGroup>

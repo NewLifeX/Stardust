@@ -85,6 +85,7 @@ public class StarFactoryTests
     public void IocTest()
     {
         using var star = new StarFactory("http://127.0.0.1:6600", "test", null);
+        star.Register(ObjectContainer.Current);
 
         var provider = ObjectContainer.Provider;
 

@@ -5,7 +5,7 @@
     <AssemblyTitle>网络监测</AssemblyTitle>
     <Description>检测网络，如果长期不可用，则重启系统，主要应用于嵌入式工控机</Description>
     <Company>新生命开发团队</Company>
-    <Copyright>©2002-2024 NewLife</Copyright>
+    <Copyright>©2002-2025 NewLife</Copyright>
     <VersionPrefix>1.0</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
