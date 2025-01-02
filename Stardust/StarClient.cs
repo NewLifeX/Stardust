@@ -361,6 +361,7 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
                     // 清空原有链接，添加新链接
                     Server = prs.NewServer;
                     Client = null;
+                    Status = LoginStatus.Ready;
 
                     await Login(cancellationToken).ConfigureAwait(false);
                 }
