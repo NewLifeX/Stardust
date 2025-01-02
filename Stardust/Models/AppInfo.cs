@@ -135,21 +135,24 @@ public class AppInfo : IPingRequest, ICloneable
                 Handles = _process.HandleCount;
             }
 
-            ThreadPool.GetAvailableThreads(out var worker, out var io);
-            WorkerThreads = worker;
-            IOThreads = io;
+            // 本进程才能采集线程池信息
+            if (Id == _pid)
+            {
+                CommandLine = Environment.CommandLine;
+
+                ThreadPool.GetAvailableThreads(out var worker, out var io);
+                WorkerThreads = worker;
+                IOThreads = io;
 
 #if NETCOREAPP
-            // 增加采集线程池性能指标，活跃线程、挂起任务、已完成任务，主要用于辅助分析线程饥渴问题
-            AvailableThreads = ThreadPool.ThreadCount;
-            PendingItems = ThreadPool.PendingWorkItemCount;
-            var items = ThreadPool.CompletedWorkItemCount;
-            CompletedItems = items - _lastCompleted;
-            _lastCompleted = items;
+                // 增加采集线程池性能指标，活跃线程、挂起任务、已完成任务，主要用于辅助分析线程饥渴问题
+                AvailableThreads = ThreadPool.ThreadCount;
+                PendingItems = ThreadPool.PendingWorkItemCount;
+                var items = ThreadPool.CompletedWorkItemCount;
+                CompletedItems = items - _lastCompleted;
+                _lastCompleted = items;
 #endif
-
-            if (Id == _pid)
-                CommandLine = Environment.CommandLine;
+            }
 
             UserName = Environment.UserName;
             MachineName = Environment.MachineName;

@@ -15,7 +15,7 @@ namespace Stardust.Managers;
 /// <summary>
 /// 应用服务控制器
 /// </summary>
-internal class ServiceController : DisposeBase
+public class ServiceController : DisposeBase
 {
     #region 属性
     static Int32 _gid = 0;

@@ -117,6 +117,16 @@ public class ServiceManager : DisposeBase
         return count;
     }
 
+    /// <summary>根据进程查找应用服务控制器</summary>
+    /// <param name="processId"></param>
+    /// <returns></returns>
+    public ServiceController QueryByProcess(Int32 processId)
+    {
+        if (processId <= 0) return null;
+
+        return _controllers.FirstOrDefault(e => e.ProcessId == processId);
+    }
+
     /// <summary>开始管理，拉起应用进程</summary>
     public void Start()
     {

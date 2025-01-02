@@ -85,6 +85,14 @@ public class StarService : DisposeBase, IApi
         ai.Code = AgentSetting.Code;
         ai.IP = AgentInfo.GetIps();
 
+        // 更新应用服务
+        var controller = Manager?.QueryByProcess(info.ProcessId);
+        if (controller != null)
+        {
+            // 标记为星尘应用，停止Deploy上报进程信息
+            controller.IsStarApp = true;
+        }
+
         // 返回插件服务器地址
         var core = NewLife.Setting.Current;
         if (!core.PluginServer.IsNullOrEmpty() && !core.PluginServer.Contains("x.newlifex.com"))
