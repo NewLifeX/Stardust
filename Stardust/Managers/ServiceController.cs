@@ -498,7 +498,7 @@ internal class ServiceController : DisposeBase
         if (!p.GetHasExited())
         {
             WriteLog("优雅退出进程：PID={0}/{1}，最大等待{2}毫秒", p.Id, p.ProcessName, 50 * 200);
-            p.SafetyKill(50, 200);
+            p.SafetyKill(5_000, 50, 200);
         }
 
         try
