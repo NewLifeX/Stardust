@@ -356,7 +356,7 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
                 OnMigration?.Invoke(this, arg);
                 if (!arg.Cancel)
                 {
-                    await Logout("切换新服务器", cancellationToken).ConfigureAwait(false);
+                    await Logout($"切换新服务器：{prs.NewServer}，原服务器：{Server}", cancellationToken).ConfigureAwait(false);
 
                     // 清空原有链接，添加新链接
                     Server = prs.NewServer;
