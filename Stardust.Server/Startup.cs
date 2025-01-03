@@ -1,15 +1,14 @@
 ﻿using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Caching.Services;
 using NewLife.IP;
 using NewLife.Log;
 using NewLife.Remoting.Extensions;
-using NewLife.Security;
 using NewLife.Serialization;
+using Stardust.Data.Monitors;
 using Stardust.Data.Nodes;
 using Stardust.Extensions.Caches;
 using Stardust.Monitors;
@@ -124,10 +123,10 @@ public class Startup
         var tracer = app.ApplicationServices.GetRequiredService<ITracer>();
         using var span = tracer?.NewSpan(nameof(Configure));
 
-        // 调整应用表名
+        // 调整应用表名。兼容2021年之前的版本
         FixAppTableName();
 
-        // 初始化数据库连接
+        // 初始化数据库连接。兼容2021年之前的版本
         var conns = DAL.ConnStrs;
         if (!conns.ContainsKey("StardustData"))
         {
@@ -160,6 +159,9 @@ public class Startup
         {
             app.UseDeveloperExceptionPage();
         }
+
+        // 调整自动分表表名。20250103起使用新的分表格式，固定31张表
+        ShardTableService.FixShardTable();
 
         // 缓存运行时安装文件
         var set = StarServerSetting.Current;

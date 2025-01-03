@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -21,7 +21,7 @@ namespace Stardust.Data
             Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
             {
                 ConnPolicy = "{0}_{1:yyyyMM}",
-                TablePolicy = "{0}_{1:yyyyMMdd}",
+                TablePolicy = "{0}_{1:dd}",
             };
 
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx

@@ -22,7 +22,7 @@ public partial class TraceData : Entity<TraceData>
         Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
         {
             ConnPolicy = "{0}",
-            TablePolicy = "{0}_{1:yyyyMMdd}",
+            TablePolicy = "{0}_{1:dd}",
             Step = TimeSpan.FromDays(1),
         };
 
@@ -371,11 +371,8 @@ public partial class TraceData : Entity<TraceData>
         var snow = Meta.Factory.Snow;
         var whereExp = _.Id < snow.GetId(date);
 
-        // 使用底层接口，加大执行时间
-        var session = Meta.Session;
-        using var cmd = session.Dal.Session.CreateCommand($"Delete From {session.FormatedTableName} Where {whereExp}");
-        cmd.CommandTimeout = 5 * 60;
-        return session.Dal.Session.Execute(cmd);
+        // 使用底层接口，分批删除
+        return Delete(whereExp);
     }
     #endregion
 }

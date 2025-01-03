@@ -134,7 +134,7 @@
     </Table>
     <Table Name="TraceData" Description="跟踪数据。应用定时上报采样得到的埋点追踪原始数据，应用端已完成初步统计，后端将再次向上汇总" ConnName="StardustData">
       <Columns>
-        <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="timeShard:yyyyMMdd" Description="编号" />
+        <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="timeShard:dd" Description="编号" />
         <Column Name="StatDate" DataType="DateTime" Description="统计日期" />
         <Column Name="StatHour" DataType="DateTime" Description="统计小时" />
         <Column Name="StatMinute" DataType="DateTime" Description="统计分钟" />
@@ -168,7 +168,7 @@
     </Table>
     <Table Name="SampleData" Description="采样数据。具体调用或异常详情，每次追踪统计携带少量样板，用于链路分析以及异常追踪" ConnName="StardustData">
       <Columns>
-        <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="timeShard:yyyyMMdd" Description="编号" />
+        <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="timeShard:dd" Description="编号" />
         <Column Name="DataId" DataType="Int64" Description="数据" />
         <Column Name="ItemId" DataType="Int32" Description="跟踪项" />
         <Column Name="Success" DataType="Boolean" Description="正常" />
