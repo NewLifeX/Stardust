@@ -32,6 +32,11 @@ public partial class TraceData : Entity<TraceData>
 
         // 过滤器 UserModule、TimeModule、IPModule
         Meta.Modules.Add<TimeModule>();
+
+        // 针对Mysql启用压缩表
+        var table = Meta.Table.DataTable;
+        table.Properties["ROW_FORMAT"] = "COMPRESSED";
+        table.Properties["KEY_BLOCK_SIZE"] = "4";
     }
 
     /// <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>

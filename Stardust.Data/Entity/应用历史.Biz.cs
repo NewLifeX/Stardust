@@ -7,7 +7,6 @@ using NewLife;
 using NewLife.Data;
 using NewLife.Log;
 using XCode;
-using XCode.Membership;
 
 namespace Stardust.Data;
 
@@ -23,6 +22,11 @@ public partial class AppHistory : Entity<AppHistory>
         Meta.Modules.Add<UserModule>();
         Meta.Modules.Add<TimeModule>();
         Meta.Modules.Add<IPModule>();
+
+        // 针对Mysql启用压缩表
+        var table = Meta.Table.DataTable;
+        table.Properties["ROW_FORMAT"] = "COMPRESSED";
+        table.Properties["KEY_BLOCK_SIZE"] = "4";
     }
 
     /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>

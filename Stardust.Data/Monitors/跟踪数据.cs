@@ -33,7 +33,7 @@ public partial class TraceData
     [DisplayName("编号")]
     [Description("编号")]
     [DataObjectField(true, false, false, 0)]
-    [BindColumn("Id", "编号", "", DataScale = "timeShard:yyyyMMdd")]
+    [BindColumn("Id", "编号", "", DataScale = "timeShard:dd")]
     public Int64 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
     private DateTime _StatDate;
