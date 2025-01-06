@@ -85,11 +85,11 @@ public class ShardTableService : IHostedService
                 {
                     foreach (var dt in ts)
                     {
-                        dal.Execute($"Alter Table {dt.TableName} ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=4");
+                        if (!tnames.Any(e => e.EqualIgnoreCase(dt.TableName, dt.Name)))
+                            dal.Execute($"Alter Table {dt.TableName} ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=4");
                     }
                 }
             }
-
 
             // 如果保留时间超过了31天，则使用删除功能清理历史数据，否则使用truncate
             if (days > 31)
@@ -121,6 +121,12 @@ public class ShardTableService : IHostedService
                             else
                                 dal.Execute($"Truncate Table {name}");
                             //dal.Session.Truncate(name);
+
+                            // 清理数据后，设置为压缩表
+                            if (dal.DbType == DatabaseType.MySql)
+                            {
+                                dal.Execute($"Alter Table {name} ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=4");
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -137,6 +143,12 @@ public class ShardTableService : IHostedService
                             else
                                 dal.Execute($"Truncate Table {name}");
                             //dal.Session.Truncate(name);
+
+                            // 清理数据后，设置为压缩表
+                            if (dal.DbType == DatabaseType.MySql)
+                            {
+                                dal.Execute($"Alter Table {name} ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=4");
+                            }
                         }
                         catch (Exception ex)
                         {
