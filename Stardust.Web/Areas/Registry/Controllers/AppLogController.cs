@@ -1,4 +1,5 @@
-﻿using NewLife.Cube;
+﻿using NewLife;
+using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data;
 using XCode.Membership;

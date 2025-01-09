@@ -1,4 +1,5 @@
-﻿using NewLife.Cube;
+﻿using NewLife;
+using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Web;
 using Stardust.Data.Nodes;
