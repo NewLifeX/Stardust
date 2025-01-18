@@ -20,6 +20,7 @@ using Stardust.Server;
 using Stardust.Data.Platform;
 using Stardust.Data.Monitors;
 using NewLife.Threading;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace Stardust.Web;
 
@@ -71,6 +72,11 @@ public class Startup
         services.Configure<KestrelServerOptions>(options =>
         {
             options.Limits.MaxRequestBodySize = Int32.MaxValue;
+        });
+        // 取消表单上传包大小限制
+        services.Configure<FormOptions>(options =>
+        {
+            options.MultipartBodyLengthLimit = Int64.MaxValue;
         });
         services.Configure<IISServerOptions>(options =>
         {
