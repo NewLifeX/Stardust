@@ -571,7 +571,12 @@ public class ZipDeploy
             var name = $"{Name}.dll";
             runfile = fis.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
         }
-
+        // 指定名称jar
+        if (runfile == null)
+        {
+            var name = $"{Name}.jar";
+            runfile = fis.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
+        }
         if (runfile != null) span?.AppendTag(runfile.FullName);
 
         return runfile;
