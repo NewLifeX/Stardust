@@ -57,7 +57,7 @@ public class DeployService
             var deployName = deployNode.DeployName;
             if (deployName.IsNullOrEmpty()) deployName = app?.Name;
 
-            var args = new { deployNode.Id, DeployName = deployName, AppName = deployName }.ToJson();
+            var args = new { deployNode.Id, DeployName = deployName, AppName = app?.Name }.ToJson();
             msg = args;
 
             await _starFactory.SendNodeCommand(deployNode.Node.Code, action, args, deployNode.Delay, 60, timeout);
