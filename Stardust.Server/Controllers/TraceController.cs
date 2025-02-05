@@ -1,7 +1,6 @@
 ﻿using System.IO.Compression;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
-using NewLife.Collections;
 using NewLife.Log;
 using NewLife.Remoting.Extensions;
 using NewLife.Serialization;
@@ -87,25 +86,24 @@ public class TraceController : ControllerBase
 
     [ApiFilter]
     [HttpPost(nameof(ReportRaw))]
-    public TraceResponse ReportRaw(String token)
+    public async Task<TraceResponse> ReportRaw(String token)
     {
         var req = Request;
         if (req.ContentLength <= 0) return null;
 
-        // 从池里或者内存流，对数据进行解压缩
-        var ms = Pool.MemoryStream.Get();
+        var ms = new MemoryStream();
         if (req.ContentType == "application/x-gzip")
         {
             using var gs = new GZipStream(req.Body, CompressionMode.Decompress);
-            gs.CopyTo(ms);
+            await gs.CopyToAsync(ms);
         }
         else
         {
-            req.Body.CopyTo(ms);
+            await req.Body.CopyToAsync(ms);
         }
 
         ms.Position = 0;
-        var body = ms.Return(true).ToStr();
+        var body = ms.ToStr();
         var model = body.ToJsonEntity<TraceModel>();
 
         return Report(model, token);
