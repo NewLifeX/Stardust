@@ -184,6 +184,14 @@ public partial class AppTracer
     [BindColumn("VipClients", "Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配", "")]
     public String VipClients { get => _VipClients; set { if (OnPropertyChanging("VipClients", value)) { _VipClients = value; OnPropertyChanged("VipClients"); } } }
 
+    private String _WebHook;
+    /// <summary>钩子地址。监控数据转发给目标接口</summary>
+    [DisplayName("钩子地址")]
+    [Description("钩子地址。监控数据转发给目标接口")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("WebHook", "钩子地址。监控数据转发给目标接口", "")]
+    public String WebHook { get => _WebHook; set { if (OnPropertyChanging("WebHook", value)) { _WebHook = value; OnPropertyChanged("WebHook"); } } }
+
     private Int32 _AlarmThreshold;
     /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值满足其一</summary>
     [Category("告警")]
@@ -330,6 +338,7 @@ public partial class AppTracer
             "Timeout" => _Timeout,
             "MaxTagLength" => _MaxTagLength,
             "VipClients" => _VipClients,
+            "WebHook" => _WebHook,
             "AlarmThreshold" => _AlarmThreshold,
             "AlarmErrorRate" => _AlarmErrorRate,
             "ItemAlarmThreshold" => _ItemAlarmThreshold,
@@ -369,6 +378,7 @@ public partial class AppTracer
                 case "Timeout": _Timeout = value.ToInt(); break;
                 case "MaxTagLength": _MaxTagLength = value.ToInt(); break;
                 case "VipClients": _VipClients = Convert.ToString(value); break;
+                case "WebHook": _WebHook = Convert.ToString(value); break;
                 case "AlarmThreshold": _AlarmThreshold = value.ToInt(); break;
                 case "AlarmErrorRate": _AlarmErrorRate = value.ToDouble(); break;
                 case "ItemAlarmThreshold": _ItemAlarmThreshold = value.ToInt(); break;
@@ -465,6 +475,9 @@ public partial class AppTracer
 
         /// <summary>Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配</summary>
         public static readonly Field VipClients = FindByName("VipClients");
+
+        /// <summary>钩子地址。监控数据转发给目标接口</summary>
+        public static readonly Field WebHook = FindByName("WebHook");
 
         /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值满足其一</summary>
         public static readonly Field AlarmThreshold = FindByName("AlarmThreshold");
@@ -570,6 +583,9 @@ public partial class AppTracer
 
         /// <summary>Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配</summary>
         public const String VipClients = "VipClients";
+
+        /// <summary>钩子地址。监控数据转发给目标接口</summary>
+        public const String WebHook = "WebHook";
 
         /// <summary>告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值满足其一</summary>
         public const String AlarmThreshold = "AlarmThreshold";

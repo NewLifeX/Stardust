@@ -21,13 +21,14 @@ public class TraceController : ControllerBase
     private readonly TokenService _tokenService;
     private readonly AppOnlineService _appOnline;
     private readonly UplinkService _uplink;
+    private readonly MonitorService _monitorService;
     private readonly StarServerSetting _setting;
     private readonly ITracer _tracer;
     private readonly ITraceStatService _stat;
     private readonly IAppDayStatService _appStat;
     private readonly ITraceItemStatService _itemStat;
 
-    public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService, AppOnlineService appOnline, UplinkService uplink, StarServerSetting setting, ITracer tracer)
+    public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService, AppOnlineService appOnline, UplinkService uplink, MonitorService monitorService, StarServerSetting setting, ITracer tracer)
     {
         _stat = stat;
         _appStat = appStat;
@@ -35,6 +36,7 @@ public class TraceController : ControllerBase
         _tokenService = tokenService;
         _appOnline = appOnline;
         _uplink = uplink;
+        _monitorService = monitorService;
         _setting = setting;
         _tracer = tracer;
     }
@@ -310,6 +312,9 @@ public class TraceController : ControllerBase
 
             // 发送给上联服务器
             _uplink.Report(app, model);
+
+            // WebHook
+            if (!app.WebHook.IsNullOrEmpty()) _monitorService.WebHook(app, model);
         }
         catch (Exception ex)
         {

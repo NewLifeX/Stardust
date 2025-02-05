@@ -67,6 +67,7 @@ public class Startup
         services.AddSingleton<AppOnlineService>();
         services.AddSingleton<UplinkService>();
         services.AddSingleton<DeployService>();
+        services.AddSingleton<MonitorService>();
 
         services.AddHttpClient();
         //services.AddResponseCompression();
