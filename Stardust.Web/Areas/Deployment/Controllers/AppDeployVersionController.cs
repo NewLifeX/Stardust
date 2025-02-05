@@ -265,20 +265,20 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
             {
                 var ts = new List<Task>();
                 var appNodes = AppDeployNode.FindAllByAppId(app.Id);
-                // 排序和延迟
-                appNodes = appNodes.OrderBy(e => e.Delay).ToList();
+                //// 排序和延迟
+                //appNodes = appNodes.OrderBy(e => e.Delay).ToList();
                 foreach (var item in appNodes)
                 {
                     //span?.AppendTag(item);
-                    //if (item.Enable) ts.Add(_deployService.Control(app, item, "install", UserHost, 0));
-                    if (item.Enable)
-                    {
-                        ts.Add(Task.Run(async () =>
-                        {
-                            if (item.Delay > 0) await Task.Delay(item.Delay * 1000);
-                            await _deployService.Control(app, item, "install", UserHost, 0);
-                        }));
-                    }
+                    if (item.Enable) ts.Add(_deployService.Control(app, item, "install", UserHost, item.Delay, 0));
+                    //if (item.Enable)
+                    //{
+                    //    ts.Add(Task.Run(async () =>
+                    //    {
+                    //        if (item.Delay > 0) await Task.Delay(item.Delay * 1000);
+                    //        await _deployService.Control(app, item, "install", UserHost, 0);
+                    //    }));
+                    //}
                 }
                 span?.AppendTag($"控制{ts.Count}个节点");
                 await Task.WhenAll(ts);

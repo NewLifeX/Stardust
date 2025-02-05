@@ -10,7 +10,7 @@ public class DeployService
 
     public DeployService(StarFactory starFactory) => _starFactory = starFactory;
 
-    public async Task Control(AppDeploy app, AppDeployNode deployNode, String action, String ip, Int32 timeout = 15)
+    public async Task Control(AppDeploy app, AppDeployNode deployNode, String action, String ip, Int32 startTime, Int32 timeout)
     {
         if (deployNode == null) throw new ArgumentNullException(nameof(deployNode));
 
@@ -60,7 +60,7 @@ public class DeployService
             var args = new { deployNode.Id, DeployName = deployName, AppName = app?.Name }.ToJson();
             msg = args;
 
-            await _starFactory.SendNodeCommand(deployNode.Node.Code, action, args, deployNode.Delay, 60, timeout);
+            await _starFactory.SendNodeCommand(deployNode.Node.Code, action, args, startTime, startTime + 60, timeout);
         }
         catch (Exception ex)
         {
