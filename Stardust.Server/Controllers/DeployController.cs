@@ -69,6 +69,7 @@ public class DeployController : BaseController
 
             var inf = new DeployInfo
             {
+                Id = item.Id,
                 Name = app.Name,
                 Version = app.Version,
                 Url = ver?.Url,

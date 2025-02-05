@@ -380,7 +380,7 @@ public class ServiceManager : DisposeBase
         await _client.UploadDeploy(svcs);
     }
 
-    private async Task<DeployInfo[]?> PullService(String? appName)
+    private async Task<DeployInfo[]?> PullService(Int32 deployId, String? appName)
     {
         if (Services == null) return null;
         if (_client == null) return null;
@@ -394,11 +394,17 @@ public class ServiceManager : DisposeBase
         if (rs == null) return null;
 
         // 过滤应用
-        if (!appName.IsNullOrEmpty()) rs = rs.Where(e => e.Name.EqualIgnoreCase(appName)).ToArray();
+        if (deployId > 0 && rs.All(e => e.Id > 0))
+            rs = rs.Where(e => e.Id == deployId).ToArray();
+        else if (!appName.IsNullOrEmpty())
+            rs = rs.Where(e => e.Name.EqualIgnoreCase(appName)).ToArray();
 
-        WriteLog("取得应用服务：{0}", rs.Join(",", e => e.Name));
-        WriteLog("可用：{0}", rs.Where(e => e.Service != null && e.Service.Enable).Join(",", e => e.Name));
-        if (rs.Length > 0) WriteLog(rs.ToJson(true));
+        if (rs.Length > 0)
+        {
+            WriteLog("取得应用服务：{0}", rs.Join(",", e => e.Name));
+            WriteLog("可用：{0}", rs.Where(e => e.Service != null && e.Service.Enable).Join(",", e => e.Name));
+            WriteLog(rs.ToJson(true));
+        }
 
         // 旧版服务
         span?.AppendTag(svcs);
@@ -576,7 +582,7 @@ public class ServiceManager : DisposeBase
 
                 if (_status == 1)
                 {
-                    deploys = await PullService(null);
+                    deploys = await PullService(-1, null);
 
                     _status = 2;
                 }
@@ -725,8 +731,8 @@ public class ServiceManager : DisposeBase
 
         var changed = cmd.Command switch
         {
-            "deploy/publish" => OnInstall(serviceName, cmd),
-            "deploy/install" => OnInstall(serviceName, cmd),
+            "deploy/publish" => OnInstall(my.Id, serviceName, cmd),
+            "deploy/install" => OnInstall(my.Id, serviceName, cmd),
             "deploy/start" => OnStart(serviceName, cmd),
             "deploy/stop" => OnStop(serviceName, cmd),
             "deploy/restart" => OnRestart(serviceName, cmd),
@@ -749,11 +755,11 @@ public class ServiceManager : DisposeBase
         public String? AppName { get; set; }
     }
 
-    Boolean OnInstall(String serviceName, CommandModel cmd)
+    Boolean OnInstall(Int32 deployId, String serviceName, CommandModel cmd)
     {
         using var span = Tracer?.NewSpan("ServiceManager-Install", cmd);
 
-        var dis = PullService(serviceName).Result;
+        var dis = PullService(deployId, serviceName).Result;
         if (dis == null || dis.Length == 0) throw new Exception($"无法从服务器取得应用信息，安装{serviceName}失败！");
 
         // 马上停止并拉起应用服务，定时器只用于双保险
