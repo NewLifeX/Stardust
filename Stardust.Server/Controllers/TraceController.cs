@@ -49,7 +49,7 @@ public class TraceController : ControllerBase
         var ip = HttpContext.GetUserHost();
         if (ip.IsNullOrEmpty()) ip = ManageProvider.UserHost;
 
-        using var span = _tracer?.NewSpan($"traceReport-{model.AppId}", new { ip, model.ClientId, count = model.Builders?.Length, names = model.Builders?.Join(",", e => e.Name) });
+        using var span = _tracer?.NewSpan($"traceReport-{model.AppId}", new { ip, model.ClientId, count = model.Builders?.Length, names = model.Builders?.Join(",", e => e.Name) }, builders?.Length ?? 0);
 
         // 验证
         var (app, online) = Valid(model.AppId, model, model.ClientId, ip, token);
@@ -309,7 +309,7 @@ public class TraceController : ControllerBase
             _itemStat.Add(app.ID);
 
             // 发送给上联服务器
-            _uplink.Report(model);
+            _uplink.Report(app, model);
         }
         catch (Exception ex)
         {
