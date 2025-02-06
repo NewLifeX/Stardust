@@ -140,8 +140,8 @@ public partial class AppCommand : Entity<AppCommand>
             Id = Id,
             Command = Command,
             Argument = Argument,
-            Expire = Expire,
-            StartTime = StartTime,
+            Expire = Expire.Year > 2000 ? Expire.ToUniversalTime() : Expire,
+            StartTime = StartTime.Year > 2000 ? StartTime.ToUniversalTime() : StartTime,
             TraceId = TraceId,
         };
     }

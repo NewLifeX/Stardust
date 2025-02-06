@@ -74,29 +74,29 @@ public partial class NodeCommand : Entity<NodeCommand>
         //return Find(_.ID == id);
     }
 
-/// <summary>根据节点、状态查找</summary>
-/// <param name="nodeId">节点</param>
-/// <param name="status">状态</param>
-/// <returns>实体列表</returns>
-public static IList<NodeCommand> FindAllByNodeIDAndStatus(Int32 nodeId, CommandStatus status)
-{
-    // 实体缓存
-    if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.NodeID == nodeId && e.Status == status);
+    /// <summary>根据节点、状态查找</summary>
+    /// <param name="nodeId">节点</param>
+    /// <param name="status">状态</param>
+    /// <returns>实体列表</returns>
+    public static IList<NodeCommand> FindAllByNodeIDAndStatus(Int32 nodeId, CommandStatus status)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.NodeID == nodeId && e.Status == status);
 
-    return FindAll(_.NodeID == nodeId & _.Status == status);
-}
+        return FindAll(_.NodeID == nodeId & _.Status == status);
+    }
 
-/// <summary>根据节点、命令查找</summary>
-/// <param name="nodeId">节点</param>
-/// <param name="command">命令</param>
-/// <returns>实体列表</returns>
-public static IList<NodeCommand> FindAllByNodeIDAndCommand(Int32 nodeId, String command)
-{
-    // 实体缓存
-    if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.NodeID == nodeId && e.Command.EqualIgnoreCase(command));
+    /// <summary>根据节点、命令查找</summary>
+    /// <param name="nodeId">节点</param>
+    /// <param name="command">命令</param>
+    /// <returns>实体列表</returns>
+    public static IList<NodeCommand> FindAllByNodeIDAndCommand(Int32 nodeId, String command)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.NodeID == nodeId && e.Command.EqualIgnoreCase(command));
 
-    return FindAll(_.NodeID == nodeId & _.Command == command);
-}
+        return FindAll(_.NodeID == nodeId & _.Command == command);
+    }
     #endregion
 
     #region 高级查询
@@ -164,8 +164,8 @@ public static IList<NodeCommand> FindAllByNodeIDAndCommand(Int32 nodeId, String 
             Id = Id,
             Command = Command,
             Argument = Argument,
-            Expire = Expire,
-            StartTime = StartTime,
+            Expire = Expire.Year > 2000 ? Expire.ToUniversalTime() : Expire,
+            StartTime = StartTime.Year > 2000 ? StartTime.ToUniversalTime() : StartTime,
             TraceId = TraceId,
         };
     }
