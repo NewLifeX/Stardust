@@ -62,6 +62,8 @@ public class StarTracer : DefaultTracer
 
         if (set.Debug) Log = XTrace.Log;
 
+        Resolver = new StarTracerResolver();
+
         try
         {
             var executing = AssemblyX.Create(Assembly.GetExecutingAssembly());
