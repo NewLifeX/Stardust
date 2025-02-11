@@ -86,7 +86,7 @@ public class NetRuntime
             {
 #if NET6_0_OR_GREATER
                 using var http = new System.Net.Http.HttpClient();
-                var hs = http.GetStreamAsync(url).Result;
+                var hs = http.GetStreamAsync(url).ConfigureAwait(false).GetAwaiter().GetResult();
 
                 using var fs = new FileStream(fullFile, FileMode.CreateNew, FileAccess.Write);
                 hs.CopyTo(fs);

@@ -32,7 +32,7 @@ public class ShowMachineInfo : BaseCommandHandler
         XTrace.WriteLine("BasePath:{0}", ".".GetBasePath());
         XTrace.WriteLine("TempPath:{0}", Path.GetTempPath());
 
-        var mi = MachineInfo.Current ?? MachineInfo.RegisterAsync().Result;
+        var mi = MachineInfo.GetCurrent();
         mi.Refresh();
         var pis = mi.GetType().GetProperties(true);
 

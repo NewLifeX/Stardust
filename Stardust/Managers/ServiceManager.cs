@@ -770,7 +770,7 @@ public class ServiceManager : DisposeBase
     {
         using var span = Tracer?.NewSpan("ServiceManager-Install", cmd);
 
-        var dis = PullService(deployId, serviceName).Result;
+        var dis = PullService(deployId, serviceName).ConfigureAwait(false).GetAwaiter().GetResult();
         if (dis == null || dis.Length == 0) throw new Exception($"无法从服务器取得应用信息，安装{serviceName}失败！");
 
         // 马上停止并拉起应用服务，定时器只用于双保险

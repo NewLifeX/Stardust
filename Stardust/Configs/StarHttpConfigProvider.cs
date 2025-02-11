@@ -96,7 +96,7 @@ internal class StarHttpConfigProvider : HttpConfigProvider
             // 从注册中心获取服务
             if (Client is IRegistry registry)
             {
-                var addrs = registry.ResolveAddressAsync(key).Result;
+                var addrs = registry.ResolveAddressAsync(key).ConfigureAwait(false).GetAwaiter().GetResult();
 
                 // 注册服务有改变时，通知配置系统改变
                 if (!_keys.Contains(key))

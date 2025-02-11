@@ -120,10 +120,10 @@ namespace Stardust.Data.Configs
 
             var list = Meta.Cache.Entities.FindAll(e => e.Enable);
             list = list.Where(e =>
-            !e.Rule.IsNullOrEmpty() && /*e.Rule.StartsWithIgnoreCase("IP=") &&*/
-            !e.Result.IsNullOrEmpty() && e.Result.StartsWithIgnoreCase("Scope="))
-            .OrderByDescending(e => e.Priority)
-            .ToList();
+                !e.Rule.IsNullOrEmpty() && /*e.Rule.StartsWithIgnoreCase("IP=") &&*/
+                !e.Result.IsNullOrEmpty() && e.Result.StartsWithIgnoreCase("Scope="))
+                .OrderByDescending(e => e.Priority)
+                .ToList();
             if (list.Count == 0) return null;
 
             var rule = list.Where(e => e.Match(ip, localIp)).OrderByDescending(e => e.Priority).ThenByDescending(e => e.Id).FirstOrDefault();

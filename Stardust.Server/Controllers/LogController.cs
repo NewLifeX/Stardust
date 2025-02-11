@@ -20,11 +20,8 @@ public class LogController : ControllerBase
     [HttpPost]
     public async Task<EmptyResult> Post()
     {
-        //var buffer = Request.BodyReader.ReadAsync().Result.Buffer;
-        //var content = Encoding.UTF8.GetString(buffer.FirstSpan);
         var r = new StreamReader(Request.Body);
         var content = await r.ReadToEndAsync();
-        //var content = Request.Body.ToStr();
         if (!content.IsNullOrEmpty())
         {
             var appId = Request.Headers["X-AppId"] + "";

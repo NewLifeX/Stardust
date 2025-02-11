@@ -219,7 +219,7 @@ class CacheFileProvider : IFileProvider
             {
                 var fi = fullPath.CombinePath(IndexInfoFile).GetBasePath().AsFile();
                 if (!fi.Exists)
-                    fi = DownloadDirectory(subpath, fi.FullName, svrs).Result?.AsFile();
+                    fi = DownloadDirectory(subpath, fi.FullName, svrs).ConfigureAwait(false).GetAwaiter().GetResult()?.AsFile();
                 else if (fi.LastWriteTime.AddDays(1) < DateTime.Now)
                     _ = Task.Run(() => DownloadDirectory(subpath, fi.FullName, svrs));
             }

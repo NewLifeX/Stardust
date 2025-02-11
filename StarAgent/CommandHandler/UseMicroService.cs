@@ -32,8 +32,7 @@ public class UseMicroService : BaseCommandHandler
 
         service.StartFactory();
 
-        var models = service._factory.Service.ResolveAsync(serviceName).Result;
-        //if (models == null) models = _factory.Dust.ResolveAsync(new ConsumeServiceInfo { ServiceName = serviceName }).Result;
+        var models = service._factory.Service.ResolveAsync(serviceName).ConfigureAwait(false).GetAwaiter().GetResult();
 
         Console.WriteLine(models.ToJson(true));
     }

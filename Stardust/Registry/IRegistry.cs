@@ -105,7 +105,7 @@ public static class RegistryExtensions
     /// <param name="serviceName">服务名</param>
     /// <param name="tag"></param>
     /// <returns></returns>
-    public static IApiClient CreateForService(this IRegistry registry, String serviceName, String? tag = null) => TaskEx.Run(() => CreateForServiceAsync(registry, serviceName, tag)).Result;
+    public static IApiClient CreateForService(this IRegistry registry, String serviceName, String? tag = null) => TaskEx.Run(() => CreateForServiceAsync(registry, serviceName, tag)).ConfigureAwait(false).GetAwaiter().GetResult();
 
     /// <summary>绑定客户端到服务集合，更新服务地址</summary>
     /// <param name="client"></param>
