@@ -60,6 +60,7 @@
         <Column Name="Excludes" DataType="String" Length="200" Description="排除项。要排除的操作名，支持*模糊匹配" />
         <Column Name="Timeout" DataType="Int32" Description="超时时间。超过该时间时强制采样，默认5000毫秒" />
         <Column Name="MaxTagLength" DataType="Int32" Description="最长标签。超过该长度时将截断，默认1024字符" />
+        <Column Name="RequestTagLength" DataType="Int32" Description="请求标签长度。HttpClient请求和WebApi请求响应作为数据标签的最大长度，小于0时不使用，默认1024字符" />
         <Column Name="VipClients" DataType="String" Description="Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配" />
         <Column Name="WebHook" DataType="String" Length="500" Description="钩子地址。监控数据转发给目标接口" />
         <Column Name="AlarmThreshold" DataType="Int32" Description="告警阈值。错误数达到该值时触发告警，0表示不启用，阈值和率值满足其一" Category="告警" />

@@ -69,6 +69,7 @@ public class TraceController : ControllerBase
             Timeout = app.Timeout,
             //Excludes = app.Excludes?.Split(",", ";"),
             MaxTagLength = app.MaxTagLength,
+            RequestTagLength = app.RequestTagLength,
             EnableMeter = app.EnableMeter,
         };
 

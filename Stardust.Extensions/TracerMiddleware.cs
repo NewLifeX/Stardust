@@ -9,6 +9,7 @@ using NewLife;
 using NewLife.Collections;
 using NewLife.Log;
 using NewLife.Web;
+using Stardust.Monitors;
 using HttpContext = Microsoft.AspNetCore.Http.HttpContext;
 
 namespace Stardust.Extensions;
@@ -33,6 +34,7 @@ public class TracerMiddleware
         //!! 以下代码不能封装为独立方法，因为有异步存在，代码被拆分为状态机，导致这里建立的埋点span无法关联页面接口内的下级埋点
         ISpan? span = null;
         var action = "";
+        var resolver = Tracer?.Resolver as StarTracerResolver;
         if (Tracer != null && !ctx.WebSockets.IsWebSocketRequest)
         {
             action = GetAction(ctx);
@@ -48,17 +50,19 @@ public class TracerMiddleware
                 if (span is DefaultSpan ds && ds.TraceFlag > 0)
                 {
                     var flag = false;
-                    if (req.ContentLength != null &&
-                        req.ContentLength < 1024 &&
+                    var size = resolver?.RequestTagLength ?? 1024;
+                    if (resolver != null && resolver.RequestContentAsTag &&
+                        req.ContentLength != null &&
+                        req.ContentLength < size &&
                         req.ContentType != null &&
                         req.ContentType.StartsWithIgnoreCase(TagTypes))
                     {
-                        var buf = Pool.Shared.Rent(1024);
+                        var buf = Pool.Shared.Rent(size);
                         try
                         {
                             req.EnableBuffering();
 
-                            var count = await req.Body.ReadAsync(buf, 0, buf.Length).ConfigureAwait(false);
+                            var count = await req.Body.ReadAsync(buf, 0, size).ConfigureAwait(false);
                             span.AppendTag("\r\n<=\r\n" + buf.ToStr(null, 0, count));
                             req.Body.Position = 0;
                             flag = true;
@@ -109,17 +113,19 @@ public class TracerMiddleware
                     if (span is DefaultSpan ds && ds.TraceFlag > 0 && (span.Tag == null || span.Tag.Length < 500))
                     {
                         var flag = false;
-                        if (res.ContentLength != null &&
-                            res.ContentLength < 1024 &&
+                        var size = resolver?.RequestTagLength ?? 1024;
+                        if (resolver != null && resolver.RequestContentAsTag &&
+                            res.ContentLength != null &&
+                            res.ContentLength < size &&
                             res.Body.CanSeek &&
                             res.ContentType != null &&
                             res.ContentType.StartsWithIgnoreCase(TagTypes))
                         {
-                            var buf = Pool.Shared.Rent(1024);
+                            var buf = Pool.Shared.Rent(size);
                             try
                             {
                                 var p = res.Body.Position;
-                                var count = await res.Body.ReadAsync(buf, 0, buf.Length).ConfigureAwait(false);
+                                var count = await res.Body.ReadAsync(buf, 0, size).ConfigureAwait(false);
                                 span.AppendTag("\r\n=>\r\n" + buf.ToStr(null, 0, count));
                                 res.Body.Position = p;
                                 flag = true;

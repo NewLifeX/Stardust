@@ -176,6 +176,14 @@ public partial class AppTracer
     [BindColumn("MaxTagLength", "最长标签。超过该长度时将截断，默认1024字符", "")]
     public Int32 MaxTagLength { get => _MaxTagLength; set { if (OnPropertyChanging("MaxTagLength", value)) { _MaxTagLength = value; OnPropertyChanged("MaxTagLength"); } } }
 
+    private Int32 _RequestTagLength;
+    /// <summary>请求标签长度。HttpClient请求和WebApi请求响应作为数据标签的最大长度，小于0时不使用，默认1024字符</summary>
+    [DisplayName("请求标签长度")]
+    [Description("请求标签长度。HttpClient请求和WebApi请求响应作为数据标签的最大长度，小于0时不使用，默认1024字符")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("RequestTagLength", "请求标签长度。HttpClient请求和WebApi请求响应作为数据标签的最大长度，小于0时不使用，默认1024字符", "")]
+    public Int32 RequestTagLength { get => _RequestTagLength; set { if (OnPropertyChanging("RequestTagLength", value)) { _RequestTagLength = value; OnPropertyChanged("RequestTagLength"); } } }
+
     private String _VipClients;
     /// <summary>Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配</summary>
     [DisplayName("Vip客户端")]
@@ -337,6 +345,7 @@ public partial class AppTracer
             "Excludes" => _Excludes,
             "Timeout" => _Timeout,
             "MaxTagLength" => _MaxTagLength,
+            "RequestTagLength" => _RequestTagLength,
             "VipClients" => _VipClients,
             "WebHook" => _WebHook,
             "AlarmThreshold" => _AlarmThreshold,
@@ -377,6 +386,7 @@ public partial class AppTracer
                 case "Excludes": _Excludes = Convert.ToString(value); break;
                 case "Timeout": _Timeout = value.ToInt(); break;
                 case "MaxTagLength": _MaxTagLength = value.ToInt(); break;
+                case "RequestTagLength": _RequestTagLength = value.ToInt(); break;
                 case "VipClients": _VipClients = Convert.ToString(value); break;
                 case "WebHook": _WebHook = Convert.ToString(value); break;
                 case "AlarmThreshold": _AlarmThreshold = value.ToInt(); break;
@@ -472,6 +482,9 @@ public partial class AppTracer
 
         /// <summary>最长标签。超过该长度时将截断，默认1024字符</summary>
         public static readonly Field MaxTagLength = FindByName("MaxTagLength");
+
+        /// <summary>请求标签长度。HttpClient请求和WebApi请求响应作为数据标签的最大长度，小于0时不使用，默认1024字符</summary>
+        public static readonly Field RequestTagLength = FindByName("RequestTagLength");
 
         /// <summary>Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配</summary>
         public static readonly Field VipClients = FindByName("VipClients");
@@ -580,6 +593,9 @@ public partial class AppTracer
 
         /// <summary>最长标签。超过该长度时将截断，默认1024字符</summary>
         public const String MaxTagLength = "MaxTagLength";
+
+        /// <summary>请求标签长度。HttpClient请求和WebApi请求响应作为数据标签的最大长度，小于0时不使用，默认1024字符</summary>
+        public const String RequestTagLength = "RequestTagLength";
 
         /// <summary>Vip客户端。高频次大样本采样，10秒100次，逗号分割，支持*模糊匹配</summary>
         public const String VipClients = "VipClients";

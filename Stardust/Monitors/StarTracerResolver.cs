@@ -10,6 +10,9 @@ public class StarTracerResolver : DefaultTracerResolver
     /// <summary>单个域名最大埋点数。默认16</summary>
     public Int32 MaxTracePerHost { get; set; } = 16;
 
+    /// <summary>请求标签长度。HttpClient请求和WebApi请求响应作为数据标签的最大长度，小于0时不使用，默认1024字符</summary>
+    public Int32 RequestTagLength { get; set; } = 1024;
+
     private ConcurrentDictionary<String, HashSet<String>> _cache = new();
 
     /// <summary>从Uri中解析出埋点名称</summary>

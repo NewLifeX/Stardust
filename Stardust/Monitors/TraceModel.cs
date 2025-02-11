@@ -43,6 +43,9 @@ public class TraceResponse
     /// <summary>最大标签长度。超过该长度时将截断，默认1024字符</summary>
     public Int32 MaxTagLength { get; set; } = 1024;
 
+    /// <summary>请求标签长度。HttpClient请求和WebApi请求响应作为数据标签的最大长度，小于0时不使用，默认1024字符</summary>
+    public Int32 RequestTagLength { get; set; } = 1024;
+
     /// <summary>性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息</summary>
     public Boolean? EnableMeter { get; set; }
 

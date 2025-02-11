@@ -70,6 +70,7 @@ public partial class AppTracer : Entity<AppTracer>
             if (!Dirtys[nameof(MaxErrors)]) MaxErrors = 10;
             if (!Dirtys[nameof(Timeout)]) Timeout = 5000;
             if (!Dirtys[nameof(MaxTagLength)]) MaxTagLength = 1024;
+            if (!Dirtys[nameof(RequestTagLength)]) RequestTagLength = 1024;
             if (!Dirtys[nameof(EnableMeter)]) EnableMeter = true;
         }
         else

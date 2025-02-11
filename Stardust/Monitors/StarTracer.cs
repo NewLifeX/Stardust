@@ -173,6 +173,12 @@ public class StarTracer : DefaultTracer
                 if (rs.EnableMeter != null) EnableMeter = rs.EnableMeter.Value;
                 Excludes = rs.Excludes;
 
+                if (Resolver is StarTracerResolver resolver && rs.RequestTagLength != 0)
+                {
+                    resolver.RequestContentAsTag = rs.RequestTagLength > 0;
+                    resolver.RequestTagLength = rs.RequestTagLength;
+                }
+
                 // 保存到配置文件
                 if (rs.Period > 0 || rs.MaxSamples > 0 || rs.MaxErrors > 0)
                 {
