@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using NewLife;
+using NewLife.Log;
 using NewLife.Model;
 using NewLife.Remoting;
 using Stardust.Data.Monitors;
@@ -7,9 +8,9 @@ using Stardust.Monitors;
 
 namespace Stardust.Server.Services;
 
-public class MonitorService
+public class MonitorService(ITracer tracer)
 {
-    private ConcurrentDictionary<Int32, WebHookActor> _actors = new();
+    private readonly ConcurrentDictionary<Int32, WebHookActor> _actors = new();
 
     public void WebHook(AppTracer app, TraceModel model)
     {
@@ -17,7 +18,7 @@ public class MonitorService
         if (app.WebHook.IsNullOrEmpty()) return;
 
         // 创建Actor
-        var actor = _actors.GetOrAdd(app.ID, k => new WebHookActor { App = app });
+        var actor = _actors.GetOrAdd(app.ID, k => new WebHookActor { App = app, Tracer = tracer });
 
         // 发送消息
         actor.App = app;
@@ -58,8 +59,12 @@ public class MonitorService
         {
             if (context.Message is not TraceModel model) return;
 
+            using var span = Tracer?.NewSpan("MonitorPush");
+
             var client = GetClient();
             if (client == null) return;
+
+            span?.AppendTag(_action);
 
             await client.PostAsync<Object>(_action, model);
         }
