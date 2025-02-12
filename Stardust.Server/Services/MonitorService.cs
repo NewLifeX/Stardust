@@ -25,15 +25,16 @@ public class MonitorService(ITracer tracer)
         actor.Tell(model);
     }
 
-    class WebHookActor : Actor
+    public class WebHookActor : Actor
     {
         public AppTracer App { get; set; }
 
         private ApiHttpClient _client;
         private String _server;
         private String _action;
+        private String _token;
 
-        private ApiHttpClient GetClient()
+        public ApiHttpClient GetClient()
         {
             var addr = App.WebHook;
             if (addr.IsNullOrEmpty()) return null;
@@ -44,13 +45,27 @@ public class MonitorService(ITracer tracer)
             }
 
             if (addr.IsNullOrEmpty()) return null;
-
-            _client = new ApiHttpClient(addr);
-
             _server = addr;
 
+            var p = addr.IndexOf("#token=", StringComparison.OrdinalIgnoreCase);
+            if (p > 0)
+            {
+                _token = addr[(p + 7)..];
+                addr = addr[..p];
+            }
+
+            //p = addr.IndexOf('?');
+            //if (p > 0)
+            //{
+            //    _action = addr[(p + 1)..];
+            //    addr = addr[..p];
+            //}
+
             var uri = new Uri(addr);
-            _action = uri.AbsolutePath;
+            _action = uri.PathAndQuery;
+
+            _client = new ApiHttpClient($"{uri.Scheme}://{uri.Authority}");
+            _client.Token = _token;
 
             return _client;
         }
