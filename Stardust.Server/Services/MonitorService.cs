@@ -32,40 +32,21 @@ public class MonitorService(ITracer tracer)
         private ApiHttpClient _client;
         private String _server;
         private String _action;
-        private String _token;
+        //private String _token;
 
         public ApiHttpClient GetClient()
         {
             var addr = App.WebHook;
             if (addr.IsNullOrEmpty()) return null;
 
-            if (_client != null)
-            {
-                if (_server == addr) return _client;
-            }
-
-            if (addr.IsNullOrEmpty()) return null;
+            if (_client != null && _server == addr) return _client;
             _server = addr;
-
-            var p = addr.IndexOf("#token=", StringComparison.OrdinalIgnoreCase);
-            if (p > 0)
-            {
-                _token = addr[(p + 7)..];
-                addr = addr[..p];
-            }
-
-            //p = addr.IndexOf('?');
-            //if (p > 0)
-            //{
-            //    _action = addr[(p + 1)..];
-            //    addr = addr[..p];
-            //}
 
             var uri = new Uri(addr);
             _action = uri.PathAndQuery;
 
-            _client = new ApiHttpClient($"{uri.Scheme}://{uri.Authority}");
-            _client.Token = _token;
+            _client = new ApiHttpClient(addr);
+            //_token = _client.Services.FirstOrDefault()?.Token;
 
             return _client;
         }
