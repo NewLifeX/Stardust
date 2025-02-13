@@ -1,4 +1,5 @@
 ﻿using NewLife;
+using NewLife.Log;
 using NewLife.Model;
 using NewLife.Remoting;
 using NewLife.Serialization;
@@ -71,11 +72,18 @@ public class UplinkService
 
             if (context.Message is not TraceModel model) return;
 
-            // 数据过大时，以压缩格式上传
-            var body = model.ToJson();
-            var rs = body.Length > 1024 ?
-                await client.PostAsync<TraceResponse>("Trace/ReportRaw", body.GetBytes()) :
-                await client.PostAsync<TraceResponse>("Trace/Report", model);
+            try
+            {
+                // 数据过大时，以压缩格式上传
+                var body = model.ToJson();
+                var rs = body.Length > 1024 ?
+                    await client.PostAsync<TraceResponse>("Trace/ReportRaw", body.GetBytes()) :
+                    await client.PostAsync<TraceResponse>("Trace/Report", model);
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+            }
         }
     }
 }

@@ -81,7 +81,14 @@ public class MonitorService(ITracer tracer)
 
             span?.AppendTag(_action);
 
-            await client.PostAsync<Object>(_action, model);
+            try
+            {
+                await client.PostAsync<Object>(_action, model);
+            }
+            catch (Exception ex)
+            {
+                span?.SetError(ex, null);
+            }
         }
     }
 }
