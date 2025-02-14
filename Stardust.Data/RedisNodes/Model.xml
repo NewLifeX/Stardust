@@ -46,6 +46,7 @@
         <Column Name="Name" DataType="String" Master="True" Description="名称" />
         <Column Name="Category" DataType="String" Description="分类" />
         <Column Name="Server" DataType="String" Description="地址。含端口" />
+        <Column Name="UserName" DataType="String" Description="用户名称，支持redis7用户名验证" />
         <Column Name="Password" DataType="String" Description="密码" />
         <Column Name="Version" DataType="String" Description="版本" />
         <Column Name="Mode" DataType="String" Description="模式" />
