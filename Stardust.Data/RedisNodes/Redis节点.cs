@@ -62,6 +62,14 @@ public partial class RedisNode
     [BindColumn("Server", "地址。含端口", "")]
     public String Server { get => _Server; set { if (OnPropertyChanging("Server", value)) { _Server = value; OnPropertyChanged("Server"); } } }
 
+    private String _UserName;
+    /// <summary>用户名称，支持redis7用户名验证</summary>
+    [DisplayName("用户名称")]
+    [Description("用户名称，支持redis7用户名验证")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("UserName", "用户名称，支持redis7用户名验证", "")]
+    public String UserName { get => _UserName; set { if (OnPropertyChanging("UserName", value)) { _UserName = value; OnPropertyChanged("UserName"); } } }
+
     private String _Password;
     /// <summary>密码</summary>
     [DisplayName("密码")]
@@ -283,6 +291,7 @@ public partial class RedisNode
             "Name" => _Name,
             "Category" => _Category,
             "Server" => _Server,
+            "UserName" => _UserName,
             "Password" => _Password,
             "Version" => _Version,
             "Mode" => _Mode,
@@ -318,6 +327,7 @@ public partial class RedisNode
                 case "Name": _Name = Convert.ToString(value); break;
                 case "Category": _Category = Convert.ToString(value); break;
                 case "Server": _Server = Convert.ToString(value); break;
+                case "UserName": _UserName = Convert.ToString(value); break;
                 case "Password": _Password = Convert.ToString(value); break;
                 case "Version": _Version = Convert.ToString(value); break;
                 case "Mode": _Mode = Convert.ToString(value); break;
@@ -380,6 +390,9 @@ public partial class RedisNode
 
         /// <summary>地址。含端口</summary>
         public static readonly Field Server = FindByName("Server");
+
+        /// <summary>用户名称，支持redis7用户名验证</summary>
+        public static readonly Field UserName = FindByName("UserName");
 
         /// <summary>密码</summary>
         public static readonly Field Password = FindByName("Password");
@@ -473,6 +486,9 @@ public partial class RedisNode
 
         /// <summary>地址。含端口</summary>
         public const String Server = "Server";
+
+        /// <summary>用户名称，支持redis7用户名验证</summary>
+        public const String UserName = "UserName";
 
         /// <summary>密码</summary>
         public const String Password = "Password";

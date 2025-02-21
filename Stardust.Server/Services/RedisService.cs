@@ -98,6 +98,10 @@ public class RedisService : IHostedService, IRedisService
 
         rds.Server = node.Server;
         rds.Password = node.Password;
+        if (!node.UserName.IsNullOrEmpty())
+        {
+            rds.UserName = node.UserName;
+        }
         rds.Db = db;
         rds.Tracer = _tracer;
         rds.Log = _log;
@@ -113,6 +117,10 @@ public class RedisService : IHostedService, IRedisService
 
         // 可能后面更新了服务器地址和密码
         rds.Server = node.Server;
+        if (!node.UserName.IsNullOrEmpty())
+        {
+            rds.UserName = node.UserName;
+        }
         rds.Password = node.Password;
         rds.Tracer = _tracer;
         rds.Log = _log;
