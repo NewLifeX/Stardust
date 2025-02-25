@@ -69,6 +69,9 @@ public class Startup
         services.AddSingleton<DeployService>();
         services.AddSingleton<MonitorService>();
 
+        services.AddSingleton<NodeSessionManager>();
+        services.AddSingleton<AppSessionManager>();
+
         services.AddHttpClient();
         //services.AddResponseCompression();
 

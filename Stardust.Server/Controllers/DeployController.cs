@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using NewLife;
 using NewLife.Remoting.Extensions;
 using NewLife.Serialization;
@@ -22,7 +23,7 @@ public class DeployController : BaseController
     private readonly TokenService _tokenService;
     private readonly StarServerSetting _setting;
 
-    public DeployController(DeployService deployService, NodeService nodeService, TokenService tokenService, StarServerSetting setting)
+    public DeployController(DeployService deployService, NodeService nodeService, TokenService tokenService, StarServerSetting setting, IServiceProvider serviceProvider) : base(serviceProvider)
     {
         _deployService = deployService;
         _nodeService = nodeService;

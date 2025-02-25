@@ -37,6 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\BaseController.cs" />
     <Compile Remove="Controllers\DustController.cs" />
     <Compile Remove="Models\CommandInModel.cs" />
     <Compile Remove="Services\CacheFileProvider.cs" />
@@ -45,8 +46,8 @@
 
   <ItemGroup>
     <PackageReference Include="NewLife.IP" Version="2.3.2025.202" />
-    <PackageReference Include="NewLife.Redis" Version="6.1.2025.209" />
-    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.2.2025.201" />
+    <PackageReference Include="NewLife.Redis" Version="6.1.2025.225-beta0533" />
+    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.3.2025.225-beta1354" />
   </ItemGroup>
 
   <ItemGroup>

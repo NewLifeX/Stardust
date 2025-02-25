@@ -16,6 +16,7 @@ using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Services;
+using TokenService = Stardust.Server.Services.TokenService;
 using WebSocket = System.Net.WebSockets.WebSocket;
 using WebSocketMessageType = System.Net.WebSockets.WebSocketMessageType;
 
@@ -28,21 +29,21 @@ public class NodeController : BaseController
     private Node _node;
     private String _clientId;
     private readonly ICacheProvider _cacheProvider;
-    private readonly IHostApplicationLifetime _lifetime;
     private readonly ITracer _tracer;
     private readonly NodeService _nodeService;
     private readonly TokenService _tokenService;
     private readonly DeployService _deployService;
+    private readonly NodeSessionManager _sessionManager;
     private readonly StarServerSetting _setting;
 
-    public NodeController(NodeService nodeService, TokenService tokenService, DeployService deployService, StarServerSetting setting, ICacheProvider cacheProvider, IHostApplicationLifetime lifetime, ITracer tracer)
+    public NodeController(NodeService nodeService, TokenService tokenService, DeployService deployService, NodeSessionManager sessionManager, StarServerSetting setting, ICacheProvider cacheProvider, IServiceProvider serviceProvider, ITracer tracer) : base(serviceProvider)
     {
         _cacheProvider = cacheProvider;
-        _lifetime = lifetime;
         _tracer = tracer;
         _nodeService = nodeService;
         _tokenService = tokenService;
         _deployService = deployService;
+        _sessionManager = sessionManager;
         _setting = setting;
     }
 
@@ -57,7 +58,15 @@ public class NodeController : BaseController
         return node != null;
     }
 
-    protected override void OnWriteError(String action, String message) => WriteHistory(_node, action, false, message, UserHost);
+    /// <summary>写日志</summary>
+    /// <param name="action"></param>
+    /// <param name="success"></param>
+    /// <param name="message"></param>
+    protected override void WriteLog(String action, Boolean success, String message)
+    {
+        var hi = NodeHistory.Create(_node, action, success, message, Environment.MachineName, UserHost);
+        hi.Insert();
+    }
     #endregion
 
     #region 登录注销
@@ -264,7 +273,7 @@ public class NodeController : BaseController
                     cmd.Result = rs;
                     cmd.Save();
 
-                    WriteHistory(node, cmd.Command, true, rs);
+                    WriteLog(cmd.Command, true, rs);
                 }
             }
         }
@@ -304,14 +313,14 @@ public class NodeController : BaseController
             using var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             try
             {
-                await Handle(socket, token, ip);
+                await HandleNotify(socket, token, ip, HttpContext.RequestAborted);
             }
             catch (Exception ex)
             {
-                XTrace.WriteLine("WebSocket异常 node={0} ip={1}", _node, UserHost);
+                XTrace.WriteLine("WebSocket异常 node={0} ip={1}", _node, ip);
                 XTrace.WriteException(ex);
 
-                WriteHistory(_node, "Node/Notify", false, ex?.GetTrue() + "");
+                WriteLog("Node/Notify", false, ex?.GetTrue() + "");
             }
         }
         else
@@ -320,7 +329,7 @@ public class NodeController : BaseController
         }
     }
 
-    private async Task Handle(WebSocket socket, String token, String ip)
+    private async Task HandleNotify(WebSocket socket, String token, String ip, CancellationToken cancellationToken)
     {
         var (_, node, error) = _nodeService.DecodeToken(token, _setting.TokenSecret);
         _node = node ?? throw new ApiException(401, $"未登录！[ip={ip}]");
@@ -331,7 +340,7 @@ public class NodeController : BaseController
         var address = connection.RemoteIpAddress ?? IPAddress.Loopback;
         if (address.IsIPv4MappedToIPv6) address = address.MapToIPv4();
         var remote = new IPEndPoint(address, connection.RemotePort);
-        WriteHistory(node, "WebSocket连接", true, $"State={socket.State} sid={sid} Remote={remote}");
+        WriteLog("WebSocket连接", true, $"State={socket.State} sid={sid} Remote={remote}");
 
         var olt = _nodeService.GetOrAddOnline(node, token, ip);
         if (olt != null)
@@ -340,29 +349,40 @@ public class NodeController : BaseController
             olt.Update();
         }
 
-        var source = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.ApplicationStopping);
-        _ = Task.Run(() => ConsumeMessage(socket, node, ip, source));
-
-        await socket.WaitForClose(txt =>
+        using var session = new NodeCommandSession(socket) { Code = node.Code, WriteLog = WriteLog };
+        try
         {
-            if (txt == "Ping")
+            _sessionManager.Add(session);
+
+            // 链接取消令牌。当客户端断开时，触发取消，结束长连接
+            using var source = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            //_ = Task.Run(() => ConsumeMessage(socket, node, ip, source));
+
+            await socket.WaitForClose(txt =>
             {
-                socket.SendAsync("Pong".GetBytes(), WebSocketMessageType.Text, true, source.Token);
-
-                var olt = _nodeService.GetOrAddOnline(node, token, ip);
-                if (olt != null)
+                if (txt == "Ping")
                 {
-                    olt.WebSocket = true;
-                    olt.Update();
-                }
-            }
-        }, source);
+                    socket.SendAsync("Pong".GetBytes(), WebSocketMessageType.Text, true, source.Token);
 
-        WriteHistory(node, "WebSocket断开", true, $"State={socket.State} CloseStatus={socket.CloseStatus} sid={sid} Remote={remote}");
-        if (olt != null)
+                    var olt = _nodeService.GetOrAddOnline(node, token, ip);
+                    if (olt != null)
+                    {
+                        olt.WebSocket = true;
+                        olt.Update();
+                    }
+                }
+            }, source);
+        }
+        finally
         {
-            olt.WebSocket = false;
-            olt.Update();
+            WriteLog("WebSocket断开", true, $"State={socket.State} CloseStatus={socket.CloseStatus} sid={sid} Remote={remote}");
+            if (olt != null)
+            {
+                olt.WebSocket = false;
+                olt.Update();
+            }
+
+            _sessionManager.Remove(session);
         }
     }
 
@@ -389,7 +409,7 @@ public class NodeController : BaseController
 
                     if (msg == null || msg.Id == 0 || msg.Expire.Year > 2000 && msg.Expire < DateTime.UtcNow)
                     {
-                        WriteHistory(node, "WebSocket发送", false, "消息无效或已过期。" + mqMsg, ip);
+                        WriteLog("WebSocket发送", false, "消息无效或已过期。" + mqMsg);
 
                         var log = NodeCommand.FindById((Int32)msg.Id);
                         if (log != null)
@@ -401,7 +421,7 @@ public class NodeController : BaseController
                     }
                     else
                     {
-                        WriteHistory(node, "WebSocket发送", true, mqMsg, ip);
+                        WriteLog("WebSocket发送", true, mqMsg);
 
                         // 向客户端传递埋点信息，构建完整调用链
                         msg.TraceId = span + "";
@@ -433,7 +453,7 @@ public class NodeController : BaseController
         {
             XTrace.WriteLine("WebSocket异常 node={0} ip={1}", node, ip);
             XTrace.WriteException(ex);
-            WriteHistory(node, "WebSocket断开", false, $"State={socket.State} CloseStatus={socket.CloseStatus} {ex}", ip);
+            WriteLog("WebSocket断开", false, $"State={socket.State} CloseStatus={socket.CloseStatus} {ex}");
         }
         finally
         {
@@ -459,12 +479,6 @@ public class NodeController : BaseController
     #endregion
 
     #region 辅助
-    private void WriteHistory(Node node, String action, Boolean success, String remark, String ip = null)
-    {
-        var hi = NodeHistory.Create(node ?? _node, action, success, remark, Environment.MachineName, ip ?? UserHost);
-        hi.Insert();
-    }
-
     private void WriteHistory(Node node, String action, Boolean success, DateTime time, String remark, String ip = null)
     {
         var hi = NodeHistory.Create(node ?? _node, action, success, remark, Environment.MachineName, ip ?? UserHost);

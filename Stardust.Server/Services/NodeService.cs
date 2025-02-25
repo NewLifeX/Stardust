@@ -20,13 +20,15 @@ public class NodeService
 {
     private readonly TokenService _tokenService;
     private readonly IPasswordProvider _passwordProvider;
+    private readonly NodeSessionManager _sessionManager;
     private readonly ICacheProvider _cacheProvider;
     private readonly ITracer _tracer;
 
-    public NodeService(TokenService tokenService, IPasswordProvider passwordProvider, ICacheProvider cacheProvider, ITracer tracer)
+    public NodeService(TokenService tokenService, IPasswordProvider passwordProvider, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer)
     {
         _tokenService = tokenService;
         _passwordProvider = passwordProvider;
+        _sessionManager = sessionManager;
         _cacheProvider = cacheProvider;
         _tracer = tracer;
     }
@@ -777,8 +779,9 @@ public class NodeService
         var commandModel = cmd.ToModel();
         commandModel.TraceId = DefaultSpan.Current + "";
 
-        var queue = _cacheProvider.GetQueue<String>($"nodecmd:{node.Code}");
-        queue.Add(commandModel.ToJson());
+        //var queue = _cacheProvider.GetQueue<String>($"nodecmd:{node.Code}");
+        //queue.Add(commandModel.ToJson());
+        _sessionManager.PublishAsync(node.Code, commandModel, commandModel.ToJson(), default).ConfigureAwait(false).GetAwaiter().GetResult();
 
         // 挂起等待。借助redis队列，等待响应
         if (model.Timeout > 0)

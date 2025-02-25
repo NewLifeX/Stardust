@@ -18,13 +18,15 @@ public class RegistryService
     private readonly AppQueueService _queue;
     private readonly AppOnlineService _appOnline;
     private readonly IPasswordProvider _passwordProvider;
+    private readonly AppSessionManager _sessionManager;
     private readonly ITracer _tracer;
 
-    public RegistryService(AppQueueService queue, AppOnlineService appOnline, IPasswordProvider passwordProvider, ITracer tracer)
+    public RegistryService(AppQueueService queue, AppOnlineService appOnline, IPasswordProvider passwordProvider, AppSessionManager sessionManager, ITracer tracer)
     {
         _queue = queue;
         _appOnline = appOnline;
         _passwordProvider = passwordProvider;
+        _sessionManager = sessionManager;
         _tracer = tracer;
     }
 
@@ -462,7 +464,8 @@ public class RegistryService
         var cmdModel = cmd.ToModel();
         foreach (var item in AppOnline.FindAllByApp(app.Id))
         {
-            _queue.Publish(app.Name, item.Client, cmdModel);
+            //_queue.Publish(app.Name, item.Client, cmdModel);
+            _sessionManager.PublishAsync(app.Name, cmdModel, cmdModel.ToJson(), default).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         // 挂起等待。借助redis队列，等待响应
