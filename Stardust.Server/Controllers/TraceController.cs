@@ -253,7 +253,7 @@ public class TraceController : ControllerBase
                 try
                 {
                     // 捕获异常，避免因为跟踪项错误导致整体跟踪失败
-                    ti = app.GetOrAddItem(item.Name, rule?.IsWhite);
+                    ti ??= app.GetOrAddItem(item.Name, rule?.IsWhite);
                 }
                 catch { }
                 if (ti == null)

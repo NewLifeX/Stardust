@@ -36,7 +36,7 @@ public class AppOnlineService
         // 如果是每节点单例部署，则使用本地IP作为会话匹配。可能是应用重启，前一次会话还在
         if (online == null && app.Singleton && !localIp.IsNullOrEmpty())
         {
-            using var span = _tracer.NewSpan("GetOnlineForSingleton", new { localIp, clientId, ip });
+            using var span = _tracer.NewSpan("GetOnlineForSingleton", new { app.Name, localIp, clientId, ip });
 
             // 要求内网IP与外网IP都匹配，才能认为是相同会话，因为有可能不同客户端部署在各自内网而具有相同本地IP
             var list = AppOnline.FindAllByAppAndIP(app.Id, localIp);
