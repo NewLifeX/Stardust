@@ -70,7 +70,8 @@ public class RobotHelper
         try
         {
             if (webhook.IsNullOrEmpty() && group != null && group.Enable) webhook = group?.WebHook;
-            if (webhook.IsNullOrEmpty()) throw new InvalidOperationException("未设置或未启用告警地址！");
+            //if (webhook.IsNullOrEmpty()) throw new InvalidOperationException("未设置或未启用告警地址！");
+            if (webhook.IsNullOrEmpty()) return hi;
 
             if (webhook.Contains("qyapi.weixin"))
             {
