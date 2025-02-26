@@ -248,7 +248,7 @@ public class TraceController : ControllerBase
                 }
 
                 // 检查跟踪项
-                var key = $"trace:Item:{item.Name}";
+                var key = $"trace:Item:{app.ID}-{item.Name}";
                 var ti = _cacheProvider.InnerCache.Get<TraceItem>(key);
                 try
                 {
