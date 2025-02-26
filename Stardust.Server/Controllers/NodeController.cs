@@ -16,6 +16,7 @@ using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Services;
+using XCode;
 using TokenService = Stardust.Server.Services.TokenService;
 using WebSocket = System.Net.WebSockets.WebSocket;
 using WebSocketMessageType = System.Net.WebSockets.WebSocketMessageType;
@@ -225,6 +226,9 @@ public class NodeController : BaseController
     [HttpPost(nameof(PostEvents))]
     public Int32 PostEvents(EventModel[] events)
     {
+        var ip = UserHost;
+        var his = new List<NodeHistory>();
+        var dis = new List<AppDeployHistory>();
         foreach (var model in events)
         {
             var success = !model.Type.EqualIgnoreCase("error");
@@ -238,11 +242,20 @@ public class NodeController : BaseController
                     appId = AppDeploy.FindByName(model.Type[..p])?.Id ?? 0;
                 }
 
-                _deployService.WriteHistory(appId, _node?.ID ?? 0, model.Name, success, model.Remark, UserHost);
+                //_deployService.WriteHistory(appId, _node?.ID ?? 0, model.Name, success, model.Remark, UserHost);
+                var dhi = AppDeployHistory.Create(appId, _node?.ID ?? 0, model.Name, success, model.Remark, ip);
+                dis.Add(dhi);
             }
 
-            WriteHistory(null, model.Name, success, model.Time.ToDateTime().ToLocalTime(), model.Remark);
+            //WriteHistory(null, model.Name, success, model.Time.ToDateTime().ToLocalTime(), model.Remark);
+            var hi = NodeHistory.Create(_node, model.Name, success, model.Remark, Environment.MachineName, ip);
+            var time = model.Time.ToDateTime().ToLocalTime();
+            if (time.Year > 2000) hi.CreateTime = time;
+            his.Add(hi);
         }
+
+        his.Insert();
+        dis.Insert();
 
         return events.Length;
     }

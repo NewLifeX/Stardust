@@ -15,6 +15,7 @@ using Stardust.Data;
 using Stardust.Data.Configs;
 using Stardust.Models;
 using Stardust.Server.Services;
+using XCode;
 using TokenService = Stardust.Server.Services.TokenService;
 using WebSocket = System.Net.WebSockets.WebSocket;
 using WebSocketMessageType = System.Net.WebSockets.WebSocketMessageType;
@@ -181,10 +182,21 @@ public class AppController : BaseController
     [HttpPost(nameof(PostEvents))]
     public Int32 PostEvents(EventModel[] events)
     {
+        var ip = UserHost;
+        var olt = AppOnline.FindByClient(_clientId);
+        var his = new List<AppHistory>();
         foreach (var model in events)
         {
-            WriteHistory(model.Name, !model.Type.EqualIgnoreCase("error"), model.Time.ToDateTime().ToLocalTime(), model.Remark, null);
+            //WriteHistory(model.Name, !model.Type.EqualIgnoreCase("error"), model.Time.ToDateTime().ToLocalTime(), model.Remark, null);
+            var success = !model.Type.EqualIgnoreCase("error");
+            var time = model.Time.ToDateTime().ToLocalTime();
+            var hi = AppHistory.Create(_app, model.Name, success, model.Remark, olt?.Version, Environment.MachineName, ip);
+            hi.Client = _clientId;
+            if (time.Year > 2000) hi.CreateTime = time;
+            his.Add(hi);
         }
+
+        his.Insert();
 
         return events.Length;
     }
