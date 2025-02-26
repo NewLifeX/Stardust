@@ -273,7 +273,7 @@ public partial class AppTracer : Entity<AppTracer>
         return false;
     }
 
-    private IList<TraceItem> _full;
+    private IDictionary<String, TraceItem> _full;
     /// <summary>
     /// 获取或添加跟踪项
     /// </summary>
@@ -290,9 +290,9 @@ public partial class AppTracer : Entity<AppTracer>
         if (ti != null) return ti;
 
         // 再查全量
-        list = _full ??= TraceItem.FindAllByApp(ID);
-        ti = list.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
-        if (ti != null)
+        var dic = _full ??= TraceItem.FindAllByApp(ID).ToDictionary(e => e.Name, e => e, StringComparer.OrdinalIgnoreCase);
+        //ti = list.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
+        if (dic.TryGetValue(name, out ti))
         {
             // 修正历史数据
             if (!ti.Enable && whiteOnApi != null && whiteOnApi.Value)
@@ -306,6 +306,7 @@ public partial class AppTracer : Entity<AppTracer>
 
         // 通过规则匹配，支持把多个埋点聚合到一起
         ti = list.FirstOrDefault(e => !e.Cloned && e.IsMatch(name));
+        ti ??= dic.Values.FirstOrDefault(e => !e.Cloned && e.IsMatch(name));
         if (ti != null) return ti;
 
         var isApi = name.StartsWith('/');

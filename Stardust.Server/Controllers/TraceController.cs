@@ -1,6 +1,7 @@
 ﻿using System.IO.Compression;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
+using NewLife.Caching;
 using NewLife.Collections;
 using NewLife.Log;
 using NewLife.Remoting.Extensions;
@@ -23,12 +24,13 @@ public class TraceController : ControllerBase
     private readonly UplinkService _uplink;
     private readonly MonitorService _monitorService;
     private readonly StarServerSetting _setting;
+    private readonly ICacheProvider _cacheProvider;
     private readonly ITracer _tracer;
     private readonly ITraceStatService _stat;
     private readonly IAppDayStatService _appStat;
     private readonly ITraceItemStatService _itemStat;
 
-    public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService, AppOnlineService appOnline, UplinkService uplink, MonitorService monitorService, StarServerSetting setting, ITracer tracer)
+    public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService, AppOnlineService appOnline, UplinkService uplink, MonitorService monitorService, StarServerSetting setting, ICacheProvider cacheProvider, ITracer tracer)
     {
         _stat = stat;
         _appStat = appStat;
@@ -38,6 +40,7 @@ public class TraceController : ControllerBase
         _uplink = uplink;
         _monitorService = monitorService;
         _setting = setting;
+        _cacheProvider = cacheProvider;
         _tracer = tracer;
     }
 
@@ -245,7 +248,8 @@ public class TraceController : ControllerBase
                 }
 
                 // 检查跟踪项
-                TraceItem ti = null;
+                var key = $"trace:Item:{item.Name}";
+                var ti = _cacheProvider.InnerCache.Get<TraceItem>(key);
                 try
                 {
                     // 捕获异常，避免因为跟踪项错误导致整体跟踪失败
@@ -257,6 +261,7 @@ public class TraceController : ControllerBase
                     using var span = _tracer?.NewSpan("trace:ErrorItem", item.Name);
                     continue;
                 }
+                _cacheProvider.InnerCache.Set(key, ti, 600);
                 if (!ti.Enable) continue;
 
                 var td = TraceData.Create(item);
