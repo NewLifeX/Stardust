@@ -7,7 +7,6 @@ using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using Stardust.Data;
-using Stardust.Data.Nodes;
 using XCode.Membership;
 
 namespace Stardust.Web.Areas.Registry.Controllers;
@@ -127,7 +126,7 @@ public class AppOnlineController : EntityController<AppOnline>
             var online = AppOnline.FindById(item.ToInt());
             if (online != null && online.App != null)
             {
-                ts.Add(_starFactory.SendAppCommand(online.App.Name, command, argument, 0, 30, 0));
+                ts.Add(_starFactory.SendAppCommand(online.App.Name, online.Client, command, argument, 0, 30, 0));
             }
         }
 
@@ -146,7 +145,7 @@ public class AppOnlineController : EntityController<AppOnline>
             var online = AppOnline.FindById(item.ToInt());
             if (online != null && online.App != null)
             {
-                ts.Add(_starFactory.SendAppCommand(online.App.Name, "app/freeMemory", null, 0, 30, 0));
+                ts.Add(_starFactory.SendAppCommand(online.App.Name, online.Client, "app/freeMemory", null, 0, 30, 0));
             }
         }
 

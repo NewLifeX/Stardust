@@ -8,9 +8,7 @@ using NewLife.Http;
 using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Remoting.Extensions;
-using NewLife.Remoting.Extensions.Services;
 using NewLife.Remoting.Models;
-using NewLife.Remoting.Services;
 using NewLife.Security;
 using NewLife.Serialization;
 using Stardust.Data;
@@ -228,7 +226,7 @@ public class AppController : BaseController
             olt.Update();
         }
 
-        using var session = new AppCommandSession(socket) { Code = app.Name, WriteLog = WriteLog };
+        using var session = new AppCommandSession(socket) { Code = $"{app.Name}@{clientId}", WriteLog = WriteLog };
         try
         {
             _sessionManager.Add(session);
@@ -350,8 +348,16 @@ public class AppController : BaseController
         if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定应用");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
 
-        var target = App.FindByName(model.Code);
-        if (target == null) throw new ArgumentOutOfRangeException(nameof(model.Code), "无效应用");
+        var code = model.Code;
+        var clientId = "";
+        var p = code.IndexOf('@');
+        if (p > 0)
+        {
+            clientId = code[(p + 1)..];
+            code = code[..p];
+        }
+
+        var target = App.FindByName(code) ?? throw new ArgumentOutOfRangeException(nameof(model.Code), "无效应用");
 
         var app = _app;
         if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new ApiException(401, "无权操作！");
@@ -359,7 +365,7 @@ public class AppController : BaseController
         if (app.AllowControlNodes != "*" && !target.Name.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
             throw new ApiException(403, $"[{app}]无权操作应用[{target}]！\n安全设计需要，默认禁止所有应用向其它应用发送控制指令。\n可在注册中心应用系统中修改[{app}]的可控节点，添加[{target.Name}]，或者设置为*所有应用。");
 
-        var cmd = await _registryService.SendCommand(target, model, app + "");
+        var cmd = await _registryService.SendCommand(target, clientId, model, app + "");
 
         return cmd.Id;
     }

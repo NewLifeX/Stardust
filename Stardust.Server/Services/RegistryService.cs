@@ -441,7 +441,7 @@ public class RegistryService
     /// <param name="model"></param>
     /// <param name="user">创建者</param>
     /// <returns></returns>
-    public async Task<AppCommand> SendCommand(App app, CommandInModel model, String user)
+    public async Task<AppCommand> SendCommand(App app, String clientId, CommandInModel model, String user)
     {
         //if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定应用");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
@@ -462,11 +462,17 @@ public class RegistryService
 
         // 分发命令给该应用的所有实例
         var cmdModel = cmd.ToModel();
+        var ts = new List<Task>();
         foreach (var item in AppOnline.FindAllByApp(app.Id))
         {
+            // 对特定实例发送
+            if (!clientId.IsNullOrEmpty() && item.Client != clientId) continue;
+
             //_queue.Publish(app.Name, item.Client, cmdModel);
-            _sessionManager.PublishAsync(app.Name, cmdModel, cmdModel.ToJson(), default).ConfigureAwait(false).GetAwaiter().GetResult();
+            var code = $"{app.Name}@{item.Client}";
+            ts.Add(_sessionManager.PublishAsync(code, cmdModel, null, default));
         }
+        Task.WaitAll(ts.ToArray());
 
         // 挂起等待。借助redis队列，等待响应
         if (model.Timeout > 0)
@@ -488,14 +494,14 @@ public class RegistryService
         return cmd;
     }
 
-    public async Task<AppCommand> SendCommand(App app, String command, String argument, String user = null)
+    public async Task<AppCommand> SendCommand(App app, String clientId, String command, String argument, String user = null)
     {
         var model = new CommandInModel
         {
             Command = command,
             Argument = argument,
         };
-        return await SendCommand(app, model, user);
+        return await SendCommand(app, clientId, model, user);
     }
 
     public AppCommand CommandReply(App app, CommandReplyModel model)
@@ -534,7 +540,7 @@ public class RegistryService
         foreach (var item in appIds)
         {
             var app = App.FindById(item);
-            if (app != null) ts.Add(SendCommand(app, command, arguments, user));
+            if (app != null) ts.Add(SendCommand(app, null, command, arguments, user));
         }
 
         await Task.WhenAll(ts);

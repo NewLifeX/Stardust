@@ -781,7 +781,7 @@ public class NodeService
 
         //var queue = _cacheProvider.GetQueue<String>($"nodecmd:{node.Code}");
         //queue.Add(commandModel.ToJson());
-        _sessionManager.PublishAsync(node.Code, commandModel, commandModel.ToJson(), default).ConfigureAwait(false).GetAwaiter().GetResult();
+        _sessionManager.PublishAsync(node.Code, commandModel, null, default).ConfigureAwait(false).GetAwaiter().GetResult();
 
         // 挂起等待。借助redis队列，等待响应
         if (model.Timeout > 0)

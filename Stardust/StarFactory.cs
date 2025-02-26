@@ -481,19 +481,23 @@ public class StarFactory : DisposeBase
 
     /// <summary>发送应用命令。通知应用刷新配置信息和服务信息等</summary>
     /// <param name="appId"></param>
+    /// <param name="clientId"></param>
     /// <param name="command"></param>
     /// <param name="argument"></param>
     /// <param name="startTime"></param>
     /// <param name="expire"></param>
     /// <param name="timeout"></param>
     /// <returns></returns>
-    public Task<Int32> SendAppCommand(String appId, String command, String? argument = null, Int32 startTime = 0, Int32 expire = 3600, Int32 timeout = 5)
+    public Task<Int32> SendAppCommand(String appId, String clientId, String command, String? argument = null, Int32 startTime = 0, Int32 expire = 3600, Int32 timeout = 5)
     {
         if (!Valid()) return Task.FromResult(-1);
 
+        var code = AppId;
+        if (!clientId.IsNullOrEmpty()) code = $"{code}@{clientId}";
+
         return _client.InvokeAsync<Int32>("App/SendCommand", new CommandInModel
         {
-            Code = appId,
+            Code = code,
             Command = command,
             Argument = argument,
             StartTime = startTime,
