@@ -515,16 +515,40 @@ public class NodeController : BaseController
             var revision = runtimeVersion.Revision;
 
             // 大致范围估计，不保证100%准确
+            if (revision >= 52868)       // 4.8.3 (2023年10月更新)
+                return "4.8.3";
+            if (revision >= 52844)       // 4.8.2 (2023年7月更新)
+                return "4.8.2";
+            if (revision >= 52840)       // 4.8.1 (Windows 11 2022更新版)
+                return "4.8.1";
+            if (revision >= 52520)       // 4.8.1 Preview 3
+                return "4.8.1 Preview";
             if (revision >= 42000)
-                return "4.8.x"; // return "4.8 或更高";
-            if (revision >= 40000)
-                return "4.7.x"; // return "4.7.x - 4.8";
-            if (revision >= 35000)
-                return "4.6.x"; // return "4.6.x - 4.7.x";
-            if (revision >= 30000)
-                return "4.5.x"; // return "4.5.x - 4.6.x";
-            if (revision >= 17000)
-                return "4.5";
+                return "4.8.0";
+
+            if (revision >= 39428)       // 4.7.2 (2018年4月更新)
+                return "4.7.2";
+            if (revision >= 39427)       // 4.7.1 (2017年10月更新)
+                return "4.7.1";
+            if (revision >= 39425)       // 4.7 RTM (2017年5月发布)
+                return "4.7.0";
+
+            if (revision >= 37840)       // 4.6.2 (2016年8月更新)
+                return "4.6.2";
+            if (revision >= 37839)       // 4.6.1 (2016年5月发布)
+                return "4.6.1";
+            if (revision >= 37838)       // 4.6 RTM (2015年11月发布)
+                return "4.6.0";
+
+            if (revision >= 37879)       // 4.5.2 (2016年2月更新)
+                return "4.5.2";
+            if (revision >= 37867)       // 4.5.1 (2015年6月发布)
+                return "4.5.1";
+            if (revision >= 37838)       // 4.5 RTM (2015年4月发布)
+                return "4.5.0";
+
+            if (revision >= 17000)     // 4.5 Beta/RC
+                return "4.5 (Pre-Release)";
             return "4.0";
         }
 
