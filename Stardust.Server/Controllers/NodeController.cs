@@ -93,6 +93,8 @@ public class NodeController : BaseController
 
         if (node == null) throw new ApiException(12, "节点鉴权失败");
 
+        node.Runtime = GetVersionByBuild(node.Runtime);  // 运行时版本号转换
+
         var tokenModel = _nodeService.Login(node, inf, ip, _setting);
 
         var rs = new LoginResponse
@@ -497,6 +499,37 @@ public class NodeController : BaseController
         var hi = NodeHistory.Create(node ?? _node, action, success, remark, Environment.MachineName, ip ?? UserHost);
         if (time.Year > 2000) hi.CreateTime = time;
         hi.Insert();
+    }
+
+    /// <summary>
+    /// 根据运行时构建号获取主要CLR版本
+    /// </summary>
+    /// <param name="version"></param>
+    /// <returns></returns>
+    public static String GetVersionByBuild(String version)
+    {
+        var runtimeVersion = new Version(version);
+        // .NET Framework 4.0及以上的主要CLR版本是4.0.30319.x
+        if (runtimeVersion.Major == 4 && runtimeVersion.Minor == 0 && runtimeVersion.Build == 30319)
+        {
+            var revision = runtimeVersion.Revision;
+
+            // 大致范围估计，不保证100%准确
+            if (revision >= 42000)
+                return "4.8.x"; // return "4.8 或更高";
+            if (revision >= 40000)
+                return "4.7.x"; // return "4.7.x - 4.8";
+            if (revision >= 35000)
+                return "4.6.x"; // return "4.6.x - 4.7.x";
+            if (revision >= 30000)
+                return "4.5.x"; // return "4.5.x - 4.6.x";
+            if (revision >= 17000)
+                return "4.5";
+            return "4.0";
+        }
+
+        // 如果不是4.0.30319.x版本格式，直接返回原始版本
+        return runtimeVersion.ToString();
     }
     #endregion
 }
