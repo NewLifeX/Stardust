@@ -488,7 +488,7 @@ public class StarFactory : DisposeBase
     /// <param name="expire"></param>
     /// <param name="timeout"></param>
     /// <returns></returns>
-    public Task<Int32> SendAppCommand(String appId, String clientId, String command, String? argument = null, Int32 startTime = 0, Int32 expire = 3600, Int32 timeout = 5)
+    public Task<Int32> SendAppCommand(String appId, String clientId, String command, String? argument, Int32 startTime = 0, Int32 expire = 3600, Int32 timeout = 5)
     {
         if (!Valid()) return Task.FromResult(-1);
 

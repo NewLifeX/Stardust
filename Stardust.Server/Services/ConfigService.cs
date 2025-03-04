@@ -321,7 +321,7 @@ public class ConfigService
             if (app.Version >= app.NextVersion) throw new ApiException(701, "已经是最新版本！");
             app.Publish();
 
-            await _starFactory.SendAppCommand(app.Name, "config/publish", "");
+            await _starFactory.SendAppCommand(app.Name, null, "config/publish", "");
             var rs = 1;
 
             // 通知下游依赖应用
@@ -331,7 +331,7 @@ public class ConfigService
                 {
                     if (item.Enable)
                     {
-                        _ = _starFactory.SendAppCommand(item.Name, "config/publish", "");
+                        _ = _starFactory.SendAppCommand(item.Name, null, "config/publish", "");
                         rs++;
                     }
                 }
