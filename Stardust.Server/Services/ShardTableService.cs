@@ -89,7 +89,7 @@ public class ShardTableService : IHostedService
             }
 
             // 如果保留时间超过了31天，则使用删除功能清理历史数据，否则使用truncate
-            if (days > 31)
+            if (days > 31 || _setting.ClearMode == ClearModes.Delete)
             {
                 // 31张表里面，每张表都删除指定时间之前的数据
                 for (var i = 0; i < 31; i++)
@@ -117,7 +117,7 @@ public class ShardTableService : IHostedService
                     {
                         try
                         {
-                            if (dal.DbType == DatabaseType.SQLite)
+                            if (dal.DbType == DatabaseType.SQLite || _setting.ClearMode == ClearModes.Delete)
                                 TraceData.DeleteBefore(dt, endday);
                             else
                                 dal.Execute($"Truncate Table {name}");
@@ -133,7 +133,7 @@ public class ShardTableService : IHostedService
                     {
                         try
                         {
-                            if (dal.DbType == DatabaseType.SQLite)
+                            if (dal.DbType == DatabaseType.SQLite || _setting.ClearMode == ClearModes.Delete)
                                 SampleData.DeleteBefore(dt, endday);
                             else
                                 dal.Execute($"Truncate Table {name}");

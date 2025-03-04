@@ -7,6 +7,16 @@ using XCode.Configuration;
 
 namespace Stardust.Server;
 
+/// <summary>数据清理模式</summary>
+public enum ClearModes
+{
+    /// <summary>清空表。高效，不产生binlog日志，需要DDL权限</summary>
+    Truncate = 1,
+
+    /// <summary>删除数据。效率较低，产生binlog日志，无需DDL权限</summary>
+    Delete = 2,
+}
+
 /// <summary>配置</summary>
 [Config("StarServer")]
 public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
@@ -16,9 +26,9 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     #endregion
 
     #region 属性
-    /// <summary>调试开关。默认true</summary>
-    [Description("调试开关。默认true")]
-    public Boolean Debug { get; set; } = true;
+    ///// <summary>调试开关。默认true</summary>
+    //[Description("调试开关。默认true")]
+    //public Boolean Debug { get; set; } = true;
 
     /// <summary>服务端口。默认6600</summary>
     [Description("服务端口。默认6600")]
@@ -68,9 +78,9 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     [Description("监控告警周期。默认30秒")]
     public Int32 AlarmPeriod { get; set; } = 30;
 
-    /// <summary>服务端地址。用于下载更新包</summary>
-    [Description("服务端地址。用于下载更新包")]
-    public String ServerUrl { get; set; } = "";
+    ///// <summary>服务端地址。用于下载更新包</summary>
+    //[Description("服务端地址。用于下载更新包")]
+    //public String ServerUrl { get; set; } = "";
 
     /// <summary>控制台地址。用于监控告警地址</summary>
     [Description("控制台地址。用于监控告警地址")]
@@ -87,6 +97,10 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     /// <summary>大颗粒数据保留时间。历史数据及每日统计数据，默认300天</summary>
     [Description("大颗粒数据保留时间。历史数据及每日统计数据，默认300天")]
     public Int32 DataRetention3 { get; set; } = 300;
+
+    /// <summary>数据清理模式。支持高效Truncate，或者无需DDL的Delete，默认Truncate</summary>
+    [Description("数据清理模式。支持高效Truncate，或者无需DDL的Delete，默认Truncate")]
+    public ClearModes ClearMode { get; set; } = ClearModes.Truncate;
 
     /// <summary>上传目录。存放升级包，需要跟StarWeb配置为同一个目录，默认../Uploads</summary>
     [Description("上传目录。存放升级包，需要跟StarWeb配置为同一个目录，默认../Uploads")]
