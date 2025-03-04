@@ -35,9 +35,6 @@ public class ShardTableService : IHostedService
 
     private void DoShardTable(Object state)
     {
-        //var set = Setting.Current;
-        //if (set.DataRetention <= 0) return;
-
         // 保留数据的起点
         var today = DateTime.Today;
         var days = _setting.DataRetention;
@@ -55,20 +52,20 @@ public class ShardTableService : IHostedService
             var tables = dal.Tables;
             var tnames = tables.Select(e => e.TableName).ToArray();
 
-            // 检查表结构
+            // 检查表结构，共31张表，循环使用
             var ts = new List<IDataTable>();
             for (var i = 0; i < 31; i++)
             {
-                var date = today.AddDays(1 - i);
+                var date = i + 1;
 
                 {
                     var table = TraceData.Meta.Table.DataTable.Clone() as IDataTable;
-                    table.TableName = $"TraceData_{date:dd}";
+                    table.TableName = $"TraceData_{date:00}";
                     ts.Add(table);
                 }
                 {
                     var table = SampleData.Meta.Table.DataTable.Clone() as IDataTable;
-                    table.TableName = $"SampleData_{date:dd}";
+                    table.TableName = $"SampleData_{date:00}";
                     ts.Add(table);
                 }
             }
@@ -97,8 +94,9 @@ public class ShardTableService : IHostedService
                 // 31张表里面，每张表都删除指定时间之前的数据
                 for (var i = 0; i < 31; i++)
                 {
-                    TraceData.DeleteBefore(endday);
-                    SampleData.DeleteBefore(endday);
+                    var dt = today.AddDays(-i);
+                    TraceData.DeleteBefore(dt, endday);
+                    SampleData.DeleteBefore(dt, endday);
                 }
             }
             else
@@ -111,22 +109,19 @@ public class ShardTableService : IHostedService
                     var dt = today.AddDays(-i);
                     if (dt >= endday) continue;
 
+                    //!! 对于不足31天的月份，要注意不要越过今天的天表
+                    if (dt.Day == today.Day) break;
+
                     var name = $"TraceData_{dt:dd}";
                     if (name.EqualIgnoreCase(tnames))
                     {
                         try
                         {
                             if (dal.DbType == DatabaseType.SQLite)
-                                TraceData.DeleteBefore(endday);
+                                TraceData.DeleteBefore(dt, endday);
                             else
                                 dal.Execute($"Truncate Table {name}");
                             //dal.Session.Truncate(name);
-
-                            // 清理数据后，设置为压缩表
-                            if (dal.DbType == DatabaseType.MySql)
-                            {
-                                dal.Execute($"Alter Table {name} ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=4");
-                            }
                         }
                         catch (Exception ex)
                         {
@@ -139,16 +134,10 @@ public class ShardTableService : IHostedService
                         try
                         {
                             if (dal.DbType == DatabaseType.SQLite)
-                                SampleData.DeleteBefore(endday);
+                                SampleData.DeleteBefore(dt, endday);
                             else
                                 dal.Execute($"Truncate Table {name}");
                             //dal.Session.Truncate(name);
-
-                            // 清理数据后，设置为压缩表
-                            if (dal.DbType == DatabaseType.MySql)
-                            {
-                                dal.Execute($"Alter Table {name} ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=4");
-                            }
                         }
                         catch (Exception ex)
                         {
