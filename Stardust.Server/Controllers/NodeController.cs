@@ -93,8 +93,6 @@ public class NodeController : BaseController
 
         if (node == null) throw new ApiException(12, "节点鉴权失败");
 
-        node.Runtime = GetVersionByBuild(node.Runtime);  // 运行时版本号转换
-
         var tokenModel = _nodeService.Login(node, inf, ip, _setting);
 
         var rs = new LoginResponse
@@ -499,61 +497,6 @@ public class NodeController : BaseController
         var hi = NodeHistory.Create(node ?? _node, action, success, remark, Environment.MachineName, ip ?? UserHost);
         if (time.Year > 2000) hi.CreateTime = time;
         hi.Insert();
-    }
-
-    /// <summary>
-    /// 根据运行时构建号获取主要CLR版本
-    /// </summary>
-    /// <param name="version"></param>
-    /// <returns></returns>
-    public static String GetVersionByBuild(String version)
-    {
-        var runtimeVersion = new Version(version);
-        // .NET Framework 4.0及以上的主要CLR版本是4.0.30319.x
-        if (runtimeVersion.Major == 4 && runtimeVersion.Minor == 0 && runtimeVersion.Build == 30319)
-        {
-            var revision = runtimeVersion.Revision;
-
-            // 大致范围估计，不保证100%准确
-            if (revision >= 52868)       // 4.8.3 (2023年10月更新)
-                return "4.8.3";
-            if (revision >= 52844)       // 4.8.2 (2023年7月更新)
-                return "4.8.2";
-            if (revision >= 52840)       // 4.8.1 (Windows 11 2022更新版)
-                return "4.8.1";
-            if (revision >= 52520)       // 4.8.1 Preview 3
-                return "4.8.1 Preview";
-            if (revision >= 42000)
-                return "4.8.0";
-
-            if (revision >= 39428)       // 4.7.2 (2018年4月更新)
-                return "4.7.2";
-            if (revision >= 39427)       // 4.7.1 (2017年10月更新)
-                return "4.7.1";
-            if (revision >= 39425)       // 4.7 RTM (2017年5月发布)
-                return "4.7.0";
-
-            if (revision >= 37840)       // 4.6.2 (2016年8月更新)
-                return "4.6.2";
-            if (revision >= 37839)       // 4.6.1 (2016年5月发布)
-                return "4.6.1";
-            if (revision >= 37838)       // 4.6 RTM (2015年11月发布)
-                return "4.6.0";
-
-            if (revision >= 37879)       // 4.5.2 (2016年2月更新)
-                return "4.5.2";
-            if (revision >= 37867)       // 4.5.1 (2015年6月发布)
-                return "4.5.1";
-            if (revision >= 37838)       // 4.5 RTM (2015年4月发布)
-                return "4.5.0";
-
-            if (revision >= 17000)     // 4.5 Beta/RC
-                return "4.5 (Pre-Release)";
-            return "4.0";
-        }
-
-        // 如果不是4.0.30319.x版本格式，直接返回原始版本
-        return runtimeVersion.ToString();
     }
     #endregion
 }

@@ -576,8 +576,9 @@ public partial class Node : Entity<Node>
         if (!info.Runtime.IsNullOrEmpty())
         {
             node.Runtime = info.Runtime;
-            if (node.Framework.IsNullOrEmpty()) node.Framework = info.Runtime;
-            if (node.Frameworks.IsNullOrEmpty()) node.Frameworks = info.Runtime;
+            var fx = GetVersionByBuild(info.Runtime);
+            if (node.Framework.IsNullOrEmpty() || node.Framework == node.Runtime) node.Framework = fx;
+            if (node.Frameworks.IsNullOrEmpty() || node.Framework == node.Runtime) node.Frameworks = fx;
         }
         if (!info.Framework.IsNullOrEmpty())
         {
@@ -598,6 +599,34 @@ public partial class Node : Entity<Node>
         }
 
         if (!node.OS.IsNullOrEmpty()) node.OSKind = OSKindHelper.Parse(node.OS, node.OSVersion);
+    }
+
+    /// <summary>
+    /// 根据运行时构建号获取主要CLR版本
+    /// </summary>
+    /// <param name="version"></param>
+    /// <returns></returns>
+    private static String GetVersionByBuild(String version)
+    {
+        if (!System.Version.TryParse(version, out var ver)) return version;
+
+        // .NET Framework 4.0及以上的主要CLR版本是4.0.30319.x
+        if (ver.Major == 4 && ver.Minor == 0 && ver.Build == 30319)
+        {
+            // 大致范围估计，不保证100%准确
+            return ver.Revision switch
+            {
+                >= 42000 => "4.6.1",
+                >= 34209 => "4.6",
+                >= 19000 => "4.5.2",
+                >= 18408 => "4.5.1",
+                >= 17929 => "4.5.0",
+                _ => "4.0"
+            };
+        }
+
+        // 如果不是4.0.30319.x版本格式，直接返回原始版本
+        return ver.ToString();
     }
 
     /// <summary>修正地区</summary>
