@@ -36,13 +36,13 @@ public class ShardTableService : IHostedService
     private void DoShardTable(Object state)
     {
         // 保留数据的起点
-        var today = DateTime.Today;
         var days = _setting.DataRetention;
-        var endday = today.AddDays(-days);
+        var now = DateTime.Now;
+        var startTime = now.AddDays(-days);
 
-        XTrace.WriteLine("检查数据分表，保留数据起始日期：{0:yyyy-MM-dd}", endday);
+        XTrace.WriteLine("检查数据分表，保留数据起始时间：{0}", startTime);
 
-        using var span = _tracer?.NewSpan("ShardTable", $"{endday.ToFullString()}");
+        using var span = _tracer?.NewSpan("ShardTable", $"{startTime.ToFullString()}");
         try
         {
             // 取所有表，清空缓存
@@ -94,9 +94,9 @@ public class ShardTableService : IHostedService
                 // 31张表里面，每张表都删除指定时间之前的数据
                 for (var i = 0; i < 31; i++)
                 {
-                    var dt = today.AddDays(-i);
-                    TraceData.DeleteBefore(dt, endday);
-                    SampleData.DeleteBefore(dt, endday);
+                    var dt = now.AddDays(-i);
+                    TraceData.DeleteBefore(dt, startTime);
+                    SampleData.DeleteBefore(dt, startTime);
                 }
             }
             else
@@ -106,11 +106,11 @@ public class ShardTableService : IHostedService
                 // 遍历31张表，只要大于结束时间则安全，否则清空
                 for (var i = 0; i < 31; i++)
                 {
-                    var dt = today.AddDays(-i);
-                    if (dt >= endday) continue;
+                    var dt = now.AddDays(-i);
+                    if (dt >= startTime) continue;
 
                     //!! 对于不足31天的月份，要注意不要越过今天的天表
-                    if (dt.Day == today.Day) break;
+                    if (dt.Day == now.Day) break;
 
                     var name = $"TraceData_{dt:dd}";
                     if (name.EqualIgnoreCase(tnames))
@@ -118,10 +118,9 @@ public class ShardTableService : IHostedService
                         try
                         {
                             if (dal.DbType == DatabaseType.SQLite || _setting.ClearMode == ClearModes.Delete)
-                                TraceData.DeleteBefore(dt, endday);
+                                TraceData.DeleteBefore(dt, startTime);
                             else
                                 dal.Execute($"Truncate Table {name}");
-                            //dal.Session.Truncate(name);
                         }
                         catch (Exception ex)
                         {
@@ -134,10 +133,9 @@ public class ShardTableService : IHostedService
                         try
                         {
                             if (dal.DbType == DatabaseType.SQLite || _setting.ClearMode == ClearModes.Delete)
-                                SampleData.DeleteBefore(dt, endday);
+                                SampleData.DeleteBefore(dt, startTime);
                             else
                                 dal.Execute($"Truncate Table {name}");
-                            //dal.Session.Truncate(name);
                         }
                         catch (Exception ex)
                         {
