@@ -12,6 +12,7 @@ public class ShardTableService : IHostedService
     private readonly StarServerSetting _setting;
     private readonly ITracer _tracer;
     private TimerX _timer;
+    private TimerX _timer2;
     public ShardTableService(StarServerSetting setting, ITracer tracer)
     {
         _setting = setting;
@@ -22,12 +23,14 @@ public class ShardTableService : IHostedService
     {
         // 每小时执行
         _timer = new TimerX(DoShardTable, null, 5_000, 3600 * 1000) { Async = true };
+        _timer2 = new TimerX(DoClearDetails, null, 6_000, 600 * 1000) { Async = true };
 
         return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
+        _timer2.TryDispose();
         _timer.TryDispose();
 
         return Task.CompletedTask;
@@ -39,8 +42,6 @@ public class ShardTableService : IHostedService
         var days = _setting.DataRetention;
         var now = DateTime.Now;
         var startTime = now.AddDays(-days);
-
-        XTrace.WriteLine("检查数据分表，保留数据起始时间：{0}", startTime);
 
         using var span = _tracer?.NewSpan("ShardTable", $"{startTime.ToFullString()}");
         try
@@ -88,6 +89,37 @@ public class ShardTableService : IHostedService
                 }
             }
 
+            // 数据迁移后，原库数据表需要清理。需要重新获取表名列表，因为Stardust/StardustData可能指向同一个数据库
+            DropOldTable(dal);
+            var dal2 = AppTracer.Meta.Session.Dal;
+            DropOldTable(dal2);
+        }
+        catch (Exception ex)
+        {
+            span?.SetError(ex, null);
+            throw;
+        }
+    }
+
+    private void DoClearDetails(Object state)
+    {
+        // 保留数据的起点
+        var days = _setting.DataRetention;
+        var now = DateTime.Now;
+        var startTime = now.AddDays(-days);
+
+        XTrace.WriteLine("检查数据分表，保留数据{0}天，起始时间：{1}", days, startTime);
+
+        var rs = 0;
+        using var span = _tracer?.NewSpan("ClearDetails", $"{startTime.ToFullString()}");
+        try
+        {
+            // 取所有表，清空缓存
+            var dal = TraceData.Meta.Session.Dal;
+
+            dal.Tables = null;
+            var tnames = dal.Tables.Select(e => e.TableName).ToArray();
+
             // 如果保留时间超过了31天，则使用删除功能清理历史数据，否则使用truncate
             if (days > 31 || _setting.ClearMode == ClearModes.Delete)
             {
@@ -95,8 +127,8 @@ public class ShardTableService : IHostedService
                 for (var i = 0; i < 31; i++)
                 {
                     var dt = now.AddDays(-i);
-                    TraceData.DeleteBefore(dt, startTime);
-                    SampleData.DeleteBefore(dt, startTime);
+                    rs += TraceData.DeleteBefore(dt, startTime);
+                    rs += SampleData.DeleteBefore(dt, startTime);
                 }
             }
             else
@@ -118,9 +150,9 @@ public class ShardTableService : IHostedService
                         try
                         {
                             if (dal.DbType == DatabaseType.SQLite || _setting.ClearMode == ClearModes.Delete)
-                                TraceData.DeleteBefore(dt, startTime);
+                                rs += TraceData.DeleteBefore(dt, startTime);
                             else
-                                dal.Execute($"Truncate Table {name}");
+                                rs += dal.Execute($"Truncate Table {name}");
                         }
                         catch (Exception ex)
                         {
@@ -133,9 +165,9 @@ public class ShardTableService : IHostedService
                         try
                         {
                             if (dal.DbType == DatabaseType.SQLite || _setting.ClearMode == ClearModes.Delete)
-                                SampleData.DeleteBefore(dt, startTime);
+                                rs += SampleData.DeleteBefore(dt, startTime);
                             else
-                                dal.Execute($"Truncate Table {name}");
+                                rs += dal.Execute($"Truncate Table {name}");
                         }
                         catch (Exception ex)
                         {
@@ -144,17 +176,14 @@ public class ShardTableService : IHostedService
                     }
                 }
             }
-
-            // 数据迁移后，原库数据表需要清理。需要重新获取表名列表，因为Stardust/StardustData可能指向同一个数据库
-            DropOldTable(dal);
-            var dal2 = AppTracer.Meta.Session.Dal;
-            DropOldTable(dal2);
         }
         catch (Exception ex)
         {
             span?.SetError(ex, null);
             throw;
         }
+
+        if (span != null) span.Value = rs;
 
         XTrace.WriteLine("检查数据表完成");
     }
