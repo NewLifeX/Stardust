@@ -63,9 +63,12 @@ public class TracerMiddleware
                             req.EnableBuffering();
 
                             var count = await req.Body.ReadAsync(buf, 0, size).ConfigureAwait(false);
-                            span.AppendTag("\r\n<=\r\n" + buf.ToStr(null, 0, count));
+                            if (count > 0)
+                            {
+                                span.AppendTag("\r\n<=\r\n" + buf.ToStr(null, 0, count));
+                                flag = true;
+                            }
                             req.Body.Position = 0;
-                            flag = true;
                         }
                         catch (Exception ex)
                         {
@@ -126,9 +129,12 @@ public class TracerMiddleware
                             {
                                 var p = res.Body.Position;
                                 var count = await res.Body.ReadAsync(buf, 0, size).ConfigureAwait(false);
-                                span.AppendTag("\r\n=>\r\n" + buf.ToStr(null, 0, count));
+                                if (count > 0)
+                                {
+                                    span.AppendTag("\r\n=>\r\n" + buf.ToStr(null, 0, count));
+                                    flag = true;
+                                }
                                 res.Body.Position = p;
-                                flag = true;
                             }
                             catch (Exception ex)
                             {
