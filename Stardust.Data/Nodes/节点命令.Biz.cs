@@ -164,8 +164,8 @@ public partial class NodeCommand : Entity<NodeCommand>
             Id = Id,
             Command = Command,
             Argument = Argument,
-            Expire = Expire.Year > 2000 ? Expire.ToUniversalTime() : Expire,
-            StartTime = StartTime.Year > 2000 ? StartTime.ToUniversalTime() : StartTime,
+            Expire = Expire,
+            StartTime = StartTime,
             TraceId = TraceId,
         };
     }

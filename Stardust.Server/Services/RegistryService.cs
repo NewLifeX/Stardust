@@ -427,7 +427,9 @@ public class RegistryService
 
                 item.Times++;
                 item.Status = CommandStatus.处理中;
-                rs.Add(item.ToModel());
+
+                var cmdModel = BuildCommand(item.App, item);
+                rs.Add(cmdModel);
             }
             item.UpdateTime = DateTime.Now;
         }
@@ -461,7 +463,7 @@ public class RegistryService
         cmd.Insert();
 
         // 分发命令给该应用的所有实例
-        var cmdModel = cmd.ToModel();
+        var cmdModel = BuildCommand(app, cmd);
         var ts = new List<Task>();
         foreach (var item in AppOnline.FindAllByApp(app.Id))
         {
@@ -544,5 +546,23 @@ public class RegistryService
         }
 
         await Task.WhenAll(ts);
+    }
+
+    //private static Version _version = new(3, 1, 2025, 0103);
+    private CommandModel BuildCommand(App app, AppCommand cmd)
+    {
+        var model = cmd.ToModel();
+        model.TraceId = DefaultSpan.Current + "";
+
+        // 新版本使用UTC时间
+        if (!app.Version.IsNullOrEmpty() && Version.TryParse(app.Version, out var ver) && (ver.Build < 2000 || ver.Build > 2025))
+        {
+            if (model.StartTime.Year > 2000)
+                model.StartTime = model.StartTime.ToUniversalTime();
+            if (model.Expire.Year > 2000)
+                model.Expire = model.Expire.ToUniversalTime();
+        }
+
+        return model;
     }
 }
