@@ -525,7 +525,10 @@ public class NodeService
 
                 item.Times++;
                 item.Status = CommandStatus.处理中;
-                rs.Add(item.ToModel());
+
+                var commandModel = BuildCommand(item.Node, item);
+
+                rs.Add(commandModel);
             }
             item.UpdateTime = DateTime.Now;
         }
@@ -776,8 +779,7 @@ public class NodeService
         if (model.Expire > 0) cmd.Expire = DateTime.Now.AddSeconds(model.Expire);
         cmd.Insert();
 
-        var commandModel = cmd.ToModel();
-        commandModel.TraceId = DefaultSpan.Current + "";
+        var commandModel = BuildCommand(node, cmd);
 
         //var queue = _cacheProvider.GetQueue<String>($"nodecmd:{node.Code}");
         //queue.Add(commandModel.ToJson());
@@ -805,6 +807,24 @@ public class NodeService
     #endregion
 
     #region 辅助
+    private static Version _version = new(3, 1, 2025, 0103);
+    private CommandModel BuildCommand(Node node, NodeCommand cmd)
+    {
+        var model = cmd.ToModel();
+        model.TraceId = DefaultSpan.Current + "";
+
+        // 新版本使用UTC时间
+        if (!node.Version.IsNullOrEmpty() && Version.TryParse(node.Version, out var ver) && ver >= _version)
+        {
+            if (model.StartTime.Year > 2000)
+                model.StartTime = model.StartTime.ToUniversalTime();
+            if (model.Expire.Year > 2000)
+                model.Expire = model.Expire.ToUniversalTime();
+        }
+
+        return model;
+    }
+
     public (JwtBuilder, Node, Exception) DecodeToken(String token, String tokenSecret)
     {
         if (token.IsNullOrEmpty()) throw new ArgumentNullException(nameof(token));
