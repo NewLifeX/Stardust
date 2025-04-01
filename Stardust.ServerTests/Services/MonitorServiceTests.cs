@@ -23,6 +23,7 @@ public class MonitorServiceTests
         var client = actor.GetClient();
         Assert.NotNull(client);
         Assert.Equal("/monitor/push?id=1234", actor.GetValue("_action"));
-        Assert.Equal("abcd", actor.GetValue("_token"));
+        //Assert.Equal("abcd", client.Token);
+        Assert.Equal("abcd", client.Services[0].Token);
     }
 }
