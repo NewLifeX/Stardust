@@ -126,7 +126,7 @@ public class AppOnlineController : EntityController<AppOnline>
             var online = AppOnline.FindById(item.ToInt());
             if (online != null && online.App != null)
             {
-                ts.Add(_starFactory.SendAppCommand(online.App.Name, online.Client, command, argument, 0, 30, 0));
+                ts.Add(_starFactory.SendAppCommand(online.App.Name, online.Client, command, argument, 0, 300, 0));
             }
         }
 
@@ -145,7 +145,7 @@ public class AppOnlineController : EntityController<AppOnline>
             var online = AppOnline.FindById(item.ToInt());
             if (online != null && online.App != null)
             {
-                ts.Add(_starFactory.SendAppCommand(online.App.Name, online.Client, "app/freeMemory", null, 0, 30, 0));
+                ts.Add(_starFactory.SendAppCommand(online.App.Name, online.Client, "app/freeMemory", null, 0, 300, 0));
             }
         }
 

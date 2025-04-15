@@ -185,7 +185,7 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
             var online = NodeOnline.FindById(item.ToInt());
             if (online != null && online.Node != null)
             {
-                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, command, argument, 0, 30, 0));
+                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, command, argument, 0, 300, 0));
             }
         }
 
