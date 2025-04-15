@@ -245,7 +245,6 @@ public class AppController : BaseController
 
             // 链接取消令牌。当客户端断开时，触发取消，结束长连接
             using var source = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            //_ = Task.Run(() => ConsumeMessage(socket, app, clientId, ip, source));
 
             await socket.WaitForClose(txt =>
             {
@@ -270,8 +269,6 @@ public class AppController : BaseController
                 olt.WebSocket = false;
                 olt.Update();
             }
-
-            _sessionManager.Remove(session);
         }
     }
 
@@ -421,7 +418,7 @@ public class AppController : BaseController
         // 发布消息通知消费者
         if (changed)
         {
-            await _registryService.NotifyConsumers(info, "registry/register", app + "");
+            await _registryService.NotifyConsumers(svc, "registry/register", app + "");
         }
 
         return svc?.ToModel();
@@ -438,7 +435,7 @@ public class AppController : BaseController
         // 发布消息通知消费者
         if (changed)
         {
-            await _registryService.NotifyConsumers(info, "registry/unregister", app + "");
+            await _registryService.NotifyConsumers(svc, "registry/unregister", app + "");
         }
 
         return svc?.ToModel();

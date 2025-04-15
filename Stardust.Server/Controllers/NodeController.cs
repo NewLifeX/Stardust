@@ -369,7 +369,6 @@ public class NodeController : BaseController
 
             // 链接取消令牌。当客户端断开时，触发取消，结束长连接
             using var source = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            //_ = Task.Run(() => ConsumeMessage(socket, node, ip, source));
 
             await socket.WaitForClose(txt =>
             {
@@ -394,8 +393,6 @@ public class NodeController : BaseController
                 olt.WebSocket = false;
                 olt.Update();
             }
-
-            _sessionManager.Remove(session);
         }
     }
 
