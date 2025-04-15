@@ -543,7 +543,7 @@ public class RegistryService
 
         // 获取所有订阅该服务的应用，可能相同应用多实例订阅，需要去重
         var appIds = list.Select(e => e.AppId).Distinct().ToArray();
-        var arguments = new { service.ServiceName, service.Address }.ToJson();
+        var arguments = new { service.AppName, service.ServiceName, service.Address }.ToJson();
 
         using var span = _tracer?.NewSpan(nameof(NotifyConsumers), $"{command} appIds={appIds.Join()} user={user} arguments={arguments}");
 

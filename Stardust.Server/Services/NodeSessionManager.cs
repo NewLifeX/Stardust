@@ -13,8 +13,6 @@ public class NodeSessionManager : SessionManager
 
 class NodeCommandSession(WebSocket socket) : WsCommandSession(socket)
 {
-    public Action<String, Boolean, String> WriteLog { get; set; }
-
     public override Task HandleAsync(CommandModel command, String message, CancellationToken cancellationToken)
     {
         if (command == null || command.Id == 0 || command.Expire.Year > 2000 && command.Expire < DateTime.UtcNow)

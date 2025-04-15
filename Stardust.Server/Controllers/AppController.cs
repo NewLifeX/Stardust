@@ -1,15 +1,11 @@
-﻿using System.Net;
-using System.Net.WebSockets;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Data;
-using NewLife.Http;
 using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Remoting.Extensions;
 using NewLife.Remoting.Models;
-using NewLife.Security;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
@@ -18,7 +14,6 @@ using Stardust.Server.Services;
 using XCode;
 using TokenService = Stardust.Server.Services.TokenService;
 using WebSocket = System.Net.WebSockets.WebSocket;
-using WebSocketMessageType = System.Net.WebSockets.WebSocketMessageType;
 
 namespace Stardust.Server.Controllers;
 
@@ -224,126 +219,24 @@ public class AppController : BaseController
     {
         if (app == null) throw new ApiException(401, "未登录！");
 
-        var sid = Rand.Next();
-        var connection = HttpContext.Connection;
-        var address = connection.RemoteIpAddress ?? IPAddress.Loopback;
-        if (address.IsIPv4MappedToIPv6) address = address.MapToIPv4();
-        var remote = new IPEndPoint(address, connection.RemotePort);
-        WriteLog("WebSocket连接", true, $"State={socket.State} sid={sid} Remote={remote}");
+        using var session = new AppCommandSession(socket)
+        {
+            Code = $"{app.Name}@{clientId}",
+            WriteLog = WriteLog,
+            SetOnline = online => SetOnline(clientId, online)
+        };
+        _sessionManager.Add(session);
 
+        await session.WaitAsync(HttpContext, cancellationToken).ConfigureAwait(false);
+    }
+
+    private void SetOnline(String clientId, Boolean online)
+    {
         var olt = AppOnline.FindByClient(clientId);
         if (olt != null)
         {
-            olt.WebSocket = true;
+            olt.WebSocket = online;
             olt.Update();
-        }
-
-        using var session = new AppCommandSession(socket) { Code = $"{app.Name}@{clientId}", WriteLog = WriteLog };
-        try
-        {
-            _sessionManager.Add(session);
-
-            // 链接取消令牌。当客户端断开时，触发取消，结束长连接
-            using var source = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-
-            await socket.WaitForClose(txt =>
-            {
-                if (txt == "Ping")
-                {
-                    socket.SendAsync("Pong".GetBytes(), WebSocketMessageType.Text, true, source.Token);
-
-                    var olt = AppOnline.FindByClient(clientId);
-                    if (olt != null)
-                    {
-                        olt.WebSocket = true;
-                        olt.Update();
-                    }
-                }
-            }, source);
-        }
-        finally
-        {
-            WriteLog("WebSocket断开", true, $"State={socket.State} CloseStatus={socket.CloseStatus} sid={sid} Remote={remote}");
-            if (olt != null)
-            {
-                olt.WebSocket = false;
-                olt.Update();
-            }
-        }
-    }
-
-    private async Task ConsumeMessage(WebSocket socket, App app, String clientId, String ip, CancellationTokenSource source)
-    {
-        DefaultSpan.Current = null;
-        var cancellationToken = source.Token;
-        var queue = _queue.GetQueue(app.Name, clientId);
-        try
-        {
-            while (!cancellationToken.IsCancellationRequested && socket.State == WebSocketState.Open)
-            {
-                ISpan span = null;
-                var mqMsg = await queue.TakeOneAsync(15, cancellationToken);
-                if (mqMsg != null)
-                {
-                    // 埋点
-                    span = _tracer?.NewSpan($"mq:AppCommand", mqMsg);
-
-                    // 解码
-                    var dic = JsonParser.Decode(mqMsg);
-                    var msg = JsonHelper.Convert<CommandModel>(dic);
-                    span.Detach(dic);
-
-                    if (msg == null || msg.Id == 0 || msg.Expire.Year > 2000 && msg.Expire < DateTime.UtcNow)
-                    {
-                        WriteLog("WebSocket发送", false, "消息无效或已过期。" + mqMsg);
-
-                        var log = AppCommand.FindById((Int32)msg.Id);
-                        if (log != null)
-                        {
-                            if (log.TraceId.IsNullOrEmpty()) log.TraceId = span?.TraceId;
-                            log.Status = CommandStatus.取消;
-                            log.Update();
-                        }
-                    }
-                    else
-                    {
-                        WriteLog("WebSocket发送", true, mqMsg);
-
-                        // 向客户端传递埋点信息，构建完整调用链
-                        msg.TraceId = span + "";
-
-                        var log = AppCommand.FindById((Int32)msg.Id);
-                        if (log != null)
-                        {
-                            if (log.TraceId.IsNullOrEmpty()) log.TraceId = span?.TraceId;
-                            log.Times++;
-                            log.Status = CommandStatus.处理中;
-                            log.UpdateTime = DateTime.Now;
-                            log.Update();
-                        }
-
-                        await socket.SendAsync(mqMsg.GetBytes(), WebSocketMessageType.Text, true, cancellationToken);
-                    }
-
-                    span?.Dispose();
-                }
-                else
-                {
-                    await Task.Delay(100, cancellationToken);
-                }
-            }
-        }
-        catch (TaskCanceledException) { }
-        catch (OperationCanceledException) { }
-        catch (Exception ex)
-        {
-            XTrace.WriteLine("WebSocket异常 app={0} ip={1}", app, ip);
-            XTrace.WriteException(ex);
-            WriteLog("WebSocket断开", false, $"State={socket.State} CloseStatus={socket.CloseStatus} {ex}");
-        }
-        finally
-        {
-            source.Cancel();
         }
     }
 
