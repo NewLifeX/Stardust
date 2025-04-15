@@ -11,15 +11,17 @@ public class NodeOnlineService : IHostedService
 {
     #region 属性
     private TimerX _timer;
-    private readonly NodeService _nodeService;
+    private NodeService _nodeService;
+    private readonly IServiceProvider _serviceProvider;
     private readonly StarServerSetting _setting;
     private readonly ITracer _tracer;
     #endregion
 
     #region 构造
-    public NodeOnlineService(NodeService nodeService, StarServerSetting setting, ITracer tracer)
+    public NodeOnlineService(IServiceProvider serviceProvider, StarServerSetting setting, ITracer tracer)
     {
-        _nodeService = nodeService;
+        //_nodeService = nodeService;
+        _serviceProvider = serviceProvider;
         _setting = setting;
         _tracer = tracer;
     }
@@ -48,6 +50,7 @@ public class NodeOnlineService : IHostedService
         if (sessionTimeout > 0)
         {
             using var span = _tracer?.NewSpan(nameof(CheckNodeOnline));
+            _nodeService ??= _serviceProvider.GetService<NodeService>();
 
             var rs = NodeOnline.ClearExpire(TimeSpan.FromSeconds(sessionTimeout));
             if (rs != null)

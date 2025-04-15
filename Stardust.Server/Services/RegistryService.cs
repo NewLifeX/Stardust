@@ -1,4 +1,5 @@
 ﻿using NewLife;
+using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Remoting.Models;
@@ -21,7 +22,7 @@ public class RegistryService
     private readonly AppSessionManager _sessionManager;
     private readonly ITracer _tracer;
 
-    public RegistryService(AppQueueService queue, AppOnlineService appOnline, IPasswordProvider passwordProvider, AppSessionManager sessionManager, ITracer tracer)
+    public RegistryService(AppQueueService queue, AppOnlineService appOnline, IPasswordProvider passwordProvider, AppSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer)
     {
         _queue = queue;
         _appOnline = appOnline;

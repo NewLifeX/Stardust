@@ -3,7 +3,6 @@ using NewLife.Data;
 using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Data;
-using Stardust.Data.Nodes;
 
 namespace Stardust.Server.Services;
 
@@ -13,15 +12,17 @@ public class OnlineService : IHostedService
     #region 属性
     private TimerX _timer;
     private TimerX _timer2;
-    private readonly RegistryService _registryService;
+    private RegistryService _registryService;
+    private readonly IServiceProvider _serviceProvider;
     private readonly StarServerSetting _setting;
     private readonly ITracer _tracer;
     #endregion
 
     #region 构造
-    public OnlineService(RegistryService registryService, StarServerSetting setting, ITracer tracer)
+    public OnlineService(IServiceProvider serviceProvider, StarServerSetting setting, ITracer tracer)
     {
-        _registryService = registryService;
+        //_registryService = registryService;
+        _serviceProvider = serviceProvider;
         _setting = setting;
         _tracer = tracer;
     }
@@ -81,6 +82,8 @@ public class OnlineService : IHostedService
     private async Task CheckHealth(Object state)
     {
         using var span = _tracer?.NewSpan(nameof(CheckHealth));
+
+        _registryService ??= _serviceProvider.GetService<RegistryService>();
 
         var page = new PageParameter { PageSize = 1000 };
         while (true)
