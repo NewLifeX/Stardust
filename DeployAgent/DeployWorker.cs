@@ -1,4 +1,5 @@
-using NewLife;
+﻿using NewLife;
+using NewLife.Log;
 using NewLife.Model;
 using NewLife.Remoting.Clients;
 using NewLife.Serialization;
@@ -7,23 +8,48 @@ using Stardust.Models;
 
 namespace DeployAgent;
 
-public class DeployWorker : IHostedService
+public class DeployWorker(StarFactory factory) : IHostedService
 {
-    private readonly StarFactory _factory;
-
-    public DeployWorker(StarFactory factory)
-    {
-        _factory = factory;
-    }
+    private StarClient _client;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _factory.App.RegisterCommand("deploy/compile", OnCompile);
+        XTrace.WriteLine("开始Deploy客户端");
+
+        var set = DeploySetting.Current;
+
+        // 产品编码、产品密钥从IoT管理平台获取，设备编码支持自动注册
+        var client = new StarClient(factory.Server)
+        {
+            Code = set.Code,
+            Secret = set.Secret,
+            ProductCode = factory.AppId,
+            Setting = set,
+
+            Tracer = factory.Tracer,
+            Log = XTrace.Log,
+        };
+
+        // 禁用客户端特性
+        client.Features &= ~Features.Upgrade;
+
+        client.Open();
+
+        Host.RegisterExit(() => client.Logout("ApplicationExit"));
+
+        _client = client;
+
+        client.RegisterCommand("deploy/compile", OnCompile);
 
         return Task.CompletedTask;
     }
 
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        _client.TryDispose();
+
+        return Task.CompletedTask;
+    }
 
     private String OnCompile(String args)
     {
