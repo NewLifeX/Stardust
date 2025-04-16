@@ -305,6 +305,35 @@ public class StarFactory : DisposeBase
 
         return true;
     }
+
+    /// <summary>设置服务端地址</summary>
+    public void SetServer(String server)
+    {
+        Server = server;
+
+        // 不能重建_client，太多对象引用它，这里无法做到逐一更新
+        //_client = null;
+
+        var client = _client;
+        if (client != null)
+        {
+            // 先注销再登录
+            try
+            {
+                client.Logout(nameof(SetServer)).Wait();
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+            }
+
+            client.Server = server;
+            client.Open();
+        }
+
+        // 注册StarServer环境变量，子进程共享
+        Environment.SetEnvironmentVariable("StarServer", Server);
+    }
     #endregion
 
     #region 监控中心
@@ -418,7 +447,6 @@ public class StarFactory : DisposeBase
                 if (!Valid()) return null;
 
                 _initService = true;
-                //_appClient = _client as AppClient;
 
                 XTrace.WriteLine("星尘注册中心：IRegistry提供服务发现能力，可根据服务名自动获取所有提供者的节点地址，并创建调用服务的IApiClient客户端，并根据服务提供者的上线与下线自动新增或减少服务地址。");
             }

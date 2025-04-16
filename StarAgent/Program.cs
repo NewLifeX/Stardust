@@ -377,22 +377,7 @@ internal class MyService : ServiceBase, IServiceProvider
         };
 
         // 服务迁移
-        client.OnMigration += (s, e) =>
-        {
-            var setStar = StarSetting;
-            var svr = e.NewServer;
-            if (!svr.IsNullOrEmpty() && !svr.EqualIgnoreCase(setStar.Server))
-            {
-                setStar.Server = svr;
-                setStar.Save();
-
-                e.Cancel = false;
-            }
-            else
-            {
-                e.Cancel = true;
-            }
-        };
+        client.OnMigration += OnMigration;
 
         // APM埋点。独立应用名
         client.Tracer = _factory?.Tracer;
@@ -409,6 +394,25 @@ internal class MyService : ServiceBase, IServiceProvider
 
         // 可能需要多次尝试
         client.Open();
+    }
+
+    private void OnMigration(Object sender, MigrationEventArgs e)
+    {
+        var setStar = StarSetting;
+        var svr = e.NewServer;
+        if (!svr.IsNullOrEmpty() && !svr.EqualIgnoreCase(setStar.Server))
+        {
+            setStar.Server = svr;
+            setStar.Save();
+
+            _factory?.SetServer(svr);
+
+            e.Cancel = false;
+        }
+        else
+        {
+            e.Cancel = true;
+        }
     }
 
     public void StartFactory()
