@@ -520,7 +520,7 @@ public class StarFactory : DisposeBase
     {
         if (!Valid()) return Task.FromResult(-1);
 
-        var code = AppId;
+        var code = appId;
         if (!clientId.IsNullOrEmpty()) code = $"{code}@{clientId}";
 
         return _client.InvokeAsync<Int32>("App/SendCommand", new CommandInModel
