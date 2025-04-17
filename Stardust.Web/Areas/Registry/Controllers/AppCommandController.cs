@@ -14,6 +14,12 @@ public class AppCommandController : EntityController<AppCommand>
 {
     static AppCommandController()
     {
+        ListFields.RemoveField("StartTime", "Expire", "UpdateUserId");
+        ListFields.RemoveCreateField();
+        //ListFields.AddListField("StartTime", null, "Result");
+        ListFields.AddListField("Expire", null, "Result");
+        ListFields.AddListField("CreateUser", "UpdateTime");
+
         {
             var df = ListFields.GetField("Command") as ListField;
             df.Url = "/Registry/AppCommand?appId={AppId}&command={Command}";

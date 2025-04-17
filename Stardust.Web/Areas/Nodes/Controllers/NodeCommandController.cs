@@ -14,12 +14,16 @@ public class NodeCommandController : EntityController<NodeCommand>
 {
     static NodeCommandController()
     {
-        //{
-        //    var df = ListFields.GetField("TraceId") as ListField;
-        //    df.DisplayName = "跟踪";
-        //    df.Url = StarHelper.BuildUrl("{TraceId}");
-        //    df.DataVisible = e => e is NodeCommand entity && !entity.TraceId.IsNullOrEmpty();
-        //}
+        ListFields.RemoveField("StartTime", "Expire", "UpdateUserId");
+        ListFields.RemoveCreateField();
+        //ListFields.AddListField("StartTime", null, "Result");
+        ListFields.AddListField("Expire", null, "Result");
+        ListFields.AddListField("CreateUser", "UpdateTime");
+
+        {
+            var df = ListFields.GetField("Command") as ListField;
+            df.Url = "/Nodes/NodeCommand?nodeId={NodeId}&command={Command}";
+        }
         ListFields.TraceUrl();
     }
 
