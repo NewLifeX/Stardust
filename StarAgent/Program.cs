@@ -5,7 +5,6 @@ using NewLife.Agent;
 using NewLife.Agent.Models;
 using NewLife.Log;
 using NewLife.Model;
-using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Remoting.Clients;
 using NewLife.Threading;
@@ -336,6 +335,56 @@ internal class MyService : ServiceBase, IServiceProvider
 
         _server.TryDispose();
         _server = null;
+    }
+
+    protected override void ProcessCommand(String cmd, String[] args)
+    {
+        var source = new CancellationTokenSource();
+        Task task = null;
+
+        // 命令参数包含-restart时，如果重启后还有其它StarAgent进程，则强行杀死
+        if (cmd == "-restart" || cmd == "-run" && "-delay".EqualIgnoreCase(args))
+        {
+            // 异步执行，-run时会阻塞ProcessCommand，导致没有机会杀死僵尸进程
+            task = Task.Run(() => DelayKill(source.Token));
+        }
+
+        base.ProcessCommand(cmd, args);
+
+        // -restart已完成，通知异步任务执行下一步杀进程操作
+        if (task != null)
+        {
+            source.Cancel();
+
+            // 阻塞等待异步任务完成
+            task.Wait();
+        }
+    }
+
+    private async Task DelayKill(CancellationToken cancellationToken)
+    {
+        // 命令参数包含-restart时，如果重启后还有其它StarAgent进程，则强行杀死
+        var pids = Process.GetProcessesByName("StarAgent").Select(e => e.Id).ToList();
+
+        await Task.Delay(5_000, cancellationToken);
+
+        var ps = Process.GetProcessesByName("StarAgent");
+        var pid = Process.GetCurrentProcess().Id;
+        foreach (var p in ps)
+        {
+            if (p.Id == pid) continue;
+
+            // 如果该进程前面没有出现过，就是新进程，无需杀死
+            if (!pids.Contains(p.Id)) continue;
+
+            WriteLog("重启时遇到残留进程 {0}/{1}，准备杀死", p.Id, p.ProcessName);
+            try
+            {
+                p.SafetyKill();
+                p.ForceKill();
+            }
+            catch { }
+        }
     }
     #endregion
 
