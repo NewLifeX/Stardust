@@ -420,17 +420,24 @@ public class RegistryService
         var rs = new List<CommandModel>();
         foreach (var item in cmds)
         {
-            if (item.Times > 10 || item.Expire.Year > 2000 && item.Expire < DateTime.Now)
+            // 命令是否已经开始
+            if (item.StartTime > DateTime.Now) continue;
+
+            // 带有过期时间的命令，加大重试次数
+            var maxTimes = item.Expire.Year > 2000 ? 100 : 10;
+            if (item.Times > maxTimes || item.Expire.Year > 2000 && item.Expire < DateTime.Now)
                 item.Status = CommandStatus.取消;
             else
             {
-                if (item.Status == CommandStatus.处理中 && item.UpdateTime.AddMinutes(10) < DateTime.Now) continue;
+                // 如果命令正在处理中，则短期内不重复下发
+                if (item.Status == CommandStatus.处理中 && item.UpdateTime.AddSeconds(30) > DateTime.Now) continue;
 
                 item.Times++;
                 item.Status = CommandStatus.处理中;
 
-                var cmdModel = BuildCommand(item.App, item);
-                rs.Add(cmdModel);
+                var commandModel = BuildCommand(item.App, item);
+
+                rs.Add(commandModel);
             }
             item.UpdateTime = DateTime.Now;
         }
