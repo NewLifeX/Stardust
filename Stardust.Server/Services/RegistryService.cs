@@ -420,8 +420,9 @@ public class RegistryService
         var rs = new List<CommandModel>();
         foreach (var item in cmds)
         {
-            // 命令是否已经开始
-            if (item.StartTime > DateTime.Now) continue;
+            // 命令要提前下发，在客户端本地做延迟处理，这里不应该过滤掉
+            //// 命令是否已经开始
+            //if (item.StartTime > DateTime.Now) continue;
 
             // 带有过期时间的命令，加大重试次数
             var maxTimes = item.Expire.Year > 2000 ? 100 : 10;
@@ -432,7 +433,9 @@ public class RegistryService
                 // 如果命令正在处理中，则短期内不重复下发
                 if (item.Status == CommandStatus.处理中 && item.UpdateTime.AddSeconds(30) > DateTime.Now) continue;
 
-                item.Times++;
+                // 即时指令，或者已到开始时间的未来指令，才增加次数
+                if (item.StartTime.Year < 2000 || item.StartTime < DateTime.Now)
+                    item.Times++;
                 item.Status = CommandStatus.处理中;
 
                 var commandModel = BuildCommand(item.App, item);
