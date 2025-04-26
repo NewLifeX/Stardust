@@ -290,7 +290,8 @@ public class StarFactory : DisposeBase
             TimerScheduler.GlobalTimeProvider = new StarTimeProvider { Client = client };
 #endif
 
-            client.WriteInfoEvent("应用启动", $"pid={Process.GetCurrentProcess().Id}");
+            var p = Process.GetCurrentProcess();
+            client.WriteInfoEvent("应用启动", $"pid={p.Id}, Name={p.ProcessName}, FileName={p.MainModule?.FileName}");
 
             _client = client;
 
@@ -360,7 +361,7 @@ public class StarFactory : DisposeBase
 
         XTrace.WriteLine("星尘监控中心：ITracer采集并上报应用埋点数据，自动埋点Api接口、Http请求、数据库操作、Redis操作等。可用于监控系统健康状态，分析分布式系统的调用链和性能瓶颈。");
 
-        var tracer = new StarTracer(Server)
+        var tracer = new StarTracer()
         {
             AppId = AppId,
             AppName = AppName,

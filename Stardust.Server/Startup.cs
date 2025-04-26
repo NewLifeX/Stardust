@@ -32,7 +32,7 @@ public class Startup
         InitConfig();
 
         //var star = new StarFactory(null, "StarServer", null);
-        var star = services.AddStardust("StarServer");
+        var star = services.AddStardust();
         if (star.Server.IsNullOrEmpty()) star.Server = "http://127.0.0.1:6600";
 
         // 埋点跟踪
@@ -262,16 +262,23 @@ public class Startup
     {
         await Task.Delay(3_000);
 
-        var registry = serviceProvider.GetRequiredService<IRegistry>();
-        if (registry == null) return;
-
-        var addrs = await registry.ResolveAddressAsync("StarWeb");
-        var str = addrs.Join(";");
-        var set = StarServerSetting.Current;
-        if (set.WebUrl != str && !str.IsNullOrEmpty())
+        try
         {
-            set.WebUrl = str;
-            set.Save();
+            var registry = serviceProvider.GetRequiredService<IRegistry>();
+            if (registry == null) return;
+
+            var addrs = await registry.ResolveAddressAsync("StarWeb");
+            var str = addrs.Join(";");
+            var set = StarServerSetting.Current;
+            if (set.WebUrl != str && !str.IsNullOrEmpty())
+            {
+                set.WebUrl = str;
+                set.Save();
+            }
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteException(ex);
         }
     }
 }

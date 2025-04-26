@@ -84,6 +84,8 @@ public class StarTracer : DefaultTracer
     /// <param name="server"></param>
     public StarTracer(String server) : this()
     {
+        if (server.IsNullOrEmpty()) throw new ArgumentNullException(nameof(server));
+
         var http = new ApiHttpClient(server)
         {
             Tracer = this
