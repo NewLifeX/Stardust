@@ -363,7 +363,7 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
                     Client = null;
                     Status = LoginStatus.Ready;
 
-                    await Login(cancellationToken).ConfigureAwait(false);
+                    await Login("切换新服务器", cancellationToken).ConfigureAwait(false);
                 }
             }
         }

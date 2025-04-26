@@ -468,13 +468,28 @@ public class StarFactory : DisposeBase
     /// <returns></returns>
     public Task<IApiClient> CreateForServiceAsync(String serviceName, String? tag = null) => Service!.CreateForServiceAsync(serviceName, tag);
 
-    /// <summary>发布服务</summary>
+    /// <summary>发布服务。异步发布，屏蔽异常</summary>
+    /// <remarks>即使发布失败，也已经加入队列，后续会定时发布</remarks>
     /// <param name="serviceName">服务名</param>
     /// <param name="address">服务地址</param>
     /// <param name="tag">特性标签</param>
     /// <param name="health">健康监测接口地址</param>
     /// <returns></returns>
-    public Task<PublishServiceInfo> RegisterAsync(String serviceName, String address, String? tag = null, String? health = null) => Service!.RegisterAsync(serviceName, address, tag, health);
+    public Task<PublishServiceInfo> RegisterAsync(String serviceName, String address, String? tag = null, String? health = null)
+    {
+        return Task.Run(() =>
+        {
+            try
+            {
+                return Service!.RegisterAsync(serviceName, address, tag, health);
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+                return null;
+            }
+        });
+    }
 
     /// <summary>消费得到服务地址信息</summary>
     /// <param name="serviceName">服务名</param>

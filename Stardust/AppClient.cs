@@ -268,6 +268,7 @@ public class AppClient : ClientBase, IRegistry
     /// <remarks>
     /// 可以多次调用注册，用于更新服务地址和特性标签等信息。
     /// 例如web应用，刚开始时可能并不知道自己的外部地址（域名和端口），有用户访问以后，即可得知并更新。
+    /// 即使发布失败，也已经加入队列，后续会定时发布。
     /// </remarks>
     /// <param name="serviceName">服务名</param>
     /// <param name="address">服务地址</param>
