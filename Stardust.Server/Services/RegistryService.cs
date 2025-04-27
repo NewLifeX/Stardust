@@ -515,12 +515,13 @@ public class RegistryService
     /// <param name="argument">参数</param>
     /// <param name="user"></param>
     /// <returns></returns>
-    public async Task<AppCommand> SendCommand(App app, String clientId, String command, String argument, String user = null)
+    public async Task<AppCommand> SendCommand(App app, String clientId, String command, String argument, Int32 expire = 0, String user = null)
     {
         var model = new CommandInModel
         {
             Command = command,
             Argument = argument,
+            Expire = expire,
         };
         return await SendCommand(app, clientId, model, user);
     }
@@ -562,7 +563,7 @@ public class RegistryService
         foreach (var item in appIds)
         {
             var app = App.FindById(item);
-            if (app != null) ts.Add(SendCommand(app, null, command, arguments, user));
+            if (app != null) ts.Add(SendCommand(app, null, command, arguments, 600, user));
         }
 
         await Task.WhenAll(ts);
