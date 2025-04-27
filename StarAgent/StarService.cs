@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using NewLife;
 using NewLife.Agent;
+using NewLife.Data;
 using NewLife.Log;
 using NewLife.Model;
 using NewLife.Net;
@@ -85,12 +86,20 @@ public class StarService : DisposeBase, IApi
         ai.Code = AgentSetting.Code;
         ai.IP = AgentInfo.GetIps();
 
+        var raw = (ControllerContext.Current?.Request as IPacket)?.ToStr();
+        if (Provider?.GetService<StarClient>() is StarClient client)
+        {
+            client.WriteEvent("info", "本地探测", raw);
+        }
+
         // 更新应用服务
         var controller = Manager?.QueryByProcess(info.ProcessId);
         if (controller != null)
         {
             // 标记为星尘应用，停止Deploy上报进程信息
             controller.IsStarApp = true;
+
+            controller.WriteEvent("本地探测", raw);
         }
 
         // 返回插件服务器地址
