@@ -291,7 +291,7 @@ public class StarFactory : DisposeBase
 #endif
 
             var p = Process.GetCurrentProcess();
-            client.WriteInfoEvent("应用启动", $"pid={p.Id}, Name={p.ProcessName}, FileName={p.MainModule?.FileName}");
+            client.WriteInfoEvent("应用启动", $"pid={p.Id}, Name={p.GetProcessName()}, FileName={p.MainModule?.FileName}");
 
             _client = client;
 
