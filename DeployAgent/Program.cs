@@ -1,4 +1,7 @@
-﻿using DeployAgent;
+﻿using System.Reflection;
+using DeployAgent;
+using DeployAgent.Commands;
+using NewLife;
 using NewLife.Log;
 using NewLife.Model;
 using Stardust;
@@ -10,12 +13,39 @@ XTrace.UseConsole();
 var services = ObjectContainer.Current;
 //services.AddSingleton(XTrace.Log);
 
-// 配置星尘。自动读取配置文件 config/star.config 中的服务器地址
-var star = services.AddStardust();
+//var asm = Assembly.GetEntryAssembly();
+//Console.WriteLine("星尘发布 StarDeploy v{0}", asm.GetName().Version);
+//Console.WriteLine(asm.GetCustomAttribute<AssemblyDescriptionAttribute>()?.Description);
+//Console.WriteLine("{0}", Environment.OSVersion);
+//Console.WriteLine();
 
-services.AddHostedService<DeployWorker>();
+var cmd = args?.FirstOrDefault();
+if (args != null && !cmd.IsNullOrEmpty())
+{
+    var cmds = new Dictionary<String, ICommand>
+    {
+        { "pack", new PackCommand() },
+        { "deploy", new DeployCommand() }
+    };
 
-var host = services.BuildHost();
+    if (cmds.TryGetValue(cmd, out var command))
+    {
+        // 执行命令
+        command.Process(args.Skip(1).ToArray());
+        return;
+    }
+}
 
-// 异步阻塞，友好退出
-await host.RunAsync();
+// 没有命令时走默认逻辑
+if (cmd.IsNullOrEmpty())
+{
+    // 配置星尘。自动读取配置文件 config/star.config 中的服务器地址
+    var star = services.AddStardust();
+
+    services.AddHostedService<DeployWorker>();
+
+    var host = services.BuildHost();
+
+    // 异步阻塞，友好退出
+    await host.RunAsync();
+}

@@ -23,7 +23,6 @@
     <IsPackable>False</IsPackable>
     <PackAsTool>True</PackAsTool>
     <ToolCommandName>stardeploy</ToolCommandName>
-    <DebugType>none</DebugType>
   </PropertyGroup>
   <PropertyGroup>
     <PackageId>$(AssemblyName)</PackageId>

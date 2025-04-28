@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DeployAgent": {
+      "commandName": "Project",
+      "commandLineArgs": "pack abc.zip config/"
+    }
+  }
+}
