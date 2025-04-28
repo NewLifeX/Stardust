@@ -1,4 +1,5 @@
-﻿using NewLife;
+﻿using System.IO.Compression;
+using NewLife;
 using NewLife.Log;
 
 namespace DeployAgent.Commands;
@@ -11,28 +12,93 @@ internal class PackCommand : ICommand
         XTrace.WriteLine("开始打包：{0}", args.Join(" "));
 
         var target = args[0].GetCurrentPath();
-        var files = args.Length <= 1 ? ["./"] : args.Skip(1).ToArray();
+        var patterns = args.Length <= 1 ? ["./"] : args.Skip(1).ToArray();
 
-        if (files.Length == 1)
+        // 单一打包项，且没有通配符，直接打包，支持多种格式
+        if (patterns.Length == 1 && !patterns[0].Contains('*'))
         {
-            var di = files[0].GetCurrentPath().AsDirectory();
+            // 打包目录
+            var di = patterns[0].GetCurrentPath().AsDirectory();
             if (di.Exists)
                 di.Compress(target, true);
             else
             {
-                var fi = files[0].GetCurrentPath().AsFile();
+                // 打包文件
+                var fi = patterns[0].GetCurrentPath().AsFile();
                 if (fi.Exists)
                     fi.Compress(target);
                 else
-                    throw new FileNotFoundException("文件不存在", files[0]);
+                    throw new FileNotFoundException("文件不存在", patterns[0]);
+            }
+        }
+        else if (target.EndsWithIgnoreCase(".zip"))
+        {
+            using var fs = new FileStream(target, FileMode.OpenOrCreate, FileAccess.Write);
+            using var zip = new ZipArchive(fs, ZipArchiveMode.Create, false);
+            var root = ".".GetCurrentPath().AsDirectory();
+
+            // 处理多个文件
+            foreach (var item in patterns)
+            {
+                // 分为*匹配、单文件、单目录这几种情况
+                if (item.Contains('*'))
+                {
+                    var di = root;
+                    var pt = "";
+
+                    // 把pt分割为目录部分和匹配符部分，以最后一个斜杠或反斜杠分割
+                    var p = item.LastIndexOfAny(['/', '\\']);
+                    if (p > 0)
+                    {
+                        di = item[..p].GetCurrentPath().AsDirectory();
+                        pt = item[(p + 1)..];
+                    }
+                    else
+                    {
+                        pt = item;
+                    }
+
+                    // 遍历文件
+                    WriteLog("扫描：{0}", di.FullName);
+                    foreach (var fi in di.GetAllFiles(pt, true))
+                    {
+                        var name = fi.FullName.Substring(di.FullName.Length).TrimStart('/', '\\');
+                        WriteLog("\t添加：{0}", name);
+                        zip.CreateEntryFromFile(fi.FullName, name);
+                    }
+                }
+                else
+                {
+                    var fi = item.GetCurrentPath().AsFile();
+                    if (fi.Exists)
+                    {
+                        WriteLog("添加：{0}", fi.FullName);
+                        zip.CreateEntryFromFile(fi.FullName, fi.Name);
+                    }
+                    else
+                    {
+                        var di = item.GetCurrentPath().AsDirectory();
+                        if (di.Exists)
+                        {
+                            WriteLog("扫描：{0}", di.FullName);
+                            foreach (var fi2 in di.GetFiles("", SearchOption.AllDirectories))
+                            {
+                                var name = fi2.FullName.Substring(di.FullName.Length).TrimStart('/', '\\');
+                                WriteLog("\t添加：{0}", name);
+                                zip.CreateEntryFromFile(fi2.FullName, name);
+                            }
+                        }
+                        else
+                            throw new FileNotFoundException("文件不存在", item);
+                    }
+                }
             }
         }
         else
-        {
-            // 处理多个文件
-            foreach (var file in files)
-            {
-            }
-        }
+            throw new NotSupportedException("不支持的压缩格式！");
     }
+
+    public ILog Log { get; set; } = XTrace.Log;
+
+    public void WriteLog(String format, params Object[] args) => Log?.Info(format, args);
 }
