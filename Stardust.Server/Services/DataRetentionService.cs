@@ -22,10 +22,7 @@ public class DataRetentionService : IHostedService
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _timer = new TimerX(DoWork, null, DateTime.Today.AddMinutes(Rand.Next(60)), 600 * 1000) { Async = true };
-
-        // 临时来一次
-        TimerX.Delay(DoWork, 10_000);
+        _timer = new TimerX(DoWork, null, DateTime.Now.AddSeconds(30), 600 * 1000) { Async = true };
 
         return Task.CompletedTask;
     }

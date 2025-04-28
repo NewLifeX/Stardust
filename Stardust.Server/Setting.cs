@@ -129,6 +129,9 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     {
         if (TokenSecret.IsNullOrEmpty() || TokenSecret.Split(':').Length != 2) TokenSecret = $"HS256:{Rand.NextString(16)}";
 
+        if (NodeCodeFormula.IsNullOrEmpty() || NodeCodeFormula == "Crc({UUID}@{MachineGuid}@{Macs})")
+            NodeCodeFormula = "Crc({ProductCode}@{UUID}@{DiskID}@{Macs})";
+
         base.OnLoaded();
     }
     #endregion

@@ -1,10 +1,8 @@
-﻿using System.Xml.Linq;
-using NewLife;
+﻿using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Data.Nodes;
 using XCode;
-using XCode.DataAccessLayer;
 using XCode.Membership;
 using XCode.Model;
 using static Stardust.Data.Nodes.Node;
@@ -19,7 +17,7 @@ public class NodeStatService : IHostedService
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _timer = new TimerX(DoNodeStat, null, 5_000, 600 * 1000) { Async = true };
+        _timer = new TimerX(DoNodeStat, null, 15_000, 600 * 1000) { Async = true };
 
         return Task.CompletedTask;
     }

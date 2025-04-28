@@ -22,8 +22,8 @@ public class ShardTableService : IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         // 每小时执行
-        _timer = new TimerX(DoShardTable, null, 5_000, 3600 * 1000) { Async = true };
-        _timer2 = new TimerX(DoClearDetails, null, 6_000, 600 * 1000) { Async = true };
+        _timer = new TimerX(DoShardTable, null, 15_000, 3600 * 1000) { Async = true };
+        _timer2 = new TimerX(DoClearDetails, null, 16_000, 600 * 1000) { Async = true };
 
         return Task.CompletedTask;
     }

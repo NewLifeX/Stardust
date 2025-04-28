@@ -21,6 +21,7 @@ public class DeployWorker(StarFactory factory) : IHostedService
         // 产品编码、产品密钥从IoT管理平台获取，设备编码支持自动注册
         var client = new StarClient(factory.Server)
         {
+            Name = "Deploy",
             Code = set.Code,
             Secret = set.Secret,
             ProductCode = factory.AppId,
