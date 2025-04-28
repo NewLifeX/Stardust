@@ -17,7 +17,7 @@ class NodeCommandSession(WebSocket socket) : WsCommandSession(socket)
     {
         if (command == null || command.Id == 0 || command.Expire.Year > 2000 && command.Expire < DateTime.UtcNow)
         {
-            WriteLog("WebSocket发送", false, "消息无效或已过期。" + message);
+            Log?.WriteLog("WebSocket发送", false, "消息无效或已过期。" + message);
 
             var log = NodeCommand.FindById((Int32)command.Id);
             if (log != null)
@@ -30,7 +30,7 @@ class NodeCommandSession(WebSocket socket) : WsCommandSession(socket)
         }
 
         {
-            WriteLog("WebSocket发送", true, message);
+            Log?.WriteLog("WebSocket发送", true, message);
 
             var log = NodeCommand.FindById((Int32)command.Id);
             if (log != null)

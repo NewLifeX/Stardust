@@ -57,7 +57,7 @@ public class AppController : BaseController
     /// <param name="action"></param>
     /// <param name="success"></param>
     /// <param name="message"></param>
-    protected override void WriteLog(String action, Boolean success, String message)
+    public override void WriteLog(String action, Boolean success, String message)
     {
         var olt = AppOnline.FindByClient(_clientId);
 
@@ -222,7 +222,7 @@ public class AppController : BaseController
         using var session = new AppCommandSession(socket)
         {
             Code = $"{app.Name}@{clientId}",
-            WriteLog = WriteLog,
+            Log = this,
             SetOnline = online => SetOnline(clientId, online)
         };
         _sessionManager.Add(session);

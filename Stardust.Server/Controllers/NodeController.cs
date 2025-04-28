@@ -57,7 +57,7 @@ public class NodeController : BaseController
     /// <param name="action"></param>
     /// <param name="success"></param>
     /// <param name="message"></param>
-    protected override void WriteLog(String action, Boolean success, String message)
+    public override void WriteLog(String action, Boolean success, String message)
     {
         var hi = NodeHistory.Create(_node, action, success, message, Environment.MachineName, UserHost);
         hi.Insert();
@@ -345,7 +345,7 @@ public class NodeController : BaseController
         using var session = new NodeCommandSession(socket)
         {
             Code = node.Code,
-            WriteLog = WriteLog,
+            Log = this,
             SetOnline = online => SetOnline(node, token, ip, online)
         };
         _sessionManager.Add(session);
