@@ -3,6 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <AssemblyName>StarDeploy</AssemblyName>
     <AssemblyTitle>星尘发布</AssemblyTitle>
     <Description>自动下载代码，编译后打包输出并推送发布中心。</Description>
     <Company>新生命开发团队</Company>
@@ -20,15 +21,25 @@
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>
     <IsPackable>False</IsPackable>
+    <PackAsTool>True</PackAsTool>
+    <ToolCommandName>stardeploy</ToolCommandName>
+    <DebugType>none</DebugType>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
-    <PublishAot>true</PublishAot>
-    <OptimizationPreference>Size</OptimizationPreference>
-    <InvariantGlobalization>true</InvariantGlobalization>
-    <StackTraceSupport>false</StackTraceSupport>
+  <PropertyGroup>
+    <PackageId>$(AssemblyName)</PackageId>
+    <Authors>$(Company)</Authors>
+    <PackageProjectUrl>https://newlifex.com/blood/stardust</PackageProjectUrl>
+    <PackageIcon>content\leaf.png</PackageIcon>
+    <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
+    <PackageReleaseNotes>强化FormatName支持反向生成下划线字段名；重构实体类代码生成，支持独立生成模型类和接口</PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
   </PropertyGroup>
-
+  <ItemGroup>
+    <Content Include="..\Doc\leaf.png" Link="leaf.png" />
+  </ItemGroup>
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />
   </ItemGroup>
