@@ -33,72 +33,80 @@ internal class PackCommand : ICommand
         }
         else if (target.EndsWithIgnoreCase(".zip"))
         {
-            using var fs = new FileStream(target, FileMode.OpenOrCreate, FileAccess.Write);
-            using var zip = new ZipArchive(fs, ZipArchiveMode.Create, false);
-            var root = ".".GetCurrentPath().AsDirectory();
+            PackZip(target, patterns);
+        }
+        else
+            throw new NotSupportedException("不支持的压缩格式！");
+    }
 
-            // 处理多个文件
-            foreach (var item in patterns)
+    private void PackZip(String target, String[] patterns)
+    {
+        using var fs = new FileStream(target, FileMode.OpenOrCreate, FileAccess.Write);
+        using var zip = new ZipArchive(fs, ZipArchiveMode.Create, false);
+        var root = ".".GetCurrentPath().AsDirectory();
+
+        // 处理多个文件
+        foreach (var item in patterns)
+        {
+            var recursion = true;
+
+            // 分为*匹配、单文件、单目录这几种情况
+            if (item.Contains('*'))
             {
-                // 分为*匹配、单文件、单目录这几种情况
-                if (item.Contains('*'))
+                var di = root;
+                var pt = "";
+
+                // 把pt分割为目录部分和匹配符部分，以最后一个斜杠或反斜杠分割
+                var p = item.LastIndexOfAny(['/', '\\']);
+                if (p > 0)
                 {
-                    var parent = "";
-                    var di = root;
-                    var pt = "";
-
-                    // 把pt分割为目录部分和匹配符部分，以最后一个斜杠或反斜杠分割
-                    var p = item.LastIndexOfAny(['/', '\\']);
-                    if (p > 0)
-                    {
-                        parent = item[..p];
-                        di = parent.GetCurrentPath().AsDirectory();
-                        pt = item[(p + 1)..];
-                    }
-                    else
-                    {
-                        pt = item;
-                    }
-
-                    // 遍历文件
-                    WriteLog("扫描：{0}", di.FullName);
-                    foreach (var fi in di.GetFiles("", SearchOption.AllDirectories))
-                    {
-                        var name = GetEntryName(di, fi);
-                        WriteLog("\t添加：{0}", name);
-                        zip.CreateEntryFromFile(fi.FullName, name);
-                    }
+                    di = item[..p].GetCurrentPath().AsDirectory();
+                    pt = item[(p + 1)..];
                 }
                 else
                 {
-                    var fi = item.GetCurrentPath().AsFile();
-                    if (fi.Exists)
+                    pt = item;
+                    recursion = false;
+                }
+
+                // 遍历文件
+                WriteLog("扫描：\e[31;1m{0}\e[0m 匹配：\u001b[32;1m{1}\u001b[0m", di.FullName, pt);
+                var option = recursion ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                foreach (var fi in di.GetFiles(pt, option))
+                {
+                    var name = recursion ? GetEntryName(di, fi) : fi.Name;
+                    WriteLog("\t添加：{0}", name);
+                    zip.CreateEntryFromFile(fi.FullName, name);
+                }
+            }
+            else
+            {
+                var fi = item.GetCurrentPath().AsFile();
+                if (fi.Exists)
+                {
+                    var name = fi.Name;
+                    WriteLog("添加：{0}", name);
+                    zip.CreateEntryFromFile(fi.FullName, name);
+                }
+                else
+                {
+                    var di = item.GetCurrentPath().AsDirectory();
+                    if (!di.Exists) throw new FileNotFoundException("文件不存在", item);
+
+                    WriteLog("扫描：\e[31;1m{0}\e[0m", di.FullName);
+                    var option = recursion ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                    foreach (var fi2 in di.GetFiles("", option))
                     {
-                        var name = GetEntryName(fi.Directory, fi);
-                        WriteLog("添加：{0}", name);
-                        zip.CreateEntryFromFile(fi.FullName, name);
-                    }
-                    else
-                    {
-                        var di = item.GetCurrentPath().AsDirectory();
-                        if (di.Exists)
-                        {
-                            WriteLog("扫描：{0}", di.FullName);
-                            foreach (var fi2 in di.GetFiles("", SearchOption.AllDirectories))
-                            {
-                                var name = GetEntryName(di, fi2);
-                                WriteLog("\t添加：{0}", name);
-                                zip.CreateEntryFromFile(fi2.FullName, name);
-                            }
-                        }
-                        else
-                            throw new FileNotFoundException("文件不存在", item);
+                        var name = GetEntryName(di, fi2);
+                        WriteLog("\t添加：{0}", name);
+                        zip.CreateEntryFromFile(fi2.FullName, name);
                     }
                 }
             }
         }
-        else
-            throw new NotSupportedException("不支持的压缩格式！");
+
+        fs.Flush();
+        fs.SetLength(fs.Position);
     }
 
     /// <summary>获取压缩条目相对路径</summary>
