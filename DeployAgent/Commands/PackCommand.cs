@@ -43,6 +43,7 @@ internal class PackCommand : ICommand
                 // 分为*匹配、单文件、单目录这几种情况
                 if (item.Contains('*'))
                 {
+                    var parent = "";
                     var di = root;
                     var pt = "";
 
@@ -50,7 +51,8 @@ internal class PackCommand : ICommand
                     var p = item.LastIndexOfAny(['/', '\\']);
                     if (p > 0)
                     {
-                        di = item[..p].GetCurrentPath().AsDirectory();
+                        parent = item[..p];
+                        di = parent.GetCurrentPath().AsDirectory();
                         pt = item[(p + 1)..];
                     }
                     else
@@ -60,9 +62,9 @@ internal class PackCommand : ICommand
 
                     // 遍历文件
                     WriteLog("扫描：{0}", di.FullName);
-                    foreach (var fi in di.GetAllFiles(pt, true))
+                    foreach (var fi in di.GetFiles("", SearchOption.AllDirectories))
                     {
-                        var name = fi.FullName.Substring(di.FullName.Length).TrimStart('/', '\\');
+                        var name = GetEntryName(di, fi);
                         WriteLog("\t添加：{0}", name);
                         zip.CreateEntryFromFile(fi.FullName, name);
                     }
@@ -72,8 +74,9 @@ internal class PackCommand : ICommand
                     var fi = item.GetCurrentPath().AsFile();
                     if (fi.Exists)
                     {
-                        WriteLog("添加：{0}", fi.FullName);
-                        zip.CreateEntryFromFile(fi.FullName, fi.Name);
+                        var name = GetEntryName(fi.Directory, fi);
+                        WriteLog("添加：{0}", name);
+                        zip.CreateEntryFromFile(fi.FullName, name);
                     }
                     else
                     {
@@ -83,7 +86,7 @@ internal class PackCommand : ICommand
                             WriteLog("扫描：{0}", di.FullName);
                             foreach (var fi2 in di.GetFiles("", SearchOption.AllDirectories))
                             {
-                                var name = fi2.FullName.Substring(di.FullName.Length).TrimStart('/', '\\');
+                                var name = GetEntryName(di, fi2);
                                 WriteLog("\t添加：{0}", name);
                                 zip.CreateEntryFromFile(fi2.FullName, name);
                             }
@@ -96,6 +99,22 @@ internal class PackCommand : ICommand
         }
         else
             throw new NotSupportedException("不支持的压缩格式！");
+    }
+
+    /// <summary>获取压缩条目相对路径</summary>
+    /// <param name="parent"></param>
+    /// <param name="fi"></param>
+    /// <returns></returns>
+    private String GetEntryName(DirectoryInfo parent, FileSystemInfo fi)
+    {
+        var name = fi.FullName;
+        if (!name.StartsWith(parent.FullName)) throw new InvalidDataException();
+
+        // 取得文件相对于目录的路径
+        name = name[parent.FullName.Length..].TrimStart('/', '\\');
+
+        // 加上目录
+        return parent.Name.CombinePath(name);
     }
 
     public ILog Log { get; set; } = XTrace.Log;
