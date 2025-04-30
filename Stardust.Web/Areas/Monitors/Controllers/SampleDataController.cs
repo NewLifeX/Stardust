@@ -14,7 +14,8 @@ public class SampleDataController : ReadOnlyEntityController<SampleData>
 {
     static SampleDataController()
     {
-        ListFields.RemoveField("Id", "DataId", "ItemId");
+        ListFields.RemoveField("Id", "DataId", "ItemId", "SpanId", "ParentId");
+        ListFields.AddListField("Tag", "CreateIP");
 
         {
             var df = ListFields.AddListField("AppName", "Name");

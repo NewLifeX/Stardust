@@ -155,6 +155,7 @@ public partial class SampleData : Entity<SampleData>
 
         if (dataId > 0) exp &= _.DataId == dataId;
         if (!traceId.IsNullOrEmpty()) exp &= _.TraceId == traceId;
+        if (itemId > 0) exp &= _.ItemId == itemId;
         if (success != null) exp &= _.Success == success;
 
         if (!key.IsNullOrEmpty()) exp &= _.Tag.Contains(key) | _.Error.Contains(key);

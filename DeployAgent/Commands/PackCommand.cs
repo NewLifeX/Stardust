@@ -44,7 +44,7 @@ internal class PackCommand : ICommand
     private void PackZip(String target, String[] patterns)
     {
         using var fs = new FileStream(target, FileMode.OpenOrCreate, FileAccess.Write);
-        using var zip = new ZipArchive(fs, ZipArchiveMode.Create, false);
+        using var zip = new ZipArchive(fs, ZipArchiveMode.Create, true);
         var root = ".".GetCurrentPath().AsDirectory();
         var context = new PackContext();
 
@@ -110,10 +110,13 @@ internal class PackCommand : ICommand
             }
         }
 
+        zip.Dispose();
         fs.Flush();
         fs.SetLength(fs.Position);
+        //fs.TryDispose();
 
         context.CompressSize = fs.Length;
+        //context.CompressSize = target.AsFile().Length;
         var rate = context.Size == 0 ? 0 : context.CompressSize / (Double)context.Size;
 
         WriteLog("压缩完成，大小：\e[31;1m{0:n0}\e[0m，压缩后大小：\e[31;1m{1:n0}\e[0m，压缩比：\e[31;1m{2:p1}\e[0m", context.Size, context.CompressSize, rate);
