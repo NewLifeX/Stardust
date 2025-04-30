@@ -8,5 +8,13 @@ namespace DeployAgent.Commands;
 
 internal class DeployCommand : ICommand
 {
-    public void Process(String[] args) => throw new NotImplementedException();
+    public void Process(String[] args)
+    {
+
+    }
+}
+
+class DeployParameter
+{
+    public String AppId { get; set; }
 }

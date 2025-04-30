@@ -1,9 +1,11 @@
-﻿using System.IO.Compression;
+﻿using System.ComponentModel;
+using System.IO.Compression;
 using NewLife;
 using NewLife.Log;
 
 namespace DeployAgent.Commands;
 
+[Description("打包命令。abc.zip *.exe *.dll *.runtimeconfig.json ./Config/*.config")]
 internal class PackCommand : ICommand
 {
     public void Process(String[] args)
@@ -44,6 +46,7 @@ internal class PackCommand : ICommand
         using var fs = new FileStream(target, FileMode.OpenOrCreate, FileAccess.Write);
         using var zip = new ZipArchive(fs, ZipArchiveMode.Create, false);
         var root = ".".GetCurrentPath().AsDirectory();
+        var context = new PackContext();
 
         // 处理多个文件
         foreach (var item in patterns)
@@ -76,7 +79,8 @@ internal class PackCommand : ICommand
                 {
                     var name = recursion ? GetEntryName(di, fi) : fi.Name;
                     WriteLog("\t添加：{0}", name);
-                    zip.CreateEntryFromFile(fi.FullName, name);
+                    //zip.CreateEntryFromFile(fi.FullName, name);
+                    CreateEntryFromFile(zip, fi, name, context);
                 }
             }
             else
@@ -86,7 +90,8 @@ internal class PackCommand : ICommand
                 {
                     var name = fi.Name;
                     WriteLog("添加：{0}", name);
-                    zip.CreateEntryFromFile(fi.FullName, name);
+                    //zip.CreateEntryFromFile(fi.FullName, name);
+                    CreateEntryFromFile(zip, fi, name, context);
                 }
                 else
                 {
@@ -99,7 +104,7 @@ internal class PackCommand : ICommand
                     {
                         var name = GetEntryName(di, fi2);
                         WriteLog("\t添加：{0}", name);
-                        zip.CreateEntryFromFile(fi2.FullName, name);
+                        CreateEntryFromFile(zip, fi2, name, context);
                     }
                 }
             }
@@ -107,6 +112,11 @@ internal class PackCommand : ICommand
 
         fs.Flush();
         fs.SetLength(fs.Position);
+
+        context.CompressSize = fs.Length;
+        var rate = context.Size == 0 ? 0 : context.CompressSize / (Double)context.Size;
+
+        WriteLog("压缩完成，大小：\e[31;1m{0:n0}\e[0m，压缩后大小：\e[31;1m{1:n0}\e[0m，压缩比：\e[31;1m{2:p1}\e[0m", context.Size, context.CompressSize, rate);
     }
 
     /// <summary>获取压缩条目相对路径</summary>
@@ -125,7 +135,30 @@ internal class PackCommand : ICommand
         return parent.Name.CombinePath(name);
     }
 
+    private void CreateEntryFromFile(ZipArchive zip, FileInfo fi, String name, PackContext context)
+    {
+        var entry = zip.CreateEntry(name, CompressionLevel.SmallestSize);
+        using var fs = fi.OpenRead();
+        using var stream = entry.Open();
+        fs.CopyTo(stream);
+
+        context.Size += fi.Length;
+    }
+
     public ILog Log { get; set; } = XTrace.Log;
 
     public void WriteLog(String format, params Object[] args) => Log?.Info(format, args);
+}
+
+class PackContext
+{
+    public String Target { get; set; }
+
+    public String[] Patterns { get; set; } = [];
+
+    /// <summary>总大小</summary>
+    public Int64 Size { get; set; }
+
+    /// <summary>压缩后大小</summary>
+    public Int64 CompressSize { get; set; }
 }

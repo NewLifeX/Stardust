@@ -26,9 +26,12 @@ var cmds = new Dictionary<String, ICommand>
     { "deploy", new DeployCommand() }
 };
 Console.WriteLine("可用命令：");
+
 foreach (var item in cmds)
 {
-    Console.WriteLine("\t{0,-8}\t{1}", item.Key, item.Value.GetType().FullName);
+    var type = item.Value.GetType();
+
+    Console.WriteLine("\t{0,-8}\t{1}", item.Key, type.GetDescription() ?? type.FullName);
 }
 
 var cmd = args?.FirstOrDefault();
@@ -36,9 +39,17 @@ if (args != null && !cmd.IsNullOrEmpty())
 {
     if (cmds.TryGetValue(cmd, out var command))
     {
-        // 执行命令
-        command.Process(args.Skip(1).ToArray());
-        return;
+        try
+        {
+            // 执行命令
+            command.Process(args.Skip(1).ToArray());
+            return;
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteException(ex);
+            Thread.Sleep(15_000);
+        }
     }
 }
 
