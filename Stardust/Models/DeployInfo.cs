@@ -3,7 +3,7 @@
 /// <summary>应用发布信息</summary>
 public class DeployInfo
 {
-    /// <summary>发布编号</summary>
+    /// <summary>发布编号。部署节点的编号</summary>
     public Int32 Id { get; set; }
 
     /// <summary>应用名称</summary>

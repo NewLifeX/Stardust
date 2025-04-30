@@ -375,7 +375,7 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
     #region 部署
     /// <summary>获取分配到本节点的应用服务信息</summary>
     /// <returns></returns>
-    public Task<DeployInfo[]?> GetDeploy() => InvokeAsync<DeployInfo[]>("Deploy/GetAll");
+    public Task<DeployInfo[]?> GetDeploy(Int32 deployId, String deployName, String appName) => InvokeAsync<DeployInfo[]>("Deploy/GetAll", new { deployId, deployName, appName });
 
     /// <summary>上传本节点的所有应用服务信息</summary>
     /// <param name="services"></param>

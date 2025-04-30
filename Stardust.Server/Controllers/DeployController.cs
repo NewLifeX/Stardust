@@ -47,7 +47,7 @@ public class DeployController : BaseController
 
     /// <summary>获取分配到本节点的应用服务信息</summary>
     /// <returns></returns>
-    public DeployInfo[] GetAll()
+    public DeployInfo[] GetAll(Int32 deployId, String deployName, String appName)
     {
         var list = AppDeployNode.FindAllByNodeId(_node.ID);
 
@@ -57,13 +57,23 @@ public class DeployController : BaseController
             // 不返回未启用的发布集，如果需要在客户端删除，则通过指令下发来实现
             if (!item.Enable) continue;
 
+            // 过滤需要的应用部署
+            if (deployId > 0 && item.Id != deployId) continue;
+
             var app = item.Deploy;
             if (app == null || !app.Enable) continue;
+            if (!deployName.IsNullOrEmpty())
+            {
+                if (!item.DeployName.IsNullOrEmpty() && item.DeployName != deployName ||
+                    item.DeployName.IsNullOrEmpty() && app.Name != deployName) continue;
+            }
+            if (!appName.IsNullOrEmpty() && app.AppName != appName) continue;
 
             // 消除缓存，解决版本更新后不能及时更新缓存的问题
             app = AppDeploy.FindByKey(app.Id);
             if (app == null || !app.Enable) continue;
 
+            //todo: 需要根据当前节点的处理器指令集和操作系统版本来选择合适的版本
             //var ver = AppDeployVersion.FindByDeployIdAndVersion(app.Id, app.Version);
             var ver = _deployService.GetDeployVersion(app, _node);
             if (ver == null) continue;
