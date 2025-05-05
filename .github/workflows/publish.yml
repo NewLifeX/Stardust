@@ -26,6 +26,7 @@ jobs:
       run: |
         dotnet pack --no-build -o out Stardust\Stardust.csproj
         dotnet pack --no-build -o out Stardust.Extensions\Stardust.Extensions.csproj
+        dotnet pack --no-build -o out DeployAgent\DeployAgent.csproj
 
     - name: Publish
       run: |
