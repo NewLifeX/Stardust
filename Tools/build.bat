@@ -13,7 +13,7 @@ dotnet publish ..\Stardust.Web\Stardust.Web.csproj --nologo -c Release -o %out%
 del /f/s/q %out%\*.pdb %out%\*.xml %out%\*.deps.json
 rmdir /s/q %out%\wwwroot
 
-clover80.exe zip %base%\StarWeb.zip %out%\
+clover.exe zip %base%\StarWeb.zip %out%\
 del %out%\*.exe %out%\*.dll %out%\*.config /f/s/q
 move %base%\StarWeb.zip %out%\StarWeb.zip
 
@@ -32,5 +32,5 @@ copy clover40.exe %base%\clover40.exe /y
 mkdir %base%\Plugins
 
 del %base%\..\star.zip /f
-clover80.exe zip %base%\..\star.zip %base%\
+clover.exe zip %base%\..\star.zip %base%\
 move %base%\..\star.zip %base%\

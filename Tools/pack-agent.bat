@@ -1,7 +1,7 @@
 @echo off
 
 set base=..\Bin\Agent
-set clover=..\..\..\Tools\clover80.exe
+set clover=..\..\..\Tools\clover.exe
 
 del %base%\*.zip /f/q
 del %base%\*.tar.gz /f/q
