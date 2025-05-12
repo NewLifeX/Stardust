@@ -576,7 +576,7 @@ public class RegistryService
         model.TraceId = DefaultSpan.Current + "";
 
         // 新版本使用UTC时间
-        if (!app.Version.IsNullOrEmpty() && Version.TryParse(app.Version, out var ver) && (ver.Build < 2000 || ver.Build > 2025))
+        if (app.Compile.Year >= 2025)
         {
             if (model.StartTime.Year > 2000)
                 model.StartTime = model.StartTime.ToUniversalTime();

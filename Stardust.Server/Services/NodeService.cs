@@ -816,14 +816,13 @@ public class NodeService
     #endregion
 
     #region 辅助
-    private static Version _version = new(3, 1, 2025, 0103);
     private CommandModel BuildCommand(Node node, NodeCommand cmd)
     {
         var model = cmd.ToModel();
         model.TraceId = DefaultSpan.Current + "";
 
         // 新版本使用UTC时间
-        if (!node.Version.IsNullOrEmpty() && Version.TryParse(node.Version, out var ver) && ver >= _version)
+        if (node.CompileTime.Year >= 2025)
         {
             if (model.StartTime.Year > 2000)
                 model.StartTime = model.StartTime.ToUniversalTime();
