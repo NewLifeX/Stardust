@@ -72,7 +72,7 @@ public class StarTracer : DefaultTracer
             {
                 AppId ??= asm.Name;
                 AppName = asm.Title;
-                _version = asm.Version;
+                _version = asm.FileVersion;
             }
 
             ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}";

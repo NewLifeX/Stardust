@@ -98,6 +98,14 @@ public class RegistryService
 
         if (app.DisplayName.IsNullOrEmpty()) app.DisplayName = model.AppName;
 
+        // 比较编译时间，只要最新的
+        var compile = model.Compile.ToDateTime().ToLocalTime();
+        if (app.Compile < compile)
+        {
+            app.Compile = compile;
+            app.Version = model.Version;
+        }
+
         app.LastLogin = DateTime.Now;
         app.LastIP = ip;
         app.UpdateIP = ip;

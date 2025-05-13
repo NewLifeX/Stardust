@@ -259,8 +259,9 @@ public partial class AppOnline : Entity<AppOnline>
             {
                 if (app.Version.IsNullOrEmpty())
                     app.Version = info.Version;
-                // 比较版本，只要最新版
-                else if (new Version(info.Version) > new Version(app.Version))
+                // 比较版本，只要最新版。要求30天内未登录，此时可能是借助埋点数据上传来更新版本信息，并没有登录动作
+                else if (app.Compile.AddDays(30) < DateTime.Now &&
+                    new Version(info.Version) > new Version(app.Version))
                     app.Version = info.Version;
 
                 if (Version.IsNullOrEmpty()) Version = info.Version;

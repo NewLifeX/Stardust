@@ -82,7 +82,7 @@ public class AppClient : ClientBase, IRegistry
             {
                 AppId ??= asm.Name;
                 AppName = asm.Title;
-                _version = asm.Version;
+                _version = asm.FileVersion;
             }
 
             ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}";
@@ -258,7 +258,7 @@ public class AppClient : ClientBase, IRegistry
 
             ClientId = ClientId,
             IP = ip,
-            Version = asmx?.Version,
+            Version = asmx?.FileVersion,
         };
 
         return service;
