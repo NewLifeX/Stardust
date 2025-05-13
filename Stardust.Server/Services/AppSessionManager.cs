@@ -8,7 +8,17 @@ namespace Stardust.Server.Services;
 
 public class AppSessionManager : SessionManager
 {
-    public AppSessionManager(IServiceProvider serviceProvider) : base(serviceProvider) => Topic = "AppCommands";
+    public AppSessionManager(IServiceProvider serviceProvider) : base(serviceProvider)
+    {
+        Topic = "AppCommands";
+
+        var lifeTime = serviceProvider.GetService<IHostApplicationLifetime>();
+        lifeTime.ApplicationStopping.Register(() =>
+        {
+            // 关闭时，清除所有会话
+            CloseAll(nameof(lifeTime.ApplicationStopping));
+        });
+    }
 }
 
 class AppCommandSession(WebSocket socket) : WsCommandSession(socket)
