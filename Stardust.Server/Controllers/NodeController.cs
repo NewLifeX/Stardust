@@ -77,6 +77,19 @@ public class NodeController : BaseController
 
         if (node != null && !node.Enable) throw new ApiException(99, "禁止登录");
 
+        // 支持自动识别2020年的XCoder版本，兼容性处理
+        if (inf.ProductCode.IsNullOrEmpty())
+        {
+            var installPath = inf.Node?.InstallPath;
+            if (!installPath.IsNullOrEmpty())
+            {
+                if (installPath.Contains("XCoder"))
+                    inf.ProductCode = "XCoder";
+                else if (installPath.Contains("CrazyCoder"))
+                    inf.ProductCode = "CrazyCoder";
+            }
+        }
+
         // 设备不存在或者验证失败，执行注册流程
         if (node != null && !_nodeService.Auth(node, inf.Secret, inf, ip, _setting))
         {
