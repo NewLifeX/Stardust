@@ -52,16 +52,16 @@ class CacheDirectoryContents : IDirectoryContents, IEnumerable<IFileInfo>, IEnum
     {
         try
         {
-            _entries = (from info in new DirectoryInfo(_directory).EnumerateFileSystemInfos()
-                        where !CacheFileProvider.IsExcluded(info, _filters)
-                        select info).Select(info =>
-                        {
-                            if (info is FileInfo fileInfo)
-                                return new PhysicalFileInfo(fileInfo);
-                            return info is DirectoryInfo directoryInfo
-                                ? (IFileInfo)new PhysicalDirectoryInfo(directoryInfo)
-                                : throw new InvalidOperationException("UnexpectedFileSystemInfo");
-                        });
+            var entries = (from info in new DirectoryInfo(_directory).EnumerateFileSystemInfos()
+                           where !CacheFileProvider.IsExcluded(info, _filters)
+                           select info).Select(info =>
+                           {
+                               if (info is FileInfo fileInfo)
+                                   return new PhysicalFileInfo(fileInfo);
+                               return info is DirectoryInfo directoryInfo
+                                   ? (IFileInfo)new PhysicalDirectoryInfo(directoryInfo)
+                                   : throw new InvalidOperationException("UnexpectedFileSystemInfo");
+                           }).ToList();
 
             if (!IndexInfoFile.IsNullOrEmpty())
             {
@@ -75,7 +75,7 @@ class CacheDirectoryContents : IDirectoryContents, IEnumerable<IFileInfo>, IEnum
                     var fis = csv.FindAll();
                     if (fis.Count > 0)
                     {
-                        var list = _entries.ToList();
+                        var list = entries.ToList();
                         foreach (var item in fis)
                         {
                             // 把fis里面的项添加到list
@@ -83,14 +83,19 @@ class CacheDirectoryContents : IDirectoryContents, IEnumerable<IFileInfo>, IEnum
                                 list.Add(item);
                         }
 
-                        _entries = list;
+                        entries = list;
                     }
+
+                    // 剔除索引文件本身
+                    entries.RemoveAll(e => e.PhysicalPath == fi.FullName);
                 }
             }
+
+            _entries = entries;
         }
         catch (Exception ex) when (ex is DirectoryNotFoundException or IOException)
         {
-            _entries = Enumerable.Empty<IFileInfo>();
+            _entries = [];
         }
     }
 }
