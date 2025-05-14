@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
+using NewLife.Model;
 using NewLife.Remoting.Clients;
 using NewLife.Remoting.Models;
 using NewLife.Serialization;
@@ -35,6 +36,22 @@ internal class MyStarClient : StarClient
 
             return false;
         }
+    }
+    #endregion
+
+    #region 方法
+    protected override void OnInit()
+    {
+        var provider = ServiceProvider ??= ObjectContainer.Provider;
+
+        // 找到容器，注册默认的模型实现，供后续InvokeAsync时自动创建正确的模型对象
+        var container = ModelExtension.GetService<IObjectContainer>(provider) ?? ObjectContainer.Current;
+        if (container != null)
+        {
+            container.AddTransient<IPingResponse, MyPingResponse>();
+        }
+
+        base.OnInit();
     }
     #endregion
 
@@ -94,6 +111,25 @@ internal class MyStarClient : StarClient
                 }
             }
         }
+    }
+
+    public override async Task<IPingResponse> Ping(CancellationToken cancellationToken = default)
+    {
+        var rs = await base.Ping(cancellationToken);
+        if (rs is MyPingResponse mpr)
+        {
+            var set = AgentSetting;
+            var syncTime = mpr.SyncTime;
+            if (syncTime > 0 && syncTime != set.SyncTime)
+            {
+                WriteLog("同步时间间隔变更为：{0}秒", syncTime);
+
+                set.SyncTime = syncTime;
+                set.Save();
+            }
+        }
+
+        return rs;
     }
     #endregion
 
