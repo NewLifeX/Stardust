@@ -12,6 +12,9 @@ public class ZipDeploy
     /// <summary>应用名称</summary>
     public String Name { get; set; } = null!;
 
+    /// <summary>应用编码</summary>
+    public String? AppId { get; set; }
+
     /// <summary>文件名</summary>
     public String? FileName { get; set; }
 
@@ -114,7 +117,7 @@ public class ZipDeploy
                 //    }
                 //    WriteLog("参数路径补全 {0}", args[i]);
                 //}
-                
+
                 // 其它参数全要，支持 urls=http://*:8000
                 gs[i] = args[i];
             }
@@ -259,6 +262,9 @@ public class ZipDeploy
             UseShellExecute = false,
         };
         si.EnvironmentVariables["BasePath"] = rundir.FullName;
+
+        if (!AppId.IsNullOrEmpty())
+            si.EnvironmentVariables["StarAppId"] = AppId;
 
         if (runfile.Extension.EqualIgnoreCase(".dll"))
         {

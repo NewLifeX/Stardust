@@ -217,7 +217,11 @@ public class StarFactory : DisposeBase
         if (AppId.IsNullOrEmpty()) AppId = set.AppKey;
         if (Secret.IsNullOrEmpty()) Secret = set.Secret;
 
-        if (flag) set.Save();
+        // 重新写回配置文件
+        set.Server = Server;
+        set.AppKey = AppId;
+        set.Secret = Secret;
+        set.Save();
 
         // 生成ClientId，用于唯一标识当前实例，默认IP@pid
         try

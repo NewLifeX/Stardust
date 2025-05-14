@@ -269,7 +269,11 @@ public class ServiceManager : DisposeBase
                 controller.EventProvider = _client;
                 controller.SetInfo(service);
 
-                if (deploy != null) controller.DeployInfo = deploy;
+                if (deploy != null)
+                {
+                    controller.DeployInfo = deploy;
+                    controller.AppId = deploy.Name;
+                }
 
                 return controller.Check();
             }
@@ -277,6 +281,7 @@ public class ServiceManager : DisposeBase
             controller = new ServiceController
             {
                 Name = service.Name,
+                AppId = deploy?.Name,
                 //Info = service,
                 DeployInfo = deploy,
 
