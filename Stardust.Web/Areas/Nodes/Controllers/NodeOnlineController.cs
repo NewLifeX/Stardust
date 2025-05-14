@@ -24,7 +24,7 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
 
         var list = ListFields;
         list.Clear();
-        var allows = new[] { "ID", "ProjectName", "Name", "Category", "ProductCode", "CityName", "PingCount", "WebSocket", "Version", "OSKind", "IP", "AvailableMemory", "MemoryUsed", "AvailableFreeSpace", "SpaceUsed", "CpuRate", "ProcessCount", __.Signal, "UplinkSpeed", "DownlinkSpeed", "LocalTime", "CreateTime", "UpdateTime", "UpdateIP" };
+        var allows = new[] { "ID", "ProjectName", "Name", "Category", "ProductCode", "CityName", "PingCount", "WebSocket", "Version", "OSKind", "IP", "AvailableMemory", "MemoryUsed", "AvailableFreeSpace", "SpaceUsed", "CpuRate", "ProcessCount", __.Signal, __.Offset, "UplinkSpeed", "DownlinkSpeed", "LocalTime", "CreateTime", "UpdateTime", "UpdateIP" };
         foreach (var item in allows)
         {
             list.AddListField(item);
@@ -126,6 +126,25 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
             if (online?.Node != null)
             {
                 ts.Add(_starFactory.SendNodeCommand(online.Node.Code, "node/upgrade", null, 0, 600, 0));
+            }
+        }
+
+        var rs = await Task.WhenAll(ts);
+
+        return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
+    }
+
+    [DisplayName("同步时间")]
+    [EntityAuthorize((PermissionFlags)16)]
+    public async Task<ActionResult> SyncTime()
+    {
+        var ts = new List<Task<Int32>>();
+        foreach (var item in SelectKeys)
+        {
+            var online = NodeOnline.FindById(item.ToInt());
+            if (online?.Node != null)
+            {
+                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, "node/syncTime", null, 0, 600, 0));
             }
         }
 
