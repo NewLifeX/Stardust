@@ -182,24 +182,14 @@ public class AppClient : ClientBase, IRegistry
     /// <returns></returns>
     protected override async Task OnPing(Object state)
     {
-        DefaultSpan.Current = null;
-        using var span = Tracer?.NewSpan("AppPing");
-        try
-        {
-            // 向服务端发送心跳后，再向本地发送心跳
-            await base.OnPing(state).ConfigureAwait(false);
-            await PingLocal().ConfigureAwait(false);
+        // 向服务端发送心跳后，再向本地发送心跳
+        await base.OnPing(state).ConfigureAwait(false);
+        await PingLocal().ConfigureAwait(false);
 
-            if (!NetworkInterface.GetIsNetworkAvailable()) return;
+        if (!NetworkInterface.GetIsNetworkAvailable()) return;
 
-            await RefreshPublish().ConfigureAwait(false);
-            await RefreshConsume().ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            span?.SetError(ex, null);
-            Log?.Debug("{0}", ex);
-        }
+        await RefreshPublish().ConfigureAwait(false);
+        await RefreshConsume().ConfigureAwait(false);
     }
     #endregion
 
