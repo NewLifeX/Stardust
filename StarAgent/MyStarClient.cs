@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using NewLife;
 using NewLife.Agent;
 using NewLife.Log;
@@ -43,6 +44,7 @@ internal class MyStarClient : StarClient
         this.RegisterCommand("node/restart", Restart);
         this.RegisterCommand("node/reboot", Reboot);
         this.RegisterCommand("node/setchannel", SetChannel);
+        this.RegisterCommand("node/synctime", SyncTime);
 
         base.Open();
     }
@@ -64,6 +66,34 @@ internal class MyStarClient : StarClient
         }
 
         return request;
+    }
+    #endregion
+
+    #region 心跳
+    private DateTime _lastSync;
+    protected override async Task OnPing(Object state)
+    {
+        await base.OnPing(state);
+
+        var syncTime = AgentSetting.SyncTime;
+        if (syncTime > 0 && Span.TotalMilliseconds != 0)
+        {
+            var now = DateTime.Now;
+            if (_lastSync.AddSeconds(syncTime) < now)
+            {
+                _lastSync = now;
+
+                try
+                {
+                    // 同步时间
+                    SyncTime();
+                }
+                catch (Exception ex)
+                {
+                    WriteLog("同步时间失败：{0}", ex.Message);
+                }
+            }
+        }
     }
     #endregion
 
@@ -226,6 +256,62 @@ internal class MyStarClient : StarClient
         set.Save();
 
         return "success " + argument;
+    }
+
+    /// <summary>同步时间</summary>
+    public String SyncTime(String argument = null)
+    {
+        var now = DateTime.Now;
+        var time = GetNow();
+        var ts = now - time;
+        if (Math.Abs(ts.TotalMilliseconds) < 100) return "无需同步";
+
+        WriteLog("同步时间为：{0}，偏差：{1}", time, ts);
+        time = time.ToUniversalTime();
+
+        var rs = "不支持的系统！";
+        if (Runtime.Windows)
+        {
+            var st = new SYSTEMTIME
+            {
+                Year = (Int16)time.Year,
+                Month = (Int16)time.Month,
+                Day = (Int16)time.Day,
+                Hour = (Int16)time.Hour,
+                Minute = (Int16)time.Minute,
+                Second = (Int16)time.Second,
+                Milliseconds = (Int16)time.Millisecond
+            };
+
+            if (!SetSystemTime(ref st))
+                throw new InvalidOperationException("Unable to set system time.");
+
+            rs = "成功";
+        }
+        else if (Runtime.Linux)
+        {
+            rs = "date".Execute($"-u -s \"{time:yyyy-MM-dd HH:mm:ss}\"", 5_000);
+        }
+
+        WriteLog(rs);
+
+        return rs;
+    }
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern Boolean SetSystemTime(ref SYSTEMTIME st);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct SYSTEMTIME
+    {
+        public Int16 Year;
+        public Int16 Month;
+        public Int16 DayOfWeek;
+        public Int16 Day;
+        public Int16 Hour;
+        public Int16 Minute;
+        public Int16 Second;
+        public Int16 Milliseconds;
     }
     #endregion
 }

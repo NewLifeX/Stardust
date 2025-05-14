@@ -140,7 +140,7 @@ public class NodeController : BaseController
     public PingResponse Ping(PingInfo inf)
     {
         var node = _node;
-        var rs = new PingResponse
+        var rs = new MyPingResponse
         {
             Time = inf.Time,
             ServerTime = DateTime.UtcNow.ToLong(),
@@ -152,6 +152,9 @@ public class NodeController : BaseController
         {
             rs.Period = node.Period;
             rs.NewServer = !node.NewServer.IsNullOrEmpty() ? node.NewServer : node.Project?.NewServer;
+
+            // 服务端设置节点的同步时间周期时，客户端会覆盖掉；服务端未设置时，不要覆盖客户端的同步参数
+            if (node.SyncTime > 0) rs.SyncTime = node.SyncTime;
 
             // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌，以获取业务的连续性。
             //todo 这里将来由客户端提交刷新令牌，才能颁发新的访问令牌。

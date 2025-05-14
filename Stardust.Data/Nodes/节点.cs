@@ -398,6 +398,15 @@ public partial class Node
     [BindColumn("Period", "采样周期。默认60秒", "")]
     public Int32 Period { get => _Period; set { if (OnPropertyChanging("Period", value)) { _Period = value; OnPropertyChanged("Period"); } } }
 
+    private Int32 _SyncTime;
+    /// <summary>同步时间。定期同步服务器时间到本地，默认0秒不同步</summary>
+    [Category("参数设置")]
+    [DisplayName("同步时间")]
+    [Description("同步时间。定期同步服务器时间到本地，默认0秒不同步")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("SyncTime", "同步时间。定期同步服务器时间到本地，默认0秒不同步", "")]
+    public Int32 SyncTime { get => _SyncTime; set { if (OnPropertyChanging("SyncTime", value)) { _SyncTime = value; OnPropertyChanged("SyncTime"); } } }
+
     private String _NewServer;
     /// <summary>新服务器。该节点自动迁移到新的服务器地址</summary>
     [Category("参数设置")]
@@ -647,6 +656,7 @@ public partial class Node
             "CityID" => _CityID,
             "Address" => _Address,
             "Period" => _Period,
+            "SyncTime" => _SyncTime,
             "NewServer" => _NewServer,
             "LastVersion" => _LastVersion,
             "Channel" => _Channel,
@@ -717,6 +727,7 @@ public partial class Node
                 case "CityID": _CityID = value.ToInt(); break;
                 case "Address": _Address = Convert.ToString(value); break;
                 case "Period": _Period = value.ToInt(); break;
+                case "SyncTime": _SyncTime = value.ToInt(); break;
                 case "NewServer": _NewServer = Convert.ToString(value); break;
                 case "LastVersion": _LastVersion = Convert.ToString(value); break;
                 case "Channel": _Channel = (NodeChannels)value.ToInt(); break;
@@ -900,6 +911,9 @@ public partial class Node
 
         /// <summary>采样周期。默认60秒</summary>
         public static readonly Field Period = FindByName("Period");
+
+        /// <summary>同步时间。定期同步服务器时间到本地，默认0秒不同步</summary>
+        public static readonly Field SyncTime = FindByName("SyncTime");
 
         /// <summary>新服务器。该节点自动迁移到新的服务器地址</summary>
         public static readonly Field NewServer = FindByName("NewServer");
@@ -1098,6 +1112,9 @@ public partial class Node
 
         /// <summary>采样周期。默认60秒</summary>
         public const String Period = "Period";
+
+        /// <summary>同步时间。定期同步服务器时间到本地，默认0秒不同步</summary>
+        public const String SyncTime = "SyncTime";
 
         /// <summary>新服务器。该节点自动迁移到新的服务器地址</summary>
         public const String NewServer = "NewServer";

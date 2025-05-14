@@ -57,6 +57,10 @@ public class StarAgentSetting : Config<StarAgentSetting>
     [Description("延迟时间。重启进程或服务的延迟时间，默认3000ms")]
     public Int32 Delay { get; set; } = 3000;
 
+    /// <summary>同步时间间隔。定期同步服务器时间到本地，默认0秒不同步</summary>
+    [Description("同步时间间隔。定期同步服务器时间到本地，默认0秒不同步")]
+    public Int32 SyncTime { get; set; }
+
     /// <summary>应用服务集合</summary>
     [Description("应用服务集合")]
     public ServiceInfo[] Services { get; set; }
