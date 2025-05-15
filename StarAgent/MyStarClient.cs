@@ -302,7 +302,9 @@ internal class MyStarClient : StarClient
         var ts = now - time;
         if (Math.Abs(ts.TotalMilliseconds) < 100) return "无需同步";
 
-        WriteLog("同步时间为：{0}，偏差：{1}", time, ts);
+        var msg = $"同步时间为：{time.ToFullString()}，偏差：{ts}";
+        WriteLog(msg);
+        WriteEvent("info", "SyncTime", msg);
         time = time.ToUniversalTime();
 
         var rs = "不支持的系统！";
