@@ -10,6 +10,7 @@ using Microsoft.Extensions.Primitives;
 using NewLife;
 using NewLife.IO;
 using NewLife.Log;
+using NewLife.Model;
 using NewLife.Web;
 
 namespace Stardust.Extensions.Caches;
@@ -46,6 +47,9 @@ class CacheFileProvider : IFileProvider
 
     /// <summary>APM追踪</summary>
     public ITracer? Tracer { get; set; }
+
+    /// <summary>服务提供者</summary>
+    public IServiceProvider ServiceProvider { get; set; } = null!;
     #endregion
 
     /// <summary>
@@ -100,6 +104,7 @@ class CacheFileProvider : IFileProvider
         var fullPath = GetFullPath(subpath);
         if (fullPath == null) return new NotFoundFileInfo(subpath);
 
+        Tracer ??= ServiceProvider?.GetService<ITracer>();
         using var span = Tracer?.NewSpan(nameof(GetFileInfo), subpath);
 
         // 本地不存在时，从服务器下载
@@ -209,6 +214,7 @@ class CacheFileProvider : IFileProvider
             subpath = subpath.TrimStart(_pathSeparators);
             if (Path.IsPathRooted(subpath)) return NotFoundDirectoryContents.Singleton;
 
+            Tracer ??= ServiceProvider?.GetService<ITracer>();
             using var span = Tracer?.NewSpan(nameof(GetDirectoryContents), subpath);
 
             var fullPath = GetFullPath(subpath);

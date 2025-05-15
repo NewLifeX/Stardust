@@ -31,7 +31,8 @@ public static class FileCacheExtensions
         var provider = new CacheFileProvider(cacheRoot, uplinkServer)
         {
             IndexInfoFile = "index.csv",
-            Tracer = DefaultTracer.Instance
+            //Tracer = DefaultTracer.Instance,
+            ServiceProvider = app.ApplicationServices,
         };
 
         if (uplinkServer.IsNullOrEmpty())
