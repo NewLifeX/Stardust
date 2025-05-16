@@ -34,7 +34,7 @@ public class AlarmService : IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         // 初始化定时器
-        _timer = new TimerX(DoAlarm, null, 15_000, Period * 1000) { Async = true };
+        _timer = new TimerX(DoAlarm, null, 60_000, Period * 1000) { Async = true };
 
         return Task.CompletedTask;
     }

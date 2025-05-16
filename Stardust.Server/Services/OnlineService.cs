@@ -31,8 +31,8 @@ public class OnlineService : IHostedService
     #region 方法
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _timer = new TimerX(CheckAppOnline, null, 15_000, 30_000) { Async = true };
-        _timer2 = new TimerX(CheckHealth, null, 15_000, 60_000) { Async = true };
+        _timer = new TimerX(CheckAppOnline, null, 30_000, 30_000) { Async = true };
+        _timer2 = new TimerX(CheckHealth, null, 60_000, 60_000) { Async = true };
 
         return Task.CompletedTask;
     }

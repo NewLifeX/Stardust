@@ -17,7 +17,7 @@ public class NodeStatService : IHostedService
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _timer = new TimerX(DoNodeStat, null, 15_000, 600 * 1000) { Async = true };
+        _timer = new TimerX(DoNodeStat, null, 60_000, 600 * 1000) { Async = true };
 
         return Task.CompletedTask;
     }

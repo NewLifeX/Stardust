@@ -23,7 +23,7 @@ public class ShardTableService : IHostedService
     {
         // 每小时执行
         _timer = new TimerX(DoShardTable, null, 15_000, 3600 * 1000) { Async = true };
-        _timer2 = new TimerX(DoClearDetails, null, 16_000, 600 * 1000) { Async = true };
+        _timer2 = new TimerX(DoClearDetails, null, 60_000, 600 * 1000) { Async = true };
 
         return Task.CompletedTask;
     }

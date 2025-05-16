@@ -36,8 +36,8 @@ public class RedisService : IHostedService, IRedisService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         // 初始化定时器
-        _traceNode = new TimerX(DoTraceNode, null, 15_000, Period * 1000) { Async = true };
-        _traceQueue = new TimerX(DoTraceQueue, null, 20_000, Period * 1000) { Async = true };
+        _traceNode = new TimerX(DoTraceNode, null, 60_000, Period * 1000) { Async = true };
+        _traceQueue = new TimerX(DoTraceQueue, null, 65_000, Period * 1000) { Async = true };
 
         return Task.CompletedTask;
     }

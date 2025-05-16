@@ -13,7 +13,7 @@ public class ApolloService : IHostedService
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _timer = new TimerX(DoApolloSync, null, 15_000, 300_000) { Async = true };
+        _timer = new TimerX(DoApolloSync, null, 60_000, 300_000) { Async = true };
 
         return Task.CompletedTask;
     }

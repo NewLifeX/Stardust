@@ -30,7 +30,7 @@ public class NodeOnlineService : IHostedService
     #region 方法
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _timer = new TimerX(CheckNodeOnline, null, 15_000, 30_000) { Async = true };
+        _timer = new TimerX(CheckNodeOnline, null, 30_000, 30_000) { Async = true };
 
         return Task.CompletedTask;
     }
