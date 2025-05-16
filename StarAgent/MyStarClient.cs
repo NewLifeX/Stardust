@@ -299,6 +299,14 @@ internal class MyStarClient : StarClient
     {
         var now = DateTime.Now;
         var time = GetNow();
+
+        // 指令传达的参数可能指定了时间
+        if (!argument.IsNullOrEmpty())
+        {
+            var dt = argument.ToDateTime();
+            if (dt.Year > 2000 && dt.Year < 3000) time = dt;
+        }
+
         var ts = now - time;
         if (Math.Abs(ts.TotalMilliseconds) < 100) return "无需同步";
 
