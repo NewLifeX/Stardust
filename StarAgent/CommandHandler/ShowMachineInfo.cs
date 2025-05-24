@@ -97,9 +97,8 @@ public class ShowMachineInfo : BaseCommandHandler
                 {
                     XTrace.WriteLine("\tGateway:{0}", gateways.Join(",", e => e.Address));
 
-                    var arp = arps.FirstOrDefault(e => e.IpAddress == gateways[0].Address.ToString());
-                    if (arp != null)
-                        XTrace.WriteLine("\tGateMAC:{0}", arp.MacAddress);
+                    if (arps.TryGetValue(gateways[0].Address.ToString(), out var mac))
+                        XTrace.WriteLine("\tGateMAC:{0}", mac);
                 }
 
                 if (ipp.DnsAddresses.Any(e => e.IsIPv4()))

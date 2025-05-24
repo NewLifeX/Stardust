@@ -212,18 +212,8 @@ class Program
 
     static void Test8()
     {
-        //var str = "runtime=6.0;version>=1.0";
-        //var dic = str.SplitAsDictionary("=", ";");
-        //XTrace.WriteLine(dic.ToJson(true));
-
-        XTrace.WriteLine("CurrentDirectory：\t{0}", Environment.CurrentDirectory);
-        XTrace.WriteLine("BaseDirectory：\t{0}", AppDomain.CurrentDomain.BaseDirectory);
-
-        var workDir = ".".GetFullPath();
-        Environment.SetEnvironmentVariable("BasePath", workDir);
-
-        var dic = Runtime.GetEnvironmentVariables().OrderBy(e => e.Key).ToDictionary(e => e.Key, e => e.Value);
-        foreach (var item in dic)
+        var arps = AgentInfo.GetArpTable();
+        foreach (var item in arps)
         {
             XTrace.WriteLine("{0}:\t{1}", item.Key, item.Value);
         }

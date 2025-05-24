@@ -141,13 +141,9 @@ public class AgentInfo
             var ip = gateway?.Address.ToString();
             if (ip.IsNullOrEmpty()) return _gateway = String.Empty;
 
-            if (Runtime.Windows)
-            {
-                var arpTable = GetArpTable();
-                var entry = arpTable.FirstOrDefault(e => e.IpAddress == ip);
-                if (entry != null)
-                    return _gateway = $"{ip}/{entry.MacAddress}";
-            }
+            var arps = GetArpTable();
+            if (arps.TryGetValue(ip, out var mac))
+                return _gateway = $"{ip}/{mac}";
 
             return _gateway = ip;
         }
@@ -159,41 +155,64 @@ public class AgentInfo
 
     /// <summary>获取ARP表</summary>
     /// <returns></returns>
-    public static ArpEntry[] GetArpTable()
+    public static IDictionary<String, String> GetArpTable()
     {
-        var size = 0;
-        GetIpNetTable(IntPtr.Zero, ref size, false);
+        var dic = new Dictionary<String, String>();
 
-        var buffer = Marshal.AllocHGlobal(size);
-        try
+        if (Runtime.Windows)
         {
-            if (GetIpNetTable(buffer, ref size, false) == 0)
+            var size = 0;
+            GetIpNetTable(IntPtr.Zero, ref size, false);
+
+            var buffer = Marshal.AllocHGlobal(size);
+            try
             {
-                var entrySize = Marshal.SizeOf(typeof(MibIpNetRow));
-                var count = Marshal.ReadInt32(buffer);
-                var currentBuffer = IntPtr.Add(buffer, 4);
-                var entries = new ArpEntry[count];
-
-                for (var i = 0; i < count; i++)
+                if (GetIpNetTable(buffer, ref size, false) == 0)
                 {
-                    var row = (MibIpNetRow)Marshal.PtrToStructure(currentBuffer, typeof(MibIpNetRow))!;
-                    entries[i] = new ArpEntry
-                    {
-                        IpAddress = new IPAddress(row.Addr).ToString(),
-                        MacAddress = String.Join("-", row.PhysAddr.Take(row.PhysAddrLen).Select(b => b.ToString("X2")))
-                    };
-                    currentBuffer = IntPtr.Add(currentBuffer, entrySize);
-                }
+                    var entrySize = Marshal.SizeOf(typeof(MibIpNetRow));
+                    var count = Marshal.ReadInt32(buffer);
+                    var currentBuffer = IntPtr.Add(buffer, 4);
 
-                return entries.Where(e => !e.MacAddress.IsNullOrEmpty() && e.MacAddress != "00-00-00-00-00-00").ToArray();
+                    for (var i = 0; i < count; i++)
+                    {
+                        var row = (MibIpNetRow)Marshal.PtrToStructure(currentBuffer, typeof(MibIpNetRow))!;
+                        var ip = new IPAddress(row.Addr).ToString();
+                        var mac = String.Join("-", row.PhysAddr.Take(row.PhysAddrLen).Select(b => b.ToString("X2")));
+
+                        if (!ip.IsNullOrEmpty() && !mac.IsNullOrEmpty() &&
+                            row.Type is MibIpNetType.DYNAMIC or MibIpNetType.STATIC)
+                            dic[ip] = mac;
+
+                        currentBuffer = IntPtr.Add(currentBuffer, entrySize);
+                    }
+
+                    return dic;
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(buffer);
             }
         }
-        finally
+        else if (Runtime.Linux)
         {
-            Marshal.FreeHGlobal(buffer);
+            var rs = "arp".Execute("-n");
+            if (rs != null && rs.Length > 0)
+            {
+                foreach (var item in rs.Split(['\n'], StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var arr = item.Split([' '], StringSplitOptions.RemoveEmptyEntries);
+                    if (arr.Length >= 2)
+                    {
+                        var ip = arr[0];
+                        var mac = arr[2].Replace(':', '-').ToUpper();
+                        dic[ip] = mac;
+                    }
+                }
+            }
         }
 
-        return [];
+        return dic;
     }
 
     [DllImport("iphlpapi.dll", SetLastError = true)]
@@ -211,18 +230,16 @@ public class AgentInfo
         [MarshalAs(UnmanagedType.U4)]
         public UInt32 Addr;
         [MarshalAs(UnmanagedType.U4)]
-        public Int32 Type;
+        public MibIpNetType Type;
     }
 
-    /// <summary>ARP表项</summary>
-    [DebuggerDisplay("{IpAddress} {MacAddress}")]
-    public class ArpEntry
+    enum MibIpNetType : Int32
     {
-        /// <summary>IP地址</summary>
-        public String IpAddress { get; set; } = null!;
-
-        /// <summary>MAC地址</summary>
-        public String MacAddress { get; set; } = null!;
+        OTHER = 1,
+        INVALID = 2,
+        DYNAMIC = 3,
+        STATIC = 4,
+        LOCAL = 5
     }
 
     private static void NetworkChange_NetworkAvailabilityChanged(Object? sender, NetworkAvailabilityEventArgs e)
