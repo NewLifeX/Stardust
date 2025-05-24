@@ -174,6 +174,24 @@ public partial class Node
     [BindColumn("IP", "本地IP", "")]
     public String IP { get => _IP; set { if (OnPropertyChanging("IP", value)) { _IP = value; OnPropertyChanged("IP"); } } }
 
+    private String _Gateway;
+    /// <summary>网关。IP地址和MAC</summary>
+    [Category("系统信息")]
+    [DisplayName("网关")]
+    [Description("网关。IP地址和MAC")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("Gateway", "网关。IP地址和MAC", "")]
+    public String Gateway { get => _Gateway; set { if (OnPropertyChanging("Gateway", value)) { _Gateway = value; OnPropertyChanged("Gateway"); } } }
+
+    private String _Dns;
+    /// <summary>DNS地址</summary>
+    [Category("系统信息")]
+    [DisplayName("DNS地址")]
+    [Description("DNS地址")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("Dns", "DNS地址", "")]
+    public String Dns { get => _Dns; set { if (OnPropertyChanging("Dns", value)) { _Dns = value; OnPropertyChanged("Dns"); } } }
+
     private Int32 _Cpu;
     /// <summary>CPU。处理器核心数</summary>
     [Category("硬件信息")]
@@ -631,6 +649,8 @@ public partial class Node
             "MachineName" => _MachineName,
             "UserName" => _UserName,
             "IP" => _IP,
+            "Gateway" => _Gateway,
+            "Dns" => _Dns,
             "Cpu" => _Cpu,
             "Memory" => _Memory,
             "TotalSize" => _TotalSize,
@@ -702,6 +722,8 @@ public partial class Node
                 case "MachineName": _MachineName = Convert.ToString(value); break;
                 case "UserName": _UserName = Convert.ToString(value); break;
                 case "IP": _IP = Convert.ToString(value); break;
+                case "Gateway": _Gateway = Convert.ToString(value); break;
+                case "Dns": _Dns = Convert.ToString(value); break;
                 case "Cpu": _Cpu = value.ToInt(); break;
                 case "Memory": _Memory = value.ToInt(); break;
                 case "TotalSize": _TotalSize = value.ToInt(); break;
@@ -836,6 +858,12 @@ public partial class Node
 
         /// <summary>本地IP</summary>
         public static readonly Field IP = FindByName("IP");
+
+        /// <summary>网关。IP地址和MAC</summary>
+        public static readonly Field Gateway = FindByName("Gateway");
+
+        /// <summary>DNS地址</summary>
+        public static readonly Field Dns = FindByName("Dns");
 
         /// <summary>CPU。处理器核心数</summary>
         public static readonly Field Cpu = FindByName("Cpu");
@@ -1037,6 +1065,12 @@ public partial class Node
 
         /// <summary>本地IP</summary>
         public const String IP = "IP";
+
+        /// <summary>网关。IP地址和MAC</summary>
+        public const String Gateway = "Gateway";
+
+        /// <summary>DNS地址</summary>
+        public const String Dns = "Dns";
 
         /// <summary>CPU。处理器核心数</summary>
         public const String Cpu = "Cpu";

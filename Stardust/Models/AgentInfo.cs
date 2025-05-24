@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using NewLife;
 using NewLife.Reflection;
 
@@ -106,8 +108,135 @@ public class AgentInfo
         }
     }
 
-    private static void NetworkChange_NetworkAvailabilityChanged(Object? sender, NetworkAvailabilityEventArgs e) => _ips = null;
+    private static String? _dns;
+    /// <summary>获取网关IP地址和MAC</summary>
+    /// <returns></returns>
+    public static String? GetDns()
+    {
+        if (_dns != null) return _dns;
+        try
+        {
+            var dns = NetworkInterface.GetAllNetworkInterfaces()
+                .SelectMany(e => e.GetIPProperties().DnsAddresses)
+                .FirstOrDefault(e => e.AddressFamily == AddressFamily.InterNetwork);
+            return _dns = dns?.ToString() ?? String.Empty;
+        }
+        catch
+        {
+            return null;
+        }
+    }
 
-    private static void NetworkChange_NetworkAddressChanged(Object? sender, EventArgs e) => _ips = null;
+    private static String? _gateway;
+    /// <summary>获取网关IP地址和MAC</summary>
+    /// <returns></returns>
+    public static String? GetGateway()
+    {
+        if (_gateway != null) return _gateway;
+        try
+        {
+            var gateway = NetworkInterface.GetAllNetworkInterfaces()
+                .SelectMany(e => e.GetIPProperties().GatewayAddresses)
+                .FirstOrDefault(e => e.Address.AddressFamily == AddressFamily.InterNetwork);
+            var ip = gateway?.Address.ToString();
+            if (ip.IsNullOrEmpty()) return _gateway = String.Empty;
+
+            if (Runtime.Windows)
+            {
+                var arpTable = GetArpTable();
+                var entry = arpTable.FirstOrDefault(e => e.IpAddress == ip);
+                if (entry != null)
+                    return _gateway = $"{ip}/{entry.MacAddress}";
+            }
+
+            return _gateway = ip;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>获取ARP表</summary>
+    /// <returns></returns>
+    public static ArpEntry[] GetArpTable()
+    {
+        var size = 0;
+        GetIpNetTable(IntPtr.Zero, ref size, false);
+
+        var buffer = Marshal.AllocHGlobal(size);
+        try
+        {
+            if (GetIpNetTable(buffer, ref size, false) == 0)
+            {
+                var entrySize = Marshal.SizeOf(typeof(MibIpNetRow));
+                var count = Marshal.ReadInt32(buffer);
+                var currentBuffer = IntPtr.Add(buffer, 4);
+                var entries = new ArpEntry[count];
+
+                for (var i = 0; i < count; i++)
+                {
+                    var row = (MibIpNetRow)Marshal.PtrToStructure(currentBuffer, typeof(MibIpNetRow))!;
+                    entries[i] = new ArpEntry
+                    {
+                        IpAddress = new IPAddress(row.Addr).ToString(),
+                        MacAddress = String.Join("-", row.PhysAddr.Take(row.PhysAddrLen).Select(b => b.ToString("X2")))
+                    };
+                    currentBuffer = IntPtr.Add(currentBuffer, entrySize);
+                }
+
+                return entries.Where(e => !e.MacAddress.IsNullOrEmpty() && e.MacAddress != "00-00-00-00-00-00").ToArray();
+            }
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buffer);
+        }
+
+        return [];
+    }
+
+    [DllImport("iphlpapi.dll", SetLastError = true)]
+    private static extern Int32 GetIpNetTable(IntPtr pIpNetTable, ref Int32 pdwSize, Boolean bOrder);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MibIpNetRow
+    {
+        [MarshalAs(UnmanagedType.U4)]
+        public Int32 Index;
+        [MarshalAs(UnmanagedType.U4)]
+        public Int32 PhysAddrLen;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
+        public Byte[] PhysAddr;
+        [MarshalAs(UnmanagedType.U4)]
+        public UInt32 Addr;
+        [MarshalAs(UnmanagedType.U4)]
+        public Int32 Type;
+    }
+
+    /// <summary>ARP表项</summary>
+    [DebuggerDisplay("{IpAddress} {MacAddress}")]
+    public class ArpEntry
+    {
+        /// <summary>IP地址</summary>
+        public String IpAddress { get; set; } = null!;
+
+        /// <summary>MAC地址</summary>
+        public String MacAddress { get; set; } = null!;
+    }
+
+    private static void NetworkChange_NetworkAvailabilityChanged(Object? sender, NetworkAvailabilityEventArgs e)
+    {
+        _ips = null;
+        _gateway = null;
+        _dns = null;
+    }
+
+    private static void NetworkChange_NetworkAddressChanged(Object? sender, EventArgs e)
+    {
+        _ips = null;
+        _gateway = null;
+        _dns = null;
+    }
     #endregion
 }

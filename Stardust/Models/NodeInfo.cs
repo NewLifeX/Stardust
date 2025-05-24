@@ -28,6 +28,12 @@ public class NodeInfo
     /// <summary>本地IP地址。随着网卡变动，可能改变</summary>
     public String? IP { get; set; }
 
+    /// <summary>网关地址。IP与MAC，随着网卡变动，可能改变</summary>
+    public String? Gateway { get; set; }
+
+    /// <summary>DNS地址。随着网卡变动，可能改变</summary>
+    public String? Dns { get; set; }
+
     /// <summary>核心数</summary>
     public Int32 ProcessorCount { get; set; }
 

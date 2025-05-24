@@ -82,6 +82,22 @@ public partial class NodeOnline
     [BindColumn("IP", "本地IP", "")]
     public String IP { get => _IP; set { if (OnPropertyChanging("IP", value)) { _IP = value; OnPropertyChanged("IP"); } } }
 
+    private String _Gateway;
+    /// <summary>网关。IP地址和MAC</summary>
+    [DisplayName("网关")]
+    [Description("网关。IP地址和MAC")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("Gateway", "网关。IP地址和MAC", "")]
+    public String Gateway { get => _Gateway; set { if (OnPropertyChanging("Gateway", value)) { _Gateway = value; OnPropertyChanged("Gateway"); } } }
+
+    private String _Dns;
+    /// <summary>DNS地址</summary>
+    [DisplayName("DNS地址")]
+    [Description("DNS地址")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("Dns", "DNS地址", "")]
+    public String Dns { get => _Dns; set { if (OnPropertyChanging("Dns", value)) { _Dns = value; OnPropertyChanged("Dns"); } } }
+
     private String _Category;
     /// <summary>分类</summary>
     [DisplayName("分类")]
@@ -409,6 +425,8 @@ public partial class NodeOnline
             "Name" => _Name,
             "ProductCode" => _ProductCode,
             "IP" => _IP,
+            "Gateway" => _Gateway,
+            "Dns" => _Dns,
             "Category" => _Category,
             "ProvinceID" => _ProvinceID,
             "CityID" => _CityID,
@@ -460,6 +478,8 @@ public partial class NodeOnline
                 case "Name": _Name = Convert.ToString(value); break;
                 case "ProductCode": _ProductCode = Convert.ToString(value); break;
                 case "IP": _IP = Convert.ToString(value); break;
+                case "Gateway": _Gateway = Convert.ToString(value); break;
+                case "Dns": _Dns = Convert.ToString(value); break;
                 case "Category": _Category = Convert.ToString(value); break;
                 case "ProvinceID": _ProvinceID = value.ToInt(); break;
                 case "CityID": _CityID = value.ToInt(); break;
@@ -561,6 +581,12 @@ public partial class NodeOnline
 
         /// <summary>本地IP</summary>
         public static readonly Field IP = FindByName("IP");
+
+        /// <summary>网关。IP地址和MAC</summary>
+        public static readonly Field Gateway = FindByName("Gateway");
+
+        /// <summary>DNS地址</summary>
+        public static readonly Field Dns = FindByName("Dns");
 
         /// <summary>分类</summary>
         public static readonly Field Category = FindByName("Category");
@@ -702,6 +728,12 @@ public partial class NodeOnline
 
         /// <summary>本地IP</summary>
         public const String IP = "IP";
+
+        /// <summary>网关。IP地址和MAC</summary>
+        public const String Gateway = "Gateway";
+
+        /// <summary>DNS地址</summary>
+        public const String Dns = "Dns";
 
         /// <summary>分类</summary>
         public const String Category = "Category";

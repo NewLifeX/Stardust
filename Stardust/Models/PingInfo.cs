@@ -46,6 +46,12 @@ public class PingInfo : PingRequest
     ///// <summary>本地IP地址。随着网卡变动，可能改变</summary>
     //public String? IP { get; set; }
 
+    /// <summary>网关地址。IP与MAC，随着网卡变动，可能改变</summary>
+    public String? Gateway { get; set; }
+
+    /// <summary>DNS地址。随着网卡变动，可能改变</summary>
+    public String? Dns { get; set; }
+
     /// <summary>进程列表</summary>
     public String? Processes { get; set; }
 

@@ -58,6 +58,8 @@
         <Column Name="MachineName" DataType="String" Description="机器名称" Category="系统信息" />
         <Column Name="UserName" DataType="String" Description="用户名称" Category="系统信息" />
         <Column Name="IP" DataType="String" Length="200" Description="本地IP" Category="系统信息" />
+        <Column Name="Gateway" DataType="String" Description="网关。IP地址和MAC" Category="系统信息" />
+        <Column Name="Dns" DataType="String" Description="DNS地址" Category="系统信息" />
         <Column Name="Cpu" DataType="Int32" Description="CPU。处理器核心数" Category="硬件信息" />
         <Column Name="Memory" DataType="Int32" Description="内存。单位M" Category="硬件信息" />
         <Column Name="TotalSize" DataType="Int32" Description="磁盘。应用所在盘，单位M" Category="硬件信息" />
@@ -129,6 +131,8 @@
         <Column Name="Name" DataType="String" Master="True" Description="名称" />
         <Column Name="ProductCode" DataType="String" Description="产品。产品编码，用于区分不同类型节点" />
         <Column Name="IP" DataType="String" Length="200" Description="本地IP" />
+        <Column Name="Gateway" DataType="String" Description="网关。IP地址和MAC" />
+        <Column Name="Dns" DataType="String" Description="DNS地址" />
         <Column Name="Category" DataType="String" Description="分类" />
         <Column Name="ProvinceID" DataType="Int32" Description="省份" />
         <Column Name="CityID" DataType="Int32" Description="城市" />

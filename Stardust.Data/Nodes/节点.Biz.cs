@@ -547,6 +547,8 @@ public partial class Node : Entity<Node>
         }
         if (!info.UserName.IsNullOrEmpty()) node.UserName = info.UserName;
         if (!info.IP.IsNullOrEmpty()) node.IP = info.IP;
+        if (!info.Gateway.IsNullOrEmpty()) node.Gateway = info.Gateway;
+        if (!info.Dns.IsNullOrEmpty()) node.Dns = info.Dns;
         if (!info.Product.IsNullOrEmpty()) node.Product = info.Product;
         if (!info.Vendor.IsNullOrEmpty()) node.Vendor = info.Vendor;
         if (!info.Processor.IsNullOrEmpty()) node.Processor = info.Processor;

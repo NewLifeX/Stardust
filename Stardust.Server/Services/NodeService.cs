@@ -446,6 +446,8 @@ public class NodeService
         if (node == null) return null;
 
         if (!inf.IP.IsNullOrEmpty()) node.IP = inf.IP;
+        if (!inf.Gateway.IsNullOrEmpty()) node.Gateway = inf.Gateway;
+
         node.UpdateIP = ip;
         node.FixArea();
         node.FixNameByRule();

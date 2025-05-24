@@ -7,6 +7,7 @@ using NewLife.Data;
 using NewLife.Log;
 using NewLife.Reflection;
 using Stardust;
+using Stardust.Models;
 
 namespace StarAgent.CommandHandler;
 
@@ -19,6 +20,7 @@ public class ShowMachineInfo : BaseCommandHandler
         ShortcutKey = 't';
     }
 
+    private static readonly String[] _Excludes = ["Loopback", "VMware", "VBox", "Virtual", "Teredo", "Tunnel", "VPN", "VNIC", "IEEE", "Filter", "Npcap", "QoS", "Miniport", "Kernel Debug"];
     public override void Process(String[] args)
     {
         var service = (MyService)Service;
@@ -74,20 +76,32 @@ public class ShowMachineInfo : BaseCommandHandler
 
         // 网络信息
         XTrace.WriteLine("NetworkAvailable:{0}", NetworkInterface.GetIsNetworkAvailable());
+        var arps = AgentInfo.GetArpTable();
         foreach (var item in NetworkInterface.GetAllNetworkInterfaces())
         {
             //if (item.OperationalStatus != OperationalStatus.Up) continue;
             if (item.NetworkInterfaceType is NetworkInterfaceType.Loopback or NetworkInterfaceType.Unknown or NetworkInterfaceType.Tunnel) continue;
+            if (_Excludes.Any(e => item.Description.Contains(e))) continue;
+            //if (Runtime.Windows && item.Speed < 1_000_000) continue;
 
             XTrace.WriteLine("{0} {1} {2}", item.NetworkInterfaceType, item.OperationalStatus, item.Name);
             XTrace.WriteLine("\tDescription:\t{0}", item.Description);
+            XTrace.WriteLine("\tSpeed:\t{0}Mbps", item.Speed / 1000 / 1000);
             XTrace.WriteLine("\tMac:\t{0}", item.GetPhysicalAddress().GetAddressBytes().ToHex("-"));
             var ipp = item.GetIPProperties();
             if (ipp != null && ipp.UnicastAddresses.Any(e => e.Address.IsIPv4()))
             {
                 XTrace.WriteLine("\tIP:\t{0}", ipp.UnicastAddresses.Where(e => e.Address.IsIPv4()).Select(e => e.Address + "").Distinct().Join(","));
-                if (ipp.GatewayAddresses.Any(e => e.Address.IsIPv4()))
-                    XTrace.WriteLine("\tGateway:{0}", ipp.GatewayAddresses.Where(e => e.Address.IsIPv4()).Join(",", e => e.Address));
+                var gateways = ipp.GatewayAddresses.Where(e => e.Address.IsIPv4()).ToList();
+                if (gateways.Count > 0)
+                {
+                    XTrace.WriteLine("\tGateway:{0}", gateways.Join(",", e => e.Address));
+
+                    var arp = arps.FirstOrDefault(e => e.IpAddress == gateways[0].Address.ToString());
+                    if (arp != null)
+                        XTrace.WriteLine("\tGateMAC:{0}", arp.MacAddress);
+                }
+
                 if (ipp.DnsAddresses.Any(e => e.IsIPv4()))
                     XTrace.WriteLine("\tDns:\t{0}", ipp.DnsAddresses.Where(e => e.IsIPv4()).Join());
             }
