@@ -636,8 +636,14 @@ public partial class Node : Entity<Node>
         if (node.UpdateIP.IsNullOrEmpty()) return;
 
         var rs = Area.SearchIP(node.UpdateIP);
-        if (rs.Count > 0) node.ProvinceID = rs[0].ID;
+        if (rs.Count > 0)
+        {
+            node.ProvinceID = rs[0].ID;
+            node.CityID = 0;
+        }
         if (rs.Count > 1) node.CityID = rs[^1].ID;
+
+        Address = node.UpdateIP.IPToAddress();
     }
 
     /// <summary>
