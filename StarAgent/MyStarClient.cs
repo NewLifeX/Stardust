@@ -308,7 +308,7 @@ internal class MyStarClient : StarClient
         }
 
         var ts = now - time;
-        if (Math.Abs(ts.TotalMilliseconds) < 100) return "无需同步";
+        if (Math.Abs(ts.TotalMilliseconds) < 1000) return "无需同步";
 
         var msg = $"同步时间为：{time.ToFullString()}，偏差：{ts}";
         WriteLog(msg);
