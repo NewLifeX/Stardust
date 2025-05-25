@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -15,7 +14,6 @@ using NewLife.Model;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
-using Renci.SshNet;
 using Stardust;
 using Stardust.Models;
 using Stardust.Windows;
@@ -28,6 +26,8 @@ class Program
     static void Main(String[] args)
     {
         XTrace.UseConsole();
+
+        XTrace.Log.Level = LogLevel.All; // 设置日志级别为所有
 
         Test8();
 
@@ -70,45 +70,45 @@ class Program
 
     static void Test2()
     {
-        Console.Write("请输入密码：");
-        var pass = Console.ReadLine().Trim();
-        Console.Clear();
+        //Console.Write("请输入密码：");
+        //var pass = Console.ReadLine().Trim();
+        //Console.Clear();
 
-        using var client = new SshClient("192.168.13.214", "stone", pass);
-        client.Connect();
+        //using var client = new SshClient("192.168.13.214", "stone", pass);
+        //client.Connect();
 
-        XTrace.WriteLine("连接成功");
-        {
-            var rs = client.RunCommand("uname -a");
-            Console.WriteLine(rs.Result);
-        }
-        {
-            var rs = client.RunCommand("cat /proc/cpuinfo");
-            Console.WriteLine(rs.Result);
-        }
-        {
-            XTrace.WriteLine("Scp上传文件");
-            using var scp = new ScpClient(client.ConnectionInfo);
-            scp.Connect();
-            XTrace.WriteLine("连接成功");
+        //XTrace.WriteLine("连接成功");
+        //{
+        //    var rs = client.RunCommand("uname -a");
+        //    Console.WriteLine(rs.Result);
+        //}
+        //{
+        //    var rs = client.RunCommand("cat /proc/cpuinfo");
+        //    Console.WriteLine(rs.Result);
+        //}
+        //{
+        //    XTrace.WriteLine("Scp上传文件");
+        //    using var scp = new ScpClient(client.ConnectionInfo);
+        //    scp.Connect();
+        //    XTrace.WriteLine("连接成功");
 
-            scp.Upload("Test.exe".AsFile(), "./Test.exe");
+        //    scp.Upload("Test.exe".AsFile(), "./Test.exe");
 
-            XTrace.WriteLine("Scp下载文件");
-            scp.Download("./aspnetcore-runtime-3.1.5-linux-x64.tar.gz", "./".AsDirectory());
-        }
-        {
-            XTrace.WriteLine("Ftp上传文件");
-            using var ftp = new SftpClient(client.ConnectionInfo);
-            ftp.Connect();
-            XTrace.WriteLine("连接成功");
+        //    XTrace.WriteLine("Scp下载文件");
+        //    scp.Download("./aspnetcore-runtime-3.1.5-linux-x64.tar.gz", "./".AsDirectory());
+        //}
+        //{
+        //    XTrace.WriteLine("Ftp上传文件");
+        //    using var ftp = new SftpClient(client.ConnectionInfo);
+        //    ftp.Connect();
+        //    XTrace.WriteLine("连接成功");
 
-            ftp.UploadFile("Test.exe".AsFile().OpenRead(), "./Test.exe");
+        //    ftp.UploadFile("Test.exe".AsFile().OpenRead(), "./Test.exe");
 
-            XTrace.WriteLine("Ftp下载文件");
-            ftp.DownloadFile("./aspnetcore-runtime-3.1.5-linux-x64.tar.gz", "asp.gz".AsFile().OpenWrite());
-        }
-        XTrace.WriteLine("完成");
+        //    XTrace.WriteLine("Ftp下载文件");
+        //    ftp.DownloadFile("./aspnetcore-runtime-3.1.5-linux-x64.tar.gz", "asp.gz".AsFile().OpenWrite());
+        //}
+        //XTrace.WriteLine("完成");
     }
 
     static void Test3()

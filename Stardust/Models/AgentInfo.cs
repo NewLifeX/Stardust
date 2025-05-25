@@ -196,17 +196,22 @@ public class AgentInfo
         }
         else if (Runtime.Linux)
         {
-            var rs = "arp".Execute("-n");
-            if (rs != null && rs.Length > 0)
+            // Linux下读取/proc/net/arp文件获取ARP表
+            var rs = "";
+            var f = "/proc/net/arp";
+            if (File.Exists(f)) rs = File.ReadAllText(f);
+
+            if (rs.IsNullOrEmpty()) rs = "arp".Execute("-n", 5_000);
+            if (!rs.IsNullOrEmpty())
             {
-                foreach (var item in rs.Split(['\n'], StringSplitOptions.RemoveEmptyEntries))
+                foreach (var item in rs.Split(['\n'], StringSplitOptions.RemoveEmptyEntries).Skip(1))
                 {
                     var arr = item.Split([' '], StringSplitOptions.RemoveEmptyEntries);
                     if (arr.Length >= 2)
                     {
                         var ip = arr[0];
-                        var mac = arr[2].Replace(':', '-').ToUpper();
-                        dic[ip] = mac;
+                        var mac = arr.Skip(1).FirstOrDefault(e => e.Contains(':'))?.Replace(':', '-').ToUpper();
+                        if (!mac.IsNullOrEmpty()) dic[ip] = mac;
                     }
                 }
             }
