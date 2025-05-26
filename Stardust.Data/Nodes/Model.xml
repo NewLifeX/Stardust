@@ -81,9 +81,10 @@
         <Column Name="Runtime" DataType="String" Description="运行时。.Net运行时版本" Category="系统信息" />
         <Column Name="Framework" DataType="String" Description="框架。本地支持的最高版本框架" Category="系统信息" />
         <Column Name="Frameworks" DataType="String" Length="200" Description="框架集合。本地支持的所有版本框架，逗号隔开" Category="系统信息" />
-        <Column Name="ProvinceID" DataType="Int32" Description="省份" Category="参数设置" />
-        <Column Name="CityID" DataType="Int32" Description="城市" Category="参数设置" />
-        <Column Name="Address" DataType="String" Length="200" Description="地址。该节点所处位置" Category="参数设置" />
+        <Column Name="ProvinceID" DataType="Int32" Description="省份" />
+        <Column Name="CityID" DataType="Int32" Description="城市" />
+        <Column Name="Address" DataType="String" Length="200" Description="地址。该节点所处地理地址" />
+        <Column Name="Location" DataType="String" Description="位置。场地安装位置，或者经纬度" />
         <Column Name="Period" DataType="Int32" Description="采样周期。默认60秒" Category="参数设置" />
         <Column Name="SyncTime" DataType="Int32" Description="同步时间。定期同步服务器时间到本地，默认0秒不同步" Category="参数设置" />
         <Column Name="NewServer" DataType="String" Description="新服务器。该节点自动迁移到新的服务器地址" Category="参数设置" />
@@ -136,6 +137,7 @@
         <Column Name="Category" DataType="String" Description="分类" />
         <Column Name="ProvinceID" DataType="Int32" Description="省份" />
         <Column Name="CityID" DataType="Int32" Description="城市" />
+        <Column Name="Location" DataType="String" Description="位置。场地安装位置，或者经纬度" />
         <Column Name="PingCount" DataType="Int32" Description="心跳" />
         <Column Name="WebSocket" DataType="Boolean" Description="长连接。WebSocket长连接" />
         <Column Name="Version" DataType="String" Description="版本" />
@@ -322,6 +324,31 @@
         <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
         <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
       </Columns>
+    </Table>
+    <Table Name="NodeLocation" Description="节点定位。根据网关IP和MAC规则，自动匹配节点所在地理位置">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="Name" DataType="String" Master="True" Description="名称" />
+        <Column Name="LanIPRule" DataType="String" Description="局域网IP。局域网IP地址规则，支持*匹配" />
+        <Column Name="MacRule" DataType="String" Description="MAC规则。局域网网关MAC地址规则，支持*匹配" />
+        <Column Name="WanIPRule" DataType="String" Description="公网IP。公网IP地址规则，支持*匹配" />
+        <Column Name="Enable" DataType="Boolean" Description="启用" />
+        <Column Name="AreaId" DataType="Int32" Description="地区。省市区编码" />
+        <Column Name="Address" DataType="String" Description="地址。地理地址" />
+        <Column Name="Location" DataType="String" Description="位置。场地安装位置，或者经纬度" />
+        <Column Name="CreateUser" DataType="String" Description="创建者" Category="扩展" />
+        <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="UpdateUserID" DataType="Int32" Description="更新者" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" DataScale="time" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="AreaId" />
+        <Index Columns="Name" />
+      </Indexes>
     </Table>
   </Tables>
 </EntityModel>

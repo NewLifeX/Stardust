@@ -382,7 +382,6 @@ public partial class Node
 
     private Int32 _ProvinceID;
     /// <summary>省份</summary>
-    [Category("参数设置")]
     [DisplayName("省份")]
     [Description("省份")]
     [DataObjectField(false, false, false, 0)]
@@ -391,7 +390,6 @@ public partial class Node
 
     private Int32 _CityID;
     /// <summary>城市</summary>
-    [Category("参数设置")]
     [DisplayName("城市")]
     [Description("城市")]
     [DataObjectField(false, false, false, 0)]
@@ -399,13 +397,20 @@ public partial class Node
     public Int32 CityID { get => _CityID; set { if (OnPropertyChanging("CityID", value)) { _CityID = value; OnPropertyChanged("CityID"); } } }
 
     private String _Address;
-    /// <summary>地址。该节点所处位置</summary>
-    [Category("参数设置")]
+    /// <summary>地址。该节点所处地理地址</summary>
     [DisplayName("地址")]
-    [Description("地址。该节点所处位置")]
+    [Description("地址。该节点所处地理地址")]
     [DataObjectField(false, false, true, 200)]
-    [BindColumn("Address", "地址。该节点所处位置", "")]
+    [BindColumn("Address", "地址。该节点所处地理地址", "")]
     public String Address { get => _Address; set { if (OnPropertyChanging("Address", value)) { _Address = value; OnPropertyChanged("Address"); } } }
+
+    private String _Location;
+    /// <summary>位置。场地安装位置，或者经纬度</summary>
+    [DisplayName("位置")]
+    [Description("位置。场地安装位置，或者经纬度")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("Location", "位置。场地安装位置，或者经纬度", "")]
+    public String Location { get => _Location; set { if (OnPropertyChanging("Location", value)) { _Location = value; OnPropertyChanged("Location"); } } }
 
     private Int32 _Period;
     /// <summary>采样周期。默认60秒</summary>
@@ -675,6 +680,7 @@ public partial class Node
             "ProvinceID" => _ProvinceID,
             "CityID" => _CityID,
             "Address" => _Address,
+            "Location" => _Location,
             "Period" => _Period,
             "SyncTime" => _SyncTime,
             "NewServer" => _NewServer,
@@ -748,6 +754,7 @@ public partial class Node
                 case "ProvinceID": _ProvinceID = value.ToInt(); break;
                 case "CityID": _CityID = value.ToInt(); break;
                 case "Address": _Address = Convert.ToString(value); break;
+                case "Location": _Location = Convert.ToString(value); break;
                 case "Period": _Period = value.ToInt(); break;
                 case "SyncTime": _SyncTime = value.ToInt(); break;
                 case "NewServer": _NewServer = Convert.ToString(value); break;
@@ -934,8 +941,11 @@ public partial class Node
         /// <summary>城市</summary>
         public static readonly Field CityID = FindByName("CityID");
 
-        /// <summary>地址。该节点所处位置</summary>
+        /// <summary>地址。该节点所处地理地址</summary>
         public static readonly Field Address = FindByName("Address");
+
+        /// <summary>位置。场地安装位置，或者经纬度</summary>
+        public static readonly Field Location = FindByName("Location");
 
         /// <summary>采样周期。默认60秒</summary>
         public static readonly Field Period = FindByName("Period");
@@ -1141,8 +1151,11 @@ public partial class Node
         /// <summary>城市</summary>
         public const String CityID = "CityID";
 
-        /// <summary>地址。该节点所处位置</summary>
+        /// <summary>地址。该节点所处地理地址</summary>
         public const String Address = "Address";
+
+        /// <summary>位置。场地安装位置，或者经纬度</summary>
+        public const String Location = "Location";
 
         /// <summary>采样周期。默认60秒</summary>
         public const String Period = "Period";
