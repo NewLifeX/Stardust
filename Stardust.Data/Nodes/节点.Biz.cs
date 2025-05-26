@@ -670,7 +670,7 @@ public partial class Node : Entity<Node>
         }
         if (rs.Count > 1) node.CityID = rs[^1].ID;
 
-        Address = node.UpdateIP.IPToAddress();
+        Address = node.UpdateIP.IPToAddress()?.TrimStart("中国–");
     }
 
     /// <summary>
