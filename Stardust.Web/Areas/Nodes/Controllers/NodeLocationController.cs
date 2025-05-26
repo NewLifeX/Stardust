@@ -8,6 +8,7 @@ using NewLife.Log;
 using NewLife.Web;
 using XCode.Membership;
 using static Stardust.Data.Nodes.NodeLocation;
+using System.ComponentModel;
 
 namespace Stardust.Web.Areas.Nodes.Controllers;
 
@@ -24,22 +25,17 @@ public class NodeLocationController : EntityController<NodeLocation>
         ListFields.RemoveCreateField().RemoveRemarkField();
 
         //{
-        //    var df = ListFields.GetField("Code") as ListField;
-        //    df.Url = "?code={Code}";
-        //    df.Target = "_blank";
+        //    var ss = SearchFields.AddDataField("AreaId") as SearchField;
+        //    ss.View = "_Area3";
         //}
         //{
-        //    var df = ListFields.AddListField("devices", null, "Onlines");
-        //    df.DisplayName = "查看设备";
-        //    df.Url = "Device?groupId={Id}";
-        //    df.DataVisible = e => (e as NodeLocation).Devices > 0;
-        //    df.Target = "_frame";
+        //    var ff = AddFormFields.GetField("AreaId") as FormField;
+        //    ff.ItemView = "_Area3";
         //}
         //{
-        //    var df = ListFields.GetField("Kind") as ListField;
-        //    df.GetValue = e => ((Int32)(e as NodeLocation).Kind).ToString("X4");
+        //    var ff = EditFormFields.GetField("AreaId") as FormField;
+        //    ff.ItemView = "_Area3";
         //}
-        //ListFields.TraceUrl("TraceId");
     }
 
     //private readonly ITracer _tracer;
@@ -55,12 +51,35 @@ public class NodeLocationController : EntityController<NodeLocation>
     protected override IEnumerable<NodeLocation> Search(Pager p)
     {
         var name = p["name"];
-        var areaId = p["areaId"].ToInt(-1);
         var enable = p["enable"]?.ToBoolean();
+        var areaId = p["areaId"].ToInt(-1);
+        //if (areaId <= 0)
+        //{
+        //    var areaIds = p["areaId"].SplitAsInt("/");
+        //    if (areaIds != null && areaIds.Length > 0) areaId = areaIds[^1];
+        //}
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
         return NodeLocation.Search(name, areaId, enable, start, end, p["Q"], p);
     }
+
+    //protected override Boolean Valid(NodeLocation entity, DataObjectMethodType type, Boolean post)
+    //{
+    //    if (post && type is DataObjectMethodType.Insert or DataObjectMethodType.Update)
+    //    {
+    //        var areaIds = GetRequest("areaId").SplitAsInt("/");
+    //        if (areaIds != null && areaIds.Length > 0) entity.AreaId = areaIds[^1];
+    //    }
+    //    if (!post && type is DataObjectMethodType.Update)
+    //    {
+    //        if (ViewBag.Page is Pager page)
+    //        {
+    //            page["AreaId"] = entity.AreaId.ToString();
+    //        }
+    //    }
+
+    //    return base.Valid(entity, type, post);
+    //}
 }

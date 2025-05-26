@@ -634,6 +634,31 @@ public partial class Node : Entity<Node>
     /// <summary>修正地区</summary>
     public void FixArea()
     {
+        // 借助节点所在网关，优先根据节点定位来确定位置
+        var location = NodeLocation.Match(IP, MACs, UpdateIP);
+        if (location == null)
+        {
+            var gws = Gateway?.Split('/');
+            if (gws != null && gws.Length >= 2)
+            {
+                location = NodeLocation.Match(gws[0], gws[1], UpdateIP);
+            }
+        }
+        if (location != null)
+        {
+            var area = location.Area;
+            if (area != null)
+            {
+                ProvinceID = area.GetAllParents().FirstOrDefault()?.ID ?? 0;
+                CityID = area.ID;
+            }
+
+            Address = location.Address;
+            Location = location.Location;
+
+            return;
+        }
+
         var node = this;
         if (node.UpdateIP.IsNullOrEmpty()) return;
 

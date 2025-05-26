@@ -112,6 +112,13 @@ public partial class NodeLocation : Entity<NodeLocation>
     #endregion
 
     #region 扩展属性
+    /// <summary>地区</summary>
+    [XmlIgnore, ScriptIgnore]
+    public Area Area => Extends.Get(nameof(Area), k => Area.FindByID(AreaId));
+
+    /// <summary>地区名</summary>
+    [Map(__.AreaId)]
+    public String AreaName => Area?.Path;
     #endregion
 
     #region 高级查询
@@ -149,5 +156,29 @@ public partial class NodeLocation : Entity<NodeLocation>
     #endregion
 
     #region 业务操作
+    /// <summary>根据网关IP和MAC规则，自动匹配节点所在地理位置</summary>
+    public static NodeLocation Match(String lanIP, String mac, String wanIP)
+    {
+        if (lanIP.IsNullOrEmpty() && mac.IsNullOrEmpty() && wanIP.IsNullOrEmpty()) return null;
+
+        // 从缓存找到所有可用项，然后逐项根据规则匹配
+        var list = FindAllWithCache().Where(e => e.Enable).ToList();
+        foreach (var rule in list)
+        {
+            if (rule.IsMatch(lanIP, mac, wanIP)) return rule;
+        }
+
+        return null;
+    }
+
+    /// <summary>是否匹配</summary>
+    public Boolean IsMatch(String lanIP, String mac, String wanIP)
+    {
+        if (!LanIPRule.IsNullOrEmpty() && !LanIPRule.IsMatch(lanIP)) return false;
+        if (!MacRule.IsNullOrEmpty() && !MacRule.IsMatch(mac)) return false;
+        if (!WanIPRule.IsNullOrEmpty() && !WanIPRule.IsMatch(wanIP)) return false;
+
+        return true;
+    }
     #endregion
 }

@@ -486,6 +486,7 @@ public class NodeService
         online.OSKind = node.OSKind;
         online.ProvinceID = node.ProvinceID;
         online.CityID = node.CityID;
+        online.Address = node.Address;
         online.Location = node.Location;
         online.Save(null, inf, token, ip);
 
@@ -593,6 +594,7 @@ public class NodeService
         olt.Category = node.Category;
         olt.ProvinceID = node.ProvinceID;
         olt.CityID = node.CityID;
+        olt.Address = node.Address;
         olt.Location = node.Location;
         olt.OSKind = node.OSKind;
         olt.Version = node.Version;

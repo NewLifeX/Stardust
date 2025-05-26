@@ -111,7 +111,7 @@ public partial class NodeOnline
     [DisplayName("省份")]
     [Description("省份")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("ProvinceID", "省份", "")]
+    [BindColumn("ProvinceID", "省份", "", ItemType = "area1")]
     public Int32 ProvinceID { get => _ProvinceID; set { if (OnPropertyChanging("ProvinceID", value)) { _ProvinceID = value; OnPropertyChanged("ProvinceID"); } } }
 
     private Int32 _CityID;
@@ -119,8 +119,16 @@ public partial class NodeOnline
     [DisplayName("城市")]
     [Description("城市")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("CityID", "城市", "")]
+    [BindColumn("CityID", "城市", "", ItemType = "area2")]
     public Int32 CityID { get => _CityID; set { if (OnPropertyChanging("CityID", value)) { _CityID = value; OnPropertyChanged("CityID"); } } }
+
+    private String _Address;
+    /// <summary>地址。该节点所处地理地址</summary>
+    [DisplayName("地址")]
+    [Description("地址。该节点所处地理地址")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("Address", "地址。该节点所处地理地址", "")]
+    public String Address { get => _Address; set { if (OnPropertyChanging("Address", value)) { _Address = value; OnPropertyChanged("Address"); } } }
 
     private String _Location;
     /// <summary>位置。场地安装位置，或者经纬度</summary>
@@ -438,6 +446,7 @@ public partial class NodeOnline
             "Category" => _Category,
             "ProvinceID" => _ProvinceID,
             "CityID" => _CityID,
+            "Address" => _Address,
             "Location" => _Location,
             "PingCount" => _PingCount,
             "WebSocket" => _WebSocket,
@@ -492,6 +501,7 @@ public partial class NodeOnline
                 case "Category": _Category = Convert.ToString(value); break;
                 case "ProvinceID": _ProvinceID = value.ToInt(); break;
                 case "CityID": _CityID = value.ToInt(); break;
+                case "Address": _Address = Convert.ToString(value); break;
                 case "Location": _Location = Convert.ToString(value); break;
                 case "PingCount": _PingCount = value.ToInt(); break;
                 case "WebSocket": _WebSocket = value.ToBoolean(); break;
@@ -606,6 +616,9 @@ public partial class NodeOnline
 
         /// <summary>城市</summary>
         public static readonly Field CityID = FindByName("CityID");
+
+        /// <summary>地址。该节点所处地理地址</summary>
+        public static readonly Field Address = FindByName("Address");
 
         /// <summary>位置。场地安装位置，或者经纬度</summary>
         public static readonly Field Location = FindByName("Location");
@@ -756,6 +769,9 @@ public partial class NodeOnline
 
         /// <summary>城市</summary>
         public const String CityID = "CityID";
+
+        /// <summary>地址。该节点所处地理地址</summary>
+        public const String Address = "Address";
 
         /// <summary>位置。场地安装位置，或者经纬度</summary>
         public const String Location = "Location";

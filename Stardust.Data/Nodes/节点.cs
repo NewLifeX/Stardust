@@ -385,7 +385,7 @@ public partial class Node
     [DisplayName("省份")]
     [Description("省份")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("ProvinceID", "省份", "")]
+    [BindColumn("ProvinceID", "省份", "", ItemType = "area1")]
     public Int32 ProvinceID { get => _ProvinceID; set { if (OnPropertyChanging("ProvinceID", value)) { _ProvinceID = value; OnPropertyChanged("ProvinceID"); } } }
 
     private Int32 _CityID;
@@ -393,7 +393,7 @@ public partial class Node
     [DisplayName("城市")]
     [Description("城市")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("CityID", "城市", "")]
+    [BindColumn("CityID", "城市", "", ItemType = "area2")]
     public Int32 CityID { get => _CityID; set { if (OnPropertyChanging("CityID", value)) { _CityID = value; OnPropertyChanged("CityID"); } } }
 
     private String _Address;

@@ -76,7 +76,7 @@ public partial class NodeLocation
     [DisplayName("地区")]
     [Description("地区。省市区编码")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("AreaId", "地区。省市区编码", "")]
+    [BindColumn("AreaId", "地区。省市区编码", "", ItemType = "area3")]
     public Int32 AreaId { get => _AreaId; set { if (OnPropertyChanging("AreaId", value)) { _AreaId = value; OnPropertyChanged("AreaId"); } } }
 
     private String _Address;
