@@ -7,6 +7,7 @@ using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Services;
+using XCode.Membership;
 using TokenService = Stardust.Server.Services.TokenService;
 
 namespace Stardust.Server.Controllers;
@@ -34,6 +35,8 @@ public class DeployController : BaseController
     #region 令牌验证
     protected override Boolean OnAuthorize(String token)
     {
+        ManageProvider.UserHost = UserHost;
+
         var (jwt, node, ex) = _nodeService.DecodeToken(token, _setting.TokenSecret);
         _node = node;
         _clientId = jwt.Id;

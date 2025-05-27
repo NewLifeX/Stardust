@@ -12,6 +12,7 @@ using Stardust.Data.Configs;
 using Stardust.Models;
 using Stardust.Server.Services;
 using XCode;
+using XCode.Membership;
 using TokenService = Stardust.Server.Services.TokenService;
 using WebSocket = System.Net.WebSockets.WebSocket;
 
@@ -46,6 +47,8 @@ public class AppController : BaseController
     #region 令牌验证
     protected override Boolean OnAuthorize(String token)
     {
+        ManageProvider.UserHost = UserHost;
+
         var (jwt, app) = _tokenService.DecodeToken(token, _setting.TokenSecret);
         _app = app;
         _clientId = jwt.Id;
