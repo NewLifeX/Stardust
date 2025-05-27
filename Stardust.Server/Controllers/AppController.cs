@@ -79,7 +79,7 @@ public class AppController : BaseController
         _app = app;
 
         // 设备不存在或者验证失败，执行注册流程
-        if (app != null && !_registryService.Auth(app, model.Secret, ip, model.ClientId))
+        if (app != null && !_registryService.Auth(app, model.Secret, ip, model.ClientId, set))
         {
             app = null;
         }

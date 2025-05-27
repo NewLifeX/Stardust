@@ -46,6 +46,12 @@ public class NodeService
         if (node.Secret.IsNullOrEmpty()) return true;
         if (node.Secret == secret) return true;
         //return !secret.IsNullOrEmpty() && !secret.IsNullOrEmpty() && (node.Secret == secret || node.Secret.MD5() == secret);
+
+        if (setting.SaltTime > 0 && _passwordProvider is SaltPasswordProvider saltProvider)
+        {
+            // 使用盐值偏差时间，允许客户端时间与服务端时间有一定偏差
+            saltProvider.SaltTime = setting.SaltTime;
+        }
         if (secret.IsNullOrEmpty() || !_passwordProvider.Verify(node.Secret, secret))
         {
             WriteHistory(node, "节点鉴权", false, "密钥校验失败", ip);

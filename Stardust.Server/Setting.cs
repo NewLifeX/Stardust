@@ -46,6 +46,10 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     [Description("会话超时。默认600秒")]
     public Int32 SessionTimeout { get; set; } = 600;
 
+    /// <summary>盐值偏差时间。客户端登录时使用当前时间加盐，如果跟服务端时间差距过大，将会导致密钥验证失败，默认600秒</summary>
+    [Description("盐值偏差时间。客户端登录时使用当前时间加盐，如果跟服务端时间差距过大，将会导致密钥验证失败，默认600秒")]
+    public Int32 SaltTime { get; set; } = 600;
+
     /// <summary>自动注册。允许节点客户端自动注册，默认true</summary>
     [Description("自动注册。允许节点客户端自动注册，默认true")]
     public Boolean AutoRegister { get; set; } = true;
