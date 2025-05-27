@@ -161,7 +161,7 @@
         <Column Name="TcpTimeWait" DataType="Int32" Description="主动关闭。主动关闭后TimeWait的Tcp网络连接数，下一步Closed" />
         <Column Name="TcpCloseWait" DataType="Int32" Description="被动关闭。被动关闭后CloseWait的Tcp网络连接数，下一步TimeWait" />
         <Column Name="Delay" DataType="Int32" Description="延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms" />
-        <Column Name="Offset" DataType="Int32" Description="偏移。客户端UTC时间减服务端UTC时间，单位ms" />
+        <Column Name="Offset" DataType="Int32" Description="偏移。客户端UTC时间加上一半延迟再减服务端UTC时间，单位ms" />
         <Column Name="LocalTime" DataType="DateTime" Description="本地时间" />
         <Column Name="Uptime" DataType="Int32" ItemType="TimeSpan" Description="开机时间。单位s" />
         <Column Name="MACs" DataType="String" Length="200" Description="网卡" />
@@ -222,7 +222,7 @@
         <Column Name="TcpTimeWait" DataType="Int32" Description="主动关闭。主动关闭后TimeWait的Tcp网络连接数，等待2MSL，确保四次挥手的最后一个ACK能够发出，下一步Closed" />
         <Column Name="TcpCloseWait" DataType="Int32" Description="被动关闭。作为客户端，收到服务器FIN后进入CloseWait的Tcp网络连接数，还没发送自己的FIN，主要原因是我方太忙" />
         <Column Name="Delay" DataType="Int32" Description="延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms" />
-        <Column Name="Offset" DataType="Int32" Description="偏移。客户端UTC时间减服务端UTC时间，单位ms" />
+        <Column Name="Offset" DataType="Int32" Description="偏移。客户端UTC时间加上一半延迟再减服务端UTC时间，单位ms" />
         <Column Name="LocalTime" DataType="DateTime" Description="本地时间" />
         <Column Name="Uptime" DataType="Int32" ItemType="TimeSpan" Description="开机时间。单位s" />
         <Column Name="Creator" DataType="String" Description="创建者。服务端节点" Category="扩展" />

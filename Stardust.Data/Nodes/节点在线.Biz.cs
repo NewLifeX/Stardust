@@ -276,7 +276,7 @@ public partial class NodeOnline : Entity<NodeOnline>
         {
             online.LocalTime = dt;
             //olt.Offset = (Int32)Math.Round((dt - DateTime.Now).TotalSeconds);
-            online.Offset = (Int32)(inf.Time - DateTime.UtcNow.ToLong());
+            online.Offset = (Int32)(inf.Time + (Delay / 2) - DateTime.UtcNow.ToLong());
         }
 
         if (!inf.Processes.IsNullOrEmpty()) online.Processes = inf.Processes;
