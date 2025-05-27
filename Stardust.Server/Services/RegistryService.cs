@@ -1,6 +1,7 @@
 ﻿using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
+using NewLife.Net;
 using NewLife.Remoting;
 using NewLife.Remoting.Models;
 using NewLife.Security;
@@ -38,7 +39,7 @@ public class RegistryService
     /// <param name="clientId"></param>
     /// <returns></returns>
     /// <exception cref="ApiException"></exception>
-    public Boolean Auth(App app, String secret, String ip, String clientId)
+    public Boolean Auth(App app, String secret, String ip, String clientId, StarServerSetting setting)
     {
         if (app == null) return false;
 
@@ -54,6 +55,12 @@ public class RegistryService
         // 未设置密钥，直接通过
         if (app.Secret.IsNullOrEmpty()) return true;
         if (app.Secret == secret) return true;
+
+        if (setting.SaltTime > 0 && _passwordProvider is SaltPasswordProvider saltProvider)
+        {
+            // 使用盐值偏差时间，允许客户端时间与服务端时间有一定偏差
+            saltProvider.SaltTime = setting.SaltTime;
+        }
         if (secret.IsNullOrEmpty() || !_passwordProvider.Verify(app.Secret, secret))
         {
             app.WriteHistory("应用鉴权", false, "密钥校验失败", null, ip, clientId);

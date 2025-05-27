@@ -151,11 +151,11 @@ public partial class NodeData
     public Int32 Delay { get => _Delay; set { if (OnPropertyChanging("Delay", value)) { _Delay = value; OnPropertyChanged("Delay"); } } }
 
     private Int32 _Offset;
-    /// <summary>偏移。客户端UTC时间减服务端UTC时间，单位ms</summary>
+    /// <summary>偏移。客户端UTC时间加上一半延迟再减服务端UTC时间，单位ms</summary>
     [DisplayName("偏移")]
-    [Description("偏移。客户端UTC时间减服务端UTC时间，单位ms")]
+    [Description("偏移。客户端UTC时间加上一半延迟再减服务端UTC时间，单位ms")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("Offset", "偏移。客户端UTC时间减服务端UTC时间，单位ms", "")]
+    [BindColumn("Offset", "偏移。客户端UTC时间加上一半延迟再减服务端UTC时间，单位ms", "")]
     public Int32 Offset { get => _Offset; set { if (OnPropertyChanging("Offset", value)) { _Offset = value; OnPropertyChanged("Offset"); } } }
 
     private DateTime _LocalTime;
@@ -344,7 +344,7 @@ public partial class NodeData
         /// <summary>延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms</summary>
         public static readonly Field Delay = FindByName("Delay");
 
-        /// <summary>偏移。客户端UTC时间减服务端UTC时间，单位ms</summary>
+        /// <summary>偏移。客户端UTC时间加上一半延迟再减服务端UTC时间，单位ms</summary>
         public static readonly Field Offset = FindByName("Offset");
 
         /// <summary>本地时间</summary>
@@ -416,7 +416,7 @@ public partial class NodeData
         /// <summary>延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms</summary>
         public const String Delay = "Delay";
 
-        /// <summary>偏移。客户端UTC时间减服务端UTC时间，单位ms</summary>
+        /// <summary>偏移。客户端UTC时间加上一半延迟再减服务端UTC时间，单位ms</summary>
         public const String Offset = "Offset";
 
         /// <summary>本地时间</summary>

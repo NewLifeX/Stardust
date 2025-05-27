@@ -1,12 +1,14 @@
 ﻿using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Caching.Services;
 using NewLife.IP;
 using NewLife.Log;
 using NewLife.Remoting.Extensions;
+using NewLife.Security;
 using NewLife.Serialization;
 using Stardust.Data.Nodes;
 using Stardust.Extensions.Caches;
