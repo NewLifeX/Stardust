@@ -61,7 +61,7 @@ public class AppClient : ClientBase, IRegistry
     /// <summary>实例化</summary>
     public AppClient()
     {
-        Features = Features.Login | Features.Ping | Features.Notify | Features.CommandReply;
+        Features = Features.Login | Features.Logout | Features.Ping | Features.Notify | Features.CommandReply | Features.PostEvent;
         SetActions("App/");
 
         // 加载已保存数据
