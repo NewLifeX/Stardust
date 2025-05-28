@@ -200,6 +200,8 @@ public class Startup
             endpoints.MapControllers();
         });
 
+        XTrace.WriteLine("StarServer初始化完成");
+
         // 取得StarWeb地址
         Task.Run(() => ResolveWebUrl(app.ApplicationServices));
     }
