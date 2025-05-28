@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
 using NewLife;
 using NewLife.Remoting.Extensions;
 using NewLife.Serialization;
@@ -84,7 +83,7 @@ public class DeployController : BaseController
             var inf = new DeployInfo
             {
                 Id = item.Id,
-                Name = app.Name,
+                Name = app.AppName ?? app.Name,
                 Version = app.Version,
                 Url = ver?.Url,
                 Hash = ver?.Hash,

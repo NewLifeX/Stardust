@@ -136,6 +136,7 @@ public class ServiceController : DisposeBase
             var args = service.Arguments?.Trim();
             WriteLog("启动应用：{0} {1} workDir={2} Mode={3} Times={4}", file, args, workDir, service.Mode, _error);
             if (service.MaxMemory > 0) WriteLog("内存限制：{0:n0}M", service.MaxMemory);
+            if (!AppId.IsNullOrEmpty()) WriteLog("应用编码：{0}", AppId);
 
             var src = service.ZipFile ?? file;
             using var span = Tracer?.NewSpan("StartService", service);
