@@ -14,7 +14,7 @@ using XCode.Cache;
 namespace Stardust.Data;
 
 /// <summary>应用系统。服务提供者和消费者</summary>
-[ModelCheckMode(ModelCheckModes.CheckTableWhenFirstUse)]
+//[ModelCheckMode(ModelCheckModes.CheckTableWhenFirstUse)]
 public partial class App : Entity<App>
 {
     #region 对象操作
