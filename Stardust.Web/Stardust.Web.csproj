@@ -50,7 +50,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Cube.Core" Version="6.5.2025.527-beta1111" />
+    <PackageReference Include="NewLife.Cube.Core" Version="6.5.2025.601" />
     <PackageReference Include="NewLife.IP" Version="2.3.2025.601" />
     <PackageReference Include="NewLife.Redis" Version="6.2.2025.601" />
     <PackageReference Include="NewLife.Remoting.Extensions" Version="3.3.2025.601" />
