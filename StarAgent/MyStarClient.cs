@@ -337,6 +337,12 @@ internal class MyStarClient : StarClient
         else if (Runtime.Linux)
         {
             rs = "date".Execute($"-u -s \"{time:yyyy-MM-dd HH:mm:ss}\"", 5_000);
+
+            // 时间偏差较大时，需要写入RTC时钟，否则时间会被硬件时钟覆盖
+            if (Math.Abs(ts.TotalSeconds) > 60)
+            {
+                rs += "，" + "hwclock".Execute("-u -w", 5_000);
+            }
         }
 
         WriteLog(rs);
