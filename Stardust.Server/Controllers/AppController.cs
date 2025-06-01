@@ -125,6 +125,22 @@ public class AppController : BaseController
         return _app?.ToString();
     }
 
+    /// <summary>注销</summary>
+    /// <param name="reason">注销原因</param>
+    /// <returns></returns>
+    [HttpGet(nameof(Logout))]
+    [HttpPost(nameof(Logout))]
+    public LoginResponse Logout(String reason)
+    {
+        if (_app != null) _registryService.Logout(_app, _clientId, reason, UserHost);
+
+        return new LoginResponse
+        {
+            Name = _app?.Name,
+            Token = null,
+        };
+    }
+
     [HttpPost(nameof(Ping))]
     public PingResponse Ping(AppInfo inf)
     {

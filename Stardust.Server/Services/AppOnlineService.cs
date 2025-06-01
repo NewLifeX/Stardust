@@ -83,7 +83,7 @@ public class AppOnlineService
         return (online, isNew);
     }
 
-    AppOnline GetOnline(String clientId)
+    public AppOnline GetOnline(String clientId)
     {
         if (clientId.IsNullOrEmpty()) return null;
 
@@ -94,6 +94,16 @@ public class AppOnlineService
         if (online != null) _cache.Set(clientId, online, 600);
 
         return online;
+    }
+
+    /// <summary>在缓存中删除在线记录</summary>
+    /// <param name="clientId"></param>
+    /// <returns></returns>
+    public Boolean RemoveOnline(String clientId)
+    {
+        if (clientId.IsNullOrEmpty()) return false;
+
+        return _cache.Remove(clientId) > 0;
     }
 
     /// <summary>

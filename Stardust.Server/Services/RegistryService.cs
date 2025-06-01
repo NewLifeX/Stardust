@@ -124,6 +124,26 @@ public class RegistryService
         return app;
     }
 
+    /// <summary>注销</summary>
+    /// <param name="reason">注销原因</param>
+    /// <param name="ip">IP地址</param>
+    /// <returns></returns>
+    public AppOnline Logout(App app, String clientId, String reason, String ip)
+    {
+        var online = _appOnline.GetOnline(clientId);
+        if (online == null) return null;
+
+        var msg = $"{reason} [{app}]]登录于{online.CreateTime}，最后活跃于{online.UpdateTime}";
+        app.WriteHistory("应用下线", true, msg, ip);
+
+        //!! 应用注销，不删除在线记录，保留在线记录用于查询
+        //online.Delete();
+
+        _appOnline.RemoveOnline(clientId);
+
+        return online;
+    }
+
     /// <summary>激活应用。更新在线信息和关联节点</summary>
     /// <param name="app"></param>
     /// <param name="inf"></param>
