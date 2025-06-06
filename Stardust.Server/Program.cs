@@ -8,6 +8,9 @@ public class Program
     {
         XTrace.UseConsole();
 
+        // 加大最小线程数，避免启动时线程饥饿
+        ThreadPool.SetMinThreads(1024, 100);
+
         CreateWebHostBuilder(args).Build().Run();
     }
 
