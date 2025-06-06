@@ -71,7 +71,7 @@
     if (deploy != null)
     {
         dic["上传新版本"] = $"/Deployment/AppDeployVersion?appId={appId}&deployId={deploy.Id}";
-        dic["部署节点"] = $"/Deployment/AppDeployNode?enable=1&appId={appId}&deployId={deploy.Id}";
+        dic["部署发布"] = $"/Deployment/AppDeployNode?enable=1&appId={appId}&deployId={deploy.Id}";
     }
 
     var monitor = AppTracer.FindByID(monitorId);
