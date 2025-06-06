@@ -364,12 +364,13 @@ public class ZipDeploy
         }
     }
 
-    Boolean IsExe(String ext) => ext.EndsWithIgnoreCase(".exe", ".dll", ".pdb", ".jar", ".go", ".py") || Runtime.Linux && ext.IsNullOrEmpty();
-    Boolean IsConfig(String ext) => ext.EndsWithIgnoreCase(".json", ".config", ".xml", ".yml");
+    Boolean IsExe(String ext) => ext.EndsWithIgnoreCase(".exe", ".dll", ".pdb", ".jar", ".go", ".py", ".so") || Runtime.Linux && ext.IsNullOrEmpty();
+    Boolean IsConfig(String ext) => ext.EndsWithIgnoreCase(".json", ".config", ".xml", ".yml", ".ini");
 
-    private void DeleteFiles(String dir, Func<String, Boolean> func, String? fileName = null)
+    private void DeleteFiles(String dir, Boolean recurse, Func<String, Boolean> func, String? fileName = null)
     {
-        foreach (var item in dir.AsDirectory().GetFiles())
+        var searchOption = recurse ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+        foreach (var item in dir.AsDirectory().GetFiles("*", searchOption))
         {
             if (func(item.Extension))
             {
@@ -424,25 +425,30 @@ public class ZipDeploy
     {
         if (FileName.IsNullOrEmpty()) throw new ArgumentNullException(nameof(FileName));
 
-        using var span = Tracer?.NewSpan("ZipDeploy-Extract", new { shadow, WorkingDirectory, Overwrite, Mode });
+        using var span = Tracer?.NewSpan("ZipDeploy-Extract", new { shadow, WorkingDirectory, Overwrite, Mode, exefile, configfile, otherfile });
 
         var fi = WorkingDirectory.CombinePath(FileName).AsFile();
         var rundir = fi.DirectoryName!;
         WriteLog("解压缩 {0} 到 {1}", FileName, shadow);
 
         var sdi = shadow.AsDirectory();
-        span?.AppendTag($"sdi={sdi.FullName} rundir={rundir}");
+        var rdi = rundir.AsDirectory();
+        span?.AppendTag($"shadow={sdi.FullName} rundir={rdi.FullName}");
+
+        fi.Extract(shadow, true);
 
         // 前置清理
         switch (Mode)
         {
             case DeployModes.Partial:
+                configfile = CopyModes.SkipExists;
                 break;
             case DeployModes.Standard:
-                WriteLog("清空影子目录中的可执行文件");
-                if (sdi.Exists)
+                configfile = CopyModes.SkipExists;
+                WriteLog("清空运行目录中的可执行文件");
+                if (rdi.Exists)
                 {
-                    foreach (var item in sdi.GetFiles())
+                    foreach (var item in rdi.GetFiles("*", SearchOption.AllDirectories))
                     {
                         if (IsExe(item.Extension))
                             item.Delete();
@@ -450,36 +456,46 @@ public class ZipDeploy
                 }
                 break;
             case DeployModes.Full:
-                WriteLog("清空影子目录中的所有文件");
-                if (sdi.Exists) sdi.Delete(true);
-                shadow.EnsureDirectory(false);
+                WriteLog("清空运行目录中的所有文件");
+                if (rdi.Exists)
+                {
+                    // 直接删除工作目录太狠，改为递归删除可执行文件，以及删除工作目录下的所有文件（不递归）
+                    //rdi.Delete(true);
+                    foreach (var item in rdi.GetFiles("*", SearchOption.AllDirectories))
+                    {
+                        if (IsExe(item.Extension) || IsConfig(item.Extension))
+                            item.Delete();
+                    }
+                    foreach (var item in rdi.GetFiles("*", SearchOption.TopDirectoryOnly))
+                    {
+                        item.Delete();
+                    }
+                }
                 break;
             default:
                 break;
         }
-
-        fi.Extract(shadow, true);
 
         var ovs = Overwrite?.Split(';');
 
         // 复制配置文件和数据文件到运行目录
         if (!sdi.FullName.EnsureEnd("\\").EqualIgnoreCase(rundir.EnsureEnd("\\")))
         {
-            if (exefile == CopyModes.ClearBeforeCopy)
-            {
-                WriteLog("清空运行目录可执行文件：{0}", rundir);
-                DeleteFiles(rundir, IsExe, FileName);
-            }
-            if (configfile == CopyModes.ClearBeforeCopy)
-            {
-                WriteLog("清空运行目录配置文件：{0}", rundir);
-                DeleteFiles(rundir, IsConfig);
-            }
-            if (otherfile == CopyModes.ClearBeforeCopy)
-            {
-                WriteLog("清空运行目录其它文件：{0}", rundir);
-                DeleteFiles(rundir, e => !IsExe(e) && !IsConfig(e));
-            }
+            //if (exefile == CopyModes.ClearBeforeCopy)
+            //{
+            //    WriteLog("清空运行目录可执行文件：{0}", rundir);
+            //    DeleteFiles(rundir, true, IsExe, FileName);
+            //}
+            //if (configfile == CopyModes.ClearBeforeCopy)
+            //{
+            //    WriteLog("清空运行目录配置文件：{0}", rundir);
+            //    DeleteFiles(rundir, false, IsConfig);
+            //}
+            //if (otherfile == CopyModes.ClearBeforeCopy)
+            //{
+            //    WriteLog("清空运行目录其它文件：{0}", rundir);
+            //    DeleteFiles(rundir, false, e => !IsExe(e) && !IsConfig(e));
+            //}
 
             WriteLog("拷贝文件到运行目录：{0}", rundir);
 
@@ -501,21 +517,10 @@ public class ZipDeploy
             {
                 var di = shadow.CombinePath(item.Name).AsDirectory();
                 var dest = rundir.CombinePath(item.Name).AsDirectory();
-                // 强制覆盖(包含子孙目录，否则会出现目标文件夹中子孙文件夹内容遗漏拷贝)
-                if (ovs != null && ovs.Contains(item.Name))
-                {
-                    WriteLog("覆盖目录 {0}", item.Name);
 
-                    di.CopyTo(dest.FullName, allSub: true);
-                }
-                //// 特殊目录且目标不存在时，覆盖
-                //else if (item.Name.EqualIgnoreCase("Data", "Config", "Plugins", "wwwroot") && !dest.Exists)
-                else if (otherfile >= CopyModes.Overwrite || otherfile == CopyModes.SkipExists && !dest.Exists)
-                {
-                    WriteLog("复制目录 {0}", item.Name);
+                WriteLog("覆盖目录 {0}", item.Name);
 
-                    di.CopyTo(dest.FullName, allSub: true);
-                }
+                di.CopyTo(dest.FullName, allSub: true);
             }
         }
     }
