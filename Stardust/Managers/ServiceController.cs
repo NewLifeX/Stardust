@@ -166,7 +166,7 @@ public class ServiceController : DisposeBase
                         }
                     case ServiceModes.ExtractAndRun:
                         {
-                            WriteLog("解压后在工作目录运行");
+                            WriteLog("解压后在工作目录运行，发布模式：{0}", DeployInfo?.Mode);
                             var deploy = Extract(src, args, workDir, false);
                             if (deploy == null) throw new Exception("解压缩失败");
 
