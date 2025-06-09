@@ -89,6 +89,7 @@
         <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
         <Column Name="IP" DataType="String" Description="IP地址。节点所在内网IP地址" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
+        <Column Name="Port" DataType="Int32" Description="应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数" />
         <Column Name="FileName" DataType="String" Description="文件。应用启动文件，可直接使用zip包，支持差异定制，为空时使用应用集配置" Category="发布参数" />
         <Column Name="Arguments" DataType="String" Length="500" Description="参数。启动应用的参数，为空时使用应用集配置" Category="发布参数" />
         <Column Name="WorkingDirectory" DataType="String" Length="200" Description="工作目录。应用根目录，为空时使用应用集配置" Category="发布参数" />

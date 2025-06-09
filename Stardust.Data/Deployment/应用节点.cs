@@ -71,6 +71,14 @@ public partial class AppDeployNode
     [BindColumn("Enable", "启用", "")]
     public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
+    private Int32 _Port;
+    /// <summary>应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
+    [DisplayName("应用端口")]
+    [Description("应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Port", "应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数", "")]
+    public Int32 Port { get => _Port; set { if (OnPropertyChanging("Port", value)) { _Port = value; OnPropertyChanged("Port"); } } }
+
     private String _FileName;
     /// <summary>文件。应用启动文件，可直接使用zip包，支持差异定制，为空时使用应用集配置</summary>
     [Category("发布参数")]
@@ -293,6 +301,7 @@ public partial class AppDeployNode
             "NodeId" => _NodeId,
             "IP" => _IP,
             "Enable" => _Enable,
+            "Port" => _Port,
             "FileName" => _FileName,
             "Arguments" => _Arguments,
             "WorkingDirectory" => _WorkingDirectory,
@@ -328,6 +337,7 @@ public partial class AppDeployNode
                 case "NodeId": _NodeId = value.ToInt(); break;
                 case "IP": _IP = Convert.ToString(value); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
+                case "Port": _Port = value.ToInt(); break;
                 case "FileName": _FileName = Convert.ToString(value); break;
                 case "Arguments": _Arguments = Convert.ToString(value); break;
                 case "WorkingDirectory": _WorkingDirectory = Convert.ToString(value); break;
@@ -388,6 +398,9 @@ public partial class AppDeployNode
 
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
+
+        /// <summary>应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
+        public static readonly Field Port = FindByName("Port");
 
         /// <summary>文件。应用启动文件，可直接使用zip包，支持差异定制，为空时使用应用集配置</summary>
         public static readonly Field FileName = FindByName("FileName");
@@ -481,6 +494,9 @@ public partial class AppDeployNode
 
         /// <summary>启用</summary>
         public const String Enable = "Enable";
+
+        /// <summary>应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
+        public const String Port = "Port";
 
         /// <summary>文件。应用启动文件，可直接使用zip包，支持差异定制，为空时使用应用集配置</summary>
         public const String FileName = "FileName";

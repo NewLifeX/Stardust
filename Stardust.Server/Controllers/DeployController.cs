@@ -100,11 +100,13 @@ public class DeployController : BaseController
             // 如果是dotnet应用，可能需要额外的参数
             if (app.ProjectKind == ProjectKinds.DotNet)
             {
-                if (app.Port > 0)
+                var port = item.Port;
+                if (port <= 0) port = app.Port;
+                if (port > 0)
                 {
                     var args = inf.Service.Arguments;
                     if (args.IsNullOrEmpty() || !args.Contains("urls=", StringComparison.OrdinalIgnoreCase))
-                        inf.Service.Arguments = (args + " urls=http://*:" + app.Port).Trim();
+                        inf.Service.Arguments = (args + " urls=http://*:" + port).Trim();
                 }
             }
 
