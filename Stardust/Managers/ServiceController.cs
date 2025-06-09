@@ -643,7 +643,7 @@ public class ServiceController : DisposeBase
         if (p != null && EventProvider is StarClient client && !IsStarApp)
         {
             if (_appInfo == null || _appInfo.Id != p.Id)
-                _appInfo = new AppInfo(p) { AppName = inf.Name };
+                _appInfo = new AppInfo(p) { AppName = DeployInfo?.Name ?? inf.Name };
             else
                 _appInfo.Refresh();
 
