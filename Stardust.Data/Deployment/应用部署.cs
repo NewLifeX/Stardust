@@ -119,13 +119,13 @@ public partial class AppDeploy
     [BindColumn("Port", "应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数", "")]
     public Int32 Port { get => _Port; set { if (OnPropertyChanging("Port", value)) { _Port = value; OnPropertyChanged("Port"); } } }
 
-    private String _FrontPorts;
-    /// <summary>外部端口。对外提供服务的端口，自动生成nginx配置，如80/443</summary>
-    [DisplayName("外部端口")]
-    [Description("外部端口。对外提供服务的端口，自动生成nginx配置，如80/443")]
+    private String _Urls;
+    /// <summary>服务地址。对外提供服务的域名端口地址，自动生成nginx配置，如https://sso.newlifex.com</summary>
+    [DisplayName("服务地址")]
+    [Description("服务地址。对外提供服务的域名端口地址，自动生成nginx配置，如https://sso.newlifex.com")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("FrontPorts", "外部端口。对外提供服务的端口，自动生成nginx配置，如80/443", "")]
-    public String FrontPorts { get => _FrontPorts; set { if (OnPropertyChanging("FrontPorts", value)) { _FrontPorts = value; OnPropertyChanged("FrontPorts"); } } }
+    [BindColumn("Urls", "服务地址。对外提供服务的域名端口地址，自动生成nginx配置，如https://sso.newlifex.com", "")]
+    public String Urls { get => _Urls; set { if (OnPropertyChanging("Urls", value)) { _Urls = value; OnPropertyChanged("Urls"); } } }
 
     private String _Repository;
     /// <summary>代码库。下载代码的位置</summary>
@@ -337,7 +337,7 @@ public partial class AppDeploy
             "AutoPublish" => _AutoPublish,
             "PackageName" => _PackageName,
             "Port" => _Port,
-            "FrontPorts" => _FrontPorts,
+            "Urls" => _Urls,
             "Repository" => _Repository,
             "Branch" => _Branch,
             "ProjectPath" => _ProjectPath,
@@ -377,7 +377,7 @@ public partial class AppDeploy
                 case "AutoPublish": _AutoPublish = value.ToBoolean(); break;
                 case "PackageName": _PackageName = Convert.ToString(value); break;
                 case "Port": _Port = value.ToInt(); break;
-                case "FrontPorts": _FrontPorts = Convert.ToString(value); break;
+                case "Urls": _Urls = Convert.ToString(value); break;
                 case "Repository": _Repository = Convert.ToString(value); break;
                 case "Branch": _Branch = Convert.ToString(value); break;
                 case "ProjectPath": _ProjectPath = Convert.ToString(value); break;
@@ -459,8 +459,8 @@ public partial class AppDeploy
         /// <summary>应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
         public static readonly Field Port = FindByName("Port");
 
-        /// <summary>外部端口。对外提供服务的端口，自动生成nginx配置，如80/443</summary>
-        public static readonly Field FrontPorts = FindByName("FrontPorts");
+        /// <summary>服务地址。对外提供服务的域名端口地址，自动生成nginx配置，如https://sso.newlifex.com</summary>
+        public static readonly Field Urls = FindByName("Urls");
 
         /// <summary>代码库。下载代码的位置</summary>
         public static readonly Field Repository = FindByName("Repository");
@@ -567,8 +567,8 @@ public partial class AppDeploy
         /// <summary>应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
         public const String Port = "Port";
 
-        /// <summary>外部端口。对外提供服务的端口，自动生成nginx配置，如80/443</summary>
-        public const String FrontPorts = "FrontPorts";
+        /// <summary>服务地址。对外提供服务的域名端口地址，自动生成nginx配置，如https://sso.newlifex.com</summary>
+        public const String Urls = "Urls";
 
         /// <summary>代码库。下载代码的位置</summary>
         public const String Repository = "Repository";
