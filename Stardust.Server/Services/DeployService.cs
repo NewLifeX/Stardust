@@ -32,6 +32,50 @@ public class DeployService
         return AppDeployVersion.FindByDeployIdAndVersion(app.Id, app.Version);
     }
 
+    public DeployInfo BuildDeployInfo(AppDeployNode item, Node node)
+    {
+        // 消除缓存，解决版本更新后不能及时更新缓存的问题
+        var app = item.Deploy;
+        app = AppDeploy.FindByKey(app.Id);
+        if (app == null || !app.Enable) return null;
+
+        //todo: 需要根据当前节点的处理器指令集和操作系统版本来选择合适的版本
+        //var ver = AppDeployVersion.FindByDeployIdAndVersion(app.Id, app.Version);
+        var ver = GetDeployVersion(app, node);
+        if (ver == null) return null;
+
+        var inf = new DeployInfo
+        {
+            Id = item.Id,
+            Name = app.AppName ?? app.Name,
+            Version = app.Version,
+            Url = ver?.Url,
+            Hash = ver?.Hash,
+            Overwrite = ver?.Overwrite,
+            Mode = ver.Mode,
+
+            Service = item.ToService(app),
+        };
+
+        // 修正Url
+        if (inf.Url.StartsWithIgnoreCase("/cube/file/")) inf.Url = inf.Url.Replace("/cube/file/", "/cube/file?id=");
+
+        // 如果是dotnet应用，可能需要额外的参数
+        if (app.ProjectKind == ProjectKinds.DotNet)
+        {
+            var port = item.Port;
+            if (port <= 0) port = app.Port;
+            if (port > 0)
+            {
+                var args = inf.Service.Arguments;
+                if (args.IsNullOrEmpty() || !args.Contains("urls=", StringComparison.OrdinalIgnoreCase))
+                    inf.Service.Arguments = (args + " urls=http://*:" + port).Trim();
+            }
+        }
+
+        return inf;
+    }
+
     /// <summary>更新应用部署的节点信息</summary>
     /// <param name="online"></param>
     public void UpdateDeployNode(AppOnline online)

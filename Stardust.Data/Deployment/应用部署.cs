@@ -120,11 +120,11 @@ public partial class AppDeploy
     public Int32 Port { get => _Port; set { if (OnPropertyChanging("Port", value)) { _Port = value; OnPropertyChanged("Port"); } } }
 
     private String _FrontPorts;
-    /// <summary>外部端口。对外提供服务的端口，一般是nginx对外，如80/443</summary>
+    /// <summary>外部端口。对外提供服务的端口，自动生成nginx配置，如80/443</summary>
     [DisplayName("外部端口")]
-    [Description("外部端口。对外提供服务的端口，一般是nginx对外，如80/443")]
+    [Description("外部端口。对外提供服务的端口，自动生成nginx配置，如80/443")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("FrontPorts", "外部端口。对外提供服务的端口，一般是nginx对外，如80/443", "")]
+    [BindColumn("FrontPorts", "外部端口。对外提供服务的端口，自动生成nginx配置，如80/443", "")]
     public String FrontPorts { get => _FrontPorts; set { if (OnPropertyChanging("FrontPorts", value)) { _FrontPorts = value; OnPropertyChanged("FrontPorts"); } } }
 
     private String _Repository;
@@ -459,7 +459,7 @@ public partial class AppDeploy
         /// <summary>应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
         public static readonly Field Port = FindByName("Port");
 
-        /// <summary>外部端口。对外提供服务的端口，一般是nginx对外，如80/443</summary>
+        /// <summary>外部端口。对外提供服务的端口，自动生成nginx配置，如80/443</summary>
         public static readonly Field FrontPorts = FindByName("FrontPorts");
 
         /// <summary>代码库。下载代码的位置</summary>
@@ -567,7 +567,7 @@ public partial class AppDeploy
         /// <summary>应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
         public const String Port = "Port";
 
-        /// <summary>外部端口。对外提供服务的端口，一般是nginx对外，如80/443</summary>
+        /// <summary>外部端口。对外提供服务的端口，自动生成nginx配置，如80/443</summary>
         public const String FrontPorts = "FrontPorts";
 
         /// <summary>代码库。下载代码的位置</summary>

@@ -64,6 +64,7 @@ public class DeployController : BaseController
 
             var app = item.Deploy;
             if (app == null || !app.Enable) continue;
+
             if (!deployName.IsNullOrEmpty())
             {
                 if (!item.DeployName.IsNullOrEmpty() && item.DeployName != deployName ||
@@ -71,44 +72,8 @@ public class DeployController : BaseController
             }
             if (!appName.IsNullOrEmpty() && app.AppName != appName) continue;
 
-            // 消除缓存，解决版本更新后不能及时更新缓存的问题
-            app = AppDeploy.FindByKey(app.Id);
-            if (app == null || !app.Enable) continue;
-
-            //todo: 需要根据当前节点的处理器指令集和操作系统版本来选择合适的版本
-            //var ver = AppDeployVersion.FindByDeployIdAndVersion(app.Id, app.Version);
-            var ver = _deployService.GetDeployVersion(app, _node);
-            if (ver == null) continue;
-
-            var inf = new DeployInfo
-            {
-                Id = item.Id,
-                Name = app.AppName ?? app.Name,
-                Version = app.Version,
-                Url = ver?.Url,
-                Hash = ver?.Hash,
-                Overwrite = ver?.Overwrite,
-                Mode = ver.Mode,
-
-                Service = item.ToService(app),
-            };
-            rs.Add(inf);
-
-            // 修正Url
-            if (inf.Url.StartsWithIgnoreCase("/cube/file/")) inf.Url = inf.Url.Replace("/cube/file/", "/cube/file?id=");
-
-            // 如果是dotnet应用，可能需要额外的参数
-            if (app.ProjectKind == ProjectKinds.DotNet)
-            {
-                var port = item.Port;
-                if (port <= 0) port = app.Port;
-                if (port > 0)
-                {
-                    var args = inf.Service.Arguments;
-                    if (args.IsNullOrEmpty() || !args.Contains("urls=", StringComparison.OrdinalIgnoreCase))
-                        inf.Service.Arguments = (args + " urls=http://*:" + port).Trim();
-                }
-            }
+            var inf = _deployService.BuildDeployInfo(item, _node);
+            if (inf == null) continue;
 
             WriteHistory(app.Id, nameof(GetAll), true, inf.ToJson());
         }
