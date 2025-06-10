@@ -189,16 +189,16 @@ internal class NginxDeploy
         if (File.Exists(targetFile) && File.ReadAllText(SiteFile).MD5() == File.ReadAllText(targetFile).MD5())
             return false;
 
-        XTrace.WriteLine("正在发布站点配置到nginx：{0} => {1}", SiteFile, targetFile);
+        WriteLog("正在发布站点配置到nginx：{0} => {1}", SiteFile, targetFile);
         File.Copy(SiteFile, targetFile, true);
 
         // 重新加载nginx配置
-        XTrace.WriteLine("正在重新加载nginx配置...");
+        WriteLog("正在重新加载nginx配置...");
         if (Runtime.Windows)
             targetDir.CombinePath("../nginx.exe").Run("-s reload", 5_000);
         else
             "nginx".Run("-s reload", 5_000);
-        XTrace.WriteLine("nginx配置重新加载完成。");
+        WriteLog("nginx配置重新加载完成。");
 
         return true;
     }
@@ -247,5 +247,11 @@ internal class NginxDeploy
             throw new InvalidOperationException("重载nginx配置失败: " + ex.Message, ex);
         }
     }
+    #endregion
+
+    #region 日志
+    public ILog Log { get; set; } = XTrace.Log;
+
+    public void WriteLog(String format, params Object[] args) => Log?.Info(format, args);
     #endregion
 }
