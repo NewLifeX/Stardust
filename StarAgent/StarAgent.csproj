@@ -55,8 +55,4 @@
     <ProjectReference Include="..\Stardust\Stardust.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Managers\" />
-  </ItemGroup>
-
 </Project>
