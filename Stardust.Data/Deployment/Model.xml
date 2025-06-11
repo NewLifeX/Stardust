@@ -52,7 +52,7 @@
         <Column Name="MultiVersion" DataType="Boolean" Description="多版本。支持多运行时版本，此时只认可部署版本中符合运行时要求的最新可用版本" />
         <Column Name="AutoPublish" DataType="Boolean" Description="自动发布。应用版本后自动发布到启用节点，加快发布速度" />
         <Column Name="PackageName" DataType="String" Description="包名。用于判断上传包名是否正确，避免错误上传其它应用包，支持*模糊匹配" />
-        <Column Name="Port" DataType="Int32" Description="应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数" />
+        <Column Name="Port" DataType="Int32" Description="监听端口。应用自身监听的端口，如果是dotnet应用会增加urls参数" />
         <Column Name="Urls" DataType="String" Description="服务地址。对外提供服务的域名端口地址，自动生成nginx配置，如https://sso.newlifex.com" />
         <Column Name="Repository" DataType="String" ItemType="url" Length="200" Description="代码库。下载代码的位置" Category="编译参数" />
         <Column Name="Branch" DataType="String" DefaultValue="master" Description="分支。默认master" Category="编译参数" />

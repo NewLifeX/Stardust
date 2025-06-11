@@ -37,7 +37,7 @@ public class NginxFile
 {
     #region 属性
     /// <summary>服务名。一般是域名</summary>
-    public String ServerName { get; set; } = null!;
+    public String ServerName { get; set; } = "localhost";
 
     /// <summary>监听的端口列表</summary>
     public List<Int32> Ports { get; set; } = [80, 443];
@@ -58,6 +58,7 @@ public class NginxFile
     public List<NginxBlock> Blocks { get; set; } = [];
     #endregion
 
+    #region 解析方法
     /// <summary>从文件加载并解析 Nginx 配置</summary>
     public static NginxFile? Load(String filePath)
     {
@@ -160,6 +161,52 @@ public class NginxFile
 
         return sb.ToString();
     }
+    #endregion
+
+    #region 方法
+    /// <summary>获取Location块，不存在时创建</summary>
+    /// <returns></returns>
+    public NginxBlock? GetLocation(Boolean createOnEmpty)
+    {
+        var block = Blocks.FirstOrDefault(e => e.Name.StartsWithIgnoreCase("location"));
+        if (block != null || !createOnEmpty) return block;
+
+        var location = new NginxBlock
+        {
+            Name = "location /"
+        };
+        location.Directives["proxy_pass"] = ["http://127.0.0.1:8080"];
+        location.Directives["proxy_http_version"] = ["1.1"];
+        location.Directives["proxy_set_header"] = ["Upgrade $http_upgrade", "Connection \"upgrade\"", "Host $host", "X-Real-IP $remote_addr", "X-Forwarded-For $proxy_add_x_forwarded_for", "X-Forwarded-Proto $scheme"];
+        location.Directives["proxy_cache_bypass"] = ["$http_upgrade"];
+
+        Blocks.Add(location);
+
+        return location;
+    }
+
+    /// <summary>获取后端服务地址列表</summary>
+    public String[] GetBackends()
+    {
+        var location = GetLocation(false);
+        if (location == null) return [];
+
+        if (location.Directives.TryGetValue("proxy_pass", out var vs) && vs.Count > 0)
+        {
+            return vs.Select(e => e.TrimEnd('/')).ToArray();
+        }
+        return [];
+    }
+
+    /// <summary>设置后端服务地址</summary>
+    public void SetBackends(params String[] backends)
+    {
+        if (backends == null || backends.Length == 0) return;
+
+        var location = GetLocation(true);
+        location.Directives["proxy_pass"] = backends.Select(e => e.TrimEnd('/')).ToList();
+    }
+    #endregion
 }
 
 /// <summary>

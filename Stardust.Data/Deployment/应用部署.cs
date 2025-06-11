@@ -112,11 +112,11 @@ public partial class AppDeploy
     public String PackageName { get => _PackageName; set { if (OnPropertyChanging("PackageName", value)) { _PackageName = value; OnPropertyChanged("PackageName"); } } }
 
     private Int32 _Port;
-    /// <summary>应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
-    [DisplayName("应用端口")]
-    [Description("应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数")]
+    /// <summary>监听端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
+    [DisplayName("监听端口")]
+    [Description("监听端口。应用自身监听的端口，如果是dotnet应用会增加urls参数")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("Port", "应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数", "")]
+    [BindColumn("Port", "监听端口。应用自身监听的端口，如果是dotnet应用会增加urls参数", "")]
     public Int32 Port { get => _Port; set { if (OnPropertyChanging("Port", value)) { _Port = value; OnPropertyChanged("Port"); } } }
 
     private String _Urls;
@@ -456,7 +456,7 @@ public partial class AppDeploy
         /// <summary>包名。用于判断上传包名是否正确，避免错误上传其它应用包，支持*模糊匹配</summary>
         public static readonly Field PackageName = FindByName("PackageName");
 
-        /// <summary>应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
+        /// <summary>监听端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
         public static readonly Field Port = FindByName("Port");
 
         /// <summary>服务地址。对外提供服务的域名端口地址，自动生成nginx配置，如https://sso.newlifex.com</summary>
@@ -564,7 +564,7 @@ public partial class AppDeploy
         /// <summary>包名。用于判断上传包名是否正确，避免错误上传其它应用包，支持*模糊匹配</summary>
         public const String PackageName = "PackageName";
 
-        /// <summary>应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
+        /// <summary>监听端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
         public const String Port = "Port";
 
         /// <summary>服务地址。对外提供服务的域名端口地址，自动生成nginx配置，如https://sso.newlifex.com</summary>

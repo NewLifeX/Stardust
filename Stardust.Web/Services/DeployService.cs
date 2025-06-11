@@ -1,7 +1,10 @@
-﻿using System.IO.Compression;
+﻿using System;
+using System.IO.Compression;
 using NewLife;
+using NewLife.Net;
 using NewLife.Serialization;
 using Stardust.Data.Deployment;
+using Stardust.Deployment;
 using Attachment = NewLife.Cube.Entity.Attachment;
 
 namespace Stardust.Web.Services;
@@ -129,24 +132,37 @@ public class DeployService
             {
                 if (entry.FullName.EndsWithIgnoreCase(".nginx") || entry.FullName.EndsWithIgnoreCase(".conf"))
                 {
-                    using var stream = entry.Open();
-                    using var reader = new StreamReader(stream);
-                    String line;
-                    while ((line = reader.ReadLine()) != null)
+                    var nginx = new NginxFile();
+                    if (nginx.Parse(entry.Open().ToStr()))
                     {
-                        if (line.StartsWith("listen ", StringComparison.OrdinalIgnoreCase))
+                        // 获取后端端口
+                        if (deploy.Port == 0)
                         {
-                            // 解析监听端口
-                            var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                            if (parts.Length > 1 && Int32.TryParse(parts[1], out var port))
+                            var backend = nginx.GetBackends().FirstOrDefault();
+                            if (!backend.IsNullOrEmpty())
                             {
-                                deploy.Port = port;
-                                deploy.Update();
-                                break;
+                                var uri = new Uri(backend);
+                                if (uri.Port > 0) deploy.Port = uri.Port;
                             }
                         }
+
+                        // 获取对外服务地址
+                        if (deploy.Urls.IsNullOrEmpty() && !nginx.ServerName.IsNullOrEmpty())
+                        {
+                            var schema = nginx.Ports.Any(e => e % 443 == 0) ? "https" : "http";
+                            var host = nginx.ServerName.Split(',').FirstOrDefault();
+                            var port = nginx.Ports.Count > 0 ? nginx.Ports.Max() : 0;
+
+                            if (schema == "https" && port % 443 == 0 || schema == "http" && port % 80 == 0)
+                                deploy.Urls = $"{schema}://{host}";
+                            else
+                                deploy.Urls = $"{schema}://{host}:{port}";
+                        }
+
+                        //deploy.Update();
+
+                        break; // 找到一个就行了
                     }
-                    break; // 找到第一个就行了
                 }
             }
         }
