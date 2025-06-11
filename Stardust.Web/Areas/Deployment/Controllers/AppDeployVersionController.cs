@@ -211,6 +211,8 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         {
             var deploy = entity.Deploy;
 
+            _deployService.ReadDotNet(entity, att, uploadPath);
+
             // 处理Nginx
             if (deploy.Port == 0 || deploy.Urls.IsNullOrEmpty())
                 _deployService.ReadNginx(entity, att, uploadPath);

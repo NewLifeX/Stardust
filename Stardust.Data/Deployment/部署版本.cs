@@ -102,6 +102,14 @@ public partial class AppDeployVersion
     [BindColumn("Runtime", "运行时。RID是运行时标识符，用于标识应用程序运行所在的目标平台。如win-x64/linux-arm", "")]
     public Stardust.Models.RuntimeIdentifier Runtime { get => _Runtime; set { if (OnPropertyChanging("Runtime", value)) { _Runtime = value; OnPropertyChanged("Runtime"); } } }
 
+    private String _TargetFramework;
+    /// <summary>目标框架。TFM目标运行时框架，如net8.0</summary>
+    [DisplayName("目标框架")]
+    [Description("目标框架。TFM目标运行时框架，如net8.0")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("TargetFramework", "目标框架。TFM目标运行时框架，如net8.0", "")]
+    public String TargetFramework { get => _TargetFramework; set { if (OnPropertyChanging("TargetFramework", value)) { _TargetFramework = value; OnPropertyChanged("TargetFramework"); } } }
+
     private String _Progress;
     /// <summary>进度。发布进度</summary>
     [DisplayName("进度")]
@@ -228,6 +236,7 @@ public partial class AppDeployVersion
             "Size" => _Size,
             "Hash" => _Hash,
             "Runtime" => _Runtime,
+            "TargetFramework" => _TargetFramework,
             "Progress" => _Progress,
             "CommitId" => _CommitId,
             "CommitLog" => _CommitLog,
@@ -256,6 +265,7 @@ public partial class AppDeployVersion
                 case "Size": _Size = value.ToLong(); break;
                 case "Hash": _Hash = Convert.ToString(value); break;
                 case "Runtime": _Runtime = (Stardust.Models.RuntimeIdentifier)value.ToInt(); break;
+                case "TargetFramework": _TargetFramework = Convert.ToString(value); break;
                 case "Progress": _Progress = Convert.ToString(value); break;
                 case "CommitId": _CommitId = Convert.ToString(value); break;
                 case "CommitLog": _CommitLog = Convert.ToString(value); break;
@@ -334,6 +344,9 @@ public partial class AppDeployVersion
         /// <summary>运行时。RID是运行时标识符，用于标识应用程序运行所在的目标平台。如win-x64/linux-arm</summary>
         public static readonly Field Runtime = FindByName("Runtime");
 
+        /// <summary>目标框架。TFM目标运行时框架，如net8.0</summary>
+        public static readonly Field TargetFramework = FindByName("TargetFramework");
+
         /// <summary>进度。发布进度</summary>
         public static readonly Field Progress = FindByName("Progress");
 
@@ -405,6 +418,9 @@ public partial class AppDeployVersion
 
         /// <summary>运行时。RID是运行时标识符，用于标识应用程序运行所在的目标平台。如win-x64/linux-arm</summary>
         public const String Runtime = "Runtime";
+
+        /// <summary>目标框架。TFM目标运行时框架，如net8.0</summary>
+        public const String TargetFramework = "TargetFramework";
 
         /// <summary>进度。发布进度</summary>
         public const String Progress = "Progress";

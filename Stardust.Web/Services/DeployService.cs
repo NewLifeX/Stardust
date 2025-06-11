@@ -1,4 +1,5 @@
 ﻿using System.IO.Compression;
+using System.Text.RegularExpressions;
 using NewLife;
 using NewLife.Serialization;
 using Stardust.Data.Deployment;
@@ -109,6 +110,56 @@ public class DeployService
     {
         deployNode.Enable = false;
         deployNode.Update();
+    }
+
+    /// <summary>从zip包读取dotnet信息</summary>
+    /// <param name="version"></param>
+    /// <param name="attachment"></param>
+    /// <param name="uploadPath"></param>
+    /// <returns></returns>
+    public Boolean ReadDotNet(AppDeployVersion version, Attachment attachment, String uploadPath)
+    {
+        if (version == null || attachment == null) return false;
+        if (attachment.Extension != ".zip") return false;
+
+        // 读取其中的nginx文件，识别监听端口
+        var deploy = version.Deploy;
+        if (deploy == null || deploy.Port != 0 && !deploy.Urls.IsNullOrEmpty()) return false;
+
+        var fi = attachment.GetFilePath(uploadPath).AsFile();
+        if (!fi.Exists) return false;
+
+        // 在zip包中查找后缀为.nginx或.conf的文件，以文本打开，按照nginx文件格式识别其中的listen监听端口
+        using var zip = ZipFile.Open(fi.FullName, ZipArchiveMode.Read);
+        foreach (var entry in zip.Entries)
+        {
+            if (entry.Name.EndsWithIgnoreCase(".runtimeconfig.json"))
+            {
+                var txt = entry.Open().ToStr();
+                var match = Regex.Match(txt, """
+                "tfm"\s*:\s*"([^"]+)"
+                """, RegexOptions.IgnoreCase);
+                if (match.Success)
+                {
+                    version.TargetFramework = match.Groups[1].Value.Trim('"');
+                    return true;
+                }
+            }
+            else if (entry.Name.EndsWithIgnoreCase(".exe.config"))
+            {
+                var txt = entry.Open().ToStr();
+                var match = Regex.Match(txt, """
+                sku\s*=\s*"\.NETFramework,Version=v([^"]+)"
+                """, RegexOptions.IgnoreCase);
+                if (match.Success)
+                {
+                    version.TargetFramework = "net" + match.Groups[1].Value.Trim('"');
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /// <summary>从zip包读取nginx信息</summary>

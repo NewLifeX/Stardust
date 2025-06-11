@@ -131,6 +131,7 @@
         <Column Name="Size" DataType="Int64" ItemType="GMK" Description="文件大小" />
         <Column Name="Hash" DataType="String" Description="文件哈希。MD5散列，避免下载的文件有缺失" />
         <Column Name="Runtime" DataType="Int32" Description="运行时。RID是运行时标识符，用于标识应用程序运行所在的目标平台。如win-x64/linux-arm" Type="Stardust.Models.RuntimeIdentifier" />
+        <Column Name="TargetFramework" DataType="String" Description="目标框架。TFM目标运行时框架，如net8.0" />
         <Column Name="Progress" DataType="String" Description="进度。发布进度" />
         <Column Name="CommitId" DataType="String" Description="提交标识" Category="编译参数" />
         <Column Name="CommitLog" DataType="String" Description="提交记录" Category="编译参数" />

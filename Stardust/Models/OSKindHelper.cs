@@ -205,7 +205,7 @@ public static class OSKindHelper
             rid
         };
 
-        var rid2 = (RuntimeIdentifier)((Int32)rid / 10);
+        var rid2 = (RuntimeIdentifier)((Int32)rid / 10 * 10);
         if (rid2 != rid) ids.Add(rid2);
 
         return ids.ToArray();
