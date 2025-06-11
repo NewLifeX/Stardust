@@ -26,7 +26,32 @@ public class DeployService
             // 目标节点所支持的运行时标识符。一般有两个，如 win-x64/win
             var rids = OSKindHelper.GetRID(node.OSKind, node.Architecture?.ToLower() + "");
 
-            return vers.FirstOrDefault(e => rids.Contains(e.Runtime));
+            //return vers.FirstOrDefault(e => rids.Contains(e.Runtime));
+
+            // 可能有多个版本，挑选最新的适合目标节点操作系统、指令集和框架运行时的版本
+            var fms = node.Frameworks?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? [];
+            foreach (var ver in vers)
+            {
+                if (!rids.Contains(ver.Runtime)) continue;
+                if (!ver.TargetFramework.IsNullOrEmpty() && fms.Length > 0)
+                {
+                    var tfm = ver.TargetFramework.TrimStart("netcoreapp", "net", "v");
+
+                    // 特殊处理4.x，例如net4.6.1可以运行在net4.7/net4.8上
+                    if (tfm.StartsWith("4."))
+                    {
+                        var v = new Version(tfm);
+                        if (!fms.Any(e => e.StartsWith("4.") && new Version(e) >= v))
+                            continue;
+                    }
+                    else if (!fms.Any(e => e.StartsWith(tfm)))
+                        continue;
+                }
+
+                return ver;
+            }
+
+            return null;
         }
 
         return AppDeployVersion.FindByDeployIdAndVersion(app.Id, app.Version);
