@@ -209,6 +209,9 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         var att = await base.SaveFile(entity, file, uploadPath, fileName);
         if (att != null)
         {
+            // 处理Nginx
+            _deployService.BuildNginx(entity, att, uploadPath);
+
             entity.Hash = att.Hash;
             entity.Size = att.Size;
             entity.Url = $"/cube/file?id={att.Id}{att.Extension}";

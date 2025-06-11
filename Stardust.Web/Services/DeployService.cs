@@ -1,6 +1,8 @@
-﻿using NewLife;
+﻿using System.IO.Compression;
+using NewLife;
 using NewLife.Serialization;
 using Stardust.Data.Deployment;
+using Attachment = NewLife.Cube.Entity.Attachment;
 
 namespace Stardust.Web.Services;
 
@@ -105,5 +107,48 @@ public class DeployService
     {
         deployNode.Enable = false;
         deployNode.Update();
+    }
+
+    public void BuildNginx(AppDeployVersion version, Attachment attachment, String uploadPath)
+    {
+        if (version == null || attachment == null) return;
+        if (attachment.Extension != ".zip") return;
+
+        var deploy = version.Deploy;
+        if (deploy == null) return;
+
+        var fi = attachment.GetFilePath(uploadPath).AsFile();
+        if (!fi.Exists) return;
+
+        // 读取其中的nginx文件，识别监听端口
+        if (deploy.Port == 0 || deploy.Urls.IsNullOrEmpty())
+        {
+            // 在zip包中查找后缀为.nginx或.conf的文件，以文本打开，按照nginx文件格式识别其中的listen监听端口
+            using var zip = ZipFile.Open(fi.FullName, ZipArchiveMode.Read);
+            foreach (var entry in zip.Entries)
+            {
+                if (entry.FullName.EndsWithIgnoreCase(".nginx") || entry.FullName.EndsWithIgnoreCase(".conf"))
+                {
+                    using var stream = entry.Open();
+                    using var reader = new StreamReader(stream);
+                    String line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        if (line.StartsWith("listen ", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // 解析监听端口
+                            var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                            if (parts.Length > 1 && Int32.TryParse(parts[1], out var port))
+                            {
+                                deploy.Port = port;
+                                deploy.Update();
+                                break;
+                            }
+                        }
+                    }
+                    break; // 找到第一个就行了
+                }
+            }
+        }
     }
 }
