@@ -22,7 +22,7 @@
 
   <PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
     <ServerGarbageCollection>true</ServerGarbageCollection>
-    <GarbageCollectionAdapatationMode>1</GarbageCollectionAdapatationMode>
+    <GarbageCollectionAdaptationMode>1</GarbageCollectionAdaptationMode>
     <!--<PublishAot>true</PublishAot>
     <OptimizationPreference>Size</OptimizationPreference>
     <InvariantGlobalization>true</InvariantGlobalization>
