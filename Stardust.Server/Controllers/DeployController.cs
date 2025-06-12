@@ -75,6 +75,7 @@ public class DeployController : BaseController
             var inf = _deployService.BuildDeployInfo(item, _node);
             if (inf == null) continue;
 
+            rs.Add(inf);
             WriteHistory(app.Id, nameof(GetAll), true, inf.ToJson());
         }
 
