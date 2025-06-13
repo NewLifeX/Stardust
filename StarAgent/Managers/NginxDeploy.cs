@@ -41,40 +41,43 @@ internal class NginxDeploy
     {
         // 初始化nginx配置
         var output = "nginx".Execute("-t", 5_000);
-        // 匹配nginx.conf路径
-        var match = Regex.Match(output, @"nginx: configuration file (.+nginx\.conf) ");
-        if (match.Success)
+        if (!output.IsNullOrEmpty())
         {
-            var nginxConfPath = match.Groups[1].Value.Trim();
-
-            // 2. 读取nginx.conf，查找include行
-            if (!String.IsNullOrEmpty(nginxConfPath) && File.Exists(nginxConfPath))
+            // 匹配nginx.conf路径
+            var match = Regex.Match(output, @"nginx: configuration file (.+nginx\.conf) ");
+            if (match.Success)
             {
-                var lines = File.ReadAllLines(nginxConfPath);
-                foreach (var line in lines)
+                var nginxConfPath = match.Groups[1].Value.Trim();
+
+                // 2. 读取nginx.conf，查找include行
+                if (!String.IsNullOrEmpty(nginxConfPath) && File.Exists(nginxConfPath))
                 {
-                    var trimmed = line.Trim();
-                    if (!trimmed.StartsWith("#") && trimmed.StartsWith("include"))
+                    var lines = File.ReadAllLines(nginxConfPath);
+                    foreach (var line in lines)
                     {
-                        // 解析include路径
-                        var parts = trimmed.Split([' ', '\t'], StringSplitOptions.RemoveEmptyEntries);
-                        if (parts.Length >= 2)
+                        var trimmed = line.Trim();
+                        if (!trimmed.StartsWith("#") && trimmed.StartsWith("include"))
                         {
-                            var includePath = parts[1].TrimEnd(';');
-                            // 例如 include /etc/nginx/conf.d/*.conf
-                            var dir = Path.GetDirectoryName(includePath);
-                            var ext = Path.GetExtension(includePath);
-                            if (!String.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                            // 解析include路径
+                            var parts = trimmed.Split([' ', '\t'], StringSplitOptions.RemoveEmptyEntries);
+                            if (parts.Length >= 2)
                             {
-                                _nginxConfig = dir;
-                                _nginxExtension = String.IsNullOrEmpty(ext) ? ".conf" : ext;
-                                break;
+                                var includePath = parts[1].TrimEnd(';');
+                                // 例如 include /etc/nginx/conf.d/*.conf
+                                var dir = Path.GetDirectoryName(includePath);
+                                var ext = Path.GetExtension(includePath);
+                                if (!String.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                                {
+                                    _nginxConfig = dir;
+                                    _nginxExtension = String.IsNullOrEmpty(ext) ? ".conf" : ext;
+                                    break;
+                                }
                             }
                         }
                     }
-                }
 
-                if (!_nginxConfig.IsNullOrEmpty()) return;
+                    if (!_nginxConfig.IsNullOrEmpty()) return;
+                }
             }
         }
 
