@@ -24,7 +24,7 @@ public class DeployWorker(StarFactory factory) : IHostedService
             Name = "Deploy",
             Code = set.Code,
             Secret = set.Secret,
-            ProductCode = factory.AppId,
+            ProductCode = "StarDeploy",
             Setting = set,
 
             Tracer = factory.Tracer,

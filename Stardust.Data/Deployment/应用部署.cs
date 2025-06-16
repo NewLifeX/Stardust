@@ -146,12 +146,12 @@ public partial class AppDeploy
     public String Branch { get => _Branch; set { if (OnPropertyChanging("Branch", value)) { _Branch = value; OnPropertyChanged("Branch"); } } }
 
     private String _ProjectPath;
-    /// <summary>项目路径。需要编译的项目路径</summary>
+    /// <summary>项目路径。需要编译的项目路径，相对于代码库根目录</summary>
     [Category("编译参数")]
     [DisplayName("项目路径")]
-    [Description("项目路径。需要编译的项目路径")]
+    [Description("项目路径。需要编译的项目路径，相对于代码库根目录")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("ProjectPath", "项目路径。需要编译的项目路径", "")]
+    [BindColumn("ProjectPath", "项目路径。需要编译的项目路径，相对于代码库根目录", "")]
     public String ProjectPath { get => _ProjectPath; set { if (OnPropertyChanging("ProjectPath", value)) { _ProjectPath = value; OnPropertyChanged("ProjectPath"); } } }
 
     private Stardust.Models.ProjectKinds _ProjectKind;
@@ -162,6 +162,15 @@ public partial class AppDeploy
     [DataObjectField(false, false, false, 0)]
     [BindColumn("ProjectKind", "项目类型。默认dotnet", "", DefaultValue = "1")]
     public Stardust.Models.ProjectKinds ProjectKind { get => _ProjectKind; set { if (OnPropertyChanging("ProjectKind", value)) { _ProjectKind = value; OnPropertyChanged("ProjectKind"); } } }
+
+    private String _BuildArgs;
+    /// <summary>编译参数。编译项目时所需参数</summary>
+    [Category("编译参数")]
+    [DisplayName("编译参数")]
+    [Description("编译参数。编译项目时所需参数")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("BuildArgs", "编译参数。编译项目时所需参数", "")]
+    public String BuildArgs { get => _BuildArgs; set { if (OnPropertyChanging("BuildArgs", value)) { _BuildArgs = value; OnPropertyChanged("BuildArgs"); } } }
 
     private String _PackageFilters;
     /// <summary>打包过滤器。需要打包哪些文件，支持通配符，多项分号隔开</summary>
@@ -342,6 +351,7 @@ public partial class AppDeploy
             "Branch" => _Branch,
             "ProjectPath" => _ProjectPath,
             "ProjectKind" => _ProjectKind,
+            "BuildArgs" => _BuildArgs,
             "PackageFilters" => _PackageFilters,
             "FileName" => _FileName,
             "Arguments" => _Arguments,
@@ -382,6 +392,7 @@ public partial class AppDeploy
                 case "Branch": _Branch = Convert.ToString(value); break;
                 case "ProjectPath": _ProjectPath = Convert.ToString(value); break;
                 case "ProjectKind": _ProjectKind = (Stardust.Models.ProjectKinds)value.ToInt(); break;
+                case "BuildArgs": _BuildArgs = Convert.ToString(value); break;
                 case "PackageFilters": _PackageFilters = Convert.ToString(value); break;
                 case "FileName": _FileName = Convert.ToString(value); break;
                 case "Arguments": _Arguments = Convert.ToString(value); break;
@@ -468,11 +479,14 @@ public partial class AppDeploy
         /// <summary>分支。默认master</summary>
         public static readonly Field Branch = FindByName("Branch");
 
-        /// <summary>项目路径。需要编译的项目路径</summary>
+        /// <summary>项目路径。需要编译的项目路径，相对于代码库根目录</summary>
         public static readonly Field ProjectPath = FindByName("ProjectPath");
 
         /// <summary>项目类型。默认dotnet</summary>
         public static readonly Field ProjectKind = FindByName("ProjectKind");
+
+        /// <summary>编译参数。编译项目时所需参数</summary>
+        public static readonly Field BuildArgs = FindByName("BuildArgs");
 
         /// <summary>打包过滤器。需要打包哪些文件，支持通配符，多项分号隔开</summary>
         public static readonly Field PackageFilters = FindByName("PackageFilters");
@@ -576,11 +590,14 @@ public partial class AppDeploy
         /// <summary>分支。默认master</summary>
         public const String Branch = "Branch";
 
-        /// <summary>项目路径。需要编译的项目路径</summary>
+        /// <summary>项目路径。需要编译的项目路径，相对于代码库根目录</summary>
         public const String ProjectPath = "ProjectPath";
 
         /// <summary>项目类型。默认dotnet</summary>
         public const String ProjectKind = "ProjectKind";
+
+        /// <summary>编译参数。编译项目时所需参数</summary>
+        public const String BuildArgs = "BuildArgs";
 
         /// <summary>打包过滤器。需要打包哪些文件，支持通配符，多项分号隔开</summary>
         public const String PackageFilters = "PackageFilters";

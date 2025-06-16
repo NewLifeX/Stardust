@@ -15,8 +15,6 @@ namespace Stardust.Web.Areas.Deployment.Controllers;
 [Menu(90)]
 public class AppDeployController : EntityController<AppDeploy>
 {
-    //private readonly StarFactory _starFactory;
-
     static AppDeployController()
     {
         ListFields.RemoveCreateField();
@@ -44,6 +42,11 @@ public class AppDeployController : EntityController<AppDeploy>
             var df = ListFields.AddListField("NodeManage", null, "Nodes") as ListField;
             df.DisplayName = "部署节点";
             df.Url = "/Deployment/AppDeployNode?deployId={Id}";
+        }
+        {
+            var df = ListFields.AddListField("BuildNode", null, "Nodes") as ListField;
+            df.DisplayName = "编译节点";
+            df.Url = "/Deployment/AppBuildNode?deployId={Id}";
         }
         {
             var df = ListFields.GetField("Version") as ListField;

@@ -56,8 +56,9 @@
         <Column Name="Urls" DataType="String" Description="服务地址。对外提供服务的域名端口地址，自动生成nginx配置，如https://sso.newlifex.com" />
         <Column Name="Repository" DataType="String" ItemType="url" Length="200" Description="代码库。下载代码的位置" Category="编译参数" />
         <Column Name="Branch" DataType="String" DefaultValue="master" Description="分支。默认master" Category="编译参数" />
-        <Column Name="ProjectPath" DataType="String" Description="项目路径。需要编译的项目路径" Category="编译参数" />
+        <Column Name="ProjectPath" DataType="String" Description="项目路径。需要编译的项目路径，相对于代码库根目录" Category="编译参数" />
         <Column Name="ProjectKind" DataType="Int32" DefaultValue="1" Description="项目类型。默认dotnet" Type="Stardust.Models.ProjectKinds" Category="编译参数" />
+        <Column Name="BuildArgs" DataType="String" Length="200" Description="编译参数。编译项目时所需参数" Category="编译参数" />
         <Column Name="PackageFilters" DataType="String" Description="打包过滤器。需要打包哪些文件，支持通配符，多项分号隔开" Category="编译参数" />
         <Column Name="FileName" DataType="String" Description="文件。应用启动文件，可直接使用zip包" Category="发布参数" />
         <Column Name="Arguments" DataType="String" Length="500" Description="参数。启动应用的参数" Category="发布参数" />
@@ -166,6 +167,31 @@
         <Index Columns="DeployId,Id" />
         <Index Columns="DeployId,Action,Id" />
         <Index Columns="NodeId,Id" />
+      </Indexes>
+    </Table>
+    <Table Name="AppBuildNode" Description="编译节点。应用部署集和编译节点的关系，一个应用可有多个部署集如arm和x64，在目标节点上发布该部署集对应的应用zip包">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="DeployId" ColumnName="AppId" DataType="Int32" Map="AppDeploy@Id@$" Description="应用部署集。对应AppDeploy" />
+        <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
+        <Column Name="Enable" DataType="Boolean" Description="启用" />
+        <Column Name="SourcePath" DataType="String" Description="源代码目录" />
+        <Column Name="PullCode" DataType="Boolean" Description="拉取源代码" />
+        <Column Name="BuildProject" DataType="Boolean" Description="编译项目" />
+        <Column Name="PackageOutput" DataType="Boolean" Description="打包输出" />
+        <Column Name="UploadPackage" DataType="Boolean" Description="上传应用包" />
+        <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
+        <Column Name="CreateUserId" DataType="Int32" Description="创建人" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="UpdateUserId" DataType="Int32" Description="更新者" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="DeployId" />
+        <Index Columns="NodeId" />
       </Indexes>
     </Table>
     <Table Name="Attachment" Description="附件。用于记录各系统模块使用的文件，可以是Local/NAS/OSS等，对应魔方附件表" ConnName="Cube">

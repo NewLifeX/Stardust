@@ -377,7 +377,7 @@ public partial class Node : Entity<Node>
     {
         var exp = new WhereExpression();
 
-        if (global != null)
+        if (projectId > 0 && global != null)
         {
             // 找到全局项目，然后再找到所有节点。如果项目不存在，则也不会有节点
             var prjs = GalaxyProject.FindAllWithCache().Where(e => e.IsGlobal == global.Value).Select(e => e.Id).ToList();
@@ -386,7 +386,7 @@ public partial class Node : Entity<Node>
 
             exp &= _.ProjectId.In(prjs);
         }
-        else if (projectId >= 0)
+        else if (projectId > 0)
             exp &= _.ProjectId == projectId;
 
         if (!category.IsNullOrEmpty()) exp &= _.Category == category | _.Category.IsNullOrEmpty();

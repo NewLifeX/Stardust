@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Xml;
 using DeployAgent;
 using DeployAgent.Commands;
 using NewLife;

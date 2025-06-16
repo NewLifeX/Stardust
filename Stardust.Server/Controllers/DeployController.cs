@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using NewLife;
+using NewLife.Remoting;
 using NewLife.Remoting.Extensions;
 using NewLife.Serialization;
 using Stardust.Data.Deployment;
@@ -155,6 +157,49 @@ public class DeployController : BaseController
     /// <returns></returns>
     [HttpPost]
     public Int32 Ping([FromBody] AppInfo inf) => _deployService.Ping(_node, inf, UserHost);
+
+    /// <summary>获取分配到本节点的应用发布任务</summary>
+    public BuildTask GetBuildTask(Int32 deployId, String deployName, String appName)
+    {
+        return null;
+    }
+
+    /// <summary>更新编译任务</summary>
+    /// <param name="result"></param>
+    [HttpPost]
+    public Int32 UpdateBuildTask(BuildResult result)
+    {
+        var ver = AppDeployVersion.FindById(result.Id)
+            ?? throw new ArgumentNullException(nameof(result));
+
+        if (!result.CommitId.IsNullOrEmpty()) ver.CommitId = result.CommitId;
+        if (!result.CommitLog.IsNullOrEmpty()) ver.CommitLog = result.CommitLog;
+        if (result.CommitTime.Year > 2000) ver.CommitTime = result.CommitTime;
+        if (!result.Progress.IsNullOrEmpty()) ver.Progress = result.Progress;
+
+        return ver.Update();
+    }
+
+    /// <summary>上传编译任务结果文件</summary>
+    [HttpPost]
+    public String UploadBuildFile(Int32 taskId, [FromForm] IFormFile file)
+    {
+        var ver = AppDeployVersion.FindById(taskId);
+        if (ver == null) throw new ArgumentNullException(nameof(taskId));
+
+        //// 仅支持部分包和标准包
+        //if (info.Mode > DeployModes.Standard) throw new ApiException(400, "仅支持部分包和标准包！");
+
+        //// 仅支持覆盖文件
+        //if (info.Overwrite.IsNullOrEmpty()) throw new ApiException(400, "请指定覆盖文件！");
+
+        // 保存应用发布信息
+        var rs = 0;
+        //var rs = _deployService.UploadBuildTask(_node, info, UserHost);
+        //WriteHistory(info.AppId, nameof(UploadBuildTask), rs > 0, info.ToJson());
+
+        return rs > 0 ? "ok" : "fail";
+    }
 
     #region 辅助
     private void WriteHistory(Int32 appId, String action, Boolean success, String remark) => _deployService.WriteHistory(appId, _node?.ID ?? 0, action, success, remark, UserHost);
