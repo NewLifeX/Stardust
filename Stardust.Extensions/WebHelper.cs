@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
+using NewLife.Log;
 
 namespace NewLife.Web;
 
@@ -11,39 +12,51 @@ static class WebHelper
     /// <summary>获取原始请求Url，支持反向代理</summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    public static Uri GetRawUrl(this HttpRequest request)
+    public static UriInfo GetRawUrl(this HttpRequest request)
     {
-        Uri? uri = null;
+        UriInfo? uri = null;
 
         // 取请求头
-        if (uri == null)
+        var url = request.GetEncodedUrl();
+        try
         {
-            var url = request.GetEncodedUrl();
-            uri = new Uri(url);
+            uri = new UriInfo(url);
+        }
+        catch (Exception ex)
+        {
+            DefaultSpan.Current?.AppendTag($"GetRawUrl：{url} 失败：{ex.Message}");
+            uri = new UriInfo("")
+            {
+                Scheme = request.Scheme,
+                Host = request.Host.Host,
+                Port = request.Host.Port ?? (request.Scheme == "https" ? 443 : 80),
+                AbsolutePath = request.PathBase + request.Path,
+                Query = request.QueryString.ToUriComponent()
+            };
         }
 
         return GetRawUrl(uri, k => request.Headers[k]);
     }
 
-    private static Uri GetRawUrl(Uri uri, Func<String, String?> headers)
+    private static UriInfo GetRawUrl(UriInfo uri, Func<String, String?> headers)
     {
         var str = headers("HTTP_X_REQUEST_URI");
         if (str.IsNullOrEmpty()) str = headers("X-Request-Uri");
 
-        if (str.IsNullOrEmpty())
-        {
-            // 阿里云CDN默认支持 X-Client-Scheme: https
-            var scheme = headers("HTTP_X_CLIENT_SCHEME");
-            if (scheme.IsNullOrEmpty()) scheme = headers("X-Client-Scheme");
+        if (!str.IsNullOrEmpty()) uri = new UriInfo(str);
 
-            // nginx
-            if (scheme.IsNullOrEmpty()) scheme = headers("HTTP_X_FORWARDED_PROTO");
-            if (scheme.IsNullOrEmpty()) scheme = headers("X-Forwarded-Proto");
+        // 阿里云CDN默认支持 X-Client-Scheme: https
+        var scheme = headers("HTTP_X_CLIENT_SCHEME");
+        if (scheme.IsNullOrEmpty()) scheme = headers("X-Client-Scheme");
 
-            if (!scheme.IsNullOrEmpty()) str = scheme + "://" + uri.ToString().Substring("://");
-        }
+        // nginx
+        if (scheme.IsNullOrEmpty()) scheme = headers("HTTP_X_FORWARDED_PROTO");
+        if (scheme.IsNullOrEmpty()) scheme = headers("X-Forwarded-Proto");
 
-        if (!str.IsNullOrEmpty()) uri = new Uri(uri, str);
+        //if (!scheme.IsNullOrEmpty()) str = scheme + "://" + uri.ToString().Substring("://");
+        if (!scheme.IsNullOrEmpty()) uri.Scheme = scheme;
+
+        //if (!str.IsNullOrEmpty()) uri = new Uri(uri, str);
 
         return uri;
     }

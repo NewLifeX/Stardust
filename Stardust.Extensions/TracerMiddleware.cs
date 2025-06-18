@@ -227,14 +227,16 @@ public class TracerMiddleware
         var uri = ctx.Request.GetRawUrl();
         if (uri == null) return;
 
-        // 排除本机地址
         var host = uri.Authority;
+        if (host.IsNullOrEmpty()) return;
+
+        // 排除本机地址
         var p = host.LastIndexOf(':');
         if (p >= 0) host = host[..p];
         if (host.EqualIgnoreCase("127.0.0.1", "localhost", "[::1]")) return;
         if (host.StartsWith("127.0.")) return;
 
-        var baseAddress = $"{uri.Scheme}://{uri.Authority}";
+        var baseAddress = $"{uri.Scheme}://{host}";
 
         var set = NewLife.Setting.Current;
         var ss = set.ServiceAddress?.Split(",").ToList() ?? [];
