@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using NewLife;
 using NewLife.Collections;
 
@@ -204,7 +205,7 @@ public class NginxFile
         if (backends == null || backends.Length == 0) return;
 
         var location = GetLocation(true);
-        location.Directives["proxy_pass"] = backends.Select(e => e.TrimEnd('/')).ToList();
+        location!.Directives["proxy_pass"] = backends.Select(e => e.TrimEnd('/')).ToList();
     }
     #endregion
 }

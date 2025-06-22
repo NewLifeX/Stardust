@@ -122,10 +122,6 @@ public class DeployService
         if (version == null || attachment == null) return false;
         if (attachment.Extension != ".zip") return false;
 
-        // 读取其中的nginx文件，识别监听端口
-        var deploy = version.Deploy;
-        if (deploy == null || deploy.Port != 0 && !deploy.Urls.IsNullOrEmpty()) return false;
-
         var fi = attachment.GetFilePath(uploadPath).AsFile();
         if (!fi.Exists) return false;
 
