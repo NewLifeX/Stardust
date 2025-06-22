@@ -87,10 +87,10 @@ public class AppMinuteStatController : ReadOnlyEntityController<AppMinuteStat>
                 };
                 chart.SetX(list2, _.StatTime);
                 //chart.SetY("耗时");
-                chart.YAxis = new[] {
-                    new { name = "耗时（ms）", type = "value" },
-                    new { name = "最大耗时（ms）", type = "value" }
-                };
+                chart.YAxis = [
+                    new YAxis{ Name = "耗时（ms）", Type = "value" },
+                    new YAxis{ Name = "最大耗时（ms）", Type = "value" }
+                ];
                 chart.AddLine(list2, _.Cost, null, true);
                 chart.Add(list2, _.MinCost);
 
@@ -123,14 +123,14 @@ public class AppMinuteStatController : ReadOnlyEntityController<AppMinuteStat>
             chart.Legend = new { data = new[] { "总数", "错误数" } };
             chart["grid"] = new { left = "3%", right = "4%", bottom = "3%", containLabel = true };
 
-            chart.XAxis = new[] { new { type = "value" } };
-            chart.YAxis = new[] {
-                new {
-                    type = "category",
-                    axisTick = new { show = false },
-                    data = list2.Select(e => e.AppName).ToArray()
+            chart.XAxis = [new XAxis { Type = "value" }];
+            chart.YAxis = [
+                new YAxis{
+                    Type = "category",
+                    AxisTick = new { show = false },
+                    Data = list2.Select(e => e.AppName).ToArray()
                 }
-            };
+            ];
 
             //chart.Add(list2, _.Total, "bar");
             //chart.Add(list2, _.Errors, "bar");
@@ -141,7 +141,7 @@ public class AppMinuteStatController : ReadOnlyEntityController<AppMinuteStat>
                 ["stack"] = "总量",
                 ["label"] = new { show = true, position = "left" },
                 ["itemStyle"] = new { color = "rgba(255, 0, 0, 0.5)", },
-                Data = list2.Select(e => -e.Errors).ToArray(),
+                Data = list2.Select(e => (Object)(-e.Errors)).ToArray(),
             });
             chart.Add(new Series
             {
@@ -149,7 +149,7 @@ public class AppMinuteStatController : ReadOnlyEntityController<AppMinuteStat>
                 Type = "bar",
                 ["stack"] = "总量",
                 ["label"] = new { show = true },
-                Data = list2.Select(e => e.Total).ToArray(),
+                Data = list2.Select(e => (Object)e.Total).ToArray(),
             });
 
             ViewBag.Charts = new[] { chart };

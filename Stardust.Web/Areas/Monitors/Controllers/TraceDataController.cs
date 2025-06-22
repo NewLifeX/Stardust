@@ -68,10 +68,10 @@ public class TraceDataController : ReadOnlyEntityController<TraceData>
                 };
                 chart.SetX(list2, _.StartTime, e => e.StartTime.ToDateTime().ToLocalTime().ToFullString());
                 //chart.SetY("次数");
-                chart.YAxis = new[] {
-                    new { name = "调用次数", type = "value" },
-                    new { name = "错误数", type = "value" }
-                };
+                chart.YAxis = [
+                    new YAxis{ Name = "调用次数", Type = "value" },
+                    new YAxis{ Name = "错误数", Type = "value" }
+                ];
                 chart.AddLine(list2, _.Total, null, true);
 
                 var line = chart.Add(list2, _.Errors);
@@ -90,10 +90,10 @@ public class TraceDataController : ReadOnlyEntityController<TraceData>
                 };
                 chart.SetX(list2, _.StartTime, e => e.StartTime.ToDateTime().ToLocalTime().ToFullString());
                 //chart.SetY("耗时");
-                chart.YAxis = new[] {
-                    new { name = "耗时（ms）", type = "value" },
-                    new { name = "最大耗时（ms）", type = "value" }
-                };
+                chart.YAxis = [
+                    new YAxis{ Name = "耗时（ms）", Type = "value" },
+                    new YAxis{ Name = "最大耗时（ms）", Type = "value" }
+                ];
                 chart.AddLine(list2, _.Cost, null, true);
                 chart.Add(list2, _.MinCost);
 

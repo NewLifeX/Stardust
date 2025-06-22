@@ -69,10 +69,10 @@ public class NodeDataController : ReadOnlyEntityController<NodeData>
                 };
                 chart.SetX(list2, _.LocalTime);
                 //chart.SetY("指标");
-                chart.YAxis = new[] {
-                    new { name = "指标", type = "value" },
-                    new { name = "网络", type = "value" }
-                };
+                chart.YAxis = [
+                    new YAxis{ Name = "指标", Type = "value" },
+                    new YAxis{ Name = "网络", Type = "value" }
+                ];
                 chart.AddDataZoom();
                 chart.AddLine(list2, _.CpuRate, e => Math.Round(e.CpuRate * 100), true);
 

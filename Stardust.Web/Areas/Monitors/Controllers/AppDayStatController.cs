@@ -101,10 +101,10 @@ public class AppDayStatController : ReadOnlyEntityController<AppDayStat>
                 };
                 chart.SetX(list2, _.StatDate);
                 //chart.SetY("耗时");
-                chart.YAxis = new[] {
-                    new { name = "耗时（ms）", type = "value" },
-                    new { name = "最大耗时（ms）", type = "value" }
-                };
+                chart.YAxis = [
+                    new YAxis{ Name = "耗时（ms）", Type = "value" },
+                    new YAxis{ Name = "最大耗时（ms）", Type = "value" }
+                ];
                 chart.AddDataZoom();
                 chart.AddLine(list2, _.Cost, null, true);
                 chart.Add(list2, _.MinCost);

@@ -114,10 +114,10 @@ public class AppMeterController : EntityController<AppMeter>
                 };
                 chart.SetX(list2, _.Time, e => (e.Time.Year > 2000 ? e.Time : e.CreateTime).ToFullString());
                 //chart.SetY("指标");
-                chart.YAxis = new[] {
-                    new { name = "指标", type = "value" },
-                    new { name = "百分比（%）", type = "value" }
-                };
+                chart.YAxis = [
+                    new YAxis{ Name = "指标", Type = "value" },
+                    new YAxis{ Name = "百分比（%）", Type = "value" }
+                ];
                 chart.AddDataZoom();
                 chart.AddLine(list2, _.Memory, null, true);
 
