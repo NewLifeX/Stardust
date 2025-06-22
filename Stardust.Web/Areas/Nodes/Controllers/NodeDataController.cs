@@ -90,29 +90,29 @@ public class NodeDataController : ReadOnlyEntityController<NodeData>
                 {
                     var line = chart.Add(list2, _.UplinkSpeed, "line", e => e.UplinkSpeed / 1000);
                     line.Name = "网络上行";
-                    line["yAxisIndex"] = 1;
+                    line.YAxisIndex = 1;
                 }
                 if (list2.Any(e => e.DownlinkSpeed > 0))
                 {
                     var line = chart.Add(list2, _.DownlinkSpeed, "line", e => e.DownlinkSpeed / 1000);
                     line.Name = "网络下行";
-                    line["yAxisIndex"] = 1;
+                    line.YAxisIndex = 1;
                 }
 
                 if (list2.Any(e => e.TcpConnections > 0))
                 {
                     var line = chart.Add(list2, _.TcpConnections);
-                    line["yAxisIndex"] = 1;
+                    line.YAxisIndex = 1;
                 }
                 if (list2.Any(e => e.TcpTimeWait > 0))
                 {
                     var line = chart.Add(list2, _.TcpTimeWait);
-                    line["yAxisIndex"] = 1;
+                    line.YAxisIndex = 1;
                 }
                 if (list2.Any(e => e.TcpCloseWait > 0))
                 {
                     var line = chart.Add(list2, _.TcpCloseWait);
-                    line["yAxisIndex"] = 1;
+                    line.YAxisIndex = 1;
                 }
                 //chart.Add(list2, _.Offset);
                 chart.SetTooltip();

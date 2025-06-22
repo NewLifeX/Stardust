@@ -75,7 +75,7 @@ public class TraceDataController : ReadOnlyEntityController<TraceData>
                 chart.AddLine(list2, _.Total, null, true);
 
                 var line = chart.Add(list2, _.Errors);
-                line["yAxisIndex"] = 1;
+                line.YAxisIndex = 1;
                 line["itemStyle"] = new { color = "rgba(255, 0, 0, 0.5)", };
 
                 chart.SetTooltip();
@@ -98,7 +98,7 @@ public class TraceDataController : ReadOnlyEntityController<TraceData>
                 chart.Add(list2, _.MinCost);
 
                 var line = chart.Add(list2, _.MaxCost);
-                line["yAxisIndex"] = 1;
+                line.YAxisIndex = 1;
 
                 chart.SetTooltip();
                 ViewBag.Charts2 = new[] { chart };

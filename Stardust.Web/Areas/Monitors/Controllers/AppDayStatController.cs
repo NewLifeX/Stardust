@@ -110,7 +110,7 @@ public class AppDayStatController : ReadOnlyEntityController<AppDayStat>
                 chart.Add(list2, _.MinCost);
 
                 var line = chart.Add(list2, _.MaxCost);
-                line["yAxisIndex"] = 1;
+                line.YAxisIndex = 1;
 
                 chart.SetTooltip();
                 ViewBag.Charts2 = new[] { chart };

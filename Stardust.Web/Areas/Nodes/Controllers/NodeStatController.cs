@@ -139,7 +139,7 @@ public class NodeStatController : ReadOnlyEntityController<NodeStat>
             chart.AddDataZoom();
 
             var line = chart.AddLine(list2, _.Total, null, true);
-            line["yAxisIndex"] = 1;
+            line.YAxisIndex = 1;
 
             chart.Add(list2, _.Actives);
             chart.Add(list2, _.ActivesT7);
