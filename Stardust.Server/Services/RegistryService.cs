@@ -272,9 +272,9 @@ public class RegistryService
         if (service.Address.IsNullOrEmpty())
         {
             if (!model.ExternalAddress.IsNullOrEmpty())
-                svc.Address = model.ExternalAddress;
+                svc.Address = model.ExternalAddress?.Split(',').Take(5).Join(",");
             else
-                svc.Address = urls.Take(10).Join(",");
+                svc.Address = urls.Take(5).Join(",");
         }
         else
         {
