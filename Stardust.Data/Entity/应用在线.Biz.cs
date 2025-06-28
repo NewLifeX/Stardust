@@ -11,7 +11,6 @@ using NewLife.Reflection;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using XCode;
-using XCode.Membership;
 
 namespace Stardust.Data;
 
@@ -38,7 +37,7 @@ public partial class AppOnline : Entity<AppOnline>
     /// <param name="isNew">是否插入</param>
     public override void Valid(Boolean isNew)
     {
-        if (!Version.IsNullOrEmpty() && !Dirtys[nameof(Compile)])
+        if (Compile.Year < 2000 && !Version.IsNullOrEmpty())
         {
             var dt = AssemblyX.GetCompileTime(Version);
             if (dt.Year > 2000) Compile = dt;

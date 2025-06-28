@@ -326,7 +326,7 @@ public partial class Node : Entity<Node>
     /// <returns></returns>
     public static IList<Node> SearchByIP(String ip)
     {
-        if (ip.IsNullOrEmpty()) return new List<Node>();
+        if (ip.IsNullOrEmpty()) return [];
 
         var ips = ip.Split(',', StringSplitOptions.RemoveEmptyEntries);
 

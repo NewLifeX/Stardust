@@ -48,7 +48,7 @@ public partial class App : Entity<App>
         if (isNew && !Dirtys[__.AutoActive]) AutoActive = true;
         if (Period == 0) Period = 60;
 
-        if (!Version.IsNullOrEmpty() && !Dirtys[nameof(Compile)])
+        if (Compile.Year < 2000 && !Version.IsNullOrEmpty())
         {
             var dt = AssemblyX.GetCompileTime(Version);
             if (dt.Year > 2000) Compile = dt;

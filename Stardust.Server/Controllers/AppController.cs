@@ -115,10 +115,15 @@ public class AppController : BaseController
         return rs;
     }
 
+    /// <summary>应用注册。旧版客户端登录接口，新版已废弃，改用Login</summary>
+    /// <param name="inf"></param>
+    /// <returns></returns>
     [HttpPost(nameof(Register))]
     public String Register(AppModel inf)
     {
-        var online = _registryService.SetOnline(_app, inf, UserHost, inf.ClientId, Token);
+        var ip = UserHost;
+        var online = _registryService.SetOnline(_app, inf, ip, inf.ClientId, Token);
+        _app.WriteHistory(nameof(Register), true, inf.ToJson(), inf.Version, ip, inf.ClientId);
 
         _deployService.UpdateDeployNode(online);
 

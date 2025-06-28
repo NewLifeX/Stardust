@@ -159,8 +159,6 @@ public class RegistryService
         app.UpdateIP = ip;
         app.Update();
 
-        app.WriteHistory(nameof(Register), true, inf.ToJson(), inf.Version, ip, clientId);
-
         if (!inf.ClientId.IsNullOrEmpty()) clientId = inf.ClientId;
 
         // 更新在线记录
@@ -173,6 +171,8 @@ public class RegistryService
             if (node != null) online.NodeId = node.ID;
 
             if (!inf.Version.IsNullOrEmpty()) online.Version = inf.Version;
+            var compile = inf.Compile.ToDateTime().ToLocalTime();
+            if (compile.Year > 2000) online.Compile = compile;
         }
         online.Update();
 
