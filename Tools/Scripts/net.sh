@@ -3,7 +3,7 @@
 
 # 获取处理器架构
 arch=$(uname -m)
-ver="9.0.0"
+ver="9.0.6"
 prefix="aspnetcore-runtime-$ver-linux"
 source="http://x.newlifex.com"
 
