@@ -155,6 +155,143 @@ public class StarService : DisposeBase, IApi
         return set.Server;
     }
 
+    /// <summary>获取所有服务列表</summary>
+    /// <returns></returns>
+    [Api(nameof(GetServices))]
+    public ServicesInfo GetServices()
+    {
+        CheckLocal();
+
+        var list = Manager.Services;
+        var runningList = Manager.RunningServices;
+
+        var result = new ServicesInfo
+        {
+            Services = list?.ToArray(),
+            RunningServices = runningList?.ToArray()
+        };
+
+        return result;
+    }
+
+    /// <summary>启动服务</summary>
+    /// <param name="serviceName">服务名称</param>
+    /// <returns></returns>
+    [Api("StartService")]
+    public ServiceOperationResult StartService(String serviceName)
+    {
+        CheckLocal();
+
+        if (serviceName.IsNullOrEmpty())
+        {
+            return new ServiceOperationResult { Success = false, Message = "服务名称不能为空" };
+        }
+
+        try
+        {
+            var result = Manager?.Start(serviceName);
+            return new ServiceOperationResult
+            {
+                Success = result ?? false,
+                Message = result == true ? "服务启动成功" : "服务启动失败或服务不存在",
+                ServiceName = serviceName
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ServiceOperationResult
+            {
+                Success = false,
+                Message = $"启动服务时发生错误: {ex.Message}",
+                ServiceName = serviceName
+            };
+        }
+    }
+
+    /// <summary>停止服务</summary>
+    /// <param name="serviceName">服务名称</param>
+    /// <returns></returns>
+    [Api("StopService")]
+    public ServiceOperationResult StopService(String serviceName)
+    {
+        CheckLocal();
+
+        if (serviceName.IsNullOrEmpty())
+        {
+            return new ServiceOperationResult { Success = false, Message = "服务名称不能为空" };
+        }
+
+        try
+        {
+            var result = Manager?.Stop(serviceName, "API调用停止");
+            return new ServiceOperationResult
+            {
+                Success = result ?? false,
+                Message = result == true ? "服务停止成功" : "服务停止失败或服务不存在",
+                ServiceName = serviceName
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ServiceOperationResult
+            {
+                Success = false,
+                Message = $"停止服务时发生错误: {ex.Message}",
+                ServiceName = serviceName
+            };
+        }
+    }
+
+    /// <summary>重启服务</summary>
+    /// <param name="serviceName">服务名称</param>
+    /// <returns></returns>
+    [Api("RestartService")]
+    public ServiceOperationResult RestartService(String serviceName)
+    {
+        CheckLocal();
+
+        if (serviceName.IsNullOrEmpty())
+        {
+            return new ServiceOperationResult { Success = false, Message = "服务名称不能为空" };
+        }
+
+        try
+        {
+            // 先停止服务
+            var stopResult = Manager?.Stop(serviceName, "API调用重启");
+            if (stopResult != true)
+            {
+                return new ServiceOperationResult
+                {
+                    Success = false,
+                    Message = "重启失败：无法停止服务或服务不存在",
+                    ServiceName = serviceName
+                };
+            }
+
+            // 等待一小段时间确保服务完全停止
+            Thread.Sleep(1000);
+
+            // 再启动服务
+            var startResult = Manager?.Start(serviceName);
+            return new ServiceOperationResult
+            {
+                Success = startResult ?? false,
+                Message = startResult == true ? "服务重启成功" : "重启失败：服务停止成功但启动失败",
+                ServiceName = serviceName
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ServiceOperationResult
+            {
+                Success = false,
+                Message = $"重启服务时发生错误: {ex.Message}",
+                ServiceName = serviceName
+            };
+        }
+    }
+
     private void DoRefreshLocal(Object state)
     {
         var ai = AgentInfo.GetLocal(true);
