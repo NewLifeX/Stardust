@@ -1,6 +1,7 @@
 ﻿using System.IO.Compression;
 using System.Text.RegularExpressions;
 using NewLife;
+using NewLife.Log;
 using NewLife.Serialization;
 using Stardust.Data.Deployment;
 using Stardust.Deployment;
@@ -9,12 +10,8 @@ using Attachment = NewLife.Cube.Entity.Attachment;
 
 namespace Stardust.Web.Services;
 
-public class DeployService
+public class DeployService(StarFactory starFactory, ITracer tracer)
 {
-    private readonly StarFactory _starFactory;
-
-    public DeployService(StarFactory starFactory) => _starFactory = starFactory;
-
     public async Task Control(AppDeploy app, AppDeployNode deployNode, String action, String ip, Int32 startTime, Int32 timeout)
     {
         if (deployNode == null) throw new ArgumentNullException(nameof(deployNode));
@@ -26,7 +23,7 @@ public class DeployService
 
         await Task.Yield();
 
-        using var span = _starFactory.Tracer?.NewSpan($"Deploy-{action}", deployNode);
+        using var span = starFactory.Tracer?.NewSpan($"Deploy-{action}", deployNode);
 
         var msg = "";
         var success = true;
@@ -65,7 +62,7 @@ public class DeployService
             var args = new { deployNode.Id, DeployName = deployName, app?.AppName }.ToJson();
             msg = args;
 
-            await _starFactory.SendNodeCommand(deployNode.Node.Code, action, args, startTime, startTime + 60, timeout);
+            await starFactory.SendNodeCommand(deployNode.Node.Code, action, args, startTime, startTime + 60, timeout);
         }
         catch (Exception ex)
         {
@@ -125,6 +122,8 @@ public class DeployService
         var fi = attachment.GetFilePath(uploadPath).AsFile();
         if (!fi.Exists) return false;
 
+        using var span = tracer?.NewSpan(nameof(ReadDotNet), fi.FullName);
+
         // 在zip包中查找后缀为.nginx或.conf的文件，以文本打开，按照nginx文件格式识别其中的listen监听端口
         using var zip = ZipFile.Open(fi.FullName, ZipArchiveMode.Read);
         foreach (var entry in zip.Entries)
@@ -138,6 +137,7 @@ public class DeployService
                 if (match.Success)
                 {
                     version.TargetFramework = match.Groups[1].Value.Trim('"');
+                    span?.AppendTag(version.TargetFramework);
                     return true;
                 }
             }
@@ -150,6 +150,7 @@ public class DeployService
                 if (match.Success)
                 {
                     version.TargetFramework = "net" + match.Groups[1].Value.Trim('"');
+                    span?.AppendTag(version.TargetFramework);
                     return true;
                 }
             }
@@ -175,6 +176,8 @@ public class DeployService
         var fi = attachment.GetFilePath(uploadPath).AsFile();
         if (!fi.Exists) return false;
 
+        using var span = tracer?.NewSpan(nameof(ReadNginx), fi.FullName);
+
         // 在zip包中查找后缀为.nginx或.conf的文件，以文本打开，按照nginx文件格式识别其中的listen监听端口
         using var zip = ZipFile.Open(fi.FullName, ZipArchiveMode.Read);
         foreach (var entry in zip.Entries)
@@ -184,6 +187,8 @@ public class DeployService
             var nginx = new NginxFile();
             if (!nginx.Parse(entry.Open().ToStr())) continue;
 
+            span?.AppendTag($"nginx:{nginx.ServerName}");
+
             // 获取后端端口
             if (deploy.Port == 0)
             {
@@ -192,6 +197,8 @@ public class DeployService
                 {
                     var uri = new Uri(backend);
                     if (uri.Port > 0) deploy.Port = uri.Port;
+
+                    span?.AppendTag(backend);
                 }
             }
 
@@ -206,6 +213,8 @@ public class DeployService
                     deploy.Urls = $"{schema}://{host}";
                 else
                     deploy.Urls = $"{schema}://{host}:{port}";
+
+                span?.AppendTag(deploy.Urls);
             }
 
             // 找到一个就行了
@@ -233,35 +242,44 @@ public class DeployService
         var fi = attachment.GetFilePath(uploadPath).AsFile();
         if (!fi.Exists) return false;
 
+        using var span = tracer?.NewSpan(nameof(BuildNginx), fi.FullName);
+
         // 如果没有nginx配置文件，则添加一个默认的
-        using var zip = ZipFile.Open(fi.FullName, ZipArchiveMode.Update);
-        if (zip.Entries.Any(e => e.Name.EndsWithIgnoreCase(".nginx", ".conf"))) return false;
-
-        var uri = new Uri(deploy.Urls);
-        var nginx = new NginxFile
         {
-            ServerName = uri.Host
-        };
-        if (uri.Port % 1000 == 443)
-            nginx.Ports = [uri.Port / 1000 + 80, uri.Port];
-        else
-            nginx.Ports = [uri.Port];
+            using var zip = ZipFile.Open(fi.FullName, ZipArchiveMode.Update);
+            if (zip.Entries.Any(e => e.Name.EndsWithIgnoreCase(".nginx", ".conf"))) return false;
 
-        // 后端端口
-        nginx.SetBackends($"http://localhost:{deploy.Port}");
+            var uri = new Uri(deploy.Urls);
+            var nginx = new NginxFile
+            {
+                ServerName = uri.Host
+            };
+            if (uri.Port % 1000 == 443)
+                nginx.Ports = [uri.Port / 1000 + 80, uri.Port];
+            else
+                nginx.Ports = [uri.Port];
 
-        // 保存到zip包中
-        var entry = zip.CreateEntry($"{uri.Host}.nginx", CompressionLevel.Optimal);
-        using var stream = entry.Open();
-        stream.Write(nginx.ToString().GetBytes());
+            // 后端端口
+            nginx.SetBackends($"http://localhost:{deploy.Port}");
 
-        zip.TryDispose();
+            var txt = nginx.ToString();
+            span?.AppendTag(txt);
+
+            // 保存到zip包中
+            var entry = zip.CreateEntry($"{uri.Host}.nginx", CompressionLevel.Optimal);
+            {
+                using var stream = entry.Open();
+                stream.Write(txt.GetBytes());
+            }
+        }
 
         // 更新附件信息
-        fi.Refresh();
-        attachment.Hash = fi.MD5().ToHex();
-        attachment.Size = fi.Length;
-        attachment.Update();
+        {
+            fi.Refresh();
+            attachment.Hash = fi.MD5().ToHex();
+            attachment.Size = fi.Length;
+            attachment.Update();
+        }
 
         return true;
     }
