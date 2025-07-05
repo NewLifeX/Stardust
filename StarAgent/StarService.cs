@@ -257,27 +257,12 @@ public class StarService : DisposeBase, IApi
 
         try
         {
-            // 先停止服务
-            var stopResult = Manager?.Stop(serviceName, "API调用重启");
-            if (stopResult != true)
-            {
-                return new ServiceOperationResult
-                {
-                    Success = false,
-                    Message = "重启失败：无法停止服务或服务不存在",
-                    ServiceName = serviceName
-                };
-            }
-
-            // 等待一小段时间确保服务完全停止
-            Thread.Sleep(1000);
-
-            // 再启动服务
-            var startResult = Manager?.Start(serviceName);
+            // 使用共同的重启逻辑
+            var success = InternalRestartService(Manager, serviceName, "API调用重启");
             return new ServiceOperationResult
             {
-                Success = startResult ?? false,
-                Message = startResult == true ? "服务重启成功" : "重启失败：服务停止成功但启动失败",
+                Success = success,
+                Message = success ? "服务重启成功" : "服务重启失败",
                 ServiceName = serviceName
             };
         }
@@ -464,11 +449,49 @@ public class StarService : DisposeBase, IApi
                 {
                     XTrace.WriteLine("进程[{0}/{1}]超过一定时间没有心跳，可能已经假死，准备重启。", p.ProcessName, p.Id);
 
-                    span?.AppendTag($"SafetyKill {p.ProcessName}/{p.Id}");
-                    p.SafetyKill();
+                    var restartSuccess = false;
+
+                    // 优先尝试通过服务重启
+                    if (state is ServiceManager manager)
+                    {
+                        try
+                        {
+                            // 通过进程ID查找对应的服务控制器
+                            var controller = manager.QueryByProcess(item);
+                            if (controller != null && !controller.Name.IsNullOrEmpty())
+                            {
+                                XTrace.WriteLine("尝试通过服务重启：{0}", controller.Name);
+                                span?.AppendTag($"RestartService {controller.Name}");
+
+                                // 使用共同的重启逻辑
+                                restartSuccess = InternalRestartService(manager, controller.Name, "看门狗重启");
+
+                                if (restartSuccess)
+                                {
+                                    XTrace.WriteLine("服务[{0}]重启成功", controller.Name);
+                                }
+                                else
+                                {
+                                    XTrace.WriteLine("服务[{0}]重启失败", controller.Name);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            XTrace.WriteException(ex);
+                        }
+                    }
+
+                    // 如果服务重启失败，则使用原有的SafetyKill方法
+                    if (!restartSuccess)
+                    {
+                        XTrace.WriteLine("服务重启失败，使用SafetyKill强制杀死进程[{0}/{1}]", p.ProcessName, p.Id);
+                        span?.AppendTag($"SafetyKill {p.ProcessName}/{p.Id}");
+                        p.SafetyKill();
+                    }
 
                     //todo 启动应用。暂时不需要，因为StarAgent会自动启动
-                    if (state is ServiceManager manager) manager.CheckNow();
+                    if (state is ServiceManager manager2) manager2.CheckNow();
                 }
             }
             catch (Exception ex)
@@ -485,7 +508,7 @@ public class StarService : DisposeBase, IApi
         }
     }
 
-    static Process GetProcessById(Int32 processId)
+    static Process? GetProcessById(Int32 processId)
     {
         try
         {
@@ -508,5 +531,35 @@ public class StarService : DisposeBase, IApi
     /// <param name="format"></param>
     /// <param name="args"></param>
     public void WriteLog(String format, params Object[] args) => Log?.Info(format, args);
+    #endregion
+
+    #region 内部方法
+    /// <summary>内部服务重启方法</summary>
+    /// <param name="manager">服务管理器</param>
+    /// <param name="serviceName">服务名称</param>
+    /// <param name="reason">重启原因</param>
+    /// <returns>是否成功</returns>
+    private static Boolean InternalRestartService(ServiceManager manager, String serviceName, String reason = "重启")
+    {
+        if (manager == null || serviceName.IsNullOrEmpty()) return false;
+
+        try
+        {
+            // 先停止服务
+            var stopResult = manager.Stop(serviceName, reason);
+            if (stopResult != true) return false;
+
+            // 等待服务完全停止
+            Thread.Sleep(1000);
+
+            // 再启动服务
+            var startResult = manager.Start(serviceName);
+            return startResult == true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
     #endregion
 }
