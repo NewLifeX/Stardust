@@ -214,6 +214,9 @@ public class AppClient : ClientBase, IRegistry
     {
         _publishServices.TryRemove(service.ServiceName, out _);
 
+        // 检查登录状态
+        if (!Logined) return Task.FromResult<ServiceModel?>(null);
+
         return InvokeAsync<ServiceModel>("App/UnregisterService", service);
     }
 
