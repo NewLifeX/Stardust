@@ -266,6 +266,9 @@ internal class MyStarClient : StarClient
             }
             else if (Runtime.Linux)
             {
+                // 重启Linux之前先同步数据到硬盘
+                "sync".ShellExecute();
+
                 // 多种方式重启Linux，先使用温和的方式
                 "systemctl".ShellExecute("reboot");
 
