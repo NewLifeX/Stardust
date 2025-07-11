@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
+
 using NewLife;
 using NewLife.Agent;
 using NewLife.Data;
@@ -9,6 +10,7 @@ using NewLife.Net;
 using NewLife.Remoting;
 using NewLife.Remoting.Models;
 using NewLife.Threading;
+
 using Stardust;
 using Stardust.Managers;
 using Stardust.Models;
@@ -259,10 +261,14 @@ public class StarService : DisposeBase, IApi
         {
             // 使用共同的重启逻辑
             var success = InternalRestartService(Manager, serviceName, "API调用重启");
+
+            // 根据结果提供更详细的信息
+            var message = success ? "服务重启成功" : GetRestartFailureMessage(Manager, serviceName);
+
             return new ServiceOperationResult
             {
                 Success = success,
-                Message = success ? "服务重启成功" : "服务重启失败",
+                Message = message,
                 ServiceName = serviceName
             };
         }
@@ -274,6 +280,25 @@ public class StarService : DisposeBase, IApi
                 Message = $"重启服务时发生错误: {ex.Message}",
                 ServiceName = serviceName
             };
+        }
+    }
+
+    /// <summary>获取重启失败的详细原因</summary>
+    private static String GetRestartFailureMessage(ServiceManager manager, String serviceName)
+    {
+        if (manager?.Services?.Any(e => e.Name.EqualIgnoreCase(serviceName)) != true)
+        {
+            return "服务不存在";
+        }
+
+        var isRunning = manager.RunningServices?.Any(e => e.Name.EqualIgnoreCase(serviceName)) == true;
+        if (isRunning)
+        {
+            return "服务重启失败：停止服务失败";
+        }
+        else
+        {
+            return "服务重启失败：启动服务失败";
         }
     }
 
@@ -543,21 +568,71 @@ public class StarService : DisposeBase, IApi
     {
         if (manager == null || serviceName.IsNullOrEmpty()) return false;
 
+        using var span = DefaultTracer.Instance?.NewSpan(nameof(InternalRestartService), new { serviceName, reason });
+
         try
         {
-            // 先停止服务
-            var stopResult = manager.Stop(serviceName, reason);
-            if (stopResult != true) return false;
+            // 检查服务是否存在
+            var service = manager.Services?.FirstOrDefault(e => e.Name.EqualIgnoreCase(serviceName));
+            if (service == null)
+            {
+                XTrace.WriteLine("服务重启失败：服务[{0}]不存在", serviceName);
+                span?.AppendTag("ServiceNotFound");
+                return false;
+            }
 
-            // 等待服务完全停止
-            Thread.Sleep(1000);
+            // 检查服务是否正在运行
+            var runningServices = manager.RunningServices;
+            var isRunning = runningServices?.Any(e => e.Name.EqualIgnoreCase(serviceName)) == true;
 
-            // 再启动服务
+            XTrace.WriteLine("开始重启服务[{0}]，当前状态：{1}，原因：{2}", serviceName, isRunning ? "运行中" : "已停止", reason);
+
+            if (isRunning)
+            {
+                // 服务正在运行，先停止服务
+                XTrace.WriteLine("停止服务[{0}]", serviceName);
+                span?.AppendTag("StopService");
+
+                var stopResult = manager.Stop(serviceName, reason);
+                if (stopResult != true)
+                {
+                    XTrace.WriteLine("服务重启失败：无法停止服务[{0}]", serviceName);
+                    span?.AppendTag("StopFailed");
+                    return false;
+                }
+
+                XTrace.WriteLine("服务[{0}]停止成功，等待1秒后启动", serviceName);
+                // 等待服务完全停止
+                Thread.Sleep(1000);
+            }
+            else
+            {
+                XTrace.WriteLine("服务[{0}]未运行，直接启动", serviceName);
+                span?.AppendTag("DirectStart");
+            }
+
+            // 启动服务（无论之前是否运行）
+            XTrace.WriteLine("启动服务[{0}]", serviceName);
+            span?.AppendTag("StartService");
+
             var startResult = manager.Start(serviceName);
-            return startResult == true;
+            if (startResult == true)
+            {
+                XTrace.WriteLine("服务[{0}]重启成功", serviceName);
+                span?.AppendTag("Success");
+                return true;
+            }
+            else
+            {
+                XTrace.WriteLine("服务重启失败：无法启动服务[{0}]", serviceName);
+                span?.AppendTag("StartFailed");
+                return false;
+            }
         }
-        catch
+        catch (Exception ex)
         {
+            XTrace.WriteLine("服务[{0}]重启时发生异常：{1}", serviceName, ex.Message);
+            span?.SetError(ex, null);
             return false;
         }
     }

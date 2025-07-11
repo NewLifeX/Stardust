@@ -38,13 +38,14 @@ public class StopService : BaseCommandHandler
                 XTrace.WriteLine("{0}. {1} (PID: {2})", i + 1, svc.Name, es.ProcessId);
             }
         }
+        XTrace.WriteLine("0. 返回主菜单");
         
         // 获取用户输入
-        XTrace.WriteLine("请输入服务序号或名称：");
+        XTrace.WriteLine("请输入服务序号或名称（0 返回主菜单）：");
         var input = Console.ReadLine();
-        if (String.IsNullOrEmpty(input))
+        if (String.IsNullOrEmpty(input) || input == "0")
         {
-            XTrace.WriteLine("操作已取消");
+            XTrace.WriteLine("返回主菜单...");
             return;
         }
         
