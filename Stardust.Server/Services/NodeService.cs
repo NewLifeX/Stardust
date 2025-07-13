@@ -246,11 +246,11 @@ public class NodeService
 
     private Node AutoRegister(Node node, LoginInfo inf, String ip, StarServerSetting set)
     {
-        if (!set.AutoRegister) throw new ApiException(12, "禁止自动注册");
+        if (!set.AutoRegister) throw new ApiException(ApiCode.Forbidden, "禁止自动注册");
 
         // 检查白名单
         //var ip = UserHost;
-        if (!IsMatchWhiteIP(set.WhiteIP, ip)) throw new ApiException(13, "非法来源，禁止注册");
+        if (!IsMatchWhiteIP(set.WhiteIP, ip)) throw new ApiException(ApiCode.Forbidden, "非法来源，禁止注册");
 
         using var span = _tracer?.NewSpan(nameof(AutoRegister), new { inf.ProductCode, inf.Node });
 
@@ -768,10 +768,10 @@ public class NodeService
         if (node == null) throw new ArgumentOutOfRangeException(nameof(model.Code), "无效节点");
 
         var (_, app) = _tokenService.DecodeToken(token, setting.TokenSecret);
-        if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new ApiException(401, "无权操作！");
+        if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new ApiException(ApiCode.Unauthorized, "无权操作！");
 
         if (app.AllowControlNodes != "*" && !node.Code.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
-            throw new ApiException(403, $"[{app}]无权操作节点[{node}]！\n安全设计需要，默认禁止所有应用向任意节点发送控制指令。\n可在注册中心应用系统中修改[{app}]的可控节点，添加[{node.Code}]，或者设置为*所有节点。");
+            throw new ApiException(ApiCode.Forbidden, $"[{app}]无权操作节点[{node}]！\n安全设计需要，默认禁止所有应用向任意节点发送控制指令。\n可在注册中心应用系统中修改[{app}]的可控节点，添加[{node.Code}]，或者设置为*所有节点。");
 
         return await SendCommand(node, model, app + "");
     }
@@ -863,9 +863,9 @@ public class NodeService
         if (!rs || node == null)
         {
             if (node != null)
-                ex = new ApiException(403, $"[{node.Name}/{node.Code}]非法访问 {message}");
+                ex = new ApiException(ApiCode.Forbidden, $"[{node.Name}/{node.Code}]非法访问 {message}");
             else
-                ex = new ApiException(403, $"[{jwt.Subject}]非法访问 {message}");
+                ex = new ApiException(ApiCode.Forbidden, $"[{jwt.Subject}]非法访问 {message}");
         }
 
         return (jwt, node, ex);

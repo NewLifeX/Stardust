@@ -45,12 +45,12 @@ public class RegistryService
 
         // 检查黑白名单
         if (!app.MatchIp(ip))
-            throw new ApiException(403, $"应用[{app.Name}]禁止{ip}访问！");
+            throw new ApiException(ApiCode.Forbidden, $"应用[{app.Name}]禁止{ip}访问！");
         if (app.Project != null && !app.Project.MatchIp(ip))
-            throw new ApiException(403, $"项目[{app.Project}]禁止{ip}访问！");
+            throw new ApiException(ApiCode.Forbidden, $"项目[{app.Project}]禁止{ip}访问！");
 
         // 检查应用有效性
-        if (!app.Enable) throw new ApiException(403, $"应用[{app.Name}]已禁用！");
+        if (!app.Enable) throw new ApiException(ApiCode.Forbidden, $"应用[{app.Name}]已禁用！");
 
         // 未设置密钥，直接通过
         if (app.Secret.IsNullOrEmpty()) return true;
@@ -567,7 +567,7 @@ public class RegistryService
         if (cmd == null) return null;
 
         // 防止越权
-        if (cmd.AppId != app.Id) throw new ApiException(403, $"[{app}]越权访问[{cmd.AppName}]的服务");
+        if (cmd.AppId != app.Id) throw new ApiException(ApiCode.Forbidden, $"[{app}]越权访问[{cmd.AppName}]的服务");
 
         cmd.Status = model.Status;
         cmd.Result = model.Data;

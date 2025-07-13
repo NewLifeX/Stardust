@@ -63,7 +63,7 @@ public class OAuthController : ControllerBase
                 var app = App.FindByName(jwt?.Subject);
                 if (app == null || !app.Enable)
                 {
-                    ex ??= new ApiException(403, $"无效应用[{jwt.Subject}]");
+                    ex ??= new ApiException(ApiCode.Unauthorized, $"无效应用[{jwt.Subject}]");
                 }
 
                 if (clientId.IsNullOrEmpty()) clientId = jwt.Id;

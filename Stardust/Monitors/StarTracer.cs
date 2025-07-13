@@ -105,9 +105,10 @@ public class StarTracer : DefaultTracer
         if (_inited) return;
 
         // 自动从本地星尘代理获取地址
-        if (Client == null) throw new ArgumentNullException(nameof(Client));
+        var client = Client;
+        if (client == null) throw new ArgumentNullException(nameof(Client));
 
-        var server = Client is ClientBase cbase ? cbase.Server : (Client + "");
+        var server = client is ClientBase cbase ? cbase.Server : (client + "");
         WriteLog("星尘监控中心 Server={0} AppId={1} ClientId={2}", server, AppId, ClientId);
 
         _inited = true;
@@ -127,10 +128,10 @@ public class StarTracer : DefaultTracer
         Init();
 
         var client = Client;
-        if (client == null) return;
+        if (client == null || client is IDisposable2 ds && ds.Disposed) return;
 
         // 构建应用信息。如果应用心跳已存在，则监控上报时不需要携带应用性能信息
-        if (EnableMeter && Client is not ClientBase)
+        if (EnableMeter && client is not ClientBase)
         {
             if (_appInfo == null)
                 _appInfo = new AppInfo(_process) { Version = _version };
@@ -202,7 +203,7 @@ public class StarTracer : DefaultTracer
         }
         catch (Exception ex)
         {
-            var source = (Client as ApiHttpClient)?.Source;
+            var source = (client as ApiHttpClient)?.Source;
             var ex2 = ex is AggregateException aex ? aex.InnerException : ex;
             if (ex2 is TaskCanceledException tce)
                 Log?.Debug("监控中心[{0}]出错 {1} TaskId={2}", source, ex2.GetType().Name, tce.Task?.Id);
@@ -246,7 +247,7 @@ public class StarTracer : DefaultTracer
     void ProcessFails()
     {
         var client = Client;
-        if (client == null) return;
+        if (client == null || client is IDisposable2 ds && ds.Disposed) return;
 
         while (_fails.TryDequeue(out var model))
         {

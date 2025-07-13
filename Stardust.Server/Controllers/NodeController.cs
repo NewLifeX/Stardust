@@ -26,23 +26,19 @@ public class NodeController : BaseController
 {
     private Node _node;
     private String _clientId;
-    private readonly ICacheProvider _cacheProvider;
     private readonly ITracer _tracer;
     private readonly IOptions<JsonOptions> _jsonOptions;
     private readonly NodeService _nodeService;
     private readonly TokenService _tokenService;
-    private readonly DeployService _deployService;
     private readonly NodeSessionManager _sessionManager;
     private readonly StarServerSetting _setting;
 
-    public NodeController(NodeService nodeService, TokenService tokenService, DeployService deployService, NodeSessionManager sessionManager, StarServerSetting setting, ICacheProvider cacheProvider, IServiceProvider serviceProvider, ITracer tracer, IOptions<JsonOptions> jsonOptions) : base(serviceProvider)
+    public NodeController(NodeService nodeService, TokenService tokenService, NodeSessionManager sessionManager, StarServerSetting setting, IServiceProvider serviceProvider, ITracer tracer, IOptions<JsonOptions> jsonOptions) : base(serviceProvider)
     {
-        _cacheProvider = cacheProvider;
         _tracer = tracer;
-        this._jsonOptions = jsonOptions;
+        _jsonOptions = jsonOptions;
         _nodeService = nodeService;
         _tokenService = tokenService;
-        _deployService = deployService;
         _sessionManager = sessionManager;
         _setting = setting;
     }
@@ -90,7 +86,7 @@ public class NodeController : BaseController
         var oldSecret = node?.Secret;
         _node = node;
 
-        if (node != null && !node.Enable) throw new ApiException(99, "禁止登录");
+        if (node != null && !node.Enable) throw new ApiException(ApiCode.Unauthorized, "禁止登录");
 
         // 支持自动识别2020年的XCoder版本，兼容性处理
         if (inf.ProductCode.IsNullOrEmpty())
@@ -113,7 +109,7 @@ public class NodeController : BaseController
 
         node ??= _nodeService.Register(inf, ip, _setting);
 
-        if (node == null) throw new ApiException(12, "节点鉴权失败");
+        if (node == null) throw new ApiException(ApiCode.Unauthorized, "节点鉴权失败");
 
         var tokenModel = _nodeService.Login(node, inf, ip, _setting);
 
@@ -207,7 +203,7 @@ public class NodeController : BaseController
     [HttpGet(nameof(Upgrade))]
     public UpgradeInfo Upgrade(String channel)
     {
-        var node = _node ?? throw new ApiException(401, "节点未登录");
+        var node = _node ?? throw new ApiException(ApiCode.Unauthorized, "节点未登录");
 
         // 基础路径
         var uri = Request.GetRawUrl().ToString();
@@ -291,7 +287,7 @@ public class NodeController : BaseController
     [HttpPost(nameof(Report))]
     public async Task<Object> Report(Int32 id)
     {
-        var node = _node ?? throw new ApiException(401, "节点未登录");
+        var node = _node ?? throw new ApiException(ApiCode.Unauthorized, "节点未登录");
 
         var cmd = NodeCommand.FindById(id);
         if (cmd != null && cmd.NodeID == node.ID)
@@ -335,7 +331,7 @@ public class NodeController : BaseController
     /// <param name="model">服务</param>
     /// <returns></returns>
     [HttpPost(nameof(CommandReply))]
-    public Int32 CommandReply(CommandReplyModel model) => _node == null ? throw new ApiException(401, "节点未登录") : _nodeService.CommandReply(_node, model, Token);
+    public Int32 CommandReply(CommandReplyModel model) => _node == null ? throw new ApiException(ApiCode.Unauthorized, "节点未登录") : _nodeService.CommandReply(_node, model, Token);
     #endregion
 
     #region 下行通知
@@ -370,7 +366,7 @@ public class NodeController : BaseController
     private async Task HandleNotify(WebSocket socket, String token, String ip, CancellationToken cancellationToken)
     {
         var (_, node, error) = _nodeService.DecodeToken(token, _setting.TokenSecret);
-        _node = node ?? throw new ApiException(401, $"未登录！[ip={ip}]");
+        _node = node ?? throw new ApiException(ApiCode.Unauthorized, $"未登录！[ip={ip}]");
         if (error != null) throw error;
 
         using var session = new NodeCommandSession(socket)

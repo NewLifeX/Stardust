@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using NewLife;
 using NewLife.Configuration;
-using NewLife.Remoting.Extensions.Models;
+using NewLife.Remoting.Models;
 using NewLife.Security;
 using XCode.Configuration;
 

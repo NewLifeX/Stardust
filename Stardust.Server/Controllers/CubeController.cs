@@ -16,14 +16,14 @@ public class CubeController : ControllerBase
     #region 附件
     private async Task<(Attachment att, String filePath)> GetFile(String id)
     {
-        if (id.IsNullOrEmpty()) throw new ApiException(404, "非法附件编号");
+        if (id.IsNullOrEmpty()) throw new ApiException(ApiCode.NotFound, "非法附件编号");
 
         // 去掉仅用于装饰的后缀名
         var p = id.IndexOf('.');
         if (p > 0) id = id[..p];
 
         var att = Attachment.FindById(id.ToLong());
-        if (att == null) throw new ApiException(404, "找不到附件信息");
+        if (att == null) throw new ApiException(ApiCode.NotFound, "找不到附件信息");
 
         var set = StarServerSetting.Current;
 
@@ -32,14 +32,14 @@ public class CubeController : ControllerBase
         if (filePath.IsNullOrEmpty() || !System.IO.File.Exists(filePath))
         {
             var url = att.Source;
-            if (url.IsNullOrEmpty()) throw new ApiException(404, "找不到附件文件");
+            if (url.IsNullOrEmpty()) throw new ApiException(ApiCode.NotFound, "找不到附件文件");
 
             var rs = await att.Fetch(url, set.UploadPath);
-            if (!rs) throw new ApiException(404, "附件远程抓取失败");
+            if (!rs) throw new ApiException(ApiCode.NotFound, "附件远程抓取失败");
 
             filePath = att.GetFilePath(set.UploadPath);
         }
-        if (filePath.IsNullOrEmpty() || !System.IO.File.Exists(filePath)) throw new ApiException(404, "附件文件不存在");
+        if (filePath.IsNullOrEmpty() || !System.IO.File.Exists(filePath)) throw new ApiException(ApiCode.NotFound, "附件文件不存在");
 
         return (att, filePath);
     }

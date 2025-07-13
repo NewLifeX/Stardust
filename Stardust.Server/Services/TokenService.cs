@@ -32,13 +32,13 @@ public class TokenService
 
         // 检查黑白名单
         if (!app.MatchIp(ip))
-            throw new ApiException(403, $"应用[{username}]禁止{ip}访问！");
+            throw new ApiException(ApiCode.Forbidden, $"应用[{username}]禁止{ip}访问！");
         if (app.Project != null && !app.Project.MatchIp(ip))
-            throw new ApiException(403, $"项目[{app.Project}]禁止{ip}访问！");
+            throw new ApiException(ApiCode.Forbidden, $"项目[{app.Project}]禁止{ip}访问！");
 
         // 检查应用有效性
-        if (!app.Enable) throw new ApiException(403, $"应用[{username}]已禁用！");
-        if (!app.Secret.IsNullOrEmpty() && password != app.Secret) throw new ApiException(401, $"非法访问应用[{username}]！");
+        if (!app.Enable) throw new ApiException(ApiCode.Forbidden, $"应用[{username}]已禁用！");
+        if (!app.Secret.IsNullOrEmpty() && password != app.Secret) throw new ApiException(ApiCode.Forbidden, $"非法访问应用[{username}]！");
 
         return app;
     }
@@ -113,7 +113,7 @@ public class TokenService
         };
 
         Exception ex = null;
-        if (!jwt.TryDecode(token, out var message)) ex = new ApiException(403, $"[{jwt.Subject}]非法访问 {message}");
+        if (!jwt.TryDecode(token, out var message)) ex = new ApiException(ApiCode.Forbidden, $"[{jwt.Subject}]非法访问 {message}");
 
         return (jwt, ex);
     }
@@ -133,7 +133,7 @@ public class TokenService
             Algorithm = ss[0],
             Secret = ss[1],
         };
-        if (!jwt.TryDecode(token, out var message)) throw new ApiException(403, $"非法访问[{jwt.Subject}]，{message}");
+        if (!jwt.TryDecode(token, out var message)) throw new ApiException(ApiCode.Forbidden, $"非法访问[{jwt.Subject}]，{message}");
 
         // 验证应用
         var app = App.FindByName(jwt.Subject);
@@ -141,11 +141,11 @@ public class TokenService
         {
             // 可能是StarAgent混用了token
             var node = Data.Nodes.Node.FindByCode(jwt.Subject);
-            if (node == null) throw new ApiException(403, $"无效应用[{jwt.Subject}]");
+            if (node == null) throw new ApiException(ApiCode.Forbidden, $"无效应用[{jwt.Subject}]");
 
             app = new App { Name = node.Code, DisplayName = node.Name, Enable = true };
         }
-        if (!app.Enable) throw new ApiException(403, $"已停用应用[{jwt.Subject}]");
+        if (!app.Enable) throw new ApiException(ApiCode.Forbidden, $"已停用应用[{jwt.Subject}]");
 
         return (jwt, app);
     }
@@ -167,11 +167,11 @@ public class TokenService
         };
 
         Exception ex = null;
-        if (!jwt.TryDecode(token, out var message)) ex = new ApiException(403, $"非法访问 {message}");
+        if (!jwt.TryDecode(token, out var message)) ex = new ApiException(ApiCode.Forbidden, $"非法访问 {message}");
 
         // 验证应用
         var app = App.FindByName(jwt.Subject);
-        if ((app == null || !app.Enable) && ex == null) ex = new ApiException(401, $"无效应用[{jwt.Subject}]");
+        if ((app == null || !app.Enable) && ex == null) ex = new ApiException(ApiCode.NotFound, $"无效应用[{jwt.Subject}]");
 
         return (app, ex);
     }

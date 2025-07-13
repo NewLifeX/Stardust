@@ -89,7 +89,7 @@ public class AppController : BaseController
 
         var clientId = model.ClientId;
         app ??= _registryService.Register(model.AppId, model.Secret, set.AppAutoRegister, ip, clientId);
-        _app = app ?? throw new ApiException(12, "应用鉴权失败");
+        _app = app ?? throw new ApiException(ApiCode.Unauthorized, "应用鉴权失败");
 
         _registryService.Login(app, model, ip, _setting);
 
@@ -241,7 +241,7 @@ public class AppController : BaseController
 
     private async Task HandleNotify(WebSocket socket, App app, String clientId, String ip, CancellationToken cancellationToken)
     {
-        if (app == null) throw new ApiException(401, "未登录！");
+        if (app == null) throw new ApiException(ApiCode.Unauthorized, "未登录！");
 
         using var session = new AppCommandSession(socket)
         {
@@ -286,10 +286,10 @@ public class AppController : BaseController
         var target = App.FindByName(code) ?? throw new ArgumentOutOfRangeException(nameof(model.Code), "无效应用");
 
         var app = _app;
-        if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new ApiException(401, "无权操作！");
+        if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new ApiException(ApiCode.Unauthorized, "无权操作！");
 
         if (app.AllowControlNodes != "*" && !target.Name.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
-            throw new ApiException(403, $"[{app}]无权操作应用[{target}]！\n安全设计需要，默认禁止所有应用向其它应用发送控制指令。\n可在注册中心应用系统中修改[{app}]的可控节点，添加[{target.Name}]，或者设置为*所有应用。");
+            throw new ApiException(ApiCode.Forbidden, $"[{app}]无权操作应用[{target}]！\n安全设计需要，默认禁止所有应用向其它应用发送控制指令。\n可在注册中心应用系统中修改[{app}]的可控节点，添加[{target.Name}]，或者设置为*所有应用。");
 
         var cmd = await _registryService.SendCommand(target, clientId, model, app + "");
 
@@ -302,7 +302,7 @@ public class AppController : BaseController
     [HttpPost(nameof(CommandReply))]
     public Int32 CommandReply(CommandReplyModel model)
     {
-        if (_app == null) throw new ApiException(401, "节点未登录");
+        if (_app == null) throw new ApiException(ApiCode.Unauthorized, "节点未登录");
 
         var cmd = _registryService.CommandReply(_app, model);
 
@@ -319,7 +319,7 @@ public class AppController : BaseController
             info = new Service { Name = serviceName, Enable = true };
             info.Insert();
         }
-        if (!info.Enable) throw new ApiException(403, $"服务[{serviceName}]已停用！");
+        if (!info.Enable) throw new ApiException(ApiCode.Forbidden, $"服务[{serviceName}]已停用！");
 
         return info;
     }
