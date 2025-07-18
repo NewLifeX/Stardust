@@ -358,6 +358,10 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
             if (ext.Items.TryGetValue("Signal", out var value)) request.Signal = value.ToInt();
         }
 
+        // 最后设置时间，避免因为代码执行原因导致误差过大
+        request.Uptime = (Int32)(Runtime.TickCount64 / 1000);
+        request.Time = DateTime.UtcNow.ToLong();
+
         return request;
     }
 
