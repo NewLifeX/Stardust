@@ -104,16 +104,20 @@ public class NodeDataController : ReadOnlyEntityController<NodeData>
                     var line = chart.Add(list2, _.TcpConnections);
                     line.YAxisIndex = 1;
                 }
-                if (list2.Any(e => e.TcpTimeWait > 0))
-                {
-                    var line = chart.Add(list2, _.TcpTimeWait);
-                    line.YAxisIndex = 1;
-                }
-                if (list2.Any(e => e.TcpCloseWait > 0))
-                {
-                    var line = chart.Add(list2, _.TcpCloseWait);
-                    line.YAxisIndex = 1;
-                }
+                //if (list2.Any(e => e.TcpTimeWait > 0))
+                //{
+                //    var line = chart.Add(list2, _.TcpTimeWait);
+                //    line.YAxisIndex = 1;
+                //}
+                //if (list2.Any(e => e.TcpCloseWait > 0))
+                //{
+                //    var line = chart.Add(list2, _.TcpCloseWait);
+                //    line.YAxisIndex = 1;
+                //}
+
+                chart.AddLine(list2, _.IntranetScore, e => Math.Round(e.IntranetScore * 100));
+                chart.AddLine(list2, _.InternetScore, e => Math.Round(e.InternetScore * 100));
+
                 //chart.Add(list2, _.Offset);
                 chart.SetTooltip();
                 ViewBag.Charts = new[] { chart };

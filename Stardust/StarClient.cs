@@ -9,11 +9,13 @@ using NewLife.Data;
 using NewLife.Log;
 using NewLife.Model;
 using NewLife.Reflection;
+using NewLife.Remoting;
 using NewLife.Remoting.Clients;
 using NewLife.Remoting.Models;
 using NewLife.Security;
 using Stardust.Managers;
 using Stardust.Models;
+using Stardust.Monitors;
 
 namespace Stardust;
 
@@ -289,6 +291,16 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
         var request = new PingInfo();
         FillPingRequest(request);
 
+        // 获取网络质量
+        var monitor = new PingMonitor();
+        var gw = AgentInfo.GetGateway();
+        if (gw != null && gw.Contains('/')) gw = gw.Substring(0, gw.IndexOf("/"));
+        var gwtTask = Task.Run(() => monitor.GetScoreAsync(gw));
+        var dns = AgentInfo.GetDns();
+        var dnsTask = Task.Run(() => monitor.GetScoreAsync(dns));
+        var svr = (Client as ApiHttpClient)?.Current?.Address.Host;
+        var svrTask = Task.Run(() => monitor.GetScoreAsync(svr));
+
         var exs = _excludes.Where(e => e.Contains('*')).ToArray();
 
         var ps = Process.GetProcesses();
@@ -335,6 +347,10 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
             request.TcpCloseWait = connections.Count(e => e.State == TcpState.CloseWait);
         }
         catch { }
+
+        // 获取网络质量
+        request.IntranetScore = gwtTask?.Result ?? 0;
+        request.InternetScore = (dnsTask?.Result ?? 0) * 0.3 + (svrTask?.Result ?? 0) * 0.7;
 
         if (mi is IExtend ext)
         {

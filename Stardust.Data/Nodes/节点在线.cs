@@ -275,6 +275,22 @@ public partial class NodeOnline
     [BindColumn("DownlinkSpeed", "下行速度。网络接收速度，字节每秒", "", ItemType = "GMK")]
     public Int64 DownlinkSpeed { get => _DownlinkSpeed; set { if (OnPropertyChanging("DownlinkSpeed", value)) { _DownlinkSpeed = value; OnPropertyChanged("DownlinkSpeed"); } } }
 
+    private Double _IntranetScore;
+    /// <summary>内网质量。综合评估到网关的心跳延迟和丢包率，满分1分</summary>
+    [DisplayName("内网质量")]
+    [Description("内网质量。综合评估到网关的心跳延迟和丢包率，满分1分")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("IntranetScore", "内网质量。综合评估到网关的心跳延迟和丢包率，满分1分", "", ItemType = "percent")]
+    public Double IntranetScore { get => _IntranetScore; set { if (OnPropertyChanging("IntranetScore", value)) { _IntranetScore = value; OnPropertyChanged("IntranetScore"); } } }
+
+    private Double _InternetScore;
+    /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分</summary>
+    [DisplayName("外网质量")]
+    [Description("外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("InternetScore", "外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分", "", ItemType = "percent")]
+    public Double InternetScore { get => _InternetScore; set { if (OnPropertyChanging("InternetScore", value)) { _InternetScore = value; OnPropertyChanged("InternetScore"); } } }
+
     private Int32 _ProcessCount;
     /// <summary>进程数</summary>
     [DisplayName("进程数")]
@@ -465,6 +481,8 @@ public partial class NodeOnline
             "Signal" => _Signal,
             "UplinkSpeed" => _UplinkSpeed,
             "DownlinkSpeed" => _DownlinkSpeed,
+            "IntranetScore" => _IntranetScore,
+            "InternetScore" => _InternetScore,
             "ProcessCount" => _ProcessCount,
             "TcpConnections" => _TcpConnections,
             "TcpTimeWait" => _TcpTimeWait,
@@ -520,6 +538,8 @@ public partial class NodeOnline
                 case "Signal": _Signal = value.ToInt(); break;
                 case "UplinkSpeed": _UplinkSpeed = value.ToLong(); break;
                 case "DownlinkSpeed": _DownlinkSpeed = value.ToLong(); break;
+                case "IntranetScore": _IntranetScore = value.ToDouble(); break;
+                case "InternetScore": _InternetScore = value.ToDouble(); break;
                 case "ProcessCount": _ProcessCount = value.ToInt(); break;
                 case "TcpConnections": _TcpConnections = value.ToInt(); break;
                 case "TcpTimeWait": _TcpTimeWait = value.ToInt(); break;
@@ -674,6 +694,12 @@ public partial class NodeOnline
         /// <summary>下行速度。网络接收速度，字节每秒</summary>
         public static readonly Field DownlinkSpeed = FindByName("DownlinkSpeed");
 
+        /// <summary>内网质量。综合评估到网关的心跳延迟和丢包率，满分1分</summary>
+        public static readonly Field IntranetScore = FindByName("IntranetScore");
+
+        /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分</summary>
+        public static readonly Field InternetScore = FindByName("InternetScore");
+
         /// <summary>进程数</summary>
         public static readonly Field ProcessCount = FindByName("ProcessCount");
 
@@ -826,6 +852,12 @@ public partial class NodeOnline
 
         /// <summary>下行速度。网络接收速度，字节每秒</summary>
         public const String DownlinkSpeed = "DownlinkSpeed";
+
+        /// <summary>内网质量。综合评估到网关的心跳延迟和丢包率，满分1分</summary>
+        public const String IntranetScore = "IntranetScore";
+
+        /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分</summary>
+        public const String InternetScore = "InternetScore";
 
         /// <summary>进程数</summary>
         public const String ProcessCount = "ProcessCount";

@@ -67,6 +67,12 @@ public class PingInfo : PingRequest
     /// <summary>被动关闭的Tcp连接数</summary>
     public Int32 TcpCloseWait { get; set; }
 
+    /// <summary>内网质量。综合评估到网关的心跳延迟和丢包率，满分1分</summary>
+    public Double IntranetScore { get; set; }
+
+    /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分</summary>
+    public Double InternetScore { get; set; }
+
     ///// <summary>开机时间，单位s</summary>
     //public Int32 Uptime { get; set; }
 

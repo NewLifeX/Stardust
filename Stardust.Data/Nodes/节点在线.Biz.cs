@@ -268,6 +268,8 @@ public partial class NodeOnline : Entity<NodeOnline>
         if (inf.TcpConnections > 0) online.TcpConnections = inf.TcpConnections;
         if (inf.TcpTimeWait > 0) online.TcpTimeWait = inf.TcpTimeWait;
         if (inf.TcpCloseWait > 0) online.TcpCloseWait = inf.TcpCloseWait;
+        if (inf.IntranetScore > 0) online.IntranetScore = inf.IntranetScore;
+        if (inf.InternetScore > 0) online.InternetScore = inf.InternetScore;
         if (inf.Uptime > 0) online.Uptime = inf.Uptime;
         if (inf.Delay > 0) online.Delay = inf.Delay;
 
@@ -314,6 +316,8 @@ public partial class NodeOnline : Entity<NodeOnline>
             TcpConnections = inf.TcpConnections,
             TcpTimeWait = inf.TcpTimeWait,
             TcpCloseWait = inf.TcpCloseWait,
+            IntranetScore = inf.IntranetScore,
+            InternetScore = inf.InternetScore,
             Uptime = inf.Uptime,
             Delay = inf.Delay,
             LocalTime = dt,

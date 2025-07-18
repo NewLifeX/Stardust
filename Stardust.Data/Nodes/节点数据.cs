@@ -142,6 +142,22 @@ public partial class NodeData
     [BindColumn("TcpCloseWait", "被动关闭。作为客户端，收到服务器FIN后进入CloseWait的Tcp网络连接数，还没发送自己的FIN，主要原因是我方太忙", "")]
     public Int32 TcpCloseWait { get => _TcpCloseWait; set { if (OnPropertyChanging("TcpCloseWait", value)) { _TcpCloseWait = value; OnPropertyChanged("TcpCloseWait"); } } }
 
+    private Double _IntranetScore;
+    /// <summary>内网质量。综合评估到网关的心跳延迟和丢包率，满分1分</summary>
+    [DisplayName("内网质量")]
+    [Description("内网质量。综合评估到网关的心跳延迟和丢包率，满分1分")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("IntranetScore", "内网质量。综合评估到网关的心跳延迟和丢包率，满分1分", "", ItemType = "percent")]
+    public Double IntranetScore { get => _IntranetScore; set { if (OnPropertyChanging("IntranetScore", value)) { _IntranetScore = value; OnPropertyChanged("IntranetScore"); } } }
+
+    private Double _InternetScore;
+    /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分</summary>
+    [DisplayName("外网质量")]
+    [Description("外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("InternetScore", "外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分", "", ItemType = "percent")]
+    public Double InternetScore { get => _InternetScore; set { if (OnPropertyChanging("InternetScore", value)) { _InternetScore = value; OnPropertyChanged("InternetScore"); } } }
+
     private Int32 _Delay;
     /// <summary>延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms</summary>
     [DisplayName("延迟")]
@@ -225,6 +241,8 @@ public partial class NodeData
             "TcpConnections" => _TcpConnections,
             "TcpTimeWait" => _TcpTimeWait,
             "TcpCloseWait" => _TcpCloseWait,
+            "IntranetScore" => _IntranetScore,
+            "InternetScore" => _InternetScore,
             "Delay" => _Delay,
             "Offset" => _Offset,
             "LocalTime" => _LocalTime,
@@ -253,6 +271,8 @@ public partial class NodeData
                 case "TcpConnections": _TcpConnections = value.ToInt(); break;
                 case "TcpTimeWait": _TcpTimeWait = value.ToInt(); break;
                 case "TcpCloseWait": _TcpCloseWait = value.ToInt(); break;
+                case "IntranetScore": _IntranetScore = value.ToDouble(); break;
+                case "InternetScore": _InternetScore = value.ToDouble(); break;
                 case "Delay": _Delay = value.ToInt(); break;
                 case "Offset": _Offset = value.ToInt(); break;
                 case "LocalTime": _LocalTime = value.ToDateTime(); break;
@@ -341,6 +361,12 @@ public partial class NodeData
         /// <summary>被动关闭。作为客户端，收到服务器FIN后进入CloseWait的Tcp网络连接数，还没发送自己的FIN，主要原因是我方太忙</summary>
         public static readonly Field TcpCloseWait = FindByName("TcpCloseWait");
 
+        /// <summary>内网质量。综合评估到网关的心跳延迟和丢包率，满分1分</summary>
+        public static readonly Field IntranetScore = FindByName("IntranetScore");
+
+        /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分</summary>
+        public static readonly Field InternetScore = FindByName("InternetScore");
+
         /// <summary>延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms</summary>
         public static readonly Field Delay = FindByName("Delay");
 
@@ -412,6 +438,12 @@ public partial class NodeData
 
         /// <summary>被动关闭。作为客户端，收到服务器FIN后进入CloseWait的Tcp网络连接数，还没发送自己的FIN，主要原因是我方太忙</summary>
         public const String TcpCloseWait = "TcpCloseWait";
+
+        /// <summary>内网质量。综合评估到网关的心跳延迟和丢包率，满分1分</summary>
+        public const String IntranetScore = "IntranetScore";
+
+        /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分</summary>
+        public const String InternetScore = "InternetScore";
 
         /// <summary>延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms</summary>
         public const String Delay = "Delay";
