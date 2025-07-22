@@ -25,7 +25,7 @@
                 <th class="text-center" style="width:10px;"><input type="checkbox" id="chkAll" title="全选" /></th>
             }
             <th class="text-center"><a href="@Html.Raw(page.GetSortUrl("Id"))">编号</a></th>
-            <th class="text-center" title="默认为空，使用部署集上名字。可用于单节点多发布场景">发布名</th>
+            <th class="text-center" title="默认为空，使用部署集上名字。可用于单节点多发布场景"><a href="@Html.Raw(page.GetSortUrl("DeployName"))">发布名</a></th>
             @if (appId == 0)
             {
                 <th class="text-center" title="应用。原始应用"><a href="@Html.Raw(page.GetSortUrl("DeployId"))">应用</a></th>
@@ -52,6 +52,8 @@
     <tbody>
         @foreach (var entity in Model)
         {
+            var name = entity.DeployName;
+            if (name.IsNullOrEmpty()) name = entity.Deploy?.Name;
             <tr>
                 @if (set.EnableSelect && ukey != null)
                 {
@@ -61,7 +63,7 @@
                 <td class="text-center">@entity.DeployName</td>
                 @if (appId == 0)
                 {
-                    <td class="text-center"><a href="/Deployment/AppDeploy?Id=@entity.DeployId" target="_blank">@entity.DeployName</a></td>
+                    <td class="text-center"><a href="/Deployment/AppDeploy?Id=@entity.DeployId" target="_blank">@name</a></td>
                 }
                 @if (nodeId == 0)
                 {
@@ -79,19 +81,19 @@
                 <td>@entity.LastActive.ToFullString("")</td>
                 <td class="text-center">
                     <i class="glyphicon glyphicon-save" style="color: green;"></i>
-                    <a data-action="action" data-url="@Url.Action("Operate",new { act="install",id=entity.Id})" data-confirm="危险操作！确认执行？" title="发布应用服务">发布</a>
+                    <a data-action="action" data-url="@Url.Action("Operate", new { act = "install", id = entity.Id })" data-confirm="危险操作！确认执行？" title="发布应用服务">发布</a>
                     &nbsp;
                     <i class="glyphicon glyphicon-play" style="color: green;"></i>
-                    <a data-action="action" data-url="@Url.Action("Operate",new { act="start",id=entity.Id})" data-confirm="危险操作！确认执行？" title="拉起应用服务">启动</a>
+                    <a data-action="action" data-url="@Url.Action("Operate", new { act = "start", id = entity.Id })" data-confirm="危险操作！确认执行？" title="拉起应用服务">启动</a>
                     &nbsp;
                     <i class="glyphicon glyphicon-stop" style="color: red;"></i>
-                    <a data-action="action" data-url="@Url.Action("Operate",new { act="stop",id=entity.Id})" data-confirm="危险操作！确认执行？" title="终止应用服务">终止</a>
+                    <a data-action="action" data-url="@Url.Action("Operate", new { act = "stop", id = entity.Id })" data-confirm="危险操作！确认执行？" title="终止应用服务">终止</a>
                     &nbsp;
                     <i class="glyphicon glyphicon-refresh" style="color: coral;"></i>
-                    <a data-action="action" data-url="@Url.Action("Operate",new { act="restart",id=entity.Id})" data-confirm="危险操作！确认执行？" title="重启应用服务">重启</a>
+                    <a data-action="action" data-url="@Url.Action("Operate", new { act = "restart", id = entity.Id })" data-confirm="危险操作！确认执行？" title="重启应用服务">重启</a>
                     &nbsp;
                     <i class="glyphicon glyphicon-remove" style="color: red;"></i>
-                    <a data-action="action" data-url="@Url.Action("Operate",new { act="uninstall",id=entity.Id})" data-confirm="危险操作！确认执行？" title="卸载应用服务">卸载</a>
+                    <a data-action="action" data-url="@Url.Action("Operate", new { act = "uninstall", id = entity.Id })" data-confirm="危险操作！确认执行？" title="卸载应用服务">卸载</a>
                 </td>
                 @if (this.Has(PermissionFlags.Detail, PermissionFlags.Update, PermissionFlags.Delete))
                 {

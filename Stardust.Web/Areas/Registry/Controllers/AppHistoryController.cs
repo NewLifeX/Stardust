@@ -68,6 +68,14 @@ public class AppHistoryController : ReadOnlyEntityController<AppHistory>
         return fields;
     }
 
+    protected override IEnumerable<AppHistory> SearchData(Pager p)
+    {
+        var appId = p["appId"].ToInt(-1);
+        if (appId >= 0) PageSetting.OrderByKey = true;
+
+        return base.SearchData(p);
+    }
+
     protected override IEnumerable<AppHistory> Search(Pager p)
     {
         //PageSetting.EnableAdd = false;
@@ -81,7 +89,6 @@ public class AppHistoryController : ReadOnlyEntityController<AppHistory>
         var end = p["dtEnd"].ToDateTime();
 
         //if (appId > 0 && start.Year < 2000) p["dtStart"] = (start = DateTime.Today).ToString("yyyy-MM-dd");
-        if (appId >= 0) PageSetting.OrderByKey = true;
 
         return AppHistory.Search(appId, client, action, start, end, p["Q"], p);
     }
