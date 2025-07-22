@@ -156,8 +156,8 @@
         <Column Name="Signal" DataType="Int32" Description="信号。信号强度，WiFi/4G" />
         <Column Name="UplinkSpeed" DataType="Int64" ItemType="GMK" Description="上行速度。网络发送速度，字节每秒" />
         <Column Name="DownlinkSpeed" DataType="Int64" ItemType="GMK" Description="下行速度。网络接收速度，字节每秒" />
-        <Column Name="IntranetScore" DataType="Double" ItemType="percent" Description="内网质量。综合评估到网关的心跳延迟和丢包率，满分1分" />
-        <Column Name="InternetScore" DataType="Double" ItemType="percent" Description="外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分" />
+        <Column Name="IntranetScore" DataType="Double" ItemType="percent" Description="内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%" />
+        <Column Name="InternetScore" DataType="Double" ItemType="percent" Description="外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%" />
         <Column Name="ProcessCount" DataType="Int32" Description="进程数" />
         <Column Name="TcpConnections" DataType="Int32" Description="连接数。传输数据Established的Tcp网络连接数" />
         <Column Name="TcpTimeWait" DataType="Int32" Description="主动关闭。主动关闭后TimeWait的Tcp网络连接数，下一步Closed" />
@@ -223,8 +223,8 @@
         <Column Name="TcpConnections" DataType="Int32" Description="连接数。传输数据Established的Tcp网络连接数" />
         <Column Name="TcpTimeWait" DataType="Int32" Description="主动关闭。主动关闭后TimeWait的Tcp网络连接数，等待2MSL，确保四次挥手的最后一个ACK能够发出，下一步Closed" />
         <Column Name="TcpCloseWait" DataType="Int32" Description="被动关闭。作为客户端，收到服务器FIN后进入CloseWait的Tcp网络连接数，还没发送自己的FIN，主要原因是我方太忙" />
-        <Column Name="IntranetScore" DataType="Double" ItemType="percent" Description="内网质量。综合评估到网关的心跳延迟和丢包率，满分1分" />
-        <Column Name="InternetScore" DataType="Double" ItemType="percent" Description="外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分" />
+        <Column Name="IntranetScore" DataType="Double" ItemType="percent" Description="内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%" />
+        <Column Name="InternetScore" DataType="Double" ItemType="percent" Description="外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%" />
         <Column Name="Delay" DataType="Int32" Description="延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms" />
         <Column Name="Offset" DataType="Int32" Description="偏移。客户端UTC时间加上一半延迟再减服务端UTC时间，单位ms" />
         <Column Name="LocalTime" DataType="DateTime" Description="本地时间" />

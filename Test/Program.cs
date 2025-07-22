@@ -29,7 +29,7 @@ class Program
 
         XTrace.Log.Level = LogLevel.All; // 设置日志级别为所有
 
-        Test8();
+        Test3();
 
         Console.WriteLine("OK!");
         Console.ReadKey();
@@ -113,40 +113,16 @@ class Program
 
     static void Test3()
     {
-        //var buf = "01005F0004496E666F560000007B2250726F636573734964223A323238342C22".ToHex();
-        //var udp = new UdpClient();
-        //udp.Send(buf, "127.0.0.1", 5500);
-        //var rs = udp.ReceiveString();
+        //latencyScore = Math.Exp(-0.01 * (latency - threshold)); // 衰减系数λ=0.2
 
-        //foreach (Environment.SpecialFolder item in Enum.GetValues(typeof(Environment.SpecialFolder)))
-        //{
-        //    var v = Environment.GetFolderPath(item);
-        //    Console.WriteLine("{0}:\t{1}", item, v);
-        //}
-
-        var client = new LocalStarClient { Log = XTrace.Log };
-        //client.ProbeAndInstall(null, "1.6");
-        var info = client.GetInfo();
-
-        var appInfo = new AppInfo(Process.GetCurrentProcess());
-
-        for (var i = 0; i < 5; i++)
+        var ds = new[] { 0.1f, 0.2f, 0.5f, 1f, 2f, 3f, 5f, 10f, 15f, 20f, 30f, 50f, 100f, 200f, 500f, 1000f, 2000f, 5000f };
+        foreach (var item in ds)
         {
-            _ = client.PingAsync(appInfo, 5);
-
-            Thread.Sleep(2000);
+            var score = Math.Exp(-0.01 * (item - 1f));
+            var score2 = Math.Exp(-0.005 * (item - 1f));
+            var score3 = Math.Exp(-0.001 * (item - 1f));
+            XTrace.WriteLine("{0,-10}:\t{1:p2}\t{2:p2}\t{3:p2}", item, score, score2, score3);
         }
-
-        Console.WriteLine("等待");
-        Console.ReadLine();
-
-        //var p = Process.GetCurrentProcess();
-        //var name = p.MainModule.FileName;
-        //var str = name + Environment.NewLine + name.ToJson();
-        //str += Environment.NewLine + name.ToJson().ToJsonEntity<String>();
-
-        //XTrace.WriteLine(str);
-        //File.WriteAllText("aa.txt".GetFullPath(), str);
     }
 
     static void Test4()

@@ -276,19 +276,19 @@ public partial class NodeOnline
     public Int64 DownlinkSpeed { get => _DownlinkSpeed; set { if (OnPropertyChanging("DownlinkSpeed", value)) { _DownlinkSpeed = value; OnPropertyChanged("DownlinkSpeed"); } } }
 
     private Double _IntranetScore;
-    /// <summary>内网质量。综合评估到网关的心跳延迟和丢包率，满分1分</summary>
+    /// <summary>内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
     [DisplayName("内网质量")]
-    [Description("内网质量。综合评估到网关的心跳延迟和丢包率，满分1分")]
+    [Description("内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("IntranetScore", "内网质量。综合评估到网关的心跳延迟和丢包率，满分1分", "", ItemType = "percent")]
+    [BindColumn("IntranetScore", "内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%", "", ItemType = "percent")]
     public Double IntranetScore { get => _IntranetScore; set { if (OnPropertyChanging("IntranetScore", value)) { _IntranetScore = value; OnPropertyChanged("IntranetScore"); } } }
 
     private Double _InternetScore;
-    /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分</summary>
+    /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
     [DisplayName("外网质量")]
-    [Description("外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分")]
+    [Description("外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("InternetScore", "外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分", "", ItemType = "percent")]
+    [BindColumn("InternetScore", "外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%", "", ItemType = "percent")]
     public Double InternetScore { get => _InternetScore; set { if (OnPropertyChanging("InternetScore", value)) { _InternetScore = value; OnPropertyChanged("InternetScore"); } } }
 
     private Int32 _ProcessCount;
@@ -694,10 +694,10 @@ public partial class NodeOnline
         /// <summary>下行速度。网络接收速度，字节每秒</summary>
         public static readonly Field DownlinkSpeed = FindByName("DownlinkSpeed");
 
-        /// <summary>内网质量。综合评估到网关的心跳延迟和丢包率，满分1分</summary>
+        /// <summary>内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
         public static readonly Field IntranetScore = FindByName("IntranetScore");
 
-        /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分</summary>
+        /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
         public static readonly Field InternetScore = FindByName("InternetScore");
 
         /// <summary>进程数</summary>
@@ -853,10 +853,10 @@ public partial class NodeOnline
         /// <summary>下行速度。网络接收速度，字节每秒</summary>
         public const String DownlinkSpeed = "DownlinkSpeed";
 
-        /// <summary>内网质量。综合评估到网关的心跳延迟和丢包率，满分1分</summary>
+        /// <summary>内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
         public const String IntranetScore = "IntranetScore";
 
-        /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分</summary>
+        /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
         public const String InternetScore = "InternetScore";
 
         /// <summary>进程数</summary>

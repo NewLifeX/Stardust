@@ -143,19 +143,19 @@ public partial class NodeData
     public Int32 TcpCloseWait { get => _TcpCloseWait; set { if (OnPropertyChanging("TcpCloseWait", value)) { _TcpCloseWait = value; OnPropertyChanged("TcpCloseWait"); } } }
 
     private Double _IntranetScore;
-    /// <summary>内网质量。综合评估到网关的心跳延迟和丢包率，满分1分</summary>
+    /// <summary>内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
     [DisplayName("内网质量")]
-    [Description("内网质量。综合评估到网关的心跳延迟和丢包率，满分1分")]
+    [Description("内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("IntranetScore", "内网质量。综合评估到网关的心跳延迟和丢包率，满分1分", "", ItemType = "percent")]
+    [BindColumn("IntranetScore", "内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%", "", ItemType = "percent")]
     public Double IntranetScore { get => _IntranetScore; set { if (OnPropertyChanging("IntranetScore", value)) { _IntranetScore = value; OnPropertyChanged("IntranetScore"); } } }
 
     private Double _InternetScore;
-    /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分</summary>
+    /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
     [DisplayName("外网质量")]
-    [Description("外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分")]
+    [Description("外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("InternetScore", "外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分", "", ItemType = "percent")]
+    [BindColumn("InternetScore", "外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%", "", ItemType = "percent")]
     public Double InternetScore { get => _InternetScore; set { if (OnPropertyChanging("InternetScore", value)) { _InternetScore = value; OnPropertyChanged("InternetScore"); } } }
 
     private Int32 _Delay;
@@ -361,10 +361,10 @@ public partial class NodeData
         /// <summary>被动关闭。作为客户端，收到服务器FIN后进入CloseWait的Tcp网络连接数，还没发送自己的FIN，主要原因是我方太忙</summary>
         public static readonly Field TcpCloseWait = FindByName("TcpCloseWait");
 
-        /// <summary>内网质量。综合评估到网关的心跳延迟和丢包率，满分1分</summary>
+        /// <summary>内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
         public static readonly Field IntranetScore = FindByName("IntranetScore");
 
-        /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分</summary>
+        /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
         public static readonly Field InternetScore = FindByName("InternetScore");
 
         /// <summary>延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms</summary>
@@ -439,10 +439,10 @@ public partial class NodeData
         /// <summary>被动关闭。作为客户端，收到服务器FIN后进入CloseWait的Tcp网络连接数，还没发送自己的FIN，主要原因是我方太忙</summary>
         public const String TcpCloseWait = "TcpCloseWait";
 
-        /// <summary>内网质量。综合评估到网关的心跳延迟和丢包率，满分1分</summary>
+        /// <summary>内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
         public const String IntranetScore = "IntranetScore";
 
-        /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分</summary>
+        /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
         public const String InternetScore = "InternetScore";
 
         /// <summary>延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms</summary>

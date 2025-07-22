@@ -1,7 +1,5 @@
 ﻿using System.Net.NetworkInformation;
-using System.Text.RegularExpressions;
 using NewLife;
-using NewLife.Log;
 
 namespace Stardust.Monitors;
 
@@ -32,7 +30,7 @@ public class PingMonitor
         {
             try
             {
-                var reply = await ping.SendPingAsync(host, 3_000).ConfigureAwait(false);
+                var reply = await ping.SendPingAsync(host, 5_000).ConfigureAwait(false);
 
                 if (reply.Status == IPStatus.Success)
                     rtTimes.Add(reply.RoundtripTime);
@@ -53,7 +51,8 @@ public class PingMonitor
             if (latency <= threshold)
                 latencyScore = 1f;
             else
-                latencyScore = Math.Exp(-0.01 * (latency - threshold)); // 衰减系数λ=0.2
+                // 衰减系数λ=0.001。1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%
+                latencyScore = Math.Exp(-0.001 * (latency - threshold));
 
             // 确保得分在0-1之间
             var score = successRate * latencyScore;
