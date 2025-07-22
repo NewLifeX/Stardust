@@ -57,7 +57,8 @@ public class SocketEventListener : EventListenerBase
         }
         else if (eventData.EventName == "ConnectStop")
         {
-            if (DefaultSpan.Current is DefaultSpan span && span.Builder != null && span.Builder.Name.StartsWith("socket:"))
+            var span = DefaultSpan.Current;
+            if (span != null && span.Name.StartsWith("socket:"))
             {
                 Append(span, eventData);
                 span.Dispose();
@@ -65,7 +66,8 @@ public class SocketEventListener : EventListenerBase
         }
         else if (eventData.EventName == "ConnectFailed")
         {
-            if (DefaultSpan.Current is DefaultSpan span && span.Builder != null && span.Builder.Name.StartsWith("socket:"))
+            var span = DefaultSpan.Current;
+            if (span != null && span.Name.StartsWith("socket:"))
             {
                 Append(span, eventData);
                 span.Error = eventData.EventName;

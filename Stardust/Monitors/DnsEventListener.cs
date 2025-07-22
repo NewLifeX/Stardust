@@ -33,7 +33,8 @@ public class DnsEventListener : EventListenerBase
         else if (eventData.EventName == "ResolutionStop")
         //else if (eventData.Opcode == EventOpcode.Stop)
         {
-            if (DefaultSpan.Current is DefaultSpan span && span.Builder != null && span.Builder.Name.StartsWith("dns:"))
+            var span = DefaultSpan.Current;
+            if (span != null && span.Name.StartsWith("dns:"))
             {
                 Append(span, eventData);
                 span.Dispose();
@@ -41,7 +42,8 @@ public class DnsEventListener : EventListenerBase
         }
         else if (eventData.EventName == "ResolutionFailed")
         {
-            if (DefaultSpan.Current is DefaultSpan span && span.Builder != null && span.Builder.Name.StartsWith("dns:"))
+            var span = DefaultSpan.Current;
+            if (span != null && span.Name.StartsWith("dns:"))
             {
                 Append(span, eventData);
                 span.Error = eventData.EventName;
