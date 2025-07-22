@@ -81,6 +81,7 @@ public class AppHistoryController : ReadOnlyEntityController<AppHistory>
         var end = p["dtEnd"].ToDateTime();
 
         //if (appId > 0 && start.Year < 2000) p["dtStart"] = (start = DateTime.Today).ToString("yyyy-MM-dd");
+        if (appId >= 0) PageSetting.OrderByKey = true;
 
         return AppHistory.Search(appId, client, action, start, end, p["Q"], p);
     }
