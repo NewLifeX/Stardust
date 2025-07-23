@@ -47,12 +47,12 @@ public class PingMonitor
             var threshold = 1f;
             var successRate = rtTimes.Count / Times;
             var latency = rtTimes.Average();
-            var latencyScore = 0d;
-            if (latency <= threshold)
-                latencyScore = 1f;
-            else
-                // 衰减系数λ=0.001。1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%
-                latencyScore = Math.Exp(-0.001 * (latency - threshold));
+            //var latencyScore = 0d;
+            //if (latency <= threshold)
+            //    latencyScore = 1f;
+            //else
+            // 衰减系数λ=0.001。1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%
+            var latencyScore = Math.Exp(-0.001 * (latency - threshold));
 
             // 确保得分在0-1之间
             var score = successRate * latencyScore;
