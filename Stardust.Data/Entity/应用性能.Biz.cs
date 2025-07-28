@@ -108,17 +108,19 @@ public partial class AppMeter : Entity<AppMeter>
     /// <summary>高级查询</summary>
     /// <param name="appId">应用</param>
     /// <param name="clientId">客户端标识</param>
+    /// <param name="source">数据来源。区分Ping/Deploy</param>
     /// <param name="start">开始时间</param>
     /// <param name="end">结束时间</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<AppMeter> Search(Int32 appId, String clientId, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<AppMeter> Search(Int32 appId, String clientId, String source, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (appId >= 0) exp &= _.AppId == appId;
         if (!clientId.IsNullOrEmpty() && clientId != "null") exp &= _.ClientId == clientId;
+        if (!source.IsNullOrEmpty()) exp &= _.Source == source;
         exp &= _.Id.Between(start, end, Meta.Factory.Snow);
         if (!key.IsNullOrEmpty()) exp &= _.ClientId.Contains(key) | _.Creator.Contains(key) | _.CreateIP.Contains(key);
 

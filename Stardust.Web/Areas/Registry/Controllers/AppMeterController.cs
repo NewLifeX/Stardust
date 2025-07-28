@@ -23,6 +23,10 @@ public class AppMeterController : EntityController<AppMeter>
             var df = ListFields.GetField("ClientId") as ListField;
             df.Url = "/Registry/AppMeter?appId={AppId}&clientId={ClientId}";
         }
+        {
+            var df = ListFields.GetField("Source") as ListField;
+            df.Url = "/Registry/AppMeter?appId={AppId}&clientId={ClientId}&source={Source}";
+        }
     }
 
     public override void OnActionExecuting(ActionExecutingContext filterContext)
@@ -56,6 +60,7 @@ public class AppMeterController : EntityController<AppMeter>
 
         var appId = p["appId"].ToInt(-1);
         var clientId = p["clientId"];
+        var source = p["source"];
 
         // 应用在线多IP时，只取第一个
         if (!clientId.IsNullOrEmpty())
@@ -90,7 +95,7 @@ public class AppMeterController : EntityController<AppMeter>
 
         if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.Id.Desc();
 
-        var list = AppMeter.Search(appId, clientId, start, end, p["Q"], p);
+        var list = AppMeter.Search(appId, clientId, source, start, end, p["Q"], p);
 
         // 如果没有clientId，则可能列表数据里面只有一个，选择它，便于展示图表
         if (list.Count > 0 && clientId.IsNullOrEmpty())

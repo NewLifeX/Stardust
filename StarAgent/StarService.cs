@@ -84,7 +84,7 @@ public class StarService : DisposeBase, IApi
 
         var ai = _agentInfo ??= AgentInfo.GetLocal(true);
         ai.Server = set.Server;
-        ai.Services = Manager?.Services.Where(e => e.Enable || !e.Name.EqualIgnoreCase("test", "test2")).Select(e => e.Name).ToArray();
+        ai.Services = Manager?.Services?.Where(e => e.Enable || !e.Name.EqualIgnoreCase("test", "test2")).Select(e => e.Name).ToArray();
         ai.Code = AgentSetting.Code;
         ai.IP = AgentInfo.GetIps();
 
@@ -95,13 +95,13 @@ public class StarService : DisposeBase, IApi
         }
 
         // 更新应用服务
-        var controller = Manager?.QueryByProcess(info.ProcessId);
+        var controller = info == null ? null : Manager?.QueryByProcess(info.ProcessId);
         if (controller != null)
         {
             // 标记为星尘应用，停止Deploy上报进程信息
             controller.IsStarApp = true;
 
-            controller.WriteEvent("本地探测", raw);
+            controller.WriteEvent("本地探测", raw!);
         }
 
         // 返回插件服务器地址
