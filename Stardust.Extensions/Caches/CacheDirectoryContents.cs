@@ -79,7 +79,9 @@ class CacheDirectoryContents : IDirectoryContents, IEnumerable<IFileInfo>, IEnum
                         foreach (var item in fis)
                         {
                             // 把fis里面的项添加到list
-                            if (!list.Any(e => e.Name.EqualIgnoreCase(item.Name)))
+                            item.Name = item.Name.TrimEnd('/', '\\');
+                            var name2 = item.Name.EnsureEnd(Path.DirectorySeparatorChar + "");
+                            if (!list.Any(e => e.Name.EqualIgnoreCase(item.Name, name2)))
                                 list.Add(item);
                         }
 
