@@ -237,16 +237,28 @@ public class TracerMiddleware
         if (host.StartsWith("127.0.")) return;
 
         var baseAddress = $"{uri.Scheme}://{host}";
+        if (uri.Scheme == "http" && uri.Port != 80)
+            baseAddress += ":" + uri.Port;
+        else if (uri.Scheme == "https" && uri.Port != 443)
+            baseAddress += ":" + uri.Port;
 
         var set = NewLife.Setting.Current;
         var ss = set.ServiceAddress?.Split(",").ToList() ?? [];
         if (!ss.Contains(baseAddress))
         {
-            // 过滤掉本机地址
-            ss = ss.Where(e => !e.EqualIgnoreCase("127.0.0.1", "localhost", "[::1]") && !e.StartsWith("127.0.")).ToList();
+            var newAddrs = new List<String> { baseAddress };
 
-            ss.Insert(0, baseAddress);
-            set.ServiceAddress = ss.Take(5).Join(",");
+            // 过滤掉本机地址
+            foreach (var item in ss)
+            {
+                if (!Uri.TryCreate(item, UriKind.Absolute, out var u)) continue;
+                if (u.Host.EqualIgnoreCase("127.0.0.1", "localhost", "[::1]")) continue;
+                if (u.Host.StartsWith("127.0.")) continue;
+
+                newAddrs.Add(item);
+            }
+
+            set.ServiceAddress = newAddrs.Take(5).Join(",");
             set.Save();
         }
     }

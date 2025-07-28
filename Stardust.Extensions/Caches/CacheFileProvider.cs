@@ -163,7 +163,7 @@ class CacheFileProvider : IFileProvider
                     if (!target.IsNullOrEmpty() && fullPath.EndsWithIgnoreCase(".sh", ".bat"))
                     {
                         var txt = File.ReadAllText(fullPath);
-                        var txt2 = txt.Replace(item.EnsureEnd("/"), target.EnsureEnd("/"));
+                        var txt2 = txt.Replace(item.TrimEnd("/"), target.TrimEnd("/"));
                         if (txt != txt2) File.WriteAllText(fullPath, txt2);
                     }
 
