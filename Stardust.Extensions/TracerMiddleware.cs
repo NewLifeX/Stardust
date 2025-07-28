@@ -237,10 +237,13 @@ public class TracerMiddleware
         if (host.StartsWith("127.0.")) return;
 
         var baseAddress = $"{uri.Scheme}://{host}";
-        if (uri.Scheme == "http" && uri.Port != 80)
-            baseAddress += ":" + uri.Port;
-        else if (uri.Scheme == "https" && uri.Port != 443)
-            baseAddress += ":" + uri.Port;
+        if (uri.Port > 0)
+        {
+            if (uri.Scheme == "http" && uri.Port != 80)
+                baseAddress += ":" + uri.Port;
+            else if (uri.Scheme == "https" && uri.Port != 443)
+                baseAddress += ":" + uri.Port;
+        }
 
         var set = NewLife.Setting.Current;
         var ss = set.ServiceAddress?.Split(",").ToList() ?? [];
@@ -251,11 +254,15 @@ public class TracerMiddleware
             // 过滤掉本机地址
             foreach (var item in ss)
             {
-                if (!Uri.TryCreate(item, UriKind.Absolute, out var u)) continue;
+                var addr = item;
+                if (!Uri.TryCreate(addr, UriKind.Absolute, out var u)) continue;
                 if (u.Host.EqualIgnoreCase("127.0.0.1", "localhost", "[::1]")) continue;
                 if (u.Host.StartsWith("127.0.")) continue;
+                if (u.Port == 0) continue;
 
-                newAddrs.Add(item);
+                addr = u.ToString();
+
+                newAddrs.Add(addr);
             }
 
             set.ServiceAddress = newAddrs.Take(5).Join(",");
