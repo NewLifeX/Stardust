@@ -54,6 +54,17 @@ internal class Program
         var set2 = StarAgentSetting.Current;
         if (!"-s".EqualIgnoreCase(args)) ThreadPoolX.QueueUserWorkItem(() => LoadUser(set2));
 
+        // 以服务工作时，提高当前进程优先级，确保星尘代理能够有效管控各个应用进程
+        if ("-s".EqualIgnoreCase(args) || "-run".EqualIgnoreCase(args))
+        {
+            try
+            {
+                var process = Process.GetCurrentProcess();
+                process.PriorityClass = ProcessPriorityClass.AboveNormal;
+            }
+            catch { }
+        }
+
         var svc = new MyService
         {
             StarSetting = set,
