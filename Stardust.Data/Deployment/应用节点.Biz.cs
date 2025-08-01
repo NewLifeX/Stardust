@@ -180,6 +180,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
             Arguments = Arguments,
             Environments = Environments,
             WorkingDirectory = WorkingDirectory,
+            UserName = UserName,
 
             Enable = app.Enable && Enable,
             //AutoStart = app.AutoStart,
@@ -203,8 +204,8 @@ public partial class AppDeployNode : Entity<AppDeployNode>
     {
         ProcessId = inf.Id;
         ProcessName = inf.Name;
+        ProcessUser = inf.UserName;
         Version = inf.Version;
-        UserName = inf.UserName;
         StartTime = inf.StartTime;
         Listens = inf.Listens;
     }
@@ -214,7 +215,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         IP = online.IP;
         ProcessId = online.ProcessId;
         ProcessName = online.ProcessName;
-        UserName = online.UserName;
+        ProcessUser = online.UserName;
         StartTime = online.StartTime;
         Listens = online.Listens;
         Version = online.Version;

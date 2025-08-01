@@ -401,15 +401,15 @@ public class ServiceController : DisposeBase
         }
 
         // 指定用户时，以特定用户启动进程
-        if (!service.UserName.IsNullOrEmpty())
+        var user = service.UserName;
+        if (!user.IsNullOrEmpty())
         {
-            si.UserName = service.UserName;
+            si.UserName = user;
             //si.UseShellExecute = false;
 
             // 在Linux系统中，改变目录所属用户
             if (Runtime.Linux)
             {
-                var user = service.UserName;
                 if (!user.Contains(':')) user = $"{user}:{user}";
                 //Process.Start("chown", $"-R {user} {si.WorkingDirectory}");
                 Process.Start("chown", $"-R {user} {si.WorkingDirectory.CombinePath("../").GetBasePath()}").WaitForExit(5_000);
@@ -438,19 +438,19 @@ public class ServiceController : DisposeBase
         Process? p = null;
 
         // Windows桌面用户运行
-        if (Runtime.Windows && (service.UserName == "$" || service.UserName == "$$"))
+        if (Runtime.Windows && (user == "$" || user == "$$"))
         {
             // 交互模式直接运行
             if (Environment.UserInteractive)
             {
-                si.UserName = null;
+                si.UserName = null!;
                 p = Process.Start(si);
             }
             else
             {
                 // 桌面用户运行
                 var desktop = new Desktop { Log = Log };
-                var pid = desktop.StartProcess(si.FileName, si.Arguments, si.WorkingDirectory, service.UserName == "$$", true);
+                var pid = desktop.StartProcess(si.FileName, si.Arguments, si.WorkingDirectory, user == "$$", true);
                 p = Process.GetProcessById((Int32)pid);
             }
         }

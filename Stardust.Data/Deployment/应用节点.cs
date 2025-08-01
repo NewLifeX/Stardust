@@ -106,6 +106,15 @@ public partial class AppDeployNode
     [BindColumn("WorkingDirectory", "工作目录。应用根目录，为空时使用应用集配置", "")]
     public String WorkingDirectory { get => _WorkingDirectory; set { if (OnPropertyChanging("WorkingDirectory", value)) { _WorkingDirectory = value; OnPropertyChanged("WorkingDirectory"); } } }
 
+    private String _UserName;
+    /// <summary>用户名。以该用户执行应用</summary>
+    [Category("发布参数")]
+    [DisplayName("用户名")]
+    [Description("用户名。以该用户执行应用")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("UserName", "用户名。以该用户执行应用", "")]
+    public String UserName { get => _UserName; set { if (OnPropertyChanging("UserName", value)) { _UserName = value; OnPropertyChanged("UserName"); } } }
+
     private String _Environments;
     /// <summary>环境变量。启动应用前设置的环境变量</summary>
     [Category("发布参数")]
@@ -142,15 +151,6 @@ public partial class AppDeployNode
     [BindColumn("ProcessId", "进程", "")]
     public Int32 ProcessId { get => _ProcessId; set { if (OnPropertyChanging("ProcessId", value)) { _ProcessId = value; OnPropertyChanged("ProcessId"); } } }
 
-    private String _UserName;
-    /// <summary>用户名。启动该进程的用户名</summary>
-    [Category("状态")]
-    [DisplayName("用户名")]
-    [Description("用户名。启动该进程的用户名")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("UserName", "用户名。启动该进程的用户名", "")]
-    public String UserName { get => _UserName; set { if (OnPropertyChanging("UserName", value)) { _UserName = value; OnPropertyChanged("UserName"); } } }
-
     private String _ProcessName;
     /// <summary>进程名称</summary>
     [Category("状态")]
@@ -159,6 +159,15 @@ public partial class AppDeployNode
     [DataObjectField(false, false, true, 200)]
     [BindColumn("ProcessName", "进程名称", "")]
     public String ProcessName { get => _ProcessName; set { if (OnPropertyChanging("ProcessName", value)) { _ProcessName = value; OnPropertyChanged("ProcessName"); } } }
+
+    private String _ProcessUser;
+    /// <summary>进程用户。启动该进程的用户名</summary>
+    [Category("状态")]
+    [DisplayName("进程用户")]
+    [Description("进程用户。启动该进程的用户名")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("ProcessUser", "进程用户。启动该进程的用户名", "")]
+    public String ProcessUser { get => _ProcessUser; set { if (OnPropertyChanging("ProcessUser", value)) { _ProcessUser = value; OnPropertyChanged("ProcessUser"); } } }
 
     private DateTime _StartTime;
     /// <summary>进程时间</summary>
@@ -305,12 +314,13 @@ public partial class AppDeployNode
             "FileName" => _FileName,
             "Arguments" => _Arguments,
             "WorkingDirectory" => _WorkingDirectory,
+            "UserName" => _UserName,
             "Environments" => _Environments,
             "Mode" => _Mode,
             "Delay" => _Delay,
             "ProcessId" => _ProcessId,
-            "UserName" => _UserName,
             "ProcessName" => _ProcessName,
+            "ProcessUser" => _ProcessUser,
             "StartTime" => _StartTime,
             "Version" => _Version,
             "Compile" => _Compile,
@@ -341,12 +351,13 @@ public partial class AppDeployNode
                 case "FileName": _FileName = Convert.ToString(value); break;
                 case "Arguments": _Arguments = Convert.ToString(value); break;
                 case "WorkingDirectory": _WorkingDirectory = Convert.ToString(value); break;
+                case "UserName": _UserName = Convert.ToString(value); break;
                 case "Environments": _Environments = Convert.ToString(value); break;
                 case "Mode": _Mode = (Stardust.Models.ServiceModes)value.ToInt(); break;
                 case "Delay": _Delay = value.ToInt(); break;
                 case "ProcessId": _ProcessId = value.ToInt(); break;
-                case "UserName": _UserName = Convert.ToString(value); break;
                 case "ProcessName": _ProcessName = Convert.ToString(value); break;
+                case "ProcessUser": _ProcessUser = Convert.ToString(value); break;
                 case "StartTime": _StartTime = value.ToDateTime(); break;
                 case "Version": _Version = Convert.ToString(value); break;
                 case "Compile": _Compile = value.ToDateTime(); break;
@@ -411,6 +422,9 @@ public partial class AppDeployNode
         /// <summary>工作目录。应用根目录，为空时使用应用集配置</summary>
         public static readonly Field WorkingDirectory = FindByName("WorkingDirectory");
 
+        /// <summary>用户名。以该用户执行应用</summary>
+        public static readonly Field UserName = FindByName("UserName");
+
         /// <summary>环境变量。启动应用前设置的环境变量</summary>
         public static readonly Field Environments = FindByName("Environments");
 
@@ -423,11 +437,11 @@ public partial class AppDeployNode
         /// <summary>进程</summary>
         public static readonly Field ProcessId = FindByName("ProcessId");
 
-        /// <summary>用户名。启动该进程的用户名</summary>
-        public static readonly Field UserName = FindByName("UserName");
-
         /// <summary>进程名称</summary>
         public static readonly Field ProcessName = FindByName("ProcessName");
+
+        /// <summary>进程用户。启动该进程的用户名</summary>
+        public static readonly Field ProcessUser = FindByName("ProcessUser");
 
         /// <summary>进程时间</summary>
         public static readonly Field StartTime = FindByName("StartTime");
@@ -507,6 +521,9 @@ public partial class AppDeployNode
         /// <summary>工作目录。应用根目录，为空时使用应用集配置</summary>
         public const String WorkingDirectory = "WorkingDirectory";
 
+        /// <summary>用户名。以该用户执行应用</summary>
+        public const String UserName = "UserName";
+
         /// <summary>环境变量。启动应用前设置的环境变量</summary>
         public const String Environments = "Environments";
 
@@ -519,11 +536,11 @@ public partial class AppDeployNode
         /// <summary>进程</summary>
         public const String ProcessId = "ProcessId";
 
-        /// <summary>用户名。启动该进程的用户名</summary>
-        public const String UserName = "UserName";
-
         /// <summary>进程名称</summary>
         public const String ProcessName = "ProcessName";
+
+        /// <summary>进程用户。启动该进程的用户名</summary>
+        public const String ProcessUser = "ProcessUser";
 
         /// <summary>进程时间</summary>
         public const String StartTime = "StartTime";
