@@ -164,6 +164,33 @@ public partial class AppDeployNode : Entity<AppDeployNode>
     #endregion
 
     #region 业务操作
+    /// <summary>修正旧版用户名数据</summary>
+    /// <returns></returns>
+    public Int32 FixOldUserName()
+    {
+        // 兼容旧数据
+        var user = UserName;
+        if (user.IsNullOrEmpty()) return 0;
+
+        // Windows 用户名
+        if (user != "$" && user != "$$" && user[^1] == '$')
+        {
+            ProcessUser = user;
+            UserName = null;
+            return Update();
+        }
+
+        if (user == Deploy?.UserName)
+        {
+            // 如果和应用的用户名相同，则不设置用户名
+            ProcessUser = user;
+            UserName = null;
+            return Update();
+        }
+
+        return 0;
+    }
+
     /// <summary>
     /// 转应用服务信息
     /// </summary>
@@ -189,6 +216,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
             MaxMemory = app.MaxMemory,
             Mode = Mode,
         };
+
         if (inf.Name.IsNullOrEmpty()) inf.Name = app.Name;
         if (inf.FileName.IsNullOrEmpty()) inf.FileName = app.FileName;
         if (inf.Arguments.IsNullOrEmpty()) inf.Arguments = app.Arguments;

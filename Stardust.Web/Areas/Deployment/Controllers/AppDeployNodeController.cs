@@ -111,6 +111,7 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
         var node = entity.Node;
         if (node != null) entity.IP = node.IP;
 
+        entity.FixOldUserName();
         entity.Deploy?.Fix();
 
         return base.Valid(entity, type, post);

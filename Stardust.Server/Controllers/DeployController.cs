@@ -56,25 +56,28 @@ public class DeployController : BaseController
         var list = AppDeployNode.FindAllByNodeId(_node.ID);
 
         var rs = new List<DeployInfo>();
-        foreach (var item in list)
+        foreach (var deployNode in list)
         {
             // 不返回未启用的发布集，如果需要在客户端删除，则通过指令下发来实现
-            if (!item.Enable) continue;
+            if (!deployNode.Enable) continue;
 
             // 过滤需要的应用部署
-            if (deployId > 0 && item.Id != deployId) continue;
+            if (deployId > 0 && deployNode.Id != deployId) continue;
 
-            var app = item.Deploy;
+            var app = deployNode.Deploy;
             if (app == null || !app.Enable) continue;
 
             if (!deployName.IsNullOrEmpty())
             {
-                if (!item.DeployName.IsNullOrEmpty() && item.DeployName != deployName ||
-                    item.DeployName.IsNullOrEmpty() && app.Name != deployName) continue;
+                if (!deployNode.DeployName.IsNullOrEmpty() && deployNode.DeployName != deployName ||
+                    deployNode.DeployName.IsNullOrEmpty() && app.Name != deployName) continue;
             }
             if (!appName.IsNullOrEmpty() && app.AppName != appName) continue;
 
-            var inf = _deployService.BuildDeployInfo(item, _node);
+            // 修正旧的用户名
+            deployNode.FixOldUserName();
+
+            var inf = _deployService.BuildDeployInfo(deployNode, _node);
             if (inf == null) continue;
 
             rs.Add(inf);
