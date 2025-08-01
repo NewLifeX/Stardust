@@ -120,7 +120,7 @@ public class AppMinuteStatController : ReadOnlyEntityController<AppMinuteStat>
                 Height = 800,
             };
             chart.SetTooltip("axis", "shadow");
-            chart.Legend = new { data = new[] { "总数", "错误数" } };
+            chart.Legend = new Legend { Data = ["总数", "错误数"] };
             chart["grid"] = new { left = "3%", right = "4%", bottom = "3%", containLabel = true };
 
             chart.XAxis = [new XAxis { Type = "value" }];
