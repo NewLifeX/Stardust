@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -297,6 +298,7 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
         if (gw != null && gw.Contains('/')) gw = gw.Substring(0, gw.IndexOf("/"));
         var gwtTask = Task.Run(() => monitor.GetScoreAsync(gw));
         var dns = AgentInfo.GetDns();
+        if (dns.IsNullOrEmpty() || IPAddress.TryParse(dns, out var ip) && ip.IsLocal()) dns = "223.5.5.5";
         var dnsTask = Task.Run(() => monitor.GetScoreAsync(dns));
         var svr = (Client as ApiHttpClient)?.Current?.Address.Host;
         var svrTask = Task.Run(() => monitor.GetScoreAsync(svr));
