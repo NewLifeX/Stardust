@@ -119,7 +119,31 @@ public class AgentInfo
             var dns = NetworkInterface.GetAllNetworkInterfaces()
                 .SelectMany(e => e.GetIPProperties().DnsAddresses)
                 .FirstOrDefault(e => e.AddressFamily == AddressFamily.InterNetwork);
-            return _dns = dns?.ToString() ?? String.Empty;
+            if (dns != null) return _dns = dns.ToString();
+
+            // 如果没有DNS地址，在Linux下直接读取/etc/resolv.conf文件
+            if (dns == null && Runtime.Linux)
+            {
+                var file = "/etc/resolv.conf";
+                if (File.Exists(file))
+                {
+                    // 读取文件所有行，清空前后空白后，找到第一个nameserver开头的行，截取IP地址数据，去掉#结尾的注释
+                    var lines = File.ReadAllLines(file);
+                    foreach (var item in lines)
+                    {
+                        var line = item.Trim();
+                        if (line.IsNullOrEmpty() || !line.StartsWith("nameserver")) continue;
+
+                        line = line["nameserver".Length..].Trim();
+                        var p = line.IndexOf('#');
+                        if (p > 0) line = line[..p].Trim(); // 去掉#结尾的注释
+
+                        return _dns = line;
+                    }
+                }
+            }
+
+            return _dns = String.Empty;
         }
         catch
         {
