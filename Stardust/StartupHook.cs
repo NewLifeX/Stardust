@@ -57,8 +57,6 @@ internal class StartupHook
 
     private static void Init(String dir)
     {
-        //XTrace.UseConsole();
-
         var has = Directory.GetFiles(Environment.CurrentDirectory, "*.dll", SearchOption.TopDirectoryOnly)
             .Any(e => e.StartsWith("NewLife", StringComparison.OrdinalIgnoreCase));
         if (!has)
@@ -67,6 +65,28 @@ internal class StartupHook
             Environment.SetEnvironmentVariable("BASEPATH", Path.Combine(dir, name!));
 
             Runtime.CreateConfigOnMissing = false;
+        }
+
+#if DEBUG
+        XTrace.UseConsole();
+#endif
+
+        var ext = Path.Combine(dir, "Stardust.Extensions.dll");
+        if (File.Exists(ext))
+        {
+            var asm = AssemblyLoadContext.Default.LoadFromAssemblyPath(ext);
+            if (asm != null)
+            {
+                var existingAssemblies = Environment.GetEnvironmentVariable("ASPNETCORE_HOSTINGSTARTUPASSEMBLIES");
+                var name = asm.GetName().Name;
+                if (existingAssemblies.IsNullOrEmpty())
+                    existingAssemblies = name;
+                else if (!existingAssemblies.Contains(name))
+                    existingAssemblies = existingAssemblies + ";" + name;
+                Environment.SetEnvironmentVariable("ASPNETCORE_HOSTINGSTARTUPASSEMBLIES", existingAssemblies);
+
+                return;
+            }
         }
 
         var services = ObjectContainer.Current;
