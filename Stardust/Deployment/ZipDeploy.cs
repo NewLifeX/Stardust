@@ -263,6 +263,14 @@ public class ZipDeploy
         };
         si.EnvironmentVariables["BasePath"] = rundir.FullName;
 
+        // 向未使用星尘的目标.Net应用注入星尘
+        var targets = Directory.GetFiles(runfile.Directory!.FullName, "*", SearchOption.TopDirectoryOnly);
+        if (targets.Any(e => e.EndsWithIgnoreCase(".runtimeconfig.json")) &&
+            !targets.Any(e => e.EqualIgnoreCase("Stardust.dll")))
+        {
+            si.EnvironmentVariables["DOTNET_STARTUP_HOOKS"] = "Stardust.dll".GetFullPath();
+        }
+
         if (!AppId.IsNullOrEmpty())
             si.EnvironmentVariables["StarAppId"] = AppId;
 
@@ -283,7 +291,7 @@ public class ZipDeploy
         }
 
         // 环境变量。不能用于ShellExecute
-        if (Environments.IsNullOrEmpty() && !si.UseShellExecute)
+        if (!Environments.IsNullOrEmpty() && !si.UseShellExecute)
         {
             foreach (var item in Environments.SplitAsDictionary("=", ";"))
             {

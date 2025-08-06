@@ -57,9 +57,9 @@ internal class StartupHook
 
     private static void Init(String dir)
     {
-        var has = Directory.GetFiles(Environment.CurrentDirectory, "*.dll", SearchOption.TopDirectoryOnly)
+        var hasNewLife = Directory.GetFiles(Environment.CurrentDirectory, "*.dll", SearchOption.TopDirectoryOnly)
             .Any(e => e.StartsWith("NewLife", StringComparison.OrdinalIgnoreCase));
-        if (!has)
+        if (!hasNewLife)
         {
             var name = Assembly.GetEntryAssembly()?.GetName().Name;
             Environment.SetEnvironmentVariable("BASEPATH", Path.Combine(dir, name!));
@@ -71,21 +71,25 @@ internal class StartupHook
         XTrace.UseConsole();
 #endif
 
-        var ext = Path.Combine(dir, "Stardust.Extensions.dll");
-        if (File.Exists(ext))
+        var runtimeConfig = Directory.GetFiles(Environment.CurrentDirectory, "*.runtimeconfig.json", SearchOption.TopDirectoryOnly).FirstOrDefault();
+        if (!runtimeConfig.IsNullOrEmpty() && File.ReadAllText(runtimeConfig).Contains("AspNetCore"))
         {
-            var asm = AssemblyLoadContext.Default.LoadFromAssemblyPath(ext);
-            if (asm != null)
+            var ext = Path.Combine(dir, "Stardust.Extensions.dll");
+            if (File.Exists(ext))
             {
-                var existingAssemblies = Environment.GetEnvironmentVariable("ASPNETCORE_HOSTINGSTARTUPASSEMBLIES");
-                var name = asm.GetName().Name;
-                if (existingAssemblies.IsNullOrEmpty())
-                    existingAssemblies = name;
-                else if (!existingAssemblies.Contains(name))
-                    existingAssemblies = existingAssemblies + ";" + name;
-                Environment.SetEnvironmentVariable("ASPNETCORE_HOSTINGSTARTUPASSEMBLIES", existingAssemblies);
+                var asm = AssemblyLoadContext.Default.LoadFromAssemblyPath(ext);
+                if (asm != null)
+                {
+                    var existingAssemblies = Environment.GetEnvironmentVariable("ASPNETCORE_HOSTINGSTARTUPASSEMBLIES");
+                    var name = asm.GetName().Name;
+                    if (existingAssemblies.IsNullOrEmpty())
+                        existingAssemblies = name;
+                    else if (!existingAssemblies.Contains(name))
+                        existingAssemblies = existingAssemblies + ";" + name;
+                    Environment.SetEnvironmentVariable("ASPNETCORE_HOSTINGSTARTUPASSEMBLIES", existingAssemblies);
 
-                return;
+                    return;
+                }
             }
         }
 

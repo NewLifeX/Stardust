@@ -381,11 +381,19 @@ public class ServiceController : DisposeBase
         };
         si.EnvironmentVariables["BasePath"] = workDir;
 
+        // 向未使用星尘的目标.Net应用注入星尘
+        var targets = Directory.GetFiles(workDir, "*", SearchOption.TopDirectoryOnly);
+        if (targets.Any(e => e.EndsWithIgnoreCase(".runtimeconfig.json")) &&
+            !targets.Any(e => e.EqualIgnoreCase("Stardust.dll")))
+        {
+            si.EnvironmentVariables["DOTNET_STARTUP_HOOKS"] = "Stardust.dll".GetFullPath();
+        }
+
         if (!AppId.IsNullOrEmpty())
             si.EnvironmentVariables["StarAppId"] = AppId;
 
         // 环境变量。不能用于ShellExecute
-        if (service.Environments.IsNullOrEmpty() && !si.UseShellExecute)
+        if (!service.Environments.IsNullOrEmpty() && !si.UseShellExecute)
         {
             foreach (var item in service.Environments.SplitAsDictionary("=", ";"))
             {
