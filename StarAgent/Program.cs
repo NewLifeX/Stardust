@@ -232,6 +232,7 @@ internal class MyService : ServiceBase, IServiceProvider
         var manager = new ServiceManager
         {
             Delay = set.Delay,
+            StartupHook = set.StartupHook,
 
             Tracer = _factory?.Tracer,
             Log = XTrace.Log,

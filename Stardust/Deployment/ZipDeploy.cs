@@ -41,6 +41,9 @@ public class ZipDeploy
     /// <summary>优先级。表示应用程序中任务或操作的优先级级别</summary>
     public ProcessPriority Priority { get; set; }
 
+    /// <summary>启动挂钩。拉起目标进程时，对dotNet应用注入星尘监控钩子，默认false</summary>
+    public Boolean StartupHook { get; set; }
+
     /// <summary>覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
     public String? Overwrite { get; set; }
 
@@ -268,13 +271,16 @@ public class ZipDeploy
         si.EnvironmentVariables["BasePath"] = rundir.FullName;
 
         // 向未使用星尘的目标.Net应用注入星尘
-        if (UserName.IsNullOrEmpty() || UserName == Environment.UserName || Runtime.Windows)
+        if (StartupHook && (UserName.IsNullOrEmpty() || UserName == Environment.UserName || Runtime.Windows))
         {
-            var targets = Directory.GetFiles(runfile.Directory!.FullName, "*", SearchOption.TopDirectoryOnly);
+            var dir = runfile.Directory!.FullName;
+            var targets = Directory.GetFiles(dir, "*", SearchOption.TopDirectoryOnly);
             if (targets.Any(e => e.EndsWithIgnoreCase(".runtimeconfig.json")) &&
                 !targets.Any(e => e.EqualIgnoreCase("Stardust.dll")))
             {
-                si.EnvironmentVariables["DOTNET_STARTUP_HOOKS"] = "Stardust.dll".GetFullPath();
+                var dll = "Stardust.dll".GetFullPath();
+                WriteLog("执行目录：{0}，注入：{1}", dir, dll);
+                si.EnvironmentVariables["DOTNET_STARTUP_HOOKS"] = dll;
             }
         }
 

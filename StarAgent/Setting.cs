@@ -61,6 +61,10 @@ public class StarAgentSetting : Config<StarAgentSetting>
     [Description("同步时间间隔。定期同步服务器时间到本地，默认0秒不同步")]
     public Int32 SyncTime { get; set; }
 
+    /// <summary>启动挂钩。拉起目标进程时，对dotNet应用注入星尘监控钩子，默认false</summary>
+    [Description("启动挂钩。拉起目标进程时，对dotNet应用注入星尘监控钩子，默认false")]
+    public Boolean StartupHook { get; set; }
+
     /// <summary>应用服务集合</summary>
     [Description("应用服务集合")]
     public ServiceInfo[] Services { get; set; }

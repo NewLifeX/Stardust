@@ -27,6 +27,9 @@ public class ServiceController : DisposeBase
     /// <summary>服务名</summary>
     public String Name { get; set; } = null!;
 
+    /// <summary>服务管理器</summary>
+    public ServiceManager? Manager { get; set; }
+
     /// <summary>应用编码</summary>
     public String? AppId { get; set; }
 
@@ -317,6 +320,7 @@ public class ServiceController : DisposeBase
             UserName = service.UserName,
             Environments = service.Environments,
             Priority = service.Priority,
+            StartupHook = Manager?.StartupHook ?? false,
 
             Tracer = Tracer,
             Log = new ActionLog(WriteLog),
@@ -383,13 +387,16 @@ public class ServiceController : DisposeBase
         si.EnvironmentVariables["BasePath"] = workDir;
 
         // 向未使用星尘的目标.Net应用注入星尘
-        if (service.UserName.IsNullOrEmpty() || service.UserName == Environment.UserName || Runtime.Windows)
+        var hook = Manager?.StartupHook ?? false;
+        if (hook && (service.UserName.IsNullOrEmpty() || service.UserName == Environment.UserName || Runtime.Windows))
         {
             var targets = Directory.GetFiles(workDir, "*", SearchOption.TopDirectoryOnly);
             if (targets.Any(e => e.EndsWithIgnoreCase(".runtimeconfig.json")) &&
                 !targets.Any(e => e.EqualIgnoreCase("Stardust.dll")))
             {
-                si.EnvironmentVariables["DOTNET_STARTUP_HOOKS"] = "Stardust.dll".GetFullPath();
+                var dll = "Stardust.dll".GetFullPath();
+                WriteLog("执行目录：{0}，注入：{1}", workDir, dll);
+                si.EnvironmentVariables["DOTNET_STARTUP_HOOKS"] = dll;
             }
         }
 

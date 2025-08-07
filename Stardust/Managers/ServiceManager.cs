@@ -24,6 +24,9 @@ public class ServiceManager : DisposeBase
     /// <summary>延迟时间。重启进程或服务的延迟时间，默认3000ms</summary>
     public Int32 Delay { get; set; } = 3000;
 
+    /// <summary>启动挂钩。拉起目标进程时，对dotNet应用注入星尘监控钩子，默认false</summary>
+    public Boolean StartupHook { get; set; }
+
     ///// <summary>星尘服务地址</summary>
     //public String Server { get; set; }
 
@@ -149,6 +152,7 @@ public class ServiceManager : DisposeBase
         {
             _controllers.Add(new ServiceController
             {
+                Manager = this,
                 Name = item.Name,
                 ProcessId = item.ProcessId,
                 ProcessName = item.ProcessName,
@@ -317,6 +321,7 @@ public class ServiceManager : DisposeBase
 
             controller = new ServiceController
             {
+                Manager = this,
                 Name = service.Name,
                 AppId = deploy?.Name,
                 //Info = service,
