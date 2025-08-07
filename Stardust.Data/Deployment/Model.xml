@@ -66,6 +66,7 @@
         <Column Name="UserName" DataType="String" Description="用户名。以该用户执行应用" Category="发布参数" />
         <Column Name="Environments" DataType="String" Length="500" Description="环境变量。启动应用前设置的环境变量" Category="发布参数" />
         <Column Name="MaxMemory" DataType="Int32" Description="最大内存。单位M，超过上限时自动重启应用，默认0不限制" Category="发布参数" />
+        <Column Name="Priority" DataType="Int32" Description="优先级。表示应用程序中任务或操作的优先级级别" Type="Stardust.Models.ProcessPriority" Category="发布参数" />
         <Column Name="Mode" DataType="Int32" Description="工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip" Type="Stardust.Models.ServiceModes" Category="发布参数" />
         <Column Name="AutoStop" DataType="Boolean" Description="自动停止。随着宿主的退出，同时停止该应用进程" Category="发布参数" />
         <Column Name="ReloadOnChange" DataType="Boolean" Description="检测变动。当文件发生改变时，自动重启应用" Category="发布参数" />
@@ -97,6 +98,7 @@
         <Column Name="UserName" DataType="String" Description="用户名。以该用户执行应用" Category="发布参数" />
         <Column Name="Environments" DataType="String" Length="500" Description="环境变量。启动应用前设置的环境变量" Category="发布参数" />
         <Column Name="MaxMemory" DataType="Int32" Description="最大内存。单位M，超过上限时自动重启应用，默认0不限制" Category="发布参数" />
+        <Column Name="Priority" DataType="Int32" Description="优先级。表示应用程序中任务或操作的优先级级别" Type="Stardust.Models.ProcessPriority" Category="发布参数" />
         <Column Name="Mode" DataType="Int32" Description="工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置" Type="Stardust.Models.ServiceModes" Category="发布参数" />
         <Column Name="Delay" DataType="Int32" Description="延迟。批量发布时，需要延迟执行的时间，用于滚动发布，单位秒" Category="发布参数" />
         <Column Name="ProcessId" DataType="Int32" Description="进程" Category="状态" />

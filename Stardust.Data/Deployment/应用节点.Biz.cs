@@ -214,6 +214,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
             AutoStop = app.AutoStop,
             ReloadOnChange = app.ReloadOnChange,
             MaxMemory = MaxMemory,
+            Priority = Priority,
             Mode = Mode,
         };
 
@@ -224,6 +225,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         if (inf.WorkingDirectory.IsNullOrEmpty()) inf.WorkingDirectory = app.WorkingDirectory;
         if (inf.UserName.IsNullOrEmpty()) inf.UserName = app.UserName;
         if (inf.MaxMemory <= 0) inf.MaxMemory = app.MaxMemory;
+        if (inf.Priority == 0) inf.Priority = app.Priority;
         if (inf.Mode <= ServiceModes.Default) inf.Mode = app.Mode;
 
         return inf;

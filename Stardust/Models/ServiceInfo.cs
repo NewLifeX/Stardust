@@ -50,6 +50,10 @@ public class ServiceInfo
     [XmlAttribute]
     public Int32 MaxMemory { get; set; }
 
+    /// <summary>优先级。表示应用程序中任务或操作的优先级级别</summary>
+    [XmlAttribute]
+    public ProcessPriority Priority { get; set; }
+
     /// <summary>压缩包文件</summary>
     [XmlIgnore]
     public String? ZipFile { get; set; }

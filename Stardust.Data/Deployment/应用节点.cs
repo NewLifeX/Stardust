@@ -133,6 +133,15 @@ public partial class AppDeployNode
     [BindColumn("MaxMemory", "最大内存。单位M，超过上限时自动重启应用，默认0不限制", "")]
     public Int32 MaxMemory { get => _MaxMemory; set { if (OnPropertyChanging("MaxMemory", value)) { _MaxMemory = value; OnPropertyChanged("MaxMemory"); } } }
 
+    private Stardust.Models.ProcessPriority _Priority;
+    /// <summary>优先级。表示应用程序中任务或操作的优先级级别</summary>
+    [Category("发布参数")]
+    [DisplayName("优先级")]
+    [Description("优先级。表示应用程序中任务或操作的优先级级别")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Priority", "优先级。表示应用程序中任务或操作的优先级级别", "")]
+    public Stardust.Models.ProcessPriority Priority { get => _Priority; set { if (OnPropertyChanging("Priority", value)) { _Priority = value; OnPropertyChanged("Priority"); } } }
+
     private Stardust.Models.ServiceModes _Mode;
     /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置</summary>
     [Category("发布参数")]
@@ -326,6 +335,7 @@ public partial class AppDeployNode
             "UserName" => _UserName,
             "Environments" => _Environments,
             "MaxMemory" => _MaxMemory,
+            "Priority" => _Priority,
             "Mode" => _Mode,
             "Delay" => _Delay,
             "ProcessId" => _ProcessId,
@@ -364,6 +374,7 @@ public partial class AppDeployNode
                 case "UserName": _UserName = Convert.ToString(value); break;
                 case "Environments": _Environments = Convert.ToString(value); break;
                 case "MaxMemory": _MaxMemory = value.ToInt(); break;
+                case "Priority": _Priority = (Stardust.Models.ProcessPriority)value.ToInt(); break;
                 case "Mode": _Mode = (Stardust.Models.ServiceModes)value.ToInt(); break;
                 case "Delay": _Delay = value.ToInt(); break;
                 case "ProcessId": _ProcessId = value.ToInt(); break;
@@ -441,6 +452,9 @@ public partial class AppDeployNode
 
         /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
         public static readonly Field MaxMemory = FindByName("MaxMemory");
+
+        /// <summary>优先级。表示应用程序中任务或操作的优先级级别</summary>
+        public static readonly Field Priority = FindByName("Priority");
 
         /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置</summary>
         public static readonly Field Mode = FindByName("Mode");
@@ -543,6 +557,9 @@ public partial class AppDeployNode
 
         /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
         public const String MaxMemory = "MaxMemory";
+
+        /// <summary>优先级。表示应用程序中任务或操作的优先级级别</summary>
+        public const String Priority = "Priority";
 
         /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置</summary>
         public const String Mode = "Mode";

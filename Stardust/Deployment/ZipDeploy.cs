@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Xml.Serialization;
 using NewLife;
 using NewLife.Log;
 using Stardust.Models;
@@ -36,6 +37,9 @@ public class ZipDeploy
 
     /// <summary>环境变量。启动应用前设置的环境变量</summary>
     public String? Environments { get; set; }
+
+    /// <summary>优先级。表示应用程序中任务或操作的优先级级别</summary>
+    public ProcessPriority Priority { get; set; }
 
     /// <summary>覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
     public String? Overwrite { get; set; }
@@ -332,6 +336,19 @@ public class ZipDeploy
 
         var p = Process.Start(si);
         if (p == null) return false;
+
+        // 进程优先级
+        if (p != null && Priority != ProcessPriority.Normal)
+            p.PriorityClass = Priority switch
+            {
+                ProcessPriority.Idle => ProcessPriorityClass.Idle,
+                ProcessPriority.BelowNormal => ProcessPriorityClass.BelowNormal,
+                ProcessPriority.Normal => ProcessPriorityClass.Normal,
+                ProcessPriority.AboveNormal => ProcessPriorityClass.AboveNormal,
+                ProcessPriority.High => ProcessPriorityClass.High,
+                ProcessPriority.RealTime => ProcessPriorityClass.RealTime,
+                _ => ProcessPriorityClass.Normal,
+            };
 
         Process = p;
         if (msWait > 0 && p.WaitForExit(msWait) && p.ExitCode != 0)

@@ -316,6 +316,7 @@ public class ServiceController : DisposeBase
             WorkingDirectory = workDir,
             UserName = service.UserName,
             Environments = service.Environments,
+            Priority = service.Priority,
 
             Tracer = Tracer,
             Log = new ActionLog(WriteLog),
@@ -466,6 +467,20 @@ public class ServiceController : DisposeBase
         {
             p = Process.Start(si);
         }
+
+        // 进程优先级
+        if (p != null && service.Priority != ProcessPriority.Normal)
+            p.PriorityClass = service.Priority switch
+            {
+                ProcessPriority.Idle => ProcessPriorityClass.Idle,
+                ProcessPriority.BelowNormal => ProcessPriorityClass.BelowNormal,
+                ProcessPriority.Normal => ProcessPriorityClass.Normal,
+                ProcessPriority.AboveNormal => ProcessPriorityClass.AboveNormal,
+                ProcessPriority.High => ProcessPriorityClass.High,
+                ProcessPriority.RealTime => ProcessPriorityClass.RealTime,
+                _ => ProcessPriorityClass.Normal,
+            };
+
         if (StartWait > 0 && p != null && p.WaitForExit(StartWait) && p.ExitCode != 0)
         {
             WriteLog("启动失败！ExitCode={0}", p.ExitCode);
