@@ -124,6 +124,15 @@ public partial class AppDeployNode
     [BindColumn("Environments", "环境变量。启动应用前设置的环境变量", "")]
     public String Environments { get => _Environments; set { if (OnPropertyChanging("Environments", value)) { _Environments = value; OnPropertyChanged("Environments"); } } }
 
+    private Int32 _MaxMemory;
+    /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
+    [Category("发布参数")]
+    [DisplayName("最大内存")]
+    [Description("最大内存。单位M，超过上限时自动重启应用，默认0不限制")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("MaxMemory", "最大内存。单位M，超过上限时自动重启应用，默认0不限制", "")]
+    public Int32 MaxMemory { get => _MaxMemory; set { if (OnPropertyChanging("MaxMemory", value)) { _MaxMemory = value; OnPropertyChanged("MaxMemory"); } } }
+
     private Stardust.Models.ServiceModes _Mode;
     /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置</summary>
     [Category("发布参数")]
@@ -316,6 +325,7 @@ public partial class AppDeployNode
             "WorkingDirectory" => _WorkingDirectory,
             "UserName" => _UserName,
             "Environments" => _Environments,
+            "MaxMemory" => _MaxMemory,
             "Mode" => _Mode,
             "Delay" => _Delay,
             "ProcessId" => _ProcessId,
@@ -353,6 +363,7 @@ public partial class AppDeployNode
                 case "WorkingDirectory": _WorkingDirectory = Convert.ToString(value); break;
                 case "UserName": _UserName = Convert.ToString(value); break;
                 case "Environments": _Environments = Convert.ToString(value); break;
+                case "MaxMemory": _MaxMemory = value.ToInt(); break;
                 case "Mode": _Mode = (Stardust.Models.ServiceModes)value.ToInt(); break;
                 case "Delay": _Delay = value.ToInt(); break;
                 case "ProcessId": _ProcessId = value.ToInt(); break;
@@ -427,6 +438,9 @@ public partial class AppDeployNode
 
         /// <summary>环境变量。启动应用前设置的环境变量</summary>
         public static readonly Field Environments = FindByName("Environments");
+
+        /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
+        public static readonly Field MaxMemory = FindByName("MaxMemory");
 
         /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置</summary>
         public static readonly Field Mode = FindByName("Mode");
@@ -526,6 +540,9 @@ public partial class AppDeployNode
 
         /// <summary>环境变量。启动应用前设置的环境变量</summary>
         public const String Environments = "Environments";
+
+        /// <summary>最大内存。单位M，超过上限时自动重启应用，默认0不限制</summary>
+        public const String MaxMemory = "MaxMemory";
 
         /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置</summary>
         public const String Mode = "Mode";
