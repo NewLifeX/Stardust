@@ -116,9 +116,19 @@ public class DeployController : BaseController
                 if (app.FileName.IsNullOrEmpty()) app.FileName = svc.FileName;
                 if (app.Arguments.IsNullOrEmpty()) app.Arguments = svc.Arguments;
                 if (app.WorkingDirectory.IsNullOrEmpty()) app.WorkingDirectory = svc.WorkingDirectory;
-                if (app.UserName.IsNullOrEmpty()) app.UserName = svc.UserName;
                 if (app.Environments.IsNullOrEmpty()) app.Environments = svc.Environments;
                 if (app.Mode < 0) app.Mode = svc.Mode;
+
+                // 新增时才记录应用部署的用户名，避免Windows/Linux混合部署时整个应用记住了Linux的用户名
+                if (app.Id == 0)
+                {
+                    if (app.UserName.IsNullOrEmpty()) app.UserName = svc.UserName;
+                    app.Mode = svc.Mode;
+                    app.AutoStop = svc.AutoStop;
+                    app.ReloadOnChange = svc.ReloadOnChange;
+                    app.MaxMemory = svc.MaxMemory;
+                    app.Priority = svc.Priority;
+                }
 
                 app.MaxMemory = svc.MaxMemory;
             }
