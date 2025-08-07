@@ -110,27 +110,25 @@ public class DeployController : BaseController
             app ??= AppDeploy.FindByName(svc.Name);
             app ??= new AppDeploy { Name = svc.Name/*, Enable = svc.Enable*/ };
 
-            //// 仅可用应用
-            //if (app.Enable)
+            // 仅新应用或停用应用（新增后未使用）更新应用信息
+            if (app.Id == 0 || !app.Enable)
             {
-                if (app.FileName.IsNullOrEmpty()) app.FileName = svc.FileName;
-                if (app.Arguments.IsNullOrEmpty()) app.Arguments = svc.Arguments;
-                if (app.WorkingDirectory.IsNullOrEmpty()) app.WorkingDirectory = svc.WorkingDirectory;
-                if (app.Environments.IsNullOrEmpty()) app.Environments = svc.Environments;
-                if (app.Mode < 0) app.Mode = svc.Mode;
+                app.FileName = svc.FileName;
+                app.Arguments = svc.Arguments;
+                app.WorkingDirectory = svc.WorkingDirectory;
+                app.Environments = svc.Environments;
+
+                app.Mode = svc.Mode;
+                app.AutoStop = svc.AutoStop;
+                app.ReloadOnChange = svc.ReloadOnChange;
+                app.MaxMemory = svc.MaxMemory;
+                app.Priority = svc.Priority;
 
                 // 新增时才记录应用部署的用户名，避免Windows/Linux混合部署时整个应用记住了Linux的用户名
                 if (app.Id == 0)
                 {
                     if (app.UserName.IsNullOrEmpty()) app.UserName = svc.UserName;
-                    app.Mode = svc.Mode;
-                    app.AutoStop = svc.AutoStop;
-                    app.ReloadOnChange = svc.ReloadOnChange;
-                    app.MaxMemory = svc.MaxMemory;
-                    app.Priority = svc.Priority;
                 }
-
-                app.MaxMemory = svc.MaxMemory;
             }
 
             // 先保存，可能有插入，需要取得应用发布Id
