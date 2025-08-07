@@ -758,7 +758,20 @@ public class ServiceController : DisposeBase
         WriteLog("应用[{0}/{1}]已启动（{2}），直接接管", p.Id, Name, reason);
 
         SetProcess(p);
-        if (Info != null) StartMonitor();
+        var service = Info;
+        if (service != null)
+        {
+            var fileName = service.FileName;
+            try
+            {
+                fileName = p.MainModule?.FileName ?? service.FileName;
+            }
+            catch { }
+
+            CheckStarApp(Path.GetDirectoryName(fileName)!, service.WorkingDirectory!);
+
+            StartMonitor();
+        }
 
         if (StartTime.Year < 2000) StartTime = DateTime.Now;
 
