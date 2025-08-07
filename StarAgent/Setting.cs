@@ -43,15 +43,15 @@ public class StarAgentSetting : Config<StarAgentSetting>
 
     /// <summary>用户名称。用户模式存储，服务模式读取</summary>
     [Description("用户名称。用户模式存储，服务模式读取")]
-    public String UserName { get; set; }
+    public String? UserName { get; set; }
 
     /// <summary>像素点。例如96*96。用户模式存储，服务模式读取</summary>
     [Description("像素点。例如96*96。用户模式存储，服务模式读取")]
-    public String Dpi { get; set; }
+    public String? Dpi { get; set; }
 
     /// <summary>分辨率。例如1024*768。用户模式存储，服务模式读取</summary>
     [Description("分辨率。例如1024*768。用户模式存储，服务模式读取")]
-    public String Resolution { get; set; }
+    public String? Resolution { get; set; }
 
     /// <summary>延迟时间。重启进程或服务的延迟时间，默认3000ms</summary>
     [Description("延迟时间。重启进程或服务的延迟时间，默认3000ms")]

@@ -134,7 +134,7 @@ internal class MyStarClient : StarClient
     #endregion
 
     #region 更新
-    public override Task<IUpgradeInfo> Upgrade(String channel, CancellationToken cancellationToken = default)
+    public override Task<IUpgradeInfo?> Upgrade(String? channel, CancellationToken cancellationToken = default)
     {
         if (channel.IsNullOrEmpty()) channel = AgentSetting.Channel;
 
@@ -204,7 +204,7 @@ internal class MyStarClient : StarClient
 
     #region 扩展功能
     /// <summary>重启应用服务</summary>
-    private String Restart(String argument)
+    private String? Restart(String? argument)
     {
         // 异步执行，让方法调用返回结果给服务端
         Task.Factory.StartNew(() =>
@@ -244,7 +244,7 @@ internal class MyStarClient : StarClient
     }
 
     /// <summary>重启操作系统</summary>
-    private String Reboot(String argument)
+    private String? Reboot(String? argument)
     {
         var dic = argument.IsNullOrEmpty() ? null : JsonParser.Decode(argument);
         var timeout = dic?["timeout"].ToInt();
@@ -286,7 +286,7 @@ internal class MyStarClient : StarClient
     /// <summary>设置通道</summary>
     /// <param name="argument"></param>
     /// <returns></returns>
-    private String SetChannel(String argument)
+    private String? SetChannel(String? argument)
     {
         if (argument.IsNullOrEmpty()) return "参数为空";
 
@@ -298,7 +298,7 @@ internal class MyStarClient : StarClient
     }
 
     /// <summary>同步时间</summary>
-    public String SyncTime(String argument = null)
+    public String? SyncTime(String? argument = null)
     {
         var now = DateTime.Now;
         var time = GetNow();
