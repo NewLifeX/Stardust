@@ -19,6 +19,7 @@ namespace Stardust.Data.Monitors;
 [Description("跟踪小时统计。每应用每接口每小时统计，用于分析接口健康状况")]
 [BindIndex("IX_TraceHourStat_StatTime_AppId_ItemId", false, "StatTime,AppId,ItemId")]
 [BindIndex("IX_TraceHourStat_AppId_ItemId_Id", false, "AppId,ItemId,Id")]
+[BindIndex("IX_TraceHourStat_AppId_StatTime", false, "AppId,StatTime")]
 [BindTable("TraceHourStat", Description = "跟踪小时统计。每应用每接口每小时统计，用于分析接口健康状况", ConnName = "StardustData", DbType = DatabaseType.None)]
 public partial class TraceHourStat
 {
@@ -221,6 +222,18 @@ public partial class TraceHourStat
     #endregion
 
     #region 扩展查询
+    /// <summary>根据应用、统计小时查找</summary>
+    /// <param name="appId">应用</param>
+    /// <param name="statTime">统计小时</param>
+    /// <returns>实体列表</returns>
+    public static IList<TraceHourStat> FindAllByAppIdAndStatTime(Int32 appId, DateTime statTime)
+    {
+        if (appId < 0) return [];
+        if (statTime.Year < 1000) return [];
+
+        return FindAll(_.AppId == appId & _.StatTime == statTime);
+    }
+
     /// <summary>根据统计小时查找</summary>
     /// <param name="statTime">统计小时</param>
     /// <returns>实体列表</returns>

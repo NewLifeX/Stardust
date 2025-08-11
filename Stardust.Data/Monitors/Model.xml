@@ -115,6 +115,7 @@
       </Columns>
       <Indexes>
         <Index Columns="AppId,Name" Unique="True" />
+        <Index Columns="Kind,AppId" />
       </Indexes>
     </Table>
     <Table Name="TraceRule" Description="跟踪规则。全局黑白名单，白名单放行，黑名单拦截">
@@ -245,6 +246,8 @@
         <Index Columns="StatDate,AppId,ItemId" />
         <Index Columns="AppId,ItemId,Id" />
         <Index Columns="AppId,Type,StatDate" />
+        <Index Columns="AppId,StatDate" />
+        <Index Columns="AppId,ItemId,StatDate" />
       </Indexes>
     </Table>
     <Table Name="TraceHourStat" Description="跟踪小时统计。每应用每接口每小时统计，用于分析接口健康状况" ConnName="StardustData">
@@ -270,6 +273,7 @@
       <Indexes>
         <Index Columns="StatTime,AppId,ItemId" />
         <Index Columns="AppId,ItemId,Id" />
+        <Index Columns="AppId,StatTime" />
       </Indexes>
     </Table>
     <Table Name="TraceMinuteStat" Description="跟踪分钟统计。每应用每接口每5分钟统计，用于分析接口健康状况" ConnName="StardustData">
@@ -321,6 +325,7 @@
       </Columns>
       <Indexes>
         <Index Columns="StatDate,AppId" Unique="True" />
+        <Index Columns="AppId,Id" />
       </Indexes>
     </Table>
     <Table Name="AppMinuteStat" Description="应用分钟统计。每应用每5分钟统计，用于分析应用健康状况" ConnName="StardustData">

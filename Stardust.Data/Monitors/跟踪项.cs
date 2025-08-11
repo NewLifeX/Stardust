@@ -18,6 +18,7 @@ namespace Stardust.Data.Monitors;
 [DataObject]
 [Description("跟踪项。应用下的多个埋点")]
 [BindIndex("IU_TraceItem_AppId_Name", true, "AppId,Name")]
+[BindIndex("IX_TraceItem_Kind_AppId", false, "Kind,AppId")]
 [BindTable("TraceItem", Description = "跟踪项。应用下的多个埋点", ConnName = "Stardust", DbType = DatabaseType.None)]
 public partial class TraceItem
 {
@@ -342,6 +343,21 @@ public partial class TraceItem
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.AppId == appId);
 
         return FindAll(_.AppId == appId);
+    }
+
+    /// <summary>根据种类、应用查找</summary>
+    /// <param name="kind">种类</param>
+    /// <param name="appId">应用</param>
+    /// <returns>实体列表</returns>
+    public static IList<TraceItem> FindAllByKindAndAppId(String kind, Int32 appId)
+    {
+        if (kind.IsNullOrEmpty()) return [];
+        if (appId < 0) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Kind.EqualIgnoreCase(kind) && e.AppId == appId);
+
+        return FindAll(_.Kind == kind & _.AppId == appId);
     }
     #endregion
 

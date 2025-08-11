@@ -21,6 +21,8 @@ namespace Stardust.Data.Monitors;
 [BindIndex("IX_TraceDayStat_StatDate_AppId_ItemId", false, "StatDate,AppId,ItemId")]
 [BindIndex("IX_TraceDayStat_AppId_ItemId_Id", false, "AppId,ItemId,Id")]
 [BindIndex("IX_TraceDayStat_AppId_Type_StatDate", false, "AppId,Type,StatDate")]
+[BindIndex("IX_TraceDayStat_AppId_StatDate", false, "AppId,StatDate")]
+[BindIndex("IX_TraceDayStat_AppId_ItemId_StatDate", false, "AppId,ItemId,StatDate")]
 [BindTable("TraceDayStat", Description = "跟踪每日统计。每应用每接口每日统计，用于分析接口健康状况", ConnName = "Stardust", DbType = DatabaseType.None)]
 public partial class TraceDayStat
 {
@@ -233,6 +235,32 @@ public partial class TraceDayStat
     #endregion
 
     #region 扩展查询
+    /// <summary>根据应用、统计日期查找</summary>
+    /// <param name="appId">应用</param>
+    /// <param name="statDate">统计日期</param>
+    /// <returns>实体列表</returns>
+    public static IList<TraceDayStat> FindAllByAppIdAndStatDate(Int32 appId, DateTime statDate)
+    {
+        if (appId < 0) return [];
+        if (statDate.Year < 1000) return [];
+
+        return FindAll(_.AppId == appId & _.StatDate == statDate);
+    }
+
+    /// <summary>根据应用、跟踪项、统计日期查找</summary>
+    /// <param name="appId">应用</param>
+    /// <param name="itemId">跟踪项</param>
+    /// <param name="statDate">统计日期</param>
+    /// <returns>实体列表</returns>
+    public static IList<TraceDayStat> FindAllByAppIdAndItemIdAndStatDate(Int32 appId, Int32 itemId, DateTime statDate)
+    {
+        if (appId < 0) return [];
+        if (itemId < 0) return [];
+        if (statDate.Year < 1000) return [];
+
+        return FindAll(_.AppId == appId & _.ItemId == itemId & _.StatDate == statDate);
+    }
+
     /// <summary>根据统计日期查找</summary>
     /// <param name="statDate">统计日期</param>
     /// <returns>实体列表</returns>
