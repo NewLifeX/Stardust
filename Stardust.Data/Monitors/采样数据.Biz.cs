@@ -207,12 +207,13 @@ public partial class SampleData : Entity<SampleData>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<SampleData> Search(Int32 appId, Int32 itemId, String kind, DateTime time, String key, PageParameter page)
+    public static IList<SampleData> Search(Int32 appId, Int32 itemId, Boolean? success, String kind, DateTime time, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         //if (appId >= 0) exp &= _.AppId == appId;
         if (itemId > 0) exp &= _.ItemId == itemId;
+        if (success != null) exp &= _.Success == success;
 
         if (!key.IsNullOrEmpty()) exp &= _.ClientId == key | _.Tag.Contains(key) | _.Error.Contains(key);
 

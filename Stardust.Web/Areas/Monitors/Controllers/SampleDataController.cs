@@ -1,5 +1,4 @@
-﻿using System.Xml.Linq;
-using NewLife;
+﻿using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
@@ -15,7 +14,7 @@ public class SampleDataController : ReadOnlyEntityController<SampleData>
 {
     static SampleDataController()
     {
-        ListFields.RemoveField("Id", "DataId", "ItemId", "SpanId", "ParentId");
+        ListFields.RemoveField("Id", "DataId", "ItemId", "SpanId", "ParentId", "EndTime", "End");
         ListFields.AddListField("Tag", "CreateIP");
 
         {
@@ -47,6 +46,22 @@ public class SampleDataController : ReadOnlyEntityController<SampleData>
         }
     }
 
+    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
+    {
+        var fields = base.OnGetFields(kind, model);
+
+        if (kind == ViewKinds.List)
+        {
+            var appId = GetRequest("appId").ToInt(-1);
+            if (appId > 0) fields.RemoveField("AppName");
+
+            var itemId = GetRequest("itemId").ToInt(-1);
+            if (itemId > 0) fields.RemoveField("ItemName", "Name");
+        }
+
+        return fields;
+    }
+
     protected override IEnumerable<SampleData> Search(Pager p)
     {
         var dataId = p["dataId"].ToLong(-1);
@@ -73,7 +88,7 @@ public class SampleDataController : ReadOnlyEntityController<SampleData>
             var time = p["time"].ToDateTime();
             if (time.Year < 2000) time = date;
 
-            return SampleData.Search(appId, itemId, kind, time, p["Q"], p);
+            return SampleData.Search(appId, itemId, success, kind, time, p["Q"], p);
         }
 
         return SampleData.Search(dataId, traceId, itemId, success, start, end, p["Q"], p);
