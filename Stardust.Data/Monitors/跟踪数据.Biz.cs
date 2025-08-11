@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
@@ -8,6 +9,7 @@ using NewLife.Data;
 using NewLife.Log;
 using Stardust.Data.Nodes;
 using XCode;
+using XCode.DataAccessLayer;
 using XCode.Shards;
 
 namespace Stardust.Data.Monitors;
@@ -264,6 +266,32 @@ public partial class TraceData : Entity<TraceData>
         using var split = Meta.CreateShard(time);
 
         return FindAll(exp, new PageParameter { PageSize = count });
+    }
+
+    /// <summary>根据时间类型搜索</summary>
+    /// <param name="appId"></param>
+    /// <param name="itemId"></param>
+    /// <param name="kind">时间种类。day/hour/minute</param>
+    /// <param name="time">时间</param>
+    /// <returns></returns>
+    public static SelectBuilder SearchSql(Int32 appId, Int32 itemId, String kind, DateTime time)
+    {
+        var exp = new WhereExpression();
+
+        if (appId >= 0) exp &= _.AppId == appId;
+        if (itemId > 0) exp &= _.ItemId == itemId;
+
+        var fi = kind switch
+        {
+            "day" => _.StatDate,
+            "hour" => _.StatHour,
+            "minute" => _.StatMinute,
+            _ => _.StatDate,
+        };
+        exp &= fi == time;
+
+        // 时间区间倒序，为了从后往前查
+        return Meta.AutoShard(time.AddSeconds(1), time, () => FindSQL(exp, null, _.Id)).FirstOrDefault();
     }
 
     /// <summary>根据应用接口分组统计</summary>

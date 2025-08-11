@@ -35,9 +35,9 @@ public class TraceDataController : ReadOnlyEntityController<TraceData>
         var time = p["time"].ToDateTime();
         if (start.Year < 2000 && end.Year < 2000) start = end = time;
 
-        //todo 待更新NewLife.Core修复雪花算法后，后面两行可以注释
-        if (start.Year > 2000) start = new DateTime(start.Year, start.Month, start.Day, start.Hour, start.Minute, start.Second, DateTimeKind.Local);
-        if (end.Year > 2000) end = new DateTime(end.Year, end.Month, end.Day, end.Hour, end.Minute, end.Second, DateTimeKind.Local);
+        ////todo 待更新NewLife.Core修复雪花算法后，后面两行可以注释
+        //if (start.Year > 2000) start = new DateTime(start.Year, start.Month, start.Day, start.Hour, start.Minute, start.Second, DateTimeKind.Local);
+        //if (end.Year > 2000) end = new DateTime(end.Year, end.Month, end.Day, end.Hour, end.Minute, end.Second, DateTimeKind.Local);
 
         if (start.Year < 2000 && end.Year < 2000)
         {
@@ -53,7 +53,7 @@ public class TraceDataController : ReadOnlyEntityController<TraceData>
 
         var list = TraceData.Search(appId, itemId, clientId, name, kind, minError, searchTag, start, end, p["Q"], p);
 
-        if (list.Count > 0 && appId > 0 && itemId > 0)
+        if (list.Count > 1 && appId > 0 && itemId > 0)
         {
             var list2 = list.OrderBy(e => e.StartTime).ToList();
 

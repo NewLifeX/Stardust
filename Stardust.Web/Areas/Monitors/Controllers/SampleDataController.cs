@@ -1,4 +1,5 @@
-﻿using NewLife;
+﻿using System.Xml.Linq;
+using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
@@ -50,6 +51,7 @@ public class SampleDataController : ReadOnlyEntityController<SampleData>
     {
         var dataId = p["dataId"].ToLong(-1);
         var traceId = p["traceId"];
+        var appId = p["appId"].ToInt(-1);
         var itemId = p["itemId"].ToInt(-1);
         var success = p["success"]?.ToBoolean();
 
@@ -62,6 +64,18 @@ public class SampleDataController : ReadOnlyEntityController<SampleData>
 
         var start = DateTime.Today.AddDays(-30);
         var end = DateTime.Today;
+
+        // 下钻查询
+        if (dataId < 0 && appId > 0)
+        {
+            var kind = p["kind"];
+            var date = p["date"].ToDateTime();
+            var time = p["time"].ToDateTime();
+            if (time.Year < 2000) time = date;
+
+            return SampleData.Search(appId, itemId, kind, time, p["Q"], p);
+        }
+
         return SampleData.Search(dataId, traceId, itemId, success, start, end, p["Q"], p);
     }
 

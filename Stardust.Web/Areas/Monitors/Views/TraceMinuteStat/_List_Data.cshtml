@@ -36,6 +36,7 @@
             <th class="text-center" title="最大耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MaxCost"))">最大耗时</a></th>
             <th class="text-center" title="最小耗时。单位毫秒"><a href="@Html.Raw(page.GetSortUrl("MinCost"))">最小耗时</a></th>
             <th class="text-center" title="总数值。用户自定义标量"><a href="@Html.Raw(page.GetSortUrl("TotalValue"))">数值</a></th>
+            <th title="直达采样数据明细">明细</th>
             <th title="跨多系统查看调用链">追踪</th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("CreateTime"))">创建时间</a></th>
             <th class="text-center" style="min-width:134px;"><a href="@Html.Raw(page.GetSortUrl("UpdateTime"))">更新时间</a></th>
@@ -49,7 +50,7 @@
         @foreach (var entity in Model)
         {
             var url1 = $"/Monitors/appDayStat?monitorId={entity.AppId}";
-            var url2 = $"/Monitors/traceData?appId={entity.AppId}&kind=minute&time={entity.StatTime:yyyy-MM-dd HH:mm:ss}&itemId={entity.ItemId}";
+            var url2 = $"/Monitors/traceData?appId={entity.AppId}&itemId={entity.ItemId}&kind=minute&time={entity.StatTime:yyyy-MM-dd HH:mm:ss}";
             var url3 = $"/Monitors/traceMinuteStat?appId={entity.AppId}&itemId={entity.ItemId}";
             var url4 = url2 + "&minError=1";
             var bgcolor = "";
@@ -85,6 +86,7 @@
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>
                 <td class="text-right">@entity.MinCost.ToString("n0")</td>
                 <td class="text-right">@entity.TotalValue.ToString("n0")</td>
+                <td><a href="/Monitors/SampleData?appId=@entity.AppId&itemId=@entity.ItemId&&kind=minute&time=@entity.StatTime.ToString("yyyy-MM-dd HH:mm:ss")" title="直达采样数据明细">明细</a></td>
                 <td><a href="/Monitors/TraceMinuteStat/Trace?id=@entity.ID" title="跨多系统查看调用链">追踪</a></td>
                 <td class="text-center">@entity.CreateTime.ToFullString("")</td>
                 <td class="text-center">@entity.UpdateTime.ToFullString("")</td>
@@ -119,6 +121,7 @@
                 <td class="text-right">@entity.MaxCost.ToString("n0")</td>
                 <td class="text-right">@entity.MinCost.ToString("n0")</td>
                 <td class="text-right">@entity.TotalValue.ToString("n0")</td>
+                <td></td>
                 <td></td>
                 <td></td>
                 <td></td>
