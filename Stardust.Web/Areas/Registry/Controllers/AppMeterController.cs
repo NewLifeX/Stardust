@@ -75,7 +75,17 @@ public class AppMeterController : EntityController<AppMeter>
         if (appId > 0)
         {
             // 最近24小时
-            if (p.PageSize == 20 && appId > 0) p.PageSize = 1440;
+            if (p.PageSize == 20 && appId > 0)
+            {
+                p.PageSize = 1440;
+
+                // 默认查询最近24小时。如果指定了应用，还需要根据应用心跳间隔来调整
+                var app = App.FindById(appId);
+                if (app != null && app.Period > 0)
+                {
+                    p.PageSize = 24 * 3600 / app.Period;
+                }
+            }
 
             //// 自动客户端
             //if (clientId.IsNullOrEmpty())

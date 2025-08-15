@@ -39,7 +39,17 @@ public class NodeDataController : ReadOnlyEntityController<NodeData>
         if (nodeId > 0)
         {
             // 最近10小时
-            if (p.PageSize == 20 && nodeId > 0) p.PageSize = 24 * 60;
+            if (p.PageSize == 20 && nodeId > 0)
+            {
+                p.PageSize = 24 * 60;
+
+                // 默认查询最近24小时。如果指定了应用，还需要根据节点心跳间隔来调整
+                var node = Node.FindByID(nodeId);
+                if (node != null && node.Period > 0)
+                {
+                    p.PageSize = 24 * 3600 / node.Period;
+                }
+            }
 
             PageSetting.EnableNavbar = false;
 
