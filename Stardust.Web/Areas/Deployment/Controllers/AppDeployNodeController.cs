@@ -166,7 +166,7 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
         foreach (var id in ids)
         {
             var dn = AppDeployNode.FindById(id);
-            if (dn != null && dn.Enable && dn.Node != null && dn.Deploy != null)
+            if (dn != null && dn.Node != null && dn.Deploy != null)
             {
                 ts.Add(_deployService.Control(dn.Deploy, dn, act, UserHost, dn.Delay, 0));
             }
