@@ -178,7 +178,7 @@ public class StarTracer : DefaultTracer
 
                 if (Resolver is StarTracerResolver resolver && rs.RequestTagLength != 0)
                 {
-                    resolver.RequestContentAsTag = rs.RequestTagLength > 0;
+                    resolver.RequestContentAsTag = rs.RequestTagLength >= 0;
                     resolver.RequestTagLength = rs.RequestTagLength;
                 }
 
