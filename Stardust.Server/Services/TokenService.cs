@@ -113,7 +113,7 @@ public class TokenService
         };
 
         Exception ex = null;
-        if (!jwt.TryDecode(token, out var message)) ex = new ApiException(ApiCode.Forbidden, $"[{jwt.Subject}]非法访问 {message}");
+        if (!jwt.TryDecode(token, out var message)) ex = new ApiException(ApiCode.Unauthorized, $"[{jwt.Subject}]非法访问 {message}");
 
         return (jwt, ex);
     }

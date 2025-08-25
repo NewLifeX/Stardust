@@ -863,9 +863,9 @@ public class NodeService
         if (!rs || node == null)
         {
             if (node != null)
-                ex = new ApiException(ApiCode.Forbidden, $"[{node.Name}/{node.Code}]非法访问 {message}");
+                ex = new ApiException(ApiCode.Unauthorized, $"[{node.Name}/{node.Code}]非法访问 {message}");
             else
-                ex = new ApiException(ApiCode.Forbidden, $"[{jwt.Subject}]非法访问 {message}");
+                ex = new ApiException(ApiCode.Unauthorized, $"[{jwt.Subject}]非法访问 {message}");
         }
 
         return (jwt, node, ex);
