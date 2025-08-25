@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -220,6 +221,7 @@ public class TracerMiddleware
         return p;
     }
 
+    private static ConcurrentDictionary<String, Int32> _serviceAddresses = new(StringComparer.OrdinalIgnoreCase);
     /// <summary>自动记录用户访问主机地址</summary>
     /// <param name="ctx"></param>
     public static void SaveServiceAddress(HttpContext ctx)
@@ -245,13 +247,14 @@ public class TracerMiddleware
                 baseAddress += ":" + uri.Port;
         }
 
-        var set = NewLife.Setting.Current;
-        var ss = set.ServiceAddress?.Split(",").ToList() ?? [];
-        if (!ss.Contains(baseAddress))
+        // 新地址赋予最低权重
+        if (_serviceAddresses.AddOrUpdate(baseAddress, 1, (k, v) => v + 1) % 10 == 1)
         {
-            var newAddrs = new List<String> { baseAddress };
+            //_serviceAddresses.TryAdd(baseAddress, 1);
 
             // 过滤掉本机地址
+            var set = NewLife.Setting.Current;
+            var ss = set.ServiceAddress?.Split(",").ToList() ?? [];
             foreach (var item in ss)
             {
                 var addr = item;
@@ -260,13 +263,20 @@ public class TracerMiddleware
                 if (u.Host.StartsWith("127.0.")) continue;
                 if (u.Port == 0) continue;
 
-                addr = u.ToString();
+                addr = u.ToString().TrimEnd('/');
 
-                newAddrs.Add(addr);
+                // 旧地址赋予较高权重
+                _serviceAddresses.TryAdd(addr, 10);
             }
 
-            set.ServiceAddress = newAddrs.Take(5).Join(",");
-            set.Save();
+            // 使用次数最多的前5个地址
+            var value = _serviceAddresses.OrderByDescending(e => e.Value).Take(5).Join(",", e => e.Key);
+            if (set.ServiceAddress != value)
+            {
+                DefaultSpan.Current?.AppendTag($"ServiceAddress: {value}");
+                set.ServiceAddress = value;
+                set.Save();
+            }
         }
     }
 }
