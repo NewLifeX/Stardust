@@ -36,7 +36,6 @@ public class AppController(ITokenService tokenService, RegistryService registryS
         var app = App.FindByName(Jwt?.Subject);
         if (app == null || !app.Enable) return false;
 
-        //var (jwt, ex) = tokenService.DecodeToken(token);
         _app = app;
         _clientId = Jwt.Id;
 

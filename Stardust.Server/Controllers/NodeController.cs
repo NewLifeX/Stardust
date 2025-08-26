@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Options;
 using NewLife;
 using NewLife.Log;
@@ -25,21 +26,39 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
 {
     private Node _node;
     private String _clientId;
+    private static DateTime _oldVersion = new(2025, 8, 26);
 
     #region 令牌验证
     protected override Boolean OnAuthorize(String token, ActionContext context)
     {
         ManageProvider.UserHost = UserHost;
 
-        if (!base.OnAuthorize(token, context)) return false;
+        Exception error = null;
+        try
+        {
+            if (!base.OnAuthorize(token, context)) return false;
+        }
+        catch (Exception ex)
+        {
+            error = ex;
+        }
 
         var node = Node.FindByCode(Jwt?.Subject);
-        if (node == null || !node.Enable) return false;
+        if (node == null || !node.Enable) error ??= new ApiException(ApiCode.Unauthorized, "无效节点");
 
-        //var (jwt, node, ex) = nodeService.DecodeToken(token, setting.TokenSecret);
         _node = node;
         _clientId = Jwt.Id;
-        //if (ex != null) throw ex;
+
+        // 旧版本节点允许匿名访问心跳和更新接口
+        var action = (context.ActionDescriptor as ControllerActionDescriptor)?.ActionName;
+        if (error is ApiException aex && aex.Code == ApiCode.Unauthorized &&
+            node != null && node.CompileTime < _oldVersion &&
+            action.EqualIgnoreCase(nameof(Ping), nameof(Upgrade)))
+        {
+            error = null;
+        }
+
+        if (error != null) throw error;
 
         return node != null;
     }
