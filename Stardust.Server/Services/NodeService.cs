@@ -3,9 +3,11 @@ using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Remoting.Models;
+using NewLife.Remoting.Services;
 using NewLife.Security;
 using NewLife.Serialization;
 using NewLife.Web;
+using Stardust.Data;
 using Stardust.Data.Nodes;
 using Stardust.Data.Platform;
 using Stardust.Models;
@@ -14,10 +16,10 @@ using XCode.Configuration;
 
 namespace Stardust.Server.Services;
 
-public class NodeService(TokenService tokenService, IPasswordProvider passwordProvider, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer)
+public class NodeService(ITokenService tokenService, IPasswordProvider passwordProvider, StarServerSetting setting, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer)
 {
     #region 注册&登录
-    public Boolean Auth(Node node, String secret, LoginInfo inf, String ip, StarServerSetting setting)
+    public Boolean Auth(Node node, String secret, LoginInfo inf, String ip)
     {
         if (node == null) return false;
 
@@ -46,7 +48,7 @@ public class NodeService(TokenService tokenService, IPasswordProvider passwordPr
         return true;
     }
 
-    public Node Register(LoginInfo inf, String ip, StarServerSetting setting)
+    public Node Register(LoginInfo inf, String ip)
     {
         var code = inf.Code;
         var secret = inf.Secret;
@@ -73,7 +75,7 @@ public class NodeService(TokenService tokenService, IPasswordProvider passwordPr
         return node;
     }
 
-    public TokenModel Login(Node node, LoginInfo inf, String ip, StarServerSetting setting)
+    public TokenModel Login(Node node, LoginInfo inf, String ip)
     {
         if (!inf.ProductCode.IsNullOrEmpty()) node.ProductCode = inf.ProductCode;
 
@@ -90,7 +92,7 @@ public class NodeService(TokenService tokenService, IPasswordProvider passwordPr
         node.Login(inf.Node, ip);
 
         // 设置令牌
-        var tokenModel = tokenService.IssueToken(node.Code, setting.TokenSecret, setting.TokenExpire, inf.ClientId);
+        var tokenModel = tokenService.IssueToken(node.Code, inf.ClientId);
 
         // 在线记录
         var olt = GetOrAddOnline(node, tokenModel.AccessToken, ip);
@@ -744,7 +746,7 @@ public class NodeService(TokenService tokenService, IPasswordProvider passwordPr
     /// <param name="model"></param>
     /// <param name="token">应用令牌</param>
     /// <returns></returns>
-    public async Task<NodeCommand> SendCommand(CommandInModel model, String token, StarServerSetting setting)
+    public async Task<NodeCommand> SendCommand(CommandInModel model, String token)
     {
         if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定节点");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
@@ -752,7 +754,10 @@ public class NodeService(TokenService tokenService, IPasswordProvider passwordPr
         var node = Node.FindByCode(model.Code);
         if (node == null) throw new ArgumentOutOfRangeException(nameof(model.Code), "无效节点");
 
-        var (_, app) = tokenService.DecodeToken(token, setting.TokenSecret);
+        var (jwt, ex) = tokenService.DecodeToken(token);
+        if (ex != null) throw ex;
+
+        var app = App.FindByName(jwt?.Subject);
         if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new ApiException(ApiCode.Unauthorized, "无权操作！");
 
         if (app.AllowControlNodes != "*" && !node.Code.EqualIgnoreCase(app.AllowControlNodes.Split(",")))

@@ -60,7 +60,7 @@ public class Startup
         // 业务服务
         services.AddSingleton<NodeService>();
         services.AddSingleton<AppQueueService>();
-        services.AddSingleton<TokenService>();
+        services.AddSingleton<AppTokenService>();
         services.AddSingleton<ConfigService>();
         services.AddSingleton<RegistryService>();
         services.AddSingleton<AppOnlineService>();

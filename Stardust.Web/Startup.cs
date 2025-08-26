@@ -1,26 +1,26 @@
 ﻿using System.Reflection;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.FileProviders;
 using NewLife;
-using NewLife.Caching.Services;
 using NewLife.Caching;
+using NewLife.Caching.Services;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Log;
+using NewLife.Threading;
+using Stardust.Data;
 using Stardust.Data.Configs;
+using Stardust.Data.Deployment;
+using Stardust.Data.Monitors;
+using Stardust.Data.Nodes;
+using Stardust.Data.Platform;
 using Stardust.Extensions.Caches;
+using Stardust.Server;
 using Stardust.Server.Services;
 using Stardust.Web.Services;
 using XCode;
 using XCode.DataAccessLayer;
-using Stardust.Data.Deployment;
-using Stardust.Data;
-using Stardust.Data.Nodes;
-using Stardust.Server;
-using Stardust.Data.Platform;
-using Stardust.Data.Monitors;
-using NewLife.Threading;
-using Microsoft.AspNetCore.Http.Features;
 
 namespace Stardust.Web;
 
@@ -52,7 +52,7 @@ public class Startup
 
         services.AddSingleton<IRedisService, RedisService>();
 
-        services.AddSingleton<TokenService>();
+        services.AddSingleton<AppTokenService>();
         services.AddSingleton<ConfigService>();
         services.AddSingleton<AppOnlineService>();
         services.AddSingleton<DeployService>();

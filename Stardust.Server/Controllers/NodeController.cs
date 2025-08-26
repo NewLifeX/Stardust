@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using NewLife;
-using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Remoting.Extensions;
 using NewLife.Remoting.Models;
+using NewLife.Remoting.Services;
 using NewLife.Web;
 using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
@@ -15,27 +15,31 @@ using Stardust.Models;
 using Stardust.Server.Services;
 using XCode;
 using XCode.Membership;
-using TokenService = Stardust.Server.Services.TokenService;
 using WebSocket = System.Net.WebSockets.WebSocket;
 
 namespace Stardust.Server.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class NodeController(NodeService nodeService, TokenService tokenService, NodeSessionManager sessionManager, StarServerSetting setting, IServiceProvider serviceProvider, ITracer tracer, IOptions<JsonOptions> jsonOptions) : BaseController(serviceProvider)
+public class NodeController(NodeService nodeService, ITokenService tokenService, NodeSessionManager sessionManager, IServiceProvider serviceProvider, ITracer tracer, IOptions<JsonOptions> jsonOptions) : BaseController(serviceProvider)
 {
     private Node _node;
     private String _clientId;
 
     #region 令牌验证
-    protected override Boolean OnAuthorize(String token)
+    protected override Boolean OnAuthorize(String token, ActionContext context)
     {
         ManageProvider.UserHost = UserHost;
 
-        var (jwt, node, ex) = nodeService.DecodeToken(token, setting.TokenSecret);
+        if (!base.OnAuthorize(token, context)) return false;
+
+        var node = Node.FindByCode(Jwt?.Subject);
+        if (node == null || !node.Enable) return false;
+
+        //var (jwt, node, ex) = nodeService.DecodeToken(token, setting.TokenSecret);
         _node = node;
-        _clientId = jwt.Id;
-        if (ex != null) throw ex;
+        _clientId = Jwt.Id;
+        //if (ex != null) throw ex;
 
         return node != null;
     }
@@ -86,16 +90,16 @@ public class NodeController(NodeService nodeService, TokenService tokenService, 
         }
 
         // 设备不存在或者验证失败，执行注册流程
-        if (node != null && !nodeService.Auth(node, inf.Secret, inf, ip, setting))
+        if (node != null && !nodeService.Auth(node, inf.Secret, inf, ip))
         {
             node = null;
         }
 
-        node ??= nodeService.Register(inf, ip, setting);
+        node ??= nodeService.Register(inf, ip);
 
         if (node == null) throw new ApiException(ApiCode.Unauthorized, "节点鉴权失败");
 
-        var tokenModel = nodeService.Login(node, inf, ip, setting);
+        var tokenModel = nodeService.Login(node, inf, ip);
 
         var rs = new LoginResponse
         {
@@ -153,12 +157,14 @@ public class NodeController(NodeService nodeService, TokenService tokenService, 
 
             // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌，以获取业务的连续性。
             //todo 这里将来由客户端提交刷新令牌，才能颁发新的访问令牌。
-            var set = setting;
-            var tm = tokenService.ValidAndIssueToken(node.Code, Token, set.TokenSecret, set.TokenExpire, _clientId);
-            if (tm != null)
+            //var set = setting;
+            //var tm = tokenService.ValidAndIssueToken(node.Code, Token, set.TokenSecret, set.TokenExpire, _clientId);
+            var (jwt, ex) = tokenService.DecodeToken(Token);
+            if (ex == null && jwt != null && jwt.Expire < DateTime.Now.AddMinutes(10))
             {
                 using var span = tracer?.NewSpan("RefreshNodeToken", new { node.Code, node.Name });
 
+                var tm = tokenService.IssueToken(node.Code, _clientId);
                 rs.Token = tm.AccessToken;
 
                 //node.WriteHistory("刷新令牌", true, tm.ToJson(), ip);
@@ -381,7 +387,7 @@ public class NodeController(NodeService nodeService, TokenService tokenService, 
         if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定节点");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
 
-        var cmd = await nodeService.SendCommand(model, token, setting);
+        var cmd = await nodeService.SendCommand(model, token);
 
         return cmd.Id;
     }

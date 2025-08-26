@@ -1,32 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Remoting.Extensions;
+using NewLife.Remoting.Services;
 using Stardust.Data;
 using Stardust.Data.Configs;
 using Stardust.Models;
 using Stardust.Server.Models;
 using Stardust.Server.Services;
-using TokenService = Stardust.Server.Services.TokenService;
 
 namespace Stardust.Server.Controllers;
 
 /// <summary>配置中心服务。向应用提供配置服务</summary>
 [Route("[controller]/[action]")]
-public class ConfigController : ControllerBase
+public class ConfigController(ConfigService configService, ITokenService tokenService, AppTokenService appTokenService, AppOnlineService appOnline, StarServerSetting setting) : ControllerBase
 {
-    private readonly ConfigService _configService;
-    private readonly TokenService _tokenService;
-    private readonly AppOnlineService _appOnline;
-    private readonly StarServerSetting _setting;
-
-    public ConfigController(ConfigService configService, TokenService tokenService, AppOnlineService appOnline, StarServerSetting setting)
-    {
-        _configService = configService;
-        _tokenService = tokenService;
-        _appOnline = appOnline;
-        _setting = setting;
-    }
-
     [ApiFilter]
     public ConfigInfo GetAll(String appId, String secret, String clientId, String token, String scope, Int32 version)
     {
@@ -46,11 +33,11 @@ public class ConfigController : ControllerBase
 
         // 版本没有变化时，不做计算处理，不返回配置数据
         if (!change && version > 0 && version >= app.Version) return new ConfigInfo { Version = app.Version, UpdateTime = app.UpdateTime };
-        var dic = _configService.GetConfigs(app, scope);
+        var dic = configService.GetConfigs(app, scope);
 
         // 返回WorkerId
-        if (app.EnableWorkerId && dic.ContainsKey(_configService.WorkerIdName))
-            dic[_configService.WorkerIdName] = online.WorkerId + "";
+        if (app.EnableWorkerId && dic.ContainsKey(configService.WorkerIdName))
+            dic[configService.WorkerIdName] = online.WorkerId + "";
 
         return new ConfigInfo
         {
@@ -100,11 +87,11 @@ public class ConfigController : ControllerBase
                 UpdateTime = app.UpdateTime
             };
 
-        var dic = _configService.GetConfigs(app, scope);
+        var dic = configService.GetConfigs(app, scope);
 
         // 返回WorkerId
-        if (app.EnableWorkerId && dic.ContainsKey(_configService.WorkerIdName))
-            dic[_configService.WorkerIdName] = online.WorkerId + "";
+        if (app.EnableWorkerId && dic.ContainsKey(configService.WorkerIdName))
+            dic[configService.WorkerIdName] = online.WorkerId + "";
 
         return new ConfigInfo
         {
@@ -124,7 +111,10 @@ public class ConfigController : ControllerBase
         App app = null;
         if (!token.IsNullOrEmpty())
         {
-            var (jwt, ap1) = _tokenService.DecodeToken(token, _setting.TokenSecret);
+            var (jwt, ex) = tokenService.DecodeToken(token);
+            if (ex != null) throw ex;
+
+            var ap1 = App.FindByName(jwt?.Subject);
             if (appId.IsNullOrEmpty()) appId = ap1?.Name;
             if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
 
@@ -132,7 +122,7 @@ public class ConfigController : ControllerBase
         }
 
         var ip = HttpContext.GetUserHost();
-        app ??= _tokenService.Authorize(appId, secret, _setting.AppAutoRegister, ip);
+        app ??= appTokenService.Authorize(appId, secret, setting.AppAutoRegister, ip);
 
         // 新建应用配置
         var config = AppConfig.FindByName(appId);
@@ -176,13 +166,13 @@ public class ConfigController : ControllerBase
         if (clientId.IsNullOrEmpty()) clientId = ip;
 
         // 更新心跳信息
-        var online = _appOnline.UpdateOnline(app, clientId, ip, token);
+        var online = appOnline.UpdateOnline(app, clientId, ip, token);
 
         // 检查应用有效性
         if (!config.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
 
         // 刷新WorkerId
-        if (config.EnableWorkerId) _configService.RefreshWorkerId(config, online);
+        if (config.EnableWorkerId) configService.RefreshWorkerId(config, online);
 
         return (config, online);
     }
@@ -197,6 +187,6 @@ public class ConfigController : ControllerBase
         var (app, _) = Valid(model.AppId, model.Secret, model.ClientId, token);
         if (app.Readonly) throw new Exception($"应用[{app}]处于只读模式，禁止修改");
 
-        return _configService.SetConfigs(app, model.Configs);
+        return configService.SetConfigs(app, model.Configs);
     }
 }

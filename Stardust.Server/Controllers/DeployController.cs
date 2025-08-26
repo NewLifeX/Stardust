@@ -7,27 +7,30 @@ using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Services;
 using XCode.Membership;
-using TokenService = Stardust.Server.Services.TokenService;
 
 namespace Stardust.Server.Controllers;
 
 /// <summary>发布中心服务</summary>
 [ApiFilter]
 [Route("[controller]/[action]")]
-public class DeployController(DeployService deployService, NodeService nodeService, StarServerSetting setting, IServiceProvider serviceProvider) : BaseController(serviceProvider)
+public class DeployController(DeployService deployService, IServiceProvider serviceProvider) : BaseController(serviceProvider)
 {
     private Node _node;
-    private String _clientId;
 
     #region 令牌验证
-    protected override Boolean OnAuthorize(String token)
+    protected override Boolean OnAuthorize(String token, ActionContext context)
     {
         ManageProvider.UserHost = UserHost;
 
-        var (jwt, node, ex) = nodeService.DecodeToken(token, setting.TokenSecret);
+        if (!base.OnAuthorize(token, context)) return false;
+
+        var node = Node.FindByCode(Jwt?.Subject);
+        if (node == null || !node.Enable) return false;
+
+        //var (jwt, node, ex) = nodeService.DecodeToken(token, setting.TokenSecret);
         _node = node;
-        _clientId = jwt.Id;
-        if (ex != null) throw ex;
+        //_clientId = Jwt.Id;
+        //if (ex != null) throw ex;
 
         return node != null;
     }

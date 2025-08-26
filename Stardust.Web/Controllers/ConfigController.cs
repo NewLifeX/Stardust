@@ -12,19 +12,8 @@ namespace Stardust.Web.Controllers;
 
 /// <summary>配置中心服务。向应用提供配置服务</summary>
 [Route("[controller]/[action]")]
-public class ConfigController : ControllerBase
+public class ConfigController(ConfigService configService, AppTokenService tokenService, AppOnlineService appOnline) : ControllerBase
 {
-    private readonly ConfigService _configService;
-    private readonly TokenService _tokenService;
-    private readonly AppOnlineService _appOnline;
-
-    public ConfigController(ConfigService configService, TokenService tokenService, AppOnlineService appOnline)
-    {
-        _configService = configService;
-        _tokenService = tokenService;
-        _appOnline = appOnline;
-    }
-
     [ApiFilter]
     public ConfigInfo GetAll(String appId, String secret, String scope, Int32 version)
     {
@@ -42,11 +31,11 @@ public class ConfigController : ControllerBase
         scope = scope.IsNullOrEmpty() ? AppRule.CheckScope(app.Id, ip, null) : scope;
         online.Scope = scope;
 
-        var dic = _configService.GetConfigs(app, scope);
+        var dic = configService.GetConfigs(app, scope);
 
         // 返回WorkerId
-        if (app.EnableWorkerId && dic.ContainsKey(_configService.WorkerIdName))
-            dic[_configService.WorkerIdName] = online.WorkerId + "";
+        if (app.EnableWorkerId && dic.ContainsKey(configService.WorkerIdName))
+            dic[configService.WorkerIdName] = online.WorkerId + "";
 
         return new ConfigInfo
         {
@@ -63,7 +52,7 @@ public class ConfigController : ControllerBase
     private AppConfig Valid(String appId, String secret, out AppOnline online)
     {
         var ip = HttpContext.GetUserHost();
-        var ap = _tokenService.Authorize(appId, secret, false, ip);
+        var ap = tokenService.Authorize(appId, secret, false, ip);
 
         var app = AppConfig.FindByName(appId);
         app ??= AppConfig.Find(AppConfig._.Name == appId);
@@ -87,13 +76,13 @@ public class ConfigController : ControllerBase
 
         // 更新心跳信息
         //var ip = HttpContext.GetUserHost();
-        online = _appOnline.UpdateOnline(ap, null, ip, appId);
+        online = appOnline.UpdateOnline(ap, null, ip, appId);
 
         // 检查应用有效性
         if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
 
         // 刷新WorkerId
-        if (app.EnableWorkerId) _configService.RefreshWorkerId(app, online);
+        if (app.EnableWorkerId) configService.RefreshWorkerId(app, online);
 
         return app;
     }

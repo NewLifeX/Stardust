@@ -5,6 +5,7 @@ using NewLife.Caching;
 using NewLife.Collections;
 using NewLife.Log;
 using NewLife.Remoting.Extensions;
+using NewLife.Remoting.Services;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Monitors;
@@ -17,33 +18,8 @@ namespace Stardust.Server.Controllers;
 
 //[ApiController]
 [Route("[controller]")]
-public class TraceController : ControllerBase
+public class TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, ITokenService tokenService, AppOnlineService appOnline, UplinkService uplink, MonitorService monitorService, StarServerSetting setting, ICacheProvider cacheProvider, ITracer tracer) : ControllerBase
 {
-    private readonly TokenService _tokenService;
-    private readonly AppOnlineService _appOnline;
-    private readonly UplinkService _uplink;
-    private readonly MonitorService _monitorService;
-    private readonly StarServerSetting _setting;
-    private readonly ICacheProvider _cacheProvider;
-    private readonly ITracer _tracer;
-    private readonly ITraceStatService _stat;
-    private readonly IAppDayStatService _appStat;
-    private readonly ITraceItemStatService _itemStat;
-
-    public TraceController(ITraceStatService stat, IAppDayStatService appStat, ITraceItemStatService itemStat, TokenService tokenService, AppOnlineService appOnline, UplinkService uplink, MonitorService monitorService, StarServerSetting setting, ICacheProvider cacheProvider, ITracer tracer)
-    {
-        _stat = stat;
-        _appStat = appStat;
-        _itemStat = itemStat;
-        _tokenService = tokenService;
-        _appOnline = appOnline;
-        _uplink = uplink;
-        _monitorService = monitorService;
-        _setting = setting;
-        _cacheProvider = cacheProvider;
-        _tracer = tracer;
-    }
-
     [ApiFilter]
     [HttpPost(nameof(Report))]
     public TraceResponse Report([FromBody] TraceModel model, String token)
@@ -54,7 +30,7 @@ public class TraceController : ControllerBase
         var ip = HttpContext.GetUserHost();
         if (ip.IsNullOrEmpty()) ip = ManageProvider.UserHost;
 
-        using var span = _tracer?.NewSpan($"traceReport-{model.AppId}", new { ip, model.ClientId, count = model.Builders?.Length, names = model.Builders?.Join(",", e => e.Name) }, builders?.Length ?? 0);
+        using var span = tracer?.NewSpan($"traceReport-{model.AppId}", new { ip, model.ClientId, count = model.Builders?.Length, names = model.Builders?.Join(",", e => e.Name) }, builders?.Length ?? 0);
 
         // 验证
         var (app, online) = Valid(model.AppId, model, model.ClientId, ip, token);
@@ -116,13 +92,16 @@ public class TraceController : ControllerBase
 
     private (AppTracer, AppOnline) Valid(String appId, TraceModel model, String clientId, String ip, String token)
     {
-        var set = _setting;
+        var set = setting;
 
         // 新版验证方式，访问令牌
         App ap = null;
         if (!token.IsNullOrEmpty() && token.Split(".").Length == 3)
         {
-            var (jwt, ap1) = _tokenService.DecodeToken(token, set.TokenSecret);
+            var (jwt, ex) = tokenService.DecodeToken(token);
+            if (ex != null) throw ex;
+
+            var ap1 = App.FindByName(jwt?.Subject);
             if (appId.IsNullOrEmpty()) appId = ap1?.Name;
             if (clientId.IsNullOrEmpty()) clientId = jwt.Id;
 
@@ -191,7 +170,7 @@ public class TraceController : ControllerBase
         if (app.EnableMeter) App.WriteMeter(model, ip);
 
         // 更新心跳信息
-        var online = _appOnline.UpdateOnline(ap, clientId, ip, token, model.Info);
+        var online = appOnline.UpdateOnline(ap, clientId, ip, token, model.Info);
 
         // 检查应用有效性
         if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");
@@ -208,7 +187,7 @@ public class TraceController : ControllerBase
             //var timeoutExcludes = app.TimeoutExcludes.Split(",", ";") ?? new String[0];
 
             var now = DateTime.Now;
-            var startTime = now.AddDays(-_setting.DataRetention);
+            var startTime = now.AddDays(-setting.DataRetention);
             var endTime = now.AddDays(1);
             var traces = new List<TraceData>();
             var samples = new List<SampleData>();
@@ -221,13 +200,13 @@ public class TraceController : ControllerBase
                 var rule = TraceRule.Match(item.Name);
                 if (rule != null && !rule.IsWhite)
                 {
-                    using var span = _tracer?.NewSpan("trace:BlackList", new { item.Name, rule.Rule, ip });
+                    using var span = tracer?.NewSpan("trace:BlackList", new { item.Name, rule.Rule, ip });
                     continue;
                 }
 
                 if (excludes != null && excludes.Any(e => e.IsMatch(item.Name, StringComparison.OrdinalIgnoreCase)))
                 {
-                    using var span = _tracer?.NewSpan("trace:Exclude", new { item.Name, ip });
+                    using var span = tracer?.NewSpan("trace:Exclude", new { item.Name, ip });
                     continue;
                 }
                 //if (item.Name.EndsWithIgnoreCase("/Trace/Report")) continue;
@@ -236,20 +215,20 @@ public class TraceController : ControllerBase
                 var timestamp = item.StartTime.ToDateTime().ToLocalTime();
                 if (timestamp < startTime || timestamp > endTime)
                 {
-                    using var span = _tracer?.NewSpan("trace:ErrorTime", new { item.Name, timestamp, ip, item });
+                    using var span = tracer?.NewSpan("trace:ErrorTime", new { item.Name, timestamp, ip, item });
                     continue;
                 }
 
                 // 拒收超长项
                 if (item.Name.Length > TraceData._.Name.Length)
                 {
-                    using var span = _tracer?.NewSpan("trace:LongName", new { item.Name, ip });
+                    using var span = tracer?.NewSpan("trace:LongName", new { item.Name, ip });
                     continue;
                 }
 
                 // 检查跟踪项
                 var key = $"trace:Item:{app.ID}-{item.Name}";
-                var ti = _cacheProvider.InnerCache.Get<TraceItem>(key);
+                var ti = cacheProvider.InnerCache.Get<TraceItem>(key);
                 try
                 {
                     // 捕获异常，避免因为跟踪项错误导致整体跟踪失败
@@ -258,10 +237,10 @@ public class TraceController : ControllerBase
                 catch { }
                 if (ti == null)
                 {
-                    using var span = _tracer?.NewSpan("trace:ErrorItem", item.Name);
+                    using var span = tracer?.NewSpan("trace:ErrorItem", item.Name);
                     continue;
                 }
-                _cacheProvider.InnerCache.Set(key, ti, 600);
+                cacheProvider.InnerCache.Set(key, ti, 600);
                 if (!ti.Enable) continue;
 
                 var td = TraceData.Create(item);
@@ -310,16 +289,16 @@ public class TraceController : ControllerBase
             samples.Insert(true);
 
             // 更新统计
-            _stat.Add(traces);
-            _appStat.Add(now.Date);
-            if (now.Hour == 0 && now.Minute <= 10) _appStat.Add(now.Date.AddDays(-1));
-            _itemStat.Add(app.ID);
+            stat.Add(traces);
+            appStat.Add(now.Date);
+            if (now.Hour == 0 && now.Minute <= 10) appStat.Add(now.Date.AddDays(-1));
+            itemStat.Add(app.ID);
 
             // 发送给上联服务器
-            _uplink.Report(app, model);
+            uplink.Report(app, model);
 
             // WebHook
-            if (!app.WebHook.IsNullOrEmpty()) _monitorService.WebHook(app, model);
+            if (!app.WebHook.IsNullOrEmpty()) monitorService.WebHook(app, model);
         }
         catch (Exception ex)
         {

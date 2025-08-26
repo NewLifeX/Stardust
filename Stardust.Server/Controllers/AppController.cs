@@ -6,6 +6,7 @@ using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Remoting.Extensions;
 using NewLife.Remoting.Models;
+using NewLife.Remoting.Services;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
@@ -13,7 +14,6 @@ using Stardust.Models;
 using Stardust.Server.Services;
 using XCode;
 using XCode.Membership;
-using TokenService = Stardust.Server.Services.TokenService;
 using WebSocket = System.Net.WebSockets.WebSocket;
 
 namespace Stardust.Server.Controllers;
@@ -21,19 +21,24 @@ namespace Stardust.Server.Controllers;
 /// <summary>应用接口控制器</summary>
 [ApiController]
 [Route("[controller]")]
-public class AppController(TokenService tokenService, RegistryService registryService, DeployService deployService, AppSessionManager sessionManager, StarServerSetting setting, IServiceProvider serviceProvider, ITracer tracer) : BaseController(serviceProvider)
+public class AppController(ITokenService tokenService, RegistryService registryService, DeployService deployService, AppSessionManager sessionManager, IServiceProvider serviceProvider, ITracer tracer) : BaseController(serviceProvider)
 {
     private App _app;
     private String _clientId;
 
     #region 令牌验证
-    protected override Boolean OnAuthorize(String token)
+    protected override Boolean OnAuthorize(String token, ActionContext context)
     {
         ManageProvider.UserHost = UserHost;
 
-        var (jwt, app) = tokenService.DecodeToken(token, setting.TokenSecret);
+        if (!base.OnAuthorize(token, context)) return false;
+
+        var app = App.FindByName(Jwt?.Subject);
+        if (app == null || !app.Enable) return false;
+
+        //var (jwt, ex) = tokenService.DecodeToken(token);
         _app = app;
-        _clientId = jwt.Id;
+        _clientId = Jwt.Id;
 
         return app != null;
     }
@@ -57,25 +62,24 @@ public class AppController(TokenService tokenService, RegistryService registrySe
     [HttpPost(nameof(Login))]
     public LoginResponse Login(AppModel model)
     {
-        var set = setting;
         var ip = UserHost;
         var app = App.FindByName(model.AppId);
         var oldSecret = app?.Secret;
         _app = app;
 
         // 设备不存在或者验证失败，执行注册流程
-        if (app != null && !registryService.Auth(app, model.Secret, ip, model.ClientId, set))
+        if (app != null && !registryService.Auth(app, model.Secret, ip, model.ClientId))
         {
             app = null;
         }
 
         var clientId = model.ClientId;
-        app ??= registryService.Register(model.AppId, model.Secret, set.AppAutoRegister, ip, clientId);
+        app ??= registryService.Register(model.AppId, model.Secret, ip, clientId);
         _app = app ?? throw new ApiException(ApiCode.Unauthorized, "应用鉴权失败");
 
-        registryService.Login(app, model, ip, setting);
+        registryService.Login(app, model, ip);
 
-        var tokenModel = tokenService.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
+        var tokenModel = tokenService.IssueToken(app.Name, clientId);
 
         var online = registryService.SetOnline(_app, model, ip, clientId, Token);
 
@@ -149,12 +153,14 @@ public class AppController(TokenService tokenService, RegistryService registrySe
 
             // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌，以获取业务的连续性。
             //todo 这里将来由客户端提交刷新令牌，才能颁发新的访问令牌。
-            var set = setting;
-            var tm = tokenService.ValidAndIssueToken(app.Name, Token, set.TokenSecret, set.TokenExpire, _clientId);
-            if (tm != null)
+            //var set = setting;
+            //var tm = tokenService.ValidAndIssueToken(app.Name, Token, set.TokenSecret, set.TokenExpire, _clientId);
+            var (jwt, ex) = tokenService.DecodeToken(Token);
+            if (ex == null && jwt != null && jwt.Expire < DateTime.Now.AddMinutes(10))
             {
                 using var span = tracer?.NewSpan("RefreshAppToken", new { app.Name, app.DisplayName });
 
+                var tm = tokenService.IssueToken(app.Name, _clientId);
                 rs.Token = tm.AccessToken;
 
                 //app.WriteHistory("刷新令牌", true, tm.ToJson(), ip);
