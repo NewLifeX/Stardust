@@ -8,12 +8,8 @@ namespace Stardust.Server.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class LogController : ControllerBase
+public class LogController(StarServerSetting setting) : ControllerBase
 {
-    private readonly StarServerSetting _setting;
-
-    public LogController(StarServerSetting setting) => _setting = setting;
-
     [HttpGet]
     public Object Get() => "LogController";
 
@@ -35,7 +31,7 @@ public class LogController : ControllerBase
                 app = new App
                 {
                     Name = appId,
-                    Enable = _setting.AppAutoRegister,
+                    Enable = setting.AppAutoRegister,
                 };
                 app.Insert();
             }

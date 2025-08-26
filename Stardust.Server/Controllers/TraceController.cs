@@ -92,8 +92,6 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
 
     private (AppTracer, AppOnline) Valid(String appId, TraceModel model, String clientId, String ip, String token)
     {
-        var set = setting;
-
         // 新版验证方式，访问令牌
         App ap = null;
         if (!token.IsNullOrEmpty() && token.Split(".").Length == 3)
@@ -137,7 +135,7 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
                     }
                     else
                     {
-                        app.Enable = set.AppAutoRegister;
+                        app.Enable = setting.AppAutoRegister;
                     }
 
                     app.Insert();

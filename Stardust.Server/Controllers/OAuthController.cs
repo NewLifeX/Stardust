@@ -17,8 +17,6 @@ public class OAuthController(ITokenService tokenService, AppTokenService appToke
     [ApiFilter]
     public TokenModel Token([FromBody] TokenInModel model)
     {
-        var set = setting;
-
         if (model.grant_type.IsNullOrEmpty()) model.grant_type = "password";
 
         var ip = HttpContext.GetUserHost();
@@ -29,7 +27,7 @@ public class OAuthController(ITokenService tokenService, AppTokenService appToke
             // 密码模式
             if (model.grant_type == "password")
             {
-                var app = appTokenService.Authorize(model.UserName, model.Password, set.AppAutoRegister, ip);
+                var app = appTokenService.Authorize(model.UserName, model.Password, setting.AppAutoRegister, ip);
 
                 // 更新应用信息
                 app.LastLogin = DateTime.Now;

@@ -7,24 +7,11 @@ using Stardust.Data.Nodes;
 namespace Stardust.Server.Services;
 
 /// <summary>节点在线服务</summary>
-public class NodeOnlineService : IHostedService
+public class NodeOnlineService(IServiceProvider serviceProvider, StarServerSetting setting, ITracer tracer) : IHostedService
 {
     #region 属性
     private TimerX _timer;
     private NodeService _nodeService;
-    private readonly IServiceProvider _serviceProvider;
-    private readonly StarServerSetting _setting;
-    private readonly ITracer _tracer;
-    #endregion
-
-    #region 构造
-    public NodeOnlineService(IServiceProvider serviceProvider, StarServerSetting setting, ITracer tracer)
-    {
-        //_nodeService = nodeService;
-        _serviceProvider = serviceProvider;
-        _setting = setting;
-        _tracer = tracer;
-    }
     #endregion
 
     #region 方法
@@ -45,12 +32,11 @@ public class NodeOnlineService : IHostedService
     private void CheckNodeOnline(Object state)
     {
         // 节点超时
-        var set = _setting;
-        var sessionTimeout = set.SessionTimeout;
+        var sessionTimeout = setting.SessionTimeout;
         if (sessionTimeout > 0)
         {
-            using var span = _tracer?.NewSpan(nameof(CheckNodeOnline));
-            _nodeService ??= _serviceProvider.GetService<NodeService>();
+            using var span = tracer?.NewSpan(nameof(CheckNodeOnline));
+            _nodeService ??= serviceProvider.GetService<NodeService>();
 
             var rs = NodeOnline.ClearExpire(TimeSpan.FromSeconds(sessionTimeout));
             if (rs != null)

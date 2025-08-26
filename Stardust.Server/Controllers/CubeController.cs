@@ -11,7 +11,7 @@ namespace Stardust.Server.Controllers;
 [DisplayName("数据接口")]
 [ApiController]
 [Route("{controller}/{action}")]
-public class CubeController : ControllerBase
+public class CubeController(StarServerSetting setting) : ControllerBase
 {
     #region 附件
     private async Task<(Attachment att, String filePath)> GetFile(String id)
@@ -25,19 +25,19 @@ public class CubeController : ControllerBase
         var att = Attachment.FindById(id.ToLong());
         if (att == null) throw new ApiException(ApiCode.NotFound, "找不到附件信息");
 
-        var set = StarServerSetting.Current;
+        //var set = StarServerSetting.Current;
 
         // 如果附件不存在，则抓取
-        var filePath = att.GetFilePath(set.UploadPath);
+        var filePath = att.GetFilePath(setting.UploadPath);
         if (filePath.IsNullOrEmpty() || !System.IO.File.Exists(filePath))
         {
             var url = att.Source;
             if (url.IsNullOrEmpty()) throw new ApiException(ApiCode.NotFound, "找不到附件文件");
 
-            var rs = await att.Fetch(url, set.UploadPath);
+            var rs = await att.Fetch(url, setting.UploadPath);
             if (!rs) throw new ApiException(ApiCode.NotFound, "附件远程抓取失败");
 
-            filePath = att.GetFilePath(set.UploadPath);
+            filePath = att.GetFilePath(setting.UploadPath);
         }
         if (filePath.IsNullOrEmpty() || !System.IO.File.Exists(filePath)) throw new ApiException(ApiCode.NotFound, "附件文件不存在");
 

@@ -1,6 +1,5 @@
 ﻿using NewLife;
 using NewLife.Log;
-using NewLife.Security;
 using NewLife.Threading;
 using Stardust.Data;
 using Stardust.Data.Deployment;
@@ -9,16 +8,9 @@ using Stardust.Data.Nodes;
 
 namespace Stardust.Server.Services;
 
-public class DataRetentionService : IHostedService
+public class DataRetentionService(StarServerSetting setting, ITracer tracer) : IHostedService
 {
-    private readonly StarServerSetting _setting;
-    private readonly ITracer _tracer;
     private TimerX _timer;
-    public DataRetentionService(StarServerSetting setting, ITracer tracer)
-    {
-        _setting = setting;
-        _tracer = tracer;
-    }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -36,15 +28,14 @@ public class DataRetentionService : IHostedService
 
     private void DoWork(Object state)
     {
-        var set = _setting;
-        if (set.DataRetention <= 0) return;
+        if (setting.DataRetention <= 0) return;
 
         // 保留数据的起点
-        var time = DateTime.Now.AddDays(-set.DataRetention);
-        var time2 = DateTime.Now.AddDays(-set.DataRetention2);
-        var time3 = DateTime.Now.AddDays(-set.DataRetention3);
+        var time = DateTime.Now.AddDays(-setting.DataRetention);
+        var time2 = DateTime.Now.AddDays(-setting.DataRetention2);
+        var time3 = DateTime.Now.AddDays(-setting.DataRetention3);
 
-        using var span = _tracer?.NewSpan("DataRetention", new { time, time2, time3 });
+        using var span = tracer?.NewSpan("DataRetention", new { time, time2, time3 });
         try
         {
             // 删除节点数据
