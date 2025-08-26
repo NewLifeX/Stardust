@@ -8,6 +8,7 @@ using NewLife;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Reflection;
+using NewLife.Remoting.Models;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using XCode;
@@ -15,7 +16,7 @@ using XCode;
 namespace Stardust.Data;
 
 /// <summary>应用在线。一个应用有多个部署，每个在线会话对应一个服务地址</summary>
-public partial class AppOnline : Entity<AppOnline>
+public partial class AppOnline : Entity<AppOnline>, IOnlineModel
 {
     #region 对象操作
     static AppOnline()

@@ -7,6 +7,7 @@ using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using NewLife.Reflection;
+using NewLife.Remoting.Models;
 using Stardust.Monitors;
 using XCode;
 using XCode.Cache;
@@ -15,7 +16,7 @@ namespace Stardust.Data;
 
 /// <summary>应用系统。服务提供者和消费者</summary>
 //[ModelCheckMode(ModelCheckModes.CheckTableWhenFirstUse)]
-public partial class App : Entity<App>
+public partial class App : Entity<App>, IDeviceModel
 {
     #region 对象操作
     static App()
@@ -104,6 +105,8 @@ public partial class App : Entity<App>
     /// <summary>服务消费者</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
     public IList<AppConsume> Consumers => Extends.Get(nameof(Consumers), k => AppConsume.FindAllByAppId(Id));
+
+    String IDeviceModel.Code { get => Name; set => Name = value; }
     #endregion
 
     #region 扩展查询

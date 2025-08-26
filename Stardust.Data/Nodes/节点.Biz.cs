@@ -1,13 +1,14 @@
-﻿using NewLife;
-using NewLife.Data;
-using Stardust.Data.Platform;
-using Stardust.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
+using NewLife;
+using NewLife.Data;
+using NewLife.Remoting.Models;
+using Stardust.Data.Platform;
+using Stardust.Models;
 using XCode;
 using XCode.Cache;
 using XCode.Configuration;
@@ -16,7 +17,7 @@ using XCode.Membership;
 namespace Stardust.Data.Nodes;
 
 /// <summary>节点信息</summary>
-public partial class Node : Entity<Node>
+public partial class Node : Entity<Node>, IDeviceModel
 {
     #region 对象操作
     static Node()
