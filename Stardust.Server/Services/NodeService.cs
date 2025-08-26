@@ -14,23 +14,8 @@ using XCode.Configuration;
 
 namespace Stardust.Server.Services;
 
-public class NodeService
+public class NodeService(TokenService tokenService, IPasswordProvider passwordProvider, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer)
 {
-    private readonly TokenService _tokenService;
-    private readonly IPasswordProvider _passwordProvider;
-    private readonly NodeSessionManager _sessionManager;
-    private readonly ICacheProvider _cacheProvider;
-    private readonly ITracer _tracer;
-
-    public NodeService(TokenService tokenService, IPasswordProvider passwordProvider, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer)
-    {
-        _tokenService = tokenService;
-        _passwordProvider = passwordProvider;
-        _sessionManager = sessionManager;
-        _cacheProvider = cacheProvider;
-        _tracer = tracer;
-    }
-
     #region 注册&登录
     public Boolean Auth(Node node, String secret, LoginInfo inf, String ip, StarServerSetting setting)
     {
@@ -47,12 +32,12 @@ public class NodeService
         if (node.Secret == secret) return true;
         //return !secret.IsNullOrEmpty() && !secret.IsNullOrEmpty() && (node.Secret == secret || node.Secret.MD5() == secret);
 
-        if (setting.SaltTime > 0 && _passwordProvider is SaltPasswordProvider saltProvider)
+        if (setting.SaltTime > 0 && passwordProvider is SaltPasswordProvider saltProvider)
         {
             // 使用盐值偏差时间，允许客户端时间与服务端时间有一定偏差
             saltProvider.SaltTime = setting.SaltTime;
         }
-        if (secret.IsNullOrEmpty() || !_passwordProvider.Verify(node.Secret, secret))
+        if (secret.IsNullOrEmpty() || !passwordProvider.Verify(node.Secret, secret))
         {
             WriteHistory(node, "节点鉴权", false, "密钥校验失败", ip);
             return false;
@@ -105,7 +90,7 @@ public class NodeService
         node.Login(inf.Node, ip);
 
         // 设置令牌
-        var tokenModel = _tokenService.IssueToken(node.Code, setting.TokenSecret, setting.TokenExpire, inf.ClientId);
+        var tokenModel = tokenService.IssueToken(node.Code, setting.TokenSecret, setting.TokenExpire, inf.ClientId);
 
         // 在线记录
         var olt = GetOrAddOnline(node, tokenModel.AccessToken, ip);
@@ -252,7 +237,7 @@ public class NodeService
         //var ip = UserHost;
         if (!IsMatchWhiteIP(set.WhiteIP, ip)) throw new ApiException(ApiCode.Forbidden, "非法来源，禁止注册");
 
-        using var span = _tracer?.NewSpan(nameof(AutoRegister), new { inf.ProductCode, inf.Node });
+        using var span = tracer?.NewSpan(nameof(AutoRegister), new { inf.ProductCode, inf.Node });
 
         var di = inf.Node;
         var code = BuildCode(di, inf.ProductCode, set);
@@ -389,7 +374,7 @@ public class NodeService
 
     private String BuildCode(NodeInfo di, String productCode, StarServerSetting set)
     {
-        using var span = _tracer?.NewSpan(nameof(BuildCode), new { set.NodeCodeFormula });
+        using var span = tracer?.NewSpan(nameof(BuildCode), new { set.NodeCodeFormula });
 
         //var set = Setting.Current;
         //var uid = $"{di.UUID}@{di.MachineGuid}@{di.Macs}";
@@ -517,7 +502,7 @@ public class NodeService
         // 是否有本节点
         if (!_commands.Any(e => e.NodeID == nodeId)) return null;
 
-        using var span = _tracer?.NewSpan(nameof(AcquireNodeCommands), new { nodeId });
+        using var span = tracer?.NewSpan(nameof(AcquireNodeCommands), new { nodeId });
 
         var cmds = NodeCommand.AcquireCommands(nodeId, 100);
         if (cmds.Count == 0) return null;
@@ -569,7 +554,7 @@ public class NodeService
     {
         //var sid = $"{node.ID}@{ip}";
         var sid = node.Code;
-        var olt = _cacheProvider.InnerCache.Get<NodeOnline>($"NodeOnline:{sid}");
+        var olt = cacheProvider.InnerCache.Get<NodeOnline>($"NodeOnline:{sid}");
         if (olt != null)
         {
             //_cacheProvider.InnerCache.SetExpire($"NodeOnline:{sid}", TimeSpan.FromSeconds(120));
@@ -624,7 +609,7 @@ public class NodeService
     public void UpdateOnline(Node node, NodeOnline online)
     {
         var sid = node.Code;
-        _cacheProvider.InnerCache.Set($"NodeOnline:{sid}", online, 120);
+        cacheProvider.InnerCache.Set($"NodeOnline:{sid}", online, 120);
     }
 
     /// <summary>删除在线状态</summary>
@@ -632,7 +617,7 @@ public class NodeService
     public void RemoveOnline(Node node)
     {
         var sid = node.Code;
-        _cacheProvider.InnerCache.Remove($"NodeOnline:{sid}");
+        cacheProvider.InnerCache.Remove($"NodeOnline:{sid}");
     }
     #endregion
 
@@ -651,10 +636,10 @@ public class NodeService
 
         // 通知命令发布者，指令已完成
         var topic = $"nodereply:{cmd.Id}";
-        var q = _cacheProvider.GetQueue<CommandReplyModel>(topic);
+        var q = cacheProvider.GetQueue<CommandReplyModel>(topic);
         q.Add(model);
 
-        _cacheProvider.Cache.SetExpire(topic, TimeSpan.FromSeconds(60));
+        cacheProvider.Cache.SetExpire(topic, TimeSpan.FromSeconds(60));
 
         return 1;
     }
@@ -675,7 +660,7 @@ public class NodeService
         list = list.Where(e => e.ProductCode.IsNullOrEmpty() || e.ProductCode.EqualIgnoreCase(node.ProductCode)).ToList();
         if (list.Count == 0) return null;
 
-        using var span = _tracer?.NewSpan(nameof(Upgrade), new { node.Name, node.Code, node.Runtime, node.Framework, node.Frameworks, ip, vers = list.Count });
+        using var span = tracer?.NewSpan(nameof(Upgrade), new { node.Name, node.Code, node.Runtime, node.Framework, node.Frameworks, ip, vers = list.Count });
 
         // 应用过滤规则，使用最新的一个版本
         var pv = list.OrderByDescending(e => e.ID).FirstOrDefault(e => e.Version != node.LastVersion && e.Match(node));
@@ -704,7 +689,7 @@ public class NodeService
         var list = NodeVersion.GetValids(0).Where(e => e.ProductCode.EqualIgnoreCase("dotNet")).ToList();
         if (list.Count == 0) return null;
 
-        using var span = _tracer?.NewSpan(nameof(CheckDotNet), new { node.Name, node.Code, node.Runtime, node.Framework, node.Frameworks, ip, vers = list.Count });
+        using var span = tracer?.NewSpan(nameof(CheckDotNet), new { node.Name, node.Code, node.Runtime, node.Framework, node.Frameworks, ip, vers = list.Count });
 
         // 应用过滤规则
         list = list.OrderByDescending(e => e.ID).Where(e => e.Match(node)).ToList();
@@ -733,8 +718,8 @@ public class NodeService
 
             // 检查是否已经升级过这个版本
             var key = $"nodeNet:{node.Code}-{fmodel.Version}";
-            if (_cacheProvider.Cache.Get<String>(key) == pv.Version) return null;
-            _cacheProvider.Cache.Set(key, pv.Version, 600);
+            if (cacheProvider.Cache.Get<String>(key) == pv.Version) return null;
+            cacheProvider.Cache.Set(key, pv.Version, 600);
 
             var model = new CommandInModel
             {
@@ -767,7 +752,7 @@ public class NodeService
         var node = Node.FindByCode(model.Code);
         if (node == null) throw new ArgumentOutOfRangeException(nameof(model.Code), "无效节点");
 
-        var (_, app) = _tokenService.DecodeToken(token, setting.TokenSecret);
+        var (_, app) = tokenService.DecodeToken(token, setting.TokenSecret);
         if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new ApiException(ApiCode.Unauthorized, "无权操作！");
 
         if (app.AllowControlNodes != "*" && !node.Code.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
@@ -803,17 +788,17 @@ public class NodeService
 
         //var queue = _cacheProvider.GetQueue<String>($"nodecmd:{node.Code}");
         //queue.Add(commandModel.ToJson());
-        _sessionManager.PublishAsync(node.Code, commandModel, null, default).ConfigureAwait(false).GetAwaiter().GetResult();
+        sessionManager.PublishAsync(node.Code, commandModel, null, default).ConfigureAwait(false).GetAwaiter().GetResult();
 
         // 挂起等待。借助redis队列，等待响应
         if (model.Timeout > 0)
         {
-            var q = _cacheProvider.GetQueue<CommandReplyModel>($"nodereply:{cmd.Id}");
+            var q = cacheProvider.GetQueue<CommandReplyModel>($"nodereply:{cmd.Id}");
             var reply = await q.TakeOneAsync(model.Timeout);
             if (reply != null)
             {
                 // 埋点
-                using var span = _tracer?.NewSpan($"mq:NodeCommandReply", reply);
+                using var span = tracer?.NewSpan($"mq:NodeCommandReply", reply);
 
                 if (reply.Status == CommandStatus.错误)
                     throw new Exception($"命令错误！{reply.Data}");

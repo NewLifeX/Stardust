@@ -21,35 +21,17 @@ namespace Stardust.Server.Controllers;
 /// <summary>应用接口控制器</summary>
 [ApiController]
 [Route("[controller]")]
-public class AppController : BaseController
+public class AppController(TokenService tokenService, RegistryService registryService, DeployService deployService, AppSessionManager sessionManager, StarServerSetting setting, IServiceProvider serviceProvider, ITracer tracer) : BaseController(serviceProvider)
 {
     private App _app;
     private String _clientId;
-    private readonly TokenService _tokenService;
-    private readonly RegistryService _registryService;
-    private readonly DeployService _deployService;
-    private readonly ITracer _tracer;
-    private readonly AppQueueService _queue;
-    private readonly AppSessionManager _sessionManager;
-    private readonly StarServerSetting _setting;
-
-    public AppController(TokenService tokenService, RegistryService registryService, DeployService deployService, AppQueueService queue, AppSessionManager sessionManager, StarServerSetting setting, IServiceProvider serviceProvider, ITracer tracer) : base(serviceProvider)
-    {
-        _tokenService = tokenService;
-        _registryService = registryService;
-        _deployService = deployService;
-        _queue = queue;
-        _sessionManager = sessionManager;
-        _setting = setting;
-        _tracer = tracer;
-    }
 
     #region 令牌验证
     protected override Boolean OnAuthorize(String token)
     {
         ManageProvider.UserHost = UserHost;
 
-        var (jwt, app) = _tokenService.DecodeToken(token, _setting.TokenSecret);
+        var (jwt, app) = tokenService.DecodeToken(token, setting.TokenSecret);
         _app = app;
         _clientId = jwt.Id;
 
@@ -75,29 +57,29 @@ public class AppController : BaseController
     [HttpPost(nameof(Login))]
     public LoginResponse Login(AppModel model)
     {
-        var set = _setting;
+        var set = setting;
         var ip = UserHost;
         var app = App.FindByName(model.AppId);
         var oldSecret = app?.Secret;
         _app = app;
 
         // 设备不存在或者验证失败，执行注册流程
-        if (app != null && !_registryService.Auth(app, model.Secret, ip, model.ClientId, set))
+        if (app != null && !registryService.Auth(app, model.Secret, ip, model.ClientId, set))
         {
             app = null;
         }
 
         var clientId = model.ClientId;
-        app ??= _registryService.Register(model.AppId, model.Secret, set.AppAutoRegister, ip, clientId);
+        app ??= registryService.Register(model.AppId, model.Secret, set.AppAutoRegister, ip, clientId);
         _app = app ?? throw new ApiException(ApiCode.Unauthorized, "应用鉴权失败");
 
-        _registryService.Login(app, model, ip, _setting);
+        registryService.Login(app, model, ip, setting);
 
-        var tokenModel = _tokenService.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
+        var tokenModel = tokenService.IssueToken(app.Name, set.TokenSecret, set.TokenExpire, clientId);
 
-        var online = _registryService.SetOnline(_app, model, ip, clientId, Token);
+        var online = registryService.SetOnline(_app, model, ip, clientId, Token);
 
-        _deployService.UpdateDeployNode(online);
+        deployService.UpdateDeployNode(online);
 
         var rs = new LoginResponse
         {
@@ -122,10 +104,10 @@ public class AppController : BaseController
     public String Register(AppModel inf)
     {
         var ip = UserHost;
-        var online = _registryService.SetOnline(_app, inf, ip, inf.ClientId, Token);
+        var online = registryService.SetOnline(_app, inf, ip, inf.ClientId, Token);
         _app.WriteHistory(nameof(Register), true, inf.ToJson(), inf.Version, ip, inf.ClientId);
 
-        _deployService.UpdateDeployNode(online);
+        deployService.UpdateDeployNode(online);
 
         return _app?.ToString();
     }
@@ -137,7 +119,7 @@ public class AppController : BaseController
     [HttpPost(nameof(Logout))]
     public LoginResponse Logout(String reason)
     {
-        if (_app != null) _registryService.Logout(_app, _clientId, reason, UserHost);
+        if (_app != null) registryService.Logout(_app, _clientId, reason, UserHost);
 
         return new LoginResponse
         {
@@ -157,9 +139,9 @@ public class AppController : BaseController
         };
 
         var ip = UserHost;
-        var online = _registryService.Ping(app, inf, ip, _clientId, Token);
+        var online = registryService.Ping(app, inf, ip, _clientId, Token);
         AppMeter.WriteData(app, inf, "Ping", _clientId, ip);
-        _deployService.UpdateDeployNode(online);
+        deployService.UpdateDeployNode(online);
 
         if (app != null)
         {
@@ -167,11 +149,11 @@ public class AppController : BaseController
 
             // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌，以获取业务的连续性。
             //todo 这里将来由客户端提交刷新令牌，才能颁发新的访问令牌。
-            var set = _setting;
-            var tm = _tokenService.ValidAndIssueToken(app.Name, Token, set.TokenSecret, set.TokenExpire, _clientId);
+            var set = setting;
+            var tm = tokenService.ValidAndIssueToken(app.Name, Token, set.TokenSecret, set.TokenExpire, _clientId);
             if (tm != null)
             {
-                using var span = _tracer?.NewSpan("RefreshAppToken", new { app.Name, app.DisplayName });
+                using var span = tracer?.NewSpan("RefreshAppToken", new { app.Name, app.DisplayName });
 
                 rs.Token = tm.AccessToken;
 
@@ -182,7 +164,7 @@ public class AppController : BaseController
             {
                 // 拉取命令
                 if (ver.Build >= 2024 && ver.Revision >= 801)
-                    rs.Commands = _registryService.AcquireAppCommands(app.Id);
+                    rs.Commands = registryService.AcquireAppCommands(app.Id);
             }
         }
 
@@ -249,7 +231,7 @@ public class AppController : BaseController
             Log = this,
             SetOnline = online => SetOnline(clientId, online)
         };
-        _sessionManager.Add(session);
+        sessionManager.Add(session);
 
         await session.WaitAsync(HttpContext, cancellationToken).ConfigureAwait(false);
     }
@@ -291,7 +273,7 @@ public class AppController : BaseController
         if (app.AllowControlNodes != "*" && !target.Name.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
             throw new ApiException(ApiCode.Forbidden, $"[{app}]无权操作应用[{target}]！\n安全设计需要，默认禁止所有应用向其它应用发送控制指令。\n可在注册中心应用系统中修改[{app}]的可控节点，添加[{target.Name}]，或者设置为*所有应用。");
 
-        var cmd = await _registryService.SendCommand(target, clientId, model, app + "");
+        var cmd = await registryService.SendCommand(target, clientId, model, app + "");
 
         return cmd.Id;
     }
@@ -304,7 +286,7 @@ public class AppController : BaseController
     {
         if (_app == null) throw new ApiException(ApiCode.Unauthorized, "节点未登录");
 
-        var cmd = _registryService.CommandReply(_app, model);
+        var cmd = registryService.CommandReply(_app, model);
 
         return cmd != null ? 1 : 0;
     }
@@ -330,12 +312,12 @@ public class AppController : BaseController
         var app = _app;
         var info = GetService(model.ServiceName);
 
-        var (svc, changed) = _registryService.RegisterService(app, info, model, UserHost);
+        var (svc, changed) = registryService.RegisterService(app, info, model, UserHost);
 
         // 发布消息通知消费者
         if (changed)
         {
-            await _registryService.NotifyConsumers(svc, "registry/register", app + "");
+            await registryService.NotifyConsumers(svc, "registry/register", app + "");
         }
 
         return svc?.ToModel();
@@ -347,12 +329,12 @@ public class AppController : BaseController
         var app = _app;
         var info = GetService(model.ServiceName);
 
-        var (svc, changed) = _registryService.UnregisterService(app, info, model, UserHost);
+        var (svc, changed) = registryService.UnregisterService(app, info, model, UserHost);
 
         // 发布消息通知消费者
         if (changed)
         {
-            await _registryService.NotifyConsumers(svc, "registry/unregister", app + "");
+            await registryService.NotifyConsumers(svc, "registry/unregister", app + "");
         }
 
         return svc?.ToModel();
@@ -401,7 +383,7 @@ public class AppController : BaseController
         info.Consumers = consumes.Count;
         info.Save();
 
-        var models = _registryService.ResolveService(info, model, svc.Scope);
+        var models = registryService.ResolveService(info, model, svc.Scope);
 
         // 记录应用消费服务得到的地址
         svc.Address = models?.Select(e => new { e.Address }).ToArray().ToJson();

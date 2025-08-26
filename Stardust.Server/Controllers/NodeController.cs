@@ -22,33 +22,17 @@ namespace Stardust.Server.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class NodeController : BaseController
+public class NodeController(NodeService nodeService, TokenService tokenService, NodeSessionManager sessionManager, StarServerSetting setting, IServiceProvider serviceProvider, ITracer tracer, IOptions<JsonOptions> jsonOptions) : BaseController(serviceProvider)
 {
     private Node _node;
     private String _clientId;
-    private readonly ITracer _tracer;
-    private readonly IOptions<JsonOptions> _jsonOptions;
-    private readonly NodeService _nodeService;
-    private readonly TokenService _tokenService;
-    private readonly NodeSessionManager _sessionManager;
-    private readonly StarServerSetting _setting;
-
-    public NodeController(NodeService nodeService, TokenService tokenService, NodeSessionManager sessionManager, StarServerSetting setting, IServiceProvider serviceProvider, ITracer tracer, IOptions<JsonOptions> jsonOptions) : base(serviceProvider)
-    {
-        _tracer = tracer;
-        _jsonOptions = jsonOptions;
-        _nodeService = nodeService;
-        _tokenService = tokenService;
-        _sessionManager = sessionManager;
-        _setting = setting;
-    }
 
     #region 令牌验证
     protected override Boolean OnAuthorize(String token)
     {
         ManageProvider.UserHost = UserHost;
 
-        var (jwt, node, ex) = _nodeService.DecodeToken(token, _setting.TokenSecret);
+        var (jwt, node, ex) = nodeService.DecodeToken(token, setting.TokenSecret);
         _node = node;
         _clientId = jwt.Id;
         if (ex != null) throw ex;
@@ -73,7 +57,7 @@ public class NodeController : BaseController
     public LoginResponse Login(JsonElement data)
     {
         // 由于客户端的多样性，这里需要手工控制序列化。某些客户端的节点信息跟密钥信息在同一层级。
-        var options = _jsonOptions.Value.JsonSerializerOptions;
+        var options = jsonOptions.Value.JsonSerializerOptions;
         var inf = data.Deserialize<LoginInfo>(options);
         if (inf.Node == null || inf.Node.UUID.IsNullOrEmpty() && inf.Node.MachineGuid.IsNullOrEmpty() && inf.Node.Macs.IsNullOrEmpty())
         {
@@ -102,16 +86,16 @@ public class NodeController : BaseController
         }
 
         // 设备不存在或者验证失败，执行注册流程
-        if (node != null && !_nodeService.Auth(node, inf.Secret, inf, ip, _setting))
+        if (node != null && !nodeService.Auth(node, inf.Secret, inf, ip, setting))
         {
             node = null;
         }
 
-        node ??= _nodeService.Register(inf, ip, _setting);
+        node ??= nodeService.Register(inf, ip, setting);
 
         if (node == null) throw new ApiException(ApiCode.Unauthorized, "节点鉴权失败");
 
-        var tokenModel = _nodeService.Login(node, inf, ip, _setting);
+        var tokenModel = nodeService.Login(node, inf, ip, setting);
 
         var rs = new LoginResponse
         {
@@ -136,7 +120,7 @@ public class NodeController : BaseController
     [HttpPost(nameof(Logout))]
     public LoginResponse Logout(String reason)
     {
-        if (_node != null) _nodeService.Logout(_node, reason, UserHost);
+        if (_node != null) nodeService.Logout(_node, reason, UserHost);
 
         return new LoginResponse
         {
@@ -157,7 +141,7 @@ public class NodeController : BaseController
             ServerTime = DateTime.UtcNow.ToLong(),
         };
 
-        var online = _nodeService.Ping(node, inf, Token, UserHost);
+        var online = nodeService.Ping(node, inf, Token, UserHost);
 
         if (node != null)
         {
@@ -169,11 +153,11 @@ public class NodeController : BaseController
 
             // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌，以获取业务的连续性。
             //todo 这里将来由客户端提交刷新令牌，才能颁发新的访问令牌。
-            var set = _setting;
-            var tm = _tokenService.ValidAndIssueToken(node.Code, Token, set.TokenSecret, set.TokenExpire, _clientId);
+            var set = setting;
+            var tm = tokenService.ValidAndIssueToken(node.Code, Token, set.TokenSecret, set.TokenExpire, _clientId);
             if (tm != null)
             {
-                using var span = _tracer?.NewSpan("RefreshNodeToken", new { node.Code, node.Name });
+                using var span = tracer?.NewSpan("RefreshNodeToken", new { node.Code, node.Name });
 
                 rs.Token = tm.AccessToken;
 
@@ -184,7 +168,7 @@ public class NodeController : BaseController
             {
                 // 拉取命令
                 if (ver.Build >= 2023 && ver.Revision >= 107)
-                    rs.Commands = _nodeService.AcquireNodeCommands(node.ID);
+                    rs.Commands = nodeService.AcquireNodeCommands(node.ID);
             }
         }
 
@@ -210,10 +194,10 @@ public class NodeController : BaseController
         var p = uri.IndexOf('/', "https://".Length);
         if (p > 0) uri = uri[..p];
 
-        var pv = _nodeService.Upgrade(node, channel, UserHost);
+        var pv = nodeService.Upgrade(node, channel, UserHost);
         if (pv == null)
         {
-            _nodeService.CheckDotNet(node, new Uri(uri), UserHost);
+            nodeService.CheckDotNet(node, new Uri(uri), UserHost);
 
             return null;
         }
@@ -332,7 +316,7 @@ public class NodeController : BaseController
     /// <param name="model">服务</param>
     /// <returns></returns>
     [HttpPost(nameof(CommandReply))]
-    public Int32 CommandReply(CommandReplyModel model) => _node == null ? throw new ApiException(ApiCode.Unauthorized, "节点未登录") : _nodeService.CommandReply(_node, model, Token);
+    public Int32 CommandReply(CommandReplyModel model) => _node == null ? throw new ApiException(ApiCode.Unauthorized, "节点未登录") : nodeService.CommandReply(_node, model, Token);
     #endregion
 
     #region 下行通知
@@ -344,11 +328,10 @@ public class NodeController : BaseController
         if (HttpContext.WebSockets.IsWebSocketRequest)
         {
             var ip = UserHost;
-            var token = (HttpContext.Request.Headers["Authorization"] + "").TrimStart("Bearer ");
             using var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             try
             {
-                await HandleNotify(socket, token, ip, HttpContext.RequestAborted);
+                await HandleNotify(socket, _node, Token, ip, HttpContext.RequestAborted);
             }
             catch (Exception ex)
             {
@@ -364,26 +347,22 @@ public class NodeController : BaseController
         }
     }
 
-    private async Task HandleNotify(WebSocket socket, String token, String ip, CancellationToken cancellationToken)
+    private async Task HandleNotify(WebSocket socket, Node node, String token, String ip, CancellationToken cancellationToken)
     {
-        var (_, node, error) = _nodeService.DecodeToken(token, _setting.TokenSecret);
-        _node = node ?? throw new ApiException(ApiCode.Unauthorized, $"未登录！[ip={ip}]");
-        if (error != null) throw error;
-
         using var session = new NodeCommandSession(socket)
         {
             Code = node.Code,
             Log = this,
             SetOnline = online => SetOnline(node, token, ip, online)
         };
-        _sessionManager.Add(session);
+        sessionManager.Add(session);
 
         await session.WaitAsync(HttpContext, cancellationToken).ConfigureAwait(false);
     }
 
     private void SetOnline(Node node, String token, String ip, Boolean online)
     {
-        var olt = _nodeService.GetOrAddOnline(node, token, ip);
+        var olt = nodeService.GetOrAddOnline(node, token, ip);
         if (olt != null)
         {
             olt.WebSocket = online;
@@ -402,7 +381,7 @@ public class NodeController : BaseController
         if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定节点");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
 
-        var cmd = await _nodeService.SendCommand(model, token, _setting);
+        var cmd = await nodeService.SendCommand(model, token, setting);
 
         return cmd.Id;
     }

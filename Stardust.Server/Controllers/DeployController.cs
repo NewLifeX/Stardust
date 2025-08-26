@@ -14,29 +14,17 @@ namespace Stardust.Server.Controllers;
 /// <summary>发布中心服务</summary>
 [ApiFilter]
 [Route("[controller]/[action]")]
-public class DeployController : BaseController
+public class DeployController(DeployService deployService, NodeService nodeService, StarServerSetting setting, IServiceProvider serviceProvider) : BaseController(serviceProvider)
 {
     private Node _node;
     private String _clientId;
-    private readonly NodeService _nodeService;
-    private readonly DeployService _deployService;
-    private readonly TokenService _tokenService;
-    private readonly StarServerSetting _setting;
-
-    public DeployController(DeployService deployService, NodeService nodeService, TokenService tokenService, StarServerSetting setting, IServiceProvider serviceProvider) : base(serviceProvider)
-    {
-        _deployService = deployService;
-        _nodeService = nodeService;
-        _tokenService = tokenService;
-        _setting = setting;
-    }
 
     #region 令牌验证
     protected override Boolean OnAuthorize(String token)
     {
         ManageProvider.UserHost = UserHost;
 
-        var (jwt, node, ex) = _nodeService.DecodeToken(token, _setting.TokenSecret);
+        var (jwt, node, ex) = nodeService.DecodeToken(token, setting.TokenSecret);
         _node = node;
         _clientId = jwt.Id;
         if (ex != null) throw ex;
@@ -75,7 +63,7 @@ public class DeployController : BaseController
             // 修正旧的用户名
             deployNode.FixOldUserName();
 
-            var inf = _deployService.BuildDeployInfo(deployNode, _node);
+            var inf = deployService.BuildDeployInfo(deployNode, _node);
             if (inf == null) continue;
 
             rs.Add(inf);
@@ -165,7 +153,7 @@ public class DeployController : BaseController
     /// <param name="inf"></param>
     /// <returns></returns>
     [HttpPost]
-    public Int32 Ping([FromBody] AppInfo inf) => _deployService.Ping(_node, inf, UserHost);
+    public Int32 Ping([FromBody] AppInfo inf) => deployService.Ping(_node, inf, UserHost);
 
     /// <summary>获取分配到本节点的应用发布任务</summary>
     public BuildTask GetBuildTask(Int32 deployId, String deployName, String appName)
@@ -211,6 +199,6 @@ public class DeployController : BaseController
     }
 
     #region 辅助
-    private void WriteHistory(Int32 appId, String action, Boolean success, String remark) => _deployService.WriteHistory(appId, _node?.ID ?? 0, action, success, remark, UserHost);
+    private void WriteHistory(Int32 appId, String action, Boolean success, String remark) => deployService.WriteHistory(appId, _node?.ID ?? 0, action, success, remark, UserHost);
     #endregion
 }
