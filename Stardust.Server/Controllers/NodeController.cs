@@ -22,7 +22,7 @@ namespace Stardust.Server.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class NodeController(NodeService nodeService, ITokenService tokenService, NodeSessionManager sessionManager, IServiceProvider serviceProvider, ITracer tracer, IOptions<JsonOptions> jsonOptions) : BaseController(serviceProvider)
+public class NodeController(NodeService nodeService, ITokenService tokenService, NodeSessionManager sessionManager, IServiceProvider serviceProvider, ITracer tracer) : BaseController(serviceProvider)
 {
     private Node _node;
     private String _clientId;
@@ -80,6 +80,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
     public LoginResponse Login(JsonElement data)
     {
         // 由于客户端的多样性，这里需要手工控制序列化。某些客户端的节点信息跟密钥信息在同一层级。
+        var jsonOptions = HttpContext.RequestServices.GetService<IOptions<JsonOptions>>();
         var options = jsonOptions.Value.JsonSerializerOptions;
         var inf = data.Deserialize<LoginInfo>(options);
         if (inf.Node == null || inf.Node.UUID.IsNullOrEmpty() && inf.Node.MachineGuid.IsNullOrEmpty() && inf.Node.Macs.IsNullOrEmpty())
@@ -210,7 +211,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
     /// <param name="channel">更新通道</param>
     /// <returns></returns>
     [HttpGet(nameof(Upgrade))]
-    public UpgradeInfo Upgrade(String channel)
+    public IUpgradeInfo Upgrade(String channel)
     {
         var node = _node ?? throw new ApiException(ApiCode.Unauthorized, "节点未登录");
 
@@ -219,33 +220,21 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
         var p = uri.IndexOf('/', "https://".Length);
         if (p > 0) uri = uri[..p];
 
-        var pv = nodeService.Upgrade(node, channel, UserHost);
-        if (pv == null)
+        var info = nodeService.Upgrade(node as IDeviceModel, channel, UserHost);
+        if (info == null)
         {
             nodeService.CheckDotNet(node, new Uri(uri), UserHost);
 
             return null;
         }
 
-        var url = pv.Source;
-
         // 为了兼容旧版本客户端，这里必须把路径处理为绝对路径
-        if (!url.StartsWithIgnoreCase("http://", "https://"))
+        if (info != null && !info.Source.StartsWithIgnoreCase("http://", "https://"))
         {
-            url = new Uri(new Uri(uri), url) + "";
+            info.Source = new Uri(new Uri(uri), info.Source) + "";
         }
 
-        return new UpgradeInfo
-        {
-            Version = pv.Version,
-            Source = url,
-            FileHash = pv.FileHash,
-            FileSize = pv.Size,
-            Preinstall = pv.Preinstall,
-            Executor = pv.Executor,
-            Force = pv.Force,
-            Description = pv.Description,
-        };
+        return info!;
     }
     #endregion
 

@@ -8,6 +8,7 @@ using NewLife.Security;
 using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data;
+using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
 using Stardust.Data.Platform;
 using Stardust.Models;
@@ -16,9 +17,9 @@ using XCode.Configuration;
 
 namespace Stardust.Server.Services;
 
-public class NodeService(ITokenService tokenService, IPasswordProvider passwordProvider, StarServerSetting setting, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer)
+public class NodeService(ITokenService tokenService, IPasswordProvider passwordProvider, StarServerSetting setting, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer) : IDeviceService
 {
-    #region 注册&登录
+    #region 登录注销
     public Boolean Auth(Node node, String secret, LoginInfo inf, String ip)
     {
         if (node == null) return false;
@@ -130,6 +131,47 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
 
         return online;
     }
+
+    public (IDeviceModel, IOnlineModel, ILoginResponse) Login(ILoginRequest request, String source, String ip)
+    {
+        var inf = request as LoginInfo;
+        var node = Node.FindByCode(request.Code);
+        if (node != null && !node.Enable) throw new ApiException(ApiCode.Forbidden, "禁止登录");
+
+        // 设备不存在或者验证失败，执行注册流程
+        if (node != null && !Auth(node, inf.Secret, inf, ip))
+        {
+            node = null;
+        }
+
+        var autoReg = false;
+        if (node == null)
+        {
+            node ??= Register(inf, ip);
+
+            autoReg = true;
+        }
+
+        if (node == null) throw new ApiException(ApiCode.Unauthorized, "节点鉴权失败");
+
+        //node = Login(node, inf, ip);
+
+        // 在线记录
+        var online = GetOrAddOnline(node, null, ip);
+        online.Save(inf.Node, null, null, ip);
+
+        var rs = new LoginResponse
+        {
+            Name = node.Name
+        };
+
+        // 动态注册，下发节点证书
+        if (autoReg) rs.Secret = node.Secret;
+
+        return (node, online, rs);
+    }
+
+    public IOnlineModel Logout(IDeviceModel device, String reason, String source, String ip) => Logout(device as Node, reason, ip);
 
     /// <summary>校验节点信息，如果大量不一致则认为是新节点</summary>
     /// <param name="node"></param>
@@ -431,7 +473,7 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
     }
     #endregion
 
-    #region 心跳
+    #region 心跳保活
     public NodeOnline Ping(Node node, PingInfo inf, String token, String ip)
     {
         if (node == null) return null;
@@ -621,33 +663,13 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
         var sid = node.Code;
         cacheProvider.InnerCache.Remove($"NodeOnline:{sid}");
     }
+
+    public IOnlineModel Ping(IDeviceModel device, IPingRequest request, String token, String ip) => throw new NotImplementedException();
+    public IOnlineModel SetOnline(IDeviceModel device, Boolean online, String token, String ip) => throw new NotImplementedException();
+    public Task<Int32> SendCommand(IDeviceModel device, CommandModel command, CancellationToken cancellationToken = default) => throw new NotImplementedException();
     #endregion
 
-    #region 历史
-    /// <summary>设备端响应服务调用</summary>
-    /// <param name="model">服务</param>
-    /// <returns></returns>
-    public Int32 CommandReply(Node node, CommandReplyModel model, String token)
-    {
-        var cmd = NodeCommand.FindById((Int32)model.Id);
-        if (cmd == null) return 0;
-
-        cmd.Status = model.Status;
-        cmd.Result = model.Data;
-        cmd.Update();
-
-        // 通知命令发布者，指令已完成
-        var topic = $"nodereply:{cmd.Id}";
-        var q = cacheProvider.GetQueue<CommandReplyModel>(topic);
-        q.Add(model);
-
-        cacheProvider.Cache.SetExpire(topic, TimeSpan.FromSeconds(60));
-
-        return 1;
-    }
-    #endregion
-
-    #region 升级
+    #region 升级更新
     /// <summary>升级检查</summary>
     /// <param name="channel">更新通道</param>
     /// <returns></returns>
@@ -739,6 +761,30 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
 
         return null;
     }
+
+    public IUpgradeInfo Upgrade(IDeviceModel device, String channel, String ip)
+    {
+        var node = device as Node;
+        var pv = Upgrade(node, channel, ip);
+        if (pv == null)
+        {
+            //CheckDotNet(node, new Uri(uri), ip);
+
+            return null;
+        }
+
+        return new UpgradeInfo
+        {
+            Version = pv.Version,
+            Source = pv.Source,
+            FileHash = pv.FileHash,
+            FileSize = pv.Size,
+            Preinstall = pv.Preinstall,
+            Executor = pv.Executor,
+            Force = pv.Force,
+            Description = pv.Description,
+        };
+    }
     #endregion
 
     #region 下行指令
@@ -816,6 +862,63 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
     }
     #endregion
 
+    #region 事件上报
+    public Int32 CommandReply(IDeviceModel device, CommandReplyModel model, String ip)
+    {
+        var cmd = NodeCommand.FindById((Int32)model.Id);
+        if (cmd == null) return 0;
+
+        cmd.Status = model.Status;
+        cmd.Result = model.Data;
+        cmd.Update();
+
+        // 通知命令发布者，指令已完成
+        var topic = $"nodereply:{cmd.Id}";
+        var q = cacheProvider.GetQueue<CommandReplyModel>(topic);
+        q.Add(model);
+
+        cacheProvider.Cache.SetExpire(topic, TimeSpan.FromSeconds(60));
+
+        return 1;
+    }
+
+    public Int32 PostEvents(IDeviceModel device, EventModel[] events, String ip)
+    {
+        var node = device as Node;
+        var his = new List<NodeHistory>();
+        var dis = new List<AppDeployHistory>();
+        foreach (var model in events)
+        {
+            var success = !model.Type.EqualIgnoreCase("error");
+            if (model.Name.EqualIgnoreCase("ServiceController"))
+            {
+                var appId = 0;
+                var p = model.Type.LastIndexOf('-');
+                if (p > 0)
+                {
+                    success = !model.Type[(p + 1)..].EqualIgnoreCase("error");
+                    appId = AppDeploy.FindByName(model.Type[..p])?.Id ?? 0;
+                }
+
+                //_deployService.WriteHistory(appId, _node?.ID ?? 0, model.Name, success, model.Remark, UserHost);
+                var dhi = AppDeployHistory.Create(appId, node?.ID ?? 0, model.Name, success, model.Remark, ip);
+                dis.Add(dhi);
+            }
+
+            //WriteHistory(null, model.Name, success, model.Time.ToDateTime().ToLocalTime(), model.Remark);
+            var hi = NodeHistory.Create(node, model.Name, success, model.Remark, Environment.MachineName, ip);
+            var time = model.Time.ToDateTime().ToLocalTime();
+            if (time.Year > 2000) hi.CreateTime = time;
+            his.Add(hi);
+        }
+
+        his.Insert();
+        dis.Insert();
+
+        return events.Length;
+    }
+    #endregion
+
     #region 辅助
     private CommandModel BuildCommand(Node node, NodeCommand cmd)
     {
@@ -866,6 +969,10 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
         var hi = NodeHistory.Create(node, action, success, remark, Environment.MachineName, ip);
         hi.Insert();
     }
+
+    public IDeviceModel QueryDevice(String code) => Node.FindByCode(code);
+
+    public void WriteHistory(IDeviceModel device, String action, Boolean success, String remark, String ip) => WriteHistory(device as Node, action, success, remark, ip);
     #endregion
 }
 
