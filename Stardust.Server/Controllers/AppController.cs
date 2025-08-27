@@ -163,9 +163,6 @@ public class AppController(RegistryService registryService, ITokenService tokenS
             rs.Period = app.Period;
 
             // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌，以获取业务的连续性。
-            //todo 这里将来由客户端提交刷新令牌，才能颁发新的访问令牌。
-            //var set = setting;
-            //var tm = tokenService.ValidAndIssueToken(app.Name, Token, set.TokenSecret, set.TokenExpire, _clientId);
             var (jwt, ex) = tokenService.DecodeToken(Token);
             if (ex == null && jwt != null && jwt.Expire < DateTime.Now.AddMinutes(10))
             {
@@ -173,8 +170,6 @@ public class AppController(RegistryService registryService, ITokenService tokenS
 
                 var tm = tokenService.IssueToken(app.Name, _clientId);
                 rs.Token = tm.AccessToken;
-
-                //app.WriteHistory("刷新令牌", true, tm.ToJson(), ip);
             }
 
             if (!app.Version.IsNullOrEmpty() && Version.TryParse(app.Version, out var ver))
@@ -211,7 +206,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
         {
             using var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
-            await HandleNotify(socket, _app, _clientId, UserHost, HttpContext.RequestAborted);
+            await HandleNotify(socket, _clientId, UserHost, HttpContext.RequestAborted);
         }
         else
         {
@@ -219,9 +214,9 @@ public class AppController(RegistryService registryService, ITokenService tokenS
         }
     }
 
-    private async Task HandleNotify(WebSocket socket, App app, String clientId, String ip, CancellationToken cancellationToken)
+    private async Task HandleNotify(WebSocket socket, String clientId, String ip, CancellationToken cancellationToken)
     {
-        if (app == null) throw new ApiException(ApiCode.Unauthorized, "未登录！");
+        var app = _app ?? throw new InvalidOperationException("未登录！");
 
         using var session = new AppCommandSession(socket)
         {
@@ -280,14 +275,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     /// <param name="model">服务</param>
     /// <returns></returns>
     [HttpPost(nameof(CommandReply))]
-    public Int32 CommandReply(CommandReplyModel model)
-    {
-        if (_app == null) throw new ApiException(ApiCode.Unauthorized, "节点未登录");
-
-        var cmd = registryService.CommandReply(_app, model);
-
-        return cmd != null ? 1 : 0;
-    }
+    public Int32 CommandReply(CommandReplyModel model) => registryService.CommandReply(_app, model, UserHost);
     #endregion
 
     #region 服务发布与消费

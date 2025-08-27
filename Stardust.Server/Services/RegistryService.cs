@@ -1,4 +1,5 @@
 ﻿using NewLife;
+using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Remoting.Models;
@@ -14,7 +15,7 @@ using XCode;
 
 namespace Stardust.Server.Services;
 
-public class RegistryService(AppQueueService queue, AppOnlineService appOnline, IPasswordProvider passwordProvider, AppSessionManager sessionManager, StarServerSetting setting, ITracer tracer) : IDeviceService
+public class RegistryService(AppQueueService queue, AppOnlineService appOnline, IPasswordProvider passwordProvider, AppSessionManager sessionManager, ICacheProvider cacheProvider, StarServerSetting setting, ITracer tracer) : IDeviceService
 {
     #region 登录注销
     /// <summary>应用鉴权</summary>
@@ -605,10 +606,11 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
 
     public Task<Int32> SendCommand(IDeviceModel device, CommandModel command, CancellationToken cancellationToken = default) => throw new NotImplementedException();
 
-    public AppCommand CommandReply(App app, CommandReplyModel model)
+    public Int32 CommandReply(IDeviceModel device, CommandReplyModel model, String ip)
     {
+        var app = device as App;
         var cmd = AppCommand.FindById((Int32)model.Id);
-        if (cmd == null) return null;
+        if (cmd == null) return 0;
 
         // 防止越权
         if (cmd.AppId != app.Id) throw new ApiException(ApiCode.Forbidden, $"[{app}]越权访问[{cmd.AppName}]的服务");
@@ -618,12 +620,15 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
         cmd.Update();
 
         // 推入服务响应队列，让服务调用方得到响应
-        queue.Reply(model);
+        var topic = $"appreply:{model.Id}";
+        var q = cacheProvider.GetQueue<CommandReplyModel>(topic);
+        q.Add(model);
 
-        return cmd;
+        // 设置过期时间，过期自动清理
+        cacheProvider.Cache.SetExpire(topic, TimeSpan.FromSeconds(60));
+
+        return 1;
     }
-
-    public Int32 CommandReply(IDeviceModel device, CommandReplyModel model, String ip) => throw new NotImplementedException();
 
     /// <summary>通知该服务的所有消费者，服务信息有变更</summary>
     /// <param name="service"></param>

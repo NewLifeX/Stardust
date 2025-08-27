@@ -877,6 +877,7 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
         var q = cacheProvider.GetQueue<CommandReplyModel>(topic);
         q.Add(model);
 
+        // 设置过期时间，过期自动清理
         cacheProvider.Cache.SetExpire(topic, TimeSpan.FromSeconds(60));
 
         return 1;
