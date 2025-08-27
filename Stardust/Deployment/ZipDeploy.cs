@@ -348,6 +348,8 @@ public class ZipDeploy
 
         // 进程优先级
         if (p != null && Priority != ProcessPriority.Normal)
+        {
+            WriteLog("优先级：{0}", Priority);
             p.PriorityClass = Priority switch
             {
                 ProcessPriority.Idle => ProcessPriorityClass.Idle,
@@ -358,6 +360,7 @@ public class ZipDeploy
                 ProcessPriority.RealTime => ProcessPriorityClass.RealTime,
                 _ => ProcessPriorityClass.Normal,
             };
+        }
 
         Process = p;
         if (msWait > 0 && p.WaitForExit(msWait) && p.ExitCode != 0)

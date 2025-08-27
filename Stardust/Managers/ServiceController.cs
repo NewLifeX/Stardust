@@ -480,6 +480,8 @@ public class ServiceController : DisposeBase
 
         // 进程优先级
         if (p != null && service.Priority != ProcessPriority.Normal)
+        {
+            WriteLog("优先级：{0}", service.Priority);
             p.PriorityClass = service.Priority switch
             {
                 ProcessPriority.Idle => ProcessPriorityClass.Idle,
@@ -490,6 +492,7 @@ public class ServiceController : DisposeBase
                 ProcessPriority.RealTime => ProcessPriorityClass.RealTime,
                 _ => ProcessPriorityClass.Normal,
             };
+        }
 
         if (StartWait > 0 && p != null && p.WaitForExit(StartWait) && p.ExitCode != 0)
         {
