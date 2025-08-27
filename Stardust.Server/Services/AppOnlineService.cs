@@ -9,16 +9,9 @@ using Stardust.Models;
 
 namespace Stardust.Server.Services;
 
-public class AppOnlineService
+public class AppOnlineService(ICacheProvider cacheProvider, ITracer tracer)
 {
-    private readonly ITracer _tracer;
-    private readonly ICache _cache;
-
-    public AppOnlineService(ICacheProvider cacheProvider, ITracer tracer)
-    {
-        _cache = cacheProvider.InnerCache;
-        _tracer = tracer;
-    }
+    private readonly ICache _cache = cacheProvider.InnerCache;
 
     public (AppOnline, Boolean isNew) GetOnline(App app, String clientId, String token, String localIp, String ip)
     {
@@ -36,7 +29,7 @@ public class AppOnlineService
         // 如果是每节点单例部署，则使用本地IP作为会话匹配。可能是应用重启，前一次会话还在
         if (online == null && app.Singleton && !localIp.IsNullOrEmpty())
         {
-            using var span = _tracer.NewSpan("GetOnlineForSingleton", new { app.Name, localIp, clientId, ip });
+            using var span = tracer.NewSpan("GetOnlineForSingleton", new { app.Name, localIp, clientId, ip });
 
             // 要求内网IP与外网IP都匹配，才能认为是相同会话，因为有可能不同客户端部署在各自内网而具有相同本地IP
             var list = AppOnline.FindAllByAppAndIP(app.Id, localIp);
@@ -179,7 +172,7 @@ public class AppOnlineService
         var rule = NodeResolver.Instance.Match(null, localIp);
         if (rule != null && rule.NewNode)
         {
-            using var span = _tracer?.NewSpan("AddNodeForApp", rule);
+            using var span = tracer?.NewSpan("AddNodeForApp", rule);
 
             var nodes = Node.SearchByIP(localIp);
             if (nodes.Count > 0) return nodes[0];

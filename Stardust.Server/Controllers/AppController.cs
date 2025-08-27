@@ -12,7 +12,6 @@ using Stardust.Data;
 using Stardust.Data.Configs;
 using Stardust.Models;
 using Stardust.Server.Services;
-using XCode;
 using XCode.Membership;
 using WebSocket = System.Net.WebSockets.WebSocket;
 
@@ -21,7 +20,7 @@ namespace Stardust.Server.Controllers;
 /// <summary>应用接口控制器</summary>
 [ApiController]
 [Route("[controller]")]
-public class AppController(ITokenService tokenService, RegistryService registryService, DeployService deployService, AppSessionManager sessionManager, IServiceProvider serviceProvider, ITracer tracer) : BaseController(serviceProvider)
+public class AppController(RegistryService registryService, ITokenService tokenService, DeployService deployService, AppSessionManager sessionManager, IServiceProvider serviceProvider, ITracer tracer) : BaseController(serviceProvider)
 {
     private App _app;
     private String _clientId;
@@ -31,13 +30,24 @@ public class AppController(ITokenService tokenService, RegistryService registryS
     {
         ManageProvider.UserHost = UserHost;
 
-        if (!base.OnAuthorize(token, context)) return false;
+        // 先调用基类，获取Jwt。即使失败，也要继续往下走，获取设备信息。最后再决定是否抛出异常
+        Exception error = null;
+        try
+        {
+            if (!base.OnAuthorize(token, context)) return false;
+        }
+        catch (Exception ex)
+        {
+            error = ex;
+        }
 
         var app = App.FindByName(Jwt?.Subject);
-        if (app == null || !app.Enable) return false;
+        if (app == null || !app.Enable) error ??= new ApiException(ApiCode.Forbidden, "无效客户端！");
 
         _app = app;
         _clientId = Jwt.Id;
+
+        if (error != null) throw error;
 
         return app != null;
     }
@@ -56,7 +66,7 @@ public class AppController(ITokenService tokenService, RegistryService registryS
     }
     #endregion
 
-    #region 登录&心跳
+    #region 登录注销
     [AllowAnonymous]
     [HttpPost(nameof(Login))]
     public LoginResponse Login(AppModel model)
@@ -130,7 +140,9 @@ public class AppController(ITokenService tokenService, RegistryService registryS
             Token = null,
         };
     }
+    #endregion
 
+    #region 心跳保活
     [HttpPost(nameof(Ping))]
     public PingResponse Ping(AppInfo inf)
     {
@@ -186,26 +198,7 @@ public class AppController(ITokenService tokenService, RegistryService registryS
     /// <param name="events">事件集合</param>
     /// <returns></returns>
     [HttpPost(nameof(PostEvents))]
-    public Int32 PostEvents(EventModel[] events)
-    {
-        var ip = UserHost;
-        var olt = AppOnline.FindByClient(_clientId);
-        var his = new List<AppHistory>();
-        foreach (var model in events)
-        {
-            //WriteHistory(model.Name, !model.Type.EqualIgnoreCase("error"), model.Time.ToDateTime().ToLocalTime(), model.Remark, null);
-            var success = !model.Type.EqualIgnoreCase("error");
-            var time = model.Time.ToDateTime().ToLocalTime();
-            var hi = AppHistory.Create(_app, model.Name, success, model.Remark, olt?.Version, Environment.MachineName, ip);
-            hi.Client = _clientId;
-            if (time.Year > 2000) hi.CreateTime = time;
-            his.Add(hi);
-        }
-
-        his.Insert();
-
-        return events.Length;
-    }
+    public Int32 PostEvents(EventModel[] events) => registryService.PostEvents(_app, events, UserHost);
     #endregion
 
     #region 下行通知
@@ -405,18 +398,6 @@ public class AppController(ITokenService tokenService, RegistryService registryS
         if (svc == null) return null;
 
         return AppService.Search(-1, svc.Id, null, true, key, new PageParameter { PageSize = 100 });
-    }
-    #endregion
-
-    #region 辅助
-    private void WriteHistory(String action, Boolean success, DateTime time, String remark, String clientId, String ip = null)
-    {
-        var olt = AppOnline.FindByClient(clientId);
-
-        var hi = AppHistory.Create(_app, action, success, remark, olt?.Version, Environment.MachineName, ip ?? UserHost);
-        hi.Client = clientId ?? _clientId;
-        if (time.Year > 2000) hi.CreateTime = time;
-        hi.Insert();
     }
     #endregion
 }

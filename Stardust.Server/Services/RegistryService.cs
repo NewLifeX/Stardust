@@ -1,9 +1,8 @@
 ﻿using NewLife;
-using NewLife.Caching;
 using NewLife.Log;
-using NewLife.Net;
 using NewLife.Remoting;
 using NewLife.Remoting.Models;
+using NewLife.Remoting.Services;
 using NewLife.Security;
 using NewLife.Serialization;
 using Stardust.Data;
@@ -15,8 +14,9 @@ using XCode;
 
 namespace Stardust.Server.Services;
 
-public class RegistryService(AppQueueService queue, AppOnlineService appOnline, IPasswordProvider passwordProvider, AppSessionManager sessionManager, StarServerSetting setting, ITracer tracer)
+public class RegistryService(AppQueueService queue, AppOnlineService appOnline, IPasswordProvider passwordProvider, AppSessionManager sessionManager, StarServerSetting setting, ITracer tracer) : IDeviceService
 {
+    #region 登录注销
     /// <summary>应用鉴权</summary>
     /// <param name="app"></param>
     /// <param name="secret"></param>
@@ -128,6 +128,66 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
         return online;
     }
 
+    public (IDeviceModel, IOnlineModel, ILoginResponse) Login(ILoginRequest request, String source, String ip)
+    {
+        var model = request as AppModel;
+        var app = App.FindByName(request.Code);
+        if (app != null && !app.Enable) throw new ApiException(ApiCode.Forbidden, "禁止登录");
+
+        // 设备不存在或者验证失败，执行注册流程
+        if (app != null && !Auth(app, model.Secret, ip, model.ClientId))
+        {
+            app = null;
+        }
+
+        var autoReg = false;
+        var clientId = model.ClientId;
+        if (app == null)
+        {
+            app ??= Register(model.AppId, model.Secret, ip, clientId);
+            //_app = app ?? throw new ApiException(ApiCode.Unauthorized, "应用鉴权失败");
+
+            autoReg = true;
+        }
+
+        app = Login(app, model, ip);
+
+        //var tokenModel = tokenService.IssueToken(app.Name, clientId);
+
+        var online = SetOnline(app, model, ip, clientId, null);
+
+        var rs = new LoginResponse
+        {
+            Name = app.Name
+        };
+
+        // 动态注册，下发节点证书
+        if (autoReg) rs.Secret = app.Secret;
+
+        return (app, online, rs);
+    }
+
+    public IOnlineModel Logout(IDeviceModel device, String reason, String source, String ip) => Logout(device as App, null, reason, ip);
+
+    public IOnlineModel SetOnline(IDeviceModel device, Boolean online, String token, String ip)
+    {
+        if (device is App app)
+        {
+            // 上线打标记
+            //var olt = GetOnline(app, ip);
+            var (olt, _) = appOnline.GetOnline(app, null, token, null, ip);
+            if (olt != null)
+            {
+                olt.WebSocket = online;
+                olt.Update();
+            }
+
+            return olt;
+        }
+
+        return null;
+    }
+
     /// <summary>激活应用。更新在线信息和关联节点</summary>
     /// <param name="app"></param>
     /// <param name="inf"></param>
@@ -162,7 +222,9 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
 
         return online;
     }
+    #endregion
 
+    #region 服务注册
     public (AppService, Boolean changed) RegisterService(App app, Service service, PublishServiceInfo model, String ip)
     {
         var clientId = model.ClientId;
@@ -384,17 +446,9 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
 
         return list.ToArray();
     }
+    #endregion
 
-    private void WriteHistory(App app, String action, Boolean success, String remark, String ip, String clientId)
-    {
-        var olt = AppOnline.FindByClient(clientId);
-        var version = olt?.Version;
-
-        var hi = AppHistory.Create(app, action, success, remark, version, Environment.MachineName, ip);
-        hi.Client = clientId;
-        hi.Insert();
-    }
-
+    #region 心跳保活
     public AppOnline Ping(App app, AppInfo inf, String ip, String clientId, String token)
     {
         if (app == null) return null;
@@ -413,6 +467,8 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
 
         return online;
     }
+
+    public IOnlineModel Ping(IDeviceModel device, IPingRequest request, String token, String ip) => throw new NotImplementedException();
 
     private static Int32 _totalCommands;
     private static IList<AppCommand> _commands;
@@ -467,7 +523,9 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
 
         return rs.ToArray();
     }
+    #endregion
 
+    #region 下行通知
     /// <summary>向应用发送命令</summary>
     /// <param name="app">应用</param>
     /// <param name="clientId">应用实例标识。向特定应用实例发送命令时指定</param>
@@ -545,6 +603,8 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
         return await SendCommand(app, clientId, model, user);
     }
 
+    public Task<Int32> SendCommand(IDeviceModel device, CommandModel command, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+
     public AppCommand CommandReply(App app, CommandReplyModel model)
     {
         var cmd = AppCommand.FindById((Int32)model.Id);
@@ -562,6 +622,8 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
 
         return cmd;
     }
+
+    public Int32 CommandReply(IDeviceModel device, CommandReplyModel model, String ip) => throw new NotImplementedException();
 
     /// <summary>通知该服务的所有消费者，服务信息有变更</summary>
     /// <param name="service"></param>
@@ -605,4 +667,48 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
 
         return model;
     }
+    #endregion
+
+    #region 事件上报
+    public Int32 PostEvents(IDeviceModel device, EventModel[] events, String ip)
+    {
+        var app = device as App;
+        var clientId = "";
+
+        var olt = AppOnline.FindByClient(clientId);
+        var his = new List<AppHistory>();
+        foreach (var model in events)
+        {
+            //WriteHistory(model.Name, !model.Type.EqualIgnoreCase("error"), model.Time.ToDateTime().ToLocalTime(), model.Remark, null);
+            var success = !model.Type.EqualIgnoreCase("error");
+            var time = model.Time.ToDateTime().ToLocalTime();
+            var hi = AppHistory.Create(app, model.Name, success, model.Remark, olt?.Version, Environment.MachineName, ip);
+            hi.Client = clientId;
+            if (time.Year > 2000) hi.CreateTime = time;
+            his.Add(hi);
+        }
+
+        his.Insert();
+
+        return events.Length;
+    }
+    #endregion
+
+    #region 辅助
+    public IDeviceModel QueryDevice(String code) => App.FindByName(code);
+
+    public void WriteHistory(IDeviceModel device, String action, Boolean success, String remark, String ip) => WriteHistory(device as App, action, success, remark, ip, null);
+
+    private void WriteHistory(App app, String action, Boolean success, String remark, String ip, String clientId)
+    {
+        var olt = AppOnline.FindByClient(clientId);
+        var version = olt?.Version;
+
+        var hi = AppHistory.Create(app, action, success, remark, version, Environment.MachineName, ip);
+        hi.Client = clientId;
+        hi.Insert();
+    }
+
+    public IUpgradeInfo Upgrade(IDeviceModel device, String channel, String ip) => throw new NotImplementedException();
+    #endregion
 }
