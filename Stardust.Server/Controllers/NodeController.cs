@@ -20,14 +20,12 @@ namespace Stardust.Server.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class NodeController(NodeService nodeService, ITokenService tokenService, NodeSessionManager sessionManager, IServiceProvider serviceProvider, ITracer tracer) : BaseController(serviceProvider)
+public class NodeController(NodeService nodeService, ITokenService tokenService, NodeSessionManager sessionManager, IServiceProvider serviceProvider, ITracer tracer) : BaseController(nodeService, tokenService, serviceProvider)
 {
-    private Node _node;
-    private String _clientId;
     private static DateTime _oldVersion = new(2025, 8, 26);
 
     #region 令牌验证
-    protected override Boolean OnAuthorize(String token, ActionContext context)
+    protected override Boolean OnAuthorize(String token, DeviceContext context)
     {
         ManageProvider.UserHost = UserHost;
 
@@ -44,11 +42,11 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
         var node = Node.FindByCode(Jwt?.Subject);
         if (node == null || !node.Enable) error ??= new ApiException(ApiCode.Unauthorized, "无效节点");
 
-        _node = node;
-        _clientId = Jwt.Id;
+        Context.Device = node;
 
         // 旧版本节点允许匿名访问心跳和更新接口
-        var action = (context.ActionDescriptor as ControllerActionDescriptor)?.ActionName;
+        var actionContext = context["__ActionContext"] as ActionContext;
+        var action = (actionContext.ActionDescriptor as ControllerActionDescriptor)?.ActionName;
         if (error is ApiException aex && aex.Code == ApiCode.Unauthorized &&
             node != null && node.CompileTime < _oldVersion &&
             action.EqualIgnoreCase(nameof(Ping), nameof(Upgrade)))
@@ -59,16 +57,6 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
         if (error != null) throw error;
 
         return node != null;
-    }
-
-    /// <summary>写日志</summary>
-    /// <param name="action"></param>
-    /// <param name="success"></param>
-    /// <param name="message"></param>
-    public override void WriteLog(String action, Boolean success, String message)
-    {
-        var hi = NodeHistory.Create(_node, action, success, message, Environment.MachineName, UserHost);
-        hi.Insert();
     }
     #endregion
 
@@ -90,7 +78,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
         var code = inf.Code;
         var node = Node.FindByCode(code, true);
         var oldSecret = node?.Secret;
-        _node = node;
+        Context.Device = node;
 
         if (node != null && !node.Enable) throw new ApiException(ApiCode.Unauthorized, "禁止登录");
 
@@ -114,6 +102,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
         }
 
         node ??= nodeService.Register(inf, ip);
+        Context.Device = node;
 
         if (node == null) throw new ApiException(ApiCode.Unauthorized, "节点鉴权失败");
 
@@ -142,11 +131,11 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
     [HttpPost(nameof(Logout))]
     public LoginResponse Logout(String reason)
     {
-        if (_node != null) nodeService.Logout(_node, reason, UserHost);
+        nodeService.Logout(Context, reason, "Http");
 
         return new LoginResponse
         {
-            Name = _node?.Name,
+            Name = Context.Device?.Name,
             Token = null,
         };
     }
@@ -156,16 +145,15 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
     [HttpPost(nameof(Ping))]
     public PingResponse Ping(PingInfo inf)
     {
-        var node = _node;
         var rs = new MyPingResponse
         {
             Time = inf.Time,
             ServerTime = DateTime.UtcNow.ToLong(),
         };
 
-        var online = nodeService.Ping(node, inf, Token, UserHost);
+        var online = nodeService.Ping(Context, inf);
 
-        if (node != null)
+        if (Context.Device is Node node)
         {
             rs.Period = node.Period;
             rs.NewServer = !node.NewServer.IsNullOrEmpty() ? node.NewServer : node.Project?.NewServer;
@@ -179,7 +167,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
             {
                 using var span = tracer?.NewSpan("RefreshNodeToken", new { node.Code, node.Name });
 
-                var tm = tokenService.IssueToken(node.Code, _clientId);
+                var tm = tokenService.IssueToken(node.Code, Context.ClientId);
                 rs.Token = tm.AccessToken;
             }
 
@@ -206,14 +194,14 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
     [HttpGet(nameof(Upgrade))]
     public IUpgradeInfo Upgrade(String channel)
     {
-        var node = _node ?? throw new ApiException(ApiCode.Unauthorized, "节点未登录");
+        var node = Context.Device as Node;
 
         // 基础路径
         var uri = Request.GetRawUrl().ToString();
         var p = uri.IndexOf('/', "https://".Length);
         if (p > 0) uri = uri[..p];
 
-        var info = nodeService.Upgrade(node as IDeviceModel, channel, UserHost);
+        var info = nodeService.Upgrade(Context, channel);
         if (info == null)
         {
             nodeService.CheckDotNet(node, new Uri(uri), UserHost);
@@ -237,7 +225,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
     /// <returns></returns>
     [ApiFilter]
     [HttpPost(nameof(PostEvents))]
-    public Int32 PostEvents(EventModel[] events) => nodeService.PostEvents(_node, events, UserHost);
+    public Int32 PostEvents(EventModel[] events) => nodeService.PostEvents(Context, events);
     #endregion
 
     #region 下行通知
@@ -250,7 +238,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
         {
             using var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
-            await HandleNotify(socket, Token, UserHost, HttpContext.RequestAborted);
+            await HandleNotify(socket, HttpContext.RequestAborted);
         }
         else
         {
@@ -258,29 +246,19 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
         }
     }
 
-    private async Task HandleNotify(WebSocket socket, String token, String ip, CancellationToken cancellationToken)
+    private async Task HandleNotify(WebSocket socket, CancellationToken cancellationToken)
     {
-        var node = _node ?? throw new InvalidOperationException("未登录！");
+        var node = Context.Device as Node;
 
         using var session = new NodeCommandSession(socket)
         {
             Code = node.Code,
             Log = this,
-            SetOnline = online => SetOnline(node, token, ip, online)
+            SetOnline = online => nodeService.SetOnline(Context, online)
         };
         sessionManager.Add(session);
 
-        await session.WaitAsync(HttpContext, cancellationToken).ConfigureAwait(false);
-    }
-
-    private void SetOnline(Node node, String token, String ip, Boolean online)
-    {
-        var olt = nodeService.GetOrAddOnline(node, token, ip);
-        if (olt != null)
-        {
-            olt.WebSocket = online;
-            olt.Update();
-        }
+        await session.WaitAsync(HttpContext, cancellationToken);
     }
 
     /// <summary>向节点发送命令。通知节点更新、安装和启停应用等</summary>
@@ -303,6 +281,6 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
     /// <param name="model">服务</param>
     /// <returns></returns>
     [HttpPost(nameof(CommandReply))]
-    public Int32 CommandReply(CommandReplyModel model) => nodeService.CommandReply(_node, model, Token);
+    public Int32 CommandReply(CommandReplyModel model) => nodeService.CommandReply(Context, model);
     #endregion
 }

@@ -12,7 +12,6 @@ using Stardust.Data;
 using Stardust.Data.Configs;
 using Stardust.Models;
 using Stardust.Server.Services;
-using XCode.Membership;
 using WebSocket = System.Net.WebSockets.WebSocket;
 
 namespace Stardust.Server.Controllers;
@@ -20,52 +19,8 @@ namespace Stardust.Server.Controllers;
 /// <summary>应用接口控制器</summary>
 [ApiController]
 [Route("[controller]")]
-public class AppController(RegistryService registryService, ITokenService tokenService, DeployService deployService, AppSessionManager sessionManager, IServiceProvider serviceProvider, ITracer tracer) : BaseController(serviceProvider)
+public class AppController(RegistryService registryService, ITokenService tokenService, DeployService deployService, AppSessionManager sessionManager, IServiceProvider serviceProvider, ITracer tracer) : BaseController(registryService, tokenService, serviceProvider)
 {
-    private App _app;
-    private String _clientId;
-
-    #region 令牌验证
-    protected override Boolean OnAuthorize(String token, ActionContext context)
-    {
-        ManageProvider.UserHost = UserHost;
-
-        // 先调用基类，获取Jwt。即使失败，也要继续往下走，获取设备信息。最后再决定是否抛出异常
-        Exception error = null;
-        try
-        {
-            if (!base.OnAuthorize(token, context)) return false;
-        }
-        catch (Exception ex)
-        {
-            error = ex;
-        }
-
-        var app = App.FindByName(Jwt?.Subject);
-        if (app == null || !app.Enable) error ??= new ApiException(ApiCode.Forbidden, "无效客户端！");
-
-        _app = app;
-        _clientId = Jwt.Id;
-
-        if (error != null) throw error;
-
-        return app != null;
-    }
-
-    /// <summary>写日志</summary>
-    /// <param name="action"></param>
-    /// <param name="success"></param>
-    /// <param name="message"></param>
-    public override void WriteLog(String action, Boolean success, String message)
-    {
-        var olt = AppOnline.FindByClient(_clientId);
-
-        var hi = AppHistory.Create(_app, action, success, message, olt?.Version, Environment.MachineName, UserHost);
-        hi.Client = _clientId;
-        hi.Insert();
-    }
-    #endregion
-
     #region 登录注销
     [AllowAnonymous]
     [HttpPost(nameof(Login))]
@@ -74,7 +29,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
         var ip = UserHost;
         var app = App.FindByName(model.AppId);
         var oldSecret = app?.Secret;
-        _app = app;
+        Context.Device = app;
 
         // 设备不存在或者验证失败，执行注册流程
         if (app != null && !registryService.Auth(app, model.Secret, ip, model.ClientId))
@@ -84,13 +39,13 @@ public class AppController(RegistryService registryService, ITokenService tokenS
 
         var clientId = model.ClientId;
         app ??= registryService.Register(model.AppId, model.Secret, ip, clientId);
-        _app = app ?? throw new ApiException(ApiCode.Unauthorized, "应用鉴权失败");
+        Context.Device = app ?? throw new ApiException(ApiCode.Unauthorized, "应用鉴权失败");
 
         registryService.Login(app, model, ip);
 
         var tokenModel = tokenService.IssueToken(app.Name, clientId);
 
-        var online = registryService.SetOnline(_app, model, ip, clientId, Token);
+        var online = registryService.SetOnline(app, model, ip, clientId, Token);
 
         deployService.UpdateDeployNode(online);
 
@@ -117,12 +72,13 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     public String Register(AppModel inf)
     {
         var ip = UserHost;
-        var online = registryService.SetOnline(_app, inf, ip, inf.ClientId, Token);
-        _app.WriteHistory(nameof(Register), true, inf.ToJson(), inf.Version, ip, inf.ClientId);
+        var app = Context.Device as App;
+        var online = registryService.SetOnline(app, inf, ip, inf.ClientId, Token);
+        app.WriteHistory(nameof(Register), true, inf.ToJson(), inf.Version, ip, inf.ClientId);
 
         deployService.UpdateDeployNode(online);
 
-        return _app?.ToString();
+        return app?.ToString();
     }
 
     /// <summary>注销</summary>
@@ -132,11 +88,11 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     [HttpPost(nameof(Logout))]
     public LoginResponse Logout(String reason)
     {
-        if (_app != null) registryService.Logout(_app, _clientId, reason, UserHost);
+        registryService.Logout(Context, reason, "Http");
 
         return new LoginResponse
         {
-            Name = _app?.Name,
+            Name = Context.Device?.Name,
             Token = null,
         };
     }
@@ -146,7 +102,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     [HttpPost(nameof(Ping))]
     public PingResponse Ping(AppInfo inf)
     {
-        var app = _app;
+        var app = Context.Device as App;
         var rs = new PingResponse
         {
             Time = inf.Time,
@@ -154,8 +110,8 @@ public class AppController(RegistryService registryService, ITokenService tokenS
         };
 
         var ip = UserHost;
-        var online = registryService.Ping(app, inf, ip, _clientId, Token);
-        AppMeter.WriteData(app, inf, "Ping", _clientId, ip);
+        var online = registryService.Ping(Context, inf) as AppOnline;
+        AppMeter.WriteData(app, inf, "Ping", Context.ClientId, ip);
         deployService.UpdateDeployNode(online);
 
         if (app != null)
@@ -168,7 +124,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
             {
                 using var span = tracer?.NewSpan("RefreshAppToken", new { app.Name, app.DisplayName });
 
-                var tm = tokenService.IssueToken(app.Name, _clientId);
+                var tm = tokenService.IssueToken(app.Name, Context.ClientId);
                 rs.Token = tm.AccessToken;
             }
 
@@ -193,7 +149,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     /// <param name="events">事件集合</param>
     /// <returns></returns>
     [HttpPost(nameof(PostEvents))]
-    public Int32 PostEvents(EventModel[] events) => registryService.PostEvents(_app, events, UserHost);
+    public Int32 PostEvents(EventModel[] events) => registryService.PostEvents(Context, events);
     #endregion
 
     #region 下行通知
@@ -206,7 +162,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
         {
             using var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
-            await HandleNotify(socket, _clientId, UserHost, HttpContext.RequestAborted);
+            await HandleNotify(socket, HttpContext.RequestAborted);
         }
         else
         {
@@ -214,29 +170,19 @@ public class AppController(RegistryService registryService, ITokenService tokenS
         }
     }
 
-    private async Task HandleNotify(WebSocket socket, String clientId, String ip, CancellationToken cancellationToken)
+    private async Task HandleNotify(WebSocket socket, CancellationToken cancellationToken)
     {
-        var app = _app ?? throw new InvalidOperationException("未登录！");
+        var app = Context.Device as App ?? throw new InvalidOperationException("未登录！");
 
         using var session = new AppCommandSession(socket)
         {
-            Code = $"{app.Name}@{clientId}",
+            Code = $"{app.Name}@{Context.ClientId}",
             Log = this,
-            SetOnline = online => SetOnline(clientId, online)
+            SetOnline = online => registryService.SetOnline(Context, online)
         };
         sessionManager.Add(session);
 
-        await session.WaitAsync(HttpContext, cancellationToken).ConfigureAwait(false);
-    }
-
-    private void SetOnline(String clientId, Boolean online)
-    {
-        var olt = AppOnline.FindByClient(clientId);
-        if (olt != null)
-        {
-            olt.WebSocket = online;
-            olt.Update();
-        }
+        await session.WaitAsync(HttpContext, cancellationToken);
     }
 
     /// <summary>向节点发送命令。通知应用刷新配置信息和服务信息等</summary>
@@ -260,7 +206,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
 
         var target = App.FindByName(code) ?? throw new ArgumentOutOfRangeException(nameof(model.Code), "无效应用");
 
-        var app = _app;
+        var app = Context.Device as App;
         if (app == null || app.AllowControlNodes.IsNullOrEmpty()) throw new ApiException(ApiCode.Unauthorized, "无权操作！");
 
         if (app.AllowControlNodes != "*" && !target.Name.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
@@ -275,7 +221,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     /// <param name="model">服务</param>
     /// <returns></returns>
     [HttpPost(nameof(CommandReply))]
-    public Int32 CommandReply(CommandReplyModel model) => registryService.CommandReply(_app, model, UserHost);
+    public Int32 CommandReply(CommandReplyModel model) => registryService.CommandReply(Context, model);
     #endregion
 
     #region 服务发布与消费
@@ -295,7 +241,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     [HttpPost(nameof(RegisterService))]
     public async Task<ServiceModel> RegisterService([FromBody] PublishServiceInfo model)
     {
-        var app = _app;
+        var app = Context.Device as App;
         var info = GetService(model.ServiceName);
 
         var (svc, changed) = registryService.RegisterService(app, info, model, UserHost);
@@ -312,7 +258,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     [HttpPost(nameof(UnregisterService))]
     public async Task<ServiceModel> UnregisterService([FromBody] PublishServiceInfo model)
     {
-        var app = _app;
+        var app = Context.Device as App;
         var info = GetService(model.ServiceName);
 
         var (svc, changed) = registryService.UnregisterService(app, info, model, UserHost);
@@ -329,7 +275,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     [HttpPost(nameof(ResolveService))]
     public ServiceModel[] ResolveService([FromBody] ConsumeServiceInfo model)
     {
-        var app = _app;
+        var app = Context.Device as App;
         var info = GetService(model.ServiceName);
 
         // 所有消费
@@ -350,7 +296,6 @@ public class AppController(RegistryService registryService, ITokenService tokenS
             };
             consumes.Add(svc);
 
-            _clientId = svc.Client;
             WriteLog("ResolveService", true, $"消费服务[{model.ServiceName}] {model.ToJson()}");
         }
 

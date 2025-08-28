@@ -6,43 +6,20 @@ using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Services;
-using XCode.Membership;
 
 namespace Stardust.Server.Controllers;
 
 /// <summary>发布中心服务</summary>
 [ApiFilter]
 [Route("[controller]/[action]")]
-public class DeployController(DeployService deployService, IServiceProvider serviceProvider) : BaseController(serviceProvider)
+public class DeployController(NodeService nodeService, DeployService deployService, IServiceProvider serviceProvider) : BaseController(nodeService, null, serviceProvider)
 {
-    private Node _node;
-
-    #region 令牌验证
-    protected override Boolean OnAuthorize(String token, ActionContext context)
-    {
-        ManageProvider.UserHost = UserHost;
-
-        if (!base.OnAuthorize(token, context)) return false;
-
-        var node = Node.FindByCode(Jwt?.Subject);
-        if (node == null || !node.Enable) return false;
-
-        //var (jwt, node, ex) = nodeService.DecodeToken(token, setting.TokenSecret);
-        _node = node;
-        //_clientId = Jwt.Id;
-        //if (ex != null) throw ex;
-
-        return node != null;
-    }
-
-    protected override void OnWriteError(String action, String message) => WriteHistory(0, action, false, message);
-    #endregion
-
     /// <summary>获取分配到本节点的应用服务信息</summary>
     /// <returns></returns>
     public DeployInfo[] GetAll(Int32 deployId, String deployName, String appName)
     {
-        var list = AppDeployNode.FindAllByNodeId(_node.ID);
+        var node = Context.Device as Node;
+        var list = AppDeployNode.FindAllByNodeId(node.ID);
 
         var rs = new List<DeployInfo>();
         foreach (var deployNode in list)
@@ -66,7 +43,7 @@ public class DeployController(DeployService deployService, IServiceProvider serv
             // 修正旧的用户名
             deployNode.FixOldUserName();
 
-            var inf = deployService.BuildDeployInfo(deployNode, _node);
+            var inf = deployService.BuildDeployInfo(deployNode, node);
             if (inf == null) continue;
 
             rs.Add(inf);
@@ -85,7 +62,8 @@ public class DeployController(DeployService deployService, IServiceProvider serv
         if (services == null || services.Length == 0) return 0;
 
         // 本节点所有发布
-        var list = AppDeployNode.FindAllByNodeId(_node.ID);
+        var node = Context.Device as Node;
+        var list = AppDeployNode.FindAllByNodeId(node.ID);
 
         var rs = 0;
         foreach (var svc in services)
@@ -131,7 +109,7 @@ public class DeployController(DeployService deployService, IServiceProvider serv
 
             dn ??= list.FirstOrDefault(e => e.DeployId == app.Id);
             if (dn == null)
-                dn = new AppDeployNode { DeployId = app.Id, NodeId = _node.ID, Enable = svc.Enable };
+                dn = new AppDeployNode { DeployId = app.Id, NodeId = node.ID, Enable = svc.Enable };
             else
                 list.Remove(dn);
 
@@ -156,7 +134,7 @@ public class DeployController(DeployService deployService, IServiceProvider serv
     /// <param name="inf"></param>
     /// <returns></returns>
     [HttpPost]
-    public Int32 Ping([FromBody] AppInfo inf) => deployService.Ping(_node, inf, UserHost);
+    public Int32 Ping([FromBody] AppInfo inf) => deployService.Ping(Context.Device as Node, inf, UserHost);
 
     /// <summary>获取分配到本节点的应用发布任务</summary>
     public BuildTask GetBuildTask(Int32 deployId, String deployName, String appName)
@@ -202,6 +180,6 @@ public class DeployController(DeployService deployService, IServiceProvider serv
     }
 
     #region 辅助
-    private void WriteHistory(Int32 appId, String action, Boolean success, String remark) => deployService.WriteHistory(appId, _node?.ID ?? 0, action, success, remark, UserHost);
+    private void WriteHistory(Int32 appId, String action, Boolean success, String remark) => deployService.WriteHistory(appId, (Context.Device as Node)?.ID ?? 0, action, success, remark, UserHost);
     #endregion
 }

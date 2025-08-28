@@ -12,6 +12,7 @@ using Stardust.Data.Nodes;
 using Stardust.Data.Platform;
 using Stardust.Models;
 using XCode;
+using Service = Stardust.Data.Service;
 
 namespace Stardust.Server.Services;
 
@@ -109,28 +110,9 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
         return app;
     }
 
-    /// <summary>注销</summary>
-    /// <param name="reason">注销原因</param>
-    /// <param name="ip">IP地址</param>
-    /// <returns></returns>
-    public AppOnline Logout(App app, String clientId, String reason, String ip)
+    public ILoginResponse Login(DeviceContext context, ILoginRequest request, String source)
     {
-        var online = appOnline.GetOnline(clientId);
-        if (online == null) return null;
-
-        var msg = $"{reason} [{app}]]登录于{online.CreateTime}，最后活跃于{online.UpdateTime}";
-        app.WriteHistory("应用下线", true, msg, ip);
-
-        //!! 应用注销，不删除在线记录，保留在线记录用于查询
-        //online.Delete();
-
-        appOnline.RemoveOnline(clientId);
-
-        return online;
-    }
-
-    public (IDeviceModel, IOnlineModel, ILoginResponse) Login(ILoginRequest request, String source, String ip)
-    {
+        var ip = context.UserHost;
         var model = request as AppModel;
         var app = App.FindByName(request.Code);
         if (app != null && !app.Enable) throw new ApiException(ApiCode.Forbidden, "禁止登录");
@@ -152,10 +134,11 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
         }
 
         app = Login(app, model, ip);
+        context.Device = app;
 
         //var tokenModel = tokenService.IssueToken(app.Name, clientId);
 
-        var online = SetOnline(app, model, ip, clientId, null);
+        context.Online = SetOnline(app, model, ip, clientId, null);
 
         var rs = new LoginResponse
         {
@@ -165,28 +148,28 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
         // 动态注册，下发节点证书
         if (autoReg) rs.Secret = app.Secret;
 
-        return (app, online, rs);
+        return rs;
     }
 
-    public IOnlineModel Logout(IDeviceModel device, String reason, String source, String ip) => Logout(device as App, null, reason, ip);
-
-    public IOnlineModel SetOnline(IDeviceModel device, Boolean online, String token, String ip)
+    /// <summary>注销</summary>
+    /// <param name="reason">注销原因</param>
+    /// <param name="ip">IP地址</param>
+    /// <returns></returns>
+    public IOnlineModel Logout(DeviceContext context, String reason, String source)
     {
-        if (device is App app)
-        {
-            // 上线打标记
-            //var olt = GetOnline(app, ip);
-            var (olt, _) = appOnline.GetOnline(app, null, token, null, ip);
-            if (olt != null)
-            {
-                olt.WebSocket = online;
-                olt.Update();
-            }
+        var online = appOnline.GetOnline(context.ClientId);
+        if (online == null) return null;
 
-            return olt;
-        }
+        var app = context.Device as App;
+        var msg = $"{reason} [{app}]]登录于{online.CreateTime}，最后活跃于{online.UpdateTime}";
+        app.WriteHistory("应用下线", true, msg, context.UserHost);
 
-        return null;
+        //!! 应用注销，不删除在线记录，保留在线记录用于查询
+        //online.Delete();
+
+        appOnline.RemoveOnline(context.ClientId);
+
+        return online;
     }
 
     /// <summary>激活应用。更新在线信息和关联节点</summary>
@@ -450,12 +433,14 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
     #endregion
 
     #region 心跳保活
-    public AppOnline Ping(App app, AppInfo inf, String ip, String clientId, String token)
+    public IOnlineModel Ping(DeviceContext context, IPingRequest request)
     {
+        var app = context.Device as App;
         if (app == null) return null;
 
         // 更新在线记录
-        var (online, _) = appOnline.GetOnline(app, clientId, token, inf?.IP, ip);
+        var inf = request as AppInfo;
+        var (online, _) = appOnline.GetOnline(app, context.ClientId, context.Token, inf?.IP, context.UserHost);
         if (online != null)
         {
             //online.Version = app.Version;
@@ -468,8 +453,6 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
 
         return online;
     }
-
-    public IOnlineModel Ping(IDeviceModel device, IPingRequest request, String token, String ip) => throw new NotImplementedException();
 
     private static Int32 _totalCommands;
     private static IList<AppCommand> _commands;
@@ -523,6 +506,25 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
         cmds.Update(false);
 
         return rs.ToArray();
+    }
+
+    /// <summary>设置设备的长连接上线/下线</summary>
+    /// <param name="context">上下文</param>
+    /// <param name="online"></param>
+    /// <returns></returns>
+    public IOnlineModel SetOnline(DeviceContext context, Boolean online)
+    {
+        if (context.Device is not App app) return null;
+
+        // 上线打标记
+        var (olt, _) = appOnline.GetOnline(app, null, context.Token, null, context.UserHost);
+        if (olt != null)
+        {
+            olt.WebSocket = online;
+            olt.Update();
+        }
+
+        return olt;
     }
     #endregion
 
@@ -606,9 +608,9 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
 
     public Task<Int32> SendCommand(IDeviceModel device, CommandModel command, CancellationToken cancellationToken = default) => throw new NotImplementedException();
 
-    public Int32 CommandReply(IDeviceModel device, CommandReplyModel model, String ip)
+    public Int32 CommandReply(DeviceContext context, CommandReplyModel model)
     {
-        var app = device as App;
+        var app = context.Device as App;
         var cmd = AppCommand.FindById((Int32)model.Id);
         if (cmd == null) return 0;
 
@@ -675,11 +677,12 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
     #endregion
 
     #region 事件上报
-    public Int32 PostEvents(IDeviceModel device, EventModel[] events, String ip)
+    public Int32 PostEvents(DeviceContext context, EventModel[] events)
     {
-        var app = device as App;
+        var app = context.Device as App;
         var clientId = "";
 
+        var ip = context.UserHost;
         var olt = AppOnline.FindByClient(clientId);
         var his = new List<AppHistory>();
         foreach (var model in events)
@@ -714,6 +717,19 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
         hi.Insert();
     }
 
-    public IUpgradeInfo Upgrade(IDeviceModel device, String channel, String ip) => throw new NotImplementedException();
+    /// <summary>写设备历史</summary>
+    /// <param name="context">上下文</param>
+    /// <param name="action">动作</param>
+    /// <param name="success">成功</param>
+    /// <param name="remark">备注内容</param>
+    public void WriteHistory(DeviceContext context, String action, Boolean success, String remark)
+    {
+        var version = (context.Online as AppOnline)?.Version;
+        var hi = AppHistory.Create(context.Device as App, action, success, remark, version, Environment.MachineName, context.UserHost);
+        hi.Client = context.ClientId;
+        hi.Insert();
+    }
+
+    IUpgradeInfo IDeviceService.Upgrade(DeviceContext context, String channel) => throw new NotImplementedException();
     #endregion
 }

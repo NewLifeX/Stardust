@@ -1,4 +1,5 @@
 ﻿using NewLife;
+using NewLife.Remoting.Models;
 using Stardust.Data;
 using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
@@ -195,7 +196,13 @@ public class DeployService
         }
         {
             var clientId = $"{inf.IP?.Split(',').FirstOrDefault()}@{inf.Id}";
-            _registryService.Ping(ap, inf, ip, clientId, null);
+            var context = new DeviceContext
+            {
+                Device = ap,
+                UserHost = ip,
+                ClientId = clientId,
+            };
+            _registryService.Ping(context, inf);
             AppMeter.WriteData(ap, inf, "Deploy", clientId, ip);
         }
 
