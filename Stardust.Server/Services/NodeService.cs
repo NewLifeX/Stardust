@@ -499,17 +499,6 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
 
         //var online = GetOrAddOnline(node, context.Token, context.UserHost);
         var online = base.Ping(context, request) as NodeOnline;
-        online.Name = node.Name;
-        online.ProjectId = node.ProjectId;
-        online.ProductCode = node.ProductCode;
-        online.Category = node.Category;
-        online.Version = node.Version;
-        online.CompileTime = node.CompileTime;
-        online.OSKind = node.OSKind;
-        online.ProvinceID = node.ProvinceID;
-        online.CityID = node.CityID;
-        online.Address = node.Address;
-        online.Location = node.Location;
         online.Save(null, inf, context.Token, context.UserHost);
 
         context.Online = online;
@@ -666,6 +655,39 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
             olt.WebSocket = online;
             olt.Update();
         }
+    }
+
+    /// <summary>创建在线</summary>
+    /// <param name="context">上下文</param>
+    /// <returns></returns>
+    public override IOnlineModel CreateOnline(DeviceContext context)
+    {
+        if (context.Device is not Node node) return null;
+
+        var online = NodeOnline.GetOrAdd(GetSessionId(context));
+        online.ProjectId = node.ProjectId;
+        online.NodeID = node.ID;
+        online.Name = node.Name;
+        online.ProductCode = node.ProductCode;
+        online.IP = node.IP;
+        online.Category = node.Category;
+        online.ProvinceID = node.ProvinceID;
+        online.CityID = node.CityID;
+        online.Address = node.Address;
+        online.Location = node.Location;
+        online.OSKind = node.OSKind;
+        online.Version = node.Version;
+        online.CompileTime = node.CompileTime;
+        online.Memory = node.Memory;
+        online.MACs = node.MACs;
+        online.Token = context.Token;
+        online.CreateIP = context.UserHost;
+        online.UpdateIP = context.UserHost;
+        online.Creator = Environment.MachineName;
+
+        context.Online = online;
+
+        return base.CreateOnline(context);
     }
     #endregion
 

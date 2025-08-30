@@ -1,5 +1,6 @@
 ﻿using NewLife;
 using NewLife.Log;
+using NewLife.Remoting.Models;
 using NewLife.Threading;
 using Stardust.Data;
 using Stardust.Data.Nodes;
@@ -41,22 +42,22 @@ public class NodeOnlineService(IServiceProvider serviceProvider, StarServerSetti
             var rs = NodeOnline.ClearExpire(TimeSpan.FromSeconds(sessionTimeout));
             if (rs != null)
             {
-                foreach (var olt in rs)
+                foreach (var online in rs)
                 {
-                    var node = olt?.Node;
-                    var msg = $"[{node}]登录于{olt.CreateTime}，最后活跃于{olt.UpdateTime}";
-                    node.WriteHistory("超时下线", true, msg, olt.CreateIP);
-
+                    var node = online?.Node;
                     if (node != null)
                     {
+                        var msg = $"[{node}]登录于{online.CreateTime}，最后活跃于{online.UpdateTime}";
+                        node.WriteHistory("超时下线", true, msg, online.CreateIP);
+
                         // 计算在线时长
-                        if (olt.CreateTime.Year > 2000 && olt.UpdateTime.Year > 2000)
+                        if (online.CreateTime.Year > 2000 && online.UpdateTime.Year > 2000)
                         {
-                            node.OnlineTime += (Int32)(olt.UpdateTime - olt.CreateTime).TotalSeconds;
+                            node.OnlineTime += (Int32)(online.UpdateTime - online.CreateTime).TotalSeconds;
                             node.Update();
                         }
 
-                        _nodeService.RemoveOnline(node);
+                        _nodeService.RemoveOnline(new DeviceContext { Device = node, Online = online });
 
                         CheckOffline(node, "超时下线");
                     }

@@ -60,6 +60,8 @@ public class AppController(RegistryService registryService, ITokenService tokenS
         var rs = registryService.Login(Context, request, "Http");
         app = Context.Device as App ?? throw new ApiException(ApiCode.Unauthorized, "应用鉴权失败"); ;
 
+        if (Context.Online is AppOnline online) deployService.UpdateDeployNode(online);
+
         //rs.Time = inf.Node.Time;
         rs.ServerTime = DateTime.UtcNow.ToLong();
 
@@ -89,12 +91,11 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     [HttpPost(nameof(Register))]
     public String Register(AppModel inf)
     {
-        var ip = UserHost;
-        var app = Context.Device as App;
-        var online = registryService.SetOnline(app, inf, ip, inf.ClientId, Token);
-        app.WriteHistory(nameof(Register), true, inf.ToJson(), inf.Version, ip, inf.ClientId);
+        var request = inf;
+        var rs = registryService.Login(Context, request, "Http");
+        var app = Context.Device as App ?? throw new ApiException(ApiCode.Unauthorized, "应用鉴权失败"); ;
 
-        deployService.UpdateDeployNode(online);
+        if (Context.Online is AppOnline online) deployService.UpdateDeployNode(online);
 
         return app?.ToString();
     }
@@ -120,7 +121,6 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     [HttpPost(nameof(Ping))]
     public PingResponse Ping(AppInfo inf)
     {
-        var app = Context.Device as App;
         var rs = new PingResponse
         {
             Time = inf.Time,
@@ -129,11 +129,12 @@ public class AppController(RegistryService registryService, ITokenService tokenS
 
         var ip = UserHost;
         var online = registryService.Ping(Context, inf) as AppOnline;
-        AppMeter.WriteData(app, inf, "Ping", Context.ClientId, ip);
         deployService.UpdateDeployNode(online);
 
-        if (app != null)
+        if (Context.Device is App app)
         {
+            AppMeter.WriteData(app, inf, "Ping", Context.ClientId, ip);
+
             rs.Period = app.Period;
 
             // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌，以获取业务的连续性。

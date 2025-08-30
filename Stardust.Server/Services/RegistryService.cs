@@ -19,6 +19,26 @@ namespace Stardust.Server.Services;
 public class RegistryService(AppQueueService queue, AppOnlineService appOnline, IPasswordProvider passwordProvider, AppSessionManager sessionManager, ICacheProvider cacheProvider, StarServerSetting setting, ITracer tracer) : DefaultDeviceService<Node, NodeOnline>(sessionManager, passwordProvider, cacheProvider)
 {
     #region 登录注销
+    public override ILoginResponse Login(DeviceContext context, ILoginRequest request, String source)
+    {
+        var rs = base.Login(context, request, source);
+
+        var inf = request as AppModel;
+        if (context.Online is AppOnline online)
+        {
+            // 关联节点，根据NodeCode匹配，如果未匹配上，则在未曾关联节点时才使用IP匹配
+            var node = Node.FindByCode(inf.NodeCode);
+            if (node == null && online.NodeId == 0) node = Node.SearchByIP(inf.IP).FirstOrDefault();
+            if (node != null) online.NodeId = node.ID;
+
+            if (!inf.Version.IsNullOrEmpty()) online.Version = inf.Version;
+            var compile = inf.Compile.ToDateTime().ToLocalTime();
+            if (compile.Year > 2000) online.Compile = compile;
+        }
+
+        return rs;
+    }
+
     /// <summary>验证设备合法性</summary>
     public override Boolean Authorize(DeviceContext context, ILoginRequest request)
     {
@@ -107,6 +127,7 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
             app.Version = model.Version;
         }
 
+        if (app.DisplayName.IsNullOrEmpty()) app.DisplayName = model.AppName;
         app.LastLogin = DateTime.Now;
         app.LastIP = ip;
         app.UpdateIP = ip;
