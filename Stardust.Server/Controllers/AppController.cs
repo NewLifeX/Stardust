@@ -7,6 +7,7 @@ using NewLife.Remoting;
 using NewLife.Remoting.Extensions;
 using NewLife.Remoting.Models;
 using NewLife.Remoting.Services;
+using NewLife.Security;
 using NewLife.Serialization;
 using Stardust.Data;
 using Stardust.Data.Configs;
@@ -24,36 +25,53 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     #region 登录注销
     [AllowAnonymous]
     [HttpPost(nameof(Login))]
-    public LoginResponse Login(AppModel model)
+    public ILoginResponse Login(AppModel model)
     {
         var ip = UserHost;
         var app = App.FindByName(model.AppId);
         var oldSecret = app?.Secret;
         Context.Device = app;
 
-        // 设备不存在或者验证失败，执行注册流程
-        if (app != null && !registryService.Auth(app, model.Secret, ip, model.ClientId))
+        //// 设备不存在或者验证失败，执行注册流程
+        //if (app != null && !registryService.Authorize(app, model.Secret, ip, model.ClientId))
+        //{
+        //    app = null;
+        //}
+
+        //var clientId = model.ClientId;
+        //app ??= registryService.Register(model.AppId, model.Secret, ip, clientId);
+        //Context.Device = app ?? throw new ApiException(ApiCode.Unauthorized, "应用鉴权失败");
+
+        //registryService.Login(app, model, ip);
+
+        //var tokenModel = tokenService.IssueToken(app.Name, clientId);
+
+        //var online = registryService.SetOnline(app, model, ip, clientId, Token);
+
+        //deployService.UpdateDeployNode(online);
+
+        //var rs = new LoginResponse
+        //{
+        //    Name = app.DisplayName,
+        //    Token = tokenModel.AccessToken,
+        //};
+
+        var request = model;
+        var rs = registryService.Login(Context, request, "Http");
+        app = Context.Device as App ?? throw new ApiException(ApiCode.Unauthorized, "应用鉴权失败"); ;
+
+        //rs.Time = inf.Node.Time;
+        rs.ServerTime = DateTime.UtcNow.ToLong();
+
+        // 动态注册的设备不可用时，不要发令牌，只发证书
+        if (app.Enable)
         {
-            app = null;
+            if (request.ClientId.IsNullOrEmpty()) Context.ClientId = request.ClientId = Rand.NextString(8);
+            var tm = tokenService.IssueToken(app.Name, request.ClientId);
+
+            rs.Token = tm.AccessToken;
+            rs.Expire = tm.ExpireIn;
         }
-
-        var clientId = model.ClientId;
-        app ??= registryService.Register(model.AppId, model.Secret, ip, clientId);
-        Context.Device = app ?? throw new ApiException(ApiCode.Unauthorized, "应用鉴权失败");
-
-        registryService.Login(app, model, ip);
-
-        var tokenModel = tokenService.IssueToken(app.Name, clientId);
-
-        var online = registryService.SetOnline(app, model, ip, clientId, Token);
-
-        deployService.UpdateDeployNode(online);
-
-        var rs = new LoginResponse
-        {
-            Name = app.DisplayName,
-            Token = tokenModel.AccessToken,
-        };
 
         // 动态注册，下发节点证书
         if (app.Name != model.AppId || app.Secret != oldSecret)

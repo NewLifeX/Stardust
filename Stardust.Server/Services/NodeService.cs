@@ -7,7 +7,6 @@ using NewLife.Remoting.Models;
 using NewLife.Remoting.Services;
 using NewLife.Security;
 using NewLife.Serialization;
-using NewLife.Web;
 using Stardust.Data;
 using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
@@ -21,10 +20,13 @@ namespace Stardust.Server.Services;
 public class NodeService(ITokenService tokenService, IPasswordProvider passwordProvider, StarServerSetting setting, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer) : DefaultDeviceService<Node, NodeOnline>(sessionManager, passwordProvider, cacheProvider)
 {
     #region 登录注销
-    public Boolean Auth(Node node, String secret, LoginInfo inf, String ip)
+    /// <summary>验证设备合法性</summary>
+    public override Boolean Authorize(DeviceContext context, ILoginRequest request)
     {
-        if (node == null) return false;
+        if (context.Device is not Node node) return false;
 
+        var inf = request as LoginInfo;
+        var ip = context.UserHost;
         node = CheckNode(node, inf.Node, inf.ProductCode, ip, setting.NodeCodeLevel);
         if (node == null)
         {
@@ -32,30 +34,34 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
             return false;
         }
 
+        // 没有密码时无需验证
         if (node.Secret.IsNullOrEmpty()) return true;
-        if (node.Secret == secret) return true;
-        //return !secret.IsNullOrEmpty() && !secret.IsNullOrEmpty() && (node.Secret == secret || node.Secret.MD5() == secret);
+        if (node.Secret.EqualIgnoreCase(request.Secret)) return true;
 
         if (setting.SaltTime > 0 && passwordProvider is SaltPasswordProvider saltProvider)
         {
             // 使用盐值偏差时间，允许客户端时间与服务端时间有一定偏差
             saltProvider.SaltTime = setting.SaltTime;
         }
-        if (secret.IsNullOrEmpty() || !passwordProvider.Verify(node.Secret, secret))
+        if (request.Secret.IsNullOrEmpty() || !passwordProvider.Verify(node.Secret, request.Secret))
         {
-            WriteHistory(node, "节点鉴权", false, "密钥校验失败", ip);
+            WriteHistory(context, "节点鉴权", false, "密钥校验失败");
             return false;
         }
 
         return true;
     }
 
-    public Node Register(LoginInfo inf, String ip)
+    /// <summary>自动注册</summary>
+    /// <param name="context"></param>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    /// <exception cref="ApiException"></exception>
+    public override IDeviceModel Register(DeviceContext context, ILoginRequest request)
     {
-        var code = inf.Code;
-        var secret = inf.Secret;
-
-        var node = Node.FindByCode(code, true);
+        var inf = request as LoginInfo;
+        var node = context.Device as Node ?? QueryDevice(request.Code) as Node;
+        var ip = context.UserHost;
 
         // 校验唯一编码，防止客户端拷贝配置
         if (node == null)
@@ -77,8 +83,14 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
         return node;
     }
 
-    public TokenModel Login(Node node, LoginInfo inf, String ip)
+    /// <summary>登录中</summary>
+    /// <param name="context"></param>
+    /// <param name="request"></param>
+    protected override void OnLogin(DeviceContext context, ILoginRequest request)
     {
+        var node = context.Device as Node;
+        var inf = request as LoginInfo;
+        var ip = context.UserHost;
         if (!inf.ProductCode.IsNullOrEmpty()) node.ProductCode = inf.ProductCode;
 
         // 设置默认项目
@@ -93,59 +105,17 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
         node.FixNameByRule();
         node.Login(inf.Node, ip);
 
-        // 设置令牌
-        var tokenModel = tokenService.IssueToken(node.Code, inf.ClientId);
+        //// 设置令牌
+        //var tokenModel = tokenService.IssueToken(node.Code, inf.ClientId);
 
-        // 在线记录
-        var olt = GetOrAddOnline(node, tokenModel.AccessToken, ip);
-        olt.Save(inf.Node, null, tokenModel.AccessToken, ip);
+        //// 在线记录
+        //var olt = GetOrAddOnline(node, tokenModel.AccessToken, ip);
+        //olt.Save(inf.Node, null, tokenModel.AccessToken, ip);
 
-        // 登录历史
-        node.WriteHistory("节点鉴权", true, $"[{node.Name}/{node.Code}]鉴权成功 " + inf.ToJson(false, false, false), ip);
+        //// 登录历史
+        //node.WriteHistory("节点鉴权", true, $"[{node.Name}/{node.Code}]鉴权成功 " + inf.ToJson(false, false, false), ip);
 
-        return tokenModel;
-    }
-
-    public ILoginResponse Login(DeviceContext context, ILoginRequest request, String source)
-    {
-        var ip = context.UserHost;
-        var inf = request as LoginInfo;
-        var node = Node.FindByCode(request.Code);
-        if (node != null && !node.Enable) throw new ApiException(ApiCode.Forbidden, "禁止登录");
-
-        // 设备不存在或者验证失败，执行注册流程
-        if (node != null && !Auth(node, inf.Secret, inf, ip))
-        {
-            node = null;
-        }
-
-        var autoReg = false;
-        if (node == null)
-        {
-            node ??= Register(inf, ip);
-
-            autoReg = true;
-        }
-
-        if (node == null) throw new ApiException(ApiCode.Unauthorized, "节点鉴权失败");
-
-        //node = Login(node, inf, ip);
-        context.Device = node;
-
-        // 在线记录
-        var online = GetOrAddOnline(node, null, ip);
-        online.Save(inf.Node, null, null, ip);
-        context.Online = online;
-
-        var rs = new LoginResponse
-        {
-            Name = node.Name
-        };
-
-        // 动态注册，下发节点证书
-        if (autoReg) rs.Secret = node.Secret;
-
-        return rs;
+        //return tokenModel;
     }
 
     /// <summary>注销</summary>

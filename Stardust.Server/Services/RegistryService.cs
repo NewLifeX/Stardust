@@ -19,16 +19,13 @@ namespace Stardust.Server.Services;
 public class RegistryService(AppQueueService queue, AppOnlineService appOnline, IPasswordProvider passwordProvider, AppSessionManager sessionManager, ICacheProvider cacheProvider, StarServerSetting setting, ITracer tracer) : DefaultDeviceService<Node, NodeOnline>(sessionManager, passwordProvider, cacheProvider)
 {
     #region 登录注销
-    /// <summary>应用鉴权</summary>
-    /// <param name="app"></param>
-    /// <param name="secret"></param>
-    /// <param name="ip"></param>
-    /// <param name="clientId"></param>
-    /// <returns></returns>
-    /// <exception cref="ApiException"></exception>
-    public Boolean Auth(App app, String secret, String ip, String clientId)
+    /// <summary>验证设备合法性</summary>
+    public override Boolean Authorize(DeviceContext context, ILoginRequest request)
     {
-        if (app == null) return false;
+        if (context.Device is not App app) return false;
+
+        var ip = context.UserHost;
+        var secret = request.Secret;
 
         // 检查黑白名单
         if (!app.MatchIp(ip))
@@ -50,20 +47,22 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
         }
         if (secret.IsNullOrEmpty() || !passwordProvider.Verify(app.Secret, secret))
         {
-            app.WriteHistory("应用鉴权", false, "密钥校验失败", null, ip, clientId);
+            app.WriteHistory("应用鉴权", false, "密钥校验失败", null, ip, context.ClientId);
             return false;
         }
 
         return true;
     }
 
-    /// <summary>应用注册</summary>
-    /// <param name="name"></param>
-    /// <param name="secret"></param>
-    /// <param name="ip"></param>
+    /// <summary>自动注册</summary>
+    /// <param name="context"></param>
+    /// <param name="request"></param>
     /// <returns></returns>
-    public App Register(String name, String secret, String ip, String clientId)
+    /// <exception cref="ApiException"></exception>
+    public override IDeviceModel Register(DeviceContext context, ILoginRequest request)
     {
+        var name = request.Code;
+
         // 查找应用
         var app = App.FindByName(name);
         // 查找或创建应用，避免多线程创建冲突
@@ -74,13 +73,22 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
             Enable = setting.AppAutoRegister,
         });
 
-        app.WriteHistory("应用注册", true, $"[{app.Name}]注册成功", null, ip, clientId);
+        app.WriteHistory("应用注册", true, $"[{app.Name}]注册成功", null, context.UserHost, context.ClientId);
+        context.Device = app;
 
         return app;
     }
 
-    public App Login(App app, AppModel model, String ip)
+    /// <summary>登录中</summary>
+    /// <param name="context"></param>
+    /// <param name="request"></param>
+    protected override void OnLogin(DeviceContext context, ILoginRequest request)
     {
+        if (context.Device is not App app) return;
+
+        var model = request as AppModel;
+        var ip = context.UserHost;
+
         // 设置默认项目
         if (app.ProjectId == 0 || app.ProjectName == "默认")
         {
@@ -106,49 +114,6 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
 
         // 登录历史
         app.WriteHistory("应用鉴权", true, $"[{app.DisplayName}/{app.Name}]鉴权成功 " + model.ToJson(false, false, false), model.Version, ip, model.ClientId);
-
-        return app;
-    }
-
-    public ILoginResponse Login(DeviceContext context, ILoginRequest request, String source)
-    {
-        var ip = context.UserHost;
-        var model = request as AppModel;
-        var app = App.FindByName(request.Code);
-        if (app != null && !app.Enable) throw new ApiException(ApiCode.Forbidden, "禁止登录");
-
-        // 设备不存在或者验证失败，执行注册流程
-        if (app != null && !Auth(app, model.Secret, ip, model.ClientId))
-        {
-            app = null;
-        }
-
-        var autoReg = false;
-        var clientId = model.ClientId;
-        if (app == null)
-        {
-            app ??= Register(model.AppId, model.Secret, ip, clientId);
-            //_app = app ?? throw new ApiException(ApiCode.Unauthorized, "应用鉴权失败");
-
-            autoReg = true;
-        }
-
-        app = Login(app, model, ip);
-        context.Device = app;
-
-        //var tokenModel = tokenService.IssueToken(app.Name, clientId);
-
-        context.Online = SetOnline(app, model, ip, clientId, null);
-
-        var rs = new LoginResponse
-        {
-            Name = app.Name
-        };
-
-        // 动态注册，下发节点证书
-        if (autoReg) rs.Secret = app.Secret;
-
-        return rs;
     }
 
     /// <summary>注销</summary>

@@ -9,6 +9,7 @@ using NewLife.Remoting;
 using NewLife.Remoting.Extensions;
 using NewLife.Remoting.Models;
 using NewLife.Remoting.Services;
+using NewLife.Security;
 using NewLife.Web;
 using Stardust.Data.Nodes;
 using Stardust.Models;
@@ -63,7 +64,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
     #region 登录注销
     [AllowAnonymous]
     [HttpPost(nameof(Login))]
-    public LoginResponse Login(JsonElement data)
+    public ILoginResponse Login(JsonElement data)
     {
         // 由于客户端的多样性，这里需要手工控制序列化。某些客户端的节点信息跟密钥信息在同一层级。
         var jsonOptions = HttpContext.RequestServices.GetService<IOptions<JsonOptions>>();
@@ -95,24 +96,41 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
             }
         }
 
-        // 设备不存在或者验证失败，执行注册流程
-        if (node != null && !nodeService.Auth(node, inf.Secret, inf, ip))
+        //// 设备不存在或者验证失败，执行注册流程
+        //if (node != null && !nodeService.Authorize(node, inf.Secret, inf, ip))
+        //{
+        //    node = null;
+        //}
+
+        //node ??= nodeService.Register(inf, ip);
+        //Context.Device = node;
+
+        //if (node == null) throw new ApiException(ApiCode.Unauthorized, "节点鉴权失败");
+
+        //var tokenModel = nodeService.Login(node, inf, ip);
+
+        //var rs = new LoginResponse
+        //{
+        //    Name = node.Name,
+        //    Token = tokenModel.AccessToken,
+        //};
+
+        var request = inf;
+        var rs = nodeService.Login(Context, request, "Http");
+        node = Context.Device as Node ?? throw new ApiException(ApiCode.Unauthorized, "节点鉴权失败"); ;
+
+        //rs.Time = inf.Node.Time;
+        rs.ServerTime = DateTime.UtcNow.ToLong();
+
+        // 动态注册的设备不可用时，不要发令牌，只发证书
+        if (node.Enable)
         {
-            node = null;
+            if (request.ClientId.IsNullOrEmpty()) Context.ClientId = request.ClientId = Rand.NextString(8);
+            var tm = tokenService.IssueToken(node.Code, request.ClientId);
+
+            rs.Token = tm.AccessToken;
+            rs.Expire = tm.ExpireIn;
         }
-
-        node ??= nodeService.Register(inf, ip);
-        Context.Device = node;
-
-        if (node == null) throw new ApiException(ApiCode.Unauthorized, "节点鉴权失败");
-
-        var tokenModel = nodeService.Login(node, inf, ip);
-
-        var rs = new LoginResponse
-        {
-            Name = node.Name,
-            Token = tokenModel.AccessToken,
-        };
 
         // 动态注册，下发节点证书
         if (node.Code != code || node.Secret != oldSecret)
