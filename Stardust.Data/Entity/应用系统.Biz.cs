@@ -6,6 +6,7 @@ using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using NewLife.Log;
 using NewLife.Reflection;
 using NewLife.Remoting.Models;
 using Stardust.Monitors;
@@ -16,7 +17,7 @@ namespace Stardust.Data;
 
 /// <summary>应用系统。服务提供者和消费者</summary>
 //[ModelCheckMode(ModelCheckModes.CheckTableWhenFirstUse)]
-public partial class App : Entity<App>, IDeviceModel
+public partial class App : Entity<App>, IDeviceModel2, ILogProvider
 {
     #region 对象操作
     static App()
@@ -281,5 +282,27 @@ public partial class App : Entity<App>, IDeviceModel
         // 未设置白名单，黑名单里面没有的，直接通过
         return true;
     }
+
+    /// <summary>创建设备历史</summary>
+    /// <param name="action"></param>
+    /// <param name="success"></param>
+    /// <param name="content"></param>
+    /// <returns></returns>
+    public IExtend CreateHistory(String action, Boolean success, String content) => AppHistory.Create(this, action, success, content, null, null, null);
+
+    /// <summary>写历史日志</summary>
+    /// <param name="action"></param>
+    /// <param name="success"></param>
+    /// <param name="content"></param>
+    public void WriteLog(String action, Boolean success, String content)
+    {
+        var history = AppHistory.Create(this, action, success, content, null, null, null);
+        history.SaveAsync();
+    }
+
+    /// <summary>创建在线对象</summary>
+    /// <param name="sessionId"></param>
+    /// <returns></returns>
+    public IOnlineModel CreateOnline(String sessionId) => AppOnline.GetOrAddClient(sessionId);
     #endregion
 }

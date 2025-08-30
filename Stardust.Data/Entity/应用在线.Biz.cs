@@ -80,6 +80,8 @@ public partial class AppOnline : Entity<AppOnline>, IOnlineModel
     /// <summary>节点</summary>
     [Map(__.NodeId)]
     public String NodeName => Node?.Name;
+
+    String IOnlineModel.SessionId { get => Client; set => Client = value; }
     #endregion
 
     #region 扩展查询
@@ -99,18 +101,18 @@ public partial class AppOnline : Entity<AppOnline>, IOnlineModel
         //return Find(_.ID == id);
     }
 
-    ///// <summary>根据会话查找</summary>
-    ///// <param name="client">会话</param>
-    ///// <param name="cache">是否走缓存</param>
-    ///// <returns></returns>
-    //public static AppOnline FindByClient(String client, Boolean cache = true)
-    //{
-    //    if (client.IsNullOrEmpty()) return null;
+    /// <summary>根据会话查找</summary>
+    /// <param name="client">会话</param>
+    /// <param name="cache">是否走缓存</param>
+    /// <returns></returns>
+    public static AppOnline FindBySessionId(String client, Boolean cache = true)
+    {
+        if (client.IsNullOrEmpty()) return null;
 
-    //    if (!cache) return Find(_.Client == client);
+        if (!cache) return Find(_.Client == client);
 
-    //    return Meta.SingleCache.GetItemWithSlaveKey(client) as AppOnline;
-    //}
+        return Meta.SingleCache.GetItemWithSlaveKey(client) as AppOnline;
+    }
 
     /// <summary>根据令牌查找</summary>
     /// <param name="token">令牌</param>
@@ -229,7 +231,7 @@ public partial class AppOnline : Entity<AppOnline>, IOnlineModel
     {
         if (client.IsNullOrEmpty()) return null;
 
-        return GetOrAdd(client, FindByClient, k => new AppOnline { Client = k, Creator = Environment.MachineName });
+        return GetOrAdd(client, FindBySessionId, k => new AppOnline { Client = k, Creator = Environment.MachineName });
     }
 
     /// <summary>

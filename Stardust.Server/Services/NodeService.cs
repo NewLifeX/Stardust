@@ -2,6 +2,7 @@
 using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Remoting;
+using NewLife.Remoting.Extensions.Services;
 using NewLife.Remoting.Models;
 using NewLife.Remoting.Services;
 using NewLife.Security;
@@ -17,7 +18,7 @@ using XCode.Configuration;
 
 namespace Stardust.Server.Services;
 
-public class NodeService(ITokenService tokenService, IPasswordProvider passwordProvider, StarServerSetting setting, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer) : IDeviceService
+public class NodeService(ITokenService tokenService, IPasswordProvider passwordProvider, StarServerSetting setting, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer) : DefaultDeviceService<Node, NodeOnline>(sessionManager, passwordProvider, cacheProvider)
 {
     #region 登录注销
     public Boolean Auth(Node node, String secret, LoginInfo inf, String ip)
@@ -151,27 +152,40 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
     /// <param name="reason">注销原因</param>
     /// <param name="ip">IP地址</param>
     /// <returns></returns>
-    public IOnlineModel Logout(DeviceContext context, String reason, String source)
+    public override IOnlineModel Logout(DeviceContext context, String reason, String source)
     {
-        var node = context.Device as Node;
-        var ip = context.UserHost;
-        var online = GetOnline(node, ip);
-        if (online == null) return null;
+        //var node = context.Device as Node;
+        //var ip = context.UserHost;
+        //var online = GetOnline(node, ip);
+        //if (online == null) return null;
 
-        var msg = $"{reason} [{node}]]登录于{online.CreateTime}，最后活跃于{online.UpdateTime}";
-        node.WriteHistory("节点下线", true, msg, ip);
-        online.Delete();
+        //var msg = $"{reason} [{node}]]登录于{online.CreateTime}，最后活跃于{online.UpdateTime}";
+        //node.WriteHistory("节点下线", true, msg, ip);
+        //online.Delete();
 
-        RemoveOnline(node);
+        //RemoveOnline(node);
 
-        // 计算在线时长
-        if (online.CreateTime.Year > 2000)
+        //// 计算在线时长
+        //if (online.CreateTime.Year > 2000)
+        //{
+        //    node.OnlineTime += (Int32)(DateTime.Now - online.CreateTime).TotalSeconds;
+        //    node.Update();
+        //}
+
+        //NodeOnlineService.CheckOffline(node, "注销");
+
+        var online = base.Logout(context, reason, source);
+        if (online is NodeOnline online2 && context.Device is Node node)
         {
-            node.OnlineTime += (Int32)(DateTime.Now - online.CreateTime).TotalSeconds;
-            node.Update();
-        }
+            // 计算在线时长
+            if (online2.CreateTime.Year > 2000)
+            {
+                node.OnlineTime += (Int32)(DateTime.Now - online2.CreateTime).TotalSeconds;
+                node.Update();
+            }
 
-        NodeOnlineService.CheckOffline(node, "注销");
+            NodeOnlineService.CheckOffline(node, "注销");
+        }
 
         return online;
     }
@@ -477,10 +491,9 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
     #endregion
 
     #region 心跳保活
-    public IOnlineModel Ping(DeviceContext context, IPingRequest request)
+    public override IOnlineModel Ping(DeviceContext context, IPingRequest request)
     {
-        var node = context.Device as Node;
-        if (node == null) return null;
+        if (context.Device is not Node node) return null;
 
         var inf = request as PingInfo;
         if (!inf.IP.IsNullOrEmpty()) node.IP = inf.IP;
@@ -514,7 +527,8 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
         //node.SaveAsync();
         node.Update();
 
-        var online = GetOrAddOnline(node, context.Token, context.UserHost);
+        //var online = GetOrAddOnline(node, context.Token, context.UserHost);
+        var online = base.Ping(context, request) as NodeOnline;
         online.Name = node.Name;
         online.ProjectId = node.ProjectId;
         online.ProductCode = node.ProductCode;
@@ -675,19 +689,13 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
     /// <param name="context">上下文</param>
     /// <param name="online"></param>
     /// <returns></returns>
-    public IOnlineModel SetOnline(DeviceContext context, Boolean online)
+    public override void SetOnline(DeviceContext context, Boolean online)
     {
-        if (context.Device is not Node node) return null;
-
-        // 上线打标记
-        var olt = GetOrAddOnline(node, context.Token, context.UserHost);
-        if (olt != null)
+        if ((context.Online ?? GetOnline(context)) is NodeOnline olt)
         {
             olt.WebSocket = online;
             olt.Update();
         }
-
-        return olt;
     }
     #endregion
 
@@ -695,7 +703,7 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
     /// <summary>升级检查</summary>
     /// <param name="channel">更新通道</param>
     /// <returns></returns>
-    public IUpgradeInfo Upgrade(DeviceContext context, String channel)
+    public override IUpgradeInfo Upgrade(DeviceContext context, String channel)
     {
         // 默认Release通道
         if (!Enum.TryParse<NodeChannels>(channel, true, out var ch)) ch = NodeChannels.Release;
@@ -846,16 +854,22 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
         cmd.Insert();
 
         var commandModel = BuildCommand(node, cmd);
+        await SendCommand(node.Code, commandModel, model.Timeout);
 
+        return cmd;
+    }
+
+    private async Task<Int32> SendCommand(String code, CommandModel command, Int32 timeout)
+    {
         //var queue = _cacheProvider.GetQueue<String>($"nodecmd:{node.Code}");
         //queue.Add(commandModel.ToJson());
-        sessionManager.PublishAsync(node.Code, commandModel, null, default).ConfigureAwait(false).GetAwaiter().GetResult();
+        await sessionManager.PublishAsync(code, command, null, default);
 
         // 挂起等待。借助redis队列，等待响应
-        if (model.Timeout > 0)
+        if (timeout > 0)
         {
-            var q = cacheProvider.GetQueue<CommandReplyModel>($"nodereply:{cmd.Id}");
-            var reply = await q.TakeOneAsync(model.Timeout);
+            var q = cacheProvider.GetQueue<CommandReplyModel>($"nodereply:{command.Id}");
+            var reply = await q.TakeOneAsync(timeout);
             if (reply != null)
             {
                 // 埋点
@@ -868,14 +882,19 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
             }
         }
 
-        return cmd;
+        return 1;
     }
 
-    Task<Int32> IDeviceService.SendCommand(IDeviceModel device, CommandModel command, CancellationToken cancellationToken) => throw new NotImplementedException();
+    public override Task<Int32> SendCommand(IDeviceModel device, CommandModel command, CancellationToken cancellationToken)
+    {
+        if (device is not Node node) throw new ArgumentException("必须是Node节点！", nameof(device));
+
+        return SendCommand(device.Code, command, 0);
+    }
     #endregion
 
     #region 事件上报
-    public Int32 CommandReply(DeviceContext context, CommandReplyModel model)
+    public override Int32 CommandReply(DeviceContext context, CommandReplyModel model)
     {
         var cmd = NodeCommand.FindById((Int32)model.Id);
         if (cmd == null) return 0;
@@ -895,7 +914,7 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
         return 1;
     }
 
-    public Int32 PostEvents(DeviceContext context, EventModel[] events)
+    public override Int32 PostEvents(DeviceContext context, EventModel[] events)
     {
         var node = context.Device as Node;
         var ip = context.UserHost;
@@ -919,11 +938,10 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
                 dis.Add(dhi);
             }
 
-            //WriteHistory(null, model.Name, success, model.Time.ToDateTime().ToLocalTime(), model.Remark);
-            var hi = NodeHistory.Create(node, model.Name, success, model.Remark, Environment.MachineName, ip);
+            var history = NodeHistory.Create(node, model.Name, success, model.Remark, Environment.MachineName, ip);
             var time = model.Time.ToDateTime().ToLocalTime();
-            if (time.Year > 2000) hi.CreateTime = time;
-            his.Add(hi);
+            if (time.Year > 2000) history.CreateTime = time;
+            his.Add(history);
         }
 
         his.Insert();
@@ -934,6 +952,10 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
     #endregion
 
     #region 辅助
+    public override IDeviceModel QueryDevice(String code) => Node.FindByCode(code);
+
+    public override IOnlineModel QueryOnline(String sessionId) => NodeOnline.FindBySessionId(sessionId, true);
+
     private CommandModel BuildCommand(Node node, NodeCommand cmd)
     {
         var model = cmd.ToModel();
@@ -957,13 +979,11 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
         hi.Insert();
     }
 
-    public void WriteHistory(DeviceContext context, String action, Boolean success, String remark)
+    public override void WriteHistory(DeviceContext context, String action, Boolean success, String remark)
     {
         var hi = NodeHistory.Create(context.Device as Node, action, success, remark, Environment.MachineName, context.UserHost);
         hi.Insert();
     }
-
-    public IDeviceModel QueryDevice(String code) => Node.FindByCode(code);
     #endregion
 }
 

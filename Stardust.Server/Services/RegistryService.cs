@@ -2,8 +2,8 @@
 using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Remoting;
+using NewLife.Remoting.Extensions.Services;
 using NewLife.Remoting.Models;
-using NewLife.Remoting.Services;
 using NewLife.Security;
 using NewLife.Serialization;
 using Stardust.Data;
@@ -16,7 +16,7 @@ using Service = Stardust.Data.Service;
 
 namespace Stardust.Server.Services;
 
-public class RegistryService(AppQueueService queue, AppOnlineService appOnline, IPasswordProvider passwordProvider, AppSessionManager sessionManager, ICacheProvider cacheProvider, StarServerSetting setting, ITracer tracer) : IDeviceService
+public class RegistryService(AppQueueService queue, AppOnlineService appOnline, IPasswordProvider passwordProvider, AppSessionManager sessionManager, ICacheProvider cacheProvider, StarServerSetting setting, ITracer tracer) : DefaultDeviceService<Node, NodeOnline>(sessionManager, passwordProvider, cacheProvider)
 {
     #region 登录注销
     /// <summary>应用鉴权</summary>
@@ -155,19 +155,25 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
     /// <param name="reason">注销原因</param>
     /// <param name="ip">IP地址</param>
     /// <returns></returns>
-    public IOnlineModel Logout(DeviceContext context, String reason, String source)
+    public override IOnlineModel Logout(DeviceContext context, String reason, String source)
     {
-        var online = appOnline.GetOnline(context.ClientId);
-        if (online == null) return null;
+        //var online = appOnline.GetOnline(context.ClientId);
+        //if (online == null) return null;
 
-        var app = context.Device as App;
-        var msg = $"{reason} [{app}]]登录于{online.CreateTime}，最后活跃于{online.UpdateTime}";
-        app.WriteHistory("应用下线", true, msg, context.UserHost);
+        //var app = context.Device as App;
+        //var msg = $"{reason} [{app}]]登录于{online.CreateTime}，最后活跃于{online.UpdateTime}";
+        //app.WriteHistory("应用下线", true, msg, context.UserHost);
 
-        //!! 应用注销，不删除在线记录，保留在线记录用于查询
-        //online.Delete();
+        ////!! 应用注销，不删除在线记录，保留在线记录用于查询
+        ////online.Delete();
 
-        appOnline.RemoveOnline(context.ClientId);
+        //appOnline.RemoveOnline(context.ClientId);
+
+        var online = base.Logout(context, reason, source);
+        if (online is AppOnline online2)
+        {
+            appOnline.RemoveOnline(context.ClientId);
+        }
 
         return online;
     }
@@ -433,14 +439,14 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
     #endregion
 
     #region 心跳保活
-    public IOnlineModel Ping(DeviceContext context, IPingRequest request)
+    public override IOnlineModel Ping(DeviceContext context, IPingRequest request)
     {
-        var app = context.Device as App;
-        if (app == null) return null;
+        if (context.Device is not App app) return null;
 
         // 更新在线记录
         var inf = request as AppInfo;
-        var (online, _) = appOnline.GetOnline(app, context.ClientId, context.Token, inf?.IP, context.UserHost);
+        //var (online, _) = appOnline.GetOnline(app, context.ClientId, context.Token, inf?.IP, context.UserHost);
+        var online = base.Ping(context, request) as AppOnline;
         if (online != null)
         {
             //online.Version = app.Version;
@@ -512,19 +518,13 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
     /// <param name="context">上下文</param>
     /// <param name="online"></param>
     /// <returns></returns>
-    public IOnlineModel SetOnline(DeviceContext context, Boolean online)
+    public override void SetOnline(DeviceContext context, Boolean online)
     {
-        if (context.Device is not App app) return null;
-
-        // 上线打标记
-        var (olt, _) = appOnline.GetOnline(app, null, context.Token, null, context.UserHost);
-        if (olt != null)
+        if ((context.Online ?? GetOnline(context)) is AppOnline olt)
         {
             olt.WebSocket = online;
             olt.Update();
         }
-
-        return olt;
     }
     #endregion
 
@@ -606,9 +606,19 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
         return await SendCommand(app, clientId, model, user);
     }
 
-    public Task<Int32> SendCommand(IDeviceModel device, CommandModel command, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+    public override async Task<Int32> SendCommand(IDeviceModel device, CommandModel command, CancellationToken cancellationToken = default)
+    {
+        var model = new CommandInModel
+        {
+            Command = command.Command,
+            Argument = command.Argument,
+            Expire = (Int32)(command.Expire - DateTime.Now).TotalSeconds,
+        };
+        var cmd = await SendCommand(device as App, null, model, null);
+        return 1;
+    }
 
-    public Int32 CommandReply(DeviceContext context, CommandReplyModel model)
+    public override Int32 CommandReply(DeviceContext context, CommandReplyModel model)
     {
         var app = context.Device as App;
         var cmd = AppCommand.FindById((Int32)model.Id);
@@ -677,44 +687,58 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
     #endregion
 
     #region 事件上报
-    public Int32 PostEvents(DeviceContext context, EventModel[] events)
-    {
-        var app = context.Device as App;
-        var clientId = "";
+    //public Int32 PostEvents(DeviceContext context, EventModel[] events)
+    //{
+    //    var app = context.Device as App;
+    //    var ip = context.UserHost;
+    //    var olt = AppOnline.FindByClient(clientId);
+    //    var his = new List<AppHistory>();
+    //    foreach (var model in events)
+    //    {
+    //        //WriteHistory(model.Name, !model.Type.EqualIgnoreCase("error"), model.Time.ToDateTime().ToLocalTime(), model.Remark, null);
+    //        var success = !model.Type.EqualIgnoreCase("error");
+    //        var time = model.Time.ToDateTime().ToLocalTime();
+    //        var hi = AppHistory.Create(app, model.Name, success, model.Remark, olt?.Version, Environment.MachineName, ip);
+    //        hi.Client = clientId;
+    //        if (time.Year > 2000) hi.CreateTime = time;
+    //        his.Add(hi);
+    //    }
 
-        var ip = context.UserHost;
-        var olt = AppOnline.FindByClient(clientId);
-        var his = new List<AppHistory>();
-        foreach (var model in events)
+    //    his.Insert();
+
+    //    return events.Length;
+    //}
+
+    protected override IEntity CreateEvent(DeviceContext context, EventModel model)
+    {
+        var entity = base.CreateEvent(context, model);
+        if (entity is AppHistory history)
         {
-            //WriteHistory(model.Name, !model.Type.EqualIgnoreCase("error"), model.Time.ToDateTime().ToLocalTime(), model.Remark, null);
-            var success = !model.Type.EqualIgnoreCase("error");
+            var online = GetOnline(context) as AppOnline;
+            history.Version = online?.Version;
+            history.Client = online?.Client;
+
             var time = model.Time.ToDateTime().ToLocalTime();
-            var hi = AppHistory.Create(app, model.Name, success, model.Remark, olt?.Version, Environment.MachineName, ip);
-            hi.Client = clientId;
-            if (time.Year > 2000) hi.CreateTime = time;
-            his.Add(hi);
+            if (time.Year > 2000) history.CreateTime = time;
         }
 
-        his.Insert();
-
-        return events.Length;
+        return entity;
     }
     #endregion
 
     #region 辅助
-    public IDeviceModel QueryDevice(String code) => App.FindByName(code);
+    public override IDeviceModel QueryDevice(String code) => App.FindByName(code);
 
-    public void WriteHistory(IDeviceModel device, String action, Boolean success, String remark, String ip) => WriteHistory(device as App, action, success, remark, ip, null);
+    public override IOnlineModel QueryOnline(String sessionId) => AppOnline.FindBySessionId(sessionId, true);
 
     private void WriteHistory(App app, String action, Boolean success, String remark, String ip, String clientId)
     {
-        var olt = AppOnline.FindByClient(clientId);
-        var version = olt?.Version;
+        var online = AppOnline.FindBySessionId(clientId, true);
+        var version = online?.Version;
 
-        var hi = AppHistory.Create(app, action, success, remark, version, Environment.MachineName, ip);
-        hi.Client = clientId;
-        hi.Insert();
+        var history = AppHistory.Create(app, action, success, remark, version, Environment.MachineName, ip);
+        history.Client = clientId;
+        history.Insert();
     }
 
     /// <summary>写设备历史</summary>
@@ -722,14 +746,12 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
     /// <param name="action">动作</param>
     /// <param name="success">成功</param>
     /// <param name="remark">备注内容</param>
-    public void WriteHistory(DeviceContext context, String action, Boolean success, String remark)
+    public override void WriteHistory(DeviceContext context, String action, Boolean success, String remark)
     {
         var version = (context.Online as AppOnline)?.Version;
-        var hi = AppHistory.Create(context.Device as App, action, success, remark, version, Environment.MachineName, context.UserHost);
-        hi.Client = context.ClientId;
-        hi.Insert();
+        var history = AppHistory.Create(context.Device as App, action, success, remark, version, Environment.MachineName, context.UserHost);
+        history.Client = context.ClientId;
+        history.Insert();
     }
-
-    IUpgradeInfo IDeviceService.Upgrade(DeviceContext context, String channel) => throw new NotImplementedException();
     #endregion
 }

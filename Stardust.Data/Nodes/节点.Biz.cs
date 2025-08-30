@@ -6,6 +6,7 @@ using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using NewLife.Log;
 using NewLife.Remoting.Models;
 using Stardust.Data.Platform;
 using Stardust.Models;
@@ -17,7 +18,7 @@ using XCode.Membership;
 namespace Stardust.Data.Nodes;
 
 /// <summary>节点信息</summary>
-public partial class Node : Entity<Node>, IDeviceModel
+public partial class Node : Entity<Node>, IDeviceModel2, ILogProvider
 {
     #region 对象操作
     static Node()
@@ -707,5 +708,27 @@ public partial class Node : Entity<Node>, IDeviceModel
 
         return hi;
     }
+
+    /// <summary>创建设备历史</summary>
+    /// <param name="action"></param>
+    /// <param name="success"></param>
+    /// <param name="content"></param>
+    /// <returns></returns>
+    public IExtend CreateHistory(String action, Boolean success, String content) => NodeHistory.Create(this, action, success, content, null, null);
+
+    /// <summary>写历史日志</summary>
+    /// <param name="action"></param>
+    /// <param name="success"></param>
+    /// <param name="content"></param>
+    public void WriteLog(String action, Boolean success, String content)
+    {
+        var history = NodeHistory.Create(this, action, success, content, null, null);
+        history.SaveAsync();
+    }
+
+    /// <summary>创建在线对象</summary>
+    /// <param name="sessionId"></param>
+    /// <returns></returns>
+    public IOnlineModel CreateOnline(String sessionId) => NodeOnline.GetOrAdd(sessionId);
     #endregion
 }
