@@ -58,7 +58,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
 
         var request = model;
         var rs = registryService.Login(Context, request, "Http");
-        app = Context.Device as App ?? throw new ApiException(ApiCode.Unauthorized, "应用鉴权失败"); ;
+        app = Context.Device as App ?? throw new ApiException(ApiCode.Unauthorized, "应用鉴权失败");
 
         if (Context.Online is AppOnline online) deployService.UpdateDeployNode(online);
 
@@ -93,7 +93,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     {
         var request = inf;
         var rs = registryService.Login(Context, request, "Http");
-        var app = Context.Device as App ?? throw new ApiException(ApiCode.Unauthorized, "应用鉴权失败"); ;
+        var app = Context.Device as App ?? throw new ApiException(ApiCode.Unauthorized, "应用鉴权失败");
 
         if (Context.Online is AppOnline online) deployService.UpdateDeployNode(online);
 

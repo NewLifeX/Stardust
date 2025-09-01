@@ -117,7 +117,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
 
         var request = inf;
         var rs = nodeService.Login(Context, request, "Http");
-        node = Context.Device as Node ?? throw new ApiException(ApiCode.Unauthorized, "节点鉴权失败"); ;
+        node = Context.Device as Node ?? throw new ApiException(ApiCode.Unauthorized, "节点鉴权失败");
 
         //rs.Time = inf.Node.Time;
         rs.ServerTime = DateTime.UtcNow.ToLong();
