@@ -118,24 +118,20 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     #endregion
 
     #region 心跳保活
+    [HttpGet(nameof(Ping))]
     [HttpPost(nameof(Ping))]
-    public PingResponse Ping(AppInfo inf)
+    public IPingResponse Ping(AppInfo inf)
     {
-        var rs = new PingResponse
-        {
-            Time = inf.Time,
-            ServerTime = DateTime.UtcNow.ToLong(),
-        };
+        var rs = registryService.Ping(Context, inf, null);
 
-        var ip = UserHost;
-        var online = registryService.Ping(Context, inf) as AppOnline;
+        var online = Context.Online as AppOnline;
         deployService.UpdateDeployNode(online);
 
         if (Context.Device is App app)
         {
-            AppMeter.WriteData(app, inf, "Ping", Context.ClientId, ip);
+            AppMeter.WriteData(app, inf, "Ping", Context.ClientId, Context.ClientId);
 
-            rs.Period = app.Period;
+            //rs.Period = app.Period;
 
             // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌，以获取业务的连续性。
             var (jwt, ex) = tokenService.DecodeToken(Token);
@@ -147,20 +143,20 @@ public class AppController(RegistryService registryService, ITokenService tokenS
                 rs.Token = tm.AccessToken;
             }
 
-            if (!app.Version.IsNullOrEmpty() && Version.TryParse(app.Version, out var ver))
-            {
-                // 拉取命令
-                if (ver.Build >= 2024 && ver.Revision >= 801)
-                    rs.Commands = registryService.AcquireAppCommands(app.Id);
-            }
+            //if (!app.Version.IsNullOrEmpty() && Version.TryParse(app.Version, out var ver))
+            //{
+            //    // 拉取命令
+            //    if (ver.Build >= 2024 && ver.Revision >= 801)
+            //        rs.Commands = registryService.AcquireCommands(app.Id);
+            //}
         }
 
         return rs;
     }
 
-    [AllowAnonymous]
-    [HttpGet(nameof(Ping))]
-    public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.UtcNow.ToLong(), };
+    //[AllowAnonymous]
+    //[HttpGet(nameof(Ping))]
+    //public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.UtcNow.ToLong(), };
     #endregion
 
     #region 事件上报
@@ -209,7 +205,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     /// <param name="token">应用令牌</param>
     /// <returns></returns>
     [HttpPost(nameof(SendCommand))]
-    public async Task<Int32> SendCommand(CommandInModel model)
+    public Task<CommandReplyModel> SendCommand(CommandInModel model)
     {
         if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定应用");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
@@ -231,9 +227,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
         if (app.AllowControlNodes != "*" && !target.Name.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
             throw new ApiException(ApiCode.Forbidden, $"[{app}]无权操作应用[{target}]！\n安全设计需要，默认禁止所有应用向其它应用发送控制指令。\n可在注册中心应用系统中修改[{app}]的可控节点，添加[{target.Name}]，或者设置为*所有应用。");
 
-        var cmd = await registryService.SendCommand(target, clientId, model, app + "");
-
-        return cmd.Id;
+        return registryService.SendCommand(target, clientId, model, app + "");
     }
 
     /// <summary>设备端响应服务调用</summary>

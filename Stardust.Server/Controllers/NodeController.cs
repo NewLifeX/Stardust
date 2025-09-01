@@ -160,24 +160,23 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
     #endregion
 
     #region 心跳保活
+    [HttpGet(nameof(Ping))]
     [HttpPost(nameof(Ping))]
-    public PingResponse Ping(PingInfo inf)
+    public IPingResponse Ping(PingInfo inf)
     {
-        var rs = new MyPingResponse
-        {
-            Time = inf.Time,
-            ServerTime = DateTime.UtcNow.ToLong(),
-        };
-
-        var online = nodeService.Ping(Context, inf);
+        var rs = nodeService.Ping(Context, inf, new MyPingResponse());
 
         if (Context.Device is Node node)
         {
             rs.Period = node.Period;
-            rs.NewServer = !node.NewServer.IsNullOrEmpty() ? node.NewServer : node.Project?.NewServer;
 
-            // 服务端设置节点的同步时间周期时，客户端会覆盖掉；服务端未设置时，不要覆盖客户端的同步参数
-            if (node.SyncTime > 0) rs.SyncTime = node.SyncTime;
+            if (rs is MyPingResponse mrs)
+            {
+                mrs.NewServer = !node.NewServer.IsNullOrEmpty() ? node.NewServer : node.Project?.NewServer;
+
+                // 服务端设置节点的同步时间周期时，客户端会覆盖掉；服务端未设置时，不要覆盖客户端的同步参数
+                if (node.SyncTime > 0) mrs.SyncTime = node.SyncTime;
+            }
 
             // 令牌有效期检查，10分钟内到期的令牌，颁发新令牌，以获取业务的连续性。
             var (jwt, ex) = tokenService.DecodeToken(Token);
@@ -189,20 +188,20 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
                 rs.Token = tm.AccessToken;
             }
 
-            if (!node.Version.IsNullOrEmpty() && Version.TryParse(node.Version, out var ver))
-            {
-                // 拉取命令
-                if (ver.Build >= 2023 && ver.Revision >= 107)
-                    rs.Commands = nodeService.AcquireNodeCommands(node.ID);
-            }
+            //if (!node.Version.IsNullOrEmpty() && Version.TryParse(node.Version, out var ver))
+            //{
+            //    // 拉取命令
+            //    if (ver.Build >= 2023 && ver.Revision >= 107)
+            //        rs.Commands = nodeService.AcquireCommands(node.ID);
+            //}
         }
 
         return rs;
     }
 
-    [AllowAnonymous]
-    [HttpGet(nameof(Ping))]
-    public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.UtcNow.ToLong(), };
+    //[AllowAnonymous]
+    //[HttpGet(nameof(Ping))]
+    //public PingResponse Ping() => new() { Time = 0, ServerTime = DateTime.UtcNow.ToLong(), };
     #endregion
 
     #region 升级更新
@@ -285,14 +284,12 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
     /// <returns></returns>
     [AllowAnonymous]
     [HttpPost(nameof(SendCommand))]
-    public async Task<Int32> SendCommand(CommandInModel model, String token)
+    public Task<CommandReplyModel> SendCommand(CommandInModel model)
     {
         if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定节点");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
 
-        var cmd = await nodeService.SendCommand(model, token);
-
-        return cmd.Id;
+        return nodeService.SendCommand(Context, model);
     }
 
     /// <summary>设备端响应服务调用</summary>

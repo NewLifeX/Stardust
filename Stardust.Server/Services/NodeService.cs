@@ -17,7 +17,7 @@ using XCode.Configuration;
 
 namespace Stardust.Server.Services;
 
-public class NodeService(ITokenService tokenService, IPasswordProvider passwordProvider, StarServerSetting setting, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer) : DefaultDeviceService<Node, NodeOnline>(sessionManager, passwordProvider, cacheProvider)
+public class NodeService(ITokenService tokenService, IPasswordProvider passwordProvider, StarServerSetting setting, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer, IServiceProvider serviceProvider) : DefaultDeviceService<Node, NodeOnline>(sessionManager, passwordProvider, cacheProvider, serviceProvider)
 {
     #region 登录注销
     /// <summary>验证设备合法性</summary>
@@ -86,7 +86,7 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
     /// <summary>登录中</summary>
     /// <param name="context"></param>
     /// <param name="request"></param>
-    protected override void OnLogin(DeviceContext context, ILoginRequest request)
+    public override void OnLogin(DeviceContext context, ILoginRequest request)
     {
         var node = context.Device as Node;
         var inf = request as LoginInfo;
@@ -105,6 +105,8 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
         node.FixNameByRule();
         node.Login(inf.Node, ip);
 
+        context.Online = GetOnline(context) ?? CreateOnline(context);
+
         //// 设置令牌
         //var tokenModel = tokenService.IssueToken(node.Code, inf.ClientId);
 
@@ -112,8 +114,8 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
         //var olt = GetOrAddOnline(node, tokenModel.AccessToken, ip);
         //olt.Save(inf.Node, null, tokenModel.AccessToken, ip);
 
-        //// 登录历史
-        //node.WriteHistory("节点鉴权", true, $"[{node.Name}/{node.Code}]鉴权成功 " + inf.ToJson(false, false, false), ip);
+        // 登录历史
+        WriteHistory(context, "节点鉴权", true, $"[{node.Name}/{node.Code}]鉴权成功 " + inf.ToJson(false, false, false));
 
         //return tokenModel;
     }
@@ -268,9 +270,9 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
         //var ip = UserHost;
         if (!IsMatchWhiteIP(set.WhiteIP, ip)) throw new ApiException(ApiCode.Forbidden, "非法来源，禁止注册");
 
-        using var span = tracer?.NewSpan(nameof(AutoRegister), new { inf.ProductCode, inf.Node });
-
         var di = inf.Node;
+        using var span = tracer?.NewSpan(nameof(AutoRegister), new { inf.ProductCode, di.UUID, di.MachineGuid, di.Macs, di.DiskID });
+
         var code = BuildCode(di, inf.ProductCode, set);
         if (code.IsNullOrEmpty()) code = Rand.NextString(8);
         span?.AppendTag($"code={code}");
@@ -461,7 +463,7 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
     #endregion
 
     #region 心跳保活
-    public override IOnlineModel Ping(DeviceContext context, IPingRequest request)
+    public override IOnlineModel OnPing(DeviceContext context, IPingRequest request)
     {
         if (context.Device is not Node node) return null;
 
@@ -498,10 +500,10 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
         node.Update();
 
         //var online = GetOrAddOnline(node, context.Token, context.UserHost);
-        var online = base.Ping(context, request) as NodeOnline;
-        online.Save(null, inf, context.Token, context.UserHost);
+        var online = base.OnPing(context, request) as NodeOnline;
+        //online.Save(null, inf, context.Token, context.UserHost);
 
-        context.Online = online;
+        //context.Online = online;
 
         //// 下发部署的应用服务
         //rs.Services = GetServices(node.ID);
@@ -513,7 +515,7 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
     private static IList<NodeCommand> _commands;
     private static DateTime _nextTime;
 
-    public CommandModel[] AcquireNodeCommands(Int32 nodeId)
+    public override CommandModel[] AcquireCommands(DeviceContext context)
     {
         // 缓存最近1000个未执行命令，用于快速过滤，避免大量节点在线时频繁查询命令表
         if (_nextTime < DateTime.Now || _totalCommands != NodeCommand.Meta.Count)
@@ -523,10 +525,13 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
             _nextTime = DateTime.Now.AddMinutes(1);
         }
 
+        if (context.Device is not Node node) return null;
+        var nodeId = node.ID;
+
         // 是否有本节点
         if (!_commands.Any(e => e.NodeID == nodeId)) return null;
 
-        using var span = tracer?.NewSpan(nameof(AcquireNodeCommands), new { nodeId });
+        using var span = tracer?.NewSpan(nameof(AcquireCommands), new { nodeId });
 
         var cmds = NodeCommand.AcquireCommands(nodeId, 100);
         if (cmds.Count == 0) return null;
@@ -664,30 +669,32 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
     {
         if (context.Device is not Node node) return null;
 
-        var online = NodeOnline.GetOrAdd(GetSessionId(context));
-        online.ProjectId = node.ProjectId;
-        online.NodeID = node.ID;
-        online.Name = node.Name;
-        online.ProductCode = node.ProductCode;
-        online.IP = node.IP;
-        online.Category = node.Category;
-        online.ProvinceID = node.ProvinceID;
-        online.CityID = node.CityID;
-        online.Address = node.Address;
-        online.Location = node.Location;
-        online.OSKind = node.OSKind;
-        online.Version = node.Version;
-        online.CompileTime = node.CompileTime;
-        online.Memory = node.Memory;
-        online.MACs = node.MACs;
+        var online = base.CreateOnline(context) as NodeOnline;
+        //var online = NodeOnline.GetOrAdd(GetSessionId(context));
+        //online.ProjectId = node.ProjectId;
+        //online.NodeID = node.ID;
+        //online.Name = node.Name;
+        //online.ProductCode = node.ProductCode;
+        //online.IP = node.IP;
+        //online.Category = node.Category;
+        //online.ProvinceID = node.ProvinceID;
+        //online.CityID = node.CityID;
+        //online.Address = node.Address;
+        //online.Location = node.Location;
+        //online.OSKind = node.OSKind;
+        //online.Version = node.Version;
+        //online.CompileTime = node.CompileTime;
+        //online.Memory = node.Memory;
+        //online.MACs = node.MACs;
         online.Token = context.Token;
-        online.CreateIP = context.UserHost;
-        online.UpdateIP = context.UserHost;
-        online.Creator = Environment.MachineName;
+        //online.CreateIP = context.UserHost;
+        //online.UpdateIP = context.UserHost;
+        //online.Creator = Environment.MachineName;
 
-        context.Online = online;
+        //context.Online = online;
 
-        return base.CreateOnline(context);
+        //return base.CreateOnline(context);
+        return online;
     }
     #endregion
 
@@ -802,7 +809,7 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
     /// <param name="model"></param>
     /// <param name="token">应用令牌</param>
     /// <returns></returns>
-    public async Task<NodeCommand> SendCommand(CommandInModel model, String token)
+    public override Task<CommandReplyModel> SendCommand(DeviceContext context, CommandInModel model, CancellationToken cancellationToken = default)
     {
         if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定节点");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
@@ -810,7 +817,7 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
         var node = Node.FindByCode(model.Code);
         if (node == null) throw new ArgumentOutOfRangeException(nameof(model.Code), "无效节点");
 
-        var (jwt, ex) = tokenService.DecodeToken(token);
+        var (jwt, ex) = tokenService.DecodeToken(context.Token);
         if (ex != null) throw ex;
 
         var app = App.FindByName(jwt?.Subject);
@@ -819,7 +826,7 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
         if (app.AllowControlNodes != "*" && !node.Code.EqualIgnoreCase(app.AllowControlNodes.Split(",")))
             throw new ApiException(ApiCode.Forbidden, $"[{app}]无权操作节点[{node}]！\n安全设计需要，默认禁止所有应用向任意节点发送控制指令。\n可在注册中心应用系统中修改[{app}]的可控节点，添加[{node.Code}]，或者设置为*所有节点。");
 
-        return await SendCommand(node, model, app + "");
+        return SendCommand(node, model, app + "", cancellationToken);
     }
 
     /// <summary>向节点发送命令。（内部用）</summary>
@@ -828,7 +835,7 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
     /// <param name="createUser"></param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
-    public async Task<NodeCommand> SendCommand(Node node, CommandInModel model, String createUser = null)
+    public async Task<CommandReplyModel> SendCommand(Node node, CommandInModel model, String createUser = null, CancellationToken cancellationToken = default)
     {
         var cmd = new NodeCommand
         {
@@ -846,22 +853,18 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
         cmd.Insert();
 
         var commandModel = BuildCommand(node, cmd);
-        await SendCommand(node.Code, commandModel, model.Timeout);
+        var code = node.Code;
 
-        return cmd;
-    }
-
-    private async Task<Int32> SendCommand(String code, CommandModel command, Int32 timeout)
-    {
         //var queue = _cacheProvider.GetQueue<String>($"nodecmd:{node.Code}");
         //queue.Add(commandModel.ToJson());
-        await sessionManager.PublishAsync(code, command, null, default);
+        await sessionManager.PublishAsync(code, commandModel, null, cancellationToken);
 
         // 挂起等待。借助redis队列，等待响应
+        var timeout = model.Timeout;
         if (timeout > 0)
         {
-            var q = cacheProvider.GetQueue<CommandReplyModel>($"nodereply:{command.Id}");
-            var reply = await q.TakeOneAsync(timeout);
+            var q = cacheProvider.GetQueue<CommandReplyModel>($"nodereply:{cmd.Id}");
+            var reply = await q.TakeOneAsync(timeout, cancellationToken);
             if (reply != null)
             {
                 // 埋点
@@ -871,17 +874,12 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
                     throw new Exception($"命令错误！{reply.Data}");
                 else if (reply.Status == CommandStatus.取消)
                     throw new Exception($"命令已取消！{reply.Data}");
+
+                return reply;
             }
         }
 
-        return 1;
-    }
-
-    public override Task<Int32> SendCommand(IDeviceModel device, CommandModel command, CancellationToken cancellationToken)
-    {
-        if (device is not Node node) throw new ArgumentException("必须是Node节点！", nameof(device));
-
-        return SendCommand(device.Code, command, 0);
+        return null;
     }
     #endregion
 
@@ -947,6 +945,8 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
     public override IDeviceModel QueryDevice(String code) => Node.FindByCode(code);
 
     public override IOnlineModel QueryOnline(String sessionId) => NodeOnline.FindBySessionId(sessionId, true);
+
+    protected override String GetSessionId(DeviceContext context) => context.ClientId ?? base.GetSessionId(context);
 
     private CommandModel BuildCommand(Node node, NodeCommand cmd)
     {

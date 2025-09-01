@@ -108,6 +108,8 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
     public IList<AppConsume> Consumers => Extends.Get(nameof(Consumers), k => AppConsume.FindAllByAppId(Id));
 
     String IDeviceModel.Code { get => Name; set => Name = value; }
+
+    String IDeviceModel2.NewServer => null;
     #endregion
 
     #region 扩展查询
@@ -303,6 +305,14 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
     /// <summary>创建在线对象</summary>
     /// <param name="sessionId"></param>
     /// <returns></returns>
-    public IOnlineModel CreateOnline(String sessionId) => AppOnline.GetOrAddClient(sessionId);
+    public IOnlineModel CreateOnline(String sessionId)
+    {
+        var online = AppOnline.GetOrAddClient(sessionId);
+        online.Name = Name;
+        online.Category = Category;
+        online.Version = Version;
+
+        return online;
+    }
     #endregion
 }

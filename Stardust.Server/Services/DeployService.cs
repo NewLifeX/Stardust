@@ -202,7 +202,7 @@ public class DeployService
                 UserHost = ip,
                 ClientId = clientId,
             };
-            _registryService.Ping(context, inf);
+            _registryService.OnPing(context, inf);
             AppMeter.WriteData(ap, inf, "Deploy", clientId, ip);
         }
 

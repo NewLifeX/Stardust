@@ -16,7 +16,7 @@ using XCode;
 namespace Stardust.Data;
 
 /// <summary>应用在线。一个应用有多个部署，每个在线会话对应一个服务地址</summary>
-public partial class AppOnline : Entity<AppOnline>, IOnlineModel
+public partial class AppOnline : Entity<AppOnline>, IOnlineModel2
 {
     #region 对象操作
     static AppOnline()
@@ -284,6 +284,29 @@ public partial class AppOnline : Entity<AppOnline>, IOnlineModel
             Listens = info.Listens;
             StartTime = info.StartTime;
         }
+    }
+
+    public Int32 Save(IPingRequest request, Object context)
+    {
+        if (context is DeviceContext ctx)
+        {
+            Token = ctx.Token;
+            UpdateIP = ctx.UserHost;
+
+            if (ctx.Device is App app)
+            {
+                Name = app.Name;
+                Category = app.Category;
+                Version = app.Version;
+
+                if (request is AppInfo ping) Fill(app, ping);
+            }
+        }
+
+        PingCount++;
+
+        return SaveAsync() ? 1 : 0;
+        //return Update();
     }
 
     /// <summary>删除过期，指定过期时间</summary>

@@ -7,7 +7,6 @@ using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using NewLife.Log;
-using NewLife.Remoting;
 using NewLife.Remoting.Models;
 using NewLife.Serialization;
 using Stardust.Models;
@@ -17,7 +16,7 @@ using XCode.Membership;
 namespace Stardust.Data.Nodes;
 
 /// <summary>节点在线</summary>
-public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel
+public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
 {
     #region 对象操作
     static NodeOnline()
@@ -202,39 +201,39 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel
         return list;
     }
 
-    /// <summary>更新并保存在线状态</summary>
-    /// <param name="di"></param>
-    /// <param name="pi"></param>
-    /// <param name="token"></param>
-    /// <param name="ip"></param>
-    public void Save(NodeInfo di, PingInfo pi, String token, String ip)
-    {
-        var olt = this;
+    ///// <summary>更新并保存在线状态</summary>
+    ///// <param name="di"></param>
+    ///// <param name="pi"></param>
+    ///// <param name="token"></param>
+    ///// <param name="ip"></param>
+    //public void Save(NodeInfo di, PingInfo pi, String token, String ip)
+    //{
+    //    var olt = this;
 
-        if (di != null)
-        {
-            olt.Fill(di);
-            olt.LocalTime = di.Time.ToLocalTime();
-            olt.MACs = di.Macs;
-            //olt.COMs = di.COMs;
-        }
-        else
-        {
-            olt.Fill(pi);
-            olt.CreateData(pi, ip);
-        }
+    //    if (di != null)
+    //    {
+    //        olt.Fill(di);
+    //        olt.LocalTime = di.Time.ToLocalTime();
+    //        olt.MACs = di.Macs;
+    //        //olt.COMs = di.COMs;
+    //    }
+    //    else
+    //    {
+    //        olt.Fill(pi);
+    //        olt.CreateData(pi, ip);
+    //    }
 
-        olt.Token = token;
-        olt.PingCount++;
-        olt.UpdateIP = ip;
-        olt.TraceId = DefaultSpan.Current?.TraceId;
+    //    olt.Token = token;
+    //    olt.PingCount++;
+    //    olt.UpdateIP = ip;
+    //    olt.TraceId = DefaultSpan.Current?.TraceId;
 
-        // 5秒内直接保存
-        if (olt.CreateTime.AddSeconds(5) > DateTime.Now)
-            olt.Save();
-        else
-            olt.SaveAsync();
-    }
+    //    // 5秒内直接保存
+    //    if (olt.CreateTime.AddSeconds(5) > DateTime.Now)
+    //        olt.Save();
+    //    else
+    //        olt.SaveAsync();
+    //}
 
     /// <summary>填充节点信息</summary>
     /// <param name="inf"></param>
@@ -334,6 +333,35 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel
 
         //data.SaveAsync();
         data.Insert();
+    }
+
+    public Int32 Save(IPingRequest request, Object context)
+    {
+        if (context is DeviceContext ctx)
+        {
+            Token = ctx.Token;
+            UpdateIP = ctx.UserHost;
+
+            if (ctx.Device is Node node)
+            {
+                Name = node.Name;
+                Category = node.Category;
+                Version = node.Version;
+                CompileTime = node.CompileTime;
+                OSKind = node.OSKind;
+                //Save(null, inf, context.Token, ip);
+            }
+            if (request is PingInfo ping)
+            {
+                Fill(ping);
+                CreateData(ping, ctx.UserHost);
+            }
+        }
+
+        PingCount++;
+
+        return SaveAsync() ? 1 : 0;
+        //return Update();
     }
     #endregion
 }

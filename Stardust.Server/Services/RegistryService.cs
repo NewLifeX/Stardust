@@ -16,7 +16,7 @@ using Service = Stardust.Data.Service;
 
 namespace Stardust.Server.Services;
 
-public class RegistryService(AppQueueService queue, AppOnlineService appOnline, IPasswordProvider passwordProvider, AppSessionManager sessionManager, ICacheProvider cacheProvider, StarServerSetting setting, ITracer tracer) : DefaultDeviceService<Node, NodeOnline>(sessionManager, passwordProvider, cacheProvider)
+public class RegistryService(AppQueueService queue, AppOnlineService appOnline, IPasswordProvider passwordProvider, AppSessionManager sessionManager, ICacheProvider cacheProvider, StarServerSetting setting, ITracer tracer, IServiceProvider serviceProvider) : DefaultDeviceService<Node, NodeOnline>(sessionManager, passwordProvider, cacheProvider, serviceProvider)
 {
     #region 登录注销
     public override ILoginResponse Login(DeviceContext context, ILoginRequest request, String source)
@@ -102,7 +102,7 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
     /// <summary>登录中</summary>
     /// <param name="context"></param>
     /// <param name="request"></param>
-    protected override void OnLogin(DeviceContext context, ILoginRequest request)
+    public override void OnLogin(DeviceContext context, ILoginRequest request)
     {
         if (context.Device is not App app) return;
 
@@ -133,8 +133,10 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
         app.UpdateIP = ip;
         app.Update();
 
+        context.Online = GetOnline(context) ?? CreateOnline(context);
+
         // 登录历史
-        app.WriteHistory("应用鉴权", true, $"[{app.DisplayName}/{app.Name}]鉴权成功 " + model.ToJson(false, false, false), model.Version, ip, model.ClientId);
+        WriteHistory(context, "应用鉴权", true, $"[{app.DisplayName}/{app.Name}]鉴权成功 " + model.ToJson(false, false, false));
     }
 
     /// <summary>注销</summary>
@@ -425,32 +427,32 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
     #endregion
 
     #region 心跳保活
-    public override IOnlineModel Ping(DeviceContext context, IPingRequest request)
-    {
-        if (context.Device is not App app) return null;
+    //public override IOnlineModel OnPing(DeviceContext context, IPingRequest request)
+    //{
+    //    if (context.Device is not App app) return null;
 
-        // 更新在线记录
-        var inf = request as AppInfo;
-        //var (online, _) = appOnline.GetOnline(app, context.ClientId, context.Token, inf?.IP, context.UserHost);
-        var online = base.Ping(context, request) as AppOnline;
-        if (online != null)
-        {
-            //online.Version = app.Version;
-            online.Fill(app, inf);
-            online.SaveAsync();
-        }
+    //    // 更新在线记录
+    //    var inf = request as AppInfo;
+    //    //var (online, _) = appOnline.GetOnline(app, context.ClientId, context.Token, inf?.IP, context.UserHost);
+    //    var online = base.OnPing(context, request) as AppOnline;
+    //    if (online != null)
+    //    {
+    //        //online.Version = app.Version;
+    //        online.Fill(app, inf);
+    //        online.SaveAsync();
+    //    }
 
-        //// 保存性能数据
-        //AppMeter.WriteData(app, inf, "Ping", clientId, ip);
+    //    //// 保存性能数据
+    //    //AppMeter.WriteData(app, inf, "Ping", clientId, ip);
 
-        return online;
-    }
+    //    return online;
+    //}
 
     private static Int32 _totalCommands;
     private static IList<AppCommand> _commands;
     private static DateTime _nextTime;
 
-    public CommandModel[] AcquireAppCommands(Int32 appId)
+    public override CommandModel[] AcquireCommands(DeviceContext context)
     {
         // 缓存最近1000个未执行命令，用于快速过滤，避免大量节点在线时频繁查询命令表
         if (_nextTime < DateTime.Now || _totalCommands != AppCommand.Meta.Count)
@@ -460,10 +462,13 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
             _nextTime = DateTime.Now.AddMinutes(1);
         }
 
+        if (context.Device is not App app) return null;
+        var appId = app.Id;
+
         // 是否有本节点
         if (!_commands.Any(e => e.AppId == appId)) return null;
 
-        using var span = tracer?.NewSpan(nameof(AcquireAppCommands), new { appId });
+        using var span = tracer?.NewSpan(nameof(AcquireCommands), new { appId });
 
         var cmds = AppCommand.AcquireCommands(appId, 100);
         if (cmds.Count == 0) return null;
@@ -521,7 +526,7 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
     /// <param name="model">命令模型</param>
     /// <param name="user">创建者</param>
     /// <returns></returns>
-    public async Task<AppCommand> SendCommand(App app, String clientId, CommandInModel model, String user)
+    public async Task<CommandReplyModel> SendCommand(App app, String clientId, CommandInModel model, String user, CancellationToken cancellationToken = default)
     {
         //if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定应用");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
@@ -550,15 +555,15 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
 
             //_queue.Publish(app.Name, item.Client, cmdModel);
             var code = $"{app.Name}@{item.Client}";
-            ts.Add(sessionManager.PublishAsync(code, cmdModel, null, default));
+            ts.Add(sessionManager.PublishAsync(code, cmdModel, null, cancellationToken));
         }
-        Task.WaitAll(ts.ToArray());
+        await Task.WhenAll(ts);
 
         // 挂起等待。借助redis队列，等待响应
         if (model.Timeout > 0)
         {
             var q = queue.GetReplyQueue(cmd.Id);
-            var reply = await q.TakeOneAsync(model.Timeout);
+            var reply = await q.TakeOneAsync(model.Timeout, cancellationToken);
             if (reply != null)
             {
                 // 埋点
@@ -568,40 +573,19 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
                     throw new Exception($"命令错误！{reply.Data}");
                 else if (reply.Status == CommandStatus.取消)
                     throw new Exception($"命令已取消！{reply.Data}");
+
+                return reply;
             }
         }
 
-        return cmd;
+        return null;
     }
 
-    /// <summary>向应用发送命令</summary>
-    /// <param name="app">应用</param>
-    /// <param name="clientId">应用实例标识。向特定应用实例发送命令时指定</param>
-    /// <param name="command">命令</param>
-    /// <param name="argument">参数</param>
-    /// <param name="user"></param>
-    /// <returns></returns>
-    public async Task<AppCommand> SendCommand(App app, String clientId, String command, String argument, Int32 expire = 0, String user = null)
+    public override Task<CommandReplyModel> SendCommand(DeviceContext context, CommandInModel model, CancellationToken cancellationToken = default)
     {
-        var model = new CommandInModel
-        {
-            Command = command,
-            Argument = argument,
-            Expire = expire,
-        };
-        return await SendCommand(app, clientId, model, user);
-    }
+        if (context.Device is not App app) return null;
 
-    public override async Task<Int32> SendCommand(IDeviceModel device, CommandModel command, CancellationToken cancellationToken = default)
-    {
-        var model = new CommandInModel
-        {
-            Command = command.Command,
-            Argument = command.Argument,
-            Expire = (Int32)(command.Expire - DateTime.Now).TotalSeconds,
-        };
-        var cmd = await SendCommand(device as App, null, model, null);
-        return 1;
+        return SendCommand(app, null, model, null);
     }
 
     public override Int32 CommandReply(DeviceContext context, CommandReplyModel model)
@@ -647,7 +631,16 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
         foreach (var item in appIds)
         {
             var app = App.FindById(item);
-            if (app != null) ts.Add(SendCommand(app, null, command, arguments, 600, user));
+            if (app != null)
+            {
+                var model = new CommandInModel
+                {
+                    Command = command,
+                    Argument = arguments,
+                    Expire = 600,
+                };
+                ts.Add(SendCommand(app, null, model, user));
+            }
         }
 
         await Task.WhenAll(ts);
@@ -695,9 +688,9 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
     //    return events.Length;
     //}
 
-    protected override IEntity CreateEvent(DeviceContext context, EventModel model)
+    protected override IEntity CreateEvent(DeviceContext context, IDeviceModel2 device, EventModel model)
     {
-        var entity = base.CreateEvent(context, model);
+        var entity = base.CreateEvent(context, device, model);
         if (entity is AppHistory history)
         {
             var online = GetOnline(context) as AppOnline;
@@ -716,6 +709,8 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
     public override IDeviceModel QueryDevice(String code) => App.FindByName(code);
 
     public override IOnlineModel QueryOnline(String sessionId) => AppOnline.FindBySessionId(sessionId, true);
+
+    protected override String GetSessionId(DeviceContext context) => context.ClientId ?? base.GetSessionId(context);
 
     private void WriteHistory(App app, String action, Boolean success, String remark, String ip, String clientId)
     {

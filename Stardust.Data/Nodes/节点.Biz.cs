@@ -729,6 +729,31 @@ public partial class Node : Entity<Node>, IDeviceModel2, ILogProvider
     /// <summary>创建在线对象</summary>
     /// <param name="sessionId"></param>
     /// <returns></returns>
-    public IOnlineModel CreateOnline(String sessionId) => NodeOnline.GetOrAdd(sessionId);
+    public IOnlineModel CreateOnline(String sessionId)
+    {
+        var node = this;
+        var online = NodeOnline.GetOrAdd(sessionId);
+        online.ProjectId = node.ProjectId;
+        online.NodeID = node.ID;
+        online.Name = node.Name;
+        online.ProductCode = node.ProductCode;
+        online.IP = node.IP;
+        online.Category = node.Category;
+        online.ProvinceID = node.ProvinceID;
+        online.CityID = node.CityID;
+        online.Address = node.Address;
+        online.Location = node.Location;
+        online.OSKind = node.OSKind;
+        online.Version = node.Version;
+        online.CompileTime = node.CompileTime;
+        online.Memory = node.Memory;
+        online.MACs = node.MACs;
+        //online.Token = context.Token;
+        //online.CreateIP = context.UserHost;
+        //online.UpdateIP = context.UserHost;
+        online.Creator = Environment.MachineName;
+
+        return online;
+    }
     #endregion
 }
