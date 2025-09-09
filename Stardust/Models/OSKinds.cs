@@ -164,6 +164,12 @@ public enum OSKinds
 
     /// <summary>新支点操作系统</summary>
     NewStartOS = 149,
+
+    /// <summary>腾讯云针对云的场景研发的Linux 操作系统</summary>
+    TencentOS = 150,
+
+    /// <summary>开源操作系统社区 OpenCloudOS 由腾讯与合作伙伴共同倡议发起</summary>
+    OpenCloudOS = 151,
     #endregion
 
     #region 国产独立
