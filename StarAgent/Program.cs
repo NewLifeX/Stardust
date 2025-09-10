@@ -433,17 +433,17 @@ internal class MyService : ServiceBase, IServiceProvider
             AgentSetting = AgentSetting,
         };
 
-        // 登录后保存证书
-        client.OnLogined += (s, e) =>
-        {
-            var inf = e.Response;
-            if (inf != null && !inf.Code.IsNullOrEmpty())
-            {
-                set.Code = inf.Code;
-                set.Secret = inf.Secret;
-                set.Save();
-            }
-        };
+        //// 登录后保存证书
+        //client.OnLogined += (s, e) =>
+        //{
+        //    var inf = e.Response;
+        //    if (inf != null && !inf.Code.IsNullOrEmpty())
+        //    {
+        //        set.Code = inf.Code;
+        //        set.Secret = inf.Secret;
+        //        set.Save();
+        //    }
+        //};
 
         // 服务迁移
         client.OnMigration += OnMigration;
