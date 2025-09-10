@@ -61,7 +61,7 @@ public class OnlineService : IHostedService
                     var app = olt?.App;
                     if (app != null)
                     {
-                        var msg = $"[{app}]登录于{olt.CreateTime}，最后活跃于{olt.UpdateTime}";
+                        var msg = $"[{app}/{olt?.Client}]登录于{olt.CreateTime}，最后活跃于{olt.UpdateTime}";
                         app.WriteHistory("超时下线", true, msg, olt.Version, olt.CreateIP, olt.Client);
 
                         CheckOffline(app, "超时下线");

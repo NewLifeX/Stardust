@@ -47,7 +47,7 @@ public class NodeOnlineService(IServiceProvider serviceProvider, StarServerSetti
                     var node = online?.Node;
                     if (node != null)
                     {
-                        var msg = $"[{node}]登录于{online.CreateTime}，最后活跃于{online.UpdateTime}";
+                        var msg = $"[{node}/{online?.SessionID}]登录于{online.CreateTime}，最后活跃于{online.UpdateTime}";
                         node.WriteHistory("超时下线", true, msg, online.CreateIP);
 
                         // 计算在线时长
