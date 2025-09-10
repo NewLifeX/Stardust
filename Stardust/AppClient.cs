@@ -187,6 +187,7 @@ public class AppClient : ClientBase, IRegistry
         await PingLocal().ConfigureAwait(false);
 
         if (!NetworkInterface.GetIsNetworkAvailable()) return;
+        if (!Logined) return;
 
         await RefreshPublish().ConfigureAwait(false);
         await RefreshConsume().ConfigureAwait(false);
