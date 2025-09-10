@@ -265,7 +265,7 @@ public class StarFactory : DisposeBase
         container.AddSingleton(p => GetConfig()!);
 
         container.TryAddSingleton(XTrace.Log);
-        container.TryAddSingleton(typeof(ICacheProvider), typeof(CacheProvider));
+        container.TryAddSingleton<ICacheProvider, CacheProvider>();
     }
 
     [MemberNotNullWhen(true, nameof(_client))]

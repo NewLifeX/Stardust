@@ -152,7 +152,7 @@ public class StarTracer : DefaultTracer
         };
 
         // 如果网络不可用，直接保存到队列
-        if (!NetworkInterface.GetIsNetworkAvailable())
+        if (!NetworkInterface.GetIsNetworkAvailable() || client is not ClientBase cb || !cb.Logined)
         {
             SaveFails(model);
             return;
