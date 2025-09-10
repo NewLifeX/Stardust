@@ -34,7 +34,6 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
     public String[]? Plugins { get; set; }
 
     private FrameworkManager _frameworkManager = new();
-    private readonly ICache _cache = new MemoryCache();
     #endregion
 
     #region 构造
@@ -375,7 +374,7 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
         if (rs != null)
         {
             // 迁移到新服务器
-            if (rs is PingResponse prs && !prs.NewServer.IsNullOrEmpty() && prs.NewServer != Server)
+            if (rs is IPingResponse2 prs && !prs.NewServer.IsNullOrEmpty() && prs.NewServer != Server)
             {
                 var arg = new MigrationEventArgs { NewServer = prs.NewServer };
 

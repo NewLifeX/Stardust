@@ -170,10 +170,11 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
         {
             rs.Period = node.Period;
 
+            if (rs is IPingResponse2 rs2)
+                rs2.NewServer = !node.NewServer.IsNullOrEmpty() ? node.NewServer : node.Project?.NewServer;
+
             if (rs is MyPingResponse mrs)
             {
-                mrs.NewServer = !node.NewServer.IsNullOrEmpty() ? node.NewServer : node.Project?.NewServer;
-
                 // 服务端设置节点的同步时间周期时，客户端会覆盖掉；服务端未设置时，不要覆盖客户端的同步参数
                 if (node.SyncTime > 0) mrs.SyncTime = node.SyncTime;
             }

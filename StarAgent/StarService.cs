@@ -118,7 +118,7 @@ public class StarService : DisposeBase, IApi
     /// <param name="info"></param>
     /// <returns></returns>
     [Api(nameof(Ping))]
-    public PingResponse Ping(LocalPingInfo info)
+    public IPingResponse Ping(LocalPingInfo info)
     {
         if (info != null && info.ProcessId > 0)
         {

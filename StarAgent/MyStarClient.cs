@@ -113,7 +113,7 @@ internal class MyStarClient : StarClient
         }
     }
 
-    public override async Task<IPingResponse> Ping(CancellationToken cancellationToken = default)
+    public override async Task<IPingResponse?> Ping(CancellationToken cancellationToken = default)
     {
         var rs = await base.Ping(cancellationToken);
         if (rs is MyPingResponse mpr)
