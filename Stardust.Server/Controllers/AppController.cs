@@ -189,21 +189,24 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     {
         var app = Context.Device as App ?? throw new InvalidOperationException("未登录！");
 
+        using var span = tracer?.NewSpan("cmd:Ws:Create", app.Name);
         using var session = new AppCommandSession(socket)
         {
             Code = $"{app.Name}@{Context.ClientId}",
             Log = this,
-            SetOnline = online => registryService.SetOnline(Context, online)
+            SetOnline = online => registryService.SetOnline(Context, online),
+            Tracer = tracer,
         };
         sessionManager.Add(session);
 
-        await session.WaitAsync(HttpContext, cancellationToken);
+        await session.WaitAsync(HttpContext, span, cancellationToken);
     }
 
     /// <summary>向节点发送命令。通知应用刷新配置信息和服务信息等</summary>
     /// <param name="model"></param>
     /// <param name="token">应用令牌</param>
     /// <returns></returns>
+    [AllowAnonymous]
     [HttpPost(nameof(SendCommand))]
     public Task<CommandReplyModel> SendCommand(CommandInModel model)
     {
@@ -257,7 +260,8 @@ public class AppController(RegistryService registryService, ITokenService tokenS
         var app = Context.Device as App;
         var info = GetService(model.ServiceName);
 
-        var (svc, changed) = registryService.RegisterService(app, info, model, UserHost);
+        var online = Context.Online as AppOnline;
+        var (svc, changed) = registryService.RegisterService(app, info, model, online, UserHost);
 
         // 发布消息通知消费者
         if (changed)
@@ -313,8 +317,9 @@ public class AppController(RegistryService registryService, ITokenService tokenS
         }
 
         // 节点信息
-        var olt = AppOnline.FindByClient(model.ClientId);
-        if (olt != null) svc.NodeId = olt.NodeId;
+        //var online = AppOnline.FindByClient(model.ClientId);
+        var online = Context.Online as AppOnline;
+        if (online != null) svc.NodeId = online.NodeId;
 
         // 作用域
         svc.Scope = AppRule.CheckScope(-1, UserHost, model.ClientId);

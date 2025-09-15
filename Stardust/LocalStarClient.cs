@@ -53,6 +53,7 @@ public class LocalStarClient
 
         _client = new ApiClient($"udp://127.0.0.1:{Port}")
         {
+            Name = "StarAgent",
             Timeout = 3_000,
             Log = Log,
         };

@@ -268,15 +268,17 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
     {
         var node = Context.Device as Node;
 
+        using var span = tracer?.NewSpan("cmd:Ws:Create", node.Code);
         using var session = new NodeCommandSession(socket)
         {
             Code = node.Code,
             Log = this,
-            SetOnline = online => nodeService.SetOnline(Context, online)
+            SetOnline = online => nodeService.SetOnline(Context, online),
+            Tracer = tracer,
         };
         sessionManager.Add(session);
 
-        await session.WaitAsync(HttpContext, cancellationToken);
+        await session.WaitAsync(HttpContext, span, cancellationToken);
     }
 
     /// <summary>向节点发送命令。通知节点更新、安装和启停应用等</summary>

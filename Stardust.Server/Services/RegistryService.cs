@@ -203,7 +203,7 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
     #endregion
 
     #region 服务注册
-    public (AppService, Boolean changed) RegisterService(App app, Service service, PublishServiceInfo model, String ip)
+    public (AppService, Boolean changed) RegisterService(App app, Service service, PublishServiceInfo model, AppOnline online, String ip)
     {
         var clientId = model.ClientId;
         var localIp = clientId;
@@ -247,8 +247,8 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
         }
 
         // 节点信息
-        var olt = AppOnline.FindByClient(model.ClientId);
-        if (olt != null) svc.NodeId = olt.NodeId;
+        //var online = AppOnline.FindByClient(model.ClientId);
+        if (online != null) svc.NodeId = online.NodeId;
 
         // 作用域
         if (service.UseScope)
@@ -511,7 +511,7 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
     /// <returns></returns>
     public override void SetOnline(DeviceContext context, Boolean online)
     {
-        if ((context.Online ?? GetOnline(context)) is AppOnline olt)
+        if ((GetOnline(context) ?? context.Online) is AppOnline olt)
         {
             olt.WebSocket = online;
             olt.Update();
