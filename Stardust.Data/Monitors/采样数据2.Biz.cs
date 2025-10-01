@@ -131,7 +131,7 @@ namespace Stardust.Data.Monitors
                 if (item.TraceId == traceId && !list.Any(e => e.Id == item.Id))
                 {
                     var entity = new SampleData2();
-                    entity.CopyFrom(item);
+                    entity.CopyFrom(item, true, true);
 
                     entity.AppId = item.TraceItem?.AppId ?? 0;
                     entity.ItemId = item.ItemId;

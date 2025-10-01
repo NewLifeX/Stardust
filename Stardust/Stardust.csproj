@@ -119,10 +119,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Remoting" Version="3.5.2025.915-beta1636" />
+    <PackageReference Include="NewLife.Remoting" Version="3.5.2025.1001" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="11.6.2025.914-beta0534" />
+    <PackageReference Include="NewLife.Core" Version="11.7.2025.1001" />
   </ItemGroup>
 
 </Project>

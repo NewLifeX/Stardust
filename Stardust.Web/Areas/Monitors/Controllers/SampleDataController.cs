@@ -105,7 +105,7 @@ public class SampleDataController : ReadOnlyEntityController<SampleData>
         if (entity2 != null)
         {
             entity = new SampleData();
-            entity.CopyFrom(entity2, false);
+            entity.CopyFrom(entity2, false, false);
             return entity;
         }
 
