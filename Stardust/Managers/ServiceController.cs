@@ -473,6 +473,10 @@ public class ServiceController : DisposeBase
                 p = Process.GetProcessById((Int32)pid);
             }
         }
+        else if (Runtime.Windows && !user.IsNullOrEmpty())
+        {
+            WriteLog("在Windows下以特定用户[{0}]启动进程，大概率失败，因没有密码令牌", user);
+        }
         else
         {
             p = Process.Start(si);
