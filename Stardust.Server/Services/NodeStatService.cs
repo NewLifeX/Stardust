@@ -39,9 +39,9 @@ public class NodeStatService : IHostedService
         // 减少Sql日志
         var dal = NodeStat.Meta.Session.Dal;
         var oldSql = dal.Session.ShowSQL;
-#if !DEBUG
+        //#if !DEBUG
         dal.Session.ShowSQL = false;
-#endif
+        //#endif
         try
         {
             // 每天0点，补偿跑T-1
