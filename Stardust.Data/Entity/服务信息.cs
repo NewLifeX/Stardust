@@ -297,6 +297,36 @@ public partial class Service
     #region 扩展查询
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="projectId">项目。资源归属的团队</param>
+    /// <param name="extranet">外网。外网服务使用提供者公网地址进行注册</param>
+    /// <param name="singleton">单例。每个节点只部署一个实例，多节点多实例，此时使用本地IP作为唯一标识，便于设置权重</param>
+    /// <param name="useScope">作用域。使用作用域隔离后，消费者只能使用本作用域内的服务</param>
+    /// <param name="healthCheck">健康监测。定时检测服务是否可用</param>
+    /// <param name="enable">启用</param>
+    /// <param name="start">更新时间开始</param>
+    /// <param name="end">更新时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<Service> Search(Int32 projectId, Boolean? extranet, Boolean? singleton, Boolean? useScope, Boolean? healthCheck, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (projectId >= 0) exp &= _.ProjectId == projectId;
+        if (extranet != null) exp &= _.Extranet == extranet;
+        if (singleton != null) exp &= _.Singleton == singleton;
+        if (useScope != null) exp &= _.UseScope == useScope;
+        if (healthCheck != null) exp &= _.HealthCheck == healthCheck;
+        if (enable != null) exp &= _.Enable == enable;
+        exp &= _.UpdateTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得服务信息字段信息的快捷方式</summary>
     public partial class _

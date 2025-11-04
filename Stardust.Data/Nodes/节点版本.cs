@@ -246,6 +246,32 @@ public partial class NodeVersion
     #region 扩展查询
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="version">版本号</param>
+    /// <param name="force">强制。强制升级</param>
+    /// <param name="channel">升级通道</param>
+    /// <param name="enable">启用。启用/停用</param>
+    /// <param name="start">更新时间开始</param>
+    /// <param name="end">更新时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<NodeVersion> Search(String version, Boolean? force, NodeChannels channel, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (!version.IsNullOrEmpty()) exp &= _.Version == version;
+        if (force != null) exp &= _.Force == force;
+        if (channel >= 0) exp &= _.Channel == channel;
+        if (enable != null) exp &= _.Enable == enable;
+        exp &= _.UpdateTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得节点版本字段信息的快捷方式</summary>
     public partial class _

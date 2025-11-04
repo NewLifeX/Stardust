@@ -811,6 +811,51 @@ public partial class Node
     }
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="projectId">项目。资源归属的团队</param>
+    /// <param name="code">编码。NodeKey</param>
+    /// <param name="productCode">产品。产品编码，用于区分不同类型节点</param>
+    /// <param name="category">分类</param>
+    /// <param name="version">版本</param>
+    /// <param name="oSKind">系统种类。主流操作系统类型，不考虑子版本</param>
+    /// <param name="ip">本地IP</param>
+    /// <param name="uuid">唯一标识</param>
+    /// <param name="machineGuid">机器标识</param>
+    /// <param name="mACs">网卡</param>
+    /// <param name="updateTime">更新时间</param>
+    /// <param name="channel">通道。升级通道，默认Release通道，使用Beta通道可以得到较新版本</param>
+    /// <param name="alarmOnOffline">下线告警。节点下线时，发送告警</param>
+    /// <param name="enable">启用</param>
+    /// <param name="start">最后活跃开始</param>
+    /// <param name="end">最后活跃结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<Node> Search(Int32 projectId, String code, String productCode, String category, String version, Stardust.Models.OSKinds oSKind, String ip, String uuid, String machineGuid, String mACs, DateTime updateTime, NodeChannels channel, Boolean? alarmOnOffline, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (projectId >= 0) exp &= _.ProjectId == projectId;
+        if (!code.IsNullOrEmpty()) exp &= _.Code == code;
+        if (!productCode.IsNullOrEmpty()) exp &= _.ProductCode == productCode;
+        if (!category.IsNullOrEmpty()) exp &= _.Category == category;
+        if (!version.IsNullOrEmpty()) exp &= _.Version == version;
+        if (oSKind >= 0) exp &= _.OSKind == oSKind;
+        if (!ip.IsNullOrEmpty()) exp &= _.IP == ip;
+        if (!uuid.IsNullOrEmpty()) exp &= _.Uuid == uuid;
+        if (!machineGuid.IsNullOrEmpty()) exp &= _.MachineGuid == machineGuid;
+        if (!mACs.IsNullOrEmpty()) exp &= _.MACs == mACs;
+        if (channel >= 0) exp &= _.Channel == channel;
+        if (alarmOnOffline != null) exp &= _.AlarmOnOffline == alarmOnOffline;
+        if (enable != null) exp &= _.Enable == enable;
+        exp &= _.LastActive.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得节点字段信息的快捷方式</summary>
     public partial class _

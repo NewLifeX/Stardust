@@ -441,6 +441,42 @@ public partial class AppDeploy
     #region 扩展查询
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="projectId">项目。资源归属的团队</param>
+    /// <param name="multiVersion">多版本。支持多运行时版本，此时只认可部署版本中符合运行时要求的最新可用版本</param>
+    /// <param name="autoPublish">自动发布。应用版本后自动发布到启用节点，加快发布速度</param>
+    /// <param name="projectKind">项目类型。默认dotnet</param>
+    /// <param name="priority">优先级。表示应用程序中任务或操作的优先级级别</param>
+    /// <param name="mode">工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</param>
+    /// <param name="autoStop">自动停止。随着宿主的退出，同时停止该应用进程</param>
+    /// <param name="reloadOnChange">检测变动。当文件发生改变时，自动重启应用</param>
+    /// <param name="enable">启用</param>
+    /// <param name="start">更新时间开始</param>
+    /// <param name="end">更新时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppDeploy> Search(Int32 projectId, Boolean? multiVersion, Boolean? autoPublish, Stardust.Models.ProjectKinds projectKind, Stardust.Models.ProcessPriority priority, Stardust.Models.ServiceModes mode, Boolean? autoStop, Boolean? reloadOnChange, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (projectId >= 0) exp &= _.ProjectId == projectId;
+        if (multiVersion != null) exp &= _.MultiVersion == multiVersion;
+        if (autoPublish != null) exp &= _.AutoPublish == autoPublish;
+        if (projectKind >= 0) exp &= _.ProjectKind == projectKind;
+        if (priority >= 0) exp &= _.Priority == priority;
+        if (mode >= 0) exp &= _.Mode == mode;
+        if (autoStop != null) exp &= _.AutoStop == autoStop;
+        if (reloadOnChange != null) exp &= _.ReloadOnChange == reloadOnChange;
+        if (enable != null) exp &= _.Enable == enable;
+        exp &= _.UpdateTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得应用部署字段信息的快捷方式</summary>
     public partial class _

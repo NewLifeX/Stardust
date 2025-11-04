@@ -372,6 +372,32 @@ public partial class RedisNode
     #region 扩展查询
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="server">地址。含端口</param>
+    /// <param name="projectId">项目。资源归属的团队</param>
+    /// <param name="scanQueue">队列。自动扫描发现消息队列，默认true</param>
+    /// <param name="enable">启用。停用的节点不再执行监控</param>
+    /// <param name="start">更新时间开始</param>
+    /// <param name="end">更新时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<RedisNode> Search(String server, Int32 projectId, Boolean? scanQueue, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (!server.IsNullOrEmpty()) exp &= _.Server == server;
+        if (projectId >= 0) exp &= _.ProjectId == projectId;
+        if (scanQueue != null) exp &= _.ScanQueue == scanQueue;
+        if (enable != null) exp &= _.Enable == enable;
+        exp &= _.UpdateTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得Redis节点字段信息的快捷方式</summary>
     public partial class _

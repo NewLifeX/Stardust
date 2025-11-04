@@ -263,6 +263,32 @@ public partial class GalaxyProject
     #region 扩展查询
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="tenantId">租户。该项目所属租户，实现隔离</param>
+    /// <param name="managerId">管理者</param>
+    /// <param name="isGlobal">全局。该项目的节点可以允许其它项目下应用选用</param>
+    /// <param name="enable">启用</param>
+    /// <param name="start">更新时间开始</param>
+    /// <param name="end">更新时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<GalaxyProject> Search(Int32 tenantId, Int32 managerId, Boolean? isGlobal, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (tenantId >= 0) exp &= _.TenantId == tenantId;
+        if (managerId >= 0) exp &= _.ManagerId == managerId;
+        if (isGlobal != null) exp &= _.IsGlobal == isGlobal;
+        if (enable != null) exp &= _.Enable == enable;
+        exp &= _.UpdateTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得星系项目字段信息的快捷方式</summary>
     public partial class _

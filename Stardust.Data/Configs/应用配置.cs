@@ -352,6 +352,40 @@ public partial class AppConfig
     #region 扩展查询
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="projectId">项目。资源归属的团队</param>
+    /// <param name="appId">应用。对应StarApp</param>
+    /// <param name="canBeQuoted">可被依赖。打开后，才能被其它应用依赖</param>
+    /// <param name="isGlobal">全局。该应用下的配置数据作为全局数据，请求任意应用配置都返回</param>
+    /// <param name="readonly">只读。只读应用，不支持客户端上传配置数据，可用于保护数据避免被错误修改</param>
+    /// <param name="enableWorkerId">雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增</param>
+    /// <param name="enableApollo">阿波罗</param>
+    /// <param name="enable">启用</param>
+    /// <param name="start">更新时间开始</param>
+    /// <param name="end">更新时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppConfig> Search(Int32 projectId, Int32 appId, Boolean? canBeQuoted, Boolean? isGlobal, Boolean? @readonly, Boolean? enableWorkerId, Boolean? enableApollo, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (projectId >= 0) exp &= _.ProjectId == projectId;
+        if (appId >= 0) exp &= _.AppId == appId;
+        if (canBeQuoted != null) exp &= _.CanBeQuoted == canBeQuoted;
+        if (isGlobal != null) exp &= _.IsGlobal == isGlobal;
+        if (@readonly != null) exp &= _.Readonly == @readonly;
+        if (enableWorkerId != null) exp &= _.EnableWorkerId == enableWorkerId;
+        if (enableApollo != null) exp &= _.EnableApollo == enableApollo;
+        if (enable != null) exp &= _.Enable == enable;
+        exp &= _.UpdateTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得应用配置字段信息的快捷方式</summary>
     public partial class _

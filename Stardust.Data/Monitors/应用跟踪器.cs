@@ -422,6 +422,34 @@ public partial class AppTracer
     #region 扩展查询
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="projectId">项目。资源归属的团队</param>
+    /// <param name="appId">应用</param>
+    /// <param name="mode">跟踪模式。仅针对api类型，过滤被扫描的数据</param>
+    /// <param name="enableMeter">性能收集。收集应用性能信息，数量较大的客户端可以不必收集应用性能信息</param>
+    /// <param name="enable">启用</param>
+    /// <param name="start">更新时间开始</param>
+    /// <param name="end">更新时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppTracer> Search(Int32 projectId, Int32 appId, TraceModes mode, Boolean? enableMeter, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (projectId >= 0) exp &= _.ProjectId == projectId;
+        if (appId >= 0) exp &= _.AppId == appId;
+        if (mode >= 0) exp &= _.Mode == mode;
+        if (enableMeter != null) exp &= _.EnableMeter == enableMeter;
+        if (enable != null) exp &= _.Enable == enable;
+        exp &= _.UpdateTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得应用跟踪器字段信息的快捷方式</summary>
     public partial class _

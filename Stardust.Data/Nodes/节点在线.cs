@@ -597,6 +597,38 @@ public partial class NodeOnline
     }
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="projectId">项目。资源归属的团队</param>
+    /// <param name="sessionId">会话</param>
+    /// <param name="provinceId">省份</param>
+    /// <param name="cityId">城市</param>
+    /// <param name="token">令牌</param>
+    /// <param name="webSocket">长连接。WebSocket长连接</param>
+    /// <param name="oSKind">系统种类。主流操作系统类型，不考虑子版本</param>
+    /// <param name="start">更新时间开始</param>
+    /// <param name="end">更新时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<NodeOnline> Search(Int32 projectId, String sessionId, Int32 provinceId, Int32 cityId, String token, Boolean? webSocket, Stardust.Models.OSKinds oSKind, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (projectId >= 0) exp &= _.ProjectId == projectId;
+        if (!sessionId.IsNullOrEmpty()) exp &= _.SessionID == sessionId;
+        if (provinceId >= 0) exp &= _.ProvinceID == provinceId;
+        if (cityId >= 0) exp &= _.CityID == cityId;
+        if (!token.IsNullOrEmpty()) exp &= _.Token == token;
+        if (webSocket != null) exp &= _.WebSocket == webSocket;
+        if (oSKind >= 0) exp &= _.OSKind == oSKind;
+        exp &= _.UpdateTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得节点在线字段信息的快捷方式</summary>
     public partial class _

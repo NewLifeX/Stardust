@@ -410,6 +410,34 @@ public partial class AppDeployNode
     #region 扩展查询
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="deployId">应用部署集。对应AppDeploy</param>
+    /// <param name="nodeId">节点。节点服务器</param>
+    /// <param name="priority">优先级。表示应用程序中任务或操作的优先级级别</param>
+    /// <param name="mode">工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置</param>
+    /// <param name="enable">启用</param>
+    /// <param name="start">更新时间开始</param>
+    /// <param name="end">更新时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppDeployNode> Search(Int32 deployId, Int32 nodeId, Stardust.Models.ProcessPriority priority, Stardust.Models.ServiceModes mode, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (deployId >= 0) exp &= _.DeployId == deployId;
+        if (nodeId >= 0) exp &= _.NodeId == nodeId;
+        if (priority >= 0) exp &= _.Priority == priority;
+        if (mode >= 0) exp &= _.Mode == mode;
+        if (enable != null) exp &= _.Enable == enable;
+        exp &= _.UpdateTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得应用节点字段信息的快捷方式</summary>
     public partial class _

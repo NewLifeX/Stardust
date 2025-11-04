@@ -246,6 +246,30 @@ public partial class ConfigData
     }
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="configId">应用</param>
+    /// <param name="scope">作用域</param>
+    /// <param name="enable">启用</param>
+    /// <param name="start">更新时间开始</param>
+    /// <param name="end">更新时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<ConfigData> Search(Int32 configId, String scope, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (configId >= 0) exp &= _.ConfigId == configId;
+        if (!scope.IsNullOrEmpty()) exp &= _.Scope == scope;
+        if (enable != null) exp &= _.Enable == enable;
+        exp &= _.UpdateTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得配置数据字段信息的快捷方式</summary>
     public partial class _

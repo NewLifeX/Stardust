@@ -186,6 +186,30 @@ public partial class TraceRule
     #region 扩展查询
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="isWhite">白名单。否则是黑名单</param>
+    /// <param name="isRegex">正则。是否使用正则表达式，此时区分大小写</param>
+    /// <param name="enable">启用</param>
+    /// <param name="start">更新时间开始</param>
+    /// <param name="end">更新时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<TraceRule> Search(Boolean? isWhite, Boolean? isRegex, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (isWhite != null) exp &= _.IsWhite == isWhite;
+        if (isRegex != null) exp &= _.IsRegex == isRegex;
+        if (enable != null) exp &= _.Enable == enable;
+        exp &= _.UpdateTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得跟踪规则字段信息的快捷方式</summary>
     public partial class _

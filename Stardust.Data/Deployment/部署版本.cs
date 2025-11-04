@@ -310,6 +310,32 @@ public partial class AppDeployVersion
     }
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="deployId">应用部署集。对应AppDeploy</param>
+    /// <param name="mode">发布模式。1部分包，仅覆盖；2标准包，清空可执行文件再覆盖；3完整包，清空所有文件</param>
+    /// <param name="runtime">运行时。RID是运行时标识符，用于标识应用程序运行所在的目标平台。如win-x64/linux-arm</param>
+    /// <param name="enable">启用</param>
+    /// <param name="start">更新时间开始</param>
+    /// <param name="end">更新时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppDeployVersion> Search(Int32 deployId, Stardust.Models.DeployModes mode, Stardust.Models.RuntimeIdentifier runtime, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (deployId >= 0) exp &= _.DeployId == deployId;
+        if (mode >= 0) exp &= _.Mode == mode;
+        if (runtime >= 0) exp &= _.Runtime == runtime;
+        if (enable != null) exp &= _.Enable == enable;
+        exp &= _.UpdateTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得部署版本字段信息的快捷方式</summary>
     public partial class _

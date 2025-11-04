@@ -155,7 +155,7 @@ public class RedisService : IHostedService, IRedisService
             // keys个数太大不支持扫描
             if (rds.Count < 10000)
             {
-                foreach (var item in rds.Search("*:Status:*", 1000))
+                foreach (var item in rds.Search("*:Status:*", 0, 1000))
                 {
                     var ss = item.Split(":");
                     var topic = ss.Take(ss.Length - 2).Join(":");
@@ -266,7 +266,7 @@ public class RedisService : IHostedService, IRedisService
                     var mq = rds.GetQueue<Object>(queue.Topic);
                     queue.Messages = mq.Count;
 
-                    var cs = rds.Search($"{queue.Topic}:Status:*", 1000).ToArray();
+                    var cs = rds.Search($"{queue.Topic}:Status:*", 0, 1000).ToArray();
                     queue.Consumers = cs.Length;
 
                     if (cs.Length > 0)
@@ -294,7 +294,7 @@ public class RedisService : IHostedService, IRedisService
                     var topic = queue.Topic.TrimEnd(":Delay");
                     //var st = rds.Get<RedisQueueStatus>(topic);
 
-                    var cs = rds.Search($"{topic}:Status:*", 1000).ToArray();
+                    var cs = rds.Search($"{topic}:Status:*", 0, 1000).ToArray();
                     queue.Consumers = cs.Length;
 
                     if (cs.Length > 0)

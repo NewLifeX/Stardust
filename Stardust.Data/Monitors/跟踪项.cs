@@ -361,6 +361,32 @@ public partial class TraceItem
     }
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="appId">应用</param>
+    /// <param name="kind">种类</param>
+    /// <param name="cloned">克隆。根据规则匹配，把跟踪数据克隆一份，形成另一个维度的统计数据</param>
+    /// <param name="enable">启用</param>
+    /// <param name="start">更新时间开始</param>
+    /// <param name="end">更新时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<TraceItem> Search(Int32 appId, String kind, Boolean? cloned, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (appId >= 0) exp &= _.AppId == appId;
+        if (!kind.IsNullOrEmpty()) exp &= _.Kind == kind;
+        if (cloned != null) exp &= _.Cloned == cloned;
+        if (enable != null) exp &= _.Enable == enable;
+        exp &= _.UpdateTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得跟踪项字段信息的快捷方式</summary>
     public partial class _

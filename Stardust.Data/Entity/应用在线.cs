@@ -360,6 +360,36 @@ public partial class AppOnline
     }
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="projectId">项目。资源归属的团队</param>
+    /// <param name="appId">应用</param>
+    /// <param name="client">客户端。IP加进程，不同应用的Client可能相同，但几率很低，暂不考虑</param>
+    /// <param name="ip">本地IP。节点本地IP地址</param>
+    /// <param name="token">令牌</param>
+    /// <param name="webSocket">长连接。WebSocket长连接</param>
+    /// <param name="start">更新时间开始</param>
+    /// <param name="end">更新时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppOnline> Search(Int32 projectId, Int32 appId, String client, String ip, String token, Boolean? webSocket, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (projectId >= 0) exp &= _.ProjectId == projectId;
+        if (appId >= 0) exp &= _.AppId == appId;
+        if (!client.IsNullOrEmpty()) exp &= _.Client == client;
+        if (!ip.IsNullOrEmpty()) exp &= _.IP == ip;
+        if (!token.IsNullOrEmpty()) exp &= _.Token == token;
+        if (webSocket != null) exp &= _.WebSocket == webSocket;
+        exp &= _.UpdateTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得应用在线字段信息的快捷方式</summary>
     public partial class _
