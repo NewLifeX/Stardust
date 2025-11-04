@@ -19,11 +19,16 @@ namespace Stardust.Server.Services;
 
 public class NodeService(ITokenService tokenService, IPasswordProvider passwordProvider, StarServerSetting setting, NodeSessionManager sessionManager, ICacheProvider cacheProvider, ITracer tracer, IServiceProvider serviceProvider) : DefaultDeviceService<Node, NodeOnline>(sessionManager, passwordProvider, cacheProvider, serviceProvider)
 {
+    private String Name => "Node";
+    private ITracer? _tracer = serviceProvider.GetService<ITracer>();
+
     #region 登录注销
     /// <summary>验证设备合法性</summary>
     public override Boolean Authorize(DeviceContext context, ILoginRequest request)
     {
         if (context.Device is not Node node) return false;
+
+        using var span = _tracer?.NewSpan($"{Name}Authorize", new { request.Code, request.ClientId });
 
         var inf = request as LoginInfo;
         var ip = context.UserHost;
@@ -59,6 +64,8 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
     /// <exception cref="ApiException"></exception>
     public override IDeviceModel Register(DeviceContext context, ILoginRequest request)
     {
+        using var span = _tracer?.NewSpan($"{Name}Register", new { request.Code, request.ClientId });
+
         var inf = request as LoginInfo;
         var node = context.Device as Node ?? QueryDevice(request.Code) as Node;
         var ip = context.UserHost;
@@ -88,6 +95,8 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
     /// <param name="request"></param>
     public override void OnLogin(DeviceContext context, ILoginRequest request)
     {
+        using var span = _tracer?.NewSpan($"{Name}OnLogin", new { request.Code, request.ClientId });
+
         var node = context.Device as Node;
         var inf = request as LoginInfo;
         var ip = context.UserHost;
@@ -126,6 +135,8 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
     /// <returns></returns>
     public override IOnlineModel Logout(DeviceContext context, String reason, String source)
     {
+        using var span = _tracer?.NewSpan($"{Name}Logout", new { context.Code, context.ClientId, reason, source });
+
         //var node = context.Device as Node;
         //var ip = context.UserHost;
         //var online = GetOnline(node, ip);
@@ -467,6 +478,8 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
     {
         if (context.Device is not Node node) return null;
 
+        using var span = _tracer?.NewSpan($"{Name}OnPing", new { context.Code, context.ClientId });
+
         var inf = request as PingInfo;
         if (!inf.IP.IsNullOrEmpty()) node.IP = inf.IP;
         if (!inf.Gateway.IsNullOrEmpty()) node.Gateway = inf.Gateway;
@@ -601,6 +614,8 @@ public class NodeService(ITokenService tokenService, IPasswordProvider passwordP
     /// <returns></returns>
     public NodeOnline CreateOnline(Node node, String token, String ip)
     {
+        using var span = _tracer?.NewSpan($"{Name}CreateOnline", new { node.Code, ip });
+
         //var sid = $"{node.ID}@{ip}";
         var sid = node.Code;
         var olt = NodeOnline.GetOrAdd(sid);

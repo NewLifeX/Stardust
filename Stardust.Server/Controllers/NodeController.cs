@@ -66,12 +66,15 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
     [HttpPost(nameof(Login))]
     public ILoginResponse Login(JsonElement data)
     {
+        var span = DefaultSpan.Current;
+
         // 由于客户端的多样性，这里需要手工控制序列化。某些客户端的节点信息跟密钥信息在同一层级。
         var jsonOptions = HttpContext.RequestServices.GetService<IOptions<JsonOptions>>();
         var options = jsonOptions.Value.JsonSerializerOptions;
         var inf = data.Deserialize<LoginInfo>(options);
         if (inf.Node == null || inf.Node.UUID.IsNullOrEmpty() && inf.Node.MachineGuid.IsNullOrEmpty() && inf.Node.Macs.IsNullOrEmpty())
         {
+            span?.AppendTag("兼容旧版本请求体");
             inf.Node = data.Deserialize<NodeInfo>(options);
         }
 
@@ -87,6 +90,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
         if (inf.ProductCode.IsNullOrEmpty())
         {
             var installPath = inf.Node?.InstallPath;
+            span?.AppendTag($"兼容旧版本XCoder（2020年），installPath:{installPath}");
             if (!installPath.IsNullOrEmpty())
             {
                 if (installPath.Contains("XCoder"))
