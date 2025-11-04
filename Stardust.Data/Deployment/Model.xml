@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202407.xsd" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model202407.xsd">
+<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202509.xsd" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model202509.xsd">
   <Option>
     <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
     <ClassNameTemplate />
@@ -214,6 +214,8 @@
         <Column Name="UploadTime" DataType="DateTime" Description="上传时间。附件上传时间，可用于构造文件存储路径" />
         <Column Name="Url" DataType="String" Length="500" Description="网址。链接到附件所在信息页的地址" />
         <Column Name="Source" DataType="String" Length="500" Description="来源。用于远程抓取的附件来源地址，本地文件不存在时自动依次抓取" />
+        <Column Name="Downloads" DataType="Int32" Description="下载次数" />
+        <Column Name="LastDownload" DataType="DateTime" Description="最后下载。最后一次下载的时间" />
         <Column Name="TraceId" DataType="String" Description="追踪。链路追踪，用于APM性能追踪定位，还原该事件的调用链" Category="扩展" />
         <Column Name="CreateUser" DataType="String" Description="创建者" Category="扩展" />
         <Column Name="CreateUserID" DataType="Int32" Description="创建用户" Category="扩展" />

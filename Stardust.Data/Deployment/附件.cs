@@ -136,6 +136,22 @@ public partial class Attachment
     [BindColumn("Source", "来源。用于远程抓取的附件来源地址，本地文件不存在时自动依次抓取", "")]
     public String Source { get => _Source; set { if (OnPropertyChanging("Source", value)) { _Source = value; OnPropertyChanged("Source"); } } }
 
+    private Int32 _Downloads;
+    /// <summary>下载次数</summary>
+    [DisplayName("下载次数")]
+    [Description("下载次数")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Downloads", "下载次数", "")]
+    public Int32 Downloads { get => _Downloads; set { if (OnPropertyChanging("Downloads", value)) { _Downloads = value; OnPropertyChanged("Downloads"); } } }
+
+    private DateTime _LastDownload;
+    /// <summary>最后下载。最后一次下载的时间</summary>
+    [DisplayName("最后下载")]
+    [Description("最后下载。最后一次下载的时间")]
+    [DataObjectField(false, false, true, 0)]
+    [BindColumn("LastDownload", "最后下载。最后一次下载的时间", "")]
+    public DateTime LastDownload { get => _LastDownload; set { if (OnPropertyChanging("LastDownload", value)) { _LastDownload = value; OnPropertyChanged("LastDownload"); } } }
+
     private String _TraceId;
     /// <summary>追踪。链路追踪，用于APM性能追踪定位，还原该事件的调用链</summary>
     [Category("扩展")]
@@ -249,6 +265,8 @@ public partial class Attachment
             "UploadTime" => _UploadTime,
             "Url" => _Url,
             "Source" => _Source,
+            "Downloads" => _Downloads,
+            "LastDownload" => _LastDownload,
             "TraceId" => _TraceId,
             "CreateUser" => _CreateUser,
             "CreateUserID" => _CreateUserID,
@@ -279,6 +297,8 @@ public partial class Attachment
                 case "UploadTime": _UploadTime = value.ToDateTime(); break;
                 case "Url": _Url = Convert.ToString(value); break;
                 case "Source": _Source = Convert.ToString(value); break;
+                case "Downloads": _Downloads = value.ToInt(); break;
+                case "LastDownload": _LastDownload = value.ToDateTime(); break;
                 case "TraceId": _TraceId = Convert.ToString(value); break;
                 case "CreateUser": _CreateUser = Convert.ToString(value); break;
                 case "CreateUserID": _CreateUserID = value.ToInt(); break;
@@ -301,14 +321,41 @@ public partial class Attachment
     #region 扩展查询
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="category">业务分类</param>
+    /// <param name="extension">扩展名</param>
+    /// <param name="filePath">路径。本地相对路径或OSS路径，本地相对路径加上附件目录的配置，方便整体转移附件</param>
+    /// <param name="enable">启用</param>
+    /// <param name="start">编号开始</param>
+    /// <param name="end">编号结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<Attachment> Search(String category, String extension, String filePath, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (!category.IsNullOrEmpty()) exp &= _.Category == category;
+        if (!extension.IsNullOrEmpty()) exp &= _.Extension == extension;
+        if (!filePath.IsNullOrEmpty()) exp &= _.FilePath == filePath;
+        if (enable != null) exp &= _.Enable == enable;
+        exp &= _.Id.Between(start, end, Meta.Factory.Snow);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 数据清理
     /// <summary>清理指定时间段内的数据</summary>
     /// <param name="start">开始时间。未指定时清理小于指定时间的所有数据</param>
     /// <param name="end">结束时间</param>
+    /// <param name="maximumRows">最大删除行数。清理历史数据时，避免一次性删除过多导致数据库IO跟不上，0表示所有</param>
     /// <returns>清理行数</returns>
-    public static Int32 DeleteWith(DateTime start, DateTime end)
+    public static Int32 DeleteWith(DateTime start, DateTime end, Int32 maximumRows = 0)
     {
-        return Delete(_.Id.Between(start, end, Meta.Factory.Snow));
+        return Delete(_.Id.Between(start, end, Meta.Factory.Snow), maximumRows);
     }
     #endregion
 
@@ -357,6 +404,12 @@ public partial class Attachment
 
         /// <summary>来源。用于远程抓取的附件来源地址，本地文件不存在时自动依次抓取</summary>
         public static readonly Field Source = FindByName("Source");
+
+        /// <summary>下载次数</summary>
+        public static readonly Field Downloads = FindByName("Downloads");
+
+        /// <summary>最后下载。最后一次下载的时间</summary>
+        public static readonly Field LastDownload = FindByName("LastDownload");
 
         /// <summary>追踪。链路追踪，用于APM性能追踪定位，还原该事件的调用链</summary>
         public static readonly Field TraceId = FindByName("TraceId");
@@ -435,6 +488,12 @@ public partial class Attachment
 
         /// <summary>来源。用于远程抓取的附件来源地址，本地文件不存在时自动依次抓取</summary>
         public const String Source = "Source";
+
+        /// <summary>下载次数</summary>
+        public const String Downloads = "Downloads";
+
+        /// <summary>最后下载。最后一次下载的时间</summary>
+        public const String LastDownload = "LastDownload";
 
         /// <summary>追踪。链路追踪，用于APM性能追踪定位，还原该事件的调用链</summary>
         public const String TraceId = "TraceId";

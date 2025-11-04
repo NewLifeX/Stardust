@@ -58,6 +58,10 @@ public class CubeController(StarServerSetting setting) : ControllerBase
         {
             var (att, filePath) = await GetFile(id);
 
+            att.Downloads++;
+            att.LastDownload = DateTime.Now;
+            att.SaveAsync(5_000);
+
             if (!att.ContentType.IsNullOrEmpty())
                 return PhysicalFile(filePath, att.ContentType, att.FileName);
             else
@@ -82,6 +86,10 @@ public class CubeController(StarServerSetting setting) : ControllerBase
         try
         {
             var (att, filePath) = await GetFile(id);
+
+            att.Downloads++;
+            att.LastDownload = DateTime.Now;
+            att.SaveAsync(5_000);
 
             if (!att.ContentType.IsNullOrEmpty() && !att.ContentType.EqualIgnoreCase("application/octet-stream"))
                 return PhysicalFile(filePath, att.ContentType, att.FileName);
