@@ -16,8 +16,29 @@ using Service = Stardust.Data.Service;
 
 namespace Stardust.Server.Services;
 
-public class RegistryService(AppQueueService queue, AppOnlineService appOnline, IPasswordProvider passwordProvider, AppSessionManager sessionManager, ICacheProvider cacheProvider, StarServerSetting setting, ITracer tracer, IServiceProvider serviceProvider) : DefaultDeviceService<Node, NodeOnline>(sessionManager, passwordProvider, cacheProvider, serviceProvider)
+public class RegistryService : DefaultDeviceService<Node, NodeOnline>
 {
+    private readonly AppQueueService _queue;
+    private readonly AppOnlineService _appOnline;
+    private readonly IPasswordProvider _passwordProvider;
+    private readonly AppSessionManager _sessionManager;
+    private readonly ICacheProvider _cacheProvider;
+    private readonly StarServerSetting _setting;
+    private readonly ITracer _tracer;
+
+    public RegistryService(AppQueueService queue, AppOnlineService appOnline, IPasswordProvider passwordProvider, AppSessionManager sessionManager, ICacheProvider cacheProvider, StarServerSetting setting, ITracer tracer, IServiceProvider serviceProvider) : base(sessionManager, passwordProvider, cacheProvider, serviceProvider)
+    {
+        _queue = queue;
+        _appOnline = appOnline;
+        _passwordProvider = passwordProvider;
+        _sessionManager = sessionManager;
+        _cacheProvider = cacheProvider;
+        _setting = setting;
+        _tracer = tracer;
+
+        Name = "App";
+    }
+
     #region 登录注销
     public override ILoginResponse Login(DeviceContext context, ILoginRequest request, String source)
     {
@@ -60,12 +81,12 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
         if (app.Secret.IsNullOrEmpty()) return true;
         if (app.Secret == secret) return true;
 
-        if (setting.SaltTime > 0 && passwordProvider is SaltPasswordProvider saltProvider)
+        if (_setting.SaltTime > 0 && _passwordProvider is SaltPasswordProvider saltProvider)
         {
             // 使用盐值偏差时间，允许客户端时间与服务端时间有一定偏差
-            saltProvider.SaltTime = setting.SaltTime;
+            saltProvider.SaltTime = _setting.SaltTime;
         }
-        if (secret.IsNullOrEmpty() || !passwordProvider.Verify(app.Secret, secret))
+        if (secret.IsNullOrEmpty() || !_passwordProvider.Verify(app.Secret, secret))
         {
             app.WriteHistory("应用鉴权", false, "密钥校验失败", null, ip, context.ClientId);
             return false;
@@ -90,7 +111,7 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
         {
             Name = name,
             Secret = Rand.NextString(16),
-            Enable = setting.AppAutoRegister,
+            Enable = _setting.AppAutoRegister,
         });
 
         app.WriteHistory("应用注册", true, $"[{app.Name}]注册成功", null, context.UserHost, context.ClientId);
@@ -160,7 +181,7 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
         var online = base.Logout(context, reason, source);
         if (online is AppOnline online2)
         {
-            appOnline.RemoveOnline(context.ClientId);
+            _appOnline.RemoveOnline(context.ClientId);
         }
 
         return online;
@@ -184,7 +205,7 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
         if (!inf.ClientId.IsNullOrEmpty()) clientId = inf.ClientId;
 
         // 更新在线记录
-        var (online, _) = appOnline.GetOnline(app, clientId, token, inf?.IP, ip);
+        var (online, _) = _appOnline.GetOnline(app, clientId, token, inf?.IP, ip);
         if (online != null)
         {
             // 关联节点，根据NodeCode匹配，如果未匹配上，则在未曾关联节点时才使用IP匹配
@@ -353,7 +374,7 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
                 url = uri.ToString();
             }
 
-            var http = tracer.CreateHttpClient();
+            var http = _tracer.CreateHttpClient();
             var rs = await http.GetStringAsync(url);
 
             svc.Healthy = true;
@@ -468,7 +489,7 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
         // 是否有本节点
         if (!_commands.Any(e => e.AppId == appId)) return null;
 
-        using var span = tracer?.NewSpan(nameof(AcquireCommands), new { appId });
+        using var span = _tracer?.NewSpan(nameof(AcquireCommands), new { appId });
 
         var cmds = AppCommand.AcquireCommands(appId, 100);
         if (cmds.Count == 0) return null;
@@ -555,19 +576,19 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
 
             //_queue.Publish(app.Name, item.Client, cmdModel);
             var code = $"{app.Name}@{item.Client}";
-            ts.Add(sessionManager.PublishAsync(code, cmdModel, null, cancellationToken));
+            ts.Add(_sessionManager.PublishAsync(code, cmdModel, null, cancellationToken));
         }
         await Task.WhenAll(ts);
 
         // 挂起等待。借助redis队列，等待响应
         if (model.Timeout > 0)
         {
-            var q = queue.GetReplyQueue(cmd.Id);
+            var q = _queue.GetReplyQueue(cmd.Id);
             var reply = await q.TakeOneAsync(model.Timeout, cancellationToken);
             if (reply != null)
             {
                 // 埋点
-                using var span = tracer?.NewSpan($"mq:AppCommandReply", reply);
+                using var span = _tracer?.NewSpan($"mq:AppCommandReply", reply);
 
                 if (reply.Status == CommandStatus.错误)
                     throw new Exception($"命令错误！{reply.Data}");
@@ -603,11 +624,11 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
 
         // 推入服务响应队列，让服务调用方得到响应
         var topic = $"appreply:{model.Id}";
-        var q = cacheProvider.GetQueue<CommandReplyModel>(topic);
+        var q = _cacheProvider.GetQueue<CommandReplyModel>(topic);
         q.Add(model);
 
         // 设置过期时间，过期自动清理
-        cacheProvider.Cache.SetExpire(topic, TimeSpan.FromSeconds(60));
+        _cacheProvider.Cache.SetExpire(topic, TimeSpan.FromSeconds(60));
 
         return 1;
     }
@@ -625,7 +646,7 @@ public class RegistryService(AppQueueService queue, AppOnlineService appOnline, 
         var appIds = list.Select(e => e.AppId).Distinct().ToArray();
         var arguments = new { service.AppName, service.ServiceName, service.Address }.ToJson();
 
-        using var span = tracer?.NewSpan(nameof(NotifyConsumers), $"{command} appIds={appIds.Join()} user={user} arguments={arguments}");
+        using var span = _tracer?.NewSpan(nameof(NotifyConsumers), $"{command} appIds={appIds.Join()} user={user} arguments={arguments}");
 
         var ts = new List<Task>();
         foreach (var item in appIds)
