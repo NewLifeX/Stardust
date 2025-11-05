@@ -33,7 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="11.7.2025.1019-beta0102" />
+    <PackageReference Include="NewLife.Core" Version="11.7.2025.1105-beta0602" />
   </ItemGroup>
 
   <ItemGroup>

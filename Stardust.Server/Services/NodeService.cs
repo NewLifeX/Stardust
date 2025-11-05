@@ -86,29 +86,42 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         var node = context.Device as Node ?? QueryDevice(request.Code) as Node;
         var ip = context.UserHost;
 
-        // 校验唯一编码，防止客户端拷贝配置
-        if (node == null)
+        try
         {
-            node = AutoRegister(null, inf, ip, _setting);
+            // 校验唯一编码，防止客户端拷贝配置
+            if (node == null)
+            {
+                node = AutoRegister(null, inf, ip, _setting);
+            }
+            else
+            {
+                //// 登录密码未设置或者未提交，则执行动态注册
+                //if (node == null || node.Secret.IsNullOrEmpty() || secret.IsNullOrEmpty())
+                //    node = AutoRegister(node, inf, ip, setting);
+                //else if (node.Secret.MD5() != secret)
+                //    node = AutoRegister(node, inf, ip, setting);
+                //else if (setting.NodeCodeLevel > 0)
+                //    node = AutoRegister(node, inf, ip, setting);
+                node = AutoRegister(node, inf, ip, _setting);
+            }
+
+            node?.WriteHistory("动态注册", true, inf.ToJson(false, false, false), ip);
         }
-        else
+        catch (Exception ex)
         {
-            //// 登录密码未设置或者未提交，则执行动态注册
-            //if (node == null || node.Secret.IsNullOrEmpty() || secret.IsNullOrEmpty())
-            //    node = AutoRegister(node, inf, ip, setting);
-            //else if (node.Secret.MD5() != secret)
-            //    node = AutoRegister(node, inf, ip, setting);
-            //else if (setting.NodeCodeLevel > 0)
-            //    node = AutoRegister(node, inf, ip, setting);
-            node = AutoRegister(node, inf, ip, _setting);
+            span?.SetError(ex, null);
+
+            node?.WriteHistory("动态注册", false, inf.ToJson(false, false, false), ip);
+
+            throw;
         }
 
         return node;
     }
 
-    /// <summary>登录中</summary>
-    /// <param name="context"></param>
-    /// <param name="request"></param>
+    /// <summary>鉴权后的登录处理。修改设备信息、创建在线记录和写日志</summary>
+    /// <param name="context">上下文</param>
+    /// <param name="request">登录请求</param>
     public override void OnLogin(DeviceContext context, ILoginRequest request)
     {
         using var span = _tracer?.NewSpan($"{Name}OnLogin", new { request.Code, request.ClientId });
@@ -141,8 +154,6 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
         // 登录历史
         WriteHistory(context, "节点鉴权", true, $"[{node.Name}/{node.Code}]鉴权成功 " + inf.ToJson(false, false, false));
-
-        //return tokenModel;
     }
 
     /// <summary>注销</summary>
@@ -352,8 +363,6 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             node.Period = 5;
             node.Update();
         }
-
-        node.WriteHistory("动态注册", true, inf.ToJson(false, false, false), ip);
 
         return node;
     }
@@ -596,6 +605,11 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
         return rs.ToArray();
     }
+
+    /// <summary>获取在线。先查缓存再查库</summary>
+    /// <param name="context">上下文</param>
+    /// <returns></returns>
+    public override IOnlineModel GetOnline(DeviceContext context) => base.GetOnline(context) as NodeOnline;
 
     public NodeOnline GetOrAddOnline(Node node, String token, String ip)
     {

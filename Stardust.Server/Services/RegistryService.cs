@@ -44,8 +44,7 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
     {
         var rs = base.Login(context, request, source);
 
-        var inf = request as AppModel;
-        if (context.Online is AppOnline online)
+        if (context.Online is AppOnline online && request is AppModel inf)
         {
             // 关联节点，根据NodeCode匹配，如果未匹配上，则在未曾关联节点时才使用IP匹配
             var node = Node.FindByCode(inf.NodeCode);
@@ -65,8 +64,9 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
     {
         if (context.Device is not App app) return false;
 
+        using var span = _tracer?.NewSpan($"{Name}Authorize", new { request.Code, request.ClientId });
+
         var ip = context.UserHost;
-        var secret = request.Secret;
 
         // 检查黑白名单
         if (!app.MatchIp(ip))
@@ -79,14 +79,14 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
 
         // 未设置密钥，直接通过
         if (app.Secret.IsNullOrEmpty()) return true;
-        if (app.Secret == secret) return true;
+        if (app.Secret.EqualIgnoreCase(request.Secret)) return true;
 
         if (_setting.SaltTime > 0 && _passwordProvider is SaltPasswordProvider saltProvider)
         {
             // 使用盐值偏差时间，允许客户端时间与服务端时间有一定偏差
             saltProvider.SaltTime = _setting.SaltTime;
         }
-        if (secret.IsNullOrEmpty() || !_passwordProvider.Verify(app.Secret, secret))
+        if (request.Secret.IsNullOrEmpty() || !_passwordProvider.Verify(app.Secret, request.Secret))
         {
             app.WriteHistory("应用鉴权", false, "密钥校验失败", null, ip, context.ClientId);
             return false;
@@ -102,30 +102,46 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
     /// <exception cref="ApiException"></exception>
     public override IDeviceModel Register(DeviceContext context, ILoginRequest request)
     {
+        using var span = _tracer?.NewSpan($"{Name}Register", new { request.Code, request.ClientId });
+
         var name = request.Code;
 
-        // 查找应用
-        var app = App.FindByName(name);
-        // 查找或创建应用，避免多线程创建冲突
-        app ??= App.GetOrAdd(name, App.FindByName, k => new App
+        App app = null;
+        try
         {
-            Name = name,
-            Secret = Rand.NextString(16),
-            Enable = _setting.AppAutoRegister,
-        });
+            // 查找应用
+            app = App.FindByName(name);
+            // 查找或创建应用，避免多线程创建冲突
+            app ??= App.GetOrAdd(name, App.FindByName, k => new App
+            {
+                Name = name,
+                Secret = Rand.NextString(16),
+                Enable = _setting.AppAutoRegister,
+            });
 
-        app.WriteHistory("应用注册", true, $"[{app.Name}]注册成功", null, context.UserHost, context.ClientId);
-        context.Device = app;
+            app.WriteHistory("应用注册", true, $"[{app.Name}]注册成功", null, context.UserHost, context.ClientId);
+            context.Device = app;
+        }
+        catch (Exception ex)
+        {
+            span?.SetError(ex, null);
+
+            app?.WriteHistory("应用注册", false, $"[{app.Name}]注册失败！" + ex.Message, null, context.UserHost, context.ClientId);
+
+            throw;
+        }
 
         return app;
     }
 
-    /// <summary>登录中</summary>
-    /// <param name="context"></param>
-    /// <param name="request"></param>
+    /// <summary>鉴权后的登录处理。修改设备信息、创建在线记录和写日志</summary>
+    /// <param name="context">上下文</param>
+    /// <param name="request">登录请求</param>
     public override void OnLogin(DeviceContext context, ILoginRequest request)
     {
         if (context.Device is not App app) return;
+
+        using var span = _tracer?.NewSpan($"{Name}OnLogin", new { request.Code, request.ClientId });
 
         var model = request as AppModel;
         var ip = context.UserHost;
@@ -525,6 +541,11 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
 
         return rs.ToArray();
     }
+
+    /// <summary>获取在线。先查缓存再查库</summary>
+    /// <param name="context">上下文</param>
+    /// <returns></returns>
+    public override IOnlineModel GetOnline(DeviceContext context) => base.GetOnline(context) as AppOnline;
 
     /// <summary>设置设备的长连接上线/下线</summary>
     /// <param name="context">上下文</param>
