@@ -991,7 +991,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
     public override IOnlineModel QueryOnline(String sessionId) => NodeOnline.FindBySessionId(sessionId, true);
 
-    protected override String GetSessionId(DeviceContext context) => context.ClientId ?? base.GetSessionId(context);
+    protected override String GetSessionId(DeviceContext context) => context.Code ?? base.GetSessionId(context);
 
     private CommandModel BuildCommand(Node node, NodeCommand cmd)
     {
