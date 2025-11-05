@@ -306,7 +306,7 @@ public partial class AppOnline : Entity<AppOnline>, IOnlineModel2
         PingCount++;
 
         //return SaveAsync() ? 1 : 0;
-        return Update();
+        return Save();
     }
 
     /// <summary>删除过期，指定过期时间</summary>

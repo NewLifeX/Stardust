@@ -361,7 +361,7 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
         PingCount++;
 
         //return SaveAsync() ? 1 : 0;
-        return Update();
+        return Save();
     }
     #endregion
 }
