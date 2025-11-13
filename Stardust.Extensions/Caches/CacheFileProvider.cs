@@ -114,7 +114,7 @@ class CacheFileProvider : IFileProvider
             if (!fi.Exists)
                 fi = DownloadFile(subpath, fullPath).ConfigureAwait(false).GetAwaiter().GetResult()?.AsFile();
             else if (fi.LastWriteTime.AddMonths(1) < DateTime.Now)
-                _ = Task.Run(() => DownloadFile(subpath, fullPath));
+                _ = Task.Factory.StartNew(() => DownloadFile(subpath, fullPath), TaskCreationOptions.LongRunning);
         }
         if (fi == null || !fi.Exists) return new NotFoundFileInfo(subpath);
 
@@ -227,7 +227,7 @@ class CacheFileProvider : IFileProvider
                 if (!fi.Exists)
                     fi = DownloadDirectory(subpath, fi.FullName, svrs).ConfigureAwait(false).GetAwaiter().GetResult()?.AsFile();
                 else if (fi.LastWriteTime.AddDays(1) < DateTime.Now)
-                    _ = Task.Run(() => DownloadDirectory(subpath, fi.FullName, svrs));
+                    _ = Task.Factory.StartNew(() => DownloadDirectory(subpath, fi.FullName, svrs), TaskCreationOptions.LongRunning);
             }
 
             return fullPath == null || !Directory.Exists(fullPath)

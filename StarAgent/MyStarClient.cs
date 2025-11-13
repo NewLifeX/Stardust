@@ -238,7 +238,7 @@ internal class MyStarClient : StarClient
 
                 return rs + "";
             }
-        });
+        }, TaskCreationOptions.LongRunning);
 
         return "success";
     }
@@ -278,7 +278,7 @@ internal class MyStarClient : StarClient
                 Thread.Sleep(5000);
                 "reboot".ShellExecute();
             }
-        });
+        }, TaskCreationOptions.LongRunning);
 
         return "success";
     }

@@ -46,7 +46,7 @@ public class AppServiceTests
         var app = new App { Name = "test" };
 
         var set = StarServerSetting.Current;
-        var service = new TokenService(set);
+        var service = new TokenService(set, null);
 
         var model = service.IssueToken(app.Name, null);
         Assert.NotNull(model);
@@ -68,7 +68,7 @@ public class AppServiceTests
         }
 
         var set = StarServerSetting.Current;
-        var service = new TokenService(set);
+        var service = new TokenService(set, null);
 
         var model = service.IssueToken(app.Name, null);
         Assert.NotNull(model);
