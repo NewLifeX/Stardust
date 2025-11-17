@@ -15,6 +15,7 @@ using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
 using Stardust;
+using Stardust.Managers;
 using Stardust.Models;
 using Stardust.Windows;
 
@@ -113,6 +114,11 @@ class Program
 
     static void Test3()
     {
+        var nr = new NetRuntime();
+        nr.BaseUrl = "https://x.newlifex.com/dotNet/10.0.0";
+
+        nr.Download("aspnetcore-runtime-10.0.0-linux-x64.tar.gz");
+
         //latencyScore = Math.Exp(-0.01 * (latency - threshold)); // 衰减系数λ=0.2
 
         var ds = new[] { 0.1f, 0.2f, 0.5f, 1f, 2f, 3f, 5f, 10f, 15f, 20f, 30f, 50f, 100f, 200f, 500f, 1000f, 2000f, 5000f };

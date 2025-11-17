@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using NewLife;
 using NewLife.Log;
 using NewLife.Remoting.Clients;
+using NewLife.Web;
 
 namespace Stardust.Managers;
 
@@ -31,6 +32,8 @@ public class NetRuntime
 
     /// <summary>事件客户端</summary>
     public IEventProvider? EventProvider { get; set; }
+
+    private HashSet<String> _urls = new();
     #endregion
 
     #region 构造
@@ -57,25 +60,56 @@ public class NetRuntime
         var fullFile = fileName;
         if (!String.IsNullOrEmpty(CachePath)) fullFile = Path.Combine(CachePath, fileName);
 
-        var hash = "";
-        if (Hashs == null || !Hashs.TryGetValue(fileName, out hash)) hash = null;
+        // 版本相对地址为空，或者主地址已经包含版本相对地址，则直接使用主地址，否则拼接基地址
+        if (String.IsNullOrEmpty(baseUrl) ||
+            !String.IsNullOrEmpty(BaseUrl) && (BaseUrl.EndsWith(baseUrl) || BaseUrl.EndsWith(baseUrl + "/")))
+            baseUrl = BaseUrl?.TrimEnd('/');
+        else
+            baseUrl = BaseUrl?.TrimEnd('/') + '/' + baseUrl?.TrimStart('/').TrimEnd('/');
+
+        // 从页面清单初始化哈希表
+        if (!baseUrl.IsNullOrEmpty() && !_urls.Contains(baseUrl))
+        {
+            var dic = Hashs ??= new Dictionary<String, String>();
+            try
+            {
+                var client = new WebClientX();
+                var links = client.GetLinks(baseUrl);
+
+                foreach (var link in links)
+                {
+                    if (!link.FullName.IsNullOrEmpty() && !link.Hash.IsNullOrEmpty())
+                        dic[link.FullName] = link.Hash;
+                }
+            }
+            catch { }
+
+            _urls.Add(baseUrl);
+        }
+
+        if (Hashs == null || !Hashs.TryGetValue(fileName, out var hash)) hash = null;
 
         // 检查已存在文件的MD5哈希，不正确则重新下载
         var fi = new FileInfo(fullFile);
-        if (fi.Exists && fi.Length < 1024 && !String.IsNullOrEmpty(hash) && GetMD5(fullFile) != hash)
+        if (fi.Exists)
         {
-            fi.Delete();
-            fi = null;
+            if (fi.Length < 1024)
+            {
+                fi.Delete();
+                fi = null;
+            }
+            else if (!String.IsNullOrEmpty(hash))
+            {
+                var hash2 = hash.Length > 32 ? GetSHA512(fullFile) : GetMD5(fullFile);
+                if (!hash2.EqualIgnoreCase(hash))
+                {
+                    fi.Delete();
+                    fi = null;
+                }
+            }
         }
         if (fi == null || !fi.Exists)
         {
-            // 版本相对地址为空，或者主地址已经包含版本相对地址，则直接使用主地址，否则拼接基地址
-            if (String.IsNullOrEmpty(baseUrl) ||
-                !String.IsNullOrEmpty(BaseUrl) && (BaseUrl.EndsWith(baseUrl) || BaseUrl.EndsWith(baseUrl + "/")))
-                baseUrl = BaseUrl?.TrimEnd('/');
-            else
-                baseUrl = BaseUrl?.TrimEnd('/') + '/' + baseUrl.TrimStart('/').TrimEnd('/');
-
             var url = $"{baseUrl}/{fileName}";
             WriteLog("正在下载：{0}", url);
 
@@ -95,7 +129,11 @@ public class NetRuntime
                 http.DownloadFile(url, fullFile);
 #endif
             }
-            WriteLog("MD5: {0}", GetMD5(fullFile));
+            var hash2 = "";
+            if (!String.IsNullOrEmpty(hash))
+                hash2 = hash.Length > 32 ? GetSHA512(fullFile) : GetMD5(fullFile);
+
+            WriteLog("哈希: {0}", hash2);
 
             //// 在windows系统上，下载完成以后，等待一会再安装，避免文件被占用（可能是安全扫描），提高安装成功率
             //if (Runtime.Windows) Thread.Sleep(15_000);
@@ -802,10 +840,28 @@ public class NetRuntime
     /// <returns></returns>
     public static String GetMD5(String fileName)
     {
+        if (!File.Exists(fileName)) return String.Empty;
+
         var fi = new FileInfo(fileName);
         var md5 = MD5.Create();
         using var fs = fi.OpenRead();
         var buf = md5.ComputeHash(fs);
+        var hex = BitConverter.ToString(buf).Replace("-", null);
+
+        return hex;
+    }
+
+    /// <summary>获取文件SHA512</summary>
+    /// <param name="fileName"></param>
+    /// <returns></returns>
+    public static String GetSHA512(String fileName)
+    {
+        if (!File.Exists(fileName)) return String.Empty;
+
+        var fi = new FileInfo(fileName);
+        var sha = SHA512.Create();
+        using var fs = fi.OpenRead();
+        var buf = sha.ComputeHash(fs);
         var hex = BitConverter.ToString(buf).Replace("-", null);
 
         return hex;
