@@ -6,6 +6,12 @@ set clover=..\..\..\Tools\clover.exe
 del %base%\*.zip /f/q
 del %base%\*.tar.gz /f/q
 
+pushd %base%\net10.0
+set name=staragent10
+%clover% tar ..\%name%.tar.gz *.exe *.dll *.runtimeconfig.json
+%clover% zip ..\%name%.zip *.exe *.dll *.runtimeconfig.json
+popd
+
 pushd %base%\net9.0
 set name=staragent90
 %clover% tar ..\%name%.tar.gz *.exe *.dll *.runtimeconfig.json

@@ -19,7 +19,7 @@ move %base%\StarWeb.zip %out%\StarWeb.zip
 
 set out=%base%\agent
 rmdir /s/q %out%
-dotnet publish ..\StarAgent\StarAgent.csproj --nologo -c Release -f net8.0 -o %out%
+dotnet publish ..\StarAgent\StarAgent.csproj --nologo -c Release -f net10.0 -o %out%
 del /f/s/q %out%\*.pdb %out%\*.xml %out%\*.deps.json
 
 mkdir %out%\Config
