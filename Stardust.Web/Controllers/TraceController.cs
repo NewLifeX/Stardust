@@ -224,7 +224,7 @@ public class TraceController : ControllerBaseX
                 foreach (var item in list2)
                 {
                     var entity = new SampleData();
-                    entity.CopyFrom(item, true, true);
+                    entity.CopyFrom(item, false, false);
 
                     list.Add(entity);
                 }
