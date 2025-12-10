@@ -2,7 +2,7 @@
 
 # 获取处理器架构
 arch=$(uname -m)
-ver="8.0.20"
+ver="8.0.22"
 prefix="aspnetcore-runtime-$ver-linux"
 source="http://x.newlifex.com"
 
@@ -70,7 +70,7 @@ if [ $arch == "x86_64" ] && [ -f /etc/os-release ]; then
       ln -s $libsrc $libstd
     fi
 
-	  yum install -y libicu
+    yum install -y libicu || yum install -y libicu-dev
   elif [ "$os_id" == "Linx" ]; then
     libstd=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
     libsrc=/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.26
@@ -85,9 +85,9 @@ if [ $arch == "x86_64" ] && [ -f /etc/os-release ]; then
       ln -s $libsrc $libstd
     fi
 
-	  apt install -y libicu
+    apt install -y libicu || apt install -y libicu70 || apt install -y libicu-dev
   else
-	  apt install -y libicu
+    apt install -y libicu || apt install -y libicu70 || apt install -y libicu-dev
   fi
 fi
 

@@ -133,4 +133,4 @@ fi
 dotnet --info
 
 # rm $gzfile -f
-# rm net.sh
+# rm net10.sh
