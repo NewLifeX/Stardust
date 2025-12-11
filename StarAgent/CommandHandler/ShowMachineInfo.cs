@@ -105,5 +105,25 @@ public class ShowMachineInfo : BaseCommandHandler
                     XTrace.WriteLine("\tDns:\t{0}", ipp.DnsAddresses.Where(e => e.IsIPv4()).Join());
             }
         }
+
+        // 磁盘信息
+        foreach (var info in DriveInfo.GetDrives())
+        {
+            var format = "";
+            var label = info.IsReady ? "" : "[NotReady]";
+            var size = 0L;
+            try
+            {
+                format = info.DriveFormat;
+                label = info.VolumeLabel;
+                size = info.TotalSize;
+            }
+            catch { }
+
+            XTrace.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", info.DriveType, format, info.Name, label, size.ToGMK());
+        }
+
+        // 等一会，等控制台输出日志
+        Thread.Sleep(100);
     }
 }
