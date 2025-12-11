@@ -66,7 +66,7 @@ public class ShowMachineInfo : BaseCommandHandler
             if (pis.Any(e => e.Name == pi.Name)) continue;
 
             var val = ni.GetValue(pi);
-            if (pi.Name.EndsWithIgnoreCase("Memory"))
+            if (pi.PropertyType == typeof(UInt64) && pi.Name.EndsWithIgnoreCase("Memory", "Size", "FreeSpace"))
                 val = val.ToLong().ToGMK();
             else if (pi.Name.EndsWithIgnoreCase("Rate", "Battery"))
                 val = val.ToDouble().ToString("p2");
