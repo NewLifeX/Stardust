@@ -115,6 +115,7 @@ public class StarClient : ClientBase, ICommandClient, IEventProvider
             ProcessorCount = Environment.ProcessorCount,
             Memory = mi.Memory,
             AvailableMemory = mi.AvailableMemory,
+            FreeMemory = mi.FreeMemory,
             TotalSize = (UInt64)(driveInfo?.TotalSize ?? 0),
             AvailableFreeSpace = (UInt64)(driveInfo?.AvailableFreeSpace ?? 0),
             DriveSize = (UInt64)drives.Sum(e => e.TotalSize),

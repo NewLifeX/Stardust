@@ -434,7 +434,8 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         // 内存告警
         if (node.AlarmMemoryRate > 0 && node.Memory > 0)
         {
-            var rate = (node.Memory - data.AvailableMemory) * 100d / node.Memory;
+            var free = data.FreeMemory > 0 ? data.FreeMemory : data.AvailableMemory;
+            var rate = (node.Memory - free) * 100d / node.Memory;
             if (rate >= node.AlarmMemoryRate)
             {
                 // 一定时间内不要重复报错，除非错误翻倍
@@ -527,7 +528,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         sb.AppendLine($">**分类：**<font color=\"gray\">{node.Category}</font>");
         sb.AppendLine($">**系统：**<font color=\"gray\">{node.OS}</font>");
         sb.AppendLine($">**CPU核心：**<font color=\"gray\">{node.Cpu}</font>");
-        sb.AppendLine($">**内存容量：**<font color=\"gray\">{node.Memory:n0}M，可用 {data.AvailableMemory:n0}M</font>");
+        sb.AppendLine($">**内存容量：**<font color=\"gray\">{node.Memory:n0}M，可用 {data.AvailableMemory:n0}M，空闲 {data.FreeMemory:n0}M</font>");
         sb.AppendLine($">**磁盘容量：**<font color=\"gray\">{node.TotalSize:n0}M，可用 {data.AvailableFreeSpace:n0}M</font>");
 
         switch (kind)
@@ -536,7 +537,8 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
                 sb.AppendLine($">**CPU使用率：**<font color=\"red\">{data.CpuRate:p0} >= {node.AlarmCpuRate / 100d:p0}</font>");
                 break;
             case "memory":
-                var rate1 = 1 - (node.Memory == 0 ? 0 : ((Double)data.AvailableMemory / node.Memory));
+                var free = data.FreeMemory > 0 ? data.FreeMemory : data.AvailableMemory;
+                var rate1 = 1 - (node.Memory == 0 ? 0 : ((Double)free / node.Memory));
                 sb.AppendLine($">**内存使用率：**<font color=\"red\">{rate1:p0} >= {node.AlarmMemoryRate / 100d:p0}</font>");
                 break;
             case "disk":

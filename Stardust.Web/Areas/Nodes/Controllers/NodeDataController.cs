@@ -86,7 +86,7 @@ public class NodeDataController : ReadOnlyEntityController<NodeData>
                 chart.AddDataZoom();
                 chart.AddLine(list2, _.CpuRate, e => Math.Round(e.CpuRate * 100), true);
 
-                var series = chart.Add(list2, _.AvailableMemory, "line", e => node.Memory == 0 ? 0 : (100 - (e.AvailableMemory * 100 / node.Memory)));
+                var series = chart.Add(list2, _.AvailableMemory, "line", e => node.Memory == 0 ? 0 : (100 - ((e.FreeMemory > 0 ? e.FreeMemory : e.AvailableMemory) * 100 / node.Memory)));
                 series.Name = "已用内存";
                 series = chart.Add(list2, _.AvailableFreeSpace, "line", e => node.TotalSize == 0 ? 0 : (100 - (e.AvailableFreeSpace * 100 / node.TotalSize)));
                 series.Name = "已用磁盘";

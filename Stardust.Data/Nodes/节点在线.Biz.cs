@@ -40,7 +40,7 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
         // 截取部分进程字段，避免过长无法保存
         this.TrimExtraLong(__.Processes, __.MACs, __.DriveInfo);
 
-        if (!Dirtys[nameof(MemoryUsed)] && Node != null) MemoryUsed = Node.Memory - AvailableMemory;
+        if (!Dirtys[nameof(MemoryUsed)] && Node != null) MemoryUsed = Node.Memory - (FreeMemory > 0 ? FreeMemory : AvailableMemory);
         if (!Dirtys[nameof(SpaceUsed)] && Node != null) SpaceUsed = Node.TotalSize - AvailableFreeSpace;
 
         base.Valid(isNew);
@@ -249,6 +249,8 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
         online.Dns = inf.Dns;
 
         if (inf.AvailableMemory > 0) online.AvailableMemory = (Int32)(inf.AvailableMemory / 1024 / 1024);
+        if (inf.FreeMemory > 0) online.FreeMemory = (Int32)(inf.FreeMemory / 1024 / 1024);
+        MemoryUsed = online.Memory - online.FreeMemory > 0 ? online.FreeMemory : online.AvailableMemory;
         if (inf.AvailableFreeSpace > 0) online.AvailableFreeSpace = (Int32)(inf.AvailableFreeSpace / 1024 / 1024);
         if (!online.DriveInfo.IsNullOrEmpty()) online.DriveInfo = online.DriveInfo;
     }
@@ -260,6 +262,8 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
         var online = this;
 
         if (inf.AvailableMemory > 0) online.AvailableMemory = (Int32)(inf.AvailableMemory / 1024 / 1024);
+        if (inf.FreeMemory > 0) online.FreeMemory = (Int32)(inf.FreeMemory / 1024 / 1024);
+        MemoryUsed = online.Memory - online.FreeMemory > 0 ? online.FreeMemory : online.AvailableMemory;
         if (inf.AvailableFreeSpace > 0) online.AvailableFreeSpace = (Int32)(inf.AvailableFreeSpace / 1024 / 1024);
         if (!inf.DriveInfo.IsNullOrEmpty()) online.DriveInfo = inf.DriveInfo;
         if (inf.CpuRate > 0) online.CpuRate = inf.CpuRate;
@@ -310,6 +314,7 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
             NodeID = olt.NodeID,
             Name = olt.Name,
             AvailableMemory = olt.AvailableMemory,
+            FreeMemory = olt.FreeMemory,
             AvailableFreeSpace = olt.AvailableFreeSpace,
             CpuRate = inf.CpuRate,
             Temperature = inf.Temperature,

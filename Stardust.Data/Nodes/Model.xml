@@ -9,6 +9,8 @@
     <BaseClass>Entity</BaseClass>
     <!--命名空间-->
     <Namespace>Stardust.Data.Nodes</Namespace>
+    <!--引用命名空间-->
+    <ExtendNameSpace />
     <!--输出目录-->
     <Output>.\</Output>
     <!--是否使用中文文件名。默认false-->
@@ -146,7 +148,8 @@
         <Column Name="OSKind" DataType="Int32" Description="系统种类。主流操作系统类型，不考虑子版本" Type="Stardust.Models.OSKinds" />
         <Column Name="Memory" DataType="Int32" Description="内存。单位M" />
         <Column Name="AvailableMemory" DataType="Int32" Description="可用内存。单位M" />
-        <Column Name="MemoryUsed" DataType="Int32" Description="已用内存。单位M" />
+        <Column Name="FreeMemory" DataType="Int32" Description="空闲内存。Linux上空闲不一定可用，部分作为缓存，单位M" />
+        <Column Name="MemoryUsed" DataType="Int32" Description="已用内存。总内存减去空闲内存，单位M" />
         <Column Name="AvailableFreeSpace" DataType="Int32" Description="可用磁盘。应用所在盘，单位M" />
         <Column Name="SpaceUsed" DataType="Int32" Description="已用磁盘。应用所在盘，单位M" />
         <Column Name="DriveInfo" DataType="String" Length="500" Description="驱动器信息。各分区大小，逗号分隔" Category="硬件信息" />
@@ -212,6 +215,7 @@
         <Column Name="NodeID" DataType="Int32" Description="节点" />
         <Column Name="Name" DataType="String" Master="True" Description="名称" />
         <Column Name="AvailableMemory" DataType="Int32" Description="可用内存。单位M" />
+        <Column Name="FreeMemory" DataType="Int32" Description="空闲内存。Linux上空闲不一定可用，部分作为缓存，单位M" />
         <Column Name="AvailableFreeSpace" DataType="Int32" Description="可用磁盘。应用所在盘，单位M" />
         <Column Name="CpuRate" DataType="Double" ItemType="percent" Description="CPU率。占用率" />
         <Column Name="Temperature" DataType="Double" Description="温度" />

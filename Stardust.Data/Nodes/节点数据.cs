@@ -54,6 +54,14 @@ public partial class NodeData
     [BindColumn("AvailableMemory", "可用内存。单位M", "")]
     public Int32 AvailableMemory { get => _AvailableMemory; set { if (OnPropertyChanging("AvailableMemory", value)) { _AvailableMemory = value; OnPropertyChanged("AvailableMemory"); } } }
 
+    private Int32 _FreeMemory;
+    /// <summary>空闲内存。Linux上空闲不一定可用，部分作为缓存，单位M</summary>
+    [DisplayName("空闲内存")]
+    [Description("空闲内存。Linux上空闲不一定可用，部分作为缓存，单位M")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("FreeMemory", "空闲内存。Linux上空闲不一定可用，部分作为缓存，单位M", "")]
+    public Int32 FreeMemory { get => _FreeMemory; set { if (OnPropertyChanging("FreeMemory", value)) { _FreeMemory = value; OnPropertyChanged("FreeMemory"); } } }
+
     private Int32 _AvailableFreeSpace;
     /// <summary>可用磁盘。应用所在盘，单位M</summary>
     [DisplayName("可用磁盘")]
@@ -230,6 +238,7 @@ public partial class NodeData
             "NodeID" => _NodeID,
             "Name" => _Name,
             "AvailableMemory" => _AvailableMemory,
+            "FreeMemory" => _FreeMemory,
             "AvailableFreeSpace" => _AvailableFreeSpace,
             "CpuRate" => _CpuRate,
             "Temperature" => _Temperature,
@@ -260,6 +269,7 @@ public partial class NodeData
                 case "NodeID": _NodeID = value.ToInt(); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "AvailableMemory": _AvailableMemory = value.ToInt(); break;
+                case "FreeMemory": _FreeMemory = value.ToInt(); break;
                 case "AvailableFreeSpace": _AvailableFreeSpace = value.ToInt(); break;
                 case "CpuRate": _CpuRate = value.ToDouble(); break;
                 case "Temperature": _Temperature = value.ToDouble(); break;
@@ -328,6 +338,9 @@ public partial class NodeData
 
         /// <summary>可用内存。单位M</summary>
         public static readonly Field AvailableMemory = FindByName("AvailableMemory");
+
+        /// <summary>空闲内存。Linux上空闲不一定可用，部分作为缓存，单位M</summary>
+        public static readonly Field FreeMemory = FindByName("FreeMemory");
 
         /// <summary>可用磁盘。应用所在盘，单位M</summary>
         public static readonly Field AvailableFreeSpace = FindByName("AvailableFreeSpace");
@@ -406,6 +419,9 @@ public partial class NodeData
 
         /// <summary>可用内存。单位M</summary>
         public const String AvailableMemory = "AvailableMemory";
+
+        /// <summary>空闲内存。Linux上空闲不一定可用，部分作为缓存，单位M</summary>
+        public const String FreeMemory = "FreeMemory";
 
         /// <summary>可用磁盘。应用所在盘，单位M</summary>
         public const String AvailableFreeSpace = "AvailableFreeSpace";

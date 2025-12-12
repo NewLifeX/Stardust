@@ -43,6 +43,9 @@ public class NodeInfo
     /// <summary>可用内存大小</summary>
     public UInt64 AvailableMemory { get; set; }
 
+    /// <summary>空闲内存大小。在Linux上，空闲内存不一定可用</summary>
+    public UInt64 FreeMemory { get; set; }
+
     /// <summary>磁盘大小。应用所在盘</summary>
     public UInt64 TotalSize { get; set; }
 

@@ -194,12 +194,20 @@ public partial class NodeOnline
     [BindColumn("AvailableMemory", "可用内存。单位M", "")]
     public Int32 AvailableMemory { get => _AvailableMemory; set { if (OnPropertyChanging("AvailableMemory", value)) { _AvailableMemory = value; OnPropertyChanged("AvailableMemory"); } } }
 
-    private Int32 _MemoryUsed;
-    /// <summary>已用内存。单位M</summary>
-    [DisplayName("已用内存")]
-    [Description("已用内存。单位M")]
+    private Int32 _FreeMemory;
+    /// <summary>空闲内存。Linux上空闲不一定可用，部分作为缓存，单位M</summary>
+    [DisplayName("空闲内存")]
+    [Description("空闲内存。Linux上空闲不一定可用，部分作为缓存，单位M")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("MemoryUsed", "已用内存。单位M", "")]
+    [BindColumn("FreeMemory", "空闲内存。Linux上空闲不一定可用，部分作为缓存，单位M", "")]
+    public Int32 FreeMemory { get => _FreeMemory; set { if (OnPropertyChanging("FreeMemory", value)) { _FreeMemory = value; OnPropertyChanged("FreeMemory"); } } }
+
+    private Int32 _MemoryUsed;
+    /// <summary>已用内存。总内存减去空闲内存，单位M</summary>
+    [DisplayName("已用内存")]
+    [Description("已用内存。总内存减去空闲内存，单位M")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("MemoryUsed", "已用内存。总内存减去空闲内存，单位M", "")]
     public Int32 MemoryUsed { get => _MemoryUsed; set { if (OnPropertyChanging("MemoryUsed", value)) { _MemoryUsed = value; OnPropertyChanged("MemoryUsed"); } } }
 
     private Int32 _AvailableFreeSpace;
@@ -471,6 +479,7 @@ public partial class NodeOnline
             "OSKind" => _OSKind,
             "Memory" => _Memory,
             "AvailableMemory" => _AvailableMemory,
+            "FreeMemory" => _FreeMemory,
             "MemoryUsed" => _MemoryUsed,
             "AvailableFreeSpace" => _AvailableFreeSpace,
             "SpaceUsed" => _SpaceUsed,
@@ -528,6 +537,7 @@ public partial class NodeOnline
                 case "OSKind": _OSKind = (Stardust.Models.OSKinds)value.ToInt(); break;
                 case "Memory": _Memory = value.ToInt(); break;
                 case "AvailableMemory": _AvailableMemory = value.ToInt(); break;
+                case "FreeMemory": _FreeMemory = value.ToInt(); break;
                 case "MemoryUsed": _MemoryUsed = value.ToInt(); break;
                 case "AvailableFreeSpace": _AvailableFreeSpace = value.ToInt(); break;
                 case "SpaceUsed": _SpaceUsed = value.ToInt(); break;
@@ -696,7 +706,10 @@ public partial class NodeOnline
         /// <summary>可用内存。单位M</summary>
         public static readonly Field AvailableMemory = FindByName("AvailableMemory");
 
-        /// <summary>已用内存。单位M</summary>
+        /// <summary>空闲内存。Linux上空闲不一定可用，部分作为缓存，单位M</summary>
+        public static readonly Field FreeMemory = FindByName("FreeMemory");
+
+        /// <summary>已用内存。总内存减去空闲内存，单位M</summary>
         public static readonly Field MemoryUsed = FindByName("MemoryUsed");
 
         /// <summary>可用磁盘。应用所在盘，单位M</summary>
@@ -855,7 +868,10 @@ public partial class NodeOnline
         /// <summary>可用内存。单位M</summary>
         public const String AvailableMemory = "AvailableMemory";
 
-        /// <summary>已用内存。单位M</summary>
+        /// <summary>空闲内存。Linux上空闲不一定可用，部分作为缓存，单位M</summary>
+        public const String FreeMemory = "FreeMemory";
+
+        /// <summary>已用内存。总内存减去空闲内存，单位M</summary>
         public const String MemoryUsed = "MemoryUsed";
 
         /// <summary>可用磁盘。应用所在盘，单位M</summary>

@@ -9,6 +9,8 @@
     <BaseClass />
     <!--命名空间-->
     <Namespace>Stardust.Data</Namespace>
+    <!--引用命名空间-->
+    <ExtendNameSpace />
     <!--输出目录-->
     <Output>.\</Output>
     <!--是否使用中文文件名。默认false-->

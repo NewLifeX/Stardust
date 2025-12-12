@@ -358,7 +358,7 @@ public partial class AppConfig
     /// <param name="appId">应用。对应StarApp</param>
     /// <param name="canBeQuoted">可被依赖。打开后，才能被其它应用依赖</param>
     /// <param name="isGlobal">全局。该应用下的配置数据作为全局数据，请求任意应用配置都返回</param>
-    /// <param name="readonly">只读。只读应用，不支持客户端上传配置数据，可用于保护数据避免被错误修改</param>
+    /// <param name="@readonly">只读。只读应用，不支持客户端上传配置数据，可用于保护数据避免被错误修改</param>
     /// <param name="enableWorkerId">雪花标识。给应用端分配唯一工作站标识，用于生成雪花Id，随着使用递增</param>
     /// <param name="enableApollo">阿波罗</param>
     /// <param name="enable">启用</param>
