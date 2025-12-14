@@ -40,7 +40,7 @@ public class NetRuntime
     /// <summary>实例化</summary>
     public NetRuntime()
     {
-        var set = NewLife.Setting.Current;
+        var set = Setting.Current;
         if (!set.PluginServer.IsNullOrEmpty())
         {
             BaseUrl = set.PluginServer.Split(',').First().TrimEnd('/') + "/dotnet";

@@ -179,7 +179,7 @@ public class LocalStarClient
         //if (url.IsNullOrEmpty()) throw new ArgumentNullException(nameof(url));
         if (url.IsNullOrEmpty())
         {
-            var set = NewLife.Setting.Current;
+            var set = Setting.Current;
             url = set.PluginServer.EnsureEnd("/");
             url += "star/";
             if (Environment.Version.Major >= 8)

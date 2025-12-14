@@ -54,7 +54,7 @@ internal class StarHttpConfigProvider : HttpConfigProvider
                 if (rs.TryGetValue("PluginServer", out var obj) && obj is String svr)
                 {
                     var asm = AssemblyX.Entry;
-                    var set = NewLife.Setting.Current;
+                    var set = Setting.Current;
                     if (!svr.IsNullOrEmpty() &&
                         !svr.EqualIgnoreCase(set.PluginServer) &&
                         (asm == null || !asm.Name.EqualIgnoreCase("StarWeb", "StarServer")))

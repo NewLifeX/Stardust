@@ -210,7 +210,7 @@ public class AppInfo : IPingRequest, ICloneable
 
     /// <summary>克隆数据</summary>
     /// <returns></returns>
-    public AppInfo Clone() => (base.MemberwiseClone() as AppInfo)!;
+    public AppInfo Clone() => (MemberwiseClone() as AppInfo)!;
 
     Object ICloneable.Clone() => Clone();
     #endregion

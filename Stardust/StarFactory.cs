@@ -197,7 +197,7 @@ public class StarFactory : DisposeBase
 
                 if (inf != null && !inf.PluginServer.IsNullOrEmpty() && !AppId.EqualIgnoreCase("StarWeb", "StarServer"))
                 {
-                    var core = NewLife.Setting.Current;
+                    var core = Setting.Current;
                     if (!inf.PluginServer.EqualIgnoreCase(core.PluginServer))
                     {
                         XTrace.WriteLine("据星尘代理公布，插件服务器PluginServer变更为 {0}", inf.PluginServer);
