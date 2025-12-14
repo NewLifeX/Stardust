@@ -57,23 +57,38 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage
 
     #region 新文件
     /// <summary>广播指定附件在当前节点可用。</summary>
-    public async Task PublishNewFileAsync(Int64 attachmentId, String? path, CancellationToken cancellationToken = default)
+    public Task PublishNewFileAsync(Int64 attachmentId, String? path, CancellationToken cancellationToken = default)
     {
         if (NewFileBus == null) throw new InvalidOperationException("NewFileBus not configured.");
 
         var file = GetLocalFileMeta(attachmentId, path);
+        return PublishNewFileAsync(file, cancellationToken);
+    }
+
+    /// <summary>广播指定附件在当前节点可用。</summary>
+    public async Task PublishNewFileAsync(IFileInfo file, CancellationToken cancellationToken = default)
+    {
+        if (NewFileBus == null) throw new InvalidOperationException("NewFileBus not configured.");
+
         if (file is not NewFileInfo msg)
         {
             msg = new NewFileInfo
             {
-                Id = attachmentId,
+                Id = file.Id,
                 Name = file.Name,
-                Path = file.Path ?? path,
+                Path = file.Path,
                 Hash = file.Hash,
                 Length = file.Length,
             };
         }
         msg.SourceNode = NodeName;
+
+        // 填充节点地址，供其他节点拉取文件
+        if (msg.NodeAddress.IsNullOrEmpty())
+        {
+            //todo: 区分内网地址和外网地址
+            msg.NodeAddress = Setting.Current.ServiceAddress;
+        }
 
         await NewFileBus.PublishAsync(msg, null, cancellationToken).ConfigureAwait(false);
     }
@@ -104,6 +119,9 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage
 
         //todo: 获取源节点基地址，通过HTTP等方式拉取文件数据
         var client = new HttpClient();
+        if (file is NewFileInfo fileInfo && !fileInfo.NodeAddress.IsNullOrEmpty())
+            client.BaseAddress = new Uri(fileInfo.NodeAddress.Split(";")[0]);
+
         await client.DownloadFileAsync(url, fileName, file.Hash, cancellationToken).ConfigureAwait(false);
     }
     #endregion
@@ -117,7 +135,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage
         var file = GetLocalFileMeta(attachmentId, path);
         var msg = new FileRequest
         {
-            Id = attachmentId,
+            Id = file.Id,
             Name = file.Name,
             Path = file.Path,
             Hash = file.Hash,

@@ -12,6 +12,9 @@ public interface IFileStorage : IDisposable
     /// <summary>广播指定附件在当前节点可用。</summary>
     Task PublishNewFileAsync(Int64 attachmentId, String? path, CancellationToken cancellationToken = default);
 
+    /// <summary>广播指定附件在当前节点可用。</summary>
+    Task PublishNewFileAsync(IFileInfo file, CancellationToken cancellationToken = default);
+
     /// <summary>发布文件请求，向其他节点索取指定附件。</summary>
     Task RequestFileAsync(Int64 attachmentId, String? path, String? reason = null, CancellationToken cancellationToken = default);
 
