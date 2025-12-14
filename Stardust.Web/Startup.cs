@@ -18,6 +18,7 @@ using Stardust.Data.Platform;
 using Stardust.Extensions.Caches;
 using Stardust.Server;
 using Stardust.Server.Services;
+using Stardust.Storages;
 using Stardust.Web.Services;
 using XCode;
 using XCode.DataAccessLayer;
@@ -57,6 +58,8 @@ public class Startup
         services.AddSingleton<AppOnlineService>();
         services.AddSingleton<DeployService>();
         services.AddSingleton<NewLife.Cube.Services.TokenService>();
+
+        services.AddCubeFileStorage();
 
         //services.AddResponseCompression();
 

@@ -3,8 +3,8 @@ using NewLife;
 using NewLife.Cube;
 using NewLife.Log;
 using NewLife.Web;
-using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
+using Stardust.Storages;
 using XCode.Membership;
 using Attachment = NewLife.Cube.Entity.Attachment;
 
@@ -12,7 +12,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers;
 
 [Menu(40)]
 [NodesArea]
-public class NodeVersionController : EntityController<NodeVersion>
+public class NodeVersionController(IFileStorage fileStorage) : EntityController<NodeVersion>
 {
     static NodeVersionController()
     {
@@ -53,7 +53,7 @@ public class NodeVersionController : EntityController<NodeVersion>
 
     protected override Int32 OnDelete(NodeVersion entity)
     {
-        if (!entity.Source.IsNullOrEmpty()) 
+        if (!entity.Source.IsNullOrEmpty())
         {
             //取 Id@Attachment 唯一
             var id = Path.GetFileNameWithoutExtension(entity.Source.Replace("/cube/file?id=", string.Empty));
@@ -69,7 +69,7 @@ public class NodeVersionController : EntityController<NodeVersion>
                 //删除记录
                 att.DeleteAsync();
             }
-        }        
+        }
 
         var rs = base.OnDelete(entity);
         return rs;
@@ -86,6 +86,9 @@ public class NodeVersionController : EntityController<NodeVersion>
 
             entity.Update();
         }
+
+        // 广播指定附件在当前节点可用
+        await fileStorage.PublishNewFileAsync(att.Id, att.FilePath, HttpContext.RequestAborted);
 
         // 不给上层拿到附件，避免Url字段被覆盖
         return null;

@@ -13,6 +13,7 @@ using Stardust.Extensions.Caches;
 using Stardust.Monitors;
 using Stardust.Registry;
 using Stardust.Server.Services;
+using Stardust.Storages;
 using XCode;
 using XCode.DataAccessLayer;
 
@@ -56,6 +57,8 @@ public class Startup
         //services.AddSingleton<IAlarmService, AlarmService>();
 
         IpResolver.Register();
+
+        services.AddCubeFileStorage();
 
         // 业务服务
         services.AddSingleton<NodeService>();

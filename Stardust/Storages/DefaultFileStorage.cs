@@ -1,5 +1,6 @@
 ﻿using NewLife;
 using NewLife.Http;
+using NewLife.Log;
 using NewLife.Messaging;
 
 namespace Stardust.Storages;
@@ -15,7 +16,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage
     public IEventBus<FileRequest>? FileRequestBus { get; set; }
 
     /// <summary>当前节点的逻辑名称。</summary>
-    public String? NodeName { get; set; }
+    public String? NodeName { get; set; } = Environment.MachineName;
 
     /// <summary>作为文件存储的根路径</summary>
     public String? RootPath { get; set; }
@@ -96,6 +97,8 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage
     /// <summary>处理新文件消息。</summary>
     protected virtual async Task OnNewFileInfoAsync(NewFileInfo info, IEventContext<NewFileInfo> context, CancellationToken cancellationToken)
     {
+        XTrace.WriteLine("新文件通知：{0} {1} {2} {3} {4}", info.Id, info.Name, info.Path, info.Hash, info.SourceNode);
+
         // 默认忽略本节点自己发布的消息（除非需要自愈）
         if (info.SourceNode.EqualIgnoreCase(NodeName)) return;
 
@@ -148,6 +151,8 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage
     /// <summary>处理文件请求消息。</summary>
     protected virtual async Task OnFileRequestAsync(FileRequest req, IEventContext<FileRequest> context, CancellationToken cancellationToken)
     {
+        XTrace.WriteLine("请求文件通知：{0} {1} {2} {3} {4}", req.Id, req.Name, req.Path, req.Hash, req.RequestNode);
+
         if (req.RequestNode.EqualIgnoreCase(NodeName)) return;
 
         // 若本地已存在且哈希正确，则再次宣告新文件，复用扩散流程

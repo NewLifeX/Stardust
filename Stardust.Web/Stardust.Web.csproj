@@ -42,6 +42,7 @@
     <Compile Include="..\Stardust.Server\Services\AppOnlineService.cs" Link="AppOnlineService.cs" />
     <Compile Include="..\Stardust.Server\Services\AppTokenService.cs" Link="Services\AppTokenService.cs" />
     <Compile Include="..\Stardust.Server\Services\ConfigService.cs" Link="Services\ConfigService.cs" />
+    <Compile Include="..\Stardust.Server\Services\FileStorageService.cs" Link="Services\FileStorageService.cs" />
     <Compile Include="..\Stardust.Server\Services\NodeStatService.cs" Link="Services\NodeStatService.cs" />
     <Compile Include="..\Stardust.Server\Services\RedisService.cs" Link="Services\RedisService.cs" />
     <Compile Include="..\Stardust.Server\Services\TraceItemStatService.cs" Link="Services\TraceItemStatService.cs" />
