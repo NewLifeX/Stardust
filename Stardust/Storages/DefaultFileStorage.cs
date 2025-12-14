@@ -1,4 +1,5 @@
 ﻿using NewLife;
+using NewLife.Http;
 using NewLife.Messaging;
 
 namespace Stardust.Storages;
@@ -16,8 +17,13 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage
     /// <summary>当前节点的逻辑名称。</summary>
     public String? NodeName { get; set; }
 
-    private Int32 _initialized;
+    /// <summary>作为文件存储的根路径</summary>
+    public String? RootPath { get; set; }
 
+    /// <summary>用于通过HTTP等方式拉取文件的基础地址</summary>
+    public String DownloadUri { get; set; } = "/cube/file?id={Id}";
+
+    private Int32 _initialized;
     #endregion
 
     #region 构造
@@ -51,76 +57,86 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage
 
     #region 新文件
     /// <summary>广播指定附件在当前节点可用。</summary>
-    public async Task PublishNewFileAsync(Int64 attachmentId, CancellationToken cancellationToken = default)
+    public async Task PublishNewFileAsync(Int64 attachmentId, String? path, CancellationToken cancellationToken = default)
     {
         if (NewFileBus == null) throw new InvalidOperationException("NewFileBus not configured.");
 
-        var (hash, relPath, contentType, length) = GetLocalFileMeta(attachmentId);
-        var msg = new NewFileInfo
+        var file = GetLocalFileMeta(attachmentId, path);
+        if (file is not NewFileInfo msg)
         {
-            AttachmentId = attachmentId,
-            SourceNode = NodeName,
-            Hash = hash,
-            RelativePath = relPath,
-            ContentType = contentType,
-            Length = length
-        };
+            msg = new NewFileInfo
+            {
+                Id = attachmentId,
+                Name = file.Name,
+                Path = file.Path ?? path,
+                Hash = file.Hash,
+                Length = file.Length,
+            };
+        }
+        msg.SourceNode = NodeName;
+
         await NewFileBus.PublishAsync(msg, null, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>处理新文件消息。</summary>
-    protected virtual async Task OnNewFileInfoAsync(NewFileInfo info)
+    protected virtual async Task OnNewFileInfoAsync(NewFileInfo info, IEventContext<NewFileInfo> context, CancellationToken cancellationToken)
     {
         // 默认忽略本节点自己发布的消息（除非需要自愈）
         if (info.SourceNode.EqualIgnoreCase(NodeName)) return;
 
         // 检查本地是否已有文件且哈希正确
-        var exists = CheckLocalFile(info.AttachmentId, info.Hash);
-        if (exists) return;
+        if (CheckLocalFile(info.Path, info.Hash)) return;
 
         // 从源节点拉取文件数据
-        var data = await FetchFileFromNodeAsync(info.AttachmentId, info.SourceNode, CancellationToken.None).ConfigureAwait(false);
-        if (data == null || data.Length == 0) return;
-
-        // 校验并保存到本地
-        ValidateAndSave(info.AttachmentId, data, info.Hash, info.RelativePath, info.ContentType);
+        await FetchFileAsync(info, info.SourceNode, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>通过应用自定义的传输方式（如HTTP接口）从指定源节点拉取文件数据。</summary>
-    protected abstract Task<Byte[]?> FetchFileFromNodeAsync(Int64 attachmentId, String? sourceNode, CancellationToken cancellationToken);
+    protected virtual async Task FetchFileAsync(IFileInfo file, String? sourceNode, CancellationToken cancellationToken)
+    {
+        if (file == null || file.Path.IsNullOrEmpty()) throw new ArgumentNullException(nameof(file));
 
-    /// <summary>验证拉取到的文件数据并保存到本地存储。</summary>
-    protected abstract Boolean ValidateAndSave(Int64 attachmentId, Byte[] data, String? expectedHash, String? relativePath, String? contentType);
+        var url = DownloadUri;
+        url = url.Replace("{Id}", file.Id + "");
+        url = url.Replace("{Name}", file.Name);
+
+        var fileName = RootPath.CombinePath(file.Path).GetFullPath();
+
+        //todo: 获取源节点基地址，通过HTTP等方式拉取文件数据
+        var client = new HttpClient();
+        await client.DownloadFileAsync(url, fileName, file.Hash, cancellationToken).ConfigureAwait(false);
+    }
     #endregion
 
     #region 文件请求
     /// <summary>发布请求，向其他节点索取指定附件。</summary>
-    public async Task RequestFileAsync(Int64 attachmentId, String? reason = null, CancellationToken cancellationToken = default)
+    public async Task RequestFileAsync(Int64 attachmentId, String? path, String? reason = null, CancellationToken cancellationToken = default)
     {
         if (FileRequestBus == null) throw new InvalidOperationException("FileRequestBus not configured.");
 
-        var (hash, relPath, _, _) = GetLocalFileMeta(attachmentId);
+        var file = GetLocalFileMeta(attachmentId, path);
         var msg = new FileRequest
         {
-            AttachmentId = attachmentId,
+            Id = attachmentId,
+            Name = file.Name,
+            Path = file.Path,
+            Hash = file.Hash,
             Reason = reason,
             RequestNode = NodeName,
-            ExpectedHash = hash,
-            RelativePath = relPath
         };
         await FileRequestBus.PublishAsync(msg, null, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>处理文件请求消息。</summary>
-    protected virtual async Task OnFileRequestAsync(FileRequest req)
+    protected virtual async Task OnFileRequestAsync(FileRequest req, IEventContext<FileRequest> context, CancellationToken cancellationToken)
     {
         if (req.RequestNode.EqualIgnoreCase(NodeName)) return;
 
         // 若本地已存在且哈希正确，则再次宣告新文件，复用扩散流程
-        var exists = CheckLocalFile(req.AttachmentId, req.ExpectedHash);
+        var exists = CheckLocalFile(req.Path, req.Hash);
         if (exists)
         {
-            await PublishNewFileAsync(req.AttachmentId, CancellationToken.None).ConfigureAwait(false);
+            await PublishNewFileAsync(req.Id, req.Path, cancellationToken).ConfigureAwait(false);
         }
     }
     #endregion
@@ -133,7 +149,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage
         var count = 0;
         foreach (var id in missing)
         {
-            await RequestFileAsync(id, "sync missing", cancellationToken).ConfigureAwait(false);
+            await RequestFileAsync(id, null, "sync missing", cancellationToken).ConfigureAwait(false);
             count++;
         }
         return count;
@@ -145,9 +161,33 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage
 
     #region 辅助
     /// <summary>检查本地是否存在附件文件且哈希匹配。</summary>
-    protected abstract Boolean CheckLocalFile(Int64 attachmentId, String? expectedHash);
+    protected virtual Boolean CheckLocalFile(String? path, String? hash)
+    {
+        if (path.IsNullOrEmpty()) return false;
 
-    /// <summary>获取本地文件的元数据，用于消息携带（哈希、相对路径、MIME、大小）。</summary>
-    protected abstract (String? hash, String? relativePath, String? contentType, Int64? length) GetLocalFileMeta(Int64 attachmentId);
+        var fi = RootPath.CombinePath(path).AsFile();
+        if (!fi.Exists) return false;
+
+        if (hash.IsNullOrEmpty()) return true;
+
+        return fi.VerifyHash(hash);
+    }
+
+    /// <summary>获取本地文件的元数据</summary>
+    protected virtual IFileInfo GetLocalFileMeta(Int64 attachmentId, String? path)
+    {
+        if (path.IsNullOrEmpty()) throw new ArgumentNullException(nameof(path));
+
+        var fi = RootPath.CombinePath(path).AsFile();
+
+        return new NewFileInfo
+        {
+            Id = attachmentId,
+            Name = fi.Name,
+            Path = path,
+            Hash = fi.MD5().ToHex(),
+            Length = fi.Length,
+        };
+    }
     #endregion
 }

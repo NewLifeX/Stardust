@@ -10,10 +10,10 @@ public interface IFileStorage : IDisposable
     Task InitializeAsync(CancellationToken cancellationToken = default);
 
     /// <summary>广播指定附件在当前节点可用。</summary>
-    Task PublishNewFileAsync(Int64 attachmentId, CancellationToken cancellationToken = default);
+    Task PublishNewFileAsync(Int64 attachmentId, String? path, CancellationToken cancellationToken = default);
 
     /// <summary>发布文件请求，向其他节点索取指定附件。</summary>
-    Task RequestFileAsync(Int64 attachmentId, String? reason = null, CancellationToken cancellationToken = default);
+    Task RequestFileAsync(Int64 attachmentId, String? path, String? reason = null, CancellationToken cancellationToken = default);
 
     /// <summary>扫描并批量请求缺失附件，返回发出请求的数量。</summary>
     Task<Int32> ScanFilesAsync(Int32 batchSize = 50, CancellationToken cancellationToken = default);
