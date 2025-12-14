@@ -2,6 +2,7 @@
 using NewLife.Http;
 using NewLife.Log;
 using NewLife.Messaging;
+using NewLife.Serialization;
 
 namespace Stardust.Storages;
 
@@ -97,7 +98,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage
     /// <summary>处理新文件消息。</summary>
     protected virtual async Task OnNewFileInfoAsync(NewFileInfo info, IEventContext<NewFileInfo> context, CancellationToken cancellationToken)
     {
-        XTrace.WriteLine("新文件通知：{0} {1} {2} {3} {4}", info.Id, info.Name, info.Path, info.Hash, info.SourceNode);
+        XTrace.WriteLine("新文件通知：{0}", info.ToJson());
 
         // 默认忽略本节点自己发布的消息（除非需要自愈）
         if (info.SourceNode.EqualIgnoreCase(NodeName)) return;
@@ -151,7 +152,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage
     /// <summary>处理文件请求消息。</summary>
     protected virtual async Task OnFileRequestAsync(FileRequest req, IEventContext<FileRequest> context, CancellationToken cancellationToken)
     {
-        XTrace.WriteLine("请求文件通知：{0} {1} {2} {3} {4}", req.Id, req.Name, req.Path, req.Hash, req.RequestNode);
+        XTrace.WriteLine("请求文件通知：{0}", req.ToJson());
 
         if (req.RequestNode.EqualIgnoreCase(NodeName)) return;
 

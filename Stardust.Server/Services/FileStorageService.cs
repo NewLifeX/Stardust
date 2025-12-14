@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using NewLife;
 using NewLife.Caching;
+using Stardust.Data.Deployment;
 using Stardust.Storages;
 
 namespace Stardust.Server.Services;
@@ -42,6 +43,23 @@ public class CubeFileStorage : DefaultFileStorage
         NodeName = Environment.MachineName;
         RootPath = "../Uploads";
         DownloadUri = "/cube/file?id={Id}";
+    }
+
+    /// <summary>获取本地文件的元数据</summary>
+    protected override IFileInfo GetLocalFileMeta(Int64 attachmentId, String? path)
+    {
+        if (path.IsNullOrEmpty()) throw new ArgumentNullException(nameof(path));
+
+        var att = Attachment.FindById(attachmentId);
+
+        return new NewFileInfo
+        {
+            Id = att.Id,
+            Name = att.FileName,
+            Path = att.FilePath,
+            Hash = att.Hash,
+            Length = att.Size,
+        };
     }
 
     protected override Int64[] GetMissingAttachmentIds(Int32 batchSize) => [];
