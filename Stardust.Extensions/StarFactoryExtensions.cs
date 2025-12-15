@@ -24,7 +24,7 @@ public static class StarFactoryExtensions
     /// <param name="services"></param>
     /// <param name="appId"></param>
     /// <returns></returns>
-    public static StarFactory AddStardust(this IServiceCollection services, String appId) => AddStardust(services, null, appId, null);
+    public static StarFactory AddStardust(this IServiceCollection services, String? appId) => AddStardust(services, null, appId, null);
 
     /// <summary>添加星尘，提供监控、配置和服务注册发现能力。先后从参数配置和本机StarAgent读取星尘平台地址</summary>
     /// <param name="services"></param>

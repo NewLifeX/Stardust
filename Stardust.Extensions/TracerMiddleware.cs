@@ -329,7 +329,7 @@ public class TracerMiddleware(RequestDelegate next)
         // 节流：每地址每100次尝试一次，或每10分钟一次
         if (count % 100 != 1 && _nextSave >= DateTime.Now) return;
 
-        _nextSave = DateTime.Now.AddMinutes(10);
+        _nextSave = DateTime.Now.AddMinutes(1);
 
         // 根据“本进程统计+（可能存在的）配置权重种子”选择 Top5
         var value = _serviceAddresses
