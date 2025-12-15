@@ -1,28 +1,12 @@
-﻿using System;
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
-using NewLife.Log;
+﻿using NewLife.Log;
+using Stardust.Web;
 
-namespace Stardust.Web
+XTrace.UseConsole();
+
+var builder = Host.CreateDefaultBuilder(args);
+builder.ConfigureWebHostDefaults(webBuilder =>
 {
-    public class Program
-    {
-        public static void Main(String[] args)
-        {
-            XTrace.UseConsole();
+    webBuilder.UseStartup<Startup>();
+});
 
-            CreateWebHostBuilder(args).Build().Run();
-        }
-
-        public static IHostBuilder CreateWebHostBuilder(String[] args)
-        {
-            var builder = Host.CreateDefaultBuilder(args);
-            builder.ConfigureWebHostDefaults(webBuilder =>
-            {
-                webBuilder.UseStartup<Startup>();
-            });
-
-            return builder;
-        }
-    }
-}
+builder.Build().Run();
