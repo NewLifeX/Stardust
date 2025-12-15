@@ -157,7 +157,7 @@ class CacheFileProvider : IFileProvider
                     var target = TargetServer;
                     if (target.IsNullOrEmpty())
                     {
-                        target = NewLife.Setting.Current.ServiceAddress?.Split(",").FirstOrDefault();
+                        target = StarSetting.Current.ServiceAddress?.Split(",").FirstOrDefault();
                         if (!target.IsNullOrEmpty()) target = target.EnsureEnd("/files/");
                     }
                     if (!target.IsNullOrEmpty() && fullPath.EndsWithIgnoreCase(".sh", ".bat"))

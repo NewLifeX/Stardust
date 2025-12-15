@@ -89,7 +89,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage
         if (msg.NodeAddress.IsNullOrEmpty())
         {
             //todo: 区分内网地址和外网地址
-            msg.NodeAddress = Setting.Current.ServiceAddress;
+            msg.NodeAddress = StarSetting.Current.ServiceAddress;
         }
 
         await NewFileBus.PublishAsync(msg, null, cancellationToken).ConfigureAwait(false);

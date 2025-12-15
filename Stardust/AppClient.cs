@@ -275,7 +275,7 @@ public class AppClient : ClientBase, IRegistry
 
         var service = CreatePublishService(serviceName);
         service.Address = address;
-        service.ExternalAddress = NewLife.Setting.Current.ServiceAddress;
+        service.ExternalAddress = StarSetting.Current.ServiceAddress;
         service.Tag = tag;
         service.Health = health;
 
@@ -297,7 +297,7 @@ public class AppClient : ClientBase, IRegistry
 
         var service = CreatePublishService(serviceName);
         service.AddressCallback = addressCallback;
-        service.ExternalAddress = NewLife.Setting.Current.ServiceAddress;
+        service.ExternalAddress = StarSetting.Current.ServiceAddress;
         service.Tag = tag;
         service.Health = health;
 
@@ -483,7 +483,7 @@ public class AppClient : ClientBase, IRegistry
     {
         if (serverAddress == null) return;
 
-        var set = NewLife.Setting.Current;
+        var set = StarSetting.Current;
         if (serverAddress == set.ServiceAddress) return;
 
         WriteLog("设置服务地址为：{0}", serverAddress);

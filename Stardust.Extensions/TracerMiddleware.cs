@@ -285,7 +285,7 @@ public class TracerMiddleware(RequestDelegate next)
     }
 
     // 外部修改时：清空内存计数，并按配置顺序赋 N*10 降序权重
-    private static void ReloadCountsFromConfig(Setting set)
+    private static void ReloadCountsFromConfig(StarSetting set)
     {
         _serviceAddresses.Clear();
 
@@ -316,7 +316,7 @@ public class TracerMiddleware(RequestDelegate next)
     public static void SaveServiceAddress(HttpContext ctx)
     {
         // 先检测外部修改：首次或变更即重载并赋权
-        var set = Setting.Current;
+        var set = StarSetting.Current;
         var currentCfg = set.ServiceAddress?.Trim();
         if (_lastWrittenServiceAddress == null || currentCfg != _lastWrittenServiceAddress)
             ReloadCountsFromConfig(set);
