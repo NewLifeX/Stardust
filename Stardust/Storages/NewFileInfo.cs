@@ -1,9 +1,11 @@
-﻿namespace Stardust.Storages;
+﻿using NewLife.Log;
+
+namespace Stardust.Storages;
 
 /// <summary>
 /// 新文件消息：宣告指定附件在某个节点可用。
 /// </summary>
-public class NewFileInfo : IFileInfo
+public class NewFileInfo : IFileInfo, ITraceMessage
 {
     /// <summary>公共数据库中的附件ID。</summary>
     public Int64 Id { get; set; }
@@ -25,4 +27,7 @@ public class NewFileInfo : IFileInfo
 
     /// <summary>节点地址</summary>
     public String? NodeAddress { get; set; }
+
+    /// <summary>追踪标识</summary>
+    public String? TraceId { get; set; }
 }

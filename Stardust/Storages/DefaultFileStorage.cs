@@ -7,7 +7,7 @@ using NewLife.Serialization;
 namespace Stardust.Storages;
 
 /// <summary>分布式文件存储默认基类，用于编排文件同步流程。具体应用应继承并实现与存储相关的操作。</summary>
-public abstract class DefaultFileStorage : DisposeBase, IFileStorage
+public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeature, ITracerFeature
 {
     #region 属性
     /// <summary>用于广播新文件消息的事件总线。</summary>
@@ -45,6 +45,8 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         if (Interlocked.Exchange(ref _initialized, 1) == 1) return;
+
+        WriteLog("初始化分布式文件存储，节点：{0}", NodeName);
 
         // 仅订阅，处理逻辑使用独立方法，避免捕获初始化的取消令牌
         NewFileBus?.Subscribe(OnNewFileInfoAsync);
@@ -98,16 +100,26 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage
     /// <summary>处理新文件消息。</summary>
     protected virtual async Task OnNewFileInfoAsync(NewFileInfo info, IEventContext<NewFileInfo> context, CancellationToken cancellationToken)
     {
-        XTrace.WriteLine("新文件通知：{0}", info.ToJson());
+        var msg = info.ToJson();
+        using var span = Tracer?.NewSpan(nameof(OnNewFileInfoAsync), msg);
+        span?.Detach(info.TraceId);
+        WriteLog("新文件通知：{0}", msg);
 
-        // 默认忽略本节点自己发布的消息（除非需要自愈）
-        if (info.SourceNode.EqualIgnoreCase(NodeName)) return;
+        //// 默认忽略本节点自己发布的消息（除非需要自愈）
+        //if (info.SourceNode.EqualIgnoreCase(NodeName)) return;
 
         // 检查本地是否已有文件且哈希正确
         if (CheckLocalFile(info.Path, info.Hash)) return;
 
-        // 从源节点拉取文件数据
-        await FetchFileAsync(info, info.SourceNode, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            // 从源节点拉取文件数据
+            await FetchFileAsync(info, info.SourceNode, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            span?.SetError(ex, null);
+        }
     }
 
     /// <summary>通过应用自定义的传输方式（如HTTP接口）从指定源节点拉取文件数据。</summary>
@@ -116,17 +128,31 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage
         if (file == null || file.Path.IsNullOrEmpty()) throw new ArgumentNullException(nameof(file));
 
         var url = DownloadUri;
+        if (file is NewFileInfo fi) url = fi.NodeAddress + url;
         url = url.Replace("{Id}", file.Id + "");
         url = url.Replace("{Name}", file.Name);
 
-        var fileName = RootPath.CombinePath(file.Path).GetFullPath();
+        var span = DefaultSpan.Current;
+        WriteLog("下载文件：{0}，来源：{1}", file.Name, url);
+        try
+        {
+            var fileName = RootPath.CombinePath(file.Path).GetFullPath();
 
-        //todo: 获取源节点基地址，通过HTTP等方式拉取文件数据
-        var client = new HttpClient();
-        if (file is NewFileInfo fileInfo && !fileInfo.NodeAddress.IsNullOrEmpty())
-            client.BaseAddress = new Uri(fileInfo.NodeAddress.Split(";")[0]);
+            //todo: 获取源节点基地址，通过HTTP等方式拉取文件数据
+            var client = new HttpClient();
+            client.SetUserAgent();
+            if (file is NewFileInfo fileInfo && !fileInfo.NodeAddress.IsNullOrEmpty())
+                client.BaseAddress = new Uri(fileInfo.NodeAddress.Split(";")[0]);
 
-        await client.DownloadFileAsync(url, fileName, file.Hash, cancellationToken).ConfigureAwait(false);
+            await client.DownloadFileAsync(url, fileName, file.Hash, cancellationToken).ConfigureAwait(false);
+
+            WriteLog("下载文件：{0}，成功：{1}", file.Name, url);
+        }
+        catch (Exception ex)
+        {
+            span?.SetError(ex);
+            WriteLog("下载文件：{0}，异常：{1}", file.Name, ex.Message);
+        }
     }
     #endregion
 
@@ -213,5 +239,16 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage
             Length = fi.Length,
         };
     }
+    #endregion
+
+    #region 日志
+    /// <summary>追踪器</summary>
+    public ITracer? Tracer { get; set; }
+
+    /// <summary>日志</summary>
+    public ILog Log { get; set; } = Logger.Null;
+
+    /// <summary>写日志</summary>
+    public void WriteLog(String format, params Object?[] args) => Log?.Info(format, args);
     #endregion
 }

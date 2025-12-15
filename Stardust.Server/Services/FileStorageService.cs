@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using NewLife;
 using NewLife.Caching;
+using NewLife.Log;
 using Stardust.Data.Deployment;
 using Stardust.Storages;
 
@@ -30,10 +31,9 @@ public static class FileStorageExtensions
 
 public class CubeFileStorage : DefaultFileStorage
 {
-    public CubeFileStorage(ICacheProvider cacheProvider)
+    public CubeFileStorage(ICacheProvider cacheProvider, ITracer tracer, ILog log)
     {
-        var cache = cacheProvider.Cache as Cache;
-        if (cache != null)
+        if (cacheProvider.Cache is Cache cache)
         {
             var clientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}";
             NewFileBus = cache.GetEventBus<NewFileInfo>("NewFile", clientId);
@@ -43,6 +43,9 @@ public class CubeFileStorage : DefaultFileStorage
         NodeName = Environment.MachineName;
         RootPath = "../Uploads";
         DownloadUri = "/cube/file?id={Id}";
+
+        Tracer = tracer;
+        Log = log;
     }
 
     /// <summary>获取本地文件的元数据</summary>
