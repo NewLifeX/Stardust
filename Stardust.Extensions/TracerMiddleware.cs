@@ -16,16 +16,16 @@ using HttpContext = Microsoft.AspNetCore.Http.HttpContext;
 namespace Stardust.Extensions;
 
 /// <summary>性能跟踪中间件</summary>
-public class TracerMiddleware
+/// <param name="next"></param>
+public class TracerMiddleware(RequestDelegate next)
 {
-    private readonly RequestDelegate _next;
+    private readonly RequestDelegate _next = next ?? throw new ArgumentNullException(nameof(next));
 
     /// <summary>跟踪器</summary>
     public static ITracer? Tracer { get; set; }
 
-    /// <summary>实例化</summary>
-    /// <param name="next"></param>
-    public TracerMiddleware(RequestDelegate next) => _next = next ?? throw new ArgumentNullException(nameof(next));
+    /// <summary>区域名集合。专用于魔方路由</summary>
+    public static String[] AreaNames { get; set; } = [];
 
     /// <summary>调用</summary>
     /// <param name="ctx"></param>
@@ -202,7 +202,7 @@ public class TracerMiddleware
         ".html", ".htm", ".js", ".css", ".map", ".png", ".jpg", ".gif", ".ico",  // 脚本样式图片
         ".woff", ".woff2", ".svg", ".ttf", ".otf", ".eot"   // 字体
     ];
-    private static readonly String[] CubeActions = ["index", "detail", "add", "edit", "delete", "deleteSelect", "deleteAll", "ExportCsv", "Info", "SetEnable", "EnableSelect", "DisableSelect", "DeleteSelect"];
+    private static readonly String[] CubeActions = ["index", "detail", "add", "edit", "delete", "deleteSelect", "deleteAll", "ExportCsv", "ExportExcel", "ExportZip", "Info", "SetEnable", "EnableSelect", "DisableSelect", "DeleteSelect"];
 
     private static String? GetAction(HttpContext ctx)
     {
@@ -213,10 +213,19 @@ public class TracerMiddleware
         if (ss.Length == 0) return p;
 
         // 如果是魔方格式，保留3段，其它webapi接口只留2段
-        if (ss.Length >= 3 && ss[2].EqualIgnoreCase(CubeActions))
-            p = "/" + ss.Take(3).Join("/");
+        var rs = AreaNames;
+        if (rs != null && ss[0].EqualIgnoreCase(rs))
+        {
+            if (ss.Length >= 3)
+                p = $"/{ss[0]}/{ss[1]}/{ss[2]}";
+        }
         else
-            p = "/" + ss.Take(2).Join("/");
+        {
+            if (ss.Length >= 3 && ss[2].EqualIgnoreCase(CubeActions))
+                p = $"/{ss[0]}/{ss[1]}/{ss[2]}";
+            else if (ss.Length >= 2)
+                p = $"/{ss[0]}/{ss[1]}";
+        }
 
         return p;
     }
