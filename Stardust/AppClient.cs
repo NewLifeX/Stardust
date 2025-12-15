@@ -400,6 +400,8 @@ public class AppClient : ClientBase, IRegistry
                 if (!address.IsNullOrEmpty()) svc.Address = address;
             }
 
+            svc.ExternalAddress = StarSetting.Current.ServiceAddress;
+
             if (!svc.Address.IsNullOrEmpty()) await RegisterAsync(svc).ConfigureAwait(false);
         }
     }

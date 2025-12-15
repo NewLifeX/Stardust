@@ -112,6 +112,14 @@ public partial class AppService
     [BindColumn("OriginAddress", "原始地址。客户端上报地址，需要经服务端处理后才能对外提供服务", "")]
     public String OriginAddress { get => _OriginAddress; set { if (OnPropertyChanging("OriginAddress", value)) { _OriginAddress = value; OnPropertyChanged("OriginAddress"); } } }
 
+    private String _ExternalAddress;
+    /// <summary>外部服务地址。用户访问的原始外网地址，用于内部构造其它Url</summary>
+    [DisplayName("外部服务地址")]
+    [Description("外部服务地址。用户访问的原始外网地址，用于内部构造其它Url")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("ExternalAddress", "外部服务地址。用户访问的原始外网地址，用于内部构造其它Url", "")]
+    public String ExternalAddress { get => _ExternalAddress; set { if (OnPropertyChanging("ExternalAddress", value)) { _ExternalAddress = value; OnPropertyChanged("ExternalAddress"); } } }
+
     private Int32 _Weight;
     /// <summary>权重。多实例提供服务时，通过权重系数调节客户端调用各实例服务的比例</summary>
     [DisplayName("权重")]
@@ -215,6 +223,7 @@ public partial class AppService
             "Version" => _Version,
             "Address" => _Address,
             "OriginAddress" => _OriginAddress,
+            "ExternalAddress" => _ExternalAddress,
             "Weight" => _Weight,
             "Scope" => _Scope,
             "Tag" => _Tag,
@@ -242,6 +251,7 @@ public partial class AppService
                 case "Version": _Version = Convert.ToString(value); break;
                 case "Address": _Address = Convert.ToString(value); break;
                 case "OriginAddress": _OriginAddress = Convert.ToString(value); break;
+                case "ExternalAddress": _ExternalAddress = Convert.ToString(value); break;
                 case "Weight": _Weight = value.ToInt(); break;
                 case "Scope": _Scope = Convert.ToString(value); break;
                 case "Tag": _Tag = Convert.ToString(value); break;
@@ -327,6 +337,9 @@ public partial class AppService
         /// <summary>原始地址。客户端上报地址，需要经服务端处理后才能对外提供服务</summary>
         public static readonly Field OriginAddress = FindByName("OriginAddress");
 
+        /// <summary>外部服务地址。用户访问的原始外网地址，用于内部构造其它Url</summary>
+        public static readonly Field ExternalAddress = FindByName("ExternalAddress");
+
         /// <summary>权重。多实例提供服务时，通过权重系数调节客户端调用各实例服务的比例</summary>
         public static readonly Field Weight = FindByName("Weight");
 
@@ -395,6 +408,9 @@ public partial class AppService
 
         /// <summary>原始地址。客户端上报地址，需要经服务端处理后才能对外提供服务</summary>
         public const String OriginAddress = "OriginAddress";
+
+        /// <summary>外部服务地址。用户访问的原始外网地址，用于内部构造其它Url</summary>
+        public const String ExternalAddress = "ExternalAddress";
 
         /// <summary>权重。多实例提供服务时，通过权重系数调节客户端调用各实例服务的比例</summary>
         public const String Weight = "Weight";

@@ -234,6 +234,7 @@
         <Column Name="Version" DataType="String" Description="版本。应用程序版本号" />
         <Column Name="Address" DataType="String" Length="500" Description="地址。经地址模版处理后对外服务的地址，默认是本地局域网服务地址，如http://127.0.0.1:1234" />
         <Column Name="OriginAddress" DataType="String" Length="500" Description="原始地址。客户端上报地址，需要经服务端处理后才能对外提供服务" />
+        <Column Name="ExternalAddress" DataType="String" Length="500" Description="外部服务地址。用户访问的原始外网地址，用于内部构造其它Url" />
         <Column Name="Weight" DataType="Int32" Description="权重。多实例提供服务时，通过权重系数调节客户端调用各实例服务的比例" />
         <Column Name="Scope" DataType="String" Description="作用域。根据配置中心应用规则计算，禁止跨域访问服务" />
         <Column Name="Tag" DataType="String" Description="标签。带有指定特性，逗号分隔" />

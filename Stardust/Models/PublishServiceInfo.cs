@@ -18,7 +18,7 @@ public class PublishServiceInfo
     /// <summary>服务地址。本地服务地址，可能是固定地址，也可能是http://*:8080,https://*:8001之类的形式</summary>
     public String? Address { get; set; }
 
-    /// <summary>外部地址</summary>
+    /// <summary>外部服务地址。用户访问的原始外网地址，用于内部构造其它Url</summary>
     public String? ExternalAddress { get;set; }
 
     /// <summary>健康检测地址</summary>
