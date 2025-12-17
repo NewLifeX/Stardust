@@ -1,7 +1,9 @@
 ﻿using NewLife;
+using NewLife.Caching;
 using NewLife.Http;
 using NewLife.Log;
 using NewLife.Messaging;
+using NewLife.Remoting;
 using NewLife.Serialization;
 
 namespace Stardust.Storages;
@@ -26,6 +28,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     public String DownloadUri { get; set; } = "/cube/file?id={Id}";
 
     private Int32 _initialized;
+    private ICache _cache = new MemoryCache();
     #endregion
 
     #region 构造
@@ -114,7 +117,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         try
         {
             // 从源节点拉取文件数据
-            await FetchFileAsync(info, info.SourceNode, cancellationToken).ConfigureAwait(false);
+            await FetchFileAsync(info, info.SourceNode, info.NodeAddress, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -123,7 +126,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     }
 
     /// <summary>通过应用自定义的传输方式（如HTTP接口）从指定源节点拉取文件数据。</summary>
-    protected virtual async Task FetchFileAsync(IFileInfo file, String? sourceNode, CancellationToken cancellationToken)
+    protected virtual async Task FetchFileAsync(IFileInfo file, String? sourceNode, String? sourceAddress, CancellationToken cancellationToken)
     {
         if (file == null || file.Path.IsNullOrEmpty()) throw new ArgumentNullException(nameof(file));
 
@@ -138,11 +141,20 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         {
             var fileName = RootPath.CombinePath(file.Path).GetFullPath();
 
-            //todo: 获取源节点基地址，通过HTTP等方式拉取文件数据
-            var client = new HttpClient();
-            client.SetUserAgent();
-            if (file is NewFileInfo fileInfo && !fileInfo.NodeAddress.IsNullOrEmpty())
-                client.BaseAddress = new Uri(fileInfo.NodeAddress.Split(";")[0]);
+            // 获取源节点基地址，通过HTTP等方式拉取文件数据
+            var key = $"client:{sourceAddress}";
+            var client = _cache.Get<ApiHttpClient>(key);
+            if (client == null)
+            {
+                client = new ApiHttpClient(sourceAddress!)
+                {
+                    DefaultUserAgent = HttpHelper.DefaultUserAgent,
+                    Tracer = Tracer,
+                    Log = Log,
+                };
+
+                _cache.Set(key, client, 600);
+            }
 
             await client.DownloadFileAsync(url, fileName, file.Hash, cancellationToken).ConfigureAwait(false);
 
