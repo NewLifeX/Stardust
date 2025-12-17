@@ -347,7 +347,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     /// <summary>处理文件请求消息。</summary>
     protected virtual async Task OnFileRequestAsync(FileRequest req, IEventContext<FileRequest> context, CancellationToken cancellationToken)
     {
-        XTrace.WriteLine("请求文件通知：{0}", req.ToJson());
+        WriteLog("请求文件通知：{0}", req.ToJson());
 
         if (req.RequestNode.EqualIgnoreCase(NodeName)) return;
 

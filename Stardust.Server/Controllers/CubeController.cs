@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Remoting;
 using Stardust.Data.Deployment;
+using Stardust.Storages;
 
 namespace Stardust.Server.Controllers;
 
@@ -11,7 +12,7 @@ namespace Stardust.Server.Controllers;
 [DisplayName("数据接口")]
 [ApiController]
 [Route("{controller}/{action}")]
-public class CubeController(StarServerSetting setting) : ControllerBase
+public class CubeController(IFileStorage fileStorage, StarServerSetting setting) : ControllerBase
 {
     #region 附件
     private async Task<(Attachment att, String filePath)> GetFile(String id)
@@ -29,6 +30,12 @@ public class CubeController(StarServerSetting setting) : ControllerBase
 
         // 如果附件不存在，则抓取
         var filePath = att.GetFilePath(setting.UploadPath);
+        if (!filePath.IsNullOrEmpty() && !System.IO.File.Exists(filePath))
+        {
+            // 如果本地文件不存在，则从分布式文件存储获取
+            await fileStorage.RequestFileAsync(att.Id, att.FilePath, "file not found");
+            await Task.Delay(5_000);
+        }
         if (filePath.IsNullOrEmpty() || !System.IO.File.Exists(filePath))
         {
             var url = att.Source;

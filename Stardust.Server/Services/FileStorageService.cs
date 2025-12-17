@@ -30,10 +30,10 @@ public static class FileStorageExtensions
 
 public class CubeFileStorage : DefaultFileStorage
 {
-    public CubeFileStorage(IServiceProvider serviceProvider, ICacheProvider cacheProvider, ITracer tracer, ILog log)
+    public CubeFileStorage(StarServerSetting setting, IServiceProvider serviceProvider, ICacheProvider cacheProvider, ITracer tracer, ILog log)
     {
         //NodeName = Environment.MachineName;
-        RootPath = "../Uploads";
+        RootPath = setting.UploadPath;
         DownloadUri = "/cube/file?id={Id}";
 
         ServiceProvider = serviceProvider;
@@ -46,7 +46,7 @@ public class CubeFileStorage : DefaultFileStorage
     /// <summary>获取本地文件的元数据</summary>
     protected override IFileInfo GetLocalFileMeta(Int64 attachmentId, String? path)
     {
-        if (path.IsNullOrEmpty()) throw new ArgumentNullException(nameof(path));
+        //if (path.IsNullOrEmpty()) throw new ArgumentNullException(nameof(path));
 
         var att = Attachment.FindById(attachmentId);
 

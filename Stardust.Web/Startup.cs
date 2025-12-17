@@ -45,6 +45,9 @@ public class Startup
         // 分布式服务，使用配置中心RedisCache配置
         services.AddSingleton<ICacheProvider, RedisCacheProvider>();
 
+        var set = StarServerSetting.Current;
+        services.AddSingleton(set);
+
         // 统计
         services.AddSingleton<IAppDayStatService, AppDayStatService>();
         services.AddSingleton<ITraceItemStatService, TraceItemStatService>();
