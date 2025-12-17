@@ -289,12 +289,12 @@ public class TracerMiddleware(RequestDelegate next)
     {
         _serviceAddresses.Clear();
 
-        var csv = set.ServiceAddress;
+        var address = set.ServiceAddress?.Trim();
         var list = new List<String>();
-        if (!csv.IsNullOrEmpty())
+        if (!address.IsNullOrEmpty())
         {
             var seen = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
-            var parts = csv!.Split([','], StringSplitOptions.RemoveEmptyEntries);
+            var parts = address.Split([','], StringSplitOptions.RemoveEmptyEntries);
             foreach (var item in parts)
             {
                 var norm = NormalizeBaseAddress(item.Trim());
@@ -308,7 +308,11 @@ public class TracerMiddleware(RequestDelegate next)
             _serviceAddresses[list[i]] = (n - i) * 10;
         }
 
-        _lastWrittenServiceAddress = csv?.Trim();
+        _lastWrittenServiceAddress = address;
+
+        // 更新星尘工厂
+        if (Tracer is StarTracer st && st.Factory != null)
+            st.Factory.ExternalAddress = address;
     }
 
     /// <summary>自动记录用户访问主机地址</summary>
@@ -344,5 +348,9 @@ public class TracerMiddleware(RequestDelegate next)
             set.Save();
             _lastWrittenServiceAddress = value;
         }
+
+        // 更新星尘工厂
+        if (Tracer is StarTracer st && st.Factory != null)
+            st.Factory.ExternalAddress = value;
     }
 }

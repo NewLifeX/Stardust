@@ -275,7 +275,7 @@ public class AppClient : ClientBase, IRegistry
 
         var service = CreatePublishService(serviceName);
         service.Address = address;
-        service.ExternalAddress = StarSetting.Current.ServiceAddress;
+        service.ExternalAddress = Factory?.ExternalAddress;
         service.Tag = tag;
         service.Health = health;
 
@@ -297,7 +297,7 @@ public class AppClient : ClientBase, IRegistry
 
         var service = CreatePublishService(serviceName);
         service.AddressCallback = addressCallback;
-        service.ExternalAddress = StarSetting.Current.ServiceAddress;
+        service.ExternalAddress = Factory?.ExternalAddress;
         service.Tag = tag;
         service.Health = health;
 
@@ -390,6 +390,8 @@ public class AppClient : ClientBase, IRegistry
 
     private async Task RefreshPublish()
     {
+        var factory = Factory;
+
         // 刷新已发布服务
         foreach (var item in _publishServices)
         {
@@ -397,10 +399,18 @@ public class AppClient : ClientBase, IRegistry
             if (svc.Address.IsNullOrEmpty() && svc.AddressCallback != null)
             {
                 var address = svc.AddressCallback();
-                if (!address.IsNullOrEmpty()) svc.Address = address;
+                if (!address.IsNullOrEmpty())
+                {
+                    svc.Address = address;
+                    factory?.InternalAddress = address;
+                }
             }
 
-            svc.ExternalAddress = StarSetting.Current.ServiceAddress;
+            if (factory != null)
+            {
+                svc.Address = factory.InternalAddress;
+                svc.ExternalAddress = factory.ExternalAddress;
+            }
 
             if (!svc.Address.IsNullOrEmpty()) await RegisterAsync(svc).ConfigureAwait(false);
         }
@@ -501,6 +511,8 @@ public class AppClient : ClientBase, IRegistry
         }
 
         //if (count > 0 && _timer != null) _timer.SetNext(-1);
+
+        Factory?.ExternalAddress = serverAddress;
 
         set.ServiceAddress = serverAddress;
         set.Save();

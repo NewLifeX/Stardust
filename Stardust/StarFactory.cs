@@ -66,6 +66,12 @@ public class StarFactory : DisposeBase
     /// <summary>本地星尘代理</summary>
     public LocalStarClient? Local { get; private set; }
 
+    /// <summary>内网地址。用于内网访问的地址集，包括协议地址端口，多地址逗号隔开</summary>
+    public String? InternalAddress { get; set; }
+
+    /// <summary>外网地址。用于外网访问的地址集，包括协议地址端口，多地址逗号隔开</summary>
+    public String? ExternalAddress { get; set; }
+
     private AppClient? _client;
     #endregion
 
@@ -367,6 +373,7 @@ public class StarFactory : DisposeBase
 
         var tracer = new StarTracer()
         {
+            Factory = this,
             AppId = AppId,
             AppName = AppName,
             ClientId = ClientId,
@@ -401,7 +408,7 @@ public class StarFactory : DisposeBase
                     Server = Server!,
                     AppId = AppId!,
                     //Secret = Secret,
-                    ClientId = ClientId,
+                    //ClientId = ClientId,
                     Client = _client,
                 };
                 config.Attach(_client);
@@ -481,6 +488,7 @@ public class StarFactory : DisposeBase
     /// <returns></returns>
     public Task<PublishServiceInfo> RegisterAsync(String serviceName, String address, String? tag = null, String? health = null)
     {
+        InternalAddress = address;
         return Task.Run(() =>
         {
             try

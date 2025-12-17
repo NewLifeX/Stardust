@@ -37,6 +37,9 @@ public class StarTracer : DefaultTracer
     /// <summary>Api客户端</summary>
     public IApiClient? Client { get; set; }
 
+    /// <summary>星尘工厂</summary>
+    public StarFactory? Factory { get; set; }
+
     /// <summary>剔除埋点调用自己。默认true</summary>
     public Boolean TrimSelf { get; set; } = true;
 

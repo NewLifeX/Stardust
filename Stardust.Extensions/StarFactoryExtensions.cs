@@ -92,6 +92,23 @@ public static class StarFactoryExtensions
 
         //app.UseMiddleware<RegistryMiddleware>();
 
+        // 启动的时候注册服务
+        var lifetime = app.ApplicationServices.GetRequiredService<IHostApplicationLifetime>();
+        lifetime.ApplicationStarted.Register(() =>
+        {
+            var star = app.ApplicationServices.GetRequiredService<StarFactory>();
+            try
+            {
+                // 本地监听地址，属于内部地址
+                var feature = app.ServerFeatures.Get<IServerAddressesFeature>();
+                var address = feature?.Addresses.Join(",");
+
+                if (star != null && !address.IsNullOrEmpty())
+                    star.InternalAddress = address;
+            }
+            catch { }
+        });
+
         return app;
     }
 
@@ -141,6 +158,7 @@ public static class StarFactoryExtensions
                         return;
                     }
                 }
+                star.InternalAddress = address;
                 star.Service?.RegisterAsync(serviceName, address, tag, health).Wait(5_000);
             }
             catch (HttpRequestException) { }

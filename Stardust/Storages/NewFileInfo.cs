@@ -25,8 +25,8 @@ public class NewFileInfo : IFileInfo, ITraceMessage
     /// <summary>当前文件所在的逻辑节点名称。</summary>
     public String? SourceNode { get; set; }
 
-    /// <summary>节点地址</summary>
-    public String? NodeAddress { get; set; }
+    ///// <summary>节点地址</summary>
+    //public String? NodeAddress { get; set; }
 
     /// <summary>追踪标识</summary>
     public String? TraceId { get; set; }

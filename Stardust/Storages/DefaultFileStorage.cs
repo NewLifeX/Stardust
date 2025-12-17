@@ -1,10 +1,15 @@
-﻿using NewLife;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Net;
+using NewLife;
 using NewLife.Caching;
 using NewLife.Http;
 using NewLife.Log;
 using NewLife.Messaging;
+using NewLife.Model;
 using NewLife.Remoting;
 using NewLife.Serialization;
+using NewLife.Threading;
 
 namespace Stardust.Storages;
 
@@ -12,14 +17,20 @@ namespace Stardust.Storages;
 public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeature, ITracerFeature
 {
     #region 属性
+    /// <summary>用于广播地址消息的事件总线。</summary>
+    public IEventBus<AddressInfo>? AddressBus { get; set; }
+
     /// <summary>用于广播新文件消息的事件总线。</summary>
     public IEventBus<NewFileInfo>? NewFileBus { get; set; }
 
     /// <summary>用于发布文件请求消息的事件总线。</summary>
     public IEventBus<FileRequest>? FileRequestBus { get; set; }
 
-    /// <summary>当前节点的逻辑名称。</summary>
-    public String? NodeName { get; set; } = Environment.MachineName;
+    /// <summary>服务提供者，用于解析 StarFactory 等依赖。</summary>
+    public IServiceProvider? ServiceProvider { get; set; }
+
+    /// <summary>当前节点的逻辑名称（ClientId：IP@ProcessId）。</summary>
+    public String? NodeName { get; set; } = Runtime.ClientId;
 
     /// <summary>作为文件存储的根路径</summary>
     public String? RootPath { get; set; }
@@ -29,6 +40,12 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
 
     private Int32 _initialized;
     private ICache _cache = new MemoryCache();
+
+    // 地址缓存：节点名称 -> 地址信息
+    private readonly ConcurrentDictionary<String, AddressInfo> _nodeAddresses = new(StringComparer.OrdinalIgnoreCase);
+
+    // 地址广播定时器
+    private TimerX? _addressTimer;
     #endregion
 
     #region 构造
@@ -40,6 +57,8 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
 
         NewFileBus.TryDispose();
         FileRequestBus.TryDispose();
+        AddressBus.TryDispose();
+        _addressTimer?.Dispose();
     }
     #endregion
 
@@ -51,15 +70,140 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
 
         WriteLog("初始化分布式文件存储，节点：{0}", NodeName);
 
-        // 仅订阅，处理逻辑使用独立方法，避免捕获初始化的取消令牌
+        // 订阅地址、新文件、文件请求消息
+        AddressBus?.Subscribe(OnAddressInfoAsync);
         NewFileBus?.Subscribe(OnNewFileInfoAsync);
         FileRequestBus?.Subscribe(OnFileRequestAsync);
+
+        // 启动地址广播定时器（首次延迟 3 秒，随后每 60 秒一次）
+        _addressTimer = new TimerX(OnScan, null, 1_000, 5_000) { Async = true };
 
         await OnInitializedAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>事件总线订阅完成后调用，覆写以执行额外初始化。</summary>
     protected virtual Task OnInitializedAsync(CancellationToken cancellationToken) => Task.FromResult(0);
+
+    /// <summary>设置事件总线</summary>
+    /// <param name="cacheProvider"></param>
+    /// <returns></returns>
+    public Boolean SetEventBus(ICacheProvider cacheProvider)
+    {
+        if (cacheProvider.Cache is not Cache cache) return false;
+
+        var clientId = Runtime.ClientId;
+        AddressBus = cache.GetEventBus<AddressInfo>("Address", clientId);
+        NewFileBus = cache.GetEventBus<NewFileInfo>("NewFile", clientId);
+        FileRequestBus = cache.GetEventBus<FileRequest>("FileRequest", clientId);
+
+        return true;
+    }
+    #endregion
+
+    #region 地址广播
+    /// <summary>发布当前节点的地址信息（内网/外网）。</summary>
+    public async Task PublishAddressAsync(CancellationToken cancellationToken = default)
+    {
+        if (AddressBus == null) throw new InvalidOperationException("AddressBus not configured.");
+
+        var info = BuildAddressInfo();
+        using var span = Tracer?.NewSpan(nameof(PublishAddressAsync), info.ToJson());
+        await AddressBus.PublishAsync(info, null, cancellationToken).ConfigureAwait(false);
+        WriteLog("地址广播：{0}", info.ToJson());
+    }
+
+    /// <summary>构建当前节点地址信息。</summary>
+    protected virtual AddressInfo BuildAddressInfo()
+    {
+        String? internalAddr = null;
+        String? externalAddr = null;
+
+        // 从 ServiceProvider 解析 StarFactory，尽量获取更准确的内外网地址
+        var factory = ServiceProvider?.GetService<StarFactory>();
+        if (factory != null)
+        {
+            internalAddr = factory.InternalAddress;
+            externalAddr = factory.ExternalAddress;
+        }
+
+        // 降级：使用 StarSetting 或已有 ServiceAddress
+        //if (internalAddr.IsNullOrEmpty()) internalAddr = StarSetting.Current.ServiceAddress;
+        if (externalAddr.IsNullOrEmpty()) externalAddr = StarSetting.Current.ServiceAddress;
+
+        // 展开内网地址
+        if (!internalAddr.IsNullOrEmpty())
+        {
+            var urls = new List<String>();
+            foreach (var ip in NetHelper.GetIPsWithCache())
+            {
+                if (IPAddress.IsLoopback(ip)) continue;
+                var buf = ip.GetAddressBytes();
+                if (buf[0] == 169 && buf[1] == 254) continue;
+                if (buf[0] == 0xfe && buf[1] == 0x80) continue;
+
+                var ip2 = ip.IsIPv4() ? ip.ToString() : $"[{ip}]";
+                var addrs = internalAddr
+                    .Replace("://*", $"://{ip2}")
+                    .Replace("://+", $"://{ip2}")
+                    .Replace("://0.0.0.0", $"://{ip2}")
+                    .Replace("://[::]", $"://{ip2}")
+                    .Split(",");
+
+                foreach (var elm in addrs)
+                {
+                    var url = elm;
+                    if (url.StartsWithIgnoreCase("http://", "https://"))
+                        url = new Uri(url).ToString().TrimEnd('/');
+                    if (!urls.Contains(url)) urls.Add(url);
+                }
+            }
+            internalAddr = urls.Join(",");
+        }
+
+        var info = new AddressInfo
+        {
+            NodeName = NodeName,
+            InternalAddress = internalAddr,
+            ExternalAddress = externalAddr,
+        };
+
+        // 更新本地缓存，便于后续下载使用
+        _nodeAddresses[info.NodeName + ""] = info;
+
+        return info;
+    }
+
+    /// <summary>消费地址消息，按节点名称缓存地址信息。</summary>
+    protected virtual Task OnAddressInfoAsync(AddressInfo info, IEventContext<AddressInfo> context, CancellationToken cancellationToken)
+    {
+        using var span = Tracer?.NewSpan(nameof(OnAddressInfoAsync), info.ToJson());
+        WriteLog("地址消息：{0}", info.ToJson());
+
+        var name = info.NodeName;
+        if (!name.IsNullOrEmpty()) _nodeAddresses[name!] = info;
+
+        return Task.FromResult(0);
+    }
+
+    private async Task OnScan(Object state)
+    {
+        try
+        {
+            await PublishAddressAsync(default).ConfigureAwait(false);
+
+            var timer = TimerX.Current;
+            if (timer != null)
+            {
+                var factory = ServiceProvider?.GetService<StarFactory>();
+                if (factory != null && !factory.InternalAddress.IsNullOrEmpty())
+                    timer.Period = 60_000;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log?.Error("地址广播异常：{0}", ex.Message);
+        }
+    }
     #endregion
 
     #region 新文件
@@ -90,12 +234,12 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         }
         msg.SourceNode = NodeName;
 
-        // 填充节点地址，供其他节点拉取文件
-        if (msg.NodeAddress.IsNullOrEmpty())
-        {
-            //todo: 区分内网地址和外网地址
-            msg.NodeAddress = StarSetting.Current.ServiceAddress;
-        }
+        //// 填充节点地址，供其他节点拉取文件
+        //if (msg.NodeAddress.IsNullOrEmpty())
+        //{
+        //    //todo: 区分内网地址和外网地址
+        //    msg.NodeAddress = StarSetting.Current.ServiceAddress;
+        //}
 
         await NewFileBus.PublishAsync(msg, null, cancellationToken).ConfigureAwait(false);
     }
@@ -117,7 +261,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         try
         {
             // 从源节点拉取文件数据
-            await FetchFileAsync(info, info.SourceNode, info.NodeAddress, cancellationToken).ConfigureAwait(false);
+            await FetchFileAsync(info, info.SourceNode!, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -126,12 +270,15 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     }
 
     /// <summary>通过应用自定义的传输方式（如HTTP接口）从指定源节点拉取文件数据。</summary>
-    protected virtual async Task FetchFileAsync(IFileInfo file, String? sourceNode, String? sourceAddress, CancellationToken cancellationToken)
+    protected virtual async Task FetchFileAsync(IFileInfo file, String sourceNode, CancellationToken cancellationToken)
     {
         if (file == null || file.Path.IsNullOrEmpty()) throw new ArgumentNullException(nameof(file));
+        if (sourceNode.IsNullOrEmpty()) throw new ArgumentNullException(nameof(sourceNode));
+
+        if (!_nodeAddresses.TryGetValue(sourceNode, out var addr))
+            throw new InvalidDataException($"无法解析节点[{sourceNode}]的地址");
 
         var url = DownloadUri;
-        if (file is NewFileInfo fi) url = fi.NodeAddress + url;
         url = url.Replace("{Id}", file.Id + "");
         url = url.Replace("{Name}", file.Name);
 
@@ -142,23 +289,25 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
             var fileName = RootPath.CombinePath(file.Path).GetFullPath();
 
             // 获取源节点基地址，通过HTTP等方式拉取文件数据
-            var key = $"client:{sourceAddress}";
+            var key = $"client:{addr.NodeName}:{addr.InternalAddress}:{addr.ExternalAddress}";
             var client = _cache.Get<ApiHttpClient>(key);
             if (client == null)
             {
-                client = new ApiHttpClient(sourceAddress!)
+                client = new ApiHttpClient
                 {
                     DefaultUserAgent = HttpHelper.DefaultUserAgent,
                     Tracer = Tracer,
                     Log = Log,
                 };
+                if (!addr.InternalAddress.IsNullOrEmpty()) client.SetServer(addr.InternalAddress);
+                if (!addr.ExternalAddress.IsNullOrEmpty()) client.SetServer(addr.ExternalAddress);
 
                 _cache.Set(key, client, 600);
             }
 
             await client.DownloadFileAsync(url, fileName, file.Hash, cancellationToken).ConfigureAwait(false);
 
-            WriteLog("下载文件：{0}，成功：{1}", file.Name, url);
+            WriteLog("下载文件：{0}，成功：{1}", file.Name, client.Current?.Address);
         }
         catch (Exception ex)
         {
