@@ -17,8 +17,8 @@ namespace Stardust.Storages;
 public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeature, ITracerFeature
 {
     #region 属性
-    /// <summary>用于广播地址消息的事件总线。</summary>
-    public IEventBus<AddressInfo>? AddressBus { get; set; }
+    ///// <summary>用于广播地址消息的事件总线。</summary>
+    //public IEventBus<AddressInfo>? AddressBus { get; set; }
 
     /// <summary>用于广播新文件消息的事件总线。</summary>
     public IEventBus<NewFileInfo>? NewFileBus { get; set; }
@@ -44,8 +44,8 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     // 地址缓存：节点名称 -> 地址信息
     private readonly ConcurrentDictionary<String, AddressInfo> _nodeAddresses = new(StringComparer.OrdinalIgnoreCase);
 
-    // 地址广播定时器
-    private TimerX? _addressTimer;
+    //// 地址广播定时器
+    //private TimerX? _addressTimer;
     #endregion
 
     #region 构造
@@ -57,8 +57,8 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
 
         NewFileBus.TryDispose();
         FileRequestBus.TryDispose();
-        AddressBus.TryDispose();
-        _addressTimer?.Dispose();
+        //AddressBus.TryDispose();
+        //_addressTimer?.Dispose();
     }
     #endregion
 
@@ -71,12 +71,12 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         WriteLog("初始化分布式文件存储，节点：{0}", NodeName);
 
         // 订阅地址、新文件、文件请求消息
-        AddressBus?.Subscribe(OnAddressInfoAsync);
+        //AddressBus?.Subscribe(OnAddressInfoAsync);
         NewFileBus?.Subscribe(OnNewFileInfoAsync);
         FileRequestBus?.Subscribe(OnFileRequestAsync);
 
-        // 启动地址广播定时器（首次延迟 3 秒，随后每 60 秒一次）
-        _addressTimer = new TimerX(OnScan, null, 1_000, 5_000) { Async = true };
+        //// 启动地址广播定时器（首次延迟 3 秒，随后每 60 秒一次）
+        //_addressTimer = new TimerX(OnScan, null, 1_000, 5_000) { Async = true };
 
         await OnInitializedAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -92,7 +92,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         if (cacheProvider.Cache is not Cache cache) return false;
 
         var clientId = Runtime.ClientId;
-        AddressBus = cache.GetEventBus<AddressInfo>("Address", clientId);
+        //AddressBus = cache.GetEventBus<AddressInfo>("Address", clientId);
         NewFileBus = cache.GetEventBus<NewFileInfo>("NewFile", clientId);
         FileRequestBus = cache.GetEventBus<FileRequest>("FileRequest", clientId);
 
@@ -101,16 +101,16 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     #endregion
 
     #region 地址广播
-    /// <summary>发布当前节点的地址信息（内网/外网）。</summary>
-    public async Task PublishAddressAsync(CancellationToken cancellationToken = default)
-    {
-        if (AddressBus == null) throw new InvalidOperationException("AddressBus not configured.");
+    ///// <summary>发布当前节点的地址信息（内网/外网）。</summary>
+    //public async Task PublishAddressAsync(CancellationToken cancellationToken = default)
+    //{
+    //    if (AddressBus == null) throw new InvalidOperationException("AddressBus not configured.");
 
-        var info = BuildAddressInfo();
-        using var span = Tracer?.NewSpan(nameof(PublishAddressAsync), info.ToJson());
-        await AddressBus.PublishAsync(info, null, cancellationToken).ConfigureAwait(false);
-        WriteLog("地址广播：{0}", info.ToJson());
-    }
+    //    var info = BuildAddressInfo();
+    //    using var span = Tracer?.NewSpan(nameof(PublishAddressAsync), info.ToJson());
+    //    await AddressBus.PublishAsync(info, null, cancellationToken).ConfigureAwait(false);
+    //    WriteLog("地址广播：{0}", info.ToJson());
+    //}
 
     /// <summary>构建当前节点地址信息。</summary>
     protected virtual AddressInfo BuildAddressInfo()
@@ -167,43 +167,43 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
             ExternalAddress = externalAddr,
         };
 
-        // 更新本地缓存，便于后续下载使用
-        _nodeAddresses[info.NodeName + ""] = info;
+        //// 更新本地缓存，便于后续下载使用
+        //_nodeAddresses[info.NodeName + ""] = info;
 
         return info;
     }
 
-    /// <summary>消费地址消息，按节点名称缓存地址信息。</summary>
-    protected virtual Task OnAddressInfoAsync(AddressInfo info, IEventContext<AddressInfo> context, CancellationToken cancellationToken)
-    {
-        using var span = Tracer?.NewSpan(nameof(OnAddressInfoAsync), info.ToJson());
-        WriteLog("地址消息：{0}", info.ToJson());
+    ///// <summary>消费地址消息，按节点名称缓存地址信息。</summary>
+    //protected virtual Task OnAddressInfoAsync(AddressInfo info, IEventContext<AddressInfo> context, CancellationToken cancellationToken)
+    //{
+    //    using var span = Tracer?.NewSpan(nameof(OnAddressInfoAsync), info.ToJson());
+    //    WriteLog("地址消息：{0}", info.ToJson());
 
-        var name = info.NodeName;
-        if (!name.IsNullOrEmpty()) _nodeAddresses[name!] = info;
+    //    var name = info.NodeName;
+    //    if (!name.IsNullOrEmpty()) _nodeAddresses[name!] = info;
 
-        return Task.FromResult(0);
-    }
+    //    return Task.FromResult(0);
+    //}
 
-    private async Task OnScan(Object state)
-    {
-        try
-        {
-            await PublishAddressAsync(default).ConfigureAwait(false);
+    //private async Task OnScan(Object state)
+    //{
+    //    try
+    //    {
+    //        await PublishAddressAsync(default).ConfigureAwait(false);
 
-            var timer = TimerX.Current;
-            if (timer != null)
-            {
-                var factory = ServiceProvider?.GetService<StarFactory>();
-                if (factory != null && !factory.InternalAddress.IsNullOrEmpty())
-                    timer.Period = 60_000;
-            }
-        }
-        catch (Exception ex)
-        {
-            Log?.Error("地址广播异常：{0}", ex.Message);
-        }
-    }
+    //        var timer = TimerX.Current;
+    //        if (timer != null)
+    //        {
+    //            var factory = ServiceProvider?.GetService<StarFactory>();
+    //            if (factory != null && !factory.InternalAddress.IsNullOrEmpty())
+    //                timer.Period = 60_000;
+    //        }
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        Log?.Error("地址广播异常：{0}", ex.Message);
+    //    }
+    //}
     #endregion
 
     #region 新文件
@@ -234,12 +234,9 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         }
         msg.SourceNode = NodeName;
 
-        //// 填充节点地址，供其他节点拉取文件
-        //if (msg.NodeAddress.IsNullOrEmpty())
-        //{
-        //    //todo: 区分内网地址和外网地址
-        //    msg.NodeAddress = StarSetting.Current.ServiceAddress;
-        //}
+        var inf = BuildAddressInfo();
+        msg.InternalAddress = inf.InternalAddress;
+        msg.ExternalAddress = inf.ExternalAddress;
 
         await NewFileBus.PublishAsync(msg, null, cancellationToken).ConfigureAwait(false);
     }
@@ -258,10 +255,21 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         // 检查本地是否已有文件且哈希正确
         if (CheckLocalFile(info.Path, info.Hash)) return;
 
+        var node = info.SourceNode + "";
+        if (!info.InternalAddress.IsNullOrEmpty() && !info.ExternalAddress.IsNullOrEmpty())
+        {
+            _nodeAddresses[node] = new AddressInfo
+            {
+                NodeName = info.SourceNode,
+                InternalAddress = info.InternalAddress,
+                ExternalAddress = info.ExternalAddress
+            };
+        }
+
         try
         {
             // 从源节点拉取文件数据
-            await FetchFileAsync(info, info.SourceNode!, cancellationToken).ConfigureAwait(false);
+            await FetchFileAsync(info, node, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -299,8 +307,8 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
                     Tracer = Tracer,
                     Log = Log,
                 };
-                if (!addr.InternalAddress.IsNullOrEmpty()) client.SetServer(addr.InternalAddress);
-                if (!addr.ExternalAddress.IsNullOrEmpty()) client.SetServer(addr.ExternalAddress);
+                if (!addr.InternalAddress.IsNullOrEmpty()) client.AddServer("内网", addr.InternalAddress);
+                if (!addr.ExternalAddress.IsNullOrEmpty()) client.AddServer("外网", addr.ExternalAddress);
 
                 _cache.Set(key, client, 600);
             }
