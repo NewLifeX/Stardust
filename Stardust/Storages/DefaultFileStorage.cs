@@ -44,8 +44,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     // 地址缓存：节点名称 -> 地址信息
     private readonly ConcurrentDictionary<String, AddressInfo> _nodeAddresses = new(StringComparer.OrdinalIgnoreCase);
 
-    //// 地址广播定时器
-    //private TimerX? _addressTimer;
+    private TimerX? _scanTimer;
     #endregion
 
     #region 构造
@@ -57,8 +56,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
 
         NewFileBus.TryDispose();
         FileRequestBus.TryDispose();
-        //AddressBus.TryDispose();
-        //_addressTimer?.Dispose();
+        _scanTimer?.Dispose();
     }
     #endregion
 
@@ -70,13 +68,11 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
 
         WriteLog("初始化分布式文件存储，节点：{0}", NodeName);
 
-        // 订阅地址、新文件、文件请求消息
-        //AddressBus?.Subscribe(OnAddressInfoAsync);
+        // 订阅新文件、文件请求消息
         NewFileBus?.Subscribe(OnNewFileInfoAsync);
         FileRequestBus?.Subscribe(OnFileRequestAsync);
 
-        //// 启动地址广播定时器（首次延迟 3 秒，随后每 60 秒一次）
-        //_addressTimer = new TimerX(OnScan, null, 1_000, 5_000) { Async = true };
+        _scanTimer = new TimerX(OnScan, null, 10_000, 3600_000) { Async = true };
 
         await OnInitializedAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -92,118 +88,11 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         if (cacheProvider.Cache is not Cache cache) return false;
 
         var clientId = Runtime.ClientId;
-        //AddressBus = cache.GetEventBus<AddressInfo>("Address", clientId);
         NewFileBus = cache.GetEventBus<NewFileInfo>("NewFile", clientId);
         FileRequestBus = cache.GetEventBus<FileRequest>("FileRequest", clientId);
 
         return true;
     }
-    #endregion
-
-    #region 地址广播
-    ///// <summary>发布当前节点的地址信息（内网/外网）。</summary>
-    //public async Task PublishAddressAsync(CancellationToken cancellationToken = default)
-    //{
-    //    if (AddressBus == null) throw new InvalidOperationException("AddressBus not configured.");
-
-    //    var info = BuildAddressInfo();
-    //    using var span = Tracer?.NewSpan(nameof(PublishAddressAsync), info.ToJson());
-    //    await AddressBus.PublishAsync(info, null, cancellationToken).ConfigureAwait(false);
-    //    WriteLog("地址广播：{0}", info.ToJson());
-    //}
-
-    /// <summary>构建当前节点地址信息。</summary>
-    protected virtual AddressInfo BuildAddressInfo()
-    {
-        String? internalAddr = null;
-        String? externalAddr = null;
-
-        // 从 ServiceProvider 解析 StarFactory，尽量获取更准确的内外网地址
-        var factory = ServiceProvider?.GetService<StarFactory>();
-        if (factory != null)
-        {
-            internalAddr = factory.InternalAddress;
-            externalAddr = factory.ExternalAddress;
-        }
-
-        // 降级：使用 StarSetting 或已有 ServiceAddress
-        //if (internalAddr.IsNullOrEmpty()) internalAddr = StarSetting.Current.ServiceAddress;
-        if (externalAddr.IsNullOrEmpty()) externalAddr = StarSetting.Current.ServiceAddress;
-
-        // 展开内网地址
-        if (!internalAddr.IsNullOrEmpty())
-        {
-            var urls = new List<String>();
-            foreach (var ip in NetHelper.GetIPsWithCache())
-            {
-                if (IPAddress.IsLoopback(ip)) continue;
-                var buf = ip.GetAddressBytes();
-                if (buf[0] == 169 && buf[1] == 254) continue;
-                if (buf[0] == 0xfe && buf[1] == 0x80) continue;
-
-                var ip2 = ip.IsIPv4() ? ip.ToString() : $"[{ip}]";
-                var addrs = internalAddr
-                    .Replace("://*", $"://{ip2}")
-                    .Replace("://+", $"://{ip2}")
-                    .Replace("://0.0.0.0", $"://{ip2}")
-                    .Replace("://[::]", $"://{ip2}")
-                    .Split(",");
-
-                foreach (var elm in addrs)
-                {
-                    var url = elm;
-                    if (url.StartsWithIgnoreCase("http://", "https://"))
-                        url = new Uri(url).ToString().TrimEnd('/');
-                    if (!urls.Contains(url)) urls.Add(url);
-                }
-            }
-            internalAddr = urls.Join(",");
-        }
-
-        var info = new AddressInfo
-        {
-            NodeName = NodeName,
-            InternalAddress = internalAddr,
-            ExternalAddress = externalAddr,
-        };
-
-        //// 更新本地缓存，便于后续下载使用
-        //_nodeAddresses[info.NodeName + ""] = info;
-
-        return info;
-    }
-
-    ///// <summary>消费地址消息，按节点名称缓存地址信息。</summary>
-    //protected virtual Task OnAddressInfoAsync(AddressInfo info, IEventContext<AddressInfo> context, CancellationToken cancellationToken)
-    //{
-    //    using var span = Tracer?.NewSpan(nameof(OnAddressInfoAsync), info.ToJson());
-    //    WriteLog("地址消息：{0}", info.ToJson());
-
-    //    var name = info.NodeName;
-    //    if (!name.IsNullOrEmpty()) _nodeAddresses[name!] = info;
-
-    //    return Task.FromResult(0);
-    //}
-
-    //private async Task OnScan(Object state)
-    //{
-    //    try
-    //    {
-    //        await PublishAddressAsync(default).ConfigureAwait(false);
-
-    //        var timer = TimerX.Current;
-    //        if (timer != null)
-    //        {
-    //            var factory = ServiceProvider?.GetService<StarFactory>();
-    //            if (factory != null && !factory.InternalAddress.IsNullOrEmpty())
-    //                timer.Period = 60_000;
-    //        }
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        Log?.Error("地址广播异常：{0}", ex.Message);
-    //    }
-    //}
     #endregion
 
     #region 新文件
@@ -327,11 +216,19 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
 
     #region 文件请求
     /// <summary>发布请求，向其他节点索取指定附件。</summary>
-    public async Task RequestFileAsync(Int64 attachmentId, String? path, String? reason = null, CancellationToken cancellationToken = default)
+    public Task RequestFileAsync(Int64 attachmentId, String? path, String? reason = null, CancellationToken cancellationToken = default)
     {
         if (FileRequestBus == null) throw new InvalidOperationException("FileRequestBus not configured.");
 
         var file = GetLocalFileMeta(attachmentId, path);
+        return RequestFileAsync(file, reason, cancellationToken);
+    }
+
+    /// <summary>发布请求，向其他节点索取指定附件。</summary>
+    public async Task RequestFileAsync(IFileInfo file, String? reason = null, CancellationToken cancellationToken = default)
+    {
+        if (FileRequestBus == null) throw new InvalidOperationException("FileRequestBus not configured.");
+
         var msg = new FileRequest
         {
             Id = file.Id,
@@ -362,20 +259,32 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
 
     #region 扫描同步
     /// <summary>批量扫描并请求缺失附件，返回已发出请求数。</summary>
-    public async Task<Int32> ScanFilesAsync(Int32 batchSize = 50, CancellationToken cancellationToken = default)
+    public async Task<Int32> ScanFilesAsync(DateTime startTime, CancellationToken cancellationToken = default)
     {
-        var missing = GetMissingAttachmentIds(batchSize);
         var count = 0;
-        foreach (var id in missing)
+        foreach (var file in GetMissingAttachments(startTime))
         {
-            await RequestFileAsync(id, null, "sync missing", cancellationToken).ConfigureAwait(false);
+            await RequestFileAsync(file.Id, file.Path, "sync missing", cancellationToken).ConfigureAwait(false);
             count++;
         }
         return count;
     }
 
-    /// <summary>查询本地缺失的附件ID列表，用于触发同步。</summary>
-    protected abstract Int64[] GetMissingAttachmentIds(Int32 batchSize);
+    private DateTime _last;
+    private async Task OnScan(Object state)
+    {
+        //if (_last.Year < 2000) _last = DateTime.Today.AddDays(-30);
+
+        var rs = await ScanFilesAsync(_last, default).ConfigureAwait(false);
+
+        if (rs > 0) _last = DateTime.Now;
+    }
+
+    /// <summary>查询从指定时间开始本地缺失的附件，用于触发同步。</summary>
+    protected virtual IEnumerable<IFileInfo> GetMissingAttachments(DateTime startTime)
+    {
+        yield break;
+    }
     #endregion
 
     #region 辅助
@@ -407,6 +316,67 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
             Hash = fi.MD5().ToHex(),
             Length = fi.Length,
         };
+    }
+
+    /// <summary>构建当前节点地址信息。</summary>
+    protected virtual AddressInfo BuildAddressInfo()
+    {
+        String? internalAddr = null;
+        String? externalAddr = null;
+
+        // 从 ServiceProvider 解析 StarFactory，尽量获取更准确的内外网地址
+        var factory = ServiceProvider?.GetService<StarFactory>();
+        if (factory != null)
+        {
+            internalAddr = factory.InternalAddress;
+            externalAddr = factory.ExternalAddress;
+        }
+
+        // 降级：使用 StarSetting 或已有 ServiceAddress
+        //if (internalAddr.IsNullOrEmpty()) internalAddr = StarSetting.Current.ServiceAddress;
+        if (externalAddr.IsNullOrEmpty()) externalAddr = StarSetting.Current.ServiceAddress;
+
+        // 展开内网地址
+        if (!internalAddr.IsNullOrEmpty())
+        {
+            var urls = new List<String>();
+            foreach (var ip in NetHelper.GetIPsWithCache())
+            {
+                if (IPAddress.IsLoopback(ip)) continue;
+                var buf = ip.GetAddressBytes();
+                if (buf[0] == 169 && buf[1] == 254) continue;
+                if (buf[0] == 0xfe && buf[1] == 0x80) continue;
+
+                var ip2 = ip.IsIPv4() ? ip.ToString() : $"[{ip}]";
+                var addrs = internalAddr
+                    .Replace("://*", $"://{ip2}")
+                    .Replace("://+", $"://{ip2}")
+                    .Replace("://0.0.0.0", $"://{ip2}")
+                    .Replace("://[::]", $"://{ip2}")
+                    .Split(",");
+
+                foreach (var elm in addrs)
+                {
+                    var url = elm;
+                    if (url.StartsWithIgnoreCase("http://", "https://"))
+                        url = new Uri(url).ToString().TrimEnd('/');
+                    if (!urls.Contains(url)) urls.Add(url);
+                }
+            }
+            internalAddr = urls.Join(",");
+        }
+
+        var info = new AddressInfo
+        {
+            NodeName = NodeName,
+            InternalAddress = internalAddr,
+            ExternalAddress = externalAddr,
+        };
+
+        //// 更新本地缓存，便于后续下载使用
+        //_nodeAddresses[info.NodeName + ""] = info;
+
+        return info;
     }
     #endregion
 

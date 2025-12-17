@@ -19,5 +19,5 @@ public interface IFileStorage : IDisposable
     Task RequestFileAsync(Int64 attachmentId, String? path, String? reason = null, CancellationToken cancellationToken = default);
 
     /// <summary>扫描并批量请求缺失附件，返回发出请求的数量。</summary>
-    Task<Int32> ScanFilesAsync(Int32 batchSize = 50, CancellationToken cancellationToken = default);
+    Task<Int32> ScanFilesAsync(DateTime startTime, CancellationToken cancellationToken = default);
 }
