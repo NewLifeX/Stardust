@@ -278,6 +278,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
             Code = node.Code,
             Log = this,
             SetOnline = online => nodeService.SetOnline(Context, online),
+            ServiceProvider = serviceProvider,
             Tracer = tracer,
         };
         sessionManager.Add(session);

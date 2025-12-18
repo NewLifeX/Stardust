@@ -200,41 +200,16 @@ public class AppClient : ClientBase, IRegistry
     #endregion
 
     #region 下行通知
-    /// <summary>处理接收到的消息。可能是命令，也可能是事件等其它消息</summary>
-    /// <param name="message">消息。支持CommandModel/String/IPacket</param>
-    /// <param name="source">来源</param>
+    /// <summary>分发消息</summary>
+    /// <param name="data">数据包</param>
     /// <param name="cancellationToken">取消通知</param>
     /// <returns></returns>
-    public override async Task ProcessMessageAsync(Object message, String? source = null, CancellationToken cancellationToken = default)
+    public override async Task<Int32> DispatchAsync(IPacket data, CancellationToken cancellationToken = default)
     {
-        // 处理事件消息。event#topic#clientid#message
-        //if (message is String str && str.StartsWith("event#"))
-        //{
-        //    var p = str.IndexOf('#');
-        //    var p2 = str.IndexOf('#', p + 1);
-        //    if (p2 > 0)
-        //    {
-        //        var p3 = str.IndexOf('#', p2 + 1);
-        //        if (p3 > 0)
-        //        {
-        //            var topic = str.Substring(p + 1, p2 - p - 1);
-        //            var clientid = str.Substring(p2 + 1, p3 - p2 - 1);
-        //            var msg = str[(p3 + 1)..];
-        //            if (!topic.IsNullOrEmpty() && clientid != ClientId && _eventBuses.TryGetValue(topic, out var action))
-        //            {
-        //                return action(msg, cancellationToken);
-        //            }
-        //        }
-        //    }
-        //}
-        var rs = 0;
-        if (message is IPacket pk)
-            rs = await _eventHub.DispatchAsync(pk, cancellationToken).ConfigureAwait(false);
-        else if (message is String str)
-            rs = await _eventHub.DispatchAsync(str, cancellationToken).ConfigureAwait(false);
-        if (rs > 0) return;
+        var rs = await _eventHub.DispatchAsync(data, cancellationToken).ConfigureAwait(false);
+        if (rs > 0) return rs;
 
-        await base.ProcessMessageAsync(message, source, cancellationToken).ConfigureAwait(false);
+        return await base.DispatchAsync(data, cancellationToken).ConfigureAwait(false);
     }
     #endregion
 
