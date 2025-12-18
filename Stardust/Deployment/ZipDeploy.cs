@@ -9,6 +9,11 @@ namespace Stardust.Deployment;
 /// <summary>Zip压缩包发布</summary>
 public class ZipDeploy
 {
+    #region 常量
+    /// <summary>IIS 应用离线页面内容</summary>
+    private const String AppOfflineHtml = "<!DOCTYPE html><html><head><meta charset=\"utf-8\"/><title>应用维护中</title></head><body><h1>应用正在更新，请稍候...</h1></body></html>";
+    #endregion
+
     #region 属性
     /// <summary>应用名称</summary>
     public String Name { get; set; } = null!;
@@ -493,20 +498,17 @@ public class ZipDeploy
             try
             {
                 WriteLog("创建 app_offline.htm 使网站离线");
-                File.WriteAllText(appOfflinePath, "<!DOCTYPE html><html><head><meta charset=\"utf-8\"/><title>应用维护中</title></head><body><h1>应用正在更新，请稍候...</h1></body></html>");
+                File.WriteAllText(appOfflinePath, AppOfflineHtml);
                 span?.AppendTag("已创建app_offline.htm");
 
-                // 备份并重命名 web.config，进一步确保文件不被占用
+                // 备份并删除 web.config，进一步确保文件不被占用
                 webConfigBackupPath = webConfigPath + ".bak";
-                if (File.Exists(webConfigPath))
-                {
-                    WriteLog("备份 web.config 到 {0}", webConfigBackupPath);
-                    File.Copy(webConfigPath, webConfigBackupPath, true);
-                    File.Delete(webConfigPath);
-                    span?.AppendTag("已备份web.config");
-                }
+                WriteLog("备份 web.config 到 {0}", webConfigBackupPath);
+                File.Copy(webConfigPath, webConfigBackupPath, true);
+                File.Delete(webConfigPath);
+                span?.AppendTag("已备份web.config");
 
-                // 等待 IIS 释放文件锁
+                // 等待 IIS 释放文件锁（同步方法中使用 Thread.Sleep）
                 Thread.Sleep(1000);
             }
             catch (Exception ex)
