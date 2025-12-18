@@ -206,7 +206,7 @@ public class AppClient : ClientBase, IRegistry
     /// <param name="source">来源</param>
     /// <param name="cancellationToken">取消通知</param>
     /// <returns></returns>
-    public override async Task<Object?> Process(Object message, String? source = null, CancellationToken cancellationToken = default)
+    public override Task ProcessMessageAsync(Object message, String? source = null, CancellationToken cancellationToken = default)
     {
         // 处理事件消息。event#topic#clientid#message
         if (message is String str && str.StartsWith("event#"))
@@ -220,18 +220,16 @@ public class AppClient : ClientBase, IRegistry
                 {
                     var topic = str.Substring(p + 1, p2 - p - 1);
                     var clientid = str.Substring(p2 + 1, p3 - p2 - 1);
-                    var msg = str.Substring(p3 + 1);
+                    var msg = str[(p3 + 1)..];
                     if (!topic.IsNullOrEmpty() && clientid != ClientId && _eventBuses.TryGetValue(topic, out var action))
                     {
-                        await action(msg, cancellationToken).ConfigureAwait(false);
-
-                        return null;
+                        return action(msg, cancellationToken);
                     }
                 }
             }
         }
 
-        return base.Process(message, source, cancellationToken);
+        return base.ProcessMessageAsync(message, source, cancellationToken);
     }
     #endregion
 

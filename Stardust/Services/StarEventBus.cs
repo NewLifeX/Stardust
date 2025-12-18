@@ -51,11 +51,14 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
         using var span = Tracer?.NewSpan($"event:{topic}", message);
         try
         {
-            var msg = client.JsonHost.Read<TEvent>(message);
             var context = new StringEventContext<TEvent>(this, message);
-            if (span != null && msg is ITraceMessage tm) span.Detach(tm.TraceId);
+            if (message is not TEvent @event)
+            {
+                @event = client.JsonHost.Read<TEvent>(message)!;
+                if (span != null && @event is ITraceMessage tm) span.Detach(tm.TraceId);
+            }
 
-            await base.PublishAsync(msg!, context, cancellationToken).ConfigureAwait(false);
+            await base.PublishAsync(@event!, context, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
