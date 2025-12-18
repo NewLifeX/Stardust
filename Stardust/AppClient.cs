@@ -4,7 +4,9 @@ using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Runtime;
 using NewLife;
+using NewLife.Data;
 using NewLife.Log;
+using NewLife.Messaging;
 using NewLife.Model;
 using NewLife.Reflection;
 using NewLife.Remoting.Clients;
@@ -13,6 +15,7 @@ using NewLife.Security;
 using NewLife.Serialization;
 using Stardust.Models;
 using Stardust.Registry;
+using Stardust.Services;
 
 namespace Stardust;
 
@@ -55,6 +58,9 @@ public class AppClient : ClientBase, IRegistry
     private readonly ConcurrentDictionary<String, ConsumeServiceInfo> _consumeServices = new();
     private readonly ConcurrentDictionary<String, ServiceModel[]> _consumes = new();
     private readonly ConcurrentDictionary<String, IList<Delegate>> _consumeEvents = new();
+
+    /// <summary>已发布服务，记录下来，定时注册刷新</summary>
+    private readonly ConcurrentDictionary<String, Func<String, CancellationToken, Task>> _eventBuses = new();
     #endregion
 
     #region 构造
@@ -85,7 +91,7 @@ public class AppClient : ClientBase, IRegistry
                 _version = asm.FileVersion;
             }
 
-            ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}";
+            ClientId = Runtime.ClientId;
         }
         catch { }
 
@@ -191,6 +197,41 @@ public class AppClient : ClientBase, IRegistry
 
         await RefreshPublish().ConfigureAwait(false);
         await RefreshConsume().ConfigureAwait(false);
+    }
+    #endregion
+
+    #region 下行通知
+    /// <summary>处理接收到的消息。可能是命令，也可能是事件等其它消息</summary>
+    /// <param name="message">消息。支持CommandModel/String/IPacket</param>
+    /// <param name="source">来源</param>
+    /// <param name="cancellationToken">取消通知</param>
+    /// <returns></returns>
+    public override async Task<Object?> Process(Object message, String? source = null, CancellationToken cancellationToken = default)
+    {
+        // 处理事件消息。event#topic#clientid#message
+        if (message is String str && str.StartsWith("event#"))
+        {
+            var p = str.IndexOf('#');
+            var p2 = str.IndexOf('#', p + 1);
+            if (p2 > 0)
+            {
+                var p3 = str.IndexOf('#', p2 + 1);
+                if (p3 > 0)
+                {
+                    var topic = str.Substring(p + 1, p2 - p - 1);
+                    var clientid = str.Substring(p2 + 1, p3 - p2 - 1);
+                    var msg = str.Substring(p3 + 1);
+                    if (!topic.IsNullOrEmpty() && clientid != ClientId && _eventBuses.TryGetValue(topic, out var action))
+                    {
+                        await action(msg, cancellationToken).ConfigureAwait(false);
+
+                        return null;
+                    }
+                }
+            }
+        }
+
+        return base.Process(message, source, cancellationToken);
     }
     #endregion
 
@@ -465,6 +506,43 @@ public class AppClient : ClientBase, IRegistry
             File.WriteAllText(file, json);
         }
         catch { }
+    }
+    #endregion
+
+    #region 事件队列
+    /// <summary>创建事件总线，指定主题，绑定WebSocket通道</summary>
+    /// <typeparam name="TEvent"></typeparam>
+    /// <param name="topic">主题</param>
+    /// <returns></returns>
+    public IEventBus<TEvent> GetEventBus<TEvent>(String topic) where TEvent : class
+    {
+        if (_eventBuses.TryGetValue(topic, out var action) && action.Target is IEventBus<TEvent> bus) return bus;
+
+        var sbus = new StarEventBus<TEvent>(this, topic)
+        {
+            Tracer = Factory?.Tracer,
+            Log = Log,
+        };
+
+        _eventBuses[topic] = sbus.Process;
+
+        return sbus;
+    }
+
+    /// <summary>发布事件到总线</summary>
+    /// <param name="topic">主题</param>
+    /// <param name="event">事件</param>
+    /// <param name="cancellationToken">取消通知</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    public Task PublishEventAsync(String topic, String @event, CancellationToken cancellationToken = default)
+    {
+        if (topic.IsNullOrEmpty()) throw new ArgumentNullException(nameof(topic));
+        if (@event.IsNullOrEmpty()) throw new ArgumentNullException(nameof(@event));
+
+        var message = $"event#{topic}#{ClientId}#{@event}";
+
+        return SendAsync((ArrayPacket)message.GetBytes(), cancellationToken);
     }
     #endregion
 
