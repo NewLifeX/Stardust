@@ -21,6 +21,9 @@ public class ZipDeploy
 
     /// <summary>备份文件扩展名</summary>
     private const String BackupExtension = ".bak";
+
+    /// <summary>IIS 释放文件锁等待时间（毫秒）</summary>
+    private const Int32 IisFileReleaseDelayMs = 1000;
     #endregion
 
     #region 属性
@@ -518,7 +521,7 @@ public class ZipDeploy
                 span?.AppendTag("已备份web.config");
 
                 // 等待 IIS 释放文件锁（同步方法中使用 Thread.Sleep）
-                Thread.Sleep(1000);
+                Thread.Sleep(IisFileReleaseDelayMs);
             }
             catch (Exception ex)
             {
