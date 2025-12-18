@@ -12,6 +12,15 @@ public class ZipDeploy
     #region 常量
     /// <summary>IIS 应用离线页面内容</summary>
     private const String AppOfflineHtml = "<!DOCTYPE html><html><head><meta charset=\"utf-8\"/><title>应用维护中</title></head><body><h1>应用正在更新，请稍候...</h1></body></html>";
+
+    /// <summary>IIS web.config 文件名</summary>
+    private const String WebConfigFileName = "web.config";
+
+    /// <summary>IIS app_offline.htm 文件名</summary>
+    private const String AppOfflineFileName = "app_offline.htm";
+
+    /// <summary>备份文件扩展名</summary>
+    private const String BackupExtension = ".bak";
     #endregion
 
     #region 属性
@@ -481,7 +490,7 @@ public class ZipDeploy
 
         // 检测是否为 IIS 部署
         var isIisDeploy = false;
-        var webConfigPath = rundir.CombinePath("web.config");
+        var webConfigPath = rundir.CombinePath(WebConfigFileName);
         var webConfigBackupPath = "";
         if (File.Exists(webConfigPath))
         {
@@ -494,7 +503,7 @@ public class ZipDeploy
         var appOfflinePath = "";
         if (isIisDeploy)
         {
-            appOfflinePath = rundir.CombinePath("app_offline.htm");
+            appOfflinePath = rundir.CombinePath(AppOfflineFileName);
             try
             {
                 WriteLog("创建 app_offline.htm 使网站离线");
@@ -502,7 +511,7 @@ public class ZipDeploy
                 span?.AppendTag("已创建app_offline.htm");
 
                 // 备份并删除 web.config，进一步确保文件不被占用
-                webConfigBackupPath = webConfigPath + ".bak";
+                webConfigBackupPath = webConfigPath + BackupExtension;
                 WriteLog("备份 web.config 到 {0}", webConfigBackupPath);
                 File.Copy(webConfigPath, webConfigBackupPath, true);
                 File.Delete(webConfigPath);
