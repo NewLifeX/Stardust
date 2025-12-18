@@ -93,6 +93,19 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
 
         return true;
     }
+
+    /// <summary>设置事件总线</summary>
+    /// <param name="client"></param>
+    /// <returns></returns>
+    public Boolean SetEventBus(AppClient client)
+    {
+        if (client == null) return false;
+
+        NewFileBus = client.GetEventBus<NewFileInfo>("NewFile");
+        FileRequestBus = client.GetEventBus<FileRequest>("FileRequest");
+
+        return true;
+    }
     #endregion
 
     #region 新文件
