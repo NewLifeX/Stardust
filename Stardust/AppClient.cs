@@ -59,8 +59,7 @@ public class AppClient : ClientBase, IRegistry
     private readonly ConcurrentDictionary<String, ServiceModel[]> _consumes = new();
     private readonly ConcurrentDictionary<String, IList<Delegate>> _consumeEvents = new();
 
-    /// <summary>已发布服务，记录下来，定时注册刷新</summary>
-    private readonly ConcurrentDictionary<String, Func<String, CancellationToken, Task>> _eventBuses = new();
+    //private readonly ConcurrentDictionary<String, Func<String, CancellationToken, Task>> _eventBuses = new();
     #endregion
 
     #region 构造
@@ -206,30 +205,36 @@ public class AppClient : ClientBase, IRegistry
     /// <param name="source">来源</param>
     /// <param name="cancellationToken">取消通知</param>
     /// <returns></returns>
-    public override Task ProcessMessageAsync(Object message, String? source = null, CancellationToken cancellationToken = default)
+    public override async Task ProcessMessageAsync(Object message, String? source = null, CancellationToken cancellationToken = default)
     {
         // 处理事件消息。event#topic#clientid#message
-        if (message is String str && str.StartsWith("event#"))
-        {
-            var p = str.IndexOf('#');
-            var p2 = str.IndexOf('#', p + 1);
-            if (p2 > 0)
-            {
-                var p3 = str.IndexOf('#', p2 + 1);
-                if (p3 > 0)
-                {
-                    var topic = str.Substring(p + 1, p2 - p - 1);
-                    var clientid = str.Substring(p2 + 1, p3 - p2 - 1);
-                    var msg = str[(p3 + 1)..];
-                    if (!topic.IsNullOrEmpty() && clientid != ClientId && _eventBuses.TryGetValue(topic, out var action))
-                    {
-                        return action(msg, cancellationToken);
-                    }
-                }
-            }
-        }
+        //if (message is String str && str.StartsWith("event#"))
+        //{
+        //    var p = str.IndexOf('#');
+        //    var p2 = str.IndexOf('#', p + 1);
+        //    if (p2 > 0)
+        //    {
+        //        var p3 = str.IndexOf('#', p2 + 1);
+        //        if (p3 > 0)
+        //        {
+        //            var topic = str.Substring(p + 1, p2 - p - 1);
+        //            var clientid = str.Substring(p2 + 1, p3 - p2 - 1);
+        //            var msg = str[(p3 + 1)..];
+        //            if (!topic.IsNullOrEmpty() && clientid != ClientId && _eventBuses.TryGetValue(topic, out var action))
+        //            {
+        //                return action(msg, cancellationToken);
+        //            }
+        //        }
+        //    }
+        //}
+        var rs = 0;
+        if (message is IPacket pk)
+            rs = await _eventHub.DispatchAsync(pk, cancellationToken).ConfigureAwait(false);
+        else if (message is String str)
+            rs = await _eventHub.DispatchAsync(str, cancellationToken).ConfigureAwait(false);
+        if (rs > 0) return;
 
-        return base.ProcessMessageAsync(message, source, cancellationToken);
+        await base.ProcessMessageAsync(message, source, cancellationToken).ConfigureAwait(false);
     }
     #endregion
 
@@ -508,13 +513,15 @@ public class AppClient : ClientBase, IRegistry
     #endregion
 
     #region 事件队列
+    private EventHub<String> _eventHub = new();
+
     /// <summary>创建事件总线，指定主题，绑定WebSocket通道</summary>
     /// <typeparam name="TEvent"></typeparam>
     /// <param name="topic">主题</param>
     /// <returns></returns>
     public IEventBus<TEvent> GetEventBus<TEvent>(String topic) where TEvent : class
     {
-        if (_eventBuses.TryGetValue(topic, out var action) && action.Target is IEventBus<TEvent> bus) return bus;
+        if (_eventHub.TryGetValue(topic, out var action) && action!.Target is IEventBus<TEvent> bus) return bus;
 
         var sbus = new StarEventBus<TEvent>(this, topic)
         {
@@ -522,7 +529,7 @@ public class AppClient : ClientBase, IRegistry
             Log = Log,
         };
 
-        _eventBuses[topic] = sbus.Process;
+        _eventHub.Add(topic, sbus);
 
         return sbus;
     }
