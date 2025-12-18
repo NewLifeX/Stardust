@@ -474,90 +474,166 @@ public class ZipDeploy
 
         fi.Extract(shadow, true);
 
-        // 前置清理
-        switch (Mode)
+        // 检测是否为 IIS 部署
+        var isIisDeploy = false;
+        var webConfigPath = rundir.CombinePath("web.config");
+        var webConfigBackupPath = "";
+        if (File.Exists(webConfigPath))
         {
-            case DeployModes.Partial:
-                configfile = CopyModes.SkipExists;
-                break;
-            case DeployModes.Standard:
-                configfile = CopyModes.SkipExists;
-                WriteLog("清空运行目录中的可执行文件");
-                if (rdi.Exists)
-                {
-                    foreach (var item in rdi.GetFiles("*", SearchOption.AllDirectories))
-                    {
-                        if (IsExe(item.Extension))
-                            item.Delete();
-                    }
-                }
-                break;
-            case DeployModes.Full:
-                WriteLog("清空运行目录中的所有文件");
-                if (rdi.Exists)
-                {
-                    // 直接删除工作目录太狠，改为递归删除可执行文件，以及删除工作目录下的所有文件（不递归）
-                    //rdi.Delete(true);
-                    foreach (var item in rdi.GetFiles("*", SearchOption.AllDirectories))
-                    {
-                        if (IsExe(item.Extension) || IsConfig(item.Extension))
-                            item.Delete();
-                    }
-                    foreach (var item in rdi.GetFiles("*", SearchOption.TopDirectoryOnly))
-                    {
-                        item.Delete();
-                    }
-                }
-                break;
-            default:
-                break;
+            isIisDeploy = true;
+            WriteLog("检测到 web.config，判定为 IIS 部署");
+            span?.AppendTag("IIS部署");
         }
 
-        var ovs = Overwrite?.Split(';');
-
-        // 复制配置文件和数据文件到运行目录
-        if (!sdi.FullName.EnsureEnd("\\").EqualIgnoreCase(rundir.EnsureEnd("\\")))
+        // IIS 部署策略：创建 app_offline.htm 确保网站离线
+        var appOfflinePath = "";
+        if (isIisDeploy)
         {
-            //if (exefile == CopyModes.ClearBeforeCopy)
-            //{
-            //    WriteLog("清空运行目录可执行文件：{0}", rundir);
-            //    DeleteFiles(rundir, true, IsExe, FileName);
-            //}
-            //if (configfile == CopyModes.ClearBeforeCopy)
-            //{
-            //    WriteLog("清空运行目录配置文件：{0}", rundir);
-            //    DeleteFiles(rundir, false, IsConfig);
-            //}
-            //if (otherfile == CopyModes.ClearBeforeCopy)
-            //{
-            //    WriteLog("清空运行目录其它文件：{0}", rundir);
-            //    DeleteFiles(rundir, false, e => !IsExe(e) && !IsConfig(e));
-            //}
-
-            WriteLog("拷贝文件到运行目录：{0}", rundir);
-
-            // 覆盖文件
-            foreach (var item in sdi.GetFiles())
+            appOfflinePath = rundir.CombinePath("app_offline.htm");
+            try
             {
-                var dst = rundir.CombinePath(item.Name);
+                WriteLog("创建 app_offline.htm 使网站离线");
+                File.WriteAllText(appOfflinePath, "<!DOCTYPE html><html><head><meta charset=\"utf-8\"/><title>应用维护中</title></head><body><h1>应用正在更新，请稍候...</h1></body></html>");
+                span?.AppendTag("已创建app_offline.htm");
 
-                if (IsExe(item.Extension))
-                    CopyFiles(item, dst, exefile, ovs);
-                else if (IsConfig(item.Extension))
-                    CopyFiles(item, dst, configfile, ovs);
-                else
-                    CopyFiles(item, dst, otherfile, ovs);
+                // 备份并重命名 web.config，进一步确保文件不被占用
+                webConfigBackupPath = webConfigPath + ".bak";
+                if (File.Exists(webConfigPath))
+                {
+                    WriteLog("备份 web.config 到 {0}", webConfigBackupPath);
+                    File.Copy(webConfigPath, webConfigBackupPath, true);
+                    File.Delete(webConfigPath);
+                    span?.AppendTag("已备份web.config");
+                }
+
+                // 等待 IIS 释放文件锁
+                Thread.Sleep(1000);
+            }
+            catch (Exception ex)
+            {
+                WriteLog("创建 app_offline.htm 失败: {0}", ex.Message);
+                span?.SetError(ex, null);
+            }
+        }
+
+        try
+        {
+            // 前置清理
+            switch (Mode)
+            {
+                case DeployModes.Partial:
+                    configfile = CopyModes.SkipExists;
+                    break;
+                case DeployModes.Standard:
+                    configfile = CopyModes.SkipExists;
+                    WriteLog("清空运行目录中的可执行文件");
+                    if (rdi.Exists)
+                    {
+                        foreach (var item in rdi.GetFiles("*", SearchOption.AllDirectories))
+                        {
+                            if (IsExe(item.Extension))
+                                item.Delete();
+                        }
+                    }
+                    break;
+                case DeployModes.Full:
+                    WriteLog("清空运行目录中的所有文件");
+                    if (rdi.Exists)
+                    {
+                        // 直接删除工作目录太狠，改为递归删除可执行文件，以及删除工作目录下的所有文件（不递归）
+                        //rdi.Delete(true);
+                        foreach (var item in rdi.GetFiles("*", SearchOption.AllDirectories))
+                        {
+                            if (IsExe(item.Extension) || IsConfig(item.Extension))
+                                item.Delete();
+                        }
+                        foreach (var item in rdi.GetFiles("*", SearchOption.TopDirectoryOnly))
+                        {
+                            item.Delete();
+                        }
+                    }
+                    break;
+                default:
+                    break;
             }
 
-            // 覆盖目录
-            foreach (var item in sdi.GetDirectories())
+            var ovs = Overwrite?.Split(';');
+
+            // 复制配置文件和数据文件到运行目录
+            if (!sdi.FullName.EnsureEnd("\\").EqualIgnoreCase(rundir.EnsureEnd("\\")))
             {
-                var di = shadow.CombinePath(item.Name).AsDirectory();
-                var dest = rundir.CombinePath(item.Name).AsDirectory();
+                //if (exefile == CopyModes.ClearBeforeCopy)
+                //{
+                //    WriteLog("清空运行目录可执行文件：{0}", rundir);
+                //    DeleteFiles(rundir, true, IsExe, FileName);
+                //}
+                //if (configfile == CopyModes.ClearBeforeCopy)
+                //{
+                //    WriteLog("清空运行目录配置文件：{0}", rundir);
+                //    DeleteFiles(rundir, false, IsConfig);
+                //}
+                //if (otherfile == CopyModes.ClearBeforeCopy)
+                //{
+                //    WriteLog("清空运行目录其它文件：{0}", rundir);
+                //    DeleteFiles(rundir, false, e => !IsExe(e) && !IsConfig(e));
+                //}
 
-                WriteLog("覆盖目录 {0}", item.Name);
+                WriteLog("拷贝文件到运行目录：{0}", rundir);
 
-                di.CopyTo(dest.FullName, allSub: true);
+                // 覆盖文件
+                foreach (var item in sdi.GetFiles())
+                {
+                    var dst = rundir.CombinePath(item.Name);
+
+                    if (IsExe(item.Extension))
+                        CopyFiles(item, dst, exefile, ovs);
+                    else if (IsConfig(item.Extension))
+                        CopyFiles(item, dst, configfile, ovs);
+                    else
+                        CopyFiles(item, dst, otherfile, ovs);
+                }
+
+                // 覆盖目录
+                foreach (var item in sdi.GetDirectories())
+                {
+                    var di = shadow.CombinePath(item.Name).AsDirectory();
+                    var dest = rundir.CombinePath(item.Name).AsDirectory();
+
+                    WriteLog("覆盖目录 {0}", item.Name);
+
+                    di.CopyTo(dest.FullName, allSub: true);
+                }
+            }
+        }
+        finally
+        {
+            // IIS 部署后清理：恢复 web.config 并删除 app_offline.htm
+            if (isIisDeploy)
+            {
+                try
+                {
+                    // 恢复 web.config
+                    if (!webConfigBackupPath.IsNullOrEmpty() && File.Exists(webConfigBackupPath))
+                    {
+                        WriteLog("恢复 web.config 从 {0}", webConfigBackupPath);
+                        File.Copy(webConfigBackupPath, webConfigPath, true);
+                        File.Delete(webConfigBackupPath);
+                        span?.AppendTag("已恢复web.config");
+                    }
+
+                    // 删除 app_offline.htm 使网站上线
+                    if (!appOfflinePath.IsNullOrEmpty() && File.Exists(appOfflinePath))
+                    {
+                        WriteLog("删除 app_offline.htm 使网站上线");
+                        File.Delete(appOfflinePath);
+                        span?.AppendTag("已删除app_offline.htm");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    WriteLog("清理 IIS 部署文件失败: {0}", ex.Message);
+                    span?.SetError(ex, null);
+                }
             }
         }
     }
