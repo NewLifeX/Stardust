@@ -629,10 +629,21 @@ public class ZipDeploy
                     // 恢复 web.config
                     if (!webConfigBackupPath.IsNullOrEmpty() && File.Exists(webConfigBackupPath))
                     {
-                        WriteLog("恢复 web.config 从 {0}", webConfigBackupPath);
-                        File.Copy(webConfigBackupPath, webConfigPath, true);
-                        File.Delete(webConfigBackupPath);
-                        span?.AppendTag("已恢复web.config");
+                        // 检查 zip 包是否包含新的 web.config
+                        // 如果解压后 web.config 已存在，说明是从 zip 包解压出来的，应保留新文件
+                        if (File.Exists(webConfigPath))
+                        {
+                            WriteLog("检测到 zip 包中包含新的 web.config，保留新版本");
+                            File.Delete(webConfigBackupPath);
+                            span?.AppendTag("保留zip包中的web.config");
+                        }
+                        else
+                        {
+                            WriteLog("恢复 web.config 从 {0}", webConfigBackupPath);
+                            File.Copy(webConfigBackupPath, webConfigPath, true);
+                            File.Delete(webConfigBackupPath);
+                            span?.AppendTag("已恢复web.config");
+                        }
                     }
 
                     // 删除 app_offline.htm 使网站上线
