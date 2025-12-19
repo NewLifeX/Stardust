@@ -3,6 +3,7 @@ using NewLife.Caching;
 using NewLife.Data;
 using NewLife.Log;
 using Stardust.Data.Deployment;
+using Stardust.Registry;
 using Stardust.Storages;
 using XCode;
 
@@ -32,7 +33,7 @@ public static class FileStorageExtensions
 
 public class CubeFileStorage : DefaultFileStorage
 {
-    public CubeFileStorage(StarServerSetting setting, IServiceProvider serviceProvider, ICacheProvider cacheProvider, ITracer tracer, ILog log)
+    public CubeFileStorage(StarServerSetting setting, IRegistry registry, IServiceProvider serviceProvider, ICacheProvider cacheProvider, ITracer tracer, ILog log)
     {
         //NodeName = Environment.MachineName;
         RootPath = setting.UploadPath;
@@ -42,7 +43,12 @@ public class CubeFileStorage : DefaultFileStorage
         Tracer = tracer;
         Log = log;
 
-        SetEventBus(cacheProvider);
+        if (cacheProvider.Cache is Redis)
+            SetEventBus(cacheProvider);
+        else if (registry is AppClient client)
+            SetEventBus(client);
+        else
+            SetEventBus(cacheProvider);
     }
 
     /// <summary>获取本地文件的元数据</summary>

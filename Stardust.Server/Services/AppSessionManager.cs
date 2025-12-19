@@ -1,4 +1,6 @@
 ﻿using System.Net.WebSockets;
+using NewLife.Data;
+using NewLife.Messaging;
 using NewLife.Remoting.Extensions.Services;
 using NewLife.Remoting.Models;
 using NewLife.Remoting.Services;
@@ -8,6 +10,9 @@ namespace Stardust.Server.Services;
 
 public class AppSessionManager : SessionManager
 {
+    /// <summary>上行数据包事件交换机</summary>
+    public EventHub<IPacket> Hub { get; set; } = new();
+
     public AppSessionManager(IServiceProvider serviceProvider) : base(serviceProvider)
     {
         Topic = "AppCommands";

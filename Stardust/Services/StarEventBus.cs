@@ -19,7 +19,7 @@ public class StringEventContext<TEvent>(IEventBus<TEvent> eventBus, String messa
 /// <typeparam name="TEvent"></typeparam>
 /// <param name="client"></param>
 /// <param name="topic"></param>
-public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEvent> where TEvent : class
+public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEvent>, IEventDispatcher<String> where TEvent : class
 {
     #region 属性
     /// <summary>链路追踪</summary>
@@ -46,7 +46,7 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
     /// <param name="message"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public async Task Process(String message, CancellationToken cancellationToken)
+    public Task<Int32> DispatchAsync(String message, CancellationToken cancellationToken)
     {
         using var span = Tracer?.NewSpan($"event:{topic}", message);
         try
@@ -58,12 +58,14 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
                 if (span != null && @event is ITraceMessage tm) span.Detach(tm.TraceId);
             }
 
-            await base.PublishAsync(@event!, context, cancellationToken).ConfigureAwait(false);
+            return base.PublishAsync(@event!, context, cancellationToken);
         }
         catch (Exception ex)
         {
             span?.SetError(ex);
         }
+
+        return Task.FromResult(0);
     }
     #endregion
 }

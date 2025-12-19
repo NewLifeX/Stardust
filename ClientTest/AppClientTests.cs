@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using NewLife;
+using NewLife.Data;
 using NewLife.Messaging;
 using Stardust;
 using Xunit;
@@ -29,7 +31,7 @@ public class AppClientTests
         bus.Subscribe(handler, clientId: "h1");
 
         var message = "event#topic1#clientB#\"hello\""; // JSON string payload
-        await client.ProcessMessageAsync(message);
+        await client.DispatchAsync((ArrayPacket)message.GetBytes());
 
         Assert.Equal("\"hello\"", handler.Received);
     }
@@ -43,7 +45,7 @@ public class AppClientTests
         bus.Subscribe(handler, clientId: "h1");
 
         var message = "event#topic1#clientA#\"hello\""; // same clientId as AppClient
-        await client.ProcessMessageAsync(message);
+        await client.DispatchAsync((ArrayPacket)message.GetBytes());
 
         Assert.Null(handler.Received);
     }
@@ -57,7 +59,7 @@ public class AppClientTests
         bus.Subscribe(handler, clientId: "h1");
 
         var message = "event#otherTopic#clientB#\"hello\""; // no bus registered for otherTopic
-        await client.ProcessMessageAsync(message);
+        await client.DispatchAsync((ArrayPacket)message.GetBytes());
 
         Assert.Null(handler.Received);
     }

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Net;
 using NewLife;
 using NewLife.Caching;
@@ -90,6 +89,19 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         var clientId = Runtime.ClientId;
         NewFileBus = cache.GetEventBus<NewFileInfo>("NewFile", clientId);
         FileRequestBus = cache.GetEventBus<FileRequest>("FileRequest", clientId);
+
+        return true;
+    }
+
+    /// <summary>设置事件总线</summary>
+    /// <param name="client"></param>
+    /// <returns></returns>
+    public Boolean SetEventBus(AppClient client)
+    {
+        if (client == null) return false;
+
+        NewFileBus = client.GetEventBus<NewFileInfo>("NewFile");
+        FileRequestBus = client.GetEventBus<FileRequest>("FileRequest");
 
         return true;
     }
