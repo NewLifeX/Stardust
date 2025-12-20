@@ -1,5 +1,6 @@
 ﻿using System.Net.WebSockets;
 using NewLife.Data;
+using NewLife.Log;
 using NewLife.Messaging;
 using NewLife.Remoting.Extensions.Services;
 using NewLife.Remoting.Models;
@@ -13,9 +14,10 @@ public class AppSessionManager : SessionManager
     /// <summary>上行数据包事件交换机</summary>
     public EventHub<IPacket> Hub { get; set; } = new();
 
-    public AppSessionManager(IServiceProvider serviceProvider) : base(serviceProvider)
+    public AppSessionManager(IServiceProvider serviceProvider, ILog log) : base(serviceProvider)
     {
         Topic = "AppCommands";
+        Hub.Log = log;
 
         var lifeTime = serviceProvider.GetService<IHostApplicationLifetime>();
         lifeTime.ApplicationStopping.Register(() =>

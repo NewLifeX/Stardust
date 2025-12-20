@@ -2,6 +2,7 @@
 using NewLife.Log;
 using NewLife.Messaging;
 using NewLife.Serialization;
+using NewLife.Threading;
 
 namespace Stardust.Services;
 
@@ -19,7 +20,7 @@ public class StringEventContext<TEvent>(IEventBus<TEvent> eventBus, String messa
 /// <typeparam name="TEvent"></typeparam>
 /// <param name="client"></param>
 /// <param name="topic"></param>
-public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEvent>, IEventDispatcher<String> where TEvent : class
+public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEvent>, IEventDispatcher<String>, ITracerFeature where TEvent : class
 {
     #region 属性
     /// <summary>超时时间。默认5000毫秒</summary>
@@ -27,6 +28,9 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
 
     /// <summary>链路追踪</summary>
     public ITracer? Tracer { get; set; }
+
+    private Boolean _subscribed;
+    private TimerX? _timer;
     #endregion
 
     #region 方法
@@ -39,18 +43,56 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
         // 先本地再远程
         if (!base.Subscribe(handler, clientId)) return false;
 
+        // 如果客户端没有准备好，则启动定时器延迟订阅，或者等发布消息的时候再订阅
+        if (!client.Logined)
+        {
+            _timer = new TimerX(DoSubscribe, null, 5_000, 5_000) { Async = true };
+            return true;
+        }
+
         try
         {
-            client.PublishEventAsync(topic, "subscribe").Wait(Timeout);
+            RemoteSubscribe().Wait(Timeout);
 
             return true;
         }
         catch
         {
-            client.PublishEventAsync(topic, "unsubscribe").Wait(Timeout);
+            base.Unsubscribe(clientId);
 
             throw;
         }
+    }
+
+    private async Task RemoteSubscribe()
+    {
+        if (!client.Logined) return;
+
+        using var span = Tracer?.NewSpan($"event:{topic}:subscribe", topic);
+
+        await client.PublishEventAsync(topic, "subscribe").ConfigureAwait(false);
+        _subscribed = true;
+
+        Log?.Info("事件总线[{0}]远程订阅成功！", topic);
+    }
+
+    private async Task DoSubscribe(Object state)
+    {
+        // 在定时器里面订阅，等待客户端准备好
+        if (!_subscribed)
+        {
+            try
+            {
+                await RemoteSubscribe().ConfigureAwait(false);
+            }
+            catch
+            {
+                return;
+            }
+        }
+
+        _timer.TryDispose();
+        _timer = null;
     }
 
     /// <summary>取消订阅消息。先远程再本地</summary>
@@ -58,8 +100,13 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
     /// <returns></returns>
     public override Boolean Unsubscribe(String clientId = "")
     {
+        using var span = Tracer?.NewSpan($"event:{topic}:unsubscribe", topic);
+
         // 先远程再本地
         client.PublishEventAsync(topic, "unsubscribe").Wait(Timeout);
+        _subscribed = false;
+
+        Log?.Info("事件总线[{0}]远程取消订阅成功！", topic);
 
         return base.Unsubscribe(clientId);
     }
@@ -70,6 +117,8 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
     /// <param name="cancellationToken">取消令牌</param>
     public override async Task<Int32> PublishAsync(TEvent @event, IEventContext<TEvent>? context = null, CancellationToken cancellationToken = default)
     {
+        if (!_subscribed) await RemoteSubscribe().ConfigureAwait(false);
+
         // 待发布消息增加追踪标识
         if (@event is ITraceMessage tm && tm.TraceId.IsNullOrEmpty()) tm.TraceId = DefaultSpan.Current?.ToString();
 
