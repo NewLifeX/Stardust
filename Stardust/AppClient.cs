@@ -58,8 +58,6 @@ public class AppClient : ClientBase, IRegistry
     private readonly ConcurrentDictionary<String, ConsumeServiceInfo> _consumeServices = new();
     private readonly ConcurrentDictionary<String, ServiceModel[]> _consumes = new();
     private readonly ConcurrentDictionary<String, IList<Delegate>> _consumeEvents = new();
-
-    //private readonly ConcurrentDictionary<String, Func<String, CancellationToken, Task>> _eventBuses = new();
     #endregion
 
     #region 构造
@@ -511,18 +509,18 @@ public class AppClient : ClientBase, IRegistry
 
     /// <summary>发布事件到总线</summary>
     /// <param name="topic">主题</param>
-    /// <param name="event">事件</param>
+    /// <param name="message">事件。可能是事件json，也可能是subscribe/unsubcribe</param>
     /// <param name="cancellationToken">取消通知</param>
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public Task PublishEventAsync(String topic, String @event, CancellationToken cancellationToken = default)
+    public Task PublishEventAsync(String topic, String message, CancellationToken cancellationToken = default)
     {
         if (topic.IsNullOrEmpty()) throw new ArgumentNullException(nameof(topic));
-        if (@event.IsNullOrEmpty()) throw new ArgumentNullException(nameof(@event));
+        if (message.IsNullOrEmpty()) throw new ArgumentNullException(nameof(message));
 
-        var message = $"event#{topic}#{ClientId}#{@event}";
+        var msg = $"event#{topic}#{ClientId}#{message}";
 
-        return SendAsync((ArrayPacket)message.GetBytes(), cancellationToken);
+        return SendAsync((ArrayPacket)msg.GetBytes(), cancellationToken);
     }
     #endregion
 
