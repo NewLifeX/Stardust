@@ -84,7 +84,7 @@ internal class StartupHook
                     var name = asm.GetName().Name;
                     if (existingAssemblies.IsNullOrEmpty())
                         existingAssemblies = name;
-                    else if (!existingAssemblies.Contains(name))
+                    else if (!name.IsNullOrEmpty() && !existingAssemblies.Contains(name))
                         existingAssemblies = existingAssemblies + ";" + name;
                     Environment.SetEnvironmentVariable("ASPNETCORE_HOSTINGSTARTUPASSEMBLIES", existingAssemblies);
 

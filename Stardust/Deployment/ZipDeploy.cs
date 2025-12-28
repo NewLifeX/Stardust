@@ -364,7 +364,7 @@ public class ZipDeploy
         if (p == null) return false;
 
         // 进程优先级
-        if (p != null && Priority != ProcessPriority.Normal)
+        if (Priority != ProcessPriority.Normal)
         {
             WriteLog("优先级：{0}", Priority);
             p.PriorityClass = Priority switch

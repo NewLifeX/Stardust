@@ -98,7 +98,7 @@ public class NetRuntime
                 fi.Delete();
                 fi = null;
             }
-            else if (!String.IsNullOrEmpty(hash))
+            else if (hash != null && !String.IsNullOrEmpty(hash))
             {
                 var hash2 = hash.Length > 32 ? GetSHA512(fullFile) : GetMD5(fullFile);
                 if (!hash2.EqualIgnoreCase(hash))
@@ -130,7 +130,7 @@ public class NetRuntime
 #endif
             }
             var hash2 = "";
-            if (!String.IsNullOrEmpty(hash))
+            if (hash != null && !String.IsNullOrEmpty(hash))
                 hash2 = hash.Length > 32 ? GetSHA512(fullFile) : GetMD5(fullFile);
 
             WriteLog("哈希: {0}", hash2);
@@ -618,7 +618,7 @@ public class NetRuntime
             // 获取SP数字
             var sp = versionKey?.GetValue("SP", "")?.ToString();
 
-            if (!String.IsNullOrEmpty(ver))
+            if (ver != null && !String.IsNullOrEmpty(ver))
             {
                 // 获取 installation flag, or an empty string if there is none.
                 var install = versionKey?.GetValue("Install", "")?.ToString();
@@ -633,7 +633,7 @@ public class NetRuntime
                 {
                     var subKey = versionKey.OpenSubKey(subKeyName);
                     ver = subKey?.GetValue("Version", "") as String;
-                    if (subKey != null && !String.IsNullOrEmpty(ver))
+                    if (subKey != null && ver != null && !String.IsNullOrEmpty(ver))
                     {
                         var name = ver;
                         while (name.Length > 3 && name.Substring(name.Length - 2) == ".0")
@@ -881,7 +881,7 @@ public class NetRuntime
         while (!reader.EndOfStream)
         {
             var line = reader.ReadLine()?.Trim();
-            if (String.IsNullOrEmpty(line)) continue;
+            if (line == null || String.IsNullOrEmpty(line)) continue;
 
             var ss = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             if (ss.Length >= 2)

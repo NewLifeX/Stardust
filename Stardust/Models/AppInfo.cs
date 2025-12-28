@@ -117,7 +117,9 @@ public class AppInfo : IPingRequest, ICloneable
     private Stopwatch? _stopwatch;
     private Int64 _last;
     private Int32 _lastGC;
+#if NETCOREAPP
     private Int64 _lastCompleted;
+#endif
 
     /// <summary>刷新进程相关信息</summary>
     public void Refresh()

@@ -24,7 +24,7 @@ public class SqlClientDiagnosticListener : TraceDiagnosticListener
         var name = value.Key.Split(".").LastOrDefault();
 
         var span = DefaultSpan.Current;
-        var spanName = (span as DefaultSpan)?.Builder?.Name;
+        var spanName = (span as DefaultSpan)?.Name;
 
         switch (name)
         {

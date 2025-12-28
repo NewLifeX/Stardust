@@ -79,7 +79,7 @@ public class NativeWifi
                     + 8 /* Offset for dwNumberOfItems and dwIndex */
                     + (Marshal.SizeOf(typeof(WLAN_INTERFACE_INFO)) * i) /* Offset for preceding items */);
 
-                InterfaceInfo[i] = (WLAN_INTERFACE_INFO)Marshal.PtrToStructure(interfaceInfo, typeof(WLAN_INTERFACE_INFO));
+                InterfaceInfo[i] = (WLAN_INTERFACE_INFO)Marshal.PtrToStructure(interfaceInfo, typeof(WLAN_INTERFACE_INFO))!;
             }
         }
     }
@@ -128,7 +128,7 @@ public class NativeWifi
                     + 8 /* Offset for dwNumberOfItems and dwIndex */
                     + (Marshal.SizeOf(typeof(WLAN_AVAILABLE_NETWORK)) * i) /* Offset for preceding items */);
 
-                Network[i] = (WLAN_AVAILABLE_NETWORK)Marshal.PtrToStructure(availableNetwork, typeof(WLAN_AVAILABLE_NETWORK));
+                Network[i] = (WLAN_AVAILABLE_NETWORK)Marshal.PtrToStructure(availableNetwork, typeof(WLAN_AVAILABLE_NETWORK))!;
             }
         }
     }
@@ -148,14 +148,17 @@ public class NativeWifi
                 EncoderFallback.ReplacementFallback,
                 DecoderFallback.ExceptionFallback);
 
-        public override String ToString()
+        public override String? ToString()
         {
             if (ucSSID == null)
                 return null;
 
             try
             {
-                return _encoding.GetString(ToBytes());
+                var buf = ToBytes();
+                if (buf == null) return null;
+
+                return _encoding.GetString(buf);
             }
             catch (DecoderFallbackException)
             {
@@ -172,7 +175,7 @@ public class NativeWifi
 
         public readonly Byte[]? ToBytes() => ucDot11MacAddress?.ToArray();
 
-        public override readonly String ToString()
+        public override readonly String? ToString()
         {
             return ucDot11MacAddress != null
                 ? BitConverter.ToString(ucDot11MacAddress).Replace('-', ':')
@@ -445,7 +448,7 @@ public class NativeWifi
                     IntPtr.Zero) != ERROR_SUCCESS) // If not connected to a network, ERROR_INVALID_STATE will be returned.
                     continue;
 
-                var connection = (WLAN_CONNECTION_ATTRIBUTES)Marshal.PtrToStructure(queryData, typeof(WLAN_CONNECTION_ATTRIBUTES));
+                var connection = (WLAN_CONNECTION_ATTRIBUTES)Marshal.PtrToStructure(queryData, typeof(WLAN_CONNECTION_ATTRIBUTES))!;
                 if (connection.isState != WLAN_INTERFACE_STATE.Connected)
                     continue;
 

@@ -19,9 +19,9 @@ public class StarTracerResolver : DefaultTracerResolver
     /// <param name="uri"></param>
     /// <param name="userState"></param>
     /// <returns></returns>
-    public override String ResolveName(Uri uri, Object? userState)
+    public override String? ResolveName(Uri uri, Object? userState)
     {
-        String name;
+        String? name;
         HashSet<String>? keys = null;
         if (uri.IsAbsoluteUri)
         {

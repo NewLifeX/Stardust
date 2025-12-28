@@ -87,8 +87,8 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         if (cacheProvider.Cache is not Cache cache) return false;
 
         var clientId = Runtime.ClientId;
-        NewFileBus = cache.GetEventBus<NewFileInfo>("NewFile", clientId);
-        FileRequestBus = cache.GetEventBus<FileRequest>("FileRequest", clientId);
+        NewFileBus = cache.CreateEventBus<NewFileInfo>("NewFile", clientId);
+        FileRequestBus = cache.CreateEventBus<FileRequest>("FileRequest", clientId);
 
         return true;
     }
