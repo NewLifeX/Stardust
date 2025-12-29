@@ -274,7 +274,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
 
     #region 扫描同步
     /// <summary>批量扫描并请求缺失附件，返回已发出请求数。</summary>
-    public async Task<Int32> ScanFilesAsync(DateTime startTime, CancellationToken cancellationToken = default)
+    public virtual async Task<Int32> ScanFilesAsync(DateTime startTime, CancellationToken cancellationToken = default)
     {
         var count = 0;
         foreach (var file in GetMissingAttachments(startTime))
@@ -290,9 +290,12 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     {
         //if (_last.Year < 2000) _last = DateTime.Today.AddDays(-30);
 
+        // 执行扫描，如果成功更新下一次执行时间，如果失败则快速重试
         var rs = await ScanFilesAsync(_last, default).ConfigureAwait(false);
-
-        if (rs > 0) _last = DateTime.Now;
+        if (rs >= 0)
+            _last = DateTime.Now;
+        else
+            _scanTimer?.SetNext(10_000);
     }
 
     /// <summary>查询从指定时间开始本地缺失的附件，用于触发同步。</summary>

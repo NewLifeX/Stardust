@@ -26,6 +26,9 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
     /// <summary>超时时间。默认5000毫秒</summary>
     public Int32 Timeout { get; set; } = 5_000;
 
+    /// <summary>是否准备好。客户端已登录且已订阅</summary>
+    public Boolean IsReady => client.Logined && _subscribed;
+
     /// <summary>链路追踪</summary>
     public ITracer? Tracer { get; set; }
 

@@ -4,6 +4,7 @@ using NewLife.Data;
 using NewLife.Log;
 using Stardust.Data.Deployment;
 using Stardust.Registry;
+using Stardust.Services;
 using Stardust.Storages;
 using XCode;
 
@@ -11,12 +12,22 @@ namespace Stardust.Server.Services;
 
 public class FileStorageService(IFileStorage fileStorage) : IHostedService
 {
-    async Task IHostedService.StartAsync(CancellationToken cancellationToken)
+    Task IHostedService.StartAsync(CancellationToken cancellationToken)
     {
-        await fileStorage.InitializeAsync(cancellationToken);
+        // 延迟10秒后初始化，避免和其它服务争抢资源
+        // 不阻塞 Host 启动：在后台执行
+        _ = InitializeLaterAsync(cancellationToken);
+
+        return Task.CompletedTask;
     }
 
     Task IHostedService.StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    private async Task InitializeLaterAsync(CancellationToken cancellationToken)
+    {
+        await Task.Delay(10_000, cancellationToken);
+        await fileStorage.InitializeAsync(cancellationToken);
+    }
 }
 
 public static class FileStorageExtensions
@@ -90,6 +101,13 @@ public class CubeFileStorage : DefaultFileStorage
             Hash = att.Hash,
             Length = att.Size,
         };
+    }
+
+    public override async Task<Int32> ScanFilesAsync(DateTime startTime, CancellationToken cancellationToken = default)
+    {
+        if (FileRequestBus is StarEventBus<FileRequest> bus && !bus.IsReady) return -1;
+
+        return await base.ScanFilesAsync(startTime, cancellationToken);
     }
 
     /// <summary>获取本地不存在的附件列表。用于文件同步</summary>
