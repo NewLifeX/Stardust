@@ -16,6 +16,9 @@ namespace Stardust.Storages;
 public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeature, ITracerFeature
 {
     #region 属性
+    /// <summary>名称。作为事件总线Topic的前缀</summary>
+    public String? Name { get; set; }
+
     ///// <summary>用于广播地址消息的事件总线。</summary>
     //public IEventBus<AddressInfo>? AddressBus { get; set; }
 
@@ -65,15 +68,15 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     {
         if (Interlocked.Exchange(ref _initialized, 1) == 1) return;
 
-        WriteLog("初始化分布式文件存储，节点：{0}", NodeName);
+        WriteLog("[{0}]初始化分布式文件存储，节点：{1}", Name, NodeName);
+
+        await OnInitializedAsync(cancellationToken).ConfigureAwait(false);
 
         // 订阅新文件、文件请求消息
         NewFileBus?.Subscribe(OnNewFileInfoAsync);
         FileRequestBus?.Subscribe(OnFileRequestAsync);
 
         _scanTimer = new TimerX(OnScan, null, 10_000, 3600_000) { Async = true };
-
-        await OnInitializedAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>事件总线订阅完成后调用，覆写以执行额外初始化。</summary>
@@ -87,8 +90,8 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         if (cacheProvider.Cache is not Cache cache) return false;
 
         var clientId = Runtime.ClientId;
-        NewFileBus = cache.CreateEventBus<NewFileInfo>("NewFile", clientId);
-        FileRequestBus = cache.CreateEventBus<FileRequest>("FileRequest", clientId);
+        NewFileBus = cache.CreateEventBus<NewFileInfo>(Name + "-NewFile", clientId);
+        FileRequestBus = cache.CreateEventBus<FileRequest>(Name + "-FileRequest", clientId);
 
         return true;
     }
@@ -100,8 +103,8 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     {
         if (client == null) return false;
 
-        NewFileBus = client.GetEventBus<NewFileInfo>("NewFile");
-        FileRequestBus = client.GetEventBus<FileRequest>("FileRequest");
+        NewFileBus = client.GetEventBus<NewFileInfo>(Name + "-NewFile");
+        FileRequestBus = client.GetEventBus<FileRequest>(Name + "-FileRequest");
 
         return true;
     }

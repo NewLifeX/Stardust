@@ -21,9 +21,21 @@ public class FileStorageService(IFileStorage fileStorage) : IHostedService
 
 public static class FileStorageExtensions
 {
-    public static IServiceCollection AddCubeFileStorage(this IServiceCollection services)
+    /// <summary>注册魔方版文件存储</summary>
+    /// <param name="services"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public static IServiceCollection AddCubeFileStorage(this IServiceCollection services, String? name = null)
     {
-        services.AddSingleton<IFileStorage, CubeFileStorage>();
+        //services.AddSingleton<IFileStorage, CubeFileStorage>();
+        //services.AddSingleton<IFileStorage>(new CubeFileStorage { Name = name });
+        services.AddSingleton<CubeFileStorage>();
+        services.AddSingleton<IFileStorage>(sp =>
+        {
+            var storage = sp.GetRequiredService<CubeFileStorage>();
+            storage.Name = name;
+            return storage;
+        });
 
         services.AddHostedService<FileStorageService>();
 
@@ -33,6 +45,9 @@ public static class FileStorageExtensions
 
 public class CubeFileStorage : DefaultFileStorage
 {
+    private ICacheProvider _cacheProvider;
+    private IRegistry _registry;
+
     public CubeFileStorage(StarServerSetting setting, IRegistry registry, IServiceProvider serviceProvider, ICacheProvider cacheProvider, ITracer tracer, ILog log)
     {
         //NodeName = Environment.MachineName;
@@ -43,12 +58,21 @@ public class CubeFileStorage : DefaultFileStorage
         Tracer = tracer;
         Log = log;
 
-        if (cacheProvider.Cache is Redis)
-            SetEventBus(cacheProvider);
-        else if (registry is AppClient client)
+        _cacheProvider = cacheProvider;
+        _registry = registry;
+    }
+
+    protected override Task OnInitializedAsync(CancellationToken cancellationToken)
+    {
+        // 优先Redis队列作为事件总线，其次使用星尘事件总线
+        if (_cacheProvider.Cache is Redis)
+            SetEventBus(_cacheProvider);
+        else if (_registry is AppClient client)
             SetEventBus(client);
         else
-            SetEventBus(cacheProvider);
+            SetEventBus(_cacheProvider);
+
+        return base.OnInitializedAsync(cancellationToken);
     }
 
     /// <summary>获取本地文件的元数据</summary>
@@ -68,6 +92,9 @@ public class CubeFileStorage : DefaultFileStorage
         };
     }
 
+    /// <summary>获取本地不存在的附件列表。用于文件同步</summary>
+    /// <param name="startTime">从指定时间开始遍历</param>
+    /// <returns></returns>
     protected override IEnumerable<IFileInfo> GetMissingAttachments(DateTime startTime)
     {
         var exp = new WhereExpression();

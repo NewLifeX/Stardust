@@ -4,10 +4,8 @@ using System.Text.Unicode;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Caching.Services;
-using NewLife.Data;
 using NewLife.IP;
 using NewLife.Log;
-using NewLife.Messaging;
 using NewLife.Remoting.Extensions;
 using NewLife.Serialization;
 using Stardust.Data.Nodes;
@@ -15,7 +13,6 @@ using Stardust.Extensions.Caches;
 using Stardust.Monitors;
 using Stardust.Registry;
 using Stardust.Server.Services;
-using Stardust.Storages;
 using XCode;
 using XCode.DataAccessLayer;
 
@@ -34,9 +31,10 @@ public class Startup
         // 初始化配置文件
         InitConfig();
 
+        var set = StarServerSetting.Current;
         //var star = new StarFactory(null, "StarServer", null);
         var star = services.AddStardust();
-        if (star.Server.IsNullOrEmpty()) star.Server = "http://127.0.0.1:6600";
+        if (star.Server.IsNullOrEmpty()) star.Server = $"http://127.0.0.1:{set.Port}";
 
         // 埋点跟踪
         var tracer = star.Tracer;
@@ -47,7 +45,6 @@ public class Startup
         // 分布式服务，使用配置中心RedisCache配置
         services.AddSingleton<ICacheProvider, RedisCacheProvider>();
 
-        var set = StarServerSetting.Current;
         services.AddSingleton(set);
 
         // 统计服务
@@ -60,7 +57,7 @@ public class Startup
 
         IpResolver.Register();
 
-        services.AddCubeFileStorage();
+        services.AddCubeFileStorage("Star");
 
         // 业务服务
         services.AddSingleton<NodeService>();

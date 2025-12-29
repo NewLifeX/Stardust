@@ -29,7 +29,7 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
     /// <summary>链路追踪</summary>
     public ITracer? Tracer { get; set; }
 
-    private Boolean _subscribed;
+    private volatile Boolean _subscribed;
     private TimerX? _timer;
     #endregion
 
@@ -64,9 +64,10 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
         }
     }
 
-    private async Task RemoteSubscribe()
+    private async Task<Boolean> RemoteSubscribe()
     {
-        if (!client.Logined) return;
+        if (!client.Logined) return false;
+        if (_subscribed) return true;
 
         using var span = Tracer?.NewSpan($"event:{topic}:subscribe", topic);
 
@@ -74,6 +75,8 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
         _subscribed = true;
 
         Log?.Info("事件总线[{0}]远程订阅成功！", topic);
+
+        return true;
     }
 
     private async Task DoSubscribe(Object state)
@@ -83,7 +86,8 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
         {
             try
             {
-                await RemoteSubscribe().ConfigureAwait(false);
+                var rs = await RemoteSubscribe().ConfigureAwait(false);
+                if (!rs) return;
             }
             catch
             {

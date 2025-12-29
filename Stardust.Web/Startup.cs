@@ -61,7 +61,7 @@ public class Startup
         services.AddSingleton<DeployService>();
         services.AddSingleton<NewLife.Cube.Services.TokenService>();
 
-        services.AddCubeFileStorage();
+        services.AddCubeFileStorage("Star");
 
         //services.AddResponseCompression();
 
