@@ -36,7 +36,7 @@ public static class FileStorageExtensions
     /// <param name="services"></param>
     /// <param name="name"></param>
     /// <returns></returns>
-    public static IServiceCollection AddCubeFileStorage(this IServiceCollection services, String? name = null)
+    public static IServiceCollection AddCubeFileStorage(this IServiceCollection services, String name = null)
     {
         //services.AddSingleton<IFileStorage, CubeFileStorage>();
         //services.AddSingleton<IFileStorage>(new CubeFileStorage { Name = name });
@@ -87,7 +87,7 @@ public class CubeFileStorage : DefaultFileStorage
     }
 
     /// <summary>获取本地文件的元数据</summary>
-    protected override IFileInfo GetLocalFileMeta(Int64 attachmentId, String? path)
+    protected override IFileInfo GetLocalFileMeta(Int64 attachmentId, String path)
     {
         //if (path.IsNullOrEmpty()) throw new ArgumentNullException(nameof(path));
 

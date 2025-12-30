@@ -62,7 +62,9 @@ public class TraceService
             {
                 // 读取最后多少字节
                 fs.Seek(-getBytes, SeekOrigin.End);
+#pragma warning disable CA2022 // 避免使用 "Stream.Read" 进行不准确读取
                 fs.Read(buffArr, 0, (Int32)getBytes);
+#pragma warning restore CA2022 // 避免使用 "Stream.Read" 进行不准确读取
             }
 
             return buffArr.ToStr();

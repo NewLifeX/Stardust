@@ -200,14 +200,14 @@ public class AppClient : ClientBase, IRegistry
     #region 下行通知
     /// <summary>分发消息</summary>
     /// <param name="data">数据包</param>
+    /// <param name="context">事件上下文。用于在发布者、订阅者及中间处理器之间传递协调数据，如 Handler、ClientId 等</param>
     /// <param name="cancellationToken">取消通知</param>
     /// <returns></returns>
-    public override async Task<Int32> DispatchAsync(IPacket data, CancellationToken cancellationToken = default)
+    public override async Task HandleAsync(IPacket data, IEventContext? context = null, CancellationToken cancellationToken = default)
     {
-        var rs = await _eventHub.DispatchAsync(data, cancellationToken).ConfigureAwait(false);
-        if (rs > 0) return rs;
+        await _eventHub.HandleAsync(data, context, cancellationToken).ConfigureAwait(false);
 
-        return await base.DispatchAsync(data, cancellationToken).ConfigureAwait(false);
+        await base.HandleAsync(data, context, cancellationToken).ConfigureAwait(false);
     }
     #endregion
 
@@ -488,13 +488,14 @@ public class AppClient : ClientBase, IRegistry
     #region 事件队列
     private EventHub<String> _eventHub = new();
 
-    /// <summary>创建事件总线，指定主题，绑定WebSocket通道</summary>
+    /// <summary>创建事件总线，指定主题，绑定WebSocket通道，客户端收到下发数据包时，路由到topic对应的事件总线</summary>
     /// <typeparam name="TEvent"></typeparam>
     /// <param name="topic">主题</param>
     /// <returns></returns>
     public IEventBus<TEvent> GetEventBus<TEvent>(String topic) where TEvent : class
     {
-        if (_eventHub.TryGetValue(topic, out var action) && action!.Target is IEventBus<TEvent> bus) return bus;
+        if (_eventHub.TryGetBus<TEvent>(topic, out var bus)) return bus;
+        if (_eventHub.TryGetValue(topic, out var handler) && handler is IEventBus<TEvent> bus2) return bus2;
 
         var sbus = new StarEventBus<TEvent>(this, topic)
         {

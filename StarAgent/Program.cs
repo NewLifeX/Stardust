@@ -290,7 +290,7 @@ internal class MyService : ServiceBase, IServiceProvider
         base.StartWork(reason);
     }
 
-    private void OnSettingChanged(Object sender, EventArgs eventArgs)
+    private void OnSettingChanged(Object? sender, EventArgs eventArgs)
     {
         WriteLog("重新加载应用服务");
 
@@ -299,7 +299,7 @@ internal class MyService : ServiceBase, IServiceProvider
         _Manager.SetServices(AgentSetting.Services);
     }
 
-    private void OnServiceChanged(Object sender, EventArgs eventArgs)
+    private void OnServiceChanged(Object? sender, EventArgs eventArgs)
     {
         // 服务改变时，保存到配置文件
         var set = AgentSetting;
@@ -465,7 +465,7 @@ internal class MyService : ServiceBase, IServiceProvider
         client.Open();
     }
 
-    private void OnMigration(Object sender, MigrationEventArgs e)
+    private void OnMigration(Object? sender, MigrationEventArgs e)
     {
         var setStar = StarSetting;
         var svr = e.NewServer;

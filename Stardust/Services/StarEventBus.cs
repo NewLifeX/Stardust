@@ -3,14 +3,17 @@ using NewLife.Log;
 using NewLife.Messaging;
 using NewLife.Serialization;
 using NewLife.Threading;
+#if !NET45
+using TaskEx = System.Threading.Tasks.Task;
+#endif
 
 namespace Stardust.Services;
 
 /// <summary>字符串事件上下文</summary>
-public class StringEventContext<TEvent>(IEventBus<TEvent> eventBus, String message) : IEventContext<TEvent>
+public class StringEventContext(IEventBus eventBus, String message) : IEventContext
 {
     /// <summary>事件总线</summary>
-    public IEventBus<TEvent> EventBus { get; set; } = eventBus;
+    public IEventBus EventBus { get; set; } = eventBus;
 
     /// <summary>原始消息</summary>
     public String Message { get; set; } = message;
@@ -20,7 +23,7 @@ public class StringEventContext<TEvent>(IEventBus<TEvent> eventBus, String messa
 /// <typeparam name="TEvent"></typeparam>
 /// <param name="client"></param>
 /// <param name="topic"></param>
-public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEvent>, IEventDispatcher<String>, ITracerFeature where TEvent : class
+public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEvent>, IEventHandler<String>, ITracerFeature where TEvent : class
 {
     #region 属性
     /// <summary>超时时间。默认5000毫秒</summary>
@@ -41,7 +44,14 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
     /// <param name="handler">事件处理器</param>
     /// <param name="clientId">客户端标识</param>
     /// <returns></returns>
-    public override Boolean Subscribe(IEventHandler<TEvent> handler, String clientId = "")
+    public override Boolean Subscribe(IEventHandler<TEvent> handler, String clientId = "") => SubscribeAsync(handler, clientId).GetAwaiter().GetResult();
+
+    /// <summary>订阅消息。先本地再远程</summary>
+    /// <param name="handler">事件处理器</param>
+    /// <param name="clientId">客户端标识</param>
+    /// <param name="cancellationToken">取消通知</param>
+    /// <returns></returns>
+    public override async Task<Boolean> SubscribeAsync(IEventHandler<TEvent> handler, String clientId = "", CancellationToken cancellationToken = default)
     {
         // 先本地再远程
         if (!base.Subscribe(handler, clientId)) return false;
@@ -55,7 +65,7 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
 
         try
         {
-            RemoteSubscribe().Wait(Timeout);
+            await RemoteSubscribe().ConfigureAwait(false);
 
             return true;
         }
@@ -105,12 +115,18 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
     /// <summary>取消订阅消息。先远程再本地</summary>
     /// <param name="clientId">客户端标识</param>
     /// <returns></returns>
-    public override Boolean Unsubscribe(String clientId = "")
+    public override Boolean Unsubscribe(String clientId = "") => UnsubscribeAsync(clientId).GetAwaiter().GetResult();
+
+    /// <summary>取消订阅消息。先远程再本地</summary>
+    /// <param name="clientId">客户端标识</param>
+    /// <param name="cancellationToken">取消通知</param>
+    /// <returns></returns>
+    public override async Task<Boolean> UnsubscribeAsync(String clientId = "", CancellationToken cancellationToken = default)
     {
         using var span = Tracer?.NewSpan($"event:{topic}:unsubscribe", topic);
 
         // 先远程再本地
-        client.PublishEventAsync(topic, "unsubscribe").Wait(Timeout);
+        await client.PublishEventAsync(topic, "unsubscribe", cancellationToken).ConfigureAwait(false);
         _subscribed = false;
 
         Log?.Info("事件总线[{0}]远程取消订阅成功！", topic);
@@ -122,7 +138,7 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
     /// <param name="event">事件</param>
     /// <param name="context">上下文</param>
     /// <param name="cancellationToken">取消令牌</param>
-    public override async Task<Int32> PublishAsync(TEvent @event, IEventContext<TEvent>? context = null, CancellationToken cancellationToken = default)
+    public override async Task<Int32> PublishAsync(TEvent @event, IEventContext? context = null, CancellationToken cancellationToken = default)
     {
         if (!_subscribed) await RemoteSubscribe().ConfigureAwait(false);
 
@@ -137,14 +153,15 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
 
     /// <summary>分发处理消息。反序列化为事件对象后分发给本地事件处理器</summary>
     /// <param name="message">事件消息原文。一般是json形式</param>
+    /// <param name="context">事件上下文。用于在发布者、订阅者及中间处理器之间传递协调数据，如 Handler、ClientId 等</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns></returns>
-    public Task<Int32> DispatchAsync(String message, CancellationToken cancellationToken)
+    public Task HandleAsync(String message, IEventContext? context, CancellationToken cancellationToken)
     {
         using var span = Tracer?.NewSpan($"event:{topic}", message);
         try
         {
-            var context = new StringEventContext<TEvent>(this, message);
+            context ??= new StringEventContext(this, message);
             if (message is not TEvent @event)
             {
                 @event = client.JsonHost.Read<TEvent>(message)!;
@@ -159,7 +176,7 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
             span?.SetError(ex);
         }
 
-        return Task.FromResult(0);
+        return TaskEx.CompletedTask;
     }
     #endregion
 }

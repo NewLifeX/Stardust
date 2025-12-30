@@ -15,7 +15,7 @@ public class AppClientTests
     {
         public String Received { get; private set; }
 
-        public Task HandleAsync(String @event, IEventContext<String> context = null, CancellationToken cancellationToken = default)
+        public Task HandleAsync(String @event, IEventContext context = null, CancellationToken cancellationToken = default)
         {
             Received = @event;
             return Task.CompletedTask;
@@ -31,7 +31,7 @@ public class AppClientTests
         bus.Subscribe(handler, clientId: "h1");
 
         var message = "event#topic1#clientB#\"hello\""; // JSON string payload
-        await client.DispatchAsync((ArrayPacket)message.GetBytes());
+        await client.HandleAsync((ArrayPacket)message.GetBytes());
 
         Assert.Equal("\"hello\"", handler.Received);
     }
@@ -45,7 +45,7 @@ public class AppClientTests
         bus.Subscribe(handler, clientId: "h1");
 
         var message = "event#topic1#clientA#\"hello\""; // same clientId as AppClient
-        await client.DispatchAsync((ArrayPacket)message.GetBytes());
+        await client.HandleAsync((ArrayPacket)message.GetBytes());
 
         Assert.Null(handler.Received);
     }
@@ -59,7 +59,7 @@ public class AppClientTests
         bus.Subscribe(handler, clientId: "h1");
 
         var message = "event#otherTopic#clientB#\"hello\""; // no bus registered for otherTopic
-        await client.DispatchAsync((ArrayPacket)message.GetBytes());
+        await client.HandleAsync((ArrayPacket)message.GetBytes());
 
         Assert.Null(handler.Received);
     }

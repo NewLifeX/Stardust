@@ -146,7 +146,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     }
 
     /// <summary>处理新文件消息。</summary>
-    protected virtual async Task OnNewFileInfoAsync(NewFileInfo info, IEventContext<NewFileInfo> context, CancellationToken cancellationToken)
+    protected virtual async Task OnNewFileInfoAsync(NewFileInfo info, IEventContext context, CancellationToken cancellationToken)
     {
         var msg = info.ToJson();
         using var span = Tracer?.NewSpan(nameof(OnNewFileInfoAsync), msg);
@@ -257,7 +257,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     }
 
     /// <summary>处理文件请求消息。</summary>
-    protected virtual async Task OnFileRequestAsync(FileRequest req, IEventContext<FileRequest> context, CancellationToken cancellationToken)
+    protected virtual async Task OnFileRequestAsync(FileRequest req, IEventContext context, CancellationToken cancellationToken)
     {
         WriteLog("请求文件通知：{0}", req.ToJson());
 

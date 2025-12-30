@@ -908,7 +908,9 @@ public class NetRuntime
             if (ms != null)
             {
                 var buf = new Byte[ms.Length];
+#pragma warning disable CA2022 // 避免使用 "Stream.Read" 进行不准确读取
                 ms.Read(buf, 0, buf.Length);
+#pragma warning restore CA2022 // 避免使用 "Stream.Read" 进行不准确读取
 
                 File.WriteAllBytes(name, buf);
             }
