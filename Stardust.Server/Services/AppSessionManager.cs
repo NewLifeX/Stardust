@@ -26,6 +26,16 @@ public class AppSessionManager : SessionManager
             CloseAll(nameof(lifeTime.ApplicationStopping));
         });
     }
+
+    /// <summary>向管理器添加会话</summary>
+    /// <param name="session"></param>
+    public override void Add(ICommandSession session)
+    {
+        if (session is WsCommandSession ws)
+            ws.Dispatcher = Hub;
+
+        base.Add(session);
+    }
 }
 
 class AppCommandSession(WebSocket socket) : WsCommandSession(socket)

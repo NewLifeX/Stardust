@@ -195,7 +195,6 @@ public class AppController(RegistryService registryService, ITokenService tokenS
             Code = $"{app.Name}@{Context.ClientId}",
             Log = this,
             SetOnline = online => registryService.SetOnline(Context, online),
-            Dispatcher = sessionManager.Hub,
             ServiceProvider = serviceProvider,
             Tracer = tracer,
         };
