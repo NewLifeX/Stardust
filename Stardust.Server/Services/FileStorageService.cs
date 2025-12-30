@@ -1,5 +1,6 @@
 ﻿using NewLife;
 using NewLife.Caching;
+using NewLife.Common;
 using NewLife.Data;
 using NewLife.Log;
 using Stardust.Data.Deployment;
@@ -33,11 +34,14 @@ public class FileStorageService(IFileStorage fileStorage) : IHostedService
 public static class FileStorageExtensions
 {
     /// <summary>注册魔方版文件存储</summary>
-    /// <param name="services"></param>
-    /// <param name="name"></param>
+    /// <param name="services">服务集合</param>
+    /// <param name="name">集群名。相同名称的多个应用共享一个文件存储集群，如StarWeb和StarServer。默认为null时使用应用标识，集群部署的多节点应用实例共享文件存储</param>
     /// <returns></returns>
     public static IServiceCollection AddCubeFileStorage(this IServiceCollection services, String name = null)
     {
+        if (name.IsNullOrEmpty()) name = StarSetting.Current.AppKey;
+        if (name.IsNullOrEmpty()) name = SysConfig.Current.Name;
+
         //services.AddSingleton<IFileStorage, CubeFileStorage>();
         //services.AddSingleton<IFileStorage>(new CubeFileStorage { Name = name });
         services.AddSingleton<CubeFileStorage>();

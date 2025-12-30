@@ -16,7 +16,7 @@ namespace Stardust.Storages;
 public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeature, ITracerFeature
 {
     #region 属性
-    /// <summary>名称。作为事件总线Topic的前缀</summary>
+    /// <summary>名称。作为事件总线Topic的前缀。相同名称的多个应用共享一个文件存储集群，如StarWeb和StarServer。默认为null时使用应用标识，集群部署的多节点应用实例共享文件存储</summary>
     public String? Name { get; set; }
 
     ///// <summary>用于广播地址消息的事件总线。</summary>
