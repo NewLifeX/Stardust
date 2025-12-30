@@ -207,7 +207,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     /// <param name="model"></param>
     /// <param name="token">应用令牌</param>
     /// <returns></returns>
-    [AllowAnonymous]
+    //[AllowAnonymous]
     [HttpPost(nameof(SendCommand))]
     public Task<CommandReplyModel> SendCommand(CommandInModel model)
     {
