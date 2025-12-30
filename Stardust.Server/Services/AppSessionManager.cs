@@ -14,9 +14,10 @@ public class AppSessionManager : SessionManager
     /// <summary>上行数据包事件交换机</summary>
     public EventHub<IPacket> Hub { get; set; } = new();
 
-    public AppSessionManager(IServiceProvider serviceProvider, ILog log) : base(serviceProvider)
+    public AppSessionManager(IServiceProvider serviceProvider, ITracer tracer, ILog log) : base(serviceProvider)
     {
         Topic = "AppCommands";
+        Hub.Tracer = tracer;
         Hub.Log = log;
 
         var lifeTime = serviceProvider.GetService<IHostApplicationLifetime>();

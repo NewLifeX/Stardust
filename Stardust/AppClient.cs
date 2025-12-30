@@ -205,8 +205,11 @@ public class AppClient : ClientBase, IRegistry
     /// <returns></returns>
     public override async Task HandleAsync(IPacket data, IEventContext? context = null, CancellationToken cancellationToken = default)
     {
-        await _eventHub.HandleAsync(data, context, cancellationToken).ConfigureAwait(false);
+        // EventHub 优先处理消息，成功时不再向下执行
+        var rs = await _eventHub.HandleAsync(data, context, cancellationToken).ConfigureAwait(false);
+        if (rs > 0) return;
 
+        // 基类的处理逻辑，主要是指令消息下发
         await base.HandleAsync(data, context, cancellationToken).ConfigureAwait(false);
     }
     #endregion
@@ -503,6 +506,7 @@ public class AppClient : ClientBase, IRegistry
             Log = Log,
         };
 
+        // 按topic向EventHub注册事件总线，在Hub收到topic方向的事件消息时，路由到对应的事件总线
         _eventHub.Add(topic, sbus);
 
         return sbus;

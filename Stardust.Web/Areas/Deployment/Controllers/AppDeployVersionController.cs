@@ -8,6 +8,7 @@ using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data.Deployment;
+using Stardust.Storages;
 using Stardust.Web.Services;
 using XCode.Membership;
 using Attachment = NewLife.Cube.Entity.Attachment;
@@ -45,11 +46,13 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
     }
 
     private readonly DeployService _deployService;
+    private readonly IFileStorage _fileStorage;
     private readonly ITracer _tracer;
 
-    public AppDeployVersionController(DeployService deployService, ITracer tracer)
+    public AppDeployVersionController(DeployService deployService, IFileStorage fileStorage, ITracer tracer)
     {
         _deployService = deployService;
+        _fileStorage = fileStorage;
         _tracer = tracer;
     }
 
@@ -234,6 +237,9 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
                 _ = Publish(entity.Deploy);
             }
         }
+
+        // 广播指定附件在当前节点可用
+        await _fileStorage.PublishNewFileAsync(att.Id, att.FilePath, HttpContext.RequestAborted);
 
         // 不给上层拿到附件，避免Url字段被覆盖
         return null;

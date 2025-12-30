@@ -69,6 +69,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         if (Interlocked.Exchange(ref _initialized, 1) == 1) return;
 
         WriteLog("[{0}]初始化分布式文件存储，节点：{1}", Name, NodeName);
+        using var span = Tracer?.NewSpan("FileStorage-Init", new { Name, NodeName });
 
         await OnInitializedAsync(cancellationToken).ConfigureAwait(false);
 
@@ -149,7 +150,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     protected virtual async Task OnNewFileInfoAsync(NewFileInfo info, IEventContext context, CancellationToken cancellationToken)
     {
         var msg = info.ToJson();
-        using var span = Tracer?.NewSpan(nameof(OnNewFileInfoAsync), msg);
+        using var span = Tracer?.NewSpan("FileStorage-NewFile", msg);
         span?.Detach(info.TraceId);
         WriteLog("新文件通知：{0}", msg);
 
@@ -194,7 +195,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         url = url.Replace("{Id}", file.Id + "");
         url = url.Replace("{Name}", file.Name);
 
-        var span = DefaultSpan.Current;
+        using var span = Tracer?.NewSpan("FileStorage-FetchFile", new { file.Name, url });
         WriteLog("下载文件：{0}，来源：{1}", file.Name, url);
         try
         {
@@ -263,6 +264,8 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
 
         if (req.RequestNode.EqualIgnoreCase(NodeName)) return;
 
+        using var span = Tracer?.NewSpan("FileStorage-FileRequest", new { req.Name, req.RequestNode });
+
         // 若本地已存在且哈希正确，则再次宣告新文件，复用扩散流程
         var exists = CheckLocalFile(req.Path, req.Hash);
         if (exists)
@@ -276,12 +279,16 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     /// <summary>批量扫描并请求缺失附件，返回已发出请求数。</summary>
     public virtual async Task<Int32> ScanFilesAsync(DateTime startTime, CancellationToken cancellationToken = default)
     {
+        using var span = Tracer?.NewSpan("FileStorage-Init", new { startTime });
+
         var count = 0;
         foreach (var file in GetMissingAttachments(startTime))
         {
             await RequestFileAsync(file.Id, file.Path, "sync missing", cancellationToken).ConfigureAwait(false);
             count++;
+            if (span != null) span.Value++;
         }
+
         return count;
     }
 
