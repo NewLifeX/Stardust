@@ -272,18 +272,27 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
     {
         var node = Context.Device as Node;
 
-        using var span = tracer?.NewSpan("cmd:Ws:Create", node.Code);
-        using var session = new NodeCommandSession(socket)
+        using var span = tracer?.NewSpan("cmd:WsNode:Create", node.Code);
+        try
         {
-            Code = node.Code,
-            Log = this,
-            SetOnline = online => nodeService.SetOnline(Context, online),
-            ServiceProvider = serviceProvider,
-            Tracer = tracer,
-        };
-        sessionManager.Add(session);
+            using var session = new NodeCommandSession(socket)
+            {
+                Code = node.Code,
+                Log = this,
+                SetOnline = online => nodeService.SetOnline(Context, online),
+                ServiceProvider = serviceProvider,
+                Tracer = tracer,
+            };
+            sessionManager.Add(session);
 
-        await session.WaitAsync(HttpContext, span, cancellationToken);
+            await session.WaitAsync(HttpContext, span, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // 这里不一定命中，因 WaitAsync 内部会提前结束span
+            span?.SetError(ex, null);
+            throw;
+        }
     }
 
     /// <summary>向节点发送命令。通知节点更新、安装和启停应用等</summary>

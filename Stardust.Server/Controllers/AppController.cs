@@ -189,18 +189,27 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     {
         var app = Context.Device as App ?? throw new InvalidOperationException("未登录！");
 
-        using var span = tracer?.NewSpan("cmd:Ws:Create", app.Name);
-        using var session = new AppCommandSession(socket)
+        using var span = tracer?.NewSpan("cmd:WsApp:Create", app.Name);
+        try
         {
-            Code = $"{app.Name}@{Context.ClientId}",
-            Log = this,
-            SetOnline = online => registryService.SetOnline(Context, online),
-            ServiceProvider = serviceProvider,
-            Tracer = tracer,
-        };
-        sessionManager.Add(session);
+            using var session = new AppCommandSession(socket)
+            {
+                Code = $"{app.Name}@{Context.ClientId}",
+                Log = this,
+                SetOnline = online => registryService.SetOnline(Context, online),
+                ServiceProvider = serviceProvider,
+                Tracer = tracer,
+            };
+            sessionManager.Add(session);
 
-        await session.WaitAsync(HttpContext, span, cancellationToken);
+            await session.WaitAsync(HttpContext, span, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // 这里不一定命中，因 WaitAsync 内部会提前结束span
+            span?.SetError(ex, null);
+            throw;
+        }
     }
 
     /// <summary>向节点发送命令。通知应用刷新配置信息和服务信息等</summary>

@@ -20,7 +20,7 @@ using Stardust.Services;
 namespace Stardust;
 
 /// <summary>应用客户端。每个应用有一个客户端连接星尘服务端</summary>
-public class AppClient : ClientBase, IRegistry
+public class AppClient : ClientBase, IRegistry, IEventBusFactory
 {
     #region 属性
     /// <summary>应用</summary>
@@ -489,16 +489,27 @@ public class AppClient : ClientBase, IRegistry
     #endregion
 
     #region 事件队列
+    private Boolean _initedEventBus;
     private EventHub<String> _eventHub = new();
 
     /// <summary>创建事件总线，指定主题，绑定WebSocket通道，客户端收到下发数据包时，路由到topic对应的事件总线</summary>
     /// <typeparam name="TEvent"></typeparam>
     /// <param name="topic">主题</param>
     /// <returns></returns>
-    public IEventBus<TEvent> GetEventBus<TEvent>(String topic) where TEvent : class
+    public IEventBus<TEvent> GetEventBus<TEvent>(String topic)
     {
         if (_eventHub.TryGetBus<TEvent>(topic, out var bus)) return bus;
         if (_eventHub.TryGetValue(topic, out var handler) && handler is IEventBus<TEvent> bus2) return bus2;
+
+        if (!_initedEventBus)
+        {
+            _initedEventBus = true;
+
+            WriteLog("星尘事件总线：应用事件通过 WebSocket 上报到 StarServer；StarServer 内部的 EventHub 按 topic 分发到对应的事件总线；订阅该 topic 的其它 WebSocket 会话再把消息下发到目标应用。StarServer 单体部署时内部总线使用内存实现；集群部署时内部总线使用 Redis 队列实现。");
+
+            _eventHub.Tracer = Factory?.Tracer;
+            _eventHub.Log = Log;
+        }
 
         var sbus = new StarEventBus<TEvent>(this, topic)
         {
@@ -511,6 +522,8 @@ public class AppClient : ClientBase, IRegistry
 
         return sbus;
     }
+
+    IEventBus<TEvent> IEventBusFactory.CreateEventBus<TEvent>(String topic, String clientId) => GetEventBus<TEvent>(topic);
 
     /// <summary>发布事件到总线</summary>
     /// <param name="topic">主题</param>

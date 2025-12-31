@@ -90,6 +90,8 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     {
         if (cacheProvider.Cache is not Cache cache) return false;
 
+        WriteLog("使用[{0}]事件总线，订阅[{1}]的应用通过消息队列分发事件。", cache.GetType().Name, Name);
+
         var clientId = Runtime.ClientId;
         NewFileBus = cache.CreateEventBus<NewFileInfo>(Name + "-NewFile", clientId);
         FileRequestBus = cache.CreateEventBus<FileRequest>(Name + "-FileRequest", clientId);
@@ -152,7 +154,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         var msg = info.ToJson();
         using var span = Tracer?.NewSpan("FileStorage-NewFile", msg);
         span?.Detach(info.TraceId);
-        WriteLog("新文件通知：{0}", msg);
+        WriteLog("收到新文件通知：{0}", msg);
 
         //// 默认忽略本节点自己发布的消息（除非需要自愈）
         //if (info.SourceNode.EqualIgnoreCase(NodeName)) return;
@@ -260,7 +262,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     /// <summary>处理文件请求消息。</summary>
     protected virtual async Task OnFileRequestAsync(FileRequest req, IEventContext context, CancellationToken cancellationToken)
     {
-        WriteLog("请求文件通知：{0}", req.ToJson());
+        WriteLog("收到请求文件通知：{0}", req.ToJson());
 
         if (req.RequestNode.EqualIgnoreCase(NodeName)) return;
 

@@ -23,7 +23,7 @@ public class StringEventContext(IEventBus eventBus, String message) : IEventCont
 /// <typeparam name="TEvent"></typeparam>
 /// <param name="client"></param>
 /// <param name="topic"></param>
-public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEvent>, IEventHandler<String>, ITracerFeature where TEvent : class
+public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEvent>, IEventHandler<String>, ITracerFeature
 {
     #region 属性
     /// <summary>超时时间。默认5000毫秒</summary>
@@ -140,6 +140,7 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
     /// <param name="cancellationToken">取消令牌</param>
     public override async Task<Int32> PublishAsync(TEvent @event, IEventContext? context = null, CancellationToken cancellationToken = default)
     {
+        if (@event == null) return 0;
         if (!_subscribed) await RemoteSubscribe().ConfigureAwait(false);
 
         // 待发布消息增加追踪标识
