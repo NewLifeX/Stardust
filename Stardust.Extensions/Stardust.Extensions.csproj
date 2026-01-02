@@ -6,8 +6,8 @@
     <AssemblyTitle>星尘分布式服务扩展</AssemblyTitle>
     <Description>星尘，分布式服务框架扩展。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
     <Company>新生命开发团队</Company>
-    <Copyright>©2002-2025 NewLife</Copyright>
-    <VersionPrefix>3.5</VersionPrefix>
+    <Copyright>©2002-2026 NewLife</Copyright>
+    <VersionPrefix>3.6</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -33,7 +33,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>星尘监控用法标准化</PackageReleaseNotes>
+    <PackageReleaseNotes>增加星尘事件总线；增减文件分布式存储，星尘平台和魔方支持上传文件自动同步</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>

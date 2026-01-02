@@ -309,6 +309,6 @@ QQ群：1600800/1600838
 
 ---
 ## License
-MIT License. Copyright (c) 2002-2025 NewLife.
+MIT License. Copyright (c) 2002-2026 NewLife.
 
 欢迎 Star / Fork / Issue / PR，共建更完善的 .NET 分布式基础设施。

@@ -21,8 +21,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
-    <PackageReference Include="NewLife.Redis" Version="6.4.2025.1230-beta0419" />
-    <PackageReference Include="NewLife.UnitTest" Version="1.0.2025.1112-beta0617" />
+    <PackageReference Include="NewLife.Redis" Version="6.4.2026.102" />
+    <PackageReference Include="NewLife.UnitTest" Version="1.1.2026.102" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <PrivateAssets>all</PrivateAssets>

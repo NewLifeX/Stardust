@@ -6,8 +6,8 @@
     <AssemblyTitle>星尘服务平台</AssemblyTitle>
     <Description>星尘，分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
     <Company>新生命开发团队</Company>
-    <Copyright>©2002-2025 NewLife</Copyright>
-    <VersionPrefix>3.5</VersionPrefix>
+    <Copyright>©2002-2026 NewLife</Copyright>
+    <VersionPrefix>3.6</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -46,9 +46,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.IP" Version="2.4.2025.1113" />
-    <PackageReference Include="NewLife.Redis" Version="6.4.2025.1230-beta0419" />
-    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.6.2025.1231-beta0314" />
+    <PackageReference Include="NewLife.IP" Version="2.4.2026.102" />
+    <PackageReference Include="NewLife.Redis" Version="6.4.2026.102" />
+    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.7.2026.102" />
   </ItemGroup>
 
   <ItemGroup>
