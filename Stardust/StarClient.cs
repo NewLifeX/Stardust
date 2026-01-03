@@ -217,7 +217,9 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
         }
         catch (Exception ex)
         {
+#if DEBUG
             XTrace.WriteLine(ex.Message);
+#endif
             return null;
         }
     }

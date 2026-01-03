@@ -17,18 +17,225 @@ public partial class StarClient
         // 获取GLIBC/musl版本
         di.LibcVersion = GetLibcVersion();
 
-        // 很多Linux系统没有xrandr命令
-        //var xrandr = Execute("xrandr", "-q");
-        //if (!xrandr.IsNullOrEmpty())
-        //{
-        //    var current = xrandr.Substring("current", ",").Trim();
-        //    if (!current.IsNullOrEmpty())
-        //    {
-        //        var ss = current.SplitAsInt("x");
-        //        if (ss.Length >= 2) di.Resolution = $"{ss[0]}*{ss[1]}";
-        //    }
-        //}
+        // 采集桌面Linux的分辨率和DPI
+        FillDisplayInfo(di);
     }
+
+    #region 显示信息采集
+    /// <summary>填充显示信息（分辨率和DPI）</summary>
+    /// <param name="di">节点信息</param>
+    private static void FillDisplayInfo(NodeInfo di)
+    {
+        try
+        {
+            // 方式1：通过 xrandr 获取分辨率
+            if (di.Resolution.IsNullOrEmpty())
+                di.Resolution = GetResolutionByXrandr();
+
+            // 方式2：通过 /sys/class/drm 获取分辨率（无需X环境）
+            if (di.Resolution.IsNullOrEmpty())
+                di.Resolution = GetResolutionByDrm();
+
+            // 方式1：通过 xdpyinfo 获取 DPI
+            if (di.Dpi.IsNullOrEmpty())
+                di.Dpi = GetDpiByXdpyinfo();
+
+            // 方式2：通过 xrdb 获取 Xft.dpi 设置
+            if (di.Dpi.IsNullOrEmpty())
+                di.Dpi = GetDpiByXrdb();
+
+            // 方式3：通过 GNOME/KDE 配置获取缩放比例推算 DPI
+            if (di.Dpi.IsNullOrEmpty())
+                di.Dpi = GetDpiByGSettings();
+        }
+        catch { }
+    }
+
+    /// <summary>通过 xrandr 获取当前分辨率</summary>
+    private static String? GetResolutionByXrandr()
+    {
+        try
+        {
+            // 检查 DISPLAY 环境变量，没有则无法使用 X 命令
+            var display = Environment.GetEnvironmentVariable("DISPLAY");
+            if (display.IsNullOrEmpty()) return null;
+
+            var output = Execute("xrandr", "--current");
+            if (output.IsNullOrEmpty()) return null;
+
+            // 解析 "current 1920 x 1080" 格式
+            var match = Regex.Match(output, @"current\s+(\d+)\s*x\s*(\d+)", RegexOptions.IgnoreCase);
+            if (match.Success)
+            {
+                var w = match.Groups[1].Value.ToInt();
+                var h = match.Groups[2].Value.ToInt();
+                if (w > 0 && h > 0) return $"{w}*{h}";
+            }
+
+            // 备选：解析带 "*" 标记的当前模式行，如 "1920x1080     60.00*+"
+            var lines = output.Split('\n');
+            foreach (var line in lines)
+            {
+                if (!line.Contains('*')) continue;
+
+                match = Regex.Match(line.Trim(), @"^(\d+)x(\d+)", RegexOptions.IgnoreCase);
+                if (match.Success)
+                {
+                    var w = match.Groups[1].Value.ToInt();
+                    var h = match.Groups[2].Value.ToInt();
+                    if (w > 0 && h > 0) return $"{w}*{h}";
+                }
+            }
+        }
+        catch { }
+
+        return null;
+    }
+
+    /// <summary>通过 /sys/class/drm 获取分辨率（无需X环境）</summary>
+    private static String? GetResolutionByDrm()
+    {
+        try
+        {
+            var drmPath = "/sys/class/drm";
+            if (!Directory.Exists(drmPath)) return null;
+
+            // 查找已连接的显示器
+            var cards = Directory.GetDirectories(drmPath, "card*-*");
+            foreach (var card in cards)
+            {
+                try
+                {
+                    var statusFile = Path.Combine(card, "status");
+                    var modesFile = Path.Combine(card, "modes");
+
+                    // 检查连接状态
+                    if (File.Exists(statusFile))
+                    {
+                        var status = File.ReadAllText(statusFile).Trim();
+                        if (!status.EqualIgnoreCase("connected")) continue;
+                    }
+
+                    // 读取支持的模式，第一行通常是当前/最佳模式
+                    if (File.Exists(modesFile))
+                    {
+                        var modes = File.ReadAllLines(modesFile);
+                        if (modes.Length > 0)
+                        {
+                            var mode = modes[0].Trim();
+                            var match = Regex.Match(mode, @"^(\d+)x(\d+)");
+                            if (match.Success)
+                            {
+                                var w = match.Groups[1].Value.ToInt();
+                                var h = match.Groups[2].Value.ToInt();
+                                if (w > 0 && h > 0) return $"{w}*{h}";
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+        }
+        catch { }
+
+        return null;
+    }
+
+    /// <summary>通过 xdpyinfo 获取 DPI</summary>
+    private static String? GetDpiByXdpyinfo()
+    {
+        try
+        {
+            var display = Environment.GetEnvironmentVariable("DISPLAY");
+            if (display.IsNullOrEmpty()) return null;
+
+            var output = Execute("xdpyinfo", null);
+            if (output.IsNullOrEmpty()) return null;
+
+            // 解析 "resolution:    96x96 dots per inch" 格式
+            var match = Regex.Match(output, @"resolution:\s*(\d+)x(\d+)\s*dots per inch", RegexOptions.IgnoreCase);
+            if (match.Success)
+            {
+                var dpiX = match.Groups[1].Value.ToInt();
+                var dpiY = match.Groups[2].Value.ToInt();
+                if (dpiX > 0 && dpiY > 0) return $"{dpiX}*{dpiY}";
+            }
+        }
+        catch { }
+
+        return null;
+    }
+
+    /// <summary>通过 xrdb 获取 Xft.dpi 设置</summary>
+    private static String? GetDpiByXrdb()
+    {
+        try
+        {
+            var display = Environment.GetEnvironmentVariable("DISPLAY");
+            if (display.IsNullOrEmpty()) return null;
+
+            var output = Execute("xrdb", "-query");
+            if (output.IsNullOrEmpty()) return null;
+
+            // 解析 "Xft.dpi:	96" 格式
+            var lines = output.Split('\n');
+            foreach (var line in lines)
+            {
+                if (!line.StartsWith("Xft.dpi", StringComparison.OrdinalIgnoreCase)) continue;
+
+                var parts = line.Split(':', '\t');
+                if (parts.Length >= 2)
+                {
+                    var dpi = parts[1].Trim().ToInt();
+                    if (dpi > 0) return $"{dpi}*{dpi}";
+                }
+            }
+        }
+        catch { }
+
+        return null;
+    }
+
+    /// <summary>通过 gsettings 获取 GNOME 缩放比例推算 DPI</summary>
+    private static String? GetDpiByGSettings()
+    {
+        try
+        {
+            // 尝试 GNOME 的缩放因子
+            var output = Execute("gsettings", "get org.gnome.desktop.interface scaling-factor");
+            if (!output.IsNullOrEmpty())
+            {
+                // 返回格式: "uint32 1" 或 "1"
+                var match = Regex.Match(output, @"(\d+)");
+                if (match.Success)
+                {
+                    var scale = match.Groups[1].Value.ToInt();
+                    if (scale > 0)
+                    {
+                        var dpi = 96 * scale;
+                        return $"{dpi}*{dpi}";
+                    }
+                }
+            }
+
+            // 尝试 GNOME 文本缩放因子
+            output = Execute("gsettings", "get org.gnome.desktop.interface text-scaling-factor");
+            if (!output.IsNullOrEmpty())
+            {
+                // 返回格式: "1.0" 或 "1.25"
+                var scale = output.Trim().Trim('\'').ToDouble();
+                if (scale > 0)
+                {
+                    var dpi = (Int32)(96 * scale);
+                    return $"{dpi}*{dpi}";
+                }
+            }
+        }
+        catch { }
+
+        return null;
+    }
+    #endregion
 
     #region Libc版本检测
     /// <summary>获取GLIBC或musl libc版本</summary>
