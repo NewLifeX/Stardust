@@ -51,7 +51,18 @@ internal class NativeMethods
     [DllImport("gdiplus.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
     internal static extern Int32 GdipGetDpiY(HandleRef graphics, Single[] dpi);
 
-    struct StartupInput
+    [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
+    internal static extern IntPtr GetDesktopWindow();
+
+    // Windows 10 (1607)+
+    [DllImport("user32.dll", ExactSpelling = true)]
+    internal static extern UInt32 GetDpiForWindow(IntPtr hwnd);
+
+    // Windows 10+ (and Windows 8.1 via shcore's GetDpiForMonitor; not used here)
+    [DllImport("user32.dll", ExactSpelling = true)]
+    internal static extern UInt32 GetDpiForSystem();
+
+    internal struct StartupInput
     {
         public Int32 GdiplusVersion;
 
@@ -71,7 +82,7 @@ internal class NativeMethods
         }
     }
 
-    struct StartupOutput
+    internal struct StartupOutput
     {
         public IntPtr hook;
 
