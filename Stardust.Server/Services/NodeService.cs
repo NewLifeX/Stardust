@@ -143,7 +143,8 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         node.FixNameByRule();
         node.Login(inf.Node, ip);
 
-        context.Online = GetOnline(context) ?? CreateOnline(context);
+        var online = context.Online = GetOnline(context) ?? CreateOnline(context);
+        if (online is NodeOnline olt && inf.Node != null) olt.Fill(inf.Node);
 
         //// 设置令牌
         //var tokenModel = tokenService.IssueToken(node.Code, inf.ClientId);

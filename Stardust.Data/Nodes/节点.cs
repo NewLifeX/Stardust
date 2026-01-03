@@ -233,7 +233,7 @@ public partial class Node
     [Category("硬件信息")]
     [DisplayName("驱动器信息")]
     [Description("驱动器信息。各分区大小，逗号分隔")]
-    [DataObjectField(false, false, true, 500)]
+    [DataObjectField(false, false, true, 200)]
     [BindColumn("DriveInfo", "驱动器信息。各分区大小，逗号分隔", "")]
     public String DriveInfo { get => _DriveInfo; set { if (OnPropertyChanging("DriveInfo", value)) { _DriveInfo = value; OnPropertyChanged("DriveInfo"); } } }
 
@@ -305,7 +305,7 @@ public partial class Node
     [Category("硬件信息")]
     [DisplayName("GPU")]
     [Description("GPU。显卡板卡信息，多个逗号分隔")]
-    [DataObjectField(false, false, true, 500)]
+    [DataObjectField(false, false, true, 200)]
     [BindColumn("Gpu", "GPU。显卡板卡信息，多个逗号分隔", "")]
     public String Gpu { get => _Gpu; set { if (OnPropertyChanging("Gpu", value)) { _Gpu = value; OnPropertyChanged("Gpu"); } } }
 

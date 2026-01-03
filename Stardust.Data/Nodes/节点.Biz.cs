@@ -554,6 +554,7 @@ public partial class Node : Entity<Node>, IDeviceModel2, ILogProvider
         if (!info.Product.IsNullOrEmpty()) node.Product = info.Product;
         if (!info.Vendor.IsNullOrEmpty()) node.Vendor = info.Vendor;
         if (!info.Processor.IsNullOrEmpty()) node.Processor = info.Processor;
+        if (!info.GPU.IsNullOrEmpty()) node.Gpu = info.GPU;
         if (!info.UUID.IsNullOrEmpty()) node.Uuid = info.UUID;
         if (!info.MachineGuid.IsNullOrEmpty()) node.MachineGuid = info.MachineGuid;
         if (!info.SerialNumber.IsNullOrEmpty()) node.SerialNumber = info.SerialNumber;
@@ -577,6 +578,7 @@ public partial class Node : Entity<Node>, IDeviceModel2, ILogProvider
         if (!info.Resolution.IsNullOrEmpty()) node.Resolution = info.Resolution;
         if (!info.Macs.IsNullOrEmpty()) node.MACs = info.Macs;
         //if (!di.COMs.IsNullOrEmpty()) node.COMs = di.COMs;
+        if (!info.TimeZone.IsNullOrEmpty()) node.TimeZone = info.TimeZone;
         if (!info.InstallPath.IsNullOrEmpty()) node.InstallPath = info.InstallPath;
         if (!info.Runtime.IsNullOrEmpty())
         {
