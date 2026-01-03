@@ -572,6 +572,7 @@ public partial class Node : Entity<Node>, IDeviceModel2, ILogProvider
                 node.DriveSize = (Int32)Math.Round(info.DriveInfo.Split(",").Sum(e => e.Substring("/", "G").ToDouble() * 1024));
         }
         if (info.MaxOpenFiles > 0) node.MaxOpenFiles = info.MaxOpenFiles;
+        if (!info.LibcVersion.IsNullOrEmpty()) node.LibcVersion = info.LibcVersion;
         if (!info.Dpi.IsNullOrEmpty()) node.Dpi = info.Dpi;
         if (!info.Resolution.IsNullOrEmpty()) node.Resolution = info.Resolution;
         if (!info.Macs.IsNullOrEmpty()) node.MACs = info.Macs;
