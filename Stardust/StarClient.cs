@@ -146,6 +146,20 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
             if (File.Exists(file)) di.MachineName = File.ReadAllText(file).Trim();
         }
 
+        // 获取时区
+        try
+        {
+            var tz = TimeZoneInfo.Local;
+            // 优先使用IANA时区名称（如Asia/Shanghai），否则使用偏移量格式
+            di.TimeZone = tz.Id;
+            if (di.TimeZone.IsNullOrEmpty() || di.TimeZone.Contains(' '))
+            {
+                var offset = tz.BaseUtcOffset;
+                di.TimeZone = $"GMT{(offset >= TimeSpan.Zero ? "+" : "")}{offset.Hours:00}:{offset.Minutes:00}";
+            }
+        }
+        catch { }
+
         // 目标框架
         di.Framework = _frameworkManager.GetAllVersions().Join(",", e => e.TrimStart('v'));
 

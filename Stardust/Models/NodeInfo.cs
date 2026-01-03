@@ -118,6 +118,9 @@ public class NodeInfo
     /// <summary>框架。本地支持的所有版本框架</summary>
     public String? Framework { get; set; }
 
+    /// <summary>时区。如Asia/Shanghai或GMT+08:00等</summary>
+    public String? TimeZone { get; set; }
+
     /// <summary>本地UTC时间</summary>
     /// <remarks>
     /// 跨系统传递UTC时间是严谨的，但是UTC时间序列化比较头疼，目前能够做到自己序列化后，自己能够解析出来，暂时用着，将来向netcore的system.text.json序列化迁移
