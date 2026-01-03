@@ -4,47 +4,20 @@ using NewLife.Remoting.Models;
 namespace Stardust.Models;
 
 /// <summary>心跳信息</summary>
+/// <remarks>
+/// 基类PingRequest包含：IP、AvailableMemory、AvailableFreeSpace、CpuRate、Temperature、Battery、Signal、UplinkSpeed、DownlinkSpeed、Uptime、Time、Delay
+/// </remarks>
 public class PingInfo : PingRequest
 {
     #region 属性
-    ///// <summary>可用内存大小</summary>
-    //public UInt64 AvailableMemory { get; set; }
-
-    ///// <summary>磁盘可用空间。应用所在盘</summary>
-    //public UInt64 AvailableFreeSpace { get; set; }
-
     /// <summary>驱动器信息。各分区大小，逗号分隔</summary>
     public String? DriveInfo { get; set; }
-
-    ///// <summary>CPU占用率</summary>
-    //public Double CpuRate { get; set; }
-
-    ///// <summary>温度</summary>
-    //public Double Temperature { get; set; }
-
-    ///// <summary>电量</summary>
-    //public Double Battery { get; set; }
-
-    ///// <summary>信号强度。WiFi/4G</summary>
-    //public Int32 Signal { get; set; }
-
-    ///// <summary>上行速度。网络发送速度，字节每秒</summary>
-    //public UInt64 UplinkSpeed { get; set; }
-
-    ///// <summary>下行速度。网络接收速度，字节每秒</summary>
-    //public UInt64 DownlinkSpeed { get; set; }
 
     /// <summary>MAC地址</summary>
     public String? Macs { get; set; }
 
-    ///// <summary>串口</summary>
-    //public String COMs { get; set; }
-
     /// <summary>框架。本地支持的所有版本框架</summary>
     public String? Framework { get; set; }
-
-    ///// <summary>本地IP地址。随着网卡变动，可能改变</summary>
-    //public String? IP { get; set; }
 
     /// <summary>网关地址。IP与MAC，随着网卡变动，可能改变</summary>
     public String? Gateway { get; set; }
@@ -73,14 +46,29 @@ public class PingInfo : PingRequest
     /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，满分1分</summary>
     public Double InternetScore { get; set; }
 
-    ///// <summary>开机时间，单位s</summary>
-    //public Int32 Uptime { get; set; }
+    /// <summary>系统负载。Linux上的Load1，Windows上的处理器队列长度</summary>
+    public Double SystemLoad { get; set; }
 
-    ///// <summary>本地UTC时间。ms毫秒</summary>
-    //public Int64 Time { get; set; }
+    /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
+    public Int32 DiskIOPS { get; set; }
 
-    ///// <summary>延迟</summary>
-    //public Int32 Delay { get; set; }
+    /// <summary>网关延迟。到网关的平均延迟，单位ms</summary>
+    public Int32 GatewayLatency { get; set; }
+
+    /// <summary>网关丢包率。到网关的丢包率</summary>
+    public Double GatewayLossRate { get; set; }
+
+    /// <summary>DNS延迟。到DNS的平均延迟，单位ms</summary>
+    public Int32 DnsLatency { get; set; }
+
+    /// <summary>DNS丢包率。到DNS的丢包率</summary>
+    public Double DnsLossRate { get; set; }
+
+    /// <summary>服务器延迟。到星尘服务器的平均延迟，单位ms</summary>
+    public Int32 ServerLatency { get; set; }
+
+    /// <summary>服务器丢包率。到星尘服务器的丢包率</summary>
+    public Double ServerLossRate { get; set; }
     #endregion
 }
 

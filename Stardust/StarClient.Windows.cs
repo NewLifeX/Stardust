@@ -51,6 +51,68 @@ public partial class StarClient
         catch { }
     }
 
+    /// <summary>填充Windows心跳专属信息</summary>
+    /// <param name="request">心跳请求</param>
+    public static void FillPingOnWindows(PingInfo request)
+    {
+        try
+        {
+            // 获取处理器队列长度作为类似Load的指标
+            request.SystemLoad = GetProcessorQueueLength();
+
+            // 获取磁盘IOPS
+            request.DiskIOPS = GetDiskIOPS();
+        }
+        catch { }
+    }
+
+    private static Double GetProcessorQueueLength()
+    {
+        try
+        {
+            // 通过 wmic 获取处理器队列长度
+            var rs = Execute("wmic", "path Win32_PerfFormattedData_PerfOS_System get ProcessorQueueLength /value");
+            if (!rs.IsNullOrEmpty())
+            {
+                var lines = rs.Split(new[] { '\r', '\n', '=' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var line in lines)
+                {
+                    var value = line.Trim().ToDouble();
+                    if (value >= 0) return value;
+                }
+            }
+        }
+        catch { }
+        return 0;
+    }
+
+    private static Int32 GetDiskIOPS()
+    {
+        try
+        {
+            // 通过 wmic 获取磁盘读写次数
+            var rs = Execute("wmic", "path Win32_PerfFormattedData_PerfDisk_PhysicalDisk where Name='_Total' get DiskReadsPersec,DiskWritesPersec /value");
+            if (!rs.IsNullOrEmpty())
+            {
+                var reads = 0;
+                var writes = 0;
+
+                var lines = rs.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var line in lines)
+                {
+                    if (line.StartsWith("DiskReadsPersec="))
+                        reads = line.Substring("DiskReadsPersec=".Length).Trim().ToInt();
+                    else if (line.StartsWith("DiskWritesPersec="))
+                        writes = line.Substring("DiskWritesPersec=".Length).Trim().ToInt();
+                }
+
+                return reads + writes;
+            }
+        }
+        catch { }
+        return 0;
+    }
+
     private static String? GetGpuInfo()
     {
         try

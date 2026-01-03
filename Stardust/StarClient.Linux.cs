@@ -24,6 +24,104 @@ public partial class StarClient
         di.GPU = GetGpuInfoLinux();
     }
 
+    /// <summary>填充Linux心跳专属信息</summary>
+    /// <param name="request">心跳请求</param>
+    public static void FillPingOnLinux(PingInfo request)
+    {
+        try
+        {
+            // 获取系统负载
+            request.SystemLoad = GetLoad1();
+
+            // 获取磁盘IOPS
+            request.DiskIOPS = GetDiskIOPSLinux();
+        }
+        catch { }
+    }
+
+    private static Double GetLoad1()
+    {
+        try
+        {
+            // 读取 /proc/loadavg，格式: "0.00 0.01 0.05 1/156 1234"
+            // 第一个数字是1分钟平均负载
+            var file = "/proc/loadavg";
+            if (File.Exists(file))
+            {
+                var content = File.ReadAllText(file);
+                var parts = content.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length > 0)
+                    return parts[0].ToDouble();
+            }
+        }
+        catch { }
+        return 0;
+    }
+
+    private static Int32 GetDiskIOPSLinux()
+    {
+        try
+        {
+            // 读取 /proc/diskstats
+            // 格式: 主设备号 次设备号 设备名 读完成次数 ... 写完成次数 ...
+            // 例如: "8 0 sda 12345 ... 67890 ..."
+            var file = "/proc/diskstats";
+            if (!File.Exists(file)) return 0;
+
+            var lines = File.ReadAllLines(file);
+            var totalReads = 0L;
+            var totalWrites = 0L;
+
+            foreach (var line in lines)
+            {
+                var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 14) continue;
+
+                var deviceName = parts[2];
+                // 只统计主磁盘（如sda、nvme0n1等），跳过分区（如sda1）
+                if (deviceName.StartsWith("loop") || deviceName.StartsWith("ram") || deviceName.StartsWith("dm-"))
+                    continue;
+                if (Regex.IsMatch(deviceName, @"^[a-z]+\d+$") && !deviceName.StartsWith("nvme"))
+                    continue;
+                if (Regex.IsMatch(deviceName, @"^nvme\d+n\d+p\d+$"))
+                    continue;
+
+                // 第4列是读完成次数，第8列是写完成次数
+                if (parts.Length > 3) totalReads += parts[3].ToLong();
+                if (parts.Length > 7) totalWrites += parts[7].ToLong();
+            }
+
+            // 这里返回的是累计值，实际IOPS需要两次采样计算差值
+            // 为简化处理，这里返回累计值除以开机时间估算
+            var uptime = GetUptime();
+            if (uptime > 0)
+                return (Int32)((totalReads + totalWrites) / uptime);
+
+            return 0;
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    private static Double GetUptime()
+    {
+        try
+        {
+            var file = "/proc/uptime";
+            if (File.Exists(file))
+            {
+                var content = File.ReadAllText(file);
+                var parts = content.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length > 0)
+                    return parts[0].ToDouble();
+            }
+        }
+        catch { }
+        return 0;
+    }
+
     private static String? GetGpuInfoLinux()
     {
         try

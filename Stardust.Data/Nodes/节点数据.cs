@@ -78,6 +78,14 @@ public partial class NodeData
     [BindColumn("CpuRate", "CPU率。占用率", "", ItemType = "percent")]
     public Double CpuRate { get => _CpuRate; set { if (OnPropertyChanging("CpuRate", value)) { _CpuRate = value; OnPropertyChanged("CpuRate"); } } }
 
+    private Double _SystemLoad;
+    /// <summary>系统负载。Linux上的Load1，Windows上的处理器队列长度</summary>
+    [DisplayName("系统负载")]
+    [Description("系统负载。Linux上的Load1，Windows上的处理器队列长度")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("SystemLoad", "系统负载。Linux上的Load1，Windows上的处理器队列长度", "")]
+    public Double SystemLoad { get => _SystemLoad; set { if (OnPropertyChanging("SystemLoad", value)) { _SystemLoad = value; OnPropertyChanged("SystemLoad"); } } }
+
     private Double _Temperature;
     /// <summary>温度</summary>
     [DisplayName("温度")]
@@ -117,6 +125,14 @@ public partial class NodeData
     [DataObjectField(false, false, false, 0)]
     [BindColumn("DownlinkSpeed", "下行速度。网络接收速度，字节每秒", "", ItemType = "GMK")]
     public Int64 DownlinkSpeed { get => _DownlinkSpeed; set { if (OnPropertyChanging("DownlinkSpeed", value)) { _DownlinkSpeed = value; OnPropertyChanged("DownlinkSpeed"); } } }
+
+    private Int32 _DiskIOPS;
+    /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
+    [DisplayName("磁盘IOPS")]
+    [Description("磁盘IOPS。每秒磁盘IO操作次数")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("DiskIOPS", "磁盘IOPS。每秒磁盘IO操作次数", "")]
+    public Int32 DiskIOPS { get => _DiskIOPS; set { if (OnPropertyChanging("DiskIOPS", value)) { _DiskIOPS = value; OnPropertyChanged("DiskIOPS"); } } }
 
     private Int32 _ProcessCount;
     /// <summary>进程数</summary>
@@ -165,6 +181,54 @@ public partial class NodeData
     [DataObjectField(false, false, false, 0)]
     [BindColumn("InternetScore", "外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%", "", ItemType = "percent")]
     public Double InternetScore { get => _InternetScore; set { if (OnPropertyChanging("InternetScore", value)) { _InternetScore = value; OnPropertyChanged("InternetScore"); } } }
+
+    private Int32 _GatewayLatency;
+    /// <summary>网关延迟。到网关的平均延迟，单位ms</summary>
+    [DisplayName("网关延迟")]
+    [Description("网关延迟。到网关的平均延迟，单位ms")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("GatewayLatency", "网关延迟。到网关的平均延迟，单位ms", "")]
+    public Int32 GatewayLatency { get => _GatewayLatency; set { if (OnPropertyChanging("GatewayLatency", value)) { _GatewayLatency = value; OnPropertyChanged("GatewayLatency"); } } }
+
+    private Double _GatewayLossRate;
+    /// <summary>网关丢包率。到网关的丢包率</summary>
+    [DisplayName("网关丢包率")]
+    [Description("网关丢包率。到网关的丢包率")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("GatewayLossRate", "网关丢包率。到网关的丢包率", "", ItemType = "percent")]
+    public Double GatewayLossRate { get => _GatewayLossRate; set { if (OnPropertyChanging("GatewayLossRate", value)) { _GatewayLossRate = value; OnPropertyChanged("GatewayLossRate"); } } }
+
+    private Int32 _DnsLatency;
+    /// <summary>DNS延迟。到DNS的平均延迟，单位ms</summary>
+    [DisplayName("DNS延迟")]
+    [Description("DNS延迟。到DNS的平均延迟，单位ms")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("DnsLatency", "DNS延迟。到DNS的平均延迟，单位ms", "")]
+    public Int32 DnsLatency { get => _DnsLatency; set { if (OnPropertyChanging("DnsLatency", value)) { _DnsLatency = value; OnPropertyChanged("DnsLatency"); } } }
+
+    private Double _DnsLossRate;
+    /// <summary>DNS丢包率。到DNS的丢包率</summary>
+    [DisplayName("DNS丢包率")]
+    [Description("DNS丢包率。到DNS的丢包率")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("DnsLossRate", "DNS丢包率。到DNS的丢包率", "", ItemType = "percent")]
+    public Double DnsLossRate { get => _DnsLossRate; set { if (OnPropertyChanging("DnsLossRate", value)) { _DnsLossRate = value; OnPropertyChanged("DnsLossRate"); } } }
+
+    private Int32 _ServerLatency;
+    /// <summary>服务器延迟。到星尘服务器的平均延迟，单位ms</summary>
+    [DisplayName("服务器延迟")]
+    [Description("服务器延迟。到星尘服务器的平均延迟，单位ms")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("ServerLatency", "服务器延迟。到星尘服务器的平均延迟，单位ms", "")]
+    public Int32 ServerLatency { get => _ServerLatency; set { if (OnPropertyChanging("ServerLatency", value)) { _ServerLatency = value; OnPropertyChanged("ServerLatency"); } } }
+
+    private Double _ServerLossRate;
+    /// <summary>服务器丢包率。到星尘服务器的丢包率</summary>
+    [DisplayName("服务器丢包率")]
+    [Description("服务器丢包率。到星尘服务器的丢包率")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("ServerLossRate", "服务器丢包率。到星尘服务器的丢包率", "", ItemType = "percent")]
+    public Double ServerLossRate { get => _ServerLossRate; set { if (OnPropertyChanging("ServerLossRate", value)) { _ServerLossRate = value; OnPropertyChanged("ServerLossRate"); } } }
 
     private Int32 _Delay;
     /// <summary>延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms</summary>
@@ -241,17 +305,25 @@ public partial class NodeData
             "FreeMemory" => _FreeMemory,
             "AvailableFreeSpace" => _AvailableFreeSpace,
             "CpuRate" => _CpuRate,
+            "SystemLoad" => _SystemLoad,
             "Temperature" => _Temperature,
             "Battery" => _Battery,
             "Signal" => _Signal,
             "UplinkSpeed" => _UplinkSpeed,
             "DownlinkSpeed" => _DownlinkSpeed,
+            "DiskIOPS" => _DiskIOPS,
             "ProcessCount" => _ProcessCount,
             "TcpConnections" => _TcpConnections,
             "TcpTimeWait" => _TcpTimeWait,
             "TcpCloseWait" => _TcpCloseWait,
             "IntranetScore" => _IntranetScore,
             "InternetScore" => _InternetScore,
+            "GatewayLatency" => _GatewayLatency,
+            "GatewayLossRate" => _GatewayLossRate,
+            "DnsLatency" => _DnsLatency,
+            "DnsLossRate" => _DnsLossRate,
+            "ServerLatency" => _ServerLatency,
+            "ServerLossRate" => _ServerLossRate,
             "Delay" => _Delay,
             "Offset" => _Offset,
             "LocalTime" => _LocalTime,
@@ -272,17 +344,25 @@ public partial class NodeData
                 case "FreeMemory": _FreeMemory = value.ToInt(); break;
                 case "AvailableFreeSpace": _AvailableFreeSpace = value.ToInt(); break;
                 case "CpuRate": _CpuRate = value.ToDouble(); break;
+                case "SystemLoad": _SystemLoad = value.ToDouble(); break;
                 case "Temperature": _Temperature = value.ToDouble(); break;
                 case "Battery": _Battery = value.ToDouble(); break;
                 case "Signal": _Signal = value.ToInt(); break;
                 case "UplinkSpeed": _UplinkSpeed = value.ToLong(); break;
                 case "DownlinkSpeed": _DownlinkSpeed = value.ToLong(); break;
+                case "DiskIOPS": _DiskIOPS = value.ToInt(); break;
                 case "ProcessCount": _ProcessCount = value.ToInt(); break;
                 case "TcpConnections": _TcpConnections = value.ToInt(); break;
                 case "TcpTimeWait": _TcpTimeWait = value.ToInt(); break;
                 case "TcpCloseWait": _TcpCloseWait = value.ToInt(); break;
                 case "IntranetScore": _IntranetScore = value.ToDouble(); break;
                 case "InternetScore": _InternetScore = value.ToDouble(); break;
+                case "GatewayLatency": _GatewayLatency = value.ToInt(); break;
+                case "GatewayLossRate": _GatewayLossRate = value.ToDouble(); break;
+                case "DnsLatency": _DnsLatency = value.ToInt(); break;
+                case "DnsLossRate": _DnsLossRate = value.ToDouble(); break;
+                case "ServerLatency": _ServerLatency = value.ToInt(); break;
+                case "ServerLossRate": _ServerLossRate = value.ToDouble(); break;
                 case "Delay": _Delay = value.ToInt(); break;
                 case "Offset": _Offset = value.ToInt(); break;
                 case "LocalTime": _LocalTime = value.ToDateTime(); break;
@@ -348,6 +428,9 @@ public partial class NodeData
         /// <summary>CPU率。占用率</summary>
         public static readonly Field CpuRate = FindByName("CpuRate");
 
+        /// <summary>系统负载。Linux上的Load1，Windows上的处理器队列长度</summary>
+        public static readonly Field SystemLoad = FindByName("SystemLoad");
+
         /// <summary>温度</summary>
         public static readonly Field Temperature = FindByName("Temperature");
 
@@ -362,6 +445,9 @@ public partial class NodeData
 
         /// <summary>下行速度。网络接收速度，字节每秒</summary>
         public static readonly Field DownlinkSpeed = FindByName("DownlinkSpeed");
+
+        /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
+        public static readonly Field DiskIOPS = FindByName("DiskIOPS");
 
         /// <summary>进程数</summary>
         public static readonly Field ProcessCount = FindByName("ProcessCount");
@@ -380,6 +466,24 @@ public partial class NodeData
 
         /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
         public static readonly Field InternetScore = FindByName("InternetScore");
+
+        /// <summary>网关延迟。到网关的平均延迟，单位ms</summary>
+        public static readonly Field GatewayLatency = FindByName("GatewayLatency");
+
+        /// <summary>网关丢包率。到网关的丢包率</summary>
+        public static readonly Field GatewayLossRate = FindByName("GatewayLossRate");
+
+        /// <summary>DNS延迟。到DNS的平均延迟，单位ms</summary>
+        public static readonly Field DnsLatency = FindByName("DnsLatency");
+
+        /// <summary>DNS丢包率。到DNS的丢包率</summary>
+        public static readonly Field DnsLossRate = FindByName("DnsLossRate");
+
+        /// <summary>服务器延迟。到星尘服务器的平均延迟，单位ms</summary>
+        public static readonly Field ServerLatency = FindByName("ServerLatency");
+
+        /// <summary>服务器丢包率。到星尘服务器的丢包率</summary>
+        public static readonly Field ServerLossRate = FindByName("ServerLossRate");
 
         /// <summary>延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms</summary>
         public static readonly Field Delay = FindByName("Delay");
@@ -429,6 +533,9 @@ public partial class NodeData
         /// <summary>CPU率。占用率</summary>
         public const String CpuRate = "CpuRate";
 
+        /// <summary>系统负载。Linux上的Load1，Windows上的处理器队列长度</summary>
+        public const String SystemLoad = "SystemLoad";
+
         /// <summary>温度</summary>
         public const String Temperature = "Temperature";
 
@@ -443,6 +550,9 @@ public partial class NodeData
 
         /// <summary>下行速度。网络接收速度，字节每秒</summary>
         public const String DownlinkSpeed = "DownlinkSpeed";
+
+        /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
+        public const String DiskIOPS = "DiskIOPS";
 
         /// <summary>进程数</summary>
         public const String ProcessCount = "ProcessCount";
@@ -461,6 +571,24 @@ public partial class NodeData
 
         /// <summary>外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
         public const String InternetScore = "InternetScore";
+
+        /// <summary>网关延迟。到网关的平均延迟，单位ms</summary>
+        public const String GatewayLatency = "GatewayLatency";
+
+        /// <summary>网关丢包率。到网关的丢包率</summary>
+        public const String GatewayLossRate = "GatewayLossRate";
+
+        /// <summary>DNS延迟。到DNS的平均延迟，单位ms</summary>
+        public const String DnsLatency = "DnsLatency";
+
+        /// <summary>DNS丢包率。到DNS的丢包率</summary>
+        public const String DnsLossRate = "DnsLossRate";
+
+        /// <summary>服务器延迟。到星尘服务器的平均延迟，单位ms</summary>
+        public const String ServerLatency = "ServerLatency";
+
+        /// <summary>服务器丢包率。到星尘服务器的丢包率</summary>
+        public const String ServerLossRate = "ServerLossRate";
 
         /// <summary>延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms</summary>
         public const String Delay = "Delay";

@@ -157,7 +157,7 @@
         <Column Name="SpaceUsed" DataType="Int32" Description="已用磁盘。应用所在盘，单位M" />
         <Column Name="DriveInfo" DataType="String" Length="500" Description="驱动器信息。各分区大小，逗号分隔" Category="硬件信息" />
         <Column Name="CpuRate" DataType="Double" ItemType="percent" Description="CPU率。占用率" />
-        <Column Name="Load1" DataType="Double" Description="系统负载。Linux上的Load1，Windows上的处理器队列长度" />
+        <Column Name="SystemLoad" DataType="Double" Description="系统负载。Linux上的Load1，Windows上的处理器队列长度" />
         <Column Name="Temperature" DataType="Double" Description="温度" />
         <Column Name="Battery" DataType="Double" ItemType="percent" Description="电量" />
         <Column Name="Signal" DataType="Int32" Description="信号。信号强度，WiFi/4G" />
@@ -229,7 +229,7 @@
         <Column Name="FreeMemory" DataType="Int32" Description="空闲内存。Linux上空闲不一定可用，部分作为缓存，单位M" />
         <Column Name="AvailableFreeSpace" DataType="Int32" Description="可用磁盘。应用所在盘，单位M" />
         <Column Name="CpuRate" DataType="Double" ItemType="percent" Description="CPU率。占用率" />
-        <Column Name="Load1" DataType="Double" Description="系统负载。Linux上的Load1，Windows上的处理器队列长度" />
+        <Column Name="SystemLoad" DataType="Double" Description="系统负载。Linux上的Load1，Windows上的处理器队列长度" />
         <Column Name="Temperature" DataType="Double" Description="温度" />
         <Column Name="Battery" DataType="Double" ItemType="percent" Description="电量" />
         <Column Name="Signal" DataType="Int32" Description="信号。信号强度，WiFi/4G" />

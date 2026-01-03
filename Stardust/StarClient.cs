@@ -249,16 +249,16 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
         var request = new PingInfo();
         FillPingRequest(request);
 
-        // 获取网络质量
+        // 获取网络质量（使用详细结果）
         var monitor = new PingMonitor();
         var gw = AgentInfo.GetGateway();
         if (gw != null && gw.Contains('/')) gw = gw.Substring(0, gw.IndexOf("/"));
-        var gwtTask = Task.Run(() => monitor.GetScoreAsync(gw));
+        var gwtTask = Task.Run(() => monitor.GetResultAsync(gw));
         var dns = AgentInfo.GetDns();
         if (dns.IsNullOrEmpty() || IPAddress.TryParse(dns, out var ip) && ip.IsLocal()) dns = "223.5.5.5";
-        var dnsTask = Task.Run(() => monitor.GetScoreAsync(dns));
+        var dnsTask = Task.Run(() => monitor.GetResultAsync(dns));
         var svr = (Client as ApiHttpClient)?.Current?.Address.Host;
-        var svrTask = Task.Run(() => monitor.GetScoreAsync(svr));
+        var svrTask = Task.Run(() => monitor.GetResultAsync(svr));
 
         var exs = _excludes.Where(e => e.Contains('*')).ToArray();
 
@@ -307,15 +307,45 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
         }
         catch { }
 
-        // 获取网络质量
-        request.IntranetScore = gwtTask?.Result ?? 0;
-        request.InternetScore = (dnsTask?.Result ?? 0) * 0.3 + (svrTask?.Result ?? 0) * 0.7;
+        // 获取网络质量明细
+        var gwResult = gwtTask?.Result;
+        var dnsResult = dnsTask?.Result;
+        var svrResult = svrTask?.Result;
+
+        // 网关结果
+        if (gwResult != null)
+        {
+            request.IntranetScore = gwResult.Score;
+            request.GatewayLatency = gwResult.Latency;
+            request.GatewayLossRate = gwResult.LossRate;
+        }
+
+        // DNS结果
+        if (dnsResult != null)
+        {
+            request.DnsLatency = dnsResult.Latency;
+            request.DnsLossRate = dnsResult.LossRate;
+        }
+
+        // 服务器结果
+        if (svrResult != null)
+        {
+            request.ServerLatency = svrResult.Latency;
+            request.ServerLossRate = svrResult.LossRate;
+        }
+
+        // 外网质量综合评分：DNS占30%，服务器占70%
+        request.InternetScore = (dnsResult?.Score ?? 0) * 0.3 + (svrResult?.Score ?? 0) * 0.7;
 
         if (mi is IExtend ext)
         {
             // 读取无线信号强度
             if (ext.Items.TryGetValue("Signal", out var value)) request.Signal = value.ToInt();
         }
+
+        // 平台特定采集（Load1、DiskIOPS、GPU）
+        if (Runtime.Windows) FillPingOnWindows(request);
+        if (Runtime.Linux) FillPingOnLinux(request);
 
         // 最后设置时间，避免因为代码执行原因导致误差过大
         request.Uptime = (Int32)(Runtime.TickCount64 / 1000);
