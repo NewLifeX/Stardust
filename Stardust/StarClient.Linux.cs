@@ -15,7 +15,7 @@ public partial class StarClient
         di.MaxOpenFiles = Execute("bash", "-c \"ulimit -n\"")?.Trim().ToInt() ?? 0;
 
         // 获取GLIBC/musl版本
-        di.LibcVersion = GetLibcVersion();
+        di.CLibVersion = GetLibcVersion();
 
         // 采集桌面Linux的分辨率和DPI
         FillDisplayInfo(di);

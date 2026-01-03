@@ -47,6 +47,9 @@ public partial class StarClient
 
             // GPU信息
             di.GPU = GetGpuInfo();
+
+            // VC++运行时版本
+            di.CLibVersion = GetVCRuntimeVersions();
         }
         catch { }
     }
@@ -137,6 +140,184 @@ public partial class StarClient
             return null;
         }
     }
+
+    /// <summary>获取已安装的VC++运行时版本</summary>
+    /// <returns>VC++运行时版本列表，如"VC2015-2022 14.42,VC2013 12.0"</returns>
+    private static String? GetVCRuntimeVersions()
+    {
+#if NET45_OR_GREATER || NET6_0_OR_GREATER
+        try
+        {
+            var versions = new List<String>();
+
+            // 检测路径列表，涵盖不同架构
+            var basePaths = new[]
+            {
+                @"SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes",
+                @"SOFTWARE\WOW6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes",
+            };
+
+            using var hklm = Microsoft.Win32.Registry.LocalMachine;
+
+            foreach (var basePath in basePaths)
+            {
+                using var baseKey = hklm.OpenSubKey(basePath);
+                if (baseKey == null) continue;
+
+                foreach (var archName in baseKey.GetSubKeyNames())
+                {
+                    using var archKey = baseKey.OpenSubKey(archName);
+                    if (archKey == null) continue;
+
+                    var major = archKey.GetValue("Major");
+                    var minor = archKey.GetValue("Minor");
+                    var bld = archKey.GetValue("Bld");
+                    if (major != null)
+                    {
+                        // 构建版本字符串，如 "14.42.34433"
+                        var ver = $"{major}";
+                        if (minor != null) ver += $".{minor}";
+
+                        // 根据主版本号确定 VC++ 年份
+                        var vcYear = GetVCYear(major.ToString().ToInt());
+                        var verStr = $"{vcYear} {ver}";
+
+                        // 添加架构信息以区分32/64位
+                        if (!archName.EqualIgnoreCase("x64", "x86"))
+                            verStr += $"({archName})";
+
+                        if (!versions.Any(v => v.StartsWith(vcYear)))
+                            versions.Add(verStr);
+                    }
+                }
+            }
+
+            // 检测旧版本 VC++ 运行时（2008-2013）
+            var oldVersions = GetOldVCRuntimeVersions();
+            if (oldVersions != null)
+                versions.AddRange(oldVersions);
+
+            // 按版本号倒序排列
+            return versions.Count > 0 ? versions.OrderByDescending(e => e).Join(",") : null;
+        }
+        catch
+        {
+            return null;
+        }
+#else
+        return null;
+#endif
+    }
+
+#if NET45_OR_GREATER || NET6_0_OR_GREATER
+    /// <summary>根据主版本号获取VC++年份标识</summary>
+    /// <param name="major">主版本号</param>
+    /// <returns>年份标识，如"VC2015-2022"</returns>
+    private static String GetVCYear(Int32 major) => major switch
+    {
+        >= 14 => "VC2015-2022",
+        12 => "VC2013",
+        11 => "VC2012",
+        10 => "VC2010",
+        9 => "VC2008",
+        8 => "VC2005",
+        _ => $"VC{major}"
+    };
+
+    /// <summary>获取旧版本VC++运行时（2005-2013）</summary>
+    private static IList<String>? GetOldVCRuntimeVersions()
+    {
+        var versions = new List<String>();
+
+        try
+        {
+            using var hklm = Microsoft.Win32.Registry.LocalMachine;
+
+            // 检测 VC++ 2013
+            CheckOldVCRuntime(hklm, @"SOFTWARE\Microsoft\VisualStudio\12.0\VC\Runtimes", "VC2013", versions);
+            CheckOldVCRuntime(hklm, @"SOFTWARE\WOW6432Node\Microsoft\VisualStudio\12.0\VC\Runtimes", "VC2013", versions);
+
+            // 检测 VC++ 2012
+            CheckOldVCRuntime(hklm, @"SOFTWARE\Microsoft\VisualStudio\11.0\VC\Runtimes", "VC2012", versions);
+            CheckOldVCRuntime(hklm, @"SOFTWARE\WOW6432Node\Microsoft\VisualStudio\11.0\VC\Runtimes", "VC2012", versions);
+
+            // 检测 VC++ 2010 (通过不同的注册表路径)
+            if (CheckVCRuntimeInstalled(hklm, @"SOFTWARE\Microsoft\VisualStudio\10.0\VC\VCRedist\x64", "Installed") ||
+                CheckVCRuntimeInstalled(hklm, @"SOFTWARE\Microsoft\VisualStudio\10.0\VC\VCRedist\x86", "Installed") ||
+                CheckVCRuntimeInstalled(hklm, @"SOFTWARE\WOW6432Node\Microsoft\VisualStudio\10.0\VC\VCRedist\x64", "Installed") ||
+                CheckVCRuntimeInstalled(hklm, @"SOFTWARE\WOW6432Node\Microsoft\VisualStudio\10.0\VC\VCRedist\x86", "Installed"))
+            {
+                if (!versions.Any(v => v.StartsWith("VC2010")))
+                    versions.Add("VC2010 10.0");
+            }
+
+            // 检测 VC++ 2008
+            if (CheckVCRuntimeInstalled(hklm, @"SOFTWARE\Microsoft\VisualStudio\9.0\VC\VCRedist\x64", "Installed") ||
+                CheckVCRuntimeInstalled(hklm, @"SOFTWARE\Microsoft\VisualStudio\9.0\VC\VCRedist\x86", "Installed") ||
+                CheckVCRuntimeInstalled(hklm, @"SOFTWARE\WOW6432Node\Microsoft\VisualStudio\9.0\VC\VCRedist\x64", "Installed") ||
+                CheckVCRuntimeInstalled(hklm, @"SOFTWARE\WOW6432Node\Microsoft\VisualStudio\9.0\VC\VCRedist\x86", "Installed"))
+            {
+                if (!versions.Any(v => v.StartsWith("VC2008")))
+                    versions.Add("VC2008 9.0");
+            }
+        }
+        catch { }
+
+        return versions.Count > 0 ? versions : null;
+    }
+
+    /// <summary>检测旧版VC++运行时</summary>
+    /// <param name="hklm">HKLM注册表</param>
+    /// <param name="path">注册表路径</param>
+    /// <param name="vcYear">VC++年份标识</param>
+    /// <param name="versions">版本列表</param>
+    private static void CheckOldVCRuntime(Microsoft.Win32.RegistryKey hklm, String path, String vcYear, IList<String> versions)
+    {
+        try
+        {
+            using var baseKey = hklm.OpenSubKey(path);
+            if (baseKey == null) return;
+
+            foreach (var archName in baseKey.GetSubKeyNames())
+            {
+                using var archKey = baseKey.OpenSubKey(archName);
+                if (archKey == null) continue;
+
+                var major = archKey.GetValue("Major");
+                var minor = archKey.GetValue("Minor");
+                if (major != null)
+                {
+                    var ver = $"{major}";
+                    if (minor != null) ver += $".{minor}";
+
+                    if (!versions.Any(v => v.StartsWith(vcYear)))
+                        versions.Add($"{vcYear} {ver}");
+                }
+            }
+        }
+        catch { }
+    }
+
+    /// <summary>检查VC++运行时是否已安装</summary>
+    /// <param name="hklm">HKLM注册表</param>
+    /// <param name="path">注册表路径</param>
+    /// <param name="valueName">值名称</param>
+    private static Boolean CheckVCRuntimeInstalled(Microsoft.Win32.RegistryKey hklm, String path, String valueName)
+    {
+        try
+        {
+            using var key = hklm.OpenSubKey(path);
+            if (key == null) return false;
+
+            var value = key.GetValue(valueName);
+            return value != null && value.ToString().ToInt() == 1;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+#endif
 
     private static void TryFillByGdiPlus(NodeInfo di)
     {

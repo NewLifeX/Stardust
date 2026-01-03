@@ -246,14 +246,14 @@ public partial class Node
     [BindColumn("MaxOpenFiles", "最大打开文件。Linux上的ulimit -n", "")]
     public Int32 MaxOpenFiles { get => _MaxOpenFiles; set { if (OnPropertyChanging("MaxOpenFiles", value)) { _MaxOpenFiles = value; OnPropertyChanged("MaxOpenFiles"); } } }
 
-    private String _LibcVersion;
-    /// <summary>LIBC版本。GLIBC版本或musl libc版本，用于判断是否支持运行目标应用程序</summary>
+    private String _CLibVersion;
+    /// <summary>C运行时版本。Linux上为GLIBC/musl版本，Windows上为VC++运行时版本</summary>
     [Category("系统信息")]
-    [DisplayName("LIBC版本")]
-    [Description("LIBC版本。GLIBC版本或musl libc版本，用于判断是否支持运行目标应用程序")]
+    [DisplayName("C运行时版本")]
+    [Description("C运行时版本。Linux上为GLIBC/musl版本，Windows上为VC++运行时版本")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("LibcVersion", "LIBC版本。GLIBC版本或musl libc版本，用于判断是否支持运行目标应用程序", "")]
-    public String LibcVersion { get => _LibcVersion; set { if (OnPropertyChanging("LibcVersion", value)) { _LibcVersion = value; OnPropertyChanged("LibcVersion"); } } }
+    [BindColumn("CLibVersion", "C运行时版本。Linux上为GLIBC/musl版本，Windows上为VC++运行时版本", "")]
+    public String CLibVersion { get => _CLibVersion; set { if (OnPropertyChanging("CLibVersion", value)) { _CLibVersion = value; OnPropertyChanged("CLibVersion"); } } }
 
     private String _Dpi;
     /// <summary>像素点。例如96*96</summary>
@@ -689,7 +689,7 @@ public partial class Node
             "DriveSize" => _DriveSize,
             "DriveInfo" => _DriveInfo,
             "MaxOpenFiles" => _MaxOpenFiles,
-            "LibcVersion" => _LibcVersion,
+            "CLibVersion" => _CLibVersion,
             "Dpi" => _Dpi,
             "Resolution" => _Resolution,
             "Product" => _Product,
@@ -766,7 +766,7 @@ public partial class Node
                 case "DriveSize": _DriveSize = value.ToInt(); break;
                 case "DriveInfo": _DriveInfo = Convert.ToString(value); break;
                 case "MaxOpenFiles": _MaxOpenFiles = value.ToInt(); break;
-                case "LibcVersion": _LibcVersion = Convert.ToString(value); break;
+                case "CLibVersion": _CLibVersion = Convert.ToString(value); break;
                 case "Dpi": _Dpi = Convert.ToString(value); break;
                 case "Resolution": _Resolution = Convert.ToString(value); break;
                 case "Product": _Product = Convert.ToString(value); break;
@@ -968,8 +968,8 @@ public partial class Node
         /// <summary>最大打开文件。Linux上的ulimit -n</summary>
         public static readonly Field MaxOpenFiles = FindByName("MaxOpenFiles");
 
-        /// <summary>LIBC版本。GLIBC版本或musl libc版本，用于判断是否支持运行目标应用程序</summary>
-        public static readonly Field LibcVersion = FindByName("LibcVersion");
+        /// <summary>C运行时版本。Linux上为GLIBC/musl版本，Windows上为VC++运行时版本</summary>
+        public static readonly Field CLibVersion = FindByName("CLibVersion");
 
         /// <summary>像素点。例如96*96</summary>
         public static readonly Field Dpi = FindByName("Dpi");
@@ -1187,8 +1187,8 @@ public partial class Node
         /// <summary>最大打开文件。Linux上的ulimit -n</summary>
         public const String MaxOpenFiles = "MaxOpenFiles";
 
-        /// <summary>LIBC版本。GLIBC版本或musl libc版本，用于判断是否支持运行目标应用程序</summary>
-        public const String LibcVersion = "LibcVersion";
+        /// <summary>C运行时版本。Linux上为GLIBC/musl版本，Windows上为VC++运行时版本</summary>
+        public const String CLibVersion = "CLibVersion";
 
         /// <summary>像素点。例如96*96</summary>
         public const String Dpi = "Dpi";

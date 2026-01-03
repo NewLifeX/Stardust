@@ -61,8 +61,8 @@ public class NodeInfo
     /// <summary>最大打开文件。Linux上的ulimit -n</summary>
     public Int32 MaxOpenFiles { get; set; }
 
-    /// <summary>LIBC版本。GLIBC版本或musl libc版本，用于判断是否支持运行目标应用程序</summary>
-    public String? LibcVersion { get; set; }
+    /// <summary>C运行时版本。Linux上为GLIBC/musl版本，Windows上为VC++运行时版本</summary>
+    public String? CLibVersion { get; set; }
 
     /// <summary>像素点。默认96*96</summary>
     public String? Dpi { get; set; }

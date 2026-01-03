@@ -248,7 +248,7 @@ public partial class NodeOnline
     [DisplayName("系统负载")]
     [Description("系统负载。Linux上的Load1，Windows上的处理器队列长度")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("SystemLoad", "系统负载。Linux上的Load1，Windows上的处理器队列长度", "")]
+    [BindColumn("SystemLoad", "系统负载。Linux上的Load1，Windows上的处理器队列长度", "", ItemType = "percent")]
     public Double SystemLoad { get => _SystemLoad; set { if (OnPropertyChanging("SystemLoad", value)) { _SystemLoad = value; OnPropertyChanged("SystemLoad"); } } }
 
     private Double _Temperature;
@@ -673,7 +673,13 @@ public partial class NodeOnline
     {
         if (id < 0) return null;
 
-        return Find(_.ID == id);
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+
+        // 单对象缓存
+        return Meta.SingleCache[id];
+
+        //return Find(_.ID == id);
     }
 
     /// <summary>根据会话查找</summary>
@@ -682,6 +688,9 @@ public partial class NodeOnline
     public static NodeOnline FindBySessionID(String sessionId)
     {
         if (sessionId.IsNullOrEmpty()) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.SessionID.EqualIgnoreCase(sessionId));
 
         return Find(_.SessionID == sessionId);
     }
