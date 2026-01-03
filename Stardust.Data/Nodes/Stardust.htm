@@ -391,6 +391,17 @@
         </tr>
 
         <tr>
+            <td>Gpu</td>
+            <td>GPU</td>
+            <td>String</td>
+            <td>500</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>显卡板卡信息，多个逗号分隔</td>
+        </tr>
+
+        <tr>
             <td>Uuid</td>
             <td>唯一标识</td>
             <td>String</td>
@@ -498,6 +509,17 @@
             <td></td>
             <td></td>
             <td>本地支持的所有版本框架，逗号隔开</td>
+        </tr>
+
+        <tr>
+            <td>TimeZone</td>
+            <td>时区</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>如Asia/Shanghai或GMT+08:00等</td>
         </tr>
 
         <tr>
@@ -1123,6 +1145,17 @@
         </tr>
 
         <tr>
+            <td>Load1</td>
+            <td>系统负载</td>
+            <td>Double</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>Linux上的Load1，Windows上的处理器队列长度</td>
+        </tr>
+
+        <tr>
             <td>Temperature</td>
             <td>温度</td>
             <td>Double</td>
@@ -1178,6 +1211,17 @@
         </tr>
 
         <tr>
+            <td>DiskIOPS</td>
+            <td>磁盘IOPS</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>每秒磁盘IO操作次数</td>
+        </tr>
+
+        <tr>
             <td>IntranetScore</td>
             <td>内网质量</td>
             <td>Double</td>
@@ -1197,6 +1241,72 @@
             <td></td>
             <td>N</td>
             <td>综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</td>
+        </tr>
+
+        <tr>
+            <td>GatewayLatency</td>
+            <td>网关延迟</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>到网关的平均延迟，单位ms</td>
+        </tr>
+
+        <tr>
+            <td>GatewayLossRate</td>
+            <td>网关丢包率</td>
+            <td>Double</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>到网关的丢包率</td>
+        </tr>
+
+        <tr>
+            <td>DnsLatency</td>
+            <td>DNS延迟</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>到DNS的平均延迟，单位ms</td>
+        </tr>
+
+        <tr>
+            <td>DnsLossRate</td>
+            <td>DNS丢包率</td>
+            <td>Double</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>到DNS的丢包率</td>
+        </tr>
+
+        <tr>
+            <td>ServerLatency</td>
+            <td>服务器延迟</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>到星尘服务器的平均延迟，单位ms</td>
+        </tr>
+
+        <tr>
+            <td>ServerLossRate</td>
+            <td>服务器丢包率</td>
+            <td>Double</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>到星尘服务器的丢包率</td>
         </tr>
 
         <tr>
@@ -1663,6 +1773,17 @@
         </tr>
 
         <tr>
+            <td>Load1</td>
+            <td>系统负载</td>
+            <td>Double</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>Linux上的Load1，Windows上的处理器队列长度</td>
+        </tr>
+
+        <tr>
             <td>Temperature</td>
             <td>温度</td>
             <td>Double</td>
@@ -1715,6 +1836,17 @@
             <td></td>
             <td>N</td>
             <td>网络接收速度，字节每秒</td>
+        </tr>
+
+        <tr>
+            <td>DiskIOPS</td>
+            <td>磁盘IOPS</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>每秒磁盘IO操作次数</td>
         </tr>
 
         <tr>
@@ -1781,6 +1913,72 @@
             <td></td>
             <td>N</td>
             <td>综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</td>
+        </tr>
+
+        <tr>
+            <td>GatewayLatency</td>
+            <td>网关延迟</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>到网关的平均延迟，单位ms</td>
+        </tr>
+
+        <tr>
+            <td>GatewayLossRate</td>
+            <td>网关丢包率</td>
+            <td>Double</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>到网关的丢包率</td>
+        </tr>
+
+        <tr>
+            <td>DnsLatency</td>
+            <td>DNS延迟</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>到DNS的平均延迟，单位ms</td>
+        </tr>
+
+        <tr>
+            <td>DnsLossRate</td>
+            <td>DNS丢包率</td>
+            <td>Double</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>到DNS的丢包率</td>
+        </tr>
+
+        <tr>
+            <td>ServerLatency</td>
+            <td>服务器延迟</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>到星尘服务器的平均延迟，单位ms</td>
+        </tr>
+
+        <tr>
+            <td>ServerLossRate</td>
+            <td>服务器丢包率</td>
+            <td>Double</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>到星尘服务器的丢包率</td>
         </tr>
 
         <tr>

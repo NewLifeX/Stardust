@@ -19,6 +19,77 @@ public partial class StarClient
 
         // 采集桌面Linux的分辨率和DPI
         FillDisplayInfo(di);
+
+        // GPU信息
+        di.GPU = GetGpuInfoLinux();
+    }
+
+    private static String? GetGpuInfoLinux()
+    {
+        try
+        {
+            var gpuList = new List<String>();
+
+            // 方式1：通过 lspci 获取显卡信息
+            var rs = Execute("lspci", null);
+            if (!rs.IsNullOrEmpty())
+            {
+                var lines = rs.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var line in lines)
+                {
+                    // 查找 VGA compatible controller 或 3D controller
+                    if (line.Contains("VGA compatible controller") || line.Contains("3D controller"))
+                    {
+                        // 格式: "00:02.0 VGA compatible controller: Intel Corporation ..."
+                        var idx = line.IndexOf(':');
+                        if (idx > 0)
+                        {
+                            idx = line.IndexOf(':', idx + 1);
+                            if (idx > 0)
+                            {
+                                var name = line[(idx + 1)..].Trim();
+                                // 移除括号中的详细型号，保留主要信息
+                                var bracketIdx = name.IndexOf('(');
+                                if (bracketIdx > 0) name = name[..bracketIdx].Trim();
+
+                                if (!name.IsNullOrEmpty() && !gpuList.Contains(name))
+                                    gpuList.Add(name);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 方式2：通过 nvidia-smi 获取NVIDIA显卡信息（如果存在）
+            if (gpuList.Count == 0)
+            {
+                rs = Execute("nvidia-smi", "-L");
+                if (!rs.IsNullOrEmpty())
+                {
+                    var lines = rs.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var line in lines)
+                    {
+                        // 格式: "GPU 0: NVIDIA GeForce RTX 3080 (UUID: ...)"
+                        if (line.StartsWith("GPU"))
+                        {
+                            var match = Regex.Match(line, @"GPU \d+: (.+?)\s*\(");
+                            if (match.Success)
+                            {
+                                var name = match.Groups[1].Value.Trim();
+                                if (!name.IsNullOrEmpty() && !gpuList.Contains(name))
+                                    gpuList.Add(name);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return gpuList.Count > 0 ? gpuList.Join(",") : null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     #region 显示信息采集

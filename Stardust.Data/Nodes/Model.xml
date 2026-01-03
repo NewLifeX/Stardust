@@ -74,6 +74,7 @@
         <Column Name="Product" DataType="String" Description="产品名" Category="硬件信息" />
         <Column Name="Vendor" DataType="String" Description="制造商" Category="硬件信息" />
         <Column Name="Processor" DataType="String" Length="200" Description="处理器" Category="硬件信息" />
+        <Column Name="Gpu" DataType="String" Length="500" Description="GPU。显卡板卡信息，多个逗号分隔" Category="硬件信息" />
         <Column Name="Uuid" DataType="String" Description="唯一标识" Category="硬件信息" />
         <Column Name="MachineGuid" DataType="String" Description="机器标识" Category="硬件信息" />
         <Column Name="SerialNumber" DataType="String" Description="序列号。适用于品牌机，跟笔记本标签显示一致" Category="硬件信息" />
@@ -84,6 +85,7 @@
         <Column Name="Runtime" DataType="String" Description="运行时。.Net运行时版本" Category="系统信息" />
         <Column Name="Framework" DataType="String" Description="框架。本地支持的最高版本框架" Category="系统信息" />
         <Column Name="Frameworks" DataType="String" Length="200" Description="框架集合。本地支持的所有版本框架，逗号隔开" Category="系统信息" />
+        <Column Name="TimeZone" DataType="String" Description="时区。如Asia/Shanghai或GMT+08:00等" Category="系统信息" />
         <Column Name="ProvinceID" DataType="Int32" ItemType="area1" Description="省份" />
         <Column Name="CityID" DataType="Int32" ItemType="area2" Description="城市" />
         <Column Name="Address" DataType="String" Length="200" Description="地址。该节点所处地理地址" />
@@ -155,13 +157,21 @@
         <Column Name="SpaceUsed" DataType="Int32" Description="已用磁盘。应用所在盘，单位M" />
         <Column Name="DriveInfo" DataType="String" Length="500" Description="驱动器信息。各分区大小，逗号分隔" Category="硬件信息" />
         <Column Name="CpuRate" DataType="Double" ItemType="percent" Description="CPU率。占用率" />
+        <Column Name="Load1" DataType="Double" Description="系统负载。Linux上的Load1，Windows上的处理器队列长度" />
         <Column Name="Temperature" DataType="Double" Description="温度" />
         <Column Name="Battery" DataType="Double" ItemType="percent" Description="电量" />
         <Column Name="Signal" DataType="Int32" Description="信号。信号强度，WiFi/4G" />
         <Column Name="UplinkSpeed" DataType="Int64" ItemType="GMK" Description="上行速度。网络发送速度，字节每秒" />
         <Column Name="DownlinkSpeed" DataType="Int64" ItemType="GMK" Description="下行速度。网络接收速度，字节每秒" />
+        <Column Name="DiskIOPS" DataType="Int32" Description="磁盘IOPS。每秒磁盘IO操作次数" />
         <Column Name="IntranetScore" DataType="Double" ItemType="percent" Description="内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%" />
         <Column Name="InternetScore" DataType="Double" ItemType="percent" Description="外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%" />
+        <Column Name="GatewayLatency" DataType="Int32" Description="网关延迟。到网关的平均延迟，单位ms" />
+        <Column Name="GatewayLossRate" DataType="Double" ItemType="percent" Description="网关丢包率。到网关的丢包率" />
+        <Column Name="DnsLatency" DataType="Int32" Description="DNS延迟。到DNS的平均延迟，单位ms" />
+        <Column Name="DnsLossRate" DataType="Double" ItemType="percent" Description="DNS丢包率。到DNS的丢包率" />
+        <Column Name="ServerLatency" DataType="Int32" Description="服务器延迟。到星尘服务器的平均延迟，单位ms" />
+        <Column Name="ServerLossRate" DataType="Double" ItemType="percent" Description="服务器丢包率。到星尘服务器的丢包率" />
         <Column Name="ProcessCount" DataType="Int32" Description="进程数" />
         <Column Name="TcpConnections" DataType="Int32" Description="连接数。传输数据Established的Tcp网络连接数" />
         <Column Name="TcpTimeWait" DataType="Int32" Description="主动关闭。主动关闭后TimeWait的Tcp网络连接数，下一步Closed" />
@@ -219,17 +229,25 @@
         <Column Name="FreeMemory" DataType="Int32" Description="空闲内存。Linux上空闲不一定可用，部分作为缓存，单位M" />
         <Column Name="AvailableFreeSpace" DataType="Int32" Description="可用磁盘。应用所在盘，单位M" />
         <Column Name="CpuRate" DataType="Double" ItemType="percent" Description="CPU率。占用率" />
+        <Column Name="Load1" DataType="Double" Description="系统负载。Linux上的Load1，Windows上的处理器队列长度" />
         <Column Name="Temperature" DataType="Double" Description="温度" />
         <Column Name="Battery" DataType="Double" ItemType="percent" Description="电量" />
         <Column Name="Signal" DataType="Int32" Description="信号。信号强度，WiFi/4G" />
         <Column Name="UplinkSpeed" DataType="Int64" ItemType="GMK" Description="上行速度。网络发送速度，字节每秒" />
         <Column Name="DownlinkSpeed" DataType="Int64" ItemType="GMK" Description="下行速度。网络接收速度，字节每秒" />
+        <Column Name="DiskIOPS" DataType="Int32" Description="磁盘IOPS。每秒磁盘IO操作次数" />
         <Column Name="ProcessCount" DataType="Int32" Description="进程数" />
         <Column Name="TcpConnections" DataType="Int32" Description="连接数。传输数据Established的Tcp网络连接数" />
         <Column Name="TcpTimeWait" DataType="Int32" Description="主动关闭。主动关闭后TimeWait的Tcp网络连接数，等待2MSL，确保四次挥手的最后一个ACK能够发出，下一步Closed" />
         <Column Name="TcpCloseWait" DataType="Int32" Description="被动关闭。作为客户端，收到服务器FIN后进入CloseWait的Tcp网络连接数，还没发送自己的FIN，主要原因是我方太忙" />
         <Column Name="IntranetScore" DataType="Double" ItemType="percent" Description="内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%" />
         <Column Name="InternetScore" DataType="Double" ItemType="percent" Description="外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%" />
+        <Column Name="GatewayLatency" DataType="Int32" Description="网关延迟。到网关的平均延迟，单位ms" />
+        <Column Name="GatewayLossRate" DataType="Double" ItemType="percent" Description="网关丢包率。到网关的丢包率" />
+        <Column Name="DnsLatency" DataType="Int32" Description="DNS延迟。到DNS的平均延迟，单位ms" />
+        <Column Name="DnsLossRate" DataType="Double" ItemType="percent" Description="DNS丢包率。到DNS的丢包率" />
+        <Column Name="ServerLatency" DataType="Int32" Description="服务器延迟。到星尘服务器的平均延迟，单位ms" />
+        <Column Name="ServerLossRate" DataType="Double" ItemType="percent" Description="服务器丢包率。到星尘服务器的丢包率" />
         <Column Name="Delay" DataType="Int32" Description="延迟。网络延迟，客户端最近一次心跳耗时的一半，单位ms" />
         <Column Name="Offset" DataType="Int32" Description="偏移。客户端UTC时间加上一半延迟再减服务端UTC时间，单位ms" />
         <Column Name="LocalTime" DataType="DateTime" Description="本地时间" />

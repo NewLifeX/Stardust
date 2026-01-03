@@ -79,6 +79,9 @@ public class NodeInfo
     /// <summary>处理器</summary>
     public String? Processor { get; set; }
 
+    /// <summary>GPU。显卡板卡信息，多个逗号分隔</summary>
+    public String? GPU { get; set; }
+
     ///// <summary>处理器标识</summary>
     //public String? CpuID { get; set; }
 

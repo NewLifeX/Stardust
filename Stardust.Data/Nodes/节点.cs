@@ -300,6 +300,15 @@ public partial class Node
     [BindColumn("Processor", "处理器", "")]
     public String Processor { get => _Processor; set { if (OnPropertyChanging("Processor", value)) { _Processor = value; OnPropertyChanged("Processor"); } } }
 
+    private String _Gpu;
+    /// <summary>GPU。显卡板卡信息，多个逗号分隔</summary>
+    [Category("硬件信息")]
+    [DisplayName("GPU")]
+    [Description("GPU。显卡板卡信息，多个逗号分隔")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("Gpu", "GPU。显卡板卡信息，多个逗号分隔", "")]
+    public String Gpu { get => _Gpu; set { if (OnPropertyChanging("Gpu", value)) { _Gpu = value; OnPropertyChanged("Gpu"); } } }
+
     private String _Uuid;
     /// <summary>唯一标识</summary>
     [Category("硬件信息")]
@@ -388,6 +397,15 @@ public partial class Node
     [DataObjectField(false, false, true, 200)]
     [BindColumn("Frameworks", "框架集合。本地支持的所有版本框架，逗号隔开", "")]
     public String Frameworks { get => _Frameworks; set { if (OnPropertyChanging("Frameworks", value)) { _Frameworks = value; OnPropertyChanged("Frameworks"); } } }
+
+    private String _TimeZone;
+    /// <summary>时区。如Asia/Shanghai或GMT+08:00等</summary>
+    [Category("系统信息")]
+    [DisplayName("时区")]
+    [Description("时区。如Asia/Shanghai或GMT+08:00等")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("TimeZone", "时区。如Asia/Shanghai或GMT+08:00等", "")]
+    public String TimeZone { get => _TimeZone; set { if (OnPropertyChanging("TimeZone", value)) { _TimeZone = value; OnPropertyChanged("TimeZone"); } } }
 
     private Int32 _ProvinceID;
     /// <summary>省份</summary>
@@ -677,6 +695,7 @@ public partial class Node
             "Product" => _Product,
             "Vendor" => _Vendor,
             "Processor" => _Processor,
+            "Gpu" => _Gpu,
             "Uuid" => _Uuid,
             "MachineGuid" => _MachineGuid,
             "SerialNumber" => _SerialNumber,
@@ -687,6 +706,7 @@ public partial class Node
             "Runtime" => _Runtime,
             "Framework" => _Framework,
             "Frameworks" => _Frameworks,
+            "TimeZone" => _TimeZone,
             "ProvinceID" => _ProvinceID,
             "CityID" => _CityID,
             "Address" => _Address,
@@ -752,6 +772,7 @@ public partial class Node
                 case "Product": _Product = Convert.ToString(value); break;
                 case "Vendor": _Vendor = Convert.ToString(value); break;
                 case "Processor": _Processor = Convert.ToString(value); break;
+                case "Gpu": _Gpu = Convert.ToString(value); break;
                 case "Uuid": _Uuid = Convert.ToString(value); break;
                 case "MachineGuid": _MachineGuid = Convert.ToString(value); break;
                 case "SerialNumber": _SerialNumber = Convert.ToString(value); break;
@@ -762,6 +783,7 @@ public partial class Node
                 case "Runtime": _Runtime = Convert.ToString(value); break;
                 case "Framework": _Framework = Convert.ToString(value); break;
                 case "Frameworks": _Frameworks = Convert.ToString(value); break;
+                case "TimeZone": _TimeZone = Convert.ToString(value); break;
                 case "ProvinceID": _ProvinceID = value.ToInt(); break;
                 case "CityID": _CityID = value.ToInt(); break;
                 case "Address": _Address = Convert.ToString(value); break;
@@ -964,6 +986,9 @@ public partial class Node
         /// <summary>处理器</summary>
         public static readonly Field Processor = FindByName("Processor");
 
+        /// <summary>GPU。显卡板卡信息，多个逗号分隔</summary>
+        public static readonly Field Gpu = FindByName("Gpu");
+
         /// <summary>唯一标识</summary>
         public static readonly Field Uuid = FindByName("Uuid");
 
@@ -993,6 +1018,9 @@ public partial class Node
 
         /// <summary>框架集合。本地支持的所有版本框架，逗号隔开</summary>
         public static readonly Field Frameworks = FindByName("Frameworks");
+
+        /// <summary>时区。如Asia/Shanghai或GMT+08:00等</summary>
+        public static readonly Field TimeZone = FindByName("TimeZone");
 
         /// <summary>省份</summary>
         public static readonly Field ProvinceID = FindByName("ProvinceID");
@@ -1177,6 +1205,9 @@ public partial class Node
         /// <summary>处理器</summary>
         public const String Processor = "Processor";
 
+        /// <summary>GPU。显卡板卡信息，多个逗号分隔</summary>
+        public const String Gpu = "Gpu";
+
         /// <summary>唯一标识</summary>
         public const String Uuid = "Uuid";
 
@@ -1206,6 +1237,9 @@ public partial class Node
 
         /// <summary>框架集合。本地支持的所有版本框架，逗号隔开</summary>
         public const String Frameworks = "Frameworks";
+
+        /// <summary>时区。如Asia/Shanghai或GMT+08:00等</summary>
+        public const String TimeZone = "TimeZone";
 
         /// <summary>省份</summary>
         public const String ProvinceID = "ProvinceID";

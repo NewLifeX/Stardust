@@ -44,8 +44,36 @@ public partial class StarClient
 
             // 兜底：GDI+ 获取 DPI（某些环境 Win32/反射 获取失败时）
             if (di.Dpi.IsNullOrEmpty()) TryFillByGdiPlus(di);
+
+            // GPU信息
+            di.GPU = GetGpuInfo();
         }
         catch { }
+    }
+
+    private static String? GetGpuInfo()
+    {
+        try
+        {
+            // 通过WMI获取GPU信息
+            var gpuList = new List<String>();
+            var rs = Execute("wmic", "path win32_VideoController get name");
+            if (!rs.IsNullOrEmpty())
+            {
+                var lines = rs.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var line in lines)
+                {
+                    var name = line.Trim();
+                    if (!name.IsNullOrEmpty() && !name.EqualIgnoreCase("Name") && !gpuList.Contains(name))
+                        gpuList.Add(name);
+                }
+            }
+            return gpuList.Count > 0 ? gpuList.Join(",") : null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static void TryFillByGdiPlus(NodeInfo di)
