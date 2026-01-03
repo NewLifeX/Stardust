@@ -417,12 +417,12 @@ internal class MyService : ServiceBase, IServiceProvider
         WriteLog("初始化服务端地址：{0}", server);
 
         var set = AgentSetting;
-        var client = new MyStarClient
+        var client = new MyStarClient(set)
         {
             Name = "Node",
             Server = server,
-            Code = set.Code,
-            Secret = set.Secret,
+            //Code = set.Code,
+            //Secret = set.Secret,
             ProductCode = "StarAgent",
 
             Log = XTrace.Log,
@@ -430,7 +430,7 @@ internal class MyService : ServiceBase, IServiceProvider
             //Manager = _Manager,
             //Host = Host,
             Service = this,
-            AgentSetting = AgentSetting,
+            //AgentSetting = AgentSetting,
         };
 
         //// 登录后保存证书

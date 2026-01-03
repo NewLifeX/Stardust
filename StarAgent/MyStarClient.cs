@@ -12,14 +12,16 @@ using Stardust.Models;
 
 namespace StarAgent;
 
-internal class MyStarClient : StarClient
+/// <summary>实例化</summary>
+/// <param name="set"></param>
+internal class MyStarClient(StarAgentSetting set) : StarClient(set)
 {
     #region 属性
     //public IHost Host { get; set; }
 
-    public ServiceBase Service { get; set; }
+    public ServiceBase Service { get; set; } = null!;
 
-    public StarAgentSetting AgentSetting { get; set; }
+    public StarAgentSetting AgentSetting { get; set; } = set;
 
     ///// <summary>项目名。新节点默认所需要加入的项目</summary>
     //public String Project { get; set; }

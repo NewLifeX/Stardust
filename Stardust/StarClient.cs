@@ -37,13 +37,19 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
 
     #region 构造
     /// <summary>实例化</summary>
-    public StarClient()
+    public StarClient() => SetDefault();
+
+    private void SetDefault()
     {
         Features = Features.Login | Features.Logout | Features.Ping | Features.Upgrade | Features.Notify | Features.CommandReply | Features.PostEvent;
         SetActions("Node/");
 
         Log = XTrace.Log;
     }
+
+    /// <summary>使用客户端设置来初始化</summary>
+    /// <param name="setting"></param>
+    public StarClient(IClientSetting setting) : base(setting) => SetDefault();
 
     /// <summary>实例化</summary>
     /// <param name="urls"></param>

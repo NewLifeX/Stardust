@@ -1,12 +1,13 @@
 ﻿using System.ComponentModel;
 using NewLife.Configuration;
+using NewLife.Remoting.Clients;
 using Stardust.Models;
 
 namespace StarAgent;
 
 /// <summary>配置</summary>
 [Config("StarAgent")]
-public class StarAgentSetting : Config<StarAgentSetting>
+public class StarAgentSetting : Config<StarAgentSetting>, IClientSetting
 {
     #region 属性
     /// <summary>调试开关。默认true</summary>
@@ -68,6 +69,8 @@ public class StarAgentSetting : Config<StarAgentSetting>
     /// <summary>应用服务集合</summary>
     [Description("应用服务集合")]
     public ServiceInfo[] Services { get; set; }
+
+    String IClientSetting.Server { get; set; }
     #endregion
 
     #region 构造
