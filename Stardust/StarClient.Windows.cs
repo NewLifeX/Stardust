@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using NewLife;
 using Stardust.Models;
 
@@ -9,6 +10,9 @@ public partial class StarClient
 {
     /// <summary>填充Windows专属信息</summary>
     /// <param name="di">节点信息</param>
+#if NET5_0_OR_GREATER
+    [SupportedOSPlatform("windows")]
+#endif
     public static void FillOnWindows(NodeInfo di)
     {
         try
@@ -71,9 +75,17 @@ public partial class StarClient
 
     private static Double GetProcessorQueueLength()
     {
+        // 优先使用性能计数器获取处理器队列长度
         try
         {
-            // 通过 wmic 获取处理器队列长度
+            var value = GetPerformanceCounterValue("System", "Processor Queue Length", null);
+            if (value >= 0) return value;
+        }
+        catch { }
+
+        // 降级为 WMIC 方式
+        try
+        {
             var rs = Execute("wmic", "path Win32_PerfFormattedData_PerfOS_System get ProcessorQueueLength /value");
             if (!rs.IsNullOrEmpty())
             {
@@ -86,14 +98,26 @@ public partial class StarClient
             }
         }
         catch { }
+
         return 0;
     }
 
     private static Int32 GetDiskIOPS()
     {
+        // 优先使用性能计数器获取磁盘IOPS
         try
         {
-            // 通过 wmic 获取磁盘读写次数
+            var reads = GetPerformanceCounterValue("PhysicalDisk", "Disk Reads/sec", "_Total");
+            var writes = GetPerformanceCounterValue("PhysicalDisk", "Disk Writes/sec", "_Total");
+
+            if (reads >= 0 || writes >= 0)
+                return (Int32)((reads > 0 ? reads : 0) + (writes > 0 ? writes : 0));
+        }
+        catch { }
+
+        // 降级为 WMIC 方式
+        try
+        {
             var rs = Execute("wmic", "path Win32_PerfFormattedData_PerfDisk_PhysicalDisk where Name='_Total' get DiskReadsPersec,DiskWritesPersec /value");
             if (!rs.IsNullOrEmpty())
             {
@@ -113,7 +137,61 @@ public partial class StarClient
             }
         }
         catch { }
+
         return 0;
+    }
+
+    /// <summary>通过反射获取性能计数器值，避免直接依赖 System.Diagnostics.PerformanceCounter</summary>
+    /// <param name="categoryName">类别名称</param>
+    /// <param name="counterName">计数器名称</param>
+    /// <param name="instanceName">实例名称</param>
+    /// <returns>计数器值，失败返回-1</returns>
+    private static Single GetPerformanceCounterValue(String categoryName, String counterName, String? instanceName)
+    {
+        try
+        {
+            // 尝试加载 PerformanceCounter 类型
+            // .NET Framework: System.dll
+            // .NET Core/.NET 5+: System.Diagnostics.PerformanceCounter.dll (需要 NuGet 包)
+            var counterType = Type.GetType("System.Diagnostics.PerformanceCounter, System", false)
+                           ?? Type.GetType("System.Diagnostics.PerformanceCounter, System.Diagnostics.PerformanceCounter", false);
+
+            if (counterType == null) return -1;
+
+            // 创建 PerformanceCounter 实例
+            Object? counter;
+            if (instanceName.IsNullOrEmpty())
+            {
+                // new PerformanceCounter(categoryName, counterName)
+                var ctor = counterType.GetConstructor(new[] { typeof(String), typeof(String) });
+                counter = ctor?.Invoke(new Object[] { categoryName, counterName });
+            }
+            else
+            {
+                // new PerformanceCounter(categoryName, counterName, instanceName)
+                var ctor = counterType.GetConstructor(new[] { typeof(String), typeof(String), typeof(String) });
+                counter = ctor?.Invoke(new Object[] { categoryName, counterName, instanceName });
+            }
+
+            if (counter == null) return -1;
+
+            try
+            {
+                // 调用 NextValue() 方法
+                var nextValueMethod = counterType.GetMethod("NextValue");
+                var result = nextValueMethod?.Invoke(counter, null);
+
+                if (result is Single value) return value;
+            }
+            finally
+            {
+                // 释放资源
+                (counter as IDisposable)?.Dispose();
+            }
+        }
+        catch { }
+
+        return -1;
     }
 
     private static String? GetGpuInfo()
@@ -143,6 +221,9 @@ public partial class StarClient
 
     /// <summary>获取已安装的VC++运行时版本</summary>
     /// <returns>VC++运行时版本列表，如"VC2015-2022 14.42,VC2013 12.0"</returns>
+#if NET5_0_OR_GREATER
+    [SupportedOSPlatform("windows")]
+#endif
     private static String? GetVCRuntimeVersions()
     {
 #if NET45_OR_GREATER || NET6_0_OR_GREATER
@@ -225,6 +306,9 @@ public partial class StarClient
     };
 
     /// <summary>获取旧版本VC++运行时（2005-2013）</summary>
+#if NET5_0_OR_GREATER
+    [SupportedOSPlatform("windows")]
+#endif
     private static IList<String>? GetOldVCRuntimeVersions()
     {
         var versions = new List<String>();
@@ -271,6 +355,9 @@ public partial class StarClient
     /// <param name="path">注册表路径</param>
     /// <param name="vcYear">VC++年份标识</param>
     /// <param name="versions">版本列表</param>
+#if NET5_0_OR_GREATER
+    [SupportedOSPlatform("windows")]
+#endif
     private static void CheckOldVCRuntime(Microsoft.Win32.RegistryKey hklm, String path, String vcYear, IList<String> versions)
     {
         try
@@ -302,6 +389,9 @@ public partial class StarClient
     /// <param name="hklm">HKLM注册表</param>
     /// <param name="path">注册表路径</param>
     /// <param name="valueName">值名称</param>
+#if NET5_0_OR_GREATER
+    [SupportedOSPlatform("windows")]
+#endif
     private static Boolean CheckVCRuntimeInstalled(Microsoft.Win32.RegistryKey hklm, String path, String valueName)
     {
         try

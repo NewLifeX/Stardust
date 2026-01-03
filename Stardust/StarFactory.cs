@@ -175,7 +175,7 @@ public class StarFactory : DisposeBase
 
         if (!Server.IsNullOrEmpty() && Local.Server.IsNullOrEmpty()) Local.Server = Server;
 
-        var flag = false;
+        //var flag = false;
         var set = StarSetting.Current;
 
         if (AppId != "StarAgent")
@@ -195,7 +195,7 @@ public class StarFactory : DisposeBase
                     if (set.Server.IsNullOrEmpty())
                     {
                         set.Server = server;
-                        flag = true;
+                        //flag = true;
                     }
                 }
                 else

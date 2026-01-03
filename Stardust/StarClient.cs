@@ -189,8 +189,13 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
         di.Architecture = IntPtr.Size == 8 ? "X64" : "X86";
 #endif
 
+#if NET5_0_OR_GREATER
+        if (OperatingSystem.IsWindows()) FillOnWindows(di);
+        if (OperatingSystem.IsLinux()) FillOnLinux(di);
+#else
         if (Runtime.Windows) FillOnWindows(di);
         if (Runtime.Linux) FillOnLinux(di);
+#endif
 
         return di;
     }

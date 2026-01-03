@@ -74,6 +74,22 @@ public class ShowMachineInfo : BaseCommandHandler
             XTrace.WriteLine("{0}:\t{1}", pi.Name, val);
         }
 
+        var pinfo = client.BuildPingRequest() as PingInfo;
+        var pis3 = ni.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+        foreach (var pi in pis3)
+        {
+            if (pis.Any(e => e.Name == pi.Name) || pis2.Any(e => e.Name == pi.Name)) continue;
+
+            var val = pinfo.GetValue(pi);
+            if (pi.PropertyType == typeof(UInt64) && pi.Name.EndsWithIgnoreCase("Memory", "Size", "FreeSpace"))
+                val = val.ToLong().ToGMK();
+            else if (pi.Name.EndsWithIgnoreCase("Rate", "Battery"))
+                val = val.ToDouble().ToString("p2");
+
+            XTrace.WriteLine("{0}:\t{1}", pi.Name, val);
+        }
+
         // 网络信息
         XTrace.WriteLine("NetworkAvailable:{0}", NetworkInterface.GetIsNetworkAvailable());
         var arps = AgentInfo.GetArpTable();
