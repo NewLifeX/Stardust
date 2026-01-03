@@ -128,54 +128,45 @@ public partial class StarClient
         {
             var gpuList = new List<String>();
 
-            // 方式1：通过 lspci 获取显卡信息
-            var rs = Execute("lspci", null);
-            if (!rs.IsNullOrEmpty())
-            {
-                var lines = rs.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var line in lines)
-                {
-                    // 查找 VGA compatible controller 或 3D controller
-                    if (line.Contains("VGA compatible controller") || line.Contains("3D controller"))
-                    {
-                        // 格式: "00:02.0 VGA compatible controller: Intel Corporation ..."
-                        var idx = line.IndexOf(':');
-                        if (idx > 0)
-                        {
-                            idx = line.IndexOf(':', idx + 1);
-                            if (idx > 0)
-                            {
-                                var name = line[(idx + 1)..].Trim();
-                                // 移除括号中的详细型号，保留主要信息
-                                var bracketIdx = name.IndexOf('(');
-                                if (bracketIdx > 0) name = name[..bracketIdx].Trim();
+            // 方式1：通过 nvidia-smi 获取NVIDIA显卡信息（包含显存）
+            var nvidiaGpus = GetNvidiaGpuInfo();
+            if (nvidiaGpus.Count > 0)
+                gpuList.AddRange(nvidiaGpus);
 
-                                if (!name.IsNullOrEmpty() && !gpuList.Contains(name))
-                                    gpuList.Add(name);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // 方式2：通过 nvidia-smi 获取NVIDIA显卡信息（如果存在）
+            // 方式2：通过 lspci 获取其他显卡信息
             if (gpuList.Count == 0)
             {
-                rs = Execute("nvidia-smi", "-L");
+                var rs = Execute("lspci", null);
                 if (!rs.IsNullOrEmpty())
                 {
                     var lines = rs.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                     foreach (var line in lines)
                     {
-                        // 格式: "GPU 0: NVIDIA GeForce RTX 3080 (UUID: ...)"
-                        if (line.StartsWith("GPU"))
+                        // 查找 VGA compatible controller 或 3D controller
+                        if (line.Contains("VGA compatible controller") || line.Contains("3D controller"))
                         {
-                            var match = Regex.Match(line, @"GPU \d+: (.+?)\s*\(");
-                            if (match.Success)
+                            // 格式: "00:02.0 VGA compatible controller: Intel Corporation ..."
+                            var idx = line.IndexOf(':');
+                            if (idx > 0)
                             {
-                                var name = match.Groups[1].Value.Trim();
-                                if (!name.IsNullOrEmpty() && !gpuList.Contains(name))
-                                    gpuList.Add(name);
+                                idx = line.IndexOf(':', idx + 1);
+                                if (idx > 0)
+                                {
+                                    var name = line[(idx + 1)..].Trim();
+                                    // 移除括号中的详细型号，保留主要信息
+                                    var bracketIdx = name.IndexOf('(');
+                                    if (bracketIdx > 0) name = name[..bracketIdx].Trim();
+
+                                    if (!name.IsNullOrEmpty() && !gpuList.Any(g => g.StartsWith(name)))
+                                    {
+                                        // 尝试获取显存
+                                        var vram = GetVramByDrm();
+                                        if (vram > 0)
+                                            gpuList.Add($"{name}({vram.ToGMK("n0")})");
+                                        else
+                                            gpuList.Add(name);
+                                    }
+                                }
                             }
                         }
                     }
@@ -188,6 +179,115 @@ public partial class StarClient
         {
             return null;
         }
+    }
+
+    /// <summary>通过 nvidia-smi 获取 NVIDIA 显卡信息（包含显存）</summary>
+    private static List<String> GetNvidiaGpuInfo()
+    {
+        var gpuList = new List<String>();
+
+        // 使用 nvidia-smi 获取 GPU 名称和显存
+        // 格式: name, memory.total [MiB]
+        var rs = Execute("nvidia-smi", "--query-gpu=name,memory.total --format=csv,noheader,nounits");
+        if (!rs.IsNullOrEmpty())
+        {
+            var lines = rs.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var line in lines)
+            {
+                // 格式: "NVIDIA GeForce RTX 3080, 10240"
+                var parts = line.Split(',');
+                if (parts.Length >= 2)
+                {
+                    var name = parts[0].Trim();
+                    var vramMiB = parts[1].Trim().ToLong();
+
+                    if (!name.IsNullOrEmpty())
+                    {
+                        // 将 MiB 转换为字节，然后格式化
+                        if (vramMiB > 0)
+                        {
+                            var vramBytes = vramMiB * 1024 * 1024;
+                            gpuList.Add($"{name}({vramBytes.ToGMK("n0")})");
+                        }
+                        else
+                        {
+                            gpuList.Add(name);
+                        }
+                    }
+                }
+            }
+        }
+
+        // 降级方案：只获取名称
+        if (gpuList.Count == 0)
+        {
+            rs = Execute("nvidia-smi", "-L");
+            if (!rs.IsNullOrEmpty())
+            {
+                var lines = rs.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var line in lines)
+                {
+                    // 格式: "GPU 0: NVIDIA GeForce RTX 3080 (UUID: ...)"
+                    if (line.StartsWith("GPU"))
+                    {
+                        var match = Regex.Match(line, @"GPU \d+: (.+?)\s*\(");
+                        if (match.Success)
+                        {
+                            var name = match.Groups[1].Value.Trim();
+                            if (!name.IsNullOrEmpty() && !gpuList.Contains(name))
+                                gpuList.Add(name);
+                        }
+                    }
+                }
+            }
+        }
+
+        return gpuList;
+    }
+
+    /// <summary>通过 /sys/class/drm 获取显存大小</summary>
+    private static Int64 GetVramByDrm()
+    {
+        try
+        {
+            var drmPath = "/sys/class/drm";
+            if (!Directory.Exists(drmPath)) return 0;
+
+            // 查找显卡设备目录
+            var cards = Directory.GetDirectories(drmPath, "card[0-9]");
+            foreach (var card in cards)
+            {
+                // AMD 显卡显存路径
+                var amdVramFile = Path.Combine(card, "device", "mem_info_vram_total");
+                if (File.Exists(amdVramFile))
+                {
+                    var content = File.ReadAllText(amdVramFile).Trim();
+                    var vram = content.ToLong();
+                    if (vram > 0) return vram;
+                }
+
+                // Intel 显卡显存路径（某些驱动）
+                var intelVramFile = Path.Combine(card, "device", "resource0_size");
+                if (File.Exists(intelVramFile))
+                {
+                    var content = File.ReadAllText(intelVramFile).Trim();
+                    // 可能是16进制格式
+                    if (content.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (Int64.TryParse(content[2..], System.Globalization.NumberStyles.HexNumber, null, out var vram) && vram > 0)
+                            return vram;
+                    }
+                    else
+                    {
+                        var vram = content.ToLong();
+                        if (vram > 0) return vram;
+                    }
+                }
+            }
+        }
+        catch { }
+
+        return 0;
     }
 
     #region 显示信息采集

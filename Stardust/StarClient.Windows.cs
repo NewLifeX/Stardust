@@ -198,25 +198,89 @@ public partial class StarClient
     {
         try
         {
-            // 通过WMI获取GPU信息
-            var gpuList = new List<String>();
-            var rs = Execute("wmic", "path win32_VideoController get name");
-            if (!rs.IsNullOrEmpty())
-            {
-                var lines = rs.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var line in lines)
-                {
-                    var name = line.Trim();
-                    if (!name.IsNullOrEmpty() && !name.EqualIgnoreCase("Name") && !gpuList.Contains(name))
-                        gpuList.Add(name);
-                }
-            }
+            // 通过WMI获取GPU信息（名称和显存）
+            var gpuList = GetGpuListWithRam();
+
+            // 若获取失败，降级为仅获取名称
+            if (gpuList.Count == 0) gpuList = GetGpuListByName();
+
             return gpuList.Count > 0 ? gpuList.Join(",") : null;
         }
         catch
         {
             return null;
         }
+    }
+
+    /// <summary>通过WMI获取GPU名称和显存</summary>
+    /// <returns>GPU信息列表，格式如"NVIDIA GeForce RTX 4090(24G)"</returns>
+    private static List<String> GetGpuListWithRam()
+    {
+        var gpuList = new List<String>();
+
+        var rs = Execute("wmic", "path win32_VideoController get Name,AdapterRAM /value");
+        if (rs.IsNullOrEmpty()) return gpuList;
+
+        // WMIC输出格式：每个实例之间用空行分隔，属性按字母顺序排列
+        // AdapterRAM=xxx
+        // Name=xxx
+        // (空行)
+        // AdapterRAM=yyy
+        // Name=yyy
+
+        String? currentName = null;
+        var currentRam = 0L;
+
+        var lines = rs.Split(new[] { '\r', '\n' }, StringSplitOptions.None);
+        foreach (var raw in lines)
+        {
+            var line = raw?.Trim();
+
+            // 空行表示一个实例结束
+            if (line.IsNullOrEmpty()) continue;
+
+            // 解析属性
+            if (line.StartsWith("AdapterRAM=", StringComparison.OrdinalIgnoreCase))
+            {
+                currentRam = line.Substring("AdapterRAM=".Length).Trim().ToLong();
+            }
+            else if (line.StartsWith("Name=", StringComparison.OrdinalIgnoreCase))
+            {
+                currentName = line.Substring("Name=".Length).Trim();
+
+                // 格式化显示：有显存时附加容量，如"NVIDIA GeForce RTX 4090(24G)"
+                var display = currentRam > 0 ? $"{currentName}({currentRam.ToGMK("n0")})" : currentName;
+                if (!gpuList.Contains(display)) gpuList.Add(display);
+
+                currentRam = 0;
+                currentName = null;
+            }
+        }
+
+        return gpuList;
+    }
+
+    /// <summary>通过WMI仅获取GPU名称（降级方案）</summary>
+    /// <returns>GPU名称列表</returns>
+    private static List<String> GetGpuListByName()
+    {
+        var gpuList = new List<String>();
+
+        var rs = Execute("wmic", "path win32_VideoController get Name");
+        if (rs.IsNullOrEmpty()) return gpuList;
+
+        var lines = rs.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (var line in lines)
+        {
+            var name = line.Trim();
+            // 跳过表头
+            if (!name.IsNullOrEmpty() && !name.EqualIgnoreCase("Name") && !gpuList.Contains(name))
+            {
+                gpuList.Add(name);
+            }
+        }
+
+        return gpuList;
     }
 
     /// <summary>获取已安装的VC++运行时版本</summary>
