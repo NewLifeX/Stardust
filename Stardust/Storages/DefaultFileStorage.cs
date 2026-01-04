@@ -282,7 +282,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     /// <summary>批量扫描并请求缺失附件，返回已发出请求数。</summary>
     public virtual async Task<Int32> ScanFilesAsync(DateTime startTime, CancellationToken cancellationToken = default)
     {
-        using var span = Tracer?.NewSpan("FileStorage-Init", new { startTime });
+        using var span = Tracer?.NewSpan("FileStorage-ScanFiles", new { startTime });
 
         var count = 0;
         foreach (var file in GetMissingAttachments(startTime))
