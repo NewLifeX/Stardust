@@ -154,10 +154,11 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         var msg = info.ToJson();
         using var span = Tracer?.NewSpan("FileStorage-NewFile", msg);
         span?.Detach(info.TraceId);
-        WriteLog("收到新文件通知：{0}", msg);
 
-        //// 默认忽略本节点自己发布的消息（除非需要自愈）
-        //if (info.SourceNode.EqualIgnoreCase(NodeName)) return;
+        // 默认忽略本节点自己发布的消息（除非需要自愈）
+        if (info.SourceNode.EqualIgnoreCase(NodeName)) return;
+
+        WriteLog("收到新文件通知：{0}", msg);
 
         // 检查本地是否已有文件且哈希正确
         if (CheckLocalFile(info.Path, info.Hash)) return;
@@ -262,9 +263,9 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     /// <summary>处理文件请求消息。</summary>
     protected virtual async Task OnFileRequestAsync(FileRequest req, IEventContext context, CancellationToken cancellationToken)
     {
-        WriteLog("收到请求文件通知：{0}", req.ToJson());
-
         if (req.RequestNode.EqualIgnoreCase(NodeName)) return;
+
+        WriteLog("收到请求文件通知：{0}", req.ToJson());
 
         using var span = Tracer?.NewSpan("FileStorage-FileRequest", new { req.Name, req.RequestNode });
 
