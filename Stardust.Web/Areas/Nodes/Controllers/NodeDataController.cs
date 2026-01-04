@@ -70,7 +70,7 @@ public class NodeDataController : ReadOnlyEntityController<NodeData>
     {
         var result = base.IndexView(p);
 
-        if (result is ObjectResult rs && rs.Value is IList<NodeData> list && list.Count > 0)
+        if (result is ViewResult rs && rs.Model is IList<NodeData> list && list.Count > 0)
         {
             var nodeId = p["nodeId"].ToInt(-1);
 
