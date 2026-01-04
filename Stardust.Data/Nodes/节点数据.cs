@@ -46,6 +46,22 @@ public partial class NodeData
     [BindColumn("Name", "名称", "", Master = true)]
     public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
+    private Double _SystemLoad;
+    /// <summary>系统负载。Linux上的Load1，Windows上的处理器队列长度</summary>
+    [DisplayName("系统负载")]
+    [Description("系统负载。Linux上的Load1，Windows上的处理器队列长度")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("SystemLoad", "系统负载。Linux上的Load1，Windows上的处理器队列长度", "", ItemType = "percent")]
+    public Double SystemLoad { get => _SystemLoad; set { if (OnPropertyChanging("SystemLoad", value)) { _SystemLoad = value; OnPropertyChanged("SystemLoad"); } } }
+
+    private Double _CpuRate;
+    /// <summary>CPU率。占用率</summary>
+    [DisplayName("CPU率")]
+    [Description("CPU率。占用率")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("CpuRate", "CPU率。占用率", "", ItemType = "percent")]
+    public Double CpuRate { get => _CpuRate; set { if (OnPropertyChanging("CpuRate", value)) { _CpuRate = value; OnPropertyChanged("CpuRate"); } } }
+
     private Int32 _AvailableMemory;
     /// <summary>可用内存。单位M</summary>
     [DisplayName("可用内存")]
@@ -70,21 +86,21 @@ public partial class NodeData
     [BindColumn("AvailableFreeSpace", "可用磁盘。应用所在盘，单位M", "")]
     public Int32 AvailableFreeSpace { get => _AvailableFreeSpace; set { if (OnPropertyChanging("AvailableFreeSpace", value)) { _AvailableFreeSpace = value; OnPropertyChanged("AvailableFreeSpace"); } } }
 
-    private Double _CpuRate;
-    /// <summary>CPU率。占用率</summary>
-    [DisplayName("CPU率")]
-    [Description("CPU率。占用率")]
+    private Int32 _DiskIOPS;
+    /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
+    [DisplayName("磁盘IOPS")]
+    [Description("磁盘IOPS。每秒磁盘IO操作次数")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("CpuRate", "CPU率。占用率", "", ItemType = "percent")]
-    public Double CpuRate { get => _CpuRate; set { if (OnPropertyChanging("CpuRate", value)) { _CpuRate = value; OnPropertyChanged("CpuRate"); } } }
+    [BindColumn("DiskIOPS", "磁盘IOPS。每秒磁盘IO操作次数", "")]
+    public Int32 DiskIOPS { get => _DiskIOPS; set { if (OnPropertyChanging("DiskIOPS", value)) { _DiskIOPS = value; OnPropertyChanged("DiskIOPS"); } } }
 
-    private Double _SystemLoad;
-    /// <summary>系统负载。Linux上的Load1，Windows上的处理器队列长度</summary>
-    [DisplayName("系统负载")]
-    [Description("系统负载。Linux上的Load1，Windows上的处理器队列长度")]
+    private Double _DiskActiveTime;
+    /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
+    [DisplayName("磁盘活动时间")]
+    [Description("磁盘活动时间。多块磁盘的最大活动时间百分比")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("SystemLoad", "系统负载。Linux上的Load1，Windows上的处理器队列长度", "", ItemType = "percent")]
-    public Double SystemLoad { get => _SystemLoad; set { if (OnPropertyChanging("SystemLoad", value)) { _SystemLoad = value; OnPropertyChanged("SystemLoad"); } } }
+    [BindColumn("DiskActiveTime", "磁盘活动时间。多块磁盘的最大活动时间百分比", "", ItemType = "percent")]
+    public Double DiskActiveTime { get => _DiskActiveTime; set { if (OnPropertyChanging("DiskActiveTime", value)) { _DiskActiveTime = value; OnPropertyChanged("DiskActiveTime"); } } }
 
     private Double _Temperature;
     /// <summary>温度</summary>
@@ -125,22 +141,6 @@ public partial class NodeData
     [DataObjectField(false, false, false, 0)]
     [BindColumn("DownlinkSpeed", "下行速度。网络接收速度，字节每秒", "", ItemType = "GMK")]
     public Int64 DownlinkSpeed { get => _DownlinkSpeed; set { if (OnPropertyChanging("DownlinkSpeed", value)) { _DownlinkSpeed = value; OnPropertyChanged("DownlinkSpeed"); } } }
-
-    private Int32 _DiskIOPS;
-    /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
-    [DisplayName("磁盘IOPS")]
-    [Description("磁盘IOPS。每秒磁盘IO操作次数")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("DiskIOPS", "磁盘IOPS。每秒磁盘IO操作次数", "")]
-    public Int32 DiskIOPS { get => _DiskIOPS; set { if (OnPropertyChanging("DiskIOPS", value)) { _DiskIOPS = value; OnPropertyChanged("DiskIOPS"); } } }
-
-    private Double _DiskActiveTime;
-    /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
-    [DisplayName("磁盘活动时间")]
-    [Description("磁盘活动时间。多块磁盘的最大活动时间百分比")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("DiskActiveTime", "磁盘活动时间。多块磁盘的最大活动时间百分比", "", ItemType = "percent")]
-    public Double DiskActiveTime { get => _DiskActiveTime; set { if (OnPropertyChanging("DiskActiveTime", value)) { _DiskActiveTime = value; OnPropertyChanged("DiskActiveTime"); } } }
 
     private Int32 _ProcessCount;
     /// <summary>进程数</summary>
@@ -309,18 +309,18 @@ public partial class NodeData
             "Id" => _Id,
             "NodeID" => _NodeID,
             "Name" => _Name,
+            "SystemLoad" => _SystemLoad,
+            "CpuRate" => _CpuRate,
             "AvailableMemory" => _AvailableMemory,
             "FreeMemory" => _FreeMemory,
             "AvailableFreeSpace" => _AvailableFreeSpace,
-            "CpuRate" => _CpuRate,
-            "SystemLoad" => _SystemLoad,
+            "DiskIOPS" => _DiskIOPS,
+            "DiskActiveTime" => _DiskActiveTime,
             "Temperature" => _Temperature,
             "Battery" => _Battery,
             "Signal" => _Signal,
             "UplinkSpeed" => _UplinkSpeed,
             "DownlinkSpeed" => _DownlinkSpeed,
-            "DiskIOPS" => _DiskIOPS,
-            "DiskActiveTime" => _DiskActiveTime,
             "ProcessCount" => _ProcessCount,
             "TcpConnections" => _TcpConnections,
             "TcpTimeWait" => _TcpTimeWait,
@@ -349,18 +349,18 @@ public partial class NodeData
                 case "Id": _Id = value.ToLong(); break;
                 case "NodeID": _NodeID = value.ToInt(); break;
                 case "Name": _Name = Convert.ToString(value); break;
+                case "SystemLoad": _SystemLoad = value.ToDouble(); break;
+                case "CpuRate": _CpuRate = value.ToDouble(); break;
                 case "AvailableMemory": _AvailableMemory = value.ToInt(); break;
                 case "FreeMemory": _FreeMemory = value.ToInt(); break;
                 case "AvailableFreeSpace": _AvailableFreeSpace = value.ToInt(); break;
-                case "CpuRate": _CpuRate = value.ToDouble(); break;
-                case "SystemLoad": _SystemLoad = value.ToDouble(); break;
+                case "DiskIOPS": _DiskIOPS = value.ToInt(); break;
+                case "DiskActiveTime": _DiskActiveTime = value.ToDouble(); break;
                 case "Temperature": _Temperature = value.ToDouble(); break;
                 case "Battery": _Battery = value.ToDouble(); break;
                 case "Signal": _Signal = value.ToInt(); break;
                 case "UplinkSpeed": _UplinkSpeed = value.ToLong(); break;
                 case "DownlinkSpeed": _DownlinkSpeed = value.ToLong(); break;
-                case "DiskIOPS": _DiskIOPS = value.ToInt(); break;
-                case "DiskActiveTime": _DiskActiveTime = value.ToDouble(); break;
                 case "ProcessCount": _ProcessCount = value.ToInt(); break;
                 case "TcpConnections": _TcpConnections = value.ToInt(); break;
                 case "TcpTimeWait": _TcpTimeWait = value.ToInt(); break;
@@ -426,6 +426,12 @@ public partial class NodeData
         /// <summary>名称</summary>
         public static readonly Field Name = FindByName("Name");
 
+        /// <summary>系统负载。Linux上的Load1，Windows上的处理器队列长度</summary>
+        public static readonly Field SystemLoad = FindByName("SystemLoad");
+
+        /// <summary>CPU率。占用率</summary>
+        public static readonly Field CpuRate = FindByName("CpuRate");
+
         /// <summary>可用内存。单位M</summary>
         public static readonly Field AvailableMemory = FindByName("AvailableMemory");
 
@@ -435,11 +441,11 @@ public partial class NodeData
         /// <summary>可用磁盘。应用所在盘，单位M</summary>
         public static readonly Field AvailableFreeSpace = FindByName("AvailableFreeSpace");
 
-        /// <summary>CPU率。占用率</summary>
-        public static readonly Field CpuRate = FindByName("CpuRate");
+        /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
+        public static readonly Field DiskIOPS = FindByName("DiskIOPS");
 
-        /// <summary>系统负载。Linux上的Load1，Windows上的处理器队列长度</summary>
-        public static readonly Field SystemLoad = FindByName("SystemLoad");
+        /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
+        public static readonly Field DiskActiveTime = FindByName("DiskActiveTime");
 
         /// <summary>温度</summary>
         public static readonly Field Temperature = FindByName("Temperature");
@@ -455,12 +461,6 @@ public partial class NodeData
 
         /// <summary>下行速度。网络接收速度，字节每秒</summary>
         public static readonly Field DownlinkSpeed = FindByName("DownlinkSpeed");
-
-        /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
-        public static readonly Field DiskIOPS = FindByName("DiskIOPS");
-
-        /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
-        public static readonly Field DiskActiveTime = FindByName("DiskActiveTime");
 
         /// <summary>进程数</summary>
         public static readonly Field ProcessCount = FindByName("ProcessCount");
@@ -534,6 +534,12 @@ public partial class NodeData
         /// <summary>名称</summary>
         public const String Name = "Name";
 
+        /// <summary>系统负载。Linux上的Load1，Windows上的处理器队列长度</summary>
+        public const String SystemLoad = "SystemLoad";
+
+        /// <summary>CPU率。占用率</summary>
+        public const String CpuRate = "CpuRate";
+
         /// <summary>可用内存。单位M</summary>
         public const String AvailableMemory = "AvailableMemory";
 
@@ -543,11 +549,11 @@ public partial class NodeData
         /// <summary>可用磁盘。应用所在盘，单位M</summary>
         public const String AvailableFreeSpace = "AvailableFreeSpace";
 
-        /// <summary>CPU率。占用率</summary>
-        public const String CpuRate = "CpuRate";
+        /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
+        public const String DiskIOPS = "DiskIOPS";
 
-        /// <summary>系统负载。Linux上的Load1，Windows上的处理器队列长度</summary>
-        public const String SystemLoad = "SystemLoad";
+        /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
+        public const String DiskActiveTime = "DiskActiveTime";
 
         /// <summary>温度</summary>
         public const String Temperature = "Temperature";
@@ -563,12 +569,6 @@ public partial class NodeData
 
         /// <summary>下行速度。网络接收速度，字节每秒</summary>
         public const String DownlinkSpeed = "DownlinkSpeed";
-
-        /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
-        public const String DiskIOPS = "DiskIOPS";
-
-        /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
-        public const String DiskActiveTime = "DiskActiveTime";
 
         /// <summary>进程数</summary>
         public const String ProcessCount = "ProcessCount";
