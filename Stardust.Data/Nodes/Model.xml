@@ -149,22 +149,22 @@
         <Column Name="Version" DataType="String" Description="版本" />
         <Column Name="CompileTime" DataType="DateTime" Description="编译时间" />
         <Column Name="OSKind" DataType="Int32" Description="系统种类。主流操作系统类型，不考虑子版本" Type="Stardust.Models.OSKinds" />
+        <Column Name="SystemLoad" DataType="Double" ItemType="percent" Description="系统负载。Linux上的Load1，Windows上的处理器队列长度" />
+        <Column Name="CpuRate" DataType="Double" ItemType="percent" Description="CPU率。占用率" />
         <Column Name="Memory" DataType="Int32" Description="内存。单位M" />
         <Column Name="AvailableMemory" DataType="Int32" Description="可用内存。单位M" />
         <Column Name="FreeMemory" DataType="Int32" Description="空闲内存。Linux上空闲不一定可用，部分作为缓存，单位M" />
         <Column Name="MemoryUsed" DataType="Int32" Description="已用内存。总内存减去空闲内存，单位M" />
         <Column Name="AvailableFreeSpace" DataType="Int32" Description="可用磁盘。应用所在盘，单位M" />
         <Column Name="SpaceUsed" DataType="Int32" Description="已用磁盘。应用所在盘，单位M" />
+        <Column Name="DiskIOPS" DataType="Int32" Description="磁盘IOPS。每秒磁盘IO操作次数" />
+        <Column Name="DiskActiveTime" DataType="Double" ItemType="percent" Description="磁盘活动时间。多块磁盘的最大活动时间百分比" />
         <Column Name="DriveInfo" DataType="String" Length="500" Description="驱动器信息。各分区大小，逗号分隔" Category="硬件信息" />
-        <Column Name="CpuRate" DataType="Double" ItemType="percent" Description="CPU率。占用率" />
-        <Column Name="SystemLoad" DataType="Double" ItemType="percent" Description="系统负载。Linux上的Load1，Windows上的处理器队列长度" />
         <Column Name="Temperature" DataType="Double" Description="温度" />
         <Column Name="Battery" DataType="Double" ItemType="percent" Description="电量" />
         <Column Name="Signal" DataType="Int32" Description="信号。信号强度，WiFi/4G" />
         <Column Name="UplinkSpeed" DataType="Int64" ItemType="GMK" Description="上行速度。网络发送速度，字节每秒" />
         <Column Name="DownlinkSpeed" DataType="Int64" ItemType="GMK" Description="下行速度。网络接收速度，字节每秒" />
-        <Column Name="DiskIOPS" DataType="Int32" Description="磁盘IOPS。每秒磁盘IO操作次数" />
-        <Column Name="DiskActiveTime" DataType="Double" ItemType="percent" Description="磁盘活动时间。多块磁盘的最大活动时间百分比" />
         <Column Name="IntranetScore" DataType="Double" ItemType="percent" Description="内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%" />
         <Column Name="InternetScore" DataType="Double" ItemType="percent" Description="外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%" />
         <Column Name="GatewayLatency" DataType="Int32" Description="网关延迟。到网关的平均延迟，单位ms" />

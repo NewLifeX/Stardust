@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Filters;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Charts;
@@ -62,10 +63,17 @@ public class NodeDataController : ReadOnlyEntityController<NodeData>
 
         if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.Id.Desc();
 
-        var list = NodeData.Search(nodeId, start, end, p["Q"], p);
+        return NodeData.Search(nodeId, start, end, p["Q"], p);
+    }
 
-        if (list.Count > 0)
+    protected override ActionResult IndexView(Pager p)
+    {
+        var result = base.IndexView(p);
+
+        if (result is ObjectResult rs && rs.Value is IList<NodeData> list && list.Count > 0)
         {
+            var nodeId = p["nodeId"].ToInt(-1);
+
             // 绘制日期曲线图
             var node = Node.FindByID(nodeId);
             if (nodeId >= 0 && node != null)
@@ -84,12 +92,16 @@ public class NodeDataController : ReadOnlyEntityController<NodeData>
                     new YAxis{ Name = "网络", Type = "value" }
                 ];
                 chart.AddDataZoom();
+                chart.AddLine(list2, _.SystemLoad, e => Math.Round(e.SystemLoad * 100), true);
                 chart.AddLine(list2, _.CpuRate, e => Math.Round(e.CpuRate * 100), true);
 
                 var series = chart.Add(list2, _.AvailableMemory, "line", e => node.Memory == 0 ? 0 : (100 - ((e.FreeMemory > 0 ? e.FreeMemory : e.AvailableMemory) * 100 / node.Memory)));
                 series.Name = "已用内存";
                 series = chart.Add(list2, _.AvailableFreeSpace, "line", e => node.TotalSize == 0 ? 0 : (100 - (e.AvailableFreeSpace * 100 / node.TotalSize)));
                 series.Name = "已用磁盘";
+
+                chart.AddLine(list2, _.DiskIOPS);
+                chart.AddLine(list2, _.DiskActiveTime, e => Math.Round(e.DiskActiveTime * 100));
 
                 if (list2.Any(e => e.Temperature > 0))
                     chart.AddLine(list2, _.Temperature, e => Math.Round(e.Temperature, 2), true);
@@ -136,6 +148,6 @@ public class NodeDataController : ReadOnlyEntityController<NodeData>
             if (list.Count > 1000) list = list.Take(1000).ToList();
         }
 
-        return list;
+        return result;
     }
 }

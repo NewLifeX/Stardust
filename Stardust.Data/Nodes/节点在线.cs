@@ -178,6 +178,22 @@ public partial class NodeOnline
     [BindColumn("OSKind", "系统种类。主流操作系统类型，不考虑子版本", "")]
     public Stardust.Models.OSKinds OSKind { get => _OSKind; set { if (OnPropertyChanging("OSKind", value)) { _OSKind = value; OnPropertyChanged("OSKind"); } } }
 
+    private Double _SystemLoad;
+    /// <summary>系统负载。Linux上的Load1，Windows上的处理器队列长度</summary>
+    [DisplayName("系统负载")]
+    [Description("系统负载。Linux上的Load1，Windows上的处理器队列长度")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("SystemLoad", "系统负载。Linux上的Load1，Windows上的处理器队列长度", "", ItemType = "percent")]
+    public Double SystemLoad { get => _SystemLoad; set { if (OnPropertyChanging("SystemLoad", value)) { _SystemLoad = value; OnPropertyChanged("SystemLoad"); } } }
+
+    private Double _CpuRate;
+    /// <summary>CPU率。占用率</summary>
+    [DisplayName("CPU率")]
+    [Description("CPU率。占用率")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("CpuRate", "CPU率。占用率", "", ItemType = "percent")]
+    public Double CpuRate { get => _CpuRate; set { if (OnPropertyChanging("CpuRate", value)) { _CpuRate = value; OnPropertyChanged("CpuRate"); } } }
+
     private Int32 _Memory;
     /// <summary>内存。单位M</summary>
     [DisplayName("内存")]
@@ -226,6 +242,22 @@ public partial class NodeOnline
     [BindColumn("SpaceUsed", "已用磁盘。应用所在盘，单位M", "")]
     public Int32 SpaceUsed { get => _SpaceUsed; set { if (OnPropertyChanging("SpaceUsed", value)) { _SpaceUsed = value; OnPropertyChanged("SpaceUsed"); } } }
 
+    private Int32 _DiskIOPS;
+    /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
+    [DisplayName("磁盘IOPS")]
+    [Description("磁盘IOPS。每秒磁盘IO操作次数")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("DiskIOPS", "磁盘IOPS。每秒磁盘IO操作次数", "")]
+    public Int32 DiskIOPS { get => _DiskIOPS; set { if (OnPropertyChanging("DiskIOPS", value)) { _DiskIOPS = value; OnPropertyChanged("DiskIOPS"); } } }
+
+    private Double _DiskActiveTime;
+    /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
+    [DisplayName("磁盘活动时间")]
+    [Description("磁盘活动时间。多块磁盘的最大活动时间百分比")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("DiskActiveTime", "磁盘活动时间。多块磁盘的最大活动时间百分比", "", ItemType = "percent")]
+    public Double DiskActiveTime { get => _DiskActiveTime; set { if (OnPropertyChanging("DiskActiveTime", value)) { _DiskActiveTime = value; OnPropertyChanged("DiskActiveTime"); } } }
+
     private String _DriveInfo;
     /// <summary>驱动器信息。各分区大小，逗号分隔</summary>
     [Category("硬件信息")]
@@ -234,22 +266,6 @@ public partial class NodeOnline
     [DataObjectField(false, false, true, 500)]
     [BindColumn("DriveInfo", "驱动器信息。各分区大小，逗号分隔", "")]
     public String DriveInfo { get => _DriveInfo; set { if (OnPropertyChanging("DriveInfo", value)) { _DriveInfo = value; OnPropertyChanged("DriveInfo"); } } }
-
-    private Double _CpuRate;
-    /// <summary>CPU率。占用率</summary>
-    [DisplayName("CPU率")]
-    [Description("CPU率。占用率")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("CpuRate", "CPU率。占用率", "", ItemType = "percent")]
-    public Double CpuRate { get => _CpuRate; set { if (OnPropertyChanging("CpuRate", value)) { _CpuRate = value; OnPropertyChanged("CpuRate"); } } }
-
-    private Double _SystemLoad;
-    /// <summary>系统负载。Linux上的Load1，Windows上的处理器队列长度</summary>
-    [DisplayName("系统负载")]
-    [Description("系统负载。Linux上的Load1，Windows上的处理器队列长度")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("SystemLoad", "系统负载。Linux上的Load1，Windows上的处理器队列长度", "", ItemType = "percent")]
-    public Double SystemLoad { get => _SystemLoad; set { if (OnPropertyChanging("SystemLoad", value)) { _SystemLoad = value; OnPropertyChanged("SystemLoad"); } } }
 
     private Double _Temperature;
     /// <summary>温度</summary>
@@ -290,22 +306,6 @@ public partial class NodeOnline
     [DataObjectField(false, false, false, 0)]
     [BindColumn("DownlinkSpeed", "下行速度。网络接收速度，字节每秒", "", ItemType = "GMK")]
     public Int64 DownlinkSpeed { get => _DownlinkSpeed; set { if (OnPropertyChanging("DownlinkSpeed", value)) { _DownlinkSpeed = value; OnPropertyChanged("DownlinkSpeed"); } } }
-
-    private Int32 _DiskIOPS;
-    /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
-    [DisplayName("磁盘IOPS")]
-    [Description("磁盘IOPS。每秒磁盘IO操作次数")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("DiskIOPS", "磁盘IOPS。每秒磁盘IO操作次数", "")]
-    public Int32 DiskIOPS { get => _DiskIOPS; set { if (OnPropertyChanging("DiskIOPS", value)) { _DiskIOPS = value; OnPropertyChanged("DiskIOPS"); } } }
-
-    private Double _DiskActiveTime;
-    /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
-    [DisplayName("磁盘活动时间")]
-    [Description("磁盘活动时间。多块磁盘的最大活动时间百分比")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("DiskActiveTime", "磁盘活动时间。多块磁盘的最大活动时间百分比", "", ItemType = "percent")]
-    public Double DiskActiveTime { get => _DiskActiveTime; set { if (OnPropertyChanging("DiskActiveTime", value)) { _DiskActiveTime = value; OnPropertyChanged("DiskActiveTime"); } } }
 
     private Double _IntranetScore;
     /// <summary>内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
@@ -549,22 +549,22 @@ public partial class NodeOnline
             "Version" => _Version,
             "CompileTime" => _CompileTime,
             "OSKind" => _OSKind,
+            "SystemLoad" => _SystemLoad,
+            "CpuRate" => _CpuRate,
             "Memory" => _Memory,
             "AvailableMemory" => _AvailableMemory,
             "FreeMemory" => _FreeMemory,
             "MemoryUsed" => _MemoryUsed,
             "AvailableFreeSpace" => _AvailableFreeSpace,
             "SpaceUsed" => _SpaceUsed,
+            "DiskIOPS" => _DiskIOPS,
+            "DiskActiveTime" => _DiskActiveTime,
             "DriveInfo" => _DriveInfo,
-            "CpuRate" => _CpuRate,
-            "SystemLoad" => _SystemLoad,
             "Temperature" => _Temperature,
             "Battery" => _Battery,
             "Signal" => _Signal,
             "UplinkSpeed" => _UplinkSpeed,
             "DownlinkSpeed" => _DownlinkSpeed,
-            "DiskIOPS" => _DiskIOPS,
-            "DiskActiveTime" => _DiskActiveTime,
             "IntranetScore" => _IntranetScore,
             "InternetScore" => _InternetScore,
             "GatewayLatency" => _GatewayLatency,
@@ -616,22 +616,22 @@ public partial class NodeOnline
                 case "Version": _Version = Convert.ToString(value); break;
                 case "CompileTime": _CompileTime = value.ToDateTime(); break;
                 case "OSKind": _OSKind = (Stardust.Models.OSKinds)value.ToInt(); break;
+                case "SystemLoad": _SystemLoad = value.ToDouble(); break;
+                case "CpuRate": _CpuRate = value.ToDouble(); break;
                 case "Memory": _Memory = value.ToInt(); break;
                 case "AvailableMemory": _AvailableMemory = value.ToInt(); break;
                 case "FreeMemory": _FreeMemory = value.ToInt(); break;
                 case "MemoryUsed": _MemoryUsed = value.ToInt(); break;
                 case "AvailableFreeSpace": _AvailableFreeSpace = value.ToInt(); break;
                 case "SpaceUsed": _SpaceUsed = value.ToInt(); break;
+                case "DiskIOPS": _DiskIOPS = value.ToInt(); break;
+                case "DiskActiveTime": _DiskActiveTime = value.ToDouble(); break;
                 case "DriveInfo": _DriveInfo = Convert.ToString(value); break;
-                case "CpuRate": _CpuRate = value.ToDouble(); break;
-                case "SystemLoad": _SystemLoad = value.ToDouble(); break;
                 case "Temperature": _Temperature = value.ToDouble(); break;
                 case "Battery": _Battery = value.ToDouble(); break;
                 case "Signal": _Signal = value.ToInt(); break;
                 case "UplinkSpeed": _UplinkSpeed = value.ToLong(); break;
                 case "DownlinkSpeed": _DownlinkSpeed = value.ToLong(); break;
-                case "DiskIOPS": _DiskIOPS = value.ToInt(); break;
-                case "DiskActiveTime": _DiskActiveTime = value.ToDouble(); break;
                 case "IntranetScore": _IntranetScore = value.ToDouble(); break;
                 case "InternetScore": _InternetScore = value.ToDouble(); break;
                 case "GatewayLatency": _GatewayLatency = value.ToInt(); break;
@@ -790,6 +790,12 @@ public partial class NodeOnline
         /// <summary>系统种类。主流操作系统类型，不考虑子版本</summary>
         public static readonly Field OSKind = FindByName("OSKind");
 
+        /// <summary>系统负载。Linux上的Load1，Windows上的处理器队列长度</summary>
+        public static readonly Field SystemLoad = FindByName("SystemLoad");
+
+        /// <summary>CPU率。占用率</summary>
+        public static readonly Field CpuRate = FindByName("CpuRate");
+
         /// <summary>内存。单位M</summary>
         public static readonly Field Memory = FindByName("Memory");
 
@@ -808,14 +814,14 @@ public partial class NodeOnline
         /// <summary>已用磁盘。应用所在盘，单位M</summary>
         public static readonly Field SpaceUsed = FindByName("SpaceUsed");
 
+        /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
+        public static readonly Field DiskIOPS = FindByName("DiskIOPS");
+
+        /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
+        public static readonly Field DiskActiveTime = FindByName("DiskActiveTime");
+
         /// <summary>驱动器信息。各分区大小，逗号分隔</summary>
         public static readonly Field DriveInfo = FindByName("DriveInfo");
-
-        /// <summary>CPU率。占用率</summary>
-        public static readonly Field CpuRate = FindByName("CpuRate");
-
-        /// <summary>系统负载。Linux上的Load1，Windows上的处理器队列长度</summary>
-        public static readonly Field SystemLoad = FindByName("SystemLoad");
 
         /// <summary>温度</summary>
         public static readonly Field Temperature = FindByName("Temperature");
@@ -831,12 +837,6 @@ public partial class NodeOnline
 
         /// <summary>下行速度。网络接收速度，字节每秒</summary>
         public static readonly Field DownlinkSpeed = FindByName("DownlinkSpeed");
-
-        /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
-        public static readonly Field DiskIOPS = FindByName("DiskIOPS");
-
-        /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
-        public static readonly Field DiskActiveTime = FindByName("DiskActiveTime");
 
         /// <summary>内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
         public static readonly Field IntranetScore = FindByName("IntranetScore");
@@ -979,6 +979,12 @@ public partial class NodeOnline
         /// <summary>系统种类。主流操作系统类型，不考虑子版本</summary>
         public const String OSKind = "OSKind";
 
+        /// <summary>系统负载。Linux上的Load1，Windows上的处理器队列长度</summary>
+        public const String SystemLoad = "SystemLoad";
+
+        /// <summary>CPU率。占用率</summary>
+        public const String CpuRate = "CpuRate";
+
         /// <summary>内存。单位M</summary>
         public const String Memory = "Memory";
 
@@ -997,14 +1003,14 @@ public partial class NodeOnline
         /// <summary>已用磁盘。应用所在盘，单位M</summary>
         public const String SpaceUsed = "SpaceUsed";
 
+        /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
+        public const String DiskIOPS = "DiskIOPS";
+
+        /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
+        public const String DiskActiveTime = "DiskActiveTime";
+
         /// <summary>驱动器信息。各分区大小，逗号分隔</summary>
         public const String DriveInfo = "DriveInfo";
-
-        /// <summary>CPU率。占用率</summary>
-        public const String CpuRate = "CpuRate";
-
-        /// <summary>系统负载。Linux上的Load1，Windows上的处理器队列长度</summary>
-        public const String SystemLoad = "SystemLoad";
 
         /// <summary>温度</summary>
         public const String Temperature = "Temperature";
@@ -1020,12 +1026,6 @@ public partial class NodeOnline
 
         /// <summary>下行速度。网络接收速度，字节每秒</summary>
         public const String DownlinkSpeed = "DownlinkSpeed";
-
-        /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
-        public const String DiskIOPS = "DiskIOPS";
-
-        /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
-        public const String DiskActiveTime = "DiskActiveTime";
 
         /// <summary>内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
         public const String IntranetScore = "IntranetScore";
