@@ -151,7 +151,7 @@ public partial class StarClient
         var totalWrites = 0L;
         var maxIoTicks = 0L;
 
-        var lines = content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        var lines = content.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
         foreach (var line in lines)
         {
             var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -215,7 +215,7 @@ public partial class StarClient
                 var rs = Execute("lspci", null);
                 if (!rs.IsNullOrEmpty())
                 {
-                    var lines = rs.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    var lines = rs.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
                     foreach (var line in lines)
                     {
                         // 查找 VGA compatible controller 或 3D controller
@@ -268,7 +268,7 @@ public partial class StarClient
         var rs = Execute("nvidia-smi", "--query-gpu=name,memory.total --format=csv,noheader,nounits");
         if (!rs.IsNullOrEmpty())
         {
-            var lines = rs.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            var lines = rs.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
             foreach (var line in lines)
             {
                 // 格式: "NVIDIA GeForce RTX 3080, 10240"
@@ -301,7 +301,7 @@ public partial class StarClient
             rs = Execute("nvidia-smi", "-L");
             if (!rs.IsNullOrEmpty())
             {
-                var lines = rs.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                var lines = rs.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
                 foreach (var line in lines)
                 {
                     // 格式: "GPU 0: NVIDIA GeForce RTX 3080 (UUID: ...)"
