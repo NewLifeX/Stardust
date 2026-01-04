@@ -673,13 +673,7 @@ public partial class NodeOnline
     {
         if (id < 0) return null;
 
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
-
-        // 单对象缓存
-        return Meta.SingleCache[id];
-
-        //return Find(_.ID == id);
+        return Find(_.ID == id);
     }
 
     /// <summary>根据会话查找</summary>
@@ -688,9 +682,6 @@ public partial class NodeOnline
     public static NodeOnline FindBySessionID(String sessionId)
     {
         if (sessionId.IsNullOrEmpty()) return null;
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.SessionID.EqualIgnoreCase(sessionId));
 
         return Find(_.SessionID == sessionId);
     }

@@ -49,7 +49,7 @@ public partial class Node : Entity<Node>, IDeviceModel2, ILogProvider
         if (Name.IsNullOrEmpty()) throw new ArgumentNullException(__.Name, _.Name.DisplayName + "不能为空！");
 
         this.TrimExtraLong(__.Uuid, __.MachineGuid, __.MACs, __.DiskID, __.SerialNumber, __.OS, __.DriveInfo);
-        this.TrimExtraLong(__.Framework, __.Frameworks, __.IP);
+        this.TrimExtraLong(__.Framework, __.Frameworks, __.CLibVersion, __.IP);
 
         // 建议先调用基类方法，基类方法会做一些统一处理
         base.Valid(isNew);

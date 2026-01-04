@@ -233,7 +233,7 @@ public partial class Node
     [Category("硬件信息")]
     [DisplayName("驱动器信息")]
     [Description("驱动器信息。各分区大小，逗号分隔")]
-    [DataObjectField(false, false, true, 200)]
+    [DataObjectField(false, false, true, 500)]
     [BindColumn("DriveInfo", "驱动器信息。各分区大小，逗号分隔", "")]
     public String DriveInfo { get => _DriveInfo; set { if (OnPropertyChanging("DriveInfo", value)) { _DriveInfo = value; OnPropertyChanged("DriveInfo"); } } }
 
@@ -247,12 +247,12 @@ public partial class Node
     public Int32 MaxOpenFiles { get => _MaxOpenFiles; set { if (OnPropertyChanging("MaxOpenFiles", value)) { _MaxOpenFiles = value; OnPropertyChanged("MaxOpenFiles"); } } }
 
     private String _CLibVersion;
-    /// <summary>C运行时版本。Linux上为GLIBC/musl版本，Windows上为VC++运行时版本</summary>
+    /// <summary>C运行时。Linux上为GLIBC/musl版本，Windows上为VC++运行时版本</summary>
     [Category("系统信息")]
-    [DisplayName("C运行时版本")]
-    [Description("C运行时版本。Linux上为GLIBC/musl版本，Windows上为VC++运行时版本")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("CLibVersion", "C运行时版本。Linux上为GLIBC/musl版本，Windows上为VC++运行时版本", "")]
+    [DisplayName("C运行时")]
+    [Description("C运行时。Linux上为GLIBC/musl版本，Windows上为VC++运行时版本")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("CLibVersion", "C运行时。Linux上为GLIBC/musl版本，Windows上为VC++运行时版本", "")]
     public String CLibVersion { get => _CLibVersion; set { if (OnPropertyChanging("CLibVersion", value)) { _CLibVersion = value; OnPropertyChanged("CLibVersion"); } } }
 
     private String _Dpi;
@@ -968,7 +968,7 @@ public partial class Node
         /// <summary>最大打开文件。Linux上的ulimit -n</summary>
         public static readonly Field MaxOpenFiles = FindByName("MaxOpenFiles");
 
-        /// <summary>C运行时版本。Linux上为GLIBC/musl版本，Windows上为VC++运行时版本</summary>
+        /// <summary>C运行时。Linux上为GLIBC/musl版本，Windows上为VC++运行时版本</summary>
         public static readonly Field CLibVersion = FindByName("CLibVersion");
 
         /// <summary>像素点。例如96*96</summary>
@@ -1187,7 +1187,7 @@ public partial class Node
         /// <summary>最大打开文件。Linux上的ulimit -n</summary>
         public const String MaxOpenFiles = "MaxOpenFiles";
 
-        /// <summary>C运行时版本。Linux上为GLIBC/musl版本，Windows上为VC++运行时版本</summary>
+        /// <summary>C运行时。Linux上为GLIBC/musl版本，Windows上为VC++运行时版本</summary>
         public const String CLibVersion = "CLibVersion";
 
         /// <summary>像素点。例如96*96</summary>
