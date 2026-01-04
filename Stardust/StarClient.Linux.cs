@@ -8,6 +8,22 @@ namespace Stardust;
 /// <summary>星星客户端 - Linux平台信息采集</summary>
 public partial class StarClient
 {
+    #region 磁盘采样缓存
+    /// <summary>上次采样时间戳（毫秒）</summary>
+    private static Int64 _lastDiskSampleTime;
+
+    /// <summary>上次采样的磁盘读次数</summary>
+    private static Int64 _lastDiskReads;
+
+    /// <summary>上次采样的磁盘写次数</summary>
+    private static Int64 _lastDiskWrites;
+
+    /// <summary>上次采样的磁盘活动时间（毫秒）</summary>
+    private static Int64 _lastDiskIoTicks;
+
+    private static readonly Object _diskLock = new();
+    #endregion
+
     /// <summary>填充Linux专属信息</summary>
     /// <param name="di">节点信息</param>
     public static void FillOnLinux(NodeInfo di)
@@ -33,8 +49,10 @@ public partial class StarClient
             // 获取系统负载
             request.SystemLoad = GetLoad1();
 
-            // 获取磁盘IOPS
-            request.DiskIOPS = GetDiskIOPSLinux();
+            // 获取磁盘IOPS和活动时间
+            var (iops, activeTime) = GetDiskStatsLinux();
+            request.DiskIOPS = iops;
+            request.DiskActiveTime = activeTime;
         }
         catch { }
     }
@@ -58,51 +76,109 @@ public partial class StarClient
         return 0;
     }
 
-    private static Int32 GetDiskIOPSLinux()
+    /// <summary>获取磁盘IOPS和活动时间百分比</summary>
+    /// <returns>IOPS和活动时间百分比（0-100）</returns>
+    private static (Int32 IOPS, Double ActiveTime) GetDiskStatsLinux()
     {
         try
         {
-            // 读取 /proc/diskstats
-            // 格式: 主设备号 次设备号 设备名 读完成次数 ... 写完成次数 ...
-            // 例如: "8 0 sda 12345 ... 67890 ..."
             var file = "/proc/diskstats";
-            if (!File.Exists(file)) return 0;
+            if (!File.Exists(file)) return (0, 0);
 
-            var lines = File.ReadAllLines(file);
-            var totalReads = 0L;
-            var totalWrites = 0L;
+            var content = File.ReadAllText(file);
+            var (totalReads, totalWrites, totalIoTicks) = ParseDiskStats(content);
 
-            foreach (var line in lines)
+            var now = Runtime.TickCount64;
+
+            lock (_diskLock)
             {
-                var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length < 14) continue;
+                // 首次采样，保存数据并返回0
+                if (_lastDiskSampleTime == 0)
+                {
+                    _lastDiskSampleTime = now;
+                    _lastDiskReads = totalReads;
+                    _lastDiskWrites = totalWrites;
+                    _lastDiskIoTicks = totalIoTicks;
+                    return (0, 0);
+                }
 
-                var deviceName = parts[2];
-                // 只统计主磁盘（如sda、nvme0n1等），跳过分区（如sda1）
-                if (deviceName.StartsWith("loop") || deviceName.StartsWith("ram") || deviceName.StartsWith("dm-"))
-                    continue;
-                if (Regex.IsMatch(deviceName, @"^[a-z]+\d+$") && !deviceName.StartsWith("nvme"))
-                    continue;
-                if (Regex.IsMatch(deviceName, @"^nvme\d+n\d+p\d+$"))
-                    continue;
+                // 计算采样周期（毫秒）
+                var elapsed = now - _lastDiskSampleTime;
+                if (elapsed <= 0) return (0, 0);
 
-                // 第4列是读完成次数，第8列是写完成次数
-                if (parts.Length > 3) totalReads += parts[3].ToLong();
-                if (parts.Length > 7) totalWrites += parts[7].ToLong();
+                // 计算差值
+                var deltaReads = totalReads - _lastDiskReads;
+                var deltaWrites = totalWrites - _lastDiskWrites;
+                var deltaIoTicks = totalIoTicks - _lastDiskIoTicks;
+
+                // 处理计数器回绕或重置
+                if (deltaReads < 0) deltaReads = totalReads;
+                if (deltaWrites < 0) deltaWrites = totalWrites;
+                if (deltaIoTicks < 0) deltaIoTicks = totalIoTicks;
+
+                // 更新上次采样数据
+                _lastDiskSampleTime = now;
+                _lastDiskReads = totalReads;
+                _lastDiskWrites = totalWrites;
+                _lastDiskIoTicks = totalIoTicks;
+
+                // 计算IOPS：差值除以时间（转换为秒）
+                var elapsedSeconds = elapsed / 1000.0;
+                var iops = (Int32)((deltaReads + deltaWrites) / elapsedSeconds);
+
+                // 计算活动时间百分比：io_ticks（毫秒）除以采样周期（毫秒）
+                // 如果有多块磁盘，totalIoTicks是所有磁盘中最大的io_ticks
+                var activeTime = deltaIoTicks * 100.0 / elapsed;
+                if (activeTime > 100) activeTime = 100;
+
+                return (iops, Math.Round(activeTime, 2));
             }
-
-            // 这里返回的是累计值，实际IOPS需要两次采样计算差值
-            // 为简化处理，这里返回累计值除以开机时间估算
-            var uptime = GetUptime();
-            if (uptime > 0)
-                return (Int32)((totalReads + totalWrites) / uptime);
-
-            return 0;
         }
         catch
         {
-            return 0;
+            return (0, 0);
         }
+    }
+
+    /// <summary>解析 /proc/diskstats 内容，提取读写完成次数和IO活动时间</summary>
+    /// <param name="content">/proc/diskstats 原始内容</param>
+    /// <returns>读次数、写次数和最大IO活动时间（毫秒）</returns>
+    internal static (Int64 TotalReads, Int64 TotalWrites, Int64 MaxIoTicks) ParseDiskStats(String? content)
+    {
+        if (content.IsNullOrEmpty()) return (0, 0, 0);
+
+        var totalReads = 0L;
+        var totalWrites = 0L;
+        var maxIoTicks = 0L;
+
+        var lines = content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (var line in lines)
+        {
+            var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 14) continue;
+
+            // parts[0]=major parts[1]=minor parts[2]=device
+            var deviceName = parts[2];
+
+            // 只统计主磁盘（如sda、nvme0n1等），跳过分区（如sda1）
+            if (deviceName.StartsWith("loop") || deviceName.StartsWith("ram") || deviceName.StartsWith("dm-"))
+                continue;
+            if (Regex.IsMatch(deviceName, @"^[a-z]+\d+$") && !deviceName.StartsWith("nvme"))
+                continue;
+            if (Regex.IsMatch(deviceName, @"^nvme\d+n\d+p\d+$"))
+                continue;
+
+            // 第4列是读完成次数，第8列是写完成次数
+            totalReads += parts[3].ToLong();
+            totalWrites += parts[7].ToLong();
+
+            // 第13列是io_ticks（磁盘活动时间，毫秒）
+            // 对于多块磁盘，取最大值（因为任意一块磁盘忙碌就意味着系统可能受影响）
+            var ioTicks = parts[12].ToLong();
+            if (ioTicks > maxIoTicks) maxIoTicks = ioTicks;
+        }
+
+        return (totalReads, totalWrites, maxIoTicks);
     }
 
     private static Double GetUptime()
@@ -146,6 +222,7 @@ public partial class StarClient
                         if (line.Contains("VGA compatible controller") || line.Contains("3D controller"))
                         {
                             // 格式: "00:02.0 VGA compatible controller: Intel Corporation ..."
+
                             var idx = line.IndexOf(':');
                             if (idx > 0)
                             {
@@ -228,6 +305,7 @@ public partial class StarClient
                 foreach (var line in lines)
                 {
                     // 格式: "GPU 0: NVIDIA GeForce RTX 3080 (UUID: ...)"
+
                     if (line.StartsWith("GPU"))
                     {
                         var match = Regex.Match(line, @"GPU \d+: (.+?)\s*\(");
@@ -569,8 +647,7 @@ public partial class StarClient
     private static String? GetMuslVersionByLoader()
     {
         // musl 动态链接器路径列表，覆盖常见架构
-        var loaders = new[]
-        {
+        var loaders = new[] {
             "/lib/ld-musl-x86_64.so.1",
             "/lib/ld-musl-aarch64.so.1",
             "/lib/ld-musl-armhf.so.1",
@@ -711,6 +788,7 @@ public partial class StarClient
     {
         // 使用简单的 grep 获取包含 GLIBC_ 的行，然后在代码中解析
         var output = Execute("sh", $"-c \"strings '{libcPath}' 2>/dev/null | grep GLIBC_ | head -50\"");
+
         if (output.IsNullOrEmpty()) return null;
 
         // 解析所有 GLIBC_x.xx 版本，取最大值
@@ -736,6 +814,7 @@ public partial class StarClient
     {
         // 获取包含 musl 或 Version 的行
         var output = Execute("sh", $"-c \"strings '{libcPath}' 2>/dev/null | grep -i version | head -20\"");
+
         if (output.IsNullOrEmpty()) return null;
 
         var lines = output.Split('\n');
@@ -756,6 +835,7 @@ public partial class StarClient
     {
         // 获取包含 uClibc 的行
         var output = Execute("sh", $"-c \"strings '{libcPath}' 2>/dev/null | grep -i uclibc | head -10\"");
+
         if (output.IsNullOrEmpty()) return null;
 
         var lines = output.Split('\n');

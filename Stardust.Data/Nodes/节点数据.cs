@@ -134,6 +134,14 @@ public partial class NodeData
     [BindColumn("DiskIOPS", "磁盘IOPS。每秒磁盘IO操作次数", "")]
     public Int32 DiskIOPS { get => _DiskIOPS; set { if (OnPropertyChanging("DiskIOPS", value)) { _DiskIOPS = value; OnPropertyChanged("DiskIOPS"); } } }
 
+    private Double _DiskActiveTime;
+    /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
+    [DisplayName("磁盘活动时间")]
+    [Description("磁盘活动时间。多块磁盘的最大活动时间百分比")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("DiskActiveTime", "磁盘活动时间。多块磁盘的最大活动时间百分比", "", ItemType = "percent")]
+    public Double DiskActiveTime { get => _DiskActiveTime; set { if (OnPropertyChanging("DiskActiveTime", value)) { _DiskActiveTime = value; OnPropertyChanged("DiskActiveTime"); } } }
+
     private Int32 _ProcessCount;
     /// <summary>进程数</summary>
     [DisplayName("进程数")]
@@ -312,6 +320,7 @@ public partial class NodeData
             "UplinkSpeed" => _UplinkSpeed,
             "DownlinkSpeed" => _DownlinkSpeed,
             "DiskIOPS" => _DiskIOPS,
+            "DiskActiveTime" => _DiskActiveTime,
             "ProcessCount" => _ProcessCount,
             "TcpConnections" => _TcpConnections,
             "TcpTimeWait" => _TcpTimeWait,
@@ -351,6 +360,7 @@ public partial class NodeData
                 case "UplinkSpeed": _UplinkSpeed = value.ToLong(); break;
                 case "DownlinkSpeed": _DownlinkSpeed = value.ToLong(); break;
                 case "DiskIOPS": _DiskIOPS = value.ToInt(); break;
+                case "DiskActiveTime": _DiskActiveTime = value.ToDouble(); break;
                 case "ProcessCount": _ProcessCount = value.ToInt(); break;
                 case "TcpConnections": _TcpConnections = value.ToInt(); break;
                 case "TcpTimeWait": _TcpTimeWait = value.ToInt(); break;
@@ -448,6 +458,9 @@ public partial class NodeData
 
         /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
         public static readonly Field DiskIOPS = FindByName("DiskIOPS");
+
+        /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
+        public static readonly Field DiskActiveTime = FindByName("DiskActiveTime");
 
         /// <summary>进程数</summary>
         public static readonly Field ProcessCount = FindByName("ProcessCount");
@@ -553,6 +566,9 @@ public partial class NodeData
 
         /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
         public const String DiskIOPS = "DiskIOPS";
+
+        /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
+        public const String DiskActiveTime = "DiskActiveTime";
 
         /// <summary>进程数</summary>
         public const String ProcessCount = "ProcessCount";

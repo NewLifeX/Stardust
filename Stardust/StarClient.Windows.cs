@@ -67,8 +67,10 @@ public partial class StarClient
             // 获取处理器队列长度作为类似Load的指标
             request.SystemLoad = GetProcessorQueueLength();
 
-            // 获取磁盘IOPS
-            request.DiskIOPS = GetDiskIOPS();
+            // 获取磁盘IOPS和活动时间
+            var (iops, activeTime) = GetDiskStatsWindows();
+            request.DiskIOPS = iops;
+            request.DiskActiveTime = activeTime;
         }
         catch { }
     }
@@ -89,7 +91,7 @@ public partial class StarClient
             var rs = Execute("wmic", "path Win32_PerfFormattedData_PerfOS_System get ProcessorQueueLength /value");
             if (!rs.IsNullOrEmpty())
             {
-                var lines = rs.Split(new[] { '\r', '\n', '=' }, StringSplitOptions.RemoveEmptyEntries);
+                var lines = rs.Split(['\r', '\n', '='], StringSplitOptions.RemoveEmptyEntries);
                 foreach (var line in lines)
                 {
                     var value = line.Trim().ToDouble();
@@ -102,43 +104,69 @@ public partial class StarClient
         return 0;
     }
 
-    private static Int32 GetDiskIOPS()
+    /// <summary>获取磁盘IOPS和活动时间</summary>
+    /// <returns>IOPS和活动时间百分比</returns>
+    private static (Int32 IOPS, Double ActiveTime) GetDiskStatsWindows()
     {
-        // 优先使用性能计数器获取磁盘IOPS
+        // 优先使用性能计数器
         try
         {
             var reads = GetPerformanceCounterValue("PhysicalDisk", "Disk Reads/sec", "_Total");
             var writes = GetPerformanceCounterValue("PhysicalDisk", "Disk Writes/sec", "_Total");
+            // 使用 % Idle Time 计算活动时间，比 % Disk Time 更准确
+            var idleTime = GetPerformanceCounterValue("PhysicalDisk", "% Idle Time", "_Total");
 
+            var iops = 0;
             if (reads >= 0 || writes >= 0)
-                return (Int32)((reads > 0 ? reads : 0) + (writes > 0 ? writes : 0));
+                iops = (Int32)((reads > 0 ? reads : 0) + (writes > 0 ? writes : 0));
+
+            var activeTime = 0.0;
+            if (idleTime >= 0)
+            {
+                // 活动时间 = 100 - 空闲时间
+                activeTime = 100 - idleTime;
+                if (activeTime < 0) activeTime = 0;
+                if (activeTime > 100) activeTime = 100;
+                activeTime = Math.Round(activeTime / 100, 2);
+            }
+
+            if (iops > 0 || activeTime > 0)
+                return (iops, activeTime);
         }
         catch { }
 
-        // 降级为 WMIC 方式
+        // 降级为 WMIC 方式，一次查询获取所有数据
         try
         {
-            var rs = Execute("wmic", "path Win32_PerfFormattedData_PerfDisk_PhysicalDisk where Name='_Total' get DiskReadsPersec,DiskWritesPersec /value");
+            var rs = Execute("wmic", "path Win32_PerfFormattedData_PerfDisk_PhysicalDisk where \"Name='_Total'\" get DiskReadsPersec,DiskWritesPersec,PercentIdleTime /value");
             if (!rs.IsNullOrEmpty())
             {
                 var reads = 0;
                 var writes = 0;
+                var idleTime = 100.0;
 
-                var lines = rs.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                var lines = rs.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
                 foreach (var line in lines)
                 {
                     if (line.StartsWith("DiskReadsPersec="))
                         reads = line.Substring("DiskReadsPersec=".Length).Trim().ToInt();
                     else if (line.StartsWith("DiskWritesPersec="))
                         writes = line.Substring("DiskWritesPersec=".Length).Trim().ToInt();
+                    else if (line.StartsWith("PercentIdleTime="))
+                        idleTime = line.Substring("PercentIdleTime=".Length).Trim().ToDouble();
                 }
 
-                return reads + writes;
+                // 活动时间 = 100 - 空闲时间
+                var activeTime = 100 - idleTime;
+                if (activeTime < 0) activeTime = 0;
+                if (activeTime > 100) activeTime = 100;
+
+                return (reads + writes, Math.Round(activeTime / 100, 2));
             }
         }
         catch { }
 
-        return 0;
+        return (0, 0);
     }
 
     /// <summary>通过反射获取性能计数器值，避免直接依赖 System.Diagnostics.PerformanceCounter</summary>
@@ -163,14 +191,14 @@ public partial class StarClient
             if (instanceName.IsNullOrEmpty())
             {
                 // new PerformanceCounter(categoryName, counterName)
-                var ctor = counterType.GetConstructor(new[] { typeof(String), typeof(String) });
-                counter = ctor?.Invoke(new Object[] { categoryName, counterName });
+                var ctor = counterType.GetConstructor([typeof(String), typeof(String)]);
+                counter = ctor?.Invoke([categoryName, counterName]);
             }
             else
             {
                 // new PerformanceCounter(categoryName, counterName, instanceName)
-                var ctor = counterType.GetConstructor(new[] { typeof(String), typeof(String), typeof(String) });
-                counter = ctor?.Invoke(new Object[] { categoryName, counterName, instanceName });
+                var ctor = counterType.GetConstructor([typeof(String), typeof(String), typeof(String)]);
+                counter = ctor?.Invoke([categoryName, counterName, instanceName]);
             }
 
             if (counter == null) return -1;
@@ -231,7 +259,7 @@ public partial class StarClient
         String? currentName = null;
         var currentRam = 0L;
 
-        var lines = rs.Split(new[] { '\r', '\n' }, StringSplitOptions.None);
+        var lines = rs.Split(['\r', '\n'], StringSplitOptions.None);
         foreach (var raw in lines)
         {
             var line = raw?.Trim();
@@ -269,7 +297,7 @@ public partial class StarClient
         var rs = Execute("wmic", "path win32_VideoController get Name");
         if (rs.IsNullOrEmpty()) return gpuList;
 
-        var lines = rs.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        var lines = rs.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
         foreach (var line in lines)
         {
             var name = line.Trim();
@@ -519,8 +547,8 @@ public partial class StarClient
                 var graphicsType = Type.GetType("System.Drawing.Graphics, System.Drawing", false);
                 if (graphicsType != null)
                 {
-                    var mi = graphicsType.GetMethod("FromHwnd", new[] { typeof(IntPtr) });
-                    var g = mi?.Invoke(null, new Object[] { IntPtr.Zero });
+                    var mi = graphicsType.GetMethod("FromHwnd", [typeof(IntPtr)]);
+                    var g = mi?.Invoke(null, [IntPtr.Zero]);
                     if (g != null)
                     {
                         var dpix = g.GetType().GetProperty("DpiX")?.GetValue(g);

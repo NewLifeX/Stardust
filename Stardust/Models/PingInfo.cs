@@ -52,6 +52,9 @@ public class PingInfo : PingRequest
     /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
     public Int32 DiskIOPS { get; set; }
 
+    /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比，0-100</summary>
+    public Double DiskActiveTime { get; set; }
+
     /// <summary>网关延迟。到网关的平均延迟，单位ms</summary>
     public Int32 GatewayLatency { get; set; }
 

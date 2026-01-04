@@ -299,6 +299,14 @@ public partial class NodeOnline
     [BindColumn("DiskIOPS", "磁盘IOPS。每秒磁盘IO操作次数", "")]
     public Int32 DiskIOPS { get => _DiskIOPS; set { if (OnPropertyChanging("DiskIOPS", value)) { _DiskIOPS = value; OnPropertyChanged("DiskIOPS"); } } }
 
+    private Double _DiskActiveTime;
+    /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
+    [DisplayName("磁盘活动时间")]
+    [Description("磁盘活动时间。多块磁盘的最大活动时间百分比")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("DiskActiveTime", "磁盘活动时间。多块磁盘的最大活动时间百分比", "", ItemType = "percent")]
+    public Double DiskActiveTime { get => _DiskActiveTime; set { if (OnPropertyChanging("DiskActiveTime", value)) { _DiskActiveTime = value; OnPropertyChanged("DiskActiveTime"); } } }
+
     private Double _IntranetScore;
     /// <summary>内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
     [DisplayName("内网质量")]
@@ -556,6 +564,7 @@ public partial class NodeOnline
             "UplinkSpeed" => _UplinkSpeed,
             "DownlinkSpeed" => _DownlinkSpeed,
             "DiskIOPS" => _DiskIOPS,
+            "DiskActiveTime" => _DiskActiveTime,
             "IntranetScore" => _IntranetScore,
             "InternetScore" => _InternetScore,
             "GatewayLatency" => _GatewayLatency,
@@ -622,6 +631,7 @@ public partial class NodeOnline
                 case "UplinkSpeed": _UplinkSpeed = value.ToLong(); break;
                 case "DownlinkSpeed": _DownlinkSpeed = value.ToLong(); break;
                 case "DiskIOPS": _DiskIOPS = value.ToInt(); break;
+                case "DiskActiveTime": _DiskActiveTime = value.ToDouble(); break;
                 case "IntranetScore": _IntranetScore = value.ToDouble(); break;
                 case "InternetScore": _InternetScore = value.ToDouble(); break;
                 case "GatewayLatency": _GatewayLatency = value.ToInt(); break;
@@ -825,6 +835,9 @@ public partial class NodeOnline
         /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
         public static readonly Field DiskIOPS = FindByName("DiskIOPS");
 
+        /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
+        public static readonly Field DiskActiveTime = FindByName("DiskActiveTime");
+
         /// <summary>内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
         public static readonly Field IntranetScore = FindByName("IntranetScore");
 
@@ -1010,6 +1023,9 @@ public partial class NodeOnline
 
         /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
         public const String DiskIOPS = "DiskIOPS";
+
+        /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
+        public const String DiskActiveTime = "DiskActiveTime";
 
         /// <summary>内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%</summary>
         public const String IntranetScore = "IntranetScore";

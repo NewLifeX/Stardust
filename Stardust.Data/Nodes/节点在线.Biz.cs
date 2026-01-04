@@ -275,6 +275,7 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
         if (inf.DownlinkSpeed > 0) online.DownlinkSpeed = (Int64)inf.DownlinkSpeed;
         if (inf.SystemLoad > 0) online.SystemLoad = inf.SystemLoad;
         if (inf.DiskIOPS > 0) online.DiskIOPS = inf.DiskIOPS;
+        if (inf.DiskActiveTime > 0) online.DiskActiveTime = inf.DiskActiveTime;
         if (inf.ProcessCount > 0) online.ProcessCount = inf.ProcessCount;
         if (inf.TcpConnections > 0) online.TcpConnections = inf.TcpConnections;
         if (inf.TcpTimeWait > 0) online.TcpTimeWait = inf.TcpTimeWait;
@@ -332,6 +333,7 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
             UplinkSpeed = (Int64)inf.UplinkSpeed,
             DownlinkSpeed = (Int64)inf.DownlinkSpeed,
             DiskIOPS = inf.DiskIOPS,
+            DiskActiveTime = inf.DiskActiveTime,
             ProcessCount = inf.ProcessCount,
             TcpConnections = inf.TcpConnections,
             TcpTimeWait = inf.TcpTimeWait,
