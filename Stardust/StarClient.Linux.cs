@@ -612,10 +612,19 @@ public partial class StarClient
             var libcxxPath = FindLibStdCpp();
             if (libcxxPath.IsNullOrEmpty()) return null;
 
-            var ver = GetGlibcxxVersionByStrings(libcxxPath);
-            if (ver.IsNullOrEmpty()) return null;
+            // 1) 优先通过软连接目标推断版本（无需 strings/binutils）
+            var ver = GetGlibcxxVersionBySymlink(libcxxPath);
+            if (!ver.IsNullOrEmpty()) return "glibcxx " + ver;
 
-            return "glibc++ " + ver;
+            // 2) 再尝试从同目录文件名推断最大版本
+            ver = GetGlibcxxVersionByFileName(libcxxPath);
+            if (!ver.IsNullOrEmpty()) return "glibcxx " + ver;
+
+            // 3) 最后才尝试 strings（若系统具备）
+            ver = GetGlibcxxVersionByStrings(libcxxPath);
+            if (!ver.IsNullOrEmpty()) return "glibcxx " + ver;
+
+            return null;
         }
         catch
         {
@@ -641,34 +650,88 @@ public partial class StarClient
                 var file = Path.Combine(libPath, "libstdc++.so.6");
                 if (File.Exists(file)) return file;
 
-                var files = Directory.GetFiles(libPath, "libstdc++.so.6*");
-                if (files != null && files.Length > 0)
-                {
-                    var first = files.FirstOrDefault();
-                    if (!first.IsNullOrEmpty()) return first;
-                }
+                // 有些发行版可能直接以版本文件存在
+                var verFile = Directory.GetFiles(libPath, "libstdc++.so.6.0.*").FirstOrDefault();
+                if (!verFile.IsNullOrEmpty()) return verFile;
             }
             catch { }
-        }
-
-        // 最后尝试 ldconfig
-        var rs = Execute("sh", "-c \"ldconfig -p 2>/dev/null | grep -m 1 'libstdc\\+\\+\\.so\\.6'\"");
-        if (!rs.IsNullOrEmpty())
-        {
-            // 输出示例："libstdc++.so.6 (libc6,x86-64) => /lib64/libstdc++.so.6"
-            var idx = rs.LastIndexOf("=>", StringComparison.Ordinal);
-            if (idx > 0)
-            {
-                var path = rs[(idx + 2)..].Trim();
-                if (!path.IsNullOrEmpty() && File.Exists(path)) return path;
-            }
         }
 
         return null;
     }
 
+    private static String? GetGlibcxxVersionBySymlink(String libcxxPath)
+    {
+        try
+        {
+#if NET6_0_OR_GREATER
+            if (File.Exists(libcxxPath))
+            {
+                var fi = new FileInfo(libcxxPath);
+                // LinkTarget 可能是相对路径
+                var target = fi.LinkTarget;
+                if (!target.IsNullOrEmpty())
+                {
+                    if (!Path.IsPathRooted(target))
+                        target = Path.GetFullPath(Path.Combine(fi.DirectoryName!, target));
+
+                    var ver = TryParseGlibcxxFromLibStdCppName(Path.GetFileName(target));
+                    if (!ver.IsNullOrEmpty()) return ver;
+                }
+            }
+#endif
+        }
+        catch { }
+
+        return null;
+    }
+
+    private static String? GetGlibcxxVersionByFileName(String libcxxPath)
+    {
+        try
+        {
+            var dir = Path.GetDirectoryName(libcxxPath);
+            if (dir.IsNullOrEmpty() || !Directory.Exists(dir)) return null;
+
+            // 在同目录查找更精确的版本文件：libstdc++.so.6.0.xx
+            Version? max = null;
+            foreach (var item in Directory.GetFiles(dir, "libstdc++.so.6.0.*"))
+            {
+                var name = Path.GetFileName(item);
+                var ver = TryParseGlibcxxFromLibStdCppName(name);
+                if (ver.IsNullOrEmpty()) continue;
+
+                if (Version.TryParse(ver, out var v) && (max == null || v > max))
+                    max = v;
+            }
+
+            return max?.ToString();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static String? TryParseGlibcxxFromLibStdCppName(String? fileName)
+    {
+        // 常见：libstdc++.so.6.0.30 -> GLIBCXX_3.4.30
+        if (fileName.IsNullOrEmpty()) return null;
+
+        var m = Regex.Match(fileName, @"libstdc\+\+\.so\.6\.0\.(\d+)");
+        if (!m.Success) return null;
+
+        var patch = m.Groups[1].Value.ToInt();
+        if (patch <= 0) return null;
+
+        return $"3.4.{patch}";
+    }
+
     private static String? GetGlibcxxVersionByStrings(String libcxxPath)
     {
+        // 没有 strings（binutils 未安装）时，直接放弃，不再用 Execute 探测
+        if (!File.Exists("/usr/bin/strings") && !File.Exists("/bin/strings")) return null;
+
         // 取较多行，覆盖到更高版本号，再在代码中计算最大值
         var output = Execute("sh", $"-c \"strings '{libcxxPath}' 2>/dev/null | grep '^GLIBCXX_' | head -200\"");
         if (output.IsNullOrEmpty()) return null;
