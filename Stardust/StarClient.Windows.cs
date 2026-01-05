@@ -371,7 +371,7 @@ public partial class StarClient
                 versions.AddRange(oldVersions);
 
             // 按版本号倒序排列
-            return versions.Count > 0 ? versions.OrderByDescending(e => e).Join(",") : null;
+            return versions.Count > 0 ? versions.OrderByDescending(e => e).Join(";") : null;
         }
         catch
         {

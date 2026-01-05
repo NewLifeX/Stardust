@@ -181,23 +181,6 @@ public partial class StarClient
         return (totalReads, totalWrites, maxIoTicks);
     }
 
-    private static Double GetUptime()
-    {
-        try
-        {
-            var file = "/proc/uptime";
-            if (File.Exists(file))
-            {
-                var content = File.ReadAllText(file);
-                var parts = content.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length > 0)
-                    return parts[0].ToDouble();
-            }
-        }
-        catch { }
-        return 0;
-    }
-
     private static String? GetGpuInfoLinux()
     {
         try
@@ -589,6 +572,22 @@ public partial class StarClient
     /// <returns></returns>
     private static String? GetLibcVersion()
     {
+        // libc（glibc/musl/uClibc）
+        var libcVersion = GetLibcVersionCore();
+
+        // libstdc++（GLIBCXX_）
+        var glibcxxVersion = GetGlibcxxVersion();
+
+        if (libcVersion.IsNullOrEmpty() && glibcxxVersion.IsNullOrEmpty()) return null;
+
+        if (libcVersion.IsNullOrEmpty()) return glibcxxVersion;
+        if (glibcxxVersion.IsNullOrEmpty()) return libcVersion;
+
+        return libcVersion + ";" + glibcxxVersion;
+    }
+
+    private static String? GetLibcVersionCore()
+    {
         // 方式1：尝试通过 ldd --version 获取版本
         var version = GetLibcVersionByLdd();
         if (!version.IsNullOrEmpty()) return version;
@@ -602,6 +601,106 @@ public partial class StarClient
         if (!version.IsNullOrEmpty()) return version;
 
         return null;
+    }
+
+    /// <summary>获取libstdc++支持的最高GLIBCXX版本</summary>
+    /// <returns>如“glibcxx 3.4.19”</returns>
+    private static String? GetGlibcxxVersion()
+    {
+        try
+        {
+            var libcxxPath = FindLibStdCpp();
+            if (libcxxPath.IsNullOrEmpty()) return null;
+
+            var ver = GetGlibcxxVersionByStrings(libcxxPath);
+            if (ver.IsNullOrEmpty()) return null;
+
+            return "glibc++ " + ver;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static String? FindLibStdCpp()
+    {
+        var libPaths = new[]
+        {
+            "/lib64", "/usr/lib64", "/lib", "/usr/lib",
+            "/usr/lib/x86_64-linux-gnu", "/lib/x86_64-linux-gnu",
+            "/usr/lib/aarch64-linux-gnu", "/lib/aarch64-linux-gnu",
+        };
+
+        foreach (var libPath in libPaths)
+        {
+            if (!Directory.Exists(libPath)) continue;
+
+            try
+            {
+                var file = Path.Combine(libPath, "libstdc++.so.6");
+                if (File.Exists(file)) return file;
+
+                var files = Directory.GetFiles(libPath, "libstdc++.so.6*");
+                if (files != null && files.Length > 0)
+                {
+                    var first = files.FirstOrDefault();
+                    if (!first.IsNullOrEmpty()) return first;
+                }
+            }
+            catch { }
+        }
+
+        // 最后尝试 ldconfig
+        var rs = Execute("sh", "-c \"ldconfig -p 2>/dev/null | grep -m 1 'libstdc\\+\\+\\.so\\.6'\"");
+        if (!rs.IsNullOrEmpty())
+        {
+            // 输出示例："libstdc++.so.6 (libc6,x86-64) => /lib64/libstdc++.so.6"
+            var idx = rs.LastIndexOf("=>", StringComparison.Ordinal);
+            if (idx > 0)
+            {
+                var path = rs[(idx + 2)..].Trim();
+                if (!path.IsNullOrEmpty() && File.Exists(path)) return path;
+            }
+        }
+
+        return null;
+    }
+
+    private static String? GetGlibcxxVersionByStrings(String libcxxPath)
+    {
+        // 取较多行，覆盖到更高版本号，再在代码中计算最大值
+        var output = Execute("sh", $"-c \"strings '{libcxxPath}' 2>/dev/null | grep '^GLIBCXX_' | head -200\"");
+        if (output.IsNullOrEmpty()) return null;
+
+        Version? maxVersion = null;
+        var lines = output.Split('\n');
+        foreach (var line in lines)
+        {
+            // 示例：GLIBCXX_3.4.19
+            var match = Regex.Match(line, @"GLIBCXX_(\d+\.\d+\.\d+)");
+            if (match.Success)
+            {
+                // Version 能解析 3.4.19
+                if (Version.TryParse(match.Groups[1].Value, out var ver))
+                {
+                    if (maxVersion == null || ver > maxVersion)
+                        maxVersion = ver;
+                }
+            }
+            else
+            {
+                // 兼容 GLIBCXX_3.4（无第三段）
+                match = Regex.Match(line, @"GLIBCXX_(\d+\.\d+)");
+                if (match.Success && Version.TryParse(match.Groups[1].Value, out var ver))
+                {
+                    if (maxVersion == null || ver > maxVersion)
+                        maxVersion = ver;
+                }
+            }
+        }
+
+        return maxVersion?.ToString();
     }
 
     /// <summary>通过 ldd --version 获取 libc 版本</summary>
@@ -638,6 +737,8 @@ public partial class StarClient
             var ver = ExtractVersionNumber(line, "Version");
             if (!ver.IsNullOrEmpty())
                 return $"musl {ver}";
+
+            return "musl";
         }
 
         return null;
