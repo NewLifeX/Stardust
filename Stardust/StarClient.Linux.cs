@@ -368,17 +368,53 @@ public partial class StarClient
 
             // 方式1：通过 xdpyinfo 获取 DPI
             if (di.Dpi.IsNullOrEmpty())
-                di.Dpi = GetDpiByXdpyinfo();
+                di.Dpi = NormalizeDpi(GetDpiByXdpyinfo());
 
             // 方式2：通过 xrdb 获取 Xft.dpi 设置
             if (di.Dpi.IsNullOrEmpty())
-                di.Dpi = GetDpiByXrdb();
+                di.Dpi = NormalizeDpi(GetDpiByXrdb());
 
             // 方式3：通过 GNOME/KDE 配置获取缩放比例推算 DPI
             if (di.Dpi.IsNullOrEmpty())
-                di.Dpi = GetDpiByGSettings();
+                di.Dpi = NormalizeDpi(GetDpiByGSettings());
         }
         catch { }
+    }
+
+    private static String? NormalizeDpi(String? dpi)
+    {
+        if (!TryParseDpi(dpi, out var dx, out var dy)) return null;
+
+        // DPI 极值通常是采集/解析异常（如 CentOS 7.6 出现 3072*3072）
+        // 常见 DPI：96/120/144/192/240/288 等，此处给一个宽松上限
+        if (dx <= 0 || dy <= 0) return null;
+        if (dx > 1000 || dy > 1000) return null;
+
+        // 保持存储格式一致：x*y
+        if (dx == dy) return $"{dx}*{dy}";
+
+        // 少数环境会出现非等比例值（取平均更贴近 UI 缩放感知）
+        var d = (Int32)Math.Round((dx + dy) / 2d);
+        if (d <= 0 || d > 1000) return null;
+
+        return $"{d}*{d}";
+    }
+
+    private static Boolean TryParseDpi(String? text, out Int32 dpiX, out Int32 dpiY)
+    {
+        dpiX = 0;
+        dpiY = 0;
+
+        if (text.IsNullOrEmpty()) return false;
+
+        // 允许 "96*96" 或 "96x96"
+        var m = Regex.Match(text.Trim(), @"^(\d+)\s*[*xX]\s*(\d+)$");
+        if (!m.Success) return false;
+
+        dpiX = m.Groups[1].Value.ToInt();
+        dpiY = m.Groups[2].Value.ToInt();
+
+        return dpiX > 0 && dpiY > 0;
     }
 
     /// <summary>通过 xrandr 获取当前分辨率</summary>
