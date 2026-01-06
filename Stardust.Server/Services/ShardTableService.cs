@@ -127,8 +127,8 @@ public class ShardTableService : IHostedService
                 for (var i = 0; i < 31; i++)
                 {
                     var dt = now.AddDays(-i);
-                    rs += TraceData.DeleteBefore(dt, startTime);
-                    rs += SampleData.DeleteBefore(dt, startTime);
+                    rs += TraceData.DeleteBefore(dt, startTime, 1_000_000);
+                    rs += SampleData.DeleteBefore(dt, startTime, 1_000_000);
                 }
             }
             else
@@ -150,7 +150,7 @@ public class ShardTableService : IHostedService
                         try
                         {
                             if (dal.DbType == DatabaseType.SQLite || _setting.ClearMode == ClearModes.Delete)
-                                rs += TraceData.DeleteBefore(dt, startTime);
+                                rs += TraceData.DeleteBefore(dt, startTime, 1_000_000);
                             else
                                 rs += dal.Execute($"Truncate Table {name}");
                         }
@@ -165,7 +165,7 @@ public class ShardTableService : IHostedService
                         try
                         {
                             if (dal.DbType == DatabaseType.SQLite || _setting.ClearMode == ClearModes.Delete)
-                                rs += SampleData.DeleteBefore(dt, startTime);
+                                rs += SampleData.DeleteBefore(dt, startTime, 1_000_000);
                             else
                                 rs += dal.Execute($"Truncate Table {name}");
                         }

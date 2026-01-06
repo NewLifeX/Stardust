@@ -290,7 +290,7 @@ public partial class SampleData : Entity<SampleData>
     /// <summary>删除指定日期之前的数据</summary>
     /// <param name="date"></param>
     /// <returns></returns>
-    public static Int32 DeleteBefore(DateTime date, DateTime endTime)
+    public static Int32 DeleteBefore(DateTime date, DateTime endTime, Int32 maximumRows)
     {
         //Delete(_.Id < Meta.Factory.Snow.GetId(date));
         using var split = Meta.CreateShard(date);
@@ -299,7 +299,7 @@ public partial class SampleData : Entity<SampleData>
         var whereExp = _.Id < snow.GetId(endTime);
 
         // 使用底层接口，分批删除
-        return Delete(whereExp);
+        return Delete(whereExp, maximumRows);
     }
     #endregion
 }
