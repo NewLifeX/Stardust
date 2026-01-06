@@ -34,7 +34,7 @@ public partial class AppService : Entity<AppService>
         //var len = _.CheckResult.Length;
         //if (len > 0 && !CheckResult.IsNullOrEmpty() && CheckResult.Length > len) CheckResult = CheckResult[..len];
 
-        this.TrimExtraLong(_.Address, _.OriginAddress, _.CheckResult);
+        this.TrimExtraLong(_.Address, _.OriginAddress, _.CheckResult, _.ExternalAddress);
 
         base.Valid(isNew);
     }
