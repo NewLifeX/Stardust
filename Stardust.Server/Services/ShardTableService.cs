@@ -59,15 +59,19 @@ public class ShardTableService : IHostedService
             {
                 var date = i + 1;
 
+                var table1 = TraceData.Meta.Table.DataTable.Clone() as IDataTable;
+                table1.TableName = $"TraceData_{date:00}";
+                ts.Add(table1);
+
+                var table2 = SampleData.Meta.Table.DataTable.Clone() as IDataTable;
+                table2.TableName = $"SampleData_{date:00}";
+                ts.Add(table2);
+
+                // SQLite分为很多个库
+                if (dal.DbType == DatabaseType.SQLite)
                 {
-                    var table = TraceData.Meta.Table.DataTable.Clone() as IDataTable;
-                    table.TableName = $"TraceData_{date:00}";
-                    ts.Add(table);
-                }
-                {
-                    var table = SampleData.Meta.Table.DataTable.Clone() as IDataTable;
-                    table.TableName = $"SampleData_{date:00}";
-                    ts.Add(table);
+                    var dalTrace = DAL.Create($"Trace{date:00}");
+                    dalTrace.Db.CreateMetaData().SetTables(Migration.On, [table1, table2]);
                 }
             }
 
@@ -75,8 +79,11 @@ public class ShardTableService : IHostedService
             {
                 XTrace.WriteLine("检查循环天表[{0}]：{1}", ts.Count, ts.Join(",", e => e.TableName));
 
-                //dal.SetTables(ts.ToArray());
-                dal.Db.CreateMetaData().SetTables(Migration.On, ts.ToArray());
+                if (dal.DbType != DatabaseType.SQLite)
+                {
+                    //dal.SetTables(ts.ToArray());
+                    dal.Db.CreateMetaData().SetTables(Migration.On, ts.ToArray());
+                }
 
                 // 首次建表时，设置为压缩表
                 if (dal.DbType == DatabaseType.MySql)

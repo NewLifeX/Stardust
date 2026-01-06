@@ -33,7 +33,6 @@ public static class StarDataHelper
         var p = dbfile.LastIndexOfAny('/', '\\');
         var dir = p >= 0 ? dbfile[..p] : ".";
         dir = dir + "/Traces";
-        //if (Directory.Exists(dir.GetFullPath())) return;
         var existed = Directory.Exists(dir.GetFullPath());
 
         // 如果已存在，不要显示太多日志
@@ -45,7 +44,7 @@ public static class StarDataHelper
         var tableTrace = TraceData.Meta.Table.DataTable;
         var tableSample = SampleData.Meta.Table.DataTable;
 
-        // 添加31个分库连接字符串
+        // 添加31个分库连接字符串，同一天的TraceData表和SampleData表必须在同一个库，有关联查询
         for (var i = 0; i < 31; i++)
         {
             var date = i + 1;
@@ -67,21 +66,6 @@ public static class StarDataHelper
                     DAL.Create(key).Db.CreateMetaData().SetTables(Migration.On, [table1, table2]);
                 }
             }
-
-            //key = $"SampleData{date:00}";
-            //file = $"{dir}/{key}.db";
-            //if (!DAL.ConnStrs.ContainsKey(key))
-            //{
-            //    builder["Data Source"] = file;
-            //    DAL.AddConnStr(key, builder.ToString(), null, "sqlite");
-
-            //    if (!File.Exists(file))
-            //    {
-            //        var table = tableSample.Clone() as IDataTable;
-            //        table.TableName = $"SampleData_{date:00}";
-            //        DAL.Create(key).Db.CreateMetaData().SetTables(Migration.On, table);
-            //    }
-            //}
         }
 
         // 准备迁移表数据，并在原始库中删除表
