@@ -8,6 +8,7 @@ using NewLife.IP;
 using NewLife.Log;
 using NewLife.Remoting.Extensions;
 using NewLife.Serialization;
+using Stardust.Data;
 using Stardust.Data.Nodes;
 using Stardust.Extensions.Caches;
 using Stardust.Monitors;
@@ -154,6 +155,10 @@ public class Startup
                 DAL.AddConnStr("StardustData", dal.ConnStr, null, dal.DbType + "");
             }
         }
+
+        // 在Sqlite中拆分TraceData和SampleData到多个Sqlite数据库
+        StarDataHelper.SplitSqliteTables();
+
         //EntityFactory.InitConnection("Stardust");
         //EntityFactory.InitConnection("StardustData");
 

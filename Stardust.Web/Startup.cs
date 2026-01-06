@@ -119,6 +119,10 @@ public class Startup
                 DAL.AddConnStr("StardustData", dal.ConnStr, null, dal.DbType + "");
             }
         }
+
+        // 在Sqlite中拆分TraceData和SampleData到多个Sqlite数据库
+        StarDataHelper.SplitSqliteTables();
+
         EntityFactory.InitConnection("Stardust");
         EntityFactory.InitConnection("StardustData");
 
