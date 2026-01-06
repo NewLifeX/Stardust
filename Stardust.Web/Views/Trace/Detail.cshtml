@@ -14,6 +14,7 @@
     var page = Model.Page;
     var list = Model.Data;
     var traceId = page["id"];
+    var dicTrace = new Dictionary<Int64, TraceData>();
 }
 <div class="table-responsive">
     @if (!traceId.IsNullOrEmpty())
@@ -30,6 +31,7 @@
                 <th class="text-center" title="耗时。毫秒"><a href="@Html.Raw(page.GetSortUrl("Cost"))">耗时</a></th>
                 <th class="text-center" title="数值。用户自定义标量"><a href="@Html.Raw(page.GetSortUrl("Value"))">数值</a></th>
                 <th class="text-center" title="数据标签或异常信息">内容</th>
+                <th class="text-center">节点</th>
                 <th class="text-center">操作</th>
             </tr>
         </thead>
@@ -53,6 +55,10 @@
                     color2 = "palevioletred";
                 }
                 var msg = !entity.Tag.IsNullOrEmpty() ? entity.Tag : entity.Error;
+                if (!dicTrace.TryGetValue(entity.DataId, out var td))
+                {
+                    dicTrace[entity.DataId] = td = TraceData.FindById(entity.DataId);
+                }
                 <tr>
                     <td class="text-center"><a href="@url1">@entity.AppName</a></td>
                     <td title="@entity.Name" style="max-width:240px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;">
@@ -65,6 +71,7 @@
                     <td class="text-right">@entity.Cost.ToString("n0")</td>
                     <td class="text-right">@entity.Value.ToString("n0")</td>
                     <td style="white-space: pre-wrap;word-wrap:break-word;word-break:break-all;">@Html.Raw(msg)</td>
+                    <td class="text-center">@(td?.NodeName)</td>
                     <td class="text-center">
                         <a href="/monitors/sampledata/detail/@entity.Id">查看</a>
                     </td>

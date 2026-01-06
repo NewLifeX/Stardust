@@ -17,6 +17,7 @@
             <th class="text-center" title="操作名。接口名或埋点名">操作名</th>
             <th style="width:80%">时间轴</th>
             <th class="text-center" title="数值。用户自定义标量">数值</th>
+            <th class="text-center">节点</th>
             <th class="text-center">操作</th>
         </tr>
     </thead>
@@ -26,6 +27,7 @@
             var min = Model.Min(e => e.StartTime);
             var max = Model.Max(e => e.EndTime);
             var length = max - min;
+            var dicTrace = new Dictionary<Int64, TraceData>();
         }
         @foreach (var entity in Model)
         {
@@ -71,6 +73,10 @@
                 tabs += "&nbsp;&nbsp;";
                 }*@
             var tabs = new String('　', entity.Level);
+            if (!dicTrace.TryGetValue(entity.DataId, out var td))
+            {
+                dicTrace[entity.DataId] = td = TraceData.FindById(entity.DataId);
+            }
             <tr>
                 <td class="text-center"><a href="@url1" title="应用最近的监控图表">@entity.AppName</a></td>
                 <td title="@entity.Tag" style="max-width:400px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;">
@@ -85,12 +91,13 @@
                     }
                     else
                     {
-                        <div style="float:left;width:@((left-0.04).ToString("p"))">&nbsp;</div>
+                        <div style="float:left;width:@((left - 0.04).ToString("p"))">&nbsp;</div>
                         <div style="float:left;width:4%">@ms.ToString("n0")ms</div>
                         <div style="background-color: @color;float:left;width:@w.ToString("p")">&nbsp;</div>
                     }
                 </td>
                 <td class="text-right">@entity.Value.ToString("n0")</td>
+                <td class="text-center">@(td?.NodeName)</td>
                 <td class="text-center">
                     <a href="/monitors/sampledata/detail/@entity.Id">查看</a>
                 </td>
