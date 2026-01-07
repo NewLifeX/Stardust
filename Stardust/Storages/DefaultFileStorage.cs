@@ -212,6 +212,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
                 client = new ApiHttpClient
                 {
                     DefaultUserAgent = HttpHelper.DefaultUserAgent,
+                    Timeout = 3_000,
                     Tracer = Tracer,
                     Log = Log,
                 };
