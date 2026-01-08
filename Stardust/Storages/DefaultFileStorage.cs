@@ -211,6 +211,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
             {
                 client = new ApiHttpClient
                 {
+                    LoadBalanceMode = LoadBalanceMode.Race,
                     DefaultUserAgent = HttpHelper.DefaultUserAgent,
                     Timeout = 3_000,
                     Tracer = Tracer,
@@ -222,7 +223,9 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
                 _cache.Set(key, client, 600);
             }
 
-            await client.DownloadFileAsync(url, fileName, file.Hash, cancellationToken).ConfigureAwait(false);
+            //await client.DownloadFileAsync(url, fileName, file.Hash, cancellationToken).ConfigureAwait(false);
+            // 使用竞速下载
+            await client.DownloadFileRaceAsync(url, fileName, file.Hash, false, cancellationToken).ConfigureAwait(false);
 
             WriteLog("下载文件：{0}，成功：{1}", file.Name, client.Current?.Address);
         }
