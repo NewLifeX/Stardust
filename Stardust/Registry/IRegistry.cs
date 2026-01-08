@@ -1,4 +1,5 @@
-﻿using NewLife;
+﻿using System.Linq;
+using NewLife;
 using NewLife.Log;
 using NewLife.Remoting;
 using Stardust.Models;
@@ -83,7 +84,7 @@ public static class RegistryExtensions
     {
         var http = new ApiHttpClient
         {
-            RoundRobin = true,
+            LoadBalanceMode = LoadBalanceMode.RoundRobin,
 
             //Log = (registry as ILogFeature).Log,
             Tracer = DefaultTracer.Instance,
@@ -109,57 +110,63 @@ public static class RegistryExtensions
 
     /// <summary>绑定客户端到服务集合，更新服务地址</summary>
     /// <param name="client"></param>
-    /// <param name="ms"></param>
-    public static void BindServices(this ApiHttpClient client, ServiceModel[] ms)
+    /// <param name="models"></param>
+    public static void BindServices(this ApiHttpClient client, ServiceModel[] models)
     {
-        if (ms == null || ms.Length == 0) return;
+        if (models == null || models.Length == 0) return;
 
-        var serviceName = ms[0].ServiceName;
-        var services = client.Services;
-        var dic = services.ToDictionary(e => e.Name, e => e);
-        var names = new List<String>();
-        foreach (var item in ms)
+        // 从服务模型中提取地址
+        var dicModels = new Dictionary<String, (ServiceModel Model, String Address, Boolean Internal)>();
+        foreach (var model in models)
         {
-            // 同时考虑两个地址
-            var name = item.Client;
-            var addrs = (item.Address + "," + item.Address2).Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-            var set = new HashSet<String>();
-            for (var i = 0; i < addrs.Length; i++)
+            var ds = new[] { model.Address, model.Address2 };
+            for (var i = 0; i < ds.Length; i++)
             {
-                var addr = addrs[i];
-                if (!addr.StartsWithIgnoreCase("http://", "https://")) continue;
-                if (set.Contains(addr)) continue;
-                set.Add(addr);
+                var elm = ds[i];
+                if (elm.IsNullOrEmpty()) continue;
 
-                // 第一个使用Client名，后续地址增加#2后缀
-                var svcName = i <= 0 && !name.IsNullOrEmpty() ? name : $"{name}#{i + 1}";
-                if (!dic.TryGetValue(svcName, out var svc))
+                var addrs = elm.Split([','], StringSplitOptions.RemoveEmptyEntries);
+                foreach (var addr in addrs)
                 {
-                    svc = new ApiHttpClient.Service
-                    {
-                        Name = svcName,
-                        Address = new Uri(addr),
-                        Weight = item.Weight,
-                    };
-                    services.Add(svc);
-                    dic.Add(svcName, svc);
+                    if (!Uri.TryCreate(addr, UriKind.Absolute, out var uri)) continue;
 
-                    XTrace.WriteLine("服务[{0}]新增地址：name={1} address={2} weight={3}", serviceName, svcName, svc.Address, item.Weight);
+                    var name = uri.GetLeftPart(UriPartial.Authority).TrimEnd('/');
+                    dicModels[name] = (model, addr, i == 0);
                 }
-                else
-                {
-                    svc.Address = new Uri(addr);
-                    svc.Weight = item.Weight;
-                }
-                names.Add(svcName);
             }
+        }
+
+        // 如果地址没有改变，则不更新
+        var services = client.Services;
+        if (services.Count == dicModels.Count)
+        {
+            var str1 = services.Select(e => e.UriName).OrderBy(e => e).Join(",");
+            var str2 = dicModels.Keys.OrderBy(e => e).Join(",");
+            if (str1.EqualIgnoreCase(str2)) return;
+        }
+
+        // 逐个地址落实更新
+        var serviceName = models[0].ServiceName;
+        foreach (var item in dicModels)
+        {
+            var svc = services.FirstOrDefault(e => e.UriName.EqualIgnoreCase(item.Key));
+            if (svc != null)
+            {
+                services.Remove(svc);
+                XTrace.WriteLine("服务[{0}]删除地址：name={1} address={2} weight={3}", serviceName, svc.Name, svc.Address, svc.Weight);
+            }
+
+            var v = item.Value;
+            client.AddServer(v.Internal ? "内网" : "外网", v.Address, v.Model.Weight);
+            svc = services[^1];
+            XTrace.WriteLine("服务[{0}]新增地址：name={1} address={2} weight={3}", serviceName, svc.Name, v.Address, v.Model.Weight);
         }
 
         // 删掉旧的
         for (var i = services.Count - 1; i >= 0; i--)
         {
             var svc = services[i];
-            if (!svc.Name.IsNullOrEmpty() && !names.Contains(svc.Name))
+            if (!svc.UriName.IsNullOrEmpty() && !dicModels.ContainsKey(svc.UriName))
             {
                 XTrace.WriteLine("服务[{0}]删除地址：name={1} address={2} weight={3}", serviceName, svc.Name, svc.Address, svc.Weight);
 

@@ -759,7 +759,7 @@ public class NetRuntime
         // 通用处理
         if (list.Count == 0)
         {
-            var infs = Execute("dotnet", "--list-runtimes")?.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            var infs = Execute("dotnet", "--list-runtimes")?.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
             if (infs != null)
             {
                 foreach (var line in infs)
@@ -883,7 +883,7 @@ public class NetRuntime
             var line = reader.ReadLine()?.Trim();
             if (line == null || String.IsNullOrEmpty(line)) continue;
 
-            var ss = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            var ss = line.Split([' '], StringSplitOptions.RemoveEmptyEntries);
             if (ss.Length >= 2)
             {
                 dic[ss[0]] = ss[1];
