@@ -70,13 +70,13 @@ public class StarFactoryTests
 
         var client = star.CreateForService("StarWeb", "tagB") as ApiHttpClient;
         Assert.NotNull(client);
-        Assert.True(client.RoundRobin);
-        Assert.Equal(0, client.Services.Count);
+        Assert.Equal(LoadBalanceMode.RoundRobin, client.LoadBalanceMode);
+        Assert.Empty(client.Services);
 
         // 第二次请求，避免使用前面的缓存
         var client2 = star.CreateForService("StarWeb", null) as ApiHttpClient;
         Assert.NotNull(client2);
-        Assert.True(client2.RoundRobin);
+        Assert.Equal(LoadBalanceMode.RoundRobin, client2.LoadBalanceMode);
         //Assert.Equal("https://localhost:5001/,http://localhost:5000/", client2.Services.Join(",", e => e.Address));
         Assert.NotEmpty(client2.Services);
     }

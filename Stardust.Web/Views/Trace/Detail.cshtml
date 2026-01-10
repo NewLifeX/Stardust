@@ -70,7 +70,7 @@
                     <td class="text-center" title="@entity.StartTime">@entity.Start.ToString("HH:mm:ss.fff")</td>
                     <td class="text-right">@entity.Cost.ToString("n0")</td>
                     <td class="text-right">@entity.Value.ToString("n0")</td>
-                    <td style="white-space: pre-wrap;word-wrap:break-word;word-break:break-all;">@Html.Raw(msg)</td>
+                    <td style="white-space: pre-wrap;word-wrap:break-word;word-break:break-all;">@msg</td>
                     <td class="text-center">@(td?.NodeName)</td>
                     <td class="text-center">
                         <a href="/monitors/sampledata/detail/@entity.Id">查看</a>
