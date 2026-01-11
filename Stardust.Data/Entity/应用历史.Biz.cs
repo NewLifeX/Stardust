@@ -6,7 +6,9 @@ using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using NewLife.Log;
+using Stardust.Data.Nodes;
 using XCode;
+using XCode.Cache;
 
 namespace Stardust.Data;
 
@@ -122,6 +124,11 @@ public partial class AppHistory : Entity<AppHistory>
 
         return FindAll(exp, page);
     }
+
+    static Lazy<FieldCache<AppHistory>> _ActionCache = new(() => new FieldCache<AppHistory>(__.Action));
+    /// <summary>获取所有分类名称</summary>
+    /// <returns></returns>
+    public static IDictionary<String, String> FindAllAction() => _ActionCache.Value.FindAllName();
     #endregion
 
     #region 业务操作

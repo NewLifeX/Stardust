@@ -180,10 +180,10 @@ public partial class NodeHistory : Entity<NodeHistory>
         return history;
     }
 
-    static Lazy<FieldCache<NodeHistory>> NameCache = new(() => new FieldCache<NodeHistory>(__.Action));
+    static Lazy<FieldCache<NodeHistory>> _ActionCache = new(() => new FieldCache<NodeHistory>(__.Action));
     /// <summary>获取所有分类名称</summary>
     /// <returns></returns>
-    public static IDictionary<String, String> FindAllAction() => NameCache.Value.FindAllName();
+    public static IDictionary<String, String> FindAllAction() => _ActionCache.Value.FindAllName();
 
     /// <summary>删除指定日期之前的数据</summary>
     /// <param name="date"></param>

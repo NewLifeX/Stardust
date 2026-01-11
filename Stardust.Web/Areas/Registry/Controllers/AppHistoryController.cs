@@ -84,12 +84,13 @@ public class AppHistoryController : ReadOnlyEntityController<AppHistory>
         var appId = p["appId"].ToInt(-1);
         var client = p["client"];
         var action = p["action"];
+        var success = p["success"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
         //if (appId > 0 && start.Year < 2000) p["dtStart"] = (start = DateTime.Today).ToString("yyyy-MM-dd");
 
-        return AppHistory.Search(appId, client, action, start, end, p["Q"], p);
+        return AppHistory.Search(appId, client, action, success, start, end, p["Q"], p);
     }
 }
