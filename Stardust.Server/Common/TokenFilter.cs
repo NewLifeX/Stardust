@@ -14,8 +14,8 @@ namespace Stardust.Server.Common
             if (context.Controller is BaseController bc)
             {
                 var session = bc.Session;
-                if (bc.Token.IsNullOrEmpty()) throw new ApiException(403, "未授权");
-                if (session == null) throw new ApiException(402, "令牌无效");
+                if (bc.Token.IsNullOrEmpty()) throw new ApiException(ApiCode.Unauthorized, "未授权");
+                if (session == null) throw new ApiException(ApiCode.Unauthorized, "令牌无效");
             }
 
             base.OnActionExecuting(context);
