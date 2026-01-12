@@ -467,9 +467,13 @@ public class ServiceController : DisposeBase
             }
             else
             {
-                // 桌面用户运行
+                // 桌面用户运行。$表示在用户桌面上启动进程，$$表示以用户身份启动进程（无需登录桌面）
                 var desktop = new Desktop { Log = Log };
-                var pid = desktop.StartProcess(si.FileName, si.Arguments, si.WorkingDirectory, user == "$$", true);
+                var pid = 0u;
+                if (user == "$")
+                    pid = desktop.StartProcess(si.FileName, si.Arguments, si.WorkingDirectory, false, true);
+                else
+                    pid = desktop.StartProcessAsUser(si.FileName, si.Arguments, si.WorkingDirectory, null);
                 p = Process.GetProcessById((Int32)pid);
             }
         }

@@ -1,5 +1,5 @@
-﻿using System.Diagnostics;
-using System.Xml.Serialization;
+﻿using System.ComponentModel;
+using System.Diagnostics;
 using NewLife;
 using NewLife.Log;
 using Stardust.Models;
@@ -331,20 +331,40 @@ public class ZipDeploy
         }
 
         // 指定用户时，以特定用户启动进程
-        if (!UserName.IsNullOrEmpty())
+        var user = UserName;
+        if (!user.IsNullOrEmpty())
         {
-            si.UserName = UserName;
-            //si.UseShellExecute = false;
-
             // 在Linux系统中，改变目录所属用户
             if (Runtime.Linux)
             {
-                var user = UserName;
-                if (!user.IsNullOrEmpty() && !user.Contains(':')) user = $"{user}:{user}";
-                //Process.Start("chown", $"-R {user} {si.WorkingDirectory}");
+                si.UserName = user;
+
+                if (!user.Contains(':')) user = $"{user}:{user}";
                 Process.Start("chown", $"-R {user} {shadow}").WaitForExit(5_000);
                 Process.Start("chown", $"-R {user} {si.WorkingDirectory.CombinePath("../").GetBasePath()}").WaitForExit(5_000);
             }
+            else if (Runtime.Windows)
+            {
+                // Windows下ProcessStartInfo.UserName需要密码/令牌，否则大概率失败
+                // ZipDeploy不引入桌面注入能力，避免增加依赖
+                if (user == "$" || user == "$$")
+                {
+                    WriteLog("ZipDeploy在Windows下不支持桌面用户[$/$$]启动（需桌面注入能力），将回退为当前用户启动");
+                }
+                else
+                {
+                    WriteLog("在Windows下以特定用户[{0}]启动进程，大概率失败，因没有密码令牌，将回退为当前用户启动", user);
+                }
+
+                user = null;
+            }
+            else
+            {
+                si.UserName = user;
+            }
+
+            if (!user.IsNullOrEmpty())
+                si.UserName = user;
         }
 
         if (Debug)
@@ -360,7 +380,21 @@ public class ZipDeploy
         if (!si.UserName.IsNullOrEmpty())
             WriteLog("启动用户：{0}", si.UserName);
 
-        var p = Process.Start(si);
+        Process? p = null;
+        try
+        {
+            p = Process.Start(si);
+        }
+        catch (Win32Exception ex)
+        {
+            LastError = ex.Message;
+            WriteLog("启动失败！Win32Exception={0} File={1} WorkDir={2} User={3}", ex.NativeErrorCode, si.FileName, si.WorkingDirectory, si.UserName);
+            WriteLog(ex.ToString());
+
+            if (!hasExtracted) DeleteShadow(shadow);
+            return false;
+        }
+
         if (p == null) return false;
 
         // 进程优先级
