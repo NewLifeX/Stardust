@@ -1,9 +1,9 @@
-﻿using System.Reflection;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using NewLife;
 using NewLife.Caching;
 using Stardust.Models;
+using Stardust.Windows;
 
 namespace Stardust;
 
@@ -11,11 +11,6 @@ namespace Stardust;
 public partial class StarClient
 {
     private static ICache _cache = MemoryCache.Instance;
-
-    private static Type? _perfCounterType;
-    private static ConstructorInfo? _perfCounterCtor2;
-    private static ConstructorInfo? _perfCounterCtor3;
-    private static MethodInfo? _perfCounterNextValue;
 
     /// <summary>执行WMIC命令并缓存输出，避免频繁创建进程</summary>
     /// <param name="arguments">WMIC arguments</param>
@@ -104,10 +99,10 @@ public partial class StarClient
 
     private static Double GetProcessorQueueLength()
     {
-        // 优先使用性能计数器获取处理器队列长度
+        // 优先使用 PDH API 获取处理器队列长度
         try
         {
-            var value = GetPerformanceCounterValue("System", "Processor Queue Length", null);
+            var value = PdhHelper.GetProcessorQueueLength();
             if (value >= 0) return value;
         }
         catch { }
@@ -135,30 +130,12 @@ public partial class StarClient
     /// <returns>IOPS和活动时间百分比</returns>
     private static (Int32 IOPS, Double ActiveTime) GetDiskStatsWindows()
     {
-        // 优先使用性能计数器
+        // 优先使用 PDH API
         try
         {
-            var reads = GetPerformanceCounterValue("PhysicalDisk", "Disk Reads/sec", "_Total");
-            var writes = GetPerformanceCounterValue("PhysicalDisk", "Disk Writes/sec", "_Total");
-            // 使用 % Idle Time 计算活动时间，比 % Disk Time 更准确
-            var idleTime = GetPerformanceCounterValue("PhysicalDisk", "% Idle Time", "_Total");
-
-            var iops = 0;
-            if (reads >= 0 || writes >= 0)
-                iops = (Int32)((reads > 0 ? reads : 0) + (writes > 0 ? writes : 0));
-
-            var activeTime = 0.0;
-            if (idleTime >= 0)
-            {
-                // 活动时间 = 100 - 空闲时间
-                activeTime = 100 - idleTime;
-                if (activeTime < 0) activeTime = 0;
-                if (activeTime > 100) activeTime = 100;
-                activeTime = Math.Round(activeTime / 100, 2);
-            }
-
-            if (iops > 0 || activeTime > 0)
-                return (iops, activeTime);
+            var (iops, activeTime) = PdhHelper.GetDiskStats();
+            if (iops >= 0 || activeTime >= 0)
+                return (iops > 0 ? iops : 0, activeTime > 0 ? activeTime : 0);
         }
         catch { }
 
@@ -194,66 +171,6 @@ public partial class StarClient
         catch { }
 
         return (0, 0);
-    }
-
-    /// <summary>通过反射获取性能计数器值，避免直接依赖 System.Diagnostics.PerformanceCounter</summary>
-    /// <param name="categoryName">类别名称</param>
-    /// <param name="counterName">计数器名称</param>
-    /// <param name="instanceName">实例名称</param>
-    /// <returns>计数器值，失败返回-1</returns>
-    private static Single GetPerformanceCounterValue(String categoryName, String counterName, String? instanceName)
-    {
-        try
-        {
-            var counterType = GetPerformanceCounterType();
-            if (counterType == null || counterType == typeof(Object)) return -1;
-
-            Object? counter;
-            if (instanceName.IsNullOrEmpty())
-            {
-                var ctor = GetPerformanceCounterCtor2(counterType);
-                if (ctor == null) return -1;
-
-                counter = ctor.Invoke([categoryName, counterName]);
-            }
-            else
-            {
-                var ctor = GetPerformanceCounterCtor3(counterType);
-                if (ctor == null) return -1;
-
-                counter = ctor.Invoke([categoryName, counterName, instanceName]);
-            }
-
-            if (counter == null) return -1;
-
-            try
-            {
-                var nextValueMethod = GetPerformanceCounterNextValue(counterType);
-                var result = nextValueMethod?.Invoke(counter, null);
-                if (result is Single value) return value;
-            }
-            finally
-            {
-                (counter as IDisposable)?.Dispose();
-            }
-        }
-        catch { }
-
-        return -1;
-
-        static Type? GetPerformanceCounterType() => _perfCounterType
-           ??= Type.GetType("System.Diagnostics.PerformanceCounter, System", false)
-           ?? Type.GetType("System.Diagnostics.PerformanceCounter, System.Diagnostics.PerformanceCounter", false)
-           ?? typeof(Object);
-
-        static MethodInfo? GetPerformanceCounterNextValue(Type counterType) => _perfCounterNextValue
-           ??= counterType.GetMethod("NextValue");
-
-        static ConstructorInfo? GetPerformanceCounterCtor2(Type counterType) => _perfCounterCtor2
-           ??= counterType.GetConstructor([typeof(String), typeof(String)]);
-
-        static ConstructorInfo? GetPerformanceCounterCtor3(Type counterType) => _perfCounterCtor3
-           ??= counterType.GetConstructor([typeof(String), typeof(String), typeof(String)]);
     }
 
 #if NET5_0_OR_GREATER
