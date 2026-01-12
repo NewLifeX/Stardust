@@ -229,7 +229,7 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
                 UseShellExecute = false,
                 RedirectStandardOutput = true
             };
-            var process = Process.Start(psi);
+            using var process = Process.Start(psi);
             if (process == null) return null;
 
             if (!process.WaitForExit(3_000))

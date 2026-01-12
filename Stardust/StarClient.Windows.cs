@@ -1,6 +1,8 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using NewLife;
+using NewLife.Caching;
 using Stardust.Models;
 
 namespace Stardust;
@@ -8,7 +10,32 @@ namespace Stardust;
 /// <summary>星星客户端 - Windows平台信息采集</summary>
 public partial class StarClient
 {
-    /// <summary>填充Windows专属信息</summary>
+    private static ICache _cache = MemoryCache.Instance;
+
+    private static Type? _perfCounterType;
+    private static ConstructorInfo? _perfCounterCtor2;
+    private static ConstructorInfo? _perfCounterCtor3;
+    private static MethodInfo? _perfCounterNextValue;
+
+    /// <summary>执行WMIC命令并缓存输出，避免频繁创建进程</summary>
+    /// <param name="arguments">WMIC arguments</param>
+    /// <param name="cacheSeconds">缓存秒数</param>
+    /// <returns>WMIC输出</returns>
+    private static String? ExecuteWmicCached(String arguments, Int32 cacheSeconds = 8)
+    {
+        if (arguments.IsNullOrEmpty()) return null;
+
+        var key = $"wmic:{arguments}";
+        var rs = _cache.Get<String>(key);
+        if (!rs.IsNullOrEmpty()) return rs;
+
+        rs = Execute("wmic", arguments);
+        _cache.Set(key, rs, cacheSeconds);
+
+        return rs;
+    }
+
+    /// <summary>星星客户端 - 填充专属信息</summary>
     /// <param name="di">节点信息</param>
 #if NET5_0_OR_GREATER
     [SupportedOSPlatform("windows")]
@@ -85,10 +112,10 @@ public partial class StarClient
         }
         catch { }
 
-        // 降级为 WMIC 方式
+        // 降级为 WMIC 方式（短 TTL 缓存，避免频繁创建进程）
         try
         {
-            var rs = Execute("wmic", "path Win32_PerfFormattedData_PerfOS_System get ProcessorQueueLength /value");
+            var rs = ExecuteWmicCached("path Win32_PerfFormattedData_PerfOS_System get ProcessorQueueLength /value");
             if (!rs.IsNullOrEmpty())
             {
                 var lines = rs.Split(['\r', '\n', '='], StringSplitOptions.RemoveEmptyEntries);
@@ -135,10 +162,10 @@ public partial class StarClient
         }
         catch { }
 
-        // 降级为 WMIC 方式，一次查询获取所有数据
+        // 降级为 WMIC 方式（短 TTL 缓存，避免频繁创建进程）。一次查询获取所有数据
         try
         {
-            var rs = Execute("wmic", "path Win32_PerfFormattedData_PerfDisk_PhysicalDisk where \"Name='_Total'\" get DiskReadsPersec,DiskWritesPersec,PercentIdleTime /value");
+            var rs = ExecuteWmicCached("path Win32_PerfFormattedData_PerfDisk_PhysicalDisk where \"Name='_Total'\" get DiskReadsPersec,DiskWritesPersec,PercentIdleTime /value");
             if (!rs.IsNullOrEmpty())
             {
                 var reads = 0;
@@ -148,11 +175,11 @@ public partial class StarClient
                 var lines = rs.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
                 foreach (var line in lines)
                 {
-                    if (line.StartsWith("DiskReadsPersec="))
+                    if (line.StartsWithIgnoreCase("DiskReadsPersec="))
                         reads = line.Substring("DiskReadsPersec=".Length).Trim().ToInt();
-                    else if (line.StartsWith("DiskWritesPersec="))
+                    else if (line.StartsWithIgnoreCase("DiskWritesPersec="))
                         writes = line.Substring("DiskWritesPersec=".Length).Trim().ToInt();
-                    else if (line.StartsWith("PercentIdleTime="))
+                    else if (line.StartsWithIgnoreCase("PercentIdleTime="))
                         idleTime = line.Substring("PercentIdleTime=".Length).Trim().ToDouble();
                 }
 
@@ -178,58 +205,71 @@ public partial class StarClient
     {
         try
         {
-            // 尝试加载 PerformanceCounter 类型
-            // .NET Framework: System.dll
-            // .NET Core/.NET 5+: System.Diagnostics.PerformanceCounter.dll (需要 NuGet 包)
-            var counterType = Type.GetType("System.Diagnostics.PerformanceCounter, System", false)
-                           ?? Type.GetType("System.Diagnostics.PerformanceCounter, System.Diagnostics.PerformanceCounter", false);
+            var counterType = GetPerformanceCounterType();
+            if (counterType == null || counterType == typeof(Object)) return -1;
 
-            if (counterType == null) return -1;
-
-            // 创建 PerformanceCounter 实例
             Object? counter;
             if (instanceName.IsNullOrEmpty())
             {
-                // new PerformanceCounter(categoryName, counterName)
-                var ctor = counterType.GetConstructor([typeof(String), typeof(String)]);
-                counter = ctor?.Invoke([categoryName, counterName]);
+                var ctor = GetPerformanceCounterCtor2(counterType);
+                if (ctor == null) return -1;
+
+                counter = ctor.Invoke([categoryName, counterName]);
             }
             else
             {
-                // new PerformanceCounter(categoryName, counterName, instanceName)
-                var ctor = counterType.GetConstructor([typeof(String), typeof(String), typeof(String)]);
-                counter = ctor?.Invoke([categoryName, counterName, instanceName]);
+                var ctor = GetPerformanceCounterCtor3(counterType);
+                if (ctor == null) return -1;
+
+                counter = ctor.Invoke([categoryName, counterName, instanceName]);
             }
 
             if (counter == null) return -1;
 
             try
             {
-                // 调用 NextValue() 方法
-                var nextValueMethod = counterType.GetMethod("NextValue");
+                var nextValueMethod = GetPerformanceCounterNextValue(counterType);
                 var result = nextValueMethod?.Invoke(counter, null);
-
                 if (result is Single value) return value;
             }
             finally
             {
-                // 释放资源
                 (counter as IDisposable)?.Dispose();
             }
         }
         catch { }
 
         return -1;
+
+        static Type? GetPerformanceCounterType() => _perfCounterType
+           ??= Type.GetType("System.Diagnostics.PerformanceCounter, System", false)
+           ?? Type.GetType("System.Diagnostics.PerformanceCounter, System.Diagnostics.PerformanceCounter", false)
+           ?? typeof(Object);
+
+        static MethodInfo? GetPerformanceCounterNextValue(Type counterType) => _perfCounterNextValue
+           ??= counterType.GetMethod("NextValue");
+
+        static ConstructorInfo? GetPerformanceCounterCtor2(Type counterType) => _perfCounterCtor2
+           ??= counterType.GetConstructor([typeof(String), typeof(String)]);
+
+        static ConstructorInfo? GetPerformanceCounterCtor3(Type counterType) => _perfCounterCtor3
+           ??= counterType.GetConstructor([typeof(String), typeof(String), typeof(String)]);
     }
 
+#if NET5_0_OR_GREATER
+    [SupportedOSPlatform("windows")]
+#endif
     private static String? GetGpuInfo()
     {
         try
         {
-            // 通过WMI获取GPU信息（名称和显存）
-            var gpuList = GetGpuListWithRam();
+            // 优先：通过 DXGI 获取各显卡信息（名称和专用显存，更准确）
+            var gpuList = GetGpuListByDxgi();
 
-            // 若获取失败，降级为仅获取名称
+            // 若 DXGI 获取失败，降级为 WMI
+            if (gpuList.Count == 0) gpuList = GetGpuListByWmi();
+
+            // 最终降级：仅获取名称
             if (gpuList.Count == 0) gpuList = GetGpuListByName();
 
             return gpuList.Count > 0 ? gpuList.Join(",") : null;
@@ -238,77 +278,129 @@ public partial class StarClient
         {
             return null;
         }
-    }
 
-    /// <summary>通过WMI获取GPU名称和显存</summary>
-    /// <returns>GPU信息列表，格式如"NVIDIA GeForce RTX 4090(24G)"</returns>
-    private static List<String> GetGpuListWithRam()
-    {
-        var gpuList = new List<String>();
-
-        var rs = Execute("wmic", "path win32_VideoController get Name,AdapterRAM /value");
-        if (rs.IsNullOrEmpty()) return gpuList;
-
-        // WMIC输出格式：每个实例之间用空行分隔，属性按字母顺序排列
-        // AdapterRAM=xxx
-        // Name=xxx
-        // (空行)
-        // AdapterRAM=yyy
-        // Name=yyy
-
-        String? currentName = null;
-        var currentRam = 0L;
-
-        var lines = rs.Split(['\r', '\n'], StringSplitOptions.None);
-        foreach (var raw in lines)
+        /// <summary>通过 DXGI 获取各显卡信息（名称和专用显存）</summary>
+        /// <returns>GPU信息列表，格式如"NVIDIA GeForce RTX 4090(24G)"</returns>
+        static List<String> GetGpuListByDxgi()
         {
-            var line = raw?.Trim();
+            var gpuList = new List<String>();
 
-            // 空行表示一个实例结束
-            if (line.IsNullOrEmpty()) continue;
-
-            // 解析属性
-            if (line.StartsWith("AdapterRAM=", StringComparison.OrdinalIgnoreCase))
+            try
             {
-                currentRam = line.Substring("AdapterRAM=".Length).Trim().ToLong();
-            }
-            else if (line.StartsWith("Name=", StringComparison.OrdinalIgnoreCase))
-            {
-                currentName = line.Substring("Name=".Length).Trim();
+                // 创建 DXGI Factory
+                var hr = NativeMethods.CreateDXGIFactory(typeof(IDXGIFactory).GUID, out var factory);
+                if (hr != 0 || factory == null) return gpuList;
 
-                // 格式化显示：有显存时附加容量，如"NVIDIA GeForce RTX 4090(24G)"
-                var display = currentRam > 0 ? $"{currentName}({currentRam.ToGMK("n0")})" : currentName;
-                if (!gpuList.Contains(display)) gpuList.Add(display);
+                try
+                {
+                    // 枚举所有显卡
+                    for (var i = 0u; ; i++)
+                    {
+                        hr = factory.EnumAdapters(i, out var adapter);
+                        if (hr != 0 || adapter == null) break;
 
-                currentRam = 0;
-                currentName = null;
+                        try
+                        {
+                            hr = adapter.GetDesc(out var desc);
+                            if (hr == 0)
+                            {
+                                var name = desc.Description?.TrimEnd('\0');
+                                var vram = (Int64)desc.DedicatedVideoMemory;
+
+                                // 跳过 Microsoft Basic Render Driver 等软件渲染器
+                                if (!name.IsNullOrEmpty() &&
+                                    !name.Contains("Microsoft Basic", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    // 格式化显示：有显存时附加容量，如"NVIDIA GeForce RTX 4090(24G)"
+                                    var display = vram > 0 ? $"{name}({vram.ToGMK("n0")})" : name;
+                                    if (!gpuList.Contains(display)) gpuList.Add(display);
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            Marshal.ReleaseComObject(adapter);
+                        }
+                    }
+                }
+                finally
+                {
+                    Marshal.ReleaseComObject(factory);
+                }
             }
+            catch { }
+
+            return gpuList;
         }
 
-        return gpuList;
-    }
-
-    /// <summary>通过WMI仅获取GPU名称（降级方案）</summary>
-    /// <returns>GPU名称列表</returns>
-    private static List<String> GetGpuListByName()
-    {
-        var gpuList = new List<String>();
-
-        var rs = Execute("wmic", "path win32_VideoController get Name");
-        if (rs.IsNullOrEmpty()) return gpuList;
-
-        var lines = rs.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
-        foreach (var line in lines)
+        /// <summary>通过WMI获取GPU名称和显存（DXGI失败时的降级方案）</summary>
+        /// <returns>GPU信息列表，格式如"NVIDIA GeForce RTX 4090(24G)"</returns>
+        static List<String> GetGpuListByWmi()
         {
-            var name = line.Trim();
-            // 跳过表头
-            if (!name.IsNullOrEmpty() && !name.EqualIgnoreCase("Name") && !gpuList.Contains(name))
+            var gpuList = new List<String>();
+
+            var rs = ExecuteWmicCached("path win32_VideoController get Name,AdapterRAM /value", 8);
+            if (rs.IsNullOrEmpty()) return gpuList;
+
+            // WMIC输出格式：每个实例之间用空行分隔，属性按字母顺序排列
+            // AdapterRAM=xxx
+            // Name=xxx
+            // (空行)
+            // AdapterRAM=yyy
+            // Name=yyy
+
+            String? currentName = null;
+            var currentRam = 0L;
+
+            var lines = rs.Split(['\r', '\n'], StringSplitOptions.None);
+            foreach (var raw in lines)
             {
-                gpuList.Add(name);
+                var line = raw?.Trim();
+
+                // 空行表示一个实例结束
+                if (line.IsNullOrEmpty()) continue;
+
+                // 解析属性
+                if (line.StartsWithIgnoreCase("AdapterRAM="))
+                {
+                    currentRam = line.Substring("AdapterRAM=".Length).Trim().ToLong();
+                }
+                else if (line.StartsWithIgnoreCase("Name="))
+                {
+                    currentName = line.Substring("Name=".Length).Trim();
+
+                    // 格式化显示：有显存时附加容量
+                    var display = currentRam > 0 ? $"{currentName}({currentRam.ToGMK("n0")})" : currentName;
+                    if (!gpuList.Contains(display)) gpuList.Add(display);
+
+                    currentRam = 0;
+                    currentName = null;
+                }
             }
+
+            return gpuList;
         }
 
-        return gpuList;
+        /// <summary>通过WMI仅获取GPU名称（最终降级方案）</summary>
+        /// <returns>GPU名称列表</returns>
+        static List<String> GetGpuListByName()
+        {
+            var gpuList = new List<String>();
+
+            var rs = ExecuteWmicCached("path win32_VideoController get Name", 8);
+            if (rs.IsNullOrEmpty()) return gpuList;
+
+            var lines = rs.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
+            foreach (var line in lines)
+            {
+                var name = line.Trim();
+                // 跳过表头
+                if (!name.IsNullOrEmpty() && !name.EqualIgnoreCase("Name") && !gpuList.Contains(name))
+                    gpuList.Add(name);
+            }
+
+            return gpuList;
+        }
     }
 
     /// <summary>获取已安装的VC++运行时版本</summary>
@@ -401,6 +493,7 @@ public partial class StarClient
 #if NET5_0_OR_GREATER
     [SupportedOSPlatform("windows")]
 #endif
+
     private static IList<String>? GetOldVCRuntimeVersions()
     {
         var versions = new List<String>();
@@ -509,13 +602,21 @@ public partial class StarClient
             var num = NativeMethods.GdipCreateFromHWND(new HandleRef(null, IntPtr.Zero), out graphics);
             if (num == 0)
             {
-                var xx = new Single[1];
-                var numx = NativeMethods.GdipGetDpiX(new HandleRef(di, graphics), xx);
+                try
+                {
+                    var xx = new Single[1];
+                    var numx = NativeMethods.GdipGetDpiX(new HandleRef(di, graphics), xx);
 
-                var yy = new Single[1];
-                var numy = NativeMethods.GdipGetDpiY(new HandleRef(di, graphics), yy);
+                    var yy = new Single[1];
+                    var numy = NativeMethods.GdipGetDpiY(new HandleRef(di, graphics), yy);
 
-                if (numx == 0 && numy == 0) di.Dpi = $"{xx[0]}*{yy[0]}";
+                    if (numx == 0 && numy == 0) di.Dpi = $"{xx[0]}*{yy[0]}";
+                }
+                finally
+                {
+                    // 对应 GdipCreateFromHWND，需要释放 graphics 句柄
+                    NativeMethods.GdipDeleteGraphics(new HandleRef(di, graphics));
+                }
             }
         }
         catch { }
