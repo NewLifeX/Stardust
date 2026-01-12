@@ -145,6 +145,22 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
         return Find(_.Name == name);
     }
 
+    /// <summary>根据密钥查找</summary>
+    /// <param name="secret">密钥</param>
+    /// <returns>实体对象</returns>
+    public static App FindBySecret(String secret)
+    {
+        if (secret.IsNullOrEmpty()) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Secret.EqualIgnoreCase(secret));
+
+        // 单对象缓存
+        //return Meta.SingleCache.GetItemWithSlaveKey(secret) as App;
+
+        return Find(_.Secret == secret);
+    }
+
     /// <summary>根据项目查找</summary>
     /// <param name="projectId">项目</param>
     /// <returns>实体列表</returns>
