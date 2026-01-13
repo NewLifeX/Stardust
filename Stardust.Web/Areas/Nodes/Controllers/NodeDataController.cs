@@ -14,7 +14,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers;
 [NodesArea]
 public class NodeDataController : ReadOnlyEntityController<NodeData>
 {
-    static NodeDataController() => ListFields.RemoveField("Id");
+    static NodeDataController() => ListFields.RemoveField("Id", "*Latency", "*LossRate");
 
     public override void OnActionExecuting(ActionExecutingContext filterContext)
     {

@@ -499,7 +499,7 @@ public partial class Node
     [DisplayName("CPU告警")]
     [Description("CPU告警。CPU告警的百分比阈值，CPU使用率达到该值时告警，百分之一")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("AlarmCpuRate", "CPU告警。CPU告警的百分比阈值，CPU使用率达到该值时告警，百分之一", "")]
+    [BindColumn("AlarmCpuRate", "CPU告警。CPU告警的百分比阈值，CPU使用率达到该值时告警，百分之一", "", ItemType = "percent")]
     public Int32 AlarmCpuRate { get => _AlarmCpuRate; set { if (OnPropertyChanging("AlarmCpuRate", value)) { _AlarmCpuRate = value; OnPropertyChanged("AlarmCpuRate"); } } }
 
     private Int32 _AlarmMemoryRate;
@@ -508,7 +508,7 @@ public partial class Node
     [DisplayName("内存告警")]
     [Description("内存告警。内存告警的百分比阈值，内存使用率达到该值时告警，百分之一")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("AlarmMemoryRate", "内存告警。内存告警的百分比阈值，内存使用率达到该值时告警，百分之一", "")]
+    [BindColumn("AlarmMemoryRate", "内存告警。内存告警的百分比阈值，内存使用率达到该值时告警，百分之一", "", ItemType = "percent")]
     public Int32 AlarmMemoryRate { get => _AlarmMemoryRate; set { if (OnPropertyChanging("AlarmMemoryRate", value)) { _AlarmMemoryRate = value; OnPropertyChanged("AlarmMemoryRate"); } } }
 
     private Int32 _AlarmDiskRate;
@@ -517,7 +517,7 @@ public partial class Node
     [DisplayName("磁盘告警")]
     [Description("磁盘告警。磁盘告警的百分比阈值，磁盘使用率达到该值时告警，百分之一")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("AlarmDiskRate", "磁盘告警。磁盘告警的百分比阈值，磁盘使用率达到该值时告警，百分之一", "")]
+    [BindColumn("AlarmDiskRate", "磁盘告警。磁盘告警的百分比阈值，磁盘使用率达到该值时告警，百分之一", "", ItemType = "percent")]
     public Int32 AlarmDiskRate { get => _AlarmDiskRate; set { if (OnPropertyChanging("AlarmDiskRate", value)) { _AlarmDiskRate = value; OnPropertyChanged("AlarmDiskRate"); } } }
 
     private Int32 _AlarmTcp;

@@ -131,7 +131,7 @@ public partial class StarClient
                 var activeTime = deltaIoTicks * 100.0 / elapsed;
                 if (activeTime > 100) activeTime = 100;
 
-                return (iops, Math.Round(activeTime, 2));
+                return (iops, Math.Round(activeTime, 4));
             }
         }
         catch

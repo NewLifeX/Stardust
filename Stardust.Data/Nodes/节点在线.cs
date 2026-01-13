@@ -183,7 +183,7 @@ public partial class NodeOnline
     [DisplayName("系统负载")]
     [Description("系统负载。Linux上的Load1，Windows上的处理器队列长度")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("SystemLoad", "系统负载。Linux上的Load1，Windows上的处理器队列长度", "", ItemType = "percent")]
+    [BindColumn("SystemLoad", "系统负载。Linux上的Load1，Windows上的处理器队列长度", "", ItemType = "percent", Scale = 3)]
     public Double SystemLoad { get => _SystemLoad; set { if (OnPropertyChanging("SystemLoad", value)) { _SystemLoad = value; OnPropertyChanged("SystemLoad"); } } }
 
     private Double _CpuRate;
@@ -191,7 +191,7 @@ public partial class NodeOnline
     [DisplayName("CPU率")]
     [Description("CPU率。占用率")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("CpuRate", "CPU率。占用率", "", ItemType = "percent")]
+    [BindColumn("CpuRate", "CPU率。占用率", "", ItemType = "percent", Scale = 3)]
     public Double CpuRate { get => _CpuRate; set { if (OnPropertyChanging("CpuRate", value)) { _CpuRate = value; OnPropertyChanged("CpuRate"); } } }
 
     private Int32 _Memory;
@@ -251,11 +251,11 @@ public partial class NodeOnline
     public Int32 DiskIOPS { get => _DiskIOPS; set { if (OnPropertyChanging("DiskIOPS", value)) { _DiskIOPS = value; OnPropertyChanged("DiskIOPS"); } } }
 
     private Double _DiskActiveTime;
-    /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
-    [DisplayName("磁盘活动时间")]
-    [Description("磁盘活动时间。多块磁盘的最大活动时间百分比")]
+    /// <summary>磁盘活动。多块磁盘的平均活动时间百分比</summary>
+    [DisplayName("磁盘活动")]
+    [Description("磁盘活动。多块磁盘的平均活动时间百分比")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("DiskActiveTime", "磁盘活动时间。多块磁盘的最大活动时间百分比", "", ItemType = "percent")]
+    [BindColumn("DiskActiveTime", "磁盘活动。多块磁盘的平均活动时间百分比", "", ItemType = "percent", Scale = 3)]
     public Double DiskActiveTime { get => _DiskActiveTime; set { if (OnPropertyChanging("DiskActiveTime", value)) { _DiskActiveTime = value; OnPropertyChanged("DiskActiveTime"); } } }
 
     private String _DriveInfo;
@@ -280,7 +280,7 @@ public partial class NodeOnline
     [DisplayName("电量")]
     [Description("电量")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("Battery", "电量", "", ItemType = "percent")]
+    [BindColumn("Battery", "电量", "", ItemType = "percent", Scale = 3)]
     public Double Battery { get => _Battery; set { if (OnPropertyChanging("Battery", value)) { _Battery = value; OnPropertyChanged("Battery"); } } }
 
     private Int32 _Signal;
@@ -312,7 +312,7 @@ public partial class NodeOnline
     [DisplayName("内网质量")]
     [Description("内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("IntranetScore", "内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%", "", ItemType = "percent")]
+    [BindColumn("IntranetScore", "内网质量。评估到网关的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%", "", ItemType = "percent", Scale = 3)]
     public Double IntranetScore { get => _IntranetScore; set { if (OnPropertyChanging("IntranetScore", value)) { _IntranetScore = value; OnPropertyChanged("IntranetScore"); } } }
 
     private Double _InternetScore;
@@ -320,7 +320,7 @@ public partial class NodeOnline
     [DisplayName("外网质量")]
     [Description("外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("InternetScore", "外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%", "", ItemType = "percent")]
+    [BindColumn("InternetScore", "外网质量。综合评估到DNS和星尘服务器的心跳延迟和丢包率，1ms为100%，10ms为99.1%，100ms为90.57%，500ms为60.71%，1000ms为36.82%", "", ItemType = "percent", Scale = 3)]
     public Double InternetScore { get => _InternetScore; set { if (OnPropertyChanging("InternetScore", value)) { _InternetScore = value; OnPropertyChanged("InternetScore"); } } }
 
     private Int32 _GatewayLatency;
@@ -336,7 +336,7 @@ public partial class NodeOnline
     [DisplayName("网关丢包率")]
     [Description("网关丢包率。到网关的丢包率")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("GatewayLossRate", "网关丢包率。到网关的丢包率", "", ItemType = "percent")]
+    [BindColumn("GatewayLossRate", "网关丢包率。到网关的丢包率", "", ItemType = "percent", Scale = 3)]
     public Double GatewayLossRate { get => _GatewayLossRate; set { if (OnPropertyChanging("GatewayLossRate", value)) { _GatewayLossRate = value; OnPropertyChanged("GatewayLossRate"); } } }
 
     private Int32 _DnsLatency;
@@ -352,7 +352,7 @@ public partial class NodeOnline
     [DisplayName("DNS丢包率")]
     [Description("DNS丢包率。到DNS的丢包率")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("DnsLossRate", "DNS丢包率。到DNS的丢包率", "", ItemType = "percent")]
+    [BindColumn("DnsLossRate", "DNS丢包率。到DNS的丢包率", "", ItemType = "percent", Scale = 3)]
     public Double DnsLossRate { get => _DnsLossRate; set { if (OnPropertyChanging("DnsLossRate", value)) { _DnsLossRate = value; OnPropertyChanged("DnsLossRate"); } } }
 
     private Int32 _ServerLatency;
@@ -368,7 +368,7 @@ public partial class NodeOnline
     [DisplayName("服务器丢包率")]
     [Description("服务器丢包率。到星尘服务器的丢包率")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("ServerLossRate", "服务器丢包率。到星尘服务器的丢包率", "", ItemType = "percent")]
+    [BindColumn("ServerLossRate", "服务器丢包率。到星尘服务器的丢包率", "", ItemType = "percent", Scale = 3)]
     public Double ServerLossRate { get => _ServerLossRate; set { if (OnPropertyChanging("ServerLossRate", value)) { _ServerLossRate = value; OnPropertyChanged("ServerLossRate"); } } }
 
     private Int32 _ProcessCount;
@@ -817,7 +817,7 @@ public partial class NodeOnline
         /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
         public static readonly Field DiskIOPS = FindByName("DiskIOPS");
 
-        /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
+        /// <summary>磁盘活动。多块磁盘的平均活动时间百分比</summary>
         public static readonly Field DiskActiveTime = FindByName("DiskActiveTime");
 
         /// <summary>驱动器信息。各分区大小，逗号分隔</summary>
@@ -1006,7 +1006,7 @@ public partial class NodeOnline
         /// <summary>磁盘IOPS。每秒磁盘IO操作次数</summary>
         public const String DiskIOPS = "DiskIOPS";
 
-        /// <summary>磁盘活动时间。多块磁盘的最大活动时间百分比</summary>
+        /// <summary>磁盘活动。多块磁盘的平均活动时间百分比</summary>
         public const String DiskActiveTime = "DiskActiveTime";
 
         /// <summary>驱动器信息。各分区大小，逗号分隔</summary>

@@ -59,7 +59,7 @@
         <Column Name="Enable" DataType="Boolean" Description="启用。停用的节点不再执行监控" />
         <Column Name="ScanQueue" DataType="Boolean" Description="队列。自动扫描发现消息队列，默认true" />
         <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" Category="告警" />
-        <Column Name="AlarmMemoryRate" DataType="Int32" Description="内存告警。内存告警的百分比阈值，百分之一" Category="告警" />
+        <Column Name="AlarmMemoryRate" DataType="Int32" ItemType="percent" Description="内存告警。内存告警的百分比阈值，百分之一" Category="告警" />
         <Column Name="AlarmConnections" DataType="Int32" Description="连接告警。连接数告警阈值" Category="告警" />
         <Column Name="AlarmSpeed" DataType="Int32" Description="速度告警。速度告警阈值" Category="告警" />
         <Column Name="AlarmInputKbps" DataType="Int32" Description="入流量告警。入流量告警阈值" Category="告警" />

@@ -157,7 +157,7 @@ public partial class RedisNode
     [DisplayName("内存告警")]
     [Description("内存告警。内存告警的百分比阈值，百分之一")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("AlarmMemoryRate", "内存告警。内存告警的百分比阈值，百分之一", "")]
+    [BindColumn("AlarmMemoryRate", "内存告警。内存告警的百分比阈值，百分之一", "", ItemType = "percent")]
     public Int32 AlarmMemoryRate { get => _AlarmMemoryRate; set { if (OnPropertyChanging("AlarmMemoryRate", value)) { _AlarmMemoryRate = value; OnPropertyChanged("AlarmMemoryRate"); } } }
 
     private Int32 _AlarmConnections;
