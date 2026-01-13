@@ -160,8 +160,8 @@ public class ZipDeploy
 
         if (name.IsNullOrEmpty()) name = Path.GetFileNameWithoutExtension(file);
         if (shadow.IsNullOrEmpty()) shadow = CreateShadow(null);
+        if (Name.IsNullOrEmpty()) Name = name;
 
-        Name = name;
         FileName = file;
         Shadow = shadow;
 
@@ -216,7 +216,7 @@ public class ZipDeploy
         if (shadow.IsNullOrEmpty()) shadow = CreateShadow(null);
         if (shadow.IsNullOrEmpty()) return false;
 
-        var hash = fi.MD5().ToHex().Substring(0, 8).ToLower();
+        var hash = fi.MD5().ToHex()[..8].ToLower();
         var rundir = fi.Directory;
         if (rundir == null) return false;
 
@@ -454,37 +454,6 @@ public class ZipDeploy
 
     Boolean IsExe(String ext) => ext.EndsWithIgnoreCase(".exe", ".dll", ".pdb", ".jar", ".go", ".py", ".so") || Runtime.Linux && ext.IsNullOrEmpty();
     Boolean IsConfig(String ext) => ext.EndsWithIgnoreCase(".json", ".config", ".xml", ".yml", ".ini");
-
-    private void DeleteFiles(String dir, Boolean recurse, Func<String, Boolean> func, String? fileName = null)
-    {
-        var searchOption = recurse ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
-        foreach (var item in dir.AsDirectory().GetFiles("*", searchOption))
-        {
-            if (func(item.Extension))
-            {
-                try
-                {
-                    //同目录运行多个可执行文件时，仅删除指定的，fileName有可能不含后缀
-                    if (!String.IsNullOrEmpty(fileName)
-                        //&& item.Name.EndsWithIgnoreCase(".exe")
-                        && !Path.GetFileNameWithoutExtension(item.Name).EqualIgnoreCase(
-                           Path.GetFileNameWithoutExtension(fileName)))
-                    {
-                        WriteLog("跳过同目录可执行文件：{0}", item.FullName);
-                        continue;
-                    }
-                    else
-                    {
-                        item.Delete();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    WriteLog(ex.Message);
-                }
-            }
-        }
-    }
 
     private void CopyFiles(FileInfo item, String dst, CopyModes mode, String[]? ovs)
     {
@@ -743,7 +712,7 @@ public class ZipDeploy
             var cfg = fis.FirstOrDefault(e => e.Name.EndsWithIgnoreCase(ext));
             if (cfg != null)
             {
-                var name = $"{cfg.Name.Substring(0, cfg.Name.Length - ext.Length)}.dll";
+                var name = $"{cfg.Name[..^ext.Length]}.dll";
                 runfile = fis.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
             }
         }
