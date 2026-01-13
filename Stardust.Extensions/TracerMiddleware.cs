@@ -97,6 +97,15 @@ public class TracerMiddleware(RequestDelegate next)
             }
         }
 
+        // 验证Host是否允许
+        if (!ValidateHost(ctx))
+        {
+            var code = HttpStatusCode.Forbidden;
+            ctx.Response.StatusCode = (Int32)code;
+            span?.SetError(new HttpRequestException($"Http Error {code} {(Int32)code}"), null);
+            return;
+        }
+
         try
         {
             await _next.Invoke(ctx).ConfigureAwait(false);
@@ -313,6 +322,35 @@ public class TracerMiddleware(RequestDelegate next)
         // 更新星尘工厂
         if (Tracer is StarTracer st && st.Factory != null)
             st.Factory.ExternalAddress = address;
+    }
+
+    /// <summary>验证请求的Host是否允许</summary>
+    /// <param name="ctx">HttpContext</param>
+    /// <returns>验证通过返回true，否则返回false</returns>
+    private static Boolean ValidateHost(HttpContext ctx)
+    {
+        var set = StarSetting.Current;
+        var allowedHosts = set.AllowedHosts?.Trim();
+
+        // 如果未配置允许的主机，则不进行验证
+        if (allowedHosts.IsNullOrEmpty()) return true;
+
+        // 获取请求的Host（包含端口）
+        var host = ctx.Request.Host.Host;
+        if (host.IsNullOrEmpty()) return false;
+
+        // IP地址请求直接放行
+        if (IPAddress.TryParse(host, out _)) return true;
+
+        // 验证Host是否在允许列表中
+        var allowedList = allowedHosts.Split([','], StringSplitOptions.RemoveEmptyEntries);
+        foreach (var allowed in allowedList)
+        {
+            if (host.IsMatch(allowed, StringComparison.OrdinalIgnoreCase)) return true;
+            //if (host.EqualIgnoreCase(allowed.Trim())) return true;
+        }
+
+        return false;
     }
 
     /// <summary>自动记录用户访问主机地址</summary>

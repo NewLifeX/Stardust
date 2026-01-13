@@ -29,6 +29,10 @@ public class StarSetting : Config<StarSetting>, IClientSetting
     [Description("服务地址。用户访问的原始外网地址，用于内部构造其它Url，多地址逗号隔开，根据用户访问频率取前5")]
     public String ServiceAddress { get; set; } = "";
 
+    /// <summary>允许的主机。多个主机名逗号隔开，支持*模糊匹配，用于验证请求的Host头，IP地址请求不进行验证。留空则不校验</summary>
+    [Description("允许的主机。多个主机名逗号隔开，支持*模糊匹配，用于验证请求的Host头，IP地址请求不进行验证。留空则不校验")]
+    public String AllowedHosts { get; set; } = "";
+
     ///// <summary>用户访问地址。自动记录用户访问的主机地址（反向代理之外），用于内部构造其它Url，多地址逗号隔开</summary>
     //[Description("用户访问地址。自动记录用户访问的主机地址（反向代理之外），用于内部构造其它Url，多地址逗号隔开")]
     //public String UserAddress { get; set; }
