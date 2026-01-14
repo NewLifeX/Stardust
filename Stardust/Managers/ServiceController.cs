@@ -672,6 +672,11 @@ public class ServiceController : DisposeBase
                     //target = Path.GetFileName(target);
                     span?.AppendTag($"GetProcessesByFile({target}) ProcessName={ProcessName}");
 
+                    // 获取目标文件的完整路径用于精确匹配
+                    var targetFullPath = target;
+                    if (!Path.IsPathRooted(target) && !_workdir.IsNullOrEmpty())
+                        targetFullPath = _workdir.CombinePath(target).GetFullPath();
+
                     // 遍历所有进程，从命令行参数中找到启动文件名一致的进程
                     foreach (var item in Process.GetProcesses())
                     {
@@ -685,7 +690,57 @@ public class ServiceController : DisposeBase
 
                             // target有可能是文件全路径，此时需要比对无后缀文件名
                             if (name.EqualIgnoreCase(target, Path.GetFileNameWithoutExtension(target)))
-                                return TakeOver(item, $"按[{ProcessName} {target}]查找");
+                            {
+                                // 进一步验证：获取进程主模块路径，确保路径匹配
+                                // 避免 cube2 应用匹配到 cube 应用的进程
+                                var matched = false;
+                                try
+                                {
+                                    var mainModule = item.MainModule?.FileName;
+                                    if (!mainModule.IsNullOrEmpty())
+                                    {
+                                        span?.AppendTag($"mainModule={mainModule}");
+
+                                        // 检查主模块路径是否包含目标文件的完整路径或工作目录
+                                        if (!targetFullPath.IsNullOrEmpty() && mainModule.EqualIgnoreCase(targetFullPath))
+                                        {
+                                            matched = true;
+                                        }
+                                        else if (!_workdir.IsNullOrEmpty() && mainModule.StartsWithIgnoreCase(_workdir))
+                                        {
+                                            matched = true;
+                                        }
+                                        else if (target.Contains('/') || target.Contains('\\'))
+                                        {
+                                            // target 本身包含路径，直接比对
+                                            matched = mainModule.EndsWithIgnoreCase(target);
+                                        }
+                                        else
+                                        {
+                                            // target 只是文件名，且没有工作目录信息，只能按文件名匹配（兼容旧逻辑）
+                                            matched = true;
+                                        }
+
+                                        if (!matched)
+                                        {
+                                            span?.AppendTag($"路径不匹配，跳过");
+                                            continue;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // 无法获取主模块路径，使用旧逻辑
+                                        matched = true;
+                                    }
+                                }
+                                catch
+                                {
+                                    // 获取 MainModule 可能因权限问题失败，使用旧逻辑
+                                    matched = true;
+                                }
+
+                                if (matched) return TakeOver(item, $"按[{ProcessName} {target}]查找");
+                            }
                         }
                     }
                 }
