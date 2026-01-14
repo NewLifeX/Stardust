@@ -359,6 +359,7 @@ public class Startup
                 if (dp.Mode.IsNewVersion()) continue;
 
                 var mode = (ServiceModes)dp.Mode;
+                if (mode == ServiceModes.Multiple) dp.AllowMultiple = true;
                 dp.Mode = DeployModesExtensions.Convert(mode);
                 dp.Update();
             }

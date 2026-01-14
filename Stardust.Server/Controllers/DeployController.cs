@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Runtime.Intrinsics.Arm;
+using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Remoting.Extensions;
 using NewLife.Serialization;
@@ -105,7 +106,11 @@ public class DeployController(NodeService nodeService, DeployService deployServi
                 if (mode.IsNewVersion())
                     app.Mode = mode;
                 else
-                    app.Mode = DeployModesExtensions.Convert((ServiceModes)mode);
+                {
+                    var mode2 = (ServiceModes)mode;
+                    app.Mode = DeployModesExtensions.Convert(mode2);
+                    if (mode2 == ServiceModes.Multiple) app.AllowMultiple = true;
+                }
 
                 // 新增时才记录应用部署的用户名，避免Windows/Linux混合部署时整个应用记住了Linux的用户名
                 if (app.Id == 0)
