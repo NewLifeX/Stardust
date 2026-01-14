@@ -370,8 +370,11 @@ public class Startup
                 if (dn.Mode.IsNewVersion()) continue;
 
                 var mode = (ServiceModes)dn.Mode;
-                dn.Mode = DeployModesExtensions.Convert(mode);
-                dn.Update();
+                if (mode > ServiceModes.Default)
+                {
+                    dn.Mode = DeployModesExtensions.Convert(mode);
+                    dn.Update();
+                }
             }
         }
     }

@@ -465,7 +465,7 @@ public class ServiceManager : DisposeBase
 
         // 旧版服务
         var svcs = Services.ToList();
-        span?.AppendTag("旧版服务：" + svcs?.Select(e => e.Name).Join(","));
+        span?.AppendTag("旧版服务：" + svcs.Select(e => e.Name).Join(","));
 
         // 合并
         foreach (var item in rs)

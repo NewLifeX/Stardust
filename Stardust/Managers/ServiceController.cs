@@ -404,101 +404,12 @@ public class ServiceController : DisposeBase
             ProcessId = 0;
         }
 
-        // 进程不存在，但名称存在
+        // 进程不存在，但名称存在，按名称查找进程
         var allowMultiple = DeployStrategyFactory.IsMultipleAllowed(inf);
-        if (p == null && !ProcessName.IsNullOrEmpty() && !allowMultiple)
+        if (p == null && !ProcessName.IsNullOrEmpty())
         {
-            if (ProcessName.EqualIgnoreCase("dotnet", "java"))
-            {
-                var target = _fileName ?? inf.FileName;
-                if (target.EqualIgnoreCase("dotnet", "java"))
-                {
-                    var ss = inf.Arguments?.Split(' ');
-                    if (ss != null) target = ss.FirstOrDefault(e => e.EndsWithIgnoreCase(".dll", ".jar"));
-                }
-                if (!target.IsNullOrEmpty())
-                {
-                    //target = Path.GetFileName(target);
-                    span?.AppendTag($"GetProcessesByFile({target}) ProcessName={ProcessName}");
-
-                    // 获取目标文件的完整路径用于精确匹配
-                    var targetFullPath = target;
-                    if (!Path.IsPathRooted(target) && !_workdir.IsNullOrEmpty())
-                        targetFullPath = _workdir.CombinePath(target).GetFullPath();
-
-                    // 遍历所有进程，从命令行参数中找到启动文件名一致的进程
-                    foreach (var item in Process.GetProcesses())
-                    {
-                        if (item.Id == mypid || item.GetHasExited()) continue;
-                        if (!item.ProcessName.EqualIgnoreCase(ProcessName)) continue;
-
-                        var name = item.GetProcessName();
-                        if (name.IsNullOrEmpty()) continue;
-
-                        span?.AppendTag($"id={item.Id} name={name}");
-
-                        // target有可能是文件全路径，此时需要比对无后缀文件名
-                        if (!name.EqualIgnoreCase(target, Path.GetFileNameWithoutExtension(target))) continue;
-
-                        // 进一步验证：获取进程主模块路径，确保路径匹配
-                        // 避免 cube2 应用匹配到 cube 应用的进程
-                        var matched = false;
-                        try
-                        {
-                            var mainModule = item.MainModule?.FileName;
-                            if (!mainModule.IsNullOrEmpty())
-                            {
-                                span?.AppendTag($"mainModule={mainModule}");
-
-                                // 检查主模块路径是否包含目标文件的完整路径或工作目录
-                                if (!targetFullPath.IsNullOrEmpty() && mainModule.EqualIgnoreCase(targetFullPath))
-                                {
-                                    matched = true;
-                                }
-                                else if (!_workdir.IsNullOrEmpty() && mainModule.StartsWithIgnoreCase(_workdir))
-                                {
-                                    matched = true;
-                                }
-                                else if (target.Contains('/') || target.Contains('\\'))
-                                {
-                                    // target 本身包含路径，直接比对
-                                    matched = mainModule.EndsWithIgnoreCase(target);
-                                }
-                                else
-                                {
-                                    // target 只是文件名，且没有工作目录信息，只能按文件名匹配（兼容旧逻辑）
-                                    matched = true;
-                                }
-
-                                if (!matched)
-                                {
-                                    span?.AppendTag($"路径不匹配，跳过");
-                                    continue;
-                                }
-                            }
-                            else
-                            {
-                                // 无法获取主模块路径，使用旧逻辑
-                                matched = true;
-                            }
-                        }
-                        catch
-                        {
-                            // 获取 MainModule 可能因权限问题失败，使用旧逻辑
-                            matched = true;
-                        }
-
-                        if (matched) return TakeOver(item, $"按[{ProcessName} {target}]查找");
-                    }
-                }
-            }
-            else
-            {
-                span?.AppendTag($"GetProcessesByName({ProcessName})");
-
-                var ps = Process.GetProcessesByName(ProcessName).Where(e => e.Id != mypid && !e.GetHasExited()).ToArray();
-                if (ps.Length > 0) return TakeOver(ps[0], $"按[Name={ProcessName}]查找");
-            }
+            p = FindProcessByName(mypid, inf, allowMultiple, span);
+            if (p != null) return TakeOver(p, $"按[Name={ProcessName}]查找");
         }
 
         // 准备启动进程
@@ -517,6 +428,124 @@ public class ServiceController : DisposeBase
         }
 
         return rs;
+    }
+
+    /// <summary>根据进程名查找目标进程</summary>
+    /// <param name="mypid">当前进程ID，用于排除自身</param>
+    /// <param name="inf">服务信息</param>
+    /// <param name="allowMultiple">是否允许多实例</param>
+    /// <param name="span">追踪span</param>
+    /// <returns>找到的目标进程，未找到返回null</returns>
+    private Process? FindProcessByName(Int32 mypid, ServiceInfo inf, Boolean allowMultiple, ISpan? span)
+    {
+        var processName = ProcessName;
+        if (processName.IsNullOrEmpty()) return null;
+
+        // 获取目标文件用于精确匹配（多实例模式必须，单实例dotnet/java也需要）
+        var target = _fileName ?? inf.FileName;
+        if (target.EqualIgnoreCase("dotnet", "java"))
+        {
+            var ss = inf.Arguments?.Split(' ');
+            if (ss != null) target = ss.FirstOrDefault(e => e.EndsWithIgnoreCase(".dll", ".jar"));
+        }
+
+        // 获取目标文件的完整路径用于精确匹配
+        var targetFullPath = target;
+        if (!target.IsNullOrEmpty() && !Path.IsPathRooted(target) && !_workdir.IsNullOrEmpty())
+            targetFullPath = _workdir.CombinePath(target).GetFullPath();
+
+        var isDotnetJava = processName.EqualIgnoreCase("dotnet", "java");
+        span?.AppendTag($"FindProcessByName({processName}) target={target} allowMultiple={allowMultiple}");
+
+        // 遍历所有同名进程
+        foreach (var item in Process.GetProcessesByName(processName))
+        {
+            if (item.Id == mypid || item.GetHasExited()) continue;
+
+            span?.AppendTag($"id={item.Id}");
+
+            // 单实例模式且非dotnet/java，直接返回第一个
+            if (!allowMultiple && !isDotnetJava) return item;
+
+            // 需要精确匹配路径：多实例模式 或 dotnet/java进程
+            if (target.IsNullOrEmpty()) continue;
+
+            if (isDotnetJava)
+            {
+                // dotnet/java进程通过命令行参数获取实际执行的dll/jar路径
+                var args = ProcessHelper.GetCommandLineArgs(item.Id);
+                if (args == null || args.Length == 0)
+                {
+                    span?.AppendTag($"无法获取命令行");
+                    continue;
+                }
+
+                // 从命令行参数中查找dll/jar文件
+                var dllOrJar = args.FirstOrDefault(e => e.EndsWithIgnoreCase(".dll", ".jar"));
+                if (dllOrJar.IsNullOrEmpty())
+                {
+                    span?.AppendTag($"命令行中无dll/jar");
+                    continue;
+                }
+
+                span?.AppendTag($"cmdFile={dllOrJar}");
+
+                // 路径匹配：完整路径比对 或 文件名比对
+                if (MatchPath(dllOrJar, target, targetFullPath, span)) return item;
+            }
+            else
+            {
+                // 普通进程通过MainModule获取执行文件路径
+                try
+                {
+                    var mainModule = item.MainModule?.FileName;
+                    if (mainModule.IsNullOrEmpty())
+                    {
+                        span?.AppendTag($"无法获取MainModule");
+                        continue;
+                    }
+
+                    span?.AppendTag($"mainModule={mainModule}");
+
+                    // 路径匹配
+                    if (MatchPath(mainModule, target, targetFullPath, span)) return item;
+                }
+                catch
+                {
+                    span?.AppendTag($"获取MainModule异常");
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>匹配文件路径</summary>
+    /// <param name="actualPath">进程实际文件路径（命令行或MainModule）</param>
+    /// <param name="target">目标文件名或路径</param>
+    /// <param name="targetFullPath">目标完整路径</param>
+    /// <param name="span">追踪span</param>
+    /// <returns>是否匹配</returns>
+    private Boolean MatchPath(String actualPath, String? target, String? targetFullPath, ISpan? span)
+    {
+        if (actualPath.IsNullOrEmpty()) return false;
+
+        // 完整路径精确匹配
+        if (!targetFullPath.IsNullOrEmpty() && actualPath.EqualIgnoreCase(targetFullPath))
+            return true;
+
+        // 工作目录匹配
+        if (!_workdir.IsNullOrEmpty() && actualPath.StartsWithIgnoreCase(_workdir))
+            return true;
+
+        // target本身包含路径，直接比对
+        if (target != null && (target.Contains('/') || target.Contains('\\')))
+        {
+            if (actualPath.EndsWithIgnoreCase(target)) return true;
+        }
+
+        span?.AppendTag($"路径不匹配");
+        return false;
     }
 
     private DateTime _nextCollect;
