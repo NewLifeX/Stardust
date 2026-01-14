@@ -16,6 +16,7 @@ using Stardust.Data.Monitors;
 using Stardust.Data.Nodes;
 using Stardust.Data.Platform;
 using Stardust.Extensions.Caches;
+using Stardust.Models;
 using Stardust.Server;
 using Stardust.Server.Services;
 using Stardust.Web.Services;
@@ -345,6 +346,32 @@ public class Startup
         {
             var list = AppDeployNode.FindAllByAppId(app.Id);
             list.Where(e => !e.Enable).Delete();
+        }
+
+        // 把旧版本的 ServiceModes 一次性转换为 DeployMode
+        var dps = AppDeploy.FindAll(AppDeploy._.Mode < 10);
+        if (dps.Count > 0)
+        {
+            XTrace.WriteLine("把旧版本的 ServiceModes 一次性转换为 DeployMode");
+
+            foreach (var dp in dps)
+            {
+                if (dp.Mode.IsNewVersion()) continue;
+
+                var mode = (ServiceModes)dp.Mode;
+                dp.Mode = DeployModesExtensions.Convert(mode);
+                dp.Update();
+            }
+
+            var dns = AppDeployNode.FindAll(AppDeployNode._.Mode < 10);
+            foreach (var dn in dns)
+            {
+                if (dn.Mode.IsNewVersion()) continue;
+
+                var mode = (ServiceModes)dn.Mode;
+                dn.Mode = DeployModesExtensions.Convert(mode);
+                dn.Update();
+            }
         }
     }
 
