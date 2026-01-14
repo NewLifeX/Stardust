@@ -507,6 +507,7 @@ public class ServiceManager : DisposeBase
                 old.ReloadOnChange = svc.ReloadOnChange;
                 old.MaxMemory = svc.MaxMemory;
                 old.Mode = svc.Mode;
+                old.AllowMultiple = svc.AllowMultiple;
                 old.ZipFile = svc.ZipFile;
             }
         }
