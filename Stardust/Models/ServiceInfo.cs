@@ -30,9 +30,18 @@ public class ServiceInfo
     [XmlAttribute]
     public Boolean Enable { get; set; }
 
-    /// <summary>服务工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</summary>
+    /// <summary>部署模式</summary>
+    /// <remarks>
+    /// 新版模式值10+：Standard(10)/Shadow(11)/Hosted(12)/Task(13)
+    /// 旧版模式值0-4：Default(0)/Extract(1)/ExtractAndRun(2)/RunOnce(3)/Multiple(4)
+    /// 客户端自动识别并兼容处理。
+    /// </remarks>
     [XmlAttribute]
-    public ServiceModes Mode { get; set; }
+    public DeployMode Mode { get; set; }
+
+    /// <summary>允许多实例。同一应用可在本机运行多份进程，健康检查时将不会按进程名匹配</summary>
+    [XmlAttribute]
+    public Boolean AllowMultiple { get; set; }
 
     /// <summary>环境变量。启动应用前设置的环境变量</summary>
     [XmlAttribute]

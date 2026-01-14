@@ -14,6 +14,8 @@ namespace Stardust.Server.Controllers;
 [Route("[controller]/[action]")]
 public class DeployController(NodeService nodeService, DeployService deployService, IServiceProvider serviceProvider) : BaseController(nodeService, null, serviceProvider)
 {
+    private readonly Version _newDeploy = new(3, 7);
+
     /// <summary>获取分配到本节点的应用服务信息</summary>
     /// <returns></returns>
     public DeployInfo[] GetAll(Int32 deployId, String deployName, String appName)
@@ -45,6 +47,12 @@ public class DeployController(NodeService nodeService, DeployService deployServi
 
             var inf = deployService.BuildDeployInfo(deployNode, node);
             if (inf == null) continue;
+
+            // 如果客户版本较低，Mode需要转为旧版本服务模式
+            if (Version.TryParse(node.Version, out var ver) && ver < _newDeploy)
+            {
+                inf.Service.Mode = (DeployMode)DeployModesExtensions.Convert(inf.Service.Mode);
+            }
 
             rs.Add(inf);
             WriteHistory(app.Id, nameof(GetAll), true, inf.ToJson());
@@ -86,12 +94,18 @@ public class DeployController(NodeService nodeService, DeployService deployServi
                 app.Arguments = svc.Arguments;
                 app.WorkingDirectory = svc.WorkingDirectory;
                 app.Environments = svc.Environments;
-
-                app.Mode = svc.Mode;
+                //app.Mode = svc.Mode;
                 app.AutoStop = svc.AutoStop;
                 app.ReloadOnChange = svc.ReloadOnChange;
                 app.MaxMemory = svc.MaxMemory;
                 app.Priority = svc.Priority;
+
+                // 客户端使用旧版本时，需要转换为新版本
+                var mode = svc.Mode;
+                if (mode.IsNewVersion())
+                    app.Mode = mode;
+                else
+                    app.Mode = DeployModesExtensions.Convert((ServiceModes)mode);
 
                 // 新增时才记录应用部署的用户名，避免Windows/Linux混合部署时整个应用记住了Linux的用户名
                 if (app.Id == 0)

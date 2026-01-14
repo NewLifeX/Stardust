@@ -244,14 +244,23 @@ public partial class AppDeploy
     [BindColumn("Priority", "优先级。表示应用程序中任务或操作的优先级级别", "")]
     public Stardust.Models.ProcessPriority Priority { get => _Priority; set { if (OnPropertyChanging("Priority", value)) { _Priority = value; OnPropertyChanged("Priority"); } } }
 
-    private Stardust.Models.ServiceModes _Mode;
-    /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</summary>
+    private Stardust.Models.DeployMode _Mode;
+    /// <summary>工作模式。Standard(10)/Shadow(11)/Hosted(12)/Task(13)</summary>
     [Category("发布参数")]
     [DisplayName("工作模式")]
-    [Description("工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip")]
+    [Description("工作模式。Standard(10)/Shadow(11)/Hosted(12)/Task(13)")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("Mode", "工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip", "")]
-    public Stardust.Models.ServiceModes Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
+    [BindColumn("Mode", "工作模式。Standard(10)/Shadow(11)/Hosted(12)/Task(13)", "")]
+    public Stardust.Models.DeployMode Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
+
+    private Boolean _AllowMultiple;
+    /// <summary>允许多实例。同一应用可在本机运行多份进程，健康检查时将不会按进程名匹配</summary>
+    [Category("发布参数")]
+    [DisplayName("允许多实例")]
+    [Description("允许多实例。同一应用可在本机运行多份进程，健康检查时将不会按进程名匹配")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("AllowMultiple", "允许多实例。同一应用可在本机运行多份进程，健康检查时将不会按进程名匹配", "")]
+    public Boolean AllowMultiple { get => _AllowMultiple; set { if (OnPropertyChanging("AllowMultiple", value)) { _AllowMultiple = value; OnPropertyChanged("AllowMultiple"); } } }
 
     private Boolean _AutoStop;
     /// <summary>自动停止。随着宿主的退出，同时停止该应用进程</summary>
@@ -370,6 +379,7 @@ public partial class AppDeploy
             "MaxMemory" => _MaxMemory,
             "Priority" => _Priority,
             "Mode" => _Mode,
+            "AllowMultiple" => _AllowMultiple,
             "AutoStop" => _AutoStop,
             "ReloadOnChange" => _ReloadOnChange,
             "CreateUserId" => _CreateUserId,
@@ -411,7 +421,8 @@ public partial class AppDeploy
                 case "Environments": _Environments = Convert.ToString(value); break;
                 case "MaxMemory": _MaxMemory = value.ToInt(); break;
                 case "Priority": _Priority = (Stardust.Models.ProcessPriority)value.ToInt(); break;
-                case "Mode": _Mode = (Stardust.Models.ServiceModes)value.ToInt(); break;
+                case "Mode": _Mode = (Stardust.Models.DeployMode)value.ToInt(); break;
+                case "AllowMultiple": _AllowMultiple = value.ToBoolean(); break;
                 case "AutoStop": _AutoStop = value.ToBoolean(); break;
                 case "ReloadOnChange": _ReloadOnChange = value.ToBoolean(); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
@@ -448,7 +459,8 @@ public partial class AppDeploy
     /// <param name="autoPublish">自动发布。应用版本后自动发布到启用节点，加快发布速度</param>
     /// <param name="projectKind">项目类型。默认dotnet</param>
     /// <param name="priority">优先级。表示应用程序中任务或操作的优先级级别</param>
-    /// <param name="mode">工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</param>
+    /// <param name="mode">工作模式。Standard(10)/Shadow(11)/Hosted(12)/Task(13)</param>
+    /// <param name="allowMultiple">允许多实例。同一应用可在本机运行多份进程，健康检查时将不会按进程名匹配</param>
     /// <param name="autoStop">自动停止。随着宿主的退出，同时停止该应用进程</param>
     /// <param name="reloadOnChange">检测变动。当文件发生改变时，自动重启应用</param>
     /// <param name="enable">启用</param>
@@ -457,7 +469,7 @@ public partial class AppDeploy
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<AppDeploy> Search(Int32 projectId, Boolean? multiVersion, Boolean? autoPublish, Stardust.Models.ProjectKinds projectKind, Stardust.Models.ProcessPriority priority, Stardust.Models.ServiceModes mode, Boolean? autoStop, Boolean? reloadOnChange, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<AppDeploy> Search(Int32 projectId, Boolean? multiVersion, Boolean? autoPublish, Stardust.Models.ProjectKinds projectKind, Stardust.Models.ProcessPriority priority, Stardust.Models.DeployMode mode, Boolean? allowMultiple, Boolean? autoStop, Boolean? reloadOnChange, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
@@ -467,6 +479,7 @@ public partial class AppDeploy
         if (projectKind >= 0) exp &= _.ProjectKind == projectKind;
         if (priority >= 0) exp &= _.Priority == priority;
         if (mode >= 0) exp &= _.Mode == mode;
+        if (allowMultiple != null) exp &= _.AllowMultiple == allowMultiple;
         if (autoStop != null) exp &= _.AutoStop == autoStop;
         if (reloadOnChange != null) exp &= _.ReloadOnChange == reloadOnChange;
         if (enable != null) exp &= _.Enable == enable;
@@ -559,8 +572,11 @@ public partial class AppDeploy
         /// <summary>优先级。表示应用程序中任务或操作的优先级级别</summary>
         public static readonly Field Priority = FindByName("Priority");
 
-        /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</summary>
+        /// <summary>工作模式。Standard(10)/Shadow(11)/Hosted(12)/Task(13)</summary>
         public static readonly Field Mode = FindByName("Mode");
+
+        /// <summary>允许多实例。同一应用可在本机运行多份进程，健康检查时将不会按进程名匹配</summary>
+        public static readonly Field AllowMultiple = FindByName("AllowMultiple");
 
         /// <summary>自动停止。随着宿主的退出，同时停止该应用进程</summary>
         public static readonly Field AutoStop = FindByName("AutoStop");
@@ -673,8 +689,11 @@ public partial class AppDeploy
         /// <summary>优先级。表示应用程序中任务或操作的优先级级别</summary>
         public const String Priority = "Priority";
 
-        /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip</summary>
+        /// <summary>工作模式。Standard(10)/Shadow(11)/Hosted(12)/Task(13)</summary>
         public const String Mode = "Mode";
+
+        /// <summary>允许多实例。同一应用可在本机运行多份进程，健康检查时将不会按进程名匹配</summary>
+        public const String AllowMultiple = "AllowMultiple";
 
         /// <summary>自动停止。随着宿主的退出，同时停止该应用进程</summary>
         public const String AutoStop = "AutoStop";

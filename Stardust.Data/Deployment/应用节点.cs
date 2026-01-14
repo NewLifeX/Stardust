@@ -142,14 +142,14 @@ public partial class AppDeployNode
     [BindColumn("Priority", "优先级。表示应用程序中任务或操作的优先级级别", "")]
     public Stardust.Models.ProcessPriority Priority { get => _Priority; set { if (OnPropertyChanging("Priority", value)) { _Priority = value; OnPropertyChanged("Priority"); } } }
 
-    private Stardust.Models.ServiceModes _Mode;
-    /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置</summary>
+    private Stardust.Models.DeployMode _Mode;
+    /// <summary>工作模式。Standard(10)/Shadow(11)/Hosted(12)/Task(13)。为空时使用应用集配置</summary>
     [Category("发布参数")]
     [DisplayName("工作模式")]
-    [Description("工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置")]
+    [Description("工作模式。Standard(10)/Shadow(11)/Hosted(12)/Task(13)。为空时使用应用集配置")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("Mode", "工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置", "")]
-    public Stardust.Models.ServiceModes Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
+    [BindColumn("Mode", "工作模式。Standard(10)/Shadow(11)/Hosted(12)/Task(13)。为空时使用应用集配置", "")]
+    public Stardust.Models.DeployMode Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
 
     private Int32 _Delay;
     /// <summary>延迟。批量发布时，需要延迟执行的时间，用于滚动发布，单位秒</summary>
@@ -375,7 +375,7 @@ public partial class AppDeployNode
                 case "Environments": _Environments = Convert.ToString(value); break;
                 case "MaxMemory": _MaxMemory = value.ToInt(); break;
                 case "Priority": _Priority = (Stardust.Models.ProcessPriority)value.ToInt(); break;
-                case "Mode": _Mode = (Stardust.Models.ServiceModes)value.ToInt(); break;
+                case "Mode": _Mode = (Stardust.Models.DeployMode)value.ToInt(); break;
                 case "Delay": _Delay = value.ToInt(); break;
                 case "ProcessId": _ProcessId = value.ToInt(); break;
                 case "ProcessName": _ProcessName = Convert.ToString(value); break;
@@ -415,14 +415,14 @@ public partial class AppDeployNode
     /// <param name="deployId">应用部署集。对应AppDeploy</param>
     /// <param name="nodeId">节点。节点服务器</param>
     /// <param name="priority">优先级。表示应用程序中任务或操作的优先级级别</param>
-    /// <param name="mode">工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置</param>
+    /// <param name="mode">工作模式。Standard(10)/Shadow(11)/Hosted(12)/Task(13)。为空时使用应用集配置</param>
     /// <param name="enable">启用</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<AppDeployNode> Search(Int32 deployId, Int32 nodeId, Stardust.Models.ProcessPriority priority, Stardust.Models.ServiceModes mode, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<AppDeployNode> Search(Int32 deployId, Int32 nodeId, Stardust.Models.ProcessPriority priority, Stardust.Models.DeployMode mode, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
@@ -484,7 +484,7 @@ public partial class AppDeployNode
         /// <summary>优先级。表示应用程序中任务或操作的优先级级别</summary>
         public static readonly Field Priority = FindByName("Priority");
 
-        /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置</summary>
+        /// <summary>工作模式。Standard(10)/Shadow(11)/Hosted(12)/Task(13)。为空时使用应用集配置</summary>
         public static readonly Field Mode = FindByName("Mode");
 
         /// <summary>延迟。批量发布时，需要延迟执行的时间，用于滚动发布，单位秒</summary>
@@ -589,7 +589,7 @@ public partial class AppDeployNode
         /// <summary>优先级。表示应用程序中任务或操作的优先级级别</summary>
         public const String Priority = "Priority";
 
-        /// <summary>工作模式。0默认exe/zip；1仅解压；2解压后运行；3仅运行一次；4多实例exe/zip。为空时使用应用集配置</summary>
+        /// <summary>工作模式。Standard(10)/Shadow(11)/Hosted(12)/Task(13)。为空时使用应用集配置</summary>
         public const String Mode = "Mode";
 
         /// <summary>延迟。批量发布时，需要延迟执行的时间，用于滚动发布，单位秒</summary>

@@ -5,7 +5,6 @@ using NewLife.Log;
 using NewLife.Remoting.Clients;
 using NewLife.Threading;
 using StarAgent.Managers;
-using Stardust.Deployment;
 using Stardust.Models;
 #if !NET40
 using TaskEx = System.Threading.Tasks.Task;
@@ -13,9 +12,20 @@ using TaskEx = System.Threading.Tasks.Task;
 
 namespace Stardust.Managers;
 
-/// <summary>
-/// 应用服务控制器
-/// </summary>
+/// <summary>应用服务控制器</summary>
+/// <remarks>
+/// 负责单个应用服务的生命周期管理：
+/// - 启动和停止应用进程
+/// - 守护进程（检测退出并重启）
+/// - 监控文件变化并热重启
+/// - 接管已存在的同名进程
+/// 
+/// 通过策略模式支持不同的部署方式：
+/// - Standard: 解压到工作目录运行（默认）
+/// - Shadow: 解压到影子目录运行
+/// - Hosted: 仅解压不运行
+/// - Task: 一次性任务
+/// </remarks>
 public class ServiceController : DisposeBase
 {
     #region 属性
@@ -71,6 +81,9 @@ public class ServiceController : DisposeBase
 
     /// <summary>是否引用了星尘SDK的APP。这类APP自带性能上报，无需Deploy上报</summary>
     public Boolean IsStarApp { get; set; }
+
+    /// <summary>部署策略</summary>
+    private IDeployStrategy? _strategy;
 
     private String? _fileName;
     private String? _workdir;
@@ -137,109 +150,90 @@ public class ServiceController : DisposeBase
             _fileName = null;
             _workdir = workDir;
 
+            // 获取部署策略
+            var strategy = _strategy = DeployStrategyFactory.Create(service);
+            if (strategy is ITracerFeature tf) tf.Tracer = Tracer;
+            var deployMode = strategy.Mode;
+            var allowMultiple = DeployStrategyFactory.IsMultipleAllowed(service);
+
             var args = service.Arguments?.Trim();
-            WriteLog("启动应用：{0} {1} workDir={2} Mode={3} Times={4}", file, args, workDir, service.Mode, _error);
+            WriteLog("启动应用：{0} {1} workDir={2} Mode={3} Times={4}", file, args, workDir, deployMode, _error);
             if (service.MaxMemory > 0) WriteLog("内存限制：{0:n0}M", service.MaxMemory);
             if (!AppId.IsNullOrEmpty()) WriteLog("应用编码：{0}", AppId);
+            if (allowMultiple) WriteLog("多实例模式");
 
-            var src = service.ZipFile ?? file;
             using var span = Tracer?.NewSpan("StartService", service);
             try
             {
-                Process? p;
-                var isZip = src.EndsWithIgnoreCase(".zip");
-
-                // 在环境变量中设置BasePath，不用担心影响当前进程，因为PathHelper仅读取一次
-                //Environment.SetEnvironmentVariable("BasePath", workDir);
-                //if (DeployInfo != null && !DeployInfo.Name.IsNullOrEmpty())
-                //    Environment.SetEnvironmentVariable("StarAppId", DeployInfo.Name);
-
-                // 工作模式
-                switch (service.Mode)
+                // 构建部署上下文
+                var context = new DeployContext
                 {
-                    case ServiceModes.Default:
-                    case ServiceModes.Multiple:
-                        break;
-                    case ServiceModes.Extract:
-                        {
-                            WriteLog("解压后不运行，外部主机（如IIS）将托管应用");
-                            var deploy = Extract(src, args, workDir, false);
-                            CheckStarApp(deploy.Shadow, workDir);
-                            Running = true;
-                            return true;
-                        }
-                    case ServiceModes.ExtractAndRun:
-                        {
-                            WriteLog("解压后在工作目录运行，发布模式：{0}", DeployInfo?.Mode);
-                            var deploy = Extract(src, args, workDir, false);
-                            if (deploy == null) throw new Exception("解压缩失败");
+                    Name = Name,
+                    AppId = AppId,
+                    Service = service,
+                    Deploy = DeployInfo,
+                    WorkingDirectory = workDir,
+                    ZipFile = service.ZipFile ?? file,
+                    Arguments = args,
+                    AllowMultiple = allowMultiple,
+                    StartupHook = Manager?.StartupHook ?? false,
+                    StartWait = StartWait,
+                    Debug = _error > 1,  // 多次重启时开启调试
+                    Tracer = Tracer,
+                    Log = new ActionLog(WriteLog),
+                };
 
-                            //file ??= deploy.ExecuteFile;
-                            var runfile = deploy.FindExeFile(workDir);
-                            file = runfile?.FullName;
-                            if (file.IsNullOrEmpty()) throw new Exception("无法找到启动文件");
-
-                            args = deploy.Arguments;
-                            //_fileName = deploy.ExecuteFile;
-                            isZip = false;
-                            break;
-                        }
-                    case ServiceModes.RunOnce:
-                        //service.Enable = false;
-                        break;
-                    default:
-                        break;
+                // 解压部署包
+                if (!strategy.Extract(context))
+                {
+                    WriteLog("解压部署包失败");
+                    return false;
                 }
 
-                if (isZip)
-                    p = RunZip(file, args, workDir, service);
-                else
-                    p = RunExe(file, args, workDir, service);
+                _fileName = context.ExecuteFile;
 
-                if (p == null) return false;
+                // 获取实际部署模式（兼容旧版）
+                var actualMode = DeployStrategyFactory.GetActualMode(deployMode);
+
+                // 托管模式，不执行
+                if (actualMode == DeployMode.Hosted)
+                {
+                    WriteLog("托管模式，外部主机将托管应用");
+                    //CheckStarApp(context.Shadow, workDir);
+                    Running = true;
+                    return true;
+                }
+
+                // 执行应用
+                var p = strategy.Execute(context);
+                if (p == null)
+                {
+                    if (!context.LastError.IsNullOrEmpty()) WriteEvent("error", context.LastError);
+                    return false;
+                }
 
                 WriteLog("启动成功 PID={0}/{1}", p.Id, p.ProcessName);
                 CheckStarApp(Path.GetDirectoryName(_fileName), workDir);
 
-                if (service.Mode == ServiceModes.RunOnce)
+                // 任务模式，运行后不守护
+                if (actualMode == DeployMode.Task)
                 {
-                    WriteLog("单次运行完成，禁用该应用服务");
+                    WriteLog("任务完成，禁用该应用服务");
                     service.Enable = false;
                     Running = false;
-
                     return true;
                 }
 
                 // 记录进程信息，避免宿主重启后无法继续管理
                 SetProcess(p);
                 Running = true;
-
                 StartTime = DateTime.Now;
 
                 // 定时检查文件是否有改变
                 StartMonitor();
 
-                // 此时还不能清零，因为进程可能不稳定，待定时器检测可靠后清零
-                //_error = 0;
-
-                // 检查nginx配置文件，如果存在，则发布nginx配置
-                var sites = NginxDeploy.DetectNginxConfig(workDir).ToList();
-                if (sites.Count > 0)
-                {
-                    WriteLog("Nginx配置目录：{0}", sites[0].ConfigPath);
-                    WriteLog("Nginx扩展名：{0}", sites[0].Extension);
-
-                    if (!sites[0].ConfigPath.IsNullOrEmpty())
-                    {
-                        foreach (var site in sites)
-                        {
-                            WriteLog("站点：{0}", site.SiteFile);
-                            site.Log = new ActionLog(WriteLog);
-                            var rs = site.Publish();
-                            WriteLog("站点发布{0}！", rs ? "成功" : "无变化");
-                        }
-                    }
-                }
+                // 检查nginx配置文件
+                PublishNginxConfig(workDir);
 
                 return true;
             }
@@ -254,281 +248,35 @@ public class ServiceController : DisposeBase
         }
     }
 
-    public ZipDeploy? Extract(String file, String? args, String workDir, Boolean needRun)
+    /// <summary>发布Nginx配置</summary>
+    /// <param name="workDir">工作目录</param>
+    private void PublishNginxConfig(String workDir)
     {
-        var isZip = file.EqualIgnoreCase("ZipDeploy") || file.EndsWithIgnoreCase(".zip");
-        if (!isZip) return null;
-
-        var deploy = new ZipDeploy
+        var sites = NginxDeploy.DetectNginxConfig(workDir).ToList();
+        if (sites.Count > 0)
         {
-            Name = Name,
-            AppId = AppId,
-            FileName = file,
-            WorkingDirectory = workDir,
+            WriteLog("Nginx配置目录：{0}", sites[0].ConfigPath);
+            WriteLog("Nginx扩展名：{0}", sites[0].Extension);
 
-            Tracer = Tracer,
-            Log = new ActionLog(WriteLog),
-        };
-
-        var di = DeployInfo;
-        if (di != null)
-        {
-            deploy.Overwrite = di.Overwrite;
-            deploy.Mode = di.Mode;
+            if (!sites[0].ConfigPath.IsNullOrEmpty())
+            {
+                foreach (var site in sites)
+                {
+                    WriteLog("站点：{0}", site.SiteFile);
+                    site.Log = new ActionLog(WriteLog);
+                    var rs = site.Publish();
+                    WriteLog("站点发布{0}！", rs ? "成功" : "无变化");
+                }
+            }
         }
-
-        //var args = service.Arguments?.Trim();
-        if (!args.IsNullOrEmpty() && !deploy.Parse(args.Split(" "))) return null;
-
-        //deploy.Extract(workDir);
-        // 要解压缩到影子目录，否则可能会把appsettings.json等配置文件覆盖。用完后删除
-        var shadow = deploy.CreateShadow($"{deploy.Name}-{DateTime.Now:yyyyMMddHHmmss}");
-        deploy.Shadow = shadow;
-        deploy.Extract(shadow, CopyModes.ClearBeforeCopy, CopyModes.SkipExists, CopyModes.Overwrite);
-        try
-        {
-            WriteLog("删除临时影子目录：{0}", shadow);
-            Directory.Delete(shadow, true);
-        }
-        catch (Exception ex)
-        {
-            WriteLog(ex.Message);
-        }
-
-        if (!needRun) return deploy;
-
-        var runfile = deploy.FindExeFile(workDir);
-        if (runfile == null)
-        {
-            WriteLog("无法找到名为[{0}]的可执行文件", deploy.FileName);
-            return null;
-        }
-
-        deploy.ExecuteFile = runfile.FullName;
-
-        return deploy;
     }
 
-    private Process? RunZip(String file, String? args, String workDir, ServiceInfo service)
-    {
-        var deploy = new ZipDeploy
-        {
-            Name = Name,
-            AppId = AppId,
-            FileName = file,
-            WorkingDirectory = workDir,
-            UserName = service.UserName,
-            Environments = service.Environments,
-            Priority = service.Priority,
-            StartupHook = Manager?.StartupHook ?? false,
-
-            Tracer = Tracer,
-            Log = new ActionLog(WriteLog),
-        };
-
-        var di = DeployInfo;
-        if (di != null)
-        {
-            deploy.Overwrite = di.Overwrite;
-            deploy.Mode = di.Mode;
-        }
-
-        // 如果出现超过一次的重启，则打开调试模式，截取控制台输出到日志
-        if (_error > 1) deploy.Debug = true;
-
-        if (!args.IsNullOrEmpty() && !deploy.Parse(args.Split(" "))) return null;
-
-        if (!deploy.Execute(StartWait))
-        {
-            WriteLog("Zip包启动失败！ExitCode={0}", deploy.Process?.ExitCode);
-
-            // 上报最后错误
-            if (!deploy.LastError.IsNullOrEmpty()) WriteEvent("error", deploy.LastError);
-
-            return null;
-        }
-
-        _fileName = deploy.ExecuteFile;
-
-        return deploy.Process;
-    }
-
-    private Process? RunExe(String file, String? args, String workDir, ServiceInfo service)
-    {
-        //WriteLog("拉起进程：{0} {1}", file, args);
-
-        var fileName = workDir.CombinePath(file).GetFullPath();
-        if (!fileName.AsFile().Exists)
-        {
-            fileName = file;
-        }
-
-        if (file.EndsWithIgnoreCase(".dll"))
-        {
-            args = $"{fileName} {args}";
-            fileName = "dotnet";
-        }
-        else if (file.EndsWithIgnoreCase(".jar"))
-        {
-            args = $" -jar {fileName} {args}";
-            fileName = "java";
-        }
-
-        var si = new ProcessStartInfo
-        {
-            FileName = fileName,
-            Arguments = args ?? "",
-            WorkingDirectory = workDir,
-
-            // false时目前控制台合并到当前控制台，一起退出；
-            // true时目标控制台独立窗口，不会一起退出；
-            UseShellExecute = false,
-        };
-        si.EnvironmentVariables["BasePath"] = workDir;
-
-        // 向未使用星尘的目标.Net应用注入星尘
-        var hook = Manager?.StartupHook ?? false;
-        if (hook && (service.UserName.IsNullOrEmpty() || service.UserName == Environment.UserName || Runtime.Windows))
-        {
-            var targets = Directory.GetFiles(workDir, "*", SearchOption.TopDirectoryOnly);
-            if (targets.Any(e => e.EndsWithIgnoreCase(".runtimeconfig.json")) &&
-                !targets.Any(e => e.EqualIgnoreCase("Stardust.dll")))
-            {
-                var dll = "Stardust.dll".GetFullPath();
-                WriteLog("执行目录：{0}，注入：{1}", workDir, dll);
-                si.EnvironmentVariables["DOTNET_STARTUP_HOOKS"] = dll;
-            }
-        }
-
-        if (!AppId.IsNullOrEmpty())
-            si.EnvironmentVariables["StarAppId"] = AppId;
-
-        // 环境变量。不能用于ShellExecute
-        if (!service.Environments.IsNullOrEmpty() && !si.UseShellExecute)
-        {
-            foreach (var item in service.Environments.SplitAsDictionary("=", ";"))
-            {
-                if (!item.Key.IsNullOrEmpty())
-                    si.EnvironmentVariables[item.Key] = item.Value;
-            }
-        }
-
-        if (Runtime.Linux)
-        {
-            // Linux下，需要给予可执行权限
-            Process.Start("chmod", $"+x {fileName}").WaitForExit(5_000);
-        }
-
-        // 指定用户时，以特定用户启动进程
-        var user = service.UserName;
-        if (!user.IsNullOrEmpty())
-        {
-            si.UserName = user;
-            //si.UseShellExecute = false;
-
-            // 在Linux系统中，改变目录所属用户
-            if (Runtime.Linux)
-            {
-                if (!user.Contains(':')) user = $"{user}:{user}";
-                //Process.Start("chown", $"-R {user} {si.WorkingDirectory}");
-                Process.Start("chown", $"-R {user} {si.WorkingDirectory.CombinePath("../").GetBasePath()}").WaitForExit(5_000);
-            }
-        }
-
-        // 如果出现超过一次的重启，则打开调试模式，截取控制台输出到日志
-        if (_error > 1)
-        {
-            // UseShellExecute 必须 false，以便于后续重定向输出流
-            si.UseShellExecute = false;
-            si.RedirectStandardError = true;
-            si.RedirectStandardOutput = true;
-        }
-
-        //// 在进程的环境变量中设置BasePath
-        //if (!si.UseShellExecute)
-        //    si.EnvironmentVariables["BasePath"] = si.WorkingDirectory;
-
-        WriteLog("工作目录: {0}", si.WorkingDirectory);
-        WriteLog("启动文件: {0}", si.FileName);
-        WriteLog("启动参数: {0}", si.Arguments);
-        if (!si.UserName.IsNullOrEmpty())
-            WriteLog("启动用户：{0}", si.UserName);
-
-        Process? p = null;
-
-        // Windows桌面用户运行
-        if (Runtime.Windows && (user == "$" || user == "$$"))
-        {
-            // 交互模式直接运行
-            if (Environment.UserInteractive)
-            {
-                si.UserName = null!;
-                p = Process.Start(si);
-            }
-            else
-            {
-                // 桌面用户运行。$表示在用户桌面上启动进程，$$表示以用户身份启动进程（无需登录桌面）
-                var desktop = new Desktop { Log = Log };
-                var pid = 0u;
-                if (user == "$")
-                    pid = desktop.StartProcess(si.FileName, si.Arguments, si.WorkingDirectory, false, true);
-                else
-                    pid = desktop.StartProcessAsUser(si.FileName, si.Arguments, si.WorkingDirectory, null);
-                p = Process.GetProcessById((Int32)pid);
-            }
-        }
-        else if (Runtime.Windows && !user.IsNullOrEmpty())
-        {
-            WriteLog("在Windows下以特定用户[{0}]启动进程，大概率失败，因没有密码令牌", user);
-        }
-        else
-        {
-            p = Process.Start(si);
-        }
-
-        // 进程优先级
-        if (p != null && service.Priority != ProcessPriority.Normal)
-        {
-            WriteLog("优先级：{0}", service.Priority);
-            p.PriorityClass = service.Priority switch
-            {
-                ProcessPriority.Idle => ProcessPriorityClass.Idle,
-                ProcessPriority.BelowNormal => ProcessPriorityClass.BelowNormal,
-                ProcessPriority.Normal => ProcessPriorityClass.Normal,
-                ProcessPriority.AboveNormal => ProcessPriorityClass.AboveNormal,
-                ProcessPriority.High => ProcessPriorityClass.High,
-                ProcessPriority.RealTime => ProcessPriorityClass.RealTime,
-                _ => ProcessPriorityClass.Normal,
-            };
-        }
-
-        if (StartWait > 0 && p != null && p.WaitForExit(StartWait) && p.ExitCode != 0)
-        {
-            WriteLog("启动失败！ExitCode={0}", p.ExitCode);
-
-            if (si.RedirectStandardError)
-            {
-                var rs = p.StandardOutput.ReadToEnd();
-                if (!rs.IsNullOrEmpty()) WriteLog(rs);
-
-                rs = p.StandardError.ReadToEnd();
-                if (!rs.IsNullOrEmpty()) WriteLog(rs);
-            }
-
-            return null;
-        }
-
-        _fileName ??= file;
-
-        return p;
-    }
-
-    private void CheckStarApp(String exeDir, String workDir)
+    private void CheckStarApp(String? exeDir, String workDir)
     {
         // 是否引用了星尘SDK的APP。这类APP自带性能上报，无需Deploy上报
         IsStarApp = false;
-        var starFile = exeDir.CombinePath("Stardust.dll").GetFullPath();
-        if (File.Exists(starFile))
+        var starFile = exeDir?.CombinePath("Stardust.dll").GetFullPath();
+        if (!starFile.IsNullOrEmpty() && File.Exists(starFile))
         {
             IsStarApp = true;
         }
@@ -657,7 +405,8 @@ public class ServiceController : DisposeBase
         }
 
         // 进程不存在，但名称存在
-        if (p == null && !ProcessName.IsNullOrEmpty() && inf.Mode != ServiceModes.Multiple)
+        var allowMultiple = DeployStrategyFactory.IsMultipleAllowed(inf);
+        if (p == null && !ProcessName.IsNullOrEmpty() && !allowMultiple)
         {
             if (ProcessName.EqualIgnoreCase("dotnet", "java"))
             {
@@ -684,64 +433,62 @@ public class ServiceController : DisposeBase
                         if (!item.ProcessName.EqualIgnoreCase(ProcessName)) continue;
 
                         var name = item.GetProcessName();
-                        if (!name.IsNullOrEmpty())
+                        if (name.IsNullOrEmpty()) continue;
+
+                        span?.AppendTag($"id={item.Id} name={name}");
+
+                        // target有可能是文件全路径，此时需要比对无后缀文件名
+                        if (!name.EqualIgnoreCase(target, Path.GetFileNameWithoutExtension(target))) continue;
+
+                        // 进一步验证：获取进程主模块路径，确保路径匹配
+                        // 避免 cube2 应用匹配到 cube 应用的进程
+                        var matched = false;
+                        try
                         {
-                            span?.AppendTag($"id={item.Id} name={name}");
-
-                            // target有可能是文件全路径，此时需要比对无后缀文件名
-                            if (name.EqualIgnoreCase(target, Path.GetFileNameWithoutExtension(target)))
+                            var mainModule = item.MainModule?.FileName;
+                            if (!mainModule.IsNullOrEmpty())
                             {
-                                // 进一步验证：获取进程主模块路径，确保路径匹配
-                                // 避免 cube2 应用匹配到 cube 应用的进程
-                                var matched = false;
-                                try
+                                span?.AppendTag($"mainModule={mainModule}");
+
+                                // 检查主模块路径是否包含目标文件的完整路径或工作目录
+                                if (!targetFullPath.IsNullOrEmpty() && mainModule.EqualIgnoreCase(targetFullPath))
                                 {
-                                    var mainModule = item.MainModule?.FileName;
-                                    if (!mainModule.IsNullOrEmpty())
-                                    {
-                                        span?.AppendTag($"mainModule={mainModule}");
-
-                                        // 检查主模块路径是否包含目标文件的完整路径或工作目录
-                                        if (!targetFullPath.IsNullOrEmpty() && mainModule.EqualIgnoreCase(targetFullPath))
-                                        {
-                                            matched = true;
-                                        }
-                                        else if (!_workdir.IsNullOrEmpty() && mainModule.StartsWithIgnoreCase(_workdir))
-                                        {
-                                            matched = true;
-                                        }
-                                        else if (target.Contains('/') || target.Contains('\\'))
-                                        {
-                                            // target 本身包含路径，直接比对
-                                            matched = mainModule.EndsWithIgnoreCase(target);
-                                        }
-                                        else
-                                        {
-                                            // target 只是文件名，且没有工作目录信息，只能按文件名匹配（兼容旧逻辑）
-                                            matched = true;
-                                        }
-
-                                        if (!matched)
-                                        {
-                                            span?.AppendTag($"路径不匹配，跳过");
-                                            continue;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        // 无法获取主模块路径，使用旧逻辑
-                                        matched = true;
-                                    }
+                                    matched = true;
                                 }
-                                catch
+                                else if (!_workdir.IsNullOrEmpty() && mainModule.StartsWithIgnoreCase(_workdir))
                                 {
-                                    // 获取 MainModule 可能因权限问题失败，使用旧逻辑
+                                    matched = true;
+                                }
+                                else if (target.Contains('/') || target.Contains('\\'))
+                                {
+                                    // target 本身包含路径，直接比对
+                                    matched = mainModule.EndsWithIgnoreCase(target);
+                                }
+                                else
+                                {
+                                    // target 只是文件名，且没有工作目录信息，只能按文件名匹配（兼容旧逻辑）
                                     matched = true;
                                 }
 
-                                if (matched) return TakeOver(item, $"按[{ProcessName} {target}]查找");
+                                if (!matched)
+                                {
+                                    span?.AppendTag($"路径不匹配，跳过");
+                                    continue;
+                                }
+                            }
+                            else
+                            {
+                                // 无法获取主模块路径，使用旧逻辑
+                                matched = true;
                             }
                         }
+                        catch
+                        {
+                            // 获取 MainModule 可能因权限问题失败，使用旧逻辑
+                            matched = true;
+                        }
+
+                        if (matched) return TakeOver(item, $"按[{ProcessName} {target}]查找");
                     }
                 }
             }
@@ -867,6 +614,14 @@ public class ServiceController : DisposeBase
             ProcessName = null;
             _appInfo = null;
         }
+    }
+
+    public void LoadModel(ProcessInfo info)
+    {
+        Name = info.Name;
+        ProcessId = info.ProcessId;
+        ProcessName = info.ProcessName;
+        StartTime = info.CreateTime;
     }
 
     /// <summary>获取进程信息</summary>

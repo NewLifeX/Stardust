@@ -7,6 +7,15 @@ using Stardust.Models;
 namespace Stardust.Deployment;
 
 /// <summary>Zip压缩包发布</summary>
+/// <remarks>
+/// 此类保留用于向后兼容。
+/// 新代码请使用 IDeployStrategy 接口及其实现类：
+/// - StandardDeployStrategy: 解压到影子目录运行
+/// - InPlaceDeployStrategy: 解压到工作目录运行
+/// - ExtractOnlyStrategy: 仅解压不运行
+/// - RunOnceStrategy: 一次性任务
+/// </remarks>
+[Obsolete("请使用 IDeployStrategy 接口及其实现类")]
 public class ZipDeploy
 {
     #region 常量

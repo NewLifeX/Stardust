@@ -215,7 +215,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
             ReloadOnChange = app.ReloadOnChange,
             MaxMemory = MaxMemory,
             Priority = Priority,
-            Mode = Mode,
+            Mode = (DeployMode)(Int32)Mode,
         };
 
         if (inf.Name.IsNullOrEmpty()) inf.Name = app.Name;
@@ -226,7 +226,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         if (inf.UserName.IsNullOrEmpty()) inf.UserName = app.UserName;
         if (inf.MaxMemory <= 0) inf.MaxMemory = app.MaxMemory;
         if (inf.Priority == 0) inf.Priority = app.Priority;
-        if (inf.Mode <= ServiceModes.Default) inf.Mode = app.Mode;
+        if ((Int32)inf.Mode <= 0) inf.Mode = (DeployMode)(Int32)app.Mode;
 
         return inf;
     }

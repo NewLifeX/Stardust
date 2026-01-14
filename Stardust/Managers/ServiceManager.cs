@@ -7,6 +7,7 @@ using NewLife.Remoting.Clients;
 using NewLife.Remoting.Models;
 using NewLife.Serialization;
 using NewLife.Threading;
+using StarAgent.Managers;
 using Stardust.Models;
 
 namespace Stardust.Managers;
@@ -150,19 +151,17 @@ public class ServiceManager : DisposeBase
         // 从数据库加载应用状态
         foreach (var item in db.FindAll())
         {
-            _controllers.Add(new ServiceController
+            var controller = new ServiceController
             {
                 Manager = this,
-                Name = item.Name,
-                ProcessId = item.ProcessId,
-                ProcessName = item.ProcessName,
-                StartTime = item.CreateTime,
                 Delay = Delay,
 
                 EventProvider = _client,
                 Tracer = Tracer,
                 Log = Log,
-            });
+            };
+            controller.LoadModel(item);
+            _controllers.Add(controller);
         }
 
         _timer = new TimerX(DoWork, null, 1000, 30_000) { Async = true };
@@ -334,15 +333,18 @@ public class ServiceManager : DisposeBase
             controller.SetInfo(service);
             _controllers.Add(controller);
 
+
             Fix(service);
             if (controller.Start())
             {
                 var svc = controller.Info;
-                if (svc != null && svc.Mode == ServiceModes.RunOnce && !svc.Enable) RaiseServiceChanged();
+                // 任务模式（新版13或旧版3）运行后禁用
+                if (svc != null && DeployStrategyFactory.GetActualMode(svc.Mode) == DeployMode.Task && !svc.Enable) RaiseServiceChanged();
 
                 return true;
             }
         }
+
 
         return false;
     }
