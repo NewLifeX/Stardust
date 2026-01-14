@@ -50,11 +50,11 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
         var zipFile = context.ZipFile;
         if (zipFile.IsNullOrEmpty()) return null;
 
-        var workDir = context.WorkingDirectory;
-        var fi = workDir.CombinePath(zipFile).AsFile();
-        if (fi != null && fi.Exists) return null;
+        var fi = zipFile.AsFile();
+        if (fi != null && fi.Exists) return fi;
 
-        fi = zipFile.AsFile();
+        var workDir = context.WorkingDirectory;
+        fi = workDir.CombinePath(zipFile).AsFile();
         if (fi != null && fi.Exists) return fi;
 
         context.WriteLog("Zip文件不存在：{0}", zipFile);
@@ -199,6 +199,9 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
             FileName = runFile.FullName,
             Arguments = arguments,
             WorkingDirectory = workDir,
+
+            // false时目前控制台合并到当前控制台，一起退出；
+            // true时目标控制台独立窗口，不会一起退出；
             UseShellExecute = false,
         };
         si.EnvironmentVariables["BasePath"] = workDir;

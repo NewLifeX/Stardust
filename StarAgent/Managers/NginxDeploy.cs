@@ -27,7 +27,14 @@ internal class NginxDeploy
     #region 构造
     static NginxDeploy()
     {
-        Init();
+        try
+        {
+            Init();
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteException(ex);
+        }
     }
 
     public NginxDeploy()
