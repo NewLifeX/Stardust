@@ -28,18 +28,20 @@ public class AppController(RegistryService registryService, ITokenService tokenS
     public ILoginResponse Login(AppModel model)
     {
         // 修正在2025-9-10错误修改rs.Code = device2.Secret，导致新应用重复注册为错误应用名
+        var autoReg = false;
         var appId = model.AppId;
         if (!appId.IsNullOrEmpty() && appId.Length == 16 && !model.Secret.IsNullOrEmpty())
         {
             // appId同时也是Secret的情况，说明是客户端传入错误，进行兼容处理
-            var passwordProvider = serviceProvider.GetService<IPasswordProvider>();
-            if (passwordProvider != null && passwordProvider.Verify(appId, model.Secret))
+            //var passwordProvider = serviceProvider.GetService<IPasswordProvider>();
+            //if (passwordProvider != null && passwordProvider.Verify(appId, model.Secret))
             {
                 var app2 = App.FindBySecret(appId);
                 if (app2 != null)
                 {
                     // 找到对应应用，修正AppId
                     model.AppId = app2.Name;
+                    autoReg = true;
                 }
             }
         }
@@ -48,30 +50,6 @@ public class AppController(RegistryService registryService, ITokenService tokenS
         var app = App.FindByName(model.AppId);
         var oldSecret = app?.Secret;
         Context.Device = app;
-
-        //// 设备不存在或者验证失败，执行注册流程
-        //if (app != null && !registryService.Authorize(app, model.Secret, ip, model.ClientId))
-        //{
-        //    app = null;
-        //}
-
-        //var clientId = model.ClientId;
-        //app ??= registryService.Register(model.AppId, model.Secret, ip, clientId);
-        //Context.Device = app ?? throw new ApiException(ApiCode.Unauthorized, "应用鉴权失败");
-
-        //registryService.Login(app, model, ip);
-
-        //var tokenModel = tokenService.IssueToken(app.Name, clientId);
-
-        //var online = registryService.SetOnline(app, model, ip, clientId, Token);
-
-        //deployService.UpdateDeployNode(online);
-
-        //var rs = new LoginResponse
-        //{
-        //    Name = app.DisplayName,
-        //    Token = tokenModel.AccessToken,
-        //};
 
         var request = model;
         var rs = registryService.Login(Context, request, "Http");
@@ -93,7 +71,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
         }
 
         // 动态注册，下发节点证书
-        if (app.Name != model.AppId || app.Secret != oldSecret)
+        if (app.Name != model.AppId || app.Secret != oldSecret || autoReg)
         {
             rs.Code = app.Name;
             rs.Secret = app.Secret;
