@@ -56,7 +56,7 @@ public class NodeVersionController(IFileStorage fileStorage) : EntityController<
         if (!entity.Source.IsNullOrEmpty())
         {
             //取 Id@Attachment 唯一
-            var id = Path.GetFileNameWithoutExtension(entity.Source.Replace("/cube/file?id=", string.Empty));
+            var id = Path.GetFileNameWithoutExtension(entity.Source.Replace("/cube/file?id=", String.Empty));
             var att = Attachment.FindById(id.ToLong());
             if (att != null)
             {

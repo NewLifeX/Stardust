@@ -23,23 +23,18 @@ public class AppResourceController : EntityController<AppResource>
         //ListFields.RemoveField("Id", "Creator");
         ListFields.RemoveCreateField().RemoveRemarkField();
 
-        //{
-        //    var df = ListFields.GetField("Code") as ListField;
-        //    df.Url = "?code={Code}";
-        //    df.Target = "_blank";
-        //}
-        //{
-        //    var df = ListFields.AddListField("devices", null, "Onlines");
-        //    df.DisplayName = "查看设备";
-        //    df.Url = "Device?groupId={Id}";
-        //    df.DataVisible = e => (e as AppResource).Devices > 0;
-        //    df.Target = "_frame";
-        //}
-        //{
-        //    var df = ListFields.GetField("Kind") as ListField;
-        //    df.GetValue = e => ((Int32)(e as AppResource).Kind).ToString("X4");
-        //}
-        //ListFields.TraceUrl("TraceId");
+        {
+            var df = ListFields.AddListField("Version", "Enable");
+            df.DisplayName = "版本";
+            df.Title = "管理资源版本";
+            df.Url = "/Deployment/AppResourceVersion?resourceId={Id}";
+        }
+        {
+            var df = ListFields.AddListField("Membership", "Enable");
+            df.DisplayName = "应用资源";
+            df.Title = "管理所有绑定到当前资源的部署集";
+            df.Url = "/Deployment/AppDeployResource?resourceId={Id}";
+        }
     }
 
     //private readonly ITracer _tracer;

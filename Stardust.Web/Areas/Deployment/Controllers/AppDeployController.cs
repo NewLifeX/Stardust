@@ -55,6 +55,12 @@ public class AppDeployController : EntityController<AppDeploy>
             df.Url = "/Deployment/AppDeployVersion?deployId={Id}";
         }
         {
+            var df = ListFields.AddListField("Membership", null, "Version");
+            df.DisplayName = "应用资源";
+            df.Title = "管理所有绑定到当前资源的部署集";
+            df.Url = "/Deployment/AppDeployResource?deployId={Id}";
+        }
+        {
             var df = ListFields.AddListField("AddVersion", "FileName");
             df.Header = "版本管理";
             df.DisplayName = "版本管理";

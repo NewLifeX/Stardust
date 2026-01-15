@@ -187,7 +187,7 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         //根据当前表Url(/cube/file?id=7185535436880961536.zip)取 Id@Attachment 唯一
         if (!entity.Url.IsNullOrEmpty())
         {
-            var id = Path.GetFileNameWithoutExtension(entity.Url.Replace("/cube/file?id=", string.Empty));
+            var id = Path.GetFileNameWithoutExtension(entity.Url.Replace("/cube/file?id=", String.Empty));
             var att = Attachment.FindById(id.ToLong());
             if (att != null)
             {

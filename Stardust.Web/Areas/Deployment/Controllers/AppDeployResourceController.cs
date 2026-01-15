@@ -12,7 +12,7 @@ using static Stardust.Data.Deployment.AppDeployResource;
 namespace Stardust.Web.Areas.Deployment.Controllers;
 
 /// <summary>应用资源。应用部署集引用的共享资源，发布时一并下发到目标节点</summary>
-[Menu(20, true, Icon = "fa-table")]
+[Menu(0, true, Icon = "fa-table")]
 [DeploymentArea]
 public class AppDeployResourceController : EntityController<AppDeployResource>
 {

@@ -246,7 +246,6 @@
         <Column Name="Category" DataType="String" Description="类别。driver/cert/config/plugin等" />
         <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称。资源唯一标识，如dm8-driver、newlifex-cert" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
-        <Column Name="Version" DataType="String" Description="版本。当前使用的版本号" />
         <Column Name="TargetPath" DataType="String" Description="目标路径。相对于应用工作目录，如../Plugins、./certs" />
         <Column Name="UnZip" DataType="Boolean" Description="解压缩。下载后是否自动解压" />
         <Column Name="Overwrite" DataType="String" Length="100" Description="覆盖文件。需要覆盖的文件模式" />

@@ -72,14 +72,6 @@ public partial class AppResource
     [BindColumn("Enable", "启用", "")]
     public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
-    private String _Version;
-    /// <summary>版本。当前使用的版本号</summary>
-    [DisplayName("版本")]
-    [Description("版本。当前使用的版本号")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("Version", "版本。当前使用的版本号", "")]
-    public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
-
     private String _TargetPath;
     /// <summary>目标路径。相对于应用工作目录，如../Plugins、./certs</summary>
     [DisplayName("目标路径")]
@@ -182,7 +174,6 @@ public partial class AppResource
             "Category" => _Category,
             "Name" => _Name,
             "Enable" => _Enable,
-            "Version" => _Version,
             "TargetPath" => _TargetPath,
             "UnZip" => _UnZip,
             "Overwrite" => _Overwrite,
@@ -205,7 +196,6 @@ public partial class AppResource
                 case "Category": _Category = Convert.ToString(value); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
-                case "Version": _Version = Convert.ToString(value); break;
                 case "TargetPath": _TargetPath = Convert.ToString(value); break;
                 case "UnZip": _UnZip = value.ToBoolean(); break;
                 case "Overwrite": _Overwrite = Convert.ToString(value); break;
@@ -363,9 +353,6 @@ public partial class AppResource
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
 
-        /// <summary>版本。当前使用的版本号</summary>
-        public static readonly Field Version = FindByName("Version");
-
         /// <summary>目标路径。相对于应用工作目录，如../Plugins、./certs</summary>
         public static readonly Field TargetPath = FindByName("TargetPath");
 
@@ -419,9 +406,6 @@ public partial class AppResource
 
         /// <summary>启用</summary>
         public const String Enable = "Enable";
-
-        /// <summary>版本。当前使用的版本号</summary>
-        public const String Version = "Version";
 
         /// <summary>目标路径。相对于应用工作目录，如../Plugins、./certs</summary>
         public const String TargetPath = "TargetPath";
