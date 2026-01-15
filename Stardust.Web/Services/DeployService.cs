@@ -12,13 +12,19 @@ namespace Stardust.Web.Services;
 
 public class DeployService(StarFactory starFactory, ITracer tracer)
 {
-    public async Task Control(AppDeploy app, AppDeployNode deployNode, String action, String ip, Int32 startTime, Int32 timeout)
+    /// <summary>发布控制</summary>
+    /// <param name="app">应用部署集</param>
+    /// <param name="deployNode">部署节点</param>
+    /// <param name="action">操作。install/start/stop/restart/uninstall</param>
+    /// <param name="ip">客户端IP</param>
+    /// <param name="startTime">开始时间</param>
+    /// <param name="timeout">超时时间</param>
+    /// <param name="resources">资源列表。逗号分隔的资源名称</param>
+    public async Task Control(AppDeploy app, AppDeployNode deployNode, String action, String ip, Int32 startTime, Int32 timeout, String resources = null)
     {
         if (deployNode == null) throw new ArgumentNullException(nameof(deployNode));
 
         app ??= deployNode.Deploy;
-        //if (app == null) throw new ArgumentNullException(nameof(deployNode));
-        //if (!deployNode.Enable || app == null || !app.Enable) throw new Exception("部署节点未启用！");
         if (app == null || !app.Enable) throw new Exception($"节点[{deployNode}]上的应用部署集[{app}]未启用！");
 
         await Task.Yield();
@@ -33,7 +39,7 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
             {
                 case "install":
                     action = "deploy/install";
-                    Install(deployNode);
+                    Install(deployNode, resources);
                     break;
                 case "start":
                     action = "deploy/start";
@@ -79,9 +85,41 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
         }
     }
 
-    public void Install(AppDeployNode deployNode)
+    /// <summary>安装应用</summary>
+    /// <param name="deployNode">部署节点</param>
+    /// <param name="resources">资源列表。逗号分隔的资源名称</param>
+    public void Install(AppDeployNode deployNode, String resources = null)
     {
         deployNode.Enable = true;
+
+        // 记录本次发布携带的资源
+        if (!resources.IsNullOrEmpty())
+        {
+            var list = new List<String>();
+            var resourceNames = resources.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var name in resourceNames)
+            {
+                // 查找资源的最新版本
+                var res = AppResource.FindByName(name);
+                if (res != null && res.Enable)
+                {
+                    var ver = res.Version;
+                    if (ver.IsNullOrEmpty())
+                    {
+                        // 如果资源没有设置当前版本，取最新启用的版本
+                        var resVer = AppResourceVersion.FindAllByResourceId(res.Id)
+                            .Where(e => e.Enable)
+                            .OrderByDescending(e => e.Id)
+                            .FirstOrDefault();
+                        ver = resVer?.Version;
+                    }
+                    if (!ver.IsNullOrEmpty())
+                        list.Add($"{name}:{ver}");
+                }
+            }
+            deployNode.Resources = list.Join(";");
+        }
+
         deployNode.Update();
     }
 

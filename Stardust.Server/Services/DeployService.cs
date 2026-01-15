@@ -24,16 +24,16 @@ public class DeployService
             var vers = AppDeployVersion.FindAllByDeployId(app.Id, 100);
             vers = vers.Where(e => e.Enable).OrderByDescending(e => e.Id).ToList();
 
-            // 目标节点所支持的运行时标识符。一般有两个，如 win-x64/win
-            var rids = OSKindHelper.GetRID(node.OSKind, node.Architecture?.ToLower() + "");
-
-            //return vers.FirstOrDefault(e => rids.Contains(e.Runtime));
+            // 目标节点的操作系统和架构
+            var (nodeOS, nodeArch) = GetNodePlatform(node);
 
             // 可能有多个版本，挑选最新的适合目标节点操作系统、指令集和框架运行时的版本
             var fms = node.Frameworks?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? [];
             foreach (var ver in vers)
             {
-                if (!rids.Contains(ver.Runtime)) continue;
+                // 检查操作系统和架构是否匹配
+                if (!MatchPlatform(ver.OS, ver.Arch, nodeOS, nodeArch)) continue;
+
                 if (!ver.TargetFramework.IsNullOrEmpty() && fms.Length > 0)
                 {
                     var tfm = ver.TargetFramework.TrimStart("netcoreapp", "net", "v");
@@ -57,6 +57,49 @@ public class DeployService
 
         return AppDeployVersion.FindByDeployIdAndVersion(app.Id, app.Version);
     }
+
+    /// <summary>获取节点的操作系统和架构</summary>
+    private static (OSKind, CpuArch) GetNodePlatform(Node node)
+    {
+        var os = node.OSKind switch
+        {
+            >= OSKinds.MacOSX => OSKind.OSX,
+            >= OSKinds.Alpine => OSKind.LinuxMusl,
+            >= OSKinds.Linux or OSKinds.SmartOS => OSKind.Linux,
+            >= OSKinds.Win10 => OSKind.Windows,
+            _ => OSKind.Unknown,
+        };
+
+        var arch = node.Architecture?.ToLower() switch
+        {
+            "x86" => CpuArch.X86,
+            "x64" => CpuArch.X64,
+            "arm" => CpuArch.Arm,
+            "arm64" => CpuArch.Arm64,
+            "loongarch64" => CpuArch.LA64,
+            "riscv64" => CpuArch.RiscV64,
+            "mips64" => CpuArch.Mips64,
+            _ => CpuArch.Unknown,
+        };
+
+        return (os, arch);
+    }
+
+    /// <summary>检查版本的平台是否匹配目标节点</summary>
+    private static Boolean MatchPlatform(OSKind verOS, CpuArch verArch, OSKind nodeOS, CpuArch nodeArch)
+    {
+        // 版本未指定平台，匹配所有
+        if (verOS == OSKind.Unknown && verArch == CpuArch.Unknown) return true;
+
+        // 操作系统匹配：版本未指定或与节点相同
+        if (verOS != OSKind.Unknown && verOS != nodeOS) return false;
+
+        // 架构匹配：版本未指定或与节点相同
+        if (verArch != CpuArch.Unknown && verArch != nodeArch) return false;
+
+        return true;
+    }
+
 
     public DeployInfo BuildDeployInfo(AppDeployNode item, Node node)
     {
@@ -99,7 +142,81 @@ public class DeployService
             }
         }
 
+        // 构建资源列表
+        inf.Resources = BuildResources(item, node);
+
         return inf;
+    }
+
+    /// <summary>构建资源下载信息列表</summary>
+    /// <param name="item">部署节点</param>
+    /// <param name="node">目标节点</param>
+    /// <returns></returns>
+    private ResourceInfo[] BuildResources(AppDeployNode item, Node node)
+    {
+        // 从 AppDeployNode.Resources 解析资源列表，格式如 dm8-driver:1.0;newlifex-cert:2025.01
+        var resources = item.Resources;
+        if (resources.IsNullOrEmpty()) return null;
+
+        var (nodeOS, nodeArch) = GetNodePlatform(node);
+        var list = new List<ResourceInfo>();
+
+        var pairs = resources.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        foreach (var pair in pairs)
+        {
+            var parts = pair.Split(':');
+            if (parts.Length < 2) continue;
+
+            var name = parts[0];
+            var version = parts[1];
+
+            // 查找资源定义
+            var res = AppResource.FindByName(name);
+            if (res == null || !res.Enable) continue;
+
+            // 查找匹配平台的资源版本
+            var resVer = GetResourceVersion(res.Id, version, nodeOS, nodeArch);
+            if (resVer == null) continue;
+
+            var inf = new ResourceInfo
+            {
+                Name = name,
+                Version = resVer.Version,
+                Url = resVer.Url,
+                Hash = resVer.Hash,
+                TargetPath = res.TargetPath,
+                UnZip = res.UnZip,
+                Overwrite = res.Overwrite,
+            };
+
+            // 修正Url
+            if (inf.Url.StartsWithIgnoreCase("/cube/file/")) inf.Url = inf.Url.Replace("/cube/file/", "/cube/file?id=");
+
+            list.Add(inf);
+        }
+
+        return list.Count > 0 ? list.ToArray() : null;
+    }
+
+    /// <summary>获取匹配平台的资源版本</summary>
+    private AppResourceVersion GetResourceVersion(Int32 resourceId, String version, OSKind nodeOS, CpuArch nodeArch)
+    {
+        // 先按版本精确查找
+        var vers = AppResourceVersion.FindAllByResourceId(resourceId)
+            .Where(e => e.Enable && e.Version == version)
+            .ToList();
+
+        // 优先匹配精确平台
+        var ver = vers.FirstOrDefault(e => MatchPlatform(e.OS, e.Arch, nodeOS, nodeArch));
+        if (ver != null) return ver;
+
+        // 如果没有指定版本的匹配，取最新版本
+        vers = AppResourceVersion.FindAllByResourceId(resourceId)
+            .Where(e => e.Enable)
+            .OrderByDescending(e => e.Id)
+            .ToList();
+
+        return vers.FirstOrDefault(e => MatchPlatform(e.OS, e.Arch, nodeOS, nodeArch));
     }
 
     /// <summary>更新应用部署的节点信息</summary>

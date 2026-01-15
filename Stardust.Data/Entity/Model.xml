@@ -14,7 +14,7 @@
     <!--输出目录-->
     <Output>.\</Output>
     <!--是否使用中文文件名。默认false-->
-    <ChineseFileName>False</ChineseFileName>
+    <ChineseFileName>True</ChineseFileName>
     <!--用于生成Copy函数的参数类型。例如{name}或I{name}-->
     <ModelNameForCopy />
     <!--带有索引器。实现IModel接口-->

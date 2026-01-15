@@ -237,7 +237,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         ProcessId = inf.Id;
         ProcessName = inf.Name;
         ProcessUser = inf.UserName;
-        Version = inf.Version;
+        //Version = inf.Version;
         StartTime = inf.StartTime;
         Listens = inf.Listens;
     }
@@ -250,7 +250,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         ProcessUser = online.UserName;
         StartTime = online.StartTime;
         Listens = online.Listens;
-        Version = online.Version;
+        //Version = online.Version;
         Compile = online.Compile;
         LastActive = online.UpdateTime;
     }

@@ -26,4 +26,7 @@ public class DeployInfo
 
     /// <summary>应用服务</summary>
     public ServiceInfo? Service { get; set; }
+
+    /// <summary>附加资源。需要一并下发的资源列表</summary>
+    public ResourceInfo[]? Resources { get; set; }
 }

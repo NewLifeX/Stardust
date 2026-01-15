@@ -139,27 +139,29 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
     }
 
     /// <summary>执行操作</summary>
-    /// <param name="act"></param>
-    /// <param name="id"></param>
+    /// <param name="act">操作。install/start/stop/restart/uninstall</param>
+    /// <param name="id">节点编号</param>
+    /// <param name="resources">资源列表。逗号分隔的资源名称，如dm8-driver,newlifex-cert</param>
     /// <returns></returns>
     [EntityAuthorize(PermissionFlags.Update)]
-    public async Task<ActionResult> Operate(String act, Int32 id)
+    public async Task<ActionResult> Operate(String act, Int32 id, String resources)
     {
         var dn = AppDeployNode.FindById(id);
         if (dn == null || dn.Node == null || dn.Deploy == null) return Json(500, $"[{id}]不存在");
 
         var deployName = dn.DeployName;
         if (deployName.IsNullOrEmpty()) deployName = dn.Deploy?.Name;
-        await _deployService.Control(dn.Deploy, dn, act, UserHost, 0, 0);
+        await _deployService.Control(dn.Deploy, dn, act, UserHost, 0, 0, resources);
 
         return JsonRefresh($"在节点[{dn.NodeName}]上对应用[{deployName}]执行[{act}]操作", 1);
     }
 
     /// <summary>批量执行操作</summary>
-    /// <param name="act"></param>
+    /// <param name="act">操作。install/start/stop/restart/uninstall</param>
+    /// <param name="resources">资源列表。逗号分隔的资源名称，如dm8-driver,newlifex-cert</param>
     /// <returns></returns>
     [EntityAuthorize(PermissionFlags.Update)]
-    public async Task<ActionResult> BatchOperate(String act)
+    public async Task<ActionResult> BatchOperate(String act, String resources)
     {
         var ts = new List<Task>();
         var ids = SelectKeys.Select(e => e.ToInt()).Where(e => e > 0).Distinct().ToList();
@@ -168,7 +170,7 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
             var dn = AppDeployNode.FindById(id);
             if (dn != null && dn.Node != null && dn.Deploy != null)
             {
-                ts.Add(_deployService.Control(dn.Deploy, dn, act, UserHost, dn.Delay, 0));
+                ts.Add(_deployService.Control(dn.Deploy, dn, act, UserHost, dn.Delay, 0, resources));
             }
         }
 

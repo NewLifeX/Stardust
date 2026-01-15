@@ -14,7 +14,7 @@
     <!--输出目录-->
     <Output>.\</Output>
     <!--是否使用中文文件名。默认false-->
-    <ChineseFileName>False</ChineseFileName>
+    <ChineseFileName>True</ChineseFileName>
     <!--用于生成Copy函数的参数类型。例如{name}或I{name}-->
     <ModelNameForCopy />
     <!--带有索引器。实现IModel接口-->
@@ -94,6 +94,8 @@
         <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
         <Column Name="IP" DataType="String" Description="IP地址。节点所在内网IP地址" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
+        <Column Name="Version" DataType="String" Description="版本。当前使用的部署版本，开启MultiVersion时可能不同节点使用不同版本" />
+        <Column Name="Resources" DataType="String" Length="500" Description="资源版本。最后一次发布时携带的资源名称和版本，格式如dm8-driver:1.0;newlifex-cert:2025.01" />
         <Column Name="Port" DataType="Int32" Description="应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数" />
         <Column Name="FileName" DataType="String" Description="文件。应用启动文件，可直接使用zip包，支持差异定制，为空时使用应用集配置" Category="发布参数" />
         <Column Name="Arguments" DataType="String" Length="500" Description="参数。启动应用的参数，为空时使用应用集配置" Category="发布参数" />
@@ -108,7 +110,6 @@
         <Column Name="ProcessName" DataType="String" Length="200" Description="进程名称" Category="状态" />
         <Column Name="ProcessUser" DataType="String" Description="进程用户。启动该进程的用户名" Category="状态" />
         <Column Name="StartTime" DataType="DateTime" Description="进程时间" Category="状态" />
-        <Column Name="Version" DataType="String" Description="版本。客户端" Category="状态" />
         <Column Name="Compile" DataType="DateTime" Description="编译时间。客户端" Category="状态" />
         <Column Name="Listens" DataType="String" Length="200" Description="监听端口。网络端口监听信息" Category="状态" />
         <Column Name="LastActive" DataType="DateTime" Description="最后活跃。最后一次上报心跳的时间" Category="状态" />
@@ -138,7 +139,8 @@
         <Column Name="Mode" DataType="Int32" Description="发布模式。1部分包，仅覆盖；2标准包，清空可执行文件再覆盖；3完整包，清空所有文件" Type="Stardust.Models.DeployModes" />
         <Column Name="Size" DataType="Int64" ItemType="GMK" Description="文件大小" />
         <Column Name="Hash" DataType="String" Description="文件哈希。MD5散列，避免下载的文件有缺失" />
-        <Column Name="Runtime" DataType="Int32" Description="运行时。RID是运行时标识符，用于标识应用程序运行所在的目标平台。如win-x64/linux-arm" Type="Stardust.Models.RuntimeIdentifier" />
+        <Column Name="OS" DataType="Int32" Description="操作系统。目标操作系统，为0表示通用" Type="Stardust.Models.OSKind" />
+        <Column Name="Arch" DataType="Int32" Description="CPU架构。目标指令集架构，为0表示通用" Type="Stardust.Models.CpuArch" />
         <Column Name="TargetFramework" DataType="String" Description="目标框架。TFM目标运行时框架，如net8.0" />
         <Column Name="Progress" DataType="String" Description="进度。发布进度" />
         <Column Name="CommitId" DataType="String" Description="提交标识" Category="编译参数" />
@@ -234,6 +236,78 @@
         <Index Columns="Category,Key" />
         <Index Columns="FilePath" />
         <Index Columns="Extension" />
+      </Indexes>
+    </Table>
+    <Table Name="AppResource" Description="部署资源。附加资源管理，如数据库驱动、SSL证书、配置模板等，支持全局/项目/应用三级归属">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="DeployId" DataType="Int32" Map="AppDeploy@Id@Name" Description="应用部署集。绑定到具体应用，为0时表示共享资源" />
+        <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属项目，为0时表示全局资源" />
+        <Column Name="Category" DataType="String" Description="类别。driver/cert/config/plugin等" />
+        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称。资源唯一标识，如dm8-driver、newlifex-cert" />
+        <Column Name="Enable" DataType="Boolean" Description="启用" />
+        <Column Name="Version" DataType="String" Description="版本。当前使用的版本号" />
+        <Column Name="TargetPath" DataType="String" Description="目标路径。相对于应用工作目录，如../Plugins、./certs" />
+        <Column Name="UnZip" DataType="Boolean" Description="解压缩。下载后是否自动解压" />
+        <Column Name="Overwrite" DataType="String" Length="100" Description="覆盖文件。需要覆盖的文件模式" />
+        <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="UpdateUserId" DataType="Int32" Description="更新者" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="DeployId,Name" Unique="True" />
+        <Index Columns="ProjectId" />
+        <Index Columns="Category" />
+      </Indexes>
+    </Table>
+    <Table Name="AppResourceVersion" Description="资源版本。资源的多个版本，支持不同运行时平台">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="ResourceId" DataType="Int32" Map="AppResource@Id@$" Description="资源" />
+        <Column Name="Version" DataType="String" Master="True" Nullable="False" Description="版本。如1.0.2025.0701" />
+        <Column Name="Enable" DataType="Boolean" Description="启用" />
+        <Column Name="Url" DataType="String" ItemType="file" Length="500" Description="资源地址" />
+        <Column Name="Size" DataType="Int64" ItemType="GMK" Description="文件大小" />
+        <Column Name="Hash" DataType="String" Description="文件哈希。MD5" />
+        <Column Name="OS" DataType="Int32" Description="操作系统。目标操作系统，为0表示通用" Type="Stardust.Models.OSKind" />
+        <Column Name="Arch" DataType="Int32" Description="CPU架构。目标指令集架构，为0表示通用" Type="Stardust.Models.CpuArch" />
+        <Column Name="TargetFramework" DataType="String" Description="目标框架。如net8.0，为空表示通用" />
+        <Column Name="TraceId" DataType="String" Description="追踪" Category="扩展" />
+        <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="UpdateUserId" DataType="Int32" Description="更新者" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="ResourceId,Version,OS,Arch" Unique="True" />
+      </Indexes>
+    </Table>
+    <Table Name="AppDeployResource" Description="应用资源。应用部署集引用的共享资源，发布时一并下发到目标节点">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="DeployId" DataType="Int32" Map="AppDeploy@Id@$" Description="应用部署集" />
+        <Column Name="ResourceId" DataType="Int32" Map="AppResource@Id@Name" Description="资源。引用的资源定义" />
+        <Column Name="Enable" DataType="Boolean" Description="启用" />
+        <Column Name="TargetPath" DataType="String" Description="目标路径。覆盖资源定义的默认路径，为空时使用资源定义的路径" />
+        <Column Name="AutoPublish" DataType="Boolean" Description="自动发布。资源新版本时自动发布到该应用的所有节点" />
+        <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="UpdateUserId" DataType="Int32" Description="更新者" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="DeployId,ResourceId" Unique="True" />
+        <Index Columns="ResourceId" />
       </Indexes>
     </Table>
   </Tables>

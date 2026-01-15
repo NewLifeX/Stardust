@@ -71,6 +71,22 @@ public partial class AppDeployNode
     [BindColumn("Enable", "启用", "")]
     public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
+    private String _Version;
+    /// <summary>版本。当前使用的部署版本，开启MultiVersion时可能不同节点使用不同版本</summary>
+    [DisplayName("版本")]
+    [Description("版本。当前使用的部署版本，开启MultiVersion时可能不同节点使用不同版本")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("Version", "版本。当前使用的部署版本，开启MultiVersion时可能不同节点使用不同版本", "")]
+    public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
+
+    private String _Resources;
+    /// <summary>资源版本。最后一次发布时携带的资源名称和版本，格式如dm8-driver:1.0;newlifex-cert:2025.01</summary>
+    [DisplayName("资源版本")]
+    [Description("资源版本。最后一次发布时携带的资源名称和版本，格式如dm8-driver:1.0;newlifex-cert:2025.01")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("Resources", "资源版本。最后一次发布时携带的资源名称和版本，格式如dm8-driver:1.0;newlifex-cert:2025.01", "")]
+    public String Resources { get => _Resources; set { if (OnPropertyChanging("Resources", value)) { _Resources = value; OnPropertyChanged("Resources"); } } }
+
     private Int32 _Port;
     /// <summary>应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
     [DisplayName("应用端口")]
@@ -196,15 +212,6 @@ public partial class AppDeployNode
     [BindColumn("StartTime", "进程时间", "")]
     public DateTime StartTime { get => _StartTime; set { if (OnPropertyChanging("StartTime", value)) { _StartTime = value; OnPropertyChanged("StartTime"); } } }
 
-    private String _Version;
-    /// <summary>版本。客户端</summary>
-    [Category("状态")]
-    [DisplayName("版本")]
-    [Description("版本。客户端")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("Version", "版本。客户端", "")]
-    public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
-
     private DateTime _Compile;
     /// <summary>编译时间。客户端</summary>
     [Category("状态")]
@@ -328,6 +335,8 @@ public partial class AppDeployNode
             "NodeId" => _NodeId,
             "IP" => _IP,
             "Enable" => _Enable,
+            "Version" => _Version,
+            "Resources" => _Resources,
             "Port" => _Port,
             "FileName" => _FileName,
             "Arguments" => _Arguments,
@@ -342,7 +351,6 @@ public partial class AppDeployNode
             "ProcessName" => _ProcessName,
             "ProcessUser" => _ProcessUser,
             "StartTime" => _StartTime,
-            "Version" => _Version,
             "Compile" => _Compile,
             "Listens" => _Listens,
             "LastActive" => _LastActive,
@@ -367,6 +375,8 @@ public partial class AppDeployNode
                 case "NodeId": _NodeId = value.ToInt(); break;
                 case "IP": _IP = Convert.ToString(value); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
+                case "Version": _Version = Convert.ToString(value); break;
+                case "Resources": _Resources = Convert.ToString(value); break;
                 case "Port": _Port = value.ToInt(); break;
                 case "FileName": _FileName = Convert.ToString(value); break;
                 case "Arguments": _Arguments = Convert.ToString(value); break;
@@ -381,7 +391,6 @@ public partial class AppDeployNode
                 case "ProcessName": _ProcessName = Convert.ToString(value); break;
                 case "ProcessUser": _ProcessUser = Convert.ToString(value); break;
                 case "StartTime": _StartTime = value.ToDateTime(); break;
-                case "Version": _Version = Convert.ToString(value); break;
                 case "Compile": _Compile = value.ToDateTime(); break;
                 case "Listens": _Listens = Convert.ToString(value); break;
                 case "LastActive": _LastActive = value.ToDateTime(); break;
@@ -460,6 +469,12 @@ public partial class AppDeployNode
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
 
+        /// <summary>版本。当前使用的部署版本，开启MultiVersion时可能不同节点使用不同版本</summary>
+        public static readonly Field Version = FindByName("Version");
+
+        /// <summary>资源版本。最后一次发布时携带的资源名称和版本，格式如dm8-driver:1.0;newlifex-cert:2025.01</summary>
+        public static readonly Field Resources = FindByName("Resources");
+
         /// <summary>应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
         public static readonly Field Port = FindByName("Port");
 
@@ -501,9 +516,6 @@ public partial class AppDeployNode
 
         /// <summary>进程时间</summary>
         public static readonly Field StartTime = FindByName("StartTime");
-
-        /// <summary>版本。客户端</summary>
-        public static readonly Field Version = FindByName("Version");
 
         /// <summary>编译时间。客户端</summary>
         public static readonly Field Compile = FindByName("Compile");
@@ -565,6 +577,12 @@ public partial class AppDeployNode
         /// <summary>启用</summary>
         public const String Enable = "Enable";
 
+        /// <summary>版本。当前使用的部署版本，开启MultiVersion时可能不同节点使用不同版本</summary>
+        public const String Version = "Version";
+
+        /// <summary>资源版本。最后一次发布时携带的资源名称和版本，格式如dm8-driver:1.0;newlifex-cert:2025.01</summary>
+        public const String Resources = "Resources";
+
         /// <summary>应用端口。应用自身监听的端口，如果是dotnet应用会增加urls参数</summary>
         public const String Port = "Port";
 
@@ -606,9 +624,6 @@ public partial class AppDeployNode
 
         /// <summary>进程时间</summary>
         public const String StartTime = "StartTime";
-
-        /// <summary>版本。客户端</summary>
-        public const String Version = "Version";
 
         /// <summary>编译时间。客户端</summary>
         public const String Compile = "Compile";

@@ -13,13 +13,13 @@ using XCode.DataAccessLayer;
 
 namespace Stardust.Data.Deployment;
 
-/// <summary>部署版本。应用的多个可发布版本，主要管理应用程序包，支持随时切换使用不同版本，来自上传或自动编译</summary>
+/// <summary>资源版本。资源的多个版本，支持不同运行时平台</summary>
 [Serializable]
 [DataObject]
-[Description("部署版本。应用的多个可发布版本，主要管理应用程序包，支持随时切换使用不同版本，来自上传或自动编译")]
-[BindIndex("IU_AppDeployVersion_DeployId_Version", true, "DeployId,Version")]
-[BindTable("AppDeployVersion", Description = "部署版本。应用的多个可发布版本，主要管理应用程序包，支持随时切换使用不同版本，来自上传或自动编译", ConnName = "Stardust", DbType = DatabaseType.None)]
-public partial class AppDeployVersion
+[Description("资源版本。资源的多个版本，支持不同运行时平台")]
+[BindIndex("IU_AppResourceVersion_ResourceId_Version_OS_Arch", true, "ResourceId,Version,OS,Arch")]
+[BindTable("AppResourceVersion", Description = "资源版本。资源的多个版本，支持不同运行时平台", ConnName = "Stardust", DbType = DatabaseType.None)]
+public partial class AppResourceVersion
 {
     #region 属性
     private Int32 _Id;
@@ -30,20 +30,20 @@ public partial class AppDeployVersion
     [BindColumn("Id", "编号", "")]
     public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
-    private Int32 _DeployId;
-    /// <summary>应用部署集。对应AppDeploy</summary>
-    [DisplayName("应用部署集")]
-    [Description("应用部署集。对应AppDeploy")]
+    private Int32 _ResourceId;
+    /// <summary>资源</summary>
+    [DisplayName("资源")]
+    [Description("资源")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("AppId", "应用部署集。对应AppDeploy", "")]
-    public Int32 DeployId { get => _DeployId; set { if (OnPropertyChanging("DeployId", value)) { _DeployId = value; OnPropertyChanged("DeployId"); } } }
+    [BindColumn("ResourceId", "资源", "")]
+    public Int32 ResourceId { get => _ResourceId; set { if (OnPropertyChanging("ResourceId", value)) { _ResourceId = value; OnPropertyChanged("ResourceId"); } } }
 
     private String _Version;
-    /// <summary>版本。如2.3.2022.0911，字符串比较大小</summary>
+    /// <summary>版本。如1.0.2025.0701</summary>
     [DisplayName("版本")]
-    [Description("版本。如2.3.2022.0911，字符串比较大小")]
+    [Description("版本。如1.0.2025.0701")]
     [DataObjectField(false, false, false, 50)]
-    [BindColumn("Version", "版本。如2.3.2022.0911，字符串比较大小", "", Master = true)]
+    [BindColumn("Version", "版本。如1.0.2025.0701", "", Master = true)]
     public String Version { get => _Version; set { if (OnPropertyChanging("Version", value)) { _Version = value; OnPropertyChanged("Version"); } } }
 
     private Boolean _Enable;
@@ -55,28 +55,12 @@ public partial class AppDeployVersion
     public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
     private String _Url;
-    /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
+    /// <summary>资源地址</summary>
     [DisplayName("资源地址")]
-    [Description("资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖")]
+    [Description("资源地址")]
     [DataObjectField(false, false, true, 500)]
-    [BindColumn("Url", "资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖", "", ItemType = "file")]
+    [BindColumn("Url", "资源地址", "", ItemType = "file")]
     public String Url { get => _Url; set { if (OnPropertyChanging("Url", value)) { _Url = value; OnPropertyChanged("Url"); } } }
-
-    private String _Overwrite;
-    /// <summary>覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
-    [DisplayName("覆盖文件")]
-    [Description("覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝")]
-    [DataObjectField(false, false, true, 100)]
-    [BindColumn("Overwrite", "覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝", "")]
-    public String Overwrite { get => _Overwrite; set { if (OnPropertyChanging("Overwrite", value)) { _Overwrite = value; OnPropertyChanged("Overwrite"); } } }
-
-    private Stardust.Models.DeployModes _Mode;
-    /// <summary>发布模式。1部分包，仅覆盖；2标准包，清空可执行文件再覆盖；3完整包，清空所有文件</summary>
-    [DisplayName("发布模式")]
-    [Description("发布模式。1部分包，仅覆盖；2标准包，清空可执行文件再覆盖；3完整包，清空所有文件")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("Mode", "发布模式。1部分包，仅覆盖；2标准包，清空可执行文件再覆盖；3完整包，清空所有文件", "")]
-    public Stardust.Models.DeployModes Mode { get => _Mode; set { if (OnPropertyChanging("Mode", value)) { _Mode = value; OnPropertyChanged("Mode"); } } }
 
     private Int64 _Size;
     /// <summary>文件大小</summary>
@@ -87,11 +71,11 @@ public partial class AppDeployVersion
     public Int64 Size { get => _Size; set { if (OnPropertyChanging("Size", value)) { _Size = value; OnPropertyChanged("Size"); } } }
 
     private String _Hash;
-    /// <summary>文件哈希。MD5散列，避免下载的文件有缺失</summary>
+    /// <summary>文件哈希。MD5</summary>
     [DisplayName("文件哈希")]
-    [Description("文件哈希。MD5散列，避免下载的文件有缺失")]
+    [Description("文件哈希。MD5")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Hash", "文件哈希。MD5散列，避免下载的文件有缺失", "")]
+    [BindColumn("Hash", "文件哈希。MD5", "")]
     public String Hash { get => _Hash; set { if (OnPropertyChanging("Hash", value)) { _Hash = value; OnPropertyChanged("Hash"); } } }
 
     private Stardust.Models.OSKind _OS;
@@ -111,55 +95,20 @@ public partial class AppDeployVersion
     public Stardust.Models.CpuArch Arch { get => _Arch; set { if (OnPropertyChanging("Arch", value)) { _Arch = value; OnPropertyChanged("Arch"); } } }
 
     private String _TargetFramework;
-    /// <summary>目标框架。TFM目标运行时框架，如net8.0</summary>
+    /// <summary>目标框架。如net8.0，为空表示通用</summary>
     [DisplayName("目标框架")]
-    [Description("目标框架。TFM目标运行时框架，如net8.0")]
+    [Description("目标框架。如net8.0，为空表示通用")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("TargetFramework", "目标框架。TFM目标运行时框架，如net8.0", "")]
+    [BindColumn("TargetFramework", "目标框架。如net8.0，为空表示通用", "")]
     public String TargetFramework { get => _TargetFramework; set { if (OnPropertyChanging("TargetFramework", value)) { _TargetFramework = value; OnPropertyChanged("TargetFramework"); } } }
 
-    private String _Progress;
-    /// <summary>进度。发布进度</summary>
-    [DisplayName("进度")]
-    [Description("进度。发布进度")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("Progress", "进度。发布进度", "")]
-    public String Progress { get => _Progress; set { if (OnPropertyChanging("Progress", value)) { _Progress = value; OnPropertyChanged("Progress"); } } }
-
-    private String _CommitId;
-    /// <summary>提交标识</summary>
-    [Category("编译参数")]
-    [DisplayName("提交标识")]
-    [Description("提交标识")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("CommitId", "提交标识", "")]
-    public String CommitId { get => _CommitId; set { if (OnPropertyChanging("CommitId", value)) { _CommitId = value; OnPropertyChanged("CommitId"); } } }
-
-    private String _CommitLog;
-    /// <summary>提交记录</summary>
-    [Category("编译参数")]
-    [DisplayName("提交记录")]
-    [Description("提交记录")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("CommitLog", "提交记录", "")]
-    public String CommitLog { get => _CommitLog; set { if (OnPropertyChanging("CommitLog", value)) { _CommitLog = value; OnPropertyChanged("CommitLog"); } } }
-
-    private DateTime _CommitTime;
-    /// <summary>提交时间</summary>
-    [Category("编译参数")]
-    [DisplayName("提交时间")]
-    [Description("提交时间")]
-    [DataObjectField(false, false, true, 0)]
-    [BindColumn("CommitTime", "提交时间", "")]
-    public DateTime CommitTime { get => _CommitTime; set { if (OnPropertyChanging("CommitTime", value)) { _CommitTime = value; OnPropertyChanged("CommitTime"); } } }
-
     private String _TraceId;
-    /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+    /// <summary>追踪</summary>
     [Category("扩展")]
     [DisplayName("追踪")]
-    [Description("追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递")]
+    [Description("追踪")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("TraceId", "追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递", "")]
+    [BindColumn("TraceId", "追踪", "")]
     public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
 
     private Int32 _CreateUserId;
@@ -235,21 +184,15 @@ public partial class AppDeployVersion
         get => name switch
         {
             "Id" => _Id,
-            "DeployId" => _DeployId,
+            "ResourceId" => _ResourceId,
             "Version" => _Version,
             "Enable" => _Enable,
             "Url" => _Url,
-            "Overwrite" => _Overwrite,
-            "Mode" => _Mode,
             "Size" => _Size,
             "Hash" => _Hash,
             "OS" => _OS,
             "Arch" => _Arch,
             "TargetFramework" => _TargetFramework,
-            "Progress" => _Progress,
-            "CommitId" => _CommitId,
-            "CommitLog" => _CommitLog,
-            "CommitTime" => _CommitTime,
             "TraceId" => _TraceId,
             "CreateUserId" => _CreateUserId,
             "CreateTime" => _CreateTime,
@@ -265,21 +208,15 @@ public partial class AppDeployVersion
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
-                case "DeployId": _DeployId = value.ToInt(); break;
+                case "ResourceId": _ResourceId = value.ToInt(); break;
                 case "Version": _Version = Convert.ToString(value); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "Url": _Url = Convert.ToString(value); break;
-                case "Overwrite": _Overwrite = Convert.ToString(value); break;
-                case "Mode": _Mode = (Stardust.Models.DeployModes)value.ToInt(); break;
                 case "Size": _Size = value.ToLong(); break;
                 case "Hash": _Hash = Convert.ToString(value); break;
                 case "OS": _OS = (Stardust.Models.OSKind)value.ToInt(); break;
                 case "Arch": _Arch = (Stardust.Models.CpuArch)value.ToInt(); break;
                 case "TargetFramework": _TargetFramework = Convert.ToString(value); break;
-                case "Progress": _Progress = Convert.ToString(value); break;
-                case "CommitId": _CommitId = Convert.ToString(value); break;
-                case "CommitLog": _CommitLog = Convert.ToString(value); break;
-                case "CommitTime": _CommitTime = value.ToDateTime(); break;
                 case "TraceId": _TraceId = Convert.ToString(value); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -295,35 +232,37 @@ public partial class AppDeployVersion
     #endregion
 
     #region 关联映射
-    /// <summary>应用部署集</summary>
+    /// <summary>资源</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public AppDeploy Deploy => Extends.Get(nameof(Deploy), k => AppDeploy.FindById(DeployId));
+    public AppResource Resource => Extends.Get(nameof(Resource), k => AppResource.FindById(ResourceId));
 
-    /// <summary>应用部署集</summary>
-    [Map(nameof(DeployId), typeof(AppDeploy), "Id")]
-    public String DeployName => Deploy?.ToString();
+    /// <summary>资源</summary>
+    [Map(nameof(ResourceId), typeof(AppResource), "Id")]
+    public String ResourceName => Resource?.ToString();
 
     #endregion
 
     #region 扩展查询
-    /// <summary>根据应用部署集查找</summary>
-    /// <param name="deployId">应用部署集</param>
-    /// <returns>实体列表</returns>
-    public static IList<AppDeployVersion> FindAllByDeployId(Int32 deployId)
+    /// <summary>根据编号查找</summary>
+    /// <param name="id">编号</param>
+    /// <returns>实体对象</returns>
+    public static AppResourceVersion FindById(Int32 id)
     {
-        if (deployId < 0) return [];
+        if (id < 0) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.DeployId == deployId);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.Id == id);
 
-        return FindAll(_.DeployId == deployId);
+        // 单对象缓存
+        return Meta.SingleCache[id];
+
+        //return Find(_.Id == id);
     }
     #endregion
 
     #region 高级查询
     /// <summary>高级查询</summary>
-    /// <param name="deployId">应用部署集。对应AppDeploy</param>
-    /// <param name="mode">发布模式。1部分包，仅覆盖；2标准包，清空可执行文件再覆盖；3完整包，清空所有文件</param>
+    /// <param name="resourceId">资源</param>
     /// <param name="os">操作系统。目标操作系统，为0表示通用</param>
     /// <param name="arch">CPU架构。目标指令集架构，为0表示通用</param>
     /// <param name="enable">启用</param>
@@ -332,12 +271,11 @@ public partial class AppDeployVersion
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<AppDeployVersion> Search(Int32 deployId, Stardust.Models.DeployModes mode, Stardust.Models.OSKind os, Stardust.Models.CpuArch arch, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<AppResourceVersion> Search(Int32 resourceId, Stardust.Models.OSKind os, Stardust.Models.CpuArch arch, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
-        if (deployId >= 0) exp &= _.DeployId == deployId;
-        if (mode >= 0) exp &= _.Mode == mode;
+        if (resourceId >= 0) exp &= _.ResourceId == resourceId;
         if (os >= 0) exp &= _.OS == os;
         if (arch >= 0) exp &= _.Arch == arch;
         if (enable != null) exp &= _.Enable == enable;
@@ -349,34 +287,28 @@ public partial class AppDeployVersion
     #endregion
 
     #region 字段名
-    /// <summary>取得部署版本字段信息的快捷方式</summary>
+    /// <summary>取得资源版本字段信息的快捷方式</summary>
     public partial class _
     {
         /// <summary>编号</summary>
         public static readonly Field Id = FindByName("Id");
 
-        /// <summary>应用部署集。对应AppDeploy</summary>
-        public static readonly Field DeployId = FindByName("DeployId");
+        /// <summary>资源</summary>
+        public static readonly Field ResourceId = FindByName("ResourceId");
 
-        /// <summary>版本。如2.3.2022.0911，字符串比较大小</summary>
+        /// <summary>版本。如1.0.2025.0701</summary>
         public static readonly Field Version = FindByName("Version");
 
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
 
-        /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
+        /// <summary>资源地址</summary>
         public static readonly Field Url = FindByName("Url");
-
-        /// <summary>覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
-        public static readonly Field Overwrite = FindByName("Overwrite");
-
-        /// <summary>发布模式。1部分包，仅覆盖；2标准包，清空可执行文件再覆盖；3完整包，清空所有文件</summary>
-        public static readonly Field Mode = FindByName("Mode");
 
         /// <summary>文件大小</summary>
         public static readonly Field Size = FindByName("Size");
 
-        /// <summary>文件哈希。MD5散列，避免下载的文件有缺失</summary>
+        /// <summary>文件哈希。MD5</summary>
         public static readonly Field Hash = FindByName("Hash");
 
         /// <summary>操作系统。目标操作系统，为0表示通用</summary>
@@ -385,22 +317,10 @@ public partial class AppDeployVersion
         /// <summary>CPU架构。目标指令集架构，为0表示通用</summary>
         public static readonly Field Arch = FindByName("Arch");
 
-        /// <summary>目标框架。TFM目标运行时框架，如net8.0</summary>
+        /// <summary>目标框架。如net8.0，为空表示通用</summary>
         public static readonly Field TargetFramework = FindByName("TargetFramework");
 
-        /// <summary>进度。发布进度</summary>
-        public static readonly Field Progress = FindByName("Progress");
-
-        /// <summary>提交标识</summary>
-        public static readonly Field CommitId = FindByName("CommitId");
-
-        /// <summary>提交记录</summary>
-        public static readonly Field CommitLog = FindByName("CommitLog");
-
-        /// <summary>提交时间</summary>
-        public static readonly Field CommitTime = FindByName("CommitTime");
-
-        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        /// <summary>追踪</summary>
         public static readonly Field TraceId = FindByName("TraceId");
 
         /// <summary>创建者</summary>
@@ -427,34 +347,28 @@ public partial class AppDeployVersion
         static Field FindByName(String name) => Meta.Table.FindByName(name);
     }
 
-    /// <summary>取得部署版本字段名称的快捷方式</summary>
+    /// <summary>取得资源版本字段名称的快捷方式</summary>
     public partial class __
     {
         /// <summary>编号</summary>
         public const String Id = "Id";
 
-        /// <summary>应用部署集。对应AppDeploy</summary>
-        public const String DeployId = "DeployId";
+        /// <summary>资源</summary>
+        public const String ResourceId = "ResourceId";
 
-        /// <summary>版本。如2.3.2022.0911，字符串比较大小</summary>
+        /// <summary>版本。如1.0.2025.0701</summary>
         public const String Version = "Version";
 
         /// <summary>启用</summary>
         public const String Enable = "Enable";
 
-        /// <summary>资源地址。一般打包为Zip包，StarAgent下载后解压缩覆盖</summary>
+        /// <summary>资源地址</summary>
         public const String Url = "Url";
-
-        /// <summary>覆盖文件。需要拷贝覆盖已存在的文件或子目录，支持*模糊匹配，多文件分号隔开。如果目标文件不存在，配置文件等自动拷贝</summary>
-        public const String Overwrite = "Overwrite";
-
-        /// <summary>发布模式。1部分包，仅覆盖；2标准包，清空可执行文件再覆盖；3完整包，清空所有文件</summary>
-        public const String Mode = "Mode";
 
         /// <summary>文件大小</summary>
         public const String Size = "Size";
 
-        /// <summary>文件哈希。MD5散列，避免下载的文件有缺失</summary>
+        /// <summary>文件哈希。MD5</summary>
         public const String Hash = "Hash";
 
         /// <summary>操作系统。目标操作系统，为0表示通用</summary>
@@ -463,22 +377,10 @@ public partial class AppDeployVersion
         /// <summary>CPU架构。目标指令集架构，为0表示通用</summary>
         public const String Arch = "Arch";
 
-        /// <summary>目标框架。TFM目标运行时框架，如net8.0</summary>
+        /// <summary>目标框架。如net8.0，为空表示通用</summary>
         public const String TargetFramework = "TargetFramework";
 
-        /// <summary>进度。发布进度</summary>
-        public const String Progress = "Progress";
-
-        /// <summary>提交标识</summary>
-        public const String CommitId = "CommitId";
-
-        /// <summary>提交记录</summary>
-        public const String CommitLog = "CommitLog";
-
-        /// <summary>提交时间</summary>
-        public const String CommitTime = "CommitTime";
-
-        /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
+        /// <summary>追踪</summary>
         public const String TraceId = "TraceId";
 
         /// <summary>创建者</summary>
