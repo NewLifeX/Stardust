@@ -83,7 +83,7 @@ public partial class AppDeployNode
     /// <summary>资源版本。最后一次发布时携带的资源名称和版本，格式如dm8-driver:1.0;newlifex-cert:2025.01</summary>
     [DisplayName("资源版本")]
     [Description("资源版本。最后一次发布时携带的资源名称和版本，格式如dm8-driver:1.0;newlifex-cert:2025.01")]
-    [DataObjectField(false, false, true, 500)]
+    [DataObjectField(false, false, true, 200)]
     [BindColumn("Resources", "资源版本。最后一次发布时携带的资源名称和版本，格式如dm8-driver:1.0;newlifex-cert:2025.01", "")]
     public String Resources { get => _Resources; set { if (OnPropertyChanging("Resources", value)) { _Resources = value; OnPropertyChanged("Resources"); } } }
 

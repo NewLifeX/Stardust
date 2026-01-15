@@ -58,7 +58,7 @@ public partial class AppResourceVersion
     /// <summary>资源地址</summary>
     [DisplayName("资源地址")]
     [Description("资源地址")]
-    [DataObjectField(false, false, true, 500)]
+    [DataObjectField(false, false, true, 200)]
     [BindColumn("Url", "资源地址", "", ItemType = "file")]
     public String Url { get => _Url; set { if (OnPropertyChanging("Url", value)) { _Url = value; OnPropertyChanged("Url"); } } }
 
