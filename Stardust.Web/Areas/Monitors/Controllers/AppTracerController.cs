@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
@@ -16,7 +15,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers;
 
 [Menu(90)]
 [MonitorsArea]
-public class AppTracerController : EntityController<AppTracer>
+public class AppTracerController : MonitorsEntityController<AppTracer>
 {
     private readonly ITraceItemStatService _traceItemStatService;
 
@@ -76,40 +75,6 @@ public class AppTracerController : EntityController<AppTracer>
     }
 
     public AppTracerController(ITraceItemStatService traceItemStatService) => _traceItemStatService = traceItemStatService;
-
-    public override void OnActionExecuting(ActionExecutingContext filterContext)
-    {
-        base.OnActionExecuting(filterContext);
-
-        var appId = GetRequest("appId").ToInt(-1);
-        var monitorId = GetRequest("monitorId").ToInt(-1);
-        if (appId > 0 || monitorId > 0)
-        {
-            PageSetting.NavView = "_App_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-        var projectId = GetRequest("projectId").ToInt(-1);
-        if (projectId > 0)
-        {
-            PageSetting.NavView = "_Project_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-
-        //PageSetting.EnableAdd = false;
-    }
-
-    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
-    {
-        var fields = base.OnGetFields(kind, model);
-
-        if (kind == ViewKinds.List)
-        {
-            var appId = GetRequest("appId").ToInt(-1);
-            if (appId > 0) fields.RemoveField("AppName", "Category");
-        }
-
-        return fields;
-    }
 
     protected override IEnumerable<AppTracer> Search(Pager p)
     {

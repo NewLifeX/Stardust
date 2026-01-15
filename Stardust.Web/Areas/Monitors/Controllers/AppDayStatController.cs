@@ -14,7 +14,7 @@ namespace Stardust.Web.Areas.Monitors.Controllers;
 
 [Menu(80)]
 [MonitorsArea]
-public class AppDayStatController : ReadOnlyEntityController<AppDayStat>
+public class AppDayStatController : MonitorsEntityController<AppDayStat>
 {
     private readonly IAppDayStatService _appStat;
     private readonly ITraceStatService _traceStat;
@@ -28,14 +28,6 @@ public class AppDayStatController : ReadOnlyEntityController<AppDayStat>
     public override void OnActionExecuting(ActionExecutingContext filterContext)
     {
         base.OnActionExecuting(filterContext);
-
-        var appId = GetRequest("appId").ToInt(-1);
-        var monitorId = GetRequest("monitorId").ToInt(-1);
-        if (appId > 0 || monitorId > 0)
-        {
-            PageSetting.NavView = "_App_Nav";
-            PageSetting.EnableNavbar = false;
-        }
 
         PageSetting.EnableAdd = false;
     }

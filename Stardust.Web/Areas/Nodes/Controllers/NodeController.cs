@@ -16,7 +16,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers;
 
 [Menu(90)]
 [NodesArea]
-public class NodeController : EntityController<Node>
+public class NodeController : NodesEntityController<Node>
 {
     private readonly StarFactory _starFactory;
 
@@ -90,13 +90,6 @@ public class NodeController : EntityController<Node>
         if (nodeId > 0)
         {
             PageSetting.NavView = "_Node_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-
-        var projectId = GetRequest("projectId").ToInt(-1);
-        if (projectId > 0)
-        {
-            PageSetting.NavView = "_Project_Nav";
             PageSetting.EnableNavbar = false;
         }
     }

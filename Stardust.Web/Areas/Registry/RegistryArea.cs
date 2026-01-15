@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel;
 using NewLife;
 using NewLife.Cube;
+using Stardust.Web.Areas.Deployment;
+using XCode;
 
 namespace Stardust.Web.Areas.Registry;
 
@@ -11,4 +13,9 @@ public class RegistryArea : AreaBase
     public RegistryArea() : base(nameof(RegistryArea).TrimEnd("Area")) { }
 
     static RegistryArea() => RegisterArea<RegistryArea>();
+}
+
+[RegistryArea]
+public class RegistryEntityController<T> : WebEntityController<T> where T : Entity<T>, new()
+{
 }

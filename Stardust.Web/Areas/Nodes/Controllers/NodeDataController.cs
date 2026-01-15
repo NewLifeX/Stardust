@@ -12,21 +12,9 @@ namespace Stardust.Web.Areas.Nodes.Controllers;
 
 [Menu(60, false)]
 [NodesArea]
-public class NodeDataController : ReadOnlyEntityController<NodeData>
+public class NodeDataController : NodesEntityController<NodeData>
 {
     static NodeDataController() => ListFields.RemoveField("Id", "*Latency", "*LossRate");
-
-    public override void OnActionExecuting(ActionExecutingContext filterContext)
-    {
-        base.OnActionExecuting(filterContext);
-
-        var nodeId = GetRequest("nodeId").ToInt(-1);
-        if (nodeId > 0)
-        {
-            PageSetting.NavView = "_Node_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-    }
 
     protected override IEnumerable<NodeData> Search(Pager p)
     {

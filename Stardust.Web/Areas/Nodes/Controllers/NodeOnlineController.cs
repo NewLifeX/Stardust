@@ -15,7 +15,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers;
 
 [Menu(80)]
 [NodesArea]
-public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
+public class NodeOnlineController : NodesEntityController<NodeOnline>
 {
     private readonly StarFactory _starFactory;
 
@@ -37,52 +37,17 @@ public class NodeOnlineController : ReadOnlyEntityController<NodeOnline>
             df.Url = "/Nodes/Node/Detail?Id={NodeID}";
             df.Target = "_blank";
         }
-        //{
-        //    var df = ListFields.AddListField("Meter", "Version");
-        //    df.DisplayName = "性能";
-        //    df.Url = "/Nodes/NodeData?nodeId={NodeID}";
-        //}
-        //{
-        //    var df = ListFields.AddListField("App", "Version");
-        //    df.DisplayName = "应用实例";
-        //    df.Url = "/Registry/AppOnline?nodeId={NodeID}";
-        //}
 
         ListFields.TraceUrl();
     }
 
     public NodeOnlineController(StarFactory starFactory) => _starFactory = starFactory;
 
-    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    override public void OnActionExecuting(ActionExecutingContext filterContext)
     {
         base.OnActionExecuting(filterContext);
 
-        var nodeId = GetRequest("nodeId").ToInt(-1);
-        if (nodeId > 0)
-        {
-            PageSetting.NavView = "_Node_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-
-        var projectId = GetRequest("projectId").ToInt(-1);
-        if (projectId > 0)
-        {
-            PageSetting.NavView = "_Project_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-    }
-
-    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
-    {
-        var fields = base.OnGetFields(kind, model);
-
-        if (kind == ViewKinds.List)
-        {
-            var nodeId = GetRequest("nodeId").ToInt(-1);
-            if (nodeId > 0) fields.RemoveField("NodeName");
-        }
-
-        return fields;
+        PageSetting.EnableAdd = false;
     }
 
     protected override IEnumerable<NodeOnline> Search(Pager p)

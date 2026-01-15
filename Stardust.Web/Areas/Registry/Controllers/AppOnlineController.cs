@@ -13,7 +13,7 @@ namespace Stardust.Web.Areas.Registry.Controllers;
 
 [RegistryArea]
 [Menu(95)]
-public class AppOnlineController : EntityController<AppOnline>
+public class AppOnlineController : RegistryEntityController<AppOnline>
 {
     private readonly StarFactory _starFactory;
 
@@ -61,43 +61,6 @@ public class AppOnlineController : EntityController<AppOnline>
         base.OnActionExecuting(filterContext);
 
         PageSetting.EnableAdd = false;
-
-        var appId = GetRequest("appId").ToInt(-1);
-        if (appId > 0)
-        {
-            PageSetting.NavView = "_App_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-
-        var nodeId = GetRequest("nodeId").ToInt(-1);
-        if (nodeId > 0)
-        {
-            PageSetting.NavView = "_Node_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-
-        var projectId = GetRequest("projectId").ToInt(-1);
-        if (projectId > 0)
-        {
-            PageSetting.NavView = "_Project_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-    }
-
-    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
-    {
-        var fields = base.OnGetFields(kind, model);
-
-        if (kind == ViewKinds.List)
-        {
-            var nodeId = GetRequest("nodeId").ToInt(-1);
-            if (nodeId > 0) fields.RemoveField("NodeName");
-
-            var appId = GetRequest("appId").ToInt(-1);
-            if (appId > 0) fields.RemoveField("AppName", "Category", "Name");
-        }
-
-        return fields;
     }
 
     protected override IEnumerable<AppOnline> Search(Pager p)

@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.Filters;
-using NewLife;
+﻿using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
@@ -11,7 +10,7 @@ namespace Stardust.Web.Areas.Registry.Controllers;
 
 [RegistryArea]
 [Menu(0, false)]
-public class AppHistoryController : ReadOnlyEntityController<AppHistory>
+public class AppHistoryController : RegistryEntityController<AppHistory>
 {
     static AppHistoryController()
     {
@@ -41,31 +40,6 @@ public class AppHistoryController : ReadOnlyEntityController<AppHistory>
             var df = ListFields.GetField("Action") as ListField;
             df.Url = "/Registry/AppHistory?appId={AppId}&action={Action}";
         }
-    }
-
-    public override void OnActionExecuting(ActionExecutingContext filterContext)
-    {
-        base.OnActionExecuting(filterContext);
-
-        var appId = GetRequest("appId").ToInt(-1);
-        if (appId > 0)
-        {
-            PageSetting.NavView = "_App_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-    }
-
-    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
-    {
-        var fields = base.OnGetFields(kind, model);
-
-        if (kind == ViewKinds.List)
-        {
-            var appId = GetRequest("appId").ToInt(-1);
-            if (appId > 0) fields.RemoveField("AppName");
-        }
-
-        return fields;
     }
 
     protected override IEnumerable<AppHistory> SearchData(Pager p)

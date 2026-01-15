@@ -15,6 +15,7 @@ public class WebEntityController<T> : EntityController<T> where T : Entity<T>, n
         var appId = GetRequest("appId").ToInt(-1);
         if (appId <= 0) appId = GetRequest("configId").ToInt(-1);
         if (appId <= 0) appId = GetRequest("deployId").ToInt(-1);
+        if (appId <= 0) appId = GetRequest("monitorId").ToInt(-1);
         if (appId > 0)
         {
             PageSetting.NavView = "_App_Nav";

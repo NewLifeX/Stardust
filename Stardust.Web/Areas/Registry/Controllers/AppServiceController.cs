@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.Filters;
-using NewLife;
+﻿using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
@@ -10,7 +9,7 @@ namespace Stardust.Web.Areas.Registry.Controllers;
 
 [RegistryArea]
 [Menu(0, false)]
-public class AppServiceController : EntityController<AppService>
+public class AppServiceController : RegistryEntityController<AppService>
 {
     static AppServiceController()
     {
@@ -33,31 +32,6 @@ public class AppServiceController : EntityController<AppService>
             var df = ListFields.GetField("Client") as ListField;
             df.Url = "/Registry/AppService?appId={AppId}&client={Client}";
         }
-    }
-
-    public override void OnActionExecuting(ActionExecutingContext filterContext)
-    {
-        base.OnActionExecuting(filterContext);
-
-        var appId = GetRequest("appId").ToInt(-1);
-        if (appId > 0)
-        {
-            PageSetting.NavView = "_App_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-    }
-
-    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
-    {
-        var fields = base.OnGetFields(kind, model);
-
-        if (kind == ViewKinds.List)
-        {
-            var appId = GetRequest("appId").ToInt(-1);
-            if (appId > 0) fields.RemoveField("AppName");
-        }
-
-        return fields;
     }
 
     protected override IEnumerable<AppService> Search(Pager p)

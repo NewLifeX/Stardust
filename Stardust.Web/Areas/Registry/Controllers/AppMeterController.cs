@@ -13,7 +13,7 @@ namespace Stardust.Web.Areas.Registry.Controllers;
 
 [RegistryArea]
 [Menu(0, false)]
-public class AppMeterController : EntityController<AppMeter>
+public class AppMeterController : RegistryEntityController<AppMeter>
 {
     static AppMeterController()
     {
@@ -27,31 +27,6 @@ public class AppMeterController : EntityController<AppMeter>
             var df = ListFields.GetField("Source") as ListField;
             df.Url = "/Registry/AppMeter?appId={AppId}&clientId={ClientId}&source={Source}";
         }
-    }
-
-    public override void OnActionExecuting(ActionExecutingContext filterContext)
-    {
-        base.OnActionExecuting(filterContext);
-
-        var appId = GetRequest("appId").ToInt(-1);
-        if (appId > 0)
-        {
-            PageSetting.NavView = "_App_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-    }
-
-    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
-    {
-        var fields = base.OnGetFields(kind, model);
-
-        if (kind == ViewKinds.List)
-        {
-            var appId = GetRequest("appId").ToInt(-1);
-            if (appId > 0) fields.RemoveField("AppName");
-        }
-
-        return fields;
     }
 
     protected override IEnumerable<AppMeter> Search(Pager p)

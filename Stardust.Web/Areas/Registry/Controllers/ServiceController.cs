@@ -10,7 +10,7 @@ namespace Stardust.Web.Areas.Registry.Controllers;
 /// <summary>服务信息。服务提供者发布的服务</summary>
 [Menu(40, true, Icon = "fa-table")]
 [RegistryArea]
-public class ServiceController : EntityController<Service>
+public class ServiceController : RegistryEntityController<Service>
 {
     static ServiceController()
     {

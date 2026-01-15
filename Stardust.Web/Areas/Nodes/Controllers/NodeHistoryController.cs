@@ -11,7 +11,7 @@ namespace Stardust.Web.Areas.Nodes.Controllers;
 
 [Menu(60, false)]
 [NodesArea]
-public class NodeHistoryController : ReadOnlyEntityController<NodeHistory>
+public class NodeHistoryController : NodesEntityController<NodeHistory>
 {
     static NodeHistoryController()
     {
@@ -30,31 +30,6 @@ public class NodeHistoryController : ReadOnlyEntityController<NodeHistory>
             var df = ListFields.GetField("Action") as ListField;
             df.Url = "/Nodes/NodeHistory?nodeId={NodeID}&action={Action}";
         }
-    }
-
-    public override void OnActionExecuting(ActionExecutingContext filterContext)
-    {
-        base.OnActionExecuting(filterContext);
-
-        var nodeId = GetRequest("nodeId").ToInt(-1);
-        if (nodeId > 0)
-        {
-            PageSetting.NavView = "_Node_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-    }
-
-    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
-    {
-        var fields = base.OnGetFields(kind, model);
-
-        if (kind == ViewKinds.List)
-        {
-            var nodeId = GetRequest("nodeId").ToInt(-1);
-            if (nodeId > 0) fields.RemoveField("NodeName");
-        }
-
-        return fields;
     }
 
     protected override IEnumerable<NodeHistory> Search(Pager p)
