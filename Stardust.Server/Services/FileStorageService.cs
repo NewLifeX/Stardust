@@ -107,12 +107,12 @@ public class CubeFileStorage : DefaultFileStorage
         };
     }
 
-    public override async Task<Int32> ScanFilesAsync(DateTime startTime, CancellationToken cancellationToken = default)
-    {
-        if (FileRequestBus is StarEventBus<FileRequest> bus && !bus.IsReady) return -1;
+    //public override async Task<Int32> ScanFilesAsync(DateTime startTime, CancellationToken cancellationToken = default)
+    //{
+    //    if (FileRequestBus is StarEventBus<FileRequest> bus && !bus.IsReady) return -1;
 
-        return await base.ScanFilesAsync(startTime, cancellationToken);
-    }
+    //    return await base.ScanFilesAsync(startTime, cancellationToken);
+    //}
 
     /// <summary>获取本地不存在的附件列表。用于文件同步</summary>
     /// <param name="startTime">从指定时间开始遍历</param>

@@ -140,6 +140,7 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
     /// <param name="cancellationToken">取消令牌</param>
     public override async Task<Int32> PublishAsync(TEvent @event, IEventContext? context = null, CancellationToken cancellationToken = default)
     {
+        if (!client.Logined) return -1;
         if (@event == null) return 0;
         if (!_subscribed) await RemoteSubscribe().ConfigureAwait(false);
 

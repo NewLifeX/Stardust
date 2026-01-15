@@ -9,6 +9,7 @@ using NewLife.Model;
 using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Threading;
+using Stardust.Services;
 
 namespace Stardust.Storages;
 
@@ -127,6 +128,8 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     public async Task PublishNewFileAsync(IFileInfo file, CancellationToken cancellationToken = default)
     {
         if (NewFileBus == null) throw new InvalidOperationException("NewFileBus not configured.");
+
+        if (NewFileBus is StarEventBus<FileRequest> bus && !bus.IsReady) return;
 
         if (file is not NewFileInfo msg)
         {
@@ -252,6 +255,8 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     {
         if (FileRequestBus == null) throw new InvalidOperationException("FileRequestBus not configured.");
 
+        if (FileRequestBus is StarEventBus<FileRequest> bus && !bus.IsReady) return;
+
         var msg = new FileRequest
         {
             Id = file.Id,
@@ -286,6 +291,8 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     /// <summary>批量扫描并请求缺失附件，返回已发出请求数。</summary>
     public virtual async Task<Int32> ScanFilesAsync(DateTime startTime, CancellationToken cancellationToken = default)
     {
+        if (FileRequestBus is StarEventBus<FileRequest> bus && !bus.IsReady) return -1;
+
         using var span = Tracer?.NewSpan("FileStorage-ScanFiles", new { startTime });
 
         var count = 0;
