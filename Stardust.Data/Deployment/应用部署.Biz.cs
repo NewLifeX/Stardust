@@ -230,5 +230,26 @@ public partial class AppDeploy : Entity<AppDeploy>
     }
 
     public static AppDeploy GetOrAdd(String name) => GetOrAdd(name, k => Find(_.Name == k), k => new AppDeploy { Name = k });
+
+    /// <summary>获取当前可用资源</summary>
+    /// <returns></returns>
+    public IList<AppResource> GetResources()
+    {
+        var rs = new List<AppResource>();
+        var ms = AppDeployResource.FindAllByDeployId(Id);
+        foreach (var item in ms)
+        {
+            if (item.Enable && !rs.Any(e => e.Id == item.ResourceId) && item.Resource != null)
+                rs.Add(item.Resource);
+        }
+        var list = AppResource.FindAllWithCache().Where(e => e.Enable && (e.ProjectId == 0 || e.ProjectId == ProjectId)).ToList();
+        foreach (var item in list)
+        {
+            if (item.Enable && !rs.Any(e => e.Id == item.Id))
+                rs.Add(item);
+        }
+
+        return rs;
+    }
     #endregion
 }

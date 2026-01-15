@@ -1,23 +1,40 @@
 ﻿@using NewLife.Common;
 @using System.Collections.Generic;
+@using NewLife.Cube.ViewModels
+@using Stardust.Data.Deployment
 @{
     var set = ViewBag.PageSetting as PageSetting;
+    var page = ViewBag.Page as Pager;
+
+    var deployId = page["deployId"].ToInt(-1);
+    var appId = page["appId"].ToInt(-1);
+    var deploy = AppDeploy.FindById(deployId) ?? AppDeploy.FindAllByAppId(appId).FirstOrDefault();
+    var res = deploy?.GetResources() ?? [];
+    var rvs = res.Select(e => e.Name).ToList();
+    rvs.Insert(0, "<主包>");
+
+    var selected = page["resources"];
+    if(selected.IsNullOrEmpty()) selected = "<主包>";
 }
 @if (set.EnableSelect)
 {
-    <button type="button" class="btn btn-primary btn-sm" data-action="action" data-url="@Url.Action("BatchOperate",new{act="install"})" data-fields="keys" disabled>
+    <button type="button" class="btn btn-primary btn-sm" data-action="action" data-url="@Url.Action("BatchOperate", new { act = "install" })" data-fields="keys,resources" disabled>
         发布
     </button>
-    <button type="button" class="btn btn-success btn-sm" data-action="action" data-url="@Url.Action("BatchOperate",new{act="start"})" data-fields="keys" disabled>
+    <button type="button" class="btn btn-success btn-sm" data-action="action" data-url="@Url.Action("BatchOperate", new { act = "start" })" data-fields="keys" disabled>
         启动
     </button>
-    <button type="button" class="btn btn-warning btn-sm" data-action="action" data-url="@Url.Action("BatchOperate",new{act="stop"})" data-fields="keys" disabled>
+    <button type="button" class="btn btn-warning btn-sm" data-action="action" data-url="@Url.Action("BatchOperate", new { act = "stop" })" data-fields="keys" disabled>
         终止
     </button>
-    <button type="button" class="btn btn-info btn-sm" data-action="action" data-url="@Url.Action("BatchOperate",new{act="restart"})" data-fields="keys" disabled>
+    <button type="button" class="btn btn-info btn-sm" data-action="action" data-url="@Url.Action("BatchOperate", new { act = "restart" })" data-fields="keys" disabled>
         重启
     </button>
-    <button type="button" class="btn btn-danger btn-sm" data-action="action" data-url="@Url.Action("BatchOperate",new{act="uninstall"})" data-fields="keys" disabled>
+    <button type="button" class="btn btn-danger btn-sm" data-action="action" data-url="@Url.Action("BatchOperate", new { act = "uninstall" })" data-fields="keys" disabled>
         卸载
     </button>
 }
+<div class="form-group">
+    <label for="roleIds" class="control-label">资源：</label>
+    @await Html.PartialAsync("_Form_ListBox", new ListBoxModel("resources", rvs, selected))
+</div>

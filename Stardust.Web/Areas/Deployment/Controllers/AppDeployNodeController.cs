@@ -108,7 +108,7 @@ public class AppDeployNodeController : DeploymentEntityController<AppDeployNode>
     /// <param name="resources">资源列表。逗号分隔的资源名称，如dm8-driver,newlifex-cert</param>
     /// <returns></returns>
     [EntityAuthorize(PermissionFlags.Update)]
-    public async Task<ActionResult> Operate(String act, Int32 id, String resources)
+    public async Task<ActionResult> Operate(String act, Int32 id, String[] resources)
     {
         var dn = AppDeployNode.FindById(id);
         if (dn == null || dn.Node == null || dn.Deploy == null) return Json(500, $"[{id}]不存在");
@@ -125,7 +125,7 @@ public class AppDeployNodeController : DeploymentEntityController<AppDeployNode>
     /// <param name="resources">资源列表。逗号分隔的资源名称，如dm8-driver,newlifex-cert</param>
     /// <returns></returns>
     [EntityAuthorize(PermissionFlags.Update)]
-    public async Task<ActionResult> BatchOperate(String act, String resources)
+    public async Task<ActionResult> BatchOperate(String act, String[] resources)
     {
         var ts = new List<Task>();
         var ids = SelectKeys.Select(e => e.ToInt()).Where(e => e > 0).Distinct().ToList();

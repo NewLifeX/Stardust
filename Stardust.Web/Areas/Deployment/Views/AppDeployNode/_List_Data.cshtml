@@ -81,7 +81,7 @@
                 <td>@entity.LastActive.ToFullString("")</td>
                 <td class="text-center">
                     <i class="glyphicon glyphicon-save" style="color: green;"></i>
-                    <a data-action="action" data-url="@Url.Action("Operate", new { act = "install", id = entity.Id })" data-confirm="危险操作！确认执行？" title="发布应用服务">发布</a>
+                    <a data-action="action" data-url="@Url.Action("Operate", new { act = "install", id = entity.Id })" data-confirm="危险操作！确认执行？" data-fields="resources" title="发布应用服务">发布</a>
                     &nbsp;
                     <i class="glyphicon glyphicon-play" style="color: green;"></i>
                     <a data-action="action" data-url="@Url.Action("Operate", new { act = "start", id = entity.Id })" data-confirm="危险操作！确认执行？" title="拉起应用服务">启动</a>
