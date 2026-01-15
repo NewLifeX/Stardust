@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.ViewModels;
@@ -13,7 +12,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers;
 
 [DeploymentArea]
 [Menu(90)]
-public class AppDeployController : EntityController<AppDeploy>
+public class AppDeployController : DeploymentEntityController<AppDeploy>
 {
     static AppDeployController()
     {
@@ -78,45 +77,6 @@ public class AppDeployController : EntityController<AppDeploy>
             df.Url = "/Admin/Log?category=应用部署&linkId={Id}";
             df.Target = "_frame";
         }
-    }
-
-    //public AppDeployController(StarFactory starFactory) => _starFactory = starFactory;
-
-    public override void OnActionExecuting(ActionExecutingContext filterContext)
-    {
-        base.OnActionExecuting(filterContext);
-
-        var appId = GetRequest("appId").ToInt(-1);
-        if (appId <= 0) appId = GetRequest("Id").ToInt(-1);
-        if (appId > 0)
-        {
-            PageSetting.NavView = "_App_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-        var projectId = GetRequest("projectId").ToInt(-1);
-        if (projectId > 0)
-        {
-            PageSetting.NavView = "_Project_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-
-        //PageSetting.EnableAdd = false;
-    }
-
-    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
-    {
-        var fields = base.OnGetFields(kind, model);
-
-        if (kind == ViewKinds.List)
-        {
-            var appId = GetRequest("appId").ToInt(-1);
-            if (appId > 0) fields.RemoveField("ProjectName", "AppName", "Category");
-
-            //var deployId = GetRequest("deployId").ToInt(-1);
-            //if (deployId > 0) fields.RemoveField("DeployName");
-        }
-
-        return fields;
     }
 
     protected override IEnumerable<AppDeploy> Search(Pager p)

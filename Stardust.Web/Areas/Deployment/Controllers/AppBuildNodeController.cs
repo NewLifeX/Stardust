@@ -12,7 +12,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers;
 /// <summary>编译节点。应用部署集和编译节点的关系，一个应用可有多个部署集如arm和x64，在目标节点上发布该部署集对应的应用zip包</summary>
 [Menu(20, true, Icon = "fa-table")]
 [DeploymentArea]
-public class AppBuildNodeController : EntityController<AppBuildNode>
+public class AppBuildNodeController : DeploymentEntityController<AppBuildNode>
 {
     static AppBuildNodeController()
     {

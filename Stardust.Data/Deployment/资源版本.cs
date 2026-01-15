@@ -17,7 +17,7 @@ namespace Stardust.Data.Deployment;
 [Serializable]
 [DataObject]
 [Description("资源版本。资源的多个版本，支持不同运行时平台")]
-[BindIndex("IU_AppResourceVersion_ResourceId_Version_OS_Arch", true, "ResourceId,Version,OS,Arch")]
+[BindIndex("IX_AppResourceVersion_ResourceId_Version", false, "ResourceId,Version")]
 [BindTable("AppResourceVersion", Description = "资源版本。资源的多个版本，支持不同运行时平台", ConnName = "Stardust", DbType = DatabaseType.None)]
 public partial class AppResourceVersion
 {
@@ -257,6 +257,21 @@ public partial class AppResourceVersion
         return Meta.SingleCache[id];
 
         //return Find(_.Id == id);
+    }
+
+    /// <summary>根据资源、版本查找</summary>
+    /// <param name="resourceId">资源</param>
+    /// <param name="version">版本</param>
+    /// <returns>实体列表</returns>
+    public static IList<AppResourceVersion> FindAllByResourceIdAndVersion(Int32 resourceId, String version)
+    {
+        if (resourceId < 0) return [];
+        if (version.IsNullOrEmpty()) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.ResourceId == resourceId && e.Version.EqualIgnoreCase(version));
+
+        return FindAll(_.ResourceId == resourceId & _.Version == version);
     }
     #endregion
 

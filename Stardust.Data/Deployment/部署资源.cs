@@ -17,8 +17,7 @@ namespace Stardust.Data.Deployment;
 [Serializable]
 [DataObject]
 [Description("部署资源。附加资源管理，如数据库驱动、SSL证书、配置模板等，支持全局/项目/应用三级归属")]
-[BindIndex("IU_AppResource_DeployId_Name", true, "DeployId,Name")]
-[BindIndex("IX_AppResource_ProjectId", false, "ProjectId")]
+[BindIndex("IU_AppResource_ProjectId_Name", true, "ProjectId,Name")]
 [BindIndex("IX_AppResource_Category", false, "Category")]
 [BindTable("AppResource", Description = "部署资源。附加资源管理，如数据库驱动、SSL证书、配置模板等，支持全局/项目/应用三级归属", ConnName = "Stardust", DbType = DatabaseType.None)]
 public partial class AppResource
@@ -32,14 +31,6 @@ public partial class AppResource
     [BindColumn("Id", "编号", "")]
     public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
-    private Int32 _DeployId;
-    /// <summary>应用部署集。绑定到具体应用，为0时表示共享资源</summary>
-    [DisplayName("应用部署集")]
-    [Description("应用部署集。绑定到具体应用，为0时表示共享资源")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("DeployId", "应用部署集。绑定到具体应用，为0时表示共享资源", "")]
-    public Int32 DeployId { get => _DeployId; set { if (OnPropertyChanging("DeployId", value)) { _DeployId = value; OnPropertyChanged("DeployId"); } } }
-
     private Int32 _ProjectId;
     /// <summary>项目。资源归属项目，为0时表示全局资源</summary>
     [DisplayName("项目")]
@@ -48,14 +39,6 @@ public partial class AppResource
     [BindColumn("ProjectId", "项目。资源归属项目，为0时表示全局资源", "")]
     public Int32 ProjectId { get => _ProjectId; set { if (OnPropertyChanging("ProjectId", value)) { _ProjectId = value; OnPropertyChanged("ProjectId"); } } }
 
-    private String _Category;
-    /// <summary>类别。driver/cert/config/plugin等</summary>
-    [DisplayName("类别")]
-    [Description("类别。driver/cert/config/plugin等")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("Category", "类别。driver/cert/config/plugin等", "")]
-    public String Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
-
     private String _Name;
     /// <summary>名称。资源唯一标识，如dm8-driver、newlifex-cert</summary>
     [DisplayName("名称")]
@@ -63,6 +46,14 @@ public partial class AppResource
     [DataObjectField(false, false, false, 50)]
     [BindColumn("Name", "名称。资源唯一标识，如dm8-driver、newlifex-cert", "", Master = true)]
     public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
+
+    private String _Category;
+    /// <summary>类别。driver/cert/config/plugin等</summary>
+    [DisplayName("类别")]
+    [Description("类别。driver/cert/config/plugin等")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("Category", "类别。driver/cert/config/plugin等", "")]
+    public String Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
 
     private Boolean _Enable;
     /// <summary>启用</summary>
@@ -169,10 +160,9 @@ public partial class AppResource
         get => name switch
         {
             "Id" => _Id,
-            "DeployId" => _DeployId,
             "ProjectId" => _ProjectId,
-            "Category" => _Category,
             "Name" => _Name,
+            "Category" => _Category,
             "Enable" => _Enable,
             "TargetPath" => _TargetPath,
             "UnZip" => _UnZip,
@@ -191,10 +181,9 @@ public partial class AppResource
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
-                case "DeployId": _DeployId = value.ToInt(); break;
                 case "ProjectId": _ProjectId = value.ToInt(); break;
-                case "Category": _Category = Convert.ToString(value); break;
                 case "Name": _Name = Convert.ToString(value); break;
+                case "Category": _Category = Convert.ToString(value); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "TargetPath": _TargetPath = Convert.ToString(value); break;
                 case "UnZip": _UnZip = value.ToBoolean(); break;
@@ -213,14 +202,6 @@ public partial class AppResource
     #endregion
 
     #region 关联映射
-    /// <summary>应用部署集</summary>
-    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public AppDeploy Deploy => Extends.Get(nameof(Deploy), k => AppDeploy.FindById(DeployId));
-
-    /// <summary>应用部署集</summary>
-    [Map(nameof(DeployId), typeof(AppDeploy), "Id")]
-    public String DeployName => Deploy?.Name;
-
     /// <summary>项目</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public Stardust.Data.Platform.GalaxyProject Project => Extends.Get(nameof(Project), k => Stardust.Data.Platform.GalaxyProject.FindById(ProjectId));
@@ -248,32 +229,19 @@ public partial class AppResource
         //return Find(_.Id == id);
     }
 
-    /// <summary>根据应用部署集、名称查找</summary>
-    /// <param name="deployId">应用部署集</param>
+    /// <summary>根据项目、名称查找</summary>
+    /// <param name="projectId">项目</param>
     /// <param name="name">名称</param>
     /// <returns>实体对象</returns>
-    public static AppResource FindByDeployIdAndName(Int32 deployId, String name)
+    public static AppResource FindByProjectIdAndName(Int32 projectId, String name)
     {
-        if (deployId < 0) return null;
+        if (projectId < 0) return null;
         if (name.IsNullOrEmpty()) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.DeployId == deployId && e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.ProjectId == projectId && e.Name.EqualIgnoreCase(name));
 
-        return Find(_.DeployId == deployId & _.Name == name);
-    }
-
-    /// <summary>根据应用部署集查找</summary>
-    /// <param name="deployId">应用部署集</param>
-    /// <returns>实体列表</returns>
-    public static IList<AppResource> FindAllByDeployId(Int32 deployId)
-    {
-        if (deployId < 0) return [];
-
-        // 实体缓存
-        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.DeployId == deployId);
-
-        return FindAll(_.DeployId == deployId);
+        return Find(_.ProjectId == projectId & _.Name == name);
     }
 
     /// <summary>根据项目查找</summary>
@@ -305,7 +273,6 @@ public partial class AppResource
 
     #region 高级查询
     /// <summary>高级查询</summary>
-    /// <param name="deployId">应用部署集。绑定到具体应用，为0时表示共享资源</param>
     /// <param name="projectId">项目。资源归属项目，为0时表示全局资源</param>
     /// <param name="category">类别。driver/cert/config/plugin等</param>
     /// <param name="unZip">解压缩。下载后是否自动解压</param>
@@ -315,11 +282,10 @@ public partial class AppResource
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<AppResource> Search(Int32 deployId, Int32 projectId, String category, Boolean? unZip, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<AppResource> Search(Int32 projectId, String category, Boolean? unZip, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
-        if (deployId >= 0) exp &= _.DeployId == deployId;
         if (projectId >= 0) exp &= _.ProjectId == projectId;
         if (!category.IsNullOrEmpty()) exp &= _.Category == category;
         if (unZip != null) exp &= _.UnZip == unZip;
@@ -338,17 +304,14 @@ public partial class AppResource
         /// <summary>编号</summary>
         public static readonly Field Id = FindByName("Id");
 
-        /// <summary>应用部署集。绑定到具体应用，为0时表示共享资源</summary>
-        public static readonly Field DeployId = FindByName("DeployId");
-
         /// <summary>项目。资源归属项目，为0时表示全局资源</summary>
         public static readonly Field ProjectId = FindByName("ProjectId");
 
-        /// <summary>类别。driver/cert/config/plugin等</summary>
-        public static readonly Field Category = FindByName("Category");
-
         /// <summary>名称。资源唯一标识，如dm8-driver、newlifex-cert</summary>
         public static readonly Field Name = FindByName("Name");
+
+        /// <summary>类别。driver/cert/config/plugin等</summary>
+        public static readonly Field Category = FindByName("Category");
 
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
@@ -392,17 +355,14 @@ public partial class AppResource
         /// <summary>编号</summary>
         public const String Id = "Id";
 
-        /// <summary>应用部署集。绑定到具体应用，为0时表示共享资源</summary>
-        public const String DeployId = "DeployId";
-
         /// <summary>项目。资源归属项目，为0时表示全局资源</summary>
         public const String ProjectId = "ProjectId";
 
-        /// <summary>类别。driver/cert/config/plugin等</summary>
-        public const String Category = "Category";
-
         /// <summary>名称。资源唯一标识，如dm8-driver、newlifex-cert</summary>
         public const String Name = "Name";
+
+        /// <summary>类别。driver/cert/config/plugin等</summary>
+        public const String Category = "Category";
 
         /// <summary>启用</summary>
         public const String Enable = "Enable";

@@ -14,7 +14,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers;
 
 [Menu(88, false)]
 [DeploymentArea]
-public class AppDeployNodeController : EntityController<AppDeployNode>
+public class AppDeployNodeController : DeploymentEntityController<AppDeployNode>
 {
     static AppDeployNodeController()
     {
@@ -46,42 +46,6 @@ public class AppDeployNodeController : EntityController<AppDeployNode>
     public AppDeployNodeController(DeployService deployService)
     {
         _deployService = deployService;
-    }
-
-    public override void OnActionExecuting(ActionExecutingContext filterContext)
-    {
-        base.OnActionExecuting(filterContext);
-
-        var appId = GetRequest("appId").ToInt(-1);
-        var deployId = GetRequest("deployId").ToInt(-1);
-        if (deployId > 0 || appId > 0)
-        {
-            PageSetting.NavView = "_App_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-
-        var nodeId = GetRequest("nodeId").ToInt(-1);
-        if (nodeId > 0)
-        {
-            PageSetting.NavView = "_Node_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-    }
-
-    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
-    {
-        var fields = base.OnGetFields(kind, model);
-
-        if (kind == ViewKinds.List)
-        {
-            var deployId = GetRequest("deployId").ToInt(-1);
-            if (deployId > 0) fields.RemoveField("DeployName");
-
-            var nodeId = GetRequest("nodeId").ToInt(-1);
-            if (nodeId > 0) fields.RemoveField("NodeName");
-        }
-
-        return fields;
     }
 
     protected override IEnumerable<AppDeployNode> Search(Pager p)

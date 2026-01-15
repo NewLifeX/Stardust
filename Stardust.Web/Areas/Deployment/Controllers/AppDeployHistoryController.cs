@@ -11,7 +11,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers;
 
 [Menu(70, false)]
 [DeploymentArea]
-public class AppDeployHistoryController : ReadOnlyEntityController<AppDeployHistory>
+public class AppDeployHistoryController : DeploymentEntityController<AppDeployHistory>
 {
     static AppDeployHistoryController()
     {
@@ -28,32 +28,6 @@ public class AppDeployHistoryController : ReadOnlyEntityController<AppDeployHist
             df.Url = "/Nodes/Node?Id={NodeId}";
             df.Target = "_frame";
         }
-    }
-
-    public override void OnActionExecuting(ActionExecutingContext filterContext)
-    {
-        base.OnActionExecuting(filterContext);
-
-        var appId = GetRequest("appId").ToInt(-1);
-        var deployId = GetRequest("deployId").ToInt(-1);
-        if (deployId > 0 || appId > 0)
-        {
-            PageSetting.NavView = "_App_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-    }
-
-    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
-    {
-        var fields = base.OnGetFields(kind, model);
-
-        if (kind == ViewKinds.List)
-        {
-            var deployId = GetRequest("deployId").ToInt(-1);
-            if (deployId > 0) fields.RemoveField("DeployName");
-        }
-
-        return fields;
     }
 
     protected override IEnumerable<AppDeployHistory> Search(Pager p)

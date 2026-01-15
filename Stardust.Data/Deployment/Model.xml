@@ -241,10 +241,9 @@
     <Table Name="AppResource" Description="部署资源。附加资源管理，如数据库驱动、SSL证书、配置模板等，支持全局/项目/应用三级归属">
       <Columns>
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="DeployId" DataType="Int32" Map="AppDeploy@Id@Name" Description="应用部署集。绑定到具体应用，为0时表示共享资源" />
         <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属项目，为0时表示全局资源" />
-        <Column Name="Category" DataType="String" Description="类别。driver/cert/config/plugin等" />
         <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称。资源唯一标识，如dm8-driver、newlifex-cert" />
+        <Column Name="Category" DataType="String" Description="类别。driver/cert/config/plugin等" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="TargetPath" DataType="String" Description="目标路径。相对于应用工作目录，如../Plugins、./certs" />
         <Column Name="UnZip" DataType="Boolean" Description="解压缩。下载后是否自动解压" />
@@ -258,8 +257,7 @@
         <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
       </Columns>
       <Indexes>
-        <Index Columns="DeployId,Name" Unique="True" />
-        <Index Columns="ProjectId" />
+        <Index Columns="ProjectId,Name" Unique="True" />
         <Index Columns="Category" />
       </Indexes>
     </Table>
@@ -285,7 +283,7 @@
         <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
       </Columns>
       <Indexes>
-        <Index Columns="ResourceId,Version,OS,Arch" Unique="True" />
+        <Index Columns="ResourceId,Version" />
       </Indexes>
     </Table>
     <Table Name="AppDeployResource" Description="应用资源。应用部署集引用的共享资源，发布时一并下发到目标节点">

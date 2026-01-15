@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
@@ -17,7 +16,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers;
 
 [Menu(80, false)]
 [DeploymentArea]
-public class AppDeployVersionController : EntityController<AppDeployVersion>
+public class AppDeployVersionController : DeploymentEntityController<AppDeployVersion>
 {
     static AppDeployVersionController()
     {
@@ -54,32 +53,6 @@ public class AppDeployVersionController : EntityController<AppDeployVersion>
         _deployService = deployService;
         _fileStorage = fileStorage;
         _tracer = tracer;
-    }
-
-    public override void OnActionExecuting(ActionExecutingContext filterContext)
-    {
-        base.OnActionExecuting(filterContext);
-
-        var appId = GetRequest("appId").ToInt(-1);
-        var deployId = GetRequest("deployId").ToInt(-1);
-        if (deployId > 0 || appId > 0)
-        {
-            PageSetting.NavView = "_App_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-    }
-
-    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
-    {
-        var fields = base.OnGetFields(kind, model);
-
-        if (kind == ViewKinds.List)
-        {
-            var deployId = GetRequest("deployId").ToInt(-1);
-            if (deployId > 0) fields.RemoveField("DeployName");
-        }
-
-        return fields;
     }
 
     protected override IEnumerable<AppDeployVersion> Search(Pager p)

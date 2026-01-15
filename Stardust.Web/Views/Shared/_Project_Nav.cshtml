@@ -22,35 +22,39 @@
     dic["监控"] = "/Monitors/AppTracer?projectId=" + projectId;
     dic["配置"] = "/Configs/AppConfig?projectId=" + projectId;
     dic["发布"] = "/Deployment/AppDeploy?projectId=" + projectId;
+    dic["资源"] = "/Deployment/AppResource?projectId=" + projectId;
 }
 @if (projectId > 0)
 {
     <div class="navbar-collapse text-center">
         <ul class="nav nav-pills" style="margin-bottom: 10px; display: inline-block;float: none;">
-            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Platform/GalaxyProject")?"active":"")">
-                <a href="/Platform/GalaxyProject/Edit?Id=@projectId">项目：@(prj?.ToString() ?? "信息")</a>
-            </li>
-            <li role="presentation" class="@(path.EqualIgnoreCase("/Nodes/Node")?"active":"")">
-                <a href="/Nodes/Node?projectId=@projectId">节点</a>
-            </li>
-            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Nodes/NodeOnline")?"active":"")">
-                <a href="/Nodes/NodeOnline?projectId=@projectId">节点在线</a>
-            </li>
-            <li role="presentation" class="@(path.EqualIgnoreCase("/Registry/App")?"active":"")">
-                <a href="/Registry/App?projectId=@projectId">应用</a>
-            </li>
-            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Registry/AppOnline")?"active":"")">
-                <a href="/Registry/AppOnline?projectId=@projectId">应用在线</a>
-            </li>
-            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Monitors/AppTracer")?"active":"")">
-                <a href="/Monitors/AppTracer?projectId=@projectId">监控</a>
-            </li>
-            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Configs/AppConfig")?"active":"")">
-                <a href="/Configs/AppConfig?projectId=@projectId">配置</a>
-            </li>
-            <li role="presentation" class="@(path.StartsWithIgnoreCase("/Deployment/AppDeploy")?"active":"")">
-                <a href="/Deployment/AppDeploy?projectId=@projectId">发布</a>
-            </li>
+            @foreach (var item in dic)
+            {
+                if (item.Value is IDictionary<String, Object> childs)
+                {
+                    <li role="presentation" class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">@item.Key <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            @foreach (var elm in childs)
+                            {
+                                var url = elm.Value + "";
+                                var v = url.Substring(null, "?");
+                                <li role="presentation" class="@(path.EqualIgnoreCase(v) ? "active" : "")">
+                                    <a href="@url">@elm.Key</a>
+                                </li>
+                            }
+                        </ul>
+                    </li>
+                }
+                else
+                {
+                    var url = item.Value + "";
+                    var v = url.Substring(null, "?");
+                    <li role="presentation" class="@(path.EqualIgnoreCase(v) ? "active" : "")">
+                        <a href="@url">@item.Key</a>
+                    </li>
+                }
+            }
         </ul>
     </div>
 }

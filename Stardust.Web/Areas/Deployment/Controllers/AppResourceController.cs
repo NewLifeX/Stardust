@@ -14,7 +14,7 @@ namespace Stardust.Web.Areas.Deployment.Controllers;
 /// <summary>部署资源。附加资源管理，如数据库驱动、SSL证书、配置模板等，支持全局/项目/应用三级归属</summary>
 [Menu(40, true, Icon = "fa-table")]
 [DeploymentArea]
-public class AppResourceController : EntityController<AppResource>
+public class AppResourceController : DeploymentEntityController<AppResource>
 {
     static AppResourceController()
     {
@@ -23,6 +23,15 @@ public class AppResourceController : EntityController<AppResource>
         //ListFields.RemoveField("Id", "Creator");
         ListFields.RemoveCreateField().RemoveRemarkField();
 
+        {
+            var df = ListFields.GetField("ProjectName") as ListField;
+            df.Url = "/Platform/GalaxyProject?Id={ProjectId}";
+            df.Target = "_frame";
+        }
+        {
+            var df = ListFields.GetField("Name") as ListField;
+            df.Url = "/Deployment/AppResource?Id={Id}";
+        }
         {
             var df = ListFields.AddListField("Version", "Enable");
             df.DisplayName = "版本";
@@ -49,7 +58,6 @@ public class AppResourceController : EntityController<AppResource>
     /// <returns></returns>
     protected override IEnumerable<AppResource> Search(Pager p)
     {
-        var deployId = p["deployId"].ToInt(-1);
         var projectId = p["projectId"].ToInt(-1);
         var category = p["category"];
         var unZip = p["unZip"]?.ToBoolean();
@@ -58,6 +66,6 @@ public class AppResourceController : EntityController<AppResource>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return AppResource.Search(deployId, projectId, category, unZip, enable, start, end, p["Q"], p);
+        return AppResource.Search(projectId, category, unZip, enable, start, end, p["Q"], p);
     }
 }
