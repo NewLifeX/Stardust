@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.Filters;
-using NewLife;
+﻿using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
@@ -36,7 +35,7 @@ public class AppDeployHistoryController : DeploymentEntityController<AppDeployHi
         if (id > 0)
         {
             var entity = AppDeployHistory.FindById(id);
-            if (entity != null) return new List<AppDeployHistory> { entity };
+            if (entity != null) return [entity];
         }
 
         var appId = p["deployId"].ToInt(-1);

@@ -21,7 +21,7 @@ public class AppDayStatService : IAppDayStatService
     public Int32 BatchPeriod { get; set; } = 30;
 
     private TimerX _timer;
-    private readonly ConcurrentBag<DateTime> _bag = new();
+    private readonly ConcurrentBag<DateTime> _bag = [];
     private readonly ITracer _tracer;
 
     public AppDayStatService(ITracer tracer) => _tracer = tracer;

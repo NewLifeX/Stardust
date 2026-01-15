@@ -32,8 +32,8 @@ public class TraceStatService : ITraceStatService
 
     private TimerX _timerFlow;
     private TimerX _timerBatch;
-    private readonly ConcurrentBag<String> _bagDay = new();
-    private readonly ConcurrentBag<String> _bagHour = new();
+    private readonly ConcurrentBag<String> _bagDay = [];
+    private readonly ConcurrentBag<String> _bagHour = [];
     private readonly ConcurrentDictionary<String, ConcurrentBag<DateTime>> _bagMinute = new();
     private readonly ConcurrentQueue<TraceData> _queue = new();
 
@@ -67,7 +67,7 @@ public class TraceStatService : ITraceStatService
             }
             {
                 var key = $"{item.AppId}_{item.StatMinute:yyyyMMddHH}";
-                var bag = _bagMinute.GetOrAdd(key, new ConcurrentBag<DateTime>());
+                var bag = _bagMinute.GetOrAdd(key, []);
                 if (!bag.Contains(item.StatMinute)) bag.Add(item.StatMinute);
             }
         }
@@ -105,7 +105,7 @@ public class TraceStatService : ITraceStatService
         {
             var minute = time.Date.AddHours(time.Hour).AddMinutes(time.Minute / 5 * 5);
             var key = $"{appId}_{minute:yyyyMMddHH}";
-            var bag = _bagMinute.GetOrAdd(key, new ConcurrentBag<DateTime>());
+            var bag = _bagMinute.GetOrAdd(key, []);
             if (!bag.Contains(minute)) bag.Add(minute);
         }
 

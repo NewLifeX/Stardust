@@ -5,7 +5,7 @@ namespace Stardust.Web.Areas.Configs.Controllers;
 
 [Menu(30)]
 [ConfigsArea]
-public class AppRuleController : EntityController<AppRule>
+public class AppRuleController : ConfigsEntityController<AppRule>
 {
     static AppRuleController()
     {

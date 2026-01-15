@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Cube;
-using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data.Configs;
@@ -13,7 +11,7 @@ namespace Stardust.Web.Areas.Configs.Controllers;
 
 [Menu(0, false)]
 [ConfigsArea]
-public class ConfigDataController : EntityController<ConfigData>
+public class ConfigDataController : ConfigsEntityController<ConfigData>
 {
     static ConfigDataController()
     {
@@ -45,34 +43,6 @@ public class ConfigDataController : EntityController<ConfigData>
         _configService = configService;
         _starFactory = starFactory;
         _tracer = tracer;
-    }
-
-    public override void OnActionExecuting(ActionExecutingContext filterContext)
-    {
-        base.OnActionExecuting(filterContext);
-
-        var appId = GetRequest("appId").ToInt(-1);
-        var configId = GetRequest("configId").ToInt(-1);
-        if (configId > 0 || appId > 0)
-        {
-            PageSetting.NavView = "_App_Nav";
-            PageSetting.EnableNavbar = false;
-        }
-
-        //PageSetting.EnableAdd = false;
-    }
-
-    protected override FieldCollection OnGetFields(ViewKinds kind, Object model)
-    {
-        var fields = base.OnGetFields(kind, model);
-
-        if (kind == ViewKinds.List)
-        {
-            var configId = GetRequest("configId").ToInt(-1);
-            if (configId > 0) fields.RemoveField("ConfigName");
-        }
-
-        return fields;
     }
 
     protected override IEnumerable<ConfigData> Search(Pager p)

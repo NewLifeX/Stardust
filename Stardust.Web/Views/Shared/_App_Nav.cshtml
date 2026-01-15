@@ -21,7 +21,7 @@
         var entity = AppConfig.FindById(configId);// ?? AppConfig.FindById(id);
         if (entity != null && entity.AppId > 0) appId = entity.AppId;
     }
-    if (appId == 0 && path2.EqualIgnoreCase("/Deployment/AppDeploy", "/Deployment/AppDeployVersion", "/Deployment/AppDeployNode", "/Deployment/AppDeployHistory"))
+    if (appId == 0 && path2.StartsWithIgnoreCase("/Deployment/"))
     {
         // var id = Context.Request.Query["Id"].ToInt(0);
         var entity = AppDeploy.FindById(deployId);// ?? AppDeploy.FindById(id);

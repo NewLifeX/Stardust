@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
@@ -54,7 +53,7 @@ public class AppDeployNodeController : DeploymentEntityController<AppDeployNode>
         if (id > 0)
         {
             var entity = AppDeployNode.FindById(id);
-            if (entity != null) return new List<AppDeployNode> { entity };
+            if (entity != null) return [entity];
         }
 
         var appId = p["deployId"].ToInt(-1);

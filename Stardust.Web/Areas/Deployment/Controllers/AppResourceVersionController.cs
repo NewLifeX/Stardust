@@ -11,9 +11,9 @@ using Attachment = NewLife.Cube.Entity.Attachment;
 namespace Stardust.Web.Areas.Deployment.Controllers;
 
 /// <summary>资源版本。资源的多个版本，支持不同运行时平台</summary>
-[Menu(0, true, Icon = "fa-table")]
+[Menu(0, false, Icon = "fa-table")]
 [DeploymentArea]
-public class AppResourceVersionController : EntityController<AppResourceVersion>
+public class AppResourceVersionController : DeploymentEntityController<AppResourceVersion>
 {
     static AppResourceVersionController()
     {

@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using NewLife;
 using NewLife.Cube;
+using XCode;
 
 namespace Stardust.Web.Areas.Configs;
 
@@ -11,4 +12,9 @@ public class ConfigsArea : AreaBase
     public ConfigsArea() : base(nameof(ConfigsArea).TrimEnd("Area")) { }
 
     static ConfigsArea() => RegisterArea<ConfigsArea>();
+}
+
+[ConfigsArea]
+public class ConfigsEntityController<T> : WebEntityController<T> where T : Entity<T>, new()
+{
 }
