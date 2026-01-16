@@ -24,14 +24,20 @@ public class StandardDeployStrategy : DeployStrategyBase
     {
         using var span = Tracer?.NewSpan("Deploy-Extract", new { context.Name, context.ZipFile, context.WorkingDirectory });
 
-        var fi = RetrieveZip(context);
-        if (fi == null) return false;
-
         var workDir = context.WorkingDirectory;
-        context.WriteLog("标准模式，解压到工作目录：{0}", workDir);
+        var fi = RetrieveZip(context);
+        if (fi != null)
+        {
+            context.WriteLog("标准模式，解压到工作目录：{0}", workDir);
 
-        // 直接解压到工作目录
-        ExtractZip(fi.FullName, workDir, context.Deploy, context.Log);
+            // 直接解压到工作目录
+            ExtractZip(fi.FullName, workDir, context.Deploy, context.Log);
+        }
+        else
+        {
+            // 没有 zip 包时，假设文件已经存在于工作目录中
+            context.WriteLog("标准模式，无需解压，直接使用工作目录：{0}", workDir);
+        }
 
         // 查找可执行文件
         return RetrieveExeFile(context, workDir);

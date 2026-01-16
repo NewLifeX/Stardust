@@ -165,6 +165,11 @@ public class ServiceController : DisposeBase
             using var span = Tracer?.NewSpan("StartService", service);
             try
             {
+                // 判断 file 是否为 zip 文件
+                String? zipFile = service.ZipFile;
+                if (zipFile.IsNullOrEmpty() && file.EndsWithIgnoreCase(".zip"))
+                    zipFile = file;
+
                 // 构建部署上下文
                 var context = new DeployContext
                 {
@@ -173,7 +178,7 @@ public class ServiceController : DisposeBase
                     Service = service,
                     Deploy = DeployInfo,
                     WorkingDirectory = workDir,
-                    ZipFile = service.ZipFile ?? file,
+                    ZipFile = zipFile,
                     Arguments = args,
                     AllowMultiple = allowMultiple,
                     StartupHook = Manager?.StartupHook ?? false,
