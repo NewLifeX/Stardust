@@ -82,9 +82,9 @@
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
         <Column Name="Category" DataType="String" Description="类别" />
-        <Column Name="AppId" DataType="Int32" Description="应用" />
+        <Column Name="AppId" DataType="Int32" Map="Stardust.Data.App@Id@Name" Description="应用" />
         <Column Name="Name" DataType="String" Master="True" Description="名称。应用名称" />
-        <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
+        <Column Name="NodeId" DataType="Int32" Map="Stardust.Data.Nodes.Node@ID@Name" Description="节点。节点服务器" />
         <Column Name="Client" DataType="String" Description="客户端。IP加进程，不同应用的Client可能相同，但几率很低，暂不考虑" />
         <Column Name="Scope" DataType="String" Description="作用域" />
         <Column Name="Version" DataType="String" Description="版本。客户端" />
@@ -120,8 +120,9 @@
     <Table Name="AppHistory" Description="应用历史" ConnName="StardustData">
       <Columns>
         <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="time" Description="编号" />
-        <Column Name="AppId" DataType="Int32" Description="应用" />
+        <Column Name="AppId" DataType="Int32" Map="Stardust.Data.App@Id@Name" Description="应用" />
         <Column Name="Client" DataType="String" Description="客户端。IP加进程" />
+        <Column Name="NodeId" DataType="Int32" Map="Stardust.Data.Nodes.Node@ID@Name" Description="节点。节点服务器" />
         <Column Name="Version" DataType="String" Description="版本。客户端实例版本" />
         <Column Name="Action" DataType="String" Description="操作" />
         <Column Name="Success" DataType="Boolean" Description="成功" />
@@ -140,7 +141,7 @@
     <Table Name="AppCommand" Description="应用命令" ConnName="StardustData">
       <Columns>
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="AppId" DataType="Int32" Description="应用" />
+        <Column Name="AppId" DataType="Int32" Map="Stardust.Data.App@Id@Name" Description="应用" />
         <Column Name="Command" DataType="String" Master="True" Description="命令" />
         <Column Name="Argument" DataType="String" Length="500" Description="参数" />
         <Column Name="StartTime" DataType="DateTime" Description="开始执行时间。用于提前下发指令后延期执行，暂时不支持取消" />
@@ -165,8 +166,9 @@
     <Table Name="AppMeter" Description="应用性能。保存应用上报的性能数据，如CPU、内存、线程、句柄等" ConnName="StardustData">
       <Columns>
         <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="time" Description="编号" />
-        <Column Name="AppId" DataType="Int32" Description="应用" />
+        <Column Name="AppId" DataType="Int32" Map="Stardust.Data.App@Id@Name" Description="应用" />
         <Column Name="ClientId" DataType="String" Description="实例。应用可能多实例部署，ip@proccessid" />
+        <Column Name="NodeId" DataType="Int32" Map="Stardust.Data.Nodes.Node@ID@Name" Description="节点。节点服务器" />
         <Column Name="Source" DataType="String" Description="来源。数据来源，应用心跳、监控数据上报携带、远程发布后由StarAgent上报" />
         <Column Name="Memory" DataType="Int32" Description="内存。单位M" />
         <Column Name="ProcessorTime" DataType="Int32" ItemType="TimeSpan" Description="处理器。处理器时间，单位s" />
@@ -224,11 +226,11 @@
     <Table Name="AppService" Description="应用服务。应用提供的服务">
       <Columns>
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="AppId" DataType="Int32" Description="应用。提供服务的应用程序" />
+        <Column Name="AppId" DataType="Int32" Map="Stardust.Data.App@Id@Name" Description="应用。提供服务的应用程序" />
         <Column Name="ServiceId" DataType="Int32" Description="服务" />
         <Column Name="ServiceName" DataType="String" Description="服务名" />
         <Column Name="Client" DataType="String" Description="客户端。由该应用实例提供服务，IP加端口" />
-        <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
+        <Column Name="NodeId" DataType="Int32" Map="Stardust.Data.Nodes.Node@ID@Name" Description="节点。节点服务器" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="PingCount" DataType="Int32" Description="心跳。应用程序定期向注册中心更新服务状态" />
         <Column Name="Version" DataType="String" Description="版本。应用程序版本号" />
@@ -255,11 +257,11 @@
     <Table Name="AppConsume" Description="应用消费。应用消费的服务">
       <Columns>
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="AppId" DataType="Int32" Description="应用。提供服务的应用程序" />
+        <Column Name="AppId" DataType="Int32" Map="Stardust.Data.App@Id@Name" Description="应用。提供服务的应用程序" />
         <Column Name="ServiceId" DataType="Int32" Description="服务" />
         <Column Name="ServiceName" DataType="String" Description="服务名" />
         <Column Name="Client" DataType="String" Description="客户端。由该应用实例提供服务，IP加端口" />
-        <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
+        <Column Name="NodeId" DataType="Int32" Map="Stardust.Data.Nodes.Node@ID@Name" Description="节点。节点服务器" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="PingCount" DataType="Int32" Description="心跳。应用程序定期向注册中心更新服务状态" />
         <Column Name="MinVersion" DataType="String" Description="最低版本。要求返回大于等于该版本的服务提供者" />
@@ -279,7 +281,7 @@
     <Table Name="AppClientLog" Description="应用日志" ConnName="StardustData">
       <Columns>
         <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="time" Description="编号" />
-        <Column Name="AppId" DataType="Int32" Master="True" Description="应用" />
+        <Column Name="AppId" DataType="Int32" Map="Stardust.Data.App@Id@Name" Master="True" Description="应用" />
         <Column Name="ClientId" DataType="String" Master="True" Description="客户端" />
         <Column Name="Time" DataType="String" Description="时间" />
         <Column Name="ThreadId" DataType="String" Description="线程" />

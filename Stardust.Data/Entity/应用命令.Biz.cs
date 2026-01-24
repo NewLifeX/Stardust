@@ -44,14 +44,14 @@ public partial class AppCommand : Entity<AppCommand>
     #endregion
 
     #region 扩展属性
-    /// <summary>应用</summary>
-    [XmlIgnore, IgnoreDataMember]
-    //[ScriptIgnore]
-    public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
+    ///// <summary>应用</summary>
+    //[XmlIgnore, IgnoreDataMember]
+    ////[ScriptIgnore]
+    //public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
 
-    /// <summary>应用</summary>
-    [Map(nameof(AppId), typeof(App), "Id")]
-    public String AppName => App?.Name;
+    ///// <summary>应用</summary>
+    //[Map(nameof(AppId), typeof(App), "Id")]
+    //public String AppName => App?.Name;
 
     #endregion
 

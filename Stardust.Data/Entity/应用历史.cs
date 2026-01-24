@@ -48,6 +48,14 @@ public partial class AppHistory
     [BindColumn("Client", "客户端。IP加进程", "")]
     public String Client { get => _Client; set { if (OnPropertyChanging("Client", value)) { _Client = value; OnPropertyChanged("Client"); } } }
 
+    private Int32 _NodeId;
+    /// <summary>节点。节点服务器</summary>
+    [DisplayName("节点")]
+    [Description("节点。节点服务器")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("NodeId", "节点。节点服务器", "")]
+    public Int32 NodeId { get => _NodeId; set { if (OnPropertyChanging("NodeId", value)) { _NodeId = value; OnPropertyChanged("NodeId"); } } }
+
     private String _Version;
     /// <summary>版本。客户端实例版本</summary>
     [DisplayName("版本")]
@@ -128,6 +136,7 @@ public partial class AppHistory
             "Id" => _Id,
             "AppId" => _AppId,
             "Client" => _Client,
+            "NodeId" => _NodeId,
             "Version" => _Version,
             "Action" => _Action,
             "Success" => _Success,
@@ -145,6 +154,7 @@ public partial class AppHistory
                 case "Id": _Id = value.ToLong(); break;
                 case "AppId": _AppId = value.ToInt(); break;
                 case "Client": _Client = Convert.ToString(value); break;
+                case "NodeId": _NodeId = value.ToInt(); break;
                 case "Version": _Version = Convert.ToString(value); break;
                 case "Action": _Action = Convert.ToString(value); break;
                 case "Success": _Success = value.ToBoolean(); break;
@@ -160,6 +170,22 @@ public partial class AppHistory
     #endregion
 
     #region 关联映射
+    /// <summary>应用</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Stardust.Data.App App => Extends.Get(nameof(App), k => Stardust.Data.App.FindById(AppId));
+
+    /// <summary>应用</summary>
+    [Map(nameof(AppId), typeof(Stardust.Data.App), "Id")]
+    public String AppName => App?.Name;
+
+    /// <summary>节点</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Stardust.Data.Nodes.Node Node => Extends.Get(nameof(Node), k => Stardust.Data.Nodes.Node.FindByID(NodeId));
+
+    /// <summary>节点</summary>
+    [Map(nameof(NodeId), typeof(Stardust.Data.Nodes.Node), "ID")]
+    public String NodeName => Node?.Name;
+
     #endregion
 
     #region 扩展查询
@@ -180,12 +206,13 @@ public partial class AppHistory
     /// <param name="client">客户端。IP加进程</param>
     /// <param name="action">操作</param>
     /// <param name="success">成功</param>
+    /// <param name="nodeId">节点。节点服务器</param>
     /// <param name="start">编号开始</param>
     /// <param name="end">编号结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<AppHistory> Search(Int32 appId, String client, String action, Boolean? success, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<AppHistory> Search(Int32 appId, String client, String action, Boolean? success, Int32 nodeId, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
@@ -193,6 +220,7 @@ public partial class AppHistory
         if (!client.IsNullOrEmpty()) exp &= _.Client == client;
         if (!action.IsNullOrEmpty()) exp &= _.Action == action;
         if (success != null) exp &= _.Success == success;
+        if (nodeId >= 0) exp &= _.NodeId == nodeId;
         exp &= _.Id.Between(start, end, Meta.Factory.Snow);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 
@@ -224,6 +252,9 @@ public partial class AppHistory
 
         /// <summary>客户端。IP加进程</summary>
         public static readonly Field Client = FindByName("Client");
+
+        /// <summary>节点。节点服务器</summary>
+        public static readonly Field NodeId = FindByName("NodeId");
 
         /// <summary>版本。客户端实例版本</summary>
         public static readonly Field Version = FindByName("Version");
@@ -263,6 +294,9 @@ public partial class AppHistory
 
         /// <summary>客户端。IP加进程</summary>
         public const String Client = "Client";
+
+        /// <summary>节点。节点服务器</summary>
+        public const String NodeId = "NodeId";
 
         /// <summary>版本。客户端实例版本</summary>
         public const String Version = "Version";

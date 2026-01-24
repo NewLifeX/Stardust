@@ -223,6 +223,14 @@ public partial class AppCommand
     #endregion
 
     #region 关联映射
+    /// <summary>应用</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Stardust.Data.App App => Extends.Get(nameof(App), k => Stardust.Data.App.FindById(AppId));
+
+    /// <summary>应用</summary>
+    [Map(nameof(AppId), typeof(Stardust.Data.App), "Id")]
+    public String AppName => App?.Name;
+
     #endregion
 
     #region 扩展查询

@@ -269,6 +269,22 @@ public partial class AppService
     #endregion
 
     #region 关联映射
+    /// <summary>应用</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Stardust.Data.App App => Extends.Get(nameof(App), k => Stardust.Data.App.FindById(AppId));
+
+    /// <summary>应用</summary>
+    [Map(nameof(AppId), typeof(Stardust.Data.App), "Id")]
+    public String AppName => App?.Name;
+
+    /// <summary>节点</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Stardust.Data.Nodes.Node Node => Extends.Get(nameof(Node), k => Stardust.Data.Nodes.Node.FindByID(NodeId));
+
+    /// <summary>节点</summary>
+    [Map(nameof(NodeId), typeof(Stardust.Data.Nodes.Node), "ID")]
+    public String NodeName => Node?.Name;
+
     #endregion
 
     #region 扩展查询
@@ -278,6 +294,7 @@ public partial class AppService
     /// <summary>高级查询</summary>
     /// <param name="appId">应用。提供服务的应用程序</param>
     /// <param name="serviceId">服务</param>
+    /// <param name="nodeId">节点。节点服务器</param>
     /// <param name="healthy">健康。无需健康监测，或监测后服务可用</param>
     /// <param name="enable">启用</param>
     /// <param name="start">更新时间开始</param>
@@ -285,12 +302,13 @@ public partial class AppService
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<AppService> Search(Int32 appId, Int32 serviceId, Boolean? healthy, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<AppService> Search(Int32 appId, Int32 serviceId, Int32 nodeId, Boolean? healthy, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (appId >= 0) exp &= _.AppId == appId;
         if (serviceId >= 0) exp &= _.ServiceId == serviceId;
+        if (nodeId >= 0) exp &= _.NodeId == nodeId;
         if (healthy != null) exp &= _.Healthy == healthy;
         if (enable != null) exp &= _.Enable == enable;
         exp &= _.UpdateTime.Between(start, end);

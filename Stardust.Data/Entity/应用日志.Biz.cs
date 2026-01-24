@@ -54,17 +54,17 @@ namespace Stardust.Data
         #endregion
 
         #region 扩展属性
-        /// <summary>应用</summary>
-        [XmlIgnore, IgnoreDataMember]
-        //[ScriptIgnore]
-        public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
+        ///// <summary>应用</summary>
+        //[XmlIgnore, IgnoreDataMember]
+        ////[ScriptIgnore]
+        //public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
 
-        /// <summary>应用</summary>
-        [XmlIgnore, IgnoreDataMember]
-        //[ScriptIgnore]
-        [DisplayName("应用")]
-        [Map(nameof(AppId), typeof(App), "ID")]
-        public String AppName => App?.Name;
+        ///// <summary>应用</summary>
+        //[XmlIgnore, IgnoreDataMember]
+        ////[ScriptIgnore]
+        //[DisplayName("应用")]
+        //[Map(nameof(AppId), typeof(App), "ID")]
+        //public String AppName => App?.Name;
         #endregion
 
         #region 扩展查询

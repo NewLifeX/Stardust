@@ -41,25 +41,25 @@ public partial class AppService : Entity<AppService>
     #endregion
 
     #region 扩展属性
-    /// <summary>应用</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-    public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
+    ///// <summary>应用</summary>
+    //[XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    //public App App => Extends.Get(nameof(App), k => App.FindById(AppId));
 
-    /// <summary>应用</summary>
-    [Map(__.AppId, typeof(App), "Id")]
-    public String AppName => App?.Name;
+    ///// <summary>应用</summary>
+    //[Map(__.AppId, typeof(App), "Id")]
+    //public String AppName => App?.Name;
 
     /// <summary>服务</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
     public Service Service => Extends.Get(nameof(Service), k => Service.FindById(ServiceId));
 
-    /// <summary>节点</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-    public Node Node => Extends.Get(nameof(Node), k => Node.FindByID(NodeId));
+    ///// <summary>节点</summary>
+    //[XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    //public Node Node => Extends.Get(nameof(Node), k => Node.FindByID(NodeId));
 
-    /// <summary>节点</summary>
-    [Map(__.NodeId)]
-    public String NodeName => Node?.Name;
+    ///// <summary>节点</summary>
+    //[Map(__.NodeId)]
+    //public String NodeName => Node?.Name;
     #endregion
 
     #region 扩展查询

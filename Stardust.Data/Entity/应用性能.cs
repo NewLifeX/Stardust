@@ -46,6 +46,14 @@ public partial class AppMeter
     [BindColumn("ClientId", "实例。应用可能多实例部署，ip@proccessid", "")]
     public String ClientId { get => _ClientId; set { if (OnPropertyChanging("ClientId", value)) { _ClientId = value; OnPropertyChanged("ClientId"); } } }
 
+    private Int32 _NodeId;
+    /// <summary>节点。节点服务器</summary>
+    [DisplayName("节点")]
+    [Description("节点。节点服务器")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("NodeId", "节点。节点服务器", "")]
+    public Int32 NodeId { get => _NodeId; set { if (OnPropertyChanging("NodeId", value)) { _NodeId = value; OnPropertyChanged("NodeId"); } } }
+
     private String _Source;
     /// <summary>来源。数据来源，应用心跳、监控数据上报携带、远程发布后由StarAgent上报</summary>
     [DisplayName("来源")]
@@ -205,6 +213,7 @@ public partial class AppMeter
             "Id" => _Id,
             "AppId" => _AppId,
             "ClientId" => _ClientId,
+            "NodeId" => _NodeId,
             "Source" => _Source,
             "Memory" => _Memory,
             "ProcessorTime" => _ProcessorTime,
@@ -232,6 +241,7 @@ public partial class AppMeter
                 case "Id": _Id = value.ToLong(); break;
                 case "AppId": _AppId = value.ToInt(); break;
                 case "ClientId": _ClientId = Convert.ToString(value); break;
+                case "NodeId": _NodeId = value.ToInt(); break;
                 case "Source": _Source = Convert.ToString(value); break;
                 case "Memory": _Memory = value.ToInt(); break;
                 case "ProcessorTime": _ProcessorTime = value.ToInt(); break;
@@ -257,6 +267,22 @@ public partial class AppMeter
     #endregion
 
     #region 关联映射
+    /// <summary>应用</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Stardust.Data.App App => Extends.Get(nameof(App), k => Stardust.Data.App.FindById(AppId));
+
+    /// <summary>应用</summary>
+    [Map(nameof(AppId), typeof(Stardust.Data.App), "Id")]
+    public String AppName => App?.Name;
+
+    /// <summary>节点</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Stardust.Data.Nodes.Node Node => Extends.Get(nameof(Node), k => Stardust.Data.Nodes.Node.FindByID(NodeId));
+
+    /// <summary>节点</summary>
+    [Map(nameof(NodeId), typeof(Stardust.Data.Nodes.Node), "ID")]
+    public String NodeName => Node?.Name;
+
     #endregion
 
     #region 扩展查询
@@ -266,17 +292,19 @@ public partial class AppMeter
     /// <summary>高级查询</summary>
     /// <param name="appId">应用</param>
     /// <param name="clientId">实例。应用可能多实例部署，ip@proccessid</param>
+    /// <param name="nodeId">节点。节点服务器</param>
     /// <param name="start">编号开始</param>
     /// <param name="end">编号结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<AppMeter> Search(Int32 appId, String clientId, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<AppMeter> Search(Int32 appId, String clientId, Int32 nodeId, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (appId >= 0) exp &= _.AppId == appId;
         if (!clientId.IsNullOrEmpty()) exp &= _.ClientId == clientId;
+        if (nodeId >= 0) exp &= _.NodeId == nodeId;
         exp &= _.Id.Between(start, end, Meta.Factory.Snow);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 
@@ -308,6 +336,9 @@ public partial class AppMeter
 
         /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
         public static readonly Field ClientId = FindByName("ClientId");
+
+        /// <summary>节点。节点服务器</summary>
+        public static readonly Field NodeId = FindByName("NodeId");
 
         /// <summary>来源。数据来源，应用心跳、监控数据上报携带、远程发布后由StarAgent上报</summary>
         public static readonly Field Source = FindByName("Source");
@@ -377,6 +408,9 @@ public partial class AppMeter
 
         /// <summary>实例。应用可能多实例部署，ip@proccessid</summary>
         public const String ClientId = "ClientId";
+
+        /// <summary>节点。节点服务器</summary>
+        public const String NodeId = "NodeId";
 
         /// <summary>来源。数据来源，应用心跳、监控数据上报携带、远程发布后由StarAgent上报</summary>
         public const String Source = "Source";

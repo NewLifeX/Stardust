@@ -147,6 +147,14 @@ public partial class AppClientLog
     #endregion
 
     #region 关联映射
+    /// <summary>应用</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Stardust.Data.App App => Extends.Get(nameof(App), k => Stardust.Data.App.FindById(AppId));
+
+    /// <summary>应用</summary>
+    [Map(nameof(AppId), typeof(Stardust.Data.App), "Id")]
+    public String AppName => App?.Name;
+
     #endregion
 
     #region 扩展查询
@@ -155,16 +163,18 @@ public partial class AppClientLog
     #region 高级查询
     /// <summary>高级查询</summary>
     /// <param name="threadId">线程</param>
+    /// <param name="appId">应用</param>
     /// <param name="start">编号开始</param>
     /// <param name="end">编号结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<AppClientLog> Search(String threadId, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<AppClientLog> Search(String threadId, Int32 appId, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (!threadId.IsNullOrEmpty()) exp &= _.ThreadId == threadId;
+        if (appId >= 0) exp &= _.AppId == appId;
         exp &= _.Id.Between(start, end, Meta.Factory.Snow);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 
