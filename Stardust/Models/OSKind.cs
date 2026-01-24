@@ -4,7 +4,7 @@
 public enum OSKind
 {
     /// <summary>未知或通用</summary>
-    Unknown = 0,
+    Any = 0,
 
     /// <summary>Windows系统</summary>
     Windows = 1,

@@ -4,7 +4,7 @@
 public enum CpuArch
 {
     /// <summary>未知或通用</summary>
-    Unknown = 0,
+    Any = 0,
 
     /// <summary>x86（32位）</summary>
     X86 = 1,

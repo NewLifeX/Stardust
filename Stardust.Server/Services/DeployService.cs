@@ -67,7 +67,7 @@ public class DeployService
             >= OSKinds.Alpine => OSKind.LinuxMusl,
             >= OSKinds.Linux or OSKinds.SmartOS => OSKind.Linux,
             >= OSKinds.Win10 => OSKind.Windows,
-            _ => OSKind.Unknown,
+            _ => OSKind.Any,
         };
 
         var arch = node.Architecture?.ToLower() switch
@@ -79,7 +79,7 @@ public class DeployService
             "loongarch64" => CpuArch.LA64,
             "riscv64" => CpuArch.RiscV64,
             "mips64" => CpuArch.Mips64,
-            _ => CpuArch.Unknown,
+            _ => CpuArch.Any,
         };
 
         return (os, arch);
@@ -89,13 +89,13 @@ public class DeployService
     private static Boolean MatchPlatform(OSKind verOS, CpuArch verArch, OSKind nodeOS, CpuArch nodeArch)
     {
         // 版本未指定平台，匹配所有
-        if (verOS == OSKind.Unknown && verArch == CpuArch.Unknown) return true;
+        if (verOS == OSKind.Any && verArch == CpuArch.Any) return true;
 
         // 操作系统匹配：版本未指定或与节点相同
-        if (verOS != OSKind.Unknown && verOS != nodeOS) return false;
+        if (verOS != OSKind.Any && verOS != nodeOS) return false;
 
         // 架构匹配：版本未指定或与节点相同
-        if (verArch != CpuArch.Unknown && verArch != nodeArch) return false;
+        if (verArch != CpuArch.Any && verArch != nodeArch) return false;
 
         return true;
     }
