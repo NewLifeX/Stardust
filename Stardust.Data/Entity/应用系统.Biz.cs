@@ -221,7 +221,7 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
     /// <summary>更新信息</summary>
     /// <param name="model"></param>
     /// <param name="ip"></param>
-    public static void WriteMeter(TraceModel model, String ip)
+    public static void WriteMeter(TraceModel model, String ip, Int32 nodeId)
     {
         // 修复数据
         var app = FindByName(model.AppId);
@@ -254,7 +254,7 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
             //}
             // 直接使用ClientId来唯一标识应用实例，用于应用性能数据存储
             var clientId = model.ClientId;
-            AppMeter.WriteData(app, model.Info, "Trace", clientId, ip);
+            AppMeter.WriteData(app, model.Info, "Trace", clientId, ip, nodeId);
         }
     }
 

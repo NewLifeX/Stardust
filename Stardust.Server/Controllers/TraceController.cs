@@ -164,11 +164,11 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
         //var ip = HttpContext.GetUserHost();
         if (clientId.IsNullOrEmpty()) clientId = ip;
 
-        // 收集应用性能信息
-        if (app.EnableMeter) App.WriteMeter(model, ip);
-
         // 更新心跳信息
         var online = appOnline.UpdateOnline(ap, clientId, ip, token, model.Info);
+
+        // 收集应用性能信息
+        if (app.EnableMeter) App.WriteMeter(model, ip, online?.NodeId ?? 0);
 
         // 检查应用有效性
         if (!app.Enable) throw new ArgumentOutOfRangeException(nameof(appId), $"应用[{appId}]已禁用！");

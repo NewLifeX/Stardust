@@ -56,6 +56,7 @@ public class AppHistoryController : RegistryEntityController<AppHistory>
         //PageSetting.EnableNavbar = false;
 
         var appId = p["appId"].ToInt(-1);
+        var nodeId = p["nodeId"].ToInt(-1);
         var client = p["client"];
         var action = p["action"];
         var success = p["success"]?.ToBoolean();
@@ -65,6 +66,6 @@ public class AppHistoryController : RegistryEntityController<AppHistory>
 
         //if (appId > 0 && start.Year < 2000) p["dtStart"] = (start = DateTime.Today).ToString("yyyy-MM-dd");
 
-        return AppHistory.Search(appId, client, action, success, start, end, p["Q"], p);
+        return AppHistory.Search(appId, client, action, success, nodeId, start, end, p["Q"], p);
     }
 }

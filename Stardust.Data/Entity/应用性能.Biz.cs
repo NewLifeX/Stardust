@@ -168,7 +168,7 @@ public partial class AppMeter : Entity<AppMeter>
     /// <param name="info"></param>
     /// <param name="clientId"></param>
     /// <param name="ip"></param>
-    public static void WriteData(App app, AppInfo info, String source, String clientId, String ip)
+    public static void WriteData(App app, AppInfo info, String source, String clientId, String ip, Int32 nodeId)
     {
         // 兼容旧版时间
         var dt = DateTime.Now;
@@ -179,6 +179,7 @@ public partial class AppMeter : Entity<AppMeter>
         {
             AppId = app.Id,
             ClientId = clientId,
+            NodeId = nodeId,
             Source = source,
 
             Memory = (Int32)(info.WorkingSet / 1024 / 1024),

@@ -124,7 +124,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
 
         if (Context.Device is App app)
         {
-            AppMeter.WriteData(app, inf, "Ping", Context.ClientId, Context.ClientId);
+            AppMeter.WriteData(app, inf, "Ping", Context.ClientId, Context.UserHost, online?.NodeId ?? 0);
 
             //rs.Period = app.Period;
 

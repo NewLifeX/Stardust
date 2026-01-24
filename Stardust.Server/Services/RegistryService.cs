@@ -40,24 +40,26 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
     }
 
     #region 登录注销
-    public override ILoginResponse Login(DeviceContext context, ILoginRequest request, String source)
-    {
-        var rs = base.Login(context, request, source);
+    //public override ILoginResponse Login(DeviceContext context, ILoginRequest request, String source)
+    //{
+    //    var rs = base.Login(context, request, source);
 
-        if (context.Online is AppOnline online && request is AppModel inf)
-        {
-            // 关联节点，根据NodeCode匹配，如果未匹配上，则在未曾关联节点时才使用IP匹配
-            var node = Node.FindByCode(inf.NodeCode);
-            if (node == null && online.NodeId == 0) node = Node.SearchByIP(inf.IP).FirstOrDefault();
-            if (node != null) online.NodeId = node.ID;
+    //    if (context.Online is AppOnline online && request is AppModel inf)
+    //    {
+    //        // 关联节点，根据NodeCode匹配，如果未匹配上，则在未曾关联节点时才使用IP匹配
+    //        var node = Node.FindByCode(inf.NodeCode);
+    //        if (node == null && online.NodeId == 0) node = Node.SearchByIP(inf.IP).FirstOrDefault();
+    //        if (node != null) online.NodeId = node.ID;
 
-            if (!inf.Version.IsNullOrEmpty()) online.Version = inf.Version;
-            var compile = inf.Compile.ToDateTime().ToLocalTime();
-            if (compile.Year > 2000) online.Compile = compile;
-        }
+    //        if (!inf.Version.IsNullOrEmpty()) online.Version = inf.Version;
+    //        var compile = inf.Compile.ToDateTime().ToLocalTime();
+    //        if (compile.Year > 2000) online.Compile = compile;
 
-        return rs;
-    }
+    //        online.Update();
+    //    }
+
+    //    return rs;
+    //}
 
     /// <summary>验证设备合法性</summary>
     public override Boolean Authorize(DeviceContext context, ILoginRequest request)
@@ -171,6 +173,20 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
         app.Update();
 
         context.Online = GetOnline(context) ?? CreateOnline(context);
+
+        if (context.Online is AppOnline online && request is AppModel inf)
+        {
+            // 关联节点，根据NodeCode匹配，如果未匹配上，则在未曾关联节点时才使用IP匹配
+            var node = Node.FindByCode(inf.NodeCode);
+            if (node == null && online.NodeId == 0) node = Node.SearchByIP(inf.IP).FirstOrDefault();
+            if (node != null) online.NodeId = node.ID;
+
+            if (!inf.Version.IsNullOrEmpty()) online.Version = inf.Version;
+            //var compile = inf.Compile.ToDateTime().ToLocalTime();
+            if (compile.Year > 2000) online.Compile = compile;
+
+            online.Update();
+        }
 
         // 登录历史
         WriteHistory(context, "应用鉴权", true, $"[{app.DisplayName}/{app.Name}]鉴权成功 " + model.ToJson(false, false, false));
@@ -543,10 +559,10 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
         return rs.ToArray();
     }
 
-    /// <summary>获取在线。先查缓存再查库</summary>
-    /// <param name="context">上下文</param>
-    /// <returns></returns>
-    public override IOnlineModel GetOnline(DeviceContext context) => base.GetOnline(context) as AppOnline;
+    ///// <summary>获取在线。先查缓存再查库</summary>
+    ///// <param name="context">上下文</param>
+    ///// <returns></returns>
+    //public override IOnlineModel GetOnline(DeviceContext context) => base.GetOnline(context) as AppOnline;
 
     /// <summary>设置设备的长连接上线/下线</summary>
     /// <param name="context">上下文</param>
@@ -739,6 +755,7 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
             var online = GetOnline(context) as AppOnline;
             history.Version = online?.Version;
             history.Client = online?.Client;
+            history.NodeId = online?.NodeId ?? 0;
 
             var time = model.Time.ToDateTime().ToLocalTime();
             if (time.Year > 2000) history.CreateTime = time;
@@ -762,6 +779,7 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
 
         var history = AppHistory.Create(app, action, success, remark, version, Environment.MachineName, ip);
         history.Client = clientId;
+        history.NodeId = online?.NodeId ?? 0;
         history.Insert();
     }
 
@@ -772,9 +790,11 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
     /// <param name="remark">备注内容</param>
     public override void WriteHistory(DeviceContext context, String action, Boolean success, String remark)
     {
-        var version = (context.Online as AppOnline)?.Version;
+        var online = context.Online as AppOnline;
+        var version = online?.Version;
         var history = AppHistory.Create(context.Device as App, action, success, remark, version, Environment.MachineName, context.UserHost);
         history.Client = context.ClientId;
+        history.NodeId = online?.NodeId ?? 0;
         history.Insert();
     }
     #endregion

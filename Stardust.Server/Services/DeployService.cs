@@ -239,7 +239,7 @@ public class DeployService
                 // 部署名绑定到别的应用，退出
                 if (deploy.AppId != 0 && deploy.AppId != online.AppId) return;
 
-                // 当顶当前应用
+                // 当前应用
                 deploy.AppId = online.AppId;
                 deploy.Update();
             }
@@ -320,7 +320,7 @@ public class DeployService
                 ClientId = clientId,
             };
             _registryService.OnPing(context, inf);
-            AppMeter.WriteData(ap, inf, "Deploy", clientId, ip);
+            AppMeter.WriteData(ap, inf, "Deploy", clientId, ip, node.ID);
         }
 
         // 部署集
