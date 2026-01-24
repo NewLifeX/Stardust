@@ -127,30 +127,48 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
         var fis = dir.GetFiles();
 
         var runfile = fis.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
+        
+        // 包名的后缀改为exe（仅 Windows）
         if (runfile == null && Runtime.Windows)
         {
-            // 包名的后缀改为exe
             var exeName = $"{name}.exe";
             runfile = fis.FirstOrDefault(e => e.Name.EqualIgnoreCase(exeName));
+        }
 
-            // 第一个参数可能就是exe
-            if (runfile == null && !arguments.IsNullOrEmpty())
+        // 第一个参数可能就是可执行文件（dll/jar/exe）
+        if (runfile == null && !arguments.IsNullOrEmpty())
+        {
+            var p = arguments.IndexOf(' ');
+            if (p > 0)
             {
-                var p = arguments.IndexOf(' ');
-                if (p > 0)
+                var first = arguments[..p];
+                // 提取文件名（去除可能的路径前缀）
+                var fileName = Path.GetFileName(first);
+                runfile = fis.FirstOrDefault(e => e.Name.EqualIgnoreCase(fileName));
+                if (runfile != null) 
                 {
-                    var first = arguments[..p];
-                    runfile = fis.FirstOrDefault(e => e.Name.EqualIgnoreCase(first));
-                    if (runfile != null) arguments = arguments[(p + 1)..];
+                    // 找到文件后，移除参数中的文件名
+                    arguments = arguments[(p + 1)..].TrimStart();
                 }
             }
-
-            // 如果当前目录有唯一exe文件，选择它
-            if (runfile == null)
+            else
             {
-                var exes = fis.Where(e => e.Extension.EqualIgnoreCase(".exe")).ToList();
-                if (exes.Count == 1) runfile = exes[0];
+                // 参数中只有一个词，可能就是文件名本身
+                var fileName = Path.GetFileName(arguments);
+                runfile = fis.FirstOrDefault(e => e.Name.EqualIgnoreCase(fileName));
+                if (runfile != null)
+                {
+                    // 移除参数中的文件名
+                    arguments = null;
+                }
             }
+        }
+
+        // 如果当前目录有唯一exe文件，选择它（仅 Windows）
+        if (runfile == null && Runtime.Windows)
+        {
+            var exes = fis.Where(e => e.Extension.EqualIgnoreCase(".exe")).ToList();
+            if (exes.Count == 1) runfile = exes[0];
         }
 
         // 跟配置文件配套的dll
@@ -179,7 +197,7 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
             runfile = fis.FirstOrDefault(e => e.Name.EqualIgnoreCase(jarName));
         }
 
-        if (runfile != null) span?.AppendTag($"runfile: {runfile.FullName}");
+        if (runfile != null) span?.AppendTag($"runfile: {runfile.FullName}, args: {arguments}");
 
         return runfile;
     }
@@ -225,12 +243,12 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
         if (runFile.Extension.EqualIgnoreCase(".dll"))
         {
             si.FileName = "dotnet";
-            si.Arguments = $"{runFile.FullName} {arguments}";
+            si.Arguments = arguments.IsNullOrEmpty() ? runFile.FullName : $"{runFile.FullName} {arguments}";
         }
         else if (runFile.Extension.EqualIgnoreCase(".jar"))
         {
             si.FileName = "java";
-            si.Arguments = $"-jar {runFile.FullName} {arguments}";
+            si.Arguments = arguments.IsNullOrEmpty() ? $"-jar {runFile.FullName}" : $"-jar {runFile.FullName} {arguments}";
         }
         else if (Runtime.Linux)
         {

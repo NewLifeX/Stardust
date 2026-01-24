@@ -25,35 +25,45 @@ public class ShadowDeployStrategy : DeployStrategyBase
     {
         using var span = Tracer?.NewSpan("Deploy-Extract", new { context.Name, context.ZipFile, context.WorkingDirectory });
 
-        var fi = RetrieveZip(context);
-        if (fi == null) return false;
-
-        // 计算哈希，构建影子目录
         var workDir = context.WorkingDirectory;
-        var hash = fi.MD5().ToHex()[..8].ToLower();
-        var shadow = CreateShadow(workDir, $"{context.Name}-{hash}");
-
-        context.Shadow = shadow;
-        context.WriteLog("影子模式，解压到影子目录：{0}", shadow);
-
-        var sdi = shadow.AsDirectory();
-        if (sdi == null || !sdi.Exists)
+        var fi = RetrieveZip(context);
+        if (fi != null)
         {
-            // 删除其它版本的影子目录
-            CleanOldShadows(workDir, context.Name, context.Log);
+            // 计算哈希，构建影子目录
+            var hash = fi.MD5().ToHex()[..8].ToLower();
+            var shadow = CreateShadow(workDir, $"{context.Name}-{hash}");
 
-            // 解压到影子目录
-            ExtractZip(fi.FullName, shadow, context.Deploy, context.Log);
+            context.Shadow = shadow;
+            context.WriteLog("影子模式，解压到影子目录：{0}", shadow);
 
-            // 拷贝配置文件到工作目录（如果不存在）
-            CopyConfigToWorkDir(shadow, workDir, context.Log);
+            var sdi = shadow.AsDirectory();
+            if (sdi == null || !sdi.Exists)
+            {
+                // 删除其它版本的影子目录
+                CleanOldShadows(workDir, context.Name, context.Log);
+
+                // 解压到影子目录
+                ExtractZip(fi.FullName, shadow, context.Deploy, context.Log);
+
+                // 拷贝配置文件到工作目录（如果不存在）
+                CopyConfigToWorkDir(shadow, workDir, context.Log);
+            }
+
+            // 查找可执行文件（在影子目录中）
+            if (!RetrieveExeFile(context, shadow))
+            {
+                DeleteShadow(shadow, context.Log);
+                return false;
+            }
         }
-
-        // 查找可执行文件（在影子目录中）
-        if (!RetrieveExeFile(context, shadow))
+        else
         {
-            DeleteShadow(shadow, context.Log);
-            return false;
+            // 没有 zip 包时，假设文件已经存在于工作目录中
+            context.WriteLog("影子模式降级为标准模式，无需解压，直接使用工作目录：{0}", workDir);
+
+            // 查找可执行文件（在工作目录中）
+            if (!RetrieveExeFile(context, workDir))
+                return false;
         }
 
         return true;
