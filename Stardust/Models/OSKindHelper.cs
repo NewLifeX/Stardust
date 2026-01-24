@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using NewLife;
+﻿using NewLife;
 
 namespace Stardust.Models;
 
@@ -38,6 +37,15 @@ public static class OSKindHelper
 
         osVersion += "";
 
+        // XP 系列统一归类（含 SP3）
+        if (osName.StartsWithIgnoreCase("Windows XP")) return OSKinds.WinXP;
+        if (osName.StartsWithIgnoreCase("Windows Server 2003")) return OSKinds.WinXP;
+
+        // Win8/Win8.1/Vista 统一归类为 Win7（失败版本，用户量极少）
+        if (osName.StartsWithIgnoreCase("Windows 8")) return OSKinds.Win7;
+        if (osName.StartsWithIgnoreCase("Windows 7")) return OSKinds.Win7;
+        if (osName.StartsWithIgnoreCase("Windows Vista")) return OSKinds.Win7;
+
         // 优先识别新系统
         if (osName.StartsWithIgnoreCase("Windows 11")) return OSKinds.Win11;
         if (osName.StartsWithIgnoreCase("Windows 10")) return OSKinds.Win10;
@@ -46,24 +54,15 @@ public static class OSKindHelper
         if (osName.StartsWithIgnoreCase("Windows Server 2019")) return OSKinds.Win2019;
         if (osName.StartsWithIgnoreCase("Windows Server 2016")) return OSKinds.Win2016;
         if (osName.StartsWithIgnoreCase("Windows Server 2012")) return OSKinds.Win2012;
-
-        if (osName.StartsWithIgnoreCase("Windows 8.1")) return OSKinds.Win81;
-        if (osName.StartsWithIgnoreCase("Windows 8")) return OSKinds.Win8;
-
-        if (osName.StartsWithIgnoreCase("Windows 7")) return osVersion.Contains("7601") ? OSKinds.Win71 : OSKinds.Win7;
-
-        if (osName.StartsWithIgnoreCase("Windows Vista")) return OSKinds.WinVista;
-
         if (osName.StartsWithIgnoreCase("Windows Server 2008")) return OSKinds.Win2008;
-        if (osName.StartsWithIgnoreCase("Windows Server 2003")) return OSKinds.Win2003;
+        // 旧服务器版本统一归类为 WinServer
+        if (osName.StartsWithIgnoreCase("Windows Server")) return OSKinds.WinServer;
 
-        if (osName.StartsWithIgnoreCase("Windows XP")) return osName.Contains("SP3") ? OSKinds.WinXP3 : OSKinds.WinXP;
-
-        // 根据版本识别
+        // 根据版本号识别
         var str = osVersion.Length < 3 ? osVersion : osVersion.Substring(0, 3);
         if (osName.Contains("Server"))
         {
-            if (str.StartsWith("5.")) return OSKinds.Win2003;
+            if (str.StartsWith("5.")) return OSKinds.WinXP;
             if (str.StartsWith("6.")) return OSKinds.Win2008;
 
             return OSKinds.WinServer;
@@ -72,12 +71,8 @@ public static class OSKindHelper
         return str switch
         {
             "10." => OSKinds.Win10,
-            "6.3" => OSKinds.Win81,
-            "6.23" => OSKinds.Win8,
-            "6.1" => OSKinds.Win7,
-            "6.0" => OSKinds.WinVista,
-            "5.2" => OSKinds.Win2003,
-            "5.1" => OSKinds.WinXP,
+            "6.3" or "6.2" or "6.1" or "6.0" => OSKinds.Win7,  // Vista/Win7/Win8 系列
+            "5.2" or "5.1" => OSKinds.WinXP,
             _ => 0,
         };
     }
@@ -90,45 +85,41 @@ public static class OSKindHelper
     {
         //if (!osName.Contains("Linux")) return 0;
 
-        // 优先识别新系统
+        // 优先识别特殊系统
         if (osName.StartsWithIgnoreCase("Alpine") || osName.EndsWithIgnoreCase("(Alpine)")) return OSKinds.Alpine;
         if (osName.StartsWithIgnoreCase("Arch")) return OSKinds.ArchLinux;
 
+        // Debian 系
         if (osName.StartsWithIgnoreCase("Ubuntu")) return OSKinds.Ubuntu;
         if (osName.StartsWithIgnoreCase("Debian")) return OSKinds.Debian;
         if (osName.Contains("Armbian")) return OSKinds.Armbian;
         if (osName.StartsWithIgnoreCase("Raspbian")) return OSKinds.Raspbian;
 
+        // RedHat 系
         if (osName.StartsWithIgnoreCase("Red Hat")) return OSKinds.RedHat;
         if (osName.StartsWithIgnoreCase("CentOS")) return OSKinds.CentOS;
         if (osName.StartsWithIgnoreCase("Fedora")) return OSKinds.Fedora;
         if (osName.StartsWithIgnoreCase("AlmaLinux")) return OSKinds.Alma;
-        if (osName.StartsWithIgnoreCase("SUSE")) return OSKinds.SUSE;
-        if (osName.StartsWithIgnoreCase("openSUSE")) return OSKinds.OpenSUSE;
-        if (osName.Contains("SUSE")) return OSKinds.SUSE;
         if (osName.StartsWithIgnoreCase("Rocky")) return OSKinds.Rocky;
+        // SUSE 系归类为 RedHat（RPM 包管理）
+        if (osName.Contains("SUSE")) return OSKinds.RedHat;
 
+        // 国产主流（DEB 系）
         if (osName.StartsWithIgnoreCase("Deepin")) return OSKinds.Deepin;
         if (osName.StartsWithIgnoreCase("UOS", "UnionTech OS")) return OSKinds.UOS;
-        if (osName.StartsWithIgnoreCase("Kylin")) return OSKinds.Kylin;
-        if (osName.StartsWithIgnoreCase("OpenKylin")) return OSKinds.OpenKylin;
-        if (osName.StartsWithIgnoreCase("Loongnix")) return OSKinds.Loongnix;
-        if (osName.StartsWithIgnoreCase("Red Flag")) return OSKinds.RedFlag;
-        if (osName.StartsWithIgnoreCase("StartOS")) return OSKinds.StartOS;
+        if (osName.StartsWithIgnoreCase("Kylin", "OpenKylin")) return OSKinds.Kylin;
+        // 冷门 DEB 系归类为 Debian
+        if (osName.StartsWithIgnoreCase("Loongnix", "Red Flag", "StartOS")) return OSKinds.Debian;
 
+        // 国产主流（RPM 系）
         if (osName.StartsWithIgnoreCase("Alibaba")) return OSKinds.AlibabaLinux;
-        if (osName.StartsWithIgnoreCase("NeoKylin")) return OSKinds.NeoKylin;
         if (osName.StartsWithIgnoreCase("Anolis")) return OSKinds.Anolis;
-        if (osName.StartsWithIgnoreCase("Linx")) return OSKinds.Linx;
-        if (osName.StartsWithIgnoreCase("openEuler")) return OSKinds.OpenEuler;
-        if (osName.Contains("EulerOS")) return OSKinds.EulerOS;
-        if (osName.StartsWithIgnoreCase("KylinSec")) return OSKinds.KylinSec;
-        if (osName.StartsWithIgnoreCase("PuhuaOS")) return OSKinds.PuhuaOS;
-        if (osName.StartsWithIgnoreCase("FangdeOS")) return OSKinds.FangdeOS;
-        if (osName.StartsWithIgnoreCase("NewStartOS")) return OSKinds.NewStartOS;
-        if (osName.StartsWithIgnoreCase("TencentOS")) return OSKinds.TencentOS;
-        if (osName.StartsWithIgnoreCase("OpenCloudOS")) return OSKinds.OpenCloudOS;
+        if (osName.StartsWithIgnoreCase("openEuler") || osName.Contains("EulerOS")) return OSKinds.OpenEuler;
+        if (osName.StartsWithIgnoreCase("TencentOS", "OpenCloudOS")) return OSKinds.TencentOS;
+        // 冷门 RPM 系归类为 CentOS
+        if (osName.StartsWithIgnoreCase("NeoKylin", "Linx", "KylinSec", "PuhuaOS", "FangdeOS", "NewStartOS")) return OSKinds.CentOS;
 
+        // 嵌入式/路由器系统
         if (osName.Contains("OpenWrt")) return OSKinds.OpenWrt;
         if (osName.Contains("Buildroot")) return OSKinds.Buildroot;
         if (osName.Contains("Arch")) return OSKinds.ArchLinux;

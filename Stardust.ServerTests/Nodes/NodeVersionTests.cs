@@ -118,7 +118,8 @@ public class NodeVersionTests
         var rs = nv.Match(new Node { OSKind = OSKinds.Win7 });
         Assert.True(rs);
 
-        rs = nv.Match(new Node { OSKind = OSKinds.Win71 });
+        // Win10 不在匹配列表中，应返回 False
+        rs = nv.Match(new Node { OSKind = OSKinds.Win10 });
         Assert.False(rs);
     }
 }

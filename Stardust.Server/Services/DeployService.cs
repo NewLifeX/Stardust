@@ -63,6 +63,7 @@ public class DeployService
     {
         var os = node.OSKind switch
         {
+            >= OSKinds.Android => OSKind.Android,
             >= OSKinds.MacOSX => OSKind.OSX,
             >= OSKinds.Alpine => OSKind.LinuxMusl,
             >= OSKinds.Linux or OSKinds.SmartOS => OSKind.Linux,
