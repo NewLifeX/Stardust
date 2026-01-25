@@ -1,5 +1,6 @@
 ﻿using NewLife.Remoting;
 using NewLife.Remoting.Extensions.Services;
+using NewLife.Web;
 using Stardust.Data;
 using Xunit;
 
@@ -54,7 +55,7 @@ public class AppServiceTests
         Assert.Equal(3, model.AccessToken.Split('.').Length);
         Assert.Equal(3, model.RefreshToken.Split('.').Length);
         Assert.Equal(set.TokenExpire, model.ExpireIn);
-        Assert.Equal("JWT", model.TokenType);
+        Assert.Equal("JWT", (model as TokenModel)?.TokenType);
     }
 
     [Fact]

@@ -15,7 +15,7 @@ namespace Stardust.Server.Controllers;
 public class OAuthController(ITokenService tokenService, AppTokenService appTokenService, AppOnlineService appOnline, StarServerSetting setting) : ControllerBase
 {
     [ApiFilter]
-    public TokenModel Token([FromBody] TokenInModel model)
+    public IToken Token([FromBody] TokenInModel model)
     {
         if (model.grant_type.IsNullOrEmpty()) model.grant_type = "password";
 

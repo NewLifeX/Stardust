@@ -99,10 +99,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Remoting" Version="3.7.2026.112-beta0604" />
+    <PackageReference Include="NewLife.Remoting" Version="3.7.2026.125-beta0150" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="11.10.2026.124-beta1112" />
+    <PackageReference Include="NewLife.Core" Version="11.10.2026.124-beta1535" />
   </ItemGroup>
 
 </Project>
