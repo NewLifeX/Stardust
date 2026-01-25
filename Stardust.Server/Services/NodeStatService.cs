@@ -1,4 +1,5 @@
 ﻿using NewLife;
+using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Data.Nodes;
@@ -9,11 +10,9 @@ using static Stardust.Data.Nodes.Node;
 
 namespace Stardust.Server.Services;
 
-public class NodeStatService : IHostedService
+public class NodeStatService(ICacheProvider cacheProvider, ITracer tracer) : IHostedService
 {
-    private readonly ITracer _tracer;
     private TimerX _timer;
-    public NodeStatService(ITracer tracer) => _tracer = tracer;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -34,7 +33,10 @@ public class NodeStatService : IHostedService
         // 无在线则不执行
         //if (_onlines == 0) return;
 
-        using var span = _tracer?.NewSpan("NodeStat");
+        // 多节点执行时，避免重复计算
+        if (!cacheProvider.Cache.Add($"NodeStatService:{DateTime.Now:yyyyMMddHH}", 1, 60)) return;
+
+        using var span = tracer?.NewSpan("NodeStat");
 
         // 减少Sql日志
         var dal = NodeStat.Meta.Session.Dal;

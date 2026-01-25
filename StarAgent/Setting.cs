@@ -16,7 +16,7 @@ public class StarAgentSetting : Config<StarAgentSetting>, IClientSetting
 
     /// <summary>证书</summary>
     [Description("证书")]
-    public String? Code { get; set; }
+    public String Code { get; set; } = null!;
 
     /// <summary>密钥</summary>
     [Description("密钥")]
