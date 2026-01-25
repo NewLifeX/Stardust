@@ -62,12 +62,13 @@ public class TraceController : ControllerBaseX
         //var cats = new List<String> { "App", "http", "db", "redis" };
         var nodes = new List<GraphNode>();
         var links = new Dictionary<String, GraphLink>();
+        var traceDatas = new Dictionary<Int64, TraceData>();
         foreach (var item in list)
         {
             var cat = "App";
             var name = item.AppName;
             var ti = item.TraceItem;
-            if (appids.Contains(item.AppId) && ti != null && ti.Kind.EqualIgnoreCase("http", "db", "redis", "mq", "mqtt", "modbus", "biz", "other"))
+            if (appids.Contains(item.AppId) && ti != null && ti.Kind.EqualIgnoreCase("api", "http", "rps", "rpc", "db", "redis", "mq", "event", "mqtt", "modbus", "biz", "other"))
             {
                 cat = ti.Kind;
                 name = ti.DisplayName ?? ti.Name;
@@ -101,6 +102,16 @@ public class TraceController : ControllerBaseX
             if (!appids.Contains(item.AppId)) appids.Add(item.AppId);
 
             name ??= item.AppName;
+
+            // 关联TraceData，获取NodeName等信息
+            if (!traceDatas.TryGetValue(item.DataId, out var td))
+            {
+                td = TraceData.FindById(item.DataId);
+                traceDatas.Add(item.DataId, td);
+            }
+            if (td != null && !td.NodeName.IsNullOrEmpty())
+                name = name + "@" + td.NodeName;
+
             item["node_name"] = name;
 
             // 分类
@@ -168,10 +179,10 @@ public class TraceController : ControllerBaseX
             cat.Symbol = item switch
             {
                 "App" => "image:///icons/app.svg",
-                "http" => "image:///icons/http.svg",
+                "http" or "api" or "rps" or "rpc" => "image:///icons/http.svg",
                 "db" => "image:///icons/db.svg",
                 "redis" => "image:///icons/redis.svg",
-                "mq" => "image:///icons/mq.svg",
+                "mq" or "event" => "image:///icons/mq.svg",
                 "mqtt" => "image:///icons/mqtt.svg",
                 "modbus" => "image:///icons/modbus.svg",
                 _ => "circle",
