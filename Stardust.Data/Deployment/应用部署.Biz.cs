@@ -242,7 +242,7 @@ public partial class AppDeploy : Entity<AppDeploy>
             if (item.Enable && !rs.Any(e => e.Id == item.ResourceId) && item.Resource != null)
                 rs.Add(item.Resource);
         }
-        var list = AppResource.FindAllWithCache().Where(e => e.Enable && (e.ProjectId == 0 || e.ProjectId == ProjectId)).ToList();
+        var list = AppResource.FindAllWithCache().Where(e => e.Enable && (/*e.ProjectId == 0 ||*/ e.ProjectId == ProjectId)).ToList();
         foreach (var item in list)
         {
             if (item.Enable && !rs.Any(e => e.Id == item.Id))
