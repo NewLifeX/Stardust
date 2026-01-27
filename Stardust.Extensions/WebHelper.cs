@@ -25,11 +25,17 @@ static class WebHelper
         catch (Exception ex)
         {
             DefaultSpan.Current?.AppendTag($"GetRawUrl：{url} 失败：{ex.Message}");
-            uri = new UriInfo("")
+            var port = request.Scheme switch
+            {
+                "https" => 443,
+                "http" => 80,
+                _ => 0
+            };
+            uri = new UriInfo
             {
                 Scheme = request.Scheme,
                 Host = request.Host.Host,
-                Port = request.Host.Port ?? (request.Scheme == "https" ? 443 : 80),
+                Port = request.Host.Port ?? port,
                 AbsolutePath = request.PathBase + request.Path,
                 Query = request.QueryString.ToUriComponent()
             };

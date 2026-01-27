@@ -64,6 +64,8 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         this.RegisterCommand("node/reboot", Reboot);
         this.RegisterCommand("node/setchannel", SetChannel);
         this.RegisterCommand("node/synctime", SyncTime);
+        this.RegisterCommand("bash", RunBash);
+        this.RegisterCommand("cmd", RunCmd);
 
         base.Open();
     }
@@ -369,6 +371,126 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         public Int16 Minute;
         public Int16 Second;
         public Int16 Milliseconds;
+    }
+
+    /// <summary>执行Bash命令</summary>
+    /// <param name="argument">命令参数。可以是纯字符串命令，或JSON格式{"cmd":"命令","timeout":超时毫秒}</param>
+    /// <returns></returns>
+    public String? RunBash(String? argument)
+    {
+        if (argument.IsNullOrEmpty()) return "参数为空";
+
+        var cmd = argument;
+        var timeout = 30_000;
+
+        // 尝试解析JSON格式参数
+        if (argument.StartsWith("{"))
+        {
+            try
+            {
+                var dic = JsonParser.Decode(argument);
+                if (dic != null)
+                {
+                    cmd = dic["cmd"] + "";
+                    if (dic.ContainsKey("timeout")) timeout = dic["timeout"].ToInt();
+                }
+            }
+            catch
+            {
+                // 解析失败则当作普通命令处理
+            }
+        }
+
+        if (cmd.IsNullOrEmpty()) return "命令为空";
+
+        // 审计日志：记录命令执行前的信息
+        var now = DateTime.Now;
+        WriteLog("执行Bash命令：{0}，超时：{1}ms", cmd, timeout);
+        WriteEvent("warn", "RunBash", $"执行命令：{cmd}，超时：{timeout}ms，时间：{now:yyyy-MM-dd HH:mm:ss}");
+
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            var rs = "bash".Execute($"-c \"{cmd.Replace("\"", "\\\"")}\"", timeout);
+            sw.Stop();
+
+            // 审计日志：记录成功执行的详细信息（输出过长时截断）
+            var resultPreview = rs?.Length > 1000 ? rs.Substring(0, 1000) + "..." : rs;
+            WriteLog("执行成功，耗时：{0}ms，输出长度：{1}", sw.ElapsedMilliseconds, rs?.Length ?? 0);
+            WriteEvent("info", "RunBash", $"执行成功，命令：{cmd}，耗时：{sw.ElapsedMilliseconds}ms，输出长度：{rs?.Length ?? 0}");
+
+            return rs;
+        }
+        catch (Exception ex)
+        {
+            sw.Stop();
+
+            // 审计日志：记录失败信息
+            WriteLog("执行失败：{0}，耗时：{1}ms", ex.Message, sw.ElapsedMilliseconds);
+            WriteEvent("error", "RunBash", $"执行失败，命令：{cmd}，耗时：{sw.ElapsedMilliseconds}ms，错误：{ex.Message}");
+
+            return $"执行失败：{ex.Message}";
+        }
+    }
+
+    /// <summary>执行CMD命令</summary>
+    /// <param name="argument">命令参数。可以是纯字符串命令，或JSON格式{"cmd":"命令","timeout":超时毫秒}</param>
+    /// <returns></returns>
+    public String? RunCmd(String? argument)
+    {
+        if (argument.IsNullOrEmpty()) return "参数为空";
+
+        var cmd = argument;
+        var timeout = 30_000;
+
+        // 尝试解析JSON格式参数
+        if (argument.StartsWith("{"))
+        {
+            try
+            {
+                var dic = JsonParser.Decode(argument);
+                if (dic != null)
+                {
+                    cmd = dic["cmd"] + "";
+                    if (dic.ContainsKey("timeout")) timeout = dic["timeout"].ToInt();
+                }
+            }
+            catch
+            {
+                // 解析失败则当作普通命令处理
+            }
+        }
+
+        if (cmd.IsNullOrEmpty()) return "命令为空";
+
+        // 审计日志：记录命令执行前的信息
+        var now = DateTime.Now;
+        WriteLog("执行CMD命令：{0}，超时：{1}ms", cmd, timeout);
+        WriteEvent("warn", "RunCmd", $"执行命令：{cmd}，超时：{timeout}ms，时间：{now:yyyy-MM-dd HH:mm:ss}");
+
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            var rs = "cmd".Execute($"/c {cmd}", timeout);
+            sw.Stop();
+
+            // 审计日志：记录成功执行的详细信息（输出过长时截断）
+            var resultPreview = rs?.Length > 1000 ? rs.Substring(0, 1000) + "..." : rs;
+            WriteLog("执行成功，耗时：{0}ms，输出长度：{1}", sw.ElapsedMilliseconds, rs?.Length ?? 0);
+            WriteEvent("info", "RunCmd", $"执行成功，命令：{cmd}，耗时：{sw.ElapsedMilliseconds}ms，输出长度：{rs?.Length ?? 0}");
+
+            return rs;
+        }
+        catch (Exception ex)
+        {
+            sw.Stop();
+
+            // 审计日志：记录失败信息
+            WriteLog("执行失败：{0}，耗时：{1}ms", ex.Message, sw.ElapsedMilliseconds);
+            WriteEvent("error", "RunCmd", $"执行失败，命令：{cmd}，耗时：{sw.ElapsedMilliseconds}ms，错误：{ex.Message}");
+
+            return $"执行失败：{ex.Message}";
+        }
     }
     #endregion
 }
