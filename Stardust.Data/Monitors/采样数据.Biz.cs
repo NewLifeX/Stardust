@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -30,8 +30,8 @@ public partial class SampleData : Entity<SampleData>
         //var df = Meta.Factory.AdditionalFields;
         //df.Add(nameof(DataId));
 
-        // 过滤器 UserModule、TimeModule、IPModule
-        Meta.Modules.Add<TimeModule>();
+        // 过滤器 UserInterceptor、TimeInterceptor、IPInterceptor
+        Meta.Interceptors.Add<TimeInterceptor>();
 
         // 针对Mysql启用压缩表
         var table = Meta.Table.DataTable;

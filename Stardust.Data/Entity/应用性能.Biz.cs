@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -26,9 +26,9 @@ public partial class AppMeter : Entity<AppMeter>
         //var df = Meta.Factory.AdditionalFields;
         //df.Add(nameof(AppId));
 
-        // 过滤器 UserModule、TimeModule、IPModule
-        Meta.Modules.Add<TimeModule>();
-        Meta.Modules.Add<IPModule>();
+        // 过滤器 UserInterceptor、TimeInterceptor、IPInterceptor
+        Meta.Interceptors.Add<TimeInterceptor>();
+        Meta.Interceptors.Add<IPInterceptor>();
 
         // 针对Mysql启用压缩表
         var table = Meta.Table.DataTable;

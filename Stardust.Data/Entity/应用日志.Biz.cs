@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -28,9 +28,9 @@ namespace Stardust.Data
             //var df = Meta.Factory.AdditionalFields;
             //df.Add(nameof(AppId));
 
-            // 过滤器 UserModule、TimeModule、IPModule
-            Meta.Modules.Add<TimeModule>();
-            Meta.Modules.Add<IPModule>();
+            // 过滤器 UserInterceptor、TimeInterceptor、IPInterceptor
+            Meta.Interceptors.Add<TimeInterceptor>();
+            Meta.Interceptors.Add<IPInterceptor>();
 
             //// 分表分库
             //Meta.ShardConnName = e => $"AppLog_{e.CreateTime:yyyyMM}";

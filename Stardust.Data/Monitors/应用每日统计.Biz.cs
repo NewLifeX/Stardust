@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
@@ -27,8 +27,8 @@ public partial class AppDayStat : Entity<AppDayStat>
         df.Add(nameof(Redis));
         df.Add(nameof(Others));
 
-        // 过滤器 UserModule、TimeModule、IPModule
-        Meta.Modules.Add<TimeModule>();
+        // 过滤器 UserInterceptor、TimeInterceptor、IPInterceptor
+        Meta.Interceptors.Add<TimeInterceptor>();
     }
 
     /// <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -25,8 +25,8 @@ public partial class TraceDayStat : Entity<TraceDayStat>
         df.Add(nameof(Errors));
         df.Add(nameof(TotalCost));
 
-        // 过滤器 UserModule、TimeModule、IPModule
-        Meta.Modules.Add<TimeModule>();
+        // 过滤器 UserInterceptor、TimeInterceptor、IPInterceptor
+        Meta.Interceptors.Add<TimeInterceptor>();
     }
 
     /// <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>

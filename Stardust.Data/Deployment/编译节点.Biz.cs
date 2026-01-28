@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -36,11 +36,11 @@ public partial class AppBuildNode : Entity<AppBuildNode>
         //var df = Meta.Factory.AdditionalFields;
         //df.Add(nameof(DeployId));
 
-        // 过滤器 UserModule、TimeModule、IPModule
-        Meta.Modules.Add(new UserModule { AllowEmpty = false });
-        Meta.Modules.Add<TimeModule>();
-        Meta.Modules.Add(new IPModule { AllowEmpty = false });
-        Meta.Modules.Add<TraceModule>();
+        // 过滤器 UserInterceptor、TimeInterceptor、IPInterceptor
+        Meta.Interceptors.Add(new UserInterceptor { AllowEmpty = false });
+        Meta.Interceptors.Add<TimeInterceptor>();
+        Meta.Interceptors.Add(new IPInterceptor { AllowEmpty = false });
+        Meta.Interceptors.Add<TraceInterceptor>();
 
         // 实体缓存
         // var ec = Meta.Cache;

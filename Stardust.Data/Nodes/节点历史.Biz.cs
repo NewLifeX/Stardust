@@ -1,4 +1,4 @@
-﻿using NewLife;
+using NewLife;
 using NewLife.Data;
 using NewLife.Log;
 using System;
@@ -19,8 +19,8 @@ public partial class NodeHistory : Entity<NodeHistory>
     {
         Meta.Table.DataTable.InsertOnly = true;
 
-        Meta.Modules.Add<TimeModule>();
-        Meta.Modules.Add<IPModule>();
+        Meta.Interceptors.Add<TimeInterceptor>();
+        Meta.Interceptors.Add<IPInterceptor>();
 
         // 针对Mysql启用压缩表
         var table = Meta.Table.DataTable;
