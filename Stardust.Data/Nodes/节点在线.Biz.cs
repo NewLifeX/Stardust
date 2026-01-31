@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -250,7 +250,7 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
 
         if (inf.AvailableMemory > 0) online.AvailableMemory = (Int32)(inf.AvailableMemory / 1024 / 1024);
         if (inf.FreeMemory > 0) online.FreeMemory = (Int32)(inf.FreeMemory / 1024 / 1024);
-        MemoryUsed = online.Memory - online.FreeMemory > 0 ? online.FreeMemory : online.AvailableMemory;
+        MemoryUsed = online.Memory - (online.FreeMemory > 0 ? online.FreeMemory : online.AvailableMemory);
         if (inf.AvailableFreeSpace > 0) online.AvailableFreeSpace = (Int32)(inf.AvailableFreeSpace / 1024 / 1024);
         if (!online.DriveInfo.IsNullOrEmpty()) online.DriveInfo = online.DriveInfo;
     }
@@ -263,7 +263,7 @@ public partial class NodeOnline : Entity<NodeOnline>, IOnlineModel2
 
         if (inf.AvailableMemory > 0) online.AvailableMemory = (Int32)(inf.AvailableMemory / 1024 / 1024);
         if (inf.FreeMemory > 0) online.FreeMemory = (Int32)(inf.FreeMemory / 1024 / 1024);
-        MemoryUsed = online.Memory - online.FreeMemory > 0 ? online.FreeMemory : online.AvailableMemory;
+        MemoryUsed = online.Memory - (online.FreeMemory > 0 ? online.FreeMemory : online.AvailableMemory);
         if (inf.AvailableFreeSpace > 0) online.AvailableFreeSpace = (Int32)(inf.AvailableFreeSpace / 1024 / 1024);
         if (!inf.DriveInfo.IsNullOrEmpty()) online.DriveInfo = inf.DriveInfo;
         if (inf.CpuRate > 0) online.CpuRate = inf.CpuRate;
