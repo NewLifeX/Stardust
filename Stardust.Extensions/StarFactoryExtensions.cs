@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Net.Http;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -69,6 +70,12 @@ public static class StarFactoryExtensions
             var server = serviceProvider.GetRequiredService<IServer>();
             return server.Features.Get<IServerAddressesFeature>()!;
         });
+
+        // 桥接 ObjectContainer 与 ASP.NET Core 依赖注入
+        // 1. AddXXX 阶段：设置工厂方法，延迟构建临时 ServiceProvider（仅在 AddXXX 阶段有服务访问时才构建）
+        // 2. UseXXX 阶段：通过 IStartupFilter 替换为正式的 app.ApplicationServices
+        NewLife.Model.ObjectContainer.SetInnerProvider(() => services.BuildServiceProvider());
+        services.AddSingleton<IStartupFilter, ObjectContainerBridgeStartupFilter>();
 
         return star;
     }
@@ -179,5 +186,32 @@ public static class StarFactoryExtensions
         });
 
         return app;
+    }
+}
+
+/// <summary>ObjectContainer 桥接过滤器，在 UseXXX 阶段将正式的 IServiceProvider 桥接到内部容器</summary>
+/// <remarks>
+/// 工作流程：
+/// 1. AddStardust 时设置工厂方法 SetInnerProvider(() => services.BuildServiceProvider())
+/// 2. 如果 AddXXX 阶段有服务通过 ObjectContainer 访问依赖，工厂方法会被调用，创建临时 ServiceProvider
+/// 3. UseXXX 阶段，IStartupFilter 在管道配置最开始执行，用正式的 app.ApplicationServices 替换临时 ServiceProvider
+/// 4. ObjectContainer.SetInnerProvider 内部应确保：
+///    - 缓存工厂方法的结果，避免重复构建
+///    - 正确释放被替换的临时 ServiceProvider
+///    - 线程安全
+/// </remarks>
+internal class ObjectContainerBridgeStartupFilter : IStartupFilter
+{
+    public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
+    {
+        return app =>
+        {
+            // 在管道配置最开始执行桥接
+            // 将正式的 app.ApplicationServices 替换临时的 ServiceProvider
+            NewLife.Model.ObjectContainer.SetInnerProvider(app.ApplicationServices);
+
+            // 继续执行原有配置
+            next(app);
+        };
     }
 }
