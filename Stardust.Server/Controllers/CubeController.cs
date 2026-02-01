@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Remoting;
 using Stardust.Data.Deployment;
+using Stardust.Extensions;
 using Stardust.Storages;
 
 namespace Stardust.Server.Controllers;
@@ -51,37 +52,6 @@ public class CubeController(IFileStorage fileStorage, StarServerSetting setting)
         return (att, filePath);
     }
 
-    /// <summary>设置文件哈希相关的响应头</summary>
-    /// <param name="hash">文件哈希值，格式：[算法名$]哈希值，如MD5$abc123或abc123</param>
-    private void SetFileHashHeaders(String hash)
-    {
-        if (hash.IsNullOrEmpty()) return;
-
-        // 解析哈希算法名称和哈希值
-        var algorithm = "MD5";
-        var hashValue = hash;
-
-        var dollarIndex = hash.IndexOf('$');
-        if (dollarIndex > 0)
-        {
-            algorithm = hash[..dollarIndex];
-            hashValue = hash[(dollarIndex + 1)..];
-        }
-
-        // 1. RFC 3230 标准 Digest 头
-        Response.Headers["Digest"] = $"{algorithm}={hashValue}";
-
-        // 2. X-Content-MD5（兼容某些客户端，总是用MD5）
-        if (algorithm.EqualIgnoreCase("MD5"))
-            Response.Headers["X-Content-MD5"] = hashValue;
-
-        // 3. ETag（用于缓存验证）
-        Response.Headers["ETag"] = $"\"{hashValue}\"";
-
-        // 4. 自定义头（易于识别）
-        Response.Headers["X-File-Hash"] = $"{algorithm}:{hashValue}";
-    }
-
     /// <summary>访问图片</summary>
     /// <param name="id">附件编号</param>
     /// <returns></returns>
@@ -99,7 +69,7 @@ public class CubeController(IFileStorage fileStorage, StarServerSetting setting)
             att.SaveAsync(5_000);
 
             // 设置文件哈希相关响应头
-            SetFileHashHeaders(att.Hash);
+            Response.SetFileHashHeaders(att.Hash);
 
             if (!att.ContentType.IsNullOrEmpty())
                 return PhysicalFile(filePath, att.ContentType, att.FileName);
@@ -129,7 +99,7 @@ public class CubeController(IFileStorage fileStorage, StarServerSetting setting)
             att.SaveAsync(5_000);
 
             // 设置文件哈希相关响应头
-            SetFileHashHeaders(att.Hash);
+            Response.SetFileHashHeaders(att.Hash);
 
             if (!att.ContentType.IsNullOrEmpty() && !att.ContentType.EqualIgnoreCase("application/octet-stream"))
                 return PhysicalFile(filePath, att.ContentType, att.FileName);

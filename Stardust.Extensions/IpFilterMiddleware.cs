@@ -49,7 +49,7 @@ public class IpFilterMiddleware
         await _next.Invoke(ctx).ConfigureAwait(false);
     }
 
-    Boolean ValidIP(String ip)
+    Boolean ValidIP(String? ip)
     {
         if (ip.IsNullOrEmpty()) return false;
 

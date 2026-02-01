@@ -52,6 +52,7 @@
   <ItemGroup>
     <Compile Remove="RegistryMiddleware.cs" />
     <Compile Remove="StarService.cs" />
+    <Compile Remove="WebHelper.cs" />
   </ItemGroup>
 
   <ItemGroup>
