@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -164,7 +164,7 @@ public static IList<TraceHourStat> FindAllByAppIdAndItemId(Int32 appId, Int32 it
         var key = $"TraceHourStat:FindByTrace:{model.Key}";
         if (cache && _cache.TryGetValue<TraceHourStat>(key, out var st)) return st;
 
-        using var span = DefaultTracer.Instance?.NewSpan("TraceHourStat-FindByTrace", model.Key);
+        //using var span = DefaultTracer.Instance?.NewSpan("TraceHourStat-FindByTrace", model.Key);
 
         st = FindAllByAppIdWithCache(model.AppId, model.Time, model.Time.AddHours(1))
             .FirstOrDefault(e => e.StatTime == model.Time && e.ItemId == model.ItemId);

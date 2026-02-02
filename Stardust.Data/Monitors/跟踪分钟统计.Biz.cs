@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -202,7 +202,7 @@ public partial class TraceMinuteStat : Entity<TraceMinuteStat>
         var key = $"TraceMinuteStat:FindByTrace:{model.Key}";
         if (cache && _cache.TryGetValue<TraceMinuteStat>(key, out var st)) return st;
 
-        using var span = DefaultTracer.Instance?.NewSpan("TraceMinuteStat-FindByTrace", model.Key);
+        //using var span = DefaultTracer.Instance?.NewSpan("TraceMinuteStat-FindByTrace", model.Key);
 
         st = FindAllByAppIdWithCache(model.AppId, model.Time, model.Time.AddMinutes(5), 24 * 60 / 5 * 1000)
             .FirstOrDefault(e => e.StatTime == model.Time && e.ItemId == model.ItemId);

@@ -22,13 +22,21 @@ public interface ITraceStatService
 }
 
 /// <summary>追踪统计服务</summary>
+/// <remarks>
+/// 性能优化说明：
+/// 1. 流式计算周期从5秒调整为30秒，队列积压一般&lt;1000条，无需过于频繁
+/// 2. 批量计算周期从30秒调整为60秒，告警延迟可容忍3-5分钟
+/// 3. 延迟队列提交周期延长，减少数据库UPDATE压力（主要性能瓶颈）
+/// 4. 分钟级统计周期较短（120秒），用于告警数据源
+/// 5. 小时/天级统计周期较长（180秒），这些数据实时性要求低
+/// </remarks>
 public class TraceStatService : ITraceStatService
 {
-    /// <summary>流计算周期。默认5秒</summary>
-    public Int32 FlowPeriod { get; set; } = 5;
+    /// <summary>流计算周期。默认30秒</summary>
+    public Int32 FlowPeriod { get; set; } = 30;
 
-    /// <summary>批计算周期。默认30秒</summary>
-    public Int32 BatchPeriod { get; set; } = 30;
+    /// <summary>批计算周期。默认60秒</summary>
+    public Int32 BatchPeriod { get; set; } = 60;
 
     private TimerX _timerFlow;
     private TimerX _timerBatch;
@@ -37,11 +45,11 @@ public class TraceStatService : ITraceStatService
     private readonly ConcurrentDictionary<String, ConcurrentBag<DateTime>> _bagMinute = new();
     private readonly ConcurrentQueue<TraceData> _queue = new();
 
-    /* 延迟队列技术 */
-    private readonly DayQueue _dayQueue = new() { Period = 60 };
-    private readonly HourQueue _hourQueue = new() { Period = 60 };
-    private readonly MinuteQueue _minuteQueue = new() { Period = 60 };
-    private readonly AppMinuteQueue _appMinuteQueue = new() { Period = 60 };
+    /* 延迟队列技术，周期越长则批量越大，UPDATE次数越少 */
+    private readonly DayQueue _dayQueue = new() { Period = 180 };
+    private readonly HourQueue _hourQueue = new() { Period = 180 };
+    private readonly MinuteQueue _minuteQueue = new() { Period = 120 };
+    private readonly AppMinuteQueue _appMinuteQueue = new() { Period = 120 };
 
     private Int32 _count;
     private readonly ITracer _tracer;
@@ -132,6 +140,10 @@ public class TraceStatService : ITraceStatService
     }
 
     /// <summary>流式计算，增量累加</summary>
+    /// <remarks>
+    /// 性能优化：只计算分钟级统计（告警数据源），小时/天级统计由批量计算处理。
+    /// 批量计算能完全修正流式计算的偏差，因此可以放心精简流式计算。
+    /// </remarks>
     /// <param name="state"></param>
     private void DoFlowStat(Object state)
     {
@@ -149,35 +161,35 @@ public class TraceStatService : ITraceStatService
             // 过滤异常数据
             if (td.AppId <= 0 || td.Name.IsNullOrEmpty()) continue;
 
-            // 每日
-            {
-                var st = _dayQueue.GetOrAdd(td.StatDate, td.AppId, td.ItemId, out var key);
+            //// 每日
+            //{
+            //    var st = _dayQueue.GetOrAdd(td.StatDate, td.AppId, td.ItemId, out var key);
 
-                st.Total += td.Total;
-                st.Errors += td.Errors;
-                st.TotalCost += td.TotalCost;
-                if (st.MaxCost < td.MaxCost) st.MaxCost = td.MaxCost;
-                if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
-                st.TotalValue += td.TotalValue;
+            //    st.Total += td.Total;
+            //    st.Errors += td.Errors;
+            //    st.TotalCost += td.TotalCost;
+            //    if (st.MaxCost < td.MaxCost) st.MaxCost = td.MaxCost;
+            //    if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
+            //    st.TotalValue += td.TotalValue;
 
-                _dayQueue.Commit(key);
-            }
+            //    _dayQueue.Commit(key);
+            //}
 
-            // 小时
-            {
-                var st = _hourQueue.GetOrAdd(td.StatHour, td.AppId, td.ItemId, out var key);
+            //// 小时
+            //{
+            //    var st = _hourQueue.GetOrAdd(td.StatHour, td.AppId, td.ItemId, out var key);
 
-                st.Total += td.Total;
-                st.Errors += td.Errors;
-                st.TotalCost += td.TotalCost;
-                if (st.MaxCost < td.MaxCost) st.MaxCost = td.MaxCost;
-                if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
-                st.TotalValue += td.TotalValue;
+            //    st.Total += td.Total;
+            //    st.Errors += td.Errors;
+            //    st.TotalCost += td.TotalCost;
+            //    if (st.MaxCost < td.MaxCost) st.MaxCost = td.MaxCost;
+            //    if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
+            //    st.TotalValue += td.TotalValue;
 
-                _hourQueue.Commit(key);
-            }
+            //    _hourQueue.Commit(key);
+            //}
 
-            // 分钟
+            // 分钟统计（告警数据源，需要较高实时性）
             {
                 var st = _minuteQueue.GetOrAdd(td.StatMinute, td.AppId, td.ItemId, out var key);
 
@@ -191,7 +203,7 @@ public class TraceStatService : ITraceStatService
                 _minuteQueue.Commit(key);
             }
 
-            // 应用分钟
+            // 应用分钟统计（告警数据源，需要较高实时性）
             {
                 var st = _appMinuteQueue.GetOrAdd(td.StatMinute, td.AppId, out var key);
 
@@ -203,6 +215,8 @@ public class TraceStatService : ITraceStatService
 
                 _appMinuteQueue.Commit(key);
             }
+
+            if (span != null) span.Value++;
         }
     }
 
@@ -249,7 +263,7 @@ public class TraceStatService : ITraceStatService
         if (appId <= 0 || time.Year < 2000) return;
 
         var date = time.Date;
-        using var span = _tracer?.NewSpan("TraceBatchStat-Day", time);
+        using var span = _tracer?.NewSpan("TraceBatchStat-Day", new { appId, time });
 
         // 统计数据。由小时级汇总
         var list = TraceHourStat.FindAllByAppIdWithCache(appId, date, date.AddDays(1));
@@ -297,11 +311,14 @@ public class TraceStatService : ITraceStatService
             }
 
             // 计算种类
-            var ti = TraceItem.FindById(item.Key);
-            if (ti != null)
+            if (st.Type.IsNullOrEmpty() || st.Name.IsNullOrEmpty())
             {
-                st.Type = ti.Kind;
-                st.Name = ti + "";
+                var ti = TraceItem.FindById(item.Key);
+                if (ti != null)
+                {
+                    st.Type = ti.Kind;
+                    st.Name = ti + "";
+                }
             }
 
             // 计算环比
@@ -312,6 +329,8 @@ public class TraceStatService : ITraceStatService
             //st.Valid(false);
 
             _dayQueue.Commit(key);
+
+            if (span != null) span.Value++;
         }
     }
 
@@ -372,6 +391,8 @@ public class TraceStatService : ITraceStatService
             if (st2 != null) st.RingRate = st2.Total <= 0 ? 1 : (Double)st.Total / st2.Total;
 
             _hourQueue.Commit(key);
+
+            if (span != null) span.Value++;
         }
     }
 
@@ -383,7 +404,7 @@ public class TraceStatService : ITraceStatService
 
         // 排除项
         var app = AppTracer.FindByID(appId);
-        var excludes = app.Excludes.Split(",", ";") ?? new String[0];
+        var excludes = app.Excludes.Split(",", ";") ?? [];
 
         start = start.Date.AddHours(start.Hour).AddMinutes(start.Minute / 5 * 5);
         end = end.Date.AddHours(end.Hour).AddMinutes(end.Minute / 5 * 5);
@@ -448,6 +469,8 @@ public class TraceStatService : ITraceStatService
             }
 
             _appMinuteQueue.Commit(key);
+
+            if (span != null) span.Value++;
         }
     }
 }
