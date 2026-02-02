@@ -231,7 +231,11 @@ public class TraceStatService : ITraceStatService
         }
 
         // 优化：使用 Task.Delay 代替 Thread.Sleep，让分钟统计落库，释放线程资源
-        // 注意：在 TimerX Async=true 模式下，整个回调在 Task.Run 中执行，可以使用 .Wait()
+        // 说明：
+        // 1. TimerX 已设置 Async=true，回调方法在 Task.Run 中执行，因此不会阻塞主线程
+        // 2. 使用 GetAwaiter().GetResult() 而非 Thread.Sleep，可以让当前线程返回线程池
+        // 3. 不使用 async/await 是为了避免 async void 的异常处理问题
+        // 4. 等待5秒让分钟统计数据完全写入数据库，然后再进行小时和日统计
         Task.Delay(5000).ConfigureAwait(false).GetAwaiter().GetResult();
 
         while (_bagHour.TryTake(out var key))
