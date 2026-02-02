@@ -106,7 +106,8 @@ public partial class AppMinuteStat : Entity<AppMinuteStat>
         // 查询数据库，即使空值也缓存，避免缓存穿透
         list = FindAll(_.AppId == appId & _.StatTime >= date & _.StatTime < date.AddDays(1));
 
-        _cache.Set(key, list, 10);
+        // 优化：缓存时间从10秒增加到30秒，降低数据库查询频率
+        _cache.Set(key, list, 30);
 
         return list;
     }

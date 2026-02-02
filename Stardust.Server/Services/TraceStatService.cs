@@ -73,7 +73,8 @@ public class TraceStatService : ITraceStatService
         }
 
         // 限制增量队列长度，避免内存暴涨。过多数据留给定时批处理
-        if (_count > 100_000) return;
+        // 优化：从10万提升到50万，降低数据丢失风险，提升吞吐量
+        if (_count > 500_000) return;
 
         // 加入队列，增量计算
         foreach (var item in traces)
@@ -208,7 +209,7 @@ public class TraceStatService : ITraceStatService
 
     /// <summary>批计算，覆盖缺失</summary>
     /// <param name="state"></param>
-    private void DoBatchStat(Object state)
+    private async void DoBatchStat(Object state)
     {
         var keys = _bagMinute.Keys;
         foreach (var item in keys)
@@ -229,8 +230,8 @@ public class TraceStatService : ITraceStatService
             }
         }
 
-        // 休息5000ms，让分钟统计落库
-        Thread.Sleep(5000);
+        // 优化：使用异步等待代替同步阻塞，让分钟统计落库，释放线程资源
+        await Task.Delay(5000).ConfigureAwait(false);
 
         while (_bagHour.TryTake(out var key))
         {
