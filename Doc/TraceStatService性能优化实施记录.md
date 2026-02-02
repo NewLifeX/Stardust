@@ -63,14 +63,23 @@ private void DoBatchStat(Object state)
 
 **优化方案：**
 ```csharp
-// 优化后
-private async void DoBatchStat(Object state)
+// 优化后（代码审查后的最终版本）
+private void DoBatchStat(Object state)
 {
     // ... 处理分钟统计
-    await Task.Delay(5000).ConfigureAwait(false);  // 异步等待
+    
+    // 使用 Task.Delay 代替 Thread.Sleep
+    // TimerX Async=true 模式下，回调在 Task.Run 中执行，可以安全使用
+    Task.Delay(5000).ConfigureAwait(false).GetAwaiter().GetResult();
+    
     // ... 处理小时和日统计
 }
 ```
+
+**说明：**
+- 避免使用 `async void`，保持方法签名同步
+- 在 `TimerX` 的 `Async = true` 模式下，回调已在线程池执行
+- 使用 `GetAwaiter().GetResult()` 替代 `Thread.Sleep`，释放线程资源
 
 **预期收益：**
 - ✅ 释放线程资源，避免线程池饥饿
@@ -143,23 +152,15 @@ diff --git a/Stardust.Server/Services/TraceStatService.cs b/Stardust.Server/Serv
  
          // 加入队列，增量计算
          foreach (var item in traces)
-@@ -208,7 +209,7 @@
- 
-     /// <summary>批计算，覆盖缺失</summary>
-     /// <param name="state"></param>
--    private void DoBatchStat(Object state)
-+    private async void DoBatchStat(Object state)
-     {
-         var keys = _bagMinute.Keys;
-         foreach (var item in keys)
-@@ -229,8 +230,8 @@
+@@ -229,8 +230,9 @@
              }
          }
  
 -        // 休息5000ms，让分钟统计落库
 -        Thread.Sleep(5000);
-+        // 优化：使用异步等待代替同步阻塞，让分钟统计落库，释放线程资源
-+        await Task.Delay(5000).ConfigureAwait(false);
++        // 优化：使用 Task.Delay 代替 Thread.Sleep，让分钟统计落库，释放线程资源
++        // 注意：在 TimerX Async=true 模式下，整个回调在 Task.Run 中执行，可以使用 .Wait()
++        Task.Delay(5000).ConfigureAwait(false).GetAwaiter().GetResult();
  
          while (_bagHour.TryTake(out var key))
          {

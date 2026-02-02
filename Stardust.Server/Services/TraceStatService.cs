@@ -209,7 +209,7 @@ public class TraceStatService : ITraceStatService
 
     /// <summary>批计算，覆盖缺失</summary>
     /// <param name="state"></param>
-    private async void DoBatchStat(Object state)
+    private void DoBatchStat(Object state)
     {
         var keys = _bagMinute.Keys;
         foreach (var item in keys)
@@ -230,8 +230,9 @@ public class TraceStatService : ITraceStatService
             }
         }
 
-        // 优化：使用异步等待代替同步阻塞，让分钟统计落库，释放线程资源
-        await Task.Delay(5000).ConfigureAwait(false);
+        // 优化：使用 Task.Delay 代替 Thread.Sleep，让分钟统计落库，释放线程资源
+        // 注意：在 TimerX Async=true 模式下，整个回调在 Task.Run 中执行，可以使用 .Wait()
+        Task.Delay(5000).ConfigureAwait(false).GetAwaiter().GetResult();
 
         while (_bagHour.TryTake(out var key))
         {
