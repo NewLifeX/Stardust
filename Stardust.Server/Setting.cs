@@ -122,6 +122,14 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     [Description("文件缓存白名单。若指定，仅允许符合条件的IP来源访问文件缓存，多个逗号隔开，支持*模糊匹配")]
     public String FileCacheWhiteIP { get; set; } = "";
 
+    /// <summary>文件存储提供服务。是否响应其他节点的文件下载请求，默认true</summary>
+    [Description("文件存储提供服务。是否响应其他节点的文件下载请求，默认true")]
+    public Boolean FileStorageProvide { get; set; } = true;
+
+    /// <summary>文件存储拉取文件。是否主动拉取其他节点发布的新文件，默认false</summary>
+    [Description("文件存储拉取文件。是否主动拉取其他节点发布的新文件，默认false")]
+    public Boolean FileStorageFetch { get; set; } = false;
+
     /// <summary>上级服务器。同步向上级汇报数据</summary>
     [Description("上级服务器。同步向上级汇报数据")]
     public String UplinkServer { get; set; }

@@ -49,6 +49,15 @@ public static class FileStorageExtensions
         {
             var storage = sp.GetRequiredService<CubeFileStorage>();
             storage.Name = name;
+
+            // 从配置读取文件存储行为开关
+            var set = sp.GetService<StarServerSetting>();
+            if (set != null)
+            {
+                storage.EnableProvide = set.FileStorageProvide;
+                storage.EnableFetch = set.FileStorageFetch;
+            }
+
             return storage;
         });
 

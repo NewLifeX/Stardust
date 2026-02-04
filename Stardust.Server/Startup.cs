@@ -71,7 +71,9 @@ public class Startup
 
         IpResolver.Register();
 
-        services.AddCubeFileStorage("Star");
+        // 当文件提供或文件拉取任一功能开启时，启用文件存储
+        if (set.FileStorageProvide || set.FileStorageFetch)
+            services.AddCubeFileStorage("Star");
 
         // 业务服务
         services.AddSingleton<NodeService>();

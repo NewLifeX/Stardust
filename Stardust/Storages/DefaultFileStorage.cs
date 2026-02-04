@@ -41,6 +41,12 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     /// <summary>用于通过HTTP等方式拉取文件的基础地址</summary>
     public String DownloadUri { get; set; } = "/cube/file?id={Id}";
 
+    /// <summary>是否响应其他节点的文件下载请求。默认true</summary>
+    public Boolean EnableProvide { get; set; } = true;
+
+    /// <summary>是否主动拉取其他节点发布的新文件。默认true</summary>
+    public Boolean EnableFetch { get; set; } = true;
+
     private Int32 _initialized;
     private ICache _cache = new MemoryCache();
 
@@ -177,6 +183,13 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
             };
         }
 
+        // 若禁用拉取功能，仅记录地址信息，不拉取文件
+        if (!EnableFetch)
+        {
+            //WriteLog("已禁用文件拉取功能，跳过：{0}", info.Name);
+            return;
+        }
+
         try
         {
             // 从源节点拉取文件数据
@@ -272,6 +285,13 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     /// <summary>处理文件请求消息。</summary>
     protected virtual async Task OnFileRequestAsync(FileRequest req, IEventContext context, CancellationToken cancellationToken)
     {
+        // 若禁用提供服务，则不响应文件请求
+        if (!EnableProvide)
+        {
+            //WriteLog("已禁用文件提供服务，跳过文件请求响应：{0}", req.Name);
+            return;
+        }
+
         if (req.RequestNode.EqualIgnoreCase(NodeName)) return;
 
         WriteLog("收到请求文件通知：{0}", req.ToJson());
