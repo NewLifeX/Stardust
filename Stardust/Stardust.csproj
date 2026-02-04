@@ -102,7 +102,7 @@
     <PackageReference Include="NewLife.Remoting" Version="3.7.2026.201" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="11.11.2026.201" />
+    <PackageReference Include="NewLife.Core" Version="11.11.2026.204-beta1253" />
   </ItemGroup>
 
 </Project>
