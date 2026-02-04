@@ -178,33 +178,37 @@ public class TraceStatService : ITraceStatService
             // 过滤异常数据
             if (td.AppId <= 0 || td.Name.IsNullOrEmpty()) continue;
 
-            //// 每日
-            //{
-            //    var st = _dayQueue.GetOrAdd(td.StatDate, td.AppId, td.ItemId, out var key);
+            // 每日
+            {
+                var queue = _dayQueue ??= new();
+                queue.Period = SavePeriod * 1000;
+                var st = queue.GetOrAdd(td.StatDate, td.AppId, td.ItemId, out var key);
 
-            //    st.Total += td.Total;
-            //    st.Errors += td.Errors;
-            //    st.TotalCost += td.TotalCost;
-            //    if (st.MaxCost < td.MaxCost) st.MaxCost = td.MaxCost;
-            //    if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
-            //    st.TotalValue += td.TotalValue;
+                st.Total += td.Total;
+                st.Errors += td.Errors;
+                st.TotalCost += td.TotalCost;
+                if (st.MaxCost < td.MaxCost) st.MaxCost = td.MaxCost;
+                if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
+                st.TotalValue += td.TotalValue;
 
-            //    _dayQueue.Commit(key);
-            //}
+                queue.Commit(key);
+            }
 
-            //// 小时
-            //{
-            //    var st = _hourQueue.GetOrAdd(td.StatHour, td.AppId, td.ItemId, out var key);
+            // 小时
+            {
+                var queue = _hourQueue ??= new();
+                queue.Period = SavePeriod * 1000;
+                var st = queue.GetOrAdd(td.StatHour, td.AppId, td.ItemId, out var key);
 
-            //    st.Total += td.Total;
-            //    st.Errors += td.Errors;
-            //    st.TotalCost += td.TotalCost;
-            //    if (st.MaxCost < td.MaxCost) st.MaxCost = td.MaxCost;
-            //    if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
-            //    st.TotalValue += td.TotalValue;
+                st.Total += td.Total;
+                st.Errors += td.Errors;
+                st.TotalCost += td.TotalCost;
+                if (st.MaxCost < td.MaxCost) st.MaxCost = td.MaxCost;
+                if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
+                st.TotalValue += td.TotalValue;
 
-            //    _hourQueue.Commit(key);
-            //}
+                queue.Commit(key);
+            }
 
             // 分钟统计（告警数据源，需要较高实时性）
             {
