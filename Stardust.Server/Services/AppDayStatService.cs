@@ -57,6 +57,9 @@ public class AppDayStatService : IAppDayStatService
                 throw;
             }
         }
+
+        // 更新周期
+        if (BatchPeriod > 0 && _timer != null) _timer.Period = BatchPeriod * 1000;
     }
 
     private void Process(DateTime date)
@@ -107,7 +110,7 @@ public class AppDayStatService : IAppDayStatService
 
             // 计算环比
             var st2 = sts2.FirstOrDefault(e => e.AppId == appId);
-            if (st2 != null) st.RingRate = st2.Total <= 0 ? 1 : (Double)st.Total / st2.Total;
+            if (st2 != null) st.RingRate = st2.Total <= 0 ? 1 : Math.Round((Double)st.Total / st2.Total, 4);
 
             st.Save();
         }

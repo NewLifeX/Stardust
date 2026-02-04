@@ -218,6 +218,9 @@ public class TraceStatService : ITraceStatService
 
             if (span != null) span.Value++;
         }
+
+        // 更新周期
+        if (FlowPeriod > 0 && _timerFlow != null) _timerFlow.Period = FlowPeriod * 1000;
     }
 
     /// <summary>批计算，覆盖缺失</summary>
@@ -256,6 +259,9 @@ public class TraceStatService : ITraceStatService
             var ss = key.Split("_");
             ProcessDay(ss[0].ToInt(), ss[1].ToDateTime());
         }
+
+        // 更新周期
+        if (BatchPeriod > 0 && _timerBatch != null) _timerBatch.Period = BatchPeriod * 1000;
     }
 
     private void ProcessDay(Int32 appId, DateTime time)

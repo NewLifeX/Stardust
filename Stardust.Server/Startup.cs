@@ -55,6 +55,13 @@ public class Startup
         services.AddSingleton<IAppDayStatService>(appStatService);
         services.AddSingleton<ITraceItemStatService, TraceItemStatService>();
         //services.AddSingleton<IAlarmService, AlarmService>();
+        // 配置变更时，更新统计服务参数
+        StarServerSetting.Provider.Changed += (s, e) =>
+        {
+            traceService.FlowPeriod = set.MonitorFlowPeriod;
+            traceService.BatchPeriod = set.MonitorBatchPeriod;
+            appStatService.BatchPeriod = set.MonitorBatchPeriod;
+        };
 
         IpResolver.Register();
 
