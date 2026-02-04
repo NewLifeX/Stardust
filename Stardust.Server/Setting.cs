@@ -70,13 +70,17 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     [Description("节点编码辨识度。UUID+Guid+SerialNumber+DiskId+MAC，只要其中几个相同，就认为是同一个节点，默认2")]
     public Int32 NodeCodeLevel { get; set; } = 2;
 
-    /// <summary>监控流统计。默认5秒</summary>
-    [Description("监控流统计。默认5秒")]
+    /// <summary>监控流统计周期。默认5秒。处理内存队列计算分钟级统计，调小提高实时性但增加CPU占用，调大降低CPU但增加告警延迟</summary>
+    [Description("监控流统计周期。默认5秒。处理内存队列计算分钟级统计，调小提高实时性但增加CPU占用，调大降低CPU但增加告警延迟")]
     public Int32 MonitorFlowPeriod { get; set; } = 5;
 
-    /// <summary>监控流统计。默认30秒</summary>
-    [Description("监控批统计。默认30秒")]
+    /// <summary>监控批统计周期。默认30秒。从数据库聚合修正数据，调小提高修正速度但增加IO压力，调大降低压力但延迟修正</summary>
+    [Description("监控批统计周期。默认30秒。从数据库聚合修正数据，调小提高修正速度但增加IO压力，调大降低压力但延迟修正")]
     public Int32 MonitorBatchPeriod { get; set; } = 30;
+
+    /// <summary>监控落盘周期。默认60秒。延迟队列批量提交周期，调小加快持久化但增加数据库UPDATE压力（主要瓶颈），调大降低IO但重启时可能丢失数据</summary>
+    [Description("监控落盘周期。默认60秒。延迟队列批量提交周期，调小加快持久化但增加数据库UPDATE压力（主要瓶颈），调大降低IO但重启时可能丢失数据")]
+    public Int32 MonitorSavePeriod { get; set; } = 60;
 
     /// <summary>监控告警周期。默认30秒</summary>
     [Description("监控告警周期。默认30秒")]

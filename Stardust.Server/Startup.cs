@@ -49,7 +49,12 @@ public class Startup
         services.AddSingleton(set);
 
         // 统计服务
-        var traceService = new TraceStatService(tracer) { FlowPeriod = set.MonitorFlowPeriod, BatchPeriod = set.MonitorBatchPeriod };
+        var traceService = new TraceStatService(tracer)
+        {
+            FlowPeriod = set.MonitorFlowPeriod,
+            BatchPeriod = set.MonitorBatchPeriod,
+            SavePeriod = set.MonitorSavePeriod,
+        };
         services.AddSingleton<ITraceStatService>(traceService);
         var appStatService = new AppDayStatService(tracer) { BatchPeriod = set.MonitorBatchPeriod };
         services.AddSingleton<IAppDayStatService>(appStatService);
@@ -60,6 +65,7 @@ public class Startup
         {
             traceService.FlowPeriod = set.MonitorFlowPeriod;
             traceService.BatchPeriod = set.MonitorBatchPeriod;
+            traceService.SavePeriod = set.MonitorSavePeriod;
             appStatService.BatchPeriod = set.MonitorBatchPeriod;
         };
 

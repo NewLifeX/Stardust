@@ -18,6 +18,11 @@ public interface IAppDayStatService
 public class AppDayStatService : IAppDayStatService
 {
     /// <summary>批计算周期。默认30秒</summary>
+    /// <remarks>
+    /// 从TraceDayStat聚合生成AppDayStat（应用天统计）的周期。
+    /// 调小：应用统计数据更新更快，但CPU和数据库IO压力增大。
+    /// 调大：减少CPU和IO压力，应用统计实时性要求不高，可适当调大。
+    /// </remarks>
     public Int32 BatchPeriod { get; set; } = 30;
 
     private TimerX _timer;
