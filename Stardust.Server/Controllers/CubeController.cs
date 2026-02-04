@@ -31,7 +31,7 @@ public class CubeController(IFileStorage fileStorage, StarServerSetting setting)
 
         // 如果附件不存在，则抓取
         var filePath = att.GetFilePath(setting.UploadPath);
-        if (!filePath.IsNullOrEmpty() && !System.IO.File.Exists(filePath))
+        if (!filePath.IsNullOrEmpty() && !System.IO.File.Exists(filePath) && setting.FileStorageFetch)
         {
             // 如果本地文件不存在，则从分布式文件存储获取
             await fileStorage.RequestFileAsync(att.Id, att.FilePath, "file not found");

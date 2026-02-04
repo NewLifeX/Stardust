@@ -330,6 +330,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     private async Task OnScan(Object state)
     {
         //if (_last.Year < 2000) _last = DateTime.Today.AddDays(-30);
+        if (EnableFetch) return;
 
         // 执行扫描，如果成功更新下一次执行时间，如果失败则快速重试
         var rs = await ScanFilesAsync(_last, default).ConfigureAwait(false);

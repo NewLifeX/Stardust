@@ -112,8 +112,8 @@ public class AppResourceVersionController : DeploymentEntityController<AppResour
             entity.Update();
         }
 
-        // 广播指定附件在当前节点可用
-        await _fileStorage.PublishNewFileAsync(att.Id, att.FilePath, HttpContext.RequestAborted);
+        //// 广播指定附件在当前节点可用
+        //await _fileStorage.PublishNewFileAsync(att.Id, att.FilePath, HttpContext.RequestAborted);
 
         // 不给上层拿到附件，避免Url字段被覆盖
         return null;
