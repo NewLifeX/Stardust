@@ -290,6 +290,7 @@ public class TraceStatService : ITraceStatService
             st.MaxCost = vs.Max(e => e.MaxCost);
             var vs2 = vs.Where(e => e.MinCost > 0).ToList();
             if (vs2.Count > 0) st.MinCost = vs2.Min(e => e.MinCost);
+            st.TotalValue = vs.Sum(e => e.TotalValue);
 
             // 计算TP99
             if (st.Total >= 50)
@@ -323,7 +324,7 @@ public class TraceStatService : ITraceStatService
 
             // 计算环比
             var st2 = sts2.FirstOrDefault(e => e.ItemId == item.Key);
-            if (st2 != null) st.RingRate = st2.Total <= 0 ? 1 : (Double)st.Total / st2.Total;
+            if (st2 != null) st.RingRate = st2.Total <= 0 ? 1 : Math.Round((Double)st.Total / st2.Total, 4);
 
             //// 强制触发种类计算
             //st.Valid(false);
@@ -366,6 +367,7 @@ public class TraceStatService : ITraceStatService
             st.MaxCost = vs.Max(e => e.MaxCost);
             var vs2 = vs.Where(e => e.MinCost > 0).ToList();
             if (vs2.Count > 0) st.MinCost = vs2.Min(e => e.MinCost);
+            st.TotalValue = vs.Sum(e => e.TotalValue);
 
             // 计算TP99
             if (st.Total >= 50)
@@ -388,7 +390,7 @@ public class TraceStatService : ITraceStatService
 
             // 计算环比
             var st2 = sts2.FirstOrDefault(e => e.ItemId == item.Key);
-            if (st2 != null) st.RingRate = st2.Total <= 0 ? 1 : (Double)st.Total / st2.Total;
+            if (st2 != null) st.RingRate = st2.Total <= 0 ? 1 : Math.Round((Double)st.Total / st2.Total, 4);
 
             _hourQueue.Commit(key);
 
