@@ -89,11 +89,11 @@ public class CubeFileStorage : DefaultFileStorage
     protected override Task OnInitializedAsync(CancellationToken cancellationToken)
     {
         // 优先Redis队列作为事件总线，其次使用星尘事件总线
-        if (_cacheProvider.Cache is Redis)
+        if (_cacheProvider.Cache is Redis redis && redis.Version >= new Version(5, 0))
             SetEventBus(_cacheProvider);
         else if (_registry is AppClient client)
             SetEventBus(client);
-        else
+        else if (_cacheProvider.Cache.GetType() == typeof(MemoryCache))
             SetEventBus(_cacheProvider);
 
         return base.OnInitializedAsync(cancellationToken);
