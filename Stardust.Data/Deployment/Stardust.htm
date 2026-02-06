@@ -380,6 +380,17 @@
         </tr>
 
         <tr>
+            <td>Dependencies</td>
+            <td>依赖项</td>
+            <td>String</td>
+            <td>500</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>依赖的驱动/插件部署集名称，如dm8-driver;redis-plugin，分号分隔。可来自全局项目或本项目</td>
+        </tr>
+
+        <tr>
             <td>CreateUserId</td>
             <td>创建者</td>
             <td>Int32</td>
@@ -1764,7 +1775,7 @@
     </tbody>
 </table>
 <br></br>
-<h3>部署资源（AppResource）</h3>
+<h3>SSL证书（SslCertificate）</h3>
 <table>
     <thead>
         <tr>
@@ -1791,36 +1802,14 @@
         </tr>
 
         <tr>
-            <td>ProjectId</td>
-            <td>项目</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>资源归属项目，为0时表示全局资源</td>
-        </tr>
-
-        <tr>
-            <td>Name</td>
-            <td>名称</td>
+            <td>Domain</td>
+            <td>域名</td>
             <td>String</td>
             <td>50</td>
             <td></td>
             <td></td>
             <td>N</td>
-            <td>资源唯一标识，如dm8-driver、newlifex-cert</td>
-        </tr>
-
-        <tr>
-            <td>Category</td>
-            <td>类别</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>driver/cert/config/plugin等</td>
+            <td>支持通配符，如*.newlifex.com，用于匹配应用Urls</td>
         </tr>
 
         <tr>
@@ -1835,52 +1824,85 @@
         </tr>
 
         <tr>
-            <td>TargetPath</td>
-            <td>目标路径</td>
+            <td>PfxFile</td>
+            <td>PFX文件</td>
             <td>String</td>
             <td>50</td>
             <td></td>
             <td></td>
             <td></td>
-            <td>相对于应用工作目录，如../Plugins、./certs</td>
+            <td>Windows/IIS使用，包含私钥</td>
         </tr>
 
         <tr>
-            <td>UnZip</td>
-            <td>解压缩</td>
-            <td>Boolean</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>下载后是否自动解压</td>
-        </tr>
-
-        <tr>
-            <td>Overwrite</td>
-            <td>覆盖文件</td>
+            <td>PfxPassword</td>
+            <td>PFX密码</td>
             <td>String</td>
-            <td>100</td>
+            <td>50</td>
             <td></td>
             <td></td>
             <td></td>
-            <td>需要覆盖的文件模式</td>
+            <td>加密存储</td>
         </tr>
 
         <tr>
-            <td>CreateUserId</td>
-            <td>创建者</td>
-            <td>Int32</td>
+            <td>CrtFile</td>
+            <td>证书文件</td>
+            <td>String</td>
+            <td>50</td>
             <td></td>
             <td></td>
             <td></td>
-            <td>N</td>
-            <td></td>
+            <td>Linux/Nginx使用</td>
         </tr>
 
         <tr>
-            <td>CreateTime</td>
-            <td>创建时间</td>
+            <td>KeyFile</td>
+            <td>私钥文件</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>Linux/Nginx使用</td>
+        </tr>
+
+        <tr>
+            <td>PemFile</td>
+            <td>PEM文件</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>通用格式，合并crt和key</td>
+        </tr>
+
+        <tr>
+            <td>Issuer</td>
+            <td>颁发者</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>如Let's Encrypt Authority X3</td>
+        </tr>
+
+        <tr>
+            <td>Subject</td>
+            <td>使用者</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>证书主题DN</td>
+        </tr>
+
+        <tr>
+            <td>NotBefore</td>
+            <td>生效时间</td>
             <td>DateTime</td>
             <td></td>
             <td></td>
@@ -1890,356 +1912,69 @@
         </tr>
 
         <tr>
-            <td>CreateIP</td>
-            <td>创建地址</td>
+            <td>NotAfter</td>
+            <td>过期时间</td>
+            <td>DateTime</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>用于自动告警和续期</td>
+        </tr>
+
+        <tr>
+            <td>Thumbprint</td>
+            <td>指纹</td>
             <td>String</td>
             <td>50</td>
             <td></td>
             <td></td>
             <td></td>
-            <td></td>
+            <td>SHA1哈希，用于唯一标识</td>
         </tr>
 
         <tr>
-            <td>UpdateUserId</td>
-            <td>更新者</td>
+            <td>AutoRenew</td>
+            <td>自动续期</td>
+            <td>Boolean</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>集成Let's Encrypt/阿里云等</td>
+        </tr>
+
+        <tr>
+            <td>Provider</td>
+            <td>证书提供商</td>
+            <td>String</td>
+            <td>50</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>letsencrypt/aliyun/tencent/manual</td>
+        </tr>
+
+        <tr>
+            <td>RenewDays</td>
+            <td>续期提前天数</td>
             <td>Int32</td>
             <td></td>
             <td></td>
             <td></td>
             <td>N</td>
-            <td></td>
+            <td>过期前N天自动续期</td>
         </tr>
 
         <tr>
-            <td>UpdateTime</td>
-            <td>更新时间</td>
+            <td>LastRenew</td>
+            <td>最后续期时间</td>
             <td>DateTime</td>
             <td></td>
             <td></td>
             <td></td>
             <td></td>
             <td></td>
-        </tr>
-
-        <tr>
-            <td>UpdateIP</td>
-            <td>更新地址</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Remark</td>
-            <td>备注</td>
-            <td>String</td>
-            <td>500</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-    </tbody>
-</table>
-<br></br>
-<h3>资源版本（AppResourceVersion）</h3>
-<table>
-    <thead>
-        <tr>
-            <th>名称</th>
-            <th>显示名</th>
-            <th>类型</th>
-            <th>长度</th>
-            <th>精度</th>
-            <th>主键</th>
-            <th>允许空</th>
-            <th>备注</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Id</td>
-            <td>编号</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td title="自增">AI</td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>ResourceId</td>
-            <td>资源</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Version</td>
-            <td>版本</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>如1.0.2025.0701</td>
-        </tr>
-
-        <tr>
-            <td>Enable</td>
-            <td>启用</td>
-            <td>Boolean</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Url</td>
-            <td>资源地址</td>
-            <td>String</td>
-            <td>200</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Size</td>
-            <td>文件大小</td>
-            <td>Int64</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Hash</td>
-            <td>文件哈希</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>MD5</td>
-        </tr>
-
-        <tr>
-            <td>OS</td>
-            <td>操作系统</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>目标操作系统，为0表示通用</td>
-        </tr>
-
-        <tr>
-            <td>Arch</td>
-            <td>CPU架构</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>目标指令集架构，为0表示通用</td>
-        </tr>
-
-        <tr>
-            <td>TargetFramework</td>
-            <td>目标框架</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>如net8.0，为空表示通用</td>
-        </tr>
-
-        <tr>
-            <td>TraceId</td>
-            <td>追踪</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>CreateUserId</td>
-            <td>创建者</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>CreateTime</td>
-            <td>创建时间</td>
-            <td>DateTime</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>CreateIP</td>
-            <td>创建地址</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>UpdateUserId</td>
-            <td>更新者</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>UpdateTime</td>
-            <td>更新时间</td>
-            <td>DateTime</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>UpdateIP</td>
-            <td>更新地址</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>Remark</td>
-            <td>备注</td>
-            <td>String</td>
-            <td>500</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-    </tbody>
-</table>
-<br></br>
-<h3>应用资源（AppDeployResource）</h3>
-<table>
-    <thead>
-        <tr>
-            <th>名称</th>
-            <th>显示名</th>
-            <th>类型</th>
-            <th>长度</th>
-            <th>精度</th>
-            <th>主键</th>
-            <th>允许空</th>
-            <th>备注</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Id</td>
-            <td>编号</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td title="自增">AI</td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>DeployId</td>
-            <td>应用部署集</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>ResourceId</td>
-            <td>资源</td>
-            <td>Int32</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>引用的资源定义</td>
-        </tr>
-
-        <tr>
-            <td>Enable</td>
-            <td>启用</td>
-            <td>Boolean</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td></td>
-        </tr>
-
-        <tr>
-            <td>TargetPath</td>
-            <td>目标路径</td>
-            <td>String</td>
-            <td>50</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>覆盖资源定义的默认路径，为空时使用资源定义的路径</td>
-        </tr>
-
-        <tr>
-            <td>AutoPublish</td>
-            <td>自动发布</td>
-            <td>Boolean</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>N</td>
-            <td>资源新版本时自动发布到该应用的所有节点</td>
         </tr>
 
         <tr>

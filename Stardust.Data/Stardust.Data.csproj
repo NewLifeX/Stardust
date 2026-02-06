@@ -36,8 +36,14 @@
     <Compile Remove="Configs\应用依赖.cs" />
     <Compile Remove="Configs\配置在线.Biz.cs" />
     <Compile Remove="Configs\配置在线.cs" />
+    <Compile Remove="Deployment\应用资源.Biz.cs" />
+    <Compile Remove="Deployment\应用资源.cs" />
+    <Compile Remove="Deployment\资源版本.Biz.cs" />
+    <Compile Remove="Deployment\资源版本.cs" />
     <Compile Remove="Deployment\部署在线.Biz.cs" />
     <Compile Remove="Deployment\部署在线.cs" />
+    <Compile Remove="Deployment\部署资源.Biz.cs" />
+    <Compile Remove="Deployment\部署资源.cs" />
   </ItemGroup>
 
   <ItemGroup>

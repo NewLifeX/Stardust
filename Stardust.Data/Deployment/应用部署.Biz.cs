@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -233,16 +233,16 @@ public partial class AppDeploy : Entity<AppDeploy>
 
     /// <summary>获取当前可用资源</summary>
     /// <returns></returns>
-    public IList<AppResource> GetResources()
+    public IList<AppDeploy> GetResources()
     {
-        var rs = new List<AppResource>();
-        var ms = AppDeployResource.FindAllByDeployId(Id);
-        foreach (var item in ms)
+        var rs = new List<AppDeploy>();
+        var ss = Dependencies?.Split(";") ?? [];
+        foreach (var item in ss)
         {
-            if (item.Enable && !rs.Any(e => e.Id == item.ResourceId) && item.Resource != null)
-                rs.Add(item.Resource);
+            var ad = FindByName(item);
+            if (ad != null && ad.Enable) rs.Add(ad);
         }
-        var list = AppResource.FindAllWithCache().Where(e => e.Enable && (/*e.ProjectId == 0 ||*/ e.ProjectId == ProjectId)).ToList();
+        var list = FindAllByProjectId(0);
         foreach (var item in list)
         {
             if (item.Enable && !rs.Any(e => e.Id == item.Id))

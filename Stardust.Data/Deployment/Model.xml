@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202509.xsd" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model202509.xsd">
+<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202509.xsd" Document="https://newlifex.com/xcode/model" ModelVersion="2.0.2026.130" xmlns="https://newlifex.com/Model202509.xsd">
   <Option>
     <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
     <ClassNameTemplate />
@@ -73,6 +73,7 @@
         <Column Name="AllowMultiple" DataType="Boolean" Description="允许多实例。同一应用可在本机运行多份进程，健康检查时将不会按进程名匹配" Category="发布参数" />
         <Column Name="AutoStop" DataType="Boolean" Description="自动停止。随着宿主的退出，同时停止该应用进程" Category="发布参数" />
         <Column Name="ReloadOnChange" DataType="Boolean" Description="检测变动。当文件发生改变时，自动重启应用" Category="发布参数" />
+        <Column Name="Dependencies" DataType="String" Length="500" Description="依赖项。依赖的驱动/插件部署集名称，如dm8-driver;redis-plugin，分号分隔。可来自全局项目或本项目" Category="发布参数" />
         <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
         <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
         <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
@@ -238,16 +239,25 @@
         <Index Columns="Extension" />
       </Indexes>
     </Table>
-    <Table Name="AppResource" Description="部署资源。附加资源管理，如数据库驱动、SSL证书、配置模板等，支持全局/项目/应用三级归属">
+    <Table Name="SslCertificate" Description="SSL证书。HTTPS证书管理，支持多域名、自动续期、多格式导出">
       <Columns>
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属项目，为0时表示全局资源" />
-        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称。资源唯一标识，如dm8-driver、newlifex-cert" />
-        <Column Name="Category" DataType="String" Description="类别。driver/cert/config/plugin等" />
+        <Column Name="Domain" DataType="String" Master="True" Nullable="False" Description="域名。支持通配符，如*.newlifex.com，用于匹配应用Urls" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
-        <Column Name="TargetPath" DataType="String" Description="目标路径。相对于应用工作目录，如../Plugins、./certs" />
-        <Column Name="UnZip" DataType="Boolean" Description="解压缩。下载后是否自动解压" />
-        <Column Name="Overwrite" DataType="String" Length="100" Description="覆盖文件。需要覆盖的文件模式" />
+        <Column Name="PfxFile" DataType="String" ItemType="file" Description="PFX文件。Windows/IIS使用，包含私钥" />
+        <Column Name="PfxPassword" DataType="String" Description="PFX密码。加密存储" />
+        <Column Name="CrtFile" DataType="String" ItemType="file" Description="证书文件。Linux/Nginx使用" />
+        <Column Name="KeyFile" DataType="String" ItemType="file" Description="私钥文件。Linux/Nginx使用" />
+        <Column Name="PemFile" DataType="String" ItemType="file" Description="PEM文件。通用格式，合并crt和key" />
+        <Column Name="Issuer" DataType="String" Description="颁发者。如Let's Encrypt Authority X3" />
+        <Column Name="Subject" DataType="String" Description="使用者。证书主题DN" />
+        <Column Name="NotBefore" DataType="DateTime" Description="生效时间" />
+        <Column Name="NotAfter" DataType="DateTime" Description="过期时间。用于自动告警和续期" />
+        <Column Name="Thumbprint" DataType="String" Description="指纹。SHA1哈希，用于唯一标识" />
+        <Column Name="AutoRenew" DataType="Boolean" Description="自动续期。集成Let's Encrypt/阿里云等" />
+        <Column Name="Provider" DataType="String" Description="证书提供商。letsencrypt/aliyun/tencent/manual" />
+        <Column Name="RenewDays" DataType="Int32" DefaultValue="30" Description="续期提前天数。过期前N天自动续期" />
+        <Column Name="LastRenew" DataType="DateTime" Description="最后续期时间" />
         <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
         <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
         <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
@@ -257,54 +267,8 @@
         <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
       </Columns>
       <Indexes>
-        <Index Columns="ProjectId,Name" Unique="True" />
-        <Index Columns="Category" />
-      </Indexes>
-    </Table>
-    <Table Name="AppResourceVersion" Description="资源版本。资源的多个版本，支持不同运行时平台">
-      <Columns>
-        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="ResourceId" DataType="Int32" Map="AppResource@Id@$" Description="资源" />
-        <Column Name="Version" DataType="String" Master="True" Nullable="False" Description="版本。如1.0.2025.0701" />
-        <Column Name="Enable" DataType="Boolean" Description="启用" />
-        <Column Name="Url" DataType="String" ItemType="file" Length="200" Description="资源地址" />
-        <Column Name="Size" DataType="Int64" ItemType="GMK" Description="文件大小" />
-        <Column Name="Hash" DataType="String" Description="文件哈希。MD5" />
-        <Column Name="OS" DataType="Int32" Description="操作系统。目标操作系统，为0表示通用" Type="Stardust.Models.OSKind" />
-        <Column Name="Arch" DataType="Int32" Description="CPU架构。目标指令集架构，为0表示通用" Type="Stardust.Models.CpuArch" />
-        <Column Name="TargetFramework" DataType="String" Description="目标框架。如net8.0，为空表示通用" />
-        <Column Name="TraceId" DataType="String" Description="追踪" Category="扩展" />
-        <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
-        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
-        <Column Name="UpdateUserId" DataType="Int32" Description="更新者" Category="扩展" />
-        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
-        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
-        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
-      </Columns>
-      <Indexes>
-        <Index Columns="ResourceId,Version" />
-      </Indexes>
-    </Table>
-    <Table Name="AppDeployResource" Description="应用资源。应用部署集引用的共享资源，发布时一并下发到目标节点">
-      <Columns>
-        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="DeployId" DataType="Int32" Map="AppDeploy@Id@$" Description="应用部署集" />
-        <Column Name="ResourceId" DataType="Int32" Map="AppResource@Id@Name" Description="资源。引用的资源定义" />
-        <Column Name="Enable" DataType="Boolean" Description="启用" />
-        <Column Name="TargetPath" DataType="String" Description="目标路径。覆盖资源定义的默认路径，为空时使用资源定义的路径" />
-        <Column Name="AutoPublish" DataType="Boolean" Description="自动发布。资源新版本时自动发布到该应用的所有节点" />
-        <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
-        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
-        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
-        <Column Name="UpdateUserId" DataType="Int32" Description="更新者" Category="扩展" />
-        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
-        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
-        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
-      </Columns>
-      <Indexes>
-        <Index Columns="DeployId,ResourceId" Unique="True" />
-        <Index Columns="ResourceId" />
+        <Index Columns="Domain,NotAfter" />
+        <Index Columns="NotAfter" />
       </Indexes>
     </Table>
   </Tables>

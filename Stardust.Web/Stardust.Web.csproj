@@ -33,6 +33,9 @@
     <Compile Remove="Areas\Configs\Controllers\AppQuoteController.cs" />
     <Compile Remove="Areas\Configs\Controllers\ConfigOnlineController.cs" />
     <Compile Remove="Areas\Deployment\Controllers\AppDeployOnlineController.cs" />
+    <Compile Remove="Areas\Deployment\Controllers\AppDeployResourceController.cs" />
+    <Compile Remove="Areas\Deployment\Controllers\AppResourceController.cs" />
+    <Compile Remove="Areas\Deployment\Controllers\AppResourceVersionController.cs" />
     <Compile Remove="Areas\Deployment\Controllers\AttachmentController.cs" />
   </ItemGroup>
 

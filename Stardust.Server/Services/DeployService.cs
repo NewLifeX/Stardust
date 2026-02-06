@@ -172,11 +172,11 @@ public class DeployService
             var version = parts[1];
 
             // 查找资源定义
-            var res = AppResource.FindByName(name);
-            if (res == null || !res.Enable) continue;
+            var deploy = AppDeploy.FindByName(name);
+            if (deploy == null || !deploy.Enable) continue;
 
             // 查找匹配平台的资源版本
-            var resVer = GetResourceVersion(res.Id, version, nodeOS, nodeArch);
+            var resVer = GetResourceVersion(deploy.Id, version, nodeOS, nodeArch);
             if (resVer == null) continue;
 
             var inf = new ResourceInfo
@@ -185,9 +185,9 @@ public class DeployService
                 Version = resVer.Version,
                 Url = resVer.Url,
                 Hash = resVer.Hash,
-                TargetPath = res.TargetPath,
-                UnZip = res.UnZip,
-                Overwrite = res.Overwrite,
+                //TargetPath = deploy.TargetPath,
+                //UnZip = deploy.UnZip,
+                //Overwrite = deploy.Overwrite,
             };
 
             // 修正Url
@@ -200,23 +200,16 @@ public class DeployService
     }
 
     /// <summary>获取匹配平台的资源版本</summary>
-    private AppResourceVersion GetResourceVersion(Int32 resourceId, String version, OSKind nodeOS, CpuArch nodeArch)
+    private AppDeployVersion GetResourceVersion(Int32 deployId, String version, OSKind nodeOS, CpuArch nodeArch)
     {
         // 先按版本精确查找
-        var vers = AppResourceVersion.FindAllByResourceId(resourceId)
-            .Where(e => e.Enable && e.Version == version)
-            .ToList();
+        var vers = AppDeployVersion.FindAllByDeployId(deployId, 100).Where(e => e.Enable).ToList();
 
         // 优先匹配精确平台
-        var ver = vers.FirstOrDefault(e => MatchPlatform(e.OS, e.Arch, nodeOS, nodeArch));
+        var ver = vers.FirstOrDefault(e => e.Version == version && MatchPlatform(e.OS, e.Arch, nodeOS, nodeArch));
         if (ver != null) return ver;
 
         // 如果没有指定版本的匹配，取最新版本
-        vers = AppResourceVersion.FindAllByResourceId(resourceId)
-            .Where(e => e.Enable)
-            .OrderByDescending(e => e.Id)
-            .ToList();
-
         return vers.FirstOrDefault(e => MatchPlatform(e.OS, e.Arch, nodeOS, nodeArch));
     }
 
