@@ -11,6 +11,9 @@ using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust.Services;
+#if !NET45
+using TaskEx = System.Threading.Tasks.Task;
+#endif
 
 namespace Stardust.Storages;
 
@@ -89,7 +92,31 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     }
 
     /// <summary>事件总线订阅完成后调用，覆写以执行额外初始化。</summary>
-    protected virtual Task OnInitializedAsync(CancellationToken cancellationToken) => Task.FromResult(0);
+    protected virtual Task OnInitializedAsync(CancellationToken cancellationToken)
+    {
+        var cacheProvider = ServiceProvider?.GetService<ICacheProvider>();
+        if (cacheProvider == null) return TaskEx.CompletedTask;
+
+        // 优先Redis队列作为事件总线，其次使用星尘事件总线，最后使用MemoryCache
+        var queue = cacheProvider.GetValue("RedisQueue") as ICache ?? cacheProvider.Cache;
+
+        // 尝试使用Redis（版本 >= 5.0）
+        var type = queue.GetType();
+        var rtype = Type.GetType("NewLife.Caching.FullRedis, NewLife.Redis");
+        if (rtype != null && rtype.IsAssignableFrom(type) && queue.GetValue("Version") is Version ver && ver >= new Version(5, 0) && SetEventBus(cacheProvider))
+            return TaskEx.CompletedTask;
+
+        // Redis失败，尝试使用星尘事件总线
+        var registry = ServiceProvider?.GetService<ICacheProvider>();
+        if (registry is AppClient client && SetEventBus(client))
+            return TaskEx.CompletedTask;
+
+        // 星尘事件总线失败，尝试使用MemoryCache
+        if (cacheProvider.Cache.GetType() == typeof(MemoryCache) && SetEventBus(cacheProvider))
+            return TaskEx.CompletedTask;
+
+        return TaskEx.CompletedTask;
+    }
 
     /// <summary>设置事件总线</summary>
     /// <param name="cacheProvider"></param>
