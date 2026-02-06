@@ -6,6 +6,7 @@ using NewLife.Http;
 using NewLife.Log;
 using NewLife.Messaging;
 using NewLife.Model;
+using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Threading;
@@ -95,7 +96,18 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     /// <returns></returns>
     public Boolean SetEventBus(ICacheProvider cacheProvider)
     {
-        if (cacheProvider.Cache is not Cache cache) return false;
+        //if (cacheProvider.Cache is not Cache cache) return false;
+        var queue = cacheProvider.GetValue("RedisQueue") as ICache ?? cacheProvider.Cache;
+        if (queue is not Cache cache) return false;
+
+        // 优先Redis队列作为事件总线，其次使用星尘事件总线
+        var rtype = Type.GetType("NewLife.Caching.FullRedis, NewLife.Redis");
+        var type = queue.GetType();
+        if (rtype != null && rtype.IsAssignableFrom(type) && queue.GetValue("Version") is Version ver)
+        {
+            // 旧版本的Redis不支持Stream，无法用作事件总线
+            if (ver < new Version(5, 0)) return false;
+        }
 
         WriteLog("使用[{0}]事件总线，订阅[{1}]的应用通过消息队列分发事件。", cache.GetType().Name, Name);
 
@@ -103,7 +115,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         NewFileBus = cache.CreateEventBus<NewFileInfo>(Name + "-NewFile", clientId);
         FileRequestBus = cache.CreateEventBus<FileRequest>(Name + "-FileRequest", clientId);
 
-        return true;
+        return NewFileBus != null || FileRequestBus != null;
     }
 
     /// <summary>设置事件总线</summary>
@@ -116,7 +128,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         NewFileBus = client.GetEventBus<NewFileInfo>(Name + "-NewFile");
         FileRequestBus = client.GetEventBus<FileRequest>(Name + "-FileRequest");
 
-        return true;
+        return NewFileBus != null || FileRequestBus != null;
     }
     #endregion
 
