@@ -48,3 +48,4 @@ Stardust.Web.Vue/dist
 
 /Stardust.Data/Platform/Config
 /Stardust.Data/RedisNodes/Config
+**/.github/copilot-instructions.md
