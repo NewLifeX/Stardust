@@ -147,7 +147,11 @@ func (c *ConfigClient) getAllConfig() {
 	}
 	defer resp.Body.Close()
 
-	respBody, _ := io.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "[Stardust] Config read response failed: %v\n", err)
+		return
+	}
 	var apiResp APIResponse
 	if err := json.Unmarshal(respBody, &apiResp); err != nil || apiResp.Code != 0 {
 		return
