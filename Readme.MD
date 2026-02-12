@@ -134,6 +134,30 @@ app.Run();
 ```
 运行后即可在 StarWeb 看到实例在线、性能指标与调用链。
 
+### 6. 多语言SDK支持
+除了 .NET SDK，星尘还提供多语言SDK支持：
+
+| SDK | 说明 | 文档 |
+| --- | --- | --- |
+| JavaScript/Node.js | 支持Node.js和浏览器环境，提供APM监控能力 | [SDK/JavaScript/README.md](SDK/JavaScript/README.md) |
+| Python | Python 3.7+ APM监控SDK | [Doc/SDK/stardust-sdk-python.md](Doc/SDK/stardust-sdk-python.md) |
+| Java | Java APM监控SDK | [Doc/SDK/stardust-sdk-java.md](Doc/SDK/stardust-sdk-java.md) |
+| Go | Go语言APM监控SDK | [Doc/SDK/stardust-sdk-go.md](Doc/SDK/stardust-sdk-go.md) |
+| PHP | PHP APM监控SDK | [Doc/SDK/stardust-sdk-php.md](Doc/SDK/stardust-sdk-php.md) |
+
+**JavaScript SDK 快速示例：**
+```javascript
+// Node.js 环境
+const { StardustTracer } = require('stardust-tracer');
+const tracer = new StardustTracer('http://star.example.com:6600', 'MyApp', 'MySecret');
+await tracer.start();
+
+// 浏览器环境
+const tracer = new StardustBrowserTracer('http://star.example.com:6600', 'MyWebApp', 'MySecret');
+await tracer.start();
+installBrowserInterceptors(tracer); // 自动拦截fetch和XMLHttpRequest
+```
+
 ---
 ## 配置中心使用
 ```csharp
