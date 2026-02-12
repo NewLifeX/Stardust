@@ -196,6 +196,10 @@ Class StardustTracer
     Private m_maxTagLength
     Private m_builders
 
+    Public Property Get Token()
+        Token = m_token
+    End Property
+
     Public Sub Init(server, appId, secret)
         m_server = server
         m_appId = appId
@@ -371,9 +375,11 @@ Function GenerateId(length)
 End Function
 
 Function GetUnixMilliseconds()
-    GetUnixMilliseconds = CLng(DateDiff("s", "1970-01-01 00:00:00", Now()) - _
-        (DateDiff("s", Now(), DateAdd("h", _
-        CInt(Right(CStr(DateDiff("h", Now(), DateAdd("h", 0, "2000-01-01"))), 2)), Now())))) * 1000
+    ' 计算当前时间距 1970-01-01 的秒数，再乘以 1000 得到毫秒
+    ' DateDiff 返回的是本地时间差，此处不做时区校正，由服务端统一处理
+    Dim seconds
+    seconds = DateDiff("s", "1970-01-01 00:00:00", Now())
+    GetUnixMilliseconds = CDbl(seconds) * 1000
 End Function
 
 Function JsEncode(str)
@@ -442,7 +448,7 @@ cachedToken = Application("StardustToken")
 If Len(cachedToken) = 0 Then
     tracer.Login
     Application.Lock
-    Application("StardustToken") = m_token
+    Application("StardustToken") = tracer.Token
     Application.UnLock
 End If
 

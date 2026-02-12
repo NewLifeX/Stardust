@@ -355,11 +355,7 @@ class StardustTracer:
         while self._running:
             time.sleep(30)
             try:
-                # 令牌过期则重新登录
-                if time.time() > self._token_expire - 600:
-                    self._ping()
-                else:
-                    self._ping()
+                self._ping()
             except Exception as ex:
                 print(f"[Stardust] Ping loop error: {ex}")
 
