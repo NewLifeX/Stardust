@@ -17,12 +17,14 @@ using NewLife.Remoting.Clients;
 using NewLife.Threading;
 using Renci.SshNet;
 using Stardust;
+using Stardust.Managers;
 using Stardust.Models;
 
 namespace AgentExpansion;
 
 internal sealed class AgentExpansionService
 {
+    private static readonly HttpClient _httpClient = new();
     private TimerX? _timer;
     private Int32 _running;
     private String? _packageFile;
@@ -163,7 +165,9 @@ internal sealed class AgentExpansionService
     private async Task<Boolean> TryInstallBySshAsync(IPAddress address, AgentExpansionSetting set, String server, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (set.UserName.IsNullOrEmpty() || set.Password.IsNullOrEmpty()) return false;
+        var user = ResolveCredential(set.UserName);
+        var password = ResolveCredential(set.Password);
+        if (user.IsNullOrEmpty() || password.IsNullOrEmpty()) return false;
 
         var packageFile = await PreparePackageAsync(set, cancellationToken).ConfigureAwait(false);
         if (packageFile.IsNullOrEmpty()) return false;
@@ -173,8 +177,23 @@ internal sealed class AgentExpansionService
 
         try
         {
-            using var client = new SshClient(address.ToString(), set.SshPort, set.UserName, set.Password);
+            using var client = new SshClient(address.ToString(), set.SshPort, user, password);
             client.ConnectionInfo.Timeout = TimeSpan.FromMilliseconds(set.Timeout);
+            var expectedKey = NormalizeHostKey(set.SshHostKey);
+            client.HostKeyReceived += (sender, args) =>
+            {
+                if (expectedKey.IsNullOrEmpty())
+                {
+                    Log.Info("节点 {0} 未配置SSH指纹，跳过校验", address);
+                    args.CanTrust = true;
+                    return;
+                }
+
+                var actual = NormalizeHostKey(BitConverter.ToString(args.FingerPrint));
+                args.CanTrust = actual.EqualIgnoreCase(expectedKey);
+                if (!args.CanTrust)
+                    Log.Info("节点 {0} SSH指纹不匹配，期望 {1} 实际 {2}", address, expectedKey, actual);
+            };
             client.Connect();
             if (!client.IsConnected) return false;
 
@@ -205,20 +224,29 @@ internal sealed class AgentExpansionService
     private async Task<Boolean> TryInstallByTelnetAsync(IPAddress address, AgentExpansionSetting set, String server, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (set.UserName.IsNullOrEmpty() || set.Password.IsNullOrEmpty()) return false;
+        var user = ResolveCredential(set.UserName);
+        var password = ResolveCredential(set.Password);
+        if (user.IsNullOrEmpty() || password.IsNullOrEmpty()) return false;
 
         var url = BuildPackageUrl(set);
         if (url.IsNullOrEmpty()) return false;
+        if (!url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) && set.PackageSha512.IsNullOrEmpty())
+        {
+            Log.Info("节点 {0} Telnet下载需HTTPS或配置PackageSha512", address);
+            return false;
+        }
+        if (!url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            Log.Info("节点 {0} Telnet使用HTTP下载存在风险，请评估网络安全", address);
 
         try
         {
-            using var session = new TelnetSession(address.ToString(), set.TelnetPort, set.Timeout);
-            if (!session.Login(set.UserName, set.Password, set.Timeout)) return false;
+            using var session = await TelnetSession.ConnectAsync(address.ToString(), set.TelnetPort, set.Timeout, cancellationToken).ConfigureAwait(false);
+            if (!await session.LoginAsync(user, password, set.Timeout, cancellationToken).ConfigureAwait(false)) return false;
 
             var targetPath = GetTargetPath(set, true);
-            var command = BuildTelnetInstallCommand(url, targetPath, server);
-            session.WriteLine(command);
-            session.Read(set.Timeout);
+            var command = BuildTelnetInstallCommand(url, targetPath, server, set.PackageSha512);
+            await session.WriteLineAsync(command, cancellationToken).ConfigureAwait(false);
+            await session.ReadAsync(set.Timeout, cancellationToken).ConfigureAwait(false);
 
             Log.Info("节点 {0} 已发送Telnet安装命令", address);
             return true;
@@ -234,6 +262,13 @@ internal sealed class AgentExpansionService
     {
         var url = BuildPackageUrl(set);
         if (url.IsNullOrEmpty()) return null;
+        if (!url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) && set.PackageSha512.IsNullOrEmpty())
+        {
+            Log.Info("安装包下载需HTTPS或配置PackageSha512");
+            return null;
+        }
+        if (!url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            Log.Info("安装包使用HTTP下载存在风险，请评估网络安全");
 
         await _packageLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -244,8 +279,19 @@ internal sealed class AgentExpansionService
             var file = Path.Combine(Path.GetTempPath(), fileName);
             if (!File.Exists(file))
             {
-                using var client = new HttpClient();
-                await client.DownloadFileAsync(url, file).ConfigureAwait(false);
+                await _httpClient.DownloadFileAsync(url, file).ConfigureAwait(false);
+            }
+
+            if (!set.PackageSha512.IsNullOrEmpty())
+            {
+                var expected = set.PackageSha512.Replace("-", String.Empty).Trim();
+                var actual = NetRuntime.GetSHA512(file);
+                if (!actual.EqualIgnoreCase(expected))
+                {
+                    Log.Info("安装包哈希校验失败，期望 {0} 实际 {1}", expected, actual);
+                    File.Delete(file);
+                    return null;
+                }
             }
 
             _packageFile = file;
@@ -315,20 +361,48 @@ internal sealed class AgentExpansionService
             $"elif [ -f {agentDll} ]; then dotnet {agentDll} -server \"{serverArg}\" -run; fi";
     }
 
-    private static String BuildTelnetInstallCommand(String url, String targetPath, String server)
+    private static String BuildTelnetInstallCommand(String url, String targetPath, String server, String? sha512)
     {
         var serverArg = server.Replace("\"", "\\\"");
         var target = QuoteShell(targetPath);
         var package = QuoteShell($"/tmp/{GetFileName(url)}");
         var agentFile = QuoteShell($"{targetPath.TrimEnd('/')}/StarAgent");
         var agentDll = QuoteShell($"{targetPath.TrimEnd('/')}/StarAgent.dll");
+        var verify = "";
+        if (!sha512.IsNullOrEmpty())
+        {
+            var hash = sha512.Replace("-", String.Empty).Trim();
+            verify = $"(command -v sha512sum >/dev/null 2>&1 && echo \"{hash}  {package}\" | sha512sum -c -) || " +
+                $"(echo \"sha512sum not found\" && false) && ";
+        }
 
         return $"rm -f {package}; " +
             $"(command -v curl >/dev/null 2>&1 && curl -L -o {package} {QuoteShell(url)}) || " +
             $"(command -v wget >/dev/null 2>&1 && wget -O {package} {QuoteShell(url)}); " +
-            $"mkdir -p {target} && unzip -o {package} -d {target} && chmod +x {agentFile} && " +
+            $"{verify}mkdir -p {target} && unzip -o {package} -d {target} && chmod +x {agentFile} && " +
             $"if [ -f {agentFile} ]; then {agentFile} -server \"{serverArg}\" -run; " +
             $"elif [ -f {agentDll} ]; then dotnet {agentDll} -server \"{serverArg}\" -run; fi";
+    }
+
+    private static String NormalizeHostKey(String? value)
+    {
+        if (value.IsNullOrEmpty()) return String.Empty;
+
+        return value.Replace(":", String.Empty).Replace("-", String.Empty).Trim();
+    }
+
+    private static String? ResolveCredential(String? value)
+    {
+        if (value.IsNullOrEmpty()) return value;
+
+        if (value.StartsWith("env:", StringComparison.OrdinalIgnoreCase))
+        {
+            var key = value["env:".Length..].Trim();
+            if (key.IsNullOrEmpty()) return value;
+            return Environment.GetEnvironmentVariable(key);
+        }
+
+        return value;
     }
 
     private static String QuoteShell(String value)
@@ -553,42 +627,74 @@ internal sealed class TelnetSession : IDisposable
     private readonly TcpClient _client;
     private readonly NetworkStream _stream;
     private readonly Encoding _encoding = Encoding.ASCII;
+    private static readonly String[] _userPrompts = ["login", "username", "user"];
+    private static readonly String[] _passwordPrompts = ["password", "pass"];
+    private const Byte TelnetIac = 255;
+    private Int32 _skipBytes;
 
-    public TelnetSession(String host, Int32 port, Int32 timeout)
+    private TelnetSession(TcpClient client)
     {
-        _client = new TcpClient
+        _client = client;
+        _stream = _client.GetStream();
+    }
+
+    public static async Task<TelnetSession> ConnectAsync(String host, Int32 port, Int32 timeout, CancellationToken cancellationToken)
+    {
+        var client = new TcpClient
         {
             ReceiveTimeout = timeout,
             SendTimeout = timeout,
         };
 
-        var task = _client.ConnectAsync(host, port);
-        if (!task.Wait(timeout)) throw new TimeoutException();
+        var task = client.ConnectAsync(host, port);
+        using var delayCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var delayTask = Task.Delay(timeout, delayCts.Token);
+        if (await Task.WhenAny(task, delayTask).ConfigureAwait(false) != task)
+            throw new TimeoutException();
+        delayCts.Cancel();
+        await task.ConfigureAwait(false);
 
-        _stream = _client.GetStream();
+        return new TelnetSession(client);
     }
 
-    public Boolean Login(String user, String password, Int32 timeout)
+    public async Task<Boolean> LoginAsync(String user, String password, Int32 timeout, CancellationToken cancellationToken)
     {
-        Read(timeout);
-        WriteLine(user);
-        Read(timeout);
-        WriteLine(password);
+        var greeting = await ReadAsync(timeout, cancellationToken).ConfigureAwait(false);
+        if (!IsPromptMatch(greeting, _userPrompts))
+            greeting += await ReadAsync(timeout, cancellationToken).ConfigureAwait(false);
+        await WriteLineAsync(user, cancellationToken).ConfigureAwait(false);
 
-        var result = Read(timeout);
+        var prompt = await ReadAsync(timeout, cancellationToken).ConfigureAwait(false);
+        if (!IsPromptMatch(prompt, _passwordPrompts))
+            prompt += await ReadAsync(timeout, cancellationToken).ConfigureAwait(false);
+        await WriteLineAsync(password, cancellationToken).ConfigureAwait(false);
+
+        var result = await ReadAsync(timeout, cancellationToken).ConfigureAwait(false);
         if (result.IsNullOrEmpty()) return true;
 
         return !result.Contains("failed", StringComparison.OrdinalIgnoreCase) &&
             !result.Contains("incorrect", StringComparison.OrdinalIgnoreCase);
     }
 
-    public void WriteLine(String command)
+    private static Boolean IsPromptMatch(String text, IEnumerable<String> prompts)
     {
-        var data = _encoding.GetBytes(command + "\n");
-        _stream.Write(data, 0, data.Length);
+        if (text.IsNullOrEmpty()) return false;
+
+        foreach (var item in prompts)
+        {
+            if (text.IndexOf(item, StringComparison.OrdinalIgnoreCase) >= 0) return true;
+        }
+
+        return false;
     }
 
-    public String Read(Int32 timeout)
+    public Task WriteLineAsync(String command, CancellationToken cancellationToken)
+    {
+        var data = _encoding.GetBytes(command + "\r\n");
+        return _stream.WriteAsync(data, 0, data.Length, cancellationToken);
+    }
+
+    public async Task<String> ReadAsync(Int32 timeout, CancellationToken cancellationToken)
     {
         var buffer = new Byte[1024];
         var sb = new StringBuilder();
@@ -598,19 +704,28 @@ internal sealed class TelnetSession : IDisposable
         {
             while (_stream.DataAvailable)
             {
-                var count = _stream.Read(buffer, 0, buffer.Length);
+                var count = await _stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
                 if (count <= 0) break;
 
                 for (var i = 0; i < count; i++)
                 {
                     var value = buffer[i];
-                    if (value == 255) continue;
+                    if (_skipBytes > 0)
+                    {
+                        _skipBytes--;
+                        continue;
+                    }
+                    if (value == TelnetIac)
+                    {
+                        _skipBytes = 2;
+                        continue;
+                    }
                     sb.Append((Char)value);
                 }
             }
 
             if (sb.Length > 0) break;
-            Thread.Sleep(50);
+            await Task.Delay(50, cancellationToken).ConfigureAwait(false);
         }
 
         return sb.ToString();
