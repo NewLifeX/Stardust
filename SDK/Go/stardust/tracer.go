@@ -340,8 +340,14 @@ func (t *Tracer) report(buildersData []*SpanBuilder) {
 		// Gzip 压缩
 		var buf bytes.Buffer
 		gz := gzip.NewWriter(&buf)
-		gz.Write(body)
-		gz.Close()
+		if _, err := gz.Write(body); err != nil {
+			fmt.Fprintf(os.Stderr, "[Stardust] Gzip write failed: %v\n", err)
+			return
+		}
+		if err := gz.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "[Stardust] Gzip close failed: %v\n", err)
+			return
+		}
 
 		reqURL := fmt.Sprintf("%s/Trace/ReportRaw?Token=%s", t.Server, url.QueryEscape(t.token))
 		resp, err = t.client.Post(reqURL, "application/x-gzip", &buf)
@@ -437,7 +443,17 @@ func (t *Tracer) pingLoop() {
 
 func randomHex(n int) string {
 	b := make([]byte, n)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		// Fallback: use timestamp-based pseudo-random
+		// This is not cryptographically secure but ensures we have valid data
+		ts := time.Now().UnixNano()
+		for i := 0; i < n; i++ {
+			b[i] = byte(ts >> (8 * (i % 8)))
+			if i%8 == 7 {
+				ts = ts * 31 + int64(i) // Simple mixing
+			}
+		}
+	}
 	return hex.EncodeToString(b)
 }
 
