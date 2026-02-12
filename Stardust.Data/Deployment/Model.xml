@@ -74,6 +74,7 @@
         <Column Name="AutoStop" DataType="Boolean" Description="自动停止。随着宿主的退出，同时停止该应用进程" Category="发布参数" />
         <Column Name="ReloadOnChange" DataType="Boolean" Description="检测变动。当文件发生改变时，自动重启应用" Category="发布参数" />
         <Column Name="Dependencies" DataType="String" Length="500" Description="依赖项。依赖的驱动/插件部署集名称，如dm8-driver;redis-plugin，分号分隔。可来自全局项目或本项目" Category="发布参数" />
+        <Column Name="HealthCheck" DataType="String" Length="200" Description="健康检查。探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health" Category="发布参数" />
         <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
         <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
         <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
@@ -107,6 +108,7 @@
         <Column Name="Priority" DataType="Int32" Description="优先级。表示应用程序中任务或操作的优先级级别" Type="Stardust.Models.ProcessPriority" Category="发布参数" />
         <Column Name="Mode" DataType="Int32" Description="工作模式。Standard(10)/Shadow(11)/Hosted(12)/Task(13)。为空时使用应用集配置" Type="Stardust.Models.DeployMode" Category="发布参数" />
         <Column Name="Delay" DataType="Int32" Description="延迟。批量发布时，需要延迟执行的时间，用于滚动发布，单位秒" Category="发布参数" />
+        <Column Name="HealthCheck" DataType="String" Length="200" Description="健康检查。探针检测服务是否正常，http/tcp/udp地址，为空时使用应用集配置" Category="发布参数" />
         <Column Name="ProcessId" DataType="Int32" Description="进程" Category="状态" />
         <Column Name="ProcessName" DataType="String" Length="200" Description="进程名称" Category="状态" />
         <Column Name="ProcessUser" DataType="String" Description="进程用户。启动该进程的用户名" Category="状态" />

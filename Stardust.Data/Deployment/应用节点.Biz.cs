@@ -217,6 +217,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
             Priority = Priority,
             Mode = Mode,
             AllowMultiple = app.AllowMultiple,
+            HealthCheck = HealthCheck,
         };
 
         if (inf.Name.IsNullOrEmpty()) inf.Name = app.Name;
@@ -228,6 +229,7 @@ public partial class AppDeployNode : Entity<AppDeployNode>
         if (inf.MaxMemory <= 0) inf.MaxMemory = app.MaxMemory;
         if (inf.Priority == 0) inf.Priority = app.Priority;
         if (inf.Mode <= DeployMode.Default) inf.Mode = app.Mode;
+        if (inf.HealthCheck.IsNullOrEmpty()) inf.HealthCheck = app.HealthCheck;
 
         return inf;
     }

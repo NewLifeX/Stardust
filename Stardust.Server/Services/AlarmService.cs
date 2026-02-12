@@ -60,6 +60,9 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
             ProcessRedisNode(item);
         }
 
+        // 检查节点告警恢复
+        CheckNodeAlarmRecovery();
+
         if (Period > 0) _timer.Period = Period * 1000;
     }
 
@@ -97,7 +100,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
                     _cache.Set("alarm:AppTracer:" + appId, st.Errors, 5 * 60);
 
                     var msg = GetMarkdown(app, st, true);
-                    RobotHelper.SendAlarm(app.Category ?? app.ProjectName, webhook, "应用告警", msg);
+                    RobotHelper.SendAlarmWithRecord(app.Category ?? app.ProjectName, webhook, "应用告警", msg, "应用告警", app.Name);
                 }
             }
         }
@@ -232,7 +235,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
                             if (group.IsNullOrEmpty()) group = app.Category;
 
                             var msg = GetMarkdown(app, st, true);
-                            RobotHelper.SendAlarm(group, webhook, "埋点告警", msg);
+                            RobotHelper.SendAlarmWithRecord(group, webhook, "埋点告警", msg, "埋点告警", $"{app.Name}/{ti.Name}");
                         }
                     }
                 }
@@ -359,7 +362,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
                             if (group.IsNullOrEmpty()) group = app.Category;
 
                             var msg = GetMarkdown(app, st, (Int32)yesterday, rate, true);
-                            RobotHelper.SendAlarm(group, webhook, "埋点告警", msg);
+                            RobotHelper.SendAlarmWithRecord(group, webhook, "埋点告警", msg, "环比告警", $"{app.Name}/{ti.Name}");
                         }
                     }
                 }
@@ -516,7 +519,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
     private void SendAlarm(String kind, Node node, NodeData data, String title, String info = null)
     {
         var msg = GetMarkdown(kind, node, data, title, info);
-        RobotHelper.SendAlarm(node.Category, node.WebHook, title, msg);
+        RobotHelper.SendAlarmWithRecord(node.Category, node.WebHook, title, msg, $"节点{kind}告警", node.Name);
     }
 
     private String GetMarkdown(String kind, Node node, NodeData data, String title, String msg = null)
@@ -671,7 +674,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         if (actions.Count > 0)
         {
             var msg = GetMarkdown(node, data, "Redis告警", actions);
-            RobotHelper.SendAlarm(node.Category, node.WebHook, "Redis告警", msg);
+            RobotHelper.SendAlarmWithRecord(node.Category, node.WebHook, "Redis告警", msg, "Redis告警", node.Name);
         }
     }
 
@@ -742,7 +745,7 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
                     _cache.Set("alarm:RedisMessageQueue:" + queue.Id, queue.Messages, 5 * 60);
 
                     var msg = GetMarkdown(node, queue, true);
-                    RobotHelper.SendAlarm(groupName, webhook, "消息队列告警", msg);
+                    RobotHelper.SendAlarmWithRecord(groupName, webhook, "消息队列告警", msg, "消息队列告警", $"{node.Name}/{queue.Name}");
                 }
             }
         }
@@ -771,6 +774,110 @@ public class AlarmService(StarServerSetting setting, IServiceProvider servicePro
         }
 
         return str;
+    }
+    #endregion
+
+    #region 告警恢复
+    private void CheckNodeAlarmRecovery()
+    {
+        using var span = tracer?.NewSpan("alarm:CheckRecovery");
+
+        // 获取所有报警中的记录
+        var records = AlarmRecord.FindAllByStatus(AlarmStatuses.Alarming);
+        if (records.Count == 0) return;
+
+        foreach (var record in records)
+        {
+            // 超过24小时的报警记录自动恢复
+            if (record.StartTime.Year > 2000 && (DateTime.Now - record.StartTime).TotalHours > 24)
+            {
+                record.Status = AlarmStatuses.Recovered;
+                record.EndTime = DateTime.Now;
+                record.Duration = (Int32)(record.EndTime - record.StartTime).TotalSeconds;
+                record.Update();
+                continue;
+            }
+
+            // 根据类别检查是否可以恢复
+            switch (record.Category)
+            {
+                case "节点cpu告警":
+                case "节点memory告警":
+                case "节点disk告警":
+                case "节点tcp告警":
+                case "节点process告警":
+                    CheckNodeRecovery(record);
+                    break;
+            }
+        }
+    }
+
+    private void CheckNodeRecovery(AlarmRecord record)
+    {
+        var node = Node.FindByName(record.Action);
+        if (node == null) return;
+
+        var data = NodeData.FindLast(node.ID);
+        if (data == null) return;
+
+        var recovered = false;
+        switch (record.Category)
+        {
+            case "节点cpu告警":
+                if (node.AlarmCpuRate <= 0 || data.CpuRate * 100 < node.AlarmCpuRate)
+                    recovered = true;
+                break;
+            case "节点memory告警":
+                if (node.AlarmMemoryRate <= 0 || node.Memory <= 0)
+                    recovered = true;
+                else
+                {
+                    var free = data.FreeMemory > 0 ? data.FreeMemory : data.AvailableMemory;
+                    var rate = (node.Memory - free) * 100d / node.Memory;
+                    if (rate < node.AlarmMemoryRate) recovered = true;
+                }
+                break;
+            case "节点disk告警":
+                if (node.AlarmDiskRate <= 0 || node.TotalSize <= 0)
+                    recovered = true;
+                else
+                {
+                    var rate = (node.TotalSize - data.AvailableFreeSpace) * 100d / node.TotalSize;
+                    if (rate < node.AlarmDiskRate) recovered = true;
+                }
+                break;
+            case "节点tcp告警":
+                if (node.AlarmTcp <= 0)
+                    recovered = true;
+                else
+                {
+                    var tcp = data.TcpConnections;
+                    if (tcp < data.TcpTimeWait) tcp = data.TcpTimeWait;
+                    if (tcp < data.TcpCloseWait) tcp = data.TcpCloseWait;
+                    if (tcp < node.AlarmTcp) recovered = true;
+                }
+                break;
+            case "节点process告警":
+                var olt = NodeOnline.FindByNodeId(node.ID);
+                if (olt != null && !olt.Processes.IsNullOrEmpty() && !node.AlarmProcesses.IsNullOrEmpty())
+                {
+                    var alarms = node.AlarmProcesses.Split(",", StringSplitOptions.RemoveEmptyEntries);
+                    var ps = olt.Processes?.Split(",", StringSplitOptions.RemoveEmptyEntries);
+                    if (alarms != null && ps != null)
+                    {
+                        var ps2 = alarms.Where(e => !ps.Contains(e)).ToList();
+                        if (ps2.Count == 0) recovered = true;
+                    }
+                }
+                break;
+        }
+
+        if (recovered)
+        {
+            var webhook = RobotHelper.GetAlarm(node.Project, node.Category, node.WebHook);
+            if (!webhook.IsNullOrEmpty())
+                RobotHelper.RecoverAlarm(record.Category, record.Action, node.Category, webhook);
+        }
     }
     #endregion
 }

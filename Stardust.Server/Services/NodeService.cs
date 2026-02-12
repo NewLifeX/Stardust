@@ -155,6 +155,9 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
         // 登录历史
         WriteHistory(context, "节点鉴权", true, $"[{node.Name}/{node.Code}]鉴权成功 " + inf.ToJson(false, false, false));
+
+        // 检查节点上线恢复
+        NodeOnlineService.CheckOnline(node);
     }
 
     /// <summary>注销</summary>
