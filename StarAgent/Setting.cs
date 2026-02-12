@@ -70,30 +70,6 @@ public class StarAgentSetting : Config<StarAgentSetting>, IClientSetting
     [Description("应用服务集合")]
     public ServiceInfo[] Services { get; set; }
 
-    /// <summary>阿里云DNS AccessKeyId。用于动态域名解析</summary>
-    [Description("阿里云DNS AccessKeyId。用于动态域名解析")]
-    public String? AliyunAccessKeyId { get; set; }
-
-    /// <summary>阿里云DNS AccessKeySecret。用于动态域名解析</summary>
-    [Description("阿里云DNS AccessKeySecret。用于动态域名解析")]
-    public String? AliyunAccessKeySecret { get; set; }
-
-    /// <summary>阿里云DNS域名。例如：example.com</summary>
-    [Description("阿里云DNS域名。例如：example.com")]
-    public String? AliyunDnsDomain { get; set; }
-
-    /// <summary>阿里云DNS记录。例如：www，表示www.example.com。@表示根域名</summary>
-    [Description("阿里云DNS记录。例如：www，表示www.example.com。@表示根域名")]
-    public String? AliyunDnsRecord { get; set; }
-
-    /// <summary>阿里云DNS记录类型。默认A记录</summary>
-    [Description("阿里云DNS记录类型。默认A记录")]
-    public String AliyunDnsRecordType { get; set; } = "A";
-
-    /// <summary>阿里云DNS更新间隔。默认300秒</summary>
-    [Description("阿里云DNS更新间隔。默认300秒")]
-    public Int32 AliyunDnsInterval { get; set; } = 300;
-
     String IClientSetting.Server { get; set; }
     #endregion
 

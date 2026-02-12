@@ -1,10 +1,11 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using System.Net.Http;
 using NewLife;
 using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Serialization;
+using NewLife.Threading;
 
 namespace StarAgent;
 
@@ -45,6 +46,7 @@ public class AliyunDnsClient
     private HttpClient? _Client;
     private String? _lastIp;
     private String? _recordId;
+    private TimerX? _timer;
     #endregion
 
     #region 构造
@@ -62,6 +64,83 @@ public class AliyunDnsClient
         AccessKeySecret = accessKeySecret;
         Domain = domain;
         Record = record;
+    }
+
+    /// <summary>从配置创建阿里云DNS客户端</summary>
+    /// <param name="setting">阿里云DNS配置</param>
+    public AliyunDnsClient(AliyunDnsSetting setting)
+    {
+        AccessKeyId = setting.AccessKeyId!;
+        AccessKeySecret = setting.AccessKeySecret!;
+        Domain = setting.Domain!;
+        Record = setting.Record!;
+        RecordType = setting.RecordType;
+    }
+    #endregion
+
+    #region 生命周期
+    /// <summary>启动阿里云DNS动态域名解析</summary>
+    /// <param name="setting">配置。为空时使用 AliyunDnsSetting.Current</param>
+    /// <returns>启动成功的客户端实例，未配置时返回null</returns>
+    public static AliyunDnsClient? Start(AliyunDnsSetting? setting = null)
+    {
+        setting ??= AliyunDnsSetting.Current;
+        if (!setting.IsConfigured) return null;
+
+        var client = new AliyunDnsClient(setting);
+        client.Start(setting.Interval);
+        return client;
+    }
+
+    /// <summary>启动定时更新</summary>
+    /// <param name="interval">更新间隔（秒）</param>
+    public void Start(Int32 interval)
+    {
+        Log.Info("启动阿里云DNS动态域名解析：{0}.{1}", Record, Domain);
+
+        // 立即执行一次更新
+        ThreadPoolX.QueueUserWorkItem(async () =>
+        {
+            try
+            {
+                await UpdateAsync();
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+            }
+        });
+
+        // 启动定时器，定期更新DNS记录
+        if (interval > 0)
+        {
+            _timer = new TimerX(OnTimer, null, interval * 1000, interval * 1000)
+            {
+                Async = true
+            };
+
+            Log.Info("阿里云DNS更新间隔：{0}秒", interval);
+        }
+    }
+
+    /// <summary>停止定时更新</summary>
+    public void Stop()
+    {
+        _timer.TryDispose();
+        _timer = null;
+    }
+
+    /// <summary>定时器回调</summary>
+    private async void OnTimer(Object? state)
+    {
+        try
+        {
+            await UpdateAsync();
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteException(ex);
+        }
     }
     #endregion
 
