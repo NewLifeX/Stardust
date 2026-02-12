@@ -233,6 +233,34 @@ public class ServiceController : DisposeBase
                 Running = true;
                 StartTime = DateTime.Now;
 
+                // 执行健康检查（如果配置了）
+                if (!service.HealthCheck.IsNullOrEmpty())
+                {
+                    // 等待应用启动完成
+                    Thread.Sleep(StartWait);
+                    
+                    // 检查进程是否还在运行
+                    if (p.GetHasExited())
+                    {
+                        WriteLog("健康检查失败：进程已退出");
+                        Running = false;
+                        return false;
+                    }
+
+                    // 执行健康检查
+                    WriteLog("执行健康检查: {0}", service.HealthCheck);
+                    var isHealthy = HealthCheckHelper.Check(service.HealthCheck, 5000, new ActionLog(WriteLog));
+                    if (!isHealthy)
+                    {
+                        WriteLog("健康检查失败，应用可能未正常启动");
+                        // 健康检查失败不影响启动，只记录日志
+                    }
+                    else
+                    {
+                        WriteLog("健康检查成功");
+                    }
+                }
+
                 // 定时检查文件是否有改变
                 StartMonitor();
 
