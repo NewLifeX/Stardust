@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Net.Http;
 using NewLife;
 using NewLife.Log;
 using NewLife.Remoting;
@@ -28,6 +29,12 @@ public class AliyunDnsClient
 
     /// <summary>API端点</summary>
     public String Endpoint { get; set; } = "https://alidns.aliyuncs.com/";
+
+    /// <summary>API版本</summary>
+    public String ApiVersion { get; set; } = "2015-01-09";
+
+    /// <summary>签名版本</summary>
+    public String SignatureVersion { get; set; } = "1.0";
 
     /// <summary>性能追踪</summary>
     public ITracer? Tracer { get; set; }
@@ -288,11 +295,11 @@ public class AliyunDnsClient
 
             // 添加公共参数
             parameters["Format"] = "JSON";
-            parameters["Version"] = "2015-01-09";
+            parameters["Version"] = ApiVersion;
             parameters["AccessKeyId"] = AccessKeyId;
             parameters["SignatureMethod"] = "HMAC-SHA1";
             parameters["Timestamp"] = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
-            parameters["SignatureVersion"] = "1.0";
+            parameters["SignatureVersion"] = SignatureVersion;
             parameters["SignatureNonce"] = Guid.NewGuid().ToString();
 
             // 生成签名

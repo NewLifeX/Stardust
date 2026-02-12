@@ -573,11 +573,11 @@ internal class MyService : ServiceBase, IServiceProvider
             };
 
             // 立即执行一次更新
-            ThreadPoolX.QueueUserWorkItem(() =>
+            ThreadPoolX.QueueUserWorkItem(async () =>
             {
                 try
                 {
-                    _AliyunDns.UpdateAsync().Wait();
+                    await _AliyunDns.UpdateAsync();
                 }
                 catch (Exception ex)
                 {
@@ -604,11 +604,12 @@ internal class MyService : ServiceBase, IServiceProvider
     }
 
     /// <summary>阿里云DNS定时器</summary>
-    private void OnAliyunDnsTimer(Object? state)
+    private async void OnAliyunDnsTimer(Object? state)
     {
         try
         {
-            _AliyunDns?.UpdateAsync().Wait();
+            if (_AliyunDns != null)
+                await _AliyunDns.UpdateAsync();
         }
         catch (Exception ex)
         {
