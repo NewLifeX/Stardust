@@ -69,6 +69,14 @@ public partial class AlarmRecord : Entity<AlarmRecord>
 
         return FindAll(_.GroupId == groupId);
     }
+
+    /// <summary>根据状态查找所有记录</summary>
+    /// <param name="status">状态</param>
+    /// <returns>实体列表</returns>
+    public static IList<AlarmRecord> FindAllByStatus(AlarmStatuses status)
+    {
+        return FindAll(_.Status == status);
+    }
     #endregion
 
     #region 高级查询
