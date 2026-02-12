@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202509.xsd" Document="https://newlifex.com/xcode/model" ModelVersion="2.0.2026.130" xmlns="https://newlifex.com/Model202509.xsd">
+  <Option>
+    <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
+    <ClassNameTemplate />
+    <!--显示名模板。其中{displayName}替换为Table.DisplayName-->
+    <DisplayNameTemplate />
+    <!--基类。可能包含基类和接口，其中{name}替换为Table.Name-->
+    <BaseClass>Entity</BaseClass>
+    <!--命名空间-->
+    <Namespace>Stardust.Data.Nodes</Namespace>
+    <!--引用命名空间-->
+    <ExtendNameSpace />
+    <!--输出目录-->
+    <Output>.\</Output>
+    <!--是否使用中文文件名。默认false-->
+    <ChineseFileName>True</ChineseFileName>
+    <!--用于生成Copy函数的参数类型。例如{name}或I{name}-->
+    <ModelNameForCopy />
+    <!--带有索引器。实现IModel接口-->
+    <HasIModel>False</HasIModel>
+    <!--可为null上下文。生成String?等-->
+    <Nullable>False</Nullable>
+    <!--数据库连接名-->
+    <ConnName>Stardust</ConnName>
+    <!--模型类模版。设置后生成模型类，用于接口数据传输，例如{name}Model-->
+    <ModelClass />
+    <!--模型类输出目录。默认当前目录的Models子目录-->
+    <ModelsOutput>.\Models\</ModelsOutput>
+    <!--模型接口模版。设置后生成模型接口，用于约束模型类和实体类，例如I{name}-->
+    <ModelInterface />
+    <!--模型接口输出目录。默认当前目录的Interfaces子目录-->
+    <InterfacesOutput>.\Interfaces\</InterfacesOutput>
+    <!--用户实体转为模型类的模型类。例如{name}或{name}DTO-->
+    <ModelNameForToModel />
+    <!--命名格式。Default/Upper/Lower/Underline-->
+    <NameFormat>Default</NameFormat>
+    <!--魔方区域显示名-->
+    <DisplayName />
+    <!--魔方控制器输出目录-->
+    <CubeOutput>../../Stardust.Web/Areas/MySql</CubeOutput>
+  </Option>
+  <Tables>
+    <Table Name="MySqlNode" Description="MySql节点。MySql管理">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
+        <Column Name="Name" DataType="String" Master="True" Description="名称" />
+        <Column Name="Category" DataType="String" Description="分类" />
+        <Column Name="Server" DataType="String" Description="地址。服务器地址" />
+        <Column Name="Port" DataType="Int32" Description="端口。默认3306" />
+        <Column Name="UserName" DataType="String" Description="用户名" />
+        <Column Name="Password" DataType="String" Description="密码" />
+        <Column Name="DatabaseName" DataType="String" Description="数据库。监控的数据库名称" />
+        <Column Name="Version" DataType="String" Description="版本" />
+        <Column Name="Enable" DataType="Boolean" Description="启用。停用的节点不再执行监控" />
+        <Column Name="WebHook" DataType="String" Length="500" Description="告警机器人。钉钉、企业微信等" Category="告警" />
+        <Column Name="AlarmConnections" DataType="Int32" Description="连接告警。连接数告警阈值" Category="告警" />
+        <Column Name="AlarmQPS" DataType="Int32" Description="QPS告警。每秒查询数告警阈值" Category="告警" />
+        <Column Name="AlarmSlowQuery" DataType="Int32" Description="慢查询告警。慢查询数告警阈值" Category="告警" />
+        <Column Name="CreateUser" DataType="String" Description="创建人" Category="扩展" />
+        <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="UpdateUser" DataType="String" Description="更新人" Category="扩展" />
+        <Column Name="UpdateUserID" DataType="Int32" Description="更新者" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="Server,Port" Unique="True" />
+      </Indexes>
+    </Table>
+    <Table Name="MySqlData" Description="MySql数据。MySql监控" ConnName="StardustData">
+      <Columns>
+        <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="time" Description="编号" />
+        <Column Name="MySqlId" DataType="Int32" Description="MySql节点" />
+        <Column Name="Name" DataType="String" Master="True" Description="名称" />
+        <Column Name="Uptime" DataType="Int32" Description="启动时间。单位秒" />
+        <Column Name="Connections" DataType="Int32" Description="当前连接数" />
+        <Column Name="MaxConnections" DataType="Int32" Description="最大连接数" />
+        <Column Name="Qps" DataType="Int32" Description="每秒查询数" />
+        <Column Name="Tps" DataType="Int32" Description="每秒事务数" />
+        <Column Name="BytesReceived" DataType="Int64" Description="接收字节数" />
+        <Column Name="BytesSent" DataType="Int64" Description="发送字节数" />
+        <Column Name="InnodbBufferPoolSize" DataType="Int64" Description="InnoDB缓冲池大小。单位MB" />
+        <Column Name="InnodbBufferPoolPages" DataType="Int32" Description="InnoDB缓冲池页数" />
+        <Column Name="InnodbBufferPoolHitRate" DataType="Double" Description="InnoDB缓冲池命中率" />
+        <Column Name="KeyCacheHitRate" DataType="Double" Description="键缓存命中率" />
+        <Column Name="QueryCacheHitRate" DataType="Double" Description="查询缓存命中率" />
+        <Column Name="SlowQueries" DataType="Int64" Description="慢查询数" />
+        <Column Name="OpenTables" DataType="Int32" Description="打开表数" />
+        <Column Name="TableLocksWaited" DataType="Int64" Description="表锁等待数" />
+        <Column Name="Threads" DataType="Int32" Description="线程数" />
+        <Column Name="ThreadsRunning" DataType="Int32" Description="运行线程数" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="MySqlId,Id" />
+      </Indexes>
+    </Table>
+  </Tables>
+</EntityModel>
