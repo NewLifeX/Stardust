@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Log;
 using NewLife.Remoting.Extensions;
-using Stardust.Server.Models;
+using Stardust.Models;
 using Stardust.Server.Services;
 
 namespace Stardust.Server.Controllers;

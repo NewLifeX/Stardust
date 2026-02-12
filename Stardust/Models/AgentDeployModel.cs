@@ -1,7 +1,7 @@
 #nullable enable
 using System.ComponentModel;
 
-namespace Stardust.Server.Models;
+namespace Stardust.Models;
 
 /// <summary>StarAgent远程部署请求模型</summary>
 public class AgentDeployModel

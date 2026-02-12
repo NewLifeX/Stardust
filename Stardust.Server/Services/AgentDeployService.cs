@@ -5,7 +5,7 @@ using System.Text;
 using NewLife;
 using NewLife.Log;
 using NewLife.Security;
-using Stardust.Server.Models;
+using Stardust.Models;
 
 namespace Stardust.Server.Services;
 
