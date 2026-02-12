@@ -6,7 +6,7 @@
 
     var serverUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
 }
-<div class="clearfix" id="agentApp">
+<div class="clearfix" id="agentApp" data-server-url="@serverUrl">
     <div class="tableTools-container">
         <h3><i class="ace-icon fa fa-cloud-download"></i> 星尘代理安装</h3>
 
@@ -237,7 +237,7 @@
 
 <script>
     (function () {
-        var serverUrl = '@Html.Raw(serverUrl)';
+        var serverUrl = document.getElementById('agentApp').getAttribute('data-server-url');
 
         // 探测本机 StarAgent
         function detectAgent() {
