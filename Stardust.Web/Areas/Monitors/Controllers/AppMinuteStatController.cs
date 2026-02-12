@@ -3,6 +3,7 @@ using NewLife.Cube;
 using NewLife.Cube.Charts;
 using NewLife.Web;
 using Stardust.Data.Monitors;
+using Stardust.Server.Services;
 using static Stardust.Data.Monitors.AppMinuteStat;
 
 namespace Stardust.Web.Areas.Monitors.Controllers;
@@ -11,6 +12,10 @@ namespace Stardust.Web.Areas.Monitors.Controllers;
 [MonitorsArea]
 public class AppMinuteStatController : ReadOnlyEntityController<AppMinuteStat>
 {
+    private readonly ITraceStatService _traceStat;
+
+    public AppMinuteStatController(ITraceStatService traceStat) => _traceStat = traceStat;
+
     protected override IEnumerable<AppMinuteStat> Search(Pager p)
     {
         var appId = p["appId"].ToInt(-1);
@@ -54,6 +59,9 @@ public class AppMinuteStatController : ReadOnlyEntityController<AppMinuteStat>
         }
 
         p.RetrieveState = true;
+
+        // 标记热门应用，缩短统计计算周期
+        if (appId > 0) _traceStat.SetHotApp(appId);
 
         var list = AppMinuteStat.Search(appId, minError, start, end, p["Q"], p);
 

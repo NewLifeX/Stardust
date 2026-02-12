@@ -222,6 +222,10 @@ public class Startup
 
         XTrace.WriteLine("StarServer初始化完成");
 
+        // 设置追踪统计服务的缓存提供者，用于热门应用共享存储
+        if (app.ApplicationServices.GetService<ITraceStatService>() is TraceStatService ts)
+            ts.CacheProvider = app.ApplicationServices.GetService<ICacheProvider>();
+
         // 取得StarWeb地址
         Task.Run(() => ResolveWebUrl(app.ApplicationServices));
     }

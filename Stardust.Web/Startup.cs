@@ -52,7 +52,14 @@ public class Startup
         // 统计
         services.AddSingleton<IAppDayStatService, AppDayStatService>();
         services.AddSingleton<ITraceItemStatService, TraceItemStatService>();
-        services.AddSingleton<ITraceStatService, TraceStatService>();
+        services.AddSingleton<ITraceStatService>(sp =>
+        {
+            var traceStat = new TraceStatService(sp.GetRequiredService<ITracer>())
+            {
+                CacheProvider = sp.GetRequiredService<ICacheProvider>(),
+            };
+            return traceStat;
+        });
 
         services.AddSingleton<IRedisService, RedisService>();
 

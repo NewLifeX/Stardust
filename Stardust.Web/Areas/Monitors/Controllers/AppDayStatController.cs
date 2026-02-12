@@ -51,6 +51,9 @@ public class AppDayStatController : MonitorsEntityController<AppDayStat>
         p.RetrieveState = true;
         PageSetting.EnableSelect = true;
 
+        // 标记热门应用，缩短统计计算周期
+        if (appId > 0) _traceStat.SetHotApp(appId);
+
         var list = AppDayStat.Search(appId, start, end, p["Q"], p);
 
         if (list.Count > 0 && appId > 0)
