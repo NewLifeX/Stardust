@@ -264,7 +264,7 @@ public static class HealthCheckHelper
 
             client.Client.ReceiveTimeout = timeout;
 
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
             using var cts = new CancellationTokenSource(timeout);
             var result = await client.ReceiveAsync(cts.Token).ConfigureAwait(false);
             return result.Buffer != null && result.Buffer.Length > 0;
@@ -284,7 +284,7 @@ public static class HealthCheckHelper
             }
 #endif
         }
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
         catch (OperationCanceledException)
         {
             log?.Warn("UDP健康检查超时: {0}", address);
