@@ -52,14 +52,7 @@ public class Startup
         // 统计
         services.AddSingleton<IAppDayStatService, AppDayStatService>();
         services.AddSingleton<ITraceItemStatService, TraceItemStatService>();
-        services.AddSingleton<ITraceStatService>(sp =>
-        {
-            var traceStat = new TraceStatService(sp.GetRequiredService<ITracer>())
-            {
-                CacheProvider = sp.GetRequiredService<ICacheProvider>(),
-            };
-            return traceStat;
-        });
+        services.AddSingleton<ITraceStatService, TraceStatService>();
 
         services.AddSingleton<IRedisService, RedisService>();
 
@@ -67,6 +60,7 @@ public class Startup
         services.AddSingleton<ConfigService>();
         services.AddSingleton<AppOnlineService>();
         services.AddSingleton<DeployService>();
+        services.AddSingleton<HotAppService>();
         services.AddSingleton<NewLife.Cube.Services.TokenService>();
 
         services.AddCubeFileStorage("Star");

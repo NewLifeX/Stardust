@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using NewLife;
-using NewLife.Caching;
 using NewLife.Log;
 using NewLife.Threading;
 using Stardust.Data.Monitors;
@@ -75,12 +74,6 @@ public class TraceStatService : ITraceStatService
 
     private Int32 _count;
     private readonly ITracer _tracer;
-
-    /// <summary>缓存提供者。用于热门应用共享存储</summary>
-    public ICacheProvider CacheProvider { get; set; }
-
-    /// <summary>热门应用缓存键</summary>
-    private const String HotAppCacheKey = "stardust:traceStat:HotApps";
 
     public TraceStatService(ITracer tracer) => _tracer = tracer;
 
@@ -173,48 +166,16 @@ public class TraceStatService : ITraceStatService
     {
         if (appId <= 0) return;
 
-        var cache = CacheProvider?.Cache;
-        if (cache == null) return;
-
-        // 使用缓存字典存储热门应用，值为过期时间，有效期5分钟
-        var dic = cache.GetDictionary<String>(HotAppCacheKey);
-        dic[appId.ToString()] = DateTime.Now.AddMinutes(5).ToFullString();
-        cache.SetExpire(HotAppCacheKey, TimeSpan.FromMinutes(6));
+        Init();
 
         // 缩短批计算周期，让统计数据更快刷新
         _timerBatch?.SetNext(3_000);
-    }
 
-    /// <summary>获取热门应用列表</summary>
-    private Int32[] GetHotApps()
-    {
-        var cache = CacheProvider?.Cache;
-        if (cache == null) return [];
-
-        if (!cache.ContainsKey(HotAppCacheKey)) return [];
-
-        var dic = cache.GetDictionary<String>(HotAppCacheKey);
-        if (dic == null || dic.Count == 0) return [];
-
-        var now = DateTime.Now;
-        var list = new List<Int32>();
-        var expired = new List<String>();
-        foreach (var item in dic)
-        {
-            var exp = item.Value.ToDateTime();
-            if (exp > now)
-                list.Add(item.Key.ToInt());
-            else
-                expired.Add(item.Key);
-        }
-
-        // 清理过期条目
-        foreach (var key in expired)
-        {
-            dic.Remove(key);
-        }
-
-        return list.ToArray();
+        // 触发各延迟队列立即落盘
+        _minuteQueue?.Trigger();
+        _hourQueue?.Trigger();
+        _dayQueue?.Trigger();
+        _appMinuteQueue?.Trigger();
     }
 
     /// <summary>流式计算，增量累加</summary>
@@ -313,9 +274,6 @@ public class TraceStatService : ITraceStatService
     /// <param name="state"></param>
     private void DoBatchStat(Object state)
     {
-        // 获取热门应用，对热门应用缩短落盘周期
-        var hotApps = GetHotApps();
-
         var keys = _bagMinute.Keys;
         foreach (var item in keys)
         {
@@ -335,9 +293,6 @@ public class TraceStatService : ITraceStatService
             }
         }
 
-        // 热门应用立即落盘，缩短保存周期，使监控数据更实时
-        if (hotApps.Length > 0) FlushHotApps(hotApps);
-
         // 休息5000ms，让分钟统计落库
         Thread.Sleep(5000);
 
@@ -354,19 +309,6 @@ public class TraceStatService : ITraceStatService
 
         // 更新周期
         if (BatchPeriod > 0 && _timerBatch != null) _timerBatch.Period = BatchPeriod * 1000;
-    }
-
-    /// <summary>立即落盘热门应用的统计数据</summary>
-    /// <param name="hotApps">热门应用编号列表</param>
-    private void FlushHotApps(Int32[] hotApps)
-    {
-        using var span = _tracer?.NewSpan("TraceFlushHotApps", new { hotApps = hotApps.Join(",") });
-
-        // 触发各延迟队列立即落盘，让热门应用统计数据尽快持久化
-        _minuteQueue?.Trigger();
-        _hourQueue?.Trigger();
-        _dayQueue?.Trigger();
-        _appMinuteQueue?.Trigger();
     }
 
     private void ProcessDay(Int32 appId, DateTime time)

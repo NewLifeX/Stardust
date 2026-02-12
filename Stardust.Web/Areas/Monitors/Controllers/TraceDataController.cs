@@ -5,7 +5,7 @@ using NewLife.Cube.Charts;
 using NewLife.Data;
 using NewLife.Web;
 using Stardust.Data.Monitors;
-using Stardust.Server.Services;
+using Stardust.Web.Services;
 using XCode;
 using XCode.Membership;
 using static Stardust.Data.Monitors.TraceData;
@@ -16,9 +16,9 @@ namespace Stardust.Web.Areas.Monitors.Controllers;
 [MonitorsArea]
 public class TraceDataController : ReadOnlyEntityController<TraceData>
 {
-    private readonly ITraceStatService _traceStat;
+    private readonly HotAppService _hotApp;
 
-    public TraceDataController(ITraceStatService traceStat) => _traceStat = traceStat;
+    public TraceDataController(HotAppService hotApp) => _hotApp = hotApp;
 
     static TraceDataController() => ListFields.RemoveField("ID");
 
@@ -57,7 +57,7 @@ public class TraceDataController : ReadOnlyEntityController<TraceData>
         if (p.Sort.IsNullOrEmpty()) p.OrderBy = _.Id.Desc();
 
         // 标记热门应用，缩短统计计算周期
-        if (appId > 0) _traceStat.SetHotApp(appId);
+        if (appId > 0) _hotApp.SetHotAppAsync(appId);
 
         var list = TraceData.Search(appId, itemId, clientId, name, kind, minError, searchTag, start, end, p["Q"], p);
 
