@@ -549,6 +549,13 @@ public class RedisService : IHostedService, IRedisService
     private static IDictionary<String, String> ParseRedisArray(Object[] array)
     {
         var dict = new Dictionary<String, String>();
+        
+        // Redis 返回的数组应该是偶数长度（key-value对）
+        if (array.Length % 2 != 0)
+        {
+            XTrace.WriteLine("警告: Redis 返回的数组长度为奇数 {0}，最后一个元素将被忽略", array.Length);
+        }
+
         for (var i = 0; i < array.Length - 1; i += 2)
         {
             var key = array[i]?.ToString();
@@ -598,17 +605,12 @@ public class RedisService : IHostedService, IRedisService
         WriteLog("DiscoverSentinelNodes", true, $"自动添加{role}节点 [{address}] 从 [{parentNode.Server}]");
     }
 
-    #region 日志
-    /// <summary>日志</summary>
-    public static NewLife.Log.ILog Log { get; set; }
-
     /// <summary>写日志</summary>
     /// <param name="action">操作</param>
     /// <param name="success">是否成功</param>
     /// <param name="remark">备注</param>
-    public static void WriteLog(String action, Boolean success, String remark)
+    private static void WriteLog(String action, Boolean success, String remark)
     {
         LogProvider.Provider?.WriteLog("RedisNode", action, success, remark);
     }
-    #endregion
 }
