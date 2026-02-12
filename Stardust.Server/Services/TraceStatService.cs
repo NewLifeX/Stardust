@@ -80,7 +80,7 @@ public class TraceStatService : ITraceStatService
     public ICacheProvider CacheProvider { get; set; }
 
     /// <summary>热门应用缓存键</summary>
-    private const String HotAppCacheKey = "star:HotApps";
+    private const String HotAppCacheKey = "stardust:traceStat:HotApps";
 
     public TraceStatService(ITracer tracer) => _tracer = tracer;
 
@@ -179,7 +179,7 @@ public class TraceStatService : ITraceStatService
         // 使用缓存字典存储热门应用，值为过期时间，有效期5分钟
         var dic = cache.GetDictionary<String>(HotAppCacheKey);
         dic[appId.ToString()] = DateTime.Now.AddMinutes(5).ToFullString();
-        cache.SetExpire(HotAppCacheKey, TimeSpan.FromMinutes(10));
+        cache.SetExpire(HotAppCacheKey, TimeSpan.FromMinutes(6));
 
         // 缩短批计算周期，让统计数据更快刷新
         _timerBatch?.SetNext(3_000);
@@ -198,10 +198,20 @@ public class TraceStatService : ITraceStatService
 
         var now = DateTime.Now;
         var list = new List<Int32>();
+        var expired = new List<String>();
         foreach (var item in dic)
         {
             var exp = item.Value.ToDateTime();
-            if (exp > now) list.Add(item.Key.ToInt());
+            if (exp > now)
+                list.Add(item.Key.ToInt());
+            else
+                expired.Add(item.Key);
+        }
+
+        // 清理过期条目
+        foreach (var key in expired)
+        {
+            dic.Remove(key);
         }
 
         return list.ToArray();
