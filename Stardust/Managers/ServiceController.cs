@@ -239,6 +239,9 @@ public class ServiceController : DisposeBase
                 // 检查nginx配置文件
                 PublishNginxConfig(workDir);
 
+                // 开放防火墙端口
+                OpenFirewallPorts(workDir);
+
                 return true;
             }
             catch (Exception ex)
@@ -272,6 +275,49 @@ public class ServiceController : DisposeBase
                     WriteLog("站点发布{0}！", rs ? "成功" : "无变化");
                 }
             }
+        }
+    }
+
+    /// <summary>开放防火墙端口</summary>
+    /// <param name="workDir">工作目录</param>
+    private void OpenFirewallPorts(String workDir)
+    {
+        try
+        {
+            var firewall = new FirewallManager { Log = new ActionLog(WriteLog) };
+
+            if (!firewall.Available)
+            {
+                WriteLog("未检测到可用的防火墙或无权限访问，跳过端口开放");
+                return;
+            }
+
+            WriteLog("检测到防火墙类型：{0}", firewall.Type);
+
+            // 检测需要开放的端口
+            var ports = FirewallManager.DetectPorts(workDir).ToList();
+            if (ports.Count == 0)
+            {
+                WriteLog("未检测到需要开放的端口");
+                return;
+            }
+
+            WriteLog("检测到 {0} 个端口需要开放: {1}", ports.Count, String.Join(", ", ports));
+
+            // 开放每个端口
+            foreach (var port in ports)
+            {
+                var ruleName = $"{Name}-{port}";
+                var success = firewall.OpenPort(port, ruleName);
+                if (!success)
+                {
+                    WriteLog("端口 {0} 开放失败", port);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            WriteLog("开放防火墙端口时发生异常: {0}", ex.Message);
         }
     }
 
