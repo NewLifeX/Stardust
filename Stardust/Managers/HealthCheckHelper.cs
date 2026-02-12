@@ -15,6 +15,8 @@ namespace Stardust.Managers;
 /// </remarks>
 public static class HealthCheckHelper
 {
+    // 使用静态 HttpClient 避免socket耗尽，设置合理的超时
+    private static readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(10) };
     /// <summary>执行健康检查</summary>
     /// <param name="healthCheck">健康检查地址，支持http/tcp/udp协议</param>
     /// <param name="timeout">超时时间（毫秒），默认5000ms</param>
@@ -48,10 +50,11 @@ public static class HealthCheckHelper
     /// <summary>HTTP健康检查</summary>
     private static Boolean CheckHttp(String url, Int32 timeout, ILog? log)
     {
-        using var client = new HttpClient { Timeout = TimeSpan.FromMilliseconds(timeout) };
         try
         {
-            var response = client.GetAsync(url).Result;
+            using var cts = new CancellationTokenSource(timeout);
+            var task = _httpClient.GetAsync(url, cts.Token);
+            var response = task.GetAwaiter().GetResult();
             var isHealthy = response.StatusCode == HttpStatusCode.OK;
             
             if (!isHealthy)
@@ -180,10 +183,10 @@ public static class HealthCheckHelper
     /// <summary>异步HTTP健康检查</summary>
     private static async Task<Boolean> CheckHttpAsync(String url, Int32 timeout, ILog? log)
     {
-        using var client = new HttpClient { Timeout = TimeSpan.FromMilliseconds(timeout) };
         try
         {
-            var response = await client.GetAsync(url).ConfigureAwait(false);
+            using var cts = new CancellationTokenSource(timeout);
+            var response = await _httpClient.GetAsync(url, cts.Token).ConfigureAwait(false);
             var isHealthy = response.StatusCode == HttpStatusCode.OK;
             
             if (!isHealthy)
@@ -270,8 +273,11 @@ public static class HealthCheckHelper
             return result.Buffer != null && result.Buffer.Length > 0;
 #else
             // 旧版本没有带 CancellationToken 的 ReceiveAsync
-            IPEndPoint? remoteEP = null;
-            var task = Task.Run(() => client.Receive(ref remoteEP));
+            var task = Task.Run(() =>
+            {
+                IPEndPoint? ep = null;
+                return client.Receive(ref ep);
+            });
             if (await Task.WhenAny(task, Task.Delay(timeout)).ConfigureAwait(false) == task)
             {
                 var response = await task.ConfigureAwait(false);
