@@ -1,6 +1,8 @@
 # 星尘监控 Java SDK
 
-适用于 Java 8+，提供星尘 APM 监控和配置中心的接入能力。
+适用于 Java 11+，提供星尘 APM 监控和配置中心的接入能力。
+
+> **注意**：示例代码使用 Java 11+ 特性（ProcessHandle、HttpURLConnection）。如需 Java 8 支持，请参考文末的兼容性说明。
 
 ## 功能特性
 
@@ -11,7 +13,9 @@
 
 ## 依赖
 
-无额外依赖，使用 JDK 内置 HTTP 客户端。Java 11+ 可使用 `java.net.http.HttpClient`。
+无额外依赖，使用 JDK 内置 HTTP 客户端。
+
+> **生产环境建议**：使用 Gson 或 Jackson 替代示例中的简易 JSON 解析器，以获得更好的性能和稳定性。
 
 ## 快速开始
 
@@ -52,6 +56,8 @@ config.stop();
 
 ## 完整代码
 
+### StardustTracer（APM 监控）
+
 ```java
 import java.io.*;
 import java.net.*;
@@ -59,6 +65,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.zip.GZIPOutputStream;
+import java.lang.management.*;
 
 /**
  * 星尘监控 Java SDK
@@ -94,7 +101,7 @@ public class StardustTracer {
         this.appId = appId;
         this.appName = appId;
         this.secret = secret;
-        this.clientId = getLocalIp() + "@" + ProcessHandle.current().pid();
+        this.clientId = getLocalIp() + "@" + getProcessId();
     }
 
     /**
@@ -243,18 +250,37 @@ public class StardustTracer {
         Map<String, Object> info = new LinkedHashMap<>();
         try {
             Runtime runtime = Runtime.getRuntime();
-            com.sun.management.OperatingSystemMXBean osBean = 
-                (com.sun.management.OperatingSystemMXBean) 
+            java.lang.management.OperatingSystemMXBean osBean = 
                 java.lang.management.ManagementFactory.getOperatingSystemMXBean();
             
-            info.put("Id", ProcessHandle.current().pid());
+            // 获取进程ID（Java 9+）
+            try {
+                info.put("Id", ProcessHandle.current().pid());
+            } catch (NoClassDefFoundError | NoSuchMethodError e) {
+                // Java 8 fallback：使用进程名解析
+                String processName = java.lang.management.ManagementFactory.getRuntimeMXBean().getName();
+                String pid = processName.split("@")[0];
+                info.put("Id", Integer.parseInt(pid));
+            }
+            
             info.put("Name", appName);
             info.put("Time", System.currentTimeMillis());
-            info.put("CpuUsage", osBean.getProcessCpuLoad());
+            
+            // 尝试获取 CPU 使用率（需要 com.sun.management API）
+            try {
+                if (osBean instanceof com.sun.management.OperatingSystemMXBean) {
+                    com.sun.management.OperatingSystemMXBean sunOsBean = 
+                        (com.sun.management.OperatingSystemMXBean) osBean;
+                    info.put("CpuUsage", sunOsBean.getProcessCpuLoad());
+                }
+            } catch (Exception e) {
+                // 某些 JVM 实现可能不支持
+            }
+            
             info.put("WorkingSet", runtime.totalMemory() - runtime.freeMemory());
             info.put("Threads", Thread.activeCount());
         } catch (Exception ex) {
-            // 忽略性能指标收集错误
+            // 忽略性能指标收集错误，不影响主流程
         }
         return info;
     }
@@ -379,17 +405,18 @@ public class StardustTracer {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> parseJson(String json) {
-        // 简易 JSON 解析，生产环境建议使用 Gson/Jackson
-        // 此处仅做基本演示
+        // 简易 JSON 解析
+        // 注意：JavaScript引擎（Nashorn）在Java 11被弃用，Java 15已移除
+        // 生产环境建议使用 Gson、Jackson 等专业库
         try {
-            // 使用 javax.script 作为简单 JSON 解析
             javax.script.ScriptEngine engine = new javax.script.ScriptEngineManager()
                     .getEngineByName("javascript");
             if (engine == null) return null;
             Object result = engine.eval("Java.asJSONCompatible(" + json + ")");
             if (result instanceof Map) return (Map<String, Object>) result;
         } catch (Exception e) {
-            // fallback
+            // fallback - 如果 JavaScript 引擎不可用（Java 15+）
+            System.err.println("[Stardust] JSON parse failed, consider using Gson/Jackson: " + e.getMessage());
         }
         return null;
     }
@@ -414,6 +441,21 @@ public class StardustTracer {
             return socket.getLocalAddress().getHostAddress();
         } catch (Exception e) {
             return "127.0.0.1";
+        }
+    }
+    
+    private static long getProcessId() {
+        try {
+            // Java 9+ ProcessHandle API
+            return ProcessHandle.current().pid();
+        } catch (NoClassDefFoundError | NoSuchMethodError e) {
+            // Java 8 fallback
+            try {
+                String processName = ManagementFactory.getRuntimeMXBean().getName();
+                return Long.parseLong(processName.split("@")[0]);
+            } catch (Exception ex) {
+                return 0;
+            }
         }
     }
 
@@ -535,10 +577,16 @@ public class StardustTracer {
 
 ## 配置中心实现
 
+### StardustConfig（配置中心）
+
 ```java
+import java.io.*;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.BiConsumer;
+import java.lang.management.*;
 
 /**
  * 星尘配置中心 Java SDK
@@ -569,7 +617,7 @@ public class StardustConfig {
         this.appId = appId;
         this.appName = appId;
         this.secret = secret;
-        this.clientId = getLocalIp() + "@" + ProcessHandle.current().pid();
+        this.clientId = getLocalIp() + "@" + getProcessId();
     }
 
     /**
@@ -808,6 +856,9 @@ public class StardustConfig {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> parseJson(String json) {
+        // 简易 JSON 解析
+        // 注意：JavaScript引擎（Nashorn）在Java 11被弃用，Java 15已移除
+        // 生产环境建议使用 Gson、Jackson 等专业库
         try {
             javax.script.ScriptEngine engine = new javax.script.ScriptEngineManager()
                     .getEngineByName("javascript");
@@ -815,7 +866,7 @@ public class StardustConfig {
             Object result = engine.eval("Java.asJSONCompatible(" + json + ")");
             if (result instanceof Map) return (Map<String, Object>) result;
         } catch (Exception e) {
-            // fallback
+            System.err.println("[Stardust] JSON parse failed, consider using Gson/Jackson: " + e.getMessage());
         }
         return null;
     }
@@ -842,10 +893,27 @@ public class StardustConfig {
             return "127.0.0.1";
         }
     }
+    
+    private static long getProcessId() {
+        try {
+            // Java 9+ ProcessHandle API
+            return ProcessHandle.current().pid();
+        } catch (NoClassDefFoundError | NoSuchMethodError e) {
+            // Java 8 fallback
+            try {
+                String processName = ManagementFactory.getRuntimeMXBean().getName();
+                return Long.parseLong(processName.split("@")[0]);
+            } catch (Exception ex) {
+                return 0;
+            }
+        }
+    }
 }
 ```
 
 ## Spring Boot 集成示例
+
+### APM 监控拦截器
 
 ```java
 import org.springframework.stereotype.Component;
@@ -1067,10 +1135,76 @@ try (StardustTracer.Span parentSpan = tracer.newSpan("处理订单")) {
 
 4. **性能影响**：APM 监控会带来少量性能开销（通常 < 1%），可以根据需要调整采样参数。
 
-5. **JSON 解析**：示例代码使用 JavaScript 引擎进行 JSON 解析，生产环境建议使用 Gson、Jackson 等专业库。
+5. **JSON 解析**：
+   - 示例代码使用 JavaScript 引擎（Nashorn）进行 JSON 解析
+   - Nashorn 在 Java 11 被标记为弃用，在 Java 15 中已完全移除
+   - **生产环境强烈建议**使用 Gson、Jackson 或 FastJSON 等专业 JSON 库
+
+6. **Java 版本兼容性**：
+   - 示例代码主要针对 Java 11+
+   - 使用了 Java 8 fallback 机制来获取进程 ID
+   - 如完全运行在 Java 8 环境，可能需要调整部分代码
+
+## Java 8 兼容性说明
+
+如需完全支持 Java 8，需要进行以下调整：
+
+### 1. 移除 ProcessHandle 依赖
+
+示例代码已包含 fallback 机制，但如果编译环境是 Java 8，需要确保不引用 `ProcessHandle` 类。
+
+### 2. 替换 JavaScript 引擎
+
+Java 8 使用 Nashorn 引擎，但建议直接使用专业 JSON 库：
+
+```xml
+<!-- Maven -->
+<dependency>
+    <groupId>com.google.code.gson</groupId>
+    <artifactId>gson</artifactId>
+    <version>2.10.1</version>
+</dependency>
+```
+
+```java
+// 替换 parseJson 方法
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+private final Gson gson = new Gson();
+
+@SuppressWarnings("unchecked")
+private Map<String, Object> parseJson(String json) {
+    return gson.fromJson(json, new TypeToken<Map<String, Object>>(){}.getType());
+}
+
+private String toJson(Map<String, Object> map) {
+    return gson.toJson(map);
+}
+```
+
+### 3. 编译目标设置
+
+```xml
+<!-- Maven pom.xml -->
+<properties>
+    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>8</maven.compiler.target>
+</properties>
+```
+
+或
+
+```gradle
+// build.gradle
+sourceCompatibility = '8'
+targetCompatibility = '8'
+```
 
 ## 相关资源
 
 - [星尘监控平台文档](https://github.com/NewLifeX/Stardust)
 - [星尘监控接入 API 文档](../星尘监控接入Api文档.md)
 - [.NET SDK 文档](https://github.com/NewLifeX/Stardust/tree/master/Stardust)
+- [Go SDK 文档](./stardust-sdk-go.md)
+- [Python SDK 文档](./stardust-sdk-python.md)
