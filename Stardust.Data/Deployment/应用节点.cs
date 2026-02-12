@@ -176,6 +176,15 @@ public partial class AppDeployNode
     [BindColumn("Delay", "延迟。批量发布时，需要延迟执行的时间，用于滚动发布，单位秒", "")]
     public Int32 Delay { get => _Delay; set { if (OnPropertyChanging("Delay", value)) { _Delay = value; OnPropertyChanged("Delay"); } } }
 
+    private String _HealthCheck;
+    /// <summary>健康检查。探针检测服务是否正常，http/tcp/udp地址，为空时使用应用集配置</summary>
+    [Category("发布参数")]
+    [DisplayName("健康检查")]
+    [Description("健康检查。探针检测服务是否正常，http/tcp/udp地址，为空时使用应用集配置")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("HealthCheck", "健康检查。探针检测服务是否正常，http/tcp/udp地址，为空时使用应用集配置", "")]
+    public String HealthCheck { get => _HealthCheck; set { if (OnPropertyChanging("HealthCheck", value)) { _HealthCheck = value; OnPropertyChanged("HealthCheck"); } } }
+
     private Int32 _ProcessId;
     /// <summary>进程</summary>
     [Category("状态")]
@@ -347,6 +356,7 @@ public partial class AppDeployNode
             "Priority" => _Priority,
             "Mode" => _Mode,
             "Delay" => _Delay,
+            "HealthCheck" => _HealthCheck,
             "ProcessId" => _ProcessId,
             "ProcessName" => _ProcessName,
             "ProcessUser" => _ProcessUser,
@@ -387,6 +397,7 @@ public partial class AppDeployNode
                 case "Priority": _Priority = (Stardust.Models.ProcessPriority)value.ToInt(); break;
                 case "Mode": _Mode = (Stardust.Models.DeployMode)value.ToInt(); break;
                 case "Delay": _Delay = value.ToInt(); break;
+                case "HealthCheck": _HealthCheck = Convert.ToString(value); break;
                 case "ProcessId": _ProcessId = value.ToInt(); break;
                 case "ProcessName": _ProcessName = Convert.ToString(value); break;
                 case "ProcessUser": _ProcessUser = Convert.ToString(value); break;
@@ -505,6 +516,9 @@ public partial class AppDeployNode
         /// <summary>延迟。批量发布时，需要延迟执行的时间，用于滚动发布，单位秒</summary>
         public static readonly Field Delay = FindByName("Delay");
 
+        /// <summary>健康检查。探针检测服务是否正常，http/tcp/udp地址，为空时使用应用集配置</summary>
+        public static readonly Field HealthCheck = FindByName("HealthCheck");
+
         /// <summary>进程</summary>
         public static readonly Field ProcessId = FindByName("ProcessId");
 
@@ -612,6 +626,9 @@ public partial class AppDeployNode
 
         /// <summary>延迟。批量发布时，需要延迟执行的时间，用于滚动发布，单位秒</summary>
         public const String Delay = "Delay";
+
+        /// <summary>健康检查。探针检测服务是否正常，http/tcp/udp地址，为空时使用应用集配置</summary>
+        public const String HealthCheck = "HealthCheck";
 
         /// <summary>进程</summary>
         public const String ProcessId = "ProcessId";

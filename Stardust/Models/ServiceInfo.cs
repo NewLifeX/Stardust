@@ -63,6 +63,10 @@ public class ServiceInfo
     [XmlAttribute]
     public ProcessPriority Priority { get; set; }
 
+    /// <summary>健康检查。探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health</summary>
+    [XmlAttribute]
+    public String? HealthCheck { get; set; }
+
     /// <summary>压缩包文件</summary>
     [XmlIgnore]
     public String? ZipFile { get; set; }

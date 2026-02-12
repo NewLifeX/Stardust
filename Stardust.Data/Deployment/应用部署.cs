@@ -289,6 +289,15 @@ public partial class AppDeploy
     [BindColumn("Dependencies", "依赖项。依赖的驱动/插件部署集名称，如dm8-driver;redis-plugin，分号分隔。可来自全局项目或本项目", "")]
     public String Dependencies { get => _Dependencies; set { if (OnPropertyChanging("Dependencies", value)) { _Dependencies = value; OnPropertyChanged("Dependencies"); } } }
 
+    private String _HealthCheck;
+    /// <summary>健康检查。探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health</summary>
+    [Category("发布参数")]
+    [DisplayName("健康检查")]
+    [Description("健康检查。探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("HealthCheck", "健康检查。探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health", "")]
+    public String HealthCheck { get => _HealthCheck; set { if (OnPropertyChanging("HealthCheck", value)) { _HealthCheck = value; OnPropertyChanged("HealthCheck"); } } }
+
     private Int32 _CreateUserId;
     /// <summary>创建者</summary>
     [Category("扩展")]
@@ -392,6 +401,7 @@ public partial class AppDeploy
             "AutoStop" => _AutoStop,
             "ReloadOnChange" => _ReloadOnChange,
             "Dependencies" => _Dependencies,
+            "HealthCheck" => _HealthCheck,
             "CreateUserId" => _CreateUserId,
             "CreateTime" => _CreateTime,
             "CreateIP" => _CreateIP,
@@ -436,6 +446,7 @@ public partial class AppDeploy
                 case "AutoStop": _AutoStop = value.ToBoolean(); break;
                 case "ReloadOnChange": _ReloadOnChange = value.ToBoolean(); break;
                 case "Dependencies": _Dependencies = Convert.ToString(value); break;
+                case "HealthCheck": _HealthCheck = Convert.ToString(value); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -598,6 +609,9 @@ public partial class AppDeploy
         /// <summary>依赖项。依赖的驱动/插件部署集名称，如dm8-driver;redis-plugin，分号分隔。可来自全局项目或本项目</summary>
         public static readonly Field Dependencies = FindByName("Dependencies");
 
+        /// <summary>健康检查。探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health</summary>
+        public static readonly Field HealthCheck = FindByName("HealthCheck");
+
         /// <summary>创建者</summary>
         public static readonly Field CreateUserId = FindByName("CreateUserId");
 
@@ -717,6 +731,9 @@ public partial class AppDeploy
 
         /// <summary>依赖项。依赖的驱动/插件部署集名称，如dm8-driver;redis-plugin，分号分隔。可来自全局项目或本项目</summary>
         public const String Dependencies = "Dependencies";
+
+        /// <summary>健康检查。探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health</summary>
+        public const String HealthCheck = "HealthCheck";
 
         /// <summary>创建者</summary>
         public const String CreateUserId = "CreateUserId";
