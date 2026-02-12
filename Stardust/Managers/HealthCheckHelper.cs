@@ -15,8 +15,8 @@ namespace Stardust.Managers;
 /// </remarks>
 public static class HealthCheckHelper
 {
-    // 使用静态 HttpClient 避免socket耗尽，设置合理的超时
-    private static readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(10) };
+    // 使用静态 HttpClient 避免socket耗尽，不设置全局超时，每次请求单独控制
+    private static readonly HttpClient _httpClient = new();
     /// <summary>执行健康检查</summary>
     /// <param name="healthCheck">健康检查地址，支持http/tcp/udp协议</param>
     /// <param name="timeout">超时时间（毫秒），默认5000ms</param>
