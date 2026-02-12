@@ -1,8 +1,10 @@
 # 星尘监控 Java SDK
 
-适用于 Java 11+，提供星尘 APM 监控和配置中心的接入能力。
+适用于 Java 8+（推荐 Java 11+），提供星尘 APM 监控和配置中心的接入能力。
 
-> **注意**：示例代码使用 Java 11+ 特性（ProcessHandle、HttpURLConnection）。如需 Java 8 支持，请参考文末的兼容性说明。
+> **版本说明**：
+> - **Java 11+**：完整支持，推荐使用
+> - **Java 8**：基本支持，需要额外配置（详见末尾兼容性说明）
 
 ## 功能特性
 
@@ -406,7 +408,7 @@ public class StardustTracer {
     @SuppressWarnings("unchecked")
     private Map<String, Object> parseJson(String json) {
         // 简易 JSON 解析
-        // 注意：JavaScript引擎（Nashorn）在Java 11被弃用，Java 15已移除
+        // 注意： JavaScript 引擎（Nashorn）在 Java 11 被弃用，Java 15 已移除
         // 生产环境建议使用 Gson、Jackson 等专业库
         try {
             javax.script.ScriptEngine engine = new javax.script.ScriptEngineManager()
@@ -857,7 +859,7 @@ public class StardustConfig {
     @SuppressWarnings("unchecked")
     private Map<String, Object> parseJson(String json) {
         // 简易 JSON 解析
-        // 注意：JavaScript引擎（Nashorn）在Java 11被弃用，Java 15已移除
+        // 注意： JavaScript 引擎（Nashorn）在 Java 11 被弃用，Java 15 已移除
         // 生产环境建议使用 Gson、Jackson 等专业库
         try {
             javax.script.ScriptEngine engine = new javax.script.ScriptEngineManager()
@@ -1162,7 +1164,7 @@ Java 8 使用 Nashorn 引擎，但建议直接使用专业 JSON 库：
 <dependency>
     <groupId>com.google.code.gson</groupId>
     <artifactId>gson</artifactId>
-    <version>2.10.1</version>
+    <version>2.11.0</version>
 </dependency>
 ```
 
