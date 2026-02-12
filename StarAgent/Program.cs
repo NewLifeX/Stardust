@@ -216,6 +216,8 @@ internal class MyService : ServiceBase, IServiceProvider
     private ServiceManager _Manager;
     private PluginManager _PluginManager;
     private String _lastVersion;
+    private AliyunDnsClient? _AliyunDns;
+    private TimerX? _dnsTimer;
 
     #region 调度核心
     /// <summary>服务启动</summary>
@@ -287,6 +289,9 @@ internal class MyService : ServiceBase, IServiceProvider
         // 辅助任务清理数据
         ThreadPoolX.QueueUserWorkItem(Fix);
 
+        // 启动阿里云DNS动态域名解析
+        StartAliyunDns();
+
         base.StartWork(reason);
     }
 
@@ -335,6 +340,9 @@ internal class MyService : ServiceBase, IServiceProvider
 
         _timer.TryDispose();
         _timer = null;
+
+        _dnsTimer.TryDispose();
+        _dnsTimer = null;
 
         StarAgentSetting.Provider.Changed -= OnSettingChanged;
         _Manager.Stop(reason);
@@ -528,6 +536,79 @@ internal class MyService : ServiceBase, IServiceProvider
             _container.AddSingleton(svr);
 
             svr.Start();
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteException(ex);
+        }
+    }
+
+    /// <summary>启动阿里云DNS动态域名解析</summary>
+    private void StartAliyunDns()
+    {
+        var set = AgentSetting;
+
+        // 检查是否配置了阿里云DNS
+        if (set.AliyunAccessKeyId.IsNullOrEmpty() ||
+            set.AliyunAccessKeySecret.IsNullOrEmpty() ||
+            set.AliyunDnsDomain.IsNullOrEmpty() ||
+            set.AliyunDnsRecord.IsNullOrEmpty())
+        {
+            return;
+        }
+
+        try
+        {
+            WriteLog("启动阿里云DNS动态域名解析：{0}.{1}", set.AliyunDnsRecord, set.AliyunDnsDomain);
+
+            _AliyunDns = new AliyunDnsClient
+            {
+                AccessKeyId = set.AliyunAccessKeyId,
+                AccessKeySecret = set.AliyunAccessKeySecret,
+                Domain = set.AliyunDnsDomain,
+                Record = set.AliyunDnsRecord,
+                RecordType = set.AliyunDnsRecordType,
+                Tracer = _factory?.Tracer,
+                Log = XTrace.Log
+            };
+
+            // 立即执行一次更新
+            ThreadPoolX.QueueUserWorkItem(() =>
+            {
+                try
+                {
+                    _AliyunDns.UpdateAsync().Wait();
+                }
+                catch (Exception ex)
+                {
+                    XTrace.WriteException(ex);
+                }
+            });
+
+            // 启动定时器，定期更新DNS记录
+            var interval = set.AliyunDnsInterval;
+            if (interval > 0)
+            {
+                _dnsTimer = new TimerX(OnAliyunDnsTimer, null, interval * 1000, interval * 1000)
+                {
+                    Async = true
+                };
+
+                WriteLog("阿里云DNS更新间隔：{0}秒", interval);
+            }
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteException(ex);
+        }
+    }
+
+    /// <summary>阿里云DNS定时器</summary>
+    private void OnAliyunDnsTimer(Object? state)
+    {
+        try
+        {
+            _AliyunDns?.UpdateAsync().Wait();
         }
         catch (Exception ex)
         {
