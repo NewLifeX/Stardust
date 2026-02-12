@@ -100,6 +100,7 @@ func (c *ConfigClient) login() {
 
 	body, err := json.Marshal(payload)
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "[Stardust] Config login marshal failed: %v\n", err)
 		return
 	}
 
@@ -136,6 +137,7 @@ func (c *ConfigClient) getAllConfig() {
 
 	body, err := json.Marshal(payload)
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "[Stardust] Config marshal failed: %v\n", err)
 		return
 	}
 

@@ -258,6 +258,7 @@ func (t *Tracer) login() {
 
 	body, err := json.Marshal(payload)
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "[Stardust] Login marshal failed: %v\n", err)
 		return
 	}
 
@@ -336,6 +337,7 @@ func (t *Tracer) report(buildersData []*SpanBuilder) {
 
 	body, err := json.Marshal(model)
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "[Stardust] Report marshal failed: %v\n", err)
 		return
 	}
 
