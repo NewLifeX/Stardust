@@ -404,49 +404,63 @@ public class RedisService : IHostedService, IRedisService
         var result = rds.Execute(null, (r, k) => r.Execute<String>("CLUSTER", "NODES"));
         if (result.IsNullOrEmpty()) return;
 
-        var lines = result.Split('\n');
+        var lines = result.Split('\n').Where(line => !line.IsNullOrWhiteSpace());
         foreach (var line in lines)
         {
-            if (line.IsNullOrWhiteSpace()) continue;
-
             // 每行格式: <id> <ip:port@cport> <flags> <master> <ping-sent> <pong-recv> <config-epoch> <link-state> <slot> <slot> ... <slot>
-            var parts = line.Split(' ');
-            if (parts.Length < 2) continue;
+            var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 3) continue;
 
             // 解析地址信息 ip:port@cport 或 ip:port
             var address = parts[1];
             var atPos = address.IndexOf('@');
             if (atPos > 0) address = address[..atPos];
 
-            // 跳过当前节点
-            if (address.EqualIgnoreCase(node.Server)) continue;
+            // flags 字段用于判断是否为当前节点（包含 "myself"）
+            var flags = parts[2];
+            if (flags.IndexOf("myself", StringComparison.OrdinalIgnoreCase) >= 0) continue;
 
             // 检查节点是否已存在
             var existingNode = RedisNode.FindByServer(address);
             if (existingNode != null) continue;
 
-            // 创建新节点
-            var newNode = new RedisNode
-            {
-                Name = $"{node.Name}-{address}",
-                Category = node.Category,
-                Server = address,
-                UserName = node.UserName,
-                Password = node.Password,
-                ProjectId = node.ProjectId,
-                Enable = true,
-                ScanQueue = node.ScanQueue,
-                WebHook = node.WebHook,
-                AlarmMemoryRate = node.AlarmMemoryRate,
-                AlarmConnections = node.AlarmConnections,
-                AlarmSpeed = node.AlarmSpeed,
-                AlarmInputKbps = node.AlarmInputKbps,
-                AlarmOutputKbps = node.AlarmOutputKbps,
-            };
-            newNode.Insert();
+            // 生成长度受控的节点名称，避免超过 RedisNode.Name 的最大长度（50）
+            var name = !node.Name.IsNullOrEmpty() ? $"{node.Name}-{address}" : address;
+            if (name.Length > 50) name = name[..50];
 
-            XTrace.WriteLine("自动添加集群节点: {0}", address);
-            WriteLog("DiscoverClusterNodes", true, $"自动添加集群节点 [{address}] 从 [{node.Server}]");
+            // 创建新节点，捕获唯一索引冲突
+            try
+            {
+                var newNode = new RedisNode
+                {
+                    Name = name,
+                    Category = node.Category,
+                    Server = address,
+                    UserName = node.UserName,
+                    Password = node.Password,
+                    ProjectId = node.ProjectId,
+                    Enable = true,
+                    ScanQueue = node.ScanQueue,
+                    WebHook = node.WebHook,
+                    AlarmMemoryRate = node.AlarmMemoryRate,
+                    AlarmConnections = node.AlarmConnections,
+                    AlarmSpeed = node.AlarmSpeed,
+                    AlarmInputKbps = node.AlarmInputKbps,
+                    AlarmOutputKbps = node.AlarmOutputKbps,
+                };
+                newNode.Insert();
+
+                XTrace.WriteLine("自动添加集群节点: {0}", address);
+                WriteLog("DiscoverClusterNodes", true, $"自动添加集群节点 [{address}] 从 [{node.Server}]");
+            }
+            catch (Exception ex)
+            {
+                // 可能是并发插入导致的唯一索引冲突，忽略
+                if (!ex.Message.Contains("duplicate") && !ex.Message.Contains("唯一"))
+                {
+                    XTrace.WriteException(ex);
+                }
+            }
         }
     }
 
@@ -470,21 +484,6 @@ public class RedisService : IHostedService, IRedisService
         {
             XTrace.WriteException(ex);
         }
-
-        try
-        {
-            // 获取哨兵节点信息
-            var sentinels = rds.Execute(null, (r, k) => r.Execute<Object[]>("SENTINEL", "SENTINELS", "mymaster"));
-            if (sentinels != null && sentinels.Length > 0)
-            {
-                ProcessSentinelList(node, sentinels, "sentinel");
-            }
-        }
-        catch (Exception ex)
-        {
-            // 可能没有配置master名称为mymaster，忽略此错误
-            XTrace.Log.Debug("获取哨兵节点失败: {0}", ex.Message);
-        }
     }
 
     /// <summary>发现哨兵主从节点</summary>
@@ -493,9 +492,10 @@ public class RedisService : IHostedService, IRedisService
     /// <param name="masters">主节点列表</param>
     private void DiscoverSentinelMasters(RedisNode node, FullRedis rds, Object[] masters)
     {
-        foreach (var masterObj in masters)
+        var masterObjs = masters.Where(m => m is Object[] arr && arr.Length > 0);
+        foreach (var masterObj in masterObjs)
         {
-            if (masterObj is not Object[] master || master.Length == 0) continue;
+            var master = (Object[])masterObj;
 
             // 解析master信息，格式为key-value对
             var masterInfo = ParseRedisArray(master);
@@ -521,6 +521,20 @@ public class RedisService : IHostedService, IRedisService
             {
                 XTrace.Log.Debug("获取从节点失败 [{0}]: {1}", masterName, ex.Message);
             }
+
+            // 获取该master的哨兵节点
+            try
+            {
+                var sentinels = rds.Execute(null, (r, k) => r.Execute<Object[]>("SENTINEL", "SENTINELS", masterName));
+                if (sentinels != null && sentinels.Length > 0)
+                {
+                    ProcessSentinelList(node, sentinels, "sentinel");
+                }
+            }
+            catch (Exception ex)
+            {
+                XTrace.Log.Debug("获取哨兵节点失败 [{0}]: {1}", masterName, ex.Message);
+            }
         }
     }
 
@@ -530,10 +544,10 @@ public class RedisService : IHostedService, IRedisService
     /// <param name="role">角色</param>
     private void ProcessSentinelList(RedisNode node, Object[] list, String role)
     {
-        foreach (var itemObj in list)
+        var items = list.Where(item => item is Object[] arr && arr.Length > 0);
+        foreach (var itemObj in items)
         {
-            if (itemObj is not Object[] item || item.Length == 0) continue;
-
+            var item = (Object[])itemObj;
             var info = ParseRedisArray(item);
             if (info.TryGetValue("ip", out var ip) && info.TryGetValue("port", out var port))
             {
@@ -581,28 +595,43 @@ public class RedisService : IHostedService, IRedisService
         var existingNode = RedisNode.FindByServer(address);
         if (existingNode != null) return;
 
-        // 创建新节点
-        var newNode = new RedisNode
-        {
-            Name = $"{parentNode.Name}-{role}-{address}",
-            Category = parentNode.Category,
-            Server = address,
-            UserName = parentNode.UserName,
-            Password = parentNode.Password,
-            ProjectId = parentNode.ProjectId,
-            Enable = true,
-            ScanQueue = parentNode.ScanQueue,
-            WebHook = parentNode.WebHook,
-            AlarmMemoryRate = parentNode.AlarmMemoryRate,
-            AlarmConnections = parentNode.AlarmConnections,
-            AlarmSpeed = parentNode.AlarmSpeed,
-            AlarmInputKbps = parentNode.AlarmInputKbps,
-            AlarmOutputKbps = parentNode.AlarmOutputKbps,
-        };
-        newNode.Insert();
+        // 生成长度受控的节点名称，避免超过 RedisNode.Name 的最大长度（50）
+        var name = !parentNode.Name.IsNullOrEmpty() ? $"{parentNode.Name}-{role}-{address}" : $"{role}-{address}";
+        if (name.Length > 50) name = name[..50];
 
-        XTrace.WriteLine("自动添加{0}节点: {1}", role, address);
-        WriteLog("DiscoverSentinelNodes", true, $"自动添加{role}节点 [{address}] 从 [{parentNode.Server}]");
+        // 创建新节点，捕获唯一索引冲突
+        try
+        {
+            var newNode = new RedisNode
+            {
+                Name = name,
+                Category = parentNode.Category,
+                Server = address,
+                UserName = parentNode.UserName,
+                Password = parentNode.Password,
+                ProjectId = parentNode.ProjectId,
+                Enable = true,
+                ScanQueue = parentNode.ScanQueue,
+                WebHook = parentNode.WebHook,
+                AlarmMemoryRate = parentNode.AlarmMemoryRate,
+                AlarmConnections = parentNode.AlarmConnections,
+                AlarmSpeed = parentNode.AlarmSpeed,
+                AlarmInputKbps = parentNode.AlarmInputKbps,
+                AlarmOutputKbps = parentNode.AlarmOutputKbps,
+            };
+            newNode.Insert();
+
+            XTrace.WriteLine("自动添加{0}节点: {1}", role, address);
+            WriteLog("DiscoverSentinelNodes", true, $"自动添加{role}节点 [{address}] 从 [{parentNode.Server}]");
+        }
+        catch (Exception ex)
+        {
+            // 可能是并发插入导致的唯一索引冲突，忽略
+            if (!ex.Message.Contains("duplicate") && !ex.Message.Contains("唯一"))
+            {
+                XTrace.WriteException(ex);
+            }
+        }
     }
 
     /// <summary>写日志</summary>
