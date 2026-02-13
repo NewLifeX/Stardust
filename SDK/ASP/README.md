@@ -112,14 +112,14 @@ Dim tracer
 Set tracer = New StardustTracer
 tracer.Init "http://star.example.com:6600", "MyASPApp", "MySecret"
 
+Application.Lock
 Dim cachedToken
 cachedToken = Application("StardustToken")
 If Len(cachedToken) = 0 Then
     tracer.Login
-    Application.Lock
     Application("StardustToken") = tracer.Token
-    Application.UnLock
 End If
+Application.UnLock
 %>
 ```
 

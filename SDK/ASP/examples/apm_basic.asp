@@ -17,14 +17,14 @@ Set tracer = New StardustTracer
 tracer.Init "http://star.example.com:6600", "MyASPApp", "MySecret"
 
 ' 使用缓存的 Token（存在 Application 中）
+Application.Lock
 Dim cachedToken
 cachedToken = Application("StardustToken")
 If Len(cachedToken) = 0 Then
     tracer.Login
-    Application.Lock
     Application("StardustToken") = tracer.Token
-    Application.UnLock
 End If
+Application.UnLock
 
 ' 创建页面级追踪片段
 Dim span
