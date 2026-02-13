@@ -14,8 +14,7 @@ function createExpressMiddleware(tracer) {
         const span = tracer.newSpan(name);
         span.setTag(`${req.method} ${req.originalUrl || req.url}`);
 
-        // 记录请求开始时间
-        const startTime = Date.now();
+        // 在请求开始时创建 span，内部会记录开始时间
 
         // 拦截响应结束事件
         const originalEnd = res.end;
