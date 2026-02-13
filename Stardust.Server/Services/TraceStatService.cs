@@ -19,6 +19,10 @@ public interface ITraceStatService
     /// <param name="appId"></param>
     /// <param name="time"></param>
     void Add(Int32 appId, DateTime time);
+
+    /// <summary>设置热门应用。监控中心正在查看的应用，缩短计算周期以提供更实时的统计数据</summary>
+    /// <param name="appId">应用编号</param>
+    void SetHotApp(Int32 appId);
 }
 
 /// <summary>追踪统计服务</summary>
@@ -154,6 +158,24 @@ public class TraceStatService : ITraceStatService
                 _timerBatch ??= new TimerX(DoBatchStat, null, 5_000, BatchPeriod * 1000) { Async = true };
             }
         }
+    }
+
+    /// <summary>设置热门应用。监控中心正在查看的应用，缩短计算周期以提供更实时的统计数据</summary>
+    /// <param name="appId">应用编号</param>
+    public void SetHotApp(Int32 appId)
+    {
+        if (appId <= 0) return;
+
+        Init();
+
+        // 缩短批计算周期，让统计数据更快刷新
+        _timerBatch?.SetNext(3_000);
+
+        // 触发各延迟队列立即落盘
+        _minuteQueue?.Trigger();
+        _hourQueue?.Trigger();
+        _dayQueue?.Trigger();
+        _appMinuteQueue?.Trigger();
     }
 
     /// <summary>流式计算，增量累加</summary>
