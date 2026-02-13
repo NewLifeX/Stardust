@@ -49,6 +49,6 @@ Stardust.Web.Vue/dist
 /Stardust.Data/Platform/Config
 /Stardust.Data/RedisNodes/Config
 
-# Copilot instruction files
-*/.github/copilot-instructions.md
-*/.github/instructions/
+# Ignore auto-generated copilot instruction files in subdirectories
+Stardust*/.github/
+Stardust/.github/

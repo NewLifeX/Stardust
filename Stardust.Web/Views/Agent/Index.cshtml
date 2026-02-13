@@ -1,0 +1,310 @@
+﻿@{
+    var theme = NewLife.Cube.CubeSetting.Current.Theme;
+    if (String.IsNullOrEmpty(theme)) theme = "ACE";
+
+    Layout = "~/Views/" + theme + "/_Layout.cshtml";
+
+    var serverUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+}
+<div class="clearfix" id="agentApp" data-server-url="@serverUrl">
+    <div class="tableTools-container">
+        <h3><i class="ace-icon fa fa-cloud-download"></i> 星尘代理安装</h3>
+
+        <!-- 本机代理状态 -->
+        <div class="alert alert-info" id="agentStatus" style="display:none;">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            <h4><i class="ace-icon fa fa-desktop"></i> 本机 StarAgent 状态</h4>
+            <div id="agentInfo"></div>
+        </div>
+        <div class="alert alert-warning" id="agentNotFound" style="display:none;">
+            <h4><i class="ace-icon fa fa-exclamation-triangle"></i> 未检测到本机 StarAgent</h4>
+            <p>本机未安装或未启动 StarAgent，请下载安装后启动服务。</p>
+        </div>
+
+        <!-- StarAgent 下载 -->
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="ace-icon fa fa-download"></i> StarAgent 下载</h3>
+            </div>
+            <div class="panel-body">
+                <!-- Windows ZIP 包 -->
+                <h4>Windows ZIP 压缩包</h4>
+                <p class="text-muted">Windows系统下载zip包，解压后运行 StarAgent.exe 即可安装</p>
+                <table class="table table-bordered table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>包名</th>
+                            <th>目标框架</th>
+                            <th>适用系统</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>staragent10.zip</td>
+                            <td><span class="label label-success">net10.0</span></td>
+                            <td>Windows / Linux</td>
+                            <td><a href="https://x.newlifex.com/star/staragent10.zip" class="btn btn-xs btn-primary"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                        </tr>
+                        <tr>
+                            <td>staragent90.zip</td>
+                            <td><span class="label label-success">net9.0</span></td>
+                            <td>Windows / Linux</td>
+                            <td><a href="https://x.newlifex.com/star/staragent90.zip" class="btn btn-xs btn-primary"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                        </tr>
+                        <tr>
+                            <td>staragent80.zip</td>
+                            <td><span class="label label-info">net8.0</span></td>
+                            <td>Windows / Linux</td>
+                            <td><a href="https://x.newlifex.com/star/staragent80.zip" class="btn btn-xs btn-primary"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                        </tr>
+                        <tr>
+                            <td>staragent60.zip</td>
+                            <td><span class="label label-default">net6.0</span></td>
+                            <td>Windows / Linux</td>
+                            <td><a href="https://x.newlifex.com/star/staragent60.zip" class="btn btn-xs btn-primary"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                        </tr>
+                        <tr>
+                            <td>staragent45.zip</td>
+                            <td><span class="label label-warning">net4.5</span></td>
+                            <td>Windows</td>
+                            <td><a href="https://x.newlifex.com/star/staragent45.zip" class="btn btn-xs btn-primary"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                        </tr>
+                        <tr>
+                            <td>staragent31.zip</td>
+                            <td><span class="label label-danger">netcoreapp3.1</span></td>
+                            <td>旧龙芯 Mips64</td>
+                            <td><a href="https://x.newlifex.com/star/staragent31.zip" class="btn btn-xs btn-primary"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Linux tar.gz 包 -->
+                <h4>Linux tar.gz 压缩包</h4>
+                <p class="text-muted">Linux系统下载tar.gz包，解压后使用 dotnet StarAgent.dll -install 安装</p>
+                <table class="table table-bordered table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>包名</th>
+                            <th>目标框架</th>
+                            <th>适用系统</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>staragent10.tar.gz</td>
+                            <td><span class="label label-success">net10.0</span></td>
+                            <td>Linux</td>
+                            <td><a href="https://x.newlifex.com/star/staragent10.tar.gz" class="btn btn-xs btn-info"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                        </tr>
+                        <tr>
+                            <td>staragent90.tar.gz</td>
+                            <td><span class="label label-success">net9.0</span></td>
+                            <td>Linux</td>
+                            <td><a href="https://x.newlifex.com/star/staragent90.tar.gz" class="btn btn-xs btn-info"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                        </tr>
+                        <tr>
+                            <td>staragent80.tar.gz</td>
+                            <td><span class="label label-info">net8.0</span></td>
+                            <td>Linux / 新龙芯 LA64</td>
+                            <td><a href="https://x.newlifex.com/star/staragent80.tar.gz" class="btn btn-xs btn-info"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                        </tr>
+                        <tr>
+                            <td>staragent60.tar.gz</td>
+                            <td><span class="label label-default">net6.0</span></td>
+                            <td>Linux</td>
+                            <td><a href="https://x.newlifex.com/star/staragent60.tar.gz" class="btn btn-xs btn-info"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                        </tr>
+                        <tr>
+                            <td>staragent31.tar.gz</td>
+                            <td><span class="label label-danger">netcoreapp3.1</span></td>
+                            <td>Linux / 旧龙芯 Mips64</td>
+                            <td><a href="https://x.newlifex.com/star/staragent31.tar.gz" class="btn btn-xs btn-info"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Linux 一键安装脚本 -->
+                <h4>Linux 一键安装脚本</h4>
+                <p class="text-muted">在 Linux 终端执行以下命令，自动下载并安装最新版 StarAgent</p>
+                <table class="table table-bordered table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>脚本</th>
+                            <th>说明</th>
+                            <th>安装命令</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>star.sh</td>
+                            <td>自动安装 net9.0 版 StarAgent</td>
+                            <td><code>curl -sSL https://x.newlifex.com/star/star.sh | bash</code></td>
+                        </tr>
+                        <tr>
+                            <td>star8.sh</td>
+                            <td>自动安装 net8.0 版 StarAgent</td>
+                            <td><code>curl -sSL https://x.newlifex.com/star/star8.sh | bash</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 星尘平台安装包 -->
+        <div class="panel panel-success">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="ace-icon fa fa-archive"></i> 星尘平台安装包</h3>
+            </div>
+            <div class="panel-body">
+                <table class="table table-bordered table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>包名</th>
+                            <th>说明</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>star.zip</td>
+                            <td>星尘整体安装包（含Agent/Server/Web）</td>
+                            <td><a href="https://x.newlifex.com/star/star.zip" class="btn btn-xs btn-success"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                        </tr>
+                        <tr>
+                            <td>StarServer.zip</td>
+                            <td>星尘服务端</td>
+                            <td><a href="https://x.newlifex.com/star/StarServer.zip" class="btn btn-xs btn-success"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                        </tr>
+                        <tr>
+                            <td>StarWeb.zip</td>
+                            <td>星尘管理平台</td>
+                            <td><a href="https://x.newlifex.com/star/StarWeb.zip" class="btn btn-xs btn-success"><i class="ace-icon fa fa-download"></i> 下载</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- .NET 运行时 -->
+        <div class="panel panel-warning">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="ace-icon fa fa-cogs"></i> .NET 运行时安装脚本</h3>
+            </div>
+            <div class="panel-body">
+                <p class="text-muted">Linux 系统可使用以下脚本一键安装 .NET 运行时</p>
+                <table class="table table-bordered table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>脚本</th>
+                            <th>说明</th>
+                            <th>安装命令</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>net.sh</td>
+                            <td>.NET 最新版运行时</td>
+                            <td><code>curl -sSL https://x.newlifex.com/dotnet/net.sh | bash</code></td>
+                        </tr>
+                        <tr>
+                            <td>net10.sh</td>
+                            <td>.NET 10.0 运行时</td>
+                            <td><code>curl -sSL https://x.newlifex.com/dotnet/net10.sh | bash</code></td>
+                        </tr>
+                        <tr>
+                            <td>net9.sh</td>
+                            <td>.NET 9.0 运行时</td>
+                            <td><code>curl -sSL https://x.newlifex.com/dotnet/net9.sh | bash</code></td>
+                        </tr>
+                        <tr>
+                            <td>net8.sh</td>
+                            <td>.NET 8.0 运行时</td>
+                            <td><code>curl -sSL https://x.newlifex.com/dotnet/net8.sh | bash</code></td>
+                        </tr>
+                        <tr>
+                            <td>net6.sh</td>
+                            <td>.NET 6.0 运行时</td>
+                            <td><code>curl -sSL https://x.newlifex.com/dotnet/net6.sh | bash</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var serverUrl = document.getElementById('agentApp').getAttribute('data-server-url');
+
+        // 探测本机 StarAgent
+        function detectAgent() {
+            var statusDiv = document.getElementById('agentStatus');
+            var notFoundDiv = document.getElementById('agentNotFound');
+            var infoDiv = document.getElementById('agentInfo');
+
+            // 尝试连接本机 StarAgent
+            fetch('http://localhost:5500/info', {
+                method: 'GET',
+                mode: 'cors',
+            })
+            .then(function (response) { return response.json(); })
+            .then(function (result) {
+                var data = result.data || result;
+                statusDiv.style.display = 'block';
+                notFoundDiv.style.display = 'none';
+
+                var html = '<table class="table table-condensed" style="margin-bottom:5px;">';
+                if (data.Name) html += '<tr><td style="width:120px;"><strong>名称</strong></td><td>' + data.Name + '</td></tr>';
+                if (data.Title) html += '<tr><td><strong>标题</strong></td><td>' + data.Title + '</td></tr>';
+                if (data.FileVersion || data.Version) html += '<tr><td><strong>版本</strong></td><td>' + (data.FileVersion || data.Version) + '</td></tr>';
+                if (data.Compile) html += '<tr><td><strong>编译时间</strong></td><td>' + data.Compile + '</td></tr>';
+                if (data.OS) html += '<tr><td><strong>操作系统</strong></td><td>' + data.OS + '</td></tr>';
+                if (data.MachineName) html += '<tr><td><strong>机器名</strong></td><td>' + data.MachineName + '</td></tr>';
+                if (data.LocalIP) html += '<tr><td><strong>本机IP</strong></td><td>' + data.LocalIP + '</td></tr>';
+                if (data.Server) {
+                    html += '<tr><td><strong>服务端</strong></td><td>' + data.Server + '</td></tr>';
+                } else {
+                    html += '<tr><td><strong>服务端</strong></td><td><span class="text-danger">未设置</span> ';
+                    html += '<button class="btn btn-xs btn-warning" onclick="setServer()"><i class="ace-icon fa fa-link"></i> 设置为当前服务器</button>';
+                    html += '</td></tr>';
+                }
+                html += '</table>';
+
+                // 如果已设置服务端但与当前不同，提供切换按钮
+                if (data.Server && data.Server !== serverUrl) {
+                    html += '<p class="text-warning"><i class="ace-icon fa fa-exclamation-circle"></i> 当前服务端地址与本站不同 ';
+                    html += '<button class="btn btn-xs btn-warning" onclick="setServer()"><i class="ace-icon fa fa-link"></i> 切换到当前服务器</button></p>';
+                }
+
+                infoDiv.innerHTML = html;
+            })
+            .catch(function () {
+                statusDiv.style.display = 'none';
+                notFoundDiv.style.display = 'block';
+            });
+        }
+
+        // 设置服务端地址
+        window.setServer = function () {
+            fetch('http://localhost:5500/setserver?server=' + encodeURIComponent(serverUrl), {
+                method: 'GET',
+                mode: 'cors',
+            })
+            .then(function (response) { return response.json(); })
+            .then(function (result) {
+                alert('服务端地址已设置为: ' + serverUrl);
+                // 重新探测
+                detectAgent();
+            })
+            .catch(function (err) {
+                alert('设置失败: ' + err.message);
+            });
+        };
+
+        // 页面加载后探测
+        detectAgent();
+    })();
+</script>
