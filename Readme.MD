@@ -135,6 +135,40 @@ app.Run();
 运行后即可在 StarWeb 看到实例在线、性能指标与调用链。
 
 ---
+## 多语言 SDK 支持
+
+除了 .NET SDK 外，星尘还提供了多种语言的 SDK，方便不同技术栈的应用接入：
+
+### PHP SDK
+适用于 PHP 7.4+，支持 APM 监控和配置中心。
+
+```php
+// APM 监控
+require_once 'SDK/PHP/src/StardustTracer.php';
+$tracer = new StardustTracer('http://star.example.com:6600', 'MyPHPApp', 'secret');
+$tracer->login();
+$span = $tracer->newSpan('业务操作');
+// ... 业务逻辑
+$span->finish();
+$tracer->flush();
+
+// 配置中心
+require_once 'SDK/PHP/src/StardustConfig.php';
+$config = new StardustConfig('http://star.example.com:6600', 'MyPHPApp', 'secret', 'dev');
+$config->login();
+$dbHost = $config->get('database.host', 'localhost');
+```
+
+详细文档：[SDK/PHP/README.md](SDK/PHP/README.md) | [Doc/SDK/stardust-sdk-php.md](Doc/SDK/stardust-sdk-php.md)
+
+### 其他语言 SDK
+- **Java**：详见 [Doc/SDK/stardust-sdk-java.md](Doc/SDK/stardust-sdk-java.md)
+- **Go**：详见 [Doc/SDK/stardust-sdk-go.md](Doc/SDK/stardust-sdk-go.md)
+- **Python**：详见 [Doc/SDK/stardust-sdk-python.md](Doc/SDK/stardust-sdk-python.md)
+- **JavaScript**：详见 [Doc/SDK/stardust-sdk-javascript.md](Doc/SDK/stardust-sdk-javascript.md)
+- **ASP**：详见 [Doc/SDK/stardust-sdk-asp.md](Doc/SDK/stardust-sdk-asp.md)
+
+---
 ## 配置中心使用
 ```csharp
 var star = services.AddStardust("OrderService");

@@ -190,6 +190,9 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
 
         // 登录历史
         WriteHistory(context, "应用鉴权", true, $"[{app.DisplayName}/{app.Name}]鉴权成功 " + model.ToJson(false, false, false));
+
+        // 检查应用上线恢复
+        OnlineService.CheckOnline(app);
     }
 
     /// <summary>注销</summary>
