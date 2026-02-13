@@ -1,0 +1,27 @@
+{
+  "name": "stardust-tracer",
+  "version": "1.0.0",
+  "description": "JavaScript/Node.js SDK for Stardust APM (Application Performance Monitoring)",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "keywords": [
+    "stardust",
+    "apm",
+    "monitoring",
+    "tracing",
+    "performance",
+    "observability"
+  ],
+  "author": "NewLife Development Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NewLifeX/Stardust.git"
+  },
+  "scripts": {
+    "test": "node test/test.js"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

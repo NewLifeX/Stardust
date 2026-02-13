@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stardust Browser Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .button-group {
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .log {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌟 Stardust APM 浏览器示例</h1>
+    <p>这个示例展示了如何在浏览器环境中使用 Stardust JavaScript SDK 进行 APM 监控。</p>
+
+    <div class="button-group">
+        <h3>测试操作：</h3>
+        <button onclick="testFetch()">测试 Fetch API</button>
+        <button onclick="testXHR()">测试 XMLHttpRequest</button>
+        <button onclick="testManualSpan()">测试手动埋点</button>
+        <button onclick="testError()">测试错误追踪</button>
+        <button onclick="clearLog()">清空日志</button>
+    </div>
+
+    <div class="log" id="log">
+        <div class="log-entry">日志将显示在这里...</div>
+    </div>
+
+    <!-- 加载 SDK -->
+    <script src="../src/browser-tracer.js"></script>
+    <script src="../src/middleware/browser.js"></script>
+
+    <script>
+        // 创建浏览器追踪器
+        const tracer = new StardustBrowserTracer(
+            'http://localhost:6600',  // 请修改为实际的星尘服务器地址
+            'BrowserDemo',
+            ''
+        );
+
+        // 启动追踪器
+        tracer.start().then(() => {
+            log('✅ Stardust 追踪器已启动');
+        }).catch(err => {
+            log('❌ 追踪器启动失败: ' + err.message);
+        });
+
+        // 安装自动拦截器
+        installBrowserInterceptors(tracer);
+        log('✅ 浏览器拦截器已安装');
+
+        // 测试 Fetch API
+        async function testFetch() {
+            log('🔄 发起 Fetch 请求...');
+            try {
+                const response = await fetch('https://api.github.com/users/github');
+                const data = await response.json();
+                log('✅ Fetch 请求成功: ' + data.login);
+            } catch (err) {
+                log('❌ Fetch 请求失败: ' + err.message);
+            }
+        }
+
+        // 测试 XMLHttpRequest
+        function testXHR() {
+            log('🔄 发起 XMLHttpRequest 请求...');
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'https://api.github.com/users/microsoft');
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    const data = JSON.parse(xhr.responseText);
+                    log('✅ XHR 请求成功: ' + data.login);
+                }
+            };
+            xhr.onerror = function() {
+                log('❌ XHR 请求失败');
+            };
+            xhr.send();
+        }
+
+        // 测试手动埋点
+        async function testManualSpan() {
+            log('🔄 执行手动埋点操作...');
+            const span = tracer.newSpan('用户点击测试');
+            span.setTag('action=manual_test, timestamp=' + Date.now());
+
+            try {
+                // 模拟一些处理
+                await sleep(Math.random() * 500);
+                log('✅ 手动埋点操作完成');
+            } catch (err) {
+                span.setError(err);
+                log('❌ 手动埋点操作失败: ' + err.message);
+            } finally {
+                span.finish();
+            }
+        }
+
+        // 测试错误追踪
+        async function testError() {
+            log('🔄 触发错误追踪...');
+            const span = tracer.newSpan('测试错误');
+            span.setTag('error_test=true');
+
+            try {
+                throw new Error('这是一个测试错误');
+            } catch (err) {
+                span.setError(err);
+                log('❌ 捕获到错误: ' + err.message);
+            } finally {
+                span.finish();
+            }
+        }
+
+        // 辅助函数
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+            logDiv.insertBefore(entry, logDiv.firstChild);
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '<div class="log-entry">日志已清空</div>';
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // 页面卸载时停止追踪器
+        window.addEventListener('beforeunload', () => {
+            tracer.stop();
+        });
+    </script>
+</body>
+</html>
