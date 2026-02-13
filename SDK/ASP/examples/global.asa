@@ -1,0 +1,33 @@
+<Script Language="VBScript" RunAt="Server">
+' ==================================================
+' Global.asa - 应用程序级别初始化示例
+'
+' 在 Application_OnStart 中初始化星尘追踪器，
+' 将 Token 缓存到 Application 对象中，
+' 避免每个请求都重新登录。
+'
+' 使用方法：
+' 1. 将此文件放在 IIS 站点根目录
+' 2. 修改下方的服务器地址、应用标识和密钥
+' ==================================================
+
+Sub Application_OnStart
+    Application("StardustServer") = "http://star.example.com:6600"
+    Application("StardustAppId") = "MyASPApp"
+    Application("StardustSecret") = "MySecret"
+    Application("StardustToken") = ""
+End Sub
+
+Sub Session_OnStart
+    ' 可在此处进行用户级别的初始化
+End Sub
+
+Sub Session_OnEnd
+    ' 可在此处进行用户级别的清理
+End Sub
+
+Sub Application_OnEnd
+    ' 应用程序结束时清理
+    Application("StardustToken") = ""
+End Sub
+</Script>
