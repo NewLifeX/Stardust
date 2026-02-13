@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202509.xsd" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model202509.xsd">
+<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202509.xsd" Document="https://newlifex.com/xcode/model" ModelVersion="2.0.2026.130" xmlns="https://newlifex.com/Model202509.xsd">
   <Option>
     <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
     <ClassNameTemplate />
@@ -370,6 +370,29 @@
       <Indexes>
         <Index Columns="Name" Unique="True" />
         <Index Columns="ProjectId" />
+      </Indexes>
+    </Table>
+    <Table Name="AlarmRecord" Description="报警记录。记录报警的开始、持续和恢复，统计报警持续时间">
+      <Columns>
+        <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="time" Description="编号" />
+        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
+        <Column Name="GroupId" DataType="Int32" Map="AlarmGroup@Id@Name" Description="告警组" />
+        <Column Name="Category" DataType="String" Description="类别。应用下线、节点下线、错误数过高等" />
+        <Column Name="Action" DataType="String" Description="操作。报警对象，如应用名或节点名" />
+        <Column Name="Status" DataType="Int32" Description="状态。报警中、已恢复" Type="Stardust.Data.Monitors.AlarmStatuses" />
+        <Column Name="StartTime" DataType="DateTime" Nullable="False" Description="开始时间。报警首次触发的时间" />
+        <Column Name="EndTime" DataType="DateTime" Description="结束时间。报警恢复的时间" />
+        <Column Name="Duration" DataType="Int32" ItemType="TimeSpan" Description="持续时间。报警持续的秒数" />
+        <Column Name="Times" DataType="Int32" Description="通知次数。累计发送报警通知的次数" />
+        <Column Name="Content" DataType="String" Length="2000" Description="内容。报警详细信息" />
+        <Column Name="Creator" DataType="String" Description="创建者。服务端节点" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="GroupId,Status" />
+        <Index Columns="Category,Action,Status" />
+        <Index Columns="Status,UpdateTime" />
       </Indexes>
     </Table>
     <Table Name="AlarmHistory" Description="告警历史。记录告警内容" ConnName="StardustData">

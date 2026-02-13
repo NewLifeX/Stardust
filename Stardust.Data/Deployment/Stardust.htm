@@ -391,6 +391,17 @@
         </tr>
 
         <tr>
+            <td>HealthCheck</td>
+            <td>健康检查</td>
+            <td>String</td>
+            <td>200</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health</td>
+        </tr>
+
+        <tr>
             <td>CreateUserId</td>
             <td>创建者</td>
             <td>Int32</td>
@@ -680,6 +691,17 @@
             <td></td>
             <td>N</td>
             <td>批量发布时，需要延迟执行的时间，用于滚动发布，单位秒</td>
+        </tr>
+
+        <tr>
+            <td>HealthCheck</td>
+            <td>健康检查</td>
+            <td>String</td>
+            <td>200</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>探针检测服务是否正常，http/tcp/udp地址，为空时使用应用集配置</td>
         </tr>
 
         <tr>

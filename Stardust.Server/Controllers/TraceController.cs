@@ -303,4 +303,15 @@ public class TraceController(ITraceStatService stat, IAppDayStatService appStat,
             XTrace.WriteException(ex);
         }
     }
+
+    /// <summary>设置热门应用。由StarWeb调用，通知StarServer缩短该应用的统计计算周期</summary>
+    /// <param name="appId">应用编号</param>
+    /// <returns></returns>
+    [HttpPost(nameof(SetHotApp))]
+    public Int32 SetHotApp([FromBody] Int32 appId)
+    {
+        stat.SetHotApp(appId);
+
+        return 1;
+    }
 }

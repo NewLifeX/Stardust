@@ -79,9 +79,21 @@ public class NodeOnlineService(IServiceProvider serviceProvider, StarServerSetti
             if (olts.Count == 0)
             {
                 var msg = $"节点[{node.Name}]已下线！{reason} IP={node.IP}";
-                RobotHelper.SendAlarm(node.Category, node.WebHook, "节点下线告警", msg);
+                RobotHelper.SendAlarmWithRecord(node.Category, node.WebHook, "节点下线告警", msg, "节点下线", node.Name);
             }
         }
+    }
+
+    /// <summary>检查节点上线恢复。在节点登录或心跳时调用</summary>
+    /// <param name="node">节点</param>
+    public static void CheckOnline(Node node)
+    {
+        if (node == null || !node.AlarmOnOffline) return;
+
+        var webhook = RobotHelper.GetAlarm(node.Project, node.Category, node.WebHook);
+        if (webhook.IsNullOrEmpty()) return;
+
+        RobotHelper.RecoverAlarm("节点下线", node.Name, node.Category, webhook);
     }
     #endregion
 }

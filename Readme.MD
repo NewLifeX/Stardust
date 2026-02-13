@@ -60,6 +60,7 @@ Stardust  星尘，轻量级分布式服务框架！
 7. [x] 服务发现。各业务应用（服务消费者）从注册中心拉取指定服务的提供者信息，分布式调用（不经网关）  
 8. [x] 远程发布。在星尘控制台上发布应用包到多台安装有星尘代理的应用服务器或物联网边缘节点，StarAgent负责拉起并守护进程  
 9. [x] 日志中心。各应用（服务提供者和服务消费者）向中心上报日志数据，统一在星尘Web查看  
+10. [x] 阿里云DNS。StarAgent支持动态域名解析(DDNS)，自动将节点公网IP注册到阿里云DNS，适用于动态IP环境 [详细文档](Doc/阿里云DNS动态域名解析.md)  
 
 ### 监控中心
 星尘监控介绍 [https://newlifex.com/blood/stardust_monitor](https://newlifex.com/blood/stardust_monitor)  
@@ -132,6 +133,40 @@ app.RegisterService("OrderService"); // 注册到星尘
 app.Run();
 ```
 运行后即可在 StarWeb 看到实例在线、性能指标与调用链。
+
+---
+## 多语言 SDK 支持
+
+除了 .NET SDK 外，星尘还提供了多种语言的 SDK，方便不同技术栈的应用接入：
+
+### PHP SDK
+适用于 PHP 7.4+，支持 APM 监控和配置中心。
+
+```php
+// APM 监控
+require_once 'SDK/PHP/src/StardustTracer.php';
+$tracer = new StardustTracer('http://star.example.com:6600', 'MyPHPApp', 'secret');
+$tracer->login();
+$span = $tracer->newSpan('业务操作');
+// ... 业务逻辑
+$span->finish();
+$tracer->flush();
+
+// 配置中心
+require_once 'SDK/PHP/src/StardustConfig.php';
+$config = new StardustConfig('http://star.example.com:6600', 'MyPHPApp', 'secret', 'dev');
+$config->login();
+$dbHost = $config->get('database.host', 'localhost');
+```
+
+详细文档：[SDK/PHP/README.md](SDK/PHP/README.md) | [Doc/SDK/stardust-sdk-php.md](Doc/SDK/stardust-sdk-php.md)
+
+### 其他语言 SDK
+- **Java**：详见 [Doc/SDK/stardust-sdk-java.md](Doc/SDK/stardust-sdk-java.md)
+- **Go**：详见 [Doc/SDK/stardust-sdk-go.md](Doc/SDK/stardust-sdk-go.md)
+- **Python**：详见 [Doc/SDK/stardust-sdk-python.md](Doc/SDK/stardust-sdk-python.md)
+- **JavaScript**：详见 [Doc/SDK/stardust-sdk-javascript.md](Doc/SDK/stardust-sdk-javascript.md)
+- **ASP**：详见 [Doc/SDK/stardust-sdk-asp.md](Doc/SDK/stardust-sdk-asp.md)
 
 ---
 ## 配置中心使用

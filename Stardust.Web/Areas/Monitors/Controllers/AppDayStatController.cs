@@ -7,6 +7,7 @@ using NewLife.Log;
 using NewLife.Web;
 using Stardust.Data.Monitors;
 using Stardust.Server.Services;
+using Stardust.Web.Services;
 using XCode.Membership;
 using static Stardust.Data.Monitors.AppDayStat;
 
@@ -18,11 +19,13 @@ public class AppDayStatController : MonitorsEntityController<AppDayStat>
 {
     private readonly IAppDayStatService _appStat;
     private readonly ITraceStatService _traceStat;
+    private readonly HotAppService _hotApp;
 
-    public AppDayStatController(IAppDayStatService appStat, ITraceStatService traceStat)
+    public AppDayStatController(IAppDayStatService appStat, ITraceStatService traceStat, HotAppService hotApp)
     {
         _appStat = appStat;
         _traceStat = traceStat;
+        _hotApp = hotApp;
     }
 
     public override void OnActionExecuting(ActionExecutingContext filterContext)
@@ -50,6 +53,9 @@ public class AppDayStatController : MonitorsEntityController<AppDayStat>
 
         p.RetrieveState = true;
         PageSetting.EnableSelect = true;
+
+        // 标记热门应用，缩短统计计算周期
+        if (appId > 0) _hotApp.SetHotAppAsync(appId);
 
         var list = AppDayStat.Search(appId, start, end, p["Q"], p);
 

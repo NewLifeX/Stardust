@@ -100,6 +100,7 @@ public class DeployController(NodeService nodeService, DeployService deployServi
                 app.ReloadOnChange = svc.ReloadOnChange;
                 app.MaxMemory = svc.MaxMemory;
                 app.Priority = svc.Priority;
+                app.HealthCheck = svc.HealthCheck;
 
                 // 客户端使用旧版本时，需要转换为新版本
                 var mode = svc.Mode;
