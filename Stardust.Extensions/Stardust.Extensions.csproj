@@ -33,7 +33,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>重构部署体系支持多模式；新增远程命令执行；引入部署资源管理支持多平台分发；增强节点信息采集（GPU、时区、IOPS等）；桥接ObjectContainer与ASP.NET Core DI容器；分布式文件存储；XCode拦截器升级</PackageReleaseNotes>
+    <PackageReleaseNotes>新增服务健康检查能力；部署时支持自动放行防火墙端口；优化健康检查Http连接复用与超时控制；增强分布式文件存储事件总线初始化并兼容旧版Redis；重构Http扩展与响应头处理</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
