@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Xunit;
 
-namespace Stardust.ServerTests.Nodes;
+namespace ServerTest.Nodes;
 
 public class NodeStatTests
 {

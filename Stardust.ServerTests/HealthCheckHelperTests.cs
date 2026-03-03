@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using NewLife.Log;
 using Stardust.Managers;
 using Xunit;
 
-namespace Stardust.ServerTests;
+namespace ServerTest;
 
 /// <summary>健康检查助手测试</summary>
 public class HealthCheckHelperTests

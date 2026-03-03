@@ -6,7 +6,7 @@ using Stardust;
 using Stardust.Models;
 using Xunit;
 
-namespace ClientTest;
+namespace ClientTest.Clients;
 
 public class StarClientTests
 {
@@ -47,6 +47,8 @@ public class StarClientTests
     [InlineData("abcd", null)]
     public async Task LoginTest(String code, String secret)
     {
+        if (!await TestEnvironment.CanGetAsync(Server).ConfigureAwait(false)) return;
+
         var client = new StarClient(Server)
         {
             Code = code,
@@ -62,6 +64,8 @@ public class StarClientTests
     [Fact]
     public async Task LogoutTest()
     {
+        if (!await TestEnvironment.CanGetAsync(Server).ConfigureAwait(false)) return;
+
         var client = new StarClient(Server);
 
         await client.Login();

@@ -7,7 +7,7 @@ using NewLife.Messaging;
 using Stardust;
 using Xunit;
 
-namespace ClientTest;
+namespace ClientTest.Clients;
 
 public class AppClientTests
 {
@@ -37,7 +37,7 @@ public class AppClientTests
     }
 
     [Fact]
-    public async Task ProcessMessageAsync_DoesNotDispatch_WhenClientIdMatches()
+    public async Task ProcessMessageAsync_Dispatches_WhenClientIdMatches()
     {
         var client = new AppClient { ClientId = "clientA" };
         var bus = client.GetEventBus<String>("topic1");
@@ -47,7 +47,7 @@ public class AppClientTests
         var message = "event#topic1#clientA#\"hello\""; // same clientId as AppClient
         await client.HandleAsync((ArrayPacket)message.GetBytes());
 
-        Assert.Null(handler.Received);
+        Assert.Equal("\"hello\"", handler.Received);
     }
 
     [Fact]

@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.IO;
 using Stardust.Managers;
 using Xunit;
 
-namespace ClientTest;
+namespace ClientTest.Managers;
 
 public class FirewallManagerTests
 {

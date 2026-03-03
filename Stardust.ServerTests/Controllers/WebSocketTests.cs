@@ -16,9 +16,10 @@ using NewLife.Security;
 using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust.Models;
+using Stardust.Server;
 using Xunit;
 
-namespace Stardust.Server.Controllers.Tests
+namespace ServerTest.Controllers
 {
     public class WebSocketTests
     {

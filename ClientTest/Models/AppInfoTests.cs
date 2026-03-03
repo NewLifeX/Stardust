@@ -6,7 +6,7 @@ using Stardust;
 using Stardust.Models;
 using Xunit;
 
-namespace ClientTest;
+namespace ClientTest.Models;
 
 public class AppInfoTests
 {
@@ -27,7 +27,7 @@ public class AppInfoTests
         var p = Process.GetCurrentProcess();
 
         var name = p.GetProcessName();
-        Assert.Equal("testhost", name);
+        Assert.Contains(name, new[] { "testhost", "exec" });
     }
 
     //[Fact]

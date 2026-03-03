@@ -1,7 +1,7 @@
 ﻿using Stardust.Deployment;
 using Xunit;
 
-namespace ClientTest;
+namespace ClientTest.Deployment;
 
 public class NginxFileTests
 {

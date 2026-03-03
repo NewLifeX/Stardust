@@ -1,7 +1,7 @@
 ﻿using Stardust.Models;
 using Xunit;
 
-namespace ClientTest;
+namespace ClientTest.Models;
 
 public class AgentInfoTests
 {

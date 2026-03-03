@@ -1,0 +1,1 @@
+﻿global using ClientTest.TestInfrastructure;

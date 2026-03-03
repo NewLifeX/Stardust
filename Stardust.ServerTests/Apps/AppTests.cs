@@ -2,7 +2,7 @@
 using Stardust.Data;
 using Xunit;
 
-namespace Stardust.ServerTests.Apps;
+namespace ServerTest.Apps;
 
 public class AppTests
 {

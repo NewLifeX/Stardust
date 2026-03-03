@@ -4,13 +4,15 @@ using NewLife.Model;
 using Stardust;
 using Xunit;
 
-namespace ClientTest;
+namespace ClientTest.Configs;
 
 public class ConfigTests
 {
     [Fact]
     public void Http_Test()
     {
+        if (!TestEnvironment.CanGet("http://127.0.0.1:6600")) return;
+
         {
             var prv = new HttpConfigProvider
             {

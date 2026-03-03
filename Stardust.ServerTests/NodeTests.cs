@@ -7,7 +7,7 @@ using Stardust.Data.Nodes;
 using Stardust.Models;
 using Xunit;
 
-namespace Stardust.ServerTests;
+namespace ServerTest;
 
 public class NodeTests
 {

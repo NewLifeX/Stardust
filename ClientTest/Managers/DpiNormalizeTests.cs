@@ -3,7 +3,7 @@ using System.Reflection;
 using Stardust;
 using Xunit;
 
-namespace ClientTest;
+namespace ClientTest.Managers;
 
 public class DpiNormalizeTests
 {

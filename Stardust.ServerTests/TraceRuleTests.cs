@@ -1,7 +1,7 @@
 ﻿using Stardust.Data.Monitors;
 using Xunit;
 
-namespace Stardust.ServerTests;
+namespace ServerTest;
 
 public class TraceRuleTests
 {

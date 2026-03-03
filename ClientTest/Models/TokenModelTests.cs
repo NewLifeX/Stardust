@@ -1,9 +1,11 @@
 ﻿using NewLife.Security;
 using NewLife.Serialization;
 using NewLife.Web;
+using System;
+using System.Collections.Generic;
 using Xunit;
 
-namespace ClientTest;
+namespace ClientTest.Models;
 
 public class TokenModelTests
 {
@@ -19,11 +21,11 @@ public class TokenModelTests
         };
 
         var json = model.ToJson();
+        var dic = json.ToJsonEntity<Dictionary<String, Object>>();
 
-        var rs = "{\"access_token\":\"{access_token}\",\"token_type\":\"token\",\"expire_in\":7200,\"refresh_token\":\"{refresh_token}\"}";
-        rs = rs.Replace("{access_token}", model.AccessToken)
-            .Replace("{refresh_token}", model.RefreshToken);
-
-        Assert.Equal(rs, json);
+        Assert.Equal(model.AccessToken, dic["access_token"] + "");
+        Assert.Equal(model.TokenType, dic["token_type"] + "");
+        Assert.Equal(model.ExpireIn, Int32.Parse(dic["expire_in"] + ""));
+        Assert.Equal(model.RefreshToken, dic["refresh_token"] + "");
     }
 }

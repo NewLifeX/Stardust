@@ -1,7 +1,7 @@
 ﻿using Stardust;
 using Xunit;
 
-namespace ClientTest;
+namespace ClientTest.Clients;
 
 public class LocalStarClientTests
 {

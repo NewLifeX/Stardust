@@ -2,9 +2,11 @@
 using NewLife.Remoting.Extensions.Services;
 using NewLife.Web;
 using Stardust.Data;
+using Stardust.Server;
+using Stardust.Server.Services;
 using Xunit;
 
-namespace Stardust.Server.Services.Tests;
+namespace ServerTest.Services;
 
 public class AppServiceTests
 {

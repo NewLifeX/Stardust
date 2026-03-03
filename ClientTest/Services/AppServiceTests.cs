@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace ClientTest;
+namespace ClientTest.Services;
 
 public class AppServiceTests
 {
