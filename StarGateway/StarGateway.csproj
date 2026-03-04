@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <AssemblyTitle>星尘网关</AssemblyTitle>
-    <Description>星尘网关，转发网络请求，实现路由切换。</Description>
+    <Description>星尘网关代理。提供流量转发与反向代理能力，支持动态路由切换，可与星尘注册中心协同实现服务发现与负载均衡，适用于微服务网关场景。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
     <VersionPrefix>3.0</VersionPrefix>

@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFrameworks>net45;net461;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
     <AssemblyName>Stardust</AssemblyName>
-    <AssemblyTitle>星尘分布式服务核心</AssemblyTitle>
-    <Description>星尘，分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
+    <AssemblyTitle>星尘分布式核心</AssemblyTitle>
+    <Description>星尘分布式服务框架核心库。提供配置中心、注册中心、服务发现、全链路追踪、APM性能监控、日志中心等客户端SDK，支持配置拉取、服务注册与发现、调用追踪、性能和日志上报。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
     <VersionPrefix>3.7</VersionPrefix>

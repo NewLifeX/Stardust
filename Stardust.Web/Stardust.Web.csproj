@@ -4,7 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <AssemblyName>StarWeb</AssemblyName>
     <AssemblyTitle>星尘管理平台</AssemblyTitle>
-    <Description>星尘，分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
+    <Description>星尘分布式服务平台管理界面。基于NewLife.Cube的可视化管理系统，提供节点管理、应用管理、配置中心、注册中心、监控中心、发布中心、调用链追踪、性能分析、日志查询等统一管理入口。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
     <VersionPrefix>3.7</VersionPrefix>
