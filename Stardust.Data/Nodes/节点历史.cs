@@ -18,6 +18,7 @@ namespace Stardust.Data.Nodes;
 [DataObject]
 [Description("节点历史")]
 [BindIndex("IX_NodeHistory_NodeID_Action", false, "NodeID,Action")]
+[BindIndex("IX_NodeHistory_Action", false, "Action")]
 [BindTable("NodeHistory", Description = "节点历史", ConnName = "StardustData", DbType = DatabaseType.None)]
 public partial class NodeHistory
 {
@@ -199,6 +200,16 @@ public partial class NodeHistory
         if (id < 0) return null;
 
         return Find(_.Id == id);
+    }
+
+    /// <summary>根据操作查找</summary>
+    /// <param name="action">操作</param>
+    /// <returns>实体列表</returns>
+    public static IList<NodeHistory> FindAllByAction(String action)
+    {
+        if (action.IsNullOrEmpty()) return [];
+
+        return FindAll(_.Action == action);
     }
     #endregion
 
