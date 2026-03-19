@@ -266,6 +266,7 @@ public class StarFactory : DisposeBase
         container.AddSingleton(p => Service!);
         container.AddSingleton(p => (p.GetService<IRegistry>() as IEventProvider)!);
         container.AddSingleton(p => (p.GetService<IRegistry>() as ICommandClient)!);
+        container.AddSingleton(p => (p.GetService<IRegistry>() as IServiceResolver)!);
 
         // 替换为混合配置提供者，优先本地配置
         container.AddSingleton(p => GetConfig()!);
@@ -467,17 +468,19 @@ public class StarFactory : DisposeBase
         }
     }
 
-    /// <summary>为指定服务创建客户端，从星尘注册中心获取服务地址。单例，应避免频繁创建客户端</summary>
-    /// <param name="serviceName"></param>
-    /// <param name="tag"></param>
+    /// <summary>为指定服务获取客户端，从星尘注册中心订阅服务地址。单例，应避免频繁调用</summary>
+    /// <param name="serviceName">服务名</param>
+    /// <param name="tag">特性标签</param>
     /// <returns></returns>
-    public IApiClient CreateForService(String serviceName, String? tag = null) => TaskEx.Run(() => CreateForServiceAsync(serviceName, tag)).ConfigureAwait(false).GetAwaiter().GetResult();
+    [Obsolete("请使用 Service.GetClient")]
+    public IApiClient CreateForService(String serviceName, String? tag = null) => TaskEx.Run(() => Service!.GetClientAsync(serviceName, tag)).ConfigureAwait(false).GetAwaiter().GetResult();
 
-    /// <summary>为指定服务创建客户端，从星尘注册中心获取服务地址。单例，应避免频繁创建客户端</summary>
-    /// <param name="serviceName"></param>
-    /// <param name="tag"></param>
+    /// <summary>为指定服务获取客户端，从星尘注册中心订阅服务地址。单例，应避免频繁调用</summary>
+    /// <param name="serviceName">服务名</param>
+    /// <param name="tag">特性标签</param>
     /// <returns></returns>
-    public Task<IApiClient> CreateForServiceAsync(String serviceName, String? tag = null) => Service!.CreateForServiceAsync(serviceName, tag);
+    [Obsolete("请使用 Service.GetClientAsync")]
+    public Task<IApiClient> CreateForServiceAsync(String serviceName, String? tag = null) => Service!.GetClientAsync(serviceName, tag);
 
     /// <summary>发布服务。异步发布，屏蔽异常</summary>
     /// <remarks>即使发布失败，也已经加入队列，后续会定时发布</remarks>

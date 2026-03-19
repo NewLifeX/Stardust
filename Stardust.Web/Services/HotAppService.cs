@@ -1,11 +1,10 @@
-﻿using NewLife;
-using NewLife.Log;
+﻿using NewLife.Log;
 using NewLife.Remoting;
 
 namespace Stardust.Web.Services;
 
 /// <summary>热门应用服务。通知StarServer缩短热门应用的统计计算周期</summary>
-public class HotAppService(StarFactory starFactory, ITracer tracer)
+public class HotAppService(IServiceResolver resolver, ITracer tracer)
 {
     private IApiClient _client;
 
@@ -18,7 +17,7 @@ public class HotAppService(StarFactory starFactory, ITracer tracer)
         using var span = tracer?.NewSpan("SetHotApp", appId);
         try
         {
-            _client ??= await starFactory.CreateForServiceAsync("StarServer");
+            _client ??= await resolver.GetClientAsync("StarServer");
 
             await _client.InvokeAsync<Int32>("Trace/SetHotApp", appId);
         }

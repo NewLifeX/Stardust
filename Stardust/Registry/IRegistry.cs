@@ -15,7 +15,7 @@ namespace Stardust.Registry;
 public delegate void ServiceChangedCallback(String serviceName, ServiceModel[] services);
 
 /// <summary>注册客户端</summary>
-public interface IRegistry
+public interface IRegistry : IServiceResolver
 {
     /// <summary>绑定消费服务名到指定事件，服务改变时通知外部</summary>
     /// <param name="serviceName"></param>
@@ -75,12 +75,12 @@ public interface IRegistry
 /// </summary>
 public static class RegistryExtensions
 {
-    /// <summary>为指定服务创建客户端，从星尘注册中心获取服务地址。单例，应避免频繁创建客户端</summary>
+    /// <summary>为指定服务获取客户端，从星尘注册中心订阅服务地址，服务提供方变更时自动更新。单例，应避免频繁创建客户端</summary>
     /// <param name="registry">服务注册客户端</param>
     /// <param name="serviceName">服务名</param>
-    /// <param name="tag"></param>
+    /// <param name="tag">特性标签</param>
     /// <returns></returns>
-    public static async Task<IApiClient> CreateForServiceAsync(this IRegistry registry, String serviceName, String? tag = null)
+    public static async Task<IApiClient> GetClientAsync(this IRegistry registry, String serviceName, String? tag = null)
     {
         var http = new ApiHttpClient
         {
@@ -101,12 +101,20 @@ public static class RegistryExtensions
         return http;
     }
 
-    /// <summary>为指定服务创建客户端，从星尘注册中心获取服务地址。单例，应避免频繁创建客户端</summary>
+    /// <summary>为指定服务获取客户端，从星尘注册中心订阅服务地址，服务提供方变更时自动更新。单例，应避免频繁创建客户端</summary>
     /// <param name="registry">服务注册客户端</param>
     /// <param name="serviceName">服务名</param>
-    /// <param name="tag"></param>
+    /// <param name="tag">特性标签</param>
     /// <returns></returns>
-    public static IApiClient CreateForService(this IRegistry registry, String serviceName, String? tag = null) => TaskEx.Run(() => CreateForServiceAsync(registry, serviceName, tag)).ConfigureAwait(false).GetAwaiter().GetResult();
+    public static IApiClient GetClient(this IRegistry registry, String serviceName, String? tag = null) => TaskEx.Run(() => GetClientAsync(registry, serviceName, tag)).ConfigureAwait(false).GetAwaiter().GetResult();
+
+    /// <inheritdoc cref="GetClientAsync"/>
+    [Obsolete("请使用 GetClientAsync")]
+    public static Task<IApiClient> CreateForServiceAsync(this IRegistry registry, String serviceName, String? tag = null) => GetClientAsync(registry, serviceName, tag);
+
+    /// <inheritdoc cref="GetClient"/>
+    [Obsolete("请使用 GetClient")]
+    public static IApiClient CreateForService(this IRegistry registry, String serviceName, String? tag = null) => GetClient(registry, serviceName, tag);
 
     /// <summary>绑定客户端到服务集合，更新服务地址</summary>
     /// <param name="client"></param>

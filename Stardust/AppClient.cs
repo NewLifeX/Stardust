@@ -9,6 +9,7 @@ using NewLife.Log;
 using NewLife.Messaging;
 using NewLife.Model;
 using NewLife.Reflection;
+using NewLife.Remoting;
 using NewLife.Remoting.Clients;
 using NewLife.Remoting.Models;
 using NewLife.Security;
@@ -215,6 +216,8 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
     #endregion
 
     #region 发布&消费
+    private readonly Dictionary<String, IApiClient> _serviceClients = [];
+
     /// <summary>发布服务（底层）。定时反复执行，让服务端更新注册信息</summary>
     /// <param name="service">应用服务</param>
     /// <returns></returns>
@@ -485,6 +488,53 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
             File.WriteAllText(file, json);
         }
         catch { }
+    }
+
+    /// <summary>为指定服务获取客户端，自动从注册中心订阅服务地址并支持动态更新。同名服务复用同一实例</summary>
+    /// <param name="serviceName">服务名</param>
+    /// <param name="tag">特性标签</param>
+    public async Task<IApiClient> GetClientAsync(String serviceName, String? tag = null)
+    {
+        var key = tag.IsNullOrEmpty() ? serviceName : $"{serviceName}#{tag}";
+        lock (_serviceClients)
+        {
+            if (_serviceClients.TryGetValue(key, out var cached)) return cached;
+        }
+
+        var client = await RegistryExtensions.GetClientAsync(this, serviceName, tag).ConfigureAwait(false);
+        lock (_serviceClients)
+        {
+            if (!_serviceClients.ContainsKey(key))
+                _serviceClients[key] = client;
+            else
+                client = _serviceClients[key];
+        }
+        return client;
+    }
+
+    /// <summary>解析服务的地址列表，供调用方自行创建客户端</summary>
+    /// <param name="serviceName">服务名</param>
+    /// <param name="tag">特性标签。为空时返回所有地址</param>
+    /// <returns>地址列表，未找到时返回空数组</returns>
+    public async Task<String[]> ResolveAddressesAsync(String serviceName, String? tag = null)
+    {
+        var models = await ResolveAsync(serviceName, null, tag).ConfigureAwait(false);
+        if (models == null || models.Length == 0) return [];
+
+        var list = new List<String>();
+        foreach (var model in models)
+        {
+            foreach (var addr in new[] { model.Address, model.Address2 })
+            {
+                if (addr.IsNullOrEmpty()) continue;
+                foreach (var a in addr.Split([','], StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var s = a.Trim();
+                    if (!s.IsNullOrEmpty() && !list.Contains(s)) list.Add(s);
+                }
+            }
+        }
+        return list.ToArray();
     }
     #endregion
 
