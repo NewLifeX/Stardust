@@ -96,16 +96,18 @@ public class Startup
         // 配置Json
         services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
         {
-#if NET7_0_OR_GREATER
-            // 支持模型类中的DataMember特性
-            options.JsonSerializerOptions.TypeInfoResolver = DataMemberResolver.Default;
-#endif
-            options.JsonSerializerOptions.Converters.Add(new TypeConverter());
-            options.JsonSerializerOptions.Converters.Add(new LocalTimeConverter());
+            SystemJson.Apply(options.JsonSerializerOptions);
+
+            //#if NET7_0_OR_GREATER
+            //            // 支持模型类中的DataMember特性
+            //            options.JsonSerializerOptions.TypeInfoResolver = DataMemberResolver.Default;
+            //#endif
+            //            options.JsonSerializerOptions.Converters.Add(new TypeConverter());
+            //            options.JsonSerializerOptions.Converters.Add(new LocalTimeConverter());
             options.JsonSerializerOptions.Converters.Add(new JsonConverter<ISpanBuilder, DefaultSpanBuilder>());
             options.JsonSerializerOptions.Converters.Add(new JsonConverter<ISpan, DefaultSpan>());
-            // 支持中文编码
-            options.JsonSerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
+            //// 支持中文编码
+            //options.JsonSerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
         });
 
         services.AddCors(options => options.AddPolicy("star_cors", builder =>
