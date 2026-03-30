@@ -12,6 +12,78 @@ namespace Stardust.Web.Services;
 
 public class DeployService(StarFactory starFactory, ITracer tracer)
 {
+    /// <summary>编译控制</summary>
+    /// <param name="app">应用部署集</param>
+    /// <param name="buildNode">编译节点</param>
+    /// <param name="action">操作。Build-Upload/Package-Upload</param>
+    /// <param name="ip">客户端IP</param>
+    public async Task Compile(AppDeploy app, AppBuildNode buildNode, String action, String ip)
+    {
+        if (buildNode == null) throw new ArgumentNullException(nameof(buildNode));
+
+        app ??= buildNode.Deploy;
+        if (app == null) throw new Exception($"编译节点[{buildNode}]上的应用部署集不存在！");
+
+        await Task.Yield();
+
+        using var span = starFactory.Tracer?.NewSpan($"Compile-{action}", buildNode);
+
+        var msg = "";
+        var success = true;
+        try
+        {
+            // 根据操作类型决定编译步骤
+            var pullCode = buildNode.PullCode;
+            var buildProject = buildNode.BuildProject;
+            var packageOutput = buildNode.PackageOutput;
+            var uploadPackage = buildNode.UploadPackage;
+
+            // Package-Upload 仅打包上传，不拉代码和编译
+            if (action.EqualIgnoreCase("Package-Upload"))
+            {
+                pullCode = false;
+                buildProject = false;
+                packageOutput = true;
+                uploadPackage = true;
+            }
+
+            // 构造编译命令参数
+            var cmd = new CompileCommand
+            {
+                Repository = app.Repository,
+                Branch = app.Branch,
+                SourcePath = buildNode.SourcePath,
+                ProjectPath = app.ProjectPath,
+                ProjectKind = app.ProjectKind,
+                BuildArgs = app.BuildArgs,
+                OutputPath = buildNode.OutputPath.IsNullOrEmpty() ? "publish" : buildNode.OutputPath,
+                PackageFilters = app.PackageFilters,
+                DeployName = app.Name,
+                PullCode = pullCode,
+                BuildProject = buildProject,
+                PackageOutput = packageOutput,
+                UploadPackage = uploadPackage,
+            };
+            var args = cmd.ToJson();
+            msg = args;
+
+            await starFactory.SendNodeCommand(buildNode.Node.Code, "deploy/compile", args, 0, 3600, 0);
+        }
+        catch (Exception ex)
+        {
+            span?.SetError(ex, null);
+            msg = ex.Message;
+            success = false;
+
+            throw;
+        }
+        finally
+        {
+            var hi = AppDeployHistory.Create(buildNode.DeployId, buildNode.NodeId, $"deploy/compile/{action}", success, msg, ip);
+            hi.SaveAsync();
+        }
+    }
+
     /// <summary>发布控制</summary>
     /// <param name="app">应用部署集</param>
     /// <param name="deployNode">部署节点</param>
