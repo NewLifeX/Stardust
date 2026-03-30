@@ -137,12 +137,12 @@ public partial class AppDeploy
     public String Repository { get => _Repository; set { if (OnPropertyChanging("Repository", value)) { _Repository = value; OnPropertyChanged("Repository"); } } }
 
     private String _Branch;
-    /// <summary>分支。默认master</summary>
+    /// <summary>分支。默认main</summary>
     [Category("编译参数")]
     [DisplayName("分支")]
-    [Description("分支。默认master")]
+    [Description("分支。默认main")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Branch", "分支。默认master", "", DefaultValue = "master")]
+    [BindColumn("Branch", "分支。默认main", "", DefaultValue = "master")]
     public String Branch { get => _Branch; set { if (OnPropertyChanging("Branch", value)) { _Branch = value; OnPropertyChanged("Branch"); } } }
 
     private String _ProjectPath;
@@ -558,7 +558,7 @@ public partial class AppDeploy
         /// <summary>代码库。下载代码的位置</summary>
         public static readonly Field Repository = FindByName("Repository");
 
-        /// <summary>分支。默认master</summary>
+        /// <summary>分支。默认main</summary>
         public static readonly Field Branch = FindByName("Branch");
 
         /// <summary>项目路径。需要编译的项目路径，相对于代码库根目录</summary>
@@ -681,7 +681,7 @@ public partial class AppDeploy
         /// <summary>代码库。下载代码的位置</summary>
         public const String Repository = "Repository";
 
-        /// <summary>分支。默认master</summary>
+        /// <summary>分支。默认main</summary>
         public const String Branch = "Branch";
 
         /// <summary>项目路径。需要编译的项目路径，相对于代码库根目录</summary>

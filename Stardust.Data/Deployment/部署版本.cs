@@ -140,7 +140,7 @@ public partial class AppDeployVersion
     [Category("编译参数")]
     [DisplayName("提交记录")]
     [Description("提交记录")]
-    [DataObjectField(false, false, true, 50)]
+    [DataObjectField(false, false, true, 500)]
     [BindColumn("CommitLog", "提交记录", "")]
     public String CommitLog { get => _CommitLog; set { if (OnPropertyChanging("CommitLog", value)) { _CommitLog = value; OnPropertyChanged("CommitLog"); } } }
 

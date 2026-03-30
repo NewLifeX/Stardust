@@ -57,7 +57,7 @@
         <Column Name="Port" DataType="Int32" Description="监听端口。应用自身监听的端口，如果是dotnet应用会增加urls参数" />
         <Column Name="Urls" DataType="String" Description="服务地址。对外提供服务的域名端口地址，自动生成nginx配置，如https://sso.newlifex.com" />
         <Column Name="Repository" DataType="String" ItemType="url" Length="200" Description="代码库。下载代码的位置" Category="编译参数" />
-        <Column Name="Branch" DataType="String" DefaultValue="master" Description="分支。默认master" Category="编译参数" />
+        <Column Name="Branch" DataType="String" DefaultValue="master" Description="分支。默认main" Category="编译参数" />
         <Column Name="ProjectPath" DataType="String" Description="项目路径。需要编译的项目路径，相对于代码库根目录" Category="编译参数" />
         <Column Name="ProjectKind" DataType="Int32" DefaultValue="1" Description="项目类型。默认dotnet" Type="Stardust.Models.ProjectKinds" Category="编译参数" />
         <Column Name="BuildArgs" DataType="String" Length="200" Description="编译参数。编译项目时所需参数" Category="编译参数" />
@@ -147,7 +147,7 @@
         <Column Name="TargetFramework" DataType="String" Description="目标框架。TFM目标运行时框架，如net8.0" />
         <Column Name="Progress" DataType="String" Description="进度。发布进度" />
         <Column Name="CommitId" DataType="String" Description="提交标识" Category="编译参数" />
-        <Column Name="CommitLog" DataType="String" Description="提交记录" Category="编译参数" />
+        <Column Name="CommitLog" DataType="String" Length="500" Description="提交记录" Category="编译参数" />
         <Column Name="CommitTime" DataType="DateTime" Description="提交时间" Category="编译参数" />
         <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
         <Column Name="CreateUserId" DataType="Int32" Description="创建者" Category="扩展" />
@@ -187,11 +187,12 @@
         <Column Name="DeployId" ColumnName="AppId" DataType="Int32" Map="AppDeploy@Id@$" Description="应用部署集。对应AppDeploy" />
         <Column Name="NodeId" DataType="Int32" Description="节点。节点服务器" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
-        <Column Name="SourcePath" DataType="String" Description="源代码目录" />
+        <Column Name="SourcePath" DataType="String" Description="源代码目录。编译节点所在目录，若已存在直接更新，避免重复还原下载包" />
         <Column Name="PullCode" DataType="Boolean" Description="拉取源代码" />
         <Column Name="BuildProject" DataType="Boolean" Description="编译项目" />
         <Column Name="PackageOutput" DataType="Boolean" Description="打包输出" />
         <Column Name="UploadPackage" DataType="Boolean" Description="上传应用包" />
+        <Column Name="OutputPath" DataType="String" Description="输出目录。编译产物输出目录，不配置时默认publish" />
         <Column Name="TraceId" DataType="String" Description="追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递" Category="扩展" />
         <Column Name="CreateUserId" DataType="Int32" Description="创建人" Category="扩展" />
         <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />

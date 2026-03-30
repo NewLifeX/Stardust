@@ -56,11 +56,11 @@ public partial class AppBuildNode
     public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
     private String _SourcePath;
-    /// <summary>源代码目录</summary>
+    /// <summary>源代码目录。编译节点所在目录，若已存在直接更新，避免重复还原下载包</summary>
     [DisplayName("源代码目录")]
-    [Description("源代码目录")]
+    [Description("源代码目录。编译节点所在目录，若已存在直接更新，避免重复还原下载包")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("SourcePath", "源代码目录", "")]
+    [BindColumn("SourcePath", "源代码目录。编译节点所在目录，若已存在直接更新，避免重复还原下载包", "")]
     public String SourcePath { get => _SourcePath; set { if (OnPropertyChanging("SourcePath", value)) { _SourcePath = value; OnPropertyChanged("SourcePath"); } } }
 
     private Boolean _PullCode;
@@ -94,6 +94,14 @@ public partial class AppBuildNode
     [DataObjectField(false, false, false, 0)]
     [BindColumn("UploadPackage", "上传应用包", "")]
     public Boolean UploadPackage { get => _UploadPackage; set { if (OnPropertyChanging("UploadPackage", value)) { _UploadPackage = value; OnPropertyChanged("UploadPackage"); } } }
+
+    private String _OutputPath;
+    /// <summary>输出目录。编译产物输出目录，不配置时默认publish</summary>
+    [DisplayName("输出目录")]
+    [Description("输出目录。编译产物输出目录，不配置时默认publish")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("OutputPath", "输出目录。编译产物输出目录，不配置时默认publish", "")]
+    public String OutputPath { get => _OutputPath; set { if (OnPropertyChanging("OutputPath", value)) { _OutputPath = value; OnPropertyChanged("OutputPath"); } } }
 
     private String _TraceId;
     /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
@@ -185,6 +193,7 @@ public partial class AppBuildNode
             "BuildProject" => _BuildProject,
             "PackageOutput" => _PackageOutput,
             "UploadPackage" => _UploadPackage,
+            "OutputPath" => _OutputPath,
             "TraceId" => _TraceId,
             "CreateUserId" => _CreateUserId,
             "CreateTime" => _CreateTime,
@@ -208,6 +217,7 @@ public partial class AppBuildNode
                 case "BuildProject": _BuildProject = value.ToBoolean(); break;
                 case "PackageOutput": _PackageOutput = value.ToBoolean(); break;
                 case "UploadPackage": _UploadPackage = value.ToBoolean(); break;
+                case "OutputPath": _OutputPath = Convert.ToString(value); break;
                 case "TraceId": _TraceId = Convert.ToString(value); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
@@ -293,7 +303,7 @@ public partial class AppBuildNode
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
 
-        /// <summary>源代码目录</summary>
+        /// <summary>源代码目录。编译节点所在目录，若已存在直接更新，避免重复还原下载包</summary>
         public static readonly Field SourcePath = FindByName("SourcePath");
 
         /// <summary>拉取源代码</summary>
@@ -307,6 +317,9 @@ public partial class AppBuildNode
 
         /// <summary>上传应用包</summary>
         public static readonly Field UploadPackage = FindByName("UploadPackage");
+
+        /// <summary>输出目录。编译产物输出目录，不配置时默认publish</summary>
+        public static readonly Field OutputPath = FindByName("OutputPath");
 
         /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
         public static readonly Field TraceId = FindByName("TraceId");
@@ -350,7 +363,7 @@ public partial class AppBuildNode
         /// <summary>启用</summary>
         public const String Enable = "Enable";
 
-        /// <summary>源代码目录</summary>
+        /// <summary>源代码目录。编译节点所在目录，若已存在直接更新，避免重复还原下载包</summary>
         public const String SourcePath = "SourcePath";
 
         /// <summary>拉取源代码</summary>
@@ -364,6 +377,9 @@ public partial class AppBuildNode
 
         /// <summary>上传应用包</summary>
         public const String UploadPackage = "UploadPackage";
+
+        /// <summary>输出目录。编译产物输出目录，不配置时默认publish</summary>
+        public const String OutputPath = "OutputPath";
 
         /// <summary>追踪。最新一次查看采样，可用于关联多个片段，建立依赖关系，随线程上下文、Http、Rpc传递</summary>
         public const String TraceId = "TraceId";
