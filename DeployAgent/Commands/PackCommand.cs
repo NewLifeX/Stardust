@@ -136,8 +136,8 @@ internal class PackCommand : ICommand
         // 取得文件相对于目录的路径
         name = name[parent.FullName.Length..].TrimStart('/', '\\');
 
-        // 加上目录
-        return parent.Name.CombinePath(name);
+        // 加上目录，并确保使用正斜杠（ZIP规范要求）
+        return parent.Name.CombinePath(name).Replace('\\', '/');
     }
 
     private void CreateEntryFromFile(ZipArchive zip, FileInfo fi, String name, PackContext context)

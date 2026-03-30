@@ -2,6 +2,9 @@
   "profiles": {
     "DeployAgent": {
       "commandName": "Project",
+    },
+    "DeployAgent2": {
+      "commandName": "Project",
       "commandLineArgs": "pack -r ../star.zip ../../star/*.exe ../../star/*.dll ../../star/*.runtimeconfig.json ../../../Doc *.dll"
     }
   }
