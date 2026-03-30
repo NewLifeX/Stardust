@@ -47,6 +47,9 @@ public class ShadowDeployStrategy : DeployStrategyBase
 
                 // 拷贝配置文件到工作目录（如果不存在）
                 CopyConfigToWorkDir(shadow, workDir, context.Log);
+
+                // 拷贝覆盖文件和子目录到工作目录
+                CopyOverwriteFiles(shadow, workDir, context.Deploy, context.Log);
             }
 
             // 查找可执行文件（在影子目录中）
@@ -169,6 +172,62 @@ public class ShadowDeployStrategy : DeployStrategyBase
                     fi.CopyTo(dst, false);
                 }
             }
+        }
+    }
+
+    /// <summary>拷贝覆盖文件和子目录到工作目录</summary>
+    private void CopyOverwriteFiles(String shadow, String workDir, DeployInfo? deploy, NewLife.Log.ILog log)
+    {
+        var sdi = shadow.AsDirectory();
+        if (sdi == null || !sdi.Exists) return;
+
+        var ovs = deploy?.Overwrite?.Split(';');
+        if (ovs == null || ovs.Length == 0) return;
+
+        log?.Info("拷贝覆盖文件到工作目录：{0}", deploy?.Overwrite);
+
+        // 覆盖匹配的文件
+        foreach (var fi in sdi.GetFiles())
+        {
+            if (ovs.Any(e => e.IsMatch(fi.Name, StringComparison.OrdinalIgnoreCase)))
+            {
+                var dst = workDir.CombinePath(fi.Name);
+                log?.Info("覆盖文件 {0}", fi.Name);
+                fi.CopyTo(dst, true);
+            }
+        }
+
+        // 覆盖匹配的子目录
+        foreach (var di in sdi.GetDirectories())
+        {
+            // 匹配目录名本身，或者匹配 "目录名/*" 模式
+            if (ovs.Any(e =>
+                e.IsMatch(di.Name, StringComparison.OrdinalIgnoreCase) ||
+                e.IsMatch(di.Name + "/", StringComparison.OrdinalIgnoreCase) ||
+                e.TrimEnd('*', '/').TrimEnd('/').EqualIgnoreCase(di.Name)))
+            {
+                var dest = workDir.CombinePath(di.Name);
+                log?.Info("覆盖目录 {0}", di.Name);
+                CopyDirectory(di, dest, log);
+            }
+        }
+    }
+
+    /// <summary>递归拷贝目录。避免使用 CopyTo 扩展方法的 TrimStart 路径截断 Bug</summary>
+    private void CopyDirectory(DirectoryInfo source, String destDir, NewLife.Log.ILog log)
+    {
+        destDir.EnsureDirectory(false);
+
+        foreach (var fi in source.GetFiles())
+        {
+            var dst = Path.Combine(destDir, fi.Name);
+            fi.CopyTo(dst, true);
+        }
+
+        foreach (var di in source.GetDirectories())
+        {
+            var dst = Path.Combine(destDir, di.Name);
+            CopyDirectory(di, dst, log);
         }
     }
 
