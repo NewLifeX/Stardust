@@ -1,12 +1,15 @@
 ﻿using System.Runtime.Intrinsics.Arm;
 using Microsoft.AspNetCore.Mvc;
 using NewLife;
+using NewLife.Log;
+using NewLife.Remoting;
 using NewLife.Remoting.Extensions;
 using NewLife.Serialization;
 using Stardust.Data.Deployment;
 using Stardust.Data.Nodes;
 using Stardust.Models;
 using Stardust.Server.Services;
+using Attachment = Stardust.Data.Deployment.Attachment;
 
 namespace Stardust.Server.Controllers;
 
@@ -178,25 +181,72 @@ public class DeployController(NodeService nodeService, DeployService deployServi
         return ver.Update();
     }
 
-    /// <summary>上传编译任务结果文件</summary>
+    /// <summary>上传编译产物包。编译节点编译完成后，上传zip包并自动创建应用版本</summary>
+    /// <param name="deployName">应用部署集名称</param>
+    /// <param name="version">版本号</param>
+    /// <param name="commitId">提交标识</param>
+    /// <param name="commitLog">提交记录</param>
+    /// <param name="commitTime">提交时间</param>
+    /// <param name="file">zip文件</param>
+    /// <returns></returns>
     [HttpPost]
-    public String UploadBuildFile(Int32 taskId, [FromForm] IFormFile file)
+    public async Task<Object> UploadBuildFile(String deployName, String version, String? commitId, String? commitLog, String? commitTime, [FromForm] IFormFile file)
     {
-        var ver = AppDeployVersion.FindById(taskId);
-        if (ver == null) throw new ArgumentNullException(nameof(taskId));
+        if (deployName.IsNullOrEmpty()) throw new ApiException(400, "应用部署集名称不能为空");
+        if (version.IsNullOrEmpty()) throw new ApiException(400, "版本号不能为空");
+        if (file == null || file.Length == 0) throw new ApiException(400, "上传文件不能为空");
 
-        //// 仅支持部分包和标准包
-        //if (info.Mode > DeployModes.Standard) throw new ApiException(400, "仅支持部分包和标准包！");
+        var node = Context.Device as Node;
 
-        //// 仅支持覆盖文件
-        //if (info.Overwrite.IsNullOrEmpty()) throw new ApiException(400, "请指定覆盖文件！");
+        // 查找应用部署集
+        var app = AppDeploy.FindByName(deployName);
+        if (app == null) throw new ApiException(404, $"应用部署集[{deployName}]不存在");
 
-        // 保存应用发布信息
-        var rs = 0;
-        //var rs = _deployService.UploadBuildTask(_node, info, UserHost);
-        //WriteHistory(info.AppId, nameof(UploadBuildTask), rs > 0, info.ToJson());
+        var set = StarServerSetting.Current;
 
-        return rs > 0 ? "ok" : "fail";
+        // 创建或更新版本
+        var ver = AppDeployVersion.FindByDeployIdAndVersion(app.Id, version);
+        if (ver == null)
+        {
+            ver = new AppDeployVersion
+            {
+                DeployId = app.Id,
+                Version = version,
+                Enable = true,
+            };
+        }
+
+        ver.TraceId = DefaultSpan.Current?.TraceId;
+
+        // 设置Git提交信息
+        if (!commitId.IsNullOrEmpty()) ver.CommitId = commitId;
+        if (!commitLog.IsNullOrEmpty()) ver.CommitLog = commitLog;
+        if (!commitTime.IsNullOrEmpty()) ver.CommitTime = commitTime.ToDateTime();
+
+        // 创建附件并保存文件
+        var att = new Attachment
+        {
+            Category = "AppDeploy",
+            Key = app.Name,
+            Title = app.Name,
+            FileName = file.FileName,
+            ContentType = file.ContentType,
+            UploadTime = DateTime.Now,
+        };
+
+        using var stream = file.OpenReadStream();
+        await att.SaveFile(stream, set.UploadPath).ConfigureAwait(false);
+
+        ver.Url = $"/cube/file?id={att.Id}{att.Extension}";
+        ver.Hash = att.Hash;
+        ver.Size = att.Size;
+
+        ver.Save();
+        app.Fix();
+
+        WriteHistory(app.Id, nameof(UploadBuildFile), true, $"版本={version} 大小={att.Size:n0} 节点={node?.Name}");
+
+        return new { ver.Id, ver.Version, ver.Url, ver.Size, ver.Hash };
     }
 
     #region 辅助

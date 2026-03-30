@@ -9,6 +9,6 @@ public enum ProjectKinds
     /// <summary>dotnet项目，MSBuild编译</summary>
     MSBuild = 2,
 
-    /// <summary>自定义项目，执行自定义脚本编译</summary>
+    /// <summary>自定义项目，执行项目build文件夹下的build.sh脚本编译</summary>
     Custom = 99,
 }
