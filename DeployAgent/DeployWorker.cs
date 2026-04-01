@@ -193,6 +193,13 @@ public class DeployWorker(StarFactory factory) : IHostedService
     {
         var publishDir = Path.Combine(repoDir, outputPath);
 
+        // 编译前先清空输出目录，避免上次编译产物影响
+        if (Directory.Exists(publishDir))
+        {
+            XTrace.WriteLine("清空输出目录：{0}", publishDir);
+            Directory.Delete(publishDir, true);
+        }
+
         // ProjectKind: 1=DotNet, 2=MSBuild, 99=Custom
         switch (cmd.ProjectKind)
         {
