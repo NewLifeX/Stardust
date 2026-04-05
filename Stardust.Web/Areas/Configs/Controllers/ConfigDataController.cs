@@ -74,10 +74,10 @@ public class ConfigDataController : ConfigsEntityController<ConfigData>
         return list;
     }
 
-    public override async Task<ActionResult> Add(ConfigData entity, String returnUrl)
+    public override async Task<ActionResult> Add(ConfigData entity)
     {
         entity.NewVersion = entity.Config.AcquireNewVersion();
-        await base.Add(entity, returnUrl);
+        await base.Add(entity);
 
         return RedirectToAction("Index", new { appId = entity.ConfigId });
     }
