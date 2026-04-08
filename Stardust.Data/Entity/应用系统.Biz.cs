@@ -96,6 +96,56 @@ public partial class App : Entity<App>, IDeviceModel2, ILogProvider
     /// </summary>
     /// <returns></returns>
     public override String ToString() => !DisplayName.IsNullOrEmpty() ? DisplayName : Name;
+
+    /// <summary>更新应用时同步到关联的部署配置</summary>
+    /// <returns>受影响的记录数</returns>
+    protected override Int32 OnUpdate()
+    {
+        var count = base.OnUpdate();
+
+        // 仅在字段真正变化时才同步
+        if (HasDirty && Meta.Session.Count > 0)
+        {
+            var deploys = AppDeploy.FindAllByAppId(Id);
+            if (deploys != null && deploys.Count > 0)
+            {
+                foreach (var deploy in deploys)
+                {
+                    var dirty = false;
+
+                    // 同步 Name
+                    if (deploy.Name != Name)
+                    {
+                        deploy.Name = Name;
+                        dirty = true;
+                    }
+
+                    // 同步 Category
+                    if (deploy.Category != Category)
+                    {
+                        deploy.Category = Category;
+                        dirty = true;
+                    }
+
+                    // 同步 ProjectId
+                    if (deploy.ProjectId != ProjectId)
+                    {
+                        deploy.ProjectId = ProjectId;
+                        dirty = true;
+                    }
+
+                    // 仅在有变化时才保存，避免不必要的数据库操作
+                    if (dirty)
+                    {
+                        XTrace.WriteLine($"[AppDeploy 同步] 应用 {Name} 更新，同步部署配置 {deploy.Name} (Id={deploy.Id})");
+                        deploy.Save();
+                    }
+                }
+            }
+        }
+
+        return count;
+    }
     #endregion
 
     #region 扩展属性
