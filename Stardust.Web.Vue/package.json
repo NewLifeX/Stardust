@@ -10,9 +10,10 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.0.10",
-    "axios": "^1.13.5",
-    "core-js": "^3.6.5",
+    "axios": "1.15.0",
+    "core-js": "3.49.0",
     "element-plus": "^2.11.0",
+    "lodash": "4.18.0",
     "vue": "^3.2.47",
     "vue-router": "^4.1.6",
     "vuex": "^4.1.0"
