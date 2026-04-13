@@ -9,6 +9,7 @@ using NewLife.Data;
 using NewLife.Log;
 using NewLife.Reflection;
 using NewLife.Remoting.Models;
+using Stardust.Data.Deployment;
 using Stardust.Monitors;
 using XCode;
 using XCode.Cache;
