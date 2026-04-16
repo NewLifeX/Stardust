@@ -229,12 +229,16 @@ public class ShardTableService : IHostedService
             var builder = new ConnectionStringBuilder(dalTrace.ConnStr);
             var dbfile = builder["Data Source"] + "";
             var file = dbfile.GetFullPath();
+            if (file.IsNullOrEmpty()) return;
 
-            if (!file.IsNullOrEmpty() && File.Exists(file))
-            {
-                XTrace.WriteLine("SQLite分片库[{0}]已过期，删除数据库文件：{1}", dd, file);
-                File.Delete(file);
-            }
+            var fi = file.AsFile();
+            if (!fi.Exists) return;
+
+            // 太小的文件可能是空库，不管它
+            if (fi.Length < 1_000_000) return;
+
+            XTrace.WriteLine("SQLite分片库[{0}]已过期，删除数据库文件：{1}", dd, file);
+            File.Delete(file);
 
             RebuildSqliteDayTables(dalTrace, dd);
             XTrace.WriteLine("SQLite分片库[{0}]已重建", dd);
