@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO.Compression;
+using System.Text;
 using NewLife;
 using NewLife.Log;
 using NewLife.Model;
@@ -88,14 +89,32 @@ public class DeployWorker(StarFactory factory) : IHostedService
                 if (!Directory.Exists(cmd.SourcePath))
                 {
                     Directory.CreateDirectory(cmd.SourcePath);
-                    GitClone(cmd.Repository, cmd.Branch ?? "main", repoDir);
-                    XTrace.WriteLine("代码拉取完成：{0}", repoDir);
+                    try
+                    {
+                        GitClone(cmd.Repository, cmd.Branch ?? "main", repoDir);
+                        XTrace.WriteLine("代码拉取完成：{0}", repoDir);
+                    }
+                    catch (Exception ex)
+                    {
+                        XTrace.WriteLine("Git 克隆失败：{0}", ex.Message);
+                        XTrace.WriteException(ex);
+                        TryRecoverAndReclone(cmd.Repository, cmd.Branch ?? "main", repoDir);
+                    }
                 }
                 // 拉取最新代码
                 else if (cmd.PullCode)
                 {
-                    GitPull(repoDir, cmd.Branch);
-                    XTrace.WriteLine("代码拉取完成");
+                    try
+                    {
+                        GitPull(repoDir, cmd.Branch);
+                        XTrace.WriteLine("代码拉取完成");
+                    }
+                    catch (Exception ex)
+                    {
+                        XTrace.WriteLine("Git 拉取失败：{0}", ex.Message);
+                        XTrace.WriteException(ex);
+                        TryRecoverAndReclone(cmd.Repository, cmd.Branch ?? "main", repoDir);
+                    }
                 }
             }
             else if (cmd.PullCode && !cmd.Repository.IsNullOrEmpty())
@@ -106,8 +125,17 @@ public class DeployWorker(StarFactory factory) : IHostedService
                 XTrace.WriteLine("工作目录：{0}", workDir);
 
                 repoDir = Path.Combine(workDir, "repo");
-                GitClone(cmd.Repository, cmd.Branch ?? "main", repoDir);
-                XTrace.WriteLine("代码拉取完成：{0}", repoDir);
+                try
+                {
+                    GitClone(cmd.Repository, cmd.Branch ?? "main", repoDir);
+                    XTrace.WriteLine("代码拉取完成：{0}", repoDir);
+                }
+                catch (Exception ex)
+                {
+                    XTrace.WriteLine("Git 克隆失败：{0}", ex.Message);
+                    XTrace.WriteException(ex);
+                    TryRecoverAndReclone(cmd.Repository, cmd.Branch ?? "main", repoDir);
+                }
             }
             else
             {
@@ -257,18 +285,44 @@ public class DeployWorker(StarFactory factory) : IHostedService
     {
         var psi = CreateProcessStartInfo(fileName, arguments, workingDirectory);
 
-        using var p = System.Diagnostics.Process.Start(psi);
-        if (p == null) throw new Exception($"无法启动进程：{fileName}");
+        using var p = new Process { StartInfo = psi, EnableRaisingEvents = true };
 
-        var output = p.StandardOutput.ReadToEnd();
-        var error = p.StandardError.ReadToEnd();
-        p.WaitForExit(600_000);
+        var outputSb = new StringBuilder();
+        var errorSb = new StringBuilder();
 
-        if (!output.IsNullOrEmpty()) XTrace.WriteLine(output);
-        if (!error.IsNullOrEmpty()) XTrace.WriteLine(error);
+        p.OutputDataReceived += (s, e) =>
+        {
+            if (e.Data != null)
+            {
+                XTrace.WriteLine(e.Data);
+                outputSb.AppendLine(e.Data);
+            }
+        };
+        p.ErrorDataReceived += (s, e) =>
+        {
+            if (e.Data != null)
+            {
+                XTrace.WriteLine(e.Data);
+                errorSb.AppendLine(e.Data);
+            }
+        };
+
+        if (!p.Start()) throw new Exception($"无法启动进程：{fileName}");
+
+        p.BeginOutputReadLine();
+        p.BeginErrorReadLine();
+
+        var timeout = 600_000;
+        if (!p.WaitForExit(timeout))
+        {
+            try { p.Kill(); } catch { }
+            throw new Exception($"{fileName} 执行超时，已终止（{timeout} ms）");
+        }
+
+        p.WaitForExit();
 
         if (p.ExitCode != 0)
-            throw new Exception($"{fileName} 执行失败，退出码：{p.ExitCode}\n{error}");
+            throw new Exception($"{fileName} 执行失败，退出码：{p.ExitCode}\n{errorSb}");
     }
 
     /// <summary>Git 克隆仓库</summary>
@@ -276,16 +330,8 @@ public class DeployWorker(StarFactory factory) : IHostedService
     {
         XTrace.WriteLine("开始克隆仓库：{0} 分支：{1}", repoUrl, branch);
 
-        var psi = CreateProcessStartInfo("git", $"clone -b {branch} --depth 1 {repoUrl} \"{targetPath}\"");
-
-        using var p = System.Diagnostics.Process.Start(psi);
-        if (p == null) throw new Exception("无法启动 git 进程");
-
-        var error = p.StandardError.ReadToEnd();
-        p.WaitForExit(300_000);
-
-        if (p.ExitCode != 0)
-            throw new Exception($"Git 克隆失败：{error}");
+        var args = $"clone -b {branch} --depth 1 {repoUrl} \"{targetPath}\"";
+        ExecuteProcess("git", args, null);
 
         XTrace.WriteLine("Git 克隆成功");
     }
@@ -300,20 +346,10 @@ public class DeployWorker(StarFactory factory) : IHostedService
         // 如果指定了分支则先切换
         if (!branch.IsNullOrEmpty())
         {
-            var psiCheckout = CreateProcessStartInfo("git", $"checkout {branch}", repoDir);
-            using var pCheckout = System.Diagnostics.Process.Start(psiCheckout);
-            pCheckout?.WaitForExit(60_000);
+            ExecuteProcess("git", $"checkout {branch}", repoDir);
         }
 
-        var psi = CreateProcessStartInfo("git", "pull", repoDir);
-        using var p = System.Diagnostics.Process.Start(psi);
-        if (p == null) throw new Exception("无法启动 git 进程");
-
-        var error = p.StandardError.ReadToEnd();
-        p.WaitForExit(300_000);
-
-        if (p.ExitCode != 0)
-            throw new Exception($"Git 拉取失败：{error}");
+        ExecuteProcess("git", "pull", repoDir);
 
         XTrace.WriteLine("Git 拉取成功");
     }
@@ -439,6 +475,74 @@ public class DeployWorker(StarFactory factory) : IHostedService
         {
             XTrace.WriteLine("获取Git提交信息失败：{0}", ex.Message);
             return ("", "", "");
+        }
+    }
+
+    /// <summary>尝试备份现有仓库并重新克隆（失败则尝试还原备份）</summary>
+    private void TryRecoverAndReclone(String repoUrl, String branch, String repoDir)
+    {
+        XTrace.WriteLine("尝试备份并重新拉取仓库：{0}", repoDir);
+
+        var backupDir = "";
+        try
+        {
+            if (Directory.Exists(repoDir))
+            {
+                backupDir = repoDir + ".backup." + DateTime.Now.ToString("yyyyMMddHHmmss");
+                Directory.Move(repoDir, backupDir);
+                XTrace.WriteLine("已备份原仓库到：{0}", backupDir);
+            }
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteLine("备份原仓库失败：{0}", ex.Message);
+            XTrace.WriteException(ex);
+        }
+
+        try
+        {
+            GitClone(repoUrl, branch ?? "main", repoDir);
+            XTrace.WriteLine("重新克隆成功：{0}", repoDir);
+
+            if (!string.IsNullOrEmpty(backupDir) && Directory.Exists(backupDir))
+            {
+                try
+                {
+                    Directory.Delete(backupDir, true);
+                    XTrace.WriteLine("已删除备份：{0}", backupDir);
+                }
+                catch (Exception ex)
+                {
+                    XTrace.WriteLine("删除备份失败：{0}", ex.Message);
+                    XTrace.WriteException(ex);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteLine("重新克隆失败：{0}", ex.Message);
+            XTrace.WriteException(ex);
+
+            // 尝试还原备份
+            try
+            {
+                if (!string.IsNullOrEmpty(backupDir) && Directory.Exists(backupDir))
+                {
+                    if (Directory.Exists(repoDir))
+                    {
+                        try { Directory.Delete(repoDir, true); } catch { }
+                    }
+                    Directory.Move(backupDir, repoDir);
+                    XTrace.WriteLine("已还原备份到：{0}", repoDir);
+                }
+            }
+            catch (Exception ex2)
+            {
+                XTrace.WriteLine("还原备份失败：{0}", ex2.Message);
+                XTrace.WriteException(ex2);
+            }
+
+            throw;
         }
     }
 
