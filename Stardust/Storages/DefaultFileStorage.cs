@@ -98,7 +98,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         if (cacheProvider == null) return TaskEx.CompletedTask;
 
         // 优先Redis队列作为事件总线，其次使用星尘事件总线，最后使用MemoryCache
-        var queue = cacheProvider.GetValue("RedisQueue") as ICache ?? cacheProvider.Cache;
+        var queue = cacheProvider.GetValue("RedisQueue", false) as ICache ?? cacheProvider.Cache;
 
         // 尝试使用Redis（版本 >= 5.0）
         var type = queue.GetType();
@@ -124,7 +124,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     public Boolean SetEventBus(ICacheProvider cacheProvider)
     {
         //if (cacheProvider.Cache is not Cache cache) return false;
-        var queue = cacheProvider.GetValue("RedisQueue") as ICache ?? cacheProvider.Cache;
+        var queue = cacheProvider.GetValue("RedisQueue", false) as ICache ?? cacheProvider.Cache;
         if (queue is not Cache cache) return false;
 
         // 优先Redis队列作为事件总线，其次使用星尘事件总线

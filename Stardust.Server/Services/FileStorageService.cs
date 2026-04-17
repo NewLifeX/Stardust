@@ -89,8 +89,9 @@ public class CubeFileStorage : DefaultFileStorage
     protected override Task OnInitializedAsync(CancellationToken cancellationToken)
     {
         // 优先Redis队列作为事件总线，其次使用星尘事件总线，最后使用MemoryCache
-        var rqueue = _cacheProvider.GetType().GetProperty("RedisQueue");
-        var queue = rqueue?.GetValue(_cacheProvider) as ICache ?? _cacheProvider.Cache;
+        //var rqueue = _cacheProvider.GetType().GetProperty("RedisQueue");
+        //var queue = rqueue?.GetValue(_cacheProvider) as ICache ?? _cacheProvider.Cache;
+        var queue = _cacheProvider.GetValue("RedisQueue", false) as ICache ?? _cacheProvider.Cache;
 
         // 尝试使用Redis（版本 >= 5.0）
         if (queue is Redis redis && redis.Version >= new Version(5, 0) && SetEventBus(_cacheProvider))
