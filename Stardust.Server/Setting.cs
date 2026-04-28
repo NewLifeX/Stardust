@@ -70,17 +70,13 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     [Description("节点编码辨识度。UUID+Guid+SerialNumber+DiskId+MAC，只要其中几个相同，就认为是同一个节点，默认2")]
     public Int32 NodeCodeLevel { get; set; } = 2;
 
-    /// <summary>监控流统计周期。默认5秒。处理内存队列计算分钟级统计，调小提高实时性但增加CPU占用，调大降低CPU但增加告警延迟</summary>
-    [Description("监控流统计周期。默认5秒。处理内存队列计算分钟级统计，调小提高实时性但增加CPU占用，调大降低CPU但增加告警延迟")]
+    /// <summary>监控流统计。默认5秒</summary>
+    [Description("监控流统计。默认5秒")]
     public Int32 MonitorFlowPeriod { get; set; } = 5;
 
-    /// <summary>监控批统计周期。默认30秒。从数据库聚合修正数据，调小提高修正速度但增加IO压力，调大降低压力但延迟修正</summary>
-    [Description("监控批统计周期。默认30秒。从数据库聚合修正数据，调小提高修正速度但增加IO压力，调大降低压力但延迟修正")]
+    /// <summary>监控流统计。默认30秒</summary>
+    [Description("监控批统计。默认30秒")]
     public Int32 MonitorBatchPeriod { get; set; } = 30;
-
-    /// <summary>监控落盘周期。默认60秒。延迟队列批量提交周期，调小加快持久化但增加数据库UPDATE压力（主要瓶颈），调大降低IO但重启时可能丢失数据</summary>
-    [Description("监控落盘周期。默认60秒。延迟队列批量提交周期，调小加快持久化但增加数据库UPDATE压力（主要瓶颈），调大降低IO但重启时可能丢失数据")]
-    public Int32 MonitorSavePeriod { get; set; } = 60;
 
     /// <summary>监控告警周期。默认30秒</summary>
     [Description("监控告警周期。默认30秒")]
@@ -121,14 +117,6 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     /// <summary>文件缓存白名单。若指定，仅允许符合条件的IP来源访问文件缓存，多个逗号隔开，支持*模糊匹配</summary>
     [Description("文件缓存白名单。若指定，仅允许符合条件的IP来源访问文件缓存，多个逗号隔开，支持*模糊匹配")]
     public String FileCacheWhiteIP { get; set; } = "";
-
-    /// <summary>文件存储提供服务。是否响应其他节点的文件下载请求，默认true</summary>
-    [Description("文件存储提供服务。是否响应其他节点的文件下载请求，默认true")]
-    public Boolean FileStorageProvide { get; set; } = true;
-
-    /// <summary>文件存储拉取文件。是否主动拉取其他节点发布的新文件，默认false</summary>
-    [Description("文件存储拉取文件。是否主动拉取其他节点发布的新文件，默认false")]
-    public Boolean FileStorageFetch { get; set; } = false;
 
     /// <summary>上级服务器。同步向上级汇报数据</summary>
     [Description("上级服务器。同步向上级汇报数据")]

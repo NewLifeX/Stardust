@@ -19,45 +19,16 @@ public interface ITraceStatService
     /// <param name="appId"></param>
     /// <param name="time"></param>
     void Add(Int32 appId, DateTime time);
-
-    /// <summary>设置热门应用。监控中心正在查看的应用，缩短计算周期以提供更实时的统计数据</summary>
-    /// <param name="appId">应用编号</param>
-    void SetHotApp(Int32 appId);
 }
 
 /// <summary>追踪统计服务</summary>
-/// <remarks>
-/// 性能优化说明：
-/// 1. 流式计算（FlowPeriod）：处理内存队列中的追踪数据，计算分钟级统计
-/// 2. 批量计算（BatchPeriod）：从数据库重新聚合，修正流式计算偏差，计算小时/天级统计
-/// 3. 落盘保存（SavePeriod）：延迟队列批量提交到数据库的周期
-/// 4. 三个周期可通过配置文件调整，根据实际负载平衡实时性与性能
-/// </remarks>
 public class TraceStatService : ITraceStatService
 {
     /// <summary>流计算周期。默认5秒</summary>
-    /// <remarks>
-    /// 处理内存队列中的追踪数据，计算分钟级统计（告警数据源）。
-    /// 调小：实时性更好，告警延迟低，但CPU占用高。
-    /// 调大：CPU占用低，但告警延迟增加（队列积压一般小于1000条，可适当调大到30秒）。
-    /// </remarks>
     public Int32 FlowPeriod { get; set; } = 5;
 
     /// <summary>批计算周期。默认30秒</summary>
-    /// <remarks>
-    /// 从数据库重新聚合数据，修正流式计算的偏差，计算小时/天级统计。
-    /// 调小：数据修正更及时，但CPU和数据库IO压力增大。
-    /// 调大：减少CPU和IO压力（告警容忍3-5分钟延迟，可适当调大到60秒）。
-    /// </remarks>
     public Int32 BatchPeriod { get; set; } = 30;
-
-    /// <summary>落盘保存周期。默认60秒</summary>
-    /// <remarks>
-    /// 延迟队列批量提交统计数据到数据库的周期，是主要性能瓶颈。
-    /// 调小：数据持久化更快，系统重启时数据丢失少，但数据库UPDATE压力大。
-    /// 调大：大幅减少数据库UPDATE次数，降低IO压力，但重启时可能丢失更多内存数据（可适当调大到120-180秒）。
-    /// </remarks>
-    public Int32 SavePeriod { get; set; } = 60;
 
     private TimerX _timerFlow;
     private TimerX _timerBatch;
@@ -66,11 +37,11 @@ public class TraceStatService : ITraceStatService
     private readonly ConcurrentDictionary<String, ConcurrentBag<DateTime>> _bagMinute = new();
     private readonly ConcurrentQueue<TraceData> _queue = new();
 
-    /* 延迟队列技术，周期越长则批量越大，UPDATE次数越少 */
-    private DayQueue _dayQueue;
-    private HourQueue _hourQueue;
-    private MinuteQueue _minuteQueue;
-    private AppMinuteQueue _appMinuteQueue;
+    /* 延迟队列技术 */
+    private readonly DayQueue _dayQueue = new() { Period = 60 };
+    private readonly HourQueue _hourQueue = new() { Period = 60 };
+    private readonly MinuteQueue _minuteQueue = new() { Period = 60 };
+    private readonly AppMinuteQueue _appMinuteQueue = new() { Period = 60 };
 
     private Int32 _count;
     private readonly ITracer _tracer;
@@ -160,29 +131,7 @@ public class TraceStatService : ITraceStatService
         }
     }
 
-    /// <summary>设置热门应用。监控中心正在查看的应用，缩短计算周期以提供更实时的统计数据</summary>
-    /// <param name="appId">应用编号</param>
-    public void SetHotApp(Int32 appId)
-    {
-        if (appId <= 0) return;
-
-        Init();
-
-        // 缩短批计算周期，让统计数据更快刷新
-        _timerBatch?.SetNext(3_000);
-
-        // 触发各延迟队列立即落盘
-        _minuteQueue?.Trigger();
-        _hourQueue?.Trigger();
-        _dayQueue?.Trigger();
-        _appMinuteQueue?.Trigger();
-    }
-
     /// <summary>流式计算，增量累加</summary>
-    /// <remarks>
-    /// 性能优化：只计算分钟级统计（告警数据源），小时/天级统计由批量计算处理。
-    /// 批量计算能完全修正流式计算的偏差，因此可以放心精简流式计算。
-    /// </remarks>
     /// <param name="state"></param>
     private void DoFlowStat(Object state)
     {
@@ -202,9 +151,7 @@ public class TraceStatService : ITraceStatService
 
             // 每日
             {
-                var queue = _dayQueue ??= new();
-                queue.Period = SavePeriod * 1000;
-                var st = queue.GetOrAdd(td.StatDate, td.AppId, td.ItemId, out var key);
+                var st = _dayQueue.GetOrAdd(td.StatDate, td.AppId, td.ItemId, out var key);
 
                 st.Total += td.Total;
                 st.Errors += td.Errors;
@@ -213,14 +160,12 @@ public class TraceStatService : ITraceStatService
                 if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
                 st.TotalValue += td.TotalValue;
 
-                queue.Commit(key);
+                _dayQueue.Commit(key);
             }
 
             // 小时
             {
-                var queue = _hourQueue ??= new();
-                queue.Period = SavePeriod * 1000;
-                var st = queue.GetOrAdd(td.StatHour, td.AppId, td.ItemId, out var key);
+                var st = _hourQueue.GetOrAdd(td.StatHour, td.AppId, td.ItemId, out var key);
 
                 st.Total += td.Total;
                 st.Errors += td.Errors;
@@ -229,14 +174,12 @@ public class TraceStatService : ITraceStatService
                 if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
                 st.TotalValue += td.TotalValue;
 
-                queue.Commit(key);
+                _hourQueue.Commit(key);
             }
 
-            // 分钟统计（告警数据源，需要较高实时性）
+            // 分钟
             {
-                var queue = _minuteQueue ??= new();
-                queue.Period = SavePeriod * 1000;
-                var st = queue.GetOrAdd(td.StatMinute, td.AppId, td.ItemId, out var key);
+                var st = _minuteQueue.GetOrAdd(td.StatMinute, td.AppId, td.ItemId, out var key);
 
                 st.Total += td.Total;
                 st.Errors += td.Errors;
@@ -245,14 +188,12 @@ public class TraceStatService : ITraceStatService
                 if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
                 st.TotalValue += td.TotalValue;
 
-                queue.Commit(key);
+                _minuteQueue.Commit(key);
             }
 
-            // 应用分钟统计（告警数据源，需要较高实时性）
+            // 应用分钟
             {
-                var queue = _appMinuteQueue ??= new();
-                queue.Period = SavePeriod * 1000;
-                var st = queue.GetOrAdd(td.StatMinute, td.AppId, out var key);
+                var st = _appMinuteQueue.GetOrAdd(td.StatMinute, td.AppId, out var key);
 
                 st.Total += td.Total;
                 st.Errors += td.Errors;
@@ -260,14 +201,9 @@ public class TraceStatService : ITraceStatService
                 if (st.MaxCost < td.MaxCost) st.MaxCost = td.MaxCost;
                 if (st.MinCost <= 0 || st.MinCost > td.MinCost && td.MinCost > 0) st.MinCost = td.MinCost;
 
-                queue.Commit(key);
+                _appMinuteQueue.Commit(key);
             }
-
-            if (span != null) span.Value++;
         }
-
-        // 更新周期
-        if (FlowPeriod > 0 && _timerFlow != null) _timerFlow.Period = FlowPeriod * 1000;
     }
 
     /// <summary>批计算，覆盖缺失</summary>
@@ -306,9 +242,6 @@ public class TraceStatService : ITraceStatService
             var ss = key.Split("_");
             ProcessDay(ss[0].ToInt(), ss[1].ToDateTime());
         }
-
-        // 更新周期
-        if (BatchPeriod > 0 && _timerBatch != null) _timerBatch.Period = BatchPeriod * 1000;
     }
 
     private void ProcessDay(Int32 appId, DateTime time)
@@ -316,7 +249,7 @@ public class TraceStatService : ITraceStatService
         if (appId <= 0 || time.Year < 2000) return;
 
         var date = time.Date;
-        using var span = _tracer?.NewSpan("TraceBatchStat-Day", new { appId, time });
+        using var span = _tracer?.NewSpan("TraceBatchStat-Day", time);
 
         // 统计数据。由小时级汇总
         var list = TraceHourStat.FindAllByAppIdWithCache(appId, date, date.AddDays(1));
@@ -328,16 +261,13 @@ public class TraceStatService : ITraceStatService
         var sts2 = TraceDayStat.FindAllByAppIdWithCache(appId, date.AddDays(-1));
         span?.AppendTag($"Yesterday={sts2.Count}");
 
-        var queue = _dayQueue ??= new();
-        queue.Period = SavePeriod * 1000;
-
         // 聚合
         // 分组聚合，这里包含了每个接口在该日内的所有分钟统计，需要求和
         foreach (var item in list.GroupBy(e => e.ItemId))
         {
             if (item.Key == 0) continue;
 
-            var st = queue.GetOrAdd(date, appId, item.Key, out var key);
+            var st = _dayQueue.GetOrAdd(date, appId, item.Key, out var key);
 
             var vs = item.ToList();
             st.Total = vs.Sum(e => e.Total);
@@ -346,7 +276,6 @@ public class TraceStatService : ITraceStatService
             st.MaxCost = vs.Max(e => e.MaxCost);
             var vs2 = vs.Where(e => e.MinCost > 0).ToList();
             if (vs2.Count > 0) st.MinCost = vs2.Min(e => e.MinCost);
-            st.TotalValue = vs.Sum(e => e.TotalValue);
 
             // 计算TP99
             if (st.Total >= 50)
@@ -368,26 +297,21 @@ public class TraceStatService : ITraceStatService
             }
 
             // 计算种类
-            if (st.Type.IsNullOrEmpty() || st.Name.IsNullOrEmpty())
+            var ti = TraceItem.FindById(item.Key);
+            if (ti != null)
             {
-                var ti = TraceItem.FindById(item.Key);
-                if (ti != null)
-                {
-                    st.Type = ti.Kind;
-                    st.Name = ti + "";
-                }
+                st.Type = ti.Kind;
+                st.Name = ti + "";
             }
 
             // 计算环比
             var st2 = sts2.FirstOrDefault(e => e.ItemId == item.Key);
-            if (st2 != null) st.RingRate = st2.Total <= 0 ? 1 : Math.Round((Double)st.Total / st2.Total, 4);
+            if (st2 != null) st.RingRate = st2.Total <= 0 ? 1 : (Double)st.Total / st2.Total;
 
             //// 强制触发种类计算
             //st.Valid(false);
 
-            queue.Commit(key);
-
-            if (span != null) span.Value++;
+            _dayQueue.Commit(key);
         }
     }
 
@@ -409,15 +333,12 @@ public class TraceStatService : ITraceStatService
         var sts2 = TraceHourStat.FindAllByAppIdWithCache(appId, time.AddDays(-1), time.AddDays(-1).AddHours(1));
         span?.AppendTag($"Yesterday={sts2.Count}");
 
-        var queue = _hourQueue ??= new();
-        queue.Period = SavePeriod * 1000;
-
         // 分组聚合，这里包含了每个接口在该小时内的所有分钟统计，需要求和
         foreach (var item in list.GroupBy(e => e.ItemId))
         {
             if (item.Key == 0) continue;
 
-            var st = queue.GetOrAdd(time, appId, item.Key, out var key);
+            var st = _hourQueue.GetOrAdd(time, appId, item.Key, out var key);
 
             var vs = item.ToList();
             st.Total = vs.Sum(e => e.Total);
@@ -426,7 +347,6 @@ public class TraceStatService : ITraceStatService
             st.MaxCost = vs.Max(e => e.MaxCost);
             var vs2 = vs.Where(e => e.MinCost > 0).ToList();
             if (vs2.Count > 0) st.MinCost = vs2.Min(e => e.MinCost);
-            st.TotalValue = vs.Sum(e => e.TotalValue);
 
             // 计算TP99
             if (st.Total >= 50)
@@ -449,11 +369,9 @@ public class TraceStatService : ITraceStatService
 
             // 计算环比
             var st2 = sts2.FirstOrDefault(e => e.ItemId == item.Key);
-            if (st2 != null) st.RingRate = st2.Total <= 0 ? 1 : Math.Round((Double)st.Total / st2.Total, 4);
+            if (st2 != null) st.RingRate = st2.Total <= 0 ? 1 : (Double)st.Total / st2.Total;
 
-            queue.Commit(key);
-
-            if (span != null) span.Value++;
+            _hourQueue.Commit(key);
         }
     }
 
@@ -465,7 +383,7 @@ public class TraceStatService : ITraceStatService
 
         // 排除项
         var app = AppTracer.FindByID(appId);
-        var excludes = app.Excludes.Split(",", ";") ?? [];
+        var excludes = app.Excludes.Split(",", ";") ?? new String[0];
 
         start = start.Date.AddHours(start.Hour).AddMinutes(start.Minute / 5 * 5);
         end = end.Date.AddHours(end.Hour).AddMinutes(end.Minute / 5 * 5);
@@ -478,13 +396,10 @@ public class TraceStatService : ITraceStatService
         // 剔除指定项
         list = list.Where(e => !e.Name.IsNullOrEmpty() && !excludes.Any(y => y.IsMatch(e.Name, StringComparison.OrdinalIgnoreCase))).ToList();
 
-        var queue = _minuteQueue ??= new();
-        queue.Period = SavePeriod * 1000;
-
         // 聚合
         foreach (var item in list)
         {
-            var st = queue.GetOrAdd(item.StatMinute, appId, item.ItemId, out var key);
+            var st = _minuteQueue.GetOrAdd(item.StatMinute, appId, item.ItemId, out var key);
 
             st.Total = item.Total;
             st.Errors = item.Errors;
@@ -493,17 +408,14 @@ public class TraceStatService : ITraceStatService
             st.MinCost = item.MinCost;
             st.TotalValue = item.TotalValue;
 
-            queue.Commit(key);
+            _minuteQueue.Commit(key);
         }
-
-        var queue2 = _appMinuteQueue ??= new();
-        queue2.Period = SavePeriod * 1000;
 
         // 聚合应用分钟统计
         foreach (var item in list.GroupBy(e => e.AppId + "#" + e.StatMinute))
         {
             var traces = item.ToList();
-            var st = queue2.GetOrAdd(traces[0].StatMinute, traces[0].AppId, out var key);
+            var st = _appMinuteQueue.GetOrAdd(traces[0].StatMinute, traces[0].AppId, out var key);
 
             st.Total = traces.Sum(e => e.Total);
             st.Errors = traces.Sum(e => e.Errors);
@@ -535,9 +447,7 @@ public class TraceStatService : ITraceStatService
                 }
             }
 
-            queue2.Commit(key);
-
-            if (span != null) span.Value++;
+            _appMinuteQueue.Commit(key);
         }
     }
 }

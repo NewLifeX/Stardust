@@ -1,0 +1,38 @@
+services:
+  stardust.server:
+    image: ${DOCKER_REGISTRY-}stardustserver
+    build:
+      context: .
+      dockerfile: Stardust.Server/Dockerfile
+    environment:
+      # 配置数据库连接（替换为MySQL，默认SQLite）
+      ConnectionStrings__Stardust: "Server=192.168.2.125;Database=StarServer;Uid=root;Pwd=bchc;CharSet=utf8mb4;"
+      # 星尘服务地址（容器内网络）
+      StarServer__Address: "http://stardust.server:6600"
+    volumes:
+      - stardust-config-server:/app/config
+      - stardust-logs:/app/logs
+    user: root
+    ports:
+      - "6600:6600" # 直接暴露端口（替代Nginx转发）
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:6600/api/health"]
+      interval: 10s  # 检查间隔
+      timeout: 3s    # 超时时间
+      retries: 3     # 重试次数
+      start_period: 20s # 启动后延迟20秒再检测（给服务初始化时间）
+# 顶级节点：定义所有引用的卷（必须与services里的卷名一致）
+  stardust.web:
+    image: ${DOCKER_REGISTRY-}stardustweb
+    build:
+      context: .
+      dockerfile: Stardust.Web/Dockerfile
+    user: root
+    ports:
+      - "6680:6680"
+volumes:
+  stardust-config-server:
+    # 默认为匿名卷，也可指定driver（如local），按需扩展
+    driver: local
+  stardust-logs:
+    driver: local

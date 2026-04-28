@@ -240,18 +240,13 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
 
             return process.StandardOutput.ReadToEnd();
         }
-#if DEBUG
         catch (Exception ex)
         {
+#if DEBUG
             XTrace.WriteLine(ex.Message);
-            return null;
-        }
-#else
-        catch
-        {
-            return null;
-        }
 #endif
+            return null;
+        }
     }
     #endregion
 

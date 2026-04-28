@@ -6,14 +6,10 @@ using NewLife.Http;
 using NewLife.Log;
 using NewLife.Messaging;
 using NewLife.Model;
-using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust.Services;
-#if !NET45
-using TaskEx = System.Threading.Tasks.Task;
-#endif
 
 namespace Stardust.Storages;
 
@@ -44,12 +40,6 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
 
     /// <summary>用于通过HTTP等方式拉取文件的基础地址</summary>
     public String DownloadUri { get; set; } = "/cube/file?id={Id}";
-
-    /// <summary>是否响应其他节点的文件下载请求。默认true</summary>
-    public Boolean EnableProvide { get; set; } = true;
-
-    /// <summary>是否主动拉取其他节点发布的新文件。默认true</summary>
-    public Boolean EnableFetch { get; set; } = true;
 
     private Int32 _initialized;
     private ICache _cache = new MemoryCache();
@@ -92,49 +82,14 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     }
 
     /// <summary>事件总线订阅完成后调用，覆写以执行额外初始化。</summary>
-    protected virtual Task OnInitializedAsync(CancellationToken cancellationToken)
-    {
-        var cacheProvider = ServiceProvider?.GetService<ICacheProvider>();
-        if (cacheProvider == null) return TaskEx.CompletedTask;
-
-        // 优先Redis队列作为事件总线，其次使用星尘事件总线，最后使用MemoryCache
-        var queue = cacheProvider.GetValue("RedisQueue") as ICache ?? cacheProvider.Cache;
-
-        // 尝试使用Redis（版本 >= 5.0）
-        var type = queue.GetType();
-        var rtype = Type.GetType("NewLife.Caching.FullRedis, NewLife.Redis");
-        if (rtype != null && rtype.IsAssignableFrom(type) && queue.GetValue("Version") is Version ver && ver >= new Version(5, 0) && SetEventBus(cacheProvider))
-            return TaskEx.CompletedTask;
-
-        // Redis失败，尝试使用星尘事件总线
-        var registry = ServiceProvider?.GetService<ICacheProvider>();
-        if (registry is AppClient client && SetEventBus(client))
-            return TaskEx.CompletedTask;
-
-        // 星尘事件总线失败，尝试使用MemoryCache
-        if (cacheProvider.Cache.GetType() == typeof(MemoryCache) && SetEventBus(cacheProvider))
-            return TaskEx.CompletedTask;
-
-        return TaskEx.CompletedTask;
-    }
+    protected virtual Task OnInitializedAsync(CancellationToken cancellationToken) => Task.FromResult(0);
 
     /// <summary>设置事件总线</summary>
     /// <param name="cacheProvider"></param>
     /// <returns></returns>
     public Boolean SetEventBus(ICacheProvider cacheProvider)
     {
-        //if (cacheProvider.Cache is not Cache cache) return false;
-        var queue = cacheProvider.GetValue("RedisQueue") as ICache ?? cacheProvider.Cache;
-        if (queue is not Cache cache) return false;
-
-        // 优先Redis队列作为事件总线，其次使用星尘事件总线
-        var rtype = Type.GetType("NewLife.Caching.FullRedis, NewLife.Redis");
-        var type = queue.GetType();
-        if (rtype != null && rtype.IsAssignableFrom(type) && queue.GetValue("Version") is Version ver)
-        {
-            // 旧版本的Redis不支持Stream，无法用作事件总线
-            if (ver < new Version(5, 0)) return false;
-        }
+        if (cacheProvider.Cache is not Cache cache) return false;
 
         WriteLog("使用[{0}]事件总线，订阅[{1}]的应用通过消息队列分发事件。", cache.GetType().Name, Name);
 
@@ -142,7 +97,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         NewFileBus = cache.CreateEventBus<NewFileInfo>(Name + "-NewFile", clientId);
         FileRequestBus = cache.CreateEventBus<FileRequest>(Name + "-FileRequest", clientId);
 
-        return NewFileBus != null || FileRequestBus != null;
+        return true;
     }
 
     /// <summary>设置事件总线</summary>
@@ -155,7 +110,7 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
         NewFileBus = client.GetEventBus<NewFileInfo>(Name + "-NewFile");
         FileRequestBus = client.GetEventBus<FileRequest>(Name + "-FileRequest");
 
-        return NewFileBus != null || FileRequestBus != null;
+        return true;
     }
     #endregion
 
@@ -220,13 +175,6 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
                 InternalAddress = info.InternalAddress,
                 ExternalAddress = info.ExternalAddress
             };
-        }
-
-        // 若禁用拉取功能，仅记录地址信息，不拉取文件
-        if (!EnableFetch)
-        {
-            //WriteLog("已禁用文件拉取功能，跳过：{0}", info.Name);
-            return;
         }
 
         try
@@ -324,13 +272,6 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     /// <summary>处理文件请求消息。</summary>
     protected virtual async Task OnFileRequestAsync(FileRequest req, IEventContext context, CancellationToken cancellationToken)
     {
-        // 若禁用提供服务，则不响应文件请求
-        if (!EnableProvide)
-        {
-            //WriteLog("已禁用文件提供服务，跳过文件请求响应：{0}", req.Name);
-            return;
-        }
-
         if (req.RequestNode.EqualIgnoreCase(NodeName)) return;
 
         WriteLog("收到请求文件通知：{0}", req.ToJson());
@@ -369,7 +310,6 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     private async Task OnScan(Object state)
     {
         //if (_last.Year < 2000) _last = DateTime.Today.AddDays(-30);
-        if (EnableFetch) return;
 
         // 执行扫描，如果成功更新下一次执行时间，如果失败则快速重试
         var rs = await ScanFilesAsync(_last, default).ConfigureAwait(false);

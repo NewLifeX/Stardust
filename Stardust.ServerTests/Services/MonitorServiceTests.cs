@@ -4,7 +4,7 @@ using Stardust.Data.Monitors;
 using Xunit;
 using static Stardust.Server.Services.MonitorService;
 
-namespace ServerTest.Services;
+namespace Stardust.ServerTests.Services;
 
 public class MonitorServiceTests
 {

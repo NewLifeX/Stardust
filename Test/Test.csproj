@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -33,7 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="11.14.2026.402" />
+    <PackageReference Include="NewLife.Core" Version="11.10.2026.127-beta1203" />
   </ItemGroup>
 
   <ItemGroup>

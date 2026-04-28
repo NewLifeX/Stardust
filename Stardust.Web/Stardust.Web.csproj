@@ -3,11 +3,11 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <AssemblyName>StarWeb</AssemblyName>
-    <AssemblyTitle>星尘管理平台</AssemblyTitle>
-    <Description>星尘分布式服务平台管理界面。基于NewLife.Cube的可视化管理系统，提供节点管理、应用管理、配置中心、注册中心、监控中心、发布中心、调用链追踪、性能分析、日志查询等统一管理入口。</Description>
-    <Company>新生命开发团队</Company>
+    <AssemblyTitle>博创分布式管理平台</AssemblyTitle>
+    <Description>分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
+    <Company>博创智新</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
-    <VersionPrefix>3.7</VersionPrefix>
+    <VersionPrefix>3.6</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -18,6 +18,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <NoWarn>1701;1702;NU5104;NETSDK1138;CS7035</NoWarn>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
@@ -33,9 +34,6 @@
     <Compile Remove="Areas\Configs\Controllers\AppQuoteController.cs" />
     <Compile Remove="Areas\Configs\Controllers\ConfigOnlineController.cs" />
     <Compile Remove="Areas\Deployment\Controllers\AppDeployOnlineController.cs" />
-    <Compile Remove="Areas\Deployment\Controllers\AppDeployResourceController.cs" />
-    <Compile Remove="Areas\Deployment\Controllers\AppResourceController.cs" />
-    <Compile Remove="Areas\Deployment\Controllers\AppResourceVersionController.cs" />
     <Compile Remove="Areas\Deployment\Controllers\AttachmentController.cs" />
   </ItemGroup>
 
@@ -46,7 +44,6 @@
     <Compile Include="..\Stardust.Server\Services\AppTokenService.cs" Link="Services\AppTokenService.cs" />
     <Compile Include="..\Stardust.Server\Services\ConfigService.cs" Link="Services\ConfigService.cs" />
     <Compile Include="..\Stardust.Server\Services\FileStorageService.cs" Link="Services\FileStorageService.cs" />
-    <Compile Include="..\Stardust.Server\Services\MySqlService.cs" Link="Services\MySqlService.cs" />
     <Compile Include="..\Stardust.Server\Services\NodeStatService.cs" Link="Services\NodeStatService.cs" />
     <Compile Include="..\Stardust.Server\Services\RedisService.cs" Link="Services\RedisService.cs" />
     <Compile Include="..\Stardust.Server\Services\TraceItemStatService.cs" Link="Services\TraceItemStatService.cs" />
@@ -55,10 +52,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Cube.Core" Version="6.10.2026.404" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
+    <PackageReference Include="NewLife.Cube.Core" Version="6.8.2026.128-beta0607" />
     <PackageReference Include="NewLife.IP" Version="2.4.2026.102" />
-    <PackageReference Include="NewLife.Redis" Version="6.5.2026.403" />
-    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.7.2026.402" />
+    <PackageReference Include="NewLife.Redis" Version="6.4.2026.111-beta1644" />
+    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.7.2026.125-beta1509" />
   </ItemGroup>
 
   <ItemGroup>

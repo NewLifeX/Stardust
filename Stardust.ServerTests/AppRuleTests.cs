@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Stardust.Data.Configs;
 using Xunit;
 
-namespace ServerTest
+namespace Stardust.ServerTests
 {
     public class AppRuleTests
     {

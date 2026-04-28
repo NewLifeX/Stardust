@@ -4,11 +4,10 @@ using Microsoft.AspNetCore.TestHost;
 using NewLife.Remoting;
 using NewLife.Web;
 using Stardust.Data;
-using Stardust.Server;
 using Stardust.Server.Models;
 using Xunit;
 
-namespace ServerTest.Controllers;
+namespace Stardust.Server.Controllers.Tests;
 
 public class OAuthControllerTests
 {

@@ -3,9 +3,9 @@ using NewLife.Caching;
 using NewLife.Common;
 using NewLife.Data;
 using NewLife.Log;
-using NewLife.Reflection;
 using Stardust.Data.Deployment;
 using Stardust.Registry;
+using Stardust.Services;
 using Stardust.Storages;
 using XCode;
 
@@ -49,15 +49,6 @@ public static class FileStorageExtensions
         {
             var storage = sp.GetRequiredService<CubeFileStorage>();
             storage.Name = name;
-
-            // 从配置读取文件存储行为开关
-            var set = sp.GetService<StarServerSetting>();
-            if (set != null)
-            {
-                storage.EnableProvide = set.FileStorageProvide;
-                storage.EnableFetch = set.FileStorageFetch;
-            }
-
             return storage;
         });
 
@@ -88,23 +79,15 @@ public class CubeFileStorage : DefaultFileStorage
 
     protected override Task OnInitializedAsync(CancellationToken cancellationToken)
     {
-        // 优先Redis队列作为事件总线，其次使用星尘事件总线，最后使用MemoryCache
-        var rqueue = _cacheProvider.GetType().GetProperty("RedisQueue");
-        var queue = rqueue?.GetValue(_cacheProvider) as ICache ?? _cacheProvider.Cache;
+        // 优先Redis队列作为事件总线，其次使用星尘事件总线
+        if (_cacheProvider.Cache is Redis)
+            SetEventBus(_cacheProvider);
+        else if (_registry is AppClient client)
+            SetEventBus(client);
+        else
+            SetEventBus(_cacheProvider);
 
-        // 尝试使用Redis（版本 >= 5.0）
-        if (queue is Redis redis && redis.Version >= new Version(5, 0) && SetEventBus(_cacheProvider))
-            return Task.CompletedTask;
-
-        // Redis失败，尝试使用星尘事件总线
-        if (_registry is AppClient client && SetEventBus(client))
-            return Task.CompletedTask;
-
-        // 星尘事件总线失败，尝试使用MemoryCache
-        if (_cacheProvider.Cache.GetType() == typeof(MemoryCache) && SetEventBus(_cacheProvider))
-            return Task.CompletedTask;
-
-        return Task.CompletedTask;
+        return base.OnInitializedAsync(cancellationToken);
     }
 
     /// <summary>获取本地文件的元数据</summary>

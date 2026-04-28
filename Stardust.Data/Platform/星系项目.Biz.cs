@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewLife;
@@ -8,7 +8,7 @@ using XCode.Membership;
 
 namespace Stardust.Data.Platform;
 
-public partial class GalaxyProject : Entity<GalaxyProject>, ITenantScope
+public partial class GalaxyProject : Entity<GalaxyProject>, ITenantSource
 {
     #region 对象操作
     static GalaxyProject()

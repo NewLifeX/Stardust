@@ -119,21 +119,9 @@ public class OnlineService : IHostedService
             if (olts.Count == 0)
             {
                 var msg = $"应用[{app.Name}]（{app.DisplayName}）已下线！{reason} IP={app.LastIP}";
-                RobotHelper.SendAlarmWithRecord(app.Category, app.WebHook, "应用下线告警", msg, "应用下线", app.Name);
+                RobotHelper.SendAlarm(app.Category, app.WebHook, "应用下线告警", msg);
             }
         }
-    }
-
-    /// <summary>检查应用上线恢复。在应用登录或心跳时调用</summary>
-    /// <param name="app">应用</param>
-    public static void CheckOnline(App app)
-    {
-        if (app == null || !app.AlarmOnOffline) return;
-
-        var webhook = RobotHelper.GetAlarm(app.Project, app.Category, app.WebHook);
-        if (webhook.IsNullOrEmpty()) return;
-
-        RobotHelper.RecoverAlarm("应用下线", app.Name, app.Category, webhook);
     }
     #endregion
 }

@@ -1,0 +1,58 @@
+﻿# docker-compose-acr.yml （拉取阿里云ACR镜像的生产配置）
+# version: '3.8'  # Compose版本，兼容主流Docker版本
+services:
+  # 服务名，和你之前一致
+  stardust.server:
+    container_name: stardust-server  # 容器名，方便管理
+    # 核心：直接填写阿里云ACR完整镜像地址（标签v1.0可根据实际更新）
+    image: registry.cn-hangzhou.aliyuncs.com/bchc_smartmine/stardustserver:v1.0
+    # restart: always  # 生产必备：容器/服务器重启后自动启动
+    networks:
+      # 复用你之前已存在的Compose网络
+      - dockercompose_stardust_server_net
+    ports:
+      - "6600:6600"  # 端口映射，和之前一致
+    command: >
+      /bin/sh -c "
+      # 1. 创建配置/日志目录（统一大写）
+      mkdir -p /app/config /app/logs &&
+      # 2. 赋权：给当前用户（非root）写入权限（避免777过度开放）
+      chmod -R 777 /app/config /app/logs &&
+      chown -R $(id -u):$(id -g) /app/config /app/logs &&
+      # 3. 启动应用
+      dotnet Stardust.Server.dll
+      "
+    environment:
+      # 你的核心业务环境变量，完全复用
+      - ConnectionStrings__Stardust=Server=192.168.2.125;Database=StarServer;Uid=root;Pwd=bchc;CharSet=utf8mb4;
+      - StarServer__Address=http://stardust.server:6600
+      - ASPNETCORE_ENVIRONMENT=Production  # 生产环境，务必保留
+      - ASPNETCORE_HTTP_PORTS=6600
+      - X_LOG_PATH=/app/logs  # 全局指定NewLife框架的日志存储根路径
+      - StarServer_LogPath=/app/logs  # 项目专属日志路径（兜底，确保生效）
+      # 【核心：禁用NewLife自动下载，优先使用镜像内的驱动包】
+      - X_AutoDownload=1
+      - XCode_AutoDownload=1
+    volumes:
+      # 复用你之前已存在的业务数据卷（配置/日志持久化）
+      - dockercompose_stardust-config-server:/app/config
+      - dockercompose_stardust-logs:/app/logs
+    user: root 
+    # 可选：限制容器资源（生产推荐，避免占用服务器全部资源）
+    deploy:
+      resources:
+        limits:
+          cpus: '2'    # 限制最大使用1核CPU
+          memory: 2G   # 限制最大使用1G内存
+
+# 声明使用外部已存在的网络（避免Compose重新创建）
+networks:
+  dockercompose_stardust_server_net:
+    external: true
+
+# 声明使用外部已存在的数据卷（复用原有配置/日志数据）
+volumes:
+  dockercompose_stardust-config-server:
+    external: true
+  dockercompose_stardust-logs:
+    external: true

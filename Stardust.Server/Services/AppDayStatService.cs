@@ -18,11 +18,6 @@ public interface IAppDayStatService
 public class AppDayStatService : IAppDayStatService
 {
     /// <summary>批计算周期。默认30秒</summary>
-    /// <remarks>
-    /// 从TraceDayStat聚合生成AppDayStat（应用天统计）的周期。
-    /// 调小：应用统计数据更新更快，但CPU和数据库IO压力增大。
-    /// 调大：减少CPU和IO压力，应用统计实时性要求不高，可适当调大。
-    /// </remarks>
     public Int32 BatchPeriod { get; set; } = 30;
 
     private TimerX _timer;
@@ -62,9 +57,6 @@ public class AppDayStatService : IAppDayStatService
                 throw;
             }
         }
-
-        // 更新周期
-        if (BatchPeriod > 0 && _timer != null) _timer.Period = BatchPeriod * 1000;
     }
 
     private void Process(DateTime date)
@@ -115,7 +107,7 @@ public class AppDayStatService : IAppDayStatService
 
             // 计算环比
             var st2 = sts2.FirstOrDefault(e => e.AppId == appId);
-            if (st2 != null) st.RingRate = st2.Total <= 0 ? 1 : Math.Round((Double)st.Total / st2.Total, 4);
+            if (st2 != null) st.RingRate = st2.Total <= 0 ? 1 : (Double)st.Total / st2.Total;
 
             st.Save();
         }

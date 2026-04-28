@@ -8,10 +8,9 @@ using Microsoft.AspNetCore.TestHost;
 using NewLife;
 using NewLife.Data;
 using NewLife.Remoting;
-using Stardust.Server;
 using Xunit;
 
-namespace ServerTest.Controllers;
+namespace Stardust.Server.Controllers.Tests;
 
 public class ApiTests
 {

@@ -1,0 +1,15 @@
+services:
+  stardust.server:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=6600
+    ports:
+      - "6600"
+
+  stardust.web:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+    ports:
+      - "8080"
+

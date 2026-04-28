@@ -3,11 +3,11 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <AssemblyName>StarServer</AssemblyName>
-    <AssemblyTitle>星尘服务平台</AssemblyTitle>
-    <Description>星尘分布式服务平台后端核心。提供配置中心、注册中心、服务发现、远程发布、性能监控、日志中心等核心API服务，支持应用注册、配置下发、指标聚合、统计计算与任务调度，可横向扩展。</Description>
-    <Company>新生命开发团队</Company>
+    <AssemblyTitle>博创服务平台</AssemblyTitle>
+    <Description>博创分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
+    <Company>博创智新</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
-    <VersionPrefix>3.7</VersionPrefix>
+    <VersionPrefix>3.6</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -18,6 +18,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <NoWarn>1701;1702;NU5104;NETSDK1138;CS7035;CS9107</NoWarn>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
@@ -46,9 +48,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
     <PackageReference Include="NewLife.IP" Version="2.4.2026.102" />
-    <PackageReference Include="NewLife.Redis" Version="6.5.2026.403" />
-    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.7.2026.402" />
+    <PackageReference Include="NewLife.Redis" Version="6.4.2026.111-beta1644" />
+    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.7.2026.125-beta1509" />
   </ItemGroup>
 
   <ItemGroup>

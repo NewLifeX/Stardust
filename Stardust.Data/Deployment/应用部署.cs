@@ -137,12 +137,12 @@ public partial class AppDeploy
     public String Repository { get => _Repository; set { if (OnPropertyChanging("Repository", value)) { _Repository = value; OnPropertyChanged("Repository"); } } }
 
     private String _Branch;
-    /// <summary>分支。默认main</summary>
+    /// <summary>分支。默认master</summary>
     [Category("编译参数")]
     [DisplayName("分支")]
-    [Description("分支。默认main")]
+    [Description("分支。默认master")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Branch", "分支。默认main", "", DefaultValue = "master")]
+    [BindColumn("Branch", "分支。默认master", "", DefaultValue = "master")]
     public String Branch { get => _Branch; set { if (OnPropertyChanging("Branch", value)) { _Branch = value; OnPropertyChanged("Branch"); } } }
 
     private String _ProjectPath;
@@ -280,24 +280,6 @@ public partial class AppDeploy
     [BindColumn("ReloadOnChange", "检测变动。当文件发生改变时，自动重启应用", "")]
     public Boolean ReloadOnChange { get => _ReloadOnChange; set { if (OnPropertyChanging("ReloadOnChange", value)) { _ReloadOnChange = value; OnPropertyChanged("ReloadOnChange"); } } }
 
-    private String _Dependencies;
-    /// <summary>依赖项。依赖的驱动/插件部署集名称，如dm8-driver;redis-plugin，分号分隔。可来自全局项目或本项目</summary>
-    [Category("发布参数")]
-    [DisplayName("依赖项")]
-    [Description("依赖项。依赖的驱动/插件部署集名称，如dm8-driver;redis-plugin，分号分隔。可来自全局项目或本项目")]
-    [DataObjectField(false, false, true, 500)]
-    [BindColumn("Dependencies", "依赖项。依赖的驱动/插件部署集名称，如dm8-driver;redis-plugin，分号分隔。可来自全局项目或本项目", "")]
-    public String Dependencies { get => _Dependencies; set { if (OnPropertyChanging("Dependencies", value)) { _Dependencies = value; OnPropertyChanged("Dependencies"); } } }
-
-    private String _HealthCheck;
-    /// <summary>健康检查。探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health</summary>
-    [Category("发布参数")]
-    [DisplayName("健康检查")]
-    [Description("健康检查。探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health")]
-    [DataObjectField(false, false, true, 200)]
-    [BindColumn("HealthCheck", "健康检查。探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health", "")]
-    public String HealthCheck { get => _HealthCheck; set { if (OnPropertyChanging("HealthCheck", value)) { _HealthCheck = value; OnPropertyChanged("HealthCheck"); } } }
-
     private Int32 _CreateUserId;
     /// <summary>创建者</summary>
     [Category("扩展")]
@@ -400,8 +382,6 @@ public partial class AppDeploy
             "AllowMultiple" => _AllowMultiple,
             "AutoStop" => _AutoStop,
             "ReloadOnChange" => _ReloadOnChange,
-            "Dependencies" => _Dependencies,
-            "HealthCheck" => _HealthCheck,
             "CreateUserId" => _CreateUserId,
             "CreateTime" => _CreateTime,
             "CreateIP" => _CreateIP,
@@ -445,8 +425,6 @@ public partial class AppDeploy
                 case "AllowMultiple": _AllowMultiple = value.ToBoolean(); break;
                 case "AutoStop": _AutoStop = value.ToBoolean(); break;
                 case "ReloadOnChange": _ReloadOnChange = value.ToBoolean(); break;
-                case "Dependencies": _Dependencies = Convert.ToString(value); break;
-                case "HealthCheck": _HealthCheck = Convert.ToString(value); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -558,7 +536,7 @@ public partial class AppDeploy
         /// <summary>代码库。下载代码的位置</summary>
         public static readonly Field Repository = FindByName("Repository");
 
-        /// <summary>分支。默认main</summary>
+        /// <summary>分支。默认master</summary>
         public static readonly Field Branch = FindByName("Branch");
 
         /// <summary>项目路径。需要编译的项目路径，相对于代码库根目录</summary>
@@ -605,12 +583,6 @@ public partial class AppDeploy
 
         /// <summary>检测变动。当文件发生改变时，自动重启应用</summary>
         public static readonly Field ReloadOnChange = FindByName("ReloadOnChange");
-
-        /// <summary>依赖项。依赖的驱动/插件部署集名称，如dm8-driver;redis-plugin，分号分隔。可来自全局项目或本项目</summary>
-        public static readonly Field Dependencies = FindByName("Dependencies");
-
-        /// <summary>健康检查。探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health</summary>
-        public static readonly Field HealthCheck = FindByName("HealthCheck");
 
         /// <summary>创建者</summary>
         public static readonly Field CreateUserId = FindByName("CreateUserId");
@@ -681,7 +653,7 @@ public partial class AppDeploy
         /// <summary>代码库。下载代码的位置</summary>
         public const String Repository = "Repository";
 
-        /// <summary>分支。默认main</summary>
+        /// <summary>分支。默认master</summary>
         public const String Branch = "Branch";
 
         /// <summary>项目路径。需要编译的项目路径，相对于代码库根目录</summary>
@@ -728,12 +700,6 @@ public partial class AppDeploy
 
         /// <summary>检测变动。当文件发生改变时，自动重启应用</summary>
         public const String ReloadOnChange = "ReloadOnChange";
-
-        /// <summary>依赖项。依赖的驱动/插件部署集名称，如dm8-driver;redis-plugin，分号分隔。可来自全局项目或本项目</summary>
-        public const String Dependencies = "Dependencies";
-
-        /// <summary>健康检查。探针检测服务是否正常，http/tcp/udp地址，如http://localhost:6600/health</summary>
-        public const String HealthCheck = "HealthCheck";
 
         /// <summary>创建者</summary>
         public const String CreateUserId = "CreateUserId";

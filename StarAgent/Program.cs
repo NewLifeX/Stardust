@@ -216,7 +216,6 @@ internal class MyService : ServiceBase, IServiceProvider
     private ServiceManager _Manager;
     private PluginManager _PluginManager;
     private String _lastVersion;
-    private AliyunDnsClient? _AliyunDns;
 
     #region 调度核心
     /// <summary>服务启动</summary>
@@ -288,10 +287,6 @@ internal class MyService : ServiceBase, IServiceProvider
         // 辅助任务清理数据
         ThreadPoolX.QueueUserWorkItem(Fix);
 
-        // 启动阿里云DNS动态域名解析
-        _AliyunDns = AliyunDnsClient.Start();
-        if (_AliyunDns != null) _AliyunDns.Tracer = _factory?.Tracer;
-
         base.StartWork(reason);
     }
 
@@ -340,9 +335,6 @@ internal class MyService : ServiceBase, IServiceProvider
 
         _timer.TryDispose();
         _timer = null;
-
-        _AliyunDns?.Stop();
-        _AliyunDns = null;
 
         StarAgentSetting.Provider.Changed -= OnSettingChanged;
         _Manager.Stop(reason);
@@ -542,7 +534,6 @@ internal class MyService : ServiceBase, IServiceProvider
             XTrace.WriteException(ex);
         }
     }
-
     #endregion
 
     #region 自动更新

@@ -3,11 +3,11 @@
   <PropertyGroup>
     <TargetFrameworks>net45;net461;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
     <AssemblyName>Stardust</AssemblyName>
-    <AssemblyTitle>星尘分布式核心</AssemblyTitle>
-    <Description>星尘分布式服务框架核心库。提供配置中心、注册中心、服务发现、全链路追踪、APM性能监控、日志中心等客户端SDK，支持配置拉取、服务注册与发现、调用追踪、性能和日志上报。</Description>
+    <AssemblyTitle>星尘分布式服务核心</AssemblyTitle>
+    <Description>星尘，分布式服务框架。节点管理，监控中心，配置中心，发布中心，注册中心</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
-    <VersionPrefix>3.7</VersionPrefix>
+    <VersionPrefix>3.6</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -32,7 +32,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>新增服务健康检查能力；部署时支持自动放行防火墙端口；优化健康检查Http连接复用与超时控制；增强分布式文件存储事件总线初始化并兼容旧版Redis</PackageReleaseNotes>
+    <PackageReleaseNotes>增加星尘事件总线；增减文件分布式存储，星尘平台和魔方支持上传文件自动同步</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -99,10 +99,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Remoting" Version="3.7.2026.402" />
+    <PackageReference Include="NewLife.Remoting" Version="3.7.2026.125-beta1509" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="11.14.2026.402" />
+    <PackageReference Include="NewLife.Core" Version="11.10.2026.127-beta1203" />
   </ItemGroup>
 
 </Project>

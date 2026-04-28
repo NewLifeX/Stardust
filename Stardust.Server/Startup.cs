@@ -49,31 +49,16 @@ public class Startup
         services.AddSingleton(set);
 
         // 统计服务
-        var traceService = new TraceStatService(tracer)
-        {
-            FlowPeriod = set.MonitorFlowPeriod,
-            BatchPeriod = set.MonitorBatchPeriod,
-            SavePeriod = set.MonitorSavePeriod,
-        };
+        var traceService = new TraceStatService(tracer) { FlowPeriod = set.MonitorFlowPeriod, BatchPeriod = set.MonitorBatchPeriod };
         services.AddSingleton<ITraceStatService>(traceService);
         var appStatService = new AppDayStatService(tracer) { BatchPeriod = set.MonitorBatchPeriod };
         services.AddSingleton<IAppDayStatService>(appStatService);
         services.AddSingleton<ITraceItemStatService, TraceItemStatService>();
         //services.AddSingleton<IAlarmService, AlarmService>();
-        // 配置变更时，更新统计服务参数
-        StarServerSetting.Provider.Changed += (s, e) =>
-        {
-            traceService.FlowPeriod = set.MonitorFlowPeriod;
-            traceService.BatchPeriod = set.MonitorBatchPeriod;
-            traceService.SavePeriod = set.MonitorSavePeriod;
-            appStatService.BatchPeriod = set.MonitorBatchPeriod;
-        };
 
         IpResolver.Register();
 
-        // 当文件提供或文件拉取任一功能开启时，启用文件存储
-        if (set.FileStorageProvide || set.FileStorageFetch)
-            services.AddCubeFileStorage("Star");
+        services.AddCubeFileStorage("Star");
 
         // 业务服务
         services.AddSingleton<NodeService>();
@@ -85,7 +70,6 @@ public class Startup
         services.AddSingleton<UplinkService>();
         services.AddSingleton<DeployService>();
         services.AddSingleton<MonitorService>();
-        services.AddSingleton<AgentDeployService>();
 
         services.AddSingleton<NodeSessionManager>();
         services.AddSingleton<AppSessionManager>();
@@ -96,18 +80,16 @@ public class Startup
         // 配置Json
         services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
         {
-            SystemJson.Apply(options.JsonSerializerOptions, true);
-
-            //#if NET7_0_OR_GREATER
-            //            // 支持模型类中的DataMember特性
-            //            options.JsonSerializerOptions.TypeInfoResolver = DataMemberResolver.Default;
-            //#endif
-            //            options.JsonSerializerOptions.Converters.Add(new TypeConverter());
-            //            options.JsonSerializerOptions.Converters.Add(new LocalTimeConverter());
+#if NET7_0_OR_GREATER
+            // 支持模型类中的DataMember特性
+            options.JsonSerializerOptions.TypeInfoResolver = DataMemberResolver.Default;
+#endif
+            options.JsonSerializerOptions.Converters.Add(new TypeConverter());
+            options.JsonSerializerOptions.Converters.Add(new LocalTimeConverter());
             options.JsonSerializerOptions.Converters.Add(new JsonConverter<ISpanBuilder, DefaultSpanBuilder>());
             options.JsonSerializerOptions.Converters.Add(new JsonConverter<ISpan, DefaultSpan>());
-            //// 支持中文编码
-            //options.JsonSerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
+            // 支持中文编码
+            options.JsonSerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
         });
 
         services.AddCors(options => options.AddPolicy("star_cors", builder =>
@@ -118,7 +100,6 @@ public class Startup
         // 后台服务。数据保留，定时删除过期数据
         services.AddHostedService<DataRetentionService>();
         services.AddHostedService<RedisService>();
-        services.AddHostedService<MySqlService>();
         services.AddHostedService<OnlineService>();
         services.AddHostedService<NodeOnlineService>();
         services.AddHostedService<ApolloService>();
