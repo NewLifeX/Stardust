@@ -1,18 +1,29 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Web;
 using Stardust.Data.Monitors;
+using Stardust.Server;
 using Stardust.Web.Models;
 using XCode.Membership;
 
 namespace Stardust.Web.Controllers;
 
+[AllowAnonymous]
 public class TraceController : ControllerBaseX
 {
+    private readonly StarServerSetting _setting;
+
+    /// <summary>实例化</summary>
+    public TraceController(StarServerSetting setting) => _setting = setting;
+
     [Route("[controller]")]
     public ActionResult Index(String id, Pager pager)
     {
+        if (!_setting.TraceAnonymous && ManageProvider.User == null)
+            return Redirect($"/Admin/User/Login?r={Uri.EscapeDataString(Request.Path + Request.QueryString)}");
+
         if (id.IsNullOrEmpty()) throw new ArgumentNullException(nameof(id));
 
         // id可能不是traceId，而是traceParent
@@ -46,6 +57,9 @@ public class TraceController : ControllerBaseX
     [Route("[action]")]
     public ActionResult Graph(String id, Pager pager)
     {
+        if (!_setting.TraceAnonymous && ManageProvider.User == null)
+            return Redirect($"/Admin/User/Login?r={Uri.EscapeDataString(Request.Path + Request.QueryString)}");
+
         if (id.IsNullOrEmpty()) throw new ArgumentNullException(nameof(id));
 
         // id可能不是traceId，而是traceParent

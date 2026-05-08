@@ -138,6 +138,10 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     [Description("固定城市。默认自动根据IP计算所在城市，开启后不再自动计算，改为人工设置")]
     public Boolean FixedCity { get; set; }
 
+    /// <summary>调用链允许匿名。允许未登录用户访问/trace调用链页面，监控数据可能含敏感信息，默认false</summary>
+    [Description("调用链允许匿名。允许未登录用户访问/trace调用链页面，监控数据可能含敏感信息，默认false")]
+    public Boolean TraceAnonymous { get; set; } = false;
+
     ///// <summary>新服务器。节点自动迁移到新的服务器地址</summary>
     //[Description("新服务器。节点自动迁移到新的服务器地址")]
     //public String NewServer { get; set; }
