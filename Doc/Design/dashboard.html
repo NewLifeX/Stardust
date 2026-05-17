@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>仪表盘 - 星尘分布式服务平台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <style>
+    html, body { height: 100%; margin: 0; }
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+
+    /* Sidebar */
+    .sidebar { width: 220px; min-width: 220px; background: #1a1f36; color: #c8cde4; display: flex; flex-direction: column; }
+    .sidebar-brand { padding: 20px 16px 16px; border-bottom: 1px solid #2d3461; }
+    .sidebar-brand a { color: #fff; text-decoration: none; font-weight: 700; font-size: 1.1rem; }
+    .sidebar-brand small { display: block; color: #8892b0; font-size: .75rem; margin-top: 2px; }
+    .sidebar-nav { padding: 12px 0; flex: 1; overflow-y: auto; }
+    .sidebar-nav .nav-section { padding: 8px 16px 4px; font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: #8892b0; }
+    .sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 9px 16px; color: #c8cde4; text-decoration: none; font-size: .9rem; border-radius: 0; transition: background .15s; }
+    .sidebar-nav a:hover { background: #2d3461; color: #fff; }
+    .sidebar-nav a.active { background: #3b4cca; color: #fff; }
+    .sidebar-nav a i { font-size: 1rem; width: 18px; text-align: center; }
+
+    /* Main */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { background: #fff; border-bottom: 1px solid #e9ecef; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .topbar h6 { margin: 0; font-weight: 600; color: #1a1f36; }
+    .content { flex: 1; overflow-y: auto; padding: 24px; background: #f0f2f5; }
+
+    /* Stat cards */
+    .stat-card { background: #fff; border-radius: 10px; padding: 20px 24px; border: none; }
+    .stat-value { font-size: 2rem; font-weight: 700; line-height: 1; }
+    .stat-label { font-size: .85rem; color: #6c757d; margin-top: 4px; }
+    .stat-change { font-size: .8rem; margin-top: 8px; }
+
+    /* Chart placeholder */
+    .chart-placeholder { background: #f8f9fa; border-radius: 8px; height: 200px; display: flex; align-items: center; justify-content: center; color: #adb5bd; font-size: .9rem; border: 2px dashed #dee2e6; }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <a href="index.html"><i class="bi bi-stars me-1"></i>星尘平台</a>
+      <small>Stardust v3.7</small>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">主导航</div>
+      <a href="dashboard.html" class="active"><i class="bi bi-speedometer2"></i>仪表盘</a>
+      <a href="project-workspace.html"><i class="bi bi-grid-1x2-fill"></i>项目工作台</a>
+      <a href="projects.html"><i class="bi bi-collection-fill"></i>项目管理</a>
+      <div class="nav-section">运维管理</div>
+      <a href="nodes.html"><i class="bi bi-hdd-network-fill"></i>节点管理</a>
+      <a href="monitor.html"><i class="bi bi-activity"></i>监控中心</a>
+      <a href="deploy.html"><i class="bi bi-rocket-takeoff-fill"></i>发布部署</a>
+      <div class="nav-section">配置</div>
+      <a href="#"><i class="bi bi-sliders2-vertical"></i>配置中心</a>
+      <a href="#"><i class="bi bi-shield-lock-fill"></i>注册中心</a>
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <div class="main">
+    <div class="topbar">
+      <h6><i class="bi bi-speedometer2 me-2 text-primary"></i>仪表盘</h6>
+      <div class="d-flex align-items-center gap-3">
+        <span class="badge bg-success"><i class="bi bi-circle-fill me-1" style="font-size:.5rem;"></i>系统正常</span>
+        <span class="text-muted" style="font-size:.85rem;">admin</span>
+        <i class="bi bi-bell text-muted"></i>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Stat cards -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3">
+          <div class="stat-card">
+            <div class="stat-value text-primary">128</div>
+            <div class="stat-label">在线节点</div>
+            <div class="stat-change text-success"><i class="bi bi-arrow-up-short"></i>较昨日 +3</div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="stat-card">
+            <div class="stat-value text-success">56</div>
+            <div class="stat-label">运行中服务</div>
+            <div class="stat-change text-muted"><i class="bi bi-dash"></i>无变化</div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="stat-card">
+            <div class="stat-value text-warning">2.4M</div>
+            <div class="stat-label">今日请求数</div>
+            <div class="stat-change text-success"><i class="bi bi-arrow-up-short"></i>较昨日 +12%</div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="stat-card">
+            <div class="stat-value text-danger">3</div>
+            <div class="stat-label">告警事项</div>
+            <div class="stat-change text-danger"><i class="bi bi-exclamation-triangle me-1"></i>需处理</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts row -->
+      <div class="row g-3 mb-4">
+        <div class="col-lg-8">
+          <div class="card border-0 rounded-3">
+            <div class="card-body">
+              <h6 class="card-title fw-semibold mb-3">请求趋势（近7日）</h6>
+              <div class="chart-placeholder"><i class="bi bi-bar-chart-line me-2"></i>图表区域</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card border-0 rounded-3">
+            <div class="card-body">
+              <h6 class="card-title fw-semibold mb-3">服务健康分布</h6>
+              <div class="chart-placeholder"><i class="bi bi-pie-chart me-2"></i>图表区域</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent activity -->
+      <div class="card border-0 rounded-3">
+        <div class="card-body">
+          <h6 class="card-title fw-semibold mb-3">最近活动</h6>
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>时间</th>
+                <th>类型</th>
+                <th>节点</th>
+                <th>描述</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody style="font-size:.875rem;">
+              <tr>
+                <td class="text-muted">14:32:10</td>
+                <td><span class="badge bg-primary-subtle text-primary">部署</span></td>
+                <td>node-01</td>
+                <td>OrderService v2.3.1 部署完成</td>
+                <td><span class="badge bg-success">成功</span></td>
+              </tr>
+              <tr>
+                <td class="text-muted">14:18:45</td>
+                <td><span class="badge bg-warning-subtle text-warning">告警</span></td>
+                <td>node-07</td>
+                <td>CPU 使用率超过 85%</td>
+                <td><span class="badge bg-warning text-dark">处理中</span></td>
+              </tr>
+              <tr>
+                <td class="text-muted">13:55:02</td>
+                <td><span class="badge bg-info-subtle text-info">注册</span></td>
+                <td>node-12</td>
+                <td>新节点上线注册</td>
+                <td><span class="badge bg-success">正常</span></td>
+              </tr>
+              <tr>
+                <td class="text-muted">13:20:18</td>
+                <td><span class="badge bg-danger-subtle text-danger">异常</span></td>
+                <td>node-03</td>
+                <td>UserService 连接超时</td>
+                <td><span class="badge bg-danger">已恢复</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
