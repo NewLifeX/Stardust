@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>项目工作台 - 星尘分布式服务平台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <style>
+    html, body { height: 100%; margin: 0; }
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+
+    /* Sidebar */
+    .sidebar { width: 220px; min-width: 220px; background: #1a1f36; color: #c8cde4; display: flex; flex-direction: column; }
+    .sidebar-brand { padding: 20px 16px 16px; border-bottom: 1px solid #2d3461; }
+    .sidebar-brand a { color: #fff; text-decoration: none; font-weight: 700; font-size: 1.1rem; }
+    .sidebar-brand small { display: block; color: #8892b0; font-size: .75rem; margin-top: 2px; }
+    .sidebar-nav { padding: 12px 0; flex: 1; overflow-y: auto; }
+    .sidebar-nav .nav-section { padding: 8px 16px 4px; font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: #8892b0; }
+    .sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 9px 16px; color: #c8cde4; text-decoration: none; font-size: .9rem; transition: background .15s; }
+    .sidebar-nav a:hover { background: #2d3461; color: #fff; }
+    .sidebar-nav a.active { background: #3b4cca; color: #fff; }
+    .sidebar-nav a i { font-size: 1rem; width: 18px; text-align: center; }
+
+    /* Main */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { background: #fff; border-bottom: 1px solid #e9ecef; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .topbar h6 { margin: 0; font-weight: 600; color: #1a1f36; }
+    .content { flex: 1; overflow-y: auto; background: #f0f2f5; }
+
+    /* Project header banner */
+    .project-banner { background: linear-gradient(135deg, #1e3a5f 0%, #2d5986 100%); color: #fff; padding: 24px 28px; }
+    .project-banner .project-avatar { width: 52px; height: 52px; border-radius: 12px; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; flex-shrink: 0; }
+    .project-banner .project-name { font-size: 1.3rem; font-weight: 700; margin-bottom: 2px; }
+    .project-banner .project-desc { opacity: .8; font-size: .88rem; }
+
+    /* Tabs */
+    .workspace-tabs { background: #fff; border-bottom: 1px solid #e9ecef; padding: 0 28px; }
+    .workspace-tabs .nav-link { color: #6c757d; padding: 12px 16px; font-size: .9rem; border: none; border-bottom: 2px solid transparent; border-radius: 0; }
+    .workspace-tabs .nav-link:hover { color: #1a1f36; }
+    .workspace-tabs .nav-link.active { color: #3b4cca; border-bottom-color: #3b4cca; font-weight: 600; }
+
+    /* Tab content area */
+    .tab-content-area { padding: 24px 28px; }
+
+    /* Mini stat */
+    .mini-stat { background: #fff; border-radius: 8px; padding: 14px 18px; }
+    .mini-stat .val { font-size: 1.6rem; font-weight: 700; line-height: 1; }
+    .mini-stat .lbl { font-size: .8rem; color: #6c757d; margin-top: 3px; }
+
+    /* Status badge */
+    .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+
+    /* Chart placeholder */
+    .chart-box { background: #f8f9fa; border-radius: 8px; height: 160px; display: flex; align-items: center; justify-content: center; color: #adb5bd; font-size: .88rem; border: 2px dashed #dee2e6; }
+
+    /* Timeline */
+    .timeline { position: relative; padding-left: 20px; }
+    .timeline::before { content: ''; position: absolute; left: 7px; top: 0; bottom: 0; width: 2px; background: #e9ecef; }
+    .timeline-item { position: relative; margin-bottom: 16px; }
+    .timeline-item::before { content: ''; position: absolute; left: -16px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: #3b82f6; border: 2px solid #fff; box-shadow: 0 0 0 2px #3b82f6; }
+    .timeline-item.success::before { background: #22c55e; box-shadow: 0 0 0 2px #22c55e; }
+    .timeline-item.danger::before { background: #ef4444; box-shadow: 0 0 0 2px #ef4444; }
+    .timeline-item.warning::before { background: #f59e0b; box-shadow: 0 0 0 2px #f59e0b; }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <a href="index.html"><i class="bi bi-stars me-1"></i>星尘平台</a>
+      <small>Stardust v3.7</small>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">主导航</div>
+      <a href="dashboard.html"><i class="bi bi-speedometer2"></i>仪表盘</a>
+      <a href="project-workspace.html" class="active"><i class="bi bi-grid-1x2-fill"></i>项目工作台</a>
+      <a href="projects.html"><i class="bi bi-collection-fill"></i>项目管理</a>
+      <div class="nav-section">运维管理</div>
+      <a href="nodes.html"><i class="bi bi-hdd-network-fill"></i>节点管理</a>
+      <a href="monitor.html"><i class="bi bi-activity"></i>监控中心</a>
+      <a href="deploy.html"><i class="bi bi-rocket-takeoff-fill"></i>发布部署</a>
+      <div class="nav-section">配置</div>
+      <a href="#"><i class="bi bi-sliders2-vertical"></i>配置中心</a>
+      <a href="#"><i class="bi bi-shield-lock-fill"></i>注册中心</a>
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <div class="main">
+    <!-- Topbar -->
+    <div class="topbar">
+      <h6>
+        <a href="projects.html" class="text-muted text-decoration-none me-1"><i class="bi bi-collection-fill"></i> 项目管理</a>
+        <i class="bi bi-chevron-right text-muted me-1" style="font-size:.75rem;"></i>
+        <span>OrderService</span>
+      </h6>
+      <div class="d-flex align-items-center gap-3">
+        <select class="form-select form-select-sm" style="width:160px;">
+          <option>OrderService</option>
+          <option>UserService</option>
+          <option>GatewayService</option>
+          <option>PaymentService</option>
+        </select>
+        <span class="text-muted" style="font-size:.85rem;">admin</span>
+        <i class="bi bi-bell text-muted"></i>
+      </div>
+    </div>
+
+    <!-- Project banner -->
+    <div class="project-banner">
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <div class="project-avatar">O</div>
+        <div>
+          <div class="project-name">OrderService</div>
+          <div class="project-desc">电商订单处理服务 · Java / Spring Boot · 生产环境</div>
+        </div>
+        <div class="ms-auto d-flex gap-2">
+          <button class="btn btn-sm btn-light"><i class="bi bi-rocket-takeoff me-1"></i>发布</button>
+          <button class="btn btn-sm btn-outline-light"><i class="bi bi-gear me-1"></i>设置</button>
+        </div>
+      </div>
+      <!-- Quick stats in banner -->
+      <div class="row g-3">
+        <div class="col-6 col-sm-3">
+          <div class="text-center">
+            <div style="font-size:1.6rem;font-weight:700;">8</div>
+            <div style="font-size:.8rem;opacity:.75;">在线节点</div>
+          </div>
+        </div>
+        <div class="col-6 col-sm-3">
+          <div class="text-center">
+            <div style="font-size:1.6rem;font-weight:700;">98.7%</div>
+            <div style="font-size:.8rem;opacity:.75;">成功率</div>
+          </div>
+        </div>
+        <div class="col-6 col-sm-3">
+          <div class="text-center">
+            <div style="font-size:1.6rem;font-weight:700;">142ms</div>
+            <div style="font-size:.8rem;opacity:.75;">平均响应</div>
+          </div>
+        </div>
+        <div class="col-6 col-sm-3">
+          <div class="text-center">
+            <div style="font-size:1.6rem;font-weight:700;">v2.3.1</div>
+            <div style="font-size:.8rem;opacity:.75;">当前版本</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workspace tabs -->
+    <div class="workspace-tabs">
+      <ul class="nav" id="workspaceTabs">
+        <li class="nav-item"><a class="nav-link active" href="#overview" data-bs-toggle="tab">概览</a></li>
+        <li class="nav-item"><a class="nav-link" href="#nodes-tab" data-bs-toggle="tab"><i class="bi bi-hdd-network me-1"></i>节点</a></li>
+        <li class="nav-item"><a class="nav-link" href="#deploy-tab" data-bs-toggle="tab"><i class="bi bi-rocket-takeoff me-1"></i>部署</a></li>
+        <li class="nav-item"><a class="nav-link" href="#monitor-tab" data-bs-toggle="tab"><i class="bi bi-activity me-1"></i>监控</a></li>
+        <li class="nav-item"><a class="nav-link" href="#config-tab" data-bs-toggle="tab"><i class="bi bi-sliders2 me-1"></i>配置</a></li>
+      </ul>
+    </div>
+
+    <!-- Tab content -->
+    <div class="flex-grow-1 overflow-auto" style="background:#f0f2f5;">
+      <div class="tab-content">
+
+        <!-- Overview tab -->
+        <div class="tab-pane fade show active tab-content-area" id="overview">
+          <div class="row g-3">
+            <!-- Left column -->
+            <div class="col-lg-8">
+              <!-- Request trend -->
+              <div class="card border-0 rounded-3 mb-3">
+                <div class="card-body">
+                  <h6 class="fw-semibold mb-3">请求趋势（近24h）</h6>
+                  <div class="chart-box"><i class="bi bi-graph-up me-2"></i>折线图区域</div>
+                </div>
+              </div>
+
+              <!-- Node status table -->
+              <div class="card border-0 rounded-3">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-semibold mb-0">节点状态</h6>
+                    <a href="#nodes-tab" class="small text-primary" data-bs-toggle="tab">查看全部</a>
+                  </div>
+                  <table class="table table-sm table-hover align-middle mb-0" style="font-size:.875rem;">
+                    <thead class="table-light">
+                      <tr><th>节点</th><th>IP</th><th>CPU</th><th>内存</th><th>状态</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>node-01</td>
+                        <td class="text-muted">192.168.1.101</td>
+                        <td>
+                          <div class="progress" style="height:5px;width:70px;display:inline-flex;">
+                            <div class="progress-bar bg-success" style="width:35%"></div>
+                          </div> 35%
+                        </td>
+                        <td>
+                          <div class="progress" style="height:5px;width:70px;display:inline-flex;">
+                            <div class="progress-bar bg-info" style="width:62%"></div>
+                          </div> 62%
+                        </td>
+                        <td><span class="status-dot" style="background:#22c55e;"></span><span class="text-success">在线</span></td>
+                      </tr>
+                      <tr>
+                        <td>node-02</td>
+                        <td class="text-muted">192.168.1.102</td>
+                        <td>
+                          <div class="progress" style="height:5px;width:70px;display:inline-flex;">
+                            <div class="progress-bar bg-warning" style="width:78%"></div>
+                          </div> 78%
+                        </td>
+                        <td>
+                          <div class="progress" style="height:5px;width:70px;display:inline-flex;">
+                            <div class="progress-bar bg-info" style="width:45%"></div>
+                          </div> 45%
+                        </td>
+                        <td><span class="status-dot" style="background:#f59e0b;"></span><span class="text-warning">告警</span></td>
+                      </tr>
+                      <tr>
+                        <td>node-04</td>
+                        <td class="text-muted">192.168.1.104</td>
+                        <td>
+                          <div class="progress" style="height:5px;width:70px;display:inline-flex;">
+                            <div class="progress-bar bg-success" style="width:22%"></div>
+                          </div> 22%
+                        </td>
+                        <td>
+                          <div class="progress" style="height:5px;width:70px;display:inline-flex;">
+                            <div class="progress-bar bg-info" style="width:50%"></div>
+                          </div> 50%
+                        </td>
+                        <td><span class="status-dot" style="background:#22c55e;"></span><span class="text-success">在线</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right column -->
+            <div class="col-lg-4">
+              <!-- Recent deploys -->
+              <div class="card border-0 rounded-3 mb-3">
+                <div class="card-body">
+                  <h6 class="fw-semibold mb-3">最近部署</h6>
+                  <div class="timeline">
+                    <div class="timeline-item success">
+                      <div class="fw-semibold" style="font-size:.875rem;">v2.3.1 · 成功</div>
+                      <div class="text-muted" style="font-size:.8rem;">node-01, node-02 · 2h前</div>
+                    </div>
+                    <div class="timeline-item success">
+                      <div class="fw-semibold" style="font-size:.875rem;">v2.3.0 · 成功</div>
+                      <div class="text-muted" style="font-size:.8rem;">全部节点 · 1d前</div>
+                    </div>
+                    <div class="timeline-item danger">
+                      <div class="fw-semibold" style="font-size:.875rem;">v2.2.9 · 回滚</div>
+                      <div class="text-muted" style="font-size:.8rem;">node-03 · 3d前</div>
+                    </div>
+                    <div class="timeline-item success">
+                      <div class="fw-semibold" style="font-size:.875rem;">v2.2.8 · 成功</div>
+                      <div class="text-muted" style="font-size:.8rem;">全部节点 · 5d前</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Alerts -->
+              <div class="card border-0 rounded-3">
+                <div class="card-body">
+                  <h6 class="fw-semibold mb-3">告警事项</h6>
+                  <div class="alert alert-warning py-2 px-3 mb-2" style="font-size:.83rem;">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>node-02</strong> CPU 使用率 78%，超过阈值
+                  </div>
+                  <div class="alert alert-info py-2 px-3 mb-0" style="font-size:.83rem;">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    配置项 <code>db.pool.max</code> 未设置，使用默认值
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nodes tab -->
+        <div class="tab-pane fade tab-content-area" id="nodes-tab">
+          <div class="d-flex gap-2 mb-3">
+            <div class="input-group" style="max-width:260px;">
+              <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+              <input type="text" class="form-control border-start-0" placeholder="搜索节点…">
+            </div>
+            <button class="btn btn-outline-secondary btn-sm ms-auto"><i class="bi bi-arrow-clockwise me-1"></i>刷新</button>
+          </div>
+          <div class="card border-0 rounded-3">
+            <div class="card-body p-0">
+              <table class="table table-hover align-middle mb-0" style="font-size:.875rem;">
+                <thead class="table-light">
+                  <tr>
+                    <th>节点名称</th><th>IP 地址</th><th>版本</th><th>CPU</th><th>内存</th><th>运行时间</th><th>状态</th><th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>node-01</strong></td>
+                    <td class="text-muted">192.168.1.101</td>
+                    <td><code>v2.3.1</code></td>
+                    <td>35%</td><td>62%</td><td>7d 14h</td>
+                    <td><span class="badge bg-success">在线</span></td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-terminal"></i></button>
+                      <button class="btn btn-sm btn-outline-warning"><i class="bi bi-arrow-counterclockwise"></i></button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>node-02</strong></td>
+                    <td class="text-muted">192.168.1.102</td>
+                    <td><code>v2.3.1</code></td>
+                    <td><span class="text-warning">78%</span></td><td>45%</td><td>3d 2h</td>
+                    <td><span class="badge bg-warning text-dark">告警</span></td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-terminal"></i></button>
+                      <button class="btn btn-sm btn-outline-warning"><i class="bi bi-arrow-counterclockwise"></i></button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>node-04</strong></td>
+                    <td class="text-muted">192.168.1.104</td>
+                    <td><code>v2.3.1</code></td>
+                    <td>22%</td><td>50%</td><td>5d 1h</td>
+                    <td><span class="badge bg-success">在线</span></td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-terminal"></i></button>
+                      <button class="btn btn-sm btn-outline-warning"><i class="bi bi-arrow-counterclockwise"></i></button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deploy tab -->
+        <div class="tab-pane fade tab-content-area" id="deploy-tab">
+          <div class="d-flex gap-2 mb-3">
+            <button class="btn btn-primary btn-sm"><i class="bi bi-rocket-takeoff me-1"></i>发起发布</button>
+            <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-clock-history me-1"></i>版本回滚</button>
+          </div>
+          <div class="card border-0 rounded-3">
+            <div class="card-body p-0">
+              <table class="table table-hover align-middle mb-0" style="font-size:.875rem;">
+                <thead class="table-light">
+                  <tr><th>版本</th><th>目标节点</th><th>发布时间</th><th>耗时</th><th>操作人</th><th>状态</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>v2.3.1</code></td>
+                    <td>node-01, node-02</td>
+                    <td class="text-muted">2026-05-17 14:32</td>
+                    <td>10.7s</td>
+                    <td>admin</td>
+                    <td><span class="badge bg-success">成功</span></td>
+                  </tr>
+                  <tr>
+                    <td><code>v2.3.0</code></td>
+                    <td>全部节点 (8)</td>
+                    <td class="text-muted">2026-05-16 10:15</td>
+                    <td>45.2s</td>
+                    <td>deploy-bot</td>
+                    <td><span class="badge bg-success">成功</span></td>
+                  </tr>
+                  <tr>
+                    <td><code>v2.2.9</code></td>
+                    <td>node-03</td>
+                    <td class="text-muted">2026-05-14 16:40</td>
+                    <td>—</td>
+                    <td>admin</td>
+                    <td><span class="badge bg-secondary">已回滚</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monitor tab -->
+        <div class="tab-pane fade tab-content-area" id="monitor-tab">
+          <div class="row g-3 mb-3">
+            <div class="col-6 col-md-3">
+              <div class="mini-stat">
+                <div class="val text-primary">12,480</div>
+                <div class="lbl">请求数/分</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="mini-stat">
+                <div class="val text-success">98.7%</div>
+                <div class="lbl">成功率</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="mini-stat">
+                <div class="val text-warning">142ms</div>
+                <div class="lbl">平均响应</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="mini-stat">
+                <div class="val text-danger">163</div>
+                <div class="lbl">错误数</div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="card border-0 rounded-3">
+                <div class="card-body">
+                  <h6 class="fw-semibold mb-2">请求量趋势</h6>
+                  <div class="chart-box"><i class="bi bi-graph-up me-2"></i>图表区域</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card border-0 rounded-3">
+                <div class="card-body">
+                  <h6 class="fw-semibold mb-2">响应时间 P50 / P95</h6>
+                  <div class="chart-box"><i class="bi bi-bar-chart me-2"></i>图表区域</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Config tab -->
+        <div class="tab-pane fade tab-content-area" id="config-tab">
+          <div class="d-flex gap-2 mb-3">
+            <div class="input-group" style="max-width:280px;">
+              <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+              <input type="text" class="form-control border-start-0" placeholder="搜索配置项…">
+            </div>
+            <button class="btn btn-primary btn-sm ms-auto"><i class="bi bi-plus-lg me-1"></i>新增配置</button>
+          </div>
+          <div class="card border-0 rounded-3">
+            <div class="card-body p-0">
+              <table class="table table-hover align-middle mb-0" style="font-size:.875rem;">
+                <thead class="table-light">
+                  <tr><th>键名</th><th>值</th><th>环境</th><th>更新时间</th><th>操作</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>db.url</code></td>
+                    <td class="text-muted">jdbc:mysql://db-01:3306/order</td>
+                    <td><span class="badge bg-danger-subtle text-danger">生产</span></td>
+                    <td class="text-muted">2026-05-10</td>
+                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></button></td>
+                  </tr>
+                  <tr>
+                    <td><code>db.pool.max</code></td>
+                    <td class="text-muted">50</td>
+                    <td><span class="badge bg-danger-subtle text-danger">生产</span></td>
+                    <td class="text-muted">2026-05-08</td>
+                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></button></td>
+                  </tr>
+                  <tr>
+                    <td><code>redis.host</code></td>
+                    <td class="text-muted">redis-cluster:6379</td>
+                    <td><span class="badge bg-danger-subtle text-danger">生产</span></td>
+                    <td class="text-muted">2026-05-01</td>
+                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></button></td>
+                  </tr>
+                  <tr>
+                    <td><code>log.level</code></td>
+                    <td class="text-muted">INFO</td>
+                    <td><span class="badge bg-danger-subtle text-danger">生产</span></td>
+                    <td class="text-muted">2026-04-20</td>
+                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /tab-content -->
+    </div><!-- /overflow-auto -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>监控中心 - 星尘分布式服务平台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <style>
+    html, body { height: 100%; margin: 0; }
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+
+    .sidebar { width: 220px; min-width: 220px; background: #1a1f36; color: #c8cde4; display: flex; flex-direction: column; }
+    .sidebar-brand { padding: 20px 16px 16px; border-bottom: 1px solid #2d3461; }
+    .sidebar-brand a { color: #fff; text-decoration: none; font-weight: 700; font-size: 1.1rem; }
+    .sidebar-brand small { display: block; color: #8892b0; font-size: .75rem; margin-top: 2px; }
+    .sidebar-nav { padding: 12px 0; flex: 1; overflow-y: auto; }
+    .sidebar-nav .nav-section { padding: 8px 16px 4px; font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: #8892b0; }
+    .sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 9px 16px; color: #c8cde4; text-decoration: none; font-size: .9rem; transition: background .15s; }
+    .sidebar-nav a:hover { background: #2d3461; color: #fff; }
+    .sidebar-nav a.active { background: #3b4cca; color: #fff; }
+    .sidebar-nav a i { font-size: 1rem; width: 18px; text-align: center; }
+
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { background: #fff; border-bottom: 1px solid #e9ecef; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .topbar h6 { margin: 0; font-weight: 600; color: #1a1f36; }
+    .content { flex: 1; overflow-y: auto; padding: 24px; background: #f0f2f5; }
+
+    .metric-card { background: #fff; border-radius: 10px; padding: 16px 20px; border: none; }
+    .metric-value { font-size: 1.8rem; font-weight: 700; line-height: 1.1; }
+    .metric-label { font-size: .82rem; color: #6c757d; margin-top: 2px; }
+    .chart-box { background: #f8f9fa; border-radius: 8px; height: 180px; display: flex; align-items: center; justify-content: center; color: #adb5bd; font-size: .9rem; border: 2px dashed #dee2e6; }
+
+    .trace-row:hover { background: #f8f9fa; cursor: pointer; }
+    .duration-bar { display: inline-block; height: 6px; border-radius: 3px; background: #3b82f6; }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <a href="index.html"><i class="bi bi-stars me-1"></i>星尘平台</a>
+      <small>Stardust v3.7</small>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">主导航</div>
+      <a href="dashboard.html"><i class="bi bi-speedometer2"></i>仪表盘</a>
+      <a href="project-workspace.html"><i class="bi bi-grid-1x2-fill"></i>项目工作台</a>
+      <a href="projects.html"><i class="bi bi-collection-fill"></i>项目管理</a>
+      <div class="nav-section">运维管理</div>
+      <a href="nodes.html"><i class="bi bi-hdd-network-fill"></i>节点管理</a>
+      <a href="monitor.html" class="active"><i class="bi bi-activity"></i>监控中心</a>
+      <a href="deploy.html"><i class="bi bi-rocket-takeoff-fill"></i>发布部署</a>
+      <div class="nav-section">配置</div>
+      <a href="#"><i class="bi bi-sliders2-vertical"></i>配置中心</a>
+      <a href="#"><i class="bi bi-shield-lock-fill"></i>注册中心</a>
+    </div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <h6><i class="bi bi-activity me-2 text-danger"></i>监控中心</h6>
+      <div class="d-flex align-items-center gap-3">
+        <select class="form-select form-select-sm" style="width:180px;">
+          <option>全部应用</option>
+          <option>OrderService</option>
+          <option>UserService</option>
+          <option>GatewayService</option>
+        </select>
+        <select class="form-select form-select-sm" style="width:120px;">
+          <option>最近 1h</option>
+          <option>最近 6h</option>
+          <option>最近 24h</option>
+          <option>最近 7d</option>
+        </select>
+        <span class="text-muted" style="font-size:.85rem;">admin</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- APM metrics -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3">
+          <div class="metric-card">
+            <div class="metric-value text-primary">12,480</div>
+            <div class="metric-label">请求总数 / 分钟</div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="metric-card">
+            <div class="metric-value text-success">98.7<small style="font-size:1rem;">%</small></div>
+            <div class="metric-label">成功率</div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="metric-card">
+            <div class="metric-value text-warning">142<small style="font-size:1rem;">ms</small></div>
+            <div class="metric-label">平均响应时间</div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="metric-card">
+            <div class="metric-value text-danger">163</div>
+            <div class="metric-label">错误请求数</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+          <div class="card border-0 rounded-3">
+            <div class="card-body">
+              <h6 class="fw-semibold mb-3">请求量趋势</h6>
+              <div class="chart-box"><i class="bi bi-graph-up me-2"></i>折线图区域</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card border-0 rounded-3">
+            <div class="card-body">
+              <h6 class="fw-semibold mb-3">响应时间分布（P50 / P95 / P99）</h6>
+              <div class="chart-box"><i class="bi bi-bar-chart me-2"></i>柱状图区域</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trace list -->
+      <div class="card border-0 rounded-3">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-semibold mb-0">链路追踪列表</h6>
+            <div class="d-flex gap-2">
+              <input type="text" class="form-control form-control-sm" placeholder="搜索 TraceId…" style="width:200px;">
+              <select class="form-select form-select-sm" style="width:120px;">
+                <option>全部状态</option>
+                <option>成功</option>
+                <option>错误</option>
+                <option>慢请求</option>
+              </select>
+            </div>
+          </div>
+          <table class="table table-hover align-middle mb-0" style="font-size:.875rem;">
+            <thead class="table-light">
+              <tr>
+                <th>时间</th>
+                <th>TraceId</th>
+                <th>服务</th>
+                <th>接口</th>
+                <th>耗时</th>
+                <th>状态码</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="trace-row">
+                <td class="text-muted">14:35:22.318</td>
+                <td><code class="text-primary" style="font-size:.8rem;">a1b2c3d4e5f6</code></td>
+                <td>OrderService</td>
+                <td>POST /api/orders</td>
+                <td>
+                  <span class="duration-bar me-2" style="width:40px;"></span>82ms
+                </td>
+                <td><span class="badge bg-success-subtle text-success">200</span></td>
+                <td><span class="badge bg-success">正常</span></td>
+              </tr>
+              <tr class="trace-row">
+                <td class="text-muted">14:35:21.104</td>
+                <td><code class="text-primary" style="font-size:.8rem;">f6e5d4c3b2a1</code></td>
+                <td>UserService</td>
+                <td>GET /api/users/123</td>
+                <td>
+                  <span class="duration-bar me-2" style="width:15px;background:#22c55e;"></span>31ms
+                </td>
+                <td><span class="badge bg-success-subtle text-success">200</span></td>
+                <td><span class="badge bg-success">正常</span></td>
+              </tr>
+              <tr class="trace-row">
+                <td class="text-muted">14:35:19.887</td>
+                <td><code class="text-primary" style="font-size:.8rem;">1a2b3c4d5e6f</code></td>
+                <td>GatewayService</td>
+                <td>GET /api/products/list</td>
+                <td>
+                  <span class="duration-bar me-2" style="width:90px;background:#f59e0b;"></span>1,850ms
+                </td>
+                <td><span class="badge bg-warning-subtle text-warning">200</span></td>
+                <td><span class="badge bg-warning text-dark">慢请求</span></td>
+              </tr>
+              <tr class="trace-row">
+                <td class="text-muted">14:35:18.543</td>
+                <td><code class="text-primary" style="font-size:.8rem;">9z8y7x6w5v4u</code></td>
+                <td>PaymentService</td>
+                <td>POST /api/payments</td>
+                <td>
+                  <span class="duration-bar me-2" style="width:25px;background:#ef4444;"></span>51ms
+                </td>
+                <td><span class="badge bg-danger-subtle text-danger">500</span></td>
+                <td><span class="badge bg-danger">错误</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+          <small class="text-muted">显示最新 4 条，共 163 条</small>
+          <nav>
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item disabled"><a class="page-link">上一页</a></li>
+              <li class="page-item active"><a class="page-link">1</a></li>
+              <li class="page-item"><a class="page-link">2</a></li>
+              <li class="page-item"><a class="page-link">下一页</a></li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
