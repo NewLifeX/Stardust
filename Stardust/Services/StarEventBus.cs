@@ -144,10 +144,12 @@ public class StarEventBus<TEvent>(AppClient client, String topic) : EventBus<TEv
         if (@event == null) return 0;
         if (!_subscribed) await RemoteSubscribe().ConfigureAwait(false);
 
-        // 待发布消息增加追踪标识
-        if (@event is ITraceMessage tm && tm.TraceId.IsNullOrEmpty()) tm.TraceId = DefaultSpan.Current?.ToString();
-
         var json = client.JsonHost.Write(@event);
+        using var span = Tracer?.NewSpan($"event:{topic}:publish", json);
+
+        // 待发布消息增加追踪标识
+        if (@event is ITraceMessage tm && tm.TraceId.IsNullOrEmpty()) tm.TraceId = span?.ToString();
+
         await client.PublishEventAsync(topic, json, cancellationToken).ConfigureAwait(false);
 
         return json.Length;
