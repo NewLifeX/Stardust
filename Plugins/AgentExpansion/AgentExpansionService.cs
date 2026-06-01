@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -143,7 +143,7 @@ internal sealed class AgentExpansionService
             using var client = new ApiClient($"udp://{address}:{LocalStarClient.Port}")
             {
                 Timeout = timeout,
-                Log = Log,
+                //Log = Log,
             };
 
             var info = await client.InvokeAsync<AgentInfo>("Info", local).ConfigureAwait(false);
@@ -482,6 +482,8 @@ internal sealed class AgentExpansionService
                 if (unicast.Address.AddressFamily != AddressFamily.InterNetwork) continue;
                 if (IPAddress.IsLoopback(unicast.Address)) continue;
                 if (unicast.IPv4Mask == null) continue;
+                //if (unicast.PrefixOrigin == PrefixOrigin.WellKnown) continue;
+                if (unicast.Address.GetAddressBytes()[0] == 169) continue;
 
                 var prefix = GetPrefixLength(unicast.IPv4Mask);
                 if (prefix <= 0) continue;

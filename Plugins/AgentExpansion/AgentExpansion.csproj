@@ -13,7 +13,7 @@
     <FileVersion>$(Version)</FileVersion>
     <AssemblyVersion>$(VersionPrefix).*</AssemblyVersion>
     <Deterministic>false</Deterministic>
-    <OutputPath>..\..\Bin\Agent</OutputPath>
+    <OutputPath>..\..\Bin</OutputPath>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <IsPackable>False</IsPackable>
@@ -24,9 +24,16 @@
     <ProjectReference Include="..\..\Stardust\Stardust.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
     <PackageReference Include="SSH.NET" Version="2020.0.2" />
-    <PackageReference Include="NewLife.Remoting" Version="3.7.2026.524-beta0246" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' != 'net45'">
+    <PackageReference Include="SSH.NET" Version="2025.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NewLife.Remoting" Version="3.7.2026.601" />
   </ItemGroup>
 
 </Project>
