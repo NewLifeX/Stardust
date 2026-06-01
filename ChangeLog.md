@@ -1,5 +1,19 @@
 # 星尘（Stardust）版本历史
 
+## v3.8.2026.0602 (2026-06-02)
+
+### 链路追踪增强
+- **TraceAnonymous匿名访问**：新增 `TraceAnonymous` 属性，允许未登录用户访问调用链页面，适用于公开展示或演示场景
+
+### 事件总线升级
+- **接口异步化**：`GetEventBus` 重命名为 `CreateEventBus`，`Subscribe`/`Unsubscribe` 全面支持异步，提升高并发场景下的响应能力
+- **追踪链路优化**：发布时优化 TraceId 赋值逻辑，增强分布式追踪可观测性；JSON 反序列化兼容 null 值
+
+### 依赖升级
+- 升级 `NewLife.Core`、`NewLife.Redis`、`NewLife.XCode` 等核心依赖至最新版本
+
+---
+
 ## v3.7.2026.0501 (2026-05-01)
 
 ### 部署增强

@@ -70,6 +70,7 @@ Stardust  星尘，轻量级分布式服务框架！
 ![XCode](Doc/调用链.png)  
 关系图
 ![XCode](Doc/关系图.png)  
+调用链页面支持 `TraceAnonymous` 属性，设置后允许未登录用户访问，适用于公开展示或演示场景。  
 
 ---
 ## 组件说明
