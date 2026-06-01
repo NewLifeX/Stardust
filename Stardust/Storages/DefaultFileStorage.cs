@@ -152,8 +152,8 @@ public abstract class DefaultFileStorage : DisposeBase, IFileStorage, ILogFeatur
     {
         if (client == null) return false;
 
-        NewFileBus = client.GetEventBus<NewFileInfo>(Name + "-NewFile");
-        FileRequestBus = client.GetEventBus<FileRequest>(Name + "-FileRequest");
+        NewFileBus = client.CreateEventBus<NewFileInfo>(Name + "-NewFile");
+        FileRequestBus = client.CreateEventBus<FileRequest>(Name + "-FileRequest");
 
         return NewFileBus != null || FileRequestBus != null;
     }

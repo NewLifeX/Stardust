@@ -26,7 +26,7 @@ public class AppClientTests
     public async Task ProcessMessageAsync_DispatchesToEventBus_WhenTopicMatchesAndClientDiffers()
     {
         var client = new AppClient { ClientId = "clientA" };
-        var bus = client.GetEventBus<String>("topic1");
+        var bus = client.CreateEventBus<String>("topic1");
         var handler = new TestStringHandler();
         bus.Subscribe(handler, clientId: "h1");
 
@@ -40,7 +40,7 @@ public class AppClientTests
     public async Task ProcessMessageAsync_Dispatches_WhenClientIdMatches()
     {
         var client = new AppClient { ClientId = "clientA" };
-        var bus = client.GetEventBus<String>("topic1");
+        var bus = client.CreateEventBus<String>("topic1");
         var handler = new TestStringHandler();
         bus.Subscribe(handler, clientId: "h1");
 
@@ -54,7 +54,7 @@ public class AppClientTests
     public async Task ProcessMessageAsync_DoesNotDispatch_WhenTopicUnknown()
     {
         var client = new AppClient { ClientId = "clientA" };
-        var bus = client.GetEventBus<String>("topic1");
+        var bus = client.CreateEventBus<String>("topic1");
         var handler = new TestStringHandler();
         bus.Subscribe(handler, clientId: "h1");
 

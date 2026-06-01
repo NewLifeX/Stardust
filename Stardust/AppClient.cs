@@ -207,7 +207,7 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
     public override async Task HandleAsync(IPacket data, IEventContext? context = null, CancellationToken cancellationToken = default)
     {
         // EventHub 优先处理消息，成功时不再向下执行
-        var rs = await _eventHub.HandleAsync(data, context, cancellationToken).ConfigureAwait(false);
+        var rs = await _eventHub.OnReceiveAsync(data, context, cancellationToken).ConfigureAwait(false);
         if (rs > 0) return;
 
         // 基类的处理逻辑，主要是指令消息下发
@@ -545,12 +545,10 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
     /// <summary>创建事件总线，指定主题，绑定WebSocket通道，客户端收到下发数据包时，路由到topic对应的事件总线</summary>
     /// <typeparam name="TEvent"></typeparam>
     /// <param name="topic">主题</param>
+    /// <param name="clientId">客户端标识</param>
     /// <returns></returns>
-    public IEventBus<TEvent> GetEventBus<TEvent>(String topic)
+    public IEventBus<TEvent> CreateEventBus<TEvent>(String topic, String? clientId = null)
     {
-        if (_eventHub.TryGetBus<TEvent>(topic, out var bus)) return bus;
-        if (_eventHub.TryGetValue(topic, out var handler) && handler is IEventBus<TEvent> bus2) return bus2;
-
         if (!_initedEventBus)
         {
             _initedEventBus = true;
@@ -568,12 +566,10 @@ public class AppClient : ClientBase, IRegistry, IEventBusFactory
         };
 
         // 按topic向EventHub注册事件总线，在Hub收到topic方向的事件消息时，路由到对应的事件总线
-        _eventHub.Add(topic, sbus);
+        _eventHub.SubscribeAsync(topic, clientId ?? "", sbus).ConfigureAwait(false).GetAwaiter().GetResult();
 
         return sbus;
     }
-
-    IEventBus<TEvent> IEventBusFactory.CreateEventBus<TEvent>(String topic, String clientId) => GetEventBus<TEvent>(topic);
 
     /// <summary>发布事件到总线</summary>
     /// <param name="topic">主题</param>
