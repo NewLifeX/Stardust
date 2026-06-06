@@ -607,6 +607,8 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         }
         cmds.Update(false);
 
+        span?.Value = rs.Count;
+
         return rs.ToArray();
     }
 
