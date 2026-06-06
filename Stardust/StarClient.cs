@@ -258,6 +258,12 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
     #region 心跳
     private readonly String[] _excludes = ["Idle", "System", "Registry", "smss", "csrss", "lsass", "wininit", "services", "winlogon", "LogonUI", "SearchUI", "fontdrvhost", "dwm", "svchost", "dllhost", "conhost", "taskhostw", "explorer", "ctfmon", "ChsIME", "WmiPrvSE", "WUDFHost", "TabTip*", "igfxCUIServiceN", "igfxEMN", "smartscreen", "sihost", "RuntimeBroker", "StartMenuExperienceHost", "SecurityHealthSystray", "SecurityHealthService", "ShellExperienceHost", "PerfWatson2", "audiodg", "spoolsv", "*ServiceHub*", "systemd*", "cron", "rsyslogd", "sudo", "dbus*", "bash", "login", "networkd*", "kworker*", "ksoftirqd*", "migration*", "auditd", "polkitd", "atd"];
 
+    private PingResult? _lastGwResult;
+    private PingResult? _lastDnsResult;
+    private PingResult? _lastSvrResult;
+    private DateTime _lastMeasureTime;
+    private volatile Boolean _measuring;
+
     /// <summary>构建心跳请求</summary>
     /// <returns></returns>
     public override IPingRequest BuildPingRequest()
@@ -265,16 +271,8 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
         var request = new PingInfo();
         FillPingRequest(request);
 
-        // 获取网络质量（使用详细结果）
-        var monitor = new PingMonitor();
-        var gw = AgentInfo.GetGateway();
-        if (gw != null && gw.Contains('/')) gw = gw.Substring(0, gw.IndexOf("/"));
-        var gwtTask = Task.Run(() => monitor.GetResultAsync(gw));
-        var dns = AgentInfo.GetDns();
-        if (dns.IsNullOrEmpty() || IPAddress.TryParse(dns, out var ip) && ip.IsLocal()) dns = "223.5.5.5";
-        var dnsTask = Task.Run(() => monitor.GetResultAsync(dns));
-        var svr = (Client as ApiHttpClient)?.Current?.Address.Host;
-        var svrTask = Task.Run(() => monitor.GetResultAsync(svr));
+        // 获取网络质量（使用后台缓存，避免阻塞心跳）
+        EnsurePingResults();
 
         var exs = _excludes.Where(e => e.Contains('*')).ToArray();
 
@@ -323,10 +321,10 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
         }
         catch { }
 
-        // 获取网络质量明细
-        var gwResult = gwtTask?.Result;
-        var dnsResult = dnsTask?.Result;
-        var svrResult = svrTask?.Result;
+        // 使用缓存的网络质量结果
+        var gwResult = _lastGwResult;
+        var dnsResult = _lastDnsResult;
+        var svrResult = _lastSvrResult;
 
         // 网关结果
         if (gwResult != null)
@@ -368,6 +366,50 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
         request.Time = DateTime.UtcNow.ToLong();
 
         return request;
+    }
+
+    private void EnsurePingResults()
+    {
+        var now = DateTime.UtcNow;
+        if (_lastGwResult != null && _lastDnsResult != null && _lastSvrResult != null &&
+            (now - _lastMeasureTime).TotalSeconds < 48)
+            return;
+
+        if (_measuring) return;
+
+        _measuring = true;
+        Task.Run(MeasurePingResultsAsync);
+    }
+
+    private async Task MeasurePingResultsAsync()
+    {
+        try
+        {
+            var monitor = new PingMonitor();
+            var gw = AgentInfo.GetGateway();
+            if (gw != null && gw.Contains('/')) gw = gw.Substring(0, gw.IndexOf("/"));
+            var dns = AgentInfo.GetDns();
+            if (dns.IsNullOrEmpty() || IPAddress.TryParse(dns, out var ip) && ip.IsLocal()) dns = "223.5.5.5";
+            var svr = (Client as ApiHttpClient)?.Current?.Address.Host;
+
+            var gwTask = Task.Run(() => monitor.GetResultAsync(gw));
+            var dnsTask = Task.Run(() => monitor.GetResultAsync(dns));
+            var svrTask = Task.Run(() => monitor.GetResultAsync(svr));
+
+            _lastGwResult = await gwTask.ConfigureAwait(false);
+            _lastDnsResult = await dnsTask.ConfigureAwait(false);
+            _lastSvrResult = await svrTask.ConfigureAwait(false);
+
+            _lastMeasureTime = DateTime.UtcNow;
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteLine($"后台网络质量测量失败：{ex.Message}");
+        }
+        finally
+        {
+            _measuring = false;
+        }
     }
 
     /// <summary>心跳</summary>
