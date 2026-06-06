@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -134,7 +134,7 @@ public partial class NodeCommand : Entity<NodeCommand>
         if (nodeId > 0) exp &= _.NodeID == nodeId;
         exp &= _.Status <= CommandStatus.处理中;
 
-        return FindAll(exp, _.Id.Asc(), null, 0, count);
+        return FindAll(exp, _.Id.Desc(), null, 0, count);
     }
 
     /// <summary>添加节点命令</summary>
