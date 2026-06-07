@@ -185,6 +185,7 @@ public class AppController(RegistryService registryService, ITokenService tokenS
         var app = Context.Device as App ?? throw new InvalidOperationException("未登录！");
 
         using var span = tracer?.NewSpan("cmd:WsApp:Create", app.Name);
+        span?.Detach(HttpContext.Request.Headers);
         try
         {
             using var session = new AppCommandSession(socket)

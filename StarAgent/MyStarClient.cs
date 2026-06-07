@@ -173,7 +173,9 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             }
             else
             {
-                this.WriteInfoEvent("Upgrade", "强制更新完成，但拉起新进程失败");
+                // 输出 Upgrade.Run() 内部的详细异常（如 Process.Start 在 systemd 隔离环境下的失败原因），
+                // 这些信息会出现在星尘节点历史中，方便远程诊断
+                this.WriteInfoEvent("Upgrade", "强制更新完成，但拉起新进程失败！" + upgrade.LastErrorMessage);
             }
         }
         else
@@ -200,7 +202,8 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             }
             else
             {
-                this.WriteInfoEvent("Upgrade", "强制更新完成，但拉起新进程失败");
+                // 输出 Upgrade.Run() 内部的详细异常，便于远程诊断拉起失败的原因
+                this.WriteInfoEvent("Upgrade", "强制更新完成，但拉起新进程失败！" + upgrade.LastErrorMessage);
             }
         }
     }

@@ -273,6 +273,7 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
         var node = Context.Device as Node;
 
         using var span = tracer?.NewSpan("cmd:WsNode:Create", node.Code);
+        span?.Detach(HttpContext.Request.Headers);
         try
         {
             using var session = new NodeCommandSession(socket)
