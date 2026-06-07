@@ -543,8 +543,8 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
                 item.Status = CommandStatus.取消;
             else
             {
-                // 如果命令正在处理中，则短期内不重复下发
-                if (item.Status == CommandStatus.处理中 && item.UpdateTime.AddSeconds(30) > DateTime.Now) continue;
+                // 如果命令正在处理中，则短期内不重复下发。客户端StarAgent具备去重能力，不需要服务端过滤
+                //if (item.Status == CommandStatus.处理中 && item.UpdateTime.AddSeconds(30) > DateTime.Now) continue;
 
                 // 即时指令，或者已到开始时间的未来指令，才增加次数
                 if (item.StartTime.Year < 2000 || item.StartTime < DateTime.Now)
