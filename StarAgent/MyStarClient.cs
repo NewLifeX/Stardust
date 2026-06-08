@@ -156,14 +156,14 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
         {
             this.WriteInfoEvent("Upgrade", "强制更新完成，准备重启后台服务！PID=" + pid);
 
-            // 使用外部命令重启服务。执行重启，如果失败，延迟后再次尝试
+            // 冒烟测试：尝试拉起新版，若失败等 5s 重试一次（应对慢速存储落盘 / JIT 预热）
             var rs = upgrade.Run("StarAgent", "-restart -upgrade", 3_000);
             if (!rs)
             {
-                var delay = 3_000;
-                this.WriteInfoEvent("Upgrade", $"拉起新进程失败，延迟{delay}ms后重试");
+                var delay = 5_000;
+                this.WriteInfoEvent("Upgrade", $"新版首次启动失败，等待{delay}ms后重试。{upgrade.LastErrorMessage}");
                 Thread.Sleep(delay);
-                rs = upgrade.Run("StarAgent", "-restart -upgrade", 1_000);
+                rs = upgrade.Run("StarAgent", "-restart -upgrade", 3_000);
             }
 
             //!! 这里不需要自杀，外部命令重启服务会结束当前进程
@@ -173,23 +173,23 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             }
             else
             {
-                // 输出 Upgrade.Run() 内部的详细异常（如 Process.Start 在 systemd 隔离环境下的失败原因），
-                // 这些信息会出现在星尘节点历史中，方便远程诊断
-                this.WriteInfoEvent("Upgrade", "强制更新完成，但拉起新进程失败！" + upgrade.LastErrorMessage);
+                // 两次均失败，确认新版有致命缺陷，回滚 .del 恢复旧版文件
+                upgrade.Rollback();
+                this.WriteInfoEvent("Upgrade", "新版启动失败（冒烟测试不通过），已回滚旧版文件，当前服务继续运行。" + upgrade.LastErrorMessage);
             }
         }
         else
         {
             this.WriteInfoEvent("Upgrade", "强制更新完成，准备拉起新进程！PID=" + pid);
 
-            // 重新拉起进程，重启服务，否则采取拉起进程的方式
-            var rs = upgrade.Run("StarAgent", "-run -upgrade");
+            // 冒烟测试：尝试拉起新版，若失败等 5s 重试一次
+            var rs = upgrade.Run("StarAgent", "-run -upgrade", 3_000);
             if (!rs)
             {
-                var delay = 3_000;
-                this.WriteInfoEvent("Upgrade", $"拉起新进程失败，延迟{delay}ms后重试");
+                var delay = 5_000;
+                this.WriteInfoEvent("Upgrade", $"新版首次启动失败，等待{delay}ms后重试。{upgrade.LastErrorMessage}");
                 Thread.Sleep(delay);
-                rs = upgrade.Run("StarAgent", "-run -upgrade", 1_000);
+                rs = upgrade.Run("StarAgent", "-run -upgrade", 3_000);
             }
 
             if (rs)
@@ -202,8 +202,9 @@ internal class MyStarClient(StarAgentSetting set) : StarClient(set)
             }
             else
             {
-                // 输出 Upgrade.Run() 内部的详细异常，便于远程诊断拉起失败的原因
-                this.WriteInfoEvent("Upgrade", "强制更新完成，但拉起新进程失败！" + upgrade.LastErrorMessage);
+                // 两次均失败，确认新版有致命缺陷，回滚 .del 恢复旧版文件
+                upgrade.Rollback();
+                this.WriteInfoEvent("Upgrade", "新版启动失败（冒烟测试不通过），已回滚旧版文件，当前服务继续运行。" + upgrade.LastErrorMessage);
             }
         }
     }
