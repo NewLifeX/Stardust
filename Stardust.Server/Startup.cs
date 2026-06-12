@@ -124,6 +124,7 @@ public class Startup
         services.AddHostedService<ApolloService>();
         services.AddHostedService<ShardTableService>();
         services.AddHostedService<AlarmService>();
+        services.AddHostedService<DotNetSyncService>();
         services.AddHostedService<NodeStatService>();
 
         // 注入Remoting服务

@@ -142,6 +142,14 @@ public class StarServerSetting : Config<StarServerSetting>, ITokenSetting
     [Description("调用链允许匿名。允许未登录用户访问/trace调用链页面，监控数据可能含敏感信息，默认false")]
     public Boolean TraceAnonymous { get; set; } = false;
 
+    /// <summary>dotNet同步周期。从官网抓取.NET运行时安装包信息，0表示禁用，单位秒，默认86400（24小时）</summary>
+    [Description("dotNet同步周期。从官网抓取.NET运行时安装包信息，0表示禁用，单位秒，默认86400（24小时）")]
+    public Int32 DotNetSyncPeriod { get; set; } = 0;
+
+    /// <summary>dotNet同步地址。抓取.NET运行时版本的官方API地址，支持{major}占位符</summary>
+    [Description("dotNet同步地址。抓取.NET运行时版本的官方API地址，支持{major}占位符")]
+    public String DotNetSyncUrl { get; set; } = "https://dotnetcli.blob.core.windows.net/dotnet/release-metadata/{major}.0/releases.json";
+
     ///// <summary>新服务器。节点自动迁移到新的服务器地址</summary>
     //[Description("新服务器。节点自动迁移到新的服务器地址")]
     //public String NewServer { get; set; }

@@ -127,13 +127,9 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
                     continue;
                 }
 
-                // 根据目标运行时设置Executor。TargetRuntime通过Executor传递给客户端
-                var executor = pkg.Executor;
-                if (executor.IsNullOrEmpty())
-                {
-                    // net45使用StarAgent.exe直接启动，其它使用dotnet StarAgent.dll
-                    executor = pkg.TargetRuntime == "4" ? "StarAgent.exe -run" : "dotnet StarAgent.dll -run";
-                }
+                // 双层取值：Package优先级高于Release，客户端自行处理空Executor
+                var executor = !pkg.Executor.IsNullOrEmpty() ? pkg.Executor : release.Executor;
+                var preinstall = !pkg.Preinstall.IsNullOrEmpty() ? pkg.Preinstall : release.Preinstall;
 
                 var info = new UpgradeInfo
                 {
@@ -141,7 +137,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
                     Source = pkg.Source,
                     FileHash = pkg.FileHash,
                     FileSize = pkg.Size,
-                    Preinstall = pkg.Preinstall,
+                    Preinstall = preinstall,
                     Executor = executor,
                     Force = release.Force,
                     Description = release.Remark,

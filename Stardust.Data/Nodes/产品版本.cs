@@ -71,6 +71,22 @@ public partial class ProductRelease
     [BindColumn("Channel", "升级通道", "")]
     public NodeChannels Channel { get => _Channel; set { if (OnPropertyChanging("Channel", value)) { _Channel = value; OnPropertyChanged("Channel"); } } }
 
+    private String _Preinstall;
+    /// <summary>预安装命令。更新前要执行的命令，解压缩后在解压缩目录执行，ProductPackage可覆盖</summary>
+    [DisplayName("预安装命令")]
+    [Description("预安装命令。更新前要执行的命令，解压缩后在解压缩目录执行，ProductPackage可覆盖")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("Preinstall", "预安装命令。更新前要执行的命令，解压缩后在解压缩目录执行，ProductPackage可覆盖", "")]
+    public String Preinstall { get => _Preinstall; set { if (OnPropertyChanging("Preinstall", value)) { _Preinstall = value; OnPropertyChanged("Preinstall"); } } }
+
+    private String _Executor;
+    /// <summary>执行命令。空格前后为文件名和参数，ProductPackage可覆盖</summary>
+    [DisplayName("执行命令")]
+    [Description("执行命令。空格前后为文件名和参数，ProductPackage可覆盖")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("Executor", "执行命令。空格前后为文件名和参数，ProductPackage可覆盖", "")]
+    public String Executor { get => _Executor; set { if (OnPropertyChanging("Executor", value)) { _Executor = value; OnPropertyChanged("Executor"); } } }
+
     private Int32 _CreateUserID;
     /// <summary>创建者</summary>
     [Category("扩展")]
@@ -149,6 +165,8 @@ public partial class ProductRelease
             "Enable" => _Enable,
             "Force" => _Force,
             "Channel" => _Channel,
+            "Preinstall" => _Preinstall,
+            "Executor" => _Executor,
             "CreateUserID" => _CreateUserID,
             "CreateTime" => _CreateTime,
             "CreateIP" => _CreateIP,
@@ -168,6 +186,8 @@ public partial class ProductRelease
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "Force": _Force = value.ToBoolean(); break;
                 case "Channel": _Channel = (NodeChannels)value.ToInt(); break;
+                case "Preinstall": _Preinstall = Convert.ToString(value); break;
+                case "Executor": _Executor = Convert.ToString(value); break;
                 case "CreateUserID": _CreateUserID = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -278,6 +298,12 @@ public partial class ProductRelease
         /// <summary>升级通道</summary>
         public static readonly Field Channel = FindByName("Channel");
 
+        /// <summary>预安装命令。更新前要执行的命令，解压缩后在解压缩目录执行，ProductPackage可覆盖</summary>
+        public static readonly Field Preinstall = FindByName("Preinstall");
+
+        /// <summary>执行命令。空格前后为文件名和参数，ProductPackage可覆盖</summary>
+        public static readonly Field Executor = FindByName("Executor");
+
         /// <summary>创建者</summary>
         public static readonly Field CreateUserID = FindByName("CreateUserID");
 
@@ -322,6 +348,12 @@ public partial class ProductRelease
 
         /// <summary>升级通道</summary>
         public const String Channel = "Channel";
+
+        /// <summary>预安装命令。更新前要执行的命令，解压缩后在解压缩目录执行，ProductPackage可覆盖</summary>
+        public const String Preinstall = "Preinstall";
+
+        /// <summary>执行命令。空格前后为文件名和参数，ProductPackage可覆盖</summary>
+        public const String Executor = "Executor";
 
         /// <summary>创建者</summary>
         public const String CreateUserID = "CreateUserID";

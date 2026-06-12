@@ -389,6 +389,8 @@
         <Column Name="Enable" DataType="Boolean" Description="启用。启用/停用" />
         <Column Name="Force" DataType="Boolean" Description="强制。强制升级" />
         <Column Name="Channel" DataType="Int32" Description="升级通道" Type="NodeChannels" />
+        <Column Name="Preinstall" DataType="String" Length="200" Description="预安装命令。更新前要执行的命令，解压缩后在解压缩目录执行，ProductPackage可覆盖" />
+        <Column Name="Executor" DataType="String" Length="200" Description="执行命令。空格前后为文件名和参数，ProductPackage可覆盖" />
         <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
         <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
         <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
