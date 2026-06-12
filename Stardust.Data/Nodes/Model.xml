@@ -381,5 +381,73 @@
         <Index Columns="Name" />
       </Indexes>
     </Table>
+    <Table Name="ProductRelease" Description="产品版本。产品发布版本，一个版本包含多个面向不同.NET运行时的包">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="Version" DataType="String" Description="版本号。完整版本号，如 3.7.2026.0611" />
+        <Column Name="ProductCode" DataType="String" Description="产品编码。StarAgent/CrazyCoder/XCoder 等，用于区分不同类型产品" />
+        <Column Name="Enable" DataType="Boolean" Description="启用。启用/停用" />
+        <Column Name="Force" DataType="Boolean" Description="强制。强制升级" />
+        <Column Name="Channel" DataType="Int32" Description="升级通道" Type="NodeChannels" />
+        <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="UpdateUserID" DataType="Int32" Description="更新者" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="Version" Unique="True" />
+        <Index Columns="ProductCode" />
+      </Indexes>
+    </Table>
+    <Table Name="ProductPackage" Description="产品发布包。隶属于发布版本的安装包，面向不同.NET运行时目标">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="ReleaseId" DataType="Int32" Map="ProductRelease@Id" Description="发布版本。所属发布版本" />
+        <Column Name="TargetRuntime" DataType="String" Description="目标运行时。目标.NET运行时主版本，如 4/5/6/7/8/9/10，*表示万能包" />
+        <Column Name="FileName" DataType="String" Length="200" Description="文件名。安装包文件名，如 staragent80.zip" />
+        <Column Name="Source" DataType="String" ItemType="file-zip" Length="200" Description="升级源。下载路径（Cube附件或外部URL）" />
+        <Column Name="Size" DataType="Int64" ItemType="GMK" Description="文件大小" />
+        <Column Name="FileHash" DataType="String" Description="文件哈希。MD5散列" />
+        <Column Name="Preinstall" DataType="String" Length="200" Description="预安装命令。更新前要执行的命令，解压缩后，在解压缩目录执行" />
+        <Column Name="Executor" DataType="String" Length="200" Description="执行命令。空格前后为文件名和参数，客户端根据此命令启动新版本" />
+        <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注。如 net8.0 通用" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="ReleaseId" />
+      </Indexes>
+    </Table>
+    <Table Name="DotNetPackage" Description="dotNet安装包。管理面向不同操作系统和CPU架构的.NET运行时安装包">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="Version" DataType="String" Description="版本号。完整版本号，如 10.0.9" />
+        <Column Name="Kind" DataType="String" Description="安装类型。runtime/aspnet/desktop/host" />
+        <Column Name="OSKind" DataType="Int32" Description="操作系统。目标操作系统，0表示通用" Type="Stardust.Models.OSKind" />
+        <Column Name="Architecture" DataType="Int32" Description="CPU架构。目标指令集架构，0表示通用" Type="Stardust.Models.CpuArch" />
+        <Column Name="FileName" DataType="String" Length="200" Description="文件名。官方文件名，如 aspnetcore-runtime-10.0.9-linux-x64.tar.gz" />
+        <Column Name="Source" DataType="String" Length="200" Description="下载源。下载URL或本地路径" />
+        <Column Name="Size" DataType="Int64" ItemType="GMK" Description="文件大小" />
+        <Column Name="FileHash" DataType="String" Description="文件哈希。MD5/SHA256散列" />
+        <Column Name="Enable" DataType="Boolean" Description="启用。启用/停用" />
+        <Column Name="Force" DataType="Boolean" Description="强制。强制安装，即使已存在同版本也重新安装" />
+        <Column Name="Channel" DataType="Int32" Description="升级通道" Type="NodeChannels" />
+        <Column Name="AutoImport" DataType="Boolean" Description="自动导入。是否从Microsoft官方源自动导入" />
+        <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="UpdateUserID" DataType="Int32" Description="更新者" Category="扩展" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Category="扩展" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" Category="扩展" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
+      </Columns>
+      <Indexes>
+        <Index Columns="Version,Kind,OSKind,Architecture" />
+      </Indexes>
+    </Table>
   </Tables>
 </EntityModel>

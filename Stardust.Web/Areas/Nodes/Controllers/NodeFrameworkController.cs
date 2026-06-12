@@ -66,32 +66,70 @@ public class NodeFrameworkController : EntityController<Node>
         var bf = new BatchFinder<Int32, Node>();
         bf.Add(SelectKeys.Select(e => e.ToInt()));
 
-        //var baseUrl = "";
-        var set = NewLife.Setting.Current;
-        var server = set.PluginServer;
-        if (baseUrl.IsNullOrEmpty() && !server.IsNullOrEmpty() && !server.Contains("x.newlifex.com", StringComparison.CurrentCultureIgnoreCase))
+        // 尝试从 DotNetPackage 表获取安装包信息
+        var pkg = DotNetPackage.FindById(ver.ToInt());
+        if (pkg != null)
         {
-            baseUrl = server.TrimEnd('/');
-            if (!baseUrl.EndsWithIgnoreCase("/dotnet")) baseUrl += "/dotnet";
-        }
-
-        var model = new FrameworkModel { Version = ver, BaseUrl = baseUrl, Force = true };
-        var args = model.ToJson();
-
-        var ts = new List<Task<Int32>>();
-        foreach (var item in SelectKeys)
-        {
-            var node = bf.FindByKey(item.ToInt());
-            if (node != null && !node.Code.IsNullOrEmpty())
+            // 使用 DotNetPackage 中的版本信息
+            var fmodel = new FrameworkModel
             {
-                ts.Add(_starFactory.SendNodeCommand(node.Code, "framework/install", args, 0, 30 * 24 * 3600, 0));
+                Version = pkg.Version,
+                BaseUrl = pkg.Source,
+                Force = true,
+            };
 
+            if (fmodel.BaseUrl.IsNullOrEmpty())
+            {
+                var set = NewLife.Setting.Current;
+                var server = set.PluginServer;
+                if (!server.IsNullOrEmpty() && !server.Contains("x.newlifex.com", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    fmodel.BaseUrl = server.TrimEnd('/');
+                    if (!fmodel.BaseUrl.EndsWithIgnoreCase("/dotnet")) fmodel.BaseUrl += "/dotnet";
+                }
             }
+
+            var args = fmodel.ToJson();
+            var ts = new List<Task<Int32>>();
+            foreach (var item in SelectKeys)
+            {
+                var node = bf.FindByKey(item.ToInt());
+                if (node != null && !node.Code.IsNullOrEmpty())
+                {
+                    ts.Add(_starFactory.SendNodeCommand(node.Code, "framework/install", args, 0, 30 * 24 * 3600, 0));
+                }
+            }
+
+            var rs = await Task.WhenAll(ts);
+            return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
         }
+        else
+        {
+            // 回退到旧逻辑：使用手动输入的版本号和URL
+            var set = NewLife.Setting.Current;
+            var server = set.PluginServer;
+            if (baseUrl.IsNullOrEmpty() && !server.IsNullOrEmpty() && !server.Contains("x.newlifex.com", StringComparison.CurrentCultureIgnoreCase))
+            {
+                baseUrl = server.TrimEnd('/');
+                if (!baseUrl.EndsWithIgnoreCase("/dotnet")) baseUrl += "/dotnet";
+            }
 
-        var rs = await Task.WhenAll(ts);
+            var model = new FrameworkModel { Version = ver, BaseUrl = baseUrl, Force = true };
+            var args = model.ToJson();
 
-        return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
+            var ts = new List<Task<Int32>>();
+            foreach (var item in SelectKeys)
+            {
+                var node = bf.FindByKey(item.ToInt());
+                if (node != null && !node.Code.IsNullOrEmpty())
+                {
+                    ts.Add(_starFactory.SendNodeCommand(node.Code, "framework/install", args, 0, 30 * 24 * 3600, 0));
+                }
+            }
+
+            var rs = await Task.WhenAll(ts);
+            return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
+        }
     }
 
     [DisplayName("卸载")]

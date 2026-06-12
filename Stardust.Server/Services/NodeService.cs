@@ -750,7 +750,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     #endregion
 
     #region 升级更新
-    /// <summary>升级检查</summary>
+    /// <summary>升级检查。新版优先匹配 ProductRelease + ProductPackage，回退到旧 NodeVersion 逻辑</summary>
     /// <param name="channel">更新通道</param>
     /// <returns></returns>
     public override IUpgradeInfo Upgrade(DeviceContext context, String channel)
@@ -759,19 +759,23 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         if (!Enum.TryParse<NodeChannels>(channel, true, out var ch)) ch = NodeChannels.Release;
         if (ch < NodeChannels.Release) ch = NodeChannels.Release;
 
-        // 找到所有产品版本
         var node = context.Device as Node;
+        var ip = context.UserHost;
+
+        // ---- 新路径：ProductRelease + ProductPackage 匹配 ----
+        var upgradeInfo = TryUpgradeFromRelease(node, ch);
+        if (upgradeInfo != null) return upgradeInfo;
+
+        // ---- 回退路径：旧 NodeVersion 逻辑（兼容已有记录） ----
         var list = NodeVersion.GetValids(ch);
         list = list.Where(e => e.ProductCode.IsNullOrEmpty() || e.ProductCode.EqualIgnoreCase(node.ProductCode)).ToList();
         if (list.Count == 0) return null;
 
-        var ip = context.UserHost;
         using var span = _tracer?.NewSpan(nameof(Upgrade), new { node.Name, node.Code, node.Runtime, node.Framework, node.Frameworks, ip, vers = list.Count });
 
         // 应用过滤规则，使用最新的一个版本
         var pv = list.OrderByDescending(e => e.ID).FirstOrDefault(e => e.Version != node.LastVersion && e.Match(node));
         if (pv == null) return null;
-        //if (pv == null) throw new ApiException(509, "没有升级规则");
 
         // 检查是否已经升级过这个版本
         if (node.LastVersion == pv.Version) return null;
@@ -795,13 +799,63 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         };
     }
 
-    /// <summary>检查节点是否符合规则，并推送dotNet运行时安装指令</summary>
+    /// <summary>尝试从新的 ProductRelease 表中匹配升级</summary>
+    private UpgradeInfo TryUpgradeFromRelease(Node node, NodeChannels channel)
+    {
+        var releases = ProductRelease.GetValids(channel);
+        if (releases.Count == 0) return null;
+
+        var ip = node.UpdateIP;
+
+        foreach (var release in releases)
+        {
+            // 检查是否已经升级过这个版本
+            if (node.LastVersion == release.Version) continue;
+
+            var pkg = release.MatchPackage(node);
+            if (pkg == null) continue;
+
+            node.WriteHistory("自动更新", true, $"channel={channel} version={node.Version} last={node.LastVersion} => Release[{release.Id}] {release.Version} Package[{pkg.TargetRuntime}] {pkg.FileName}", ip);
+
+            node.Channel = channel;
+            node.LastVersion = release.Version;
+            node.Update();
+
+            // 根据目标运行时设置Executor。TargetRuntime通过Executor传递给客户端
+            var executor = pkg.Executor;
+            if (executor.IsNullOrEmpty())
+            {
+                // net45使用StarAgent.exe直接启动，其它使用dotnet StarAgent.dll
+                executor = pkg.TargetRuntime == "4" ? "StarAgent.exe -run" : "dotnet StarAgent.dll -run";
+            }
+
+            return new UpgradeInfo
+            {
+                Version = release.Version,
+                Source = pkg.Source,
+                FileHash = pkg.FileHash,
+                FileSize = pkg.Size,
+                Preinstall = pkg.Preinstall,
+                Executor = executor,
+                Force = release.Force,
+                Description = release.Remark,
+            };
+        }
+
+        return null;
+    }
+
+    /// <summary>检查节点是否符合规则，并推送dotNet运行时安装指令。新版优先匹配 DotNetPackage，回退到旧 NodeVersion 逻辑</summary>
     /// <param name="node"></param>
     /// <param name="ip"></param>
     /// <returns></returns>
-    public NodeVersion CheckDotNet(Node node, Uri baseUri, String ip)
+    public DotNetPackage CheckDotNet(Node node, Uri baseUri, String ip)
     {
-        // 找到所有产品版本
+        // ---- 新路径：DotNetPackage 匹配 ----
+        var pkg = TryDotNetFromPackage(node, baseUri, ip);
+        if (pkg != null) return pkg;
+
+        // ---- 回退路径：旧 NodeVersion(ProductCode=dotNet) 逻辑 ----
         var list = NodeVersion.GetValids(0).Where(e => e.ProductCode.EqualIgnoreCase("dotNet")).ToList();
         if (list.Count == 0) return null;
 
@@ -809,16 +863,6 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
         // 应用过滤规则
         list = list.OrderByDescending(e => e.ID).Where(e => e.Match(node)).ToList();
-        //var list2 = new List<NodeVersion>();
-        //foreach (var pv in list)
-        //{
-        //    var rs = pv.MatchResult(node);
-        //    if (rs == null)
-        //        list2.Add(pv);
-        //    else
-        //        span?.AppendTag($"[{pv.Version}] {rs}");
-        //}
-        //list = list2;
         if (list.Count == 0) return null;
 
         // 每个版本都要检查，如果已经推送，则推送下一个
@@ -848,10 +892,54 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
             node.WriteHistory("推送dotNet", true, $"version={node.Framework} => [{pv.ID}] {pv.Version} {fmodel.BaseUrl}", ip);
 
-            return pv;
+            return null; // 兼容返回值，旧机制无 DotNetPackage 对象可返回
         }
 
         return null;
+    }
+
+    /// <summary>尝试从新的 DotNetPackage 表中匹配 dotNet 安装包并推送</summary>
+    private DotNetPackage TryDotNetFromPackage(Node node, Uri baseUri, String ip)
+    {
+        var pkg = DotNetPackage.Match(node);
+        if (pkg == null) return null;
+
+        // 检查节点是否已经安装了该版本
+        if (!node.Framework.IsNullOrEmpty())
+        {
+            System.Version.TryParse(pkg.Version, out var targetVer);
+            System.Version.TryParse(node.Framework, out var currentVer);
+            if (currentVer != null && targetVer != null && currentVer >= targetVer && !pkg.Force)
+                return null;
+        }
+
+        // 准备安装框架所需要的参数
+        var fmodel = new FrameworkModel
+        {
+            Version = pkg.Version,
+            BaseUrl = pkg.Source,
+            Force = pkg.Force,
+        };
+        // 如果没有指定源，则使用默认源
+        if (fmodel.BaseUrl.IsNullOrEmpty()) fmodel.BaseUrl = new Uri(baseUri, "/files/dotnet/").ToString();
+
+        // 检查是否已经推送过这个版本（避免重复推送）
+        var key = $"nodeNet:{node.Code}-{pkg.Version}";
+        if (_cacheProvider.Cache.Get<String>(key) == pkg.Version) return null;
+        _cacheProvider.Cache.Set(key, pkg.Version, 600);
+
+        var model = new CommandInModel
+        {
+            Code = node.Code,
+            Command = "framework/install",
+            Argument = fmodel.ToJson(),
+            Expire = 60,
+        };
+        _ = SendCommand(node, model, $"DotNetPackage:{pkg.Version}");
+
+        node.WriteHistory("推送dotNet", true, $"version={node.Framework} => Package[{pkg.Id}] {pkg.Version}-{pkg.Kind} {pkg.Source}", ip);
+
+        return pkg;
     }
     #endregion
 

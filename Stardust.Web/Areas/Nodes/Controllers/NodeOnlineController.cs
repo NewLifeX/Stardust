@@ -5,6 +5,8 @@ using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
+using NewLife.Remoting.Models;
+using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data.Nodes;
 using XCode.Membership;
@@ -100,6 +102,60 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
         var rs = await Task.WhenAll(ts);
 
         return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
+    }
+
+    [DisplayName("升级到版本")]
+    [EntityAuthorize((PermissionFlags)16)]
+    public async Task<ActionResult> UpgradeTo(String releaseId)
+    {
+        if (releaseId.IsNullOrEmpty()) throw new ArgumentNullException(nameof(releaseId));
+
+        var release = ProductRelease.FindById(releaseId.ToInt());
+        if (release == null) return JsonRefresh("指定版本不存在！");
+
+        var ts = new List<Task<Int32>>();
+        var skipCount = 0;
+        foreach (var item in SelectKeys)
+        {
+            var online = NodeOnline.FindById(item.ToInt());
+            if (online?.Node != null)
+            {
+                var pkg = release.MatchPackage(online.Node);
+                if (pkg == null)
+                {
+                    skipCount++;
+                    continue;
+                }
+
+                // 根据目标运行时设置Executor。TargetRuntime通过Executor传递给客户端
+                var executor = pkg.Executor;
+                if (executor.IsNullOrEmpty())
+                {
+                    // net45使用StarAgent.exe直接启动，其它使用dotnet StarAgent.dll
+                    executor = pkg.TargetRuntime == "4" ? "StarAgent.exe -run" : "dotnet StarAgent.dll -run";
+                }
+
+                var info = new UpgradeInfo
+                {
+                    Version = release.Version,
+                    Source = pkg.Source,
+                    FileHash = pkg.FileHash,
+                    FileSize = pkg.Size,
+                    Preinstall = pkg.Preinstall,
+                    Executor = executor,
+                    Force = release.Force,
+                    Description = release.Remark,
+                };
+                var args = info.ToJson();
+                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, "node/upgrade", args, 0, 600, 0));
+            }
+        }
+
+        if (ts.Count == 0) return JsonRefresh($"选中节点均无匹配的包。跳过{skipCount}个");
+
+        var rs = await Task.WhenAll(ts);
+
+        return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个，跳过{skipCount}个");
     }
 
     [DisplayName("同步时间")]

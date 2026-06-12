@@ -75,7 +75,7 @@ public partial class MySqlData
     [DisplayName("每秒查询数")]
     [Description("每秒查询数")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("QPS", "每秒查询数", "")]
+    [BindColumn("Qps", "每秒查询数", "")]
     public Int32 Qps { get => _Qps; set { if (OnPropertyChanging("Qps", value)) { _Qps = value; OnPropertyChanged("Qps"); } } }
 
     private Int32 _Tps;
@@ -83,7 +83,7 @@ public partial class MySqlData
     [DisplayName("每秒事务数")]
     [Description("每秒事务数")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("TPS", "每秒事务数", "")]
+    [BindColumn("Tps", "每秒事务数", "")]
     public Int32 Tps { get => _Tps; set { if (OnPropertyChanging("Tps", value)) { _Tps = value; OnPropertyChanged("Tps"); } } }
 
     private Int64 _BytesReceived;
