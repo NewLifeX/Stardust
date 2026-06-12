@@ -13,6 +13,7 @@ public class DotNetSyncService : IHostedService
     private readonly ITracer _tracer;
     private readonly StarServerSetting _setting;
     private TimerX _timer;
+    private Int32 _lastPeriod;
     private readonly HttpClient _http;
 
     public DotNetSyncService(ITracer tracer, StarServerSetting setting)
@@ -24,14 +25,12 @@ public class DotNetSyncService : IHostedService
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        var period = _setting.DotNetSyncPeriod;
-        if (period <= 0) return Task.CompletedTask;
-
-        // 首次延迟5秒执行，之后按周期
-        _timer = new TimerX(DoSync, null, 5_000, period * 1000)
+        // 不管配置是否禁用，都启动定时器。DoSync内判断配置，每次执行后更新周期
+        _timer = new TimerX(DoSync, null, 5_000, 60_000)
         {
             Async = true,
         };
+        _lastPeriod = _setting.DotNetSyncPeriod;
 
         return Task.CompletedTask;
     }
@@ -42,8 +41,36 @@ public class DotNetSyncService : IHostedService
         return Task.CompletedTask;
     }
 
+    /// <summary>更新定时器周期，根据当前配置动态调整</summary>
+    private void UpdateTimer()
+    {
+        var period = _setting.DotNetSyncPeriod;
+        if (_lastPeriod == period) return;
+        _lastPeriod = period;
+
+        if (period <= 0)
+        {
+            // 禁用时改为每分钟检查，确保配置变化后能快速恢复
+            _timer.Period = 60_000;
+            XTrace.WriteLine("DotNetSyncService 已暂停，配置周期={0}", period);
+        }
+        else
+        {
+            _timer.Period = period * 1000;
+            XTrace.WriteLine("DotNetSyncService 周期已更新为 {0}秒", period);
+        }
+    }
+
     private async void DoSync(Object state)
     {
+        var period = _setting.DotNetSyncPeriod;
+        if (period <= 0)
+        {
+            // 禁用时不执行同步，但每分钟会进来检查配置变化
+            UpdateTimer();
+            return;
+        }
+
         var url = _setting.DotNetSyncUrl;
         if (url.IsNullOrEmpty()) return;
 
@@ -62,6 +89,11 @@ public class DotNetSyncService : IHostedService
         {
             span?.SetError(ex, null);
             XTrace.Log.Error("DotNetSyncService.Error {0}", ex.Message);
+        }
+        finally
+        {
+            // 每次执行完后检查配置有无变化，动态更新定时器周期
+            UpdateTimer();
         }
     }
 
