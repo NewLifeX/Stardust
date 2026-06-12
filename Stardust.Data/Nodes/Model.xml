@@ -432,13 +432,12 @@
         <Column Name="OSKind" DataType="Int32" Description="操作系统。目标操作系统，0表示通用" Type="Stardust.Models.OSKind" />
         <Column Name="Architecture" DataType="Int32" Description="CPU架构。目标指令集架构，0表示通用" Type="Stardust.Models.CpuArch" />
         <Column Name="FileName" DataType="String" Length="200" Description="文件名。官方文件名，如 aspnetcore-runtime-10.0.9-linux-x64.tar.gz" />
-        <Column Name="Source" DataType="String" Length="200" Description="下载源。下载URL或本地路径" />
+        <Column Name="Source" DataType="String" ItemType="file-zip" Length="200" Description="下载源。Cube附件（手动上传）或外部URL（自动同步）" />
         <Column Name="Size" DataType="Int64" ItemType="GMK" Description="文件大小" />
-        <Column Name="FileHash" DataType="String" Description="文件哈希。MD5/SHA256散列" />
+        <Column Name="FileHash" DataType="String" Length="200" Description="文件哈希。SHA512散列" />
         <Column Name="Enable" DataType="Boolean" Description="启用。启用/停用" />
         <Column Name="Force" DataType="Boolean" Description="强制。强制安装，即使已存在同版本也重新安装" />
         <Column Name="Channel" DataType="Int32" Description="升级通道" Type="NodeChannels" />
-        <Column Name="AutoImport" DataType="Boolean" Description="自动导入。是否从Microsoft官方源自动导入" />
         <Column Name="CreateUserID" DataType="Int32" Description="创建者" Category="扩展" />
         <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Category="扩展" />
         <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />

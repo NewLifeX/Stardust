@@ -75,7 +75,7 @@ public partial class DotNetPackage
     [DisplayName("下载源")]
     [Description("下载源。下载URL或本地路径")]
     [DataObjectField(false, false, true, 200)]
-    [BindColumn("Source", "下载源。下载URL或本地路径", "")]
+    [BindColumn("Source", "下载源。Cube附件（手动上传）或外部URL（自动同步）", "", ItemType = "file-zip")]
     public String Source { get => _Source; set { if (OnPropertyChanging("Source", value)) { _Source = value; OnPropertyChanged("Source"); } } }
 
     private Int64 _Size;
@@ -87,11 +87,11 @@ public partial class DotNetPackage
     public Int64 Size { get => _Size; set { if (OnPropertyChanging("Size", value)) { _Size = value; OnPropertyChanged("Size"); } } }
 
     private String _FileHash;
-    /// <summary>文件哈希。MD5/SHA256散列</summary>
+    /// <summary>文件哈希。SHA512散列</summary>
     [DisplayName("文件哈希")]
-    [Description("文件哈希。MD5/SHA256散列")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("FileHash", "文件哈希。MD5/SHA256散列", "")]
+    [Description("文件哈希。SHA512散列")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("FileHash", "文件哈希。SHA512散列", "")]
     public String FileHash { get => _FileHash; set { if (OnPropertyChanging("FileHash", value)) { _FileHash = value; OnPropertyChanged("FileHash"); } } }
 
     private Boolean _Enable;
@@ -117,14 +117,6 @@ public partial class DotNetPackage
     [DataObjectField(false, false, false, 0)]
     [BindColumn("Channel", "升级通道", "")]
     public NodeChannels Channel { get => _Channel; set { if (OnPropertyChanging("Channel", value)) { _Channel = value; OnPropertyChanged("Channel"); } } }
-
-    private Boolean _AutoImport;
-    /// <summary>自动导入。是否从Microsoft官方源自动导入</summary>
-    [DisplayName("自动导入")]
-    [Description("自动导入。是否从Microsoft官方源自动导入")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("AutoImport", "自动导入。是否从Microsoft官方源自动导入", "")]
-    public Boolean AutoImport { get => _AutoImport; set { if (OnPropertyChanging("AutoImport", value)) { _AutoImport = value; OnPropertyChanged("AutoImport"); } } }
 
     private Int32 _CreateUserID;
     /// <summary>创建者</summary>
@@ -210,7 +202,6 @@ public partial class DotNetPackage
             "Enable" => _Enable,
             "Force" => _Force,
             "Channel" => _Channel,
-            "AutoImport" => _AutoImport,
             "CreateUserID" => _CreateUserID,
             "CreateTime" => _CreateTime,
             "CreateIP" => _CreateIP,
@@ -236,7 +227,6 @@ public partial class DotNetPackage
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "Force": _Force = value.ToBoolean(); break;
                 case "Channel": _Channel = (NodeChannels)value.ToInt(); break;
-                case "AutoImport": _AutoImport = value.ToBoolean(); break;
                 case "CreateUserID": _CreateUserID = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -279,14 +269,13 @@ public partial class DotNetPackage
     /// <param name="architecture">CPU架构。目标指令集架构，0表示通用</param>
     /// <param name="force">强制。强制安装，即使已存在同版本也重新安装</param>
     /// <param name="channel">升级通道</param>
-    /// <param name="autoImport">自动导入。是否从Microsoft官方源自动导入</param>
     /// <param name="enable">启用。启用/停用</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<DotNetPackage> Search(String version, String kind, Stardust.Models.OSKind oSKind, Stardust.Models.CpuArch architecture, Boolean? force, NodeChannels channel, Boolean? autoImport, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<DotNetPackage> Search(String version, String kind, Stardust.Models.OSKind oSKind, Stardust.Models.CpuArch architecture, Boolean? force, NodeChannels channel, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
@@ -296,7 +285,6 @@ public partial class DotNetPackage
         if (architecture >= 0) exp &= _.Architecture == architecture;
         if (force != null) exp &= _.Force == force;
         if (channel >= 0) exp &= _.Channel == channel;
-        if (autoImport != null) exp &= _.AutoImport == autoImport;
         if (enable != null) exp &= _.Enable == enable;
         exp &= _.UpdateTime.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
@@ -333,7 +321,7 @@ public partial class DotNetPackage
         /// <summary>文件大小</summary>
         public static readonly Field Size = FindByName("Size");
 
-        /// <summary>文件哈希。MD5/SHA256散列</summary>
+        /// <summary>文件哈希。SHA512散列</summary>
         public static readonly Field FileHash = FindByName("FileHash");
 
         /// <summary>启用。启用/停用</summary>
@@ -344,9 +332,6 @@ public partial class DotNetPackage
 
         /// <summary>升级通道</summary>
         public static readonly Field Channel = FindByName("Channel");
-
-        /// <summary>自动导入。是否从Microsoft官方源自动导入</summary>
-        public static readonly Field AutoImport = FindByName("AutoImport");
 
         /// <summary>创建者</summary>
         public static readonly Field CreateUserID = FindByName("CreateUserID");
@@ -399,7 +384,7 @@ public partial class DotNetPackage
         /// <summary>文件大小</summary>
         public const String Size = "Size";
 
-        /// <summary>文件哈希。MD5/SHA256散列</summary>
+        /// <summary>文件哈希。SHA512散列</summary>
         public const String FileHash = "FileHash";
 
         /// <summary>启用。启用/停用</summary>
@@ -410,9 +395,6 @@ public partial class DotNetPackage
 
         /// <summary>升级通道</summary>
         public const String Channel = "Channel";
-
-        /// <summary>自动导入。是否从Microsoft官方源自动导入</summary>
-        public const String AutoImport = "AutoImport";
 
         /// <summary>创建者</summary>
         public const String CreateUserID = "CreateUserID";

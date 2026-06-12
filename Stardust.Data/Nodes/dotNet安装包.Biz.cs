@@ -133,6 +133,10 @@ public partial class DotNetPackage : Entity<DotNetPackage>
     /// <summary>获取版本号列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
     /// <returns></returns>
     public static IDictionary<String, String> GetVersionList() => _VersionCache.FindAllName();
+
+    /// <summary>按版本号查询所有安装包</summary>
+    /// <param name="version">版本号</param>
+    public static IList<DotNetPackage> FindAllByVersion(String version) => FindAll(_.Version == version);
     #endregion
 
     #region 业务操作
