@@ -4,6 +4,7 @@ using System.Diagnostics;
 using NewLife;
 using NewLife.Agent.Windows;
 using NewLife.Log;
+using Stardust;
 using Stardust.Models;
 
 namespace StarAgent.Managers;
@@ -373,6 +374,14 @@ public abstract class DeployStrategyBase : IDeployStrategy, ITracerFeature
                 ProcessPriority.RealTime => ProcessPriorityClass.RealTime,
                 _ => ProcessPriorityClass.Normal,
             };
+        }
+
+        // OOM分值。Linux下子进程默认继承父进程（StarAgent）的 -1000，需重置为普通进程
+        if (Runtime.Linux && service.OomScoreAdjust != -1000)
+        {
+            StarClient.SetOomScoreAdj(p.Id, service.OomScoreAdjust);
+            if (service.OomScoreAdjust != 0)
+                context.WriteLog("OOM分值：{0}", service.OomScoreAdjust);
         }
 
         // 等待启动

@@ -685,6 +685,12 @@ public class ServiceController : DisposeBase
         WriteLog("应用[{0}/{1}]已启动（{2}），直接接管", p.Id, Name, reason);
 
         SetProcess(p);
+
+        // OOM分值。接管已存在进程时修正其OOM分值，避免StarAgent重启后旧子进程仍保持 -1000
+        var oomScore = Info?.OomScoreAdjust ?? 0;
+        if (Runtime.Linux && oomScore != -1000)
+            StarClient.SetOomScoreAdj(p.Id, oomScore);
+
         var service = Info;
         if (service != null)
         {

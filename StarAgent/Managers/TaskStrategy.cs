@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using NewLife;
+using Stardust;
 using Stardust.Models;
 
 namespace StarAgent.Managers;
@@ -119,6 +120,11 @@ public class TaskStrategy : DeployStrategyBase
             if (p != null)
             {
                 context.WriteLog("启动成功！PID={0}", p.Id);
+
+                // OOM分值。Linux下子进程默认继承父进程（StarAgent）的 -1000，需重置为普通进程
+                var oomScore = context.Service?.OomScoreAdjust ?? 0;
+                if (Runtime.Linux && oomScore != -1000)
+                    StarClient.SetOomScoreAdj(p.Id, oomScore);
             }
         }
         catch (Exception ex)

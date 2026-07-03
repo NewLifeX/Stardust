@@ -67,6 +67,9 @@ public class ZipDeploy
     /// <summary>优先级。表示应用程序中任务或操作的优先级级别</summary>
     public ProcessPriority Priority { get; set; }
 
+    /// <summary>OOM 分值。Linux 下 OOM Killer 选择目标的优先级，-1000 禁止被杀，0 普通进程，1000 最先被杀。默认0，作为普通进程可被 OOM 杀死</summary>
+    public Int32? OomScoreAdjust { get; set; }
+
     /// <summary>启动挂钩。拉起目标进程时，对dotNet应用注入星尘监控钩子，默认false</summary>
     public Boolean StartupHook { get; set; }
 
@@ -420,6 +423,14 @@ public class ZipDeploy
                 ProcessPriority.RealTime => ProcessPriorityClass.RealTime,
                 _ => ProcessPriorityClass.Normal,
             };
+        }
+
+        // OOM分值。Linux下子进程默认继承父进程（StarAgent）的 -1000，需重置为普通进程
+        if (Runtime.Linux && OomScoreAdjust != -1000)
+        {
+            StarClient.SetOomScoreAdj(p.Id, OomScoreAdjust);
+            if (OomScoreAdjust != 0)
+                WriteLog("OOM分值：{0}", OomScoreAdjust);
         }
 
         Process = p;

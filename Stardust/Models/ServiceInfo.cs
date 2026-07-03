@@ -59,6 +59,10 @@ public class ServiceInfo
     [XmlAttribute]
     public Int32 MaxMemory { get; set; }
 
+    /// <summary>OOM 分值。Linux 下 OOM Killer 选择目标的优先级，-1000 禁止被杀，0 普通进程，1000 最先被杀。默认0，作为普通进程可被 OOM 杀死</summary>
+    [XmlAttribute]
+    public Int32 OomScoreAdjust { get; set; }
+
     /// <summary>优先级。表示应用程序中任务或操作的优先级级别</summary>
     [XmlAttribute]
     public ProcessPriority Priority { get; set; }

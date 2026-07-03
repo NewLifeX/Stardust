@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text.RegularExpressions;
 using NewLife;
+using NewLife.Log;
 using Stardust.Models;
 
 namespace Stardust;
@@ -1104,6 +1105,32 @@ public partial class StarClient
         catch
         {
             return null;
+        }
+    }
+    #endregion
+
+    #region OOM分值控制
+    /// <summary>设置进程 OOM 优先级分值（仅 Linux 生效）</summary>
+    /// <param name="pid">目标进程ID</param>
+    /// <param name="score">OOM 分值，-1000（禁止被杀）到 1000（最先被杀），默认0为普通进程</param>
+    /// <remarks>
+    /// Linux 下 fork 子进程会继承父进程的 oom_score_adj。
+    /// StarAgent 自身 OOMScoreAdjust=-1000 禁止被杀，但其拉起的应用应作为普通进程（0），允许 OOM Killer 在内存不足时选中。
+    /// 写入 /proc/{pid}/oom_score_adj 需要 CAP_SYS_RESOURCE 或同用户权限。
+    /// </remarks>
+    public static void SetOomScoreAdj(Int32 pid, Int32 score = 0)
+    {
+        if (!Runtime.Linux) return;
+        if (pid <= 0) return;
+
+        try
+        {
+            var path = $"/proc/{pid}/oom_score_adj";
+            File.WriteAllText(path, score.ToString());
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteLine("设置进程[{0}] OOM分值={1} 失败：{2}", pid, score, ex.Message);
         }
     }
     #endregion
