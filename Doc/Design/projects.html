@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>项目管理 - 星尘分布式服务平台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <style>
+    html, body { height: 100%; margin: 0; }
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+
+    .sidebar { width: 220px; min-width: 220px; background: #1a1f36; color: #c8cde4; display: flex; flex-direction: column; }
+    .sidebar-brand { padding: 20px 16px 16px; border-bottom: 1px solid #2d3461; }
+    .sidebar-brand a { color: #fff; text-decoration: none; font-weight: 700; font-size: 1.1rem; }
+    .sidebar-brand small { display: block; color: #8892b0; font-size: .75rem; margin-top: 2px; }
+    .sidebar-nav { padding: 12px 0; flex: 1; overflow-y: auto; }
+    .sidebar-nav .nav-section { padding: 8px 16px 4px; font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: #8892b0; }
+    .sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 9px 16px; color: #c8cde4; text-decoration: none; font-size: .9rem; transition: background .15s; }
+    .sidebar-nav a:hover { background: #2d3461; color: #fff; }
+    .sidebar-nav a.active { background: #3b4cca; color: #fff; }
+    .sidebar-nav a i { font-size: 1rem; width: 18px; text-align: center; }
+
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { background: #fff; border-bottom: 1px solid #e9ecef; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .topbar h6 { margin: 0; font-weight: 600; color: #1a1f36; }
+    .content { flex: 1; overflow-y: auto; padding: 24px; background: #f0f2f5; }
+
+    .project-card { background: #fff; border-radius: 10px; border: none; transition: box-shadow .2s, transform .2s; }
+    .project-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,.1); transform: translateY(-2px); }
+    .project-avatar { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; color: #fff; flex-shrink: 0; }
+    .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+    .tag { display: inline-block; padding: 1px 8px; border-radius: 20px; font-size: .75rem; background: #f1f5f9; color: #64748b; margin-right: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <a href="index.html"><i class="bi bi-stars me-1"></i>星尘平台</a>
+      <small>Stardust v3.7</small>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">主导航</div>
+      <a href="dashboard.html"><i class="bi bi-speedometer2"></i>仪表盘</a>
+      <a href="project-workspace.html"><i class="bi bi-grid-1x2-fill"></i>项目工作台</a>
+      <a href="projects.html" class="active"><i class="bi bi-collection-fill"></i>项目管理</a>
+      <div class="nav-section">运维管理</div>
+      <a href="nodes.html"><i class="bi bi-hdd-network-fill"></i>节点管理</a>
+      <a href="monitor.html"><i class="bi bi-activity"></i>监控中心</a>
+      <a href="deploy.html"><i class="bi bi-rocket-takeoff-fill"></i>发布部署</a>
+      <div class="nav-section">配置</div>
+      <a href="#"><i class="bi bi-sliders2-vertical"></i>配置中心</a>
+      <a href="#"><i class="bi bi-shield-lock-fill"></i>注册中心</a>
+    </div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <h6><i class="bi bi-collection-fill me-2 text-info"></i>项目管理</h6>
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>新建项目</button>
+        <span class="text-muted" style="font-size:.85rem;">admin</span>
+        <i class="bi bi-bell text-muted"></i>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Toolbar -->
+      <div class="d-flex gap-2 mb-4 flex-wrap align-items-center">
+        <div class="input-group" style="max-width:280px;">
+          <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" class="form-control border-start-0" placeholder="搜索项目名称…">
+        </div>
+        <select class="form-select" style="max-width:140px;">
+          <option>全部状态</option>
+          <option>运行中</option>
+          <option>已停止</option>
+          <option>异常</option>
+        </select>
+        <div class="ms-auto btn-group">
+          <button class="btn btn-outline-secondary btn-sm active"><i class="bi bi-grid-3x2-gap"></i></button>
+          <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-list-ul"></i></button>
+        </div>
+      </div>
+
+      <!-- Project cards grid -->
+      <div class="row g-3">
+
+        <div class="col-md-6 col-xl-4">
+          <div class="card project-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-start gap-3 mb-3">
+                <div class="project-avatar" style="background: linear-gradient(135deg,#3b82f6,#1d4ed8);">O</div>
+                <div class="flex-grow-1">
+                  <h6 class="mb-0 fw-semibold">
+                    <a href="project-workspace.html?id=order" class="text-decoration-none text-dark">OrderService</a>
+                  </h6>
+                  <small class="text-muted">电商订单处理服务</small>
+                </div>
+                <span class="status-dot" style="background:#22c55e;margin-top:8px;"></span>
+              </div>
+              <div class="row g-2 mb-3" style="font-size:.82rem;">
+                <div class="col-4 text-center">
+                  <div class="fw-semibold text-primary">8</div>
+                  <div class="text-muted">节点</div>
+                </div>
+                <div class="col-4 text-center border-start border-end">
+                  <div class="fw-semibold text-success">3</div>
+                  <div class="text-muted">发布</div>
+                </div>
+                <div class="col-4 text-center">
+                  <div class="fw-semibold text-warning">0</div>
+                  <div class="text-muted">告警</div>
+                </div>
+              </div>
+              <div class="mb-2">
+                <span class="tag">Java</span>
+                <span class="tag">Spring Boot</span>
+                <span class="tag">生产</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">最近部署：v2.3.1 · 2h前</small>
+                <a href="project-workspace.html?id=order" class="btn btn-sm btn-outline-primary">进入工作台</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-xl-4">
+          <div class="card project-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-start gap-3 mb-3">
+                <div class="project-avatar" style="background: linear-gradient(135deg,#8b5cf6,#5b21b6);">U</div>
+                <div class="flex-grow-1">
+                  <h6 class="mb-0 fw-semibold">
+                    <a href="project-workspace.html?id=user" class="text-decoration-none text-dark">UserService</a>
+                  </h6>
+                  <small class="text-muted">用户认证与授权服务</small>
+                </div>
+                <span class="status-dot" style="background:#f59e0b;margin-top:8px;"></span>
+              </div>
+              <div class="row g-2 mb-3" style="font-size:.82rem;">
+                <div class="col-4 text-center">
+                  <div class="fw-semibold text-primary">4</div>
+                  <div class="text-muted">节点</div>
+                </div>
+                <div class="col-4 text-center border-start border-end">
+                  <div class="fw-semibold text-success">1</div>
+                  <div class="text-muted">发布</div>
+                </div>
+                <div class="col-4 text-center">
+                  <div class="fw-semibold text-warning">2</div>
+                  <div class="text-muted">告警</div>
+                </div>
+              </div>
+              <div class="mb-2">
+                <span class="tag">.NET 8</span>
+                <span class="tag">C#</span>
+                <span class="tag">生产</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">最近部署：v1.8.0 · 1h前</small>
+                <a href="project-workspace.html?id=user" class="btn btn-sm btn-outline-primary">进入工作台</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-xl-4">
+          <div class="card project-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-start gap-3 mb-3">
+                <div class="project-avatar" style="background: linear-gradient(135deg,#10b981,#065f46);">G</div>
+                <div class="flex-grow-1">
+                  <h6 class="mb-0 fw-semibold">
+                    <a href="project-workspace.html?id=gateway" class="text-decoration-none text-dark">GatewayService</a>
+                  </h6>
+                  <small class="text-muted">API 网关与流量治理</small>
+                </div>
+                <span class="status-dot" style="background:#ef4444;margin-top:8px;"></span>
+              </div>
+              <div class="row g-2 mb-3" style="font-size:.82rem;">
+                <div class="col-4 text-center">
+                  <div class="fw-semibold text-primary">2</div>
+                  <div class="text-muted">节点</div>
+                </div>
+                <div class="col-4 text-center border-start border-end">
+                  <div class="fw-semibold text-success">2</div>
+                  <div class="text-muted">发布</div>
+                </div>
+                <div class="col-4 text-center">
+                  <div class="fw-semibold text-danger">1</div>
+                  <div class="text-muted">告警</div>
+                </div>
+              </div>
+              <div class="mb-2">
+                <span class="tag">Go</span>
+                <span class="tag">Gin</span>
+                <span class="tag">测试</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">最近部署：v3.1.0 · 30m前</small>
+                <a href="project-workspace.html?id=gateway" class="btn btn-sm btn-outline-primary">进入工作台</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-xl-4">
+          <div class="card project-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-start gap-3 mb-3">
+                <div class="project-avatar" style="background: linear-gradient(135deg,#f59e0b,#b45309);">P</div>
+                <div class="flex-grow-1">
+                  <h6 class="mb-0 fw-semibold">
+                    <a href="project-workspace.html?id=payment" class="text-decoration-none text-dark">PaymentService</a>
+                  </h6>
+                  <small class="text-muted">支付与结算处理服务</small>
+                </div>
+                <span class="status-dot" style="background:#22c55e;margin-top:8px;"></span>
+              </div>
+              <div class="row g-2 mb-3" style="font-size:.82rem;">
+                <div class="col-4 text-center">
+                  <div class="fw-semibold text-primary">6</div>
+                  <div class="text-muted">节点</div>
+                </div>
+                <div class="col-4 text-center border-start border-end">
+                  <div class="fw-semibold text-success">1</div>
+                  <div class="text-muted">发布</div>
+                </div>
+                <div class="col-4 text-center">
+                  <div class="fw-semibold text-warning">0</div>
+                  <div class="text-muted">告警</div>
+                </div>
+              </div>
+              <div class="mb-2">
+                <span class="tag">.NET 8</span>
+                <span class="tag">C#</span>
+                <span class="tag">生产</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">最近部署：v2.0.5 · 4h前</small>
+                <a href="project-workspace.html?id=payment" class="btn btn-sm btn-outline-primary">进入工作台</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-xl-4">
+          <div class="card project-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-start gap-3 mb-3">
+                <div class="project-avatar" style="background: linear-gradient(135deg,#ec4899,#9d174d);">N</div>
+                <div class="flex-grow-1">
+                  <h6 class="mb-0 fw-semibold">
+                    <a href="project-workspace.html?id=notify" class="text-decoration-none text-dark">NotifyService</a>
+                  </h6>
+                  <small class="text-muted">消息推送与通知服务</small>
+                </div>
+                <span class="status-dot" style="background:#22c55e;margin-top:8px;"></span>
+              </div>
+              <div class="row g-2 mb-3" style="font-size:.82rem;">
+                <div class="col-4 text-center">
+                  <div class="fw-semibold text-primary">3</div>
+                  <div class="text-muted">节点</div>
+                </div>
+                <div class="col-4 text-center border-start border-end">
+                  <div class="fw-semibold text-success">1</div>
+                  <div class="text-muted">发布</div>
+                </div>
+                <div class="col-4 text-center">
+                  <div class="fw-semibold text-warning">0</div>
+                  <div class="text-muted">告警</div>
+                </div>
+              </div>
+              <div class="mb-2">
+                <span class="tag">Python</span>
+                <span class="tag">FastAPI</span>
+                <span class="tag">生产</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">最近部署：v1.2.3 · 6h前</small>
+                <a href="project-workspace.html?id=notify" class="btn btn-sm btn-outline-primary">进入工作台</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add new project card -->
+        <div class="col-md-6 col-xl-4">
+          <div class="card h-100 border-2 border-dashed d-flex align-items-center justify-content-center" style="border-color:#dee2e6!important;border-style:dashed!important;background:transparent;cursor:pointer;min-height:200px;">
+            <div class="text-center text-muted p-4">
+              <i class="bi bi-plus-circle fs-2 d-block mb-2"></i>
+              <div class="fw-semibold">新建项目</div>
+              <small>接入新应用到星尘平台</small>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

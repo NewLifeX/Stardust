@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>节点管理 - 星尘分布式服务平台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <style>
+    html, body { height: 100%; margin: 0; }
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+
+    .sidebar { width: 220px; min-width: 220px; background: #1a1f36; color: #c8cde4; display: flex; flex-direction: column; }
+    .sidebar-brand { padding: 20px 16px 16px; border-bottom: 1px solid #2d3461; }
+    .sidebar-brand a { color: #fff; text-decoration: none; font-weight: 700; font-size: 1.1rem; }
+    .sidebar-brand small { display: block; color: #8892b0; font-size: .75rem; margin-top: 2px; }
+    .sidebar-nav { padding: 12px 0; flex: 1; overflow-y: auto; }
+    .sidebar-nav .nav-section { padding: 8px 16px 4px; font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: #8892b0; }
+    .sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 9px 16px; color: #c8cde4; text-decoration: none; font-size: .9rem; transition: background .15s; }
+    .sidebar-nav a:hover { background: #2d3461; color: #fff; }
+    .sidebar-nav a.active { background: #3b4cca; color: #fff; }
+    .sidebar-nav a i { font-size: 1rem; width: 18px; text-align: center; }
+
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { background: #fff; border-bottom: 1px solid #e9ecef; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .topbar h6 { margin: 0; font-weight: 600; color: #1a1f36; }
+    .content { flex: 1; overflow-y: auto; padding: 24px; background: #f0f2f5; }
+
+    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+    .status-online { background: #22c55e; }
+    .status-offline { background: #ef4444; }
+    .status-warning { background: #f59e0b; }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <a href="index.html"><i class="bi bi-stars me-1"></i>星尘平台</a>
+      <small>Stardust v3.7</small>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">主导航</div>
+      <a href="dashboard.html"><i class="bi bi-speedometer2"></i>仪表盘</a>
+      <a href="project-workspace.html"><i class="bi bi-grid-1x2-fill"></i>项目工作台</a>
+      <a href="projects.html"><i class="bi bi-collection-fill"></i>项目管理</a>
+      <div class="nav-section">运维管理</div>
+      <a href="nodes.html" class="active"><i class="bi bi-hdd-network-fill"></i>节点管理</a>
+      <a href="monitor.html"><i class="bi bi-activity"></i>监控中心</a>
+      <a href="deploy.html"><i class="bi bi-rocket-takeoff-fill"></i>发布部署</a>
+      <div class="nav-section">配置</div>
+      <a href="#"><i class="bi bi-sliders2-vertical"></i>配置中心</a>
+      <a href="#"><i class="bi bi-shield-lock-fill"></i>注册中心</a>
+    </div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <h6><i class="bi bi-hdd-network-fill me-2 text-warning"></i>节点管理</h6>
+      <div class="d-flex align-items-center gap-3">
+        <span class="text-muted" style="font-size:.85rem;">共 <strong>128</strong> 个节点，在线 <strong class="text-success">125</strong></span>
+        <span class="text-muted" style="font-size:.85rem;">admin</span>
+        <i class="bi bi-bell text-muted"></i>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Toolbar -->
+      <div class="d-flex gap-2 mb-3 flex-wrap">
+        <div class="input-group" style="max-width:280px;">
+          <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" class="form-control border-start-0" placeholder="搜索节点 IP / 名称…">
+        </div>
+        <select class="form-select" style="max-width:150px;">
+          <option>全部状态</option>
+          <option>在线</option>
+          <option>离线</option>
+          <option>告警</option>
+        </select>
+        <select class="form-select" style="max-width:160px;">
+          <option>全部项目</option>
+          <option>OrderService</option>
+          <option>UserService</option>
+          <option>GatewayService</option>
+        </select>
+        <button class="btn btn-primary ms-auto"><i class="bi bi-plus-lg me-1"></i>添加节点</button>
+        <button class="btn btn-outline-secondary"><i class="bi bi-arrow-clockwise me-1"></i>刷新</button>
+      </div>
+
+      <!-- Node table -->
+      <div class="card border-0 rounded-3">
+        <div class="card-body p-0">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th><input type="checkbox" class="form-check-input"></th>
+                <th>节点名称</th>
+                <th>IP 地址</th>
+                <th>操作系统</th>
+                <th>CPU</th>
+                <th>内存</th>
+                <th>运行时间</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody style="font-size:.875rem;">
+              <tr>
+                <td><input type="checkbox" class="form-check-input"></td>
+                <td><strong>node-01</strong><br><small class="text-muted">OrderService</small></td>
+                <td>192.168.1.101</td>
+                <td><i class="bi bi-windows me-1 text-info"></i>Windows Server 2022</td>
+                <td>
+                  <div class="progress" style="height:6px;width:80px;">
+                    <div class="progress-bar bg-success" style="width:35%"></div>
+                  </div>
+                  <small class="text-muted">35%</small>
+                </td>
+                <td>
+                  <div class="progress" style="height:6px;width:80px;">
+                    <div class="progress-bar bg-info" style="width:62%"></div>
+                  </div>
+                  <small class="text-muted">62%</small>
+                </td>
+                <td>7d 14h</td>
+                <td><span class="status-dot status-online"></span><span class="text-success">在线</span></td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary me-1" title="远程命令"><i class="bi bi-terminal"></i></button>
+                  <button class="btn btn-sm btn-outline-warning me-1" title="重启"><i class="bi bi-arrow-counterclockwise"></i></button>
+                  <button class="btn btn-sm btn-outline-secondary" title="详情"><i class="bi bi-info-circle"></i></button>
+                </td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="form-check-input"></td>
+                <td><strong>node-02</strong><br><small class="text-muted">UserService</small></td>
+                <td>192.168.1.102</td>
+                <td><i class="bi bi-ubuntu me-1 text-warning"></i>Ubuntu 22.04</td>
+                <td>
+                  <div class="progress" style="height:6px;width:80px;">
+                    <div class="progress-bar bg-warning" style="width:78%"></div>
+                  </div>
+                  <small class="text-muted">78%</small>
+                </td>
+                <td>
+                  <div class="progress" style="height:6px;width:80px;">
+                    <div class="progress-bar bg-info" style="width:45%"></div>
+                  </div>
+                  <small class="text-muted">45%</small>
+                </td>
+                <td>3d 2h</td>
+                <td><span class="status-dot status-warning"></span><span class="text-warning">告警</span></td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary me-1" title="远程命令"><i class="bi bi-terminal"></i></button>
+                  <button class="btn btn-sm btn-outline-warning me-1" title="重启"><i class="bi bi-arrow-counterclockwise"></i></button>
+                  <button class="btn btn-sm btn-outline-secondary" title="详情"><i class="bi bi-info-circle"></i></button>
+                </td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="form-check-input"></td>
+                <td><strong>node-03</strong><br><small class="text-muted">GatewayService</small></td>
+                <td>192.168.1.103</td>
+                <td><i class="bi bi-ubuntu me-1 text-warning"></i>CentOS 7</td>
+                <td>
+                  <div class="progress" style="height:6px;width:80px;">
+                    <div class="progress-bar bg-danger" style="width:92%"></div>
+                  </div>
+                  <small class="text-muted">92%</small>
+                </td>
+                <td>
+                  <div class="progress" style="height:6px;width:80px;">
+                    <div class="progress-bar bg-danger" style="width:88%"></div>
+                  </div>
+                  <small class="text-muted">88%</small>
+                </td>
+                <td>12h 30m</td>
+                <td><span class="status-dot status-warning"></span><span class="text-warning">高负载</span></td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary me-1" title="远程命令"><i class="bi bi-terminal"></i></button>
+                  <button class="btn btn-sm btn-outline-warning me-1" title="重启"><i class="bi bi-arrow-counterclockwise"></i></button>
+                  <button class="btn btn-sm btn-outline-secondary" title="详情"><i class="bi bi-info-circle"></i></button>
+                </td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="form-check-input"></td>
+                <td><strong>node-07</strong><br><small class="text-muted">PaymentService</small></td>
+                <td>192.168.1.107</td>
+                <td><i class="bi bi-windows me-1 text-info"></i>Windows Server 2019</td>
+                <td>
+                  <div class="progress" style="height:6px;width:80px;">
+                    <div class="progress-bar bg-success" style="width:20%"></div>
+                  </div>
+                  <small class="text-muted">20%</small>
+                </td>
+                <td>
+                  <div class="progress" style="height:6px;width:80px;">
+                    <div class="progress-bar bg-info" style="width:30%"></div>
+                  </div>
+                  <small class="text-muted">30%</small>
+                </td>
+                <td>离线</td>
+                <td><span class="status-dot status-offline"></span><span class="text-danger">离线</span></td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary me-1 disabled" title="远程命令"><i class="bi bi-terminal"></i></button>
+                  <button class="btn btn-sm btn-outline-warning me-1 disabled" title="重启"><i class="bi bi-arrow-counterclockwise"></i></button>
+                  <button class="btn btn-sm btn-outline-secondary" title="详情"><i class="bi bi-info-circle"></i></button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+          <small class="text-muted">显示 1–4，共 128 条</small>
+          <nav>
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item disabled"><a class="page-link">上一页</a></li>
+              <li class="page-item active"><a class="page-link">1</a></li>
+              <li class="page-item"><a class="page-link">2</a></li>
+              <li class="page-item"><a class="page-link">3</a></li>
+              <li class="page-item"><a class="page-link">下一页</a></li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
