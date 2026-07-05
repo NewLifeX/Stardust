@@ -36,7 +36,7 @@ public class DeployService
 
                 if (!ver.TargetFramework.IsNullOrEmpty() && fms.Length > 0)
                 {
-                    var tfm = ver.TargetFramework.TrimStart("netcoreapp", "net", "v");
+                    var tfm = ver.TargetFramework.TrimPrefix("netcoreapp").TrimPrefix("net").TrimPrefix("v");
 
                     // 特殊处理4.x，例如net4.6.1可以运行在net4.7/net4.8上
                     if (tfm.StartsWith("4."))

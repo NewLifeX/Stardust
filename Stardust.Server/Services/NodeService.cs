@@ -164,7 +164,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     /// <param name="reason">注销原因</param>
     /// <param name="ip">IP地址</param>
     /// <returns></returns>
-    public override IOnlineModel Logout(DeviceContext context, String reason, String source)
+    public override IOnlineModel? Logout(DeviceContext context, String? reason, String source)
     {
         using var span = _tracer?.NewSpan($"{Name}Logout", new { context.Code, context.ClientId, reason, source });
 
@@ -503,7 +503,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     #endregion
 
     #region 心跳保活
-    public override IOnlineModel OnPing(DeviceContext context, IPingRequest request)
+    public override IOnlineModel OnPing(DeviceContext context, IPingRequest? request)
     {
         if (context.Device is not Node node) return null;
 
@@ -557,7 +557,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     private static IList<NodeCommand> _commands;
     private static DateTime _nextTime;
 
-    public override CommandModel[] AcquireCommands(DeviceContext context)
+    public override CommandModel[]? AcquireCommands(DeviceContext context)
     {
         // 缓存最近1000个未执行命令，用于快速过滤，避免大量节点在线时频繁查询命令表
         if (_nextTime < DateTime.Now || _totalCommands != NodeCommand.Meta.Count)
@@ -615,7 +615,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     /// <summary>获取在线。先查缓存再查库</summary>
     /// <param name="context">上下文</param>
     /// <returns></returns>
-    public override IOnlineModel GetOnline(DeviceContext context) => base.GetOnline(context) as NodeOnline;
+    public override IOnlineModel? GetOnline(DeviceContext context) => base.GetOnline(context) as NodeOnline;
 
     public NodeOnline GetOrAddOnline(Node node, String token, String ip)
     {
@@ -716,7 +716,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     /// <summary>创建在线</summary>
     /// <param name="context">上下文</param>
     /// <returns></returns>
-    public override IOnlineModel CreateOnline(DeviceContext context)
+    public override IOnlineModel? CreateOnline(DeviceContext context)
     {
         if (context.Device is not Node node) return null;
 
@@ -753,7 +753,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     /// <summary>升级检查。新版优先匹配 ProductRelease + ProductPackage，回退到旧 NodeVersion 逻辑</summary>
     /// <param name="channel">更新通道</param>
     /// <returns></returns>
-    public override IUpgradeInfo Upgrade(DeviceContext context, String channel)
+    public override IUpgradeInfo? Upgrade(DeviceContext context, String? channel)
     {
         // 默认Release通道
         if (!Enum.TryParse<NodeChannels>(channel, true, out var ch)) ch = NodeChannels.Release;
@@ -944,7 +944,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     /// <param name="model"></param>
     /// <param name="token">应用令牌</param>
     /// <returns></returns>
-    public override Task<CommandReplyModel> SendCommand(DeviceContext context, CommandInModel model, CancellationToken cancellationToken = default)
+    public override Task<CommandReplyModel?> SendCommand(DeviceContext context, CommandInModel model, CancellationToken cancellationToken = default)
     {
         if (model.Code.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Code), "必须指定节点");
         if (model.Command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(model.Command));
@@ -990,28 +990,19 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         var commandModel = BuildCommand(node, cmd);
         var code = node.Code;
 
-        //var queue = _cacheProvider.GetQueue<String>($"nodecmd:{node.Code}");
-        //queue.Add(commandModel.ToJson());
-        await _sessionManager.PublishAsync(code, commandModel, null, cancellationToken);
-
-        // 挂起等待。借助redis队列，等待响应
-        var timeout = model.Timeout;
-        if (timeout > 0)
+        // 通过SessionManager发布命令，内置timeout机制等待响应（跨实例广播）
+        var reply = await _sessionManager.PublishAsync(code, commandModel, null, model.Timeout, cancellationToken);
+        if (reply != null)
         {
-            var q = _cacheProvider.GetQueue<CommandReplyModel>($"nodereply:{cmd.Id}");
-            var reply = await q.TakeOneAsync(timeout, cancellationToken);
-            if (reply != null)
-            {
-                // 埋点
-                using var span = _tracer?.NewSpan($"mq:NodeCommandReply", reply);
+            // 埋点
+            using var span = _tracer?.NewSpan($"mq:NodeCommandReply", reply);
 
-                if (reply.Status == CommandStatus.错误)
-                    throw new Exception($"命令错误！{reply.Data}");
-                else if (reply.Status == CommandStatus.取消)
-                    throw new Exception($"命令已取消！{reply.Data}");
+            if (reply.Status == CommandStatus.错误)
+                throw new Exception($"命令错误！{reply.Data}");
+            else if (reply.Status == CommandStatus.取消)
+                throw new Exception($"命令已取消！{reply.Data}");
 
-                return reply;
-            }
+            return reply;
         }
 
         return null;
@@ -1028,13 +1019,8 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         cmd.Result = model.Data;
         cmd.Update();
 
-        // 通知命令发布者，指令已完成
-        var topic = $"nodereply:{cmd.Id}";
-        var q = _cacheProvider.GetQueue<CommandReplyModel>(topic);
-        q.Add(model);
-
-        // 设置过期时间，过期自动清理
-        _cacheProvider.Cache.SetExpire(topic, TimeSpan.FromSeconds(60));
+        // 通过会话管理器内置的响应事件总线广播响应（跨实例广播不阻塞）
+        _ = _sessionManager.PublishResponseAsync(model, default);
 
         return 1;
     }
@@ -1077,9 +1063,9 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     #endregion
 
     #region 辅助
-    public override IDeviceModel QueryDevice(String code) => Node.FindByCode(code);
+    public override IDeviceModel? QueryDevice(String code) => Node.FindByCode(code);
 
-    public override IOnlineModel QueryOnline(String sessionId) => NodeOnline.FindBySessionId(sessionId, true);
+    public override IOnlineModel? QueryOnline(String sessionId) => NodeOnline.FindBySessionId(sessionId, true);
 
     protected override String GetSessionId(DeviceContext context) => context.Code ?? base.GetSessionId(context);
 

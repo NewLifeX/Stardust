@@ -170,7 +170,7 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
         di.Framework = _frameworkManager.GetAllVersions().Join(",", e => e.TrimStart('v'));
 
 #if NETCOREAPP || NETSTANDARD
-        di.Framework ??= RuntimeInformation.FrameworkDescription?.TrimStart(".NET Framework", ".NET Core", ".NET Native", ".NET").Trim();
+        di.Framework ??= RuntimeInformation.FrameworkDescription?.TrimPrefix(".NET Framework").TrimPrefix(".NET Core").TrimPrefix(".NET Native").TrimPrefix(".NET").Trim();
 
         di.Architecture = RuntimeInformation.ProcessArchitecture + "";
 
@@ -185,7 +185,7 @@ public partial class StarClient : ClientBase, ICommandClient, IEventProvider
         var tar = asm?.Asm.GetCustomAttribute<TargetFrameworkAttribute>();
         if (tar != null) ver = !tar.FrameworkDisplayName.IsNullOrEmpty() ? tar.FrameworkDisplayName : tar.FrameworkName;
 
-        di.Framework ??= ver?.TrimStart(".NET Framework", ".NET Core", ".NET Native", ".NET").Trim();
+        di.Framework ??= ver?.TrimPrefix(".NET Framework").TrimPrefix(".NET Core").TrimPrefix(".NET Native").TrimPrefix(".NET").Trim();
         di.Architecture = IntPtr.Size == 8 ? "X64" : "X86";
 #endif
 

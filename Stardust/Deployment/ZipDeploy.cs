@@ -426,9 +426,9 @@ public class ZipDeploy
         }
 
         // OOM分值。Linux下子进程默认继承父进程（StarAgent）的 -1000，需重置为普通进程
-        if (Runtime.Linux && OomScoreAdjust != -1000)
+        if (Runtime.Linux && OomScoreAdjust != null && OomScoreAdjust != -1000)
         {
-            StarClient.SetOomScoreAdj(p.Id, OomScoreAdjust);
+            StarClient.SetOomScoreAdj(p.Id, OomScoreAdjust.Value);
             if (OomScoreAdjust != 0)
                 WriteLog("OOM分值：{0}", OomScoreAdjust);
         }

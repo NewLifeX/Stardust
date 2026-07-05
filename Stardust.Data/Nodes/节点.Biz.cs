@@ -675,7 +675,7 @@ public partial class Node : Entity<Node>, IDeviceModel2, ILogProvider
         }
         if (rs.Count > 1) node.CityID = rs[^1].ID;
 
-        Address = node.UpdateIP.IPToAddress()?.TrimStart("中国–");
+        Address = node.UpdateIP.IPToAddress()?.TrimPrefix("中国–");
     }
 
     /// <summary>
