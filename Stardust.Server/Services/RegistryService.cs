@@ -18,7 +18,6 @@ namespace Stardust.Server.Services;
 
 public class RegistryService : DefaultDeviceService<Node, NodeOnline>
 {
-    private readonly AppQueueService _queue;
     private readonly AppOnlineService _appOnline;
     private readonly IPasswordProvider _passwordProvider;
     private readonly AppSessionManager _sessionManager;
@@ -26,9 +25,8 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
     private readonly StarServerSetting _setting;
     private readonly ITracer _tracer;
 
-    public RegistryService(AppQueueService queue, AppOnlineService appOnline, IPasswordProvider passwordProvider, AppSessionManager sessionManager, ICacheProvider cacheProvider, StarServerSetting setting, ITracer tracer, IServiceProvider serviceProvider) : base(sessionManager, passwordProvider, cacheProvider, serviceProvider)
+    public RegistryService(AppOnlineService appOnline, IPasswordProvider passwordProvider, AppSessionManager sessionManager, ICacheProvider cacheProvider, StarServerSetting setting, ITracer tracer, IServiceProvider serviceProvider) : base(sessionManager, passwordProvider, cacheProvider, serviceProvider)
     {
-        _queue = queue;
         _appOnline = appOnline;
         _passwordProvider = passwordProvider;
         _sessionManager = sessionManager;
@@ -222,40 +220,6 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
         return online;
     }
 
-    /// <summary>激活应用。更新在线信息和关联节点</summary>
-    /// <param name="app"></param>
-    /// <param name="inf"></param>
-    /// <param name="ip"></param>
-    /// <param name="clientId"></param>
-    /// <param name="token"></param>
-    /// <returns></returns>
-    public AppOnline SetOnline(App app, AppModel inf, String ip, String clientId, String token)
-    {
-        if (app == null) return null;
-
-        if (app.DisplayName.IsNullOrEmpty()) app.DisplayName = inf.AppName;
-        app.UpdateIP = ip;
-        app.Update();
-
-        if (!inf.ClientId.IsNullOrEmpty()) clientId = inf.ClientId;
-
-        // 更新在线记录
-        var (online, _) = _appOnline.GetOnline(app, clientId, token, inf?.IP, ip);
-        if (online != null)
-        {
-            // 关联节点，根据NodeCode匹配，如果未匹配上，则在未曾关联节点时才使用IP匹配
-            var node = Node.FindByCode(inf.NodeCode);
-            if (node == null && online.NodeId == 0) node = Node.SearchByIP(inf.IP).FirstOrDefault();
-            if (node != null) online.NodeId = node.ID;
-
-            if (!inf.Version.IsNullOrEmpty()) online.Version = inf.Version;
-            var compile = inf.Compile.ToDateTime().ToLocalTime();
-            if (compile.Year > 2000) online.Compile = compile;
-        }
-        online.Update();
-
-        return online;
-    }
     #endregion
 
     #region 服务注册

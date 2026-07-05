@@ -111,17 +111,4 @@ public class NodeVersionController(IFileStorage fileStorage) : EntityController<
     //    return rs;
     //}
 
-    public ActionResult GetVersion(String id)
-    {
-        var name = id;
-        var nv = NodeVersion.FindByVersion(name.TrimSuffix(".zip"));
-        if (nv == null) return NotFound("非法参数");
-
-        var set = CubeSetting.Current;
-        var updatePath = set.UploadPath;
-        var fi = updatePath.CombinePath(nv.Source).AsFile();
-        if (!fi.Exists) return NotFound("文件不存在");
-
-        return PhysicalFile(fi.FullName, "application/octet-stream", name);
-    }
 }

@@ -30,16 +30,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Areas\Configs\Controllers\AppQuoteController.cs" />
-    <Compile Remove="Areas\Configs\Controllers\ConfigOnlineController.cs" />
-    <Compile Remove="Areas\Deployment\Controllers\AppDeployOnlineController.cs" />
-    <Compile Remove="Areas\Deployment\Controllers\AppDeployResourceController.cs" />
-    <Compile Remove="Areas\Deployment\Controllers\AppResourceController.cs" />
-    <Compile Remove="Areas\Deployment\Controllers\AppResourceVersionController.cs" />
-    <Compile Remove="Areas\Deployment\Controllers\AttachmentController.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Include="..\Stardust.Server\Services\ApolloService.cs" Link="Services\ApolloService.cs" />
     <Compile Include="..\Stardust.Server\Services\AppDayStatService.cs" Link="Services\AppDayStatService.cs" />
     <Compile Include="..\Stardust.Server\Services\AppOnlineService.cs" Link="AppOnlineService.cs" />

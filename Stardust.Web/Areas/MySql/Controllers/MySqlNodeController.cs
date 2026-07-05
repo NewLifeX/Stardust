@@ -75,29 +75,6 @@ public class MySqlNodeController : EntityController<MySqlNode>
         return MySqlNode.Search(server, port, projectId, enable, start, end, p["Q"], p);
     }
 
-    /// <summary>搜索</summary>
-    /// <param name="category">分类</param>
-    /// <param name="key">关键字</param>
-    /// <returns></returns>
-    public ActionResult NodeSearch(String category, String key = null)
-    {
-        var page = new PageParameter { PageSize = 20 };
-
-        // 默认排序
-        if (page.Sort.IsNullOrEmpty()) page.Sort = MySqlNode._.Name;
-
-        var list = MySqlNode.Search(null, -1, -1, true, DateTime.MinValue, DateTime.MinValue, key, page);
-
-        return Json(0, null, list.Select(e => new
-        {
-            e.Id,
-            e.Name,
-            e.Server,
-            e.Port,
-            e.Category,
-        }).ToArray());
-    }
-
     [EntityAuthorize(PermissionFlags.Update)]
     public ActionResult Refresh(Int32 id)
     {

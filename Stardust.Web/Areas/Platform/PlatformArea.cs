@@ -9,4 +9,6 @@ namespace Stardust.Web.Areas.Platform;
 public class PlatformArea : AreaBase
 {
     public PlatformArea() : base(nameof(PlatformArea).TrimSuffix("Area")) { }
+
+    static PlatformArea() => RegisterArea<PlatformArea>();
 }

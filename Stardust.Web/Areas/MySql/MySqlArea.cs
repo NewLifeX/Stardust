@@ -8,4 +8,6 @@ namespace Stardust.Web.Areas.MySql;
 public class MySqlArea : AreaBase
 {
     public MySqlArea() : base(nameof(MySqlArea).TrimSuffix("Area")) { }
+
+    static MySqlArea() => RegisterArea<MySqlArea>();
 }
