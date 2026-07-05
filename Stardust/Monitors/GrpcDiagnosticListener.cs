@@ -1,4 +1,6 @@
 ﻿#if NET5_0_OR_GREATER
+using NewLife;
+using NewLife;
 using NewLife.Log;
 using NewLife.Reflection;
 
@@ -7,14 +9,14 @@ namespace Stardust.Monitors;
 /// <summary>Grpc诊断监听器</summary>
 public class GrpcDiagnosticListener : TraceDiagnosticListener
 {
-    private static HttpRequestOptionsKey<ISpan> _spanKey = new("Star-Grpc-Span");
+    private static HttpRequestOptionsKey<ISpan?> _spanKey = new("Star-Grpc-Span");
 
     /// <summary>实例化</summary>
     public GrpcDiagnosticListener() => Name = "Grpc.Net.Client";
 
     /// <summary>下一步</summary>
     /// <param name="value"></param>
-    public override void OnNext(KeyValuePair<String, Object> value)
+    public override void OnNext(KeyValuePair<String, Object?> value)
     {
         if (Tracer == null) return;
 
@@ -22,12 +24,12 @@ public class GrpcDiagnosticListener : TraceDiagnosticListener
         var name = value.Key.Split(".").LastOrDefault();
 
         var span = DefaultSpan.Current;
-        var spanName = (span as DefaultSpan)?.Builder?.Name;
+        var spanName = (span as DefaultSpan)?.Name;
 
         switch (name)
         {
             case "Start":
-                if (value.Value.GetValue("Request") is HttpRequestMessage request &&
+                if (value.Value != null && value.Value.GetValue("Request") is HttpRequestMessage request &&
                     !request.Headers.Contains("traceparent"))
                 {
                     var span2 = Tracer.NewSpan(request);
@@ -37,7 +39,7 @@ public class GrpcDiagnosticListener : TraceDiagnosticListener
                 break;
 
             case "Stop":
-                if (spanName.StartsWith("grpc:"))
+                if (span != null && !spanName.IsNullOrEmpty() && spanName.StartsWith("grpc:"))
                 {
                     span.Dispose();
                 }
@@ -45,9 +47,9 @@ public class GrpcDiagnosticListener : TraceDiagnosticListener
                 break;
 
             case "Error":
-                if (spanName.StartsWith("grpc:"))
+                if (span != null && !spanName.IsNullOrEmpty() && spanName.StartsWith("grpc:"))
                 {
-                    if (value.Value.GetValue("Exception") is Exception ex) span.SetError(ex, null);
+                    if (value.Value != null && value.Value.GetValue("Exception") is Exception ex) span.SetError(ex, null);
 
                     span.Dispose();
                 }

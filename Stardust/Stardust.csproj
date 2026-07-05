@@ -42,9 +42,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Web\**" />
-    <EmbeddedResource Remove="Web\**" />
-    <None Remove="Web\**" />
+    <Compile Remove="Managers\ServiceController.cs" />
+    <Compile Remove="Managers\ServiceManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="System.Net.Http" />
@@ -54,30 +53,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Managers\ServiceController.cs" />
-    <Compile Remove="Managers\ServiceManager.cs" />
-    <Compile Remove="Models\CommandEventArgs.cs" />
-    <Compile Remove="Models\CommandInModel.cs" />
-    <Compile Remove="Models\CommandModel.cs" />
-    <Compile Remove="Models\CommandReplyModel.cs" />
-    <Compile Remove="Models\CommandStatus.cs" />
-    <Compile Remove="Models\EventModel.cs" />
-    <Compile Remove="Models\TokenModel.cs" />
-    <Compile Remove="Models\UpgradeInfo.cs" />
-    <Compile Remove="Monitors\AspNetCoreDiagnosticListener.cs" />
-    <Compile Remove="Monitors\GrpcDiagnosticListener.cs" />
-    <Compile Remove="Monitors\MyBuilder.cs" />
-    <Compile Remove="Monitors\MySpan.cs" />
-    <Compile Remove="Monitors\MyTraceModel.cs" />
-    <Compile Remove="Registry\RegistryClient.cs" />
-    <Compile Remove="RpcClient.cs" />
-    <Compile Remove="RpcServer.cs" />
-    <Compile Remove="Services\CacheService.cs" />
-    <Compile Remove="Services\ICommandClient.cs" />
-    <Compile Remove="Services\IEventProvider.cs" />
   </ItemGroup>
 
   <ItemGroup>

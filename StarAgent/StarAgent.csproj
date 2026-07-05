@@ -36,10 +36,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="StarService2.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Include="..\Stardust\Managers\ServiceController.cs" Link="Managers\ServiceController.cs" />
     <Compile Include="..\Stardust\Managers\ServiceManager.cs" Link="Managers\ServiceManager.cs" />
   </ItemGroup>

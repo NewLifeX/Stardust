@@ -50,12 +50,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="RegistryMiddleware.cs" />
-    <Compile Remove="StarService.cs" />
-    <Compile Remove="WebHelper.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Include="..\Doc\leaf.png" Link="leaf.png" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
