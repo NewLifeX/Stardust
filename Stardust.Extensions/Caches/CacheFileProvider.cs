@@ -133,7 +133,7 @@ class CacheFileProvider : IFileProvider
                 try
                 {
                     var url = subpath.Replace("\\", "/");
-                    url = item.Contains("{0}") ? item.Replace("{0}", url) : item.TrimEnd("/") + url.EnsureStart("/");
+                    url = item.Contains("{0}") ? item.Replace("{0}", url) : item.TrimSuffix("/") + url.EnsureStart("/");
 
                     span?.AppendTag(url);
                     XTrace.WriteLine("下载文件：{0}", url);
@@ -163,7 +163,7 @@ class CacheFileProvider : IFileProvider
                     if (!target.IsNullOrEmpty() && fullPath.EndsWithIgnoreCase(".sh", ".bat"))
                     {
                         var txt = File.ReadAllText(fullPath);
-                        var txt2 = txt.Replace(item.TrimEnd("/"), target.TrimEnd("/"));
+                        var txt2 = txt.Replace(item.TrimSuffix("/"), target.TrimSuffix("/"));
                         if (txt != txt2) File.WriteAllText(fullPath, txt2);
                     }
 
@@ -242,14 +242,14 @@ class CacheFileProvider : IFileProvider
 
     async Task<String?> DownloadDirectory(String subpath, String fullPath, String[] svrs)
     {
-        subpath = subpath.TrimEnd('/');
+        subpath = subpath.TrimSuffix("/");
         var span = DefaultSpan.Current;
         foreach (var item in svrs)
         {
             try
             {
                 var url = subpath.Replace("\\", "/");
-                url = item.Contains("{0}") ? item.Replace("{0}", url) : item.TrimEnd("/") + url.EnsureStart("/");
+                url = item.Contains("{0}") ? item.Replace("{0}", url) : item.TrimSuffix("/") + url.EnsureStart("/");
 
                 span?.AppendTag(url);
                 XTrace.WriteLine("下载目录：{0}", url);

@@ -8,5 +8,5 @@ namespace Stardust.Web.Areas.Platform;
 [Menu(999, true, LastUpdate = "20240407")]
 public class PlatformArea : AreaBase
 {
-    public PlatformArea() : base(nameof(PlatformArea).TrimEnd("Area")) { }
+    public PlatformArea() : base(nameof(PlatformArea).TrimSuffix("Area")) { }
 }

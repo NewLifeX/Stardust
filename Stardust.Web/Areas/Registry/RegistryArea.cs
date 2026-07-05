@@ -10,7 +10,7 @@ namespace Stardust.Web.Areas.Registry;
 [Menu(777, true, LastUpdate = "20240727")]
 public class RegistryArea : AreaBase
 {
-    public RegistryArea() : base(nameof(RegistryArea).TrimEnd("Area")) { }
+    public RegistryArea() : base(nameof(RegistryArea).TrimSuffix("Area")) { }
 
     static RegistryArea() => RegisterArea<RegistryArea>();
 }

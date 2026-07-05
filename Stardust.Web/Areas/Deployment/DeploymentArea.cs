@@ -9,7 +9,7 @@ namespace Stardust.Web.Areas.Deployment;
 [Menu(555, true, LastUpdate = "20260115")]
 public class DeploymentArea : AreaBase
 {
-    public DeploymentArea() : base(nameof(DeploymentArea).TrimEnd("Area")) { }
+    public DeploymentArea() : base(nameof(DeploymentArea).TrimSuffix("Area")) { }
 
     static DeploymentArea() => RegisterArea<DeploymentArea>();
 }

@@ -116,11 +116,11 @@ namespace Stardust.Data.Nodes
 
         /// <summary>开机时间</summary>
         [Map(nameof(Uptime))]
-        public String UptimeName => TimeSpan.FromSeconds(Uptime).ToString().TrimEnd("0000").TrimStart("00:");
+        public String UptimeName => TimeSpan.FromSeconds(Uptime).ToString().TrimSuffix("0000").TrimPrefix("00:");
 
         /// <summary>平均存活时间</summary>
         [Map(nameof(AvgTtl))]
-        public String AvgTtlName => TimeSpan.FromMilliseconds(AvgTtl).ToString().TrimEnd("0000").TrimStart("00:");
+        public String AvgTtlName => TimeSpan.FromMilliseconds(AvgTtl).ToString().TrimSuffix("0000").TrimPrefix("00:");
         #endregion
 
         #region 扩展查询
@@ -231,7 +231,7 @@ namespace Stardust.Data.Nodes
             Writes = inf["total_writes_processed"].ToLong();
 
             // 命令统计。cmdstat_lpush:calls=40,usec=816,usec_per_call=20.40
-            var cmds = inf.Where(e => e.Key.StartsWith("cmdstat_")).ToDictionary(e => e.Key.TrimStart("cmdstat_"), e => e.Value);
+            var cmds = inf.Where(e => e.Key.StartsWith("cmdstat_")).ToDictionary(e => e.Key.TrimPrefix("cmdstat_"), e => e.Value);
             if (cmds.Count > 0)
             {
                 var dic = cmds.ToDictionary(e => e.Key, e => e.Value.Substring("calls=", ",").ToInt());

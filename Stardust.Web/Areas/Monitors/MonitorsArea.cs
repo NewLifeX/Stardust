@@ -10,7 +10,7 @@ namespace Stardust.Web.Areas.Monitors;
 [Menu(444, true, LastUpdate = "20240407")]
 public class MonitorsArea : AreaBase
 {
-    public MonitorsArea() : base(nameof(MonitorsArea).TrimEnd("Area")) { }
+    public MonitorsArea() : base(nameof(MonitorsArea).TrimSuffix("Area")) { }
 
     static MonitorsArea() => RegisterArea<MonitorsArea>();
 }

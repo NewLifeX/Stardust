@@ -295,7 +295,7 @@ public class RedisService : IHostedService, IRedisService
                     var mq = rds.GetDelayQueue<Object>(queue.Topic);
                     queue.Messages = mq.Count;
 
-                    var topic = queue.Topic.TrimEnd(":Delay");
+                    var topic = queue.Topic.TrimSuffix(":Delay");
                     //var st = rds.Get<RedisQueueStatus>(topic);
 
                     var cs = rds.Search($"{topic}:Status:*", 0, 1000).ToArray();

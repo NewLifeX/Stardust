@@ -289,7 +289,7 @@ public class Upgrade
     /// <param name="name"></param>
     public void Trim(String name)
     {
-        var name2 = name.TrimEnd(".exe", ".dll");
+        var name2 = name.TrimSuffix(".exe").TrimSuffix(".dll");
         if (Runtime.Windows || Runtime.Mono)
         {
             var file = name2.GetFullPath();

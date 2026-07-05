@@ -89,7 +89,7 @@ public class NginxFile
         if (ds.TryGetValue("listen", out var listens))
         {
             ds.Remove("listen");
-            Ports = listens.Select(e => e.TrimEnd("ssl").Trim().ToInt()).Where(e => e > 0).Distinct().ToList();
+            Ports = listens.Select(e => e.TrimSuffix(" ssl").Trim().ToInt()).Where(e => e > 0).Distinct().ToList();
             SupportIPv6 = listens.Any(e => e.Contains("[::]"));
         }
         if (ds.TryGetValue("ssl_certificate", out vs))
@@ -194,7 +194,7 @@ public class NginxFile
 
         if (location.Directives.TryGetValue("proxy_pass", out var vs) && vs.Count > 0)
         {
-            return vs.Select(e => e.TrimEnd('/')).ToArray();
+            return vs.Select(e => e.TrimSuffix("/")).ToArray();
         }
         return [];
     }
@@ -205,7 +205,7 @@ public class NginxFile
         if (backends == null || backends.Length == 0) return;
 
         var location = GetLocation(true);
-        location!.Directives["proxy_pass"] = backends.Select(e => e.TrimEnd('/')).ToList();
+        location!.Directives["proxy_pass"] = backends.Select(e => e.TrimSuffix("/")).ToList();
     }
     #endregion
 }

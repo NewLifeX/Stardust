@@ -205,7 +205,7 @@ public class LocalStarClient
                 // 比目标版本高，不需要安装
                 if (String.Compare(info.Version, version) >= 0) return true;
 
-                if (!info.FileName.IsNullOrEmpty()) info.FileName = info.FileName.TrimEnd(" (deleted)");
+                if (!info.FileName.IsNullOrEmpty()) info.FileName = info.FileName.TrimSuffix(" (deleted)");
                 if (target.IsNullOrEmpty()) target = Path.GetDirectoryName(info.FileName);
 
                 WriteLog("StarAgent在用版本 v{0}，低于目标版本 v{1}", info.Version, version);

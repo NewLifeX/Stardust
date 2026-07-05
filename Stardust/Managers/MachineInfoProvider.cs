@@ -250,7 +250,7 @@ public class MachineInfoProvider : IMachineInfo
                         info["SSID"] = value;
 
                     if (dic.TryGetValue("signal", out value))
-                        info["Signal"] = signal = value.TrimEnd("dBm").Trim().ToInt();
+                        info["Signal"] = signal = value.TrimSuffix("dBm").Trim().ToInt();
                 }
             }
         }

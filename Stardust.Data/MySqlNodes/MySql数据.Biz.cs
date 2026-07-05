@@ -128,7 +128,7 @@ public partial class MySqlData : Entity<MySqlData>
 
     /// <summary>开机时间</summary>
     [Map(nameof(Uptime))]
-    public String UptimeName => TimeSpan.FromSeconds(Uptime).ToString().TrimEnd("0000").TrimStart("00:");
+    public String UptimeName => TimeSpan.FromSeconds(Uptime).ToString().TrimSuffix("0000").TrimPrefix("00:");
     #endregion
 
     #region 扩展查询

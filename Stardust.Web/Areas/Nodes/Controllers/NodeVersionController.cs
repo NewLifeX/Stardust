@@ -114,7 +114,7 @@ public class NodeVersionController(IFileStorage fileStorage) : EntityController<
     public ActionResult GetVersion(String id)
     {
         var name = id;
-        var nv = NodeVersion.FindByVersion(name.TrimEnd(".zip"));
+        var nv = NodeVersion.FindByVersion(name.TrimSuffix(".zip"));
         if (nv == null) return NotFound("非法参数");
 
         var set = CubeSetting.Current;

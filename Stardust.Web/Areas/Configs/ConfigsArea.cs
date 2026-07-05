@@ -9,7 +9,7 @@ namespace Stardust.Web.Areas.Configs;
 [Menu(666, true, LastUpdate = "20240407")]
 public class ConfigsArea : AreaBase
 {
-    public ConfigsArea() : base(nameof(ConfigsArea).TrimEnd("Area")) { }
+    public ConfigsArea() : base(nameof(ConfigsArea).TrimSuffix("Area")) { }
 
     static ConfigsArea() => RegisterArea<ConfigsArea>();
 }

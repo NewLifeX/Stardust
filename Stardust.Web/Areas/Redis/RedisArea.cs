@@ -8,7 +8,7 @@ namespace Stardust.Web.Areas.Redis;
 [Menu(887, true, LastUpdate = "20240407")]
 public class RedisArea : AreaBase
 {
-    public RedisArea() : base(nameof(RedisArea).TrimEnd("Area")) { }
+    public RedisArea() : base(nameof(RedisArea).TrimSuffix("Area")) { }
 
     static RedisArea() => RegisterArea<RedisArea>();
 }

@@ -283,7 +283,7 @@ internal class MyService : ServiceBase, IServiceProvider
             }
         }
 
-        if (_Client != null) _Client.Plugins = pm.Plugins.Select(e => e.GetType().Name.TrimEnd("Plugin")).ToArray();
+        if (_Client != null) _Client.Plugins = pm.Plugins.Select(e => e.GetType().Name.TrimSuffix("Plugin")).ToArray();
 
         // 辅助任务清理数据
         ThreadPoolX.QueueUserWorkItem(Fix);
