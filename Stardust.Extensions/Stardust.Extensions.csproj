@@ -7,7 +7,7 @@
     <Description>星尘分布式服务框架ASP.NET Core扩展库。提供AddStardust、UseStardust、RegisterService、ConsumeService等中间件与便捷方法，简化服务注册发现与监控接入，支持Web/API应用快速集成星尘平台。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
-    <VersionPrefix>3.8</VersionPrefix>
+    <VersionPrefix>3.9</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -33,7 +33,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>新增TraceAnonymous属性支持调用链匿名访问；事件总线接口异步化，GetEventBus改名为CreateEventBus；优化事件总线追踪链路与TraceId赋值；升级多个核心依赖包至最新版本</PackageReleaseNotes>
+    <PackageReleaseNotes>新增产品版本/发布包/dotNet安装包三表及升级逻辑，支持.NET运行时自动同步与冒烟测试回滚；新增Linux下OOM分值调整与进程优先级控制；优化星尘追踪解析器，增强高并发场景线程安全；优化命令下发去重与心跳检测异步缓存；全面开启可空类型检查，大规模清理冗余代码</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>

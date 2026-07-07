@@ -34,7 +34,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/Stardust</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>升级多个核心依赖包至最新版本；优化 AgentExpansion 配置与 SSH.NET 条件引用</PackageReleaseNotes>
+    <PackageReleaseNotes>升级多个核心依赖包至最新版本；优化 AgentExpansion 配置与 SSH.NET 条件引用；开启可空引用类型检查，优化警告处理</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
   </PropertyGroup>

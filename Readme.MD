@@ -61,6 +61,7 @@ Stardust  星尘，轻量级分布式服务框架！
 8. [x] 远程发布。在星尘控制台上发布应用包到多台安装有星尘代理的应用服务器或物联网边缘节点，StarAgent负责拉起并守护进程  
 9. [x] 日志中心。各应用（服务提供者和服务消费者）向中心上报日志数据，统一在星尘Web查看  
 10. [x] 阿里云DNS。StarAgent支持动态域名解析(DDNS)，自动将节点公网IP注册到阿里云DNS，适用于动态IP环境 [详细文档](Doc/阿里云DNS动态域名解析.md)  
+11. [x] .NET运行时管理。StarServer自动同步官方.NET发布信息，StarAgent支持按需安装.NET运行时版本，配合升级命令实现自动升级与冒烟测试回滚  
 
 ### 监控中心
 星尘监控介绍 [https://newlifex.com/blood/stardust_monitor](https://newlifex.com/blood/stardust_monitor)  
