@@ -85,6 +85,7 @@ public class Startup
         services.AddSingleton<DeployService>();
         services.AddSingleton<MonitorService>();
         services.AddSingleton<AgentDeployService>();
+        services.AddSingleton<GatewayService>();
 
         services.AddSingleton<NodeSessionManager>();
         services.AddSingleton<AppSessionManager>();

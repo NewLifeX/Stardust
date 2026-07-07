@@ -1,0 +1,139 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202509.xsd" Document="https://newlifex.com/xcode/model" ModelVersion="2.0.2026.130" xmlns="https://newlifex.com/Model202509.xsd">
+  <Option>
+    <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
+    <ClassNameTemplate />
+    <!--显示名模板。其中{displayName}替换为Table.DisplayName-->
+    <DisplayNameTemplate />
+    <!--基类。可能包含基类和接口，其中{name}替换为Table.Name-->
+    <BaseClass>Entity</BaseClass>
+    <!--命名空间-->
+    <Namespace>Stardust.Data.Gateway</Namespace>
+    <!--引用命名空间-->
+    <ExtendNameSpace>Stardust.Data.Platform</ExtendNameSpace>
+    <!--输出目录-->
+    <Output>.\</Output>
+    <!--是否使用中文文件名。默认false-->
+    <ChineseFileName>True</ChineseFileName>
+    <!--用于生成Copy函数的参数类型。例如{name}或I{name}-->
+    <ModelNameForCopy />
+    <!--带有索引器。实现IModel接口-->
+    <HasIModel>False</HasIModel>
+    <!--可为null上下文。生成String?等-->
+    <Nullable>False</Nullable>
+    <!--数据库连接名-->
+    <ConnName>Stardust</ConnName>
+    <!--模型类模版。设置后生成模型类，用于接口数据传输，例如{name}Model-->
+    <ModelClass />
+    <!--模型类输出目录。默认当前目录的Models子目录-->
+    <ModelsOutput>.\Models\</ModelsOutput>
+    <!--模型接口模版。设置后生成模型接口，用于约束模型类和实体类，例如I{name}-->
+    <ModelInterface />
+    <!--模型接口输出目录。默认当前目录的Interfaces子目录-->
+    <InterfacesOutput>.\Interfaces\</InterfacesOutput>
+    <!--用户实体转为模型类的模型类。例如{name}或{name}DTO-->
+    <ModelNameForToModel />
+    <!--命名格式。Default/Upper/Lower/Underline-->
+    <NameFormat>Default</NameFormat>
+    <!--魔方区域显示名-->
+    <DisplayName>网关管理</DisplayName>
+    <!--魔方控制器输出目录-->
+    <CubeOutput>../../Stardust.Web/Areas/Gateway</CubeOutput>
+  </Option>
+  <Tables>
+    <Table Name="GatewayCluster" Description="网关集群。后端服务器集群，定义了负载均衡策略和健康检查配置">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
+        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
+        <Column Name="LoadBalance" DataType="String" DefaultValue="RoundRobin" Description="负载均衡算法。RoundRobin/LeastConnection/IPHash" />
+        <Column Name="HealthPath" DataType="String" Length="200" Description="健康检查路径。如 /health" />
+        <Column Name="HealthInterval" DataType="Int32" DefaultValue="10" Description="健康检查间隔。单位秒，默认10秒" />
+        <Column Name="HealthTimeout" DataType="Int32" DefaultValue="3000" Description="健康检查超时。单位毫秒，默认3000ms" />
+        <Column Name="UnhealthyThreshold" DataType="Int32" DefaultValue="3" Description="不健康阈值。连续失败次数，默认3次" />
+        <Column Name="HealthyThreshold" DataType="Int32" DefaultValue="2" Description="健康阈值。连续成功次数，默认2次" />
+        <Column Name="SessionSticky" DataType="Boolean" Description="会话保持。开启后同一来源IP转发到同一后端" />
+        <Column Name="SessionStickyName" DataType="String" Description="会话保持标识。如 Cookie 名" />
+        <Column Name="Enable" DataType="Boolean" DefaultValue="True" Description="启用" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" />
+        <Column Name="CreateUser" DataType="String" Description="创建者" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+        <Column Name="UpdateUser" DataType="String" Description="更新者" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+      </Columns>
+      <Indexes>
+        <Index Columns="Name" Unique="True" />
+        <Index Columns="ProjectId" />
+      </Indexes>
+    </Table>
+    <Table Name="GatewayNode" Description="网关节点。集群中的后端服务器节点">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="ClusterId" DataType="Int32" Map="Stardust.Data.Gateway.GatewayCluster@Id@Name" Description="集群。所属网关集群" />
+        <Column Name="Name" DataType="String" Master="True" Description="名称" />
+        <Column Name="Address" DataType="String" Length="200" Nullable="False" Description="地址。如 http://192.168.1.100:5000" />
+        <Column Name="Weight" DataType="Int32" DefaultValue="1" Description="权重。负载均衡权重，默认1" />
+        <Column Name="Enable" DataType="Boolean" DefaultValue="True" Description="启用" />
+        <Column Name="IsHealthy" DataType="Boolean" DefaultValue="True" Description="是否健康。运行时状态" />
+        <Column Name="MaxFails" DataType="Int32" DefaultValue="3" Description="最大失败次数。超过后暂时移除" />
+        <Column Name="FailTimeout" DataType="Int32" DefaultValue="60" Description="失败超时。单位秒，超时后重新加入，默认60秒" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" />
+        <Column Name="CreateUser" DataType="String" Description="创建者" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+        <Column Name="UpdateUser" DataType="String" Description="更新者" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+      </Columns>
+      <Indexes>
+        <Index Columns="ClusterId" />
+        <Index Columns="Address" />
+      </Indexes>
+    </Table>
+    <Table Name="GatewayRoute" Description="网关路由。请求匹配规则，定义如何将请求转发到目标集群">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="ProjectId" DataType="Int32" Map="Stardust.Data.Platform.GalaxyProject@Id@Name" Description="项目。资源归属的团队" />
+        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
+        <Column Name="Enable" DataType="Boolean" DefaultValue="True" Description="启用" />
+        <Column Name="Priority" DataType="Int32" DefaultValue="0" Description="优先级。数值越大优先级越高" />
+        <Column Name="ClusterId" DataType="Int32" Map="Stardust.Data.Gateway.GatewayCluster@Id@Name" Description="集群。目标后端集群" />
+        <Column Name="Domain" DataType="String" Length="200" Description="域名匹配。支持通配符 *.example.com，多个用逗号分隔" />
+        <Column Name="Path" DataType="String" Length="500" Description="路径匹配。如 /api/*，多个用逗号分隔" />
+        <Column Name="Methods" DataType="String" Length="100" Description="HTTP方法。GET,POST,PUT,DELETE,PATCH，为空表示全部" />
+        <Column Name="Headers" DataType="String" Length="1000" Description="请求头匹配。JSON格式，如 {key:value}" />
+        <Column Name="StripPrefix" DataType="Boolean" Description="去除前缀。转发时去除匹配的路径前缀" />
+        <Column Name="AddHeaders" DataType="String" Length="1000" Description="添加请求头。JSON格式，如 {key:value}" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" />
+        <Column Name="CreateUser" DataType="String" Description="创建者" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+        <Column Name="UpdateUser" DataType="String" Description="更新者" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+      </Columns>
+      <Indexes>
+        <Index Columns="Name" Unique="True" />
+        <Index Columns="ProjectId" />
+        <Index Columns="ClusterId" />
+        <Index Columns="Domain" />
+        <Index Columns="Priority" />
+      </Indexes>
+    </Table>
+    <Table Name="GatewayCert" Description="网关证书。SSL证书配置，用于HTTPS终止和SNI匹配">
+      <Columns>
+        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
+        <Column Name="Enable" DataType="Boolean" DefaultValue="True" Description="启用" />
+        <Column Name="Domain" DataType="String" Length="200" Nullable="False" Description="域名。匹配SNI，支持通配符 *.example.com" />
+        <Column Name="CertFile" DataType="String" Length="500" Description="证书文件路径。PEM格式" />
+        <Column Name="KeyFile" DataType="String" Length="500" Description="私钥文件路径。PEM格式" />
+        <Column Name="Remark" DataType="String" Length="500" Description="备注" />
+        <Column Name="CreateUser" DataType="String" Description="创建者" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+        <Column Name="UpdateUser" DataType="String" Description="更新者" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+      </Columns>
+      <Indexes>
+        <Index Columns="Name" Unique="True" />
+        <Index Columns="Domain" />
+      </Indexes>
+    </Table>
+  </Tables>
+</EntityModel>

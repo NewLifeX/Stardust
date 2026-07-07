@@ -4,63 +4,45 @@ using NewLife;
 using NewLife.Log;
 using StarGateway.Proxy;
 
-namespace StarGateway
+namespace StarGateway;
+
+class MyService : IHostedService
 {
-    class MyService : IHostedService
+    private HttpReverseProxy _proxy;
+
+    public Task StartAsync(CancellationToken cancellationToken)
     {
-        private HttpReverseProxy _proxy;
-        public Task StartAsync(CancellationToken cancellationToken)
+        var set = StarGatewaySetting.Current;
+
+        var server = new HttpReverseProxy
         {
-            var set = StarGatewaySetting.Current;
+            Port = set.Port > 0 ? set.Port : 8080,
+            RemoteServer = "http://star.newlifex.com",
 
-            var server = new HttpReverseProxy
-            {
-                Port = 8080,
-                RemoteServer = "http://star.newlifex.com",
+            Tracer = DefaultTracer.Instance,
+            Log = XTrace.Log,
+        };
 
-                Tracer = DefaultTracer.Instance,
-                Log = XTrace.Log,
-            };
-
-            if (set.Debug) server.SessionLog = XTrace.Log;
+        if (set.Debug) server.SessionLog = XTrace.Log;
 #if DEBUG
-            server.SocketLog = XTrace.Log;
-            server.LogSend = true;
-            server.LogReceive = true;
+        server.SocketLog = XTrace.Log;
+        server.LogSend = true;
+        server.LogReceive = true;
 #endif
 
-            server.Start();
+        server.Start();
 
-            _proxy = server;
+        _proxy = server;
 
-//            var server2 = new HttpReverseProxy
-//            {
-//                Port = 80,
-//                RemoteServer = "http://star.newlifex.com",
+        XTrace.WriteLine("StarGateway 已启动，监听端口 {0}，远程服务器 {1}", set.Port, server.RemoteServer);
 
-//                Tracer = DefaultTracer.Instance,
-//                Log = XTrace.Log,
-//            };
+        return Task.CompletedTask;
+    }
 
-//            if (set.Debug) server2.SessionLog = XTrace.Log;
-//#if DEBUG
-//            server2.SocketLog = XTrace.Log;
-//            server2.LogSend = true;
-//            server2.LogReceive = true;
-//#endif
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        _proxy.TryDispose();
 
-//            server2.Start();
-
-//            _proxy2 = server2;
-
-            return Task.CompletedTask;
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            _proxy.TryDispose();
-
-            return Task.CompletedTask;
-        }
+        return Task.CompletedTask;
     }
 }

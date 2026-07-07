@@ -1,126 +1,189 @@
-﻿using NewLife;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using NewLife;
 using NewLife.Http;
 using NewLife.Net;
+using NewLife.Threading;
+using Stardust.Data.Gateway;
 
-namespace StarGateway.Proxy
+namespace StarGateway.Proxy;
+
+/// <summary>Http反向代理。支持动态路由配置，从数据库加载路由规则</summary>
+public class HttpReverseProxy : ProxyServer
 {
-    /// <summary>Http反向代理。把所有收到的Http请求转发到目标服务器。</summary>
-    /// <remarks>
-    /// 主要是修改Http请求头为正确的主机。
-    /// 
-    /// 经典用途：
-    /// 1，缓存。代理缓存某些静态资源的请求结果，减少对服务器的请求压力
-    /// 2，拦截。禁止访问某些资源，返回空白页或者连接重置
-    /// 3，修改请求或响应。更多的可能是修改响应的页面内容
-    /// 4，记录统计。记录并统计请求的网址。
-    /// 
-    /// 修改Http响应的一般做法：
-    /// 1，反向映射888端口到目标abc.com
-    /// 2，abc.com页面响应时，所有http://abc.com/的连接都修改为http://IP:888
-    /// 3，注意在内网的反向代理需要使用公网IP，而不是本机IP
-    /// 4，子域名也可以修改，比如http://pic.abc.com/修改为http://IP:888/http_pic.abc.com/
-    /// </remarks>
-    public class HttpReverseProxy : ProxyServer
+    #region 属性
+    /// <summary>远程服务器地址（默认兜底）</summary>
+    public NetUri RemoteServer { get; set; } = new();
+
+    /// <summary>路由缓存快照</summary>
+    private volatile IList<GatewayRoute> _routes;
+
+    /// <summary>配置刷新间隔。默认15秒</summary>
+    public Int32 ConfigRefreshInterval { get; set; } = 15;
+
+    private TimerX _timer;
+    #endregion
+
+    #region 构造
+    public HttpReverseProxy()
     {
-        #region 属性
-        /// <summary>远程服务器地址</summary>
-        public NetUri RemoteServer { get; set; } = new NetUri();
-        #endregion
+        Name = "Gateway";
+        Port = 8080;
+        ProtocolType = NetType.Tcp;
+    }
+    #endregion
 
-        /// <summary>实例化</summary>
-        public HttpReverseProxy()
-        {
-            Name = "HttpRev";
-
-            Port = 80;
-
-            ProtocolType = NetType.Tcp;
-        }
-
-        //protected override void OnStart()
-        //{
-        //    Add(new HttpCodec { AllowParseHeader = true });
-
-        //    base.OnStart();
-        //}
-
-        /// <summary>创建会话</summary>
-        /// <param name="session"></param>
-        /// <returns></returns>
-        protected override INetSession CreateSession(ISocketSession session) => new HttpReverseSession { Host = this };
+    #region 启动停止
+    protected override void OnStart()
+    {
+        LoadConfig();
+        _timer = new TimerX(DoRefreshConfig, null, ConfigRefreshInterval * 1000, ConfigRefreshInterval * 1000) { Async = true };
+        WriteLog("Http反向代理启动，监听端口：{0}，路由数：{1}", Port, _routes?.Count ?? 0);
+        base.OnStart();
     }
 
-    /// <summary>Http反向代理会话</summary>
-    public class HttpReverseSession : ProxySession
+    #endregion
+
+    #region 配置加载
+    protected virtual void LoadConfig()
     {
-        /// <summary>原始主机</summary>
-        public String RawHost { get; set; }
-
-        /// <summary>请求地址</summary>
-        public Uri LocalUri { get; set; }
-
-        /// <summary>远程地址</summary>
-        public Uri RemoteUri { get; set; }
-
-        /// <summary>收到客户端发来的数据。子类可通过重载该方法来修改数据</summary>
-        /// <param name="e"></param>
-        protected override void OnReceive(ReceivedEventArgs e)
+        try
         {
-            if (Disposed) return;
+            var routes = GatewayRoute.FindAllEnabled();
+            Interlocked.Exchange(ref _routes, routes);
+            WriteLog("加载路由配置完成，共 {0} 条路由", routes.Count);
+        }
+        catch (Exception ex)
+        {
+            WriteError("加载路由配置失败：{0}", ex.Message);
+        }
+    }
 
-            // 请求头
-            var request = new HttpRequest();
-            if (request.Parse(e.Packet))
-            {
-                e.Message = request;
+    private async Task DoRefreshConfig(Object state)
+    {
+        LoadConfig();
+        await Task.CompletedTask;
+    }
 
-                //// 解码请求头，准备修改细节
-                //request.DecodeHeaders();
+    public void RefreshConfig() => LoadConfig();
+    #endregion
 
-                //if (OnRequest(request, e))
-                //{
-                //    // 重新生成Http请求头
-                //    request.EncodeHeaders();
-                //    e.Packet = request.ToPacket();
-                //}
+    #region 会话管理
+    protected override INetSession CreateSession(ISocketSession session) => new HttpReverseSession { Host = this };
+    #endregion
 
-                //var uri = new NetUri(NetType.Http, RawHost, Session.Local.Port);
-                WriteDebugLog(LocalUri + "");
-            }
+    #region 路由匹配
+    public GatewayRoute MatchRoute(String domain, String path, String method)
+    {
+        var routes = _routes;
+        if (routes == null || routes.Count == 0) return null;
 
-            base.OnReceive(e);
+        foreach (var route in routes)
+        {
+            if (route.Match(domain, path, method)) return route;
+        }
+        return null;
+    }
+
+    public NetUri SelectNode(GatewayRoute route)
+    {
+        var nodes = GatewayNode.FindAllHealthyByCluster(route.ClusterId);
+        if (nodes == null || nodes.Count == 0) return null;
+
+        var cluster = route.Cluster;
+        var lb = cluster?.LoadBalance ?? "RoundRobin";
+
+        GatewayNode selected;
+        switch (lb)
+        {
+            case "LeastConnection":
+                selected = SelectLeastConnection(nodes);
+                break;
+            case "IPHash":
+                selected = SelectIPHash(nodes, "");
+                break;
+            case "RoundRobin":
+            default:
+                selected = SelectRoundRobin(nodes);
+                break;
         }
 
-        protected virtual Boolean OnRequest(HttpRequest request, ReceivedEventArgs e)
+        if (selected == null || selected.Address.IsNullOrEmpty()) return null;
+        return new NetUri(selected.Address);
+    }
+
+    private static GatewayNode SelectRoundRobin(IList<GatewayNode> nodes)
+    {
+        var index = Environment.TickCount % nodes.Count;
+        return nodes[index >= 0 ? index : 0];
+    }
+
+    private static GatewayNode SelectLeastConnection(IList<GatewayNode> nodes) => SelectRoundRobin(nodes);
+
+    private static GatewayNode SelectIPHash(IList<GatewayNode> nodes, String ip)
+    {
+        var hash = ip.IsNullOrEmpty() ? 0 : ip.GetHashCode();
+        var index = Math.Abs(hash) % nodes.Count;
+        return nodes[index];
+    }
+    #endregion
+}
+
+/// <summary>Http反向代理会话。处理客户端请求，匹配路由并转发到目标集群</summary>
+public class HttpReverseSession : ProxySession
+{
+    /// <summary>原始主机</summary>
+    public String RawHost { get; set; }
+
+    /// <summary>请求地址</summary>
+    public Uri LocalUri { get; set; }
+
+    /// <summary>远程地址</summary>
+    public Uri RemoteUri { get; set; }
+
+    /// <summary>收到客户端发来的数据</summary>
+    protected override void OnReceive(ReceivedEventArgs e)
+    {
+        if (Disposed) return;
+
+        // 解析HTTP请求，用于路由匹配
+        var request = new HttpRequest();
+        if (request.Parse(e.Packet))
         {
-            // 修改Host
+            e.Message = request;
+
             var host = request.Headers["Host"];
+            var path = request.RequestUri?.OriginalString ?? "/";
+            var method = request.Method;
 
-            LocalUri = new Uri($"http://{host}:{Session.Local.Port}{request.RequestUri}");
-
-            host = GetHost(host);
-            if (host.IsNullOrEmpty()) return false;
-
-            RemoteUri = new Uri($"http://{host}:{RemoteServerUri.Port}{request.RequestUri}");
-
-            request.Headers["Host"] = host;
-
-            request.Headers["X-Real-IP"] = Remote.Host;
-            request.Headers["X-Forwarded-For"] = Remote.Host;
-            request.Headers["X-Request-Uri"] = LocalUri.ToString();
-
-            return true;
-        }
-
-        protected virtual String GetHost(String rawHost)
-        {
-            if (Host is HttpReverseProxy http)
+            // 匹配路由
+            if (Host is HttpReverseProxy proxy)
             {
-                RemoteServerUri = http.RemoteServer;
-                return http.RemoteServer.Host;
+                var route = proxy.MatchRoute(host, path, method);
+                if (route != null)
+                {
+                    // 选择后端节点
+                    var target = proxy.SelectNode(route);
+                    if (target != null)
+                    {
+                        RemoteServerUri = target;
+                        WriteDebugLog("路由匹配: {0} -> {1}:{2}", route.Name, target.Host, target.Port);
+                    }
+                    else
+                    {
+                        WriteError("路由 {0} 没有可用的后端节点", route.Name);
+                    }
+                }
+                else
+                {
+                    // 未匹配路由，使用默认远程服务器
+                    if (proxy.RemoteServer != null) RemoteServerUri = proxy.RemoteServer;
+                }
             }
-
-            return null;
         }
+
+        base.OnReceive(e);
     }
 }
