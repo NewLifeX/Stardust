@@ -3,9 +3,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Net.Sockets;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using NewLife;
 using NewLife.Http;
 using NewLife.Log;
@@ -65,11 +69,56 @@ public class HttpReverseProxy : ProxyServer
         // 先尝试从StarServer加载，失败则从数据库加载，再失败则从本地文件加载
         LoadConfigWithFallback();
 
+        // 加载SSL证书
+        LoadCertificates();
+
         _timer = new TimerX(DoRefreshConfig, null, ConfigRefreshInterval * 1000, ConfigRefreshInterval * 1000) { Async = true };
         _healthTimer = new TimerX(DoHealthCheck, null, HealthCheckInterval * 1000, HealthCheckInterval * 1000) { Async = true };
 
         WriteLog("Http反向代理启动，监听端口：{0}，路由数：{1}", Port, _routes?.Count ?? 0);
         base.OnStart();
+    }
+    #endregion
+
+    #region SSL证书加载
+    protected virtual void LoadCertificates()
+    {
+        try
+        {
+            var certs = GatewayCert.FindAllEnabled();
+            if (certs.Count == 0)
+            {
+                WriteLog("未配置SSL证书，仅支持HTTP");
+                return;
+            }
+
+            // 加载第一个可用的证书
+            foreach (var certEntity in certs)
+            {
+                var file = certEntity.CertFile;
+                if (file.IsNullOrEmpty() || !File.Exists(file)) continue;
+
+                try
+                {
+                    // 尝试加载PEM格式证书
+#pragma warning disable SYSLIB0057
+                    var cert = new X509Certificate2(file);
+#pragma warning restore SYSLIB0057
+                    Certificate = cert;
+                    SslProtocol = SslProtocols.Tls12;
+                    WriteLog("加载SSL证书: {0} -> {1}", certEntity.Name, cert.Subject);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    WriteError("加载证书 {0} 失败：{1}", file, ex.Message);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            WriteError("加载SSL证书配置失败：{0}", ex.Message);
+        }
     }
     #endregion
 
@@ -359,12 +408,91 @@ public class HttpReverseProxy : ProxyServer
         return true;
     }
     #endregion
+
+    #region StarAgent 协同
+    /// <summary>本地StarAgent地址。默认 http://127.0.0.1:5500</summary>
+    public String AgentUrl { get; set; } = "http://127.0.0.1:5500";
+
+    /// <summary>空闲超时。单位秒，超过该时间无流量的后端将被回收，默认900秒（15分钟）</summary>
+    public Int32 IdleTimeout { get; set; } = 900;
+
+    /// <summary>后端最后活动时间</summary>
+    internal ConcurrentDictionary<String, DateTime> _lastActive = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>调用StarAgent启动服务</summary>
+    public async Task<Boolean> StartBackend(String address, String serviceName)
+    {
+        try
+        {
+            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+            var url = $"{AgentUrl}/api/StartService?serviceName={serviceName}";
+            var rs = await client.GetStringAsync(url);
+            AdminLog?.Info("StarAgent StartService {0}: {1}", serviceName, rs);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            WriteError("调用StarAgent启动服务失败 {0}：{1}", serviceName, ex.Message);
+            return false;
+        }
+    }
+
+    /// <summary>调用StarAgent停止服务</summary>
+    public async Task<Boolean> StopBackend(String address, String serviceName)
+    {
+        try
+        {
+            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+            var url = $"{AgentUrl}/api/StopService?serviceName={serviceName}";
+            var rs = await client.GetStringAsync(url);
+            AdminLog?.Info("StarAgent StopService {0}: {1}", serviceName, rs);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            WriteError("调用StarAgent停止服务失败 {0}：{1}", serviceName, ex.Message);
+            return false;
+        }
+    }
+
+    /// <summary>检查空闲后端并回收</summary>
+    public async Task CheckIdleBackends()
+    {
+        var routes = _routes;
+        if (routes == null) return;
+
+        var now = DateTime.Now;
+        foreach (var route in routes)
+        {
+            var nodes = GatewayNode.FindAllByClusterId(route.ClusterId);
+            if (nodes == null) continue;
+
+            foreach (var node in nodes)
+            {
+                if (!node.Enable) continue;
+
+                var key = node.Address;
+                if (_lastActive.TryGetValue(key, out var last))
+                {
+                    // 空闲时间超过阈值，且不是当前健康节点
+                    if ((now - last).TotalSeconds > IdleTimeout && !node.IsHealthy)
+                    {
+                        AdminLog?.Info("空闲回收: {0} 超过 {1} 秒无活动", key, IdleTimeout);
+                        // 可以调用StarAgent停止服务
+                        // await StopBackend(key, serviceName);
+                    }
+                }
+            }
+        }
+    }
+    #endregion
 }
 
 /// <summary>Http反向代理会话</summary>
 public class HttpReverseSession : ProxySession
 {
     private String _targetAddress;
+    private String _routeName;
 
     protected override void OnReceive(ReceivedEventArgs e)
     {
@@ -393,26 +521,50 @@ public class HttpReverseSession : ProxySession
             {
                 RemoteServerUri = target;
                 _targetAddress = target.ToString();
+                _routeName = route.Name;
 
                 // 追踪连接数
                 proxy.IncrementConnection(_targetAddress);
-                proxy.AdminLog?.Info("{0} {1} -> {2}:{3} [{4}]", method, path, target.Host, target.Port, route.Name);
+                proxy._lastActive[_targetAddress] = DateTime.Now;
+                proxy.AdminLog?.Info("{0} {1} -> {2}:{3} [{4}]", method, path, target.Host, target.Port, _routeName);
             }
             else
             {
+                // 没有可用节点，尝试冷启动
                 proxy.WriteError("路由 {0} 没有可用的后端节点", route.Name);
+                _ = TryColdStart(proxy, route);
             }
         }
         else
         {
+            // 未匹配路由，使用默认远程服务器
             if (proxy.RemoteServer != null) RemoteServerUri = proxy.RemoteServer;
         }
 
         base.OnReceive(e);
     }
 
+    private async Task TryColdStart(HttpReverseProxy proxy, GatewayRoute route)
+    {
+        var cluster = route.Cluster;
+        if (cluster == null) return;
+
+        var nodes = GatewayNode.FindAllByClusterId(route.ClusterId);
+        if (nodes == null || nodes.Count == 0) return;
+
+        // 尝试唤醒第一个有问题的节点
+        foreach (var node in nodes)
+        {
+            if (node.Enable && !node.IsHealthy)
+            {
+                proxy.AdminLog?.Info("冷启动: 尝试唤醒 {0} (路由: {1})", node.Address, route.Name);
+                await proxy.StartBackend(node.Address, node.Name);
+                break;
+            }
+        }
+    }
+
     /// <summary>销毁</summary>
-    /// <param name="disposing"></param>
     protected override void Dispose(Boolean disposing)
     {
         if (_targetAddress != null && Host is HttpReverseProxy proxy)
