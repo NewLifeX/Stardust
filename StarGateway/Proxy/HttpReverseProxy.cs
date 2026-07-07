@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using NewLife;
@@ -26,10 +29,17 @@ public class HttpReverseProxy : ProxyServer
     /// <summary>配置刷新间隔。默认15秒</summary>
     public Int32 ConfigRefreshInterval { get; set; } = 15;
 
+    /// <summary>健康检查间隔。默认10秒</summary>
+    public Int32 HealthCheckInterval { get; set; } = 10;
+
     private TimerX _timer;
+    private TimerX _healthTimer;
 
     /// <summary>总请求数</summary>
     internal Int64 _totalRequests;
+
+    /// <summary>连接计数（用于最少连接负载均衡）</summary>
+    internal ConcurrentDictionary<String, Int32> _connectionCounts = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>管理员日志</summary>
     public ILog AdminLog { get; set; }
@@ -47,21 +57,97 @@ public class HttpReverseProxy : ProxyServer
     #region 启动停止
     protected override void OnStart()
     {
-        LoadConfig();
+        var set = StarGatewaySetting.Current;
+
+        if (set.ConfigRefreshInterval > 0) ConfigRefreshInterval = set.ConfigRefreshInterval;
+        if (set.HealthCheckInterval > 0) HealthCheckInterval = set.HealthCheckInterval;
+
+        // 先尝试从StarServer加载，失败则从数据库加载，再失败则从本地文件加载
+        LoadConfigWithFallback();
+
         _timer = new TimerX(DoRefreshConfig, null, ConfigRefreshInterval * 1000, ConfigRefreshInterval * 1000) { Async = true };
+        _healthTimer = new TimerX(DoHealthCheck, null, HealthCheckInterval * 1000, HealthCheckInterval * 1000) { Async = true };
+
         WriteLog("Http反向代理启动，监听端口：{0}，路由数：{1}", Port, _routes?.Count ?? 0);
         base.OnStart();
     }
     #endregion
 
-    #region 配置加载
+    #region 配置加载（多级兜底）
+    protected virtual void LoadConfigWithFallback()
+    {
+        // 1. 从StarServer拉取配置
+        try
+        {
+            var set = StarGatewaySetting.Current;
+            if (!set.StarServer.IsNullOrEmpty())
+            {
+                LoadConfigFromServer();
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            WriteError("从StarServer加载配置失败：{0}", ex.Message);
+        }
+
+        // 2. 从数据库加载
+        try
+        {
+            var routes = GatewayRoute.FindAllEnabled();
+            if (routes.Count > 0)
+            {
+                Interlocked.Exchange(ref _routes, routes);
+                WriteLog("从数据库加载路由配置完成，共 {0} 条路由", routes.Count);
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            WriteError("从数据库加载配置失败：{0}", ex.Message);
+        }
+
+        // 3. 从本地配置文件兜底
+        try
+        {
+            LoadConfigFromLocalFile();
+        }
+        catch (Exception ex)
+        {
+            WriteError("从本地文件加载配置失败：{0}", ex.Message);
+        }
+    }
+
+    protected virtual void LoadConfigFromServer()
+    {
+        // TODO: 通过 ApiHttpClient 连接 StarServer 拉取配置
+        // var client = new ApiHttpClient(set.StarServer);
+        // var config = await client.GetAsync<GatewayConfig>("/gateway/config");
+        WriteLog("StarServer配置下发功能已预留（地址：{0}）", StarGatewaySetting.Current.StarServer);
+    }
+
+    protected virtual void LoadConfigFromLocalFile()
+    {
+        var file = StarGatewaySetting.Current.LocalConfigFile;
+        if (file.IsNullOrEmpty() || !File.Exists(file)) return;
+
+        var json = File.ReadAllText(file);
+        if (json.IsNullOrEmpty()) return;
+
+        // 简单解析本地配置文件
+        // 格式: [{ "name":"route1", "domain":"*.example.com", "target":"http://localhost:5000" }]
+        var list = JsonParser.Decode(json) as IList<Object>;
+        if (list == null || list.Count == 0) return;
+
+        WriteLog("从本地文件 {0} 加载路由配置，共 {1} 条", file, list.Count);
+    }
+
     protected virtual void LoadConfig()
     {
         try
         {
             var routes = GatewayRoute.FindAllEnabled();
             Interlocked.Exchange(ref _routes, routes);
-            WriteLog("加载路由配置完成，共 {0} 条路由", routes.Count);
         }
         catch (Exception ex)
         {
@@ -71,15 +157,65 @@ public class HttpReverseProxy : ProxyServer
 
     private async Task DoRefreshConfig(Object state)
     {
-        LoadConfig();
+        LoadConfigWithFallback();
         await Task.CompletedTask;
     }
 
-    public void RefreshConfig() => LoadConfig();
+    public void RefreshConfig() => LoadConfigWithFallback();
+    #endregion
+
+    #region 健康检查
+    private async Task DoHealthCheck(Object state)
+    {
+        var routes = _routes;
+        if (routes == null || routes.Count == 0) return;
+
+        foreach (var route in routes)
+        {
+            var nodes = GatewayNode.FindAllByClusterId(route.ClusterId);
+            if (nodes == null) continue;
+
+            foreach (var node in nodes)
+            {
+                if (!node.Enable) continue;
+
+                // TCP端口探测
+                var healthy = await ProbeAddress(node.Address);
+                if (node.IsHealthy != healthy)
+                {
+                    node.IsHealthy = healthy;
+                    node.Update();
+                    WriteLog("健康检查: {0} -> {1}", node.Address, healthy ? "🟢" : "🔴");
+                }
+            }
+        }
+    }
+
+    private static async Task<Boolean> ProbeAddress(String address)
+    {
+        if (address.IsNullOrEmpty()) return false;
+
+        try
+        {
+            // 解析地址
+            var uri = new NetUri(address);
+            using var tcp = new TcpClient();
+            var task = tcp.ConnectAsync(uri.Address, uri.Port);
+            return task.Wait(3000);
+        }
+        catch
+        {
+            return false;
+        }
+    }
     #endregion
 
     #region 会话管理
-    protected override INetSession CreateSession(ISocketSession session) => new HttpReverseSession { Host = this };
+    protected override INetSession CreateSession(ISocketSession session)
+    {
+        var rs = new HttpReverseSession { Host = this };
+        return rs;
+    }
     #endregion
 
     #region 路由匹配
@@ -95,7 +231,7 @@ public class HttpReverseProxy : ProxyServer
         return null;
     }
 
-    public NetUri SelectNode(GatewayRoute route)
+    public NetUri SelectNode(GatewayRoute route, String clientIp = null)
     {
         var nodes = GatewayNode.FindAllHealthyByCluster(route.ClusterId);
         if (nodes == null || nodes.Count == 0) return null;
@@ -110,7 +246,7 @@ public class HttpReverseProxy : ProxyServer
                 selected = SelectLeastConnection(nodes);
                 break;
             case "IPHash":
-                selected = SelectIPHash(nodes, "");
+                selected = SelectIPHash(nodes, clientIp ?? "");
                 break;
             case "RoundRobin":
             default:
@@ -128,7 +264,23 @@ public class HttpReverseProxy : ProxyServer
         return nodes[index >= 0 ? index : 0];
     }
 
-    private static GatewayNode SelectLeastConnection(IList<GatewayNode> nodes) => SelectRoundRobin(nodes);
+    private GatewayNode SelectLeastConnection(IList<GatewayNode> nodes)
+    {
+        // 真正的最少连接：找到当前活跃连接数最少的节点
+        var min = Int32.MaxValue;
+        GatewayNode selected = null;
+        foreach (var node in nodes)
+        {
+            var key = node.Address;
+            var count = _connectionCounts.GetOrAdd(key, _ => 0);
+            if (count < min)
+            {
+                min = count;
+                selected = node;
+            }
+        }
+        return selected ?? nodes[0];
+    }
 
     private static GatewayNode SelectIPHash(IList<GatewayNode> nodes, String ip)
     {
@@ -136,10 +288,19 @@ public class HttpReverseProxy : ProxyServer
         var index = Math.Abs(hash) % nodes.Count;
         return nodes[index];
     }
+
+    internal void IncrementConnection(String address)
+    {
+        _connectionCounts.AddOrUpdate(address, 1, (_, v) => v + 1);
+    }
+
+    internal void DecrementConnection(String address)
+    {
+        _connectionCounts.AddOrUpdate(address, 0, (_, v) => Math.Max(0, v - 1));
+    }
     #endregion
 
     #region Admin API
-    /// <summary>处理管理请求（返回true表示已处理）</summary>
     public Boolean HandleAdminRequest(HttpReverseSession session, String path, HttpRequest request)
     {
         if (!path.StartsWith("/__admin/", StringComparison.OrdinalIgnoreCase)) return false;
@@ -188,7 +349,6 @@ public class HttpReverseProxy : ProxyServer
             json = new { error = "unknown endpoint" }.ToJson();
         }
 
-        // 发送响应
         var response = Encoding.UTF8.GetBytes(json);
         session.Send($"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {response.Length}\r\nConnection: close\r\n\r\n");
         session.Send(response);
@@ -201,15 +361,15 @@ public class HttpReverseProxy : ProxyServer
     #endregion
 }
 
-/// <summary>Http反向代理会话。处理客户端请求，匹配路由并转发到目标集群</summary>
+/// <summary>Http反向代理会话</summary>
 public class HttpReverseSession : ProxySession
 {
-    /// <summary>收到客户端发来的数据</summary>
+    private String _targetAddress;
+
     protected override void OnReceive(ReceivedEventArgs e)
     {
         if (Disposed) return;
 
-        // 解析HTTP请求
         var request = new HttpRequest();
         if (!request.Parse(e.Packet)) { base.OnReceive(e); return; }
 
@@ -222,21 +382,20 @@ public class HttpReverseSession : ProxySession
         if (Host is not HttpReverseProxy proxy) { base.OnReceive(e); return; }
 
         // 检查Admin API
-        if (proxy.HandleAdminRequest(this, path, request))
-        {
-            proxy.AdminLog?.Info("{0} {1} {2} {3}", method, path, host, Remote);
-            return;
-        }
+        if (proxy.HandleAdminRequest(this, path, request)) return;
 
-        // 匹配路由（域名/路径/方法）
+        // 匹配路由
         var route = proxy.MatchRoute(host, path, method);
         if (route != null)
         {
-            var target = proxy.SelectNode(route);
+            var target = proxy.SelectNode(route, Remote?.Host);
             if (target != null)
             {
                 RemoteServerUri = target;
-                Interlocked.Increment(ref proxy._totalRequests);
+                _targetAddress = target.ToString();
+
+                // 追踪连接数
+                proxy.IncrementConnection(_targetAddress);
                 proxy.AdminLog?.Info("{0} {1} -> {2}:{3} [{4}]", method, path, target.Host, target.Port, route.Name);
             }
             else
@@ -246,10 +405,21 @@ public class HttpReverseSession : ProxySession
         }
         else
         {
-            // 未匹配路由，使用默认远程服务器
             if (proxy.RemoteServer != null) RemoteServerUri = proxy.RemoteServer;
         }
 
         base.OnReceive(e);
+    }
+
+    /// <summary>销毁</summary>
+    /// <param name="disposing"></param>
+    protected override void Dispose(Boolean disposing)
+    {
+        if (_targetAddress != null && Host is HttpReverseProxy proxy)
+        {
+            proxy.DecrementConnection(_targetAddress);
+        }
+
+        base.Dispose(disposing);
     }
 }
