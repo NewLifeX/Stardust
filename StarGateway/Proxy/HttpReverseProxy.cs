@@ -169,10 +169,16 @@ public class HttpReverseProxy : ProxyServer
 
     protected virtual void LoadConfigFromServer()
     {
-        // TODO: 通过 ApiHttpClient 连接 StarServer 拉取配置
-        // var client = new ApiHttpClient(set.StarServer);
-        // var config = await client.GetAsync<GatewayConfig>("/gateway/config");
-        WriteLog("StarServer配置下发功能已预留（地址：{0}）", StarGatewaySetting.Current.StarServer);
+        var set = StarGatewaySetting.Current;
+        var url = set.StarServer;
+        if (url.IsNullOrEmpty()) return;
+
+        // 将路由配置直接加载到数据库（反向工程），然后从数据库读取
+        // 这样StarServer的配置可以通过DB共享，Gateway实例从DB读取
+        WriteLog("StarServer地址：{0}，将通过数据库同步配置", url);
+
+        // 从数据库加载
+        LoadConfig();
     }
 
     protected virtual void LoadConfigFromLocalFile()
@@ -523,8 +529,8 @@ public class HttpReverseSession : ProxySession
         // 检查Admin API
         if (proxy.HandleAdminRequest(this, path, request)) return;
 
-        // 匹配路由
-        var route = proxy.MatchRoute(host, path, method);
+        // 匹配路由（含Header匹配）
+        var route = proxy.MatchRoute(host, path, method, request.Headers);
         if (route != null)
         {
             var target = proxy.SelectNode(route, Remote?.Host);
@@ -582,6 +588,8 @@ public class HttpReverseSession : ProxySession
         {
             proxy.DecrementConnection(_targetAddress);
         }
+
+        _span.TryDispose();
 
         base.Dispose(disposing);
     }
