@@ -522,12 +522,13 @@ public class StarFactory : DisposeBase
     /// <param name="startTime"></param>
     /// <param name="expire"></param>
     /// <param name="timeout"></param>
+    /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public Task<Int32> SendNodeCommand(String nodeCode, String command, String? argument = null, Int32 startTime = 0, Int32 expire = 3600, Int32 timeout = 5)
+    public Task<CommandReplyModel?> SendNodeCommandAsync(String nodeCode, String command, String? argument = null, Int32 startTime = 0, Int32 expire = 3600, Int32 timeout = 5, CancellationToken cancellationToken = default)
     {
-        if (!Valid()) return Task.FromResult(-1);
+        if (!Valid()) return Task.FromResult<CommandReplyModel?>(null);
 
-        return _client.InvokeAsync<Int32>("Node/SendCommand", new CommandInModel
+        return _client.InvokeAsync<CommandReplyModel?>("Node/SendCommand", new CommandInModel
         {
             Code = nodeCode,
             Command = command,
@@ -535,7 +536,22 @@ public class StarFactory : DisposeBase
             StartTime = startTime,
             Expire = expire,
             Timeout = timeout
-        });
+        }, cancellationToken);
+    }
+
+    /// <summary>发送节点命令。通知节点更新、安装和启停应用等</summary>
+    /// <param name="nodeCode"></param>
+    /// <param name="command"></param>
+    /// <param name="argument"></param>
+    /// <param name="startTime"></param>
+    /// <param name="expire"></param>
+    /// <param name="timeout"></param>
+    /// <returns>命令ID。大于0表示成功</returns>
+    [Obsolete("请使用SendNodeCommandAsync代替")]
+    public async Task<Int32> SendNodeCommand(String nodeCode, String command, String? argument = null, Int32 startTime = 0, Int32 expire = 3600, Int32 timeout = 5)
+    {
+        var rs = await SendNodeCommandAsync(nodeCode, command, argument, startTime, expire, timeout).ConfigureAwait(false);
+        return rs != null ? 1 : -1;
     }
 
     /// <summary>发送应用命令。通知应用刷新配置信息和服务信息等</summary>
@@ -546,15 +562,16 @@ public class StarFactory : DisposeBase
     /// <param name="startTime"></param>
     /// <param name="expire"></param>
     /// <param name="timeout"></param>
+    /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public Task<Int32> SendAppCommand(String appId, String clientId, String command, String? argument, Int32 startTime = 0, Int32 expire = 3600, Int32 timeout = 5)
+    public Task<CommandReplyModel?> SendAppCommandAsync(String appId, String clientId, String command, String? argument, Int32 startTime = 0, Int32 expire = 3600, Int32 timeout = 5, CancellationToken cancellationToken = default)
     {
-        if (!Valid()) return Task.FromResult(-1);
+        if (!Valid()) return Task.FromResult<CommandReplyModel?>(null);
 
         var code = appId;
         if (!clientId.IsNullOrEmpty()) code = $"{code}@{clientId}";
 
-        return _client.InvokeAsync<Int32>("App/SendCommand", new CommandInModel
+        return _client.InvokeAsync<CommandReplyModel?>("App/SendCommand", new CommandInModel
         {
             Code = code,
             Command = command,
@@ -562,8 +579,26 @@ public class StarFactory : DisposeBase
             StartTime = startTime,
             Expire = expire,
             Timeout = timeout
-        });
+        }, cancellationToken);
     }
+
+    /// <summary>发送应用命令。通知应用刷新配置信息和服务信息等</summary>
+    /// <param name="appId"></param>
+    /// <param name="clientId"></param>
+    /// <param name="command"></param>
+    /// <param name="argument"></param>
+    /// <param name="startTime"></param>
+    /// <param name="expire"></param>
+    /// <param name="timeout"></param>
+    /// <returns>命令ID。大于0表示成功</returns>
+    [Obsolete("请使用SendAppCommandAsync代替")]
+    public async Task<Int32> SendAppCommand(String appId, String clientId, String command, String? argument, Int32 startTime = 0, Int32 expire = 3600, Int32 timeout = 5)
+    {
+        var rs = await SendAppCommandAsync(appId, clientId, command, argument, startTime, expire, timeout).ConfigureAwait(false);
+        return rs != null ? 1 : -1;
+    }
+
+
 
     /// <summary>设置看门狗超时时间</summary>
     /// <param name="timeout">超时时间，单位秒。0表示关闭看门狗</param>

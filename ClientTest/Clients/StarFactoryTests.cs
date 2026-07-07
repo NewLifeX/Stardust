@@ -119,7 +119,7 @@ public class StarFactoryTests
 
         using var star = new StarFactory("http://127.0.0.1:6600", "StarWeb", "xxx");
 
-        var rs = await star.SendNodeCommand("81AFCC68", "hello", "stone", 33);
-        Assert.True(rs > 0);
+        var rs = await star.SendNodeCommandAsync("81AFCC68", "hello", "stone", 33, cancellationToken: default);
+        Assert.NotNull(rs);
     }
 }

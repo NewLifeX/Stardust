@@ -78,8 +78,8 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
             //NodeCommand.Add(node, "截屏");
             //NodeCommand.Add(node, "抓日志");
 
-            await _starFactory.SendNodeCommand(node.Code, "截屏");
-            await _starFactory.SendNodeCommand(node.Code, "抓日志");
+            await _starFactory.SendNodeCommandAsync(node.Code, "截屏", cancellationToken: HttpContext.RequestAborted);
+            await _starFactory.SendNodeCommandAsync(node.Code, "抓日志", cancellationToken: HttpContext.RequestAborted);
         }
 
         return RedirectToAction("Index");
@@ -89,19 +89,29 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
     [EntityAuthorize((PermissionFlags)16)]
     public async Task<ActionResult> CheckUpgrade()
     {
-        var ts = new List<Task<Int32>>();
+        var ts = new List<(String name, Task<CommandReplyModel?> task)>();
         foreach (var item in SelectKeys)
         {
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
             {
-                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, "node/upgrade", null, 0, 600, 0));
+                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/upgrade", null, 0, 600, 0, HttpContext.RequestAborted)));
             }
         }
 
-        var rs = await Task.WhenAll(ts);
+        await Task.WhenAll(ts.Select(t => t.task));
 
-        return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
+        var success = ts.Count(t => t.task.Result != null);
+        var timeout = ts.Count(t => t.task.Result == null);
+        var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个";
+        foreach (var (name, task) in ts)
+        {
+            var reply = task.Result;
+            if (reply != null)
+                msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
+        }
+
+        return JsonRefresh(msg);
     }
 
     [DisplayName("升级到版本")]
@@ -113,7 +123,7 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
         var release = ProductRelease.FindById(releaseId.ToInt());
         if (release == null) return JsonRefresh("指定版本不存在！");
 
-        var ts = new List<Task<Int32>>();
+        var ts = new List<(String name, Task<CommandReplyModel?> task)>();
         var skipCount = 0;
         foreach (var item in SelectKeys)
         {
@@ -143,72 +153,112 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
                     Description = release.Remark,
                 };
                 var args = info.ToJson();
-                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, "node/upgrade", args, 0, 600, 0));
+                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/upgrade", args, 0, 600, 0, HttpContext.RequestAborted)));
             }
         }
 
         if (ts.Count == 0) return JsonRefresh($"选中节点均无匹配的包。跳过{skipCount}个");
 
-        var rs = await Task.WhenAll(ts);
+        await Task.WhenAll(ts.Select(t => t.task));
 
-        return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个，跳过{skipCount}个");
+        var success = ts.Count(t => t.task.Result != null);
+        var timeout = ts.Count(t => t.task.Result == null);
+        var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个，跳过{skipCount}个";
+        foreach (var (name, task) in ts)
+        {
+            var reply = task.Result;
+            if (reply != null)
+                msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
+        }
+
+        return JsonRefresh(msg);
     }
 
     [DisplayName("同步时间")]
     [EntityAuthorize((PermissionFlags)16)]
     public async Task<ActionResult> SyncTime()
     {
-        var ts = new List<Task<Int32>>();
+        var ts = new List<(String name, Task<CommandReplyModel?> task)>();
         foreach (var item in SelectKeys)
         {
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
             {
-                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, "node/syncTime", null, 0, 600, 0));
+                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/syncTime", null, 0, 600, 0, HttpContext.RequestAborted)));
             }
         }
 
-        var rs = await Task.WhenAll(ts);
+        await Task.WhenAll(ts.Select(t => t.task));
 
-        return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
+        var success = ts.Count(t => t.task.Result != null);
+        var timeout = ts.Count(t => t.task.Result == null);
+        var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个";
+        foreach (var (name, task) in ts)
+        {
+            var reply = task.Result;
+            if (reply != null)
+                msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
+        }
+
+        return JsonRefresh(msg);
     }
 
     [DisplayName("重启服务")]
     [EntityAuthorize((PermissionFlags)32)]
     public async Task<ActionResult> Restart()
     {
-        var ts = new List<Task<Int32>>();
+        var ts = new List<(String name, Task<CommandReplyModel?> task)>();
         foreach (var item in SelectKeys)
         {
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
             {
-                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, "node/restart", null, 0, 600, 0));
+                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/restart", null, 0, 600, 0, HttpContext.RequestAborted)));
             }
         }
 
-        var rs = await Task.WhenAll(ts);
+        await Task.WhenAll(ts.Select(t => t.task));
 
-        return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
+        var success = ts.Count(t => t.task.Result != null);
+        var timeout = ts.Count(t => t.task.Result == null);
+        var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个";
+        foreach (var (name, task) in ts)
+        {
+            var reply = task.Result;
+            if (reply != null)
+                msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
+        }
+
+        return JsonRefresh(msg);
     }
 
     [DisplayName("重启系统")]
     [EntityAuthorize((PermissionFlags)64)]
     public async Task<ActionResult> Reboot()
     {
-        var ts = new List<Task<Int32>>();
+        var ts = new List<(String name, Task<CommandReplyModel?> task)>();
         foreach (var item in SelectKeys)
         {
             var online = NodeOnline.FindById(item.ToInt());
             if (online?.Node != null)
             {
-                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, "node/reboot", null, 0, 600, 0));
+                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, "node/reboot", null, 0, 600, 0, HttpContext.RequestAborted)));
             }
         }
 
-        var rs = await Task.WhenAll(ts);
+        await Task.WhenAll(ts.Select(t => t.task));
 
-        return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
+        var success = ts.Count(t => t.task.Result != null);
+        var timeout = ts.Count(t => t.task.Result == null);
+        var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个";
+        foreach (var (name, task) in ts)
+        {
+            var reply = task.Result;
+            if (reply != null)
+                msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
+        }
+
+        return JsonRefresh(msg);
     }
 
     [DisplayName("执行命令")]
@@ -218,18 +268,28 @@ public class NodeOnlineController : NodesEntityController<NodeOnline>
         if (GetRequest("keys") == null) throw new ArgumentNullException(nameof(SelectKeys));
         if (command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(command));
 
-        var ts = new List<Task<Int32>>();
+        var ts = new List<(String name, Task<CommandReplyModel?> task)>();
         foreach (var item in SelectKeys)
         {
             var online = NodeOnline.FindById(item.ToInt());
             if (online != null && online.Node != null)
             {
-                ts.Add(_starFactory.SendNodeCommand(online.Node.Code, command, argument, 0, 300, 0));
+                ts.Add((online.Name, _starFactory.SendNodeCommandAsync(online.Node.Code, command, argument, 0, 300, 0, HttpContext.RequestAborted)));
             }
         }
 
-        var rs = await Task.WhenAll(ts);
+        await Task.WhenAll(ts.Select(t => t.task));
 
-        return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
+        var success = ts.Count(t => t.task.Result != null);
+        var timeout = ts.Count(t => t.task.Result == null);
+        var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个";
+        foreach (var (name, task) in ts)
+        {
+            var reply = task.Result;
+            if (reply != null)
+                msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
+        }
+
+        return JsonRefresh(msg);
     }
 }

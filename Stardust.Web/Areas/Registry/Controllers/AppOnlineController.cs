@@ -6,6 +6,7 @@ using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Web;
+using NewLife.Remoting.Models;
 using Stardust.Data;
 using XCode.Membership;
 
@@ -83,37 +84,57 @@ public class AppOnlineController : RegistryEntityController<AppOnline>
         if (GetRequest("keys") == null) throw new ArgumentNullException(nameof(SelectKeys));
         if (command.IsNullOrEmpty()) throw new ArgumentNullException(nameof(command));
 
-        var ts = new List<Task<Int32>>();
+        var ts = new List<(String name, Task<CommandReplyModel?> task)>();
         foreach (var item in SelectKeys)
         {
             var online = AppOnline.FindById(item.ToInt());
             if (online != null && online.App != null)
             {
-                ts.Add(_starFactory.SendAppCommand(online.App.Name, online.Client, command, argument, 0, 300, 0));
+                ts.Add((online.AppName, _starFactory.SendAppCommandAsync(online.App.Name, online.Client, command, argument, 0, 300, 0, HttpContext.RequestAborted)));
             }
         }
 
-        var rs = await Task.WhenAll(ts);
+        await Task.WhenAll(ts.Select(t => t.task));
 
-        return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
+        var success = ts.Count(t => t.task.Result != null);
+        var timeout = ts.Count(t => t.task.Result == null);
+        var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个";
+        foreach (var (name, task) in ts)
+        {
+            var reply = task.Result;
+            if (reply != null)
+                msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
+        }
+
+        return JsonRefresh(msg);
     }
 
     [DisplayName("释放内存")]
     [EntityAuthorize((PermissionFlags)32)]
     public async Task<ActionResult> FreeMemory()
     {
-        var ts = new List<Task<Int32>>();
+        var ts = new List<(String name, Task<CommandReplyModel?> task)>();
         foreach (var item in SelectKeys)
         {
             var online = AppOnline.FindById(item.ToInt());
             if (online != null && online.App != null)
             {
-                ts.Add(_starFactory.SendAppCommand(online.App.Name, online.Client, "app/freeMemory", null, 0, 300, 0));
+                ts.Add((online.AppName, _starFactory.SendAppCommandAsync(online.App.Name, online.Client, "app/freeMemory", null, 0, 300, 0, HttpContext.RequestAborted)));
             }
         }
 
-        var rs = await Task.WhenAll(ts);
+        await Task.WhenAll(ts.Select(t => t.task));
 
-        return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
+        var success = ts.Count(t => t.task.Result != null);
+        var timeout = ts.Count(t => t.task.Result == null);
+        var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个";
+        foreach (var (name, task) in ts)
+        {
+            var reply = task.Result;
+            if (reply != null)
+                msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
+        }
+
+        return JsonRefresh(msg);
     }
 }

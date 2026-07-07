@@ -167,7 +167,7 @@ public class AppConfigController : ConfigsEntityController<AppConfig>
 
     public async Task<ActionResult> Publish(Int32 configId)
     {
-        var rs = await _configService.Publish(configId);
+        var rs = await _configService.Publish(configId, HttpContext.RequestAborted);
 
         return JsonRefresh($"发布成功！共通知{rs}个应用", 3);
     }

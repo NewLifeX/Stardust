@@ -5,6 +5,7 @@ using NewLife.Cube;
 using NewLife.Serialization;
 using NewLife.Web;
 using Stardust.Data.Nodes;
+using NewLife.Remoting.Models;
 using Stardust.Models;
 using XCode;
 using XCode.Membership;
@@ -90,18 +91,27 @@ public class NodeFrameworkController : EntityController<Node>
             }
 
             var args = fmodel.ToJson();
-            var ts = new List<Task<Int32>>();
+            var ts = new List<(String name, Task<CommandReplyModel?> task)>();
             foreach (var item in SelectKeys)
             {
                 var node = bf.FindByKey(item.ToInt());
                 if (node != null && !node.Code.IsNullOrEmpty())
                 {
-                    ts.Add(_starFactory.SendNodeCommand(node.Code, "framework/install", args, 0, 30 * 24 * 3600, 0));
+                    ts.Add((node.Name, _starFactory.SendNodeCommandAsync(node.Code, "framework/install", args, 0, 30 * 24 * 3600, 0, HttpContext.RequestAborted)));
                 }
             }
 
-            var rs = await Task.WhenAll(ts);
-            return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
+            await Task.WhenAll(ts.Select(t => t.task));
+            var success = ts.Count(t => t.task.Result != null);
+            var timeout = ts.Count(t => t.task.Result == null);
+            var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个";
+            foreach (var (name, task) in ts)
+            {
+                var reply = task.Result;
+                if (reply != null)
+                    msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
+            }
+            return JsonRefresh(msg);
         }
         else
         {
@@ -117,18 +127,27 @@ public class NodeFrameworkController : EntityController<Node>
             var model = new FrameworkModel { Version = ver, BaseUrl = baseUrl, Force = true };
             var args = model.ToJson();
 
-            var ts = new List<Task<Int32>>();
+            var ts = new List<(String name, Task<CommandReplyModel?> task)>();
             foreach (var item in SelectKeys)
             {
                 var node = bf.FindByKey(item.ToInt());
                 if (node != null && !node.Code.IsNullOrEmpty())
                 {
-                    ts.Add(_starFactory.SendNodeCommand(node.Code, "framework/install", args, 0, 30 * 24 * 3600, 0));
+                    ts.Add((node.Name, _starFactory.SendNodeCommandAsync(node.Code, "framework/install", args, 0, 30 * 24 * 3600, 0, HttpContext.RequestAborted)));
                 }
             }
 
-            var rs = await Task.WhenAll(ts);
-            return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
+            await Task.WhenAll(ts.Select(t => t.task));
+            var success = ts.Count(t => t.task.Result != null);
+            var timeout = ts.Count(t => t.task.Result == null);
+            var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个";
+            foreach (var (name, task) in ts)
+            {
+                var reply = task.Result;
+                if (reply != null)
+                    msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
+            }
+            return JsonRefresh(msg);
         }
     }
 
@@ -147,19 +166,27 @@ public class NodeFrameworkController : EntityController<Node>
         var model = new FrameworkModel { Version = ver, BaseUrl = null, Force = true };
         var args = model.ToJson();
 
-        var ts = new List<Task<Int32>>();
+        var ts = new List<(String name, Task<CommandReplyModel?> task)>();
         foreach (var item in SelectKeys)
         {
             var node = bf.FindByKey(item.ToInt());
             if (node != null && !node.Code.IsNullOrEmpty())
             {
-                ts.Add(_starFactory.SendNodeCommand(node.Code, "framework/uninstall", args, 0, 30 * 24 * 3600, 0));
-
+                ts.Add((node.Name, _starFactory.SendNodeCommandAsync(node.Code, "framework/uninstall", args, 0, 30 * 24 * 3600, 0, HttpContext.RequestAborted)));
             }
         }
 
-        var rs = await Task.WhenAll(ts);
+        await Task.WhenAll(ts.Select(t => t.task));
+        var success = ts.Count(t => t.task.Result != null);
+        var timeout = ts.Count(t => t.task.Result == null);
+        var msg = $"操作成功！下发{ts.Count}个，响应{success}个，超时{timeout}个";
+        foreach (var (name, task) in ts)
+        {
+            var reply = task.Result;
+            if (reply != null)
+                msg += $"\n{name}: {reply.Data ?? "(无返回数据)"}";
+        }
 
-        return JsonRefresh($"操作成功！下发指令{rs.Length}个，成功{rs.Count(e => e > 0)}个");
+        return JsonRefresh(msg);
     }
 }

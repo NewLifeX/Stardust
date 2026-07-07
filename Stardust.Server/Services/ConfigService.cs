@@ -311,7 +311,7 @@ public class ConfigService
         return configs.Count;
     }
 
-    public async Task<Int32> Publish(Int32 appId)
+    public async Task<Int32> Publish(Int32 appId, CancellationToken cancellationToken = default)
     {
         using var span = _tracer?.NewSpan(nameof(Publish), appId + "");
         try
@@ -321,7 +321,7 @@ public class ConfigService
             if (app.Version >= app.NextVersion) throw new ApiException(701, "已经是最新版本！");
             app.Publish();
 
-            await _starFactory.SendAppCommand(app.Name, null, "config/publish", "");
+            await _starFactory.SendAppCommandAsync(app.Name, null, "config/publish", "", 0, 3600, 5, cancellationToken);
             var rs = 1;
 
             // 通知下游依赖应用
@@ -331,7 +331,7 @@ public class ConfigService
                 {
                     if (item.Enable)
                     {
-                        _ = _starFactory.SendAppCommand(item.Name, null, "config/publish", "");
+                        _ = _starFactory.SendAppCommandAsync(item.Name, null, "config/publish", "", 0, 3600, 5, cancellationToken);
                         rs++;
                     }
                 }

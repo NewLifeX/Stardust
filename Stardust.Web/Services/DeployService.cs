@@ -17,7 +17,7 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
     /// <param name="buildNode">编译节点</param>
     /// <param name="action">操作。Build-Upload/Package-Upload</param>
     /// <param name="ip">客户端IP</param>
-    public async Task Compile(AppDeploy app, AppBuildNode buildNode, String action, String ip)
+    public async Task Compile(AppDeploy app, AppBuildNode buildNode, String action, String ip, CancellationToken cancellationToken = default)
     {
         if (buildNode == null) throw new ArgumentNullException(nameof(buildNode));
 
@@ -67,7 +67,7 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
             var args = cmd.ToJson();
             msg = args;
 
-            await starFactory.SendNodeCommand(buildNode.Node.Code, "deploy/compile", args, 0, 3600, 0);
+            await starFactory.SendNodeCommandAsync(buildNode.Node.Code, "deploy/compile", args, 0, 3600, 0, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -92,7 +92,7 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
     /// <param name="startTime">开始时间</param>
     /// <param name="timeout">超时时间</param>
     /// <param name="resources">资源列表。逗号分隔的资源名称</param>
-    public async Task Control(AppDeploy app, AppDeployNode deployNode, String action, String ip, Int32 startTime, Int32 timeout, String[] resources = null)
+    public async Task Control(AppDeploy app, AppDeployNode deployNode, String action, String ip, Int32 startTime, Int32 timeout, String[] resources = null, CancellationToken cancellationToken = default)
     {
         if (deployNode == null) throw new ArgumentNullException(nameof(deployNode));
 
@@ -140,7 +140,7 @@ public class DeployService(StarFactory starFactory, ITracer tracer)
             var args = new { deployNode.Id, DeployName = deployName, app?.AppName }.ToJson();
             msg = args;
 
-            await starFactory.SendNodeCommand(deployNode.Node.Code, action, args, startTime, startTime + 60, timeout);
+            await starFactory.SendNodeCommandAsync(deployNode.Node.Code, action, args, startTime, startTime + 60, timeout, cancellationToken);
         }
         catch (Exception ex)
         {

@@ -97,7 +97,7 @@ public class AppBuildNodeController : DeploymentEntityController<AppBuildNode>
         var deployName = bn.DeployName;
         if (deployName.IsNullOrEmpty()) deployName = app.Name;
 
-        await _deployService.Compile(app, bn, act, UserHost);
+        await _deployService.Compile(app, bn, act, UserHost, HttpContext.RequestAborted);
 
         return JsonRefresh($"在节点[{bn.NodeName}]上对应用[{deployName}]执行[{act}]操作", 1);
     }

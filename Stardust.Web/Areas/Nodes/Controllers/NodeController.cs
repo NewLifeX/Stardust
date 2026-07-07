@@ -174,8 +174,8 @@ public class NodeController : NodesEntityController<Node>
             //NodeCommand.Add(node, "截屏");
             //NodeCommand.Add(node, "抓日志");
 
-            await _starFactory.SendNodeCommand(node.Code, "截屏");
-            await _starFactory.SendNodeCommand(node.Code, "抓日志");
+            await _starFactory.SendNodeCommandAsync(node.Code, "截屏", cancellationToken: HttpContext.RequestAborted);
+            await _starFactory.SendNodeCommandAsync(node.Code, "抓日志", cancellationToken: HttpContext.RequestAborted);
         }
 
         return RedirectToAction("Index");
