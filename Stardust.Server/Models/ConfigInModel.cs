@@ -1,6 +1,5 @@
 ﻿namespace Stardust.Server.Models;
 
-#pragma warning disable CS8632 // 只能在 "#nullable" 注释上下文内的代码中使用可为 null 的引用类型的注释。
 /// <summary>配置入参</summary>
 public class ConfigInModel
 {
@@ -28,4 +27,3 @@ public class ConfigInModel
     /// <summary>缺失的键</summary>
     public String? MissedKeys { get; set; }
 }
-#pragma warning restore CS8632 // 只能在 "#nullable" 注释上下文内的代码中使用可为 null 的引用类型的注释。

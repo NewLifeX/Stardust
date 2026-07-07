@@ -470,7 +470,7 @@ public class RegistryService : DefaultDeviceService<Node, NodeOnline>
     //}
 
     private static Int32 _totalCommands;
-    private static IList<AppCommand> _commands;
+    private static IList<AppCommand> _commands = [];
     private static DateTime _nextTime;
 
     public override CommandModel[]? AcquireCommands(DeviceContext context)

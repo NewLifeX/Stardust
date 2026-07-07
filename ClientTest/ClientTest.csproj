@@ -6,6 +6,7 @@
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
     <IsTestProject>true</IsTestProject>
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>

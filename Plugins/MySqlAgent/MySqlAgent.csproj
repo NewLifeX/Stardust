@@ -17,6 +17,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <IsPackable>False</IsPackable>
+    <NoWarn>1701;1702;CS8632;CS0169</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

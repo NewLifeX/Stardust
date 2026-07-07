@@ -554,7 +554,7 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     }
 
     private static Int32 _totalCommands;
-    private static IList<NodeCommand> _commands;
+    private static IList<NodeCommand> _commands = [];
     private static DateTime _nextTime;
 
     public override CommandModel[]? AcquireCommands(DeviceContext context)

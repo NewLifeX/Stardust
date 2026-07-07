@@ -10,7 +10,7 @@ namespace MySqlAgent;
 [DisplayName("MySql助手")]
 public class MySqlPlugin : AgentPlugin
 {
-    private TimerX _timer;
+    //private TimerX _timer;
     private ITracer _tracer;
     private BinlogClear _clear;
 

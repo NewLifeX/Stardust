@@ -37,7 +37,7 @@ public class DiagnosticTests
     {
         XTrace.WriteLine(nameof(TestHttp2));
 
-        if (!await TestEnvironment.CanGetAsync("http://newlifex.com").ConfigureAwait(false)) return;
+        if (!await TestEnvironment.CanGetAsync("http://newlifex.com")) return;
 
         //var tracer = NewLife.Log.DefaultTracer.Instance;
         var tracer = new DefaultTracer { Period = 22 };
@@ -62,7 +62,7 @@ public class DiagnosticTests
     {
         XTrace.WriteLine(nameof(TestHttp3));
 
-        if (!await TestEnvironment.CanGetAsync("http://newlifex.com").ConfigureAwait(false)) return;
+        if (!await TestEnvironment.CanGetAsync("http://newlifex.com")) return;
 
         //var tracer = NewLife.Log.DefaultTracer.Instance;
         var tracer = new DefaultTracer { Period = 33 };

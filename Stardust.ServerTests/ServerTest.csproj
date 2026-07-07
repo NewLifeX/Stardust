@@ -10,6 +10,7 @@
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>
     <IsPackable>false</IsPackable>
+    <NoWarn>1701;1702;ASPDEPR008</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

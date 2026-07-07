@@ -215,7 +215,7 @@ internal class MyService : ServiceBase, IServiceProvider
     internal StarFactory _factory;
     private ServiceManager _Manager;
     private PluginManager _PluginManager;
-    private String _lastVersion;
+    //private String _lastVersion;
     private AliyunDnsClient? _AliyunDns;
 
     #region 调度核心
@@ -701,11 +701,13 @@ internal class MyService : ServiceBase, IServiceProvider
 
         XTrace.WriteLine("开始运行Zip发布文件 {0}", file);
 
+#pragma warning disable CS0618 // 暂时保留 ZipDeploy 兼容，后续迁移到 IDeployStrategy
         var deploy = new ZipDeploy
         {
             Tracer = _factory?.Tracer,
             Log = XTrace.Log
         };
+#pragma warning restore CS0618
         if (!deploy.Parse(args)) return false;
 
         deploy.Execute();

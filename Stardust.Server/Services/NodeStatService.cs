@@ -465,7 +465,9 @@ public class NodeStatService(ICacheProvider cacheProvider, ITracer tracer) : IHo
         var sts = NodeStat.FindAllByDate(category, date);
 
         // 处理器做二次合并，因为处理器太多，需要截取中间一部分
+#if !DEBUG
         var count = 0;
+#endif
         foreach (var node in list.OrderByDescending(e => e.ID))
         {
 #if !DEBUG

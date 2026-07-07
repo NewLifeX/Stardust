@@ -9,7 +9,6 @@ namespace StarGateway
     class MyService : IHostedService
     {
         private HttpReverseProxy _proxy;
-        private HttpReverseProxy _proxy2;
         public Task StartAsync(CancellationToken cancellationToken)
         {
             var set = StarGatewaySetting.Current;
@@ -60,7 +59,6 @@ namespace StarGateway
         public Task StopAsync(CancellationToken cancellationToken)
         {
             _proxy.TryDispose();
-            _proxy2.TryDispose();
 
             return Task.CompletedTask;
         }

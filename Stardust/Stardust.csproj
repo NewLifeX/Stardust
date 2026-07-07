@@ -19,7 +19,7 @@
     <LangVersion>latest</LangVersion>
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>
-    <NoWarn>1701;1702;NU5104;NU1505;NETSDK1138;CS7035</NoWarn>
+    <NoWarn>1701;1702;NU5104;NU1505;NETSDK1138;CS7035;CS8600;CS8602;CS8603;CS8604;CS8618;CS8619;CS8625</NoWarn>
     <AnalysisLevel>latest</AnalysisLevel>
     <WarningsAsErrors>CA2007</WarningsAsErrors>
   </PropertyGroup>
@@ -74,7 +74,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Remoting" Version="3.7.2026.705-beta0241" />
+    <PackageReference Include="NewLife.Remoting" Version="3.8.2026.706" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NewLife.Core" Version="11.17.2026.701" />

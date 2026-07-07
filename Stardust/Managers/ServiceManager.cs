@@ -824,9 +824,9 @@ public class ServiceManager : DisposeBase
     {
         public Int32 Id { get; set; }
 
-        public String DeployName { get; set; }
+        public String DeployName { get; set; } = null!;
 
-        public String AppName { get; set; }
+        public String AppName { get; set; } = null!;
     }
 
     async Task<Boolean> OnInstall(Int32 deployId, String serviceName, String appName, CommandModel cmd)

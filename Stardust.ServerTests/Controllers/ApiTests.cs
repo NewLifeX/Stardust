@@ -19,8 +19,10 @@ public class ApiTests
 
     public ApiTests()
     {
+#pragma warning disable CS0618, ASPDEPR008
         _server = new TestServer(WebHost.CreateDefaultBuilder()
             .UseStartup<Startup>());
+#pragma warning restore CS0618, ASPDEPR008
     }
 
     [Theory(DisplayName = "基础测试")]

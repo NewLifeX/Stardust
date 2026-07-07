@@ -55,14 +55,14 @@ public class StarFactoryTests
     [Fact]
     public async Task CreateForService()
     {
-        if (!await TestEnvironment.CanGetAsync("http://127.0.0.1:6600").ConfigureAwait(false)) return;
+        if (!await TestEnvironment.CanGetAsync("http://127.0.0.1:6600")) return;
 
         using var star = new StarFactory("http://127.0.0.1:6600", "test", "xxx");
         await star.Service.RegisterAsync("testService", "http://localhost:1234", "tA,tagB,ttC");
 
-        var client = star.CreateForService("testService", "tagB") as ApiHttpClient;
+        var client = star.Service!.GetClient("testService", "tagB") as ApiHttpClient;
         Assert.NotNull(client);
-        Assert.True(client.RoundRobin);
+        Assert.Equal(LoadBalanceMode.RoundRobin, client.LoadBalanceMode);
         //Assert.Equal("http://localhost:1234/", client.Services.Join(",", e => e.Address));
         Assert.Contains(client.Services, e => e.Address + "" == "http://localhost:1234/");
     }
@@ -74,13 +74,13 @@ public class StarFactoryTests
 
         using var star = new StarFactory("http://127.0.0.1:6600", "test", "xxx");
 
-        var client = star.CreateForService("StarWeb", "tagB") as ApiHttpClient;
+        var client = star.Service!.GetClient("StarWeb", "tagB") as ApiHttpClient;
         Assert.NotNull(client);
         Assert.Equal(LoadBalanceMode.RoundRobin, client.LoadBalanceMode);
         Assert.All(client.Services, e => Assert.False(String.IsNullOrEmpty(e.Address + "")));
 
         // 第二次请求，避免使用前面的缓存
-        var client2 = star.CreateForService("StarWeb", null) as ApiHttpClient;
+        var client2 = star.Service!.GetClient("StarWeb", null) as ApiHttpClient;
         Assert.NotNull(client2);
         Assert.Equal(LoadBalanceMode.RoundRobin, client2.LoadBalanceMode);
         //Assert.Equal("https://localhost:5001/,http://localhost:5000/", client2.Services.Join(",", e => e.Address));
@@ -115,7 +115,7 @@ public class StarFactoryTests
     [Fact]
     public async Task SendNodeCommand()
     {
-        if (!await TestEnvironment.CanGetAsync("http://127.0.0.1:6600").ConfigureAwait(false)) return;
+        if (!await TestEnvironment.CanGetAsync("http://127.0.0.1:6600")) return;
 
         using var star = new StarFactory("http://127.0.0.1:6600", "StarWeb", "xxx");
 

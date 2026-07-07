@@ -47,7 +47,7 @@ public class StarClientTests
     [InlineData("abcd", null)]
     public async Task LoginTest(String code, String secret)
     {
-        if (!await TestEnvironment.CanGetAsync(Server).ConfigureAwait(false)) return;
+        if (!await TestEnvironment.CanGetAsync(Server)) return;
 
         var client = new StarClient(Server)
         {
@@ -64,7 +64,7 @@ public class StarClientTests
     [Fact]
     public async Task LogoutTest()
     {
-        if (!await TestEnvironment.CanGetAsync(Server).ConfigureAwait(false)) return;
+        if (!await TestEnvironment.CanGetAsync(Server)) return;
 
         var client = new StarClient(Server);
 

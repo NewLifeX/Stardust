@@ -17,7 +17,8 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
-    <NoWarn>1701;1702;NU5104;NETSDK1138;CS7035;CS9107</NoWarn>
+    <Nullable>enable</Nullable>
+    <NoWarn>1701;1702;NU5104;NETSDK1138;CS7035;CS9107;CS8600;CS8601;CS8602;CS8603;CS8604;CS8618;CS8619;CS8622;CS8625;CS8764;CS8765</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
@@ -32,7 +33,7 @@
   <ItemGroup>
     <PackageReference Include="NewLife.IP" Version="2.4.2026.501" />
     <PackageReference Include="NewLife.Redis" Version="6.5.2026.701" />
-    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.7.2026.705-beta0241" />
+    <PackageReference Include="NewLife.Remoting.Extensions" Version="3.8.2026.706" />
   </ItemGroup>
 
   <ItemGroup>
