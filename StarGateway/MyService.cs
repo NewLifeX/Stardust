@@ -30,6 +30,8 @@ class MyService : IHostedService
         server.LogReceive = true;
 #endif
 
+        server.AdminLog = XTrace.Log;
+
         server.Start();
 
         _proxy = server;

@@ -94,8 +94,9 @@ public partial class GatewayRoute : Entity<GatewayRoute>
     /// <param name="domain">请求域名</param>
     /// <param name="path">请求路径</param>
     /// <param name="method">HTTP方法</param>
+    /// <param name="headers">请求头字典（用于Header匹配）</param>
     /// <returns></returns>
-    public Boolean Match(String domain, String path, String method)
+    public Boolean Match(String domain, String path, String method, IDictionary<String, String> headers = null)
     {
         // 检查域名
         if (!Domain.IsNullOrEmpty())
@@ -113,6 +114,12 @@ public partial class GatewayRoute : Entity<GatewayRoute>
         if (!Methods.IsNullOrEmpty())
         {
             if (!MatchMethod(method)) return false;
+        }
+
+        // 检查请求头
+        if (!Headers.IsNullOrEmpty())
+        {
+            if (!MatchHeaders(headers)) return false;
         }
 
         return true;
@@ -176,6 +183,51 @@ public partial class GatewayRoute : Entity<GatewayRoute>
         if (methods == null || methods.Length == 0) return true;
 
         return methods.Any(e => e.Trim().EqualIgnoreCase(method));
+    }
+
+    /// <summary>匹配请求头</summary>
+    /// <param name="headers">请求头字典</param>
+    /// <returns></returns>
+    public Boolean MatchHeaders(IDictionary<String, String> headers)
+    {
+        if (Headers.IsNullOrEmpty()) return true;
+
+        var rules = HeaderRules;
+        if (rules == null || rules.Count == 0) return true;
+
+        if (headers == null) return false;
+
+        foreach (var rule in rules)
+        {
+            var key = rule.Key;
+            var value = rule.Value;
+
+            // 检查请求头是否存在
+            if (!headers.TryGetValue(key, out var hv)) return false;
+
+            // 通配符匹配
+            if (value == "*") continue;
+
+            // 前缀匹配
+            if (value.EndsWith("*"))
+            {
+                var prefix = value.TrimEnd('*');
+                if (!hv.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return false;
+            }
+            // 后缀匹配
+            else if (value.StartsWith("*"))
+            {
+                var suffix = value.TrimStart('*');
+                if (!hv.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)) return false;
+            }
+            // 精确匹配或包含
+            else if (!hv.EqualIgnoreCase(value) && !hv.Contains(value))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>获取去除了前缀的路径</summary>

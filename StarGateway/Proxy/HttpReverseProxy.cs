@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using NewLife;
 using NewLife.Http;
+using NewLife.Log;
 using NewLife.Net;
+using NewLife.Serialization;
 using NewLife.Threading;
 using Stardust.Data.Gateway;
 
@@ -24,6 +27,12 @@ public class HttpReverseProxy : ProxyServer
     public Int32 ConfigRefreshInterval { get; set; } = 15;
 
     private TimerX _timer;
+
+    /// <summary>总请求数</summary>
+    internal Int64 _totalRequests;
+
+    /// <summary>管理员日志</summary>
+    public ILog AdminLog { get; set; }
     #endregion
 
     #region 构造
@@ -43,7 +52,6 @@ public class HttpReverseProxy : ProxyServer
         WriteLog("Http反向代理启动，监听端口：{0}，路由数：{1}", Port, _routes?.Count ?? 0);
         base.OnStart();
     }
-
     #endregion
 
     #region 配置加载
@@ -75,14 +83,14 @@ public class HttpReverseProxy : ProxyServer
     #endregion
 
     #region 路由匹配
-    public GatewayRoute MatchRoute(String domain, String path, String method)
+    public GatewayRoute MatchRoute(String domain, String path, String method, IDictionary<String, String> headers = null)
     {
         var routes = _routes;
         if (routes == null || routes.Count == 0) return null;
 
         foreach (var route in routes)
         {
-            if (route.Match(domain, path, method)) return route;
+            if (route.Match(domain, path, method, headers)) return route;
         }
         return null;
     }
@@ -129,59 +137,117 @@ public class HttpReverseProxy : ProxyServer
         return nodes[index];
     }
     #endregion
+
+    #region Admin API
+    /// <summary>处理管理请求（返回true表示已处理）</summary>
+    public Boolean HandleAdminRequest(HttpReverseSession session, String path, HttpRequest request)
+    {
+        if (!path.StartsWith("/__admin/", StringComparison.OrdinalIgnoreCase)) return false;
+
+        Interlocked.Increment(ref _totalRequests);
+
+        var json = "";
+        if (path.EqualIgnoreCase("/__admin/status"))
+        {
+            var routes = _routes;
+            json = new
+            {
+                uptime = Environment.TickCount64 / 1000,
+                activeSessions = Sessions,
+                totalRequests = Interlocked.Read(ref _totalRequests),
+                routeCount = routes?.Count ?? 0,
+                port = Port,
+            }.ToJson();
+        }
+        else if (path.EqualIgnoreCase("/__admin/routes"))
+        {
+            var routes = _routes;
+            if (routes != null)
+            {
+                var list = routes.Select(e => new
+                {
+                    e.Id,
+                    e.Name,
+                    e.Domain,
+                    e.Path,
+                    e.Methods,
+                    e.Priority,
+                    e.Enable,
+                    cluster = e.ClusterName,
+                }).ToList();
+                json = list.ToJson();
+            }
+        }
+        else if (path.EqualIgnoreCase("/__admin/refresh"))
+        {
+            RefreshConfig();
+            json = new { success = true, message = "配置已刷新" }.ToJson();
+        }
+        else
+        {
+            json = new { error = "unknown endpoint" }.ToJson();
+        }
+
+        // 发送响应
+        var response = Encoding.UTF8.GetBytes(json);
+        session.Send($"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {response.Length}\r\nConnection: close\r\n\r\n");
+        session.Send(response);
+        session.Dispose();
+
+        AdminLog?.Info("Admin {0} from {1}", path, session.Remote);
+
+        return true;
+    }
+    #endregion
 }
 
 /// <summary>Http反向代理会话。处理客户端请求，匹配路由并转发到目标集群</summary>
 public class HttpReverseSession : ProxySession
 {
-    /// <summary>原始主机</summary>
-    public String RawHost { get; set; }
-
-    /// <summary>请求地址</summary>
-    public Uri LocalUri { get; set; }
-
-    /// <summary>远程地址</summary>
-    public Uri RemoteUri { get; set; }
-
     /// <summary>收到客户端发来的数据</summary>
     protected override void OnReceive(ReceivedEventArgs e)
     {
         if (Disposed) return;
 
-        // 解析HTTP请求，用于路由匹配
+        // 解析HTTP请求
         var request = new HttpRequest();
-        if (request.Parse(e.Packet))
+        if (!request.Parse(e.Packet)) { base.OnReceive(e); return; }
+
+        e.Message = request;
+
+        var host = request.Headers["Host"] ?? "";
+        var path = request.RequestUri?.OriginalString ?? "/";
+        var method = request.Method ?? "GET";
+
+        if (Host is not HttpReverseProxy proxy) { base.OnReceive(e); return; }
+
+        // 检查Admin API
+        if (proxy.HandleAdminRequest(this, path, request))
         {
-            e.Message = request;
+            proxy.AdminLog?.Info("{0} {1} {2} {3}", method, path, host, Remote);
+            return;
+        }
 
-            var host = request.Headers["Host"];
-            var path = request.RequestUri?.OriginalString ?? "/";
-            var method = request.Method;
-
-            // 匹配路由
-            if (Host is HttpReverseProxy proxy)
+        // 匹配路由（域名/路径/方法）
+        var route = proxy.MatchRoute(host, path, method);
+        if (route != null)
+        {
+            var target = proxy.SelectNode(route);
+            if (target != null)
             {
-                var route = proxy.MatchRoute(host, path, method);
-                if (route != null)
-                {
-                    // 选择后端节点
-                    var target = proxy.SelectNode(route);
-                    if (target != null)
-                    {
-                        RemoteServerUri = target;
-                        WriteDebugLog("路由匹配: {0} -> {1}:{2}", route.Name, target.Host, target.Port);
-                    }
-                    else
-                    {
-                        WriteError("路由 {0} 没有可用的后端节点", route.Name);
-                    }
-                }
-                else
-                {
-                    // 未匹配路由，使用默认远程服务器
-                    if (proxy.RemoteServer != null) RemoteServerUri = proxy.RemoteServer;
-                }
+                RemoteServerUri = target;
+                Interlocked.Increment(ref proxy._totalRequests);
+                proxy.AdminLog?.Info("{0} {1} -> {2}:{3} [{4}]", method, path, target.Host, target.Port, route.Name);
             }
+            else
+            {
+                proxy.WriteError("路由 {0} 没有可用的后端节点", route.Name);
+            }
+        }
+        else
+        {
+            // 未匹配路由，使用默认远程服务器
+            if (proxy.RemoteServer != null) RemoteServerUri = proxy.RemoteServer;
         }
 
         base.OnReceive(e);
