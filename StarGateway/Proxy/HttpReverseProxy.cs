@@ -493,6 +493,7 @@ public class HttpReverseSession : ProxySession
 {
     private String _targetAddress;
     private String _routeName;
+    private IDisposable _span;
 
     protected override void OnReceive(ReceivedEventArgs e)
     {
@@ -508,6 +509,16 @@ public class HttpReverseSession : ProxySession
         var method = request.Method ?? "GET";
 
         if (Host is not HttpReverseProxy proxy) { base.OnReceive(e); return; }
+
+        // 创建APM追踪span
+        var tracer = proxy.Tracer;
+        if (tracer != null)
+        {
+            // 尝试从请求头获取上游TraceId/SpanId（星尘APM标准头）
+            var traceId = request.Headers["Trace-Id"] ?? request.Headers["traceparent"];
+            var data = new { host, path, method };
+            _span = tracer.NewSpan($"gateway:{method}:{path}", traceId != null ? new { traceId, data } : data);
+        }
 
         // 检查Admin API
         if (proxy.HandleAdminRequest(this, path, request)) return;
