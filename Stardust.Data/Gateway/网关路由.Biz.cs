@@ -58,6 +58,10 @@ public partial class GatewayRoute : Entity<GatewayRoute>
         }
     }
 
+    /// <summary>是否允许 WebSocket 升级。当路由未显式设置时，默认允许</summary>
+    [XmlIgnore, IgnoreDataMember]
+    public Boolean WebSocketEnabled => WebSocket;
+
     /// <summary>域名列表</summary>
     [XmlIgnore, IgnoreDataMember]
     public String[] DomainList => (Domain + "").Split(',', StringSplitOptions.RemoveEmptyEntries);

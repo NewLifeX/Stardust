@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NewLife;
+using NewLife.Data;
 using NewLife.Http;
 using NewLife.Log;
 using NewLife.Net;
@@ -65,6 +66,7 @@ public class HttpReverseProxy : ProxyServer
 
         if (set.ConfigRefreshInterval > 0) ConfigRefreshInterval = set.ConfigRefreshInterval;
         if (set.HealthCheckInterval > 0) HealthCheckInterval = set.HealthCheckInterval;
+        if (set.IdleTimeout > 0) IdleTimeout = set.IdleTimeout;
 
         // 先尝试从StarServer加载，失败则从数据库加载，再失败则从本地文件加载
         LoadConfigWithFallback();
@@ -358,12 +360,12 @@ public class HttpReverseProxy : ProxyServer
     #region Admin API
     public Boolean HandleAdminRequest(HttpReverseSession session, String path, HttpRequest request)
     {
-        if (!path.StartsWith("/__admin/", StringComparison.OrdinalIgnoreCase)) return false;
+        if (!path.StartsWith("/api/", StringComparison.OrdinalIgnoreCase)) return false;
 
         Interlocked.Increment(ref _totalRequests);
 
         var json = "";
-        if (path.EqualIgnoreCase("/__admin/status"))
+        if (path.EqualIgnoreCase("/api/status"))
         {
             var routes = _routes;
             json = new
@@ -375,7 +377,7 @@ public class HttpReverseProxy : ProxyServer
                 port = Port,
             }.ToJson();
         }
-        else if (path.EqualIgnoreCase("/__admin/routes"))
+        else if (path.EqualIgnoreCase("/api/routes"))
         {
             var routes = _routes;
             if (routes != null)
@@ -394,7 +396,7 @@ public class HttpReverseProxy : ProxyServer
                 json = list.ToJson();
             }
         }
-        else if (path.EqualIgnoreCase("/__admin/refresh"))
+        else if (path.EqualIgnoreCase("/api/refresh"))
         {
             RefreshConfig();
             json = new { success = true, message = "配置已刷新" }.ToJson();
@@ -501,9 +503,22 @@ public class HttpReverseSession : ProxySession
     private String _routeName;
     private IDisposable _span;
 
+    /// <summary>是否为WebSocket升级请求</summary>
+    private Boolean _isWebSocketUpgrade;
+
+    /// <summary>是否已完成WebSocket升级（101响应已透传），后续帧走TCP透传</summary>
+    private Boolean _upgraded;
+
     protected override void OnReceive(ReceivedEventArgs e)
     {
         if (Disposed) return;
+
+        // WebSocket升级后，所有帧走TCP原始透传，跳过HTTP解析和日志
+        if (_upgraded)
+        {
+            base.OnReceive(e);
+            return;
+        }
 
         var request = new HttpRequest();
         if (!request.Parse(e.Packet)) { base.OnReceive(e); return; }
@@ -516,11 +531,31 @@ public class HttpReverseSession : ProxySession
 
         if (Host is not HttpReverseProxy proxy) { base.OnReceive(e); return; }
 
-        // 创建APM追踪span
-        var tracer = proxy.Tracer;
-        if (tracer != null)
+        // 检测WebSocket升级请求
+        var isUpgrade = request.Headers.TryGetValue("Upgrade", out var upgrade) &&
+                        upgrade.EqualIgnoreCase("websocket") &&
+                        request.Headers.TryGetValue("Connection", out var conn) &&
+                        conn.IndexOf("upgrade", StringComparison.OrdinalIgnoreCase) >= 0;
+
+        // 匹配路由（含Header匹配）
+        var route = proxy.MatchRoute(host, path, method, request.Headers);
+
+        // 如果是WebSocket升级请求，检查路由是否允许
+        if (isUpgrade && route != null && !route.WebSocket)
         {
-            // 尝试从请求头获取上游TraceId/SpanId（星尘APM标准头）
+            // 路由禁止WebSocket，返回400
+            proxy.AdminLog?.Info("WebSocket被路由 {0} 禁止: {1} {2}", route.Name, method, path);
+            var body = "WebSocket upgrade not allowed for this route"u8.ToArray();
+            Send($"HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: {body.Length}\r\nConnection: close\r\n\r\n");
+            Send(body);
+            Dispose();
+            return;
+        }
+
+        // 创建APM追踪span（仅首次请求，WebSocket升级后不再创建）
+        var tracer = proxy.Tracer;
+        if (tracer != null && !_upgraded)
+        {
             var traceId = request.Headers["Trace-Id"] ?? request.Headers["traceparent"];
             var data = new { host, path, method };
             _span = tracer.NewSpan($"gateway:{method}:{path}", traceId != null ? new { traceId, data } : data);
@@ -529,8 +564,6 @@ public class HttpReverseSession : ProxySession
         // 检查Admin API
         if (proxy.HandleAdminRequest(this, path, request)) return;
 
-        // 匹配路由（含Header匹配）
-        var route = proxy.MatchRoute(host, path, method, request.Headers);
         if (route != null)
         {
             var target = proxy.SelectNode(route, Remote?.Host);
@@ -543,7 +576,17 @@ public class HttpReverseSession : ProxySession
                 // 追踪连接数
                 proxy.IncrementConnection(_targetAddress);
                 proxy._lastActive[_targetAddress] = DateTime.Now;
-                proxy.AdminLog?.Info("{0} {1} -> {2}:{3} [{4}]", method, path, target.Host, target.Port, _routeName);
+
+                // 仅非WebSocket或首次升级请求记录日志
+                if (!isUpgrade)
+                {
+                    proxy.AdminLog?.Info("{0} {1} -> {2}:{3} [{4}]", method, path, target.Host, target.Port, _routeName);
+                }
+                else
+                {
+                    _isWebSocketUpgrade = true;
+                    proxy.AdminLog?.Info("WS {0} {1} -> {2}:{3} [{4}]", method, path, target.Host, target.Port, _routeName);
+                }
             }
             else
             {
@@ -558,7 +601,45 @@ public class HttpReverseSession : ProxySession
             if (proxy.RemoteServer != null) RemoteServerUri = proxy.RemoteServer;
         }
 
+        // 转发请求到后端
         base.OnReceive(e);
+
+        // WebSocket升级请求转发后，标记已升级，后续帧走TCP透传
+        if (_isWebSocketUpgrade)
+        {
+            _upgraded = true;
+        }
+    }
+
+    /// <summary>收到远程服务器返回的数据</summary>
+    /// <param name="e"></param>
+    protected override void OnReceiveRemote(ReceivedEventArgs e)
+    {
+        // WebSocket升级后，所有数据直接透传
+        if (_upgraded)
+        {
+            base.OnReceiveRemote(e);
+            return;
+        }
+
+        // 检查是否为101 Switching Protocols响应（WebSocket升级成功）
+        if (_isWebSocketUpgrade)
+        {
+            var data = e.Packet.ToArray();
+            var str = Encoding.UTF8.GetString(data);
+            if (str.StartsWith("HTTP/1.1 101", StringComparison.Ordinal) ||
+                str.StartsWith("HTTP/1.0 101", StringComparison.Ordinal))
+            {
+                // 标记升级完成，下次OnReceive直接走TCP透传
+                _upgraded = true;
+                if (Host is HttpReverseProxy proxy)
+                {
+                    proxy.AdminLog?.Info("WS 升级成功: {0}", _targetAddress);
+                }
+            }
+        }
+
+        base.OnReceiveRemote(e);
     }
 
     private async Task TryColdStart(HttpReverseProxy proxy, GatewayRoute route)

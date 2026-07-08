@@ -36,5 +36,9 @@ public class StarGatewaySetting : Config<StarGatewaySetting>
     /// <summary>配置刷新间隔。单位秒，默认15秒</summary>
     [Description("配置刷新间隔。单位秒，默认15秒")]
     public Int32 ConfigRefreshInterval { get; set; } = 15;
+
+    /// <summary>空闲超时。单位秒，后端超过该时间无流量的连接将被回收，默认900秒（15分钟）</summary>
+    [Description("空闲超时。单位秒，后端超过该时间无流量的连接将被回收，默认900秒（15分钟）")]
+    public Int32 IdleTimeout { get; set; } = 900;
     #endregion
 }

@@ -123,6 +123,14 @@ public partial class GatewayRoute
     [BindColumn("AddHeaders", "添加请求头。JSON格式，如 {key:value}", "")]
     public String AddHeaders { get => _AddHeaders; set { if (OnPropertyChanging("AddHeaders", value)) { _AddHeaders = value; OnPropertyChanged("AddHeaders"); } } }
 
+    private Boolean _WebSocket;
+    /// <summary>WebSocket。是否允许WebSocket升级，开启后检测Upgrade头并透明转发帧数据</summary>
+    [DisplayName("WebSocket")]
+    [Description("WebSocket。是否允许WebSocket升级，开启后检测Upgrade头并透明转发帧数据")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("WebSocket", "WebSocket。是否允许WebSocket升级，开启后检测Upgrade头并透明转发帧数据", "")]
+    public Boolean WebSocket { get => _WebSocket; set { if (OnPropertyChanging("WebSocket", value)) { _WebSocket = value; OnPropertyChanged("WebSocket"); } } }
+
     private String _Remark;
     /// <summary>备注</summary>
     [DisplayName("备注")]
@@ -184,6 +192,7 @@ public partial class GatewayRoute
             "Headers" => _Headers,
             "StripPrefix" => _StripPrefix,
             "AddHeaders" => _AddHeaders,
+            "WebSocket" => _WebSocket,
             "Remark" => _Remark,
             "CreateUser" => _CreateUser,
             "CreateTime" => _CreateTime,
@@ -207,6 +216,7 @@ public partial class GatewayRoute
                 case "Headers": _Headers = Convert.ToString(value); break;
                 case "StripPrefix": _StripPrefix = value.ToBoolean(); break;
                 case "AddHeaders": _AddHeaders = Convert.ToString(value); break;
+                case "WebSocket": _WebSocket = value.ToBoolean(); break;
                 case "Remark": _Remark = Convert.ToString(value); break;
                 case "CreateUser": _CreateUser = Convert.ToString(value); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
