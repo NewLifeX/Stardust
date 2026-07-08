@@ -915,6 +915,18 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                 return null;
         }
 
+        // 检查 NodeVersion 中是否存在相同版本被禁用（管理员按版本控制开关）
+        var nvVer = $"v{pkg.Version}-{pkg.Kind}";
+        var disabledNv = NodeVersion.Meta.Cache.FindAll(e =>
+            e.ProductCode.EqualIgnoreCase("dotNet") &&
+            !e.Enable &&
+            e.Version.EqualIgnoreCase(nvVer)).ToList();
+        if (disabledNv.Count > 0)
+        {
+            node.WriteHistory("跳过dotNet", true, $"NodeVersion[{nvVer}] 已禁用，跳过推送", ip);
+            return null;
+        }
+
         // 检查节点操作系统是否兼容目标.NET版本（如Ubuntu18无法安装.NET10）
         if (!IsOSCompatible(node, pkg.Version))
         {
