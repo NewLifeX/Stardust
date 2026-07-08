@@ -934,6 +934,14 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
             return null;
         }
 
+        // 检查节点的GLIBC版本是否满足要求（Linux节点上报了CLibVersion时启用）
+        var minGLibc = GetDotNetMinGLibcVersion(pkg.Version);
+        if (minGLibc != null && !CheckGLibc(node, minGLibc))
+        {
+            node.WriteHistory("跳过dotNet", true, $"GLIBC[{node.CLibVersion}] 不满足 {GetNetMajorVersion(pkg.Version)} 最低要求 {minGLibc}，.NET {pkg.Version} 已跳过", ip);
+            return null;
+        }
+
         // 准备安装框架所需要的参数
         // 将 Kind 嵌入 Version，Agent 端 DoInstall 可从中提取安装类型（aspnet/runtime/desktop/host）
         var source = pkg.Source;
@@ -1035,6 +1043,80 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
 
         // 未知操作系统或无法识别版本时，默认兼容（不阻塞推送）
         return true;
+    }
+
+    /// <summary>获取指定.NET版本要求的最低GLIBC版本（硬编码，每年随.NET大版本更新一次）</summary>
+    /// <param name="version">.NET版本号，如 10.0.9</param>
+    /// <returns>最低GLIBC版本号，如 2.17；未知时返回 null</returns>
+    /// <remarks>
+    /// .NET 版本与 glibc 兼容性历史：
+    /// .NET 6/7/8 → glibc 2.17+（CentOS 7 及更新）
+    /// .NET 9/10  → glibc 2.27+（CentOS 8/Ubuntu 18.04 及更新）
+    /// 首次发行年份：.NET 6=2021, .NET 7=2022, .NET 8=2023, .NET 9=2024, .NET 10=2025
+    /// </remarks>
+    private static String? GetDotNetMinGLibcVersion(String version)
+    {
+        if (version.IsNullOrEmpty()) return null;
+        if (!System.Version.TryParse(version.TrimStart('v', 'V'), out var ver)) return null;
+
+        var major = ver.Major;
+
+        // .NET 9+ 要求 glibc 2.27+
+        if (major >= 9) return "2.27";
+        // .NET 6/7/8 支持 glibc 2.17+
+        if (major >= 6) return "2.17";
+
+        return null;
+    }
+
+    /// <summary>获取.NET版本的主要代号字符串，用于日志显示</summary>
+    private static String GetNetMajorVersion(String version)
+    {
+        if (version.IsNullOrEmpty()) return "";
+        if (!System.Version.TryParse(version.TrimStart('v', 'V'), out var ver)) return "";
+        return $".NET {ver.Major}";
+    }
+
+    /// <summary>检查节点的GLIBC版本是否满足最低要求</summary>
+    /// <param name="node">节点</param>
+    /// <param name="minVersion">最低GLIBC版本号，如 2.17</param>
+    /// <returns>满足返回true，不满足返回false</returns>
+    /// <remarks>
+    /// 仅当节点为Linux且上报了CLibVersion时启用精确检查。
+    /// CLibVersion 格式示例：glibc 2.17、glibc 2.27、musl 1.2.2；可能形如 glibc 2.17;glibcxx 3.4.30
+    /// 使用 System.Version 逐段比较 major.minor，忽略后缀 patch 版本。
+    /// </remarks>
+    private static Boolean CheckGLibc(Node node, String minVersion)
+    {
+        // 非 Linux 或未上报 CLibVersion 时跳过检查
+        if (node.CLibVersion.IsNullOrEmpty()) return true;
+        if (!node.OS.StartsWithIgnoreCase("Linux") && !node.OS.StartsWithIgnoreCase("CentOS") &&
+            !node.OS.StartsWithIgnoreCase("Ubuntu") && !node.OS.StartsWithIgnoreCase("Debian") &&
+            !node.OS.StartsWithIgnoreCase("RHEL") && !node.OS.StartsWithIgnoreCase("Red Hat"))
+            return true;
+
+        if (!System.Version.TryParse(minVersion, out var min)) return true;
+
+        // 从 CLibVersion 中提取 glibc 版本号
+        // 格式：glibc 2.17 或 glibc 2.17;glibcxx 3.4.30
+        var clib = node.CLibVersion;
+        var p = clib.IndexOf(';');
+        if (p > 0) clib = clib.Substring(0, p);
+        clib = clib.Trim();
+
+        // 提取 glibc x.y 或 musl x.y.z
+        if (!clib.StartsWithIgnoreCase("glibc ") && !clib.StartsWithIgnoreCase("musl ")) return true;
+
+        var verStr = clib.Substring(clib.IndexOf(' ') + 1).Trim();
+        if (verStr.IsNullOrEmpty()) return true;
+
+        if (!System.Version.TryParse(verStr, out var current)) return true;
+
+        // 只比较 major.minor，patch 版本不影响兼容性
+        var currentMajorMinor = current.Major * 10000 + current.Minor;
+        var minMajorMinor = min.Major * 10000 + min.Minor;
+
+        return currentMajorMinor >= minMajorMinor;
     }
     #endregion
 
