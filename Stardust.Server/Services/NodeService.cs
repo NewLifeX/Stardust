@@ -847,6 +847,12 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
     /// <returns></returns>
     public DotNetPackage CheckDotNet(Node node, Uri baseUri, String ip)
     {
+        // ---- 检查 NodeVersion 中是否有启用的 dotNet 策略 ----
+        // 如果旧表存在 dotNet 记录但全部被禁用，说明管理员已明确关闭 dotNet 推送，跳过全部路径
+        var allNv = NodeVersion.Meta.Cache.FindAll(e => e.ProductCode.EqualIgnoreCase("dotNet")).ToList();
+        if (allNv.Count > 0 && allNv.All(e => !e.Enable))
+            return null;
+
         // ---- 新路径：DotNetPackage 匹配 ----
         var pkg = TryDotNetFromPackage(node, baseUri, ip);
         if (pkg != null) return pkg;
@@ -909,18 +915,29 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
                 return null;
         }
 
+        // 检查节点操作系统是否兼容目标.NET版本（如Ubuntu18无法安装.NET10）
+        if (!IsOSCompatible(node, pkg.Version))
+        {
+            node.WriteHistory("跳过dotNet", true, $"OS[{node.OS}] 不兼容 .NET {pkg.Version}，已跳过", ip);
+            return null;
+        }
+
         // 准备安装框架所需要的参数
+        // 将 Kind 嵌入 Version，Agent 端 DoInstall 可从中提取安装类型（aspnet/runtime/desktop/host）
+        var source = pkg.Source;
+        if (!source.IsNullOrEmpty() && !pkg.FileName.IsNullOrEmpty() && source.EndsWith(pkg.FileName))
+            source = source.Substring(0, source.Length - pkg.FileName.Length);
         var fmodel = new FrameworkModel
         {
-            Version = pkg.Version,
-            BaseUrl = pkg.Source,
+            Version = $"{pkg.Version}-{pkg.Kind}",
+            BaseUrl = source,
             Force = pkg.Force,
         };
         // 如果没有指定源，则使用默认源
         if (fmodel.BaseUrl.IsNullOrEmpty()) fmodel.BaseUrl = new Uri(baseUri, "/files/dotnet/").ToString();
 
         // 检查是否已经推送过这个版本（避免重复推送）
-        var key = $"nodeNet:{node.Code}-{pkg.Version}";
+        var key = $"nodeNet:{node.Code}-{pkg.Version}-{pkg.Kind}";
         if (_cacheProvider.Cache.Get<String>(key) == pkg.Version) return null;
         _cacheProvider.Cache.Set(key, pkg.Version, 600);
 
@@ -936,6 +953,76 @@ public class NodeService : DefaultDeviceService<Node, NodeOnline>
         node.WriteHistory("推送dotNet", true, $"version={node.Framework} => Package[{pkg.Id}] {pkg.Version}-{pkg.Kind} {pkg.Source}", ip);
 
         return pkg;
+    }
+
+    /// <summary>检查节点操作系统是否兼容目标.NET版本。防止向过旧的操作系统推送不支持的.NET运行时</summary>
+    /// <param name="node">节点</param>
+    /// <param name="version">目标.NET版本号，如 10.0.9</param>
+    /// <returns>兼容返回true，不兼容返回false</returns>
+    private static Boolean IsOSCompatible(Node node, String version)
+    {
+        if (node.OS.IsNullOrEmpty() || version.IsNullOrEmpty()) return true;
+        if (!System.Version.TryParse(version.TrimStart('v', 'V'), out var ver)) return true;
+
+        var os = node.OS;
+        var major = ver.Major;
+
+        // 提取操作系统名称和版本号
+        Double osVer = 0;
+        var dist = "";
+
+        // 匹配常见 Linux 发行版
+        if (os.StartsWithIgnoreCase("Ubuntu"))
+        {
+            dist = "Ubuntu";
+            // "Ubuntu 18.04.5 LTS" → 18.04
+            var part = os.Split(' ').Skip(1).FirstOrDefault();
+            Double.TryParse(part, out osVer);
+        }
+        else if (os.StartsWithIgnoreCase("Debian"))
+        {
+            dist = "Debian";
+            // "Debian GNU/Linux 11 (bullseye)" → 11
+            foreach (var s in os.Split(' '))
+            {
+                if (Double.TryParse(s, out var v)) { osVer = v; break; }
+            }
+        }
+        else if (os.StartsWithIgnoreCase("CentOS") || os.StartsWithIgnoreCase("RHEL") || os.StartsWithIgnoreCase("Red Hat"))
+        {
+            dist = "RHEL";
+            // "CentOS Linux 7 (Core)" → 7
+            foreach (var s in os.Split(' '))
+            {
+                if (Double.TryParse(s, out var v)) { osVer = v; break; }
+            }
+        }
+
+        // 检查兼容性
+        if (osVer > 0)
+        {
+            if (major >= 10)
+            {
+                if (dist == "Ubuntu") return osVer >= 22.04;
+                if (dist == "Debian") return osVer >= 12;
+                if (dist == "RHEL") return osVer >= 9;
+            }
+            else if (major >= 8)
+            {
+                if (dist == "Ubuntu") return osVer >= 20.04;
+                if (dist == "Debian") return osVer >= 11;
+                if (dist == "RHEL") return osVer >= 8;
+            }
+            else if (major >= 6)
+            {
+                if (dist == "Ubuntu") return osVer >= 16.04;
+                if (dist == "Debian") return osVer >= 10;
+                if (dist == "RHEL") return osVer >= 7;
+            }
+        }
+
+        // 未知操作系统或无法识别版本时，默认兼容（不阻塞推送）
+        return true;
     }
     #endregion
 
