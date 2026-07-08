@@ -13,6 +13,7 @@ using XCode.Membership;
 namespace Stardust.Data.Gateway;
 
 /// <summary>网关证书。SSL证书配置，用于HTTPS终止和SNI匹配</summary>
+/// <remarks>已废弃：请使用 Stardust.Data.Deployment.SslCertificate 统一管理证书。</remarks>
 public partial class GatewayCert : Entity<GatewayCert>
 {
     #region 对象操作

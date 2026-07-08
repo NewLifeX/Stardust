@@ -11,12 +11,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NewLife;
+using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Http;
 using NewLife.Log;
 using NewLife.Net;
 using NewLife.Serialization;
 using NewLife.Threading;
+using Stardust.Data.Deployment;
 using Stardust.Data.Gateway;
 
 namespace StarGateway.Proxy;
@@ -87,28 +89,61 @@ public class HttpReverseProxy : ProxyServer
     {
         try
         {
-            var certs = GatewayCert.FindAllEnabled();
+            // 统一使用 SslCertificate（星尘部署中心证书管理）
+            var certs = SslCertificate.FindAllEnabled();
             if (certs.Count == 0)
             {
                 WriteLog("未配置SSL证书，仅支持HTTP");
                 return;
             }
 
-            // 加载第一个可用的证书
+            // 加载第一个可用的证书（SNI多证书支持在后续版本完善）
             foreach (var certEntity in certs)
             {
-                var file = certEntity.CertFile;
-                if (file.IsNullOrEmpty() || !File.Exists(file)) continue;
+                // 优先尝试PEM文件，其次PFX，最后CRT+KEY
+                var file = certEntity.PemFile;
+                if (file.IsNullOrEmpty() || !File.Exists(file))
+                {
+                    // 尝试PFX
+                    if (!certEntity.PfxFile.IsNullOrEmpty() && File.Exists(certEntity.PfxFile))
+                    {
+                        try
+                        {
+                            var pfxPassword = certEntity.PfxPassword;
+                            var cert = pfxPassword.IsNullOrEmpty()
+                                ? new X509Certificate2(certEntity.PfxFile)
+                                : new X509Certificate2(certEntity.PfxFile, pfxPassword);
+                            Certificate = cert;
+                            SslProtocol = SslProtocols.Tls12;
+                            WriteLog("加载SSL证书(PFX): {0} -> {1}", certEntity.Domain, cert.Subject);
+                            break;
+                        }
+                        catch (Exception exPfx)
+                        {
+                            WriteError("加载PFX证书 {0} 失败：{1}", certEntity.PfxFile, exPfx.Message);
+                            continue;
+                        }
+                    }
+                    // 尝试CRT+KEY
+                    if (!certEntity.CrtFile.IsNullOrEmpty() && File.Exists(certEntity.CrtFile))
+                    {
+                        file = certEntity.CrtFile;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
 
                 try
                 {
-                    // 尝试加载PEM格式证书
+                    // 加载PEM/CRT格式证书
 #pragma warning disable SYSLIB0057
                     var cert = new X509Certificate2(file);
 #pragma warning restore SYSLIB0057
                     Certificate = cert;
                     SslProtocol = SslProtocols.Tls12;
-                    WriteLog("加载SSL证书: {0} -> {1}", certEntity.Name, cert.Subject);
+                    WriteLog("加载SSL证书: {0} -> {1}", certEntity.Domain, cert.Subject);
                     break;
                 }
                 catch (Exception ex)
@@ -173,13 +208,16 @@ public class HttpReverseProxy : ProxyServer
     {
         var set = StarGatewaySetting.Current;
         var url = set.StarServer;
-        if (url.IsNullOrEmpty()) return;
+        if (url.IsNullOrEmpty())
+        {
+            LoadConfig();
+            return;
+        }
 
-        // 将路由配置直接加载到数据库（反向工程），然后从数据库读取
-        // 这样StarServer的配置可以通过DB共享，Gateway实例从DB读取
-        WriteLog("StarServer地址：{0}，将通过数据库同步配置", url);
+        // 尝试通过 StarServer API 获取配置（需将 GatewayConfig DTO 移动到 Stardust.Data）
+        // 当前版本使用数据库共享模式作为主要配置源，API 拉取为预留扩展点
+        // 后续可参考：var config = await StarClient?.Client?.InvokeAsync<GatewayConfig>("Gateway/config");
 
-        // 从数据库加载
         LoadConfig();
     }
 
@@ -215,6 +253,10 @@ public class HttpReverseProxy : ProxyServer
     private async Task DoRefreshConfig(Object state)
     {
         LoadConfigWithFallback();
+
+        // 配置刷新时同时刷新证书（证书热更新）
+        LoadCertificates();
+
         await Task.CompletedTask;
     }
 
@@ -257,8 +299,16 @@ public class HttpReverseProxy : ProxyServer
             // 解析地址
             var uri = new NetUri(address);
             using var tcp = new TcpClient();
-            var task = tcp.ConnectAsync(uri.Address, uri.Port);
-            return task.Wait(3000);
+
+            // 异步连接，避免同步阻塞导致线程池饥饿
+            var connectTask = tcp.ConnectAsync(uri.Address, uri.Port);
+            var timeoutTask = Task.Delay(3000);
+            var completed = await Task.WhenAny(connectTask, timeoutTask);
+
+            if (completed == connectTask && tcp.Connected)
+                return true;
+
+            return false;
         }
         catch
         {
@@ -599,6 +649,61 @@ public class HttpReverseSession : ProxySession
         {
             // 未匹配路由，使用默认远程服务器
             if (proxy.RemoteServer != null) RemoteServerUri = proxy.RemoteServer;
+        }
+
+        // ---- 头部修改：StripPrefix & AddHeaders ----
+        if (route != null)
+        {
+            var modified = false;
+
+            // StripPrefix: 去除匹配路径前缀
+            if (route.StripPrefix && !route.Path.IsNullOrEmpty())
+            {
+                var prefix = route.Path.TrimEnd('*').TrimEnd('/');
+                if (!prefix.IsNullOrEmpty() && path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    var newPath = path.Substring(prefix.Length);
+                    if (newPath.IsNullOrEmpty()) newPath = "/";
+                    request.RequestUri = new Uri(newPath, UriKind.RelativeOrAbsolute);
+                    modified = true;
+                }
+            }
+
+            // AddHeaders: 添加额外请求头
+            if (!route.AddHeaders.IsNullOrEmpty())
+            {
+                var headers = route.AddHeaderRules;
+                if (headers != null)
+                {
+                    foreach (var kv in headers)
+                    {
+                        request.Headers[kv.Key] = kv.Value;
+                    }
+                    modified = true;
+                }
+            }
+
+            // 如果有修改，重建HTTP请求包
+            if (modified)
+            {
+                // 重建请求行和头部
+                var sb = Pool.StringBuilder.Get();
+                var requestUri = request.RequestUri?.OriginalString ?? path;
+                sb.Append($"{method} {requestUri} HTTP/1.1\r\n");
+                foreach (var kv in request.Headers)
+                {
+                    if (!kv.Key.EqualIgnoreCase("Host"))
+                        sb.Append($"{kv.Key}: {kv.Value}\r\n");
+                }
+                sb.Append("\r\n");
+
+                // 保留原始请求体（如果有）
+                var headerBytes = Encoding.UTF8.GetBytes(sb.ToString());
+                var body = e.Packet.Slice(headerBytes.Length);
+                // 替换包数据
+                e.Packet = new ArrayPacket(headerBytes.Concat(body.ToArray()).ToArray());
+                sb.TryDispose();
+            }
         }
 
         // 转发请求到后端

@@ -32,6 +32,10 @@ public partial class SslCertificate : Entity<SslCertificate>
     // 控制最大缓存数量，Find/FindAll查询方法在表行数小于该值时走实体缓存
     private static Int32 MaxCacheCount = 1000;
 
+    /// <summary>查找所有启用的证书</summary>
+    /// <returns>证书列表</returns>
+    public static IList<SslCertificate> FindAllEnabled() => FindAll(_.Enable == true);
+
     static SslCertificate()
     {
         // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx

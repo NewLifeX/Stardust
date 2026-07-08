@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using NewLife;
 using NewLife.Log;
 using StarGateway.Proxy;
+using Stardust;
 
 namespace StarGateway;
 
@@ -14,29 +15,37 @@ class MyService : IHostedService
     {
         var set = StarGatewaySetting.Current;
 
-        var server = new HttpReverseProxy
-        {
-            Port = set.Port > 0 ? set.Port : 8080,
-            RemoteServer = "http://star.newlifex.com",
+        // 使用配置的端口，默认8800（与 Setting.cs 默认值一致）
+        var port = set.Port > 0 ? set.Port : 8800;
 
-            Tracer = DefaultTracer.Instance,
+        // 从 StarFactory 获取 Tracer 和 StarServer 地址
+        var star = Program.Star;
+        var tracer = star?.Tracer ?? DefaultTracer.Instance;
+        var serverUrl = star?.Server ?? set.StarServer ?? "http://star.newlifex.com";
+
+        var proxy = new HttpReverseProxy
+        {
+            Port = port,
+            RemoteServer = serverUrl,
+
+            Tracer = tracer,
             Log = XTrace.Log,
         };
 
-        if (set.Debug) server.SessionLog = XTrace.Log;
+        if (set.Debug) proxy.SessionLog = XTrace.Log;
 #if DEBUG
-        server.SocketLog = XTrace.Log;
-        server.LogSend = true;
-        server.LogReceive = true;
+        proxy.SocketLog = XTrace.Log;
+        proxy.LogSend = true;
+        proxy.LogReceive = true;
 #endif
 
-        server.AdminLog = XTrace.Log;
+        proxy.AdminLog = XTrace.Log;
 
-        server.Start();
+        proxy.Start();
 
-        _proxy = server;
+        _proxy = proxy;
 
-        XTrace.WriteLine("StarGateway 已启动，监听端口 {0}，远程服务器 {1}", set.Port, server.RemoteServer);
+        XTrace.WriteLine("StarGateway 已启动，监听端口 {0}，远程服务器 {1}", port, serverUrl);
 
         return Task.CompletedTask;
     }

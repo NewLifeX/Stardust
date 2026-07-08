@@ -1,4 +1,6 @@
-﻿using Stardust.Data;
+﻿using NewLife.Log;
+using Stardust.Data;
+using Stardust.Data.Deployment;
 using Stardust.Data.Gateway;
 
 namespace StarGateway;
@@ -20,7 +22,9 @@ class InitService : IHostedService
         _ = GatewayCluster.Meta.Count;
         _ = GatewayNode.Meta.Count;
         _ = GatewayRoute.Meta.Count;
-        _ = GatewayCert.Meta.Count;
+        _ = SslCertificate.Meta.Count;
+
+        XTrace.WriteLine("数据库初始化完成");
 
         return Task.CompletedTask;
     }

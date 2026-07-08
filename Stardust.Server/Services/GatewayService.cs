@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NewLife;
 using NewLife.Log;
+using Stardust.Data.Deployment;
 using Stardust.Data.Gateway;
 
 namespace Stardust.Server.Services;
@@ -90,13 +91,13 @@ public class GatewayService
             });
         }
 
-        // 获取所有启用的证书
-        config.Certs = GatewayCert.FindAllEnabled().Select(e => new GatewayCertInfo
+        // 获取所有启用的证书（统一使用 SslCertificate）
+        config.Certs = SslCertificate.FindAllEnabled().Select(e => new GatewayCertInfo
         {
             Id = e.Id,
-            Name = e.Name,
+            Name = e.Domain,
             Domain = e.Domain,
-            CertFile = e.CertFile,
+            CertFile = e.PemFile ?? e.CrtFile ?? e.PfxFile,
             KeyFile = e.KeyFile,
         }).ToList();
 

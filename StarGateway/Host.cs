@@ -34,11 +34,22 @@ namespace StarGateway
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            foreach (var item in Services)
+            XTrace.WriteLine("正在优雅关闭服务……");
+
+            // 反向顺序停止服务（先启动的后停止）
+            for (var i = Services.Count - 1; i >= 0; i--)
             {
+                var item = Services[i];
                 try
                 {
-                    await item.StopAsync(cancellationToken).ConfigureAwait(false);
+                    using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    cts.CancelAfter(10_000); // 每个服务最多10秒
+
+                    await item.StopAsync(cts.Token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    XTrace.WriteLine("服务 [{0}] 停止超时，强制关闭", item.GetType().Name);
                 }
                 catch (Exception ex)
                 {

@@ -15,6 +15,8 @@ using XCode.DataAccessLayer;
 namespace Stardust.Data.Gateway;
 
 /// <summary>网关证书。SSL证书配置，用于HTTPS终止和SNI匹配</summary>
+/// <remarks>已废弃：请使用 Stardust.Data.Deployment.SslCertificate 统一管理证书。</remarks>
+[Obsolete("已废弃，请使用 SslCertificate（星尘部署中心证书管理）")]
 [Serializable]
 [DataObject]
 [Description("网关证书。SSL证书配置，用于HTTPS终止和SNI匹配")]
