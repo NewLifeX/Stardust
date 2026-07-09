@@ -1,0 +1,93 @@
+@model EntityField
+@using NewLife;
+@using NewLife.Cube.ViewModels
+@using Stardust.Data.Deployment
+@using Stardust.Data.Nodes;
+@using Stardust.Web.Models
+@using XCode;
+@using XCode.Configuration;
+@{
+    var entity = Model.Entity as AppPipeline;
+    var field = Model.Field;
+    var nodeId = entity?.BuildNodeId ?? 0;
+    var showValue = nodeId > 0 ? Node.FindByID(nodeId)?.Name : "";
+    var projectId = entity?.ProjectId ?? 0;
+
+    var set = NewLife.Cube.CubeSetting.Current;
+    var cls = set.FormGroupClass;
+    if (cls.IsNullOrEmpty()) { cls = "form-group col-xs-12 col-sm-6 col-lg-4"; }
+}
+<div class="@cls">
+    <label class="control-label col-xs-3 col-sm-3">@field.DisplayName</label>
+    <div class="input-group col-xs-9 col-sm-9">
+        <input type="hidden" name="@field.Name" id="@field.Name" value="@nodeId" />
+        <input type="text" class="form-control" id="@(field.Name)_select" placeholder="搜索节点" value="@showValue">
+        <div class="input-group-btn">
+            <ul class="dropdown-menu dropdown-menu-right" role="menu"></ul>
+        </div>
+    </div>
+</div>
+<input type="hidden" name="ProjectId" id="ProjectId" value="@projectId" />
+<script src="~/Content/bootstrap-suggest.js"></script>
+<script>
+    (function() {
+        var id = '@field.Name';
+
+        function initBsSuggest(projectId) {
+            var $input = $('#' + id + '_select');
+            if ($input.data('bsSuggest')) {
+                $input.bsSuggest('destroy');
+            }
+            $input.bsSuggest({
+                url: '/Nodes/Node/NodeSearch?projectId=' + projectId + '&product=StarDeploy&key=',
+                getDataMethod: 'url',
+                effectiveFieldsAlias: { id: '编号', code: '代码', name: '名称', projectName: '项目', category: '分类', ip: '地址' },
+                ignorecase: true,
+                showHeader: true,
+                delayUntilKeyup: true,
+                hideOnSelect: true,
+                idField: 'id',
+                showBtn: false,
+                keyField: 'name',
+                clearable: true,
+                searchingTip: '搜索中...',
+                allowNoKeyword: true,
+                delay: 500,
+                emptyTip: '无数据',
+                containerValueId: id,
+                fnProcessData: function (result) {
+                    dt = {};
+                    dt.value = result.data;
+                    return dt;
+                }
+            }).on('onSetSelectValue', function (e, keyword, data) {
+                $('#' + id).val(keyword.id);
+            }).on('onUnsetSelectValue', function () {
+                $('#' + id).val('');
+            });
+        }
+
+        var deployIdField = document.getElementById('DeployId');
+        var projectIdField = document.getElementById('ProjectId');
+
+        if (deployIdField) {
+            deployIdField.addEventListener('change', function() {
+                var deployId = parseInt(this.value) || 0;
+                if (deployId > 0) {
+                    fetch('/Deployment/AppPipeline/GetDeployProject?deployId=' + deployId)
+                        .then(function(r) { return r.json(); })
+                        .then(function(d) {
+                            var pId = (d.code === 0 ? (d.data || 0) : 0);
+                            if (projectIdField) projectIdField.value = pId;
+                            initBsSuggest(pId);
+                        });
+                } else {
+                    if (projectIdField) projectIdField.value = '';
+                    initBsSuggest(0);
+                }
+            });
+        }
+
+        initBsSuggest(@projectId);
+    })();
+</script>
