@@ -26,11 +26,11 @@ public class DotNetSyncService : IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         // 不管配置是否禁用，都启动定时器。DoSync内判断配置，每次执行后更新周期
+        // _lastPeriod 保持默认值 0，确保首次 DoSync 完成后 UpdateTimer 能正确设置周期
         _timer = new TimerX(DoSync, null, 5_000, 60_000)
         {
             Async = true,
         };
-        _lastPeriod = _setting.DotNetSyncPeriod;
 
         return Task.CompletedTask;
     }
