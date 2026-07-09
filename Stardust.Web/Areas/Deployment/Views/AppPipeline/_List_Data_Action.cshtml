@@ -1,0 +1,59 @@
+@*
+    AppPipeline 列表操作列重载
+    - CopyWebhook: 点击发起 AJAX 请求，解析返回 JSON 的 data 字段，将 URL 写入剪贴板
+    - Trigger: 保持标准 data-action 行为，由 Cube.js 处理
+    - CRUD: 查看/编辑/删除/恢复（同默认实现）
+*@
+@using NewLife;
+@using NewLife.Cube
+@using XCode;
+@using XCode.Membership;
+@{
+    var entity = Model as IEntity;
+    var set = ViewBag.PageSetting as PageSetting ?? PageSetting.Global;
+    var rv = entity.GetRouteKey();
+    var id = entity["Id"];
+}
+
+@* 高级操作（CopyWebhook / Trigger） *@
+@if (this.Has(PermissionFlags.Detail))
+{
+    <a href="@Url.Action("CopyWebhook", new { id })" onclick="var t=this.textContent;fetch(this.href).then(r=>r.json()).then(d=>{var s=function(v){var e=document.createElement('textarea');e.value=v;e.style.position='fixed';e.style.left='-9999px';document.body.appendChild(e);e.select();document.execCommand('copy');document.body.removeChild(e)};navigator.clipboard.writeText(d.data).catch(function(){s(d.data)});this.textContent='已复制';setTimeout(function(){this.textContent=t}.bind(this),2000)});return false;" title="点击复制 webhook 地址到剪贴板" style="margin-left:5px;">复制WebHook</a>
+    <a href="@Url.Action("Trigger", new { id })" data-action="action" title="手动触发流水线运行，使用当前分支最新提交" style="margin-left:5px;">启动</a>
+}
+
+@* CRUD 操作 *@
+@if (set.IsReadOnly)
+{
+    if (this.Has(PermissionFlags.Detail))
+    {
+        <i class="glyphicon glyphicon-edit" style="color: blue;"></i>
+        <a href="@Url.Action("Detail", rv)" class="editcell" title="双击本行任意地方也可以进入查看页">查看</a>
+    }
+}
+else if (this.Has(PermissionFlags.Update))
+{
+    <i class="glyphicon glyphicon-edit" style="color: blue;"></i>
+    <a href="@Url.Action("Edit", rv)" class="editcell" title="双击本行任意地方也可以进入编辑表单页">编辑</a>
+}
+else if (this.Has(PermissionFlags.Detail))
+{
+    <i class="glyphicon glyphicon-edit" style="color: blue;"></i>
+    <a href="@Url.Action("Detail", rv)" class="editcell" title="双击本行任意地方也可以进入查看页">查看</a>
+}
+@if (this.Has(PermissionFlags.Delete))
+{
+    var fact = ViewBag.Factory as IEntityFactory;
+    var fi = (fact == null || fact.Fields == null) ? null : fact.Fields.FirstOrDefault(e => e.Name.EqualIgnoreCase("Deleted", "IsDelete", "IsDeleted"));
+    if (fi != null && fi.Type == typeof(Boolean) && (Boolean)entity[fi.Name])
+    {
+        rv["restore"] = 1;
+        <i class="glyphicon glyphicon-transfer" style="color: green;"></i>
+        <a href="@Url.Action("Delete", rv)" data-action="action" data-confirm="确认恢复？">恢复</a>
+    }
+    else
+    {
+        <i class="glyphicon glyphicon-remove" style="color: red;"></i>
+        <a href="@Url.Action("Delete", rv)" data-action="action" data-confirm="确认删除？">删除</a>
+    }
+}
