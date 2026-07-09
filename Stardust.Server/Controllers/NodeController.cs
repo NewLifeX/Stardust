@@ -211,10 +211,11 @@ public class NodeController(NodeService nodeService, ITokenService tokenService,
 
     #region 升级更新
     /// <summary>升级检查</summary>
-    /// <param name="channel">更新通道</param>
+    /// <param name="channel">更新通道。兼容旧版本客户端，允许为空，默认Release</param>
     /// <returns></returns>
     [HttpGet(nameof(Upgrade))]
-    public IUpgradeInfo Upgrade(String channel)
+    [HttpPost(nameof(Upgrade))]
+    public IUpgradeInfo? Upgrade(String? channel)
     {
         var node = Context.Device as Node;
 
