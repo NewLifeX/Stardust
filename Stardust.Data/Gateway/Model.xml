@@ -116,24 +116,5 @@
         <Index Columns="Priority" />
       </Indexes>
     </Table>
-    <Table Name="GatewayCert" Description="网关证书。SSL证书配置，用于HTTPS终止和SNI匹配">
-      <Columns>
-        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
-        <Column Name="Enable" DataType="Boolean" DefaultValue="True" Description="启用" />
-        <Column Name="Domain" DataType="String" Length="200" Nullable="False" Description="域名。匹配SNI，支持通配符 *.example.com" />
-        <Column Name="CertFile" DataType="String" Length="500" Description="证书文件路径。PEM格式" />
-        <Column Name="KeyFile" DataType="String" Length="500" Description="私钥文件路径。PEM格式" />
-        <Column Name="Remark" DataType="String" Length="500" Description="备注" />
-        <Column Name="CreateUser" DataType="String" Description="创建者" />
-        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
-        <Column Name="UpdateUser" DataType="String" Description="更新者" />
-        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
-      </Columns>
-      <Indexes>
-        <Index Columns="Name" Unique="True" />
-        <Index Columns="Domain" />
-      </Indexes>
-    </Table>
   </Tables>
 </EntityModel>
