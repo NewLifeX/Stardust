@@ -1,7 +1,9 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
 using NewLife;
+using NewLife.Agent;
+using NewLife.Agent.Models;
 using NewLife.Log;
 using NewLife.Model;
 using NewLife.Remoting.Clients;
@@ -11,28 +13,53 @@ using Stardust.Models;
 
 namespace DeployAgent;
 
-/// <summary>
-/// 部署工作服务
-/// </summary>
-public class DeployWorker(StarFactory factory) : IHostedService
+/// <summary>部署服务。支持安装为Windows服务或Linux systemd，常驻接收星尘服务端下发的编译命令</summary>
+internal class DeployService : ServiceBase
 {
     private StarClient _client = null!;
+    private StarFactory _factory;
 
-    public Task StartAsync(CancellationToken cancellationToken)
+    public DeployService()
+    {
+        ServiceName = "StarDeploy";
+        DisplayName = "星尘发布";
+        Description = "星尘构建发布工具。自动下载代码仓库、执行编译构建、打包输出并推送至星尘发布中心。";
+
+        MachineInfo.RegisterAsync();
+    }
+
+    #region 服务生命周期
+    /// <summary>服务启动</summary>
+    /// <remarks>
+    /// 安装Windows服务后，服务启动会执行一次该方法。
+    /// 控制台菜单按5进入循环调试也会执行该方法。
+    /// </remarks>
+    public override void StartWork(String reason)
     {
         XTrace.WriteLine("开始 Deploy 客户端");
 
-        var set = DeploySetting.Current;
+        var set = StarSetting.Current;
 
-        var client = new StarClient(factory.Server)
+        var server = set.Server;
+        if (server.IsNullOrEmpty())
+        {
+            XTrace.WriteLine("未配置星尘服务端地址，请配置 config/Star.config 中的 Server");
+            return;
+        }
+
+        // 初始化星尘工厂，用于追踪和配置
+        _factory = new StarFactory(server, "StarDeploy", null);
+        _factory.Register(ObjectContainer.Current);
+
+        var client = new StarClient(server)
         {
             Name = "Deploy",
-            Code = set.Code,
+            Code = set.AppKey,
             Secret = set.Secret,
             ProductCode = "StarDeploy",
             Setting = set,
 
-            Tracer = factory.Tracer,
+            Tracer = _factory?.Tracer,
             Log = XTrace.Log,
         };
 
@@ -41,25 +68,34 @@ public class DeployWorker(StarFactory factory) : IHostedService
 
         client.Open();
 
-        Host.RegisterExit(() => client.Logout("ApplicationExit"));
-
         _client = client;
 
         // 注册编译命令
         client.RegisterCommand("deploy/compile", OnCompile);
 
-        return Task.CompletedTask;
+        base.StartWork(reason);
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
+    /// <summary>服务停止</summary>
+    /// <remarks>
+    /// 安装Windows服务后，服务停止会执行该方法。
+    /// 控制台菜单按5进入循环调试，任意键结束时也会执行该方法。
+    /// </remarks>
+    public override void StopWork(String reason)
     {
+        base.StopWork(reason);
+
+        _client?.Logout(reason);
         _client.TryDispose();
+        _client = null!;
 
-        return Task.CompletedTask;
+        _factory = null!;
     }
+    #endregion
 
+    #region 编译命令处理
     /// <summary>处理编译命令</summary>
-    private String OnCompile(String args)
+    private String OnCompile(String? args)
     {
         if (args.IsNullOrEmpty()) throw new ArgumentNullException(nameof(args));
 
@@ -608,4 +644,5 @@ public class DeployWorker(StarFactory factory) : IHostedService
             StandardErrorEncoding = System.Text.Encoding.UTF8
         };
     }
+    #endregion
 }

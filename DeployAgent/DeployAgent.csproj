@@ -25,6 +25,7 @@
     <IsPackable>True</IsPackable>
     <PackAsTool>True</PackAsTool>
     <ToolCommandName>stardeploy</ToolCommandName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <PropertyGroup>
     <PackageId>$(AssemblyName)</PackageId>
@@ -43,6 +44,10 @@
   </ItemGroup>
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NewLife.Agent" Version="10.16.2026.701" />
   </ItemGroup>
 
   <ItemGroup>
