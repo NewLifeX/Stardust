@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using NewLife;
@@ -377,7 +378,11 @@ public class PipelineService
 
             var commitMessage = json.HeadCommit?.Message ?? json.ObjectAttributes?.Message;
             var commitAuthor = json.HeadCommit?.Author?.Name ?? json.UserName ?? json.ObjectAttributes?.AuthorName;
-            var commitTime = json.HeadCommit?.Timestamp ?? json.ObjectAttributes?.Timestamp ?? default;
+            // 时间戳：head_commit.timestamp → commits[0].timestamp → object_attributes.timestamp
+            var commitTime = json.HeadCommit?.Timestamp
+                ?? json.Commits?.FirstOrDefault()?.Timestamp
+                ?? json.ObjectAttributes?.Timestamp
+                ?? default;
 
             return (branch, commitId, commitMessage, commitAuthor, commitTime);
         }
@@ -399,7 +404,7 @@ public class PipelineService
     #endregion
 }
 
-/// <summary>通用 webhook payload（GitHub/GitLab 兼容）</summary>
+/// <summary>通用 webhook payload（GitHub/GitLab/Gitea 兼容）</summary>
 internal class WebhookPayload
 {
     public String Ref { get; set; }
@@ -408,6 +413,7 @@ internal class WebhookPayload
     public String UserName { get; set; }
     public WebhookCommit HeadCommit { get; set; }
     public WebhookObject ObjectAttributes { get; set; }
+    public WebhookCommit[] Commits { get; set; }
 }
 
 internal class WebhookCommit
